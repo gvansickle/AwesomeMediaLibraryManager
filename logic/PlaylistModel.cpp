@@ -28,8 +28,6 @@
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
 
-#include <gui/Rating.h>
-
 
 PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 {
