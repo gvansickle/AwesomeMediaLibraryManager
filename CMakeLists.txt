@@ -196,8 +196,6 @@ set(HEADER_FILES
 	gui/NetworkAwareFileDialog.h
 	gui/PixmapLabel.h
 	gui/PlayerControls.h
-	gui/SettingsDialog.h
-	gui/SettingsPages.h
 	logic/Library.h
 	logic/LibraryEntry.h
 	logic/LibraryEntryMimeData.h
@@ -244,8 +242,6 @@ set(SOURCE_FILES
 	gui/NetworkAwareFileDialog.cpp
 	gui/PixmapLabel.cpp
 	gui/PlayerControls.cpp
-	gui/SettingsDialog.cpp
-	gui/SettingsPages.cpp
 	logic/Library.cpp
 	logic/LibraryEntry.cpp
 	logic/LibraryEntryMimeData.cpp
