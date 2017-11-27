@@ -30,7 +30,7 @@ function(CPACKIFW_COMMON)
 		FORCED_INSTALLATION
 		NAME ${IDENTIFIER}.installer  # "is used to create domain-like identification for this component. By default used origin component name."
 		VERSION ${PROJECT_VERSION} # Version of component
-		LICENSES License ${${PROJECT_NAME}_SOURCE_DIR}/gpl.txt
+                LICENSES License ${${PROJECT_NAME}_SOURCE_DIR}/LICENSE
 		DEFAULT TRUE
 		)
 endfunction()
