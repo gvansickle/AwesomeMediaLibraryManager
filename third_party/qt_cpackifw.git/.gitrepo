@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/skypjack/qt_cpackifw.git
+	branch = master
+	commit = 8156c43c2891eca61f08f228b0d4cc391bc77af0
+	parent = 2f1cd9178224fd443703a86fbf80cad0341e5b4e
+	cmdver = 0.3.1
