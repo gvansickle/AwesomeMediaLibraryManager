@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/lipnitsk/libcue.git
+	branch = master
+	commit = bbce26703f9ad34f3578a2ca988192675d0bd289
+	parent = 7424ac94cbbcebf6a45b4cbc84791f313dd3f799
+	cmdver = 0.3.1

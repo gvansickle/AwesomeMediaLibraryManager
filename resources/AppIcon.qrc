@@ -1,0 +1,6 @@
+<RCC version="1.0">
+	<qresource prefix="/Icons">
+		<file alias="AppIcon32">AppIcon32.png</file>
+		<file alias="AppIcon128">AppIcon128.png</file>
+	</qresource>
+</RCC>
