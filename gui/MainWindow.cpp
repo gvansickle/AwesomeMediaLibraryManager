@@ -20,7 +20,9 @@
 #include "FilterWidget.h"
 #include "MainWindow.h"
 #include "NetworkAwareFileDialog.h"
+#if TODO
 #include "SettingsDialog.h"
+#endif
 
 #include "MDITreeViewBase.h"
 #include "MDILibraryView.h"
@@ -986,8 +988,10 @@ void MainWindow::savePlaylistAs()
 
 void MainWindow::startSettingsDialog()
 {
+#if TODO
 	SettingsDialog dlg(this);
 	dlg.exec();
+#endif
 }
 
 #if 0
