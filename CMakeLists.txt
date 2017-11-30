@@ -322,7 +322,7 @@ set(PRIMARY_TARGET_INSTALLER "${PROJECT_NAME}Installer")
 
 install(
         TARGETS ${PRIMARY_TARGET}
-        RUNTIME DESTINATION "."
+        RUNTIME DESTINATION "${PROJECT_NAME}" # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
         COMPONENT the_installer_comp
         )
 

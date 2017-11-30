@@ -15,6 +15,7 @@ macro(message_cpack_summary)
         message(STATUS "CPACK_PACKAGE_EXECUTABLES: ${CPACK_PACKAGE_EXECUTABLES}") # List of the exe's+text label used to create Start Menu shortcuts.
         message(STATUS "CPACK_IFW_PACKAGE_MAINTENANCE_TOOL_NAME: ${CPACK_IFW_PACKAGE_MAINTENANCE_TOOL_NAME}")
         message(STATUS "CPACK_IFW_PACKAGE_NAME: ${CPACK_IFW_PACKAGE_NAME}")
+        message(STATUS "CPACK_IFW_TARGET_DIRECTORY: ${CPACK_IFW_TARGET_DIRECTORY}")
         cmake_print_variables(CPACK_IFW_PACKAGE_NAME CPACK_IFW_FRAMEWORK_VERSION)
 endmacro()
 
@@ -30,7 +31,8 @@ function(CPACKIFW_COMMON)
 	set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} Installation Tool")
 	set(CPACK_PACKAGE_VERSION "0.0.1") # Version of installer
         set(CPACK_COMPONENTS_ALL the_installer_comp)
-        set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}") # Default is PROJECT_NAME<space>VERSION
+        # Default below is PROJECT_NAME<space>VERSION, so this gets us CPACK_IFW_TARGET_DIRECTORY="c:\Program Files\${PROJECT_NAME}" on windows.
+        set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
         set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${PROJECT_NAME}")
         set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME}" "${PROJECT_NAME}")
         # QtIFW only comes in a 32-bit Windows flavor right now, which inexplicably installs even 64-bit exes to "Program Files (x86)".  So force the X64 install dir.
