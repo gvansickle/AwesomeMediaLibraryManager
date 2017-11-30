@@ -323,7 +323,7 @@ set(PRIMARY_TARGET_INSTALLER "${PROJECT_NAME}Installer")
 install(
         TARGETS ${PRIMARY_TARGET}
         RUNTIME DESTINATION "."
-        COMPONENT ${PRIMARY_TARGET_INSTALLER}
+        COMPONENT the_installer_comp
         )
 
 include(CPackHelper)

@@ -33,7 +33,8 @@ function(CPACKIFW_COMMON)
         set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}") # Default is PROJECT_NAME<space>VERSION
         set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${PROJECT_NAME}")
         set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME}" "${PROJECT_NAME}")
-        set(CPACK_IFW_TARGET_DIRECTORY )
+        # QtIFW only comes in a 32-bit Windows flavor right now, which inexplicably installs even 64-bit exes to "Program Files (x86)".  So force the X64 install dir.
+        set(CPACK_IFW_TARGET_DIRECTORY "@ApplicationsDirX64@/${CPACK_PACKAGE_INSTALL_DIRECTORY}")
 	set(CPACK_GENERATOR IFW)
 	set(CPACK_IFW_VERBOSE ON)
 
@@ -46,17 +47,17 @@ function(CPACKIFW_COMMON)
 
 	cpack_add_component(
                     the_installer_comp
-			DISPLAY_NAME "${PROJECT_NAME} - Qt CPackIFW"
-			DESCRIPTION "Install me"
+                        DISPLAY_NAME "${PROJECT_NAME} - The Awesome Media Library Manager"
+                        DESCRIPTION "The main Awesome Media Library Manager program"
 			REQUIRED
 			)
 
 	cpack_ifw_configure_component(
                 the_installer_comp
                 FORCED_INSTALLATION # Required to be installed
-                NAME the.installer.comp  # "is used to create domain-like identification for this component. By default used origin component name."
+                NAME "io.github.gvansickle.root"  # "is used to create domain-like identification for this component. By default used origin component name."
 		VERSION ${PROJECT_VERSION} # Version of component
-                LICENSES License ${${PROJECT_NAME}_SOURCE_DIR}/LICENSE
+                LICENSES GPL3 ${${PROJECT_NAME}_SOURCE_DIR}/LICENSE
                 SCRIPT package/qtifw/create_start_menu_shortcuts.qs
 		DEFAULT TRUE
 		)

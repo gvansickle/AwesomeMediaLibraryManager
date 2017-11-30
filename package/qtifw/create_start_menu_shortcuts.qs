@@ -11,11 +11,12 @@ Component.prototype.createOperations = function()
 
         component.addOperation("CreateShortcut",
                                "@TargetDir@/AwesomeMediaLibraryManager.exe",
-                               "@StartMenuDir@/AwesomeMediaLibraryManager.lnk");
+                               "@StartMenuDir@/AwesomeMediaLibraryManager.lnk",
+                               "description=Run Awesome Media Library Manager");
 
         component.addOperation("CreateShortcut",
-                               "@TargetDir@/AwesomeMediaLibraryManagerSetup.exe",
-                               "@StartMenuDir@/" + qsTr("Uninstall Awesome Media Library Manger", "Start menu entry") + ".lnk",
+                               "@TargetDir@/maintenancetool.exe",
+                               "@StartMenuDir@/Uninstall Awesome Media Library Manger.lnk",
                                "workingDirectory=@TargetDir@", "iconPath=%SystemRoot%/system32/SHELL32.dll",
                                "iconId=2", "description=Uninstall the Awesome Media Library Manger program");
     }
