@@ -112,7 +112,7 @@ get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "Found Qt ${Qt5Core_VERSION_STRING} at ${Qt5Core_location}")
 
 # Right now we need all the verbosity we can get.
-set(CMAKE_VERBOSE_MAKEFILE  NO)
+set(CMAKE_VERBOSE_MAKEFILE  YES)
 set(CPACK_IFW_VERBOSE YES)
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
@@ -287,7 +287,6 @@ foreach(generated_rcc_file_name ${RESOURCE_FILES})
     set_property(SOURCE ${generated_rcc_file_name} PROPERTY SKIP_AUTOMOC ON)
 endforeach()
 
-# source_group("UI Files" FILES ${UI_FILES})
 
 ###
 ### The main executable.
@@ -323,13 +322,16 @@ set(PRIMARY_TARGET_INSTALLER "${PROJECT_NAME}Installer")
 
 install(
         TARGETS ${PRIMARY_TARGET}
-        RUNTIME DESTINATION ${PRIMARY_TARGET}
+        RUNTIME DESTINATION "."
         COMPONENT ${PRIMARY_TARGET_INSTALLER}
-        BUNDLE DESTINATION ${PRIMARY_TARGET}
-        COMPONENT ${PRIMARY_TARGET_INSTALLER}
-)
+        )
 
 include(CPackHelper)
+
+#### Show package configuration files
+add_custom_target(package_files
+    SOURCES package/qtifw/create_start_menu_shortcuts.qs
+    COMMENT "Dummy target to show package configuration files in Qt Creator interface")
 
 ### END INSTALLER STUFF
 
@@ -344,6 +346,6 @@ message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION)
-message_cpack_summary()
+cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION META_FILES_TO_INCLUDE)
+#message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
