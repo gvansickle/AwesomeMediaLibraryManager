@@ -36,7 +36,7 @@ function(CPACKIFW_COMMON)
         set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${PROJECT_NAME}")
         set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME}" "${PROJECT_NAME}")
         # QtIFW only comes in a 32-bit Windows flavor right now, which inexplicably installs even 64-bit exes to "Program Files (x86)".  So force the X64 install dir.
-        set(CPACK_IFW_TARGET_DIRECTORY "@ApplicationsDirX64@/${CPACK_PACKAGE_INSTALL_DIRECTORY}")
+        set(CPACK_IFW_TARGET_DIRECTORY "@ApplicationsDir@/${CPACK_PACKAGE_INSTALL_DIRECTORY}")
 	set(CPACK_GENERATOR IFW)
 	set(CPACK_IFW_VERBOSE ON)
 

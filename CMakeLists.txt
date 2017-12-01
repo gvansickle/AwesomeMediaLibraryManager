@@ -43,6 +43,9 @@ project(AwesomeMediaLibraryManager
 # Add folder where we keep support *.cmake's.
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+# CMake debug.
+set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${PROJECT_BINARY_DIR}/ReportUndefinedProperties.txt")
+
 # Include some basic cmake functions.
 include(helperfunctions)
 
