@@ -178,6 +178,11 @@ endif()
 
 # Set up definitions and paths
 add_definitions(${QT_DEFINITIONS})
+if(WIN32)
+    add_definitions(-DUNICODE -D_UNICODE)
+endif()
+cmake_print_variables(QT_DEFINITIONS)
+
 link_directories(${TAGLIB_LIBRARY_DIRS})
 include_directories(${TAGLIB_INCLUDE_DIRS})
 

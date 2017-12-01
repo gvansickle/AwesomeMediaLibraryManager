@@ -28,9 +28,9 @@ macro(add_project_meta FILES_TO_INCLUDE)
                 "windows_metafile.rc"
                 )
         set(RES_FILES "windows_metafile.rc")
-        set(CMAKE_RC_COMPILER_INIT windres)
-        ### @todo FIXME ENABLE_LANGUAGE(RC)
-        ###SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
+        #set(CMAKE_RC_COMPILER_INIT windres)
+        ENABLE_LANGUAGE(RC)
+        #SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
     endif()
 
     if (APPLE)
