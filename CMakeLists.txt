@@ -48,11 +48,12 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${PROJECT_BINARY_DIR}/ReportUndefinedProperties.txt")
 
 # Include some basic cmake functions.
+include(CMakePrintHelpers)
 include(helperfunctions)
-
-# Include Qt basic cmake functions
+# Include some basic Qt5-related cmake functions
 include(QtCommon)
-# Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
+
+# QtCommon: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
 init_os_bundle()
 
 set(SETTINGS_ORGANIZATION "Gary R. Van Sickle")
@@ -80,8 +81,6 @@ message("*   Discovered tools:")
 message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
 
 print_compilers_and_params()
-
-include(CMakePrintHelpers)
 
 # Be nice to visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -398,5 +397,7 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION META_FILES_TO_INCLUDE)
+
 message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
+
