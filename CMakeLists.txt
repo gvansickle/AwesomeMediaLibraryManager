@@ -37,13 +37,14 @@ cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
 # (per https://cgold.readthedocs.io/en/latest/tutorials/project.html)
 project(AwesomeMediaLibraryManager
-        VERSION 0.0.1
+        VERSION 0.0.1.0
+        DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
 # Add folder where we keep support *.cmake's.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-# CMake debug.
+# CMake debug.  Does nothing.
 set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${PROJECT_BINARY_DIR}/ReportUndefinedProperties.txt")
 
 # Include some basic cmake functions.
@@ -61,19 +62,22 @@ set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
 
 set(FULL_COPYRIGHT_STRING "Copyright (c) 2017 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
-message("*")
+message("******************************************************************")
 message("* ${PROJECT_NAME} version ${PROJECT_VERSION} (${CMAKE_BUILD_TYPE})")
 message("* ${FULL_COPYRIGHT_STRING}")
-message("*")
+message("******************************************************************")
 
 message("* Using CMake version ${CMAKE_VERSION}")
 message("* CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 message("*")
 message("* From top level:")
 message("*   Source directory: ${PROJECT_SOURCE_DIR} (${AwesomeMediaLibraryManager_SOURCE_DIR})")
+message("*   Top level of build tree: ${CMAKE_BINARY_DIR}")
 message("*   Build directory: ${PROJECT_BINARY_DIR} (${AwesomeMediaLibraryManager_BINARY_DIR})")
 message("*   Version: ${PROJECT_VERSION}")
-message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}")
+message("*   Discovered tools:")
+message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
 
 print_compilers_and_params()
 
@@ -323,6 +327,10 @@ install(TARGETS ${PROJECT_NAME}
 		COMPONENT coreapp
 	)
 
+# Add custom commands and install targets for Qt windeploy.
+do_windeploy(${PROJECT_NAME} coreapp)
+
+
 ### Packaging
 # From within the build directory, just run the following commands to create the package:
 # $ cmake ..
@@ -337,7 +345,7 @@ set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(CPACK_PACKAGE_VERSION_PATCH "1")
 
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} - The Awesome Media Library Manager")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} - ${PROJECT_DESCRIPTION}")
 set(CPACK_PACKAGE_CONTACT "Gary R. Van Sickle <${PROJECT_AUTHOR_EMAIL}>")
 set(CPACK_PACKAGE_VENDOR "${COMPANY}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
@@ -360,6 +368,7 @@ set(CPACK_NSIS_MUI_FINISHPAGE_RUN ${PROJECT_NAME})
 
 include(CPack)
 include(CpackNSIS)
+include(CPackIFW REQUIRED)
 
 # CONFIGURE COMPONENTS
 cpack_add_component(
@@ -371,9 +380,9 @@ cpack_add_component(
 #include(CPackHelper)
 
 #### Show package configuration files
-add_custom_target(package_files
-    SOURCES package/qtifw/create_start_menu_shortcuts.qs
-    COMMENT "Dummy target to show package configuration files in Qt Creator interface")
+#add_custom_target(package_files
+#    SOURCES package/qtifw/create_start_menu_shortcuts.qs
+#    COMMENT "Dummy target to show package configuration files in Qt Creator interface")
 
 ### END INSTALLER STUFF
 

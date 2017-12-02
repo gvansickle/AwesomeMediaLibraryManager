@@ -92,7 +92,7 @@ if(CPACK_IFW_ROOT OR DEFINED ENV{QTIFWDIR})
 					install(
 						DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/
 						DESTINATION ${PROJECT_NAME}
-                        COMPONENT the_installer_comp
+                                                COMPONENT the_installer_comp
 						)
 
 					CPACKIFW_COMMON()
