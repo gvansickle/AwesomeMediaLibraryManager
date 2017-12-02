@@ -1,36 +1,49 @@
 
 message(STATUS "Entering CPackHelper...")
 
+
 if(INCLUDE_QT_DLL_IN_BIN_PACKAGE OR NOT QT_CONFIG MATCHES "static")
 	include( InstallRequiredSystemLibraries )
 endif(INCLUDE_QT_DLL_IN_BIN_PACKAGE OR NOT QT_CONFIG MATCHES "static")
 
 function(CPACKIFW_COMMON)
-	set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
-	set(CPACK_PACKAGE_FILE_NAME ${PRIMARY_TARGET_INSTALLER})
+        set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+        set(CPACK_PACKAGE_VENDOR "Gary R. Van Sickle")
+        set(CPACK_IFW_PACKAGE_PUBLISHER "gvansickle")
+        set(CPACK_PACKAGE_FILE_NAME "${PRIMARY_TARGET_INSTALLER}")
 	set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} Installation Tool")
 	set(CPACK_PACKAGE_VERSION "0.0.1") # Version of installer
-	set(CPACK_COMPONENTS_ALL ${PRIMARY_TARGET_INSTALLER})
-	set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY ${PROJECT_NAME})
+        set(CPACK_COMPONENTS_ALL the_installer_comp)
+        # Default below is PROJECT_NAME<space>VERSION, so this gets us CPACK_IFW_TARGET_DIRECTORY="c:\Program Files\${PROJECT_NAME}" on windows.
+        set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
+        set(CPACK_IFW_PACKAGE_START_MENU_DIRECTORY "${PROJECT_NAME}")
+        set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME}" "${PROJECT_NAME}")
+        # QtIFW only comes in a 32-bit Windows flavor right now, which inexplicably installs even 64-bit exes to "Program Files (x86)".  So force the X64 install dir.
+        set(CPACK_IFW_TARGET_DIRECTORY "@ApplicationsDir@/${CPACK_PACKAGE_INSTALL_DIRECTORY}")
 	set(CPACK_GENERATOR IFW)
 	set(CPACK_IFW_VERBOSE ON)
+
+        message_cpack_summary()
 
 	include(CPack REQUIRED)
 	include(CPackIFW REQUIRED)
 
+        message_cpack_summary()
+
 	cpack_add_component(
-		    ${PRIMARY_TARGET_INSTALLER}
-			DISPLAY_NAME "${PROJECT_NAME} - Qt CPackIFW"
-			DESCRIPTION "Install me"
+                    the_installer_comp
+                        DISPLAY_NAME "${PROJECT_NAME} - The Awesome Media Library Manager"
+                        DESCRIPTION "The main Awesome Media Library Manager program"
 			REQUIRED
 			)
 
 	cpack_ifw_configure_component(
-		${PRIMARY_TARGET_INSTALLER}
-		FORCED_INSTALLATION
-		NAME ${IDENTIFIER}.installer  # "is used to create domain-like identification for this component. By default used origin component name."
+                the_installer_comp
+                FORCED_INSTALLATION # Required to be installed
+                NAME "io.github.gvansickle.root"  # "is used to create domain-like identification for this component. By default used origin component name."
 		VERSION ${PROJECT_VERSION} # Version of component
-                LICENSES License ${${PROJECT_NAME}_SOURCE_DIR}/LICENSE
+                LICENSES GPL3 ${${PROJECT_NAME}_SOURCE_DIR}/LICENSE
+                SCRIPT package/qtifw/create_start_menu_shortcuts.qs
 		DEFAULT TRUE
 		)
 endfunction()
@@ -79,7 +92,7 @@ if(CPACK_IFW_ROOT OR DEFINED ENV{QTIFWDIR})
 					install(
 						DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/
 						DESTINATION ${PROJECT_NAME}
-						COMPONENT ${PRIMARY_TARGET_INSTALLER}
+                                                COMPONENT the_installer_comp
 						)
 
 					CPACKIFW_COMMON()
@@ -102,20 +115,5 @@ else()
 	message("The specified path should not contain bin at the end (for example: D:\\DevTools\\QtIFW2.0.5).")
 endif()
 
-macro(message_cpack_summary)
-	message(STATUS "CPackIFW Tools found:")
-	message(STATUS "=====================")
-	message(STATUS "CPACK_IFW_FRAMEWORK_VERSION: ${CPACK_IFW_FRAMEWORK_VERSION}")
-	message(STATUS "CPACK_IFW_BINARYCREATOR_EXECUTABLE: ${CPACK_IFW_BINARYCREATOR_EXECUTABLE}")
-	message(STATUS "CPACK_IFW_INSTALLERBASE_EXECUTABLE: ${CPACK_IFW_INSTALLERBASE_EXECUTABLE}")
-	message(STATUS "Installer info:")
-	message(STATUS "===============")
-	message(STATUS "CPACK_PACKAGE_NAME: ${CPACK_PACKAGE_NAME}")
-	message(STATUS "CPACK_PACKAGE_FILE_NAME: ${CPACK_PACKAGE_FILE_NAME}") # Name of the package file to generate.
-	message(STATUS "CPACK_PACKAGE_EXECUTABLES: ${CPACK_PACKAGE_EXECUTABLES}") # List of the exe's+text label used to create Start Menu shortcuts.
-	message(STATUS "CPACK_IFW_PACKAGE_MAINTENANCE_TOOL_NAME: ${CPACK_IFW_PACKAGE_MAINTENANCE_TOOL_NAME}")
-	message(STATUS "CPACK_IFW_PACKAGE_NAME: ${CPACK_IFW_PACKAGE_NAME}")
-	cmake_print_variables(CPACK_IFW_PACKAGE_NAME CPACK_IFW_FRAMEWORK_VERSION)
-endmacro()
 
 message(STATUS "Leaving CPackHelper.")

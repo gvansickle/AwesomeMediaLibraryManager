@@ -37,44 +37,48 @@ cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
 # (per https://cgold.readthedocs.io/en/latest/tutorials/project.html)
 project(AwesomeMediaLibraryManager
-        VERSION 0.0.1
+        VERSION 0.0.1.0
+        DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
 # Add folder where we keep support *.cmake's.
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
+# CMake debug.  Does nothing.
+set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${PROJECT_BINARY_DIR}/ReportUndefinedProperties.txt")
 
 # Include some basic cmake functions.
+include(CMakePrintHelpers)
 include(helperfunctions)
-
-# Include Qt basic cmake functions
+# Include some basic Qt5-related cmake functions
 include(QtCommon)
-# Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
+
+# QtCommon: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
 init_os_bundle()
 
-set(SETTINGS_ORGANIZATION "Gary R. Van Sickle")
-set(SETTINGS_APPLICATION ${PROJECT_NAME})
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
 
 set(FULL_COPYRIGHT_STRING "Copyright (c) 2017 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
-message("*")
+message("******************************************************************")
 message("* ${PROJECT_NAME} version ${PROJECT_VERSION} (${CMAKE_BUILD_TYPE})")
 message("* ${FULL_COPYRIGHT_STRING}")
-message("*")
+message("******************************************************************")
 
 message("* Using CMake version ${CMAKE_VERSION}")
 message("* CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 message("*")
 message("* From top level:")
 message("*   Source directory: ${PROJECT_SOURCE_DIR} (${AwesomeMediaLibraryManager_SOURCE_DIR})")
+message("*   Top level of build tree: ${CMAKE_BINARY_DIR}")
 message("*   Build directory: ${PROJECT_BINARY_DIR} (${AwesomeMediaLibraryManager_BINARY_DIR})")
 message("*   Version: ${PROJECT_VERSION}")
-message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}")
+message("*   Discovered tools:")
+message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
 
 print_compilers_and_params()
-
-include(CMakePrintHelpers)
 
 # Be nice to visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -112,20 +116,20 @@ get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "Found Qt ${Qt5Core_VERSION_STRING} at ${Qt5Core_location}")
 
 # Right now we need all the verbosity we can get.
-set(CMAKE_VERBOSE_MAKEFILE  NO)
+set(CMAKE_VERBOSE_MAKEFILE  YES)
 set(CPACK_IFW_VERBOSE YES)
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 
-# Set additional project information FBO QtCommon.cmake.
-# Resource directory FBO QtCommon.
+# Set additional project information FBO QtCommon.cmake/add_project_meta().
+# Resource directory FBO QtCommon/add_project_meta().
 set(RESOURCE_FOLDER resources)
 # The basename of the application's icon.
 set(ICON_NAME "AppIcon")
-# app.setOrganizationName()?
-set(COMPANY "gvansickle")
-set(COPYRIGHT "${FULL_COPYRIGHT_STRING}")
+# For the "CompanyName" field in the rc file.
+set(RC_COMPANYNAME "${PROJECT_AUTHOR}")
+set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 # Reverse of app.setOrganizationDomain()?
 set(IDENTIFIER "io.github.gvansickle")
 
@@ -178,6 +182,11 @@ endif()
 
 # Set up definitions and paths
 add_definitions(${QT_DEFINITIONS})
+if(WIN32)
+    add_definitions(-DUNICODE -D_UNICODE)
+endif()
+cmake_print_variables(QT_DEFINITIONS)
+
 link_directories(${TAGLIB_LIBRARY_DIRS})
 include_directories(${TAGLIB_INCLUDE_DIRS})
 
@@ -271,6 +280,7 @@ set(SOURCE_FILES
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a QtIFW build.
 add_project_meta(META_FILES_TO_INCLUDE)
+cmake_print_variables(META_FILES_TO_INCLUDE)
 
 # Resource files.
 ## Does this cover it for QtCommon?  Or does it want to know the *.qrc files? E.g.:
@@ -287,7 +297,6 @@ foreach(generated_rcc_file_name ${RESOURCE_FILES})
     set_property(SOURCE ${generated_rcc_file_name} PROPERTY SKIP_AUTOMOC ON)
 endforeach()
 
-# source_group("UI Files" FILES ${UI_FILES})
 
 ###
 ### The main executable.
@@ -310,26 +319,69 @@ Checks: '-*,llvm-twine-local'
 ")
 
 
+### Installation.
+install(TARGETS ${PROJECT_NAME}
+		RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+		COMPONENT coreapp
+	)
 
-### START GRVS INSTALLER STUFF.
-# The executable target we want to create an installer for.
-set(PRIMARY_TARGET "${PROJECT_NAME}")
-set(PRIMARY_TARGET_INSTALLER "${PROJECT_NAME}Installer")
+# Add custom commands and install targets for Qt windeploy.
+do_windeploy(${PROJECT_NAME} coreapp)
 
-### START INSTALLER STUFF
+
+### Packaging
 # From within the build directory, just run the following commands to create the package:
 # $ cmake ..
 # $ make package
 
-install(
-        TARGETS ${PRIMARY_TARGET}
-        RUNTIME DESTINATION ${PRIMARY_TARGET}
-        COMPONENT ${PRIMARY_TARGET_INSTALLER}
-        BUNDLE DESTINATION ${PRIMARY_TARGET}
-        COMPONENT ${PRIMARY_TARGET_INSTALLER}
-)
+# Relocate this?
+set(CPACK_GENERATOR NSIS)
 
-include(CPackHelper)
+# Generic.
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "1")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} - ${PROJECT_DESCRIPTION}")
+set(CPACK_PACKAGE_CONTACT "${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+set(CPACK_PACKAGE_VENDOR "${COMPANY}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
+set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
+
+set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME};${PROJECT_NAME}")
+
+#set(CPACK_PACKAGE_VERSION "1.0.0")
+
+# Packaging: NSIS
+set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
+set(CPACK_NSIS_MENU_LINKS "https://github.com/gvansickle/AwesomeMediaLibraryManager" "AwesomeMediaLibraryManager at GitHub")
+
+set(CPACK_NSIS_PACKAGE_ARCHITECTURE "64")
+set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
+
+set(CPACK_NSIS_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
+# Add a "Finished, Run the app?" page to the installer.
+set(CPACK_NSIS_MUI_FINISHPAGE_RUN ${PROJECT_NAME})
+
+include(CPack)
+include(CpackNSIS)
+include(CPackIFW REQUIRED)
+
+# Add components to be packaged by CPack.
+cpack_add_component(
+		coreapp
+		DISPLAY_NAME "${PROJECT_NAME} application"
+		DESCRIPTION "Install ${PROJECT_NAME} application files"
+		REQUIRED)
+
+#include(CPackHelper)
+
+#### Show package configuration files
+#add_custom_target(package_files
+#    SOURCES package/qtifw/create_start_menu_shortcuts.qs
+#    COMMENT "Dummy target to show package configuration files in Qt Creator interface")
 
 ### END INSTALLER STUFF
 
@@ -344,6 +396,8 @@ message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION)
+cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION META_FILES_TO_INCLUDE)
+
 message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
+

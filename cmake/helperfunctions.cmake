@@ -25,3 +25,49 @@ function(print_compilers_and_params)
         endforeach()
     endforeach()
 endfunction()
+
+macro(message_cpack_summary)
+    message(STATUS "CPackIFW Tools found:")
+    message(STATUS "=====================")
+    message(STATUS "CPACK_IFW_FRAMEWORK_VERSION: ${CPACK_IFW_FRAMEWORK_VERSION}")
+    message(STATUS "CPACK_IFW_BINARYCREATOR_EXECUTABLE: ${CPACK_IFW_BINARYCREATOR_EXECUTABLE}")
+    message(STATUS "CPACK_IFW_INSTALLERBASE_EXECUTABLE: ${CPACK_IFW_INSTALLERBASE_EXECUTABLE}")
+    message(STATUS "Installer info:")
+    message(STATUS "===============")
+    message(STATUS "CPACK_PACKAGE_NAME: ${CPACK_PACKAGE_NAME}")
+    message(STATUS "CPACK_PACKAGE_FILE_NAME: ${CPACK_PACKAGE_FILE_NAME}") # Name of the package file to generate.
+    message(STATUS "CPACK_PACKAGE_EXECUTABLES: ${CPACK_PACKAGE_EXECUTABLES}") # List of the exe's+text label used to create Start Menu shortcuts.
+    message(STATUS "CPACK_IFW_PACKAGE_MAINTENANCE_TOOL_NAME: ${CPACK_IFW_PACKAGE_MAINTENANCE_TOOL_NAME}")
+    message(STATUS "CPACK_IFW_PACKAGE_NAME: ${CPACK_IFW_PACKAGE_NAME}")
+    message(STATUS "CPACK_IFW_TARGET_DIRECTORY: ${CPACK_IFW_TARGET_DIRECTORY}")
+    cmake_print_variables(CPACK_NSIS_INSTALL_ROOT)
+    cmake_print_variables(CPACK_NSIS_DISPLAY_NAME)
+    cmake_print_variables(CPACK_NSIS_PACKAGE_NAME)
+    cmake_print_variables(CPACK_NSIS_coreapp_INSTALL_DIRECTORY)
+    cmake_print_variables(CPACK_NSIS_EXECUTABLES_DIRECTORY)
+    cmake_print_variables(CPACK_IFW_PACKAGE_NAME CPACK_IFW_FRAMEWORK_VERSION)
+endmacro()
+
+macro(do_windeploy arg_coreapp_target arg_install_component)
+    if(WIN32)
+        message(STATUS "Setting up Qt-related dependencies for installer.")
+        if(EXISTS $ENV{QTDIR}/bin/windeployqt.exe)
+                add_custom_command(
+                            TARGET ${arg_coreapp_target} POST_BUILD
+                                COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies, exe: $<TARGET_FILE:${arg_coreapp_target}>"
+                                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
+                                COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${arg_coreapp_target}>
+                                COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies complete.  Intermediate directory is: ${CMAKE_BINARY_DIR}/windeployqt_stuff"
+                                )
+
+                install(
+                        DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/
+                        DESTINATION .
+                        COMPONENT ${arg_install_component}
+                        )
+                message(STATUS "Qt-related dependencies set up complete.  Intermediate directory is ${CMAKE_BINARY_DIR}/windeployqt_stuff")
+        else()
+                message("Unable to find executable QTDIR/bin/windeployqt.")
+        endif()
+    endif()
+endmacro()
