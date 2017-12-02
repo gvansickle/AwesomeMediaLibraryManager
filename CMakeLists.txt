@@ -44,16 +44,13 @@ project(AwesomeMediaLibraryManager
 # Add folder where we keep support *.cmake's.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-# CMake debug.  Does nothing.
-set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${PROJECT_BINARY_DIR}/ReportUndefinedProperties.txt")
-
 # Include some basic cmake functions.
 include(CMakePrintHelpers)
 include(helperfunctions)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 
-# QtCommon: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
+# QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
 init_os_bundle()
 
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
@@ -105,10 +102,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-# Undo some of what QtCommon did.
-set(CMAKE_AUTOMOC OFF)
-set(CMAKE_AUTORCC OFF)
-set(CMAKE_AUTORCC_OPTIONS "--temp")
+
+### @todo do we need this?
+#set(CMAKE_AUTORCC_OPTIONS "--temp")
 
 # The Qt5 packages we require.
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Concurrent)
@@ -139,7 +135,7 @@ set(IDENTIFIER "io.github.gvansickle")
 if(NOT WIN32)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBCUE REQUIRED libcue)
-	pkg_check_modules(TAGLIB REQUIRED taglib>=1.6)
+    pkg_check_modules(TAGLIB REQUIRED taglib>=1.6)
 else()
     set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -278,15 +274,12 @@ set(SOURCE_FILES
         )
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
-# needed for a QtIFW build.
+# needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
-# Resource files.
-## Does this cover it for QtCommon?  Or does it want to know the *.qrc files? E.g.:
-#set(RESOURCE_FILES
-#        resources/oxygenicons.qrc
-#        resources/TangoIcons.qrc) ???
+# Qt5 Resource (qrc) files.
+# RESOURCE_FILES is a list of the generated output *.cpp file names.
 qt5_add_resources(RESOURCE_FILES
         resources/oxygenicons.qrc
         resources/TangoIcons.qrc

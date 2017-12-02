@@ -64,9 +64,10 @@ add_definitions(-DCUE_EXPORT=)
 # Add the given directories to those the compiler uses to search for include files.
 # The include directories are added to the INCLUDE_DIRECTORIES directory property
 # for the current CMakeLists file. They are also added to the INCLUDE_DIRECTORIES target property for each target in the current CMakeLists file.
-include_directories("libcue")
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+#include_directories("libcue")
+#include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+# Create the "libcue" target.
 add_library(libcue STATIC ${CUE_SOURCES}
         ${BISON_CueParser_OUTPUTS}
         ${FLEX_CueScanner_OUTPUTS})
@@ -74,6 +75,7 @@ if(WIN32)
     # On Windows the including exe will need to define out the __attribute__((visibility))
     # CMake + VS makes this difficult (no function-type macros on command line).
     #target_compile_definitions(libcue INTERFACE CUE_EXPORT=)
+    target_include_directories(libcue PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/libcue)
     target_include_directories(libcue PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_compile_options(libcue PUBLIC -FIlibcue_config_win.h)
 endif()
@@ -81,8 +83,3 @@ endif()
 #install(TARGETS cue DESTINATION lib)
 #install(FILES ${HEADERS} DESTINATION include)
 
-#message(STATUS "")
-#get_cmake_property(_variableNames VARIABLES)
-#foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
