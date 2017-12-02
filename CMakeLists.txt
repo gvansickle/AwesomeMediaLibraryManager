@@ -41,7 +41,7 @@ project(AwesomeMediaLibraryManager
         LANGUAGES C CXX)
 
 # Add folder where we keep support *.cmake's.
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 # CMake debug.
 set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${PROJECT_BINARY_DIR}/ReportUndefinedProperties.txt")
@@ -317,24 +317,58 @@ Checks: '-*,llvm-twine-local'
 ")
 
 
+### Installation.
+install(TARGETS ${PROJECT_NAME}
+		RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+		COMPONENT coreapp
+	)
 
-### START GRVS INSTALLER STUFF.
-# The executable target we want to create an installer for.
-set(PRIMARY_TARGET "${PROJECT_NAME}")
-set(PRIMARY_TARGET_INSTALLER "${PROJECT_NAME}Installer")
-
-### START INSTALLER STUFF
+### Packaging
 # From within the build directory, just run the following commands to create the package:
 # $ cmake ..
 # $ make package
 
-install(
-        TARGETS ${PRIMARY_TARGET}
-        RUNTIME DESTINATION "${PROJECT_NAME}" # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
-        COMPONENT the_installer_comp
-        )
+# Relocate this?
+set(CPACK_GENERATOR NSIS)
 
-include(CPackHelper)
+# Generic.
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "1")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} - The Awesome Media Library Manager")
+set(CPACK_PACKAGE_CONTACT "Gary R. Van Sickle <${PROJECT_AUTHOR_EMAIL}>")
+set(CPACK_PACKAGE_VENDOR "${COMPANY}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
+set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
+
+set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME};${PROJECT_NAME}")
+
+#set(CPACK_PACKAGE_VERSION "1.0.0")
+
+# Packaging: NSIS
+set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
+set(CPACK_NSIS_MENU_LINKS "https://github.com/gvansickle/AwesomeMediaLibraryManager" "AwesomeMediaLibraryManager at GitHub")
+
+set(CPACK_NSIS_PACKAGE_ARCHITECTURE "64")
+set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
+
+set(CPACK_NSIS_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
+set(CPACK_NSIS_MUI_FINISHPAGE_RUN ${PROJECT_NAME})
+
+include(CPack)
+include(CpackNSIS)
+
+# CONFIGURE COMPONENTS
+cpack_add_component(
+		coreapp
+		DISPLAY_NAME "${PROJECT_NAME} application"
+		DESCRIPTION "Install ${PROJECT_NAME} application files"
+		REQUIRED)
+
+#include(CPackHelper)
 
 #### Show package configuration files
 add_custom_target(package_files
@@ -355,5 +389,5 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION META_FILES_TO_INCLUDE)
-#message_cpack_summary()
+message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
