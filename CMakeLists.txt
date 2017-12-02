@@ -56,8 +56,6 @@ include(QtCommon)
 # QtCommon: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
 init_os_bundle()
 
-set(SETTINGS_ORGANIZATION "Gary R. Van Sickle")
-set(SETTINGS_APPLICATION ${PROJECT_NAME})
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
 
@@ -124,14 +122,14 @@ set(CPACK_IFW_VERBOSE YES)
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 
-# Set additional project information FBO QtCommon.cmake.
-# Resource directory FBO QtCommon.
+# Set additional project information FBO QtCommon.cmake/add_project_meta().
+# Resource directory FBO QtCommon/add_project_meta().
 set(RESOURCE_FOLDER resources)
 # The basename of the application's icon.
 set(ICON_NAME "AppIcon")
-# app.setOrganizationName()?
-set(COMPANY "gvansickle")
-set(COPYRIGHT "${FULL_COPYRIGHT_STRING}")
+# For the "CompanyName" field in the rc file.
+set(RC_COMPANYNAME "${PROJECT_AUTHOR}")
+set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 # Reverse of app.setOrganizationDomain()?
 set(IDENTIFIER "io.github.gvansickle")
 
@@ -282,6 +280,7 @@ set(SOURCE_FILES
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a QtIFW build.
 add_project_meta(META_FILES_TO_INCLUDE)
+cmake_print_variables(META_FILES_TO_INCLUDE)
 
 # Resource files.
 ## Does this cover it for QtCommon?  Or does it want to know the *.qrc files? E.g.:
@@ -345,7 +344,7 @@ set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(CPACK_PACKAGE_VERSION_PATCH "1")
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} - ${PROJECT_DESCRIPTION}")
-set(CPACK_PACKAGE_CONTACT "Gary R. Van Sickle <${PROJECT_AUTHOR_EMAIL}>")
+set(CPACK_PACKAGE_CONTACT "${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 set(CPACK_PACKAGE_VENDOR "${COMPANY}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROJECT_NAME}")
 set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
@@ -363,13 +362,14 @@ set(CPACK_NSIS_PACKAGE_ARCHITECTURE "64")
 set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
 
 set(CPACK_NSIS_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
+# Add a "Finished, Run the app?" page to the installer.
 set(CPACK_NSIS_MUI_FINISHPAGE_RUN ${PROJECT_NAME})
 
 include(CPack)
 include(CpackNSIS)
 include(CPackIFW REQUIRED)
 
-# CONFIGURE COMPONENTS
+# Add components to be packaged by CPack.
 cpack_add_component(
 		coreapp
 		DISPLAY_NAME "${PROJECT_NAME} application"
