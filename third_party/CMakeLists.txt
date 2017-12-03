@@ -52,11 +52,11 @@ set(CUE_SOURCES ${HEADERS}
 
 bison_target(CueParser
         ${LIBCUE_SRC_DIR}/cue_parser.y
-        ${CMAKE_BINARY_DIR}/cue_parser.c
+        ${libcue_BINARY_DIR}/cue_parser.c
         COMPILE_FLAGS ${BISON_FLAGS_EXTRA})
 flex_target(CueScanner
         ${LIBCUE_SRC_DIR}/cue_scanner.l
-        ${CMAKE_BINARY_DIR}/cue_scanner.c
+        ${libcue_BINARY_DIR}/cue_scanner.c
         COMPILE_FLAGS ${FLEX_FLAGS_EXTRA})
 ADD_FLEX_BISON_DEPENDENCY(CueScanner CueParser)
 
@@ -81,7 +81,7 @@ endif()
 #        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 #        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 #        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-#install(FILES ${CMAKE_SOURCE_DIR}/libcue.h
+#install(FILES ${libcue_SOURCE_DIR}/libcue.h
 #        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 message(STATUS "Completed processing third_party/CMakeLists.txt")
