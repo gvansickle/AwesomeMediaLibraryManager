@@ -46,6 +46,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 # Include some basic cmake functions.
 include(CMakePrintHelpers)
+include(PrintTargetProperties)
 include(helperfunctions)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
@@ -132,19 +133,36 @@ set(IDENTIFIER "io.github.gvansickle")
 ###
 ### The third-party packages we require.
 ###
+
+set(AMLM_LIBCUE_TARGET "")
+set(AMLM_TAGLIB_TARGET "")
+
 if(NOT WIN32)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LIBCUE REQUIRED libcue)
-    pkg_check_modules(TAGLIB REQUIRED taglib>=1.6)
+
+    pkg_check_modules(LIBCUE REQUIRED libcue
+			IMPORTED_TARGET)
+	if(LIBCUE_FOUND)
+		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
+	endif()
+
+    pkg_check_modules(TAGLIB REQUIRED taglib>=1.6
+			IMPORTED_TARGET)
+	if(TAGLIB_FOUND)
+		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
+	endif()
 else()
     set(CMAKE_VERBOSE_MAKEFILE ON)
 
-    # libcue.
+    # Use the in-tree copy of libcue.
     add_subdirectory("third_party")
-    include_directories("third_party/libcue")
-    set(LIBCUE_LIBRARIES libcue)
+    #include_directories("third_party/libcue")
+    #set(LIBCUE_LIBRARIES libcue)
+	set(AMLM_LIBCUE_TARGET "libcue")
 
-    # TagLib.
+	print_target_properties(${AMLM_LIBCUE_TARGET})
+
+	# TagLib.
     add_definitions(-DTAGLIB_STATIC)
     set(TAGLIB_PATH_PREFIX "${PROJECT_SOURCE_DIR}/../taglib-1.11.1/taglib")
     #if(debug)
@@ -302,7 +320,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-        ${TAGLIB_LIBRARIES} ${LIBCUE_LIBRARIES})
+        ${TAGLIB_LIBRARIES} ${AMLM_LIBCUE_TARGET})
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
@@ -311,6 +329,7 @@ Checks: '-*,llvm-twine-local'
 ...
 ")
 
+print_target_properties(${PROJECT_NAME})
 
 ### Installation.
 install(TARGETS ${PROJECT_NAME}
