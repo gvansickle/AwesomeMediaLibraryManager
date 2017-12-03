@@ -341,20 +341,10 @@ add_custom_target(packaging
     ALL
     DEPENDS ${PROJECT_NAME}
     COMMENT "Packaging ${PROJECT_NAME}...")
-
-# Add custom commands and install targets for Qt windeploy.
-#do_windeploy(${PROJECT_NAME} coreapp)
-include(package/PackageWindows.cmake)
-
-#add_custom_target(prep_for_installer
-#    COMMENT "Doing windeploy..."
-#    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies, exe: $<TARGET_FILE:${PROJECT_NAME}>"
-#    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
-#    COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${PROJECT_NAME}>
-#    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies complete.  Intermediate directory is: ${CMAKE_BINARY_DIR}/windeployqt_stuff"
-#    )
-
-
+if(WIN32)
+    # Add custom commands and install targets for Qt windeploy.
+    include(package/PackageWindows.cmake)
+endif()
 
 ### Packaging
 # From within the build directory, just run the following commands to create the package:
