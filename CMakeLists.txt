@@ -156,13 +156,12 @@ else()
 
     # Use the in-tree copy of libcue.
     add_subdirectory("third_party")
-    #include_directories("third_party/libcue")
-    #set(LIBCUE_LIBRARIES libcue)
-	set(AMLM_LIBCUE_TARGET "libcue")
 
-	print_target_properties(${AMLM_LIBCUE_TARGET})
+    set(AMLM_LIBCUE_TARGET "libcue")
 
-	# TagLib.
+    print_target_properties(${AMLM_LIBCUE_TARGET})
+
+    # TagLib.
     add_definitions(-DTAGLIB_STATIC)
     set(TAGLIB_PATH_PREFIX "${PROJECT_SOURCE_DIR}/../taglib-1.11.1/taglib")
     #if(debug)
@@ -337,8 +336,24 @@ install(TARGETS ${PROJECT_NAME}
 		COMPONENT coreapp
 	)
 
+# Custom target for coordinating the packaging.
+add_custom_target(packaging
+    ALL
+    DEPENDS ${PROJECT_NAME}
+    COMMENT "Packaging ${PROJECT_NAME}...")
+
 # Add custom commands and install targets for Qt windeploy.
-do_windeploy(${PROJECT_NAME} coreapp)
+#do_windeploy(${PROJECT_NAME} coreapp)
+include(package/PackageWindows.cmake)
+
+#add_custom_target(prep_for_installer
+#    COMMENT "Doing windeploy..."
+#    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies, exe: $<TARGET_FILE:${PROJECT_NAME}>"
+#    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
+#    COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${PROJECT_NAME}>
+#    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies complete.  Intermediate directory is: ${CMAKE_BINARY_DIR}/windeployqt_stuff"
+#    )
+
 
 
 ### Packaging
