@@ -115,6 +115,13 @@ message(STATUS "Found Qt ${Qt5Core_VERSION_STRING} at ${Qt5Core_location}")
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 set(CPACK_IFW_VERBOSE YES)
+#set(CMAKE_DEBUG_TARGET_PROPERTIES
+#		INCLUDE_DIRECTORIES
+#		COMPILE_DEFINITIONS
+#		POSITION_INDEPENDENT_CODE
+#		CONTAINER_SIZE_REQUIRED
+#		LIB_VERSION
+#		)
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
@@ -134,6 +141,8 @@ set(IDENTIFIER "io.github.gvansickle")
 ### The third-party packages we require.
 ###
 
+include(ExternalProject)
+
 set(AMLM_LIBCUE_TARGET "")
 set(AMLM_TAGLIB_TARGET "")
 
@@ -152,8 +161,6 @@ if(NOT WIN32)
 		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
 	endif()
 else()
-    set(CMAKE_VERBOSE_MAKEFILE ON)
-
     # Use the in-tree copy of libcue.
     add_subdirectory("third_party"
 			EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
@@ -164,48 +171,51 @@ else()
     print_target_properties(${AMLM_LIBCUE_TARGET})
 
     # TagLib.
-	add_subdirectory("third_party/taglib"
-			EXCLUDE_FROM_ALL # Don't tie this lib directly to the ALL target.
-			)
-		# @note There's currently a bug in taglib's taglib/taglib/CmakeLists.txt:
-		# include_directories(
-		#   ${CMAKE_CURRENT_SOURCE_DIR}/toolkit
-		#   [...]
-		#   ${CMAKE_SOURCE_DIR}/3rdparty
-		#
-		# The last line point to our top-level directory, not taglib's.
-		# We work around this here.
-		target_include_directories(tag PRIVATE "third_party/taglib/3rdparty")
+    ExternalProject_Add(taglib_internal
+            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
+            LOG_CONFIGURE TRUE
+            LOG_BUILD TRUE
+            LOG_INSTALL TRUE
+            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+            STEP_TARGETS install
+            )
+    ExternalProject_Get_Property(taglib_internal INSTALL_DIR)
+    message(STATUS "taglib_internal INSTALL_DIR: ${INSTALL_DIR}")
+    print_target_properties(taglib_internal)
+
+    add_library(taglib UNKNOWN IMPORTED)
+    set_target_properties(taglib PROPERTIES
+        IMPORTED_LOCATION ${INSTALL_DIR}/lib/tag.lib
+        INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+#    target_include_directories(taglib PUBLIC
+#            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+#            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libcue>
+#            $<INSTALL_INTERFACE:${INSTALL_DIR}/include>
+#    )
+    add_dependencies(taglib taglib_internal-install)
+
+#	add_subdirectory("third_party/taglib"
+#			EXCLUDE_FROM_ALL # Don't tie this lib directly to the ALL target.
+#			)
+
+	#		# @note There's currently a bug in taglib's taglib/taglib/CmakeLists.txt:
+#		# include_directories(
+#		#   ${CMAKE_CURRENT_SOURCE_DIR}/toolkit
+#		#   [...]
+#		#   ${CMAKE_SOURCE_DIR}/3rdparty
+#		#
+#		# The last line point to our top-level directory, not taglib's.
+#		# We work around this here.
+#		target_include_directories(tag PRIVATE "third_party/taglib/3rdparty")
+#
+#		include_directories("${CMAKE_SOURCE_DIR}/third_party/taglib/toolkit"
+#				"${CMAKE_SOURCE_DIR}/third_party/taglib")
 
 
-	set(AMLM_TAGLIB_TARGET "tag")
+	set(AMLM_TAGLIB_TARGET "taglib")
 
 	print_target_properties(${AMLM_TAGLIB_TARGET})
 
-	#    add_definitions(-DTAGLIB_STATIC)
-#    set(TAGLIB_PATH_PREFIX "${PROJECT_SOURCE_DIR}/../taglib-1.11.1/taglib")
-#    set(TAGLIB_LIB_PATH "${TAGLIB_PATH_PREFIX}/Debug")
-#    message(STATUS "${TAGLIB_LIB_PATH}")
-#    # Include dir.
-#    find_path(TAGLIB_INCLUDE_DIR
-#            NAMES taglib/taglib.h
-#            PATHS ${TAGLIB_PATH_PREFIX}-install/include)
-#    # The library itself.
-#    find_library(TAGLIB_LIBRARY
-#            NAMES tag.lib
-#            PATHS ${TAGLIB_LIB_PATH})
-#    # handle the QUIETLY and REQUIRED arguments and set TAGLIB_FOUND to TRUE
-#    # if all listed variables are TRUE
-#    include(FindPackageHandleStandardArgs)
-#    find_package_handle_standard_args(TagLib DEFAULT_MSG
-#            TAGLIB_LIBRARY TAGLIB_INCLUDE_DIR)
-#    set(TAGLIB_LIBRARIES ${TAGLIB_LIBRARY})
-#    set(TAGLIB_INCLUDE_DIRS ${TAGLIB_INCLUDE_DIR})
-#    message(STATUS "TagLib found?: ${TAGLIB_FOUND}")
-#
-#    if(NOT TAGLIB_LIBRARY)
-#        message(FATAL_ERROR "TagLib not found.")
-#    endif()
 endif()
 
 # Set up definitions and paths
@@ -214,9 +224,6 @@ if(WIN32)
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
 cmake_print_variables(QT_DEFINITIONS)
-
-link_directories(${TAGLIB_LIBRARY_DIRS})
-include_directories(${TAGLIB_INCLUDE_DIRS})
 
 set(HEADER_FILES
 	gui/ActivityProgressIndicator.h
@@ -334,7 +341,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "

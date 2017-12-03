@@ -68,7 +68,6 @@ target_include_directories(libcue PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/libcue)
 if(WIN32)
     # On Windows the including exe will need to define out the __attribute__((visibility))
     # CMake + VS makes this difficult (no function-type macros on command line).
-    #target_compile_definitions(libcue INTERFACE CUE_EXPORT=)
     target_include_directories(libcue PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libcue>
