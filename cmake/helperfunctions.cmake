@@ -48,26 +48,4 @@ macro(message_cpack_summary)
     cmake_print_variables(CPACK_IFW_PACKAGE_NAME CPACK_IFW_FRAMEWORK_VERSION)
 endmacro()
 
-macro(do_windeploy arg_coreapp_target arg_install_component)
-    if(WIN32)
-        message(STATUS "Setting up Qt-related dependencies for installer.")
-        if(EXISTS $ENV{QTDIR}/bin/windeployqt.exe)
-                add_custom_command(
-                            TARGET ${arg_coreapp_target} POST_BUILD
-                                COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies, exe: $<TARGET_FILE:${arg_coreapp_target}>"
-                                COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
-                                COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${arg_coreapp_target}>
-                                COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies complete.  Intermediate directory is: ${CMAKE_BINARY_DIR}/windeployqt_stuff"
-                                )
 
-                install(
-                        DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/
-                        DESTINATION .
-                        COMPONENT ${arg_install_component}
-                        )
-                message(STATUS "Qt-related dependencies set up complete.  Intermediate directory is ${CMAKE_BINARY_DIR}/windeployqt_stuff")
-        else()
-                message("Unable to find executable QTDIR/bin/windeployqt.")
-        endif()
-    endif()
-endmacro()

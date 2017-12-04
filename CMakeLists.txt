@@ -44,16 +44,14 @@ project(AwesomeMediaLibraryManager
 # Add folder where we keep support *.cmake's.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-# CMake debug.  Does nothing.
-set_property(GLOBAL PROPERTY REPORT_UNDEFINED_PROPERTIES "${PROJECT_BINARY_DIR}/ReportUndefinedProperties.txt")
-
 # Include some basic cmake functions.
 include(CMakePrintHelpers)
+include(PrintTargetProperties)
 include(helperfunctions)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 
-# QtCommon: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
+# QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
 init_os_bundle()
 
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
@@ -105,10 +103,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-# Undo some of what QtCommon did.
-set(CMAKE_AUTOMOC OFF)
-set(CMAKE_AUTORCC OFF)
-set(CMAKE_AUTORCC_OPTIONS "--temp")
+
+### @todo do we need this?
+#set(CMAKE_AUTORCC_OPTIONS "--temp")
 
 # The Qt5 packages we require.
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Concurrent)
@@ -118,6 +115,13 @@ message(STATUS "Found Qt ${Qt5Core_VERSION_STRING} at ${Qt5Core_location}")
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 set(CPACK_IFW_VERBOSE YES)
+#set(CMAKE_DEBUG_TARGET_PROPERTIES
+#		INCLUDE_DIRECTORIES
+#		COMPILE_DEFINITIONS
+#		POSITION_INDEPENDENT_CODE
+#		CONTAINER_SIZE_REQUIRED
+#		LIB_VERSION
+#		)
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
@@ -136,48 +140,63 @@ set(IDENTIFIER "io.github.gvansickle")
 ###
 ### The third-party packages we require.
 ###
+
+include(ExternalProject)
+
+set(AMLM_LIBCUE_TARGET "")
+set(AMLM_TAGLIB_TARGET "")
+
 if(NOT WIN32)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LIBCUE REQUIRED libcue)
-	pkg_check_modules(TAGLIB REQUIRED taglib>=1.6)
+
+    pkg_check_modules(LIBCUE REQUIRED libcue
+			IMPORTED_TARGET)
+	if(LIBCUE_FOUND)
+		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
+	endif()
+
+    pkg_check_modules(TAGLIB REQUIRED taglib>=1.6
+			IMPORTED_TARGET)
+	if(TAGLIB_FOUND)
+		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
+	endif()
 else()
-    set(CMAKE_VERBOSE_MAKEFILE ON)
+    # Use the in-tree copy of libcue.
+    add_subdirectory("third_party"
+			EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
+			)
 
-    # libcue.
-    add_subdirectory("third_party")
-    include_directories("third_party/libcue")
-    set(LIBCUE_LIBRARIES libcue)
+    set(AMLM_LIBCUE_TARGET "libcue")
 
-    # TagLib.
-    add_definitions(-DTAGLIB_STATIC)
-    set(TAGLIB_PATH_PREFIX "${PROJECT_SOURCE_DIR}/../taglib-1.11.1/taglib")
-    #if(debug)
-    set(TAGLIB_LIB_PATH "${TAGLIB_PATH_PREFIX}/Debug")
-    message(STATUS "${TAGLIB_LIB_PATH}")
-    # Include dir.
-    find_path(TAGLIB_INCLUDE_DIR
-            NAMES taglib/taglib.h
-            PATHS ${TAGLIB_PATH_PREFIX}-install/include)
-    # The library itself.
-    find_library(TAGLIB_LIBRARY
-            NAMES tag.lib
-            PATHS ${TAGLIB_LIB_PATH})
-    # handle the QUIETLY and REQUIRED arguments and set TAGLIB_FOUND to TRUE
-    # if all listed variables are TRUE
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(TagLib DEFAULT_MSG
-            TAGLIB_LIBRARY TAGLIB_INCLUDE_DIR)
-    set(TAGLIB_LIBRARIES ${TAGLIB_LIBRARY})
-    set(TAGLIB_INCLUDE_DIRS ${TAGLIB_INCLUDE_DIR})
-    message(STATUS "TagLib found?: ${TAGLIB_FOUND}")
+    print_target_properties(${AMLM_LIBCUE_TARGET})
 
-    ### @todo Uninstalled lib, need to put /toolkit on lookup path.
-    #INCLUDEPATH += $$TAGLIB_INSTALL_PATH/include
-    #DEPENDPATH += $$TAGLIB_INSTALL_PATH/include
+    # Use the in-tree copy of TagLib.
+    ExternalProject_Add(taglib_internal
+            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
+            LOG_CONFIGURE TRUE
+            LOG_BUILD TRUE
+            LOG_INSTALL TRUE
+            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DBUILD_BINDINGS=OFF
+            STEP_TARGETS install
+            )
+    ExternalProject_Get_Property(taglib_internal INSTALL_DIR)
+    message(STATUS "taglib_internal INSTALL_DIR: ${INSTALL_DIR}")
+    print_target_properties(taglib_internal)
 
-    if(NOT TAGLIB_LIBRARY)
-        message(FATAL_ERROR "TagLib not found.")
-    endif()
+    add_library(taglib STATIC IMPORTED)
+    set_target_properties(taglib PROPERTIES
+        IMPORTED_LOCATION ${INSTALL_DIR}/lib/tag.lib
+        INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include
+        INTERFACE_COMPILE_OPTIONS -DTAGLIB_STATIC
+        )
+    # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
+    file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
+    add_dependencies(taglib taglib_internal-install)
+
+    set(AMLM_TAGLIB_TARGET "taglib")
+
+    print_target_properties(${AMLM_TAGLIB_TARGET})
+
 endif()
 
 # Set up definitions and paths
@@ -186,9 +205,6 @@ if(WIN32)
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
 cmake_print_variables(QT_DEFINITIONS)
-
-link_directories(${TAGLIB_LIBRARY_DIRS})
-include_directories(${TAGLIB_INCLUDE_DIRS})
 
 set(HEADER_FILES
 	gui/ActivityProgressIndicator.h
@@ -278,15 +294,12 @@ set(SOURCE_FILES
         )
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
-# needed for a QtIFW build.
+# needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
-# Resource files.
-## Does this cover it for QtCommon?  Or does it want to know the *.qrc files? E.g.:
-#set(RESOURCE_FILES
-#        resources/oxygenicons.qrc
-#        resources/TangoIcons.qrc) ???
+# Qt5 Resource (qrc) files.
+# RESOURCE_FILES is a list of the generated output *.cpp file names.
 qt5_add_resources(RESOURCE_FILES
         resources/oxygenicons.qrc
         resources/TangoIcons.qrc
@@ -309,7 +322,8 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-        ${TAGLIB_LIBRARIES} ${LIBCUE_LIBRARIES})
+		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
@@ -318,6 +332,7 @@ Checks: '-*,llvm-twine-local'
 ...
 ")
 
+print_target_properties(${PROJECT_NAME})
 
 ### Installation.
 install(TARGETS ${PROJECT_NAME}
@@ -325,9 +340,15 @@ install(TARGETS ${PROJECT_NAME}
 		COMPONENT coreapp
 	)
 
-# Add custom commands and install targets for Qt windeploy.
-do_windeploy(${PROJECT_NAME} coreapp)
-
+# Custom target for coordinating the packaging.
+add_custom_target(packaging
+    ALL
+    DEPENDS ${PROJECT_NAME}
+    COMMENT "Packaging ${PROJECT_NAME}...")
+if(WIN32)
+    # Add custom commands and install targets for Qt windeploy.
+    include(package/PackageWindows.cmake)
+endif()
 
 ### Packaging
 # From within the build directory, just run the following commands to create the package:
