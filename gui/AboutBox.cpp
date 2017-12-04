@@ -33,12 +33,25 @@ public:
         setTitle(QString("About %1").arg(qApp->applicationDisplayName()));
         setSubTitle(QString("The Awesome Media Library Manager"));
 
-        m_label = new QLabel(tr("This wizard will generate a skeleton C++ class "
-                                  "definition, including a few functions. You simply "
-                                  "need to specify the class name and set a few "
-                                  "options to produce a header file and an "
-                                  "implementation file for your new C++ class."));
+        m_label = new QLabel(this);
+        m_label->setTextFormat(Qt::RichText);
+        m_label->setText(tr("<body>"
+                             "<a href=\"https://github.com/gvansickle/AwesomeMediaLibraryManager\">AwesomeMediaLibraryManager</a> is free software: you can redistribute it and/or modify"
+                                " it under the terms of the GNU General Public License as published by"
+                                " the Free Software Foundation, either version 3 of the License, or"
+                                " (at your option) any later version."
+                                "<br>"
+                                " AwesomeMediaLibraryManager is distributed in the hope that it will be useful,"
+                                " but WITHOUT ANY WARRANTY; without even the implied warranty of"
+                                " MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the"
+                                " GNU General Public License for more details."
+                                "<br>"
+                                "You should have received a copy of the GNU General Public License"
+                                " along with AwesomeMediaLibraryManager.  If not, see <a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a>."
+                            "</body>"));
         m_label->setWordWrap(true);
+        m_label->setTextInteractionFlags(Qt::LinksAccessibleByKeyboard | Qt::LinksAccessibleByMouse);
+        m_label->setOpenExternalLinks(true);
 
         QVBoxLayout *layout = new QVBoxLayout;
         layout->addWidget(m_label);
