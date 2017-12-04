@@ -178,7 +178,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
         // Mainly this is CUESHEET and LOG entries in FLAC VORBIS_COMMENT blocks, which are gigantic and destroy the
         // formatting.
         ///@todo Maybe also filter on size of values.
-        if(key.contains(QRegularExpression(R"!(CUESHEET|LOG)!")))
+        if(key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
         {
             continue;
         }
