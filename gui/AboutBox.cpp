@@ -83,5 +83,5 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QWizard(pare
 void AboutBox::fitToContents(int pageid)
 {
     // Size Wizard to fit the page.
-    adjustSize();
+    updateGeometry();
 }
