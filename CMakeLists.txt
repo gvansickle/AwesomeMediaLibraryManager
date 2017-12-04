@@ -387,7 +387,9 @@ set(CPACK_NSIS_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
 set(CPACK_NSIS_MUI_FINISHPAGE_RUN ${PROJECT_NAME})
 
 include(CPack)
-include(CpackNSIS)
+if(WIN32)
+	include(CpackNSIS)
+endif()
 include(CPackIFW REQUIRED)
 
 # Add components to be packaged by CPack.
