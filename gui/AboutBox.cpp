@@ -75,4 +75,13 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QWizard(pare
     setWindowTitle(tr("About %1").arg(qApp->applicationDisplayName()));
 
     addPage(new AboutPage(this));
+
+    /// @todo This doesn't work.
+    connect(this, &AboutBox::currentIdChanged, this, &AboutBox::fitToContents);
+}
+
+void AboutBox::fitToContents(int pageid)
+{
+    // Size Wizard to fit the page.
+    adjustSize();
 }

@@ -29,6 +29,8 @@ class AboutBox : public QWizard
 public:
     AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
 
+public slots:
+    void fitToContents(int pageid);
 };
 
 
