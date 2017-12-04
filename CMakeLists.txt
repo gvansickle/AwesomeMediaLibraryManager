@@ -250,6 +250,7 @@ set(HEADER_FILES
 	gui/ActivityProgressWidget.h
         utils/concurrency/ReportingRunner.h
         utils/AsyncDirScanner.h
+        gui/AboutBox.h
 	)
 
 # Source file list.
@@ -291,7 +292,8 @@ set(SOURCE_FILES
 	gui/ActivityProgressWidget.cpp
         utils/concurrency/ReportingRunner.cpp
         utils/AsyncDirScanner.cpp
-		gui/AboutBox.cpp gui/AboutBox.h)
+        gui/AboutBox.cpp
+        )
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
