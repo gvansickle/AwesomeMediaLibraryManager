@@ -22,6 +22,8 @@
 
 #include <QWizard>
 
+class QLabel;
+
 class AboutBox : public QWizard
 {
     Q_OBJECT
@@ -31,6 +33,18 @@ public:
 
 public slots:
     void fitToContents(int pageid);
+};
+
+class AboutPage : public QWizardPage
+{
+	Q_OBJECT
+
+public:
+	AboutPage(QWidget* parent = nullptr);
+
+private:
+
+	QLabel *m_label;
 };
 
 
