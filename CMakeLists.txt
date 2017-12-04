@@ -104,9 +104,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-### @todo do we need this?
-#set(CMAKE_AUTORCC_OPTIONS "--temp")
-
 # The Qt5 packages we require.
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Concurrent)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
@@ -176,7 +173,7 @@ else()
             LOG_CONFIGURE TRUE
             LOG_BUILD TRUE
             LOG_INSTALL TRUE
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DBUILD_BINDINGS=OFF
+            CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF"
             STEP_TARGETS install
             )
     ExternalProject_Get_Property(taglib_internal INSTALL_DIR)
@@ -243,19 +240,19 @@ set(HEADER_FILES
 	utils/Fraction.h
 	utils/in.h
 	utils/MapConverter.h
-        utils/StringHelpers.h
+	utils/StringHelpers.h
 	utils/Theme.h
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	gui/ActivityProgressWidget.h
-        utils/concurrency/ReportingRunner.h
-        utils/AsyncDirScanner.h
-        gui/AboutBox.h
+	utils/concurrency/ReportingRunner.h
+	utils/AsyncDirScanner.h
+	gui/AboutBox.h
 	)
 
 # Source file list.
 set(SOURCE_FILES
-        gui/CollectionDockWidget.cpp
+	gui/CollectionDockWidget.cpp
 	gui/Experimental.cpp
 	gui/FilterWidget.cpp
 	gui/ItemDelegateLength.cpp
@@ -272,7 +269,7 @@ set(SOURCE_FILES
 	logic/LibraryEntry.cpp
 	logic/LibraryEntryMimeData.cpp
 	logic/LibraryModel.cpp
-        logic/LibrarySortFilterProxyModel.cpp
+	logic/LibrarySortFilterProxyModel.cpp
 	logic/Metadata.cpp
 	logic/MetadataAbstractBase.cpp
 	logic/MetadataFromCache.cpp
@@ -290,10 +287,10 @@ set(SOURCE_FILES
 	main.cpp
 	logic/LibraryRescanner.cpp
 	gui/ActivityProgressWidget.cpp
-        utils/concurrency/ReportingRunner.cpp
-        utils/AsyncDirScanner.cpp
-        gui/AboutBox.cpp
-        )
+	utils/concurrency/ReportingRunner.cpp
+	utils/AsyncDirScanner.cpp
+	gui/AboutBox.cpp
+		)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
