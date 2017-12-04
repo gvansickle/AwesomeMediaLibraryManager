@@ -104,6 +104,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# Sanitizers.
+find_package(Sanitizers)
+
 # The Qt5 packages we require.
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Concurrent)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
@@ -325,6 +328,8 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY AUTORCC ON)
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+# Add sanitizers.
+add_sanitizers(${PROJECT_NAME})
 
 
 # Stop clang-tidy from scanning generated files.
