@@ -176,17 +176,19 @@ else()
             LOG_CONFIGURE TRUE
             LOG_BUILD TRUE
             LOG_INSTALL TRUE
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DBUILD_BINDINGS=OFF
             STEP_TARGETS install
             )
     ExternalProject_Get_Property(taglib_internal INSTALL_DIR)
     message(STATUS "taglib_internal INSTALL_DIR: ${INSTALL_DIR}")
     print_target_properties(taglib_internal)
 
-    add_library(taglib UNKNOWN IMPORTED)
+    add_library(taglib STATIC IMPORTED)
     set_target_properties(taglib PROPERTIES
         IMPORTED_LOCATION ${INSTALL_DIR}/lib/tag.lib
-        INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include)
+        INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include
+        )
+    add_definitions(-DTAGLIB_STATIC)
 #    target_include_directories(taglib PUBLIC
 #            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 #            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libcue>
@@ -198,7 +200,7 @@ else()
 #			EXCLUDE_FROM_ALL # Don't tie this lib directly to the ALL target.
 #			)
 
-	#		# @note There's currently a bug in taglib's taglib/taglib/CmakeLists.txt:
+#		# @note There's currently a bug in taglib's taglib/taglib/CmakeLists.txt:
 #		# include_directories(
 #		#   ${CMAKE_CURRENT_SOURCE_DIR}/toolkit
 #		#   [...]
@@ -207,9 +209,6 @@ else()
 #		# The last line point to our top-level directory, not taglib's.
 #		# We work around this here.
 #		target_include_directories(tag PRIVATE "third_party/taglib/3rdparty")
-#
-#		include_directories("${CMAKE_SOURCE_DIR}/third_party/taglib/toolkit"
-#				"${CMAKE_SOURCE_DIR}/third_party/taglib")
 
 
 	set(AMLM_TAGLIB_TARGET "taglib")
