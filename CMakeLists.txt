@@ -170,7 +170,7 @@ else()
 
     print_target_properties(${AMLM_LIBCUE_TARGET})
 
-    # TagLib.
+    # Use the in-tree copy of TagLib.
     ExternalProject_Add(taglib_internal
             SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
             LOG_CONFIGURE TRUE
@@ -187,33 +187,15 @@ else()
     set_target_properties(taglib PROPERTIES
         IMPORTED_LOCATION ${INSTALL_DIR}/lib/tag.lib
         INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include
+        INTERFACE_COMPILE_OPTIONS -DTAGLIB_STATIC
         )
-    add_definitions(-DTAGLIB_STATIC)
-#    target_include_directories(taglib PUBLIC
-#            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-#            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libcue>
-#            $<INSTALL_INTERFACE:${INSTALL_DIR}/include>
-#    )
+    # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
+    file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
     add_dependencies(taglib taglib_internal-install)
 
-#	add_subdirectory("third_party/taglib"
-#			EXCLUDE_FROM_ALL # Don't tie this lib directly to the ALL target.
-#			)
+    set(AMLM_TAGLIB_TARGET "taglib")
 
-#		# @note There's currently a bug in taglib's taglib/taglib/CmakeLists.txt:
-#		# include_directories(
-#		#   ${CMAKE_CURRENT_SOURCE_DIR}/toolkit
-#		#   [...]
-#		#   ${CMAKE_SOURCE_DIR}/3rdparty
-#		#
-#		# The last line point to our top-level directory, not taglib's.
-#		# We work around this here.
-#		target_include_directories(tag PRIVATE "third_party/taglib/3rdparty")
-
-
-	set(AMLM_TAGLIB_TARGET "taglib")
-
-	print_target_properties(${AMLM_TAGLIB_TARGET})
+    print_target_properties(${AMLM_TAGLIB_TARGET})
 
 endif()
 
@@ -341,6 +323,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
