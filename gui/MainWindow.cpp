@@ -70,6 +70,7 @@
 #include <QtWidgets/QWhatsThis>
 
 #include "gui/ActivityProgressWidget.h"
+#include "AboutBox.h"
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags)
 {
@@ -1056,7 +1057,9 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 
 void MainWindow::about()
 {
-    QMessageBox::about(this, "About", "This is where the About box text goes.");
+    AboutBox about_box(this);
+
+	about_box.exec();
 }
 
 

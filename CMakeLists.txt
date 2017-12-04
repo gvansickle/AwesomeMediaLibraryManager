@@ -104,9 +104,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-### @todo do we need this?
-#set(CMAKE_AUTORCC_OPTIONS "--temp")
-
 # The Qt5 packages we require.
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Concurrent)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
@@ -176,7 +173,7 @@ else()
             LOG_CONFIGURE TRUE
             LOG_BUILD TRUE
             LOG_INSTALL TRUE
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DBUILD_BINDINGS=OFF
+            CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF"
             STEP_TARGETS install
             )
     ExternalProject_Get_Property(taglib_internal INSTALL_DIR)
@@ -200,11 +197,9 @@ else()
 endif()
 
 # Set up definitions and paths
-add_definitions(${QT_DEFINITIONS})
 if(WIN32)
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
-cmake_print_variables(QT_DEFINITIONS)
 
 set(HEADER_FILES
 	gui/ActivityProgressIndicator.h
@@ -243,18 +238,19 @@ set(HEADER_FILES
 	utils/Fraction.h
 	utils/in.h
 	utils/MapConverter.h
-        utils/StringHelpers.h
+	utils/StringHelpers.h
 	utils/Theme.h
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	gui/ActivityProgressWidget.h
-        utils/concurrency/ReportingRunner.h
-        utils/AsyncDirScanner.h
+	utils/concurrency/ReportingRunner.h
+	utils/AsyncDirScanner.h
+	gui/AboutBox.h
 	)
 
 # Source file list.
 set(SOURCE_FILES
-        gui/CollectionDockWidget.cpp
+	gui/CollectionDockWidget.cpp
 	gui/Experimental.cpp
 	gui/FilterWidget.cpp
 	gui/ItemDelegateLength.cpp
@@ -271,7 +267,7 @@ set(SOURCE_FILES
 	logic/LibraryEntry.cpp
 	logic/LibraryEntryMimeData.cpp
 	logic/LibraryModel.cpp
-        logic/LibrarySortFilterProxyModel.cpp
+	logic/LibrarySortFilterProxyModel.cpp
 	logic/Metadata.cpp
 	logic/MetadataAbstractBase.cpp
 	logic/MetadataFromCache.cpp
@@ -289,9 +285,10 @@ set(SOURCE_FILES
 	main.cpp
 	logic/LibraryRescanner.cpp
 	gui/ActivityProgressWidget.cpp
-        utils/concurrency/ReportingRunner.cpp
-        utils/AsyncDirScanner.cpp
-		gui/AboutBox.cpp gui/AboutBox.h)
+	utils/concurrency/ReportingRunner.cpp
+	utils/AsyncDirScanner.cpp
+	gui/AboutBox.cpp
+		)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -299,6 +296,10 @@ add_project_meta(META_FILES_TO_INCLUDE)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
 # Qt5 Resource (qrc) files.
+#set(QRC_FILES
+#		resources/oxygenicons.qrc
+#		resources/TangoIcons.qrc
+#		resources/AppIcon.qrc)
 # RESOURCE_FILES is a list of the generated output *.cpp file names.
 qt5_add_resources(RESOURCE_FILES
         resources/oxygenicons.qrc
@@ -315,10 +316,11 @@ endforeach()
 ### The main executable.
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-        ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+        ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
         )
 # Only the Qt stuff needs AUTOMOC.
 set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
+set_property(TARGET ${PROJECT_NAME} PROPERTY AUTORCC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
