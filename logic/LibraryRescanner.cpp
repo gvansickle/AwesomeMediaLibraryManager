@@ -56,6 +56,10 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_re
 	connect(&m_dir_traversal_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
 	connect(&m_dir_traversal_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onDirTravResultReadyAt(int)));
 	connect(&m_dir_traversal_future_watcher, SIGNAL(finished()), SLOT(onDirTravFinished()));
+
+    // On Windows at least, these don't seem to throttle automatically as well as on Linux.
+    m_rescan_future_watcher.setPendingResultsLimit(10);
+    m_dir_traversal_future_watcher.setPendingResultsLimit(10);
 }
 
 LibraryRescanner::~LibraryRescanner()
