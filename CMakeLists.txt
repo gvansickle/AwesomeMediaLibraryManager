@@ -197,11 +197,9 @@ else()
 endif()
 
 # Set up definitions and paths
-add_definitions(${QT_DEFINITIONS})
 if(WIN32)
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
-cmake_print_variables(QT_DEFINITIONS)
 
 set(HEADER_FILES
 	gui/ActivityProgressIndicator.h
@@ -298,6 +296,10 @@ add_project_meta(META_FILES_TO_INCLUDE)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
 # Qt5 Resource (qrc) files.
+#set(QRC_FILES
+#		resources/oxygenicons.qrc
+#		resources/TangoIcons.qrc
+#		resources/AppIcon.qrc)
 # RESOURCE_FILES is a list of the generated output *.cpp file names.
 qt5_add_resources(RESOURCE_FILES
         resources/oxygenicons.qrc
@@ -314,10 +316,11 @@ endforeach()
 ### The main executable.
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-        ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+        ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
         )
 # Only the Qt stuff needs AUTOMOC.
 set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
+set_property(TARGET ${PROJECT_NAME} PROPERTY AUTORCC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
