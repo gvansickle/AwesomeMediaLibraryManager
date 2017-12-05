@@ -148,6 +148,8 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 			}
 			else
 			{
+				// Not sure what exactly we got back.
+				qCritical() << "Unknown response: mapitem.size()==" << mapitem.size() << "subtracks.size()==" << subtracks.size();
 				Q_ASSERT(0);
 			}
 		}

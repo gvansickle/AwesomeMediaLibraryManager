@@ -36,6 +36,8 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QWizard(pare
 
     addPage(new AboutPage(this));
 
+	adjustSize();
+
     /// @todo This doesn't work.
     connect(this, &AboutBox::currentIdChanged, this, &AboutBox::fitToContents);
 }
