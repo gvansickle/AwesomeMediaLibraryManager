@@ -32,6 +32,7 @@
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
+#include <utils/StringHelpers.h>
 
 LibraryEntry::LibraryEntry()
 {
@@ -367,7 +368,7 @@ QStringList LibraryEntry::getMetadata(QString key) const
 {
 	if(isPopulated() && !isError())
 	{
-		std::string str = m_metadata[key.toStdString()];
+		std::string str = m_metadata[tostdstr(key)];
 		if(str.empty())
 		{
 			return QStringList();

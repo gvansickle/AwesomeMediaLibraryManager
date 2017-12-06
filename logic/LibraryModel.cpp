@@ -753,7 +753,7 @@ static QString table_row(std::string s1, std::string s2)
 	QString retval = "<tr>";
 	for(auto s : {s1, s2})
 	{
-		retval += "<td>" + QString::fromStdString(s) + "</td>";
+		retval += "<td>" + toqstr(s) + "</td>";
 	}
 	retval += "</tr>";
 	return retval;
@@ -771,7 +771,7 @@ QString LibraryModel::getEntryStatusToolTip(LibraryEntry* item) const
 "<table>";
 	for(cit = mdff.cbegin(); cit != mdff.cend(); ++cit)
 	{
-		tttext += table_row(cit.key().toStdString(), cit.value().toString().toStdString());
+		tttext += table_row(tostdstr(cit.key()), tostdstr(cit.value().toString()));
 	}
 
 tttext += "</table>";

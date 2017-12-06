@@ -37,6 +37,22 @@ static inline std::string tostdstr(const char *cstr)
 	}
 }
 
+static inline std::string tostdstr(const QString& qstr)
+{
+	// From the Qt5 docs:
+	// "Returns a std::string object with the data contained in this QString. The Unicode data is converted into 8-bit characters using the toUtf8() function."
+	return qstr.toStdString();
+}
+
+static inline std::string tostdstring(const TagLib::String& tstr)
+{
+	/* From TagLib: "Returns a deep copy of this String as an std::string.  The returned string
+     * is encoded in UTF8 if \a unicode is true [...]."
+     */
+	return tstr.to8Bit(true);
+}
+
+
 static inline QString toqstr(const std::string &str)
 {
 	// From the QT5 docs:

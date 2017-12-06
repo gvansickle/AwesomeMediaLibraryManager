@@ -135,16 +135,13 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
 		//std::string key = reverse_lookup(key_val_pairs.first.toCString());
 		//qDebug() << "Normalized key:" << key;
-		std::string key = key_val_pairs.first.toCString();
+		std::string key = tostdstring(key_val_pairs.first);
 
 		std::vector<std::string> out_val;
 		// Iterate over the StringList for this key.
 		for(auto value : key_val_pairs.second)
 		{
-			/// @todo Not sure what I was doing here.
-			std::string val_as_utf8 = value.to8Bit(true);
-			//qDebug() << "Value:" << val_as_utf8 << QString::fromUtf8(val_as_utf8.c_str());
-			out_val.push_back(value.toCString(true));
+			out_val.push_back(tostdstring(value));
 		}
 		retval[key] = out_val;
 	}

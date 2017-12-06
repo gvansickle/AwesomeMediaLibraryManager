@@ -65,7 +65,7 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 	}
 
 	auto first_model_index = newSelection.indexes()[0];
-	qDebug() << "Incoming model:" << first_model_index.model();
+	///qDebug() << "Incoming model:" << first_model_index.model();
 	const LibrarySortFilterProxyModel* model = dynamic_cast<const LibrarySortFilterProxyModel*>(first_model_index.model());
 	if(model == nullptr)
 	{
@@ -73,17 +73,17 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 	}
 	auto selected_row = first_model_index.row();
 
-	qDebug() << "Selected Row: " << selected_row;
+	///qDebug() << "Selected Row: " << selected_row;
 	//return
 	LibraryEntry* libentry = model->getItem(first_model_index);
-	qDebug() << "PLAYLIST ITEM: " << libentry;
+	///qDebug() << "PLAYLIST ITEM: " << libentry;
 	if(libentry != nullptr)
 	{
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
 
 		std::map<QString, QVariant> pimeta = libentry->getAllMetadata().toStdMap(); // QMap<QString, QVariant>
-		qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;
+		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;
 		// clear out any old data we have.
 		metadataWidget->clear();
 		coverImageLabel->clear();
@@ -153,7 +153,7 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 			QImage image;
 			if(image.loadFromData(cover_image_bytes) == true)
 			{
-				qDebug() << "Image:" << image;
+				///qDebug() << "Image:" << image;
 				coverImageLabel->setPixmap(QPixmap::fromImage(image));
 				//coverImageLabel.adjustSize()
 			}
