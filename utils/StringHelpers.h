@@ -44,7 +44,7 @@ static inline std::string tostdstr(const QString& qstr)
 	return qstr.toStdString();
 }
 
-static inline std::string tostdstring(const TagLib::String& tstr)
+static inline std::string tostdstr(const TagLib::String &tstr)
 {
 	/* From TagLib: "Returns a deep copy of this String as an std::string.  The returned string
      * is encoded in UTF8 if \a unicode is true [...]."
@@ -59,6 +59,12 @@ static inline QString toqstr(const std::string &str)
 	// "QString QString::fromStdString(const std::string &str)
 	//	Returns a copy of the str string. The given string is converted to Unicode using the fromUtf8() function."
 	return QString::fromStdString(str);
+}
+
+static inline QString toqstr(const TagLib::String& tstr)
+{
+	// Convert from TagLib::String (UTF-16) to QString (UTF-16).
+	return QString::fromStdString(tstr.to8Bit(true));
 }
 
 /// From a QStringList, return the first one.  If there isn't a first one, return an empty string.

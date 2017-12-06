@@ -135,13 +135,13 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
 		//std::string key = reverse_lookup(key_val_pairs.first.toCString());
 		//qDebug() << "Normalized key:" << key;
-		std::string key = tostdstring(key_val_pairs.first);
+		std::string key = tostdstr(key_val_pairs.first);
 
 		std::vector<std::string> out_val;
 		// Iterate over the StringList for this key.
 		for(auto value : key_val_pairs.second)
 		{
-			out_val.push_back(tostdstring(value));
+			out_val.push_back(tostdstr(value));
 		}
 		retval[key] = out_val;
 	}
@@ -170,7 +170,7 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 		auto strlist = file->properties()["CUESHEET"];
 		qDebug() << "CUESHEET strlist num entries:" << strlist.size();
 		qDebug() << "CUESHEET strlist entries:" << strlist.toString();
-		retval = QString::fromUtf8(strlist.toString().toCString(true));
+		retval = toqstr(strlist.toString());
 	}
 
 //	auto xiph_comment = file->xiphComment();
@@ -413,18 +413,15 @@ M_WARNING("TODO: This could probably be improved, e.g. not merge these in but ke
 	if(track_entry.m_PTI_TITLE.size() > 0)
 	{
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
-		std::string utf8_track_title = track_entry.m_PTI_TITLE;
-		TagLib::String tl_track_title(utf8_track_title, TagLib::String::UTF8);
-		retval.m_tag_map["TITLE"].push_back(tl_track_title.toCString(true));
+		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
 	}
 	if(track_entry.m_PTI_PERFORMER.size() > 0)
 	{
-		TagLib::String tl_track_performer(track_entry.m_PTI_PERFORMER, TagLib::String::UTF8);
-		retval.m_tag_map["PERFORMER"].push_back(tl_track_performer.toCString(true));
+		retval.m_tag_map["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
 	}
 	if(track_entry.m_isrc.size() > 0)
 	{
-		retval.m_tag_map["ISRC"].push_back(TagLib::String(track_entry.m_isrc, TagLib::String::UTF8).toCString(true));
+		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
 	}
 
 	return retval;

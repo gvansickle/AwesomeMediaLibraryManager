@@ -350,7 +350,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 		return false;
 	}
 
-	qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
+	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
 	LibraryEntry* new_entry = value.value<LibraryEntry*>();
 	Q_ASSERT(new_entry != nullptr);
