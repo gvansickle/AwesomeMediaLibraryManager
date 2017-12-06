@@ -33,6 +33,7 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 
+class QActionGroup;
 class QWidget;
 class QLabel;
 class QMdiSubWindow;
@@ -86,6 +87,8 @@ private slots:
 	void onSendEntryToPlaylist(LibraryEntry* libentry, PlaylistModel* playlist_model);
 
 	void doExperiment();
+
+	void onChangeWindowMode(QAction* action);
 
 	/// Filter slots.
 	void onTextFilterChanged();
@@ -179,18 +182,26 @@ private:
 	QAction* m_exitAction;
 	QAction* m_scanLibraryAction;
 	QAction* m_settingsAct;
-    /// Window actions.
+
+	/// @name Window actions.
+	/// @{
+	QActionGroup *m_tabs_or_subwindows_group;
+	QAction *m_tabs_act;
+	QAction *m_subwins_act;
 	QAction* m_windowNextAct;
 	QAction* m_windowPrevAct;
 	QAction* m_windowCascadeAct;
 	QAction* m_windowTileAct;
 	QAction* m_closeAllAct;
 	QAction* m_closeAct;
-    /// Help actions.
+	/// @}
+
+	/// Help actions.
 	QAction* m_helpAct;
 	QAction* m_whatsThisAct;
 	QAction* m_aboutAct;
 	QAction* m_aboutQtAct;
+
 	/// Experimental actions.
 	QAction* m_experimentalAct;
 

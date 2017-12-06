@@ -49,13 +49,13 @@ struct MetadataReturnVal
 		m_original_pindexes.push_back(pmi);
 		m_new_libentries.push_back(le);
 		m_num_tracks_found++;
-	};
+	}
 
 	void push_back(LibraryEntry* le)
 	{
 		m_new_libentries.push_back(le);
 		m_num_tracks_found++;
-	};
+	}
 };
 
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;

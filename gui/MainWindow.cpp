@@ -196,6 +196,17 @@ void MainWindow::createActions()
 							   ///triggered=scanLibrary)
 
     // Window actions.
+	m_tabs_or_subwindows_group = new QActionGroup(this);
+	m_tabs_act = make_action(QIcon::fromTheme(""), "Tabs", m_tabs_or_subwindows_group,
+							 QKeySequence(), "Display as tabs");
+	m_tabs_act->setCheckable(true);
+
+	m_subwins_act = make_action(QIcon::fromTheme(""), "Subwindows", m_tabs_or_subwindows_group,
+								QKeySequence(), "Display as subwindows");
+	m_subwins_act->setCheckable(true);
+	m_tabs_act->setChecked(true);
+	connect(m_tabs_or_subwindows_group, &QActionGroup::triggered, this, &MainWindow::onChangeWindowMode);
+
 	m_windowNextAct = make_action(QIcon::fromTheme("go-next"), "&Next", this,
                                  QKeySequence::NextChild);
 	connect_trig(m_windowNextAct, this->m_mdi_area, &QMdiArea::activateNextSubWindow);
@@ -495,11 +506,15 @@ void MainWindow::updateWindowMenu()
 {
 	m_windowMenu->clear();
 	m_windowMenu->addActions({
+		m_windowMenu->addSection(tr("Subwindow Mode")),
+		m_tabs_act,
+		m_subwins_act,
+		m_windowMenu->addSection(tr("Window Navigation")),
 		m_windowNextAct,
 		m_windowPrevAct,
 		m_windowCascadeAct,
 		m_windowTileAct,
-		m_windowMenu->addSeparator(),
+		m_windowMenu->addSection(tr("Close")),
 		m_closeAct,
 		m_closeAllAct
     });
@@ -645,10 +660,6 @@ void MainWindow::readSettings()
         auto geometry = settings.value("geometry", QByteArray());
         if(geometry.isNull() || !geometry.isValid())
         {
-            // availableGeometry = qApp.desktop().availableGeometry(self)
-            // resize(availableGeometry.width()/3, availableGeometry.height()/2)
-            // move((availableGeometry.width()-width())/2,
-            //           (availableGeometry.height()-height())/2)
             qDebug() << "No saved window geometry, using defaults.";
         }
         else
@@ -1066,6 +1077,18 @@ void MainWindow::about()
 void MainWindow::doExperiment()
 {
 	m_experimental->DoExperiment();
+}
+
+void MainWindow::onChangeWindowMode(QAction* action)
+{
+	if(action == m_tabs_act)
+	{
+		m_mdi_area->setViewMode(QMdiArea::TabbedView);
+	}
+	else
+	{
+		m_mdi_area->setViewMode(QMdiArea::SubWindowView);
+	}
 }
 
 void MainWindow::onTextFilterChanged()
