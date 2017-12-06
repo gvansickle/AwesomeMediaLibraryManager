@@ -22,8 +22,6 @@
 
 #include <QUrl>
 
-#include <deque>
-
 #include "LibraryEntry.h"
 
 class QFileDevice;
