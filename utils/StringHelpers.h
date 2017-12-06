@@ -87,7 +87,7 @@ template<typename LHSType, typename T>
 std::enable_if_t<std::is_same<T,TagLib::String>::value, LHSType&>
 operator<<(LHSType& out, const T& str)
 {
-	return out << str.toCString(true);
+	return out << toqstr(str);
 }
 
 /// For TagLib::StringList to QStringList.
