@@ -167,7 +167,7 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 	if(file->properties().contains("CUESHEET"))
 	{
 		qDebug() << "properties() contains CUESHEET";
-		auto strlist = file->properties()["CUESHEET"];
+		TagLib::StringList strlist = file->properties()["CUESHEET"];
 		qDebug() << "CUESHEET strlist num entries:" << strlist.size();
 		qDebug() << "CUESHEET strlist entries:" << strlist.toString();
 		retval = toqstr(strlist.toString());
@@ -186,6 +186,16 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 //	}
 
 	return retval;
+}
+
+static Cd* parse_cue_sheet_string(const char * bytes)
+{
+	// Let's first assume that bytes is a UTF-8 string, and that libcue can handle that.
+	Cd* cd = cue_parse_string(bytes);
+
+	Q_ASSERT_X(cd != nullptr, "cuesheet", "failed to parse cuesheet string");
+
+	return cd;
 }
 
 bool MetadataTaglib::read(QUrl url)
@@ -302,7 +312,7 @@ bool MetadataTaglib::read(QUrl url)
 	if(!cuesheet_str.empty())
 	{
 		// Try to parse the cue sheet we found with libcue.
-		Cd* cd = cue_parse_string(cuesheet_str.c_str());
+		Cd *cd = parse_cue_sheet_string(cuesheet_str.c_str());
 		if(cd == nullptr)
 		{
 			qWarning() << "Embedded cue sheet parsing failed.";
