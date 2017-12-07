@@ -33,7 +33,7 @@ PlaylistModelItem::~PlaylistModelItem()
 	// Just here to make sure the class has a vtable.
 }
 
-PlaylistModelItem* PlaylistModelItem::createFromLibraryEntry(const LibraryEntry* item)
+std::shared_ptr<PlaylistModelItem> PlaylistModelItem::createFromLibraryEntry(const LibraryEntry* item)
 {
 	PlaylistModelItem* pitem;
 

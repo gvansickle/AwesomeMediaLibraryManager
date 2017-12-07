@@ -45,6 +45,7 @@
 LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 {
 	m_library = new Library();
+
 	// App-specific cache directory.
 	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 	// Make sure it ends in a "/".
@@ -85,17 +86,18 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 
 LibraryModel::~LibraryModel()
 {
+	delete m_library;
 }
 
 QModelIndex LibraryModel::index(int row, int column, const QModelIndex &parent) const
 {
 	if(!parent.isValid())
 	{
-		if((!m_library->lib_entries.empty())
+		if((!m_library->m_lib_entries.empty())
 				&& (row >= 0 && row < rowCount())
 				&& (column >= 0 && column < static_cast<int>(m_columnSpecs.size())))
 		{
-			return createIndex(row, column, m_library->lib_entries[row]);
+			return createIndex(row, column, m_library->m_lib_entries[row].get());
 		}
 	}
 	//logger.warning("Returning invalid index: {}/{}/{}".format(row, column, parent))
@@ -127,7 +129,7 @@ int LibraryModel::rowCount(const QModelIndex &parent) const
 	{
 		if(m_library != nullptr)
 		{
-			return m_library->lib_entries.size();
+			return m_library->m_lib_entries.size();
 		}
 	}
 	return 0;
@@ -306,9 +308,9 @@ bool LibraryModel::hasChildren(const QModelIndex& parent) const
 	}
 }
 
-LibraryEntry* LibraryModel::createDefaultConstructedEntry() const
+std::shared_ptr<LibraryEntry> LibraryModel::createDefaultConstructedEntry() const
 {
-	return new LibraryEntry();
+	return std::make_shared<LibraryEntry>();
 }
 
 LibraryEntry *LibraryModel::getItem(const QModelIndex& index) const
@@ -352,7 +354,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
-	LibraryEntry* new_entry = value.value<LibraryEntry*>();
+	auto new_entry = std::make_shared<LibraryEntry>(value.value<LibraryEntry*>());
 	Q_ASSERT(new_entry != nullptr);
 
 	m_library->replaceEntry(index.row(), new_entry);
@@ -429,14 +431,14 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 	return true;
 }
 
-void LibraryModel::appendRow(LibraryEntry *libentry)
+void LibraryModel::appendRow(std::shared_ptr<LibraryEntry> libentry)
 {
-	std::vector<LibraryEntry*> libentries;
+	std::vector<std::shared_ptr<LibraryEntry>> libentries;
 	libentries.push_back(libentry);
 	appendRows(libentries);
 }
 
-void LibraryModel::appendRows(std::vector<LibraryEntry *> libentries)
+void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentries)
 {
 	auto rowcount = rowCount();
 	beginInsertRows(QModelIndex(), rowcount, rowcount+libentries.size()-1);
@@ -575,9 +577,10 @@ void LibraryModel::readFromJson(const QJsonObject& jo)
 	endResetModel();
 }
 
-LibraryModel* LibraryModel::constructFromJson(const QJsonObject& json, QObject* parent)
+QSharedPointer<LibraryModel> LibraryModel::constructFromJson(const QJsonObject& json, QObject* parent)
 {
-	LibraryModel* retval = new LibraryModel(parent);
+	///LibraryModel* retval = new LibraryModel(parent);
+	auto retval = QSharedPointer<LibraryModel>::create(parent);
 	retval->readFromJson(json);
 
 	return retval;
@@ -634,8 +637,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 
 void LibraryModel::onIncomingFilename(QString filename)
 {
-	LibraryEntry* new_entry;
-	new_entry = LibraryEntry::fromUrl(filename)[0];
+	auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
 	appendRow(new_entry);
 }
 

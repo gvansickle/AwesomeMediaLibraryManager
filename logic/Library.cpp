@@ -39,7 +39,7 @@ Library::~Library()
 void Library::clear()
 {
 	rootURL = QUrl();
-	lib_entries.clear();
+	m_lib_entries.clear();
 	num_unpopulated = 0;
 	num_populated = 0;
 	///discovered_metadata_keys = []
@@ -59,47 +59,47 @@ QString Library::getLibraryName() const
 	}
 }
 
-void Library::addNewEntries(std::vector<LibraryEntry*> entries)
+void Library::addNewEntries(std::vector<std::shared_ptr<LibraryEntry>> entries)
 {
 	for(auto e : entries)
 	{
-		lib_entries.push_back(e);
-		addingEntry(e);
+		m_lib_entries.push_back(e);
+		addingEntry(e.get());
 	}
 }
 
 void Library::removeEntry(int row)
 {
-	auto old_entry = lib_entries[row];
-	removingEntry(old_entry);
-	auto it = lib_entries.begin();
+	auto old_entry = m_lib_entries[row];
+	removingEntry(old_entry.get());
+	auto it = m_lib_entries.begin();
 	std::advance(it, row);
-	delete lib_entries[row];
-	lib_entries.erase(it);
+	///delete m_lib_entries[row];
+	m_lib_entries.erase(it);
 }
 
-void Library::insertEntry(int row, LibraryEntry* entry)
+void Library::insertEntry(int row, std::shared_ptr<LibraryEntry> entry)
 {
-	addingEntry(entry);
-	auto it = lib_entries.begin();
+	addingEntry(entry.get());
+	auto it = m_lib_entries.begin();
 	std::advance(it, row);
-	lib_entries.insert(it, entry);
+	m_lib_entries.insert(it, entry);
 }
 
-void Library::replaceEntry(int row, LibraryEntry* entry)
+void Library::replaceEntry(int row, std::shared_ptr<LibraryEntry> entry)
 {
-	qDebug() << "Replacing row" << row << ", old/new:" << lib_entries[row] << "/" << entry;
-	qDebug() << "isPopulated: old/new:" << lib_entries[row]->isPopulated() << "/" << entry->isPopulated();
-	auto old_entry = lib_entries[row];
-	addingEntry(entry);
-	lib_entries[row] = entry;
-	removingEntry(old_entry);
-	delete old_entry;
+	//qDebug() << "Replacing row" << row << ", old/new:" << m_lib_entries[row] << "/" << entry;
+	qDebug() << "isPopulated: old/new:" << m_lib_entries[row]->isPopulated() << "/" << entry->isPopulated();
+	auto old_entry = m_lib_entries[row];
+	addingEntry(entry.get());
+	m_lib_entries[row] = entry;
+	removingEntry(old_entry.get());
+	//delete old_entry;
 }
 
 bool Library::areAllEntriesFullyPopulated() const
 {
-	for(auto e : lib_entries)
+	for(auto e : m_lib_entries)
 	{
 		if(!e->isPopulated())
 		{
@@ -129,12 +129,12 @@ void Library::writeToJson(QJsonObject& jo, bool no_items) const
 	jo["rootUrl"] = rootURL.toString();
 	jo["num_unpopulated"] = num_unpopulated;
 	jo["num_populated"] = num_populated;
-	jo["len_lib_entries"] = (qint64)lib_entries.size();
+	jo["len_lib_entries"] = (qint64)m_lib_entries.size();
 	if(!no_items)
 	{
 		// Collect up the LibraryEntry's.
 		QJsonArray array;
-		for(auto e : lib_entries)
+		for(auto e : m_lib_entries)
 		{
 			QJsonObject qjsonobject;
 			e->writeToJson(qjsonobject);
@@ -165,11 +165,11 @@ void Library::readFromJson(const QJsonObject& jo)
 		{
 			///qDebug() << "Reading LibraryEntry:" << i;
 			auto libentryobj = jsonarray[i].toObject();
-			auto libentry = new LibraryEntry();
+			auto libentry = std::make_shared<LibraryEntry>();
 			libentry->readFromJson(libentryobj);
-			lib_entries.push_back(libentry);
+			m_lib_entries.push_back(libentry);
 		}
-        ptrdiff_t read_num_lib_entries = lib_entries.size();
+		ptrdiff_t read_num_lib_entries = m_lib_entries.size();
 		if(read_num_lib_entries != len_lib_entries)
 		{
 			qCritical() << QString("read_num_lib_entries(%1) != len_lib_entries(%2)").arg(read_num_lib_entries).arg(len_lib_entries);
@@ -190,7 +190,7 @@ void Library::deserializeFromFile(QFileDevice& file)
 	Q_ASSERT(0 == "NOT IMPLEMENTED");
 }
 
-void Library::addingEntry(LibraryEntry* entry)
+void Library::addingEntry(const LibraryEntry* entry)
 {
 	if(entry->isPopulated())
 	{
@@ -202,7 +202,7 @@ void Library::addingEntry(LibraryEntry* entry)
 	}
 }
 
-void Library::removingEntry(LibraryEntry* entry)
+void Library::removingEntry(const LibraryEntry* entry)
 {
 	if(entry->isPopulated())
 	{

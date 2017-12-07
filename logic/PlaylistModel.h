@@ -52,7 +52,7 @@ public:
 
 	/// Override this in derived classes to return a newly-allocated, default-constructed instance
 	/// of an entry derived from LibraryEntry.  Used by insertRows().
-	virtual PlaylistModelItem* createDefaultConstructedEntry() const override;
+	virtual std::shared_ptr<LibraryEntry> createDefaultConstructedEntry() const override;
 
 	virtual PlaylistModelItem* getItem(const QModelIndex& index) const override;
 

@@ -143,7 +143,7 @@ public:
 
 	/// Override this in derived classes to return a newly-allocated, default-constructed instance
 	/// of an entry derived from LibraryEntry.  Used by insertRows().
-	virtual LibraryEntry* createDefaultConstructedEntry() const;
+	virtual std::shared_ptr<LibraryEntry> createDefaultConstructedEntry() const;
 
 	virtual LibraryEntry* getItem(const QModelIndex& index) const;
 
@@ -156,8 +156,8 @@ public:
 
     /// Additional interfaces beyond the QAbstractItemModel interface.
 
-    void appendRow(LibraryEntry* libentry);
-	void appendRows(std::vector<LibraryEntry*> libentries);
+	void appendRow(std::shared_ptr<LibraryEntry> libentry);
+	void appendRows(std::vector<std::shared_ptr<LibraryEntry> > libentries);
 
     int getColFromSection(SectionID section_id) const;
     SectionID getSectionFromCol(int col) const;
@@ -182,7 +182,9 @@ public:
 
 	virtual void writeToJson(QJsonObject & json) const;
 	virtual void readFromJson(const QJsonObject& jo);
-	static LibraryModel* constructFromJson(const QJsonObject & json, QObject* parent = Q_NULLPTR);
+
+	/// Static constructor for deserializing from JSON.
+	static QSharedPointer<LibraryModel> constructFromJson(const QJsonObject & json, QObject* parent = Q_NULLPTR);
 
 	virtual void serializeToFile(QFileDevice& file) const;
 	virtual void deserializeFromFile(QFileDevice& file);

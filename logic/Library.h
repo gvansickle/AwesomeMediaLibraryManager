@@ -37,10 +37,10 @@ public:
 	QUrl getRootUrl() { return rootURL; }
 	QString getLibraryName() const;
 
-	void addNewEntries(std::vector<LibraryEntry*> entries);
+	void addNewEntries(std::vector<std::shared_ptr<LibraryEntry> > entries);
 	void removeEntry(int row);
-	void insertEntry(int row, LibraryEntry* entry);
-	void replaceEntry(int row, LibraryEntry* entry);
+	void insertEntry(int row, std::shared_ptr<LibraryEntry> entry);
+	void replaceEntry(int row, std::shared_ptr<LibraryEntry> entry);
 
 	bool areAllEntriesFullyPopulated() const;
 	qint64 getNumEntries() const;
@@ -56,14 +56,14 @@ public:
 	/// @}
 
 private:
-	void addingEntry(LibraryEntry* entry);
-	void removingEntry(LibraryEntry* entry);
+	void addingEntry(const LibraryEntry* entry);
+	void removingEntry(const LibraryEntry* entry);
 
 //private:
 public:
     QUrl rootURL;
 
-	std::vector<LibraryEntry*> lib_entries;
+	std::vector<std::shared_ptr<LibraryEntry>> m_lib_entries;
 
 	qint64 num_unpopulated {0};
 	qint64 num_populated {0};

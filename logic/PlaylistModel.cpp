@@ -119,9 +119,9 @@ M_WARNING("TODO: Finish rating delegate.")
 	return LibraryModel::data(index, role);
 }
 
-PlaylistModelItem*PlaylistModel::createDefaultConstructedEntry() const
+std::shared_ptr<LibraryEntry> PlaylistModel::createDefaultConstructedEntry() const
 {
-	return new PlaylistModelItem();
+	return std::dynamic_pointer_cast<LibraryEntry>(std::make_shared<PlaylistModelItem>());
 }
 
 PlaylistModelItem* PlaylistModel::getItem(const QModelIndex& index) const

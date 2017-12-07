@@ -132,7 +132,7 @@ private:
 	QMdiSubWindow* findSubWindow(QUrl url);
 	std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
 
-	LibraryModel* openLibraryModelOnUrl(QUrl url);
+	QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
 	void openMDILibraryViewOnModel(LibraryModel* libmodel);
 
 	std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
@@ -156,7 +156,7 @@ private:
 	Experimental* m_experimental;
 
 	/// The library models.
-	std::vector<LibraryModel*> m_libmodels;
+	std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
 	/// The list of PlaylistModels.
 	std::vector<PlaylistModel*> m_playlist_models;
