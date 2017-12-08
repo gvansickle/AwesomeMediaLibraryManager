@@ -434,9 +434,6 @@ M_WARNING( "TODO: index is a QPersist. in the Python....")
 	{
 		qFatal("Replace-remove failed:");/// << QString("Replace-remove failed:") << m_qmplaylist->errorString();
 	}
-M_WARNING( "TODO: This looks like debug code from the Python")
-//	PlaylistModelItem* item = getItem(index);
-//	qDebug() << "Types::" << item << value;
 
 	Q_ASSERT(value.canConvert<std::shared_ptr<LibraryEntry>>() == true);
 
