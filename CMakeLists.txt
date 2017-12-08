@@ -249,6 +249,7 @@ set(HEADER_FILES
 	utils/concurrency/ReportingRunner.h
 	utils/AsyncDirScanner.h
 	gui/AboutBox.h
+	utils/RegisterQtMetatypes.h
 	)
 
 # Source file list.
@@ -291,7 +292,7 @@ set(SOURCE_FILES
 	utils/concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	gui/AboutBox.cpp
-	utils/RegisterQtMetatypes.cpp utils/RegisterQtMetatypes.h)
+	utils/RegisterQtMetatypes.cpp)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
