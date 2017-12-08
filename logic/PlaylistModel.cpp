@@ -149,11 +149,11 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		return false;
 	}
 
-	if(value.canConvert<PlaylistModelItem*>())
+	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 	{
 		qDebug() << "Can convert to PlaylistModelItem*: true";
 
-		LibraryEntry* pmitem = value.value<PlaylistModelItem*>();
+		std::shared_ptr<LibraryEntry> pmitem = value.value<std::shared_ptr<PlaylistModelItem>>();
 		QVariant casted_value = QVariant::fromValue(pmitem);
 		return LibraryModel::setData(index, casted_value, role);
 	}

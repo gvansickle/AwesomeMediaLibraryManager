@@ -72,7 +72,7 @@
 #include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
 	// Name our GUI thread.
 	QThread::currentThread()->setObjectName("GUIThread");
@@ -95,9 +95,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(par
 
     // Follow the system style for the Icon&/|Text setting for toolbar buttons.
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
-
-    // The player object.
-	m_player = new MP2(this);
 
 M_WARNING("TODO: ifdef this to development only")
 	m_experimental = new Experimental(this);
@@ -386,7 +383,7 @@ void MainWindow::createConnections()
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
-	__connectPlayerAndControls(m_player, m_controls);
+	__connectPlayerAndControls(&m_player, m_controls);
 
     // Connect with the CollectionDockWidget.
 	connect(m_libraryDockWidget, &CollectionDockWidget::showLibViewSignal, this, &MainWindow::onShowLibrary);
@@ -473,7 +470,7 @@ void MainWindow::updateConnections()
 
 		if(childIsPlaylist != nullptr)
 		{
-			__connectPlayerAndPlaylistView(m_player, childIsPlaylist);
+			__connectPlayerAndPlaylistView(&m_player, childIsPlaylist);
 		}
 	}
 }

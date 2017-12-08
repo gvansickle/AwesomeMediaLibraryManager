@@ -349,7 +349,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
 	std::shared_ptr<LibraryEntry> new_entry = value.value<std::shared_ptr<LibraryEntry>>();
-	Q_ASSERT(new_entry != nullptr);
+	Q_ASSERT(new_entry);
 
 	m_library.replaceEntry(index.row(), new_entry);
 

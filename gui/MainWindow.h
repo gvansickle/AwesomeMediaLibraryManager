@@ -32,6 +32,7 @@
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
+#include <logic/MP2.h>
 
 class QActionGroup;
 class QWidget;
@@ -45,7 +46,6 @@ class MDILibraryView;
 class MDIPlaylistView;
 class MetadataDockWidget;
 class CollectionDockWidget;
-class MP2;
 class ActivityProgressWidget;
 
 class MainWindow: public QMainWindow
@@ -150,7 +150,7 @@ private:
 	QUrl m_appdatadir;
 
 	/// The media player instance.
-	MP2* m_player;
+	MP2 m_player;
 
 	/// Experimental "scratch" widget for doing development experiments.
 	Experimental* m_experimental;
