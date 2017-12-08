@@ -30,7 +30,7 @@ public:
 	PlaylistModelItem(const PlaylistModelItem& other);
 	~PlaylistModelItem() override;
 
-	static std::shared_ptr<PlaylistModelItem> createFromLibraryEntry(const LibraryEntry* item);
+	static std::shared_ptr<PlaylistModelItem> createFromLibraryEntry(std::shared_ptr<LibraryEntry> item);
 
 	int m_user_rating {0};
 	bool m_is_blacklisted {false};

@@ -40,7 +40,7 @@ class LibraryRescanner;
 class ActivityProgressWidget;
 
 typedef QVector<QUrl> VecOfUrls;
-typedef QVector<LibraryEntry*> VecOfLEs;
+typedef QVector<std::shared_ptr<LibraryEntry>> VecOfLEs;
 typedef QVector<QPersistentModelIndex>  VecOfPMIs;
 
 Q_DECLARE_METATYPE(VecOfUrls);
@@ -145,7 +145,7 @@ public:
 	/// of an entry derived from LibraryEntry.  Used by insertRows().
 	virtual std::shared_ptr<LibraryEntry> createDefaultConstructedEntry() const;
 
-	virtual LibraryEntry* getItem(const QModelIndex& index) const;
+	virtual std::shared_ptr<LibraryEntry> getItem(const QModelIndex& index) const;
 
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 

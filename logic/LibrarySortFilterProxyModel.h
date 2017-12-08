@@ -20,6 +20,7 @@
 #ifndef LIBRARYSORTFILTERPROXYMODEL_H
 #define LIBRARYSORTFILTERPROXYMODEL_H
 
+#include <memory>
 #include <QSortFilterProxyModel>
 
 class LibraryEntry;
@@ -31,7 +32,7 @@ class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 public:
 	LibrarySortFilterProxyModel(QObject* parent = Q_NULLPTR);
 
-	LibraryEntry* getItem(QModelIndex index) const;
+	std::shared_ptr<LibraryEntry> getItem(QModelIndex index) const;
 
 	virtual bool hasChildren(const QModelIndex &parent) const override;
 

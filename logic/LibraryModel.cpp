@@ -208,7 +208,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 				if(role == Qt::ToolTipRole)
 				{
 					// Return a big tooltip with all the details of the entry.
-					return QVariant(getEntryStatusToolTip(item));
+					return QVariant(getEntryStatusToolTip(item.get()));
 				}
 				else if(role == Qt::DisplayRole)
 				{
@@ -313,14 +313,14 @@ std::shared_ptr<LibraryEntry> LibraryModel::createDefaultConstructedEntry() cons
 	return std::make_shared<LibraryEntry>();
 }
 
-LibraryEntry *LibraryModel::getItem(const QModelIndex& index) const
+std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) const
 {
 	if(index.isValid())
 	{
-		auto item = reinterpret_cast<LibraryEntry*>(index.internalPointer());
+		std::shared_ptr<LibraryEntry> *item = reinterpret_cast<std::shared_ptr<LibraryEntry>*>(index.internalPointer());
 		if(item != nullptr)
 		{
-			return item;
+			return *item;
 		}
 		else
 		{
@@ -354,7 +354,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
-	auto new_entry = std::make_shared<LibraryEntry>(value.value<LibraryEntry*>());
+	auto new_entry = std::make_shared<LibraryEntry>(*value.value<std::shared_ptr<LibraryEntry>>());
 	Q_ASSERT(new_entry != nullptr);
 
 	m_library->replaceEntry(index.row(), new_entry);
@@ -615,7 +615,7 @@ QStringList LibraryModel::mimeTypes() const
 
 QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 {
-	std::vector<LibraryEntry*> row_items;
+	std::vector<std::shared_ptr<LibraryEntry>> row_items;
 	for(auto i : indexes)
 	{
 		if(i.column() == 0)
@@ -792,13 +792,13 @@ void LibraryModel::startRescan()
 		QVector<VecLibRescannerMapItems> items_to_rescan;
 
 		VecLibRescannerMapItems multientry;
-		LibraryEntry* last_entry = nullptr;
+		std::shared_ptr<LibraryEntry> last_entry = nullptr;
 
 		for(auto i=0; i<rowCount(); ++i)
 		{
 			auto item = getItem(index(i,0));
 
-			if(last_entry != nullptr && item->isFromSameFileAs(last_entry))
+			if(last_entry != nullptr && item->isFromSameFileAs(last_entry.get()))
 			{
 				// It's from the same file as the last entry we looked at.
 				// Queue it up in the current batch.

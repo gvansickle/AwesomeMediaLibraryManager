@@ -75,7 +75,7 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 
 	///qDebug() << "Selected Row: " << selected_row;
 	//return
-	LibraryEntry* libentry = model->getItem(first_model_index);
+	std::shared_ptr<LibraryEntry> libentry = model->getItem(first_model_index);
 	///qDebug() << "PLAYLIST ITEM: " << libentry;
 	if(libentry != nullptr)
 	{

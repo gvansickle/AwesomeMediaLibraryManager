@@ -954,9 +954,9 @@ void MainWindow::onPlayTrackNowSignal(QUrl url)
 	qWarning() << QString("PlayTrackNow not implemented: '%1'").arg(url.toString());
 }
 
-void MainWindow::onSendEntryToPlaylist(LibraryEntry* libentry, PlaylistModel* playlist_model)
+void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model)
 {
-	qDebug() << QString("Sending entry to playlist:") << playlist_model;
+	qDebug() << QString("Sending entry to playlist:") << playlist_model.get();
 	if(playlist_model != nullptr)
 	{
 		auto new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);

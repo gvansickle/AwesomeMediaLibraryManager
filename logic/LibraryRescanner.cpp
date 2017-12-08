@@ -86,7 +86,7 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 
 		// Get the LibraryEntry* to the existing entry.
 		/// @todo There's no locking here, there needs to be, or these need to be copies.
-		LibraryEntry *item = mapitem[0].item;
+		std::shared_ptr<LibraryEntry> item = mapitem[0].item;
 
 		if(!item->isPopulated())
 		{
@@ -100,7 +100,7 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 			{
 				if (!i->isPopulated())
 				{
-					qCritical() << "NOT POPULATED" << i;
+					qCritical() << "NOT POPULATED" << i.get();
 				}
 				retval.push_back(i);
 			}
@@ -113,7 +113,7 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 		else
 		{
 			//qDebug() << "Re-reading metatdata for item" << item->getUrl();
-			LibraryEntry *new_entry = item->refresh_metadata();
+			std::shared_ptr<LibraryEntry> new_entry = item->refresh_metadata();
 
 			if(new_entry == nullptr)
 			{
@@ -136,7 +136,7 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 	else if (mapitem.size() > 1)
 	{
 		// Multiple incoming tracks.
-		LibraryEntry* first_item = mapitem[0].item;
+		std::shared_ptr<LibraryEntry> first_item = mapitem[0].item;
 		auto subtracks = first_item->populate(true);
 		if(subtracks.size() < mapitem.size())
 		{
