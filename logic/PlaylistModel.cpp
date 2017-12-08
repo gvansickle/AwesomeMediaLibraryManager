@@ -438,7 +438,7 @@ M_WARNING( "TODO: This looks like debug code from the Python")
 //	PlaylistModelItem* item = getItem(index);
 //	qDebug() << "Types::" << item << value;
 
-	Q_ASSERT(value.canConvert<LibraryEntry*>() == true);
+	Q_ASSERT(value.canConvert<std::shared_ptr<LibraryEntry>>() == true);
 
 	std::shared_ptr<PlaylistModelItem> playlist_entry = PlaylistModelItem::createFromLibraryEntry(value.value<std::shared_ptr<LibraryEntry>>());
 	QMediaContent* qmediacontent = new QMediaContent(playlist_entry->getM2Url());
