@@ -106,6 +106,7 @@ private:
 };
 
 /// So we can more easily pass ptrs in QVariants.
+Q_DECLARE_METATYPE(LibraryEntry)
 Q_DECLARE_METATYPE(LibraryEntry*)
 Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>)
 

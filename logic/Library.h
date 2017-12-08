@@ -34,13 +34,15 @@ public:
 
 	void clear();
 	void setRootUrl(const QUrl& url) { rootURL = url; }
-	QUrl getRootUrl() { return rootURL; }
+	QUrl getRootUrl() const { return rootURL; }
 	QString getLibraryName() const;
 
 	void addNewEntries(std::vector<std::shared_ptr<LibraryEntry> > entries);
 	void removeEntry(int row);
 	void insertEntry(int row, std::shared_ptr<LibraryEntry> entry);
 	void replaceEntry(int row, std::shared_ptr<LibraryEntry> entry);
+
+	std::shared_ptr<LibraryEntry> operator[](size_t index) const;
 
 	bool areAllEntriesFullyPopulated() const;
 	qint64 getNumEntries() const;

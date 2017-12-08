@@ -97,6 +97,12 @@ void Library::replaceEntry(int row, std::shared_ptr<LibraryEntry> entry)
 	//delete old_entry;
 }
 
+std::shared_ptr<LibraryEntry> Library::operator[](size_t index) const
+{
+	return m_lib_entries.at(index);
+}
+
+
 bool Library::areAllEntriesFullyPopulated() const
 {
 	for(auto e : m_lib_entries)

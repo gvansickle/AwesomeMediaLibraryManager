@@ -42,10 +42,8 @@
 
 #include "gui/ActivityProgressWidget.h"
 
-LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
+LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_library()
 {
-	m_library = new Library();
-
 	// App-specific cache directory.
 	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 	// Make sure it ends in a "/".
@@ -86,18 +84,17 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 
 LibraryModel::~LibraryModel()
 {
-	delete m_library;
 }
 
 QModelIndex LibraryModel::index(int row, int column, const QModelIndex &parent) const
 {
 	if(!parent.isValid())
 	{
-		if((!m_library->m_lib_entries.empty())
+		if((!m_library.m_lib_entries.empty())
 				&& (row >= 0 && row < rowCount())
 				&& (column >= 0 && column < static_cast<int>(m_columnSpecs.size())))
 		{
-			return createIndex(row, column, m_library->m_lib_entries[row].get());
+			return createIndex(row, column, m_library.m_lib_entries[row].get());
 		}
 	}
 	//logger.warning("Returning invalid index: {}/{}/{}".format(row, column, parent))
@@ -127,10 +124,7 @@ int LibraryModel::rowCount(const QModelIndex &parent) const
 {
 	if(!parent.isValid())
 	{
-		if(m_library != nullptr)
-		{
-			return m_library->m_lib_entries.size();
-		}
+		return m_library.m_lib_entries.size();
 	}
 	return 0;
 }
@@ -317,10 +311,10 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 {
 	if(index.isValid())
 	{
-		std::shared_ptr<LibraryEntry> *item = reinterpret_cast<std::shared_ptr<LibraryEntry>*>(index.internalPointer());
+		std::shared_ptr<LibraryEntry> item = m_library[index.row()];
 		if(item != nullptr)
 		{
-			return *item;
+			return item;
 		}
 		else
 		{
@@ -354,10 +348,10 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
-	auto new_entry = std::make_shared<LibraryEntry>(*value.value<std::shared_ptr<LibraryEntry>>());
+	std::shared_ptr<LibraryEntry> new_entry = value.value<std::shared_ptr<LibraryEntry>>();
 	Q_ASSERT(new_entry != nullptr);
 
-	m_library->replaceEntry(index.row(), new_entry);
+	m_library.replaceEntry(index.row(), new_entry);
 
 	// Notify subclasses of the change.
 	onSetData(pindex, value, role);
@@ -385,7 +379,7 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 	for(int i = row; i<row+count; ++i)
 	{
 		auto default_entry = createDefaultConstructedEntry();
-		m_library->insertEntry(i, default_entry);
+		m_library.insertEntry(i, default_entry);
 	}
 
 	endInsertRows();
@@ -419,7 +413,7 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 
 	for(int i = row; i < row+count; ++i)
 	{
-		m_library->removeEntry(i);
+		m_library.removeEntry(i);
 	}
 
 	if(m_first_possible_unpop_row > row)
@@ -446,7 +440,7 @@ void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentr
 	{
 		m_first_possible_unpop_row = rowcount;
 	}
-	m_library->addNewEntries(libentries);
+	m_library.addNewEntries(libentries);
 	onRowsInserted(QModelIndex(), rowcount, rowcount+libentries.size()-1);
 	endInsertRows();
 }
@@ -471,17 +465,17 @@ SectionID LibraryModel::getSectionFromCol(int col) const
 
 QUrl LibraryModel::getLibRootDir() const
 {
-	return m_library->getRootUrl();
+	return m_library.getRootUrl();
 }
 
 QString LibraryModel::getLibraryName() const
 {
-	return m_library->getLibraryName();
+	return m_library.getLibraryName();
 }
 
 qint64 LibraryModel::getLibraryNumEntries() const
 {
-	return m_library->getNumEntries();
+	return m_library.getNumEntries();
 }
 
 void LibraryModel::setLibraryRootUrl(const QUrl& url)
@@ -489,14 +483,14 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 	beginResetModel();
 
 	// Give the library a starting point.
-	m_library->setRootUrl(url);
+	m_library.setRootUrl(url);
 
 	// Create a cache file for this Library.
 	createCacheFile(url);
 
 	connectSignals();
 	emit statusSignal(LibState::ScanningForFiles, 0, 0);
-	emit startFileScanSignal(m_library->rootURL);
+	emit startFileScanSignal(m_library.rootURL);
 
 	endResetModel();
 }
@@ -527,7 +521,7 @@ void LibraryModel::writeToJson(QJsonObject& json) const
 	qDebug() << "json object:" << json;
 	QJsonObject lib_object;
 	qDebug() << "Writing library to new json object";
-	m_library->writeToJson(lib_object, false);
+	m_library.writeToJson(lib_object, false);
 	QJsonDocument jsondoc(lib_object);
 	QByteArray jdoc_str = jsondoc.toJson();
 	///lib_cache_file.write(bytearray(jdoc_str, encoding='utf-8'));
@@ -540,7 +534,7 @@ void LibraryModel::writeToJson(QJsonObject& json) const
 	qDebug() << "committing and closing";
 	m_lib_cache_file.commit();
 	// Save the minimum of the library.
-	m_library->writeToJson(json, true);
+	m_library.writeToJson(json, true);
 }
 
 void LibraryModel::readFromJson(const QJsonObject& jo)
@@ -568,7 +562,7 @@ void LibraryModel::readFromJson(const QJsonObject& jo)
 
 	qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
 
-	m_library->readFromJson(jsondoc.object());
+	m_library.readFromJson(jsondoc.object());
 
 	connectSignals();
 	/// @todo
@@ -588,12 +582,12 @@ QSharedPointer<LibraryModel> LibraryModel::constructFromJson(const QJsonObject& 
 
 void LibraryModel::serializeToFile(QFileDevice& file) const
 {
-	m_library->serializeToFile(file);
+	m_library.serializeToFile(file);
 }
 
 void LibraryModel::deserializeFromFile(QFileDevice& file)
 {
-	m_library->deserializeFromFile(file);
+	m_library.deserializeFromFile(file);
 }
 
 Qt::DropActions LibraryModel::supportedDragActions() const
@@ -746,8 +740,8 @@ void LibraryModel::disconnectIncomingSignals()
 void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
-	qDebug() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library->getNumPopulatedEntries()).arg(rowCount());
-	emit statusSignal(LibState::PopulatingMetadata, m_library->getNumPopulatedEntries(), rowCount());
+	qDebug() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
+	emit statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
 static QString table_row(std::string s1, std::string s2)

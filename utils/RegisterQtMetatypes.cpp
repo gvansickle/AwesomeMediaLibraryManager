@@ -23,5 +23,7 @@
 
 void RegisterQtMetatypes()
 {
+	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
+	qRegisterMetaType<LibraryEntry>();
 	qRegisterMetaTypeStreamOperators<LibraryEntry>("LibraryEntry");
 }

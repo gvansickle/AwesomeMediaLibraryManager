@@ -226,7 +226,7 @@ protected:
 
 	std::vector<ColumnSpec> m_columnSpecs;
 
-    Library* m_library = nullptr;
+    Library m_library;
 
 	LibraryRescanner* m_rescanner = nullptr;
 
