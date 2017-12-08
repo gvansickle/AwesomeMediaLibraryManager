@@ -109,7 +109,7 @@ private:
 Q_DECLARE_METATYPE(LibraryEntry*)
 Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>)
 
-QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj) { return out << QString("TBD"); };
-QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj) { qDebug() << QString("TBD") ; return in; };
+inline QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj) { return out << QString("TBD"); };
+inline QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj) { qDebug() << QString("TBD") ; return in; };
 
 #endif // LIBRARYENTRY_H

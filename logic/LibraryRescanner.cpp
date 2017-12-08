@@ -244,8 +244,8 @@ void LibraryRescanner::onResultReadyAt(int index)
 	{
 		// Not sure what we got.
 		qCritical() << "pindexes/libentries/num_new_entries:" << lritem_vec.m_original_pindexes.size()
-		                                                      << lritem_vec.m_new_libentries.size()
-		                                                      << lritem_vec.m_new_libentries;
+															  << lritem_vec.m_new_libentries.size();
+															  //<< lritem_vec.m_new_libentries;
 		Q_ASSERT_X(0, "Scanning", "Not sure what we got");
 	}
 }
