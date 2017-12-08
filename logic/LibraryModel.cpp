@@ -610,12 +610,15 @@ QStringList LibraryModel::mimeTypes() const
 QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 {
 	std::vector<std::shared_ptr<LibraryEntry>> row_items;
+	QList<QUrl> urls;
+
 	for(auto i : indexes)
 	{
 		if(i.column() == 0)
 		{
 			auto e = getItem(i);
 			row_items.push_back(e);
+			urls.push_back(e->getM2Url());
 		}
 	}
 	if(row_items.size() > 0)
@@ -624,6 +627,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 		LibraryEntryMimeData* e = new LibraryEntryMimeData();
 		e->setData(mimeTypes()[0], QByteArray());
 		e->lib_item_list = row_items;
+		e->setUrls(urls);
 		return e;
 	}
 	return nullptr;
