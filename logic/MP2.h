@@ -65,8 +65,8 @@ private:
 
 	void createActions();
 	void __setTrackInfoFromUrl(QUrl url);
-	void __updateSeekToEndInfoOnMediaChange();
-	void __seekToEnd();
+	void updateSeekToEndInfoOnMediaChange();
+	void seekToEnd();
 
 public slots:
 	void play();

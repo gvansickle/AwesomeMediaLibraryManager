@@ -97,10 +97,10 @@ void MP2::__setTrackInfoFromUrl(QUrl url)
 	{
 		m_is_subtrack = false;
 	}
-	__updateSeekToEndInfoOnMediaChange();
+	updateSeekToEndInfoOnMediaChange();
 }
 
-void MP2::__updateSeekToEndInfoOnMediaChange()
+void MP2::updateSeekToEndInfoOnMediaChange()
 {
 	// We need to call this whenever the current media status changes.
 	// If we were in seek-to-end mode, this sets things up to handle any possible pending seek msg, and cancels out of
@@ -112,7 +112,7 @@ void MP2::__updateSeekToEndInfoOnMediaChange()
 		if(m_pending_seek_msg)
 		{
 			// There's an outstanding seek-to-end msg.  Ignore it when it comes in.
-			qDebug() << "__updateSeekToEndInfoOnMediaChange: Seek msg pending, will ignore next setPosition(-1)";
+			qDebug() << "Seek msg pending, will ignore next setPosition(-1)";
 			m_ignore_seek_msg = true;
 		}
 		// We're no longer in seek-to-end mode, this new track cancels it.
@@ -120,10 +120,10 @@ void MP2::__updateSeekToEndInfoOnMediaChange()
 	}
 }
 
-void MP2::__seekToEnd()
+void MP2::seekToEnd()
 {
 	// Start the seek-to-end process for a subtrack.
-	qDebug() << "__seekToEnd: queueing setPosition(-1) message.";
+	qDebug() << "Queueing setPosition(-1) message.";
 	m_seek_to_end_mode = true;
 	m_pending_seek_msg = true;
 	m_ignore_seek_msg = false;
@@ -139,7 +139,7 @@ void MP2::play()
 void MP2::stop()
 {
 	QMediaPlayer::stop();
-	__updateSeekToEndInfoOnMediaChange();
+	updateSeekToEndInfoOnMediaChange();
 	if(m_is_subtrack)
 	{
 		QMediaPlayer::setPosition(m_track_startpos_ms);
@@ -263,7 +263,7 @@ void MP2::onPositionChanged(qint64 pos)
 			if(QMediaPlayer::position() >= m_track_endpos_ms)
 			{
 				qDebug() << QString("onPositionChanged: Seeking to subtrack end: %1").arg(QMediaPlayer::duration());
-				__seekToEnd();
+				seekToEnd();
 			}
 		}
 	}
@@ -293,11 +293,11 @@ void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 	qDebug() << QString("onMediaStatusChanged: %1").arg(/*MediaStatusMap[*/status/*]*/);
 	if(status == QMediaPlayer::NoMedia)
 	{
-		__updateSeekToEndInfoOnMediaChange();
+		updateSeekToEndInfoOnMediaChange();
 	}
 	else if(status == QMediaPlayer::EndOfMedia)
 	{
-		__updateSeekToEndInfoOnMediaChange();
+		updateSeekToEndInfoOnMediaChange();
 	}
 }
 
@@ -305,13 +305,13 @@ void MP2::onCurrentMediaChanged(const QMediaContent& qmediacontent)
 {
 	// This is the active media content being played.  Could be Null.
 	qDebug() << QString("onCurrentMediaChanged:") << qmediacontent.canonicalUrl();
-	__updateSeekToEndInfoOnMediaChange();
+	updateSeekToEndInfoOnMediaChange();
 	if(!qmediacontent.isNull())
 	{
 		if(qmediacontent.playlist() == nullptr)
 		{
 			__setTrackInfoFromUrl(qmediacontent.canonicalUrl());
-			qDebug() << QString("onCurrentMediaChange: track start: %1").arg(m_track_startpos_ms);
+			qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
 			QMediaPlayer::setPosition(m_track_startpos_ms);
 		}
 	}
