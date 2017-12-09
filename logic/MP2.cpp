@@ -290,7 +290,7 @@ void MP2::onMediaChanged(const QMediaContent& media)
 
 void MP2::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
-	qDebug() << QString("onMediaStatusChanged: %1").arg(/*MediaStatusMap[*/status/*]*/);
+	qDebug() << QString("onMediaStatusChanged:") << status;
 	if(status == QMediaPlayer::NoMedia)
 	{
 		updateSeekToEndInfoOnMediaChange();

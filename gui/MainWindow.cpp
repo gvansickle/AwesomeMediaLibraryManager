@@ -442,8 +442,13 @@ M_WARNING("TODO: Hide qMediaPlaylist behind playlist_view?");
 
 void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view)
 {
+	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
+	/// OR-ed in with any other connection type, which are 0,1,2,3.
 	connect(m_controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 	connect(m_controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	
+	// Connect play() signal-to-signal.
+	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
 void MainWindow::connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw)

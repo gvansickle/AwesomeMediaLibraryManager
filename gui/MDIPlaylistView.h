@@ -33,6 +33,10 @@ class MDIPlaylistView : public MDITreeViewBase
 {
 	Q_OBJECT
 
+signals:
+
+	void play();
+
 public:
 	MDIPlaylistView(QWidget *parent = Q_NULLPTR);
 

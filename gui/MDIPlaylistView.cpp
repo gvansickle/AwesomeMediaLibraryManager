@@ -411,6 +411,10 @@ M_WARNING("TODO: Fix assumptions");
 		/// @note See "jump()" etc in the Qt5 MediaPlyer example.
 
 		m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
+
+		// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
+		// make sure it starts.
+		emit play();
 	}
 }
 
