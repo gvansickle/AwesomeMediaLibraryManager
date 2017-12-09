@@ -1015,7 +1015,7 @@ void MainWindow::savePlaylistAs()
 void MainWindow::startSettingsDialog()
 {
 	m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
-	///SettingsDialog dlg(this);
+
 	m_settings_dlg->exec();
 }
 

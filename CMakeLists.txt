@@ -211,7 +211,6 @@ if(WIN32)
 endif()
 
 set(HEADER_FILES
-	gui/ActivityProgressIndicator.h
 	gui/CollectionDockWidget.h
 	gui/Experimental.h
 	gui/FilterWidget.h
@@ -241,7 +240,6 @@ set(HEADER_FILES
 	logic/PlaylistSortFilterProxyModel.h
 	logic/TrackMetadata.h
 	utils/ActionHelpers.h
-	utils/asyncfuture.h
 	utils/ConnectHelpers.h
 	utils/DebugHelpers.h
 	utils/Fraction.h
@@ -303,7 +301,7 @@ set(SOURCE_FILES
 	utils/RegisterQtMetatypes.cpp
 	logic/CueSheetParser.cpp
 	gui/settings/SettingsDialog.cpp
-	)
+	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -330,8 +328,10 @@ endforeach()
 ###
 ### The main executable.
 ###
+### @note Including HEADER_FILES in here so they get check for existence.
+###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-        ${SOURCE_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
+	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
         )
 # Only the Qt stuff needs AUTOMOC.
 set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)

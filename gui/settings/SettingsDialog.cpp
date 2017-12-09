@@ -18,8 +18,35 @@
  */
 
 #include "SettingsDialog.h"
+
+#include <QApplication>
+
+
 SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	: QWizard(parent, flags)
 {
+	// Make this Wizard look like a Settings Dialog.
+
+	/// @todo Experiments.  Where do these strings, set on the Dialog itself, show up, if anywhere?
+	setStatusTip("SettingsDialog StatusTip");
+	setToolTip("SettingsDialog toolTip");
+	setWhatsThis("SettingsDialog what'sThis");
+
+	// Use the ModernStyle, to get rid of the big header graphic of AeroStyle, which just wastes space.
+	setWizardStyle(QWizard::ModernStyle);
+	setOptions(QWizard::HaveFinishButtonOnEarlyPages | QWizard::HaveHelpButton);
+
+	// Turn the "Finish" button into an "Ok" button.
+	setButtonText(QWizard::FinishButton, tr("OK"));
+
+	// Explicitly set the button layout.
+	// Note that the 'Commit" button is the Next button on a "Commit" page.  We'll use it here as an "Apply" button,
+	// and make every page a "Commit" page.
+	QList<QWizard::WizardButton> button_layout;
+	button_layout << QWizard::HelpButton << QWizard::Stretch << QWizard::CommitButton << QWizard::CancelButton << QWizard::FinishButton;
+
+	setButtonLayout(button_layout);
+
+	setWindowTitle(tr("Settings"));
 
 }
