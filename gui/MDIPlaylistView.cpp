@@ -45,8 +45,11 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	// Configure selection.
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
 
+	// Hook up double-click handler.
+	connect(this, &MDIPlaylistView::doubleClicked, this, &MDIPlaylistView::onDoubleClicked);
+
 	// Configure drag and drop.
-	// Playlistst can have items dragged into them as well as out of them.
+	// Playlists can have items dragged into them as well as out of them.
 	// Playlists can have their items dragged around inside them.
 	setDragEnabled(true);
 	setAcceptDrops(true);
@@ -343,13 +346,13 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 
 void MDIPlaylistView::onContextMenu(QPoint pos)
 {
-	/// @todo Implement a playlist context menu.
+M_WARNING("@todo Implement a playlist context menu.");
 
 	// Position to put the menu.
 //	auto globalPos = mapToGlobal(pos);
 	// The QModelIndex() that was right-clicked.
 	auto modelindex = indexAt(pos);
-	qDebug() << QString("INDEX: {} {} ").arg(modelindex.row()).arg(modelindex.column());
+	qDebug() << QString("INDEX: %1 %2").arg(modelindex.row()).arg(modelindex.column());
 	if(!modelindex.isValid())
 	{
 		qDebug() << "Invalid model index, not showing context menu.";
@@ -369,6 +372,30 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	// Notification from the QMediaPlaylist that the current selection has changed.
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
-	auto proxy_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapFromSource(m_underlying_model->index(position, 0));
+	auto proxy_model_index = from_underlying_qmodelindex(m_underlying_model->index(position, 0));
 	setCurrentIndex(proxy_model_index);
+}
+
+void MDIPlaylistView::onDoubleClicked(const QModelIndex& index)
+{
+	// Should always be valid.
+	Q_ASSERT(index.isValid());
+
+M_WARNING("TODO: Fix assumptions");
+	if(true) // we're the playlist connected to the player.
+	{
+		// Tell the player to start playing the song at index.
+		qDebug() << "Double-clicked index:" << index;
+	}
+}
+
+QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_index)
+{
+	return QModelIndex();
+}
+
+QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &underlying_index)
+{
+	auto proxy_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapFromSource(underlying_index);
+	return proxy_model_index;
 }

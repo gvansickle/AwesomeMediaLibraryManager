@@ -55,16 +55,22 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	// All rows are the same height.
 	setUniformRowHeights(true);
 
+	// No actual root item.
 	setRootIndex(QModelIndex());
 
 	// Item's aren't expandable.
 	setItemsExpandable(false);
 	setExpandsOnDoubleClick(false);
 
-	// Make the tree view look like a list.
+	// Eliminate the "lines to nowhere" from the nonexistent root item to the top-level entries.
 	setRootIsDecorated(false);
 
-	// Hook things up so column sorting is tri-state.
+	// Set which actions will cause the view to enter edit mode.
+	// We want double-click to not cause an entry to edit mode here, since that will be used for the
+	// "start playing this entry" action.
+	setEditTriggers(QAbstractItemView::EditKeyPressed);
+
+	// Hook things up for our tri-state column-sorting implementation.
 	connect(header(), &QHeaderView::sectionClicked, this, &MDITreeViewBase::onSectionClicked);
 
 	// Connect up our custom Header context menu.
