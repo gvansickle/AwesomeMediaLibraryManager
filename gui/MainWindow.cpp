@@ -446,7 +446,7 @@ void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
 	connect(m_controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 	connect(m_controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-	
+
 	// Connect play() signal-to-signal.
 	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
@@ -467,17 +467,17 @@ void MainWindow::updateConnections()
 
 		if(childIsLibrary != nullptr)
 		{
-			bool result = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
+			auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
 								  m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
 									Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if(!result)
+			if(!connection_handle)
 			{
 				qDebug() << "Connection failed: already connected?";
 			}
 
-			result = connect(childIsLibrary, &MDILibraryView::playTrackNowSignal,
+			connection_handle = connect(childIsLibrary, &MDILibraryView::playTrackNowSignal,
 							 this, &MainWindow::onPlayTrackNowSignal, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if(!result)
+			if(!connection_handle)
 			{
 				qDebug() << "Connection failed: already connected?";
 			}
