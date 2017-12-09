@@ -421,10 +421,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 }
 
 /**
- * @note This actually connects the player to the playlist's QMediaPlaylist and the PlayerControls to the QMediaPlaylist.
- *		The QmediaPlaylist is a member of @a playlist_view.
- * @param player
- * @param playlist_view
+ * @note This actually connects the player to the playlist's QMediaPlaylist.  Should probably encapsulate this better.
  */
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {

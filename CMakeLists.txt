@@ -256,6 +256,8 @@ set(HEADER_FILES
 	utils/AsyncDirScanner.h
 	gui/AboutBox.h
 	utils/RegisterQtMetatypes.h
+	logic/CueSheetParser.h
+	gui/settings/SettingsDialog.h
 	)
 
 # Source file list.
@@ -298,7 +300,10 @@ set(SOURCE_FILES
 	utils/concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	gui/AboutBox.cpp
-	utils/RegisterQtMetatypes.cpp logic/CueSheetParser.cpp logic/CueSheetParser.h)
+	utils/RegisterQtMetatypes.cpp
+	logic/CueSheetParser.cpp
+	gui/settings/SettingsDialog.cpp
+	)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
