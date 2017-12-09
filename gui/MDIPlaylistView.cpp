@@ -50,7 +50,8 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	// Playlists can have their items dragged around inside them.
 	setDragEnabled(true);
 	setAcceptDrops(true);
-	setDragDropMode(QAbstractItemView::DragDrop);  // View supports both dragging and dropping.
+	// View supports both dragging and dropping.
+	setDragDropMode(QAbstractItemView::DragDrop);
 	setDragDropOverwriteMode(false);
 	setDefaultDropAction(Qt::MoveAction);
 	setDropIndicatorShown(true);
