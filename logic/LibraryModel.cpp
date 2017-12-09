@@ -42,9 +42,8 @@
 
 #include "gui/ActivityProgressWidget.h"
 
-LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
+LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_library()
 {
-	m_library = new Library();
 	// App-specific cache directory.
 	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
 	// Make sure it ends in a "/".
@@ -91,11 +90,11 @@ QModelIndex LibraryModel::index(int row, int column, const QModelIndex &parent) 
 {
 	if(!parent.isValid())
 	{
-		if((!m_library->lib_entries.empty())
+		if((!m_library.m_lib_entries.empty())
 				&& (row >= 0 && row < rowCount())
 				&& (column >= 0 && column < static_cast<int>(m_columnSpecs.size())))
 		{
-			return createIndex(row, column, m_library->lib_entries[row]);
+			return createIndex(row, column, m_library.m_lib_entries[row].get());
 		}
 	}
 	//logger.warning("Returning invalid index: {}/{}/{}".format(row, column, parent))
@@ -125,10 +124,7 @@ int LibraryModel::rowCount(const QModelIndex &parent) const
 {
 	if(!parent.isValid())
 	{
-		if(m_library != nullptr)
-		{
-			return m_library->lib_entries.size();
-		}
+		return m_library.m_lib_entries.size();
 	}
 	return 0;
 }
@@ -206,7 +202,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 				if(role == Qt::ToolTipRole)
 				{
 					// Return a big tooltip with all the details of the entry.
-					return QVariant(getEntryStatusToolTip(item));
+					return QVariant(getEntryStatusToolTip(item.get()));
 				}
 				else if(role == Qt::DisplayRole)
 				{
@@ -306,16 +302,16 @@ bool LibraryModel::hasChildren(const QModelIndex& parent) const
 	}
 }
 
-LibraryEntry* LibraryModel::createDefaultConstructedEntry() const
+std::shared_ptr<LibraryEntry> LibraryModel::createDefaultConstructedEntry() const
 {
-	return new LibraryEntry();
+	return std::make_shared<LibraryEntry>();
 }
 
-LibraryEntry *LibraryModel::getItem(const QModelIndex& index) const
+std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) const
 {
 	if(index.isValid())
 	{
-		auto item = reinterpret_cast<LibraryEntry*>(index.internalPointer());
+		std::shared_ptr<LibraryEntry> item = m_library[index.row()];
 		if(item != nullptr)
 		{
 			return item;
@@ -350,12 +346,12 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 		return false;
 	}
 
-	qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
+	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
-	LibraryEntry* new_entry = value.value<LibraryEntry*>();
-	Q_ASSERT(new_entry != nullptr);
+	std::shared_ptr<LibraryEntry> new_entry = value.value<std::shared_ptr<LibraryEntry>>();
+	Q_ASSERT(new_entry);
 
-	m_library->replaceEntry(index.row(), new_entry);
+	m_library.replaceEntry(index.row(), new_entry);
 
 	// Notify subclasses of the change.
 	onSetData(pindex, value, role);
@@ -383,7 +379,7 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 	for(int i = row; i<row+count; ++i)
 	{
 		auto default_entry = createDefaultConstructedEntry();
-		m_library->insertEntry(i, default_entry);
+		m_library.insertEntry(i, default_entry);
 	}
 
 	endInsertRows();
@@ -417,7 +413,7 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 
 	for(int i = row; i < row+count; ++i)
 	{
-		m_library->removeEntry(i);
+		m_library.removeEntry(i);
 	}
 
 	if(m_first_possible_unpop_row > row)
@@ -429,14 +425,14 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 	return true;
 }
 
-void LibraryModel::appendRow(LibraryEntry *libentry)
+void LibraryModel::appendRow(std::shared_ptr<LibraryEntry> libentry)
 {
-	std::vector<LibraryEntry*> libentries;
+	std::vector<std::shared_ptr<LibraryEntry>> libentries;
 	libentries.push_back(libentry);
 	appendRows(libentries);
 }
 
-void LibraryModel::appendRows(std::vector<LibraryEntry *> libentries)
+void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentries)
 {
 	auto rowcount = rowCount();
 	beginInsertRows(QModelIndex(), rowcount, rowcount+libentries.size()-1);
@@ -444,7 +440,7 @@ void LibraryModel::appendRows(std::vector<LibraryEntry *> libentries)
 	{
 		m_first_possible_unpop_row = rowcount;
 	}
-	m_library->addNewEntries(libentries);
+	m_library.addNewEntries(libentries);
 	onRowsInserted(QModelIndex(), rowcount, rowcount+libentries.size()-1);
 	endInsertRows();
 }
@@ -469,17 +465,17 @@ SectionID LibraryModel::getSectionFromCol(int col) const
 
 QUrl LibraryModel::getLibRootDir() const
 {
-	return m_library->getRootUrl();
+	return m_library.getRootUrl();
 }
 
 QString LibraryModel::getLibraryName() const
 {
-	return m_library->getLibraryName();
+	return m_library.getLibraryName();
 }
 
 qint64 LibraryModel::getLibraryNumEntries() const
 {
-	return m_library->getNumEntries();
+	return m_library.getNumEntries();
 }
 
 void LibraryModel::setLibraryRootUrl(const QUrl& url)
@@ -487,14 +483,14 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 	beginResetModel();
 
 	// Give the library a starting point.
-	m_library->setRootUrl(url);
+	m_library.setRootUrl(url);
 
 	// Create a cache file for this Library.
 	createCacheFile(url);
 
 	connectSignals();
 	emit statusSignal(LibState::ScanningForFiles, 0, 0);
-	emit startFileScanSignal(m_library->rootURL);
+	emit startFileScanSignal(m_library.rootURL);
 
 	endResetModel();
 }
@@ -525,7 +521,7 @@ void LibraryModel::writeToJson(QJsonObject& json) const
 	qDebug() << "json object:" << json;
 	QJsonObject lib_object;
 	qDebug() << "Writing library to new json object";
-	m_library->writeToJson(lib_object, false);
+	m_library.writeToJson(lib_object, false);
 	QJsonDocument jsondoc(lib_object);
 	QByteArray jdoc_str = jsondoc.toJson();
 	///lib_cache_file.write(bytearray(jdoc_str, encoding='utf-8'));
@@ -538,7 +534,7 @@ void LibraryModel::writeToJson(QJsonObject& json) const
 	qDebug() << "committing and closing";
 	m_lib_cache_file.commit();
 	// Save the minimum of the library.
-	m_library->writeToJson(json, true);
+	m_library.writeToJson(json, true);
 }
 
 void LibraryModel::readFromJson(const QJsonObject& jo)
@@ -566,7 +562,7 @@ void LibraryModel::readFromJson(const QJsonObject& jo)
 
 	qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
 
-	m_library->readFromJson(jsondoc.object());
+	m_library.readFromJson(jsondoc.object());
 
 	connectSignals();
 	/// @todo
@@ -575,9 +571,10 @@ void LibraryModel::readFromJson(const QJsonObject& jo)
 	endResetModel();
 }
 
-LibraryModel* LibraryModel::constructFromJson(const QJsonObject& json, QObject* parent)
+QSharedPointer<LibraryModel> LibraryModel::constructFromJson(const QJsonObject& json, QObject* parent)
 {
-	LibraryModel* retval = new LibraryModel(parent);
+	///LibraryModel* retval = new LibraryModel(parent);
+	auto retval = QSharedPointer<LibraryModel>::create(parent);
 	retval->readFromJson(json);
 
 	return retval;
@@ -585,12 +582,12 @@ LibraryModel* LibraryModel::constructFromJson(const QJsonObject& json, QObject* 
 
 void LibraryModel::serializeToFile(QFileDevice& file) const
 {
-	m_library->serializeToFile(file);
+	m_library.serializeToFile(file);
 }
 
 void LibraryModel::deserializeFromFile(QFileDevice& file)
 {
-	m_library->deserializeFromFile(file);
+	m_library.deserializeFromFile(file);
 }
 
 Qt::DropActions LibraryModel::supportedDragActions() const
@@ -612,13 +609,16 @@ QStringList LibraryModel::mimeTypes() const
 
 QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 {
-	std::vector<LibraryEntry*> row_items;
+	std::vector<std::shared_ptr<LibraryEntry>> row_items;
+	QList<QUrl> urls;
+
 	for(auto i : indexes)
 	{
 		if(i.column() == 0)
 		{
 			auto e = getItem(i);
 			row_items.push_back(e);
+			urls.push_back(e->getM2Url());
 		}
 	}
 	if(row_items.size() > 0)
@@ -627,6 +627,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 		LibraryEntryMimeData* e = new LibraryEntryMimeData();
 		e->setData(mimeTypes()[0], QByteArray());
 		e->lib_item_list = row_items;
+		e->setUrls(urls);
 		return e;
 	}
 	return nullptr;
@@ -634,8 +635,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 
 void LibraryModel::onIncomingFilename(QString filename)
 {
-	LibraryEntry* new_entry;
-	new_entry = LibraryEntry::fromUrl(filename)[0];
+	auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
 	appendRow(new_entry);
 }
 
@@ -744,8 +744,8 @@ void LibraryModel::disconnectIncomingSignals()
 void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
-	qDebug() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library->getNumPopulatedEntries()).arg(rowCount());
-	emit statusSignal(LibState::PopulatingMetadata, m_library->getNumPopulatedEntries(), rowCount());
+	qDebug() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
+	emit statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
 static QString table_row(std::string s1, std::string s2)
@@ -753,7 +753,7 @@ static QString table_row(std::string s1, std::string s2)
 	QString retval = "<tr>";
 	for(auto s : {s1, s2})
 	{
-		retval += "<td>" + QString::fromStdString(s) + "</td>";
+		retval += "<td>" + toqstr(s) + "</td>";
 	}
 	retval += "</tr>";
 	return retval;
@@ -771,7 +771,7 @@ QString LibraryModel::getEntryStatusToolTip(LibraryEntry* item) const
 "<table>";
 	for(cit = mdff.cbegin(); cit != mdff.cend(); ++cit)
 	{
-		tttext += table_row(cit.key().toStdString(), cit.value().toString().toStdString());
+		tttext += table_row(tostdstr(cit.key()), tostdstr(cit.value().toString()));
 	}
 
 tttext += "</table>";
@@ -790,13 +790,13 @@ void LibraryModel::startRescan()
 		QVector<VecLibRescannerMapItems> items_to_rescan;
 
 		VecLibRescannerMapItems multientry;
-		LibraryEntry* last_entry = nullptr;
+		std::shared_ptr<LibraryEntry> last_entry = nullptr;
 
 		for(auto i=0; i<rowCount(); ++i)
 		{
 			auto item = getItem(index(i,0));
 
-			if(last_entry != nullptr && item->isFromSameFileAs(last_entry))
+			if(last_entry != nullptr && item->isFromSameFileAs(last_entry.get()))
 			{
 				// It's from the same file as the last entry we looked at.
 				// Queue it up in the current batch.

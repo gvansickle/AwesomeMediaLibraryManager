@@ -146,14 +146,11 @@ include(ExternalProject)
 set(AMLM_LIBCUE_TARGET "")
 set(AMLM_TAGLIB_TARGET "")
 
+# Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
+set(USE_BUNDLED_LIBCUE TRUE)
+
 if(NOT WIN32)
     find_package(PkgConfig REQUIRED)
-
-    pkg_check_modules(LIBCUE REQUIRED libcue
-			IMPORTED_TARGET)
-	if(LIBCUE_FOUND)
-		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
-	endif()
 
     pkg_check_modules(TAGLIB REQUIRED taglib>=1.6
 			IMPORTED_TARGET)
@@ -161,15 +158,6 @@ if(NOT WIN32)
 		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
 	endif()
 else()
-    # Use the in-tree copy of libcue.
-    add_subdirectory("third_party"
-			EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
-			)
-
-    set(AMLM_LIBCUE_TARGET "libcue")
-
-    print_target_properties(${AMLM_LIBCUE_TARGET})
-
     # Use the in-tree copy of TagLib.
     ExternalProject_Add(taglib_internal
             SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
@@ -197,6 +185,24 @@ else()
 
     print_target_properties(${AMLM_TAGLIB_TARGET})
 
+endif()
+
+if(USE_BUNDLED_LIBCUE)
+	# Use the in-tree copy of libcue.
+	add_subdirectory("third_party"
+		EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
+		)
+
+	set(AMLM_LIBCUE_TARGET "libcue")
+
+	print_target_properties(${AMLM_LIBCUE_TARGET})
+else()
+	# Use the system libcue.
+	pkg_check_modules(LIBCUE REQUIRED libcue
+		IMPORTED_TARGET)
+	if(LIBCUE_FOUND)
+		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
+	endif()
 endif()
 
 # Set up definitions and paths
@@ -249,6 +255,7 @@ set(HEADER_FILES
 	utils/concurrency/ReportingRunner.h
 	utils/AsyncDirScanner.h
 	gui/AboutBox.h
+	utils/RegisterQtMetatypes.h
 	)
 
 # Source file list.
@@ -291,7 +298,7 @@ set(SOURCE_FILES
 	utils/concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	gui/AboutBox.cpp
-		)
+	utils/RegisterQtMetatypes.cpp logic/CueSheetParser.cpp logic/CueSheetParser.h)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).

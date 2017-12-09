@@ -17,27 +17,27 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBRARYENTRYMIMEDATA_H
-#define LIBRARYENTRYMIMEDATA_H
+#include "CueSheetParser.h"
 
-#include <QMimeData>
+#include <QtGlobal>
+#include <utils/StringHelpers.h>
 
-#include <memory>
-#include <vector>
 
-class LibraryEntry;
-
-class LibraryEntryMimeData : public QMimeData
+CueSheetParser::CueSheetParser()
 {
-	Q_OBJECT
 
-public:
-	LibraryEntryMimeData();
+}
 
-	std::vector<std::shared_ptr<LibraryEntry>> lib_item_list;
+Cd *CueSheetParser::parse_cue_sheet_string(const char *bytes)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
 
-private:
-	Q_DISABLE_COPY(LibraryEntryMimeData)
-};
+	// libcue (actually flex) can't handle invalid UTF-8.
+	Q_ASSERT_X(isValidUTF8(bytes), __func__, "Invalid UTF-8 cuesheet string.");
 
-#endif // LIBRARYENTRYMIMEDATA_H
+	Cd* cd = cue_parse_string(bytes);
+
+	Q_ASSERT_X(cd != nullptr, "cuesheet", "failed to parse cuesheet string");
+
+	return cd;
+}

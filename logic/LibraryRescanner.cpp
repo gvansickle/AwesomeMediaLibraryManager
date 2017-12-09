@@ -25,6 +25,7 @@
 
 #include <QThread>
 #include <QtConcurrent>
+#include <utils/DebugHelpers.h>
 
 #include "utils/AsyncDirScanner.h"
 #include "utils/concurrency/ReportingRunner.h"
@@ -85,8 +86,8 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 		// Only one entry.
 
 		// Get the LibraryEntry* to the existing entry.
-		/// @todo There's no locking here, there needs to be, or these need to be copies.
-		LibraryEntry *item = mapitem[0].item;
+M_WARNING("There's no locking here, there needs to be, or these need to be copies.");
+		std::shared_ptr<LibraryEntry> item = mapitem[0].item;
 
 		if(!item->isPopulated())
 		{
@@ -100,7 +101,7 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 			{
 				if (!i->isPopulated())
 				{
-					qCritical() << "NOT POPULATED" << i;
+					qCritical() << "NOT POPULATED" << i.get();
 				}
 				retval.push_back(i);
 			}
@@ -113,7 +114,7 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 		else
 		{
 			//qDebug() << "Re-reading metatdata for item" << item->getUrl();
-			LibraryEntry *new_entry = item->refresh_metadata();
+			std::shared_ptr<LibraryEntry> new_entry = item->refresh_metadata();
 
 			if(new_entry == nullptr)
 			{
@@ -136,7 +137,7 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 	else if (mapitem.size() > 1)
 	{
 		// Multiple incoming tracks.
-		LibraryEntry* first_item = mapitem[0].item;
+		std::shared_ptr<LibraryEntry> first_item = mapitem[0].item;
 		auto subtracks = first_item->populate(true);
 		if(subtracks.size() < mapitem.size())
 		{
@@ -244,8 +245,8 @@ void LibraryRescanner::onResultReadyAt(int index)
 	{
 		// Not sure what we got.
 		qCritical() << "pindexes/libentries/num_new_entries:" << lritem_vec.m_original_pindexes.size()
-		                                                      << lritem_vec.m_new_libentries.size()
-		                                                      << lritem_vec.m_new_libentries;
+															  << lritem_vec.m_new_libentries.size();
+															  //<< lritem_vec.m_new_libentries;
 		Q_ASSERT_X(0, "Scanning", "Not sure what we got");
 	}
 }

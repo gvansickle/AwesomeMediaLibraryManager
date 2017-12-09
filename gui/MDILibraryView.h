@@ -23,6 +23,7 @@
 #include "MDITreeViewBase.h"
 
 #include <QUrl>
+#include <memory>
 
 class ItemDelegateLength;
 class LibrarySortFilterProxyModel;
@@ -43,7 +44,7 @@ public:
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
 signals:
-	void sendEntryToPlaylist(LibraryEntry*, PlaylistModel*);
+	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
 	void playTrackNowSignal(QUrl);
 
 protected:
@@ -62,7 +63,7 @@ protected:
 	/// @name Serialization
 	/// @{
 
-	virtual bool loadFile(QUrl load_url);
+	virtual bool loadFile(QUrl load_url) override;
 	virtual void serializeDocument(QFileDevice& file) const override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 

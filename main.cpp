@@ -30,6 +30,7 @@
 
 #include "gui/MainWindow.h"
 #include "utils/Theme.h"
+#include "utils/RegisterQtMetatypes.h"
 
 
 static void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
@@ -70,6 +71,9 @@ int main(int argc, char *argv[])
 	app.setOrganizationDomain("gvansickle.github.io");
     app.setApplicationDisplayName("Awesome Media Library Manager");
 	app.setDesktopFileName("AwesomeMediaLibraryManager.desktop");
+
+	// Register types with Qt.
+	RegisterQtMetatypes();
 
 	// Set the application Icon.
 	///@todo Get an actual icon.

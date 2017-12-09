@@ -32,6 +32,7 @@
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
+#include <logic/MP2.h>
 
 class QActionGroup;
 class QWidget;
@@ -45,7 +46,6 @@ class MDILibraryView;
 class MDIPlaylistView;
 class MetadataDockWidget;
 class CollectionDockWidget;
-class MP2;
 class ActivityProgressWidget;
 
 class MainWindow: public QMainWindow
@@ -84,7 +84,7 @@ private slots:
 	void savePlaylistAs();
 
 	void onPlayTrackNowSignal(QUrl url);
-	void onSendEntryToPlaylist(LibraryEntry* libentry, PlaylistModel* playlist_model);
+	void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
 
 	void doExperiment();
 
@@ -132,7 +132,7 @@ private:
 	QMdiSubWindow* findSubWindow(QUrl url);
 	std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
 
-	LibraryModel* openLibraryModelOnUrl(QUrl url);
+	QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
 	void openMDILibraryViewOnModel(LibraryModel* libmodel);
 
 	std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
@@ -150,13 +150,13 @@ private:
 	QUrl m_appdatadir;
 
 	/// The media player instance.
-	MP2* m_player;
+	MP2 m_player;
 
 	/// Experimental "scratch" widget for doing development experiments.
 	Experimental* m_experimental;
 
 	/// The library models.
-	std::vector<LibraryModel*> m_libmodels;
+	std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
 	/// The list of PlaylistModels.
 	std::vector<PlaylistModel*> m_playlist_models;

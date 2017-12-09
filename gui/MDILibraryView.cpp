@@ -199,7 +199,7 @@ void MDILibraryView::onContextMenu(QPoint pos)
 		if(selectedItem->data().isValid())
 		{
 			// Send the selected library item to the selected playlist.
-			emit sendEntryToPlaylist(getTypedModel()->getItem(modelindex), selectedItem->data().value<PlaylistModel*>());
+			emit sendEntryToPlaylist(std::shared_ptr<LibraryEntry>(getTypedModel()->getItem(modelindex)), selectedItem->data().value<std::shared_ptr<PlaylistModel>>());
 		}
 		else if( selectedItem == extractAct)
 		{

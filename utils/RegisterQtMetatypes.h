@@ -17,27 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBRARYENTRYMIMEDATA_H
-#define LIBRARYENTRYMIMEDATA_H
+#ifndef AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
+#define AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 
-#include <QMimeData>
 
-#include <memory>
-#include <vector>
+void RegisterQtMetatypes();
 
-class LibraryEntry;
 
-class LibraryEntryMimeData : public QMimeData
-{
-	Q_OBJECT
-
-public:
-	LibraryEntryMimeData();
-
-	std::vector<std::shared_ptr<LibraryEntry>> lib_item_list;
-
-private:
-	Q_DISABLE_COPY(LibraryEntryMimeData)
-};
-
-#endif // LIBRARYENTRYMIMEDATA_H
+#endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

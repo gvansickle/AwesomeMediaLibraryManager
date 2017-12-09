@@ -58,7 +58,7 @@ QVariant PlaylistModel::data(const QModelIndex& index, int role) const
 	auto sectionid = getSectionFromCol(index.column());
 	if(sectionid >= SectionID::PLAYLIST_1)
 	{
-		auto item = getItem(index);
+		std::shared_ptr<PlaylistModelItem> item = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(index));
 		switch(role)
 		{
 		case Qt::DisplayRole:
@@ -119,23 +119,23 @@ M_WARNING("TODO: Finish rating delegate.")
 	return LibraryModel::data(index, role);
 }
 
-PlaylistModelItem*PlaylistModel::createDefaultConstructedEntry() const
+std::shared_ptr<LibraryEntry> PlaylistModel::createDefaultConstructedEntry() const
 {
-	return new PlaylistModelItem();
+	return std::dynamic_pointer_cast<LibraryEntry>(std::make_shared<PlaylistModelItem>());
 }
 
-PlaylistModelItem* PlaylistModel::getItem(const QModelIndex& index) const
+std::shared_ptr<LibraryEntry> PlaylistModel::getItem(const QModelIndex& index) const
 {
-	LibraryEntry* libmodel_item = LibraryModel::getItem(index);
+	auto libmodel_item = LibraryModel::getItem(index);
 	Q_ASSERT(libmodel_item != nullptr);
-	PlaylistModelItem* playlist_model_item = dynamic_cast<PlaylistModelItem*>(libmodel_item);
+	auto playlist_model_item = std::dynamic_pointer_cast<PlaylistModelItem>(libmodel_item);
 	if(!playlist_model_item)
 	{
 		qCritical() << "LibraryModelItem not a PlaylistModelItem";
 	}
 
 	Q_ASSERT(playlist_model_item != nullptr);
-	return playlist_model_item;
+	return std::static_pointer_cast<LibraryEntry>(playlist_model_item);
 }
 
 bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int role)
@@ -149,11 +149,11 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		return false;
 	}
 
-	if(value.canConvert<PlaylistModelItem*>())
+	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 	{
 		qDebug() << "Can convert to PlaylistModelItem*: true";
 
-		LibraryEntry* pmitem = value.value<PlaylistModelItem*>();
+		std::shared_ptr<LibraryEntry> pmitem = value.value<std::shared_ptr<PlaylistModelItem>>();
 		QVariant casted_value = QVariant::fromValue(pmitem);
 		return LibraryModel::setData(index, casted_value, role);
 	}
@@ -295,7 +295,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 		{
 			qDebug() << "Inserting Copies";
 			// Create a new PlaylistModelItem to put in the model.
-			PlaylistModelItem* plmi = PlaylistModelItem::createFromLibraryEntry(libentry);
+			std::shared_ptr<PlaylistModelItem> plmi = PlaylistModelItem::createFromLibraryEntry(libentry);
 			setData(index(beginRow, 0), QVariant::fromValue(plmi));
 			beginRow += 1;
 		}
@@ -309,7 +309,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 		{
 			qDebug() << "Moving";
 			// The dropped libentries should actually be PlaylistEntries.
-			PlaylistModelItem* plmi = dynamic_cast<PlaylistModelItem*>(libentry);
+			std::shared_ptr<PlaylistModelItem> plmi = std::dynamic_pointer_cast<PlaylistModelItem>(libentry);
 			Q_ASSERT(plmi != 0);
 			setData(index(beginRow, 0), QVariant::fromValue(plmi));
 			beginRow += 1;
@@ -324,7 +324,7 @@ void PlaylistModel::setLibraryRootUrl(const QUrl &url)
     beginResetModel();
 
     // Give the library a starting point.
-    m_library->setRootUrl(url);
+    m_library.setRootUrl(url);
 
 M_WARNING("TODO: This is here to stop the model populator thread from starting, and we don't need a cache file.")
 //    // Create a cache file for this Library.
@@ -365,7 +365,7 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 	for(qint64 row = 0; row < rowCount(); ++row)
 	{
 		QModelIndex mi = index(row, 0, QModelIndex());
-		PlaylistModelItem* pmi = getItem(mi);
+		std::shared_ptr<PlaylistModelItem> pmi = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(mi));
 		Q_ASSERT(pmi != nullptr);
 		stream.writeStartElement("track");
 			// Location
@@ -393,7 +393,7 @@ void PlaylistModel::onRowsInserted(QModelIndex parent, int first, int last)
 	for(auto i = first; i<last+1; ++i)
 	{
 		auto child_index = index(i, 0, QModelIndex());
-		PlaylistModelItem* playlist_entry = getItem(child_index);
+		std::shared_ptr<PlaylistModelItem> playlist_entry = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(child_index));
 		QMediaContent* qmediacontent = new QMediaContent(playlist_entry->getM2Url());
 		if(!m_qmplaylist->insertMedia(i, *qmediacontent))
 		{
@@ -434,13 +434,10 @@ M_WARNING( "TODO: index is a QPersist. in the Python....")
 	{
 		qFatal("Replace-remove failed:");/// << QString("Replace-remove failed:") << m_qmplaylist->errorString();
 	}
-M_WARNING( "TODO: This looks like debug code from the Python")
-//	PlaylistModelItem* item = getItem(index);
-//	qDebug() << "Types::" << item << value;
 
-	Q_ASSERT(value.canConvert<LibraryEntry*>() == true);
+	Q_ASSERT(value.canConvert<std::shared_ptr<LibraryEntry>>() == true);
 
-	PlaylistModelItem* playlist_entry = PlaylistModelItem::createFromLibraryEntry(value.value<LibraryEntry*>());
+	std::shared_ptr<PlaylistModelItem> playlist_entry = PlaylistModelItem::createFromLibraryEntry(value.value<std::shared_ptr<LibraryEntry>>());
 	QMediaContent* qmediacontent = new QMediaContent(playlist_entry->getM2Url());
 	if(!m_qmplaylist->insertMedia(index.row(), *qmediacontent))
 	{

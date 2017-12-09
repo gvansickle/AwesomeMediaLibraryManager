@@ -42,8 +42,7 @@
 #include <taglib/flacfile.h>
 #include <taglib/flacpicture.h>
 
-// libcue includes.
-#include <libcue.h>
+#include <logic/CueSheetParser.h>
 
 #include <QDebug>
 #include "utils/DebugHelpers.h"
@@ -135,22 +134,21 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
 		//std::string key = reverse_lookup(key_val_pairs.first.toCString());
 		//qDebug() << "Normalized key:" << key;
-		std::string key = key_val_pairs.first.toCString();
+		std::string key = tostdstr(key_val_pairs.first);
 
 		std::vector<std::string> out_val;
 		// Iterate over the StringList for this key.
 		for(auto value : key_val_pairs.second)
 		{
-			/// @todo Not sure what I was doing here.
-			std::string val_as_utf8 = value.to8Bit(true);
-			//qDebug() << "Value:" << val_as_utf8 << QString::fromUtf8(val_as_utf8.c_str());
-			out_val.push_back(value.toCString(true));
+			out_val.push_back(tostdstr(value));
 		}
 		retval[key] = out_val;
 	}
 	//qDebug() << "Returning:" << retval;
 	return retval;
 }
+
+CueSheetParser MetadataTaglib::m_cue_sheet_parser;
 
 
 MetadataTaglib::MetadataTaglib() : MetadataAbstractBase()
@@ -170,10 +168,10 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 	if(file->properties().contains("CUESHEET"))
 	{
 		qDebug() << "properties() contains CUESHEET";
-		auto strlist = file->properties()["CUESHEET"];
+		TagLib::StringList strlist = file->properties()["CUESHEET"];
 		qDebug() << "CUESHEET strlist num entries:" << strlist.size();
 		qDebug() << "CUESHEET strlist entries:" << strlist.toString();
-		retval = QString::fromUtf8(strlist.toString().toCString(true));
+		retval = toqstr(strlist.toString());
 	}
 
 //	auto xiph_comment = file->xiphComment();
@@ -305,7 +303,7 @@ bool MetadataTaglib::read(QUrl url)
 	if(!cuesheet_str.empty())
 	{
 		// Try to parse the cue sheet we found with libcue.
-		Cd* cd = cue_parse_string(cuesheet_str.c_str());
+		Cd *cd = m_cue_sheet_parser.parse_cue_sheet_string(cuesheet_str.c_str());
 		if(cd == nullptr)
 		{
 			qWarning() << "Embedded cue sheet parsing failed.";
@@ -416,18 +414,15 @@ M_WARNING("TODO: This could probably be improved, e.g. not merge these in but ke
 	if(track_entry.m_PTI_TITLE.size() > 0)
 	{
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
-		std::string utf8_track_title = track_entry.m_PTI_TITLE;
-		TagLib::String tl_track_title(utf8_track_title, TagLib::String::UTF8);
-		retval.m_tag_map["TITLE"].push_back(tl_track_title.toCString(true));
+		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
 	}
 	if(track_entry.m_PTI_PERFORMER.size() > 0)
 	{
-		TagLib::String tl_track_performer(track_entry.m_PTI_PERFORMER, TagLib::String::UTF8);
-		retval.m_tag_map["PERFORMER"].push_back(tl_track_performer.toCString(true));
+		retval.m_tag_map["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
 	}
 	if(track_entry.m_isrc.size() > 0)
 	{
-		retval.m_tag_map["ISRC"].push_back(TagLib::String(track_entry.m_isrc, TagLib::String::UTF8).toCString(true));
+		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
 	}
 
 	return retval;

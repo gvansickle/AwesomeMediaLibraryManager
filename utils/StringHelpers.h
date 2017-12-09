@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <string>
 #include <QString>
+#include <taglib/tag.h>
+#include <QTextCodec>
 
 static inline std::string tostdstr(const char *cstr)
 {
@@ -37,12 +39,34 @@ static inline std::string tostdstr(const char *cstr)
 	}
 }
 
+static inline std::string tostdstr(const QString& qstr)
+{
+	// From the Qt5 docs:
+	// "Returns a std::string object with the data contained in this QString. The Unicode data is converted into 8-bit characters using the toUtf8() function."
+	return qstr.toStdString();
+}
+
+static inline std::string tostdstr(const TagLib::String &tstr)
+{
+	/* From TagLib: "Returns a deep copy of this String as an std::string.  The returned string
+     * is encoded in UTF8 if \a unicode is true [...]."
+     */
+	return tstr.to8Bit(true);
+}
+
+
 static inline QString toqstr(const std::string &str)
 {
 	// From the QT5 docs:
 	// "QString QString::fromStdString(const std::string &str)
 	//	Returns a copy of the str string. The given string is converted to Unicode using the fromUtf8() function."
 	return QString::fromStdString(str);
+}
+
+static inline QString toqstr(const TagLib::String& tstr)
+{
+	// Convert from TagLib::String (UTF-16) to QString (UTF-16).
+	return QString::fromStdString(tstr.to8Bit(true));
 }
 
 /// From a QStringList, return the first one.  If there isn't a first one, return an empty string.
@@ -65,7 +89,7 @@ template<typename LHSType, typename T>
 std::enable_if_t<std::is_same<T,TagLib::String>::value, LHSType&>
 operator<<(LHSType& out, const T& str)
 {
-	return out << str.toCString(true);
+	return out << toqstr(str);
 }
 
 /// For TagLib::StringList to QStringList.
@@ -75,6 +99,16 @@ operator<<(LHSType& out, const T& str)
 //	return out << LHSType::fromUtf8(strlist.toString().toCString(true));
 //}
 
-
+static inline bool isValidUTF8(const char* bytes)
+{
+	QTextCodec::ConverterState state;
+	QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+	const QString text = codec->toUnicode(bytes, strlen(bytes), &state);
+	if (state.invalidChars > 0)
+	{
+		return false;
+	}
+	return true;
+}
 
 #endif // STRINGHELPERS_H

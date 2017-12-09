@@ -33,20 +33,22 @@ PlaylistModelItem::~PlaylistModelItem()
 	// Just here to make sure the class has a vtable.
 }
 
-PlaylistModelItem* PlaylistModelItem::createFromLibraryEntry(const LibraryEntry* item)
+std::shared_ptr<PlaylistModelItem> PlaylistModelItem::createFromLibraryEntry(std::shared_ptr<LibraryEntry> item)
 {
-	PlaylistModelItem* pitem;
+	std::shared_ptr<PlaylistModelItem> pitem;
 
 	// First let's make sure item isn't already a PlaylistModelItem*.
-	const PlaylistModelItem* pitem_ptr = dynamic_cast<const PlaylistModelItem*>(item);
-	if(pitem_ptr != nullptr)
+	//const PlaylistModelItem* pitem_ptr = dynamic_cast<const PlaylistModelItem*>(item);
+	const std::shared_ptr<PlaylistModelItem> pitem_ptr = std::dynamic_pointer_cast<PlaylistModelItem>(item);
+	if(pitem_ptr)
 	{
-		// Forward to the copy constructor.
-		pitem = new PlaylistModelItem(*pitem_ptr);
+		// item is really a PlaylistModelEntry.  Forward to the copy constructor.
+		pitem = std::make_shared<PlaylistModelItem>(*pitem_ptr);
 	}
 	else
 	{
-		pitem = new PlaylistModelItem(*item);
+		// item is a LibraryEntry.
+		pitem = std::make_shared<PlaylistModelItem>(*item);
 	}
 	return pitem;
 }

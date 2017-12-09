@@ -44,9 +44,9 @@ private:
 	QLabel* m_text_status_label;
 	QProgressBar* m_progress_bar;
 
-	int m_last_min;
-	int m_last_max;
-	int m_last_val;
+	int m_last_min {0};
+	int m_last_max {0};
+	int m_last_val {0};
 
 	QString createTextStatusString();
 

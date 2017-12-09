@@ -28,7 +28,7 @@ LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSor
 	setFilterKeyColumn(-1);
 }
 
-LibraryEntry* LibrarySortFilterProxyModel::getItem(QModelIndex index) const
+std::shared_ptr<LibraryEntry> LibrarySortFilterProxyModel::getItem(QModelIndex index) const
 {
 	// Need to map to the source model index.
 	auto source_index = mapToSource(index);

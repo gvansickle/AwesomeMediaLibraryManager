@@ -22,8 +22,6 @@
 
 #include <QUrl>
 
-#include <deque>
-
 #include "LibraryEntry.h"
 
 class QFileDevice;
@@ -36,13 +34,15 @@ public:
 
 	void clear();
 	void setRootUrl(const QUrl& url) { rootURL = url; }
-	QUrl getRootUrl() { return rootURL; }
+	QUrl getRootUrl() const { return rootURL; }
 	QString getLibraryName() const;
 
-	void addNewEntries(std::vector<LibraryEntry*> entries);
+	void addNewEntries(std::vector<std::shared_ptr<LibraryEntry> > entries);
 	void removeEntry(int row);
-	void insertEntry(int row, LibraryEntry* entry);
-	void replaceEntry(int row, LibraryEntry* entry);
+	void insertEntry(int row, std::shared_ptr<LibraryEntry> entry);
+	void replaceEntry(int row, std::shared_ptr<LibraryEntry> entry);
+
+	std::shared_ptr<LibraryEntry> operator[](size_t index) const;
 
 	bool areAllEntriesFullyPopulated() const;
 	qint64 getNumEntries() const;
@@ -58,14 +58,14 @@ public:
 	/// @}
 
 private:
-	void addingEntry(LibraryEntry* entry);
-	void removingEntry(LibraryEntry* entry);
+	void addingEntry(const LibraryEntry* entry);
+	void removingEntry(const LibraryEntry* entry);
 
 //private:
 public:
     QUrl rootURL;
 
-	std::vector<LibraryEntry*> lib_entries;
+	std::vector<std::shared_ptr<LibraryEntry>> m_lib_entries;
 
 	qint64 num_unpopulated {0};
 	qint64 num_populated {0};

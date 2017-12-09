@@ -22,7 +22,7 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 
-
+#include <memory>
 #include <QtCore/QObject>
 #include <QtCore/QPersistentModelIndex>
 #include <QtCore/QFuture>
@@ -35,28 +35,30 @@ class LibraryModel;
 struct LibraryRescannerMapItem
 {
 	QPersistentModelIndex pindex {QPersistentModelIndex()};
-	LibraryEntry* item {nullptr};
+	std::shared_ptr<LibraryEntry> item {nullptr};
 };
 
 struct MetadataReturnVal
 {
 	QVector<QPersistentModelIndex> m_original_pindexes;
-	QVector<LibraryEntry*> m_new_libentries;
+	QVector<std::shared_ptr<LibraryEntry>> m_new_libentries;
 	int m_num_tracks_found {0};
 
-	void push_back(QPersistentModelIndex pmi, LibraryEntry* le)
+	void push_back(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> le)
 	{
 		m_original_pindexes.push_back(pmi);
 		m_new_libentries.push_back(le);
 		m_num_tracks_found++;
 	}
 
-	void push_back(LibraryEntry* le)
+	void push_back(std::shared_ptr<LibraryEntry> le)
 	{
 		m_new_libentries.push_back(le);
 		m_num_tracks_found++;
 	}
 };
+
+Q_DECLARE_METATYPE(MetadataReturnVal)
 
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;
 

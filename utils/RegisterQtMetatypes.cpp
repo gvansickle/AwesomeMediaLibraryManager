@@ -17,27 +17,13 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBRARYENTRYMIMEDATA_H
-#define LIBRARYENTRYMIMEDATA_H
+#include "RegisterQtMetatypes.h"
 
-#include <QMimeData>
+#include <logic/LibraryEntry.h>
 
-#include <memory>
-#include <vector>
-
-class LibraryEntry;
-
-class LibraryEntryMimeData : public QMimeData
+void RegisterQtMetatypes()
 {
-	Q_OBJECT
-
-public:
-	LibraryEntryMimeData();
-
-	std::vector<std::shared_ptr<LibraryEntry>> lib_item_list;
-
-private:
-	Q_DISABLE_COPY(LibraryEntryMimeData)
-};
-
-#endif // LIBRARYENTRYMIMEDATA_H
+	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
+	qRegisterMetaType<LibraryEntry>();
+	qRegisterMetaTypeStreamOperators<LibraryEntry>("LibraryEntry");
+}

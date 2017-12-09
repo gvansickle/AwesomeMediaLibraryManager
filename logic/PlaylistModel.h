@@ -23,6 +23,8 @@
 #include "LibraryModel.h"
 #include "PlaylistModelItem.h"
 
+#include <memory>
+
 class QMediaPlaylist;
 
 
@@ -52,9 +54,9 @@ public:
 
 	/// Override this in derived classes to return a newly-allocated, default-constructed instance
 	/// of an entry derived from LibraryEntry.  Used by insertRows().
-	virtual PlaylistModelItem* createDefaultConstructedEntry() const override;
+	virtual std::shared_ptr<LibraryEntry> createDefaultConstructedEntry() const override;
 
-	virtual PlaylistModelItem* getItem(const QModelIndex& index) const override;
+	virtual std::shared_ptr<LibraryEntry> getItem(const QModelIndex& index) const override;
 
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
@@ -90,5 +92,6 @@ private:
 };
 
 Q_DECLARE_METATYPE(const PlaylistModel*)
+Q_DECLARE_METATYPE(std::shared_ptr<PlaylistModel>)
 
 #endif // PLAYLISTMODEL_H

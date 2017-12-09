@@ -32,6 +32,7 @@
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
+#include <utils/StringHelpers.h>
 
 LibraryEntry::LibraryEntry()
 {
@@ -51,12 +52,12 @@ QVector<LibraryEntry*> LibraryEntry::fromUrl(QUrl fileurl)
 	return retval;
 }
 
-std::vector<LibraryEntry*> LibraryEntry::populate(bool force_refresh)
+std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
 {
 	// Populate the metadata.  Assumption is that all we have before calling this is self.url.
 	// returns A list of LibraryEntry's, or self if self.url was not a multi-track file.
 
-	std::vector<LibraryEntry*> retval;
+	std::vector<std::shared_ptr<LibraryEntry>> retval;
 
 	// Some sanity checks first.
 	if(!m_url.isValid())
@@ -71,7 +72,7 @@ std::vector<LibraryEntry*> LibraryEntry::populate(bool force_refresh)
 		return retval;
 	}
 
-#if 0 /// @todo Look for an associated *.cue sheet.
+#if 0 /// @todo Look for an associated *.cue sheet file.
 	// Check for an associated cuesheet.
 	cue_name = re.sub(r"\.[\w]+$", r".cue", url_as_local)
 	cue_file: QFile = QFile(cue_name)
@@ -94,7 +95,7 @@ std::vector<LibraryEntry*> LibraryEntry::populate(bool force_refresh)
 	{
 		// Read failed.
 		qWarning() << "Can't get metadata for file '" << m_url << "'";
-		auto new_entry = new LibraryEntry(*this);
+		auto new_entry = std::make_shared<LibraryEntry>(*this);
 		new_entry->m_is_populated = true;
 		new_entry->m_is_error = true;
 		retval.push_back(new_entry);
@@ -106,7 +107,7 @@ std::vector<LibraryEntry*> LibraryEntry::populate(bool force_refresh)
 			// Couldn't load a cue sheet, this is probably a single-song file.
 			qDebug() << "No cuesheet for file" << this->m_url;
 
-			auto new_entry = new LibraryEntry(*this);
+			auto new_entry = std::make_shared<LibraryEntry>(*this);
 			new_entry->m_metadata = file_metadata;
 			new_entry->m_length_secs = file_metadata.total_length_seconds();
 			new_entry->m_is_subtrack = false;
@@ -147,7 +148,7 @@ std::vector<LibraryEntry*> LibraryEntry::populate(bool force_refresh)
 
 
 				/// Create the new entry.
-				auto new_entry = new LibraryEntry(*this);
+				auto new_entry = std::make_shared<LibraryEntry>(*this);
 				new_entry->m_track_number = tn;
 				new_entry->m_total_track_number = sheet_track.m_total_track_number;
 				new_entry->m_metadata = track_metadata;
@@ -164,9 +165,9 @@ std::vector<LibraryEntry*> LibraryEntry::populate(bool force_refresh)
 	return retval;
 }
 
-LibraryEntry* LibraryEntry::refresh_metadata()
+std::shared_ptr<LibraryEntry> LibraryEntry::refresh_metadata()
 {
-	LibraryEntry* retval = nullptr;
+	std::shared_ptr<LibraryEntry> retval = nullptr;
 
 	// Some sanity checks first.
 	if(!m_url.isValid())
@@ -182,7 +183,7 @@ LibraryEntry* LibraryEntry::refresh_metadata()
 	{
 		// Read failed.
 		qWarning() << "Can't get metadata for file" << m_url;
-		auto new_entry = new LibraryEntry(*this);
+		auto new_entry = std::make_shared<LibraryEntry>(*this);
 		new_entry->m_is_populated = true;
 		new_entry->m_is_error = true;
 		retval = new_entry;
@@ -194,7 +195,7 @@ LibraryEntry* LibraryEntry::refresh_metadata()
 			// Couldn't load a cue sheet, this is probably a single-song file.
 			qDebug() << "No cuesheet for file" << this->m_url;
 
-			auto new_entry = new LibraryEntry(*this);
+			auto new_entry = std::make_shared<LibraryEntry>(*this);
 			new_entry->m_metadata = file_metadata;
 			new_entry->m_length_secs = file_metadata.total_length_seconds();
 			new_entry->m_is_subtrack = false;
@@ -367,7 +368,7 @@ QStringList LibraryEntry::getMetadata(QString key) const
 {
 	if(isPopulated() && !isError())
 	{
-		std::string str = m_metadata[key.toStdString()];
+		std::string str = m_metadata[tostdstr(key)];
 		if(str.empty())
 		{
 			return QStringList();

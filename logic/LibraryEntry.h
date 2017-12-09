@@ -38,9 +38,9 @@ public:
 
 	static QVector<LibraryEntry*> fromUrl(QUrl fileurl = QUrl());
 
-	std::vector<LibraryEntry*> populate(bool force_refresh = false);
+	std::vector<std::shared_ptr<LibraryEntry> > populate(bool force_refresh = false);
 
-	LibraryEntry* refresh_metadata();
+	std::shared_ptr<LibraryEntry> refresh_metadata();
 
 	bool isPopulated() const { return m_is_populated; }
 	bool isError() const { return m_is_error; }
@@ -106,6 +106,11 @@ private:
 };
 
 /// So we can more easily pass ptrs in QVariants.
+Q_DECLARE_METATYPE(LibraryEntry)
 Q_DECLARE_METATYPE(LibraryEntry*)
+Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>)
+
+inline QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj) { return out << QString("TBD"); };
+inline QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj) { qDebug() << QString("TBD") ; return in; };
 
 #endif // LIBRARYENTRY_H

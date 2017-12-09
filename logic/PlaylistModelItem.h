@@ -30,7 +30,7 @@ public:
 	PlaylistModelItem(const PlaylistModelItem& other);
 	~PlaylistModelItem() override;
 
-	static PlaylistModelItem* createFromLibraryEntry(const LibraryEntry* item);
+	static std::shared_ptr<PlaylistModelItem> createFromLibraryEntry(std::shared_ptr<LibraryEntry> item);
 
 	int m_user_rating {0};
 	bool m_is_blacklisted {false};
@@ -38,5 +38,6 @@ public:
 
 /// So we can more easily pass ptrs in QVariants.
 Q_DECLARE_METATYPE(PlaylistModelItem*);
+Q_DECLARE_METATYPE(std::shared_ptr<PlaylistModelItem>);
 
 #endif // PLAYLISTMODELITEM_H

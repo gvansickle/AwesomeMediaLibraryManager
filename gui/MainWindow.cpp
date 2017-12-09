@@ -72,7 +72,7 @@
 #include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
 	// Name our GUI thread.
 	QThread::currentThread()->setObjectName("GUIThread");
@@ -96,11 +96,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(par
     // Follow the system style for the Icon&/|Text setting for toolbar buttons.
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
-    // The player object.
-	m_player = new MP2(this);
-
 M_WARNING("TODO: ifdef this to development only")
-	m_experimental = new Experimental(parent);
+	m_experimental = new Experimental(this);
 
     // The list of LibraryModels.
 	m_libmodels.clear();
@@ -386,7 +383,7 @@ void MainWindow::createConnections()
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
-	__connectPlayerAndControls(m_player, m_controls);
+	__connectPlayerAndControls(&m_player, m_controls);
 
     // Connect with the CollectionDockWidget.
 	connect(m_libraryDockWidget, &CollectionDockWidget::showLibViewSignal, this, &MainWindow::onShowLibrary);
@@ -473,7 +470,7 @@ void MainWindow::updateConnections()
 
 		if(childIsPlaylist != nullptr)
 		{
-			__connectPlayerAndPlaylistView(m_player, childIsPlaylist);
+			__connectPlayerAndPlaylistView(&m_player, childIsPlaylist);
 		}
 	}
 }
@@ -689,18 +686,21 @@ void MainWindow::readLibSettings(QSettings& settings)
 		qDebug() << "Jsondoc:" << jsondoc.toJson();
 		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
 
-		LibraryModel* libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
+		QSharedPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
 
 		if(libmodel == nullptr)
 		{
 			QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
 								  QMessageBox::Ok);
 		}
-		m_libmodels.push_back(libmodel);
-		// Add the new library to the Collection Doc Widget.
-		m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel));
-		// Hook up the status signal from the library model to this class's onStatusSignal handler.
-		connect(libmodel, &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
+		else
+		{
+			m_libmodels.push_back(libmodel);
+			// Add the new library to the Collection Doc Widget.
+			m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel.data()));
+			// Hook up the status signal from the library model to this class's onStatusSignal handler.
+			connect(libmodel.data(), &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
+		}
 	}
 	settings.endArray();
 }
@@ -770,7 +770,7 @@ void MainWindow::openWindows()
 	for(auto m : m_libmodels)
 	{
 		qDebug() << QString("Opening view on model:") << m->getLibraryName() << m->getLibRootDir();
-		openMDILibraryViewOnModel(m);
+		openMDILibraryViewOnModel(m.data());
 	}
 }
 
@@ -779,18 +779,18 @@ void MainWindow::openWindows()
 ////// Action targets.
 //////
 
-LibraryModel* MainWindow::openLibraryModelOnUrl(QUrl url)
+QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 {
-	// Create the new lib.
-	auto lib = new LibraryModel(this);
+	// Create the new LibraryModel.
+	auto lib = QSharedPointer<LibraryModel>(new LibraryModel(this));
 	m_libmodels.push_back(lib);
 	lib->setLibraryRootUrl(url);
 
 	// Add the new library to the Collection Doc Widget.
-	m_libraryDockWidget->addLibrary(new LocalLibraryItem(lib));
+	m_libraryDockWidget->addLibrary(new LocalLibraryItem(lib.data()));
 
 	// Hook up the status signal from the library model to this class's onStatusSignal handler.
-	connect(lib, &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
+	connect(lib.data(), &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
 
 	return lib;
 }
@@ -838,13 +838,13 @@ void MainWindow::importLib()
 		if(l->getLibRootDir() == lib_url)
 		{
 			qDebug() << "LibraryModel URL '" << lib_url << "' is already open.";
-			lib = l;
+			lib = l.data();
 		}
 	}
 	if(lib == nullptr)
 	{
         // Create the new LibraryModel.
-		lib = openLibraryModelOnUrl(lib_url);
+		lib = openLibraryModelOnUrl(lib_url).data();
 	}
 
     // Open a view on it.
@@ -910,7 +910,8 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
 			qDebug() << QString("Removing libmodel:") << m << ", have" << m_libmodels.size() << "model(s).";
 			m->close(true);
 			m_libmodels.erase(m_libmodels.begin() + index);
-			delete m;
+			// Delete the model.
+			m.clear();
 			break;
 		}
 		index++;
@@ -950,12 +951,12 @@ void MainWindow::onPlayTrackNowSignal(QUrl url)
 	qWarning() << QString("PlayTrackNow not implemented: '%1'").arg(url.toString());
 }
 
-void MainWindow::onSendEntryToPlaylist(LibraryEntry* libentry, PlaylistModel* playlist_model)
+void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model)
 {
-	qDebug() << QString("Sending entry to playlist:") << playlist_model;
+	qDebug() << QString("Sending entry to playlist:") << playlist_model.get();
 	if(playlist_model != nullptr)
 	{
-		PlaylistModelItem* new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);
+		auto new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);
 		playlist_model->appendRow(new_playlist_entry);
 	}
 }
