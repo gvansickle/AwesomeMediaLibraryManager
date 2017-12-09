@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <string>
 #include <QString>
+#include <QTextCodec>
 
 static inline std::string tostdstr(const char *cstr)
 {
@@ -97,6 +98,16 @@ operator<<(LHSType& out, const T& str)
 //	return out << LHSType::fromUtf8(strlist.toString().toCString(true));
 //}
 
-
+static inline bool isValidUTF8(const char* bytes)
+{
+	QTextCodec::ConverterState state;
+	QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+	const QString text = codec->toUnicode(bytes, strlen(bytes), &state);
+	if (state.invalidChars > 0)
+	{
+		return false;
+	}
+	return true;
+}
 
 #endif // STRINGHELPERS_H

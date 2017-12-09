@@ -190,7 +190,9 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 
 static Cd* parse_cue_sheet_string(const char * bytes)
 {
-	// Let's first assume that bytes is a UTF-8 string, and that libcue can handle that.
+	// libcue (actually flex) can't handle invalid UTF-8.
+	Q_ASSERT_X(isValidUTF8(bytes), __func__, "Invalid UTF-8 cuesheet string.");
+
 	Cd* cd = cue_parse_string(bytes);
 
 	Q_ASSERT_X(cd != nullptr, "cuesheet", "failed to parse cuesheet string");
