@@ -383,7 +383,7 @@ void MainWindow::createConnections()
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
-	__connectPlayerAndControls(&m_player, m_controls);
+	connectPlayerAndControls(&m_player, m_controls);
 
     // Connect with the CollectionDockWidget.
 	connect(m_libraryDockWidget, &CollectionDockWidget::showLibViewSignal, this, &MainWindow::onShowLibrary);
@@ -395,7 +395,7 @@ void MainWindow::createConnections()
 	updateConnections();
 }
 
-void MainWindow::__connectPlayerAndControls(MP2* player, PlayerControls* controls)
+void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 {
 	// PlayerControls -> MP2 signals.
 	connect(controls, &PlayerControls::play, player, &MP2::play);
@@ -420,8 +420,15 @@ void MainWindow::__connectPlayerAndControls(MP2* player, PlayerControls* control
 	controls->setVolume(player->volume());
 }
 
-void MainWindow::__connectPlayerAndPlaylistView(MP2* player, MDIPlaylistView* playlist_view)
+/**
+ * @note This actually connects the player to the playlist's QMediaPlaylist and the PlayerControls to the QMediaPlaylist.
+ *		The QmediaPlaylist is a member of @a playlist_view.
+ * @param player
+ * @param playlist_view
+ */
+void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
+M_WARNING("TODO: Hide qMediaPlaylist behind playlist_view?");
 	if(player->playlist() == playlist_view->getQMediaPlaylist())
 	{
 		qDebug() << "Already connected.";
@@ -430,10 +437,18 @@ void MainWindow::__connectPlayerAndPlaylistView(MP2* player, MDIPlaylistView* pl
 	{
 		QMediaPlaylist* qmp = playlist_view->getQMediaPlaylist();
 		player->setPlaylist(qmp);
-
-		connect(m_controls, &PlayerControls::next, qmp, &QMediaPlaylist::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-		connect(m_controls, &PlayerControls::previous, qmp, &QMediaPlaylist::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 	}
+}
+
+void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view)
+{
+	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
+	/// OR-ed in with any other connection type, which are 0,1,2,3.
+	connect(m_controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	connect(m_controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+
+	// Connect play() signal-to-signal.
+	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
 void MainWindow::connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw)
@@ -452,17 +467,17 @@ void MainWindow::updateConnections()
 
 		if(childIsLibrary != nullptr)
 		{
-			bool result = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
+			auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
 								  m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
 									Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if(!result)
+			if(!connection_handle)
 			{
 				qDebug() << "Connection failed: already connected?";
 			}
 
-			result = connect(childIsLibrary, &MDILibraryView::playTrackNowSignal,
+			connection_handle = connect(childIsLibrary, &MDILibraryView::playTrackNowSignal,
 							 this, &MainWindow::onPlayTrackNowSignal, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if(!result)
+			if(!connection_handle)
 			{
 				qDebug() << "Connection failed: already connected?";
 			}
@@ -470,7 +485,8 @@ void MainWindow::updateConnections()
 
 		if(childIsPlaylist != nullptr)
 		{
-			__connectPlayerAndPlaylistView(&m_player, childIsPlaylist);
+			connectPlayerAndPlaylistView(&m_player, childIsPlaylist);
+			connectPlayerControlsAndPlaylistView(m_controls, childIsPlaylist);
 		}
 	}
 }
@@ -1154,6 +1170,7 @@ void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)
 	m_numSongsIndicator->setText(QString("Number of Songs: %1").arg(num_songs));
 #endif
 }
+
 #if 0
 
     @pyqtSlot()

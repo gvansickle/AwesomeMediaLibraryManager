@@ -33,6 +33,10 @@ class MDIPlaylistView : public MDITreeViewBase
 {
 	Q_OBJECT
 
+signals:
+
+	void play();
+
 public:
 	MDIPlaylistView(QWidget *parent = Q_NULLPTR);
 
@@ -41,6 +45,10 @@ public:
 	virtual void setModel(QAbstractItemModel* model) override;
 
 	virtual PlaylistModel* underlyingModel() const;
+
+public slots:
+	void next();
+	void previous();
 
 protected:
 
@@ -65,6 +73,12 @@ protected:
 protected slots:
 	virtual void playlistPositionChanged(qint64 position);
 
+	/// Invoked when user double-clicks on an entry.
+	/// According to Qt5 docs, index will always be valid:
+	/// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:
+	/// "The [doubleClicked] signal is only emitted when the index is valid."
+	void onDoubleClicked(const QModelIndex &index);
+
 private slots:
 	void onContextMenu(QPoint pos);
 
@@ -72,6 +86,12 @@ private:
 	Q_DISABLE_COPY(MDIPlaylistView)
 
 	bool dropOn(QDropEvent *event, int *dropRow, int *dropCol, QModelIndex *dropIndex);
+
+	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
+	QModelIndex to_underlying_qmodelindex(const QModelIndex& proxy_index);
+	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
+	QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index);
+
 
 	PlaylistModel* m_underlying_model;
 	LibrarySortFilterProxyModel* m_sortfilter_model;

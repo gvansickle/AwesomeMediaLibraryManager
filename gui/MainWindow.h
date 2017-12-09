@@ -102,9 +102,16 @@ private:
     void updateMenus();
 
     void updateWindowMenu();
-	void __connectPlayerAndControls(MP2* m_player, PlayerControls* m_controls);
-	void __connectPlayerAndPlaylistView(MP2* m_player, MDIPlaylistView* playlist_view);
+
+	/// @name Signal/slot Connection management.
+	///@{
+	void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
+	void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
+	void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
+
 	void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
+	///@}
+
 	void stopAllBackgroundThreads();
 
     void importLib();
