@@ -18,3 +18,8 @@
  */
 
 #include "SettingsDialog.h"
+SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
+	: QWizard(parent, flags)
+{
+
+}

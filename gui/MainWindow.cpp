@@ -249,8 +249,8 @@ void MainWindow::createActions()
 	connect(m_aboutQtAct, &QAction::triggered, this, &QApplication::aboutQt);
 
 	/// Experimental actions
-	m_experimentalAct = make_action(QIcon::fromTheme("stop"), "Experimental", this,
-								   QKeySequence(), "Invoke experimental code");
+	m_experimentalAct = make_action(QIcon::fromTheme("edit-bomb"), "Experimental", this,
+								   QKeySequence(), "Invoke experimental code - USE AT YOUR OWN RISK");
 								   //triggered=doExperiment);
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 }
@@ -1014,10 +1014,9 @@ void MainWindow::savePlaylistAs()
 
 void MainWindow::startSettingsDialog()
 {
-#if TODO
-	SettingsDialog dlg(this);
-	dlg.exec();
-#endif
+	m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
+	///SettingsDialog dlg(this);
+	m_settings_dlg->exec();
 }
 
 #if 0

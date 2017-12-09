@@ -21,9 +21,14 @@
 #define AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOG_H
 
 
-class SettingsDialog
-{
+#include <QWizard>
 
+class SettingsDialog : public QWizard
+{
+	Q_OBJECT
+
+public:
+	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
 };
 
 

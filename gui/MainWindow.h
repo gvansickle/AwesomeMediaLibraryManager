@@ -33,6 +33,7 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 #include <logic/MP2.h>
+#include <gui/settings/SettingsDialog.h>
 
 class QActionGroup;
 class QWidget;
@@ -231,5 +232,8 @@ private:
 
     /// The Activity Progress Widget.
 	ActivityProgressWidget* m_activity_progress_widget;
+
+	/// The Settings (AKA Preferences, AKA Config) dialog.
+	QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 
