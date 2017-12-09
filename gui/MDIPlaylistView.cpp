@@ -373,6 +373,8 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	// Since we have a QSortFilterProxyModel between us and the underlying model, we need to convert the position,
 	// which is in underlying-model coordinates, to proxy model coordinates.
 	auto proxy_model_index = from_underlying_qmodelindex(m_underlying_model->index(position, 0));
+
+	// @todo or should this change the selected index?
 	setCurrentIndex(proxy_model_index);
 }
 
@@ -386,12 +388,22 @@ M_WARNING("TODO: Fix assumptions");
 	{
 		// Tell the player to start playing the song at index.
 		qDebug() << "Double-clicked index:" << index;
+		auto underlying_model_index = to_underlying_qmodelindex(index);
+
+		Q_ASSERT(underlying_model_index.isValid());
+
+		qDebug() << "Underlying index:" << underlying_model_index;
+
+
 	}
 }
 
 QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_index)
 {
-	return QModelIndex();
+	auto underlying_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapToSource(proxy_index);
+	Q_ASSERT(underlying_model_index.isValid());
+
+	return underlying_model_index;
 }
 
 QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &underlying_index)
