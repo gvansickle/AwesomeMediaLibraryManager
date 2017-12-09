@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <string>
 #include <QString>
+#include <taglib/tag.h>
 #include <QTextCodec>
 
 static inline std::string tostdstr(const char *cstr)
