@@ -420,8 +420,15 @@ void MainWindow::__connectPlayerAndControls(MP2* player, PlayerControls* control
 	controls->setVolume(player->volume());
 }
 
+/**
+ * @note This actually connects the player to the playlist's QMediaPlaylist and the PlayerControls to the QMediaPlaylist.
+ *		The QmediaPlaylist is a member of @a playlist_view.
+ * @param player
+ * @param playlist_view
+ */
 void MainWindow::__connectPlayerAndPlaylistView(MP2* player, MDIPlaylistView* playlist_view)
 {
+M_WARNING("TODO: Hide qMediaPlaylist behind playlist_view?");
 	if(player->playlist() == playlist_view->getQMediaPlaylist())
 	{
 		qDebug() << "Already connected.";

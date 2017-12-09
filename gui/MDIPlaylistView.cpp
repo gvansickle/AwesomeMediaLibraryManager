@@ -394,7 +394,11 @@ M_WARNING("TODO: Fix assumptions");
 
 		qDebug() << "Underlying index:" << underlying_model_index;
 
+		// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
+		// start the song.
+		/// @note See "jump()" etc in the Qt5 MediaPlyer example.
 
+		m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
 	}
 }
 
