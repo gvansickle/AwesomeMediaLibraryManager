@@ -42,6 +42,10 @@ public:
 
 	virtual PlaylistModel* underlyingModel() const;
 
+public slots:
+	void next();
+	void previous();
+
 protected:
 
 	///

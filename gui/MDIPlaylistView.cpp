@@ -344,6 +344,18 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 	return m_underlying_model;
 }
 
+void MDIPlaylistView::next()
+{
+	// Forward to the QMediaPlaylist.
+	m_underlying_model->qmplaylist()->next();
+}
+
+void MDIPlaylistView::previous()
+{
+	// Forward to the QMediaPlaylist.
+	m_underlying_model->qmplaylist()->previous();
+}
+
 void MDIPlaylistView::onContextMenu(QPoint pos)
 {
 M_WARNING("@todo Implement a playlist context menu.");
