@@ -34,7 +34,7 @@ MP2::MP2(QObject* parent, Flags flags) : QMediaPlayer(parent, flags)
 	setAudioRole(QAudio::MusicRole);
 	setNotifyInterval(10); // ms
 
-	__createActions();
+	createActions();
 
 	// Make initial connections.
 	connect(this, &QMediaPlayer::positionChanged, this, &MP2::onPositionChanged);
@@ -71,7 +71,7 @@ qint64 MP2::duration() const
 	}
 }
 
-void MP2::__createActions()
+void MP2::createActions()
 {
 	m_shuffleAct = make_action(QIcon::fromTheme("media-playlist-shuffle"), "Shuffle", this,
 					QKeySequence(),

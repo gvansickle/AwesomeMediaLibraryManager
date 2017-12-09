@@ -63,7 +63,7 @@ private:
 	/// For managing transitions between Shuffle/Sequential+Stop/Sequential+Repeat.
 	bool m_last_repeat_state = false;
 
-	void __createActions();
+	void createActions();
 	void __setTrackInfoFromUrl(QUrl url);
 	void __updateSeekToEndInfoOnMediaChange();
 	void __seekToEnd();
