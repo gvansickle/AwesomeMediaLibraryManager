@@ -22,6 +22,9 @@
 
 
 #include <QWizard>
+#include <QPointer>
+
+#include "SettingsDialogSideWidget.h"
 
 class SettingsDialog : public QWizard
 {
@@ -29,7 +32,12 @@ class SettingsDialog : public QWizard
 
 public:
 	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
+    
+private:
+    
+    QPointer<SettingsDialogSideWidget> m_contents_side_widget;
 };
 
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOG_H
+

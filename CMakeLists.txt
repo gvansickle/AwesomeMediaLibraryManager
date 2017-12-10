@@ -256,6 +256,7 @@ set(HEADER_FILES
 	utils/RegisterQtMetatypes.h
 	logic/CueSheetParser.h
 	gui/settings/SettingsDialog.h
+	gui/settings/SettingsDialogSideWidget.h
 	)
 
 # Source file list.
@@ -301,7 +302,9 @@ set(SOURCE_FILES
 	utils/RegisterQtMetatypes.cpp
 	logic/CueSheetParser.cpp
 	gui/settings/SettingsDialog.cpp
-	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h gui/settings/SDPageAppearance.cpp gui/settings/SDPageAppearance.h)
+	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h
+	gui/settings/SDPageAppearance.cpp gui/settings/SDPageAppearance.h
+	gui/settings/SettingsDialogSideWidget.cpp)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).

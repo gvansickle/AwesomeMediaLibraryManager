@@ -18,6 +18,7 @@
  */
 
 #include "SettingsDialog.h"
+#include "SDPageAppearance.h"
 
 #include <QApplication>
 
@@ -48,5 +49,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	setButtonLayout(button_layout);
 
 	setWindowTitle(tr("Settings"));
+
+	// Add all the pages.
+	addPage(new SDPageAppearance(this));
 
 }

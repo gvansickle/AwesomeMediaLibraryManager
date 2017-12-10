@@ -17,17 +17,13 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
-#define AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
+#include "SettingsDialogSideWidget.h"
 
-
-#include "SettingsDialogPageBase.h"
-
-class SDPageAppearance : public SettingsDialogPageBase
+SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent, Qt::WindowFlags f) : QListWidget(parent)
 {
-public:
-	SDPageAppearance(QWidget *parent = nullptr);
-};
-
-
-#endif //AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
+    setViewMode(QListView::IconMode);
+    setIconSize(QSize(96, 84));
+    setMovement(QListView::Static);
+    setMaximumWidth(128);
+    setSpacing(12);
+}
