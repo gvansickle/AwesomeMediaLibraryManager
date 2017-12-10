@@ -21,21 +21,31 @@
 #define AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOG_H
 
 
-#include <QWizard>
+#include <QDialog>
 #include <QPointer>
+#include <QtWidgets/QDialogButtonBox>
+#include <QtWidgets/QStackedWidget>
 
 #include "SettingsDialogSideWidget.h"
+#include "SettingsDialogPageBase.h"
 
-class SettingsDialog : public QWizard
+class SettingsDialog : public QDialog
 {
 	Q_OBJECT
 
 public:
 	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
+
+	void addPage(SettingsDialogPageBase * page);
     
 private:
     
     QPointer<SettingsDialogSideWidget> m_contents_side_widget;
+
+	QDialogButtonBox m_dialog_button_box;
+
+	// The stacked widget which will hold the pages.
+	QStackedWidget m_page_stack_widget;
 };
 
 

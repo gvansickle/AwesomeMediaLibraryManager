@@ -19,41 +19,32 @@
 
 #include "SettingsDialog.h"
 #include "SDPageAppearance.h"
+#include "SDPageLibrary.h"
 
 #include <QApplication>
+#include <QLayout>
+
 #include <utils/Theme.h>
+#include <QtWidgets/QStackedWidget>
 
 
 SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
-	: QWizard(parent, flags)
+	: QDialog(parent, flags),
+	  m_dialog_button_box(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply | QDialogButtonBox::Help,
+	                      Qt::Horizontal, this),
+	  m_page_stack_widget(this)
 {
-	// Make this Wizard look like a Settings Dialog.
-
 	/// @todo Experiments.  Where do these strings, set on the Dialog itself, show up, if anywhere?
 	setStatusTip("SettingsDialog StatusTip");
 	setToolTip("SettingsDialog toolTip");
 	setWhatsThis("SettingsDialog what'sThis");
 
-	// Use the ModernStyle, to get rid of the big header graphic of AeroStyle, which just wastes space.
-	setWizardStyle(QWizard::ModernStyle);
-	setOptions(QWizard::HaveFinishButtonOnEarlyPages | QWizard::HaveHelpButton);
+	setWindowTitle(tr("Settings"));
 
-	// Turn the "Finish" button into an "Ok" button.
-	setButtonText(QWizard::FinishButton, tr("OK"));
+	setSizeGripEnabled(true);
 
-	// Explicitly set the button layout.
-	// Note that the 'Commit" button is the Next button on a "Commit" page.  We'll use it here as an "Apply" button,
-	// and make every page a "Commit" page.
-	QList<QWizard::WizardButton> button_layout;
-	button_layout << QWizard::HelpButton << QWizard::Stretch << QWizard::CommitButton << QWizard::CancelButton << QWizard::FinishButton;
-	setButtonLayout(button_layout);
-
-    
     // Set the contents/page selector/side widget.
     m_contents_side_widget = new SettingsDialogSideWidget(this);
-    setSideWidget(m_contents_side_widget);
-    
-	setWindowTitle(tr("Settings"));
 
 	// Add all the pages.
 	addPage(new SDPageAppearance(this));
@@ -62,4 +53,28 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 						"View/Change appearance-related settings",
 						"This selection will allow you to view and/or change the appearance-related settings");
 
+	addPage(new SDPageLibrary(this));
+	m_contents_side_widget->addPageEntry("Library", Theme::iconFromTheme("applications-multimedia"));
+
+	// Now set up the layouts.
+
+	QHBoxLayout *horizontalLayout = new QHBoxLayout;
+	horizontalLayout->addWidget(m_contents_side_widget);
+	horizontalLayout->addWidget(&m_page_stack_widget, 1);
+
+	QHBoxLayout *buttonsLayout = new QHBoxLayout;
+	buttonsLayout->addStretch(1);
+	buttonsLayout->addWidget(&m_dialog_button_box);
+
+	QVBoxLayout *mainLayout = new QVBoxLayout;
+	mainLayout->addLayout(horizontalLayout);
+	mainLayout->addStretch(1);
+	//mainLayout->addSpacing(12);
+	mainLayout->addLayout(buttonsLayout);
+	setLayout(mainLayout);
+}
+void SettingsDialog::addPage(SettingsDialogPageBase *page)
+{
+	// Add the page to the page stack widget.
+	m_page_stack_widget.addWidget(page);
 }

@@ -24,7 +24,7 @@ SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent) : QListWidge
     setViewMode(QListView::IconMode);
     setIconSize(QSize(96, 84));
     setMovement(QListView::Static);
-    setMaximumWidth(128);
+	//setMaximumWidth(256);
     setSpacing(12);
 }
 
