@@ -177,7 +177,7 @@ void MainWindow::createActions()
                                    ///triggered=savePlaylistAs);
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 
-	m_settingsAct = make_action(QIcon::fromTheme("document-properties"), "Settings...", this,
+	m_settingsAct = make_action(QIcon::fromTheme("configure"), "Settings...", this,
 							   QKeySequence::Preferences, "Open the Settings dialog.");
 	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
 
@@ -249,8 +249,8 @@ void MainWindow::createActions()
 	connect(m_aboutQtAct, &QAction::triggered, this, &QApplication::aboutQt);
 
 	/// Experimental actions
-	m_experimentalAct = make_action(QIcon::fromTheme("stop"), "Experimental", this,
-								   QKeySequence(), "Invoke experimental code");
+	m_experimentalAct = make_action(QIcon::fromTheme("edit-bomb"), "Experimental", this,
+								   QKeySequence(), "Invoke experimental code - USE AT YOUR OWN RISK");
 								   //triggered=doExperiment);
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 }
@@ -421,10 +421,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 }
 
 /**
- * @note This actually connects the player to the playlist's QMediaPlaylist and the PlayerControls to the QMediaPlaylist.
- *		The QmediaPlaylist is a member of @a playlist_view.
- * @param player
- * @param playlist_view
+ * @note This actually connects the player to the playlist's QMediaPlaylist.  Should probably encapsulate this better.
  */
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
@@ -1017,10 +1014,9 @@ void MainWindow::savePlaylistAs()
 
 void MainWindow::startSettingsDialog()
 {
-#if TODO
-	SettingsDialog dlg(this);
-	dlg.exec();
-#endif
+	m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
+
+	m_settings_dlg->exec();
 }
 
 #if 0

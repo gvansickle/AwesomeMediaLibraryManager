@@ -173,12 +173,12 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
-	emit progressTextChanged("Scanning directory tree");
-
 	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
 	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
 	m_dir_traversal_future_watcher.setFuture(fut);
+
+	emit progressTextChanged("Scanning directory tree");
 }
 
 void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan)
