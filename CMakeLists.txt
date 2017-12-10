@@ -304,7 +304,7 @@ set(SOURCE_FILES
 	gui/settings/SettingsDialog.cpp
 	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h
 	gui/settings/SDPageAppearance.cpp gui/settings/SDPageAppearance.h
-	gui/settings/SettingsDialogSideWidget.cpp)
+	gui/settings/SettingsDialogSideWidget.cpp gui/settings/SDPageLibrary.cpp gui/settings/SDPageLibrary.h)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
