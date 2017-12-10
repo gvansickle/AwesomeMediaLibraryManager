@@ -177,7 +177,7 @@ void MainWindow::createActions()
                                    ///triggered=savePlaylistAs);
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 
-	m_settingsAct = make_action(QIcon::fromTheme("document-properties"), "Settings...", this,
+	m_settingsAct = make_action(QIcon::fromTheme("configure"), "Settings...", this,
 							   QKeySequence::Preferences, "Open the Settings dialog.");
 	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
 

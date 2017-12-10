@@ -22,6 +22,9 @@
 
 #include <QListWidget>
 
+class QString;
+class QIcon;
+
 /**
  * @todo write docs
  */
@@ -34,7 +37,12 @@ public:
     /**
      * Constructor
      */
-    SettingsDialogSideWidget(QWidget* parent, Qt::WindowFlags f);
+    SettingsDialogSideWidget(QWidget* parent);
+
+	void addPageEntry(const QString& label_text, const QIcon& icon,
+	                  const QString& tooltip_str = QString(),
+	                  const QString& statustip_str = QString(),
+	                  const QString& whatsthis_str = QString());
 
 };
 

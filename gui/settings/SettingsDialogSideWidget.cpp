@@ -19,11 +19,28 @@
 
 #include "SettingsDialogSideWidget.h"
 
-SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent, Qt::WindowFlags f) : QListWidget(parent)
+SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent) : QListWidget(parent)
 {
     setViewMode(QListView::IconMode);
     setIconSize(QSize(96, 84));
     setMovement(QListView::Static);
     setMaximumWidth(128);
     setSpacing(12);
+}
+
+void SettingsDialogSideWidget::addPageEntry(const QString &label_text, const QIcon& icon,
+                                            const QString& tooltip_str,
+											const QString& statustip_str,
+											const QString& whatsthis_str)
+{
+    QListWidgetItem *item = new QListWidgetItem(this); // passing 'this' adds the item to the QListWidget.
+    item->setIcon(icon);
+    item->setText(label_text);
+    item->setToolTip(tooltip_str);
+    item->setStatusTip(statustip_str);
+	item->setWhatsThis(whatsthis_str);
+
+    // Set various properties.
+    item->setTextAlignment(Qt::AlignHCenter);
+    item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 }
