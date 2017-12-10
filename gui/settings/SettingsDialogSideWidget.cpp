@@ -34,9 +34,12 @@ SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent) : QListWidge
 	// Re-layout the items when the view is resized.  This isn't the default.
 	setResizeMode(QListView::Adjust);
 
-	setIconSize(QSize(96, 84));
-	setMaximumWidth(128);
-    setSpacing(12);
+	// Unclear if this makes any difference.
+	setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Expanding);
+
+//	setIconSize(QSize(96, 84));
+//	setMaximumWidth(128);
+//    setSpacing(12);
 
 	// Only single-selection make sense.
 	setSelectionMode(QAbstractItemView::SingleSelection);
@@ -78,7 +81,7 @@ QSize SettingsDialogSideWidget::sizeHint() const
 	s.setHeight(QListWidget::sizeHint().height());
 	auto sizehint0 = sizeHintForColumn(0);
 	qDebug() << "sizehint0:" << sizehint0;
-	s.setWidth(sizehint0);
+	s.setWidth(sizehint0+30); ///@todo Need to add something here, this isn't quite correct.
 
 	return s;
 }

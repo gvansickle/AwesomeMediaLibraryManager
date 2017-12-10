@@ -40,6 +40,8 @@ public:
 
 public slots:
 	void changePage(QListWidgetItem *current, QListWidgetItem *previous);
+
+	void onHelpRequested();
     
 private:
     

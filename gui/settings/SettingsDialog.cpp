@@ -26,6 +26,7 @@
 
 #include <utils/Theme.h>
 #include <QtWidgets/QStackedWidget>
+#include <QtWidgets/QMessageBox>
 
 
 SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
@@ -71,6 +72,11 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	setLayout(mainLayout);
 
 	connect(m_contents_side_widget, &SettingsDialogSideWidget::currentItemChanged, this, &SettingsDialog::changePage);
+
+	// Connect up the buttons.
+	connect(&m_dialog_button_box, &QDialogButtonBox::rejected, this, &QDialog::rejected);
+	connect(&m_dialog_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	connect(&m_dialog_button_box, &QDialogButtonBox::helpRequested, this, &SettingsDialog::onHelpRequested);
 }
 
 void SettingsDialog::addPage(SettingsDialogPageBase *page)
@@ -89,4 +95,9 @@ void SettingsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previ
 	}
 
 	m_page_stack_widget.setCurrentIndex(m_contents_side_widget->row(current));
+}
+
+void SettingsDialog::onHelpRequested()
+{
+	QMessageBox::information(this, "Help", "Help is not yet implemented");
 }
