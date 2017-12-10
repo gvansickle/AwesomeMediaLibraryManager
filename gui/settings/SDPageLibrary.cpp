@@ -21,11 +21,41 @@
 
 
 #include <utils/Theme.h>
+#include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QTreeWidget>
+#include <logic/Metadata.h>
 
 SDPageLibrary::SDPageLibrary(QWidget *parent)
 	: SettingsDialogPageBase(parent)
 {
+	QVBoxLayout *mainLayout = new QVBoxLayout;
+	QGroupBox *pageGroup = new QGroupBox(tr("Library Info"));
+	QTreeWidget* treeWidget = new QTreeWidget;
 
+	treeWidget->setColumnCount(1);
+	auto newtags = Metadata::getNewTags();
+	QString str = QString("These %1 tags were discovered:\n").arg(newtags.size());
+	QList<QTreeWidgetItem*> item_list;
+	for(auto s : newtags)
+	{
+		QString tag_name = QString::fromUtf8(s.c_str());
+		qDebug() << tag_name;
+		item_list.append(new QTreeWidgetItem((QTreeWidget*)nullptr, QStringList(tag_name)));
+	}
+	treeWidget->insertTopLevelItems(0, item_list);
+	treeWidget->setHeaderLabels(QStringList("Tag Name"));
+
+	// GroupBoxes need a layout.
+	QVBoxLayout* pageGroupLayout = new QVBoxLayout;
+	pageGroupLayout->addWidget(treeWidget);
+	pageGroup->setLayout(pageGroupLayout);
+
+	//mainLayout->addWidget(treeWidget);
+
+	mainLayout->addWidget(pageGroup);
+	//mainLayout->addStretch(1);
+	setLayout(mainLayout);
 }
 void SDPageLibrary::addContentsEntry(SettingsDialogSideWidget *contents_widget)
 {
