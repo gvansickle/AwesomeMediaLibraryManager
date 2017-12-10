@@ -18,10 +18,10 @@
  */
 
 #include "SettingsDialogPageBase.h"
+
 SettingsDialogPageBase::SettingsDialogPageBase(QWidget *parent)
-	: QWizardPage(parent)
+	: QWidget(parent)
 {
-	// Every page is a "Commit" page.  As such, when you hit the "Apply" button (which in the normal QWizard setup is
-	// the "Next" button with the text "Commit" on it), the changes are applied and you can't undo them with Cancel.
-	setCommitPage(true);
+
 }
+

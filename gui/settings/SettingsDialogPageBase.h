@@ -21,12 +21,15 @@
 #define AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOGPAGEBASE_H
 
 
-#include <QWizardPage>
+#include <QWidget>
+#include "SettingsDialogSideWidget.h"
 
-class SettingsDialogPageBase : public QWizardPage
+class SettingsDialogPageBase : public QWidget
 {
 public:
 	SettingsDialogPageBase(QWidget *parent = nullptr);
+
+	virtual void addContentsEntry(SettingsDialogSideWidget* contents_widget) = 0;
 };
 
 

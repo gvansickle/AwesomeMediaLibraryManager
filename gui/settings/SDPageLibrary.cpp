@@ -18,8 +18,16 @@
  */
 
 #include "SDPageLibrary.h"
+
+
+#include <utils/Theme.h>
+
 SDPageLibrary::SDPageLibrary(QWidget *parent)
 	: SettingsDialogPageBase(parent)
 {
 
+}
+void SDPageLibrary::addContentsEntry(SettingsDialogSideWidget *contents_widget)
+{
+	contents_widget->addPageEntry("Library", Theme::iconFromTheme("applications-multimedia"));
 }

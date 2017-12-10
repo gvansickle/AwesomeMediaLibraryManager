@@ -21,14 +21,15 @@
 #include <QApplication>
 #include <QLabel>
 #include <QHBoxLayout>
+#include <utils/Theme.h>
 
 SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(parent)
 {
-    setTitle(QString("%1").arg(qApp->applicationDisplayName()));
-    setSubTitle(QString("<p>The Awesome Media Library Manager</p>"
-    "<p>Version %1</p>"
-    "<p>Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).</p>").arg(qApp->applicationVersion()));
-    
+    //setTitle(QString("%1").arg(qApp->applicationDisplayName()));
+    //setSubTitle(QString("<p>The Awesome Media Library Manager</p>"
+//    "<p>Version %1</p>"
+//    "<p>Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).</p>").arg(qApp->applicationVersion()));
+//
     auto m_label = new QLabel(this);
     m_label->setTextFormat(Qt::RichText);
     m_label->setText(tr("<body>"
@@ -52,4 +53,12 @@ SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(par
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(m_label);
     setLayout(layout);
+}
+
+void SDPageAppearance::addContentsEntry(SettingsDialogSideWidget *contents_widget)
+{
+	contents_widget->addPageEntry("Appearance", Theme::iconFromTheme("preferences-desktop-color"),
+	                                     "Appearance settings",
+	                                     "View/Change appearance-related settings",
+	                                     "This selection will allow you to view and/or change the appearance-related settings");
 }

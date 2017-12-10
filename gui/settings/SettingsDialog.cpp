@@ -49,37 +49,36 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 
 	// Add all the pages.
 	addPage(new SDPageAppearance(this));
-	m_contents_side_widget->addPageEntry("Appearance", Theme::iconFromTheme("preferences-desktop-color"),
-						"Appearance settings",
-						"View/Change appearance-related settings",
-						"This selection will allow you to view and/or change the appearance-related settings");
-
 	addPage(new SDPageLibrary(this));
-	m_contents_side_widget->addPageEntry("Library", Theme::iconFromTheme("applications-multimedia"));
 
 	// Now set up the layouts.
 
+	// HBox containing the Sidebar and the page contents.
 	QHBoxLayout *horizontalLayout = new QHBoxLayout;
 	horizontalLayout->addWidget(m_contents_side_widget);
 	horizontalLayout->addWidget(&m_page_stack_widget, 1);
 
-	QHBoxLayout *buttonsLayout = new QHBoxLayout;
-	buttonsLayout->addStretch(1);
-	buttonsLayout->addWidget(&m_dialog_button_box);
+//	QHBoxLayout *buttonsLayout = new QHBoxLayout;
+//	//buttonsLayout->addStretch(1);
+//	buttonsLayout->addWidget(&m_dialog_button_box);
 
 	QVBoxLayout *mainLayout = new QVBoxLayout;
 	mainLayout->addLayout(horizontalLayout);
 	mainLayout->addStretch(1);
 	//mainLayout->addSpacing(12);
-	mainLayout->addLayout(buttonsLayout);
+	//mainLayout->addLayout(buttonsLayout);
+	mainLayout->addWidget(&m_dialog_button_box);
 	setLayout(mainLayout);
 
 	connect(m_contents_side_widget, &SettingsDialogSideWidget::currentItemChanged, this, &SettingsDialog::changePage);
 }
+
 void SettingsDialog::addPage(SettingsDialogPageBase *page)
 {
 	// Add the page to the page stack widget.
 	m_page_stack_widget.addWidget(page);
+	// and add a corresponding entry to the contents side widget.
+	page->addContentsEntry(m_contents_side_widget);
 }
 
 void SettingsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
