@@ -18,6 +18,7 @@
  */
 
 #include "SDPageAppearance.h"
+
 #include <QApplication>
 #include <QLabel>
 #include <QHBoxLayout>

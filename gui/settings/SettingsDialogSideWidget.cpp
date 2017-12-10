@@ -19,6 +19,8 @@
 
 #include "SettingsDialogSideWidget.h"
 
+#include <QDebug>
+
 SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent) : QListWidget(parent)
 {
 	// Set to IconMode view mode.  This sets l-to-r layout/Large size/Free movement.
@@ -59,6 +61,24 @@ void SettingsDialogSideWidget::addPageEntry(const QString &label_text, const QIc
 	// Set a size hint with a width wider than the widest entry.  This
 	// is to center us in the containing QListView.
 	//auto oldsize = item->sizeHint();
-	item->setSizeHint(QSize(maximumWidth(), 84));
+//	item->setSizeHint(QSize(maximumWidth(), 84));
 }
 
+int SettingsDialogSideWidget::sizeHintForColumn(int column) const
+{
+	return QListWidget::sizeHintForColumn(column);
+}
+
+QSize SettingsDialogSideWidget::sizeHint() const
+{
+	///return QAbstractScrollArea::sizeHint();
+
+	// Attempt to get the width exactly right, so we don't have a horizontal scrollbar.
+	auto s = QSize();
+	s.setHeight(QListWidget::sizeHint().height());
+	auto sizehint0 = sizeHintForColumn(0);
+	qDebug() << "sizehint0:" << sizehint0;
+	s.setWidth(sizehint0);
+
+	return s;
+}

@@ -43,7 +43,8 @@ public:
 	                  const QString& tooltip_str = QString(),
 	                  const QString& statustip_str = QString(),
 	                  const QString& whatsthis_str = QString());
-
+	int sizeHintForColumn(int column) const override;
+	QSize sizeHint() const override;
 };
 
 #endif // SETTINGSDIALOGSIDEWIDGET_H
