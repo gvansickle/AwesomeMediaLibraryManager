@@ -30,7 +30,8 @@
 
 SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	: QDialog(parent, flags),
-	  m_dialog_button_box(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply | QDialogButtonBox::Help,
+	  m_dialog_button_box(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply
+		                      | QDialogButtonBox::Help | QDialogButtonBox::RestoreDefaults,
 	                      Qt::Horizontal, this),
 	  m_page_stack_widget(this)
 {

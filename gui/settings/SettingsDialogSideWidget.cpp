@@ -21,11 +21,23 @@
 
 SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent) : QListWidget(parent)
 {
-    setViewMode(QListView::IconMode);
-    setIconSize(QSize(96, 84));
+	// Set to IconMode view mode.  This sets l-to-r layout/Large size/Free movement.
+	setViewMode(QListView::IconMode);
+	// We want top-to-bottom layout.
+	setFlow(QListView::Flow::TopToBottom);
+	// We don't want Free movement.  Items can't be moved by user.
     setMovement(QListView::Static);
-	//setMaximumWidth(256);
+	// Don't know what this defaults to, but we don't want batched mode.
+	setLayoutMode(QListView::SinglePass);
+	// Re-layout the items when the view is resized.  This isn't the default.
+	setResizeMode(QListView::Adjust);
+
+	setIconSize(QSize(96, 84));
+	setMaximumWidth(128);
     setSpacing(12);
+	
+	// Only single-selection make sense.
+	setSelectionMode(QAbstractItemView::SingleSelection);
 }
 
 void SettingsDialogSideWidget::addPageEntry(const QString &label_text, const QIcon& icon,
@@ -43,4 +55,10 @@ void SettingsDialogSideWidget::addPageEntry(const QString &label_text, const QIc
     // Set various properties.
     item->setTextAlignment(Qt::AlignHCenter);
     item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+	// Set a size hint with a width wider than the widest entry.  This
+	// is to center us in the containing QListView.
+	//auto oldsize = item->sizeHint();
+	item->setSizeHint(QSize(maximumWidth(), 84));
 }
+
