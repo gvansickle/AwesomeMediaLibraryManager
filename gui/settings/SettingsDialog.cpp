@@ -73,9 +73,21 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	//mainLayout->addSpacing(12);
 	mainLayout->addLayout(buttonsLayout);
 	setLayout(mainLayout);
+
+	connect(m_contents_side_widget, &SettingsDialogSideWidget::currentItemChanged, this, &SettingsDialog::changePage);
 }
 void SettingsDialog::addPage(SettingsDialogPageBase *page)
 {
 	// Add the page to the page stack widget.
 	m_page_stack_widget.addWidget(page);
+}
+
+void SettingsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
+{
+	if(!current)
+	{
+		current = previous;
+	}
+
+	m_page_stack_widget.setCurrentIndex(m_contents_side_widget->row(current));
 }

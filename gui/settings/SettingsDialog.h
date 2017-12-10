@@ -37,6 +37,9 @@ public:
 	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
 
 	void addPage(SettingsDialogPageBase * page);
+
+public slots:
+	void changePage(QListWidgetItem *current, QListWidgetItem *previous);
     
 private:
     

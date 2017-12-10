@@ -35,7 +35,7 @@ SettingsDialogSideWidget::SettingsDialogSideWidget(QWidget* parent) : QListWidge
 	setIconSize(QSize(96, 84));
 	setMaximumWidth(128);
     setSpacing(12);
-	
+
 	// Only single-selection make sense.
 	setSelectionMode(QAbstractItemView::SingleSelection);
 }
