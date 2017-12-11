@@ -59,8 +59,8 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_re
 	connect(&m_dir_traversal_future_watcher, SIGNAL(finished()), SLOT(onDirTravFinished()));
 
     // On Windows at least, these don't seem to throttle automatically as well as on Linux.
-    m_rescan_future_watcher.setPendingResultsLimit(10);
-    m_dir_traversal_future_watcher.setPendingResultsLimit(10);
+    m_rescan_future_watcher.setPendingResultsLimit(1);
+    m_dir_traversal_future_watcher.setPendingResultsLimit(1);
 }
 
 LibraryRescanner::~LibraryRescanner()
@@ -75,7 +75,6 @@ LibraryRescanner::~LibraryRescanner()
 
 MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapItems& mapitem)
 {
-	qDebug() << "Enter";
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
 	MetadataReturnVal retval;
@@ -164,8 +163,6 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	{
 		qCritical() << "GOT EMPTY LIST OF LIBRARY ENTRIES TO RESCAN";
 	}
-
-	qDebug() << "Exit";
 
 	return retval;
 }
