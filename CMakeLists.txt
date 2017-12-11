@@ -105,6 +105,11 @@ endif()
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(WIN32)
+    # Make sure we're supporting Unicode on Windows.
+    add_definitions(-DUNICODE -D_UNICODE)
+endif()
+
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -163,7 +168,7 @@ if(NOT WIN32)
 	endif()
 else()
     # Use the in-tree copy of TagLib.  Requires some non-obvious cmake gyrations, since TagLib needs to be installed before you can realistically include its headers.
-	# Based somewhat on this SO answer: https://stackoverflow.com/a/45079298
+    # Based somewhat on this SO answer: https://stackoverflow.com/a/45079298
     add_library(taglib INTERFACE)
     ExternalProject_Add(taglib_bundled
             PREFIX "taglib_bundled"  # "Relative paths are interpreted with respect to CMAKE_CURRENT_BINARY_DIR at the point where ExternalProject_Add() is called."
@@ -183,22 +188,19 @@ else()
     print_target_properties(taglib_bundled)
     cmake_print_variables(CMAKE_C_COMPILER CMAKE_VERSION)
 
-        set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
-	set(taglib_INCLUDE_DIR "${INSTALL_DIR}/include")
+    set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(taglib_INCLUDE_DIR "${INSTALL_DIR}/include")
     message(STATUS "taglib_LIBRARY: ${taglib_LIBRARY}")
     message(STATUS "taglib_INCLUDE_DIR: ${taglib_INCLUDE_DIR}")
 
-        # Set INTERFACE properties on our taglib INTERFACE library.
-        # https://cmake.org/cmake/help/v3.10/command/add_library.html?highlight=add_librar#id6
-	target_link_libraries(taglib INTERFACE ${taglib_LIBRARY})
-	target_include_directories(taglib INTERFACE ${taglib_INCLUDE_DIR})
-        target_compile_definitions(taglib INTERFACE "TAGLIB_STATIC")
-#    set_target_properties(taglib PROPERTIES
-#        IMPORTED_LOCATION ${PROJECT_BINARY_DIR}/${INSTALL_DIR}/lib/tag.lib
-#        INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include
-#        INTERFACE_COMPILE_DEFINITIONS -DTAGLIB_STATIC
-#        )
+    # Set INTERFACE properties on our taglib INTERFACE library.
+    # https://cmake.org/cmake/help/v3.10/command/add_library.html?highlight=add_librar#id6
+    target_link_libraries(taglib INTERFACE ${taglib_LIBRARY})
+    target_include_directories(taglib INTERFACE ${taglib_INCLUDE_DIR})
+    target_compile_definitions(taglib INTERFACE "TAGLIB_STATIC")
+
     # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
+    # @todo looks like we no longer need this.
     #file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
 #    add_dependencies(taglib taglib_bundled-install)
 
@@ -224,11 +226,6 @@ else()
 	if(LIBCUE_FOUND)
 		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
 	endif()
-endif()
-
-# Set up definitions and paths
-if(WIN32)
-    add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
 set(HEADER_FILES
@@ -455,7 +452,6 @@ cpack_add_component(
 ###
 message(STATUS "======================== START CMAKE SUMMARY ====================================")
 message(STATUS "PROJECT_NAME: ${PROJECT_NAME}")
-get_target_property(PNID ${PROJECT_NAME} INCLUDE_DIRECTORIES)
 message(STATUS "PROJECT_NAME INCLUDE_DIRECTORIES: ${PNID}")
 message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
