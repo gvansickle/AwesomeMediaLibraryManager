@@ -182,7 +182,7 @@ else()
             # Create a CMake target "taglib_bundled-install" which can be depended upon.
             STEP_TARGETS install
             )
-        add_dependencies(taglib taglib_bundled-install)
+	add_dependencies(taglib taglib_bundled-install)
     ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
     message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
     print_target_properties(taglib_bundled)
@@ -202,7 +202,6 @@ else()
     # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
     # @todo looks like we no longer need this.
     #file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
-#    add_dependencies(taglib taglib_bundled-install)
 
     set(AMLM_TAGLIB_TARGET "taglib")
 
