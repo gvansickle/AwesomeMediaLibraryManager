@@ -44,7 +44,11 @@ project(AwesomeMediaLibraryManager
 # Add folder where we keep support *.cmake's.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+message(STATUS "CMake-time PATH: $ENV{PATH}")
+
+
 # Include some basic cmake functions.
+include(GNUInstallDirs)
 include(CMakePrintHelpers)
 include(PrintTargetProperties)
 include(helperfunctions)
@@ -158,32 +162,49 @@ if(NOT WIN32)
 		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
 	endif()
 else()
-    # Use the in-tree copy of TagLib.
-    ExternalProject_Add(taglib_internal
+    # Use the in-tree copy of TagLib.  Requires some non-obvious cmake gyrations, since TagLib needs to be installed before you can realistically include its headers.
+	# Based somewhat on this SO answer: https://stackoverflow.com/a/45079298
+    add_library(taglib INTERFACE)
+    ExternalProject_Add(taglib_bundled
+            PREFIX "taglib_bundled"  # "Relative paths are interpreted with respect to CMAKE_CURRENT_BINARY_DIR at the point where ExternalProject_Add() is called."
             SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
+            INSTALL_DIR "taglib_bundled/install"
             LOG_CONFIGURE TRUE
             LOG_BUILD TRUE
             LOG_INSTALL TRUE
-            CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF"
+            # Configure step options.
+            CMAKE_ARGS "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF"
+            # Create a CMake target "taglib_bundled-install" which can be depended upon.
             STEP_TARGETS install
             )
-    ExternalProject_Get_Property(taglib_internal INSTALL_DIR)
-    message(STATUS "taglib_internal INSTALL_DIR: ${INSTALL_DIR}")
-    print_target_properties(taglib_internal)
+        add_dependencies(taglib taglib_bundled-install)
+    ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
+    message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
+    print_target_properties(taglib_bundled)
+    cmake_print_variables(CMAKE_C_COMPILER CMAKE_VERSION)
 
-    add_library(taglib STATIC IMPORTED)
-    set_target_properties(taglib PROPERTIES
-        IMPORTED_LOCATION ${INSTALL_DIR}/lib/tag.lib
-        INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include
-        INTERFACE_COMPILE_OPTIONS -DTAGLIB_STATIC
-        )
+        set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
+	set(taglib_INCLUDE_DIR "${INSTALL_DIR}/include")
+    message(STATUS "taglib_LIBRARY: ${taglib_LIBRARY}")
+    message(STATUS "taglib_INCLUDE_DIR: ${taglib_INCLUDE_DIR}")
+
+        # Set INTERFACE properties on our taglib INTERFACE library.
+        # https://cmake.org/cmake/help/v3.10/command/add_library.html?highlight=add_librar#id6
+	target_link_libraries(taglib INTERFACE ${taglib_LIBRARY})
+	target_include_directories(taglib INTERFACE ${taglib_INCLUDE_DIR})
+        target_compile_definitions(taglib INTERFACE "TAGLIB_STATIC")
+#    set_target_properties(taglib PROPERTIES
+#        IMPORTED_LOCATION ${PROJECT_BINARY_DIR}/${INSTALL_DIR}/lib/tag.lib
+#        INTERFACE_INCLUDE_DIRECTORIES ${INSTALL_DIR}/include
+#        INTERFACE_COMPILE_DEFINITIONS -DTAGLIB_STATIC
+#        )
     # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
-    file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
-    add_dependencies(taglib taglib_internal-install)
+    #file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
+#    add_dependencies(taglib taglib_bundled-install)
 
     set(AMLM_TAGLIB_TARGET "taglib")
 
-    print_target_properties(${AMLM_TAGLIB_TARGET})
+    #print_target_properties(${AMLM_TAGLIB_TARGET})
 
 endif()
 
