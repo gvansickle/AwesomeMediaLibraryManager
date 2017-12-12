@@ -69,24 +69,29 @@ static std::string reverse_lookup(const std::string& native_key)
 std::string MetadataAbstractBase::operator[](const std::string& key) const
 {
 	std::string native_key_string;
-	try
+
+	auto it = f_name_normalization_map.find(key);
+	if(it != f_name_normalization_map.end())
 	{
-		native_key_string = f_name_normalization_map.at(key);
+		// Found it.
+		native_key_string = it->second;
 	}
-	catch(...)
+	else
 	{
-		// No such key.
-		return "";
+		// Didn't find it.
+		native_key_string = "";
+		return native_key_string;
 	}
 
 //	TagLib::StringList stringlist = m_pm[native_key_string];
 	decltype(m_tag_map)::mapped_type stringlist;
 
-	try
+	auto strlist_it = m_tag_map.find(native_key_string);
+	if(strlist_it != m_tag_map.end())
 	{
-		stringlist = m_tag_map.at(native_key_string);
+		stringlist = strlist_it->second;
 	}
-	catch(...)
+	else
 	{
 //		qDebug() << "No such key:" << native_key_string;
 	}

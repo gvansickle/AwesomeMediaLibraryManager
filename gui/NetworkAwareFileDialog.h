@@ -55,8 +55,14 @@ public slots:
 
 private:
 
-	QString _filter_to_suffix(const QString& filter);
-	bool _use_native_dlg() const { return false; }
+	QString filter_to_suffix(const QString &filter);
+
+    // Returns the final decision on whether we should use the native file dialog or not.
+	bool use_native_dlg() const;
+
+    /// @todo Returns the user-settable preference on whether to use native dialogs or not.
+    bool user_pref_native_file_dialog() const { return true; };
+
 	bool isDirSelectDialog() const;
 	void setDefaultSidebarUrls();
 

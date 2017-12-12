@@ -49,7 +49,7 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 
 	setObjectName("nafiledialog");
 	setViewMode(QFileDialog::Detail);
-	if(!_use_native_dlg())
+	if(!use_native_dlg())
 	{
 		setOptions(QFileDialog::DontUseNativeDialog);
 	}
@@ -138,7 +138,7 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 	return std::make_pair(dlg->selectedUrls()[0], dlg->selectedNameFilter());
 }
 
-QString NetworkAwareFileDialog::_filter_to_suffix(const QString& filter)
+QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
 {
     qDebug() << "Filter:" << filter;
     QRegularExpression re(R"((\.([[:alnum:]_]*)))");
@@ -161,7 +161,7 @@ bool NetworkAwareFileDialog::isDirSelectDialog() const
 void NetworkAwareFileDialog::setDefaultSidebarUrls()
 {
 	// This doesn't appear to do anything on Windows when using the system file dialog.
-	if(!(_use_native_dlg() && (QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)))
+	if(!use_native_dlg())
 	{
 		QList<QUrl> urls =
 		{
@@ -183,7 +183,7 @@ void NetworkAwareFileDialog::onFilterSelected(const QString& filter)
 	if(fileMode() != QFileDialog::Directory && fileMode() != QFileDialog::DirectoryOnly)
 	{
 		qDebug() << "Filter selected:" << filter;
-		setDefaultSuffix(_filter_to_suffix(filter));
+		setDefaultSuffix(filter_to_suffix(filter));
 	}
 }
 
@@ -245,11 +245,11 @@ int NetworkAwareFileDialog::exec_()
 	{
 		setDefaultSidebarUrls();
 		// On Windows at least, we don't have to do this for a native file dialog.
-		if(!isDirSelectDialog() && !_use_native_dlg())
+		if(!isDirSelectDialog() && !use_native_dlg())
 		{
 			QString snf = selectedNameFilter();
 			qDebug() << QString("Initial selected name filter:") << snf;
-			setDefaultSuffix(_filter_to_suffix(selectedNameFilter()));
+			setDefaultSuffix(filter_to_suffix(selectedNameFilter()));
 		}
 		int retval = QFileDialog::exec();
 		return retval;
@@ -276,4 +276,18 @@ int NetworkAwareFileDialog::exec_()
 #endif
 		Q_ASSERT(0);
 	}
+}
+
+bool NetworkAwareFileDialog::use_native_dlg() const
+{
+    if(/** @todo user_pref_native_file_dialog() | */
+        ((QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
+    {
+        // Use the native file dialogs.
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
