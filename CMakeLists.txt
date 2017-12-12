@@ -334,16 +334,18 @@ cmake_print_variables(META_FILES_TO_INCLUDE)
 #		resources/TangoIcons.qrc
 #		resources/AppIcon.qrc)
 # RESOURCE_FILES is a list of the generated output *.cpp file names.
-qt5_add_resources(RESOURCE_FILES
-        resources/oxygenicons.qrc
-        resources/TangoIcons.qrc
-        resources/AppIcon.qrc
-        )
-foreach(generated_rcc_file_name ${RESOURCE_FILES})
-    message(STATUS "generated_rcc_file_name: ${generated_rcc_file_name}")
-    set_property(SOURCE ${generated_rcc_file_name} PROPERTY SKIP_AUTOMOC ON)
-endforeach()
-
+#qt5_add_resources(RESOURCE_FILES
+#        resources/oxygenicons.qrc
+#        resources/TangoIcons.qrc
+#        resources/AppIcon.qrc
+#        )
+#foreach(generated_rcc_file_name ${RESOURCE_FILES})
+#    message(STATUS "generated_rcc_file_name: ${generated_rcc_file_name}")
+#    set_property(SOURCE ${generated_rcc_file_name} PROPERTY SKIP_AUTOMOC ON)
+#endforeach()
+qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
+qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
+qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 
 ###
 ### The main executable.
@@ -359,7 +361,8 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY AUTORCC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
 
