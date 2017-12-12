@@ -346,6 +346,10 @@ cmake_print_variables(META_FILES_TO_INCLUDE)
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
+add_library(icon_rccs INTERFACE)
+target_sources(icon_rccs INTERFACE icons_oxygen icons_Tango icons_App)
+print_target_properties(icons_oxygen)
+
 
 ###
 ### The main executable.
@@ -357,12 +361,11 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
         )
 # Only the Qt stuff needs AUTOMOC.
 set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
-set_property(TARGET ${PROJECT_NAME} PROPERTY AUTORCC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
         ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
-add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
+add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
 
@@ -380,6 +383,14 @@ install(TARGETS ${PROJECT_NAME}
 		RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 		COMPONENT coreapp
 	)
+install(FILES
+    ### @todo I think these are installing on top of themselves.
+    #icons_oxygen.rcc icons_Tango.rcc icons_App.rcc
+    ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
+    ${CMAKE_CURRENT_BINARY_DIR}/icons_Tango.rcc
+    ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
+    DESTINATION .
+    COMPONENT coreapp)
 
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
