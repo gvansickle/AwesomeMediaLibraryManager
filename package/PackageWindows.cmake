@@ -31,11 +31,11 @@ add_custom_command(TARGET do_windeploy POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "windeployqt.exe path: ${windeployqt}"
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies, exe: $<TARGET_FILE:${PROJECT_NAME}>"
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
     COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${PROJECT_NAME}>
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies complete.  Intermediate directory is: ${CMAKE_BINARY_DIR}/windeployqt_stuff"
     )
-install(
-        DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/
+install(DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/
         DESTINATION .
         COMPONENT coreapp
         )

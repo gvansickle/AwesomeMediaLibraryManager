@@ -23,6 +23,7 @@
 #include <QIcon>
 #include <QStorageInfo>
 #include <QLoggingCategory>
+#include <QResource>
 
 #include <QImageReader>
 #include <QDebug>
@@ -74,6 +75,12 @@ int main(int argc, char *argv[])
 
 	// Register types with Qt.
 	RegisterQtMetatypes();
+
+    // Load the icon resources.
+    QResource::registerResource("icons_oxygen.rcc");
+    QResource::registerResource("icons_Tango.rcc");
+    QResource::registerResource("icons_App.rcc");
+
 
 	// Set the application Icon.
 	///@todo Get an actual icon.

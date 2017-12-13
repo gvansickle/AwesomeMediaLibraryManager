@@ -250,7 +250,7 @@ void LibraryRescanner::onResultReadyAt(int index)
 
 void LibraryRescanner::onRescanFinished()
 {
-	qDebug() << "Async Rescan reports fisished.";
+	qDebug() << "Async Rescan reports finished.";
 	// Send out progress text.
 	emit progressTextChanged("Idle");
 }
