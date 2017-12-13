@@ -20,32 +20,21 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 #define AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 
-#include <QWizard>
+#include <QDialog>
+#include <QString>
 
-class QLabel;
-
-class AboutBox : public QWizard
+class AboutBox : public QDialog
 {
     Q_OBJECT
 
 public:
     AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
 
-public slots:
-    void fitToContents(int pageid);
-};
-
-class AboutPage : public QWizardPage
-{
-	Q_OBJECT
-
-public:
-	AboutPage(QWidget* parent = nullptr);
+	int exec() override;
 
 private:
-
-	QLabel *m_label;
+	QString m_text_str;
+	QString m_title_str;
 };
-
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H

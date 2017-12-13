@@ -17,12 +17,18 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+#add_executable(windeployqt IMPORTED)
+#set_target_properties(windeployqt
+#    PROPERTIES IMPORTED_LOCATION $ENV{QTDIR}/bin/windeployqt.exe)
+#print_target_properties(windeployqt)
+
 add_custom_target(do_windeploy)
 add_dependencies(packaging do_windeploy)
 add_dependencies(do_windeploy ${PROJECT_NAME})
 
 add_custom_command(TARGET do_windeploy POST_BUILD
     COMMENT "Doing windeploy..."
+    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "windeployqt.exe path: ${windeployqt}"
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies, exe: $<TARGET_FILE:${PROJECT_NAME}>"
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
     COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${PROJECT_NAME}>
