@@ -395,7 +395,7 @@ install(FILES
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
     ALL
-    DEPENDS ${PROJECT_NAME}
+    DEPENDS ${PROJECT_NAME} icon_rccs
     COMMENT "Packaging ${PROJECT_NAME}...")
 if(WIN32)
     # Add custom commands and install targets for Qt windeploy.
