@@ -360,6 +360,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
         )
 # Only the Qt stuff needs AUTOMOC.
+#set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
@@ -380,7 +381,7 @@ print_target_properties(${PROJECT_NAME})
 
 ### Installation.
 install(TARGETS ${PROJECT_NAME}
-		RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+                RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 		COMPONENT coreapp
 	)
 install(FILES
@@ -389,7 +390,7 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_Tango.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
-    DESTINATION .
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
     COMPONENT coreapp)
 
 # Custom target for coordinating the packaging.
