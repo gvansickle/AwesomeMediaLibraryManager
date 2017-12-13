@@ -360,8 +360,9 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
         )
 # Only the Qt stuff needs AUTOMOC.
-#set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
-set_property(TARGET ${PROJECT_NAME} PROPERTY AUTOMOC ON)
+### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES AUTOMOC ON)
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
@@ -381,7 +382,9 @@ print_target_properties(${PROJECT_NAME})
 
 ### Installation.
 install(TARGETS ${PROJECT_NAME}
-                RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+                RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+                LIBRARY DESTINATION .
+                ARCHIVE DESTINATION .
 		COMPONENT coreapp
 	)
 install(FILES
@@ -390,7 +393,7 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_Tango.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    DESTINATION .
     COMPONENT coreapp)
 
 # Custom target for coordinating the packaging.
@@ -429,7 +432,7 @@ set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME};${PROJECT_NAME}")
 
 # Packaging: NSIS
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-set(CPACK_NSIS_EXECUTABLES_DIRECTORY ${CMAKE_INSTALL_BINDIR})
+set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
 set(CPACK_NSIS_MENU_LINKS "https://github.com/gvansickle/AwesomeMediaLibraryManager" "AwesomeMediaLibraryManager at GitHub")
 
 set(CPACK_NSIS_PACKAGE_ARCHITECTURE "64")

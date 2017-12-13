@@ -22,9 +22,9 @@
 #    PROPERTIES IMPORTED_LOCATION $ENV{QTDIR}/bin/windeployqt.exe)
 #print_target_properties(windeployqt)
 
-add_custom_target(do_windeploy DEPENDS ${PROJECT_NAME})
+add_custom_target(do_windeploy)
 add_dependencies(packaging do_windeploy)
-#add_dependencies(do_windeploy ${PROJECT_NAME}) # Can't use add_custom_target(DEPENDS) because:
+add_dependencies(do_windeploy ${PROJECT_NAME}) # Can't use add_custom_target(DEPENDS) because:
     # "DEPENDS
     #   Reference files and outputs of custom commands created with add_custom_command() command calls in the same directory (CMakeLists.txt file). They will be brought up to date when the target is built.
     #   Use the add_dependencies() command to add dependencies on other targets.
@@ -38,7 +38,7 @@ add_custom_command(TARGET do_windeploy POST_BUILD
     COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${PROJECT_NAME}>
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies complete.  Intermediate directory is: ${CMAKE_BINARY_DIR}/windeployqt_stuff"
     )
-install(DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff
+install(DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/
         DESTINATION .
         COMPONENT coreapp
         )
