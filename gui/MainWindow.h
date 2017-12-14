@@ -166,6 +166,11 @@ private:
 	/// The library models.
 	std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
+	/// The "Now Playing" playlist.
+    QPointer<PlaylistModel> m_now_playing_playlist_model;
+    QPointer<MDIPlaylistView> m_now_playing_playlist_view;
+
+
 	/// The list of PlaylistModels.
 	std::vector<PlaylistModel*> m_playlist_models;
 

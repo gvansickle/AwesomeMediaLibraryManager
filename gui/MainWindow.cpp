@@ -20,9 +20,6 @@
 #include "FilterWidget.h"
 #include "MainWindow.h"
 #include "NetworkAwareFileDialog.h"
-#if TODO
-#include "SettingsDialog.h"
-#endif
 
 #include "MDITreeViewBase.h"
 #include "MDILibraryView.h"
@@ -765,8 +762,21 @@ void MainWindow::writeLibSettings(QSettings& settings)
 
 void MainWindow::loadFiles()
 {
-	/// @todo
-	changeIconTheme(QIcon::themeName());
+    /// @todo This is doing more than loading files, rename it.
+    // Change the Icon Theme.
+    changeIconTheme(QIcon::themeName());
+
+    // Create the "Now Playing" playlist.
+    auto wins = createMdiChildPlaylist();
+    m_now_playing_playlist_view = wins.first;
+    QMdiSubWindow* mdisubwindow = wins.second;
+
+    m_now_playing_playlist_view->newFile();
+
+    setActiveSubWindow(mdisubwindow);
+    statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
+
+    m_now_playing_playlist_view->show();
 
 	qDebug() << QString("Loading files from last session...");
 	QSettings settings;
