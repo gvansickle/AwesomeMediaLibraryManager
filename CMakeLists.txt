@@ -55,6 +55,8 @@ include(helperfunctions)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 
+dir_summary()
+
 # QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
 init_os_bundle()
 
@@ -182,7 +184,7 @@ else()
             # Create a CMake target "taglib_bundled-install" which can be depended upon.
             STEP_TARGETS install
             )
-	add_dependencies(taglib taglib_bundled-install)
+    add_dependencies(taglib taglib_bundled-install)
     ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
     message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
     print_target_properties(taglib_bundled)

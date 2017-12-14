@@ -26,6 +26,12 @@ function(print_compilers_and_params)
     endforeach()
 endfunction()
 
+macro(dir_summary)
+    message(STATUS "CMAKE_ARCHIVE_OUTPUT_DIRECTORY: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+    message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
+    message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+endmacro()
+
 macro(message_cpack_summary)
     message(STATUS "CPackIFW Tools found:")
     message(STATUS "=====================")
