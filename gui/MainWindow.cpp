@@ -450,6 +450,11 @@ void MainWindow::connectLibraryToActivityProgressWidget(LibraryModel* lm, Activi
 	lm->connectProgressToActivityProgressWidget(apw);
 }
 
+void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
+{
+	//connect();
+}
+
 void MainWindow::updateConnections()
 {
 	if(activeMdiChild() != nullptr)
@@ -1180,6 +1185,7 @@ void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)
 	m_numSongsIndicator->setText(QString("Number of Songs: %1").arg(num_songs));
 #endif
 }
+
 
 #if 0
 

@@ -111,6 +111,8 @@ private:
 	void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
 
 	void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
+
+	void connectLibraryViewAndMainWindow(MDILibraryView* lv);
 	///@}
 
 	void stopAllBackgroundThreads();

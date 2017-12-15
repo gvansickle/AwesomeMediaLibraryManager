@@ -101,6 +101,9 @@ protected:
 
 	virtual bool maybeSave();
 
+	/**
+	 * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
+	 */
 	QMdiSubWindow* getQMdiSubWindow() const;
 
 	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.

@@ -145,6 +145,7 @@ bool MDILibraryView::onBlankAreaToolTip(QHelpEvent* event)
 {
 	// Return True if you handle it, False if you don't.
 	// Blank-area tooltip, for debugging.
+M_WARNING("TODO: Get/print library stats")
 	QToolTip::showText(event->globalPos(),
 		QString("<b>Debug Info</b><hr>"
 		"Num items in model: %1\n"
