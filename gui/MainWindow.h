@@ -22,6 +22,7 @@
 #include "MDIPlaylistView.h"
 #include "MDITreeViewBase.h"
 #include "PlayerControls.h"
+#include "MDINowPlayingView.h"
 
 #include <QMainWindow>
 #include <QUrl>
@@ -144,6 +145,7 @@ private:
     MDITreeViewBase* activeMdiChild();
 	QMdiSubWindow* findSubWindow(QUrl url);
 	std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
+	std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
 
 	QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
 	void openMDILibraryViewOnModel(LibraryModel* libmodel);

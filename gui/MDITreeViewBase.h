@@ -45,7 +45,10 @@ public:
 	bool saveAs();
 	bool saveFile(QUrl save_url, QString filter);
 
+	/// Returns the current basename of this window's backing file.
 	QString userFriendlyCurrentFile() const;
+
+	/// Returns the full URL of this window's backing file.
 	QUrl getCurrentUrl() const;
 
 protected:
@@ -55,6 +58,7 @@ protected:
 	bool m_isUntitled = true;
 
 	/// Protected function which is used to set the view's filename properties on a save or load.
+	/// Called by loadFile() and saveFile().
 	void setCurrentFile(QUrl url);
 
 	virtual void closeEvent(QCloseEvent* event) override;
@@ -99,6 +103,11 @@ protected:
 	/// Return True if you handle it, False if you don't.
 	virtual bool onBlankAreaToolTip(QHelpEvent* event);
 
+	/**
+	 * Called by closeEvent().  If document shows as modified, pops up a "Do you want to save?" box,
+	 * then calls save() or not depending on the user's choice.
+	 * @return false if file was modified and user cancelled, true otherwise.
+	 */
 	virtual bool maybeSave();
 
 	/**

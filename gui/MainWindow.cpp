@@ -459,6 +459,9 @@ void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
 {
 	connect(this, &MainWindow::sendToNowPlaying, plv, &MDIPlaylistView::onSendToNowPlaying);
+
+	connectPlayerAndPlaylistView(&m_player, plv);
+	connectPlayerControlsAndPlaylistView(m_controls, plv);
 }
 
 void MainWindow::updateConnections()
@@ -473,25 +476,22 @@ void MainWindow::updateConnections()
 		if(childIsLibrary != nullptr)
 		{
 			auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
-								  m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
-									Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if(!connection_handle)
+			                                 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
+			                                 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+			if (!connection_handle)
 			{
 				qDebug() << "Connection failed: already connected?";
 			}
 
-			connection_handle = connect(childIsLibrary, &MDILibraryView::playTrackNowSignal,
-							 this, &MainWindow::onPlayTrackNowSignal, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if(!connection_handle)
+			connection_handle = connect(childIsLibrary,
+			                            &MDILibraryView::playTrackNowSignal,
+			                            this,
+			                            &MainWindow::onPlayTrackNowSignal,
+			                            Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+			if (!connection_handle)
 			{
 				qDebug() << "Connection failed: already connected?";
 			}
-		}
-
-		if(childIsPlaylist != nullptr)
-		{
-			connectPlayerAndPlaylistView(&m_player, childIsPlaylist);
-			connectPlayerControlsAndPlaylistView(m_controls, childIsPlaylist);
 		}
 	}
 }
@@ -779,7 +779,7 @@ void MainWindow::onStartup()
     changeIconTheme(QIcon::themeName());
 
     // Create the "Now Playing" playlist.
-    auto wins = createMdiChildPlaylist();
+    auto wins = createMdiNowPlayingView();
     m_now_playing_playlist_view = wins.first;
     QMdiSubWindow* mdisubwindow = wins.second;
 
@@ -1031,6 +1031,31 @@ std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
 	return std::make_pair(child, mdisubwindow);
 }
 
+std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingView()
+{
+	// Create a new "Now Playing" playlist model.
+	auto new_playlist_model = new PlaylistModel(this);
+
+	// TODO REMOVE
+	m_playlist_models.push_back(new_playlist_model);
+	m_now_playing_playlist_model = new_playlist_model;
+
+	MDINowPlayingView* child = new MDINowPlayingView(this);
+	child->setModel(new_playlist_model);
+	auto mdisubwindow = m_mdi_area->addSubWindow(child);
+
+	// child.undoAvailable.connect(editUndoAct.setEnabled)
+	// child.redoAvailable.connect(redoAct.setEnabled)
+	// child.copyAvailable.connect(cutAct.setEnabled)
+	// child.copyAvailable.connect(copyAct.setEnabled)
+
+	// Connect signals.
+	//child.cursorPositionChanged.connect(cursorPosChanged)
+
+	// Add the new playlist to the collection doc widget.
+	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
+	return std::make_pair(child, mdisubwindow);
+}
 
 // Top-level "saveAs" action handler for "Save playlist as..."
 void MainWindow::savePlaylistAs()
