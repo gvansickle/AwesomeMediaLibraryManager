@@ -45,6 +45,7 @@ public:
 
 signals:
 	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
+	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
 	void playTrackNowSignal(QUrl);
 
 protected:

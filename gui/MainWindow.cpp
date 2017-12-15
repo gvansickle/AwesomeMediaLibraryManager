@@ -452,7 +452,8 @@ void MainWindow::connectLibraryToActivityProgressWidget(LibraryModel* lm, Activi
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 {
-	//connect();
+	connect(lv, &MDILibraryView::sendEntryToPlaylist, this, &MainWindow::onSendEntryToPlaylist);
+	connect(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
 }
 
 void MainWindow::updateConnections()
@@ -891,7 +892,7 @@ std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryVie
 	auto child = new MDILibraryView(this);
 	auto mdisubwindow = m_mdi_area->addSubWindow(child);
 
-	connect(child, &MDILibraryView::sendEntryToPlaylist, this, &MainWindow::onSendEntryToPlaylist);
+	connectLibraryViewAndMainWindow(child);
 
 	return std::make_tuple(child, mdisubwindow);
 }
@@ -991,6 +992,11 @@ void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, s
 		auto new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);
 		playlist_model->appendRow(new_playlist_entry);
 	}
+}
+
+void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
+{
+	Q_ASSERT(0);
 }
 
 std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
@@ -1185,7 +1191,6 @@ void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)
 	m_numSongsIndicator->setText(QString("Number of Songs: %1").arg(num_songs));
 #endif
 }
-
 
 #if 0
 
