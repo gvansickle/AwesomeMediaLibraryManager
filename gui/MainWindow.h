@@ -58,6 +58,7 @@ public:
     ~MainWindow() override;
 
 signals:
+	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
 
 protected:
 	void closeEvent(QCloseEvent* event) override;
@@ -114,6 +115,7 @@ private:
 	void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
 
 	void connectLibraryViewAndMainWindow(MDILibraryView* lv);
+	void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
 	///@}
 
 	void stopAllBackgroundThreads();

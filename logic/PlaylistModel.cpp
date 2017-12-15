@@ -131,7 +131,7 @@ std::shared_ptr<LibraryEntry> PlaylistModel::getItem(const QModelIndex& index) c
 	auto playlist_model_item = std::dynamic_pointer_cast<PlaylistModelItem>(libmodel_item);
 	if(!playlist_model_item)
 	{
-		qCritical() << "LibraryModelItem not a PlaylistModelItem";
+		qCritical() << "libmodel_item not a PlaylistModelItem";
 	}
 
 	Q_ASSERT(playlist_model_item != nullptr);

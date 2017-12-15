@@ -456,6 +456,11 @@ void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 	connect(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
 }
 
+void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
+{
+	connect(this, &MainWindow::sendToNowPlaying, plv, &MDIPlaylistView::onSendToNowPlaying);
+}
+
 void MainWindow::updateConnections()
 {
 	if(activeMdiChild() != nullptr)
@@ -778,7 +783,10 @@ void MainWindow::onStartup()
     m_now_playing_playlist_view = wins.first;
     QMdiSubWindow* mdisubwindow = wins.second;
 
+M_WARNING("TODO: Specify a temp/cache file?")
     m_now_playing_playlist_view->newFile();
+
+	connectNowPlayingViewAndMainWindow(m_now_playing_playlist_view);
 
     setActiveSubWindow(mdisubwindow);
     statusBar()->showMessage(QString("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
@@ -996,7 +1004,8 @@ void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, s
 
 void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 {
-	Q_ASSERT(0);
+	// Resend the entry to the "Now Playing" playlist view.
+	emit sendToNowPlaying(libentry);
 }
 
 std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()

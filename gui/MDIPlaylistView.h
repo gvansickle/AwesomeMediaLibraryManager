@@ -50,6 +50,8 @@ public slots:
 	void next();
 	void previous();
 
+	void onSendToNowPlaying(std::shared_ptr<LibraryEntry>);
+
 protected:
 
 	///

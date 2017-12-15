@@ -244,28 +244,21 @@ void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 	// Should always be valid.
 	Q_ASSERT(index.isValid());
 
-M_WARNING("TODO: Fix assumptions");
-	if(true) // we're the playlist connected to the player.
-	{
-		// Tell the player to start playing the song at index.
-		qDebug() << "Double-clicked index:" << index;
-		auto underlying_model_index = to_underlying_qmodelindex(index);
+	// Tell the player to start playing the song at index.
+	qDebug() << "Double-clicked index:" << index;
+	auto underlying_model_index = to_underlying_qmodelindex(index);
 
-		Q_ASSERT(underlying_model_index.isValid());
+	Q_ASSERT(underlying_model_index.isValid());
 
-		qDebug() << "Underlying index:" << underlying_model_index;
+	qDebug() << "Underlying index:" << underlying_model_index;
 
-		// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
-		// start the song.
-		/// @note See "jump()" etc in the Qt5 MediaPlyer example.
+	// Get the item that was double clicked.
+	auto item = m_underlying_model->getItem(underlying_model_index);
 
-//		m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
+	Q_ASSERT(item != nullptr);
 
-		// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
-		// make sure it starts.
-//		emit play();
-	}
-
+	// Send it to the "Now Playing" playlist, by way of MainWindow.
+	emit sendToNowPlaying(item);
 }
 
 
