@@ -103,6 +103,12 @@ protected:
 
 	QMdiSubWindow* getQMdiSubWindow() const;
 
+	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
+	virtual QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) = 0;
+
+	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
+	virtual QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) = 0;
+
 private:
 	Q_DISABLE_COPY(MDITreeViewBase)
 

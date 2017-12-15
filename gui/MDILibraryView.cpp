@@ -30,6 +30,7 @@
 #include <gui/MDIPlaylistView.h>
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
+#include <utils/DebugHelpers.h>
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -49,6 +50,9 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 
 	// Configure selection.
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
+
+	// Hook up double-click handler.
+	connect(this, &MDILibraryView::doubleClicked, this, &MDILibraryView::onDoubleClicked);
 
 	// Configure drag and drop.
 	//// Libraries can't have items dragged around inside them.
@@ -148,6 +152,20 @@ bool MDILibraryView::onBlankAreaToolTip(QHelpEvent* event)
 	return true;
 }
 
+QModelIndex MDILibraryView::to_underlying_qmodelindex(const QModelIndex &proxy_index)
+{
+	auto underlying_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapToSource(proxy_index);
+	Q_ASSERT(underlying_model_index.isValid());
+
+	return underlying_model_index;
+}
+
+QModelIndex MDILibraryView::from_underlying_qmodelindex(const QModelIndex &underlying_index)
+{
+	auto proxy_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapFromSource(underlying_index);
+	return proxy_model_index;
+}
+
 void MDILibraryView::addSendToMenuActions(QMenu* menu)
 {
 	auto playlistviews = getAllMdiPlaylistViews();
@@ -215,6 +233,40 @@ void MDILibraryView::onContextMenu(QPoint pos)
 		}
 	}
 }
+
+/**
+ * Handler which gets invoked by a double-click on a Library Model item.
+ * Sends the clicked-on item to the "Now Playing" playlist to be played.
+ */
+void MDILibraryView::onDoubleClicked(const QModelIndex &index)
+{
+	// Should always be valid.
+	Q_ASSERT(index.isValid());
+
+M_WARNING("TODO: Fix assumptions");
+	if(true) // we're the playlist connected to the player.
+	{
+		// Tell the player to start playing the song at index.
+		qDebug() << "Double-clicked index:" << index;
+		auto underlying_model_index = to_underlying_qmodelindex(index);
+
+		Q_ASSERT(underlying_model_index.isValid());
+
+		qDebug() << "Underlying index:" << underlying_model_index;
+
+		// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
+		// start the song.
+		/// @note See "jump()" etc in the Qt5 MediaPlyer example.
+
+//		m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
+
+		// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
+		// make sure it starts.
+//		emit play();
+	}
+
+}
+
 
 std::vector<MDIPlaylistView*> MDILibraryView::getAllMdiPlaylistViews()
 {

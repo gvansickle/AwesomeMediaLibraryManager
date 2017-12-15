@@ -132,7 +132,7 @@ M_WARNING("TODO: ifdef this to development only")
     setUnifiedTitleAndToolBarOnMac(true);
 
     // Send ourself a message to re-load the files we had open last time we were closed.
-	QTimer::singleShot(0, this, &MainWindow::loadFiles);
+	QTimer::singleShot(0, this, &MainWindow::onStartup);
 
 }
 
@@ -759,11 +759,12 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	qDebug() << "writeLibSettings() end";
 }
 
-
-void MainWindow::loadFiles()
+/**
+ * Called by a "timer(0)" started in the constructor.
+ */
+void MainWindow::onStartup()
 {
-    /// @todo This is doing more than loading files, rename it.
-    // Change the Icon Theme.
+    // Set the Icon Theme.
     changeIconTheme(QIcon::themeName());
 
     // Create the "Now Playing" playlist.
@@ -774,10 +775,11 @@ void MainWindow::loadFiles()
     m_now_playing_playlist_view->newFile();
 
     setActiveSubWindow(mdisubwindow);
-    statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
+    statusBar()->showMessage(QString("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
 
     m_now_playing_playlist_view->show();
 
+	// Load any files which were opened at the time the last session was closed.
 	qDebug() << QString("Loading files from last session...");
 	QSettings settings;
 	readLibSettings(settings);
@@ -949,7 +951,9 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
 	/// @todo ???
 }
 
-// Top-level action for creating a new, empty playlist.
+/**
+ * Top-level menu/toolbar action for creating a new, empty playlist.
+ */
 void MainWindow::newPlaylist()
 {
     auto wins = createMdiChildPlaylist();

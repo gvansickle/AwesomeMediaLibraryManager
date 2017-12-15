@@ -70,6 +70,11 @@ protected:
 	/// Drag and Drop
 	virtual void dropEvent(QDropEvent* event) override;
 
+	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
+	QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) override;
+	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
+	QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
+
 protected slots:
 	virtual void playlistPositionChanged(qint64 position);
 
@@ -86,12 +91,6 @@ private:
 	Q_DISABLE_COPY(MDIPlaylistView)
 
 	bool dropOn(QDropEvent *event, int *dropRow, int *dropCol, QModelIndex *dropIndex);
-
-	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
-	QModelIndex to_underlying_qmodelindex(const QModelIndex& proxy_index);
-	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
-	QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index);
-
 
 	PlaylistModel* m_underlying_model;
 	LibrarySortFilterProxyModel* m_sortfilter_model;

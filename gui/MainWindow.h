@@ -124,7 +124,7 @@ private:
 
 	/// Reads the primary settings.
     void readSettings();
-    void loadFiles();
+    void onStartup();
 	void openWindows();
 	void writeSettings();
 	void writeLibSettings(QSettings& settings);
