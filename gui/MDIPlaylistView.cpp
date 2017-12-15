@@ -377,7 +377,9 @@ Q_ASSERT(new_playlist_entry != nullptr);
 	m_underlying_model->appendRow(new_playlist_entry);
 
 	// Find the last row of the underlying model in top-proxy-model coordinates.
-	auto proxy_index = from_underlying_qmodelindex(m_underlying_model->index(std::min(0, m_underlying_model->rowCount()-1), 0));
+	auto proxy_index = from_underlying_qmodelindex(m_underlying_model->index(std::max(0, m_underlying_model->rowCount()-1), 0));
+
+	qDebug() << "Proxy index:" << proxy_index;
 
 	// Pretend the user double-clicked on it.
 	emit onDoubleClicked(proxy_index);
