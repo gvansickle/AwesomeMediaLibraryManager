@@ -344,6 +344,10 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 	return m_underlying_model;
 }
 
+//
+// Public slots
+//
+
 void MDIPlaylistView::next()
 {
 	// Forward to the QMediaPlaylist.
@@ -354,6 +358,31 @@ void MDIPlaylistView::previous()
 {
 	// Forward to the QMediaPlaylist.
 	m_underlying_model->qmplaylist()->previous();
+}
+
+/**
+ * Slot which appends the incoming library entry and starts playing it.
+ */
+void MDIPlaylistView::onSendToNowPlaying(std::shared_ptr<LibraryEntry> new_libentry)
+{
+M_WARNING("TODO: Dedup")
+
+	// We first need to convert the LibraryEntry to a PlaylistModelItem.
+	// Create a new PlaylistModelItem to put in the model.
+	std::shared_ptr<PlaylistModelItem> new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(new_libentry);
+
+Q_ASSERT(new_playlist_entry != nullptr);
+
+	// Append to underlying model.
+	m_underlying_model->appendRow(new_playlist_entry);
+
+	// Find the last row of the underlying model in top-proxy-model coordinates.
+	auto proxy_index = from_underlying_qmodelindex(m_underlying_model->index(std::max(0, m_underlying_model->rowCount()-1), 0));
+
+	qDebug() << "Proxy index:" << proxy_index;
+
+	// Pretend the user double-clicked on it.
+	emit onDoubleClicked(proxy_index);
 }
 
 void MDIPlaylistView::onContextMenu(QPoint pos)
@@ -431,3 +460,4 @@ QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &unde
 	auto proxy_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapFromSource(underlying_index);
 	return proxy_model_index;
 }
+

@@ -45,8 +45,15 @@ public:
 	bool saveAs();
 	bool saveFile(QUrl save_url, QString filter);
 
+	/// Returns the current basename of this window's backing file.
 	QString userFriendlyCurrentFile() const;
+
+	/// Returns the full URL of this window's backing file.
 	QUrl getCurrentUrl() const;
+
+	/// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
+	/// Default implementation returns userFriendlyCurrentFile().
+	virtual QString getDisplayName() const;
 
 protected:
 
@@ -55,6 +62,7 @@ protected:
 	bool m_isUntitled = true;
 
 	/// Protected function which is used to set the view's filename properties on a save or load.
+	/// Called by loadFile() and saveFile().
 	void setCurrentFile(QUrl url);
 
 	virtual void closeEvent(QCloseEvent* event) override;
@@ -99,9 +107,23 @@ protected:
 	/// Return True if you handle it, False if you don't.
 	virtual bool onBlankAreaToolTip(QHelpEvent* event);
 
+	/**
+	 * Called by closeEvent().  If document shows as modified, pops up a "Do you want to save?" box,
+	 * then calls save() or not depending on the user's choice.
+	 * @return false if file was modified and user cancelled, true otherwise.
+	 */
 	virtual bool maybeSave();
 
+	/**
+	 * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
+	 */
 	QMdiSubWindow* getQMdiSubWindow() const;
+
+	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
+	virtual QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) = 0;
+
+	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
+	virtual QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) = 0;
 
 private:
 	Q_DISABLE_COPY(MDITreeViewBase)

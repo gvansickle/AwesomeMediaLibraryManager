@@ -72,7 +72,6 @@ class PlaylistItem: public QStandardItem
 public:
 	PlaylistItem(MDIPlaylistView* view)
 	{
-		//playlist_model: PlaylistModel = model;
 		playlist_view = view;
 
 		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
@@ -83,7 +82,7 @@ public:
 		// Get the data we need from the model we're connected to
 		if(role == Qt::EditRole || role == Qt::DisplayRole)
 		{
-			return QVariant(playlist_view->userFriendlyCurrentFile());
+			return QVariant(playlist_view->getDisplayName());
 		}
 		else if(role == Qt::ToolTipRole)
 		{

@@ -28,6 +28,7 @@
 #include <QAction>
 #include <QHeaderView>
 #include <QSaveFile>
+#include <logic/LibrarySortFilterProxyModel.h>
 
 #include "gui/NetworkAwareFileDialog.h"
 
@@ -77,14 +78,24 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	connect(header(), &QHeaderView::customContextMenuRequested, this, &MDITreeViewBase::headerMenu);
 }
 
+/**
+ * Called by the MainWindow immediately after a new, empty MDI child window is created.
+ */
 void MDITreeViewBase::newFile()
 {
 static qint64 sequenceNumber = 0;
 
+	// We don't have an actual title yet.
 	m_isUntitled = true;
+
+	// Create a default filename.
 	m_current_url = QUrl(getNewFilenameTemplate().arg(sequenceNumber));
 	sequenceNumber += 1;
-	setWindowTitle(userFriendlyCurrentFile() + "[*]");
+
+	// Set the window title to the Display Name, which defaults to the filename, plus the Qt "is modified" placeholder.
+	setWindowTitle(getDisplayName() + "[*]");
+
+	/// @todo Connect a contentsChanged signal to a docWasModified slot here?
 }
 
 bool MDITreeViewBase::loadFile(QUrl load_url)
@@ -185,7 +196,12 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 	m_isUntitled = false;
 	setWindowFilePath(url.toString());
 	setWindowModified(false);
-	setWindowTitle(userFriendlyCurrentFile() + "[*]");
+	setWindowTitle(getDisplayName() + "[*]");
+}
+
+QString MDITreeViewBase::getDisplayName() const
+{
+	return userFriendlyCurrentFile();
 }
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)

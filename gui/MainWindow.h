@@ -22,6 +22,7 @@
 #include "MDIPlaylistView.h"
 #include "MDITreeViewBase.h"
 #include "PlayerControls.h"
+#include "MDINowPlayingView.h"
 
 #include <QMainWindow>
 #include <QUrl>
@@ -58,6 +59,7 @@ public:
     ~MainWindow() override;
 
 signals:
+	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
 
 protected:
 	void closeEvent(QCloseEvent* event) override;
@@ -86,6 +88,7 @@ private slots:
 
 	void onPlayTrackNowSignal(QUrl url);
 	void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
+	void onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry);
 
 	void doExperiment();
 
@@ -111,6 +114,9 @@ private:
 	void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
 
 	void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
+
+	void connectLibraryViewAndMainWindow(MDILibraryView* lv);
+	void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
 	///@}
 
 	void stopAllBackgroundThreads();
@@ -124,7 +130,7 @@ private:
 
 	/// Reads the primary settings.
     void readSettings();
-    void loadFiles();
+    void onStartup();
 	void openWindows();
 	void writeSettings();
 	void writeLibSettings(QSettings& settings);
@@ -139,6 +145,7 @@ private:
     MDITreeViewBase* activeMdiChild();
 	QMdiSubWindow* findSubWindow(QUrl url);
 	std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
+	std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
 
 	QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
 	void openMDILibraryViewOnModel(LibraryModel* libmodel);
@@ -165,6 +172,11 @@ private:
 
 	/// The library models.
 	std::vector<QSharedPointer<LibraryModel>> m_libmodels;
+
+	/// The "Now Playing" playlist.
+    QPointer<PlaylistModel> m_now_playing_playlist_model;
+    QPointer<MDIPlaylistView> m_now_playing_playlist_view;
+
 
 	/// The list of PlaylistModels.
 	std::vector<PlaylistModel*> m_playlist_models;
