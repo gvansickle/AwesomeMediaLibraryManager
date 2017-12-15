@@ -29,6 +29,8 @@ class MDINowPlayingView : public MDIPlaylistView
 
 public:
 	MDINowPlayingView(QWidget *parent);
+
+	QString getDisplayName() const override;
 };
 
 

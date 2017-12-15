@@ -51,6 +51,10 @@ public:
 	/// Returns the full URL of this window's backing file.
 	QUrl getCurrentUrl() const;
 
+	/// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
+	/// Default implementation returns userFriendlyCurrentFile().
+	virtual QString getDisplayName() const;
+
 protected:
 
 	QUrl m_current_url;

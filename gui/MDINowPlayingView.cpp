@@ -23,3 +23,8 @@ MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 {
 
 }
+
+QString MDINowPlayingView::getDisplayName() const
+{
+	return "Now Playing";
+}

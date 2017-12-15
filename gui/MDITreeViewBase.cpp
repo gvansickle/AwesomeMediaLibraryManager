@@ -92,8 +92,8 @@ static qint64 sequenceNumber = 0;
 	m_current_url = QUrl(getNewFilenameTemplate().arg(sequenceNumber));
 	sequenceNumber += 1;
 
-	// Set the window title to the default filename, plus the Qt "is modified" placeholder.
-	setWindowTitle(userFriendlyCurrentFile() + "[*]");
+	// Set the window title to the Display Name, which defaults to the filename, plus the Qt "is modified" placeholder.
+	setWindowTitle(getDisplayName() + "[*]");
 
 	/// @todo Connect a contentsChanged signal to a docWasModified slot here?
 }
@@ -196,7 +196,12 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 	m_isUntitled = false;
 	setWindowFilePath(url.toString());
 	setWindowModified(false);
-	setWindowTitle(userFriendlyCurrentFile() + "[*]");
+	setWindowTitle(getDisplayName() + "[*]");
+}
+
+QString MDITreeViewBase::getDisplayName() const
+{
+	return userFriendlyCurrentFile();
 }
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)
