@@ -27,6 +27,7 @@
 class QToolButton;
 class QSlider;
 class QLabel;
+class QShortcut;
 
 class PlayerControls : public QWidget
 {
@@ -94,11 +95,17 @@ private:
 
 	/// Actions.
 	QAction* m_play_act;
+	QAction* m_skip_fwd_act;
 	QAction* m_repeat_act;
 
 	QSlider* m_positionSlider;
 	QSlider* m_volumeSlider;
 	QLabel* m_labelDuration;
+
+	/// Media Key QShortcuts.
+	QShortcut* m_media_key_next;
+
+	void registerMediaKeySequences();
 
     void updateDurationInfo(qint64 pos, qint64 duration);
 };

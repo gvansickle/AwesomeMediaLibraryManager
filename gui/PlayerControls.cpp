@@ -25,6 +25,7 @@
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QTime>
+#include <QShortcut>
 
 #include "utils/Theme.h"
 #include "utils/ConnectHelpers.h"
@@ -42,24 +43,30 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	/// m_playButton->setDefaultAction(m_play_act);
 
 	m_stopButton = new QToolButton(this);
-	m_icon_stop = QIcon::fromTheme("media-playback-stop");
+	m_icon_stop = Theme::iconFromTheme("media-playback-stop");
 	m_stopButton->setIcon(m_icon_stop);
 	m_stopButton->setEnabled(false);
 	connect_clicked(m_stopButton, this, &PlayerControls::stop);
 
+	m_skip_fwd_act = new QAction(Theme::iconFromTheme("media-skip-forward"), tr("Next song"), this);
+	m_skip_fwd_act->setShortcut(QKeySequence(Qt::Key_MediaNext));
+	m_skip_fwd_act->setShortcutContext(Qt::ApplicationShortcut);
 	m_nextButton = new QToolButton(this);
-	m_nextButton->setIcon(QIcon::fromTheme("media-skip-forward"));
-	connect_clicked(m_nextButton, this, &PlayerControls::next);
+	m_nextButton->setDefaultAction(m_skip_fwd_act);
+	//m_nextButton->setIcon(Theme::iconFromTheme("media-skip-forward"));
+	//connect_clicked(m_nextButton, this, &PlayerControls::next);
+	//QShortcut(, this, Q_NULLPTR, Q_NULLPTR, Qt::ApplicationShortcut);
+	connect_trig(m_skip_fwd_act, this, &PlayerControls::next);
 
 	m_previousButton = new QToolButton(this);
-	m_previousButton->setIcon(QIcon::fromTheme("media-skip-backward"));
+	m_previousButton->setIcon(Theme::iconFromTheme("media-skip-backward"));
 	connect_clicked(m_previousButton, this, &PlayerControls::previous);
 
     // Shuffle button will be connected to an action, no need to set an icon here.
 	m_shuffleButton = new QToolButton(this);
 
 	m_repeatButton = new QToolButton(this);
-	m_repeat_icon = QIcon::fromTheme("media-playlist-repeat");
+	m_repeat_icon = Theme::iconFromTheme("media-playlist-repeat");
 	m_repeat_act = make_action(m_repeat_icon, "Repeat", this, QKeySequence(), "Repeat after last song in playlist is played");
 	m_repeat_act->setCheckable(true);
 	m_repeatButton->setDefaultAction(m_repeat_act);
@@ -105,6 +112,21 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	m_last_pos = 0;
 	m_last_dur = 0;
     updateDurationInfo(0,0);
+
+	// Set up support for media control keys.
+	registerMediaKeySequences();
+}
+
+void PlayerControls::registerMediaKeySequences()
+{
+	//m_media_key_next = new QShortcut(QKeySequence(Qt::Key_MediaNext), this, Q_NULLPTR, Q_NULLPTR, Qt::ApplicationShortcut);
+	//connect(m_media_key_next, &QShortcut::activated, m_nextButton, &QToolButton::triggered);
+	// Qt::Key_MediaPause
+	// Qt::Key_MediaPlay
+	// Qt::Key_MediaStop
+	// Qt::Key_MediaPrevious
+	// Qt::Key_MediaTogglePlayPause
+	// Qt::Key_LaunchMedia
 }
 
 int PlayerControls::volume() const
@@ -243,3 +265,4 @@ void PlayerControls::updateDurationInfo(qint64 pos, qint64 duration)
 
 	m_labelDuration->setText(tStr);
 }
+
