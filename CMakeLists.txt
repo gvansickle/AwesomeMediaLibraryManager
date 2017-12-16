@@ -159,6 +159,7 @@ set(AMLM_TAGLIB_TARGET "")
 
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
+set(USE_BUNDLED_QXTGLOBALSHORTCUT FALSE)
 
 if(NOT WIN32)
     find_package(PkgConfig REQUIRED)
@@ -229,6 +230,20 @@ else()
 	endif()
 endif()
 
+if(USE_BUNDLED_QXTGLOBALSHORTCUT)
+	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
+else()
+	find_package(PkgConfig REQUIRED)
+
+	pkg_check_modules(QXTGLOBALSHORTCUT_LIB REQUIRED qxtglobalshortcut
+		IMPORTED_TARGET)
+	if(QXTGLOBALSHORTCUT_LIB_FOUND)
+		set(AMLM_QXTGLOBALSHORTCUT_LIB_TARGET "PkgConfig::QXTGLOBALSHORTCUT_LIB")
+		# Doesn't work, this is an interface library: print_target_properties(${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+	endif()
+endif()
+
+# Main program header files.
 set(HEADER_FILES
 	gui/CollectionDockWidget.h
 	gui/Experimental.h
@@ -323,7 +338,11 @@ set(SOURCE_FILES
 	gui/settings/SettingsDialog.cpp
 	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h
 	gui/settings/SDPageAppearance.cpp gui/settings/SDPageAppearance.h
-	gui/settings/SettingsDialogSideWidget.cpp gui/settings/SDPageLibrary.cpp gui/settings/SDPageLibrary.h gui/MDINowPlayingView.cpp gui/MDINowPlayingView.h)
+	gui/settings/SettingsDialogSideWidget.cpp
+	gui/settings/SDPageLibrary.cpp
+	gui/settings/SDPageLibrary.h
+	gui/MDINowPlayingView.cpp
+	gui/MDINowPlayingView.h)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -368,7 +387,7 @@ set_target_properties(${PROJECT_NAME}
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
 add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})

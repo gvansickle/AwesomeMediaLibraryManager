@@ -27,6 +27,9 @@
 #include <QTime>
 #include <QShortcut>
 
+#include <qxtglobalshortcut.h>
+#include <QtCore/QPointer>
+
 #include "utils/Theme.h"
 #include "utils/ConnectHelpers.h"
 #include "utils/ActionHelpers.h"
@@ -49,7 +52,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	connect_clicked(m_stopButton, this, &PlayerControls::stop);
 
 	m_skip_fwd_act = new QAction(Theme::iconFromTheme("media-skip-forward"), tr("Next song"), this);
-	m_skip_fwd_act->setShortcut(QKeySequence(Qt::Key_MediaNext));
+	//m_skip_fwd_act->setShortcut(QKeySequence(Qt::Key_MediaNext));
 	m_skip_fwd_act->setShortcutContext(Qt::ApplicationShortcut);
 	m_nextButton = new QToolButton(this);
 	m_nextButton->setDefaultAction(m_skip_fwd_act);
@@ -117,10 +120,28 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	registerMediaKeySequences();
 }
 
+static QPointer<QxtGlobalShortcut> make_QxtGlobalShortcut(const QKeySequence& key_seq, QAction* action_to_trigger, QObject *parent = nullptr)
+{
+	QPointer<QxtGlobalShortcut> retval;
+
+	retval = new QxtGlobalShortcut(key_seq, parent);
+
+	if(!retval || !retval->isValid())
+	{
+		qWarning() << "Failed to set global shortcut:" << key_seq;
+	}
+
+	QObject::connect(retval, &QxtGlobalShortcut::activated, [=](){ action_to_trigger->triggered(); });
+
+	return retval;
+}
+
 void PlayerControls::registerMediaKeySequences()
 {
-	//m_media_key_next = new QShortcut(QKeySequence(Qt::Key_MediaNext), this, Q_NULLPTR, Q_NULLPTR, Qt::ApplicationShortcut);
-	//connect(m_media_key_next, &QShortcut::activated, m_nextButton, &QToolButton::triggered);
+	qDebug() << "Setting global shortcuts";
+
+	m_media_key_next_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaNext), m_skip_fwd_act, this);
+
 	// Qt::Key_MediaPause
 	// Qt::Key_MediaPlay
 	// Qt::Key_MediaStop

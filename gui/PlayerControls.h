@@ -24,6 +24,8 @@
 #include <QMediaPlayer>
 #include <QIcon>
 
+#include <qxtglobalshortcut.h>
+
 class QToolButton;
 class QSlider;
 class QLabel;
@@ -102,8 +104,8 @@ private:
 	QSlider* m_volumeSlider;
 	QLabel* m_labelDuration;
 
-	/// Media Key QShortcuts.
-	QShortcut* m_media_key_next;
+	/// Global Media Key shortcuts.
+	QxtGlobalShortcut* m_media_key_next_gshortcut;
 
 	void registerMediaKeySequences();
 
