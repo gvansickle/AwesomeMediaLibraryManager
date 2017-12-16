@@ -149,7 +149,11 @@ void PlayerControls::registerMediaKeySequences()
 {
 	qDebug() << "Setting global shortcuts";
 
-	m_media_key_play_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPlay), m_play_act, this);
+	/// @note It looks like QxtGlobalShortcut maps (on Windows) VK_MEDIA_PLAY_PAUSE to Qt::Key_MediaPlay, and nothing to
+	/// Qt::Key_MediaTogglePlayPause.  I'm seeing what looks like the same thing on Fedora, though the creation of
+	/// the Qt::Key_MediaTogglePlayPause shortcut below doesn't fail.
+	/// For now we'll map Qt::Key_MediaPlay to the m_play_pause_toggle_act.
+	m_media_key_play_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPlay), /*m_play_act*/ m_play_pause_toggle_act, this);
 	qDebug() << "Play:" << m_media_key_play_gshortcut;
 	m_media_key_pause_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPause), m_pause_act, this);
 	qDebug() << "Pause:" << m_media_key_pause_gshortcut;
