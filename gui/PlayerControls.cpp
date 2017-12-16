@@ -39,10 +39,14 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	// Play/pause button.
 	m_icon_play = Theme::iconFromTheme("media-playback-start");
 	m_icon_pause = Theme::iconFromTheme("media-playback-pause");
-	m_play_act = new QAction(m_icon_play, tr("Play/Pause"), this);
+	m_play_act = new QAction(m_icon_play, tr("Play"), this);
+	m_pause_act = new QAction(m_icon_pause, tr("Pause"), this);
+	m_play_pause_toggle_act = new QAction(m_icon_pause, tr("Toggle Play/Pause"), this);
 	m_playButton = new QToolButton(this);
 	m_playButton->setDefaultAction(m_play_act);
-	connect_trig(m_play_act, this, &PlayerControls::playClicked);
+	connect_trig(m_play_act, this, &PlayerControls::onPlayAction);
+	connect_trig(m_pause_act, this, &PlayerControls::onPauseAction);
+	connect_trig(m_play_pause_toggle_act, this, &PlayerControls::onTogglePlayPauseAction);
 
 	// Stop button.
 	m_stop_act = new QAction(Theme::iconFromTheme("media-playback-stop"), tr("Stop"), this);
@@ -145,15 +149,19 @@ void PlayerControls::registerMediaKeySequences()
 {
 	qDebug() << "Setting global shortcuts";
 
+	m_media_key_play_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPlay), m_play_act, this);
+	qDebug() << "Play:" << m_media_key_play_gshortcut;
+	m_media_key_pause_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPause), m_pause_act, this);
+	qDebug() << "Pause:" << m_media_key_pause_gshortcut;
+	m_media_key_toggle_play_pause_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaTogglePlayPause), m_play_pause_toggle_act, this);
+	qDebug() << "PlayPauseToggle:" << m_media_key_toggle_play_pause_gshortcut;
 	m_media_key_stop_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaStop), m_stop_act, this);
 	m_media_key_next_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaNext), m_skip_fwd_act, this);
 	m_media_key_prev_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPrevious), m_skip_back_act, this);
 	m_media_key_mute_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_VolumeMute), m_mute_act, this);
 
-	// Qt::Key_MediaPause
-	// Qt::Key_MediaPlay
-	// Qt::Key_MediaTogglePlayPause
 	// Qt::Key_LaunchMedia
+	qDebug() << "Setting global shortcuts complete";
 }
 
 int PlayerControls::volume() const
@@ -161,27 +169,33 @@ int PlayerControls::volume() const
 	return m_volumeSlider->value();
 }
 
+/**
+ * Slot connected to the player, which notifies us of its current state so we can set the control states appropriately.
+ * @param state
+ */
 void PlayerControls::setState(QMediaPlayer::State state)
 {
-	if(state != m_playerState)
-    {
-		m_playerState = state;
+	qDebug() << "new state:" << state;
 
-        if(state == QMediaPlayer::StoppedState)
-        {
-			m_stop_act->setEnabled(false);
-			m_playButton->setIcon(m_icon_play);
-        }
-        else if( state == QMediaPlayer::PlayingState)
-        {
-			m_stop_act->setEnabled(true);
-			m_playButton->setIcon(m_icon_pause);
-        }
-        else if( state == QMediaPlayer::PausedState)
-        {
-			m_stop_act->setEnabled(true);
-			m_playButton->setIcon(m_icon_play);
-        }
+	m_playerState = state;
+
+    if(state == QMediaPlayer::StoppedState)
+    {
+	    qDebug() << "Stopped, setting play act";
+		m_stop_act->setEnabled(false);
+		m_playButton->setDefaultAction(m_play_act);
+    }
+    else if( state == QMediaPlayer::PlayingState)
+    {
+	    qDebug() << "Playing, setting pause act";
+		m_stop_act->setEnabled(true);
+		m_playButton->setDefaultAction(m_pause_act);
+    }
+    else if( state == QMediaPlayer::PausedState)
+    {
+	    qDebug() << "Paused, setting play act";
+		m_stop_act->setEnabled(true);
+		m_playButton->setDefaultAction(m_play_act);
     }
 }
 
@@ -214,17 +228,31 @@ QMediaPlayer::State PlayerControls::state() const
 /**
  * Cycle through the Playing/Paused states.
  */
-void PlayerControls::playClicked()
+void PlayerControls::onPlayAction()
 {
-	if(m_playerState == QMediaPlayer::StoppedState || m_playerState == QMediaPlayer::PausedState)
-    {
-        emit play();
-    }
-	else if(m_playerState == QMediaPlayer::PlayingState)
-    {
-        emit pause();
-    }
+	qDebug() << "play";
+	emit play();
 }
+
+void PlayerControls::onPauseAction()
+{
+	qDebug() << "pause";
+	emit pause();
+}
+
+void PlayerControls::onTogglePlayPauseAction()
+{
+	qDebug() << "toggle";
+	if(m_playerState == QMediaPlayer::StoppedState || m_playerState == QMediaPlayer::PausedState)
+	{
+		emit play();
+	}
+	else if(m_playerState == QMediaPlayer::PlayingState)
+	{
+		emit pause();
+	}
+}
+
 
 void PlayerControls::muteClicked()
 {

@@ -65,7 +65,9 @@ public slots:
 	void onPositionChanged(qint64 pos);
 
 private slots:
-    void playClicked();
+    void onPlayAction();
+	void onPauseAction();
+	void onTogglePlayPauseAction();
     void muteClicked();
 
 
@@ -98,6 +100,8 @@ private:
 
 	/// Actions.
 	QAction* m_play_act;
+	QAction* m_pause_act;
+	QAction* m_play_pause_toggle_act;
 	QAction* m_stop_act;
 	QAction* m_skip_fwd_act;
 	QAction* m_skip_back_act;
@@ -111,6 +115,7 @@ private:
 	/// Global Media Key shortcuts.
 	QPointer<QxtGlobalShortcut> m_media_key_play_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_pause_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_toggle_play_pause_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_stop_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_next_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_prev_gshortcut;
