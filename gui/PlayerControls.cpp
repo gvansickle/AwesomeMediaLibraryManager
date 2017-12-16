@@ -36,14 +36,13 @@
 
 PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 {
-	m_playButton = new QToolButton(this);
-	connect_clicked(m_playButton, this, &PlayerControls::playClicked);
-    m_icon_play = Theme::iconFromTheme("media-playback-start");
+	// Play/pause button.
+	m_icon_play = Theme::iconFromTheme("media-playback-start");
 	m_icon_pause = Theme::iconFromTheme("media-playback-pause");
-	m_playButton->setIcon(m_icon_play);
-	//m_playButton->defaultAction()->setShortcut(QKeySequence(Qt::Key_MediaPlay));
-	///@todo m_play_act = make_action(m_icon_play, "Play", this, QKeySequence(Qt::Key_MediaPlay), "Start media playback");
-	/// m_playButton->setDefaultAction(m_play_act);
+	m_play_act = new QAction(m_icon_play, tr("Play/Pause"), this);
+	m_playButton = new QToolButton(this);
+	m_playButton->setDefaultAction(m_play_act);
+	connect_trig(m_play_act, this, &PlayerControls::playClicked);
 
 	// Stop button.
 	m_stop_act = new QAction(Theme::iconFromTheme("media-playback-stop"), tr("Stop"), this);
