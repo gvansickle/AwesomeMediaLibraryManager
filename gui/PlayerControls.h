@@ -25,6 +25,7 @@
 #include <QIcon>
 
 #include <qxtglobalshortcut.h>
+#include <QtCore/QPointer>
 
 class QToolButton;
 class QSlider;
@@ -97,7 +98,9 @@ private:
 
 	/// Actions.
 	QAction* m_play_act;
+	QAction* m_stop_act;
 	QAction* m_skip_fwd_act;
+	QAction* m_skip_back_act;
 	QAction* m_repeat_act;
 
 	QSlider* m_positionSlider;
@@ -105,7 +108,12 @@ private:
 	QLabel* m_labelDuration;
 
 	/// Global Media Key shortcuts.
-	QxtGlobalShortcut* m_media_key_next_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_play_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_pause_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_stop_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_next_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_prev_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_mute_gshortcut;
 
 	void registerMediaKeySequences();
 

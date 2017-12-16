@@ -45,25 +45,24 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	///@todo m_play_act = make_action(m_icon_play, "Play", this, QKeySequence(Qt::Key_MediaPlay), "Start media playback");
 	/// m_playButton->setDefaultAction(m_play_act);
 
+	// Stop button.
+	m_stop_act = new QAction(Theme::iconFromTheme("media-playback-stop"), tr("Stop"), this);
 	m_stopButton = new QToolButton(this);
-	m_icon_stop = Theme::iconFromTheme("media-playback-stop");
-	m_stopButton->setIcon(m_icon_stop);
-	m_stopButton->setEnabled(false);
-	connect_clicked(m_stopButton, this, &PlayerControls::stop);
+	m_stopButton->setDefaultAction(m_stop_act);
+	m_stop_act->setEnabled(false);
+	connect_trig(m_stop_act, this, &PlayerControls::stop);
 
+	// Next button.
 	m_skip_fwd_act = new QAction(Theme::iconFromTheme("media-skip-forward"), tr("Next song"), this);
-	//m_skip_fwd_act->setShortcut(QKeySequence(Qt::Key_MediaNext));
-	m_skip_fwd_act->setShortcutContext(Qt::ApplicationShortcut);
 	m_nextButton = new QToolButton(this);
 	m_nextButton->setDefaultAction(m_skip_fwd_act);
-	//m_nextButton->setIcon(Theme::iconFromTheme("media-skip-forward"));
-	//connect_clicked(m_nextButton, this, &PlayerControls::next);
-	//QShortcut(, this, Q_NULLPTR, Q_NULLPTR, Qt::ApplicationShortcut);
 	connect_trig(m_skip_fwd_act, this, &PlayerControls::next);
 
+	// Previous button.
+	m_skip_back_act = new QAction(Theme::iconFromTheme("media-skip-backward"), tr("Previous song"), this);
 	m_previousButton = new QToolButton(this);
-	m_previousButton->setIcon(Theme::iconFromTheme("media-skip-backward"));
-	connect_clicked(m_previousButton, this, &PlayerControls::previous);
+	m_previousButton->setDefaultAction(m_skip_back_act);
+	connect_trig(m_skip_back_act, this, &PlayerControls::previous);
 
     // Shuffle button will be connected to an action, no need to set an icon here.
 	m_shuffleButton = new QToolButton(this);
@@ -140,12 +139,12 @@ void PlayerControls::registerMediaKeySequences()
 {
 	qDebug() << "Setting global shortcuts";
 
+	m_media_key_stop_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaStop), m_stop_act, this);
 	m_media_key_next_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaNext), m_skip_fwd_act, this);
+	m_media_key_prev_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPrevious), m_skip_back_act, this);
 
 	// Qt::Key_MediaPause
 	// Qt::Key_MediaPlay
-	// Qt::Key_MediaStop
-	// Qt::Key_MediaPrevious
 	// Qt::Key_MediaTogglePlayPause
 	// Qt::Key_LaunchMedia
 }
@@ -163,17 +162,17 @@ void PlayerControls::setState(QMediaPlayer::State state)
 
         if(state == QMediaPlayer::StoppedState)
         {
-			m_stopButton->setEnabled(false);
+			m_stop_act->setEnabled(false);
 			m_playButton->setIcon(m_icon_play);
         }
         else if( state == QMediaPlayer::PlayingState)
         {
-			m_stopButton->setEnabled(true);
+			m_stop_act->setEnabled(true);
 			m_playButton->setIcon(m_icon_pause);
         }
         else if( state == QMediaPlayer::PausedState)
         {
-			m_stopButton->setEnabled(true);
+			m_stop_act->setEnabled(true);
 			m_playButton->setIcon(m_icon_play);
         }
     }
