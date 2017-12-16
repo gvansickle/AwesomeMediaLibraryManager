@@ -93,8 +93,8 @@ private:
     QIcon m_icon_skip_fwd;
     QIcon m_icon_skip_back;
 	QIcon m_repeat_icon;
-    QIcon m_icon_mute;
-	QIcon m_icon_unmute;
+    QIcon m_icon_muted;
+	QIcon m_icon_not_muted;
 
 	/// Actions.
 	QAction* m_play_act;
@@ -102,6 +102,7 @@ private:
 	QAction* m_skip_fwd_act;
 	QAction* m_skip_back_act;
 	QAction* m_repeat_act;
+	QAction* m_mute_act;
 
 	QSlider* m_positionSlider;
 	QSlider* m_volumeSlider;

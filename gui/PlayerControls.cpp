@@ -76,11 +76,17 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	// Signal-to-signal connection, emit a changeRepeat(bool) when the "Repeat" button changes checked state.
 	connect(m_repeat_act, &QAction::toggled, this, &PlayerControls::changeRepeat);
 
+	// Mute button.
+	// Note a few things here:
+	// - This is not a checkable action, just a normal stateless triggered()-sending button/action.
+	// - The current mute state is sent back to us from the player.  We use this to switch between the
+	//   muted and unmuted icons.
+	m_icon_muted = QIcon::fromTheme("audio-volume-muted");
+	m_icon_not_muted = QIcon::fromTheme("audio-volume-high");
+	m_mute_act = new QAction(m_icon_not_muted, tr("Mute"), this);
 	m_muteButton = new QToolButton(this);
-	m_icon_mute = QIcon::fromTheme("audio-volume-muted");
-	m_icon_unmute = QIcon::fromTheme("audio-volume-high");
-	m_muteButton->setIcon(m_icon_unmute);
-	connect_clicked(m_muteButton, this, &PlayerControls::muteClicked);
+	m_muteButton->setDefaultAction(m_mute_act);
+	connect_trig(m_mute_act, this, &PlayerControls::muteClicked);
 
     // Position slider
 	m_positionSlider = new QSlider(Qt::Horizontal);
@@ -92,6 +98,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 
     // Volume slider.
 	m_volumeSlider = new QSlider(Qt::Horizontal);
+	m_volumeSlider->setToolTip(tr("Volume"));
 	m_volumeSlider->setRange(0, 100);
 	// Signal-to-signal connection, emit a changeVolume(int) signal when the user moves the slider.
 	connect(m_volumeSlider, &QSlider::sliderMoved, this, &PlayerControls::changeVolume);
@@ -142,6 +149,7 @@ void PlayerControls::registerMediaKeySequences()
 	m_media_key_stop_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaStop), m_stop_act, this);
 	m_media_key_next_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaNext), m_skip_fwd_act, this);
 	m_media_key_prev_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPrevious), m_skip_back_act, this);
+	m_media_key_mute_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_VolumeMute), m_mute_act, this);
 
 	// Qt::Key_MediaPause
 	// Qt::Key_MediaPlay
@@ -190,11 +198,11 @@ void PlayerControls::setMuted(bool muted)
 		m_playerMuted = muted;
         if(muted)
         {
-			m_muteButton->setIcon(m_icon_mute);
+			m_mute_act->setIcon(m_icon_muted);
         }
         else
         {
-			m_muteButton->setIcon(m_icon_unmute);
+			m_mute_act->setIcon(m_icon_not_muted);
         }
     }
 }
