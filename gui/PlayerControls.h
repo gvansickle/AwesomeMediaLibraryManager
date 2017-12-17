@@ -120,6 +120,7 @@ private:
 	QPointer<QxtGlobalShortcut> m_media_key_next_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_prev_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_mute_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_toggle_shuffle;
 
 	void registerMediaKeySequences();
 

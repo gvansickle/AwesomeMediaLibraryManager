@@ -165,13 +165,13 @@ void MP2::setShuffleMode(bool shuffle_on)
 			// was last set.
 			if(m_last_repeat_state)
 			{
-				current_playlist->setPlaybackMode(QMediaPlaylist::Sequential);
-				qDebug() << "Seq+Stop";
+				current_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+				qDebug() << "Seq+Repeat";
 			}
 			else
 			{
-				current_playlist->setPlaybackMode(QMediaPlaylist::Loop);
-				qDebug() << "Seq+Repeat";
+				current_playlist->setPlaybackMode(QMediaPlaylist::Sequential);
+				qDebug() << "Seq+Stop";
 			}
 		}
 	}
@@ -205,9 +205,10 @@ void MP2::repeat(bool checked)
 				current_playlist->setPlaybackMode(QMediaPlaylist::Sequential);
 				qDebug() << "Seq+Stop";
 			}
-			m_last_repeat_state = checked;
 		}
 	}
+	// Regardless of whether we ignored it above or not, record the new state for setShuffleMode().
+	m_last_repeat_state = checked;
 }
 
 void MP2::setPosition(qint64 position)

@@ -170,6 +170,9 @@ void PlayerControls::registerMediaKeySequences()
 	m_media_key_prev_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPrevious), m_skip_back_act, this);
 	m_media_key_mute_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_VolumeMute), m_mute_act, this);
 
+	/// @todo This doesn't appear to work.
+	//m_media_key_toggle_shuffle = make_QxtGlobalShortcut(Theme::keySequenceFromTheme(Theme::Key_ToggleShuffle), m_shuffleAct, this);
+
 	// Qt::Key_LaunchMedia
 	qDebug() << "Setting global shortcuts complete";
 }
