@@ -352,7 +352,7 @@ set(SOURCE_FILES
 	gui/settings/SDPageLibrary.h
 	gui/MDINowPlayingView.cpp
         gui/MDINowPlayingView.h
-        resources/VersionInfo.cpp)
+    )
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -385,6 +385,7 @@ print_target_properties(icons_oxygen)
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
@@ -442,6 +443,7 @@ endif()
 set(CPACK_GENERATOR NSIS)
 
 # Generic.
+# https://cmake.org/cmake/help/v3.10/module/CPack.html
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "0")

@@ -22,8 +22,10 @@
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QLabel>
-
 #include <QMessageBox>
+
+#include <utils/StringHelpers.h>
+#include <resources/VersionInfo.h>
 
 
 AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(parent, flags)
@@ -31,10 +33,12 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
     m_title_str = tr("About %1").arg(qApp->applicationDisplayName());
 
     QString app_name_str = qApp->applicationDisplayName();
+	QString app_full_version_info = toqstr(VersionInfo::get_full_version_info_string());
 
     m_text_str = tr(
 	    "<body>"
         "<h1>%1</h1>"
+                "<h1>Version %2</h1>"
         "<h2>The Awesome Media Library Manager</h2>"
         "<h3>Because the world needs a Media Library Manager which is Awesome.</h3>"
         "<h4>Copyright (c) 2017 Gary R. Van Sickle</h4>"
@@ -52,7 +56,7 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
 		"<p>You should have received a copy of the GNU General Public License"
 		" along with AwesomeMediaLibraryManager.  If not, see <a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a>.</p>"
 		    "<hr>"
-		    "</body>").arg(app_name_str);
+		    "</body>").arg(app_name_str).arg(app_full_version_info);
 }
 
 int AboutBox::exec()
