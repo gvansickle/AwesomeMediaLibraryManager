@@ -39,7 +39,7 @@ include(cmake/GetVersionInfo.cmake)
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
 # (per https://cgold.readthedocs.io/en/latest/tutorials/project.html)
 project(AwesomeMediaLibraryManager
-        VERSION 0.0.1.0
+        VERSION ${GVI_VERSION_TAG_QUAD}
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
@@ -68,7 +68,7 @@ set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
 set(FULL_COPYRIGHT_STRING "Copyright (c) 2017 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 message("******************************************************************")
-message("* ${PROJECT_NAME} version ${PROJECT_VERSION} (${CMAKE_BUILD_TYPE})")
+message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
 message("* ${FULL_COPYRIGHT_STRING}")
 message("******************************************************************")
 
