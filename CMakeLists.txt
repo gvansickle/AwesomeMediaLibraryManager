@@ -141,7 +141,7 @@ fix_project_version()
 # Resource directory FBO QtCommon/add_project_meta().
 set(RESOURCE_FOLDER resources)
 # The basename of the application's icon.
-set(ICON_NAME "AppIcon")
+set(ICON_NAME "AMLMAppIcon")
 # For the "CompanyName" field in the rc file.
 set(RC_COMPANYNAME "${PROJECT_AUTHOR}")
 set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
@@ -378,7 +378,7 @@ print_target_properties(icons_oxygen)
 ###
 ### The main executable.
 ###
-### @note Including HEADER_FILES in here so they get check for existence.
+### @note Including HEADER_FILES in here so they get checked for existence.
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
