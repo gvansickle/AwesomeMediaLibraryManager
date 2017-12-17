@@ -39,6 +39,9 @@ public:
 
     static QIcon iconFromTheme(const QString& icon_name);
 
+	// Return a platform- and possibly theme-specific QKeySequence corresponding to
+	static QKeySequence keySequenceFromTheme();
+
 signals:
 
 public slots:

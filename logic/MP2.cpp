@@ -73,11 +73,7 @@ qint64 MP2::duration() const
 
 void MP2::createActions()
 {
-	m_shuffleAct = make_action(QIcon::fromTheme("media-playlist-shuffle"), "Shuffle", this,
-					QKeySequence(),
-					"Shuffle mode");
-	m_shuffleAct->setCheckable(true);
-	connect_trig(m_shuffleAct, this, &MP2::shuffle);
+
 }
 
 void MP2::__setTrackInfoFromUrl(QUrl url)
@@ -146,7 +142,7 @@ void MP2::stop()
 	}
 }
 
-void MP2::shuffle()
+void MP2::setShuffleMode(bool shuffle_on)
 {
 	// QMediaPlaylist doesn't have orthogonal support for Sequential/Shuffle and Repeat/Non-repeat playback.
 	// It's a single setting of QMediaPlaylist::PlaybackMode, which can be one of:
@@ -157,7 +153,7 @@ void MP2::shuffle()
 	auto current_playlist = playlist();
 	if(current_playlist)
 	{
-		if(m_shuffleAct->isChecked())
+		if(shuffle_on)
 		{
 			// Shuffle plus Implicit repeat.
 			current_playlist->setPlaybackMode(QMediaPlaylist::Random);

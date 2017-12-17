@@ -36,9 +36,6 @@ public:
 	qint64 position() const;
 	qint64 duration() const;
 
-	/// @todo Make this non-public.
-	QAction* m_shuffleAct;
-
 signals:
 	void positionChanged2(qint64);
 	void durationChanged2(qint64);
@@ -71,7 +68,7 @@ private:
 public slots:
 	void play();
 	void stop();
-	void shuffle();
+	void setShuffleMode(bool shuffle_on);
 	void repeat(bool checked);
 
 	void setPosition(qint64 position);

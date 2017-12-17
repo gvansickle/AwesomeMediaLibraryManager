@@ -26,9 +26,9 @@
 #include <QHBoxLayout>
 #include <QTime>
 #include <QShortcut>
+#include <QtCore/QPointer>
 
 #include <qxtglobalshortcut.h>
-#include <QtCore/QPointer>
 
 #include "utils/Theme.h"
 #include "utils/ConnectHelpers.h"
@@ -67,8 +67,14 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	m_previousButton->setDefaultAction(m_skip_back_act);
 	connect_trig(m_skip_back_act, this, &PlayerControls::previous);
 
-    // Shuffle button will be connected to an action, no need to set an icon here.
+    // Shuffle button.
+	m_shuffleAct = new QAction(Theme::iconFromTheme("media-playlist-shuffle"), tr("Shuffle"), this);
+	m_shuffleAct->setToolTip(tr("Shuffle mode"));
+	m_shuffleAct->setStatusTip(tr("Toggle the shuffle mode of the currently playing playlist"));
+	m_shuffleAct->setCheckable(true);
 	m_shuffleButton = new QToolButton(this);
+	m_shuffleButton->setDefaultAction(m_shuffleAct);
+	connect(m_shuffleAct, &QAction::toggled, this, &PlayerControls::changeShuffle);
 
 	m_repeatButton = new QToolButton(this);
 	m_repeat_icon = Theme::iconFromTheme("media-playlist-repeat");
@@ -187,6 +193,8 @@ void PlayerControls::setState(QMediaPlayer::State state)
     {
 	    qDebug() << "Stopped, setting play act";
 		m_stop_act->setEnabled(false);
+	    // Note: We actually need to remove the existing default action here, or the button grows a drop-down menu with
+	    // all the actions.
 	    auto old_action = m_playButton->defaultAction();
 	    if(old_action) { m_playButton->removeAction(old_action); };
 		m_playButton->setDefaultAction(m_play_act);

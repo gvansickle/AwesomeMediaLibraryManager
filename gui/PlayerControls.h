@@ -44,15 +44,13 @@ public:
 	bool isMuted() const { return m_playerMuted; }
     int volume() const;
 
-	/// @todo Exposed so MainWindow can hook up to this. Make this non-public.
-	QToolButton* m_shuffleButton;
-
 signals:
     void play();
     void pause();
     void stop();
     void next();
     void previous();
+	void changeShuffle(bool);
 	void changeRepeat(bool);
 	void changeVolume(int);
     void changeMuting(bool);
@@ -85,6 +83,7 @@ private:
 	QToolButton* m_stopButton;
 	QToolButton* m_nextButton;
 	QToolButton* m_previousButton;
+	QToolButton* m_shuffleButton;
 	QToolButton* m_repeatButton;
 	QToolButton* m_muteButton;
 
@@ -105,6 +104,7 @@ private:
 	QAction* m_stop_act;
 	QAction* m_skip_fwd_act;
 	QAction* m_skip_back_act;
+	QAction* m_shuffleAct;
 	QAction* m_repeat_act;
 	QAction* m_mute_act;
 
