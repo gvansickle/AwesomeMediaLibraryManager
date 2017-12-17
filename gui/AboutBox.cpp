@@ -38,9 +38,9 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
     m_text_str = tr(
 	    "<body>"
         "<h1>%1</h1>"
-                "<h1>Version %2</h1>"
         "<h2>The Awesome Media Library Manager</h2>"
         "<h3>Because the world needs a Media Library Manager which is Awesome.</h3>"
+        "<h4>Version %2</h4>"
         "<h4>Copyright (c) 2017 Gary R. Van Sickle</h4>"
         "<hr>"
 		"<p><a href=\"https://github.com/gvansickle/AwesomeMediaLibraryManager\">AwesomeMediaLibraryManager</a> is free software: you can redistribute it and/or modify"
