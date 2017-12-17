@@ -86,6 +86,10 @@ message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
 
 print_compilers_and_params()
 
+# Generate the version info file.
+configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
+    ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+
 # Be nice to visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -296,7 +300,7 @@ set(HEADER_FILES
 	logic/CueSheetParser.h
 	gui/settings/SettingsDialog.h
 	gui/settings/SettingsDialogSideWidget.h
-	)
+	resources/VersionInfo.h)
 
 # Source file list.
 set(SOURCE_FILES
@@ -347,7 +351,8 @@ set(SOURCE_FILES
 	gui/settings/SDPageLibrary.cpp
 	gui/settings/SDPageLibrary.h
 	gui/MDINowPlayingView.cpp
-	gui/MDINowPlayingView.h)
+        gui/MDINowPlayingView.h
+        resources/VersionInfo.cpp)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -355,10 +360,6 @@ add_project_meta(META_FILES_TO_INCLUDE)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
 # Qt5 Resource (qrc) files.
-#set(QRC_FILES
-#		resources/oxygenicons.qrc
-#		resources/TangoIcons.qrc
-#		resources/AppIcon.qrc)
 # RESOURCE_FILES is a list of the generated output *.cpp file names.
 #qt5_add_resources(RESOURCE_FILES
 #        resources/oxygenicons.qrc
@@ -383,7 +384,7 @@ print_target_properties(icons_oxygen)
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
+	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
         )
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)

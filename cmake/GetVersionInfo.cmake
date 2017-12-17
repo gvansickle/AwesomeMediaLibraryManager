@@ -21,8 +21,8 @@
 # - GVI_GIT_DESCRIBE_OUTPUT: The raw output from "git describe"
 # - GVI_VERSION_TAG_QUAD: Four-segment version number from the last git tag, e.g. "1.2.3.4"
 # - GVI_VERSION_HASH: The git SHA-1 hash returned by "git describe".
-# - GVI_VERSION_IS_DIRTY: TRUE or FALSE, depending on what git describe returns for dirty.
 # - GVI_VERSION_DIRTY_POSTFIX: "-dirty" or "" depending on if the workspace is dirty or not.
+# - GVI_VERSION_IS_DIRTY: TRUE or FALSE, depending on what git describe returns for dirty.
 find_package(Git)
 if(GIT_FOUND)
     message(STATUS "Git found: ${GIT_EXECUTABLE}")
