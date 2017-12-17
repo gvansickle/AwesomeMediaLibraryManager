@@ -56,6 +56,8 @@ include(PrintTargetProperties)
 include(helperfunctions)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
+set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+include(InstallRequiredSystemLibraries)
 
 dir_summary()
 
