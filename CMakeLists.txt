@@ -56,7 +56,7 @@ include(PrintTargetProperties)
 include(helperfunctions)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
-set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
+set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
 
 dir_summary()
