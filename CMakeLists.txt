@@ -232,6 +232,7 @@ endif()
 
 if(USE_BUNDLED_QXTGLOBALSHORTCUT)
 	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
+	### @todo Looks like this is the most maintained fork: https://github.com/hluk/qxtglobalshortcut
 else()
 	find_package(PkgConfig REQUIRED)
 

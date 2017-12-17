@@ -187,18 +187,24 @@ void PlayerControls::setState(QMediaPlayer::State state)
     {
 	    qDebug() << "Stopped, setting play act";
 		m_stop_act->setEnabled(false);
+	    auto old_action = m_playButton->defaultAction();
+	    if(old_action) { m_playButton->removeAction(old_action); };
 		m_playButton->setDefaultAction(m_play_act);
     }
     else if( state == QMediaPlayer::PlayingState)
     {
 	    qDebug() << "Playing, setting pause act";
 		m_stop_act->setEnabled(true);
+	    auto old_action = m_playButton->defaultAction();
+	    if(old_action) { m_playButton->removeAction(old_action); };
 		m_playButton->setDefaultAction(m_pause_act);
     }
     else if( state == QMediaPlayer::PausedState)
     {
 	    qDebug() << "Paused, setting play act";
 		m_stop_act->setEnabled(true);
+	    auto old_action = m_playButton->defaultAction();
+	    if(old_action) { m_playButton->removeAction(old_action); };
 		m_playButton->setDefaultAction(m_play_act);
     }
 }
