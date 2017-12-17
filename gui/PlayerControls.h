@@ -23,9 +23,11 @@
 #include <QWidget>
 #include <QMediaPlayer>
 #include <QIcon>
-
-#include <qxtglobalshortcut.h>
 #include <QtCore/QPointer>
+
+#if HAVE_QXTGLOBALSHORTCUT
+#include <qxtglobalshortcut.h>
+#endif
 
 class QToolButton;
 class QSlider;
@@ -112,6 +114,7 @@ private:
 	QSlider* m_volumeSlider;
 	QLabel* m_labelDuration;
 
+#if HAVE_QXTGLOBALSHORTCUT
 	/// Global Media Key shortcuts.
 	QPointer<QxtGlobalShortcut> m_media_key_play_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_pause_gshortcut;
@@ -121,6 +124,7 @@ private:
 	QPointer<QxtGlobalShortcut> m_media_key_prev_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_mute_gshortcut;
 	QPointer<QxtGlobalShortcut> m_media_key_toggle_shuffle;
+#endif
 
 	void registerMediaKeySequences();
 

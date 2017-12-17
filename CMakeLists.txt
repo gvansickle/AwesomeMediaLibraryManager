@@ -230,6 +230,7 @@ else()
 	endif()
 endif()
 
+if(FALSE)
 if(USE_BUNDLED_QXTGLOBALSHORTCUT)
 	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
 	### @todo Looks like this is the most maintained fork: https://github.com/hluk/qxtglobalshortcut
@@ -242,6 +243,7 @@ else()
 		set(AMLM_QXTGLOBALSHORTCUT_LIB_TARGET "PkgConfig::QXTGLOBALSHORTCUT_LIB")
 		# Doesn't work, this is an interface library: print_target_properties(${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
 	endif()
+endif()
 endif()
 
 # Main program header files.

@@ -28,7 +28,9 @@
 #include <QShortcut>
 #include <QtCore/QPointer>
 
+#if HAVE_QXTGLOBALSHORTCUT
 #include <qxtglobalshortcut.h>
+#endif
 
 #include "utils/Theme.h"
 #include "utils/ConnectHelpers.h"
@@ -78,7 +80,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 
 	m_repeatButton = new QToolButton(this);
 	m_repeat_icon = Theme::iconFromTheme("media-playlist-repeat");
-	m_repeat_act = make_action(m_repeat_icon, "Repeat", this, QKeySequence(), "Repeat after last song in playlist is played");
+	m_repeat_act = make_action(m_repeat_icon, tr("Repeat"), this, QKeySequence(), "Repeat after last song in playlist is played");
 	m_repeat_act->setCheckable(true);
 	m_repeatButton->setDefaultAction(m_repeat_act);
 	m_playerRepeat = false;
@@ -135,6 +137,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	registerMediaKeySequences();
 }
 
+#if HAVE_QXTGLOBALSHORTCUT
 static QPointer<QxtGlobalShortcut> make_QxtGlobalShortcut(const QKeySequence& key_seq, QAction* action_to_trigger, QObject *parent = nullptr)
 {
 	QPointer<QxtGlobalShortcut> retval;
@@ -150,6 +153,7 @@ static QPointer<QxtGlobalShortcut> make_QxtGlobalShortcut(const QKeySequence& ke
 
 	return retval;
 }
+#endif
 
 void PlayerControls::registerMediaKeySequences()
 {
@@ -176,7 +180,7 @@ void PlayerControls::registerMediaKeySequences()
 	//m_media_key_toggle_shuffle = make_QxtGlobalShortcut(Theme::keySequenceFromTheme(Theme::Key_ToggleShuffle), m_shuffleAct, this);
 
 	qDebug() << "Setting global shortcuts complete";
-	
+
 #endif
 }
 
