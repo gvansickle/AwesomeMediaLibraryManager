@@ -411,7 +411,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	connect(player, &MP2::positionChanged2, controls, &PlayerControls::onPositionChanged);
 
 	// Final setup.
-	// Set volume control to othe current player volume.
+	// Set volume control to the current player volume.
 	controls->setVolume(player->volume());
 }
 

@@ -153,6 +153,8 @@ static QPointer<QxtGlobalShortcut> make_QxtGlobalShortcut(const QKeySequence& ke
 
 void PlayerControls::registerMediaKeySequences()
 {
+#if 0 /// @todo Not sure what's happening here on Linux (Fedora 27), this takes over the whole keyboard.
+
 	qDebug() << "Setting global shortcuts";
 
 	/// @note It looks like QxtGlobalShortcut maps (on Windows) VK_MEDIA_PLAY_PAUSE to Qt::Key_MediaPlay, and nothing to
@@ -173,8 +175,9 @@ void PlayerControls::registerMediaKeySequences()
 	/// @todo This doesn't appear to work.
 	//m_media_key_toggle_shuffle = make_QxtGlobalShortcut(Theme::keySequenceFromTheme(Theme::Key_ToggleShuffle), m_shuffleAct, this);
 
-	// Qt::Key_LaunchMedia
 	qDebug() << "Setting global shortcuts complete";
+	
+#endif
 }
 
 int PlayerControls::volume() const
