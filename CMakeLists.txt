@@ -33,6 +33,8 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
+include(cmake/GetVersionInfo.cmake)
+
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
 # (per https://cgold.readthedocs.io/en/latest/tutorials/project.html)
