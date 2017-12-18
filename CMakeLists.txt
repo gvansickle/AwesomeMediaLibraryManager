@@ -48,6 +48,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 message(STATUS "CMake-time PATH: $ENV{PATH}")
 
+# Prevent an in-root-of-src-tree build.
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
+endif()
 
 # Include some basic cmake functions.
 include(GNUInstallDirs)
@@ -70,7 +74,7 @@ set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
 set(FULL_COPYRIGHT_STRING "Copyright (c) 2017 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 message("******************************************************************")
-message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
+message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_COMMITS}-g${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
 message("* ${FULL_COPYRIGHT_STRING}")
 message("******************************************************************")
 
@@ -85,6 +89,7 @@ message("*   Version: ${PROJECT_VERSION}")
 message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}")
 message("*   Discovered tools:")
 message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
+message("*        GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
 
 print_compilers_and_params()
 
@@ -98,11 +103,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Be nice and export compile commands by default, this is handy for clang-tidy
 # and for other tools.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Prevent an in-root-of-src-tree build.
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-    message(FATAL_ERROR "Prevented in-tree build. Please create a build directory outside of the source code and call cmake from there. Thank you.")
-endif()
 
 # Set default install location to dist folder in build dir
 # we do not want to install to /usr by default
@@ -447,7 +447,7 @@ set(CPACK_GENERATOR NSIS)
 # Generic.
 # https://cmake.org/cmake/help/v3.10/module/CPack.html
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_VERSION ${GVI_GIT_DESCRIBE_OUTPUT}-${CMAKE_BUILD_TYPE})
 # Doesn't look like we need to set these separately.
 #set(CPACK_PACKAGE_VERSION_MAJOR ???)
 #set(CPACK_PACKAGE_VERSION_MINOR ???)

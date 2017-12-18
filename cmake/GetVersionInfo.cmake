@@ -21,6 +21,7 @@
 # - GVI_GIT_DESCRIBE_OUTPUT: The raw output from "git describe"
 # - GVI_VERSION_TAG_QUAD: Four-segment version number from the last git tag, e.g. "1.2.3.4"
 # - GVI_VERSION_HASH: The git SHA-1 hash returned by "git describe".
+# - GVI_VERSION_COMMITS: The number of post-tag commits.
 # - GVI_VERSION_DIRTY_POSTFIX: "-dirty" or "" depending on if the workspace is dirty or not.
 # - GVI_VERSION_IS_DIRTY: TRUE or FALSE, depending on what git describe returns for dirty.
 find_package(Git)
@@ -39,8 +40,9 @@ else()
 endif()
 
 string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+" GVI_VERSION_TAG_QUAD ${GVI_GIT_DESCRIBE_OUTPUT})
-string(REGEX REPLACE "-g([0-9a-fA-F]+)" "\\1" DUMMY ${GVI_GIT_DESCRIBE_OUTPUT})
-set(GVI_VERSION_HASH ${CMAKE_MATCH_1})
+string(REGEX REPLACE "-([0-9]+)-g([0-9a-fA-F]+)" "\\1\\2" DUMMY ${GVI_GIT_DESCRIBE_OUTPUT})
+set(GVI_VERSION_COMMITS ${CMAKE_MATCH_1})
+set(GVI_VERSION_HASH ${CMAKE_MATCH_2})
 if(${GVI_GIT_DESCRIBE_OUTPUT} MATCHES "-dirty")
     set(GVI_VERSION_IS_DIRTY TRUE)
     set(GVI_VERSION_DIRTY_POSTFIX "-dirty")
@@ -48,4 +50,4 @@ else()
     set(GVI_VERSION_IS_DIRTY FALSE)
     set(GVI_VERSION_DIRTY_POSTFIX "")
 endif()
-message(STATUS "git describe reports: ${GVI_GIT_DESCRIBE_OUTPUT} (${GVI_VERSION_TAG_QUAD}/${GVI_VERSION_HASH}/${GVI_VERSION_DIRTY_POSTFIX})")
+message(STATUS "git describe reports: ${GVI_GIT_DESCRIBE_OUTPUT} (${GVI_VERSION_TAG_QUAD}/${GVI_VERSION_COMMITS}/${GVI_VERSION_HASH}/${GVI_VERSION_DIRTY_POSTFIX})")
