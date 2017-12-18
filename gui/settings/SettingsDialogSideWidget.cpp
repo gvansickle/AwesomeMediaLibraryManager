@@ -81,7 +81,7 @@ QSize SettingsDialogSideWidget::sizeHint() const
 	s.setHeight(QListWidget::sizeHint().height());
 	auto sizehint0 = sizeHintForColumn(0);
 	qDebug() << "sizehint0:" << sizehint0;
-	s.setWidth(sizehint0+30); ///@todo Need to add something here, this isn't quite correct.
+    s.setWidth(sizehint0/*+30*/); ///@todo Need to add something here, this isn't quite correct.
 
 	return s;
 }
