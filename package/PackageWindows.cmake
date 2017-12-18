@@ -17,10 +17,20 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-#add_executable(windeployqt IMPORTED)
-#set_target_properties(windeployqt
-#    PROPERTIES IMPORTED_LOCATION $ENV{QTDIR}/bin/windeployqt.exe)
-#print_target_properties(windeployqt)
+# Find windeployqt, returning absolute path in WINDEPLOYQT_EXECUTABLE.
+# Adapted from https://github.com/nitroshare/nitroshare-desktop/blob/master/cmake/DeployQt.cmake (MIT).
+macro(FindWindeploy)
+    # Retrieve the absolute path to qmake and then use that path to find
+    # the windeployqt binary
+    get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+endmacro()
+
+# Find the windeployqt executable.
+FindWindeploy()
+
+message(STATUS "Found windeployqt: ${WINDEPLOYQT_EXECUTABLE}")
 
 add_custom_target(do_windeploy)
 add_dependencies(packaging do_windeploy)
@@ -31,11 +41,11 @@ add_dependencies(do_windeploy ${PROJECT_NAME}) # Can't use add_custom_target(DEP
 
 add_custom_command(TARGET do_windeploy POST_BUILD
     COMMENT "Doing windeploy..."
-    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "windeployqt.exe path: $ENV{QTDIR}/bin/windeployqt.exe"
+    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "windeployqt.exe path: ${WINDEPLOYQT_EXECUTABLE}"
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies, exe: $<TARGET_FILE:${PROJECT_NAME}>"
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/windeployqt_stuff
-    COMMAND $ENV{QTDIR}/bin/windeployqt.exe --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND ${WINDEPLOYQT_EXECUTABLE} --compiler-runtime --dir ${CMAKE_BINARY_DIR}/windeployqt_stuff $<TARGET_FILE:${PROJECT_NAME}>
     COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --cyan "Scanning for Qt dependencies complete.  Intermediate directory is: ${CMAKE_BINARY_DIR}/windeployqt_stuff"
     )
 install(DIRECTORY ${CMAKE_BINARY_DIR}/windeployqt_stuff/

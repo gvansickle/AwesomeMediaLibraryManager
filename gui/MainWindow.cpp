@@ -401,9 +401,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	connect(controls, &PlayerControls::changeRepeat, player, &MP2::repeat);
 	connect(controls, &PlayerControls::changeMuting, player, &MP2::setMuted);
 	connect(controls, &PlayerControls::changeVolume, player, &MP2::setVolume);
-
-	/// @todo This violates the encapsulation of both controls and player.
-	controls->m_shuffleButton->setDefaultAction(player->m_shuffleAct);
+	connect(controls, &PlayerControls::changeShuffle, player, &MP2::setShuffleMode);
 
 	// MP2 -> PlayerControls signals.
 	connect(player, &MP2::stateChanged, controls, &PlayerControls::setState);
@@ -413,7 +411,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
 	connect(player, &MP2::positionChanged2, controls, &PlayerControls::onPositionChanged);
 
 	// Final setup.
-	// Set volume control to othe current player volume.
+	// Set volume control to the current player volume.
 	controls->setVolume(player->volume());
 }
 

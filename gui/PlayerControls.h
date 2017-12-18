@@ -23,10 +23,16 @@
 #include <QWidget>
 #include <QMediaPlayer>
 #include <QIcon>
+#include <QtCore/QPointer>
+
+#if HAVE_QXTGLOBALSHORTCUT
+#include <qxtglobalshortcut.h>
+#endif
 
 class QToolButton;
 class QSlider;
 class QLabel;
+class QShortcut;
 
 class PlayerControls : public QWidget
 {
@@ -40,15 +46,13 @@ public:
 	bool isMuted() const { return m_playerMuted; }
     int volume() const;
 
-	/// @todo Exposed so MainWindow can hook up to this. Make this non-public.
-	QToolButton* m_shuffleButton;
-
 signals:
     void play();
     void pause();
     void stop();
     void next();
     void previous();
+	void changeShuffle(bool);
 	void changeRepeat(bool);
 	void changeVolume(int);
     void changeMuting(bool);
@@ -61,7 +65,9 @@ public slots:
 	void onPositionChanged(qint64 pos);
 
 private slots:
-    void playClicked();
+    void onPlayAction();
+	void onPauseAction();
+	void onTogglePlayPauseAction();
     void muteClicked();
 
 
@@ -79,6 +85,7 @@ private:
 	QToolButton* m_stopButton;
 	QToolButton* m_nextButton;
 	QToolButton* m_previousButton;
+	QToolButton* m_shuffleButton;
 	QToolButton* m_repeatButton;
 	QToolButton* m_muteButton;
 
@@ -89,16 +96,37 @@ private:
     QIcon m_icon_skip_fwd;
     QIcon m_icon_skip_back;
 	QIcon m_repeat_icon;
-    QIcon m_icon_mute;
-	QIcon m_icon_unmute;
+    QIcon m_icon_muted;
+	QIcon m_icon_not_muted;
 
 	/// Actions.
 	QAction* m_play_act;
+	QAction* m_pause_act;
+	QAction* m_play_pause_toggle_act;
+	QAction* m_stop_act;
+	QAction* m_skip_fwd_act;
+	QAction* m_skip_back_act;
+	QAction* m_shuffleAct;
 	QAction* m_repeat_act;
+	QAction* m_mute_act;
 
 	QSlider* m_positionSlider;
 	QSlider* m_volumeSlider;
 	QLabel* m_labelDuration;
+
+#if HAVE_QXTGLOBALSHORTCUT
+	/// Global Media Key shortcuts.
+	QPointer<QxtGlobalShortcut> m_media_key_play_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_pause_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_toggle_play_pause_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_stop_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_next_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_prev_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_mute_gshortcut;
+	QPointer<QxtGlobalShortcut> m_media_key_toggle_shuffle;
+#endif
+
+	void registerMediaKeySequences();
 
     void updateDurationInfo(qint64 pos, qint64 duration);
 };

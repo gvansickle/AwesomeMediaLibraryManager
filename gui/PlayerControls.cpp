@@ -25,6 +25,12 @@
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QTime>
+#include <QShortcut>
+#include <QtCore/QPointer>
+
+#if HAVE_QXTGLOBALSHORTCUT
+#include <qxtglobalshortcut.h>
+#endif
 
 #include "utils/Theme.h"
 #include "utils/ConnectHelpers.h"
@@ -32,46 +38,66 @@
 
 PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 {
-	m_playButton = new QToolButton(this);
-	connect_clicked(m_playButton, this, &PlayerControls::playClicked);
-    m_icon_play = Theme::iconFromTheme("media-playback-start");
+	// Play/pause button.
+	m_icon_play = Theme::iconFromTheme("media-playback-start");
 	m_icon_pause = Theme::iconFromTheme("media-playback-pause");
-	m_playButton->setIcon(m_icon_play);
-	//m_playButton->defaultAction()->setShortcut(QKeySequence(Qt::Key_MediaPlay));
-	///@todo m_play_act = make_action(m_icon_play, "Play", this, QKeySequence(Qt::Key_MediaPlay), "Start media playback");
-	/// m_playButton->setDefaultAction(m_play_act);
+	m_play_act = new QAction(m_icon_play, tr("Play"), this);
+	m_pause_act = new QAction(m_icon_pause, tr("Pause"), this);
+	m_play_pause_toggle_act = new QAction(m_icon_pause, tr("Toggle Play/Pause"), this);
+	m_playButton = new QToolButton(this);
+	m_playButton->setDefaultAction(m_play_act);
+	connect_trig(m_play_act, this, &PlayerControls::onPlayAction);
+	connect_trig(m_pause_act, this, &PlayerControls::onPauseAction);
+	connect_trig(m_play_pause_toggle_act, this, &PlayerControls::onTogglePlayPauseAction);
 
+	// Stop button.
+	m_stop_act = new QAction(Theme::iconFromTheme("media-playback-stop"), tr("Stop"), this);
 	m_stopButton = new QToolButton(this);
-	m_icon_stop = QIcon::fromTheme("media-playback-stop");
-	m_stopButton->setIcon(m_icon_stop);
-	m_stopButton->setEnabled(false);
-	connect_clicked(m_stopButton, this, &PlayerControls::stop);
+	m_stopButton->setDefaultAction(m_stop_act);
+	m_stop_act->setEnabled(false);
+	connect_trig(m_stop_act, this, &PlayerControls::stop);
 
+	// Next button.
+	m_skip_fwd_act = new QAction(Theme::iconFromTheme("media-skip-forward"), tr("Next song"), this);
 	m_nextButton = new QToolButton(this);
-	m_nextButton->setIcon(QIcon::fromTheme("media-skip-forward"));
-	connect_clicked(m_nextButton, this, &PlayerControls::next);
+	m_nextButton->setDefaultAction(m_skip_fwd_act);
+	connect_trig(m_skip_fwd_act, this, &PlayerControls::next);
 
+	// Previous button.
+	m_skip_back_act = new QAction(Theme::iconFromTheme("media-skip-backward"), tr("Previous song"), this);
 	m_previousButton = new QToolButton(this);
-	m_previousButton->setIcon(QIcon::fromTheme("media-skip-backward"));
-	connect_clicked(m_previousButton, this, &PlayerControls::previous);
+	m_previousButton->setDefaultAction(m_skip_back_act);
+	connect_trig(m_skip_back_act, this, &PlayerControls::previous);
 
-    // Shuffle button will be connected to an action, no need to set an icon here.
+    // Shuffle button.
+	m_shuffleAct = new QAction(Theme::iconFromTheme("media-playlist-shuffle"), tr("Shuffle"), this);
+	m_shuffleAct->setToolTip(tr("Shuffle mode"));
+	m_shuffleAct->setStatusTip(tr("Toggle the shuffle mode of the currently playing playlist"));
+	m_shuffleAct->setCheckable(true);
 	m_shuffleButton = new QToolButton(this);
+	m_shuffleButton->setDefaultAction(m_shuffleAct);
+	connect(m_shuffleAct, &QAction::toggled, this, &PlayerControls::changeShuffle);
 
 	m_repeatButton = new QToolButton(this);
-	m_repeat_icon = QIcon::fromTheme("media-playlist-repeat");
-	m_repeat_act = make_action(m_repeat_icon, "Repeat", this, QKeySequence(), "Repeat after last song in playlist is played");
+	m_repeat_icon = Theme::iconFromTheme("media-playlist-repeat");
+	m_repeat_act = make_action(m_repeat_icon, tr("Repeat"), this, QKeySequence(), "Repeat after last song in playlist is played");
 	m_repeat_act->setCheckable(true);
 	m_repeatButton->setDefaultAction(m_repeat_act);
 	m_playerRepeat = false;
 	// Signal-to-signal connection, emit a changeRepeat(bool) when the "Repeat" button changes checked state.
 	connect(m_repeat_act, &QAction::toggled, this, &PlayerControls::changeRepeat);
 
+	// Mute button.
+	// Note a few things here:
+	// - This is not a checkable action, just a normal stateless triggered()-sending button/action.
+	// - The current mute state is sent back to us from the player.  We use this to switch between the
+	//   muted and unmuted icons.
+	m_icon_muted = QIcon::fromTheme("audio-volume-muted");
+	m_icon_not_muted = QIcon::fromTheme("audio-volume-high");
+	m_mute_act = new QAction(m_icon_not_muted, tr("Mute"), this);
 	m_muteButton = new QToolButton(this);
-	m_icon_mute = QIcon::fromTheme("audio-volume-muted");
-	m_icon_unmute = QIcon::fromTheme("audio-volume-high");
-	m_muteButton->setIcon(m_icon_unmute);
-	connect_clicked(m_muteButton, this, &PlayerControls::muteClicked);
+	m_muteButton->setDefaultAction(m_mute_act);
+	connect_trig(m_mute_act, this, &PlayerControls::muteClicked);
 
     // Position slider
 	m_positionSlider = new QSlider(Qt::Horizontal);
@@ -83,6 +109,7 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 
     // Volume slider.
 	m_volumeSlider = new QSlider(Qt::Horizontal);
+	m_volumeSlider->setToolTip(tr("Volume"));
 	m_volumeSlider->setRange(0, 100);
 	// Signal-to-signal connection, emit a changeVolume(int) signal when the user moves the slider.
 	connect(m_volumeSlider, &QSlider::sliderMoved, this, &PlayerControls::changeVolume);
@@ -105,6 +132,56 @@ PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 	m_last_pos = 0;
 	m_last_dur = 0;
     updateDurationInfo(0,0);
+
+	// Set up support for media control keys.
+	registerMediaKeySequences();
+}
+
+#if HAVE_QXTGLOBALSHORTCUT
+static QPointer<QxtGlobalShortcut> make_QxtGlobalShortcut(const QKeySequence& key_seq, QAction* action_to_trigger, QObject *parent = nullptr)
+{
+	QPointer<QxtGlobalShortcut> retval;
+
+	retval = new QxtGlobalShortcut(key_seq, parent);
+
+	if(!retval || !retval->isValid())
+	{
+		qWarning() << "Failed to set global shortcut:" << key_seq;
+	}
+
+	QObject::connect(retval, &QxtGlobalShortcut::activated, [=](){ action_to_trigger->triggered(); });
+
+	return retval;
+}
+#endif
+
+void PlayerControls::registerMediaKeySequences()
+{
+#if 0 /// @todo Not sure what's happening here on Linux (Fedora 27), this takes over the whole keyboard.
+
+	qDebug() << "Setting global shortcuts";
+
+	/// @note It looks like QxtGlobalShortcut maps (on Windows) VK_MEDIA_PLAY_PAUSE to Qt::Key_MediaPlay, and nothing to
+	/// Qt::Key_MediaTogglePlayPause.  I'm seeing what looks like the same thing on Fedora, though the creation of
+	/// the Qt::Key_MediaTogglePlayPause shortcut below doesn't fail.
+	/// For now we'll map Qt::Key_MediaPlay to the m_play_pause_toggle_act.
+	m_media_key_play_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPlay), /*m_play_act*/ m_play_pause_toggle_act, this);
+	qDebug() << "Play:" << m_media_key_play_gshortcut;
+	m_media_key_pause_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPause), m_pause_act, this);
+	qDebug() << "Pause:" << m_media_key_pause_gshortcut;
+	m_media_key_toggle_play_pause_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaTogglePlayPause), m_play_pause_toggle_act, this);
+	qDebug() << "PlayPauseToggle:" << m_media_key_toggle_play_pause_gshortcut;
+	m_media_key_stop_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaStop), m_stop_act, this);
+	m_media_key_next_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaNext), m_skip_fwd_act, this);
+	m_media_key_prev_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_MediaPrevious), m_skip_back_act, this);
+	m_media_key_mute_gshortcut = make_QxtGlobalShortcut(QKeySequence(Qt::Key_VolumeMute), m_mute_act, this);
+
+	/// @todo This doesn't appear to work.
+	//m_media_key_toggle_shuffle = make_QxtGlobalShortcut(Theme::keySequenceFromTheme(Theme::Key_ToggleShuffle), m_shuffleAct, this);
+
+	qDebug() << "Setting global shortcuts complete";
+
+#endif
 }
 
 int PlayerControls::volume() const
@@ -112,27 +189,41 @@ int PlayerControls::volume() const
 	return m_volumeSlider->value();
 }
 
+/**
+ * Slot connected to the player, which notifies us of its current state so we can set the control states appropriately.
+ * @param state
+ */
 void PlayerControls::setState(QMediaPlayer::State state)
 {
-	if(state != m_playerState)
-    {
-		m_playerState = state;
+	qDebug() << "new state:" << state;
 
-        if(state == QMediaPlayer::StoppedState)
-        {
-			m_stopButton->setEnabled(false);
-			m_playButton->setIcon(m_icon_play);
-        }
-        else if( state == QMediaPlayer::PlayingState)
-        {
-			m_stopButton->setEnabled(true);
-			m_playButton->setIcon(m_icon_pause);
-        }
-        else if( state == QMediaPlayer::PausedState)
-        {
-			m_stopButton->setEnabled(true);
-			m_playButton->setIcon(m_icon_play);
-        }
+	m_playerState = state;
+
+    if(state == QMediaPlayer::StoppedState)
+    {
+	    qDebug() << "Stopped, setting play act";
+		m_stop_act->setEnabled(false);
+	    // Note: We actually need to remove the existing default action here, or the button grows a drop-down menu with
+	    // all the actions.
+	    auto old_action = m_playButton->defaultAction();
+	    if(old_action) { m_playButton->removeAction(old_action); };
+		m_playButton->setDefaultAction(m_play_act);
+    }
+    else if( state == QMediaPlayer::PlayingState)
+    {
+	    qDebug() << "Playing, setting pause act";
+		m_stop_act->setEnabled(true);
+	    auto old_action = m_playButton->defaultAction();
+	    if(old_action) { m_playButton->removeAction(old_action); };
+		m_playButton->setDefaultAction(m_pause_act);
+    }
+    else if( state == QMediaPlayer::PausedState)
+    {
+	    qDebug() << "Paused, setting play act";
+		m_stop_act->setEnabled(true);
+	    auto old_action = m_playButton->defaultAction();
+	    if(old_action) { m_playButton->removeAction(old_action); };
+		m_playButton->setDefaultAction(m_play_act);
     }
 }
 
@@ -148,11 +239,11 @@ void PlayerControls::setMuted(bool muted)
 		m_playerMuted = muted;
         if(muted)
         {
-			m_muteButton->setIcon(m_icon_mute);
+			m_mute_act->setIcon(m_icon_muted);
         }
         else
         {
-			m_muteButton->setIcon(m_icon_unmute);
+			m_mute_act->setIcon(m_icon_not_muted);
         }
     }
 }
@@ -165,17 +256,31 @@ QMediaPlayer::State PlayerControls::state() const
 /**
  * Cycle through the Playing/Paused states.
  */
-void PlayerControls::playClicked()
+void PlayerControls::onPlayAction()
 {
-	if(m_playerState == QMediaPlayer::StoppedState || m_playerState == QMediaPlayer::PausedState)
-    {
-        emit play();
-    }
-	else if(m_playerState == QMediaPlayer::PlayingState)
-    {
-        emit pause();
-    }
+	qDebug() << "play";
+	emit play();
 }
+
+void PlayerControls::onPauseAction()
+{
+	qDebug() << "pause";
+	emit pause();
+}
+
+void PlayerControls::onTogglePlayPauseAction()
+{
+	qDebug() << "toggle";
+	if(m_playerState == QMediaPlayer::StoppedState || m_playerState == QMediaPlayer::PausedState)
+	{
+		emit play();
+	}
+	else if(m_playerState == QMediaPlayer::PlayingState)
+	{
+		emit pause();
+	}
+}
+
 
 void PlayerControls::muteClicked()
 {
@@ -243,3 +348,4 @@ void PlayerControls::updateDurationInfo(qint64 pos, qint64 duration)
 
 	m_labelDuration->setText(tStr);
 }
+

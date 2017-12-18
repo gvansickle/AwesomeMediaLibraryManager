@@ -28,10 +28,13 @@
 #include <QImageReader>
 #include <QDebug>
 #include "utils/DebugHelpers.h"
+#include "utils/StringHelpers.h"
 
 #include "gui/MainWindow.h"
 #include "utils/Theme.h"
 #include "utils/RegisterQtMetatypes.h"
+
+#include "resources/VersionInfo.h"
 
 
 static void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
@@ -67,7 +70,7 @@ int main(int argc, char *argv[])
 
 	// Set up app information.
 	app.setApplicationName("AwesomeMediaLibraryManager");
-	app.setApplicationVersion("0.0.1");
+    app.setApplicationVersion(toqstr(VersionInfo::get_version_quad()));
     app.setOrganizationName("gvansickle");
 	app.setOrganizationDomain("gvansickle.github.io");
     app.setApplicationDisplayName("Awesome Media Library Manager");

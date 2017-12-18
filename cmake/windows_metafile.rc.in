@@ -1,12 +1,25 @@
 #include "winver.h"
 
+/*
+ * Handle misc info coming in from the build environment.
+ */
+#cmakedefine01 GVI_VERSION_IS_DIRTY
+
+// Per https://msdn.microsoft.com/en-us/library/windows/desktop/aa381058(v=vs.85).aspx:
+// "VS_FF_PRIVATEBUILD	File was not built using standard release procedures. If this value is given, the StringFileInfo block must contain a PrivateBuild string."
+#if GVI_VERSION_IS_DIRTY == 1
+#define AMLM_FILEFLAGS VS_FF_PRIVATEBUILD
+#else
+#define AMLM_FILEFLAGS 0x00L
+#endif
+
 IDI_ICON1               ICON    DISCARDABLE     "@ICON_FILE@"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,@PROJECT_VERSION_TWEAK@
  PRODUCTVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,@PROJECT_VERSION_TWEAK@
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
- FILEFLAGS 0x0L
+ FILEFLAGS AMLM_FILEFLAGS
  FILEOS VOS_NT_WINDOWS32 /* Same for x86-64 */
  FILETYPE VFT_APP
  FILESUBTYPE VFT2_UNKNOWN
@@ -17,12 +30,15 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "@RC_COMPANYNAME@"
             VALUE "FileDescription", "@PROJECT_DESCRIPTION@"
-            VALUE "FileVersion", "@PROJECT_VERSION@"
+            VALUE "FileVersion", "@GVI_GIT_DESCRIBE_OUTPUT@"
             VALUE "LegalCopyright", "@RC_LEGALCOPYRIGHT@"
             VALUE "InternalName", "@PROJECT_NAME@"
             VALUE "OriginalFilename", "@PROJECT_NAME@.exe"
             VALUE "ProductName", "@PROJECT_NAME@"
-            VALUE "ProductVersion", "@PROJECT_VERSION@"
+            VALUE "ProductVersion", "@GVI_GIT_DESCRIBE_OUTPUT@"
+#if GVI_VERSION_IS_DIRTY
+            VALUE "PrivateBuild" "File was built from a dirty working copy"
+#endif
         END
     END
     BLOCK "VarFileInfo"

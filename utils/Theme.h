@@ -28,6 +28,7 @@
 class Theme : public QWidget
 {
     Q_OBJECT
+
 public:
     explicit Theme(QWidget *parent = nullptr);
 
@@ -38,6 +39,19 @@ public:
 	static bool setThemeName(const QString& name);
 
     static QIcon iconFromTheme(const QString& icon_name);
+
+	/**
+ 	 * Enumeration of some additional Qt::Key-like key names which don't exist in Qt 5.10.
+ 	 */
+	enum Key
+	{
+		Key_ToggleShuffle, ///< Windows Media Player: CTRL+H
+		Key_ToggleRepeat,  ///< Windows Media Player: CTRL+T
+	};
+	Q_ENUM(Key)
+
+	// Return a platform- and possibly theme-specific QKeySequence corresponding to the string @a key.
+	static QKeySequence keySequenceFromTheme(Theme::Key key);
 
 signals:
 

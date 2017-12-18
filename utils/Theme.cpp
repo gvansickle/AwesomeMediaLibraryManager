@@ -205,3 +205,16 @@ QIcon Theme::iconFromTheme(const QString &icon_name)
 
     return retval;
 }
+QKeySequence Theme::keySequenceFromTheme(Theme::Key key)
+{
+    switch(key)
+    {
+	    case Theme::Key_ToggleShuffle:
+		    return QKeySequence("Ctrl+H");
+	    break;
+	    case Theme::Key_ToggleRepeat:
+		    return QKeySequence("Ctrl+T");
+	    break;
+    }
+	return QKeySequence();
+}

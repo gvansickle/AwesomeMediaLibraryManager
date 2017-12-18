@@ -33,11 +33,13 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
+include(cmake/GetVersionInfo.cmake)
+
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
 # (per https://cgold.readthedocs.io/en/latest/tutorials/project.html)
 project(AwesomeMediaLibraryManager
-        VERSION 0.0.1.0
+        VERSION ${GVI_VERSION_TAG_QUAD}
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
@@ -46,6 +48,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 message(STATUS "CMake-time PATH: $ENV{PATH}")
 
+# Prevent an in-root-of-src-tree build.
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
+endif()
 
 # Include some basic cmake functions.
 include(GNUInstallDirs)
@@ -54,6 +60,8 @@ include(PrintTargetProperties)
 include(helperfunctions)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
+set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
+include(InstallRequiredSystemLibraries)
 
 dir_summary()
 
@@ -66,7 +74,7 @@ set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
 set(FULL_COPYRIGHT_STRING "Copyright (c) 2017 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 message("******************************************************************")
-message("* ${PROJECT_NAME} version ${PROJECT_VERSION} (${CMAKE_BUILD_TYPE})")
+message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_COMMITS}-g${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
 message("* ${FULL_COPYRIGHT_STRING}")
 message("******************************************************************")
 
@@ -81,8 +89,13 @@ message("*   Version: ${PROJECT_VERSION}")
 message("*   Version (alt): ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}")
 message("*   Discovered tools:")
 message("*        CMAKE_MAKE_PROGRAM: ${CMAKE_MAKE_PROGRAM}")
+message("*        GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
 
 print_compilers_and_params()
+
+# Generate the version info file.
+configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
+    ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 
 # Be nice to visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -90,11 +103,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Be nice and export compile commands by default, this is handy for clang-tidy
 # and for other tools.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-# Prevent an in-root-of-src-tree build.
-if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-    message(FATAL_ERROR "Prevented in-tree build. Please create a build directory outside of the source code and call cmake from there. Thank you.")
-endif()
 
 # Set default install location to dist folder in build dir
 # we do not want to install to /usr by default
@@ -141,7 +149,7 @@ fix_project_version()
 # Resource directory FBO QtCommon/add_project_meta().
 set(RESOURCE_FOLDER resources)
 # The basename of the application's icon.
-set(ICON_NAME "AppIcon")
+set(ICON_NAME "AMLMAppIcon")
 # For the "CompanyName" field in the rc file.
 set(RC_COMPANYNAME "${PROJECT_AUTHOR}")
 set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
@@ -159,6 +167,7 @@ set(AMLM_TAGLIB_TARGET "")
 
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
+set(USE_BUNDLED_QXTGLOBALSHORTCUT FALSE)
 
 if(NOT WIN32)
     find_package(PkgConfig REQUIRED)
@@ -229,6 +238,23 @@ else()
 	endif()
 endif()
 
+if(FALSE)
+if(USE_BUNDLED_QXTGLOBALSHORTCUT)
+	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
+	### @todo Looks like this is the most maintained fork: https://github.com/hluk/qxtglobalshortcut
+else()
+	find_package(PkgConfig REQUIRED)
+
+	pkg_check_modules(QXTGLOBALSHORTCUT_LIB REQUIRED qxtglobalshortcut
+		IMPORTED_TARGET)
+	if(QXTGLOBALSHORTCUT_LIB_FOUND)
+		set(AMLM_QXTGLOBALSHORTCUT_LIB_TARGET "PkgConfig::QXTGLOBALSHORTCUT_LIB")
+		# Doesn't work, this is an interface library: print_target_properties(${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+	endif()
+endif()
+endif()
+
+# Main program header files.
 set(HEADER_FILES
 	gui/CollectionDockWidget.h
 	gui/Experimental.h
@@ -276,7 +302,7 @@ set(HEADER_FILES
 	logic/CueSheetParser.h
 	gui/settings/SettingsDialog.h
 	gui/settings/SettingsDialogSideWidget.h
-	)
+	resources/VersionInfo.h)
 
 # Source file list.
 set(SOURCE_FILES
@@ -323,7 +349,12 @@ set(SOURCE_FILES
 	gui/settings/SettingsDialog.cpp
 	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h
 	gui/settings/SDPageAppearance.cpp gui/settings/SDPageAppearance.h
-	gui/settings/SettingsDialogSideWidget.cpp gui/settings/SDPageLibrary.cpp gui/settings/SDPageLibrary.h gui/MDINowPlayingView.cpp gui/MDINowPlayingView.h)
+	gui/settings/SettingsDialogSideWidget.cpp
+	gui/settings/SDPageLibrary.cpp
+	gui/settings/SDPageLibrary.h
+	gui/MDINowPlayingView.cpp
+        gui/MDINowPlayingView.h
+    )
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -331,10 +362,6 @@ add_project_meta(META_FILES_TO_INCLUDE)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
 # Qt5 Resource (qrc) files.
-#set(QRC_FILES
-#		resources/oxygenicons.qrc
-#		resources/TangoIcons.qrc
-#		resources/AppIcon.qrc)
 # RESOURCE_FILES is a list of the generated output *.cpp file names.
 #qt5_add_resources(RESOURCE_FILES
 #        resources/oxygenicons.qrc
@@ -356,10 +383,11 @@ print_target_properties(icons_oxygen)
 ###
 ### The main executable.
 ###
-### @note Including HEADER_FILES in here so they get check for existence.
+### @note Including HEADER_FILES in here so they get checked for existence.
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES} ${QRC_FILES}
+	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
@@ -368,7 +396,7 @@ set_target_properties(${PROJECT_NAME}
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET})
+        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
 add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
@@ -417,10 +445,13 @@ endif()
 set(CPACK_GENERATOR NSIS)
 
 # Generic.
+# https://cmake.org/cmake/help/v3.10/module/CPack.html
 set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
-set(CPACK_PACKAGE_VERSION_MAJOR "0")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "1")
+set(CPACK_PACKAGE_VERSION ${GVI_GIT_DESCRIBE_OUTPUT}-${CMAKE_BUILD_TYPE})
+# Doesn't look like we need to set these separately.
+#set(CPACK_PACKAGE_VERSION_MAJOR ???)
+#set(CPACK_PACKAGE_VERSION_MINOR ???)
+#set(CPACK_PACKAGE_VERSION_PATCH ???)
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_NAME} - ${PROJECT_DESCRIPTION}")
 set(CPACK_PACKAGE_CONTACT "${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
@@ -430,12 +461,9 @@ set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE)
 
 set(CPACK_PACKAGE_EXECUTABLES "${PROJECT_NAME};${PROJECT_NAME}")
 
-#set(CPACK_PACKAGE_VERSION "1.0.0")
-
 # Packaging: NSIS
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 set(CPACK_NSIS_EXECUTABLES_DIRECTORY .)
-set(CPACK_NSIS_MENU_LINKS "https://github.com/gvansickle/AwesomeMediaLibraryManager" "AwesomeMediaLibraryManager at GitHub")
 
 set(CPACK_NSIS_PACKAGE_ARCHITECTURE "64")
 set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
@@ -443,6 +471,8 @@ set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
 set(CPACK_NSIS_PACKAGE_NAME ${CPACK_PACKAGE_NAME})
 # Add a "Finished, Run the app?" page to the installer.
 set(CPACK_NSIS_MUI_FINISHPAGE_RUN ${PROJECT_NAME})
+
+set(CPACK_NSIS_MENU_LINKS "https://github.com/gvansickle/AwesomeMediaLibraryManager" "AwesomeMediaLibraryManager at GitHub")
 
 include(CPack)
 if(WIN32)
