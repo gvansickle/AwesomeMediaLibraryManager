@@ -26,7 +26,7 @@
 #include <QtWidgets/QTreeWidget>
 #include <logic/Metadata.h>
 
-SDPageLibrary::SDPageLibrary(QWidget *parent)
+SDPageLibrary::SDPageLibrary(SettingsDialog *parent)
 	: SettingsDialogPageBase(parent)
 {
 	QVBoxLayout *mainLayout = new QVBoxLayout;

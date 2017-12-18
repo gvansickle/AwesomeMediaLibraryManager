@@ -26,10 +26,12 @@
 
 #include "SettingsDialogSideWidget.h"
 
+class SettingsDialog;
+
 class SettingsDialogPageBase : public QWidget
 {
 public:
-	SettingsDialogPageBase(QWidget *parent = nullptr);
+	SettingsDialogPageBase(SettingsDialog *parent = nullptr);
 
 	virtual void addContentsEntry(SettingsDialogSideWidget* contents_widget) = 0;
 

@@ -26,7 +26,7 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QComboBox>
 
-SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(parent)
+SDPageAppearance::SDPageAppearance(SettingsDialog *parent) : SettingsDialogPageBase(parent)
 {
 	QGroupBox *configGroup = new QGroupBox(tr("Appearance"));
 

@@ -34,9 +34,12 @@ class SettingsDialog : public QDialog
 	Q_OBJECT
 
 public:
-	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
+	explicit SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
 
 	void addPage(SettingsDialogPageBase * page);
+
+	void setField(const QString &name, const QVariant &value);
+	QVariant field(const QString &name) const;
 
 public slots:
 	void changePage(QListWidgetItem *current, QListWidgetItem *previous);
@@ -49,8 +52,16 @@ private:
 
 	QDialogButtonBox m_dialog_button_box;
 
-	// The stacked widget which will hold the pages.
+	/// The stacked widget which will hold the pages.
 	QStackedWidget m_page_stack_widget;
+
+    struct
+    {
+        QWidget *m_widget;
+        const char *m_property_name;
+    };
+	/// The map of registeredField() names to values.
+	QMap<QString, QVariant> m_registered_fields;
 };
 
 

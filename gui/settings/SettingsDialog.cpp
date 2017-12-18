@@ -23,10 +23,11 @@
 
 #include <QApplication>
 #include <QLayout>
-
-#include <utils/Theme.h>
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QMessageBox>
+#include <QDebug>
+
+#include <utils/Theme.h>
 
 
 SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
@@ -74,8 +75,11 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	connect(m_contents_side_widget, &SettingsDialogSideWidget::currentItemChanged, this, &SettingsDialog::changePage);
 
 	// Connect up the buttons.
-	connect(&m_dialog_button_box, &QDialogButtonBox::rejected, this, &QDialog::rejected);
-	connect(&m_dialog_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    // OK
+    connect(&m_dialog_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    // Cancel, Esc
+    connect(&m_dialog_button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    // Help
 	connect(&m_dialog_button_box, &QDialogButtonBox::helpRequested, this, &SettingsDialog::onHelpRequested);
 }
 
@@ -86,6 +90,26 @@ void SettingsDialog::addPage(SettingsDialogPageBase *page)
 	// and add a corresponding entry to the contents side widget.
 	page->addContentsEntry(m_contents_side_widget);
 }
+
+void SettingsDialog::setField(const QString &name, const QVariant &value)
+{
+	m_registered_fields[name] = value;
+}
+
+QVariant SettingsDialog::field(const QString &name) const
+{
+    if(m_registered_fields.contains(name))
+    {
+        return m_registered_fields[name];
+    }
+    else
+    {
+        qWarning() << QString("No such field registered:") << name;
+    }
+
+	return QVariant();
+}
+
 
 void SettingsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
 {
@@ -101,3 +125,4 @@ void SettingsDialog::onHelpRequested()
 {
 	QMessageBox::information(this, "Help", "Help is not yet implemented");
 }
+

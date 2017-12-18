@@ -19,8 +19,16 @@
 
 #include "SettingsDialogPageBase.h"
 
-SettingsDialogPageBase::SettingsDialogPageBase(QWidget *parent)
+#include "SettingsDialog.h"
+
+SettingsDialogPageBase::SettingsDialogPageBase(SettingsDialog *parent)
 	: QWidget(parent)
+{
+
+}
+
+void SettingsDialogPageBase::registerField(const QString &name, QWidget *widget, const char *property,
+                                           const char *changedSignal)
 {
 
 }
