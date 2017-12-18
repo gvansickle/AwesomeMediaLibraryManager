@@ -93,14 +93,14 @@ void SettingsDialog::addPage(SettingsDialogPageBase *page)
 
 void SettingsDialog::setField(const QString &name, const QVariant &value)
 {
-	m_registered_fields[name] = value;
+	//m_registered_fields[name] = value;
 }
 
 QVariant SettingsDialog::field(const QString &name) const
 {
     if(m_registered_fields.contains(name))
     {
-        return m_registered_fields[name];
+        //return m_registered_fields[name];
     }
     else
     {
@@ -124,5 +124,19 @@ void SettingsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previ
 void SettingsDialog::onHelpRequested()
 {
 	QMessageBox::information(this, "Help", "Help is not yet implemented");
+}
+
+void SettingsDialog::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)
+{
+    m_registered_fields[name] = {widget, property, changedSignal};
+}
+
+void SettingsDialog::accept()
+{
+	// Collect the fields here.
+
+
+
+	QDialog::accept();
 }
 

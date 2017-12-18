@@ -21,13 +21,41 @@
 
 #include <QApplication>
 #include <QLabel>
+#include <QString>
 #include <QHBoxLayout>
 #include <utils/Theme.h>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QComboBox>
+#include <QFontComboBox>
+#include <QSpinBox>
+#include <QFormLayout>
+#include <utils/DebugHelpers.h>
+
+static void make_font_selector(QString label, const QFont& current_font, QFormLayout* layout)
+{
+    QHBoxLayout *rhs_layout = new QHBoxLayout;
+    auto fontComboBox = new QFontComboBox();
+	auto fontSizeSpinbox = new QSpinBox;
+    fontSizeSpinbox->setSuffix(" pt");
+M_WARNING("TODO Need to come up with this range better.")
+	fontSizeSpinbox->setRange(8,32);
+
+	fontComboBox->setEditable(false);
+    rhs_layout->addWidget(fontComboBox);
+	rhs_layout->addWidget(fontSizeSpinbox);
+    // Add the form entries.
+    layout->addRow(label, rhs_layout);
+}
 
 SDPageAppearance::SDPageAppearance(SettingsDialog *parent) : SettingsDialogPageBase(parent)
 {
+	// The font selection group box.
+	QGroupBox *fontGroup = new QGroupBox(tr("Fonts"));
+	auto fontFormLayout = new QFormLayout;
+    make_font_selector(tr("Default Track font"), QFont(), fontFormLayout);
+	make_font_selector(tr("Default Metadata Explorer font"), QFont(), fontFormLayout);
+	fontGroup->setLayout(fontFormLayout);
+
 	QGroupBox *configGroup = new QGroupBox(tr("Appearance"));
 
 	QLabel *dummy_select_label = new QLabel(tr("Select one:"));
@@ -47,9 +75,12 @@ SDPageAppearance::SDPageAppearance(SettingsDialog *parent) : SettingsDialogPageB
 	configGroup->setLayout(config_layout);
 
 	QVBoxLayout *mainLayout = new QVBoxLayout;
+	mainLayout->addWidget(fontGroup);
 	mainLayout->addWidget(configGroup);
 	mainLayout->addStretch(1);
 	setLayout(mainLayout);
+
+    //registerField("default_track_font", fontComboBox);
 }
 
 void SDPageAppearance::addContentsEntry(SettingsDialogSideWidget *contents_widget)

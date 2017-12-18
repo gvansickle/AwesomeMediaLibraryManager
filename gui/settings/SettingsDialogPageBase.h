@@ -37,6 +37,7 @@ public:
 
 protected:
 
+    SettingsDialog* getSettingsDialog();
     /**
      * This is me copying the functionality of QWizardPage's registerField() members.
      * I am sure I'll find out that there's a simple way to use QWizard/QWizardPage for a

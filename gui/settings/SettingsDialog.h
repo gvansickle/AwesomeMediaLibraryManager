@@ -45,9 +45,16 @@ public slots:
 	void changePage(QListWidgetItem *current, QListWidgetItem *previous);
 
 	void onHelpRequested();
+
+	void accept() override;
     
 private:
-    
+
+    // SettingsPages are friended to make the field() mechanism easier.
+    friend SettingsDialogPageBase;
+
+    void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
+
     QPointer<SettingsDialogSideWidget> m_contents_side_widget;
 
 	QDialogButtonBox m_dialog_button_box;
@@ -55,13 +62,15 @@ private:
 	/// The stacked widget which will hold the pages.
 	QStackedWidget m_page_stack_widget;
 
-    struct
+    struct QRegFieldStruct
     {
         QWidget *m_widget;
-        const char *m_property_name;
+        const char *m_property_name = nullptr;
+        const char *m_changed_signal = nullptr;
     };
+
 	/// The map of registeredField() names to values.
-	QMap<QString, QVariant> m_registered_fields;
+	QMap<QString, QRegFieldStruct> m_registered_fields;
 };
 
 
