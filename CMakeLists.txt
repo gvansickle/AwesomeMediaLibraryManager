@@ -33,6 +33,7 @@ cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
+message(STATUS "CMake-time PATH: $ENV{PATH}")
 include(cmake/GetVersionInfo.cmake)
 
 # Basic information about project
@@ -45,8 +46,6 @@ project(AwesomeMediaLibraryManager
 
 # Add folder where we keep support *.cmake's.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-
-message(STATUS "CMake-time PATH: $ENV{PATH}")
 
 # Prevent an in-root-of-src-tree build.
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
@@ -93,10 +92,6 @@ message("*        GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
 
 print_compilers_and_params()
 
-# Generate the version info file.
-configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
-    ${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
-
 # Be nice to visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -110,6 +105,10 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/dist" CACHE PATH
         "Install path prefix, prepended onto install directories." FORCE )
 endif()
+
+# Generate the version info file.
+configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 
 # C++14
 set(CMAKE_CXX_STANDARD 14)
