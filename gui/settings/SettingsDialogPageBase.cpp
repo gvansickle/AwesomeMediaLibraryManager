@@ -22,7 +22,7 @@
 
 #include "SettingsDialog.h"
 
-SettingsDialogPageBase::SettingsDialogPageBase(SettingsDialog *parent)
+SettingsDialogPageBase::SettingsDialogPageBase(QWidget *parent)
 	: QWidget(parent)
 {
 
@@ -30,8 +30,7 @@ SettingsDialogPageBase::SettingsDialogPageBase(SettingsDialog *parent)
 
 SettingsDialog *SettingsDialogPageBase::getSettingsDialog()
 {
-M_WARNING("TODO This parent-of-parent is adequate, but we should have a better way.")
-    return dynamic_cast<SettingsDialog *>(this->parentWidget()->parentWidget());
+    return m_settings_dialog;
 }
 
 void SettingsDialogPageBase::registerField(const QString &name, QWidget *widget, const char *property,

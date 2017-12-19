@@ -23,31 +23,46 @@
 #include <QLabel>
 #include <QString>
 #include <QHBoxLayout>
-#include <utils/Theme.h>
-#include <QtWidgets/QGroupBox>
-#include <QtWidgets/QComboBox>
+#include <QGroupBox>
+#include <QComboBox>
 #include <QFontComboBox>
 #include <QSpinBox>
 #include <QFormLayout>
+#include <QFontDialog>
+#include <QToolButton>
+
+#include <utils/Theme.h>
 #include <utils/DebugHelpers.h>
+
 
 static void make_font_selector(QString label, const QFont& current_font, QFormLayout* layout)
 {
     QHBoxLayout *rhs_layout = new QHBoxLayout;
     auto fontComboBox = new QFontComboBox();
+    fontComboBox->setCurrentFont(current_font);
+
 	auto fontSizeSpinbox = new QSpinBox;
     fontSizeSpinbox->setSuffix(" pt");
+    fontSizeSpinbox->setRange(8,32);
+
+    auto fontDialogButton = new QToolButton;
+    fontDialogButton->setIcon(Theme::iconFromTheme("preferences-desktop-font"));
+    QObject::connect(fontDialogButton, &QToolButton::clicked, [=](){
+        auto font = QFontDialog::getFont(nullptr, fontComboBox->currentFont(), layout->parentWidget(), label);
+        fontComboBox->setCurrentFont(font);
+        fontSizeSpinbox->setValue(font.pointSize());
+    });
 M_WARNING("TODO Need to come up with this range better.")
-	fontSizeSpinbox->setRange(8,32);
 
 	fontComboBox->setEditable(false);
     rhs_layout->addWidget(fontComboBox);
 	rhs_layout->addWidget(fontSizeSpinbox);
+    rhs_layout->addWidget(fontDialogButton);
     // Add the form entries.
     layout->addRow(label, rhs_layout);
 }
 
-SDPageAppearance::SDPageAppearance(SettingsDialog *parent) : SettingsDialogPageBase(parent)
+SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(parent)
 {
 	// The font selection group box.
 	QGroupBox *fontGroup = new QGroupBox(tr("Fonts"));

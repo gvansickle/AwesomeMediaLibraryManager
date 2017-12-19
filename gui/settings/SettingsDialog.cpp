@@ -87,6 +87,8 @@ void SettingsDialog::addPage(SettingsDialogPageBase *page)
 {
 	// Add the page to the page stack widget.
 	m_page_stack_widget.addWidget(page);
+	// Tell the page what SettingsDialog it belongs to.
+	page->setSettingsDialog(this);
 	// and add a corresponding entry to the contents side widget.
 	page->addContentsEntry(m_contents_side_widget);
 }

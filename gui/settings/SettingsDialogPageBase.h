@@ -31,9 +31,11 @@ class SettingsDialog;
 class SettingsDialogPageBase : public QWidget
 {
 public:
-	SettingsDialogPageBase(SettingsDialog *parent = nullptr);
+	SettingsDialogPageBase(QWidget *parent = nullptr);
 
+	/// @todo Friend to SettingsDialog.
 	virtual void addContentsEntry(SettingsDialogSideWidget* contents_widget) = 0;
+	void setSettingsDialog(SettingsDialog* settings_dialog) { m_settings_dialog = settings_dialog; };
 
 protected:
 
@@ -44,6 +46,8 @@ protected:
      * settings dialog that I couldn't figure out a few seconds after I have this mostly implemented.
      */
     void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
+
+	SettingsDialog *m_settings_dialog;
 };
 
 

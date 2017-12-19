@@ -26,7 +26,7 @@
 class SDPageLibrary : public SettingsDialogPageBase
 {
 public:
-	SDPageLibrary(SettingsDialog *parent = nullptr);
+	SDPageLibrary(QWidget *parent = nullptr);
 
 	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
 };
