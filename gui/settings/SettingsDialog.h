@@ -62,16 +62,8 @@ private:
 	/// The stacked widget which will hold the pages.
 	QStackedWidget m_page_stack_widget;
 
-    struct QRegFieldStruct
-    {
-        QWidget *m_widget;
-        const char *m_property_name = nullptr;
-        const char *m_changed_signal = nullptr;
-		QVariant m_value;
-    };
-
 	/// The map of registeredField() names to values.
-	QMap<QString, QRegFieldStruct> m_registered_fields;
+	//QMap<QString, QRegFieldStruct> m_registered_fields;
 };
 
 
