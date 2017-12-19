@@ -17,11 +17,27 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utils/DebugHelpers.h>
 #include "SettingsDialogPageBase.h"
+
+#include "SettingsDialog.h"
 
 SettingsDialogPageBase::SettingsDialogPageBase(QWidget *parent)
 	: QWidget(parent)
 {
 
 }
+
+SettingsDialog *SettingsDialogPageBase::getSettingsDialog()
+{
+    return m_settings_dialog;
+}
+
+void SettingsDialogPageBase::registerField(const QString &name, QWidget *widget, const char *property,
+                                           const char *changedSignal)
+{
+    getSettingsDialog()->registerField(name, widget, property, changedSignal);
+}
+
+
 

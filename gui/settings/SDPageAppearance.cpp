@@ -21,13 +21,59 @@
 
 #include <QApplication>
 #include <QLabel>
+#include <QString>
 #include <QHBoxLayout>
+#include <QGroupBox>
+#include <QComboBox>
+#include <QFontComboBox>
+#include <QSpinBox>
+#include <QFormLayout>
+#include <QFontDialog>
+#include <QToolButton>
+
 #include <utils/Theme.h>
-#include <QtWidgets/QGroupBox>
-#include <QtWidgets/QComboBox>
+#include <utils/DebugHelpers.h>
+
+
+static QFontComboBox* make_font_selector(QString label, const QFont& current_font, QFormLayout* layout)
+{
+    QHBoxLayout *rhs_layout = new QHBoxLayout;
+    auto fontComboBox = new QFontComboBox();
+    fontComboBox->setCurrentFont(current_font);
+
+	auto fontSizeSpinbox = new QSpinBox;
+    fontSizeSpinbox->setSuffix(" pt");
+    fontSizeSpinbox->setRange(8,32);
+
+    auto fontDialogButton = new QToolButton;
+    fontDialogButton->setIcon(Theme::iconFromTheme("preferences-desktop-font"));
+    QObject::connect(fontDialogButton, &QToolButton::clicked, [=](){
+        auto current_combo_font = fontComboBox->currentFont();
+        current_combo_font.setPointSize(fontSizeSpinbox->value());
+        auto font = QFontDialog::getFont(nullptr, current_combo_font, layout->parentWidget(), label);
+        fontComboBox->setCurrentFont(font);
+        fontSizeSpinbox->setValue(font.pointSize());
+    });
+
+	fontComboBox->setEditable(false);
+    rhs_layout->addWidget(fontComboBox);
+	rhs_layout->addWidget(fontSizeSpinbox);
+    rhs_layout->addWidget(fontDialogButton);
+    // Add the form entries.
+    layout->addRow(label, rhs_layout);
+
+    return fontComboBox;
+}
 
 SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(parent)
 {
+	// The font selection group box.
+	QGroupBox *fontGroup = new QGroupBox(tr("Fonts"));
+	auto fontFormLayout = new QFormLayout;
+    m_track_font_selector = make_font_selector(tr("Default Track font"), QFont(), fontFormLayout);
+	make_font_selector(tr("Default Metadata Explorer font"), QFont(), fontFormLayout);
+	fontGroup->setLayout(fontFormLayout);
+
 	QGroupBox *configGroup = new QGroupBox(tr("Appearance"));
 
 	QLabel *dummy_select_label = new QLabel(tr("Select one:"));
@@ -47,9 +93,12 @@ SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(par
 	configGroup->setLayout(config_layout);
 
 	QVBoxLayout *mainLayout = new QVBoxLayout;
+	mainLayout->addWidget(fontGroup);
 	mainLayout->addWidget(configGroup);
 	mainLayout->addStretch(1);
 	setLayout(mainLayout);
+
+    registerField("default_track_font", m_track_font_selector);
 }
 
 void SDPageAppearance::addContentsEntry(SettingsDialogSideWidget *contents_widget)

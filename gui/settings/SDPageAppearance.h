@@ -23,12 +23,17 @@
 
 #include "SettingsDialogPageBase.h"
 
+class QFontComboBox;
+
 class SDPageAppearance : public SettingsDialogPageBase
 {
 public:
 	SDPageAppearance(QWidget *parent = nullptr);
 
 	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
+
+private:
+    QFontComboBox* m_track_font_selector;
 };
 
 

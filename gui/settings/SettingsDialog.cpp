@@ -23,10 +23,11 @@
 
 #include <QApplication>
 #include <QLayout>
-
-#include <utils/Theme.h>
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QMessageBox>
+#include <QDebug>
+
+#include <utils/Theme.h>
 
 
 SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
@@ -74,8 +75,11 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	connect(m_contents_side_widget, &SettingsDialogSideWidget::currentItemChanged, this, &SettingsDialog::changePage);
 
 	// Connect up the buttons.
-	connect(&m_dialog_button_box, &QDialogButtonBox::rejected, this, &QDialog::rejected);
-	connect(&m_dialog_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    // OK
+    connect(&m_dialog_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    // Cancel, Esc
+    connect(&m_dialog_button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    // Help
 	connect(&m_dialog_button_box, &QDialogButtonBox::helpRequested, this, &SettingsDialog::onHelpRequested);
 }
 
@@ -83,9 +87,31 @@ void SettingsDialog::addPage(SettingsDialogPageBase *page)
 {
 	// Add the page to the page stack widget.
 	m_page_stack_widget.addWidget(page);
+	// Tell the page what SettingsDialog it belongs to.
+	page->setSettingsDialog(this);
 	// and add a corresponding entry to the contents side widget.
 	page->addContentsEntry(m_contents_side_widget);
 }
+
+void SettingsDialog::setField(const QString &name, const QVariant &value)
+{
+	//m_registered_fields[name] = value;
+}
+
+QVariant SettingsDialog::field(const QString &name) const
+{
+    if(m_registered_fields.contains(name))
+    {
+        //return m_registered_fields[name];
+    }
+    else
+    {
+        qWarning() << QString("No such field registered:") << name;
+    }
+
+	return QVariant();
+}
+
 
 void SettingsDialog::changePage(QListWidgetItem *current, QListWidgetItem *previous)
 {
@@ -101,3 +127,36 @@ void SettingsDialog::onHelpRequested()
 {
 	QMessageBox::information(this, "Help", "Help is not yet implemented");
 }
+
+void SettingsDialog::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)
+{
+	if(property == nullptr)
+	{
+		if(1/*isQFontComboBox*/)
+		{
+			property = "currentFont";
+		}
+	}
+
+	if(changedSignal == nullptr)
+	{
+		if(1/*isQFontComboBox*/)
+		{
+			changedSignal = "currentFontChanged";
+		}
+	}
+
+    //m_registered_fields[name] = {widget, property, changedSignal};
+
+    //connect(widget, SIGNAL(changedSignal), [=](const QFont& newfont){ m_registered_fields[name].m_value = newfont; });
+}
+
+void SettingsDialog::accept()
+{
+	// Collect the fields here.
+
+
+
+	QDialog::accept();
+}
+

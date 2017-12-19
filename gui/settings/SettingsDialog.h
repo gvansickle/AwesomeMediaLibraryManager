@@ -34,23 +34,44 @@ class SettingsDialog : public QDialog
 	Q_OBJECT
 
 public:
-	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
+	explicit SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
 
 	void addPage(SettingsDialogPageBase * page);
+
+	void setField(const QString &name, const QVariant &value);
+	QVariant field(const QString &name) const;
 
 public slots:
 	void changePage(QListWidgetItem *current, QListWidgetItem *previous);
 
 	void onHelpRequested();
-    
+
+	void accept() override;
+
 private:
-    
+
+    // SettingsPages are friended to make the field() mechanism easier.
+    friend SettingsDialogPageBase;
+
+    void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
+
     QPointer<SettingsDialogSideWidget> m_contents_side_widget;
 
 	QDialogButtonBox m_dialog_button_box;
 
-	// The stacked widget which will hold the pages.
+	/// The stacked widget which will hold the pages.
 	QStackedWidget m_page_stack_widget;
+
+    struct QRegFieldStruct
+    {
+        QWidget *m_widget;
+        const char *m_property_name = nullptr;
+        const char *m_changed_signal = nullptr;
+		QVariant m_value;
+    };
+
+	/// The map of registeredField() names to values.
+	QMap<QString, QRegFieldStruct> m_registered_fields;
 };
 
 
