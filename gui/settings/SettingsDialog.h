@@ -47,7 +47,7 @@ public slots:
 	void onHelpRequested();
 
 	void accept() override;
-    
+
 private:
 
     // SettingsPages are friended to make the field() mechanism easier.
@@ -67,6 +67,7 @@ private:
         QWidget *m_widget;
         const char *m_property_name = nullptr;
         const char *m_changed_signal = nullptr;
+		QVariant m_value;
     };
 
 	/// The map of registeredField() names to values.

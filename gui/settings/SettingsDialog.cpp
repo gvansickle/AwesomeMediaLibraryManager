@@ -130,7 +130,25 @@ void SettingsDialog::onHelpRequested()
 
 void SettingsDialog::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)
 {
-    m_registered_fields[name] = {widget, property, changedSignal};
+	if(property == nullptr)
+	{
+		if(1/*isQFontComboBox*/)
+		{
+			property = "currentFont";
+		}
+	}
+
+	if(changedSignal == nullptr)
+	{
+		if(1/*isQFontComboBox*/)
+		{
+			changedSignal = "currentFontChanged";
+		}
+	}
+
+    //m_registered_fields[name] = {widget, property, changedSignal};
+
+    //connect(widget, SIGNAL(changedSignal), [=](const QFont& newfont){ m_registered_fields[name].m_value = newfont; });
 }
 
 void SettingsDialog::accept()

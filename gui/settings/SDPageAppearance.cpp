@@ -35,7 +35,7 @@
 #include <utils/DebugHelpers.h>
 
 
-static void make_font_selector(QString label, const QFont& current_font, QFormLayout* layout)
+static QFontComboBox* make_font_selector(QString label, const QFont& current_font, QFormLayout* layout)
 {
     QHBoxLayout *rhs_layout = new QHBoxLayout;
     auto fontComboBox = new QFontComboBox();
@@ -48,11 +48,12 @@ static void make_font_selector(QString label, const QFont& current_font, QFormLa
     auto fontDialogButton = new QToolButton;
     fontDialogButton->setIcon(Theme::iconFromTheme("preferences-desktop-font"));
     QObject::connect(fontDialogButton, &QToolButton::clicked, [=](){
-        auto font = QFontDialog::getFont(nullptr, fontComboBox->currentFont(), layout->parentWidget(), label);
+        auto current_combo_font = fontComboBox->currentFont();
+        current_combo_font.setPointSize(fontSizeSpinbox->value());
+        auto font = QFontDialog::getFont(nullptr, current_combo_font, layout->parentWidget(), label);
         fontComboBox->setCurrentFont(font);
         fontSizeSpinbox->setValue(font.pointSize());
     });
-M_WARNING("TODO Need to come up with this range better.")
 
 	fontComboBox->setEditable(false);
     rhs_layout->addWidget(fontComboBox);
@@ -60,6 +61,8 @@ M_WARNING("TODO Need to come up with this range better.")
     rhs_layout->addWidget(fontDialogButton);
     // Add the form entries.
     layout->addRow(label, rhs_layout);
+
+    return fontComboBox;
 }
 
 SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(parent)
@@ -67,7 +70,7 @@ SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(par
 	// The font selection group box.
 	QGroupBox *fontGroup = new QGroupBox(tr("Fonts"));
 	auto fontFormLayout = new QFormLayout;
-    make_font_selector(tr("Default Track font"), QFont(), fontFormLayout);
+    m_track_font_selector = make_font_selector(tr("Default Track font"), QFont(), fontFormLayout);
 	make_font_selector(tr("Default Metadata Explorer font"), QFont(), fontFormLayout);
 	fontGroup->setLayout(fontFormLayout);
 
@@ -95,7 +98,7 @@ SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(par
 	mainLayout->addStretch(1);
 	setLayout(mainLayout);
 
-    //registerField("default_track_font", fontComboBox);
+    registerField("default_track_font", m_track_font_selector);
 }
 
 void SDPageAppearance::addContentsEntry(SettingsDialogSideWidget *contents_widget)
