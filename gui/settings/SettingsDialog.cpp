@@ -100,9 +100,11 @@ void SettingsDialog::setField(const QString &name, const QVariant &value)
 
 QVariant SettingsDialog::field(const QString &name) const
 {
-    if(m_registered_fields.contains(name))
+	auto index = m_reg_field_index_map.value(name, -1);
+    if(index != -1)
     {
-        //return m_registered_fields[name];
+        const RegisteredField &field = m_registered_fields.at(index);
+		return field.m_object->property(field.m_property_name);
     }
     else
     {
@@ -127,6 +129,21 @@ void SettingsDialog::onHelpRequested()
 {
 	QMessageBox::information(this, "Help", "Help is not yet implemented");
 }
+
+void SettingsDialog::addField(const RegisteredField &field)
+{
+	RegisteredField local_reg_field = field;
+
+	///local_reg_field.resolve(defaultPropertyTable);
+
+	/// @todo Check for dups.
+
+	m_reg_field_index_map.insert(local_reg_field.m_name, m_registered_fields.size());
+	m_registered_fields.push_back(local_reg_field);
+
+	connect(local_reg_field.m_object, SIGNAL(destroyed(QObject*)), this, SLOT(onRegisteredFieldDestroyed(QObject*)));
+}
+
 
 void SettingsDialog::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)
 {
@@ -159,4 +176,5 @@ void SettingsDialog::accept()
 
 	QDialog::accept();
 }
+
 

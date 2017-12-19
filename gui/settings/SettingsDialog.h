@@ -28,6 +28,7 @@
 
 #include "SettingsDialogSideWidget.h"
 #include "SettingsDialogPageBase.h"
+#include "RegisteredField.h"
 
 class SettingsDialog : public QDialog
 {
@@ -53,6 +54,7 @@ private:
     // SettingsPages are friended to make the field() mechanism easier.
     friend SettingsDialogPageBase;
 
+    void addField(const RegisteredField& field);
     void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
 
     QPointer<SettingsDialogSideWidget> m_contents_side_widget;
@@ -63,7 +65,8 @@ private:
 	QStackedWidget m_page_stack_widget;
 
 	/// The map of registeredField() names to values.
-	//QMap<QString, QRegFieldStruct> m_registered_fields;
+    QMap<QString, int> m_reg_field_index_map;
+    QVector<RegisteredField> m_registered_fields;
 };
 
 

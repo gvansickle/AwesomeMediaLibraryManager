@@ -37,8 +37,8 @@ public:
     SettingsDialogPageBase* m_page;
     QString m_name;
     QObject *m_object;
-    QString m_property_name;
-    QString m_changed_signal;
+    QByteArray m_property_name;
+    QByteArray m_changed_signal;
     QVariant m_initial_value;
 };
 
