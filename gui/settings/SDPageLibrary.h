@@ -25,6 +25,8 @@
 
 class SDPageLibrary : public SettingsDialogPageBase
 {
+    Q_OBJECT
+
 public:
 	SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *parent);
 

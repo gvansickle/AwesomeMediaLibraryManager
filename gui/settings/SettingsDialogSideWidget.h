@@ -20,6 +20,7 @@
 #ifndef SETTINGSDIALOGSIDEWIDGET_H
 #define SETTINGSDIALOGSIDEWIDGET_H
 
+#include <QObject>
 #include <QListWidget>
 
 class QString;

@@ -88,7 +88,18 @@ void SettingsDialogBase::addPage(SettingsDialogPageBase *page)
 
 void SettingsDialogBase::setField(const QString &name, const QVariant &value)
 {
-    //m_registered_fields[name] = value;
+    auto index = m_reg_field_index_map.value(name, -1);
+
+    if(index != -1)
+    {
+        // Found the field.
+        const RegisteredField &field = m_registered_fields.at(index);
+        auto retval = field.m_object->setProperty(field.m_property_name, value);
+        if(!retval)
+        {
+            qWarning("Couldn't write to property '%s'", field.m_property_name.constData());
+        }
+    }
 }
 
 QVariant SettingsDialogBase::field(const QString &name) const

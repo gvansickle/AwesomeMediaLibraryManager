@@ -20,11 +20,11 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOG_H
 #define AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOG_H
 
-
+#include <QObject>
 #include <QDialog>
 #include <QPointer>
-#include <QtWidgets/QDialogButtonBox>
-#include <QtWidgets/QStackedWidget>
+#include <QDialogButtonBox>
+#include <QStackedWidget>
 
 #include "SettingsDialogSideWidget.h"
 #include "SettingsDialogPageBase.h"
@@ -33,6 +33,8 @@
 
 class SettingsDialog : public SettingsDialogBase
 {
+    Q_OBJECT
+
 public:
     SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
 };

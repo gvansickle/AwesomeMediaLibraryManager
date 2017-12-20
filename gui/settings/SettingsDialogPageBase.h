@@ -20,7 +20,7 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOGPAGEBASE_H
 #define AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOGPAGEBASE_H
 
-
+#include <QObject>
 #include <QWidget>
 #include <QString>
 
@@ -30,6 +30,8 @@ class SettingsDialogBase;
 
 class SettingsDialogPageBase : public QWidget
 {
+    Q_OBJECT
+
 public:
 	SettingsDialogPageBase(SettingsDialogBase *settings_dialog_base, QWidget *parent = nullptr);
 

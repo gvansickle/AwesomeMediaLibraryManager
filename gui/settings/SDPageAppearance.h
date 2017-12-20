@@ -23,10 +23,14 @@
 
 #include "SettingsDialogPageBase.h"
 
+#include <QObject>
+
 class QFontComboBox;
 
 class SDPageAppearance : public SettingsDialogPageBase
 {
+    Q_OBJECT
+
 public:
 	SDPageAppearance(SettingsDialogBase *settings_dialog_parent, QWidget *parent);
 

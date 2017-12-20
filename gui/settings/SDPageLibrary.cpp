@@ -25,21 +25,32 @@
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QTreeWidget>
 #include <logic/Metadata.h>
+#include <utils/StringHelpers.h>
+#include <QFormLayout>
+#include <QLineEdit>
 
 SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *parent)
 	: SettingsDialogPageBase(settings_dialog_base, parent)
 {
-	QVBoxLayout *mainLayout = new QVBoxLayout;
-	QGroupBox *pageGroup = new QGroupBox(tr("Library Info"));
-	QTreeWidget* treeWidget = new QTreeWidget;
+	// The library info/stats group box.
+	QGroupBox *lib_info = new QGroupBox(tr("Library Info"));
 
+	/// The stats.
+	// Number of songs.
+	auto lib_num_songs = new QLineEdit(this);
+
+	// FormLayout for the stats.
+	QFormLayout *lib_stats_form = new QFormLayout;
+	lib_stats_form->addRow(tr("Total number of songs"), lib_num_songs);
+
+	QTreeWidget* treeWidget = new QTreeWidget;
 	treeWidget->setColumnCount(1);
 	auto newtags = Metadata::getNewTags();
 	QString str = QString("These %1 tags were discovered:\n").arg(newtags.size());
 	QList<QTreeWidgetItem*> item_list;
 	for(auto s : newtags)
 	{
-		QString tag_name = QString::fromUtf8(s.c_str());
+		QString tag_name = toqstr(s);
 		qDebug() << tag_name;
 		item_list.append(new QTreeWidgetItem((QTreeWidget*)nullptr, QStringList(tag_name)));
 	}
@@ -47,13 +58,14 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 	treeWidget->setHeaderLabels(QStringList("Tag Name"));
 
 	// GroupBoxes need a layout.
-	QVBoxLayout* pageGroupLayout = new QVBoxLayout;
-	pageGroupLayout->addWidget(treeWidget);
-	pageGroup->setLayout(pageGroupLayout);
+	QVBoxLayout* lib_info_layout = new QVBoxLayout;
+	lib_info_layout->addLayout(lib_stats_form);
+	lib_info_layout->addWidget(treeWidget);
+	lib_info->setLayout(lib_info_layout);
 
+	QVBoxLayout *mainLayout = new QVBoxLayout;
 	//mainLayout->addWidget(treeWidget);
-
-	mainLayout->addWidget(pageGroup);
+	mainLayout->addWidget(lib_info);
 	//mainLayout->addStretch(1);
 	setLayout(mainLayout);
 }
