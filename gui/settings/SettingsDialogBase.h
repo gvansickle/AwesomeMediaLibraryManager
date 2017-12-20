@@ -37,6 +37,7 @@ class SettingsDialogBase : public QDialog
 
 public:
     explicit SettingsDialogBase(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
+    virtual ~SettingsDialogBase() {}
 
     void addPage(SettingsDialogPageBase *page);
 

@@ -28,7 +28,7 @@ class QFontComboBox;
 class SDPageAppearance : public SettingsDialogPageBase
 {
 public:
-	SDPageAppearance(QWidget *parent = nullptr);
+	SDPageAppearance(SettingsDialogBase *settings_dialog_parent, QWidget *parent);
 
 	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
 

@@ -26,8 +26,8 @@
 #include <QtWidgets/QTreeWidget>
 #include <logic/Metadata.h>
 
-SDPageLibrary::SDPageLibrary(QWidget *parent)
-	: SettingsDialogPageBase(parent)
+SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *parent)
+	: SettingsDialogPageBase(settings_dialog_base, parent)
 {
 	QVBoxLayout *mainLayout = new QVBoxLayout;
 	QGroupBox *pageGroup = new QGroupBox(tr("Library Info"));

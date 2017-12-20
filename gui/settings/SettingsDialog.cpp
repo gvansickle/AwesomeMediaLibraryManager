@@ -34,8 +34,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	: SettingsDialogBase(parent, flags)
 {
 	// Add all the pages.
-	addPage(new SDPageAppearance(this));
-	addPage(new SDPageLibrary(this));
+	addPage(new SDPageAppearance(this, this));
+	addPage(new SDPageLibrary(this, this));
 }
 
 

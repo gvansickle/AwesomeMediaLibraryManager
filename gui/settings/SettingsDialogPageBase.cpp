@@ -22,18 +22,14 @@
 
 #include "SettingsDialogBase.h"
 
-SettingsDialogPageBase::SettingsDialogPageBase(QWidget *parent)
-	: QWidget(parent)
+SettingsDialogPageBase::SettingsDialogPageBase(SettingsDialogBase *settings_dialog_base, QWidget *parent)
+	: QWidget(parent), m_settings_dialog_base(settings_dialog_base)
 {
-
 }
 
 void SettingsDialogPageBase::registerField(const QString &name, QWidget *widget, const char *property,
                                            const char *changedSignal)
 {
     RegisteredField field(this, name, widget, property, changedSignal);
-    m_settings_dialog->addField(field);
+    m_settings_dialog_base->addField(field);
 }
-
-
-

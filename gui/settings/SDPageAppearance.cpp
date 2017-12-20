@@ -65,7 +65,8 @@ static QFontComboBox* make_font_selector(QString label, const QFont& current_fon
     return fontComboBox;
 }
 
-SDPageAppearance::SDPageAppearance(QWidget *parent) : SettingsDialogPageBase(parent)
+SDPageAppearance::SDPageAppearance(SettingsDialogBase *settings_dialog_parent, QWidget *parent)
+        : SettingsDialogPageBase(settings_dialog_parent, parent)
 {
 	// The font selection group box.
 	QGroupBox *fontGroup = new QGroupBox(tr("Fonts"));

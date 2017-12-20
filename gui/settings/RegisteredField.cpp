@@ -19,6 +19,8 @@
 
 #include "RegisteredField.h"
 
+#include "SettingsDialogPageBase.h"
+
 RegisteredField::RegisteredField(SettingsDialogPageBase *page, const QString &spec, QObject *object,
                                  const char *property, const char *changedSignal)
         : m_page(page), m_name(spec), m_object(object), m_property_name(property), m_changed_signal(changedSignal)

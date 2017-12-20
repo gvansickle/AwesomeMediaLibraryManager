@@ -25,17 +25,16 @@
 #include <QString>
 
 #include "SettingsDialogSideWidget.h"
-//#include "SettingsDialogBase.h
+
 class SettingsDialogBase;
 
 class SettingsDialogPageBase : public QWidget
 {
 public:
-	SettingsDialogPageBase(QWidget *parent = nullptr);
+	SettingsDialogPageBase(SettingsDialogBase *settings_dialog_base, QWidget *parent = nullptr);
 
-	/// @todo Friend to SettingsDialog.
+	/// @todo Friend to SettingsDialogBase.
 	virtual void addContentsEntry(SettingsDialogSideWidget* contents_widget) = 0;
-	void setSettingsDialogBase(SettingsDialogBase *settings_dialog) { m_settings_dialog = settings_dialog; };
 
 protected:
 
@@ -46,7 +45,7 @@ protected:
      */
     void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
 
-	SettingsDialogBase *m_settings_dialog;
+	SettingsDialogBase *m_settings_dialog_base = nullptr;
 };
 
 
