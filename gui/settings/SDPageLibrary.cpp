@@ -28,6 +28,15 @@
 #include <utils/StringHelpers.h>
 #include <QFormLayout>
 #include <QLineEdit>
+#include <QtWidgets/QLabel>
+
+static QLabel* make_qlabel(const QString& str, QWidget *parent)
+{
+    QLabel *retval = new QLabel(str, parent);
+    retval->setTextInteractionFlags(Qt::TextSelectableByKeyboard | Qt::TextSelectableByMouse);
+    retval->setFrameStyle(QFrame::StyledPanel);
+    return retval;
+}
 
 SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *parent)
 	: SettingsDialogPageBase(settings_dialog_base, parent)
@@ -37,11 +46,13 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 
 	/// The stats.
 	// Number of songs.
-	auto lib_num_songs = new QLineEdit(this);
-
+	auto lib_num_songs = make_qlabel("12345", this);
+    // Total size on disk.
+    auto lib_size_on_disk = make_qlabel("55756 GB", this);
 	// FormLayout for the stats.
 	QFormLayout *lib_stats_form = new QFormLayout;
-	lib_stats_form->addRow(tr("Total number of songs"), lib_num_songs);
+	lib_stats_form->addRow(tr("Total number of songs:"), lib_num_songs);
+    lib_stats_form->addRow(tr("Total size on disk:"), lib_size_on_disk);
 
 	QTreeWidget* treeWidget = new QTreeWidget;
 	treeWidget->setColumnCount(1);
