@@ -20,17 +20,12 @@
 #include <utils/DebugHelpers.h>
 #include "SettingsDialogPageBase.h"
 
-#include "SettingsDialog.h"
+#include "SettingsDialogBase.h"
 
 SettingsDialogPageBase::SettingsDialogPageBase(QWidget *parent)
 	: QWidget(parent)
 {
 
-}
-
-SettingsDialog *SettingsDialogPageBase::getSettingsDialog()
-{
-    return m_settings_dialog;
 }
 
 void SettingsDialogPageBase::registerField(const QString &name, QWidget *widget, const char *property,

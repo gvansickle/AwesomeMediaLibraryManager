@@ -353,7 +353,7 @@ set(SOURCE_FILES
 	gui/settings/SDPageLibrary.h
 	gui/MDINowPlayingView.cpp
         gui/MDINowPlayingView.h
-        gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h)
+        gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).

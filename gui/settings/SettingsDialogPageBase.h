@@ -25,8 +25,8 @@
 #include <QString>
 
 #include "SettingsDialogSideWidget.h"
-
-class SettingsDialog;
+//#include "SettingsDialogBase.h
+class SettingsDialogBase;
 
 class SettingsDialogPageBase : public QWidget
 {
@@ -35,11 +35,10 @@ public:
 
 	/// @todo Friend to SettingsDialog.
 	virtual void addContentsEntry(SettingsDialogSideWidget* contents_widget) = 0;
-	void setSettingsDialog(SettingsDialog* settings_dialog) { m_settings_dialog = settings_dialog; };
+	void setSettingsDialogBase(SettingsDialogBase *settings_dialog) { m_settings_dialog = settings_dialog; };
 
 protected:
 
-    SettingsDialog* getSettingsDialog();
     /**
      * This is me copying the functionality of QWizardPage's registerField() members.
      * I am sure I'll find out that there's a simple way to use QWizard/QWizardPage for a
@@ -47,7 +46,7 @@ protected:
      */
     void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
 
-	SettingsDialog *m_settings_dialog;
+	SettingsDialogBase *m_settings_dialog;
 };
 
 
