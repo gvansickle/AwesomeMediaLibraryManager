@@ -23,6 +23,8 @@
 
 #include "SettingsDialogPageBase.h"
 
+class QLabel;
+
 class SDPageLibrary : public SettingsDialogPageBase
 {
     Q_OBJECT
@@ -31,6 +33,9 @@ public:
 	SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *parent);
 
 	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
+
+private:
+	QLabel *m_lib_num_songs_label;
 };
 
 

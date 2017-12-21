@@ -33,3 +33,5 @@ void SettingsDialogPageBase::registerField(const QString &name, QWidget *widget,
     RegisteredField field(this, name, widget, property, changedSignal);
     m_settings_dialog_base->addField(field);
 }
+
+

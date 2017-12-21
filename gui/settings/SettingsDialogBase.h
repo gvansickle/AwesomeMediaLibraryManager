@@ -26,10 +26,13 @@
 #include <QStackedWidget>
 
 class QWidget;
+class QDataWidgetMapper;
+class QStandardItemModel;
 
 #include "SettingsDialogSideWidget.h"
 #include "SettingsDialogPageBase.h"
 #include "RegisteredField.h"
+
 
 class SettingsDialogBase : public QDialog
 {
@@ -69,6 +72,12 @@ private:
     /// The map of registeredField() names to values.
     QMap<QString, int> m_reg_field_index_map;
     QVector<RegisteredField> m_registered_fields;
+
+    // The model which will serve up the settings.
+    QStandardItemModel *m_settings_model;
+
+    // The mapper.
+    QDataWidgetMapper *m_mapper;
 };
 
 

@@ -27,3 +27,27 @@ RegisteredField::RegisteredField(SettingsDialogPageBase *page, const QString &sp
 {
 
 }
+
+#if 0
+void RegisteredField::resolve(const QVector<QWizardDefaultProperty> &defaultPropertyTable)
+{
+    if (property.isEmpty())
+        findProperty(defaultPropertyTable.constData(), defaultPropertyTable.count());
+    initialValue = object->property(property);
+}
+
+void RegisteredField::findProperty(const QWizardDefaultProperty *properties, int propertyCount)
+{
+    QByteArray className;
+
+    for (int i = 0; i < propertyCount; ++i)
+    {
+        if (objectInheritsXAndXIsCloserThanY(object, properties[i].className, className)) {
+            className = properties[i].className;
+            property = properties[i].property;
+            changedSignal = properties[i].changedSignal;
+        }
+    }
+}
+#endif
+

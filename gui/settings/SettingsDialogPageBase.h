@@ -28,6 +28,8 @@
 
 class SettingsDialogBase;
 
+class QLabel;
+
 class SettingsDialogPageBase : public QWidget
 {
     Q_OBJECT
@@ -47,7 +49,7 @@ protected:
      */
     void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
 
-	SettingsDialogBase *m_settings_dialog_base = nullptr;
+    SettingsDialogBase *m_settings_dialog_base = nullptr;
 };
 
 

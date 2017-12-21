@@ -41,6 +41,10 @@ public:
     QByteArray m_property_name;
     QByteArray m_changed_signal;
     QVariant m_initial_value;
+/*
+    void resolve(const QVector<QWizardDefaultProperty> &defaultPropertyTable);
+    void findProperty(const QWizardDefaultProperty *properties, int propertyCount);
+*/
 };
 
 

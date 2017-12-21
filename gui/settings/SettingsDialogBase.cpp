@@ -21,9 +21,11 @@
 
 #include <QApplication>
 #include <QLayout>
-#include <QtWidgets/QStackedWidget>
-#include <QtWidgets/QMessageBox>
+#include <QStackedWidget>
+#include <QMessageBox>
 #include <QDebug>
+#include <QDataWidgetMapper>
+#include <QStandardItemModel>
 
 #include <utils/Theme.h>
 
@@ -43,6 +45,12 @@ SettingsDialogBase::SettingsDialogBase(QWidget *parent, const Qt::WindowFlags &f
 
     // Allow user to resize the dialog.
     setSizeGripEnabled(true);
+
+    // Create the settings model.
+    m_settings_model = new QStandardItemModel(this);
+
+    // Create the mapper.
+    m_mapper = new QDataWidgetMapper(this);
 
     // Set the contents/page selector/side widget.
     m_contents_side_widget = new SettingsDialogSideWidget(this);
