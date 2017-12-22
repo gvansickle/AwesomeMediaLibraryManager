@@ -40,17 +40,17 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
 	// Main layout is vertical.
 	auto mainLayout = new QVBoxLayout();
 
-	metadataWidget = new QTreeWidget(parent);
-	metadataWidget->setRootIsDecorated(false);
-	metadataWidget->setColumnCount(2);
-	metadataWidget->setHeaderLabels(QStringList() << "Key" << "Value");
+    m_metadata_widget = new QTreeWidget(parent);
+    m_metadata_widget->setRootIsDecorated(false);
+    m_metadata_widget->setColumnCount(2);
+    m_metadata_widget->setHeaderLabels(QStringList() << "Key" << "Value");
 
 
-	coverImageLabel = new PixmapLabel(this);
-	coverImageLabel->setText("IMAGE HERE");
+	m_cover_image_label = new PixmapLabel(this);
+	m_cover_image_label->setText("IMAGE HERE");
 
-	mainLayout->addWidget(metadataWidget);
-	mainLayout->addWidget(coverImageLabel);
+    mainLayout->addWidget(m_metadata_widget);
+	mainLayout->addWidget(m_cover_image_label);
 	auto mainWidget = new QWidget(this);
 	mainWidget->setLayout(mainLayout);
 	setWidget(mainWidget);
@@ -85,8 +85,8 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 		std::map<QString, QVariant> pimeta = libentry->getAllMetadata().toStdMap(); // QMap<QString, QVariant>
 		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;
 		// clear out any old data we have.
-		metadataWidget->clear();
-		coverImageLabel->clear();
+        m_metadata_widget->clear();
+		m_cover_image_label->clear();
 
 		if(md)
 		{
@@ -94,10 +94,10 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 
             // Top-level spanning title item for the "Metadata Types" section.
             QTreeWidgetItem* metadata_types = new QTreeWidgetItem({"Metadata Types", ""});
-            metadataWidget->addTopLevelItem(metadata_types);
+            m_metadata_widget->addTopLevelItem(metadata_types);
             metadata_types->setExpanded(true);
             metadata_types->setFirstColumnSpanned(true);
-            metadataWidget->setFirstItemColumnSpanned(metadata_types, true);
+            m_metadata_widget->setFirstItemColumnSpanned(metadata_types, true);
 
             std::vector<std::tuple<QString, QVariant, TagMap>> md_list = {
 				{"hasVorbisComments?", md.hasVorbisComments(), md.tagmap_VorbisComments()},
@@ -131,7 +131,7 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 		};
 		for(auto p: list)
 		{
-			metadataWidget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
+            m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
 		}
 
 		/// Dump all the metadata.
@@ -141,7 +141,7 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 			QStringList value = entry->second.value<QStringList>();
 			if(value.size() > 0)
 			{
-				metadataWidget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
+                m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
 			}
 		}
 
@@ -154,8 +154,8 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 			if(image.loadFromData(cover_image_bytes) == true)
 			{
 				///qDebug() << "Image:" << image;
-				coverImageLabel->setPixmap(QPixmap::fromImage(image));
-				//coverImageLabel.adjustSize()
+				m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+				//m_cover_image_label.adjustSize()
 			}
 			else
 			{

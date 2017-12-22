@@ -40,9 +40,9 @@ public slots:
 	void playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
 
 private:
-	QTreeWidget* metadataWidget;
+    QTreeWidget* m_metadata_widget;
 
-	PixmapLabel* coverImageLabel;
+	PixmapLabel* m_cover_image_label;
 
 	void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
 
