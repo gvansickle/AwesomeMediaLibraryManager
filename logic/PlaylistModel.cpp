@@ -222,10 +222,13 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 {
 	qDebug() << "dropMimeData():" << data << action;
 
-	// First check if we should accept the drop.
 	// Per example code here: http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views, "Inserting dropped data into a model".
+	// "The model first has to make sure that the operation should be acted on,
+	// the data supplied is in a format that can be used,
+	// and that its destination within the model is valid"
 	if(!canDropMimeData(data, action, row, column, parent))
 	{
+		// Not a format we can use.
 		return false;
 	}
 	if (action == Qt::IgnoreAction)
@@ -234,10 +237,18 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 		return true;
 	}
 
+	// "The data to be inserted into the model is treated differently depending on whether it is dropped onto an existing
+	// item or not. In this simple example, we want to allow drops between existing items, before the first item in the
+	// list, and after the last item.
+	// When a drop occurs, the model index corresponding to the parent item will either be valid, indicating that the
+	// drop occurred on an item, or it will be invalid, indicating that the drop occurred somewhere in the view that
+	// corresponds to top level of the model."
 
-	// First do some pre-work which applies to both Copy and Move.
-	int beginRow = row;
-#if 0
+	// "We initially examine the row number supplied to see if we can use it to insert items into the model,
+	// regardless of whether the parent index is valid or not."
+	int beginRow;
+
+#if 1
 	if(row != -1)
 	{
 		// Valid row number.
@@ -246,15 +257,24 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	else if(parent.isValid())
 	{
 		// Valid parent, drop occurred on an item.
+		// "If the parent model index is valid, the drop occurred on an item. In this simple list model, we find out
+		// the row number of the item and use that value to insert dropped items into the top level of the model."
 		beginRow = parent.row();
 	}
 	else
 	{
 		// Must have been a drop on the top level of the model.
+		// "When a drop occurs elsewhere in the view, and the row number is unusable, we append items to the top level
+		// of the model."
 		beginRow = rowCount(QModelIndex());
 	}
+
+	// "In hierarchical models, when a drop occurs on an item, it would be better to insert new items into the model as
+	// children of that item. In the simple example shown here, the model only has one level, so this approach is not
+	// appropriate."
 #endif
 
+#if 0
 	if(action == Qt::CopyAction || action == Qt::MoveAction)
 	{
 		// Try to insert a dropped item into the model.
@@ -284,6 +304,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 			beginRow = row;
 		}
 	}
+#endif
 
 	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->lib_item_list;
 	auto rows = libentries.size();
