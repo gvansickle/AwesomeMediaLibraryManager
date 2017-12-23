@@ -411,6 +411,8 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 
 	beginRemoveRows(parent, row, row+count-1);
 
+M_WARNING("There's a QSignalBlocker() here in the model for: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp");
+
 	for(int i = row; i < row+count; ++i)
 	{
 		m_library.removeEntry(i);

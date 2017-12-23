@@ -247,6 +247,24 @@ bool MDIPlaylistView::onBlankAreaToolTip(QHelpEvent* event)
 //	}
 //
 
+void MDIPlaylistView::fixDropEvent(QDropEvent *event)
+{
+	if(event->source() != this)
+	{
+		// Not dropping on ourself.
+		event->setDropAction(Qt::CopyAction);
+	}
+	else
+	{
+		Qt::DropAction action = Qt::MoveAction;
+		if(event->keyboardModifiers() & Qt::ControlModifier)
+		{
+			action = Qt::CopyAction;
+		}
+		event->setDropAction(action);
+	}
+}
+
 void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 {
 	auto source = qobject_cast<MDIPlaylistView*>(event->source());
@@ -256,6 +274,10 @@ void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 		event->setDropAction(Qt::MoveAction);
         qDebug() << "dragEnterEvent() on ourselves, setting Qt::MoveAction" << event;
 	}
+#warning "TODO"
+	event->setAccepted(true);
+
+#if 0
 	else
 	{
         // Drag is not from ourself.
@@ -263,10 +285,12 @@ void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 	}
 
     MDITreeViewBase::dragEnterEvent(event);
+#endif
 }
 
 void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
 {
+#if 0
     MDIPlaylistView *source = qobject_cast<MDIPlaylistView *>(event->source());
     if (source && source == this)
     {
@@ -281,6 +305,8 @@ void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
     }
 
     MDITreeViewBase::dragMoveEvent(event);
+#endif
+	fixDropEvent(event);
 }
 
 void MDIPlaylistView::dropEvent(QDropEvent* event)
@@ -289,6 +315,8 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 
 	// Based on this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
 	// Also see this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qabstractitemview.cpp::dropEvent()
+	// Also see "void QTreeWidget::dropEvent(QDropEvent *event)" from that same link.  It looks like this is where we have to
+	// do the actual intra-tree move.
     if(event->source() == this)
     {
         // We're doing a drop onto ourself.

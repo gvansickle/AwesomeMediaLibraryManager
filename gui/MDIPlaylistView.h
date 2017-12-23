@@ -98,6 +98,8 @@ private slots:
 private:
 	Q_DISABLE_COPY(MDIPlaylistView)
 
+	void fixDropEvent(QDropEvent *event);
+
 	PlaylistModel* m_underlying_model;
 	LibrarySortFilterProxyModel* m_sortfilter_model;
 	ItemDelegateLength* m_length_delegate;
