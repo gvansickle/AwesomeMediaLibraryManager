@@ -60,8 +60,6 @@ public:
 
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-	virtual bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationChild) override;
-
 	/// @name Drag and drop support.
 	/// @{
 

@@ -34,7 +34,6 @@
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
-	//logger.debug("WinTitle: {}".format(windowTitle()))
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
 	setWindowTitle("DUMMY");
 
@@ -147,8 +146,8 @@ bool MDILibraryView::onBlankAreaToolTip(QHelpEvent* event)
 	// Blank-area tooltip, for debugging.
 M_WARNING("TODO: Get/print library stats")
 	QToolTip::showText(event->globalPos(),
-		QString("<b>Debug Info</b><hr>"
-		"Num items in model: %1\n"
+        QString("<b>Library Info</b><hr>"
+        "Total number of entries: %1\n"
 		"rowCount: %2").arg(m_underlying_model->getLibraryNumEntries()).arg(model()->rowCount()));
 	return true;
 }

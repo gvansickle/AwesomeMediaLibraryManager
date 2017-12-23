@@ -49,14 +49,35 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	connect(this, &MDIPlaylistView::doubleClicked, this, &MDIPlaylistView::onDoubleClicked);
 
 	// Configure drag and drop.
+    // http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views
 	// Playlists can have items dragged into them as well as out of them.
 	// Playlists can have their items dragged around inside them.
+
+    // Enable dragging.
 	setDragEnabled(true);
-	setAcceptDrops(true);
+    // Enable dropping of internal or external items within the view.
+    setAcceptDrops(true);
 	// View supports both dragging and dropping.
 	setDragDropMode(QAbstractItemView::DragDrop);
-	setDragDropOverwriteMode(false);
-	setDefaultDropAction(Qt::MoveAction);
+    // Not entirely sure what's correct here.  From the docs:
+    // "  If its value is \c true, the selected data will overwrite the
+    //    existing item data when dropped, while moving the data will clear
+    //    the item. If its value is \c false, the selected data will be
+    //    inserted as a new item when the data is dropped. When the data is
+    //    moved, the item is removed as well."
+    // At the time of this writing, the behavior appears to be the same regardless of the setting here.
+    // Per this: https://github.com/d1vanov/PyQt5-reorderable-list-model
+    // "if our model properly implements the removeRows method and the view's dragDropOverwriteMode property
+    // is set to false (as it is by default in QListView and QTreeView but not in QTableView), Qt would call
+    // it automatically after dropMimeData method if the latter one returns true"
+    //
+    // Per this: https://stackoverflow.com/a/43963264
+    // "[false] specifies if the source item should be removed (typical in a tree view) or cleared [true] (typical in a table view)"
+    setDragDropOverwriteMode(false);
+    // Default to a Copy drop action.  If it ends up we're dropping onto ourselves, we'll convert this to a Qt::MoveAction
+    // in the dropEvent() handler.
+    setDefaultDropAction(Qt::CopyAction);
+    // Show the user where the item will be dropped.
 	setDropIndicatorShown(true);
 
 	// Hook up the context menu.
@@ -181,71 +202,85 @@ bool MDIPlaylistView::onBlankAreaToolTip(QHelpEvent* event)
 
 	// Blank-area tooltip, for debugging.
 	QToolTip::showText(event->globalPos(),
-	QString("<b>Debug Info</b><hr>"
-	"Num items in model: %1").arg(model()->rowCount()));
+    QString("<b>Playlist Info</b><hr>"
+    "Total number of entries: %1").arg(model()->rowCount()));
 	return true;
 }
 
-/*!
-	If the event hasn't already been accepted, determines the index to drop on.
-	if (row == -1 && col == -1)
-		// append to this drop index
-	else
-		// place at row, col in drop index
-	If it returns \c true a drop can be done, and dropRow, dropCol and dropIndex reflects the position of the drop.
-	\internal
-  */
-bool MDIPlaylistView::dropOn(QDropEvent *event, int *dropRow, int *dropCol, QModelIndex *dropIndex)
+//
+// Drag and Drop
+//
+// MoveAction vs. CopyAction vs. who does the remove of the original on a move?
+// Per the Qt5 docs, (http://doc.qt.io/qt-5/qtwidgets-draganddrop-fridgemagnets-example.html, 'Dragging" et al),
+// it appears that the ::mousePressEvent() handler is ultimately responsible for
+// the disposition of the dragged-from item, based on what is returned by the QDrag::exec() call:
+//	void DragWidget::mousePressEvent(QMouseEvent *event)
+//	{
+//		[...]
+//		QDrag *drag = new QDrag(this);
+//		[...]
+//		if (drag->exec(Qt::MoveAction | Qt::CopyAction, Qt::CopyAction) == Qt::MoveAction)
+//			child->close(); // ==> "if this action is equal to Qt::MoveAction we will close the activated fridge magnet
+//									widget because we will create a new one to replace it (see dropEvent())"
+//		else
+//			child->show();
+//	}
+//
+// This looks like it is mostly applicable to QAbstractItemView, which does this:
+//	void QAbstractItemView::startDrag(Qt::DropActions supportedActions)
+//	{
+//      [...]
+//      QDrag *drag = new QDrag(this);
+//		[...]
+//		if (drag->exec(supportedActions, defaultDropAction) == Qt::MoveAction)
+//			d->clearOrRemove();
+//      [...]
+//	}
+// clearOrRemove() then looks like this:
+// if (!overwrite) {
+//	[..]
+//	model->removeRows((*it).top(), count, parent);
+//	} else {
+//	// we can't remove the rows so reset the items (i.e. the view is like a table)
+//	[...]
+//	model->setItemData(index, roles);
+//	}
+//
+
+void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 {
-	//Q_Q(QAbstractItemView);
-	if (event->isAccepted())
-		return false;
-
-	QModelIndex root = QModelIndex();
-
-	QModelIndex index;
-	// rootIndex() (i.e. the viewport) might be a valid index
-	if (viewport()->rect().contains(event->pos())) {
-		index = /*q->*/indexAt(event->pos());
-		if (!index.isValid() || !/*q->*/visualRect(index).contains(event->pos()))
-			index = root;
-	}
-
-	// If we are allowed to do the drop
-	if (model()->supportedDropActions() & event->dropAction())
+	auto source = qobject_cast<MDIPlaylistView*>(event->source());
+	if(source && source == this)
 	{
-		int row = -1;
-		int col = -1;
-		if (index != root)
-		{
-//			auto dip = position(event->pos(), /*q->*/visualRect(index), index);
-//			switch (dropIndicatorPosition) {
-//			case QAbstractItemView::AboveItem:
-				row = index.row();
-				col = index.column();
-				index = index.parent();
-//				break;
-//			case QAbstractItemView::BelowItem:
-//				row = index.row() + 1;
-//				col = index.column();
-//				index = index.parent();
-//				break;
-//			case QAbstractItemView::OnItem:
-//			case QAbstractItemView::OnViewport:
-//				break;
-//			}
-		}
-		else
-		{
-//			dropIndicatorPosition = QAbstractItemView::OnViewport;
-		}
-		*dropIndex = index;
-		*dropRow = row;
-		*dropCol = col;
-//		if (!droppingOnItself(event, index))
-			return true;
+        // Dropping onto ourself.  We want to do a MoveAction in this case.
+		event->setDropAction(Qt::MoveAction);
+        qDebug() << "dragEnterEvent() on ourselves, setting Qt::MoveAction" << event;
 	}
-	return false;
+	else
+	{
+        // Drag is not from ourself.
+        qDebug() << "dragEnterEvent() from elsewhere" << event;
+	}
+
+    MDITreeViewBase::dragEnterEvent(event);
+}
+
+void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
+{
+    MDIPlaylistView *source = qobject_cast<MDIPlaylistView *>(event->source());
+    if (source && source == this)
+    {
+        // Dropping onto ourself.  We want to do a MoveAction in this case.
+        event->setDropAction(Qt::MoveAction);
+//        qDebug() << "dragMoveEvent() from ourself" << event;
+    }
+    else
+    {
+        // Drag is not from ourself.
+//        qDebug() << "dragMoveEvent() from elsewhere" << event;
+    }
+
+    MDITreeViewBase::dragMoveEvent(event);
 }
 
 void MDIPlaylistView::dropEvent(QDropEvent* event)
@@ -253,90 +288,18 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 	qDebug() << "dropEvent()" << event;
 
 	// Based on this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
-	if(event->source() == this)
-	{
-		// We're doing a move drop onto ourself.
-		qDebug() << "dropEvent(): source is ourself:" << event;
-
-#if 1
-		// Drop source is ourself.  We want to turn any proposed copies into moves.
-		if(event->proposedAction() == Qt::CopyAction)
-		{
-			// It's a copy, is move available?
-			if(event->possibleActions() & Qt::MoveAction)
-			{
-				// Yes, tell Qt that we'll accept a move instead.
-				qDebug() << "dropEvent(): converting to MoveAction:" << event;
-				event->setDropAction(Qt::MoveAction);
-				//event->accept();
-				qDebug() << "dropEvent(): converted to MoveAction:" << event;
-			}
-			else
-			{
-				// Copy drop from ourself with no move option.  Reject it.
-				qDebug() << "dropEvent(): no MoveAction option, ignoring:" << event;
-				event->ignore();
-				return;
-			}
-		}
-#else
-
-		QModelIndex topIndex;
-		int col = -1;
-		int row = -1;
-		if (dropOn(event, &row, &col, &topIndex))
-		{
-			// Get the list of model indexes in the source of the drop.
-			QList<QModelIndex> idxs = selectedIndexes();
-			QList<QPersistentModelIndex> indexes;
-			for (int i = 0; i < idxs.count(); i++)
-			{
-				indexes.append(idxs.at(i));
-			}
-
-			if (indexes.contains(topIndex))
-			{
-				return;
-			}
-
-			// When removing items the drop location could shift
-			QPersistentModelIndex dropRow = model()->index(row, col, topIndex);
-
-			// Remove the items
-			QList<LibraryEntry*> taken;
-			for (int i = indexes.count() - 1; i >= 0; --i)
-			{
-				LibraryEntry* item = underlyingModel()->getItem(indexes[i]);
-				taken.append(item);
-				model()->removeRow(indexes[i].row(), indexes[i].parent());
-			}
-
-			// insert them back in at their new positions
-			for (int i = 0; i < indexes.count(); ++i)
-			{
-				if(row == -1)
-				{
-					// Append a top-level item.
-					underlyingModel()->appendRow(taken[i]);
-				}
-				else
-				{
-					// Insert a top level item.
-					int r = dropRow.row() >= 0 ? dropRow.row() : row;
-					underlyingModel()->insertRow(r, QModelIndex());
-					underlyingModel()->setData(underlyingModel()->index(r, 0, QModelIndex()), QVariant::fromValue(taken[i]), Qt::EditRole);
-				}
-			}
-
-			event->accept();
-			// Don't want QAbstractItemView to delete it because it was "moved" we already did it
-			event->setDropAction(Qt::CopyAction);
-		}
-#endif
-	}
+	// Also see this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qabstractitemview.cpp::dropEvent()
+    if(event->source() == this)
+    {
+        // We're doing a drop onto ourself.
+        qDebug() << "dropEvent(): source is ourself:" << event;
+        event->setDropAction(Qt::MoveAction);
+    }
 
 	qDebug() << "dropEvent(): Calling base class with event:" << event;
-	return MDITreeViewBase::dropEvent(event);
+    MDITreeViewBase::dropEvent(event);
+
+    qDebug() << "Post-base-class event:" << event;
 }
 
 PlaylistModel* MDIPlaylistView::underlyingModel() const
@@ -460,4 +423,6 @@ QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &unde
 	auto proxy_model_index = qobject_cast<LibrarySortFilterProxyModel*>(model())->mapFromSource(underlying_index);
 	return proxy_model_index;
 }
+
+
 

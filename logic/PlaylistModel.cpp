@@ -167,30 +167,6 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 
 }
 
-bool PlaylistModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int count, const QModelIndex& destinationParent, int destinationChild)
-{
-	if(beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationChild))
-	{
-		// dest isn't in the middle of the source rows of the same parent, and not attempting to move a row to one of its own children or ancestors.
-		if(sourceParent != destinationParent)
-		{
-			Q_ASSERT(0);
-		}
-
-		// When removing items the destination location could shift.
-		QPersistentModelIndex destRow = index(destinationChild, 0, destinationParent);
-
-		// Copy the entries we're about to move to a temporary buffer.
-		std::vector<PlaylistModelItem*> items_being_moved;
-
-M_WARNING("TODO");
-
-		endMoveRows();
-		return true;
-	}
-	return false;
-}
-
 QStringList PlaylistModel::mimeTypes() const
 {
 	// The MIME types we can accept on a Drop.
@@ -220,7 +196,7 @@ bool PlaylistModel::canDropMimeData(const QMimeData* data, Qt::DropAction action
 
 bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
 {
-	qDebug() << "dropMimeData():" << data << action;
+    qDebug() << "dropMimeData():" << action << data;
 
 	// Per example code here: http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views, "Inserting dropped data into a model".
 	// "The model first has to make sure that the operation should be acted on,
@@ -234,6 +210,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	if (action == Qt::IgnoreAction)
 	{
 		// Not sure why we would be told to ignore the drop, but we've been told to ignore the drop, so ignore it.
+        // Return true here because the drop was "handled" by the model.
 		return true;
 	}
 
@@ -248,7 +225,6 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	// regardless of whether the parent index is valid or not."
 	int beginRow;
 
-#if 1
 	if(row != -1)
 	{
 		// Valid row number.
@@ -272,39 +248,13 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	// "In hierarchical models, when a drop occurs on an item, it would be better to insert new items into the model as
 	// children of that item. In the simple example shown here, the model only has one level, so this approach is not
 	// appropriate."
-#endif
 
-#if 0
-	if(action == Qt::CopyAction || action == Qt::MoveAction)
-	{
-		// Try to insert a dropped item into the model.
-		qDebug() << QString("Drop: parentindex: %1, %2").arg(parent.row()).arg(parent.column());
-		qDebug() << QString("Drop: r/c: %1, %2").arg(row).arg(column);
-		qDebug() << QString("MimeData formats:") << data->formats();
-		if(row == -1 && column == -1)
-		{
-			// The drop was on top of an existing parent item.  The parent could be the root item.
-			if(!parent.isValid())
-			{
-				// It's the root.  Convert to a drop after the last child item.
-				qDebug() << QString("parent is root");
-				row = rowCount(parent);
-				column = 0;
-			}
-			else
-			{
-				// It's a drop onto an existing item.  We need to convert this to a drop at the top level, on the row just before the dropped-on parent.
-				qDebug() << QString("drop was on parent, whose r/c is: %1/%2").arg(parent.row(), parent.column());
-				row = parent.row();
-				column = 0;
-	M_WARNING( "TODO: Parent needs to be grandparent?")
-	//			parent = parent.parent();
-				qDebug() << QString("Converted to r/c, pr/pc: %1/%2, %3/%4").arg(row).arg(column).arg(parent.row()).arg(parent.column());
-			}
-			beginRow = row;
-		}
-	}
-#endif
+    // Now unpack the data from the QMimeData and put in into the model.
+
+    /// @note From here: https://stackoverflow.com/questions/23388612/drag-and-drop-in-qtreeview-removerows-not-called
+    /// "Short answer: If everything is correctly configured, the target should not remove the source item, the
+    /// initiator of the drag should remove the source item if a Qt::MoveAction is performed."
+    /// So if we're in the model here with a Qt::MoveAction, we shouldn't need to do the remove.
 
 	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->lib_item_list;
 	auto rows = libentries.size();
@@ -326,6 +276,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	}
 	else if(action == Qt::MoveAction)
 	{
+        qDebug() << "MoveAction START";
 		for(auto libentry : libentries)
 		{
 			qDebug() << "Moving";
@@ -335,6 +286,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 			setData(index(beginRow, 0), QVariant::fromValue(plmi));
 			beginRow += 1;
 		}
+        qDebug() << "MoveAction END";
 		return true;
 	}
 	return false;
