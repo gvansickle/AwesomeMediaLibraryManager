@@ -323,6 +323,19 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 	/// https://github.com/qt/qtbase/blob/bbcd4533889b3f3ae45917d638e06bedc9e5c536/src/widgets/itemviews/qabstractitemview.cpp#L2107
 	/// Looks like the base class should do everything we need, except we may need to convert
 	/// drops-to-self into MoveActions.
+	/// ...which doesn't work.  It looks like this is the code we're fighting (from QAbstractItemView::dropEvent()):
+	///
+	/// if (d->dropOn(event, &row, &col, &index)) {
+	///	const Qt::DropAction action = dragDropMode() == InternalMove ? Qt::MoveAction : event->dropAction();
+	///	if (d->model->dropMimeData(event->mimeData(), action, row, col, index)) {
+	///		if (action != event->dropAction()) {
+	///			event->setDropAction(action); <== Need action to be MoveAction, and
+	///			event->accept();              <== Need this to be called.
+	///		} else {
+	///			event->acceptProposedAction(); <== Need this to *not* be called.
+	///		}
+	///	}
+	///}
 #if 0
 	// Based on this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
 	// Also see this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qabstractitemview.cpp::dropEvent()
@@ -339,10 +352,13 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 #endif
 
 	qDebug() << "Pre-base-class event:" << event << ", Formats:" << event->mimeData()->formats();
+	auto original_mode = dragDropMode();
 	if(event->source() == this)
 	{
 		// We're doing a drop onto ourself.
 		qDebug() << "######## source is ourself";
+		//event->setDropAction(Qt::MoveAction);
+		setDragDropMode(InternalMove);
 	}
 	else // if(move is an option)
 	{
@@ -355,6 +371,7 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 	mdd.dumpMimeData(event->mimeData());
 	MDITreeViewBase::dropEvent(event);
 	qDebug() << "Post-base-class event:" << event;
+	setDragDropMode(original_mode);
 }
 
 void MDIPlaylistView::handleIntraWidgetMoveDrop(QDropEvent* event)

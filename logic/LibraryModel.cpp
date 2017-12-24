@@ -368,24 +368,6 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 		return false;
 	}
 
-#if 0
-	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
-	{
-		// Incoming item to replace the existing one.
-		qDebug() << "INCOMING NEW POINTER";
-		std::shared_ptr<LibraryEntry> new_item_ptr = value.value<std::shared_ptr<LibraryEntry>>();
-		Q_ASSERT(new_item_ptr);
-		qDebug() << "URL:" << new_item_ptr->getUrl();
-		m_library.replaceEntry(index.row(), new_item_ptr);
-		qDebug() << "After URL:" << m_library[index.row()]->getUrl();
-		// Tell anybody that's listening that all data in this row has changed.
-		QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);
-		qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
-		emit dataChanged(index, bottom_right_index, {role});
-		return true;
-	}
-#endif
-
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
 	if(role != Qt::EditRole)

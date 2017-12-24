@@ -211,13 +211,11 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 	return LibraryModel::setData(index, value, role);
 }
 
-#if 0
 QStringList PlaylistModel::mimeTypes() const
 {
 	// The MIME types we can accept on a Drop.
 	return QStringList({"application/x-grvs-libraryentryref"});
 }
-#endif
 
 Qt::DropActions PlaylistModel::supportedDragActions() const
 {
@@ -237,7 +235,7 @@ bool PlaylistModel::canDropMimeData(const QMimeData* data, Qt::DropAction action
 
 	// ...actually we would like to reject copy drops to ourself in here, but we don't have enough info.  Specifically,
 	// we don't have the source of the dragged item.
-	return LibraryModel::canDropMimeData(data, action, row, column, parent);
+	return QAbstractItemModel::canDropMimeData(data, action, row, column, parent);
 }
 
 bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
