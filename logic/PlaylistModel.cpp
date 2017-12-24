@@ -28,6 +28,8 @@
 #include "utils/StringHelpers.h"
 #include "utils/DebugHelpers.h"
 
+#include "logic/ModelUserRoles.h"
+
 
 PlaylistModel::PlaylistModel(QObject* parent) : LibraryModel(parent)
 {
@@ -55,6 +57,15 @@ Qt::ItemFlags PlaylistModel::flags(const QModelIndex& index) const
 
 QVariant PlaylistModel::data(const QModelIndex& index, int role) const
 {
+	if(!index.isValid()) return QVariant();
+
+	if(role == ModelUserRoles::PointerToItemRole)
+	{
+		// Return a pointer to the item.
+		std::shared_ptr<PlaylistModelItem> item = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(index));
+		return QVariant::fromValue<std::shared_ptr<PlaylistModelItem>>(item);
+	}
+
 	auto sectionid = getSectionFromCol(index.column());
 	if(sectionid >= SectionID::PLAYLIST_1)
 	{
@@ -144,9 +155,38 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 
 	qDebug() << "index/value/role:" << index << value << role;
 
+	// Has to be a valid index or the call doesn't make sense.
+	if(!index.isValid())
+	{
+		qCritical() << "SET DATA CALLED WITH AN INVALID INDEX";
+		return false;
+	}
+
+	if(role == ModelUserRoles::PointerToItemRole)
+	{
+		// Incoming item to replace the existing one.
+		qDebug() << "INCOMING NEW POINTER";
+
+		QVariant v = index.data(role);
+
+		if(v.canConvert<std::shared_ptr<PlaylistModelItem>>())
+		{
+			qDebug() << "Can convert to PlaylistModelItem*: true";
+
+			std::shared_ptr<LibraryEntry> new_item_ptr = v.value<std::shared_ptr<PlaylistModelItem>>();
+			Q_ASSERT(new_item_ptr);
+			QVariant casted_value = QVariant::fromValue(new_item_ptr);
+			return LibraryModel::setData(index, casted_value, role);
+		}
+		else
+		{
+			qCritical() << "CANT CONVERT:" << value;
+		}
+	}
+
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
-	if(role != Qt::EditRole && role != Qt::DisplayRole)
+	if(role != Qt::EditRole)
 	{
 		qDebug() << "NOT EDITROLE, RETURNING FALSE";
 		return false;
@@ -167,7 +207,6 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 	}
 	qDebug() << "PUNTING TO BASE CLASS";
 	return LibraryModel::setData(index, value, role);
-
 }
 
 #if 0

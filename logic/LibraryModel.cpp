@@ -40,6 +40,8 @@
 #include "Library.h"
 #include "LibraryRescanner.h"
 
+#include "logic/ModelUserRoles.h"
+
 #include "gui/ActivityProgressWidget.h"
 
 LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_library()
@@ -167,6 +169,13 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 		{
 			return QVariant();
 		}
+	}
+
+	if(role == ModelUserRoles::PointerToItemRole)
+	{
+		// Return a pointer to the item.
+		std::shared_ptr<LibraryEntry> item = std::dynamic_pointer_cast<LibraryEntry>(getItem(index));
+		return QVariant::fromValue<std::shared_ptr<LibraryEntry>>(item);
 	}
 
 	if(role == Qt::DecorationRole && SectionID::Status == getSectionFromCol(index.column()))
@@ -312,7 +321,7 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 	if(index.isValid())
 	{
 		std::shared_ptr<LibraryEntry> item = m_library[index.row()];
-		if(item != nullptr)
+		if(item)
 		{
 			return item;
 		}
@@ -331,7 +340,31 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 
 bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
-	qDebug() << "SetData";
+	qDebug() << "SetData, index/value/role:" << index << value << role;
+
+	// Has to be a valid index or the call doesn't make sense.
+	if(!index.isValid())
+	{
+		qCritical() << "SET DATA CALLED WITH AN INVALID INDEX";
+		return false;
+	}
+
+	if(role == ModelUserRoles::PointerToItemRole)
+	{
+		// Incoming item to replace the existing one.
+		qDebug() << "INCOMING NEW POINTER";
+		std::shared_ptr<LibraryEntry> new_item_ptr = value.value<std::shared_ptr<LibraryEntry>>();
+		Q_ASSERT(new_item_ptr);
+		qDebug() << "URL:" << new_item_ptr->getUrl();
+		m_library.replaceEntry(index.row(), new_item_ptr);
+		qDebug() << "After URL:" << m_library[index.row()]->getUrl();
+		// Tell anybody that's listening that all data in this row has changed.
+		QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);
+		qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
+		emit dataChanged(index, bottom_right_index, {role});
+		return true;
+	}
+
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
 	if(role != Qt::EditRole)
@@ -342,7 +375,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	auto pindex = QPersistentModelIndex(index);
 
-	if(!index.isValid() || index.column() != 0 || index.row() < 0)
+	if(!pindex.isValid() || pindex.column() != 0 || pindex.row() < 0)
 	{
 		qWarning() << "RETURNING FALSE: setData() called with index: valid=" << index.isValid() << ", row=" << index.row() << ", column=" << index.column() << ", parent=" << index.parent();
 		return false;
@@ -435,20 +468,35 @@ void LibraryModel::appendRow(std::shared_ptr<LibraryEntry> libentry)
 {
 	std::vector<std::shared_ptr<LibraryEntry>> libentries;
 	libentries.push_back(libentry);
+	qDebug() << "URL:" << libentries[0]->getUrl();
 	appendRows(libentries);
 }
 
 void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentries)
 {
-	auto rowcount = rowCount();
-	beginInsertRows(QModelIndex(), rowcount, rowcount+libentries.size()-1);
-	if(m_first_possible_unpop_row > rowcount)
+M_WARNING("TODO EXPERIMENT");
+	auto start_rowcount = rowCount();
+
+	insertRows(start_rowcount, libentries.size(), QModelIndex());
+
+	//beginInsertRows(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
+	if(m_first_possible_unpop_row > start_rowcount)
 	{
-		m_first_possible_unpop_row = rowcount;
+		m_first_possible_unpop_row = start_rowcount;
 	}
+#if 0
 	m_library.addNewEntries(libentries);
-	onRowsInserted(QModelIndex(), rowcount, rowcount+libentries.size()-1);
-	endInsertRows();
+#else
+	for(int i = 0; i < libentries.size(); i++)
+	{
+		QModelIndex mi = index(start_rowcount+i, 0, QModelIndex());
+		QVariant entry = QVariant::fromValue<std::shared_ptr<LibraryEntry>>(libentries[i]);
+		qDebug() << "URL:" << entry.value<std::shared_ptr<LibraryEntry>>()->getUrl();
+		setData(mi, entry, ModelUserRoles::PointerToItemRole);
+	}
+#endif
+	onRowsInserted(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
+	//endInsertRows();
 }
 
 int LibraryModel::getColFromSection(SectionID section_id) const
@@ -646,6 +694,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 void LibraryModel::onIncomingFilename(QString filename)
 {
 	auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
+	qDebug() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);
 }
 
@@ -656,7 +705,8 @@ void LibraryModel::onIncomingPopulateRowWithItems_Single(QPersistentModelIndex p
 	auto initial_row_index = QModelIndex(pindex);
 //	qDebug() << QString("incoming single item, row %1").arg(row);
 	// Metadata's been populated.
-	setData(initial_row_index, QVariant::fromValue(item));
+//	setData(initial_row_index, QVariant::fromValue(item));
+	setData(initial_row_index, QVariant::fromValue(item), ModelUserRoles::PointerToItemRole);
 
 	finishIncoming();
 }
@@ -682,7 +732,8 @@ void LibraryModel::onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex
 	// Replace the default-constructed items we just inserted after the old one.
 	for(int i = 0; i < static_cast<int>(items.size()); ++i)
 	{
-		setData(index(row + 1 + i, 0), QVariant::fromValue(items[i]), Qt::EditRole);
+//		setData(index(row + 1 + i, 0), QVariant::fromValue(items[i]), Qt::EditRole);
+		setData(index(row + 1 + i, 0), QVariant::fromValue(items[i]), ModelUserRoles::PointerToItemRole);
 	}
 
 	// Delete the original LibraryEntry which pointed to the entire album.
@@ -805,6 +856,8 @@ void LibraryModel::startRescan()
 		for(auto i=0; i<rowCount(); ++i)
 		{
 			auto item = getItem(index(i,0));
+
+			qDebug() << "Item URL:" << i << item->getUrl();
 
 			if(last_entry != nullptr && item->isFromSameFileAs(last_entry.get()))
 			{

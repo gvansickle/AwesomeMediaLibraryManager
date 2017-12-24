@@ -302,7 +302,8 @@ set(HEADER_FILES
 	gui/settings/SettingsDialog.h
 	gui/settings/SettingsDialogSideWidget.h
 	resources/VersionInfo.h
-	gui/DropMenu.h)
+	gui/DropMenu.h
+	logic/ModelUserRoles.h)
 
 # Source file list.
 set(SOURCE_FILES
@@ -355,7 +356,8 @@ set(SOURCE_FILES
 	gui/MDINowPlayingView.cpp
 	gui/MDINowPlayingView.h
 	gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
-	gui/DropMenu.cpp)
+	gui/DropMenu.cpp
+	logic/ModelUserRoles.cpp)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
