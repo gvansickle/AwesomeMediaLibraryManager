@@ -250,39 +250,9 @@ bool MDIPlaylistView::onBlankAreaToolTip(QHelpEvent* event)
 //	}
 //
 
-void MDIPlaylistView::fixDropEvent(QDropEvent *event)
-{
-	if(event->source() != this)
-	{
-		// Not dropping on ourself.
-		event->setDropAction(Qt::CopyAction);
-	}
-	else
-	{
-		Qt::DropAction action = Qt::MoveAction;
-		if(event->keyboardModifiers() & Qt::ControlModifier)
-		{
-			action = Qt::CopyAction;
-		}
-		event->setDropAction(action);
-	}
-}
-
 void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 {
-#if 0
-	auto source = qobject_cast<MDIPlaylistView*>(event->source());
-	if(source && source == this)
-	{
-        // Dropping onto ourself.  We want to do a MoveAction in this case.
-		event->setDropAction(Qt::MoveAction);
-        qDebug() << "dragEnterEvent() on ourselves, setting Qt::MoveAction" << event;
-	}
-#warning "TODO"
-	event->setAccepted(true);
-
-#else
-	/// QAbstractItemView does this (mode != InternalMove):
+	/// QAbstractItemView does this if (mode != InternalMove):
 	/// if (d_func()->canDrop(event)) {
 	///		event->accept();
 	///		setState(DraggingState);
@@ -290,7 +260,6 @@ void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 	///		event->ignore();
 	///	}
     MDITreeViewBase::dragEnterEvent(event);
-#endif
 }
 
 void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
@@ -298,23 +267,6 @@ void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
 	/// @note QTreeView overrides this to start the autoExpandDelay, and then calls the QAbstractItemView::dragMoveEvent(),
 	/// https://github.com/qt/qtbase/blob/bbcd4533889b3f3ae45917d638e06bedc9e5c536/src/widgets/itemviews/qabstractitemview.cpp#L1996
 	/// ...which does a bunch of work.
-#if 0
-    MDIPlaylistView *source = qobject_cast<MDIPlaylistView *>(event->source());
-    if (source && source == this)
-    {
-        // Dropping onto ourself.  We want to do a MoveAction in this case.
-        event->setDropAction(Qt::MoveAction);
-//        qDebug() << "dragMoveEvent() from ourself" << event;
-    }
-    else
-    {
-        // Drag is not from ourself.
-//        qDebug() << "dragMoveEvent() from elsewhere" << event;
-    }
-
-    MDITreeViewBase::dragMoveEvent(event);
-#endif
-//	fixDropEvent(event);
 	MDITreeViewBase::dragMoveEvent(event);
 }
 
@@ -322,8 +274,8 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 {
 	/// https://github.com/qt/qtbase/blob/bbcd4533889b3f3ae45917d638e06bedc9e5c536/src/widgets/itemviews/qabstractitemview.cpp#L2107
 	/// Looks like the base class should do everything we need, except we may need to convert
-	/// drops-to-self into MoveActions.
-	/// ...which doesn't work.  It looks like this is the code we're fighting (from QAbstractItemView::dropEvent()):
+	/// drops-to-self into MoveActions...
+	/// ...which doesn't work.  This is the code we're fighting (from QAbstractItemView::dropEvent()):
 	///
 	/// if (d->dropOn(event, &row, &col, &index)) {
 	///	const Qt::DropAction action = dragDropMode() == InternalMove ? Qt::MoveAction : event->dropAction();
@@ -332,32 +284,21 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 	///			event->setDropAction(action); <== Need action to be MoveAction, and
 	///			event->accept();              <== Need this to be called.
 	///		} else {
-	///			event->acceptProposedAction(); <== Need this to *not* be called.
+	///			event->acceptProposedAction(); <== Need this to *not* be called, it will accept the CopyAction.
 	///		}
 	///	}
 	///}
-#if 0
-	// Based on this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
-	// Also see this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qabstractitemview.cpp::dropEvent()
-	// Also see "void QTreeWidget::dropEvent(QDropEvent *event)" from that same link.  It looks like this is where we have to
-	// do the actual intra-tree move.
-    if(event->source() == this)
-    {
-        // We're doing a drop onto ourself.
-        qDebug() << "dropEvent(): source is ourself:" << event;
-        event->setDropAction(Qt::MoveAction);
-
-		//handleIntraWidgetMoveDrop(event);
-    }
-#endif
+	///
+	/// So my latest trick here is to detect if we're doing a self-drop, and temporarily switch dragDropMode() to InternalMove.
+	/// This seems to make everything work as expected.
 
 	qDebug() << "Pre-base-class event:" << event << ", Formats:" << event->mimeData()->formats();
+	// Save the original dragdrop mode.
 	auto original_mode = dragDropMode();
 	if(event->source() == this)
 	{
 		// We're doing a drop onto ourself.
-		qDebug() << "######## source is ourself";
-		//event->setDropAction(Qt::MoveAction);
+		qDebug() << "Drop Source is ourself, temporarily switching to InternalMove mode";
 		setDragDropMode(InternalMove);
 	}
 	else // if(move is an option)
@@ -371,55 +312,8 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 	mdd.dumpMimeData(event->mimeData());
 	MDITreeViewBase::dropEvent(event);
 	qDebug() << "Post-base-class event:" << event;
+	// Restore the original dragdrop mode.
 	setDragDropMode(original_mode);
-}
-
-void MDIPlaylistView::handleIntraWidgetMoveDrop(QDropEvent* event)
-{
-#if 0
-	// This is supposed to be the index which the drop happened on.
-	QModelIndex topIndex;
-	int row = -1;
-	int col = -1;
-
-	// Get QPersistentModelIndexes for all the dropping items.
-	const QList<QModelIndex> idxs = selectedIndexes();
-	QList<QPersistentModelIndex> indexes;
-	const int indexesCount = idxs.count();
-	indexes.reserve(indexesCount);
-	for(const auto& idx : idxs)
-	{
-		if(idx.column() != 0)
-		{
-			// Only care about the first column.
-			qDebug() << "Eliding column:" << idx.column();
-			continue;
-		}
-		indexes.append(idx);
-	}
-
-	/// @todo Not sure what this really is at the moment.
-	///if(indexes.contains(topIndex)) return;
-
-	// Get a QPersistentIndex for the drop row.  When removing items the drop location could shift.
-	QPersistentModelIndex dropRow = to_underlying_qmodelindex(model()->index(row, col, topIndex));
-
-	// Remove the dropped items from the source model (which is this).
-	QList<std::shared_ptr<PlaylistModelItem>> taken;
-	for(const auto &index : indexes)
-	{
-		auto item = m_underlying_model->getItem(to_underlying_qmodelindex(index));
-		taken.append(item); //std::shared_ptr<PlaylistModelItem> parent =
-		// Delete the row.
-		model()->removeRow(index.row(), QModelIndex());
-	}
-
-	// Now re-insert the items.
-	for(int i=0; i < indexes.count(); ++i)
-	{
-		//
-	}
-#endif
 }
 
 PlaylistModel* MDIPlaylistView::underlyingModel() const

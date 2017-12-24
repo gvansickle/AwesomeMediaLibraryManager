@@ -74,10 +74,9 @@ protected:
 	virtual bool onBlankAreaToolTip(QHelpEvent* event) override;
 
 	/// Drag and Drop
-    virtual void dragEnterEvent(QDragEnterEvent *event) override;
+	void dragEnterEvent(QDragEnterEvent *event) override;
 	void dragMoveEvent(QDragMoveEvent *event) override;
-	virtual void dropEvent(QDropEvent* event) override;
-	virtual void handleIntraWidgetMoveDrop(QDropEvent* event);
+	void dropEvent(QDropEvent* event) override;
 
 	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
 	QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) override;
@@ -98,8 +97,6 @@ private slots:
 
 private:
 	Q_DISABLE_COPY(MDIPlaylistView)
-
-	void fixDropEvent(QDropEvent *event);
 
 	PlaylistModel* m_underlying_model;
 	LibrarySortFilterProxyModel* m_sortfilter_model;
