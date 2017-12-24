@@ -368,6 +368,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 		return false;
 	}
 
+#if 0
 	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
 	{
 		// Incoming item to replace the existing one.
@@ -383,6 +384,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 		emit dataChanged(index, bottom_right_index, {role});
 		return true;
 	}
+#endif
 
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
@@ -487,7 +489,7 @@ void LibraryModel::appendRow(std::shared_ptr<LibraryEntry> libentry)
 {
 	std::vector<std::shared_ptr<LibraryEntry>> libentries;
 	libentries.push_back(libentry);
-	qDebug() << "URL:" << libentries[0]->getUrl();
+//	qDebug() << "URL:" << libentries[0]->getUrl();
 	appendRows(libentries);
 }
 
@@ -496,16 +498,17 @@ void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentr
 M_WARNING("TODO EXPERIMENT");
 	auto start_rowcount = rowCount();
 
-	insertRows(start_rowcount, libentries.size(), QModelIndex());
+//	insertRows(start_rowcount, libentries.size(), QModelIndex());
 
-	//beginInsertRows(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
+	beginInsertRows(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
 	if(m_first_possible_unpop_row > start_rowcount)
 	{
 		m_first_possible_unpop_row = start_rowcount;
 	}
-#if 0
+
 	m_library.addNewEntries(libentries);
-#else
+
+#if 0
 	for(int i = 0; i < libentries.size(); i++)
 	{
 		QModelIndex mi = index(start_rowcount+i, 0, QModelIndex());
@@ -514,8 +517,9 @@ M_WARNING("TODO EXPERIMENT");
 		setData(mi, entry, ModelUserRoles::PointerToItemRole);
 	}
 #endif
+
 	onRowsInserted(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
-	//endInsertRows();
+	endInsertRows();
 }
 
 int LibraryModel::getColFromSection(SectionID section_id) const
@@ -675,14 +679,14 @@ Qt::DropActions LibraryModel::supportedDropActions() const
 	return Qt::IgnoreAction;
 }
 
-#if 0
+#if 1
 QStringList LibraryModel::mimeTypes() const
 {
 	return {"application/x-grvs-libraryentryref"};
 }
 #endif
 
-#if 0
+#if 1
 QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 {
 	std::vector<std::shared_ptr<LibraryEntry>> row_items;
@@ -724,8 +728,8 @@ void LibraryModel::onIncomingPopulateRowWithItems_Single(QPersistentModelIndex p
 	auto initial_row_index = QModelIndex(pindex);
 //	qDebug() << QString("incoming single item, row %1").arg(row);
 	// Metadata's been populated.
-//	setData(initial_row_index, QVariant::fromValue(item));
-	setData(initial_row_index, QVariant::fromValue(item), ModelUserRoles::PointerToItemRole);
+	setData(initial_row_index, QVariant::fromValue(item));
+//	setData(initial_row_index, QVariant::fromValue(item), ModelUserRoles::PointerToItemRole);
 
 	finishIncoming();
 }
@@ -751,8 +755,8 @@ void LibraryModel::onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex
 	// Replace the default-constructed items we just inserted after the old one.
 	for(int i = 0; i < static_cast<int>(items.size()); ++i)
 	{
-//		setData(index(row + 1 + i, 0), QVariant::fromValue(items[i]), Qt::EditRole);
-		setData(index(row + 1 + i, 0), QVariant::fromValue(items[i]), ModelUserRoles::PointerToItemRole);
+		setData(index(row + 1 + i, 0), QVariant::fromValue(items[i]), Qt::EditRole);
+//		setData(index(row + 1 + i, 0), QVariant::fromValue(items[i]), ModelUserRoles::PointerToItemRole);
 	}
 
 	// Delete the original LibraryEntry which pointed to the entire album.

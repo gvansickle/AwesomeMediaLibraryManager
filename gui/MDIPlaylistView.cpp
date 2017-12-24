@@ -282,12 +282,22 @@ void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 	event->setAccepted(true);
 
 #else
+	/// QAbstractItemView does this (mode != InternalMove):
+	/// if (d_func()->canDrop(event)) {
+	///		event->accept();
+	///		setState(DraggingState);
+	///	} else {
+	///		event->ignore();
+	///	}
     MDITreeViewBase::dragEnterEvent(event);
 #endif
 }
 
 void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
 {
+	/// @note QTreeView overrides this to start the autoExpandDelay, and then calls the QAbstractItemView::dragMoveEvent(),
+	/// https://github.com/qt/qtbase/blob/bbcd4533889b3f3ae45917d638e06bedc9e5c536/src/widgets/itemviews/qabstractitemview.cpp#L1996
+	/// ...which does a bunch of work.
 #if 0
     MDIPlaylistView *source = qobject_cast<MDIPlaylistView *>(event->source());
     if (source && source == this)
@@ -310,6 +320,9 @@ void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
 
 void MDIPlaylistView::dropEvent(QDropEvent* event)
 {
+	/// https://github.com/qt/qtbase/blob/bbcd4533889b3f3ae45917d638e06bedc9e5c536/src/widgets/itemviews/qabstractitemview.cpp#L2107
+	/// Looks like the base class should do everything we need, except we may need to convert
+	/// drops-to-self into MoveActions.
 #if 0
 	// Based on this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
 	// Also see this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qabstractitemview.cpp::dropEvent()

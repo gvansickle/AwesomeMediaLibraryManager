@@ -162,6 +162,7 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		return false;
 	}
 
+#if 0
 	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
 	{
 		// Incoming item to replace the existing one.
@@ -181,6 +182,7 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 			qCritical() << "CAN'T CONVERT:" << value;
 		}
 	}
+#endif
 
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
@@ -189,8 +191,8 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		qDebug() << "NOT EDITROLE, RETURNING FALSE";
 		return false;
 	}
-M_WARNING("TODO")
-	return false;
+//M_WARNING("TODO")
+//	return false;
 
 	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 	{
@@ -240,7 +242,7 @@ bool PlaylistModel::canDropMimeData(const QMimeData* data, Qt::DropAction action
 
 bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
 {
-#if 0
+#if 1
     /// @brief Drag and Drop shouldn't be this hard.
     /// To get drag and drop functioning completely correctly requires a lot of completely unintuitive and undocumented work.
     /// For example, Qt5's own QTreeWidget:
@@ -249,7 +251,11 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
     /// One thing you'll notice is that QTreeModel::dropMimeData() *does not perform the drop of the MimeData*.
     /// All it does adjust the drop row if it's a drop to {-1,-1}, then it calls *the view's* dropMimeData() function,
     /// when then gets the drop-parent item's index and then calls down to QAbstractItemModel::dropMimeData(), which
-    // then (hopefully) does the actual drop.  This if course completely breaks the notion of the model and view being independent entities.
+	/// then (hopefully) does the actual drop.  This if course completely breaks the notion of the model and view being independent entities.
+	///
+	/// Note that the  QAbstractItemModel::dropMimeData() implementation looks like it's not what we need.
+	/// It ultimately calls QAbstractItemModel::decodeData() and deserializes a QDataStream coming from the QMimeData,
+	/// and it does a ton of work to get every row and column entered into the model.
 
 	// Per example code here: http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views, "Inserting dropped data into a model".
 	// "The model first has to make sure that the operation should be acted on,
