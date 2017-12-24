@@ -250,6 +250,9 @@ bool MDIPlaylistView::onBlankAreaToolTip(QHelpEvent* event)
 //	}
 //
 
+/// @note QAbstractItemView::mousePressEvent() is hardcoded to have the left mouse button only initiate drags:
+/// @see https://github.com/qt/qtbase/blob/c4f397ee11fc3cea1fc132ebe1db24e3970bb477/src/widgets/itemviews/qabstractitemview.cpp#L1868
+
 void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 {
 	/// QAbstractItemView does this if (mode != InternalMove):
@@ -301,10 +304,19 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 		qDebug() << "Drop Source is ourself, temporarily switching to InternalMove mode";
 		setDragDropMode(InternalMove);
 	}
-	else // if(move is an option)
+	else if(event->possibleActions() & Qt::MoveAction)
 	{
+		// MoveAction is an option.  Ask the user if they want to copy or move.
 		DropMenu dm(tr("Copy or Move?"), this);
-		event->setDropAction(dm.whichAction(QCursor::pos()));
+		auto selected_action = dm.whichAction(QCursor::pos());
+		qDebug() << "Selected action:" << selected_action;
+		event->setDropAction(selected_action);
+		if(selected_action == Qt::MoveAction)
+		{
+			// Need to do the same trick here, or the move won't happen.
+			M_WARNING("/// @todo Doesn't work.");
+			setDragDropMode(InternalMove);
+		}
 	}
 
 	MimeDataDumper mdd(this);
