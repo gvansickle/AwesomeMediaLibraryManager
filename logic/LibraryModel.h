@@ -129,6 +129,10 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    
+	QMap<int, QVariant> itemData(const QModelIndex &index) const override;
+
+	QHash<int, QByteArray> roleNames() const override;
 
 	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 

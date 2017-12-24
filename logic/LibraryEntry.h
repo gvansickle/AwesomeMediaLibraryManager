@@ -110,8 +110,9 @@ Q_DECLARE_METATYPE(LibraryEntry)
 Q_DECLARE_METATYPE(LibraryEntry*)
 Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
 Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>)
+Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>)
 
-inline QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj) { return out << QString("TBD"); };
-inline QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj) { qDebug() << QString("TBD") ; return in; };
+//inline QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj) { return out << QString("TBD"); };
+//inline QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj) { qDebug() << QString("TBD") ; return in; };
 
 #endif // LIBRARYENTRY_H

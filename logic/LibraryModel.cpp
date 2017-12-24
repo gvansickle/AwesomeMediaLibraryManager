@@ -171,11 +171,12 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 		}
 	}
 
-	if(role == ModelUserRoles::PointerToItemRole)
+	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
 	{
 		// Return a pointer to the item.
-		std::shared_ptr<LibraryEntry> item = std::dynamic_pointer_cast<LibraryEntry>(getItem(index));
-		return QVariant::fromValue<std::shared_ptr<LibraryEntry>>(item);
+		QSharedPointer<LibraryEntry> item(getItem(index).get());
+		qDebug() << "Returning pointer to item with Url:" << item->getUrl();
+		return QVariant::fromValue<QSharedPointer<LibraryEntry>>(item);
 	}
 
 	if(role == Qt::DecorationRole && SectionID::Status == getSectionFromCol(index.column()))
@@ -275,6 +276,24 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
+QMap<int, QVariant> LibraryModel::itemData(const QModelIndex& index) const
+{
+	auto retval = QAbstractItemModel::itemData(index);
+	auto vardata = data(index, ModelUserRoles::PointerToItemRole);
+	if(vardata.isValid())
+	{
+		retval.insert(ModelUserRoles::PointerToItemRole, vardata);
+	}
+	return retval;
+}
+
+QHash<int, QByteArray> LibraryModel::roleNames() const
+{
+	auto retval = QAbstractItemModel::roleNames();
+	retval.insert(ModelUserRoles::PointerToItemRole, "PointerToItemRole");
+	return retval;
+}
+
 QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	Q_ASSERT(section >= -1);
@@ -349,7 +368,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 		return false;
 	}
 
-	if(role == ModelUserRoles::PointerToItemRole)
+	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
 	{
 		// Incoming item to replace the existing one.
 		qDebug() << "INCOMING NEW POINTER";

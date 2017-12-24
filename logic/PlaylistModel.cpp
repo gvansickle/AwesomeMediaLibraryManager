@@ -162,25 +162,23 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		return false;
 	}
 
-	if(role == ModelUserRoles::PointerToItemRole)
+	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
 	{
 		// Incoming item to replace the existing one.
 		qDebug() << "INCOMING NEW POINTER";
 
-		QVariant v = index.data(role);
-
-		if(v.canConvert<std::shared_ptr<PlaylistModelItem>>())
+		if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 		{
 			qDebug() << "Can convert to PlaylistModelItem*: true";
 
-			std::shared_ptr<LibraryEntry> new_item_ptr = v.value<std::shared_ptr<PlaylistModelItem>>();
+			std::shared_ptr<LibraryEntry> new_item_ptr = value.value<std::shared_ptr<PlaylistModelItem>>();
 			Q_ASSERT(new_item_ptr);
 			QVariant casted_value = QVariant::fromValue(new_item_ptr);
 			return LibraryModel::setData(index, casted_value, role);
 		}
 		else
 		{
-			qCritical() << "CANT CONVERT:" << value;
+			qCritical() << "CAN'T CONVERT:" << value;
 		}
 	}
 
@@ -191,6 +189,8 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		qDebug() << "NOT EDITROLE, RETURNING FALSE";
 		return false;
 	}
+M_WARNING("TODO")
+	return false;
 
 	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 	{
