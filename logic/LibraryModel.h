@@ -195,8 +195,8 @@ public:
 
 	virtual Qt::DropActions supportedDragActions() const override;
 	virtual Qt::DropActions supportedDropActions() const override;
-	virtual QStringList mimeTypes() const override;
-	virtual QMimeData* mimeData(const QModelIndexList &indexes) const override;
+//	virtual QStringList mimeTypes() const override;
+//	virtual QMimeData* mimeData(const QModelIndexList &indexes) const override;
 
 public slots:
 	/// All this is for reading the metadata from a non-GUI thread.

@@ -24,8 +24,13 @@
 #include <QMetaType>
 #include <QString>
 
+/**
+ * @todo We should obsolete this.
+ */
 class Fraction
 {
+	Q_GADGET
+
 public:
     Fraction();
 	Fraction(const QString& s);
@@ -44,6 +49,9 @@ public:
 	friend Fraction operator-(Fraction f1, Fraction f2);
 	friend Fraction operator*(Fraction f1, Fraction f2);
 	friend bool operator<(Fraction f1, Fraction f2);
+	// For QVariant serialization.
+	friend QDataStream &operator<<(QDataStream &out, const Fraction &f);
+	friend QDataStream &operator>>(QDataStream &in, Fraction &f);
 
 private:
 	qint64 m_numerator;
@@ -61,5 +69,9 @@ Fraction operator*(Fraction f1, Fraction f2);
 bool operator<(Fraction f1, Fraction f2);
 
 QDebug operator<<(QDebug dbg, const Fraction& f);
+
+// For QVariant serialization.
+QDataStream &operator<<(QDataStream &out, const Fraction &f);
+QDataStream &operator>>(QDataStream &in, Fraction &f);
 
 #endif // FRACTION_H

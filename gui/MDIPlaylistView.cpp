@@ -19,16 +19,19 @@
 
 #include "MDIPlaylistView.h"
 
+#include "DropMenu.h"
 #include "ItemDelegateLength.h"
 
 #include <QHeaderView>
 #include <QToolTip>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QMimeType>
 #include <QMimeDatabase>
 
 #include <logic/LibrarySortFilterProxyModel.h>
 #include "utils/DebugHelpers.h"
+#include "logic/LibraryEntryMimeData.h"
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -267,6 +270,7 @@ void MDIPlaylistView::fixDropEvent(QDropEvent *event)
 
 void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 {
+#if 0
 	auto source = qobject_cast<MDIPlaylistView*>(event->source());
 	if(source && source == this)
 	{
@@ -277,13 +281,7 @@ void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 #warning "TODO"
 	event->setAccepted(true);
 
-#if 0
-	else
-	{
-        // Drag is not from ourself.
-        qDebug() << "dragEnterEvent() from elsewhere" << event;
-	}
-
+#else
     MDITreeViewBase::dragEnterEvent(event);
 #endif
 }
@@ -306,13 +304,13 @@ void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
 
     MDITreeViewBase::dragMoveEvent(event);
 #endif
-	fixDropEvent(event);
+//	fixDropEvent(event);
+	MDITreeViewBase::dragMoveEvent(event);
 }
 
 void MDIPlaylistView::dropEvent(QDropEvent* event)
 {
-	qDebug() << "dropEvent()" << event;
-
+#if 0
 	// Based on this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
 	// Also see this: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qabstractitemview.cpp::dropEvent()
 	// Also see "void QTreeWidget::dropEvent(QDropEvent *event)" from that same link.  It looks like this is where we have to
@@ -322,12 +320,76 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
         // We're doing a drop onto ourself.
         qDebug() << "dropEvent(): source is ourself:" << event;
         event->setDropAction(Qt::MoveAction);
+
+		//handleIntraWidgetMoveDrop(event);
     }
+#endif
 
-	qDebug() << "dropEvent(): Calling base class with event:" << event;
-    MDITreeViewBase::dropEvent(event);
+	qDebug() << "Pre-base-class event:" << event << ", Formats:" << event->mimeData()->formats();
+	if(event->source() == this)
+	{
+		// We're doing a drop onto ourself.
+		qDebug() << "######## source is ourself";
+	}
+	else // if(move is an option)
+	{
+		DropMenu dm(tr("Copy or Move?"), this);
+		event->setDropAction(dm.whichAction(QCursor::pos()));
+	}
 
-    qDebug() << "Post-base-class event:" << event;
+	MimeDataDumper mdd(this);
+	qDebug() << "QMimeData:";
+	mdd.dumpMimeData(event->mimeData());
+	MDITreeViewBase::dropEvent(event);
+	qDebug() << "Post-base-class event:" << event;
+}
+
+void MDIPlaylistView::handleIntraWidgetMoveDrop(QDropEvent* event)
+{
+#if 0
+	// This is supposed to be the index which the drop happened on.
+	QModelIndex topIndex;
+	int row = -1;
+	int col = -1;
+
+	// Get QPersistentModelIndexes for all the dropping items.
+	const QList<QModelIndex> idxs = selectedIndexes();
+	QList<QPersistentModelIndex> indexes;
+	const int indexesCount = idxs.count();
+	indexes.reserve(indexesCount);
+	for(const auto& idx : idxs)
+	{
+		if(idx.column() != 0)
+		{
+			// Only care about the first column.
+			qDebug() << "Eliding column:" << idx.column();
+			continue;
+		}
+		indexes.append(idx);
+	}
+
+	/// @todo Not sure what this really is at the moment.
+	///if(indexes.contains(topIndex)) return;
+
+	// Get a QPersistentIndex for the drop row.  When removing items the drop location could shift.
+	QPersistentModelIndex dropRow = to_underlying_qmodelindex(model()->index(row, col, topIndex));
+
+	// Remove the dropped items from the source model (which is this).
+	QList<std::shared_ptr<PlaylistModelItem>> taken;
+	for(const auto &index : indexes)
+	{
+		auto item = m_underlying_model->getItem(to_underlying_qmodelindex(index));
+		taken.append(item); //std::shared_ptr<PlaylistModelItem> parent =
+		// Delete the row.
+		model()->removeRow(index.row(), QModelIndex());
+	}
+
+	// Now re-insert the items.
+	for(int i=0; i < indexes.count(); ++i)
+	{
+		//
+	}
+#endif
 }
 
 PlaylistModel* MDIPlaylistView::underlyingModel() const

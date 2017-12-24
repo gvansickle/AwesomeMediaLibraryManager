@@ -22,6 +22,10 @@
 
 #include <QMimeData>
 
+#include <QDataStream>
+#include <QIODevice>
+#include <QDebug>
+
 #include <memory>
 #include <vector>
 
@@ -38,6 +42,30 @@ public:
 
 private:
 	Q_DISABLE_COPY(LibraryEntryMimeData)
+};
+
+class MimeDataDumper : public QObject
+{
+	Q_OBJECT
+
+public:
+	MimeDataDumper(QObject* parent) : QObject(parent) {}
+
+	void dumpMimeData(const QMimeData* md)
+	{
+		QByteArray e = md->data("application/x-qabstractitemmodeldatalist");
+		QDataStream stream(&e, QIODevice::ReadOnly);
+
+		while(!stream.atEnd())
+		{
+			int row, col;
+			QMap<int, QVariant> roleDataMap;
+
+			stream >> row >> col >> roleDataMap;
+
+			qDebug() << "row:" << row << "col:" << col << "roleDataMap:" << roleDataMap;
+		}
+	}
 };
 
 #endif // LIBRARYENTRYMIMEDATA_H

@@ -142,10 +142,13 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 {
 	// Only needed because we can't put a derived class pointer into a QVariant and get a base class pointer out.
 
+	qDebug() << "index/value/role:" << index << value << role;
+
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
-	if(role != Qt::EditRole)
+	if(role != Qt::EditRole && role != Qt::DisplayRole)
 	{
+		qDebug() << "NOT EDITROLE, RETURNING FALSE";
 		return false;
 	}
 
@@ -162,16 +165,18 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		qCritical() << "CANT CONVERT:" << value;
 		//Q_ASSERT(0);
 	}
-
+	qDebug() << "PUNTING TO BASE CLASS";
 	return LibraryModel::setData(index, value, role);
 
 }
 
+#if 0
 QStringList PlaylistModel::mimeTypes() const
 {
 	// The MIME types we can accept on a Drop.
 	return QStringList({"application/x-grvs-libraryentryref"});
 }
+#endif
 
 Qt::DropActions PlaylistModel::supportedDragActions() const
 {
@@ -196,7 +201,16 @@ bool PlaylistModel::canDropMimeData(const QMimeData* data, Qt::DropAction action
 
 bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
 {
-    qDebug() << "dropMimeData():" << action << data;
+#if 0
+    /// @brief Drag and Drop shouldn't be this hard.
+    /// To get drag and drop functioning completely correctly requires a lot of completely unintuitive and undocumented work.
+    /// For example, Qt5's own QTreeWidget:
+    ///    https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
+    /// Examine the dance that QTreeWidget and its "private" model QTreeModel have to do for drag and drop.
+    /// One thing you'll notice is that QTreeModel::dropMimeData() *does not perform the drop of the MimeData*.
+    /// All it does adjust the drop row if it's a drop to {-1,-1}, then it calls *the view's* dropMimeData() function,
+    /// when then gets the drop-parent item's index and then calls down to QAbstractItemModel::dropMimeData(), which
+    // then (hopefully) does the actual drop.  This if course completely breaks the notion of the model and view being independent entities.
 
 	// Per example code here: http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views, "Inserting dropped data into a model".
 	// "The model first has to make sure that the operation should be acted on,
@@ -290,6 +304,12 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 		return true;
 	}
 	return false;
+#endif
+	qDebug() << "Dropping, Action:" << action << "drop row/column:" << row << column << "Parent:" << parent;
+    qDebug() << "QMimeData:"; MimeDataDumper(this).dumpMimeData(data);
+	bool retval = LibraryModel::dropMimeData(data, action, row, column, parent);
+	qDebug() << "BASE CLASS RETURN VALUE:" << retval;
+	return retval;
 }
 
 void PlaylistModel::setLibraryRootUrl(const QUrl &url)

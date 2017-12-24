@@ -63,7 +63,7 @@ public:
 	/// @name Drag and drop support.
 	/// @{
 
-	virtual QStringList mimeTypes() const override;
+	//virtual QStringList mimeTypes() const override;
 	virtual Qt::DropActions supportedDragActions() const override;
 	virtual Qt::DropActions supportedDropActions() const override;
 	virtual bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;

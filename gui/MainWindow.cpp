@@ -466,7 +466,7 @@ void MainWindow::updateConnections()
 {
 	if(activeMdiChild() != nullptr)
 	{
-		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
+//		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
 
 		auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
 		auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
@@ -478,7 +478,7 @@ void MainWindow::updateConnections()
 			                                 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 			if (!connection_handle)
 			{
-				qDebug() << "Connection failed: already connected?";
+//				qDebug() << "Connection failed: already connected?";
 			}
 
 			connection_handle = connect(childIsLibrary,
@@ -488,7 +488,7 @@ void MainWindow::updateConnections()
 			                            Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 			if (!connection_handle)
 			{
-				qDebug() << "Connection failed: already connected?";
+//				qDebug() << "Connection failed: already connected?";
 			}
 		}
 	}
@@ -497,7 +497,7 @@ void MainWindow::updateConnections()
 void MainWindow::updateMenus()
 {
 		// Update action enable states.  Mainly depends on if we have an MDI child window open.
-        qDebug() << "Updating menu status";
+//        qDebug() << "Updating menu status";
         bool hasMdiChild = activeMdiChild() != nullptr;
 
         bool childIsPlaylist = (dynamic_cast<MDIPlaylistView*>(activeMdiChild()) != nullptr);
@@ -700,10 +700,10 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 		QByteArray jdoc_str = settings.value("asJson").toByteArray();
 
-		qDebug() << "jdoc_str=" << jdoc_str;
+//		qDebug() << "jdoc_str=" << jdoc_str;
 		QJsonDocument jsondoc = QJsonDocument::fromJson(jdoc_str);
-		qDebug() << "Jsondoc:" << jsondoc.toJson();
-		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
+//		qDebug() << "Jsondoc:" << jsondoc.toJson();
+//		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
 
 		QSharedPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
 
@@ -749,7 +749,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	qDebug() << "Writing"  << m_libmodels.size() << "libraries";
 	for(size_t i = 0; i < m_libmodels.size(); ++i)
 	{
-		qDebug() << "Model #:" << i;
+//		qDebug() << "Model #:" << i;
 		settings.setArrayIndex(i);
 
 		// Serialize the library to a QJsonObject.
@@ -757,7 +757,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 		m_libmodels[i]->writeToJson(lib_object);
 		// Create a QJsonDocument from the QJsonObject.
 		QJsonDocument jsondoc(lib_object);
-		qDebug() << "LIB AS JSON:" << jsondoc.toJson();
+//		qDebug() << "LIB AS JSON:" << jsondoc.toJson();
 		// Convert the QJSonDocument to a QByteArray.
 		QByteArray jdoc_bytes = jsondoc.toJson();
 

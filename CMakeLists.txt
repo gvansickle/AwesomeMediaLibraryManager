@@ -301,7 +301,8 @@ set(HEADER_FILES
 	logic/CueSheetParser.h
 	gui/settings/SettingsDialog.h
 	gui/settings/SettingsDialogSideWidget.h
-	resources/VersionInfo.h)
+	resources/VersionInfo.h
+	gui/DropMenu.h)
 
 # Source file list.
 set(SOURCE_FILES
@@ -352,8 +353,9 @@ set(SOURCE_FILES
 	gui/settings/SDPageLibrary.cpp
 	gui/settings/SDPageLibrary.h
 	gui/MDINowPlayingView.cpp
-        gui/MDINowPlayingView.h
-        gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h)
+	gui/MDINowPlayingView.h
+	gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
+	gui/DropMenu.cpp)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).

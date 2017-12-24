@@ -20,6 +20,8 @@
 #include "Fraction.h"
 
 #include <QString>
+#include <QDataStream>
+
 #include <numeric>
 
 /// Calculate the Greatest Common Divisor.
@@ -164,3 +166,15 @@ bool operator<(Fraction f1, Fraction f2)
 	return qint64(f1) < qint64(f2);
 }
 
+
+QDataStream& operator<<(QDataStream& out, const Fraction& f)
+{
+	out << f.m_numerator << f.m_denominator << f.m_cheater;
+	return out;
+}
+
+QDataStream& operator>>(QDataStream& in, Fraction& f)
+{
+	in >> f.m_numerator >> f.m_denominator >> f.m_cheater;
+	return in;
+}

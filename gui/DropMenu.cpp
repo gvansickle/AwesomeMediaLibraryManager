@@ -17,17 +17,34 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RegisterQtMetatypes.h"
+#include "DropMenu.h"
 
-#include <logic/LibraryEntry.h>
-#include <utils/Fraction.h>
+#include "utils/Theme.h"
 
-void RegisterQtMetatypes()
+DropMenu::DropMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
 {
-	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
-	qRegisterMetaType<LibraryEntry>();
-	qRegisterMetaTypeStreamOperators<LibraryEntry>("LibraryEntry");
-
-	qRegisterMetaType<Fraction>();
-	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
+	m_act_copy = addAction(Theme::iconFromTheme("edit-copy"), tr("Copy"));
+	m_act_copy->setData(Qt::CopyAction);
+	m_act_move = addAction(Theme::iconFromTheme("go-jump"), tr("Move"));
+	m_act_move->setData(Qt::MoveAction);
+	addSeparator();
+	m_act_cancel = addAction(Theme::iconFromTheme("window-close"), tr("Cancel"));
+	m_act_cancel->setData(Qt::IgnoreAction);
+	// Set the safest choice as the default.
+	setDefaultAction(m_act_cancel);
 }
+
+Qt::DropAction DropMenu::whichAction(QPoint p)
+{
+	QAction *selected_action = exec(p);
+
+	if(selected_action == 0)
+	{
+		// User hit escape.
+		return Qt::IgnoreAction;
+	}
+
+	return selected_action->data().value<Qt::DropAction>();
+}
+
+

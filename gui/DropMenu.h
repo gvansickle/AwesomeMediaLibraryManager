@@ -17,17 +17,34 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "RegisterQtMetatypes.h"
+#ifndef DROPMENU_H
+#define DROPMENU_H
 
-#include <logic/LibraryEntry.h>
-#include <utils/Fraction.h>
+#include <QObject>
+#include <QMenu>
+#include <QAction>
 
-void RegisterQtMetatypes()
+class QString;
+
+/**
+ * @todo write docs
+ */
+class DropMenu : public QMenu
 {
-	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
-	qRegisterMetaType<LibraryEntry>();
-	qRegisterMetaTypeStreamOperators<LibraryEntry>("LibraryEntry");
+    Q_OBJECT
 
-	qRegisterMetaType<Fraction>();
-	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
-}
+public:
+    /**
+     * @todo write docs
+     */
+	DropMenu(const QString &title = tr("Copy or Move?"), QWidget *parent = Q_NULLPTR);
+
+	Qt::DropAction whichAction(QPoint p);
+
+private:
+    QAction *m_act_cancel;
+    QAction *m_act_move;
+    QAction *m_act_copy;
+};
+
+#endif // DROPMENU_H

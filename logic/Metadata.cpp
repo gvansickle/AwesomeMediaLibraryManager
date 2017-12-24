@@ -73,6 +73,6 @@ std::string Metadata::GetFiletypeName() const
 void Metadata::writeToJson(QJsonObject& jo) const
 {
 	Q_ASSERT(pImpl);
-	qDebug() << "Writing Metadata to QJsonObject:" << jo;
+//	qDebug() << "Writing Metadata to QJsonObject:" << jo;
 	jo["metadata"] = QJsonObject::fromVariantMap(MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
 }

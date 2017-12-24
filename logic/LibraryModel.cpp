@@ -331,10 +331,12 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 
 bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
+	qDebug() << "SetData";
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
 	if(role != Qt::EditRole)
 	{
+		qDebug() << "NOT Qt::EditRole";
 		return false;
 	}
 
@@ -342,7 +344,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	if(!index.isValid() || index.column() != 0 || index.row() < 0)
 	{
-		qWarning() << "setData() called with index: valid=" << index.isValid() << ", row=" << index.row() << ", column=" << index.column() << ", parent=" << index.parent();
+		qWarning() << "RETURNING FALSE: setData() called with index: valid=" << index.isValid() << ", row=" << index.row() << ", column=" << index.column() << ", parent=" << index.parent();
 		return false;
 	}
 
@@ -358,7 +360,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	// Tell anybody that's listening that all data in this row has changed.
 	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);
-//	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
+	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
 	emit dataChanged(index, bottom_right_index, {role});
 	return true;
 }
@@ -367,9 +369,10 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 {
 	// Insert a default-constructed row into the model.
-//	qDebug() << "Inserting rows" << row << "to" << row+count-1 << ".";
+	qDebug() << "INSERTING ROWS" << row << "to" << row+count-1 << "UNDER PARENT:" << parent;
 	if(parent.isValid())
 	{
+		qDebug() << "PARENT IS VALID, NOT INSERTING";
 		return false;
 	}
 
@@ -394,8 +397,10 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 
 bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 {
+	qDebug() <<  "REMOVING" << count << "ROWS STARTING AT ROW" <<  row << ", PARENT:" <<  parent;
 	if(parent.isValid())
 	{
+		qDebug() << "PARENT IS VALID, NOT REMOVING";
 		return false;
 	}
 
@@ -403,7 +408,6 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 	{
 		qCritical() << "ROW WAS < 0";
 		return false;
-		//traceback.print_exc();
 	}
 
 	// Notify subclasses of the change.
@@ -520,9 +524,9 @@ void LibraryModel::writeToJson(QJsonObject& json) const
 	qDebug() << "QUrl:" << m_lib_cache_file.fileName() << QUrl::fromLocalFile(m_lib_cache_file.fileName()).toString();
 
 	json["lib_cache_file"] = QUrl::fromLocalFile(m_lib_cache_file.fileName()).toString();
-	qDebug() << "json object:" << json;
+// 	qDebug() << "json object:" << json;
 	QJsonObject lib_object;
-	qDebug() << "Writing library to new json object";
+ 	qDebug() << "Writing library to new json object";
 	m_library.writeToJson(lib_object, false);
 	QJsonDocument jsondoc(lib_object);
 	QByteArray jdoc_str = jsondoc.toJson();
@@ -604,11 +608,14 @@ Qt::DropActions LibraryModel::supportedDropActions() const
 	return Qt::IgnoreAction;
 }
 
+#if 0
 QStringList LibraryModel::mimeTypes() const
 {
 	return {"application/x-grvs-libraryentryref"};
 }
+#endif
 
+#if 0
 QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 {
 	std::vector<std::shared_ptr<LibraryEntry>> row_items;
@@ -634,6 +641,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 	}
 	return nullptr;
 }
+#endif
 
 void LibraryModel::onIncomingFilename(QString filename)
 {
