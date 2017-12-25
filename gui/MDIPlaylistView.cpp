@@ -19,6 +19,7 @@
 
 #include "MDIPlaylistView.h"
 
+#include "DragDropTreeViewStyleProxy.h"
 #include "DropMenu.h"
 #include "ItemDelegateLength.h"
 
@@ -33,8 +34,13 @@
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
 
+
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
+	// Set up a Style Proxy to draw a more natural drop indicator.
+	this->setStyle(new DragDropTreeViewStyleProxy);
+
+
 	m_underlying_model = nullptr;
 
 	// The sort and Filter proxy model.
@@ -77,9 +83,11 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
     // Per this: https://stackoverflow.com/a/43963264
     // "[false] specifies if the source item should be removed (typical in a tree view) or cleared [true] (typical in a table view)"
     setDragDropOverwriteMode(false);
+
     // Default to a Copy drop action.  If it ends up we're dropping onto ourselves, we'll convert this to a Qt::MoveAction
     // in the dropEvent() handler.
     setDefaultDropAction(Qt::CopyAction);
+
     // Show the user where the item will be dropped.
 	setDropIndicatorShown(true);
 
@@ -255,6 +263,12 @@ bool MDIPlaylistView::onBlankAreaToolTip(QHelpEvent* event)
 
 void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 {
+	if(event->source() == this)
+	{
+		// Force Qt::MoveAction to change the cursor decoration.
+		event->setDropAction(Qt::MoveAction);
+	}
+
 	/// QAbstractItemView does this if (mode != InternalMove):
 	/// if (d_func()->canDrop(event)) {
 	///		event->accept();
@@ -267,6 +281,14 @@ void MDIPlaylistView::dragEnterEvent(QDragEnterEvent *event)
 
 void MDIPlaylistView::dragMoveEvent(QDragMoveEvent *event)
 {
+	if(event->source() == this)
+	{
+		// Force Qt::MoveAction to change the cursor decoration.
+		event->setDropAction(Qt::MoveAction);
+	}
+
+	qDebug() << "dropIndicatorPosition:" << dropIndicatorPosition();
+
 	/// @note QTreeView overrides this to start the autoExpandDelay, and then calls the QAbstractItemView::dragMoveEvent(),
 	/// https://github.com/qt/qtbase/blob/bbcd4533889b3f3ae45917d638e06bedc9e5c536/src/widgets/itemviews/qabstractitemview.cpp#L1996
 	/// ...which does a bunch of work.
@@ -294,6 +316,9 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 	///
 	/// So my latest trick here is to detect if we're doing a self-drop, and temporarily switch dragDropMode() to InternalMove.
 	/// This seems to make everything work as expected.
+	///
+	/// @see also this guy: http://www.qtcentre.org/threads/16953-QTreeView-default-drag-action
+	///      who reimplements startDrag().
 
 	qDebug() << "Pre-base-class event:" << event << ", Formats:" << event->mimeData()->formats();
 	// Save the original dragdrop mode.
@@ -314,6 +339,7 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 		if(selected_action == Qt::MoveAction)
 		{
 			// Need to do the same trick here, or the move won't happen.
+			qDebug() << "SELECTED MOVE ACTION";
 			M_WARNING("/// @todo Doesn't work.");
 			setDragDropMode(InternalMove);
 		}
@@ -324,6 +350,7 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 	mdd.dumpMimeData(event->mimeData());
 	MDITreeViewBase::dropEvent(event);
 	qDebug() << "Post-base-class event:" << event;
+
 	// Restore the original dragdrop mode.
 	setDragDropMode(original_mode);
 }

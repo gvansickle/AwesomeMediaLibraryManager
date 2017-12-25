@@ -41,7 +41,7 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 
 	setAttribute(Qt::WA_DeleteOnClose);
 
-	// Enable sorting.
+	// Enable sorting for this view.
 	setSortingEnabled(true);
 	// ...but start unsorted, and don't show the sort indicator.
 	header()->setSortIndicator(m_previous_sort_column, m_sort_order);
@@ -280,6 +280,15 @@ void MDITreeViewBase::onSectionClicked(int logicalIndex)
 
 	header()->setSortIndicator(logicalIndex, m_sort_order);
 }
+
+#if 0
+void MDITreeViewBase::paintEvent(QPaintEvent* event)
+{
+	QTreeView::paintEvent(event);
+	// Take over for the base class' call to paintDropIndicator().
+
+}
+#endif
 
 bool MDITreeViewBase::viewportEvent(QEvent* event)
 {

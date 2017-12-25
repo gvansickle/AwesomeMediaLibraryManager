@@ -97,7 +97,9 @@ protected slots:
 
 protected:
 
-	virtual bool viewportEvent(QEvent *event) override;
+//    void paintEvent(QPaintEvent* event) override;
+	
+    virtual bool viewportEvent(QEvent *event) override;
 
 	/// Return a string suitable for use as a key in the QSettings file.  Used
 	/// to save and restore the state of the "Save As" dialog.
