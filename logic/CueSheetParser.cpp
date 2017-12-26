@@ -41,3 +41,44 @@ Cd *CueSheetParser::parse_cue_sheet_string(const char *bytes)
 
 	return cd;
 }
+
+#if 0
+/// @todo Old code.
+///
+	@pyqtSlot()
+	def scanLibrary(self):
+		dlg = NetworkAwareFileDialog(self, "Select directory to scan")
+		dlg.setFileMode(QFileDialog.Directory)
+		dlg.setAcceptMode(QFileDialog.AcceptOpen)
+		dlg.setOption(QFileDialog.ShowDirsOnly, true)
+		if not dlg.exec_():
+			return
+		qDebug() << QString("Selected directories: {}".format(dlg.selectedUrls()))
+		////// Scan the directory tree
+		cuefiles = []
+		for url in dlg.selectedUrls():
+			dtw = DirTreeWalker([url], ["*.cue"])
+			for fullname in dtw.walk():
+				qDebug() << QString("FILE: {}".format(fullname))
+				cuefiles.append(fullname)
+		print("Names: {}".format(cuefiles))
+		chardet_output = []
+		for path in cuefiles:
+			with open(path.toLocalFile(), "rb") as f:
+				rawdata = f.read()
+				charset = chardet.detect(rawdata)
+				charset["path"] = path
+				qDebug() << QString(charset)
+				chardet_output.append(charset)
+		print(chardet_output)
+		bad_cuesheets = []
+		for entry in chardet_output:
+			if entry["confidence"] < 0.66:
+				logger.warning("Low chardet confidence: {}".format(entry))
+				continue
+			if entry["encoding"] not in ["ascii", "utf-8"]:
+				print("Found non-UTF-8 encoded file: {}".format(entry))
+				bad_cuesheets.append(entry)
+		cuesheet_fixer = CueSheetFixDialog(self, bad_cuesheets)
+		cuesheet_fixer.exec_()
+#endif
