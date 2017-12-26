@@ -54,12 +54,17 @@ class MainWindow: public QMainWindow
 {
     Q_OBJECT
 
+signals:
+	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+
+
 public:
     MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
     ~MainWindow() override;
 
-signals:
-	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+public slots:
+	void updateActions();
+
 
 protected:
 	void closeEvent(QCloseEvent* event) override;
@@ -99,13 +104,16 @@ private slots:
 
 private:
     void createActions();
-    void createMenus();
+	void createEditActions();
+	void createMenus();
     void createToolBars();
     void createStatusBar();
     void createDockWindows();
     void updateMenus();
 
     void updateWindowMenu();
+
+
 
 	/// @name Signal/slot Connection management.
 	///@{
@@ -192,6 +200,9 @@ private:
 	QSignalMapper *m_windowMapper;
 
     /// Actions
+
+	/// @name File actions
+	/// @{
 	QAction* m_importLibAct;
 	QAction* m_rescanLibraryAct;
 	QAction* m_saveLibraryAsAct;
@@ -202,6 +213,15 @@ private:
 	QAction* m_exitAction;
 	QAction* m_scanLibraryAction;
 	QAction* m_settingsAct;
+	/// @}
+
+	/// @name Edit actions.
+	/// @{
+	QAction *m_act_cut;
+	QAction *m_act_copy;
+	QAction *m_act_paste;
+	QAction *m_act_delete;
+	/// @}
 
 	/// @name Window actions.
 	/// @{
@@ -227,6 +247,7 @@ private:
 
     /// Menus
 	QMenu* m_fileMenu;
+	QMenu *m_menu_edit;
 	QMenu* m_viewMenu;
 	QMenu* m_toolsMenu;
 	QMenu* m_windowMenu;

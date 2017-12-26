@@ -122,6 +122,8 @@ M_WARNING("TODO: ifdef this to development only")
     createDockWindows();
     updateMenus();
 
+	updateActions();
+
     ////// Connect up signals and slots.
     createConnections();
 
@@ -138,6 +140,50 @@ M_WARNING("TODO: ifdef this to development only")
 
 MainWindow::~MainWindow()
 {
+
+}
+
+void MainWindow::updateActions()
+{
+	qDebug() << "ENTER";
+	if(activeMdiChild() != nullptr)
+	{
+		qDebug() << "Active child:" << activeMdiChild();
+
+		// We have an active MDI child.  What is it?
+		auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
+		auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
+		auto childBaseClass = dynamic_cast<MDITreeViewBase*>(activeMdiChild());
+
+		if(childBaseClass)
+		{
+			// Update edit actions.
+
+			// It's something that might have a selection.
+			bool has_selection = childBaseClass->selectionModel()->hasSelection();
+
+			// Can copy from any derived class if it has a selection.
+			m_act_copy->setEnabled(has_selection);
+
+			// A playlist can also cut and delete.
+			auto mutating_actions = {m_act_cut, m_act_delete};
+			for(auto act : mutating_actions)
+			{
+				act->setEnabled(childIsPlaylist && has_selection);
+			}
+
+			// We can paste into a Playlist regardless of selection.
+			m_act_paste->setEnabled(childIsPlaylist);
+
+			return;
+		}
+	}
+
+	// No active MDI child, or not one that could have a selection or be pasted into.
+	for(auto i : {m_act_copy, m_act_cut, m_act_paste, m_act_delete})
+	{
+		i->setDisabled(true);
+	}
 
 }
 
@@ -182,6 +228,11 @@ void MainWindow::createActions()
                               QKeySequence::Quit,
                               "Exit application");
 	connect_trig(m_exitAction, this, &MainWindow::close);
+
+	//
+	// Edit actions.
+	//
+	createEditActions();
 
 	//////// Tools actions.
 
@@ -252,6 +303,21 @@ void MainWindow::createActions()
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 }
 
+void MainWindow::createEditActions()
+{
+	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
+							tr("Cut the current selection to the clipboard"));
+	m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), this, QKeySequence::Copy,
+							 tr("Copy the current selection to the clipboard"));
+	//connect_trig(m_act_copy, this, &MainWindow::copy);
+	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
+							  tr("Paste the clipboard's contents into the current selection"));
+
+	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence::Delete,
+							   tr("Delete this entry"));
+
+}
+
 
 void MainWindow::createMenus()
 {
@@ -274,6 +340,14 @@ void MainWindow::createMenus()
                           //actPrintPreview,
                           //fileMenu.addSeparator(),
 						  m_exitAction});
+
+	// Edit menu.
+	m_menu_edit = menuBar()->addMenu("&Edit");
+	m_menu_edit->addActions({
+								m_act_cut,
+								m_act_copy,
+								m_act_paste
+							});
 
     // Create the View menu.
 	m_viewMenu = menuBar()->addMenu("&View");
@@ -378,6 +452,9 @@ void MainWindow::createConnections()
 {
 	/// @todo
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
+
+	// Connect menu "about to shows" to the action updater.
+	connect(m_menu_edit, &QMenu::aboutToShow, this, &MainWindow::updateActions);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(&m_player, m_controls);
