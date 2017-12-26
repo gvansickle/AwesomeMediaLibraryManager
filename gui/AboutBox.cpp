@@ -61,7 +61,7 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
 
 int AboutBox::exec()
 {
-    QMessageBox::about(this->parentWidget(), m_title_str, m_text_str);
+	QMessageBox::about(this->parentWidget(), m_title_str, m_text_str);
     //return QDialog::exec();
 
     return 0;
