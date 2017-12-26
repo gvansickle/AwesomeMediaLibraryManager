@@ -221,6 +221,7 @@ private:
 	QAction *m_act_copy;
 	QAction *m_act_paste;
 	QAction *m_act_delete;
+	QAction *m_act_select_all;
 	/// @}
 
 	/// @name Window actions.

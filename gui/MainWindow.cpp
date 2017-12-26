@@ -161,9 +161,14 @@ void MainWindow::updateActions()
 
 			// It's something that might have a selection.
 			bool has_selection = childBaseClass->selectionModel()->hasSelection();
+			// And might contain items.
+			bool has_items = childBaseClass->model()->rowCount() > 0;
 
 			// Can copy from any derived class if it has a selection.
 			m_act_copy->setEnabled(has_selection);
+
+			// We can only select all if it has some items.
+			m_act_select_all->setEnabled(has_items);
 
 			// A playlist can also cut and delete.
 			auto mutating_actions = {m_act_cut, m_act_delete};
@@ -180,7 +185,7 @@ void MainWindow::updateActions()
 	}
 
 	// No active MDI child, or not one that could have a selection or be pasted into.
-	for(auto i : {m_act_copy, m_act_cut, m_act_paste, m_act_delete})
+	for(auto i : {m_act_copy, m_act_cut, m_act_paste, m_act_delete, m_act_select_all})
 	{
 		i->setDisabled(true);
 	}
@@ -316,6 +321,9 @@ void MainWindow::createEditActions()
 	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence::Delete,
 							   tr("Delete this entry"));
 
+	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
+								   QKeySequence::SelectAll, tr("Select all items in the current list"));
+
 }
 
 
@@ -346,7 +354,9 @@ void MainWindow::createMenus()
 	m_menu_edit->addActions({
 								m_act_cut,
 								m_act_copy,
-								m_act_paste
+								m_act_paste,
+								m_menu_edit->addSection(tr("Selections")),
+								m_act_select_all
 							});
 
     // Create the View menu.
