@@ -242,11 +242,11 @@ void MainWindow::createActions()
 
     // Window actions.
 	m_tabs_or_subwindows_group = new QActionGroup(this);
-	m_tabs_act = make_action(QIcon::fromTheme(""), "Tabs", m_tabs_or_subwindows_group,
+	m_tabs_act = make_action(QIcon::fromTheme("tab-duplicate"), "Tabs", m_tabs_or_subwindows_group,
 							 QKeySequence(), "Display as tabs");
 	m_tabs_act->setCheckable(true);
 
-	m_subwins_act = make_action(QIcon::fromTheme(""), "Subwindows", m_tabs_or_subwindows_group,
+	m_subwins_act = make_action(QIcon::fromTheme("window-duplicate"), "Subwindows", m_tabs_or_subwindows_group,
 								QKeySequence(), "Display as subwindows");
 	m_subwins_act->setCheckable(true);
 	m_tabs_act->setChecked(true);
