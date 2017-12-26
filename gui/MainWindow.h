@@ -91,6 +91,8 @@ private slots:
     void openPlaylist();
 	void savePlaylistAs();
 
+	void onDelete();
+
 	void onPlayTrackNowSignal(QUrl url);
 	void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
 	void onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry);

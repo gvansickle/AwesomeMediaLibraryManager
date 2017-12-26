@@ -83,6 +83,9 @@ protected:
 	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
 	QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
 
+	/// keyPressEvent override for handling delete key.
+	void keyPressEvent(QKeyEvent *event) override;
+
 protected slots:
 	virtual void playlistPositionChanged(qint64 position);
 

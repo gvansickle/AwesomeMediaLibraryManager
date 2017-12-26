@@ -320,6 +320,7 @@ void MainWindow::createEditActions()
 
 	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence::Delete,
 							   tr("Delete this entry"));
+	connect_trig(m_act_delete, this, &MainWindow::onDelete);
 
 	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
 								   QKeySequence::SelectAll, tr("Select all items in the current list"));
@@ -706,7 +707,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	}
 }
 
-/*Note: Returns the QMdiSubWindow widget(), not the subwindow itself. */
+/*Note: Returns the QMdiSubWindow's widget(), not the subwindow itself. */
 MDITreeViewBase* MainWindow::activeMdiChild()
 {
 	auto activeSubWindow = m_mdi_area->activeSubWindow();
@@ -1152,6 +1153,23 @@ void MainWindow::savePlaylistAs()
 		if(playlist_ptr != nullptr && playlist_ptr->saveAs())
 		{
 			statusBar()->showMessage("Playlist saved", 2000);
+		}
+	}
+}
+
+void MainWindow::onDelete()
+{
+	qDebug() << "DELETE";
+
+	auto child_treeview = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
+	if(child_treeview)
+	{
+		// It's something we can maybe delete from.
+		QModelIndex index = child_treeview->selectionModel()->currentIndex();
+		QAbstractItemModel *model = child_treeview->model();
+		if (model->removeRow(index.row(), index.parent()))
+		{
+			updateActions();
 		}
 	}
 }

@@ -477,5 +477,51 @@ QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &unde
 	return proxy_model_index;
 }
 
+/// @todo Move this where everyone can use it.
+static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
+{
+	QList<QPersistentModelIndex> retval;
+
+	for(auto i : mil)
+	{
+		retval.append(i);
+	}
+	return retval;
+}
+
+void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
+{
+	// QAbstractItemView::keyPressEvent() ->ignore()'s this event if it's the Delete key:
+	// https://github.com/qt/qtbase/blob/c4f397ee11fc3cea1fc132ebe1db24e3970bb477/src/widgets/itemviews/qabstractitemview.cpp#L2433
+
+	bool need_to_update_actions = false;
+
+	if(event->matches(QKeySequence::Delete))
+	{
+		//qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
+		// Remove the current selection.
+		QModelIndexList mil = selectionModel()->selectedRows();
+		auto pmil = toQPersistentModelIndexList(mil);
+		auto m = model();
+		for(auto pi : pmil)
+		{
+			if(m->removeRow(pi.row()))
+			{
+				need_to_update_actions = true;
+			}
+		}
+		event->accept();
+
+		if(need_to_update_actions)
+		{
+M_WARNING("Not sure if we really need to do anything here.");
+			qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
+		}
+
+		return;
+	}
+	MDITreeViewBase::keyPressEvent(event);
+}
+
 
 
