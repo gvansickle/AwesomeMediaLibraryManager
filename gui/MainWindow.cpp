@@ -318,7 +318,7 @@ void MainWindow::createEditActions()
 	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
 							  tr("Paste the clipboard's contents into the current selection"));
 
-	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence::Delete,
+	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence(),///QKeySequence::Delete,
 							   tr("Delete this entry"));
 	connect_trig(m_act_delete, this, &MainWindow::onDelete);
 
