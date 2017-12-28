@@ -563,9 +563,11 @@ void MainWindow::updateConnections()
 //		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
 
         // Disconnect actions from whatever they were connected to.
+        m_act_copy->disconnect();
         m_act_select_all->disconnect();
-        
+                
         // Connect them to the new MDI Child.
+        connect_trig(m_act_copy, childIsMDITreeViewBase, &MDITreeViewBase::onCopy);
         connect_trig(m_act_select_all, childIsMDITreeViewBase, &MDITreeViewBase::onSelectAll);
         
         auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());

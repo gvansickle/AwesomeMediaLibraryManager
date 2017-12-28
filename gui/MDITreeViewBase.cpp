@@ -26,6 +26,7 @@
 #include <QDebug>
 #include <QMenu>
 #include <QAction>
+#include <QClipboard>
 #include <QHeaderView>
 #include <QSaveFile>
 #include <logic/LibrarySortFilterProxyModel.h>
@@ -214,18 +215,18 @@ void MDITreeViewBase::onCopy()
     // Get the current selection.
     QModelIndexList mil = selectionModel()->selectedRows();
     
-    auto pmil = toQPersistentModelIndexList(mil);
-    auto m = model();
-    for(auto pi : pmil)
+    if(mil.isEmpty())
     {
-        if(m->removeRow(pi.row()))
-        {
-                need_to_update_actions = true;
-        }
+        // Nothing to copy.
+        return;
     }
+    
+    auto m = model();
+    QMimeData* copied_rows = m->mimeData(mil);
+
+    // Copy the rows to the clipboard.
     QClipboard *clipboard = QGuiApplication::clipboard();
-    
-    
+    clipboard->setMimeData(copied_rows, QClipboard::Clipboard);
 }
 
 void MDITreeViewBase::onSelectAll()

@@ -313,7 +313,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
     /// initiator of the drag should remove the source item if a Qt::MoveAction is performed."
     /// So if we're in the model here with a Qt::MoveAction, we shouldn't need to do the remove.
 
-	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->lib_item_list;
+	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->m_lib_item_list;
 	auto rows = libentries.size();
 
 	insertRows(beginRow, rows, QModelIndex());
@@ -334,15 +334,15 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	else if(action == Qt::MoveAction)
 	{
         qDebug() << "MoveAction START";
-		for(auto libentry : libentries)
-		{
-			qDebug() << "Moving";
-			// The dropped libentries should actually be PlaylistEntries.
-			std::shared_ptr<PlaylistModelItem> plmi = std::dynamic_pointer_cast<PlaylistModelItem>(libentry);
-			Q_ASSERT(plmi != 0);
-			setData(index(beginRow, 0), QVariant::fromValue(plmi));
-			beginRow += 1;
-		}
+            for(auto libentry : libentries)
+            {
+                    qDebug() << "Moving";
+                    // The dropped libentries should actually be PlaylistEntries.
+                    std::shared_ptr<PlaylistModelItem> plmi = std::dynamic_pointer_cast<PlaylistModelItem>(libentry);
+                    Q_ASSERT(plmi != 0);
+                    setData(index(beginRow, 0), QVariant::fromValue(plmi));
+                    beginRow += 1;
+            }
         qDebug() << "MoveAction END";
 		return true;
 	}
