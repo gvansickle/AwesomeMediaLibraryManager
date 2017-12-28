@@ -40,7 +40,7 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	m_isUntitled = true;
 
 	setAttribute(Qt::WA_DeleteOnClose);
-
+        
 	// Enable sorting for this view.
 	setSortingEnabled(true);
 	// ...but start unsorted, and don't show the sort indicator.
@@ -203,6 +203,16 @@ QString MDITreeViewBase::getDisplayName() const
 {
 	return userFriendlyCurrentFile();
 }
+
+//
+// Public slots.
+//
+
+void MDITreeViewBase::onSelectAll()
+{
+    selectAll();
+}
+
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)
 {

@@ -49,7 +49,7 @@ public:
 public slots:
 	void next();
 	void previous();
-
+        
 	/**
  	 * Slot which appends the incoming library entry and starts playing it.
  	 * Intended for use primarily on the single "Now Playing" playlist.

@@ -71,49 +71,49 @@
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
-	// Name our GUI thread.
-	QThread::currentThread()->setObjectName("GUIThread");
-	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
+    // Name our GUI thread.
+    QThread::currentThread()->setObjectName("GUIThread");
+    qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
 
-	// Get some standard paths.
+    // Get some standard paths.
     // App-specific cache directory.
-	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
-	qInfo() << "App cache dir:" << m_cachedir;
+    m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    qInfo() << "App cache dir:" << m_cachedir;
     // App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
-	m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
-	qInfo() << "App data dir:" << m_appdatadir;
+    m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+    qInfo() << "App data dir:" << m_appdatadir;
 
-	// Look for icons.
-	Theme::initialize();
+    // Look for icons.
+    Theme::initialize();
 
-	/// @todo
-	changeIconTheme(QIcon::themeName());
+    /// @todo
+    changeIconTheme(QIcon::themeName());
 
     // Follow the system style for the Icon&/|Text setting for toolbar buttons.
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
 M_WARNING("TODO: ifdef this to development only")
-	m_experimental = new Experimental(this);
+    m_experimental = new Experimental(this);
 
     // The list of LibraryModels.
-	m_libmodels.clear();
+    m_libmodels.clear();
 
     // The list of PlaylistModels.
-	m_playlist_models.clear();
+    m_playlist_models.clear();
 
-	m_controls = new PlayerControls(this);
+    m_controls = new PlayerControls(this);
 
     // Create the MDIArea and set it as the central widget.
-	m_mdi_area = new MDIArea(this);
-	setCentralWidget(m_mdi_area);
+    m_mdi_area = new MDIArea(this);
+    setCentralWidget(m_mdi_area);
 
-	connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::subWindowActivated);
+    connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::subWindowActivated);
 
     // Mapper for the Window menu.
-	m_windowMapper = new QSignalMapper(this);
-	connect(m_windowMapper, SIGNAL(mapped(QWidget*)),
-            this, SLOT(setActiveSubWindow(QWidget*)));
+    m_windowMapper = new QSignalMapper(this);
+    connect(m_windowMapper, SIGNAL(mapped(QWidget*)),
+        this, SLOT(setActiveSubWindow(QWidget*)));
 
     createActions();
     createMenus();
@@ -122,7 +122,7 @@ M_WARNING("TODO: ifdef this to development only")
     createDockWindows();
     updateMenus();
 
-	updateActions();
+    updateActions();
 
     ////// Connect up signals and slots.
     createConnections();
@@ -134,7 +134,7 @@ M_WARNING("TODO: ifdef this to development only")
     setUnifiedTitleAndToolBarOnMac(true);
 
     // Send ourself a message to re-load the files we had open last time we were closed.
-	QTimer::singleShot(0, this, &MainWindow::onStartup);
+    QTimer::singleShot(0, this, &MainWindow::onStartup);
 
 }
 
@@ -239,8 +239,10 @@ void MainWindow::createActions()
 	//
 	createEditActions();
 
-	//////// Tools actions.
-
+        //
+	// Tools actions.
+        //
+        
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
 							   ///triggered=scanLibrary)
@@ -310,21 +312,21 @@ void MainWindow::createActions()
 
 void MainWindow::createEditActions()
 {
-	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
-							tr("Cut the current selection to the clipboard"));
-	m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), this, QKeySequence::Copy,
-							 tr("Copy the current selection to the clipboard"));
-	//connect_trig(m_act_copy, this, &MainWindow::copy);
-	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
-							  tr("Paste the clipboard's contents into the current selection"));
+    m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
+                                                    tr("Cut the current selection to the clipboard"));
+    m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), this, QKeySequence::Copy,
+                                                     tr("Copy the current selection to the clipboard"));
+    //connect_trig(m_act_copy, this, &MainWindow::copy);
+    m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
+                                                      tr("Paste the clipboard's contents into the current selection"));
 
-	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence(),///QKeySequence::Delete,
-							   tr("Delete this entry"));
-	connect_trig(m_act_delete, this, &MainWindow::onDelete);
+    m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence(),///QKeySequence::Delete,
+                                                       tr("Delete this entry"));
+    connect_trig(m_act_delete, this, &MainWindow::onDelete);
 
-	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
-								   QKeySequence::SelectAll, tr("Select all items in the current list"));
-
+    m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
+                                                               QKeySequence::SelectAll, tr("Select all items in the current list"));
+    connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
 }
 
 
@@ -552,40 +554,50 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
 
 void MainWindow::updateConnections()
 {
-	if(activeMdiChild() != nullptr)
-	{
+    auto childIsMDITreeViewBase = dynamic_cast<MDITreeViewBase*>(activeMdiChild());
+    auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
+    auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
+
+    if(childIsMDITreeViewBase)
+    {
 //		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
 
-		auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
-		auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
+        // Disconnect actions from whatever they were connected to.
+        m_act_select_all->disconnect();
+        
+        // Connect them to the new MDI Child.
+        connect_trig(m_act_select_all, childIsMDITreeViewBase, &MDITreeViewBase::onSelectAll);
+        
+        auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
+        auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
 
-		if(childIsLibrary != nullptr)
-		{
-			auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
-			                                 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
-			                                 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if (!connection_handle)
-			{
+        if(childIsLibrary)
+        {
+                auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
+                                                 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
+                                                 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+                if (!connection_handle)
+                {
 //				qDebug() << "Connection failed: already connected?";
-			}
+                }
 
-			connection_handle = connect(childIsLibrary,
-			                            &MDILibraryView::playTrackNowSignal,
-			                            this,
-			                            &MainWindow::onPlayTrackNowSignal,
-			                            Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if (!connection_handle)
-			{
+                connection_handle = connect(childIsLibrary,
+                                            &MDILibraryView::playTrackNowSignal,
+                                            this,
+                                            &MainWindow::onPlayTrackNowSignal,
+                                            Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+                if (!connection_handle)
+                {
 //				qDebug() << "Connection failed: already connected?";
-			}
-		}
-	}
+                }
+        }
+    }
 }
 
 void MainWindow::updateMenus()
 {
-		// Update action enable states.  Mainly depends on if we have an MDI child window open.
-//        qDebug() << "Updating menu status";
+	// Update action enable states.  Mainly depends on if we have an MDI child window open.
+//      qDebug() << "Updating menu status";
         bool hasMdiChild = activeMdiChild() != nullptr;
 
         bool childIsPlaylist = (dynamic_cast<MDIPlaylistView*>(activeMdiChild()) != nullptr);
@@ -741,16 +753,16 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 
 void MainWindow::setActiveSubWindow(QWidget *window)
 {
-//	qDebug() << "setActiveSubWindow: '" << window << "', '" << window->windowTitle() << "'";
-	if(window != nullptr)
-	{
-		m_mdi_area->setActiveSubWindow(dynamic_cast<QMdiSubWindow*>(window));
-	}
+//qDebug() << "setActiveSubWindow: '" << window << "', '" << window->windowTitle() << "'";
+    if(window != nullptr)
+    {
+            m_mdi_area->setActiveSubWindow(dynamic_cast<QMdiSubWindow*>(window));
+    }
 }
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
-//	qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+    //qDebug() << "Keyboard focus has changed from" << old << "to" << now;
 }
 
 //////
@@ -1156,6 +1168,12 @@ void MainWindow::savePlaylistAs()
 		}
 	}
 }
+
+void MainWindow::onSelectAll()
+{
+    qDebug() << "Select All action";
+}
+
 
 void MainWindow::onDelete()
 {

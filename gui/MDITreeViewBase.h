@@ -54,6 +54,11 @@ public:
 	/// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
 	/// Default implementation returns userFriendlyCurrentFile().
 	virtual QString getDisplayName() const;
+        
+public slots:
+    
+    void onSelectAll();
+
 
 protected:
 
