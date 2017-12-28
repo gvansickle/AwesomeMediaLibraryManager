@@ -12,4 +12,8 @@ CTestTestfile.cmake
 /cmake-build-*
 moc_*.cpp
 mocs_*.cpp
+moc*.h
+/.kdev4
+/.vscode
+/.idea
 
