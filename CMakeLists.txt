@@ -305,7 +305,8 @@ set(HEADER_FILES
 	resources/VersionInfo.h
 	gui/DropMenu.h
 	logic/ModelUserRoles.h
-	gui/DragDropTreeViewStyleProxy.h)
+	gui/DragDropTreeViewStyleProxy.h
+        utils/ModelHelpers.h)
 
 # Source file list.
 set(SOURCE_FILES

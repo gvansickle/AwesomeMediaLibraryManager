@@ -38,7 +38,7 @@ class LibraryEntryMimeData : public QMimeData
 public:
 	LibraryEntryMimeData();
 
-	std::vector<std::shared_ptr<LibraryEntry>> lib_item_list;
+	std::vector<std::shared_ptr<LibraryEntry>> m_lib_item_list;
 
 private:
 	Q_DISABLE_COPY(LibraryEntryMimeData)

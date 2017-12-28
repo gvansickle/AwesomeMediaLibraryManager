@@ -33,6 +33,7 @@
 #include <logic/LibrarySortFilterProxyModel.h>
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
+#include "utils/ModelHelpers.h"
 
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
@@ -477,18 +478,6 @@ QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &unde
 	return proxy_model_index;
 }
 
-/// @todo Move this where everyone can use it.
-static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
-{
-	QList<QPersistentModelIndex> retval;
-
-	for(auto i : mil)
-	{
-		retval.append(i);
-	}
-	return retval;
-}
-
 void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 {
 	// QAbstractItemView::keyPressEvent() ->ignore()'s this event if it's the Delete key:
@@ -514,7 +503,7 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 
 		if(need_to_update_actions)
 		{
-M_WARNING("Not sure if we really need to do anything here.");
+    ///@note Not sure if we really need to do anything here, it doesn't look like it.
 			qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
 		}
 

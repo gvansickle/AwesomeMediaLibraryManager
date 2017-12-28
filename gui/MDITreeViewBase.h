@@ -57,6 +57,7 @@ public:
         
 public slots:
     
+    void onCopy();
     void onSelectAll();
 
 
@@ -106,40 +107,40 @@ protected:
 	
     virtual bool viewportEvent(QEvent *event) override;
 
-	/// Return a string suitable for use as a key in the QSettings file.  Used
-	/// to save and restore the state of the "Save As" dialog.
-	/// Default is none, settings won't be saved.
-	virtual QString getSaveAsDialogKey() const { return QString(); }
+    /// Return a string suitable for use as a key in the QSettings file.  Used
+    /// to save and restore the state of the "Save As" dialog.
+    /// Default is none, settings won't be saved.
+    virtual QString getSaveAsDialogKey() const { return QString(); }
 
-	/// Return True if you handle it, False if you don't.
-	virtual bool onBlankAreaToolTip(QHelpEvent* event);
+    /// Return True if you handle it, False if you don't.
+    virtual bool onBlankAreaToolTip(QHelpEvent* event);
 
-	/**
-	 * Called by closeEvent().  If document shows as modified, pops up a "Do you want to save?" box,
-	 * then calls save() or not depending on the user's choice.
-	 * @return false if file was modified and user cancelled, true otherwise.
-	 */
-	virtual bool maybeSave();
+    /**
+     * Called by closeEvent().  If document shows as modified, pops up a "Do you want to save?" box,
+     * then calls save() or not depending on the user's choice.
+     * @return false if file was modified and user cancelled, true otherwise.
+     */
+    virtual bool maybeSave();
 
-	/**
-	 * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
-	 */
-	QMdiSubWindow* getQMdiSubWindow() const;
+    /**
+     * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
+     */
+    QMdiSubWindow* getQMdiSubWindow() const;
 
-	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
-	virtual QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) = 0;
+    /// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
+    virtual QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) = 0;
 
-	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
-	virtual QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) = 0;
+    /// Helper function to convert from underlying model indexes to proxy QModelIndexes.
+    virtual QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) = 0;
 
 private:
-	Q_DISABLE_COPY(MDITreeViewBase)
+    Q_DISABLE_COPY(MDITreeViewBase)
 
-	/// The column which we last saw was being sorted.
-	/// This is used to enable tri-state column sort functionality.
-	int m_previous_sort_column {-1};
+    /// The column which we last saw was being sorted.
+    /// This is used to enable tri-state column sort functionality.
+    int m_previous_sort_column {-1};
 
-	Qt::SortOrder m_sort_order { Qt::AscendingOrder };
+    Qt::SortOrder m_sort_order { Qt::AscendingOrder };
 
 };
 

@@ -29,6 +29,7 @@
 #include <QHeaderView>
 #include <QSaveFile>
 #include <logic/LibrarySortFilterProxyModel.h>
+#include <utils/ModelHelpers.h>
 
 #include "gui/NetworkAwareFileDialog.h"
 
@@ -207,6 +208,25 @@ QString MDITreeViewBase::getDisplayName() const
 //
 // Public slots.
 //
+
+void MDITreeViewBase::onCopy()
+{
+    // Get the current selection.
+    QModelIndexList mil = selectionModel()->selectedRows();
+    
+    auto pmil = toQPersistentModelIndexList(mil);
+    auto m = model();
+    for(auto pi : pmil)
+    {
+        if(m->removeRow(pi.row()))
+        {
+                need_to_update_actions = true;
+        }
+    }
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    
+    
+}
 
 void MDITreeViewBase::onSelectAll()
 {
