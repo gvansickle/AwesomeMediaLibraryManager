@@ -377,6 +377,36 @@ void MDIPlaylistView::previous()
 	m_underlying_model->qmplaylist()->previous();
 }
 
+void MDIPlaylistView::onPaste()
+{
+    // Get the current selection.
+	QModelIndexList mil = selectionModel()->selectedRows();
+M_WARNING("TODO")
+	
+	QClipboard *clipboard = QGuiApplication::clipboard();
+	if(!clipboard)
+	{
+		return;
+	}
+
+	QDropEvent de(QPos(0,0), Qt::CopyAction, clipboard->mimeData(), Qt::LeftButton, 0);
+
+	onDropEvent(de);
+	
+//	if(mil.isEmpty())
+//    {
+//        // Nothing to copy.
+//        return;
+//    }
+//    
+//    auto m = model();
+//    QMimeData* copied_rows = m->mimeData(mil);
+//
+//    // Copy the rows to the clipboard.
+//    QClipboard *clipboard = QGuiApplication::clipboard();
+//    clipboard->setMimeData(copied_rows, QClipboard::Clipboard);
+}
+
 /**
  * Slot which appends the incoming library entry and starts playing it.
  */
@@ -499,14 +529,12 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 				need_to_update_actions = true;
 			}
 		}
+                
+                // Don't call the parent class' keyPressEvent().
+                // We've done what we need to here, the Qt5 docs say not to do it,
+                // and it's possible to delete (or at least enable editing on)
+                // another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
 		event->accept();
-
-		if(need_to_update_actions)
-		{
-    ///@note Not sure if we really need to do anything here, it doesn't look like it.
-			qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
-		}
-
 		return;
 	}
 	MDITreeViewBase::keyPressEvent(event);

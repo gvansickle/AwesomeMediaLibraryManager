@@ -312,15 +312,6 @@ void MDITreeViewBase::onSectionClicked(int logicalIndex)
 	header()->setSortIndicator(logicalIndex, m_sort_order);
 }
 
-#if 0
-void MDITreeViewBase::paintEvent(QPaintEvent* event)
-{
-	QTreeView::paintEvent(event);
-	// Take over for the base class' call to paintDropIndicator().
-
-}
-#endif
-
 bool MDITreeViewBase::viewportEvent(QEvent* event)
 {
 	if(event->type() == QEvent::ToolTip)

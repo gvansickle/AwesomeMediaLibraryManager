@@ -50,6 +50,10 @@ public slots:
 	void next();
 	void previous();
         
+        /// Paste from clipboard.
+        /// Related const operations (copy, select all, etc) are in MDITreeViewBase.
+        void onPaste();
+        
 	/**
  	 * Slot which appends the incoming library entry and starts playing it.
  	 * Intended for use primarily on the single "Now Playing" playlist.
