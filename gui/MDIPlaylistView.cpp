@@ -393,22 +393,6 @@ M_WARNING("TODO")
 	}
 
 	m_underlying_model->dropMimeData(clipboard->mimeData(), Qt::CopyAction, -1, -1, QModelIndex());
-	//QDropEvent de(QPoint(0,0), Qt::CopyAction, clipboard->mimeData(), Qt::LeftButton, 0);
-//
-//	onDropEvent(de);
-	
-//	if(mil.isEmpty())
-//    {
-//        // Nothing to copy.
-//        return;
-//    }
-//    
-//    auto m = model();
-//    QMimeData* copied_rows = m->mimeData(mil);
-//
-//    // Copy the rows to the clipboard.
-//    QClipboard *clipboard = QGuiApplication::clipboard();
-//    clipboard->setMimeData(copied_rows, QClipboard::Clipboard);
 }
 
 /**
@@ -540,6 +524,14 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
                 // another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
 		event->accept();
 		return;
+	}
+	else if(event->matches(QKeySequence::Copy))
+	{
+		qDebug() << "Copy Key";
+	}
+	else if(event->matches(QKeySequence::Paste))
+	{
+		qDebug() << "Paste Key";
 	}
 	MDITreeViewBase::keyPressEvent(event);
 }

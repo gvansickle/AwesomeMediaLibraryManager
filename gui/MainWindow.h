@@ -63,7 +63,7 @@ public:
     ~MainWindow() override;
 
 public slots:
-	void updateActions();
+	void updateActionEnableStates();
 
 
 protected:
@@ -72,65 +72,70 @@ protected:
 
 private slots:
     void subWindowActivated(QMdiSubWindow* subwindow);
-	void setActiveSubWindow(QWidget* window);
-	void onFocusChanged(QWidget* old, QWidget* now);
+    void setActiveSubWindow(QWidget* window);
+    void onFocusChanged(QWidget* old, QWidget* now);
 
-	void changeStyle(const QString& styleName);
-	void changeIconTheme(const QString& iconThemeName);
+    void changeStyle(const QString& styleName);
+    void changeIconTheme(const QString& iconThemeName);
 
-	void onStatusSignal(LibState state,  qint64 current, qint64 max);
+    void onStatusSignal(LibState state,  qint64 current, qint64 max);
 
-	void onShowLibrary(LibraryModel* libmodel);
-	void onRemoveDirFromLibrary(LibraryModel* libmodel);
+    void onShowLibrary(LibraryModel* libmodel);
+    void onRemoveDirFromLibrary(LibraryModel* libmodel);
 
-	void onRescanLibrary();
+    void onRescanLibrary();
 
-	void startSettingsDialog();
+    void startSettingsDialog();
 
     void newPlaylist();
     void openPlaylist();
-	void savePlaylistAs();
+    void savePlaylistAs();
 
+    /// @name Edit action forwarders.
+    /// @{
+    void onCut();
+    void onCopy();
+    void onPaste();
     void onSelectAll();
     void onDelete();
+    /// @}
 
-	void onPlayTrackNowSignal(QUrl url);
-	void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
-	void onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry);
+    void onPlayTrackNowSignal(QUrl url);
+    void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
+    void onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry);
 
-	void doExperiment();
+    void doExperiment();
 
-	void onChangeWindowMode(QAction* action);
+    void onChangeWindowMode(QAction* action);
 
-	/// Filter slots.
-	void onTextFilterChanged();
+    /// Filter slots.
+    void onTextFilterChanged();
 
 private:
     void createActions();
-	void createEditActions();
-	void createMenus();
+    void createEditActions();
+    
+    void createMenus();
     void createToolBars();
     void createStatusBar();
     void createDockWindows();
+    
     void updateMenus();
-
     void updateWindowMenu();
 
+    /// @name Signal/slot Connection management.
+    ///@{
+    void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
+    void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
+    void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
 
+    void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
 
-	/// @name Signal/slot Connection management.
-	///@{
-	void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
-	void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
-	void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
+    void connectLibraryViewAndMainWindow(MDILibraryView* lv);
+    void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
+    ///@}
 
-	void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
-
-	void connectLibraryViewAndMainWindow(MDILibraryView* lv);
-	void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
-	///@}
-
-	void stopAllBackgroundThreads();
+    void stopAllBackgroundThreads();
 
     void importLib();
     
@@ -142,11 +147,11 @@ private:
 	/// Reads the primary settings.
     void readSettings();
     void onStartup();
-	void openWindows();
-	void writeSettings();
-	void writeLibSettings(QSettings& settings);
-	void readLibSettings(QSettings& settings);
-	///@}
+    void openWindows();
+    void writeSettings();
+    void writeLibSettings(QSettings& settings);
+    void readLibSettings(QSettings& settings);
+    ///@}
 
     /// Signal-Slot-related functions.
     void createConnections();
@@ -154,16 +159,16 @@ private:
 
     /// MDI-related functions.
     MDITreeViewBase* activeMdiChild();
-	QMdiSubWindow* findSubWindow(QUrl url);
-	std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
-	std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
+    QMdiSubWindow* findSubWindow(QUrl url);
+    std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
+    std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
 
-	QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
-	void openMDILibraryViewOnModel(LibraryModel* libmodel);
+    QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
+    void openMDILibraryViewOnModel(LibraryModel* libmodel);
 
-	std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
+    std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
 
-	bool maybeSaveOnClose();
+    bool maybeSaveOnClose();
 
 
 	/// @name Private data members.
@@ -204,68 +209,68 @@ private:
 
     /// Actions
 
-	/// @name File actions
-	/// @{
-	QAction* m_importLibAct;
-	QAction* m_rescanLibraryAct;
-	QAction* m_saveLibraryAsAct;
-	QAction* m_removeDirFromLibrary;
-	QAction* m_newPlaylistAct;
-	QAction* m_openPlaylistAct;
-	QAction* m_savePlaylistAct;
-	QAction* m_exitAction;
-	QAction* m_scanLibraryAction;
-	QAction* m_settingsAct;
-	/// @}
+    /// @name File actions
+    /// @{
+    QAction* m_importLibAct;
+    QAction* m_rescanLibraryAct;
+    QAction* m_saveLibraryAsAct;
+    QAction* m_removeDirFromLibrary;
+    QAction* m_newPlaylistAct;
+    QAction* m_openPlaylistAct;
+    QAction* m_savePlaylistAct;
+    QAction* m_exitAction;
+    QAction* m_scanLibraryAction;
+    QAction* m_settingsAct;
+    /// @}
 
-	/// @name Edit actions.
-	/// @{
-	QAction *m_act_cut;
-	QAction *m_act_copy;
-	QAction *m_act_paste;
-	QAction *m_act_delete;
-	QAction *m_act_select_all;
-	/// @}
+    /// @name Edit actions.
+    /// @{
+    QAction *m_act_cut;
+    QAction *m_act_copy;
+    QAction *m_act_paste;
+    QAction *m_act_delete;
+    QAction *m_act_select_all;
+    /// @}
 
-	/// @name Window actions.
-	/// @{
-	QActionGroup *m_tabs_or_subwindows_group;
-	QAction *m_tabs_act;
-	QAction *m_subwins_act;
-	QAction* m_windowNextAct;
-	QAction* m_windowPrevAct;
-	QAction* m_windowCascadeAct;
-	QAction* m_windowTileAct;
-	QAction* m_closeAllAct;
-	QAction* m_closeAct;
-	/// @}
+    /// @name Window actions.
+    /// @{
+    QActionGroup *m_tabs_or_subwindows_group;
+    QAction *m_tabs_act;
+    QAction *m_subwins_act;
+    QAction* m_windowNextAct;
+    QAction* m_windowPrevAct;
+    QAction* m_windowCascadeAct;
+    QAction* m_windowTileAct;
+    QAction* m_closeAllAct;
+    QAction* m_closeAct;
+    /// @}
 
-	/// Help actions.
-	QAction* m_helpAct;
-	QAction* m_whatsThisAct;
-	QAction* m_aboutAct;
-	QAction* m_aboutQtAct;
+    /// Help actions.
+    QAction* m_helpAct;
+    QAction* m_whatsThisAct;
+    QAction* m_aboutAct;
+    QAction* m_aboutQtAct;
 
-	/// Experimental actions.
-	QAction* m_experimentalAct;
+    /// Experimental actions.
+    QAction* m_experimentalAct;
 
     /// Menus
-	QMenu* m_fileMenu;
-	QMenu *m_menu_edit;
-	QMenu* m_viewMenu;
-	QMenu* m_toolsMenu;
-	QMenu* m_windowMenu;
-	QMenu* m_helpMenu;
+    QMenu* m_fileMenu;
+    QMenu *m_menu_edit;
+    QMenu* m_viewMenu;
+    QMenu* m_toolsMenu;
+    QMenu* m_windowMenu;
+    QMenu* m_helpMenu;
 
     /// Toolbars
-	QToolBar* m_fileToolBar;
-	QToolBar* m_settingsToolBar;
-	QToolBar* m_controlsToolbar;
-	QToolBar* m_filterToolbar;
+    QToolBar* m_fileToolBar;
+    QToolBar* m_settingsToolBar;
+    QToolBar* m_controlsToolbar;
+    QToolBar* m_filterToolbar;
 
     /// Docks
-	CollectionDockWidget* m_libraryDockWidget;
-	MetadataDockWidget* m_metadataDockWidget;
+    CollectionDockWidget* m_libraryDockWidget;
+    MetadataDockWidget* m_metadataDockWidget;
 
     /// The Activity Progress Widget.
 	ActivityProgressWidget* m_activity_progress_widget;

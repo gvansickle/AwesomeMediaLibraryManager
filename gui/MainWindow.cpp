@@ -108,6 +108,7 @@ M_WARNING("TODO: ifdef this to development only")
     m_mdi_area = new MDIArea(this);
     setCentralWidget(m_mdi_area);
 
+	// Connect the MDIArea signal to a slot so we know when the subwindow activation changes.
     connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::subWindowActivated);
 
     // Mapper for the Window menu.
@@ -122,7 +123,7 @@ M_WARNING("TODO: ifdef this to development only")
     createDockWindows();
     updateMenus();
 
-    updateActions();
+    updateActionEnableStates();
 
     ////// Connect up signals and slots.
     createConnections();
@@ -143,7 +144,7 @@ MainWindow::~MainWindow()
 
 }
 
-void MainWindow::updateActions()
+void MainWindow::updateActionEnableStates()
 {
 	qDebug() << "ENTER";
 	if(activeMdiChild() != nullptr)
@@ -151,13 +152,14 @@ void MainWindow::updateActions()
 		qDebug() << "Active child:" << activeMdiChild();
 
 		// We have an active MDI child.  What is it?
-		auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
-		auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
-		auto childBaseClass = dynamic_cast<MDITreeViewBase*>(activeMdiChild());
+		auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+		auto childIsLibrary = qobject_cast<MDILibraryView*>(activeMdiChild());
+		auto childBaseClass = qobject_cast<MDITreeViewBase*>(activeMdiChild());
 
 		if(childBaseClass)
 		{
 			// Update edit actions.
+			qDebug() << "Child inherits from MDITreeViewBase, updating RO actions enable state";
 
 			// It's something that might have a selection.
 			bool has_selection = childBaseClass->selectionModel()->hasSelection();
@@ -239,13 +241,12 @@ void MainWindow::createActions()
 	//
 	createEditActions();
 
-        //
+    //
 	// Tools actions.
-        //
+    //
         
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
-							   ///triggered=scanLibrary)
 
     // Window actions.
 	m_tabs_or_subwindows_group = new QActionGroup(this);
@@ -314,11 +315,15 @@ void MainWindow::createEditActions()
 {
     m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
+	connect_trig(m_act_cut, this, &MainWindow::onCut);
+	
     m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), this, QKeySequence::Copy,
                                                      tr("Copy the current selection to the clipboard"));
-    //connect_trig(m_act_copy, this, &MainWindow::copy);
+    connect_trig(m_act_copy, this, &MainWindow::onCopy);
+	
     m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
                                                       tr("Paste the clipboard's contents into the current selection"));
+	connect_trig(m_act_paste, this, &MainWindow::onPaste);
 
     m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence(),///QKeySequence::Delete,
                                                        tr("Delete this entry"));
@@ -327,8 +332,21 @@ void MainWindow::createEditActions()
     m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
     connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
+	
+	// Add action to the MainWindow.  If we don't do this,
+	// the keyboard shortcuts won't get propagated.  The QAction has to be added to a visible widget.
+	// See:
+	// https://forum.qt.io/topic/15107/solved-action-shortcut-not-triggering-unless-action-is-placed-in-a-toolbar/5
+	// https://stackoverflow.com/questions/23916623/qt5-doesnt-recognised-shortcuts-unless-actions-are-added-to-a-toolbar
+	// https://bugs.launchpad.net/ubuntu/+source/appmenu-qt5/+bug/1313248
+	// https://github.com/pyzo/pyzo/issues/470
+	// https://github.com/pyzo/pyzo/commit/0064a5c709e4c5f6f67832128f022469c637a4c2
+	// GRVS: Doesn't seem to make a difference.  Also, the actions are parented to the MainWindow on creation.
+//	for(auto i : {m_act_copy, m_act_cut, m_act_paste, m_act_delete, m_act_select_all})
+//	{
+//		addAction(i);
+//	}
 }
-
 
 void MainWindow::createMenus()
 {
@@ -353,7 +371,7 @@ void MainWindow::createMenus()
 						  m_exitAction});
 
 	// Edit menu.
-	m_menu_edit = menuBar()->addMenu("&Edit");
+	m_menu_edit = menuBar()->addMenu(tr("&Edit"));
 	m_menu_edit->addActions({
 								m_act_cut,
 								m_act_copy,
@@ -467,7 +485,7 @@ void MainWindow::createConnections()
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
 	// Connect menu "about to shows" to the action updater.
-	connect(m_menu_edit, &QMenu::aboutToShow, this, &MainWindow::updateActions);
+	connect(m_menu_edit, &QMenu::aboutToShow, this, &MainWindow::updateActionEnableStates);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(&m_player, m_controls);
@@ -554,6 +572,7 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
 
 void MainWindow::updateConnections()
 {
+	qDebug() << "Updating connections";
     auto childIsMDITreeViewBase = dynamic_cast<MDITreeViewBase*>(activeMdiChild());
     auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
     auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
@@ -563,41 +582,38 @@ void MainWindow::updateConnections()
 //		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
 
         // Disconnect actions from whatever they were connected to.
-        m_act_copy->disconnect();
-		m_act_cut->disconnect();
-		m_act_paste->disconnect();
-        m_act_select_all->disconnect();
-                
+//        m_act_copy->disconnect();
+//		m_act_cut->disconnect();
+//		m_act_paste->disconnect();
+//        m_act_select_all->disconnect();
+//                
         // Connect them to the new MDI Child.
-        connect_trig(m_act_copy, childIsMDITreeViewBase, &MDITreeViewBase::onCopy);
-        connect_trig(m_act_select_all, childIsMDITreeViewBase, &MDITreeViewBase::onSelectAll);
+//        connect_trig(m_act_copy, childIsMDITreeViewBase, &MDITreeViewBase::onCopy);
+//        connect_trig(m_act_select_all, childIsMDITreeViewBase, &MDITreeViewBase::onSelectAll);
         
-        auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
-        auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
-
         if(childIsLibrary)
         {
-                auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
-                                                 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
-                                                 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-                if (!connection_handle)
-                {
+			auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
+											 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
+											 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+			if (!connection_handle)
+			{
 //				qDebug() << "Connection failed: already connected?";
-                }
+			}
 
-                connection_handle = connect(childIsLibrary,
-                                            &MDILibraryView::playTrackNowSignal,
-                                            this,
-                                            &MainWindow::onPlayTrackNowSignal,
-                                            Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-                if (!connection_handle)
-                {
+			connection_handle = connect(childIsLibrary,
+										&MDILibraryView::playTrackNowSignal,
+										this,
+										&MainWindow::onPlayTrackNowSignal,
+										Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+			if (!connection_handle)
+			{
 //				qDebug() << "Connection failed: already connected?";
-                }
+			}
         }
 		if(childIsPlaylist)
 		{
-			connect_trig(m_act_paste, childIsPlaylist, &MDIPlaylistView::onPaste);
+//			connect_trig(m_act_paste, childIsPlaylist, &MDIPlaylistView::onPaste);
 		}
     }
 }
@@ -727,14 +743,16 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	}
 }
 
-/*Note: Returns the QMdiSubWindow's widget(), not the subwindow itself. */
+/**
+ * Note: Returns the QMdiSubWindow's widget(), not the QMdiSubWindow subwindow itself.
+ */
 MDITreeViewBase* MainWindow::activeMdiChild()
 {
 	auto activeSubWindow = m_mdi_area->activeSubWindow();
 
     if(activeSubWindow)
     {
-        return dynamic_cast<MDITreeViewBase*>(activeSubWindow->widget());
+        return qobject_cast<MDITreeViewBase*>(activeSubWindow->widget());
     }
     return nullptr;
 }
@@ -1177,6 +1195,29 @@ void MainWindow::savePlaylistAs()
 	}
 }
 
+void MainWindow::onCut()
+{
+
+}
+
+void MainWindow::onCopy()
+{
+	auto active_child = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+	if(active_child)	
+	{
+		active_child->onCopy();
+	}
+}
+
+void MainWindow::onPaste()
+{
+	auto active_child = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+	if(active_child)
+	{
+		active_child->onPaste();
+	}
+}
+
 void MainWindow::onSelectAll()
 {
     qDebug() << "Select All action";
@@ -1195,7 +1236,7 @@ void MainWindow::onDelete()
 		QAbstractItemModel *model = child_treeview->model();
 		if (model->removeRow(index.row(), index.parent()))
 		{
-			updateActions();
+			updateActionEnableStates();
 		}
 	}
 }
@@ -1285,7 +1326,7 @@ void MainWindow::subWindowActivated(QMdiSubWindow *subwindow)
 {
     if(subwindow != nullptr)
     {
-        //libmodel.rowsInserted.connect(onRowsInserted)
+		updateActionEnableStates();
 		updateConnections();
 		updateMenus();
     }
