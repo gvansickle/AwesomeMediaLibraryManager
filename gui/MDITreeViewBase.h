@@ -30,36 +30,53 @@ class QFileDevice;
 class MDITreeViewBase : public QTreeView
 {
 	Q_OBJECT
+        
+signals:
+    
+    /**
+     * Signal is emitted when a row is selected or deselected in the QTreeView.
+     */
+    void copyAvailable(bool);
+        
 
 public:
-	MDITreeViewBase(QWidget *parent = Q_NULLPTR);
+    explicit MDITreeViewBase(QWidget *parent = Q_NULLPTR);
 
-	///
-	/// Public interface.
-	///
+    ///
+    /// Public interface.
+    ///
 
-	void newFile();
+    void newFile();
 
-	virtual bool loadFile(QUrl load_url);
-	bool save();
-	bool saveAs();
-	bool saveFile(QUrl save_url, QString filter);
+    virtual bool loadFile(QUrl load_url);
+    bool save();
+    bool saveAs();
+    bool saveFile(QUrl save_url, QString filter);
 
-	/// Returns the current basename of this window's backing file.
-	QString userFriendlyCurrentFile() const;
+    /// Returns the current basename of this window's backing file.
+    QString userFriendlyCurrentFile() const;
 
-	/// Returns the full URL of this window's backing file.
-	QUrl getCurrentUrl() const;
+    /// Returns the full URL of this window's backing file.
+    QUrl getCurrentUrl() const;
 
-	/// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
-	/// Default implementation returns userFriendlyCurrentFile().
-	virtual QString getDisplayName() const;
-        
+    /// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
+    /// Default implementation returns userFriendlyCurrentFile().
+    virtual QString getDisplayName() const;
+
 public slots:
     
-    void onCopy();
-    void onSelectAll();
-
+    /// @name Edit handlers.
+    /// @{
+    
+    /// View is read-only by default.  Does nothing.
+    virtual void onCut() {}
+    virtual void onCopy();
+    /// View is read-only by default.  Does nothing.
+    virtual void onPaste() {}
+    virtual void onSelectAll();
+    /// View is read-only by default.  Does nothing.
+    virtual void onDelete() {}
+    /// @}
 
 protected:
 

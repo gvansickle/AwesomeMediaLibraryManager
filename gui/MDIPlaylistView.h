@@ -31,83 +31,94 @@ class ItemDelegateLength;
 
 class MDIPlaylistView : public MDITreeViewBase
 {
-	Q_OBJECT
+    Q_OBJECT
 
 signals:
 
-	void play();
+    void play();
 
 public:
-	explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
+    explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
 
-	QMediaPlaylist* getQMediaPlaylist();
+    QMediaPlaylist* getQMediaPlaylist();
 
-	virtual void setModel(QAbstractItemModel* model) override;
+    virtual void setModel(QAbstractItemModel* model) override;
 
-	virtual PlaylistModel* underlyingModel() const;
+    virtual PlaylistModel* underlyingModel() const;
 
 public slots:
-	void next();
-	void previous();
-        
-	/// Paste from clipboard.
-	/// Related const operations (copy, select all, etc) are in MDITreeViewBase.
-	void onPaste();
-        
-	/**
- 	 * Slot which appends the incoming library entry and starts playing it.
- 	 * Intended for use primarily on the single "Now Playing" playlist.
- 	 */
-	void onSendToNowPlaying(std::shared_ptr<LibraryEntry>);
+    void next();
+    void previous();
+
+    /// @name Edit slots.
+    /// Related const operations (copy, select all, etc) are in MDITreeViewBase.
+    /// @{
+
+    /// Copy the current selection to the clipboard and delete it.
+    void onCut() override;
+
+    /// Paste from clipboard.
+    void onPaste() override;
+
+    /// Delete the currently selected rows.
+    void onDelete() override;
+
+    /// @}
+
+    /**
+     * Slot which appends the incoming library entry and starts playing it.
+     * Intended for use primarily on the single "Now Playing" playlist.
+     */
+    void onSendToNowPlaying(std::shared_ptr<LibraryEntry>);
 
 protected:
 
-	///
-	/// Pure virtual function overrides.
-	///
-	virtual QString getNewFilenameTemplate() const override;
-	virtual QString defaultNameFilter() override;
+    ///
+    /// Pure virtual function overrides.
+    ///
+    virtual QString getNewFilenameTemplate() const override;
+    virtual QString defaultNameFilter() override;
 
-	virtual void serializeDocument(QFileDevice& file) const override;
-	virtual void deserializeDocument(QFileDevice& file) override;
+    virtual void serializeDocument(QFileDevice& file) const override;
+    virtual void deserializeDocument(QFileDevice& file) override;
 
-	virtual bool isModified() const override;
+    virtual bool isModified() const override;
 
-	virtual QString getSaveAsDialogKey() const override;
+    virtual QString getSaveAsDialogKey() const override;
 
-	virtual bool onBlankAreaToolTip(QHelpEvent* event) override;
+    virtual bool onBlankAreaToolTip(QHelpEvent* event) override;
 
-	/// Drag and Drop
-	void dragEnterEvent(QDragEnterEvent *event) override;
-	void dragMoveEvent(QDragMoveEvent *event) override;
-	void dropEvent(QDropEvent* event) override;
+    /// Drag and Drop
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dropEvent(QDropEvent* event) override;
 
-	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
-	QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) override;
-	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
-	QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
+    /// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
+    QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) override;
+    /// Helper function to convert from underlying model indexes to proxy QModelIndexes.
+    QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
 
-	/// keyPressEvent override for handling delete key.
-	void keyPressEvent(QKeyEvent *event) override;
+    /// keyPressEvent override for handling delete key.
+    void keyPressEvent(QKeyEvent *event) override;
 
 protected slots:
-	virtual void playlistPositionChanged(qint64 position);
+    virtual void playlistPositionChanged(qint64 position);
 
-	/// Invoked when user double-clicks on an entry.
-	/// According to Qt5 docs, index will always be valid:
-	/// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:
-	/// "The [doubleClicked] signal is only emitted when the index is valid."
-	void onDoubleClicked(const QModelIndex &index);
+    /// Invoked when user double-clicks on an entry.
+    /// According to Qt5 docs, index will always be valid:
+    /// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:
+    /// "The [doubleClicked] signal is only emitted when the index is valid."
+    void onDoubleClicked(const QModelIndex &index);
 
 private slots:
-	void onContextMenu(QPoint pos);
+    void onContextMenu(QPoint pos);
 
 private:
-	Q_DISABLE_COPY(MDIPlaylistView)
+    Q_DISABLE_COPY(MDIPlaylistView)
 
-	PlaylistModel* m_underlying_model;
-	LibrarySortFilterProxyModel* m_sortfilter_model;
-	ItemDelegateLength* m_length_delegate;
+    PlaylistModel* m_underlying_model;
+    LibrarySortFilterProxyModel* m_sortfilter_model;
+    ItemDelegateLength* m_length_delegate;
 };
 
 #endif // MDIPLAYLISTVIEW_H
