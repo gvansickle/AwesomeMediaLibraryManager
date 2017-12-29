@@ -240,7 +240,6 @@ bool PlaylistModel::canDropMimeData(const QMimeData* data, Qt::DropAction action
 
 bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
 {
-#if 1
     /// @brief Drag and Drop shouldn't be this hard.
     /// To get drag and drop functioning completely correctly requires a lot of completely unintuitive and undocumented work.
     /// For example, Qt5's own QTreeWidget:
@@ -253,7 +252,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	///
 	/// Note that the  QAbstractItemModel::dropMimeData() implementation looks like it's not what we need.
 	/// It ultimately calls QAbstractItemModel::decodeData() and deserializes a QDataStream coming from the QMimeData,
-	/// and it does a ton of work to get every row and column entered into the model.
+	/// and it does a ton of work to get every row and column separately entered into the model.
 
 	// Per example code here: http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views, "Inserting dropped data into a model".
 	// "The model first has to make sure that the operation should be acted on,
@@ -347,12 +346,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 		return true;
 	}
 	return false;
-#endif
-	qDebug() << "Dropping, Action:" << action << "drop row/column:" << row << column << "Parent:" << parent;
-    qDebug() << "QMimeData:"; MimeDataDumper(this).dumpMimeData(data);
-	bool retval = LibraryModel::dropMimeData(data, action, row, column, parent);
-	qDebug() << "BASE CLASS RETURN VALUE:" << retval;
-	return retval;
+
 }
 
 void PlaylistModel::setLibraryRootUrl(const QUrl &url)

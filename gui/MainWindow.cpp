@@ -564,6 +564,8 @@ void MainWindow::updateConnections()
 
         // Disconnect actions from whatever they were connected to.
         m_act_copy->disconnect();
+		m_act_cut->disconnect();
+		m_act_paste->disconnect();
         m_act_select_all->disconnect();
                 
         // Connect them to the new MDI Child.
@@ -593,6 +595,10 @@ void MainWindow::updateConnections()
 //				qDebug() << "Connection failed: already connected?";
                 }
         }
+		if(childIsPlaylist)
+		{
+			connect_trig(m_act_paste, childIsPlaylist, &MDIPlaylistView::onPaste);
+		}
     }
 }
 

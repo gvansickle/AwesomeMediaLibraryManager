@@ -29,6 +29,8 @@
 #include <QMimeData>
 #include <QMimeType>
 #include <QMimeDatabase>
+#include <QClipboard>
+#include <QPoint>
 
 #include <logic/LibrarySortFilterProxyModel.h>
 #include "utils/DebugHelpers.h"
@@ -379,6 +381,7 @@ void MDIPlaylistView::previous()
 
 void MDIPlaylistView::onPaste()
 {
+	qDebug() << "PASTING";
     // Get the current selection.
 	QModelIndexList mil = selectionModel()->selectedRows();
 M_WARNING("TODO")
@@ -389,9 +392,10 @@ M_WARNING("TODO")
 		return;
 	}
 
-	QDropEvent de(QPos(0,0), Qt::CopyAction, clipboard->mimeData(), Qt::LeftButton, 0);
-
-	onDropEvent(de);
+	m_underlying_model->dropMimeData(clipboard->mimeData(), Qt::CopyAction, -1, -1, QModelIndex());
+	//QDropEvent de(QPoint(0,0), Qt::CopyAction, clipboard->mimeData(), Qt::LeftButton, 0);
+//
+//	onDropEvent(de);
 	
 //	if(mil.isEmpty())
 //    {
