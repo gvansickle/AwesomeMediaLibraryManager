@@ -113,18 +113,16 @@ M_WARNING("TODO: ifdef this to development only")
     connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
     // Mapper for the Window menu.
-    m_windowMapper = new QSignalMapper(this);
-    connect(m_windowMapper, SIGNAL(mapped(QWidget*)),
-        this, SLOT(setActiveSubWindow(QWidget*)));
+//    m_windowMapper = new QSignalMapper(this);
+//    connect(m_windowMapper, SIGNAL(mapped(QWidget*)),
+//        this, SLOT(setActiveSubWindow(QWidget*)));
 
     createActions();
     createMenus();
     createToolBars();
     createStatusBar();
     createDockWindows();
-    updateMenus();
-
-    updateActionEnableStates_Edit();
+    updateActionEnableStates();
 
     ////// Connect up signals and slots.
     createConnections();
@@ -152,6 +150,21 @@ void MainWindow::updateActionEnableStates()
 	auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeMdiChild());
 	auto childIsLibrary = qobject_cast<MDILibraryView*>(activeMdiChild());
 	
+	/// Update file actions.
+	for(auto act : {
+		m_saveLibraryAsAct,
+		})
+	{
+		act->setEnabled(childIsLibrary);
+	}
+	for(auto act : {
+		m_savePlaylistAct
+		})
+	{
+		act->setEnabled(childIsPlaylist);
+	}
+	
+	// Update the Window menu actions.
 	m_act_window_list_separator->setVisible(childIsBaseClass);
 	if(childIsBaseClass)
 	{
@@ -180,9 +193,11 @@ void MainWindow::updateActionEnableStates_Edit()
 			qDebug() << "Child inherits from MDITreeViewBase, updating RO actions enable state";
 
 			// It's something that might have a selection.
-			bool has_selection = childBaseClass->selectionModel()->hasSelection();
+			auto bcsm = childBaseClass->selectionModel();
+			bool has_selection = bcsm && bcsm->hasSelection();
 			// And might contain items.
-			bool has_items = childBaseClass->model()->rowCount() > 0;
+			auto bcmodel = childBaseClass->model();
+			bool has_items = bcmodel && bcmodel->rowCount() > 0;
 
 			// Can copy from any derived class if it has a selection.
 			m_act_copy->setEnabled(has_selection);
@@ -661,34 +676,10 @@ void MainWindow::updateConnections()
     }
 }
 
-void MainWindow::updateMenus()
-{
-	// Update action enable states.  Mainly depends on if we have an MDI child window open.
-//      qDebug() << "Updating menu status";
-        bool hasMdiChild = activeMdiChild() != nullptr;
-
-        bool childIsPlaylist = (dynamic_cast<MDIPlaylistView*>(activeMdiChild()) != nullptr);
-        bool childIsLibrary = (dynamic_cast<MDILibraryView*>(activeMdiChild()) != nullptr);
-
-        // File actions.
-        for(auto act : {
-			m_saveLibraryAsAct,
-            })
-        {
-            act->setEnabled(hasMdiChild && childIsLibrary);
-        }
-        for(auto act : {
-			m_savePlaylistAct
-            })
-        {
-            act->setEnabled(hasMdiChild && childIsPlaylist);
-        }
-}
-
 void MainWindow::updateWindowMenu()
 {
 	return;
-M_WARNING("DELETE ME");
+M_WARNING("DELETE ME, BUT FIRST PORT OVER THE ACCELERATOR KEY STUFF");
 	m_menu_window->clear();
 	m_menu_window->addActions({
 		m_menu_window->addSection(tr("Subwindow Mode")),
@@ -958,14 +949,14 @@ void MainWindow::onStartup()
     // Create the "Now Playing" playlist.
     auto wins = createMdiNowPlayingView();
     m_now_playing_playlist_view = wins.first;
-    QMdiSubWindow* mdisubwindow = wins.second;
+//    QMdiSubWindow* mdisubwindow = wins.second;
 
 M_WARNING("TODO: Specify a temp/cache file?")
     m_now_playing_playlist_view->newFile();
 
 	connectNowPlayingViewAndMainWindow(m_now_playing_playlist_view);
 
-    setActiveSubWindow(mdisubwindow);
+//    setActiveSubWindow(mdisubwindow);
     statusBar()->showMessage(QString("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
 
     m_now_playing_playlist_view->show();
@@ -1023,15 +1014,16 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 			return;
 		}
 
+M_WARNING("THIS NEEDS WORK");
 		MDILibraryView* child;
 		QMdiSubWindow* mdisubWindow;
 		std::tie(child, mdisubWindow) = createMdiChildLibraryView();
 
 		child->setModel(libmodel);
-		setActiveSubWindow(mdisubWindow);
+//		setActiveSubWindow(mdisubWindow);
 		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
-		child->show();
+//		child->show();
 	}
 }
 
@@ -1068,20 +1060,6 @@ void MainWindow::importLib()
     return;
 }
 
-
-std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryView()
-{
-	// Create a new, empty LibraryView.
-
-	// New Lib MDI View.
-	auto child = new MDILibraryView(this);
-	auto mdisubwindow = m_mdi_area->addSubWindow(child);
-
-	connectLibraryViewAndMainWindow(child);
-
-	return std::make_tuple(child, mdisubwindow);
-}
-
 #if 0
     def saveLibraryAs(self):
         if activeMdiChild() and activeMdiChild().saveAs():
@@ -1100,9 +1078,9 @@ void MainWindow::onRescanLibrary()
 
 void MainWindow::onShowLibrary(LibraryModel* libmodel)
 {
-		qDebug() << QString("onShowLibrary");
-		openMDILibraryViewOnModel(libmodel);
-		return;
+	qDebug() << QString("onShowLibrary");
+	openMDILibraryViewOnModel(libmodel);
+	return;
 }
 
 
@@ -1149,11 +1127,11 @@ void MainWindow::newPlaylist()
 {
     auto wins = createMdiChildPlaylist();
 	MDIPlaylistView* child = wins.first;
-	QMdiSubWindow* mdisubwindow = wins.second;
+//	QMdiSubWindow* mdisubwindow = wins.second;
 
     child->newFile();
 
-    setActiveSubWindow(mdisubwindow);
+//    setActiveSubWindow(mdisubwindow);
     statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(child->windowTitle()));
 
     child->show();
@@ -1201,12 +1179,27 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	
 	// Add the child subwindow to the MDI area.
 	auto mdisubwindow = m_mdi_area->addSubWindow(child);
+	
 	// Add actions to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
 	
 	// Show the child window we just added.
 	mdisubwindow->show();	
+}
+
+std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryView()
+{
+	// Create a new, empty LibraryView.
+
+	// New Lib MDI View.
+	auto child = new MDILibraryView(this);
+	
+	addChildMDIView(child);
+
+	connectLibraryViewAndMainWindow(child);
+
+	return std::make_tuple(child, nullptr);
 }
 
 std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
@@ -1218,12 +1211,11 @@ std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
 	MDIPlaylistView* child = new MDIPlaylistView(this);
 	child->setModel(new_playlist_model);
 
-	//auto mdisubwindow = m_mdi_area->addSubWindow(child);
 	addChildMDIView(child);
 
 	// Add the new playlist to the collection doc widget.
 	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return std::make_pair(child, nullptr); //mdisubwindow);
+	return std::make_pair(child, nullptr);
 }
 
 std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingView()
@@ -1237,19 +1229,12 @@ std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingVie
 
 	MDINowPlayingView* child = new MDINowPlayingView(this);
 	child->setModel(new_playlist_model);
-	auto mdisubwindow = m_mdi_area->addSubWindow(child);
-
-	// child.undoAvailable.connect(editUndoAct.setEnabled)
-	// child.redoAvailable.connect(redoAct.setEnabled)
-	// child.copyAvailable.connect(cutAct.setEnabled)
-	// child.copyAvailable.connect(copyAct.setEnabled)
-
-	// Connect signals.
-	//child.cursorPositionChanged.connect(cursorPosChanged)
+	
+	addChildMDIView(child);
 
 	// Add the new playlist to the collection doc widget.
 	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return std::make_pair(child, mdisubwindow);
+	return std::make_pair(child, nullptr);
 }
 
 // Top-level "saveAs" action handler for "Save playlist as..."
@@ -1307,7 +1292,7 @@ void MainWindow::onDelete()
 {
 	qDebug() << "DELETE";
 
-	auto child_treeview = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
+	auto child_treeview = qobject_cast<MDIPlaylistView*>(activeMdiChild());
 	if(child_treeview)
 	{
 		// It's something we can maybe delete from.
@@ -1322,7 +1307,11 @@ void MainWindow::onDelete()
 
 void MainWindow::startSettingsDialog()
 {
-	m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
+	if(!m_settings_dlg)
+	{
+		// This is the first time anyone has opened the settings dialog.
+		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
+	}
 
 	m_settings_dlg->exec();
 }
@@ -1410,9 +1399,8 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *subwindow)
 		if(mdibase)
 		{
 			qDebug() << "Updating actions";
-			updateActionEnableStates_Edit();
+			updateActionEnableStates();
 			updateConnections();
-			updateMenus();
 		}
 	}
 }

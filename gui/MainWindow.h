@@ -163,13 +163,14 @@ private:
     void addChildMDIView(MDITreeViewBase* child);
     MDITreeViewBase* activeMdiChild();
     QMdiSubWindow* findSubWindow(QUrl url);
+    
+    std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
     std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
     std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
 
     QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
     void openMDILibraryViewOnModel(LibraryModel* libmodel);
 
-    std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
     /// @}
     
     
