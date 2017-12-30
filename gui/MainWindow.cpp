@@ -377,20 +377,6 @@ void MainWindow::createActionsEdit()
     m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
     connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
-	
-	// Add action to the MainWindow.  If we don't do this,
-	// the keyboard shortcuts won't get propagated.  The QAction has to be added to a visible widget.
-	// See:
-	// https://forum.qt.io/topic/15107/solved-action-shortcut-not-triggering-unless-action-is-placed-in-a-toolbar/5
-	// https://stackoverflow.com/questions/23916623/qt5-doesnt-recognised-shortcuts-unless-actions-are-added-to-a-toolbar
-	// https://bugs.launchpad.net/ubuntu/+source/appmenu-qt5/+bug/1313248
-	// https://github.com/pyzo/pyzo/issues/470
-	// https://github.com/pyzo/pyzo/commit/0064a5c709e4c5f6f67832128f022469c637a4c2
-	// GRVS: Doesn't seem to make a difference.  Also, the actions are parented to the MainWindow on creation.
-//	for(auto i : {m_act_copy, m_act_cut, m_act_paste, m_act_delete, m_act_select_all})
-//	{
-//		addAction(i);
-//	}
 }
 
 void MainWindow::createMenus()

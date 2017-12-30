@@ -123,7 +123,12 @@ protected slots:
 
 protected:
 
-    virtual bool viewportEvent(QEvent *event) override;
+	/**
+	 * Called whenever the view's selection changes.  We override it here to emit the copyAvailable() signal.
+	 */
+	void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
+
+	bool viewportEvent(QEvent *event) override;
 
     /// Return a string suitable for use as a key in the QSettings file.  Used
     /// to save and restore the state of the "Save As" dialog.

@@ -319,6 +319,20 @@ void MDITreeViewBase::onSectionClicked(int logicalIndex)
 	header()->setSortIndicator(logicalIndex, m_sort_order);
 }
 
+void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
+{
+	this->QTreeView::selectionChanged(selected, deselected);
+
+	if(!selected.empty())
+	{
+		emit copyAvailable(true);
+	}
+	else
+	{
+		emit copyAvailable(false);
+	}
+}
+
 bool MDITreeViewBase::viewportEvent(QEvent* event)
 {
 	if(event->type() == QEvent::ToolTip)
