@@ -19,11 +19,7 @@
 
 #include "EntryToMetadataTreeProxyModel.h"
 
-EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel()
-{
-}
-
-EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(const EntryToMetadataTreeProxyModel& orig)
+EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(QObject *parent) : QSortFilterProxyModel(parent)
 {
 }
 
@@ -31,3 +27,7 @@ EntryToMetadataTreeProxyModel::~EntryToMetadataTreeProxyModel()
 {
 }
 
+bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
+{
+
+}

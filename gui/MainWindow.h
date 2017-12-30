@@ -123,7 +123,7 @@ private:
     void updateMenus();
     void updateWindowMenu();
 
-    /// @name Signal/slot Connection management.
+	/// @name Bulk Signal/Slot Connection management.
     ///@{
     void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
     void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
@@ -133,6 +133,7 @@ private:
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
     void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
+	void connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget);
     ///@}
 
     void stopAllBackgroundThreads();

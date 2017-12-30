@@ -24,10 +24,13 @@
 
 #include "logic/MetadataAbstractBase.h"
 
+class MDITreeViewBase;
 class QTreeWidget;
 class PixmapLabel;
 class QItemSelection;
+class QItemSelectionModel;
 class QTreeWidgetItem;
+class EntryToMetadataTreeProxyModel;
 
 class MetadataDockWidget : public QDockWidget
 {
@@ -36,10 +39,17 @@ class MetadataDockWidget : public QDockWidget
 public:
     explicit MetadataDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 
+    void connectToView(MDITreeViewBase* view);
+    
 public slots:
     void playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
 
 private:
+    
+	QItemSelectionModel* m_connected_selection_model;
+
+    EntryToMetadataTreeProxyModel* m_proxy_model;
+    
     QTreeWidget* m_metadata_widget;
 
     PixmapLabel* m_cover_image_label;

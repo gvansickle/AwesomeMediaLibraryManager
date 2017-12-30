@@ -534,16 +534,14 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWindows()
 {
-
     // Create the Library/Playlist dock widget.
 	m_libraryDockWidget = new CollectionDockWidget("Media Sources", this);
 	addDockWidget(Qt::LeftDockWidgetArea, m_libraryDockWidget);
 
     // Create the metadata dock widget.
-	m_metadataDockWidget = new MetadataDockWidget("Metadata", this);
+	m_metadataDockWidget = new MetadataDockWidget(tr("Metadata Explorer"), this);
 	m_metadataDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	addDockWidget(Qt::RightDockWidgetArea, m_metadataDockWidget);
-    //player.playlistSelectionChanged.connect(metadataDockWidget.playlistSelectionChanged)
 }
 
 void MainWindow::createConnections()
@@ -634,28 +632,30 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
 	connectPlayerControlsAndPlaylistView(m_controls, plv);
 }
 
+void MainWindow::connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget)
+{
+	metadata_dock_widget->connectToView(viewbase);
+}
+
+
 void MainWindow::updateConnections()
 {
 	qDebug() << "Updating connections";
-    auto childIsMDITreeViewBase = dynamic_cast<MDITreeViewBase*>(activeMdiChild());
-    auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
-    auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
+    auto childIsMDITreeViewBase = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+    auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+    auto childIsLibrary = qobject_cast<MDILibraryView*>(activeMdiChild());
 
     if(childIsMDITreeViewBase)
     {
 //		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
+
+		// Connect the Metadata dock widget to the active child window's selectionModel().
+		connectActiveMDITreeViewBaseAndMetadataDock(childIsMDITreeViewBase, m_metadataDockWidget);
+		
         
         if(childIsLibrary)
         {
-			auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
-											 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
-											 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if (!connection_handle)
-			{
-//				qDebug() << "Connection failed: already connected?";
-			}
-
-			connection_handle = connect(childIsLibrary,
+			auto connection_handle = connect(childIsLibrary,
 										&MDILibraryView::playTrackNowSignal,
 										this,
 										&MainWindow::onPlayTrackNowSignal,

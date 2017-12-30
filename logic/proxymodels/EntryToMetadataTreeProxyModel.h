@@ -24,10 +24,16 @@
 
 class EntryToMetadataTreeProxyModel : public QSortFilterProxyModel
 {
+    Q_OBJECT
+    
 public:
-    EntryToMetadataTreeProxyModel();
-    EntryToMetadataTreeProxyModel(const EntryToMetadataTreeProxyModel& orig);
+    explicit EntryToMetadataTreeProxyModel(QObject *parent = Q_NULLPTR);
     virtual ~EntryToMetadataTreeProxyModel();
+    
+protected:
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
+
+    
 private:
 
 };

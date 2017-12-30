@@ -31,6 +31,7 @@
 #include <logic/MetadataAbstractBase.h>
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
+#include <gui/MDITreeViewBase.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 
 #include <utils/Theme.h>
@@ -56,6 +57,25 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
 	auto mainWidget = new QWidget(this);
 	mainWidget->setLayout(mainLayout);
 	setWidget(mainWidget);
+}
+
+void MetadataDockWidget::connectToView(MDITreeViewBase* view)
+{
+	if(view == nullptr)
+	{
+		qWarning() << "VIEW IS NULL";
+		return;
+	}
+	
+	m_connected_selection_model = view->selectionModel();
+	
+	auto connection_handle = connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
+										 this, &MetadataDockWidget::playlistSelectionChanged,
+										 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+	if (!connection_handle)
+	{
+			qDebug() << "Connection failed: already connected?";
+	}
 }
 
 void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
