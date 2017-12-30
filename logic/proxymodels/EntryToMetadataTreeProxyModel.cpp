@@ -17,35 +17,17 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef METADATADOCKWIDGET_H
-#define METADATADOCKWIDGET_H
+#include "EntryToMetadataTreeProxyModel.h"
 
-#include <QDockWidget>
-
-#include "logic/MetadataAbstractBase.h"
-
-class QTreeWidget;
-class PixmapLabel;
-class QItemSelection;
-class QTreeWidgetItem;
-
-class MetadataDockWidget : public QDockWidget
+EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel()
 {
-    Q_OBJECT
+}
 
-public:
-    explicit MetadataDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
+EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(const EntryToMetadataTreeProxyModel& orig)
+{
+}
 
-public slots:
-    void playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
+EntryToMetadataTreeProxyModel::~EntryToMetadataTreeProxyModel()
+{
+}
 
-private:
-    QTreeWidget* m_metadata_widget;
-
-    PixmapLabel* m_cover_image_label;
-
-    void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
-
-};
-
-#endif // METADATADOCKWIDGET_H

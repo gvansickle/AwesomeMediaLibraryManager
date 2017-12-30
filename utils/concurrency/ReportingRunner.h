@@ -34,57 +34,57 @@ template <class T>
 class ControllableTask
 {
 public:
-	virtual ~ControllableTask() {}
+    virtual ~ControllableTask() {}
 
-	// Override this in your derived class to do the long-running work.
-	// Periodically check @a control->isCanceled() and return if it returns false.
-	// Send results out via one of the control->reportResult() overloads.
-	virtual void run(QFutureInterface<T>& control) = 0;
+    // Override this in your derived class to do the long-running work.
+    // Periodically check @a control->isCanceled() and return if it returns false.
+    // Send results out via one of the control->reportResult() overloads.
+    virtual void run(QFutureInterface<T>& control) = 0;
 };
 
 template <typename T>
 class RunControllableTask : public QFutureInterface<T> , public QRunnable
 {
 public:
-	RunControllableTask(ControllableTask<T>* tsk) : m_task(tsk) { }
-	virtual ~RunControllableTask() { delete m_task; }
+    explicit RunControllableTask(ControllableTask<T>* tsk) : m_task(tsk) { }
+    virtual ~RunControllableTask() { delete m_task; }
 
-	QFuture<T> start()
-	{
-		this->setRunnable(this);
-		// Report that we've started via the QFutureInterface.
-		this->reportStarted();
-		QFuture<T> future = this->future();
-		QThreadPool::globalInstance()->start(this, /*m_priority*/ 0);
-		return future;
-	}
+    QFuture<T> start()
+    {
+            this->setRunnable(this);
+            // Report that we've started via the QFutureInterface.
+            this->reportStarted();
+            QFuture<T> future = this->future();
+            QThreadPool::globalInstance()->start(this, /*m_priority*/ 0);
+            return future;
+    }
 
-	void run()
-	{
-		if (this->isCanceled())
-		{
-			this->reportFinished();
-			return;
-		}
-		this->m_task->run(*this);
-		if (!this->isCanceled())
-		{
-			/// @todo Do anything here???;
-		}
-		this->reportFinished();
-	}
+    void run()
+    {
+            if (this->isCanceled())
+            {
+                    this->reportFinished();
+                    return;
+            }
+            this->m_task->run(*this);
+            if (!this->isCanceled())
+            {
+                    /// @todo Do anything here???;
+            }
+            this->reportFinished();
+    }
 
-	ControllableTask<T> *m_task;
+    ControllableTask<T> *m_task;
 };
 
 class ReportingRunner
 {
 public:
-	template <class T>
-	static QFuture<T> run(ControllableTask<T>* task)
-	{
-		return (new RunControllableTask<T>(task))->start();
-	}
+    template <class T>
+    static QFuture<T> run(ControllableTask<T>* task)
+    {
+            return (new RunControllableTask<T>(task))->start();
+    }
 };
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REPORTINGRUNNER_H

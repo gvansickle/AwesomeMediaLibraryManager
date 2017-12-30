@@ -306,7 +306,8 @@ set(HEADER_FILES
 	gui/DropMenu.h
 	logic/ModelUserRoles.h
 	gui/DragDropTreeViewStyleProxy.h
-        utils/ModelHelpers.h)
+        utils/ModelHelpers.h
+        logic/proxymodels/EntryToMetadataTreeProxyModel.h)
 
 # Source file list.
 set(SOURCE_FILES
@@ -361,7 +362,8 @@ set(SOURCE_FILES
 	gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
 	gui/DropMenu.cpp
 	logic/ModelUserRoles.cpp
-	gui/DragDropTreeViewStyleProxy.cpp)
+	gui/DragDropTreeViewStyleProxy.cpp
+        logic/proxymodels/EntryToMetadataTreeProxyModel.cpp)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
