@@ -70,28 +70,44 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 		qWarning() << "VIEW IS NULL";
 		return;
 	}
-	
+
+	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
+
 	m_proxy_model->setSourceModel(view->model());
 	m_connected_selection_model = view->selectionModel();
 
 	auto connection_handle = connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
-										 this, &MetadataDockWidget::playlistSelectionChanged,
+										 this, &MetadataDockWidget::viewSelectionChanged,
 										 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 	if (!connection_handle)
 	{
 			qDebug() << "Connection failed: already connected?";
 	}
+
+	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
 }
 
-void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
+void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
 {
 	qDebug() << "Selection changed: " << newSelection;
-	if(newSelection.isEmpty())
-	{
-		return;
-	}
 
-	auto first_model_index = newSelection.indexes()[0];
+	// Tell the filter model about the new selection.
+	m_proxy_model->setSelectedIndex(newSelection.indexes()[0]);
+
+	PopulateTreeWidget(newSelection.indexes()[0]);
+}
+
+void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
+{
+	qDebug() << "Data changed:" << topLeft << bottomRight << roles;
+
+	PopulateTreeWidget(topLeft);
+}
+
+void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index)
+{
+	qDebug() << "Populating with: " << first_model_index;
+
 	///qDebug() << "Incoming model:" << first_model_index.model();
 	const LibrarySortFilterProxyModel* model = dynamic_cast<const LibrarySortFilterProxyModel*>(first_model_index.model());
 	if(model == nullptr)

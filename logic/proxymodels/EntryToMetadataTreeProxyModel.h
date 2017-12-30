@@ -21,6 +21,7 @@
 #define ENTRYTOMETADATATREEPROXYMODEL_H
 
 #include <QSortFilterProxyModel>
+#include <QPersistentModelIndex>
 
 class EntryToMetadataTreeProxyModel : public QSortFilterProxyModel
 {
@@ -30,6 +31,8 @@ public:
     explicit EntryToMetadataTreeProxyModel(QObject *parent = Q_NULLPTR);
     virtual ~EntryToMetadataTreeProxyModel();
     
+    void setSelectedIndex(const QPersistentModelIndex& selected_index);
+    
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
@@ -37,6 +40,7 @@ protected:
 private:
 	Q_DISABLE_COPY(EntryToMetadataTreeProxyModel)
 
+	QPersistentModelIndex m_current_selected_index;
 };
 
 #endif /* ENTRYTOMETADATATREEPROXYMODEL_H */

@@ -42,7 +42,13 @@ public:
     void connectToView(MDITreeViewBase* view);
     
 public slots:
-    void playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
+	void viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
+
+	/// Slot which is invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
+	void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
+
+	///@todo
+	void PopulateTreeWidget(const QModelIndex& first_model_index);
 
 private:
 	Q_DISABLE_COPY(MetadataDockWidget)

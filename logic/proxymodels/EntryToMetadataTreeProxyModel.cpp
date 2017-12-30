@@ -19,6 +19,8 @@
 
 #include "EntryToMetadataTreeProxyModel.h"
 
+#include <QDebug>
+
 EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(QObject *parent) : QSortFilterProxyModel(parent)
 {
 }
@@ -27,10 +29,23 @@ EntryToMetadataTreeProxyModel::~EntryToMetadataTreeProxyModel()
 {
 }
 
+void EntryToMetadataTreeProxyModel::setSelectedIndex(const QPersistentModelIndex& selected_index)
+{
+	qDebug() << "Setting selected index to:" << selected_index;
+
+	m_current_selected_index = selected_index;
+}
+
 bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 {
 	// Only accept the row if it's selected.
 	QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
-//	if(sourceModel()->selectionModel()->)
+	if(m_current_selected_index == index)
+	{
+		qDebug() << "Accepting selected index:" << index;
+		return true;
+	}
+
+	return false;
 }
