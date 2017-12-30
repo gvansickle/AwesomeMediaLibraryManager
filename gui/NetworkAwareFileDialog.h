@@ -54,6 +54,7 @@ public slots:
 	virtual int exec() override;
 
 private:
+	Q_DISABLE_COPY(NetworkAwareFileDialog)
 
 	QString filter_to_suffix(const QString &filter);
 

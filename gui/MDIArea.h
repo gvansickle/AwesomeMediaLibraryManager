@@ -29,6 +29,10 @@ class MDIArea : public QMdiArea
 public:
     MDIArea(QWidget *parent = Q_NULLPTR);
     ~MDIArea();
+
+private:
+	Q_DISABLE_COPY(MDIArea)
+
 };
 
 #endif // MDIAREA_H

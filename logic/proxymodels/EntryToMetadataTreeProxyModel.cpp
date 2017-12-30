@@ -29,5 +29,8 @@ EntryToMetadataTreeProxyModel::~EntryToMetadataTreeProxyModel()
 
 bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 {
+	// Only accept the row if it's selected.
+	QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
+//	if(sourceModel()->selectionModel()->)
 }

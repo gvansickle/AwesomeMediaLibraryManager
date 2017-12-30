@@ -33,12 +33,16 @@
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
 #include <logic/LibrarySortFilterProxyModel.h>
+#include <logic/proxymodels/EntryToMetadataTreeProxyModel.h>
 
 #include <utils/Theme.h>
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
 	setObjectName("MetadataDockWidget");
+
+	// Set up the proxy model.
+	m_proxy_model = new EntryToMetadataTreeProxyModel(this);
 
 	// Main layout is vertical.
 	auto mainLayout = new QVBoxLayout();
@@ -67,8 +71,9 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 		return;
 	}
 	
+	m_proxy_model->setSourceModel(view->model());
 	m_connected_selection_model = view->selectionModel();
-	
+
 	auto connection_handle = connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
 										 this, &MetadataDockWidget::playlistSelectionChanged,
 										 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));

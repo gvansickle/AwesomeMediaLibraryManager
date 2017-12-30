@@ -35,6 +35,7 @@ protected:
 
     
 private:
+	Q_DISABLE_COPY(EntryToMetadataTreeProxyModel)
 
 };
 

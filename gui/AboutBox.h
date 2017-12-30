@@ -33,6 +33,8 @@ public:
 	int exec() override;
 
 private:
+	Q_DISABLE_COPY(AboutBox)
+
 	QString m_text_str;
 	QString m_title_str;
 };

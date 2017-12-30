@@ -37,11 +37,13 @@ public:
     /**
      * @todo write docs
      */
-	DropMenu(const QString &title = tr("Copy or Move?"), QWidget *parent = Q_NULLPTR);
+	explicit DropMenu(const QString &title = tr("Copy or Move?"), QWidget *parent = Q_NULLPTR);
 
 	Qt::DropAction whichAction(QPoint p);
 
 private:
+	Q_DISABLE_COPY(DropMenu)
+
     QAction *m_act_cancel;
     QAction *m_act_move;
     QAction *m_act_copy;

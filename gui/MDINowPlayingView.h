@@ -31,6 +31,9 @@ public:
 	MDINowPlayingView(QWidget *parent);
 
 	QString getDisplayName() const override;
+
+private:
+	Q_DISABLE_COPY(MDINowPlayingView)
 };
 
 

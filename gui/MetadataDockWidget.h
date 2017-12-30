@@ -45,11 +45,12 @@ public slots:
     void playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
 
 private:
-    
+	Q_DISABLE_COPY(MetadataDockWidget)
+
+	EntryToMetadataTreeProxyModel* m_proxy_model;
+
 	QItemSelectionModel* m_connected_selection_model;
 
-    EntryToMetadataTreeProxyModel* m_proxy_model;
-    
     QTreeWidget* m_metadata_widget;
 
     PixmapLabel* m_cover_image_label;

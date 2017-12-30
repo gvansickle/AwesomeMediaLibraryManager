@@ -112,6 +112,8 @@ private slots:
     void onTextFilterChanged();
 
 private:
+	Q_DISABLE_COPY(MainWindow)
+
     void createActions();
     void createActionsEdit();
     
