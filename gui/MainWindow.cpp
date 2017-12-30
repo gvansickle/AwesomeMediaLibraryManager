@@ -112,11 +112,6 @@ M_WARNING("TODO: ifdef this to development only")
 	// the subwindow activation changes.
     connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
-    // Mapper for the Window menu.
-//    m_windowMapper = new QSignalMapper(this);
-//    connect(m_windowMapper, SIGNAL(mapped(QWidget*)),
-//        this, SLOT(setActiveSubWindow(QWidget*)));
-
     createActions();
     createMenus();
     createToolBars();
@@ -143,6 +138,9 @@ MainWindow::~MainWindow()
 
 }
 
+/**
+ * Called primarily when we get a subWindowActivated signal from the MDIArea.
+ */
 void MainWindow::updateActionEnableStates()
 {
 	// Do we have an active MDI child, and what is it?
@@ -151,18 +149,8 @@ void MainWindow::updateActionEnableStates()
 	auto childIsLibrary = qobject_cast<MDILibraryView*>(activeMdiChild());
 	
 	/// Update file actions.
-	for(auto act : {
-		m_saveLibraryAsAct,
-		})
-	{
-		act->setEnabled(childIsLibrary);
-	}
-	for(auto act : {
-		m_savePlaylistAct
-		})
-	{
-		act->setEnabled(childIsPlaylist);
-	}
+	m_saveLibraryAsAct->setEnabled(childIsLibrary);
+	m_savePlaylistAct->setEnabled(childIsPlaylist);
 	
 	// Update the Window menu actions.
 	m_act_window_list_separator->setVisible(childIsBaseClass);
@@ -190,12 +178,12 @@ void MainWindow::updateActionEnableStates_Edit()
 		if(childBaseClass)
 		{
 			// Update edit actions.
-			qDebug() << "Child inherits from MDITreeViewBase, updating RO actions enable state";
+			qDebug() << "Child inherits from MDITreeViewBase, updating edit actions enable state";
 
 			// It's something that might have a selection.
 			auto bcsm = childBaseClass->selectionModel();
 			bool has_selection = bcsm && bcsm->hasSelection();
-			// And might contain items.
+			// And may or may not contain items.
 			auto bcmodel = childBaseClass->model();
 			bool has_items = bcmodel && bcmodel->rowCount() > 0;
 
@@ -272,7 +260,7 @@ void MainWindow::createActions()
 	//
 	// Edit actions.
 	//
-	createEditActions();
+	createActionsEdit();
 
     //
 	// Tools actions.
@@ -354,7 +342,7 @@ void MainWindow::createActions()
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 }
 
-void MainWindow::createEditActions()
+void MainWindow::createActionsEdit()
 {
     m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
@@ -368,7 +356,7 @@ void MainWindow::createEditActions()
                                                       tr("Paste the clipboard's contents into the current selection"));
 	connect_trig(m_act_paste, this, &MainWindow::onPaste);
 
-    m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("Delete"), this, QKeySequence(),///QKeySequence::Delete,
+    m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("&Delete"), this, QKeySequence::Delete,
                                                        tr("Delete this entry"));
     connect_trig(m_act_delete, this, &MainWindow::onDelete);
 
@@ -419,6 +407,8 @@ void MainWindow::createMenus()
 								m_act_cut,
 								m_act_copy,
 								m_act_paste,
+								m_menu_edit->addSection(tr("Delete")),
+								m_act_delete,
 								m_menu_edit->addSection(tr("Selections")),
 								m_act_select_all
 							});
@@ -541,9 +531,6 @@ void MainWindow::createConnections()
 {
 	/// @todo
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
-
-	// Connect menu "about to shows" to the action updater.
-	connect(m_menu_edit, &QMenu::aboutToShow, this, &MainWindow::updateActionEnableStates_Edit);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(&m_player, m_controls);
@@ -813,6 +800,7 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 	return nullptr;
 }
 
+#if 0
 void MainWindow::setActiveSubWindow(QMdiSubWindow *window)
 {
 	qDebug() << "FIXME";
@@ -829,6 +817,7 @@ void MainWindow::setActiveSubWindow(QMdiSubWindow *window)
 		qDebug() << "null subwindow";
 	}
 }
+#endif
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
@@ -949,14 +938,12 @@ void MainWindow::onStartup()
     // Create the "Now Playing" playlist.
     auto wins = createMdiNowPlayingView();
     m_now_playing_playlist_view = wins.first;
-//    QMdiSubWindow* mdisubwindow = wins.second;
 
 M_WARNING("TODO: Specify a temp/cache file?")
     m_now_playing_playlist_view->newFile();
 
 	connectNowPlayingViewAndMainWindow(m_now_playing_playlist_view);
 
-//    setActiveSubWindow(mdisubwindow);
     statusBar()->showMessage(QString("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
 
     m_now_playing_playlist_view->show();
@@ -1020,10 +1007,8 @@ M_WARNING("THIS NEEDS WORK");
 		std::tie(child, mdisubWindow) = createMdiChildLibraryView();
 
 		child->setModel(libmodel);
-//		setActiveSubWindow(mdisubWindow);
 		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
-//		child->show();
 	}
 }
 
@@ -1127,14 +1112,10 @@ void MainWindow::newPlaylist()
 {
     auto wins = createMdiChildPlaylist();
 	MDIPlaylistView* child = wins.first;
-//	QMdiSubWindow* mdisubwindow = wins.second;
 
     child->newFile();
 
-//    setActiveSubWindow(mdisubwindow);
     statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(child->windowTitle()));
-
-    child->show();
 }
 
 void MainWindow::openPlaylist()
@@ -1194,10 +1175,10 @@ std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryVie
 
 	// New Lib MDI View.
 	auto child = new MDILibraryView(this);
-	
-	addChildMDIView(child);
 
 	connectLibraryViewAndMainWindow(child);
+	
+	addChildMDIView(child);
 
 	return std::make_tuple(child, nullptr);
 }
@@ -1300,7 +1281,7 @@ void MainWindow::onDelete()
 		QAbstractItemModel *model = child_treeview->model();
 		if (model->removeRow(index.row(), index.parent()))
 		{
-			updateActionEnableStates_Edit();
+			updateActionEnableStates();
 		}
 	}
 }

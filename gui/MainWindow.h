@@ -73,7 +73,7 @@ protected:
 
 private slots:
     void onSubWindowActivated(QMdiSubWindow* subwindow);
-    void setActiveSubWindow(QMdiSubWindow* window);
+	///@delete void setActiveSubWindow(QMdiSubWindow* window);
     void onFocusChanged(QWidget* old, QWidget* now);
 
     void changeStyle(const QString& styleName);
@@ -114,7 +114,7 @@ private slots:
 
 private:
     void createActions();
-    void createEditActions();
+    void createActionsEdit();
     
     void createMenus();
     void createToolBars();
