@@ -23,3 +23,26 @@ LibraryEntryMimeData::LibraryEntryMimeData()
 {
 
 }
+
+bool LibraryEntryMimeData::hasFormat(const QString& mimetype) const
+{
+	if(mimetype == m_additional_supported_mimetypes[0] && m_lib_item_list.size() > 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+QStringList LibraryEntryMimeData::formats() const
+{
+	QStringList retval;
+
+	if(m_lib_item_list.size() > 0)
+	{
+		retval.append(m_additional_supported_mimetypes[0]);
+	}
+
+	retval += this->QMimeData::formats();
+
+	return retval;
+}

@@ -73,7 +73,6 @@ protected:
 
 private slots:
     void onSubWindowActivated(QMdiSubWindow* subwindow);
-	///@delete void setActiveSubWindow(QMdiSubWindow* window);
     void onFocusChanged(QWidget* old, QWidget* now);
 
     void changeStyle(const QString& styleName);
@@ -272,6 +271,7 @@ private:
 
     /// Toolbars
     QToolBar* m_fileToolBar;
+    QToolBar* m_toolbar_edit;
     QToolBar* m_settingsToolBar;
     QToolBar* m_controlsToolbar;
     QToolBar* m_filterToolbar;
@@ -281,9 +281,9 @@ private:
     MetadataDockWidget* m_metadataDockWidget;
 
     /// The Activity Progress Widget.
-	ActivityProgressWidget* m_activity_progress_widget;
+    ActivityProgressWidget* m_activity_progress_widget;
 
-	/// The Settings (AKA Preferences, AKA Config) dialog.
-	QSharedPointer<SettingsDialog> m_settings_dlg;
+    /// The Settings (AKA Preferences, AKA Config) dialog.
+    QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 

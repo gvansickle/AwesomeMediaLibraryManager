@@ -57,6 +57,7 @@
 #include <QComboBox>
 #include <QStyleFactory>
 #include <QDirIterator>
+#include <QClipboard>
 
 #include <functional>
 #include <type_traits>
@@ -65,6 +66,7 @@
 #include <utils/Theme.h>
 #include <QtCore/QThread>
 #include <QtWidgets/QWhatsThis>
+#include <qt5/QtCore/qmimedata.h>
 
 #include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
@@ -165,8 +167,7 @@ void MainWindow::updateActionEnableStates()
 
 void MainWindow::updateActionEnableStates_Edit()
 {
-	qDebug() << "ENTER";
-	if(activeMdiChild() != nullptr)
+	if(activeMdiChild())
 	{
 		qDebug() << "Active child:" << activeMdiChild();
 
@@ -186,6 +187,19 @@ void MainWindow::updateActionEnableStates_Edit()
 			// And may or may not contain items.
 			auto bcmodel = childBaseClass->model();
 			bool has_items = bcmodel && bcmodel->rowCount() > 0;
+			// For paste, does the clipboard have anything in it we might be interested in?
+			const QClipboard *clipboard = QApplication::clipboard();
+			const QMimeData *mimeData = clipboard->mimeData();
+			bool clipboard_has_contents = false;
+			if(mimeData)
+			{
+				QStringList mimedata_formats = mimeData->formats();
+				if(mimedata_formats.contains("application/x-grvs-libraryentryref"))
+				{
+					clipboard_has_contents = true;
+				}
+			}
+			
 
 			// Can copy from any derived class if it has a selection.
 			m_act_copy->setEnabled(has_selection);
@@ -201,7 +215,7 @@ void MainWindow::updateActionEnableStates_Edit()
 			}
 
 			// We can paste into a Playlist regardless of selection.
-			m_act_paste->setEnabled(childIsPlaylist);
+			m_act_paste->setEnabled(childIsPlaylist && clipboard_has_contents);
 
 			return;
 		}
@@ -412,6 +426,7 @@ void MainWindow::createMenus()
 								m_menu_edit->addSection(tr("Selections")),
 								m_act_select_all
 							});
+	m_menu_edit->setTearOffEnabled(true);
 
     // Create the View menu.
 	m_viewMenu = menuBar()->addMenu("&View");
@@ -461,7 +476,10 @@ void MainWindow::createMenus()
 
 void MainWindow::createToolBars()
 {
-	m_fileToolBar = addToolBar("File");
+	//
+	// File
+	//
+	m_fileToolBar = addToolBar(tr("File"));
 	m_fileToolBar->setObjectName("FileToolbar");
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
@@ -469,7 +487,22 @@ void MainWindow::createToolBars()
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
 							 m_savePlaylistAct});
-
+							 
+	//
+	// Edit
+	//
+	m_toolbar_edit = addToolBar(tr("Edit"));
+	m_toolbar_edit->setObjectName("EditToolbar");
+	m_toolbar_edit->addActions({
+		/// @todo m_act_undo, m_act_redo,
+		m_act_cut,
+		m_act_copy,
+		m_act_paste
+	});
+									 
+	//
+	// Settings
+	//
 	m_settingsToolBar = addToolBar("Settings");
 	m_settingsToolBar->setObjectName("SettingsToolbar");
 	m_settingsToolBar->addAction(m_settingsAct);
@@ -625,16 +658,6 @@ void MainWindow::updateConnections()
     if(childIsMDITreeViewBase)
     {
 //		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
-
-        // Disconnect actions from whatever they were connected to.
-//        m_act_copy->disconnect();
-//		m_act_cut->disconnect();
-//		m_act_paste->disconnect();
-//        m_act_select_all->disconnect();
-//                
-        // Connect them to the new MDI Child.
-//        connect_trig(m_act_copy, childIsMDITreeViewBase, &MDITreeViewBase::onCopy);
-//        connect_trig(m_act_select_all, childIsMDITreeViewBase, &MDITreeViewBase::onSelectAll);
         
         if(childIsLibrary)
         {
@@ -799,25 +822,6 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 	}
 	return nullptr;
 }
-
-#if 0
-void MainWindow::setActiveSubWindow(QMdiSubWindow *window)
-{
-	qDebug() << "FIXME";
-	m_mdi_area->setActiveSubWindow(window);
-	return;
-    if(window != nullptr)
-    {
-		qDebug() << "new subwindow: '" << window << "', '" << window->windowTitle() << "'";
-
-        m_mdi_area->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(window));
-    }
-	else
-	{
-		qDebug() << "null subwindow";
-	}
-}
-#endif
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
