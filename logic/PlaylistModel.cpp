@@ -240,7 +240,6 @@ bool PlaylistModel::canDropMimeData(const QMimeData* data, Qt::DropAction action
 
 bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
 {
-#if 1
     /// @brief Drag and Drop shouldn't be this hard.
     /// To get drag and drop functioning completely correctly requires a lot of completely unintuitive and undocumented work.
     /// For example, Qt5's own QTreeWidget:
@@ -253,7 +252,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	///
 	/// Note that the  QAbstractItemModel::dropMimeData() implementation looks like it's not what we need.
 	/// It ultimately calls QAbstractItemModel::decodeData() and deserializes a QDataStream coming from the QMimeData,
-	/// and it does a ton of work to get every row and column entered into the model.
+	/// and it does a ton of work to get every row and column separately entered into the model.
 
 	// Per example code here: http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views, "Inserting dropped data into a model".
 	// "The model first has to make sure that the operation should be acted on,
@@ -313,7 +312,7 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
     /// initiator of the drag should remove the source item if a Qt::MoveAction is performed."
     /// So if we're in the model here with a Qt::MoveAction, we shouldn't need to do the remove.
 
-	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->lib_item_list;
+	auto libentries = qobject_cast<const LibraryEntryMimeData*>(data)->m_lib_item_list;
 	auto rows = libentries.size();
 
 	insertRows(beginRow, rows, QModelIndex());
@@ -334,25 +333,20 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	else if(action == Qt::MoveAction)
 	{
         qDebug() << "MoveAction START";
-		for(auto libentry : libentries)
-		{
-			qDebug() << "Moving";
-			// The dropped libentries should actually be PlaylistEntries.
-			std::shared_ptr<PlaylistModelItem> plmi = std::dynamic_pointer_cast<PlaylistModelItem>(libentry);
-			Q_ASSERT(plmi != 0);
-			setData(index(beginRow, 0), QVariant::fromValue(plmi));
-			beginRow += 1;
-		}
+            for(auto libentry : libentries)
+            {
+                    qDebug() << "Moving";
+                    // The dropped libentries should actually be PlaylistEntries.
+                    std::shared_ptr<PlaylistModelItem> plmi = std::dynamic_pointer_cast<PlaylistModelItem>(libentry);
+                    Q_ASSERT(plmi != 0);
+                    setData(index(beginRow, 0), QVariant::fromValue(plmi));
+                    beginRow += 1;
+            }
         qDebug() << "MoveAction END";
 		return true;
 	}
 	return false;
-#endif
-	qDebug() << "Dropping, Action:" << action << "drop row/column:" << row << column << "Parent:" << parent;
-    qDebug() << "QMimeData:"; MimeDataDumper(this).dumpMimeData(data);
-	bool retval = LibraryModel::dropMimeData(data, action, row, column, parent);
-	qDebug() << "BASE CLASS RETURN VALUE:" << retval;
-	return retval;
+
 }
 
 void PlaylistModel::setLibraryRootUrl(const QUrl &url)

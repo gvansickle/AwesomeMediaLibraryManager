@@ -39,7 +39,7 @@ class PlaylistModelItem;
 class LocalLibraryItem : public QStandardItem
 {
 public:
-	LocalLibraryItem(LibraryModel* libmodel)
+	explicit LocalLibraryItem(LibraryModel* libmodel)
 	{
 		m_libmodel = libmodel;
 		setData(QVariant::fromValue(libmodel));

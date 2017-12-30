@@ -26,21 +26,30 @@
 #include <QDebug>
 #include <QMenu>
 #include <QAction>
+#include <QClipboard>
 #include <QHeaderView>
 #include <QSaveFile>
 #include <logic/LibrarySortFilterProxyModel.h>
+#include <utils/ModelHelpers.h>
 
 #include "gui/NetworkAwareFileDialog.h"
+#include "utils/ConnectHelpers.h"
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {
+	// Window menu action.
+	m_act_window = new QAction(this);
+	m_act_window->setCheckable(true);
+	connect(m_act_window, SIGNAL(triggered()), this, SLOT(show()));
+	connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
+	
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();
 
 	m_isUntitled = true;
 
 	setAttribute(Qt::WA_DeleteOnClose);
-
+        
 	// Enable sorting for this view.
 	setSortingEnabled(true);
 	// ...but start unsorted, and don't show the sort indicator.
@@ -94,8 +103,7 @@ static qint64 sequenceNumber = 0;
 
 	// Set the window title to the Display Name, which defaults to the filename, plus the Qt "is modified" placeholder.
 	setWindowTitle(getDisplayName() + "[*]");
-
-	/// @todo Connect a contentsChanged signal to a docWasModified slot here?
+	m_act_window->setText(getDisplayName());
 }
 
 bool MDITreeViewBase::loadFile(QUrl load_url)
@@ -197,12 +205,42 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 	setWindowFilePath(url.toString());
 	setWindowModified(false);
 	setWindowTitle(getDisplayName() + "[*]");
+	m_act_window->setText(getDisplayName());
 }
 
 QString MDITreeViewBase::getDisplayName() const
 {
 	return userFriendlyCurrentFile();
 }
+
+//
+// Public slots.
+//
+
+void MDITreeViewBase::onCopy()
+{
+    // Get the current selection.
+    QModelIndexList mil = selectionModel()->selectedRows();
+    
+    if(mil.isEmpty())
+    {
+        // Nothing to copy.
+        return;
+    }
+    
+    auto m = model();
+    QMimeData* copied_rows = m->mimeData(mil);
+
+    // Copy the rows to the clipboard.
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    clipboard->setMimeData(copied_rows, QClipboard::Clipboard);
+}
+
+void MDITreeViewBase::onSelectAll()
+{
+    selectAll();
+}
+
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)
 {
@@ -281,14 +319,19 @@ void MDITreeViewBase::onSectionClicked(int logicalIndex)
 	header()->setSortIndicator(logicalIndex, m_sort_order);
 }
 
-#if 0
-void MDITreeViewBase::paintEvent(QPaintEvent* event)
+void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
-	QTreeView::paintEvent(event);
-	// Take over for the base class' call to paintDropIndicator().
+	this->QTreeView::selectionChanged(selected, deselected);
 
+	if(!selected.empty())
+	{
+		emit copyAvailable(true);
+	}
+	else
+	{
+		emit copyAvailable(false);
+	}
 }
-#endif
 
 bool MDITreeViewBase::viewportEvent(QEvent* event)
 {

@@ -54,198 +54,236 @@ class MainWindow: public QMainWindow
 {
     Q_OBJECT
 
+signals:
+    void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+
+
 public:
     MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
     ~MainWindow() override;
 
-signals:
-	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+public slots:
+    void updateActionEnableStates();
+    void updateActionEnableStates_Edit();
+
 
 protected:
-	void closeEvent(QCloseEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
 
 
 private slots:
-    void subWindowActivated(QMdiSubWindow* subwindow);
-	void setActiveSubWindow(QWidget* window);
-	void onFocusChanged(QWidget* old, QWidget* now);
+    void onSubWindowActivated(QMdiSubWindow* subwindow);
+    void onFocusChanged(QWidget* old, QWidget* now);
 
-	void changeStyle(const QString& styleName);
-	void changeIconTheme(const QString& iconThemeName);
+    void changeStyle(const QString& styleName);
+    void changeIconTheme(const QString& iconThemeName);
 
-	void onStatusSignal(LibState state,  qint64 current, qint64 max);
+    void onStatusSignal(LibState state,  qint64 current, qint64 max);
 
-	void onShowLibrary(LibraryModel* libmodel);
-	void onRemoveDirFromLibrary(LibraryModel* libmodel);
+    void onShowLibrary(LibraryModel* libmodel);
+    void onRemoveDirFromLibrary(LibraryModel* libmodel);
 
-	void onRescanLibrary();
+    void onRescanLibrary();
 
-	void startSettingsDialog();
+    void startSettingsDialog();
 
     void newPlaylist();
     void openPlaylist();
-	void savePlaylistAs();
+    void savePlaylistAs();
 
-	void onPlayTrackNowSignal(QUrl url);
-	void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
-	void onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry);
+    /// @name Edit action forwarders.
+    /// @{
+    void onCut();
+    void onCopy();
+    void onPaste();
+    void onSelectAll();
+    void onDelete();
+    /// @}
 
-	void doExperiment();
+    void onPlayTrackNowSignal(QUrl url);
+    void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
+    void onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry);
 
-	void onChangeWindowMode(QAction* action);
+    void doExperiment();
 
-	/// Filter slots.
-	void onTextFilterChanged();
+    void onChangeWindowMode(QAction* action);
+
+    /// Filter slots.
+    void onTextFilterChanged();
 
 private:
     void createActions();
+    void createActionsEdit();
+    
     void createMenus();
     void createToolBars();
     void createStatusBar();
     void createDockWindows();
+    
     void updateMenus();
-
     void updateWindowMenu();
 
-	/// @name Signal/slot Connection management.
-	///@{
-	void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
-	void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
-	void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
+    /// @name Signal/slot Connection management.
+    ///@{
+    void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
+    void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
+    void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
 
-	void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
+    void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
 
-	void connectLibraryViewAndMainWindow(MDILibraryView* lv);
-	void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
-	///@}
+    void connectLibraryViewAndMainWindow(MDILibraryView* lv);
+    void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
+    ///@}
 
-	void stopAllBackgroundThreads();
+    void stopAllBackgroundThreads();
 
     void importLib();
-
+    
     void about();
 
     /// @name Persistency
-	///@{
+    ///@{
 
-	/// Reads the primary settings.
+    /// Reads the primary settings.
     void readSettings();
     void onStartup();
-	void openWindows();
-	void writeSettings();
-	void writeLibSettings(QSettings& settings);
-	void readLibSettings(QSettings& settings);
-	///@}
+    void openWindows();
+    void writeSettings();
+    void writeLibSettings(QSettings& settings);
+    void readLibSettings(QSettings& settings);
+    ///@}
 
     /// Signal-Slot-related functions.
     void createConnections();
-	void updateConnections();
+    void updateConnections();
 
     /// MDI-related functions.
+    /// @{
+    void addChildMDIView(MDITreeViewBase* child);
     MDITreeViewBase* activeMdiChild();
-	QMdiSubWindow* findSubWindow(QUrl url);
-	std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
-	std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
+    QMdiSubWindow* findSubWindow(QUrl url);
+    
+    std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
+    std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
+    std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
 
-	QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
-	void openMDILibraryViewOnModel(LibraryModel* libmodel);
+    QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
+    void openMDILibraryViewOnModel(LibraryModel* libmodel);
 
-	std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
+    /// @}
+    
+    
+    bool maybeSaveOnClose();
 
-	bool maybeSaveOnClose();
 
+    /// @name Private data members.
+    /// @{
 
-	/// @name Private data members.
-	/// @{
+    /// App-specific cache directory.
+    QUrl m_cachedir;
 
-	/// App-specific cache directory.
-	QUrl m_cachedir;
+    /// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
+    QUrl m_appdatadir;
 
-	/// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
-	QUrl m_appdatadir;
+    /// The media player instance.
+    MP2 m_player;
 
-	/// The media player instance.
-	MP2 m_player;
+    /// Experimental "scratch" widget for doing development experiments.
+    Experimental* m_experimental;
 
-	/// Experimental "scratch" widget for doing development experiments.
-	Experimental* m_experimental;
-
-	/// The library models.
-	std::vector<QSharedPointer<LibraryModel>> m_libmodels;
+    /// The library models.
+    std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
 	/// The "Now Playing" playlist.
     QPointer<PlaylistModel> m_now_playing_playlist_model;
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
 
-	/// The list of PlaylistModels.
-	std::vector<PlaylistModel*> m_playlist_models;
+    /// The list of PlaylistModels.
+    std::vector<PlaylistModel*> m_playlist_models;
 
-	/// @}
+    /// @}
 
-	/// The player controls widget.
-	PlayerControls* m_controls;
-	QLabel* m_numSongsIndicator;
+    /// The player controls widget.
+    PlayerControls* m_controls;
+    QLabel* m_numSongsIndicator;
 
-	/// the MDI area and signal mapper.
-	QMdiArea *m_mdi_area;
-	QSignalMapper *m_windowMapper;
+    /// the MDI area and signal mapper.
+    QMdiArea *m_mdi_area;
+    QSignalMapper *m_windowMapper;
 
     /// Actions
-	QAction* m_importLibAct;
-	QAction* m_rescanLibraryAct;
-	QAction* m_saveLibraryAsAct;
-	QAction* m_removeDirFromLibrary;
-	QAction* m_newPlaylistAct;
-	QAction* m_openPlaylistAct;
-	QAction* m_savePlaylistAct;
-	QAction* m_exitAction;
-	QAction* m_scanLibraryAction;
-	QAction* m_settingsAct;
 
-	/// @name Window actions.
-	/// @{
-	QActionGroup *m_tabs_or_subwindows_group;
-	QAction *m_tabs_act;
-	QAction *m_subwins_act;
-	QAction* m_windowNextAct;
-	QAction* m_windowPrevAct;
-	QAction* m_windowCascadeAct;
-	QAction* m_windowTileAct;
-	QAction* m_closeAllAct;
-	QAction* m_closeAct;
-	/// @}
+    /// @name File actions
+    /// @{
+    QAction* m_importLibAct;
+    QAction* m_rescanLibraryAct;
+    QAction* m_saveLibraryAsAct;
+    QAction* m_removeDirFromLibrary;
+    QAction* m_newPlaylistAct;
+    QAction* m_openPlaylistAct;
+    QAction* m_savePlaylistAct;
+    QAction* m_exitAction;
+    QAction* m_scanLibraryAction;
+    QAction* m_settingsAct;
+    /// @}
 
-	/// Help actions.
-	QAction* m_helpAct;
-	QAction* m_whatsThisAct;
-	QAction* m_aboutAct;
-	QAction* m_aboutQtAct;
+    /// @name Edit actions.
+    /// @{
+    QAction *m_act_cut;
+    QAction *m_act_copy;
+    QAction *m_act_paste;
+    QAction *m_act_delete;
+    QAction *m_act_select_all;
+    /// @}
 
-	/// Experimental actions.
-	QAction* m_experimentalAct;
+    /// @name Window actions.
+    /// @{
+    QActionGroup *m_tabs_or_subwindows_group;
+    QAction *m_tabs_act;
+    QAction *m_subwins_act;
+    QAction* m_windowNextAct;
+    QAction* m_windowPrevAct;
+    QAction* m_windowCascadeAct;
+    QAction* m_windowTileAct;
+    QAction* m_closeAllAct;
+    QAction* m_closeAct;
+    QActionGroup* m_act_group_window;
+    QAction* m_act_window_list_separator;
+    /// @}
+
+    /// Help actions.
+    QAction* m_helpAct;
+    QAction* m_whatsThisAct;
+    QAction* m_aboutAct;
+    QAction* m_aboutQtAct;
+
+    /// Experimental actions.
+    QAction* m_experimentalAct;
 
     /// Menus
-	QMenu* m_fileMenu;
-	QMenu* m_viewMenu;
-	QMenu* m_toolsMenu;
-	QMenu* m_windowMenu;
-	QMenu* m_helpMenu;
+    QMenu* m_fileMenu;
+    QMenu *m_menu_edit;
+    QMenu* m_viewMenu;
+    QMenu* m_toolsMenu;
+    QMenu* m_menu_window;
+    QMenu* m_helpMenu;
 
     /// Toolbars
-	QToolBar* m_fileToolBar;
-	QToolBar* m_settingsToolBar;
-	QToolBar* m_controlsToolbar;
-	QToolBar* m_filterToolbar;
+    QToolBar* m_fileToolBar;
+    QToolBar* m_toolbar_edit;
+    QToolBar* m_settingsToolBar;
+    QToolBar* m_controlsToolbar;
+    QToolBar* m_filterToolbar;
 
     /// Docks
-	CollectionDockWidget* m_libraryDockWidget;
-	MetadataDockWidget* m_metadataDockWidget;
+    CollectionDockWidget* m_libraryDockWidget;
+    MetadataDockWidget* m_metadataDockWidget;
 
     /// The Activity Progress Widget.
-	ActivityProgressWidget* m_activity_progress_widget;
+    ActivityProgressWidget* m_activity_progress_widget;
 
-	/// The Settings (AKA Preferences, AKA Config) dialog.
-	QSharedPointer<SettingsDialog> m_settings_dlg;
+    /// The Settings (AKA Preferences, AKA Config) dialog.
+    QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 

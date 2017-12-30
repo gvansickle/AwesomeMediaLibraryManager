@@ -17,32 +17,24 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LibraryEntryMimeData.h"
+#ifndef MODELHELPERS_H
+#define MODELHELPERS_H
 
-LibraryEntryMimeData::LibraryEntryMimeData()
+#include <QPersistentModelIndex>
+#include <QModelIndexList>
+
+/// Convert a QModelIndexList into a QList of QPersistentIndexes.
+inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
 {
+	QList<QPersistentModelIndex> retval;
 
-}
-
-bool LibraryEntryMimeData::hasFormat(const QString& mimetype) const
-{
-	if(mimetype == m_additional_supported_mimetypes[0] && m_lib_item_list.size() > 0)
+	for(auto i : mil)
 	{
-		return true;
+		retval.append(i);
 	}
-	return false;
-}
-
-QStringList LibraryEntryMimeData::formats() const
-{
-	QStringList retval;
-
-	if(m_lib_item_list.size() > 0)
-	{
-		retval.append(m_additional_supported_mimetypes[0]);
-	}
-
-	retval += this->QMimeData::formats();
-
 	return retval;
 }
+
+
+#endif /* MODELHELPERS_H */
+

@@ -29,10 +29,13 @@
 #include <QMimeData>
 #include <QMimeType>
 #include <QMimeDatabase>
+#include <QClipboard>
+#include <QPoint>
 
 #include <logic/LibrarySortFilterProxyModel.h>
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
+#include "utils/ModelHelpers.h"
 
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
@@ -376,6 +379,47 @@ void MDIPlaylistView::previous()
 	m_underlying_model->qmplaylist()->previous();
 }
 
+void MDIPlaylistView::onCut()
+{
+	qDebug() << "CUTTING";
+	
+	// Copy selection to clipboard.
+	onCopy();
+	
+	// Delete the selected items from this view.
+	onDelete();
+}
+
+
+void MDIPlaylistView::onPaste()
+{
+	qDebug() << "PASTING";
+    // Get the current selection.
+	QModelIndexList mil = selectionModel()->selectedRows();
+M_WARNING("TODO: Paste at current select position")
+	
+	QClipboard *clipboard = QGuiApplication::clipboard();
+	if(!clipboard)
+	{
+		return;
+	}
+
+	m_underlying_model->dropMimeData(clipboard->mimeData(), Qt::CopyAction, -1, -1, QModelIndex());
+}
+
+void MDIPlaylistView::onDelete()
+{
+	qDebug() << "DELETING";
+	// Remove the current selection.
+	QModelIndexList mil = selectionModel()->selectedRows();
+	auto pmil = toQPersistentModelIndexList(mil);
+	auto m = model();
+	for(auto pi : pmil)
+	{
+		m->removeRow(pi.row());
+	}
+}
+
 /**
  * Slot which appends the incoming library entry and starts playing it.
  */
@@ -477,5 +521,34 @@ QModelIndex MDIPlaylistView::from_underlying_qmodelindex(const QModelIndex &unde
 	return proxy_model_index;
 }
 
+void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
+{
+	// QAbstractItemView::keyPressEvent() ->ignore()'s this event if it's the Delete key:
+	// https://github.com/qt/qtbase/blob/c4f397ee11fc3cea1fc132ebe1db24e3970bb477/src/widgets/itemviews/qabstractitemview.cpp#L2433
 
-
+	if(event->matches(QKeySequence::Delete))
+	{
+		qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
+		onDelete();
+                
+		// Don't call the parent class' keyPressEvent().
+		// We've done what we need to here, the Qt5 docs say not to do it,
+		// and it's possible to delete (or at least enable editing on)
+		// another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
+		event->accept();
+		return;
+	}
+	else if(event->matches(QKeySequence::Copy))
+	{
+		qDebug() << "Copy Key";
+	}
+	else if(event->matches(QKeySequence::Paste))
+	{
+		qDebug() << "Paste Key";
+	}
+	else if(event->matches(QKeySequence::Cut))
+	{
+		qDebug() << "Cut key";
+	}
+	MDITreeViewBase::keyPressEvent(event);
+}

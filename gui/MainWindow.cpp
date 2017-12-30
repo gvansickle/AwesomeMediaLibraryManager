@@ -57,6 +57,7 @@
 #include <QComboBox>
 #include <QStyleFactory>
 #include <QDirIterator>
+#include <QClipboard>
 
 #include <functional>
 #include <type_traits>
@@ -65,62 +66,60 @@
 #include <utils/Theme.h>
 #include <QtCore/QThread>
 #include <QtWidgets/QWhatsThis>
+#include <qt5/QtCore/qmimedata.h>
 
 #include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
-	// Name our GUI thread.
-	QThread::currentThread()->setObjectName("GUIThread");
-	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
+    // Name our GUI thread.
+    QThread::currentThread()->setObjectName("GUIThread");
+    qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
 
-	// Get some standard paths.
+    // Get some standard paths.
     // App-specific cache directory.
-	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
-	qInfo() << "App cache dir:" << m_cachedir;
+    m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+    qInfo() << "App cache dir:" << m_cachedir;
     // App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
-	m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
-	qInfo() << "App data dir:" << m_appdatadir;
+    m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+    qInfo() << "App data dir:" << m_appdatadir;
 
-	// Look for icons.
-	Theme::initialize();
+    // Look for icons.
+    Theme::initialize();
 
-	/// @todo
-	changeIconTheme(QIcon::themeName());
+    /// @todo
+    changeIconTheme(QIcon::themeName());
 
     // Follow the system style for the Icon&/|Text setting for toolbar buttons.
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
 M_WARNING("TODO: ifdef this to development only")
-	m_experimental = new Experimental(this);
+    m_experimental = new Experimental(this);
 
     // The list of LibraryModels.
-	m_libmodels.clear();
+    m_libmodels.clear();
 
     // The list of PlaylistModels.
-	m_playlist_models.clear();
+    m_playlist_models.clear();
 
-	m_controls = new PlayerControls(this);
+    m_controls = new PlayerControls(this);
 
     // Create the MDIArea and set it as the central widget.
-	m_mdi_area = new MDIArea(this);
-	setCentralWidget(m_mdi_area);
+    m_mdi_area = new MDIArea(this);
+    setCentralWidget(m_mdi_area);
 
-	connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::subWindowActivated);
-
-    // Mapper for the Window menu.
-	m_windowMapper = new QSignalMapper(this);
-	connect(m_windowMapper, SIGNAL(mapped(QWidget*)),
-            this, SLOT(setActiveSubWindow(QWidget*)));
+	// Connect the MDIArea subWindowActivated signal to a slot so we know when
+	// the subwindow activation changes.
+    connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
     createActions();
     createMenus();
     createToolBars();
     createStatusBar();
     createDockWindows();
-    updateMenus();
+    updateActionEnableStates();
 
     ////// Connect up signals and slots.
     createConnections();
@@ -132,12 +131,101 @@ M_WARNING("TODO: ifdef this to development only")
     setUnifiedTitleAndToolBarOnMac(true);
 
     // Send ourself a message to re-load the files we had open last time we were closed.
-	QTimer::singleShot(0, this, &MainWindow::onStartup);
+    QTimer::singleShot(0, this, &MainWindow::onStartup);
 
 }
 
 MainWindow::~MainWindow()
 {
+
+}
+
+/**
+ * Called primarily when we get a subWindowActivated signal from the MDIArea.
+ */
+void MainWindow::updateActionEnableStates()
+{
+	// Do we have an active MDI child, and what is it?
+	auto childIsBaseClass = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+	auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+	auto childIsLibrary = qobject_cast<MDILibraryView*>(activeMdiChild());
+	
+	/// Update file actions.
+	m_saveLibraryAsAct->setEnabled(childIsLibrary);
+	m_savePlaylistAct->setEnabled(childIsPlaylist);
+	
+	// Update the Window menu actions.
+	m_act_window_list_separator->setVisible(childIsBaseClass);
+	if(childIsBaseClass)
+	{
+		// Set the check next to this window's menu entry.
+		childIsBaseClass->windowMenuAction()->setChecked(true);
+	}
+	
+	updateActionEnableStates_Edit();
+}
+
+void MainWindow::updateActionEnableStates_Edit()
+{
+	if(activeMdiChild())
+	{
+		qDebug() << "Active child:" << activeMdiChild();
+
+		// We have an active MDI child.  What is it?
+		auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+		auto childIsLibrary = qobject_cast<MDILibraryView*>(activeMdiChild());
+		auto childBaseClass = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+
+		if(childBaseClass)
+		{
+			// Update edit actions.
+			qDebug() << "Child inherits from MDITreeViewBase, updating edit actions enable state";
+
+			// It's something that might have a selection.
+			auto bcsm = childBaseClass->selectionModel();
+			bool has_selection = bcsm && bcsm->hasSelection();
+			// And may or may not contain items.
+			auto bcmodel = childBaseClass->model();
+			bool has_items = bcmodel && bcmodel->rowCount() > 0;
+			// For paste, does the clipboard have anything in it we might be interested in?
+			const QClipboard *clipboard = QApplication::clipboard();
+			const QMimeData *mimeData = clipboard->mimeData();
+			bool clipboard_has_contents = false;
+			if(mimeData)
+			{
+				QStringList mimedata_formats = mimeData->formats();
+				if(mimedata_formats.contains("application/x-grvs-libraryentryref"))
+				{
+					clipboard_has_contents = true;
+				}
+			}
+			
+
+			// Can copy from any derived class if it has a selection.
+			m_act_copy->setEnabled(has_selection);
+
+			// We can only select all if it has some items.
+			m_act_select_all->setEnabled(has_items);
+
+			// A playlist can also cut and delete.
+			auto mutating_actions = {m_act_cut, m_act_delete};
+			for(auto act : mutating_actions)
+			{
+				act->setEnabled(childIsPlaylist && has_selection);
+			}
+
+			// We can paste into a Playlist regardless of selection.
+			m_act_paste->setEnabled(childIsPlaylist && clipboard_has_contents);
+
+			return;
+		}
+	}
+
+	// No active MDI child, or not one that could have a selection or be pasted into.
+	for(auto i : {m_act_copy, m_act_cut, m_act_paste, m_act_delete, m_act_select_all})
+	{
+		i->setDisabled(true);
+	}
 
 }
 
@@ -183,19 +271,27 @@ void MainWindow::createActions()
                               "Exit application");
 	connect_trig(m_exitAction, this, &MainWindow::close);
 
-	//////// Tools actions.
+	//
+	// Edit actions.
+	//
+	createActionsEdit();
 
+    //
+	// Tools actions.
+    //
+        
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
-							   ///triggered=scanLibrary)
 
+	//
     // Window actions.
+	//
 	m_tabs_or_subwindows_group = new QActionGroup(this);
-	m_tabs_act = make_action(QIcon::fromTheme(""), "Tabs", m_tabs_or_subwindows_group,
+	m_tabs_act = make_action(QIcon::fromTheme("tab-duplicate"), "Tabs", m_tabs_or_subwindows_group,
 							 QKeySequence(), "Display as tabs");
 	m_tabs_act->setCheckable(true);
 
-	m_subwins_act = make_action(QIcon::fromTheme(""), "Subwindows", m_tabs_or_subwindows_group,
+	m_subwins_act = make_action(QIcon::fromTheme("window-duplicate"), "Subwindows", m_tabs_or_subwindows_group,
 								QKeySequence(), "Display as subwindows");
 	m_subwins_act->setCheckable(true);
 	m_tabs_act->setChecked(true);
@@ -226,7 +322,15 @@ void MainWindow::createActions()
                                "Close all the windows");
 	connect_trig(m_closeAllAct, this->m_mdi_area, &QMdiArea::closeAllSubWindows);
 
+	m_act_window_list_separator = new QAction(this);
+	m_act_window_list_separator->setText(tr("Window List"));
+	m_act_window_list_separator->setSeparator(true);
+	
+	m_act_group_window = new QActionGroup(this);
+	
+	//
     // Help actions.
+	//
 	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), "&Help", this,
 	                        QKeySequence::HelpContents,
 							"Show help contents");
@@ -252,10 +356,32 @@ void MainWindow::createActions()
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 }
 
+void MainWindow::createActionsEdit()
+{
+    m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
+                                                    tr("Cut the current selection to the clipboard"));
+	connect_trig(m_act_cut, this, &MainWindow::onCut);
+	
+    m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), this, QKeySequence::Copy,
+                                                     tr("Copy the current selection to the clipboard"));
+    connect_trig(m_act_copy, this, &MainWindow::onCopy);
+	
+    m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
+                                                      tr("Paste the clipboard's contents into the current selection"));
+	connect_trig(m_act_paste, this, &MainWindow::onPaste);
+
+    m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("&Delete"), this, QKeySequence::Delete,
+                                                       tr("Delete this entry"));
+    connect_trig(m_act_delete, this, &MainWindow::onDelete);
+
+    m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
+                                                               QKeySequence::SelectAll, tr("Select all items in the current list"));
+    connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
+}
 
 void MainWindow::createMenus()
 {
-	m_fileMenu = menuBar()->addMenu("&File");
+	m_fileMenu = menuBar()->addMenu(tr("&File"));
 
 	m_fileMenu->addActions({//newFileAct,
 						  m_fileMenu->addSection("Libraries"),
@@ -275,6 +401,19 @@ void MainWindow::createMenus()
                           //fileMenu.addSeparator(),
 						  m_exitAction});
 
+	// Edit menu.
+	m_menu_edit = menuBar()->addMenu(tr("&Edit"));
+	m_menu_edit->addActions({
+								m_act_cut,
+								m_act_copy,
+								m_act_paste,
+								m_menu_edit->addSection(tr("Delete")),
+								m_act_delete,
+								m_menu_edit->addSection(tr("Selections")),
+								m_act_select_all
+							});
+	m_menu_edit->setTearOffEnabled(true);
+
     // Create the View menu.
 	m_viewMenu = menuBar()->addMenu("&View");
 
@@ -289,9 +428,24 @@ void MainWindow::createMenus()
                 });
 
     // Create the Window menu.
-	m_windowMenu = menuBar()->addMenu("&Window");
-    updateWindowMenu();
-	connect(m_windowMenu, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
+	m_menu_window = menuBar()->addMenu(tr("&Window"));
+///@todo    updateWindowMenu();
+	m_menu_window->addActions({
+		m_menu_window->addSection(tr("Close")),
+		m_closeAct,
+		m_closeAllAct,
+		m_menu_window->addSection(tr("Arrange")),
+		m_windowTileAct,
+		m_windowCascadeAct,
+		m_menu_window->addSection(tr("Subwindow Mode")),
+		m_tabs_act,
+		m_subwins_act,
+		m_menu_window->addSection(tr("Navigation")),
+		m_windowNextAct,
+		m_windowPrevAct,
+		m_act_window_list_separator
+    });
+//	connect(m_menu_window, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
 
     menuBar()->addSeparator();
 
@@ -308,7 +462,10 @@ void MainWindow::createMenus()
 
 void MainWindow::createToolBars()
 {
-	m_fileToolBar = addToolBar("File");
+	//
+	// File
+	//
+	m_fileToolBar = addToolBar(tr("File"));
 	m_fileToolBar->setObjectName("FileToolbar");
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
@@ -316,7 +473,22 @@ void MainWindow::createToolBars()
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
 							 m_savePlaylistAct});
-
+							 
+	//
+	// Edit
+	//
+	m_toolbar_edit = addToolBar(tr("Edit"));
+	m_toolbar_edit->setObjectName("EditToolbar");
+	m_toolbar_edit->addActions({
+		/// @todo m_act_undo, m_act_redo,
+		m_act_cut,
+		m_act_copy,
+		m_act_paste
+	});
+									 
+	//
+	// Settings
+	//
 	m_settingsToolBar = addToolBar("Settings");
 	m_settingsToolBar->setObjectName("SettingsToolbar");
 	m_settingsToolBar->addAction(m_settingsAct);
@@ -464,73 +636,57 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
 
 void MainWindow::updateConnections()
 {
-	if(activeMdiChild() != nullptr)
-	{
+	qDebug() << "Updating connections";
+    auto childIsMDITreeViewBase = dynamic_cast<MDITreeViewBase*>(activeMdiChild());
+    auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
+    auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
+
+    if(childIsMDITreeViewBase)
+    {
 //		qDebug() << "Updating connectons for activated window" << activeMdiChild()->windowTitle();
-
-		auto childIsPlaylist = dynamic_cast<MDIPlaylistView*>(activeMdiChild());
-		auto childIsLibrary = dynamic_cast<MDILibraryView*>(activeMdiChild());
-
-		if(childIsLibrary != nullptr)
-		{
+        
+        if(childIsLibrary)
+        {
 			auto connection_handle = connect(activeMdiChild()->selectionModel(), &QItemSelectionModel::selectionChanged,
-			                                 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
-			                                 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+											 m_metadataDockWidget, &MetadataDockWidget::playlistSelectionChanged,
+											 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 			if (!connection_handle)
 			{
 //				qDebug() << "Connection failed: already connected?";
 			}
 
 			connection_handle = connect(childIsLibrary,
-			                            &MDILibraryView::playTrackNowSignal,
-			                            this,
-			                            &MainWindow::onPlayTrackNowSignal,
-			                            Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+										&MDILibraryView::playTrackNowSignal,
+										this,
+										&MainWindow::onPlayTrackNowSignal,
+										Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 			if (!connection_handle)
 			{
 //				qDebug() << "Connection failed: already connected?";
 			}
+        }
+		if(childIsPlaylist)
+		{
+//			connect_trig(m_act_paste, childIsPlaylist, &MDIPlaylistView::onPaste);
 		}
-	}
-}
-
-void MainWindow::updateMenus()
-{
-		// Update action enable states.  Mainly depends on if we have an MDI child window open.
-//        qDebug() << "Updating menu status";
-        bool hasMdiChild = activeMdiChild() != nullptr;
-
-        bool childIsPlaylist = (dynamic_cast<MDIPlaylistView*>(activeMdiChild()) != nullptr);
-        bool childIsLibrary = (dynamic_cast<MDILibraryView*>(activeMdiChild()) != nullptr);
-
-        // File actions.
-        for(auto act : {
-			m_saveLibraryAsAct,
-            })
-        {
-            act->setEnabled(hasMdiChild && childIsLibrary);
-        }
-        for(auto act : {
-			m_savePlaylistAct
-            })
-        {
-            act->setEnabled(hasMdiChild && childIsPlaylist);
-        }
+    }
 }
 
 void MainWindow::updateWindowMenu()
 {
-	m_windowMenu->clear();
-	m_windowMenu->addActions({
-		m_windowMenu->addSection(tr("Subwindow Mode")),
+	return;
+M_WARNING("DELETE ME, BUT FIRST PORT OVER THE ACCELERATOR KEY STUFF");
+	m_menu_window->clear();
+	m_menu_window->addActions({
+		m_menu_window->addSection(tr("Subwindow Mode")),
 		m_tabs_act,
 		m_subwins_act,
-		m_windowMenu->addSection(tr("Window Navigation")),
+		m_menu_window->addSection(tr("Window Navigation")),
 		m_windowNextAct,
 		m_windowPrevAct,
 		m_windowCascadeAct,
 		m_windowTileAct,
-		m_windowMenu->addSection(tr("Close")),
+		m_menu_window->addSection(tr("Close")),
 		m_closeAct,
 		m_closeAllAct
     });
@@ -538,7 +694,7 @@ void MainWindow::updateWindowMenu()
 	auto windows = m_mdi_area->subWindowList();
     if(windows.length() > 0)
     {
-		m_windowMenu->addSection("Windows");
+		m_menu_window->addSection("Windows");
     }
 
     for(int i=0; i<windows.length(); ++i)
@@ -554,7 +710,7 @@ void MainWindow::updateWindowMenu()
             text = "&" + text;
         }
 
-		auto action = m_windowMenu->addAction(text);
+		auto action = m_menu_window->addAction(text);
         action->setCheckable(true);
         action->setChecked(child == activeMdiChild());
 		connect_trig(action, m_windowMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
@@ -619,14 +775,16 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	}
 }
 
-/*Note: Returns the QMdiSubWindow widget(), not the subwindow itself. */
+/**
+ * Note: Returns the QMdiSubWindow's widget(), not the QMdiSubWindow subwindow itself.
+ */
 MDITreeViewBase* MainWindow::activeMdiChild()
 {
 	auto activeSubWindow = m_mdi_area->activeSubWindow();
 
     if(activeSubWindow)
     {
-        return dynamic_cast<MDITreeViewBase*>(activeSubWindow->widget());
+        return qobject_cast<MDITreeViewBase*>(activeSubWindow->widget());
     }
     return nullptr;
 }
@@ -651,18 +809,9 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 	return nullptr;
 }
 
-void MainWindow::setActiveSubWindow(QWidget *window)
-{
-//	qDebug() << "setActiveSubWindow: '" << window << "', '" << window->windowTitle() << "'";
-	if(window != nullptr)
-	{
-		m_mdi_area->setActiveSubWindow(dynamic_cast<QMdiSubWindow*>(window));
-	}
-}
-
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
-//	qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+    qDebug() << "Keyboard focus has changed from" << old << "to" << now;
 }
 
 //////
@@ -779,14 +928,12 @@ void MainWindow::onStartup()
     // Create the "Now Playing" playlist.
     auto wins = createMdiNowPlayingView();
     m_now_playing_playlist_view = wins.first;
-    QMdiSubWindow* mdisubwindow = wins.second;
 
 M_WARNING("TODO: Specify a temp/cache file?")
     m_now_playing_playlist_view->newFile();
 
 	connectNowPlayingViewAndMainWindow(m_now_playing_playlist_view);
 
-    setActiveSubWindow(mdisubwindow);
     statusBar()->showMessage(QString("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
 
     m_now_playing_playlist_view->show();
@@ -844,15 +991,14 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 			return;
 		}
 
+M_WARNING("THIS NEEDS WORK");
 		MDILibraryView* child;
 		QMdiSubWindow* mdisubWindow;
 		std::tie(child, mdisubWindow) = createMdiChildLibraryView();
 
 		child->setModel(libmodel);
-		setActiveSubWindow(mdisubWindow);
 		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
-		child->show();
 	}
 }
 
@@ -889,20 +1035,6 @@ void MainWindow::importLib()
     return;
 }
 
-
-std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryView()
-{
-	// Create a new, empty LibraryView.
-
-	// New Lib MDI View.
-	auto child = new MDILibraryView(this);
-	auto mdisubwindow = m_mdi_area->addSubWindow(child);
-
-	connectLibraryViewAndMainWindow(child);
-
-	return std::make_tuple(child, mdisubwindow);
-}
-
 #if 0
     def saveLibraryAs(self):
         if activeMdiChild() and activeMdiChild().saveAs():
@@ -921,9 +1053,9 @@ void MainWindow::onRescanLibrary()
 
 void MainWindow::onShowLibrary(LibraryModel* libmodel)
 {
-		qDebug() << QString("onShowLibrary");
-		openMDILibraryViewOnModel(libmodel);
-		return;
+	qDebug() << QString("onShowLibrary");
+	openMDILibraryViewOnModel(libmodel);
+	return;
 }
 
 
@@ -970,14 +1102,10 @@ void MainWindow::newPlaylist()
 {
     auto wins = createMdiChildPlaylist();
 	MDIPlaylistView* child = wins.first;
-	QMdiSubWindow* mdisubwindow = wins.second;
 
     child->newFile();
 
-    setActiveSubWindow(mdisubwindow);
     statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(child->windowTitle()));
-
-    child->show();
 }
 
 void MainWindow::openPlaylist()
@@ -1006,6 +1134,45 @@ void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 	emit sendToNowPlaying(libentry);
 }
 
+/**
+ * Add a child view to the MDIArea and hook it up to a few signals/slots.
+ */
+void MainWindow::addChildMDIView(MDITreeViewBase* child)
+{
+	// Connect Cut and Copy actions to the availability signals emitted by the child.
+	/// @note AFAICT, this works because only the active child will send this signal.
+	connect(child, &MDITreeViewBase::copyAvailable, m_act_cut, &QAction::setEnabled);
+	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
+
+	/// @todo Same thing with undo/redo.
+	// child.undoAvailable.connect(editUndoAct.setEnabled)
+	// child.redoAvailable.connect(redoAct.setEnabled)
+	
+	// Add the child subwindow to the MDI area.
+	auto mdisubwindow = m_mdi_area->addSubWindow(child);
+	
+	// Add actions to the Window menu and its action group.
+	m_menu_window->addAction(child->windowMenuAction());
+	m_act_group_window->addAction(child->windowMenuAction());
+	
+	// Show the child window we just added.
+	mdisubwindow->show();	
+}
+
+std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryView()
+{
+	// Create a new, empty LibraryView.
+
+	// New Lib MDI View.
+	auto child = new MDILibraryView(this);
+
+	connectLibraryViewAndMainWindow(child);
+	
+	addChildMDIView(child);
+
+	return std::make_tuple(child, nullptr);
+}
+
 std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
 {
 	// Create a new playlist model.
@@ -1014,19 +1181,12 @@ std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
 
 	MDIPlaylistView* child = new MDIPlaylistView(this);
 	child->setModel(new_playlist_model);
-	auto mdisubwindow = m_mdi_area->addSubWindow(child);
 
-	// child.undoAvailable.connect(editUndoAct.setEnabled)
-	// child.redoAvailable.connect(redoAct.setEnabled)
-	// child.copyAvailable.connect(cutAct.setEnabled)
-	// child.copyAvailable.connect(copyAct.setEnabled)
-
-	// Connect signals.
-	//child.cursorPositionChanged.connect(cursorPosChanged)
+	addChildMDIView(child);
 
 	// Add the new playlist to the collection doc widget.
 	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return std::make_pair(child, mdisubwindow);
+	return std::make_pair(child, nullptr);
 }
 
 std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingView()
@@ -1040,19 +1200,12 @@ std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingVie
 
 	MDINowPlayingView* child = new MDINowPlayingView(this);
 	child->setModel(new_playlist_model);
-	auto mdisubwindow = m_mdi_area->addSubWindow(child);
-
-	// child.undoAvailable.connect(editUndoAct.setEnabled)
-	// child.redoAvailable.connect(redoAct.setEnabled)
-	// child.copyAvailable.connect(cutAct.setEnabled)
-	// child.copyAvailable.connect(copyAct.setEnabled)
-
-	// Connect signals.
-	//child.cursorPositionChanged.connect(cursorPosChanged)
+	
+	addChildMDIView(child);
 
 	// Add the new playlist to the collection doc widget.
 	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return std::make_pair(child, mdisubwindow);
+	return std::make_pair(child, nullptr);
 }
 
 // Top-level "saveAs" action handler for "Save playlist as..."
@@ -1069,52 +1222,70 @@ void MainWindow::savePlaylistAs()
 	}
 }
 
+void MainWindow::onCut()
+{
+	auto active_child = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+	if(active_child)
+	{
+		active_child->onCut();
+	}
+}
+
+void MainWindow::onCopy()
+{
+	auto active_child = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+	if(active_child)	
+	{
+		active_child->onCopy();
+	}
+}
+
+void MainWindow::onPaste()
+{
+	auto active_child = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+	if(active_child)
+	{
+		active_child->onPaste();
+	}
+}
+
+void MainWindow::onSelectAll()
+{
+    qDebug() << "Select All action";
+	auto active_child = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+	if(active_child)
+	{
+		active_child->onSelectAll();
+	}
+}
+
+void MainWindow::onDelete()
+{
+	qDebug() << "DELETE";
+
+	auto child_treeview = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+	if(child_treeview)
+	{
+		// It's something we can maybe delete from.
+		QModelIndex index = child_treeview->selectionModel()->currentIndex();
+		QAbstractItemModel *model = child_treeview->model();
+		if (model->removeRow(index.row(), index.parent()))
+		{
+			updateActionEnableStates();
+		}
+	}
+}
+
 void MainWindow::startSettingsDialog()
 {
-	m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
+	if(!m_settings_dlg)
+	{
+		// This is the first time anyone has opened the settings dialog.
+		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
+	}
 
 	m_settings_dlg->exec();
 }
-
-#if 0
-    @pyqtSlot()
-    def scanLibrary(self):
-        dlg = NetworkAwareFileDialog(self, "Select directory to scan")
-        dlg.setFileMode(QFileDialog.Directory)
-        dlg.setAcceptMode(QFileDialog.AcceptOpen)
-        dlg.setOption(QFileDialog.ShowDirsOnly, true)
-        if not dlg.exec_():
-            return
-		qDebug() << QString("Selected directories: {}".format(dlg.selectedUrls()))
-        ////// Scan the directory tree
-        cuefiles = []
-        for url in dlg.selectedUrls():
-            dtw = DirTreeWalker([url], ["*.cue"])
-            for fullname in dtw.walk():
-				qDebug() << QString("FILE: {}".format(fullname))
-                cuefiles.append(fullname)
-        print("Names: {}".format(cuefiles))
-        chardet_output = []
-        for path in cuefiles:
-            with open(path.toLocalFile(), "rb") as f:
-                rawdata = f.read()
-                charset = chardet.detect(rawdata)
-                charset["path"] = path
-				qDebug() << QString(charset)
-                chardet_output.append(charset)
-        print(chardet_output)
-        bad_cuesheets = []
-        for entry in chardet_output:
-            if entry["confidence"] < 0.66:
-                logger.warning("Low chardet confidence: {}".format(entry))
-                continue
-            if entry["encoding"] not in ["ascii", "utf-8"]:
-                print("Found non-UTF-8 encoded file: {}".format(entry))
-                bad_cuesheets.append(entry)
-        cuesheet_fixer = CueSheetFixDialog(self, bad_cuesheets)
-        cuesheet_fixer.exec_()
-#endif
-
 
 void MainWindow::changeStyle(const QString& styleName)
 {
@@ -1190,14 +1361,19 @@ void MainWindow::stopAllBackgroundThreads()
 ////// Slots
 //////
 
-void MainWindow::subWindowActivated(QMdiSubWindow *subwindow)
+void MainWindow::onSubWindowActivated(QMdiSubWindow *subwindow)
 {
-    if(subwindow != nullptr)
-    {
-        //libmodel.rowsInserted.connect(onRowsInserted)
-		updateConnections();
-		updateMenus();
-    }
+	qDebug() << "Activated subwindow:" << subwindow;
+	if(subwindow)
+	{
+		auto mdibase = qobject_cast<MDITreeViewBase*>(subwindow->widget());
+		if(mdibase)
+		{
+			qDebug() << "Updating actions";
+			updateActionEnableStates();
+			updateConnections();
+		}
+	}
 }
 
 void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)

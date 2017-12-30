@@ -29,12 +29,7 @@ static inline QAction* make_action(const QIcon &icon, const QString &text, QObje
 	QAction* retval = new QAction(icon, text, parent);
 	retval->setShortcut(shortcut);
 	retval->setStatusTip(status_tip);
-#if 0
-	if(slot != nullptr)
-	{
-		connect_trig(retval, &QAction::triggered, parent, slot);
-	}
-#endif
+
 	return retval;
 }
 

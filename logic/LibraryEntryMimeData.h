@@ -21,6 +21,7 @@
 #define LIBRARYENTRYMIMEDATA_H
 
 #include <QMimeData>
+#include <QStringList>
 
 #include <QDataStream>
 #include <QIODevice>
@@ -38,10 +39,17 @@ class LibraryEntryMimeData : public QMimeData
 public:
 	LibraryEntryMimeData();
 
-	std::vector<std::shared_ptr<LibraryEntry>> lib_item_list;
+	QStringList m_additional_supported_mimetypes { {"application/x-grvs-libraryentryref"} };
+
+        
+	bool hasFormat(const QString& mimetype) const override;
+	QStringList formats() const override;
+
+	std::vector<std::shared_ptr<LibraryEntry>> m_lib_item_list;
 
 private:
 	Q_DISABLE_COPY(LibraryEntryMimeData)
+             
 };
 
 class MimeDataDumper : public QObject

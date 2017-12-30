@@ -33,6 +33,8 @@
 #include <logic/LibraryModel.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 
+#include <utils/Theme.h>
+
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
 	setObjectName("MetadataDockWidget");
@@ -160,7 +162,15 @@ void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelec
 			else
 			{
 				qWarning() << "Error attempting to load image.";
+				QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+				m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 			}
+		}
+		else
+		{
+			// No image available.
+			QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 		}
 	}
 	else

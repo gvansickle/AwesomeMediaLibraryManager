@@ -688,7 +688,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 		qDebug() << QString("Returning %1 row(s)").arg(row_items.size());
 		LibraryEntryMimeData* e = new LibraryEntryMimeData();
 		e->setData(mimeTypes()[0], QByteArray());
-		e->lib_item_list = row_items;
+		e->m_lib_item_list = row_items;
 		e->setUrls(urls);
 		return e;
 	}

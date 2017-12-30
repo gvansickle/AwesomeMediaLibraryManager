@@ -34,8 +34,13 @@ class PlaylistModel;
 
 class MDILibraryView : public MDITreeViewBase
 {
-	Q_OBJECT
+    Q_OBJECT
 
+signals:
+    void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
+    void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+    void playTrackNowSignal(QUrl);
+        
 public:
 	MDILibraryView(QWidget *parent = Q_NULLPTR);
 
@@ -43,10 +48,6 @@ public:
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
-signals:
-	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
-	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
-	void playTrackNowSignal(QUrl);
 
 protected:
 	LibraryModel* m_underlying_model;
