@@ -62,6 +62,9 @@ public:
     /// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
     /// Default implementation returns userFriendlyCurrentFile().
     virtual QString getDisplayName() const;
+    
+    /// Return an action for the MainWindow's Window menu.
+    QAction* windowMenuAction() const { return m_act_window; };
 
 public slots:
     
@@ -80,48 +83,46 @@ public slots:
 
 protected:
 
-	QUrl m_current_url;
-	QString m_current_filter;
-	bool m_isUntitled = true;
+    QUrl m_current_url;
+    QString m_current_filter;
+    bool m_isUntitled = true;
 
-	/// Protected function which is used to set the view's filename properties on a save or load.
-	/// Called by loadFile() and saveFile().
-	void setCurrentFile(QUrl url);
+    /// Protected function which is used to set the view's filename properties on a save or load.
+    /// Called by loadFile() and saveFile().
+    void setCurrentFile(QUrl url);
 
-	virtual void closeEvent(QCloseEvent* event) override;
+    virtual void closeEvent(QCloseEvent* event) override;
 
-	///
-	/// Pure virtual functions.
-	///
+    ///
+    /// Pure virtual functions.
+    ///
 
-	/// Return a template for use in naming instances of this class when doing a "File->New".
-	/// E.g. "document%1.txt".  The %1 will be filled in with a unique identifier.
-	virtual QString getNewFilenameTemplate() const = 0;
+    /// Return a template for use in naming instances of this class when doing a "File->New".
+    /// E.g. "document%1.txt".  The %1 will be filled in with a unique identifier.
+    virtual QString getNewFilenameTemplate() const = 0;
 
-	/// Override to return a string usable by QFileDialog in setNameFilter().
-	virtual QString defaultNameFilter() = 0;
+    /// Override to return a string usable by QFileDialog in setNameFilter().
+    virtual QString defaultNameFilter() = 0;
 
-	/// Override to return whether or not the underlying data has been modified.
-	virtual bool isModified() const = 0;
+    /// Override to return whether or not the underlying data has been modified.
+    virtual bool isModified() const = 0;
 
-	virtual void serializeDocument(QFileDevice& file) const = 0;
-	virtual void deserializeDocument(QFileDevice& file) = 0;
+    virtual void serializeDocument(QFileDevice& file) const = 0;
+    virtual void deserializeDocument(QFileDevice& file) = 0;
 
-	///
-	/// Not pure-virtual, but designed-to-be-overridden functions.
-	///
+    ///
+    /// Not pure-virtual, but designed-to-be-overridden functions.
+    ///
 
 protected slots:
-	virtual void documentWasModified();
+    virtual void documentWasModified();
 
-	virtual void headerMenu(QPoint pos);
+    virtual void headerMenu(QPoint pos);
 
-	virtual void onSectionClicked(int logicalIndex);
+    virtual void onSectionClicked(int logicalIndex);
 
 protected:
 
-//    void paintEvent(QPaintEvent* event) override;
-	
     virtual bool viewportEvent(QEvent *event) override;
 
     /// Return a string suitable for use as a key in the QSettings file.  Used
@@ -158,6 +159,8 @@ private:
     int m_previous_sort_column {-1};
 
     Qt::SortOrder m_sort_order { Qt::AscendingOrder };
+    
+    QAction *m_act_window;
 
 };
 

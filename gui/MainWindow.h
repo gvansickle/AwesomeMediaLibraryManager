@@ -55,7 +55,7 @@ class MainWindow: public QMainWindow
     Q_OBJECT
 
 signals:
-	void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+    void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
 
 
 public:
@@ -63,16 +63,17 @@ public:
     ~MainWindow() override;
 
 public slots:
-	void updateActionEnableStates();
+    void updateActionEnableStates();
+    void updateActionEnableStates_Edit();
 
 
 protected:
-	void closeEvent(QCloseEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
 
 
 private slots:
-    void subWindowActivated(QMdiSubWindow* subwindow);
-    void setActiveSubWindow(QWidget* window);
+    void onSubWindowActivated(QMdiSubWindow* subwindow);
+    void setActiveSubWindow(QMdiSubWindow* window);
     void onFocusChanged(QWidget* old, QWidget* now);
 
     void changeStyle(const QString& styleName);
@@ -142,9 +143,9 @@ private:
     void about();
 
     /// @name Persistency
-	///@{
+    ///@{
 
-	/// Reads the primary settings.
+    /// Reads the primary settings.
     void readSettings();
     void onStartup();
     void openWindows();
@@ -155,9 +156,11 @@ private:
 
     /// Signal-Slot-related functions.
     void createConnections();
-	void updateConnections();
+    void updateConnections();
 
     /// MDI-related functions.
+    /// @{
+    void addChildMDIView(MDITreeViewBase* child);
     MDITreeViewBase* activeMdiChild();
     QMdiSubWindow* findSubWindow(QUrl url);
     std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
@@ -167,45 +170,47 @@ private:
     void openMDILibraryViewOnModel(LibraryModel* libmodel);
 
     std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
-
+    /// @}
+    
+    
     bool maybeSaveOnClose();
 
 
-	/// @name Private data members.
-	/// @{
+    /// @name Private data members.
+    /// @{
 
-	/// App-specific cache directory.
-	QUrl m_cachedir;
+    /// App-specific cache directory.
+    QUrl m_cachedir;
 
-	/// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
-	QUrl m_appdatadir;
+    /// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
+    QUrl m_appdatadir;
 
-	/// The media player instance.
-	MP2 m_player;
+    /// The media player instance.
+    MP2 m_player;
 
-	/// Experimental "scratch" widget for doing development experiments.
-	Experimental* m_experimental;
+    /// Experimental "scratch" widget for doing development experiments.
+    Experimental* m_experimental;
 
-	/// The library models.
-	std::vector<QSharedPointer<LibraryModel>> m_libmodels;
+    /// The library models.
+    std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
 	/// The "Now Playing" playlist.
     QPointer<PlaylistModel> m_now_playing_playlist_model;
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
 
-	/// The list of PlaylistModels.
-	std::vector<PlaylistModel*> m_playlist_models;
+    /// The list of PlaylistModels.
+    std::vector<PlaylistModel*> m_playlist_models;
 
-	/// @}
+    /// @}
 
-	/// The player controls widget.
-	PlayerControls* m_controls;
-	QLabel* m_numSongsIndicator;
+    /// The player controls widget.
+    PlayerControls* m_controls;
+    QLabel* m_numSongsIndicator;
 
-	/// the MDI area and signal mapper.
-	QMdiArea *m_mdi_area;
-	QSignalMapper *m_windowMapper;
+    /// the MDI area and signal mapper.
+    QMdiArea *m_mdi_area;
+    QSignalMapper *m_windowMapper;
 
     /// Actions
 
@@ -243,6 +248,8 @@ private:
     QAction* m_windowTileAct;
     QAction* m_closeAllAct;
     QAction* m_closeAct;
+    QActionGroup* m_act_group_window;
+    QAction* m_act_window_list_separator;
     /// @}
 
     /// Help actions.
@@ -259,7 +266,7 @@ private:
     QMenu *m_menu_edit;
     QMenu* m_viewMenu;
     QMenu* m_toolsMenu;
-    QMenu* m_windowMenu;
+    QMenu* m_menu_window;
     QMenu* m_helpMenu;
 
     /// Toolbars

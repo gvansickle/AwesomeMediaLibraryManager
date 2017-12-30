@@ -108,8 +108,9 @@ M_WARNING("TODO: ifdef this to development only")
     m_mdi_area = new MDIArea(this);
     setCentralWidget(m_mdi_area);
 
-	// Connect the MDIArea signal to a slot so we know when the subwindow activation changes.
-    connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::subWindowActivated);
+	// Connect the MDIArea subWindowActivated signal to a slot so we know when
+	// the subwindow activation changes.
+    connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
     // Mapper for the Window menu.
     m_windowMapper = new QSignalMapper(this);
@@ -123,7 +124,7 @@ M_WARNING("TODO: ifdef this to development only")
     createDockWindows();
     updateMenus();
 
-    updateActionEnableStates();
+    updateActionEnableStates_Edit();
 
     ////// Connect up signals and slots.
     createConnections();
@@ -145,6 +146,23 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::updateActionEnableStates()
+{
+	// Do we have an active MDI child, and what is it?
+	auto childIsBaseClass = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+	auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+	auto childIsLibrary = qobject_cast<MDILibraryView*>(activeMdiChild());
+	
+	m_act_window_list_separator->setVisible(childIsBaseClass);
+	if(childIsBaseClass)
+	{
+		// Set the check next to this window's menu entry.
+		childIsBaseClass->windowMenuAction()->setChecked(true);
+	}
+	
+	updateActionEnableStates_Edit();
+}
+
+void MainWindow::updateActionEnableStates_Edit()
 {
 	qDebug() << "ENTER";
 	if(activeMdiChild() != nullptr)
@@ -248,7 +266,9 @@ void MainWindow::createActions()
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
 
+	//
     // Window actions.
+	//
 	m_tabs_or_subwindows_group = new QActionGroup(this);
 	m_tabs_act = make_action(QIcon::fromTheme("tab-duplicate"), "Tabs", m_tabs_or_subwindows_group,
 							 QKeySequence(), "Display as tabs");
@@ -285,7 +305,15 @@ void MainWindow::createActions()
                                "Close all the windows");
 	connect_trig(m_closeAllAct, this->m_mdi_area, &QMdiArea::closeAllSubWindows);
 
+	m_act_window_list_separator = new QAction(this);
+	m_act_window_list_separator->setText(tr("Window List"));
+	m_act_window_list_separator->setSeparator(true);
+	
+	m_act_group_window = new QActionGroup(this);
+	
+	//
     // Help actions.
+	//
 	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), "&Help", this,
 	                        QKeySequence::HelpContents,
 							"Show help contents");
@@ -350,7 +378,7 @@ void MainWindow::createEditActions()
 
 void MainWindow::createMenus()
 {
-	m_fileMenu = menuBar()->addMenu("&File");
+	m_fileMenu = menuBar()->addMenu(tr("&File"));
 
 	m_fileMenu->addActions({//newFileAct,
 						  m_fileMenu->addSection("Libraries"),
@@ -394,9 +422,24 @@ void MainWindow::createMenus()
                 });
 
     // Create the Window menu.
-	m_windowMenu = menuBar()->addMenu("&Window");
-    updateWindowMenu();
-	connect(m_windowMenu, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
+	m_menu_window = menuBar()->addMenu(tr("&Window"));
+///@todo    updateWindowMenu();
+	m_menu_window->addActions({
+		m_menu_window->addSection(tr("Close")),
+		m_closeAct,
+		m_closeAllAct,
+		m_menu_window->addSection(tr("Arrange")),
+		m_windowTileAct,
+		m_windowCascadeAct,
+		m_menu_window->addSection(tr("Subwindow Mode")),
+		m_tabs_act,
+		m_subwins_act,
+		m_menu_window->addSection(tr("Navigation")),
+		m_windowNextAct,
+		m_windowPrevAct,
+		m_act_window_list_separator
+    });
+//	connect(m_menu_window, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
 
     menuBar()->addSeparator();
 
@@ -485,7 +528,7 @@ void MainWindow::createConnections()
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
 	// Connect menu "about to shows" to the action updater.
-	connect(m_menu_edit, &QMenu::aboutToShow, this, &MainWindow::updateActionEnableStates);
+	connect(m_menu_edit, &QMenu::aboutToShow, this, &MainWindow::updateActionEnableStates_Edit);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(&m_player, m_controls);
@@ -644,17 +687,19 @@ void MainWindow::updateMenus()
 
 void MainWindow::updateWindowMenu()
 {
-	m_windowMenu->clear();
-	m_windowMenu->addActions({
-		m_windowMenu->addSection(tr("Subwindow Mode")),
+	return;
+M_WARNING("DELETE ME");
+	m_menu_window->clear();
+	m_menu_window->addActions({
+		m_menu_window->addSection(tr("Subwindow Mode")),
 		m_tabs_act,
 		m_subwins_act,
-		m_windowMenu->addSection(tr("Window Navigation")),
+		m_menu_window->addSection(tr("Window Navigation")),
 		m_windowNextAct,
 		m_windowPrevAct,
 		m_windowCascadeAct,
 		m_windowTileAct,
-		m_windowMenu->addSection(tr("Close")),
+		m_menu_window->addSection(tr("Close")),
 		m_closeAct,
 		m_closeAllAct
     });
@@ -662,7 +707,7 @@ void MainWindow::updateWindowMenu()
 	auto windows = m_mdi_area->subWindowList();
     if(windows.length() > 0)
     {
-		m_windowMenu->addSection("Windows");
+		m_menu_window->addSection("Windows");
     }
 
     for(int i=0; i<windows.length(); ++i)
@@ -678,7 +723,7 @@ void MainWindow::updateWindowMenu()
             text = "&" + text;
         }
 
-		auto action = m_windowMenu->addAction(text);
+		auto action = m_menu_window->addAction(text);
         action->setCheckable(true);
         action->setChecked(child == activeMdiChild());
 		connect_trig(action, m_windowMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
@@ -777,18 +822,26 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 	return nullptr;
 }
 
-void MainWindow::setActiveSubWindow(QWidget *window)
+void MainWindow::setActiveSubWindow(QMdiSubWindow *window)
 {
-//qDebug() << "setActiveSubWindow: '" << window << "', '" << window->windowTitle() << "'";
+	qDebug() << "FIXME";
+	m_mdi_area->setActiveSubWindow(window);
+	return;
     if(window != nullptr)
     {
-            m_mdi_area->setActiveSubWindow(dynamic_cast<QMdiSubWindow*>(window));
+		qDebug() << "new subwindow: '" << window << "', '" << window->windowTitle() << "'";
+
+        m_mdi_area->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(window));
     }
+	else
+	{
+		qDebug() << "null subwindow";
+	}
 }
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
-    //qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+    qDebug() << "Keyboard focus has changed from" << old << "to" << now;
 }
 
 //////
@@ -1132,6 +1185,30 @@ void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 	emit sendToNowPlaying(libentry);
 }
 
+/**
+ * Add a child view to the MDIArea and hook it up to a few signals/slots.
+ */
+void MainWindow::addChildMDIView(MDITreeViewBase* child)
+{
+	// Connect Cut and Copy actions to the availability signals emitted by the child.
+	/// @note AFAICT, this works because only the active child will send this signal.
+	connect(child, &MDITreeViewBase::copyAvailable, m_act_cut, &QAction::setEnabled);
+	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
+
+	/// @todo Same thing with undo/redo.
+	// child.undoAvailable.connect(editUndoAct.setEnabled)
+	// child.redoAvailable.connect(redoAct.setEnabled)
+	
+	// Add the child subwindow to the MDI area.
+	auto mdisubwindow = m_mdi_area->addSubWindow(child);
+	// Add actions to the Window menu and its action group.
+	m_menu_window->addAction(child->windowMenuAction());
+	m_act_group_window->addAction(child->windowMenuAction());
+	
+	// Show the child window we just added.
+	mdisubwindow->show();	
+}
+
 std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
 {
 	// Create a new playlist model.
@@ -1140,19 +1217,13 @@ std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
 
 	MDIPlaylistView* child = new MDIPlaylistView(this);
 	child->setModel(new_playlist_model);
-	auto mdisubwindow = m_mdi_area->addSubWindow(child);
 
-	// child.undoAvailable.connect(editUndoAct.setEnabled)
-	// child.redoAvailable.connect(redoAct.setEnabled)
-	// child.copyAvailable.connect(cutAct.setEnabled)
-	// child.copyAvailable.connect(copyAct.setEnabled)
-
-	// Connect signals.
-	//child.cursorPositionChanged.connect(cursorPosChanged)
+	//auto mdisubwindow = m_mdi_area->addSubWindow(child);
+	addChildMDIView(child);
 
 	// Add the new playlist to the collection doc widget.
 	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return std::make_pair(child, mdisubwindow);
+	return std::make_pair(child, nullptr); //mdisubwindow);
 }
 
 std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingView()
@@ -1197,7 +1268,11 @@ void MainWindow::savePlaylistAs()
 
 void MainWindow::onCut()
 {
-
+	auto active_child = qobject_cast<MDIPlaylistView*>(activeMdiChild());
+	if(active_child)
+	{
+		active_child->onCut();
+	}
 }
 
 void MainWindow::onCopy()
@@ -1221,8 +1296,12 @@ void MainWindow::onPaste()
 void MainWindow::onSelectAll()
 {
     qDebug() << "Select All action";
+	auto active_child = qobject_cast<MDITreeViewBase*>(activeMdiChild());
+	if(active_child)
+	{
+		active_child->onSelectAll();
+	}
 }
-
 
 void MainWindow::onDelete()
 {
@@ -1236,7 +1315,7 @@ void MainWindow::onDelete()
 		QAbstractItemModel *model = child_treeview->model();
 		if (model->removeRow(index.row(), index.parent()))
 		{
-			updateActionEnableStates();
+			updateActionEnableStates_Edit();
 		}
 	}
 }
@@ -1322,14 +1401,20 @@ void MainWindow::stopAllBackgroundThreads()
 ////// Slots
 //////
 
-void MainWindow::subWindowActivated(QMdiSubWindow *subwindow)
+void MainWindow::onSubWindowActivated(QMdiSubWindow *subwindow)
 {
-    if(subwindow != nullptr)
-    {
-		updateActionEnableStates();
-		updateConnections();
-		updateMenus();
-    }
+	qDebug() << "Activated subwindow:" << subwindow;
+	if(subwindow)
+	{
+		auto mdibase = qobject_cast<MDITreeViewBase*>(subwindow->widget());
+		if(mdibase)
+		{
+			qDebug() << "Updating actions";
+			updateActionEnableStates_Edit();
+			updateConnections();
+			updateMenus();
+		}
+	}
 }
 
 void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)

@@ -33,9 +33,16 @@
 #include <utils/ModelHelpers.h>
 
 #include "gui/NetworkAwareFileDialog.h"
+#include "utils/ConnectHelpers.h"
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {
+	// Window menu action.
+	m_act_window = new QAction(this);
+	m_act_window->setCheckable(true);
+	connect(m_act_window, SIGNAL(triggered()), this, SLOT(show()));
+	connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
+	
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();
 
@@ -96,8 +103,7 @@ static qint64 sequenceNumber = 0;
 
 	// Set the window title to the Display Name, which defaults to the filename, plus the Qt "is modified" placeholder.
 	setWindowTitle(getDisplayName() + "[*]");
-
-	/// @todo Connect a contentsChanged signal to a docWasModified slot here?
+	m_act_window->setText(getDisplayName());
 }
 
 bool MDITreeViewBase::loadFile(QUrl load_url)
@@ -199,6 +205,7 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 	setWindowFilePath(url.toString());
 	setWindowModified(false);
 	setWindowTitle(getDisplayName() + "[*]");
+	m_act_window->setText(getDisplayName());
 }
 
 QString MDITreeViewBase::getDisplayName() const
