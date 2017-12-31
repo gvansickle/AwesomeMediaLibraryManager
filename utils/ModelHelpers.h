@@ -24,6 +24,7 @@
 #include <QModelIndexList>
 #include <QItemSelection>
 #include <QAbstractProxyModel>
+#include <QDebug>
 
 /// Convert a QModelIndexList into a QList of QPersistentIndexes.
 inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
@@ -72,7 +73,34 @@ inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
         }
     }
     
-	return proxy_index;
+    return proxy_index;
+}
+
+inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
+{
+	auto proxy_model = qobject_cast<QAbstractProxyModel*>(maybe_proxy_model);
+
+	if(proxy_model)
+	{
+		qDebug() << "Is a proxy model:" << proxy_model;
+//		QModelIndex root_model_index = proxy_model->mapToSource(proxy_model->index(0, 0,QModelIndex()));
+//		qDebug() << "proxy model index:" << root_model_index;
+		auto source_model = proxy_model->sourceModel();
+		if(source_model)
+		{
+			return (QAbstractItemModel*)source_model;
+		}
+		else
+		{
+			return maybe_proxy_model;
+		}
+	}
+	else
+	{
+		// Wasn't a proxy model.
+		qDebug() << "Not a proxy model:" << maybe_proxy_model;
+		return maybe_proxy_model;
+	}
 }
 
 #endif /* MODELHELPERS_H */

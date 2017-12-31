@@ -41,6 +41,13 @@ public:
 	void setSourceIndexToShow(const QPersistentModelIndex& source_index_to_filter_on);
     
 protected:
+    
+    /**
+     * Row filtering function.
+     * @param sourceRow     Row to consider relative to sourceModel().
+     * @param sourceParent  Parent of row, again relative to sourceModel().
+     * @return 
+     */
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
     

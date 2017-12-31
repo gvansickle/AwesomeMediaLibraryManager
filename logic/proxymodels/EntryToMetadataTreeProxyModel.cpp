@@ -34,7 +34,7 @@ EntryToMetadataTreeProxyModel::~EntryToMetadataTreeProxyModel()
 
 void EntryToMetadataTreeProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
-	qDebug() << "Setting source model to:" << sourceModel;
+	qDebug() << "Setting source model to:" << sourceModel << "root model is:" << getRootModel(sourceModel);
 
 	// Clear out the old index to show, it doesn't apply to the new model.
 	m_current_selected_index = QPersistentModelIndex();
@@ -46,7 +46,7 @@ void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelI
 {
 	qDebug() << "Setting selected index to:" << source_index_to_filter_on;
 
-	qDebug() << "Source root model:" << sourceModel() << "index model:" << source_index_to_filter_on.model();
+	qDebug() << "Source model:" << sourceModel() << "index model:" << source_index_to_filter_on.model();
 
 //	Q_ASSERT(sourceModel() == source_index_to_filter_on.model());
 
@@ -63,12 +63,15 @@ bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModel
 	// Only accept the row if it's currently selected.
 	QModelIndex index = ::mapToSource(sourceModel()->index(sourceRow, 0, sourceParent));
 
-//	qDebug() << "index model:" << index.model();
-//	qDebug() << "root model:" << ::mapToSource(index);
+	if(!m_current_selected_index.isValid())
+	{
+		qDebug() << "selected index invalid" << m_current_selected_index;
+	}
 
 	if(m_current_selected_index == index)
 	{
 		qDebug() << "Accepting selected index:" << index;
+		qDebug() << "index model:" << index.model();
 		return true;
 	}
 
