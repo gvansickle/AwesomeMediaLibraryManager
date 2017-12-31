@@ -112,7 +112,7 @@ private slots:
     void onTextFilterChanged();
 
 private:
-	Q_DISABLE_COPY(MainWindow)
+    Q_DISABLE_COPY(MainWindow)
 
     void createActions();
     void createActionsEdit();
@@ -123,7 +123,6 @@ private:
     void createDockWindows();
     
     void updateMenus();
-    void updateWindowMenu();
 
 	/// @name Bulk Signal/Slot Connection management.
     ///@{

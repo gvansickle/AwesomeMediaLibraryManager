@@ -672,52 +672,6 @@ void MainWindow::updateConnections()
     }
 }
 
-void MainWindow::updateWindowMenu()
-{
-	return;
-M_WARNING("DELETE ME, BUT FIRST PORT OVER THE ACCELERATOR KEY STUFF");
-	m_menu_window->clear();
-	m_menu_window->addActions({
-		m_menu_window->addSection(tr("Subwindow Mode")),
-		m_tabs_act,
-		m_subwins_act,
-		m_menu_window->addSection(tr("Window Navigation")),
-		m_windowNextAct,
-		m_windowPrevAct,
-		m_windowCascadeAct,
-		m_windowTileAct,
-		m_menu_window->addSection(tr("Close")),
-		m_closeAct,
-		m_closeAllAct
-    });
-
-	auto windows = m_mdi_area->subWindowList();
-    if(windows.length() > 0)
-    {
-		m_menu_window->addSection("Windows");
-    }
-
-    for(int i=0; i<windows.length(); ++i)
-    {
-        auto win = windows[i];
-        auto child = win->widget();
-        auto title = child->windowTitle();
-		QString text = QString("%1 %2").arg(i + 1).arg(title);
-
-        // Make the window number an accelerator key for the first 9 windows.
-        if(i < 9)
-        {
-            text = "&" + text;
-        }
-
-		auto action = m_menu_window->addAction(text);
-        action->setCheckable(true);
-        action->setChecked(child == activeMdiChild());
-		connect_trig(action, m_windowMapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
-		m_windowMapper->setMapping(action, win);
-    }
-}
-
 //////
 ////// MDI Management functions.
 //////
