@@ -29,7 +29,7 @@ class QFileDevice;
 
 class MDITreeViewBase : public QTreeView
 {
-	Q_OBJECT
+    Q_OBJECT
         
 signals:
     
@@ -48,11 +48,13 @@ public:
 
     void newFile();
 
-    virtual bool loadFile(QUrl load_url);
     bool save();
     bool saveAs();
     bool saveFile(QUrl save_url, QString filter);
 
+    virtual bool loadFile(QUrl load_url);
+
+    
     /// Returns the current basename of this window's backing file.
     QString userFriendlyCurrentFile() const;
 
@@ -165,6 +167,7 @@ private:
 
     Qt::SortOrder m_sort_order { Qt::AscendingOrder };
     
+    /// The QAction we'll give to the MainWindow for inclusion in the Window menu.
     QAction *m_act_window;
 
 };

@@ -166,7 +166,7 @@ private:
     QMdiSubWindow* findSubWindow(QUrl url);
     
     MDILibraryView* createMdiChildLibraryView();
-    MDIPlaylistView* createMdiChildPlaylist();
+    MDIPlaylistView* createMdiChildPlaylistView();
     MDINowPlayingView* createMdiNowPlayingView();
 
     QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);

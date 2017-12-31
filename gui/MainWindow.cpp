@@ -1051,7 +1051,7 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
  */
 void MainWindow::newPlaylist()
 {
-    auto child = createMdiChildPlaylist();
+    auto child = createMdiChildPlaylistView();
 
     child->newFile();
 
@@ -1123,7 +1123,7 @@ MDILibraryView* MainWindow::createMdiChildLibraryView()
 	return child;
 }
 
-MDIPlaylistView* MainWindow::createMdiChildPlaylist()
+MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
 {
 	// Create a new playlist model.
 	auto new_playlist_model = new PlaylistModel(this);
