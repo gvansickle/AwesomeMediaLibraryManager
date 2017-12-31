@@ -26,6 +26,8 @@
 
 class QMdiSubWindow;
 class QFileDevice;
+class ModelChangeWatcher;
+
 
 class MDITreeViewBase : public QTreeView
 {
@@ -44,6 +46,11 @@ signals:
      * Signal emitted when the "cutability" status changes.  Read-only views will only send false.
      */
     void cutAvailable(bool);
+    
+    /**
+     * Signal emitted when there is a change in the "Select All" status.
+     */
+    void selectAllAvailable(bool);
         
 
 public:
@@ -80,6 +87,11 @@ public:
     
     /// Override if derived classes are not read-only.
     virtual bool isReadOnly() const { return true; };
+
+	//
+	// Base class overrides.
+	//
+	void setModel(QAbstractItemModel *model) override;
 
 public slots:
     
@@ -138,12 +150,12 @@ protected slots:
 
 protected:
 
-	/**
-	 * Called whenever the view's selection changes.  We override it here to emit the copyAvailable() signal.
-	 */
-	void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
+    /**
+     * Called whenever the view's selection changes.  We override it here to emit the copyAvailable() signal.
+     */
+    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
 
-	bool viewportEvent(QEvent *event) override;
+    bool viewportEvent(QEvent *event) override;
 
     /// Return a string suitable for use as a key in the QSettings file.  Used
     /// to save and restore the state of the "Save As" dialog.
@@ -173,6 +185,9 @@ protected:
 
 private:
     Q_DISABLE_COPY(MDITreeViewBase)
+    
+    /// ModelChangeWatcher object for keeping "Select All" enable status correct.
+    ModelChangeWatcher* m_select_all_model_watcher;
 
     /// The column which we last saw was being sorted.
     /// This is used to enable tri-state column sort functionality.

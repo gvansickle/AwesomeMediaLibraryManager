@@ -48,7 +48,6 @@ class MDIPlaylistView;
 class MetadataDockWidget;
 class CollectionDockWidget;
 class ActivityProgressWidget;
-class ModelChangeWatcher;
 
 class MainWindow: public QMainWindow
 {
@@ -237,9 +236,6 @@ private:
     QAction *m_act_select_all;
     /// @}
     
-    /// ModelChangeWatcher object for keeping "Select All" enable status correct.
-    QSharedPointer<ModelChangeWatcher> m_select_all_model_watcher;
-
     /// @name Window actions.
     /// @{
     QActionGroup *m_tabs_or_subwindows_group;

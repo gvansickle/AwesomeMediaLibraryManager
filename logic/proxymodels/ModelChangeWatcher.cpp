@@ -28,17 +28,32 @@ ModelChangeWatcher::ModelChangeWatcher(QObject *parent) : QObject(parent)
 
 void ModelChangeWatcher::setModelToWatch(QAbstractItemModel* model)
 {
+	qDebug() << "Connecting to model" << model;
+
 	m_the_model = model;
 
 	// Connect to all the signals which might change the number of rows.
 	connect(m_the_model, &QAbstractItemModel::modelReset, this, &ModelChangeWatcher::onRowCountChanged);
-	QObject::connect(m_the_model, SIGNAL(rowsInserted()), this, SLOT(onRowCountChanged()));
-	QObject::connect(m_the_model, SIGNAL(rowsRemoved()), this, SLOT(onRowCountChanged()));
+	QObject::connect(m_the_model, &QAbstractItemModel::rowsInserted, this, &ModelChangeWatcher::onRowCountChanged);
+	QObject::connect(m_the_model, &QAbstractItemModel::rowsRemoved, this, &ModelChangeWatcher::onRowCountChanged);
 
+}
+
+void ModelChangeWatcher::disconnectFromCurrentModel()
+{
+	qDebug() << "Disconnecting from model" << m_the_model;
+
+	if(m_the_model)
+	{
+		// Disconnect all signals from m_the_model to this.
+		m_the_model->disconnect(this);
+	}
+
+	m_the_model = nullptr;
 }
 
 void ModelChangeWatcher::onRowCountChanged()
 {
-	qDebug() << "EMITTING rowCountChanged for model" << m_the_model;
-	emit rowCountChanged();
+	qDebug() << "EMITTING rowCountChanged for model" << m_the_model << "num rows:" << m_the_model->rowCount();
+	emit modelHasRows(m_the_model->rowCount() > 0);
 }

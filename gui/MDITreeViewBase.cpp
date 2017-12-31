@@ -34,6 +34,7 @@
 
 #include "gui/NetworkAwareFileDialog.h"
 #include "utils/ConnectHelpers.h"
+#include "logic/proxymodels/ModelChangeWatcher.h"
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {
@@ -42,6 +43,20 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	m_act_window->setCheckable(true);
 	connect_trig(m_act_window, this, &MDITreeViewBase::show);
 	connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
+	
+	// ModelChangeWatcher for keeping "Select All" status updated.
+	m_select_all_model_watcher = new ModelChangeWatcher(this);
+	connect(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, [=](){
+		qDebug() << "ModelChange";
+		if(model()->rowCount() > 0)
+		{
+			emit selectAllAvailable(true);
+		}
+		else
+		{
+			emit selectAllAvailable(false);
+		}
+	});
 	
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();
@@ -209,6 +224,19 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 QString MDITreeViewBase::getDisplayName() const
 {
 	return userFriendlyCurrentFile();
+}
+
+//
+// Base class overrides.
+//
+
+void MDITreeViewBase::setModel(QAbstractItemModel* model)
+{
+	qDebug() << "BASE SETTING MODEL:" << model;
+
+	m_select_all_model_watcher->disconnectFromCurrentModel();
+	this->BASE_CLASS::setModel(model);
+	m_select_all_model_watcher->setModelToWatch(model);
 }
 
 //

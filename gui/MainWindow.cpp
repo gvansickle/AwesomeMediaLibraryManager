@@ -1096,29 +1096,12 @@ void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
  */
 void MainWindow::addChildMDIView(MDITreeViewBase* child)
 {
-	// Connect Cut, Delete, and Copy actions to the availability signals emitted by the child.
+	// Connect Cut, Copy, Delete, and Select All actions to the availability signals emitted by the child.
 	/// @note AFAICT, this works because only the active child will send this signal.
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
-
-	if(!m_select_all_model_watcher)
-	{
-		m_select_all_model_watcher = QSharedPointer<ModelChangeWatcher>::create(this);
-	}
-	
-	m_select_all_model_watcher->setModelToWatch(child->model());
-	connect(m_select_all_model_watcher.data(), &ModelChangeWatcher::rowCountChanged, this, [=](){
-		qDebug() << "ModelChange";
-		if(child->model()->rowCount() > 0)
-		{
-			m_act_select_all->setEnabled(true);
-		}
-		else
-		{
-			m_act_select_all->setEnabled(false);
-		}
-	});
+	connect(child, &MDITreeViewBase::selectAllAvailable, m_act_select_all, &QAction::setEnabled);
 	
 	/// @todo Same thing with undo/redo.
 	// child.undoAvailable.connect(editUndoAct.setEnabled)

@@ -32,12 +32,13 @@ class ModelChangeWatcher : public QObject
     
 signals:
 
-    void rowCountChanged();
+	void modelHasRows(bool);
 
 public:
     explicit ModelChangeWatcher(QObject *parent = Q_NULLPTR);
     
     void setModelToWatch(QAbstractItemModel* model);
+	void disconnectFromCurrentModel();
 
 protected slots:
     void onRowCountChanged();
@@ -45,7 +46,7 @@ protected slots:
 private:
     Q_DISABLE_COPY(ModelChangeWatcher)
             
-    QPointer<QAbstractItemModel> m_the_model;
+	QPointer<QAbstractItemModel> m_the_model { nullptr };
 };
 
 #endif /* MODELCHANGEWATCHER_H */
