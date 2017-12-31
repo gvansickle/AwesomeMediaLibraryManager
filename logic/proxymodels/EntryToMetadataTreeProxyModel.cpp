@@ -21,6 +21,8 @@
 
 #include <QDebug>
 
+#include <utils/ModelHelpers.h>
+
 EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(QObject *parent) : BASE_CLASS(parent)
 {
 	setDynamicSortFilter(true);
@@ -59,9 +61,10 @@ void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelI
 bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 {
 	// Only accept the row if it's currently selected.
-	QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
+	QModelIndex index = ::mapToSource(sourceModel()->index(sourceRow, 0, sourceParent));
 
-	qDebug() << "index model:" << index.model();
+//	qDebug() << "index model:" << index.model();
+//	qDebug() << "root model:" << ::mapToSource(index);
 
 	if(m_current_selected_index == index)
 	{

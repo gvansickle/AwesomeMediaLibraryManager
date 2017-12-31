@@ -60,5 +60,20 @@ inline static QItemSelection mapSelectionToSource(const QItemSelection& proxy_se
     return proxy_selection;
 }
 
+inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
+{
+    if(proxy_index.model())
+    {
+        // There's a model.  See if it's a proxy model.
+		auto proxy_model = qobject_cast<const QAbstractProxyModel*>(proxy_index.model());
+        if(proxy_model)
+        {
+            return proxy_model->mapToSource(proxy_index);
+        }
+    }
+    
+	return proxy_index;
+}
+
 #endif /* MODELHELPERS_H */
 

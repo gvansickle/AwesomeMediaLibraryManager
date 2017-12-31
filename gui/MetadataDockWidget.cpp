@@ -96,8 +96,7 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 	/// need indexes into m_proxy_model, which sits on top of view->model().
 
 	connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
-										 this, &MetadataDockWidget::viewSelectionChanged,
-										 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+										 this, &MetadataDockWidget::viewSelectionChanged);
 	
 	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
 }
