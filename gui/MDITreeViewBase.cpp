@@ -324,10 +324,12 @@ void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QIt
 	if(!selected.empty())
 	{
 		emit copyAvailable(true);
+		emit cutAvailable(!isReadOnly());
 	}
 	else
 	{
 		emit copyAvailable(false);
+		emit cutAvailable(false);
 	}
 }
 

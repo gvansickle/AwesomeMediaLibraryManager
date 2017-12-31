@@ -45,6 +45,9 @@ public:
     virtual void setModel(QAbstractItemModel* model) override;
 
     virtual PlaylistModel* underlyingModel() const;
+    
+    /// Playlists are not read-only.
+    bool isReadOnly() const override { return false; };
 
 public slots:
     void next();

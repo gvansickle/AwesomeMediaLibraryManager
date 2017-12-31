@@ -43,6 +43,11 @@ signals:
         
 public:
 	MDILibraryView(QWidget *parent = Q_NULLPTR);
+        
+        /**
+        * static member function which opens an MDILibraryView on the given model.
+        */
+        static MDILibraryView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
 
 	virtual void setModel(QAbstractItemModel* model) override;
 

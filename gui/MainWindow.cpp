@@ -936,6 +936,7 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 {
 	if(libmodel != nullptr)
 	{
+		// First check if we already have a view open.
 		auto existing = findSubWindow(libmodel->getLibRootDir());
 		if(existing != nullptr)
 		{
@@ -944,10 +945,14 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 			return;
 		}
 
-M_WARNING("THIS NEEDS WORK");
-		MDILibraryView* child = createMdiChildLibraryView();
-
-		child->setModel(libmodel);
+		// No view open, create a new one.
+		auto child = MDILibraryView::openModel(libmodel);
+		
+		if(child)
+		{
+			addChildMDIView(child);
+		}
+		
 		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
 	}
@@ -1091,7 +1096,7 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 {
 	// Connect Cut and Copy actions to the availability signals emitted by the child.
 	/// @note AFAICT, this works because only the active child will send this signal.
-	connect(child, &MDITreeViewBase::copyAvailable, m_act_cut, &QAction::setEnabled);
+	connect(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
 
 	/// @todo Same thing with undo/redo.
@@ -1350,14 +1355,3 @@ void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)
 #endif
 }
 
-#if 0
-
-    @pyqtSlot()
-    def metaDataChanged(self):
-		qDebug() << QString("MAIN GOT MESSAGE")
-        //all_metadata = player.player.availableMetaData()
-        current_window_title = "{} - {}".format(player.player.metaData(QMediaMetaData.AlbumArtist),
-                               player.player.metaData(QMediaMetaData.Title))
-        setWindowTitle(current_window_title)
-
-#endif

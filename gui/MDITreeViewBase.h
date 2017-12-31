@@ -30,13 +30,20 @@ class QFileDevice;
 class MDITreeViewBase : public QTreeView
 {
     Q_OBJECT
+    
+    using BASE_CLASS = QTreeView;
         
 signals:
     
     /**
-     * Signal is emitted when a row is selected or deselected in the QTreeView.
+     * Signal is emitted when a selection is available for copying in the QTreeView.
      */
     void copyAvailable(bool);
+
+    /**
+     * Signal emitted when the "cutability" status changes.  Read-only views will only send false.
+     */
+    void cutAvailable(bool);
         
 
 public:
@@ -54,6 +61,9 @@ public:
 
     virtual bool loadFile(QUrl load_url);
 
+    /// @note This one would be a good candidate for virtual static methods which don't exist in C++.
+    /// Create a factory function like this in each derived class:
+    /// static MDITreeViewBase* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
     
     /// Returns the current basename of this window's backing file.
     QString userFriendlyCurrentFile() const;
@@ -67,6 +77,9 @@ public:
     
     /// Return an action for the MainWindow's Window menu.
     QAction* windowMenuAction() const { return m_act_window; };
+    
+    /// Override if derived classes are not read-only.
+    virtual bool isReadOnly() const { return true; };
 
 public slots:
     
