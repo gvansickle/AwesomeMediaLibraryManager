@@ -40,7 +40,7 @@ class QActionGroup;
 class QWidget;
 class QLabel;
 class QMdiSubWindow;
-class QMdiArea;
+class MDIArea;
 class QSettings;
 
 class MDITreeViewBase;
@@ -196,10 +196,9 @@ private:
     /// The library models.
     std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
-	/// The "Now Playing" playlist.
+    /// The "Now Playing" playlist model and view.
     QPointer<PlaylistModel> m_now_playing_playlist_model;
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
-
 
     /// The list of PlaylistModels.
     std::vector<PlaylistModel*> m_playlist_models;
@@ -210,9 +209,8 @@ private:
     PlayerControls* m_controls;
     QLabel* m_numSongsIndicator;
 
-    /// the MDI area and signal mapper.
-    QMdiArea *m_mdi_area;
-    QSignalMapper *m_windowMapper;
+    /// The MDI area.
+    MDIArea* m_mdi_area;
 
     /// Actions
 
