@@ -30,6 +30,13 @@ void ModelChangeWatcher::setModelToWatch(QAbstractItemModel* model)
 {
 	qDebug() << "Connecting to model" << model;
 
+	// Disconnect any currently-connected model.
+	if(m_the_model)
+	{
+		// Disconnect all signals from m_the_model to this.
+		m_the_model->disconnect(this);
+	}
+
 	m_the_model = model;
 
 	// Connect to all the signals which might change the number of rows.

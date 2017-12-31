@@ -46,17 +46,7 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	
 	// ModelChangeWatcher for keeping "Select All" status updated.
 	m_select_all_model_watcher = new ModelChangeWatcher(this);
-	connect(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, [=](){
-		qDebug() << "ModelChange";
-		if(model()->rowCount() > 0)
-		{
-			emit selectAllAvailable(true);
-		}
-		else
-		{
-			emit selectAllAvailable(false);
-		}
-	});
+	connect(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MDITreeViewBase::selectAllAvailable);
 	
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();
