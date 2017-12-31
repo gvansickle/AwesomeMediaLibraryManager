@@ -43,26 +43,35 @@ public:
     void connectToView(MDITreeViewBase* view);
     
 public slots:
-	void viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
+    
+    /**
+     * Slot we connect up to the view's selectionModel()->QItemSelectionModel::selectionChanged signal.
+     * Note then that it's receiving selections relative to view->model(), which may need conversion.
+     */
+    void viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
 
-	/// Slot which is invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
-	void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
+    /**
+     * Slot which we connect up to m_proxy_model->&EntryToMetadataTreeProxyModel::dataChanged signal.
+     * Invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
+     * @note The model indexes will be relative to m_proxy_model, so again may need conversion.
+     */
+    void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
 
-	///@todo
-	void PopulateTreeWidget(const QModelIndex& first_model_index);
+    ///@todo
+    void PopulateTreeWidget(const QModelIndex& first_model_index);
 
 private:
-	Q_DISABLE_COPY(MetadataDockWidget)
+    Q_DISABLE_COPY(MetadataDockWidget)
 
-	EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
+    EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
 
-	QItemSelectionModel* m_connected_selection_model { nullptr };
+    QItemSelectionModel* m_connected_selection_model { nullptr };
 
-	QTreeWidget* m_metadata_widget { nullptr };
+    QTreeWidget* m_metadata_widget { nullptr };
 
-	QTreeView* m_metadata_tree_view { nullptr };
+    QTreeView* m_metadata_tree_view { nullptr };
 
-	PixmapLabel* m_cover_image_label { nullptr };
+    PixmapLabel* m_cover_image_label { nullptr };
 
     void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
 

@@ -33,6 +33,7 @@
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
+#include <utils/ModelHelpers.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/EntryToMetadataTreeProxyModel.h>
 
@@ -78,41 +79,65 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 
 	if(m_connected_selection_model != nullptr)
 	{
-		QObject::disconnect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
+		disconnect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
 				   this, &MetadataDockWidget::viewSelectionChanged);
+	}
+	if(m_proxy_model)
+	{
+		disconnect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
 	}
 
 	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
 	m_connected_selection_model = view->selectionModel();
 	m_proxy_model->setSourceModel(view->model());
+	
+	/// Note that the selectionModel() will send out QModelIndex's from view->model(), while we will mostly
+	/// need indexes into m_proxy_model, which sits on top of view->model().
 
-	auto connection_handle = connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
+	connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
 										 this, &MetadataDockWidget::viewSelectionChanged,
 										 Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-	if (!connection_handle)
-	{
-			qDebug() << "Connection failed: already connected?";
-	}
-
+	
 	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
 }
 
 void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
 {
 	qDebug() << "Selection changed: " << newSelection;
+	
+	if(newSelection.size() > 0)
+	{
+		// Get the top-level source selection.
+		QItemSelection tlis = mapSelectionToSource(newSelection);
+		
+		// Extract the first source index.
+		QModelIndex fsi = tlis.indexes()[0];
+		
+		// Tell the filter model about the new selection.
+		m_proxy_model->setSourceIndexToShow(fsi);
 
-	// Tell the filter model about the new selection.
-	m_proxy_model->setSourceIndexToShow(newSelection.indexes()[0]);
-
-	PopulateTreeWidget(newSelection.indexes()[0]);
+//		PopulateTreeWidget(fsi);
+	}
+	else
+	{
+		qDebug() << "selection was empty";
+		
+		m_proxy_model->setSourceIndexToShow(QModelIndex());
+//		PopulateTreeWidget(QModelIndex());
+	}
 }
 
 void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
 {
 	qDebug() << "Data changed:" << topLeft << bottomRight << roles;
+	
+	Q_ASSERT(topLeft.model() == m_proxy_model);
 
-	PopulateTreeWidget(topLeft);
+	// Map the index to the top-level source model.
+	QModelIndex source_model_index = m_proxy_model->mapToSource(topLeft);
+	
+//	PopulateTreeWidget(source_model_index);
 }
 
 void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index)

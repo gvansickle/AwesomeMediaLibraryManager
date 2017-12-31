@@ -47,6 +47,7 @@ protected:
 private:
 	Q_DISABLE_COPY(EntryToMetadataTreeProxyModel)
 
+	/// The root index to allow to pass through.
 	QPersistentModelIndex m_current_selected_index;
 };
 

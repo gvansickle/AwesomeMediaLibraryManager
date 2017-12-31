@@ -22,19 +22,43 @@
 
 #include <QPersistentModelIndex>
 #include <QModelIndexList>
+#include <QItemSelection>
+#include <QAbstractProxyModel>
 
 /// Convert a QModelIndexList into a QList of QPersistentIndexes.
 inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
 {
-	QList<QPersistentModelIndex> retval;
+    QList<QPersistentModelIndex> retval;
 
-	for(auto i : mil)
-	{
-		retval.append(i);
-	}
-	return retval;
+    for(auto i : mil)
+    {
+        retval.append(i);
+    }
+    return retval;
 }
 
+/**
+ *  Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().
+ */
+inline static QItemSelection mapSelectionToSource(const QItemSelection& proxy_selection)
+{
+    if(proxy_selection.size() > 0)
+    {
+        // There's a selection to convert.  Get the first QModelIndex so we can get its model.
+        auto model = proxy_selection[0].model();
+        if(model)
+        {
+            // Is it a proxy model?
+            auto proxy_model = qobject_cast<const QAbstractProxyModel*>(model);
+            if(proxy_model)
+            {
+                return proxy_model->mapSelectionToSource(proxy_selection);
+            }
+        }
+    }
+    
+    return proxy_selection;
+}
 
 #endif /* MODELHELPERS_H */
 
