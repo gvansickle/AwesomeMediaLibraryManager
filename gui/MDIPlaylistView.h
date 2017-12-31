@@ -33,6 +33,8 @@ class MDIPlaylistView : public MDITreeViewBase
 {
     Q_OBJECT
 
+    using BASE_CLASS = MDITreeViewBase;
+    
 signals:
 
     void play();
@@ -42,7 +44,7 @@ public:
 
     QMediaPlaylist* getQMediaPlaylist();
 
-    virtual void setModel(QAbstractItemModel* model) override;
+    void setModel(QAbstractItemModel* model) override;
 
     virtual PlaylistModel* underlyingModel() const;
     

@@ -462,12 +462,6 @@ M_WARNING("@todo Implement a playlist context menu.");
 	//menu = self.createContextMenu(modelindex)
 }
 
-//	# @pyqtSlot(QItemSelection, QItemSelection)
-//	# def selectionChanged(self, newSelection: QItemSelection, oldSelection: QItemSelection) -> None:
-//	#     #self.playlistSelectionChanged.emit(newSelection, oldSelection)
-//	#     pass
-
-
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
 {
 	// Notification from the QMediaPlaylist that the current selection has changed.

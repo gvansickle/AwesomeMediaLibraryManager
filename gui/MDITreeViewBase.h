@@ -88,10 +88,10 @@ public:
     /// Override if derived classes are not read-only.
     virtual bool isReadOnly() const { return true; };
 
-	//
-	// Base class overrides.
-	//
-	void setModel(QAbstractItemModel *model) override;
+    //
+    // Base class overrides.
+    //
+    void setModel(QAbstractItemModel *model) override;
 
 public slots:
     
