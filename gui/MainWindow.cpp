@@ -1094,9 +1094,10 @@ void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
  */
 void MainWindow::addChildMDIView(MDITreeViewBase* child)
 {
-	// Connect Cut and Copy actions to the availability signals emitted by the child.
+	// Connect Cut, Delete, and Copy actions to the availability signals emitted by the child.
 	/// @note AFAICT, this works because only the active child will send this signal.
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
+	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
 
 	/// @todo Same thing with undo/redo.
