@@ -26,12 +26,19 @@
 class EntryToMetadataTreeProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
+
+	using BASE_CLASS = QSortFilterProxyModel;
     
 public:
     explicit EntryToMetadataTreeProxyModel(QObject *parent = Q_NULLPTR);
     virtual ~EntryToMetadataTreeProxyModel();
     
-    void setSelectedIndex(const QPersistentModelIndex& selected_index);
+	void setSourceModel(QAbstractItemModel* sourceModel) override;
+
+	/**
+	 * Call this to set the one sourceIndex to pass through this proxy.
+	 */
+	void setSourceIndexToShow(const QPersistentModelIndex& source_index_to_filter_on);
     
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;

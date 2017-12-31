@@ -22,6 +22,7 @@
 #include "PixmapLabel.h"
 
 #include <QItemSelection>
+#include <QTreeView>
 #include <QTreeWidget>
 #include <QHBoxLayout>
 #include <QDebug>
@@ -47,7 +48,10 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
 	// Main layout is vertical.
 	auto mainLayout = new QVBoxLayout();
 
-    m_metadata_widget = new QTreeWidget(parent);
+	m_metadata_tree_view = new QTreeView(this);
+	m_metadata_tree_view->setModel(m_proxy_model);
+
+	m_metadata_widget = new QTreeWidget(this);
     m_metadata_widget->setRootIsDecorated(false);
     m_metadata_widget->setColumnCount(2);
     m_metadata_widget->setHeaderLabels(QStringList() << "Key" << "Value");
@@ -56,7 +60,8 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
 	m_cover_image_label = new PixmapLabel(this);
 	m_cover_image_label->setText("IMAGE HERE");
 
-    mainLayout->addWidget(m_metadata_widget);
+	mainLayout->addWidget(m_metadata_tree_view);
+	mainLayout->addWidget(m_metadata_widget);
 	mainLayout->addWidget(m_cover_image_label);
 	auto mainWidget = new QWidget(this);
 	mainWidget->setLayout(mainLayout);
@@ -71,10 +76,16 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 		return;
 	}
 
+	if(m_connected_selection_model != nullptr)
+	{
+		QObject::disconnect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
+				   this, &MetadataDockWidget::viewSelectionChanged);
+	}
+
 	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
-	m_proxy_model->setSourceModel(view->model());
 	m_connected_selection_model = view->selectionModel();
+	m_proxy_model->setSourceModel(view->model());
 
 	auto connection_handle = connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
 										 this, &MetadataDockWidget::viewSelectionChanged,
@@ -92,7 +103,7 @@ void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection
 	qDebug() << "Selection changed: " << newSelection;
 
 	// Tell the filter model about the new selection.
-	m_proxy_model->setSelectedIndex(newSelection.indexes()[0]);
+	m_proxy_model->setSourceIndexToShow(newSelection.indexes()[0]);
 
 	PopulateTreeWidget(newSelection.indexes()[0]);
 }

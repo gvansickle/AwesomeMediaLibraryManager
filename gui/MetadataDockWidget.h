@@ -30,6 +30,7 @@ class PixmapLabel;
 class QItemSelection;
 class QItemSelectionModel;
 class QTreeWidgetItem;
+class QTreeView;
 class EntryToMetadataTreeProxyModel;
 
 class MetadataDockWidget : public QDockWidget
@@ -53,13 +54,15 @@ public slots:
 private:
 	Q_DISABLE_COPY(MetadataDockWidget)
 
-	EntryToMetadataTreeProxyModel* m_proxy_model;
+	EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
 
-	QItemSelectionModel* m_connected_selection_model;
+	QItemSelectionModel* m_connected_selection_model { nullptr };
 
-    QTreeWidget* m_metadata_widget;
+	QTreeWidget* m_metadata_widget { nullptr };
 
-    PixmapLabel* m_cover_image_label;
+	QTreeView* m_metadata_tree_view { nullptr };
+
+	PixmapLabel* m_cover_image_label { nullptr };
 
     void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
 

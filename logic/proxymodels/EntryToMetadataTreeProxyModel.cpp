@@ -21,19 +21,37 @@
 
 #include <QDebug>
 
-EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(QObject *parent) : QSortFilterProxyModel(parent)
+EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(QObject *parent) : BASE_CLASS(parent)
 {
+	setDynamicSortFilter(true);
 }
 
 EntryToMetadataTreeProxyModel::~EntryToMetadataTreeProxyModel()
 {
 }
 
-void EntryToMetadataTreeProxyModel::setSelectedIndex(const QPersistentModelIndex& selected_index)
+void EntryToMetadataTreeProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
-	qDebug() << "Setting selected index to:" << selected_index;
+	qDebug() << "Setting source model to:" << sourceModel;
 
-	m_current_selected_index = selected_index;
+	// Clear out the old index to show, it doesn't apply to the new model.
+	m_current_selected_index = QPersistentModelIndex();
+
+	BASE_CLASS::setSourceModel(sourceModel);
+}
+
+void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelIndex& source_index_to_filter_on)
+{
+	qDebug() << "Setting selected index to:" << source_index_to_filter_on;
+
+	Q_ASSERT(sourceModel() == source_index_to_filter_on.model());
+
+	/// @todo Maybe another way to notify listeners of this change?
+	beginResetModel();
+
+	m_current_selected_index = source_index_to_filter_on;
+
+	endResetModel();
 }
 
 bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
