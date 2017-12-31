@@ -20,6 +20,7 @@
 #include "ModelChangeWatcher.h"
 
 #include <QAbstractItemModel>
+#include <QDebug>
 
 ModelChangeWatcher::ModelChangeWatcher(QObject *parent) : QObject(parent)
 {
@@ -38,5 +39,6 @@ void ModelChangeWatcher::setModelToWatch(QAbstractItemModel* model)
 
 void ModelChangeWatcher::onRowCountChanged()
 {
+	qDebug() << "EMITTING rowCountChanged for model" << m_the_model;
 	emit rowCountChanged();
 }

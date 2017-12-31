@@ -58,6 +58,7 @@
 #include <QStyleFactory>
 #include <QDirIterator>
 #include <QClipboard>
+#include <QSharedPointer>
 
 #include <functional>
 #include <type_traits>
@@ -70,6 +71,7 @@
 
 #include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
+#include "logic/proxymodels/ModelChangeWatcher.h"
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
@@ -1100,6 +1102,24 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
 
+	if(!m_select_all_model_watcher)
+	{
+		m_select_all_model_watcher = QSharedPointer<ModelChangeWatcher>::create(this);
+	}
+	
+	m_select_all_model_watcher->setModelToWatch(child->model());
+	connect(m_select_all_model_watcher.data(), &ModelChangeWatcher::rowCountChanged, this, [=](){
+		qDebug() << "ModelChange";
+		if(child->model()->rowCount() > 0)
+		{
+			m_act_select_all->setEnabled(true);
+		}
+		else
+		{
+			m_act_select_all->setEnabled(false);
+		}
+	});
+	
 	/// @todo Same thing with undo/redo.
 	// child.undoAvailable.connect(editUndoAct.setEnabled)
 	// child.redoAvailable.connect(redoAct.setEnabled)
