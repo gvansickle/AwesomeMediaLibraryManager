@@ -83,11 +83,10 @@ inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_m
 	if(proxy_model)
 	{
 		qDebug() << "Is a proxy model:" << proxy_model;
-//		QModelIndex root_model_index = proxy_model->mapToSource(proxy_model->index(0, 0,QModelIndex()));
-//		qDebug() << "proxy model index:" << root_model_index;
 		auto source_model = proxy_model->sourceModel();
 		if(source_model)
 		{
+			qDebug() << "With source model:" << source_model;
 			return (QAbstractItemModel*)source_model;
 		}
 		else

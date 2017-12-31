@@ -93,7 +93,7 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 	auto root_model = getRootModel(view->model());
 	qDebug() << "View" << view << "has root model:" << root_model;
 	m_proxy_model->setSourceModel(root_model);
-	
+
 	/// Note that the selectionModel() will send out QModelIndex's from view->model(), while we will mostly
 	/// need indexes into m_proxy_model, which sits on top of view->model().
 
@@ -101,6 +101,12 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 										 this, &MetadataDockWidget::viewSelectionChanged);
 	
 	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+
+	if(m_connected_selection_model && m_connected_selection_model->hasSelection())
+	{
+		// Call viewSelectionChanged to set the existing selection.
+		viewSelectionChanged(m_connected_selection_model->selection(), m_connected_selection_model->selection());
+	}
 }
 
 void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
