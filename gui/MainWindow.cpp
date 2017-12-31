@@ -879,9 +879,8 @@ void MainWindow::onStartup()
     // Set the Icon Theme.
     changeIconTheme(QIcon::themeName());
 
-    // Create the "Now Playing" playlist.
-    auto wins = createMdiNowPlayingView();
-    m_now_playing_playlist_view = wins.first;
+    // Create the "Now Playing" playlist and view.
+    m_now_playing_playlist_view = createMdiNowPlayingView();
 
 M_WARNING("TODO: Specify a temp/cache file?")
     m_now_playing_playlist_view->newFile();
@@ -946,9 +945,7 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 		}
 
 M_WARNING("THIS NEEDS WORK");
-		MDILibraryView* child;
-		QMdiSubWindow* mdisubWindow;
-		std::tie(child, mdisubWindow) = createMdiChildLibraryView();
+		MDILibraryView* child = createMdiChildLibraryView();
 
 		child->setModel(libmodel);
 		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
@@ -1054,8 +1051,7 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
  */
 void MainWindow::newPlaylist()
 {
-    auto wins = createMdiChildPlaylist();
-	MDIPlaylistView* child = wins.first;
+    auto child = createMdiChildPlaylist();
 
     child->newFile();
 
@@ -1113,7 +1109,7 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	mdisubwindow->show();	
 }
 
-std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryView()
+MDILibraryView* MainWindow::createMdiChildLibraryView()
 {
 	// Create a new, empty LibraryView.
 
@@ -1124,10 +1120,10 @@ std::tuple<MDILibraryView*, QMdiSubWindow*> MainWindow::createMdiChildLibraryVie
 	
 	addChildMDIView(child);
 
-	return std::make_tuple(child, nullptr);
+	return child;
 }
 
-std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
+MDIPlaylistView* MainWindow::createMdiChildPlaylist()
 {
 	// Create a new playlist model.
 	auto new_playlist_model = new PlaylistModel(this);
@@ -1140,10 +1136,10 @@ std::pair<MDIPlaylistView*, QMdiSubWindow*> MainWindow::createMdiChildPlaylist()
 
 	// Add the new playlist to the collection doc widget.
 	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return std::make_pair(child, nullptr);
+	return child;
 }
 
-std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingView()
+MDINowPlayingView* MainWindow::createMdiNowPlayingView()
 {
 	// Create a new "Now Playing" playlist model.
 	auto new_playlist_model = new PlaylistModel(this);
@@ -1159,7 +1155,7 @@ std::pair<MDINowPlayingView*, QMdiSubWindow*> MainWindow::createMdiNowPlayingVie
 
 	// Add the new playlist to the collection doc widget.
 	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return std::make_pair(child, nullptr);
+	return child;
 }
 
 // Top-level "saveAs" action handler for "Save playlist as..."

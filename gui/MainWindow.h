@@ -134,7 +134,7 @@ private:
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
     void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
-	void connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget);
+    void connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget);
     ///@}
 
     void stopAllBackgroundThreads();
@@ -165,9 +165,9 @@ private:
     MDITreeViewBase* activeMdiChild();
     QMdiSubWindow* findSubWindow(QUrl url);
     
-    std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
-    std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
-    std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
+    MDILibraryView* createMdiChildLibraryView();
+    MDIPlaylistView* createMdiChildPlaylist();
+    MDINowPlayingView* createMdiNowPlayingView();
 
     QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
     void openMDILibraryViewOnModel(LibraryModel* libmodel);
