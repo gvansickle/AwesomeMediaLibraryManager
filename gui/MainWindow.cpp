@@ -1205,7 +1205,6 @@ void MainWindow::onPaste()
 
 void MainWindow::onSelectAll()
 {
-    qDebug() << "Select All action";
 	auto active_child = qobject_cast<MDITreeViewBase*>(activeChildMDIView());
 	if(active_child)
 	{
@@ -1215,18 +1214,10 @@ void MainWindow::onSelectAll()
 
 void MainWindow::onDelete()
 {
-	qDebug() << "DELETE";
-
 	auto child_treeview = qobject_cast<MDIPlaylistView*>(activeChildMDIView());
 	if(child_treeview)
 	{
-		// It's something we can maybe delete from.
-		QModelIndex index = child_treeview->selectionModel()->currentIndex();
-		QAbstractItemModel *model = child_treeview->model();
-		if (model->removeRow(index.row(), index.parent()))
-		{
-			updateActionEnableStates();
-		}
+		child_treeview->onDelete();
 	}
 }
 
