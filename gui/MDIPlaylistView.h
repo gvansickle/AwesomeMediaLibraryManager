@@ -41,6 +41,11 @@ signals:
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
+    
+    /**
+     * static member function which opens an MDILibraryView on the given model.
+     */
+    static MDIPlaylistView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
 
     QMediaPlaylist* getQMediaPlaylist();
 

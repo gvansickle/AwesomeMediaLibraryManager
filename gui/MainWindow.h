@@ -62,8 +62,7 @@ public:
     ~MainWindow() override;
 
 public slots:
-    void updateActionEnableStates();
-    void updateActionEnableStates_Edit();
+
 
 
 protected:
@@ -98,6 +97,10 @@ private slots:
     void onSelectAll();
     void onDelete();
     /// @}
+	///
+
+	void about();
+
 
     void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
@@ -105,6 +108,9 @@ private slots:
 
     void doExperiment();
 
+	void updateActionEnableStates();
+    void updateActionEnableStates_Edit();
+	
     void onChangeWindowMode(QAction* action);
 
     /// Filter slots.
@@ -120,9 +126,9 @@ private:
     void createToolBars();
     void createStatusBar();
     void createDockWindows();
+	void addChildMDIView(MDITreeViewBase* child);
+	MDITreeViewBase* activeChildMDIView();
     
-    void updateMenus();
-
 	/// @name Bulk Signal/Slot Connection management.
     ///@{
     void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
@@ -140,7 +146,6 @@ private:
 
     void importLib();
     
-    void about();
 
     /// @name Persistency
     ///@{
@@ -160,8 +165,6 @@ private:
 
     /// MDI-related functions.
     /// @{
-    void addChildMDIView(MDITreeViewBase* child);
-    MDITreeViewBase* activeMdiChild();
     QMdiSubWindow* findSubWindow(QUrl url);
     
     MDILibraryView* createMdiChildLibraryView();

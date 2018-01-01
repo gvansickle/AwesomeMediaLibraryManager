@@ -36,7 +36,7 @@ class MDILibraryView : public MDITreeViewBase
 {
     Q_OBJECT
 
-	using BASE_CLASS = MDITreeViewBase;
+    using BASE_CLASS = MDITreeViewBase;
 
 signals:
     void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);

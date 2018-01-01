@@ -24,6 +24,14 @@ MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 
 }
 
+MDINowPlayingView* MDINowPlayingView::openModel(QAbstractItemModel* model, QWidget* parent)
+{
+	auto view = new MDINowPlayingView(parent);
+	view->setModel(model);
+	return view;
+}
+
+
 QString MDINowPlayingView::getDisplayName() const
 {
 	return "Now Playing";

@@ -102,6 +102,14 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	/// @todo selectionModel().selectionChanged.connect(selectionChanged)
 }
 
+MDIPlaylistView* MDIPlaylistView::openModel(QAbstractItemModel* model, QWidget* parent)
+{
+	auto view = new MDIPlaylistView(parent);
+	view->setModel(model);
+	return view;
+}
+
+
 QMediaPlaylist* MDIPlaylistView::getQMediaPlaylist()
 {
 	return m_underlying_model->qmplaylist();
