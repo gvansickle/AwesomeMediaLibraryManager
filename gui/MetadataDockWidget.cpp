@@ -49,10 +49,6 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     // Set up the proxy model.
     m_proxy_model = new EntryToMetadataTreeProxyModel(this);
 
-	// Set up the Data Widget Mapper.
-	m_dw_mapper = new QDataWidgetMapper(this);
-	m_test_label = new QLineEdit("MAPPED DATA HERE", this);
-
     // Main layout is vertical.
     auto mainLayout = new QVBoxLayout();
 
@@ -68,7 +64,6 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_cover_image_label = new PixmapLabel(this);
     m_cover_image_label->setText("IMAGE HERE");
 
-	mainLayout->addWidget(m_test_label);
     mainLayout->addWidget(m_metadata_tree_view);
     mainLayout->addWidget(m_metadata_widget);
     mainLayout->addWidget(m_cover_image_label);
@@ -96,12 +91,6 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
     m_proxy_model->setSelectionModel(view->selectionModel());
 
     connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
-
-	///@todo EXPERIMENT
-	m_dw_mapper->setModel(m_proxy_model);
-	qDebug() << "rowCount:" << m_proxy_model->rowCount();
-	m_dw_mapper->addMapping(m_test_label, 1);
-	m_dw_mapper->toFirst();
 }
 
 void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
