@@ -31,7 +31,10 @@ class QItemSelection;
 class QItemSelectionModel;
 class QTreeWidgetItem;
 class QTreeView;
+
 class EntryToMetadataTreeProxyModel;
+class QDataWidgetMapper;
+class QLineEdit;
 
 class MetadataDockWidget : public QDockWidget
 {
@@ -62,6 +65,10 @@ public slots:
 
 private:
     Q_DISABLE_COPY(MetadataDockWidget)
+
+	QLineEdit* m_test_label { nullptr };
+
+	QDataWidgetMapper* m_dw_mapper { nullptr };
 
     EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
 

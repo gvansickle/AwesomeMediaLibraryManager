@@ -31,6 +31,8 @@
 
 FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(new QActionGroup(this))
 {
+	setPlaceholderText(tr("Enter search terms here"));
+
 	setClearButtonEnabled(true);
 	connect(this, &QLineEdit::textChanged, this, &FilterWidget::filterChanged);
 
@@ -94,8 +96,10 @@ QRegExp::PatternSyntax FilterWidget::patternSyntax() const
 
 void FilterWidget::setPatternSyntax(QRegExp::PatternSyntax s)
 {
-	foreach (QAction *a, m_patternGroup->actions()) {
-		if (patternSyntaxFromAction(a) == s) {
+	for(QAction *a : m_patternGroup->actions())
+	{
+		if (patternSyntaxFromAction(a) == s)
+		{
 			a->setChecked(true);
 			break;
 		}

@@ -27,6 +27,9 @@
 #include <QHBoxLayout>
 #include <QDebug>
 
+#include <QDataWidgetMapper>
+#include <QLineEdit>
+
 #include <functional>
 
 #include <logic/MetadataAbstractBase.h>
@@ -46,6 +49,10 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     // Set up the proxy model.
     m_proxy_model = new EntryToMetadataTreeProxyModel(this);
 
+	// Set up the Data Widget Mapper.
+	m_dw_mapper = new QDataWidgetMapper(this);
+	m_test_label = new QLineEdit("MAPPED DATA HERE", this);
+
     // Main layout is vertical.
     auto mainLayout = new QVBoxLayout();
 
@@ -61,6 +68,7 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_cover_image_label = new PixmapLabel(this);
     m_cover_image_label->setText("IMAGE HERE");
 
+	mainLayout->addWidget(m_test_label);
     mainLayout->addWidget(m_metadata_tree_view);
     mainLayout->addWidget(m_metadata_widget);
     mainLayout->addWidget(m_cover_image_label);
@@ -77,11 +85,6 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
         return;
     }
 
-//    if(m_connected_selection_model != nullptr)
-//    {
-//            disconnect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
-//                               this, &MetadataDockWidget::viewSelectionChanged);
-//    }
     if(m_proxy_model != nullptr)
     {
 		disconnect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
@@ -89,51 +92,42 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 
     qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
-	//m_connected_selection_model = view->selectionModel();
-    //auto root_model = getRootModel(view->model());
-    //qDebug() << "View" << view << "has root model:" << root_model;
     m_proxy_model->setSourceModel(view->model());
     m_proxy_model->setSelectionModel(view->selectionModel());
 
-    /// Note that the selectionModel() will send out QModelIndex's from view->model(), while we will mostly
-    /// need indexes into m_proxy_model, which sits on top of view->model().
-
-//    connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
-//                                                                             this, &MetadataDockWidget::viewSelectionChanged);
-
     connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
 
-//    if(m_connected_selection_model && m_connected_selection_model->hasSelection())
-//    {
-//            // Call viewSelectionChanged to set the existing selection.
-//            viewSelectionChanged(m_connected_selection_model->selection(), m_connected_selection_model->selection());
-//    }
+	///@todo EXPERIMENT
+	m_dw_mapper->setModel(m_proxy_model);
+	qDebug() << "rowCount:" << m_proxy_model->rowCount();
+	m_dw_mapper->addMapping(m_test_label, 1);
+	m_dw_mapper->toFirst();
 }
 
 void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
 {
-	qDebug() << "Selection changed: " << newSelection;
-	
-	if(newSelection.size() > 0)
-	{
-		// Get the top-level source selection.
-		QItemSelection tlis = ::mapSelectionToSource(newSelection);
-		
-		// Extract the first source index.
-		QModelIndex fsi = tlis.indexes()[0];
-		
-		// Tell the filter model about the new selection.
-		m_proxy_model->setSourceIndexToShow(fsi);
+    qDebug() << "Selection changed: " << newSelection;
+
+    if(newSelection.size() > 0)
+    {
+        // Get the top-level source selection.
+        QItemSelection tlis = ::mapSelectionToSource(newSelection);
+
+        // Extract the first source index.
+        QModelIndex fsi = tlis.indexes()[0];
+
+        // Tell the filter model about the new selection.
+        m_proxy_model->setSourceIndexToShow(fsi);
 
 //		PopulateTreeWidget(fsi);
-	}
-	else
-	{
-		qDebug() << "selection was empty";
-		
-		m_proxy_model->setSourceIndexToShow(QModelIndex());
+    }
+    else
+    {
+        qDebug() << "selection was empty";
+
+        m_proxy_model->setSourceIndexToShow(QModelIndex());
 //		PopulateTreeWidget(QModelIndex());
-	}
+    }
 }
 
 void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
