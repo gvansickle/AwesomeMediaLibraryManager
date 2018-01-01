@@ -993,13 +993,6 @@ void MainWindow::importLib()
     return;
 }
 
-#if 0
-    def saveLibraryAs(self):
-        if activeMdiChild() and activeMdiChild().saveAs():
-            activeMdiChild().saveAs()
-#endif
-
-
 void MainWindow::onRescanLibrary()
 {
 	// Start a rescan on all models.

@@ -409,13 +409,16 @@ M_WARNING("TODO: Paste at current select position")
 
 void MDIPlaylistView::onDelete()
 {
-	qDebug() << "DELETING";
 	// Remove the current selection.
 	QModelIndexList mil = selectionModel()->selectedRows();
+
+	qDebug() << "DELETING" << mil.size() << "MODEL INDEXES";
+	
 	auto pmil = toQPersistentModelIndexList(mil);
 	auto m = model();
 	for(auto pi : pmil)
 	{
+		qDebug() << "DELETING ROW:" << pi.row() << "isValid():" << pi.isValid();
 		m->removeRow(pi.row());
 	}
 }

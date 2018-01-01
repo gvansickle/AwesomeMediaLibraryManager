@@ -112,7 +112,6 @@ static qint64 sequenceNumber = 0;
 }
 
 
-
 bool MDITreeViewBase::save()
 {
 	if(m_isUntitled)
