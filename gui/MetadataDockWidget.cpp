@@ -40,6 +40,7 @@
 #include <utils/ModelHelpers.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/EntryToMetadataTreeProxyModel.h>
+#include <logic/proxymodels/ModelChangeWatcher.h>
 
 #include <utils/Theme.h>
 
@@ -49,6 +50,9 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
 
     // Set up the proxy model.
     m_proxy_model = new EntryToMetadataTreeProxyModel(this);
+	// Set up the watcher.
+	m_proxy_model_watcher = new ModelChangeWatcher(this);
+	m_proxy_model_watcher->setModelToWatch(m_proxy_model);
 
     // Main layout is vertical.
     auto mainLayout = new QVBoxLayout();
@@ -85,6 +89,7 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
     {
 		disconnect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
     }
+	m_proxy_model_watcher->disconnect(this);
 
     qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
@@ -92,6 +97,7 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
     m_proxy_model->setSelectionModel(view->selectionModel());
 
     connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 
 void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
@@ -109,7 +115,7 @@ void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection
         // Tell the filter model about the new selection.
         m_proxy_model->setSourceIndexToShow(fsi);
 
-//		PopulateTreeWidget(fsi);
+		PopulateTreeWidget(fsi);
     }
     else
     {
@@ -126,10 +132,9 @@ void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelI
 	
 	Q_ASSERT(topLeft.model() == m_proxy_model);
 
-	// Map the index to the top-level source model.
-//	QModelIndex source_model_index = m_proxy_model->mapToSource(topLeft);
 	if(topLeft.isValid())
 	{
+		// Update the QTreeWidget.
 		QModelIndex mi = m_proxy_model->index(topLeft.row(), 0, QModelIndex());
 		auto sp = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
 		qDebug() << "Pointer says:" << sp->getM2Url();
@@ -140,18 +145,6 @@ void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelI
 void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index)
 {
 	qDebug() << "Populating with: " << first_model_index;
-
-	///qDebug() << "Incoming model:" << first_model_index.model();
-//	const LibrarySortFilterProxyModel* model = dynamic_cast<const LibrarySortFilterProxyModel*>(first_model_index.model());
-//	if(model == nullptr)
-//	{
-//		qCritical() << "Null model. first_model_index.isValid?:" << first_model_index.isValid();
-//	}
-//	auto selected_row = first_model_index.row();
-
-	///qDebug() << "Selected Row: " << selected_row;
-	//return
-//	std::shared_ptr<LibraryEntry> libentry = model->getItem(first_model_index);
 
 	QModelIndex mi = m_proxy_model->index(first_model_index.row(), 0, QModelIndex());
 	auto libentry = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
@@ -280,3 +273,14 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
 	}
 }
 
+void MetadataDockWidget::onProxyModelChange(bool has_rows)
+{
+	qDebug() << "MODELWATCHER DETECTED CHANGE IN PROXY MODEL";
+
+	if(has_rows)
+	{
+		// Update the tree widget.
+		auto index = m_proxy_model->index(0, 0, QModelIndex());
+		PopulateTreeWidget(index);
+	}
+}

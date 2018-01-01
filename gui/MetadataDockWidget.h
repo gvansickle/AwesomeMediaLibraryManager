@@ -31,7 +31,9 @@ class QItemSelection;
 class QItemSelectionModel;
 class QTreeWidgetItem;
 class QTreeView;
+
 class EntryToMetadataTreeProxyModel;
+class ModelChangeWatcher;
 
 
 class MetadataDockWidget : public QDockWidget
@@ -54,7 +56,7 @@ public slots:
     /**
      * Slot which we connect up to m_proxy_model->&EntryToMetadataTreeProxyModel::dataChanged signal.
      * Invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
-     * @note The model indexes will be relative to m_proxy_model, so again may need conversion.
+	 * @note The model indexes will be relative to m_proxy_model.
      */
     void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
 
@@ -66,6 +68,8 @@ private:
 
     EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
 
+	ModelChangeWatcher* m_proxy_model_watcher { nullptr };
+
     QTreeWidget* m_metadata_widget { nullptr };
 
     QTreeView* m_metadata_tree_view { nullptr };
@@ -74,6 +78,8 @@ private:
 
     void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
 
+private slots:
+	void onProxyModelChange(bool);
 };
 
 #endif // METADATADOCKWIDGET_H
