@@ -212,7 +212,7 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 
 QString MDITreeViewBase::getDisplayName() const
 {
-	return userFriendlyCurrentFile();
+    return userFriendlyCurrentFile();
 }
 
 //
@@ -221,11 +221,11 @@ QString MDITreeViewBase::getDisplayName() const
 
 void MDITreeViewBase::setModel(QAbstractItemModel* model)
 {
-	qDebug() << "BASE SETTING MODEL:" << model;
+    qDebug() << "BASE SETTING MODEL:" << model;
 
-	m_select_all_model_watcher->disconnectFromCurrentModel();
-	this->BASE_CLASS::setModel(model);
-	m_select_all_model_watcher->setModelToWatch(model);
+    m_select_all_model_watcher->disconnectFromCurrentModel();
+    this->BASE_CLASS::setModel(model);
+    m_select_all_model_watcher->setModelToWatch(model);
 }
 
 //
