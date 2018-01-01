@@ -403,12 +403,20 @@ void MDIPlaylistView::onPaste()
 {
 	qDebug() << "PASTING";
     // Get the current selection.
-	QModelIndexList mil = selectionModel()->selectedRows();
+	auto selmodel = selectionModel();
+	if(!selmodel)
+	{
+		qWarning() << "BAD SELECTION MODEL";
+		return;
+	}
+
+	QModelIndexList mil = selmodel->selectedRows();
 M_WARNING("TODO: Paste at current select position")
 	
 	QClipboard *clipboard = QGuiApplication::clipboard();
 	if(!clipboard)
 	{
+		qWarning() << "COULD NOT GET CLIPBOARD";
 		return;
 	}
 
@@ -420,14 +428,20 @@ void MDIPlaylistView::onDelete()
 	// Remove the current selection.
 	QModelIndexList mil = selectionModel()->selectedRows();
 
-	qDebug() << "DELETING" << mil.size() << "MODEL INDEXES";
-	
+	// Convert them to persistent model indexes.
 	auto pmil = toQPersistentModelIndexList(mil);
 	auto m = model();
 	for(auto pi : pmil)
 	{
-		qDebug() << "DELETING ROW:" << pi.row() << "isValid():" << pi.isValid();
-		m->removeRow(pi.row());
+		if(pi.isValid())
+		{
+			m->removeRow(pi.row(), pi.parent());
+		}
+		else
+		{
+			// Index somehow became invalid.
+			qWarning() << "ATTEMPTED TO DELETE INVALID INDEX:" << pi;
+		}
 	}
 }
 
