@@ -41,72 +41,73 @@
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
-	setObjectName("MetadataDockWidget");
+    setObjectName("MetadataDockWidget");
 
-	// Set up the proxy model.
-	m_proxy_model = new EntryToMetadataTreeProxyModel(this);
+    // Set up the proxy model.
+    m_proxy_model = new EntryToMetadataTreeProxyModel(this);
 
-	// Main layout is vertical.
-	auto mainLayout = new QVBoxLayout();
+    // Main layout is vertical.
+    auto mainLayout = new QVBoxLayout();
 
-	m_metadata_tree_view = new QTreeView(this);
-	m_metadata_tree_view->setModel(m_proxy_model);
+    m_metadata_tree_view = new QTreeView(this);
+    m_metadata_tree_view->setModel(m_proxy_model);
 
-	m_metadata_widget = new QTreeWidget(this);
+    m_metadata_widget = new QTreeWidget(this);
     m_metadata_widget->setRootIsDecorated(false);
     m_metadata_widget->setColumnCount(2);
     m_metadata_widget->setHeaderLabels(QStringList() << "Key" << "Value");
 
 
-	m_cover_image_label = new PixmapLabel(this);
-	m_cover_image_label->setText("IMAGE HERE");
+    m_cover_image_label = new PixmapLabel(this);
+    m_cover_image_label->setText("IMAGE HERE");
 
-	mainLayout->addWidget(m_metadata_tree_view);
-	mainLayout->addWidget(m_metadata_widget);
-	mainLayout->addWidget(m_cover_image_label);
-	auto mainWidget = new QWidget(this);
-	mainWidget->setLayout(mainLayout);
-	setWidget(mainWidget);
+    mainLayout->addWidget(m_metadata_tree_view);
+    mainLayout->addWidget(m_metadata_widget);
+    mainLayout->addWidget(m_cover_image_label);
+    auto mainWidget = new QWidget(this);
+    mainWidget->setLayout(mainLayout);
+    setWidget(mainWidget);
 }
 
 void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 {
-	if(view == nullptr)
-	{
-		qWarning() << "VIEW IS NULL";
-		return;
-	}
+    if(view == nullptr)
+    {
+        qWarning() << "VIEW IS NULL";
+        return;
+    }
 
-	if(m_connected_selection_model != nullptr)
-	{
-		disconnect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
-				   this, &MetadataDockWidget::viewSelectionChanged);
-	}
-	if(m_proxy_model != nullptr)
-	{
+//    if(m_connected_selection_model != nullptr)
+//    {
+//            disconnect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
+//                               this, &MetadataDockWidget::viewSelectionChanged);
+//    }
+    if(m_proxy_model != nullptr)
+    {
 		disconnect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
-	}
+    }
 
-	qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
+    qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
-	m_connected_selection_model = view->selectionModel();
-	auto root_model = getRootModel(view->model());
-	qDebug() << "View" << view << "has root model:" << root_model;
-	m_proxy_model->setSourceModel(root_model);
+	//m_connected_selection_model = view->selectionModel();
+    //auto root_model = getRootModel(view->model());
+    //qDebug() << "View" << view << "has root model:" << root_model;
+    m_proxy_model->setSourceModel(view->model());
+    m_proxy_model->setSelectionModel(view->selectionModel());
 
-	/// Note that the selectionModel() will send out QModelIndex's from view->model(), while we will mostly
-	/// need indexes into m_proxy_model, which sits on top of view->model().
+    /// Note that the selectionModel() will send out QModelIndex's from view->model(), while we will mostly
+    /// need indexes into m_proxy_model, which sits on top of view->model().
 
-	connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
-										 this, &MetadataDockWidget::viewSelectionChanged);
-	
-	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+//    connect(m_connected_selection_model, &QItemSelectionModel::selectionChanged,
+//                                                                             this, &MetadataDockWidget::viewSelectionChanged);
 
-	if(m_connected_selection_model && m_connected_selection_model->hasSelection())
-	{
-		// Call viewSelectionChanged to set the existing selection.
-		viewSelectionChanged(m_connected_selection_model->selection(), m_connected_selection_model->selection());
-	}
+    connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+
+//    if(m_connected_selection_model && m_connected_selection_model->hasSelection())
+//    {
+//            // Call viewSelectionChanged to set the existing selection.
+//            viewSelectionChanged(m_connected_selection_model->selection(), m_connected_selection_model->selection());
+//    }
 }
 
 void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)

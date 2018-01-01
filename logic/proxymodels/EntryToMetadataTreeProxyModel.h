@@ -23,17 +23,29 @@
 #include <QSortFilterProxyModel>
 #include <QPersistentModelIndex>
 
+class QItemSelectionModel;
+
 class EntryToMetadataTreeProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 
+	Q_PROPERTY(QItemSelectionModel *selectionModel
+		   READ selectionModel WRITE setSelectionModel NOTIFY selectionModelChanged)
+			
 	using BASE_CLASS = QSortFilterProxyModel;
-    
+
+signals:
+
+	void selectionModelChanged();
+
 public:
     explicit EntryToMetadataTreeProxyModel(QObject *parent = Q_NULLPTR);
     virtual ~EntryToMetadataTreeProxyModel();
     
 	void setSourceModel(QAbstractItemModel* sourceModel) override;
+
+	void setSelectionModel(QItemSelectionModel *selectionModel);
+    QItemSelectionModel *selectionModel() const;
 
 	/**
 	 * Call this to set the one sourceIndex to pass through this proxy.
@@ -50,12 +62,17 @@ protected:
      */
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
+protected slots:
+	void onSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+	void onModelChanged(QAbstractItemModel *model);
     
 private:
 	Q_DISABLE_COPY(EntryToMetadataTreeProxyModel)
 
 	/// The root index to allow to pass through.
 	QPersistentModelIndex m_current_selected_index;
+
+	QItemSelectionModel* m_filter_selection_model = nullptr;
 };
 
 #endif /* ENTRYTOMETADATATREEPROXYMODEL_H */

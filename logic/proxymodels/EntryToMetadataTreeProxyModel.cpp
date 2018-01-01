@@ -42,6 +42,20 @@ void EntryToMetadataTreeProxyModel::setSourceModel(QAbstractItemModel* sourceMod
 	BASE_CLASS::setSourceModel(sourceModel);
 }
 
+void EntryToMetadataTreeProxyModel::setSelectionModel(QItemSelectionModel* filter_selection_model)
+{
+	m_filter_selection_model = filter_selection_model;
+
+	// Connect up the signals and slots.
+	connect(m_filter_selection_model, &QItemSelectionModel::selectionChanged, this, &EntryToMetadataTreeProxyModel::onSelectionChanged);
+	connect(m_filter_selection_model, &QItemSelectionModel::modelChanged, this, &EntryToMetadataTreeProxyModel::onModelChanged);
+}
+
+QItemSelectionModel* EntryToMetadataTreeProxyModel::selectionModel() const
+{
+	return m_filter_selection_model;
+}
+
 void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelIndex& source_index_to_filter_on)
 {
 	qDebug() << "Setting selected index to:" << source_index_to_filter_on;
@@ -55,13 +69,20 @@ void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelI
 
 	m_current_selected_index = source_index_to_filter_on;
 
+	auto sm = sourceModel();
+	auto topleft = sm->index(0, 0, QModelIndex());
+	auto bottomright = sm->index(sm->rowCount(), sm->columnCount(), QModelIndex());
+
+//	emit dataChanged(topleft, bottomright);
+
 	endResetModel();
 }
 
 bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 {
 	// Only accept the row if it's currently selected.
-	QModelIndex index = ::mapToSource(sourceModel()->index(sourceRow, 0, sourceParent));
+	//QModelIndex index = ::mapToSource(sourceModel()->index(sourceRow, 0, sourceParent));
+	QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
 	if(!m_current_selected_index.isValid())
 	{
@@ -76,4 +97,24 @@ bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModel
 	}
 
 	return false;
+}
+
+void EntryToMetadataTreeProxyModel::onSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+{
+	// Only pick the first selected index for now.
+	auto source_rows = m_filter_selection_model->selectedRows();
+
+	if(source_rows.isEmpty())
+	{
+		qWarning() << "Selection is empty";
+	}
+	else
+	{
+		setSourceIndexToShow(QPersistentModelIndex(source_rows[0]));
+	}
+}
+
+void EntryToMetadataTreeProxyModel::onModelChanged(QAbstractItemModel* model)
+{
+///@todo
 }

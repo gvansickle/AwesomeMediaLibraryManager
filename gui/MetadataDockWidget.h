@@ -65,7 +65,7 @@ private:
 
     EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
 
-    QItemSelectionModel* m_connected_selection_model { nullptr };
+//    QItemSelectionModel* m_connected_selection_model { nullptr };
 
     QTreeWidget* m_metadata_widget { nullptr };
 
