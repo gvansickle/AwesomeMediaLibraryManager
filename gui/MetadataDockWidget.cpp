@@ -20,6 +20,7 @@
 #include "MetadataDockWidget.h"
 
 #include "PixmapLabel.h"
+#include "logic/ModelUserRoles.h"
 
 #include <QItemSelection>
 #include <QTreeView>
@@ -126,9 +127,14 @@ void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelI
 	Q_ASSERT(topLeft.model() == m_proxy_model);
 
 	// Map the index to the top-level source model.
-	QModelIndex source_model_index = m_proxy_model->mapToSource(topLeft);
-	
-//	PopulateTreeWidget(source_model_index);
+//	QModelIndex source_model_index = m_proxy_model->mapToSource(topLeft);
+	if(topLeft.isValid())
+	{
+		QModelIndex mi = m_proxy_model->index(topLeft.row(), 0, QModelIndex());
+		auto sp = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
+		qDebug() << "Pointer says:" << sp->getM2Url();
+		PopulateTreeWidget(mi);
+	}
 }
 
 void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index)
@@ -136,16 +142,21 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 	qDebug() << "Populating with: " << first_model_index;
 
 	///qDebug() << "Incoming model:" << first_model_index.model();
-	const LibrarySortFilterProxyModel* model = dynamic_cast<const LibrarySortFilterProxyModel*>(first_model_index.model());
-	if(model == nullptr)
-	{
-		qCritical() << "Null model. first_model_index.isValid?:" << first_model_index.isValid();
-	}
-	auto selected_row = first_model_index.row();
+//	const LibrarySortFilterProxyModel* model = dynamic_cast<const LibrarySortFilterProxyModel*>(first_model_index.model());
+//	if(model == nullptr)
+//	{
+//		qCritical() << "Null model. first_model_index.isValid?:" << first_model_index.isValid();
+//	}
+//	auto selected_row = first_model_index.row();
 
 	///qDebug() << "Selected Row: " << selected_row;
 	//return
-	std::shared_ptr<LibraryEntry> libentry = model->getItem(first_model_index);
+//	std::shared_ptr<LibraryEntry> libentry = model->getItem(first_model_index);
+
+	QModelIndex mi = m_proxy_model->index(first_model_index.row(), 0, QModelIndex());
+	auto libentry = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
+	qDebug() << "Pointer says:" << libentry->getM2Url();
+
 	///qDebug() << "PLAYLIST ITEM: " << libentry;
 	if(libentry != nullptr)
 	{

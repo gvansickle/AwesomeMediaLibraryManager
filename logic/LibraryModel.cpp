@@ -171,12 +171,15 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 		}
 	}
 
-	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
+	if(role == ModelUserRoles::PointerToItemRole)
 	{
-		// Return a pointer to the item.
-		QSharedPointer<LibraryEntry> item(getItem(index).get());
-		qDebug() << "Returning pointer to item with Url:" << item->getUrl();
-		return QVariant::fromValue<QSharedPointer<LibraryEntry>>(item);
+		if(index.column() == 0)
+		{
+			// Return a pointer to the item.
+			std::shared_ptr<LibraryEntry> item = getItem(index);
+			qDebug() << "Returning pointer to item with Url:" << item->getUrl();
+			return QVariant::fromValue<std::shared_ptr<LibraryEntry>>(item);
+		}
 	}
 
 	if(role == Qt::DecorationRole && SectionID::Status == getSectionFromCol(index.column()))
