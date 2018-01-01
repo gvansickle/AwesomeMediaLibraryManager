@@ -49,6 +49,13 @@ void EntryToMetadataTreeProxyModel::setSelectionModel(QItemSelectionModel* filte
 	// Connect up the signals and slots.
 	connect(m_filter_selection_model, &QItemSelectionModel::selectionChanged, this, &EntryToMetadataTreeProxyModel::onSelectionChanged);
 	connect(m_filter_selection_model, &QItemSelectionModel::modelChanged, this, &EntryToMetadataTreeProxyModel::onModelChanged);
+
+	// If there's already a selection, set it up.
+	if(m_filter_selection_model && m_filter_selection_model->hasSelection())
+	{
+		// Call viewSelectionChanged to set the existing selection.
+		onSelectionChanged(m_filter_selection_model->selection(), m_filter_selection_model->selection());
+	}
 }
 
 QItemSelectionModel* EntryToMetadataTreeProxyModel::selectionModel() const
@@ -116,5 +123,5 @@ void EntryToMetadataTreeProxyModel::onSelectionChanged(const QItemSelection& sel
 
 void EntryToMetadataTreeProxyModel::onModelChanged(QAbstractItemModel* model)
 {
-///@todo
+	qDebug() << "MODEL CHANGED:" << model;
 }
