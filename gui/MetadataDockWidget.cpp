@@ -79,6 +79,10 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     auto mainWidget = new QWidget(this);
     mainWidget->setLayout(mainLayout);
     setWidget(mainWidget);
+
+	// Connect up to the proxy model.  We won't have to disconnect/reconnect since we own this proxy model.
+	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 
 void MetadataDockWidget::connectToView(MDITreeViewBase* view)
@@ -89,19 +93,10 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
         return;
     }
 
-    if(m_proxy_model != nullptr)
-    {
-		disconnect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
-    }
-	m_proxy_model_watcher->disconnect(this);
-
     qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
     m_proxy_model->setSourceModel(view->model());
     m_proxy_model->setSelectionModel(view->selectionModel());
-
-    connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
-	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 
 void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
@@ -126,10 +121,9 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 	QModelIndex mi = m_proxy_model->index(first_model_index.row(), 0, QModelIndex());
 	auto variant = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole);
-	qDebug() << "Variant is:" << variant;
+//	qDebug() << "Variant is:" << variant;
 
-	qDebug() << variant.canConvert<std::shared_ptr<LibraryEntry>>();
-	//qDebug() << variant.canConvert<std::shared_ptr<PlaylistModelEntry>>();
+//	qDebug() << variant.canConvert<std::shared_ptr<LibraryEntry>>();
 
 	auto libentry = variant.value<std::shared_ptr<LibraryEntry>>();
 
