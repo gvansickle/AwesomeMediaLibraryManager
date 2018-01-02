@@ -10,6 +10,7 @@ CTestTestfile.cmake
 /.project
 .idea/workspace.xml
 /cmake-build-*
+/build*
 moc_*.cpp
 mocs_*.cpp
 moc*.h

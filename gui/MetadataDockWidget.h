@@ -60,12 +60,16 @@ public slots:
      */
     void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
 
-    ///@todo
-    void PopulateTreeWidget(const QModelIndex& first_model_index);
+protected:
+
+	void PopulateTreeWidget(const QModelIndex& first_model_index);
 
 private:
     Q_DISABLE_COPY(MetadataDockWidget)
 
+	/**
+	 * The proxy model we'll use to select out just the currently selected or playing track.
+	 */
     EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
 
 	ModelChangeWatcher* m_proxy_model_watcher { nullptr };

@@ -373,29 +373,37 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
-	if(role != Qt::EditRole)
+	if(role != Qt::EditRole && role != ModelUserRoles::PointerToItemRole)
 	{
-		qDebug() << "NOT Qt::EditRole";
+		qDebug() << "NOT Qt::EditRole or ModelUserRoles::PointerToItemRole";
 		return false;
 	}
 
-	auto pindex = QPersistentModelIndex(index);
-
-	if(!pindex.isValid() || pindex.column() != 0 || pindex.row() < 0)
+	// Currently we only support setData() on the first column.
+	if(index.column() != 0 || index.row() < 0)
 	{
 		qWarning() << "RETURNING FALSE: setData() called with index: valid=" << index.isValid() << ", row=" << index.row() << ", column=" << index.column() << ", parent=" << index.parent();
 		return false;
 	}
 
+	std::shared_ptr<LibraryEntry> replacement_item;
+
+//	if(role == ModelUserRoles::PointerToItemRole)
+//	{
+		// Set a std::shared_ptr<> to the item at this index/role.
+		replacement_item = value.value<std::shared_ptr<LibraryEntry>>();
+		Q_ASSERT(replacement_item);
+		qDebug() << "Setting pointer to item with Url:" << replacement_item->getUrl();
+//	}
+
 	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();
 
-	std::shared_ptr<LibraryEntry> new_entry = value.value<std::shared_ptr<LibraryEntry>>();
-	Q_ASSERT(new_entry);
+	Q_ASSERT(replacement_item);
 
-	m_library.replaceEntry(index.row(), new_entry);
+	m_library.replaceEntry(index.row(), replacement_item);
 
 	// Notify subclasses of the change.
-	onSetData(pindex, value, role);
+	onSetData(index, value, role);
 
 	// Tell anybody that's listening that all data in this row has changed.
 	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);

@@ -71,9 +71,11 @@ void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelI
 
 //	Q_ASSERT(sourceModel() == source_index_to_filter_on.model());
 
-	/// @todo Maybe another way to notify listeners of this change?
+	/// @todo Maybe a lighter-weight way to notify listeners of this change?
 	beginResetModel();
 
+	// Note that this is an index to the source model, while the *ResetModel()'s work on this model,
+	// so this won't get invalidated.
 	m_current_selected_index = source_index_to_filter_on;
 
 	endResetModel();
@@ -117,4 +119,6 @@ void EntryToMetadataTreeProxyModel::onSelectionChanged(const QItemSelection& sel
 void EntryToMetadataTreeProxyModel::onModelChanged(QAbstractItemModel* model)
 {
 	qDebug() << "MODEL CHANGED:" << model;
+
+	Q_UNIMPLEMENTED();
 }

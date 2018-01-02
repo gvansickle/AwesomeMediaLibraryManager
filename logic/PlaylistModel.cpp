@@ -57,13 +57,28 @@ Qt::ItemFlags PlaylistModel::flags(const QModelIndex& index) const
 
 QVariant PlaylistModel::data(const QModelIndex& index, int role) const
 {
-	if(!index.isValid()) return QVariant();
+	if(!index.isValid())
+	{
+		if(role == Qt::UserRole)
+		{
+			// Global UserRole override for accessing model metadata.
+			return QVariant(getLibraryName());
+		}
+		else
+		{
+			return QVariant();
+		}
+	}
 
 	if(role == ModelUserRoles::PointerToItemRole)
 	{
-		// Return a pointer to the item.
-		std::shared_ptr<PlaylistModelItem> item = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(index));
-		return QVariant::fromValue<std::shared_ptr<PlaylistModelItem>>(item);
+		if(index.column() == 0)
+		{
+			// Return a pointer to the item.
+			std::shared_ptr<PlaylistModelItem> item = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(index));
+			qDebug() << "Returning pointer to item with Url:" << item->getUrl();
+			return QVariant::fromValue<std::shared_ptr<PlaylistModelItem>>(item);
+		}
 	}
 
 	auto sectionid = getSectionFromCol(index.column());
@@ -162,44 +177,27 @@ bool PlaylistModel::setData(const QModelIndex& index, const QVariant& value, int
 		return false;
 	}
 
-#if 0
-	if(index.column() == 0 && role == ModelUserRoles::PointerToItemRole)
-	{
-		// Incoming item to replace the existing one.
-		qDebug() << "INCOMING NEW POINTER";
-
-		if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
-		{
-			qDebug() << "Can convert to PlaylistModelItem*: true";
-
-			std::shared_ptr<LibraryEntry> new_item_ptr = value.value<std::shared_ptr<PlaylistModelItem>>();
-			Q_ASSERT(new_item_ptr);
-			QVariant casted_value = QVariant::fromValue(new_item_ptr);
-			return LibraryModel::setData(index, casted_value, role);
-		}
-		else
-		{
-			qCritical() << "CAN'T CONVERT:" << value;
-		}
-	}
-#endif
-
 	// The stock view widgets react only to dataChanged with the DisplayRole.
 	// When they edit the data, they call setData with the EditRole.
-	if(role != Qt::EditRole)
+	if(role != Qt::EditRole && role != ModelUserRoles::PointerToItemRole)
 	{
-		qDebug() << "NOT EDITROLE, RETURNING FALSE";
+		qDebug() << "NOT Qt::EditRole or ModelUserRoles::PointerToItemRole";
 		return false;
 	}
-//M_WARNING("TODO")
-//	return false;
+
+	// Currently we only support setData() on the first column.
+	if(index.column() != 0 || index.row() < 0)
+	{
+		qWarning() << "RETURNING FALSE: setData() called with index: valid=" << index.isValid() << ", row=" << index.row() << ", column=" << index.column() << ", parent=" << index.parent();
+		return false;
+	}
 
 	if(value.canConvert<std::shared_ptr<PlaylistModelItem>>())
 	{
 		qDebug() << "Can convert to PlaylistModelItem*: true";
 
-		std::shared_ptr<LibraryEntry> pmitem = value.value<std::shared_ptr<PlaylistModelItem>>();
-		QVariant casted_value = QVariant::fromValue(pmitem);
+		std::shared_ptr<LibraryEntry> replacement_item = value.value<std::shared_ptr<PlaylistModelItem>>();
+		QVariant casted_value = QVariant::fromValue(replacement_item);
 		return LibraryModel::setData(index, casted_value, role);
 	}
 	else

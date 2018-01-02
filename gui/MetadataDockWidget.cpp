@@ -147,6 +147,12 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 	qDebug() << "Populating with: " << first_model_index;
 
 	QModelIndex mi = m_proxy_model->index(first_model_index.row(), 0, QModelIndex());
+	auto variant = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole);
+	qDebug() << "Variant is:" << variant;
+
+	qDebug() << variant.canConvert<std::shared_ptr<LibraryEntry>>();
+	//qDebug() << variant.canConvert<std::shared_ptr<PlaylistModelEntry>>();
+
 	auto libentry = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
 	qDebug() << "Pointer says:" << libentry->getM2Url();
 
