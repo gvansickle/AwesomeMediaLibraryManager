@@ -36,6 +36,8 @@ class MDILibraryView : public MDITreeViewBase
 {
     Q_OBJECT
 
+    using BASE_CLASS = MDITreeViewBase;
+
 signals:
     void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
     void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
@@ -43,8 +45,13 @@ signals:
         
 public:
 	MDILibraryView(QWidget *parent = Q_NULLPTR);
+        
+	/**
+	* static member function which opens an MDILibraryView on the given model.
+	*/
+	static MDILibraryView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
 
-	virtual void setModel(QAbstractItemModel* model) override;
+	void setModel(QAbstractItemModel* model) override;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 

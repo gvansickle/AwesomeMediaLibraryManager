@@ -34,14 +34,19 @@
 
 #include "gui/NetworkAwareFileDialog.h"
 #include "utils/ConnectHelpers.h"
+#include "logic/proxymodels/ModelChangeWatcher.h"
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {
 	// Window menu action.
 	m_act_window = new QAction(this);
 	m_act_window->setCheckable(true);
-	connect(m_act_window, SIGNAL(triggered()), this, SLOT(show()));
+	connect_trig(m_act_window, this, &MDITreeViewBase::show);
 	connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
+	
+	// ModelChangeWatcher for keeping "Select All" status updated.
+	m_select_all_model_watcher = new ModelChangeWatcher(this);
+	connect(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MDITreeViewBase::selectAllAvailable);
 	
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();
@@ -106,31 +111,6 @@ static qint64 sequenceNumber = 0;
 	m_act_window->setText(getDisplayName());
 }
 
-bool MDITreeViewBase::loadFile(QUrl load_url)
-{
-	QApplication::setOverrideCursor(Qt::WaitCursor);
-
-	QFile file(load_url.toLocalFile());
-	if(!file.open(QFile::ReadOnly | QFile::Text))
-	{
-		QApplication::restoreOverrideCursor();
-		QMessageBox::warning(this, qApp->applicationDisplayName(),
-							QString("Cannot read file %1:\n%2.").arg(load_url.toString()).arg(file.errorString()));
-		return false;
-	}
-
-	// Call the overridden function to serialize the doc.
-	deserializeDocument(file);
-
-	QApplication::restoreOverrideCursor();
-
-	setCurrentFile(load_url);
-
-	/// @todo Connect to docWasModified.
-	//self.document().contentsChanged.connect(self.documentWasModified)
-
-	return true;
-}
 
 bool MDITreeViewBase::save()
 {
@@ -147,7 +127,7 @@ bool MDITreeViewBase::save()
 bool MDITreeViewBase::saveAs()
 {
 	QString state_key = getSaveAsDialogKey();
-	auto retval = NetworkAwareFileDialog::getSaveFileUrl(this, "Save As", m_current_url, defaultNameFilter(), state_key);
+	auto retval = NetworkAwareFileDialog::getSaveFileUrl(this, tr("Save As"), m_current_url, defaultNameFilter(), state_key);
 
 	QUrl file_url = retval.first;
 	QString filter = retval.second;
@@ -156,10 +136,6 @@ bool MDITreeViewBase::saveAs()
 	{
 		return false;
 	}
-
-	/// @todo Don't need this?  At least here?
-	/// mo = re.search(r"\.([^.]*)$", file_url.toString())
-	/// playlist_type = mo[1]
 
 	return saveFile(file_url, filter);
 }
@@ -187,6 +163,32 @@ bool MDITreeViewBase::saveFile(QUrl save_url, QString filter)
 	return true;
 }
 
+bool MDITreeViewBase::loadFile(QUrl load_url)
+{
+	QApplication::setOverrideCursor(Qt::WaitCursor);
+
+	QFile file(load_url.toLocalFile());
+	if(!file.open(QFile::ReadOnly | QFile::Text))
+	{
+		QApplication::restoreOverrideCursor();
+		QMessageBox::warning(this, qApp->applicationDisplayName(),
+							QString("Cannot read file %1:\n%2.").arg(load_url.toString()).arg(file.errorString()));
+		return false;
+	}
+
+	// Call the overridden function to serialize the doc.
+	deserializeDocument(file);
+
+	QApplication::restoreOverrideCursor();
+
+	setCurrentFile(load_url);
+
+	/// @todo Connect to docWasModified.
+	//self.document().contentsChanged.connect(self.documentWasModified)
+
+	return true;
+}
+
 QString MDITreeViewBase::userFriendlyCurrentFile() const
 {
 	return m_current_url.fileName();
@@ -210,7 +212,20 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 
 QString MDITreeViewBase::getDisplayName() const
 {
-	return userFriendlyCurrentFile();
+    return userFriendlyCurrentFile();
+}
+
+//
+// Base class overrides.
+//
+
+void MDITreeViewBase::setModel(QAbstractItemModel* model)
+{
+    qDebug() << "BASE SETTING MODEL:" << model;
+
+    m_select_all_model_watcher->disconnectFromCurrentModel();
+    this->BASE_CLASS::setModel(model);
+    m_select_all_model_watcher->setModelToWatch(model);
 }
 
 //
@@ -326,10 +341,12 @@ void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QIt
 	if(!selected.empty())
 	{
 		emit copyAvailable(true);
+		emit cutAvailable(!isReadOnly());
 	}
 	else
 	{
 		emit copyAvailable(false);
+		emit cutAvailable(false);
 	}
 }
 

@@ -33,18 +33,28 @@ class MDIPlaylistView : public MDITreeViewBase
 {
     Q_OBJECT
 
+    using BASE_CLASS = MDITreeViewBase;
+    
 signals:
 
     void play();
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
+    
+    /**
+     * static member function which opens an MDILibraryView on the given model.
+     */
+    static MDIPlaylistView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
 
     QMediaPlaylist* getQMediaPlaylist();
 
-    virtual void setModel(QAbstractItemModel* model) override;
+    void setModel(QAbstractItemModel* model) override;
 
     virtual PlaylistModel* underlyingModel() const;
+    
+    /// Playlists are not read-only.
+    bool isReadOnly() const override { return false; };
 
 public slots:
     void next();

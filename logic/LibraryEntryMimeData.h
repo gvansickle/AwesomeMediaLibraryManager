@@ -32,6 +32,8 @@
 
 class LibraryEntry;
 
+static const QStringList g_additional_supported_mimetypes = { {"application/x-grvs-libraryentryref"} };
+
 class LibraryEntryMimeData : public QMimeData
 {
 	Q_OBJECT
@@ -39,9 +41,6 @@ class LibraryEntryMimeData : public QMimeData
 public:
 	LibraryEntryMimeData();
 
-	QStringList m_additional_supported_mimetypes { {"application/x-grvs-libraryentryref"} };
-
-        
 	bool hasFormat(const QString& mimetype) const override;
 	QStringList formats() const override;
 

@@ -58,6 +58,7 @@ signals:
 public slots:
 
 private:
+	Q_DISABLE_COPY(Theme)
 
     static QStringList FindIconThemes();
 };

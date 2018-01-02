@@ -37,7 +37,9 @@ public:
 };
 
 /// So we can more easily pass ptrs in QVariants.
+Q_DECLARE_METATYPE(PlaylistModelItem);
 Q_DECLARE_METATYPE(PlaylistModelItem*);
+///Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
 Q_DECLARE_METATYPE(std::shared_ptr<PlaylistModelItem>);
 
 #endif // PLAYLISTMODELITEM_H

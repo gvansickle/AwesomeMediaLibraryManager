@@ -33,6 +33,10 @@ signals:
 public slots:
 
 	void DoExperiment();
+
+private:
+	Q_DISABLE_COPY(Experimental)
+
 };
 
 #endif // EXPERIMENTAL_H

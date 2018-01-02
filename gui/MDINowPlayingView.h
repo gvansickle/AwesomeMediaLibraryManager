@@ -25,12 +25,20 @@
 
 class MDINowPlayingView : public MDIPlaylistView
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	MDINowPlayingView(QWidget *parent);
+    MDINowPlayingView(QWidget *parent);
+    
+    /**
+     * static member function which opens an MDILibraryView on the given model.
+     */
+    static MDINowPlayingView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
+	
+    QString getDisplayName() const override;
 
-	QString getDisplayName() const override;
+private:
+	Q_DISABLE_COPY(MDINowPlayingView)
 };
 
 

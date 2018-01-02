@@ -20,13 +20,23 @@
 #include "RegisterQtMetatypes.h"
 
 #include <logic/LibraryEntry.h>
+#include <logic/PlaylistModelItem.h>
 #include <utils/Fraction.h>
 
 void RegisterQtMetatypes()
 {
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
 	qRegisterMetaType<LibraryEntry>();
-//	qRegisterMetaTypeStreamOperators<LibraryEntry>("LibraryEntry");
+	qRegisterMetaType<PlaylistModelItem>();
+	qRegisterMetaType<std::shared_ptr<LibraryEntry>>();
+	qRegisterMetaType<std::shared_ptr<PlaylistModelItem>>();
+	
+	// Cast std::shared_ptr<PlaylistModelItem> to std::shared_ptr<LibraryEntry>.
+	auto PlaylistModelItemToLibraryEntry = [](const std::shared_ptr<PlaylistModelItem> plmi)
+		{
+			return std::dynamic_pointer_cast<LibraryEntry>(plmi);
+		};
+	QMetaType::registerConverter< std::shared_ptr<PlaylistModelItem>, std::shared_ptr<LibraryEntry> >(PlaylistModelItemToLibraryEntry);
 
 	qRegisterMetaType<Fraction>();
 	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");

@@ -20,66 +20,115 @@
 #include "MetadataDockWidget.h"
 
 #include "PixmapLabel.h"
+#include "logic/ModelUserRoles.h"
 
 #include <QItemSelection>
+#include <QTreeView>
 #include <QTreeWidget>
 #include <QHBoxLayout>
 #include <QDebug>
+
+#include <QDataWidgetMapper>
+#include <QLineEdit>
 
 #include <functional>
 
 #include <logic/MetadataAbstractBase.h>
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
+#include <gui/MDITreeViewBase.h>
+#include <utils/ModelHelpers.h>
 #include <logic/LibrarySortFilterProxyModel.h>
+#include <logic/proxymodels/EntryToMetadataTreeProxyModel.h>
+#include <logic/proxymodels/ModelChangeWatcher.h>
 
 #include <utils/Theme.h>
+#include <utils/StringHelpers.h>
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
-	setObjectName("MetadataDockWidget");
+    setObjectName("MetadataDockWidget");
 
-	// Main layout is vertical.
-	auto mainLayout = new QVBoxLayout();
+    // Set up the proxy model.
+    m_proxy_model = new EntryToMetadataTreeProxyModel(this);
+	// Set up the watcher.
+	m_proxy_model_watcher = new ModelChangeWatcher(this);
+	m_proxy_model_watcher->setModelToWatch(m_proxy_model);
 
-    m_metadata_widget = new QTreeWidget(parent);
+    // Main layout is vertical.
+    auto mainLayout = new QVBoxLayout();
+
+    m_metadata_tree_view = new QTreeView(this);
+    m_metadata_tree_view->setModel(m_proxy_model);
+
+    m_metadata_widget = new QTreeWidget(this);
     m_metadata_widget->setRootIsDecorated(false);
     m_metadata_widget->setColumnCount(2);
     m_metadata_widget->setHeaderLabels(QStringList() << "Key" << "Value");
 
+	// The Cover Art label.
+    m_cover_image_label = new PixmapLabel(this);
+    m_cover_image_label->setText("IMAGE HERE");
 
-	m_cover_image_label = new PixmapLabel(this);
-	m_cover_image_label->setText("IMAGE HERE");
+	/// @todo Make this into the real Metadata tree view.  Until then, keep it hidden.
+	mainLayout->addWidget(m_metadata_tree_view);
+	m_metadata_tree_view->hide();
 
     mainLayout->addWidget(m_metadata_widget);
-	mainLayout->addWidget(m_cover_image_label);
-	auto mainWidget = new QWidget(this);
-	mainWidget->setLayout(mainLayout);
-	setWidget(mainWidget);
+    mainLayout->addWidget(m_cover_image_label);
+    auto mainWidget = new QWidget(this);
+    mainWidget->setLayout(mainLayout);
+    setWidget(mainWidget);
+
+	// Connect up to the proxy model.  We won't have to disconnect/reconnect since we own this proxy model.
+	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 
-void MetadataDockWidget::playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
+void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 {
-	qDebug() << "Selection changed: " << newSelection;
-	if(newSelection.isEmpty())
-	{
-		return;
-	}
+    if(view == nullptr)
+    {
+        qWarning() << "VIEW IS NULL";
+        return;
+    }
 
-	auto first_model_index = newSelection.indexes()[0];
-	///qDebug() << "Incoming model:" << first_model_index.model();
-	const LibrarySortFilterProxyModel* model = dynamic_cast<const LibrarySortFilterProxyModel*>(first_model_index.model());
-	if(model == nullptr)
-	{
-		qCritical() << "Null model. first_model_index.isValid?:" << first_model_index.isValid();
-	}
-	auto selected_row = first_model_index.row();
+    qDebug() << "Setting new source model and selection model:" << view->model() << view->selectionModel();
 
-	///qDebug() << "Selected Row: " << selected_row;
-	//return
-	std::shared_ptr<LibraryEntry> libentry = model->getItem(first_model_index);
+    m_proxy_model->setSourceModel(view->model());
+    m_proxy_model->setSelectionModel(view->selectionModel());
+}
+
+void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
+{
+	qDebug() << "Data changed:" << topLeft << bottomRight << roles;
+	
+	Q_ASSERT(topLeft.model() == m_proxy_model);
+
+	if(topLeft.isValid())
+	{
+		// Update the QTreeWidget.
+		QModelIndex mi = m_proxy_model->index(topLeft.row(), 0, QModelIndex());
+		auto sp = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
+		qDebug() << "Pointer says:" << sp->getM2Url();
+		PopulateTreeWidget(mi);
+	}
+}
+
+void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index)
+{
+	qDebug() << "Populating with: " << first_model_index;
+
+	QModelIndex mi = m_proxy_model->index(first_model_index.row(), 0, QModelIndex());
+	auto variant = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole);
+//	qDebug() << "Variant is:" << variant;
+
+//	qDebug() << variant.canConvert<std::shared_ptr<LibraryEntry>>();
+
+	auto libentry = variant.value<std::shared_ptr<LibraryEntry>>();
+
 	///qDebug() << "PLAYLIST ITEM: " << libentry;
-	if(libentry != nullptr)
+	if(libentry)
 	{
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
@@ -183,7 +232,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
 {
 	for(auto e : tagmap)
 	{
-		QString key = QString::fromUtf8(e.first.c_str());
+		QString key = toqstr(e.first);
         // Filter out keys we don't want to see in the Metadata display.
         // Mainly this is CUESHEET and LOG entries in FLAC VORBIS_COMMENT blocks, which are gigantic and destroy the
         // formatting.
@@ -194,10 +243,21 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
         }
 		for(auto f : e.second)
 		{
-			QString value = QString::fromUtf8(f.c_str());
+			QString value = toqstr(f);
 			auto child = new QTreeWidgetItem({key, value});
 			parent->addChild(child);
 		}
 	}
 }
 
+void MetadataDockWidget::onProxyModelChange(bool has_rows)
+{
+	qDebug() << "MODELWATCHER DETECTED CHANGE IN PROXY MODEL";
+
+	if(has_rows)
+	{
+		// Update the tree widget.
+		auto index = m_proxy_model->index(0, 0, QModelIndex());
+		PopulateTreeWidget(index);
+	}
+}

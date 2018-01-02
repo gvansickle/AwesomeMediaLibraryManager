@@ -50,6 +50,8 @@ signals:
 public slots:
 
 private:
+	Q_DISABLE_COPY(FilterWidget)
+
 	QAction *m_caseSensitivityAction;
 	QActionGroup *m_patternGroup;
 };

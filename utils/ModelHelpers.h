@@ -22,19 +22,85 @@
 
 #include <QPersistentModelIndex>
 #include <QModelIndexList>
+#include <QItemSelection>
+#include <QAbstractProxyModel>
+#include <QDebug>
 
 /// Convert a QModelIndexList into a QList of QPersistentIndexes.
 inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
 {
-	QList<QPersistentModelIndex> retval;
+    QList<QPersistentModelIndex> retval;
 
-	for(auto i : mil)
-	{
-		retval.append(i);
-	}
-	return retval;
+    for(auto i : mil)
+    {
+        retval.append(i);
+    }
+    return retval;
 }
 
+/**
+ *  Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().
+ */
+inline static QItemSelection mapSelectionToSource(const QItemSelection& proxy_selection)
+{
+    if(proxy_selection.size() > 0)
+    {
+        // There's a selection to convert.  Get the first QModelIndex so we can get its model.
+        auto model = proxy_selection[0].model();
+        if(model)
+        {
+            // Is it a proxy model?
+            auto proxy_model = qobject_cast<const QAbstractProxyModel*>(model);
+            if(proxy_model)
+            {
+                return proxy_model->mapSelectionToSource(proxy_selection);
+            }
+        }
+    }
+    
+    return proxy_selection;
+}
+
+inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
+{
+    if(proxy_index.model())
+    {
+        // There's a model.  See if it's a proxy model.
+		auto proxy_model = qobject_cast<const QAbstractProxyModel*>(proxy_index.model());
+        if(proxy_model)
+        {
+            return proxy_model->mapToSource(proxy_index);
+        }
+    }
+    
+    return proxy_index;
+}
+
+inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
+{
+	auto proxy_model = qobject_cast<QAbstractProxyModel*>(maybe_proxy_model);
+
+	if(proxy_model)
+	{
+		qDebug() << "Is a proxy model:" << proxy_model;
+		auto source_model = proxy_model->sourceModel();
+		if(source_model)
+		{
+			qDebug() << "With source model:" << source_model;
+			return (QAbstractItemModel*)source_model;
+		}
+		else
+		{
+			return maybe_proxy_model;
+		}
+	}
+	else
+	{
+		// Wasn't a proxy model.
+		qDebug() << "Not a proxy model:" << maybe_proxy_model;
+		return maybe_proxy_model;
+	}
+}
 
 #endif /* MODELHELPERS_H */
 

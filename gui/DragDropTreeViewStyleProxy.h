@@ -41,6 +41,8 @@ class DragDropTreeViewStyleProxy : public QProxyStyle
     
 public:
     
+	explicit DragDropTreeViewStyleProxy(QStyle* style = Q_NULLPTR) : QProxyStyle(style) {}
+
     void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
     {
         if(element == QStyle::PE_IndicatorItemViewItemDrop && !option->rect.isNull())
@@ -71,10 +73,12 @@ public:
     }
         
 private:
+	Q_DISABLE_COPY(DragDropTreeViewStyleProxy)
+
     
-    /**
-        * Do the actual draw of the Drop Indicator.
-        */
+	/**
+	* Do the actual draw of the Drop Indicator.
+	*/
     void drawIndicator(const QStyleOption *option, QPainter *painter, const QWidget *widget) const
     {
         painter->setRenderHint(QPainter::Antialiasing, true);

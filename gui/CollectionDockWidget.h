@@ -122,6 +122,8 @@ protected:
 	void contextMenuEvent(QContextMenuEvent* event) override;
 
 private:
+	Q_DISABLE_COPY(CollectionDockWidget)
+
     QStandardItemModel* sourcesModel;
     QTreeView* collectionTreeView;
 

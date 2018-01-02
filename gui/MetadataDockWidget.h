@@ -24,28 +24,63 @@
 
 #include "logic/MetadataAbstractBase.h"
 
+class MDITreeViewBase;
 class QTreeWidget;
 class PixmapLabel;
 class QItemSelection;
+class QItemSelectionModel;
 class QTreeWidgetItem;
+class QTreeView;
+
+class EntryToMetadataTreeProxyModel;
+class ModelChangeWatcher;
+
 
 class MetadataDockWidget : public QDockWidget
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	MetadataDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
+    explicit MetadataDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 
+    void connectToView(MDITreeViewBase* view);
+    
 public slots:
-	void playlistSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
+    
+    /**
+     * Slot which we connect up to m_proxy_model->&EntryToMetadataTreeProxyModel::dataChanged signal.
+     * Invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
+	 * @note The model indexes will be relative to m_proxy_model.
+     */
+    void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int>());
+
+protected:
+
+	void PopulateTreeWidget(const QModelIndex& first_model_index);
 
 private:
-    QTreeWidget* m_metadata_widget;
+    Q_DISABLE_COPY(MetadataDockWidget)
 
-	PixmapLabel* m_cover_image_label;
+	/**
+	 * The proxy model we'll use to select out just the currently selected or playing track.
+	 */
+    EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
 
-	void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
+	ModelChangeWatcher* m_proxy_model_watcher { nullptr };
 
+    QTreeWidget* m_metadata_widget { nullptr };
+
+    QTreeView* m_metadata_tree_view { nullptr };
+
+    PixmapLabel* m_cover_image_label { nullptr };
+
+    void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
+
+private slots:
+	/**
+	 * Signaled by the ModelChangeWatcher on a change in m_proxy_model.
+	 */
+	void onProxyModelChange(bool);
 };
 
 #endif // METADATADOCKWIDGET_H

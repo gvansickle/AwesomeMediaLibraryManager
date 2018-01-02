@@ -27,21 +27,21 @@ class LibraryEntry;
 
 class LibrarySortFilterProxyModel : public QSortFilterProxyModel
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	LibrarySortFilterProxyModel(QObject* parent = Q_NULLPTR);
+    explicit LibrarySortFilterProxyModel(QObject* parent = Q_NULLPTR);
 
-	std::shared_ptr<LibraryEntry> getItem(QModelIndex index) const;
+    std::shared_ptr<LibraryEntry> getItem(QModelIndex index) const;
 
-	virtual bool hasChildren(const QModelIndex &parent) const override;
+    virtual bool hasChildren(const QModelIndex &parent) const override;
 
 protected:
-	bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
-	bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
+    bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 
 private:
-	Q_DISABLE_COPY(LibrarySortFilterProxyModel)
+    Q_DISABLE_COPY(LibrarySortFilterProxyModel)
 };
 
 #endif // LIBRARYSORTFILTERPROXYMODEL_H

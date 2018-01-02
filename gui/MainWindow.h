@@ -26,7 +26,6 @@
 
 #include <QMainWindow>
 #include <QUrl>
-#include <QSignalMapper>
 
 #include <vector>
 #include <utility> // For std::pair<>
@@ -40,7 +39,7 @@ class QActionGroup;
 class QWidget;
 class QLabel;
 class QMdiSubWindow;
-class QMdiArea;
+class MDIArea;
 class QSettings;
 
 class MDITreeViewBase;
@@ -63,8 +62,7 @@ public:
     ~MainWindow() override;
 
 public slots:
-    void updateActionEnableStates();
-    void updateActionEnableStates_Edit();
+
 
 
 protected:
@@ -99,6 +97,10 @@ private slots:
     void onSelectAll();
     void onDelete();
     /// @}
+	///
+
+	void about();
+
 
     void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
@@ -106,12 +108,17 @@ private slots:
 
     void doExperiment();
 
+	void updateActionEnableStates();
+    void updateActionEnableStates_Edit();
+	
     void onChangeWindowMode(QAction* action);
 
     /// Filter slots.
     void onTextFilterChanged();
 
 private:
+    Q_DISABLE_COPY(MainWindow)
+
     void createActions();
     void createActionsEdit();
     
@@ -119,11 +126,10 @@ private:
     void createToolBars();
     void createStatusBar();
     void createDockWindows();
+	void addChildMDIView(MDITreeViewBase* child);
+	MDITreeViewBase* activeChildMDIView();
     
-    void updateMenus();
-    void updateWindowMenu();
-
-    /// @name Signal/slot Connection management.
+	/// @name Bulk Signal/Slot Connection management.
     ///@{
     void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
     void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
@@ -133,13 +139,13 @@ private:
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
     void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
+    void connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget);
     ///@}
 
     void stopAllBackgroundThreads();
 
     void importLib();
     
-    void about();
 
     /// @name Persistency
     ///@{
@@ -159,13 +165,11 @@ private:
 
     /// MDI-related functions.
     /// @{
-    void addChildMDIView(MDITreeViewBase* child);
-    MDITreeViewBase* activeMdiChild();
     QMdiSubWindow* findSubWindow(QUrl url);
     
-    std::tuple<MDILibraryView *, QMdiSubWindow *> createMdiChildLibraryView();
-    std::pair<MDIPlaylistView*, QMdiSubWindow*> createMdiChildPlaylist();
-    std::pair<MDINowPlayingView*, QMdiSubWindow*> createMdiNowPlayingView();
+    MDILibraryView* createMdiChildLibraryView();
+    MDIPlaylistView* createMdiChildPlaylistView();
+    MDINowPlayingView* createMdiNowPlayingView();
 
     QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
     void openMDILibraryViewOnModel(LibraryModel* libmodel);
@@ -194,10 +198,9 @@ private:
     /// The library models.
     std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
-	/// The "Now Playing" playlist.
+    /// The "Now Playing" playlist model and view.
     QPointer<PlaylistModel> m_now_playing_playlist_model;
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
-
 
     /// The list of PlaylistModels.
     std::vector<PlaylistModel*> m_playlist_models;
@@ -208,9 +211,8 @@ private:
     PlayerControls* m_controls;
     QLabel* m_numSongsIndicator;
 
-    /// the MDI area and signal mapper.
-    QMdiArea *m_mdi_area;
-    QSignalMapper *m_windowMapper;
+    /// The MDI area.
+    MDIArea* m_mdi_area;
 
     /// Actions
 
@@ -236,7 +238,7 @@ private:
     QAction *m_act_delete;
     QAction *m_act_select_all;
     /// @}
-
+    
     /// @name Window actions.
     /// @{
     QActionGroup *m_tabs_or_subwindows_group;

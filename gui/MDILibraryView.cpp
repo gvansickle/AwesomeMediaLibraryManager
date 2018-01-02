@@ -66,6 +66,16 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	connect(this, &MDILibraryView::customContextMenuRequested, this, &MDILibraryView::onContextMenu);
 }
 
+/**
+ * static member function which opens an MDILibraryView on the given model.
+ */
+MDILibraryView* MDILibraryView::openModel(QAbstractItemModel* model, QWidget* parent)
+{
+	auto view = new MDILibraryView(parent);
+	view->setModel(model);
+	return view;
+}
+
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
 	// Keep a ref to the real model.
@@ -73,16 +83,15 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 
 	// Set our "current file" to the root dir of the model.
 	setCurrentFile(m_underlying_model->getLibRootDir());
-#if 1
+
 	m_sortfilter_model->setSourceModel(model);
 	auto old_sel_model = selectionModel();
 	// This will create a new selection model.
 	MDITreeViewBase::setModel(m_sortfilter_model);
 	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
 	old_sel_model->deleteLater();
-#else
-	MDITreeViewBase::setModel(m_underlying_model);
-#endif
+
+	
 	// Set up the TreeView's header.
 	header()->setStretchLastSection(false);
 	header()->setSectionResizeMode(QHeaderView::Stretch);

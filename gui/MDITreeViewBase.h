@@ -26,17 +26,31 @@
 
 class QMdiSubWindow;
 class QFileDevice;
+class ModelChangeWatcher;
+
 
 class MDITreeViewBase : public QTreeView
 {
-	Q_OBJECT
+    Q_OBJECT
+    
+    using BASE_CLASS = QTreeView;
         
 signals:
     
     /**
-     * Signal is emitted when a row is selected or deselected in the QTreeView.
+     * Signal is emitted when a selection is available for copying in the QTreeView.
      */
     void copyAvailable(bool);
+
+    /**
+     * Signal emitted when the "cutability" status changes.  Read-only views will only send false.
+     */
+    void cutAvailable(bool);
+    
+    /**
+     * Signal emitted when there is a change in the "Select All" status.
+     */
+    void selectAllAvailable(bool);
         
 
 public:
@@ -48,11 +62,16 @@ public:
 
     void newFile();
 
-    virtual bool loadFile(QUrl load_url);
     bool save();
     bool saveAs();
     bool saveFile(QUrl save_url, QString filter);
 
+    virtual bool loadFile(QUrl load_url);
+
+    /// @note This one would be a good candidate for virtual static methods which don't exist in C++.
+    /// Create a factory function like this in each derived class:
+    /// static MDITreeViewBase* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
+    
     /// Returns the current basename of this window's backing file.
     QString userFriendlyCurrentFile() const;
 
@@ -65,6 +84,14 @@ public:
     
     /// Return an action for the MainWindow's Window menu.
     QAction* windowMenuAction() const { return m_act_window; };
+    
+    /// Override if derived classes are not read-only.
+    virtual bool isReadOnly() const { return true; };
+
+    //
+    // Base class overrides.
+    //
+    void setModel(QAbstractItemModel *model) override;
 
 public slots:
     
@@ -123,12 +150,12 @@ protected slots:
 
 protected:
 
-	/**
-	 * Called whenever the view's selection changes.  We override it here to emit the copyAvailable() signal.
-	 */
-	void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
+    /**
+     * Called whenever the view's selection changes.  We override it here to emit the copyAvailable() signal.
+     */
+    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) override;
 
-	bool viewportEvent(QEvent *event) override;
+    bool viewportEvent(QEvent *event) override;
 
     /// Return a string suitable for use as a key in the QSettings file.  Used
     /// to save and restore the state of the "Save As" dialog.
@@ -158,6 +185,9 @@ protected:
 
 private:
     Q_DISABLE_COPY(MDITreeViewBase)
+    
+    /// ModelChangeWatcher object for keeping "Select All" enable status correct.
+    ModelChangeWatcher* m_select_all_model_watcher;
 
     /// The column which we last saw was being sorted.
     /// This is used to enable tri-state column sort functionality.
@@ -165,6 +195,7 @@ private:
 
     Qt::SortOrder m_sort_order { Qt::AscendingOrder };
     
+    /// The QAction we'll give to the MainWindow for inclusion in the Window menu.
     QAction *m_act_window;
 
 };

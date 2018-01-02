@@ -17,22 +17,37 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MDIAREA_H
-#define MDIAREA_H
+#ifndef MODELCHANGEWATCHER_H
+#define MODELCHANGEWATCHER_H
 
-#include <QMdiArea>
+#include <QObject>
+#include <QPointer>
 
-class MDIArea : public QMdiArea
+class QAbstractItemModel;
+
+
+class ModelChangeWatcher : public QObject
 {
-	Q_OBJECT
+    Q_OBJECT
+    
+signals:
+
+	void modelHasRows(bool);
 
 public:
-    MDIArea(QWidget *parent = Q_NULLPTR);
-    ~MDIArea();
+    explicit ModelChangeWatcher(QObject *parent = Q_NULLPTR);
+    
+    void setModelToWatch(QAbstractItemModel* model);
+	void disconnectFromCurrentModel();
 
+protected slots:
+    void onRowCountChanged();
+    
 private:
-	Q_DISABLE_COPY(MDIArea)
-
+    Q_DISABLE_COPY(ModelChangeWatcher)
+            
+	QPointer<QAbstractItemModel> m_the_model { nullptr };
 };
 
-#endif // MDIAREA_H
+#endif /* MODELCHANGEWATCHER_H */
+

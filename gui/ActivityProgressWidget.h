@@ -40,6 +40,8 @@ public slots:
 	void onProgressValueChanged(int progressValue);
 
 private:
+	Q_DISABLE_COPY(ActivityProgressWidget)
+
 	QLabel* m_current_activity_label;
 	QLabel* m_text_status_label;
 	QProgressBar* m_progress_bar;

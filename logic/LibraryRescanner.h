@@ -102,6 +102,8 @@ protected:
 	MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
 
 private:
+	Q_DISABLE_COPY(LibraryRescanner)
+
 	LibraryModel* m_current_libmodel;
 };
 

@@ -72,6 +72,8 @@ private slots:
 
 
 private:
+	Q_DISABLE_COPY(PlayerControls)
+
 	QMediaPlayer::State m_playerState = QMediaPlayer::StoppedState;
 	bool m_playerMuted = false;
 	bool m_playerRepeat = false;
