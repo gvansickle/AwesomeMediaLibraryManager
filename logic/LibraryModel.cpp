@@ -65,9 +65,6 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_libr
 	m_columnSpecs.push_back({SectionID::FileType, "Type", {"filetype"}, true});
 	m_columnSpecs.push_back({SectionID::Filename, "Filename", {"filename"}});
 
-	// State for keeping track of which and how many items haven't been fully populated yet.
-	m_first_possible_unpop_row = 0;
-
 	// Pre-fabbed Icons
 	m_IconError = QVariant(QIcon::fromTheme("dialog-error"));
 	m_IconOk = QVariant(QIcon::fromTheme("audio-x-generic"));
@@ -470,11 +467,6 @@ M_WARNING("There's a QSignalBlocker() here in the model for: https://github.com/
 		m_library.removeEntry(i);
 	}
 
-	if(m_first_possible_unpop_row > row)
-	{
-		m_first_possible_unpop_row = row;
-	}
-
 	endRemoveRows();
 	return true;
 }
@@ -496,10 +488,6 @@ void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentr
 	auto start_rowcount = rowCount();
 
 	beginInsertRows(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
-	if(m_first_possible_unpop_row > start_rowcount)
-	{
-		m_first_possible_unpop_row = start_rowcount;
-	}
 
 	m_library.addNewEntries(libentries);
 

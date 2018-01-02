@@ -90,7 +90,6 @@ QVariant PlaylistModel::data(const QModelIndex& index, int role) const
 		case Qt::DisplayRole:
 			if(sectionid == PlaylistSectionID::Rating)
 			{
-M_WARNING("TODO: Finish rating delegate.")
 				///@todo return QVariant::fromValue(Rating(item->m_user_rating));
 				return QVariant(item->m_user_rating);
 			}
