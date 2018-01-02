@@ -246,7 +246,7 @@ void MainWindow::createActions()
 	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
 
 	m_saveLibraryAsAct = make_action(QIcon::fromTheme("folder-close"), "&Save library as...", this);
-                                ///triggered=saveLibraryAs);
+
 	m_removeDirFromLibrary = make_action(QIcon::fromTheme("edit-delete"), "Remove &Dir from library...", this);
 
     ////// Playlist actions.
@@ -258,10 +258,10 @@ void MainWindow::createActions()
 	m_openPlaylistAct = make_action(QIcon::fromTheme("document-open"), "&Open playlist...", this,
                                 QKeySequence::Open,
                                 "Open an existing playlist");
-                                ///triggered=openPlaylist);
+
 	m_savePlaylistAct = make_action(QIcon::fromTheme("document-save"), "&Save playlist as...", this,
                                    QKeySequence::Save);
-                                   ///triggered=savePlaylistAs);
+
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 
 	m_settingsAct = make_action(QIcon::fromTheme("configure"), "Settings...", this,
@@ -302,23 +302,23 @@ void MainWindow::createActions()
 	m_windowNextAct = make_action(QIcon::fromTheme("go-next"), "&Next", this,
                                  QKeySequence::NextChild);
 	connect_trig(m_windowNextAct, this->m_mdi_area, &QMdiArea::activateNextSubWindow);
-                                 ///triggered=mdi_area.activateNextSubWindow)
+
 	m_windowPrevAct = make_action(QIcon::fromTheme("go-previous"), "&Previous", this,
                             QKeySequence::PreviousChild);
 	connect_trig(m_windowPrevAct, this->m_mdi_area, &QMdiArea::activatePreviousSubWindow);
-                                ///triggered=mdi_area.activatePreviousSubWindow,
 
+	
 	m_windowCascadeAct = make_action(QIcon::fromTheme("window-cascade"), "Cascade", this);
 	connect_trig(m_windowCascadeAct, this->m_mdi_area, &QMdiArea::cascadeSubWindows);
-                                    ///triggered=mdi_area.cascadeSubWindows)
+
 	m_windowTileAct = make_action(QIcon::fromTheme("window-tile"), "Tile", this);
 	connect_trig(m_windowTileAct, this->m_mdi_area, &QMdiArea::tileSubWindows);
-                                 ///triggered=mdi_area.tileSubWindows)
+
 	m_closeAct = make_action(QIcon::fromTheme("window-close"), "Cl&ose", this,
                             QKeySequence::Close,
                             "Close the active window");
 	connect_trig(m_closeAct, this->m_mdi_area, &QMdiArea::closeActiveSubWindow);
-                            ///triggered=mdi_area.closeActiveSubWindow);
+
 	m_closeAllAct = make_action(QIcon::fromTheme("window-close-all"), "Close &All", this,
                               QKeySequence(),
                                "Close all the windows");
@@ -333,7 +333,7 @@ void MainWindow::createActions()
 	//
     // Help actions.
 	//
-	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), "&Help", this,
+	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), tr("&Help"), this,
 	                        QKeySequence::HelpContents,
 							"Show help contents");
 	m_helpAct->setDisabled(true); /// @todo No help yet.
@@ -341,12 +341,12 @@ void MainWindow::createActions()
 	m_whatsThisAct = QWhatsThis::createAction(this);
 	m_whatsThisAct->setStatusTip("Show more than a tooltip, less than full help on a GUI item");
 
-	m_aboutAct = make_action(QIcon::fromTheme("help-about"), "&About", this,
+	m_aboutAct = make_action(QIcon::fromTheme("help-about"), tr("&About"), this,
                            QKeySequence(),
                             "Show the About box");
 	connect_trig(m_aboutAct, this, &MainWindow::about);
 
-	m_aboutQtAct = make_action(QIcon::fromTheme("help-about-qt"), "About &Qt", this,
+	m_aboutQtAct = make_action(QIcon::fromTheme("help-about-qt"), tr("About &Qt"), this,
                              QKeySequence(),
                               "Show the Qt library's About box");
 	connect_trig(m_aboutQtAct, qApp, &QApplication::aboutQt);
