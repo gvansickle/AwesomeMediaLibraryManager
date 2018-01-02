@@ -43,6 +43,7 @@
 #include <logic/proxymodels/ModelChangeWatcher.h>
 
 #include <utils/Theme.h>
+#include <utils/StringHelpers.h>
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
@@ -65,11 +66,14 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_metadata_widget->setColumnCount(2);
     m_metadata_widget->setHeaderLabels(QStringList() << "Key" << "Value");
 
-
+	// The Cover Art label.
     m_cover_image_label = new PixmapLabel(this);
     m_cover_image_label->setText("IMAGE HERE");
 
-    mainLayout->addWidget(m_metadata_tree_view);
+	/// @todo Make this into the real Metadata tree view.  Until then, keep it hidden.
+	mainLayout->addWidget(m_metadata_tree_view);
+	m_metadata_tree_view->hide();
+
     mainLayout->addWidget(m_metadata_widget);
     mainLayout->addWidget(m_cover_image_label);
     auto mainWidget = new QWidget(this);
@@ -100,32 +104,6 @@ void MetadataDockWidget::connectToView(MDITreeViewBase* view)
 	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 
-void MetadataDockWidget::viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection& /*oldSelection*/)
-{
-    qDebug() << "Selection changed: " << newSelection;
-
-    if(newSelection.size() > 0)
-    {
-        // Get the top-level source selection.
-        QItemSelection tlis = ::mapSelectionToSource(newSelection);
-
-        // Extract the first source index.
-        QModelIndex fsi = tlis.indexes()[0];
-
-        // Tell the filter model about the new selection.
-        m_proxy_model->setSourceIndexToShow(fsi);
-
-		PopulateTreeWidget(fsi);
-    }
-    else
-    {
-        qDebug() << "selection was empty";
-
-        m_proxy_model->setSourceIndexToShow(QModelIndex());
-//		PopulateTreeWidget(QModelIndex());
-    }
-}
-
 void MetadataDockWidget::onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight, const QVector<int>& roles)
 {
 	qDebug() << "Data changed:" << topLeft << bottomRight << roles;
@@ -153,11 +131,10 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 	qDebug() << variant.canConvert<std::shared_ptr<LibraryEntry>>();
 	//qDebug() << variant.canConvert<std::shared_ptr<PlaylistModelEntry>>();
 
-	auto libentry = m_proxy_model->data(mi, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
-	qDebug() << "Pointer says:" << libentry->getM2Url();
+	auto libentry = variant.value<std::shared_ptr<LibraryEntry>>();
 
 	///qDebug() << "PLAYLIST ITEM: " << libentry;
-	if(libentry != nullptr)
+	if(libentry)
 	{
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
@@ -261,7 +238,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
 {
 	for(auto e : tagmap)
 	{
-		QString key = QString::fromUtf8(e.first.c_str());
+		QString key = toqstr(e.first);
         // Filter out keys we don't want to see in the Metadata display.
         // Mainly this is CUESHEET and LOG entries in FLAC VORBIS_COMMENT blocks, which are gigantic and destroy the
         // formatting.
@@ -272,7 +249,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
         }
 		for(auto f : e.second)
 		{
-			QString value = QString::fromUtf8(f.c_str());
+			QString value = toqstr(f);
 			auto child = new QTreeWidgetItem({key, value});
 			parent->addChild(child);
 		}

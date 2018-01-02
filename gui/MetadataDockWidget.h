@@ -48,12 +48,6 @@ public:
 public slots:
     
     /**
-     * Slot we connect up to the view's selectionModel()->QItemSelectionModel::selectionChanged signal.
-     * Note then that it's receiving selections relative to view->model(), which may need conversion.
-     */
-    void viewSelectionChanged(const QItemSelection& newSelection, const QItemSelection&);
-
-    /**
      * Slot which we connect up to m_proxy_model->&EntryToMetadataTreeProxyModel::dataChanged signal.
      * Invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
 	 * @note The model indexes will be relative to m_proxy_model.
@@ -83,6 +77,9 @@ private:
     void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
 
 private slots:
+	/**
+	 * Signaled by the ModelChangeWatcher on a change in m_proxy_model.
+	 */
 	void onProxyModelChange(bool);
 };
 
