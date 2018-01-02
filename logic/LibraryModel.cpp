@@ -282,10 +282,13 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 QMap<int, QVariant> LibraryModel::itemData(const QModelIndex& index) const
 {
 	auto retval = QAbstractItemModel::itemData(index);
-	auto vardata = data(index, ModelUserRoles::PointerToItemRole);
-	if(vardata.isValid())
+	if(index.column() == 0)
 	{
-		retval.insert(ModelUserRoles::PointerToItemRole, vardata);
+		auto vardata = data(index, ModelUserRoles::PointerToItemRole);
+		if(vardata.isValid())
+		{
+			retval.insert(ModelUserRoles::PointerToItemRole, vardata);
+		}
 	}
 	return retval;
 }
@@ -434,8 +437,6 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 
 	endInsertRows();
 
-//	qDebug() << "Inserted.";
-
 	// Notify subclasses of the change.
 	onRowsInserted(QModelIndex(), row, row + count - 1);
 
@@ -482,16 +483,17 @@ void LibraryModel::appendRow(std::shared_ptr<LibraryEntry> libentry)
 {
 	std::vector<std::shared_ptr<LibraryEntry>> libentries;
 	libentries.push_back(libentry);
-//	qDebug() << "URL:" << libentries[0]->getUrl();
 	appendRows(libentries);
 }
 
+/**
+ * Append the items in @a libentries to the model in one operation, i.e. without a separate insertRows(),
+ * and with a single beginInsertRows()/endInsertRows() pair.
+ * @param libentries
+ */
 void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentries)
 {
-M_WARNING("TODO EXPERIMENT");
 	auto start_rowcount = rowCount();
-
-//	insertRows(start_rowcount, libentries.size(), QModelIndex());
 
 	beginInsertRows(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
 	if(m_first_possible_unpop_row > start_rowcount)
@@ -500,16 +502,6 @@ M_WARNING("TODO EXPERIMENT");
 	}
 
 	m_library.addNewEntries(libentries);
-
-#if 0
-	for(int i = 0; i < libentries.size(); i++)
-	{
-		QModelIndex mi = index(start_rowcount+i, 0, QModelIndex());
-		QVariant entry = QVariant::fromValue<std::shared_ptr<LibraryEntry>>(libentries[i]);
-		qDebug() << "URL:" << entry.value<std::shared_ptr<LibraryEntry>>()->getUrl();
-		setData(mi, entry, ModelUserRoles::PointerToItemRole);
-	}
-#endif
 
 	onRowsInserted(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
 	endInsertRows();
@@ -672,14 +664,14 @@ Qt::DropActions LibraryModel::supportedDropActions() const
 	return Qt::IgnoreAction;
 }
 
-#if 1
 QStringList LibraryModel::mimeTypes() const
 {
-	return {"application/x-grvs-libraryentryref"};
-}
-#endif
+	M_WARNING("TODO: Return url type as well?");
 
-#if 1
+	return g_additional_supported_mimetypes;
+}
+
+
 QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 {
 	std::vector<std::shared_ptr<LibraryEntry>> row_items;
@@ -694,6 +686,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 			urls.push_back(e->getM2Url());
 		}
 	}
+
 	if(row_items.size() > 0)
 	{
 		qDebug() << QString("Returning %1 row(s)").arg(row_items.size());
@@ -703,9 +696,11 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 		e->setUrls(urls);
 		return e;
 	}
+
+	// "If the list of indexes is empty, or there are no supported MIME types, 0 is returned rather than a serialized empty list.".
 	return nullptr;
 }
-#endif
+
 
 void LibraryModel::onIncomingFilename(QString filename)
 {
