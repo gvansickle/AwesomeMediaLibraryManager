@@ -921,6 +921,10 @@ QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 {
 	// Create the new LibraryModel.
 	auto lib = QSharedPointer<LibraryModel>(new LibraryModel(this));
+
+	// Connect it to the ActivityProgressWidget, since as soon as we set the URL, async activity will start.
+	connectLibraryToActivityProgressWidget(lib.data(), m_activity_progress_widget);
+
 	m_libmodels.push_back(lib);
 	lib->setLibraryRootUrl(url);
 

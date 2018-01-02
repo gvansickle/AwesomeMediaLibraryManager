@@ -615,9 +615,7 @@ void LibraryModel::readFromJson(const QJsonObject& jo)
 	m_library.readFromJson(jsondoc.object());
 
 	connectSignals();
-	/// @todo
-	//self.statusSignal.emit(LibState.ScanningForFiles, 0, 0)
-	//self.startFileScanSignal.emit(self.library.rootURL)
+
 	endResetModel();
 }
 
