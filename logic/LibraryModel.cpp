@@ -396,7 +396,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 		// Set a std::shared_ptr<> to the item at this index/role.
 		replacement_item = value.value<std::shared_ptr<LibraryEntry>>();
 		Q_ASSERT(replacement_item);
-		qDebug() << "Setting pointer to item with Url:" << replacement_item->getUrl();
+//		qDebug() << "Setting pointer to item with Url:" << replacement_item->getUrl();
 //	}
 
 	///qDebug() << "Can convert to LibraryEntry*:" << value.canConvert<LibraryEntry*>();

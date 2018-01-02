@@ -446,8 +446,7 @@ void PlaylistModel::onSetData(QModelIndex index, QVariant value, int role)
 //	qDebug() << "onSetData()" << index << Qt::ItemDataRole(role);
 
 	// QMediaPlaylist has no analog to setData(), so we have to remove and insert here.
-M_WARNING( "TODO: index is a QPersist. in the Python....")
-//	auto index = QModelIndex(pindex)
+
 	qDebug() << QString("Replacing row %1 of QMPlaylist, mediaCount=%2").arg(index.row()).arg(m_qmplaylist->mediaCount());
 	if(m_qmplaylist->mediaCount() < index.row()+1)
 	{

@@ -121,7 +121,7 @@ public:
     QModelIndex parent(const QModelIndex &index) const override;
 	QModelIndex sibling(int row, int column, const QModelIndex &idx) const override;
 
-	virtual QSize span(const QModelIndex &index) const override;
+	QSize span(const QModelIndex &index) const override;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
