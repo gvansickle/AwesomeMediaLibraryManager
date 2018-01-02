@@ -349,12 +349,11 @@ void MainWindow::createActions()
 	m_aboutQtAct = make_action(QIcon::fromTheme("help-about-qt"), "About &Qt", this,
                              QKeySequence(),
                               "Show the Qt library's About box");
-	connect(m_aboutQtAct, &QAction::triggered, this, &QApplication::aboutQt);
+	connect_trig(m_aboutQtAct, qApp, &QApplication::aboutQt);
 
 	/// Experimental actions
 	m_experimentalAct = make_action(QIcon::fromTheme("edit-bomb"), "Experimental", this,
 								   QKeySequence(), "Invoke experimental code - USE AT YOUR OWN RISK");
-								   //triggered=doExperiment);
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 }
 
