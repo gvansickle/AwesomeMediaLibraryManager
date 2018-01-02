@@ -821,8 +821,6 @@ void MainWindow::readLibSettings(QSettings& settings)
 			m_libmodels.push_back(libmodel);
 			// Add the new library to the Collection Doc Widget.
 			m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel.data()));
-			// Hook up the status signal from the library model to this class's onStatusSignal handler.
-			connect(libmodel.data(), &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
 		}
 	}
 	settings.endArray();
@@ -930,9 +928,6 @@ QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 
 	// Add the new library to the Collection Doc Widget.
 	m_libraryDockWidget->addLibrary(new LocalLibraryItem(lib.data()));
-
-	// Hook up the status signal from the library model to this class's onStatusSignal handler.
-	connect(lib.data(), &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
 
 	return lib;
 }
@@ -1322,29 +1317,5 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *subwindow)
 			updateConnections();
 		}
 	}
-}
-
-void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)
-{
-	M_WARNING("TODO: Fix this")
-#if 0
-	if(state == LibState::ScanningForFiles)
-	{
-		m_actProgIndicator->setRange(0, max);
-	}
-	else if(state == LibState::PopulatingMetadata)
-	{
-		m_actProgIndicator->setRange(0, max);
-		m_actProgIndicator->setValue(current);
-	}
-
-	// get summary stats over all libraries.
-	qint64 num_songs = 0;
-	for(auto libmodel : m_libmodels)
-	{
-		num_songs += libmodel->rowCount();
-	}
-	m_numSongsIndicator->setText(QString("Number of Songs: %1").arg(num_songs));
-#endif
 }
 
