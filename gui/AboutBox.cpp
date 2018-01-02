@@ -22,18 +22,22 @@
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QIcon>
 #include <QMessageBox>
 
 #include <utils/StringHelpers.h>
 #include <resources/VersionInfo.h>
+#include <qt5/QtWidgets/qdialogbuttonbox.h>
 
 
 AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(parent, flags)
 {
-    m_title_str = tr("About %1").arg(qApp->applicationDisplayName());
+	setObjectName("AboutBox");
 
-    QString app_name_str = qApp->applicationDisplayName();
+	QString app_name_str = qApp->applicationDisplayName();
 	QString app_full_version_info = toqstr(VersionInfo::get_full_version_info_string());
+	
+    m_title_str = tr("About %1").arg(qApp->applicationDisplayName());
 
     m_text_str = tr(
 	    "<body>"
@@ -57,12 +61,38 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
 		" along with AwesomeMediaLibraryManager.  If not, see <a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a>.</p>"
 		    "<hr>"
 		    "</body>").arg(app_name_str).arg(app_full_version_info);
+	
+	// Main layout is vertical.
+    auto mainLayout = new QVBoxLayout();
+	
+	// Above-buttons section is divided in two: left for icon, right for About text.
+	auto hlayout = new QHBoxLayout();
+	
+	QIcon icon = parent->windowIcon();
+	auto icon_as_label = new QLabel();
+	icon_as_label->setPixmap(icon.pixmap(128));
+		
+	auto main_text = new QLabel(m_text_str, this);
+	main_text->setWordWrap(true);
+	
+	auto button_box = new QDialogButtonBox(QDialogButtonBox::Ok, this);
+	connect(button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	
+	hlayout->addWidget(icon_as_label, 0, Qt::AlignTop | Qt::AlignHCenter);
+	hlayout->addWidget(main_text);
+	
+	mainLayout->addLayout(hlayout);
+	mainLayout->addWidget(button_box);
+	
+    setLayout(mainLayout);
+	
+	setWindowTitle(m_title_str);
 }
 
 int AboutBox::exec()
 {
-	QMessageBox::about(this->parentWidget(), m_title_str, m_text_str);
-    //return QDialog::exec();
+	//QMessageBox::about(this->parentWidget(), m_title_str, m_text_str);
+    return QDialog::exec();
 
     return 0;
 }
