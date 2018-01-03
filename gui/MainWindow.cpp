@@ -233,17 +233,14 @@ void MainWindow::updateActionEnableStates_Edit()
 
 void MainWindow::createActions()
 {
-    // File actions.
+	//
+	// File actions.
+	//
     ////// Library actions.
     m_importLibAct = make_action(QIcon::fromTheme("folder-open"), "&Import library...", this,
                                 QKeySequence("CTRL+SHIFT+O"),
                                 "Add a library location");
 	connect_trig(m_importLibAct, this, &MainWindow::importLib);
-
-
-	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), "&Rescan libray...", this,
-                                    QKeySequence::Refresh);
-	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
 
 	m_saveLibraryAsAct = make_action(QIcon::fromTheme("folder-close"), "&Save library as...", this);
 
@@ -264,10 +261,6 @@ void MainWindow::createActions()
 
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 
-	m_settingsAct = make_action(QIcon::fromTheme("configure"), "Settings...", this,
-							   QKeySequence::Preferences, "Open the Settings dialog.");
-	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
-
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
@@ -281,7 +274,15 @@ void MainWindow::createActions()
     //
 	// Tools actions.
     //
-        
+
+	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
+									QKeySequence::Refresh);
+	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
+
+	m_settingsAct = make_action(QIcon::fromTheme("configure"), tr("Settings..."), this,
+							   QKeySequence::Preferences, "Open the Settings dialog.");
+	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
+
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
 
