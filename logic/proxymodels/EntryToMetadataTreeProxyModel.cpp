@@ -83,13 +83,14 @@ void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelI
 
 bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 {
-	// Only accept the row if it's currently selected.
-	QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
-
 	if(!m_current_selected_index.isValid())
 	{
-		qDebug() << "selected index invalid" << m_current_selected_index;
+//		qDebug() << "selected index invalid" << m_current_selected_index;
+		return false;
 	}
+
+	// Only accept the row if it's currently selected.
+	QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
 	if(m_current_selected_index == index)
 	{
