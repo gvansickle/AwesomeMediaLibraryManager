@@ -69,7 +69,7 @@ public:
 		this->m_task->run(*this);
 		if (this->isCanceled())
 		{
-			// Report that we were cancelled.
+			// Report that we were canceled.
 			this->reportCanceled();
 		}
 		else
