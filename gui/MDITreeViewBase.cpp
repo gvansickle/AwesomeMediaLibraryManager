@@ -61,9 +61,9 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	// ...but start unsorted, and don't show the sort indicator.
 	header()->setSortIndicator(m_previous_sort_column, m_sort_order);
 	header()->setSortIndicatorShown(false);
-	setTips(header(), tr("Header<br>Click to sort by column"),
-		 tr("This is the table header"),
-		 tr("This is the header of the view.  Click the header of a column to cycle between unsorted, sort ascending, and sort descending"));
+	setTips(header(), tr("Header<br>Click to cycle through column sort modes."),
+		 tr("This is the view header."),
+		 tr("<h4>Header</h4>This is the view header.  Click the header of a column to cycle between unsorted, sort ascending, and sort descending modes."));
 
 	// Only allow selection of full rows.
 	setSelectionBehavior(QAbstractItemView::SelectRows);
