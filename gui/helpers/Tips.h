@@ -1,28 +1,35 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/* 
- * File:   Tips.h
- * Author: gary
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
- * Created on January 2, 2018, 8:23 PM
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef TIPS_H
-#    define TIPS_H
+#define TIPS_H
 
-class Tips
+/// @file Helpers for setting all the various *Tips() at once.
+
+template<typename T>
+void setTips(T* obj, const QString& toolTip, const QString& statusTip, const QString& whatsThis)
 {
-public:
-	Tips();
-	Tips(const Tips& orig);
-	virtual ~Tips();
-private:
+	obj->setToolTip(toolTip);
+	obj->setStatusTip(statusTip);
+	obj->setWhatsThis(whatsThis);
+}
 
-};
 
 #endif /* TIPS_H */
 

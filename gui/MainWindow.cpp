@@ -67,7 +67,8 @@
 #include <utils/Theme.h>
 #include <QtCore/QThread>
 #include <QtWidgets/QWhatsThis>
-#include <qt5/QtCore/qmimedata.h>
+#include <QMimeData>
+#include "logic/LibraryEntryMimeData.h"
 
 #include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
@@ -196,7 +197,7 @@ void MainWindow::updateActionEnableStates_Edit()
 			if(mimeData)
 			{
 				QStringList mimedata_formats = mimeData->formats();
-				if(mimedata_formats.contains("application/x-grvs-libraryentryref"))
+				if(mimedata_formats.contains(g_additional_supported_mimetypes[0]))
 				{
 					clipboard_has_contents = true;
 				}
