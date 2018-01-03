@@ -430,7 +430,6 @@ void MainWindow::createMenus()
 
     // Create the Window menu.
 	m_menu_window = menuBar()->addMenu(tr("&Window"));
-///@todo    updateWindowMenu();
 	m_menu_window->addActions({
 		m_menu_window->addSection(tr("Close")),
 		m_closeAct,
@@ -446,7 +445,6 @@ void MainWindow::createMenus()
 		m_windowPrevAct,
 		m_act_window_list_separator
     });
-//	connect(m_menu_window, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
 
     menuBar()->addSeparator();
 
