@@ -894,18 +894,22 @@ M_WARNING("TODO: Specify a temp/cache file?")
 	qDebug() << QString("Loading files from last session...");
 	QSettings settings;
 	readLibSettings(settings);
-	////// @todo
+
+	// Open the windows the user had open at the end of last session.
 	openWindows();
 }
 
-
+/**
+ * Open the windows the user had open at the end of last session.
+ * @todo Actually now only opens a window for each libmodel.
+ */
 void MainWindow::openWindows()
 {
-	qDebug() << QString("Opening windows which were opened from last session...");
-	////// @todo Actually now always opens a window for each libmodel.
+	qDebug() << "Opening windows which were opened from last session...";
+
 	for(auto m : m_libmodels)
 	{
-		qDebug() << QString("Opening view on model:") << m->getLibraryName() << m->getLibRootDir();
+		qDebug() << "Opening view on model:" << m->getLibraryName() << m->getLibRootDir();
 		openMDILibraryViewOnModel(m.data());
 	}
 }

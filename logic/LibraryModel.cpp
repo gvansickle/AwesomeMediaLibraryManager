@@ -893,6 +893,7 @@ void LibraryModel::startRescan()
 
 void LibraryModel::connectProgressToActivityProgressWidget(ActivityProgressWidget *apw)
 {
+	m_rescanner->disconnect(apw);
 	connect(m_rescanner, &LibraryRescanner::progressRangeChanged, apw, &ActivityProgressWidget::onProgressRangeChanged);
 	connect(m_rescanner, &LibraryRescanner::progressTextChanged, apw, &ActivityProgressWidget::onProgressTextChanged);
 	connect(m_rescanner, &LibraryRescanner::progressValueChanged, apw, &ActivityProgressWidget::onProgressValueChanged);

@@ -28,7 +28,7 @@
 
 /**
  * Subclass this to get a controllable task which can be passed to ReportingRunner::run().
- * @tparam T
+ * @tparam T  The type returned in the QFuture<T>.
  */
 template <class T>
 class ControllableTask
@@ -36,9 +36,9 @@ class ControllableTask
 public:
     virtual ~ControllableTask() {}
 
-    // Override this in your derived class to do the long-running work.
-    // Periodically check @a control->isCanceled() and return if it returns false.
-    // Send results out via one of the control->reportResult() overloads.
+    /// Override this in your derived class to do the long-running work.
+    /// Periodically check @a control->isCanceled() and return if it returns false.
+    /// Send results out via one of the control->reportResult() overloads.
     virtual void run(QFutureInterface<T>& control) = 0;
 };
 
@@ -51,27 +51,31 @@ public:
 
     QFuture<T> start()
     {
-            this->setRunnable(this);
-            // Report that we've started via the QFutureInterface.
-            this->reportStarted();
-            QFuture<T> future = this->future();
-            QThreadPool::globalInstance()->start(this, /*m_priority*/ 0);
-            return future;
+		this->setRunnable(this);
+		// Report that we've started via the QFutureInterface.
+		this->reportStarted();
+		QFuture<T> future = this->future();
+		QThreadPool::globalInstance()->start(this, /*m_priority*/ 0);
+		return future;
     }
 
     void run()
     {
-            if (this->isCanceled())
-            {
-                    this->reportFinished();
-                    return;
-            }
-            this->m_task->run(*this);
-            if (!this->isCanceled())
-            {
-                    /// @todo Do anything here???;
-            }
-            this->reportFinished();
+		if (this->isCanceled())
+		{
+			this->reportFinished();
+			return;
+		}
+		this->m_task->run(*this);
+		if (this->isCanceled())
+		{
+			// Report that we were cancelled.
+			this->reportCanceled();
+		}
+		else
+		{
+			this->reportFinished();
+		}
     }
 
     ControllableTask<T> *m_task;
@@ -83,7 +87,7 @@ public:
     template <class T>
     static QFuture<T> run(ControllableTask<T>* task)
     {
-            return (new RunControllableTask<T>(task))->start();
+		return (new RunControllableTask<T>(task))->start();
     }
 };
 
