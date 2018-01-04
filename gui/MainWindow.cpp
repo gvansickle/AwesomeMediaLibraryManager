@@ -67,7 +67,8 @@
 #include <utils/Theme.h>
 #include <QtCore/QThread>
 #include <QtWidgets/QWhatsThis>
-#include <qt5/QtCore/qmimedata.h>
+#include <QMimeData>
+#include "logic/LibraryEntryMimeData.h"
 
 #include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
@@ -196,7 +197,7 @@ void MainWindow::updateActionEnableStates_Edit()
 			if(mimeData)
 			{
 				QStringList mimedata_formats = mimeData->formats();
-				if(mimedata_formats.contains("application/x-grvs-libraryentryref"))
+				if(mimedata_formats.contains(g_additional_supported_mimetypes[0]))
 				{
 					clipboard_has_contents = true;
 				}
@@ -233,17 +234,14 @@ void MainWindow::updateActionEnableStates_Edit()
 
 void MainWindow::createActions()
 {
-    // File actions.
+	//
+	// File actions.
+	//
     ////// Library actions.
     m_importLibAct = make_action(QIcon::fromTheme("folder-open"), "&Import library...", this,
                                 QKeySequence("CTRL+SHIFT+O"),
                                 "Add a library location");
 	connect_trig(m_importLibAct, this, &MainWindow::importLib);
-
-
-	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), "&Rescan libray...", this,
-                                    QKeySequence::Refresh);
-	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
 
 	m_saveLibraryAsAct = make_action(QIcon::fromTheme("folder-close"), "&Save library as...", this);
 
@@ -264,10 +262,6 @@ void MainWindow::createActions()
 
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 
-	m_settingsAct = make_action(QIcon::fromTheme("configure"), "Settings...", this,
-							   QKeySequence::Preferences, "Open the Settings dialog.");
-	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
-
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
@@ -281,7 +275,15 @@ void MainWindow::createActions()
     //
 	// Tools actions.
     //
-        
+
+	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
+									QKeySequence::Refresh);
+	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
+
+	m_settingsAct = make_action(QIcon::fromTheme("configure"), tr("Settings..."), this,
+							   QKeySequence::Preferences, "Open the Settings dialog.");
+	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
+
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
 
@@ -430,7 +432,6 @@ void MainWindow::createMenus()
 
     // Create the Window menu.
 	m_menu_window = menuBar()->addMenu(tr("&Window"));
-///@todo    updateWindowMenu();
 	m_menu_window->addActions({
 		m_menu_window->addSection(tr("Close")),
 		m_closeAct,
@@ -446,7 +447,6 @@ void MainWindow::createMenus()
 		m_windowPrevAct,
 		m_act_window_list_separator
     });
-//	connect(m_menu_window, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
 
     menuBar()->addSeparator();
 
@@ -821,8 +821,6 @@ void MainWindow::readLibSettings(QSettings& settings)
 			m_libmodels.push_back(libmodel);
 			// Add the new library to the Collection Doc Widget.
 			m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel.data()));
-			// Hook up the status signal from the library model to this class's onStatusSignal handler.
-			connect(libmodel.data(), &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
 		}
 	}
 	settings.endArray();
@@ -896,18 +894,22 @@ M_WARNING("TODO: Specify a temp/cache file?")
 	qDebug() << QString("Loading files from last session...");
 	QSettings settings;
 	readLibSettings(settings);
-	////// @todo
+
+	// Open the windows the user had open at the end of last session.
 	openWindows();
 }
 
-
+/**
+ * Open the windows the user had open at the end of last session.
+ * @todo Actually now only opens a window for each libmodel.
+ */
 void MainWindow::openWindows()
 {
-	qDebug() << QString("Opening windows which were opened from last session...");
-	////// @todo Actually now always opens a window for each libmodel.
+	qDebug() << "Opening windows which were opened from last session...";
+
 	for(auto m : m_libmodels)
 	{
-		qDebug() << QString("Opening view on model:") << m->getLibraryName() << m->getLibRootDir();
+		qDebug() << "Opening view on model:" << m->getLibraryName() << m->getLibRootDir();
 		openMDILibraryViewOnModel(m.data());
 	}
 }
@@ -921,14 +923,15 @@ QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 {
 	// Create the new LibraryModel.
 	auto lib = QSharedPointer<LibraryModel>(new LibraryModel(this));
+
+	// Connect it to the ActivityProgressWidget, since as soon as we set the URL, async activity will start.
+	connectLibraryToActivityProgressWidget(lib.data(), m_activity_progress_widget);
+
 	m_libmodels.push_back(lib);
 	lib->setLibraryRootUrl(url);
 
 	// Add the new library to the Collection Doc Widget.
 	m_libraryDockWidget->addLibrary(new LocalLibraryItem(lib.data()));
-
-	// Hook up the status signal from the library model to this class's onStatusSignal handler.
-	connect(lib.data(), &LibraryModel::statusSignal, this, &MainWindow::onStatusSignal);
 
 	return lib;
 }
@@ -1318,29 +1321,5 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *subwindow)
 			updateConnections();
 		}
 	}
-}
-
-void MainWindow::onStatusSignal(LibState state,  qint64 current, qint64 max)
-{
-	M_WARNING("TODO: Fix this")
-#if 0
-	if(state == LibState::ScanningForFiles)
-	{
-		m_actProgIndicator->setRange(0, max);
-	}
-	else if(state == LibState::PopulatingMetadata)
-	{
-		m_actProgIndicator->setRange(0, max);
-		m_actProgIndicator->setValue(current);
-	}
-
-	// get summary stats over all libraries.
-	qint64 num_songs = 0;
-	for(auto libmodel : m_libmodels)
-	{
-		num_songs += libmodel->rowCount();
-	}
-	m_numSongsIndicator->setText(QString("Number of Songs: %1").arg(num_songs));
-#endif
 }
 

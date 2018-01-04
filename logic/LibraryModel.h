@@ -121,7 +121,7 @@ public:
     QModelIndex parent(const QModelIndex &index) const override;
 	QModelIndex sibling(int row, int column, const QModelIndex &idx) const override;
 
-	virtual QSize span(const QModelIndex &index) const override;
+	QSize span(const QModelIndex &index) const override;
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -230,6 +230,7 @@ protected:
 
 	std::vector<ColumnSpec> m_columnSpecs;
 
+	/// The underlying data store.
     Library m_library;
 
 	LibraryRescanner* m_rescanner = nullptr;
@@ -243,8 +244,7 @@ private:
 	/// The actual QSaveFile which will serve as the write half of the cache file.
 	mutable QSaveFile m_lib_cache_file;
 
-	qint64 m_first_possible_unpop_row;
-
+	/// Icons for various entry states.
 	QVariant m_IconError, m_IconOk, m_IconUnknown;
 };
 

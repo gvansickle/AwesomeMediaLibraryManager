@@ -90,7 +90,6 @@ QVariant PlaylistModel::data(const QModelIndex& index, int role) const
 		case Qt::DisplayRole:
 			if(sectionid == PlaylistSectionID::Rating)
 			{
-M_WARNING("TODO: Finish rating delegate.")
 				///@todo return QVariant::fromValue(Rating(item->m_user_rating));
 				return QVariant(item->m_user_rating);
 			}
@@ -446,8 +445,7 @@ void PlaylistModel::onSetData(QModelIndex index, QVariant value, int role)
 //	qDebug() << "onSetData()" << index << Qt::ItemDataRole(role);
 
 	// QMediaPlaylist has no analog to setData(), so we have to remove and insert here.
-M_WARNING( "TODO: index is a QPersist. in the Python....")
-//	auto index = QModelIndex(pindex)
+
 	qDebug() << QString("Replacing row %1 of QMPlaylist, mediaCount=%2").arg(index.row()).arg(m_qmplaylist->mediaCount());
 	if(m_qmplaylist->mediaCount() < index.row()+1)
 	{

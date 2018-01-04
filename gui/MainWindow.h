@@ -76,8 +76,6 @@ private slots:
     void changeStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
 
-    void onStatusSignal(LibState state,  qint64 current, qint64 max);
-
     void onShowLibrary(LibraryModel* libmodel);
     void onRemoveDirFromLibrary(LibraryModel* libmodel);
 
