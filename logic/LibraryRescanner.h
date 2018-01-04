@@ -28,6 +28,10 @@
 #include <QtCore/QFuture>
 #include <QtCore/QFutureWatcher>
 
+#if 1 ///@todo HAVE_TBB
+#include <tbb/tbb.h>
+#endif
+
 #include "logic/LibraryEntry.h"
 
 class LibraryModel;
@@ -105,6 +109,10 @@ private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
 	LibraryModel* m_current_libmodel;
+
+#if 1
+	tbb::concurrent_queue<QString> m_fileurl_queue;
+#endif
 };
 
 

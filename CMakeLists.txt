@@ -160,6 +160,9 @@ set(IDENTIFIER "io.github.gvansickle")
 ### The third-party packages we require.
 ###
 
+# FindTBB from here (MIT): https://github.com/justusc/FindTBB
+find_package(TBB REQUIRED)
+
 include(ExternalProject)
 
 set(AMLM_LIBCUE_TARGET "")
@@ -413,6 +416,8 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
         ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+# TBB.
+target_link_libraries(${PROJECT_NAME} tbb)
 add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})

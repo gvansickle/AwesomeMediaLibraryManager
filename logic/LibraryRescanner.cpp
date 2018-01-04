@@ -170,11 +170,19 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
+#if 0 ///@todo !HAVE_TBB
 	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
 	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
 	m_dir_traversal_future_watcher.setFuture(fut);
-
+#else
+	LaunchAsyncDirScanner_TBB(m_fileurl_queue,
+							  [this](int x){ QMetaObject::invokeMethod(this, "onDirTravResultReadyAt", Qt::QueuedConnection, Q_ARG(int, x)); },
+								[this](){ QMetaObject::invokeMethod(this, "onDirTravFinished", Qt::QueuedConnection); },
+				dir_url,
+				QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+				QDir::NoFilter, QDirIterator::Subdirectories);
+#endif
 	emit progressTextChanged("Scanning directory tree");
 }
 
@@ -258,8 +266,13 @@ void LibraryRescanner::onRescanFinished()
 void LibraryRescanner::onDirTravResultReadyAt(int index)
 {
 	qDebug() << "Async Dir Trav reports result ready at" << index << "==" << m_dir_traversal_future_watcher.resultAt(index);
-
+#if 0 ///@todo !HAVE_TBB
 	m_current_libmodel->onIncomingFilename(m_dir_traversal_future_watcher.resultAt(index));
+#else
+	QString local_copy;
+	m_fileurl_queue.try_pop(local_copy);
+	m_current_libmodel->onIncomingFilename(local_copy);
+#endif
 }
 
 void LibraryRescanner::onDirTravFinished()
