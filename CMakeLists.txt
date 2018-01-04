@@ -310,6 +310,7 @@ set(HEADER_FILES
 	logic/proxymodels/EntryToMetadataTreeProxyModel.h
 	logic/proxymodels/ModelChangeWatcher.h
 	gui/helpers/Tips.h
+	gui/LibraryContextMenu.h
     )
 
 # Source file list.
@@ -369,6 +370,7 @@ set(SOURCE_FILES
 	logic/proxymodels/EntryToMetadataTreeProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
 	gui/helpers/Tips.cpp
+	gui/LibraryContextMenu.cpp
     )
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files

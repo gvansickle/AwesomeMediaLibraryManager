@@ -31,6 +31,7 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
+#include "LibraryContextMenu.h"
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -63,8 +64,6 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 
 	// Hook up the context menu.
 	setContextMenuPolicy(Qt::DefaultContextMenu);
-//	setContextMenuPolicy(Qt::CustomContextMenu);
-//	connect(this, &MDILibraryView::customContextMenuRequested, this, &MDILibraryView::onContextMenu);
 }
 
 /**
@@ -208,7 +207,10 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 
 void MDILibraryView::contextMenuEvent(QContextMenuEvent* event)
 {
-	onContextMenu(event->pos());
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), this);
+	context_menu->exec(event->globalPos());
+
+	return;
 }
 
 void MDILibraryView::onContextMenu(QPoint pos)
