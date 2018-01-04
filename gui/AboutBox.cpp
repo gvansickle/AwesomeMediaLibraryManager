@@ -71,9 +71,13 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
 	QIcon icon = parent->windowIcon();
 	auto icon_as_label = new QLabel();
 	icon_as_label->setPixmap(icon.pixmap(128));
-		
+
+	// The main About text QLabel.
 	auto main_text = new QLabel(m_text_str, this);
 	main_text->setWordWrap(true);
+	// About text is link-clickable with mouse or keyboard, text can be selected and copied with mouse.
+	main_text->setTextInteractionFlags(Qt::TextBrowserInteraction);
+	main_text->setOpenExternalLinks(true);
 	
 	auto button_box = new QDialogButtonBox(QDialogButtonBox::Ok, this);
 	connect(button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);

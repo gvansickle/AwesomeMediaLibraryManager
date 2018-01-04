@@ -62,8 +62,9 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	setDropIndicatorShown(true);
 
 	// Hook up the context menu.
-	setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(this, &MDILibraryView::customContextMenuRequested, this, &MDILibraryView::onContextMenu);
+	setContextMenuPolicy(Qt::DefaultContextMenu);
+//	setContextMenuPolicy(Qt::CustomContextMenu);
+//	connect(this, &MDILibraryView::customContextMenuRequested, this, &MDILibraryView::onContextMenu);
 }
 
 /**
@@ -175,6 +176,7 @@ QModelIndex MDILibraryView::from_underlying_qmodelindex(const QModelIndex &under
 	return proxy_model_index;
 }
 
+
 void MDILibraryView::addSendToMenuActions(QMenu* menu)
 {
 	auto playlistviews = getAllMdiPlaylistViews();
@@ -201,6 +203,12 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 {
 	auto retval = qobject_cast<LibrarySortFilterProxyModel*>(model());
 	return retval;
+}
+
+
+void MDILibraryView::contextMenuEvent(QContextMenuEvent* event)
+{
+	onContextMenu(event->pos());
 }
 
 void MDILibraryView::onContextMenu(QPoint pos)

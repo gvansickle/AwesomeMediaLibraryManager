@@ -27,7 +27,7 @@
 class QString;
 
 /**
- * @todo write docs
+ * Create a popup menu for a right-drop to allow user to select copy or move.
  */
 class DropMenu : public QMenu
 {
