@@ -52,9 +52,7 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 	// Add cut/copy/paste to the context menu.
 	mw->m_ab_edit_actions->appendToMenu(this);
 
-//	addAction("Cut");
-//	addAction("Copy");
-//	addAction("Paste");
+
 	addSeparator();
 	addAction("Search Wikipedia for...");
 }

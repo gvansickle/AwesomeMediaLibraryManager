@@ -49,15 +49,15 @@ public:
 	/**
 	 * Does not transfer ownership of the QActions to @a menu.
 	 */
-	void appendToMenu(QMenu* menu);
+	void appendToMenu(QMenu* menu, bool elide_separators = false);
 
 	/**
 	 * Does not transfer ownership of the QActions to @a toolbar.
 	 */
-	void appendToToolBar(QToolBar* toolbar);
+	void appendToToolBar(QToolBar* toolbar, bool elide_separators = false);
 
 private:
-	Q_DISABLE_COPY(ActionBundle);
+	Q_DISABLE_COPY(ActionBundle)
 
 };
 

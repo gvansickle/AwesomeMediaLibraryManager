@@ -44,7 +44,7 @@ signals:
     void playTrackNowSignal(QUrl);
         
 public:
-	MDILibraryView(QWidget *parent = Q_NULLPTR);
+	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
         
 	/**
 	* static member function which opens an MDILibraryView on the given model.

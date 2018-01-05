@@ -42,19 +42,25 @@ QAction* ActionBundle::addSection(const QIcon& icon, const QString& text)
 	return sec;
 }
 
-void ActionBundle::appendToMenu(QMenu* menu)
+void ActionBundle::appendToMenu(QMenu* menu, bool elide_separators)
 {
 	for(auto action : actions())
 	{
-		menu->addAction(action);
+		if(!elide_separators || action->isSeparator() == false)
+		{
+			menu->addAction(action);
+		}
 	}
 }
 
-void ActionBundle::appendToToolBar(QToolBar* toolbar)
+void ActionBundle::appendToToolBar(QToolBar* toolbar, bool elide_separators)
 {
 	for(auto action : actions())
 	{
-		toolbar->addAction(action);
+		if(!elide_separators || action->isSeparator() == false)
+		{
+			toolbar->addAction(action);
+		}
 	}
 }
 
