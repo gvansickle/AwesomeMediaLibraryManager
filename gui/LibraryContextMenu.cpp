@@ -19,15 +19,30 @@
 
 #include "LibraryContextMenu.h"
 
+#include <QDebug>
+
 #include "utils/Theme.h"
+#include "utils/ActionHelpers.h"
+#include "helpers/Tips.h"
 
 
 LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
 {
 	setTitle(title);
 
+	qDebug() << "Parent:" << parent;
+
+	auto act_append_to_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Append to Now Playing"), this);
+	auto act_replace_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Replace Now Playing with this"), this);
+
+//	setTextandTips();
+	
+	addAction(act_append_to_playlist);
+	addAction(act_replace_playlist);
+	addSeparator();
+
 	addAction("Song properties...");
-	addAction(Theme::iconFromTheme("go-next"), "Send to Now Playing");
+
 	addSeparator();
 	addAction("Cut");
 	addAction("Copy");

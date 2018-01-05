@@ -89,8 +89,10 @@ protected:
 
 protected slots:
 
-	void contextMenuEvent(QContextMenuEvent* event) override;
+	void onContextMenuIndex(QContextMenuEvent* event, QModelIndex index) override;
+	void onContextMenuViewport(QContextMenuEvent* event) override;
 
+	/// @obsolete
 	virtual void onContextMenu(QPoint pos);
 
 	/// Invoked when user double-clicks on an entry.

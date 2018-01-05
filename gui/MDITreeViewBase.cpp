@@ -338,6 +338,28 @@ void MDITreeViewBase::onSectionClicked(int logicalIndex)
 	header()->setSortIndicator(logicalIndex, m_sort_order);
 }
 
+void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
+{
+	// Check if the click was on an item or in the blank area, and dispatch accordingly.
+	// Note that indexAt() takes a point in viewport coordinates.
+	QModelIndex index = indexAt(viewport()->mapFromGlobal(event->globalPos()));
+
+	if(index.isValid())
+	{
+		// Open context menu for the item.
+		qDebug() << "MODEL INDEX:" << index;
+
+		onContextMenuIndex(event, index);
+	}
+	else
+	{
+		// Open the blank area context menu.
+		qDebug() << "NO VALID INDEX";
+
+		onContextMenuViewport(event);
+	}
+}
+
 void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)
 {
 	this->QTreeView::selectionChanged(selected, deselected);

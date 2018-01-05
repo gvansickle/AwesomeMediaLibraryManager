@@ -29,6 +29,9 @@
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QtWidgets/QLabel>
+#include <QStandardItemModel>
+#include <QDataWidgetMapper>
+#include <QCheckBox>
 
 static QLabel* make_qlabel(const QString& str, QWidget *parent)
 {
@@ -43,12 +46,13 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 {
 	// The library info/stats group box.
 	QGroupBox *lib_info = new QGroupBox(tr("Library Info"));
-
+	
 	/// The stats.
 	// Number of songs.
 	m_lib_num_songs_label = make_qlabel("12345", this);
     // Total size on disk.
-    auto lib_size_on_disk = make_qlabel("55756 GB", this);
+	auto lib_size_on_disk = make_qlabel("55756 GB", this);
+
 	// FormLayout for the stats.
 	QFormLayout *lib_stats_form = new QFormLayout;
 	lib_stats_form->addRow(tr("Total number of songs:"), m_lib_num_songs_label);
@@ -82,6 +86,7 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 
     registerField("m_lib_num_songs_label", m_lib_num_songs_label);
 }
+
 void SDPageLibrary::addContentsEntry(SettingsDialogSideWidget *contents_widget)
 {
 	contents_widget->addPageEntry("Library", Theme::iconFromTheme("applications-multimedia"));

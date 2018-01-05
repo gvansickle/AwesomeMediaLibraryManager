@@ -147,6 +147,27 @@ protected slots:
     virtual void headerMenu(QPoint pos);
 
     virtual void onSectionClicked(int logicalIndex);
+	
+	/**
+	 * Context menu handler.  Base class implementation in QWidget ignores the event.
+	 * This override dispatches the event to either onContextMenuIndex() or onContextMenuViewport()
+	 * as appropriate.  Derived classes shouldn't need to override this.
+	 */
+	void contextMenuEvent(QContextMenuEvent* event) override;
+
+	/**
+	 * Override to implement context menu handler for @a index.  @a index is guaranteed to be valid.
+	 * @param event
+	 * @param index
+	 */
+	virtual void onContextMenuIndex(QContextMenuEvent* event, QModelIndex index) { Q_UNUSED(event); Q_UNUSED(index); }
+
+	/**
+	 * Override to implement context menu handler for the viewport (blank area of treeview).
+	 * @param event
+	 * @param index
+	 */
+	virtual void onContextMenuViewport(QContextMenuEvent* event) { Q_UNUSED(event); }
 
 protected:
 

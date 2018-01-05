@@ -155,7 +155,7 @@ void SettingsDialogBase::addField(const RegisteredField &field)
     m_reg_field_index_map.insert(local_reg_field.m_name, m_registered_fields.size());
     m_registered_fields.push_back(local_reg_field);
 
-    connect(local_reg_field.m_object, SIGNAL(destroyed(QObject*)), this, SLOT(onRegisteredFieldDestroyed(QObject*)));
+	//connect(local_reg_field.m_object, SIGNAL(destroyed(QObject*)), this, SLOT(onRegisteredFieldDestroyed(QObject*)));
 }
 
 void SettingsDialogBase::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)

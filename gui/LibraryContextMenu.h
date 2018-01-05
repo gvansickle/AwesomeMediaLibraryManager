@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,28 +17,26 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TIPS_H
-#define TIPS_H
+#ifndef LIBRARYCONTEXTMENU_H
+#define LIBRARYCONTEXTMENU_H
 
-/// @file Helpers for setting all the various *Tips() at once.
+#include <QObject>
+#include <QMenu>
+#include <QAction>
 
 class QString;
 
-template<typename T>
-void setTips(T* obj, const QString& toolTip, const QString& statusTip, const QString& whatsThis)
+
+class LibraryContextMenu : public QMenu
 {
-	obj->setToolTip(toolTip);
-	obj->setStatusTip(statusTip);
-	obj->setWhatsThis(whatsThis);
-}
+	Q_OBJECT
+	
+public:
+	explicit LibraryContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
 
-template <typename T>
-void setTextandTips(T* obj, const QString& text, const QString& toolTip, const QString& statusTip, const QString& whatsThis)
-{
-	obj->setText(text);
-	setTips(obj, toolTip, statusTip, whatsThis);
-}
+private:
+	Q_DISABLE_COPY(LibraryContextMenu)
+};
 
-
-#endif /* TIPS_H */
+#endif /* LIBRARYCONTEXTMENU_H */
 

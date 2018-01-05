@@ -205,12 +205,22 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 }
 
 
-void MDILibraryView::contextMenuEvent(QContextMenuEvent* event)
+void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, QModelIndex index)
 {
+	// Open context menu for the item.
+	qDebug() << "INDEX:" << index;
+	
 	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), this);
 	context_menu->exec(event->globalPos());
+}
 
-	return;
+void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
+{
+	// Open the blank area context menu.
+	qDebug() << "Viewport";
+
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), this);
+	context_menu->exec(event->globalPos());
 }
 
 void MDILibraryView::onContextMenu(QPoint pos)
