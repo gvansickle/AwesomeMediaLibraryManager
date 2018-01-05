@@ -237,7 +237,8 @@ private:
     /// @name Edit actions.
     /// @{
 public:
-	ActionBundle* m_ab_edit_actions;
+	ActionBundle* m_ab_cut_copy_paste_actions;
+	ActionBundle* m_ab_extended_edit_actions;
 private:
     QAction *m_act_cut;
     QAction *m_act_copy;

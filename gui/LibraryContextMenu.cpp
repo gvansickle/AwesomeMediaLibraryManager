@@ -50,7 +50,7 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 	addSeparator();
 
 	// Add cut/copy/paste to the context menu.
-	mw->m_ab_edit_actions->appendToMenu(this);
+	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
 
 
 	addSeparator();
