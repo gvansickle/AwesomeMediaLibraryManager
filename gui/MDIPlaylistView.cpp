@@ -93,13 +93,6 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 
     // Show the user where the item will be dropped.
 	setDropIndicatorShown(true);
-
-	// Hook up the context menu.
-	setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(this, &MDIPlaylistView::customContextMenuRequested, this, &MDIPlaylistView::onContextMenu);
-
-	// Call selectionChanged when the user changes the selection.
-	/// @todo selectionModel().selectionChanged.connect(selectionChanged)
 }
 
 MDIPlaylistView* MDIPlaylistView::openModel(QAbstractItemModel* model, QWidget* parent)
@@ -470,22 +463,7 @@ Q_ASSERT(new_playlist_entry != nullptr);
 	emit onDoubleClicked(proxy_index);
 }
 
-void MDIPlaylistView::onContextMenu(QPoint pos)
-{
-M_WARNING("@todo Implement a playlist context menu.");
 
-	// Position to put the menu.
-//	auto globalPos = mapToGlobal(pos);
-	// The QModelIndex() that was right-clicked.
-	auto modelindex = indexAt(pos);
-	qDebug() << QString("INDEX: %1 %2").arg(modelindex.row()).arg(modelindex.column());
-	if(!modelindex.isValid())
-	{
-		qDebug() << "Invalid model index, not showing context menu.";
-		return;
-	}
-	//menu = self.createContextMenu(modelindex)
-}
 
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
 {
@@ -496,6 +474,16 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 
 	// @todo or should this change the selected index?
 	setCurrentIndex(proxy_model_index);
+}
+
+void MDIPlaylistView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
+{
+M_WARNING("TODO");
+}
+
+void MDIPlaylistView::onContextMenuViewport(QContextMenuEvent* event)
+{
+M_WARNING("TODO");
 }
 
 void MDIPlaylistView::onDoubleClicked(const QModelIndex& index)

@@ -114,14 +114,14 @@ protected:
 protected slots:
     virtual void playlistPositionChanged(qint64 position);
 
+	void onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index) override;
+	void onContextMenuViewport(QContextMenuEvent* event) override;
+
     /// Invoked when user double-clicks on an entry.
     /// According to Qt5 docs, index will always be valid:
     /// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:
     /// "The [doubleClicked] signal is only emitted when the index is valid."
     void onDoubleClicked(const QModelIndex &index);
-
-private slots:
-    void onContextMenu(QPoint pos);
 
 private:
     Q_DISABLE_COPY(MDIPlaylistView)

@@ -61,9 +61,6 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	setAcceptDrops(false);
 	setDragDropMode(QAbstractItemView::DragOnly);
 	setDropIndicatorShown(true);
-
-	// Hook up the context menu.
-	setContextMenuPolicy(Qt::DefaultContextMenu);
 }
 
 /**
@@ -205,7 +202,7 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 }
 
 
-void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, QModelIndex index)
+void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
 {
 	// Open context menu for the item.
 	qDebug() << "INDEX:" << index;

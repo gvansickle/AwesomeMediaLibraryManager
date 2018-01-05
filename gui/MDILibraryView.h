@@ -89,7 +89,7 @@ protected:
 
 protected slots:
 
-	void onContextMenuIndex(QContextMenuEvent* event, QModelIndex index) override;
+	void onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
 	/// @obsolete

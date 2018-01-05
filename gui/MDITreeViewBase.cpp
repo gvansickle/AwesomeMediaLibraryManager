@@ -89,6 +89,9 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	// "start playing this entry" action.
 	setEditTriggers(QAbstractItemView::EditKeyPressed);
 
+	// We'll use the default context menu event mechanism.
+	setContextMenuPolicy(Qt::DefaultContextMenu);
+
 	// Hook things up for our tri-state column-sorting implementation.
 	connect(header(), &QHeaderView::sectionClicked, this, &MDITreeViewBase::onSectionClicked);
 
