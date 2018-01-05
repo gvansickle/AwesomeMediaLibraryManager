@@ -31,7 +31,7 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
-#include "LibraryContextMenu.h"
+#include "menus/LibraryContextMenu.h"
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {

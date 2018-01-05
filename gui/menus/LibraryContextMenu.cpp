@@ -23,8 +23,8 @@
 
 #include "utils/Theme.h"
 #include "utils/ActionHelpers.h"
-#include "helpers/Tips.h"
-#include "menus/ActionBundle.h"
+#include "gui/helpers/Tips.h"
+#include "ActionBundle.h"
 
 #include "gui/MainWindow.h"
 
@@ -51,7 +51,6 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 
 	// Add cut/copy/paste to the context menu.
 	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
-
 
 	addSeparator();
 	addAction("Search Wikipedia for...");
