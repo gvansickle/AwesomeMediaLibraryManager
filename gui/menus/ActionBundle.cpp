@@ -19,15 +19,42 @@
 
 #include "ActionBundle.h"
 
-ActionBundle::ActionBundle()
+#include <QMenu>
+#include <QToolBar>
+
+ActionBundle::ActionBundle(QObject *parent) : QActionGroup (parent)
 {
+	// Default to non-exclusive.
+	setExclusive(false);
 }
 
-ActionBundle::ActionBundle(const ActionBundle& orig)
+QAction* ActionBundle::addSection(const QString& text)
 {
+	auto sec = new QAction(text, this);
+	sec->setSeparator(true);
+	return sec;
 }
 
-ActionBundle::~ActionBundle()
+QAction* ActionBundle::addSection(const QIcon& icon, const QString& text)
 {
+	auto sec = new QAction(icon, text, this);
+	sec->setSeparator(true);
+	return sec;
+}
+
+void ActionBundle::appendToMenu(QMenu* menu)
+{
+	for(auto action : actions())
+	{
+		menu->addAction(action);
+	}
+}
+
+void ActionBundle::appendToToolBar(QToolBar* toolbar)
+{
+	for(auto action : actions())
+	{
+		toolbar->addAction(action);
+	}
 }
 

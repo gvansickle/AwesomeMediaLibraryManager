@@ -74,6 +74,8 @@
 #include "AboutBox.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
+#include <gui/menus/ActionBundle.h>
+
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
     // Name our GUI thread.
@@ -141,6 +143,22 @@ M_WARNING("TODO: ifdef this to development only")
 MainWindow::~MainWindow()
 {
 
+}
+
+MainWindow* MainWindow::getInstance()
+{
+	// Search the qApp for the main window.
+	for(auto widget : qApp->topLevelWidgets())
+	{
+		if(MainWindow* is_main_window = qobject_cast<MainWindow*>(widget))
+		{
+			// Found it.
+			return is_main_window;
+		}
+	}
+
+	Q_ASSERT_X(0, "getInstance", "Couldn't find a MainWindow instance");
+	return nullptr;
 }
 
 /**
@@ -361,23 +379,31 @@ void MainWindow::createActions()
 
 void MainWindow::createActionsEdit()
 {
-    m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
+	// The Edit action bundle.
+	m_ab_edit_actions = new ActionBundle(this);
+
+	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
+	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_edit_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
 	connect_trig(m_act_cut, this, &MainWindow::onCut);
 	
-    m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), this, QKeySequence::Copy,
+	m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), m_ab_edit_actions, QKeySequence::Copy,
                                                      tr("Copy the current selection to the clipboard"));
     connect_trig(m_act_copy, this, &MainWindow::onCopy);
 	
-    m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
+	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), m_ab_edit_actions, QKeySequence::Paste,
                                                       tr("Paste the clipboard's contents into the current selection"));
 	connect_trig(m_act_paste, this, &MainWindow::onPaste);
 
-    m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("&Delete"), this, QKeySequence::Delete,
+	m_ab_edit_actions->addSection(tr("Delete"));
+
+	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("&Delete"), m_ab_edit_actions, QKeySequence::Delete,
                                                        tr("Delete this entry"));
     connect_trig(m_act_delete, this, &MainWindow::onDelete);
 
-    m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
+	m_ab_edit_actions->addSection(tr("Selections"));
+
+	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), m_ab_edit_actions,
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
     connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
 }
@@ -406,15 +432,16 @@ void MainWindow::createMenus()
 
 	// Edit menu.
 	m_menu_edit = menuBar()->addMenu(tr("&Edit"));
-	m_menu_edit->addActions({
-								m_act_cut,
-								m_act_copy,
-								m_act_paste,
-								m_menu_edit->addSection(tr("Delete")),
-								m_act_delete,
-								m_menu_edit->addSection(tr("Selections")),
-								m_act_select_all
-							});
+//	m_menu_edit->addActions({
+//								m_act_cut,
+//								m_act_copy,
+//								m_act_paste,
+//								m_menu_edit->addSection(tr("Delete")),
+//								m_act_delete,
+//								m_menu_edit->addSection(tr("Selections")),
+//								m_act_select_all
+//							});
+	m_ab_edit_actions->appendToMenu(m_menu_edit);
 	m_menu_edit->setTearOffEnabled(true);
 
     // Create the View menu.
@@ -480,12 +507,14 @@ void MainWindow::createToolBars()
 	//
 	m_toolbar_edit = addToolBar(tr("Edit"));
 	m_toolbar_edit->setObjectName("EditToolbar");
-	m_toolbar_edit->addActions({
-		/// @todo m_act_undo, m_act_redo,
-		m_act_cut,
-		m_act_copy,
-		m_act_paste
-	});
+//	m_toolbar_edit->addActions({
+//		/// @todo m_act_undo, m_act_redo,
+//		m_act_cut,
+//		m_act_copy,
+//		m_act_paste
+//	});
+M_WARNING("TODO: Make this only the cut/copy/paste subset");
+	m_ab_edit_actions->appendToToolBar(m_toolbar_edit);
 									 
 	//
 	// Settings

@@ -311,6 +311,7 @@ set(HEADER_FILES
 	logic/proxymodels/ModelChangeWatcher.h
 	gui/helpers/Tips.h
 	gui/LibraryContextMenu.h
+	gui/menus/ActionBundle.h
     )
 
 # Source file list.
@@ -371,6 +372,7 @@ set(SOURCE_FILES
 	logic/proxymodels/ModelChangeWatcher.cpp
 	gui/helpers/Tips.cpp
 	gui/LibraryContextMenu.cpp
+	gui/menus/ActionBundle.cpp
     )
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files

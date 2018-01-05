@@ -20,13 +20,44 @@
 #ifndef ACTIONBUNDLE_H
 #define ACTIONBUNDLE_H
 
-class ActionBundle
+#include <QActionGroup>
+
+class QMenu;
+class QToolBar;
+class QString;
+class QIcon;
+
+class ActionBundle : public QActionGroup
 {
+	Q_OBJECT
+	
 public:
-	ActionBundle();
-	ActionBundle(const ActionBundle& orig);
-	virtual ~ActionBundle();
+	explicit ActionBundle(QObject *parent);
+	
+	/**
+	 * Adds a QAction separator with the given @a text to the bundle.
+	 * ActionBundle takes ownership of the created QAction.
+	 */
+	QAction* addSection(const QString &text);
+
+	/**
+	 * Adds a QAction separator with the given @a icon and @a text to the bundle.
+	 * ActionBundle takes ownership of the created QAction.
+	 */
+	QAction* addSection(const QIcon &icon, const QString &text);
+
+	/**
+	 * Does not transfer ownership of the QActions to @a menu.
+	 */
+	void appendToMenu(QMenu* menu);
+
+	/**
+	 * Does not transfer ownership of the QActions to @a toolbar.
+	 */
+	void appendToToolBar(QToolBar* toolbar);
+
 private:
+	Q_DISABLE_COPY(ActionBundle);
 
 };
 

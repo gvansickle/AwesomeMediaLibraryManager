@@ -24,13 +24,17 @@
 #include "utils/Theme.h"
 #include "utils/ActionHelpers.h"
 #include "helpers/Tips.h"
+#include "menus/ActionBundle.h"
 
+#include "gui/MainWindow.h"
 
 LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
 {
 	setTitle(title);
 
 	qDebug() << "Parent:" << parent;
+
+	auto mw = MainWindow::getInstance();
 
 	auto act_append_to_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Append to Now Playing"), this);
 	auto act_replace_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Replace Now Playing with this"), this);
@@ -44,9 +48,13 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 	addAction("Song properties...");
 
 	addSeparator();
-	addAction("Cut");
-	addAction("Copy");
-	addAction("Paste");
+
+	// Add cut/copy/paste to the context menu.
+	mw->m_ab_edit_actions->appendToMenu(this);
+
+//	addAction("Cut");
+//	addAction("Copy");
+//	addAction("Paste");
 	addSeparator();
 	addAction("Search Wikipedia for...");
 }

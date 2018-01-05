@@ -48,6 +48,7 @@ class MDIPlaylistView;
 class MetadataDockWidget;
 class CollectionDockWidget;
 class ActivityProgressWidget;
+class ActionBundle;
 
 class MainWindow: public QMainWindow
 {
@@ -60,6 +61,11 @@ signals:
 public:
     MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
     ~MainWindow() override;
+
+	/**
+	 * Get a pointer to the MainWindow singleton.
+	 */
+	static MainWindow* getInstance();
 
 public slots:
 
@@ -230,6 +236,9 @@ private:
 
     /// @name Edit actions.
     /// @{
+public:
+	ActionBundle* m_ab_edit_actions;
+private:
     QAction *m_act_cut;
     QAction *m_act_copy;
     QAction *m_act_paste;
