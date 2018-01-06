@@ -39,6 +39,7 @@ public:
 
 	void addNewEntries(std::vector<std::shared_ptr<LibraryEntry> > entries);
 	void removeEntry(int row);
+	void removeRows(int row, int count);
 	void insertEntry(int row, std::shared_ptr<LibraryEntry> entry);
 	void replaceEntry(int row, std::shared_ptr<LibraryEntry> entry);
 

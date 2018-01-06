@@ -457,8 +457,9 @@ void MDIPlaylistView::onDelete()
 
 		qDebug() << "REMOVING ROW RANGE:" << first_row.row() << "TO" << last_row.row();
 		model()->removeRows(start_row, num_rows, first_row.parent());
-
+		qDebug() << "REMOVED";
 	}
+	qDebug() << "ALL SELECTION RANGES REMOVED";
 #endif
 }
 
