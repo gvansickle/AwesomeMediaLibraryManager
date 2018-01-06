@@ -36,7 +36,7 @@
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
 #include "utils/ModelHelpers.h"
-
+#include "menus/PlaylistContextMenuViewport.h"
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -383,10 +383,10 @@ void MDIPlaylistView::previous()
 void MDIPlaylistView::onCut()
 {
 	qDebug() << "CUTTING";
-	
+
 	// Copy selection to clipboard.
 	onCopy();
-	
+
 	// Delete the selected items from this view.
 	onDelete();
 }
@@ -405,7 +405,7 @@ void MDIPlaylistView::onPaste()
 
 	QModelIndexList mil = selmodel->selectedRows();
 M_WARNING("TODO: Paste at current select position")
-	
+
 	QClipboard *clipboard = QGuiApplication::clipboard();
 	if(!clipboard)
 	{
@@ -483,7 +483,10 @@ M_WARNING("TODO");
 
 void MDIPlaylistView::onContextMenuViewport(QContextMenuEvent* event)
 {
-M_WARNING("TODO");
+	// Open the blank area (viewport) context menu.
+	// Note that there may be e.g. rows selected in the view, which may affect what menu items are/should be displayed/enabled.
+	auto context_menu = new PlaylistContextMenuViewport(tr("Playlist Context Menu"), this);
+	context_menu->exec(event->globalPos());
 }
 
 void MDIPlaylistView::onDoubleClicked(const QModelIndex& index)
@@ -537,7 +540,7 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 	{
 		qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
 		onDelete();
-                
+
 		// Don't call the parent class' keyPressEvent().
 		// We've done what we need to here, the Qt5 docs say not to do it,
 		// and it's possible to delete (or at least enable editing on)

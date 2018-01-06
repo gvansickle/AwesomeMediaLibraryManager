@@ -19,14 +19,21 @@
 
 #include "PlaylistContextMenuViewport.h"
 
-PlaylistContextMenuViewport::PlaylistContextMenuViewport()
+#include "ActionBundle.h"
+
+#include "gui/MainWindow.h"
+
+
+PlaylistContextMenuViewport::PlaylistContextMenuViewport(const QString &title, QWidget *parent) : QMenu(parent)
 {
-	// TODO Auto-generated constructor stub
+	setTitle(title);
+
+	auto mw = MainWindow::getInstance();
+
+	// Add cut/copy/paste to the context menu.
+	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
 
 }
 
-PlaylistContextMenuViewport::~PlaylistContextMenuViewport()
-{
-	// TODO Auto-generated destructor stub
-}
+
 

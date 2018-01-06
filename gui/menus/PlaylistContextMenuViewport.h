@@ -20,18 +20,22 @@
 #ifndef GUI_MENUS_PLAYLISTCONTEXTMENUVIEWPORT_H_
 #define GUI_MENUS_PLAYLISTCONTEXTMENUVIEWPORT_H_
 
-#include "ActionBundle.h"
-
+#include <QObject>
 #include <QMenu>
+#include <QAction>
 
 /*
  *
  */
 class PlaylistContextMenuViewport: public QMenu
 {
+	Q_OBJECT
+
 public:
-	PlaylistContextMenuViewport();
-	virtual ~PlaylistContextMenuViewport();
+	explicit PlaylistContextMenuViewport(const QString &title, QWidget *parent = Q_NULLPTR);
+
+private:
+	Q_DISABLE_COPY(PlaylistContextMenuViewport)
 };
 
 #endif /* GUI_MENUS_PLAYLISTCONTEXTMENUVIEWPORT_H_ */
