@@ -34,6 +34,7 @@
 
 #include "gui/NetworkAwareFileDialog.h"
 #include "utils/ConnectHelpers.h"
+#include "utils/DebugHelpers.h"
 #include "helpers/Tips.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
@@ -44,18 +45,18 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	m_act_window->setCheckable(true);
 	connect_trig(m_act_window, this, &MDITreeViewBase::show);
 	connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
-	
+
 	// ModelChangeWatcher for keeping "Select All" status updated.
 	m_select_all_model_watcher = new ModelChangeWatcher(this);
 	connect(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MDITreeViewBase::selectAllAvailable);
-	
+
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();
 
 	m_isUntitled = true;
 
 	setAttribute(Qt::WA_DeleteOnClose);
-        
+
 	// Enable sorting for this view.
 	setSortingEnabled(true);
 	// ...but start unsorted, and don't show the sort indicator.
@@ -87,7 +88,15 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	// Set which actions will cause the view to enter edit mode.
 	// We want double-click to not cause an entry to edit mode here, since that will be used for the
 	// "start playing this entry" action.
+M_WARNING("TODO: Actually, default should probably be no editing, and we'll want e.g. Enter to cause a Playlist item to play.");
 	setEditTriggers(QAbstractItemView::EditKeyPressed);
+
+	setAlternatingRowColors(true);
+
+	// Enable smooth scrolling by default.
+	/// @todo Should be a user-settable parameter.
+	/// @note per Qt5 docs: "default value comes from the style via the QStyle::SH_ItemView_ScrollMode style hint.".
+	setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
 
 	// We'll use the default context menu event mechanism.
 	setContextMenuPolicy(Qt::DefaultContextMenu);
@@ -243,13 +252,13 @@ void MDITreeViewBase::onCopy()
 {
     // Get the current selection.
     QModelIndexList mil = selectionModel()->selectedRows();
-    
+
     if(mil.isEmpty())
     {
         // Nothing to copy.
         return;
     }
-    
+
     auto m = model();
     QMimeData* copied_rows = m->mimeData(mil);
 

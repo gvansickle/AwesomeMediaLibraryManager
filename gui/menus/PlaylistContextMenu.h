@@ -36,7 +36,7 @@ public:
 	explicit PlaylistContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
 
 private:
-	Q_DISABLE_COPY(PlaylistContextMenu);
+	Q_DISABLE_COPY(PlaylistContextMenu)
 };
 
 #endif /* GUI_MENUS_PLAYLISTCONTEXTMENU_H_ */

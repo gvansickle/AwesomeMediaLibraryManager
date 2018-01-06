@@ -542,14 +542,15 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 	if(event->matches(QKeySequence::Delete))
 	{
 		qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
-		onDelete();
-
-		// Don't call the parent class' keyPressEvent().
-		// We've done what we need to here, the Qt5 docs say not to do it,
-		// and it's possible to delete (or at least enable editing on)
-		// another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
-		event->accept();
-		return;
+M_WARNING("TODO: It seems now that we don't need this anymore for some reason.");
+//		onDelete();
+//
+//		// Don't call the parent class' keyPressEvent().
+//		// We've done what we need to here, the Qt5 docs say not to do it,
+//		// and it's possible to delete (or at least enable editing on)
+//		// another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
+//		event->accept();
+//		return;
 	}
 	else if(event->matches(QKeySequence::Copy))
 	{
