@@ -26,6 +26,7 @@
 #include <QDebug>
 #include <QDataWidgetMapper>
 #include <QStandardItemModel>
+#include <QAbstractButton>
 
 #include <utils/Theme.h>
 
@@ -79,6 +80,8 @@ SettingsDialogBase::SettingsDialogBase(QWidget *parent, const Qt::WindowFlags &f
     // Connect up the buttons.
     // OK
     connect(&m_dialog_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	// Apply
+	connect(&m_dialog_button_box, &QDialogButtonBox::clicked, this, &SettingsDialogBase::onClicked);
     // Cancel, Esc
     connect(&m_dialog_button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
     // Help
@@ -187,5 +190,16 @@ void SettingsDialogBase::accept()
 
 
 
-    QDialog::accept();
+	QDialog::accept();
+}
+
+void SettingsDialogBase::onClicked(QAbstractButton* button)
+{
+	// See which button it was.
+	auto role = m_dialog_button_box.buttonRole(button);
+	if(role == QDialogButtonBox::ApplyRole)
+	{
+		// Tell the current page to apply any changes.
+		qobject_cast<SettingsDialogPageBase*>(m_page_stack_widget.currentWidget())->onApply();
+	}
 }

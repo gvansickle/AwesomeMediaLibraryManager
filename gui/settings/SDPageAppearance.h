@@ -36,6 +36,8 @@ public:
 
 	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
 
+	void onApply() override;
+
 private:
     QFontComboBox* m_track_font_selector;
 };

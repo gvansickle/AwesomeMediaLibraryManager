@@ -54,6 +54,8 @@ public slots:
 
     void accept() override;
 
+	void onClicked(QAbstractButton *button);
+
 private:
 
     // SettingsPages are friended to make the field() mechanism easier.

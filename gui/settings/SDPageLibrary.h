@@ -36,6 +36,8 @@ public:
 
 	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
 
+	void onApply() override;
+
 private:
 	Q_DISABLE_COPY(SDPageLibrary)
 	

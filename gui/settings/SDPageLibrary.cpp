@@ -46,17 +46,26 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 {
 	// The library info/stats group box.
 	QGroupBox *lib_info = new QGroupBox(tr("Library Info"));
-	
+
 	/// The stats.
 	// Number of songs.
 	m_lib_num_songs_label = make_qlabel("12345", this);
     // Total size on disk.
 	auto lib_size_on_disk = make_qlabel("55756 GB", this);
 
+	///@todo EXPERIMENTAL
+	auto check1 = new QCheckBox("Test 1", this);
+	auto check2 = new QCheckBox("Test 2", this);
+
 	// FormLayout for the stats.
 	QFormLayout *lib_stats_form = new QFormLayout;
 	lib_stats_form->addRow(tr("Total number of songs:"), m_lib_num_songs_label);
     lib_stats_form->addRow(tr("Total size on disk:"), lib_size_on_disk);
+
+    ////
+    lib_stats_form->addRow(tr("Check1"),check1);
+    lib_stats_form->addRow(tr("Check2"),check2);
+    ////
 
 	QTreeWidget* treeWidget = new QTreeWidget;
 	treeWidget->setColumnCount(1);
@@ -84,10 +93,28 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 	//mainLayout->addStretch(1);
 	setLayout(mainLayout);
 
+///M_WARNING("EXPERIMENTAL");
+
+	auto si1 = new QStandardItem("true");
+	auto si2 = new QStandardItem("false");
+	m_model = new QStandardItemModel;
+	m_model->appendRow({si1, si2});
+	m_mapper = new QDataWidgetMapper;
+	m_mapper->setModel(m_model);
+	m_mapper->addMapping(check1, 0);
+	m_mapper->addMapping(check2, 1);
+	m_mapper->toFirst();
+
     registerField("m_lib_num_songs_label", m_lib_num_songs_label);
 }
 
 void SDPageLibrary::addContentsEntry(SettingsDialogSideWidget *contents_widget)
 {
 	contents_widget->addPageEntry("Library", Theme::iconFromTheme("applications-multimedia"));
+}
+
+void SDPageLibrary::onApply()
+{
+	qDebug() << "APPLIED SETTINGS:" << m_model->data(m_model->index(0, 0, QModelIndex()))
+				<< m_model->data(m_model->index(0, 1, QModelIndex()));;
 }

@@ -40,6 +40,8 @@ public:
 	/// @todo Friend to SettingsDialogBase.
 	virtual void addContentsEntry(SettingsDialogSideWidget* contents_widget) = 0;
 
+	virtual void onApply() = 0;
+
 protected:
 
     /**
