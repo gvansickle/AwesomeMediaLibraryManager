@@ -59,8 +59,10 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 
 M_WARNING("EXPERIMENTAL");
 	auto f = QFont();
-	qDebug() << "Original Font size:" << f.pointSize();
+	qDebug() << "Original Font size:" << f.pointSize() << "Font:" << f;
 	f.setPointSize(10);
+//	f = QApplication::font("QTreeView"); /// @note: This comes back as 12 pt., and is what the view uses by default.
+	qDebug() << "New Font size:" << f.pointSize() << "Font:" << f;
 	setFont(f);
 
 	// Enable sorting for this view.
