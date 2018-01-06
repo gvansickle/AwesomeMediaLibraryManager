@@ -311,6 +311,7 @@ set(HEADER_FILES
 	logic/proxymodels/ModelChangeWatcher.h
 	gui/helpers/Tips.h
 	gui/menus/LibraryContextMenu.h
+	gui/menus/PlaylistContextMenuViewport.h
 	gui/menus/ActionBundle.h
     )
 
@@ -372,6 +373,7 @@ set(SOURCE_FILES
 	logic/proxymodels/ModelChangeWatcher.cpp
 	gui/helpers/Tips.cpp
 	gui/menus/LibraryContextMenu.cpp
+	gui/menus/PlaylistContextMenuViewport.cpp
 	gui/menus/ActionBundle.cpp
     )
 
