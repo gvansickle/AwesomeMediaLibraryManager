@@ -495,29 +495,43 @@ void MDIPlaylistView::onContextMenuViewport(QContextMenuEvent* event)
 void MDIPlaylistView::onDoubleClicked(const QModelIndex& index)
 {
 	// Should always be valid.
+	qDebug() << "Double-clicked index:" << index;
 	Q_ASSERT(index.isValid());
 
-M_WARNING("TODO: Fix assumptions");
+M_WARNING("TODO: Fix assumption");
 	if(true) // we're the playlist connected to the player.
 	{
-		// Tell the player to start playing the song at index.
-		qDebug() << "Double-clicked index:" << index;
-		auto underlying_model_index = to_underlying_qmodelindex(index);
-
-		Q_ASSERT(underlying_model_index.isValid());
-
-		qDebug() << "Underlying index:" << underlying_model_index;
-
-		// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
-		// start the song.
-		/// @note See "jump()" etc in the Qt5 MediaPlyer example.
-
-		m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
-
-		// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
-		// make sure it starts.
-		emit play();
+		startPlaying(index);
 	}
+}
+
+void MDIPlaylistView::onActivated(const QModelIndex& index)
+{
+	M_WARNING("TODO: Fix assumption");
+	if(true) // we're the playlist connected to the player.
+	{
+		startPlaying(index);
+	}
+}
+
+void MDIPlaylistView::startPlaying(const QModelIndex& index)
+{
+	// Tell the player to start playing the song at index.
+	auto underlying_model_index = to_underlying_qmodelindex(index);
+
+	Q_ASSERT(underlying_model_index.isValid());
+
+	qDebug() << "Underlying index:" << underlying_model_index;
+
+	// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
+	// start the song.
+	/// @note See "jump()" etc in the Qt5 MediaPlyer example.
+
+	m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
+
+	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
+	// make sure it starts.
+	emit play();
 }
 
 QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_index)
@@ -543,14 +557,16 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 	{
 		qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
 M_WARNING("TODO: It seems now that we don't need this anymore for some reason.");
-//		onDelete();
-//
-//		// Don't call the parent class' keyPressEvent().
-//		// We've done what we need to here, the Qt5 docs say not to do it,
-//		// and it's possible to delete (or at least enable editing on)
-//		// another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
-//		event->accept();
-//		return;
+#if 0
+		onDelete();
+
+		// Don't call the parent class' keyPressEvent().
+		// We've done what we need to here, the Qt5 docs say not to do it,
+		// and it's possible to delete (or at least enable editing on)
+		// another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
+		event->accept();
+		return;
+#endif
 	}
 	else if(event->matches(QKeySequence::Copy))
 	{

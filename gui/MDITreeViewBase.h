@@ -169,6 +169,12 @@ protected slots:
 	 */
 	virtual void onContextMenuViewport(QContextMenuEvent* event) { Q_UNUSED(event); }
 
+	/**
+	 * Slot called when the user activates (hits Enter) on an item.
+	 * @param index
+	 */
+	virtual void onActivated(const QModelIndex& index);
+
 protected:
 
     /**

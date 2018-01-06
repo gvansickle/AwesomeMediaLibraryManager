@@ -108,7 +108,13 @@ protected:
     /// Helper function to convert from underlying model indexes to proxy QModelIndexes.
     QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
 
-    /// keyPressEvent override for handling delete key.
+	/**
+	 * keyPressEvent() override.  Not sure we need this anymore.  Qt5 docs:
+	 * "This function is called with the given event when a key event is sent to the widget. The default implementation
+	 * handles basic cursor movement, e.g. Up, Down, Left, Right, Home, PageUp, and PageDown; the activated() signal
+	 * is emitted if the current index is valid and the activation key is pressed (e.g. Enter or Return, depending on the platform).
+	 * This function is where editing is initiated by key press, e.g. if F2 is pressed."
+	 */
     void keyPressEvent(QKeyEvent *event) override;
 
 protected slots:
@@ -123,8 +129,20 @@ protected slots:
     /// "The [doubleClicked] signal is only emitted when the index is valid."
     void onDoubleClicked(const QModelIndex &index);
 
+	/**
+	 * Slot called when the user activates (hits Enter) on an item.
+	 * @param index
+	 */
+	void onActivated(const QModelIndex& index) override;
+
 private:
     Q_DISABLE_COPY(MDIPlaylistView)
+
+	/**
+	 * Tell the player component to start playing the song at @a index.
+	 * @param index
+	 */
+	void startPlaying(const QModelIndex& index);
 
     PlaylistModel* m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
