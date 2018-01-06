@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,30 +17,25 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
-#define AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
-
-
-#include "SettingsDialogPageBase.h"
+#ifndef GUI_MENUS_PLAYLISTCONTEXTMENUVIEWPORT_H_
+#define GUI_MENUS_PLAYLISTCONTEXTMENUVIEWPORT_H_
 
 #include <QObject>
+#include <QMenu>
+#include <QAction>
 
-class QFontComboBox;
-
-class SDPageAppearance : public SettingsDialogPageBase
+/*
+ *
+ */
+class PlaylistContextMenuViewport: public QMenu
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-	SDPageAppearance(SettingsDialogBase *settings_dialog_parent, QWidget *parent);
-
-	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
-
-	void onApply() override;
+	explicit PlaylistContextMenuViewport(const QString &title, QWidget *parent = Q_NULLPTR);
 
 private:
-    QFontComboBox* m_track_font_selector;
+	Q_DISABLE_COPY(PlaylistContextMenuViewport)
 };
 
-
-#endif //AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
+#endif /* GUI_MENUS_PLAYLISTCONTEXTMENUVIEWPORT_H_ */

@@ -80,10 +80,16 @@ int main(int argc, char *argv[])
 	RegisterQtMetatypes();
 
     // Load the icon resources.
-    QResource::registerResource("icons_oxygen.rcc");
-    QResource::registerResource("icons_Tango.rcc");
-    QResource::registerResource("icons_App.rcc");
-
+	bool opened = false;
+	auto rccs = {"icons_oxygen.rcc", "icons_Tango.rcc", "icons_App.rcc"};
+	for(auto fname : rccs)
+	{
+		bool opened = QResource::registerResource(fname);
+		if(!opened)
+		{
+			qCritical() << "FAILED TO OPEN RCC:" << fname;
+		}
+	}
 
 	// Set the application Icon.
 	///@todo Get an actual icon.

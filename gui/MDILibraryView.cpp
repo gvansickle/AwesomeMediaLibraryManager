@@ -31,6 +31,7 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
+#include "menus/LibraryContextMenu.h"
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -60,10 +61,6 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	setAcceptDrops(false);
 	setDragDropMode(QAbstractItemView::DragOnly);
 	setDropIndicatorShown(true);
-
-	// Hook up the context menu.
-	setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(this, &MDILibraryView::customContextMenuRequested, this, &MDILibraryView::onContextMenu);
 }
 
 /**
@@ -175,6 +172,7 @@ QModelIndex MDILibraryView::from_underlying_qmodelindex(const QModelIndex &under
 	return proxy_model_index;
 }
 
+
 void MDILibraryView::addSendToMenuActions(QMenu* menu)
 {
 	auto playlistviews = getAllMdiPlaylistViews();
@@ -201,6 +199,25 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 {
 	auto retval = qobject_cast<LibrarySortFilterProxyModel*>(model());
 	return retval;
+}
+
+
+void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
+{
+	// Open context menu for the item.
+	qDebug() << "INDEX:" << index;
+	
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), this);
+	context_menu->exec(event->globalPos());
+}
+
+void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
+{
+	// Open the blank area context menu.
+	qDebug() << "Viewport";
+
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), this);
+	context_menu->exec(event->globalPos());
 }
 
 void MDILibraryView::onContextMenu(QPoint pos)

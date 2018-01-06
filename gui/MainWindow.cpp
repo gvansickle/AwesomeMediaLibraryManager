@@ -74,6 +74,8 @@
 #include "AboutBox.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
+#include <gui/menus/ActionBundle.h>
+
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
     // Name our GUI thread.
@@ -98,6 +100,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(par
     // Follow the system style for the Icon&/|Text setting for toolbar buttons.
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
+	/// Set "document mode" for the tab bar of tabbed dock widgets.
+	setDocumentMode(true);
+	setAnimated(true);
+	setDockNestingEnabled(true);
+
 M_WARNING("TODO: ifdef this to development only")
     m_experimental = new Experimental(this);
 
@@ -121,7 +128,7 @@ M_WARNING("TODO: ifdef this to development only")
     createMenus();
     createToolBars();
     createStatusBar();
-    createDockWindows();
+	createDockWidgets();
     updateActionEnableStates();
 
     ////// Connect up signals and slots.
@@ -143,6 +150,22 @@ MainWindow::~MainWindow()
 
 }
 
+MainWindow* MainWindow::getInstance()
+{
+	// Search the qApp for the main window.
+	for(auto widget : qApp->topLevelWidgets())
+	{
+		if(MainWindow* is_main_window = qobject_cast<MainWindow*>(widget))
+		{
+			// Found it.
+			return is_main_window;
+		}
+	}
+
+	Q_ASSERT_X(0, "getInstance", "Couldn't find a MainWindow instance");
+	return nullptr;
+}
+
 /**
  * Called primarily when we get a subWindowActivated signal from the MDIArea.
  */
@@ -152,11 +175,11 @@ void MainWindow::updateActionEnableStates()
 	auto childIsBaseClass = qobject_cast<MDITreeViewBase*>(activeChildMDIView());
 	auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeChildMDIView());
 	auto childIsLibrary = qobject_cast<MDILibraryView*>(activeChildMDIView());
-	
+
 	/// Update file actions.
 	m_saveLibraryAsAct->setEnabled(childIsLibrary);
 	m_savePlaylistAct->setEnabled(childIsPlaylist);
-	
+
 	// Update the Window menu actions.
 	m_act_window_list_separator->setVisible(childIsBaseClass);
 	if(childIsBaseClass)
@@ -164,7 +187,7 @@ void MainWindow::updateActionEnableStates()
 		// Set the check next to this window's menu entry.
 		childIsBaseClass->windowMenuAction()->setChecked(true);
 	}
-	
+
 	updateActionEnableStates_Edit();
 }
 
@@ -202,7 +225,7 @@ void MainWindow::updateActionEnableStates_Edit()
 					clipboard_has_contents = true;
 				}
 			}
-			
+
 
 			// Can copy from any derived class if it has a selection.
 			m_act_copy->setEnabled(has_selection);
@@ -272,6 +295,11 @@ void MainWindow::createActions()
 	//
 	createActionsEdit();
 
+	//
+	// View actions.
+	//
+	createActionsView();
+
     //
 	// Tools actions.
     //
@@ -309,7 +337,7 @@ void MainWindow::createActions()
                             QKeySequence::PreviousChild);
 	connect_trig(m_windowPrevAct, this->m_mdi_area, &QMdiArea::activatePreviousSubWindow);
 
-	
+
 	m_windowCascadeAct = make_action(QIcon::fromTheme("window-cascade"), "Cascade", this);
 	connect_trig(m_windowCascadeAct, this->m_mdi_area, &QMdiArea::cascadeSubWindows);
 
@@ -329,9 +357,9 @@ void MainWindow::createActions()
 	m_act_window_list_separator = new QAction(this);
 	m_act_window_list_separator->setText(tr("Window List"));
 	m_act_window_list_separator->setSeparator(true);
-	
+
 	m_act_group_window = new QActionGroup(this);
-	
+
 	//
     // Help actions.
 	//
@@ -361,25 +389,47 @@ void MainWindow::createActions()
 
 void MainWindow::createActionsEdit()
 {
-    m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), this, QKeySequence::Cut,
+	// The cut/copy/paste action "sub-bundle".
+	m_ab_cut_copy_paste_actions = new ActionBundle(this);
+
+	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
+	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
 	connect_trig(m_act_cut, this, &MainWindow::onCut);
-	
-    m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), this, QKeySequence::Copy,
+
+	m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), m_ab_cut_copy_paste_actions, QKeySequence::Copy,
                                                      tr("Copy the current selection to the clipboard"));
     connect_trig(m_act_copy, this, &MainWindow::onCopy);
-	
-    m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), this, QKeySequence::Paste,
+
+	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), m_ab_cut_copy_paste_actions, QKeySequence::Paste,
                                                       tr("Paste the clipboard's contents into the current selection"));
 	connect_trig(m_act_paste, this, &MainWindow::onPaste);
 
-    m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("&Delete"), this, QKeySequence::Delete,
+	// The action bundle containing the other edit actions.
+	m_ab_extended_edit_actions = new ActionBundle(this);
+
+	m_ab_extended_edit_actions->addSection(tr("Delete"));
+
+	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("&Delete"), m_ab_extended_edit_actions, QKeySequence::Delete,
                                                        tr("Delete this entry"));
     connect_trig(m_act_delete, this, &MainWindow::onDelete);
 
-    m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), this,
+	m_ab_extended_edit_actions->addSection(tr("Selections"));
+
+	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), m_ab_extended_edit_actions,
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
-    connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
+	connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
+}
+
+void MainWindow::createActionsView()
+{
+	m_ab_docks = new ActionBundle(this);
+
+	m_act_lock_layout = make_action(Theme::iconFromTheme(""), tr("Lock layout"), this);
+	m_act_reset_layout = make_action(Theme::iconFromTheme(""), tr("Reset layout"), this);
+M_WARNING("TODO: These appear to be unreparentable, so we can't give them to an ActionBundle.");
+//	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
+//	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
 }
 
 void MainWindow::createMenus()
@@ -406,19 +456,19 @@ void MainWindow::createMenus()
 
 	// Edit menu.
 	m_menu_edit = menuBar()->addMenu(tr("&Edit"));
-	m_menu_edit->addActions({
-								m_act_cut,
-								m_act_copy,
-								m_act_paste,
-								m_menu_edit->addSection(tr("Delete")),
-								m_act_delete,
-								m_menu_edit->addSection(tr("Selections")),
-								m_act_select_all
-							});
+	// Cut/copy/paste
+	m_ab_cut_copy_paste_actions->appendToMenu(m_menu_edit);
+	// Delete/Select all.
+	m_ab_extended_edit_actions->appendToMenu(m_menu_edit);
 	m_menu_edit->setTearOffEnabled(true);
 
     // Create the View menu.
-	m_viewMenu = menuBar()->addMenu("&View");
+	m_viewMenu = menuBar()->addMenu(tr("&View"));
+	m_ab_docks->appendToMenu(m_viewMenu);
+	m_viewMenu->addActions({
+							   m_act_lock_layout,
+							   m_act_reset_layout
+						   });
 
     // Tools menu.
 	m_toolsMenu = menuBar()->addMenu("&Tools");
@@ -474,19 +524,15 @@ void MainWindow::createToolBars()
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
 							 m_savePlaylistAct});
-							 
+
 	//
 	// Edit
 	//
 	m_toolbar_edit = addToolBar(tr("Edit"));
 	m_toolbar_edit->setObjectName("EditToolbar");
-	m_toolbar_edit->addActions({
-		/// @todo m_act_undo, m_act_redo,
-		m_act_cut,
-		m_act_copy,
-		m_act_paste
-	});
-									 
+	// Only add the cut/copy/paste subset of actions to the toolbar.
+	m_ab_cut_copy_paste_actions->appendToToolBar(m_toolbar_edit);
+
 	//
 	// Settings
 	//
@@ -533,7 +579,7 @@ void MainWindow::createStatusBar()
 	statusBar()->showMessage("Ready");
 }
 
-void MainWindow::createDockWindows()
+void MainWindow::createDockWidgets()
 {
     // Create the Library/Playlist dock widget.
 	m_libraryDockWidget = new CollectionDockWidget("Media Sources", this);
@@ -652,8 +698,8 @@ void MainWindow::updateConnections()
 
 		// Connect the Metadata dock widget to the active child window's selectionModel().
 		connectActiveMDITreeViewBaseAndMetadataDock(childIsMDITreeViewBase, m_metadataDockWidget);
-		
-        
+
+
         if(childIsLibrary)
         {
 			auto connection_handle = connect(childIsLibrary,
@@ -951,12 +997,12 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 
 		// No view open, create a new one.
 		auto child = MDILibraryView::openModel(libmodel);
-		
+
 		if(child)
 		{
 			addChildMDIView(child);
 		}
-		
+
 		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
 	}
@@ -1097,20 +1143,20 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::selectAllAvailable, m_act_select_all, &QAction::setEnabled);
-	
+
 	/// @todo Same thing with undo/redo.
 	// child.undoAvailable.connect(editUndoAct.setEnabled)
 	// child.redoAvailable.connect(redoAct.setEnabled)
-	
+
 	// Add the child subwindow to the MDI area.
 	auto mdisubwindow = m_mdi_area->addSubWindow(child);
-	
+
 	// Add actions to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
-	
+
 	// Show the child window we just added.
-	mdisubwindow->show();	
+	mdisubwindow->show();
 }
 
 MDILibraryView* MainWindow::createMdiChildLibraryView()
@@ -1121,7 +1167,7 @@ MDILibraryView* MainWindow::createMdiChildLibraryView()
 	auto child = new MDILibraryView(this);
 
 	connectLibraryViewAndMainWindow(child);
-	
+
 	addChildMDIView(child);
 
 	return child;
@@ -1156,7 +1202,7 @@ MDINowPlayingView* MainWindow::createMdiNowPlayingView()
 //	MDINowPlayingView* child = new MDINowPlayingView(this);
 //	child->setModel(new_playlist_model);
 	auto child = MDINowPlayingView::openModel(m_now_playing_playlist_model, this);
-	
+
 	addChildMDIView(child);
 
 	// Add the new playlist to the collection doc widget.
@@ -1190,7 +1236,7 @@ void MainWindow::onCut()
 void MainWindow::onCopy()
 {
 	auto active_child = qobject_cast<MDITreeViewBase*>(activeChildMDIView());
-	if(active_child)	
+	if(active_child)
 	{
 		active_child->onCopy();
 	}

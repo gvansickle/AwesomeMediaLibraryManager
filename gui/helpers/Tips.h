@@ -22,12 +22,21 @@
 
 /// @file Helpers for setting all the various *Tips() at once.
 
+class QString;
+
 template<typename T>
 void setTips(T* obj, const QString& toolTip, const QString& statusTip, const QString& whatsThis)
 {
 	obj->setToolTip(toolTip);
 	obj->setStatusTip(statusTip);
 	obj->setWhatsThis(whatsThis);
+}
+
+template <typename T>
+void setTextandTips(T* obj, const QString& text, const QString& toolTip, const QString& statusTip, const QString& whatsThis)
+{
+	obj->setText(text);
+	setTips(obj, toolTip, statusTip, whatsThis);
 }
 
 

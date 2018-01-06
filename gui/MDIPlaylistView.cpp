@@ -36,7 +36,8 @@
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
 #include "utils/ModelHelpers.h"
-
+#include "menus/PlaylistContextMenuViewport.h"
+#include "menus/PlaylistContextMenu.h"
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -93,13 +94,6 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 
     // Show the user where the item will be dropped.
 	setDropIndicatorShown(true);
-
-	// Hook up the context menu.
-	setContextMenuPolicy(Qt::CustomContextMenu);
-	connect(this, &MDIPlaylistView::customContextMenuRequested, this, &MDIPlaylistView::onContextMenu);
-
-	// Call selectionChanged when the user changes the selection.
-	/// @todo selectionModel().selectionChanged.connect(selectionChanged)
 }
 
 MDIPlaylistView* MDIPlaylistView::openModel(QAbstractItemModel* model, QWidget* parent)
@@ -390,10 +384,10 @@ void MDIPlaylistView::previous()
 void MDIPlaylistView::onCut()
 {
 	qDebug() << "CUTTING";
-	
+
 	// Copy selection to clipboard.
 	onCopy();
-	
+
 	// Delete the selected items from this view.
 	onDelete();
 }
@@ -412,7 +406,7 @@ void MDIPlaylistView::onPaste()
 
 	QModelIndexList mil = selmodel->selectedRows();
 M_WARNING("TODO: Paste at current select position")
-	
+
 	QClipboard *clipboard = QGuiApplication::clipboard();
 	if(!clipboard)
 	{
@@ -470,22 +464,7 @@ Q_ASSERT(new_playlist_entry != nullptr);
 	emit onDoubleClicked(proxy_index);
 }
 
-void MDIPlaylistView::onContextMenu(QPoint pos)
-{
-M_WARNING("@todo Implement a playlist context menu.");
 
-	// Position to put the menu.
-//	auto globalPos = mapToGlobal(pos);
-	// The QModelIndex() that was right-clicked.
-	auto modelindex = indexAt(pos);
-	qDebug() << QString("INDEX: %1 %2").arg(modelindex.row()).arg(modelindex.column());
-	if(!modelindex.isValid())
-	{
-		qDebug() << "Invalid model index, not showing context menu.";
-		return;
-	}
-	//menu = self.createContextMenu(modelindex)
-}
 
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
 {
@@ -498,32 +477,61 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	setCurrentIndex(proxy_model_index);
 }
 
+void MDIPlaylistView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
+{
+	// Open a context menu on the clicked-on row.
+	auto context_menu = new PlaylistContextMenu(tr("Playlist Context Menu"), this);
+	context_menu->exec(event->globalPos());
+}
+
+void MDIPlaylistView::onContextMenuViewport(QContextMenuEvent* event)
+{
+	// Open the blank area (viewport) context menu.
+	// Note that there may be e.g. rows selected in the view, which may affect what menu items are/should be displayed/enabled.
+	auto context_menu = new PlaylistContextMenuViewport(tr("Playlist Context Menu - Viewport"), this);
+	context_menu->exec(event->globalPos());
+}
+
 void MDIPlaylistView::onDoubleClicked(const QModelIndex& index)
 {
 	// Should always be valid.
+	qDebug() << "Double-clicked index:" << index;
 	Q_ASSERT(index.isValid());
 
-M_WARNING("TODO: Fix assumptions");
+M_WARNING("TODO: Fix assumption");
 	if(true) // we're the playlist connected to the player.
 	{
-		// Tell the player to start playing the song at index.
-		qDebug() << "Double-clicked index:" << index;
-		auto underlying_model_index = to_underlying_qmodelindex(index);
-
-		Q_ASSERT(underlying_model_index.isValid());
-
-		qDebug() << "Underlying index:" << underlying_model_index;
-
-		// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
-		// start the song.
-		/// @note See "jump()" etc in the Qt5 MediaPlyer example.
-
-		m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
-
-		// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
-		// make sure it starts.
-		emit play();
+		startPlaying(index);
 	}
+}
+
+void MDIPlaylistView::onActivated(const QModelIndex& index)
+{
+	M_WARNING("TODO: Fix assumption");
+	if(true) // we're the playlist connected to the player.
+	{
+		startPlaying(index);
+	}
+}
+
+void MDIPlaylistView::startPlaying(const QModelIndex& index)
+{
+	// Tell the player to start playing the song at index.
+	auto underlying_model_index = to_underlying_qmodelindex(index);
+
+	Q_ASSERT(underlying_model_index.isValid());
+
+	qDebug() << "Underlying index:" << underlying_model_index;
+
+	// Since m_underlying_model->qmplaylist() is connected to the player, we should only have to setCurrentIndex() to
+	// start the song.
+	/// @note See "jump()" etc in the Qt5 MediaPlyer example.
+
+	m_underlying_model->qmplaylist()->setCurrentIndex(underlying_model_index.row());
+
+	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
+	// make sure it starts.
+	emit play();
 }
 
 QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_index)
@@ -548,14 +556,17 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 	if(event->matches(QKeySequence::Delete))
 	{
 		qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
+M_WARNING("TODO: It seems now that we don't need this anymore for some reason.");
+#if 0
 		onDelete();
-                
+
 		// Don't call the parent class' keyPressEvent().
 		// We've done what we need to here, the Qt5 docs say not to do it,
 		// and it's possible to delete (or at least enable editing on)
 		// another unintended row if the tree's edit trigger is set up to AnyKeyPressed.
 		event->accept();
 		return;
+#endif
 	}
 	else if(event->matches(QKeySequence::Copy))
 	{

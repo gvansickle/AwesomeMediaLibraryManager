@@ -24,18 +24,27 @@
 #include "SettingsDialogPageBase.h"
 
 class QLabel;
+class QStandardItemModel;
+class QDataWidgetMapper;
 
 class SDPageLibrary : public SettingsDialogPageBase
 {
     Q_OBJECT
 
 public:
-	SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *parent);
+	explicit SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *parent);
 
 	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
 
+	void onApply() override;
+
 private:
+	Q_DISABLE_COPY(SDPageLibrary)
+	
 	QLabel *m_lib_num_songs_label;
+	
+	QStandardItemModel *m_model;
+    QDataWidgetMapper *m_mapper;
 };
 
 

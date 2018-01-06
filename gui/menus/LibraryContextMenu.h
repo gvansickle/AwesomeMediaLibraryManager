@@ -17,30 +17,26 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
-#define AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
-
-
-#include "SettingsDialogPageBase.h"
+#ifndef LIBRARYCONTEXTMENU_H
+#define LIBRARYCONTEXTMENU_H
 
 #include <QObject>
+#include <QMenu>
+#include <QAction>
 
-class QFontComboBox;
+class QString;
 
-class SDPageAppearance : public SettingsDialogPageBase
+
+class LibraryContextMenu : public QMenu
 {
-    Q_OBJECT
-
+	Q_OBJECT
+	
 public:
-	SDPageAppearance(SettingsDialogBase *settings_dialog_parent, QWidget *parent);
-
-	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
-
-	void onApply() override;
+	explicit LibraryContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
 
 private:
-    QFontComboBox* m_track_font_selector;
+	Q_DISABLE_COPY(LibraryContextMenu)
 };
 
+#endif /* LIBRARYCONTEXTMENU_H */
 
-#endif //AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H

@@ -107,5 +107,10 @@ void SDPageAppearance::addContentsEntry(SettingsDialogSideWidget *contents_widge
 	contents_widget->addPageEntry("Appearance", Theme::iconFromTheme("preferences-desktop-color"),
 	                                     "Appearance settings",
 	                                     "View/Change appearance-related settings",
-	                                     "This selection will allow you to view and/or change the appearance-related settings");
+								  "This selection will allow you to view and/or change the appearance-related settings");
+}
+
+void SDPageAppearance::onApply()
+{
+
 }

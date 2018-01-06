@@ -44,7 +44,7 @@ signals:
     void playTrackNowSignal(QUrl);
         
 public:
-	MDILibraryView(QWidget *parent = Q_NULLPTR);
+	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
         
 	/**
 	* static member function which opens an MDILibraryView on the given model.
@@ -89,6 +89,10 @@ protected:
 
 protected slots:
 
+	void onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index) override;
+	void onContextMenuViewport(QContextMenuEvent* event) override;
+
+	/// @obsolete
 	virtual void onContextMenu(QPoint pos);
 
 	/// Invoked when user double-clicks on an entry.

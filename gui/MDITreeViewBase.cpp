@@ -34,6 +34,7 @@
 
 #include "gui/NetworkAwareFileDialog.h"
 #include "utils/ConnectHelpers.h"
+#include "utils/DebugHelpers.h"
 #include "helpers/Tips.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
@@ -44,18 +45,24 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	m_act_window->setCheckable(true);
 	connect_trig(m_act_window, this, &MDITreeViewBase::show);
 	connect(m_act_window, SIGNAL(triggered()), this, SLOT(setFocus()));
-	
+
 	// ModelChangeWatcher for keeping "Select All" status updated.
 	m_select_all_model_watcher = new ModelChangeWatcher(this);
 	connect(m_select_all_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MDITreeViewBase::selectAllAvailable);
-	
+
 	// Full Url to the file backing this view.
 	m_current_url = QUrl();
 
 	m_isUntitled = true;
 
 	setAttribute(Qt::WA_DeleteOnClose);
-        
+
+M_WARNING("EXPERIMENTAL");
+	auto f = QFont();
+	qDebug() << "Original Font size:" << f.pointSize();
+	f.setPointSize(10);
+	setFont(f);
+
 	// Enable sorting for this view.
 	setSortingEnabled(true);
 	// ...but start unsorted, and don't show the sort indicator.
@@ -87,7 +94,25 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	// Set which actions will cause the view to enter edit mode.
 	// We want double-click to not cause an entry to edit mode here, since that will be used for the
 	// "start playing this entry" action.
+	// "EditKeyPressed" appears to mean F2.
+	/// @todo Actually, default should probably be no editing.  We also want item activation (Enter) to cause a Playlist item to play,
+	/// which is apparently hooked to the activated() signal on QAbstractItemView: "QAbstractItemView::activated(const QModelIndex &index)
+	///   This signal is emitted when the item specified by index is activated by the user. How to activate items depends on the platform;
+	///   e.g., by single- or double-clicking the item, or by pressing the Return or Enter key when the item is current."
 	setEditTriggers(QAbstractItemView::EditKeyPressed);
+
+	setAlternatingRowColors(true);
+
+	// Enable smooth scrolling by default.
+	/// @todo Should be a user-settable parameter.
+	/// @note per Qt5 docs: "default value comes from the style via the QStyle::SH_ItemView_ScrollMode style hint.".
+	setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+	// We'll use the default context menu event mechanism.
+	setContextMenuPolicy(Qt::DefaultContextMenu);
+
+	// Connect to the activated() signal, i.e. when the user hits "Enter".
+	connect(this, &MDITreeViewBase::activated, this, &MDITreeViewBase::onActivated);
 
 	// Hook things up for our tri-state column-sorting implementation.
 	connect(header(), &QHeaderView::sectionClicked, this, &MDITreeViewBase::onSectionClicked);
@@ -240,13 +265,13 @@ void MDITreeViewBase::onCopy()
 {
     // Get the current selection.
     QModelIndexList mil = selectionModel()->selectedRows();
-    
+
     if(mil.isEmpty())
     {
         // Nothing to copy.
         return;
     }
-    
+
     auto m = model();
     QMimeData* copied_rows = m->mimeData(mil);
 
@@ -336,6 +361,33 @@ void MDITreeViewBase::onSectionClicked(int logicalIndex)
 	}
 
 	header()->setSortIndicator(logicalIndex, m_sort_order);
+}
+
+void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
+{
+	// Check if the click was on an item or in the blank area, and dispatch accordingly.
+	// Note that indexAt() takes a point in viewport coordinates.
+	QModelIndex index = indexAt(viewport()->mapFromGlobal(event->globalPos()));
+
+	if(index.isValid())
+	{
+		// Open context menu for the item.
+		qDebug() << "MODEL INDEX:" << index;
+
+		onContextMenuIndex(event, index);
+	}
+	else
+	{
+		// Open the blank area context menu.
+		qDebug() << "NO VALID INDEX";
+
+		onContextMenuViewport(event);
+	}
+}
+
+void MDITreeViewBase::onActivated(const QModelIndex& index)
+{
+	qDebug() << "Base class ignoring activated signal at index:" << index;
 }
 
 void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected)

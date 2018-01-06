@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,30 +17,23 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
-#define AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
+#include "PlaylistContextMenuViewport.h"
+
+#include "ActionBundle.h"
+
+#include "gui/MainWindow.h"
 
 
-#include "SettingsDialogPageBase.h"
-
-#include <QObject>
-
-class QFontComboBox;
-
-class SDPageAppearance : public SettingsDialogPageBase
+PlaylistContextMenuViewport::PlaylistContextMenuViewport(const QString &title, QWidget *parent) : QMenu(parent)
 {
-    Q_OBJECT
+	setTitle(title);
 
-public:
-	SDPageAppearance(SettingsDialogBase *settings_dialog_parent, QWidget *parent);
+	auto mw = MainWindow::getInstance();
 
-	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
+	// Add cut/copy/paste to the context menu.
+	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
 
-	void onApply() override;
-
-private:
-    QFontComboBox* m_track_font_selector;
-};
+}
 
 
-#endif //AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
+

@@ -26,6 +26,7 @@
 #include <QDebug>
 #include <QDataWidgetMapper>
 #include <QStandardItemModel>
+#include <QAbstractButton>
 
 #include <utils/Theme.h>
 
@@ -79,6 +80,8 @@ SettingsDialogBase::SettingsDialogBase(QWidget *parent, const Qt::WindowFlags &f
     // Connect up the buttons.
     // OK
     connect(&m_dialog_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	// Apply
+	connect(&m_dialog_button_box, &QDialogButtonBox::clicked, this, &SettingsDialogBase::onClicked);
     // Cancel, Esc
     connect(&m_dialog_button_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
     // Help
@@ -155,7 +158,7 @@ void SettingsDialogBase::addField(const RegisteredField &field)
     m_reg_field_index_map.insert(local_reg_field.m_name, m_registered_fields.size());
     m_registered_fields.push_back(local_reg_field);
 
-    connect(local_reg_field.m_object, SIGNAL(destroyed(QObject*)), this, SLOT(onRegisteredFieldDestroyed(QObject*)));
+	//connect(local_reg_field.m_object, SIGNAL(destroyed(QObject*)), this, SLOT(onRegisteredFieldDestroyed(QObject*)));
 }
 
 void SettingsDialogBase::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)
@@ -187,5 +190,16 @@ void SettingsDialogBase::accept()
 
 
 
-    QDialog::accept();
+	QDialog::accept();
+}
+
+void SettingsDialogBase::onClicked(QAbstractButton* button)
+{
+	// See which button it was.
+	auto role = m_dialog_button_box.buttonRole(button);
+	if(role == QDialogButtonBox::ApplyRole)
+	{
+		// Tell the current page to apply any changes.
+		qobject_cast<SettingsDialogPageBase*>(m_page_stack_widget.currentWidget())->onApply();
+	}
 }
