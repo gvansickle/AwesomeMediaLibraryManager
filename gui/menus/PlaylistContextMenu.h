@@ -22,13 +22,21 @@
 
 #include <QMenu>
 
+class QString;
+class QWidget;
+
 /*
  *
  */
 class PlaylistContextMenu: public QMenu
 {
+	Q_OBJECT
+
 public:
-	PlaylistContextMenu();
+	explicit PlaylistContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
+
+private:
+	Q_DISABLE_COPY(PlaylistContextMenu);
 };
 
 #endif /* GUI_MENUS_PLAYLISTCONTEXTMENU_H_ */

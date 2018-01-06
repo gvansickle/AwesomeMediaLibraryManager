@@ -312,6 +312,7 @@ set(HEADER_FILES
 	gui/helpers/Tips.h
 	gui/menus/LibraryContextMenu.h
 	gui/menus/PlaylistContextMenuViewport.h
+	gui/menus/PlaylistContextMenu.h
 	gui/menus/ActionBundle.h
     )
 
@@ -374,6 +375,7 @@ set(SOURCE_FILES
 	gui/helpers/Tips.cpp
 	gui/menus/LibraryContextMenu.cpp
 	gui/menus/PlaylistContextMenuViewport.cpp
+	gui/menus/PlaylistContextMenu.cpp
 	gui/menus/ActionBundle.cpp
     )
 

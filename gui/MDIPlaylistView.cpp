@@ -37,6 +37,7 @@
 #include "logic/LibraryEntryMimeData.h"
 #include "utils/ModelHelpers.h"
 #include "menus/PlaylistContextMenuViewport.h"
+#include "menus/PlaylistContextMenu.h"
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -478,14 +479,16 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 
 void MDIPlaylistView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
 {
-M_WARNING("TODO");
+	// Open a context menu on the clicked-on row.
+	auto context_menu = new PlaylistContextMenu(tr("Playlist Context Menu"), this);
+	context_menu->exec(event->globalPos());
 }
 
 void MDIPlaylistView::onContextMenuViewport(QContextMenuEvent* event)
 {
 	// Open the blank area (viewport) context menu.
 	// Note that there may be e.g. rows selected in the view, which may affect what menu items are/should be displayed/enabled.
-	auto context_menu = new PlaylistContextMenuViewport(tr("Playlist Context Menu"), this);
+	auto context_menu = new PlaylistContextMenuViewport(tr("Playlist Context Menu - Viewport"), this);
 	context_menu->exec(event->globalPos());
 }
 
