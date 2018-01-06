@@ -125,11 +125,12 @@ private:
 
     void createActions();
     void createActionsEdit();
+	void createActionsView();
     
     void createMenus();
     void createToolBars();
     void createStatusBar();
-    void createDockWindows();
+	void createDockWidgets();
 	void addChildMDIView(MDITreeViewBase* child);
 	MDITreeViewBase* activeChildMDIView();
     
@@ -246,6 +247,13 @@ private:
     QAction *m_act_delete;
     QAction *m_act_select_all;
     /// @}
+
+	/// View actions.
+	/// @{
+	QAction *m_act_lock_layout;
+	QAction *m_act_reset_layout;
+	ActionBundle* m_ab_docks;
+	/// @}
     
     /// @name Window actions.
     /// @{
