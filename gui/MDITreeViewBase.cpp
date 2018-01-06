@@ -57,6 +57,12 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 
 	setAttribute(Qt::WA_DeleteOnClose);
 
+M_WARNING("EXPERIMENTAL");
+	auto f = QFont();
+	qDebug() << "Original Font size:" << f.pointSize();
+	f.setPointSize(10);
+	setFont(f);
+
 	// Enable sorting for this view.
 	setSortingEnabled(true);
 	// ...but start unsorted, and don't show the sort indicator.
