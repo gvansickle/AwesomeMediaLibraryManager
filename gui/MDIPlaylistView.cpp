@@ -421,26 +421,6 @@ void MDIPlaylistView::onDelete()
 {
 	// Remove the current selection from the model.
 
-#if 0
-	// Get the selected rows.
-	QModelIndexList mil = selectionModel()->selectedRows();
-
-	// Convert them to persistent model indexes.
-	auto pmil = toQPersistentModelIndexList(mil);
-	auto m = model();
-	for(auto pi : pmil)
-	{
-		if(pi.isValid())
-		{
-			m->removeRow(pi.row(), pi.parent());
-		}
-		else
-		{
-			// Index somehow became invalid.
-			qWarning() << "ATTEMPTED TO DELETE INVALID INDEX:" << pi;
-		}
-	}
-#else
 	// Get the current selection.
 	QItemSelection selection = selectionModel()->selection();
 
@@ -460,7 +440,6 @@ void MDIPlaylistView::onDelete()
 		qDebug() << "REMOVED";
 	}
 	qDebug() << "ALL SELECTION RANGES REMOVED";
-#endif
 }
 
 /**

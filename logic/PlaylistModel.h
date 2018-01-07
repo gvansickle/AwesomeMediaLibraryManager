@@ -79,9 +79,9 @@ public:
 	bool serializeToFileAsXSPF(QFileDevice& filedev) const;
 
 protected:
-	virtual void onRowsInserted(QModelIndex parent, int first, int last) override;
-	virtual void onRowsRemoved(QModelIndex parent, int first, int last) override;
-	virtual void onSetData(QModelIndex index, QVariant value, int role = Qt::EditRole) override;
+	void subclassesInsertRows(int first_row, int num_rows, const QModelIndex& parent = QModelIndex()) override;
+	void subclassesRemoveRows(int first_row, int num_rows, const QModelIndex& parent = QModelIndex()) override;
+	void subclassesSetData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
 
 private:
 	Q_DISABLE_COPY(PlaylistModel)

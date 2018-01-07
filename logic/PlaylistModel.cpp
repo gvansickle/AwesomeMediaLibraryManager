@@ -414,10 +414,10 @@ bool PlaylistModel::serializeToFileAsXSPF(QFileDevice& filedev) const
 
 }
 
-void PlaylistModel::onRowsInserted(QModelIndex parent, int first, int last)
+void PlaylistModel::subclassesInsertRows(int first_row, int num_rows, const QModelIndex& parent)
 {
-	qDebug() << QString("Inserting rows %1 - %2 into QMPlaylist, mediaCount=%3").arg(first).arg(last).arg(m_qmplaylist->mediaCount());
-	for(auto i = first; i<last+1; ++i)
+	qDebug() << QString("Inserting rows %1 through %2 into QMPlaylist, mediaCount=%3").arg(first_row).arg(first_row+num_rows-1).arg(m_qmplaylist->mediaCount());
+	for(auto i = first_row; i<first_row+num_rows; ++i)
 	{
 		auto child_index = index(i, 0, QModelIndex());
 		std::shared_ptr<PlaylistModelItem> playlist_entry = std::dynamic_pointer_cast<PlaylistModelItem>(getItem(child_index));
@@ -430,17 +430,17 @@ void PlaylistModel::onRowsInserted(QModelIndex parent, int first, int last)
 	qDebug() << "complete";
 }
 
-void PlaylistModel::onRowsRemoved(QModelIndex parent, int first, int last)
+void PlaylistModel::subclassesRemoveRows(int first_row, int num_rows, const QModelIndex& parent)
 {
-	qDebug() << QString("Removing rows %1 through %2 from QMPlaylist").arg(first).arg(last);
-	if(!m_qmplaylist->removeMedia(first, last))
+	qDebug() << QString("Removing rows %1 through %2 from QMPlaylist").arg(first_row).arg(first_row+num_rows-1);
+	if(!m_qmplaylist->removeMedia(first_row, first_row+num_rows-1))
 	{
-		qFatal("Insertion failed: %s", m_qmplaylist->errorString().toStdString().c_str());
+		qFatal("Remove failed: %s", m_qmplaylist->errorString().toStdString().c_str());
 	}
 	qDebug("complete");
 }
 
-void PlaylistModel::onSetData(QModelIndex index, QVariant value, int role)
+void PlaylistModel::subclassesSetData(const QModelIndex& index, const QVariant& value, int role)
 {
 //	qDebug() << "onSetData()" << index << Qt::ItemDataRole(role);
 

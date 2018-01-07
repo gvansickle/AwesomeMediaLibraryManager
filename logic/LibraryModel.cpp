@@ -403,7 +403,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 	m_library.replaceEntry(index.row(), replacement_item);
 
 	// Notify subclasses of the change.
-	onSetData(index, value, role);
+	subclassesSetData(index, value, role);
 
 	// Tell anybody that's listening that all data in this row has changed.
 	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);
@@ -432,10 +432,10 @@ bool LibraryModel::insertRows(int row, int count, const QModelIndex& parent)
 		m_library.insertEntry(i, default_entry);
 	}
 
-	endInsertRows();
+	// Notify subclasses of the insertion.
+	subclassesInsertRows(row, count);
 
-	// Notify subclasses of the change.
-	onRowsInserted(QModelIndex(), row, row + count - 1);
+	endInsertRows();
 
 	return true;
 }
@@ -455,12 +455,13 @@ bool LibraryModel::removeRows(int row, int count, const QModelIndex& parent)
 		return false;
 	}
 
-	// Notify subclasses of the change.
-	onRowsRemoved(QModelIndex(), row, row+count-1);
-
 	beginRemoveRows(parent, row, row+count-1);
 
-M_WARNING("There's a QSignalBlocker() here in the model for: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp");
+	/// @note There's a QSignalBlocker() here in the model for: https://github.com/qt/qtbase/blob/5.10/src/widgets/itemviews/qtreewidget.cpp
+	/// Not clear why, doesn't seem like we need it.
+
+	// Notify subclasses of the change.
+	subclassesRemoveRows(row, count);
 
 	// Remove the indicated rows from the underlying Library.
 	m_library.removeRows(row, count);
@@ -489,7 +490,9 @@ void LibraryModel::appendRows(std::vector<std::shared_ptr<LibraryEntry>> libentr
 
 	m_library.addNewEntries(libentries);
 
-	onRowsInserted(QModelIndex(), start_rowcount, start_rowcount+libentries.size()-1);
+	// Tell subclasses about the add.
+	subclassesInsertRows(start_rowcount, libentries.size());
+
 	endInsertRows();
 }
 

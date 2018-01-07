@@ -68,7 +68,7 @@ void Library::addNewEntries(std::vector<std::shared_ptr<LibraryEntry>> entries)
 	}
 }
 
-void Library::removeEntry(int row)
+void Library::removeRow(int row)
 {
 	removeRows(row, 1);
 }
