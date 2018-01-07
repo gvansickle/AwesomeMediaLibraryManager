@@ -68,14 +68,29 @@ void Library::addNewEntries(std::vector<std::shared_ptr<LibraryEntry>> entries)
 	}
 }
 
-void Library::removeEntry(int row)
+void Library::removeRow(int row)
 {
-	auto old_entry = m_lib_entries[row];
-	removingEntry(old_entry.get());
-	auto it = m_lib_entries.begin();
-	std::advance(it, row);
-	///delete m_lib_entries[row];
-	m_lib_entries.erase(it);
+	removeRows(row, 1);
+}
+
+void Library::removeRows(int row, int count)
+{
+	// Do the accounting.
+	for(auto i = row; i<=(row+count-1); ++i)
+	{
+		auto old_entry = m_lib_entries[row];
+		removingEntry(old_entry.get());
+	}
+
+	// Get an iterator to the first row we're going to erase.
+	auto first = m_lib_entries.begin();
+	std::advance(first, row);
+	// ..and one to the last-plus-one row.
+	auto last_plus_one = first;
+	std::advance(last_plus_one, count);
+
+	// erase the entries.
+	m_lib_entries.erase(first, last_plus_one);
 }
 
 void Library::insertEntry(int row, std::shared_ptr<LibraryEntry> entry)

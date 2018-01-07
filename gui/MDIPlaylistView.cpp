@@ -419,24 +419,27 @@ M_WARNING("TODO: Paste at current select position")
 
 void MDIPlaylistView::onDelete()
 {
-	// Remove the current selection.
-	QModelIndexList mil = selectionModel()->selectedRows();
+	// Remove the current selection from the model.
 
-	// Convert them to persistent model indexes.
-	auto pmil = toQPersistentModelIndexList(mil);
-	auto m = model();
-	for(auto pi : pmil)
+	// Get the current selection.
+	QItemSelection selection = selectionModel()->selection();
+
+	// Iterate over the selection ranges and convert to "row ranges".
+	qDebug() << "SELECTION CONTAINS" << selection.size() << "CONTIGUOUS RANGES";
+	for(QItemSelectionRange range : selection)
 	{
-		if(pi.isValid())
-		{
-			m->removeRow(pi.row(), pi.parent());
-		}
-		else
-		{
-			// Index somehow became invalid.
-			qWarning() << "ATTEMPTED TO DELETE INVALID INDEX:" << pi;
-		}
+		qDebug() << "RANGE:" << range;
+		QPersistentModelIndex first_row = range.topLeft();
+		QPersistentModelIndex last_row = range.bottomRight();
+
+		auto start_row = first_row.row();
+		auto num_rows = (last_row.row() - start_row)+1;
+
+		qDebug() << "REMOVING ROW RANGE:" << first_row.row() << "TO" << last_row.row();
+		model()->removeRows(start_row, num_rows, first_row.parent());
+		qDebug() << "REMOVED";
 	}
+	qDebug() << "ALL SELECTION RANGES REMOVED";
 }
 
 /**
