@@ -379,6 +379,15 @@ set(SOURCE_FILES
 	gui/menus/ActionBundle.cpp
     )
 
+set(HEADER_FILES_UTILS_CONCURRENCY
+	utils/concurrency/AsyncTaskManager.h)
+set(SOURCE_FILES_UTILS_CONCURRENCY
+	utils/concurrency/AsyncTaskManager.cpp)
+
+list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
+list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
+
+
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
