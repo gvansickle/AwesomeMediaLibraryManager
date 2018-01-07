@@ -432,7 +432,7 @@ void PlaylistModel::onRowsInserted(QModelIndex parent, int first, int last)
 
 void PlaylistModel::onRowsRemoved(QModelIndex parent, int first, int last)
 {
-	qDebug() << QString("Removing rows %1 - %2 from QMPlaylist").arg(first).arg(last);
+	qDebug() << QString("Removing rows %1 through %2 from QMPlaylist").arg(first).arg(last);
 	if(!m_qmplaylist->removeMedia(first, last))
 	{
 		qFatal("Insertion failed: %s", m_qmplaylist->errorString().toStdString().c_str());
