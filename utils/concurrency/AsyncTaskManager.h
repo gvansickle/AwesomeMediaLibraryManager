@@ -24,6 +24,8 @@
 #include <QVector>
 #include <QFuture>
 #include <QFutureWatcher>
+#include <QList>
+
 #include <functional>
 
 class QFutureWatcherBase;
@@ -57,6 +59,59 @@ public:
 private:
 	QVector<QFutureWatcherBase*> m_future_watchers;
 
+};
+
+/**
+ * The futureww ("FutureWatcherWatcher") class template.
+ */
+template <typename T>
+class futureww : public QFutureWatcher<T>
+{
+public:
+    explicit futureww(QObject* parent = 0) : QFutureWatcher<T>(parent) {}
+    ~futureww()
+    {
+        cancel();
+        waitForFinished();
+    }
+
+    explicit futureww(QFuture<T> qfuture) : futureww(qfuture.parent())
+	{
+		setFuture(qfuture);
+	}
+
+    futureww<T>& operator=(QFuture<T> f) { setFuture(f); return *this; };
+
+	/**
+     * Attaches a continuation to the futureww.
+     * Sort of.  Type has to be ReturnFutureT(QList<T>), return value is reference to this future.
+     * @return
+	 */
+    template <typename ReturnFutureT>
+    ReturnFutureT then(std::function<ReturnFutureT(QList<T>)> continuation_function)
+	{
+        m_continuation_function = continuation_function;
+        connect(this, &QFutureWatcher<T>::resultsReadyAt, m_continuation_function);
+        return m_continuation_function(future());
+	}
+
+    futureww<T>& on_result(std::function<void(int)> result_function)
+	{
+        m_result_function = result_function;
+        connect(this, &QFutureWatcher<T>::resultReadyAt, m_result_function);
+        return *this;
+	}
+
+	void cancel()
+	{
+        QFutureWatcher<T>::cancel();
+	}
+
+private:
+
+    std::function<void(QList<T>)> m_continuation_function {nullptr};
+
+    std::function<void(int)> m_result_function {nullptr};
 };
 
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */

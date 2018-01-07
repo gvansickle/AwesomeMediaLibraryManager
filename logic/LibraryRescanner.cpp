@@ -186,6 +186,7 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 
 M_WARNING("EXPERIMENTAL");
 
+#if 0
 	m_async_task_manager.addFuture(QtConcurrent::mapped(items_to_rescan,
 									   std::bind(&LibraryRescanner::refresher_callback, this, _1)),
 								   [this](){
@@ -197,11 +198,17 @@ M_WARNING("EXPERIMENTAL");
 		},
 									[](){ qDebug() << "CANCELLED"; }
 	);
-#if 0
+
+#elif 0
 	// Start the mapped operation, set the future watcher to the returned future, and we're scanning.
 	m_rescan_future_watcher.setFuture(QtConcurrent::mapped(
 			items_to_rescan,
 			std::bind(&LibraryRescanner::refresher_callback, this, _1)));
+#elif 1
+    m_futureww = QtConcurrent::mapped(items_to_rescan,
+                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
+    m_futureww.on_result([](int at){ qDebug() << "RESULT AT:" << at << "THREAD:" << QThread::currentThread()->objectName(); });
+
 #endif
 }
 

@@ -108,6 +108,8 @@ private:
 	LibraryModel* m_current_libmodel;
 
 	AsyncTaskManager m_async_task_manager;
+
+    futureww<MetadataReturnVal> m_futureww;
 };
 
 
