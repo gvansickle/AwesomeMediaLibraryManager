@@ -23,11 +23,10 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QIcon>
-#include <QMessageBox>
+#include <QDialogButtonBox>
 
 #include <utils/StringHelpers.h>
 #include <resources/VersionInfo.h>
-#include <qt5/QtWidgets/qdialogbuttonbox.h>
 
 
 AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(parent, flags)
