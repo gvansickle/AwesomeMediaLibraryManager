@@ -35,7 +35,8 @@
 using std::placeholders::_1;
 
 
-LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_rescan_future_watcher(this), m_dir_traversal_future_watcher(this)
+LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_rescan_future_watcher(this), m_dir_traversal_future_watcher(this),
+	m_async_task_manager(this)
 {
 	// Somewhat redundant, but keep another pointer to the LibraryModel.
 	m_current_libmodel = parent;
@@ -183,10 +184,20 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 	// Send out progress text.
 	emit progressTextChanged("Rereading metadata");
 
+M_WARNING("EXPERIMENTAL");
+
+	m_async_task_manager.addFuture(QtConcurrent::mapped(items_to_rescan,
+									   std::bind(&LibraryRescanner::refresher_callback, this, _1)),
+								   [](){ qDebug() << "RESULTS"; },
+									[](){ qDebug() << "FINISHED"; },
+									[](){ qDebug() << "CANCELLED"; }
+	);
+#if 0
 	// Start the mapped operation, set the future watcher to the returned future, and we're scanning.
 	m_rescan_future_watcher.setFuture(QtConcurrent::mapped(
 			items_to_rescan,
 			std::bind(&LibraryRescanner::refresher_callback, this, _1)));
+#endif
 }
 
 void LibraryRescanner::onResultReadyAt(int index)

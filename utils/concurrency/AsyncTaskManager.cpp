@@ -19,14 +19,13 @@
 
 #include "AsyncTaskManager.h"
 
-AsyncTaskManager::AsyncTaskManager()
+AsyncTaskManager::AsyncTaskManager(QObject *parent) : QObject(parent)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 AsyncTaskManager::~AsyncTaskManager()
 {
-	// TODO Auto-generated destructor stub
+
 }
 

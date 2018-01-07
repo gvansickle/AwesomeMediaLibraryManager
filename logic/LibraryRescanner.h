@@ -27,6 +27,7 @@
 #include <QtCore/QPersistentModelIndex>
 #include <QtCore/QFuture>
 #include <QtCore/QFutureWatcher>
+#include <utils/concurrency/AsyncTaskManager.h>
 
 #include "logic/LibraryEntry.h"
 
@@ -105,6 +106,8 @@ private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
 	LibraryModel* m_current_libmodel;
+
+	AsyncTaskManager m_async_task_manager;
 };
 
 

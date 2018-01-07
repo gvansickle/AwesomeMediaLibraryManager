@@ -21,6 +21,12 @@
 #define UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 
 #include <QObject>
+#include <QVector>
+#include <QFuture>
+#include <QFutureWatcher>
+#include <functional>
+
+class QFutureWatcherBase;
 
 /*
  *
@@ -28,8 +34,29 @@
 class AsyncTaskManager: public QObject
 {
 public:
-	AsyncTaskManager();
+	AsyncTaskManager(QObject *parent = 0);
 	virtual ~AsyncTaskManager();
+
+	template <typename T>
+	void addFuture(const QFuture<T>& future,
+			std::function<void()> on_results,
+			std::function<void()> on_finished,
+			std::function<void()> on_canceled)
+	{
+		auto watcher = new QFutureWatcher<T>(this);
+
+		// Make connections.
+		connect(watcher, &QFutureWatcher<T>::resultsReadyAt, on_results);
+		connect(watcher, &QFutureWatcher<T>::finished, on_finished);
+		connect(watcher, &QFutureWatcher<T>::canceled, on_canceled);
+
+		watcher->setFuture(future);
+		m_future_watchers.push_back(watcher);
+	}
+
+private:
+	QVector<QFutureWatcherBase*> m_future_watchers;
+
 };
 
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */
