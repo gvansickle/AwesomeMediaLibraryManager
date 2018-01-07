@@ -188,8 +188,13 @@ M_WARNING("EXPERIMENTAL");
 
 	m_async_task_manager.addFuture(QtConcurrent::mapped(items_to_rescan,
 									   std::bind(&LibraryRescanner::refresher_callback, this, _1)),
-								   [](){ qDebug() << "RESULTS"; },
-									[](){ qDebug() << "FINISHED"; },
+								   [this](){
+		qDebug() << "RESULTS.  this:" << this;
+		qDebug() << "Current thread:" << QThread::currentThread()->objectName();},
+									[](){
+		qDebug() << "FINISHED";
+		qDebug() << "Current thread:" << QThread::currentThread()->objectName();
+		},
 									[](){ qDebug() << "CANCELLED"; }
 	);
 #if 0
