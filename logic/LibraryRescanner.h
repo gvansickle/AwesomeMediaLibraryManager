@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <QtCore/QObject>
+#include <QElapsedTimer>
 #include <QtCore/QPersistentModelIndex>
 #include <QtCore/QFuture>
 #include <QtCore/QFutureWatcher>
@@ -77,6 +78,8 @@ public:
 	QFutureWatcher<MetadataReturnVal> m_rescan_future_watcher;
 	QFutureWatcher<QString> m_dir_traversal_future_watcher;
 
+	QElapsedTimer m_timer;
+
 signals:
 	/// @name Signals forwarded from the QFutureWatcher's.
 	///@{
@@ -111,6 +114,7 @@ private:
 
 	AsyncTaskManager m_async_task_manager;
 
+    futureww<QString> m_futureww_dirscan;
     futureww<MetadataReturnVal> m_futureww;
 };
 

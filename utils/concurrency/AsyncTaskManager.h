@@ -78,10 +78,10 @@ public:
 
     futureww(const futureww&) = delete;
 
-    explicit futureww(QFuture<T> qfuture) : futureww(qfuture.parent())
-	{
-		setFuture(qfuture);
-	}
+//    explicit futureww(QFuture<T> qfuture) : futureww(qfuture.parent())
+//	{
+//		setFuture(qfuture);
+//	}
 
     /// Assignment operator from QFuture<T>.
     futureww<T>& operator=(QFuture<T> f) { setFuture(f); return *this; }
@@ -100,8 +100,6 @@ public:
 
     /**
      * Attaches a "finished" continuation to the future.
-     * @param result_function
-     * @return
      */
     void then(std::function<void()> finished_function)
     {
@@ -118,7 +116,7 @@ public:
 
     futureww<T>& on_result(std::function<void(T)> result_function)
     {
-        m_result_function = result_function;
+        m_result_function = std::move(result_function);
         connect(this, &QFutureWatcher<T>::resultReadyAt, [this](int index){m_result_function(future().resultAt(index));});
         return *this;
     }
@@ -126,8 +124,14 @@ public:
     futureww<T>& on_progress(std::function<void(int,int,int)> progress_function)
     {
         m_progress_function = progress_function;
-    	connect(this, &QFutureWatcher<T>::progressValueChanged, [this](int val){ m_prog_value = val; m_progress_function(m_prog_min, m_prog_max, m_prog_value); });
-    	connect(this, &QFutureWatcher<T>::progressRangeChanged, [this](int min, int max){ m_prog_min = min; m_prog_max = max; m_progress_function(m_prog_min, m_prog_max, m_prog_value); });
+    	connect(this, &QFutureWatcher<T>::progressValueChanged, [this](int val){
+    		m_prog_value = val; m_progress_function(m_prog_min, m_prog_max, m_prog_value);
+    	});
+    	connect(this, &QFutureWatcher<T>::progressRangeChanged, [this](int min, int max){
+    		m_prog_min = min;
+    		m_prog_max = max;
+    		m_progress_function(m_prog_min, m_prog_max, m_prog_value);
+    	});
         return *this;
     }
 
