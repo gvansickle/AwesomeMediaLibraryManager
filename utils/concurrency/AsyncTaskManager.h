@@ -27,6 +27,7 @@
 #include <QList>
 
 #include <functional>
+#include <algorithm>
 
 class QFutureWatcherBase;
 
@@ -82,7 +83,8 @@ public:
 		setFuture(qfuture);
 	}
 
-    futureww<T>& operator=(QFuture<T> f) { setFuture(f); return *this; };
+    /// Assignment operator from QFuture<T>.
+    futureww<T>& operator=(QFuture<T> f) { setFuture(f); return *this; }
 
 	/**
      * Attaches a continuation to the futureww.
@@ -121,6 +123,14 @@ public:
         return *this;
     }
 
+    futureww<T>& on_progress(std::function<void(int,int,int)> progress_function)
+    {
+        m_progress_function = progress_function;
+    	connect(this, &QFutureWatcher<T>::progressValueChanged, [this](int val){ m_prog_value = val; m_progress_function(m_prog_min, m_prog_max, m_prog_value); });
+    	connect(this, &QFutureWatcher<T>::progressRangeChanged, [this](int min, int max){ m_prog_min = min; m_prog_max = max; m_progress_function(m_prog_min, m_prog_max, m_prog_value); });
+        return *this;
+    }
+
 	void cancel()
 	{
         QFutureWatcher<T>::cancel();
@@ -128,9 +138,14 @@ public:
 
 private:
 
+	int m_prog_min = 0;
+	int m_prog_max = 0;
+	int m_prog_value = 0;
+
     std::function<void(QList<T>)> m_continuation_function {nullptr};
     std::function<void()> m_finished_function {nullptr};
     std::function<void()> m_cancelled_function {nullptr};
+    std::function<void(int,int,int)> m_progress_function {nullptr};
 
     std::function<void(int)> m_resultat_function {nullptr};
     std::function<void(T)> m_result_function {nullptr};

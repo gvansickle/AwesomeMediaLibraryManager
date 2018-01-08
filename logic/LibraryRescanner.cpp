@@ -205,13 +205,19 @@ M_WARNING("EXPERIMENTAL");
 			items_to_rescan,
 			std::bind(&LibraryRescanner::refresher_callback, this, _1)));
 #elif 1
-    m_futureww = QtConcurrent::mapped(items_to_rescan,
-                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
+
     m_futureww.on_resultat([](int at){
         qDebug() << "RESULT AT:" << at << "THREAD:" << QThread::currentThread()->objectName();
-    }).on_result([this](auto a){ this->processReadyResults(a);})
+    }).on_result([this](auto a){
+    	this->processReadyResults(a);
+    })
+    .on_progress([this](int min, int max, int val){
+    	emit progressRangeChanged(min, max);
+    	emit progressValueChanged(val);
+    })
             .then([](){ qDebug() << "FINISHED, THREAD:" << QThread::currentThread()->objectName(); });
-
+    m_futureww = QtConcurrent::mapped(items_to_rescan,
+                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
 #endif
 }
 
