@@ -207,16 +207,26 @@ M_WARNING("EXPERIMENTAL");
 #elif 1
     m_futureww = QtConcurrent::mapped(items_to_rescan,
                                     std::bind(&LibraryRescanner::refresher_callback, this, _1));
-    m_futureww.on_result([](int at){ qDebug() << "RESULT AT:" << at << "THREAD:" << QThread::currentThread()->objectName(); });
+    m_futureww.on_resultat([](int at){
+        qDebug() << "RESULT AT:" << at << "THREAD:" << QThread::currentThread()->objectName();
+    }).on_result([this](auto a){ this->processReadyResults(a);})
+            .then([](){ qDebug() << "FINISHED, THREAD:" << QThread::currentThread()->objectName(); });
 
 #endif
 }
 
 void LibraryRescanner::onResultReadyAt(int index)
 {
-	//qDebug() << "Async Rescan reports result ready at" << index;
+    //qDebug() << "Async Rescan reports result ready at" << index;
 
-	MetadataReturnVal lritem_vec = m_rescan_future_watcher.resultAt(index);
+    MetadataReturnVal lritem_vec = m_rescan_future_watcher.resultAt(index);
+
+    processReadyResults(lritem_vec);
+}
+
+void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
+{
+
 
 	// We got one of ??? things back:
 	// - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..

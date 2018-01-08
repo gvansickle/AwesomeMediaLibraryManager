@@ -75,6 +75,8 @@ public:
         waitForFinished();
     }
 
+    futureww(const futureww&) = delete;
+
     explicit futureww(QFuture<T> qfuture) : futureww(qfuture.parent())
 	{
 		setFuture(qfuture);
@@ -84,23 +86,40 @@ public:
 
 	/**
      * Attaches a continuation to the futureww.
-     * Sort of.  Type has to be ReturnFutureT(QList<T>), return value is reference to this future.
-     * @return
+     * @return Reference to the return value of @a continuation_function.
 	 */
     template <typename ReturnFutureT>
-    ReturnFutureT then(std::function<ReturnFutureT(QList<T>)> continuation_function)
+    ReturnFutureT& then(std::function<ReturnFutureT(QList<T>)> continuation_function)
 	{
-        m_continuation_function = continuation_function;
+        m_continuation_function = std::move(continuation_function);
         connect(this, &QFutureWatcher<T>::resultsReadyAt, m_continuation_function);
         return m_continuation_function(future());
 	}
 
-    futureww<T>& on_result(std::function<void(int)> result_function)
+    /**
+     * Attaches a "finished" continuation to the future.
+     * @param result_function
+     * @return
+     */
+    void then(std::function<void()> finished_function)
+    {
+        m_finished_function = std::move(finished_function);
+        connect(this, &QFutureWatcher<T>::finished, m_finished_function);
+    }
+
+    futureww<T>& on_resultat(std::function<void(int)> resultat_function)
 	{
-        m_result_function = result_function;
-        connect(this, &QFutureWatcher<T>::resultReadyAt, m_result_function);
+        m_resultat_function = resultat_function;
+        connect(this, &QFutureWatcher<T>::resultReadyAt, m_resultat_function);
         return *this;
 	}
+
+    futureww<T>& on_result(std::function<void(T)> result_function)
+    {
+        m_result_function = result_function;
+        connect(this, &QFutureWatcher<T>::resultReadyAt, [this](int index){m_result_function(future().resultAt(index));});
+        return *this;
+    }
 
 	void cancel()
 	{
@@ -110,8 +129,11 @@ public:
 private:
 
     std::function<void(QList<T>)> m_continuation_function {nullptr};
+    std::function<void()> m_finished_function {nullptr};
+    std::function<void()> m_cancelled_function {nullptr};
 
-    std::function<void(int)> m_result_function {nullptr};
+    std::function<void(int)> m_resultat_function {nullptr};
+    std::function<void(T)> m_result_function {nullptr};
 };
 
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */

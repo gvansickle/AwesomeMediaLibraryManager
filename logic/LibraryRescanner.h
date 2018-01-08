@@ -94,6 +94,8 @@ public slots:
 	/// Slot called by m_rescan_future_watcher when it has a result available.
 	void onResultReadyAt(int index);
 
+    void processReadyResults(MetadataReturnVal lritem_vec);
+
 	/// Slot called by m_rescan_future_watcher when the rescan is complete.
 	void onRescanFinished();
 
