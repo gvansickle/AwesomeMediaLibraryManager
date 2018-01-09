@@ -60,7 +60,17 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	//// Libraries can only have copies dragged out of them.
 	setAcceptDrops(false);
 	setDragDropMode(QAbstractItemView::DragOnly);
-	setDropIndicatorShown(true);
+    setDropIndicatorShown(true);
+}
+
+/**
+ * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+ */
+MDILibraryView *MDILibraryView::open(QWidget *parent)
+{
+M_WARNING("TODO");
+    Q_ASSERT(0);
+    return nullptr;
 }
 
 /**
@@ -110,7 +120,13 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 
 	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
 	/// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
-	header()->setResizeContentsPrecision(0);
+    header()->setResizeContentsPrecision(0);
+}
+
+void MDILibraryView::setEmptyModel()
+{
+    M_WARNING("TODO");
+    Q_ASSERT(0);
 }
 
 QString MDILibraryView::getNewFilenameTemplate() const

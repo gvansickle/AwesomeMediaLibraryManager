@@ -139,7 +139,11 @@ static qint64 sequenceNumber = 0;
 
 	// Set the window title to the Display Name, which defaults to the filename, plus the Qt "is modified" placeholder.
 	setWindowTitle(getDisplayName() + "[*]");
+    // Set the name we'll give to the MainWindow's Window menu.
 	m_act_window->setText(getDisplayName());
+
+    // Create a new, empty model.
+    setEmptyModel();
 }
 
 

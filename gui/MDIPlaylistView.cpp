@@ -162,7 +162,13 @@ QString MDIPlaylistView::getNewFilenameTemplate() const
 
 QString MDIPlaylistView::defaultNameFilter()
 {
-	return "M3U8 (*.m3u8);;M3U (*.m3u);;PLS (*.pls);;Windows media player playlist (*.wpl);;XSPF (*.xspf)";
+    return "M3U8 (*.m3u8);;M3U (*.m3u);;PLS (*.pls);;Windows media player playlist (*.wpl);;XSPF (*.xspf)";
+}
+
+void MDIPlaylistView::setEmptyModel()
+{
+    auto new_playlist_model = new PlaylistModel(this->parent());
+    setModel(new_playlist_model);
 }
 
 void MDIPlaylistView::serializeDocument(QFileDevice& file) const

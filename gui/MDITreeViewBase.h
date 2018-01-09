@@ -64,14 +64,31 @@ public:
 
     bool save();
     bool saveAs();
-    bool saveFile(QUrl save_url, QString filter);
 
-    virtual bool loadFile(QUrl load_url);
+    /// @name Open functions.
+    /// Create factory functions like these in each derived class.
+    /// These static "open" functions would be good candidates for the virtual static methods which don't exist in C++.
+    /// These are just dummied out here for demonstration purposes.
+    /// @{
+#if 0
+    /**
+     * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+     */
+    static MDITreeViewBase* open(QWidget* parent) { return nullptr; }
 
-    /// @note This one would be a good candidate for virtual static methods which don't exist in C++.
-    /// Create a factory function like this in each derived class:
-    /// static MDITreeViewBase* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
-    
+    /**
+     * Open the specified QUrl.
+     */
+    static MDITreeViewBase* openFile(QUrl open_url, QWidget* parent) { return nullptr; }
+
+    /**
+     * Open a new view on the given model.
+     */
+    static MDITreeViewBase* openModel(QAbstractItemModel* model, QWidget* parent) { return nullptr; }
+    /// @}
+#endif
+    Q_DECL_DEPRECATED virtual bool loadFile(QUrl load_url);
+
     /// Returns the current basename of this window's backing file.
     QString userFriendlyCurrentFile() const;
 
@@ -114,9 +131,14 @@ protected:
     QString m_current_filter;
     bool m_isUntitled = true;
 
+    /// Override in derived classes to set an empty model on newFile().
+    virtual void setEmptyModel() = 0;
+
     /// Protected function which is used to set the view's filename properties on a save or load.
     /// Called by loadFile() and saveFile().
     void setCurrentFile(QUrl url);
+
+    bool saveFile(QUrl save_url, QString filter);
 
     virtual void closeEvent(QCloseEvent* event) override;
 
@@ -170,7 +192,7 @@ protected slots:
 	virtual void onContextMenuViewport(QContextMenuEvent* event) { Q_UNUSED(event); }
 
 	/**
-	 * Slot called when the user activates (hits Enter) on an item.
+     * Slot called when the user activates (hits Enter or double-clicks) on an item.
 	 * @param index
 	 */
 	virtual void onActivated(const QModelIndex& index);

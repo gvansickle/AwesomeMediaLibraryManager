@@ -32,7 +32,6 @@
 
 #include "utils/ConnectHelpers.h"
 #include "utils/ActionHelpers.h"
-#include "utils/DebugHelpers.h"
 
 #include <QObject>
 
@@ -48,6 +47,7 @@
 #include <QAction>
 #include <QStandardPaths>
 #include <QDebug>
+#include "utils/DebugHelpers.h"
 #include <QMdiSubWindow>
 #include <QTimer>
 #include <QMessageBox>
@@ -75,6 +75,11 @@
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
 #include <gui/menus/ActionBundle.h>
+
+//
+// Note: Very roughly based on Qt5 MDI example, http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and counless
+// other variations on the theme.
+//
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
@@ -667,6 +672,7 @@ void MainWindow::connectLibraryToActivityProgressWidget(LibraryModel* lm, Activi
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 {
+    qDebug() << "Connecting" << lv << "and" << this;
 	connect(lv, &MDILibraryView::sendEntryToPlaylist, this, &MainWindow::onSendEntryToPlaylist);
 	connect(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
 }
@@ -918,6 +924,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 
 /**
  * Called by a "timer(0)" started in the constructor.
+ * Does some final setup work which should be done once the constructor has finished and the event loop has started.
  */
 void MainWindow::onStartup()
 {
@@ -932,7 +939,7 @@ M_WARNING("TODO: Specify a temp/cache file?")
 
 	connectNowPlayingViewAndMainWindow(m_now_playing_playlist_view);
 
-    statusBar()->showMessage(QString("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
+    statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
 
     m_now_playing_playlist_view->show();
 
@@ -996,14 +1003,18 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 		}
 
 		// No view open, create a new one.
-		auto child = MDILibraryView::openModel(libmodel);
+//		auto child = MDILibraryView::openModel(libmodel);
+        auto child = createMdiChildLibraryView();
+        child->setModel(libmodel);
+//		if(child)
+//		{
+//			addChildMDIView(child);
+//		}
 
-		if(child)
-		{
-			addChildMDIView(child);
-		}
+M_WARNING("TODO: These seem out of place.");
+        connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
+        connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
 
-		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
 	}
 }
@@ -1099,8 +1110,10 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
  */
 void MainWindow::newPlaylist()
 {
+    // Create the View object.
     auto child = createMdiChildPlaylistView();
 
+    //
     child->newFile();
 
     statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(child->windowTitle()));
@@ -1129,6 +1142,7 @@ void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, s
 void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 {
 	// Resend the entry to the "Now Playing" playlist view.
+    qDebug() << "Re-emitting sendToNowPlaying";
 	emit sendToNowPlaying(libentry);
 }
 
@@ -1173,15 +1187,22 @@ MDILibraryView* MainWindow::createMdiChildLibraryView()
 	return child;
 }
 
+/**
+ * Creates a new, empty Now Playing playlist and view, then adds it to the MDIArea.
+ * @return
+ */
 MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
 {
 	// Create a new playlist model.
-	auto new_playlist_model = new PlaylistModel(this);
-	m_playlist_models.push_back(new_playlist_model);
+//	auto new_playlist_model = new PlaylistModel(this);
+//	m_playlist_models.push_back(new_playlist_model);
 
 //	MDIPlaylistView* child = new MDIPlaylistView(this);
 //	child->setModel(new_playlist_model);
-	auto child = MDIPlaylistView::openModel(new_playlist_model, this);
+//	auto child = MDIPlaylistView::openModel(new_playlist_model, this);
+    auto child = new MDIPlaylistView(this);
+    child->newFile();
+    m_playlist_models.push_back(child->underlyingModel());
 
 	addChildMDIView(child);
 
@@ -1190,18 +1211,26 @@ MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
 	return child;
 }
 
+/**
+ * Creates a new, empty Now Playing playlist and view, then adds it to the MDIArea.
+ * @return
+ */
 MDINowPlayingView* MainWindow::createMdiNowPlayingView()
 {
 	// Create a new "Now Playing" playlist model.
-	auto new_playlist_model = new PlaylistModel(this);
+//	auto new_playlist_model = new PlaylistModel(this);
 
 	// TODO REMOVE
-	m_playlist_models.push_back(new_playlist_model);
-	m_now_playing_playlist_model = new_playlist_model;
+//	m_playlist_models.push_back(new_playlist_model);
+//	m_now_playing_playlist_model = new_playlist_model;
 
 //	MDINowPlayingView* child = new MDINowPlayingView(this);
 //	child->setModel(new_playlist_model);
-	auto child = MDINowPlayingView::openModel(m_now_playing_playlist_model, this);
+    //auto child = MDINowPlayingView::openModel(m_now_playing_playlist_model, this);
+    auto child = new MDINowPlayingView(this);
+    child->newFile();
+    m_playlist_models.push_back(child->underlyingModel());
+    m_now_playing_playlist_model = child->underlyingModel();
 
 	addChildMDIView(child);
 

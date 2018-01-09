@@ -45,13 +45,23 @@ signals:
         
 public:
 	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
-        
-	/**
-	* static member function which opens an MDILibraryView on the given model.
-	*/
-	static MDILibraryView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
 
-	void setModel(QAbstractItemModel* model) override;
+    /**
+     * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+     */
+    static MDILibraryView* open(QWidget* parent);
+
+    /**
+     * Open the specified QUrl.
+     */
+    static MDILibraryView* openFile(QUrl open_url, QWidget* parent);
+
+    /**
+     * Open a new view on the given model.
+     */
+    static MDILibraryView* openModel(QAbstractItemModel* model, QWidget* parent);
+
+    void setModel(QAbstractItemModel* model) override;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
@@ -66,13 +76,15 @@ protected:
 	/// Pure virtual function overrides.
 	///
 
+    void setEmptyModel() override;
+
 	virtual QString getNewFilenameTemplate() const override;
 	virtual QString defaultNameFilter() override;
 
 	/// @name Serialization
 	/// @{
 
-	virtual bool loadFile(QUrl load_url) override;
+    Q_DECL_DEPRECATED virtual bool loadFile(QUrl load_url) override;
 	virtual void serializeDocument(QFileDevice& file) const override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 
