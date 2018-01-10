@@ -74,7 +74,7 @@ public slots:
     void importLib();
 
     /**
-     * Open a new, blank playlist.
+     * Open a new, empty playlist.
      * ~= "File->New".
      */
     void newPlaylist();
@@ -149,6 +149,9 @@ private:
     void createToolBars();
     void createStatusBar();
 	void createDockWidgets();
+
+    /// Equivalent of a "File->New" action for the Now Playing model/view.
+    void newNowPlaying();
 
 	void addChildMDIView(MDITreeViewBase* child);
 	MDITreeViewBase* activeChildMDIView();

@@ -593,7 +593,29 @@ void MainWindow::createDockWidgets()
     // Create the metadata dock widget.
 	m_metadataDockWidget = new MetadataDockWidget(tr("Metadata Explorer"), this);
 	m_metadataDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	addDockWidget(Qt::RightDockWidgetArea, m_metadataDockWidget);
+    addDockWidget(Qt::RightDockWidgetArea, m_metadataDockWidget);
+}
+
+void MainWindow::newNowPlaying()
+{
+    auto child = new MDINowPlayingView(this);
+    child->newFile();
+
+    // Add the new child's underlying model to the list of playlist models.
+    /// @todo REMOVE, only one Now Playing.
+    m_playlist_models.push_back(child->underlyingModel());
+    // Set this view's model as the single "Now Playing" model.
+    m_now_playing_playlist_model = child->underlyingModel();
+
+    /// @todo do we really need to keep this as a member pointer?
+    m_now_playing_playlist_view = child;
+
+    connectNowPlayingViewAndMainWindow(child);
+
+    addChildMDIView(child);
+
+	// Add the new playlist to the collection doc widget.
+    m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
 }
 
 void MainWindow::createConnections()
@@ -679,10 +701,12 @@ void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 
 void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
 {
+    qDebug() << "Connecting";
 	connect(this, &MainWindow::sendToNowPlaying, plv, &MDIPlaylistView::onSendToNowPlaying);
 
 	connectPlayerAndPlaylistView(&m_player, plv);
 	connectPlayerControlsAndPlaylistView(m_controls, plv);
+    qDebug() << "Connected";
 }
 
 void MainWindow::connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget)
@@ -932,16 +956,9 @@ void MainWindow::onStartup()
     changeIconTheme(QIcon::themeName());
 
     // Create the "Now Playing" playlist and view.
-    m_now_playing_playlist_view = createMdiNowPlayingView();
-
-M_WARNING("TODO: Specify a temp/cache file?")
-    m_now_playing_playlist_view->newFile();
-
-	connectNowPlayingViewAndMainWindow(m_now_playing_playlist_view);
+    newNowPlaying();
 
     statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
-
-    m_now_playing_playlist_view->show();
 
 	// Load any files which were opened at the time the last session was closed.
 	qDebug() << QString("Loading files from last session...");
@@ -1107,18 +1124,28 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
 
 /**
  * Top-level menu/toolbar action for creating a new, empty playlist.
+ * ~= "File->New".
  */
 void MainWindow::newPlaylist()
 {
     // Create the View object.
-    auto child = createMdiChildPlaylistView();
+    auto child = new MDIPlaylistView(this); ///@todo createMdiChildPlaylistView();
 
-    //
+    // Tell it to create a new, empty model.
     child->newFile();
 
-    statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(child->windowTitle()));
+    // Add the underlying model to the list.
+    m_playlist_models.push_back(child->underlyingModel());
+
+    // Add it to the child views.
+    addChildMDIView(child);
+    statusBar()->showMessage(tr("Opened new Playlist '%1'").arg(child->windowTitle()));
 }
 
+/**
+ * Top-level menu/toolbar action for opening an existing playlist.
+ * ~= "File->Open...".
+ */
 void MainWindow::openPlaylist()
 {
 	qCritical() << "Not implemented";
@@ -1152,7 +1179,8 @@ void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 void MainWindow::addChildMDIView(MDITreeViewBase* child)
 {
 	// Connect Cut, Copy, Delete, and Select All actions to the availability signals emitted by the child.
-	/// @note AFAICT, this works because only the active child will send this signal.
+    /// @note This works because only the active child will send this signal.
+    /// Otherwise we'd need to swap which child was connected to the menu.
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
@@ -1165,7 +1193,7 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	// Add the child subwindow to the MDI area.
 	auto mdisubwindow = m_mdi_area->addSubWindow(child);
 
-	// Add actions to the Window menu and its action group.
+    // Add actions from the child to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
 
@@ -1188,7 +1216,7 @@ MDILibraryView* MainWindow::createMdiChildLibraryView()
 }
 
 /**
- * Creates a new, empty Now Playing playlist and view, then adds it to the MDIArea.
+ * Creates a new, empty "Now Playing" playlist and view, then adds it to the MDIArea.
  * @return
  */
 MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
@@ -1213,6 +1241,7 @@ MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
 
 /**
  * Creates a new, empty Now Playing playlist and view, then adds it to the MDIArea.
+ * ~= "File->New".
  * @return
  */
 MDINowPlayingView* MainWindow::createMdiNowPlayingView()
@@ -1220,7 +1249,6 @@ MDINowPlayingView* MainWindow::createMdiNowPlayingView()
 	// Create a new "Now Playing" playlist model.
 //	auto new_playlist_model = new PlaylistModel(this);
 
-	// TODO REMOVE
 //	m_playlist_models.push_back(new_playlist_model);
 //	m_now_playing_playlist_model = new_playlist_model;
 
@@ -1229,7 +1257,11 @@ MDINowPlayingView* MainWindow::createMdiNowPlayingView()
     //auto child = MDINowPlayingView::openModel(m_now_playing_playlist_model, this);
     auto child = new MDINowPlayingView(this);
     child->newFile();
+
+    // Add the new child's underlying model to the list of playlist models.
+    /// @todo REMOVE, only one Now Playing.
     m_playlist_models.push_back(child->underlyingModel());
+    // Set this view's model as the single "Now Playing" model.
     m_now_playing_playlist_model = child->underlyingModel();
 
 	addChildMDIView(child);
