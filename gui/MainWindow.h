@@ -193,7 +193,6 @@ private:
     
     MDILibraryView* createMdiChildLibraryView();
     MDIPlaylistView* createMdiChildPlaylistView();
-    MDINowPlayingView* createMdiNowPlayingView();
 
     /**
      * Called by importModel().

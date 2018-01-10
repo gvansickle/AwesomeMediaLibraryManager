@@ -607,12 +607,14 @@ void MainWindow::newNowPlaying()
     // Set this view's model as the single "Now Playing" model.
     m_now_playing_playlist_model = child->underlyingModel();
 
-    /// @todo do we really need to keep this as a member pointer?
+    /// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;
 
     connectNowPlayingViewAndMainWindow(child);
 
     addChildMDIView(child);
+
+    statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(child->windowTitle()));
 
 	// Add the new playlist to the collection doc widget.
     m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
@@ -958,8 +960,6 @@ void MainWindow::onStartup()
     // Create the "Now Playing" playlist and view.
     newNowPlaying();
 
-    statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
-
 	// Load any files which were opened at the time the last session was closed.
 	qDebug() << QString("Loading files from last session...");
 	QSettings settings;
@@ -1231,38 +1231,6 @@ MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
     auto child = new MDIPlaylistView(this);
     child->newFile();
     m_playlist_models.push_back(child->underlyingModel());
-
-	addChildMDIView(child);
-
-	// Add the new playlist to the collection doc widget.
-	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return child;
-}
-
-/**
- * Creates a new, empty Now Playing playlist and view, then adds it to the MDIArea.
- * ~= "File->New".
- * @return
- */
-MDINowPlayingView* MainWindow::createMdiNowPlayingView()
-{
-	// Create a new "Now Playing" playlist model.
-//	auto new_playlist_model = new PlaylistModel(this);
-
-//	m_playlist_models.push_back(new_playlist_model);
-//	m_now_playing_playlist_model = new_playlist_model;
-
-//	MDINowPlayingView* child = new MDINowPlayingView(this);
-//	child->setModel(new_playlist_model);
-    //auto child = MDINowPlayingView::openModel(m_now_playing_playlist_model, this);
-    auto child = new MDINowPlayingView(this);
-    child->newFile();
-
-    // Add the new child's underlying model to the list of playlist models.
-    /// @todo REMOVE, only one Now Playing.
-    m_playlist_models.push_back(child->underlyingModel());
-    // Set this view's model as the single "Now Playing" model.
-    m_now_playing_playlist_model = child->underlyingModel();
 
 	addChildMDIView(child);
 
