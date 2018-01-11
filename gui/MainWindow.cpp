@@ -596,30 +596,6 @@ void MainWindow::createDockWidgets()
     addDockWidget(Qt::RightDockWidgetArea, m_metadataDockWidget);
 }
 
-void MainWindow::newNowPlaying()
-{
-    auto child = new MDINowPlayingView(this);
-    child->newFile();
-
-    // Add the new child's underlying model to the list of playlist models.
-    /// @todo REMOVE, only one Now Playing.
-    m_playlist_models.push_back(child->underlyingModel());
-    // Set this view's model as the single "Now Playing" model.
-    m_now_playing_playlist_model = child->underlyingModel();
-
-    /// @todo Do we really need to keep this as a member pointer?
-    m_now_playing_playlist_view = child;
-
-    connectNowPlayingViewAndMainWindow(child);
-
-    addChildMDIView(child);
-
-    statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(child->windowTitle()));
-
-	// Add the new playlist to the collection doc widget.
-    m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-}
-
 void MainWindow::createConnections()
 {
 	/// @todo
@@ -1036,6 +1012,10 @@ M_WARNING("TODO: These seem out of place.");
 	}
 }
 
+/**
+ * Top-level menu/toolbar action for creating a new Library view by picking a library root directory.
+ * ~= "File->Open...".
+ */
 void MainWindow::importLib()
 {
 	// Add a directory as the root of a new library.
@@ -1129,7 +1109,7 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
 void MainWindow::newPlaylist()
 {
     // Create the View object.
-    auto child = new MDIPlaylistView(this); ///@todo createMdiChildPlaylistView();
+    auto child = new MDIPlaylistView(this);
 
     // Tell it to create a new, empty model.
     child->newFile();
@@ -1139,7 +1119,39 @@ void MainWindow::newPlaylist()
 
     // Add it to the child views.
     addChildMDIView(child);
+
+	// Add the new playlist to the collection doc widget.
+	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
+
     statusBar()->showMessage(tr("Opened new Playlist '%1'").arg(child->windowTitle()));
+}
+
+/**
+ * Top-level menu/toolbar action for creating a new, empty "Now Playing" playlist.
+ * ~= "File->New", except there is no user action for creating the "Now Playing" view/model.
+ */
+void MainWindow::newNowPlaying()
+{
+    auto child = new MDINowPlayingView(this);
+    child->newFile();
+
+    // Add the new child's underlying model to the list of playlist models.
+    /// @todo REMOVE, only one Now Playing.
+    m_playlist_models.push_back(child->underlyingModel());
+    // Set this view's model as the single "Now Playing" model.
+    m_now_playing_playlist_model = child->underlyingModel();
+
+    /// @todo Do we really need to keep this as a member pointer?
+    m_now_playing_playlist_view = child;
+
+    connectNowPlayingViewAndMainWindow(child);
+
+    addChildMDIView(child);
+
+    statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(child->windowTitle()));
+
+	// Add the new playlist to the collection doc widget.
+    m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
 }
 
 /**
@@ -1212,30 +1224,6 @@ MDILibraryView* MainWindow::createMdiChildLibraryView()
 
 	addChildMDIView(child);
 
-	return child;
-}
-
-/**
- * Creates a new, empty "Now Playing" playlist and view, then adds it to the MDIArea.
- * @return
- */
-MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
-{
-	// Create a new playlist model.
-//	auto new_playlist_model = new PlaylistModel(this);
-//	m_playlist_models.push_back(new_playlist_model);
-
-//	MDIPlaylistView* child = new MDIPlaylistView(this);
-//	child->setModel(new_playlist_model);
-//	auto child = MDIPlaylistView::openModel(new_playlist_model, this);
-    auto child = new MDIPlaylistView(this);
-    child->newFile();
-    m_playlist_models.push_back(child->underlyingModel());
-
-	addChildMDIView(child);
-
-	// Add the new playlist to the collection doc widget.
-	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
 	return child;
 }
 

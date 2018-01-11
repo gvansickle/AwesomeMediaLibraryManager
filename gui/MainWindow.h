@@ -192,7 +192,6 @@ private:
     QMdiSubWindow* findSubWindow(QUrl url);
     
     MDILibraryView* createMdiChildLibraryView();
-    MDIPlaylistView* createMdiChildPlaylistView();
 
     /**
      * Called by importModel().
