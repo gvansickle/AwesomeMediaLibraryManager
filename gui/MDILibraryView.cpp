@@ -32,6 +32,7 @@
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
 #include "menus/LibraryContextMenu.h"
+#include "gui/NetworkAwareFileDialog.h"
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -68,9 +69,36 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
  */
 MDILibraryView *MDILibraryView::open(QWidget *parent)
 {
-M_WARNING("TODO");
-    Q_ASSERT(0);
-    return nullptr;
+    auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(), "import_dir");
+    QUrl lib_url = liburl.first;
+
+    if(lib_url.isEmpty())
+    {
+        qDebug() << "User cancelled.";
+        return nullptr;
+    }
+    // Open the directory the user chose as an MDILibraryView and associated model.
+M_WARNING("TODO: Need to somehow check if a model already exists and needs a view, or if we just need to activate an existing view.");
+    return openFile(lib_url, parent);
+}
+
+MDILibraryView *MDILibraryView::openFile(QUrl open_url, QWidget *parent)
+{
+M_WARNING("TODO: Need to somehow check if a model already exists and needs a view, or if we just need to activate an existing view.");
+
+    // Create an empty library.
+    auto libview = new MDILibraryView(parent);
+
+    if(libview->readFile(open_url))
+    {
+        libview->setCurrentFile(open_url);
+        return libview;
+    }
+    else
+    {
+        delete libview;
+        return nullptr;
+    }
 }
 
 /**

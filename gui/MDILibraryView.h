@@ -48,6 +48,7 @@ public:
 
     /**
      * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+     * ~= "File->Open..."
      */
     static MDILibraryView* open(QWidget* parent);
 

@@ -1018,6 +1018,7 @@ M_WARNING("TODO: These seem out of place.");
  */
 void MainWindow::importLib()
 {
+#if TEMP
 	// Add a directory as the root of a new library.
 
 	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(this, "Select a directory to import", QUrl(), "import_dir");
@@ -1047,6 +1048,32 @@ void MainWindow::importLib()
     // Open a view on it.
 	openMDILibraryViewOnModel(lib);
     return;
+#else
+    auto child = new MDILibraryView::open(this);
+    if(child)
+    {
+        // Add the new child's underlying model to the list of library models.
+        m_libmodels.push_back(child->underlyingModel());
+
+        /// @todo Set this as the single Library?
+
+        // Connects...
+        connectLibraryViewAndMainWindow(child);
+
+        addChildMDIView(child);
+
+M_WARNING("TODO: These seem out of place.");
+        connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
+        connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
+
+        /// @todo Collection
+        statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));
+    }
+    else
+    {
+        qDebug() << "MDILibraryView::open() returned nullptr";
+    }
+#endif
 }
 
 void MainWindow::onRescanLibrary()
