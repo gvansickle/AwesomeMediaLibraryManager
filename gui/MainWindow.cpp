@@ -968,13 +968,14 @@ void MainWindow::openWindows()
 QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 {
 	// Create the new LibraryModel.
-	auto lib = QSharedPointer<LibraryModel>(new LibraryModel(this));
+//	auto lib = QSharedPointer<LibraryModel>(new LibraryModel(this));
+	auto lib = LibraryModel::openFile(url, this);
 
 	// Connect it to the ActivityProgressWidget, since as soon as we set the URL, async activity will start.
 	connectLibraryToActivityProgressWidget(lib.data(), m_activity_progress_widget);
 
 	m_libmodels.push_back(lib);
-	lib->setLibraryRootUrl(url);
+//	lib->setLibraryRootUrl(url);
 
 	// Add the new library to the Collection Doc Widget.
 	m_libraryDockWidget->addLibrary(new LocalLibraryItem(lib.data()));
@@ -1049,11 +1050,11 @@ void MainWindow::importLib()
 	openMDILibraryViewOnModel(lib);
     return;
 #else
-    auto child = new MDILibraryView::open(this);
+    auto child = MDILibraryView::open(this);
     if(child)
     {
         // Add the new child's underlying model to the list of library models.
-        m_libmodels.push_back(child->underlyingModel());
+        m_libmodels.push_back(child->underlyingModelSharedPtr());
 
         /// @todo Set this as the single Library?
 
@@ -1063,6 +1064,7 @@ void MainWindow::importLib()
         addChildMDIView(child);
 
 M_WARNING("TODO: These seem out of place.");
+        auto libmodel = child->underlyingModel();
         connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
         connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
 
@@ -1088,7 +1090,9 @@ void MainWindow::onRescanLibrary()
 void MainWindow::onShowLibrary(LibraryModel* libmodel)
 {
 	qDebug() << QString("onShowLibrary");
-	openMDILibraryViewOnModel(libmodel);
+M_WARNING("TODO");
+//	openMDILibraryViewOnModel(libmodel);
+    //??? MDILibraryView(libmodel);
 	return;
 }
 

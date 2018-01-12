@@ -21,6 +21,7 @@
 #define MDILIBRARYVIEW_H
 
 #include "MDITreeViewBase.h"
+#include "logic/LibraryModel.h"
 
 #include <QUrl>
 #include <memory>
@@ -28,7 +29,6 @@
 class ItemDelegateLength;
 class LibrarySortFilterProxyModel;
 class MDIPlaylistView;
-class LibraryModel;
 class LibraryEntry;
 class PlaylistModel;
 
@@ -53,22 +53,26 @@ public:
     static MDILibraryView* open(QWidget* parent);
 
     /**
-     * Open the specified QUrl.
+     * Open the specified QUrl.  Called by open().
      */
     static MDILibraryView* openFile(QUrl open_url, QWidget* parent);
 
     /**
      * Open a new view on the given model.
      */
-    static MDILibraryView* openModel(QAbstractItemModel* model, QWidget* parent);
+    static MDILibraryView* openModel(QSharedPointer<LibraryModel> model, QWidget* parent);
 
     void setModel(QAbstractItemModel* model) override;
+    void setModel(QSharedPointer<LibraryModel> model);
+
+    LibraryModel* underlyingModel() const override;
+    QSharedPointer<LibraryModel> underlyingModelSharedPtr() const;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
 
 protected:
-	LibraryModel* m_underlying_model;
+    QSharedPointer<LibraryModel> m_underlying_model;
 
 	LibrarySortFilterProxyModel* m_sortfilter_model;
 	ItemDelegateLength* m_length_delegate;

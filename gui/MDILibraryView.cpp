@@ -89,8 +89,12 @@ M_WARNING("TODO: Need to somehow check if a model already exists and needs a vie
     // Create an empty library.
     auto libview = new MDILibraryView(parent);
 
-    if(libview->readFile(open_url))
+    // Try to open the given URL as a model.
+    auto libmodel = LibraryModel::openFile(open_url, parent);
+
+    if(libmodel)
     {
+        libview->setModel(libmodel);
         libview->setCurrentFile(open_url);
         return libview;
     }
@@ -104,7 +108,7 @@ M_WARNING("TODO: Need to somehow check if a model already exists and needs a vie
 /**
  * static member function which opens an MDILibraryView on the given model.
  */
-MDILibraryView* MDILibraryView::openModel(QAbstractItemModel* model, QWidget* parent)
+MDILibraryView* MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent)
 {
 	auto view = new MDILibraryView(parent);
 	view->setModel(model);
@@ -113,6 +117,8 @@ MDILibraryView* MDILibraryView::openModel(QAbstractItemModel* model, QWidget* pa
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
+    Q_ASSERT(0);
+#if 0
 	// Keep a ref to the real model.
 	m_underlying_model = qobject_cast<LibraryModel*>(model);
 
@@ -149,6 +155,57 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
 	/// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
     header()->setResizeContentsPrecision(0);
+#endif
+}
+
+void MDILibraryView::setModel(QSharedPointer<LibraryModel> model)
+{
+    // Keep a ref to the real model.
+    m_underlying_model = model;
+
+    // Set our "current file" to the root dir of the model.
+    setCurrentFile(m_underlying_model->getLibRootDir());
+
+    m_sortfilter_model->setSourceModel(model.data());
+    auto old_sel_model = selectionModel();
+    // This will create a new selection model.
+    MDITreeViewBase::setModel(m_sortfilter_model);
+    Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
+    old_sel_model->deleteLater();
+
+
+    // Set up the TreeView's header.
+    header()->setStretchLastSection(false);
+    header()->setSectionResizeMode(QHeaderView::Stretch);
+    header()->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // Set the resize behavior of the header's columns based on the columnspecs.
+    int num_cols = m_underlying_model->columnCount();
+    for(int c = 0; c < num_cols; ++c)
+    {
+        if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
+        {
+            header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+        }
+    }
+    // Find the "Length" column.
+    auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
+    // Set the delegate on it.
+    setItemDelegateForColumn(len_col, m_length_delegate);
+
+    /// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
+    /// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
+    header()->setResizeContentsPrecision(0);
+}
+
+LibraryModel* MDILibraryView::underlyingModel() const
+{
+    return m_underlying_model.data();
+}
+
+QSharedPointer<LibraryModel> MDILibraryView::underlyingModelSharedPtr() const
+{
+    return m_underlying_model;
 }
 
 void MDILibraryView::setEmptyModel()

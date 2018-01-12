@@ -77,7 +77,7 @@ public:
     static MDITreeViewBase* open(QWidget* parent) { return nullptr; }
 
     /**
-     * Open the specified QUrl.
+     * Open the specified QUrl.  Called by open(QWidget*).
      */
     static MDITreeViewBase* openFile(QUrl open_url, QWidget* parent) { return nullptr; }
 
@@ -109,6 +109,9 @@ public:
     // Base class overrides.
     //
     void setModel(QAbstractItemModel *model) override;
+
+    virtual QAbstractItemModel* underlyingModel() const = 0;
+
 
 public slots:
     

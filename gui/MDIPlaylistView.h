@@ -52,7 +52,7 @@ public:
 
     void setModel(QAbstractItemModel* model) override;
 
-    virtual PlaylistModel* underlyingModel() const;
+    PlaylistModel* underlyingModel() const override;
     
     /// Playlists are not read-only.
     bool isReadOnly() const override { return false; }

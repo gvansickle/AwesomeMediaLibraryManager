@@ -83,6 +83,18 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_libr
 
 LibraryModel::~LibraryModel()
 {
+    delete m_rescanner;
+}
+
+QSharedPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QWidget* parent)
+{
+    // Create the new LibraryModel.
+    auto lib = QSharedPointer<LibraryModel>(new LibraryModel(parent));
+
+M_WARNING("TODO: Find a better way to start async operations and/or connect");
+    lib->setLibraryRootUrl(open_url);
+
+    return lib;
 }
 
 QModelIndex LibraryModel::index(int row, int column, const QModelIndex &parent) const
