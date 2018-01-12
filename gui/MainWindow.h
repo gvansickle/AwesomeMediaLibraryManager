@@ -190,6 +190,7 @@ private:
     /// MDI-related functions.
     /// @{
     QMdiSubWindow* findSubWindow(QUrl url);
+    QWidget* findSubWindowWithWidget(QWidget* widget) const;
     
     MDILibraryView* createMdiChildLibraryView();
 

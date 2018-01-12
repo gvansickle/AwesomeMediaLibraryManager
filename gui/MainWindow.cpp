@@ -799,13 +799,14 @@ MDITreeViewBase* MainWindow::activeChildMDIView()
 }
 
 /**
- * Find any existing child MDI window associated with the give url.
+ * Find any existing child MDI window associated with the given url.
  */
 QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 {
 	for(auto window : m_mdi_area->subWindowList())
 	{
 		auto widget = window->widget();
+        qDebug() << "windowFilePath:" << windowFilePath();
 		if(widget == nullptr)
 		{
 			qCritical() << "Mdi child has no widget.";
@@ -815,7 +816,20 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 			return window;
 		}
 	}
-	return nullptr;
+    return nullptr;
+}
+
+QWidget* MainWindow::findSubWindowWithWidget(QWidget *widget) const
+{
+    auto subwindow_list = m_mdi_area->subWindowList();
+    for(auto sw : subwindow_list)
+    {
+        if(sw->widget() == widget)
+        {
+            return widget;
+        }
+    }
+    return nullptr;
 }
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
@@ -1057,9 +1071,20 @@ void MainWindow::importLib()
 	openMDILibraryViewOnModel(lib);
     return;
 #else
-    auto child = MDILibraryView::open(this);
+
+    auto check_for_existing_view = [this](QUrl url) -> MDILibraryView* { return qobject_cast<MDILibraryView*>(this->findSubWindow(url)); };
+
+    auto child = MDILibraryView::open(this, check_for_existing_view);
     if(child)
     {
+        if(child == findSubWindowWithWidget(child))
+        {
+            // View already existed, just activate it's parent subwindow.
+            qDebug() << "View already existed";
+            qobject_cast<QMdiSubWindow*>(child->parent())->show();
+            return;
+        }
+
         // Add the new child's underlying model to the list of library models.
         m_libmodels.push_back(child->underlyingModelSharedPtr());
 

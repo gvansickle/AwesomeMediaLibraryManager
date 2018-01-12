@@ -67,7 +67,7 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 /**
  * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
  */
-MDILibraryView *MDILibraryView::open(QWidget *parent)
+MDILibraryView* MDILibraryView::open(QWidget *parent, std::function<MDILibraryView*(QUrl)> find_existing_view_func)
 {
     auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(), "import_dir");
     QUrl lib_url = liburl.first;
@@ -79,12 +79,20 @@ MDILibraryView *MDILibraryView::open(QWidget *parent)
     }
     // Open the directory the user chose as an MDILibraryView and associated model.
 M_WARNING("TODO: Need to somehow check if a model already exists and needs a view, or if we just need to activate an existing view.");
-    return openFile(lib_url, parent);
+    return openFile(lib_url, parent, find_existing_view_func);
 }
 
-MDILibraryView *MDILibraryView::openFile(QUrl open_url, QWidget *parent)
+/**
+ * Static member function which opens a view on the given @a open_url.
+ */
+MDILibraryView* MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDILibraryView*(QUrl)> find_existing_view_func)
 {
-M_WARNING("TODO: Need to somehow check if a model already exists and needs a view, or if we just need to activate an existing view.");
+    // Check if a view of this URL already exists and we just need to activate it.
+    auto view = find_existing_view_func(open_url);
+    if(view)
+    {
+        return view;
+    }
 
     // Try to open the given URL as a model.
     auto libmodel = LibraryModel::openFile(open_url, parent);
@@ -92,10 +100,12 @@ M_WARNING("TODO: Need to somehow check if a model already exists and needs a vie
     if(libmodel)
     {
         auto libview = MDILibraryView::openModel(libmodel, parent);
+        libview->setCurrentFile(open_url);
         return libview;
     }
     else
     {
+        // User must have cancelled.
         return nullptr;
     }
 }
@@ -103,7 +113,7 @@ M_WARNING("TODO: Need to somehow check if a model already exists and needs a vie
 /**
  * static member function which opens an MDILibraryView on the given model.
  */
-MDILibraryView* MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent)
+MDILibraryView* MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent, std::function<MDILibraryView*(QUrl)> find_existing_model_func)
 {
 	auto view = new MDILibraryView(parent);
 	view->setModel(model);
