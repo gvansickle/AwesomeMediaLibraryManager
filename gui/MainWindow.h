@@ -199,7 +199,7 @@ private:
      * @return
      */
     QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
-    void openMDILibraryViewOnModel(LibraryModel* libmodel);
+    void openMDILibraryViewOnModel(QSharedPointer<LibraryModel> libmodel);
 
     /// @}
     

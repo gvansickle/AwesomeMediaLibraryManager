@@ -86,21 +86,16 @@ MDILibraryView *MDILibraryView::openFile(QUrl open_url, QWidget *parent)
 {
 M_WARNING("TODO: Need to somehow check if a model already exists and needs a view, or if we just need to activate an existing view.");
 
-    // Create an empty library.
-    auto libview = new MDILibraryView(parent);
-
     // Try to open the given URL as a model.
     auto libmodel = LibraryModel::openFile(open_url, parent);
 
     if(libmodel)
     {
-        libview->setModel(libmodel);
-        libview->setCurrentFile(open_url);
+        auto libview = MDILibraryView::openModel(libmodel, parent);
         return libview;
     }
     else
     {
-        delete libview;
         return nullptr;
     }
 }

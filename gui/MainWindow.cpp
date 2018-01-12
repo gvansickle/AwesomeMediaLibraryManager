@@ -956,7 +956,17 @@ void MainWindow::openWindows()
 	for(auto m : m_libmodels)
 	{
 		qDebug() << "Opening view on model:" << m->getLibraryName() << m->getLibRootDir();
-		openMDILibraryViewOnModel(m.data());
+//        openMDILibraryViewOnModel(m);
+        auto child = MDILibraryView::openModel(m, this);
+        if(child)
+        {
+            addChildMDIView(child);
+        }
+M_WARNING("TODO: These seem out of place.");
+        connectLibraryToActivityProgressWidget(m.data(), m_activity_progress_widget);
+        connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
+
+        statusBar()->showMessage(QString("Opened view on library '%1'").arg(m->getLibraryName()));
 	}
 }
 
@@ -968,7 +978,6 @@ void MainWindow::openWindows()
 QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 {
 	// Create the new LibraryModel.
-//	auto lib = QSharedPointer<LibraryModel>(new LibraryModel(this));
 	auto lib = LibraryModel::openFile(url, this);
 
 	// Connect it to the ActivityProgressWidget, since as soon as we set the URL, async activity will start.
@@ -983,7 +992,7 @@ QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 	return lib;
 }
 
-void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
+void MainWindow::openMDILibraryViewOnModel(QSharedPointer<LibraryModel> libmodel)
 {
 	if(libmodel != nullptr)
 	{
@@ -991,22 +1000,20 @@ void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
 		auto existing = findSubWindow(libmodel->getLibRootDir());
 		if(existing != nullptr)
 		{
-			// Already have a view open, switch to it.
+            // Already have a view open, so just switch to it.
 			m_mdi_area->setActiveSubWindow(existing);
 			return;
 		}
 
 		// No view open, create a new one.
-//		auto child = MDILibraryView::openModel(libmodel);
-        auto child = createMdiChildLibraryView();
-        child->setModel(libmodel);
-//		if(child)
-//		{
-//			addChildMDIView(child);
-//		}
+        auto child = MDILibraryView::openModel(libmodel, this);
+        if(child)
+        {
+            addChildMDIView(child);
+        }
 
 M_WARNING("TODO: These seem out of place.");
-        connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
+        connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
         connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
 
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
@@ -1244,6 +1251,7 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	mdisubwindow->show();
 }
 
+#if 0
 MDILibraryView* MainWindow::createMdiChildLibraryView()
 {
 	// Create a new, empty LibraryView.
@@ -1257,6 +1265,7 @@ MDILibraryView* MainWindow::createMdiChildLibraryView()
 
 	return child;
 }
+#endif
 
 // Top-level "saveAs" action handler for "Save playlist as..."
 void MainWindow::savePlaylistAs()
