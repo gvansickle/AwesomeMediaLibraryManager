@@ -188,9 +188,11 @@ M_WARNING("EXPERIMENTAL");
 
 	m_async_task_manager.addFuture(QtConcurrent::mapped(items_to_rescan,
 									   std::bind(&LibraryRescanner::refresher_callback, this, _1)),
-								   [this](){
-		qDebug() << "RESULTS.  this:" << this;
-		qDebug() << "Current thread:" << QThread::currentThread()->objectName();},
+								   [this](int index, QFuture<MetadataReturnVal> f){
+		qDebug() << "RESULT.  this:" << this << "int:" << index;
+		qDebug() << "Current thread:" << QThread::currentThread()->objectName();
+		this->onResultReadyAt(index, f);
+	},
 									[](){
 		qDebug() << "FINISHED";
 		qDebug() << "Current thread:" << QThread::currentThread()->objectName();
@@ -205,7 +207,7 @@ M_WARNING("EXPERIMENTAL");
 #endif
 }
 
-void LibraryRescanner::onResultReadyAt(int index)
+void LibraryRescanner::onResultReadyAt(int index, QFuture<MetadataReturnVal> f)
 {
 	//qDebug() << "Async Rescan reports result ready at" << index;
 

@@ -92,7 +92,7 @@ public slots:
 	void onDirTravFinished();
 
 	/// Slot called by m_rescan_future_watcher when it has a result available.
-	void onResultReadyAt(int index);
+	void onResultReadyAt(int index, QFuture<MetadataReturnVal> f);
 
 	/// Slot called by m_rescan_future_watcher when the rescan is complete.
 	void onRescanFinished();

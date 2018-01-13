@@ -39,14 +39,14 @@ public:
 
 	template <typename T>
 	void addFuture(const QFuture<T>& future,
-			std::function<void()> on_results,
+			std::function<void(int, QFuture<T>)> on_result,
 			std::function<void()> on_finished,
 			std::function<void()> on_canceled)
 	{
 		auto watcher = new QFutureWatcher<T>(this);
 
 		// Make connections.
-		connect(watcher, &QFutureWatcher<T>::resultsReadyAt, on_results);
+		connect(watcher, &QFutureWatcher<T>::resultReadyAt, [=](int i){on_result(i, watcher->future());});
 		connect(watcher, &QFutureWatcher<T>::finished, on_finished);
 		connect(watcher, &QFutureWatcher<T>::canceled, on_canceled);
 
