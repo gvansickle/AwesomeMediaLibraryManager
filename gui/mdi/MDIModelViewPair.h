@@ -21,17 +21,21 @@
 #define GUI_MDI_MDIVIEWPAIRMODEL_H
 
 class MDITreeViewBase;
-class QAbstractItemModel;
+class LibraryModel;
 
 
 class MDIModelViewPair
 {
 public:
-    QAbstractItemModel* m_model { nullptr };
+	QSharedPointer<LibraryModel> m_model { nullptr };
     MDITreeViewBase* m_view { nullptr };
 
     bool m_model_was_existing { false };
     bool m_view_was_existing { false };
+
+	bool hasModel() const { return m_model; }
+	bool hasView() const { return m_view; } ///< This really shouldn't ever be the case if there's no model.
+	bool hasModelAndView() const { return m_model && m_view; }
 };
 
 #endif //GUI_MDI_MDIVIEWPAIRMODEL_H

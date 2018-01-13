@@ -848,7 +848,7 @@ MDITreeViewBase* MainWindow::findSubWindowView(QUrl url)
     }
 }
 
-MDIViewModelPair MainWindow::findSubWindowViewModelPair(QUrl url)
+MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url)
 {
     MDIModelViewPair retval;
     auto view = findSubWindowView(url);
@@ -856,9 +856,34 @@ MDIViewModelPair MainWindow::findSubWindowViewModelPair(QUrl url)
     {
         retval.m_view = view;
         retval.m_view_was_existing = true;
-        retval.m_model = view->underlyingModel();
+		retval.m_model = qobject_cast<LibraryModel*>(view->underlyingModel())->sharedFromThis();
         retval.m_model_was_existing = true;
     }
+	else
+	{
+		// No existing view, is there an existing model open?
+M_WARNING("TODO: Find a cleaner way to handle this.");
+		for(auto lm : m_libmodels)
+		{
+			if(lm->getLibRootDir() == url)
+			{
+				qDebug() << "Found existing LibraryModel:" << lm;
+				retval.m_model = lm;
+				retval.m_model_was_existing = true;
+			}
+		}
+		for(auto pm : m_playlist_models)
+		{
+			if(pm->getLibRootDir() == url)
+			{
+				qDebug() << "Found existing PlaylistModel:" << pm;
+				retval.m_model = pm->sharedFromThis();
+				retval.m_model_was_existing = true;
+			}
+		}
+	}
+
+	return retval;
 }
 
 QWidget* MainWindow::findSubWindowWithWidget(QWidget *widget) const
@@ -1014,13 +1039,13 @@ void MainWindow::openWindows()
 		qDebug() << "Opening view on model:" << m->getLibraryName() << m->getLibRootDir();
 //        openMDILibraryViewOnModel(m);
         auto child = MDILibraryView::openModel(m, this);
-        if(child)
+		if(child.m_view)
         {
-            addChildMDIView(child);
+			addChildMDIView(child.m_view);
         }
 M_WARNING("TODO: These seem out of place.");
         connectLibraryToActivityProgressWidget(m.data(), m_activity_progress_widget);
-        connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
+		connectActiveMDITreeViewBaseAndMetadataDock(child.m_view, m_metadataDockWidget);
 
         statusBar()->showMessage(QString("Opened view on library '%1'").arg(m->getLibraryName()));
 	}
@@ -1048,6 +1073,7 @@ QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 	return lib;
 }
 
+#if 0
 void MainWindow::openMDILibraryViewOnModel(QSharedPointer<LibraryModel> libmodel)
 {
 	if(libmodel != nullptr)
@@ -1075,6 +1101,7 @@ M_WARNING("TODO: These seem out of place.");
 		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
 	}
 }
+#endif
 
 /**
  * Top-level menu/toolbar action for creating a new Library view by picking a library root directory.
@@ -1114,36 +1141,53 @@ void MainWindow::importLib()
     return;
 #else
 
-    auto check_for_existing_view = [this](QUrl url) -> MDIViewModelPair {
-        auto libview = qobject_cast<MDILibraryView*>(this->findSubWindowView(url));
-        return libview;
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		//auto libview = qobject_cast<MDILibraryView*>(this->findSubWindowView(url));
+		return mvpair;
     };
 
     auto child = MDILibraryView::open(this, check_for_existing_view);
-    if(child)
+	if(child.m_view)
     {
-        if(child == findSubWindowWithWidget(child))
+		auto libview = qobject_cast<MDILibraryView*>(child.m_view);
+		auto libmodel = qobject_cast<LibraryModel*>(child.m_model);
+
+		Q_ASSERT(libview != 0);
+		Q_ASSERT(libmodel != 0);
+
+		// Did a view of the URL the user specified already exist?
+		if(child.m_view_was_existing)
         {
-            // View already existed, just activate it's parent subwindow.
+			// View already existed, just activate its parent subwindow.
             qDebug() << "View already existed";
-            qobject_cast<QMdiSubWindow*>(child->parent())->show();
+			qobject_cast<QMdiSubWindow*>(child.m_view->parent())->show();
             return;
         }
 
-        // Add the new child's underlying model to the list of library models.
-        m_libmodels.push_back(child->underlyingModelSharedPtr());
+		// View is new.
+		/// @todo Seems out of place.
+		connectActiveMDITreeViewBaseAndMetadataDock(libview, m_metadataDockWidget);
+		connectLibraryViewAndMainWindow(libview);
 
-        /// @todo Set this as the single Library?
+		addChildMDIView(libview);
 
-        // Connects...
-        connectLibraryViewAndMainWindow(child);
+		// View is new, did the model already exist?
+		if(child.m_model_was_existing)
+		{
+			qDebug() << "Model existed:" << child.m_model;
+			return;
+		}
 
-        addChildMDIView(child);
+		// Model is new, add the new child's underlying model to the list of library models.
+
+		/// @todo Set this as the single Library?
+
+		qDebug() << "Model is new:" << child.m_model;
+		m_libmodels.push_back(libview->underlyingModelSharedPtr());
 
 M_WARNING("TODO: These seem out of place.");
-        auto libmodel = child->underlyingModel();
-        connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
-        connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
+		connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
 
         /// @todo Collection
         statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));

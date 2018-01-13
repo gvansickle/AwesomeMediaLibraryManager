@@ -34,6 +34,7 @@
 #include <logic/PlaylistModel.h>
 #include <logic/MP2.h>
 #include <gui/settings/SettingsDialog.h>
+#include "mdi/MDIModelViewPair.h"
 
 class QActionGroup;
 class QWidget;
@@ -189,6 +190,7 @@ private:
 
     /// MDI-related functions.
     /// @{
+	MDIModelViewPair findSubWindowModelViewPair(QUrl url);
     QMdiSubWindow* findSubWindow(QUrl url);
     MDITreeViewBase* findSubWindowView(QUrl url);
     QWidget* findSubWindowWithWidget(QWidget* widget) const;

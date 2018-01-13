@@ -23,15 +23,16 @@
 #include <QContextMenuEvent>
 #include <QTreeView>
 #include <QUrl>
+#include <QEnableSharedFromThis>
 
-#include "gui/mdi/MDIViewModelPair.h"
+#include "mdi/MDIModelViewPair.h"
 
 class QMdiSubWindow;
 class QFileDevice;
 class ModelChangeWatcher;
 
 
-class MDITreeViewBase : public QTreeView
+class MDITreeViewBase : public QTreeView, public QEnableSharedFromThis<MDITreeViewBase>
 {
     Q_OBJECT
     

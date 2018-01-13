@@ -68,12 +68,14 @@ private:
 template <typename T>
 class futureww : public QFutureWatcher<T>
 {
+	using BASE_CLASS = QFutureWatcher<T>;
+
 public:
     explicit futureww(QObject* parent = 0) : QFutureWatcher<T>(parent) {}
     ~futureww()
     {
         cancel();
-        waitForFinished();
+		BASE_CLASS::waitForFinished();
     }
 
     futureww(const futureww&) = delete;
@@ -84,7 +86,7 @@ public:
 //	}
 
     /// Assignment operator from QFuture<T>.
-    futureww<T>& operator=(QFuture<T> f) { setFuture(f); return *this; }
+	futureww<T>& operator=(QFuture<T> f) { BASE_CLASS::setFuture(f); return *this; }
 
 	/**
      * Attaches a continuation to the futureww.
@@ -95,7 +97,7 @@ public:
 	{
         m_continuation_function = std::move(continuation_function);
         connect(this, &QFutureWatcher<T>::resultsReadyAt, m_continuation_function);
-        return m_continuation_function(future());
+		return m_continuation_function(BASE_CLASS::future());
 	}
 
     /**
@@ -104,7 +106,7 @@ public:
     void then(std::function<void()> finished_function)
     {
         m_finished_function = std::move(finished_function);
-        connect(this, &QFutureWatcher<T>::finished, m_finished_function);
+		QObject::connect(this, &QFutureWatcher<T>::finished, m_finished_function);
     }
 
     futureww<T>& on_resultat(std::function<void(int)> resultat_function)
@@ -117,17 +119,17 @@ public:
     futureww<T>& on_result(std::function<void(T)> result_function)
     {
         m_result_function = std::move(result_function);
-        connect(this, &QFutureWatcher<T>::resultReadyAt, [this](int index){m_result_function(future().resultAt(index));});
+		QObject::connect(this, &QFutureWatcher<T>::resultReadyAt, [this](int index){m_result_function(BASE_CLASS::future().resultAt(index));});
         return *this;
     }
 
     futureww<T>& on_progress(std::function<void(int,int,int)> progress_function)
     {
         m_progress_function = progress_function;
-    	connect(this, &QFutureWatcher<T>::progressValueChanged, [this](int val){
+		QObject::connect(this, &QFutureWatcher<T>::progressValueChanged, [this](int val){
     		m_prog_value = val; m_progress_function(m_prog_min, m_prog_max, m_prog_value);
     	});
-    	connect(this, &QFutureWatcher<T>::progressRangeChanged, [this](int min, int max){
+		QObject::connect(this, &QFutureWatcher<T>::progressRangeChanged, [this](int min, int max){
     		m_prog_min = min;
     		m_prog_max = max;
     		m_progress_function(m_prog_min, m_prog_max, m_prog_value);

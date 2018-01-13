@@ -28,6 +28,7 @@
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
+#include <QEnableSharedFromThis>
 
 #include "Library.h"
 #include "LibraryEntry.h"
@@ -99,7 +100,7 @@ struct ColumnSpec
 	bool m_default_to_hidden {false};
 };
 
-class LibraryModel : public QAbstractItemModel
+class LibraryModel : public QAbstractItemModel, public QEnableSharedFromThis<LibraryModel>
 {
     Q_OBJECT
 

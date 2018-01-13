@@ -67,7 +67,7 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 /**
  * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
  */
-MDILibraryView* MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
     auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(), "import_dir");
     QUrl lib_url = liburl.first;
@@ -75,7 +75,7 @@ MDILibraryView* MDILibraryView::open(QWidget *parent, std::function<MDIModelView
     if(lib_url.isEmpty())
     {
         qDebug() << "User cancelled.";
-        return nullptr;
+		return MDIModelViewPair();
     }
 
     // Open the directory the user chose as an MDILibraryView and associated model.
@@ -86,7 +86,7 @@ MDILibraryView* MDILibraryView::open(QWidget *parent, std::function<MDIModelView
 /**
  * Static member function which opens a view on the given @a open_url.
  */
-MDILibraryView* MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
     // Check if a view of this URL already exists and we just need to activate it.
     qDebug() << "Looking for existing view of" << open_url;
@@ -98,33 +98,52 @@ MDILibraryView* MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::fu
         return mv_pair;
     }
 
-    // No existing view.  Is there an existing model?
-M_WARNING("TODO EXISTING MODEL");
+	// No existing view.  Open a new one.
 
-    //qDebug() << "// Try to open a model on the given URL.";
-    auto libmodel = LibraryModel::openFile(open_url, parent);
+	qDebug() << "// Try to open a model on the given URL.";
+	QSharedPointer<LibraryModel> libmodel;
+	if(mv_pair.m_model)
+	{
+		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
+
+		qDebug() << "Model exists:" << mv_pair.m_model;
+		libmodel = mv_pair.m_model;
+	}
+	else
+	{
+		qDebug() << "Opening new model on URL" << open_url;
+		libmodel = LibraryModel::openFile(open_url, parent);
+	}
 
     if(libmodel)
     {
         auto libview = MDILibraryView::openModel(libmodel, parent);
-        libview->setCurrentFile(open_url);
+		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control system.
+		/// In very shortened form: Derived member functions can only access "protected" members through
+		/// an object of the Derived type, not of the Base type.
+		static_cast<MDILibraryView*>(libview.m_view)->setCurrentFile(open_url);
         return libview;
     }
     else
     {
         // User must have cancelled.
-        return nullptr;
+		return MDIModelViewPair();
     }
 }
 
 /**
  * static member function which opens an MDILibraryView on the given model.
  */
-MDILibraryView* MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_model_func)
+MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent,
+										   std::function<MDIModelViewPair(QUrl)> find_existing_model_func,
+										   MDIModelViewPair mvpair)
 {
-	auto view = new MDILibraryView(parent);
-	view->setModel(model);
-	return view;
+	MDIModelViewPair retval;
+	retval.m_model = model;
+
+	retval.m_view = new MDILibraryView(parent);
+	retval.m_view->setModel(model.data());
+	return retval;
 }
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
