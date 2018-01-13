@@ -24,7 +24,7 @@ class MDITreeViewBase;
 class QAbstractItemModel;
 
 
-class MDIViewModelPair
+class MDIModelViewPair
 {
 public:
     MDITreeViewBase* m_view { nullptr };
