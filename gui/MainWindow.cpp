@@ -806,13 +806,14 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
 	for(auto window : m_mdi_area->subWindowList())
 	{
 		auto widget = window->widget();
-        qDebug() << "windowFilePath:" << windowFilePath();
+        qDebug() << "windowFilePath:" << widget << widget->windowFilePath();
 		if(widget == nullptr)
 		{
 			qCritical() << "Mdi child has no widget.";
 		}
 		else if(widget->windowFilePath() == url.toString())
 		{
+            qDebug() << "Found subwindow with URL:" << url;
 			return window;
 		}
 	}
@@ -1072,7 +1073,18 @@ void MainWindow::importLib()
     return;
 #else
 
-    auto check_for_existing_view = [this](QUrl url) -> MDILibraryView* { return qobject_cast<MDILibraryView*>(this->findSubWindow(url)); };
+    auto check_for_existing_view = [this](QUrl url) -> MDILibraryView* {
+        auto qmdiwin = this->findSubWindow(url);
+        qDebug() << "qmdiwin" << qmdiwin;
+        if(qmdiwin)
+        {
+            return qobject_cast<MDILibraryView*>(qmdiwin->widget());
+        }
+        else
+        {
+            return nullptr;
+        }
+    };
 
     auto child = MDILibraryView::open(this, check_for_existing_view);
     if(child)

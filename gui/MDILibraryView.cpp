@@ -88,13 +88,16 @@ M_WARNING("TODO: Need to somehow check if a model already exists and needs a vie
 MDILibraryView* MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDILibraryView*(QUrl)> find_existing_view_func)
 {
     // Check if a view of this URL already exists and we just need to activate it.
+    qDebug() << "Looking for existing view of" << open_url;
     auto view = find_existing_view_func(open_url);
+    qDebug() << "WTH:" << view;
     if(view)
     {
+        qDebug() << "View already exists, returning" << view;
         return view;
     }
 
-    // Try to open the given URL as a model.
+    qDebug() << "// Try to open the given URL as a model.";
     auto libmodel = LibraryModel::openFile(open_url, parent);
 
     if(libmodel)
@@ -230,7 +233,7 @@ QString MDILibraryView::defaultNameFilter()
 	return "";
 }
 
-bool MDILibraryView::loadFile(QUrl load_url)
+bool MDILibraryView::readFile(QUrl load_url)
 {
 	m_underlying_model->setLibraryRootUrl(load_url);
 	setCurrentFile(load_url);

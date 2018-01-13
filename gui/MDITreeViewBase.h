@@ -87,7 +87,6 @@ public:
     static MDITreeViewBase* openModel(QAbstractItemModel* model, QWidget* parent) { return nullptr; }
     /// @}
 #endif
-    Q_DECL_DEPRECATED virtual bool loadFile(QUrl load_url);
 
     /// Returns the current basename of this window's backing file.
     QString userFriendlyCurrentFile() const;
@@ -134,14 +133,17 @@ protected:
     QString m_current_filter;
     bool m_isUntitled = true;
 
-    /// Override in derived classes to set an empty model on newFile().
+    /// Override in derived classes to set an empty model.
+    /// Used when newFile() is called.
     virtual void setEmptyModel() = 0;
 
-    /// Protected function which is used to set the view's filename properties on a save or load.
-    /// Called by loadFile() and saveFile().
+    /// Protected function which is used to set the view's filename properties on a read or write.
+    /// Called by readFile() and writeFile().
     void setCurrentFile(QUrl url);
 
-    bool saveFile(QUrl save_url, QString filter);
+    virtual bool readFile(QUrl load_url);
+
+    virtual bool writeFile(QUrl save_url, QString filter);
 
     virtual void closeEvent(QCloseEvent* event) override;
 

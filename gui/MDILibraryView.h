@@ -93,7 +93,7 @@ protected:
 	/// @name Serialization
 	/// @{
 
-    Q_DECL_DEPRECATED virtual bool loadFile(QUrl load_url) override;
+    virtual bool readFile(QUrl load_url) override;
 	virtual void serializeDocument(QFileDevice& file) const override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 
