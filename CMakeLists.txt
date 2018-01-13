@@ -422,6 +422,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
+target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS")
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-O0")
 endif()

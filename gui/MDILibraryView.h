@@ -74,10 +74,10 @@ public:
 									  std::function<MDIModelViewPair(QUrl)> find_existing_model_func = nullptr,
 									  MDIModelViewPair mvpair = MDIModelViewPair());
 
-    void setModel(QAbstractItemModel* model) override;
+	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
     void setModel(QSharedPointer<LibraryModel> model);
 
-    LibraryModel* underlyingModel() const override;
+	Q_DECL_DEPRECATED LibraryModel* underlyingModel() const override;
     QSharedPointer<LibraryModel> underlyingModelSharedPtr() const;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }

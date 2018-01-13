@@ -48,6 +48,7 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_re
 	connect(&m_rescan_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
 	connect(&m_rescan_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
 	connect(&m_rescan_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
+M_WARNING("QObject::connect: No such slot LibraryRescanner::onResultReadyAt(int) in /home/gary/src/AwesomeMediaLibraryManager/logic/LibraryRescanner.cpp:51");
 	connect(&m_rescan_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onResultReadyAt(int)));
 	connect(&m_rescan_future_watcher, SIGNAL(finished()), SLOT(onRescanFinished()));
 
@@ -219,12 +220,12 @@ M_WARNING("EXPERIMENTAL");
 									[](){ qDebug() << "CANCELLED"; }
 	);
 
-#elif 1
+#elif 0
 	// Start the mapped operation, set the future watcher to the returned future, and we're scanning.
 	m_rescan_future_watcher.setFuture(QtConcurrent::mapped(
 			items_to_rescan,
 			std::bind(&LibraryRescanner::refresher_callback, this, _1)));
-#elif 0
+#elif 1
 
     m_futureww
 //	.on_resultat([](int at){
