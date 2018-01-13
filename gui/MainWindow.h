@@ -69,29 +69,25 @@ public:
 
 public slots:
 
+    /// Slot corresponding to the "Open Directory as new Library" action.
+    /// This is ~= a "File->Open" action.
+    void importLib();
 
-
-protected:
-    void closeEvent(QCloseEvent* event) override;
-
-
-private slots:
-    void onSubWindowActivated(QMdiSubWindow* subwindow);
-    void onFocusChanged(QWidget* old, QWidget* now);
-
-    void changeStyle(const QString& styleName);
-    void changeIconTheme(const QString& iconThemeName);
-
-    void onShowLibrary(LibraryModel* libmodel);
-    void onRemoveDirFromLibrary(LibraryModel* libmodel);
-
-    void onRescanLibrary();
-
-    void startSettingsDialog();
-
+    /**
+     * Open a new, empty playlist.
+     * ~= "File->New".
+     */
     void newPlaylist();
+
+    /**
+     * Open an existing playlist.
+     * ~= "File->Open...".
+     */
     void openPlaylist();
     void savePlaylistAs();
+
+    void onRescanLibrary();
+    void startSettingsDialog();
 
     /// @name Edit action forwarders.
     /// @{
@@ -101,10 +97,32 @@ private slots:
     void onSelectAll();
     void onDelete();
     /// @}
-	///
 
-	void about();
 
+    void about();
+
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
+
+protected slots:
+
+    // Probably don't need anything here, since we probably won't be deriving from MainWindow.
+
+private slots:
+    void onSubWindowActivated(QMdiSubWindow* subwindow);
+    void onFocusChanged(QWidget* old, QWidget* now);
+
+    void changeStyle(const QString& styleName);
+    void changeIconTheme(const QString& iconThemeName);
+
+    /**
+     * Slot FBO the Collection sidebar to bring the Library @a libmodel to the fore
+     * and/or creat a new MDILibraryView for it if one doesn't exist.
+     */
+    void onShowLibrary(LibraryModel* libmodel);
+
+    void onRemoveDirFromLibrary(LibraryModel* libmodel);
 
     void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
@@ -131,6 +149,10 @@ private:
     void createToolBars();
     void createStatusBar();
 	void createDockWidgets();
+
+    /// Equivalent of a "File->New" action for the Now Playing model/view.
+    void newNowPlaying();
+
 	void addChildMDIView(MDITreeViewBase* child);
 	MDITreeViewBase* activeChildMDIView();
     
@@ -148,9 +170,6 @@ private:
     ///@}
 
     void stopAllBackgroundThreads();
-
-    void importLib();
-    
 
     /// @name Persistency
     ///@{
@@ -171,13 +190,18 @@ private:
     /// MDI-related functions.
     /// @{
     QMdiSubWindow* findSubWindow(QUrl url);
+    MDITreeViewBase* findSubWindowView(QUrl url);
+    QWidget* findSubWindowWithWidget(QWidget* widget) const;
     
     MDILibraryView* createMdiChildLibraryView();
-    MDIPlaylistView* createMdiChildPlaylistView();
-    MDINowPlayingView* createMdiNowPlayingView();
 
+    /**
+     * Called by importModel().
+     * @param url
+     * @return
+     */
     QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
-    void openMDILibraryViewOnModel(LibraryModel* libmodel);
+    void openMDILibraryViewOnModel(QSharedPointer<LibraryModel> libmodel);
 
     /// @}
     

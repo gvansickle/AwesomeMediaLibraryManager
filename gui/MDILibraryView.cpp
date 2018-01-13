@@ -32,6 +32,7 @@
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
 #include "menus/LibraryContextMenu.h"
+#include "gui/NetworkAwareFileDialog.h"
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -60,13 +61,66 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	//// Libraries can only have copies dragged out of them.
 	setAcceptDrops(false);
 	setDragDropMode(QAbstractItemView::DragOnly);
-	setDropIndicatorShown(true);
+    setDropIndicatorShown(true);
+}
+
+/**
+ * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+ */
+MDILibraryView* MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+{
+    auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(), "import_dir");
+    QUrl lib_url = liburl.first;
+
+    if(lib_url.isEmpty())
+    {
+        qDebug() << "User cancelled.";
+        return nullptr;
+    }
+
+    // Open the directory the user chose as an MDILibraryView and associated model.
+    // Note that openFile() may return an already-existing view if one is found by find_existing_view_func().
+    return openFile(lib_url, parent, find_existing_view_func);
+}
+
+/**
+ * Static member function which opens a view on the given @a open_url.
+ */
+MDILibraryView* MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+{
+    // Check if a view of this URL already exists and we just need to activate it.
+    qDebug() << "Looking for existing view of" << open_url;
+    auto mv_pair = find_existing_view_func(open_url);
+    if(mv_pair.m_view)
+    {
+        Q_ASSERT_X(mv_pair.m_view_was_existing == true, "openFile", "find_existing function returned a view but said it was not pre-existing.");
+        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view;
+        return mv_pair;
+    }
+
+    // No existing view.  Is there an existing model?
+M_WARNING("TODO EXISTING MODEL");
+
+    //qDebug() << "// Try to open a model on the given URL.";
+    auto libmodel = LibraryModel::openFile(open_url, parent);
+
+    if(libmodel)
+    {
+        auto libview = MDILibraryView::openModel(libmodel, parent);
+        libview->setCurrentFile(open_url);
+        return libview;
+    }
+    else
+    {
+        // User must have cancelled.
+        return nullptr;
+    }
 }
 
 /**
  * static member function which opens an MDILibraryView on the given model.
  */
-MDILibraryView* MDILibraryView::openModel(QAbstractItemModel* model, QWidget* parent)
+MDILibraryView* MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_model_func)
 {
 	auto view = new MDILibraryView(parent);
 	view->setModel(model);
@@ -75,6 +129,8 @@ MDILibraryView* MDILibraryView::openModel(QAbstractItemModel* model, QWidget* pa
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
+    Q_ASSERT(0);
+#if 0
 	// Keep a ref to the real model.
 	m_underlying_model = qobject_cast<LibraryModel*>(model);
 
@@ -110,7 +166,64 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 
 	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
 	/// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
-	header()->setResizeContentsPrecision(0);
+    header()->setResizeContentsPrecision(0);
+#endif
+}
+
+void MDILibraryView::setModel(QSharedPointer<LibraryModel> model)
+{
+    // Keep a ref to the real model.
+    m_underlying_model = model;
+
+    // Set our "current file" to the root dir of the model.
+    setCurrentFile(m_underlying_model->getLibRootDir());
+
+    m_sortfilter_model->setSourceModel(model.data());
+    auto old_sel_model = selectionModel();
+    // This will create a new selection model.
+    MDITreeViewBase::setModel(m_sortfilter_model);
+    Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
+    old_sel_model->deleteLater();
+
+
+    // Set up the TreeView's header.
+    header()->setStretchLastSection(false);
+    header()->setSectionResizeMode(QHeaderView::Stretch);
+    header()->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // Set the resize behavior of the header's columns based on the columnspecs.
+    int num_cols = m_underlying_model->columnCount();
+    for(int c = 0; c < num_cols; ++c)
+    {
+        if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
+        {
+            header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+        }
+    }
+    // Find the "Length" column.
+    auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
+    // Set the delegate on it.
+    setItemDelegateForColumn(len_col, m_length_delegate);
+
+    /// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
+    /// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
+    header()->setResizeContentsPrecision(0);
+}
+
+LibraryModel* MDILibraryView::underlyingModel() const
+{
+    return m_underlying_model.data();
+}
+
+QSharedPointer<LibraryModel> MDILibraryView::underlyingModelSharedPtr() const
+{
+    return m_underlying_model;
+}
+
+void MDILibraryView::setEmptyModel()
+{
+    M_WARNING("TODO");
+    Q_ASSERT(0);
 }
 
 QString MDILibraryView::getNewFilenameTemplate() const
@@ -124,7 +237,7 @@ QString MDILibraryView::defaultNameFilter()
 	return "";
 }
 
-bool MDILibraryView::loadFile(QUrl load_url)
+bool MDILibraryView::readFile(QUrl load_url)
 {
 	m_underlying_model->setLibraryRootUrl(load_url);
 	setCurrentFile(load_url);

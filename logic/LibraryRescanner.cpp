@@ -174,7 +174,24 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
 	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
-	m_dir_traversal_future_watcher.setFuture(fut);
+
+M_WARNING("EXPERIMENTAL");
+#if 0
+    m_dir_traversal_future_watcher.setFuture(fut);
+#elif 1
+    m_futureww_dirscan.on_result([this](auto a){
+        this->m_current_libmodel->onIncomingFilename(a);
+    })
+    .on_progress([this](int min, int max, int val){
+        emit progressRangeChanged(min, max);
+        emit progressValueChanged(val);
+    })
+    .then([=](){
+        qDebug() << "DIRTRAV RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
+        onDirTravFinished();
+    });
+    m_futureww_dirscan = fut;
+#endif
 
 	emit progressTextChanged("Scanning directory tree");
 }
@@ -184,8 +201,10 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 	// Send out progress text.
 	emit progressTextChanged("Rereading metadata");
 
-M_WARNING("EXPERIMENTAL");
+    m_timer.start();
 
+M_WARNING("EXPERIMENTAL");
+#if 0
 	m_async_task_manager.addFuture(QtConcurrent::mapped(items_to_rescan,
 									   std::bind(&LibraryRescanner::refresher_callback, this, _1)),
 								   [this](int index, QFuture<MetadataReturnVal> f){
@@ -199,19 +218,46 @@ M_WARNING("EXPERIMENTAL");
 		},
 									[](){ qDebug() << "CANCELLED"; }
 	);
-#if 0
+
+#elif 1
 	// Start the mapped operation, set the future watcher to the returned future, and we're scanning.
 	m_rescan_future_watcher.setFuture(QtConcurrent::mapped(
 			items_to_rescan,
 			std::bind(&LibraryRescanner::refresher_callback, this, _1)));
+#elif 0
+
+    m_futureww
+//	.on_resultat([](int at){
+//        qDebug() << "RESULT AT:" << at << "THREAD:" << QThread::currentThread()->objectName();
+//    })
+	.on_result([this](auto a){
+    	this->processReadyResults(a);
+    })
+    .on_progress([this](int min, int max, int val){
+    	emit progressRangeChanged(min, max);
+    	emit progressValueChanged(val);
+    })
+    .then([=](){
+    	qDebug() << "METADATA RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
+    	onRescanFinished();
+    });
+    m_futureww = QtConcurrent::mapped(items_to_rescan,
+                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
 #endif
 }
 
 void LibraryRescanner::onResultReadyAt(int index, QFuture<MetadataReturnVal> f)
 {
-	//qDebug() << "Async Rescan reports result ready at" << index;
+    //qDebug() << "Async Rescan reports result ready at" << index;
 
-	MetadataReturnVal lritem_vec = m_rescan_future_watcher.resultAt(index);
+    MetadataReturnVal lritem_vec = m_rescan_future_watcher.resultAt(index);
+
+    processReadyResults(lritem_vec);
+}
+
+void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
+{
+
 
 	// We got one of ??? things back:
 	// - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
@@ -268,7 +314,9 @@ void LibraryRescanner::onResultReadyAt(int index, QFuture<MetadataReturnVal> f)
 
 void LibraryRescanner::onRescanFinished()
 {
+    auto elapsed = m_timer.elapsed();
 	qDebug() << "Async Rescan reports finished.";
+	qInfo() << "Metadata rescan took" << elapsed << "ms";
 	// Send out progress text.
 	emit progressTextChanged("Idle");
 }

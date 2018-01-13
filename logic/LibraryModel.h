@@ -114,6 +114,11 @@ public:
     explicit LibraryModel(QObject *parent = 0);
 	virtual ~LibraryModel() override;
 
+	/**
+	 * Open a new LibraryModel on the specified QUrl.
+	 */
+    static QSharedPointer<LibraryModel> openFile(QUrl open_url, QWidget* parent);
+
 	/// @name Basic functionality.
 	/// @{
     QModelIndex index(int row, int column,

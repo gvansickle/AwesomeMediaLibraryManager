@@ -42,6 +42,7 @@ signals:
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
     
+
     /**
      * static member function which opens an MDILibraryView on the given model.
      */
@@ -51,10 +52,10 @@ public:
 
     void setModel(QAbstractItemModel* model) override;
 
-    virtual PlaylistModel* underlyingModel() const;
+    PlaylistModel* underlyingModel() const override;
     
     /// Playlists are not read-only.
-    bool isReadOnly() const override { return false; };
+    bool isReadOnly() const override { return false; }
 
 public slots:
     void next();
@@ -88,6 +89,8 @@ protected:
     ///
     virtual QString getNewFilenameTemplate() const override;
     virtual QString defaultNameFilter() override;
+
+    void setEmptyModel() override;
 
     virtual void serializeDocument(QFileDevice& file) const override;
     virtual void deserializeDocument(QFileDevice& file) override;

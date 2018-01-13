@@ -21,14 +21,16 @@
 #define MDILIBRARYVIEW_H
 
 #include "MDITreeViewBase.h"
+#include "logic/LibraryModel.h"
 
 #include <QUrl>
+
 #include <memory>
+#include <functional>
 
 class ItemDelegateLength;
 class LibrarySortFilterProxyModel;
 class MDIPlaylistView;
-class LibraryModel;
 class LibraryEntry;
 class PlaylistModel;
 
@@ -45,19 +47,39 @@ signals:
         
 public:
 	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
-        
-	/**
-	* static member function which opens an MDILibraryView on the given model.
-	*/
-	static MDILibraryView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
 
-	void setModel(QAbstractItemModel* model) override;
+    /**
+     * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+     * ~= "File->Open..."
+     *
+     * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
+     *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
+     */
+    static MDILibraryView* open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
+
+    /**
+     * Open the specified QUrl.  Called by open().
+     * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
+     *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
+     */
+    static MDILibraryView* openFile(QUrl open_url, QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
+
+    /**
+     * Open a new view on the given model.
+     */
+    static MDILibraryView* openModel(QSharedPointer<LibraryModel> model, QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_model_func = nullptr);
+
+    void setModel(QAbstractItemModel* model) override;
+    void setModel(QSharedPointer<LibraryModel> model);
+
+    LibraryModel* underlyingModel() const override;
+    QSharedPointer<LibraryModel> underlyingModelSharedPtr() const;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
 
 protected:
-	LibraryModel* m_underlying_model;
+    QSharedPointer<LibraryModel> m_underlying_model;
 
 	LibrarySortFilterProxyModel* m_sortfilter_model;
 	ItemDelegateLength* m_length_delegate;
@@ -66,13 +88,15 @@ protected:
 	/// Pure virtual function overrides.
 	///
 
+    void setEmptyModel() override;
+
 	virtual QString getNewFilenameTemplate() const override;
 	virtual QString defaultNameFilter() override;
 
 	/// @name Serialization
 	/// @{
 
-	virtual bool loadFile(QUrl load_url) override;
+    virtual bool readFile(QUrl load_url) override;
 	virtual void serializeDocument(QFileDevice& file) const override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 

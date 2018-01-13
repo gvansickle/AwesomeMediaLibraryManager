@@ -139,7 +139,11 @@ static qint64 sequenceNumber = 0;
 
 	// Set the window title to the Display Name, which defaults to the filename, plus the Qt "is modified" placeholder.
 	setWindowTitle(getDisplayName() + "[*]");
+    // Set the name we'll give to the MainWindow's Window menu.
 	m_act_window->setText(getDisplayName());
+
+    // CwriteFilenew, empty model.
+    setEmptyModel();
 }
 
 
@@ -151,7 +155,7 @@ bool MDITreeViewBase::save()
 	}
 	else
 	{
-		return saveFile(m_current_url, m_current_filter);
+        return writeFile(m_current_url, m_current_filter);
 	}
 }
 
@@ -168,44 +172,20 @@ bool MDITreeViewBase::saveAs()
 		return false;
 	}
 
-	return saveFile(file_url, filter);
+    return writeFile(file_url, filter);
 }
 
-bool MDITreeViewBase::saveFile(QUrl save_url, QString filter)
+bool MDITreeViewBase::readFile(QUrl load_url)
 {
-	QApplication::setOverrideCursor(Qt::WaitCursor);
-
-	QSaveFile savefile(save_url.toLocalFile());
-
-	if(!savefile.open(QIODevice::WriteOnly | QIODevice::Text))
-	{
-		QApplication::restoreOverrideCursor();
-
-		QMessageBox::warning(this, qApp->applicationDisplayName(),
-							QString("Cannot write file ") + save_url.toString() + ": " + savefile.errorString());
-		return false;
-	}
-	serializeDocument(savefile);
-	savefile.commit();
-
-	QApplication::restoreOverrideCursor();
-
-	setCurrentFile(save_url);
-	return true;
-}
-
-bool MDITreeViewBase::loadFile(QUrl load_url)
-{
-	QApplication::setOverrideCursor(Qt::WaitCursor);
-
 	QFile file(load_url.toLocalFile());
 	if(!file.open(QFile::ReadOnly | QFile::Text))
 	{
-		QApplication::restoreOverrideCursor();
 		QMessageBox::warning(this, qApp->applicationDisplayName(),
 							QString("Cannot read file %1:\n%2.").arg(load_url.toString()).arg(file.errorString()));
 		return false;
 	}
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
 
 	// Call the overridden function to serialize the doc.
 	deserializeDocument(file);
@@ -218,6 +198,28 @@ bool MDITreeViewBase::loadFile(QUrl load_url)
 	//self.document().contentsChanged.connect(self.documentWasModified)
 
 	return true;
+}
+
+bool MDITreeViewBase::writeFile(QUrl save_url, QString filter)
+{
+    QSaveFile savefile(save_url.toLocalFile());
+
+    if(!savefile.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, qApp->applicationDisplayName(),
+                            QString("Cannot write file ") + save_url.toString() + ": " + savefile.errorString());
+        return false;
+    }
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    serializeDocument(savefile);
+    savefile.commit();
+
+    QApplication::restoreOverrideCursor();
+
+    setCurrentFile(save_url);
+    return true;
 }
 
 QString MDITreeViewBase::userFriendlyCurrentFile() const
@@ -236,6 +238,7 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 	m_current_url = url;
 	m_isUntitled = false;
 	setWindowFilePath(url.toString());
+    qDebug() << "windowFilePath()" << windowFilePath();
 	setWindowModified(false);
 	setWindowTitle(getDisplayName() + "[*]");
 	m_act_window->setText(getDisplayName());
