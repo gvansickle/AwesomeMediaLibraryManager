@@ -820,6 +820,34 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
     return nullptr;
 }
 
+MDITreeViewBase* MainWindow::findSubWindowView(QUrl url)
+{
+    auto child_mdi_subwin = findSubWindow(url);
+
+    if(child_mdi_subwin)
+    {
+        // Found a child window associated with the given URL.
+        // Return the QMdiSubWindow's widget.
+        auto view = qobject_cast<MDITreeViewBase*>(child_mdi_subwin->widget());
+        if(!view)
+        {
+            qCritical() << "Found subwindow" << child_mdi_subwin
+                        << "has no MDITreeViewBase-derived view as widget().  widget():" << child_mdi_subwin->widget();
+            qFatal("findSubwindow() mechanism failed.");
+            return nullptr; // Never returns, this is just to eliminate compiler warning.
+        }
+        else
+        {
+            return view;
+        }
+    }
+    else
+    {
+        // No such child window found.
+        return nullptr;
+    }
+}
+
 QWidget* MainWindow::findSubWindowWithWidget(QWidget *widget) const
 {
     auto subwindow_list = m_mdi_area->subWindowList();
@@ -1074,16 +1102,8 @@ void MainWindow::importLib()
 #else
 
     auto check_for_existing_view = [this](QUrl url) -> MDILibraryView* {
-        auto qmdiwin = this->findSubWindow(url);
-        qDebug() << "qmdiwin" << qmdiwin;
-        if(qmdiwin)
-        {
-            return qobject_cast<MDILibraryView*>(qmdiwin->widget());
-        }
-        else
-        {
-            return nullptr;
-        }
+        auto libview = qobject_cast<MDILibraryView*>(this->findSubWindowView(url));
+        return libview;
     };
 
     auto child = MDILibraryView::open(this, check_for_existing_view);

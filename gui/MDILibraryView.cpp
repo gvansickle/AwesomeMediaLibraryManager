@@ -77,8 +77,9 @@ MDILibraryView* MDILibraryView::open(QWidget *parent, std::function<MDILibraryVi
         qDebug() << "User cancelled.";
         return nullptr;
     }
+
     // Open the directory the user chose as an MDILibraryView and associated model.
-M_WARNING("TODO: Need to somehow check if a model already exists and needs a view, or if we just need to activate an existing view.");
+    // Note that openFile() may return an already-existing view if one is found by find_existing_view_func().
     return openFile(lib_url, parent, find_existing_view_func);
 }
 
@@ -90,14 +91,16 @@ MDILibraryView* MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::fu
     // Check if a view of this URL already exists and we just need to activate it.
     qDebug() << "Looking for existing view of" << open_url;
     auto view = find_existing_view_func(open_url);
-    qDebug() << "WTH:" << view;
     if(view)
     {
-        qDebug() << "View already exists, returning" << view;
+        qDebug() << "View of" << open_url << "already exists, returning" << view;
         return view;
     }
 
-    qDebug() << "// Try to open the given URL as a model.";
+    // No existing view.  Is there an existing model?
+M_WARNING("TODO EXISTING MODEL");
+
+    //qDebug() << "// Try to open a model on the given URL.";
     auto libmodel = LibraryModel::openFile(open_url, parent);
 
     if(libmodel)
