@@ -848,6 +848,19 @@ MDITreeViewBase* MainWindow::findSubWindowView(QUrl url)
     }
 }
 
+MDIViewModelPair MainWindow::findSubWindowViewModelPair(QUrl url)
+{
+    MDIModelViewPair retval;
+    auto view = findSubWindowView(url);
+    if(view)
+    {
+        retval.m_view = view;
+        retval.m_view_was_existing = true;
+        retval.m_model = view->underlyingModel();
+        retval.m_model_was_existing = true;
+    }
+}
+
 QWidget* MainWindow::findSubWindowWithWidget(QWidget *widget) const
 {
     auto subwindow_list = m_mdi_area->subWindowList();
@@ -1101,7 +1114,7 @@ void MainWindow::importLib()
     return;
 #else
 
-    auto check_for_existing_view = [this](QUrl url) -> MDILibraryView* {
+    auto check_for_existing_view = [this](QUrl url) -> MDIViewModelPair {
         auto libview = qobject_cast<MDILibraryView*>(this->findSubWindowView(url));
         return libview;
     };

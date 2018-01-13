@@ -55,19 +55,19 @@ public:
      * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
      *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
      */
-    static MDILibraryView* open(QWidget* parent, std::function<MDILibraryView*(QUrl)> find_existing_view_func = nullptr);
+    static MDILibraryView* open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
 
     /**
      * Open the specified QUrl.  Called by open().
      * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
      *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
      */
-    static MDILibraryView* openFile(QUrl open_url, QWidget* parent, std::function<MDILibraryView*(QUrl)> find_existing_view_func = nullptr);
+    static MDILibraryView* openFile(QUrl open_url, QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
 
     /**
      * Open a new view on the given model.
      */
-    static MDILibraryView* openModel(QSharedPointer<LibraryModel> model, QWidget* parent, std::function<MDILibraryView*(QUrl)> find_existing_model_func = nullptr);
+    static MDILibraryView* openModel(QSharedPointer<LibraryModel> model, QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_model_func = nullptr);
 
     void setModel(QAbstractItemModel* model) override;
     void setModel(QSharedPointer<LibraryModel> model);

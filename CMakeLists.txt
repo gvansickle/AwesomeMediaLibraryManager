@@ -314,7 +314,7 @@ set(HEADER_FILES
 	gui/menus/PlaylistContextMenuViewport.h
 	gui/menus/PlaylistContextMenu.h
 	gui/menus/ActionBundle.h
-	gui/mdi/MDIViewModelPair.h
+	gui/mdi/MDIModelViewPair.h
     )
 
 # Source file list.

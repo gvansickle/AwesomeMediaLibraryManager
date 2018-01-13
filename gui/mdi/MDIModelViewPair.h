@@ -27,11 +27,11 @@ class QAbstractItemModel;
 class MDIModelViewPair
 {
 public:
-    MDITreeViewBase* m_view { nullptr };
     QAbstractItemModel* m_model { nullptr };
+    MDITreeViewBase* m_view { nullptr };
 
-    bool m_view_was_existing { false };
     bool m_model_was_existing { false };
+    bool m_view_was_existing { false };
 };
 
 #endif //GUI_MDI_MDIVIEWPAIRMODEL_H

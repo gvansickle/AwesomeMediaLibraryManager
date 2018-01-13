@@ -24,6 +24,8 @@
 #include <QTreeView>
 #include <QUrl>
 
+#include "gui/mdi/MDIViewModelPair.h"
+
 class QMdiSubWindow;
 class QFileDevice;
 class ModelChangeWatcher;
