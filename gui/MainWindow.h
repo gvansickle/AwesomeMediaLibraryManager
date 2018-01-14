@@ -124,7 +124,7 @@ private slots:
      */
 	void onShowLibrary(QSharedPointer<LibraryModel> libmodel);
 
-    void onRemoveDirFromLibrary(LibraryModel* libmodel);
+	void onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel);
 
     void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);

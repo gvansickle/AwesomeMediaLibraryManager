@@ -1185,18 +1185,14 @@ void MainWindow::onRescanLibrary()
 
 void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
 {
-	qDebug() << QString("onShowLibrary");
-M_WARNING("TODO: SHOWLIBRARY");
-//	openMDILibraryViewOnModel(libmodel);
-    //??? MDILibraryView(libmodel);
-
+	// We'll just try to open the same URL as the libmodel, and let the "opening an existing view/model"
+	// logic do the rest.
 	openFileLibrary(libmodel->getLibRootDir());
-
 	return;
 }
 
 
-void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
+void MainWindow::onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel)
 {
 	qDebug() << QString("Removing libmodel from library:") << libmodel;
 

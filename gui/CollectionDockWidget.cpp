@@ -38,10 +38,10 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     setFeatures(QDockWidget::DockWidgetMovable);
     setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-    sourcesModel = new QStandardItemModel(this);
+	m_sources_model = new QStandardItemModel(this);
 
     collectionTreeView = new QTreeView(this);
-    collectionTreeView->setModel(sourcesModel);
+	collectionTreeView->setModel(m_sources_model);
     collectionTreeView->setRootIsDecorated(false);
     // Want to have the tree always expanded.
     collectionTreeView->setExpandsOnDoubleClick(false);
@@ -62,7 +62,7 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     playlistsItem->setFont(font);
 
     // Add top-level items.
-    sourcesModel->invisibleRootItem()->appendRows({localLibsItem, playlistsItem});
+	m_sources_model->invisibleRootItem()->appendRows({localLibsItem, playlistsItem});
 
     // Connect the double-click signal to a custom handler.
 	connect(collectionTreeView, &QTreeView::doubleClicked, this, &CollectionDockWidget::tree_doubleclick);
@@ -96,11 +96,11 @@ void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
     auto parentindex = modelindex.parent();
 	///qDebug() << QString("Parent: {}/{}/{}".format(modelindex.parent(), modelindex.parent().row(), modelindex.parent().column()));
 
-    if (parentindex == sourcesModel->indexFromItem(localLibsItem))
+	if (parentindex == m_sources_model->indexFromItem(localLibsItem))
     {
         doLibraryContextMenu(event, treepos);
     }
-    else if (parentindex == sourcesModel->indexFromItem(playlistsItem))
+	else if (parentindex == m_sources_model->indexFromItem(playlistsItem))
     {
 		qDebug("Playlist menu, not implemented.");
     }
@@ -163,9 +163,9 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 	if(retval == QMessageBox::Yes)
 	{
 		// Remove the directory.
-		emit removeLibModelFromLibSignal(modelindex.data(Qt::UserRole+1).value<LibraryModel*>());
-		// Remove the entry in out Tree model.
-		sourcesModel->removeRow(modelindex.row(), modelindex.parent());
+		emit removeLibModelFromLibSignal(modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>());
+		// Remove the entry in our Tree model.
+		m_sources_model->removeRow(modelindex.row(), modelindex.parent());
 	}
 }
 
@@ -179,11 +179,11 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 
 	auto parentindex = modelindex.parent();
 	qDebug() << QString("Parent:") << modelindex.parent() << modelindex.parent().row() << modelindex.parent().column();
-	if(parentindex == sourcesModel->indexFromItem(localLibsItem))
+	if(parentindex == m_sources_model->indexFromItem(localLibsItem))
 	{
 		emit showLibViewSignal(modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>());
 	}
-	else if(parentindex == sourcesModel->indexFromItem(playlistsItem))
+	else if(parentindex == m_sources_model->indexFromItem(playlistsItem))
 	{
 		qDebug() << QString("Playlist menu, not implemented.");
 	}

@@ -126,7 +126,7 @@ public:
 
 signals:
 	// Signal indicating the user wants to remove the given LibraryModel.
-	void removeLibModelFromLibSignal(LibraryModel*);
+	void removeLibModelFromLibSignal(QSharedPointer<LibraryModel>);
 
 	// Signal indicating the user wants to show the window for the given LibraryModel.
 	void showLibViewSignal(QSharedPointer<LibraryModel>);
@@ -140,7 +140,7 @@ protected:
 private:
 	Q_DISABLE_COPY(CollectionDockWidget)
 
-    QStandardItemModel* sourcesModel;
+	QStandardItemModel* m_sources_model;
     QTreeView* collectionTreeView;
 
 	QStandardItem* localLibsItem;
