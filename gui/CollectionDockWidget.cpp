@@ -18,6 +18,8 @@
  */
 
 #include "CollectionDockWidget.h"
+#include "MDILibraryView.h"
+#include "MDINowPlayingView.h"
 
 #include <QContextMenuEvent>
 #include <QStandardItem>
@@ -192,6 +194,13 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 void CollectionDockWidget::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
 {
 	qDebug() << "Got closing() signal from view" << viewptr;
+
+	// We only care if it's not a Library or Now Playing view.
+	if(qobject_cast<MDILibraryView*>(viewptr) || qobject_cast<MDINowPlayingView*>(viewptr))
+	{
+		qDebug() << "Ignoring, view is Now Playing or Library";
+		return;
+	}
 
 	auto parentindex = m_sources_model->indexFromItem(m_playlistsItem);
 
