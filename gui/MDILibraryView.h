@@ -131,6 +131,12 @@ protected slots:
 	/// @obsolete
 	virtual void onContextMenu(QPoint pos);
 
+	/**
+	 * Slot called when the user activates (hits Enter or double-clicks) on an item.
+	 * @param index
+	 */
+	void onActivated(const QModelIndex& index) override;
+
 	/// Invoked when user double-clicks on an entry.
 	/// According to Qt5 docs, index will always be valid:
 	/// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:

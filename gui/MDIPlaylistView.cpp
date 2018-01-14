@@ -530,7 +530,7 @@ M_WARNING("TODO: Fix assumption");
 
 void MDIPlaylistView::onActivated(const QModelIndex& index)
 {
-	M_WARNING("TODO: Fix assumption");
+M_WARNING("TODO: Fix assumption");
 	if(true) // we're the playlist connected to the player.
 	{
 		startPlaying(index);

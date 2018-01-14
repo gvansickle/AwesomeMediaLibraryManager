@@ -362,6 +362,28 @@ void MDILibraryView::onContextMenu(QPoint pos)
 	}
 }
 
+void MDILibraryView::onActivated(const QModelIndex& index)
+{
+	// Should always be valid.
+	Q_ASSERT(index.isValid());
+
+	// Tell the player to start playing the song at index.
+	qDebug() << "Activated index:" << index;
+	auto underlying_model_index = to_underlying_qmodelindex(index);
+
+	Q_ASSERT(underlying_model_index.isValid());
+
+	qDebug() << "Underlying index:" << underlying_model_index;
+
+	// Get the item that was activated.
+	auto item = m_underlying_model->getItem(underlying_model_index);
+
+	Q_ASSERT(item != nullptr);
+
+	// Send it to the "Now Playing" playlist, by way of MainWindow.
+	emit sendToNowPlaying(item);
+}
+
 /**
  * Handler which gets invoked by a double-click on a Library Model item.
  * Sends the clicked-on item to the "Now Playing" playlist to be played.
@@ -383,9 +405,10 @@ void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 	auto item = m_underlying_model->getItem(underlying_model_index);
 
 	Q_ASSERT(item != nullptr);
-
+#if 0 /// We're handling this in the onActivated() handler at the moment.
 	// Send it to the "Now Playing" playlist, by way of MainWindow.
 	emit sendToNowPlaying(item);
+#endif
 }
 
 

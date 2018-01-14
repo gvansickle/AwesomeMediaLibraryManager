@@ -1034,7 +1034,8 @@ void MainWindow::openWindows()
 			addChildMDIView(child.m_view);
         }
 M_WARNING("TODO: These seem out of place.");
-        connectLibraryToActivityProgressWidget(m.data(), m_activity_progress_widget);
+		connectLibraryViewAndMainWindow(qobject_cast<MDILibraryView*>(child.m_view));
+		connectLibraryToActivityProgressWidget(m.data(), m_activity_progress_widget);
 		connectActiveMDITreeViewBaseAndMetadataDock(child.m_view, m_metadataDockWidget);
 
         statusBar()->showMessage(QString("Opened view on library '%1'").arg(m->getLibraryName()));
@@ -1139,7 +1140,7 @@ M_WARNING("TODO: Factor out this common code.");
 		}
 
 		// View is new.
-		/// @todo Seems out of place.
+M_WARNING("TODO: These seem out of place.");
 		connectActiveMDITreeViewBaseAndMetadataDock(libview, m_metadataDockWidget);
 		connectLibraryViewAndMainWindow(libview);
 
