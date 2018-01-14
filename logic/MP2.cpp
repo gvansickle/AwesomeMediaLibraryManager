@@ -36,14 +36,14 @@ MP2::MP2(QObject* parent, Flags flags) : QMediaPlayer(parent, flags)
 
 	createActions();
 
-	// Make initial connections.
+	// Make initial connections from the underlying QMediaPlayer to slots in this.
 	connect(this, &QMediaPlayer::positionChanged, this, &MP2::onPositionChanged);
 	connect(this, &QMediaPlayer::durationChanged, this, &MP2::onDurationChanged);
 	connect(this, &QMediaPlayer::mediaChanged, this, &MP2::onMediaChanged);
 	connect(this, &QMediaPlayer::mediaStatusChanged, this, &MP2::onMediaStatusChanged);
 	connect(this, &QMediaPlayer::currentMediaChanged, this, &MP2::onCurrentMediaChanged);
 	connect(this, &QMediaPlayer::stateChanged, this, &MP2::onStateChanged);
-	connect(dynamic_cast<QMediaPlayer*>(this), static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error)>(&QMediaPlayer::error), this,
+	connect(qobject_cast<QMediaPlayer*>(this), static_cast<void(QMediaPlayer::*)(QMediaPlayer::Error)>(&QMediaPlayer::error), this,
 			static_cast<void(MP2::*)(QMediaPlayer::Error)>(&MP2::onPlayerError));
 }
 
@@ -76,9 +76,9 @@ void MP2::createActions()
 
 }
 
-void MP2::__setTrackInfoFromUrl(QUrl url)
+void MP2::setTrackInfoFromUrl(QUrl url)
 {
-	qDebug() << QString("__setTrackInfoFromUrl: '%1'").arg(url.toString());
+	qDebug() << QString("URL: '%1'").arg(url.toString());
 	if(url.hasFragment())
 	{
 		m_is_subtrack = true;
@@ -157,7 +157,7 @@ void MP2::setShuffleMode(bool shuffle_on)
 		{
 			// Shuffle plus Implicit repeat.
 			current_playlist->setPlaybackMode(QMediaPlaylist::Random);
-			qDebug() << "Shuffle";
+			qDebug() << "Shuffle+Repeat";
 		}
 		else
 		{
@@ -191,7 +191,6 @@ void MP2::repeat(bool checked)
 		{
 			// Ignore this signal while we're in shuffle playback mode.
 			qDebug() << "Currently in Shuffle mode, ignoring";
-			return;
 		}
 		else
 		{
@@ -307,7 +306,7 @@ void MP2::onCurrentMediaChanged(const QMediaContent& qmediacontent)
 	{
 		if(qmediacontent.playlist() == nullptr)
 		{
-			__setTrackInfoFromUrl(qmediacontent.canonicalUrl());
+			setTrackInfoFromUrl(qmediacontent.canonicalUrl());
 			qDebug() << QString("track start: %1").arg(m_track_startpos_ms);
 			QMediaPlayer::setPosition(m_track_startpos_ms);
 		}
