@@ -115,6 +115,14 @@ private slots:
     void onSubWindowActivated(QMdiSubWindow* subwindow);
     void onFocusChanged(QWidget* old, QWidget* now);
 
+	/**
+	 * Slot which is signaled by closing views.
+	 * This widget should delete any references it is keeping to @a viewptr.
+	 *
+	 * @note This arrangement is racey, need to find a better way to manage this.
+	 */
+	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
+
     void changeStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
 
@@ -124,6 +132,9 @@ private slots:
      */
 	void onShowLibrary(QSharedPointer<LibraryModel> libmodel);
 
+	/**
+	 * Slot FBO the Collection sidebar to remove the specified model and any attached views.
+	 */
 	void onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel);
 
     void onPlayTrackNowSignal(QUrl url);

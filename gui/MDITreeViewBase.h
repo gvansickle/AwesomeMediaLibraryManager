@@ -40,6 +40,13 @@ class MDITreeViewBase : public QTreeView
         
 signals:
     
+	/**
+	 * Signal emitted just before the QCloseEvent is accepted.
+	 * @note view_that_is_closing can not be consided to be dereferenceable.  The view may have
+	 * already been deleted before the signal is delivered.
+	 */
+	void closing(MDITreeViewBase* view_that_is_closing, QAbstractItemModel* modelptr);
+
     /**
      * Signal is emitted when a selection is available for copying in the QTreeView.
      */

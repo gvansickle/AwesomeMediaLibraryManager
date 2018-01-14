@@ -295,6 +295,7 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 {
 	if(okToClose())
 	{
+		emit closing(this, underlyingModel());
 		event->accept();
 	}
 	else

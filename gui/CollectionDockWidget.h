@@ -36,6 +36,8 @@ class QTreeView;
 class LocalLibraryItem;
 class PlaylistModelItem;
 
+static const int si_role_view_ptr = Qt::UserRole + 1;
+
 class LocalLibraryItem : public QStandardItem
 {
 public:
@@ -86,9 +88,9 @@ private:
 class PlaylistItem: public QStandardItem
 {
 public:
-	PlaylistItem(MDIPlaylistView* view)
+	explicit PlaylistItem(MDIPlaylistView* view)
 	{
-		playlist_view = view;
+		m_playlist_view = view;
 
 		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
 	}
@@ -98,11 +100,16 @@ public:
 		// Get the data we need from the model we're connected to
 		if(role == Qt::EditRole || role == Qt::DisplayRole)
 		{
-			return QVariant(playlist_view->getDisplayName());
+			return QVariant(m_playlist_view->getDisplayName());
 		}
 		else if(role == Qt::ToolTipRole)
 		{
-			return QVariant(playlist_view->getCurrentUrl());
+			return QVariant(m_playlist_view->getCurrentUrl());
+		}
+		else if(role == si_role_view_ptr)
+		{
+			qDebug() << "POINTER REQUEST:" << m_playlist_view;
+			return QVariant::fromValue<MDITreeViewBase*>(m_playlist_view);
 		}
 		else
 		{
@@ -111,19 +118,12 @@ public:
 	}
 
 private:
-	  MDIPlaylistView* playlist_view;
+	  MDIPlaylistView* m_playlist_view;
 };
 
 class CollectionDockWidget : public QDockWidget
 {
     Q_OBJECT
-public:
-    explicit CollectionDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
-
-	void addLibrary(LocalLibraryItem* library);
-	void addPlaylist(PlaylistItem* playlist);
-
-	void removePlaylist(PlaylistItem* playlist);
 
 signals:
 	// Signal indicating the user wants to remove the given LibraryModel.
@@ -132,8 +132,24 @@ signals:
 	// Signal indicating the user wants to show the window for the given LibraryModel.
 	void showLibViewSignal(QSharedPointer<LibraryModel>);
 
+public:
+    explicit CollectionDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
+
+	void addLibrary(LocalLibraryItem* library);
+	void addPlaylist(PlaylistItem* playlist);
+
+	void removePlaylist(PlaylistItem* playlist);
+
 public slots:
 	void tree_doubleclick(QModelIndex modelindex);
+
+	/**
+	 * Slot which is signaled by closing views.
+	 * This widget should delete any references it is keeping to @a viewptr.
+	 *
+	 * @note This whole arrangement is racey.  This sidebar really needs to be thoroughly reworked.
+	 */
+	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
 
 protected:
 	void contextMenuEvent(QContextMenuEvent* event) override;
@@ -144,8 +160,11 @@ private:
 	QStandardItemModel* m_sources_model;
     QTreeView* collectionTreeView;
 
-	QStandardItem* localLibsItem;
-	QStandardItem* playlistsItem;
+	/// @name "Category" items.
+	/// @{
+	QStandardItem* m_localLibsItem;
+	QStandardItem* m_playlistsItem;
+	/// @}
 
 	void doLibraryContextMenu(QContextMenuEvent* event, QPoint treepos);
 	void onShowLib(QModelIndex modelindex);

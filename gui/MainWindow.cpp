@@ -61,6 +61,7 @@
 #include <QSharedPointer>
 
 #include <functional>
+#include <algorithm>
 #include <type_traits>
 
 #include <logic/MP2.h>
@@ -762,8 +763,8 @@ bool MainWindow::maybeSaveOnClose()
 	}
 	if(failures.size() > 0)
 	{
-		if(QMessageBox::warning(this, "Save Error",
-								QString("Failed to save %1\nQuit anyway?").arg(failures.join(',')), /// @todo % "\n\t".join(failures),
+		if(QMessageBox::warning(this, tr("Save Error"),
+								tr("Failed to save %1\nQuit anyway?").arg(failures.join(',')), /// @todo % "\n\t".join(failures),
 		QMessageBox::Yes|QMessageBox::No) == QMessageBox::No)
 		{
 			// Do not accept the close event.
@@ -776,6 +777,8 @@ bool MainWindow::maybeSaveOnClose()
 void MainWindow::closeEvent(QCloseEvent* event)
 {
 	qDebug() << QString("Main Window received closeEvent.");
+
+#if 1
 	stopAllBackgroundThreads();
 	bool continue_with_close = maybeSaveOnClose();
 	if(continue_with_close)
@@ -791,6 +794,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 		qDebug() << QString("ignoring closeEvent.");
 		event->ignore();
 	}
+#endif
 }
 
 /**
@@ -898,7 +902,27 @@ M_WARNING("TODO: This isn't correct.");
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
-    qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+	qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+}
+
+void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
+{
+	qDebug() << "Got signal view_is_closing:" << viewptr << modelptr;
+
+	auto playlist = qobject_cast<MDIPlaylistView*>(viewptr);
+	auto nowplaying = qobject_cast<MDINowPlayingView*>(viewptr);
+	if(nowplaying)
+	{
+		qDebug() << "Was nowplaying view, ignoring:" << nowplaying;
+	}
+	else if(playlist)
+	{
+		qDebug() << "Was playlist, deleting model";
+		m_playlist_models.erase(std::remove(m_playlist_models.begin(),
+								  m_playlist_models.end(),
+								  modelptr),
+				   m_playlist_models.end());
+	}
 }
 
 //////
@@ -1325,8 +1349,8 @@ void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 void MainWindow::addChildMDIView(MDITreeViewBase* child)
 {
 	// Connect Cut, Copy, Delete, and Select All actions to the availability signals emitted by the child.
-    /// @note This works because only the active child will send this signal.
-    /// Otherwise we'd need to swap which child was connected to the menu.
+	/// @note This works because only the active child will send these signals.
+	/// Otherwise we'd need to swap which child was connected to the actions.
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
@@ -1342,6 +1366,11 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
     // Add actions from the child to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
+
+	/// Connect the closing() signal to the Collection Dock widget.
+	connect(child, &MDITreeViewBase::closing, m_libraryDockWidget, &CollectionDockWidget::view_is_closing);
+	/// ..and also to the main window.
+	connect(child, &MDITreeViewBase::closing, this, &MainWindow::view_is_closing);
 
 	// Show the child window we just added.
 	mdisubwindow->show();
