@@ -49,6 +49,8 @@ signals:
 public:
 	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
 
+	QString getDisplayName() const override;
+
     /**
      * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
      * ~= "File->Open..."
@@ -114,9 +116,10 @@ M_WARNING("TODO: Override writeFile?");
 
 	/// @}
 
-	virtual bool isModified() const override;
+	/// For GUI purposes, a Library is never in a modified state.
+	bool isModified() const override;
 
-	virtual bool onBlankAreaToolTip(QHelpEvent* event) override;
+	bool onBlankAreaToolTip(QHelpEvent* event) override;
 
 	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
 	QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) override;
@@ -133,7 +136,8 @@ protected slots:
 
 	/**
 	 * Slot called when the user activates (hits Enter or double-clicks) on an item.
-	 * @param index
+	 * In the Library view, activating an item sends that item to the "Now Playing" playlist
+	 * which then starts playing it.
 	 */
 	void onActivated(const QModelIndex& index) override;
 

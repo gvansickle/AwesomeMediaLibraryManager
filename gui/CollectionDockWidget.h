@@ -123,6 +123,7 @@ public:
 	void addLibrary(LocalLibraryItem* library);
 	void addPlaylist(PlaylistItem* playlist);
 
+	void removePlaylist(PlaylistItem* playlist);
 
 signals:
 	// Signal indicating the user wants to remove the given LibraryModel.

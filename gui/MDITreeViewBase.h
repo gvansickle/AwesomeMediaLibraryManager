@@ -190,6 +190,11 @@ protected:
     ///
 
 protected slots:
+
+	/**
+	 * Connect this slot to any model signals which indicate there are unsaved changes.
+	 * By default, calls setWindowModified(isModified()).
+	 */
     virtual void documentWasModified();
 
     virtual void headerMenu(QPoint pos);
@@ -245,7 +250,7 @@ protected:
      * then calls save() or not depending on the user's choice.
      * @return false if file was modified and user cancelled, true otherwise.
      */
-    virtual bool maybeSave();
+	virtual bool okToClose();
 
     /**
      * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.

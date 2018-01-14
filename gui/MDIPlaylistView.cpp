@@ -578,7 +578,7 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 
 	if(event->matches(QKeySequence::Delete))
 	{
-		qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
+		qDebug() << "DELETE KEY:" << event;
 M_WARNING("TODO: It seems now that we don't need this anymore for some reason.");
 #if 0
 		onDelete();

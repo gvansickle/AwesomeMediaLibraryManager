@@ -164,10 +164,11 @@ private:
     void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
     void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
 
-    void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
+	void connectLibraryModelToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
-    void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
+	void connectPlaylistViewAndMainWindow(MDIPlaylistView* plv);
+	void connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view);
     void connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget);
     ///@}
 

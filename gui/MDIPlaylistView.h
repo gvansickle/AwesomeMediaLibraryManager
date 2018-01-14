@@ -36,8 +36,11 @@ class MDIPlaylistView : public MDITreeViewBase
     using BASE_CLASS = MDITreeViewBase;
     
 signals:
-
+	/// @name Signals for player-connected messages.
+	/// @{
+	/// Start playing the current song.
     void play();
+	/// @}
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
@@ -62,8 +65,14 @@ public:
     bool isReadOnly() const override { return false; }
 
 public slots:
+
+	/// @name Slots for player-connected messages.
+	/// @{
+	/// Start next song.
     void next();
+	/// Start previous song.
     void previous();
+	/// @}
 
     /// @name Edit slots.
     /// Related const operations (copy, select all, etc) are in MDITreeViewBase.

@@ -61,7 +61,13 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	//// Libraries can only have copies dragged out of them.
 	setAcceptDrops(false);
 	setDragDropMode(QAbstractItemView::DragOnly);
-    setDropIndicatorShown(true);
+	setDropIndicatorShown(true);
+}
+
+QString MDILibraryView::getDisplayName() const
+{
+	/// @todo Let the user rename the library/ies.
+	return tr("Library");
 }
 
 /**
@@ -252,7 +258,7 @@ bool MDILibraryView::onBlankAreaToolTip(QHelpEvent* event)
 {
 	// Return True if you handle it, False if you don't.
 	// Blank-area tooltip, for debugging.
-M_WARNING("TODO: Get/print library stats")
+M_WARNING("TODO: Get/print more library stats")
 	QToolTip::showText(event->globalPos(),
         QString("<b>Library Info</b><hr>"
         "Total number of entries: %1\n"
@@ -322,6 +328,7 @@ void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
 	context_menu->exec(event->globalPos());
 }
 
+/// OBSOLETE
 void MDILibraryView::onContextMenu(QPoint pos)
 {
 	// Position to put the menu.
@@ -362,12 +369,19 @@ void MDILibraryView::onContextMenu(QPoint pos)
 	}
 }
 
+/**
+ * Slot called when the user activates (hits Enter or double-clicks) on an item.
+ * In the Library view, activating an item sends that item to the "Now Playing" playlist
+ * which then starts playing it.
+ */
 void MDILibraryView::onActivated(const QModelIndex& index)
 {
 	// Should always be valid.
 	Q_ASSERT(index.isValid());
 
-	// Tell the player to start playing the song at index.
+	// In the Library view, activating an item sends that item to the "Now Playing" playlist
+	// which then starts playing it.
+
 	qDebug() << "Activated index:" << index;
 	auto underlying_model_index = to_underlying_qmodelindex(index);
 

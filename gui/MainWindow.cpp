@@ -667,7 +667,7 @@ void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls
 	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
-void MainWindow::connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw)
+void MainWindow::connectLibraryModelToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw)
 {
 	lm->connectProgressToActivityProgressWidget(apw);
 }
@@ -679,13 +679,20 @@ void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 	connect(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
 }
 
-void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
+void MainWindow::connectPlaylistViewAndMainWindow(MDIPlaylistView* plv)
+{
+	qDebug() << "Connecting";
+M_WARNING("TODO: connect");
+	qDebug() << "Connected";
+}
+
+void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view)
 {
     qDebug() << "Connecting";
-	connect(this, &MainWindow::sendToNowPlaying, plv, &MDIPlaylistView::onSendToNowPlaying);
+	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDIPlaylistView::onSendToNowPlaying);
 
-	connectPlayerAndPlaylistView(&m_player, plv);
-	connectPlayerControlsAndPlaylistView(m_controls, plv);
+	connectPlayerAndPlaylistView(&m_player, now_playing_view);
+	connectPlayerControlsAndPlaylistView(m_controls, now_playing_view);
     qDebug() << "Connected";
 }
 
@@ -1035,7 +1042,7 @@ void MainWindow::openWindows()
         }
 M_WARNING("TODO: These seem out of place.");
 		connectLibraryViewAndMainWindow(qobject_cast<MDILibraryView*>(child.m_view));
-		connectLibraryToActivityProgressWidget(m.data(), m_activity_progress_widget);
+		connectLibraryModelToActivityProgressWidget(m.data(), m_activity_progress_widget);
 		connectActiveMDITreeViewBaseAndMetadataDock(child.m_view, m_metadataDockWidget);
 
         statusBar()->showMessage(QString("Opened view on library '%1'").arg(m->getLibraryName()));
@@ -1100,7 +1107,7 @@ M_WARNING("TODO: Factor out this common code.");
 		m_libmodels.push_back(qSharedPointerObjectCast<LibraryModel>(libview->underlyingModelSharedPtr()));
 
 M_WARNING("TODO: These seem out of place.");
-		connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
+		connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
 
 		// Add the new library to the Collection Doc Widget.
 		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>()));
@@ -1162,7 +1169,7 @@ M_WARNING("TODO: These seem out of place.");
 		m_libmodels.push_back(qSharedPointerObjectCast<LibraryModel>(libview->underlyingModelSharedPtr()));
 
 M_WARNING("TODO: These seem out of place.");
-		connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
+		connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
 
 		// Add the new library to the Collection Doc Widget.
 		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>()));

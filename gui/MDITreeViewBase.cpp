@@ -293,7 +293,7 @@ void MDITreeViewBase::onSelectAll()
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)
 {
-	if(maybeSave())
+	if(okToClose())
 	{
 		event->accept();
 	}
@@ -442,13 +442,17 @@ bool MDITreeViewBase::onBlankAreaToolTip(QHelpEvent* event)
 	return false;
 }
 
-bool MDITreeViewBase::maybeSave()
+bool MDITreeViewBase::okToClose()
 {
-	/// Default implementation to give the user one last chance to save a modified document when he's closing it.
-	if(isWindowModified())
+	/// Default implementation to give the user one last chance to save a modified document when he's closing it
+	/// or the whole application.
+
+	/// @note Not using QWidget::isWindowModified() here.  Idea is that the view may want to not show the
+	///       modified state, even when it needs saving.  Not sure that makes sense, but that's my thinking here.
+	if(isModified())
 	{
 		auto ret = QMessageBox::warning(this, qGuiApp->applicationDisplayName(),
-								  QString("'%1' has been modified.\nDo you want to save your changes?").arg(userFriendlyCurrentFile()),
+								  tr("'%1' has been modified.\nDo you want to save your changes?").arg(userFriendlyCurrentFile()),
 									  QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
 								  );
 		if(ret == QMessageBox::Save)
