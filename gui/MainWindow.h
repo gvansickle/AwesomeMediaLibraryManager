@@ -230,7 +230,7 @@ private:
     std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
     /// The "Now Playing" playlist model and view.
-    QPointer<PlaylistModel> m_now_playing_playlist_model;
+	QSharedPointer<PlaylistModel> m_now_playing_playlist_model;
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
     /// The list of PlaylistModels.

@@ -85,6 +85,7 @@ MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelVie
 
 /**
  * Static member function which opens a view on the given @a open_url.
+ * Among other things, this function is responsible for calling setCurrentFile().
  */
 MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
@@ -99,6 +100,9 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     }
 
 	// No existing view.  Open a new one.
+
+	/// @note This should probably be creating an empty View here and then
+	/// calling an overridden readFile().
 
 	qDebug() << "// Try to open a model on the given URL.";
 	QSharedPointer<LibraryModel> libmodel;
@@ -117,26 +121,29 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 
     if(libmodel)
     {
-        auto libview = MDILibraryView::openModel(libmodel, parent);
+		// The model has either been found already existing and with no associated View, or it has been newly opened.
+		// Either way it's valid and we now create and associate a View with it.
+
+		auto mvpair = MDILibraryView::openModel(libmodel, parent);
 		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control system.
 		/// In very shortened form: Derived member functions can only access "protected" members through
 		/// an object of the Derived type, not of the Base type.
-		static_cast<MDILibraryView*>(libview.m_view)->setCurrentFile(open_url);
-        return libview;
+		static_cast<MDILibraryView*>(mvpair.m_view)->setCurrentFile(open_url);
+		return mvpair;
     }
     else
     {
-        // User must have cancelled.
+		// Library import failed.
+M_WARNING("TODO: Add a QMessageBox or something here.");
 		return MDIModelViewPair();
     }
 }
 
 /**
  * static member function which opens an MDILibraryView on the given model.
+ * @param model  The model to open.  Must exist and must be valid.
  */
-MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent,
-										   std::function<MDIModelViewPair(QUrl)> find_existing_model_func,
-										   MDIModelViewPair mvpair)
+MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
 	retval.setModel(model);
@@ -150,44 +157,6 @@ MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, Q
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
 	Q_ASSERT(0); /// Obsolete, use QSharedPointer version.
-#if 0
-	// Keep a ref to the real model.
-	m_underlying_model = qobject_cast<LibraryModel*>(model);
-
-	// Set our "current file" to the root dir of the model.
-	setCurrentFile(m_underlying_model->getLibRootDir());
-
-	m_sortfilter_model->setSourceModel(model);
-	auto old_sel_model = selectionModel();
-	// This will create a new selection model.
-	MDITreeViewBase::setModel(m_sortfilter_model);
-	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
-	old_sel_model->deleteLater();
-
-	
-	// Set up the TreeView's header.
-	header()->setStretchLastSection(false);
-	header()->setSectionResizeMode(QHeaderView::Stretch);
-	header()->setContextMenuPolicy(Qt::CustomContextMenu);
-
-	// Set the resize behavior of the header's columns based on the columnspecs.
-	int num_cols = m_underlying_model->columnCount();
-	for(int c = 0; c < num_cols; ++c)
-	{
-		if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
-		{
-			header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
-		}
-	}
-	// Find the "Length" column.
-	auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
-	// Set the delegate on it.
-	setItemDelegateForColumn(len_col, m_length_delegate);
-
-	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
-	/// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
-    header()->setResizeContentsPrecision(0);
-#endif
 }
 
 void MDILibraryView::setModel(QSharedPointer<QAbstractItemModel> model)

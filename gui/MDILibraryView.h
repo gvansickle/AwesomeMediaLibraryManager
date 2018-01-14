@@ -22,6 +22,7 @@
 
 #include "MDITreeViewBase.h"
 #include "logic/LibraryModel.h"
+#include "utils/DebugHelpers.h"
 
 #include <QUrl>
 
@@ -70,9 +71,7 @@ public:
 	 *
 	 * @param model  The model to open.  Must exist and must be valid.
      */
-	static MDIModelViewPair openModel(QSharedPointer<LibraryModel> model, QWidget* parent,
-									  std::function<MDIModelViewPair(QUrl)> find_existing_model_func = nullptr,
-									  MDIModelViewPair mvpair = MDIModelViewPair());
+	static MDIModelViewPair openModel(QSharedPointer<LibraryModel> model, QWidget* parent);
 
 	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
 
@@ -103,7 +102,13 @@ protected:
 	/// @name Serialization
 	/// @{
 
+	/**
+	 * Called by openFile().
+	 */
     virtual bool readFile(QUrl load_url) override;
+
+M_WARNING("TODO: Override writeFile?");
+
 	virtual void serializeDocument(QFileDevice& file) const override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 

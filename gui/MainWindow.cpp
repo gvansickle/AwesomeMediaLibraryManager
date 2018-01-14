@@ -1057,6 +1057,7 @@ M_WARNING("TODO: These seem out of place.");
 ////// Action targets.
 //////
 
+#if 0
 QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 {
 	// Create the new LibraryModel.
@@ -1073,6 +1074,7 @@ QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
 
 	return lib;
 }
+#endif
 
 #if 0
 void MainWindow::openMDILibraryViewOnModel(QSharedPointer<LibraryModel> libmodel)
@@ -1180,7 +1182,8 @@ void MainWindow::importLib()
 			return;
 		}
 
-		// Model is new, add the new child's underlying model to the list of library models.
+		// Model is new, add the new child's underlying model to the list of library models
+		// and the Collection sidebar.
 
 		/// @todo Set this as the single Library?
 
@@ -1190,7 +1193,9 @@ void MainWindow::importLib()
 M_WARNING("TODO: These seem out of place.");
 		connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
 
-        /// @todo Collection
+		// Add the new library to the Collection Doc Widget.
+		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>().data()));
+
         statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));
     }
     else
@@ -1289,10 +1294,10 @@ void MainWindow::newNowPlaying()
     child->newFile();
 
     // Add the new child's underlying model to the list of playlist models.
-    /// @todo REMOVE, only one Now Playing.
+	/// @todo REMOVE?, only one Now Playing.
     m_playlist_models.push_back(child->underlyingModel());
-    // Set this view's model as the single "Now Playing" model.
-    m_now_playing_playlist_model = child->underlyingModel();
+	// Set this view's model to be the single "Now Playing" model.
+	m_now_playing_playlist_model = child->underlyingModelSharedPtr().objectCast<PlaylistModel>();
 
     /// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;

@@ -63,6 +63,10 @@ public:
     /// Public interface.
     ///
 
+	/**
+	 * Called by the MainWindow immediately after a new, empty MDI child window is created.
+	 * Gives the view a dummy name and sets the window title.
+	 */
     void newFile();
 
     bool save();
@@ -77,17 +81,20 @@ public:
     /**
      * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
      */
-    static MDITreeViewBase* open(QWidget* parent) { return nullptr; }
+	static MDIModelViewPair open(QWidget* parent) { return nullptr; }
 
     /**
      * Open the specified QUrl.  Called by open(QWidget*).
+	 * Among other things, this function is responsible for calling setCurrentFilename().
      */
-    static MDITreeViewBase* openFile(QUrl open_url, QWidget* parent) { return nullptr; }
+	static MDIModelViewPair openFile(QUrl open_url, QWidget* parent) { return nullptr; }
 
     /**
      * Open a new view on the given model.
+	 * This is largely analogous to the openFile() call, though @a model here must be an existing, valid model.
+	 * Among other things, this function is responsible for calling setCurrentFilename().
      */
-    static MDITreeViewBase* openModel(QAbstractItemModel* model, QWidget* parent) { return nullptr; }
+	static MDIModelViewPair openModel(QSharedPointer<QAbstractItemModel> model, QWidget* parent) { return nullptr; }
     /// @}
 #endif
 
@@ -102,10 +109,10 @@ public:
     virtual QString getDisplayName() const;
     
     /// Return an action for the MainWindow's Window menu.
-    QAction* windowMenuAction() const { return m_act_window; };
+	QAction* windowMenuAction() const { return m_act_window; }
     
     /// Override if derived classes are not read-only.
-    virtual bool isReadOnly() const { return true; };
+	virtual bool isReadOnly() const { return true; }
 
     //
     // Base class overrides.
@@ -149,8 +156,14 @@ protected:
     /// Called by readFile() and writeFile().
     void setCurrentFile(QUrl url);
 
+	/**
+	 * Called by openFile().
+	 */
     virtual bool readFile(QUrl load_url);
 
+	/**
+	 * Called by saveFile().
+	 */
     virtual bool writeFile(QUrl save_url, QString filter);
 
     virtual void closeEvent(QCloseEvent* event) override;

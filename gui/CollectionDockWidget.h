@@ -44,7 +44,7 @@ public:
 		m_libmodel = libmodel;
 		setData(QVariant::fromValue(libmodel));
 		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
-	};
+	}
 
 	QVariant data(int role = Qt::UserRole+1) const override
 	{
@@ -75,7 +75,7 @@ public:
 		playlist_view = view;
 
 		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
-	};
+	}
 
 	QVariant data(int role = Qt::UserRole+1) const override
 	{
