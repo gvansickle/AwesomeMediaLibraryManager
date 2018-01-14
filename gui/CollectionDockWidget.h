@@ -39,7 +39,7 @@ class PlaylistModelItem;
 class LocalLibraryItem : public QStandardItem
 {
 public:
-	explicit LocalLibraryItem(LibraryModel* libmodel)
+	explicit LocalLibraryItem(QSharedPointer<LibraryModel> libmodel)
 	{
 		m_libmodel = libmodel;
 		setData(QVariant::fromValue(libmodel));
@@ -48,23 +48,39 @@ public:
 
 	QVariant data(int role = Qt::UserRole+1) const override
 	{
-		// Get the data we need from the model we're connected to
-		if(role == Qt::EditRole || role == Qt::DisplayRole)
-		{
-			return QVariant(m_libmodel->getLibraryName());
-		}
-		else if(role == Qt::ToolTipRole)
-		{
-			return QVariant(m_libmodel->getLibRootDir());
-		}
-		else
+		if(role != Qt::EditRole && role != Qt::DisplayRole && role != Qt::ToolTipRole)
 		{
 			return QStandardItem::data(role);
+		}
+
+		auto libmodel = m_libmodel.toStrongRef();
+		if(libmodel)
+		{
+			// Get the data we need from the model we're connected to
+			if(role == Qt::EditRole || role == Qt::DisplayRole)
+			{
+				if(libmodel)
+				{
+					return QVariant(libmodel->getLibraryName());
+				}
+				else
+				{
+					return QVariant();
+				}
+			}
+			else if(role == Qt::ToolTipRole)
+			{
+				return QVariant(libmodel->getLibRootDir());
+			}
+			else
+			{
+				return QStandardItem::data(role);
+			}
 		}
 	}
 
 private:
-	LibraryModel* m_libmodel;
+	QWeakPointer<LibraryModel> m_libmodel;
 };
 
 class PlaylistItem: public QStandardItem
@@ -113,7 +129,7 @@ signals:
 	void removeLibModelFromLibSignal(LibraryModel*);
 
 	// Signal indicating the user wants to show the window for the given LibraryModel.
-	void showLibViewSignal(LibraryModel*);
+	void showLibViewSignal(QSharedPointer<LibraryModel>);
 
 public slots:
 	void tree_doubleclick(QModelIndex modelindex);

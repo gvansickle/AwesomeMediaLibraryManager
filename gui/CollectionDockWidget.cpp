@@ -144,7 +144,7 @@ void CollectionDockWidget::doLibraryContextMenu(QContextMenuEvent* event, QPoint
 
 void CollectionDockWidget::onShowLib(QModelIndex modelindex)
 {
-	emit showLibViewSignal(modelindex.data(Qt::UserRole+1).value<LibraryModel*>());
+	emit showLibViewSignal(modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>());
 }
 
 void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
@@ -181,7 +181,7 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 	qDebug() << QString("Parent:") << modelindex.parent() << modelindex.parent().row() << modelindex.parent().column();
 	if(parentindex == sourcesModel->indexFromItem(localLibsItem))
 	{
-		emit showLibViewSignal(modelindex.data(Qt::UserRole + 1).value<LibraryModel*>());
+		emit showLibViewSignal(modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>());
 	}
 	else if(parentindex == sourcesModel->indexFromItem(playlistsItem))
 	{

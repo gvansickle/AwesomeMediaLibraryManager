@@ -118,10 +118,10 @@ private slots:
     void changeIconTheme(const QString& iconThemeName);
 
     /**
-     * Slot FBO the Collection sidebar to bring the Library @a libmodel to the fore
+	 * Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
      * and/or creat a new MDILibraryView for it if one doesn't exist.
      */
-    void onShowLibrary(LibraryModel* libmodel);
+	void onShowLibrary(QSharedPointer<LibraryModel> libmodel);
 
     void onRemoveDirFromLibrary(LibraryModel* libmodel);
 
@@ -190,21 +190,9 @@ private:
 
     /// MDI-related functions.
     /// @{
-	MDIModelViewPair findSubWindowModelViewPair(QUrl url);
-    QMdiSubWindow* findSubWindow(QUrl url);
-    MDITreeViewBase* findSubWindowView(QUrl url);
-    QWidget* findSubWindowWithWidget(QWidget* widget) const;
-    
-    MDILibraryView* createMdiChildLibraryView();
-
-    /**
-     * Called by importModel().
-     * @param url
-     * @return
-     */
-    QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
-    void openMDILibraryViewOnModel(QSharedPointer<LibraryModel> libmodel);
-
+	MDIModelViewPair findSubWindowModelViewPair(QUrl url) const;
+	QMdiSubWindow* findSubWindow(QUrl url) const;
+	MDITreeViewBase* findSubWindowView(QUrl url) const;
     /// @}
     
     

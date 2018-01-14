@@ -77,8 +77,9 @@
 #include <gui/menus/ActionBundle.h>
 
 //
-// Note: Very roughly based on Qt5 MDI example, http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and counless
-// other variations on the theme.
+// Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
+// the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and counless
+// other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
@@ -157,7 +158,7 @@ MainWindow::~MainWindow()
 
 MainWindow* MainWindow::getInstance()
 {
-	// Search the qApp for the main window.
+	// Search the qApp for the single MainWindow instance.
 	for(auto widget : qApp->topLevelWidgets())
 	{
 		if(MainWindow* is_main_window = qobject_cast<MainWindow*>(widget))
@@ -430,8 +431,8 @@ void MainWindow::createActionsView()
 {
 	m_ab_docks = new ActionBundle(this);
 
-	m_act_lock_layout = make_action(Theme::iconFromTheme(""), tr("Lock layout"), this);
-	m_act_reset_layout = make_action(Theme::iconFromTheme(""), tr("Reset layout"), this);
+	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); //< Also an "emblem-unlocked"
+	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 M_WARNING("TODO: These appear to be unreparentable, so we can't give them to an ActionBundle.");
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
@@ -465,6 +466,7 @@ void MainWindow::createMenus()
 	m_ab_cut_copy_paste_actions->appendToMenu(m_menu_edit);
 	// Delete/Select all.
 	m_ab_extended_edit_actions->appendToMenu(m_menu_edit);
+	// Let's see what this does, just for fun.
 	m_menu_edit->setTearOffEnabled(true);
 
     // Create the View menu.
@@ -801,7 +803,7 @@ MDITreeViewBase* MainWindow::activeChildMDIView()
 /**
  * Find any existing child MDI window associated with the given url.
  */
-QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
+QMdiSubWindow* MainWindow::findSubWindow(QUrl url) const
 {
 	for(auto window : m_mdi_area->subWindowList())
 	{
@@ -820,7 +822,7 @@ QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
     return nullptr;
 }
 
-MDITreeViewBase* MainWindow::findSubWindowView(QUrl url)
+MDITreeViewBase* MainWindow::findSubWindowView(QUrl url) const
 {
     auto child_mdi_subwin = findSubWindow(url);
 
@@ -848,7 +850,7 @@ MDITreeViewBase* MainWindow::findSubWindowView(QUrl url)
     }
 }
 
-MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url)
+MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 {
     MDIModelViewPair retval;
     auto view = findSubWindowView(url);
@@ -885,19 +887,6 @@ M_WARNING("TODO: This isn't correct.");
 	}
 
 	return retval;
-}
-
-QWidget* MainWindow::findSubWindowWithWidget(QWidget *widget) const
-{
-    auto subwindow_list = m_mdi_area->subWindowList();
-    for(auto sw : subwindow_list)
-    {
-        if(sw->widget() == widget)
-        {
-            return widget;
-        }
-    }
-    return nullptr;
 }
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
@@ -956,7 +945,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 		{
 			m_libmodels.push_back(libmodel);
 			// Add the new library to the Collection Doc Widget.
-			m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel.data()));
+			m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel));
 		}
 	}
 	settings.endArray();
@@ -1038,8 +1027,8 @@ void MainWindow::openWindows()
 	for(auto m : m_libmodels)
 	{
 		qDebug() << "Opening view on model:" << m->getLibraryName() << m->getLibRootDir();
-//        openMDILibraryViewOnModel(m);
-        auto child = MDILibraryView::openModel(m, this);
+
+		auto child = MDILibraryView::openModel(m, this);
 		if(child.m_view)
         {
 			addChildMDIView(child.m_view);
@@ -1057,96 +1046,14 @@ M_WARNING("TODO: These seem out of place.");
 ////// Action targets.
 //////
 
-#if 0
-QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
-{
-	// Create the new LibraryModel.
-	auto lib = LibraryModel::openFile(url, this);
-
-	// Connect it to the ActivityProgressWidget, since as soon as we set the URL, async activity will start.
-	connectLibraryToActivityProgressWidget(lib.data(), m_activity_progress_widget);
-
-	m_libmodels.push_back(lib);
-//	lib->setLibraryRootUrl(url);
-
-	// Add the new library to the Collection Doc Widget.
-	m_libraryDockWidget->addLibrary(new LocalLibraryItem(lib.data()));
-
-	return lib;
-}
-#endif
-
-#if 0
-void MainWindow::openMDILibraryViewOnModel(QSharedPointer<LibraryModel> libmodel)
-{
-	if(libmodel != nullptr)
-	{
-		// First check if we already have a view open.
-		auto existing = findSubWindow(libmodel->getLibRootDir());
-		if(existing != nullptr)
-		{
-            // Already have a view open, so just switch to it.
-			m_mdi_area->setActiveSubWindow(existing);
-			return;
-		}
-
-		// No view open, create a new one.
-        auto child = MDILibraryView::openModel(libmodel, this);
-        if(child)
-        {
-            addChildMDIView(child);
-        }
-
-M_WARNING("TODO: These seem out of place.");
-        connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
-        connectActiveMDITreeViewBaseAndMetadataDock(child, m_metadataDockWidget);
-
-		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
-	}
-}
-#endif
-
 /**
  * Top-level menu/toolbar action for creating a new Library view by picking a library root directory.
  * ~= "File->Open...".
  */
 void MainWindow::importLib()
 {
-#if TEMP
-	// Add a directory as the root of a new library.
-
-	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(this, "Select a directory to import", QUrl(), "import_dir");
-	QUrl lib_url = liburl.first;
-
-	if(lib_url.isEmpty())
-	{
-		qDebug() << "User cancelled.";
-		return;
-	}
-
-	LibraryModel* lib = nullptr;
-	for(auto l : m_libmodels)
-	{
-		if(l->getLibRootDir() == lib_url)
-		{
-			qDebug() << "LibraryModel URL '" << lib_url << "' is already open.";
-			lib = l.data();
-		}
-	}
-	if(lib == nullptr)
-	{
-        // Create the new LibraryModel.
-		lib = openLibraryModelOnUrl(lib_url).data();
-	}
-
-    // Open a view on it.
-	openMDILibraryViewOnModel(lib);
-    return;
-#else
-
 	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
 		auto mvpair = findSubWindowModelViewPair(url);
-		//auto libview = qobject_cast<MDILibraryView*>(this->findSubWindowView(url));
 		return mvpair;
     };
 
@@ -1194,15 +1101,14 @@ M_WARNING("TODO: These seem out of place.");
 		connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
 
 		// Add the new library to the Collection Doc Widget.
-		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>().data()));
+		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>()));
 
         statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));
     }
     else
     {
-        qDebug() << "MDILibraryView::open() returned nullptr";
+		qCritical() << "MDILibraryView::open() returned nullptr";
     }
-#endif
 }
 
 void MainWindow::onRescanLibrary()
@@ -1214,12 +1120,20 @@ void MainWindow::onRescanLibrary()
 	}
 }
 
-void MainWindow::onShowLibrary(LibraryModel* libmodel)
+void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
 {
 	qDebug() << QString("onShowLibrary");
-M_WARNING("TODO");
+M_WARNING("TODO: SHOWLIBRARY");
 //	openMDILibraryViewOnModel(libmodel);
     //??? MDILibraryView(libmodel);
+
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+	};
+
+	MDILibraryView::openFile(libmodel->getLibRootDir(), this, check_for_existing_view);
+
 	return;
 }
 
@@ -1370,22 +1284,6 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	// Show the child window we just added.
 	mdisubwindow->show();
 }
-
-#if 0
-MDILibraryView* MainWindow::createMdiChildLibraryView()
-{
-	// Create a new, empty LibraryView.
-
-	// New Lib MDI View.
-	auto child = new MDILibraryView(this);
-
-	connectLibraryViewAndMainWindow(child);
-
-	addChildMDIView(child);
-
-	return child;
-}
-#endif
 
 // Top-level "saveAs" action handler for "Save playlist as..."
 void MainWindow::savePlaylistAs()
