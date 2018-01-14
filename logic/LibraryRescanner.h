@@ -24,9 +24,11 @@
 
 #include <memory>
 #include <QtCore/QObject>
+#include <QElapsedTimer>
 #include <QtCore/QPersistentModelIndex>
 #include <QtCore/QFuture>
 #include <QtCore/QFutureWatcher>
+#include <utils/concurrency/AsyncTaskManager.h>
 
 #include "logic/LibraryEntry.h"
 
@@ -76,6 +78,8 @@ public:
 	QFutureWatcher<MetadataReturnVal> m_rescan_future_watcher;
 	QFutureWatcher<QString> m_dir_traversal_future_watcher;
 
+	QElapsedTimer m_timer;
+
 signals:
 	/// @name Signals forwarded from the QFutureWatcher's.
 	///@{
@@ -91,7 +95,9 @@ public slots:
 	void onDirTravFinished();
 
 	/// Slot called by m_rescan_future_watcher when it has a result available.
-	void onResultReadyAt(int index);
+	void onResultReadyAt(int index, QFuture<MetadataReturnVal> f);
+
+    void processReadyResults(MetadataReturnVal lritem_vec);
 
 	/// Slot called by m_rescan_future_watcher when the rescan is complete.
 	void onRescanFinished();
@@ -105,6 +111,11 @@ private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
 	LibraryModel* m_current_libmodel;
+
+	AsyncTaskManager m_async_task_manager;
+
+    futureww<QString> m_futureww_dirscan;
+    futureww<MetadataReturnVal> m_futureww;
 };
 
 

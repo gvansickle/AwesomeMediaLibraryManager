@@ -18,6 +18,8 @@
  */
 
 #include "CollectionDockWidget.h"
+#include "MDILibraryView.h"
+#include "MDINowPlayingView.h"
 
 #include <QContextMenuEvent>
 #include <QStandardItem>
@@ -38,10 +40,10 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     setFeatures(QDockWidget::DockWidgetMovable);
     setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-    sourcesModel = new QStandardItemModel(this);
+	m_sources_model = new QStandardItemModel(this);
 
     collectionTreeView = new QTreeView(this);
-    collectionTreeView->setModel(sourcesModel);
+	collectionTreeView->setModel(m_sources_model);
     collectionTreeView->setRootIsDecorated(false);
     // Want to have the tree always expanded.
     collectionTreeView->setExpandsOnDoubleClick(false);
@@ -52,17 +54,17 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     collectionTreeView->setContextMenuPolicy(Qt::DefaultContextMenu);
     setWidget(collectionTreeView);
 
-	localLibsItem = new QStandardItem("Libraries");
-    localLibsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-    auto font = QFont(localLibsItem->font());
+	m_localLibsItem = new QStandardItem("Libraries");
+	m_localLibsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+	auto font = QFont(m_localLibsItem->font());
     font.setBold(true);
-    localLibsItem->setFont(font);
-	playlistsItem = new QStandardItem("Playlists");
-    playlistsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-    playlistsItem->setFont(font);
+	m_localLibsItem->setFont(font);
+	m_playlistsItem = new QStandardItem("Playlists");
+	m_playlistsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+	m_playlistsItem->setFont(font);
 
     // Add top-level items.
-    sourcesModel->invisibleRootItem()->appendRows({localLibsItem, playlistsItem});
+	m_sources_model->invisibleRootItem()->appendRows({m_localLibsItem, m_playlistsItem});
 
     // Connect the double-click signal to a custom handler.
 	connect(collectionTreeView, &QTreeView::doubleClicked, this, &CollectionDockWidget::tree_doubleclick);
@@ -73,14 +75,14 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 void CollectionDockWidget::addLibrary(LocalLibraryItem* lib)
 {
 	qDebug() << "Adding local library: " << lib;
-	localLibsItem->appendRow(lib);
+	m_localLibsItem->appendRow(lib);
 	collectionTreeView->expandAll();
 }
 
 void CollectionDockWidget::addPlaylist(PlaylistItem* playlist)
 {
-	qDebug() << "Adding playlist";
-	playlistsItem->appendRow(playlist);
+	qDebug() << "Adding playlist:" << playlist;
+	m_playlistsItem->appendRow(playlist);
 	collectionTreeView->expandAll();
 }
 
@@ -96,11 +98,11 @@ void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
     auto parentindex = modelindex.parent();
 	///qDebug() << QString("Parent: {}/{}/{}".format(modelindex.parent(), modelindex.parent().row(), modelindex.parent().column()));
 
-    if (parentindex == sourcesModel->indexFromItem(localLibsItem))
+	if (parentindex == m_sources_model->indexFromItem(m_localLibsItem))
     {
         doLibraryContextMenu(event, treepos);
     }
-    else if (parentindex == sourcesModel->indexFromItem(playlistsItem))
+	else if (parentindex == m_sources_model->indexFromItem(m_playlistsItem))
     {
 		qDebug("Playlist menu, not implemented.");
     }
@@ -144,7 +146,7 @@ void CollectionDockWidget::doLibraryContextMenu(QContextMenuEvent* event, QPoint
 
 void CollectionDockWidget::onShowLib(QModelIndex modelindex)
 {
-	emit showLibViewSignal(modelindex.data(Qt::UserRole+1).value<LibraryModel*>());
+	emit showLibViewSignal(modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>());
 }
 
 void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
@@ -163,9 +165,9 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 	if(retval == QMessageBox::Yes)
 	{
 		// Remove the directory.
-		emit removeLibModelFromLibSignal(modelindex.data(Qt::UserRole+1).value<LibraryModel*>());
-		// Remove the entry in out Tree model.
-		sourcesModel->removeRow(modelindex.row(), modelindex.parent());
+		emit removeLibModelFromLibSignal(modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>());
+		// Remove the entry in our Tree model.
+		m_sources_model->removeRow(modelindex.row(), modelindex.parent());
 	}
 }
 
@@ -179,13 +181,38 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 
 	auto parentindex = modelindex.parent();
 	qDebug() << QString("Parent:") << modelindex.parent() << modelindex.parent().row() << modelindex.parent().column();
-	if(parentindex == sourcesModel->indexFromItem(localLibsItem))
+	if(parentindex == m_sources_model->indexFromItem(m_localLibsItem))
 	{
-		emit showLibViewSignal(modelindex.data(Qt::UserRole + 1).value<LibraryModel*>());
+		emit showLibViewSignal(modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>());
 	}
-	else if(parentindex == sourcesModel->indexFromItem(playlistsItem))
+	else if(parentindex == m_sources_model->indexFromItem(m_playlistsItem))
 	{
 		qDebug() << QString("Playlist menu, not implemented.");
 	}
+}
+
+void CollectionDockWidget::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
+{
+	qDebug() << "Got closing() signal from view" << viewptr;
+
+	// We only care if it's not a Library or Now Playing view.
+	if(qobject_cast<MDILibraryView*>(viewptr) || qobject_cast<MDINowPlayingView*>(viewptr))
+	{
+		qDebug() << "Ignoring, view is Now Playing or Library";
+		return;
+	}
+
+	auto parentindex = m_sources_model->indexFromItem(m_playlistsItem);
+
+	auto indexes_to_delete = m_sources_model->match(parentindex, si_role_view_ptr,
+													QVariant::fromValue<MDITreeViewBase*>(viewptr), -1,
+													Qt::MatchExactly | Qt::MatchRecursive);
+	qDebug() << "Num indexes found:" << indexes_to_delete.size();
+
+	for(auto i : indexes_to_delete)
+	{
+		m_sources_model->removeRow(i.row(), parentindex);
+	}
+
 }
 

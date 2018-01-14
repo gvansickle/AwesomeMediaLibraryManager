@@ -37,6 +37,15 @@ public:
 	
     QString getDisplayName() const override;
 
+protected:
+
+	/**
+	 * The Now Playing view isn't directly saveable, but serves as a volatile "scratch" playlist for
+	 * the player.  So it doesn't make sense to indicate that it's modified, even when it is.
+	 */
+	bool isModified() const override { return false; }
+
+
 private:
 	Q_DISABLE_COPY(MDINowPlayingView)
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,22 +17,15 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "MDINowPlayingView.h"
+#include "AsyncTaskManager.h"
 
-MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
+AsyncTaskManager::AsyncTaskManager(QObject *parent) : QObject(parent)
 {
 
 }
 
-MDINowPlayingView* MDINowPlayingView::openModel(QAbstractItemModel* model, QWidget* parent)
+AsyncTaskManager::~AsyncTaskManager()
 {
-	auto view = new MDINowPlayingView(parent);
-	view->setModel(model);
-	return view;
+
 }
 
-
-QString MDINowPlayingView::getDisplayName() const
-{
-	return tr("Now Playing");
-}

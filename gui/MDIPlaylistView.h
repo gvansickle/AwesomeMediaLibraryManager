@@ -36,29 +36,43 @@ class MDIPlaylistView : public MDITreeViewBase
     using BASE_CLASS = MDITreeViewBase;
     
 signals:
-
+	/// @name Signals for player-connected messages.
+	/// @{
+	/// Start playing the current song.
     void play();
+	/// @}
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
     
+
     /**
      * static member function which opens an MDILibraryView on the given model.
      */
-    static MDIPlaylistView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
+	static MDIModelViewPair openModel(QSharedPointer<PlaylistModel> model, QWidget* parent);
 
     QMediaPlaylist* getQMediaPlaylist();
 
-    void setModel(QAbstractItemModel* model) override;
+	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
 
-    virtual PlaylistModel* underlyingModel() const;
+	void setModel(QSharedPointer<QAbstractItemModel> model) override;
+
+	Q_DECL_DEPRECATED PlaylistModel* underlyingModel() const override;
+
+	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
     
     /// Playlists are not read-only.
-    bool isReadOnly() const override { return false; };
+    bool isReadOnly() const override { return false; }
 
 public slots:
+
+	/// @name Slots for player-connected messages.
+	/// @{
+	/// Start next song.
     void next();
+	/// Start previous song.
     void previous();
+	/// @}
 
     /// @name Edit slots.
     /// Related const operations (copy, select all, etc) are in MDITreeViewBase.
@@ -88,6 +102,8 @@ protected:
     ///
     virtual QString getNewFilenameTemplate() const override;
     virtual QString defaultNameFilter() override;
+
+    void setEmptyModel() override;
 
     virtual void serializeDocument(QFileDevice& file) const override;
     virtual void deserializeDocument(QFileDevice& file) override;
@@ -144,7 +160,7 @@ private:
 	 */
 	void startPlaying(const QModelIndex& index);
 
-    PlaylistModel* m_underlying_model;
+	QSharedPointer<PlaylistModel> m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
     ItemDelegateLength* m_length_delegate;
 };

@@ -32,7 +32,6 @@
 
 #include "utils/ConnectHelpers.h"
 #include "utils/ActionHelpers.h"
-#include "utils/DebugHelpers.h"
 
 #include <QObject>
 
@@ -48,6 +47,7 @@
 #include <QAction>
 #include <QStandardPaths>
 #include <QDebug>
+#include "utils/DebugHelpers.h"
 #include <QMdiSubWindow>
 #include <QTimer>
 #include <QMessageBox>
@@ -61,6 +61,7 @@
 #include <QSharedPointer>
 
 #include <functional>
+#include <algorithm>
 #include <type_traits>
 
 #include <logic/MP2.h>
@@ -75,6 +76,12 @@
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
 #include <gui/menus/ActionBundle.h>
+
+//
+// Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
+// the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and counless
+// other variations on the theme, with my own adaptations liberally applied throughout.
+//
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
 {
@@ -152,7 +159,7 @@ MainWindow::~MainWindow()
 
 MainWindow* MainWindow::getInstance()
 {
-	// Search the qApp for the main window.
+	// Search the qApp for the single MainWindow instance.
 	for(auto widget : qApp->topLevelWidgets())
 	{
 		if(MainWindow* is_main_window = qobject_cast<MainWindow*>(widget))
@@ -425,8 +432,8 @@ void MainWindow::createActionsView()
 {
 	m_ab_docks = new ActionBundle(this);
 
-	m_act_lock_layout = make_action(Theme::iconFromTheme(""), tr("Lock layout"), this);
-	m_act_reset_layout = make_action(Theme::iconFromTheme(""), tr("Reset layout"), this);
+	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); //< Also an "emblem-unlocked"
+	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 M_WARNING("TODO: These appear to be unreparentable, so we can't give them to an ActionBundle.");
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
@@ -460,6 +467,7 @@ void MainWindow::createMenus()
 	m_ab_cut_copy_paste_actions->appendToMenu(m_menu_edit);
 	// Delete/Select all.
 	m_ab_extended_edit_actions->appendToMenu(m_menu_edit);
+	// Let's see what this does, just for fun.
 	m_menu_edit->setTearOffEnabled(true);
 
     // Create the View menu.
@@ -588,7 +596,7 @@ void MainWindow::createDockWidgets()
     // Create the metadata dock widget.
 	m_metadataDockWidget = new MetadataDockWidget(tr("Metadata Explorer"), this);
 	m_metadataDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	addDockWidget(Qt::RightDockWidgetArea, m_metadataDockWidget);
+    addDockWidget(Qt::RightDockWidgetArea, m_metadataDockWidget);
 }
 
 void MainWindow::createConnections()
@@ -660,23 +668,33 @@ void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls
 	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
-void MainWindow::connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw)
+void MainWindow::connectLibraryModelToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw)
 {
 	lm->connectProgressToActivityProgressWidget(apw);
 }
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
 {
+    qDebug() << "Connecting" << lv << "and" << this;
 	connect(lv, &MDILibraryView::sendEntryToPlaylist, this, &MainWindow::onSendEntryToPlaylist);
 	connect(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
 }
 
-void MainWindow::connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv)
+void MainWindow::connectPlaylistViewAndMainWindow(MDIPlaylistView* plv)
 {
-	connect(this, &MainWindow::sendToNowPlaying, plv, &MDIPlaylistView::onSendToNowPlaying);
+	qDebug() << "Connecting";
+M_WARNING("TODO: connect");
+	qDebug() << "Connected";
+}
 
-	connectPlayerAndPlaylistView(&m_player, plv);
-	connectPlayerControlsAndPlaylistView(m_controls, plv);
+void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view)
+{
+    qDebug() << "Connecting";
+	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDIPlaylistView::onSendToNowPlaying);
+
+	connectPlayerAndPlaylistView(&m_player, now_playing_view);
+	connectPlayerControlsAndPlaylistView(m_controls, now_playing_view);
+    qDebug() << "Connected";
 }
 
 void MainWindow::connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget)
@@ -745,8 +763,8 @@ bool MainWindow::maybeSaveOnClose()
 	}
 	if(failures.size() > 0)
 	{
-		if(QMessageBox::warning(this, "Save Error",
-								QString("Failed to save %1\nQuit anyway?").arg(failures.join(',')), /// @todo % "\n\t".join(failures),
+		if(QMessageBox::warning(this, tr("Save Error"),
+								tr("Failed to save %1\nQuit anyway?").arg(failures.join(',')), /// @todo % "\n\t".join(failures),
 		QMessageBox::Yes|QMessageBox::No) == QMessageBox::No)
 		{
 			// Do not accept the close event.
@@ -759,6 +777,8 @@ bool MainWindow::maybeSaveOnClose()
 void MainWindow::closeEvent(QCloseEvent* event)
 {
 	qDebug() << QString("Main Window received closeEvent.");
+
+#if 1
 	stopAllBackgroundThreads();
 	bool continue_with_close = maybeSaveOnClose();
 	if(continue_with_close)
@@ -774,6 +794,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 		qDebug() << QString("ignoring closeEvent.");
 		event->ignore();
 	}
+#endif
 }
 
 /**
@@ -791,28 +812,117 @@ MDITreeViewBase* MainWindow::activeChildMDIView()
 }
 
 /**
- * Find any existing child MDI window associated with the give url.
+ * Find any existing child MDI window associated with the given url.
  */
-QMdiSubWindow* MainWindow::findSubWindow(QUrl url)
+QMdiSubWindow* MainWindow::findSubWindow(QUrl url) const
 {
 	for(auto window : m_mdi_area->subWindowList())
 	{
 		auto widget = window->widget();
+        qDebug() << "windowFilePath:" << widget << widget->windowFilePath();
 		if(widget == nullptr)
 		{
 			qCritical() << "Mdi child has no widget.";
 		}
 		else if(widget->windowFilePath() == url.toString())
 		{
+            qDebug() << "Found subwindow with URL:" << url;
 			return window;
 		}
 	}
-	return nullptr;
+    return nullptr;
+}
+
+MDITreeViewBase* MainWindow::findSubWindowView(QUrl url) const
+{
+    auto child_mdi_subwin = findSubWindow(url);
+
+    if(child_mdi_subwin)
+    {
+        // Found a child window associated with the given URL.
+        // Return the QMdiSubWindow's widget.
+        auto view = qobject_cast<MDITreeViewBase*>(child_mdi_subwin->widget());
+        if(!view)
+        {
+            qCritical() << "Found subwindow" << child_mdi_subwin
+                        << "has no MDITreeViewBase-derived view as widget().  widget():" << child_mdi_subwin->widget();
+            qFatal("findSubwindow() mechanism failed.");
+            return nullptr; // Never returns, this is just to eliminate compiler warning.
+        }
+        else
+        {
+            return view;
+        }
+    }
+    else
+    {
+        // No such child window found.
+        return nullptr;
+    }
+}
+
+MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
+{
+    MDIModelViewPair retval;
+    auto view = findSubWindowView(url);
+    if(view)
+    {
+        retval.m_view = view;
+        retval.m_view_was_existing = true;
+		retval.m_model = view->underlyingModelSharedPtr();
+        retval.m_model_was_existing = true;
+    }
+	else
+	{
+		// No existing view, is there an existing model open?
+M_WARNING("TODO: Find a cleaner way to handle this.");
+		for(auto lm : m_libmodels)
+		{
+			if(lm->getLibRootDir() == url)
+			{
+				qDebug() << "Found existing LibraryModel:" << lm;
+				retval.m_model = lm;
+				retval.m_model_was_existing = true;
+			}
+		}
+		for(auto pm : m_playlist_models)
+		{
+			if(pm->getLibRootDir() == url)
+			{
+				qDebug() << "Found existing PlaylistModel:" << pm;
+M_WARNING("TODO: This isn't correct.");
+				retval.m_model = QSharedPointer<PlaylistModel>(pm);
+				retval.m_model_was_existing = true;
+			}
+		}
+	}
+
+	return retval;
 }
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
-    qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+	qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+}
+
+void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
+{
+	qDebug() << "Got signal view_is_closing:" << viewptr << modelptr;
+
+	auto playlist = qobject_cast<MDIPlaylistView*>(viewptr);
+	auto nowplaying = qobject_cast<MDINowPlayingView*>(viewptr);
+	if(nowplaying)
+	{
+		qDebug() << "Was nowplaying view, ignoring:" << nowplaying;
+	}
+	else if(playlist)
+	{
+		qDebug() << "Was playlist, deleting model";
+		m_playlist_models.erase(std::remove(m_playlist_models.begin(),
+								  m_playlist_models.end(),
+								  modelptr),
+				   m_playlist_models.end());
+	}
 }
 
 //////
@@ -866,7 +976,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 		{
 			m_libmodels.push_back(libmodel);
 			// Add the new library to the Collection Doc Widget.
-			m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel.data()));
+			m_libraryDockWidget->addLibrary(new LocalLibraryItem(libmodel));
 		}
 	}
 	settings.endArray();
@@ -918,6 +1028,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 
 /**
  * Called by a "timer(0)" started in the constructor.
+ * Does some final setup work which should be done once the constructor has finished and the event loop has started.
  */
 void MainWindow::onStartup()
 {
@@ -925,16 +1036,7 @@ void MainWindow::onStartup()
     changeIconTheme(QIcon::themeName());
 
     // Create the "Now Playing" playlist and view.
-    m_now_playing_playlist_view = createMdiNowPlayingView();
-
-M_WARNING("TODO: Specify a temp/cache file?")
-    m_now_playing_playlist_view->newFile();
-
-	connectNowPlayingViewAndMainWindow(m_now_playing_playlist_view);
-
-    statusBar()->showMessage(QString("Opened 'Now Playing' Playlist '%1'").arg(m_now_playing_playlist_view->windowTitle()));
-
-    m_now_playing_playlist_view->show();
+    newNowPlaying();
 
 	// Load any files which were opened at the time the last session was closed.
 	qDebug() << QString("Loading files from last session...");
@@ -956,7 +1058,18 @@ void MainWindow::openWindows()
 	for(auto m : m_libmodels)
 	{
 		qDebug() << "Opening view on model:" << m->getLibraryName() << m->getLibRootDir();
-		openMDILibraryViewOnModel(m.data());
+
+		auto child = MDILibraryView::openModel(m, this);
+		if(child.m_view)
+        {
+			addChildMDIView(child.m_view);
+        }
+M_WARNING("TODO: These seem out of place.");
+		connectLibraryViewAndMainWindow(qobject_cast<MDILibraryView*>(child.m_view));
+		connectLibraryModelToActivityProgressWidget(m.data(), m_activity_progress_widget);
+		connectActiveMDITreeViewBaseAndMetadataDock(child.m_view, m_metadataDockWidget);
+
+        statusBar()->showMessage(QString("Opened view on library '%1'").arg(m->getLibraryName()));
 	}
 }
 
@@ -965,80 +1078,132 @@ void MainWindow::openWindows()
 ////// Action targets.
 //////
 
-QSharedPointer<LibraryModel> MainWindow::openLibraryModelOnUrl(QUrl url)
+/**
+ * Top-level menu/toolbar action for creating a new Library view by picking a library root directory.
+ * ~= "File->Open...".
+ */
+void MainWindow::importLib()
 {
-	// Create the new LibraryModel.
-	auto lib = QSharedPointer<LibraryModel>(new LibraryModel(this));
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+    };
 
-	// Connect it to the ActivityProgressWidget, since as soon as we set the URL, async activity will start.
-	connectLibraryToActivityProgressWidget(lib.data(), m_activity_progress_widget);
+    auto child = MDILibraryView::open(this, check_for_existing_view);
+M_WARNING("TODO: Factor out this common code.");
+	if(child.m_view)
+    {
+		auto libview = qobject_cast<MDILibraryView*>(child.m_view);
+		auto libmodel = qobject_cast<LibraryModel*>(child.m_model);
 
-	m_libmodels.push_back(lib);
-	lib->setLibraryRootUrl(url);
+		Q_ASSERT(libview != 0);
+		Q_ASSERT(libmodel != 0);
 
-	// Add the new library to the Collection Doc Widget.
-	m_libraryDockWidget->addLibrary(new LocalLibraryItem(lib.data()));
+		// Did a view of the URL the user specified already exist?
+		if(child.m_view_was_existing)
+        {
+			// View already existed, just activate its parent subwindow.
+            qDebug() << "View already existed";
+			m_mdi_area->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(child.m_view->parent()));
+			return;
+        }
 
-	return lib;
-}
+		// View is new.
+		/// @todo Seems out of place.
+		connectActiveMDITreeViewBaseAndMetadataDock(libview, m_metadataDockWidget);
+		connectLibraryViewAndMainWindow(libview);
 
-void MainWindow::openMDILibraryViewOnModel(LibraryModel* libmodel)
-{
-	if(libmodel != nullptr)
-	{
-		// First check if we already have a view open.
-		auto existing = findSubWindow(libmodel->getLibRootDir());
-		if(existing != nullptr)
+		addChildMDIView(libview);
+
+		// View is new, did the model already exist?
+		if(child.m_model_was_existing)
 		{
-			// Already have a view open, switch to it.
-			m_mdi_area->setActiveSubWindow(existing);
+			qDebug() << "Model existed:" << child.m_model;
 			return;
 		}
 
-		// No view open, create a new one.
-		auto child = MDILibraryView::openModel(libmodel);
+		// Model is new, add the new child's underlying model to the list of library models
+		// and the Collection sidebar.
 
-		if(child)
-		{
-			addChildMDIView(child);
-		}
+		/// @todo Set this as the single Library?
 
-		connectLibraryToActivityProgressWidget(libmodel, m_activity_progress_widget);
-		statusBar()->showMessage(QString("Opened view on library '%1'").arg(libmodel->getLibraryName()));
-	}
+		qDebug() << "Model is new:" << child.m_model;
+		m_libmodels.push_back(qSharedPointerObjectCast<LibraryModel>(libview->underlyingModelSharedPtr()));
+
+M_WARNING("TODO: These seem out of place.");
+		connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
+
+		// Add the new library to the Collection Doc Widget.
+		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>()));
+
+        statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));
+    }
+    else
+    {
+		qCritical() << "MDILibraryView::open() returned nullptr";
+    }
 }
 
-void MainWindow::importLib()
+void MainWindow::openFileLibrary(const QUrl& filename)
 {
-	// Add a directory as the root of a new library.
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+	};
 
-	auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(this, "Select a directory to import", QUrl(), "import_dir");
-	QUrl lib_url = liburl.first;
-
-	if(lib_url.isEmpty())
+	auto child = MDILibraryView::openFile(filename, this, check_for_existing_view);
+M_WARNING("TODO: Factor out this common code.");
+	if(child.m_view)
 	{
-		qDebug() << "User cancelled.";
-		return;
-	}
+		auto libview = qobject_cast<MDILibraryView*>(child.m_view);
+		auto libmodel = qobject_cast<LibraryModel*>(child.m_model);
 
-	LibraryModel* lib = nullptr;
-	for(auto l : m_libmodels)
-	{
-		if(l->getLibRootDir() == lib_url)
+		Q_ASSERT(libview != 0);
+		Q_ASSERT(libmodel != 0);
+
+		// Did a view of the URL the user specified already exist?
+		if(child.m_view_was_existing)
 		{
-			qDebug() << "LibraryModel URL '" << lib_url << "' is already open.";
-			lib = l.data();
+			// View already existed, just activate its parent subwindow.
+			qDebug() << "View already existed, activating it.";
+			m_mdi_area->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(child.m_view->parent()));
+			return;
 		}
-	}
-	if(lib == nullptr)
-	{
-        // Create the new LibraryModel.
-		lib = openLibraryModelOnUrl(lib_url).data();
-	}
 
-    // Open a view on it.
-	openMDILibraryViewOnModel(lib);
-    return;
+		// View is new.
+M_WARNING("TODO: These seem out of place.");
+		connectActiveMDITreeViewBaseAndMetadataDock(libview, m_metadataDockWidget);
+		connectLibraryViewAndMainWindow(libview);
+
+		addChildMDIView(libview);
+
+		// View is new, did the model already exist?
+		if(child.m_model_was_existing)
+		{
+			qDebug() << "Model existed:" << child.m_model;
+			return;
+		}
+
+		// Model is new, add the new child's underlying model to the list of library models
+		// and the Collection sidebar.
+
+		/// @todo Set this as the single Library?
+
+		qDebug() << "Model is new:" << child.m_model;
+		m_libmodels.push_back(qSharedPointerObjectCast<LibraryModel>(libview->underlyingModelSharedPtr()));
+
+M_WARNING("TODO: These seem out of place.");
+		connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
+
+		// Add the new library to the Collection Doc Widget.
+		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>()));
+
+		statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));
+	}
+	else
+	{
+		qCritical() << "MDILibraryView::open() returned nullptr";
+	}
 }
 
 void MainWindow::onRescanLibrary()
@@ -1050,15 +1215,16 @@ void MainWindow::onRescanLibrary()
 	}
 }
 
-void MainWindow::onShowLibrary(LibraryModel* libmodel)
+void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
 {
-	qDebug() << QString("onShowLibrary");
-	openMDILibraryViewOnModel(libmodel);
+	// We'll just try to open the same URL as the libmodel, and let the "opening an existing view/model"
+	// logic do the rest.
+	openFileLibrary(libmodel->getLibRootDir());
 	return;
 }
 
 
-void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
+void MainWindow::onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel)
 {
 	qDebug() << QString("Removing libmodel from library:") << libmodel;
 
@@ -1096,16 +1262,60 @@ void MainWindow::onRemoveDirFromLibrary(LibraryModel* libmodel)
 
 /**
  * Top-level menu/toolbar action for creating a new, empty playlist.
+ * ~= "File->New".
  */
 void MainWindow::newPlaylist()
 {
-    auto child = createMdiChildPlaylistView();
+    // Create the View object.
+    auto child = new MDIPlaylistView(this);
 
+    // Tell it to create a new, empty model.
     child->newFile();
 
-    statusBar()->showMessage(QString("Opened new Playlist '%1'").arg(child->windowTitle()));
+    // Add the underlying model to the list.
+    m_playlist_models.push_back(child->underlyingModel());
+
+    // Add it to the child views.
+    addChildMDIView(child);
+
+	// Add the new playlist to the collection doc widget.
+	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
+
+    statusBar()->showMessage(tr("Opened new Playlist '%1'").arg(child->windowTitle()));
 }
 
+/**
+ * Top-level menu/toolbar action for creating a new, empty "Now Playing" playlist.
+ * ~= "File->New", except there is no user action for creating the "Now Playing" view/model.
+ */
+void MainWindow::newNowPlaying()
+{
+    auto child = new MDINowPlayingView(this);
+    child->newFile();
+
+    // Add the new child's underlying model to the list of playlist models.
+	/// @todo REMOVE?, only one Now Playing.
+    m_playlist_models.push_back(child->underlyingModel());
+	// Set this view's model to be the single "Now Playing" model.
+	m_now_playing_playlist_model = child->underlyingModelSharedPtr().objectCast<PlaylistModel>();
+
+    /// @todo Do we really need to keep this as a member pointer?
+    m_now_playing_playlist_view = child;
+
+    connectNowPlayingViewAndMainWindow(child);
+
+    addChildMDIView(child);
+
+    statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(child->windowTitle()));
+
+	// Add the new playlist to the collection doc widget.
+    m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
+}
+
+/**
+ * Top-level menu/toolbar action for opening an existing playlist.
+ * ~= "File->Open...".
+ */
 void MainWindow::openPlaylist()
 {
 	qCritical() << "Not implemented";
@@ -1129,6 +1339,7 @@ void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, s
 void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 {
 	// Resend the entry to the "Now Playing" playlist view.
+    qDebug() << "Re-emitting sendToNowPlaying";
 	emit sendToNowPlaying(libentry);
 }
 
@@ -1138,7 +1349,8 @@ void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
 void MainWindow::addChildMDIView(MDITreeViewBase* child)
 {
 	// Connect Cut, Copy, Delete, and Select All actions to the availability signals emitted by the child.
-	/// @note AFAICT, this works because only the active child will send this signal.
+	/// @note This works because only the active child will send these signals.
+	/// Otherwise we'd need to swap which child was connected to the actions.
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_cut, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::cutAvailable, m_act_delete, &QAction::setEnabled);
 	connect(child, &MDITreeViewBase::copyAvailable, m_act_copy, &QAction::setEnabled);
@@ -1151,63 +1363,17 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	// Add the child subwindow to the MDI area.
 	auto mdisubwindow = m_mdi_area->addSubWindow(child);
 
-	// Add actions to the Window menu and its action group.
+    // Add actions from the child to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
 
+	/// Connect the closing() signal to the Collection Dock widget.
+	connect(child, &MDITreeViewBase::closing, m_libraryDockWidget, &CollectionDockWidget::view_is_closing);
+	/// ..and also to the main window.
+	connect(child, &MDITreeViewBase::closing, this, &MainWindow::view_is_closing);
+
 	// Show the child window we just added.
 	mdisubwindow->show();
-}
-
-MDILibraryView* MainWindow::createMdiChildLibraryView()
-{
-	// Create a new, empty LibraryView.
-
-	// New Lib MDI View.
-	auto child = new MDILibraryView(this);
-
-	connectLibraryViewAndMainWindow(child);
-
-	addChildMDIView(child);
-
-	return child;
-}
-
-MDIPlaylistView* MainWindow::createMdiChildPlaylistView()
-{
-	// Create a new playlist model.
-	auto new_playlist_model = new PlaylistModel(this);
-	m_playlist_models.push_back(new_playlist_model);
-
-//	MDIPlaylistView* child = new MDIPlaylistView(this);
-//	child->setModel(new_playlist_model);
-	auto child = MDIPlaylistView::openModel(new_playlist_model, this);
-
-	addChildMDIView(child);
-
-	// Add the new playlist to the collection doc widget.
-	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return child;
-}
-
-MDINowPlayingView* MainWindow::createMdiNowPlayingView()
-{
-	// Create a new "Now Playing" playlist model.
-	auto new_playlist_model = new PlaylistModel(this);
-
-	// TODO REMOVE
-	m_playlist_models.push_back(new_playlist_model);
-	m_now_playing_playlist_model = new_playlist_model;
-
-//	MDINowPlayingView* child = new MDINowPlayingView(this);
-//	child->setModel(new_playlist_model);
-	auto child = MDINowPlayingView::openModel(m_now_playing_playlist_model, this);
-
-	addChildMDIView(child);
-
-	// Add the new playlist to the collection doc widget.
-	m_libraryDockWidget->addPlaylist(new PlaylistItem(child));
-	return child;
 }
 
 // Top-level "saveAs" action handler for "Save playlist as..."

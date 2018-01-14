@@ -260,4 +260,8 @@ void MetadataDockWidget::onProxyModelChange(bool has_rows)
 		auto index = m_proxy_model->index(0, 0, QModelIndex());
 		PopulateTreeWidget(index);
 	}
+    else
+    {
+        qDebug() << "NO ROWS";
+    }
 }

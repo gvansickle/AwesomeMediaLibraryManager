@@ -486,7 +486,14 @@ QByteArray MetadataTaglib::getCoverArtBytes() const
 	QByteArray retval;
 
 	// Open the file ref.
-	TagLib::FileRef fr(m_audio_file_url.toLocalFile().toStdString().c_str());
+    QString url_as_local = m_audio_file_url.toLocalFile();
+
+    TagLib::FileRef fr {openFileRef(url_as_local)};
+    if(fr.isNull())
+    {
+        qWarning() << "Unable to open file" << url_as_local << "with TagLib";
+        return retval;
+    }
 
 	// Downcast it to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))

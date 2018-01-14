@@ -34,6 +34,7 @@
 #include <logic/PlaylistModel.h>
 #include <logic/MP2.h>
 #include <gui/settings/SettingsDialog.h>
+#include "mdi/MDIModelViewPair.h"
 
 class QActionGroup;
 class QWidget;
@@ -69,29 +70,26 @@ public:
 
 public slots:
 
+    /// Slot corresponding to the "Open Directory as new Library" action.
+    /// This is ~= a "File->Open" action.
+    void importLib();
+	void openFileLibrary(const QUrl& filename);
 
-
-protected:
-    void closeEvent(QCloseEvent* event) override;
-
-
-private slots:
-    void onSubWindowActivated(QMdiSubWindow* subwindow);
-    void onFocusChanged(QWidget* old, QWidget* now);
-
-    void changeStyle(const QString& styleName);
-    void changeIconTheme(const QString& iconThemeName);
-
-    void onShowLibrary(LibraryModel* libmodel);
-    void onRemoveDirFromLibrary(LibraryModel* libmodel);
-
-    void onRescanLibrary();
-
-    void startSettingsDialog();
-
+    /**
+     * Open a new, empty playlist.
+     * ~= "File->New".
+     */
     void newPlaylist();
+
+    /**
+     * Open an existing playlist.
+     * ~= "File->Open...".
+     */
     void openPlaylist();
     void savePlaylistAs();
+
+    void onRescanLibrary();
+    void startSettingsDialog();
 
     /// @name Edit action forwarders.
     /// @{
@@ -101,10 +99,43 @@ private slots:
     void onSelectAll();
     void onDelete();
     /// @}
-	///
 
-	void about();
 
+    void about();
+
+
+protected:
+    void closeEvent(QCloseEvent* event) override;
+
+protected slots:
+
+    // Probably don't need anything here, since we probably won't be deriving from MainWindow.
+
+private slots:
+    void onSubWindowActivated(QMdiSubWindow* subwindow);
+    void onFocusChanged(QWidget* old, QWidget* now);
+
+	/**
+	 * Slot which is signaled by closing views.
+	 * This widget should delete any references it is keeping to @a viewptr.
+	 *
+	 * @note This arrangement is racey, need to find a better way to manage this.
+	 */
+	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
+
+    void changeStyle(const QString& styleName);
+    void changeIconTheme(const QString& iconThemeName);
+
+    /**
+	 * Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
+     * and/or creat a new MDILibraryView for it if one doesn't exist.
+     */
+	void onShowLibrary(QSharedPointer<LibraryModel> libmodel);
+
+	/**
+	 * Slot FBO the Collection sidebar to remove the specified model and any attached views.
+	 */
+	void onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel);
 
     void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
@@ -131,6 +162,10 @@ private:
     void createToolBars();
     void createStatusBar();
 	void createDockWidgets();
+
+    /// Equivalent of a "File->New" action for the Now Playing model/view.
+    void newNowPlaying();
+
 	void addChildMDIView(MDITreeViewBase* child);
 	MDITreeViewBase* activeChildMDIView();
     
@@ -140,17 +175,15 @@ private:
     void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
     void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
 
-    void connectLibraryToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
+	void connectLibraryModelToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
-    void connectNowPlayingViewAndMainWindow(MDIPlaylistView* plv);
+	void connectPlaylistViewAndMainWindow(MDIPlaylistView* plv);
+	void connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view);
     void connectActiveMDITreeViewBaseAndMetadataDock(MDITreeViewBase* viewbase, MetadataDockWidget* metadata_dock_widget);
     ///@}
 
     void stopAllBackgroundThreads();
-
-    void importLib();
-    
 
     /// @name Persistency
     ///@{
@@ -170,15 +203,9 @@ private:
 
     /// MDI-related functions.
     /// @{
-    QMdiSubWindow* findSubWindow(QUrl url);
-    
-    MDILibraryView* createMdiChildLibraryView();
-    MDIPlaylistView* createMdiChildPlaylistView();
-    MDINowPlayingView* createMdiNowPlayingView();
-
-    QSharedPointer<LibraryModel> openLibraryModelOnUrl(QUrl url);
-    void openMDILibraryViewOnModel(LibraryModel* libmodel);
-
+	MDIModelViewPair findSubWindowModelViewPair(QUrl url) const;
+	QMdiSubWindow* findSubWindow(QUrl url) const;
+	MDITreeViewBase* findSubWindowView(QUrl url) const;
     /// @}
     
     
@@ -204,7 +231,7 @@ private:
     std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
     /// The "Now Playing" playlist model and view.
-    QPointer<PlaylistModel> m_now_playing_playlist_model;
+	QSharedPointer<PlaylistModel> m_now_playing_playlist_model;
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
     /// The list of PlaylistModels.

@@ -32,6 +32,7 @@
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
 #include "menus/LibraryContextMenu.h"
+#include "gui/NetworkAwareFileDialog.h"
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -63,54 +64,161 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	setDropIndicatorShown(true);
 }
 
+QString MDILibraryView::getDisplayName() const
+{
+	/// @todo Let the user rename the library/ies.
+	return tr("Library");
+}
+
+/**
+ * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+ */
+MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+{
+    auto liburl = NetworkAwareFileDialog::getExistingDirectoryUrl(parent, "Select a directory to import", QUrl(), "import_dir");
+    QUrl lib_url = liburl.first;
+
+    if(lib_url.isEmpty())
+    {
+        qDebug() << "User cancelled.";
+		return MDIModelViewPair();
+    }
+
+    // Open the directory the user chose as an MDILibraryView and associated model.
+    // Note that openFile() may return an already-existing view if one is found by find_existing_view_func().
+    return openFile(lib_url, parent, find_existing_view_func);
+}
+
+/**
+ * Static member function which opens a view on the given @a open_url.
+ * Among other things, this function is responsible for calling setCurrentFile().
+ */
+MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
+{
+    // Check if a view of this URL already exists and we just need to activate it.
+    qDebug() << "Looking for existing view of" << open_url;
+    auto mv_pair = find_existing_view_func(open_url);
+    if(mv_pair.m_view)
+    {
+        Q_ASSERT_X(mv_pair.m_view_was_existing == true, "openFile", "find_existing function returned a view but said it was not pre-existing.");
+        qDebug() << "View of" << open_url << "already exists, returning" << mv_pair.m_view;
+        return mv_pair;
+    }
+
+	// No existing view.  Open a new one.
+
+	/// @note This should probably be creating an empty View here and then
+	/// calling an overridden readFile().
+
+	qDebug() << "// Try to open a model on the given URL.";
+	QSharedPointer<LibraryModel> libmodel;
+	if(mv_pair.m_model)
+	{
+		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
+
+		qDebug() << "Model exists:" << mv_pair.m_model;
+		libmodel = qSharedPointerObjectCast<LibraryModel>(mv_pair.m_model);
+	}
+	else
+	{
+		qDebug() << "Opening new model on URL" << open_url;
+		libmodel = LibraryModel::openFile(open_url, parent);
+	}
+
+    if(libmodel)
+    {
+		// The model has either been found already existing and with no associated View, or it has been newly opened.
+		// Either way it's valid and we now create and associate a View with it.
+
+		auto mvpair = MDILibraryView::openModel(libmodel, parent);
+		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control system.
+		/// In very shortened form: Derived member functions can only access "protected" members through
+		/// an object of the Derived type, not of the Base type.
+		static_cast<MDILibraryView*>(mvpair.m_view)->setCurrentFile(open_url);
+		return mvpair;
+    }
+    else
+    {
+		// Library import failed.
+M_WARNING("TODO: Add a QMessageBox or something here.");
+		return MDIModelViewPair();
+    }
+}
+
 /**
  * static member function which opens an MDILibraryView on the given model.
+ * @param model  The model to open.  Must exist and must be valid.
  */
-MDILibraryView* MDILibraryView::openModel(QAbstractItemModel* model, QWidget* parent)
+MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent)
 {
-	auto view = new MDILibraryView(parent);
-	view->setModel(model);
-	return view;
+	MDIModelViewPair retval;
+	retval.setModel(model);
+
+	retval.m_view = new MDILibraryView(parent);
+	static_cast<MDILibraryView*>(retval.m_view)->setModel(model);
+
+	return retval;
 }
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
-	// Keep a ref to the real model.
-	m_underlying_model = qobject_cast<LibraryModel*>(model);
+	Q_ASSERT(0); /// Obsolete, use QSharedPointer version.
+}
 
-	// Set our "current file" to the root dir of the model.
-	setCurrentFile(m_underlying_model->getLibRootDir());
+void MDILibraryView::setModel(QSharedPointer<QAbstractItemModel> model)
+{
+    // Keep a ref to the real model.
+	m_underlying_model = qSharedPointerObjectCast<LibraryModel>(model);
 
-	m_sortfilter_model->setSourceModel(model);
-	auto old_sel_model = selectionModel();
-	// This will create a new selection model.
-	MDITreeViewBase::setModel(m_sortfilter_model);
-	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
-	old_sel_model->deleteLater();
+    // Set our "current file" to the root dir of the model.
+    setCurrentFile(m_underlying_model->getLibRootDir());
 
-	
-	// Set up the TreeView's header.
-	header()->setStretchLastSection(false);
-	header()->setSectionResizeMode(QHeaderView::Stretch);
-	header()->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_sortfilter_model->setSourceModel(model.data());
+    auto old_sel_model = selectionModel();
+    // This will create a new selection model.
+    MDITreeViewBase::setModel(m_sortfilter_model);
+    Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
+    old_sel_model->deleteLater();
 
-	// Set the resize behavior of the header's columns based on the columnspecs.
-	int num_cols = m_underlying_model->columnCount();
-	for(int c = 0; c < num_cols; ++c)
-	{
-		if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
-		{
-			header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
-		}
-	}
-	// Find the "Length" column.
-	auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
-	// Set the delegate on it.
-	setItemDelegateForColumn(len_col, m_length_delegate);
 
-	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
-	/// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
-	header()->setResizeContentsPrecision(0);
+    // Set up the TreeView's header.
+    header()->setStretchLastSection(false);
+    header()->setSectionResizeMode(QHeaderView::Stretch);
+    header()->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    // Set the resize behavior of the header's columns based on the columnspecs.
+    int num_cols = m_underlying_model->columnCount();
+    for(int c = 0; c < num_cols; ++c)
+    {
+        if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
+        {
+            header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+        }
+    }
+    // Find the "Length" column.
+    auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
+    // Set the delegate on it.
+    setItemDelegateForColumn(len_col, m_length_delegate);
+
+    /// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
+    /// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
+    header()->setResizeContentsPrecision(0);
+}
+
+LibraryModel* MDILibraryView::underlyingModel() const
+{
+	return m_underlying_model.data();
+}
+
+QSharedPointer<QAbstractItemModel> MDILibraryView::underlyingModelSharedPtr() const
+{
+    return m_underlying_model;
+}
+
+void MDILibraryView::setEmptyModel()
+{
+    M_WARNING("TODO");
+    Q_ASSERT(0);
 }
 
 QString MDILibraryView::getNewFilenameTemplate() const
@@ -124,7 +232,7 @@ QString MDILibraryView::defaultNameFilter()
 	return "";
 }
 
-bool MDILibraryView::loadFile(QUrl load_url)
+bool MDILibraryView::readFile(QUrl load_url)
 {
 	m_underlying_model->setLibraryRootUrl(load_url);
 	setCurrentFile(load_url);
@@ -150,7 +258,7 @@ bool MDILibraryView::onBlankAreaToolTip(QHelpEvent* event)
 {
 	// Return True if you handle it, False if you don't.
 	// Blank-area tooltip, for debugging.
-M_WARNING("TODO: Get/print library stats")
+M_WARNING("TODO: Get/print more library stats")
 	QToolTip::showText(event->globalPos(),
         QString("<b>Library Info</b><hr>"
         "Total number of entries: %1\n"
@@ -220,6 +328,7 @@ void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
 	context_menu->exec(event->globalPos());
 }
 
+/// OBSOLETE
 void MDILibraryView::onContextMenu(QPoint pos)
 {
 	// Position to put the menu.
@@ -261,6 +370,35 @@ void MDILibraryView::onContextMenu(QPoint pos)
 }
 
 /**
+ * Slot called when the user activates (hits Enter or double-clicks) on an item.
+ * In the Library view, activating an item sends that item to the "Now Playing" playlist
+ * which then starts playing it.
+ */
+void MDILibraryView::onActivated(const QModelIndex& index)
+{
+	// Should always be valid.
+	Q_ASSERT(index.isValid());
+
+	// In the Library view, activating an item sends that item to the "Now Playing" playlist
+	// which then starts playing it.
+
+	qDebug() << "Activated index:" << index;
+	auto underlying_model_index = to_underlying_qmodelindex(index);
+
+	Q_ASSERT(underlying_model_index.isValid());
+
+	qDebug() << "Underlying index:" << underlying_model_index;
+
+	// Get the item that was activated.
+	auto item = m_underlying_model->getItem(underlying_model_index);
+
+	Q_ASSERT(item != nullptr);
+
+	// Send it to the "Now Playing" playlist, by way of MainWindow.
+	emit sendToNowPlaying(item);
+}
+
+/**
  * Handler which gets invoked by a double-click on a Library Model item.
  * Sends the clicked-on item to the "Now Playing" playlist to be played.
  */
@@ -281,9 +419,10 @@ void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 	auto item = m_underlying_model->getItem(underlying_model_index);
 
 	Q_ASSERT(item != nullptr);
-
+#if 0 /// We're handling this in the onActivated() handler at the moment.
 	// Send it to the "Now Playing" playlist, by way of MainWindow.
 	emit sendToNowPlaying(item);
+#endif
 }
 
 

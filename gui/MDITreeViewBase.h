@@ -23,6 +23,9 @@
 #include <QContextMenuEvent>
 #include <QTreeView>
 #include <QUrl>
+#include <QEnableSharedFromThis>
+
+#include "mdi/MDIModelViewPair.h"
 
 class QMdiSubWindow;
 class QFileDevice;
@@ -37,6 +40,13 @@ class MDITreeViewBase : public QTreeView
         
 signals:
     
+	/**
+	 * Signal emitted just before the QCloseEvent is accepted.
+	 * @note view_that_is_closing can not be consided to be dereferenceable.  The view may have
+	 * already been deleted before the signal is delivered.
+	 */
+	void closing(MDITreeViewBase* view_that_is_closing, QAbstractItemModel* modelptr);
+
     /**
      * Signal is emitted when a selection is available for copying in the QTreeView.
      */
@@ -60,18 +70,41 @@ public:
     /// Public interface.
     ///
 
+	/**
+	 * Called by the MainWindow immediately after a new, empty MDI child window is created.
+	 * Gives the view a dummy name and sets the window title.
+	 */
     void newFile();
 
     bool save();
     bool saveAs();
-    bool saveFile(QUrl save_url, QString filter);
 
-    virtual bool loadFile(QUrl load_url);
+    /// @name Open functions.
+    /// Create factory functions like these in each derived class.
+    /// These static "open" functions would be good candidates for the virtual static methods which don't exist in C++.
+    /// These are just dummied out here for demonstration purposes.
+    /// @{
+#if 0
+    /**
+     * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+     */
+	static MDIModelViewPair open(QWidget* parent) { return nullptr; }
 
-    /// @note This one would be a good candidate for virtual static methods which don't exist in C++.
-    /// Create a factory function like this in each derived class:
-    /// static MDITreeViewBase* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
-    
+    /**
+     * Open the specified QUrl.  Called by open(QWidget*).
+	 * Among other things, this function is responsible for calling setCurrentFilename().
+     */
+	static MDIModelViewPair openFile(QUrl open_url, QWidget* parent) { return nullptr; }
+
+    /**
+     * Open a new view on the given model.
+	 * This is largely analogous to the openFile() call, though @a model here must be an existing, valid model.
+	 * Among other things, this function is responsible for calling setCurrentFilename().
+     */
+	static MDIModelViewPair openModel(QSharedPointer<QAbstractItemModel> model, QWidget* parent) { return nullptr; }
+    /// @}
+#endif
+
     /// Returns the current basename of this window's backing file.
     QString userFriendlyCurrentFile() const;
 
@@ -83,15 +116,23 @@ public:
     virtual QString getDisplayName() const;
     
     /// Return an action for the MainWindow's Window menu.
-    QAction* windowMenuAction() const { return m_act_window; };
+	QAction* windowMenuAction() const { return m_act_window; }
     
     /// Override if derived classes are not read-only.
-    virtual bool isReadOnly() const { return true; };
+	virtual bool isReadOnly() const { return true; }
 
     //
     // Base class overrides.
     //
-    void setModel(QAbstractItemModel *model) override;
+
+	// Overridden from QTreeView.
+	Q_DECL_DEPRECATED void setModel(QAbstractItemModel *model) override;
+
+	virtual void setModel(QSharedPointer<QAbstractItemModel> model) = 0;
+
+	Q_DECL_DEPRECATED virtual QAbstractItemModel* underlyingModel() const = 0;
+
+	virtual QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const = 0;
 
 public slots:
     
@@ -114,9 +155,23 @@ protected:
     QString m_current_filter;
     bool m_isUntitled = true;
 
-    /// Protected function which is used to set the view's filename properties on a save or load.
-    /// Called by loadFile() and saveFile().
+    /// Override in derived classes to set an empty model.
+    /// Used when newFile() is called.
+    virtual void setEmptyModel() = 0;
+
+    /// Protected function which is used to set the view's filename properties on a read or write.
+    /// Called by readFile() and writeFile().
     void setCurrentFile(QUrl url);
+
+	/**
+	 * Called by openFile().
+	 */
+    virtual bool readFile(QUrl load_url);
+
+	/**
+	 * Called by saveFile().
+	 */
+    virtual bool writeFile(QUrl save_url, QString filter);
 
     virtual void closeEvent(QCloseEvent* event) override;
 
@@ -142,6 +197,11 @@ protected:
     ///
 
 protected slots:
+
+	/**
+	 * Connect this slot to any model signals which indicate there are unsaved changes.
+	 * By default, calls setWindowModified(isModified()).
+	 */
     virtual void documentWasModified();
 
     virtual void headerMenu(QPoint pos);
@@ -170,7 +230,7 @@ protected slots:
 	virtual void onContextMenuViewport(QContextMenuEvent* event) { Q_UNUSED(event); }
 
 	/**
-	 * Slot called when the user activates (hits Enter) on an item.
+     * Slot called when the user activates (hits Enter or double-clicks) on an item.
 	 * @param index
 	 */
 	virtual void onActivated(const QModelIndex& index);
@@ -197,7 +257,7 @@ protected:
      * then calls save() or not depending on the user's choice.
      * @return false if file was modified and user cancelled, true otherwise.
      */
-    virtual bool maybeSave();
+	virtual bool okToClose();
 
     /**
      * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.

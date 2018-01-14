@@ -96,11 +96,15 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	setDropIndicatorShown(true);
 }
 
-MDIPlaylistView* MDIPlaylistView::openModel(QAbstractItemModel* model, QWidget* parent)
+MDIModelViewPair MDIPlaylistView::openModel(QSharedPointer<PlaylistModel> model, QWidget* parent)
 {
-	auto view = new MDIPlaylistView(parent);
-	view->setModel(model);
-	return view;
+	MDIModelViewPair retval;
+	retval.setModel(model);
+
+	retval.m_view = new MDIPlaylistView(parent);
+	static_cast<MDIPlaylistView*>(retval.m_view)->setModel(model);
+
+	return retval;
 }
 
 
@@ -111,14 +115,19 @@ QMediaPlaylist* MDIPlaylistView::getQMediaPlaylist()
 
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
+	Q_ASSERT(0); /// Obsolete, use QSharedPointer version.
+}
+
+void MDIPlaylistView::setModel(QSharedPointer<QAbstractItemModel> model)
+{
 	// Keep a ref to the real model.
-	m_underlying_model = qobject_cast<PlaylistModel*>(model);
+	m_underlying_model = qSharedPointerObjectCast<PlaylistModel>(model);
 
 	// Set our model URLs to the "current file".
 	/// @todo This is FBO the Playlist sidebar.  Should we keep the playlist model as a member of this class instead?
 	m_underlying_model->setLibraryRootUrl(m_current_url);
 
-	m_sortfilter_model->setSourceModel(model);
+	m_sortfilter_model->setSourceModel(model.data());
 	auto old_sel_model = selectionModel();
 	MDITreeViewBase::setModel(m_sortfilter_model);
 	// Call selectionChanged when the user changes the selection.
@@ -150,7 +159,7 @@ void MDIPlaylistView::setModel(QAbstractItemModel* model)
 
 	// Find the "Rating" column and set a delegate on it.
 	auto user_rating_col = m_underlying_model->getColFromSection(SectionID(PlaylistSectionID::Rating));
-    /// @todo setItemDelegateForColumn(user_rating_col, m_user_rating_delegate);
+	/// @todo setItemDelegateForColumn(user_rating_col, m_user_rating_delegate);
 
 	setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::SelectedClicked);
 }
@@ -162,7 +171,13 @@ QString MDIPlaylistView::getNewFilenameTemplate() const
 
 QString MDIPlaylistView::defaultNameFilter()
 {
-	return "M3U8 (*.m3u8);;M3U (*.m3u);;PLS (*.pls);;Windows media player playlist (*.wpl);;XSPF (*.xspf)";
+    return "M3U8 (*.m3u8);;M3U (*.m3u);;PLS (*.pls);;Windows media player playlist (*.wpl);;XSPF (*.xspf)";
+}
+
+void MDIPlaylistView::setEmptyModel()
+{
+	auto new_playlist_model = QSharedPointer<PlaylistModel>::create(this->parent());
+    setModel(new_playlist_model);
 }
 
 void MDIPlaylistView::serializeDocument(QFileDevice& file) const
@@ -362,6 +377,11 @@ void MDIPlaylistView::dropEvent(QDropEvent* event)
 
 PlaylistModel* MDIPlaylistView::underlyingModel() const
 {
+	return m_underlying_model.data();
+}
+
+QSharedPointer<QAbstractItemModel> MDIPlaylistView::underlyingModelSharedPtr() const
+{
 	return m_underlying_model;
 }
 
@@ -510,7 +530,7 @@ M_WARNING("TODO: Fix assumption");
 
 void MDIPlaylistView::onActivated(const QModelIndex& index)
 {
-	M_WARNING("TODO: Fix assumption");
+M_WARNING("TODO: Fix assumption");
 	if(true) // we're the playlist connected to the player.
 	{
 		startPlaying(index);
@@ -558,7 +578,7 @@ void MDIPlaylistView::keyPressEvent(QKeyEvent* event)
 
 	if(event->matches(QKeySequence::Delete))
 	{
-		qDebug() << "DELETE KEY IN PLAYLISTVIEW:" << event;
+		qDebug() << "DELETE KEY:" << event;
 M_WARNING("TODO: It seems now that we don't need this anymore for some reason.");
 #if 0
 		onDelete();

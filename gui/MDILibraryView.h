@@ -21,14 +21,17 @@
 #define MDILIBRARYVIEW_H
 
 #include "MDITreeViewBase.h"
+#include "logic/LibraryModel.h"
+#include "utils/DebugHelpers.h"
 
 #include <QUrl>
+
 #include <memory>
+#include <functional>
 
 class ItemDelegateLength;
 class LibrarySortFilterProxyModel;
 class MDIPlaylistView;
-class LibraryModel;
 class LibraryEntry;
 class PlaylistModel;
 
@@ -45,19 +48,46 @@ signals:
         
 public:
 	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
-        
-	/**
-	* static member function which opens an MDILibraryView on the given model.
-	*/
-	static MDILibraryView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
 
-	void setModel(QAbstractItemModel* model) override;
+	QString getDisplayName() const override;
+
+    /**
+     * Pop up an 'Open file" dialog and open a new View on the file specified by the user.
+     * ~= "File->Open..."
+     *
+     * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
+     *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
+     */
+	static MDIModelViewPair open(QWidget* parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
+
+    /**
+     * Open the specified QUrl.  Called by open().
+     * @param find_existing_view_func  Function which, if specified, should search for an existing instance of
+     *                                 a view with the same open_url open, and return a pointer to it, or null if none was found.
+     */
+	static MDIModelViewPair openFile(QUrl open_url, QWidget* parent,
+									 std::function<MDIModelViewPair(QUrl)> find_existing_view_func = nullptr);
+
+    /**
+     * Open a new view on the given model.
+	 *
+	 * @param model  The model to open.  Must exist and must be valid.
+     */
+	static MDIModelViewPair openModel(QSharedPointer<LibraryModel> model, QWidget* parent);
+
+	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
+
+	void setModel(QSharedPointer<QAbstractItemModel> model) override;
+
+	Q_DECL_DEPRECATED LibraryModel* underlyingModel() const override;
+
+	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
 
 protected:
-	LibraryModel* m_underlying_model;
+    QSharedPointer<LibraryModel> m_underlying_model;
 
 	LibrarySortFilterProxyModel* m_sortfilter_model;
 	ItemDelegateLength* m_length_delegate;
@@ -66,21 +96,30 @@ protected:
 	/// Pure virtual function overrides.
 	///
 
+    void setEmptyModel() override;
+
 	virtual QString getNewFilenameTemplate() const override;
 	virtual QString defaultNameFilter() override;
 
 	/// @name Serialization
 	/// @{
 
-	virtual bool loadFile(QUrl load_url) override;
+	/**
+	 * Called by openFile().
+	 */
+    virtual bool readFile(QUrl load_url) override;
+
+M_WARNING("TODO: Override writeFile?");
+
 	virtual void serializeDocument(QFileDevice& file) const override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 
 	/// @}
 
-	virtual bool isModified() const override;
+	/// For GUI purposes, a Library is never in a modified state.
+	bool isModified() const override;
 
-	virtual bool onBlankAreaToolTip(QHelpEvent* event) override;
+	bool onBlankAreaToolTip(QHelpEvent* event) override;
 
 	/// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
 	QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) override;
@@ -94,6 +133,13 @@ protected slots:
 
 	/// @obsolete
 	virtual void onContextMenu(QPoint pos);
+
+	/**
+	 * Slot called when the user activates (hits Enter or double-clicks) on an item.
+	 * In the Library view, activating an item sends that item to the "Now Playing" playlist
+	 * which then starts playing it.
+	 */
+	void onActivated(const QModelIndex& index) override;
 
 	/// Invoked when user double-clicks on an entry.
 	/// According to Qt5 docs, index will always be valid:

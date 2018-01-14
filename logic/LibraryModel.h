@@ -28,6 +28,7 @@
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
+#include <QEnableSharedFromThis>
 
 #include "Library.h"
 #include "LibraryEntry.h"
@@ -113,6 +114,11 @@ signals:
 public:
     explicit LibraryModel(QObject *parent = 0);
 	virtual ~LibraryModel() override;
+
+	/**
+	 * Open a new LibraryModel on the specified QUrl.
+	 */
+    static QSharedPointer<LibraryModel> openFile(QUrl open_url, QWidget* parent);
 
 	/// @name Basic functionality.
 	/// @{

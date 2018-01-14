@@ -314,6 +314,7 @@ set(HEADER_FILES
 	gui/menus/PlaylistContextMenuViewport.h
 	gui/menus/PlaylistContextMenu.h
 	gui/menus/ActionBundle.h
+	gui/mdi/MDIModelViewPair.h
     )
 
 # Source file list.
@@ -379,6 +380,15 @@ set(SOURCE_FILES
 	gui/menus/ActionBundle.cpp
     )
 
+set(HEADER_FILES_UTILS_CONCURRENCY
+	utils/concurrency/AsyncTaskManager.h)
+set(SOURCE_FILES_UTILS_CONCURRENCY
+	utils/concurrency/AsyncTaskManager.cpp)
+
+list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
+list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
+
+
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
@@ -412,7 +422,10 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
+target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS")
+if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-O0")
+endif()
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}
