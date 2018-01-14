@@ -307,7 +307,7 @@ set(HEADER_FILES
 	logic/ModelUserRoles.h
 	gui/DragDropTreeViewStyleProxy.h
 	utils/ModelHelpers.h
-	logic/proxymodels/EntryToMetadataTreeProxyModel.h
+	logic/proxymodels/SelectionFilterProxyModel.h
 	logic/proxymodels/ModelChangeWatcher.h
 	gui/helpers/Tips.h
 	gui/menus/LibraryContextMenu.h
@@ -371,7 +371,7 @@ set(SOURCE_FILES
 	gui/DropMenu.cpp
 	logic/ModelUserRoles.cpp
 	gui/DragDropTreeViewStyleProxy.cpp
-	logic/proxymodels/EntryToMetadataTreeProxyModel.cpp
+	logic/proxymodels/SelectionFilterProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
 	gui/helpers/Tips.cpp
 	gui/menus/LibraryContextMenu.cpp

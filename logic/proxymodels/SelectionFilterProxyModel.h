@@ -25,7 +25,11 @@
 
 class QItemSelectionModel;
 
-class EntryToMetadataTreeProxyModel : public QSortFilterProxyModel
+/**
+ * Proxy model which filters its source model based on the source model's selection.
+ * Similar in concept to KDE's KSelectionProxyModel.
+ */
+class SelectionFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 
@@ -39,8 +43,8 @@ signals:
 	void selectionModelChanged();
 
 public:
-    explicit EntryToMetadataTreeProxyModel(QObject *parent = Q_NULLPTR);
-    virtual ~EntryToMetadataTreeProxyModel();
+	explicit SelectionFilterProxyModel(QObject *parent = Q_NULLPTR);
+	virtual ~SelectionFilterProxyModel();
     
 	void setSourceModel(QAbstractItemModel* sourceModel) override;
 
@@ -67,7 +71,7 @@ protected slots:
 	void onModelChanged(QAbstractItemModel *model);
     
 private:
-	Q_DISABLE_COPY(EntryToMetadataTreeProxyModel)
+	Q_DISABLE_COPY(SelectionFilterProxyModel)
 
 	/// The root index to allow to pass through.
 	QPersistentModelIndex m_current_selected_index;
