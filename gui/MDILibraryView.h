@@ -75,10 +75,12 @@ public:
 									  MDIModelViewPair mvpair = MDIModelViewPair());
 
 	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
-    void setModel(QSharedPointer<LibraryModel> model);
+
+	void setModel(QSharedPointer<QAbstractItemModel> model) override;
 
 	Q_DECL_DEPRECATED LibraryModel* underlyingModel() const override;
-    QSharedPointer<LibraryModel> underlyingModelSharedPtr() const;
+
+	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 

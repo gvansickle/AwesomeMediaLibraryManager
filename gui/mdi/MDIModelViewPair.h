@@ -20,6 +20,9 @@
 #ifndef GUI_MDI_MDIVIEWPAIRMODEL_H
 #define GUI_MDI_MDIVIEWPAIRMODEL_H
 
+#include <QSharedPointer>
+#include <QAbstractItemModel>
+
 class MDITreeViewBase;
 class LibraryModel;
 
@@ -27,11 +30,17 @@ class LibraryModel;
 class MDIModelViewPair
 {
 public:
-	QSharedPointer<LibraryModel> m_model { nullptr };
+	QSharedPointer<QAbstractItemModel> m_model { nullptr };
     MDITreeViewBase* m_view { nullptr };
 
     bool m_model_was_existing { false };
     bool m_view_was_existing { false };
+
+	template <typename T>
+	void setModel(QSharedPointer<T> derived_model_ptr)
+	{
+		m_model = qSharedPointerDynamicCast<LibraryModel>(derived_model_ptr);
+	}
 
 	bool hasModel() const { return m_model; }
 	bool hasView() const { return m_view; } ///< This really shouldn't ever be the case if there's no model.

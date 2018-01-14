@@ -34,5 +34,5 @@ MDINowPlayingView* MDINowPlayingView::openModel(QAbstractItemModel* model, QWidg
 
 QString MDINowPlayingView::getDisplayName() const
 {
-	return "Now Playing";
+	return tr("Now Playing");
 }

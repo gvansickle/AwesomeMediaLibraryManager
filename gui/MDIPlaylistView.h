@@ -46,13 +46,17 @@ public:
     /**
      * static member function which opens an MDILibraryView on the given model.
      */
-    static MDIPlaylistView* openModel(QAbstractItemModel* model, QWidget* parent = nullptr);
+	static MDIModelViewPair openModel(QSharedPointer<PlaylistModel> model, QWidget* parent);
 
     QMediaPlaylist* getQMediaPlaylist();
 
-    void setModel(QAbstractItemModel* model) override;
+	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
 
-    PlaylistModel* underlyingModel() const override;
+	void setModel(QSharedPointer<QAbstractItemModel> model) override;
+
+	Q_DECL_DEPRECATED PlaylistModel* underlyingModel() const override;
+
+	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
     
     /// Playlists are not read-only.
     bool isReadOnly() const override { return false; }
@@ -147,7 +151,7 @@ private:
 	 */
 	void startPlaying(const QModelIndex& index);
 
-    PlaylistModel* m_underlying_model;
+	QSharedPointer<PlaylistModel> m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
     ItemDelegateLength* m_length_delegate;
 };

@@ -32,7 +32,7 @@ class QFileDevice;
 class ModelChangeWatcher;
 
 
-class MDITreeViewBase : public QTreeView, public QEnableSharedFromThis<MDITreeViewBase>
+class MDITreeViewBase : public QTreeView
 {
     Q_OBJECT
     
@@ -110,10 +110,15 @@ public:
     //
     // Base class overrides.
     //
-    void setModel(QAbstractItemModel *model) override;
 
-    virtual QAbstractItemModel* underlyingModel() const = 0;
+	// Overridden from QTreeView.
+	Q_DECL_DEPRECATED void setModel(QAbstractItemModel *model) override;
 
+	virtual void setModel(QSharedPointer<QAbstractItemModel> model) = 0;
+
+	Q_DECL_DEPRECATED virtual QAbstractItemModel* underlyingModel() const = 0;
+
+	virtual QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const = 0;
 
 public slots:
     

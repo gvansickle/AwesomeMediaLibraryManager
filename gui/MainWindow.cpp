@@ -856,7 +856,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url)
     {
         retval.m_view = view;
         retval.m_view_was_existing = true;
-		retval.m_model = qobject_cast<LibraryModel*>(view->underlyingModel())->sharedFromThis();
+		retval.m_model = view->underlyingModelSharedPtr();
         retval.m_model_was_existing = true;
     }
 	else
@@ -877,7 +877,8 @@ M_WARNING("TODO: Find a cleaner way to handle this.");
 			if(pm->getLibRootDir() == url)
 			{
 				qDebug() << "Found existing PlaylistModel:" << pm;
-				retval.m_model = pm->sharedFromThis();
+M_WARNING("TODO: This isn't correct.");
+				retval.m_model = QSharedPointer<PlaylistModel>(pm);
 				retval.m_model_was_existing = true;
 			}
 		}
@@ -1184,7 +1185,7 @@ void MainWindow::importLib()
 		/// @todo Set this as the single Library?
 
 		qDebug() << "Model is new:" << child.m_model;
-		m_libmodels.push_back(libview->underlyingModelSharedPtr());
+		m_libmodels.push_back(qSharedPointerObjectCast<LibraryModel>(libview->underlyingModelSharedPtr()));
 
 M_WARNING("TODO: These seem out of place.");
 		connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);

@@ -107,7 +107,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
 		qDebug() << "Model exists:" << mv_pair.m_model;
-		libmodel = mv_pair.m_model;
+		libmodel = qSharedPointerObjectCast<LibraryModel>(mv_pair.m_model);
 	}
 	else
 	{
@@ -139,16 +139,17 @@ MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, Q
 										   MDIModelViewPair mvpair)
 {
 	MDIModelViewPair retval;
-	retval.m_model = model;
+	retval.setModel(model);
 
 	retval.m_view = new MDILibraryView(parent);
 	static_cast<MDILibraryView*>(retval.m_view)->setModel(model);
+
 	return retval;
 }
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
-    Q_ASSERT(0);
+	Q_ASSERT(0); /// Obsolete, use QSharedPointer version.
 #if 0
 	// Keep a ref to the real model.
 	m_underlying_model = qobject_cast<LibraryModel*>(model);
@@ -189,10 +190,10 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 #endif
 }
 
-void MDILibraryView::setModel(QSharedPointer<LibraryModel> model)
+void MDILibraryView::setModel(QSharedPointer<QAbstractItemModel> model)
 {
     // Keep a ref to the real model.
-    m_underlying_model = model;
+	m_underlying_model = qSharedPointerObjectCast<LibraryModel>(model);
 
     // Set our "current file" to the root dir of the model.
     setCurrentFile(m_underlying_model->getLibRootDir());
@@ -231,10 +232,10 @@ void MDILibraryView::setModel(QSharedPointer<LibraryModel> model)
 
 LibraryModel* MDILibraryView::underlyingModel() const
 {
-    return m_underlying_model.data();
+	return m_underlying_model.data();
 }
 
-QSharedPointer<LibraryModel> MDILibraryView::underlyingModelSharedPtr() const
+QSharedPointer<QAbstractItemModel> MDILibraryView::underlyingModelSharedPtr() const
 {
     return m_underlying_model;
 }

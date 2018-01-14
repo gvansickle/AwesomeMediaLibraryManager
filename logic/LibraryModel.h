@@ -100,7 +100,7 @@ struct ColumnSpec
 	bool m_default_to_hidden {false};
 };
 
-class LibraryModel : public QAbstractItemModel, public QEnableSharedFromThis<LibraryModel>
+class LibraryModel : public QAbstractItemModel
 {
     Q_OBJECT
 
