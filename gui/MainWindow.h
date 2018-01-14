@@ -73,6 +73,7 @@ public slots:
     /// Slot corresponding to the "Open Directory as new Library" action.
     /// This is ~= a "File->Open" action.
     void importLib();
+	void openFileLibrary(const QUrl& filename);
 
     /**
      * Open a new, empty playlist.

@@ -1058,6 +1058,7 @@ void MainWindow::importLib()
     };
 
     auto child = MDILibraryView::open(this, check_for_existing_view);
+M_WARNING("TODO: Factor out this common code.");
 	if(child.m_view)
     {
 		auto libview = qobject_cast<MDILibraryView*>(child.m_view);
@@ -1071,8 +1072,8 @@ void MainWindow::importLib()
         {
 			// View already existed, just activate its parent subwindow.
             qDebug() << "View already existed";
-			qobject_cast<QMdiSubWindow*>(child.m_view->parent())->show();
-            return;
+			m_mdi_area->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(child.m_view->parent()));
+			return;
         }
 
 		// View is new.
@@ -1111,6 +1112,68 @@ M_WARNING("TODO: These seem out of place.");
     }
 }
 
+void MainWindow::openFileLibrary(const QUrl& filename)
+{
+	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
+		auto mvpair = findSubWindowModelViewPair(url);
+		return mvpair;
+	};
+
+	auto child = MDILibraryView::openFile(filename, this, check_for_existing_view);
+M_WARNING("TODO: Factor out this common code.");
+	if(child.m_view)
+	{
+		auto libview = qobject_cast<MDILibraryView*>(child.m_view);
+		auto libmodel = qobject_cast<LibraryModel*>(child.m_model);
+
+		Q_ASSERT(libview != 0);
+		Q_ASSERT(libmodel != 0);
+
+		// Did a view of the URL the user specified already exist?
+		if(child.m_view_was_existing)
+		{
+			// View already existed, just activate its parent subwindow.
+			qDebug() << "View already existed, activating it.";
+			m_mdi_area->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(child.m_view->parent()));
+			return;
+		}
+
+		// View is new.
+		/// @todo Seems out of place.
+		connectActiveMDITreeViewBaseAndMetadataDock(libview, m_metadataDockWidget);
+		connectLibraryViewAndMainWindow(libview);
+
+		addChildMDIView(libview);
+
+		// View is new, did the model already exist?
+		if(child.m_model_was_existing)
+		{
+			qDebug() << "Model existed:" << child.m_model;
+			return;
+		}
+
+		// Model is new, add the new child's underlying model to the list of library models
+		// and the Collection sidebar.
+
+		/// @todo Set this as the single Library?
+
+		qDebug() << "Model is new:" << child.m_model;
+		m_libmodels.push_back(qSharedPointerObjectCast<LibraryModel>(libview->underlyingModelSharedPtr()));
+
+M_WARNING("TODO: These seem out of place.");
+		connectLibraryToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
+
+		// Add the new library to the Collection Doc Widget.
+		m_libraryDockWidget->addLibrary(new LocalLibraryItem(child.m_model.objectCast<LibraryModel>()));
+
+		statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));
+	}
+	else
+	{
+		qCritical() << "MDILibraryView::open() returned nullptr";
+	}
+}
+
 void MainWindow::onRescanLibrary()
 {
 	// Start a rescan on all models.
@@ -1127,12 +1190,7 @@ M_WARNING("TODO: SHOWLIBRARY");
 //	openMDILibraryViewOnModel(libmodel);
     //??? MDILibraryView(libmodel);
 
-	auto check_for_existing_view = [this](QUrl url) -> MDIModelViewPair {
-		auto mvpair = findSubWindowModelViewPair(url);
-		return mvpair;
-	};
-
-	MDILibraryView::openFile(libmodel->getLibRootDir(), this, check_for_existing_view);
+	openFileLibrary(libmodel->getLibRootDir());
 
 	return;
 }
