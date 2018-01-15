@@ -28,7 +28,7 @@
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
-#include <QEnableSharedFromThis>
+#include <QMetaEnum>
 
 #include "Library.h"
 #include "LibraryEntry.h"
@@ -55,8 +55,11 @@ enum LibState
 	PopulatingMetadata
 };
 
-struct SectionID
+class SectionID
 {
+	Q_GADGET
+
+public:
 	enum Enumerator
 	{
 		Status,
@@ -69,6 +72,8 @@ struct SectionID
 		PLAYLIST_1
 	};
 
+	Q_ENUM(Enumerator)
+
 	SectionID() = default;
 	explicit SectionID(int val) : m_val(val) {}
 	SectionID(SectionID::Enumerator e) { m_val = e; }
@@ -77,6 +82,10 @@ struct SectionID
 
 	template<typename DerivedType>
 	operator SectionID() { return DerivedType(); }
+
+	static const char* valueToKey(Enumerator val) { return QMetaEnum::fromType<SectionID::Enumerator>().valueToKey(val); }
+
+	const char * valueToKey() const { return SectionID::valueToKey(static_cast<Enumerator>(m_val)); }
 
 protected:
 	int m_val;

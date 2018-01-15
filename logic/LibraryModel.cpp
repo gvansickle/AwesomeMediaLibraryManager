@@ -305,7 +305,7 @@ QMap<int, QVariant> LibraryModel::itemData(const QModelIndex& index) const
 QHash<int, QByteArray> LibraryModel::roleNames() const
 {
 	auto retval = QAbstractItemModel::roleNames();
-	retval.insert(ModelUserRoles::PointerToItemRole, "PointerToItemRole");
+	retval.insert(ModelUserRoles::PointerToItemRole, ModelUserRoles::valueToKey(ModelUserRoles::PointerToItemRole));
 	return retval;
 }
 
@@ -314,7 +314,9 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 	Q_ASSERT(section >= -1);
 	if(orientation == Qt::Horizontal)
 	{
-		if(role == Qt::DisplayRole)
+		switch(role)
+		{
+		case Qt::DisplayRole:
 		{
 			if(section+1 > static_cast<int>(m_columnSpecs.size()))
 			{
@@ -323,10 +325,16 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 			auto dn = m_columnSpecs[section].display_name;
 			return QVariant(dn);
 		}
-		else if(role == Qt::UserRole)
+		case ModelUserRoles::HeaderViewSectionID:
+		{
+			return QVariant::fromValue(m_columnSpecs[section].section_id);
+		}
+		case Qt::UserRole:
 		{
 			return m_columnSpecs[section].m_should_fit_column_width_to_contents;
 		}
+		}
+
 	}
 
 	return QVariant();

@@ -22,12 +22,17 @@
 #include <QDebug>
 
 #include "utils/Theme.h"
-#include "utils/ActionHelpers.h"
 #include "gui/helpers/Tips.h"
+#include "utils/ActionHelpers.h"
 #include "ActionBundle.h"
 
 #include "gui/MainWindow.h"
 
+#include <logic/ModelUserRoles.h>
+
+/**
+ * Blank-area context menu.
+ */
 LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
 {
 	setTitle(title);
@@ -53,6 +58,32 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
 
 	addSeparator();
-	addAction("Search Wikipedia for...");
+	auto act_search_wikipedia = make_action(Theme::iconFromTheme("edit-web-search"), tr("Search Wikipedia for..."), this);
+	act_search_wikipedia->setDisabled(true); /// @todo
+	addAction(act_search_wikipedia);
+}
+
+/**
+ * Context menu for a Library entry.
+ */
+LibraryContextMenu::LibraryContextMenu(const QString& title, QPersistentModelIndex pmi, QWidget* parent)
+	: LibraryContextMenu(title, parent)
+{
+	if(pmi.isValid())
+	{
+		qDebug() << "pmi valid:" << pmi;
+
+		auto row_index = pmi.sibling(pmi.row(), 0);
+		if(row_index.isValid())
+		{
+			qDebug() << "row_index valid:" << row_index;
+
+			// Got a valid index, add the track-specific entries.
+			auto model = row_index.model();
+			auto item_ptr = model->data(row_index, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
+
+//			auto track_name = item_ptr->get
+		}
+	}
 }
 

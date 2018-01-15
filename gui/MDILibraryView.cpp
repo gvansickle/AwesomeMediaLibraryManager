@@ -37,7 +37,8 @@
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
-	setWindowTitle("DUMMY");
+	/// @todo Seems like we no longer need to do this.
+//	setWindowTitle("DUMMY");
 
 	m_underlying_model = nullptr;
 
@@ -315,7 +316,13 @@ void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, const QModelIn
 	// Open context menu for the item.
 	qDebug() << "INDEX:" << index;
 	
-	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), this);
+	if(!index.isValid())
+	{
+		qDebug() << "Invalid model index, not showing context menu.";
+		return;
+	}
+
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), QPersistentModelIndex(index), this);
 	context_menu->exec(event->globalPos());
 }
 

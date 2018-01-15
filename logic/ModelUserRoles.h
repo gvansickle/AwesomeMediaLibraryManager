@@ -20,6 +20,7 @@
 #define MODELUSERROLES_H
 
 #include <QObject>
+#include <QMetaEnum>
 
 /**
  * @todo write docs
@@ -32,10 +33,15 @@ public:
     
 	enum UserRoles
     {
+		/// Used in a model to store a pointer to the underlying item.
         PointerToItemRole = Qt::UserRole + 1,
+		/// Used in a model's headerData to give a ~UUID to each column in a model.
+		HeaderViewSectionID
     };
     
 	Q_ENUM(UserRoles)
+
+	static const char* valueToKey(UserRoles val) { return QMetaEnum::fromType<ModelUserRoles::UserRoles>().valueToKey(val); }
 };
 
 Q_DECLARE_METATYPE(ModelUserRoles)

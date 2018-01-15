@@ -23,6 +23,7 @@
 #include <QObject>
 #include <QMenu>
 #include <QAction>
+#include <QPersistentModelIndex>
 
 class QString;
 
@@ -31,8 +32,15 @@ class LibraryContextMenu : public QMenu
 {
 	Q_OBJECT
 	
+	using BASE_CLASS = QMenu;
+
 public:
+	/**
+	 * Constructor for blank area context menu.
+	 */
 	explicit LibraryContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
+
+	explicit LibraryContextMenu(const QString &title, QPersistentModelIndex pmi, QWidget *parent = Q_NULLPTR);
 
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
