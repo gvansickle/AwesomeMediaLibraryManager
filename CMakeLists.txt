@@ -315,6 +315,7 @@ set(HEADER_FILES
 	gui/menus/PlaylistContextMenu.h
 	gui/menus/ActionBundle.h
 	gui/mdi/MDIModelViewPair.h
+	logic/ColumnSpec.h
     )
 
 # Source file list.
@@ -378,6 +379,7 @@ set(SOURCE_FILES
 	gui/menus/PlaylistContextMenuViewport.cpp
 	gui/menus/PlaylistContextMenu.cpp
 	gui/menus/ActionBundle.cpp
+	logic/ColumnSpec.cpp
     )
 
 set(HEADER_FILES_UTILS_CONCURRENCY

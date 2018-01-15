@@ -28,8 +28,8 @@
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
-#include <QMetaEnum>
 
+#include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryEntry.h"
 #include "LibraryRescanner.h"
@@ -55,59 +55,7 @@ enum LibState
 	PopulatingMetadata
 };
 
-class SectionID
-{
-	Q_GADGET
 
-public:
-	enum Enumerator
-	{
-		Status,
-		Title,
-		Artist,
-		Album,
-		Length,
-		FileType,
-		Filename,
-		PLAYLIST_1
-	};
-
-	Q_ENUM(Enumerator)
-
-	SectionID() = default;
-	explicit SectionID(int val) : m_val(val) {}
-	SectionID(SectionID::Enumerator e) { m_val = e; }
-
-	virtual operator int() const { return m_val; }
-
-	template<typename DerivedType>
-	operator SectionID() { return DerivedType(); }
-
-	static const char* valueToKey(Enumerator val) { return QMetaEnum::fromType<SectionID::Enumerator>().valueToKey(val); }
-
-	const char * valueToKey() const { return SectionID::valueToKey(static_cast<Enumerator>(m_val)); }
-
-protected:
-	int m_val;
-};
-
-
-struct ColumnSpec
-{
-	ColumnSpec(SectionID s, QString dn, QStringList ml, bool fit_col_width = false)
-    {
-        section_id = s;
-        display_name = dn;
-        metadata_list = ml;
-		m_should_fit_column_width_to_contents = fit_col_width;
-	}
-
-    SectionID section_id;
-    QString display_name;
-    QStringList metadata_list;
-	bool m_should_fit_column_width_to_contents {false};
-	bool m_default_to_hidden {false};
-};
 
 class LibraryModel : public QAbstractItemModel
 {
