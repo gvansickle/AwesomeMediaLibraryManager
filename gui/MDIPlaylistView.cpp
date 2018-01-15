@@ -39,6 +39,8 @@
 #include "menus/PlaylistContextMenuViewport.h"
 #include "menus/PlaylistContextMenu.h"
 
+#include <logic/ModelUserRoles.h>
+
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
 	// Set up a Style Proxy to draw a more natural drop indicator.
@@ -146,7 +148,7 @@ void MDIPlaylistView::setModel(QSharedPointer<QAbstractItemModel> model)
 	int num_cols = m_underlying_model->columnCount();
 	for(int c = 0; c < num_cols; ++c)
 	{
-		if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
+		if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
 		{
 			header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
 		}

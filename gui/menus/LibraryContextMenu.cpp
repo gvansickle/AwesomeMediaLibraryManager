@@ -73,16 +73,22 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, QPersistentModelInd
 	{
 		qDebug() << "pmi valid:" << pmi;
 
-		auto row_index = pmi.sibling(pmi.row(), 0);
+		auto model = qobject_cast<const LibraryModel*>(pmi.model());
+		Q_ASSERT(model != nullptr);
+		auto name_col = model->getColFromSection(SectionID::Title);
+
+		auto row_index = pmi.sibling(pmi.row(), name_col);
 		if(row_index.isValid())
 		{
 			qDebug() << "row_index valid:" << row_index;
 
 			// Got a valid index, add the track-specific entries.
-			auto model = row_index.model();
-			auto item_ptr = model->data(row_index, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
 
-//			auto track_name = item_ptr->get
+			auto model = row_index.model();
+			//auto item_ptr = model->data(row_index, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
+			auto track_name = model->data(row_index, Qt::DisplayRole);
+			qDebug() << "track_name:" << track_name;
+			addAction(track_name.toString());
 		}
 	}
 }

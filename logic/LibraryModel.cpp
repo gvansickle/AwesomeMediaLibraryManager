@@ -305,7 +305,13 @@ QMap<int, QVariant> LibraryModel::itemData(const QModelIndex& index) const
 QHash<int, QByteArray> LibraryModel::roleNames() const
 {
 	auto retval = QAbstractItemModel::roleNames();
-	retval.insert(ModelUserRoles::PointerToItemRole, ModelUserRoles::valueToKey(ModelUserRoles::PointerToItemRole));
+
+	// Append our user role names.
+	for(int i = 0; i<ModelUserRoles::keyCount(); i++)
+	{
+		qDebug() << "ENUM:" << ModelUserRoles::key(i) << "Val:" << ModelUserRoles::value(i);
+		retval.insert(ModelUserRoles::value(i), ModelUserRoles::valueToKey(ModelUserRoles::value(i)));
+	}
 	return retval;
 }
 
@@ -329,10 +335,13 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 		{
 			return QVariant::fromValue(m_columnSpecs[section].section_id);
 		}
-		case Qt::UserRole:
+		case ModelUserRoles::HeaderViewSectionShouldFitWidthToContents:
 		{
 			return m_columnSpecs[section].m_should_fit_column_width_to_contents;
 		}
+		default:
+			// Punt to base class.
+			return BASE_CLASS::headerData(section, orientation, role);
 		}
 
 	}

@@ -113,6 +113,8 @@ class LibraryModel : public QAbstractItemModel
 {
     Q_OBJECT
 
+	using BASE_CLASS = QAbstractItemModel;
+
 signals:
 	/// Signal to ourself to start an asynchronous directory traversal.
     void startFileScanSignal(QUrl url);

@@ -34,6 +34,8 @@
 #include "menus/LibraryContextMenu.h"
 #include "gui/NetworkAwareFileDialog.h"
 
+#include <logic/ModelUserRoles.h>
+
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
@@ -191,7 +193,7 @@ void MDILibraryView::setModel(QSharedPointer<QAbstractItemModel> model)
     int num_cols = m_underlying_model->columnCount();
     for(int c = 0; c < num_cols; ++c)
     {
-        if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
+		if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
         {
             header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
         }
@@ -316,13 +318,15 @@ void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, const QModelIn
 	// Open context menu for the item.
 	qDebug() << "INDEX:" << index;
 	
-	if(!index.isValid())
+	QPersistentModelIndex pmi = to_underlying_qmodelindex(index);
+
+	if(!index.isValid() || !pmi.isValid())
 	{
 		qDebug() << "Invalid model index, not showing context menu.";
 		return;
 	}
 
-	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), QPersistentModelIndex(index), this);
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), pmi, this);
 	context_menu->exec(event->globalPos());
 }
 

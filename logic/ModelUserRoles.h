@@ -36,12 +36,20 @@ public:
 		/// Used in a model to store a pointer to the underlying item.
         PointerToItemRole = Qt::UserRole + 1,
 		/// Used in a model's headerData to give a ~UUID to each column in a model.
-		HeaderViewSectionID
+		HeaderViewSectionID,
+		HeaderViewSectionShouldFitWidthToContents
     };
     
 	Q_ENUM(UserRoles)
 
-	static const char* valueToKey(UserRoles val) { return QMetaEnum::fromType<ModelUserRoles::UserRoles>().valueToKey(val); }
+	static QMetaEnum metaEnum() { return QMetaEnum::fromType<ModelUserRoles::UserRoles>(); }
+	static const char* valueToKey(UserRoles val) { return metaEnum().valueToKey(val); }
+	static int keyCount() { return metaEnum().keyCount(); }
+	static const char * key(int index) { return metaEnum().key(index); }
+	static UserRoles value(int index) { return static_cast<UserRoles>(metaEnum().value(index)); }
+	static const char* name() { return metaEnum().name(); }
+	static const char* scope() { return metaEnum().scope(); }
+
 };
 
 Q_DECLARE_METATYPE(ModelUserRoles)
