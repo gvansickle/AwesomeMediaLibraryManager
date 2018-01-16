@@ -48,6 +48,7 @@ Q_DECLARE_METATYPE(VecOfUrls);
 Q_DECLARE_METATYPE(VecOfLEs);
 Q_DECLARE_METATYPE(VecOfPMIs);
 
+
 enum LibState
 {
 	Idle,
@@ -55,8 +56,9 @@ enum LibState
 	PopulatingMetadata
 };
 
-
-
+/**
+ * The LibraryModel class.
+ */
 class LibraryModel : public QAbstractItemModel
 {
     Q_OBJECT

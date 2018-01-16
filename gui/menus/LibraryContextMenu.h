@@ -44,6 +44,8 @@ public:
 
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
+
+	QAction* m_act_search_wikipedia;
 };
 
 #endif /* LIBRARYCONTEXTMENU_H */

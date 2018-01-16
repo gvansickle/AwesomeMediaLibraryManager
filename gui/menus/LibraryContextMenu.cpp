@@ -56,11 +56,6 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 
 	// Add cut/copy/paste to the context menu.
 	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
-
-	addSeparator();
-	auto act_search_wikipedia = make_action(Theme::iconFromTheme("edit-web-search"), tr("Search Wikipedia for..."), this);
-	act_search_wikipedia->setDisabled(true); /// @todo
-	addAction(act_search_wikipedia);
 }
 
 /**
@@ -85,11 +80,16 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, QPersistentModelInd
 			// Got a valid index, add the track-specific entries.
 
 			auto model = row_index.model();
-			//auto item_ptr = model->data(row_index, ModelUserRoles::PointerToItemRole).value<std::shared_ptr<LibraryEntry>>();
+
 			auto track_name = model->data(row_index, Qt::DisplayRole);
 			qDebug() << "track_name:" << track_name;
 			addAction(track_name.toString());
 		}
+
+		addSeparator();
+		m_act_search_wikipedia = make_action(Theme::iconFromTheme("edit-web-search"), tr("Search Wikipedia for..."), this);
+		m_act_search_wikipedia->setDisabled(true); /// @todo
+		addAction(m_act_search_wikipedia);
 	}
 }
 
