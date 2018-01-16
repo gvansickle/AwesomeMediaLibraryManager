@@ -30,8 +30,7 @@
 #include <QHeaderView>
 #include <QSaveFile>
 #include <logic/LibrarySortFilterProxyModel.h>
-#include <utils/ModelHelpers.h>
-
+#include <logic/proxymodels/ModelHelpers.h>
 #include "gui/NetworkAwareFileDialog.h"
 #include "utils/ConnectHelpers.h"
 #include "utils/DebugHelpers.h"
@@ -380,7 +379,7 @@ void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
 		// Open context menu for the item.
 		qDebug() << "MODEL INDEX:" << index;
 
-		onContextMenuIndex(event, index);
+		onContextMenuIndexList(event, index);
 	}
 	else
 	{

@@ -26,7 +26,9 @@
 #include <QAbstractProxyModel>
 #include <QDebug>
 
-/// Convert a QModelIndexList into a QList of QPersistentIndexes.
+/**
+ * Convert a QModelIndexList into a QList of QPersistentIndexes.
+ */
 inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
 {
     QList<QPersistentModelIndex> retval;

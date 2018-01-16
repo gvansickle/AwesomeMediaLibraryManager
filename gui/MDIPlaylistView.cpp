@@ -35,11 +35,11 @@
 #include <logic/LibrarySortFilterProxyModel.h>
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
-#include "utils/ModelHelpers.h"
 #include "menus/PlaylistContextMenuViewport.h"
 #include "menus/PlaylistContextMenu.h"
 
 #include <logic/ModelUserRoles.h>
+#include <logic/proxymodels/ModelHelpers.h>
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -502,7 +502,7 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	setCurrentIndex(proxy_model_index);
 }
 
-void MDIPlaylistView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
+void MDIPlaylistView::onContextMenuIndexList(QContextMenuEvent* event, const QModelIndex& index)
 {
 	// Open a context menu on the clicked-on row.
 	auto context_menu = new PlaylistContextMenu(tr("Playlist Context Menu"), this);

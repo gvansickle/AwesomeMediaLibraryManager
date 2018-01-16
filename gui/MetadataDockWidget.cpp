@@ -37,9 +37,9 @@
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
-#include <utils/ModelHelpers.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelChangeWatcher.h>
+#include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
 
 #include <utils/Theme.h>

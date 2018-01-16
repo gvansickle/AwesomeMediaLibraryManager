@@ -41,13 +41,13 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 
 	auto mw = MainWindow::getInstance();
 
-	auto act_append_to_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Append to Now Playing"), this);
-	auto act_replace_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Replace Now Playing with this"), this);
+	m_act_append_to_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Append to Now Playing"), this);
+	m_act_replace_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Replace Now Playing with this"), this);
 
 //	setTextandTips();
 	
-	addAction(act_append_to_playlist);
-	addAction(act_replace_playlist);
+	addAction(m_act_append_to_playlist);
+	addAction(m_act_replace_playlist);
 	addSeparator();
 
 	addAction("Song properties...");

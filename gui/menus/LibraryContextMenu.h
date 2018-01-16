@@ -45,6 +45,8 @@ public:
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
 
+	QAction* m_act_append_to_playlist;
+	QAction* m_act_replace_playlist;
 	QAction* m_act_search_wikipedia;
 };
 

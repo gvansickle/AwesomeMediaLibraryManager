@@ -306,7 +306,7 @@ set(HEADER_FILES
 	gui/DropMenu.h
 	logic/ModelUserRoles.h
 	gui/DragDropTreeViewStyleProxy.h
-	utils/ModelHelpers.h
+	logic/proxymodels/ModelHelpers.h
 	logic/proxymodels/SelectionFilterProxyModel.h
 	logic/proxymodels/ModelChangeWatcher.h
 	gui/helpers/Tips.h

@@ -313,7 +313,7 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 }
 
 
-void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
+void MDILibraryView::onContextMenuIndexList(QContextMenuEvent* event, const QModelIndex& index)
 {
 	// Open context menu for the item.
 	qDebug() << "INDEX:" << index;

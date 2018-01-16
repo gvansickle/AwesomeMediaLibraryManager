@@ -220,7 +220,7 @@ protected slots:
 	 * @param event
 	 * @param index
 	 */
-	virtual void onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index) { Q_UNUSED(event); Q_UNUSED(index); }
+	virtual void onContextMenuIndexList(QContextMenuEvent* event, const QModelIndex& index) { Q_UNUSED(event); Q_UNUSED(index); }
 
 	/**
 	 * Override to implement context menu handler for the viewport (blank area of treeview).

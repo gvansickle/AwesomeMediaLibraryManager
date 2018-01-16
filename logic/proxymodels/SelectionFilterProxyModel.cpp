@@ -17,10 +17,10 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
 #include <QDebug>
 
-#include <utils/ModelHelpers.h>
 
 SelectionFilterProxyModel::SelectionFilterProxyModel(QObject *parent) : BASE_CLASS(parent)
 {
