@@ -313,20 +313,12 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 }
 
 
-void MDILibraryView::onContextMenuIndexList(QContextMenuEvent* event, const QModelIndex& index)
+void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const QList<QPersistentModelIndex>& row_indexes)
 {
 	// Open context menu for the item.
-	qDebug() << "INDEX:" << index;
+	qDebug() << "ROW INDEXES:" << row_indexes;
 	
-	QPersistentModelIndex pmi = to_underlying_qmodelindex(index);
-
-	if(!index.isValid() || !pmi.isValid())
-	{
-		qDebug() << "Invalid model index, not showing context menu.";
-		return;
-	}
-
-	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), pmi, this);
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), row_indexes, this);
 	context_menu->exec(event->globalPos());
 }
 

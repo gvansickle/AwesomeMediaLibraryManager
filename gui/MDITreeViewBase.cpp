@@ -311,7 +311,7 @@ void MDITreeViewBase::documentWasModified()
 void MDITreeViewBase::headerMenu(QPoint pos)
 {
 	auto globalPos = mapToGlobal(pos);
-	auto menu = new QMenu("Show/Hide Columns");
+	auto menu = new QMenu(tr("Show/Hide Columns"));
 	for(qint64 col = 0;  col < model()->columnCount(); ++col)
 	{
 		auto action = new QAction(menu);
@@ -376,10 +376,19 @@ void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
 
 	if(index.isValid())
 	{
-		// Open context menu for the item.
+		// Open context menu for the current selection.
 		qDebug() << "MODEL INDEX:" << index;
 
-		onContextMenuIndexList(event, index);
+		// This item should be in the current selection.
+		auto selected_rows = selectionModel()->selectedRows();
+		auto source_selected_rows = toQPersistentModelIndexList(mapToSource(selected_rows));
+
+		if(source_selected_rows.size() == 0)
+		{
+			qWarning() << "Should have more than one selected row, got 0";
+		}
+
+		onContextMenuSelectedRows(event, source_selected_rows);
 	}
 	else
 	{

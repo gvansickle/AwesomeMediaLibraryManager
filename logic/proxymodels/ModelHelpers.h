@@ -41,7 +41,8 @@ inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelInd
 }
 
 /**
- *  Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().
+ * Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().
+ * A no-op if selection is empty or the model isn't a proxy model.
  */
 inline static QItemSelection mapSelectionToSource(const QItemSelection& proxy_selection)
 {
@@ -65,18 +66,38 @@ inline static QItemSelection mapSelectionToSource(const QItemSelection& proxy_se
 
 inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
 {
-    if(proxy_index.model())
-    {
-        // There's a model.  See if it's a proxy model.
+	if(proxy_index.model())
+	{
+		// There's a model.  See if it's a proxy model.
 		auto proxy_model = qobject_cast<const QAbstractProxyModel*>(proxy_index.model());
-        if(proxy_model)
-        {
-            return proxy_model->mapToSource(proxy_index);
-        }
-    }
-    
-    return proxy_index;
+		if(proxy_model)
+		{
+			return proxy_model->mapToSource(proxy_index);
+		}
+	}
+
+	return proxy_index;
 }
+
+inline static QModelIndexList mapToSource(const QModelIndexList& source_indices)
+{
+	QModelIndexList retval;
+
+	for(auto i : source_indices)
+	{
+		retval.push_back(mapToSource(i));
+	}
+
+	return retval;
+}
+
+//template <typename T>
+//QList<QPersistentModelIndex> selectedSourceRows(const T* item_selection_model, int column = 0)
+//{
+//	auto selected_rows = item_selection_model->selectedRows(column);
+//	auto selected_source_rows =
+//}
+
 
 inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
 {

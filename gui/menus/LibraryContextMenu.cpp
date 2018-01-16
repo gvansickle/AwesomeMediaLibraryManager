@@ -61,18 +61,18 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 /**
  * Context menu for a Library entry.
  */
-LibraryContextMenu::LibraryContextMenu(const QString& title, QPersistentModelIndex pmi, QWidget* parent)
+LibraryContextMenu::LibraryContextMenu(const QString& title, QList<QPersistentModelIndex> row_indexes, QWidget* parent)
 	: LibraryContextMenu(title, parent)
 {
-	if(pmi.isValid())
+	if(row_indexes.size() > 0)
 	{
-		qDebug() << "pmi valid:" << pmi;
+		qDebug() << "row_indexes size():" << row_indexes.size();
 
-		auto model = qobject_cast<const LibraryModel*>(pmi.model());
+		auto model = qobject_cast<const LibraryModel*>(row_indexes[0].model());
 		Q_ASSERT(model != nullptr);
 		auto name_col = model->getColFromSection(SectionID::Title);
 
-		auto row_index = pmi.sibling(pmi.row(), name_col);
+		auto row_index = row_indexes[0].sibling(row_indexes[0].row(), name_col);
 		if(row_index.isValid())
 		{
 			qDebug() << "row_index valid:" << row_index;

@@ -128,7 +128,7 @@ M_WARNING("TODO: Override writeFile?");
 
 protected slots:
 
-	void onContextMenuIndexList(QContextMenuEvent* event, const QModelIndex& index) override;
+	void onContextMenuSelectedRows(QContextMenuEvent* event, const QList<QPersistentModelIndex>& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
 	/// @obsolete

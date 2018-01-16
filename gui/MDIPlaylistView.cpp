@@ -502,7 +502,7 @@ void MDIPlaylistView::playlistPositionChanged(qint64 position)
 	setCurrentIndex(proxy_model_index);
 }
 
-void MDIPlaylistView::onContextMenuIndexList(QContextMenuEvent* event, const QModelIndex& index)
+void MDIPlaylistView::onContextMenuSelectedRows(QContextMenuEvent* event, const QList<QPersistentModelIndex>& row_indexes)
 {
 	// Open a context menu on the clicked-on row.
 	auto context_menu = new PlaylistContextMenu(tr("Playlist Context Menu"), this);

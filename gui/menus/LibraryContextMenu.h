@@ -40,7 +40,7 @@ public:
 	 */
 	explicit LibraryContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
 
-	explicit LibraryContextMenu(const QString &title, QPersistentModelIndex pmi, QWidget *parent = Q_NULLPTR);
+	explicit LibraryContextMenu(const QString &title, QList<QPersistentModelIndex> row_indexes, QWidget *parent = Q_NULLPTR);
 
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
