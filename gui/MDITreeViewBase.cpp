@@ -36,6 +36,7 @@
 #include "utils/DebugHelpers.h"
 #include "helpers/Tips.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
+#include "logic/proxymodels/ModelHelpers.h"
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {
@@ -380,15 +381,15 @@ void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
 		qDebug() << "MODEL INDEX:" << index;
 
 		// This item should be in the current selection.
-		auto selected_rows = selectionModel()->selectedRows();
-		auto source_selected_rows = toQPersistentModelIndexList(mapToSource(selected_rows));
+		auto selected_row_indexes = selectionModel()->selectedRows(0);
+		auto selected_row_pindexes = toQPersistentModelIndexVec(selected_row_indexes);
 
-		if(source_selected_rows.size() == 0)
+		if(selected_row_pindexes.size() == 0)
 		{
 			qWarning() << "Should have more than one selected row, got 0";
 		}
 
-		onContextMenuSelectedRows(event, source_selected_rows);
+		onContextMenuSelectedRows(event, selected_row_pindexes);
 	}
 	else
 	{

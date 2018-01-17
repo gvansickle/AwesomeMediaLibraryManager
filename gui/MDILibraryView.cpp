@@ -31,6 +31,7 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
+#include <logic/proxymodels/ModelHelpers.h>
 #include "menus/LibraryContextMenu.h"
 #include "gui/NetworkAwareFileDialog.h"
 
@@ -313,10 +314,10 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 }
 
 
-void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const QList<QPersistentModelIndex>& row_indexes)
+void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes)
 {
 	// Open context menu for the item.
-	qDebug() << "ROW INDEXES:" << row_indexes;
+//	qDebug() << "ROW INDEXES:" << row_indexes;
 	
 	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), row_indexes, this);
 	context_menu->exec(event->globalPos());

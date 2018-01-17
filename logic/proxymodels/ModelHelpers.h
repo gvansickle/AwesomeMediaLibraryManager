@@ -26,12 +26,15 @@
 #include <QAbstractProxyModel>
 #include <QDebug>
 
+
+using QPersistentModelIndexVec = QVector<QPersistentModelIndex>;
+
 /**
- * Convert a QModelIndexList into a QList of QPersistentIndexes.
+ * Convert a QModelIndexList into a QVector of QPersistentIndexes.
  */
-inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelIndexList mil)
+inline static QVector<QPersistentModelIndex> toQPersistentModelIndexVec(const QModelIndexList& mil)
 {
-    QList<QPersistentModelIndex> retval;
+	QVector<QPersistentModelIndex> retval;
 
     for(auto i : mil)
     {
@@ -44,7 +47,7 @@ inline static QList<QPersistentModelIndex> toQPersistentModelIndexList(QModelInd
  * Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().
  * A no-op if selection is empty or the model isn't a proxy model.
  */
-inline static QItemSelection mapSelectionToSource(const QItemSelection& proxy_selection)
+inline static QItemSelection mapQItemSelectionToSource(const QItemSelection& proxy_selection)
 {
     if(proxy_selection.size() > 0)
     {
@@ -64,6 +67,31 @@ inline static QItemSelection mapSelectionToSource(const QItemSelection& proxy_se
     return proxy_selection;
 }
 
+
+inline static QVector<QPersistentModelIndex> pindexes(const QItemSelection& selection, int col = -1)
+{
+	QModelIndexList index_vec = selection.indexes();
+	QModelIndexList retval;
+	if(col != -1)
+	{
+		for(auto i : index_vec)
+		{
+			if(i.isValid())
+			{
+				if(i.column() == col)
+				{
+					retval.push_back(i);
+				}
+			}
+		}
+		toQPersistentModelIndexVec(retval);
+	}
+	else
+	{
+		return toQPersistentModelIndexVec(index_vec);
+	}
+}
+
 inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
 {
 	if(proxy_index.model())
@@ -77,6 +105,17 @@ inline static QModelIndex mapToSource(const QModelIndex& proxy_index)
 	}
 
 	return proxy_index;
+}
+
+template <template<class> class T>
+T<QPersistentModelIndex> mapQPersistentModelIndexesToSource(const T<QPersistentModelIndex>& iterable_of_pindexes)
+{
+	T<QPersistentModelIndex> retval;
+	for(auto i : iterable_of_pindexes)
+	{
+		retval.push_back(mapToSource(i));
+	}
+	return retval;
 }
 
 inline static QModelIndexList mapToSource(const QModelIndexList& source_indices)

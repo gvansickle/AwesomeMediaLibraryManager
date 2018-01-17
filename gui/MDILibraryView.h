@@ -35,6 +35,7 @@ class MDIPlaylistView;
 class LibraryEntry;
 class PlaylistModel;
 
+
 class MDILibraryView : public MDITreeViewBase
 {
     Q_OBJECT
@@ -128,7 +129,7 @@ M_WARNING("TODO: Override writeFile?");
 
 protected slots:
 
-	void onContextMenuSelectedRows(QContextMenuEvent* event, const QList<QPersistentModelIndex>& row_indexes) override;
+	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
 	/// @obsolete

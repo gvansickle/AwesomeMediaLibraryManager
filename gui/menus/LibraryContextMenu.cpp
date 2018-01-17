@@ -61,9 +61,12 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 /**
  * Context menu for a Library entry.
  */
-LibraryContextMenu::LibraryContextMenu(const QString& title, QList<QPersistentModelIndex> row_indexes, QWidget* parent)
+LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentModelIndexVec& selected_rows, QWidget* parent)
 	: LibraryContextMenu(title, parent)
 {
+	// Convert to sourceModel coords.
+	auto row_indexes = mapQPersistentModelIndexesToSource(selected_rows);
+
 	if(row_indexes.size() > 0)
 	{
 		qDebug() << "row_indexes size():" << row_indexes.size();

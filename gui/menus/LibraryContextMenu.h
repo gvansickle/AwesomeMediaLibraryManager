@@ -1,5 +1,6 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018
+ * Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -23,7 +24,9 @@
 #include <QObject>
 #include <QMenu>
 #include <QAction>
-#include <QPersistentModelIndex>
+#include <QItemSelection>
+
+#include "logic/proxymodels/ModelHelpers.h"
 
 class QString;
 
@@ -40,7 +43,12 @@ public:
 	 */
 	explicit LibraryContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
 
-	explicit LibraryContextMenu(const QString &title, QList<QPersistentModelIndex> row_indexes, QWidget *parent = Q_NULLPTR);
+	/**
+	 * Constructor for a context menu for a selection of one or more items.
+	 * @a selection is in View-model index space, so depending on the use, it may need to be
+	 * translated to source-model space.
+	 */
+	explicit LibraryContextMenu(const QString &title, const QPersistentModelIndexVec& selected_rows, QWidget *parent = Q_NULLPTR);
 
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)

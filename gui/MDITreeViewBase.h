@@ -23,9 +23,9 @@
 #include <QContextMenuEvent>
 #include <QTreeView>
 #include <QUrl>
-#include <QEnableSharedFromThis>
 
 #include "mdi/MDIModelViewPair.h"
+#include "logic/proxymodels/ModelHelpers.h"
 
 class QMdiSubWindow;
 class QFileDevice;
@@ -220,7 +220,7 @@ protected slots:
 	 * @param event
 	 * @param index
 	 */
-	virtual void onContextMenuSelectedRows(QContextMenuEvent* event, const QList<QPersistentModelIndex>& row_indexes) { Q_UNUSED(event); Q_UNUSED(row_indexes); }
+	virtual void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) { Q_UNUSED(event); Q_UNUSED(row_indexes); }
 
 	/**
 	 * Override to implement context menu handler for the viewport (blank area of treeview).

@@ -136,7 +136,7 @@ protected:
 protected slots:
     virtual void playlistPositionChanged(qint64 position);
 
-	void onContextMenuSelectedRows(QContextMenuEvent* event, const QList<QPersistentModelIndex>& row_indexes) override;
+	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
     /// Invoked when user double-clicks on an entry.
