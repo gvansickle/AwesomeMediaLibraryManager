@@ -65,12 +65,13 @@ protected:
 
 struct ColumnSpec
 {
-	ColumnSpec(SectionID s, QString dn, QStringList ml, bool fit_col_width = false)
+	ColumnSpec(SectionID s, QString dn, QStringList ml, bool fit_col_width = false, bool default_to_hidden = false)
     {
         section_id = s;
         display_name = dn;
         metadata_list = ml;
 		m_should_fit_column_width_to_contents = fit_col_width;
+		m_default_to_hidden = default_to_hidden;
 	}
 
     SectionID section_id;

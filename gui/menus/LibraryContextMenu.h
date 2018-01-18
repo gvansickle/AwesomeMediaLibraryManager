@@ -50,9 +50,14 @@ public:
 	 */
 	explicit LibraryContextMenu(const QString &title, const QPersistentModelIndexVec& selected_rows, QWidget *parent = Q_NULLPTR);
 
+protected:
+
+	QStringList getSongsAsTooltips(const QPersistentModelIndexVec& row_indexes);
+
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
 
+	QAction* m_send_to_now_playing;
 	QAction* m_act_append_to_playlist;
 	QAction* m_act_replace_playlist;
 	QAction* m_act_search_wikipedia;
