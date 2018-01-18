@@ -66,11 +66,18 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 {
 	// Convert to sourceModel coords.
 	auto row_indexes = mapQPersistentModelIndexesToSource(selected_rows);
-
+	bool is_multirow = false;
+	
 	if(row_indexes.size() > 0)
 	{
 		qDebug() << "row_indexes size():" << row_indexes.size();
 
+		if(row_indexes.size() > 1)
+		{
+			// Multi-row selection.
+			is_multirow = true;
+		}
+		
 		auto model = qobject_cast<const LibraryModel*>(row_indexes[0].model());
 		Q_ASSERT(model != nullptr);
 		auto name_col = model->getColFromSection(SectionID::Title);
@@ -86,7 +93,18 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 
 			auto track_name = model->data(row_index, Qt::DisplayRole);
 			qDebug() << "track_name:" << track_name;
-			addAction(track_name.toString());
+
+			QString send_to_now_playing_text;
+			if(is_multirow)
+			{
+				send_to_now_playing_text = tr("Send selected items to 'Now Playing'");
+			}
+			else
+			{
+				send_to_now_playing_text = tr("Send '%1' to 'Now Playing'").arg(track_name.toString());
+			}
+
+			addAction(send_to_now_playing_text);
 		}
 
 		addSeparator();
