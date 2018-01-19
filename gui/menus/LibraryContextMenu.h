@@ -26,6 +26,7 @@
 #include <QAction>
 #include <QItemSelection>
 
+#include "utils/DebugHelpers.h"
 #include "logic/proxymodels/ModelHelpers.h"
 
 class QString;
@@ -60,6 +61,8 @@ protected:
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
 
+M_WARNING("TODO: These shouldn't be public.  Not sure what would be a better way to do this atm.");
+public:
 	QAction* m_send_to_now_playing;
 	QAction* m_act_append_to_playlist;
 	QAction* m_act_replace_playlist;

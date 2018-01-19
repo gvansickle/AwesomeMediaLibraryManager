@@ -34,6 +34,26 @@ class LibraryEntry;
 
 static const QStringList g_additional_supported_mimetypes = { {"application/x-grvs-libraryentryref"} };
 
+class DropTargetInstructions
+{
+	Q_GADGET
+public:
+	enum Enumerator
+	{
+		NA,
+		APPEND,
+		REPLACE
+	};
+
+	Q_ENUM(Enumerator)
+
+	/// Which action to take.
+	Enumerator m_action { NA };
+
+	/// Whether to start playing or not.
+	bool m_start_playing { false };
+};
+
 class LibraryEntryMimeData : public QMimeData
 {
 	Q_OBJECT
@@ -49,7 +69,7 @@ public:
 
 	/// Instructions to the target on what the user wants it to do with these LibraryEntry's.
 	/// Intended for use in a context menu's "Send to and play"/"Append"/"Replace" menu actions.
-
+	DropTargetInstructions m_drop_target_instructions;
 
 private:
 	Q_DISABLE_COPY(LibraryEntryMimeData)

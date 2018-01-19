@@ -67,7 +67,7 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentModelIndexVec& selected_rows, QWidget* parent)
 	: LibraryContextMenu(title, parent)
 {
-	// Convert to sourceModel coords.
+	// Convert the selected rows to sourceModel coords.
 	auto row_indexes = mapQPersistentModelIndexesToSource(selected_rows);
 	bool is_multirow = false;
 	
@@ -83,9 +83,9 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 		
 		auto model = qobject_cast<const LibraryModel*>(row_indexes[0].model());
 		Q_ASSERT(model != nullptr);
-		auto name_col = model->getColFromSection(SectionID::Title);
+		auto title_col = model->getColFromSection(SectionID::Title);
 
-		auto row_index = row_indexes[0].sibling(row_indexes[0].row(), name_col);
+		auto row_index = row_indexes[0].sibling(row_indexes[0].row(), title_col);
 		if(row_index.isValid())
 		{
 			qDebug() << "row_index valid:" << row_index;
@@ -108,7 +108,7 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 			{
 				send_to_now_playing_text = tr("Send '%1' to 'Now Playing'").arg(track_name.toString());
 			}
-			m_send_to_now_playing = make_action(Theme::iconFromTheme("go-next"), send_to_now_playing_text, this);
+			m_send_to_now_playing = make_action(Theme::iconFromTheme("go-next"), send_to_now_playing_text, parent);
 //			m_send_to_now_playing->setToolTip(songs_as_tooltips.join("\n"));
 			// Insert this action at the top of the menu.
 			insertAction(m_act_append_to_playlist, m_send_to_now_playing);

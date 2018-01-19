@@ -34,6 +34,7 @@
 #include <logic/proxymodels/ModelHelpers.h>
 #include "menus/LibraryContextMenu.h"
 #include "gui/NetworkAwareFileDialog.h"
+#include "logic/proxymodels/QPersistentModelIndexVec.h"
 
 #include <logic/ModelUserRoles.h>
 
@@ -320,7 +321,14 @@ void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const Q
 //	qDebug() << "ROW INDEXES:" << row_indexes;
 	
 	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), row_indexes, this);
-	context_menu->exec(event->globalPos());
+	auto selected_action = context_menu->exec(event->globalPos());
+M_WARNING("TODO");
+
+	if(selected_action == context_menu->m_send_to_now_playing)
+	{
+		// User wants to send tracks to "Now Playing".
+		auto mimedata = selectedRowsToMimeData(row_indexes);
+	}
 }
 
 void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)

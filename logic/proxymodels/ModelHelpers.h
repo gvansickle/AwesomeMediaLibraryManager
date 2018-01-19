@@ -27,7 +27,7 @@
 #include <QDebug>
 
 
-using QPersistentModelIndexVec = QVector<QPersistentModelIndex>;
+//using QPersistentModelIndexVec2 = QVector<QPersistentModelIndex>;
 
 /**
  * Convert a QModelIndexList into a QVector of QPersistentIndexes.
@@ -63,7 +63,7 @@ inline static QItemSelection mapQItemSelectionToSource(const QItemSelection& pro
             }
         }
     }
-    
+
     return proxy_selection;
 }
 

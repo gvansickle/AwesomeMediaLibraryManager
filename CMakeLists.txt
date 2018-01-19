@@ -316,6 +316,7 @@ set(HEADER_FILES
 	gui/menus/ActionBundle.h
 	gui/mdi/MDIModelViewPair.h
 	logic/ColumnSpec.h
+	logic/proxymodels/QPersistentModelIndexVec.h
     )
 
 # Source file list.
@@ -380,6 +381,7 @@ set(SOURCE_FILES
 	gui/menus/PlaylistContextMenu.cpp
 	gui/menus/ActionBundle.cpp
 	logic/ColumnSpec.cpp
+	logic/proxymodels/QPersistentModelIndexVec.cpp
     )
 
 set(HEADER_FILES_UTILS_CONCURRENCY

@@ -37,6 +37,8 @@
 #include "helpers/Tips.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 #include "logic/proxymodels/ModelHelpers.h"
+#include "logic/proxymodels/QPersistentModelIndexVec.h"
+
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {

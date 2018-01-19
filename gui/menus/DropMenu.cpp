@@ -37,7 +37,7 @@ Qt::DropAction DropMenu::whichAction(QPoint p)
 {
 	QAction *selected_action = exec(p);
 
-	if(selected_action == 0)
+	if(selected_action == nullptr)
 	{
 		// User hit escape.
 		return Qt::IgnoreAction;

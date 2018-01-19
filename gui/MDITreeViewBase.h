@@ -30,7 +30,7 @@
 class QMdiSubWindow;
 class QFileDevice;
 class ModelChangeWatcher;
-
+class QPersistentModelIndexVec;
 
 class MDITreeViewBase : public QTreeView
 {
