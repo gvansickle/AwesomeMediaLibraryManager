@@ -19,7 +19,7 @@
 
 #include "LibraryEntryMimeData.h"
 
-LibraryEntryMimeData::LibraryEntryMimeData()
+LibraryEntryMimeData::LibraryEntryMimeData() : QMimeData ()
 {
 
 }

@@ -44,7 +44,12 @@ public:
 	bool hasFormat(const QString& mimetype) const override;
 	QStringList formats() const override;
 
+	/// The LibraryEntry's contained in this MimeData object.
 	std::vector<std::shared_ptr<LibraryEntry>> m_lib_item_list;
+
+	/// Instructions to the target on what the user wants it to do with these LibraryEntry's.
+	/// Intended for use in a context menu's "Send to and play"/"Append"/"Replace" menu actions.
+
 
 private:
 	Q_DISABLE_COPY(LibraryEntryMimeData)

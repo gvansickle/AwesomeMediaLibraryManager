@@ -690,7 +690,7 @@ M_WARNING("TODO: connect");
 void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view)
 {
     qDebug() << "Connecting";
-	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDIPlaylistView::onSendToNowPlaying);
+	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
 
 	connectPlayerAndPlaylistView(&m_player, now_playing_view);
 	connectPlayerControlsAndPlaylistView(m_controls, now_playing_view);

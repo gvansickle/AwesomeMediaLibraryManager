@@ -52,6 +52,9 @@ public:
 
 protected:
 
+	/**
+	 * Return a QString
+	 */
 	QStringList getSongsAsTooltips(const QPersistentModelIndexVec& row_indexes);
 
 private:

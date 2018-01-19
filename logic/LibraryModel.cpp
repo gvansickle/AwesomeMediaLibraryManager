@@ -779,6 +779,7 @@ void LibraryModel::createCacheFile(QUrl root_url)
 			return;
 		}
 	}
+
 	// Set up a cache file.
 	qDebug() << "Cachedir:" << m_cachedir;
 	QUrl cacheurl = m_cachedir.resolved(QUrl(QString("library_cache_%1_XXXXXX.json").arg(root_url.fileName())));
@@ -792,6 +793,10 @@ void LibraryModel::createCacheFile(QUrl root_url)
 	temp_lib_cache_file.setAutoRemove(false);
 	m_lib_cache_file.setFileName(temp_lib_cache_file.fileName());
 	temp_lib_cache_file.close();
+	// Note here that we're depending on this behavior of QTemporaryFile:
+	// "Reopening a QTemporaryFile after calling close() is safe. For as long as the QTemporaryFile object itself is not destroyed,
+	// the unique temporary file will exist and be kept open internally by QTemporaryFile."
+	// (http://doc.qt.io/qt-5/qtemporaryfile.html)
 	if(!m_lib_cache_file.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		qCritical() << "Couldn't open cache file" << m_lib_cache_file.fileName() << ":" << m_lib_cache_file.errorString();

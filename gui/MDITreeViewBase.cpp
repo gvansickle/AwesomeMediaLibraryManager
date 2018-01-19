@@ -271,6 +271,8 @@ void MDITreeViewBase::onCopy()
     // Get the current selection.
     QModelIndexList mil = selectionModel()->selectedRows();
 
+M_WARNING("DELETE ME");
+#if 0
     if(mil.isEmpty())
     {
         // Nothing to copy.
@@ -279,6 +281,9 @@ void MDITreeViewBase::onCopy()
 
     auto m = model();
     QMimeData* copied_rows = m->mimeData(mil);
+#endif
+
+	QMimeData* copied_rows = selectedRowsToMimeData(mil);
 
     // Copy the rows to the clipboard.
     QClipboard *clipboard = QGuiApplication::clipboard();
@@ -302,6 +307,22 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 	{
 		event->ignore();
 	}
+}
+
+QMimeData* MDITreeViewBase::selectedRowsToMimeData(const QModelIndexList& row_indexes)
+{
+	auto mil = row_indexes;
+
+	if(mil.isEmpty())
+	{
+		// Nothing to copy.
+		return nullptr;
+	}
+
+	auto m = model();
+	QMimeData* copied_rows = m->mimeData(mil);
+
+	return copied_rows;
 }
 
 void MDITreeViewBase::documentWasModified()

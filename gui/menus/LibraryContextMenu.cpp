@@ -20,6 +20,9 @@
 #include "LibraryContextMenu.h"
 
 #include <QDebug>
+#include <QTextBrowser>
+#include <QTextDocument>
+#include <QTextTable>
 
 #include "utils/Theme.h"
 #include "gui/helpers/Tips.h"
@@ -59,7 +62,7 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 }
 
 /**
- * Context menu for a Library entry.
+ * Context menu for a selection of one or more Library entries.
  */
 LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentModelIndexVec& selected_rows, QWidget* parent)
 	: LibraryContextMenu(title, parent)
@@ -94,7 +97,7 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 			auto track_name = model->data(row_index, Qt::DisplayRole);
 			qDebug() << "track_name:" << track_name;
 
-			auto songs_as_tooltips = getSongsAsTooltips(row_indexes);
+//			auto songs_as_tooltips = getSongsAsTooltips(row_indexes);
 
 			QString send_to_now_playing_text;
 			if(is_multirow)
@@ -106,7 +109,7 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 				send_to_now_playing_text = tr("Send '%1' to 'Now Playing'").arg(track_name.toString());
 			}
 			m_send_to_now_playing = make_action(Theme::iconFromTheme("go-next"), send_to_now_playing_text, this);
-			m_send_to_now_playing->setToolTip(songs_as_tooltips.join("\n"));
+//			m_send_to_now_playing->setToolTip(songs_as_tooltips.join("\n"));
 			// Insert this action at the top of the menu.
 			insertAction(m_act_append_to_playlist, m_send_to_now_playing);
 			setToolTipsVisible(true);
@@ -119,9 +122,29 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 	}
 }
 
+static void appendTableRow(QTextTable* table, QString a, QString b)
+{
+	table->appendRows(1);
+	auto cursor = table->cellAt(table->rows()-1, 0).firstCursorPosition();
+	//QTextBlockFormat blockFormat = cursor.blockFormat();
+	cursor.insertText(a);
+	cursor = table->cellAt(table->rows()-1, 1).firstCursorPosition();
+	cursor.insertText(b);
+}
+
 QStringList LibraryContextMenu::getSongsAsTooltips(const QPersistentModelIndexVec& row_indexes)
 {
 	Q_ASSERT(row_indexes.size() > 0);
+
+	QTextBrowser* tb = new QTextBrowser(this);
+//	QTextDocument* td = new QTextDocument(this);
+	auto cursor = tb->textCursor();
+	cursor.movePosition(QTextCursor::Start);
+	QTextTable* table = cursor.insertTable(1,2);
+
+	appendTableRow(table, "Column1", "Column2");
+
+	qDebug() << "ROW:" << tb->document()->toHtml();
 
 	auto model = qobject_cast<const LibraryModel*>(row_indexes[0].model());
 	Q_ASSERT(model != nullptr);

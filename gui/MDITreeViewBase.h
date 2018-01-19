@@ -141,6 +141,7 @@ public slots:
     
     /// View is read-only by default.  Does nothing.
     virtual void onCut() {}
+	/// Copy selection to clipboard.
     virtual void onCopy();
     /// View is read-only by default.  Does nothing.
     virtual void onPaste() {}
@@ -195,6 +196,9 @@ protected:
     ///
     /// Not pure-virtual, but designed-to-be-overridden functions.
     ///
+
+	/// Creates a QMimeData object containing copies of the given rows.
+	QMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
 
 protected slots:
 

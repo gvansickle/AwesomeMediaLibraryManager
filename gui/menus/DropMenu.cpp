@@ -17,8 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "DropMenu.h"
-
+#include <gui/menus/DropMenu.h>
 #include "utils/Theme.h"
 
 DropMenu::DropMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
