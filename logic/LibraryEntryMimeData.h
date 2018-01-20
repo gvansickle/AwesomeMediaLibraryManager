@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017,2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -38,20 +38,27 @@ class DropTargetInstructions
 {
 	Q_GADGET
 public:
-	enum Enumerator
+	enum ItemDispositionActionEnumerator
 	{
-		NA,
-		APPEND,
-		REPLACE
+		IDAE_NA,
+		IDAE_APPEND,
+		IDAE_REPLACE
 	};
 
-	Q_ENUM(Enumerator)
+	Q_ENUM(ItemDispositionActionEnumerator)
 
-	/// Which action to take.
-	Enumerator m_action { NA };
+	enum PostAddActionEnumerator
+	{
+		PA_NONE,
+		PA_START_PLAYING,
+	};
+	Q_ENUM(PostAddActionEnumerator)
+
+	/// Which item disposition action to take.
+	ItemDispositionActionEnumerator m_action { IDAE_NA };
 
 	/// Whether to start playing or not.
-	bool m_start_playing { false };
+	PostAddActionEnumerator m_start_playing { PA_NONE };
 };
 
 class LibraryEntryMimeData : public QMimeData
@@ -75,6 +82,10 @@ private:
 	Q_DISABLE_COPY(LibraryEntryMimeData)
              
 };
+
+// Not declaring this as a metatype.  Needs a copy constructor, which we have privatized.
+// FWIW, QMimeData itself isn't declared as a metatype either.
+//Q_DECLARE_METATYPE(LibraryEntryMimeData)
 
 class MimeDataDumper : public QObject
 {

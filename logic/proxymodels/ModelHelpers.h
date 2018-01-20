@@ -26,22 +26,8 @@
 #include <QAbstractProxyModel>
 #include <QDebug>
 
-
-//using QPersistentModelIndexVec2 = QVector<QPersistentModelIndex>;
-
-/**
- * Convert a QModelIndexList into a QVector of QPersistentIndexes.
- */
-inline static QVector<QPersistentModelIndex> toQPersistentModelIndexVec(const QModelIndexList& mil)
-{
-	QVector<QPersistentModelIndex> retval;
-
-    for(auto i : mil)
-    {
-        retval.append(i);
-    }
-    return retval;
-}
+#include "utils/DebugHelpers.h"
+#include "logic/proxymodels/QPersistentModelIndexVec.h"
 
 /**
  * Map a QItemSelection to a top-level source selection via QAbstractProxyModel::mapSelectionToSource().
@@ -68,7 +54,7 @@ inline static QItemSelection mapQItemSelectionToSource(const QItemSelection& pro
 }
 
 
-inline static QVector<QPersistentModelIndex> pindexes(const QItemSelection& selection, int col = -1)
+inline static QPersistentModelIndexVec pindexes(const QItemSelection& selection, int col = -1)
 {
 	QModelIndexList index_vec = selection.indexes();
 	QModelIndexList retval;

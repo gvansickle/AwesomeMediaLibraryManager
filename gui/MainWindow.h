@@ -35,6 +35,7 @@
 #include <logic/MP2.h>
 #include <gui/settings/SettingsDialog.h>
 #include "mdi/MDIModelViewPair.h"
+#include "logic/LibraryEntryMimeData.h"
 
 class QActionGroup;
 class QWidget;
@@ -56,7 +57,11 @@ class MainWindow: public QMainWindow
     Q_OBJECT
 
 signals:
-    void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+	/**
+	 * Signal which serves essentially as a repeater for other views which want to
+	 * send one or more tracks to the "Now Playing" view.
+	 */
+	void sendToNowPlaying(LibraryEntryMimeData* mime_data);
 
 
 public:
@@ -139,7 +144,7 @@ private slots:
 
     void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
-    void onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry);
+	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
 
     void doExperiment();
 

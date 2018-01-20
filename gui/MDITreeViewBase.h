@@ -31,7 +31,11 @@ class QMdiSubWindow;
 class QFileDevice;
 class ModelChangeWatcher;
 class QPersistentModelIndexVec;
+class LibraryEntryMimeData;
 
+/**
+ * Base class for the various tree views in the app.
+ */
 class MDITreeViewBase : public QTreeView
 {
     Q_OBJECT
@@ -197,8 +201,8 @@ protected:
     /// Not pure-virtual, but designed-to-be-overridden functions.
     ///
 
-	/// Creates a QMimeData object containing copies of the given rows.
-	QMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
+	/// Creates a LibraryEntryMimeData object containing copies of the given rows.
+	LibraryEntryMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
 
 protected slots:
 

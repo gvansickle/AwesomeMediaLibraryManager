@@ -29,6 +29,7 @@
 #include <QClipboard>
 #include <QHeaderView>
 #include <QSaveFile>
+#include <logic/LibraryEntryMimeData.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include "gui/NetworkAwareFileDialog.h"
@@ -273,19 +274,13 @@ void MDITreeViewBase::onCopy()
     // Get the current selection.
     QModelIndexList mil = selectionModel()->selectedRows();
 
-M_WARNING("DELETE ME");
-#if 0
-    if(mil.isEmpty())
-    {
-        // Nothing to copy.
-        return;
-    }
+	LibraryEntryMimeData* copied_rows = selectedRowsToMimeData(mil);
 
-    auto m = model();
-    QMimeData* copied_rows = m->mimeData(mil);
-#endif
-
-	QMimeData* copied_rows = selectedRowsToMimeData(mil);
+	if(copied_rows == nullptr)
+	{
+		qWarning() << "Couldn't get a QMimeData object for selection's QModelIndexList:" << mil;
+		return;
+	}
 
     // Copy the rows to the clipboard.
     QClipboard *clipboard = QGuiApplication::clipboard();
@@ -311,18 +306,19 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 	}
 }
 
-QMimeData* MDITreeViewBase::selectedRowsToMimeData(const QModelIndexList& row_indexes)
+LibraryEntryMimeData* MDITreeViewBase::selectedRowsToMimeData(const QModelIndexList& row_indexes)
 {
 	auto mil = row_indexes;
 
 	if(mil.isEmpty())
 	{
 		// Nothing to copy.
+		qWarning() << "EMPTY MODELINDEXLIST, RETURNING NULLPTR" <<  row_indexes;
 		return nullptr;
 	}
 
 	auto m = model();
-	QMimeData* copied_rows = m->mimeData(mil);
+	LibraryEntryMimeData* copied_rows = qobject_cast<LibraryEntryMimeData*>(m->mimeData(mil));
 
 	return copied_rows;
 }
@@ -405,7 +401,7 @@ void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
 
 		// This item should be in the current selection.
 		auto selected_row_indexes = selectionModel()->selectedRows(0);
-		auto selected_row_pindexes = toQPersistentModelIndexVec(selected_row_indexes);
+		auto selected_row_pindexes = QPersistentModelIndexVec(selected_row_indexes);
 
 		if(selected_row_pindexes.size() == 0)
 		{

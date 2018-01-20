@@ -19,9 +19,27 @@
 
 #include "QPersistentModelIndexVec.h"
 
-QPersistentModelIndexVec::QPersistentModelIndexVec()
-{
-	// TODO Auto-generated constructor stub
+#include <QModelIndex>
+#include <QModelIndexList>
+#include <QPersistentModelIndex>
 
+QPersistentModelIndexVec::QPersistentModelIndexVec(const QModelIndexList& mil)
+{
+	for(const auto& i : mil)
+	{
+		(*this).push_back(i);
+	}
+}
+
+QPersistentModelIndexVec::operator const QModelIndexList() const
+{
+	QModelIndexList retval;
+
+	for(auto i : *this)
+	{
+		retval.push_back(i);
+	}
+
+	return retval;
 }
 

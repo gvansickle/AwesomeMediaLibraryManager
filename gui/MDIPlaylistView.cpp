@@ -465,20 +465,33 @@ void MDIPlaylistView::onDelete()
 }
 
 /**
- * Slot which appends the incoming library entry and starts playing it.
+ * Slot which accepts a LibraryEntryMimeData* from a signal.
+ * Appends or replaces the incoming tracks in @mime_data and possibly starts playing the first one.
  */
-void MDIPlaylistView::onSendToNowPlaying(std::shared_ptr<LibraryEntry> new_libentry)
+void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 {
 M_WARNING("TODO: Dedup")
 
-	// We first need to convert the LibraryEntry to a PlaylistModelItem.
+	// We first need to convert the LibraryEntry's to a PlaylistModelItem's.
+	auto new_playlist_entries = toNewPlaylistModelItems(mime_data->m_lib_item_list);
 	// Create a new PlaylistModelItem to put in the model.
-	std::shared_ptr<PlaylistModelItem> new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(new_libentry);
+//	std::shared_ptr<PlaylistModelItem> new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(new_libentry);
 
-Q_ASSERT(new_playlist_entry != nullptr);
+//Q_ASSERT(new_playlist_entry != nullptr);
+	if(new_playlist_entries.size() == 0)
+	{
+		qWarning() << "No PlaylistModelItems returned from toNewPlaylistModelItems() conversion:" << new_playlist_entries
+				   << "Original entries:" << mime_data->m_lib_item_list;
+		return;
+	}
+
+	// Dynamically cast the list to std::shared_ptr's to LibraryEntry's.
+M_WARNING("/// @todo This seems terribly convoluted.  Seems like this view and model should only be caring about"
+		  "PlaylistModelEntry's");
+	auto new_playlist_entries_as_libentry_ptrs = toLibraryEntrySharedPtrs(new_playlist_entries);
 
 	// Append to underlying model.
-	m_underlying_model->appendRow(new_playlist_entry);
+	m_underlying_model->appendRows(new_playlist_entries_as_libentry_ptrs);
 
 	// Find the last row of the underlying model in top-proxy-model coordinates.
 	auto proxy_index = from_underlying_qmodelindex(m_underlying_model->index(std::max(0, m_underlying_model->rowCount()-1), 0));
@@ -486,7 +499,8 @@ Q_ASSERT(new_playlist_entry != nullptr);
 	qDebug() << "Proxy index:" << proxy_index;
 
 	// Pretend the user double-clicked on it.
-	emit onDoubleClicked(proxy_index);
+//	emit onDoubleClicked(proxy_index);
+	emit onActivated(proxy_index);
 }
 
 

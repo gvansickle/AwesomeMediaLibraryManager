@@ -1336,11 +1336,12 @@ void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, s
 	}
 }
 
-void MainWindow::onSendToNowPlaying(std::shared_ptr<LibraryEntry> libentry)
+void MainWindow::onSendToNowPlaying(LibraryEntryMimeData *mime_data)
 {
+M_WARNING("TODO: This appears to not be connected to anything.")
 	// Resend the entry to the "Now Playing" playlist view.
-    qDebug() << "Re-emitting sendToNowPlaying";
-	emit sendToNowPlaying(libentry);
+	qDebug() << "Re-emitting sendToNowPlaying() with mime_data:" << mime_data;
+	emit sendToNowPlaying(mime_data);
 }
 
 /**

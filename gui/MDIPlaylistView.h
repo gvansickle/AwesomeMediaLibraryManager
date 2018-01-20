@@ -90,10 +90,10 @@ public slots:
     /// @}
 
     /**
-     * Slot which appends the incoming library entry and starts playing it.
-     * Intended for use primarily on the single "Now Playing" playlist.
+	 * Slot which appends the incoming library entries and starts playing the first one.
+	 * Intended for use primarily by the single "Now Playing" playlist.
      */
-    void onSendToNowPlaying(std::shared_ptr<LibraryEntry>);
+	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
 
 protected:
 

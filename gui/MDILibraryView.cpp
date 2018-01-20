@@ -36,6 +36,7 @@
 #include "gui/NetworkAwareFileDialog.h"
 #include "logic/proxymodels/QPersistentModelIndexVec.h"
 
+#include <logic/LibraryEntryMimeData.h>
 #include <logic/ModelUserRoles.h>
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
@@ -322,12 +323,15 @@ void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const Q
 	
 	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), row_indexes, this);
 	auto selected_action = context_menu->exec(event->globalPos());
-M_WARNING("TODO");
 
 	if(selected_action == context_menu->m_send_to_now_playing)
 	{
 		// User wants to send tracks to "Now Playing".
-		auto mimedata = selectedRowsToMimeData(row_indexes);
+		LibraryEntryMimeData* mime_data = selectedRowsToMimeData(row_indexes);
+		mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
+
+		// Send tracks to the "Now Playing" playlist and start playing the first one.
+		emit sendToNowPlaying(mime_data);
 	}
 }
 
@@ -407,7 +411,11 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 	Q_ASSERT(item != nullptr);
 
 	// Send it to the "Now Playing" playlist, by way of MainWindow.
-	emit sendToNowPlaying(item);
+	/// @todo Do we want to expand the send here to all indexes in the current selection?
+	LibraryEntryMimeData* mime_data = new LibraryEntryMimeData();
+	mime_data->m_lib_item_list.push_back(item);
+	mime_data->m_drop_target_instructions ={ DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
+	emit sendToNowPlaying(mime_data);
 }
 
 /**

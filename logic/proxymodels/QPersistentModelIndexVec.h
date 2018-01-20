@@ -29,7 +29,28 @@
 class QPersistentModelIndexVec : public QVector<QPersistentModelIndex>
 {
 public:
-	QPersistentModelIndexVec();
+	QPersistentModelIndexVec() = default;
+
+	/// Convert from a const QModelIndexList.
+	QPersistentModelIndexVec(const QModelIndexList& mil);
+
+	/// Conversion operator to a const QModelIndexList.
+	operator const QModelIndexList() const;
 };
+
+/**
+ * Convert a collection of QModelIndex's (e.g. a QModelIndexList) into a QPersistentModelIndexVec (a QVector of QPersistentIndexes).
+ */
+template <template<class> class CollectionType>
+QPersistentModelIndexVec toQPersistentModelIndexVec(const CollectionType<QModelIndex>& mil)
+{
+	QPersistentModelIndexVec retval;
+
+	for(auto i : mil)
+	{
+		retval.push_back(i);
+	}
+	return retval;
+}
 
 #endif /* LOGIC_PROXYMODELS_QPERSISTENTMODELINDEXVEC_H_ */
