@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017,2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -34,6 +34,33 @@ class LibraryEntry;
 
 static const QStringList g_additional_supported_mimetypes = { {"application/x-grvs-libraryentryref"} };
 
+class DropTargetInstructions
+{
+	Q_GADGET
+public:
+	enum ItemDispositionActionEnumerator
+	{
+		IDAE_NA,
+		IDAE_APPEND,
+		IDAE_REPLACE
+	};
+
+	Q_ENUM(ItemDispositionActionEnumerator)
+
+	enum PostAddActionEnumerator
+	{
+		PA_NONE,
+		PA_START_PLAYING,
+	};
+	Q_ENUM(PostAddActionEnumerator)
+
+	/// Which item disposition action to take.
+	ItemDispositionActionEnumerator m_action { IDAE_NA };
+
+	/// Whether to start playing or not.
+	PostAddActionEnumerator m_start_playing { PA_NONE };
+};
+
 class LibraryEntryMimeData : public QMimeData
 {
 	Q_OBJECT
@@ -44,12 +71,21 @@ public:
 	bool hasFormat(const QString& mimetype) const override;
 	QStringList formats() const override;
 
+	/// The LibraryEntry's contained in this MimeData object.
 	std::vector<std::shared_ptr<LibraryEntry>> m_lib_item_list;
+
+	/// Instructions to the target on what the user wants it to do with these LibraryEntry's.
+	/// Intended for use in a context menu's "Send to and play"/"Append"/"Replace" menu actions.
+	DropTargetInstructions m_drop_target_instructions;
 
 private:
 	Q_DISABLE_COPY(LibraryEntryMimeData)
              
 };
+
+// Not declaring this as a metatype.  Needs a copy constructor, which we have privatized.
+// FWIW, QMimeData itself isn't declared as a metatype either.
+//Q_DECLARE_METATYPE(LibraryEntryMimeData)
 
 class MimeDataDumper : public QObject
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,32 +17,29 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LibraryEntryMimeData.h"
+#include "QPersistentModelIndexVec.h"
 
-LibraryEntryMimeData::LibraryEntryMimeData() : QMimeData ()
+#include <QModelIndex>
+#include <QModelIndexList>
+#include <QPersistentModelIndex>
+
+QPersistentModelIndexVec::QPersistentModelIndexVec(const QModelIndexList& mil)
 {
-
+	for(const auto& i : mil)
+	{
+		(*this).push_back(i);
+	}
 }
 
-bool LibraryEntryMimeData::hasFormat(const QString& mimetype) const
+QPersistentModelIndexVec::operator const QModelIndexList() const
 {
-	if(mimetype == g_additional_supported_mimetypes[0] && m_lib_item_list.size() > 0)
+	QModelIndexList retval;
+
+	for(auto i : *this)
 	{
-		return true;
+		retval.push_back(i);
 	}
-	return false;
-}
-
-QStringList LibraryEntryMimeData::formats() const
-{
-	QStringList retval;
-
-	if(m_lib_item_list.size() > 0)
-	{
-		retval.append(g_additional_supported_mimetypes[0]);
-	}
-
-	retval += this->QMimeData::formats();
 
 	return retval;
 }
+

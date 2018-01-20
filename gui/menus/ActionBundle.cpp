@@ -53,6 +53,21 @@ void ActionBundle::appendToMenu(QMenu* menu, bool elide_separators)
 	}
 }
 
+void ActionBundle::prependToMenu(QMenu* menu, bool elide_separators)
+{
+	// We insert our contained actions in reverse order to the top of @a menu.
+	auto first_action_in_menu = menu->actions()[0];
+	for(auto i = 0; i < actions().size(); ++i)
+	{
+		auto action = actions()[actions().size()-i-1];
+		if(!elide_separators || action->isSeparator() == false)
+		{
+			menu->insertAction(first_action_in_menu, action);
+			first_action_in_menu = action;
+		}
+	}
+}
+
 void ActionBundle::appendToToolBar(QToolBar* toolbar, bool elide_separators)
 {
 	for(auto action : actions())

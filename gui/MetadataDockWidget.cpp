@@ -37,10 +37,10 @@
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
-#include <utils/ModelHelpers.h>
 #include <logic/LibrarySortFilterProxyModel.h>
-#include <logic/proxymodels/EntryToMetadataTreeProxyModel.h>
 #include <logic/proxymodels/ModelChangeWatcher.h>
+#include <logic/proxymodels/ModelHelpers.h>
+#include <logic/proxymodels/SelectionFilterProxyModel.h>
 
 #include <utils/Theme.h>
 #include <utils/StringHelpers.h>
@@ -50,7 +50,7 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     setObjectName("MetadataDockWidget");
 
     // Set up the proxy model.
-    m_proxy_model = new EntryToMetadataTreeProxyModel(this);
+    m_proxy_model = new SelectionFilterProxyModel(this);
 	// Set up the watcher.
 	m_proxy_model_watcher = new ModelChangeWatcher(this);
 	m_proxy_model_watcher->setModelToWatch(m_proxy_model);
@@ -81,7 +81,7 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     setWidget(mainWidget);
 
 	// Connect up to the proxy model.  We won't have to disconnect/reconnect since we own this proxy model.
-	connect(m_proxy_model, &EntryToMetadataTreeProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+	connect(m_proxy_model, &SelectionFilterProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
 	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 

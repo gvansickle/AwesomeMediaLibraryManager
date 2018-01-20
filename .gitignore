@@ -1,6 +1,7 @@
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
+/CMakeLists.txt.user
 Testing
 Makefile
 cmake_install.cmake
@@ -17,4 +18,4 @@ moc*.h
 /.kdev4
 /.vscode
 /.idea
-
+/.settings

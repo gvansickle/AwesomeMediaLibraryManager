@@ -17,8 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "DropMenu.h"
-
+#include <gui/menus/DropMenu.h>
 #include "utils/Theme.h"
 
 DropMenu::DropMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
@@ -38,7 +37,7 @@ Qt::DropAction DropMenu::whichAction(QPoint p)
 {
 	QAction *selected_action = exec(p);
 
-	if(selected_action == 0)
+	if(selected_action == nullptr)
 	{
 		// User hit escape.
 		return Qt::IgnoreAction;

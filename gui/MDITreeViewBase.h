@@ -23,15 +23,19 @@
 #include <QContextMenuEvent>
 #include <QTreeView>
 #include <QUrl>
-#include <QEnableSharedFromThis>
 
 #include "mdi/MDIModelViewPair.h"
+#include "logic/proxymodels/ModelHelpers.h"
 
 class QMdiSubWindow;
 class QFileDevice;
 class ModelChangeWatcher;
+class QPersistentModelIndexVec;
+class LibraryEntryMimeData;
 
-
+/**
+ * Base class for the various tree views in the app.
+ */
 class MDITreeViewBase : public QTreeView
 {
     Q_OBJECT
@@ -141,6 +145,7 @@ public slots:
     
     /// View is read-only by default.  Does nothing.
     virtual void onCut() {}
+	/// Copy selection to clipboard.
     virtual void onCopy();
     /// View is read-only by default.  Does nothing.
     virtual void onPaste() {}
@@ -196,6 +201,13 @@ protected:
     /// Not pure-virtual, but designed-to-be-overridden functions.
     ///
 
+	virtual QModelIndexList selectedRowIndexes() const;
+
+	virtual QPersistentModelIndexVec selectedRowPindexes() const;
+
+	/// Creates a LibraryEntryMimeData object containing copies of the given rows.
+	virtual LibraryEntryMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
+
 protected slots:
 
 	/**
@@ -220,7 +232,7 @@ protected slots:
 	 * @param event
 	 * @param index
 	 */
-	virtual void onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index) { Q_UNUSED(event); Q_UNUSED(index); }
+	virtual void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) { Q_UNUSED(event); Q_UNUSED(row_indexes); }
 
 	/**
 	 * Override to implement context menu handler for the viewport (blank area of treeview).

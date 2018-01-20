@@ -303,18 +303,20 @@ set(HEADER_FILES
 	gui/settings/SettingsDialog.h
 	gui/settings/SettingsDialogSideWidget.h
 	resources/VersionInfo.h
-	gui/DropMenu.h
 	logic/ModelUserRoles.h
 	gui/DragDropTreeViewStyleProxy.h
-	utils/ModelHelpers.h
-	logic/proxymodels/EntryToMetadataTreeProxyModel.h
+	logic/proxymodels/ModelHelpers.h
+	logic/proxymodels/SelectionFilterProxyModel.h
 	logic/proxymodels/ModelChangeWatcher.h
 	gui/helpers/Tips.h
+	gui/menus/DropMenu.h
 	gui/menus/LibraryContextMenu.h
 	gui/menus/PlaylistContextMenuViewport.h
 	gui/menus/PlaylistContextMenu.h
 	gui/menus/ActionBundle.h
 	gui/mdi/MDIModelViewPair.h
+	logic/ColumnSpec.h
+	logic/proxymodels/QPersistentModelIndexVec.h
     )
 
 # Source file list.
@@ -368,16 +370,18 @@ set(SOURCE_FILES
 	gui/MDINowPlayingView.cpp
 	gui/MDINowPlayingView.h
 	gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
-	gui/DropMenu.cpp
 	logic/ModelUserRoles.cpp
 	gui/DragDropTreeViewStyleProxy.cpp
-	logic/proxymodels/EntryToMetadataTreeProxyModel.cpp
+	logic/proxymodels/SelectionFilterProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
 	gui/helpers/Tips.cpp
+	gui/menus/DropMenu.cpp
 	gui/menus/LibraryContextMenu.cpp
 	gui/menus/PlaylistContextMenuViewport.cpp
 	gui/menus/PlaylistContextMenu.cpp
 	gui/menus/ActionBundle.cpp
+	logic/ColumnSpec.cpp
+	logic/proxymodels/QPersistentModelIndexVec.cpp
     )
 
 set(HEADER_FILES_UTILS_CONCURRENCY

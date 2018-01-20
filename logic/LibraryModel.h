@@ -28,8 +28,8 @@
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
-#include <QEnableSharedFromThis>
 
+#include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryEntry.h"
 #include "LibraryRescanner.h"
@@ -48,6 +48,7 @@ Q_DECLARE_METATYPE(VecOfUrls);
 Q_DECLARE_METATYPE(VecOfLEs);
 Q_DECLARE_METATYPE(VecOfPMIs);
 
+
 enum LibState
 {
 	Idle,
@@ -55,54 +56,14 @@ enum LibState
 	PopulatingMetadata
 };
 
-struct SectionID
-{
-	enum Enumerator
-	{
-		Status,
-		Title,
-		Artist,
-		Album,
-		Length,
-		FileType,
-		Filename,
-		PLAYLIST_1
-	};
-
-	SectionID() = default;
-	explicit SectionID(int val) : m_val(val) {}
-	SectionID(SectionID::Enumerator e) { m_val = e; }
-
-	virtual operator int() const { return m_val; }
-
-	template<typename DerivedType>
-	operator SectionID() { return DerivedType(); }
-
-protected:
-	int m_val;
-};
-
-
-struct ColumnSpec
-{
-	ColumnSpec(SectionID s, QString dn, QStringList ml, bool fit_col_width = false)
-    {
-        section_id = s;
-        display_name = dn;
-        metadata_list = ml;
-		m_should_fit_column_width_to_contents = fit_col_width;
-	}
-
-    SectionID section_id;
-    QString display_name;
-    QStringList metadata_list;
-	bool m_should_fit_column_width_to_contents {false};
-	bool m_default_to_hidden {false};
-};
-
+/**
+ * The LibraryModel class.
+ */
 class LibraryModel : public QAbstractItemModel
 {
     Q_OBJECT
+
+	using BASE_CLASS = QAbstractItemModel;
 
 signals:
 	/// Signal to ourself to start an asynchronous directory traversal.

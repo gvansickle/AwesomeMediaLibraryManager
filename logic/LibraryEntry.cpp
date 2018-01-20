@@ -375,8 +375,7 @@ QStringList LibraryEntry::getMetadata(QString key) const
 		}
 		else
 		{
-			///return QStringList(QString::fromStdString(album.to8Bit(true)));
-			return QStringList(QString::fromStdString(str));
+			return QStringList(toqstr(str));
 		}
 	}
 	else

@@ -35,6 +35,7 @@ class MDIPlaylistView;
 class LibraryEntry;
 class PlaylistModel;
 
+
 class MDILibraryView : public MDITreeViewBase
 {
     Q_OBJECT
@@ -42,8 +43,13 @@ class MDILibraryView : public MDITreeViewBase
     using BASE_CLASS = MDITreeViewBase;
 
 signals:
-    void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
-    void sendToNowPlaying(std::shared_ptr<LibraryEntry>);
+	/**
+	 * Signal emitted when the user has selected one or more tracks in this view, and wants to
+	 * append/replace them to the "Now Playing" playlist, and possibly start playing them.
+	 */
+	void sendToNowPlaying(LibraryEntryMimeData*);
+
+	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
     void playTrackNowSignal(QUrl);
         
 public:
@@ -128,11 +134,8 @@ M_WARNING("TODO: Override writeFile?");
 
 protected slots:
 
-	void onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index) override;
+	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
-
-	/// @obsolete
-	virtual void onContextMenu(QPoint pos);
 
 	/**
 	 * Slot called when the user activates (hits Enter or double-clicks) on an item.
@@ -141,6 +144,7 @@ protected slots:
 	 */
 	void onActivated(const QModelIndex& index) override;
 
+	/// @note OBSOLETE
 	/// Invoked when user double-clicks on an entry.
 	/// According to Qt5 docs, index will always be valid:
 	/// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:

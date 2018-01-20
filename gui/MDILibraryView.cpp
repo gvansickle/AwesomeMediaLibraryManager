@@ -31,13 +31,19 @@
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 #include <utils/DebugHelpers.h>
+#include <logic/proxymodels/ModelHelpers.h>
 #include "menus/LibraryContextMenu.h"
 #include "gui/NetworkAwareFileDialog.h"
+#include "logic/proxymodels/QPersistentModelIndexVec.h"
+
+#include <logic/LibraryEntryMimeData.h>
+#include <logic/ModelUserRoles.h>
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
 	// Not sure what's going on here, but if I don't set this to something here, the tabs stay "(Untitled)".
-	setWindowTitle("DUMMY");
+	/// @todo Seems like we no longer need to do this.
+//	setWindowTitle("DUMMY");
 
 	m_underlying_model = nullptr;
 
@@ -190,7 +196,7 @@ void MDILibraryView::setModel(QSharedPointer<QAbstractItemModel> model)
     int num_cols = m_underlying_model->columnCount();
     for(int c = 0; c < num_cols; ++c)
     {
-        if(m_underlying_model->headerData(c, Qt::Horizontal, Qt::UserRole) == true)
+		if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
         {
             header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
         }
@@ -310,13 +316,30 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 }
 
 
-void MDILibraryView::onContextMenuIndex(QContextMenuEvent* event, const QModelIndex& index)
+void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes)
 {
-	// Open context menu for the item.
-	qDebug() << "INDEX:" << index;
-	
-	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), this);
-	context_menu->exec(event->globalPos());
+	// Open context menu for a seletion of one or more items.
+	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), row_indexes, this);
+	auto selected_action = context_menu->exec(event->globalPos());
+
+	if(selected_action == context_menu->m_act_append_to_now_playing)
+	{
+		// User wants to append tracks to "Now Playing".
+		LibraryEntryMimeData* mime_data = selectedRowsToMimeData(row_indexes);
+		mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
+
+		// Send tracks to the "Now Playing" playlist and start playing the first one.
+		emit sendToNowPlaying(mime_data);
+	}
+	else if(selected_action == context_menu->m_act_replace_playlist)
+	{
+		// User wants to clear "Now Playing" and replace it with the selection.
+		LibraryEntryMimeData* mime_data = selectedRowsToMimeData(row_indexes);
+		mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_REPLACE, DropTargetInstructions::PA_START_PLAYING };
+
+		// Replace tracks in the "Now Playing" playlist and start playing the first one.
+		emit sendToNowPlaying(mime_data);
+	}
 }
 
 void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
@@ -328,51 +351,10 @@ void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
 	context_menu->exec(event->globalPos());
 }
 
-/// OBSOLETE
-void MDILibraryView::onContextMenu(QPoint pos)
-{
-	// Position to put the menu.
-	auto globalPos = mapToGlobal(pos);
-	// The QModelIndex() that was right-clicked.
-	auto modelindex = indexAt(pos);
-	qDebug() << "INDEX:" << modelindex.row() << modelindex.column();
-	if(!modelindex.isValid())
-	{
-		qDebug() << "Invalid model index, not showing context menu.";
-		return;
-	}
-	auto menu = new QMenu(this);
-	//sendToPlaylistAct = menu->addAction("Send to playlist");
-	addSendToMenuActions(menu);
-	auto playNowAct = menu->addAction("Play");
-	auto extractAct = menu->addAction("Extract to file...");
-	auto selectedItem = menu->exec(globalPos);
-	if(selectedItem)
-	{
-		if(selectedItem->data().isValid())
-		{
-			// Send the selected library item to the selected playlist.
-			emit sendEntryToPlaylist(std::shared_ptr<LibraryEntry>(getTypedModel()->getItem(modelindex)), selectedItem->data().value<std::shared_ptr<PlaylistModel>>());
-		}
-		else if( selectedItem == extractAct)
-		{
-//			auto item = model()->getItem(modelindex);
-//			auto tc = Transcoder();
-//			tc.extract_track(item, "deleteme.flac");
-		}
-		else if(selectedItem == playNowAct)
-		{
-			// Play the track.
-			qDebug() << "PLAY";
-//			onPlayTrack(modelindex);
-		}
-	}
-}
-
 /**
- * Slot called when the user activates (hits Enter or double-clicks) on an item.
- * In the Library view, activating an item sends that item to the "Now Playing" playlist
- * which then starts playing it.
+ * Slot called when the user activates (hits Enter or double-clicks) on an item or items.
+ * In the Library view, activating items appends the items to the "Now Playing" playlist
+ * and then starts playing the first one.
  */
 void MDILibraryView::onActivated(const QModelIndex& index)
 {
@@ -383,19 +365,20 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 	// which then starts playing it.
 
 	qDebug() << "Activated index:" << index;
-	auto underlying_model_index = to_underlying_qmodelindex(index);
 
-	Q_ASSERT(underlying_model_index.isValid());
+	// The activated item should be in the current selection.
+	/// @todo Add a check for that.
+	auto selected_row_pindexes = selectedRowPindexes();
 
-	qDebug() << "Underlying index:" << underlying_model_index;
+	if(selected_row_pindexes.size() == 0)
+	{
+		qWarning() << "Should have more than one selected row, got 0";
+	}
 
-	// Get the item that was activated.
-	auto item = m_underlying_model->getItem(underlying_model_index);
-
-	Q_ASSERT(item != nullptr);
-
-	// Send it to the "Now Playing" playlist, by way of MainWindow.
-	emit sendToNowPlaying(item);
+	// Send the tracks to the "Now Playing" playlist, by way of MainWindow.
+	LibraryEntryMimeData* mime_data = selectedRowsToMimeData(selected_row_pindexes);
+	mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
+	emit sendToNowPlaying(mime_data);
 }
 
 /**
@@ -404,6 +387,8 @@ void MDILibraryView::onActivated(const QModelIndex& index)
  */
 void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 {
+	Q_UNUSED(index);
+#if 0 /// We're handling this in the onActivated() handler at the moment.
 	// Should always be valid.
 	Q_ASSERT(index.isValid());
 
@@ -419,7 +404,6 @@ void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 	auto item = m_underlying_model->getItem(underlying_model_index);
 
 	Q_ASSERT(item != nullptr);
-#if 0 /// We're handling this in the onActivated() handler at the moment.
 	// Send it to the "Now Playing" playlist, by way of MainWindow.
 	emit sendToNowPlaying(item);
 #endif

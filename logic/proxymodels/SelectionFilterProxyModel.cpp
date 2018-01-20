@@ -17,22 +17,21 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "EntryToMetadataTreeProxyModel.h"
-
+#include <logic/proxymodels/ModelHelpers.h>
+#include <logic/proxymodels/SelectionFilterProxyModel.h>
 #include <QDebug>
 
-#include <utils/ModelHelpers.h>
 
-EntryToMetadataTreeProxyModel::EntryToMetadataTreeProxyModel(QObject *parent) : BASE_CLASS(parent)
+SelectionFilterProxyModel::SelectionFilterProxyModel(QObject *parent) : BASE_CLASS(parent)
 {
 	setDynamicSortFilter(true);
 }
 
-EntryToMetadataTreeProxyModel::~EntryToMetadataTreeProxyModel()
+SelectionFilterProxyModel::~SelectionFilterProxyModel()
 {
 }
 
-void EntryToMetadataTreeProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
+void SelectionFilterProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
 	qDebug() << "Setting source model to:" << sourceModel << "root model is:" << getRootModel(sourceModel);
 
@@ -42,13 +41,13 @@ void EntryToMetadataTreeProxyModel::setSourceModel(QAbstractItemModel* sourceMod
 	BASE_CLASS::setSourceModel(sourceModel);
 }
 
-void EntryToMetadataTreeProxyModel::setSelectionModel(QItemSelectionModel* filter_selection_model)
+void SelectionFilterProxyModel::setSelectionModel(QItemSelectionModel* filter_selection_model)
 {
 	m_filter_selection_model = filter_selection_model;
 
 	// Connect up the signals and slots.
-	connect(m_filter_selection_model, &QItemSelectionModel::selectionChanged, this, &EntryToMetadataTreeProxyModel::onSelectionChanged);
-	connect(m_filter_selection_model, &QItemSelectionModel::modelChanged, this, &EntryToMetadataTreeProxyModel::onModelChanged);
+	connect(m_filter_selection_model, &QItemSelectionModel::selectionChanged, this, &SelectionFilterProxyModel::onSelectionChanged);
+	connect(m_filter_selection_model, &QItemSelectionModel::modelChanged, this, &SelectionFilterProxyModel::onModelChanged);
 
 	// If there's already a selection, set it up.
 	if(m_filter_selection_model && m_filter_selection_model->hasSelection())
@@ -58,12 +57,12 @@ void EntryToMetadataTreeProxyModel::setSelectionModel(QItemSelectionModel* filte
 	}
 }
 
-QItemSelectionModel* EntryToMetadataTreeProxyModel::selectionModel() const
+QItemSelectionModel* SelectionFilterProxyModel::selectionModel() const
 {
 	return m_filter_selection_model;
 }
 
-void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelIndex& source_index_to_filter_on)
+void SelectionFilterProxyModel::setSourceIndexToShow(const QPersistentModelIndex& source_index_to_filter_on)
 {
 	qDebug() << "Setting selected index to:" << source_index_to_filter_on;
 
@@ -81,7 +80,7 @@ void EntryToMetadataTreeProxyModel::setSourceIndexToShow(const QPersistentModelI
 	endResetModel();
 }
 
-bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
+bool SelectionFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 {
 	if(!m_current_selected_index.isValid())
 	{
@@ -102,7 +101,7 @@ bool EntryToMetadataTreeProxyModel::filterAcceptsRow(int sourceRow, const QModel
 	return false;
 }
 
-void EntryToMetadataTreeProxyModel::onSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
+void SelectionFilterProxyModel::onSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected)
 {
 	// Only pick the first selected index for now.
 	auto source_rows = m_filter_selection_model->selectedRows();
@@ -117,7 +116,7 @@ void EntryToMetadataTreeProxyModel::onSelectionChanged(const QItemSelection& sel
 	}
 }
 
-void EntryToMetadataTreeProxyModel::onModelChanged(QAbstractItemModel* model)
+void SelectionFilterProxyModel::onModelChanged(QAbstractItemModel* model)
 {
 	qDebug() << "MODEL CHANGED:" << model;
 

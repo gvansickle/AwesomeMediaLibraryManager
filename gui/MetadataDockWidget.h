@@ -32,7 +32,7 @@ class QItemSelectionModel;
 class QTreeWidgetItem;
 class QTreeView;
 
-class EntryToMetadataTreeProxyModel;
+class SelectionFilterProxyModel;
 class ModelChangeWatcher;
 
 
@@ -64,7 +64,7 @@ private:
 	/**
 	 * The proxy model we'll use to select out just the currently selected or playing track.
 	 */
-    EntryToMetadataTreeProxyModel* m_proxy_model { nullptr };
+    SelectionFilterProxyModel* m_proxy_model { nullptr };
 
 	ModelChangeWatcher* m_proxy_model_watcher { nullptr };
 

@@ -29,14 +29,17 @@
 #include <QClipboard>
 #include <QHeaderView>
 #include <QSaveFile>
+#include <logic/LibraryEntryMimeData.h>
 #include <logic/LibrarySortFilterProxyModel.h>
-#include <utils/ModelHelpers.h>
-
+#include <logic/proxymodels/ModelHelpers.h>
 #include "gui/NetworkAwareFileDialog.h"
 #include "utils/ConnectHelpers.h"
 #include "utils/DebugHelpers.h"
 #include "helpers/Tips.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
+#include "logic/proxymodels/ModelHelpers.h"
+#include "logic/proxymodels/QPersistentModelIndexVec.h"
+
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {
@@ -119,7 +122,7 @@ M_WARNING("EXPERIMENTAL");
 	// Hook things up for our tri-state column-sorting implementation.
 	connect(header(), &QHeaderView::sectionClicked, this, &MDITreeViewBase::onSectionClicked);
 
-	// Connect up our custom Header context menu.
+	// Connect up our custom HeaderView context menu.
 	connect(header(), &QHeaderView::customContextMenuRequested, this, &MDITreeViewBase::headerMenu);
 }
 
@@ -271,14 +274,13 @@ void MDITreeViewBase::onCopy()
     // Get the current selection.
     QModelIndexList mil = selectionModel()->selectedRows();
 
-    if(mil.isEmpty())
-    {
-        // Nothing to copy.
-        return;
-    }
+	LibraryEntryMimeData* copied_rows = selectedRowsToMimeData(mil);
 
-    auto m = model();
-    QMimeData* copied_rows = m->mimeData(mil);
+	if(copied_rows == nullptr)
+	{
+		qWarning() << "Couldn't get a QMimeData object for selection's QModelIndexList:" << mil;
+		return;
+	}
 
     // Copy the rows to the clipboard.
     QClipboard *clipboard = QGuiApplication::clipboard();
@@ -304,6 +306,33 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 	}
 }
 
+QModelIndexList MDITreeViewBase::selectedRowIndexes() const
+{
+	return selectionModel()->selectedRows(0);
+}
+
+QPersistentModelIndexVec MDITreeViewBase::selectedRowPindexes() const
+{
+	return QPersistentModelIndexVec(selectedRowIndexes());
+}
+
+LibraryEntryMimeData* MDITreeViewBase::selectedRowsToMimeData(const QModelIndexList& row_indexes)
+{
+	auto mil = row_indexes;
+
+	if(mil.isEmpty())
+	{
+		// Nothing to copy.
+		qWarning() << "EMPTY MODELINDEXLIST, RETURNING NULLPTR" <<  row_indexes;
+		return nullptr;
+	}
+
+	auto m = model();
+	LibraryEntryMimeData* copied_rows = qobject_cast<LibraryEntryMimeData*>(m->mimeData(mil));
+
+	return copied_rows;
+}
+
 void MDITreeViewBase::documentWasModified()
 {
 	setWindowModified(isModified());
@@ -312,7 +341,7 @@ void MDITreeViewBase::documentWasModified()
 void MDITreeViewBase::headerMenu(QPoint pos)
 {
 	auto globalPos = mapToGlobal(pos);
-	auto menu = new QMenu("Show/Hide Columns");
+	auto menu = new QMenu(tr("Show/Hide Columns"));
 	for(qint64 col = 0;  col < model()->columnCount(); ++col)
 	{
 		auto action = new QAction(menu);
@@ -377,10 +406,18 @@ void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
 
 	if(index.isValid())
 	{
-		// Open context menu for the item.
+		// Open context menu for the current selection.
 		qDebug() << "MODEL INDEX:" << index;
 
-		onContextMenuIndex(event, index);
+		// This item should be in the current selection.
+		auto selected_row_pindexes = selectedRowPindexes();
+
+		if(selected_row_pindexes.size() == 0)
+		{
+			qWarning() << "Should have more than one selected row, got 0";
+		}
+
+		onContextMenuSelectedRows(event, selected_row_pindexes);
 	}
 	else
 	{
@@ -403,6 +440,7 @@ void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QIt
 	if(!selected.empty())
 	{
 		emit copyAvailable(true);
+		// Cut is never available if we're read-only.
 		emit cutAvailable(!isReadOnly());
 	}
 	else

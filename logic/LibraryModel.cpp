@@ -305,7 +305,13 @@ QMap<int, QVariant> LibraryModel::itemData(const QModelIndex& index) const
 QHash<int, QByteArray> LibraryModel::roleNames() const
 {
 	auto retval = QAbstractItemModel::roleNames();
-	retval.insert(ModelUserRoles::PointerToItemRole, "PointerToItemRole");
+
+	// Append our user role names.
+	for(int i = 0; i<ModelUserRoles::keyCount(); i++)
+	{
+		qDebug() << "ENUM:" << ModelUserRoles::key(i) << "Val:" << ModelUserRoles::value(i);
+		retval.insert(ModelUserRoles::value(i), ModelUserRoles::valueToKey(ModelUserRoles::value(i)));
+	}
 	return retval;
 }
 
@@ -314,7 +320,9 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 	Q_ASSERT(section >= -1);
 	if(orientation == Qt::Horizontal)
 	{
-		if(role == Qt::DisplayRole)
+		switch(role)
+		{
+		case Qt::DisplayRole:
 		{
 			if(section+1 > static_cast<int>(m_columnSpecs.size()))
 			{
@@ -323,10 +331,19 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 			auto dn = m_columnSpecs[section].display_name;
 			return QVariant(dn);
 		}
-		else if(role == Qt::UserRole)
+		case ModelUserRoles::HeaderViewSectionID:
+		{
+			return QVariant::fromValue(m_columnSpecs[section].section_id);
+		}
+		case ModelUserRoles::HeaderViewSectionShouldFitWidthToContents:
 		{
 			return m_columnSpecs[section].m_should_fit_column_width_to_contents;
 		}
+		default:
+			// Punt to base class.
+			return BASE_CLASS::headerData(section, orientation, role);
+		}
+
 	}
 
 	return QVariant();
@@ -762,6 +779,7 @@ void LibraryModel::createCacheFile(QUrl root_url)
 			return;
 		}
 	}
+
 	// Set up a cache file.
 	qDebug() << "Cachedir:" << m_cachedir;
 	QUrl cacheurl = m_cachedir.resolved(QUrl(QString("library_cache_%1_XXXXXX.json").arg(root_url.fileName())));
@@ -775,6 +793,10 @@ void LibraryModel::createCacheFile(QUrl root_url)
 	temp_lib_cache_file.setAutoRemove(false);
 	m_lib_cache_file.setFileName(temp_lib_cache_file.fileName());
 	temp_lib_cache_file.close();
+	// Note here that we're depending on this behavior of QTemporaryFile:
+	// "Reopening a QTemporaryFile after calling close() is safe. For as long as the QTemporaryFile object itself is not destroyed,
+	// the unique temporary file will exist and be kept open internally by QTemporaryFile."
+	// (http://doc.qt.io/qt-5/qtemporaryfile.html)
 	if(!m_lib_cache_file.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		qCritical() << "Couldn't open cache file" << m_lib_cache_file.fileName() << ":" << m_lib_cache_file.errorString();

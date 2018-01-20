@@ -1,5 +1,6 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018
+ * Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -23,6 +24,11 @@
 #include <QObject>
 #include <QMenu>
 #include <QAction>
+#include <QItemSelection>
+
+#include "utils/DebugHelpers.h"
+#include "logic/proxymodels/ModelHelpers.h"
+#include "ActionBundle.h"
 
 class QString;
 
@@ -31,11 +37,37 @@ class LibraryContextMenu : public QMenu
 {
 	Q_OBJECT
 	
+	using BASE_CLASS = QMenu;
+
 public:
+	/**
+	 * Constructor for blank area context menu.
+	 */
 	explicit LibraryContextMenu(const QString &title, QWidget *parent = Q_NULLPTR);
+
+	/**
+	 * Constructor for a context menu for a selection of one or more items.
+	 * @a selection is in View-model index space, so depending on the use, it may need to be
+	 * translated to source-model space.
+	 */
+	explicit LibraryContextMenu(const QString &title, const QPersistentModelIndexVec& selected_rows, QWidget *parent = Q_NULLPTR);
+
+protected:
+
+	/**
+	 * Return a QString
+	 */
+	QStringList getSongsAsTooltips(const QPersistentModelIndexVec& row_indexes);
 
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
+
+M_WARNING("TODO: These shouldn't be public.  Not sure what would be a better way to do this atm.");
+public:
+	ActionBundle* m_ab_to_now_playing;
+	QAction* m_act_append_to_now_playing;
+	QAction* m_act_replace_playlist;
+	QAction* m_act_search_wikipedia;
 };
 
 #endif /* LIBRARYCONTEXTMENU_H */
