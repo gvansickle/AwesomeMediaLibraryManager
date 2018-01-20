@@ -52,6 +52,11 @@ public:
 	void appendToMenu(QMenu* menu, bool elide_separators = false);
 
 	/**
+	 * Does not transfer ownership of the QActions to @a menu.
+	 */
+	void prependToMenu(QMenu* menu, bool elide_separators = false);
+
+	/**
 	 * Does not transfer ownership of the QActions to @a toolbar.
 	 */
 	void appendToToolBar(QToolBar* toolbar, bool elide_separators = false);

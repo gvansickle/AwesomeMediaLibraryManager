@@ -137,9 +137,6 @@ protected slots:
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;
 
-	/// @obsolete
-	virtual void onContextMenu(QPoint pos);
-
 	/**
 	 * Slot called when the user activates (hits Enter or double-clicks) on an item.
 	 * In the Library view, activating an item sends that item to the "Now Playing" playlist
@@ -147,6 +144,7 @@ protected slots:
 	 */
 	void onActivated(const QModelIndex& index) override;
 
+	/// @note OBSOLETE
 	/// Invoked when user double-clicks on an entry.
 	/// According to Qt5 docs, index will always be valid:
 	/// http://doc.qt.io/qt-5/qabstractitemview.html#doubleClicked:

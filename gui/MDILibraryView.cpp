@@ -318,19 +318,26 @@ LibrarySortFilterProxyModel* MDILibraryView::getTypedModel()
 
 void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes)
 {
-	// Open context menu for the item.
-//	qDebug() << "ROW INDEXES:" << row_indexes;
-	
+	// Open context menu for a seletion of one or more items.
 	auto context_menu = new LibraryContextMenu(tr("Library Context Menu"), row_indexes, this);
 	auto selected_action = context_menu->exec(event->globalPos());
 
-	if(selected_action == context_menu->m_send_to_now_playing)
+	if(selected_action == context_menu->m_act_append_to_now_playing)
 	{
-		// User wants to send tracks to "Now Playing".
+		// User wants to append tracks to "Now Playing".
 		LibraryEntryMimeData* mime_data = selectedRowsToMimeData(row_indexes);
 		mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
 
 		// Send tracks to the "Now Playing" playlist and start playing the first one.
+		emit sendToNowPlaying(mime_data);
+	}
+	else if(selected_action == context_menu->m_act_replace_playlist)
+	{
+		// User wants to clear "Now Playing" and replace it with the selection.
+		LibraryEntryMimeData* mime_data = selectedRowsToMimeData(row_indexes);
+		mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_REPLACE, DropTargetInstructions::PA_START_PLAYING };
+
+		// Replace tracks in the "Now Playing" playlist and start playing the first one.
 		emit sendToNowPlaying(mime_data);
 	}
 }
@@ -344,51 +351,10 @@ void MDILibraryView::onContextMenuViewport(QContextMenuEvent* event)
 	context_menu->exec(event->globalPos());
 }
 
-/// OBSOLETE
-void MDILibraryView::onContextMenu(QPoint pos)
-{
-	// Position to put the menu.
-	auto globalPos = mapToGlobal(pos);
-	// The QModelIndex() that was right-clicked.
-	auto modelindex = indexAt(pos);
-	qDebug() << "INDEX:" << modelindex.row() << modelindex.column();
-	if(!modelindex.isValid())
-	{
-		qDebug() << "Invalid model index, not showing context menu.";
-		return;
-	}
-	auto menu = new QMenu(this);
-	//sendToPlaylistAct = menu->addAction("Send to playlist");
-	addSendToMenuActions(menu);
-	auto playNowAct = menu->addAction("Play");
-	auto extractAct = menu->addAction("Extract to file...");
-	auto selectedItem = menu->exec(globalPos);
-	if(selectedItem)
-	{
-		if(selectedItem->data().isValid())
-		{
-			// Send the selected library item to the selected playlist.
-			emit sendEntryToPlaylist(std::shared_ptr<LibraryEntry>(getTypedModel()->getItem(modelindex)), selectedItem->data().value<std::shared_ptr<PlaylistModel>>());
-		}
-		else if( selectedItem == extractAct)
-		{
-//			auto item = model()->getItem(modelindex);
-//			auto tc = Transcoder();
-//			tc.extract_track(item, "deleteme.flac");
-		}
-		else if(selectedItem == playNowAct)
-		{
-			// Play the track.
-			qDebug() << "PLAY";
-//			onPlayTrack(modelindex);
-		}
-	}
-}
-
 /**
  * Slot called when the user activates (hits Enter or double-clicks) on an item or items.
- * In the Library view, activating items sends the items to the "Now Playing" playlist
- * which then starts playing the first one.
+ * In the Library view, activating items appends the items to the "Now Playing" playlist
+ * and then starts playing the first one.
  */
 void MDILibraryView::onActivated(const QModelIndex& index)
 {

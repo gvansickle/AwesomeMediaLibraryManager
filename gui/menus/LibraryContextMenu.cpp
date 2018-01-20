@@ -44,18 +44,13 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 
 	auto mw = MainWindow::getInstance();
 
-	m_act_append_to_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Append to Now Playing"), this);
-	m_act_replace_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Replace Now Playing with this"), this);
-
 //	setTextandTips();
-	
-	addAction(m_act_append_to_playlist);
-	addAction(m_act_replace_playlist);
-	addSeparator();
 
-	addAction("Song properties...");
-
-	addSeparator();
+	// Create these actions, but don't add them to the menu.  They'll be used by the has-a-selection constructor.
+	m_ab_to_now_playing = new ActionBundle(parent);
+	m_act_append_to_now_playing = make_action(Theme::iconFromTheme("go-next"), tr("Append to Now Playing"), m_ab_to_now_playing);
+	m_act_replace_playlist = make_action(Theme::iconFromTheme("go-next"), tr("Replace Now Playing with this"), m_ab_to_now_playing);
+	m_ab_to_now_playing->addSection("");
 
 	// Add cut/copy/paste to the context menu.
 	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
@@ -99,25 +94,28 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 
 //			auto songs_as_tooltips = getSongsAsTooltips(row_indexes);
 
-			QString send_to_now_playing_text;
+			// Set the appropriate text for the "Append to" and "Replace with" actions.
+			QString append_to_now_playing_text, replace_now_playing_text;
 			if(is_multirow)
 			{
-				send_to_now_playing_text = tr("Send selected items to 'Now Playing'");
+				append_to_now_playing_text = tr("Append %1 selected items to 'Now Playing'").arg(row_indexes.size());
+				replace_now_playing_text = tr("Replace 'Now Playing' with %1 selected items").arg(row_indexes.size());
 			}
 			else
 			{
-				send_to_now_playing_text = tr("Send '%1' to 'Now Playing'").arg(track_name.toString());
+				append_to_now_playing_text = tr("Append '%1' to 'Now Playing'").arg(track_name.toString());
+				replace_now_playing_text = tr("Replace 'Now Playing' with '%1'").arg(track_name.toString());
 			}
-			m_send_to_now_playing = make_action(Theme::iconFromTheme("go-next"), send_to_now_playing_text, parent);
-//			m_send_to_now_playing->setToolTip(songs_as_tooltips.join("\n"));
-			// Insert this action at the top of the menu.
-			insertAction(m_act_append_to_playlist, m_send_to_now_playing);
-			setToolTipsVisible(true);
+
+			m_act_append_to_now_playing->setText(append_to_now_playing_text);
+			m_act_replace_playlist->setText(replace_now_playing_text);
+			// Insert these actions at the top of the menu.
+			m_ab_to_now_playing->prependToMenu(this);
 		}
 
 		addSeparator();
 		m_act_search_wikipedia = make_action(Theme::iconFromTheme("edit-web-search"), tr("Search Wikipedia for..."), this);
-		m_act_search_wikipedia->setDisabled(true); /// @todo
+		m_act_search_wikipedia->setDisabled(true); /// @todo Actually implement this.
 		addAction(m_act_search_wikipedia);
 	}
 }

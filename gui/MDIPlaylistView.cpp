@@ -487,6 +487,13 @@ M_WARNING("/// @todo This seems terribly convoluted.  Seems like this view and m
 		  "PlaylistModelEntry's");
 	auto new_playlist_entries_as_libentry_ptrs = toLibraryEntrySharedPtrs(new_playlist_entries);
 
+	if(mime_data->m_drop_target_instructions.m_action == DropTargetInstructions::IDAE_REPLACE)
+	{
+		// User wants to replace the existing contents of "Now Playing".
+		selectAll();
+		onDelete();
+	}
+
 	// This will be an append, so get the last row index of the View's model.
 	// That's the one we'll activate.
 M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this view is sorted.  Proxy vs. Underlying model issue.");
@@ -502,7 +509,6 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 		emit onActivated(proxy_index);
 	}
 }
-
 
 
 void MDIPlaylistView::playlistPositionChanged(qint64 position)
