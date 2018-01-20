@@ -159,6 +159,7 @@ MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, Q
 {
 	MDIModelViewPair retval;
 	retval.setModel(model);
+	retval.m_model_was_existing = true;
 
 	retval.m_view = new MDILibraryView(parent);
 	static_cast<MDILibraryView*>(retval.m_view)->setModel(model);

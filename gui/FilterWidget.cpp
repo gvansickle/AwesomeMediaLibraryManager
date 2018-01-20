@@ -43,12 +43,12 @@ FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(
 
 	menu->addSeparator();
 	m_patternGroup->setExclusive(true);
-	QAction *patternAction = menu->addAction("Fixed String");
+	QAction *patternAction = menu->addAction(tr("Fixed String"));
 	patternAction->setData(QVariant(int(QRegExp::FixedString)));
 	patternAction->setCheckable(true);
 	patternAction->setChecked(true);
 	m_patternGroup->addAction(patternAction);
-	patternAction = menu->addAction("Regular Expression");
+	patternAction = menu->addAction(tr("Regular Expression"));
 	patternAction->setCheckable(true);
 	patternAction->setData(QVariant(int(QRegExp::RegExp2)));
 	m_patternGroup->addAction(patternAction);

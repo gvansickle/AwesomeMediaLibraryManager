@@ -25,6 +25,7 @@
 #include "MDINowPlayingView.h"
 
 #include <QMainWindow>
+#include <QStandardItem>
 #include <QUrl>
 
 #include <vector>
@@ -158,6 +159,8 @@ private slots:
 private:
     Q_DISABLE_COPY(MainWindow)
 
+	/// @name Startup Initialization
+	/// @{
     void createActions();
     void createActionsEdit();
 	void createActionsView();
@@ -166,11 +169,15 @@ private:
     void createToolBars();
     void createStatusBar();
 	void createDockWidgets();
+	void initRootModels();
+	/// @}
 
     /// Equivalent of a "File->New" action for the Now Playing model/view.
     void newNowPlaying();
 
 	void addChildMDIView(MDITreeViewBase* child);
+	void addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair);
+	void addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpair);
 	MDITreeViewBase* activeChildMDIView();
     
 	/// @name Bulk Signal/Slot Connection management.
@@ -230,6 +237,11 @@ private:
 
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
+
+	/// The "model of models", used for the collection dock widget.
+	QPointer<QStandardItemModel> m_model_of_model_view_pairs;
+	QStandardItem* m_sitem_libraries;
+	QStandardItem* m_playlistsItem;
 
     /// The library models.
     std::vector<QSharedPointer<LibraryModel>> m_libmodels;
@@ -326,7 +338,7 @@ private:
     QToolBar* m_filterToolbar;
 
     /// Docks
-    CollectionDockWidget* m_libraryDockWidget;
+	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
 
     /// The Activity Progress Widget.

@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QMenu>
 #include <QMessageBox>
+#include <QPointer>
 
 
 CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent, Qt::WindowFlags flags)
@@ -42,17 +43,17 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 
 	m_sources_model = new QStandardItemModel(this);
 
-    collectionTreeView = new QTreeView(this);
-	collectionTreeView->setModel(m_sources_model);
-    collectionTreeView->setRootIsDecorated(false);
+	m_collection_tree_view = new QTreeView(this);
+	m_collection_tree_view->setModel(m_sources_model);
+	m_collection_tree_view->setRootIsDecorated(false);
     // Want to have the tree always expanded.
-    collectionTreeView->setExpandsOnDoubleClick(false);
-    collectionTreeView->setHeaderHidden(true);
+	m_collection_tree_view->setExpandsOnDoubleClick(false);
+	m_collection_tree_view->setHeaderHidden(true);
     // Prevent double-click from starting a file rename (i.e. edit) operation.
-    collectionTreeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+	m_collection_tree_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // Hook up the context menu.
-    collectionTreeView->setContextMenuPolicy(Qt::DefaultContextMenu);
-    setWidget(collectionTreeView);
+	m_collection_tree_view->setContextMenuPolicy(Qt::DefaultContextMenu);
+	setWidget(m_collection_tree_view);
 
 	m_localLibsItem = new QStandardItem("Libraries");
 	m_localLibsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
@@ -67,23 +68,29 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 	m_sources_model->invisibleRootItem()->appendRows({m_localLibsItem, m_playlistsItem});
 
     // Connect the double-click signal to a custom handler.
-	connect(collectionTreeView, &QTreeView::doubleClicked, this, &CollectionDockWidget::tree_doubleclick);
+	connect(m_collection_tree_view, &QTreeView::doubleClicked, this, &CollectionDockWidget::tree_doubleclick);
 
-    collectionTreeView->expandAll();
+	m_collection_tree_view->expandAll();
+}
+
+void CollectionDockWidget::setModel(QPointer<QStandardItemModel> model)
+{
+	m_sources_model = model;
+	m_collection_tree_view->setModel(m_sources_model);
 }
 
 void CollectionDockWidget::addLibrary(LocalLibraryItem* lib)
 {
 	qDebug() << "Adding local library: " << lib;
 	m_localLibsItem->appendRow(lib);
-	collectionTreeView->expandAll();
+	m_collection_tree_view->expandAll();
 }
 
 void CollectionDockWidget::addPlaylist(PlaylistItem* playlist)
 {
 	qDebug() << "Adding playlist:" << playlist;
 	m_playlistsItem->appendRow(playlist);
-	collectionTreeView->expandAll();
+	m_collection_tree_view->expandAll();
 }
 
 void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
@@ -92,9 +99,9 @@ void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
 
     // CollectionDockWidget actually got the right-click event after the QTreeView ignored it,
     // so we have to convert the position back.
-    auto treepos = collectionTreeView->mapFromParent(event->pos());
+	auto treepos = m_collection_tree_view->mapFromParent(event->pos());
 
-    auto modelindex = collectionTreeView->indexAt(treepos);
+	auto modelindex = m_collection_tree_view->indexAt(treepos);
     auto parentindex = modelindex.parent();
 	///qDebug() << QString("Parent: {}/{}/{}".format(modelindex.parent(), modelindex.parent().row(), modelindex.parent().column()));
 
@@ -122,7 +129,7 @@ void CollectionDockWidget::doLibraryContextMenu(QContextMenuEvent* event, QPoint
 	// Position to put the menu.
 	QPoint globalPos = mapToGlobal(pos);
 	// The QModelIndex() that was right-clicked.
-	QModelIndex modelindex = collectionTreeView->indexAt(treepos);
+	QModelIndex modelindex = m_collection_tree_view->indexAt(treepos);
 	qDebug() << QString("INDEX:") << modelindex.row() << modelindex.column();
 	if(!modelindex.isValid())
 	{
@@ -176,6 +183,13 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 {
 	if(!modelindex.isValid())
 	{
+		return;
+	}
+
+	auto libmodel = modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
+	if(libmodel)
+	{
+		emit showLibViewSignal(libmodel);
 		return;
 	}
 

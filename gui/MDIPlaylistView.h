@@ -89,10 +89,11 @@ public slots:
 
     /// @}
 
-    /**
-	 * Slot which appends the incoming library entries and starts playing the first one.
-	 * Intended for use primarily by the single "Now Playing" playlist.
-     */
+	/**
+	 * Slot which accepts a LibraryEntryMimeData* from a signal.
+	 * Appends or replaces the incoming tracks in @a mime_data and possibly starts playing the first one.
+	 * @note Deletes mime_data.
+	 */
 	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
 
 protected:

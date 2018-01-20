@@ -35,8 +35,11 @@ class FilterWidget : public QLineEdit
 	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
 	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
 
+signals:
+	void filterChanged();
+
 public:
-	explicit FilterWidget(QWidget *parent = 0);
+	explicit FilterWidget(QWidget *parent = nullptr);
 
 	Qt::CaseSensitivity caseSensitivity() const;
 	void setCaseSensitivity(Qt::CaseSensitivity);
@@ -44,8 +47,6 @@ public:
 	QRegExp::PatternSyntax patternSyntax() const;
 	void setPatternSyntax(QRegExp::PatternSyntax);
 
-signals:
-	void filterChanged();
 
 public slots:
 

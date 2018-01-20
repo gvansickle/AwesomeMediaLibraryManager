@@ -135,6 +135,8 @@ signals:
 public:
     explicit CollectionDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 
+	void setModel(QPointer<QStandardItemModel> model);
+
 	void addLibrary(LocalLibraryItem* library);
 	void addPlaylist(PlaylistItem* playlist);
 
@@ -158,7 +160,7 @@ private:
 	Q_DISABLE_COPY(CollectionDockWidget)
 
 	QStandardItemModel* m_sources_model;
-    QTreeView* collectionTreeView;
+	QTreeView* m_collection_tree_view;
 
 	/// @name "Category" items.
 	/// @{
