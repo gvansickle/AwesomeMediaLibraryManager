@@ -43,6 +43,19 @@ void SelectionFilterProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 
 void SelectionFilterProxyModel::setSelectionModel(QItemSelectionModel* filter_selection_model)
 {
+	if(filter_selection_model == nullptr)
+	{
+		qWarning() << "ATTEMPT TO SET NULL SELECTION MODEL";
+		return;
+	}
+
+	if(m_filter_selection_model)
+	{
+		// Already have a selection model set.  Disconnect from it.
+		qDebug() << "Disconnecting from current selection model:" << m_filter_selection_model;
+		m_filter_selection_model->disconnect(this);
+	}
+
 	m_filter_selection_model = filter_selection_model;
 
 	// Connect up the signals and slots.
