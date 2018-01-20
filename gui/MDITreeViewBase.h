@@ -201,8 +201,12 @@ protected:
     /// Not pure-virtual, but designed-to-be-overridden functions.
     ///
 
+	virtual QModelIndexList selectedRowIndexes() const;
+
+	virtual QPersistentModelIndexVec selectedRowPindexes() const;
+
 	/// Creates a LibraryEntryMimeData object containing copies of the given rows.
-	LibraryEntryMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
+	virtual LibraryEntryMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
 
 protected slots:
 

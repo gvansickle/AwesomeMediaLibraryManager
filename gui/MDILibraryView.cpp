@@ -386,9 +386,9 @@ void MDILibraryView::onContextMenu(QPoint pos)
 }
 
 /**
- * Slot called when the user activates (hits Enter or double-clicks) on an item.
- * In the Library view, activating an item sends that item to the "Now Playing" playlist
- * which then starts playing it.
+ * Slot called when the user activates (hits Enter or double-clicks) on an item or items.
+ * In the Library view, activating items sends the items to the "Now Playing" playlist
+ * which then starts playing the first one.
  */
 void MDILibraryView::onActivated(const QModelIndex& index)
 {
@@ -405,16 +405,25 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 
 	qDebug() << "Underlying index:" << underlying_model_index;
 
+#if 0
 	// Get the item that was activated.
 	auto item = m_underlying_model->getItem(underlying_model_index);
 
 	Q_ASSERT(item != nullptr);
+#endif
 
-	// Send it to the "Now Playing" playlist, by way of MainWindow.
-	/// @todo Do we want to expand the send here to all indexes in the current selection?
-	LibraryEntryMimeData* mime_data = new LibraryEntryMimeData();
-	mime_data->m_lib_item_list.push_back(item);
-	mime_data->m_drop_target_instructions ={ DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
+	// The activated item should be in the current selection.
+	/// @todo Add a check for that.
+	auto selected_row_pindexes = selectedRowPindexes();
+
+	if(selected_row_pindexes.size() == 0)
+	{
+		qWarning() << "Should have more than one selected row, got 0";
+	}
+
+	// Send the tracks to the "Now Playing" playlist, by way of MainWindow.
+	LibraryEntryMimeData* mime_data = selectedRowsToMimeData(selected_row_pindexes);
+	mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
 	emit sendToNowPlaying(mime_data);
 }
 
@@ -424,6 +433,8 @@ void MDILibraryView::onActivated(const QModelIndex& index)
  */
 void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 {
+	Q_UNUSED(index);
+#if 0 /// We're handling this in the onActivated() handler at the moment.
 	// Should always be valid.
 	Q_ASSERT(index.isValid());
 
@@ -439,7 +450,6 @@ void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 	auto item = m_underlying_model->getItem(underlying_model_index);
 
 	Q_ASSERT(item != nullptr);
-#if 0 /// We're handling this in the onActivated() handler at the moment.
 	// Send it to the "Now Playing" playlist, by way of MainWindow.
 	emit sendToNowPlaying(item);
 #endif

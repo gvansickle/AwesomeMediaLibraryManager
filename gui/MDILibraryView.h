@@ -43,8 +43,13 @@ class MDILibraryView : public MDITreeViewBase
     using BASE_CLASS = MDITreeViewBase;
 
 signals:
-    void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
+	/**
+	 * Signal emitted when the user has selected one or more tracks in this view, and wants to
+	 * append/replace them to the "Now Playing" playlist, and possibly start playing them.
+	 */
 	void sendToNowPlaying(LibraryEntryMimeData*);
+
+	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
     void playTrackNowSignal(QUrl);
         
 public:

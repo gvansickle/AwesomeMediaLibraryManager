@@ -122,7 +122,7 @@ M_WARNING("EXPERIMENTAL");
 	// Hook things up for our tri-state column-sorting implementation.
 	connect(header(), &QHeaderView::sectionClicked, this, &MDITreeViewBase::onSectionClicked);
 
-	// Connect up our custom Header context menu.
+	// Connect up our custom HeaderView context menu.
 	connect(header(), &QHeaderView::customContextMenuRequested, this, &MDITreeViewBase::headerMenu);
 }
 
@@ -306,6 +306,16 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 	}
 }
 
+QModelIndexList MDITreeViewBase::selectedRowIndexes() const
+{
+	return selectionModel()->selectedRows(0);
+}
+
+QPersistentModelIndexVec MDITreeViewBase::selectedRowPindexes() const
+{
+	return QPersistentModelIndexVec(selectedRowIndexes());
+}
+
 LibraryEntryMimeData* MDITreeViewBase::selectedRowsToMimeData(const QModelIndexList& row_indexes)
 {
 	auto mil = row_indexes;
@@ -400,8 +410,7 @@ void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
 		qDebug() << "MODEL INDEX:" << index;
 
 		// This item should be in the current selection.
-		auto selected_row_indexes = selectionModel()->selectedRows(0);
-		auto selected_row_pindexes = QPersistentModelIndexVec(selected_row_indexes);
+		auto selected_row_pindexes = selectedRowPindexes();
 
 		if(selected_row_pindexes.size() == 0)
 		{
@@ -431,6 +440,7 @@ void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QIt
 	if(!selected.empty())
 	{
 		emit copyAvailable(true);
+		// Cut is never available if we're read-only.
 		emit cutAvailable(!isReadOnly());
 	}
 	else
