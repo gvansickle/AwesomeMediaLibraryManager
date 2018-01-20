@@ -399,18 +399,6 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 	// which then starts playing it.
 
 	qDebug() << "Activated index:" << index;
-	auto underlying_model_index = to_underlying_qmodelindex(index);
-
-	Q_ASSERT(underlying_model_index.isValid());
-
-	qDebug() << "Underlying index:" << underlying_model_index;
-
-#if 0
-	// Get the item that was activated.
-	auto item = m_underlying_model->getItem(underlying_model_index);
-
-	Q_ASSERT(item != nullptr);
-#endif
 
 	// The activated item should be in the current selection.
 	/// @todo Add a check for that.

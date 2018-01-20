@@ -466,7 +466,7 @@ void MDIPlaylistView::onDelete()
 
 /**
  * Slot which accepts a LibraryEntryMimeData* from a signal.
- * Appends or replaces the incoming tracks in @mime_data and possibly starts playing the first one.
+ * Appends or replaces the incoming tracks in @a mime_data and possibly starts playing the first one.
  */
 void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 {
@@ -474,10 +474,7 @@ M_WARNING("TODO: Dedup")
 
 	// We first need to convert the LibraryEntry's to a PlaylistModelItem's.
 	auto new_playlist_entries = toNewPlaylistModelItems(mime_data->m_lib_item_list);
-	// Create a new PlaylistModelItem to put in the model.
-//	std::shared_ptr<PlaylistModelItem> new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(new_libentry);
 
-//Q_ASSERT(new_playlist_entry != nullptr);
 	if(new_playlist_entries.size() == 0)
 	{
 		qWarning() << "No PlaylistModelItems returned from toNewPlaylistModelItems() conversion:" << new_playlist_entries
@@ -490,17 +487,20 @@ M_WARNING("/// @todo This seems terribly convoluted.  Seems like this view and m
 		  "PlaylistModelEntry's");
 	auto new_playlist_entries_as_libentry_ptrs = toLibraryEntrySharedPtrs(new_playlist_entries);
 
+	// This will be an append, so get the last row index of the View's model.
+	// That's the one we'll activate.
+M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this view is sorted.  Proxy vs. Underlying model issue.");
+	auto last_row = model()->rowCount();
+
 	// Append to underlying model.
 	m_underlying_model->appendRows(new_playlist_entries_as_libentry_ptrs);
 
-	// Find the last row of the underlying model in top-proxy-model coordinates.
-	auto proxy_index = from_underlying_qmodelindex(m_underlying_model->index(std::max(0, m_underlying_model->rowCount()-1), 0));
-
-	qDebug() << "Proxy index:" << proxy_index;
-
-	// Pretend the user double-clicked on it.
-//	emit onDoubleClicked(proxy_index);
-	emit onActivated(proxy_index);
+	if(mime_data->m_drop_target_instructions.m_start_playing == DropTargetInstructions::PA_START_PLAYING)
+	{
+		// Activate the index to start playing it.
+		auto proxy_index = model()->index(last_row, 0, QModelIndex());
+		emit onActivated(proxy_index);
+	}
 }
 
 
