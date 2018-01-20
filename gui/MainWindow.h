@@ -142,7 +142,6 @@ private slots:
 	 */
 	void onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel);
 
-    void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
 	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
 
@@ -296,8 +295,8 @@ private:
     QAction* m_windowPrevAct;
     QAction* m_windowCascadeAct;
     QAction* m_windowTileAct;
-    QAction* m_closeAllAct;
-    QAction* m_closeAct;
+    QAction* m_act_close_all;
+    QAction* m_act_close;
     QActionGroup* m_act_group_window;
     QAction* m_act_window_list_separator;
     /// @}

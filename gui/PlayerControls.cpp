@@ -38,6 +38,8 @@
 
 PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 {
+	setObjectName("PlayerControlsWidget");
+
 	// Play/pause button.
 	m_icon_play = Theme::iconFromTheme("media-playback-start");
 	m_icon_pause = Theme::iconFromTheme("media-playback-pause");

@@ -179,15 +179,23 @@ MainWindow* MainWindow::getInstance()
 void MainWindow::updateActionEnableStates()
 {
 	// Do we have an active MDI child, and what is it?
+	qDebug() << "childIsBaseClass:" << activeChildMDIView();
+
 	auto childIsBaseClass = qobject_cast<MDITreeViewBase*>(activeChildMDIView());
 	auto childIsPlaylist = qobject_cast<MDIPlaylistView*>(activeChildMDIView());
 	auto childIsLibrary = qobject_cast<MDILibraryView*>(activeChildMDIView());
 
-	/// Update file actions.
+	qDebug() << "childIsBaseClass:" << childIsBaseClass;
+
+	// Update file actions.
 	m_saveLibraryAsAct->setEnabled(childIsLibrary);
 	m_savePlaylistAct->setEnabled(childIsPlaylist);
 
 	// Update the Window menu actions.
+	m_act_close->setEnabled(childIsBaseClass);
+	m_act_close_all->setEnabled(childIsBaseClass);
+	m_windowTileAct->setEnabled(childIsBaseClass);
+	m_windowCascadeAct->setEnabled(childIsBaseClass);
 	m_act_window_list_separator->setVisible(childIsBaseClass);
 	if(childIsBaseClass)
 	{
@@ -259,7 +267,6 @@ void MainWindow::updateActionEnableStates_Edit()
 	{
 		i->setDisabled(true);
 	}
-
 }
 
 void MainWindow::createActions()
@@ -351,15 +358,15 @@ void MainWindow::createActions()
 	m_windowTileAct = make_action(QIcon::fromTheme("window-tile"), "Tile", this);
 	connect_trig(m_windowTileAct, this->m_mdi_area, &QMdiArea::tileSubWindows);
 
-	m_closeAct = make_action(QIcon::fromTheme("window-close"), "Cl&ose", this,
+	m_act_close = make_action(QIcon::fromTheme("window-close"), "Cl&ose", this,
                             QKeySequence::Close,
                             "Close the active window");
-	connect_trig(m_closeAct, this->m_mdi_area, &QMdiArea::closeActiveSubWindow);
+	connect_trig(m_act_close, this->m_mdi_area, &QMdiArea::closeActiveSubWindow);
 
-	m_closeAllAct = make_action(QIcon::fromTheme("window-close-all"), "Close &All", this,
+	m_act_close_all = make_action(QIcon::fromTheme("window-close-all"), "Close &All", this,
                               QKeySequence(),
                                "Close all the windows");
-	connect_trig(m_closeAllAct, this->m_mdi_area, &QMdiArea::closeAllSubWindows);
+	connect_trig(m_act_close_all, this->m_mdi_area, &QMdiArea::closeAllSubWindows);
 
 	m_act_window_list_separator = new QAction(this);
 	m_act_window_list_separator->setText(tr("Window List"));
@@ -492,8 +499,8 @@ void MainWindow::createMenus()
 	m_menu_window = menuBar()->addMenu(tr("&Window"));
 	m_menu_window->addActions({
 		m_menu_window->addSection(tr("Close")),
-		m_closeAct,
-		m_closeAllAct,
+		m_act_close,
+		m_act_close_all,
 		m_menu_window->addSection(tr("Arrange")),
 		m_windowTileAct,
 		m_windowCascadeAct,
@@ -716,24 +723,6 @@ void MainWindow::updateConnections()
 
 		// Connect the Metadata dock widget to the active child window's selectionModel().
 		connectActiveMDITreeViewBaseAndMetadataDock(childIsMDITreeViewBase, m_metadataDockWidget);
-
-
-        if(childIsLibrary)
-        {
-			auto connection_handle = connect(childIsLibrary,
-										&MDILibraryView::playTrackNowSignal,
-										this,
-										&MainWindow::onPlayTrackNowSignal,
-										Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-			if (!connection_handle)
-			{
-//				qDebug() << "Connection failed: already connected?";
-			}
-        }
-		if(childIsPlaylist)
-		{
-//			connect_trig(m_act_paste, childIsPlaylist, &MDIPlaylistView::onPaste);
-		}
     }
 }
 
@@ -1319,11 +1308,6 @@ void MainWindow::newNowPlaying()
 void MainWindow::openPlaylist()
 {
 	qCritical() << "Not implemented";
-}
-
-void MainWindow::onPlayTrackNowSignal(QUrl url)
-{
-	qWarning() << QString("PlayTrackNow not implemented: '%1'").arg(url.toString());
 }
 
 void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model)

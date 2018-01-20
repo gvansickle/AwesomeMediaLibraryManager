@@ -34,13 +34,13 @@ class QSlider;
 class QLabel;
 class QShortcut;
 
+
 class PlayerControls : public QWidget
 {
-
     Q_OBJECT
 
 public:
-    explicit PlayerControls(QWidget *parent = 0);
+	explicit PlayerControls(QWidget *parent = nullptr);
 
     QMediaPlayer::State state() const;
 	bool isMuted() const { return m_playerMuted; }
@@ -78,7 +78,7 @@ private:
 	bool m_playerMuted = false;
 	bool m_playerRepeat = false;
 
-	// State info.
+	/// State info.
 	qint64 m_last_pos = 0;
 	qint64 m_last_dur = 0;
 
