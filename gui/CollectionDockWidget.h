@@ -26,6 +26,7 @@
 #include <QWidget>
 #include <QModelIndex>
 #include <QStandardItemModel>
+#include <QPointer>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModelItem.h>
@@ -137,8 +138,8 @@ public:
 
 	void setModel(QPointer<QStandardItemModel> model);
 
-	void addLibrary(LocalLibraryItem* library);
-	void addPlaylist(PlaylistItem* playlist);
+//	void addLibrary(LocalLibraryItem* library);
+//	void addPlaylist(PlaylistItem* playlist);
 
 	void removePlaylist(PlaylistItem* playlist);
 
@@ -151,7 +152,7 @@ public slots:
 	 *
 	 * @note This whole arrangement is racey.  This sidebar really needs to be thoroughly reworked.
 	 */
-	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
+//	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
 
 protected:
 	void contextMenuEvent(QContextMenuEvent* event) override;
@@ -159,7 +160,7 @@ protected:
 private:
 	Q_DISABLE_COPY(CollectionDockWidget)
 
-	QStandardItemModel* m_sources_model;
+	QPointer<QStandardItemModel> m_sources_model;
 	QTreeView* m_collection_tree_view;
 
 	/// @name "Category" items.

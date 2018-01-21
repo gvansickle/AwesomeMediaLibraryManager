@@ -240,8 +240,8 @@ private:
 
 	/// The "model of models", used for the collection dock widget.
 	QPointer<QStandardItemModel> m_model_of_model_view_pairs;
-	QStandardItem* m_sitem_libraries;
-	QStandardItem* m_playlistsItem;
+	QStandardItem* m_stditem_libraries;
+	QStandardItem* m_stditem_playlists;
 
     /// The library models.
     std::vector<QSharedPointer<LibraryModel>> m_libmodels;
@@ -251,7 +251,7 @@ private:
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
     /// The list of PlaylistModels.
-    std::vector<PlaylistModel*> m_playlist_models;
+	std::vector<QPointer<PlaylistModel>> m_playlist_models;
 
     /// @}
 

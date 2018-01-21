@@ -41,10 +41,10 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     setFeatures(QDockWidget::DockWidgetMovable);
     setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-	m_sources_model = new QStandardItemModel(this);
+//	m_sources_model = new QStandardItemModel(this);
 
 	m_collection_tree_view = new QTreeView(this);
-	m_collection_tree_view->setModel(m_sources_model);
+//	m_collection_tree_view->setModel(m_sources_model);
 	m_collection_tree_view->setRootIsDecorated(false);
     // Want to have the tree always expanded.
 	m_collection_tree_view->setExpandsOnDoubleClick(false);
@@ -55,17 +55,17 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 	m_collection_tree_view->setContextMenuPolicy(Qt::DefaultContextMenu);
 	setWidget(m_collection_tree_view);
 
-	m_localLibsItem = new QStandardItem("Libraries");
-	m_localLibsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-	auto font = QFont(m_localLibsItem->font());
-    font.setBold(true);
-	m_localLibsItem->setFont(font);
-	m_playlistsItem = new QStandardItem("Playlists");
-	m_playlistsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-	m_playlistsItem->setFont(font);
+//	m_localLibsItem = new QStandardItem("Libraries");
+//	m_localLibsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+//	auto font = QFont(m_localLibsItem->font());
+//    font.setBold(true);
+//	m_localLibsItem->setFont(font);
+//	m_playlistsItem = new QStandardItem("Playlists");
+//	m_playlistsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+//	m_playlistsItem->setFont(font);
 
     // Add top-level items.
-	m_sources_model->invisibleRootItem()->appendRows({m_localLibsItem, m_playlistsItem});
+//	m_sources_model->invisibleRootItem()->appendRows({m_localLibsItem, m_playlistsItem});
 
     // Connect the double-click signal to a custom handler.
 	connect(m_collection_tree_view, &QTreeView::doubleClicked, this, &CollectionDockWidget::tree_doubleclick);
@@ -75,10 +75,15 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 
 void CollectionDockWidget::setModel(QPointer<QStandardItemModel> model)
 {
+	qDebug() << "SETTING MODEL:" << model;
 	m_sources_model = model;
 	m_collection_tree_view->setModel(m_sources_model);
+	m_collection_tree_view->expandAll();
+//	qDebug() << "TREEINFO:";
+//	m_collection_tree_view->dumpObjectTree();
 }
 
+#if 0
 void CollectionDockWidget::addLibrary(LocalLibraryItem* lib)
 {
 	qDebug() << "Adding local library: " << lib;
@@ -92,6 +97,7 @@ void CollectionDockWidget::addPlaylist(PlaylistItem* playlist)
 	m_playlistsItem->appendRow(playlist);
 	m_collection_tree_view->expandAll();
 }
+#endif
 
 void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
 {
@@ -107,10 +113,11 @@ void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
 	if(libmodel)
 	{
 		doLibraryContextMenu(event, treepos);
+		event->accept();
 		return;
 	}
-
-
+return;
+M_WARNING("TODO");
     auto parentindex = modelindex.parent();
 	///qDebug() << QString("Parent: {}/{}/{}".format(modelindex.parent(), modelindex.parent().row(), modelindex.parent().column()));
 
@@ -221,6 +228,8 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 
 void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 {
+//	m_collection_tree_view->expandAll();
+
 	if(!modelindex.isValid())
 	{
 		return;
@@ -232,7 +241,7 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 		emit showLibViewSignal(libmodel);
 		return;
 	}
-
+return;
 	auto parentindex = modelindex.parent();
 	qDebug() << QString("Parent:") << modelindex.parent() << modelindex.parent().row() << modelindex.parent().column();
 	if(parentindex == m_sources_model->indexFromItem(m_localLibsItem))
@@ -245,6 +254,7 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 	}
 }
 
+#if 0
 void CollectionDockWidget::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
 {
 	qDebug() << "Got closing() signal from view" << viewptr;
@@ -269,4 +279,4 @@ void CollectionDockWidget::view_is_closing(MDITreeViewBase* viewptr, QAbstractIt
 	}
 
 }
-
+#endif

@@ -115,9 +115,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(par
 M_WARNING("TODO: ifdef this to development only")
     m_experimental = new Experimental(this);
 
-	// The Model of Model/View pairs.
-	m_model_of_model_view_pairs = new QStandardItemModel(this);
-
     // The list of LibraryModels.
     m_libmodels.clear();
 
@@ -611,17 +608,26 @@ void MainWindow::createDockWidgets()
 
 void MainWindow::initRootModels()
 {
-	m_sitem_libraries = new QStandardItem(tr("Libraries"));
-	m_sitem_libraries->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-	auto font = QFont(m_sitem_libraries->font());
+	// The Model of Model/View pairs.
+	m_model_of_model_view_pairs = new QStandardItemModel(this);
+	m_model_of_model_view_pairs->setObjectName("ModelOfModels");
+
+	m_stditem_libraries = new QStandardItem(tr("Libraries"));
+	m_stditem_libraries->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+	auto font = QFont(m_stditem_libraries->font());
 	font.setBold(true);
-	m_sitem_libraries->setFont(font);
-	m_playlistsItem = new QStandardItem(tr("Playlists"));
-	m_playlistsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-	m_playlistsItem->setFont(font);
+	m_stditem_libraries->setFont(font);
+	m_stditem_playlists = new QStandardItem(tr("Playlists"));
+	m_stditem_playlists->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+	m_stditem_playlists->setFont(font);
 
 	// Add top-level "category" items.
-	m_model_of_model_view_pairs->invisibleRootItem()->appendRows({m_sitem_libraries, m_playlistsItem});
+	m_model_of_model_view_pairs->/*invisibleRootItem()->*/appendRow(m_stditem_libraries);
+	m_model_of_model_view_pairs->/*invisibleRootItem()->*/appendRow(m_stditem_playlists);
+//	Q_ASSERT(m_stditem_libraries->parent() == m_model_of_model_view_pairs->invisibleRootItem());
+//	Q_ASSERT(m_stditem_playlists->parent() == m_model_of_model_view_pairs->invisibleRootItem());
+
+//	m_stditem_playlists->setChild(0,0, new QStandardItem("Hello"));
 
 	// Set the Collection Doc widget model.
 	m_collection_dock_widget->setModel(m_model_of_model_view_pairs);
@@ -899,7 +905,7 @@ M_WARNING("TODO: Find a cleaner way to handle this.");
 			{
 				qDebug() << "Found existing PlaylistModel:" << pm;
 M_WARNING("TODO: This isn't correct.");
-				retval.m_model = QSharedPointer<PlaylistModel>(pm);
+				retval.m_model = QSharedPointer<PlaylistModel>(pm.data());
 				retval.m_model_was_existing = true;
 			}
 		}
@@ -1142,7 +1148,6 @@ void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
 	// We'll just try to open the same URL as the libmodel, and let the "opening an existing view/model"
 	// logic do the rest.
 	openFileLibrary(libmodel->getLibRootDir());
-	return;
 }
 
 
@@ -1194,16 +1199,17 @@ void MainWindow::newPlaylist()
     // Tell it to create a new, empty model.
     child->newFile();
 
-    // Add the underlying model to the list.
-    m_playlist_models.push_back(child->underlyingModel());
+	/// @todo Maybe refactor the "newFile()" setup to look more like the static openXxx() functions,
+	/// so we always get an MDIModelViewPair here and don't need to hand-roll it.
+	MDIModelViewPair mvpair;
+	mvpair.m_view = child;
+	mvpair.m_view_was_existing = false;
+	mvpair.setModel(child->underlyingModelSharedPtr());
+	mvpair.m_model_was_existing = false;
 
-    // Add it to the child views.
-    addChildMDIView(child);
+	addChildMDIModelViewPair_Playlist(mvpair);
 
-	// Add the new playlist to the collection doc widget.
-	m_collection_dock_widget->addPlaylist(new PlaylistItem(child));
-
-    statusBar()->showMessage(tr("Opened new Playlist '%1'").arg(child->windowTitle()));
+	statusBar()->showMessage(tr("Opened new Playlist '%1'").arg(child->windowTitle()));
 }
 
 /**
@@ -1215,23 +1221,25 @@ void MainWindow::newNowPlaying()
     auto child = new MDINowPlayingView(this);
     child->newFile();
 
-    // Add the new child's underlying model to the list of playlist models.
-	/// @todo REMOVE?, only one Now Playing.
-    m_playlist_models.push_back(child->underlyingModel());
 	// Set this view's model to be the single "Now Playing" model.
 	m_now_playing_playlist_model = child->underlyingModelSharedPtr().objectCast<PlaylistModel>();
 
     /// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;
 
-    connectNowPlayingViewAndMainWindow(child);
+	/// @todo Maybe refactor the "newFile()" setup to look more like the static openXxx() functions,
+	/// so we always get an MDIModelViewPair here and don't need to hand-roll it.
+	MDIModelViewPair mvpair;
+	mvpair.m_view = child;
+	mvpair.m_view_was_existing = false;
+	mvpair.setModel(m_now_playing_playlist_model);
+	mvpair.m_model_was_existing = false;
 
-    addChildMDIView(child);
+	addChildMDIModelViewPair_Playlist(mvpair);
+
+	connectNowPlayingViewAndMainWindow(child);
 
     statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(child->windowTitle()));
-
-	// Add the new playlist to the collection doc widget.
-	m_collection_dock_widget->addPlaylist(new PlaylistItem(child));
 }
 
 /**
@@ -1285,7 +1293,7 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
 	m_act_group_window->addAction(child->windowMenuAction());
 
 	/// Connect the closing() signal to the Collection Dock widget.
-	connect(child, &MDITreeViewBase::closing, m_collection_dock_widget, &CollectionDockWidget::view_is_closing);
+//	connect(child, &MDITreeViewBase::closing, m_collection_dock_widget, &CollectionDockWidget::view_is_closing);
 	/// ..and also to the main window.
 	connect(child, &MDITreeViewBase::closing, this, &MainWindow::view_is_closing);
 
@@ -1345,16 +1353,77 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 
 			// Add the new library to the ModelViewPairs Model.
 			// The Collection Doc Widget uses this among others.
-			auto new_lib_row_item = new QStandardItem(libmodel->getLibraryName());
+			QStandardItem* new_lib_row_item = new QStandardItem(libmodel->getLibraryName());
 			new_lib_row_item->setData(QVariant::fromValue(libmodel));
-			m_sitem_libraries->appendRow(new_lib_row_item);
+			qDebug() << "APPENDING ROW:" << new_lib_row_item << new_lib_row_item->text();
+			m_stditem_libraries->appendRow(new_lib_row_item);
+			qDebug() << "INFO:";
+			m_model_of_model_view_pairs->dumpObjectInfo();
+			qDebug() << "TREE:";
+			m_model_of_model_view_pairs->dumpObjectTree();
 		}
 	}
 }
 
 void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpair)
 {
-#warning "TODO"
+	if(mvpair.hasView())
+	{
+		auto playlist_view = qobject_cast<MDIPlaylistView*>(mvpair.m_view);
+
+		Q_CHECK_PTR(playlist_view);
+
+		// Did a view of the URL the user specified already exist?
+		if(mvpair.m_view_was_existing)
+		{
+			// View already existed, just activate its parent subwindow and we're done.
+			qDebug() << "View already existed";
+			m_mdi_area->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(mvpair.m_view->parent()));
+		}
+		else
+		{
+			// View is new.
+
+			// Add the view as a new MDI child.
+			addChildMDIView(mvpair.m_view);
+		}
+	}
+
+	if(mvpair.hasModel())
+	{
+		QPointer<PlaylistModel> playlist_model = qSharedPointerObjectCast<PlaylistModel>(mvpair.m_model).data();
+		Q_CHECK_PTR(playlist_model);
+
+		bool model_really_already_existed = (std::find(m_playlist_models.begin(), m_playlist_models.end(), playlist_model) != m_playlist_models.end());
+
+		// View is new, did the model already exist?
+		if(mvpair.m_model_was_existing)
+		{
+			qDebug() << "Model existed:" << mvpair.m_model << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
+			Q_ASSERT(model_really_already_existed);
+		}
+		else
+		{
+			// Model is new.
+			qDebug() << "Model is new:" << mvpair.m_model << playlist_model->getLibRootDir() << playlist_model->getLibraryName();
+			Q_ASSERT(!model_really_already_existed);
+
+			// Add the underlying model to the PlaylistModel list.
+			m_playlist_models.push_back(playlist_model.data());
+
+			// Add the new PlaylistModel to the ModelViewPairs Model.
+			// The Collection Doc Widget uses this among others.
+			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_model->getLibraryName());
+			new_playlist_row_item->setData(QVariant::fromValue(playlist_model));
+			qDebug() << "APPENDING ROW:" << new_playlist_row_item << new_playlist_row_item->text();
+			m_stditem_playlists->appendRow(new_playlist_row_item);
+			qDebug() << "MODEL:" << m_stditem_playlists->model();
+			qDebug() << "INFO:";
+			m_model_of_model_view_pairs->dumpObjectInfo();
+			qDebug() << "TREE:";
+			m_model_of_model_view_pairs->dumpObjectTree();
+		}
+	}
 }
 
 // Top-level "saveAs" action handler for "Save playlist as..."
