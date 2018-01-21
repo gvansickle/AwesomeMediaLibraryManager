@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -1307,13 +1307,8 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
     // Add actions from the child to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
-M_WARNING("EXPERIMENTAL")
+//M_WARNING("EXPERIMENTAL")
 //	m_collection_dock_widget->addActionExperimental(child->windowMenuAction());
-
-	/// Connect the closing() signal to the Collection Dock widget.
-//	connect(child, &MDITreeViewBase::closing, m_collection_dock_widget, &CollectionDockWidget::view_is_closing);
-	/// ..and also to the main window.
-//	connect(child, &MDITreeViewBase::closing, this, &MainWindow::view_is_closing);
 
 	// Show the child window we just added.
 	mdisubwindow->show();
@@ -1409,6 +1404,8 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_view->getDisplayName());
 			new_playlist_row_item->setData(QVariant::fromValue(playlist_view));
 			new_playlist_row_item->setData(QIcon::fromTheme("view-media-playlist"), Qt::DecorationRole);
+			QString tttext = tr("<b>%1</b><hr>%2").arg(playlist_view->getDisplayName()).arg(playlist_view->windowFilePath());
+			new_playlist_row_item->setData(QVariant(tttext), Qt::ToolTipRole);
 			m_stditem_playlist_views->appendRow(new_playlist_row_item);
 		}
 		statusBar()->showMessage(tr("Opened view on playlist '%1'").arg(playlist_view->getDisplayName()));

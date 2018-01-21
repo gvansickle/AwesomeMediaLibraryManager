@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -44,6 +44,8 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     setFeatures(QDockWidget::DockWidgetMovable);
     setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
+	auto center_widget = new QSplitter(Qt::Vertical, this);
+
 	m_collection_tree_view = new QTreeView(this);
 	m_collection_tree_view->setRootIsDecorated(false);
     // Want to have the tree always expanded.
@@ -56,16 +58,18 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 	connect(m_collection_tree_view, &QTreeView::customContextMenuRequested, this, &CollectionDockWidget::onTreeContextMenu);
 
 	/// @todo EXPERIMENTAL
+	if(false)
+	{
 	m_tree_widget = new QTreeWidget(this);
 	QPushButton *topLevelButton = new QPushButton("Top Level Button");
 	QTreeWidgetItem *topLevelItem = new QTreeWidgetItem();
 	m_tree_widget->addTopLevelItem(topLevelItem);
 	m_tree_widget->setItemWidget(topLevelItem, 0, topLevelButton);
 
-	auto center_widget = new QSplitter(Qt::Vertical, this);
-	center_widget->addWidget(m_collection_tree_view);
 	center_widget->addWidget(m_tree_widget);
-	/// @todo EXPERIMENTAL
+	}
+
+	center_widget->addWidget(m_collection_tree_view);
 
 	// Set the widget for this dock widget.
 	setWidget(center_widget);
@@ -95,29 +99,9 @@ void CollectionDockWidget::addActionExperimental(QAction* act)
 	m_tree_widget->setItemWidget(treewidgetitem, 0, button);
 }
 
-#if 0
-void CollectionDockWidget::addLibrary(LocalLibraryItem* lib)
-{
-	qDebug() << "Adding local library: " << lib;
-	m_localLibsItem->appendRow(lib);
-	m_collection_tree_view->expandAll();
-}
-
-void CollectionDockWidget::addPlaylist(PlaylistItem* playlist)
-{
-	qDebug() << "Adding playlist:" << playlist;
-	m_playlistsItem->appendRow(playlist);
-	m_collection_tree_view->expandAll();
-}
-#endif
-
 void CollectionDockWidget::onTreeContextMenu(const QPoint& point)
 {
-	qDebug() << "Context menu";
-
-	// CollectionDockWidget actually got the right-click event after the QTreeView ignored it,
-	// so we have to convert the position back.
-//	auto treepos = m_collection_tree_view->mapFromParent(point);
+	qDebug() << "Tree Context menu";
 
 	auto modelindex = m_collection_tree_view->indexAt(point);
 
@@ -215,7 +199,7 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 	mb->setIcon(QMessageBox::Question);
 	mb->setText(tr("Remove Library Directory"));
 	mb->setInformativeText(QString("Do you really want to remove '%1' from the library?").arg(name));
-	mb->setDetailedText(QString("Name: '%1'\nURL: '%2'").arg(name).arg(url.toString()));
+	mb->setDetailedText(QString("Name: '%1'\nURL: '%2'").arg(name).arg(url.toDisplayString()));
 	mb->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
 	mb->setDefaultButton(QMessageBox::No);
 	auto retval = mb->exec();

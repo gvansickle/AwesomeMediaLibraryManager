@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -35,95 +35,6 @@
 class QStandardItemModel;
 class QTreeView;
 
-#if 0
-class LocalLibraryItem;
-class PlaylistModelItem;
-
-static const int si_role_view_ptr = Qt::UserRole + 1;
-
-class LocalLibraryItem : public QStandardItem
-{
-public:
-	explicit LocalLibraryItem(QSharedPointer<LibraryModel> libmodel)
-	{
-		m_libmodel = libmodel;
-		setData(QVariant::fromValue(libmodel));
-		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
-	}
-
-	QVariant data(int role = Qt::UserRole+1) const override
-	{
-		if(role != Qt::EditRole && role != Qt::DisplayRole && role != Qt::ToolTipRole)
-		{
-			return QStandardItem::data(role);
-		}
-
-		auto libmodel = m_libmodel.toStrongRef();
-		if(libmodel)
-		{
-			// Get the data we need from the model we're connected to
-			if(role == Qt::EditRole || role == Qt::DisplayRole)
-			{
-				if(libmodel)
-				{
-					return QVariant(libmodel->getLibraryName());
-				}
-				else
-				{
-					return QVariant();
-				}
-			}
-			else if(role == Qt::ToolTipRole)
-			{
-				return QVariant(libmodel->getLibRootDir());
-			}
-			else
-			{
-				return QStandardItem::data(role);
-			}
-		}
-	}
-
-private:
-	QWeakPointer<LibraryModel> m_libmodel;
-};
-
-class PlaylistItem: public QStandardItem
-{
-public:
-	explicit PlaylistItem(MDIPlaylistView* view)
-	{
-		m_playlist_view = view;
-
-		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
-	}
-
-	QVariant data(int role = Qt::UserRole+1) const override
-	{
-		// Get the data we need from the model we're connected to
-		if(role == Qt::EditRole || role == Qt::DisplayRole)
-		{
-			return QVariant(m_playlist_view->getDisplayName());
-		}
-		else if(role == Qt::ToolTipRole)
-		{
-			return QVariant(m_playlist_view->getCurrentUrl());
-		}
-		else if(role == si_role_view_ptr)
-		{
-			qDebug() << "POINTER REQUEST:" << m_playlist_view;
-			return QVariant::fromValue<MDITreeViewBase*>(m_playlist_view);
-		}
-		else
-		{
-			return QStandardItem::data(role);
-		}
-	}
-
-private:
-	  MDIPlaylistView* m_playlist_view;
-};
-#endif
 
 class CollectionDockWidget : public QDockWidget
 {
