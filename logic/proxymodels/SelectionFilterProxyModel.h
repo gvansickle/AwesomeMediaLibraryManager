@@ -22,6 +22,7 @@
 
 #include <QSortFilterProxyModel>
 #include <QPersistentModelIndex>
+#include <QPointer>
 
 class QItemSelectionModel;
 
@@ -76,7 +77,7 @@ private:
 	/// The root index to allow to pass through.
 	QPersistentModelIndex m_current_selected_index;
 
-	QItemSelectionModel* m_filter_selection_model = nullptr;
+	QPointer<QItemSelectionModel> m_filter_selection_model = nullptr;
 };
 
 #endif /* ENTRYTOMETADATATREEPROXYMODEL_H */

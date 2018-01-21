@@ -18,6 +18,7 @@
  */
 
 #include "MDITreeViewBase.h"
+#include "MainWindow.h"
 
 #include <QGuiApplication>
 #include <QApplication>
@@ -58,6 +59,7 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 
 	m_isUntitled = true;
 
+	// Delete this window on close instead of just hiding it.
 	setAttribute(Qt::WA_DeleteOnClose);
 
 M_WARNING("EXPERIMENTAL");
@@ -297,11 +299,16 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 {
 	if(okToClose())
 	{
-		emit closing(this, underlyingModel());
+		// Closing this view.
+
+		// Tell the MainWindow that we're closing.
+		MainWindow::getInstance()->view_is_closing(this, underlyingModel());
+
 		event->accept();
 	}
 	else
 	{
+		// We want to stay open.
 		event->ignore();
 	}
 }

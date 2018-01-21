@@ -125,6 +125,11 @@ public:
     /// Override if derived classes are not read-only.
 	virtual bool isReadOnly() const { return true; }
 
+	/**
+	 * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
+	 */
+	QMdiSubWindow* getQMdiSubWindow() const;
+
     //
     // Base class overrides.
     //
@@ -178,7 +183,7 @@ protected:
 	 */
     virtual bool writeFile(QUrl save_url, QString filter);
 
-    virtual void closeEvent(QCloseEvent* event) override;
+	void closeEvent(QCloseEvent* event) override;
 
     ///
     /// Pure virtual functions.
@@ -271,16 +276,14 @@ protected:
      */
 	virtual bool okToClose();
 
-    /**
-     * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
-     */
-    QMdiSubWindow* getQMdiSubWindow() const;
-
     /// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
     virtual QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) = 0;
 
     /// Helper function to convert from underlying model indexes to proxy QModelIndexes.
     virtual QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) = 0;
+
+	/// The QAction we'll give to the MainWindow for inclusion in the Window menu.
+	QAction *m_act_window;
 
 private:
     Q_DISABLE_COPY(MDITreeViewBase)
@@ -294,9 +297,6 @@ private:
 
     Qt::SortOrder m_sort_order { Qt::AscendingOrder };
     
-    /// The QAction we'll give to the MainWindow for inclusion in the Window menu.
-    QAction *m_act_window;
-
 };
 
 #endif // MDITREEVIEWBASE_H

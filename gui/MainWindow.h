@@ -25,6 +25,7 @@
 #include "MDINowPlayingView.h"
 
 #include <QMainWindow>
+#include <QStandardItem>
 #include <QUrl>
 
 #include <vector>
@@ -73,6 +74,14 @@ public:
 	 */
 	static MainWindow* getInstance();
 
+	/**
+	 * Called from the closeEvent() of views just before they accept the event.
+	 * This widget should delete any references it is keeping to @a viewptr.
+	 *
+	 * @note This arrangement is racey, need to find a better way to manage this.
+	 */
+	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
+
 public slots:
 
     /// Slot corresponding to the "Open Directory as new Library" action.
@@ -93,6 +102,8 @@ public slots:
     void openPlaylist();
     void savePlaylistAs();
 
+	void onCloseSubwindow();
+
     void onRescanLibrary();
     void startSettingsDialog();
 
@@ -108,6 +119,11 @@ public slots:
 
     void about();
 
+	/**
+	 * Slot which forwards the param to the QMdiArea.
+	 */
+	void setActiveSubWindow(QMdiSubWindow* window);
+
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -119,14 +135,6 @@ protected slots:
 private slots:
     void onSubWindowActivated(QMdiSubWindow* subwindow);
     void onFocusChanged(QWidget* old, QWidget* now);
-
-	/**
-	 * Slot which is signaled by closing views.
-	 * This widget should delete any references it is keeping to @a viewptr.
-	 *
-	 * @note This arrangement is racey, need to find a better way to manage this.
-	 */
-	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
 
     void changeStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
@@ -142,7 +150,6 @@ private slots:
 	 */
 	void onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel);
 
-    void onPlayTrackNowSignal(QUrl url);
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
 	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
 
@@ -159,6 +166,8 @@ private slots:
 private:
     Q_DISABLE_COPY(MainWindow)
 
+	/// @name Startup Initialization
+	/// @{
     void createActions();
     void createActionsEdit();
 	void createActionsView();
@@ -167,11 +176,15 @@ private:
     void createToolBars();
     void createStatusBar();
 	void createDockWidgets();
+	void initRootModels();
+	/// @}
 
     /// Equivalent of a "File->New" action for the Now Playing model/view.
     void newNowPlaying();
 
 	void addChildMDIView(MDITreeViewBase* child);
+	void addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair);
+	void addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpair);
 	MDITreeViewBase* activeChildMDIView();
     
 	/// @name Bulk Signal/Slot Connection management.
@@ -232,6 +245,11 @@ private:
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
 
+	/// The "model of models", used for the collection dock widget.
+	QPointer<QStandardItemModel> m_model_of_model_view_pairs;
+	QStandardItem* m_stditem_libraries;
+	QStandardItem* m_stditem_playlist_views;
+
     /// The library models.
     std::vector<QSharedPointer<LibraryModel>> m_libmodels;
 
@@ -240,7 +258,7 @@ private:
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
     /// The list of PlaylistModels.
-    std::vector<PlaylistModel*> m_playlist_models;
+	std::vector<QPointer<PlaylistModel>> m_playlist_models;
 
     /// @}
 
@@ -296,8 +314,8 @@ private:
     QAction* m_windowPrevAct;
     QAction* m_windowCascadeAct;
     QAction* m_windowTileAct;
-    QAction* m_closeAllAct;
-    QAction* m_closeAct;
+    QAction* m_act_close_all;
+    QAction* m_act_close;
     QActionGroup* m_act_group_window;
     QAction* m_act_window_list_separator;
     /// @}
@@ -327,7 +345,7 @@ private:
     QToolBar* m_filterToolbar;
 
     /// Docks
-    CollectionDockWidget* m_libraryDockWidget;
+	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
 
     /// The Activity Progress Widget.

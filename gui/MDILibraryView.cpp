@@ -45,6 +45,8 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	/// @todo Seems like we no longer need to do this.
 //	setWindowTitle("DUMMY");
 
+	m_act_window->setIcon(QIcon::fromTheme("folder"));
+
 	m_underlying_model = nullptr;
 
 	// The sort and Filter proxy model.
@@ -102,7 +104,7 @@ MDIModelViewPair MDILibraryView::open(QWidget *parent, std::function<MDIModelVie
 MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::function<MDIModelViewPair(QUrl)> find_existing_view_func)
 {
     // Check if a view of this URL already exists and we just need to activate it.
-    qDebug() << "Looking for existing view of" << open_url;
+	qDebug() << "Looking for existing MDIModelViewPair of" << open_url;
     auto mv_pair = find_existing_view_func(open_url);
     if(mv_pair.m_view)
     {
@@ -116,9 +118,8 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	/// @note This should probably be creating an empty View here and then
 	/// calling an overridden readFile().
 
-	qDebug() << "// Try to open a model on the given URL.";
 	QSharedPointer<LibraryModel> libmodel;
-	if(mv_pair.m_model)
+	if(mv_pair.hasModel())
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
@@ -137,6 +138,10 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 		// Either way it's valid and we now create and associate a View with it.
 
 		auto mvpair = MDILibraryView::openModel(libmodel, parent);
+
+		/// @todo This should be done somewhere else, so that the mvpair we get above already has this set correctly.
+		mvpair.m_model_was_existing = mv_pair.m_model_was_existing;
+
 		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control system.
 		/// In very shortened form: Derived member functions can only access "protected" members through
 		/// an object of the Derived type, not of the Base type.

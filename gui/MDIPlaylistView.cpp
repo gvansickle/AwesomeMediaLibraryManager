@@ -46,6 +46,8 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	// Set up a Style Proxy to draw a more natural drop indicator.
 	this->setStyle(new DragDropTreeViewStyleProxy);
 
+	// Give our Window Menu action an icon.
+	m_act_window->setIcon(QIcon::fromTheme("view-media-playlist"));
 
 	m_underlying_model = nullptr;
 
@@ -467,6 +469,7 @@ void MDIPlaylistView::onDelete()
 /**
  * Slot which accepts a LibraryEntryMimeData* from a signal.
  * Appends or replaces the incoming tracks in @a mime_data and possibly starts playing the first one.
+ * @note Deletes mime_data.
  */
 void MDIPlaylistView::onSendToNowPlaying(LibraryEntryMimeData* mime_data)
 {
@@ -508,6 +511,9 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 		auto proxy_index = model()->index(last_row, 0, QModelIndex());
 		emit onActivated(proxy_index);
 	}
+
+	// Manually delete the MimeData object, since it didn't go through the normal copy/paste or drag/drop channels.
+	delete mime_data;
 }
 
 

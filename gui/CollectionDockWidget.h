@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -26,6 +26,8 @@
 #include <QWidget>
 #include <QModelIndex>
 #include <QStandardItemModel>
+#include <QPointer>
+#include <QTreeWidget>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModelItem.h>
@@ -33,93 +35,6 @@
 class QStandardItemModel;
 class QTreeView;
 
-class LocalLibraryItem;
-class PlaylistModelItem;
-
-static const int si_role_view_ptr = Qt::UserRole + 1;
-
-class LocalLibraryItem : public QStandardItem
-{
-public:
-	explicit LocalLibraryItem(QSharedPointer<LibraryModel> libmodel)
-	{
-		m_libmodel = libmodel;
-		setData(QVariant::fromValue(libmodel));
-		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
-	}
-
-	QVariant data(int role = Qt::UserRole+1) const override
-	{
-		if(role != Qt::EditRole && role != Qt::DisplayRole && role != Qt::ToolTipRole)
-		{
-			return QStandardItem::data(role);
-		}
-
-		auto libmodel = m_libmodel.toStrongRef();
-		if(libmodel)
-		{
-			// Get the data we need from the model we're connected to
-			if(role == Qt::EditRole || role == Qt::DisplayRole)
-			{
-				if(libmodel)
-				{
-					return QVariant(libmodel->getLibraryName());
-				}
-				else
-				{
-					return QVariant();
-				}
-			}
-			else if(role == Qt::ToolTipRole)
-			{
-				return QVariant(libmodel->getLibRootDir());
-			}
-			else
-			{
-				return QStandardItem::data(role);
-			}
-		}
-	}
-
-private:
-	QWeakPointer<LibraryModel> m_libmodel;
-};
-
-class PlaylistItem: public QStandardItem
-{
-public:
-	explicit PlaylistItem(MDIPlaylistView* view)
-	{
-		m_playlist_view = view;
-
-		setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
-	}
-
-	QVariant data(int role = Qt::UserRole+1) const override
-	{
-		// Get the data we need from the model we're connected to
-		if(role == Qt::EditRole || role == Qt::DisplayRole)
-		{
-			return QVariant(m_playlist_view->getDisplayName());
-		}
-		else if(role == Qt::ToolTipRole)
-		{
-			return QVariant(m_playlist_view->getCurrentUrl());
-		}
-		else if(role == si_role_view_ptr)
-		{
-			qDebug() << "POINTER REQUEST:" << m_playlist_view;
-			return QVariant::fromValue<MDITreeViewBase*>(m_playlist_view);
-		}
-		else
-		{
-			return QStandardItem::data(role);
-		}
-	}
-
-private:
-	  MDIPlaylistView* m_playlist_view;
-};
 
 class CollectionDockWidget : public QDockWidget
 {
@@ -130,43 +45,37 @@ signals:
 	void removeLibModelFromLibSignal(QSharedPointer<LibraryModel>);
 
 	// Signal indicating the user wants to show the window for the given LibraryModel.
-	void showLibViewSignal(QSharedPointer<LibraryModel>);
+	void showLibraryModelSignal(QSharedPointer<LibraryModel>);
+
+	void activateSubwindow(QMdiSubWindow* subwindow);
 
 public:
     explicit CollectionDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 
-	void addLibrary(LocalLibraryItem* library);
-	void addPlaylist(PlaylistItem* playlist);
+	void setModel(QPointer<QStandardItemModel> model);
 
-	void removePlaylist(PlaylistItem* playlist);
+	void addActionExperimental(QAction* act);
 
 public slots:
 	void tree_doubleclick(QModelIndex modelindex);
 
-	/**
-	 * Slot which is signaled by closing views.
-	 * This widget should delete any references it is keeping to @a viewptr.
-	 *
-	 * @note This whole arrangement is racey.  This sidebar really needs to be thoroughly reworked.
-	 */
-	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
-
 protected:
-	void contextMenuEvent(QContextMenuEvent* event) override;
+
+protected slots:
+	void onTreeContextMenu(const QPoint &point);
 
 private:
 	Q_DISABLE_COPY(CollectionDockWidget)
 
-	QStandardItemModel* m_sources_model;
-    QTreeView* collectionTreeView;
+	QPointer<QStandardItemModel> m_sources_model;
+	QTreeView* m_collection_tree_view;
 
-	/// @name "Category" items.
-	/// @{
-	QStandardItem* m_localLibsItem;
-	QStandardItem* m_playlistsItem;
-	/// @}
+M_WARNING("EXPERIMENTAL");
+	QPointer<QTreeWidget> m_tree_widget;
 
-	void doLibraryContextMenu(QContextMenuEvent* event, QPoint treepos);
+	QSharedPointer<LibraryModel> modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const;
+
+	void doLibraryContextMenu(QPoint treepos);
 	void onShowLib(QModelIndex modelindex);
 	void onRemoveLib(QModelIndex modelindex);
 };
