@@ -27,6 +27,7 @@
 #include <QModelIndex>
 #include <QStandardItemModel>
 #include <QPointer>
+#include <QTreeWidget>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModelItem.h>
@@ -131,14 +132,16 @@ signals:
 	void removeLibModelFromLibSignal(QSharedPointer<LibraryModel>);
 
 	// Signal indicating the user wants to show the window for the given LibraryModel.
-	void showLibViewSignal(QSharedPointer<LibraryModel>);
+	void showLibraryModelSignal(QSharedPointer<LibraryModel>);
+
+	void activateSubwindow(QMdiSubWindow* subwindow);
 
 public:
     explicit CollectionDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 
 	void setModel(QPointer<QStandardItemModel> model);
 
-//	void addLibrary(LocalLibraryItem* library);
+	void addActionExperimental(QAction* act);
 //	void addPlaylist(PlaylistItem* playlist);
 
 	void removePlaylist(PlaylistItem* playlist);
@@ -162,6 +165,8 @@ private:
 
 	QPointer<QStandardItemModel> m_sources_model;
 	QTreeView* m_collection_tree_view;
+
+	QPointer<QTreeWidget> m_tree_widget;
 
 	/// @name "Category" items.
 	/// @{

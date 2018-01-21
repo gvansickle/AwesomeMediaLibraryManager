@@ -47,7 +47,7 @@ class PlaylistModel : public LibraryModel
 	Q_OBJECT
 
 public:
-	PlaylistModel(QObject* parent);
+	explicit PlaylistModel(QObject* parent);
 
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 	QVariant data(const QModelIndex &index, int role) const override;

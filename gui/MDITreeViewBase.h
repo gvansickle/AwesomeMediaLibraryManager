@@ -125,6 +125,11 @@ public:
     /// Override if derived classes are not read-only.
 	virtual bool isReadOnly() const { return true; }
 
+	/**
+	 * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
+	 */
+	QMdiSubWindow* getQMdiSubWindow() const;
+
     //
     // Base class overrides.
     //
@@ -270,11 +275,6 @@ protected:
      * @return false if file was modified and user cancelled, true otherwise.
      */
 	virtual bool okToClose();
-
-    /**
-     * Returns the QMdiSubwindow instance holding this MDITreeViewBase-derived instance.
-     */
-    QMdiSubWindow* getQMdiSubWindow() const;
 
     /// Helper function to convert from incoming proxy QModelIndexes to actual underlying model indexes.
     virtual QModelIndex to_underlying_qmodelindex(const QModelIndex &proxy_index) = 0;

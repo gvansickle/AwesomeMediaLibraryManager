@@ -617,13 +617,13 @@ void MainWindow::initRootModels()
 	auto font = QFont(m_stditem_libraries->font());
 	font.setBold(true);
 	m_stditem_libraries->setFont(font);
-	m_stditem_playlists = new QStandardItem(tr("Playlists"));
-	m_stditem_playlists->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-	m_stditem_playlists->setFont(font);
+	m_stditem_playlist_views = new QStandardItem(tr("Playlists"));
+	m_stditem_playlist_views->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
+	m_stditem_playlist_views->setFont(font);
 
 	// Add top-level "category" items.
 	m_model_of_model_view_pairs->/*invisibleRootItem()->*/appendRow(m_stditem_libraries);
-	m_model_of_model_view_pairs->/*invisibleRootItem()->*/appendRow(m_stditem_playlists);
+	m_model_of_model_view_pairs->/*invisibleRootItem()->*/appendRow(m_stditem_playlist_views);
 //	Q_ASSERT(m_stditem_libraries->parent() == m_model_of_model_view_pairs->invisibleRootItem());
 //	Q_ASSERT(m_stditem_playlists->parent() == m_model_of_model_view_pairs->invisibleRootItem());
 
@@ -642,8 +642,9 @@ void MainWindow::createConnections()
 	connectPlayerAndControls(&m_player, m_controls);
 
     // Connect with the CollectionDockWidget.
-	connect(m_collection_dock_widget, &CollectionDockWidget::showLibViewSignal, this, &MainWindow::onShowLibrary);
+	connect(m_collection_dock_widget, &CollectionDockWidget::showLibraryModelSignal, this, &MainWindow::onShowLibrary);
 	connect(m_collection_dock_widget, &CollectionDockWidget::removeLibModelFromLibSignal, this, &MainWindow::onRemoveDirFromLibrary);
+	connect(m_collection_dock_widget, &CollectionDockWidget::activateSubwindow, this, &MainWindow::setActiveSubWindow);
 
 	// Connect FilterWidget signals
 	connect(m_filterToolbar->findChild<FilterWidget*>(), &FilterWidget::filterChanged, this, &MainWindow::onTextFilterChanged);
@@ -1291,6 +1292,8 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
     // Add actions from the child to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
+//M_WARNING("EXPERIMENTAL")
+//	m_collection_dock_widget->addActionExperimental(child->windowMenuAction());
 
 	/// Connect the closing() signal to the Collection Dock widget.
 //	connect(child, &MDITreeViewBase::closing, m_collection_dock_widget, &CollectionDockWidget::view_is_closing);
@@ -1355,12 +1358,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			// The Collection Doc Widget uses this among others.
 			QStandardItem* new_lib_row_item = new QStandardItem(libmodel->getLibraryName());
 			new_lib_row_item->setData(QVariant::fromValue(libmodel));
-			qDebug() << "APPENDING ROW:" << new_lib_row_item << new_lib_row_item->text();
 			m_stditem_libraries->appendRow(new_lib_row_item);
-			qDebug() << "INFO:";
-			m_model_of_model_view_pairs->dumpObjectInfo();
-			qDebug() << "TREE:";
-			m_model_of_model_view_pairs->dumpObjectTree();
 		}
 	}
 }
@@ -1385,8 +1383,15 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			// View is new.
 
 			// Add the view as a new MDI child.
-			addChildMDIView(mvpair.m_view);
+			addChildMDIView(playlist_view);
+
+			// Add the new Playlist View to the ModelViewPairs Model.
+			// The Collection Doc Widget uses this among others.
+			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_view->getDisplayName());
+			new_playlist_row_item->setData(QVariant::fromValue(playlist_view));
+			m_stditem_playlist_views->appendRow(new_playlist_row_item);
 		}
+		statusBar()->showMessage(tr("Opened view on playlist '%1'").arg(playlist_view->getDisplayName()));
 	}
 
 	if(mvpair.hasModel())
@@ -1410,18 +1415,6 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 
 			// Add the underlying model to the PlaylistModel list.
 			m_playlist_models.push_back(playlist_model.data());
-
-			// Add the new PlaylistModel to the ModelViewPairs Model.
-			// The Collection Doc Widget uses this among others.
-			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_model->getLibraryName());
-			new_playlist_row_item->setData(QVariant::fromValue(playlist_model));
-			qDebug() << "APPENDING ROW:" << new_playlist_row_item << new_playlist_row_item->text();
-			m_stditem_playlists->appendRow(new_playlist_row_item);
-			qDebug() << "MODEL:" << m_stditem_playlists->model();
-			qDebug() << "INFO:";
-			m_model_of_model_view_pairs->dumpObjectInfo();
-			qDebug() << "TREE:";
-			m_model_of_model_view_pairs->dumpObjectTree();
 		}
 	}
 }
@@ -1521,6 +1514,11 @@ void MainWindow::about()
     AboutBox about_box(this);
 
 	about_box.exec();
+}
+
+void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
+{
+	m_mdi_area->setActiveSubWindow(window);
 }
 
 

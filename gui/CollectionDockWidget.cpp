@@ -29,6 +29,9 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPointer>
+#include <QSplitter>
+#include <QPushButton>
+#include <QToolButton>
 
 
 CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent, Qt::WindowFlags flags)
@@ -53,19 +56,21 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 	m_collection_tree_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // Hook up the context menu.
 	m_collection_tree_view->setContextMenuPolicy(Qt::DefaultContextMenu);
-	setWidget(m_collection_tree_view);
 
-//	m_localLibsItem = new QStandardItem("Libraries");
-//	m_localLibsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-//	auto font = QFont(m_localLibsItem->font());
-//    font.setBold(true);
-//	m_localLibsItem->setFont(font);
-//	m_playlistsItem = new QStandardItem("Playlists");
-//	m_playlistsItem->setFlags(Qt::ItemIsEnabled | Qt::ItemIsDropEnabled);
-//	m_playlistsItem->setFont(font);
+	/// @todo EXPERIMENTAL
+	m_tree_widget = new QTreeWidget(this);
+	QPushButton *topLevelButton = new QPushButton("Top Level Button");
+	QTreeWidgetItem *topLevelItem = new QTreeWidgetItem();
+	m_tree_widget->addTopLevelItem(topLevelItem);
+	m_tree_widget->setItemWidget(topLevelItem, 0, topLevelButton);
 
-    // Add top-level items.
-//	m_sources_model->invisibleRootItem()->appendRows({m_localLibsItem, m_playlistsItem});
+	auto center_widget = new QSplitter(Qt::Vertical, this);
+	center_widget->addWidget(m_collection_tree_view);
+	center_widget->addWidget(m_tree_widget);
+	/// @todo EXPERIMENTAL
+
+	// Set the widget for this dock widget.
+	setWidget(center_widget);
 
     // Connect the double-click signal to a custom handler.
 	connect(m_collection_tree_view, &QTreeView::doubleClicked, this, &CollectionDockWidget::tree_doubleclick);
@@ -75,12 +80,21 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 
 void CollectionDockWidget::setModel(QPointer<QStandardItemModel> model)
 {
-	qDebug() << "SETTING MODEL:" << model;
 	m_sources_model = model;
 	m_collection_tree_view->setModel(m_sources_model);
 	m_collection_tree_view->expandAll();
-//	qDebug() << "TREEINFO:";
-//	m_collection_tree_view->dumpObjectTree();
+}
+
+void CollectionDockWidget::addActionExperimental(QAction* act)
+{
+	QToolButton *button = new QToolButton();
+	button->setDefaultAction(act);
+	button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+	QTreeWidgetItem *treewidgetitem = new QTreeWidgetItem();
+	auto parent = m_tree_widget->invisibleRootItem()->child(0);
+	parent->addChild(treewidgetitem);
+	m_tree_widget->setItemWidget(treewidgetitem, 0, button);
 }
 
 #if 0
@@ -193,7 +207,7 @@ void CollectionDockWidget::onShowLib(QModelIndex modelindex)
 		return;
 	}
 
-	emit showLibViewSignal(libmodel);
+	emit showLibraryModelSignal(libmodel);
 }
 
 void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
@@ -238,15 +252,23 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 	auto libmodel = modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
 	if(libmodel)
 	{
-		emit showLibViewSignal(libmodel);
+		emit showLibraryModelSignal(libmodel);
 		return;
 	}
+
+	auto playlist_view = modelindex.data(Qt::UserRole + 1).value<MDIPlaylistView*>();
+	qDebug() << "Playlistview:" << playlist_view << "MDISubwin:" << playlist_view->getQMdiSubWindow();
+	if(playlist_view)
+	{
+		emit activateSubwindow(playlist_view->getQMdiSubWindow());
+	}
+
 return;
 	auto parentindex = modelindex.parent();
 	qDebug() << QString("Parent:") << modelindex.parent() << modelindex.parent().row() << modelindex.parent().column();
 	if(parentindex == m_sources_model->indexFromItem(m_localLibsItem))
 	{
-		emit showLibViewSignal(modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>());
+		emit showLibraryModelSignal(modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>());
 	}
 	else if(parentindex == m_sources_model->indexFromItem(m_playlistsItem))
 	{
