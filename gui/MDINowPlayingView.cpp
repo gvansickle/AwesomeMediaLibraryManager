@@ -21,7 +21,9 @@
 
 MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 {
-
+	// Do not delete this window on close, just hide it.
+M_WARNING("This doesn't seem to work as expected, Collection Widget still segfaults if Now Playing is closed then double-clicked.");
+//	setAttribute(Qt::WA_DeleteOnClose, false);
 }
 
 MDINowPlayingView* MDINowPlayingView::openModel(QAbstractItemModel* model, QWidget* parent)

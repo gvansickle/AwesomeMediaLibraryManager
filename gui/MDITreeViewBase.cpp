@@ -59,6 +59,7 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 
 	m_isUntitled = true;
 
+	// Delete this window on close instead of just hiding it.
 	setAttribute(Qt::WA_DeleteOnClose);
 
 M_WARNING("EXPERIMENTAL");
