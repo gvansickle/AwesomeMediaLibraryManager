@@ -118,6 +118,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(WIN32)
     # Make sure we're supporting Unicode on Windows.
     add_definitions(-DUNICODE -D_UNICODE)
+	# FBO Verdigris on Windows.
+	add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
 endif()
 
 # Find includes in corresponding build directories.
