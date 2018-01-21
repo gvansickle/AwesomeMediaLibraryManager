@@ -86,8 +86,8 @@ void CollectionDockWidget::setModel(QPointer<QStandardItemModel> model)
 void CollectionDockWidget::addActionExperimental(QAction* act)
 {
 	QToolButton *button = new QToolButton();
-	button->setDefaultAction(act);
 	button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	button->setDefaultAction(act);
 
 	QTreeWidgetItem *treewidgetitem = new QTreeWidgetItem();
 	auto parent = m_tree_widget->invisibleRootItem()->child(0);
@@ -238,9 +238,17 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 {
 //	m_collection_tree_view->expandAll();
-
+	qDebug() << "DOUBLECLICK on INDEX:" << modelindex;
 	if(!modelindex.isValid())
 	{
+		qDebug() << "Invalid index:" << modelindex;
+		return;
+	}
+
+	if(!modelindex.parent().isValid())
+	{
+		// No parent, it's a top-level item.
+		qDebug() << "Section index, ignoring:" << modelindex;
 		return;
 	}
 
