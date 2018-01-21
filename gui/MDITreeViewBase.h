@@ -183,7 +183,7 @@ protected:
 	 */
     virtual bool writeFile(QUrl save_url, QString filter);
 
-    virtual void closeEvent(QCloseEvent* event) override;
+	void closeEvent(QCloseEvent* event) override;
 
     ///
     /// Pure virtual functions.

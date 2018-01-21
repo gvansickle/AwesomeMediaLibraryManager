@@ -74,6 +74,14 @@ public:
 	 */
 	static MainWindow* getInstance();
 
+	/**
+	 * Called from the closeEvent() of views just before they accept the event.
+	 * This widget should delete any references it is keeping to @a viewptr.
+	 *
+	 * @note This arrangement is racey, need to find a better way to manage this.
+	 */
+	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
+
 public slots:
 
     /// Slot corresponding to the "Open Directory as new Library" action.
@@ -93,6 +101,8 @@ public slots:
      */
     void openPlaylist();
     void savePlaylistAs();
+
+	void onCloseSubwindow();
 
     void onRescanLibrary();
     void startSettingsDialog();
@@ -125,14 +135,6 @@ protected slots:
 private slots:
     void onSubWindowActivated(QMdiSubWindow* subwindow);
     void onFocusChanged(QWidget* old, QWidget* now);
-
-	/**
-	 * Slot which is signaled by closing views.
-	 * This widget should delete any references it is keeping to @a viewptr.
-	 *
-	 * @note This arrangement is racey, need to find a better way to manage this.
-	 */
-	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
 
     void changeStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);

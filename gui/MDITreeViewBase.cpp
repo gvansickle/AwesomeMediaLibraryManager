@@ -18,6 +18,7 @@
  */
 
 #include "MDITreeViewBase.h"
+#include "MainWindow.h"
 
 #include <QGuiApplication>
 #include <QApplication>
@@ -297,11 +298,16 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 {
 	if(okToClose())
 	{
-		emit closing(this, underlyingModel());
+		// Closing this view.
+
+		// Tell the MainWindow that we're closing.
+		MainWindow::getInstance()->view_is_closing(this, underlyingModel());
+
 		event->accept();
 	}
 	else
 	{
+		// We want to stay open.
 		event->ignore();
 	}
 }

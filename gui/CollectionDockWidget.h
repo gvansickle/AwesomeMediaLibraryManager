@@ -142,9 +142,6 @@ public:
 	void setModel(QPointer<QStandardItemModel> model);
 
 	void addActionExperimental(QAction* act);
-//	void addPlaylist(PlaylistItem* playlist);
-
-	void removePlaylist(PlaylistItem* playlist);
 
 public slots:
 	void tree_doubleclick(QModelIndex modelindex);
@@ -160,23 +157,21 @@ public slots:
 protected:
 	void contextMenuEvent(QContextMenuEvent* event) override;
 
+protected slots:
+	void onTreeContextMenu(const QPoint &point);
+
 private:
 	Q_DISABLE_COPY(CollectionDockWidget)
 
 	QPointer<QStandardItemModel> m_sources_model;
 	QTreeView* m_collection_tree_view;
 
+M_WARNING("EXPERIMENTAL");
 	QPointer<QTreeWidget> m_tree_widget;
-
-	/// @name "Category" items.
-	/// @{
-	QStandardItem* m_localLibsItem;
-	QStandardItem* m_playlistsItem;
-	/// @}
 
 	QSharedPointer<LibraryModel> modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const;
 
-	void doLibraryContextMenu(QContextMenuEvent* event, QPoint treepos);
+	void doLibraryContextMenu(QPoint treepos);
 	void onShowLib(QModelIndex modelindex);
 	void onRemoveLib(QModelIndex modelindex);
 };

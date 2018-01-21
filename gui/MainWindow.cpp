@@ -361,7 +361,8 @@ void MainWindow::createActions()
 	m_act_close = make_action(QIcon::fromTheme("window-close"), "Cl&ose", this,
                             QKeySequence::Close,
                             "Close the active window");
-	connect_trig(m_act_close, this->m_mdi_area, &QMdiArea::closeActiveSubWindow);
+//	connect_trig(m_act_close, this->m_mdi_area, &QMdiArea::closeActiveSubWindow);
+	connect_trig(m_act_close, this, &MainWindow::onCloseSubwindow);
 
 	m_act_close_all = make_action(QIcon::fromTheme("window-close-all"), "Close &All", this,
                               QKeySequence(),
@@ -922,7 +923,7 @@ void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 
 void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
 {
-	qDebug() << "Got signal view_is_closing:" << viewptr << modelptr;
+	qDebug() << "A child view is closing:" << viewptr << modelptr;
 
 	auto playlist = qobject_cast<MDIPlaylistView*>(viewptr);
 	auto nowplaying = qobject_cast<MDINowPlayingView*>(viewptr);
@@ -932,7 +933,21 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 	}
 	else if(playlist)
 	{
-		qDebug() << "Was playlist, deleting model";
+		qDebug() << "Was playlist, deleting view from model-of-models";
+
+		auto parentindex = m_model_of_model_view_pairs->indexFromItem(m_stditem_playlist_views);
+		auto indexes_to_delete = m_model_of_model_view_pairs->match(parentindex, Qt::UserRole+1,
+														QVariant::fromValue<MDITreeViewBase*>(viewptr), -1,
+														Qt::MatchExactly | Qt::MatchRecursive);
+		qDebug() << "Num indexes found:" << indexes_to_delete.size();
+
+		for(auto i : indexes_to_delete)
+		{
+			m_model_of_model_view_pairs->removeRow(i.row(), parentindex);
+		}
+
+		//m_model_of_model_view_pairs->indexFromItem()
+
 		m_playlist_models.erase(std::remove(m_playlist_models.begin(),
 								  m_playlist_models.end(),
 								  modelptr),
@@ -1292,13 +1307,13 @@ void MainWindow::addChildMDIView(MDITreeViewBase* child)
     // Add actions from the child to the Window menu and its action group.
 	m_menu_window->addAction(child->windowMenuAction());
 	m_act_group_window->addAction(child->windowMenuAction());
-//M_WARNING("EXPERIMENTAL")
+M_WARNING("EXPERIMENTAL")
 //	m_collection_dock_widget->addActionExperimental(child->windowMenuAction());
 
 	/// Connect the closing() signal to the Collection Dock widget.
 //	connect(child, &MDITreeViewBase::closing, m_collection_dock_widget, &CollectionDockWidget::view_is_closing);
 	/// ..and also to the main window.
-	connect(child, &MDITreeViewBase::closing, this, &MainWindow::view_is_closing);
+//	connect(child, &MDITreeViewBase::closing, this, &MainWindow::view_is_closing);
 
 	// Show the child window we just added.
 	mdisubwindow->show();
@@ -1359,6 +1374,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			QStandardItem* new_lib_row_item = new QStandardItem(libmodel->getLibraryName());
 			new_lib_row_item->setData(QVariant::fromValue(libmodel));
 			m_stditem_libraries->appendRow(new_lib_row_item);
+			qDebug() << "LIBS ROWCOUNT:" << m_stditem_libraries->rowCount() << new_lib_row_item->parent();
 		}
 	}
 }
@@ -1431,6 +1447,14 @@ void MainWindow::savePlaylistAs()
 			statusBar()->showMessage("Playlist saved", 2000);
 		}
 	}
+}
+
+void MainWindow::onCloseSubwindow()
+{
+	auto active_subwin = this->m_mdi_area->activeSubWindow();
+	qInfo() << "Closing MDI Subwindow:" << active_subwin;
+
+	this->m_mdi_area->closeActiveSubWindow();
 }
 
 void MainWindow::onCut()

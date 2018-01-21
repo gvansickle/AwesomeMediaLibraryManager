@@ -44,10 +44,7 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     setFeatures(QDockWidget::DockWidgetMovable);
     setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
-//	m_sources_model = new QStandardItemModel(this);
-
 	m_collection_tree_view = new QTreeView(this);
-//	m_collection_tree_view->setModel(m_sources_model);
 	m_collection_tree_view->setRootIsDecorated(false);
     // Want to have the tree always expanded.
 	m_collection_tree_view->setExpandsOnDoubleClick(false);
@@ -55,7 +52,8 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
     // Prevent double-click from starting a file rename (i.e. edit) operation.
 	m_collection_tree_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // Hook up the context menu.
-	m_collection_tree_view->setContextMenuPolicy(Qt::DefaultContextMenu);
+	m_collection_tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(m_collection_tree_view, &QTreeView::customContextMenuRequested, this, &CollectionDockWidget::onTreeContextMenu);
 
 	/// @todo EXPERIMENTAL
 	m_tree_widget = new QTreeWidget(this);
@@ -115,41 +113,38 @@ void CollectionDockWidget::addPlaylist(PlaylistItem* playlist)
 
 void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
 {
-    qDebug() << "Context menu";
 
-    // CollectionDockWidget actually got the right-click event after the QTreeView ignored it,
-    // so we have to convert the position back.
-	auto treepos = m_collection_tree_view->mapFromParent(event->pos());
+}
 
-	auto modelindex = m_collection_tree_view->indexAt(treepos);
+void CollectionDockWidget::onTreeContextMenu(const QPoint& point)
+{
+	qDebug() << "Context menu";
 
-	auto libmodel = modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
-	if(libmodel)
+	// CollectionDockWidget actually got the right-click event after the QTreeView ignored it,
+	// so we have to convert the position back.
+//	auto treepos = m_collection_tree_view->mapFromParent(point);
+
+	auto modelindex = m_collection_tree_view->indexAt(point);
+
+	qDebug() << "INDEX:" << modelindex;
+
+	auto item = m_sources_model->itemFromIndex(modelindex);
+
+	if(!item)
 	{
-		doLibraryContextMenu(event, treepos);
-		event->accept();
+		qDebug() << "NO ITEM AT INDEX:" << modelindex;
 		return;
 	}
-return;
-M_WARNING("TODO");
-    auto parentindex = modelindex.parent();
-	///qDebug() << QString("Parent: {}/{}/{}".format(modelindex.parent(), modelindex.parent().row(), modelindex.parent().column()));
 
-	if (parentindex == m_sources_model->indexFromItem(m_localLibsItem))
-    {
-        doLibraryContextMenu(event, treepos);
-    }
-	else if (parentindex == m_sources_model->indexFromItem(m_playlistsItem))
-    {
-		qDebug("Playlist menu, not implemented.");
-    }
-    else
-    {
-		event->ignore();
-        return;
-    }
+	qDebug() << "ITEM:" << item->data(Qt::DisplayRole);
 
-	event->accept();
+	auto libmodel = item->data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
+	if(libmodel)
+	{
+		doLibraryContextMenu(point);
+		return;
+	}
+
 }
 
 QSharedPointer<LibraryModel> CollectionDockWidget::modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const
@@ -170,11 +165,11 @@ QSharedPointer<LibraryModel> CollectionDockWidget::modelIndexToLibraryModelPtr(c
 }
 
 
-void CollectionDockWidget::doLibraryContextMenu(QContextMenuEvent* event, QPoint treepos)
+void CollectionDockWidget::doLibraryContextMenu(QPoint treepos)
 {
-	QPoint pos = event->pos();
-	// Position to put the menu.
-	QPoint globalPos = mapToGlobal(pos);
+	// Get a global coordinate to put the menu at.
+	auto menu_pos = m_collection_tree_view->mapToGlobal(treepos);
+
 	// The QModelIndex() that was right-clicked.
 	QModelIndex modelindex = m_collection_tree_view->indexAt(treepos);
 	qDebug() << QString("INDEX:") << modelindex.row() << modelindex.column();
@@ -186,7 +181,7 @@ void CollectionDockWidget::doLibraryContextMenu(QContextMenuEvent* event, QPoint
 	auto menu = new QMenu(this);
 	auto showAct = menu->addAction("Show");
 	auto removeAct = menu->addAction("Remove...");
-	auto selectedItem = menu->exec(globalPos);
+	auto selectedItem = menu->exec(menu_pos);
 	if(selectedItem == removeAct)
 	{
 		onRemoveLib(modelindex);
@@ -261,18 +256,6 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 	if(playlist_view)
 	{
 		emit activateSubwindow(playlist_view->getQMdiSubWindow());
-	}
-
-return;
-	auto parentindex = modelindex.parent();
-	qDebug() << QString("Parent:") << modelindex.parent() << modelindex.parent().row() << modelindex.parent().column();
-	if(parentindex == m_sources_model->indexFromItem(m_localLibsItem))
-	{
-		emit showLibraryModelSignal(modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>());
-	}
-	else if(parentindex == m_sources_model->indexFromItem(m_playlistsItem))
-	{
-		qDebug() << QString("Playlist menu, not implemented.");
 	}
 }
 
