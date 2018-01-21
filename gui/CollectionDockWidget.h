@@ -35,6 +35,7 @@
 class QStandardItemModel;
 class QTreeView;
 
+#if 0
 class LocalLibraryItem;
 class PlaylistModelItem;
 
@@ -122,6 +123,7 @@ public:
 private:
 	  MDIPlaylistView* m_playlist_view;
 };
+#endif
 
 class CollectionDockWidget : public QDockWidget
 {
@@ -146,16 +148,7 @@ public:
 public slots:
 	void tree_doubleclick(QModelIndex modelindex);
 
-	/**
-	 * Slot which is signaled by closing views.
-	 * This widget should delete any references it is keeping to @a viewptr.
-	 *
-	 * @note This whole arrangement is racey.  This sidebar really needs to be thoroughly reworked.
-	 */
-//	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
-
 protected:
-	void contextMenuEvent(QContextMenuEvent* event) override;
 
 protected slots:
 	void onTreeContextMenu(const QPoint &point);

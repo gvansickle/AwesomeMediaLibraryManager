@@ -1373,6 +1373,9 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			// The Collection Doc Widget uses this among others.
 			QStandardItem* new_lib_row_item = new QStandardItem(libmodel->getLibraryName());
 			new_lib_row_item->setData(QVariant::fromValue(libmodel));
+			new_lib_row_item->setData(QIcon::fromTheme("folder"), Qt::DecorationRole);
+			QString tttext = tr("<b>%1</b><hr>%2").arg(libmodel->getLibraryName()).arg(libmodel->getLibRootDir().toDisplayString());
+			new_lib_row_item->setData(QVariant(tttext), Qt::ToolTipRole);
 			m_stditem_libraries->appendRow(new_lib_row_item);
 			qDebug() << "LIBS ROWCOUNT:" << m_stditem_libraries->rowCount() << new_lib_row_item->parent();
 		}
@@ -1405,6 +1408,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			// The Collection Doc Widget uses this among others.
 			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_view->getDisplayName());
 			new_playlist_row_item->setData(QVariant::fromValue(playlist_view));
+			new_playlist_row_item->setData(QIcon::fromTheme("view-media-playlist"), Qt::DecorationRole);
 			m_stditem_playlist_views->appendRow(new_playlist_row_item);
 		}
 		statusBar()->showMessage(tr("Opened view on playlist '%1'").arg(playlist_view->getDisplayName()));

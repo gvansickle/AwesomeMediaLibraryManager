@@ -111,11 +111,6 @@ void CollectionDockWidget::addPlaylist(PlaylistItem* playlist)
 }
 #endif
 
-void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
-{
-
-}
-
 void CollectionDockWidget::onTreeContextMenu(const QPoint& point)
 {
 	qDebug() << "Context menu";
@@ -267,29 +262,3 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 	}
 }
 
-#if 0
-void CollectionDockWidget::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
-{
-	qDebug() << "Got closing() signal from view" << viewptr;
-
-	// We only care if it's not a Library or Now Playing view.
-	if(qobject_cast<MDILibraryView*>(viewptr) || qobject_cast<MDINowPlayingView*>(viewptr))
-	{
-		qDebug() << "Ignoring, view is Now Playing or Library";
-		return;
-	}
-
-	auto parentindex = m_sources_model->indexFromItem(m_playlistsItem);
-
-	auto indexes_to_delete = m_sources_model->match(parentindex, si_role_view_ptr,
-													QVariant::fromValue<MDITreeViewBase*>(viewptr), -1,
-													Qt::MatchExactly | Qt::MatchRecursive);
-	qDebug() << "Num indexes found:" << indexes_to_delete.size();
-
-	for(auto i : indexes_to_delete)
-	{
-		m_sources_model->removeRow(i.row(), parentindex);
-	}
-
-}
-#endif

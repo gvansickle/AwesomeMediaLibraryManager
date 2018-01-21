@@ -45,6 +45,8 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 	/// @todo Seems like we no longer need to do this.
 //	setWindowTitle("DUMMY");
 
+	m_act_window->setIcon(QIcon::fromTheme("folder"));
+
 	m_underlying_model = nullptr;
 
 	// The sort and Filter proxy model.
