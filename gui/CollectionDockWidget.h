@@ -168,6 +168,8 @@ private:
 	QStandardItem* m_playlistsItem;
 	/// @}
 
+	QSharedPointer<LibraryModel> modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const;
+
 	void doLibraryContextMenu(QContextMenuEvent* event, QPoint treepos);
 	void onShowLib(QModelIndex modelindex);
 	void onRemoveLib(QModelIndex modelindex);

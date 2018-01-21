@@ -102,6 +102,15 @@ void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
 	auto treepos = m_collection_tree_view->mapFromParent(event->pos());
 
 	auto modelindex = m_collection_tree_view->indexAt(treepos);
+
+	auto libmodel = modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
+	if(libmodel)
+	{
+		doLibraryContextMenu(event, treepos);
+		return;
+	}
+
+
     auto parentindex = modelindex.parent();
 	///qDebug() << QString("Parent: {}/{}/{}".format(modelindex.parent(), modelindex.parent().row(), modelindex.parent().column()));
 
@@ -119,7 +128,24 @@ void CollectionDockWidget::contextMenuEvent(QContextMenuEvent* event)
         return;
     }
 
-    event->accept();
+	event->accept();
+}
+
+QSharedPointer<LibraryModel> CollectionDockWidget::modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const
+{
+	if(!modelindex.isValid())
+	{
+		qWarning() << "INVALID INDEX:" << modelindex;
+		return nullptr;
+	}
+
+	auto libmodel = modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>();
+	if(!libmodel)
+	{
+		qWarning() << "NO VALID LIBMODEL AT INDEX:" << modelindex;
+	}
+
+	return libmodel;
 }
 
 
@@ -153,16 +179,30 @@ void CollectionDockWidget::doLibraryContextMenu(QContextMenuEvent* event, QPoint
 
 void CollectionDockWidget::onShowLib(QModelIndex modelindex)
 {
-	emit showLibViewSignal(modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>());
+	auto libmodel = modelIndexToLibraryModelPtr(modelindex);
+	if(!libmodel)
+	{
+		qWarning() << "NO VALID LIBMODEL AT INDEX:" << modelindex;
+		return;
+	}
+
+	emit showLibViewSignal(libmodel);
 }
 
 void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 {
+	auto libmodel = modelIndexToLibraryModelPtr(modelindex);
+	if(!libmodel)
+	{
+		qWarning() << "NO VALID LIBMODEL AT INDEX:" << modelindex;
+		return;
+	}
+
 	QString name = modelindex.data(Qt::DisplayRole).toString();
-	auto url = modelindex.data(Qt::ToolTipRole);
+	auto url = libmodel->getLibRootDir();
 	auto mb = new QMessageBox(this);
 	mb->setIcon(QMessageBox::Question);
-	mb->setText("Remove Library Directory");
+	mb->setText(tr("Remove Library Directory"));
 	mb->setInformativeText(QString("Do you really want to remove '%1' from the library?").arg(name));
 	mb->setDetailedText(QString("Name: '%1'\nURL: '%2'").arg(name).arg(url.toString()));
 	mb->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
@@ -172,7 +212,7 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 	if(retval == QMessageBox::Yes)
 	{
 		// Remove the directory.
-		emit removeLibModelFromLibSignal(modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>());
+		emit removeLibModelFromLibSignal(libmodel);
 		// Remove the entry in our Tree model.
 		m_sources_model->removeRow(modelindex.row(), modelindex.parent());
 	}

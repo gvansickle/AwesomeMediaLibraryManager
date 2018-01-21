@@ -39,8 +39,13 @@
 
 static void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
 {
-	QTextStream ts(stdout);
-    ts << qFormatLogMessage(type, context, msg) << endl;
+	QString debug_str = qFormatLogMessage(type, context, msg);
+
+#ifdef Q_OS_WIN
+	OutputDebugString(debug_str.toStdWString().c_str());
+#else
+	std::cerr << debug_str.toStdString() << std::endl;
+#endif
 }
 
 int main(int argc, char *argv[])
@@ -50,23 +55,34 @@ int main(int argc, char *argv[])
                                      "qt.qpa.input*.debug=false\n"
                                      "qt.*=false\n");
 
-	if(true/** @todo We're running under a debugger.  This still doesn't work.*/)
+	if(true/** @todo We're running under a debugger.  This still doesn't work on Windows.*/)
     {
-        qInstallMessageHandler(&printDebugMessagesWhileDebuggingHandler);
+		qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
     }
 
-	// Start the log with the App ID and version info.
-	/// @todo
-
+	// App-wide settings.
+	// http://doc.qt.io/qt-5/qt.html#ApplicationAttribute-enum
+	// Enable high-DPI scaling in Qt on supported platforms.
+	// Makes Qt scale the main (device independent) coordinate system according to display scale factors provided by
+	// the operating system. This corresponds to setting the QT_AUTO_SCREEN​_SCALE_FACTOR environment variable to 1.
+	// Must be set before Q(Gui)Application is constructed.
 	QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+	/// @todo Look at:
+	///		Qt::AA_UseHighDpiPixmaps
+	///		Qt::AA_UseStyleSheetPropagationInWidgetStyles
+	///		Qt::AA_CompressHighFrequencyEvents (default is true on X11)
 
 	// Create the Qt5 app.
     QApplication app(argc, argv);
 
     // Set up top-level logging.
-    qSetMessagePattern("[%{time yyyy-MM-ddThh:mm:ss.zzz}"
-                       " %{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}%{if-fatal}FATAL%{endif}]"
-                       " %{function}:%{line} - %{message}");
+	qSetMessagePattern("["
+					   "%{time yyyy-MM-ddThh:mm:ss.zzz} "
+					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
+					   "%{if-fatal}FATAL%{endif}"
+					   "] "
+					   "%{function}:%{line} - %{message}"
+					   "%{if-fatal}%{backtrace}%{endif}");
 
 	// Set up app information.
 	app.setApplicationName("AwesomeMediaLibraryManager");
@@ -75,6 +91,11 @@ int main(int argc, char *argv[])
 	app.setOrganizationDomain("gvansickle.github.io");
     app.setApplicationDisplayName("Awesome Media Library Manager");
 	app.setDesktopFileName("AwesomeMediaLibraryManager.desktop");
+
+	// Start the log with the App ID and version info.
+	qInfo() << "LOGGING START";
+	qInfo() << "Application:" << app.applicationDisplayName() << "(" << app.applicationName() << ")";
+	qInfo() << "    Version:" << app.applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
 
 	// Register types with Qt.
 	RegisterQtMetatypes();

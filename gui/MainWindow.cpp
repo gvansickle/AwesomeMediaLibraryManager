@@ -961,7 +961,7 @@ void MainWindow::readSettings()
 void MainWindow::readLibSettings(QSettings& settings)
 {
 	int num_libs = settings.beginReadArray("libraries");
-	qDebug() << "Reading" << num_libs << "libraries...";
+	qInfo() << "Reading" << num_libs << "libraries...";
 	for(int i = 0; i < num_libs; ++i)
 	{
 		settings.setArrayIndex(i);
@@ -975,7 +975,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 		QSharedPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
 
-		if(libmodel == nullptr)
+		if(!libmodel)
 		{
 			QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
 								  QMessageBox::Ok);
@@ -987,9 +987,6 @@ void MainWindow::readLibSettings(QSettings& settings)
 			mvpair.m_model_was_existing = false;
 
 			addChildMDIModelViewPair_Library(mvpair);
-
-			// Add the new library to the Collection Doc Widget.
-//			m_collection_dock_widget->addLibrary(new LocalLibraryItem(libmodel));
 		}
 	}
 	settings.endArray();
@@ -1054,7 +1051,7 @@ void MainWindow::onStartup()
     newNowPlaying();
 
 	// Load any files which were opened at the time the last session was closed.
-	qDebug() << QString("Loading files from last session...");
+	qInfo() << "Loading libraries open at end of last session...";
 	QSettings settings;
 	readLibSettings(settings);
 
@@ -1068,13 +1065,17 @@ void MainWindow::onStartup()
  */
 void MainWindow::openWindows()
 {
-	qDebug() << "Opening windows which were opened from last session...";
+	qInfo() << "Opening windows which were open at end of last session...";
 
 	for(auto m : m_libmodels)
 	{
-		qDebug() << "Opening view on model:" << m->getLibraryName() << m->getLibRootDir();
+		qDebug() << "Opening view on existing model:" << m->getLibraryName() << m->getLibRootDir();
 
 		auto child = MDILibraryView::openModel(m, this);
+
+		/// @todo Should be encapsulated such that what we get back from openModel() is correct.
+		child.m_model_was_existing = true;
+
 		if(child.m_view)
         {
 			addChildMDIModelViewPair_Library(child);
@@ -1316,6 +1317,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			// Add the view as a new MDI child.
 			addChildMDIView(mvpair.m_view);
 		}
+		statusBar()->showMessage(tr("Opened view on library '%1'").arg(libview->getDisplayName()));
 	}
 
 	if(mvpair.hasModel())
@@ -1323,15 +1325,20 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 		auto libmodel = qSharedPointerObjectCast<LibraryModel>(mvpair.m_model);
 		Q_CHECK_PTR(libmodel);
 
+		bool model_really_already_existed = (std::find(m_libmodels.begin(), m_libmodels.end(), libmodel) != m_libmodels.end());
+
 		// View is new, did the model already exist?
 		if(mvpair.m_model_was_existing)
 		{
-			qDebug() << "Model existed:" << mvpair.m_model;
+			qDebug() << "Model existed:" << mvpair.m_model << libmodel->getLibRootDir() << libmodel->getLibraryName();
+			Q_ASSERT(model_really_already_existed);
 		}
 		else
 		{
-			// Model is new as well.
-			qDebug() << "Model is new:" << mvpair.m_model;
+			// Model is new.
+			qDebug() << "Model is new:" << mvpair.m_model << libmodel->getLibRootDir() << libmodel->getLibraryName();
+			Q_ASSERT(!model_really_already_existed);
+
 			m_libmodels.push_back(libmodel);
 
 			connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
@@ -1343,8 +1350,6 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			m_sitem_libraries->appendRow(new_lib_row_item);
 		}
 	}
-
-//	statusBar()->showMessage(tr("Opened view on library '%1'").arg(libmodel->getLibraryName()));
 }
 
 void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpair)
