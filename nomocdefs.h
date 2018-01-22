@@ -21,10 +21,9 @@
 #define NOMOCDEFS_H_
 
 #ifdef USE_BUNDLED_VERDIGRIS
-#include <wobjectdefs.h>  // IWYU pragma: export
+#include <wobjectdefs.h>
 #else
 #define W_OBJECT(classname) Q_OBJECT
 #endif
-
 
 #endif /* NOMOCDEFS_H_ */

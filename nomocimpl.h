@@ -21,7 +21,7 @@
 #define NOMOCIMPL_H_
 
 #ifdef USE_BUNDLED_VERDIGRIS
-#include <wobjectimpl.h>  // IWYU pragma: export
+#include <wobjectimpl.h>
 #else
 #define W_OBJECT_IMPL(classname) /* nothing */
 #endif
