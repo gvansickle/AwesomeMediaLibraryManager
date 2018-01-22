@@ -22,7 +22,7 @@
 
 #include "MDITreeViewBase.h"
 
-#include <QMediaPlaylist>
+class QMediaPlaylist;
 
 #include <logic/PlaylistModel.h>
 
@@ -34,7 +34,7 @@ class MDIPlaylistView : public MDITreeViewBase
     Q_OBJECT
 
     using BASE_CLASS = MDITreeViewBase;
-    
+
 signals:
 	/// @name Signals for player-connected messages.
 	/// @{
@@ -44,7 +44,7 @@ signals:
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
-    
+
 
     /**
      * static member function which opens an MDILibraryView on the given model.
@@ -60,7 +60,7 @@ public:
 	Q_DECL_DEPRECATED PlaylistModel* underlyingModel() const override;
 
 	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
-    
+
     /// Playlists are not read-only.
     bool isReadOnly() const override { return false; }
 

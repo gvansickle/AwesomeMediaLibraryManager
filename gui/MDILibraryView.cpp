@@ -24,6 +24,7 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QToolTip>
+#include <QContextMenuEvent>
 
 #include "ItemDelegateLength.h"
 #include <logic/LibrarySortFilterProxyModel.h>

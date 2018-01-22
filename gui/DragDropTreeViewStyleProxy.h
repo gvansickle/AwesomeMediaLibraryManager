@@ -20,7 +20,8 @@
 #ifndef DRAGDROPTREEVIEWSTYLEPROXY_H
 #define DRAGDROPTREEVIEWSTYLEPROXY_H
 
-#include <QApplication>
+#include <nomocdefs.h>
+
 #include <QStyle>
 #include <QStyleOption>
 #include <QProxyStyle>
@@ -37,10 +38,10 @@
  */
 class DragDropTreeViewStyleProxy : public QProxyStyle
 {
-    Q_OBJECT
-    
+    W_OBJECT(DragDropTreeViewStyleProxy)
+
 public:
-    
+
 	explicit DragDropTreeViewStyleProxy(QStyle* style = Q_NULLPTR) : QProxyStyle(style) {}
 
     void drawPrimitive(PrimitiveElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
@@ -49,21 +50,21 @@ public:
         {
             // Drawing a drop indicator in a drop view.
             // widget will be the derived QAbstractItemView.
-            
+
             painter->save();
-            
+
             QStyleOption opt(*option);
             opt.rect.setLeft(0);
             if(widget)
             {
                 opt.rect.setRight(widget->width()-1);
             }
-            
+
             // Draw the drop indicator.
             drawIndicator(&opt, painter, widget);
-            
+
             painter->restore();
-            
+
             return;
         }
         else
@@ -71,27 +72,27 @@ public:
             QProxyStyle::drawPrimitive(element, option, painter, widget);
         }
     }
-        
+
 private:
 	Q_DISABLE_COPY(DragDropTreeViewStyleProxy)
 
-    
+
 	/**
 	* Do the actual draw of the Drop Indicator.
 	*/
     void drawIndicator(const QStyleOption *option, QPainter *painter, const QWidget *widget) const
     {
         painter->setRenderHint(QPainter::Antialiasing, true);
-        
+
         // Use the "Selected item" color.
         QColor c = option->palette.highlight().color();
         QPen pen(c);
         QBrush brush(c);
-        
+
         pen.setWidth(3);
         painter->setPen(pen);
         painter->setBrush(brush);
-        
+
         QPoint myPoint = QPoint(option->rect.topLeft().x(), option->rect.topLeft().y()+2);
         painter->drawLine(myPoint, option->rect.topRight());
     }

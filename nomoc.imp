@@ -19,6 +19,7 @@
 [
 	{ include: ["<wobjectdefs.h>", "private", "<nomocdefs.h>", "public"] },
 	{ include: ["\"wobjectdefs.h\"", "private", "<nomocdefs.h>", "public"] },
-	{ include: ["<wobjectimpl.h>", "private", "<nomocimpl.h>", "public"] },
-	{ include: ["\"wobjectimpl.h\"", "private", "<nomocimpl.h>", "public"] }
+	{ include: ["@[<\"]wobjectimpl.h[>\"]", "private", "<nomocimpl.h>", "public"] },
+	{ include: ["@[<\"]qdialogbuttonbox.h[>\"]", "private", "<QDialogButtonBox>", "public"] },
+	{ include: ["@[<\"]qglobal.h[>\"]", "private", "<QtGlobal>", "public"] }
 ]

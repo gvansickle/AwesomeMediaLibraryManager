@@ -19,6 +19,8 @@
 
 #include "MDINowPlayingView.h"
 
+#include <utils/DebugHelpers.h>
+
 MDINowPlayingView::MDINowPlayingView(QWidget *parent) : MDIPlaylistView(parent)
 {
 	// Do not delete this window on close, just hide it.

@@ -20,14 +20,14 @@
 #ifndef MDITREEVIEWBASE_H
 #define MDITREEVIEWBASE_H
 
-#include <QContextMenuEvent>
 #include <QTreeView>
 #include <QUrl>
 
 #include "mdi/MDIModelViewPair.h"
-#include "logic/proxymodels/ModelHelpers.h"
+//#include "logic/proxymodels/ModelHelpers.h"
 
 class QMdiSubWindow;
+class QContextMenuEvent;
 class QFileDevice;
 class ModelChangeWatcher;
 class QPersistentModelIndexVec;
@@ -39,11 +39,11 @@ class LibraryEntryMimeData;
 class MDITreeViewBase : public QTreeView
 {
     Q_OBJECT
-    
+
     using BASE_CLASS = QTreeView;
-        
+
 signals:
-    
+
 	/**
 	 * Signal emitted just before the QCloseEvent is accepted.
 	 * @note view_that_is_closing can not be consided to be dereferenceable.  The view may have
@@ -60,12 +60,12 @@ signals:
      * Signal emitted when the "cutability" status changes.  Read-only views will only send false.
      */
     void cutAvailable(bool);
-    
+
     /**
      * Signal emitted when there is a change in the "Select All" status.
      */
     void selectAllAvailable(bool);
-        
+
 
 public:
     explicit MDITreeViewBase(QWidget *parent = Q_NULLPTR);
@@ -118,10 +118,10 @@ public:
     /// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
     /// Default implementation returns userFriendlyCurrentFile().
     virtual QString getDisplayName() const;
-    
+
     /// Return an action for the MainWindow's Window menu.
 	QAction* windowMenuAction() const { return m_act_window; }
-    
+
     /// Override if derived classes are not read-only.
 	virtual bool isReadOnly() const { return true; }
 
@@ -144,10 +144,10 @@ public:
 	virtual QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const = 0;
 
 public slots:
-    
+
     /// @name Edit handlers.
     /// @{
-    
+
     /// View is read-only by default.  Does nothing.
     virtual void onCut() {}
 	/// Copy selection to clipboard.
@@ -224,7 +224,7 @@ protected slots:
     virtual void headerMenu(QPoint pos);
 
     virtual void onSectionClicked(int logicalIndex);
-	
+
 	/**
 	 * Context menu handler.  Base class implementation in QWidget ignores the event.
 	 * This override dispatches the event to either onContextMenuIndex() or onContextMenuViewport()
@@ -287,7 +287,7 @@ protected:
 
 private:
     Q_DISABLE_COPY(MDITreeViewBase)
-    
+
     /// ModelChangeWatcher object for keeping "Select All" enable status correct.
     ModelChangeWatcher* m_select_all_model_watcher;
 
@@ -296,7 +296,7 @@ private:
     int m_previous_sort_column {-1};
 
     Qt::SortOrder m_sort_order { Qt::AscendingOrder };
-    
+
 };
 
 #endif // MDITREEVIEWBASE_H

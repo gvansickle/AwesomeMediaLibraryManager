@@ -22,6 +22,7 @@
 
 #include <nomocdefs.h>
 
+#include <QtGlobal>
 #include <QDialog>
 #include <QString>
 

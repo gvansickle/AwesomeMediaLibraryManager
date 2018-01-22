@@ -45,6 +45,7 @@
 #include <QStatusBar>
 #include <Qt>
 #include <QAction>
+#include <QCloseEvent>
 #include <QStandardPaths>
 #include <QDebug>
 #include "utils/DebugHelpers.h"

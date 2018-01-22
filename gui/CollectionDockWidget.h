@@ -20,20 +20,22 @@
 #ifndef COLLECTIONDOCKWIDGET_H
 #define COLLECTIONDOCKWIDGET_H
 
-#include "MDIPlaylistView.h"
+//#include "MDIPlaylistView.h"
 
 #include <QDockWidget>
 #include <QWidget>
 #include <QModelIndex>
-#include <QStandardItemModel>
 #include <QPointer>
 #include <QTreeWidget>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModelItem.h>
 
+#include "utils/DebugHelpers.h"
+
 class QStandardItemModel;
 class QTreeView;
+class QMdiSubWindow;
 
 
 class CollectionDockWidget : public QDockWidget

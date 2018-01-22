@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <QMenu>
 #include <QAction>
+#include <QContextMenuEvent>
 #include <QClipboard>
 #include <QHeaderView>
 #include <QSaveFile>
