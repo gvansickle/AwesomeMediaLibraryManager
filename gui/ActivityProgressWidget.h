@@ -36,7 +36,7 @@ public:
 	explicit ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f = Qt::WindowFlags());
 	virtual ~ActivityProgressWidget() override;
 
-public /*slots*/:
+public Q_SLOTS:
 	void onProgressRangeChanged(int minimum, int maximum);
 	void onProgressTextChanged(const QString &progressText);
 	void onProgressValueChanged(int progressValue);

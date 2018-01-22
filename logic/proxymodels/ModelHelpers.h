@@ -70,7 +70,7 @@ inline static QPersistentModelIndexVec pindexes(const QItemSelection& selection,
 				}
 			}
 		}
-		toQPersistentModelIndexVec(retval);
+		return toQPersistentModelIndexVec(retval);
 	}
 	else
 	{

@@ -147,6 +147,7 @@ endforeach()
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
+set(GLOBAL_DEPENDS_DEBUG_MODE TRUE)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #		INCLUDE_DIRECTORIES
@@ -156,6 +157,12 @@ set(CPACK_IFW_VERBOSE YES)
 #		LIB_VERSION
 #		)
 
+# Use include-what-you-use.
+if(TRUE)
+	if(NOT WIN32)
+		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp")
+	endif()
+endif()
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 
@@ -269,6 +276,7 @@ endif()
 endif()
 
 # Verdigris is just two headers.
+set(USE_BUNDLED_VERDIGRIS 1)
 set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
 
 # Main program header files.
@@ -446,10 +454,10 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 # FBO Verdigris (esp. on Windows/MSVC).
 #add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS" "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}")
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_VERDIGRIS})
 if(NOT WIN32)
-target_compile_options(${PROJECT_NAME} PUBLIC "-O0")
+target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)

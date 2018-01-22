@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,28 +17,13 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
-#define AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
+#ifndef NOMOCIMPL_H_
+#define NOMOCIMPL_H_
 
-#include <nomocdefs.h>
+#ifdef USE_BUNDLED_VERDIGRIS
+#include <wobjectimpl.h>  // IWYU pragma: export
+#else
+#define W_OBJECT_IMPL(classname) /* nothing */
+#endif
 
-#include <QDialog>
-#include <QString>
-
-class AboutBox : public QDialog
-{
-	W_OBJECT(AboutBox)
-
-public:
-    AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
-
-	int exec() override;
-
-private:
-	Q_DISABLE_COPY(AboutBox)
-
-	QString m_text_str;
-	QString m_title_str;
-};
-
-#endif //AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
+#endif /* NOMOCIMPL_H_ */

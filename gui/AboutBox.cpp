@@ -19,7 +19,7 @@
 
 #include "AboutBox.h"
 
-#include <wobjectimpl.h>
+#include <nomocimpl.h>
 
 #include <QApplication>
 #include <QHBoxLayout>
@@ -38,7 +38,7 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
 
 	QString app_name_str = qApp->applicationDisplayName();
 	QString app_full_version_info = toqstr(VersionInfo::get_full_version_info_string());
-	
+
     m_title_str = tr("About %1").arg(qApp->applicationDisplayName());
 
     m_text_str = tr(
@@ -63,13 +63,13 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
 		" along with AwesomeMediaLibraryManager.  If not, see <a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a>.</p>"
 		    "<hr>"
 		    "</body>").arg(app_name_str).arg(app_full_version_info);
-	
+
 	// Main layout is vertical.
     auto mainLayout = new QVBoxLayout();
-	
+
 	// Above-buttons section is divided in two: left for icon, right for About text.
 	auto hlayout = new QHBoxLayout();
-	
+
 	QIcon icon = parent->windowIcon();
 	auto icon_as_label = new QLabel();
 	icon_as_label->setPixmap(icon.pixmap(128));
@@ -80,18 +80,18 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
 	// About text is link-clickable with mouse or keyboard, text can be selected and copied with mouse.
 	main_text->setTextInteractionFlags(Qt::TextBrowserInteraction);
 	main_text->setOpenExternalLinks(true);
-	
+
 	auto button_box = new QDialogButtonBox(QDialogButtonBox::Ok, this);
 	connect(button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
-	
+
 	hlayout->addWidget(icon_as_label, 0, Qt::AlignTop | Qt::AlignHCenter);
 	hlayout->addWidget(main_text);
-	
+
 	mainLayout->addLayout(hlayout);
 	mainLayout->addWidget(button_box);
-	
+
     setLayout(mainLayout);
-	
+
 	setWindowTitle(m_title_str);
 }
 
