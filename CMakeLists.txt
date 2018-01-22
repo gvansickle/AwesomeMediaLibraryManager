@@ -118,8 +118,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if(WIN32)
     # Make sure we're supporting Unicode on Windows.
     add_definitions(-DUNICODE -D_UNICODE)
-	# FBO Verdigris on Windows.
-	add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
 endif()
 
 # Find includes in corresponding build directories.
@@ -129,9 +127,23 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Sanitizers)
 
 # The Qt5 packages we require.
-find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Concurrent)
+find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia Concurrent REQUIRED)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
-message(STATUS "Found Qt ${Qt5Core_VERSION_STRING} at ${Qt5Core_location}")
+message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
+message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
+message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
+# List plugin info.
+message(STATUS "*  Qt5::Gui Plugins:")
+foreach(plugin ${Qt5Gui_PLUGINS})
+  get_target_property(_loc ${plugin} LOCATION)
+  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+endforeach()
+message(STATUS "*  Qt5::Widgets Plugins:")
+foreach(plugin ${Qt5Widgets_PLUGINS})
+  get_target_property(_loc ${plugin} LOCATION)
+  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+endforeach()
+
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
@@ -255,6 +267,9 @@ else()
 	endif()
 endif()
 endif()
+
+# Verdigris is just two headers.
+set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
 
 # Main program header files.
 set(HEADER_FILES
@@ -428,7 +443,11 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
+# FBO Verdigris (esp. on Windows/MSVC).
+#add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS")
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_VERDIGRIS})
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-O0")
 endif()

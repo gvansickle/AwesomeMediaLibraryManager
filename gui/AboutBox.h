@@ -20,12 +20,15 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 #define AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
 
+#include <wobjectdefs.h>
+
 #include <QDialog>
 #include <QString>
 
 class AboutBox : public QDialog
 {
-    Q_OBJECT
+	//Q_OBJECT
+	W_OBJECT(AboutBox)
 
 public:
     AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
@@ -33,7 +36,7 @@ public:
 	int exec() override;
 
 private:
-	Q_DISABLE_COPY(AboutBox)
+	//Q_DISABLE_COPY(AboutBox)
 
 	QString m_text_str;
 	QString m_title_str;
