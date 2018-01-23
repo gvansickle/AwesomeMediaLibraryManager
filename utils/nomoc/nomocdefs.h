@@ -17,13 +17,13 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_NOMOCIMPL_H_
-#define UTILS_NOMOCIMPL_H_
+#ifndef UTILS_NOMOC_NOMOCDEFS_H_
+#define UTILS_NOMOC_NOMOCDEFS_H_
 
 #ifdef USE_BUNDLED_VERDIGRIS
-#include <wobjectimpl.h>
+#include <wobjectdefs.h>
 #else
-#define W_OBJECT_IMPL(classname) /* nothing */
+#define W_OBJECT(classname) Q_OBJECT
 #endif
 
-#endif /* UTILS_NOMOCIMPL_H_ */
+#endif /* UTILS_NOMOC_NOMOCDEFS_H_ */
