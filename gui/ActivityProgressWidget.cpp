@@ -19,7 +19,7 @@
 
 #include "ActivityProgressWidget.h"
 
-#include <wobjectimpl.h>
+#include <nomocimpl.h>
 
 #include <QLabel>
 #include <QProgressBar>

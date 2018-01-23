@@ -20,7 +20,7 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 #define AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 
-#include <wobjectdefs.h>
+#include <nomocdefs.h>
 
 #include <QtWidgets/QWidget>
 
@@ -29,7 +29,6 @@ class QLabel;
 
 class ActivityProgressWidget : public QWidget
 {
-	//Q_OBJECT
 	W_OBJECT(ActivityProgressWidget)
 
 public:
