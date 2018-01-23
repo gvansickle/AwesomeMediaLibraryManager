@@ -160,7 +160,7 @@ set(CPACK_IFW_VERBOSE YES)
 # Use include-what-you-use.
 if(TRUE)
 	if(NOT WIN32)
-		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp;-Xiwyu;--mapping_file=${PROJECT_SOURCE_DIR}/nomoc.imp")
+		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp;-Xiwyu;--mapping_file=${PROJECT_SOURCE_DIR}/utils/nomoc/nomoc.imp")
 	endif()
 endif()
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
@@ -409,6 +409,12 @@ set(SOURCE_FILES
 	logic/proxymodels/QPersistentModelIndexVec.cpp
     )
 
+# NoMoc files.
+set(HEADER_FILES_UTILS_NOMOC
+	utils/nomoc/nomocdefs.h
+	utils/nomoc/nomocimpl.h)
+list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
+
 set(HEADER_FILES_UTILS_CONCURRENCY
 	utils/concurrency/AsyncTaskManager.h)
 set(SOURCE_FILES_UTILS_CONCURRENCY
@@ -455,7 +461,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 #add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS" "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}")
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_VERDIGRIS})
+target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
