@@ -24,6 +24,8 @@
 #include <wobjectdefs.h>
 #else
 #define W_OBJECT(classname) Q_OBJECT
+#define W_SIGNAL(...) ;
+#define W_SLOT(...) /* nothing */
 #endif
 
 #endif /* UTILS_NOMOC_NOMOCDEFS_H_ */

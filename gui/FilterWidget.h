@@ -20,6 +20,8 @@
 #ifndef FILTERWIDGET_H
 #define FILTERWIDGET_H
 
+#include <nomocdefs.h>
+
 #include <QLineEdit>
 #include <QRegExp>
 
@@ -30,13 +32,14 @@ Q_DECLARE_METATYPE(QRegExp::PatternSyntax)
 
 class FilterWidget : public QLineEdit
 {
-	Q_OBJECT
+	W_OBJECT(FilterWidget)
 
-	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
+	//Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
+	//Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
 
-signals:
-	void filterChanged();
+Q_SIGNALS:
+	void filterChanged()
+	  W_SIGNAL(filterChanged)
 
 public:
 	explicit FilterWidget(QWidget *parent = nullptr);
@@ -47,8 +50,10 @@ public:
 	QRegExp::PatternSyntax patternSyntax() const;
 	void setPatternSyntax(QRegExp::PatternSyntax);
 
+	W_PROPERTY(Qt::CaseSensitivity, caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
+	W_PROPERTY(QRegExp::PatternSyntax, patternSyntax READ patternSyntax WRITE setPatternSyntax)
 
-public slots:
+public Q_SLOTS:
 
 private:
 	Q_DISABLE_COPY(FilterWidget)
