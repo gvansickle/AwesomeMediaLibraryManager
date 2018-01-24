@@ -886,6 +886,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
     auto view = findSubWindowView(url);
     if(view)
     {
+		// Found an existing View, which means it's attached to an existing Model.
         retval.m_view = view;
         retval.m_view_was_existing = true;
 		retval.m_model = view->underlyingModel();
@@ -893,8 +894,8 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
     }
 	else
 	{
-		// No existing view, is there an existing model open?
-M_WARNING("TODO: Find a cleaner way to handle this.");
+		// No existing View, is there an existing Model open?
+		/// @todo: Seems like there should be a cleaner way to handle this.
 		for(auto lm : m_libmodels)
 		{
 			if(lm->getLibRootDir() == url)
@@ -909,8 +910,7 @@ M_WARNING("TODO: Find a cleaner way to handle this.");
 			if(pm->getLibRootDir() == url)
 			{
 				qDebug() << "Found existing PlaylistModel:" << pm;
-M_WARNING("TODO: This isn't correct.");
-				retval.m_model = QPointer<PlaylistModel>(pm.data());
+				retval.m_model = pm;
 				retval.m_model_was_existing = true;
 			}
 		}

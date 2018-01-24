@@ -117,7 +117,7 @@ void CollectionDockWidget::onTreeContextMenu(const QPoint& point)
 
 	qDebug() << "ITEM:" << item->data(Qt::DisplayRole);
 
-	auto libmodel = item->data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
+	auto libmodel = item->data(Qt::UserRole + 1).value<QPointer<LibraryModel>>();
 	if(libmodel)
 	{
 		doLibraryContextMenu(point);
