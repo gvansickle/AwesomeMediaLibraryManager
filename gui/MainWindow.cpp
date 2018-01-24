@@ -17,7 +17,6 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <nomocimpl.h>
 
 #include "FilterWidget.h"
 #include "MainWindow.h"
@@ -80,7 +79,6 @@
 
 #include <gui/menus/ActionBundle.h>
 
-W_OBJECT_IMPL(MainWindow)
 
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,

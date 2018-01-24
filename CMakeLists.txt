@@ -158,11 +158,12 @@ set(CPACK_IFW_VERBOSE YES)
 #		)
 
 # Use include-what-you-use.
-if(TRUE)
+if(FALSE)
 	if(NOT WIN32)
 		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp;-Xiwyu;--mapping_file=${PROJECT_SOURCE_DIR}/utils/nomoc/nomoc.imp")
 	endif()
 endif()
+
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 

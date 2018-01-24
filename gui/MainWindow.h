@@ -17,8 +17,6 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <nomocdefs.h>
-
 #include "Experimental.h"
 #include "MDILibraryView.h"
 #include "MDIPlaylistView.h"
@@ -57,14 +55,14 @@ class ActionBundle;
 
 class MainWindow: public QMainWindow
 {
-	W_OBJECT(MainWindow)
+	Q_OBJECT
 
 Q_SIGNALS:
 	/**
 	 * Signal which serves essentially as a repeater for other views which want to
 	 * send one or more tracks to the "Now Playing" view.
 	 */
-	void sendToNowPlaying(LibraryEntryMimeData* mime_data) W_SIGNAL(sendToNowPlaying, (LibraryEntryMimeData*), mime_data)
+	void sendToNowPlaying(LibraryEntryMimeData* mime_data);
 
 
 public:
@@ -89,36 +87,28 @@ public Q_SLOTS:
     /// Slot corresponding to the "Open Directory as new Library" action.
     /// This is ~= a "File->Open" action.
     void importLib();
-	W_SLOT(importLib, W_Access::Public)
 
 	void openFileLibrary(const QUrl& filename);
-	W_SLOT(openFileLibrary, W_Access::Public)
 
     /**
      * Open a new, empty playlist.
      * ~= "File->New".
      */
     void newPlaylist();
-	W_SLOT(newPlaylist, W_Access::Public)
 
     /**
      * Open an existing playlist.
      * ~= "File->Open...".
      */
     void openPlaylist();
-	W_SLOT(openPlaylist, W_Access::Public)
 
     void savePlaylistAs();
-	W_SLOT(savePlaylistAs, W_Access::Public)
 
 	void onCloseSubwindow();
-	W_SLOT(onCloseSubwindow, W_Access::Public)
 
     void onRescanLibrary();
-	W_SLOT(onRescanLibrary, W_Access::Public)
 
     void startSettingsDialog();
-	W_SLOT(startSettingsDialog, W_Access::Public)
 
     /// @name Edit action forwarders.
     /// @{
