@@ -20,8 +20,6 @@
 #ifndef COLLECTIONDOCKWIDGET_H
 #define COLLECTIONDOCKWIDGET_H
 
-//#include "MDIPlaylistView.h"
-
 #include <QDockWidget>
 #include <QWidget>
 #include <QModelIndex>
@@ -29,7 +27,6 @@
 #include <QTreeWidget>
 
 #include <logic/LibraryModel.h>
-#include <logic/PlaylistModelItem.h>
 
 #include "utils/DebugHelpers.h"
 
@@ -42,7 +39,7 @@ class CollectionDockWidget : public QDockWidget
 {
     Q_OBJECT
 
-signals:
+Q_SIGNALS:
 	// Signal indicating the user wants to remove the given LibraryModel.
 	void removeLibModelFromLibSignal(QSharedPointer<LibraryModel>);
 
@@ -58,12 +55,12 @@ public:
 
 	void addActionExperimental(QAction* act);
 
-public slots:
+public Q_SLOTS:
 	void tree_doubleclick(QModelIndex modelindex);
 
 protected:
 
-protected slots:
+protected Q_SLOTS:
 	void onTreeContextMenu(const QPoint &point);
 
 private:
