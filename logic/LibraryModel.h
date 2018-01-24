@@ -65,7 +65,7 @@ class LibraryModel : public QAbstractItemModel
 
 	using BASE_CLASS = QAbstractItemModel;
 
-signals:
+Q_SIGNALS:
 	/// Signal to ourself to start an asynchronous directory traversal.
     void startFileScanSignal(QUrl url);
 
@@ -169,7 +169,7 @@ public:
 	virtual QStringList mimeTypes() const override;
 	virtual QMimeData* mimeData(const QModelIndexList &indexes) const override;
 
-public slots:
+public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
 	void onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
 	void onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
