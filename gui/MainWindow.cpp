@@ -888,7 +888,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
     {
         retval.m_view = view;
         retval.m_view_was_existing = true;
-		retval.m_model = view->underlyingModelSharedPtr();
+		retval.m_model = view->underlyingModel();
         retval.m_model_was_existing = true;
     }
 	else
@@ -910,7 +910,7 @@ M_WARNING("TODO: Find a cleaner way to handle this.");
 			{
 				qDebug() << "Found existing PlaylistModel:" << pm;
 M_WARNING("TODO: This isn't correct.");
-				retval.m_model = QSharedPointer<PlaylistModel>(pm.data());
+				retval.m_model = QPointer<PlaylistModel>(pm.data());
 				retval.m_model_was_existing = true;
 			}
 		}
@@ -998,7 +998,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 //		qDebug() << "Jsondoc:" << jsondoc.toJson();
 //		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
 
-		QSharedPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
+		QPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
 
 		if(!libmodel)
 		{
@@ -1162,7 +1162,7 @@ void MainWindow::onRescanLibrary()
 	}
 }
 
-void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
+void MainWindow::onShowLibrary(QPointer<LibraryModel> libmodel)
 {
 	// We'll just try to open the same URL as the libmodel, and let the "opening an existing view/model"
 	// logic do the rest.
@@ -1170,7 +1170,7 @@ void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
 }
 
 
-void MainWindow::onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel)
+void MainWindow::onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel)
 {
 	qDebug() << QString("Removing libmodel from library:") << libmodel;
 
@@ -1223,7 +1223,7 @@ void MainWindow::newPlaylist()
 	MDIModelViewPair mvpair;
 	mvpair.m_view = child;
 	mvpair.m_view_was_existing = false;
-	mvpair.setModel(child->underlyingModelSharedPtr());
+	mvpair.setModel(child->underlyingModel());
 	mvpair.m_model_was_existing = false;
 
 	addChildMDIModelViewPair_Playlist(mvpair);
@@ -1241,7 +1241,7 @@ void MainWindow::newNowPlaying()
     child->newFile();
 
 	// Set this view's model to be the single "Now Playing" model.
-	m_now_playing_playlist_model = child->underlyingModelSharedPtr().objectCast<PlaylistModel>();
+	m_now_playing_playlist_model = child->underlyingModel();
 
     /// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;
@@ -1346,7 +1346,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 
 	if(mvpair.hasModel())
 	{
-		auto libmodel = qSharedPointerObjectCast<LibraryModel>(mvpair.m_model);
+		QPointer<LibraryModel> libmodel = qobject_cast<LibraryModel*>(mvpair.m_model);
 		Q_CHECK_PTR(libmodel);
 
 		bool model_really_already_existed = (std::find(m_libmodels.begin(), m_libmodels.end(), libmodel) != m_libmodels.end());
@@ -1416,7 +1416,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 
 	if(mvpair.hasModel())
 	{
-		QPointer<PlaylistModel> playlist_model = qSharedPointerObjectCast<PlaylistModel>(mvpair.m_model).data();
+		auto playlist_model = qobject_cast<PlaylistModel*>(mvpair.m_model);
 		Q_CHECK_PTR(playlist_model);
 
 		bool model_really_already_existed = (std::find(m_playlist_models.begin(), m_playlist_models.end(), playlist_model) != m_playlist_models.end());
@@ -1434,7 +1434,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			Q_ASSERT(!model_really_already_existed);
 
 			// Add the underlying model to the PlaylistModel list.
-			m_playlist_models.push_back(playlist_model.data());
+			m_playlist_models.push_back(playlist_model);
 		}
 	}
 }

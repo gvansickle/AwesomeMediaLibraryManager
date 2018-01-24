@@ -42,7 +42,7 @@ class MDITreeViewBase : public QTreeView
 
     using BASE_CLASS = QTreeView;
 
-signals:
+Q_SIGNALS:
 
 	/**
 	 * Signal emitted just before the QCloseEvent is accepted.
@@ -135,15 +135,12 @@ public:
     //
 
 	// Overridden from QTreeView.
-	Q_DECL_DEPRECATED void setModel(QAbstractItemModel *model) override;
+	void setModel(QAbstractItemModel *model) override;
 
-	virtual void setModel(QSharedPointer<QAbstractItemModel> model) = 0;
+	virtual QAbstractItemModel* underlyingModel() const = 0;
 
-	Q_DECL_DEPRECATED virtual QAbstractItemModel* underlyingModel() const = 0;
 
-	virtual QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const = 0;
-
-public slots:
+public Q_SLOTS:
 
     /// @name Edit handlers.
     /// @{
@@ -213,7 +210,7 @@ protected:
 	/// Creates a LibraryEntryMimeData object containing copies of the given rows.
 	virtual LibraryEntryMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
 
-protected slots:
+protected Q_SLOTS:
 
 	/**
 	 * Connect this slot to any model signals which indicate there are unsaved changes.

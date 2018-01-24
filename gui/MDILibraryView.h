@@ -79,21 +79,17 @@ public:
 	 *
 	 * @param model  The model to open.  Must exist and must be valid.
      */
-	static MDIModelViewPair openModel(QSharedPointer<LibraryModel> model, QWidget* parent);
+	static MDIModelViewPair openModel(QPointer<LibraryModel> model, QWidget* parent);
 
-	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
+	void setModel(QAbstractItemModel* model) override;
 
-	void setModel(QSharedPointer<QAbstractItemModel> model) override;
-
-	Q_DECL_DEPRECATED LibraryModel* underlyingModel() const override;
-
-	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
+	LibraryModel* underlyingModel() const override;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
 
 protected:
-    QSharedPointer<LibraryModel> m_underlying_model;
+	QPointer<LibraryModel> m_underlying_model;
 
 	LibrarySortFilterProxyModel* m_sortfilter_model;
 	ItemDelegateLength* m_length_delegate;

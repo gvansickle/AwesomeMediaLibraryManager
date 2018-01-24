@@ -148,7 +148,7 @@ static qint64 sequenceNumber = 0;
     // Set the name we'll give to the MainWindow's Window menu.
 	m_act_window->setText(getDisplayName());
 
-    // CwriteFilenew, empty model.
+	// Create a new, empty model.
     setEmptyModel();
 }
 
