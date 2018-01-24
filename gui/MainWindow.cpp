@@ -1514,7 +1514,13 @@ void MainWindow::startSettingsDialog()
 		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
 	}
 
-	m_settings_dlg->exec();
+	// Open the settings dialog modeless.
+	// Note this from the Qt5 docs:
+	// http://doc.qt.io/qt-5/qdialog.html
+	// "If you invoke the show() function after hiding a dialog, the dialog will be displayed in its original position. [...]
+	// To preserve the position of a dialog that has been moved by the user, save its position in your closeEvent() handler and
+	// then move the dialog to that position, before showing it again"
+	m_settings_dlg->show();
 }
 
 void MainWindow::changeStyle(const QString& styleName)
