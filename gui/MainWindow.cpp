@@ -1521,6 +1521,8 @@ void MainWindow::startSettingsDialog()
 	// To preserve the position of a dialog that has been moved by the user, save its position in your closeEvent() handler and
 	// then move the dialog to that position, before showing it again"
 	m_settings_dlg->show();
+	m_settings_dlg->raise();
+	m_settings_dlg->activateWindow();
 }
 
 void MainWindow::changeStyle(const QString& styleName)
