@@ -111,7 +111,7 @@ protected:
 	 */
     virtual bool readFile(QUrl load_url) override;
 
-M_WARNING("TODO: Override writeFile?");
+	///@todo Override writeFile?
 
 	virtual void serializeDocument(QFileDevice& file) const override;
 	virtual void deserializeDocument(QFileDevice& file) override;

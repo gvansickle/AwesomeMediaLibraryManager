@@ -63,7 +63,7 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	// Delete this window on close instead of just hiding it.
 	setAttribute(Qt::WA_DeleteOnClose);
 
-M_WARNING("EXPERIMENTAL");
+	/// @todo Seems to work well.  Currently seeing default of 12 pt on Fedora 27, 8 pt on Win7.
 	auto f = QFont();
 	qDebug() << "Original Font size:" << f.pointSize() << "Font:" << f;
 	f.setPointSize(10);

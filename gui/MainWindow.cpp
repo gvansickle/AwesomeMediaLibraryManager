@@ -20,7 +20,6 @@
 
 #include "FilterWidget.h"
 #include "MainWindow.h"
-#include "NetworkAwareFileDialog.h"
 
 #include "MDITreeViewBase.h"
 #include "MDILibraryView.h"
@@ -445,7 +444,7 @@ void MainWindow::createActionsView()
 
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); //< Also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
-M_WARNING("TODO: These appear to be unreparentable, so we can't give them to an ActionBundle.");
+	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
 }
@@ -684,7 +683,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
  */
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
-M_WARNING("TODO: Hide qMediaPlaylist behind playlist_view?");
+	/// @todo Hide qMediaPlaylist behind playlist_view?
 	if(player->playlist() == playlist_view->getQMediaPlaylist())
 	{
 		qDebug() << "Already connected.";
