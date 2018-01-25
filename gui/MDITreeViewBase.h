@@ -166,16 +166,20 @@ protected:
     /// Used when newFile() is called.
     virtual void setEmptyModel() = 0;
 
+	bool saveFile(const QUrl& filename, const QString& filter);
+
     /// Protected function which is used to set the view's filename properties on a read or write.
     /// Called by readFile() and writeFile().
     void setCurrentFile(QUrl url);
 
 	/**
+	 * The function that does the actual reading of the file.
 	 * Called by openFile().
 	 */
     virtual bool readFile(QUrl load_url);
 
 	/**
+	 * The function that finally does the actual saving of the file.
 	 * Called by saveFile().
 	 */
     virtual bool writeFile(QUrl save_url, QString filter);

@@ -47,6 +47,7 @@ public:
 	operator SectionID() { return SectionID(m_val); }
 };
 
+
 class PlaylistModel : public LibraryModel
 {
 	Q_OBJECT

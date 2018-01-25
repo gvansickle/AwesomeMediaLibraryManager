@@ -161,7 +161,7 @@ bool MDITreeViewBase::save()
 	}
 	else
 	{
-        return writeFile(m_current_url, m_current_filter);
+		return saveFile(m_current_url, m_current_filter);
 	}
 }
 
@@ -178,7 +178,7 @@ bool MDITreeViewBase::saveAs()
 		return false;
 	}
 
-    return writeFile(file_url, filter);
+	return saveFile(file_url, filter);
 }
 
 bool MDITreeViewBase::readFile(QUrl load_url)
@@ -213,12 +213,13 @@ bool MDITreeViewBase::writeFile(QUrl save_url, QString filter)
     if(!savefile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QMessageBox::warning(this, qApp->applicationDisplayName(),
-                            QString("Cannot write file ") + save_url.toString() + ": " + savefile.errorString());
+							tr("Cannot write file %1:\n%2.").arg(save_url.toDisplayString()).arg(savefile.errorString()));
         return false;
     }
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
+	qDebug() << "Savefile name:" << save_url.toLocalFile() << savefile.fileName();
     serializeDocument(savefile);
     savefile.commit();
 
@@ -238,6 +239,19 @@ QUrl MDITreeViewBase::getCurrentUrl() const
 	return m_current_url;
 }
 
+bool MDITreeViewBase::saveFile(const QUrl& filename, const QString& filter)
+{
+	if(writeFile(filename, filter))
+	{
+		setCurrentFile(filename);
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 void MDITreeViewBase::setCurrentFile(QUrl url)
 {
 	// Protected function which is used to set the view's filename properties on a save or load.
@@ -245,9 +259,9 @@ void MDITreeViewBase::setCurrentFile(QUrl url)
 	m_isUntitled = false;
 	setWindowFilePath(url.toString());
     qDebug() << "windowFilePath()" << windowFilePath();
-	setWindowModified(false);
 	setWindowTitle(getDisplayName() + "[*]");
 	m_act_window->setText(getDisplayName());
+	setWindowModified(false);
 }
 
 QString MDITreeViewBase::getDisplayName() const
@@ -292,9 +306,8 @@ void MDITreeViewBase::onCopy()
 
 void MDITreeViewBase::onSelectAll()
 {
-    selectAll();
+	selectAll();
 }
-
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)
 {
