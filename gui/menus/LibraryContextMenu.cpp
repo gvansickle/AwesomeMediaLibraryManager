@@ -65,7 +65,7 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 	// Convert the selected rows to sourceModel coords.
 	auto row_indexes = mapQPersistentModelIndexesToSource(selected_rows);
 	bool is_multirow = false;
-	
+
 	if(row_indexes.size() > 0)
 	{
 		qDebug() << "row_indexes size():" << row_indexes.size();
@@ -75,7 +75,7 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 			// Multi-row selection.
 			is_multirow = true;
 		}
-		
+
 		auto model = qobject_cast<const LibraryModel*>(row_indexes[0].model());
 		Q_ASSERT(model != nullptr);
 		auto title_col = model->getColFromSection(SectionID::Title);

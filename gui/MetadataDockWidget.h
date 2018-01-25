@@ -44,9 +44,9 @@ public:
     explicit MetadataDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 
     void connectToView(MDITreeViewBase* view);
-    
-public slots:
-    
+
+public Q_SLOTS:
+
     /**
      * Slot which we connect up to m_proxy_model->&EntryToMetadataTreeProxyModel::dataChanged signal.
      * Invoked when a setData() happens on the EntryToMetadataTreeProxyModel.
@@ -76,7 +76,7 @@ private:
 
     void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
 
-private slots:
+private Q_SLOTS:
 	/**
 	 * Signaled by the ModelChangeWatcher on a change in m_proxy_model.
 	 */

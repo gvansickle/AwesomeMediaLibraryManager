@@ -42,7 +42,7 @@ class MDILibraryView : public MDITreeViewBase
 
     using BASE_CLASS = MDITreeViewBase;
 
-signals:
+Q_SIGNALS:
 	/**
 	 * Signal emitted when the user has selected one or more tracks in this view, and wants to
 	 * append/replace them to the "Now Playing" playlist, and possibly start playing them.
@@ -51,7 +51,7 @@ signals:
 
 	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
     void playTrackNowSignal(QUrl);
-        
+
 public:
 	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
 
@@ -128,7 +128,7 @@ protected:
 	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
 	QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
 
-protected slots:
+protected Q_SLOTS:
 
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;

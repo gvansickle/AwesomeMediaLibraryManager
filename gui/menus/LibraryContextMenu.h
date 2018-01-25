@@ -28,15 +28,15 @@
 
 #include "utils/DebugHelpers.h"
 #include "logic/proxymodels/ModelHelpers.h"
-#include "ActionBundle.h"
 
 class QString;
+class ActionBundle;
 
 
 class LibraryContextMenu : public QMenu
 {
 	Q_OBJECT
-	
+
 	using BASE_CLASS = QMenu;
 
 public:

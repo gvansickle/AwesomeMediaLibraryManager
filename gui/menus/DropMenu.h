@@ -22,9 +22,9 @@
 
 #include <QObject>
 #include <QMenu>
-#include <QAction>
 
 class QString;
+class QAction;
 
 /**
  * Create a popup menu for a right-drop to allow user to select copy or move.

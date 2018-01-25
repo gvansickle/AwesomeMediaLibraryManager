@@ -21,11 +21,10 @@
 #define GUI_MDI_MDIVIEWPAIRMODEL_H
 
 #include <QPointer>
-#include <QAbstractItemModel>
 
 class MDITreeViewBase;
 class LibraryModel;
-
+class QAbstractItemModel;
 
 class MDIModelViewPair
 {
