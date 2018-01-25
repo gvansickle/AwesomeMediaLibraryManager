@@ -36,7 +36,7 @@ public:
 	qint64 position() const;
 	qint64 duration() const;
 
-signals:
+Q_SIGNALS:
 	void positionChanged2(qint64);
 	void durationChanged2(qint64);
 
@@ -65,7 +65,7 @@ private:
 	void updateSeekToEndInfoOnMediaChange();
 	void seekToEnd();
 
-public slots:
+public Q_SLOTS:
 	void play();
 	void stop();
 	void setShuffleMode(bool shuffle_on);

@@ -44,39 +44,12 @@ Q_DECLARE_METATYPE(std::shared_ptr<PlaylistModelItem>);
 
 /**
  * Convert a collection of std::shared_ptr<LibraryEntry>'s to a vector of std::shared_ptr<PlayistModelItems>'s.
- * The PlayistModelItems will be newly-created and unattached to the original LibraryEntry's.
+ * The PlayistModelItems will be copy-constructed and unattached to the original LibraryEntry's.
  */
-//template <typename CollectionType, typename IterType = typename CollectionType::const_iterator>
-//std::vector<std::shared_ptr<PlaylistModelItem>> toNewPlaylistModelItems(const CollectionType<std::shared_ptr<LibraryEntry>>& libentries)
-inline static std::vector<std::shared_ptr<PlaylistModelItem>>
-toNewPlaylistModelItems(const std::vector<std::shared_ptr<LibraryEntry>>& libentries)
-{
-	std::vector<std::shared_ptr<PlaylistModelItem>> retval;
+std::vector<std::shared_ptr<PlaylistModelItem>>
+toNewPlaylistModelItems(const std::vector<std::shared_ptr<LibraryEntry>>& libentries);
 
-	for(auto i : libentries)
-	{
-		auto playlist_model_item = std::make_shared<PlaylistModelItem>(*i);
-		if(!playlist_model_item)
-		{
-			qCritical() << "COULD NOT CONVERT LibraryEntry" << i << "TO PlaylistModelItem";
-			continue;
-		}
-		retval.push_back(playlist_model_item);
-	}
-
-	return retval;
-}
-
-inline static std::vector<std::shared_ptr<LibraryEntry>>
-toLibraryEntrySharedPtrs(const std::vector<std::shared_ptr<PlaylistModelItem>> playlist_model_items)
-{
-	std::vector<std::shared_ptr<LibraryEntry>> retval;
-
-	std::transform(playlist_model_items.begin(), playlist_model_items.end(),
-				   std::back_inserter(retval), [](auto pitem) -> std::shared_ptr<LibraryEntry> {
-												return std::dynamic_pointer_cast<LibraryEntry>(pitem); });
-
-	return retval;
-}
+std::vector<std::shared_ptr<LibraryEntry>>
+toLibraryEntrySharedPtrs(const std::vector<std::shared_ptr<PlaylistModelItem>> playlist_model_items);
 
 #endif // PLAYLISTMODELITEM_H
