@@ -200,7 +200,7 @@ protected:
     /// Override to return whether or not the underlying data has been modified.
     virtual bool isModified() const = 0;
 
-    virtual void serializeDocument(QFileDevice& file) const = 0;
+	virtual void serializeDocument(QFileDevice& file) = 0;
     virtual void deserializeDocument(QFileDevice& file) = 0;
 
     ///

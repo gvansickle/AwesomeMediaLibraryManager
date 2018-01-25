@@ -192,7 +192,7 @@ void MDIPlaylistView::setEmptyModel()
     setModel(new_playlist_model);
 }
 
-void MDIPlaylistView::serializeDocument(QFileDevice& file) const
+void MDIPlaylistView::serializeDocument(QFileDevice& file)
 {
 	// Determine which format we're supposed to serialize the playlist to.
 	QString fn = file.fileName();

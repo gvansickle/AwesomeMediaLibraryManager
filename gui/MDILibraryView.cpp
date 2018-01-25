@@ -241,7 +241,7 @@ bool MDILibraryView::readFile(QUrl load_url)
 	return true;
 }
 
-void MDILibraryView::serializeDocument(QFileDevice& file) const
+void MDILibraryView::serializeDocument(QFileDevice& file)
 {
 	m_underlying_model->serializeToFile(file);
 }

@@ -113,7 +113,7 @@ protected:
 
 	///@todo Override writeFile?
 
-	virtual void serializeDocument(QFileDevice& file) const override;
+	virtual void serializeDocument(QFileDevice& file) override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 
 	/// @}
