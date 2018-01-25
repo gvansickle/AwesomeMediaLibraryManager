@@ -236,13 +236,13 @@ void NetworkAwareFileDialog::saveStateOverload()
 	qDebug() << "Saving last dir URL: " << directoryUrl();
 	settings.setValue(m_settings_state_key + "/dir_url", QVariant::fromValue(directoryUrl()));
 
-	QString selected_mime_type_filter = selectedMimeTypeFilter();
-	qDebug() << "Saving last selected_mime_type_filter: " << selected_mime_type_filter;
-	settings.setValue(m_settings_state_key + "/mime_type_filter", QVariant::fromValue(selected_mime_type_filter));
-
 	QString selected_name_filter = selectedNameFilter();
 	qDebug() << "Saving last selected_name_filter: " << selected_name_filter;
 	settings.setValue(m_settings_state_key + "/name_filter", QVariant::fromValue(selected_name_filter));
+
+	QString selected_mime_type_filter = selectedMimeTypeFilter();
+	qDebug() << "Saving last selected_mime_type_filter: " << selected_mime_type_filter;
+	settings.setValue(m_settings_state_key + "/mime_type_filter", QVariant::fromValue(selected_mime_type_filter));
 
 	// Detail or List view.
 	QFileDialog::ViewMode view_mode  = viewMode();
@@ -277,10 +277,11 @@ void NetworkAwareFileDialog::restoreStateOverload()
 			/// So, we save/restore the directoryUrl manually.
 			qDebug() << "Restoring last dir URL to:" << last_dir_url;
 			setDirectoryUrl(last_dir_url);
-			qDebug() << "Restoring selected_mime_type_filter:" << selected_mime_type_filter;
-			selectMimeTypeFilter(selected_mime_type_filter);
 			qDebug() << "Restoring selected_name_filter:" << selected_name_filter;
 			selectNameFilter(selected_name_filter);
+			// Note: MimeTypeFilters override NameFilters.
+			qDebug() << "Restoring selected_mime_type_filter:" << selected_mime_type_filter;
+			selectMimeTypeFilter(selected_mime_type_filter);
 		}
 
 		if(state_restored == false)
