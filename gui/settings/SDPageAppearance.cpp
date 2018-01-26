@@ -75,7 +75,6 @@ SDPageAppearance::SDPageAppearance(SettingsDialogBase *settings_dialog_parent, Q
 	make_font_selector(tr("Default Metadata Explorer font"), QFont(), fontFormLayout);
 	fontGroup->setLayout(fontFormLayout);
 
-	QGroupBox *configGroup = new QGroupBox(tr("Appearance"));
 
 	QLabel *dummy_select_label = new QLabel(tr("Select one:"));
 	QComboBox *dummy_combo = new QComboBox;
@@ -89,6 +88,7 @@ SDPageAppearance::SDPageAppearance(SettingsDialogBase *settings_dialog_parent, Q
 	dummy_layout->addWidget(dummy_select_label);
 	dummy_layout->addWidget(dummy_combo);
 
+	QGroupBox *configGroup = new QGroupBox(tr("Appearance"));
 	QVBoxLayout *config_layout = new QVBoxLayout;
 	config_layout->addLayout(dummy_layout);
 	configGroup->setLayout(config_layout);
