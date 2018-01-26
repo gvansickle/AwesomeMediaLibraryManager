@@ -99,7 +99,7 @@ SDPageAppearance::SDPageAppearance(SettingsDialogBase *settings_dialog_parent, Q
 	mainLayout->addStretch(1);
 	setLayout(mainLayout);
 
-    registerField("default_track_font", m_track_font_selector);
+//    registerField("default_track_font", m_track_font_selector);
 }
 
 void SDPageAppearance::addContentsEntry(SettingsDialogSideWidget *contents_widget)

@@ -24,6 +24,7 @@
 #include "SettingsDialogPageBase.h"
 
 class QLabel;
+class QCheckBox;
 class QStandardItemModel;
 class QDataWidgetMapper;
 
@@ -43,8 +44,8 @@ private:
 	
 	QLabel *m_lib_num_songs_label;
 	
-	QStandardItemModel *m_model;
-    QDataWidgetMapper *m_mapper;
+	QCheckBox* m_check1;
+	QCheckBox* m_check2;
 };
 
 

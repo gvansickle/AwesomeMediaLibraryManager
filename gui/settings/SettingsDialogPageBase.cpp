@@ -27,11 +27,12 @@ SettingsDialogPageBase::SettingsDialogPageBase(SettingsDialogBase *settings_dial
 {
 }
 
+#if 0
 void SettingsDialogPageBase::registerField(const QString &name, QWidget *widget, const char *property,
                                            const char *changedSignal)
 {
     RegisteredField field(this, name, widget, property, changedSignal);
     m_settings_dialog_base->addField(field);
 }
-
+#endif
 
