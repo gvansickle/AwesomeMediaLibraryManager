@@ -62,6 +62,7 @@ include(helperfunctions)
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
+### @todo? find_package(ECM 1.7.0 REQUIRED NO_MODULE)
 
 dir_summary()
 

@@ -29,6 +29,12 @@ if(GIT_FOUND)
     message(STATUS "Git found: ${GIT_EXECUTABLE}")
     message(STATUS "Git version: ${GIT_VERSION_STRING}")
     execute_process(
+            COMMAND pwd
+            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+            OUTPUT_VARIABLE PWDOUTPUT
+    )
+    message(STATUS "PWD OUT: ${PWDOUTPUT}")
+    execute_process(
             COMMAND "${GIT_EXECUTABLE}" describe --always --long --dirty
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             OUTPUT_VARIABLE GVI_GIT_DESCRIBE_OUTPUT
