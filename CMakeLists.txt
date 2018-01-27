@@ -127,12 +127,27 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Sanitizers)
 
 # The Qt5 packages we require.
-find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Concurrent)
+find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia Concurrent REQUIRED)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
-message(STATUS "Found Qt ${Qt5Core_VERSION_STRING} at ${Qt5Core_location}")
+message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
+message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
+message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
+# List plugin info.
+message(STATUS "*  Qt5::Gui Plugins:")
+foreach(plugin ${Qt5Gui_PLUGINS})
+  get_target_property(_loc ${plugin} LOCATION)
+  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+endforeach()
+message(STATUS "*  Qt5::Widgets Plugins:")
+foreach(plugin ${Qt5Widgets_PLUGINS})
+  get_target_property(_loc ${plugin} LOCATION)
+  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+endforeach()
+
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
+set(GLOBAL_DEPENDS_DEBUG_MODE TRUE)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #		INCLUDE_DIRECTORIES
@@ -141,6 +156,13 @@ set(CPACK_IFW_VERBOSE YES)
 #		CONTAINER_SIZE_REQUIRED
 #		LIB_VERSION
 #		)
+
+# Use include-what-you-use.
+if(FALSE)
+	if(NOT WIN32)
+		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp;-Xiwyu;--mapping_file=${PROJECT_SOURCE_DIR}/utils/nomoc/nomoc.imp")
+	endif()
+endif()
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
@@ -253,6 +275,10 @@ else()
 	endif()
 endif()
 endif()
+
+# Verdigris is just two headers.
+set(USE_BUNDLED_VERDIGRIS 1)
+set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
 
 # Main program header files.
 set(HEADER_FILES
@@ -384,6 +410,12 @@ set(SOURCE_FILES
 	logic/proxymodels/QPersistentModelIndexVec.cpp
     )
 
+# NoMoc files.
+set(HEADER_FILES_UTILS_NOMOC
+	utils/nomoc/nomocdefs.h
+	utils/nomoc/nomocimpl.h)
+list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
+
 set(HEADER_FILES_UTILS_CONCURRENCY
 	utils/concurrency/AsyncTaskManager.h)
 set(SOURCE_FILES_UTILS_CONCURRENCY
@@ -426,9 +458,13 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
-target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS")
+# FBO Verdigris (esp. on Windows/MSVC).
+#add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS" "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}")
+target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 if(NOT WIN32)
-target_compile_options(${PROJECT_NAME} PUBLIC "-O0")
+target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)

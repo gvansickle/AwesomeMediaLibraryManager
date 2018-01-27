@@ -20,14 +20,14 @@
 #ifndef MDITREEVIEWBASE_H
 #define MDITREEVIEWBASE_H
 
-#include <QContextMenuEvent>
 #include <QTreeView>
 #include <QUrl>
 
 #include "mdi/MDIModelViewPair.h"
-#include "logic/proxymodels/ModelHelpers.h"
+//#include "logic/proxymodels/ModelHelpers.h"
 
 class QMdiSubWindow;
+class QContextMenuEvent;
 class QFileDevice;
 class ModelChangeWatcher;
 class QPersistentModelIndexVec;
@@ -39,11 +39,11 @@ class LibraryEntryMimeData;
 class MDITreeViewBase : public QTreeView
 {
     Q_OBJECT
-    
+
     using BASE_CLASS = QTreeView;
-        
-signals:
-    
+
+Q_SIGNALS:
+
 	/**
 	 * Signal emitted just before the QCloseEvent is accepted.
 	 * @note view_that_is_closing can not be consided to be dereferenceable.  The view may have
@@ -60,12 +60,12 @@ signals:
      * Signal emitted when the "cutability" status changes.  Read-only views will only send false.
      */
     void cutAvailable(bool);
-    
+
     /**
      * Signal emitted when there is a change in the "Select All" status.
      */
     void selectAllAvailable(bool);
-        
+
 
 public:
     explicit MDITreeViewBase(QWidget *parent = Q_NULLPTR);
@@ -118,10 +118,10 @@ public:
     /// Returns the name to be displayed as this view's windowTitle(), e.g. in tabs.
     /// Default implementation returns userFriendlyCurrentFile().
     virtual QString getDisplayName() const;
-    
+
     /// Return an action for the MainWindow's Window menu.
 	QAction* windowMenuAction() const { return m_act_window; }
-    
+
     /// Override if derived classes are not read-only.
 	virtual bool isReadOnly() const { return true; }
 
@@ -135,19 +135,16 @@ public:
     //
 
 	// Overridden from QTreeView.
-	Q_DECL_DEPRECATED void setModel(QAbstractItemModel *model) override;
+	void setModel(QAbstractItemModel *model) override;
 
-	virtual void setModel(QSharedPointer<QAbstractItemModel> model) = 0;
+	virtual QAbstractItemModel* underlyingModel() const = 0;
 
-	Q_DECL_DEPRECATED virtual QAbstractItemModel* underlyingModel() const = 0;
 
-	virtual QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const = 0;
+public Q_SLOTS:
 
-public slots:
-    
     /// @name Edit handlers.
     /// @{
-    
+
     /// View is read-only by default.  Does nothing.
     virtual void onCut() {}
 	/// Copy selection to clipboard.
@@ -169,16 +166,20 @@ protected:
     /// Used when newFile() is called.
     virtual void setEmptyModel() = 0;
 
+	bool saveFile(const QUrl& filename, const QString& filter);
+
     /// Protected function which is used to set the view's filename properties on a read or write.
     /// Called by readFile() and writeFile().
     void setCurrentFile(QUrl url);
 
 	/**
+	 * The function that does the actual reading of the file.
 	 * Called by openFile().
 	 */
     virtual bool readFile(QUrl load_url);
 
 	/**
+	 * The function that finally does the actual saving of the file.
 	 * Called by saveFile().
 	 */
     virtual bool writeFile(QUrl save_url, QString filter);
@@ -199,7 +200,7 @@ protected:
     /// Override to return whether or not the underlying data has been modified.
     virtual bool isModified() const = 0;
 
-    virtual void serializeDocument(QFileDevice& file) const = 0;
+	virtual void serializeDocument(QFileDevice& file) = 0;
     virtual void deserializeDocument(QFileDevice& file) = 0;
 
     ///
@@ -213,7 +214,7 @@ protected:
 	/// Creates a LibraryEntryMimeData object containing copies of the given rows.
 	virtual LibraryEntryMimeData* selectedRowsToMimeData(const QModelIndexList& row_indexes);
 
-protected slots:
+protected Q_SLOTS:
 
 	/**
 	 * Connect this slot to any model signals which indicate there are unsaved changes.
@@ -224,7 +225,7 @@ protected slots:
     virtual void headerMenu(QPoint pos);
 
     virtual void onSectionClicked(int logicalIndex);
-	
+
 	/**
 	 * Context menu handler.  Base class implementation in QWidget ignores the event.
 	 * This override dispatches the event to either onContextMenuIndex() or onContextMenuViewport()
@@ -287,7 +288,7 @@ protected:
 
 private:
     Q_DISABLE_COPY(MDITreeViewBase)
-    
+
     /// ModelChangeWatcher object for keeping "Select All" enable status correct.
     ModelChangeWatcher* m_select_all_model_watcher;
 
@@ -296,7 +297,7 @@ private:
     int m_previous_sort_column {-1};
 
     Qt::SortOrder m_sort_order { Qt::AscendingOrder };
-    
+
 };
 
 #endif // MDITREEVIEWBASE_H

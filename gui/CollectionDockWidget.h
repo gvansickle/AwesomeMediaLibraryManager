@@ -20,32 +20,31 @@
 #ifndef COLLECTIONDOCKWIDGET_H
 #define COLLECTIONDOCKWIDGET_H
 
-#include "MDIPlaylistView.h"
-
 #include <QDockWidget>
 #include <QWidget>
 #include <QModelIndex>
-#include <QStandardItemModel>
 #include <QPointer>
 #include <QTreeWidget>
 
 #include <logic/LibraryModel.h>
-#include <logic/PlaylistModelItem.h>
+
+#include "utils/DebugHelpers.h"
 
 class QStandardItemModel;
 class QTreeView;
+class QMdiSubWindow;
 
 
 class CollectionDockWidget : public QDockWidget
 {
     Q_OBJECT
 
-signals:
+Q_SIGNALS:
 	// Signal indicating the user wants to remove the given LibraryModel.
-	void removeLibModelFromLibSignal(QSharedPointer<LibraryModel>);
+	void removeLibModelFromLibSignal(QPointer<LibraryModel>);
 
 	// Signal indicating the user wants to show the window for the given LibraryModel.
-	void showLibraryModelSignal(QSharedPointer<LibraryModel>);
+	void showLibraryModelSignal(QPointer<LibraryModel>);
 
 	void activateSubwindow(QMdiSubWindow* subwindow);
 
@@ -56,12 +55,12 @@ public:
 
 	void addActionExperimental(QAction* act);
 
-public slots:
+public Q_SLOTS:
 	void tree_doubleclick(QModelIndex modelindex);
 
 protected:
 
-protected slots:
+protected Q_SLOTS:
 	void onTreeContextMenu(const QPoint &point);
 
 private:
@@ -73,7 +72,7 @@ private:
 M_WARNING("EXPERIMENTAL");
 	QPointer<QTreeWidget> m_tree_widget;
 
-	QSharedPointer<LibraryModel> modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const;
+	QPointer<LibraryModel> modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const;
 
 	void doLibraryContextMenu(QPoint treepos);
 	void onShowLib(QModelIndex modelindex);

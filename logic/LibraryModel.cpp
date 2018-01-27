@@ -86,10 +86,10 @@ LibraryModel::~LibraryModel()
     delete m_rescanner;
 }
 
-QSharedPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QWidget* parent)
+QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
 {
     // Create the new LibraryModel.
-    auto lib = QSharedPointer<LibraryModel>(new LibraryModel(parent));
+	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
 
 M_WARNING("TODO: Find a better way to start async operations and/or connect");
     lib->setLibraryRootUrl(open_url);
@@ -649,10 +649,10 @@ void LibraryModel::readFromJson(const QJsonObject& jo)
 	endResetModel();
 }
 
-QSharedPointer<LibraryModel> LibraryModel::constructFromJson(const QJsonObject& json, QObject* parent)
+QPointer<LibraryModel> LibraryModel::constructFromJson(const QJsonObject& json, QObject* parent)
 {
-	///LibraryModel* retval = new LibraryModel(parent);
-	auto retval = QSharedPointer<LibraryModel>::create(parent);
+	LibraryModel* retval = new LibraryModel(parent);
+
 	retval->readFromJson(json);
 
 	return retval;

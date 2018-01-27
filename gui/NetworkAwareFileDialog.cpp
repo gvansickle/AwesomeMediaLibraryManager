@@ -62,7 +62,7 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 	if(state_key.length() > 0)
 	{
 		// Persist the last state to/from this QSettings key.
-		m_state_key = "file_dialogs/" + state_key;
+		m_settings_state_key = "file_dialogs/" + state_key;
 	}
 
 	connect(this, &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
@@ -70,15 +70,6 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 
 /**
  * Static member for creating a "Save File" dialog.
- * @param parent
- * @param caption
- * @param dir
- * @param filter
- * @param state_key
- * @param selectedFilter
- * @param options
- * @param supportedSchemes
- * @return
  */
 std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent, const QString& caption, const QUrl& dir, const QString& filter,
 																const QString& state_key, QFileDialog::Options options,
@@ -107,13 +98,6 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 
 /**
  * Static member for creating a "Open Existing Dir" dialog.
- * @param parent
- * @param caption
- * @param dir
- * @param state_key
- * @param options
- * @param supportedSchemes
- * @return
  */
 std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget* parent, const QString& caption, const QUrl& dir, const QString& state_key,
 																		 QFileDialog::Options options, const QStringList& supportedSchemes)
@@ -189,50 +173,14 @@ void NetworkAwareFileDialog::onFilterSelected(const QString& filter)
 
 int NetworkAwareFileDialog::exec()
 {
-	QSettings settings;
-
-	// Do we have a state_key key?
-	if(m_state_key.length() > 0)
-	{
-		bool state_restored = false;
-
-		QByteArray saved_state = settings.value(m_state_key + "/qfd_state").toByteArray();
-		QUrl last_dir_url = settings.value(m_state_key + "/dir_url").toUrl();
-		if(saved_state.size() > 0)
-		{
-			/// @todo For reasons unknown, QFileDialog::restoreState() doesn't seem to work correctly,
-			/// at least on Linux.
-			/// At a minimum, it does not restore the selected directory; it behaves as though there's
-			/// a single m_state_key that all instances are sharing (which isn't the case).
-			/// So, we save/restore the directoryUrl manually.
-			state_restored = restoreState(saved_state);
-
-			qDebug() << "Restoring last dir URL to:" << last_dir_url;
-			setDirectoryUrl(last_dir_url);
-		}
-
-		if(state_restored == false)
-		{
-			qWarning() << "File dialog state failed to restore for m_state_key '" << m_state_key << "'";
-		}
-		else
-		{
-			qDebug() << "File dialog state restored successfully for m_state_key '" << m_state_key << "'";
-			//qDebug() << "Dir is" << directory() << directoryUrl();
-		}
-	}
+	restoreStateOverload();
 
 	int retval = exec_();
 
-	if(retval && m_state_key.length() > 0)
+	if(retval && m_settings_state_key.length() > 0)
 	{
 		// Save the state for next time.
-		QByteArray new_state = saveState();
-		settings.setValue(m_state_key + "/qfd_state", QVariant::fromValue(new_state));
-		qDebug() << "Saving last dir URL: " << directoryUrl();
-		settings.setValue(m_state_key + "/dir_url", QVariant::fromValue(directoryUrl()));
-		settings.sync();
-		qDebug() << "Saved settings with error status:" << settings.status();
+		saveStateOverload();
 	}
 
 	return retval;
@@ -275,6 +223,76 @@ int NetworkAwareFileDialog::exec_()
 		return response
 #endif
 		Q_ASSERT(0);
+	}
+}
+
+void NetworkAwareFileDialog::saveStateOverload()
+{
+	QSettings settings;
+
+	QByteArray new_state = saveState();
+	qDebug() << "Saving file dialog settings to settings key:" << m_settings_state_key;
+	settings.setValue(m_settings_state_key + "/qfd_state", QVariant::fromValue(new_state));
+	qDebug() << "Saving last dir URL: " << directoryUrl();
+	settings.setValue(m_settings_state_key + "/dir_url", QVariant::fromValue(directoryUrl()));
+
+	QString selected_name_filter = selectedNameFilter();
+	qDebug() << "Saving last selected_name_filter: " << selected_name_filter;
+	settings.setValue(m_settings_state_key + "/name_filter", QVariant::fromValue(selected_name_filter));
+
+	QString selected_mime_type_filter = selectedMimeTypeFilter();
+	qDebug() << "Saving last selected_mime_type_filter: " << selected_mime_type_filter;
+	settings.setValue(m_settings_state_key + "/mime_type_filter", QVariant::fromValue(selected_mime_type_filter));
+
+	// Detail or List view.
+	QFileDialog::ViewMode view_mode  = viewMode();
+	qDebug() << "Saving last view_mode: " << view_mode;
+	settings.setValue(m_settings_state_key + "/view_mode", QVariant::fromValue(view_mode));
+
+	settings.sync();
+	qDebug() << "Saved settings with error status:" << settings.status();
+}
+
+void NetworkAwareFileDialog::restoreStateOverload()
+{
+	QSettings settings;
+
+	// Do we have a state_key key?
+	if(m_settings_state_key.length() > 0)
+	{
+		bool state_restored = false;
+
+		QByteArray saved_state = settings.value(m_settings_state_key + "/qfd_state").toByteArray();
+		QUrl last_dir_url = settings.value(m_settings_state_key + "/dir_url").toUrl();
+		QString selected_mime_type_filter = settings.value(m_settings_state_key + "/mime_type_filter").toString();
+		QString selected_name_filter = settings.value(m_settings_state_key + "/name_filter").toString();
+		if(saved_state.size() > 0)
+		{
+			state_restored = restoreState(saved_state);
+
+			/// @todo For reasons unknown, the above QFileDialog::restoreState() doesn't seem to work correctly,
+			/// at least on Linux.
+			/// At a minimum, it does not restore the selected directory; it behaves as though there's
+			/// a single m_state_key that all instances are sharing (which isn't the case).
+			/// So, we save/restore the directoryUrl manually.
+			qDebug() << "Restoring last dir URL to:" << last_dir_url;
+			setDirectoryUrl(last_dir_url);
+			qDebug() << "Restoring selected_name_filter:" << selected_name_filter;
+			selectNameFilter(selected_name_filter);
+			// Note: MimeTypeFilters override NameFilters.
+			qDebug() << "Restoring selected_mime_type_filter:" << selected_mime_type_filter;
+			selectMimeTypeFilter(selected_mime_type_filter);
+		}
+
+		if(state_restored == false)
+		{
+			qWarning() << "File dialog state failed to restore for m_state_key '" << m_settings_state_key << "'";
+		}
+		else
+		{
+			qDebug() << "File dialog state restored successfully for m_state_key '" << m_settings_state_key << "'";
+			//qDebug() << "Dir is" << directory() << directoryUrl();
+		}
 	}
 }
 

@@ -17,12 +17,16 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/menus/DropMenu.h>
 #include "MDIPlaylistView.h"
+
+
+#include <gui/menus/DropMenu.h>
 
 #include "DragDropTreeViewStyleProxy.h"
 #include "ItemDelegateLength.h"
 
+#include <QApplication>
+#include <QMediaPlaylist>
 #include <QHeaderView>
 #include <QToolTip>
 #include <QMessageBox>
@@ -31,6 +35,7 @@
 #include <QMimeDatabase>
 #include <QClipboard>
 #include <QPoint>
+#include <QKeyEvent>
 
 #include <logic/LibrarySortFilterProxyModel.h>
 #include "utils/DebugHelpers.h"
@@ -100,13 +105,13 @@ MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)
 	setDropIndicatorShown(true);
 }
 
-MDIModelViewPair MDIPlaylistView::openModel(QSharedPointer<PlaylistModel> model, QWidget* parent)
+MDIModelViewPair MDIPlaylistView::openModel(QPointer<PlaylistModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
 	retval.setModel(model);
 
 	retval.m_view = new MDIPlaylistView(parent);
-	static_cast<MDIPlaylistView*>(retval.m_view)->setModel(model);
+	qobject_cast<MDIPlaylistView*>(retval.m_view)->setModel(model);
 
 	return retval;
 }
@@ -119,53 +124,55 @@ QMediaPlaylist* MDIPlaylistView::getQMediaPlaylist()
 
 void MDIPlaylistView::setModel(QAbstractItemModel* model)
 {
-	Q_ASSERT(0); /// Obsolete, use QSharedPointer version.
-}
-
-void MDIPlaylistView::setModel(QSharedPointer<QAbstractItemModel> model)
-{
 	// Keep a ref to the real model.
-	m_underlying_model = qSharedPointerObjectCast<PlaylistModel>(model);
+	m_underlying_model = qobject_cast<PlaylistModel*>(model);
 
-	// Set our model URLs to the "current file".
-	/// @todo This is FBO the Playlist sidebar.  Should we keep the playlist model as a member of this class instead?
-	m_underlying_model->setLibraryRootUrl(m_current_url);
-
-	m_sortfilter_model->setSourceModel(model.data());
-	auto old_sel_model = selectionModel();
-	MDITreeViewBase::setModel(m_sortfilter_model);
-	// Call selectionChanged when the user changes the selection.
-	/// @todo selectionModel().selectionChanged.connect(selectionChanged)
-	old_sel_model->deleteLater();
-
-	// Connect to the QMediaPlaylist's index changed notifications,
-	connect(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
-
-	// Set up the TreeView's header.
-	header()->setStretchLastSection(false);
-	header()->setSectionResizeMode(QHeaderView::Stretch);
-	header()->setContextMenuPolicy(Qt::CustomContextMenu);
-
-	// Set the resize behavior of the header's columns based on the columnspecs.
-	int num_cols = m_underlying_model->columnCount();
-	for(int c = 0; c < num_cols; ++c)
+	if(m_underlying_model)
 	{
-		if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
+		// Set our model URLs to the "current file".
+		/// @todo This is FBO the Playlist sidebar.  Should we keep the playlist model as a member of this class instead?
+		m_underlying_model->setLibraryRootUrl(m_current_url);
+
+		m_sortfilter_model->setSourceModel(model);
+		auto old_sel_model = selectionModel();
+		MDITreeViewBase::setModel(m_sortfilter_model);
+		// Call selectionChanged when the user changes the selection.
+		/// @todo selectionModel().selectionChanged.connect(selectionChanged)
+		old_sel_model->deleteLater();
+
+		// Connect to the QMediaPlaylist's index changed notifications,
+		connect(m_underlying_model->qmplaylist(), &QMediaPlaylist::currentIndexChanged, this, &MDIPlaylistView::playlistPositionChanged);
+
+		// Set up the TreeView's header.
+		header()->setStretchLastSection(false);
+		header()->setSectionResizeMode(QHeaderView::Stretch);
+		header()->setContextMenuPolicy(Qt::CustomContextMenu);
+
+		// Set the resize behavior of the header's columns based on the columnspecs.
+		int num_cols = m_underlying_model->columnCount();
+		for(int c = 0; c < num_cols; ++c)
 		{
-			header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+			if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
+			{
+				header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+			}
 		}
+
+		// Find the "Length" column.
+		auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
+		// Set the delegate on it.
+		setItemDelegateForColumn(len_col, m_length_delegate);
+
+		// Find the "Rating" column and set a delegate on it.
+		auto user_rating_col = m_underlying_model->getColFromSection(SectionID(PlaylistSectionID::Rating));
+		/// @todo setItemDelegateForColumn(user_rating_col, m_user_rating_delegate);
+
+		setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::SelectedClicked);
 	}
-
-	// Find the "Length" column.
-	auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
-	// Set the delegate on it.
-	setItemDelegateForColumn(len_col, m_length_delegate);
-
-	// Find the "Rating" column and set a delegate on it.
-	auto user_rating_col = m_underlying_model->getColFromSection(SectionID(PlaylistSectionID::Rating));
-	/// @todo setItemDelegateForColumn(user_rating_col, m_user_rating_delegate);
-
-	setEditTriggers(QAbstractItemView::DoubleClicked|QAbstractItemView::SelectedClicked);
+	else
+	{
+		qWarning() << "Not a PlaylistModel:" << model;
+	}
 }
 
 QString MDIPlaylistView::getNewFilenameTemplate() const
@@ -180,11 +187,12 @@ QString MDIPlaylistView::defaultNameFilter()
 
 void MDIPlaylistView::setEmptyModel()
 {
-	auto new_playlist_model = QSharedPointer<PlaylistModel>::create(this->parent());
+	/// @note This empty playlist model is parented to this.  Normally models are parented to the MainWindow.
+	auto new_playlist_model = new PlaylistModel(this);
     setModel(new_playlist_model);
 }
 
-void MDIPlaylistView::serializeDocument(QFileDevice& file) const
+void MDIPlaylistView::serializeDocument(QFileDevice& file)
 {
 	// Determine which format we're supposed to serialize the playlist to.
 	QString fn = file.fileName();
@@ -384,10 +392,6 @@ PlaylistModel* MDIPlaylistView::underlyingModel() const
 	return m_underlying_model.data();
 }
 
-QSharedPointer<QAbstractItemModel> MDIPlaylistView::underlyingModelSharedPtr() const
-{
-	return m_underlying_model;
-}
 
 //
 // Public slots

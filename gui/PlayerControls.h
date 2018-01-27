@@ -46,7 +46,7 @@ public:
 	bool isMuted() const { return m_playerMuted; }
     int volume() const;
 
-signals:
+Q_SIGNALS:
     void play();
     void pause();
     void stop();
@@ -57,14 +57,14 @@ signals:
 	void changeVolume(int);
     void changeMuting(bool);
 
-public slots:
+public Q_SLOTS:
     void setState(QMediaPlayer::State state);
     void setVolume(int volume);
     void setMuted(bool muted);
 	void onDurationChanged(qint64 duration);
 	void onPositionChanged(qint64 pos);
 
-private slots:
+private Q_SLOTS:
     void onPlayAction();
 	void onPauseAction();
 	void onTogglePlayPauseAction();

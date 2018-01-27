@@ -19,10 +19,14 @@
 
 #include "ActivityProgressWidget.h"
 
+#include <nomocimpl.h>
+
 #include <QLabel>
 #include <QProgressBar>
 #include <QHBoxLayout>
 #include <QDebug>
+
+W_OBJECT_IMPL(ActivityProgressWidget)
 
 ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f) : QWidget(parent, f)
 {

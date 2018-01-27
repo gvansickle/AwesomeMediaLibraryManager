@@ -25,7 +25,9 @@
 #include <QLayout>
 #include <QtWidgets/QStackedWidget>
 #include <QtWidgets/QMessageBox>
+#include <QDataWidgetMapper>
 #include <QDebug>
+#include <QStandardItem>
 
 #include <utils/Theme.h>
 
@@ -33,10 +35,27 @@
 SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
 	: SettingsDialogBase(parent, flags)
 {
+	initSettingsModel();
+
 	// Add all the pages.
 	addPage(new SDPageAppearance(this, this));
 	addPage(new SDPageLibrary(this, this));
+
+	m_mapper->toFirst();
 }
+
+void SettingsDialog::initSettingsModel()
+{
+	auto si1 = new QStandardItem("true");
+	auto si2 = new QStandardItem("false");
+	m_settings_model = new QStandardItemModel;
+	m_settings_model->appendRow({si1, si2});
+
+	// Create the mapper.
+	m_mapper = new QDataWidgetMapper;
+	m_mapper->setModel(m_settings_model);
+}
+
 
 
 

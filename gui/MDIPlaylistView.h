@@ -21,11 +21,9 @@
 #define MDIPLAYLISTVIEW_H
 
 #include "MDITreeViewBase.h"
-
-#include <QMediaPlaylist>
-
 #include <logic/PlaylistModel.h>
 
+class QMediaPlaylist;
 class LibrarySortFilterProxyModel;
 class ItemDelegateLength;
 
@@ -34,8 +32,8 @@ class MDIPlaylistView : public MDITreeViewBase
     Q_OBJECT
 
     using BASE_CLASS = MDITreeViewBase;
-    
-signals:
+
+Q_SIGNALS:
 	/// @name Signals for player-connected messages.
 	/// @{
 	/// Start playing the current song.
@@ -44,27 +42,23 @@ signals:
 
 public:
     explicit MDIPlaylistView(QWidget *parent = Q_NULLPTR);
-    
+
 
     /**
      * static member function which opens an MDILibraryView on the given model.
      */
-	static MDIModelViewPair openModel(QSharedPointer<PlaylistModel> model, QWidget* parent);
+	static MDIModelViewPair openModel(QPointer<PlaylistModel> model, QWidget* parent);
 
     QMediaPlaylist* getQMediaPlaylist();
 
-	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
+	void setModel(QAbstractItemModel* model) override;
 
-	void setModel(QSharedPointer<QAbstractItemModel> model) override;
+	PlaylistModel* underlyingModel() const override;
 
-	Q_DECL_DEPRECATED PlaylistModel* underlyingModel() const override;
-
-	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
-    
     /// Playlists are not read-only.
     bool isReadOnly() const override { return false; }
 
-public slots:
+public Q_SLOTS:
 
 	/// @name Slots for player-connected messages.
 	/// @{
@@ -106,7 +100,7 @@ protected:
 
     void setEmptyModel() override;
 
-    virtual void serializeDocument(QFileDevice& file) const override;
+	virtual void serializeDocument(QFileDevice& file) override;
     virtual void deserializeDocument(QFileDevice& file) override;
 
     virtual bool isModified() const override;
@@ -134,7 +128,7 @@ protected:
 	 */
     void keyPressEvent(QKeyEvent *event) override;
 
-protected slots:
+protected Q_SLOTS:
     virtual void playlistPositionChanged(qint64 position);
 
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
@@ -161,7 +155,7 @@ private:
 	 */
 	void startPlaying(const QModelIndex& index);
 
-	QSharedPointer<PlaylistModel> m_underlying_model;
+	QPointer<PlaylistModel> m_underlying_model;
     LibrarySortFilterProxyModel* m_sortfilter_model;
     ItemDelegateLength* m_length_delegate;
 };

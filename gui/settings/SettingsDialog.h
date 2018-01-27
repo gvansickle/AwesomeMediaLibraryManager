@@ -36,7 +36,9 @@ class SettingsDialog : public SettingsDialogBase
     Q_OBJECT
 
 public:
-    SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
+	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = nullptr);
+
+	void initSettingsModel() override;
 };
 
 

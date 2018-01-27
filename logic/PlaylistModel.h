@@ -28,13 +28,18 @@
 class QMediaPlaylist;
 
 
-struct PlaylistSectionID : public SectionID
+class PlaylistSectionID : public SectionID
 {
+	Q_GADGET
+
+public:
 	enum Enumerator
 	{
 		Rating = int(SectionID::PLAYLIST_1) + 0,
 		Blacklist
 	};
+
+	Q_ENUM(Enumerator)
 
 	PlaylistSectionID() = default;
 	PlaylistSectionID(PlaylistSectionID::Enumerator e) { m_val = e; }
@@ -42,12 +47,14 @@ struct PlaylistSectionID : public SectionID
 	operator SectionID() { return SectionID(m_val); }
 };
 
+
 class PlaylistModel : public LibraryModel
 {
 	Q_OBJECT
 
 public:
 	explicit PlaylistModel(QObject* parent);
+	~PlaylistModel() = default;
 
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 	QVariant data(const QModelIndex &index, int role) const override;

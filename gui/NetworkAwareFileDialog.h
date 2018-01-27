@@ -24,13 +24,13 @@
 #include <QUrl>
 #include <QString>
 
-#include <utility>
+#include <utility> // for std::pair<>.
 
 class NetworkAwareFileDialog : public QFileDialog
 {
 	Q_OBJECT
 
-public:	
+public:
 	explicit NetworkAwareFileDialog(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &directory = QUrl(),
 									const QString &filter = QString(), const QString &state_key = QString());
 
@@ -46,9 +46,9 @@ public:
 															const QUrl &dir = QUrl(),
 															const QString &state_key = QString(), Options options = ShowDirsOnly,
 															const QStringList &supportedSchemes = QStringList());
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
 	virtual void onFilterSelected(const QString& filter);
 
 	virtual int exec() override;
@@ -62,15 +62,19 @@ private:
 	bool use_native_dlg() const;
 
     /// @todo Returns the user-settable preference on whether to use native dialogs or not.
-    bool user_pref_native_file_dialog() const { return true; };
+	bool user_pref_native_file_dialog() const { return true; }
 
 	bool isDirSelectDialog() const;
 	void setDefaultSidebarUrls();
 
 	int exec_();
 
+	/// "Overload" because these have base class equivalents of otherwise the same name.
+	void saveStateOverload();
+	void restoreStateOverload();
+
 	/// Persist the last state to/from this QSettings key.
-	QString m_state_key;
+	QString m_settings_state_key;
 };
 
 #endif // NETWORKAWAREFILEDIALOG_H

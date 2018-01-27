@@ -65,7 +65,7 @@ class LibraryModel : public QAbstractItemModel
 
 	using BASE_CLASS = QAbstractItemModel;
 
-signals:
+Q_SIGNALS:
 	/// Signal to ourself to start an asynchronous directory traversal.
     void startFileScanSignal(QUrl url);
 
@@ -79,7 +79,7 @@ public:
 	/**
 	 * Open a new LibraryModel on the specified QUrl.
 	 */
-    static QSharedPointer<LibraryModel> openFile(QUrl open_url, QWidget* parent);
+	static QPointer<LibraryModel> openFile(QUrl open_url, QObject* parent);
 
 	/// @name Basic functionality.
 	/// @{
@@ -155,7 +155,7 @@ public:
 	virtual void readFromJson(const QJsonObject& jo);
 
 	/// Static constructor for deserializing from JSON.
-	static QSharedPointer<LibraryModel> constructFromJson(const QJsonObject & json, QObject* parent = Q_NULLPTR);
+	static QPointer<LibraryModel> constructFromJson(const QJsonObject & json, QObject* parent = Q_NULLPTR);
 
 	virtual void serializeToFile(QFileDevice& file) const;
 	virtual void deserializeFromFile(QFileDevice& file);
@@ -169,7 +169,7 @@ public:
 	virtual QStringList mimeTypes() const override;
 	virtual QMimeData* mimeData(const QModelIndexList &indexes) const override;
 
-public slots:
+public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
 	void onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
 	void onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);

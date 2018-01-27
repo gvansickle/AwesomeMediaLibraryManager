@@ -20,26 +20,31 @@
 #ifndef GUI_MDI_MDIVIEWPAIRMODEL_H
 #define GUI_MDI_MDIVIEWPAIRMODEL_H
 
-#include <QSharedPointer>
-#include <QAbstractItemModel>
+#include <QPointer>
 
 class MDITreeViewBase;
 class LibraryModel;
-
+class QAbstractItemModel;
 
 class MDIModelViewPair
 {
 public:
-	QSharedPointer<QAbstractItemModel> m_model { nullptr };
-    MDITreeViewBase* m_view { nullptr };
+	QPointer<QAbstractItemModel> m_model { nullptr };
+	QPointer<MDITreeViewBase> m_view { nullptr };
 
     bool m_model_was_existing { false };
     bool m_view_was_existing { false };
 
 	template <typename T>
-	void setModel(QSharedPointer<T> derived_model_ptr)
+	void setModel(T* derived_model_ptr)
 	{
-		m_model = qSharedPointerDynamicCast<LibraryModel>(derived_model_ptr);
+		m_model = derived_model_ptr;
+	}
+
+	template <typename T>
+	void setModel(QPointer<T> derived_model_ptr)
+	{
+		m_model = derived_model_ptr;
 	}
 
 	bool hasModel() const { return m_model; }

@@ -55,9 +55,9 @@ class ActionBundle;
 
 class MainWindow: public QMainWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 
-signals:
+Q_SIGNALS:
 	/**
 	 * Signal which serves essentially as a repeater for other views which want to
 	 * send one or more tracks to the "Now Playing" view.
@@ -82,11 +82,12 @@ public:
 	 */
 	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
 
-public slots:
+public Q_SLOTS:
 
     /// Slot corresponding to the "Open Directory as new Library" action.
     /// This is ~= a "File->Open" action.
     void importLib();
+
 	void openFileLibrary(const QUrl& filename);
 
     /**
@@ -100,11 +101,13 @@ public slots:
      * ~= "File->Open...".
      */
     void openPlaylist();
+
     void savePlaylistAs();
 
 	void onCloseSubwindow();
 
     void onRescanLibrary();
+
     void startSettingsDialog();
 
     /// @name Edit action forwarders.
@@ -128,11 +131,11 @@ public slots:
 protected:
     void closeEvent(QCloseEvent* event) override;
 
-protected slots:
+protected Q_SLOTS:
 
     // Probably don't need anything here, since we probably won't be deriving from MainWindow.
 
-private slots:
+private Q_SLOTS:
     void onSubWindowActivated(QMdiSubWindow* subwindow);
     void onFocusChanged(QWidget* old, QWidget* now);
 
@@ -143,12 +146,12 @@ private slots:
 	 * Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
      * and/or creat a new MDILibraryView for it if one doesn't exist.
      */
-	void onShowLibrary(QSharedPointer<LibraryModel> libmodel);
+	void onShowLibrary(QPointer<LibraryModel> libmodel);
 
 	/**
 	 * Slot FBO the Collection sidebar to remove the specified model and any attached views.
 	 */
-	void onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel);
+	void onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel);
 
     void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
 	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
@@ -251,10 +254,10 @@ private:
 	QStandardItem* m_stditem_playlist_views;
 
     /// The library models.
-    std::vector<QSharedPointer<LibraryModel>> m_libmodels;
+	std::vector<QPointer<LibraryModel>> m_libmodels;
 
     /// The "Now Playing" playlist model and view.
-	QSharedPointer<PlaylistModel> m_now_playing_playlist_model;
+	QPointer<PlaylistModel> m_now_playing_playlist_model;
     QPointer<MDIPlaylistView> m_now_playing_playlist_view;
 
     /// The list of PlaylistModels.

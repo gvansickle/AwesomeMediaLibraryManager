@@ -59,7 +59,7 @@ public:
 	const char * valueToKey() const { return SectionID::valueToKey(static_cast<Enumerator>(m_val)); }
 
 protected:
-	int m_val;
+	int m_val {0};
 };
 
 

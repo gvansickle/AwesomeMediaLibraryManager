@@ -18,3 +18,8 @@
  */
 
 #include "gui/DragDropTreeViewStyleProxy.h"
+
+#include <nomocimpl.h>
+
+W_OBJECT_IMPL(DragDropTreeViewStyleProxy)
+

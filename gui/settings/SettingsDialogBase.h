@@ -39,13 +39,19 @@ class SettingsDialogBase : public QDialog
     Q_OBJECT
 
 public:
-    explicit SettingsDialogBase(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
-    virtual ~SettingsDialogBase() {}
+	explicit SettingsDialogBase(QWidget *parent = nullptr, const Qt::WindowFlags &flags = nullptr);
+	~SettingsDialogBase() override {}
 
     void addPage(SettingsDialogPageBase *page);
 
+	virtual void initSettingsModel() = 0;
+
     void setField(const QString &name, const QVariant &value);
     QVariant field(const QString &name) const;
+
+	/// @todo private/friend these to SDPageBase?
+	void addMapping(QWidget *widget, int section);
+	void addMapping(QWidget *widget, int section, const QByteArray &propertyName);
 
 public slots:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);
@@ -55,6 +61,13 @@ public slots:
     void accept() override;
 
 	void onClicked(QAbstractButton *button);
+
+protected:
+	// The model which will serve up the settings.
+	QStandardItemModel *m_settings_model;
+
+	// The mapper.
+	QDataWidgetMapper *m_mapper;
 
 private:
 
@@ -74,12 +87,6 @@ private:
     /// The map of registeredField() names to values.
     QMap<QString, int> m_reg_field_index_map;
     QVector<RegisteredField> m_registered_fields;
-
-    // The model which will serve up the settings.
-    QStandardItemModel *m_settings_model;
-
-    // The mapper.
-    QDataWidgetMapper *m_mapper;
 };
 
 

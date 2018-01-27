@@ -24,6 +24,7 @@
 #include <QHeaderView>
 #include <QMenu>
 #include <QToolTip>
+#include <QContextMenuEvent>
 
 #include "ItemDelegateLength.h"
 #include <logic/LibrarySortFilterProxyModel.h>
@@ -118,13 +119,13 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 	/// @note This should probably be creating an empty View here and then
 	/// calling an overridden readFile().
 
-	QSharedPointer<LibraryModel> libmodel;
+	QPointer<LibraryModel> libmodel;
 	if(mv_pair.hasModel())
 	{
 		Q_ASSERT_X(mv_pair.m_model_was_existing, "openFile", "find_exisiting returned a model but said it was not pre-existing.");
 
 		qDebug() << "Model exists:" << mv_pair.m_model;
-		libmodel = qSharedPointerObjectCast<LibraryModel>(mv_pair.m_model);
+		libmodel = qobject_cast<LibraryModel*>(mv_pair.m_model);
 	}
 	else
 	{
@@ -145,7 +146,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 		/// @note Need this cast due to some screwyness I mean subtleties of C++'s member access control system.
 		/// In very shortened form: Derived member functions can only access "protected" members through
 		/// an object of the Derived type, not of the Base type.
-		static_cast<MDILibraryView*>(mvpair.m_view)->setCurrentFile(open_url);
+		qobject_cast<MDILibraryView*>(mvpair.m_view)->setCurrentFile(open_url);
 		return mvpair;
     }
     else
@@ -160,70 +161,60 @@ M_WARNING("TODO: Add a QMessageBox or something here.");
  * static member function which opens an MDILibraryView on the given model.
  * @param model  The model to open.  Must exist and must be valid.
  */
-MDIModelViewPair MDILibraryView::openModel(QSharedPointer<LibraryModel> model, QWidget* parent)
+MDIModelViewPair MDILibraryView::openModel(QPointer<LibraryModel> model, QWidget* parent)
 {
 	MDIModelViewPair retval;
 	retval.setModel(model);
 
 	retval.m_view = new MDILibraryView(parent);
-	static_cast<MDILibraryView*>(retval.m_view)->setModel(model);
+	qobject_cast<MDILibraryView*>(retval.m_view)->setModel(model);
 
 	return retval;
 }
 
 void MDILibraryView::setModel(QAbstractItemModel* model)
 {
-	Q_ASSERT(0); /// Obsolete, use QSharedPointer version.
-}
+	// Keep a ref to the real model.
+	m_underlying_model = qobject_cast<LibraryModel*>(model);
 
-void MDILibraryView::setModel(QSharedPointer<QAbstractItemModel> model)
-{
-    // Keep a ref to the real model.
-	m_underlying_model = qSharedPointerObjectCast<LibraryModel>(model);
+	// Set our "current file" to the root dir of the model.
+	setCurrentFile(m_underlying_model->getLibRootDir());
 
-    // Set our "current file" to the root dir of the model.
-    setCurrentFile(m_underlying_model->getLibRootDir());
-
-    m_sortfilter_model->setSourceModel(model.data());
-    auto old_sel_model = selectionModel();
-    // This will create a new selection model.
-    MDITreeViewBase::setModel(m_sortfilter_model);
-    Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
-    old_sel_model->deleteLater();
+	m_sortfilter_model->setSourceModel(model);
+	auto old_sel_model = selectionModel();
+	// This will create a new selection model.
+	MDITreeViewBase::setModel(m_sortfilter_model);
+	Q_ASSERT((void*)m_sortfilter_model != (void*)old_sel_model);
+	old_sel_model->deleteLater();
 
 
-    // Set up the TreeView's header.
-    header()->setStretchLastSection(false);
-    header()->setSectionResizeMode(QHeaderView::Stretch);
-    header()->setContextMenuPolicy(Qt::CustomContextMenu);
+	// Set up the TreeView's header.
+	header()->setStretchLastSection(false);
+	header()->setSectionResizeMode(QHeaderView::Stretch);
+	header()->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    // Set the resize behavior of the header's columns based on the columnspecs.
-    int num_cols = m_underlying_model->columnCount();
-    for(int c = 0; c < num_cols; ++c)
-    {
+	// Set the resize behavior of the header's columns based on the columnspecs.
+	int num_cols = m_underlying_model->columnCount();
+	for(int c = 0; c < num_cols; ++c)
+	{
 		if(m_underlying_model->headerData(c, Qt::Horizontal, ModelUserRoles::HeaderViewSectionShouldFitWidthToContents) == true)
-        {
-            header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
-        }
-    }
-    // Find the "Length" column.
-    auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
-    // Set the delegate on it.
-    setItemDelegateForColumn(len_col, m_length_delegate);
+		{
+			header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
+		}
+	}
+	// Find the "Length" column.
+	auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
+	// Set the delegate on it.
+	setItemDelegateForColumn(len_col, m_length_delegate);
 
-    /// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
-    /// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
-    header()->setResizeContentsPrecision(0);
+	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
+	/// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.
+	header()->setResizeContentsPrecision(0);
 }
 
 LibraryModel* MDILibraryView::underlyingModel() const
 {
-	return m_underlying_model.data();
-}
-
-QSharedPointer<QAbstractItemModel> MDILibraryView::underlyingModelSharedPtr() const
-{
-    return m_underlying_model;
+	return m_underlying_model;
 }
 
 void MDILibraryView::setEmptyModel()
@@ -250,7 +241,7 @@ bool MDILibraryView::readFile(QUrl load_url)
 	return true;
 }
 
-void MDILibraryView::serializeDocument(QFileDevice& file) const
+void MDILibraryView::serializeDocument(QFileDevice& file)
 {
 	m_underlying_model->serializeToFile(file);
 }

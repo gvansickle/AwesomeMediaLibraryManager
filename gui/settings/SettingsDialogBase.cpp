@@ -126,10 +126,18 @@ QVariant SettingsDialogBase::field(const QString &name) const
         qWarning() << QString("No such field registered:") << name;
     }
 
-    return QVariant();
+	return QVariant();
 }
 
+void SettingsDialogBase::addMapping(QWidget* widget, int section)
+{
+	m_mapper->addMapping(widget, section);
+}
 
+void SettingsDialogBase::addMapping(QWidget* widget, int section, const QByteArray& propertyName)
+{
+	m_mapper->addMapping(widget, section, propertyName);
+}
 
 void SettingsDialogBase::changePage(QListWidgetItem *current, QListWidgetItem *previous)
 {

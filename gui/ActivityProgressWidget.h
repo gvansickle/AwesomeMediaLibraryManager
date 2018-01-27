@@ -20,6 +20,7 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 #define AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 
+#include <nomocdefs.h>
 
 #include <QtWidgets/QWidget>
 
@@ -28,16 +29,19 @@ class QLabel;
 
 class ActivityProgressWidget : public QWidget
 {
-	Q_OBJECT
+	W_OBJECT(ActivityProgressWidget)
 
 public:
 	explicit ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f = Qt::WindowFlags());
 	virtual ~ActivityProgressWidget() override;
 
-public slots:
+public Q_SLOTS:
 	void onProgressRangeChanged(int minimum, int maximum);
 	void onProgressTextChanged(const QString &progressText);
 	void onProgressValueChanged(int progressValue);
+
+	/// @note This is only needed for the old-style connection syntax and/or QML exposure.
+//	W_SLOT(onProgressRangeChanged)
 
 private:
 	Q_DISABLE_COPY(ActivityProgressWidget)

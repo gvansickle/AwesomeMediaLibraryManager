@@ -42,7 +42,7 @@ class MDILibraryView : public MDITreeViewBase
 
     using BASE_CLASS = MDITreeViewBase;
 
-signals:
+Q_SIGNALS:
 	/**
 	 * Signal emitted when the user has selected one or more tracks in this view, and wants to
 	 * append/replace them to the "Now Playing" playlist, and possibly start playing them.
@@ -51,7 +51,7 @@ signals:
 
 	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
     void playTrackNowSignal(QUrl);
-        
+
 public:
 	explicit MDILibraryView(QWidget *parent = Q_NULLPTR);
 
@@ -79,21 +79,17 @@ public:
 	 *
 	 * @param model  The model to open.  Must exist and must be valid.
      */
-	static MDIModelViewPair openModel(QSharedPointer<LibraryModel> model, QWidget* parent);
+	static MDIModelViewPair openModel(QPointer<LibraryModel> model, QWidget* parent);
 
-	Q_DECL_DEPRECATED void setModel(QAbstractItemModel* model) override;
+	void setModel(QAbstractItemModel* model) override;
 
-	void setModel(QSharedPointer<QAbstractItemModel> model) override;
-
-	Q_DECL_DEPRECATED LibraryModel* underlyingModel() const override;
-
-	QSharedPointer<QAbstractItemModel> underlyingModelSharedPtr() const override;
+	LibraryModel* underlyingModel() const override;
 
 	LibrarySortFilterProxyModel* proxy_model() const { return m_sortfilter_model; }
 
 
 protected:
-    QSharedPointer<LibraryModel> m_underlying_model;
+	QPointer<LibraryModel> m_underlying_model;
 
 	LibrarySortFilterProxyModel* m_sortfilter_model;
 	ItemDelegateLength* m_length_delegate;
@@ -115,9 +111,9 @@ protected:
 	 */
     virtual bool readFile(QUrl load_url) override;
 
-M_WARNING("TODO: Override writeFile?");
+	///@todo Override writeFile?
 
-	virtual void serializeDocument(QFileDevice& file) const override;
+	virtual void serializeDocument(QFileDevice& file) override;
 	virtual void deserializeDocument(QFileDevice& file) override;
 
 	/// @}
@@ -132,7 +128,7 @@ M_WARNING("TODO: Override writeFile?");
 	/// Helper function to convert from underlying model indexes to proxy QModelIndexes.
 	QModelIndex from_underlying_qmodelindex(const QModelIndex& underlying_index) override;
 
-protected slots:
+protected Q_SLOTS:
 
 	void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) override;
 	void onContextMenuViewport(QContextMenuEvent* event) override;

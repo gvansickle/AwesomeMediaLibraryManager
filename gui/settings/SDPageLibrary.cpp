@@ -19,6 +19,7 @@
 
 #include "SDPageLibrary.h"
 
+#include "SettingsDialogBase.h"
 
 #include <utils/Theme.h>
 #include <QtWidgets/QVBoxLayout>
@@ -32,6 +33,8 @@
 #include <QStandardItemModel>
 #include <QDataWidgetMapper>
 #include <QCheckBox>
+
+#include "utils/DebugHelpers.h"
 
 static QLabel* make_qlabel(const QString& str, QWidget *parent)
 {
@@ -54,8 +57,8 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 	auto lib_size_on_disk = make_qlabel("55756 GB", this);
 
 	///@todo EXPERIMENTAL
-	auto check1 = new QCheckBox("Test 1", this);
-	auto check2 = new QCheckBox("Test 2", this);
+	m_check1 = new QCheckBox("Test 1", this);
+	m_check2 = new QCheckBox("Test 2", this);
 
 	// FormLayout for the stats.
 	QFormLayout *lib_stats_form = new QFormLayout;
@@ -63,8 +66,8 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
     lib_stats_form->addRow(tr("Total size on disk:"), lib_size_on_disk);
 
     ////
-    lib_stats_form->addRow(tr("Check1"),check1);
-    lib_stats_form->addRow(tr("Check2"),check2);
+	lib_stats_form->addRow(tr("Check1"),m_check1);
+	lib_stats_form->addRow(tr("Check2"),m_check2);
     ////
 
 	QTreeWidget* treeWidget = new QTreeWidget;
@@ -93,19 +96,11 @@ SDPageLibrary::SDPageLibrary(SettingsDialogBase *settings_dialog_base, QWidget *
 	//mainLayout->addStretch(1);
 	setLayout(mainLayout);
 
-///M_WARNING("EXPERIMENTAL");
+	// Create the model<->widget mappings.
+	settings_dialog_base->addMapping(m_check1, 0);
+	settings_dialog_base->addMapping(m_check2, 1);
 
-	auto si1 = new QStandardItem("true");
-	auto si2 = new QStandardItem("false");
-	m_model = new QStandardItemModel;
-	m_model->appendRow({si1, si2});
-	m_mapper = new QDataWidgetMapper;
-	m_mapper->setModel(m_model);
-	m_mapper->addMapping(check1, 0);
-	m_mapper->addMapping(check2, 1);
-	m_mapper->toFirst();
-
-    registerField("m_lib_num_songs_label", m_lib_num_songs_label);
+//    registerField("m_lib_num_songs_label", m_lib_num_songs_label);
 }
 
 void SDPageLibrary::addContentsEntry(SettingsDialogSideWidget *contents_widget)
@@ -115,6 +110,9 @@ void SDPageLibrary::addContentsEntry(SettingsDialogSideWidget *contents_widget)
 
 void SDPageLibrary::onApply()
 {
+M_WARNING("TODO");
+#if 0
 	qDebug() << "APPLIED SETTINGS:" << m_model->data(m_model->index(0, 0, QModelIndex()))
 				<< m_model->data(m_model->index(0, 1, QModelIndex()));;
+#endif
 }

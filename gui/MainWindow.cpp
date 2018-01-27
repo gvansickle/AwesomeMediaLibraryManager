@@ -17,9 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "FilterWidget.h"
 #include "MainWindow.h"
-#include "NetworkAwareFileDialog.h"
 
 #include "MDITreeViewBase.h"
 #include "MDILibraryView.h"
@@ -45,6 +45,7 @@
 #include <QStatusBar>
 #include <Qt>
 #include <QAction>
+#include <QCloseEvent>
 #include <QStandardPaths>
 #include <QDebug>
 #include "utils/DebugHelpers.h"
@@ -76,6 +77,7 @@
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
 #include <gui/menus/ActionBundle.h>
+
 
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
@@ -442,7 +444,7 @@ void MainWindow::createActionsView()
 
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); //< Also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
-M_WARNING("TODO: These appear to be unreparentable, so we can't give them to an ActionBundle.");
+	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
 }
@@ -681,7 +683,7 @@ void MainWindow::connectPlayerAndControls(MP2 *player, PlayerControls *controls)
  */
 void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *playlist_view)
 {
-M_WARNING("TODO: Hide qMediaPlaylist behind playlist_view?");
+	/// @todo Hide qMediaPlaylist behind playlist_view?
 	if(player->playlist() == playlist_view->getQMediaPlaylist())
 	{
 		qDebug() << "Already connected.";
@@ -883,15 +885,16 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
     auto view = findSubWindowView(url);
     if(view)
     {
+		// Found an existing View, which means it's attached to an existing Model.
         retval.m_view = view;
         retval.m_view_was_existing = true;
-		retval.m_model = view->underlyingModelSharedPtr();
+		retval.m_model = view->underlyingModel();
         retval.m_model_was_existing = true;
     }
 	else
 	{
-		// No existing view, is there an existing model open?
-M_WARNING("TODO: Find a cleaner way to handle this.");
+		// No existing View, is there an existing Model open?
+		/// @todo: Seems like there should be a cleaner way to handle this.
 		for(auto lm : m_libmodels)
 		{
 			if(lm->getLibRootDir() == url)
@@ -906,8 +909,7 @@ M_WARNING("TODO: Find a cleaner way to handle this.");
 			if(pm->getLibRootDir() == url)
 			{
 				qDebug() << "Found existing PlaylistModel:" << pm;
-M_WARNING("TODO: This isn't correct.");
-				retval.m_model = QSharedPointer<PlaylistModel>(pm.data());
+				retval.m_model = pm;
 				retval.m_model_was_existing = true;
 			}
 		}
@@ -995,7 +997,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 //		qDebug() << "Jsondoc:" << jsondoc.toJson();
 //		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
 
-		QSharedPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
+		QPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
 
 		if(!libmodel)
 		{
@@ -1159,7 +1161,7 @@ void MainWindow::onRescanLibrary()
 	}
 }
 
-void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
+void MainWindow::onShowLibrary(QPointer<LibraryModel> libmodel)
 {
 	// We'll just try to open the same URL as the libmodel, and let the "opening an existing view/model"
 	// logic do the rest.
@@ -1167,7 +1169,7 @@ void MainWindow::onShowLibrary(QSharedPointer<LibraryModel> libmodel)
 }
 
 
-void MainWindow::onRemoveDirFromLibrary(QSharedPointer<LibraryModel> libmodel)
+void MainWindow::onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel)
 {
 	qDebug() << QString("Removing libmodel from library:") << libmodel;
 
@@ -1220,7 +1222,7 @@ void MainWindow::newPlaylist()
 	MDIModelViewPair mvpair;
 	mvpair.m_view = child;
 	mvpair.m_view_was_existing = false;
-	mvpair.setModel(child->underlyingModelSharedPtr());
+	mvpair.setModel(child->underlyingModel());
 	mvpair.m_model_was_existing = false;
 
 	addChildMDIModelViewPair_Playlist(mvpair);
@@ -1238,7 +1240,7 @@ void MainWindow::newNowPlaying()
     child->newFile();
 
 	// Set this view's model to be the single "Now Playing" model.
-	m_now_playing_playlist_model = child->underlyingModelSharedPtr().objectCast<PlaylistModel>();
+	m_now_playing_playlist_model = child->underlyingModel();
 
     /// @todo Do we really need to keep this as a member pointer?
     m_now_playing_playlist_view = child;
@@ -1343,7 +1345,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 
 	if(mvpair.hasModel())
 	{
-		auto libmodel = qSharedPointerObjectCast<LibraryModel>(mvpair.m_model);
+		QPointer<LibraryModel> libmodel = qobject_cast<LibraryModel*>(mvpair.m_model);
 		Q_CHECK_PTR(libmodel);
 
 		bool model_really_already_existed = (std::find(m_libmodels.begin(), m_libmodels.end(), libmodel) != m_libmodels.end());
@@ -1413,7 +1415,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 
 	if(mvpair.hasModel())
 	{
-		QPointer<PlaylistModel> playlist_model = qSharedPointerObjectCast<PlaylistModel>(mvpair.m_model).data();
+		auto playlist_model = qobject_cast<PlaylistModel*>(mvpair.m_model);
 		Q_CHECK_PTR(playlist_model);
 
 		bool model_really_already_existed = (std::find(m_playlist_models.begin(), m_playlist_models.end(), playlist_model) != m_playlist_models.end());
@@ -1431,7 +1433,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			Q_ASSERT(!model_really_already_existed);
 
 			// Add the underlying model to the PlaylistModel list.
-			m_playlist_models.push_back(playlist_model.data());
+			m_playlist_models.push_back(playlist_model);
 		}
 	}
 }
@@ -1511,7 +1513,15 @@ void MainWindow::startSettingsDialog()
 		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
 	}
 
-	m_settings_dlg->exec();
+	// Open the settings dialog modeless.
+	// Note this from the Qt5 docs:
+	// http://doc.qt.io/qt-5/qdialog.html
+	// "If you invoke the show() function after hiding a dialog, the dialog will be displayed in its original position. [...]
+	// To preserve the position of a dialog that has been moved by the user, save its position in your closeEvent() handler and
+	// then move the dialog to that position, before showing it again"
+	m_settings_dlg->show();
+	m_settings_dlg->raise();
+	m_settings_dlg->activateWindow();
 }
 
 void MainWindow::changeStyle(const QString& styleName)

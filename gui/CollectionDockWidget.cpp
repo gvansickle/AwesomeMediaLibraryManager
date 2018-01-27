@@ -117,7 +117,7 @@ void CollectionDockWidget::onTreeContextMenu(const QPoint& point)
 
 	qDebug() << "ITEM:" << item->data(Qt::DisplayRole);
 
-	auto libmodel = item->data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
+	auto libmodel = item->data(Qt::UserRole + 1).value<QPointer<LibraryModel>>();
 	if(libmodel)
 	{
 		doLibraryContextMenu(point);
@@ -126,7 +126,7 @@ void CollectionDockWidget::onTreeContextMenu(const QPoint& point)
 
 }
 
-QSharedPointer<LibraryModel> CollectionDockWidget::modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const
+QPointer<LibraryModel> CollectionDockWidget::modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const
 {
 	if(!modelindex.isValid())
 	{
@@ -134,7 +134,7 @@ QSharedPointer<LibraryModel> CollectionDockWidget::modelIndexToLibraryModelPtr(c
 		return nullptr;
 	}
 
-	auto libmodel = modelindex.data(Qt::UserRole+1).value<QSharedPointer<LibraryModel>>();
+	auto libmodel = modelindex.data(Qt::UserRole+1).value<QPointer<LibraryModel>>();
 	if(!libmodel)
 	{
 		qWarning() << "NO VALID LIBMODEL AT INDEX:" << modelindex;
@@ -231,7 +231,7 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 		return;
 	}
 
-	auto libmodel = modelindex.data(Qt::UserRole + 1).value<QSharedPointer<LibraryModel>>();
+	auto libmodel = modelindex.data(Qt::UserRole + 1).value<QPointer<LibraryModel>>();
 	if(libmodel)
 	{
 		emit showLibraryModelSignal(libmodel);
