@@ -47,7 +47,7 @@ bool PixmapLabel::hasHeightForWidth() const
 
 int PixmapLabel::heightForWidth(int) const
 {
-	if(pixmap() != nullptr)
+	if(pixmap() != nullptr && pixmap()->width() > 0)
 	{
 		return int(width() * pixmap()->height() / pixmap()->width());
 	}
