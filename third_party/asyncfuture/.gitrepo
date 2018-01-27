@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/benlau/asyncfuture.git
+	branch = master
+	commit = 0dda821f1dbc93a3e498d1b23ee14261dc8a6701
+	parent = 14aa72ed40b106b5d7542faf9c2edcaa6fa6226a
+	cmdver = 0.3.1
