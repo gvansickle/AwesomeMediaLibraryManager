@@ -20,6 +20,9 @@
 #ifndef UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 #define UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 
+/// @todo Experimental
+#include <asyncfuture.h>
+
 #include <QObject>
 #include <QVector>
 #include <QFuture>
@@ -37,7 +40,7 @@ class QFutureWatcherBase;
 class AsyncTaskManager: public QObject
 {
 public:
-	AsyncTaskManager(QObject *parent = 0);
+	AsyncTaskManager(QObject *parent = nullptr);
 	virtual ~AsyncTaskManager();
 
 	template <typename T>
@@ -71,7 +74,7 @@ class futureww : public QFutureWatcher<T>
 	using BASE_CLASS = QFutureWatcher<T>;
 
 public:
-    explicit futureww(QObject* parent = 0) : QFutureWatcher<T>(parent) {}
+	explicit futureww(QObject* parent = nullptr) : QFutureWatcher<T>(parent) {}
     ~futureww()
     {
         cancel();
@@ -155,6 +158,24 @@ private:
 
     std::function<void(int)> m_resultat_function {nullptr};
     std::function<void(T)> m_result_function {nullptr};
+};
+
+/// @todo Experimental.
+template <typename T>
+class CustomDeferred : public AsyncFuture::Deferred<T>
+{
+	using BASE_CLASS = AsyncFuture::Deferred<T>;
+
+public:
+
+	CustomDeferred()
+	{
+	}
+
+	void reportResult(T value, int index)
+	{
+		BASE_CLASS::deferredFuture->reportResult(value, index);
+	}
 };
 
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */

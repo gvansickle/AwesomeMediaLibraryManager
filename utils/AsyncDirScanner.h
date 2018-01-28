@@ -65,6 +65,7 @@ public:
 
 			/// Send this path to the future.
 			control.reportResult(file_url.toString());
+			qDebug() << "resultCount:" << control.resultCount();
 			// Update progress.
 			control.setProgressRange(0, num_files_found_so_far);
 			control.setProgressValue(num_files_found_so_far);

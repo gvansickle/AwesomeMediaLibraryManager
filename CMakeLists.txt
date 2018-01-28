@@ -183,6 +183,9 @@ set(IDENTIFIER "io.github.gvansickle")
 ### The third-party packages we require.
 ###
 
+set(HEADER_FILES_THIRD_PARTY "")
+set(SOURCE_FILES_THIRD_PARTY "")
+
 include(ExternalProject)
 
 set(AMLM_LIBCUE_TARGET "")
@@ -280,6 +283,11 @@ endif()
 # Verdigris is just two headers.
 set(USE_BUNDLED_VERDIGRIS 1)
 set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
+
+# AsyncFuture is just one header.
+set(USE_BUNDLED_ASYNCFUTURE 1)
+set(INCLUDE_DIR_ASYNCFUTURE third_party/asyncfuture)
+list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_ASYNCFUTURE}/asyncfuture.h)
 
 # Main program header files.
 set(HEADER_FILES
@@ -425,6 +433,9 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 
+# Append the third_party files which need to be explicitly in the SOURCE_/HEADER_FILES vars.
+list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
+list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -462,8 +473,12 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 # FBO Verdigris (esp. on Windows/MSVC).
 #add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS" "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}")
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE})
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
