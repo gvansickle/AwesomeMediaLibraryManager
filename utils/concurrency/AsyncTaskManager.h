@@ -34,37 +34,6 @@
 
 class QFutureWatcherBase;
 
-/*
- *
- */
-class AsyncTaskManager: public QObject
-{
-public:
-	AsyncTaskManager(QObject *parent = nullptr);
-	virtual ~AsyncTaskManager();
-
-	template <typename T>
-	void addFuture(const QFuture<T>& future,
-			std::function<void(int, QFuture<T>)> on_result,
-			std::function<void()> on_finished,
-			std::function<void()> on_canceled)
-	{
-		auto watcher = new QFutureWatcher<T>(this);
-
-		// Make connections.
-		connect(watcher, &QFutureWatcher<T>::resultReadyAt, [=](int i){on_result(i, watcher->future());});
-		connect(watcher, &QFutureWatcher<T>::finished, on_finished);
-		connect(watcher, &QFutureWatcher<T>::canceled, on_canceled);
-
-		watcher->setFuture(future);
-		m_future_watchers.push_back(watcher);
-	}
-
-private:
-	QVector<QFutureWatcherBase*> m_future_watchers;
-
-};
-
 /**
  * The futureww ("FutureWatcherWatcher") class template.
  */
@@ -160,6 +129,41 @@ private:
     std::function<void(T)> m_result_function {nullptr};
 };
 
+
+/*
+ *
+ */
+class AsyncTaskManager: public QObject
+{
+public:
+	AsyncTaskManager(QObject *parent = nullptr);
+	virtual ~AsyncTaskManager();
+
+	template <typename T>
+	void add_futureww(futureww<T> fww);
+
+	template <typename T>
+	void addFuture(const QFuture<T>& future,
+			std::function<void(int, QFuture<T>)> on_result,
+			std::function<void()> on_finished,
+			std::function<void()> on_canceled)
+	{
+		auto watcher = new QFutureWatcher<T>(this);
+
+		// Make connections.
+		connect(watcher, &QFutureWatcher<T>::resultReadyAt, [=](int i){on_result(i, watcher->future());});
+		connect(watcher, &QFutureWatcher<T>::finished, on_finished);
+		connect(watcher, &QFutureWatcher<T>::canceled, on_canceled);
+
+		watcher->setFuture(future);
+		m_future_watchers.push_back(watcher);
+	}
+
+private:
+	QVector<QFutureWatcherBase*> m_future_watchers;
+
+};
+
 /// @todo Experimental.
 template <typename T>
 class CustomDeferred : public AsyncFuture::Deferred<T>
@@ -168,14 +172,57 @@ class CustomDeferred : public AsyncFuture::Deferred<T>
 
 public:
 
-	CustomDeferred()
+	CustomDeferred() : AsyncFuture::Deferred<T>() {}
+
+	void complete(QFuture<T> future)
 	{
+		qDebug() << "complete called";
+		m_watched_future = future;
+		BASE_CLASS::complete(future);
+	}
+
+	template <typename Functor>
+	void onResultReadyAt(Functor onResultReadyAt)
+	{
+		QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
+
+		auto wrapper = [=](int index) mutable {
+
+			if (!onResultReadyAt(index)) {
+				watcher->disconnect();
+				watcher->deleteLater();
+			}
+		};
+
+		QObject::connect(watcher, &QFutureWatcher<T>::finished,
+						 [=]() {
+			watcher->disconnect();
+			watcher->deleteLater();
+		});
+
+		QObject::connect(watcher, &QFutureWatcher<T>::canceled,
+						 [=]() {
+			watcher->disconnect();
+			watcher->deleteLater();
+		});
+
+		QObject::connect(watcher, &QFutureWatcher<T>::resultReadyAt, wrapper);
+
+		if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
+			watcher->moveToThread(QCoreApplication::instance()->thread());
+		}
+
+		watcher->setFuture(m_watched_future); ////this->m_future);
 	}
 
 	void reportResult(T value, int index)
 	{
+		qDebug() << "####################################### value/index:" << value << index;
 		BASE_CLASS::deferredFuture->reportResult(value, index);
 	}
+
+protected:
+	QFuture<T> m_watched_future;
 };
 
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */

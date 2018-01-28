@@ -177,15 +177,12 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
-#if 1 /// USE_BUNDLED_ASYNCFUTURE
+#ifndef USE_BUNDLED_ASYNCFUTURE
 	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
 	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
 
 M_WARNING("EXPERIMENTAL");
-#if 0
-    m_dir_traversal_future_watcher.setFuture(fut);
-#elif 1
     m_futureww_dirscan.on_result([this](auto a){
         this->m_current_libmodel->onIncomingFilename(a);
     })
@@ -198,18 +195,35 @@ M_WARNING("EXPERIMENTAL");
         onDirTravFinished();
     });
     m_futureww_dirscan = fut;
-#endif
 #else
 	// USE_BUNDLED_ASYNCFUTURE
 
+	// Create the ControlledTask which will scan the directory tree for files.
 	auto async_dir_scanner = new AsyncDirScanner(dir_url,
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
 
-	AsyncFuture::Deferred<void> deferred_start = AsyncFuture::deferred<void>();
+	QFuture<QString> future = AsyncFuture::observe(ReportingRunner::run(async_dir_scanner)).future();
 
-	CustomDeferred<QString> defer;
+	AsyncFuture::observe(future).subscribe(
+				[](){ qDebug() << "COMPLETED"; return;});
 
+	CustomDeferred<QString> cdefer;
+//	auto cfuture = cdefer.future();
+	AsyncFuture::observe(future).onProgress([=]() -> void {
+						  qDebug() << "######################## resultCount/Progval:" << future.resultCount() << future.progressValue();
+					  });
+	cdefer.complete(future);
+
+	cdefer.onProgress([=](){
+		qDebug() << "DEFERRED ONPROGRESS ######################## RESULTCOUNT:" << cdefer.future().resultCount();
+	});
+	cdefer.onResultReadyAt([=](int index){
+		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! INDEX:" << index;
+		return true;
+	});
+
+#if 0
 //	QFuture<QString> future = ReportingRunner::run(async_dir_scanner);
 	// @note .context():
 	// "The callback is invoked in the thread of the context object"
@@ -247,37 +261,23 @@ M_WARNING("EXPERIMENTAL");
 
 	///AsyncFuture::observe(dfuture.)
 
-//	auto contextObject = this;
-//	AsyncFuture::observe(future).context(contextObject,
-//		// onComplete().
-//		[](QFuture<QString> future)
-//		{
-//			qDebug() << "Complete, future:" << future;
-//		}
-//#if 0
-//	,
-//		// onCancel.
-//		[]()
-//		{
-//			qDebug() << "Cancelled";
-//		}
-//#endif
-//	);
-//	auto contextObject = this;
-//	QFuture<QString> f2 = AsyncFuture::observe(dfuture.future()).context(contextObject,
-//	   [=](QFuture<QString> future)
-//		{
-//			qDebug() << "Context results:" << future.results();
-//			return future.results;
-//		}
-//	).future();
-
-//	connect(&dfuture, &Deferred, m_resultat_function);
-
-//	dfuture.complete(ReportingRunner::run(async_dir_scanner));
-
 	deferred_start.complete();
-	defer.complete(future);
+	cdefer.complete(future);
+
+	QFuture<QString> future = AsyncFuture::observe(
+				ReportingRunner::run(async_dir_scanner)
+			)
+			.subscribe([=](QFuture<QString> f){
+		// Main thread.
+		qDebug() << "################## RESULT COUNT:" << f.resultCount();
+		return f;
+	})
+	.future();
+
+	AsyncFuture::observe(future).onProgress([=](){
+		qDebug() << "################# PROGRESS RESCOUNT:" << future.resultCount();
+	});
+#endif
 
 
 #endif // USE_BUNDLED_ASYNCFUTURE
