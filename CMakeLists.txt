@@ -426,7 +426,8 @@ set(HEADER_FILES_UTILS_NOMOC
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
 set(HEADER_FILES_UTILS_CONCURRENCY
-	utils/concurrency/AsyncTaskManager.h)
+	utils/concurrency/AsyncTaskManager.h
+	utils/concurrency/ExtendedDeferred.h)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	utils/concurrency/AsyncTaskManager.cpp)
 

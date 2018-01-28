@@ -27,6 +27,7 @@
 #include <QtConcurrent>
 #ifdef USE_BUNDLED_ASYNCFUTURE
 #include <asyncfuture.h>
+#include <utils/concurrency/ExtendedDeferred.h>
 #endif
 
 
@@ -208,7 +209,7 @@ M_WARNING("EXPERIMENTAL");
 	AsyncFuture::observe(future).subscribe(
 				[](){ qDebug() << "COMPLETED"; return;});
 
-	CustomDeferred<QString> cdefer;
+	ExtendedDeferred<QString> cdefer;
 //	auto cfuture = cdefer.future();
 	AsyncFuture::observe(future).onProgress([=]() -> void {
 						  qDebug() << "######################## resultCount/Progval:" << future.resultCount() << future.progressValue();
