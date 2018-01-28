@@ -20,8 +20,70 @@
 #ifndef UTILS_CONCURRENCY_EXTENDEDDEFERRED_H_
 #define UTILS_CONCURRENCY_EXTENDEDDEFERRED_H_
 
+#include "asyncfuture.h"
 
+/**
+ * Extended subclass of Deferred<T>.  Adds callbacks for resultReadyAt(), resultsReadyAt() signals.
+ */
+template <typename T>
+class ExtendedDeferred : public AsyncFuture::Deferred<T>
+{
+	using BASE_CLASS = AsyncFuture::Deferred<T>;
 
+public:
+
+	ExtendedDeferred() : AsyncFuture::Deferred<T>() {}
+
+	void complete(QFuture<T> future)
+	{
+		qDebug() << "complete called";
+		m_watched_future = future;
+		BASE_CLASS::complete(future);
+	}
+
+	template <typename Functor>
+	void onResultReadyAt(Functor onResultReadyAt)
+	{
+		QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
+
+		auto wrapper = [=](int index) mutable {
+
+			if (!onResultReadyAt(index)) {
+				watcher->disconnect();
+				watcher->deleteLater();
+			}
+		};
+
+		QObject::connect(watcher, &QFutureWatcher<T>::finished,
+						 [=]() {
+			watcher->disconnect();
+			watcher->deleteLater();
+		});
+
+		QObject::connect(watcher, &QFutureWatcher<T>::canceled,
+						 [=]() {
+			watcher->disconnect();
+			watcher->deleteLater();
+		});
+
+		QObject::connect(watcher, &QFutureWatcher<T>::resultReadyAt, wrapper);
+
+		if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
+			watcher->moveToThread(QCoreApplication::instance()->thread());
+		}
+
+		watcher->setFuture(m_watched_future); ////this->m_future);
+	}
+
+	void reportResult(T value, int index)
+	{
+		qDebug() << "####################################### value/index:" << value << index;
+		BASE_CLASS::deferredFuture->reportResult(value, index);
+	}
+
+protected:
+	QFuture<T> m_watched_future;
+};
 
 
 #endif /* UTILS_CONCURRENCY_EXTENDEDDEFERRED_H_ */
