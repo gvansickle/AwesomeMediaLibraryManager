@@ -25,9 +25,12 @@
 #include <QString>
 #include <QDebug>
 
-static inline QDebug& operator<<(QDebug& d, const std::string& s)
+#include "StringHelpers.h"
+
+
+inline static QDebug& operator<<(QDebug& d, const std::string& s)
 {
-	return d << QString::fromStdString(s);
+	return d << toqstr(s);
 }
 
 

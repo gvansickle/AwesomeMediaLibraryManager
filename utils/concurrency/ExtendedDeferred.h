@@ -66,7 +66,7 @@ public:
     template <typename ANY>
 	void track(QFuture<ANY> future)
     {
-		qDebug() << "THIS TRACK WAS CALLED";
+		qDebug() << "ExtendedDeferredFuture TRACK WAS CALLED";
 		QPointer<ExtendedDeferredFuture<T>> thiz = this;
         QFutureWatcher<ANY> *watcher = new QFutureWatcher<ANY>();
 
@@ -83,6 +83,7 @@ public:
                         return;
                     }
 					//QFutureInterface<T>::reportResult(future.resultAt(index), index);
+                	qDebug() << "INDEX/VALUE:" << index << future.resultAt(index);
 					thiz->reportResult(future.resultAt(index), index);
                 });
 
@@ -123,6 +124,7 @@ public:
 	template <typename R>
 	void reportResult(const R& value, int index = -1)
 	{
+    	qDebug() << "INDEX/VALUE:" << index << value;
 		QFutureInterface<T>::reportResult(value, index);
 	}
 
@@ -204,7 +206,8 @@ public:
     typename std::enable_if<std::is_same<typename std::result_of<Functor(T, int)>::type, void>::value, void>::type
 	onReportResult(Functor functor)
     {
-    	onReportResult([=](T value, int index) mutable {
+    	onReportResult([=](T value, int index) mutable -> bool {
+        	qDebug() << "INDEX/VALUE:" << index << value;
             functor(value, index);
             return true;
         });
@@ -217,6 +220,7 @@ public:
 		QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
 
 		auto wrapper = [=](int index) mutable {
+        	qDebug() << "INDEX/VALUE:" << index << watcher->resultAt(index);
 			if (!onReportResult(watcher->resultAt(index), index))
 			{
 				watcher->disconnect();

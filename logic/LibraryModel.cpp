@@ -309,7 +309,7 @@ QHash<int, QByteArray> LibraryModel::roleNames() const
 	// Append our user role names.
 	for(int i = 0; i<ModelUserRoles::keyCount(); i++)
 	{
-		qDebug() << "ENUM:" << ModelUserRoles::key(i) << "Val:" << ModelUserRoles::value(i);
+//		qDebug() << "ENUM:" << ModelUserRoles::key(i) << "Val:" << ModelUserRoles::value(i);
 		retval.insert(ModelUserRoles::value(i), ModelUserRoles::valueToKey(ModelUserRoles::value(i)));
 	}
 	return retval;
@@ -391,7 +391,7 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 
 bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
-	qDebug() << "SetData, index/value/role:" << index << value << role;
+//	qDebug() << "SetData, index/value/role:" << index << value << role;
 
 	// Has to be a valid index or the call doesn't make sense.
 	if(!index.isValid())
@@ -436,7 +436,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 
 	// Tell anybody that's listening that all data in this row has changed.
 	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);
-	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
+//	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
 	emit dataChanged(index, bottom_right_index, {role});
 	return true;
 }
@@ -903,7 +903,7 @@ void LibraryModel::startRescan()
 				if(multientry.size() > 0)
 				{
 					items_to_rescan.append(multientry);
-					qDebug() << "PUSHING: " << multientry.size();
+					qDebug() << "PUSHING MULTIENTRY, SIZE:" << multientry.size();
 				}
 				multientry.clear();
 				multientry.push_back(LibraryRescannerMapItem({QPersistentModelIndex(index(i, 0)), item}));
@@ -915,7 +915,7 @@ void LibraryModel::startRescan()
 		{
 			// It wasn't cleared by the last iteration above, so we have to append it here.
 			items_to_rescan.append(multientry);
-			qDebug() << "PUSHING: " << multientry.size();
+			qDebug() << "PUSHING LAST MULTIENTRY, SIZE:" << multientry.size();
 			multientry.clear();
 		}
 

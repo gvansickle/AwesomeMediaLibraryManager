@@ -198,6 +198,10 @@ M_WARNING("EXPERIMENTAL");
     m_futureww_dirscan = fut;
 #else
 	// USE_BUNDLED_ASYNCFUTURE
+	qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
+    qDebug() << "START:" << dir_url;
+
+	static long num_files = 0;
 
 	// The ExtendedDeferred object we'll use to control completion, cancellation, and reporting.
 	auto cdefer = extended_deferred<QString>();
@@ -216,25 +220,30 @@ M_WARNING("EXPERIMENTAL");
 
 	// Monitor progress.
 	cdefer.onProgress([=]() -> void {
+		qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
 		emit progressRangeChanged(cdefer.future().progressMinimum(), cdefer.future().progressMaximum());
 		emit progressValueChanged(cdefer.future().progressValue());
 	});
 
 	/// @todo Testing.
 //	cdefer.onResultReadyAt([=](int index) -> void {
-//		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! cdefer INDEX:" << index << "RESULTCOUNT:" << cdefer.future().resultCount();
+//		qDebug() << "cdefer INDEX:" << index << "RESULTCOUNT:" << cdefer.future().resultCount();
 //	});
 
 	// Send out results as they come in.
 	cdefer.onReportResult([this](auto str, auto index) -> void {
-//		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
+		qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
+		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
 		this->m_current_libmodel->onIncomingFilename(str);
+		num_files++;
 	});
 
 	// Subscribe to the onCompleted and onCancelled callbacks.
-	AsyncFuture::observe(filenames_future).subscribe(
-		[this](){
-			qDebug() << "COMPLETED";
+	AsyncFuture::observe(cdefer.future()).subscribe(
+		[=](){
+			qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
+			qDebug() << "COMPLETED SCANNING. FOUND" << num_files / cdefer.future().resultCount() << "FILES";
+			num_files = 0;
 			/// @todo This could also just return another future for the overall results.
 			onDirTravFinished();
 		},
@@ -246,6 +255,8 @@ M_WARNING("EXPERIMENTAL");
 #endif // USE_BUNDLED_ASYNCFUTURE
 
 	emit progressTextChanged("Scanning directory tree");
+
+	qDebug() << "END:" << dir_url;
 }
 
 void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan)
