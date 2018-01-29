@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -199,6 +199,9 @@ M_WARNING("EXPERIMENTAL");
 #else
 	// USE_BUNDLED_ASYNCFUTURE
 
+	// The ExtendedDeferred object we'll use to control completion, cancellation, and reporting.
+	auto cdefer = extended_deferred<QString>();
+
 	// Create the ControlledTask which will scan the directory tree for files.
 	auto async_dir_scanner = new AsyncDirScanner(dir_url,
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
@@ -206,83 +209,38 @@ M_WARNING("EXPERIMENTAL");
 
 	QFuture<QString> filenames_future = AsyncFuture::observe(ReportingRunner::run(async_dir_scanner)).future();
 
-	AsyncFuture::observe(filenames_future).subscribe(
-				[](){ qDebug() << "COMPLETED"; return;});
-
-	// The ExtendedDeferred object we'll use to control completion, cancellation, and reporting.
-	auto cdefer = extended_deferred<QString>();
-
 	// Complete on the filename_future we set up above.
 	cdefer.complete(filenames_future);
+	/// @todo Also set up cancellation:
+	/// cdefer.cancel(cancel_future);
 
 	// Monitor progress.
 	cdefer.onProgress([=]() -> void {
 		emit progressRangeChanged(cdefer.future().progressMinimum(), cdefer.future().progressMaximum());
 		emit progressValueChanged(cdefer.future().progressValue());
 	});
-	cdefer.onResultReadyAt([=](int index) -> void {
-		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! cdefer INDEX:" << index << "RESULTCOUNT:" << cdefer.future().resultCount();
-	});
 
+	/// @todo Testing.
+//	cdefer.onResultReadyAt([=](int index) -> void {
+//		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! cdefer INDEX:" << index << "RESULTCOUNT:" << cdefer.future().resultCount();
+//	});
+
+	// Send out results as they come in.
 	cdefer.onReportResult([this](auto str, auto index) -> void {
-		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
+//		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
+		this->m_current_libmodel->onIncomingFilename(str);
 	});
 
-#if 0
-//	QFuture<QString> future = ReportingRunner::run(async_dir_scanner);
-	// @note .context():
-	// "The callback is invoked in the thread of the context object"
-	// "The return value is an Observable<R> object where R is the return type of the onCompleted callback."
-	QFuture<QString> filenames_future = AsyncFuture::observe(deferred_start.filenames_future()).context(this,
-																		   [=]()
-	{
-		QFuture<QString> retval = ReportingRunner::run(async_dir_scanner);
-
-		auto fw_dir2 = new QFutureWatcher<QString>(this);
-		fw_dir2->setFuture(retval);
-		connect(fw_dir2, &QFutureWatcher<QString>::resultReadyAt, [=](int i){ qDebug() << "Results ready at:" << i << fw_dir2->filenames_future().resultCount();});
-
-		return retval;
-	}).filenames_future();
-
-	auto fw_dir1 = new QFutureWatcher<QString>(this);
-	fw_dir1->setFuture(filenames_future);
-	connect(fw_dir1, &QFutureWatcher<QString>::resultReadyAt, [=](int i){ qDebug() << "Results ready at:" << i << fw_dir1->filenames_future().resultCount();});
-
-	AsyncFuture::observe(filenames_future).onProgress([=]() mutable -> bool {
-		QFuture<QString>& fut = filenames_future;
-		//qDebug() << "Progress/range:" << fut.progressValue() << "/" << fut.progressMinimum() << "-" << fut.progressMaximum();
-		emit progressRangeChanged(fut.progressMinimum(), fut.progressMaximum());
-		emit progressValueChanged(fut.progressValue());
-		auto num_results = fut.resultCount();
-		qDebug() << "resultCount:" << num_results;
-		if(num_results > 0)
-		{
-			qDebug() << "resulsAt(" << num_results-1 << ")" << fut.resultAt(num_results-1);
-		}
-		// Return false if we want to detach this listener.
-		return true;
-	});
-
-	///AsyncFuture::observe(dfuture.)
-
-	deferred_start.complete();
-	cdefer.complete(filenames_future);
-
-	QFuture<QString> filenames_future = AsyncFuture::observe(
-				ReportingRunner::run(async_dir_scanner)
-			)
-			.subscribe([=](QFuture<QString> f){
-		// Main thread.
-		qDebug() << "################## RESULT COUNT:" << f.resultCount();
-		return f;
-	})
-	.filenames_future();
-
-	AsyncFuture::observe(filenames_future).onProgress([=](){
-		qDebug() << "################# PROGRESS RESCOUNT:" << filenames_future.resultCount();
-	});
-#endif
+	// Subscribe to the onCompleted and onCancelled callbacks.
+	AsyncFuture::observe(filenames_future).subscribe(
+		[this](){
+			qDebug() << "COMPLETED";
+			/// @todo This could also just return another future for the overall results.
+			onDirTravFinished();
+		},
+		[](){
+			qDebug() << "CANCELLED";
+			;});
 
 
 #endif // USE_BUNDLED_ASYNCFUTURE
