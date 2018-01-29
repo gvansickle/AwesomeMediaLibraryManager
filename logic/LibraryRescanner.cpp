@@ -204,23 +204,32 @@ M_WARNING("EXPERIMENTAL");
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
 
-	QFuture<QString> future = AsyncFuture::observe(ReportingRunner::run(async_dir_scanner)).future();
+	QFuture<QString> filenames_future = AsyncFuture::observe(ReportingRunner::run(async_dir_scanner)).future();
 
-	AsyncFuture::observe(future).subscribe(
+	AsyncFuture::observe(filenames_future).subscribe(
 				[](){ qDebug() << "COMPLETED"; return;});
 
-	ExtendedDeferred<QString> cdefer;
+//	ExtendedDeferred<QString> cdefer;
+	auto cdefer = extended_deferred<QString>();
 //	auto cfuture = cdefer.future();
-	AsyncFuture::observe(future).onProgress([=]() -> void {
-						  qDebug() << "######################## resultCount/Progval:" << future.resultCount() << future.progressValue();
+	AsyncFuture::observe(filenames_future).onProgress([=]() -> void {
+						  qDebug() << "######################## filenames_future resultCount/Progval:"
+								   << filenames_future.resultCount()
+								   << filenames_future.progressValue();
 					  });
-	cdefer.complete(future);
+	cdefer.complete(filenames_future);
 
 	cdefer.onProgress([=](){
-		qDebug() << "DEFERRED ONPROGRESS ######################## RESULTCOUNT:" << cdefer.future().resultCount();
+		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! cdefer ONPROGRESS RESULTCOUNT:" << cdefer.future().resultCount()
+				 << "PROG VAL:" << cdefer.future().progressValue();
 	});
-	cdefer.onResultReadyAt([=](int index){
-		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! INDEX:" << index;
+	cdefer.onResultReadyAt([=](int index) -> bool {
+		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! cdefer INDEX:" << index << "RESULTCOUNT:" << cdefer.future().resultCount();
+		return true;
+	});
+
+	cdefer.onReportResult([this](auto str, auto index){
+		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
 		return true;
 	});
 
@@ -229,24 +238,24 @@ M_WARNING("EXPERIMENTAL");
 	// @note .context():
 	// "The callback is invoked in the thread of the context object"
 	// "The return value is an Observable<R> object where R is the return type of the onCompleted callback."
-	QFuture<QString> future = AsyncFuture::observe(deferred_start.future()).context(this,
+	QFuture<QString> filenames_future = AsyncFuture::observe(deferred_start.filenames_future()).context(this,
 																		   [=]()
 	{
 		QFuture<QString> retval = ReportingRunner::run(async_dir_scanner);
 
 		auto fw_dir2 = new QFutureWatcher<QString>(this);
 		fw_dir2->setFuture(retval);
-		connect(fw_dir2, &QFutureWatcher<QString>::resultReadyAt, [=](int i){ qDebug() << "Results ready at:" << i << fw_dir2->future().resultCount();});
+		connect(fw_dir2, &QFutureWatcher<QString>::resultReadyAt, [=](int i){ qDebug() << "Results ready at:" << i << fw_dir2->filenames_future().resultCount();});
 
 		return retval;
-	}).future();
+	}).filenames_future();
 
 	auto fw_dir1 = new QFutureWatcher<QString>(this);
-	fw_dir1->setFuture(future);
-	connect(fw_dir1, &QFutureWatcher<QString>::resultReadyAt, [=](int i){ qDebug() << "Results ready at:" << i << fw_dir1->future().resultCount();});
+	fw_dir1->setFuture(filenames_future);
+	connect(fw_dir1, &QFutureWatcher<QString>::resultReadyAt, [=](int i){ qDebug() << "Results ready at:" << i << fw_dir1->filenames_future().resultCount();});
 
-	AsyncFuture::observe(future).onProgress([=]() mutable -> bool {
-		QFuture<QString>& fut = future;
+	AsyncFuture::observe(filenames_future).onProgress([=]() mutable -> bool {
+		QFuture<QString>& fut = filenames_future;
 		//qDebug() << "Progress/range:" << fut.progressValue() << "/" << fut.progressMinimum() << "-" << fut.progressMaximum();
 		emit progressRangeChanged(fut.progressMinimum(), fut.progressMaximum());
 		emit progressValueChanged(fut.progressValue());
@@ -263,9 +272,9 @@ M_WARNING("EXPERIMENTAL");
 	///AsyncFuture::observe(dfuture.)
 
 	deferred_start.complete();
-	cdefer.complete(future);
+	cdefer.complete(filenames_future);
 
-	QFuture<QString> future = AsyncFuture::observe(
+	QFuture<QString> filenames_future = AsyncFuture::observe(
 				ReportingRunner::run(async_dir_scanner)
 			)
 			.subscribe([=](QFuture<QString> f){
@@ -273,10 +282,10 @@ M_WARNING("EXPERIMENTAL");
 		qDebug() << "################## RESULT COUNT:" << f.resultCount();
 		return f;
 	})
-	.future();
+	.filenames_future();
 
-	AsyncFuture::observe(future).onProgress([=](){
-		qDebug() << "################# PROGRESS RESCOUNT:" << future.resultCount();
+	AsyncFuture::observe(filenames_future).onProgress([=](){
+		qDebug() << "################# PROGRESS RESCOUNT:" << filenames_future.resultCount();
 	});
 #endif
 
