@@ -38,8 +38,6 @@ void connect_watcher_disconnects(WatcherType *watcher)
 	});
 }
 
-void extended_watch();
-
 
 /**
  *
@@ -59,23 +57,24 @@ public:
 		this->cancel();
     }
 
+	/**
+	 * Additions to DeferredFuture<>'s tracking.
+	 * The base class' track() implementation is called in only two places:
+	 * - At the end of DeferredFuture<>'s "void complete(QFuture<T> future)" overload.
+	 * - Deferred<>'s track() simply forwards the call to it.
+	 */
     template <typename ANY>
 	void track(QFuture<ANY> future)
     {
-		qDebug() << "THIS TRACK WAS CALLED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+		qDebug() << "THIS TRACK WAS CALLED";
 		QPointer<ExtendedDeferredFuture<T>> thiz = this;
         QFutureWatcher<ANY> *watcher = new QFutureWatcher<ANY>();
 
-        if ((QThread::currentThread() != QCoreApplication::instance()->thread())) {
+        if ((QThread::currentThread() != QCoreApplication::instance()->thread()))
+        {
             watcher->moveToThread(QCoreApplication::instance()->thread());
         }
 
-#if 0
-        QObject::connect(watcher, &QFutureWatcher<ANY>::finished, [=]() {
-            watcher->disconnect();
-            watcher->deleteLater();
-        });
-#endif
         connect_watcher_disconnects(watcher);
 
         QObject::connect(watcher, &QFutureWatcher<ANY>::resultReadyAt, [=](int index) {
@@ -87,30 +86,12 @@ public:
 					thiz->reportResult(future.resultAt(index), index);
                 });
 
-#if 0
-        QObject::connect(watcher, &QFutureWatcher<ANY>::started, [=](){
-            thiz->reportStarted();
-        });
-
-        QObject::connect(watcher, &QFutureWatcher<ANY>::paused, [=](){
-            thiz->setPaused(true);
-        });
-
-        QObject::connect(watcher, &QFutureWatcher<ANY>::resumed, [=](){
-            thiz->setPaused(false);
-        });
-#endif
         watcher->setFuture(future);
 
-        QFutureInterface<T>::setProgressRange(future.progressMinimum(), future.progressMaximum());
-        QFutureInterface<T>::setProgressValue(future.progressValue());
-
-        if (future.isStarted()) {
-            QFutureInterface<T>::reportStarted();
-        }
-
-        if (future.isPaused()) {
-            QFutureInterface<T>::setPaused(true);
+        /// @todo We probably need to check for already-completed work and call reportResults() here.
+        if(future.resultCount() > 0)
+        {
+        	qWarning() << "RESULTS EXISITED BEFORE FUTURE WAS SET. NUM:" << future.resultCount();
         }
     }
 
@@ -158,31 +139,28 @@ class ExtendedDeferred : public AsyncFuture::Deferred<T>
 
 public:
 
-#if 0
-	ExtendedDeferred() : AsyncFuture::Deferred<T>() {}
-#else
 	ExtendedDeferred() : AsyncFuture::Deferred<T>()
 	{
+		/// @todo Not sure if we are leaking a smart_ptr here or not, the Deferred<T>() constructor
+		/// has already created a DeferredFuture<T> and put it in deferredFuture.
 		QSharedPointer<DeferredFutureType> extdeffut_sp = DeferredFutureType::create();
 		//this->deferredFuture = qSharedPointerCast<AsyncFuture::Private::DeferredFuture<T>>(extdeffut_sp);
 		this->deferredFuture = extdeffut_sp;
 		this->m_future = this->deferredFuture->future();
 	}
-#endif
 
 	void complete(QFuture<QFuture<T>> future)
 	{
 		qDebug() << "complete(QFuture<QFuture<T>>) called";
-		track(future);
-		m_watched_future = future;
 		BASE_CLASS::complete(future);
 	}
 
 	void complete(QFuture<T> future)
 	{
 		qDebug() << "complete(QFuture<T>) called";
-		m_watched_future = future;
 		BASE_CLASS::complete(future);
+		// The base class complete() call above called DeferredFuture's track().
+		// Now call our overridden one.
 		qSharedPointerDynamicCast<DeferredFutureType>(this->deferredFuture)->track(future);
 	}
 
@@ -200,21 +178,8 @@ public:
 			}
 		};
 
-#if 1
 		connect_watcher_disconnects(watcher);
-#else
-		QObject::connect(watcher, &QFutureWatcher<T>::finished,
-						 [=]() {
-			watcher->disconnect();
-			watcher->deleteLater();
-		});
 
-		QObject::connect(watcher, &QFutureWatcher<T>::canceled,
-						 [=]() {
-			watcher->disconnect();
-			watcher->deleteLater();
-		});
-#endif
 		QObject::connect(watcher, &QFutureWatcher<T>::resultReadyAt, wrapper);
 
 		if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
@@ -252,12 +217,11 @@ public:
 	template <typename ANY>
 	void track(QFuture<ANY> future)
 	{
-		qInfo() << "########################################### TRACK CALLED";
-		this->deferredFuture->track(future);
+		qSharedPointerDynamicCast<DeferredFutureType>(this->deferredFuture)->track(future);
 	}
 
 protected:
-	QFuture<T> m_watched_future;
+
 };
 
 template <typename T>
