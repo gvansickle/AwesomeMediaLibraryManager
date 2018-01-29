@@ -164,8 +164,19 @@ public:
 		qSharedPointerDynamicCast<DeferredFutureType>(this->deferredFuture)->track(future);
 	}
 
+    template <typename Functor>
+	typename std::enable_if<std::is_same<typename std::result_of<Functor(int)>::type, void>::value, void>::type
+	onResultReadyAt(Functor functor)
+	{
+    	onResultReadyAt([=](int index) mutable -> bool {
+            functor(index);
+            return true;
+        });
+    }
+
 	template <typename Functor>
-	void onResultReadyAt(Functor onResultReadyAt)
+	typename std::enable_if<std::is_same<typename std::result_of<Functor(int)>::type, bool>::value, void>::type
+	onResultReadyAt(Functor onResultReadyAt)
 	{
 		QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
 
@@ -189,8 +200,19 @@ public:
 		watcher->setFuture(this->m_future);
 	}
 
+    template <typename Functor>
+    typename std::enable_if<std::is_same<typename std::result_of<Functor(T, int)>::type, void>::value, void>::type
+	onReportResult(Functor functor)
+    {
+    	onReportResult([=](T value, int index) mutable {
+            functor(value, index);
+            return true;
+        });
+    }
+
 	template <typename Functor>
-	void onReportResult(Functor onReportResult)
+    typename std::enable_if<std::is_same<typename std::result_of<Functor(T, int)>::type, bool>::value, void>::type
+	onReportResult(Functor onReportResult)
 	{
 		QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
 

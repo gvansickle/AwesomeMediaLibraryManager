@@ -209,28 +209,23 @@ M_WARNING("EXPERIMENTAL");
 	AsyncFuture::observe(filenames_future).subscribe(
 				[](){ qDebug() << "COMPLETED"; return;});
 
-//	ExtendedDeferred<QString> cdefer;
+	// The ExtendedDeferred object we'll use to control completion, cancellation, and reporting.
 	auto cdefer = extended_deferred<QString>();
-//	auto cfuture = cdefer.future();
-	AsyncFuture::observe(filenames_future).onProgress([=]() -> void {
-						  qDebug() << "######################## filenames_future resultCount/Progval:"
-								   << filenames_future.resultCount()
-								   << filenames_future.progressValue();
-					  });
+
+	// Complete on the filename_future we set up above.
 	cdefer.complete(filenames_future);
 
-	cdefer.onProgress([=](){
-		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! cdefer ONPROGRESS RESULTCOUNT:" << cdefer.future().resultCount()
-				 << "PROG VAL:" << cdefer.future().progressValue();
+	// Monitor progress.
+	cdefer.onProgress([=]() -> void {
+		emit progressRangeChanged(cdefer.future().progressMinimum(), cdefer.future().progressMaximum());
+		emit progressValueChanged(cdefer.future().progressValue());
 	});
-	cdefer.onResultReadyAt([=](int index) -> bool {
+	cdefer.onResultReadyAt([=](int index) -> void {
 		qDebug() << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! cdefer INDEX:" << index << "RESULTCOUNT:" << cdefer.future().resultCount();
-		return true;
 	});
 
-	cdefer.onReportResult([this](auto str, auto index){
+	cdefer.onReportResult([this](auto str, auto index) -> void {
 		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
-		return true;
 	});
 
 #if 0
