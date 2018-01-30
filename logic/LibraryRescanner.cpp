@@ -30,8 +30,7 @@
 #include <utils/concurrency/ExtendedDeferred.h>
 #endif
 #if 1
-#include <third_party/QtPromise/src/Promise.h>
-#include <third_party/QtPromise/src/PromiseSitter.h>
+#include <QtPromise>
 #endif
 
 
@@ -194,15 +193,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
 #if 1
-
 	using namespace QtPromise;
 
-	Deferred::Ptr deferred = Deferred::create();
-
-	Promise::Ptr promise = Promise::create(deferred)
-			->then([=](const QVariant& value){ qDebug() << "Completed";});
-
-	PromiseSitter::instance()->add(promise);
+	auto promise = qPromise(ReportingRunner::run(async_dir_scanner)).then([](){
+		qDebug() << "DONE";
+	});
 
 #elif 0 ///ndef USE_BUNDLED_ASYNCFUTURE
 

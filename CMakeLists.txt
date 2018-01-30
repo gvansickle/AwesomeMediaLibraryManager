@@ -264,10 +264,6 @@ else()
 	endif()
 endif()
 
-if(TRUE)
-	add_subdirectory("third_party/QtPromise")
-endif()
-
 if(FALSE)
 if(USE_BUNDLED_QXTGLOBALSHORTCUT)
 	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
@@ -292,6 +288,10 @@ set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
 set(USE_BUNDLED_ASYNCFUTURE 1)
 set(INCLUDE_DIR_ASYNCFUTURE third_party/asyncfuture)
 list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_ASYNCFUTURE}/asyncfuture.h)
+
+set(USE_BUNDLED_QTPROMISE 1)
+set(INCLUDE_DIR_QTPROMISE third_party/qtpromise/include)
+#list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_QTPROMISE}/QtPromise)
 
 # Main program header files.
 set(HEADER_FILES
@@ -483,7 +483,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
@@ -494,7 +494,7 @@ set_target_properties(${PROJECT_NAME}
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET} qt5promise)
+		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
 add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
