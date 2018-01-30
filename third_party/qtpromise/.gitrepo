@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/simonbrunel/qtpromise.git
+	branch = master
+	commit = d3b69f1248550334e187af4c0e201bfffd40b2e2
+	parent = 48ad3757fa4765a522172b60eb226863fb18f4c1
+	cmdver = 0.3.1
