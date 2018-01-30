@@ -264,6 +264,10 @@ else()
 	endif()
 endif()
 
+if(TRUE)
+	add_subdirectory("third_party/QtPromise")
+endif()
+
 if(FALSE)
 if(USE_BUNDLED_QXTGLOBALSHORTCUT)
 	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
@@ -490,7 +494,7 @@ set_target_properties(${PROJECT_NAME}
 # The libs.
 target_link_libraries(${PROJECT_NAME}
         Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET} qt5promise)
 add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})

@@ -25,9 +25,13 @@
 
 #include <QThread>
 #include <QtConcurrent>
-#ifdef USE_BUNDLED_ASYNCFUTURE
+#if 0//def USE_BUNDLED_ASYNCFUTURE
 #include <asyncfuture.h>
 #include <utils/concurrency/ExtendedDeferred.h>
+#endif
+#if 1
+#include <third_party/QtPromise/src/Promise.h>
+#include <third_party/QtPromise/src/PromiseSitter.h>
 #endif
 
 
@@ -189,8 +193,18 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	auto async_dir_scanner = new AsyncDirScanner(dir_url,
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
+#if 1
 
-#if 1 ///ndef USE_BUNDLED_ASYNCFUTURE
+	using namespace QtPromise;
+
+	Deferred::Ptr deferred = Deferred::create();
+
+	Promise::Ptr promise = Promise::create(deferred)
+			->then([=](const QVariant& value){ qDebug() << "Completed";});
+
+	PromiseSitter::instance()->add(promise);
+
+#elif 0 ///ndef USE_BUNDLED_ASYNCFUTURE
 
 	QFuture<QString> fut = ReportingRunner::run(async_dir_scanner);
 
