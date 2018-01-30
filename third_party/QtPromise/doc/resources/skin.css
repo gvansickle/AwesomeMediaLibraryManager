@@ -1,0 +1,72 @@
+
+/* Fixes the large empty space produced by GitLab badge when it cannot be loaded. */
+[alt="Build status"] {
+	max-height: 20px;
+}
+
+
+.navpath ul {
+	background-image: none;
+}
+
+.navpath li {
+	color: #17a81a;
+}
+.navpath li.navelem a {
+	color: #17a81a;
+	text-shadow: none;
+}
+.navpath li.navelem a:hover {
+	color: #5ece5e;
+	text-shadow: none;
+}
+
+.sm-dox {
+	background-image: none;
+	background-color: #17a81a;
+}
+
+.sm-dox a {
+	color: #ffffff;
+	background-image: none;
+	text-shadow: none;
+}
+.sm-dox a:hover {
+	background-image: none;
+	background-color: #5ece5e;
+	text-shadow: none;
+}
+
+.sm-dox a,
+.sm-dox a:focus,
+.sm-dox a:active,
+.sm-dox a:hover,
+.sm-dox a.highlighted {
+	background-image: none;
+}
+
+.sm-dox ul a {
+	background-image: none;
+	text-shadow: none;
+}
+.sm-dox ul a:hover {
+	background-image: none;
+	background-color: #5ece5e;
+	text-shadow: none;
+}
+
+.contents a {
+	color: #17a81a;
+}
+.contents a:visited {
+	color: #17a81a;
+}
+
+.icon {
+	background-color: #17a81a;
+}
+
+div.ah {
+	background-image: none;
+	background-color: #17a81a;
+}

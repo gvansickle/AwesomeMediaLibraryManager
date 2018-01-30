@@ -1,0 +1,24 @@
+namespace QtPromise {
+
+/*!
+
+\page page_asyncSignalEmission Asynchronous Signal Emission
+
+There are situations where objects would need to emit signals in their constructors. Since it would
+be impossible for the caller to receive those signals, those signals are emitted asynchronously.
+This means that an event loop is required to emit the signals.
+
+This behavior is analogous to the behavior of QNetworkReply and ensures consistent behavior between
+cases when a Deferred is resolved/rejected right when it is created and when it is resolved/rejected
+asynchronously: in both cases, the caller will receive the signals when control returns to the event
+loop.
+
+An example where this happens is when creating a NetworkPromise / NetworkDeferred with an already
+finished QNetworkReply.
+
+\note Signals emitted by normal methods of the objects (for example Deferred::resolve()) are emitted
+synchronously.
+
+*/
+
+} // namespace QtPromise

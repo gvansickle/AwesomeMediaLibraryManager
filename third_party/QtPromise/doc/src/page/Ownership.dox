@@ -1,0 +1,203 @@
+namespace QtPromise {
+
+/*!
+
+\page page_ownership Object Ownership, Smart Pointers and Lambda Expressions
+
+\brief This page describes the handling of object ownership/lifetime in the %Qt %Promise library.
+
+\tableofcontents
+
+Since the ownership of most objects of %Qt %Promise is shared between multiple objects,
+the library uses %Qt's smart pointer class QSharedPointer to manage the lifetime of the objects.
+See the typdefs Promise::Ptr, Deferred::Ptr etc. 
+
+This helps avoiding memory leaks and access violations especially with promise chaining because:
+- intermediate promises could be created which would be annoying if needed to be deleted explicitly
+- multiple promises could be created based on the same (shared) deferred
+- all promises and deferreds in the chain need to exist as long as the last promise in
+the chain is in use
+
+Therefore, the promises and deferreds hold QSharedPointers to the deferreds they depend on.
+
+\note Nevertheless, it is necessary to ensure that a QSharedPointer to the last promise
+in the chain exists until the promise is resolved/rejected. Else the promise chain will
+be destructed and the attached callbacks will not be executed.\n
+The PromiseSitter class can be used to store those pointers. However, be careful regarding the
+lifetime of objects captured in lambda expressions used as callbacks of promises since the promises
+will stay alive until they are resolved or rejected. See the next section for ways to restrict
+the lifetimes of promises.
+
+\warning As with any QObject, promises and deferreds *must not* be deleted in a slot or functor
+connected to one of their own signals. This also applies to the callbacks passed to Promise::then().
+So if you need to execute actions from a Promise::then() callback that could lead to the deletion of
+the Promise itself, defer the action, for example using QTimer::singleShot().\n
+The deletion can sometimes be hard to spot. For example, it can be triggered by a
+QCoreApplication::processEvents() in combination with context objects and the PromiseSitter.\n
+The Deferred class has a detection which produces
+\ref page_logMessages_error_deferredDestroyedReactionToOwnSignal "a log message" using qCritical()
+in case it detects its destruction as reaction to one of its signals.
+See also Deferred::checkDestructionInSignalHandler().
+For examples, see \ref page_logMessages_error_deferredDestroyedReactionToOwnSignal "the Log Messages page".
+
+
+\section page_ownership_capturingLambdas Capturing Objects in Lambda Expressions
+
+When capturing and using (pointers/references to) objects in a lambda expression, it must be
+ensured that the objects still exist when the lambda is called.
+This also applies to the callbacks of the %Qt %Promise library.
+
+One way of doing this is using smart pointers like QSharedPointer to ensure the objects exist
+until the lambda exists.
+
+Unfortunately, it is often not possible to control the lifetime of an object at the place where it
+is captured in a lambda.
+However, one can take the statement from above the other way round:
+whenever an object which has been captured in a lambda expression is destroyed, it must be
+ensured that the lambda expression will not be called anymore.
+For the %Qt %Promise library, this means: when any of the objects captured in one of the callbacks
+passed to Promise::then() is destroyed, it must be ensured that all QSharedPointers to the promise
+returned by Promise::then() go out of scope.
+Depending on the situation, there are multiple possibilities to achieve this:
+
+\subsection page_ownership_capturingLambdas_promiseMember Promise::Ptr as member variable
+
+Save the QSharedPointer to the promise as a member variable of the object being captured.
+
+This is a very practical solution if the lambda is capturing the \c this pointer.
+However, this works only if there is only one captured object or if all captured objects are
+destroyed at the same time because the lifetime of Promise is bound to the lifetime of the object
+holding the QSharedPointer.
+
+\note Instead of saving the Promise as a member variable of a QObject derived class, one can also
+use QObject::setProperty() to save the Promise using a dynamic property.
+
+\b Example:
+\code
+using namespace QtPromise;
+class MyObject
+{
+private:
+	Promise::Ptr m_asyncOpPromsie;
+
+public:
+	Promise::Ptr startAsyncOperation()
+	{
+		// ...
+	}
+
+	void doSomething()
+	{
+		m_asyncOpPromise = startAsyncOperation()
+		->then([this](const QVariant& data) {
+			// ...
+		});
+	}
+};
+\endcode
+
+\subsection page_ownership_capturingLambdas_explicitRelease Explicilty release the Promise::Ptr
+
+Explicitly release the QSharedPointer when one of the captured objects is destroyed.
+
+This can be used when multiple objects are captured. But it cannot be used in every case
+because it requires that one can react to the destruction of the objects and that one can release
+the QSharedPointer without creating a copy of it with a longer lifetime.
+However, those requirements are fulfilled when the captured objects are QObjects and when the Promise
+can be accessed by reference.
+
+\warning It's important \b NOT to capture the Promise::Ptr by value!
+Else we would extend the lifetime of the promise until \b all captured objects are destroyed.
+
+\b Example:
+\code
+using namespace QtPromise;
+void MyClass::doSomething(MyFirstClass* firstObj, MySecondClass* secondObj)
+{
+	this->promise = startAsyncOperation()
+	->then([firstObj, secondObj](const QVariant& data) {
+		// ...
+	});
+
+	// Release the promise when one of the captured objects is destroyed
+	connect(firstObj, &QObject::destroyed, promise.data(), [this]() mutable {
+		this->promise.reset();
+	});
+	connect(secondObj, &QObject::destroyed, promise.data(), [this]() mutable {
+		this->promise.reset();
+	});
+}
+\endcode
+
+\subsection page_ownership_capturingLambdas_contextObjects Using Context Objects
+
+The PromiseSitter provides a convenient way to release the Promise when a QObject is destroyed:
+It can take a vector of context QObjects when \link PromiseSitter::add() adding \endlink the Promise
+to the sitter. When one of those objects is destroyed, the PromiseSitter releases it's pointer to
+the Promise.
+
+\b Example:
+\code
+using namespace QtPromise;
+void MyClass::doSomething(MyFirstClass* firstObj, MySecondClass* secondObj)
+{
+	Promise::Ptr promise = startAsyncOperation()
+	->then([firstObj, secondObj](const QVariant& data) {
+		// ...
+	});
+
+	PromiseSitter::instance()->add(promise, {firstObj, secondObj});
+}
+\endcode
+
+\subsection page_ownership_capturingLambdas_checkObjects Check Objects in Lambda
+
+Check the captured objects in the lambda expression before using them.
+
+This requires that one can check if the captured objects are still valid. For QObjects, this can be
+achieved by capturing a QPointer to the object. The lambda then checks if the object is still valid
+before it uses it. If the object has been destroyed, the lambda can then act accordingly (for 
+example, reject the Promise).
+
+\b Example:
+\code
+using namespace QtPromise;
+Promise::Ptr MyClass::doSomething(MyFirstClass* firstObj, MySecondClass* secondObj)
+{
+	QPointer<MyFirstClass> safeFirstObj(firstObj);
+	QPointer<MySecondClass> safeSecondObj(secondObj);
+	return startAsyncOperation()
+	->then([safeFirstObj, safeSecondObj](const QVariant& data) -> Promise::Ptr {
+		if (!safeFirstObj || !safeSecondObj)
+			return Promise::createRejected(QVariant::fromValue(QString("Captured object unexpectedly destroyed")));
+		// ...
+	});
+}
+\endcode
+
+
+\section page_ownership_lambdaMemoryLeaks Memory Leaks with QSharedPointer and Lambdas
+
+Be careful when passing QSharedPointers of QObject derived classes to lambdas connected to
+the object's own signals as this creates a memory leak.
+This applies for the objects from the %Qt %Promise library as well:
+\code
+Promise::Ptr myPromise = startAsyncOperation();
+
+// DON'T DO THIS! THIS CREATES A MEMORY LEAK!
+connect(myPromise.data(), &Promise::notified, [myPromise](const QVariant& data) {
+	//  ^^^^^^^^^                              ^^^^^^^^^ MEMORY LEAK!
+	// ...
+});
+\endcode
+`myPromise` will never be released since the lambda holds a reference to it and the lambda
+exists as long as `myPromise` exists due to QObject::connect().
+
+In case the lambda will be called only once (e.g. when connected to Promise::resolved() or
+Promise::rejected()), one can work around the memory leak by calling QSharedPointer::clear() at
+the end of the lambda. But this will not work for signals which will be emitted multiple times
+as the QSharedPointer will be null in subsequent calls.
+
+*/
+
+} // namespace QtPromise

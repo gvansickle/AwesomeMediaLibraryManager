@@ -1,0 +1,28 @@
+version: "2.0.1.{build}"
+
+image: Visual Studio 2015
+
+environment:
+    CTEST_OUTPUT_ON_FAILURE: '1'
+    matrix:
+        - VCVARS_COMMANDLINE: '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86'
+          CMAKE_GENERATOR: Visual Studio 14 2015
+          QT_DIR: C:\Qt\5.9\msvc2015
+        - VCVARS_COMMANDLINE: '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86'
+          CMAKE_GENERATOR: Visual Studio 14 2015
+          QT_DIR: C:\Qt\5.6\msvc2015
+
+before_build:
+    - call %VCVARS_COMMANDLINE%
+    - set Path=%QT_DIR%\bin;%Path%
+    - set QT_QPA_PLATFORM_PLUGIN_PATH=%QT_DIR%\plugins
+    - mkdir _build
+    - cd _build
+    - cmake -G "%CMAKE_GENERATOR%" ..
+
+build:
+    project: _build\ALL_BUILD.vcxproj
+
+
+test_script:
+    - msbuild "%APPVEYOR_BUILD_FOLDER%\_build\RUN_TESTS.vcxproj" /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"

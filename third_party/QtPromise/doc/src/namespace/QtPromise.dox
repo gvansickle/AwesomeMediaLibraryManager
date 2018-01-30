@@ -1,0 +1,15 @@
+/*!
+
+\namespace QtPromise
+
+Namespace for all classes of the Qt Promise library.
+
+*/
+
+/*!
+
+\namespace QtPromise::Test
+
+Namespace for all unit tests and related helper methods and classes of the Qt Promise library.
+
+*/

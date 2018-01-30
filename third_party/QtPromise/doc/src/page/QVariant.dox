@@ -1,0 +1,198 @@
+namespace QtPromise {
+
+/*!
+
+\page page_qVariant QVariant, Object Slicing and Exceptions
+
+The %Qt %Promise library uses QVariant for all data.
+This has different advantages and disadvantages:
+<table>
+	<tr>
+		<th>Advantages</th>
+		<th>Disadvantages</th>
+	</tr>
+	<tr>
+		<td><ul>
+			<li>Avoids need to explicitly specify parameter types for
+			resolvedCallback, rejectedCallback and notifiedCallback.</li>
+			<li>Allows different types depending on application flow at runtime.</li>
+			<li>Allows storing different "types" of objects (e.g. Promises) in containers.</li>
+		</ul></td>
+		<td><ul>
+			<li>Need to document parameter types and convert the QVariant to the exact type
+			before using.</li>
+			<li>Possibly need to check for the actual type stored in QVariant.</li>
+			<li>Need to register parameter types in Qt's meta type system.</li>
+		</ul></td>
+	</tr>
+</table>
+
+
+\section page_qVariant_exactTypes Exact Types
+
+The first disadvantage needs special attention:
+when you try to get the value of a QVariant, you need to know the exact type of the stored data
+or you will get a default constructed object.\n
+From the QVariant::value() documentation:
+> If the value cannot be converted, a default-constructed value will be returned. 
+
+This applies also when trying to convert to a base class:
+\code
+class Base
+{
+};
+
+class Derived : public Base
+{
+};
+
+// ...
+
+Derived myObject;
+QVariant variant = QVariant::fromValue(myObject);
+// WARNING: This will return a default constructed object!
+Base baseObject = variant.value<Base>();
+\endcode
+
+`baseObject` will be a default constructed object of type `Base`.
+
+This is especially a disadvantage when using exception objects to reject promises:
+\code
+class MyExceptionBase : public std::exception
+{
+};
+Q_DECLARE_METATYPE(MyExceptionBase)
+
+class MyException : public MyExceptionBase
+{
+};
+Q_DECLARE_METATYPE(MyException)
+
+// ...
+
+this->m_promise = startAsyncOperation()
+->then([this](const QVariant& value) {
+	try
+	{
+		QVariant result = doSomething(value);
+		return Promise::createResolved(result);
+	}
+	catch(const MyException& e)
+	{
+		return Promise::createRejected(QVariant::fromValue(e));
+	}
+	catch(const std::exception& e)
+	{
+		return Promise::createRejected(QVariant::fromValue(e));
+	}
+})
+->then(noop, [this](const QVariant& reason) {
+	// WARNING: Won't work well in every case!
+	std::exception exception = reason.value<std::exception>();
+	logError(exception.what());
+});
+\endcode
+
+The `exception` object will be default constructed object when actually a `MyException`
+object was used.
+
+To implement the \p rejectedCallback properly, it is necessary to check for the exact type:
+\code
+this->m_promise = startAsyncOperation()
+->then(noop, [this](const QVariant& reason) {
+	if (reason.canConvert<MyException>())
+	{
+		MyException exception = reason.value<MyException>();
+		logError(exception.what());
+	}
+	else if (reason.canConvert<MyExceptionBase>())
+	{
+		MyException exception = reason.value<MyExceptionBase>();
+		logError(exception.what());
+	}
+	else if (reason.canConvert<std::exception>())
+	{
+		std::exception exception = reason.value<std::exception>();
+		logError(exception.what());
+	}
+});
+\endcode
+
+
+\section page_qVariant_objectSlicing Object Slicing
+
+Additionally, one needs to be careful to avoid [object slicing] when converting to QVariant.
+This needs attention especially when catching exceptions:
+\code
+this->m_promise = startAsyncOperation()
+->then([this](const QVariant& value) -> Promise::Ptr {
+	try
+	{
+		QVariant result = doSomething(value);
+		return Promise::createResolved(result);
+	}
+	catch(const MyExceptionBase& e)
+	{
+		// WARNING: This may cause object slicing!
+		QVariant exceptionVariant = QVariant::fromValue(e);
+		return Promise::createRejected(exceptionVariant);
+	}
+});
+\endcode
+
+Since QVariant::fromValue() can only use the static type of the exception, the created
+QVariant will contain an object of type `MyExceptionBase` even if the actualy exception `e`
+was of a type derived from `MyExceptionBase`.
+
+[object slicing]: https://en.wikipedia.org/wiki/Object_slicing
+
+
+\section page_qVariant_usingSmartPointers Using Smart Pointers
+
+To avoid the above two disadvantages, especially when using exceptions, one can use smart
+pointers for the data:
+\code
+Q_DECLARE_METATYPE(QSharedPointer<MyExceptionBase>)
+
+// ...
+
+this->m_promise = startAsyncOperation()
+->then([this](const QVariant& value) -> Promise::Ptr {
+	try
+	{
+		QVariant result = doSomething(value);
+		return Promise::createResolved(result);
+	}
+	catch(const MyExceptionBase& e)
+	{
+		// This avoids object slicing when storing the exception in the QVariant
+		QSharedPointer<MyExceptionBase> clonedEx = e.clone();
+		QVariant exceptionVariant = QVariant::fromValue(clonedEx);
+		return Promise::createRejected(exceptionVariant);
+	}
+})
+->then(noop, [this](const QVariant& reason) {
+	if (reason.canConvert<QSharedPointer<MyExceptionBase>>())
+	{
+		try
+		{
+			auto exception = reason.value<QSharedPointer<MyExceptionBase>>();
+			// Use raise() instead of throw to avoid object slicing
+			exception->raise();
+		}
+		catch(const MyExceptionBase& e)
+		{
+			// Also catches objects of type MyException
+			logError(e.what());
+		}
+	}
+});
+\endcode
+
+However, it is required to have virtual `clone()` and `raise()` methods in the exception classes
+which avoiding object slicing when copying and throwing the exceptions using a base type as static
+type. See QException::clone() and QException::raise() for examples of such methods.
+
+*/
+
+} // namespace QtPromise

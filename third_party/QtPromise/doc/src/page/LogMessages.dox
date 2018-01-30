@@ -1,0 +1,128 @@
+namespace QtPromise {
+
+/*!
+
+\page page_logMessages Log Messages
+
+\tableofcontents
+
+\brief This page explains the messages logged by the %Qt %Promise library.
+
+The %Qt %Promise library logs messages using qDebug() or qCritical() in certain situations.
+These messages can help you debugging the usage of %Qt %Promise library in your application.
+To do so, run your application in a debugger and set a breakpoint to the places in the %Qt %Promise
+library where the messages are logged.
+
+
+\section page_logMessages_debug Debug Messages
+
+\subsection page_logMessages_debug_deferredDestroyedWhilePending Deferred 0x??? destroyed while still pending
+
+This message is logged when a Deferred object is destroyed before being resolved or rejected.
+This typically happens when an asynchronous operation is started and before it is finished,
+all Promises waiting for the result are destroyed.
+
+This is fine and can be ignored in situations when no component is interessted in the result anymore.
+For example, when the user cancels the action which started the asynchronous operation.
+
+It can also indicate that components are not "correctly" waiting for the result of an asynchronous
+operation. That is, the components are destroyed or continue before the result of the operation
+is available.
+
+And finally, it can indicate that a Promise::Ptr is not stored correctly. Meaning, the Promise::Ptr
+goes out of scope before the asynchronous operation finishes.
+If you are not interessted in the result of the asynchronous operation but only want its side effects
+to happen, you can store the Promise::Ptr in the PromiseSitter. This will ensure that the Promise
+is alive until the operation finished. However, be aware of the pitfalls when
+\ref page_ownership_capturingLambdas.
+
+
+\subsection page_logMessages_debug_cannotActionDeferredWhichIsAlreadyState Cannot resolve Deferred 0x??? which is already resolved
+
+This message is logged when trying to resolve, reject or notify a Deferred which is already resolved or rejected.
+
+After a Deferred (and its Promises) has been resolved or rejected, this state cannot be changed anymore
+and it cannot be notified anymore. Trying to do so anyway will log this message.
+
+If you see this message and want to avoid it, you can simply check the Deferred::state() to be 
+Deferred::Pending before calling Deferred::resolve(), Deferred::reject() or Deferred::notify().
+
+
+\subsection page_logMessages_debug_qNetworkReplyDestroyed QNetworkReply %1 destroyed while owning NetworkDeferred %2 still pending
+
+This message is logged when a QNetworkReply is deleted outside of the owning NetworkDeferred.
+
+The NetworkDeferred handles this scenario by rejecting itself with a NetworkDeferred::Error object
+with special values (see NetworkDeferred::Error::code and NetworkDeferred::Error::replyData).\n
+However, since this could be a bug instead of an intention, this message is logged.
+
+
+\section page_logMessages_error (Critical) Error Messages
+
+\subsection page_logMessages_error_parentDeferredDestroyedWhileChildHoldingReference Parent deferred 0x??? is destroyed while child 0x??? is still holding a reference
+
+This message indicates that a raw Deferred object is destroyed explicitly. That is, it is delete outside of
+the QSharedPointer class like
+\code
+delete myDeferred.data(); // DON'T DO THIS!!!
+\endcode
+This will lead to a crash (segmentation fault) sooner or later because the QSharedPointer owning that
+Deferred will try to delete it but it has already been deleted at that time.
+
+
+\subsection page_logMessages_error_deferredDestroyedReactionToOwnSignal Deferred 0x??? destroyed as reaction to its own signal
+
+This messages indicates that a Deferred (or Promise) is deleted in a slot or functor connected to its own signal.
+This leads to a crash (segmentation fault) because Qt tries to access the Deferred after the signal
+handler has returned. But at that time, the Deferred has already been deleted.\n
+See also \ref page_ownership.
+
+This typically happens when the Promise is deleted in a chained \link Promise::then() then() \endlink
+callback. For example:
+\code
+void MyClass::doSomething()
+{
+	this->myPromise = startAsyncOperation()
+	->then([this] (const QVariant& data) {
+		// do something
+		this->myPromise.reset(); // DON'T DO THIS!!!
+	});
+}
+\endcode
+
+It can also happen when entering the event loop in a then() callback. Especially, when using the
+PromiseSitter with context objects. For example:
+\code
+void MyClass::doSomething(OtherClass* contextObject)
+{
+	auto promise = startAsyncOperation()
+	->then([contextObject] (const QVariant& data) {
+		// do something
+		QCoreApplication::processEvents(); // BE CAREFUL!!!
+		// do something after events have been processed
+	});
+	PromiseSitter::instance()->add(promise, contextObject);
+}
+\endcode
+When \c contextObject is destroyed when the events are processed, the promise is destroyed while
+still inside the callback, which leads to a crash.\n
+Generally, it is not reasonable nor necessary to enter the event loop from within a then() callback.
+If events should be processed as part of a %Promise chain, return a Promise which is resolved or rejected
+with a delay using Promise::delayedResolve() or Promise::delayedReject():
+\code
+void MyClass::doSomething(OtherClass* contextObject)
+{
+	auto promise = startAsyncOperation()
+	->then([contextObject] (const QVariant& data) -> Promise::Ptr {
+		// do something
+		return Promise::delayedResolve(); // This will do event processing *between* the two callbacks
+	})->then([contextObject] (const QVariant& data) {
+		// do something after events have been processed
+	});
+	PromiseSitter::instance()->add(promise, contextObject);
+}
+\endcode
+
+*/
+
+} // namespace QtPromise
