@@ -41,9 +41,12 @@
 using std::placeholders::_1;
 
 
-LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_rescan_future_watcher(this), m_dir_traversal_future_watcher(this),
+LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_rescan_future_watcher(this),
+//	m_dir_traversal_future_watcher(this),
 	m_async_task_manager(this)
 {
+	setObjectName("TheLibraryRescanner");
+
 	// Somewhat redundant, but keep another pointer to the LibraryModel.
 	m_current_libmodel = parent;
 
@@ -60,24 +63,24 @@ M_WARNING("QObject::connect: No such slot LibraryRescanner::onResultReadyAt(int)
 
 	//m_dir_traversal_future_watcher = new QFutureWatcher<QString>(this);
 
-	connect(&m_dir_traversal_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onDirTravResultReadyAt(int)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(finished()), SLOT(onDirTravFinished()));
+//	connect(&m_dir_traversal_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
+//	connect(&m_dir_traversal_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
+//	connect(&m_dir_traversal_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
+//	connect(&m_dir_traversal_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onDirTravResultReadyAt(int)));
+//	connect(&m_dir_traversal_future_watcher, SIGNAL(finished()), SLOT(onDirTravFinished()));
 
     // On Windows at least, these don't seem to throttle automatically as well as on Linux.
     m_rescan_future_watcher.setPendingResultsLimit(1);
-    m_dir_traversal_future_watcher.setPendingResultsLimit(1);
+//    m_dir_traversal_future_watcher.setPendingResultsLimit(1);
 }
 
 LibraryRescanner::~LibraryRescanner()
 {
 	// Make sure we don't have any async tasks running when we get destroyed.
 	m_rescan_future_watcher.cancel();
-	m_dir_traversal_future_watcher.cancel();
+//	m_dir_traversal_future_watcher.cancel();
 	m_rescan_future_watcher.waitForFinished();
-	m_dir_traversal_future_watcher.waitForFinished();
+//	m_dir_traversal_future_watcher.waitForFinished();
 }
 
 
@@ -178,12 +181,19 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
-#ifndef USE_BUNDLED_ASYNCFUTURE
-	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
-	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
+//	qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
+	qDebug() << M_THREADNAME();
+	qDebug() << "START:" << dir_url;
 
-M_WARNING("EXPERIMENTAL");
+	// Create the ControlledTask which will scan the directory tree for files.
+	auto async_dir_scanner = new AsyncDirScanner(dir_url,
+												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+												QDir::NoFilter, QDirIterator::Subdirectories);
+
+#if 1 ///ndef USE_BUNDLED_ASYNCFUTURE
+
+	QFuture<QString> fut = ReportingRunner::run(async_dir_scanner);
+
     m_futureww_dirscan.on_result([this](auto a){
         this->m_current_libmodel->onIncomingFilename(a);
     })
@@ -198,18 +208,15 @@ M_WARNING("EXPERIMENTAL");
     m_futureww_dirscan = fut;
 #else
 	// USE_BUNDLED_ASYNCFUTURE
-	qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
-    qDebug() << "START:" << dir_url;
 
 	static long num_files = 0;
 
 	// The ExtendedDeferred object we'll use to control completion, cancellation, and reporting.
 	auto cdefer = extended_deferred<QString>();
+	this->dumpObjectInfo();
+	this->dumpObjectTree();
 
-	// Create the ControlledTask which will scan the directory tree for files.
-	auto async_dir_scanner = new AsyncDirScanner(dir_url,
-												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-												QDir::NoFilter, QDirIterator::Subdirectories);
+
 
 	QFuture<QString> filenames_future = AsyncFuture::observe(ReportingRunner::run(async_dir_scanner)).future();
 
@@ -220,7 +227,7 @@ M_WARNING("EXPERIMENTAL");
 
 	// Monitor progress.
 	cdefer.onProgress([=]() -> void {
-		qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
+		qDebug() << "ONPROGRESS THREADNAME:" << QThread::currentThread()->objectName();
 		emit progressRangeChanged(cdefer.future().progressMinimum(), cdefer.future().progressMaximum());
 		emit progressValueChanged(cdefer.future().progressValue());
 	});
@@ -231,18 +238,19 @@ M_WARNING("EXPERIMENTAL");
 //	});
 
 	// Send out results as they come in.
-	cdefer.onReportResult([this](auto str, auto index) -> void {
+	cdefer.onReportResult([this](QString str, int index) -> bool {
 		qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
 		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
 		this->m_current_libmodel->onIncomingFilename(str);
 		num_files++;
+		return true;
 	});
 
 	// Subscribe to the onCompleted and onCancelled callbacks.
 	AsyncFuture::observe(cdefer.future()).subscribe(
 		[=](){
 			qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
-			qDebug() << "COMPLETED SCANNING. FOUND" << num_files / cdefer.future().resultCount() << "FILES";
+			qDebug() << "COMPLETED SCANNING. FOUND" << num_files << "/" << cdefer.future().resultCount() << "FILES";
 			num_files = 0;
 			/// @todo This could also just return another future for the overall results.
 			onDirTravFinished();
@@ -386,9 +394,10 @@ void LibraryRescanner::onRescanFinished()
 
 void LibraryRescanner::onDirTravResultReadyAt(int index)
 {
-	qDebug() << "Async Dir Trav reports result ready at" << index << "==" << m_dir_traversal_future_watcher.resultAt(index);
+	Q_ASSERT(0);
+//	qDebug() << "Async Dir Trav reports result ready at" << index << "==" << m_dir_traversal_future_watcher.resultAt(index);
 
-	m_current_libmodel->onIncomingFilename(m_dir_traversal_future_watcher.resultAt(index));
+//	m_current_libmodel->onIncomingFilename(m_dir_traversal_future_watcher.resultAt(index));
 }
 
 void LibraryRescanner::onDirTravFinished()

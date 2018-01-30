@@ -22,6 +22,7 @@
 
 /// @todo Experimental
 #include <asyncfuture.h>
+#include "ReportingRunner.h"
 
 #include <QObject>
 #include <QVector>
@@ -29,6 +30,7 @@
 #include <QFutureWatcher>
 #include <QList>
 
+#include <type_traits>
 #include <functional>
 #include <algorithm>
 
@@ -81,6 +83,19 @@ public:
 		QObject::connect(this, &QFutureWatcher<T>::finished, m_finished_function);
     }
 
+	/// @todo Attempt to be more std::experimental.  Incomplete and broken.
+	template<typename F>
+	QFuture<typename std::result_of<F(QFuture<T>&)>::type>
+		then(F&& func)
+	{
+		return ReportingRunner::run([](QFuture<T>&& fut, F&& func) {
+			fut.waitForFinished();
+			return std::forward<F>(func)(fut);
+		},
+		this, std::forward<F>(func)
+		);
+	}
+
     futureww<T>& on_resultat(std::function<void(int)> resultat_function)
 	{
         m_resultat_function = resultat_function;
@@ -128,6 +143,7 @@ private:
     std::function<void(int)> m_resultat_function {nullptr};
     std::function<void(T)> m_result_function {nullptr};
 };
+
 
 
 /*

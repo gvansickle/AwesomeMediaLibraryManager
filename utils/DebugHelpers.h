@@ -27,11 +27,18 @@
 
 #include "StringHelpers.h"
 
-
+/**
+ * Streaming operator for qDebug() << std::string.
+ */
 inline static QDebug& operator<<(QDebug& d, const std::string& s)
 {
 	return d << toqstr(s);
 }
+
+/**
+ * Stream to qDebug() to log the current thread name.
+ */
+#define M_THREADNAME() "THREADNAME:" << QThread::currentThread()->objectName();
 
 
 template <typename T>

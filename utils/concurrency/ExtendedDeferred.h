@@ -69,6 +69,7 @@ public:
 		qDebug() << "ExtendedDeferredFuture TRACK WAS CALLED";
 		QPointer<ExtendedDeferredFuture<T>> thiz = this;
         QFutureWatcher<ANY> *watcher = new QFutureWatcher<ANY>();
+		watcher->setObjectName("EDFTrackWatcher");
 
         if ((QThread::currentThread() != QCoreApplication::instance()->thread()))
         {
@@ -77,15 +78,15 @@ public:
 
         connect_watcher_disconnects(watcher);
 
-        QObject::connect(watcher, &QFutureWatcher<ANY>::resultReadyAt, [=](int index) {
-                    if (thiz.isNull())
-                    {
-                        return;
-                    }
-					//QFutureInterface<T>::reportResult(future.resultAt(index), index);
-                	qDebug() << "INDEX/VALUE:" << index << future.resultAt(index);
-					thiz->reportResult(future.resultAt(index), index);
-                });
+//        QObject::connect(watcher, &QFutureWatcher<ANY>::resultReadyAt, [=](int index) {
+//                    if (thiz.isNull())
+//                    {
+//                        return;
+//                    }
+//					//QFutureInterface<T>::reportResult(future.resultAt(index), index);
+//					qDebug() << "resultReadyAt, REPORTING RESULT: INDEX/VALUE:" << index << future.resultAt(index);
+//					thiz->reportResult(future.resultAt(index), index);
+//                });
 
         watcher->setFuture(future);
 
@@ -94,6 +95,9 @@ public:
         {
         	qWarning() << "RESULTS EXISITED BEFORE FUTURE WAS SET. NUM:" << future.resultCount();
         }
+
+		watcher->dumpObjectInfo();
+		watcher->dumpObjectTree();
     }
 
     /**
@@ -124,7 +128,8 @@ public:
 	template <typename R>
 	void reportResult(const R& value, int index = -1)
 	{
-    	qDebug() << "INDEX/VALUE:" << index << value;
+		qDebug() << "REPORTING RESULT: INDEX/VALUE:" << index << value;
+		qDebug() << "SENDER:" << this->sender();
 		QFutureInterface<T>::reportResult(value, index);
 	}
 
@@ -164,6 +169,7 @@ public:
 		// The base class complete() call above called DeferredFuture's track().
 		// Now call our overridden one.
 		qSharedPointerDynamicCast<DeferredFutureType>(this->deferredFuture)->track(future);
+		qSharedPointerDynamicCast<DeferredFutureType>(this->deferredFuture)->QObject::dumpObjectInfo();
 	}
 
     template <typename Functor>
@@ -215,13 +221,14 @@ public:
 
 	template <typename Functor>
     typename std::enable_if<std::is_same<typename std::result_of<Functor(T, int)>::type, bool>::value, void>::type
-	onReportResult(Functor onReportResult)
+	onReportResult(Functor functor)
 	{
 		QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
+		watcher->setObjectName("onReportResultBoolWatcher");
 
 		auto wrapper = [=](int index) mutable {
         	qDebug() << "INDEX/VALUE:" << index << watcher->resultAt(index);
-			if (!onReportResult(watcher->resultAt(index), index))
+			if (!functor(watcher->resultAt(index), index))
 			{
 				watcher->disconnect();
 				watcher->deleteLater();

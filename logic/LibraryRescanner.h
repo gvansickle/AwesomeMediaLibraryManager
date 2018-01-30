@@ -76,7 +76,7 @@ public:
 
 
 	QFutureWatcher<MetadataReturnVal> m_rescan_future_watcher;
-	QFutureWatcher<QString> m_dir_traversal_future_watcher;
+//	QFutureWatcher<QString> m_dir_traversal_future_watcher;
 
 	QElapsedTimer m_timer;
 
