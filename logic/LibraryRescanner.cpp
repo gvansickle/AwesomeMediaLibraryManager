@@ -37,6 +37,7 @@
 #include <utils/DebugHelpers.h>
 
 #include "utils/AsyncDirScanner.h"
+#include "utils/concurrency/AsyncTaskManager.h"
 #include "utils/concurrency/ReportingRunner.h"
 #include "logic/LibraryModel.h"
 
@@ -181,23 +182,121 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	return retval;
 }
 
+///////////////////////////////////////////////////////////////
+
+//template<typename T>
+QFutureInterface<QString> ReportingRun(std::function<QFutureInterface<QString>(QFutureInterface<QString>)> f)
+{
+	QFutureInterface<QString> retval;
+	return QtConcurrent::run(f, retval);
+}
+
+/**
+ * Class for asynchronously scanning a directory tree.
+ */
+class AsyncDirScanner2
+{
+public:
+	AsyncDirScanner2(const QUrl &dir_url,
+					const QStringList &nameFilters,
+					QDir::Filters filters = QDir::NoFilter,
+					QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags)
+			: m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
+	{
+		// Nothing.
+	}
+	~AsyncDirScanner2() { qDebug() << "Destructor called"; }
+
+	QFutureInterface<QString> operator()(QFutureInterface<QString> control)
+	{
+		qDebug() << M_THREADNAME();
+
+		QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
+		int num_files_found_so_far = 0;
+
+		while(m_dir_iterator.hasNext())
+		{
+			if(control.isCanceled())
+			{
+				// We've been cancelled.
+				return control;
+			}
+
+			num_files_found_so_far++;
+
+//			qDebug() << "Found URL:" << m_dir_iterator.filePath();
+			QUrl file_url = QUrl::fromLocalFile(m_dir_iterator.next());
+//			qDebug() << file_url;
+
+			/// Send this path to the future.
+			control.reportResult(file_url.toString());
+			qDebug() << "resultCount:" << control.resultCount();
+			// Update progress.
+			control.setProgressRange(0, num_files_found_so_far);
+			control.setProgressValue(num_files_found_so_far);
+			///control.setProgressValueAndText(num_files_found_so_far, "Hello");
+		}
+		return control;
+	}
+
+private:
+
+	/// @name Params for QDirIterator.
+	///@{
+	QUrl m_dir_url;
+	QStringList m_nameFilters;
+	QDir::Filters m_dir_filters;
+	QDirIterator::IteratorFlags m_iterator_flags;
+	///@}
+};
+
+
+//////////////////////////////////////////////////////////////////
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
-//	qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
 	qDebug() << M_THREADNAME();
 	qDebug() << "START:" << dir_url;
 
 	// Create the ControlledTask which will scan the directory tree for files.
-	auto async_dir_scanner = new AsyncDirScanner(dir_url,
+	auto async_dir_scanner = new AsyncDirScanner2(dir_url,
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
-#if 1
+#if 0
 	using namespace QtPromise;
 
-	auto promise = qPromise(ReportingRunner::run(async_dir_scanner)).then([](){
+	auto promise = qPromise(ReportingRunner::run(async_dir_scanner))
+			.tap([](QPromise<QString> str){
+			qDebug() << "TAP:" << str.wait();
+		;})
+			.then([](){
 		qDebug() << "DONE";
 	});
+#elif 1
+
+	auto callback = [=](QFutureInterface<QString> qfi) -> QFutureInterface<QString> {
+		qDebug() << M_THREADNAME();
+		qDebug() << "Hello";
+		return qfi;
+	};
+
+	/// This is the key:
+	/// https://stackoverflow.com/a/22205495
+	/// "The future() call is a factory method for creating a QFuture bound to your QFutureInterface."
+	/// It looks like it is creating a new one each time.
+	QFutureInterface<QString> promise;
+	auto future = promise.future();
+
+	QFutureWatcher<QString> fw(this);
+	fw.setFuture(future);
+
+	connect(&fw, &QFutureWatcher<QString>::resultsReadyAt, [](int a, int b) -> void {
+		qDebug() << "ITEM" << b << ":";// << fw.resultAt(b);
+	});
+
+	auto new_promise = ReportingRun(*async_dir_scanner);
+
+	qDebug() << "COUNT:" << new_promise.resultCount();
 
 #elif 0 ///ndef USE_BUNDLED_ASYNCFUTURE
 

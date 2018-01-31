@@ -24,6 +24,7 @@
 #include <asyncfuture.h>
 #include "ReportingRunner.h"
 
+#include <QtConcurrent>
 #include <QObject>
 #include <QVector>
 #include <QFuture>
