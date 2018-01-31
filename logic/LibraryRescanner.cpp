@@ -185,9 +185,9 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 ///////////////////////////////////////////////////////////////
 
 //template<typename T>
-QFutureInterface<QString> ReportingRun(std::function<QFutureInterface<QString>(QFutureInterface<QString>)> f)
+QFutureInterface<QString> ReportingRun(std::function<QFutureInterface<QString>(QFutureInterface<QString>)> f, QFutureInterface<QString> p)
 {
-	QFutureInterface<QString> retval;
+	QFutureInterface<QString> retval(p);
 	return QtConcurrent::run(f, retval);
 }
 
@@ -288,14 +288,17 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	auto future = promise.future();
 
 	QFutureWatcher<QString> fw(this);
-	fw.setFuture(future);
-
-	connect(&fw, &QFutureWatcher<QString>::resultsReadyAt, [](int a, int b) -> void {
-		qDebug() << "ITEM" << b << ":";// << fw.resultAt(b);
+	connect(&fw, &QFutureWatcher<QString>::progressValueChanged, [=](int b) -> void {
+		qDebug() << M_THREADNAME();
+		qDebug() << "PROGRESS" << b; // << ":" << future.resultAt(b);
 	});
 
-	auto new_promise = ReportingRun(*async_dir_scanner);
+	fw.setFuture(future);
 
+	auto new_promise = ReportingRun(*async_dir_scanner, promise);
+
+	qDebug() << "NEW==OLD:" << (new_promise == promise);
+	qDebug() << "NEW==OLD:" << (new_promise.future() == promise.future());
 	qDebug() << "COUNT:" << new_promise.resultCount();
 
 #elif 0 ///ndef USE_BUNDLED_ASYNCFUTURE
