@@ -22,7 +22,10 @@
 
 
 #include <QtCore/QFutureInterface>
+#include <QFutureWatcher>
 #include <QThreadPool>
+
+#include <utils/StringHelpers.h>
 
 /// Based on this Stack Overflow reply: https://stackoverflow.com/a/16729619
 
@@ -132,5 +135,47 @@ public:
 		return (new RunControllableTask<T>(task))->start();
     }
 };
+
+template <typename T>
+class FutureWatcherPlus : public QFutureWatcher<T>
+{
+
+};
+
+template <typename T>
+class Promise : public QFutureInterface<T>
+{
+public:
+	Promise(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::NoState) : QFutureInterface<T>(initialState)
+	{
+	}
+
+	QString state() const;
+};
+
+template<typename T>
+QString Promise<T>::state() const
+{
+	QString retval;
+
+	std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+		{QFutureInterfaceBase::NoState, "NoState"},
+		{QFutureInterfaceBase::Running, "Running"},
+		{QFutureInterfaceBase::Started,  "Started"},
+		{QFutureInterfaceBase::Finished,  "Finished"},
+		{QFutureInterfaceBase::Canceled,  "Canceled"},
+		{QFutureInterfaceBase::Paused,   "Paused"},
+		{QFutureInterfaceBase::Throttled, "Throttled"}
+	};
+
+	for(auto i : list)
+	{
+		if(this->queryState(i.first))
+		{
+			return toqstr(i.second);
+		}
+	}
+	return "UNKNOWN";
+}
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REPORTINGRUNNER_H

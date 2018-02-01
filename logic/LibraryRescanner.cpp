@@ -185,10 +185,9 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 ///////////////////////////////////////////////////////////////
 
 //template<typename T>
-QFutureInterface<QString> ReportingRun(std::function<QFutureInterface<QString>(QFutureInterface<QString>)> f, QFutureInterface<QString> p)
+QFuture<void> ReportingRun(std::function<void(QFutureInterface<QString>&)> &&f, QFutureInterface<QString>& p)
 {
-	QFutureInterface<QString> retval(p);
-	return QtConcurrent::run(f, retval);
+	return QtConcurrent::run(f, p);
 }
 
 /**
@@ -207,19 +206,31 @@ public:
 	}
 	~AsyncDirScanner2() { qDebug() << "Destructor called"; }
 
-	QFutureInterface<QString> operator()(QFutureInterface<QString> control)
+	void operator()(QFutureInterface<QString>& report_and_control)
 	{
 		qDebug() << M_THREADNAME();
+
+		if (report_and_control.isCanceled())
+		{
+			report_and_control.reportFinished();
+			return;
+		}
+
+		/// Needed?
+		report_and_control.reportStarted();
+
 
 		QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 		int num_files_found_so_far = 0;
 
+		report_and_control.setProgressRange(0, 100);
+
 		while(m_dir_iterator.hasNext())
 		{
-			if(control.isCanceled())
+			if(report_and_control.isCanceled())
 			{
 				// We've been cancelled.
-				return control;
+				break;
 			}
 
 			num_files_found_so_far++;
@@ -229,14 +240,25 @@ public:
 //			qDebug() << file_url;
 
 			/// Send this path to the future.
-			control.reportResult(file_url.toString());
-			qDebug() << "resultCount:" << control.resultCount();
+			report_and_control.reportResult(file_url.toString());
+			qDebug() << "resultCount:" << report_and_control.resultCount();
 			// Update progress.
-			control.setProgressRange(0, num_files_found_so_far);
-			control.setProgressValue(num_files_found_so_far);
+			report_and_control.setProgressRange(0, num_files_found_so_far);
+			report_and_control.setProgressValue(num_files_found_so_far);
 			///control.setProgressValueAndText(num_files_found_so_far, "Hello");
 		}
-		return control;
+
+		if (report_and_control.isCanceled())
+		{
+			// Report that we were canceled.
+			report_and_control.reportCanceled();
+		}
+		else
+		{
+			report_and_control.reportFinished();
+		}
+
+		return;
 	}
 
 private:
@@ -250,6 +272,19 @@ private:
 	///@}
 };
 
+//////////////#######################
+#if 0
+template <typename T>
+template <typename THandler>
+inline QPromise<T> QPromiseBase<T>::tap(THandler handler) const
+{
+	QPromise<T> p = *this;
+	return p.then(handler).then([=]() {
+		return p;
+	});
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////
 
@@ -259,20 +294,33 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << "START:" << dir_url;
 
 	// Create the ControlledTask which will scan the directory tree for files.
-	auto async_dir_scanner = new AsyncDirScanner2(dir_url,
+	auto async_dir_scanner = new AsyncDirScanner(dir_url,
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
-#if 0
+#if 1
 	using namespace QtPromise;
 
+	auto input_gen = [=](/*QFutureInterface<QString>&*/){
+		for(int i=0; i<100; i++)
+		{
+			return QString("%1").arg(i);
+		}
+		;};
+
+	QPromise<QPromise<QString>> input = qPromise(QtConcurrent::run(input_gen));
+
 	auto promise = qPromise(ReportingRunner::run(async_dir_scanner))
-			.tap([](QPromise<QString> str){
-			qDebug() << "TAP:" << str.wait();
+			.then([](QString str){ return QPromise<QString>(str);})
+			.tap([](QString str){
+			qDebug() << "TAP:";
 		;})
 			.then([](){
 		qDebug() << "DONE";
 	});
-#elif 1
+
+	promise.wait();
+
+#elif 0
 
 	auto callback = [=](QFutureInterface<QString> qfi) -> QFutureInterface<QString> {
 		qDebug() << M_THREADNAME();
@@ -284,8 +332,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	/// https://stackoverflow.com/a/22205495
 	/// "The future() call is a factory method for creating a QFuture bound to your QFutureInterface."
 	/// It looks like it is creating a new one each time.
-	QFutureInterface<QString> promise;
-	auto future = promise.future();
+	Promise<QString> promise;
+
+	qDebug() << promise.state();
 
 	QFutureWatcher<QString> fw(this);
 	connect(&fw, &QFutureWatcher<QString>::progressValueChanged, [=](int b) -> void {
@@ -293,13 +342,31 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		qDebug() << "PROGRESS" << b; // << ":" << future.resultAt(b);
 	});
 
-	fw.setFuture(future);
+	qDebug() << promise.state();
 
-	auto new_promise = ReportingRun(*async_dir_scanner, promise);
+	fw.setFuture(promise.future());
 
-	qDebug() << "NEW==OLD:" << (new_promise == promise);
-	qDebug() << "NEW==OLD:" << (new_promise.future() == promise.future());
-	qDebug() << "COUNT:" << new_promise.resultCount();
+	qDebug() << promise.state();
+
+
+	auto new_future = ReportingRun(*async_dir_scanner, promise);
+
+	qDebug() << promise.state();
+
+
+	//qDebug() << "NEW==OLD:" << (new_promise == promise);
+	//qDebug() << "NEW==OLD:" << (new_promise.future() == promise.future());
+	qDebug() << "COUNT:" << new_future.resultCount();
+
+	auto result = promise.future().result();
+	qDebug() << "RESULT:" << result;
+
+	qDebug() << promise.state();
+
+	new_future.waitForFinished();
+
+	qDebug() << promise.state();
+
 
 #elif 0 ///ndef USE_BUNDLED_ASYNCFUTURE
 

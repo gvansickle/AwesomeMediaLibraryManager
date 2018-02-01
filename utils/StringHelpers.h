@@ -54,6 +54,13 @@ static inline std::string tostdstr(const TagLib::String &tstr)
 	return tstr.to8Bit(true);
 }
 
+static inline QString toqstr(const char * str)
+{
+	// From the QT5 docs:
+	// "QString QString::fromStdString(const std::string &str)
+	//	Returns a copy of the str string. The given string is converted to Unicode using the fromUtf8() function."
+	return QString::fromStdString(std::string(str));
+}
 
 static inline QString toqstr(const std::string &str)
 {
