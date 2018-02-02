@@ -184,10 +184,10 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 ///////////////////////////////////////////////////////////////
 
-//template<typename T>
-QFuture<void> ReportingRun(std::function<void(QFutureInterface<QString>&)> &&f, QFutureInterface<QString>& p)
+template<typename F = std::function<void(QFutureInterface<QString>&)>>
+QFuture<void> ReportingRun(F &&f, QFutureInterface<QString>& p)
 {
-	return QtConcurrent::run(f, p);
+	return QtConcurrent::run(std::forward<F>(f), p);
 }
 
 /**
@@ -205,6 +205,7 @@ public:
 		// Nothing.
 	}
 	~AsyncDirScanner2() { qDebug() << "Destructor called"; }
+	AsyncDirScanner2(AsyncDirScanner2& other) = delete ;
 
 	void operator()(QFutureInterface<QString>& report_and_control)
 	{
@@ -294,10 +295,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << "START:" << dir_url;
 
 	// Create the ControlledTask which will scan the directory tree for files.
-	auto async_dir_scanner = new AsyncDirScanner(dir_url,
+	AsyncDirScanner2 async_dir_scanner(dir_url,
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
-#if 1
+#if 0
 	using namespace QtPromise;
 
 	auto input_gen = [=](/*QFutureInterface<QString>&*/){
@@ -307,20 +308,20 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		}
 		;};
 
-	QPromise<QPromise<QString>> input = qPromise(QtConcurrent::run(input_gen));
+	QPromise<QString> input = qPromise(QtConcurrent::run(input_gen));
 
-	auto promise = qPromise(ReportingRunner::run(async_dir_scanner))
-			.then([](QString str){ return QPromise<QString>(str);})
-			.tap([](QString str){
-			qDebug() << "TAP:";
-		;})
-			.then([](){
+	QPromise<QString> promise = qPromise(ReportingRunner::run(async_dir_scanner))
+			.tap([](){
+			qDebug() << "TAP:"; // << promise.isFulfilled();
+		;});
+#if 0
+	.then([](){
 		qDebug() << "DONE";
 	});
-
+#endif
 	promise.wait();
 
-#elif 0
+#elif 1
 
 	auto callback = [=](QFutureInterface<QString> qfi) -> QFutureInterface<QString> {
 		qDebug() << M_THREADNAME();
@@ -349,7 +350,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << promise.state();
 
 
-	auto new_future = ReportingRun(*async_dir_scanner, promise);
+	auto new_future = ReportingRun(async_dir_scanner, promise);
 
 	qDebug() << promise.state();
 
@@ -358,14 +359,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	//qDebug() << "NEW==OLD:" << (new_promise.future() == promise.future());
 	qDebug() << "COUNT:" << new_future.resultCount();
 
-	auto result = promise.future().result();
-	qDebug() << "RESULT:" << result;
+//	auto result = promise.future().result();
+//	qDebug() << promise.state();
+//	qDebug() << "RESULT:" << result;
 
 	qDebug() << promise.state();
 
 	new_future.waitForFinished();
 
-	qDebug() << promise.state();
+	qDebug() << "AFTER WAIT:" << promise.state();
 
 
 #elif 0 ///ndef USE_BUNDLED_ASYNCFUTURE
