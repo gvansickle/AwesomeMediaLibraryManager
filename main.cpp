@@ -77,7 +77,8 @@ int main(int argc, char *argv[])
 
     // Set up top-level logging.
 	qSetMessagePattern("["
-					   "%{time yyyy-MM-ddThh:mm:ss.zzz} "
+					   "%{time hh:mm:ss.zzz} "
+					   "%{threadid} "
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
 					   "%{if-fatal}FATAL%{endif}"
 					   "] "

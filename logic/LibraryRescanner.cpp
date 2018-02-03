@@ -295,9 +295,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << "START:" << dir_url;
 
 	// Create the ControlledTask which will scan the directory tree for files.
-	AsyncDirScanner async_dir_scanner(dir_url,
-												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-												QDir::NoFilter, QDirIterator::Subdirectories);
+
 #if 0
 	using namespace QtPromise;
 
@@ -372,77 +370,23 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 #elif 1 ///ndef USE_BUNDLED_ASYNCFUTURE
 
-//	QFuture<QString> fut = ReportingRunner::run(&async_dir_scanner);
 	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
 	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
     m_futureww_dirscan.on_result([this](auto a){
+		qDebug() << M_THREADNAME() << "INCOMING FILENAME:" << a;
         this->m_current_libmodel->onIncomingFilename(a);
     })
     .on_progress([this](int min, int max, int val){
-		qDebug() << M_THREADNAME();
+		qDebug() << M_THREADNAME() << "PROGRESS";
         emit progressRangeChanged(min, max);
         emit progressValueChanged(val);
     })
     .then([=](){
-		qDebug() << M_THREADNAME();
-		qDebug() << "DIRTRAV RESCAN FINISHED";
+		qDebug() << M_THREADNAME() << "DIRTRAV RESCAN FINISHED";
         onDirTravFinished();
     });
     m_futureww_dirscan = fut;
-#else
-	// USE_BUNDLED_ASYNCFUTURE
-
-	static long num_files = 0;
-
-	// The ExtendedDeferred object we'll use to control completion, cancellation, and reporting.
-	auto cdefer = extended_deferred<QString>();
-	this->dumpObjectInfo();
-	this->dumpObjectTree();
-
-
-
-	QFuture<QString> filenames_future = AsyncFuture::observe(ReportingRunner::run(async_dir_scanner)).future();
-
-	// Complete on the filename_future we set up above.
-	cdefer.complete(filenames_future);
-	/// @todo Also set up cancellation:
-	/// cdefer.cancel(cancel_future);
-
-	// Monitor progress.
-	cdefer.onProgress([=]() -> void {
-		qDebug() << "ONPROGRESS THREADNAME:" << QThread::currentThread()->objectName();
-		emit progressRangeChanged(cdefer.future().progressMinimum(), cdefer.future().progressMaximum());
-		emit progressValueChanged(cdefer.future().progressValue());
-	});
-
-	/// @todo Testing.
-//	cdefer.onResultReadyAt([=](int index) -> void {
-//		qDebug() << "cdefer INDEX:" << index << "RESULTCOUNT:" << cdefer.future().resultCount();
-//	});
-
-	// Send out results as they come in.
-	cdefer.onReportResult([this](QString str, int index) -> bool {
-		qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
-		qDebug() << "GOT INDEX:" << index << "STRING:" << str;
-		this->m_current_libmodel->onIncomingFilename(str);
-		num_files++;
-		return true;
-	});
-
-	// Subscribe to the onCompleted and onCancelled callbacks.
-	AsyncFuture::observe(cdefer.future()).subscribe(
-		[=](){
-			qDebug() << "THREADNAME:" << QThread::currentThread()->objectName();
-			qDebug() << "COMPLETED SCANNING. FOUND" << num_files << "/" << cdefer.future().resultCount() << "FILES";
-			num_files = 0;
-			/// @todo This could also just return another future for the overall results.
-			onDirTravFinished();
-		},
-		[](){
-			qDebug() << "CANCELLED";
-			;});
-
 
 #endif // USE_BUNDLED_ASYNCFUTURE
 
