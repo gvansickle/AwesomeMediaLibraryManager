@@ -233,11 +233,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	QPromise<QString> promise = qPromise(future_interface.future());
 
 	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>(this);
-	connect(fw, &ExtFutureWatcher<QString>::progressValueChanged, [=](int progress_val) -> void {
-		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << progress_val; // << ":" << future.resultAt(b);
-		emit progressRangeChanged(0, progress_val*2);
-		emit progressValueChanged(progress_val);
-	});
+	fw->onProgressChange([=](int min, int val, int max){
+		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << min << val << max;
+		;});
 	fw->setFuture(future_interface);
 
 

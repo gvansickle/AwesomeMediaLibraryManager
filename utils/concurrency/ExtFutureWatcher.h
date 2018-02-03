@@ -22,12 +22,16 @@
 
 #include <QFutureWatcher>
 
+#include <functional>
+
 #include <QDebug>
 
 template <typename T>
 class ExtFutureWatcher : public QFutureWatcher<T>
 {
 	using BASE_CLASS = QFutureWatcher<T>;
+
+	using OnProgressType = std::function<void(int, int, int)>;
 
 public:
 	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent)
@@ -44,12 +48,75 @@ public:
 	 * Overload of setFuture() which takes a QFutureInterface<T> instead of a QFuture<T>.
 	 */
 	void setFuture(QFutureInterface<T> &future_interface);
+
+	/// @name Signal callback interface.
+	/// @{
+
+	/**
+	 * Register the given @a on_progress_function callback to be called on any change of
+	 * the watched QFutureInterface<>'s progress range or value.
+	 */
+	void onProgressChange(OnProgressType &&on_progress_function)
+	{
+		connectOnProgressCallbacks();
+		m_on_progress_callbacks.push_back(on_progress_function);
+	}
+
+	/// @}
+
+protected:
+
+	void connectOnProgressCallbacks();
+
+	/// @name Last known progress state.
+	/// These are used to try to reduce the number of emits by only
+	/// sending signals when the values have actually changed.
+	/// @{
+	int m_last_progress_min {-1};
+	int m_last_progress_value {-1};
+	int m_last_progress_max {-1};
+	/// @}
+
+	/**
+	 * Callbacks registered to be called when the progress range or value is updated.
+	 */
+	std::vector<OnProgressType> m_on_progress_callbacks;
 };
 
 template <typename T>
 inline void ExtFutureWatcher<T>::setFuture(QFutureInterface<T> &future_interface)
 {
 	BASE_CLASS::setFuture(future_interface.future());
+}
+
+template<typename T>
+void ExtFutureWatcher<T>::connectOnProgressCallbacks()
+{
+	if(m_on_progress_callbacks.empty())
+	{
+		// Registering the first progress callback, so set up the watcher connections.
+		QObject::connect(this, &ExtFutureWatcher::progressValueChanged, [=](int new_value){
+			if(m_last_progress_value != new_value)
+			{
+				// Value is different, so we do need to send out a signal.
+				m_last_progress_value = new_value;
+				if(m_last_progress_max < new_value)
+				{
+					m_last_progress_max = new_value;
+				}
+				if(m_last_progress_min == -1)
+				{
+					// Haven't got a valid min yet for some reason, set it to 0.
+					m_last_progress_min = 0;
+				}
+				// Call all the callbacks.
+				for(auto cb : m_on_progress_callbacks)
+				{
+					cb(m_last_progress_min, m_last_progress_value, m_last_progress_max);
+				}
+			}
+		;});
+	}
 }
 
 #endif /* UTILS_CONCURRENCY_EXTFUTUREWATCHER_H_ */
