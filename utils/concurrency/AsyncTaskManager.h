@@ -49,6 +49,7 @@ public:
 	explicit futureww(QObject* parent = nullptr) : QFutureWatcher<T>(parent) {}
     ~futureww()
     {
+		qDebug() << "DESTRUCTOR CALLED";
         cancel();
 		BASE_CLASS::waitForFinished();
     }

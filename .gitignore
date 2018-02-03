@@ -19,3 +19,4 @@ moc*.h
 /.vscode
 /.idea
 /.settings
+/nbproject/

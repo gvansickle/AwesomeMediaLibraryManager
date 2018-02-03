@@ -295,7 +295,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << "START:" << dir_url;
 
 	// Create the ControlledTask which will scan the directory tree for files.
-	AsyncDirScanner2 async_dir_scanner(dir_url,
+	AsyncDirScanner async_dir_scanner(dir_url,
 												QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												QDir::NoFilter, QDirIterator::Subdirectories);
 #if 0
@@ -321,7 +321,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 #endif
 	promise.wait();
 
-#elif 1
+#elif 0
 
 	auto callback = [=](QFutureInterface<QString> qfi) -> QFutureInterface<QString> {
 		qDebug() << M_THREADNAME();
@@ -350,7 +350,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << promise.state();
 
 
-	auto new_future = ReportingRun(async_dir_scanner, promise);
+	auto new_future = ReportingRunner(async_dir_scanner, promise);
 
 	qDebug() << promise.state();
 
@@ -370,19 +370,23 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << "AFTER WAIT:" << promise.state();
 
 
-#elif 0 ///ndef USE_BUNDLED_ASYNCFUTURE
+#elif 1 ///ndef USE_BUNDLED_ASYNCFUTURE
 
-	QFuture<QString> fut = ReportingRunner::run(async_dir_scanner);
-
+//	QFuture<QString> fut = ReportingRunner::run(&async_dir_scanner);
+	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
+	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
     m_futureww_dirscan.on_result([this](auto a){
         this->m_current_libmodel->onIncomingFilename(a);
     })
     .on_progress([this](int min, int max, int val){
+		qDebug() << M_THREADNAME();
         emit progressRangeChanged(min, max);
         emit progressValueChanged(val);
     })
     .then([=](){
-        qDebug() << "DIRTRAV RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
+		qDebug() << M_THREADNAME();
+		qDebug() << "DIRTRAV RESCAN FINISHED";
         onDirTravFinished();
     });
     m_futureww_dirscan = fut;
