@@ -44,14 +44,28 @@ public:
 	}
 	~AsyncDirScanner() override { qDebug() << "Destructor called"; }
 
-	void run(QFutureInterface<QString>& control) override
+	void run(QFutureInterface<QString>& report_and_control) override
 	{
+		/// @todo TEST
+#if 0
+//		QObject signal_source;
+		QFutureWatcher<QString> fw;
+		fw.connect(&fw, &QFutureWatcher<QString>::progressValueChanged, [=](int b) -> void {
+			qDebug() << M_THREADNAME() << "ASYNC PROGRESS SIGNAL: " << b; // << ":" << future.resultAt(b);
+		});
+		fw.setFuture(report_and_control.future());
+		/// @note QFutureWatcher needs to be on either the main thread or maybe a thread with an event loop,
+		/// or it seems to never get called and/or signals don't get emitted.
+		fw.moveToThread(QCoreApplication::instance()->thread());
+#endif
+		/// @todo TEST
+
 		QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 		int num_files_found_so_far = 0;
 
 		while(m_dir_iterator.hasNext())
 		{
-			if(control.isCanceled())
+			if(report_and_control.isCanceled())
 			{
 				// We've been cancelled.
 				return;
@@ -64,11 +78,11 @@ public:
 //			qDebug() << file_url;
 
 			/// Send this path to the future.
-			control.reportResult(file_url.toString());
-			qDebug() << M_THREADNAME() << "resultCount:" << control.resultCount();
+			report_and_control.reportResult(file_url.toString());
+			qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
 			// Update progress.
-			control.setProgressRange(0, num_files_found_so_far);
-			control.setProgressValue(num_files_found_so_far);
+			report_and_control.setProgressRange(0, num_files_found_so_far);
+			report_and_control.setProgressValue(num_files_found_so_far);
 			///control.setProgressValueAndText(num_files_found_so_far, "Hello");
 		}
 	}

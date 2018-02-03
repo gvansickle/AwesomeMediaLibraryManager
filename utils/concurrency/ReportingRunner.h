@@ -34,6 +34,7 @@
 
 /**
  * Subclass this to get a controllable task which can be passed to ReportingRunner::run().
+ * Note that this class does not derive from QObject (or any other class for that matter).
  * @tparam T  The type returned in the QFuture<T>.
  */
 template <class T>

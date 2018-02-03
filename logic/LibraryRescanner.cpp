@@ -231,18 +231,21 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	QPromise<QString> promise = qPromise(future_interface.future());
 
-	QFutureWatcher<QString> fw;
-	connect(&fw, &QFutureWatcher<QString>::progressValueChanged, [=](int b) -> void {
-		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << b; // << ":" << future.resultAt(b);
+	QFutureWatcher<QString>* fw = new QFutureWatcher<QString>(this);
+	connect(fw, &QFutureWatcher<QString>::progressValueChanged, [=](int progress_val) -> void {
+		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << progress_val; // << ":" << future.resultAt(b);
+		emit progressRangeChanged(0, progress_val*2);
+		emit progressValueChanged(progress_val);
 	});
-	fw.setFuture(future_interface.future());
+	fw->setFuture(future_interface.future());
+
 
 	promise.tap([&](){
 		qDebug() << M_THREADNAME() << "TAP";
 	}).then([&](QString res){
 		qDebug() << M_THREADNAME() << "THEN";
 		qDebug() << "DONE";
-	}).wait();
+	});//.wait();
 
 //	QPromise<QString> promise([=](const QPromiseResolve<int>& resolve, const QPromiseResolve<int>& reject) {
 //		auto async_method = [=](){

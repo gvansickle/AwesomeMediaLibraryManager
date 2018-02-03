@@ -53,6 +53,12 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
+# Use ccache if it's available.
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+	set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
+
 # Include some basic cmake functions.
 include(GNUInstallDirs)
 include(CMakePrintHelpers)
