@@ -65,14 +65,14 @@ public:
 	futureww<T>& operator=(QFuture<T> f) { BASE_CLASS::setFuture(f); return *this; }
 
 	/**
-     * Attaches a continuation to the futureww.
-     * @return Reference to the return value of @a continuation_function.
+	 * Attaches a continuation to the futureww.
+	 * @return Reference to the return value of @a continuation_function.
 	 */
-    template <typename ReturnFutureT>
-    ReturnFutureT& then(std::function<ReturnFutureT(QList<T>)> continuation_function)
+	template <typename ReturnFutureT>
+	ReturnFutureT& then(std::function<ReturnFutureT(QList<T>)> continuation_function)
 	{
-        m_continuation_function = std::move(continuation_function);
-        connect(this, &QFutureWatcher<T>::resultsReadyAt, m_continuation_function);
+		m_continuation_function = std::move(continuation_function);
+		connect(this, &QFutureWatcher<T>::resultsReadyAt, m_continuation_function);
 		return m_continuation_function(BASE_CLASS::future());
 	}
 
@@ -96,6 +96,13 @@ public:
 		},
 		this, std::forward<F>(func)
 		);
+	}
+
+	futureww<T>& tap(std::function<void(QFutureInterface<T>&)> tap_function)
+	{
+		QFutureInterface<T> future(this->future());
+		tap_function(future);
+		return future;
 	}
 
     futureww<T>& on_resultat(std::function<void(int)> resultat_function)

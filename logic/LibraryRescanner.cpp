@@ -190,89 +190,6 @@ QFuture<void> ReportingRun(F &&f, QFutureInterface<QString>& p)
 	return QtConcurrent::run(std::forward<F>(f), p);
 }
 
-/**
- * Class for asynchronously scanning a directory tree.
- */
-class AsyncDirScanner2
-{
-public:
-	AsyncDirScanner2(const QUrl &dir_url,
-					const QStringList &nameFilters,
-					QDir::Filters filters = QDir::NoFilter,
-					QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags)
-			: m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
-	{
-		// Nothing.
-	}
-	~AsyncDirScanner2() { qDebug() << "Destructor called"; }
-	AsyncDirScanner2(AsyncDirScanner2& other) = delete ;
-
-	void operator()(QFutureInterface<QString>& report_and_control)
-	{
-		qDebug() << M_THREADNAME();
-
-		if (report_and_control.isCanceled())
-		{
-			report_and_control.reportFinished();
-			return;
-		}
-
-		/// Needed?
-		report_and_control.reportStarted();
-
-
-		QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
-		int num_files_found_so_far = 0;
-
-		report_and_control.setProgressRange(0, 100);
-
-		while(m_dir_iterator.hasNext())
-		{
-			if(report_and_control.isCanceled())
-			{
-				// We've been cancelled.
-				break;
-			}
-
-			num_files_found_so_far++;
-
-//			qDebug() << "Found URL:" << m_dir_iterator.filePath();
-			QUrl file_url = QUrl::fromLocalFile(m_dir_iterator.next());
-//			qDebug() << file_url;
-
-			/// Send this path to the future.
-			report_and_control.reportResult(file_url.toString());
-			qDebug() << "resultCount:" << report_and_control.resultCount();
-			// Update progress.
-			report_and_control.setProgressRange(0, num_files_found_so_far);
-			report_and_control.setProgressValue(num_files_found_so_far);
-			///control.setProgressValueAndText(num_files_found_so_far, "Hello");
-		}
-
-		if (report_and_control.isCanceled())
-		{
-			// Report that we were canceled.
-			report_and_control.reportCanceled();
-		}
-		else
-		{
-			report_and_control.reportFinished();
-		}
-
-		return;
-	}
-
-private:
-
-	/// @name Params for QDirIterator.
-	///@{
-	QUrl m_dir_url;
-	QStringList m_nameFilters;
-	QDir::Filters m_dir_filters;
-	QDirIterator::IteratorFlags m_iterator_flags;
-	///@}
-};
-
 //////////////#######################
 #if 0
 template <typename T>
@@ -286,6 +203,12 @@ inline QPromise<T> QPromiseBase<T>::tap(THandler handler) const
 }
 #endif
 
+QFutureInterface<QString>& tap(QFutureInterface<QString> up_future, std::function<void(QFutureInterface<QString>&)> tap_function)
+{
+	QFutureInterface<QString> future(up_future);
+	tap_function(future);
+	return future;
+}
 
 //////////////////////////////////////////////////////////////////
 
@@ -296,30 +219,57 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	// Create the ControlledTask which will scan the directory tree for files.
 
-#if 0
+#if 1 // USE_BUNDLED_SB_QTPROMISE Simon Brunel's qtpromise.
 	using namespace QtPromise;
 
-	auto input_gen = [=](/*QFutureInterface<QString>&*/){
-		for(int i=0; i<100; i++)
-		{
-			return QString("%1").arg(i);
-		}
-		;};
+//	QFuture<QString> future = ReportingRunner::run(new AsyncDirScanner(dir_url,
+//												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+//												  QDir::NoFilter, QDirIterator::Subdirectories));
+	QFutureInterface<QString> future_interface = ReportingRunner::runFI(new AsyncDirScanner(dir_url,
+												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+												  QDir::NoFilter, QDirIterator::Subdirectories));
 
-	QPromise<QString> input = qPromise(QtConcurrent::run(input_gen));
+	QPromise<QString> promise = qPromise(future_interface.future());
 
-	QPromise<QString> promise = qPromise(ReportingRunner::run(async_dir_scanner))
-			.tap([](){
-			qDebug() << "TAP:"; // << promise.isFulfilled();
-		;});
+	QFutureWatcher<QString> fw;
+	connect(&fw, &QFutureWatcher<QString>::progressValueChanged, [=](int b) -> void {
+		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << b; // << ":" << future.resultAt(b);
+	});
+	fw.setFuture(future_interface.future());
+
+	promise.tap([&](){
+		qDebug() << M_THREADNAME() << "TAP";
+	}).then([&](QString res){
+		qDebug() << M_THREADNAME() << "THEN";
+		qDebug() << "DONE";
+	}).wait();
+
+//	QPromise<QString> promise([=](const QPromiseResolve<int>& resolve, const QPromiseResolve<int>& reject) {
+//		auto async_method = [=](){
+//			if(true /* success */)
+//			{
+//				resolve(fut);
+//			}
+//			else
+//			{
+////				reject(customException();)
+//			}
+//			return;};
+//	});
+
+
+//	QPromise<QString> promise = qPromise(ReportingRunner::run(async_dir_scanner))
+//			.tap([](){
+//			qDebug() << "TAP:"; // << promise.isFulfilled();
+//		;});
 #if 0
 	.then([](){
 		qDebug() << "DONE";
 	});
-#endif
 	promise.wait();
+#endif
 
-#elif 0
+#elif 0 /// USE_PROMISE
 
 	auto callback = [=](QFutureInterface<QString> qfi) -> QFutureInterface<QString> {
 		qDebug() << M_THREADNAME();
@@ -368,7 +318,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDebug() << "AFTER WAIT:" << promise.state();
 
 
-#elif 1 ///ndef USE_BUNDLED_ASYNCFUTURE
+#elif 0 /// USE_FUTUREWW
 
 	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
 	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
@@ -382,13 +332,31 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         emit progressRangeChanged(min, max);
         emit progressValueChanged(val);
     })
-    .then([=](){
+	.then([=](){
 		qDebug() << M_THREADNAME() << "DIRTRAV RESCAN FINISHED";
         onDirTravFinished();
     });
+
+	Promise<QString> promise;
+
+	qDebug() << promise.state();
+	promise.then([=](Promise<QString>& p) -> Promise<QString>& {
+		qDebug() << M_THREADNAME() << "THEN1";
+		p.reportStarted();
+		p.reportFinished();
+		return p;});
+
+	qDebug() << "AFTER";
+#if 0
+			.tap([=](QFutureInterface<QString>& future){
+		qDebug() << M_THREADNAME() << "TAP";
+		return future;
+			;})
+#endif
+
     m_futureww_dirscan = fut;
 
-#endif // USE_BUNDLED_ASYNCFUTURE
+#endif // Which future/promise to use.
 
 	emit progressTextChanged("Scanning directory tree");
 

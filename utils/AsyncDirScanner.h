@@ -26,7 +26,7 @@
 #include <QDebug>
 
 #include <utils/concurrency/ReportingRunner.h>
-
+#include <utils/DebugHelpers.h>
 
 /**
  * Class for asynchronously scanning a directory tree.
@@ -65,7 +65,7 @@ public:
 
 			/// Send this path to the future.
 			control.reportResult(file_url.toString());
-			qDebug() << "resultCount:" << control.resultCount();
+			qDebug() << M_THREADNAME() << "resultCount:" << control.resultCount();
 			// Update progress.
 			control.setProgressRange(0, num_files_found_so_far);
 			control.setProgressValue(num_files_found_so_far);

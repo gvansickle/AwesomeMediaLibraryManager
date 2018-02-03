@@ -25,6 +25,9 @@
 #include <QFutureWatcher>
 #include <QThreadPool>
 
+////
+#include <QtPromise>
+
 #include <utils/StringHelpers.h>
 
 /// Based on this Stack Overflow reply: https://stackoverflow.com/a/16729619
@@ -61,12 +64,7 @@ public:
 	 * The start() functions are analogous to those in Qt5's RunFunctionTaskBase<>.
 	 * @return
 	 */
-    QFuture<T> start()
-    {
-		return start(QThreadPool::globalInstance());
-    }
-
-	QFuture<T> start(QThreadPool *pool)
+	QFuture<T> start(QThreadPool *pool = QThreadPool::globalInstance())
 	{
 		this->setThreadPool(pool);
 		this->setRunnable(this);
@@ -75,6 +73,17 @@ public:
 		QFuture<T> future = this->future();
 		pool->start(this, /*m_priority*/ 0);
 		return future;
+	}
+
+	QFutureInterface<T> startFI(QThreadPool *pool = QThreadPool::globalInstance())
+	{
+		this->setThreadPool(pool);
+		this->setRunnable(this);
+		// Report that we've started via the QFutureInterface.
+		this->reportStarted();
+		QFutureInterface<T> future_interface = *this;
+		pool->start(this, /*m_priority*/ 0);
+		return future_interface;
 	}
 
 	/**
@@ -134,6 +143,12 @@ public:
     {
 		return (new RunControllableTask<T>(task))->start();
     }
+
+	template <class T>
+	static QFutureInterface<T> runFI(ControllableTask<T>* task)
+	{
+		return (new RunControllableTask<T>(task))->startFI();
+	}
 };
 
 template <typename T>
@@ -145,12 +160,35 @@ class FutureWatcherPlus : public QFutureWatcher<T>
 template <typename T>
 class Promise : public QFutureInterface<T>
 {
+	using BASE_CLASS = QFutureInterface<T>;
+
 public:
-	Promise(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::NoState) : QFutureInterface<T>(initialState)
+	explicit Promise(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::NoState) : QFutureInterface<T>(initialState)
 	{
 	}
 
+	void setResolver(QFuture<T> future)
+	{
+		m_future = future;
+	}
+
 	QString state() const;
+
+	/**
+	 * Attaches a continuation to the Promise.
+	 * @return Reference to the return value of @a continuation_function.
+	 */
+	Promise<T>& then(std::function<Promise<T>&(Promise<T>&)> continuation_function)
+	{
+		m_continuation_function = std::move(continuation_function);
+		return m_continuation_function(*this);
+	}
+
+protected:
+
+	QFuture<T> m_future;
+	std::function<Promise<T>&(Promise<T>&)> m_continuation_function {nullptr};
+
 };
 
 template<typename T>
