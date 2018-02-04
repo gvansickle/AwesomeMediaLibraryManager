@@ -32,6 +32,7 @@
 #include "gui/MainWindow.h"
 
 #include <logic/ModelUserRoles.h>
+#include <logic/LibraryModel.h>
 
 /**
  * Blank-area context menu.

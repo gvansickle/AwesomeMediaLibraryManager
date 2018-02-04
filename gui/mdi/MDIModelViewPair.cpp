@@ -19,6 +19,20 @@
 
 #include "MDIModelViewPair.h"
 
-bool MDIModelViewPair::hasModel() const { return m_model; }
-bool MDIModelViewPair::hasView() const { return m_view; } ///< This really shouldn't ever be the case if there's no model.
-bool MDIModelViewPair::hasModelAndView() const { return m_model && m_view; }
+#include <QAbstractItemModel>
+#include "gui/MDITreeViewBase.h"
+
+bool MDIModelViewPair::hasModel() const
+{
+	return m_model;
+}
+
+bool MDIModelViewPair::hasView() const
+{
+	return m_view;
+}
+
+bool MDIModelViewPair::hasModelAndView() const
+{
+	return m_model && m_view;
+}
