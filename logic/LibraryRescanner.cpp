@@ -238,6 +238,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		emit progressRangeChanged(min, max);
 		emit progressValueChanged(val);
 		;});
+	fw->onProgressChange([=](int min, int val, int max, const QString& text){
+		qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
+		emit progressRangeChanged(min, max);
+		emit progressValueChanged(val);
+		emit progressTextChanged(text);
+		;});
 	fw->setFuture(future_interface);
 
 
