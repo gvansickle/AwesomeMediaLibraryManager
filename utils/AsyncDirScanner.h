@@ -63,6 +63,9 @@ public:
 		QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 		int num_files_found_so_far = 0;
 
+		report_and_control.setProgressValueAndText(0, "Scanning for music files");
+
+
 		while(m_dir_iterator.hasNext())
 		{
 			if(report_and_control.isCanceled())
@@ -82,8 +85,8 @@ public:
 			qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
 			// Update progress.
 			report_and_control.setProgressRange(0, num_files_found_so_far);
-			report_and_control.setProgressValue(num_files_found_so_far);
-			///control.setProgressValueAndText(num_files_found_so_far, "Hello");
+//			report_and_control.setProgressValue(num_files_found_so_far);
+			report_and_control.setProgressValueAndText(num_files_found_so_far, "Scanning for music files");
 		}
 	}
 

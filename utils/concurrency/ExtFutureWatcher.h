@@ -35,6 +35,7 @@ class ExtFutureWatcher : public QFutureWatcher<T>
 
 	using OnProgressChangeType = std::function<void(int, int, int)>;
 	using OnProgressWithTextChangeType = std::function<void(int, int, int, const QString&)>;
+	using OnReportResultType = std::function<void(T, int)>;
 
 public:
 	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent)
@@ -75,9 +76,16 @@ public:
 		m_on_prog_with_text_callbacks.push_back(on_prog_with_text_change_func);
 
 		// Register the same function to be called by the numeric progress update signals.
+		/// @todo This results in the callback always being called twice.
 		onProgressChange([=](int min, int val, int max){
 			on_prog_with_text_change_func(min, val, max, m_last_progress_text);
 			;});
+	}
+
+	void onReportResult(OnReportResultType &&on_report_result_callback)
+	{
+		connectReportResultCallbacks();
+		m_on_report_result_callbacks.push_back(on_report_result_callback);
 	}
 
 	/// @}
@@ -86,6 +94,7 @@ protected:
 
 	void connectOnProgressCallbacks();
 	void connectOnProgressWithTextCallbacks();
+	void connectReportResultCallbacks();
 
 	/// @name Last known progress state.
 	/// These are used to try to reduce the number of emits by only
@@ -103,6 +112,8 @@ protected:
 	std::vector<OnProgressChangeType> m_on_progress_callbacks;
 
 	std::vector<OnProgressWithTextChangeType> m_on_prog_with_text_callbacks;
+
+	std::vector<OnReportResultType> m_on_report_result_callbacks;
 };
 
 template <typename T>
@@ -179,12 +190,12 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 template<typename T>
 void ExtFutureWatcher<T>::connectOnProgressWithTextCallbacks()
 {
-	if(m_on_progress_callbacks.empty())
+	if(m_on_prog_with_text_callbacks.empty())
 	{
 		// Registering the first progress+text callback, so set up the watcher connections.
 
 		QObject::connect(this, &ExtFutureWatcher::progressTextChanged, [=](const QString& str){
-			if(m_last_progress_text == str)
+			if(m_last_progress_text != str)
 			{
 				// Text is different, so send out a signal.
 				m_last_progress_text = str;
@@ -198,6 +209,26 @@ void ExtFutureWatcher<T>::connectOnProgressWithTextCallbacks()
 			else
 			{
 				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS TEXT, NOT EMITTING SIGNALS.";
+			}
+			;});
+	}
+}
+
+template<typename T>
+void ExtFutureWatcher<T>::connectReportResultCallbacks()
+{
+	if(m_on_report_result_callbacks.empty())
+	{
+		// Registering the first OnReportResult callback, so set up the watcher connections.
+
+		QObject::connect(this, &ExtFutureWatcher::resultReadyAt, [=](int index){
+			// Get the result from the future.  It's guaranteed to be available.
+			T temp_val = this->resultAt(index);
+
+			// Call all the callbacks.
+			for(auto cb : m_on_report_result_callbacks)
+			{
+				cb(temp_val, index);
 			}
 			;});
 	}

@@ -244,6 +244,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		emit progressValueChanged(val);
 		emit progressTextChanged(text);
 		;});
+	fw->onReportResult([=](QString s, int index){
+		qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+		this->m_current_libmodel->onIncomingFilename(s);
+	});
 	fw->setFuture(future_interface);
 
 
