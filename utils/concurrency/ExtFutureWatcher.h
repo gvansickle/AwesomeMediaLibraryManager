@@ -25,13 +25,16 @@
 #include <functional>
 
 #include <QDebug>
+#include <QThread>
+#include "utils/DebugHelpers.h"
 
 template <typename T>
 class ExtFutureWatcher : public QFutureWatcher<T>
 {
 	using BASE_CLASS = QFutureWatcher<T>;
 
-	using OnProgressType = std::function<void(int, int, int)>;
+	using OnProgressChangeType = std::function<void(int, int, int)>;
+	using OnProgressWithTextChangeType = std::function<void(int, int, int, const QString&)>;
 
 public:
 	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent)
@@ -56,10 +59,25 @@ public:
 	 * Register the given @a on_progress_function callback to be called on any change of
 	 * the watched QFutureInterface<>'s progress range or value.
 	 */
-	void onProgressChange(OnProgressType &&on_progress_function)
+	void onProgressChange(OnProgressChangeType &&on_progress_function)
 	{
 		connectOnProgressCallbacks();
 		m_on_progress_callbacks.push_back(on_progress_function);
+	}
+
+	/**
+	 * Register the given @a on_progress_function callback to be called on any change of
+	 * the watched QFutureInterface<>'s progress range, value, or text.
+	 */
+	void onProgressChange(OnProgressWithTextChangeType &&on_prog_with_text_change_func)
+	{
+		connectOnProgressWithTextCallbacks();
+		m_on_prog_with_text_callbacks.push_back(on_prog_with_text_change_func);
+
+		// Register the same function to be called by the numeric progress update signals.
+		onProgressChange([=](int min, int val, int max){
+			on_prog_with_text_change_func(min, val, max, m_last_progress_text);
+			;});
 	}
 
 	/// @}
@@ -67,6 +85,7 @@ public:
 protected:
 
 	void connectOnProgressCallbacks();
+	void connectOnProgressWithTextCallbacks();
 
 	/// @name Last known progress state.
 	/// These are used to try to reduce the number of emits by only
@@ -75,12 +94,15 @@ protected:
 	int m_last_progress_min {-1};
 	int m_last_progress_value {-1};
 	int m_last_progress_max {-1};
+	QString m_last_progress_text;
 	/// @}
 
 	/**
 	 * Callbacks registered to be called when the progress range or value is updated.
 	 */
-	std::vector<OnProgressType> m_on_progress_callbacks;
+	std::vector<OnProgressChangeType> m_on_progress_callbacks;
+
+	std::vector<OnProgressWithTextChangeType> m_on_prog_with_text_callbacks;
 };
 
 template <typename T>
@@ -95,6 +117,8 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 	if(m_on_progress_callbacks.empty())
 	{
 		// Registering the first progress callback, so set up the watcher connections.
+
+		// The progressValueChanged(int) signal.
 		QObject::connect(this, &ExtFutureWatcher::progressValueChanged, [=](int new_value){
 			if(m_last_progress_value != new_value)
 			{
@@ -109,13 +133,73 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 					// Haven't got a valid min yet for some reason, set it to 0.
 					m_last_progress_min = 0;
 				}
+
 				// Call all the callbacks.
 				for(auto cb : m_on_progress_callbacks)
 				{
 					cb(m_last_progress_min, m_last_progress_value, m_last_progress_max);
 				}
 			}
+			else
+			{
+				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS VALUE, NOT EMITTING SIGNALS.";
+			}
 		;});
+
+		// The progressRangeChanged(int min, int max) signal.
+		QObject::connect(this, &ExtFutureWatcher::progressRangeChanged, [=](int min, int max){
+			if(m_last_progress_min != min || m_last_progress_max != max)
+			{
+				// min or max is different, we need to send out a signal.
+				m_last_progress_min = min;
+				m_last_progress_max = max;
+				if(m_last_progress_value < min)
+				{
+					m_last_progress_value = min;
+				}
+				else if(m_last_progress_value > max)
+				{
+					m_last_progress_value = max;
+				}
+
+				// Call all the callbacks.
+				for(auto cb : m_on_progress_callbacks)
+				{
+					cb(m_last_progress_min, m_last_progress_value, m_last_progress_max);
+				}
+			}
+			else
+			{
+				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS MIN/MAX, NOT EMITTING SIGNALS.";
+			}
+			;});
+	}
+}
+
+template<typename T>
+void ExtFutureWatcher<T>::connectOnProgressWithTextCallbacks()
+{
+	if(m_on_progress_callbacks.empty())
+	{
+		// Registering the first progress+text callback, so set up the watcher connections.
+
+		QObject::connect(this, &ExtFutureWatcher::progressTextChanged, [=](const QString& str){
+			if(m_last_progress_text == str)
+			{
+				// Text is different, so send out a signal.
+				m_last_progress_text = str;
+
+				// Call all the callbacks.
+				for(auto cb : m_on_prog_with_text_callbacks)
+				{
+					cb(m_last_progress_min, m_last_progress_value, m_last_progress_max, m_last_progress_text);
+				}
+			}
+			else
+			{
+				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS TEXT, NOT EMITTING SIGNALS.";
+			}
+			;});
 	}
 }
 
