@@ -79,13 +79,14 @@ public:
 //	QFutureWatcher<QString> m_dir_traversal_future_watcher;
 
 	QElapsedTimer m_timer;
+	qint64 m_last_elapsed_time_dirscan {0};
 
 signals:
 	/// @name Signals forwarded from the QFutureWatcher's.
 	///@{
 	void progressRangeChanged(int minimum, int maximum);
 	void progressValueChanged(int progressValue);
-	void progressTextChanged(const QString &progressText);
+	void progressTextChanged(QString progressText);
 	///@}
 
 public slots:

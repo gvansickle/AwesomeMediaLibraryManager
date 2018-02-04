@@ -35,7 +35,7 @@ class ExtFutureWatcher : public QFutureWatcher<T>
 	using BASE_CLASS = QFutureWatcher<T>;
 
 	using OnProgressChangeType = std::function<void(int, int, int)>;
-	using OnProgressWithTextChangeType = std::function<void(int, int, int, const QString&)>;
+	using OnProgressWithTextChangeType = std::function<void(int, int, int, QString)>;
 	using OnReportResultType = std::function<void(T, int)>;
 
 public:
@@ -149,7 +149,7 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 
 		// The progressValueChanged(int) signal.
 		QObject::connect(this, &ExtFutureWatcher::progressValueChanged, [=](int new_value){
-			qDebug() << M_THREADNAME() << "progressValueChanged";
+//			qDebug() << M_THREADNAME() << "progressValueChanged";
 			if(m_last_progress_value != new_value)
 			{
 				// Value is different, so we do need to send out a signal.
@@ -172,13 +172,13 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 			}
 			else
 			{
-				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS VALUE, NOT EMITTING SIGNALS.";
+//				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS VALUE, NOT EMITTING SIGNALS.";
 			}
 		;});
 
 		// The progressRangeChanged(int min, int max) signal.
 		QObject::connect(this, &ExtFutureWatcher::progressRangeChanged, [=](int min, int max){
-			qDebug() << M_THREADNAME() << "progressRangeChanged";
+//			qDebug() << M_THREADNAME() << "progressRangeChanged";
 			if(m_last_progress_min != min || m_last_progress_max != max)
 			{
 				// min or max is different, we need to send out a signal.
@@ -201,7 +201,7 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 			}
 			else
 			{
-				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS MIN/MAX, NOT EMITTING SIGNALS.";
+//				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS MIN/MAX, NOT EMITTING SIGNALS.";
 			}
 			;});
 	}
@@ -215,7 +215,7 @@ void ExtFutureWatcher<T>::connectOnProgressWithTextCallbacks()
 		// Registering the first progress+text callback, so set up the watcher connections.
 
 		QObject::connect(this, &ExtFutureWatcher::progressTextChanged, [=](const QString& str){
-			qDebug() << M_THREADNAME() << "progressTextChanged";
+//			qDebug() << M_THREADNAME() << "progressTextChanged";
 			if(m_last_progress_text != str)
 			{
 				// Text is different, so send out a signal.
@@ -229,7 +229,7 @@ void ExtFutureWatcher<T>::connectOnProgressWithTextCallbacks()
 			}
 			else
 			{
-				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS TEXT, NOT EMITTING SIGNALS.";
+//				qDebug() << M_THREADNAME() << "NO CHANGE IN PROGRESS TEXT, NOT EMITTING SIGNALS.";
 			}
 			;});
 	}
@@ -243,7 +243,7 @@ void ExtFutureWatcher<T>::connectReportResultCallbacks()
 		// Registering the first OnReportResult callback, so set up the watcher connections.
 
 		QObject::connect(this, &ExtFutureWatcher::resultReadyAt, [=](int index){
-			qDebug() << M_THREADNAME() << "resultReadyAt";
+//			qDebug() << M_THREADNAME() << "resultReadyAt";
 
 			// Get the result from the future.  It's guaranteed to be available.
 			T temp_val = this->resultAt(index);

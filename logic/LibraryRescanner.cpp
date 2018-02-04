@@ -183,34 +183,13 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	return retval;
 }
 
-///////////////////////////////////////////////////////////////
-
-template<typename F = std::function<void(QFutureInterface<QString>&)>>
-QFuture<void> ReportingRun(F &&f, QFutureInterface<QString>& p)
-{
-	return QtConcurrent::run(std::forward<F>(f), p);
-}
-
-//////////////#######################
-#if 0
-template <typename T>
-template <typename THandler>
-inline QPromise<T> QPromiseBase<T>::tap(THandler handler) const
-{
-	QPromise<T> p = *this;
-	return p.then(handler).then([=]() {
-		return p;
-	});
-}
-#endif
-
-
-//////////////////////////////////////////////////////////////////
-
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
 	qDebug() << M_THREADNAME();
 	qDebug() << "START:" << dir_url;
+
+	// Time how long it takes.
+	m_timer.start();
 
 	// Create the ControlledTask which will scan the directory tree for files.
 
@@ -225,57 +204,32 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
 
-//	QPromise<QString> promise([&](const QPromiseResolve<QString>& resolve) {
-
-//		resolve(fw->onProgressChange([=](int min, int val, int max, const QString& text){
-//				qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-//				emit progressRangeChanged(min, max);
-//				emit progressValueChanged(val);
-//				emit progressTextChanged(text);
-//				;})
-//			.onReportResult([=](QString s, int index){
-//				qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-//				this->m_current_libmodel->onIncomingFilename(s);
-//			})
-//			.setFuture(future_interface).future());
-//		});
-	fw->onProgressChange([=](int min, int val, int max, const QString& text){
+	fw->onProgressChange([=](int min, int val, int max, QString text){
 					qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-					emit progressRangeChanged(min, max);
-					emit progressValueChanged(val);
-					emit progressTextChanged(text);
+//					emit progressRangeChanged(min, max);
+					Q_EMIT progressValueChanged(val);
+//					emit progressTextChanged(text);
 					;})
 				.onReportResult([=](QString s, int index){
+					/// @note This is called in an arbitrary thread context.
 					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-					this->m_current_libmodel->onIncomingFilename(s);
+M_WARNING("TODO: NOT THREADSAFE")
+//					this->m_current_libmodel->onIncomingFilename(s);
+					QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
 				})
 				.setFuture(future_interface);
 
 	qDebug() << "future is finished:" << fw->future().isFinished() << "isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
 
-	promise.tap([&](){
-		qDebug() << M_THREADNAME() << "TAP";
-	}).then([&](QString res){
-		qDebug() << M_THREADNAME() << "THEN";
-		qDebug() << "DONE";
+	promise.then([&](QString res){
+		qDebug() << M_THREADNAME() << "Directory scan complete.";
+		m_last_elapsed_time_dirscan = m_timer.elapsed();
+		qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+		// Directory traversal complete.
 		onDirTravFinished();
 	}); //.wait();
 
 	qDebug() << "future is finished:" << fw->future().isFinished() <<"isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
-
-
-//	QPromise<QString> promise([=](const QPromiseResolve<int>& resolve, const QPromiseResolve<int>& reject) {
-//		async_method([=](){
-//			if(true /* success */)
-//			{
-//				resolve(fut);
-//			}
-//			else
-//			{
-////				reject(customException();)
-//			}
-//			return;};
-//	});
 
 #elif 0 /// USE_PROMISE
 
@@ -475,6 +429,7 @@ void LibraryRescanner::onRescanFinished()
 {
     auto elapsed = m_timer.elapsed();
 	qDebug() << "Async Rescan reports finished.";
+	qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 	qInfo() << "Metadata rescan took" << elapsed << "ms";
 	// Send out progress text.
 	emit progressTextChanged("Idle");
