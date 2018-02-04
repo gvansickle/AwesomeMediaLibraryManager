@@ -212,9 +212,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 					;})
 				.onReportResult([=](QString s, int index){
 					/// @note This is called in an arbitrary thread context.
-					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-M_WARNING("TODO: NOT THREADSAFE")
+//					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+					// This is not threadsafe:
 //					this->m_current_libmodel->onIncomingFilename(s);
+					// This is threadsafe.
 					QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
 				})
 				.setFuture(future_interface);
