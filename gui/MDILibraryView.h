@@ -21,7 +21,7 @@
 #define MDILIBRARYVIEW_H
 
 #include "MDITreeViewBase.h"
-#include "logic/LibraryModel.h"
+#include "logic/LibraryModel.h" // Needed for covariant return type.
 #include "utils/DebugHelpers.h"
 
 #include <QUrl>
