@@ -204,12 +204,6 @@ inline QPromise<T> QPromiseBase<T>::tap(THandler handler) const
 }
 #endif
 
-QFutureInterface<QString>& tap(QFutureInterface<QString> up_future, std::function<void(QFutureInterface<QString>&)> tap_function)
-{
-	QFutureInterface<QString> future(up_future);
-	tap_function(future);
-	return future;
-}
 
 //////////////////////////////////////////////////////////////////
 
@@ -233,11 +227,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	QPromise<QString> promise = qPromise(future_interface.future());
 
 	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>(this);
-	fw->onProgressChange([=](int min, int val, int max){
-		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << min << val << max;
-		emit progressRangeChanged(min, max);
-		emit progressValueChanged(val);
-		;});
+//	fw->onProgressChange([=](int min, int val, int max){
+//		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << min << val << max;
+//		emit progressRangeChanged(min, max);
+//		emit progressValueChanged(val);
+//		;});
 	fw->onProgressChange([=](int min, int val, int max, const QString& text){
 		qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
 		emit progressRangeChanged(min, max);
@@ -259,7 +253,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	});//.wait();
 
 //	QPromise<QString> promise([=](const QPromiseResolve<int>& resolve, const QPromiseResolve<int>& reject) {
-//		auto async_method = [=](){
+//		async_method([=](){
 //			if(true /* success */)
 //			{
 //				resolve(fut);
@@ -271,25 +265,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //			return;};
 //	});
 
-
-//	QPromise<QString> promise = qPromise(ReportingRunner::run(async_dir_scanner))
-//			.tap([](){
-//			qDebug() << "TAP:"; // << promise.isFulfilled();
-//		;});
-#if 0
-	.then([](){
-		qDebug() << "DONE";
-	});
-	promise.wait();
-#endif
-
 #elif 0 /// USE_PROMISE
-
-	auto callback = [=](QFutureInterface<QString> qfi) -> QFutureInterface<QString> {
-		qDebug() << M_THREADNAME();
-		qDebug() << "Hello";
-		return qfi;
-	};
 
 	/// This is the key:
 	/// https://stackoverflow.com/a/22205495
@@ -305,20 +281,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		qDebug() << "PROGRESS" << b; // << ":" << future.resultAt(b);
 	});
 
-	qDebug() << promise.state();
-
 	fw.setFuture(promise.future());
-
-	qDebug() << promise.state();
-
 
 	auto new_future = ReportingRunner(async_dir_scanner, promise);
 
-	qDebug() << promise.state();
-
-
-	//qDebug() << "NEW==OLD:" << (new_promise == promise);
-	//qDebug() << "NEW==OLD:" << (new_promise.future() == promise.future());
 	qDebug() << "COUNT:" << new_future.resultCount();
 
 //	auto result = promise.future().result();
