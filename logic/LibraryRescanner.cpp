@@ -217,14 +217,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 #if 1 // USE_BUNDLED_SB_QTPROMISE Simon Brunel's qtpromise.
 	using namespace QtPromise;
 
-//	QFuture<QString> future = ReportingRunner::run(new AsyncDirScanner(dir_url,
-//												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-//												  QDir::NoFilter, QDirIterator::Subdirectories));
 	QFutureInterface<QString> future_interface = ReportingRunner::runFI(new AsyncDirScanner(dir_url,
 												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												  QDir::NoFilter, QDirIterator::Subdirectories));
 
-	QPromise<QString> promise = qPromise(future_interface.future());
+//	QPromise<QString> promise = qPromise(future_interface.future());
 
 	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>(this);
 //	fw->onProgressChange([=](int min, int val, int max){
@@ -232,17 +229,20 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //		emit progressRangeChanged(min, max);
 //		emit progressValueChanged(val);
 //		;});
-	fw->onProgressChange([=](int min, int val, int max, const QString& text){
-		qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-		emit progressRangeChanged(min, max);
-		emit progressValueChanged(val);
-		emit progressTextChanged(text);
-		;});
-	fw->onReportResult([=](QString s, int index){
-		qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-		this->m_current_libmodel->onIncomingFilename(s);
-	});
-	fw->setFuture(future_interface);
+	QPromise<QString> promise([&](const QPromiseResolve<QString>& resolve) {
+
+		resolve(fw->onProgressChange([=](int min, int val, int max, const QString& text){
+				qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
+				emit progressRangeChanged(min, max);
+				emit progressValueChanged(val);
+				emit progressTextChanged(text);
+				;})
+			.onReportResult([=](QString s, int index){
+				qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+				this->m_current_libmodel->onIncomingFilename(s);
+			})
+			.setFuture(future_interface).future());
+		});
 
 
 	promise.tap([&](){

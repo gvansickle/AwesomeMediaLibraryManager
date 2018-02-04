@@ -51,7 +51,7 @@ public:
 	/**
 	 * Overload of setFuture() which takes a QFutureInterface<T> instead of a QFuture<T>.
 	 */
-	void setFuture(QFutureInterface<T> &future_interface);
+	ExtFutureWatcher<T>& setFuture(QFutureInterface<T> &future_interface);
 
 	/// @name Signal callback interface.
 	/// @{
@@ -60,17 +60,18 @@ public:
 	 * Register the given @a on_progress_function callback to be called on any change of
 	 * the watched QFutureInterface<>'s progress range or value.
 	 */
-	void onProgressChange(OnProgressChangeType &&on_progress_function)
+	ExtFutureWatcher<T>& onProgressChange(OnProgressChangeType &&on_progress_function)
 	{
 		connectOnProgressCallbacks();
 		m_on_progress_callbacks.push_back(on_progress_function);
+		return *this;
 	}
 
 	/**
 	 * Register the given @a on_progress_function callback to be called on any change of
 	 * the watched QFutureInterface<>'s progress range, value, or text.
 	 */
-	void onProgressChange(OnProgressWithTextChangeType &&on_prog_with_text_change_func)
+	ExtFutureWatcher<T>& onProgressChange(OnProgressWithTextChangeType &&on_prog_with_text_change_func)
 	{
 		connectOnProgressWithTextCallbacks();
 		m_on_prog_with_text_callbacks.push_back(on_prog_with_text_change_func);
@@ -80,12 +81,14 @@ public:
 		onProgressChange([=](int min, int val, int max){
 			on_prog_with_text_change_func(min, val, max, m_last_progress_text);
 			;});
+		return *this;
 	}
 
-	void onReportResult(OnReportResultType &&on_report_result_callback)
+	ExtFutureWatcher<T>& onReportResult(OnReportResultType &&on_report_result_callback)
 	{
 		connectReportResultCallbacks();
 		m_on_report_result_callbacks.push_back(on_report_result_callback);
+		return *this;
 	}
 
 	/// @}
@@ -117,9 +120,10 @@ protected:
 };
 
 template <typename T>
-inline void ExtFutureWatcher<T>::setFuture(QFutureInterface<T> &future_interface)
+inline ExtFutureWatcher<T>& ExtFutureWatcher<T>::setFuture(QFutureInterface<T> &future_interface)
 {
 	BASE_CLASS::setFuture(future_interface.future());
+	return *this;
 }
 
 template<typename T>
