@@ -22,6 +22,7 @@
 
 #include <QFutureWatcher>
 
+#include <QApplication>
 #include <functional>
 
 #include <QDebug>
@@ -38,15 +39,22 @@ class ExtFutureWatcher : public QFutureWatcher<T>
 	using OnReportResultType = std::function<void(T, int)>;
 
 public:
-	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent)
+	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent), m_utility_thread(new QThread(this))
 	{
 		qDebug() << "CONSTRUCTOR CALLED WITH PARENT:" << parent;
+		m_utility_thread->start();
+		this->connect(m_utility_thread, &QThread::finished, &QThread::deleteLater);
 	}
 	/// @note QFutureWatcher<> is derived from QObject.  QObject has a virtual destructor,
 	/// while QFutureWatcher<>'s destructor isn't marked either virtual or override.  By the
 	/// rules of C++, QFutureWatcher<>'s destructor is actually virtual ("once virtual always virtual"),
 	/// so we're good.  Marking this override to avoid confusion.
-	~ExtFutureWatcher() override = default;
+	~ExtFutureWatcher() override
+	{
+		qDebug() << "START: QUIT UTILITY THREAD";
+		m_utility_thread->quit();
+		qDebug() << "END: QUIT UTILITY THREAD";
+	}
 
 	/**
 	 * Overload of setFuture() which takes a QFutureInterface<T> instead of a QFuture<T>.
@@ -95,6 +103,8 @@ public:
 
 protected:
 
+	QThread* m_utility_thread;
+
 	void connectOnProgressCallbacks();
 	void connectOnProgressWithTextCallbacks();
 	void connectReportResultCallbacks();
@@ -122,6 +132,10 @@ protected:
 template <typename T>
 inline ExtFutureWatcher<T>& ExtFutureWatcher<T>::setFuture(QFutureInterface<T> &future_interface)
 {
+	/// @todo Move to a non-GUI thread.
+	m_utility_thread->setObjectName("UtilityThread");
+	this->moveToThread(m_utility_thread);
+
 	BASE_CLASS::setFuture(future_interface.future());
 	return *this;
 }
@@ -135,6 +149,7 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 
 		// The progressValueChanged(int) signal.
 		QObject::connect(this, &ExtFutureWatcher::progressValueChanged, [=](int new_value){
+			qDebug() << M_THREADNAME() << "progressValueChanged";
 			if(m_last_progress_value != new_value)
 			{
 				// Value is different, so we do need to send out a signal.
@@ -163,6 +178,7 @@ void ExtFutureWatcher<T>::connectOnProgressCallbacks()
 
 		// The progressRangeChanged(int min, int max) signal.
 		QObject::connect(this, &ExtFutureWatcher::progressRangeChanged, [=](int min, int max){
+			qDebug() << M_THREADNAME() << "progressRangeChanged";
 			if(m_last_progress_min != min || m_last_progress_max != max)
 			{
 				// min or max is different, we need to send out a signal.
@@ -199,6 +215,7 @@ void ExtFutureWatcher<T>::connectOnProgressWithTextCallbacks()
 		// Registering the first progress+text callback, so set up the watcher connections.
 
 		QObject::connect(this, &ExtFutureWatcher::progressTextChanged, [=](const QString& str){
+			qDebug() << M_THREADNAME() << "progressTextChanged";
 			if(m_last_progress_text != str)
 			{
 				// Text is different, so send out a signal.
@@ -226,6 +243,8 @@ void ExtFutureWatcher<T>::connectReportResultCallbacks()
 		// Registering the first OnReportResult callback, so set up the watcher connections.
 
 		QObject::connect(this, &ExtFutureWatcher::resultReadyAt, [=](int index){
+			qDebug() << M_THREADNAME() << "resultReadyAt";
+
 			// Get the result from the future.  It's guaranteed to be available.
 			T temp_val = this->resultAt(index);
 

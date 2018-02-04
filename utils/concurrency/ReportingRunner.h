@@ -41,13 +41,19 @@ template <class T>
 class ControllableTask
 {
 public:
-    virtual ~ControllableTask() {}
+	virtual ~ControllableTask();
 
     /// Override this in your derived class to do the long-running work.
     /// Periodically check @a control->isCanceled() and return if it returns false.
     /// Send results out via one of the control->reportResult() overloads.
-    virtual void run(QFutureInterface<T>& control) = 0;
+	virtual void run(QFutureInterface<T>& control) = 0;
 };
+
+template<class T>
+ControllableTask<T>::~ControllableTask()
+{
+	// Nothing.
+}
 
 /**
  * This is a sort of combination of the RunFunctionTaskBase<> and RunFunctionTask<> class templates
@@ -150,12 +156,6 @@ public:
 	{
 		return (new RunControllableTask<T>(task))->startFI();
 	}
-};
-
-template <typename T>
-class FutureWatcherPlus : public QFutureWatcher<T>
-{
-
 };
 
 template <typename T>

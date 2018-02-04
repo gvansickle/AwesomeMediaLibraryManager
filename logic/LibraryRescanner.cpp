@@ -221,36 +221,48 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 												  QDir::NoFilter, QDirIterator::Subdirectories));
 
-//	QPromise<QString> promise = qPromise(future_interface.future());
+	QPromise<QString> promise = qPromise(future_interface.future());
 
-	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>(this);
-//	fw->onProgressChange([=](int min, int val, int max){
-//		qDebug() << M_THREADNAME() << "PROGRESS SIGNAL: " << min << val << max;
-//		emit progressRangeChanged(min, max);
-//		emit progressValueChanged(val);
-//		;});
-	QPromise<QString> promise([&](const QPromiseResolve<QString>& resolve) {
+	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
 
-		resolve(fw->onProgressChange([=](int min, int val, int max, const QString& text){
-				qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-				emit progressRangeChanged(min, max);
-				emit progressValueChanged(val);
-				emit progressTextChanged(text);
-				;})
-			.onReportResult([=](QString s, int index){
-				qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-				this->m_current_libmodel->onIncomingFilename(s);
-			})
-			.setFuture(future_interface).future());
-		});
+//	QPromise<QString> promise([&](const QPromiseResolve<QString>& resolve) {
 
+//		resolve(fw->onProgressChange([=](int min, int val, int max, const QString& text){
+//				qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
+//				emit progressRangeChanged(min, max);
+//				emit progressValueChanged(val);
+//				emit progressTextChanged(text);
+//				;})
+//			.onReportResult([=](QString s, int index){
+//				qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+//				this->m_current_libmodel->onIncomingFilename(s);
+//			})
+//			.setFuture(future_interface).future());
+//		});
+	fw->onProgressChange([=](int min, int val, int max, const QString& text){
+					qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
+					emit progressRangeChanged(min, max);
+					emit progressValueChanged(val);
+					emit progressTextChanged(text);
+					;})
+				.onReportResult([=](QString s, int index){
+					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+					this->m_current_libmodel->onIncomingFilename(s);
+				})
+				.setFuture(future_interface);
+
+	qDebug() << "future is finished:" << fw->future().isFinished() << "isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
 
 	promise.tap([&](){
 		qDebug() << M_THREADNAME() << "TAP";
 	}).then([&](QString res){
 		qDebug() << M_THREADNAME() << "THEN";
 		qDebug() << "DONE";
-	});//.wait();
+		onDirTravFinished();
+	}); //.wait();
+
+	qDebug() << "future is finished:" << fw->future().isFinished() <<"isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
+
 
 //	QPromise<QString> promise([=](const QPromiseResolve<int>& resolve, const QPromiseResolve<int>& reject) {
 //		async_method([=](){
