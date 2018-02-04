@@ -21,9 +21,8 @@
 #define GUI_MDI_MDIVIEWPAIRMODEL_H
 
 #include <QPointer>
-#include <QAbstractItemModel>
 
-//#include <gui/MDITreeViewBase.h>
+class QAbstractItemModel;
 class MDITreeViewBase;
 
 class MDIModelViewPair
@@ -49,7 +48,7 @@ public:
 
 	bool hasModel() const;
 	bool hasView() const;
-	bool hasModelAndView();
+	bool hasModelAndView() const;
 };
 
 #endif //GUI_MDI_MDIVIEWPAIRMODEL_H
