@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -30,9 +30,8 @@
 #include <QtCore/QFutureWatcher>
 #include <utils/concurrency/AsyncTaskManager.h>
 
-#include "logic/LibraryEntry.h"
-
 class LibraryModel;
+class LibraryEntry;
 
 struct LibraryRescannerMapItem
 {
@@ -92,7 +91,6 @@ signals:
 public slots:
 	void startAsyncDirectoryTraversal(QUrl dir_url);
 
-	void onDirTravResultReadyAt(int index);
 	void onDirTravFinished();
 
 	/// Slot called by m_rescan_future_watcher when it has a result available.

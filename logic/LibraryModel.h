@@ -32,7 +32,6 @@
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryEntry.h"
-#include "LibraryRescanner.h"
 
 class QFileDevice;
 

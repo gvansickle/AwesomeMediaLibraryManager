@@ -18,15 +18,27 @@
  */
 
 
-#include "FilterWidget.h"
 #include "MainWindow.h"
+
+
+#include "Experimental.h"
+#include "FilterWidget.h"
 
 #include "MDITreeViewBase.h"
 #include "MDILibraryView.h"
 #include "MDIPlaylistView.h"
+#include "MDINowPlayingView.h"
+
+#include <gui/settings/SettingsDialog.h>
+#include <logic/LibraryModel.h>
+#include <logic/PlaylistModel.h>
+
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
 #include "CollectionDockWidget.h"
+#include "PlayerControls.h"
+
+#include "logic/LibraryEntryMimeData.h"
 
 #include "logic/LibrarySortFilterProxyModel.h"
 
@@ -60,6 +72,8 @@
 #include <QDirIterator>
 #include <QClipboard>
 #include <QSharedPointer>
+#include <QStandardItem>
+
 
 #include <functional>
 #include <algorithm>

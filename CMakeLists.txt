@@ -103,8 +103,8 @@ print_compilers_and_params()
 # Be nice to visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Be nice and export compile commands by default, this is handy for clang-tidy
-# and for other tools.
+# Export compile commands.
+# FBO clang-tidy, iwyu, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set default install location to dist folder in build dir
@@ -139,18 +139,19 @@ get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
 message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
-# List plugin info.
-message(STATUS "*  Qt5::Gui Plugins:")
-foreach(plugin ${Qt5Gui_PLUGINS})
-  get_target_property(_loc ${plugin} LOCATION)
-  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-endforeach()
-message(STATUS "*  Qt5::Widgets Plugins:")
-foreach(plugin ${Qt5Widgets_PLUGINS})
-  get_target_property(_loc ${plugin} LOCATION)
-  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-endforeach()
-
+if(FALSE)
+	# List plugin info.
+	message(STATUS "*  Qt5::Gui Plugins:")
+	foreach(plugin ${Qt5Gui_PLUGINS})
+	  get_target_property(_loc ${plugin} LOCATION)
+	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+	endforeach()
+	message(STATUS "*  Qt5::Widgets Plugins:")
+	foreach(plugin ${Qt5Widgets_PLUGINS})
+	  get_target_property(_loc ${plugin} LOCATION)
+	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+	endforeach()
+endif()
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
@@ -169,6 +170,23 @@ if(FALSE)
 	if(NOT WIN32)
 		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp;-Xiwyu;--mapping_file=${PROJECT_SOURCE_DIR}/utils/nomoc/nomoc.imp")
 	endif()
+endif()
+
+# Custom cppclean target
+find_program(CPPCLEAN_PROGRAM NAMES cppclean)
+if(CPPCLEAN_PROGRAM AND FALSE) # << TRUE == USE_CPPCLEAN
+	set(CPPCLEAN_EXCLUDE_PATTERNS "cmake-build-*;build-*")
+	set(CPPCLEAN_INCLUDE_PATHS "${PROJECT_SOURCE_DIR}")
+	set(CPPCLEAN_EXCLUDE_SPECS "")
+	set(CPPCLEAN_INCLUDE_PATH_SPECS "")
+	PREPEND_TO_EACH(CPPCLEAN_EXCLUDE_SPECS "--exclude=" ${CPPCLEAN_EXCLUDE_PATTERNS})
+	PREPEND_TO_EACH(CPPCLEAN_INCLUDE_PATH_SPECS "--include-path=" ${CPPCLEAN_INCLUDE_PATHS})
+	add_custom_target(run_cppclean
+		ALL # @todo Change this so it's not run by default.
+		COMMAND "${CPPCLEAN_PROGRAM}" ${CPPCLEAN_EXCLUDE_SPECS} ${CPPCLEAN_INCLUDE_PATH_SPECS} "${PROJECT_SOURCE_DIR}"
+		COMMENT "Running cppclean"
+		VERBATIM
+		)
 endif()
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
@@ -425,6 +443,7 @@ set(SOURCE_FILES
 	gui/menus/PlaylistContextMenuViewport.cpp
 	gui/menus/PlaylistContextMenu.cpp
 	gui/menus/ActionBundle.cpp
+	gui/mdi/MDIModelViewPair.cpp
 	logic/ColumnSpec.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
     )

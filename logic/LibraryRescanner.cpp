@@ -436,14 +436,6 @@ void LibraryRescanner::onRescanFinished()
 	emit progressTextChanged("Idle");
 }
 
-void LibraryRescanner::onDirTravResultReadyAt(int index)
-{
-	Q_ASSERT(0);
-//	qDebug() << "Async Dir Trav reports result ready at" << index << "==" << m_dir_traversal_future_watcher.resultAt(index);
-
-//	m_current_libmodel->onIncomingFilename(m_dir_traversal_future_watcher.resultAt(index));
-}
-
 void LibraryRescanner::onDirTravFinished()
 {
 	qDebug() << "Async Dir Trav reports fisished.";
