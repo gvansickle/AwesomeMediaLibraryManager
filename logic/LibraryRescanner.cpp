@@ -29,9 +29,11 @@
 #include <asyncfuture.h>
 #include <utils/concurrency/ExtendedDeferred.h>
 #endif
-#if 1
+
+// Simon Brunel's QtPromise.
+// https://github.com/simonbrunel/qtpromise
 #include <QtPromise>
-#endif
+
 
 #include <utils/concurrency/ExtFutureWatcher.h>
 
@@ -204,17 +206,18 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
 
-	fw->onProgressChange([=](int min, int val, int max, QString text){
+	fw->onProgressChange([=](int min, int val, int max, QString text) -> void {
 					qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-//					emit progressRangeChanged(min, max);
-					Q_EMIT progressValueChanged(val);
-//					emit progressTextChanged(text);
+					Q_EMIT progressChanged(min, val, max, text);
 					;})
-				.onReportResult([=](QString s, int index){
-					/// @note This is called in an arbitrary thread context.
+				.onReportResult([=](QString s, int index) {
+					Q_UNUSED(index);
+					/// @note This lambda is called in an arbitrary thread context.
 //					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+
 					// This is not threadsafe:
-//					this->m_current_libmodel->onIncomingFilename(s);
+					/// WRONG: this->m_current_libmodel->onIncomingFilename(s);
+
 					// This is threadsafe.
 					QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
 				})
@@ -234,7 +237,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 #elif 0 /// USE_PROMISE
 
-	/// This is the key:
+	/// This is key:
 	/// https://stackoverflow.com/a/22205495
 	/// "The future() call is a factory method for creating a QFuture bound to your QFutureInterface."
 	/// It looks like it is creating a new one each time.
@@ -305,15 +308,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 #endif // Which future/promise to use.
 
-	emit progressTextChanged("Scanning directory tree");
-
 	qDebug() << "END:" << dir_url;
 }
 
 void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan)
 {
 	// Send out progress text.
-	emit progressTextChanged("Rereading metadata");
+	QString progtext = tr("Rereading metadata");
 
     m_timer.start();
 
@@ -347,9 +348,8 @@ M_WARNING("EXPERIMENTAL");
 	.on_result([this](auto a){
     	this->processReadyResults(a);
     })
-    .on_progress([this](int min, int max, int val){
-    	emit progressRangeChanged(min, max);
-    	emit progressValueChanged(val);
+	.on_progress([=](int min, int max, int val){
+		emit progressChanged(min, val, max, progtext);
     })
     .then([=](){
     	qDebug() << "METADATA RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
@@ -433,7 +433,7 @@ void LibraryRescanner::onRescanFinished()
 	qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 	qInfo() << "Metadata rescan took" << elapsed << "ms";
 	// Send out progress text.
-	emit progressTextChanged("Idle");
+	emit progressChanged(0, 0, 0, "Idle");
 }
 
 void LibraryRescanner::onDirTravFinished()
@@ -441,7 +441,7 @@ void LibraryRescanner::onDirTravFinished()
 	qDebug() << "Async Dir Trav reports fisished.";
 
 	// Send out progress text.
-	emit progressTextChanged("Idle");
+	emit progressChanged(0, 0, 0, "Idle");
 
 	/// @todo Should be a lambda.
 	///m_current_libmodel->onIncomingFilenamesComplete();

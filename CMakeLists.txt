@@ -506,6 +506,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"QT_DEPRECATED_WARNINGS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})

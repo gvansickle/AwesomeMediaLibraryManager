@@ -67,6 +67,11 @@ class LibraryRescanner : public QObject
 {
 	Q_OBJECT
 
+Q_SIGNALS:
+
+	/// Signal for progress changes.
+	void progressChanged(int min, int val, int max, QString text);
+
 public:
 	LibraryRescanner(LibraryModel* parent);
 	~LibraryRescanner() override;
@@ -75,18 +80,9 @@ public:
 
 
 	QFutureWatcher<MetadataReturnVal> m_rescan_future_watcher;
-//	QFutureWatcher<QString> m_dir_traversal_future_watcher;
 
 	QElapsedTimer m_timer;
 	qint64 m_last_elapsed_time_dirscan {0};
-
-signals:
-	/// @name Signals forwarded from the QFutureWatcher's.
-	///@{
-	void progressRangeChanged(int minimum, int maximum);
-	void progressValueChanged(int progressValue);
-	void progressTextChanged(QString progressText);
-	///@}
 
 public slots:
 	void startAsyncDirectoryTraversal(QUrl dir_url);

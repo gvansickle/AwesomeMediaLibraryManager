@@ -36,12 +36,11 @@ public:
 	virtual ~ActivityProgressWidget() override;
 
 public Q_SLOTS:
-	void onProgressRangeChanged(int minimum, int maximum);
-	void onProgressTextChanged(const QString &progressText);
-	void onProgressValueChanged(int progressValue);
+
+	void onProgressChanged(int min, int val, int max, QString text);
 
 	/// @note This is only needed for the old-style connection syntax and/or QML exposure.
-//	W_SLOT(onProgressRangeChanged)
+//	W_SLOT(onProgressChanged)
 
 private:
 	Q_DISABLE_COPY(ActivityProgressWidget)

@@ -53,24 +53,16 @@ ActivityProgressWidget::~ActivityProgressWidget()
 
 }
 
-void ActivityProgressWidget::onProgressRangeChanged(int minimum, int maximum)
+void ActivityProgressWidget::onProgressChanged(int min, int val, int max, QString text)
 {
-	m_progress_bar->setRange(minimum, maximum);
-	m_last_min = minimum;
-	m_last_max = maximum;
+	m_progress_bar->setRange(min, max);
+	m_progress_bar->setValue(val);
+	m_current_activity_label->setText(text);
 
-	m_text_status_label->setText(createTextStatusString());
-}
+	m_last_min = min;
+	m_last_max = max;
+	m_last_val = val;
 
-void ActivityProgressWidget::onProgressTextChanged(const QString &progressText)
-{
-	m_current_activity_label->setText(progressText);
-}
-
-void ActivityProgressWidget::onProgressValueChanged(int progressValue)
-{
-	m_progress_bar->setValue(progressValue);
-	m_last_val = progressValue;
 	m_text_status_label->setText(createTextStatusString());
 }
 
