@@ -158,7 +158,7 @@ private Q_SLOTS:
 	 */
 	void onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel);
 
-    void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
+	void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model);
 	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
 
     void doExperiment();

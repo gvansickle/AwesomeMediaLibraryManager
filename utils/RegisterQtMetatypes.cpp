@@ -22,7 +22,29 @@
 #include <logic/LibraryEntry.h>
 #include <logic/PlaylistModelItem.h>
 #include <utils/Fraction.h>
+#include <logic/LibraryRescanner.h>
+#include <logic/LibraryEntryMimeData.h>
 
+/**
+ * Why do we need this?  According to: https://woboq.com/blog/qmetatype-knows-your-types.html
+ *
+ * "It enables things such as QVariant wrapping of custom types, copy of queued connection arguments, and more."
+ *
+ * However, he goes on to say this is almost unnecessary:
+ *
+ * "That was it for Q_DECLARE_METATYPE, but you would still need to call qRegisterMetaType to use these type
+ * in a Q_PROPERTY or as a parameter in a signal/slot queued connection. Since Qt 5.x however, the code generated
+ * by moc will call qRegisterMetaType for you if moc can determine that the type may be registered as a meta-type."
+ *
+ * There's also this from StackOverflow ca. 2013: https://stackoverflow.com/a/19380656
+ *
+ * "Foo and Foo* are different types and need to be registered separately. [...]
+ * Normally, you would only register the pointer form if your class cannot be copied,
+ * as in the case of QObject and derivatives, but this depends on your requirements."
+ *
+ * Docs:
+ * http://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1
+ */
 void RegisterQtMetatypes()
 {
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
@@ -40,4 +62,10 @@ void RegisterQtMetatypes()
 
 	qRegisterMetaType<Fraction>();
 	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
+
+	// From #include <logic/LibraryRescanner.h>
+	qRegisterMetaType<QFuture<MetadataReturnVal>>();
+
+	// #include <logic/LibraryEntryMimeData.h>
+	qRegisterMetaType<LibraryEntryMimeData*>();
 }

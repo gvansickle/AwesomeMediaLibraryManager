@@ -72,7 +72,7 @@ Q_SIGNALS:
     void statusSignal(LibState, qint64, qint64);
 
 public:
-    explicit LibraryModel(QObject *parent = 0);
+	explicit LibraryModel(QObject *parent = nullptr);
 	virtual ~LibraryModel() override;
 
 	/**

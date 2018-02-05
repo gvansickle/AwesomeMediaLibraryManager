@@ -60,6 +60,7 @@ struct MetadataReturnVal
 };
 
 Q_DECLARE_METATYPE(MetadataReturnVal)
+Q_DECLARE_METATYPE(QFuture<MetadataReturnVal>)
 
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;
 
@@ -84,7 +85,7 @@ public:
 	QElapsedTimer m_timer;
 	qint64 m_last_elapsed_time_dirscan {0};
 
-public slots:
+public Q_SLOTS:
 	void startAsyncDirectoryTraversal(QUrl dir_url);
 
 	void onDirTravFinished();

@@ -1283,10 +1283,10 @@ void MainWindow::openPlaylist()
 	qCritical() << "Not implemented";
 }
 
-void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model)
+void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model)
 {
-	qDebug() << QString("Sending entry to playlist:") << playlist_model.get();
-	if(playlist_model != nullptr)
+	qDebug() << QString("Sending entry to playlist:") << playlist_model;
+	if(!playlist_model.isNull())
 	{
 		auto new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);
 		playlist_model->appendRow(new_playlist_entry);

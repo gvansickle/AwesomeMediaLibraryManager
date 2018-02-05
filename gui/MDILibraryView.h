@@ -49,7 +49,7 @@ Q_SIGNALS:
 	 */
 	void sendToNowPlaying(LibraryEntryMimeData*);
 
-	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
+	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, QPointer<PlaylistModel>);
     void playTrackNowSignal(QUrl);
 
 public:
