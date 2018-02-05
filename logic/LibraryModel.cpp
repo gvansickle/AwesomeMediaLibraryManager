@@ -926,6 +926,12 @@ void LibraryModel::startRescan()
 	// Now we just let it do its thing.  It will call back through the public interface with updated metadata.
 }
 
+void LibraryModel::cancelRescan()
+{
+	qDebug() << "CANCEL";
+///#error "TODO"
+}
+
 void LibraryModel::connectProgressToActivityProgressWidget(ActivityProgressWidget *apw)
 {
 	m_rescanner->disconnect(apw);

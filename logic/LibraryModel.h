@@ -176,6 +176,8 @@ public Q_SLOTS:
 	/// Let's try something different.
 	virtual void startRescan();
 
+	virtual void cancelRescan();
+
 	void onIncomingFilename(QString filename);
 
 protected:
@@ -219,7 +221,7 @@ protected:
 	/// The underlying data store.
     Library m_library;
 
-	LibraryRescanner* m_rescanner = nullptr;
+	LibraryRescanner* m_rescanner {nullptr};
 
 private:
 	Q_DISABLE_COPY(LibraryModel)

@@ -113,6 +113,8 @@ public Q_SLOTS:
 
     void onRescanLibrary();
 
+	void onCancelRescan();
+
     void startSettingsDialog();
 
     /// @name Edit action forwarders.
@@ -282,7 +284,6 @@ private:
     /// @name File actions
     /// @{
     QAction* m_importLibAct;
-    QAction* m_rescanLibraryAct;
     QAction* m_saveLibraryAsAct;
     QAction* m_removeDirFromLibrary;
     QAction* m_newPlaylistAct;
@@ -305,6 +306,14 @@ private:
     QAction *m_act_delete;
     QAction *m_act_select_all;
     /// @}
+
+	/// @name Tools actions
+	/// @{
+
+	QAction* m_rescanLibraryAct;
+	QAction* m_cancelRescanAct;
+
+	/// @}
 
 	/// View actions.
 	/// @{

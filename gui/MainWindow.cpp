@@ -338,6 +338,10 @@ void MainWindow::createActions()
 									QKeySequence::Refresh);
 	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
 
+	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
+									QKeySequence::Cancel);
+	connect_trig(m_cancelRescanAct, this, &MainWindow::onCancelRescan);
+
 	m_settingsAct = make_action(QIcon::fromTheme("configure"), tr("Settings..."), this,
 							   QKeySequence::Preferences, "Open the Settings dialog.");
 	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
@@ -508,6 +512,7 @@ void MainWindow::createMenus()
         {//scanLibraryAction,
 		 m_toolsMenu->addSection("Rescans"),
 		 m_rescanLibraryAct,
+		 m_cancelRescanAct,
 		 m_toolsMenu->addSection("Settings"),
 		 m_settingsAct,
                 });
@@ -552,6 +557,7 @@ void MainWindow::createToolBars()
 	m_fileToolBar->setObjectName("FileToolbar");
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
+							   m_cancelRescanAct,
 							 m_fileToolBar->addSeparator(),
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
@@ -1172,6 +1178,14 @@ void MainWindow::onRescanLibrary()
 	for(auto l : m_libmodels)
 	{
 		l->startRescan();
+	}
+}
+
+void MainWindow::onCancelRescan()
+{
+	for(auto l : m_libmodels)
+	{
+		l->cancelRescan();
 	}
 }
 
