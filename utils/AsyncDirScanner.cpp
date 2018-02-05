@@ -19,6 +19,7 @@
 
 #include "AsyncDirScanner.h"
 
+#include <QString>
 #include <utils/DebugHelpers.h>
 
 
@@ -29,48 +30,64 @@ AsyncDirScanner::~AsyncDirScanner()
 
 void AsyncDirScanner::run(QFutureInterface<QString>& report_and_control)
 {
-	/// @todo TEST
-#if 0
-	//		QObject signal_source;
-	QFutureWatcher<QString> fw;
-	fw.connect(&fw, &QFutureWatcher<QString>::progressValueChanged, [=](int b) -> void {
-		qDebug() << M_THREADNAME() << "ASYNC PROGRESS SIGNAL: " << b; // << ":" << future.resultAt(b);
-	});
-	fw.setFuture(report_and_control.future());
-	/// @note QFutureWatcher needs to be on either the main thread or maybe a thread with an event loop,
-	/// or it seems to never get called and/or signals don't get emitted.
-	fw.moveToThread(QCoreApplication::instance()->thread());
-#endif
-	/// @todo TEST
-
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
+
 	int num_files_found_so_far = 0;
+	uint num_possible_files = 0;
+	QString status_text = QObject::tr("Scanning for music files");
 
-	report_and_control.setProgressValueAndText(0, "Scanning for music files");
-
+	report_and_control.setProgressRange(0, 0);
+	report_and_control.setProgressValueAndText(0, status_text);
 
 	while(m_dir_iterator.hasNext())
 	{
 		if(report_and_control.isCanceled())
 		{
 			// We've been cancelled.
-			return;
+			break;
 		}
 
-		num_files_found_so_far++;
+		// Go to the next entry and return the path to it.
+		QString entry_path = m_dir_iterator.next();
+		auto file_info = m_dir_iterator.fileInfo();
 
-		//			qDebug() << "Found URL:" << m_dir_iterator.filePath();
-		QUrl file_url = QUrl::fromLocalFile(m_dir_iterator.next());
-		//			qDebug() << file_url;
+//		qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
-		/// Send this path to the future.
-		report_and_control.reportResult(file_url.toString());
-		qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
-		// Update progress.
-		report_and_control.setProgressRange(0, num_files_found_so_far);
-		//			report_and_control.setProgressValue(num_files_found_so_far);
-		report_and_control.setProgressValueAndText(num_files_found_so_far, "Scanning for music files");
+		if(file_info.isDir())
+		{
+			QDir dir = file_info.absoluteDir();
+//			qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
+
+			// Update the max range to be the number of files we know we've found so far plus the number
+			// of files potentially in this directory.
+			num_possible_files = num_files_found_so_far + file_info.dir().count();
+
+			report_and_control.setProgressRange(0, num_possible_files);
+		}
+		else if(file_info.isFile())
+		{
+			// It's a file.
+			num_files_found_so_far++;
+
+//			qDebug() << "ITS A FILE";
+
+			QUrl file_url = QUrl::fromLocalFile(entry_path);
+
+			// Send this path to the future.
+			report_and_control.reportResult(file_url.toString());
+
+//			qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
+			// Update progress.
+			report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
+		}
 	}
+
+	// We're done.  One last thing to clean up: We need to send the now-known max range out.
+	// Then we need to send out the final progress value again, because it might have been throttled away
+	// by Qt.
+	num_possible_files = num_files_found_so_far;
+	report_and_control.setProgressRange(0, num_possible_files);
+	report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
 }
 
 

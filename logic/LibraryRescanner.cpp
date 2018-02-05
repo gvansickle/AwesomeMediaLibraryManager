@@ -61,11 +61,11 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_re
 	//m_rescan_future_watcher = new QFutureWatcher<VecLibRescannerMapItems>(this);
 
 	/// Forward QFutureWatcher progress signals.
-	connect(&m_rescan_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
-	connect(&m_rescan_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
-	connect(&m_rescan_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
+//	connect(&m_rescan_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
+//	connect(&m_rescan_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
+//	connect(&m_rescan_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
 M_WARNING("QObject::connect: No such slot LibraryRescanner::onResultReadyAt(int) in /home/gary/src/AwesomeMediaLibraryManager/logic/LibraryRescanner.cpp:51");
-	connect(&m_rescan_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onResultReadyAt(int)));
+//	connect(&m_rescan_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onResultReadyAt(int)));
 	connect(&m_rescan_future_watcher, SIGNAL(finished()), SLOT(onRescanFinished()));
 
 	//m_dir_traversal_future_watcher = new QFutureWatcher<QString>(this);
@@ -200,7 +200,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	QFutureInterface<QString> future_interface = ReportingRunner::runFI(new AsyncDirScanner(dir_url,
 												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-												  QDir::NoFilter, QDirIterator::Subdirectories));
+												  QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
 	QPromise<QString> promise = qPromise(future_interface.future());
 

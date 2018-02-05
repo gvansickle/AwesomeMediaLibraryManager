@@ -43,7 +43,6 @@ class ExtFutureWatcher : public QFutureWatcher<T>
 {
 	using BASE_CLASS = QFutureWatcher<T>;
 
-//	using OnProgressChangeType = std::function<void(int, int, int)>;
 	using OnProgressWithTextChangeType = std::function<void(int, int, int, QString)>;
 	using OnReportResultType = std::function<void(T, int)>;
 
@@ -62,6 +61,7 @@ public:
 		m_utility_thread->start();
 		this->connect(m_utility_thread, &QThread::finished, &QThread::deleteLater);
 	}
+
 	/// @note QFutureWatcher<> is derived from QObject.  QObject has a virtual destructor,
 	/// while QFutureWatcher<>'s destructor isn't marked either virtual or override.  By the
 	/// rules of C++, QFutureWatcher<>'s destructor is actually virtual ("once virtual always virtual"),
@@ -230,9 +230,12 @@ void ExtFutureWatcher<T>::connectAllOnProgressCallbacks()
 		// Note that Qt5 can't send signals from a class template.  Luckily we have a non-template base-base class,
 		// so we can just do this cast and send from there.
 		QFutureWatcherBase * fwb = qobject_cast<QFutureWatcherBase*>(this);
-		QObject::connect(fwb, &QFutureWatcherBase::progressValueChanged, this, &ExtFutureWatcher<T>::onProgressValueChanged);
-		QObject::connect(fwb, &QFutureWatcherBase::progressRangeChanged, this, &ExtFutureWatcher<T>::onProgressRangeChanged);
-		QObject::connect(fwb, &QFutureWatcherBase::progressTextChanged, this, &ExtFutureWatcher<T>::onProgressTextChanged);
+		QObject::connect(fwb, &QFutureWatcherBase::progressValueChanged,
+						 this, &ExtFutureWatcher<T>::onProgressValueChanged);
+		QObject::connect(fwb, &QFutureWatcherBase::progressRangeChanged,
+						 this, &ExtFutureWatcher<T>::onProgressRangeChanged);
+		QObject::connect(fwb, &QFutureWatcherBase::progressTextChanged,
+						 this, &ExtFutureWatcher<T>::onProgressTextChanged);
 	}
 }
 
@@ -253,8 +256,10 @@ void ExtFutureWatcher<T>::connectReportResultCallbacks()
 	if(m_on_report_result_callbacks.empty())
 	{
 		// Registering the first OnReportResult callback, so set up the watcher connections.
-
-		QObject::connect(this, &ExtFutureWatcher::resultReadyAt, [=](int index){
+		/// @note The second "this" is the context pointer for the lambda, which does two things:
+		/// 1. Disconnects this connection when this is destroyed.
+		/// 2. Determines whether the connection will be queued or not.
+		QObject::connect(this, &ExtFutureWatcher::resultReadyAt, this, [=](int index){
 			qDebug() << M_THREADNAME() << "resultReadyAt";
 
 			// Get the result from the future.  It's guaranteed to be available.

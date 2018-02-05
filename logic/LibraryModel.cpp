@@ -930,5 +930,6 @@ void LibraryModel::connectProgressToActivityProgressWidget(ActivityProgressWidge
 {
 	m_rescanner->disconnect(apw);
 
-	connect(m_rescanner, &LibraryRescanner::progressChanged, apw, &ActivityProgressWidget::onProgressChanged);
+	connect(m_rescanner, &LibraryRescanner::progressChanged, apw, &ActivityProgressWidget::onProgressChanged,
+			Qt::QueuedConnection);
 }

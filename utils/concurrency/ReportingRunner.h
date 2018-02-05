@@ -43,9 +43,23 @@ class ControllableTask
 public:
 	virtual ~ControllableTask();
 
-    /// Override this in your derived class to do the long-running work.
-    /// Periodically check @a control->isCanceled() and return if it returns false.
-    /// Send results out via one of the control->reportResult() overloads.
+	/**
+	 * Override this in your derived class to do the long-running work.
+	 * Periodically check @a control->isCanceled() and return if it returns false.
+	 * Send results out via one of the control->reportResult() overloads.
+	 *
+	 * @note Fun Fact about progress reporting: It's all too easy to flood the GUI thread
+	 * with progress updates unless you know one non-obvious thing about QFutureWatcher<>'s
+	 * progressValueChanged() implementation.  From the Qt5 docs (http://doc.qt.io/qt-5/qfuturewatcher.html):
+	 *
+	 * "In order to avoid overloading the GUI event loop, QFutureWatcher limits the progress signal emission rate.
+	 *  This means that listeners connected to this slot might not get all progress reports the future makes.
+	 *  The last progress update (where ***progressValue equals the maximum value***) will always be delivered."
+	 *
+	 * Emphasis mine.  That means don't do what I did and set the progress range max equal to the progressValue when
+	 * you don't know a priori what the range max is (e.g. during a directory traversal).
+	 * If you do so, the GUI slows to a crawl.
+	 */
 	virtual void run(QFutureInterface<T>& control) = 0;
 };
 
