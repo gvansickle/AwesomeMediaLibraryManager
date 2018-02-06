@@ -47,7 +47,7 @@ class ExtFutureWatcher : public QFutureWatcher<T>
 	using OnReportResultType = std::function<void(T, int)>;
 
 public:
-	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent), m_utility_thread(new QThread(this))
+	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent), m_utility_thread(new QThread())
 	{
 		if(parent != nullptr)
 		{
@@ -58,8 +58,9 @@ public:
 		this->setObjectName("ExtFutureWatcher");
 		// Give the utility thread a name.
 		m_utility_thread->setObjectName("UtilityThread");
+		// Connect the finished signal to the deleteLater() slot.
+		QObject::connect(m_utility_thread, &QThread::finished, &QThread::deleteLater);
 		m_utility_thread->start();
-		this->connect(m_utility_thread, &QThread::finished, &QThread::deleteLater);
 	}
 
 	/// @note QFutureWatcher<> is derived from QObject.  QObject has a virtual destructor,
@@ -68,9 +69,16 @@ public:
 	/// so we're good.  Marking this override to avoid confusion.
 	~ExtFutureWatcher() override
 	{
-		qDebug() << "START: QUIT UTILITY THREAD";
+		// I have no idea if this is the right way to go about this.
+		// It's definitely too much to be doing in a destructor, but hey, this is Qt, when in Rome....
+		// Move ourselves off the utility thread to the main thread, so we can wait for the utility thread to quit.
+		this->moveToThread(QApplication::instance()->thread());
+//		qDebug() << "QUITTING UTILITY THREAD";
 		m_utility_thread->quit();
-		qDebug() << "END: QUIT UTILITY THREAD";
+//		qDebug() << "WAITING FOR UTILITY THREAD TO QUIT";
+		m_utility_thread->wait();
+//		qDebug() << "WAITING OVER";
+		m_utility_thread->deleteLater();
 	}
 
 	/**
@@ -150,7 +158,7 @@ protected:
 template <typename T>
 inline ExtFutureWatcher<T>& ExtFutureWatcher<T>::setFuture(QFutureInterface<T> &future_interface)
 {
-	// Move this to the utility thread.
+	// Move ourselves to the utility thread.
 	this->moveToThread(m_utility_thread);
 
 	BASE_CLASS::setFuture(future_interface.future());
