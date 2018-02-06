@@ -56,38 +56,13 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_re
 
 	// Somewhat redundant, but keep another pointer to the LibraryModel.
 	m_current_libmodel = parent;
-
-	// Create a QFutureWatcher and connect up signals/slots.
-	//m_rescan_future_watcher = new QFutureWatcher<VecLibRescannerMapItems>(this);
-
-	/// Forward QFutureWatcher progress signals.
-//	connect(&m_rescan_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
-//	connect(&m_rescan_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
-//	connect(&m_rescan_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
-M_WARNING("QObject::connect: No such slot LibraryRescanner::onResultReadyAt(int) in /home/gary/src/AwesomeMediaLibraryManager/logic/LibraryRescanner.cpp:51");
-//	connect(&m_rescan_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onResultReadyAt(int)));
-	connect(&m_rescan_future_watcher, SIGNAL(finished()), SLOT(onRescanFinished()));
-
-	//m_dir_traversal_future_watcher = new QFutureWatcher<QString>(this);
-
-//	connect(&m_dir_traversal_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
-//	connect(&m_dir_traversal_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
-//	connect(&m_dir_traversal_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
-//	connect(&m_dir_traversal_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onDirTravResultReadyAt(int)));
-//	connect(&m_dir_traversal_future_watcher, SIGNAL(finished()), SLOT(onDirTravFinished()));
-
-    // On Windows at least, these don't seem to throttle automatically as well as on Linux.
-    m_rescan_future_watcher.setPendingResultsLimit(1);
-//    m_dir_traversal_future_watcher.setPendingResultsLimit(1);
 }
 
 LibraryRescanner::~LibraryRescanner()
 {
 	// Make sure we don't have any async tasks running when we get destroyed.
 	m_rescan_future_watcher.cancel();
-//	m_dir_traversal_future_watcher.cancel();
 	m_rescan_future_watcher.waitForFinished();
-//	m_dir_traversal_future_watcher.waitForFinished();
 }
 
 
@@ -199,28 +174,32 @@ QPromise<QString> traverse_dirs(LibraryRescanner *thiz, const QUrl& dir_url, Lib
 		ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
 
 		fw->onProgressChange([=](int min, int val, int max, QString text) -> void {
-						qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
+						//qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
 						Q_EMIT thiz->progressChanged(min, val, max, text);
 						;})
 					.onReportResult([=](QString s, int index) {
 						Q_UNUSED(index);
 						/// @note This lambda is called in an arbitrary thread context.
-	//					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+						//qDebug() << M_THREADNAME() << "RESULT:" << s << index;
 
 						// This is not threadsafe:
 						/// WRONG: this->m_current_libmodel->onIncomingFilename(s);
 
-	//					/// EXPERIMENTAL
-	//					static int fail_counter = 0;
-	//					fail_counter++;
-	//					if(fail_counter > 5)
-	//					{
-	////						future_interface.cancel();
-	//						throw QException();
-	//					}
-
 						// This is threadsafe.
 						QMetaObject::invokeMethod(lib_model, "onIncomingFilename", Q_ARG(QString, s));
+
+						/// EXPERIMENTAL
+//						static int fail_counter = 0;
+//						fail_counter++;
+//						if(fail_counter > 5)
+//						{
+////							future_interface.cancel();
+//							//throw QException();
+//							qDebug() << "ERROR";
+//							return QPromise<QString>::reject("ERROR");
+//						}
+
+
 					})
 					.setFuture(future_interface);
 
