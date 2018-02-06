@@ -72,12 +72,15 @@ public:
 		// I have no idea if this is the right way to go about this.
 		// It's definitely too much to be doing in a destructor, but hey, this is Qt, when in Rome....
 		// Move ourselves off the utility thread to the main thread, so we can wait for the utility thread to quit.
-		this->moveToThread(QApplication::instance()->thread());
-//		qDebug() << "QUITTING UTILITY THREAD";
+		// Note: Doesn't seem to make any difference as long as we don't wait(), and use deleteLater().
+		//this->moveToThread(QApplication::instance()->thread());
+		qDebug() << "QUITTING UTILITY THREAD";
 		m_utility_thread->quit();
-//		qDebug() << "WAITING FOR UTILITY THREAD TO QUIT";
-		m_utility_thread->wait();
-//		qDebug() << "WAITING OVER";
+		// Note: Waiting here seems to be useless.  We don't seem to have been moved to the main thread
+		// by the time we get here, and we can't wait on our own threac.
+		//qDebug() << "WAITING FOR UTILITY THREAD TO QUIT";
+		//m_utility_thread->wait();
+		qDebug() << "DELETELATER utilitythread";
 		m_utility_thread->deleteLater();
 	}
 
