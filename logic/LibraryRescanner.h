@@ -79,9 +79,6 @@ public:
 
 	void startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan);
 
-
-	QFutureWatcher<MetadataReturnVal> m_rescan_future_watcher;
-
 	QElapsedTimer m_timer;
 	qint64 m_last_elapsed_time_dirscan {0};
 
@@ -89,9 +86,6 @@ public Q_SLOTS:
 	void startAsyncDirectoryTraversal(QUrl dir_url);
 
 	void onDirTravFinished();
-
-	/// Slot called by m_rescan_future_watcher when it has a result available.
-	void onResultReadyAt(int index, QFuture<MetadataReturnVal> f);
 
     void processReadyResults(MetadataReturnVal lritem_vec);
 

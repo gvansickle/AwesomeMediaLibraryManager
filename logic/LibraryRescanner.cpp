@@ -48,9 +48,7 @@
 using std::placeholders::_1;
 
 
-LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_rescan_future_watcher(this),
-//	m_dir_traversal_future_watcher(this),
-	m_async_task_manager(this)
+LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_async_task_manager(this)
 {
 	setObjectName("TheLibraryRescanner");
 
@@ -60,9 +58,7 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_re
 
 LibraryRescanner::~LibraryRescanner()
 {
-	// Make sure we don't have any async tasks running when we get destroyed.
-	m_rescan_future_watcher.cancel();
-	m_rescan_future_watcher.waitForFinished();
+
 }
 
 
@@ -429,15 +425,6 @@ M_WARNING("EXPERIMENTAL");
     m_futureww = QtConcurrent::mapped(items_to_rescan,
                                     std::bind(&LibraryRescanner::refresher_callback, this, _1));
 #endif
-}
-
-void LibraryRescanner::onResultReadyAt(int index, QFuture<MetadataReturnVal> f)
-{
-    //qDebug() << "Async Rescan reports result ready at" << index;
-
-    MetadataReturnVal lritem_vec = m_rescan_future_watcher.resultAt(index);
-
-    processReadyResults(lritem_vec);
 }
 
 void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
