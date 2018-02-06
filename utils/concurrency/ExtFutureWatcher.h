@@ -47,8 +47,10 @@ class ExtFutureWatcher : public QFutureWatcher<T>
 	using OnReportResultType = std::function<void(T, int)>;
 
 public:
-	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent), m_utility_thread(new QThread())
+	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent), m_utility_thread(new QThread(/*no parent*/))
 	{
+		// @note We don't give the QThread ourselves as a parent, so that it doesn't get deleted
+		// before we do.  Since we'll be running in that thread, that's an important safety tip.
 		if(parent != nullptr)
 		{
 			// If we're created with a parent, we can't moveToThread() later.
@@ -155,6 +157,9 @@ protected:
 	 */
 	std::vector<OnProgressWithTextChangeType> m_on_prog_with_text_callbacks;
 
+	/**
+	 * Callbacks registered to be called back when a result is ready.
+	 */
 	std::vector<OnReportResultType> m_on_report_result_callbacks;
 };
 
@@ -254,7 +259,7 @@ template<typename T>
 void ExtFutureWatcher<T>::callAllProgressCallbacks()
 {
 	// Call all the onProgress callbacks.
-	qDebug() << M_THREADNAME() << "callAllProgressCallbacks";
+//	qDebug() << M_THREADNAME() << "callAllProgressCallbacks";
 	for(auto cb : m_on_prog_with_text_callbacks)
 	{
 		cb(m_last_progress_min, m_last_progress_value, m_last_progress_max, m_last_progress_text);
@@ -271,7 +276,7 @@ void ExtFutureWatcher<T>::connectReportResultCallbacks()
 		/// 1. Disconnects this connection when this is destroyed.
 		/// 2. Determines whether the connection will be queued or not.
 		QObject::connect(this, &ExtFutureWatcher::resultReadyAt, this, [=](int index){
-			qDebug() << M_THREADNAME() << "resultReadyAt";
+			//qDebug() << M_THREADNAME() << "resultReadyAt";
 
 			// Get the result from the future.  It's guaranteed to be available.
 			T temp_val = this->resultAt(index);
