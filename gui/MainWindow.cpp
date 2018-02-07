@@ -99,7 +99,7 @@
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags)
 {
     // Name our GUI thread.
     QThread::currentThread()->setObjectName("GUIThread");
@@ -136,6 +136,9 @@ M_WARNING("TODO: ifdef this to development only")
 
     // The list of PlaylistModels.
     m_playlist_models.clear();
+
+	// The media player.
+	m_player = new MP2(this);
 
     m_controls = new PlayerControls(this);
 
@@ -662,7 +665,7 @@ void MainWindow::createConnections()
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
-	connectPlayerAndControls(&m_player, m_controls);
+	connectPlayerAndControls(m_player, m_controls);
 
     // Connect with the CollectionDockWidget.
 	connect(m_collection_dock_widget, &CollectionDockWidget::showLibraryModelSignal, this, &MainWindow::onShowLibrary);
@@ -750,7 +753,7 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
     qDebug() << "Connecting";
 	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
 
-	connectPlayerAndPlaylistView(&m_player, now_playing_view);
+	connectPlayerAndPlaylistView(m_player, now_playing_view);
 	connectPlayerControlsAndPlaylistView(m_controls, now_playing_view);
     qDebug() << "Connected";
 }

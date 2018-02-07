@@ -250,7 +250,7 @@ private:
     QUrl m_appdatadir;
 
     /// The media player instance.
-    MP2 m_player;
+	MP2* m_player;
 
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
