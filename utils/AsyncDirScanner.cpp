@@ -46,6 +46,11 @@ void AsyncDirScanner::run(QFutureInterface<QString>& report_and_control)
 			// We've been cancelled.
 			break;
 		}
+		if(report_and_control.isPaused())
+		{
+			// We're paused, wait for a resume signal.
+			report_and_control.waitForResume();
+		}
 
 		// Go to the next entry and return the path to it.
 		QString entry_path = m_dir_iterator.next();
@@ -86,8 +91,11 @@ void AsyncDirScanner::run(QFutureInterface<QString>& report_and_control)
 	// Then we need to send out the final progress value again, because it might have been throttled away
 	// by Qt.
 	num_possible_files = num_files_found_so_far;
-	report_and_control.setProgressRange(0, num_possible_files);
-	report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
+	if (!report_and_control.isCanceled())
+	{
+		report_and_control.setProgressRange(0, num_possible_files);
+		report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
+	}
 }
 
 
