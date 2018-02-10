@@ -27,6 +27,8 @@
 
 #include <QFutureInterface>
 
+#include <utils/StringHelpers.h>
+
 template <typename T>
 class ExtFuture : public QFutureInterface<T>
 {
@@ -53,11 +55,70 @@ public:
 		return m_continuation_function();
 	}
 
+	/**
+	 * Get this' current state as a string.
+	 *
+	 * @return QString describing the current state of the ExtFuture.
+	 */
+	QString state() const;
+
 protected:
 
 	std::function<ExtFuture<void>()> m_continuation_function {nullptr};
 
 };
+
+template<typename T>
+QString ExtFuture<T>::state() const
+{
+	// States from QFutureInterfaceBase.
+	/// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
+	///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
+	///			#ifndef QFUTURE_TEST
+	///			private:
+	///			#endif
+	///				QFutureInterfaceBasePrivate *d;
+	/// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
+	/// actually a QAtomicInt, so we're not thread-safe here.
+	/// This is the queryState() code from qfutureinterface.cpp:
+	///
+	///     bool QFutureInterfaceBase::queryState(State state) const
+	///	    {
+	///		    return d->state.load() & state;
+	///	    }
+
+	std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+		{QFutureInterfaceBase::NoState, "NoState"},
+		{QFutureInterfaceBase::Running, "Running"},
+		{QFutureInterfaceBase::Started,  "Started"},
+		{QFutureInterfaceBase::Finished,  "Finished"},
+		{QFutureInterfaceBase::Canceled,  "Canceled"},
+		{QFutureInterfaceBase::Paused,   "Paused"},
+		{QFutureInterfaceBase::Throttled, "Throttled"}
+	};
+
+	QString retval = "";
+	for(auto i : list)
+	{
+		if(this->queryState(i.first))
+		{
+			if(retval.size() != 0)
+			{
+				// Add a separator.
+				retval += " | ";
+			}
+			retval += toqstr(i.second);
+		}
+	}
+	if(retval.size() == 0)
+	{
+		return QString("UNKNOWN");
+	}
+	else
+	{
+		return retval;
+	}
+}
 
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
