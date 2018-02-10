@@ -24,6 +24,7 @@
 
 #include <QString>
 #include <QDebug>
+#include <QThread>
 
 #include "StringHelpers.h"
 
@@ -40,6 +41,13 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
  */
 #define M_THREADNAME() "THREADNAME:" << QThread::currentThread()->objectName()
 
+/**
+ * qDebug() etc. replacements which prepends the current thread name.
+ */
+#define qDb() qDebug() << M_THREADNAME()
+#define qIn() qInfo() << M_THREADNAME()
+#define qWr() qWarning() << M_THREADNAME()
+#define qCr() qCritical() << M_THREADNAME()
 
 template <typename T>
 static inline auto idstr(const char *id_as_c_str, T id) -> std::enable_if_t<std::is_convertible<T, std::string>::value == true, std::string> /// SFINAE version for T already convertible to std::string.
@@ -57,15 +65,20 @@ idstr(const char *id_as_c_str, T id)
 
 #define M_IDSTR(id) idstr(#id ": ", id) + ", " +
 
+
 /// Portable compile-time warning.
+/// Use: M_WARNING("My message")
+///
 #define STRINGISE_IMPL(x) #x
 #define STRINGISE(x) STRINGISE_IMPL(x)
 #define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) "): "
 
-// Use: M_WARNING("My message")
-#if _MSC_VER
+#if defined(_MSC_VER)
 #   define M_WARNING(exp) __pragma(message(FILE_LINE_LINK "warning C2660: " exp))
-#else//__GNUC__ - may need other defines for different compilers
+#elif defined(__clang__)
+#   define DEFER(M, ...) M(__VA_ARGS__)
+#   define M_WARNING(X) _Pragma(STRINGISE_IMPL(GCC warning(X " at line " DEFER(STRINGISE_IMPL, __LINE__))))
+#elif defined(__GNUC__) || defined(__GNUCXX__)
 #	define DO_PRAGMA(x) _Pragma(#x)
 #   define M_WARNING(exp) DO_PRAGMA(message FILE_LINE_LINK "warning: " exp)
 #endif

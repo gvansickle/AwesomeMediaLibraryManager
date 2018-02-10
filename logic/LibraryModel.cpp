@@ -19,8 +19,11 @@
 
 /** @file LibraryModel. */
 
-#include "LibraryEntryMimeData.h"
 #include "LibraryModel.h"
+
+#include "LibraryRescanner.h"
+
+#include "LibraryEntryMimeData.h"
 
 #include <QtConcurrent>
 
@@ -38,7 +41,6 @@
 #include <QDir>
 
 #include "Library.h"
-#include "LibraryRescanner.h"
 
 #include "logic/ModelUserRoles.h"
 

@@ -90,7 +90,7 @@ MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 	setUniformRowHeights(true);
 
 	// No actual root item.
-	setRootIndex(QModelIndex());
+//	setRootIndex(QModelIndex());
 
 	// Item's aren't expandable.
 	setItemsExpandable(false);

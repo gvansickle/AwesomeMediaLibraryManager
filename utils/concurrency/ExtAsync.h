@@ -25,6 +25,8 @@
  * Qt5 analogs to std::async().
  */
 
+#include "ExtFuture.h"
+
 #include <type_traits>
 
 #include <QEvent>
@@ -41,12 +43,12 @@
  */
 template <typename This, typename Function, typename... Args,
 		  typename R = QString>
-QFutureInterface<QString>
+ExtFuture<R>
 ExtAsync(This* thiz, Function&& function, Args&&... args)
 {
 	// Indicate that we've started so that any calls of waitForFinished against the QFutureInterface will block.
 /// @todo Do we need this as well?:	m_future_interface.setRunnable(this);
-	QFutureInterface<QString> report_and_control(QFutureInterfaceBase::Started);
+	ExtFuture<R> report_and_control(QFutureInterfaceBase::Started);
 
 	QtConcurrent::run(thiz, function, report_and_control, args...);
 
@@ -56,6 +58,10 @@ ExtAsync(This* thiz, Function&& function, Args&&... args)
 /**
  * Run a functor on another thread.
  * Works by posting a message to @a obj's thread's event loop, and running the functor in the event's destructor.
+ *
+ * Functionally equivalent to something like:
+ * QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
+ *
  *
  * Adapted from https://stackoverflow.com/questions/21646467/how-to-execute-a-functor-or-a-lambda-in-a-given-thread-in-qt-gcd-style/21653558#21653558
  */
@@ -74,6 +80,9 @@ static void runInObjectEventLoop(F && fun, QObject * obj = qApp) {
 /**
  * Run a member function or slot in another thread.
  * Works by posting a message to @a obj's thread's event loop, and running the functor in the event's destructor.
+ *
+ * Functionally equivalent to something like:
+ * QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
  *
  * @note Adapted from https://stackoverflow.com/questions/21646467/how-to-execute-a-functor-or-a-lambda-in-a-given-thread-in-qt-gcd-style/21653558#21653558
  *

@@ -83,7 +83,6 @@ public:
 
 	/**
 	 * The start() functions are analogous to those in Qt5's RunFunctionTaskBase<>.
-	 * @return
 	 */
 	QFuture<T> start(QThreadPool *pool = QThreadPool::globalInstance())
 	{

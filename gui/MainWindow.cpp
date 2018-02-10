@@ -463,7 +463,7 @@ void MainWindow::createActionsView()
 {
 	m_ab_docks = new ActionBundle(this);
 
-	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); //< Also an "emblem-unlocked"
+	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
