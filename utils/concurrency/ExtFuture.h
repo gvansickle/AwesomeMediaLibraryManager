@@ -31,6 +31,46 @@
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 
+#include <memory>
+
+/**
+ * A decay_copy for creating a copy of the specified function @a func.
+ * @param func
+ * @return
+ */
+template <typename T>
+std::decay_t<T> decay_copy(T&& func)
+{
+	return std::forward<T>(func);
+}
+
+template<typename T>
+class ExtCallbackHelper
+{
+public:
+
+};
+
+template <typename T>
+class UniqueIDMixin
+{
+	static std::atomic_uintmax_t m_next_id_num;
+
+	uintmax_t m_id_num;
+
+public:
+	UniqueIDMixin()
+	{
+		m_id_num = m_next_id_num;
+		m_next_id_num++;
+	};
+
+	QString id() const { return QString("%1").arg(m_id_num); };
+};
+//
+template <typename T>
+std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
+
 /**
  * An extended QFutureInterface<T> class.
  * Actually more like a combined promise and future.
@@ -53,9 +93,11 @@
  * - tap()
  */
 template <typename T>
-class ExtFuture : public QFutureInterface<T>
+class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 {
 	using BASE_CLASS = QFutureInterface<T>;
+
+	using ContinuationType = std::function<void(void)>;
 
 public:
 	/**
@@ -99,10 +141,24 @@ public:
 		qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
 	}
 
-	ExtFuture(const QFutureInterface<T> &other)
-		: QFutureInterface<T>(other)
+	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other), m_continuation_function(other.m_continuation_function)
 	{
-		qDb() << "future state:" << state();
+		qIn() << "Copy Constructor: other.m_continuation_function copied";
+
+//		if(other.m_continuation_function != nullptr)
+//		{
+//			Q_ASSERT(0);
+//		}
+	}
+
+	ExtFuture(const QFutureInterface<T> &other) : QFutureInterface<T>(other)
+	{
+		qDb() << "future state:" << *this;
+	}
+
+	ExtFuture(QFuture<T> other_future) : QFutureInterface<T>(other_future.d)
+	{
+		qDb() << "future state:" << *this;
 	}
 
 	/**
@@ -114,8 +170,25 @@ public:
 	 */
 	~ExtFuture() override
 	{
-		qDebug() << "DESTRUCTOR";
+		qDb() << "DESTRUCTOR";
+
+		if(m_continuation_function)
+		{
+			qWr() << "m_continuation_function == NULLPTR";
+		}
+		else
+		{
+			qWr() << "m_continuation_function != NULLPTR";
+		}
 	}
+
+	/// @name Copy and move operators.
+	/// @{
+
+	ExtFuture<T>& operator=(const ExtFuture<T>& other) = default;
+	ExtFuture<T>& operator=(ExtFuture<T>&& other) = default;
+
+	/// @}
 
 	/**
 	 *
@@ -127,10 +200,12 @@ public:
 	 * Attaches a continuation to this ExtFuture.
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
-	ExtFuture<void> then(std::function<ExtFuture<void>(ExtFuture<T>&)> continuation_function)
+//	template<class ContinuationFunctionType> //, class ReturnType = std::result_of_t<ContinuationFunctionType(ExtFuture<T>&)>>
+	ExtFuture<QString> then(ContinuationType continuation_function)
 	{
-		m_continuation_function = std::move(continuation_function);
-		return m_continuation_function(*this);
+		m_continuation_function = std::make_shared<ContinuationType>(continuation_function);
+		ExtFuture<QString> retval = ExtAsync(*m_continuation_function, *this);
+		return retval;
 	}
 
 	void wait();
@@ -157,6 +232,20 @@ public:
 	 */
 	QString debug_state() const;
 
+	QString debug_string() const
+	{
+		QString retval = "ID:" + this->id();
+		if(m_continuation_function)
+		{
+			retval += ", Continuation: nullptr";
+		}
+		else
+		{
+			retval += ", Continuation: valid";
+		}
+		return retval;
+	}
+
 	/// @name Operators
 	/// @{
 
@@ -173,27 +262,40 @@ public:
 
 protected:
 
-	std::function<ExtFuture<void>()> m_continuation_function {nullptr};
+	std::shared_ptr<ContinuationType> m_continuation_function;
 
 };
 
+/**
+ * This is the function which actually is called by QtConcurrent::run() for the continuation.
+ */
+template<class T>
+static QString ThenHelper(ExtFuture<T>* predecessor_future)
+{
+	qDb() << "THEN CALLED, WAITING";
+	predecessor_future->wait();
+	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
+	Q_CHECK_PTR(predecessor_future);
+	Q_CHECK_PTR(predecessor_future->m_continuation_function);
+	(*(predecessor_future->m_continuation_function))();
+	return QString("THEN DONE");
+}
+
 //Q_DECLARE_METATYPE(ExtFuture);
-Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
+//Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 
 template<typename T>
 T ExtFuture<T>::get()
 {
-
+	return this->future().result();
 }
 
 template<typename T>
 void ExtFuture<T>::wait()
 {
-	qDb() << "WAIT START, future state:" << state();
+	qDb() << "WAIT START, future state:" << *this;
 	this->waitForFinished();
-	this->results();
-	this->cancel();
-	qDb() << "WAIT COMPLETE, future state:" << state();
+	qDb() << "WAIT COMPLETE, future state:" << *this;
 }
 
 template<typename T>
@@ -304,7 +406,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 {
 	QDebugStateSaver saver(dbg);
 
-	dbg << "ExtFuture<T>(" /*<< extfuture.future()*/ << "STATE:" << extfuture.state() << ")";
+	dbg << "ExtFuture<T>(" << "STATE:" << extfuture.state() << extfuture.debug_string() << ")";
 
 	return dbg;
 }

@@ -26,8 +26,10 @@
  */
 
 #include "ExtFuture.h"
+#include "ExtFutureWatcher.h"
 
 #include <type_traits>
+#include <functional>
 
 #include <QEvent>
 #include <QObject>
@@ -46,13 +48,36 @@ template <typename This, typename Function, typename... Args,
 ExtFuture<R>
 ExtAsync(This* thiz, Function&& function, Args&&... args)
 {
-	// Indicate that we've started so that any calls of waitForFinished against the QFutureInterface will block.
-/// @todo Do we need this as well?:	m_future_interface.setRunnable(this);
-	ExtFuture<R> report_and_control(QFutureInterfaceBase::Started);
+	// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+	// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+	ExtFuture<R> report_and_control;
 
 	QtConcurrent::run(thiz, function, report_and_control, args...);
 
 	return report_and_control;
+}
+
+//template <typename Tin=QString, typename Tout=QString, typename ThenCallbackType = std::function<void(void)>>
+inline static void ExtAsyncHelper(std::function<void(void)> then_callback, ExtFuture<QString> predecessor_future, ExtFuture<QString> return_future)
+{
+	qDb() << "THEN CALLED, WAITING";
+	predecessor_future.wait();
+	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
+	then_callback();
+	//(*(predecessor_future->m_continuation_function))();
+}
+
+//template <//typename Function, // = std::function<int(ExtFuture<QString>&)>, typename... Args,
+//		  typename R = QString>
+inline static ExtFuture<QString>
+ExtAsync(std::function<void(void)> then_callback, ExtFuture<QString> predecessor_future)
+{
+	ExtFuture<QString> return_future;
+
+//	QtConcurrent::run(std::forward<Function>(function), std::forward<Args>(args)...);
+	QtConcurrent::run(ExtAsyncHelper, then_callback, std::forward<ExtFuture<QString>>(predecessor_future), std::forward<ExtFuture<QString>>(return_future));
+
+	return return_future;
 }
 
 /**
@@ -99,6 +124,18 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
       ~Event() { (obj->*method)(); }
    };
    QCoreApplication::postEvent(obj, new Event(obj, method));
+}
+
+template <typename T, typename Function>
+const ExtFuture<T>& onResultReady(ExtFuture<T>& future, QObject *guard, Function f)
+{
+	auto watcher = new ExtFutureWatcher<T>(); //new QFutureWatcher<T>();
+	QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+	QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard, [f, watcher](int index) {
+		f(watcher->future().resultAt(index));
+	});
+	watcher->setFuture(future);
+	return future;
 }
 
 #endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */
