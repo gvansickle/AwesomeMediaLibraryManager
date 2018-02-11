@@ -38,8 +38,9 @@ namespace function_traits_impl
 
 		using functraits1 = function_traits<decltype(ft_test_func1)>;
 		static_assert(std::is_same_v<functraits1::return_type_t, int>, "Wrong return type");
-		static_assert(functraits1::arity_v == 1, "Wrong number of args");
 		static_assert(std::is_same_v<functraits1::arg_t<0>, long>, "Wrong type for arg 0");
+		static_assert(functraits1::arity_v == 1, "Wrong number of args");
+		static_assert(functraits1::return_type_is_v<int>, "Wrong return type");
 		static_assert(functraits1::argtype_is_v<0, int> == false, "Function does not take int as arg 0");
 		static_assert(functraits1::argtype_is_v<0, long> == true, "Function takes long as arg 0, but check failed");
 
@@ -50,6 +51,8 @@ namespace function_traits_impl
 			ft_test2_class* ft_test2a_member_fn(double d) { return this; };
 
 			void* ft_test2a_const_member_fn() const { return (void*)this; };
+
+			void ft_test2b_returns_void(void) { volatile int a; a = 2; };
 		};
 
 		using functraits2 = function_traits<decltype(&ft_test2_class::ft_test2a_member_fn)>;
@@ -58,10 +61,28 @@ namespace function_traits_impl
 		static_assert(std::is_same_v<functraits2::arg_t<1>, double>, "Wrong type for arg 1");
 		static_assert(functraits2::argtype_is_v<0, ft_test2_class&>, "Function does not take correct this ptr type as arg 0");
 
+		using ft_test2b_returns_void_traits = function_traits<decltype(&ft_test2_class::ft_test2b_returns_void)>;
+		static_assert(ft_test2b_returns_void_traits::arity_v == 1, "Wrong number of args");
+		static_assert(ft_test2b_returns_void_traits::return_type_is_v<void>, "Wrong return type");
+		static_assert(ft_test2b_returns_void_traits::argtype_is_v<0, ft_test2_class&>, "Function does not take correct this ptr type as arg 0");
+
 		using functraits3 = function_traits<decltype(&ft_test2_class::ft_test2a_const_member_fn)>;
 		static_assert(std::is_same_v<functraits3::return_type_t, void*>, "Wrong return type");
 		static_assert(functraits3::arity_v == 1, "Wrong number of args");
+		static_assert(functraits3::return_type_is_v<void*>, "Wrong return type");
 		static_assert(functraits3::argtype_is_v<0, ft_test2_class&>, "Function does not take correct this ptr type as arg 0");
+
+		// Lambda.
+		auto lambda1 = [=](const char *str){ return str;};
+		using lambda1_traits = function_traits<decltype(lambda1)>;
+		static_assert(std::is_same_v<lambda1_traits::return_type_t, const char*>, "Wrong return type");
+		static_assert(std::is_same_v<lambda1_traits::arg_t<0>, const char*>, "Wrong type for arg 0");
+		static_assert(lambda1_traits::arity_v == 1, "Wrong number of args");
+		static_assert(lambda1_traits::return_type_is_v<const char*>, "Wrong return type");
+		static_assert(lambda1_traits::argtype_is_v<0, const char*>, "Wrong type for arg 0");
+
+		// Convenience templates.
+		static_assert(function_return_type_is_v<decltype(lambda1), const char*>, "Wrong return type");
 	}
 
 }

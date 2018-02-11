@@ -51,6 +51,7 @@ struct function_traits;
  * - ::return_type_t  The function's return type.
  * - ::arg_t<N>       The type of the function's Nth argument, 0-based.
  * - ::argtype_is_v<N, T>  true if arg_t<N> is of type T.
+ * - ::return_type_is_v<T> true if return_type_t is type T.
  */
 template<class ReturnType, class... Args>
 struct function_traits<ReturnType(Args...)>
@@ -74,6 +75,9 @@ struct function_traits<ReturnType(Args...)>
     template <std::size_t N, typename T>
     static constexpr bool argtype_is_v = std::is_same_v<typename arg<N>::type, T>;
 
+    /// For checking if the return type is T.
+    template <typename T>
+    static constexpr bool return_type_is_v = std::is_same_v<return_type_t, T>;
 };
 
 /**
@@ -117,5 +121,62 @@ struct function_traits<ReturnType(Class::* const)(Args...)> : public function_tr
  */
 template <typename Class, typename ReturnType, typename... Args>
 struct function_traits<ReturnType(Class::* const)(Args...) const> : public function_traits<ReturnType(Class&, Args...)> {};
+
+/**
+ * Specialization for "Callables", i.e. functors, std::function<>'s, anything with an operator().
+ */
+template <typename CallableType>
+struct function_traits
+{
+	/// Get the function_traits<> of operator().
+	using function_call_operator_t = function_traits<decltype(&CallableType::operator())>;
+
+    using return_type_t = typename function_call_operator_t::return_type_t;
+
+    // Adjust arity to ignore the implicit object pointer.
+    static constexpr std::size_t arity_v = function_call_operator_t::arity_v - 1;
+
+    template <std::size_t N>
+    struct arg
+    {
+        static_assert(N < arity_v, "Parameter index out of range");
+        // Again, adjusting arity to ignore the implicit object pointer.
+        using type = typename function_call_operator_t::template arg_t<N+1>;
+    };
+
+    /// Helper for providing arg_t<N> vs. arg<N>::type.
+    template <std::size_t N>
+    using arg_t = typename arg<N>::type;
+
+    /// For checking if the type of arg N is T.
+    template <std::size_t N, typename T>
+    static constexpr bool argtype_is_v = std::is_same_v<typename arg<N>::type, T>;
+
+    /// For checking if the return type is T.
+    template <typename T>
+    static constexpr bool return_type_is_v = std::is_same_v<return_type_t, T>;
+};
+
+/**
+ * Specializations for "Callables" to strip ref qualifiers.
+ * @todo This could probably be done with std::decay<> in the specialization above.
+ */
+template <typename CallableType>
+struct function_traits<CallableType&> : public function_traits<CallableType> {};
+
+template <typename CallableType>
+struct function_traits<CallableType&&> : public function_traits<CallableType> {};
+
+
+/// @name Convenience templates, when you don't need all the function_traits<>.
+/// @{
+
+template <typename F>
+using function_return_type_t = typename function_traits<F>::return_type_t;
+
+template <typename F, typename R>
+static constexpr bool function_return_type_is_v = std::is_same_v<function_return_type_t<F>, R>;
+
+/// @} // Convenience templates.
 
 #endif /* UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_ */
