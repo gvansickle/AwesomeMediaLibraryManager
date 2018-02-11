@@ -32,6 +32,7 @@
 #include <utils/DebugHelpers.h>
 
 #include <memory>
+#include "function_traits.hpp"
 
 /**
  * A decay_copy for creating a copy of the specified function @a func.
