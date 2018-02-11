@@ -63,9 +63,9 @@ public:
 	{
 		m_id_num = m_next_id_num;
 		m_next_id_num++;
-	};
+	}
 
-	QString id() const { return QString("%1").arg(m_id_num); };
+	QString id() const { return QString("%1").arg(m_id_num); }
 };
 //
 template <typename T>
@@ -198,6 +198,8 @@ public:
 
 	/**
 	 * Attaches a continuation to this ExtFuture.
+	 * @note Like std::experimental::future::then(), the continuation function will be run on
+	 *       an unspecified thread.
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
 //	template<class ContinuationFunctionType> //, class ReturnType = std::result_of_t<ContinuationFunctionType(ExtFuture<T>&)>>
@@ -230,11 +232,10 @@ public:
 	 * Get a string describing this ExtFuture<>, suitable for debug output.
 	 * @return
 	 */
-	QString debug_state() const;
-
 	QString debug_string() const
 	{
-		QString retval = "ID:" + this->id();
+		QString retval = "ID: " + this->id();
+		retval += ", STATE: (" + state() + ")";
 		if(m_continuation_function)
 		{
 			retval += ", Continuation: nullptr";
@@ -332,18 +333,12 @@ QString ExtFuture<T>::state() const
 	{
 		if(QFutureInterfaceBase::queryState(i.first))
 		{
-//			qDebug() << "CHECKING" << i.first << ": TRUE";
-
 			if(retval.size() != 0)
 			{
 				// Add a separator.
 				retval += " | ";
 			}
 			retval += toqstr(i.second);
-		}
-		else
-		{
-//			qDebug() << "CHECKING" << i.first << ": FALSE";
 		}
 	}
 
@@ -356,12 +351,6 @@ QString ExtFuture<T>::state() const
 		return retval;
 	}
 }
-
-//template<typename T>
-//bool ExtFuture<T>::operator==(const ExtFuture<T>& other) const
-//{
-//	return QFutureInterface<T>::operator==(other);
-//}
 
 #if 0
 template<typename T>
@@ -406,7 +395,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 {
 	QDebugStateSaver saver(dbg);
 
-	dbg << "ExtFuture<T>(" << "STATE:" << extfuture.state() << extfuture.debug_string() << ")";
+	dbg << "ExtFuture<T>(" << extfuture.debug_string() << ")";
 
 	return dbg;
 }
