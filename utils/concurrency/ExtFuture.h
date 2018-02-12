@@ -34,6 +34,8 @@
 #include <memory>
 #include "function_traits.hpp"
 
+
+
 /**
  * A decay_copy for creating a copy of the specified function @a func.
  * @param func
@@ -203,6 +205,7 @@ public:
 	 *       an unspecified thread.
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
+#if 0
 //	template<class ContinuationFunctionType> //, class ReturnType = std::result_of_t<ContinuationFunctionType(ExtFuture<T>&)>>
 	ExtFuture<QString> then(ContinuationType continuation_function)
 	{
@@ -210,6 +213,9 @@ public:
 		ExtFuture<QString> retval = ExtAsync(*m_continuation_function, *this);
 		return retval;
 	}
+#endif
+
+	ExtFuture<QString> then(ContinuationType continuation_function);
 
 	void wait();
 
@@ -268,6 +274,9 @@ protected:
 
 };
 
+M_WARNING("TODO");
+#include "ExtAsync.h"
+
 /**
  * This is the function which actually is called by QtConcurrent::run() for the continuation.
  */
@@ -290,6 +299,14 @@ template<typename T>
 T ExtFuture<T>::get()
 {
 	return this->future().result();
+}
+
+template<typename T>
+ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
+{
+	m_continuation_function = std::make_shared<ContinuationType>(continuation_function);
+	ExtFuture<QString> retval = ExtAsync::run(*m_continuation_function, *this);
+	return retval;
 }
 
 template<typename T>
