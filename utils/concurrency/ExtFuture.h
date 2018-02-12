@@ -34,7 +34,8 @@
 #include <memory>
 #include "function_traits.hpp"
 
-
+// Forward declare the ExtAsync namespace
+namespace ExtAsync {}
 
 /**
  * A decay_copy for creating a copy of the specified function @a func.
@@ -46,13 +47,6 @@ std::decay_t<T> decay_copy(T&& func)
 {
 	return std::forward<T>(func);
 }
-
-template<typename T>
-class ExtCallbackHelper
-{
-public:
-
-};
 
 template <typename T>
 class UniqueIDMixin
@@ -215,7 +209,8 @@ public:
 	}
 #endif
 
-	ExtFuture<QString> then(ContinuationType continuation_function);
+	template <typename R = QString>
+	ExtFuture<R> then(ContinuationType continuation_function);
 
 	void wait();
 
@@ -278,7 +273,7 @@ protected:
 // START IMPLEMENTATION
 //
 
-M_WARNING("TODO");
+M_WARNING("INCLUDING ExtAsync.h");
 #include "ExtAsync.h"
 
 /**
@@ -306,10 +301,11 @@ T ExtFuture<T>::get()
 }
 
 template<typename T>
-ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
+template<typename R>
+ExtFuture<R> ExtFuture<T>::then(ContinuationType continuation_function)
 {
 	m_continuation_function = std::make_shared<ContinuationType>(continuation_function);
-	ExtFuture<QString> retval = ExtAsync::run(*m_continuation_function, *this);
+	ExtFuture<R> retval = ExtAsync::run(*m_continuation_function, *this);
 	return retval;
 }
 
