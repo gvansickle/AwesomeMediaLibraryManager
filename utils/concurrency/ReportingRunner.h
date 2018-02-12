@@ -29,6 +29,7 @@
 #include <QtPromise>
 
 #include <utils/StringHelpers.h>
+#include <utils/DebugHelpers.h>
 
 /// Based on this Stack Overflow reply: https://stackoverflow.com/a/16729619
 
@@ -84,41 +85,53 @@ public:
 	/**
 	 * The start() functions are analogous to those in Qt5's RunFunctionTaskBase<>.
 	 */
-	QFuture<T> start(QThreadPool *pool = QThreadPool::globalInstance())
-	{
-		this->setThreadPool(pool);
-		this->setRunnable(this);
-		// Report that we've started via the QFutureInterface.
-		this->reportStarted();
-		QFuture<T> future = this->future();
-		pool->start(this, /*m_priority*/ 0);
-		return future;
-	}
+	QFuture<T> start(QThreadPool *pool = QThreadPool::globalInstance());
 
-	QFutureInterface<T> startFI(QThreadPool *pool = QThreadPool::globalInstance())
-	{
-		this->setThreadPool(pool);
-		this->setRunnable(this);
-		// Report that we've started via the QFutureInterface.
-		this->reportStarted();
-		QFutureInterface<T> future_interface = *this;
-		pool->start(this, /*m_priority*/ 0);
-		return future_interface;
-	}
+	QFutureInterface<T> startFI(QThreadPool *pool = QThreadPool::globalInstance());
 
 	/**
 	 * The run() function is analogous to that in Qt5's RunFunctionTask<> class template.
 	 * It's an overridden virtual function inherited from QRunnable.
 	 */
-	void run() override
-    {
-		if (this->isCanceled())
-		{
-			this->reportFinished();
-			return;
-		}
+	void run() override;
+
+    ControllableTask<T> *m_task;
+};
+
+template<typename T>
+QFuture<T> RunControllableTask<T>::start(QThreadPool* pool)
+{
+	this->setThreadPool(pool);
+	this->setRunnable(this);
+	// Report that we've started via the QFutureInterface.
+	this->reportStarted();
+	QFuture<T> future = this->future();
+	pool->start(this, /*m_priority*/ 0);
+	return future;
+}
+
+template<typename T>
+QFutureInterface<T> RunControllableTask<T>::startFI(QThreadPool* pool)
+{
+	this->setThreadPool(pool);
+	this->setRunnable(this);
+	// Report that we've started via the QFutureInterface.
+	this->reportStarted();
+	QFutureInterface<T> future_interface = *this;
+	pool->start(this, /*m_priority*/ 0);
+	return future_interface;
+}
+
+template<typename T>
+void RunControllableTask<T>::run()
+{
+	if (this->isCanceled())
+	{
+		this->reportFinished();
+		return;
+	}
 #ifndef QT_NO_EXCEPTIONS
-		try {
+	try {
 #endif
 		// Run the actual worker function.
 		/// In Qt5 QtConcurrent, this is done somewhat differently.
@@ -130,25 +143,22 @@ public:
 		/// need to do something else.
 		this->m_task->run(*this);
 #ifndef QT_NO_EXCEPTIONS
-		} catch (QException &e) {
-			QFutureInterface<T>::reportException(e);
-		} catch (...) {
-			QFutureInterface<T>::reportException(QUnhandledException());
-		}
+	} catch (QException &e) {
+		QFutureInterface<T>::reportException(e);
+	} catch (...) {
+		QFutureInterface<T>::reportException(QUnhandledException());
+	}
 #endif
-		if (this->isCanceled())
-		{
-			// Report that we were canceled.
-			this->reportCanceled();
-		}
-		else
-		{
-			this->reportFinished();
-		}
-    }
-
-    ControllableTask<T> *m_task;
-};
+	if (this->isCanceled())
+	{
+		// Report that we were canceled.
+		this->reportCanceled();
+	}
+	else
+	{
+		this->reportFinished();
+	}
+}
 
 /**
  * This class is analogous to the run() function templates in the Qt5 header
@@ -158,11 +168,11 @@ public:
 class ReportingRunner
 {
 public:
-    template <class T>
-    static QFuture<T> run(ControllableTask<T>* task)
-    {
+	template <class T>
+	static QFuture<T> run(ControllableTask<T>* task)
+	{
 		return (new RunControllableTask<T>(task))->start();
-    }
+	}
 
 	template <class T>
 	static QFutureInterface<T> runFI(ControllableTask<T>* task)
@@ -170,64 +180,5 @@ public:
 		return (new RunControllableTask<T>(task))->startFI();
 	}
 };
-
-template <typename T>
-class Promise : public QFutureInterface<T>
-{
-	using BASE_CLASS = QFutureInterface<T>;
-
-public:
-	explicit Promise(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::NoState) : QFutureInterface<T>(initialState)
-	{
-	}
-
-	void setResolver(QFuture<T> future)
-	{
-		m_future = future;
-	}
-
-	QString state() const;
-
-	/**
-	 * Attaches a continuation to the Promise.
-	 * @return Reference to the return value of @a continuation_function.
-	 */
-	Promise<T>& then(std::function<Promise<T>&(Promise<T>&)> continuation_function)
-	{
-		m_continuation_function = std::move(continuation_function);
-		return m_continuation_function(*this);
-	}
-
-protected:
-
-	QFuture<T> m_future;
-	std::function<Promise<T>&(Promise<T>&)> m_continuation_function {nullptr};
-
-};
-
-template<typename T>
-QString Promise<T>::state() const
-{
-	QString retval;
-
-	std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
-		{QFutureInterfaceBase::NoState, "NoState"},
-		{QFutureInterfaceBase::Running, "Running"},
-		{QFutureInterfaceBase::Started,  "Started"},
-		{QFutureInterfaceBase::Finished,  "Finished"},
-		{QFutureInterfaceBase::Canceled,  "Canceled"},
-		{QFutureInterfaceBase::Paused,   "Paused"},
-		{QFutureInterfaceBase::Throttled, "Throttled"}
-	};
-
-	for(auto i : list)
-	{
-		if(this->queryState(i.first))
-		{
-			return toqstr(i.second);
-		}
-	}
-	return "UNKNOWN";
-}
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REPORTINGRUNNER_H

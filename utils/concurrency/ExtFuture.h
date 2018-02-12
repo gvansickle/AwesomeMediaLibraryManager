@@ -274,6 +274,10 @@ protected:
 
 };
 
+//
+// START IMPLEMENTATION
+//
+
 M_WARNING("TODO");
 #include "ExtAsync.h"
 

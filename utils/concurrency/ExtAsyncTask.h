@@ -56,12 +56,15 @@ public:
 
 /**
  * Used as an intermediary helper class between the ExtAsyc::run() functions and an
- * instance of ExtAsyncTask<T>.  Handles the setup and teardown.  Setup includes reporting started and
- * not starting if already cancelled.  Teardown includes reporting finished, if finishing was
- * due to cancellation, and propagating and reporting exceptions.
+ * instance of ExtAsyncTask<T>.  Handles the setup and teardown.  Setup handled in the run() function
+ * includes reporting started and not starting if already cancelled.  Teardown includes reporting finished,
+ * if finishing was due to cancellation, and propagating and reporting exceptions.
+ * QRunnable handles autoDelete() and ref counting.
  *
  * @note This is a sort of combination of the RunFunctionTaskBase<> and RunFunctionTask<> class templates
  * from Qt5.
+ *
+ * @note It appears that QRunnable will not be copyable in Qt6.  Not sure if that will affect us or not.
  *
  * @see /usr/include/qt5/QtConcurrent/qtconcurrentrunbase.h
  */
@@ -125,13 +128,13 @@ void ExtAsyncTaskRunner<T>::run()
 	try {
 #endif
 		// Run the actual worker function.
-		/// In Qt5 QtConcurrent, this is done somewhat differently.
+		/// In Qt5 QtConcurrent's RunFunctionTask*<>, this is done somewhat differently.
 		/// A "StoredFunctorCall0" struct (or one of dozens of variants) from
 		/// the header /usr/include/qt5/QtConcurrent/qtconcurrentstoredfunctioncall.h
 		/// come into play here, and effectively does something like this:
 		///     void runFunctor() override { this->result = function(); }
-		/// Since we want to be able to send up interim results and progress, we
-		/// need to do something else.
+		/// Since we want to be able to send up interim results and progress through a
+		/// QFutureInterface<> of some sort, we need to do something else.
 		this->m_task->run(*this);
 #ifndef QT_NO_EXCEPTIONS
 	} catch (QException &e) {
