@@ -94,9 +94,10 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 {
 	using BASE_CLASS = QFutureInterface<T>;
 
+public:
+
 	using ContinuationType = std::function<void(void)>;
 
-public:
 	/**
 	 * Default constructor.
 	 *
@@ -209,7 +210,7 @@ public:
 	}
 #endif
 
-	template <typename R = QString>
+	template <typename R = typename function_traits<ContinuationType>::return_type_t>
 	ExtFuture<R> then(ContinuationType continuation_function);
 
 	void wait();
