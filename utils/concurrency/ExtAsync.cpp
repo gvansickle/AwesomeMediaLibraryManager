@@ -17,6 +17,31 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include "ExtAsync.h"
+#include "ExtAsync.h"
 
+#include <utils/DebugHelpers.h>
 
+void ExtAsyncTest()
+{
+	qDb() << "TEST START";
+
+	int val = 0;
+
+//	ExtFuture<QString> promise;
+
+	auto future = ExtAsync::run([&](ExtFuture<QString> future) {
+		qDb() << "TEST: Running from main run lambda.";
+		val++;
+M_WARNING("TODO: Shouldn't need this I don't think");
+		future.reportFinished(new QString("FINISHED"));
+	})
+	.then([&](){
+		qDb() << "TEST: Running from then()";
+		Q_ASSERT(val == 1);
+		val++;
+	});
+
+	Q_ASSERT(val == 2);
+
+	qDb() << "TEST END";
+}
