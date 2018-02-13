@@ -92,6 +92,7 @@
 
 #include <gui/menus/ActionBundle.h>
 
+#include "utils/concurrency/ExtAsync.h"
 
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
@@ -1104,6 +1105,9 @@ void MainWindow::onStartup()
 
 	// Open the windows the user had open at the end of last session.
 	openWindows();
+
+	M_WARNING("TEST, REMOVE");
+	ExtAsyncTest();
 }
 
 /**
