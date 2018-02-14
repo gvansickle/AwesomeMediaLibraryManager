@@ -32,6 +32,7 @@
 #include <utils/DebugHelpers.h>
 
 #include <memory>
+#include <type_traits>
 #include "function_traits.hpp"
 
 // Forward declare the ExtAsync namespace
@@ -213,6 +214,21 @@ public:
 	template <typename R = typename function_traits<ContinuationType>::return_type_t>
 	ExtFuture<R> then(ContinuationType continuation_function);
 
+	/**
+	 * Attaches a "tap" callback to this ExtFuture.
+	 * The callback passed to tap() is invoked with an instance of the new result value of the predecessor's ExtFuture
+	 * whenever there is a new result available.
+	 *
+	 * @note Whoah, what's with that wild preproc macro?!?  K&R meets C++20!!!
+	 *
+	 * @return  A reference to the predecessor ExtFuture<>.
+	 */
+#define M_EXTFUTURE_TAP_DECL(mem_func_name) \
+	template <typename TapCallbackType, typename R> \
+	auto mem_func_name(TapCallbackType tap_callback) -> ExtFuture<R> // typename function_traits<TapCallbackType>::arg_t<1> >
+
+	M_EXTFUTURE_TAP_DECL(tap);
+
 	void wait();
 
 	/// @todo
@@ -309,6 +325,13 @@ ExtFuture<R> ExtFuture<T>::then(ContinuationType continuation_function)
 	ExtFuture<R> retval = ExtAsync::run(*m_continuation_function, *this);
 	return retval;
 }
+
+template <typename T>
+M_EXTFUTURE_TAP_DECL(ExtFuture<T>::tap)
+{
+
+}
+
 
 template<typename T>
 void ExtFuture<T>::wait()
@@ -421,3 +444,4 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
+
