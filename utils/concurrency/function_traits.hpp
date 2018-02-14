@@ -25,6 +25,7 @@
 #ifndef UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_
 #define UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_
 
+#include <cstddef>
 #include <type_traits>
 #include <tuple>
 
@@ -38,7 +39,7 @@ namespace std
 #endif
 
 /**
- * The primary template.
+ * Forward declaration of the primary template.
  */
 template <class F>
 struct function_traits;
@@ -64,7 +65,7 @@ struct function_traits<ReturnType(Args...)>
     struct arg
     {
         static_assert(N < arity_v, "Parameter index out of range");
-        using type = typename std::tuple_element<N,std::tuple<Args...>>::type;
+        using type = std::tuple_element_t<N,std::tuple<Args...>>;
     };
 
     /// Helper for providing arg_t<N> vs. arg<N>::type.
@@ -73,7 +74,7 @@ struct function_traits<ReturnType(Args...)>
 
     /// For checking if the type of arg N is T.
     template <std::size_t N, typename T>
-    static constexpr bool argtype_is_v = std::is_same_v<typename arg<N>::type, T>;
+    static constexpr bool argtype_is_v = std::is_same_v<arg_t<N>, T>;
 
     /// For checking if the return type is T.
     template <typename T>
@@ -150,7 +151,7 @@ struct function_traits
 
     /// For checking if the type of arg N is T.
     template <std::size_t N, typename T>
-    static constexpr bool argtype_is_v = std::is_same_v<typename arg<N>::type, T>;
+    static constexpr bool argtype_is_v = std::is_same_v<arg_t<N>, T>;
 
     /// For checking if the return type is T.
     template <typename T>

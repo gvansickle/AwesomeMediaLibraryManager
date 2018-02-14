@@ -221,11 +221,11 @@ public:
 	 *
 	 * @note Whoah, what's with that wild preproc macro?!?  K&R meets C++20!!!
 	 *
-	 * @return  A reference to the predecessor ExtFuture<>.
+	 * @return  A reference to the predecessor ExtFuture<T>.
 	 */
 #define M_EXTFUTURE_TAP_DECL(mem_func_name) \
-	template <typename TapCallbackType, typename R> \
-	auto mem_func_name(TapCallbackType tap_callback) -> ExtFuture<R> // typename function_traits<TapCallbackType>::arg_t<1> >
+	template <typename TapCallbackType> \
+	ExtFuture<T>& mem_func_name(TapCallbackType tap_callback)
 
 	M_EXTFUTURE_TAP_DECL(tap);
 
@@ -284,6 +284,9 @@ protected:
 
 	std::shared_ptr<ContinuationType> m_continuation_function;
 
+/// @todo
+//	std::shared_ptr<typename TapCallbackType> m_tap_function;
+
 };
 
 //
@@ -329,7 +332,8 @@ ExtFuture<R> ExtFuture<T>::then(ContinuationType continuation_function)
 template <typename T>
 M_EXTFUTURE_TAP_DECL(ExtFuture<T>::tap)
 {
-
+M_WARNING("TODO")
+	//m_tap_function<TapCallbackType> = tap_callback;
 }
 
 
