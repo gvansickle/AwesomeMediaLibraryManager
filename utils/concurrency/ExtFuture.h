@@ -333,6 +333,7 @@ template <typename T>
 M_EXTFUTURE_TAP_DECL(ExtFuture<T>::tap)
 {
 M_WARNING("TODO")
+	qDb() << "TAP() ENTERED";
 	//m_tap_function<TapCallbackType> = tap_callback;
 }
 
