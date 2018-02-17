@@ -33,6 +33,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <functional>
 #include "function_traits.hpp"
 
 #include "ExtFutureWatcher.h"
@@ -49,6 +50,9 @@ constexpr bool TapCallback = require<
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync {}
+
+template <class T>
+class ExtFuture;
 
 /**
  * A decay_copy for creating a copy of the specified function @a func.
@@ -81,6 +85,21 @@ public:
 template <typename T>
 std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
 
+
+template <typename T>
+struct isExtFuture : std::false_type
+{
+	/// @todo Not sure this is correct.
+	using inner = void;
+};
+
+template <typename T>
+struct isExtFuture<ExtFuture<T>> : std::true_type
+{
+	using inner = T;
+};
+
+
 /**
  * An extended QFutureInterface<T> class.
  * Actually more like a combined promise and future.
@@ -109,12 +128,13 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 
 public:
 
-	using ContinuationType = std::function<void(void)>;
+	using ContinuationType = std::function<ExtFuture<QString>(ExtFuture<QString>&)>;
 
 	/// Type 1 tap() callback.
 	/// Takes a value of type T, returns void.
 	using TapCallbackType1 = std::function<void(QString)>;
 
+	using OnResultCallbackType1 = std::function<void(QString)>;
 
 	/**
 	 * Default constructor.
@@ -157,17 +177,27 @@ public:
 		qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
 	}
 
-	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other),
-			m_continuation_function(other.m_continuation_function),
-			m_tap_function(other.m_tap_function)
-	{
-		qIn() << "Copy Constructor: other.m_continuation_function copied";
+	ExtFuture(const ExtFuture<T>& other) = default;
 
-//		if(other.m_continuation_function != nullptr)
-//		{
-//			Q_ASSERT(0);
-//		}
-	}
+#if TEMP
+	/**
+	 * Implicit unwrapping constructor, ala std::experimental::future::future.
+	 * @param rhs
+	 */
+	ExtFuture(ExtFuture<ExtFuture<R>>&&	rhs) noexcept;
+#endif
+
+//	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other),
+//			m_continuation_function(other.m_continuation_function),
+//			m_tap_function(other.m_tap_function)
+//	{
+//		qIn() << "Copy Constructor";
+//
+////		if(other.m_continuation_function != nullptr)
+////		{
+////			Q_ASSERT(0);
+////		}
+//	}
 
 	ExtFuture(const QFutureInterface<T> &other) : QFutureInterface<T>(other)
 	{
@@ -209,6 +239,13 @@ public:
 	/// @}
 
 	/**
+	 * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
+	 */
+	template <typename F = T>
+	std::enable_if_t<isExtFuture<F>::value, ExtFuture<typename isExtFuture<T>::inner>>
+	unwrap();
+
+	/**
 	 *
 	 * @return
 	 */
@@ -230,8 +267,8 @@ public:
 	}
 #endif
 
-	template <typename R = typename function_traits<ContinuationType>::return_type_t>
-	ExtFuture<R> then(ContinuationType continuation_function);
+//	template <typename R = QString> //typename function_traits<ContinuationType>::return_type_t>
+	ExtFuture<QString> then(ContinuationType continuation_function);
 
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
@@ -239,12 +276,20 @@ public:
 	 *
 	 * @return  A reference to the predecessor ExtFuture<T>.
 	 */
-	ExtFuture<T>& tap(QObject* context, TapCallbackType1 tap_callback)
+	ExtFuture<QString>& tap(QObject* context, TapCallbackType1 tap_callback)
 	{
 		qDb() << "TAP() ENTERED, this:" << this << *this;
 		m_tap_function = std::make_shared<TapCallbackType1>(tap_callback);
-		return TapHelper(context, tap_callback);
+		return TapHelper(context, *m_tap_function);
 	}
+
+	/// @note from futureww<>.
+//	ExtFuture<T>& on_result(OnResultCallbackType1 result_function)
+//    {
+//        m_result_function = std::move(result_function);
+//		QObject::connect(this, &ExtFuture<T>::resultReadyAt, [this](int index){m_result_function(BASE_CLASS::future().resultAt(index));});
+//        return *this;
+//    }
 
 	void wait();
 
@@ -303,12 +348,14 @@ protected:
 	ExtFuture<T>& TapHelper(QObject *guard_qobject, Function f)
 	{
 		qDb() << "ENTER";
-		auto watcher = new ExtFutureWatcher<T>();
+		auto watcher = new QFutureWatcher<T>();
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject, [f, watcher](int index) {
+			qDb() << "TAP WRAPPER CALLED";
 			f(watcher->future().resultAt(index));
 		});
-		watcher->setFuture(*this);
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ExtFutureWatcher DESTROYED";});
+		watcher->setFuture(this->future());
 		qDb() << "EXIT";
 		return *this;
 	}
@@ -318,7 +365,31 @@ protected:
 /// @todo
 	std::shared_ptr<TapCallbackType1> m_tap_function;
 
+    std::function<void(QString)> m_result_function;
+
 };
+
+#if 0
+/**
+ * Create and return a finished future of type ExtFuture<T>.
+ * @param value
+ * @return
+ */
+template<typename T>
+ExtFuture<typename std::decay<T>::type> make_ready_future(T&& value)
+{
+	return detail::make_ready_future<typename std::decay<T>::type>(value);
+}
+
+/**
+ * void specialization of the above.
+ * @return
+ */
+inline future<void> make_ready_future()
+{
+  return detail::made_ready_future<void>();
+}
+#endif
 
 //
 // START IMPLEMENTATION
@@ -326,6 +397,18 @@ protected:
 
 M_WARNING("INCLUDING ExtAsync.h");
 #include "ExtAsync.h"
+
+
+template <typename T>
+QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
+{
+	QDebugStateSaver saver(dbg);
+
+	dbg << "ExtFuture<T>(" << extfuture.debug_string() << ")";
+
+	return dbg;
+}
+
 
 /**
  * This is the function which actually is called by QtConcurrent::run() for the continuation.
@@ -353,11 +436,11 @@ T ExtFuture<T>::get()
 }
 
 template<typename T>
-template<typename R>
-ExtFuture<R> ExtFuture<T>::then(ContinuationType continuation_function)
+ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
 {
 	m_continuation_function = std::make_shared<ContinuationType>(continuation_function);
-	ExtFuture<R> retval = ExtAsync::run(*m_continuation_function, *this);
+	ExtFuture<QString> retval = ExtAsync::run_then(*m_continuation_function, *this).unwrap();
+	qDb() << "THEN Entered, returning:" << &retval << retval;
 	return retval;
 }
 
@@ -461,16 +544,8 @@ QFutureInterfaceBase::State ExtFuture<T>::queryState() const
 }
 #endif
 
-template <typename T>
-QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
-{
-	QDebugStateSaver saver(dbg);
-
-	dbg << "ExtFuture<T>(" << extfuture.debug_string() << ")";
-
-	return dbg;
-}
-
+// Include the implementation.
+#include "ExtFuture_p.hpp"
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 
