@@ -73,7 +73,11 @@ class ExtAsyncTaskRunner : public ExtFuture<T>, public QRunnable
 {
 public:
     explicit ExtAsyncTaskRunner(ExtAsyncTask<T>* tsk) : m_task(tsk) { }
-    virtual ~ExtAsyncTaskRunner() { delete m_task; }
+    virtual ~ExtAsyncTaskRunner()
+    {
+    	qDb() << "DESTRUCTOR";
+    	delete m_task;
+    }
 
 	/**
 	 * start() function analogous to those in Qt5's RunFunctionTaskBase<>.

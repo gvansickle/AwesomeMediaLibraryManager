@@ -35,6 +35,18 @@
 #include <type_traits>
 #include "function_traits.hpp"
 
+#include "ExtFutureWatcher.h"
+
+#if 0
+#include "cpp14_concepts.hpp"
+
+// Define some concepts.
+template <class T, class FutureRetureType>
+constexpr bool TapCallback = require<
+	function_traits<T>::return_type_is_v<ExtFuture<FutureRetureType>>
+>;
+#endif
+
 // Forward declare the ExtAsync namespace
 namespace ExtAsync {}
 
@@ -99,6 +111,11 @@ public:
 
 	using ContinuationType = std::function<void(void)>;
 
+	/// Type 1 tap() callback.
+	/// Takes a value of type T, returns void.
+	using TapCallbackType1 = std::function<void(QString)>;
+
+
 	/**
 	 * Default constructor.
 	 *
@@ -140,7 +157,9 @@ public:
 		qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
 	}
 
-	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other), m_continuation_function(other.m_continuation_function)
+	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other),
+			m_continuation_function(other.m_continuation_function),
+			m_tap_function(other.m_tap_function)
 	{
 		qIn() << "Copy Constructor: other.m_continuation_function copied";
 
@@ -216,18 +235,16 @@ public:
 
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
-	 * The callback passed to tap() is invoked with an instance of the new result value of the predecessor's ExtFuture
-	 * whenever there is a new result available.
-	 *
-	 * @note Whoah, what's with that wild preproc macro?!?  K&R meets C++20!!!
+	 * The callback passed to tap() is invoked with an reference to an instance of the predecessor's ExtFuture<> (i.e. this).
 	 *
 	 * @return  A reference to the predecessor ExtFuture<T>.
 	 */
-#define M_EXTFUTURE_TAP_DECL(mem_func_name) \
-	template <typename TapCallbackType> \
-	ExtFuture<T>& mem_func_name(TapCallbackType tap_callback)
-
-	M_EXTFUTURE_TAP_DECL(tap);
+	ExtFuture<T>& tap(QObject* context, TapCallbackType1 tap_callback)
+	{
+		qDb() << "TAP() ENTERED, this:" << this << *this;
+		m_tap_function = std::make_shared<TapCallbackType1>(tap_callback);
+		return TapHelper(context, tap_callback);
+	}
 
 	void wait();
 
@@ -282,10 +299,24 @@ public:
 
 protected:
 
+	template <typename Function>
+	ExtFuture<T>& TapHelper(QObject *guard_qobject, Function f)
+	{
+		qDb() << "ENTER";
+		auto watcher = new ExtFutureWatcher<T>();
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject, [f, watcher](int index) {
+			f(watcher->future().resultAt(index));
+		});
+		watcher->setFuture(*this);
+		qDb() << "EXIT";
+		return *this;
+	}
+
 	std::shared_ptr<ContinuationType> m_continuation_function;
 
 /// @todo
-//	std::shared_ptr<typename TapCallbackType> m_tap_function;
+	std::shared_ptr<TapCallbackType1> m_tap_function;
 
 };
 
@@ -311,6 +342,7 @@ static QString ThenHelper(ExtFuture<T>* predecessor_future)
 	return QString("THEN DONE");
 }
 
+
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 
@@ -327,14 +359,6 @@ ExtFuture<R> ExtFuture<T>::then(ContinuationType continuation_function)
 	m_continuation_function = std::make_shared<ContinuationType>(continuation_function);
 	ExtFuture<R> retval = ExtAsync::run(*m_continuation_function, *this);
 	return retval;
-}
-
-template <typename T>
-M_EXTFUTURE_TAP_DECL(ExtFuture<T>::tap)
-{
-M_WARNING("TODO")
-	qDb() << "TAP() ENTERED";
-	//m_tap_function<TapCallbackType> = tap_callback;
 }
 
 
