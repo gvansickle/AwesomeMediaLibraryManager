@@ -310,9 +310,8 @@ public:
 
 	ExtFuture<T>& tap(QObject* context, TapCallbackTypeProgress prog_tap_callback)
 	{
-		return TapProgressHelper(context, [prog_tap_callback](ExtAsyncProgress progress) {
-			prog_tap_callback(progress);
-		});
+		m_tap_progress_function = std::make_shared<TapCallbackTypeProgress>(prog_tap_callback);
+		return TapProgressHelper(context, *m_tap_progress_function);
 	}
 
 	ExtFuture<T>& tap(TapCallbackTypeProgress prog_tap_callback)
@@ -432,6 +431,8 @@ protected:
 	std::shared_ptr<ContinuationType> m_continuation_function;
 
 	std::shared_ptr<TapCallbackType1> m_tap_function;
+
+	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 
 
 };
