@@ -296,19 +296,30 @@ public:
 //	}
 
 	template <typename F, typename R = function_return_type_t<F>>
-	ExtFuture<R> then(F&& func)
+	ExtFuture<R> then(QObject* context, F&& func)
 	{
 //		qDb() << "ENTERED THEN";
 		EnsureFWInstantiated();
 		/// @todo
-		m_continuation_function = std::make_shared<ContinuationType>(func);
-		m_extfuture_watcher->onReportResult([=](T val, int index) {
-			qDb() << "THEN FROM onREPORTRESULT, m_continuation_function use count:" << m_continuation_function.use_count();
-			(*m_continuation_function)(val);
-		});
+		m_continuation_function = std::make_shared<ContinuationType>(std::move(func));
+//		m_extfuture_watcher->onReportResult([=](T val, int index) {
+//			qDb() << "THEN FROM onREPORTRESULT, m_continuation_function use count:" << m_continuation_function.use_count();
+//			(*m_continuation_function)(val);
+//		});
+		QObject::connect(m_extfuture_watcher, &ExtFutureWatcher<T>::finished, context, [=]() {
+				qDb() << "THEN CALLED FROM FINISHED CONNECTION, m_continuation_function use count:" << m_continuation_function.use_count();
+				QString val = QObject::tr("dummy");
+				(*m_continuation_function)(val);
+			});
 		m_extfuture_watcher->setFuture(*this);
 //		qDb() << "EXITED THEN";
 		return ExtFuture<QString>();
+	}
+
+	template <typename F, typename R = function_return_type_t<F>>
+	ExtFuture<R> then(F&& func)
+	{
+		return then(QApplication::instance(), func);
 	}
 
 	/**
@@ -487,13 +498,11 @@ ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
 template<typename T>
 void ExtFuture<T>::wait()
 {
-	qDb() << "WAIT START, future state:" << *this;
     while (!this->isFinished())
     {
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     }
-	qDb() << "WAIT COMPLETE, future state:" << *this;
 }
 
 template<typename T>

@@ -77,14 +77,14 @@ template <class T, class... Ts>
 struct conjunction<T, Ts...> :
   bool_constant<T::value and conjunction<Ts...>::value>
 { };
-template <> struct conjunction<> : true_type { };
+template <> struct conjunction<> : std::true_type { };
 
 template <class T, class... Ts>
 struct disjunction<T, Ts...> :
   bool_constant<T::value or disjunction<Ts...>::value>
 { };
 
-template <> struct disjunction<> : false_type { };
+template <> struct disjunction<> : std::false_type { };
 
 /// Template variable wrappers.
 template <bool... Bs>

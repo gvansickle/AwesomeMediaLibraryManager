@@ -25,12 +25,15 @@
  * Qt5 analogs to std::async().
  */
 
-#include "ExtFuture.h"
-#include "ExtFutureWatcher.h"
+//#include "ExtFuture.h"
+//#include "ExtFutureWatcher.h"
 
 
 #include <type_traits>
+#include "function_traits.hpp"
+#include "cpp14_concepts.hpp"
 #include <functional>
+#include <memory>
 
 #include <QEvent>
 #include <QObject>
@@ -40,50 +43,30 @@
 
 #include <QCoreApplication>
 
+#include "utils/DebugHelpers.h"
 
-/**
- * A Qt5 analog to std::async().
- */
-#if 0
-template <typename This, typename Function, typename... Args,
-		  typename R = QString>
-ExtFuture<R>
-ExtAsync(This* thiz, Function&& function, Args&&... args)
-{
-	// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
-	// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-	ExtFuture<R> report_and_control;
 
-	QtConcurrent::run(thiz, function, report_and_control, args...);
+template <typename T> class ExtFuture;
+//template <typename T> class ExtAsyncTask;
+//template <typename T> class ExtAsyncTaskRunner;
 
-	return report_and_control;
-}
-#endif
-
-//template <typename Tin=QString, typename Tout=QString, typename ThenCallbackType = std::function<void(void)>>
-inline static void ExtAsyncThisHelper(std::function<void(void)> then_callback, ExtFuture<QString> predecessor_future, ExtFuture<QString> return_future)
-{
-	qDb() << "THEN CALLED, WAITING";
-	predecessor_future.wait();
-	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
-	then_callback();
-	//(*(predecessor_future->m_continuation_function))();
-}
-
-M_WARNING("/// @todo Odd place to put an include, I know");
 #include "ExtAsyncTask.h"
 
+//template <typename T>
+//constexpr bool ThenCallbackFuncType1 = require<
+//	function_traits<T>::return_type_is_v<QString>,
+//	function_traits<T>::argtype_is_v<0, QString>
+//>;
 
 /**
  * Helper class for wrapping a free function into a Callable suitable for passing into
  * the ExtAsync::run() functions.
  */
 template<typename T, typename F>
-
 class ExtAsyncThenHelper : public ExtAsyncTask<T>
 {
 public:
-	ExtAsyncThenHelper(F then_callback) : ExtAsyncTask<T>(), m_continuation(std::make_shared<std::function<void()>>(then_callback)) {}
+	ExtAsyncThenHelper(F then_callback) : ExtAsyncTask<T>(), m_continuation(std::make_shared<F>(then_callback)) {}
 	~ExtAsyncThenHelper() override {}
 
 	void run(ExtFuture<T>& report_and_control_future) override;
@@ -93,30 +76,9 @@ private:
 	//	(std::function<void(void)> then_callback)
 };
 
-//
-// START ExtAsyncThenHelper implementation.
-//
-
-template<typename T, typename F>
-void ExtAsyncThenHelper<T, F>::run(ExtFuture<T>& report_and_control_future)
-{
-	qDb() << "THEN CALLED, WAITING";
-	report_and_control_future.wait();
-	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
-	if(m_continuation)
-	{
-		(*m_continuation)();
-	}
-	else
-	{
-		qCr() << "THEN HELPER CALLED, BUT NO CONTINUATION FUNCTION FOUND";
-	}
-}
-
-//
-// END ExtAsyncThenHelper implementation.
-//
-
+/**
+ * A Qt5 analog to std::async().
+ */
 
 /**
  * This namespace and its run() functions are analogous to the run() function templates in the Qt5 header
@@ -124,7 +86,7 @@ void ExtAsyncThenHelper<T, F>::run(ExtFuture<T>& report_and_control_future)
  */
 namespace ExtAsync
 {
-//M_WARNING("ExtAsync DECLARED");
+M_WARNING("ExtAsync DECLARED");
 
 	template <typename T>
 	static ExtFuture<T> run(ExtAsyncTask<T>* task)
@@ -145,6 +107,44 @@ namespace ExtAsync
 		return report_and_control;
 	}
 
+	/**
+	 * For free functions.
+	 * @param function
+	 * @param args
+	 * @return
+	 */
+#if 1
+	template <typename Function, typename... Args, typename R = QString>
+	static ExtFuture<R>
+	run(Function&& function, Args&&... args)
+	{
+		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+		ExtFuture<R> report_and_control;
+
+		QtConcurrent::run(function, report_and_control, args...);
+
+		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+		return report_and_control;
+	}
+
+#if 0
+	template <typename Function, typename... Args>
+	static ExtFuture<void>
+	run(Function&& function, Args&&... args)
+	{
+		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+		ExtFuture<void> report_and_control;
+
+		QtConcurrent::run(function, report_and_control, args...);
+
+		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+		return report_and_control;
+	}
+#endif // void specialization.
+#endif
+
 #if 0
 	inline static ExtFuture<QString>
 	run(std::function<void(void)> then_callback, ExtFuture<QString> predecessor_future)
@@ -158,18 +158,71 @@ namespace ExtAsync
 	}
 #endif
 
-	inline static
-	ExtFuture<QString>
-	run(std::function<void(void)> then_callback, ExtFuture<QString> predecessor_future)
+	/**
+	 * Special run() function for .then() callbacks.
+	 * @param then_callback
+	 * @param predecessor_future
+	 * @return
+	 */
+	template <typename T, typename CallbackType = std::function<ExtFuture<QString>(QString)>,
+			typename R = typename function_traits<CallbackType>::return_type_t>
+	ExtFuture<R>
+	run_then(CallbackType then_callback, ExtFuture<T>& predecessor_future)
 	{
 //		ExtFuture<QString> return_future;
+		static_assert(std::is_same_v<R, ExtFuture<QString>>, "");
 
-		using ThenHelperType = ExtAsyncThenHelper<QString, std::function<void(void)>>;
-		ExtAsyncThenHelper<QString, std::function<void(void)>>* then_helper = new ExtAsyncThenHelper<QString, std::function<void(void)>>(std::move(then_callback));
-		return run(then_helper);
+		using ThenHelperType = ExtAsyncThenHelper<QString, std::function<void(QString)>>;
+		ExtAsyncThenHelper<QString, std::function<void(QString)>>* then_helper = new ExtAsyncThenHelper<QString, std::function<void(QString)>>(std::move(then_callback));
+		then_helper->run(predecessor_future);
+		return ExtFuture<R>();
 	}
 };
 
+#if 0
+//template <typename Tin=QString, typename Tout=QString, typename ThenCallbackType = std::function<void(void)>>
+inline static void ExtAsyncThisHelper(std::function<void(void)> then_callback, ExtFuture<QString> predecessor_future, ExtFuture<QString> return_future)
+{
+	qDb() << "THEN CALLED, WAITING";
+	predecessor_future.wait();
+	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
+	then_callback();
+	//(*(predecessor_future->m_continuation_function))();
+}
+#endif
+
+M_WARNING("/// @todo Odd place to put an include, I know");
+#include "ExtAsyncTask.h"
+
+
+
+
+//
+// START ExtAsyncThenHelper implementation.
+//
+#include "ExtFuture.h"
+
+template<typename T, typename F>
+void ExtAsyncThenHelper<T, F>::run(ExtFuture<T>& report_and_control_future)
+{
+	static_assert(std::is_same_v<F, ExtFuture<QString>(ExtFuture<QString>)>, "");
+	qDb() << "THEN CALLED, WAITING";
+	report_and_control_future.wait();
+	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
+	Q_CHECK_PTR(m_continuation);
+	if(m_continuation)
+	{
+		(*m_continuation)(report_and_control_future);
+	}
+	else
+	{
+		qCr() << "THEN HELPER CALLED, BUT NO CONTINUATION FUNCTION FOUND";
+	}
+}
+
+//
+// END ExtAsyncThenHelper implementation.
+//
 
 /**
  * Run a functor on another thread.
@@ -217,16 +270,8 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }
 
-template <typename T, typename Function>
-const ExtFuture<T>& onResultReady(ExtFuture<T>& future, QObject *guard, Function f)
-{
-	auto watcher = new ExtFutureWatcher<T>(); //new QFutureWatcher<T>();
-	QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
-	QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard, [f, watcher](int index) {
-		f(watcher->future().resultAt(index));
-	});
-	watcher->setFuture(future);
-	return future;
-}
+#include "ExtFutureWatcher.h"
+
+void ExtAsyncTest(QObject *context);
 
 #endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */

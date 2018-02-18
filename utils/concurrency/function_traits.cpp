@@ -73,7 +73,7 @@ namespace function_traits_impl
 		static_assert(functraits3::argtype_is_v<0, ft_test2_class&>, "Function does not take correct this ptr type as arg 0");
 
 		// Lambda.
-		auto lambda1 = [=](const char *str){ return str;};
+		auto lambda1 = [](const char *str){ return str;};
 		using lambda1_traits = function_traits<decltype(lambda1)>;
 		static_assert(std::is_same_v<lambda1_traits::return_type_t, const char*>, "Wrong return type");
 		static_assert(std::is_same_v<lambda1_traits::arg_t<0>, const char*>, "Wrong type for arg 0");

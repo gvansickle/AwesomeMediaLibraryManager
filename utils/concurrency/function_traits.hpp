@@ -27,16 +27,9 @@
 
 #include <cstddef>
 #include <type_traits>
+#include "future_type_traits.hpp"
 #include <tuple>
 
-
-#if 1 /// @todo Conditionalize on C++17 or the appropriate __has_whatever.
-namespace std
-{
-	template< class T, class U >
-	constexpr bool is_same_v = std::is_same<T, U>::value;
-};
-#endif
 
 /**
  * Forward declaration of the primary template.
@@ -172,11 +165,21 @@ struct function_traits<CallableType&&> : public function_traits<CallableType> {}
 /// @name Convenience templates, when you don't need all the function_traits<>.
 /// @{
 
+/**
+ * Return type of a function with type F.
+ */
 template <typename F>
 using function_return_type_t = typename function_traits<F>::return_type_t;
 
 template <typename F, typename R>
 static constexpr bool function_return_type_is_v = std::is_same_v<function_return_type_t<F>, R>;
+
+//template<typename F, typename... Args>
+//struct result_type_given_args
+//{
+//	using
+//};
+
 
 /// @} // Convenience templates.
 

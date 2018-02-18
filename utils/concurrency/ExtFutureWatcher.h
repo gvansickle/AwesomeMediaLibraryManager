@@ -43,10 +43,11 @@ class ExtFutureWatcher : public QFutureWatcher<T>
 {
 	using BASE_CLASS = QFutureWatcher<T>;
 
+public:
+
 	using OnProgressWithTextChangeType = std::function<void(int, int, int, QString)>;
 	using OnReportResultType = std::function<void(T, int)>;
 
-public:
 	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent), m_utility_thread(new QThread(/*no parent*/))
 	{
 		// @note We don't give the QThread ourselves as a parent, so that it doesn't get deleted

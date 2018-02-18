@@ -30,9 +30,9 @@ void ExtAsyncTest(QObject* context)
 
 //	ExtFuture<QString> promise;
 
-	auto then_func1 = [&](QString str) -> QString {
+	auto then_func1 = [=](QString str) -> QString {
 		qDb() << "Then1";
-		Q_ASSERT(tap_ran);
+//		Q_ASSERT(tap_ran);
 		return QString("Then1");
 	};
 
@@ -50,13 +50,17 @@ void ExtAsyncTest(QObject* context)
 //	.on_result([&](QString str) -> void {
 //		qDb() << "TEST: ON_RESULT_CALLED, VALUE:" << str;
 //	})
-	.tap(context, [&](QString value) -> void {
+	.tap(context, [=](QString value) -> void {
 		qDb() << "TEST: TAP CALLBACK CALLED, VALUE:" << value << "VAL:" << val;
 //		Q_ASSERT(val == 1);
 //		val = 2;
-		tap_ran = true;
+//		tap_ran = true;
 	})
-//	.then(then_func1)
+//	.then(context, [=](QString str) -> QString {
+//		qDb() << "Then1";
+////		Q_ASSERT(tap_ran);
+//		return QString("Then1");
+//	})
 	;
 #if 0
 	.then([&](ExtFuture<QString>& the_future) -> ExtFuture<QString> {
@@ -108,8 +112,9 @@ void ExtAsyncTest(QObject* context)
 					.setFuture(future);
 #endif
 
-	qDb() << "Waiting on future:" << &future << future;
-//	future.wait();
+	qDb() << "START Waiting on future:" << &future << future;
+	future.wait();
+	qDb() << "END Waiting on future:" << &future << future;
 
 	// Should get here some time before .then().
 //	Q_ASSERT(val == 2);

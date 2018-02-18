@@ -1107,7 +1107,7 @@ void MainWindow::onStartup()
 	openWindows();
 
 	M_WARNING("TEST, REMOVE");
-	ExtAsyncTest();
+	ExtAsyncTest(this);
 }
 
 /**
