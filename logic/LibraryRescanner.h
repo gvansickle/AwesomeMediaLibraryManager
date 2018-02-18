@@ -87,6 +87,7 @@ public:
 
 public Q_SLOTS:
 	void startAsyncDirectoryTraversal(QUrl dir_url);
+	void cancelAsyncDirectoryTraversal();
 
 	/// @todo EXPERIMENTAL
 	ExtFuture<QString> AsyncDirectoryTraversal(QUrl dir_url);
@@ -110,6 +111,8 @@ private:
 	LibraryModel* m_current_libmodel;
 
 	AsyncTaskManager m_async_task_manager;
+
+	ExtFuture<QString> m_dirtrav_future;
 
     futureww<QString> m_futureww_dirscan;
     futureww<MetadataReturnVal> m_futureww;

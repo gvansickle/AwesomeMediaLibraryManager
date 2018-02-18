@@ -931,7 +931,7 @@ void LibraryModel::startRescan()
 void LibraryModel::cancelRescan()
 {
 	qDebug() << "CANCEL";
-///#error "TODO"
+	m_rescanner->cancelAsyncDirectoryTraversal();
 }
 
 void LibraryModel::connectProgressToActivityProgressWidget(ActivityProgressWidget *apw)

@@ -306,11 +306,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		;});
 #elif 1 /// ExtAsync
 
-	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
-	qDb() << "ExtFuture<> RETURNED FROM ASYNCDIRTRAV:" << future;
-	qDb() << "ATTACHING THEN, future:" << future;
-	future.then([=](QString the_future) -> QString {
-		qDb() << "then() Async Scan Complete, future:" << future;
+//	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
+	m_dirtrav_future = AsyncDirectoryTraversal(dir_url);
+	qDb() << "ExtFuture<> RETURNED FROM ASYNCDIRTRAV:" << m_dirtrav_future;
+	qDb() << "ATTACHING THEN, future:" << m_dirtrav_future;
+	m_dirtrav_future.then([=](QString the_future) -> QString {
+		qDb() << "then() Async Scan Complete, future:" << m_dirtrav_future;
 		qDb() << "Directory scan complete.";
 		m_last_elapsed_time_dirscan = m_timer.elapsed();
 		qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
@@ -318,7 +319,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		onDirTravFinished();
 		return QString("THEN DONE");
 	});
-	qDb() << "THEN ATTACHED, future:" << future;
+	qDb() << "THEN ATTACHED, future:" << m_dirtrav_future;
 
 //	qDb() << "ATTACHING WAIT, future state:" << future;
 //	future.wait();
@@ -376,11 +377,18 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	qDb() << "END:" << dir_url;
 }
 
+void LibraryRescanner::cancelAsyncDirectoryTraversal()
+{
+	m_dirtrav_future.cancel();
+}
+
 ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 {
 	qDb() << "START ASYNC";
 
 	ExtFuture<QString> result = ExtAsync::run(this, &LibraryRescanner::SyncDirectoryTraversal, dir_url);
+
+//	m_dirtrav_future = ExtAsync::run(this, &LibraryRescanner::SyncDirectoryTraversal, dir_url);
 
 	qDb() << "RETURNED FROM ExtAsync:" << result;
 
@@ -389,8 +397,9 @@ ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 		qDb() << "IN onResultReady CALLBACK:" << result;
 		runInObjectEventLoop([=](){ m_current_libmodel->onIncomingFilename(str);}, m_current_libmodel);
 	})
-	.tap(this, [=](ExtAsyncProgress prog){
+	.tap(this, [=](ExtAsyncProgress prog) {
 		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
+
 	;})
 	.then(this, [=](QString dummy){
 		qDb() << "FROM THEN:" << dummy;
