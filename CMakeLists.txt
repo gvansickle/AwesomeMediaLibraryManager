@@ -476,9 +476,9 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	utils/concurrency/ExtFuture.h
 	utils/concurrency/ExtFuture_p.hpp
 	utils/concurrency/ExtFutureWatcher.h
+	utils/concurrency/impl/ExtFuture_fwddecl_p.h
 	utils/concurrency/ExtAsync.h
 	utils/concurrency/ExtAsyncTask.h
-	utils/concurrency/functiontraits.h
 	utils/concurrency/function_traits.hpp)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	utils/concurrency/AsyncTaskManager.cpp

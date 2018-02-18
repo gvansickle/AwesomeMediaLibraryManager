@@ -93,23 +93,9 @@ public:
 template <typename T>
 std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
 
+// Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
+#include "impl/ExtFuture_fwddecl_p.h"
 
-template <typename T>
-struct isExtFuture : std::false_type
-{
-	/// @todo Not sure this is correct.
-	using inner = void;
-};
-
-/// Returns the T from an ExtFuture<T> as isExtFuture<T>::inner_t.
-template <typename T>
-struct isExtFuture<ExtFuture<T>> : std::true_type
-{
-	using inner_t = T;
-};
-
-template <typename T>
-static constexpr bool isExtFuture_v = isExtFuture<T>::value;
 
 /**
  * An extended QFutureInterface<T> class.
@@ -139,7 +125,8 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 
 public:
 
-	using future_value_type = T;
+	/// Member alias ala boost::future<T>.
+	using value_type = T;
 
 	using ContinuationType = std::function<QString(QString)>;
 
@@ -195,13 +182,11 @@ public:
 
 	ExtFuture(const ExtFuture<T>& other) = default;
 
-#if TEMP
 	/**
-	 * Implicit unwrapping constructor, ala std::experimental::future::future.
-	 * @param rhs
+	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
 	 */
-	ExtFuture(ExtFuture<ExtFuture<R>>&&	rhs) noexcept;
-#endif
+	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other);
+
 
 //	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other),
 //			m_continuation_function(other.m_continuation_function),
@@ -263,7 +248,7 @@ public:
 	 * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
 	 */
 	template <typename F = T>
-	std::enable_if_t<isExtFuture<F>::value, ExtFuture<typename isExtFuture<T>::inner>>
+	std::enable_if_t<isExtFuture<F>::value, ExtFuture<typename isExtFuture<T>::inner_t>>
 	unwrap();
 
 	/**
@@ -483,6 +468,12 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
+
+template<typename T>
+ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T> >&& other)
+{
+
+}
 
 template<typename T>
 T ExtFuture<T>::get()

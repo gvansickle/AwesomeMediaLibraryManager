@@ -27,10 +27,10 @@
  */
 template <typename T>
 template <typename F>
-std::enable_if_t<isExtFuture<F>::value, ExtFuture<typename isExtFuture<T>::inner>>
+std::enable_if_t<isExtFuture<F>::value, ExtFuture<typename isExtFuture<T>::inner_t>>
 ExtFuture<T>::unwrap()
 {
-	return then([](ExtFuture<typename isExtFuture<T>::inner> internal_extfuture) {
+	return then([](ExtFuture<typename isExtFuture<T>::inner_t> internal_extfuture) {
 		return internal_extfuture;
 		;});
 }
