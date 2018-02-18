@@ -28,15 +28,15 @@
 #if 0//def USE_BUNDLED_ASYNCFUTURE
 #include <asyncfuture.h>
 #include <utils/concurrency/ExtendedDeferred.h>
-#endif
 
 // Simon Brunel's QtPromise.
 // https://github.com/simonbrunel/qtpromise
 #include <QtPromise>
+#endif
 
-#include <utils/concurrency/ExtFutureWatcher.h>
+//#include <utils/concurrency/ExtFutureWatcher.h>
 #include <utils/concurrency/ExtAsync.h>
-#include <utils/concurrency/ExtFuture.h>
+//#include <utils/concurrency/ExtFuture.h>
 
 #include <utils/concurrency/runextensions.h>
 
@@ -389,10 +389,14 @@ ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 		qDb() << "IN onResultReady CALLBACK:" << result;
 		runInObjectEventLoop([=](){ m_current_libmodel->onIncomingFilename(str);}, m_current_libmodel);
 	})
+	.tap(this, [=](ExtAsyncProgress prog){
+		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
+	;})
 	.then(this, [=](QString dummy){
 		qDb() << "FROM THEN:" << dummy;
 		return QString("anotherdummy");
-		;});
+	;});
+
 
 //	qDb() << "WAIT ASYNC";
 //	result.wait();

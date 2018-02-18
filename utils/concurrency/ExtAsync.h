@@ -58,6 +58,7 @@ template <typename T> class ExtFuture;
 //	function_traits<T>::argtype_is_v<0, QString>
 //>;
 
+
 /**
  * Helper class for wrapping a free function into a Callable suitable for passing into
  * the ExtAsync::run() functions.

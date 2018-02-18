@@ -54,6 +54,14 @@ namespace ExtAsync {}
 template <class T>
 class ExtFuture;
 
+struct ExtAsyncProgress
+{
+	int min;
+	int val;
+	int max;
+	QString text;
+};
+
 /**
  * A decay_copy for creating a copy of the specified function @a func.
  * @param func
@@ -138,6 +146,9 @@ public:
 	/// Type 1 tap() callback.
 	/// Takes a value of type T, returns void.
 	using TapCallbackType1 = std::function<void(QString)>;
+
+	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
+
 
 	using OnResultCallbackType1 = std::function<void(QString)>;
 
@@ -297,6 +308,18 @@ public:
 		return tap(QApplication::instance(), tap_callback);
 	}
 
+	ExtFuture<T>& tap(QObject* context, TapCallbackTypeProgress prog_tap_callback)
+	{
+		return TapProgressHelper(context, [prog_tap_callback](ExtAsyncProgress progress) {
+			prog_tap_callback(progress);
+		});
+	}
+
+	ExtFuture<T>& tap(TapCallbackTypeProgress prog_tap_callback)
+	{
+		return tap(QApplication::instance(), prog_tap_callback);
+	}
+
 	/**
 	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
 	 * event loop running.
@@ -366,8 +389,23 @@ protected:
 			qDb() << "TAP WRAPPER CALLED";
 			f(watcher->future().resultAt(index));
 		});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ExtFutureWatcher DESTROYED";});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAP ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
+		qDb() << "EXIT";
+		return *this;
+	}
+
+	template <typename Function>
+	ExtFuture<T>& TapProgressHelper(QObject *guard_qobject, Function f)
+	{
+		qDb() << "ENTER";
+		auto watcher = new ExtFutureWatcher<T>();
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+		watcher->onProgressChange([f, watcher](int min, int val, int max, QString text){
+			f({min, val, max, text});
+			;});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAPPROGRESS ExtFutureWatcher DESTROYED";});
+		watcher->setFuture(*this);
 		qDb() << "EXIT";
 		return *this;
 	}
