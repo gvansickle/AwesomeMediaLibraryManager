@@ -93,12 +93,15 @@ struct isExtFuture : std::false_type
 	using inner = void;
 };
 
+/// Returns the T from an ExtFuture<T> as isExtFuture<T>::inner_t.
 template <typename T>
 struct isExtFuture<ExtFuture<T>> : std::true_type
 {
-	using inner = T;
+	using inner_t = T;
 };
 
+template <typename T>
+static constexpr bool isExtFuture_v = isExtFuture<T>::value;
 
 /**
  * An extended QFutureInterface<T> class.
@@ -128,7 +131,9 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 
 public:
 
-	using ContinuationType = std::function<ExtFuture<QString>(ExtFuture<QString>&)>;
+	using future_value_type = T;
+
+	using ContinuationType = std::function<QString(QString)>;
 
 	/// Type 1 tap() callback.
 	/// Takes a value of type T, returns void.
@@ -228,6 +233,11 @@ public:
 		{
 			qWr() << "m_continuation_function != NULLPTR";
 		}
+
+		if(m_extfuture_watcher)
+		{
+			qWr() << "m_extfuture_watcher != NULL";
+		}
 	}
 
 	/// @name Copy and move operators.
@@ -267,8 +277,39 @@ public:
 	}
 #endif
 
+#if 0
 //	template <typename R = QString> //typename function_traits<ContinuationType>::return_type_t>
 	ExtFuture<QString> then(ContinuationType continuation_function);
+#endif
+
+//	template <typename F, typename... Args, typename R = std::result_of_t<F&&(Args&&...)>>
+//	ExtFuture<typename isExtFuture<R>::inner>
+//	then(F&& func, Args...)
+//	{
+//		return this->template ThenHelper<F, R>(std::forward<F>(func), R);
+//	}
+
+//	template <typename F, typename R = typename function_traits<F>::return_type_t>
+//	ExtFuture<R> then(F&& func)
+//	{
+//		return this->template ThenHelper<F, R>(std::forward<F>(func));
+//	}
+
+	template <typename F, typename R = function_return_type_t<F>>
+	ExtFuture<R> then(F&& func)
+	{
+//		qDb() << "ENTERED THEN";
+		EnsureFWInstantiated();
+		/// @todo
+		m_continuation_function = std::make_shared<ContinuationType>(func);
+		m_extfuture_watcher->onReportResult([=](T val, int index) {
+			qDb() << "THEN FROM onREPORTRESULT, m_continuation_function use count:" << m_continuation_function.use_count();
+			(*m_continuation_function)(val);
+		});
+		m_extfuture_watcher->setFuture(*this);
+//		qDb() << "EXITED THEN";
+		return ExtFuture<QString>();
+	}
 
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
@@ -283,14 +324,15 @@ public:
 		return TapHelper(context, *m_tap_function);
 	}
 
-	/// @note from futureww<>.
-//	ExtFuture<T>& on_result(OnResultCallbackType1 result_function)
-//    {
-//        m_result_function = std::move(result_function);
-//		QObject::connect(this, &ExtFuture<T>::resultReadyAt, [this](int index){m_result_function(BASE_CLASS::future().resultAt(index));});
-//        return *this;
-//    }
+	ExtFuture<T>& tap(TapCallbackType1 tap_callback)
+	{
+		return tap(QApplication::instance(), tap_callback);
+	}
 
+	/**
+	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
+	 * event loop running.
+	 */
 	void wait();
 
 	/// @todo
@@ -344,6 +386,14 @@ public:
 
 protected:
 
+	void EnsureFWInstantiated()
+	{
+		if(!m_extfuture_watcher)
+		{
+			m_extfuture_watcher = new ExtFutureWatcher<T>();
+		}
+	}
+
 	template <typename Function>
 	ExtFuture<T>& TapHelper(QObject *guard_qobject, Function f)
 	{
@@ -360,12 +410,13 @@ protected:
 		return *this;
 	}
 
+	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
+
 	std::shared_ptr<ContinuationType> m_continuation_function;
 
 /// @todo
 	std::shared_ptr<TapCallbackType1> m_tap_function;
 
-    std::function<void(QString)> m_result_function;
 
 };
 
@@ -410,20 +461,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 }
 
 
-/**
- * This is the function which actually is called by QtConcurrent::run() for the continuation.
- */
-template<class T>
-static QString ThenHelper(ExtFuture<T>* predecessor_future)
-{
-	qDb() << "THEN CALLED, WAITING";
-	predecessor_future->wait();
-	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
-	Q_CHECK_PTR(predecessor_future);
-	Q_CHECK_PTR(predecessor_future->m_continuation_function);
-	(*(predecessor_future->m_continuation_function))();
-	return QString("THEN DONE");
-}
+
 
 
 //Q_DECLARE_METATYPE(ExtFuture);
@@ -435,6 +473,7 @@ T ExtFuture<T>::get()
 	return this->future().result();
 }
 
+#if 0
 template<typename T>
 ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
 {
@@ -443,13 +482,17 @@ ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
 	qDb() << "THEN Entered, returning:" << &retval << retval;
 	return retval;
 }
-
+#endif
 
 template<typename T>
 void ExtFuture<T>::wait()
 {
 	qDb() << "WAIT START, future state:" << *this;
-	this->waitForFinished();
+    while (!this->isFinished())
+    {
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    }
 	qDb() << "WAIT COMPLETE, future state:" << *this;
 }
 
@@ -505,44 +548,6 @@ QString ExtFuture<T>::state() const
 		return retval;
 	}
 }
-
-#if 0
-template<typename T>
-QFutureInterfaceBase::State ExtFuture<T>::queryState() const
-{
-	/// @todo This can't actually work.
-
-	/// We need this butchery to get the value of this->d->p->state.  Qt 5.10 provides no interface
-	/// or other known way to get the future's state contents atomically, only the queryState() function,
-	/// which returns a bool which is the result of &'ing the state with the input param.
-	/// This is the queryState() code from qfutureinterface.cpp:
-	///
-	///     bool QFutureInterfaceBase::queryState(State state) const
-	///	    {
-	///		    return d->state.load() & state;
-	///	    }
-	///
-	/// The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
-	/// but the instance of that class in QFutureInterfaceBase is private:
-	///
-	///			#ifndef QFUTURE_TEST
-	///			private:
-	///			#endif
-	///				QFutureInterfaceBasePrivate *d;
-	///
-	/// Trying to #define QFUTURE_TEST in various ways doesn't work, I did try.
-
-#if 0 // DOESN'T WORK
-	QFutureInterfaceBase::State retval;
-	QFutureInterfaceBase::State mask = (QFutureInterfaceBase::State)0xFF;
-	// Do the unthinkable: Cast a bool to an int.
-	int state_bits = *((int*)(&QFutureInterfaceBase::queryState(mask)));
-	retval = (QFutureInterfaceBase::State)(state_bits);
-#endif
-	Q_ASSERT(0);
-	return QFutureInterfaceBase::State::NoState;
-}
-#endif
 
 // Include the implementation.
 #include "ExtFuture_p.hpp"
