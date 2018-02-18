@@ -121,6 +121,21 @@ public:
 		return *this;
 	}
 
+	template <typename F>
+	ExtFutureWatcher<T>& then(QObject* context, F&& func)
+	{
+		QObject::connect(this, &ExtFutureWatcher<T>::finished, context, [=](){
+			func();
+		});
+		return *this;
+	}
+
+	template <typename F>
+	ExtFutureWatcher<T>& then(F&& func)
+	{
+		return then(QApplication::instance(), std::forward<F>(func));
+	}
+
 	/// @}
 
 protected /*slots*/: // Template, can't have "real" slots.

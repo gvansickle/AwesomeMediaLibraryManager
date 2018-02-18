@@ -302,15 +302,19 @@ public:
 		EnsureFWInstantiated();
 		/// @todo
 		m_continuation_function = std::make_shared<ContinuationType>(std::move(func));
-//		m_extfuture_watcher->onReportResult([=](T val, int index) {
-//			qDb() << "THEN FROM onREPORTRESULT, m_continuation_function use count:" << m_continuation_function.use_count();
-//			(*m_continuation_function)(val);
-//		});
+#if 1
+		m_extfuture_watcher->then(context, [=]() {
+			qDb() << "THEN CALLED FROM FINISHED CONNECTION, m_continuation_function use count:" << m_continuation_function.use_count();
+			QString val = QObject::tr("dummy");
+			(*m_continuation_function)(val);
+		});
+#else
 		QObject::connect(m_extfuture_watcher, &ExtFutureWatcher<T>::finished, context, [=]() {
 				qDb() << "THEN CALLED FROM FINISHED CONNECTION, m_continuation_function use count:" << m_continuation_function.use_count();
 				QString val = QObject::tr("dummy");
 				(*m_continuation_function)(val);
 			});
+#endif
 		m_extfuture_watcher->setFuture(*this);
 //		qDb() << "EXITED THEN";
 		return ExtFuture<QString>();

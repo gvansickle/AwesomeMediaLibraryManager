@@ -56,11 +56,11 @@ void ExtAsyncTest(QObject* context)
 //		val = 2;
 //		tap_ran = true;
 	})
-//	.then(context, [=](QString str) -> QString {
-//		qDb() << "Then1";
-////		Q_ASSERT(tap_ran);
-//		return QString("Then1");
-//	})
+	.then(context, [=](QString str) -> QString {
+		qDb() << "Then1";
+//		Q_ASSERT(tap_ran);
+		return QString("Then1");
+	})
 	;
 #if 0
 	.then([&](ExtFuture<QString>& the_future) -> ExtFuture<QString> {
