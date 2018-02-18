@@ -20,3 +20,4 @@ moc*.h
 /.idea
 /.settings
 /nbproject/
+/bin/
