@@ -21,10 +21,9 @@
 #define UTILS_CONCURRENCY_EXTFUTURE_P_HPP_
 
 
-
-
 /**
  * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
+ * Implementation based on Facebook's "folly" library's Future (Apache 2.0)
  */
 template <typename T>
 template <typename F>
@@ -35,6 +34,7 @@ ExtFuture<T>::unwrap()
 		return internal_extfuture;
 		;});
 }
+
 #if 0
 /**
  * This is the function which actually is called by QtConcurrent::run() for the continuation.
