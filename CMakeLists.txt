@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -61,6 +61,7 @@ endif()
 
 # Include some basic cmake functions.
 include(GNUInstallDirs)
+include(CheckCXXCompilerFlag)
 include(CMakePrintHelpers)
 include(PrintTargetProperties)
 include(helperfunctions)
@@ -122,6 +123,20 @@ configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Compiler flag support checks.
+set(EXTRA_CXX_COMPILE_FLAGS "")
+if(FALSE)
+check_cxx_compiler_flag("-Wdocumentation" CXX_W_DOCUMENTATION)
+if(CXX_W_DOCUMENTATION)
+	message(STATUS "Compile flag supported: ${CXX_W_DOCUMENTATION}")
+	list(APPEND EXTRA_CXX_COMPILE_FLAGS "-Wdocumentation")
+endif()
+endif()
+check_cxx_compiler_flag("-Wuninitialized" CXX_W_UNINIT)
+if(CXX_W_UNINIT)
+	message(STATUS "Compile flag supported: ${CXX_W_UNINIT}")
+	list(APPEND EXTRA_CXX_COMPILE_FLAGS "-Wuninitialized")
+endif()
 if(WIN32)
     # Make sure we're supporting Unicode on Windows.
     add_definitions(-DUNICODE -D_UNICODE)
@@ -358,7 +373,6 @@ set(HEADER_FILES
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	gui/ActivityProgressWidget.h
-	utils/concurrency/ReportingRunner.h
 	utils/AsyncDirScanner.h
 	gui/AboutBox.h
 	utils/RegisterQtMetatypes.h
@@ -454,12 +468,23 @@ set(HEADER_FILES_UTILS_NOMOC
 	utils/nomoc/nomocimpl.h)
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
+# Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
+	utils/concurrency/ReportingRunner.h
 	utils/concurrency/AsyncTaskManager.h
 	utils/concurrency/ExtendedDeferred.h
-	utils/concurrency/ExtFutureWatcher.h)
+	utils/concurrency/ExtFuture.h
+	utils/concurrency/ExtFuture_p.hpp
+	utils/concurrency/ExtFutureWatcher.h
+	utils/concurrency/ExtAsync.h
+	utils/concurrency/ExtAsyncTask.h
+	utils/concurrency/functiontraits.h
+	utils/concurrency/function_traits.hpp)
 set(SOURCE_FILES_UTILS_CONCURRENCY
-	utils/concurrency/AsyncTaskManager.cpp)
+	utils/concurrency/AsyncTaskManager.cpp
+	utils/concurrency/ExtAsync.cpp
+	utils/concurrency/ExtAsync.cpp
+	utils/concurrency/function_traits.cpp)
 
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
@@ -508,12 +533,14 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
 	"QT_DEPRECATED_WARNINGS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}")
+	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
+	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
+target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}

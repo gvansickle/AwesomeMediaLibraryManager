@@ -22,12 +22,15 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 
+#include <utils/concurrency/ExtFuture.h>
+
 #include <memory>
 #include <QtCore/QObject>
 #include <QElapsedTimer>
 #include <QtCore/QPersistentModelIndex>
 #include <QtCore/QFuture>
 #include <QtCore/QFutureWatcher>
+
 #include <utils/concurrency/AsyncTaskManager.h>
 
 class LibraryModel;
@@ -84,6 +87,10 @@ public:
 
 public Q_SLOTS:
 	void startAsyncDirectoryTraversal(QUrl dir_url);
+
+	/// @todo EXPERIMENTAL
+	ExtFuture<QString> AsyncDirectoryTraversal(QUrl dir_url);
+	void SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl dir_url);
 
 	void onDirTravFinished();
 

@@ -267,57 +267,11 @@ public:
 	 *       an unspecified thread.
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
-#if 0
-//	template<class ContinuationFunctionType> //, class ReturnType = std::result_of_t<ContinuationFunctionType(ExtFuture<T>&)>>
-	ExtFuture<QString> then(ContinuationType continuation_function)
-	{
-		m_continuation_function = std::make_shared<ContinuationType>(continuation_function);
-		ExtFuture<QString> retval = ExtAsync(*m_continuation_function, *this);
-		return retval;
-	}
-#endif
-
-#if 0
-//	template <typename R = QString> //typename function_traits<ContinuationType>::return_type_t>
-	ExtFuture<QString> then(ContinuationType continuation_function);
-#endif
-
-//	template <typename F, typename... Args, typename R = std::result_of_t<F&&(Args&&...)>>
-//	ExtFuture<typename isExtFuture<R>::inner>
-//	then(F&& func, Args...)
-//	{
-//		return this->template ThenHelper<F, R>(std::forward<F>(func), R);
-//	}
-
-//	template <typename F, typename R = typename function_traits<F>::return_type_t>
-//	ExtFuture<R> then(F&& func)
-//	{
-//		return this->template ThenHelper<F, R>(std::forward<F>(func));
-//	}
-
 	template <typename F, typename R = function_return_type_t<F>>
 	ExtFuture<R> then(QObject* context, F&& func)
 	{
-//		qDb() << "ENTERED THEN";
-		EnsureFWInstantiated();
-		/// @todo
 		m_continuation_function = std::make_shared<ContinuationType>(std::move(func));
-#if 1
-		m_extfuture_watcher->then(context, [=]() {
-			qDb() << "THEN CALLED FROM FINISHED CONNECTION, m_continuation_function use count:" << m_continuation_function.use_count();
-			QString val = QObject::tr("dummy");
-			(*m_continuation_function)(val);
-		});
-#else
-		QObject::connect(m_extfuture_watcher, &ExtFutureWatcher<T>::finished, context, [=]() {
-				qDb() << "THEN CALLED FROM FINISHED CONNECTION, m_continuation_function use count:" << m_continuation_function.use_count();
-				QString val = QObject::tr("dummy");
-				(*m_continuation_function)(val);
-			});
-#endif
-		m_extfuture_watcher->setFuture(*this);
-//		qDb() << "EXITED THEN";
-		return ExtFuture<QString>();
+		return ThenHelper(context, *m_continuation_function);
 	}
 
 	template <typename F, typename R = function_return_type_t<F>>
@@ -334,7 +288,6 @@ public:
 	 */
 	ExtFuture<QString>& tap(QObject* context, TapCallbackType1 tap_callback)
 	{
-		qDb() << "TAP() ENTERED, this:" << this << *this;
 		m_tap_function = std::make_shared<TapCallbackType1>(tap_callback);
 		return TapHelper(context, *m_tap_function);
 	}
@@ -359,12 +312,6 @@ public:
 	 * @return QString describing the current state of the ExtFuture.
 	 */
 	QString state() const;
-
-	/**
-	 * queryState
-	 * @return The value of the otherwise-protected state member variable.
-	 */
-//	QFutureInterfaceBase::State queryState() const;
 
 	/**
 	 * Get a string describing this ExtFuture<>, suitable for debug output.
@@ -425,11 +372,27 @@ protected:
 		return *this;
 	}
 
+	template <typename Function>
+	ExtFuture<T> ThenHelper(QObject *guard_qobject, Function f)
+	{
+		qDb() << "ENTER";
+		auto watcher = new QFutureWatcher<T>();
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [f, watcher](){
+			// Call the then() callback function.
+			qDb() << "THEN WRAPPER CALLED";
+			f("dummy");
+			watcher->deleteLater();
+		});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
+		watcher->setFuture(this->future());
+		qDb() << "EXIT";
+		return *this;
+	}
+
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
 	std::shared_ptr<ContinuationType> m_continuation_function;
 
-/// @todo
 	std::shared_ptr<TapCallbackType1> m_tap_function;
 
 
