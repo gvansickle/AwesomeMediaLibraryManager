@@ -39,7 +39,7 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 /**
  * Stream to qDebug() to log the current thread name.
  */
-#define M_THREADNAME() "THREADNAME:" << QThread::currentThread()->objectName()
+#define M_THREADNAME() "[" << QThread::currentThread()->objectName() << "]"
 
 /**
  * qDebug() etc. replacements which prepends the current thread name.

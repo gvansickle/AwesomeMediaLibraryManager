@@ -35,7 +35,7 @@ ExtFuture<T>::unwrap()
 		return internal_extfuture;
 		;});
 }
-
+#if 0
 /**
  * This is the function which actually is called by QtConcurrent::run() for the continuation.
  */
@@ -50,5 +50,5 @@ static QString ThenHelper(ExtFuture<T>* predecessor_future)
 	(*(predecessor_future->m_continuation_function))();
 	return QString("THEN DONE");
 }
-
+#endif
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_P_HPP_ */

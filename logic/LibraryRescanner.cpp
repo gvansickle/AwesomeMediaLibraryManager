@@ -619,7 +619,7 @@ void LibraryRescanner::onRescanFinished()
 
 void LibraryRescanner::onDirTravFinished()
 {
-	qDebug() << "Async Dir Trav reports fisished.";
+	qDb() << "Async Dir Trav reports fisished.";
 
 	// Send out progress text.
 	emit progressChanged(0, 0, 0, "Idle");
