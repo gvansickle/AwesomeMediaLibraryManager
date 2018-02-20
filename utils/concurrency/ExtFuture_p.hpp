@@ -27,12 +27,36 @@
  */
 template <typename T>
 template <typename F>
-std::enable_if_t<isExtFuture<F>::value, ExtFuture<typename isExtFuture<T>::inner_t>>
+std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
 ExtFuture<T>::unwrap()
 {
-	return then([](ExtFuture<typename isExtFuture<T>::inner_t> internal_extfuture) {
+	using InternalExtFutureType = ExtFuture<typename isExtFuture<T>::inner_t>;
+	InternalExtFutureType internal_extfuture;
+	return this->then([=](InternalExtFutureType internal_extfuture) -> InternalExtFutureType {
 		return internal_extfuture;
-		;});
+		});
+}
+
+/**
+ * ThenHelper which takes a callback which returns an ExtFuture<>.
+ */
+template <typename T>
+template <typename F, typename R, typename... Args>
+std::enable_if_t<R::returns_future::value, typename R::return_type>
+ExtFuture<T>::ThenHelper(F&& func, arg_result<F, Args...>)
+{
+	static_assert(sizeof...(Args) <= 1, "Too many args");
+
+	using B = typename isExtFuture<R>::inner_t;
+
+	ExtFuture<B> promise;
+	auto future = promise.future();
+
+	M_WARNING("TODO");
+
+
+	return future;
+
 }
 
 #if 0

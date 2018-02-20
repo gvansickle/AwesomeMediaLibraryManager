@@ -185,7 +185,7 @@ public:
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
 	 */
-	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other);
+//	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other);
 
 
 //	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other),
@@ -221,19 +221,8 @@ public:
 	{
 		qDb() << "DESTRUCTOR";
 
-		if(m_continuation_function)
-		{
-			qWr() << "m_continuation_function == NULLPTR";
-		}
-		else
-		{
-			qWr() << "m_continuation_function != NULLPTR";
-		}
-
-		if(m_extfuture_watcher)
-		{
-			qWr() << "m_extfuture_watcher != NULL";
-		}
+		qWr() << "m_continuation_function:" << (bool)m_continuation_function;
+		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
 	}
 
 	/// @name Copy and move operators.
@@ -248,7 +237,7 @@ public:
 	 * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
 	 */
 	template <typename F = T>
-	std::enable_if_t<isExtFuture<F>::value, ExtFuture<typename isExtFuture<T>::inner_t>>
+	std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
 	unwrap();
 
 	/**
@@ -270,10 +259,60 @@ public:
 		return ThenHelper(context, *m_continuation_function);
 	}
 
+	/**
+	 * Overload for callback returning non-ExtFuture<>.
+	 */
 	template <typename F, typename R = function_return_type_t<F>>
-	ExtFuture<R> then(F&& func)
+	std::enable_if_t<!isExtFuture_v<R>, ExtFuture<R>>
+	then(F&& func)
 	{
 		return then(QApplication::instance(), func);
+	}
+
+	/**
+	 * Overload for callback returning an ExtFuture<>.
+	 */
+	template <typename F, typename R = function_return_type_t<F>>
+	std::enable_if_t<isExtFuture_v<R>, ExtFuture<R>>
+	then(F&& func)
+	{
+
+	}
+
+	/**
+	 * then() overload taking a callback of type R(*func)(T).
+	 *
+	 * @tparam R a non-ExtFuture<> type.
+	 * @tparam T a non-ExtFuture<> type.
+	 *
+	 * @returns ExtFuture<R>
+	 */
+	template <typename R = T>
+	std::enable_if_t<!isExtFuture_v<R> && !isExtFuture_v<T>, ExtFuture<R>>
+	then( R(*then_callback)(T) )
+	{
+		std::function<R(T)> the_then_callback = then_callback;
+		return then(QApplication::instance(), the_then_callback);
+	}
+
+	/**
+	 * Overload for function returning an ExtFuture<>.
+	 */
+//	template <typename FunctionType, typename R = ExtFutureThenCallbackTraits<T, FunctionType>>
+//	typename R::return_type		//std::enable_if_t<isExtFuture_v<R>, ExtFuture<R>>
+//	then(FunctionType&& func)
+//	{
+//		return this->template ThenHelper<FunctionType, R>(std::forward<FunctionType>(func), typename R::arg());
+//	}
+
+
+	/**
+	 * Overload for an empty .then().
+	 * @return
+	 */
+	ExtFuture<Unit> then()
+	{
+//		return then([] () {});
 	}
 
 	/**
@@ -394,15 +433,17 @@ protected:
 		return *this;
 	}
 
-	template <typename Function>
-	ExtFuture<T> ThenHelper(QObject *guard_qobject, Function f)
+	template <typename R = T>
+	ExtFuture<R> ThenHelper(QObject* context, std::function<R(T)> then_callback)
 	{
 		qDb() << "ENTER";
 		auto watcher = new QFutureWatcher<T>();
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [f, watcher](){
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, watcher](){
 			// Call the then() callback function.
 			qDb() << "THEN WRAPPER CALLED";
-			f("dummy");
+			// f() takes void, val, or ExtFuture<T>.
+			// f() returns void, a type R, or an ExtFuture<R>
+			then_callback("HELLO");
 			watcher->deleteLater();
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
@@ -410,6 +451,35 @@ protected:
 		qDb() << "EXIT";
 		return *this;
 	}
+
+//	template <typename FunctionType, typename... Args, typename Ftraits = function_traits<FunctionType>>
+//	auto ThenHelper(QObject *guard_qobject, FunctionType f, Args... args) -> ExtFuture<typename Ftraits::return_type_t>
+//	{
+//		// The callback can only take 0 or 1 arg.
+//		static_assert(sizeof...(Args) <= 1, "Too many args");
+//
+//		qDb() << "ENTER";
+//		auto watcher = new QFutureWatcher<T>();
+//		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [f, watcher](){
+//			// Call the then() callback function.
+//			qDb() << "THEN WRAPPER CALLED";
+//			// f() takes void, val, or ExtFuture<T>.
+//			// f() returns void, a type R, or an ExtFuture<R>
+//			f();
+//			watcher->deleteLater();
+//		});
+//		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
+//		watcher->setFuture(this->future());
+//		qDb() << "EXIT";
+//		return *this;
+//	}
+
+	/**
+	 * ThenHelper which takes a callback which returns an ExtFuture<>.
+	 */
+	template <typename F, typename R, typename... Args>
+	std::enable_if_t<R::returns_future::value, typename R::return_type>
+	ThenHelper(F&& func, arg_result<F, Args...>);
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
@@ -469,11 +539,11 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 
-template<typename T>
-ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T> >&& other)
-{
-
-}
+//template<typename T>
+//ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T> >&& other)
+//{
+//
+//}
 
 template<typename T>
 T ExtFuture<T>::get()

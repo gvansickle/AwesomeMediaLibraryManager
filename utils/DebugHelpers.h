@@ -81,6 +81,7 @@ void print_type_in_compilation_error(T&&)
 //#define M_PRINT_TYPE_IN_ERROR(t) void dummy(void) { print_type_in_compilation_error((t)); }
 //#define M_PRINT_TYPE_IN_ERROR(T) typedef typename T::something_made_up X;
 #define M_PRINT_TYPEOF_VAR_IN_ERROR(v) bool x = decltype((v))::no_such_member_so_you_can_see_the_type_name;
+#define M_PRINT_TYPEOF_TEMPLATE_PARAM_T(T) typedef typename T::no_such_member_so_you_can_see_the_type_name X;
 
 /// @name Preprocessor helpers for M_WARNING().
 /// @{

@@ -128,7 +128,7 @@ M_WARNING("ExtAsync DECLARED");
 		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 		return report_and_control;
 	}
-
+#endif
 #if 0
 	template <typename Function, typename... Args>
 	static ExtFuture<void>
@@ -144,7 +144,17 @@ M_WARNING("ExtAsync DECLARED");
 		return report_and_control;
 	}
 #endif // void specialization.
-#endif
+
+	/**
+	 * Free function taking no params and returning non-void.
+	 * @param function
+	 * @return
+	 */
+	template <typename FuncType, typename R = typename function_traits<FuncType>::return_type_t>
+	auto run(FuncType&& function) -> std::enable_if_t<!function_return_type_is_v<FuncType, void>, ExtFuture<R>>
+	{
+	    return ExtFuture<R>(QtConcurrent::run(function));
+	}
 
 #if 0
 	inline static ExtFuture<QString>

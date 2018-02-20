@@ -19,11 +19,16 @@
 
 #include "ExtAsync.h"
 
+#include "tests/AsyncTests.h"
+
 #include <utils/DebugHelpers.h>
 
 void ExtAsyncTest(QObject* context)
 {
 	qDb() << "TEST START";
+
+	auto async_tests = new AsyncTests();
+	async_tests->UnwrapTest();
 
 	int val = 0;
 	bool tap_ran = false;
@@ -63,12 +68,12 @@ void ExtAsyncTest(QObject* context)
 	})
 	;
 #if 0
-	.then([&](ExtFuture<QString>& the_future) -> ExtFuture<QString> {
+	.then([=](ExtFuture<QString>& the_future) -> ExtFuture<QString> {
 		// Should only run after .tap() is called, but not after the tap callback is called.
 		qDb() << "TEST: Running from then()";
-		Q_ASSERT(val == 1);
-		Q_ASSERT(tap_ran);
-		val = 3;
+//		Q_ASSERT(val == 1);
+//		Q_ASSERT(tap_ran);
+//		val = 3;
 		M_WARNING("LEAK");
 		ExtFuture<QString> *retval = new ExtFuture<QString>();
 		return *retval;
