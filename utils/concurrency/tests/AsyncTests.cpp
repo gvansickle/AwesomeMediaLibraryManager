@@ -45,9 +45,10 @@ static QString delayed_string_func_1()
 
 void AsyncTests::BasicTest()
 {
-	qDb() << "START";
+	qIn() << "START";
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
+
 	future
 	.then([](QString str){
 		qDb() << "Then1, got str:" << str;
@@ -64,7 +65,7 @@ void AsyncTests::BasicTest()
 
 	future.wait();
 
-	qDb() << "Complete";
+	qIn() << "Complete";
 
 }
 
