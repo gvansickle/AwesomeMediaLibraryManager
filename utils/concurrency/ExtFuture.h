@@ -272,12 +272,20 @@ public:
 	/**
 	 * Overload for callback returning an ExtFuture<>.
 	 */
-	template <typename F, typename R = function_return_type_t<F>>
-	std::enable_if_t<isExtFuture_v<R>, ExtFuture<R>>
-	then(F&& func)
-	{
+//	template <typename F, typename R = function_return_type_t<F>>
+//	std::enable_if_t<isExtFuture_v<R>, ExtFuture<R>>
+//	then(F&& func)
+//	{
+//
+//	}
 
-	}
+//	template <typename F>
+//	ExtFuture<typename std::result_of_t<F(ExtFuture<T>)>>
+//	then(F&& then_callback)
+//	{
+////		std::function<R(T)> the_then_callback = then_callback;
+//		return then(QApplication::instance(), then_callback);
+//	}
 
 	/**
 	 * then() overload taking a callback of type R(*func)(T).
@@ -285,14 +293,16 @@ public:
 	 * @tparam R a non-ExtFuture<> type.
 	 * @tparam T a non-ExtFuture<> type.
 	 *
+	 * @param then_callback  Callback of type R(*)(T).
+	 *
 	 * @returns ExtFuture<R>
 	 */
 	template <typename R = T>
 	std::enable_if_t<!isExtFuture_v<R> && !isExtFuture_v<T>, ExtFuture<R>>
 	then( R(*then_callback)(T) )
 	{
-		std::function<R(T)> the_then_callback = then_callback;
-		return then(QApplication::instance(), the_then_callback);
+//		std::function<R(T)> the_then_callback = then_callback;
+		return then(QApplication::instance(), then_callback);
 	}
 
 	/**
@@ -436,19 +446,19 @@ protected:
 	template <typename R = T>
 	ExtFuture<R> ThenHelper(QObject* context, std::function<R(T)> then_callback)
 	{
-		qDb() << "ENTER";
+//		qDb() << "ENTER";
 		auto watcher = new QFutureWatcher<T>();
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, watcher](){
 			// Call the then() callback function.
 			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
-			then_callback("HELLO");
+			then_callback("TODO: HELLO");
 			watcher->deleteLater();
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
-		qDb() << "EXIT";
+//		qDb() << "EXIT";
 		return *this;
 	}
 

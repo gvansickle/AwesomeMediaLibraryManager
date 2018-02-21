@@ -50,7 +50,7 @@ void AsyncTests::BasicTest()
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
 	future
-	.then([](QString str){
+	.then([](QString str) -> QString {
 		qDb() << "Then1, got str:" << str;
 		return str;
 	})
