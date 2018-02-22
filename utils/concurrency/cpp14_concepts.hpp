@@ -23,8 +23,9 @@
 #include <type_traits>
 #include <utility>
 
-#if 1 /// @todo if these haven't been standardized.
+#if 1 /// @todo if these haven't been standardized/aren't supported.
 
+/// void_t
 template <class...>
 using void_t = void;
 
@@ -42,6 +43,8 @@ struct nonesuch final
   void operator = (nonesuch const&) = delete;
 };
 
+#if !defined(__cpp_lib_experimental_detect) || (__cpp_lib_experimental_detect < 201505)
+// No support for detection idiom.  Per http://en.cppreference.com/w/cpp/experimental/lib_extensions_2
 namespace detail
 {
 	template <class Default, class AlwaysVoid,
@@ -60,6 +63,11 @@ namespace detail
 
 } // namespace detail
 
+/**
+ * is_detected<Op, Args>
+ * "Is it valid to instantiate Op with Args?"
+ * I.e. is
+ */
 template <template<class...> class Op, class... Args>
 using is_detected = typename detail::detector<nonesuch, void, Op, Args...>::value_t;
 
@@ -68,6 +76,26 @@ using detected_t = typename detail::detector<nonesuch, void, Op, Args...>::type;
 
 template <class Default, template<class...> class Op, class... Args>
 using detected_or = detail::detector<Default, void, Op, Args...>;
+
+template< template<class...> class Op, class... Args >
+constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+
+template< class Default, template<class...> class Op, class... Args >
+using detected_or_t = typename detected_or<Default, Op, Args...>::type;
+
+template <class Expected, template<class...> class Op, class... Args>
+using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
+
+template <class Expected, template<class...> class Op, class... Args>
+constexpr bool is_detected_exact_v = is_detected_exact<Expected, Op, Args...>::value;
+
+template <class To, template<class...> class Op, class... Args>
+using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
+
+template <class To, template<class...> class Op, class... Args>
+constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args...>::value;
+
+#endif // No support for detection idiom.
 
 template <class...> struct conjunction;
 template <class...> struct disjunction;
@@ -83,18 +111,37 @@ template <class T, class... Ts>
 struct disjunction<T, Ts...> :
   bool_constant<T::value or disjunction<Ts...>::value>
 { };
-
 template <> struct disjunction<> : std::false_type { };
 
 /// Template variable wrappers.
+/// @{
+
 template <bool... Bs>
 constexpr bool require = conjunction<bool_constant<Bs>...>::value;
 
 template <bool... Bs>
 constexpr bool either = disjunction<bool_constant<Bs>...>::value;
 
+template <bool... Bs>
+constexpr bool disallow = not require<Bs...>;
+
 template <template <class...> class Op, class... Args>
 constexpr bool exists = is_detected<Op, Args...>::value;
+
+template <class To, template <class...> class Op, class... Args>
+constexpr bool converts_to = is_detected_convertible<To, Op, Args...>::value;
+
+template <class Exact, template <class...> class Op, class... Args>
+constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
+
+/// @}
+
+
+namespace concepts
+{
+	template <class T> constexpr bool Pointer = std::is_pointer<T>::value;
+}
+
 
 #endif /// @todo if these haven't been standardized.
 
