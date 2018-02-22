@@ -32,7 +32,7 @@ class AsyncTests: public QObject
 public:
 	AsyncTests();
 
-	void BasicTest();
+	void ExtFutureThenChainingTest();
 
 	void UnwrapTest();
 };

@@ -37,33 +37,60 @@ static QString delayed_string_func_1()
 		qDb() << "ENTER, SLEEPING FOR 1 SEC";
 		QThread::sleep(1);
 		qDb() << "SLEEP COMPLETE";
-		return QString("HELLO");
+		return QString("delayed_string_func_1() output");
 	});
 
 	return retval;
 }
 
-void AsyncTests::BasicTest()
+void AsyncTests::ExtFutureThenChainingTest()
 {
 	qIn() << "START";
+
+	bool ran1 = false;
+	bool ran2 = false;
+	bool ran3 = false;
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
 	future
-	.then([](QString str) -> QString {
+	.then([&](ExtFuture<QString> str) -> QString {
 		qDb() << "Then1, got str:" << str;
-		return str;
+		qDb() << "Then1, str val:" << str.get();
+		Q_ASSERT(ran1 == false);
+		Q_ASSERT(ran2 == false);
+		Q_ASSERT(ran3 == false);
+		ran1 = true;
+		Q_ASSERT(str.get() == "delayed_string_func_1() output");
+		return QString("Then1 OUTPUT");
 	})
-	.then([](QString str) -> QString {
+	.then([&](ExtFuture<QString> str) -> QString {
 		qDb() << "Then2, got str:" << str;
-		return str;
+		qDb() << "Then2, str val:" << str.get();
+		Q_ASSERT(ran1 == true);
+		Q_ASSERT(ran2 == false);
+		Q_ASSERT(ran3 == false);
+		ran2 = true;
+		return QString("Then2 OUTPUT");
 	})
-	.then([](QString str) -> QString {
+	.then([&](ExtFuture<QString> str) -> QString {
 		qDb() << "Then3, got str:" << str;
-		return str;
-	});
+		qDb() << "Then3, str val:" << str.get();
+		Q_ASSERT(ran1 == true);
+		Q_ASSERT(ran2 == true);
+		Q_ASSERT(ran3 == false);
+		ran3 = true;
+		return QString("Then3 OUTPUT");
+	}).wait();
 
+	qDb() << "STARING WAIT";
+	/// @todo This doesn't wait here, but the attached wait() above does.
 	future.wait();
+	qDb() << "ENDING WAIT";
+
+	Q_ASSERT(ran1 == true);
+	Q_ASSERT(ran2 == true);
+	Q_ASSERT(ran3 == true);
 
 	qIn() << "Complete";
 
