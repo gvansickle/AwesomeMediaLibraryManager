@@ -49,7 +49,7 @@ constexpr bool TapCallback = require<
 #endif
 
 // Forward declare the ExtAsync namespace
-namespace ExtAsync {}
+namespace ExtAsync { namespace detail {} }
 
 template <class T>
 class ExtFuture;
@@ -250,41 +250,27 @@ public:
 	 * Attaches a continuation to this ExtFuture.
 	 * @note Like std::experimental::future::then(), the continuation function will be run on
 	 *       an unspecified thread.
+	 *
+	 * @tparam F = Continuation function type.
+	 * @tparam R = Return value of continuation F(ExtFuture<T>).
+	 *
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
-	template <typename F, typename R = function_return_type_t<F>>
+	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>)> >
 	ExtFuture<R> then(QObject* context, F&& func)
 	{
-		m_continuation_function = std::make_shared<ContinuationType>(std::move(func));
-		return ThenHelper(context, *m_continuation_function);
+//		m_continuation_function = std::make_shared<ContinuationType>(std::move(func));
+		return ThenHelper(context, func, *this);//*m_continuation_function);
 	}
 
 	/**
 	 * Overload for callback returning non-ExtFuture<>.
 	 */
-	template <typename F, typename R = function_return_type_t<F>>
-	std::enable_if_t<!isExtFuture_v<R>, ExtFuture<R>>
-	then(F&& func)
-	{
-		return then(QApplication::instance(), func);
-	}
-
-	/**
-	 * Overload for callback returning an ExtFuture<>.
-	 */
 //	template <typename F, typename R = function_return_type_t<F>>
-//	std::enable_if_t<isExtFuture_v<R>, ExtFuture<R>>
+//	std::enable_if_t<!isExtFuture_v<R>, ExtFuture<R>>
 //	then(F&& func)
 //	{
-//
-//	}
-
-//	template <typename F>
-//	ExtFuture<typename std::result_of_t<F(ExtFuture<T>)>>
-//	then(F&& then_callback)
-//	{
-////		std::function<R(T)> the_then_callback = then_callback;
-//		return then(QApplication::instance(), then_callback);
+//		return then(QApplication::instance(), func);
 //	}
 
 	/**
@@ -305,14 +291,38 @@ public:
 		return then(QApplication::instance(), then_callback);
 	}
 
+	/// std::/boost::-ish then()'s.
 	/**
-	 * Overload for function returning an ExtFuture<>.
+	 * then_callback(ExtFuture<T>) -> R
+	 * Returns an ExtFuture<R>.
+	 *
+	 * @param then_callback
+	 * @return
 	 */
-//	template <typename FunctionType, typename R = ExtFutureThenCallbackTraits<T, FunctionType>>
-//	typename R::return_type		//std::enable_if_t<isExtFuture_v<R>, ExtFuture<R>>
-//	then(FunctionType&& func)
+	template <typename F>
+	auto then( F&& then_callback ) -> ExtFuture<decltype(then_callback(*this))>
+	{
+//		std::function<R(T)> the_then_callback = then_callback;
+		return then(QApplication::instance(), then_callback);
+	}
+//	template <typename F>
+//	ExtFuture<typename std::result_of<F(ExtFuture<T>)>::type>
+//	then(F&& then_callback) //-> ExtFuture<decltype(then_callback(*this))>
 //	{
-//		return this->template ThenHelper<FunctionType, R>(std::forward<FunctionType>(func), typename R::arg());
+//		return then(QApplication::instance(), std::forward<F>(then_callback));
+//	}
+	/**
+	 * U = Return type of continuation.
+	 * @param context
+	 * @param then_callback
+	 * @return
+	 */
+//	template <typename F, typename U = std::result_of_t<std::decay_t<F>(ExtFuture<T>)> >
+//	ExtFuture<U>
+//	then(QObject* context, F&& then_callback)
+//	{
+//		Q_ASSERT(0);
+//		//return then(QApplication::instance(), then_callback);
 //	}
 
 
@@ -320,10 +330,10 @@ public:
 	 * Overload for an empty .then().
 	 * @return
 	 */
-	ExtFuture<Unit> then()
-	{
-//		return then([] () {});
-	}
+//	ExtFuture<Unit> then()
+//	{
+////		return then([] () {});
+//	}
 
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
@@ -443,23 +453,28 @@ protected:
 		return *this;
 	}
 
-	template <typename R = T>
-	ExtFuture<R> ThenHelper(QObject* context, std::function<R(T)> then_callback)
+	template <typename R = T, typename F, typename... Args>
+	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
 	{
 //		qDb() << "ENTER";
 		auto watcher = new QFutureWatcher<T>();
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, watcher](){
+M_WARNING("TODO: LEAKS THIS, DOESNT WORK");
+		auto retval = new ExtFuture<R>();
+		qDb() << "NEW EXTFUTURE:" << *retval;
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, retval, args..., watcher](){
 			// Call the then() callback function.
 			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
-			then_callback("TODO: HELLO");
+			retval->reportResult(then_callback(args...));
+			retval->reportFinished();
+			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
 //		qDb() << "EXIT";
-		return *this;
+		return *retval;
 	}
 
 //	template <typename FunctionType, typename... Args, typename Ftraits = function_traits<FunctionType>>
@@ -487,9 +502,9 @@ protected:
 	/**
 	 * ThenHelper which takes a callback which returns an ExtFuture<>.
 	 */
-	template <typename F, typename R, typename... Args>
-	std::enable_if_t<R::returns_future::value, typename R::return_type>
-	ThenHelper(F&& func, arg_result<F, Args...>);
+//	template <typename F, typename R, typename... Args>
+//	std::enable_if_t<R::returns_future::value, typename R::return_type>
+//	ThenHelper(F&& func, arg_result<F, Args...>);
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
@@ -502,33 +517,12 @@ protected:
 
 };
 
-#if 0
-/**
- * Create and return a finished future of type ExtFuture<T>.
- * @param value
- * @return
- */
-template<typename T>
-ExtFuture<typename std::decay<T>::type> make_ready_future(T&& value)
-{
-	return detail::make_ready_future<typename std::decay<T>::type>(value);
-}
-
-/**
- * void specialization of the above.
- * @return
- */
-inline future<void> make_ready_future()
-{
-  return detail::made_ready_future<void>();
-}
-#endif
 
 //
 // START IMPLEMENTATION
 //
 
-M_WARNING("INCLUDING ExtAsync.h");
+//M_WARNING("INCLUDING ExtAsync.h");
 #include "ExtAsync.h"
 
 
@@ -637,6 +631,21 @@ QString ExtFuture<T>::state() const
 
 // Include the implementation.
 #include "ExtFuture_p.hpp"
+
+/**
+ * Create and return a finished future of type ExtFuture<T>.
+ *
+ * @todo Specialize for void, or use Unit.
+ *
+ * @param value
+ * @return
+ */
+template<typename T>
+ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
+{
+	return ExtAsync::detail::make_ready_future<typename std::decay<T>::type>(value);
+}
+
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 

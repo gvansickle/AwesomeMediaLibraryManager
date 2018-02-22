@@ -37,27 +37,45 @@ ExtFuture<T>::unwrap()
 		});
 }
 
+namespace ExtAsync
+{
+	namespace detail
+	{
+		template<typename T>
+		ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
+		{
+			ExtFuture<T> extfuture;
+
+			extfuture.reportStarted();
+			extfuture.reportResult(std::forward<T>(value));
+			extfuture.reportFinished();
+
+			return extfuture;
+		}
+	}
+}
+
 /**
  * ThenHelper which takes a callback which returns an ExtFuture<>.
  */
-template <typename T>
-template <typename F, typename R, typename... Args>
-std::enable_if_t<R::returns_future::value, typename R::return_type>
-ExtFuture<T>::ThenHelper(F&& func, arg_result<F, Args...>)
-{
-	static_assert(sizeof...(Args) <= 1, "Too many args");
-
-	using B = typename isExtFuture<R>::inner_t;
-
-	ExtFuture<B> promise;
-	auto future = promise.future();
-
-	M_WARNING("TODO");
-
-
-	return future;
-
-}
+//template <typename T>
+//template <typename F, typename R, typename... Args>
+//std::enable_if_t<R::returns_future::value, typename R::return_type>
+//ExtFuture<T>::ThenHelper(F&& func, arg_result<F, Args...>)
+//{
+//	static_assert(sizeof...(Args) <= 1, "Too many args");
+//
+//	using B = typename isExtFuture<R>::inner_t;
+//
+//	ExtFuture<B> promise;
+//	auto future = promise.future();
+//
+//	M_WARNING("TODO");
+//
+//
+//	return future;
+//
+//}
 
 #if 0
 /**
