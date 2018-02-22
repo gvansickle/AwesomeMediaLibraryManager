@@ -28,6 +28,7 @@ void ExtAsyncTest(QObject* context)
 	qDb() << "TEST START";
 
 	auto async_tests = new AsyncTests();
+	async_tests->ExtFutureThenChainingTest();
 	async_tests->UnwrapTest();
 
 	int val = 0;
@@ -61,11 +62,11 @@ void ExtAsyncTest(QObject* context)
 //		val = 2;
 //		tap_ran = true;
 	})
-	.then(context, [=](QString str) -> QString {
-		qDb() << "Then1";
-//		Q_ASSERT(tap_ran);
-		return QString("Then1");
-	})
+//	.then(context, [=](QString str) -> QString {
+//		qDb() << "Then1";
+////		Q_ASSERT(tap_ran);
+//		return QString("Then1");
+//	})
 	;
 #if 0
 	.then([=](ExtFuture<QString>& the_future) -> ExtFuture<QString> {
