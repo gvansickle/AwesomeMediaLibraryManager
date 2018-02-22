@@ -310,7 +310,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	m_dirtrav_future = AsyncDirectoryTraversal(dir_url);
 	qDb() << "ExtFuture<> RETURNED FROM ASYNCDIRTRAV:" << m_dirtrav_future;
 	qDb() << "ATTACHING THEN, future:" << m_dirtrav_future;
-	m_dirtrav_future.then([=](QString the_future) -> QString {
+	m_dirtrav_future.then([=](ExtFuture<QString> the_future) -> QString {
 		qDb() << "then() Async Scan Complete, future:" << m_dirtrav_future;
 		qDb() << "Directory scan complete.";
 		m_last_elapsed_time_dirscan = m_timer.elapsed();
@@ -401,7 +401,7 @@ ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
 
 	;})
-	.then(this, [=](QString dummy){
+	.then(this, [=](ExtFuture<QString> dummy){
 		qDb() << "FROM THEN:" << dummy;
 		return QString("anotherdummy");
 	;});
