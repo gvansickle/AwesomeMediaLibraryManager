@@ -571,6 +571,7 @@ void ExtFuture<T>::wait()
 {
     while (!this->isFinished())
     {
+    	// Pump the event loop.
         QCoreApplication::processEvents(QEventLoop::AllEvents);
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     }
@@ -635,17 +636,46 @@ QString ExtFuture<T>::state() const
 /**
  * Create and return a finished future of type ExtFuture<T>.
  *
+ * Intended to be a mostly-work-alike to std::experimental::make_ready_future.
+ * @see http://en.cppreference.com/w/cpp/experimental/make_ready_future
+ *
  * @todo Specialize for void, or use Unit.
+ * @todo return type decay rules when decay<T> is ref wrapper.
  *
  * @param value
  * @return
  */
-template<typename T>
-ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
+#if 0
+template<typename T, typename X, typename U = std::decay_t<T>, typename V = std::conditional<std::is_same_v<U, std::reference_wrapper<X>>,X&,U>>
+ExtFuture</*typename std::decay_t<T>*/V> make_ready_future(T&& value)
 {
 	return ExtAsync::detail::make_ready_future<typename std::decay<T>::type>(value);
 }
+#else
+template <typename T>
+struct deduced_type_impl
+{
+	using type = T;
+};
+template <typename T>
+struct deduced_type_impl<std::reference_wrapper<T>>
+{
+	using type = T&;
+};
+template <typename T>
+struct deduced_type
+{
+	using type = typename deduced_type_impl<std::decay_t<T>>::type;
+};
+template <typename T>
+using deduced_type_t = typename deduced_type<T>::type;
 
+template <int = 0, int..., class T>
+ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
+{
+	return /*ExtFuture<deduced_type_t<T>>();*/ ExtAsync::detail::make_ready_future(std::forward<T>(value));
+}
+#endif
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 

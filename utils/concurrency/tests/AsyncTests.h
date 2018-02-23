@@ -32,6 +32,8 @@ class AsyncTests: public QObject
 public:
 	AsyncTests();
 
+	void RunAllTests();
+
 	void ExtFutureThenChainingTest();
 
 	void UnwrapTest();

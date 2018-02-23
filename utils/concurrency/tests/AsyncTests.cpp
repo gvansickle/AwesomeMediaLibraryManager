@@ -21,6 +21,9 @@
 
 #include <QString>
 
+#include <type_traits>
+#include "../function_traits.hpp"
+
 #include "../ExtAsync.h"
 //#include "../ExtFuture.h"
 
@@ -28,6 +31,12 @@
 AsyncTests::AsyncTests() : QObject()
 {
 
+}
+
+void AsyncTests::RunAllTests()
+{
+	ExtFutureThenChainingTest();
+	UnwrapTest();
 }
 
 static QString delayed_string_func_1()
@@ -84,7 +93,7 @@ void AsyncTests::ExtFutureThenChainingTest()
 	}).wait();
 
 	qDb() << "STARING WAIT";
-	/// @todo This doesn't wait here, but the attached wait() above does.
+	/// @todo This doesn't wait here, but the attached wait() above does. Which maybe makes sense.
 	future.wait();
 	qDb() << "ENDING WAIT";
 
@@ -127,3 +136,16 @@ void AsyncTests::UnwrapTest()
 
 //	ExtFuture<QString> unwrapped_future = future.unwrap();
 }
+
+/// Static checks
+void dummy(void)
+{
+	// From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
+	// "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
+	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >, "");
+	int v;
+	static_assert(std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >, "");
+
+}
+
+
