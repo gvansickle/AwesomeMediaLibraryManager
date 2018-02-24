@@ -19,16 +19,14 @@
 
 #include "ExtAsync.h"
 
-#include "tests/AsyncTests.h"
-
 #include <utils/DebugHelpers.h>
 
 void ExtAsyncTest(QObject* context)
 {
 	qDb() << "TEST START";
 
-	auto async_tests = new AsyncTests();
-	async_tests->RunAllTests();
+//	auto async_tests = new AsyncTests();
+//	async_tests->RunAllTests();
 
 	int val = 0;
 	bool tap_ran = false;

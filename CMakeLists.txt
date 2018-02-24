@@ -593,7 +593,6 @@ list(APPEND
 	utils/concurrency/tests/AsyncTests.h)
 
 add_executable(${TEST_EXE_TARGET}
-				EXCLUDE_FROM_ALL
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
 				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)

@@ -619,6 +619,12 @@ ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
 //	return ExtAsync::detail::make_ready_future();
 //}
 
+template <int = 0, int..., class T = void>
+ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception)
+{
+	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
+}
+
 #endif
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */

@@ -134,6 +134,18 @@ namespace ExtAsync
 //			return extfuture;
 //		}
 
+		template <typename T, typename R = typename std::decay_t<T>>
+		ExtFuture<R> make_exceptional_future(const QException& exception)
+		{
+			ExtFuture<R> extfuture;
+
+			extfuture.reportStarted();
+			extfuture.reportException(exception);
+			extfuture.reportFinished();
+
+		    return extfuture;
+		}
+
 	}
 }
 
