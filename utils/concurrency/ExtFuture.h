@@ -461,7 +461,7 @@ protected:
 	{
 //		qDb() << "ENTER";
 		auto watcher = new QFutureWatcher<T>();
-M_WARNING("TODO: LEAKS THIS, DOESNT WORK");
+M_WARNING("TODO: LEAKS THIS");
 		auto retval = new ExtFuture<R>();
 		qDb() << "NEW EXTFUTURE:" << *retval;
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, retval, args..., watcher](){
@@ -546,17 +546,6 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 
-//template<typename T>
-//ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T> >&& other)
-//{
-//
-//}
-
-template<typename T>
-T ExtFuture<T>::get()
-{
-	return this->future().result();
-}
 
 #if 0
 template<typename T>
@@ -569,69 +558,7 @@ ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
 }
 #endif
 
-template<typename T>
-void ExtFuture<T>::wait()
-{
-    while (!this->isFinished())
-    {
-    	// Pump the event loop.
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    }
-}
 
-template<typename T>
-QString ExtFuture<T>::state() const
-{
-	// States from QFutureInterfaceBase.
-	/// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
-	///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
-	///			#ifndef QFUTURE_TEST
-	///			private:
-	///			#endif
-	///				QFutureInterfaceBasePrivate *d;
-	/// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
-	/// actually a QAtomicInt, so we're not thread-safe here.
-	/// This is the queryState() code from qfutureinterface.cpp:
-	///
-	///     bool QFutureInterfaceBase::queryState(State state) const
-	///	    {
-	///		    return d->state.load() & state;
-	///	    }
-
-	std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
-		{QFutureInterfaceBase::NoState, "NoState"},
-		{QFutureInterfaceBase::Running, "Running"},
-		{QFutureInterfaceBase::Started,  "Started"},
-		{QFutureInterfaceBase::Finished,  "Finished"},
-		{QFutureInterfaceBase::Canceled,  "Canceled"},
-		{QFutureInterfaceBase::Paused,   "Paused"},
-		{QFutureInterfaceBase::Throttled, "Throttled"}
-	};
-
-	QString retval = "";
-	for(auto i : list)
-	{
-		if(QFutureInterfaceBase::queryState(i.first))
-		{
-			if(retval.size() != 0)
-			{
-				// Add a separator.
-				retval += " | ";
-			}
-			retval += toqstr(i.second);
-		}
-	}
-
-	if(retval.size() == 0)
-	{
-		return QString("UNKNOWN");
-	}
-	else
-	{
-		return retval;
-	}
-}
 
 // Include the implementation.
 #include <utils/concurrency/impl/ExtFuture_p.hpp>
