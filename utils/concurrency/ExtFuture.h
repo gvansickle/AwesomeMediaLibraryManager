@@ -634,7 +634,7 @@ QString ExtFuture<T>::state() const
 }
 
 // Include the implementation.
-#include "ExtFuture_p.hpp"
+#include <utils/concurrency/impl/ExtFuture_p.hpp>
 
 /**
  * Create and return a finished future of type ExtFuture<T>.

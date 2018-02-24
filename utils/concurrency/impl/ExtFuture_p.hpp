@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_CONCURRENCY_EXTFUTURE_P_HPP_
-#define UTILS_CONCURRENCY_EXTFUTURE_P_HPP_
+#ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_
+#define UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_
 
 
 /**
@@ -105,4 +105,4 @@ static QString ThenHelper(ExtFuture<T>* predecessor_future)
 	return QString("THEN DONE");
 }
 #endif
-#endif /* UTILS_CONCURRENCY_EXTFUTURE_P_HPP_ */
+#endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_ */

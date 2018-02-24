@@ -474,16 +474,15 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	utils/concurrency/AsyncTaskManager.h
 	utils/concurrency/ExtendedDeferred.h
 	utils/concurrency/ExtFuture.h
-	utils/concurrency/ExtFuture_p.hpp
 	utils/concurrency/ExtFutureWatcher.h
 	utils/concurrency/impl/ExtFuture_fwddecl_p.h
+	utils/concurrency/impl/ExtFuture_p.hpp
 	utils/concurrency/ExtAsync.h
 	utils/concurrency/ExtAsyncTask.h
 	utils/concurrency/function_traits.hpp
 	utils/concurrency/tests/AsyncTests.h)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	utils/concurrency/AsyncTaskManager.cpp
-	utils/concurrency/ExtAsync.cpp
 	utils/concurrency/ExtAsync.cpp
 	utils/concurrency/function_traits.cpp
 	utils/concurrency/tests/AsyncTests.cpp)
