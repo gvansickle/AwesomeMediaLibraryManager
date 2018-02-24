@@ -22,6 +22,21 @@
 
 #include <QObject>
 
+#include <gtest/gtest.h>
+//#include <gmock/gmock-matchers.h>
+
+
+/// @todo TEST
+
+class AsyncTestsFixture : public ::testing::Test
+{
+protected:
+	int m_example;
+};
+
+
+
+
 /*
  *
  */
@@ -29,14 +44,21 @@ class AsyncTests: public QObject
 {
 	Q_OBJECT
 
-public:
-	AsyncTests();
+private Q_SLOTS:
+
+	void initTestCase();
+	void test1();
+	void test2();
+	void cleanupTestCase();
 
 	void RunAllTests();
+
+	void TestReadyFutures();
 
 	void ExtFutureThenChainingTest();
 
 	void UnwrapTest();
 };
+
 
 #endif /* UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_ */

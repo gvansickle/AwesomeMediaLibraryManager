@@ -20,6 +20,7 @@
 #include "AsyncTests.h"
 
 #include <QString>
+#include <QTest>
 
 #include <type_traits>
 #include "../function_traits.hpp"
@@ -27,16 +28,54 @@
 #include "../ExtAsync.h"
 //#include "../ExtFuture.h"
 
+///
+//TEST(TestCase1, TestSet1)
+//{
+//	EXPECT_EQ(1, 1);
+//	ASSERT_THAT(0, Eq(0));
+//};
+///
 
-AsyncTests::AsyncTests() : QObject()
+/// Test Function.
+TEST_F(AsyncTestsFixture, ThisShouldFail)
 {
+	ASSERT_TRUE(false);
+}
 
+TEST_F(AsyncTestsFixture, ThisShouldPass)
+{
+	ASSERT_TRUE(true);
+}
+
+void AsyncTests::initTestCase()
+{
+	qDb() << "INIT";
+}
+
+void AsyncTests::test1()
+{
+	QTRY_COMPARE(4, 0);
+}
+
+void AsyncTests::test2()
+{
+	QTRY_COMPARE(6, 6);
+}
+
+void AsyncTests::cleanupTestCase()
+{
+	qDb() << "CLEANUP";
 }
 
 void AsyncTests::RunAllTests()
 {
 	ExtFutureThenChainingTest();
 	UnwrapTest();
+}
+
+void AsyncTests::TestReadyFutures()
+{
+
 }
 
 static QString delayed_string_func_1()

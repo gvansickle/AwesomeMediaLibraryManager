@@ -261,7 +261,7 @@ else()
     add_dependencies(taglib taglib_bundled-install)
     ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
     message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
-    print_target_properties(taglib_bundled)
+#    print_target_properties(taglib_bundled)
     cmake_print_variables(CMAKE_C_COMPILER CMAKE_VERSION)
 
     set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -293,7 +293,7 @@ if(USE_BUNDLED_LIBCUE)
 
 	set(AMLM_LIBCUE_TARGET "libcue")
 
-	print_target_properties(${AMLM_LIBCUE_TARGET})
+#	print_target_properties(${AMLM_LIBCUE_TARGET})
 else()
 	# Use the system libcue.
 	pkg_check_modules(LIBCUE REQUIRED libcue
@@ -430,7 +430,6 @@ set(SOURCE_FILES
 	utils/MapConverter.cpp
 	utils/Theme.cpp
 	utils/WorkerThreadBase.cpp
-	main.cpp
 	logic/LibraryRescanner.cpp
 	gui/ActivityProgressWidget.cpp
 	utils/concurrency/ReportingRunner.cpp
@@ -480,12 +479,12 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	utils/concurrency/ExtAsync.h
 	utils/concurrency/ExtAsyncTask.h
 	utils/concurrency/function_traits.hpp
-	utils/concurrency/tests/AsyncTests.h)
+	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	utils/concurrency/AsyncTaskManager.cpp
 	utils/concurrency/ExtAsync.cpp
 	utils/concurrency/function_traits.cpp
-	utils/concurrency/tests/AsyncTests.cpp)
+	)
 
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
@@ -515,7 +514,7 @@ qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 add_library(icon_rccs INTERFACE)
 target_sources(icon_rccs INTERFACE icons_oxygen icons_Tango icons_App)
-print_target_properties(icons_oxygen)
+#print_target_properties(icons_oxygen)
 
 
 ###
@@ -524,7 +523,8 @@ print_target_properties(icons_oxygen)
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		main.cpp
+		${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
 # FBO Verdigris (esp. on Windows/MSVC).
@@ -561,9 +561,64 @@ Checks: '-*,llvm-twine-local'
 ...
 ")
 
-print_target_properties(${PROJECT_NAME})
+#print_target_properties(${PROJECT_NAME})
 
+###
+### Testing
+###
+if(TRUE) # Enable test target.
+
+find_package(Qt5Test REQUIRED)
+include(CTest)
+find_package(Threads REQUIRED)
+set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED 1")
+include(DownloadProject)
+download_project(PROJ                googletest
+                 GIT_REPOSITORY      https://github.com/google/googletest.git
+                 GIT_TAG             master
+                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
+)
+# Prevent GoogleTest from overriding our compiler/linker options
+# when building with Visual Studio
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+
+#enable_testing()
+set(TEST_EXE_TARGET alltests)
+set(SOURCE_FILES_TEST)
+set(HEADER_FILES_TEST)
+list(APPEND SOURCE_FILES_TEST
+	utils/concurrency/tests/AsyncTests.cpp)
+list(APPEND
+	utils/concurrency/tests/AsyncTests.h)
+
+add_executable(${TEST_EXE_TARGET}
+				EXCLUDE_FROM_ALL
+				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
+				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
+	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"QT_DEPRECATED_WARNINGS"
+	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
+	"QFUTURE_TEST")
+target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_include_directories(${TEST_EXE_TARGET} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
+target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
+target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
+set_target_properties(${TEST_EXE_TARGET} PROPERTIES AUTOMOC ON)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
+target_link_libraries(${TEST_EXE_TARGET} Qt5::Test Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
+	${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})
+
+endif() # Enable test target.
+
+###
 ### Installation.
+###
 install(TARGETS ${PROJECT_NAME}
                 RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
                 LIBRARY DESTINATION .
