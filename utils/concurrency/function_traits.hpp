@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <type_traits>
+// Include some type_traits from the future (i.e. C++17+).
 #include "future_type_traits.hpp"
 #include <tuple>
 
@@ -174,12 +175,35 @@ using function_return_type_t = typename function_traits<F>::return_type_t;
 template <typename F, typename R>
 static constexpr bool function_return_type_is_v = std::is_same_v<function_return_type_t<F>, R>;
 
-//template<typename F, typename... Args>
-//struct result_type_given_args
-//{
-//	using
-//};
+/**
+ * Return type of a function of type F called with arglist Args.
+ */
+template <typename F, typename... Args>
+using result_of_t = decltype(std::declval<F>()(std::declval<Args>()...));
 
+/**
+ * Distinct type holding the return type of a function of type F called with arglist Args.
+ */
+template <typename F, typename... Args>
+struct arg_result
+{
+	using result_t = result_of_t<F, Args...>;
+};
+
+template <typename F, typename... Args>
+struct CallableWith
+{
+    template <typename T, typename = result_of_t<T, Args...>>
+    static constexpr std::true_type
+    check(std::nullptr_t) { return std::true_type{}; }
+
+    template <typename>
+    static constexpr std::false_type
+    check(...) { return std::false_type{}; }
+
+    typedef decltype(check<F>(nullptr)) type;
+    static constexpr bool value = type::value;
+};
 
 /// @} // Convenience templates.
 

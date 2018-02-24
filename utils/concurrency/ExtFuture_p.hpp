@@ -52,6 +52,18 @@ namespace ExtAsync
 
 			return extfuture;
 		}
+
+		/// @todo
+//		inline ExtFuture<void> make_ready_future()
+//		{
+//			ExtFuture<void> extfuture;
+//
+//			extfuture.reportStarted();
+//			extfuture.reportFinished();
+//
+//			return extfuture;
+//		}
+
 	}
 }
 

@@ -284,7 +284,10 @@ public:
 	 * @returns ExtFuture<R>
 	 */
 	template <typename R = T>
-	std::enable_if_t<!isExtFuture_v<R> && !isExtFuture_v<T>, ExtFuture<R>>
+	std::enable_if_t<!isExtFuture_v<R>
+		&& !isExtFuture_v<T>
+		&& !std::is_same_v<R, void>
+		&& !std::is_same_v<T, void>, ExtFuture<R>>
 	then( R(*then_callback)(T) )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
@@ -670,11 +673,25 @@ struct deduced_type
 template <typename T>
 using deduced_type_t = typename deduced_type<T>::type;
 
+/**
+ * Creates a completed future containing the value @a value.
+ *
+ * @param value
+ * @return
+ */
 template <int = 0, int..., class T>
 ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
 {
 	return /*ExtFuture<deduced_type_t<T>>();*/ ExtAsync::detail::make_ready_future(std::forward<T>(value));
 }
+
+/// overload for ExtFutue<void>.
+/// @todo
+//inline ExtFuture<void> make_ready_future()
+//{
+//	return ExtAsync::detail::make_ready_future();
+//}
+
 #endif
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */

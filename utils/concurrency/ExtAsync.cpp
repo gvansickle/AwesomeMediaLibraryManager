@@ -28,8 +28,7 @@ void ExtAsyncTest(QObject* context)
 	qDb() << "TEST START";
 
 	auto async_tests = new AsyncTests();
-	async_tests->ExtFutureThenChainingTest();
-	async_tests->UnwrapTest();
+	async_tests->RunAllTests();
 
 	int val = 0;
 	bool tap_ran = false;
