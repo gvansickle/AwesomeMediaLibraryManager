@@ -5,7 +5,8 @@
  *      Author: gary
  */
 
-//#include <QObject>
+#include <QApplication>
+#include <QTimer>
 //#include <QtTest>
 
 //#include <utils/concurrency/tests/AsyncTests.h>
@@ -14,19 +15,29 @@
 
 ////
 //#include <gmock/gmock-matchers.h>
-//
-//using namespace testing;
-//
-//TEST(TestCase1, TestSet1)
-//{
-//	EXPECT_EQ(1, 1);
-//	ASSERT_THAT(0, Eq(0));
-//}
-////
+
+QT_BEGIN_NAMESPACE
+inline void PrintTo(const QString &qString, ::std::ostream *os)
+{
+    *os << qUtf8Printable(qString);
+}
+QT_END_NAMESPACE
+
+/// @note main() mods to support Qt5 threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
 
 int main(int argc, char *argv[])
 {
+	QApplication app(argc, argv);
+
 	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+	auto retval = RUN_ALL_TESTS();
+
+	// Timer-based exit from app.exec().
+	QTimer exitTimer;
+	QObject::connect(&exitTimer, &QTimer::timeout, &app, QCoreApplication::quit);
+	exitTimer.start();
+	app.exec();
+
+	return retval;
 }
 

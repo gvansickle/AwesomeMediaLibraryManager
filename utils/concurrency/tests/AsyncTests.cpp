@@ -19,6 +19,10 @@
 
 #include "AsyncTests.h"
 
+#include <gtest/gtest.h>
+//#include <gmock/gmock-matchers.h>
+
+
 #include <QString>
 #include <QTest>
 
@@ -26,26 +30,114 @@
 #include "../function_traits.hpp"
 
 #include "../ExtAsync.h"
-//#include "../ExtFuture.h"
 
-///
-//TEST(TestCase1, TestSet1)
-//{
-//	EXPECT_EQ(1, 1);
-//	ASSERT_THAT(0, Eq(0));
-//};
-///
+#define GTEST_COUT std::cerr << "[          ] [ INFO ]"
+
+void AsyncTestsSuiteFixture::SetUp()
+{
+	GTEST_COUT << "SetUp()" << std::endl;
+}
+
+void AsyncTestsSuiteFixture::TearDown()
+{
+	GTEST_COUT << "TearDown()" << std::endl;
+}
+
+
 
 /// Test Function.
-TEST_F(AsyncTestsFixture, ThisShouldFail)
+TEST_F(AsyncTestsSuiteFixture, ThisShouldFail)
 {
 	ASSERT_TRUE(false);
 }
 
-TEST_F(AsyncTestsFixture, ThisShouldPass)
+TEST_F(AsyncTestsSuiteFixture, ThisShouldPass)
 {
 	ASSERT_TRUE(true);
 }
+
+TEST_F(AsyncTestsSuiteFixture, QStringPrintTest)
+{
+	QString test = "Test";
+	ASSERT_EQ(test, "notTest");
+}
+
+static QString delayed_string_func_1()
+{
+	auto retval = QtConcurrent::run([](){
+		// Sleep for a second.
+		qDb() << "ENTER, SLEEPING FOR 1 SEC";
+		QThread::sleep(1);
+		qDb() << "SLEEP COMPLETE";
+		return QString("delayed_string_func_1() output");
+	});
+
+	return retval;
+}
+
+TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest)
+{
+	SCOPED_TRACE("START");
+//	qIn() << "START";
+
+	bool ran1 = false;
+	bool ran2 = false;
+	bool ran3 = false;
+
+	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
+
+	ASSERT_TRUE(future.isStarted());
+	ASSERT_FALSE(future.isFinished());
+
+	future
+	.then([&](ExtFuture<QString> str) -> QString {
+		qDb() << "Then1, got str:" << str;
+		qDb() << "Then1, str val:" << str.get();
+		EXPECT_EQ(ran1, false);
+		EXPECT_EQ(ran2, false);
+		EXPECT_EQ(ran3, false);
+		ran1 = true;
+		QString the_str = str.get();
+		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
+		return QString("Then1 OUTPUT");
+	})
+	.then([&](ExtFuture<QString> str) -> QString {
+		qDb() << "Then2, got str:" << str;
+		qDb() << "Then2, str val:" << str.get();
+		EXPECT_EQ(ran1, true);
+		EXPECT_EQ(ran2, false);
+		EXPECT_EQ(ran3, false);
+		ran2 = true;
+		return QString("Then2 OUTPUT");
+	})
+	.then([&](ExtFuture<QString> str) -> QString {
+		qDb() << "Then3, got str:" << str;
+		qDb() << "Then3, str val:" << str.get();
+		EXPECT_EQ(ran1, true);
+		EXPECT_EQ(ran2, true);
+		EXPECT_EQ(ran3, false);
+		ran3 = true;
+		return QString("Then3 OUTPUT");
+	}).wait();
+
+	ASSERT_TRUE(future.isFinished());
+
+	qDb() << "STARING WAIT";
+	/// @todo This doesn't wait here, but the attached wait() above does. Which maybe makes sense.
+	future.wait();
+	qDb() << "ENDING WAIT";
+
+	ASSERT_TRUE(ran1);
+	ASSERT_TRUE(ran2);
+	ASSERT_TRUE(ran3);
+
+	qIn() << "Complete";
+	SUCCEED();
+	RecordProperty("Completed", true);
+}
+
+
+//////////
 
 void AsyncTests::initTestCase()
 {
@@ -78,18 +170,7 @@ void AsyncTests::TestReadyFutures()
 
 }
 
-static QString delayed_string_func_1()
-{
-	auto retval = QtConcurrent::run([](){
-		// Sleep for a second.
-		qDb() << "ENTER, SLEEPING FOR 1 SEC";
-		QThread::sleep(1);
-		qDb() << "SLEEP COMPLETE";
-		return QString("delayed_string_func_1() output");
-	});
 
-	return retval;
-}
 
 void AsyncTests::ExtFutureThenChainingTest()
 {
@@ -188,5 +269,6 @@ void dummy(void)
 //	static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<void> >, "");
 
 }
+
 
 

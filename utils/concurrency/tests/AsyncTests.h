@@ -26,15 +26,26 @@
 //#include <gmock/gmock-matchers.h>
 
 
-/// @todo TEST
+QT_BEGIN_NAMESPACE
+inline void PrintTo(const QString &qString, ::std::ostream *os)
+{
+    *os << qUtf8Printable(qString);
+}
+QT_END_NAMESPACE
 
-class AsyncTestsFixture : public ::testing::Test
+/**
+ * Test Suite (ISTQB) or "Test Case" (Google) for AsyncTests.
+ */
+class AsyncTestsSuiteFixture : public ::testing::Test
 {
 protected:
+
+	void SetUp() override;
+	void TearDown() override;
+
+	// Objects declared here can be used by all tests in this Fixture.
 	int m_example;
 };
-
-
 
 
 /*
