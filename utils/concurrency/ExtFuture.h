@@ -264,63 +264,29 @@ public:
 	}
 
 	/**
-	 * Overload for callback returning non-ExtFuture<>.
-	 */
-//	template <typename F, typename R = function_return_type_t<F>>
-//	std::enable_if_t<!isExtFuture_v<R>, ExtFuture<R>>
-//	then(F&& func)
-//	{
-//		return then(QApplication::instance(), func);
-//	}
-
-	/**
-	 * then() overload taking a callback of type R(*func)(T).
+	 * C++17 std::experimental::future-like then().
+	 *
+	 * then_callback(ExtFuture<T>) -> R
+	 * Returns an ExtFuture<R>.
 	 *
 	 * @tparam R a non-ExtFuture<> type.
 	 * @tparam T a non-ExtFuture<> type.
 	 *
-	 * @param then_callback  Callback of type R(*)(T).
-	 *
+	 * @param then_callback
 	 * @returns ExtFuture<R>
 	 */
-	template <typename R = T,
-			REQUIRES(!IsExtFuture<R> && !IsExtFuture<T>	&& !std::is_same_v<R, void>	&& !std::is_same_v<T, void>)>
-	ExtFuture<R> then( R(*then_callback)(T) )
-	{
-//		std::function<R(T)> the_then_callback = then_callback;
-		return then(QApplication::instance(), then_callback);
-	}
-
-	/// std::/boost::-ish then()'s.
-	/**
-	 * then_callback(ExtFuture<T>) -> R
-	 * Returns an ExtFuture<R>.
-	 *
-	 * @param then_callback
-	 * @return
-	 */
-	template <class F, class R = std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T> && !IsExtFuture<R>)>
+	template <class F, class R = std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T> && NonNestedExtFuture<ExtFuture<R>>)>
 	ExtFuture<R> then( F&& then_callback )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
 		return then(QApplication::instance(), then_callback);
 	}
-//	template <typename F, class R = std::result_of_t<F&&(T&&)>, REQUIRES(!IsExtFuture<T> && NonNestedExtFuture<ExtFuture<R>>)>
-//	ExtFuture<R> then(F&& then_callback)
-//	{
-////#error "TODO: Appears to get past template problems."
-//		return then(QApplication::instance(), std::forward<F>(then_callback));
-//	}
-
 
 	/**
 	 * Overload for an empty .then().
-	 * @return
+	 * @todo?
 	 */
-//	ExtFuture<Unit> then()
-//	{
-////		return then([] () {});
-//	}
+
 
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
@@ -440,10 +406,15 @@ protected:
 		return *this;
 	}
 
+	/**
+	 * ThenHelper which takes a callback which returns an ExtFuture<>.
+	 */
 	template <typename F, typename... Args, typename R = std::result_of_t<F&&(Args...)>>
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
 	{
 //		qDb() << "ENTER";
+		static_assert(sizeof...(Args) <= 1, "Too many args");
+
 		auto watcher = new QFutureWatcher<T>();
 M_WARNING("TODO: LEAKS THIS");
 		auto retval = new ExtFuture<R>();
@@ -464,34 +435,6 @@ M_WARNING("TODO: LEAKS THIS");
 		return *retval;
 	}
 
-//	template <typename FunctionType, typename... Args, typename Ftraits = function_traits<FunctionType>>
-//	auto ThenHelper(QObject *guard_qobject, FunctionType f, Args... args) -> ExtFuture<typename Ftraits::return_type_t>
-//	{
-//		// The callback can only take 0 or 1 arg.
-//		static_assert(sizeof...(Args) <= 1, "Too many args");
-//
-//		qDb() << "ENTER";
-//		auto watcher = new QFutureWatcher<T>();
-//		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [f, watcher](){
-//			// Call the then() callback function.
-//			qDb() << "THEN WRAPPER CALLED";
-//			// f() takes void, val, or ExtFuture<T>.
-//			// f() returns void, a type R, or an ExtFuture<R>
-//			f();
-//			watcher->deleteLater();
-//		});
-//		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
-//		watcher->setFuture(this->future());
-//		qDb() << "EXIT";
-//		return *this;
-//	}
-
-	/**
-	 * ThenHelper which takes a callback which returns an ExtFuture<>.
-	 */
-//	template <typename F, typename R, typename... Args>
-//	std::enable_if_t<R::returns_future::value, typename R::return_type>
-//	ThenHelper(F&& func, arg_result<F, Args...>);
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
