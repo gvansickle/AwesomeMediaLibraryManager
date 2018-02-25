@@ -107,31 +107,34 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	ASSERT_FALSE(future.isFinished());
 
 	future
-	.then([&](ExtFuture<QString> str) -> QString {
-		qDb() << "Then1, got str:" << str;
-		qDb() << "Then1, str val:" << str.get();
+	.then([&](ExtFuture<QString> extfuture) -> QString {
+		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		qDb() << "Then1, got extfuture:" << extfuture;
+		qDb() << "Then1, extfuture val:" << extfuture.get();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran1 = true;
-		QString the_str = str.get();
+		QString the_str = extfuture.get();
 		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
 		return QString("Then1 OUTPUT");
 	})
-	.then([&](ExtFuture<QString> str) -> QString {
-		qDb() << "Then2, got str:" << str;
-		qDb() << "Then2, str val:" << str.get();
+	.then([&](ExtFuture<QString> extfuture) -> QString {
+		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		qDb() << "Then2, got extfuture:" << extfuture;
+		qDb() << "Then2, extfuture val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
-		auto the_str = str.get();
+		auto the_str = extfuture.get();
 		EXPECT_EQ(the_str, QString("Then1 OUTPUT"));
 		return QString("Then2 OUTPUT");
 	})
-	.then([&](ExtFuture<QString> str) -> QString {
-		qDb() << "Then3, got str:" << str;
-		qDb() << "Then3, str val:" << str.get();
+	.then([&](ExtFuture<QString> extfuture) -> QString {
+		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		qDb() << "Then3, got extfuture:" << extfuture;
+		qDb() << "Then3, extfuture val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
@@ -169,32 +172,32 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	ASSERT_FALSE(future.isFinished());
 
 	future
-	.then([&](ExtFuture<QString> val) -> int {
-		qDb() << "Then1, got val:" << val.get();
+	.then([&](ExtFuture<QString> extfuture) -> int {
+		qDb() << "Then1, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran1 = true;
-		QString the_str = val.get();
+		QString the_str = extfuture.get();
 		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
 		return 2;
 	})
-	.then([&](ExtFuture<int> val) -> int {
-		qDb() << "Then2, got val:" << val.get();
+	.then([&](ExtFuture<int> extfuture) -> int {
+		qDb() << "Then2, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
-		EXPECT_EQ(val.get(), 2);
+		EXPECT_EQ(extfuture.get(), 2);
 		return 3;
 	})
-	.then([&](ExtFuture<int> val) -> double {
-		qDb() << "Then3, got val:" << val.get();
+	.then([&](ExtFuture<int> extfuture) -> double {
+		qDb() << "Then3, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
 		ran3 = true;
-		EXPECT_EQ(val.get(), 3);
+		EXPECT_EQ(extfuture.get(), 3);
 		return 3.1415;
 	}).wait();
 
