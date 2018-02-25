@@ -40,14 +40,4 @@ protected:
 };
 
 
-/*
- *
- */
-class AsyncTests: public QObject
-{
-
-	void UnwrapTest();
-};
-
-
 #endif /* UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_ */

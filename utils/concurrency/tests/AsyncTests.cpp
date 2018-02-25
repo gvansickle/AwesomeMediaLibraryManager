@@ -48,10 +48,12 @@ void AsyncTestsSuiteFixture::TearDown()
 /// Test Cases
 ///
 
+#if 0
 TEST_F(AsyncTestsSuiteFixture, ThisShouldFail)
 {
 	ASSERT_TRUE(false);
 }
+#endif
 
 TEST_F(AsyncTestsSuiteFixture, ThisShouldPass)
 {
