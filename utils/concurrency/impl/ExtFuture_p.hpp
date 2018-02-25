@@ -40,11 +40,12 @@ ExtFuture<T>::unwrap()
 template<typename T>
 T ExtFuture<T>::get()
 {
+	wait();
 	return this->future().result();
 }
 
 template<typename T>
-void ExtFuture<T>::wait()
+void ExtFuture<T>::wait() const
 {
     while (!this->isFinished())
     {

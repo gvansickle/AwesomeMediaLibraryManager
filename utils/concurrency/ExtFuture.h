@@ -128,7 +128,7 @@ public:
 	/// Member alias ala boost::future<T>.
 	using value_type = T;
 
-	using ContinuationType = std::function<QString(QString)>;
+//	using ContinuationType = std::function<QString(QString)>;
 
 	/// Type 1 tap() callback.
 	/// Takes a value of type T, returns void.
@@ -221,7 +221,7 @@ public:
 	{
 		qDb() << "DESTRUCTOR";
 
-		qWr() << "m_continuation_function:" << (bool)m_continuation_function;
+//		qWr() << "m_continuation_function:" << (bool)m_continuation_function;
 		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
 	}
 
@@ -241,15 +241,27 @@ public:
 	unwrap();
 
 	/**
+	 * Waits until the ExtFuture is finished, and returns the result.
+	 * Essentially the same semantics as std::future::get().
 	 *
-	 * @return
+	 * @note Calls .wait() then returns this->future().result().  This keeps Qt's event loops running.
+	 *       Not entirely sure if that's what we should be doing or not, std::future::get() doesn't
+	 *       work like that, but this is Qt, so... when in Rome....
+	 *
+	 * @return The result value of this ExtFuture.
 	 */
 	T get();
+
+	/// @name .then() overloads.
+	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016)
+	/// std::experimental::future-like .then() overloads for Qt5.
+	/// @{
 
 	/**
 	 * Attaches a continuation to this ExtFuture.
 	 * @note Like std::experimental::future::then(), the continuation function will be run on
 	 *       an unspecified thread.
+	 * @note ...but as currently implemented, it's always run on the app's main thread.
 	 *
 	 * @tparam F = Continuation function type.
 	 * @tparam R = Return value of continuation F(ExtFuture<T>).
@@ -264,10 +276,12 @@ public:
 	}
 
 	/**
-	 * C++17 std::experimental::future-like then().
+	 * std::experimental::future-like .then() which takes a continuation function @a the_callback,
+	 * of signature:
 	 *
-	 * then_callback(ExtFuture<T>) -> R
-	 * Returns an ExtFuture<R>.
+	 *     then_callback(ExtFuture<T>) -> R
+	 *
+	 * and returns an ExtFuture<R>.
 	 *
 	 * @tparam R a non-ExtFuture<> type.
 	 * @tparam T a non-ExtFuture<> type.
@@ -282,11 +296,16 @@ public:
 		return then(QApplication::instance(), then_callback);
 	}
 
-	/**
-	 * Overload for an empty .then().
-	 * @todo?
-	 */
+//	template <typename F, typename R = ExtFutureThenCallbackTraits<T, F>>
+//	typename R::then_return_type_t then(F&& func)
+//	{
+//		return ExtFuture<int>();
+//	}
 
+	/// @} // END .then() overloads.
+
+	/// @name .tap() overloads.
+	/// @{
 
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
@@ -316,14 +335,37 @@ public:
 		return tap(QApplication::instance(), prog_tap_callback);
 	}
 
+	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
+	ExtFuture<T>& tap(F&& tap_callback)
+	{
+		return *this; ///tap(QApplication::instance(), tap_callback);
+	}
+
+
+	/**
+	 * Degenerate .tap() case where no callback is specified.
+	 * Basically a no-op, simply returns a reference to *this.
+	 *
+	 * @return Reference to this.
+	 */
+	ExtFuture<T>& tap()
+	{
+		return *this;
+	}
+
+	/// @} // END .tap() overloads.
+
 	/**
 	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
 	 * event loop running.
+	 *
+	 * Effectively the same semantics as std::future::wait(), but with Qt's-event-loop pumping, so it only
+	 * semi-blocks the thread.
 	 */
-	void wait();
+	void wait() const;
 
 	/// @todo
-	void await();
+//	void await();
 
 	/**
 	 * Get this' current state as a string.
@@ -340,14 +382,14 @@ public:
 	{
 		QString retval = "ID: " + this->id();
 		retval += ", STATE: (" + state() + ")";
-		if(m_continuation_function)
-		{
-			retval += ", Continuation: nullptr";
-		}
-		else
-		{
-			retval += ", Continuation: valid";
-		}
+//		if(m_continuation_function)
+//		{
+//			retval += ", Continuation: nullptr";
+//		}
+//		else
+//		{
+//			retval += ", Continuation: valid";
+//		}
 		return retval;
 	}
 
@@ -373,37 +415,6 @@ protected:
 		{
 			m_extfuture_watcher = new ExtFutureWatcher<T>();
 		}
-	}
-
-	template <typename Function>
-	ExtFuture<T>& TapHelper(QObject *guard_qobject, Function f)
-	{
-		qDb() << "ENTER";
-		auto watcher = new QFutureWatcher<T>();
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
-		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject, [f, watcher](int index) {
-			qDb() << "TAP WRAPPER CALLED";
-			f(watcher->future().resultAt(index));
-		});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAP ExtFutureWatcher DESTROYED";});
-		watcher->setFuture(this->future());
-		qDb() << "EXIT";
-		return *this;
-	}
-
-	template <typename Function>
-	ExtFuture<T>& TapProgressHelper(QObject *guard_qobject, Function f)
-	{
-		qDb() << "ENTER";
-		auto watcher = new ExtFutureWatcher<T>();
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
-		watcher->onProgressChange([f, watcher](int min, int val, int max, QString text){
-			f({min, val, max, text});
-			;});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAPPROGRESS ExtFutureWatcher DESTROYED";});
-		watcher->setFuture(*this);
-		qDb() << "EXIT";
-		return *this;
 	}
 
 	/**
@@ -435,10 +446,47 @@ M_WARNING("TODO: LEAKS THIS");
 		return *retval;
 	}
 
+	/**
+	 * TapHelper which calls tap_callback whenever there's a new result ready.
+	 * @param guard_qobject
+	 * @param tap_callback
+	 * @return
+	 */
+	template <typename Function>
+	ExtFuture<T>& TapHelper(QObject *guard_qobject, Function&& tap_callback)
+	{
+		qDb() << "ENTER";
+		auto watcher = new QFutureWatcher<T>();
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject, [tap_callback, watcher](int index) {
+			qDb() << "TAP WRAPPER CALLED";
+			tap_callback(watcher->future().resultAt(index));
+		});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAP ExtFutureWatcher DESTROYED";});
+		watcher->setFuture(this->future());
+		qDb() << "EXIT";
+		return *this;
+	}
+
+	template <typename Function>
+	ExtFuture<T>& TapProgressHelper(QObject *guard_qobject, Function f)
+	{
+		qDb() << "ENTER";
+		auto watcher = new ExtFutureWatcher<T>();
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+		watcher->onProgressChange([f, watcher](int min, int val, int max, QString text){
+			f({min, val, max, text});
+			;});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAPPROGRESS ExtFutureWatcher DESTROYED";});
+		watcher->setFuture(*this);
+		qDb() << "EXIT";
+		return *this;
+	}
+
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
-	std::shared_ptr<ContinuationType> m_continuation_function;
+//	std::shared_ptr<ContinuationType> m_continuation_function;
 
 	std::shared_ptr<TapCallbackType1> m_tap_function;
 

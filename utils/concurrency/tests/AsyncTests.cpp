@@ -246,6 +246,32 @@ TEST_F(AsyncTestsSuiteFixture, UnwrapTest)
 //	ExtFuture<QString> unwrapped_future = future.unwrap();
 }
 
+TEST_F(AsyncTestsSuiteFixture, TapAndThen)
+{
+
+	bool ran_tap = false;
+	bool ran_then = false;
+
+	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
+
+	future.tap([&](QString result){
+			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
+			ran_tap = true;
+			EXPECT_FALSE(ran_then);
+		;})
+		.then([&](ExtFuture<QString> extfuture){
+			EXPECT_EQ(extfuture.get(), QString("delayed_string_func_1() output"));
+			EXPECT_TRUE(ran_tap);
+			EXPECT_FALSE(ran_then);
+			ran_then = true;
+			return QString("Then Called");
+		;})
+		.wait();
+
+	ASSERT_TRUE(ran_tap);
+	ASSERT_TRUE(ran_then);
+}
+
 /// Static checks
 void dummy(void)
 {

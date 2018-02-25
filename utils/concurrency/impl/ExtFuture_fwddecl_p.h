@@ -132,21 +132,23 @@ using conditional_t = typename std::conditional<B,T,F>::type;
 #endif
 
 /**
- * Traits of a callback function passed to ExtFuture<T>::then().
+ * Traits of a callback function of type F passed to ExtFuture<T>::then(...).
  */
 template <typename T, typename F>
 struct ExtFutureThenCallbackTraits
 {
 //	typedef arg_result<T, F> arg;
-	typedef std::conditional_t<
-			CallableWith<F>::value, arg_result<F>,
-			std::conditional_t<
-						CallableWith<F, T&&>::value, arg_result<F, T&&>,
-						arg_result<F, T&>
-						>
-				> arg;
-	typedef isExtFuture2<typename arg::result_t> returns_future;
-	typedef ExtFuture<typename returns_future::inner_t> return_type;
+//	typedef std::conditional_t<
+//			CallableWith<F>::value, arg_result<F>,
+//			std::conditional_t<
+//						CallableWith<F, T&&>::value, arg_result<F, T&&>,
+//						arg_result<F, T&>
+//						>
+//				> arg;
+//	typedef isExtFuture2<typename arg::result_t> returns_future;
+
+	/// The type which should be returned from the .then() call.
+//	using then_return_type_t = ExtFuture<typename returns_future::inner_t>;
 };
 
 /**
