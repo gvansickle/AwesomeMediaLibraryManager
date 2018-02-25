@@ -283,12 +283,11 @@ public:
 	 *
 	 * @returns ExtFuture<R>
 	 */
-	template <typename R = T>
-	std::enable_if_t<!isExtFuture_v<R>
-		&& !isExtFuture_v<T>
-		&& !std::is_same_v<R, void>
-		&& !std::is_same_v<T, void>, ExtFuture<R>>
-	then( R(*then_callback)(T) )
+	template <typename R = T,
+			REQUIRES(!IsExtFuture<R> && !IsExtFuture<T>
+				&& !std::is_same_v<R, void>
+				&& !std::is_same_v<T, void>)>
+	ExtFuture<R> then( R(*then_callback)(T) )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
 		return then(QApplication::instance(), then_callback);
@@ -606,7 +605,7 @@ using deduced_type_t = typename deduced_type<T>::type;
  * @param value
  * @return
  */
-template <int = 0, int..., class T>
+template <int = 0, int..., class T, REQUIRES(!IsExtFuture<T>)>
 ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
 {
 	return /*ExtFuture<deduced_type_t<T>>();*/ ExtAsync::detail::make_ready_future(std::forward<T>(value));
@@ -626,6 +625,14 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 }
 
 #endif
+
+/// Concept checks.
+static_assert(IsExtFuture<ExtFuture<int>>, "");
+static_assert(NonNestedExtFuture<ExtFuture<int>>, "");
+static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
+static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
+static_assert(!NestedExtFuture<ExtFuture<int>>, "");
+static_assert(!IsExtFuture<int>, "");
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 

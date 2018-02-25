@@ -21,13 +21,15 @@
 #define UTILS_CONCURRENCY_CPP14_CONCEPTS_HPP_
 
 #include <type_traits>
-#include <utility>
+#include <utility> // For std::declval<>.
 
 #if 1 /// @todo if these haven't been standardized/aren't supported.
 
 /// void_t
-template <class...>
-using void_t = void;
+//template <class...>
+//using void_t = void;
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
 
 template <bool B>
 using bool_constant = std::integral_constant<bool, B>;
@@ -136,10 +138,46 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
 
 /// @}
 
+/// Member aliases.
+namespace alias
+{
+	template <class T>
+	using value_type = typename T::value_type;
+	template <class T>
+	using reference = typename T::reference;
+	template <class T>
+	using pointer = typename T::pointer;
+} // namespace alias
 
 namespace concepts
 {
 	template <class T> constexpr bool Pointer = std::is_pointer<T>::value;
+
+	/// Mishmash of ideas from all over.
+	/// SO post: https://stackoverflow.com/a/26533335
+
+	/// "models" trait declarations.
+	/// Primary template, handles types which do not model a Concept, which we define as
+	/// having a "requires" member.
+	template <class Concept, class Enable=void_t<>>
+	struct models : std::false_type {};
+
+	/// Specialization which handles types which do have a ".requires()" member, and hence
+	/// we say model a Concept.
+	template <class Concept, class... Ts>
+	struct models<Concept(Ts...), void_t<
+									decltype(std::declval<Concept>().requires(std::declval<Ts>()...))
+									>
+			> : std::true_type {};
+
+	/// Our low-rent C++2x "requires" "keyword".
+	#define REQUIRES(...) typename std::enable_if_t<(__VA_ARGS__), int> = 0
+
+	template<class Concept, class... Ts>
+	constexpr auto modeled(Ts&&...)
+	{
+	    return models<Concept(Ts...)>();
+	}
 }
 
 

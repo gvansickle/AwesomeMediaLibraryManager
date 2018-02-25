@@ -22,6 +22,7 @@
 
 #include <type_traits>
 #include "../function_traits.hpp"
+#include "../cpp14_concepts.hpp"
 
 /**
  * "Unit" vs. "void" concept from Facebook's "folly" library (Apache 2.0).
@@ -121,8 +122,11 @@ struct isExtFuture2<ExtFuture<T>> : std::true_type
 template <typename T>
 static constexpr bool isExtFuture_v = isExtFuture<T>::value;
 
+/// @todo If not C++14 or not supported.
+#if 0
 template< bool B, class T, class F >
 using conditional_t = typename std::conditional<B,T,F>::type;
+#endif
 
 /**
  * Traits of a callback function passed to ExtFuture<T>::then().
@@ -131,9 +135,9 @@ template <typename T, typename F>
 struct ExtFutureThenCallbackTraits
 {
 //	typedef arg_result<T, F> arg;
-	typedef conditional_t<
+	typedef std::conditional_t<
 			CallableWith<F>::value, arg_result<F>,
-			conditional_t<
+			std::conditional_t<
 						CallableWith<F, T&&>::value, arg_result<F, T&&>,
 						arg_result<F, T&>
 						>
@@ -142,5 +146,27 @@ struct ExtFutureThenCallbackTraits
 	typedef ExtFuture<typename returns_future::inner_t> return_type;
 };
 
+/**
+ *
+ */
+
+/// Our "ExtFuture" concept.
+/// Not super exhaustive checking, but....
+template <class T>
+constexpr bool IsExtFuture = require<
+		exists<alias::value_type, T>
+	>;
+
+template <class T>
+constexpr bool NonNestedExtFuture = require<
+		IsExtFuture<T>,
+		not IsExtFuture<typename T::value_type>
+	>;
+
+template <class T>
+constexpr bool NestedExtFuture = require<
+		IsExtFuture<T>,
+		IsExtFuture<typename T::value_type>
+	>;
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_ */
