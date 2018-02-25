@@ -120,7 +120,10 @@ struct isExtFuture2<ExtFuture<T>> : std::true_type
 
 
 template <typename T>
-static constexpr bool isExtFuture_v = isExtFuture<T>::value;
+constexpr bool isExtFuture_v = isExtFuture<T>::value;
+
+template <typename T>
+using isExtFuture_t = typename isExtFuture<T>::inner_t;
 
 /// @todo If not C++14 or not supported.
 #if 0
@@ -153,14 +156,12 @@ struct ExtFutureThenCallbackTraits
 /// Our "ExtFuture" concept.
 /// Not super exhaustive checking, but....
 template <class T>
-constexpr bool IsExtFuture = require<
-		exists<alias::value_type, T>
-	>;
+constexpr bool IsExtFuture = require<isExtFuture_v<T>>;
 
 template <class T>
 constexpr bool NonNestedExtFuture = require<
 		IsExtFuture<T>,
-		not IsExtFuture<typename T::value_type>
+		!IsExtFuture<isExtFuture_t<T>>
 	>;
 
 template <class T>

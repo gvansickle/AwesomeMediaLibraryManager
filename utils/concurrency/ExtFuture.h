@@ -284,9 +284,7 @@ public:
 	 * @returns ExtFuture<R>
 	 */
 	template <typename R = T,
-			REQUIRES(!IsExtFuture<R> && !IsExtFuture<T>
-				&& !std::is_same_v<R, void>
-				&& !std::is_same_v<T, void>)>
+			REQUIRES(!IsExtFuture<R> && !IsExtFuture<T>	&& !std::is_same_v<R, void>	&& !std::is_same_v<T, void>)>
 	ExtFuture<R> then( R(*then_callback)(T) )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
@@ -301,8 +299,8 @@ public:
 	 * @param then_callback
 	 * @return
 	 */
-	template <typename F>
-	auto then( F&& then_callback ) -> ExtFuture<decltype(then_callback(*this))>
+	template <class F, class R = std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T>)>
+	ExtFuture<R> then( F&& then_callback )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
 		return then(QApplication::instance(), then_callback);
@@ -630,7 +628,7 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 static_assert(IsExtFuture<ExtFuture<int>>, "");
 static_assert(NonNestedExtFuture<ExtFuture<int>>, "");
 static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
+//static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
 static_assert(!NestedExtFuture<ExtFuture<int>>, "");
 static_assert(!IsExtFuture<int>, "");
 
