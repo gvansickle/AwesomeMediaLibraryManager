@@ -17,37 +17,21 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_
-#define UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_
+#ifndef TESTS_TESTHELPERS_H_
+#define TESTS_TESTHELPERS_H_
 
-#include <QObject>
+QT_BEGIN_NAMESPACE
 
-#include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
-
-
-/**
- * Test Suite (ISTQB) or "Test Case" (Google) for AsyncTests.
- */
-class AsyncTestsSuiteFixture : public ::testing::Test
+/// To let Google Test print QStrings.
+inline void PrintTo(const QString &qString, ::std::ostream *os)
 {
-protected:
+    *os << qUtf8Printable(qString);
+}
 
-	void SetUp() override;
-	void TearDown() override;
+QT_END_NAMESPACE
 
-	// Objects declared here can be used by all tests in this Fixture.
-};
-
-
-/*
- *
- */
-class AsyncTests: public QObject
-{
-
-	void UnwrapTest();
-};
+/// Quick and dirty way to add information to the test log.
+#define GTEST_COUT std::cout << "[          ] [ INFO ]"
 
 
-#endif /* UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_ */
+#endif /* TESTS_TESTHELPERS_H_ */

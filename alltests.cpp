@@ -1,27 +1,38 @@
 /*
- * alltests.cpp
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
- *  Created on: Feb 23, 2018
- *      Author: gary
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <QApplication>
 #include <QTimer>
 //#include <QtTest>
 
-//#include <utils/concurrency/tests/AsyncTests.h>
-
 #include <gtest/gtest.h>
+#include <tests/TestHelpers.h>
+
+#if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
+#error "Google Test wasn't compiled for a multithreaded environment."
+#endif
 
 ////
 //#include <gmock/gmock-matchers.h>
 
-QT_BEGIN_NAMESPACE
-inline void PrintTo(const QString &qString, ::std::ostream *os)
-{
-    *os << qUtf8Printable(qString);
-}
-QT_END_NAMESPACE
+
+
 
 /// @note main() mods to support Qt5 threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
 

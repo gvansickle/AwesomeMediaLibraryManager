@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
-
+#include <tests/TestHelpers.h>
 
 #include <QString>
 #include <QTest>
@@ -31,7 +31,6 @@
 
 #include "../ExtAsync.h"
 
-#define GTEST_COUT std::cerr << "[          ] [ INFO ]"
 
 void AsyncTestsSuiteFixture::SetUp()
 {
@@ -45,7 +44,10 @@ void AsyncTestsSuiteFixture::TearDown()
 
 
 
-/// Test Function.
+///
+/// Test Cases
+///
+
 TEST_F(AsyncTestsSuiteFixture, ThisShouldFail)
 {
 	ASSERT_TRUE(false);
@@ -59,7 +61,7 @@ TEST_F(AsyncTestsSuiteFixture, ThisShouldPass)
 TEST_F(AsyncTestsSuiteFixture, QStringPrintTest)
 {
 	QString test = "Test";
-	ASSERT_EQ(test, "notTest");
+	ASSERT_EQ(test, "Test");
 }
 
 static QString delayed_string_func_1()
@@ -108,6 +110,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest)
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
+		auto the_str = str.get();
+		EXPECT_EQ(the_str, QString("Then1 OUTPUT"));
 		return QString("Then2 OUTPUT");
 	})
 	.then([&](ExtFuture<QString> str) -> QString {
@@ -136,94 +140,18 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest)
 	RecordProperty("Completed", true);
 }
 
+TEST_F(AsyncTestsSuiteFixture,TestReadyFutures)
+{
+	ExtFuture<int> future = make_ready_future(45);
+	ASSERT_TRUE(future.isStarted());
+	ASSERT_TRUE(future.isFinished());
+	ASSERT_EQ(future.get(), 45);
+}
 
 //////////
 
-void AsyncTests::initTestCase()
-{
-	qDb() << "INIT";
-}
-
-void AsyncTests::test1()
-{
-	QTRY_COMPARE(4, 0);
-}
-
-void AsyncTests::test2()
-{
-	QTRY_COMPARE(6, 6);
-}
-
-void AsyncTests::cleanupTestCase()
-{
-	qDb() << "CLEANUP";
-}
-
-void AsyncTests::RunAllTests()
-{
-	ExtFutureThenChainingTest();
-	UnwrapTest();
-}
-
-void AsyncTests::TestReadyFutures()
-{
-
-}
 
 
-
-void AsyncTests::ExtFutureThenChainingTest()
-{
-	qIn() << "START";
-
-	bool ran1 = false;
-	bool ran2 = false;
-	bool ran3 = false;
-
-	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
-
-	future
-	.then([&](ExtFuture<QString> str) -> QString {
-		qDb() << "Then1, got str:" << str;
-		qDb() << "Then1, str val:" << str.get();
-		Q_ASSERT(ran1 == false);
-		Q_ASSERT(ran2 == false);
-		Q_ASSERT(ran3 == false);
-		ran1 = true;
-		Q_ASSERT(str.get() == "delayed_string_func_1() output");
-		return QString("Then1 OUTPUT");
-	})
-	.then([&](ExtFuture<QString> str) -> QString {
-		qDb() << "Then2, got str:" << str;
-		qDb() << "Then2, str val:" << str.get();
-		Q_ASSERT(ran1 == true);
-		Q_ASSERT(ran2 == false);
-		Q_ASSERT(ran3 == false);
-		ran2 = true;
-		return QString("Then2 OUTPUT");
-	})
-	.then([&](ExtFuture<QString> str) -> QString {
-		qDb() << "Then3, got str:" << str;
-		qDb() << "Then3, str val:" << str.get();
-		Q_ASSERT(ran1 == true);
-		Q_ASSERT(ran2 == true);
-		Q_ASSERT(ran3 == false);
-		ran3 = true;
-		return QString("Then3 OUTPUT");
-	}).wait();
-
-	qDb() << "STARING WAIT";
-	/// @todo This doesn't wait here, but the attached wait() above does. Which maybe makes sense.
-	future.wait();
-	qDb() << "ENDING WAIT";
-
-	Q_ASSERT(ran1 == true);
-	Q_ASSERT(ran2 == true);
-	Q_ASSERT(ran3 == true);
-
-	qIn() << "Complete";
-
-}
 
 static ExtFuture<QString> delayed_string_func()
 {
@@ -238,7 +166,7 @@ static ExtFuture<QString> delayed_string_func()
 	return retval;
 }
 
-void AsyncTests::UnwrapTest()
+TEST_F(AsyncTestsSuiteFixture, UnwrapTest)
 {
 
 //	auto future = QtConcurrent::run(delayed_string_func);
