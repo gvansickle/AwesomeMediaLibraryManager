@@ -167,7 +167,7 @@ constexpr bool NonNestedExtFuture = require<
 template <class T>
 constexpr bool NestedExtFuture = require<
 		IsExtFuture<T>,
-		IsExtFuture<typename T::value_type>
+		IsExtFuture<isExtFuture_t<T>>
 	>;
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_ */

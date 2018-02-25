@@ -299,30 +299,17 @@ public:
 	 * @param then_callback
 	 * @return
 	 */
-	template <class F, class R = std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T>)>
+	template <class F, class R = std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T> && !IsExtFuture<R>)>
 	ExtFuture<R> then( F&& then_callback )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
 		return then(QApplication::instance(), then_callback);
 	}
-//	template <typename F>
-//	ExtFuture<typename std::result_of<F(ExtFuture<T>)>::type>
-//	then(F&& then_callback) //-> ExtFuture<decltype(then_callback(*this))>
+//	template <typename F, class R = std::result_of_t<F&&(T&&)>, REQUIRES(!IsExtFuture<T> && NonNestedExtFuture<ExtFuture<R>>)>
+//	ExtFuture<R> then(F&& then_callback)
 //	{
+////#error "TODO: Appears to get past template problems."
 //		return then(QApplication::instance(), std::forward<F>(then_callback));
-//	}
-	/**
-	 * U = Return type of continuation.
-	 * @param context
-	 * @param then_callback
-	 * @return
-	 */
-//	template <typename F, typename U = std::result_of_t<std::decay_t<F>(ExtFuture<T>)> >
-//	ExtFuture<U>
-//	then(QObject* context, F&& then_callback)
-//	{
-//		Q_ASSERT(0);
-//		//return then(QApplication::instance(), then_callback);
 //	}
 
 
@@ -453,7 +440,7 @@ protected:
 		return *this;
 	}
 
-	template <typename R = T, typename F, typename... Args>
+	template <typename F, typename... Args, typename R = std::result_of_t<F&&(Args...)>>
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
 	{
 //		qDb() << "ENTER";
@@ -628,7 +615,7 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 static_assert(IsExtFuture<ExtFuture<int>>, "");
 static_assert(NonNestedExtFuture<ExtFuture<int>>, "");
 static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-//static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
+static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
 static_assert(!NestedExtFuture<ExtFuture<int>>, "");
 static_assert(!IsExtFuture<int>, "");
 

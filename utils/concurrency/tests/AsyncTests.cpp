@@ -155,7 +155,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	RecordProperty("Completed", true);
 }
 
-TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_Values)
+TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 {
 //	qIn() << "START";
 
@@ -169,31 +169,33 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_Values)
 	ASSERT_FALSE(future.isFinished());
 
 	future
-	.then([&](QString str) -> QString {
-		qDb() << "Then1, got str:" << str;
+	.then([&](ExtFuture<QString> val) -> int {
+		qDb() << "Then1, got val:" << val.get();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran1 = true;
-		EXPECT_EQ(str, QString("delayed_string_func_1() output"));
-		return QString("Then1 OUTPUT");
+		QString the_str = val.get();
+		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
+		return 2;
 	})
-	.then([&](QString str) -> QString {
-		qDb() << "Then2, got str:" << str;
+	.then([&](ExtFuture<int> val) -> int {
+		qDb() << "Then2, got val:" << val.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
-		EXPECT_EQ(str, QString("Then1 OUTPUT"));
-		return QString("Then2 OUTPUT");
+		EXPECT_EQ(val.get(), 2);
+		return 3;
 	})
-	.then([&](QString str) -> QString {
-		qDb() << "Then3, got str:" << str;
+	.then([&](ExtFuture<int> val) -> double {
+		qDb() << "Then3, got val:" << val.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
 		ran3 = true;
-		return QString("Then3 OUTPUT");
+		EXPECT_EQ(val.get(), 3);
+		return 3.1415;
 	}).wait();
 
 	ASSERT_TRUE(future.isFinished());
