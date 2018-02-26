@@ -30,6 +30,7 @@
 
 
 #include <type_traits>
+#include "future_type_traits.hpp"
 #include "function_traits.hpp"
 #include "cpp14_concepts.hpp"
 #include <functional>
@@ -87,7 +88,7 @@ private:
  */
 namespace ExtAsync
 {
-M_WARNING("ExtAsync DECLARED");
+//M_WARNING("ExtAsync DECLARED");
 
 	template <typename T>
 	static ExtFuture<T> run(ExtAsyncTask<T>* task)
@@ -95,10 +96,19 @@ M_WARNING("ExtAsync DECLARED");
 		return (new ExtAsyncTaskRunner<T>(task))->start();
 	}
 
-	template <typename This, typename Function, typename... Args, typename R = QString>
+	/**
+	 * ExtAsync::run() overload for member functions taking an ExtFuture<T>& as the first non-this param.
+	 * E.g.:
+	 * 		void Class::Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
+	 */
+	template <typename This, typename F, typename... Args, typename R = QString> //function_traits<F(This*, Args...)>, ///@todo WRONG, void.
+//			REQUIRES(std::is_class_v<This>)>// && function_arg_n_is_type_v<F, 0, decltype(ExtFuture<R>())>)>
 	static ExtFuture<R>
-	run(This* thiz, Function&& function, Args&&... args)
+	run(This* thiz, F&& function, Args&&... args)
 	{
+		static_assert(sizeof...(Args) <= 1, "Too many args");
+		static_assert(function_traits<F>::arity_v > 1, "Callback must take at least one argument");
+
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFuture<R> report_and_control;
@@ -114,10 +124,9 @@ M_WARNING("ExtAsync DECLARED");
 	 * @param args
 	 * @return
 	 */
-#if 1
-	template <typename Function, typename... Args, typename R = QString>
-	static ExtFuture<R>
-	run(Function&& function, Args&&... args)
+	template <typename Function, typename... Args, typename R = typename function_traits<Function(Args...)>::return_type_t>
+	static
+	auto run(Function&& function, Args&&... args) ->  ExtFuture<R>
 	{
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
@@ -128,7 +137,7 @@ M_WARNING("ExtAsync DECLARED");
 		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 		return report_and_control;
 	}
-#endif
+
 #if 0
 	template <typename Function, typename... Args>
 	static ExtFuture<void>
@@ -150,7 +159,8 @@ M_WARNING("ExtAsync DECLARED");
 	 * @param function
 	 * @return
 	 */
-	template <typename FuncType, typename R = typename function_traits<FuncType>::return_type_t>
+	template <typename FuncType, typename R = typename function_traits<FuncType>::return_type_t,
+			REQUIRES(!std::is_member_function_pointer_v<FuncType>)>
 	auto run(FuncType&& function) -> std::enable_if_t<!function_return_type_is_v<FuncType, void>, ExtFuture<R>>
 	{
 	    return ExtFuture<R>(QtConcurrent::run(function));
@@ -202,7 +212,10 @@ inline static void ExtAsyncThisHelper(std::function<void(void)> then_callback, E
 }
 #endif
 
-M_WARNING("/// @todo Odd place to put an include, I know");
+
+
+
+/// @todo Move this include.
 #include "ExtAsyncTask.h"
 
 

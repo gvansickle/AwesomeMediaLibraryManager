@@ -138,6 +138,11 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
 
 /// @}
 
+/// @name Detectors.
+/// @{
+
+
+
 /// Member aliases.
 namespace alias
 {
@@ -148,6 +153,8 @@ namespace alias
 	template <class T>
 	using pointer = typename T::pointer;
 } // namespace alias
+
+/// @}
 
 namespace concepts
 {
@@ -173,11 +180,24 @@ namespace concepts
 	/// Our low-rent C++2x "requires" "keyword".
 	#define REQUIRES(...) typename std::enable_if_t<(__VA_ARGS__), int> = 0
 
+	/// Helper function for reducing the need for dectype().
 	template<class Concept, class... Ts>
 	constexpr auto modeled(Ts&&...)
 	{
 	    return models<Concept(Ts...)>();
 	}
+
+	template <class T>
+	constexpr bool Class = std::is_class_v<T>;
+
+	template <class T>
+	constexpr bool Function = std::is_function<T>::value;
+
+	struct Callable
+	{
+		template<class F, class... Ts>
+		auto requires(F&& f, Ts&&... xs) -> decltype(f(std::forward<Ts>(xs)...));
+	};
 }
 
 

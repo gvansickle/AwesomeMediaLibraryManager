@@ -38,6 +38,7 @@
 template <class F>
 struct function_traits;
 
+
 /**
  * Specialization for regular free functions.
  *
@@ -53,9 +54,9 @@ struct function_traits<ReturnType(Args...)>
 {
     using return_type_t = ReturnType;
 
-    static constexpr std::size_t arity_v = sizeof...(Args);
+    static constexpr int arity_v = sizeof...(Args);
 
-    template <std::size_t N>
+    template <int N>
     struct arg
     {
         static_assert(N < arity_v, "Parameter index out of range");
@@ -63,11 +64,11 @@ struct function_traits<ReturnType(Args...)>
     };
 
     /// Helper for providing arg_t<N> vs. arg<N>::type.
-    template <std::size_t N>
+    template <int N>
     using arg_t = typename arg<N>::type;
 
     /// For checking if the type of arg N is T.
-    template <std::size_t N, typename T>
+    template <int N, typename T>
     static constexpr bool argtype_is_v = std::is_same_v<arg_t<N>, T>;
 
     /// For checking if the return type is T.
@@ -117,6 +118,19 @@ struct function_traits<ReturnType(Class::* const)(Args...)> : public function_tr
 template <typename Class, typename ReturnType, typename... Args>
 struct function_traits<ReturnType(Class::* const)(Args...) const> : public function_traits<ReturnType(Class&, Args...)> {};
 
+
+/// helper
+template<class F, class...Args>
+struct is_callable
+{
+    template<class U>
+    static auto test(U* p) -> decltype((*p)(std::declval<Args>()...), void(), std::true_type());
+    template<class U>
+    static auto test(...) -> decltype(std::false_type());
+
+    static constexpr bool value = decltype(test<F>(0))::value;
+};
+
 /**
  * Specialization for "Callables", i.e. functors, std::function<>'s, anything with an operator().
  */
@@ -124,27 +138,27 @@ template <typename CallableType>
 struct function_traits
 {
 	/// Get the function_traits<> of operator().
-	using function_call_operator_t = function_traits<decltype(&CallableType::operator())>;
+	using function_call_operator_traits_t = function_traits<decltype(&CallableType::operator())>;
 
-    using return_type_t = typename function_call_operator_t::return_type_t;
+    using return_type_t = typename function_call_operator_traits_t::return_type_t;
 
     // Adjust arity to ignore the implicit object pointer.
-    static constexpr std::size_t arity_v = function_call_operator_t::arity_v - 1;
+    static constexpr int arity_v = function_call_operator_traits_t::arity_v - 1;
 
-    template <std::size_t N>
+    template <int N>
     struct arg
     {
         static_assert(N < arity_v, "Parameter index out of range");
         // Again, adjusting arity to ignore the implicit object pointer.
-        using type = typename function_call_operator_t::template arg_t<N+1>;
+        using type = typename function_call_operator_traits_t::template arg<N+1>::type;
     };
 
     /// Helper for providing arg_t<N> vs. arg<N>::type.
-    template <std::size_t N>
+    template <int N>
     using arg_t = typename arg<N>::type;
 
     /// For checking if the type of arg N is T.
-    template <std::size_t N, typename T>
+    template <int N, typename T>
     static constexpr bool argtype_is_v = std::is_same_v<arg_t<N>, T>;
 
     /// For checking if the return type is T.
@@ -177,6 +191,7 @@ static constexpr bool function_return_type_is_v = std::is_same_v<function_return
 
 /**
  * Return type of a function of type F called with arglist Args.
+ * @todo This is not the same as std::result_of_t, but more like invoke_result.
  */
 template <typename F, typename... Args>
 using result_of_t = decltype(std::declval<F>()(std::declval<Args>()...));
@@ -204,6 +219,22 @@ struct CallableWith
     typedef decltype(check<F>(nullptr)) type;
     static constexpr bool value = type::value;
 };
+
+/**
+ * Get the type of the Nth element of a parameter pack.
+ */
+template <int N, typename... Ts>
+using type_of_param_pack_arg_n = typename std::tuple_element<N, std::tuple<Ts...>>::type;
+
+template<typename... Ts>
+using type_of_param_pack_arg_0 = type_of_param_pack_arg_n<0, Ts...>;
+template<typename... Ts>
+using type_of_param_pack_arg_1 = type_of_param_pack_arg_n<1, Ts...>;
+template<typename... Ts>
+using type_of_param_pack_arg_2 = type_of_param_pack_arg_n<2, Ts...>;
+
+template <typename F, unsigned N, typename T>
+constexpr bool function_arg_n_is_type_v = std::is_same_v<T, typename function_traits<F>::template arg<N>::type>;
 
 /// @} // Convenience templates.
 

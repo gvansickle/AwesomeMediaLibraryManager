@@ -103,6 +103,12 @@ struct isExtFuture<ExtFuture<T>> : std::true_type
 	using inner_t = T;
 };
 
+/// Facebook's folly futures call this "isFutureOrSemiFuture<>".
+/// There's probably a good reason why, but I don't see it...
+/// ...oh wait, there it is: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0783r0.html
+/// SemiFutures are futures without continuations.
+/// Anyway, this is the primary template, inheriting from std::false_type
+/// So, not real clear on why the two types.
 template <typename T>
 struct isExtFuture2 : std::false_type
 {
@@ -125,14 +131,27 @@ constexpr bool isExtFuture_v = isExtFuture<T>::value;
 template <typename T>
 using isExtFuture_t = typename isExtFuture<T>::inner_t;
 
-/// @todo If not C++14 or not supported.
-#if 0
-template< bool B, class T, class F >
-using conditional_t = typename std::conditional<B,T,F>::type;
-#endif
+/// Our "ExtFuture" concepts.
+template <class T>
+constexpr bool IsExtFuture = require<concepts::Class<T>, isExtFuture_v<T>>;
+
+template <class T>
+constexpr bool NonNestedExtFuture = require<
+		IsExtFuture<T>,
+		!IsExtFuture<isExtFuture_t<T>>
+	>;
+
+template <class T>
+constexpr bool NestedExtFuture = require<
+		IsExtFuture<T>,
+		IsExtFuture<isExtFuture_t<T>>
+	>;
+/// END concepts
 
 /**
- * Traits of a callback function of type F passed to ExtFuture<T>::then(...).
+ * Traits of a continuation of type F passed to ExtFuture<T>::then(ExtFuture<T>).
+ *
+ * then_return_type_t   The complete type (e.g. ExtFuture<int>) which should be returned from the .then() call.
  */
 template <typename T, typename F>
 struct ExtFutureThenCallbackTraits
@@ -147,29 +166,18 @@ struct ExtFutureThenCallbackTraits
 //				> arg;
 //	typedef isExtFuture2<typename arg::result_t> returns_future;
 
+
+
+	using callback_return_t = typename function_traits<F>::return_type_t;
+
 	/// The type which should be returned from the .then() call.
-//	using then_return_type_t = ExtFuture<typename returns_future::inner_t>;
+	using then_return_type_t = ExtFuture<callback_return_t>;
 };
 
 /**
  *
  */
 
-/// Our "ExtFuture" concept.
-/// Not super exhaustive checking, but....
-template <class T>
-constexpr bool IsExtFuture = require<isExtFuture_v<T>>;
 
-template <class T>
-constexpr bool NonNestedExtFuture = require<
-		IsExtFuture<T>,
-		!IsExtFuture<isExtFuture_t<T>>
-	>;
-
-template <class T>
-constexpr bool NestedExtFuture = require<
-		IsExtFuture<T>,
-		IsExtFuture<isExtFuture_t<T>>
-	>;
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_ */

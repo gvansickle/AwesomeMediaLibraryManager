@@ -246,7 +246,7 @@ TEST_F(AsyncTestsSuiteFixture, UnwrapTest)
 //	ExtFuture<QString> unwrapped_future = future.unwrap();
 }
 
-TEST_F(AsyncTestsSuiteFixture, TapAndThen)
+TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 {
 
 	bool ran_tap = false;
@@ -270,6 +270,36 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen)
 
 	ASSERT_TRUE(ran_tap);
 	ASSERT_TRUE(ran_then);
+}
+
+TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
+{
+	int tap_call_counter = 0;
+
+	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int> extfuture) {
+			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
+			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
+			QThread::sleep(1);
+			extfuture.reportResult(867);
+			extfuture.reportResult(5309);
+			extfuture.reportFinished();
+			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
+		})
+	.tap([&](int value){
+		if(tap_call_counter == 0)
+		{
+			EXPECT_EQ(value, 867);
+		}
+		else if(tap_call_counter == 1)
+		{
+			EXPECT_EQ(value, 5309);
+		}
+		else
+		{
+			EXPECT_EQ(tap_call_counter, 1);
+		}
+		tap_call_counter++;
+		;}).wait();
 }
 
 /// Static checks

@@ -123,10 +123,13 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 {
 	using BASE_CLASS = QFutureInterface<T>;
 
+	static_assert(!std::is_void<T>::value, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
+
 public:
 
-	/// Member alias ala boost::future<T>.
+	/// Member alias for the contained type, ala boost::future<T>.
 	using value_type = T;
+	using is_ExtFuture_v = std::true_type;
 
 //	using ContinuationType = std::function<QString(QString)>;
 
@@ -336,9 +339,15 @@ public:
 	}
 
 	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
+	ExtFuture<T>& tap(QObject* context, F&& tap_callback)
+	{
+		return TapHelper(context, tap_callback);
+	}
+
+	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
 	ExtFuture<T>& tap(F&& tap_callback)
 	{
-		return *this; ///tap(QApplication::instance(), tap_callback);
+		return tap(QApplication::instance(), tap_callback);
 	}
 
 
