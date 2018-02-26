@@ -316,7 +316,7 @@ public:
 	 *
 	 * @return  A reference to the predecessor ExtFuture<T>.
 	 */
-	ExtFuture<QString>& tap(QObject* context, TapCallbackType1 tap_callback)
+	ExtFuture<T>& tap(QObject* context, TapCallbackType1 tap_callback)
 	{
 		m_tap_function = std::make_shared<TapCallbackType1>(tap_callback);
 		return TapHelper(context, *m_tap_function);
