@@ -90,6 +90,7 @@ namespace ExtAsync
 {
 //M_WARNING("ExtAsync DECLARED");
 
+
 	template <typename T>
 	static ExtFuture<T> run(ExtAsyncTask<T>* task)
 	{
@@ -119,15 +120,33 @@ namespace ExtAsync
 	}
 
 	/**
-	 * For free functions.
+	 * For free functions of the form:
+	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
 	 * @param function
 	 * @param args
 	 * @return
 	 */
-	template <typename Function, typename... Args, typename R = typename function_traits<Function(Args...)>::return_type_t>
-	static
-	auto run(Function&& function, Args&&... args) ->  ExtFuture<R>
+
+	template <class R, typename Function, typename... Args>
+	struct run_specialization_helper
 	{
+		static auto run(Function&& function, Args&&... args) -> std::enable_if_t<function_arg_n_is_type_v<Function, 0, ExtFuture<R>>>
+		{
+			// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+			// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+			ExtFuture<R> report_and_control;
+
+			QtConcurrent::run(function, report_and_control, args...);
+
+			qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+			return report_and_control;
+		}
+	};
+
+	template <typename Function, typename... Args, class R = typename function_traits<Function(Args...)>::return_type_t>
+	ExtFuture<R> run(Function&& function, Args&&... args)
+	{
+#if 0
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFuture<R> report_and_control;
@@ -136,6 +155,8 @@ namespace ExtAsync
 
 		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 		return report_and_control;
+#endif
+		return run_specialization_helper<R, Function, Args...>::run(function, args...);
 	}
 
 #if 0

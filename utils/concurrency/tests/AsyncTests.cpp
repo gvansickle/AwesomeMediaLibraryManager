@@ -276,7 +276,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 {
 	int tap_call_counter = 0;
 
-	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int> extfuture) {
+	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int>& extfuture) {
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			QThread::sleep(1);
