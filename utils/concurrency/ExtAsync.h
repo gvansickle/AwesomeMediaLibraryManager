@@ -166,12 +166,12 @@ namespace ExtAsync
 		}
 	};
 
-	template <typename Function, class ExtFutureR, typename... Args>// = typename function_traits<Function(Args...)>::return_type_t>
-	auto run(Function&& function, Args&&... args) -> void_t<decltype(function(std::declval<ExtFutureR&>()))>
+	template <typename Function, class R = int, typename... Args>// = typename function_traits<Function(Args...)>::return_type_t>
+	auto run(Function&& function, Args&&... args) -> void_t<decltype(function(std::declval<ExtFuture<R>&>()))>
 	{
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		ExtFutureR report_and_control;
+		ExtFuture<R> report_and_control;
 
 		QtConcurrent::run(function, report_and_control, args...);
 
