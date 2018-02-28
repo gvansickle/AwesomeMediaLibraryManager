@@ -26,10 +26,10 @@
 #if 1 /// @todo if these haven't been standardized/aren't supported.
 
 /// void_t
-//template <class...>
-//using void_t = void;
-template<typename... Ts> struct make_void { typedef void type;};
-template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+template <class...>
+using void_t = void;
+//template<typename... Ts> struct make_void { typedef void type;};
+//template<typename... Ts> using void_t = typename make_void<Ts...>::type;
 
 template <bool B>
 using bool_constant = std::integral_constant<bool, B>;
@@ -154,6 +154,22 @@ namespace alias
 	using pointer = typename T::pointer;
 } // namespace alias
 
+/// @}
+
+/// Generic "compiles" and "requires" traits.
+/// From here: https://foonathan.net/blog/2016/09/09/cpp14-concepts.html
+/// @{
+template <typename T, template <typename> class Expression, typename AlwaysVoid = void_t<>>
+struct compiles : std::false_type {};
+
+template <typename T, template <typename> class Expression>
+struct compiles<T, Expression, void_t<Expression<T>>> : std::true_type {};
+
+template <typename ResultType, typename CheckType, template <typename> class ... Values>
+using requires = std::enable_if_t<conjunction<Values<CheckType>...>::value, ResultType>;
+
+template <typename ResultType, typename CheckType, template <typename> class ... Values>
+using fallback = std::enable_if_t<conjunction<negation<Values<CheckType>>...>::value, ResultType>;
 /// @}
 
 namespace concepts
