@@ -105,11 +105,11 @@ namespace ExtAsync
 //		: std::true_type {};
 ////		: std::is_same<std::declval<F>()(std::declval<Ts>()...));
 
-//	template <class F, class Ret, class Param1>
-//	using extfuture_ref_t = std::integral_constant<Ret F&&(Param1&), & F&&(Param1&)>;
-//
-//	template <class F, class Ret, class Param1>
-//	using param1_is_extfuture_ref = is_detected<extfuture_ref_t, F, Ret, Param1>;
+	template <class F>
+	using check_param1_for_extfuture_ref_t = decltype(std::declval<F>()(std::declval<ExtFuture<int>&>()));
+
+	template <class F>
+	using param1_is_extfuture_ref = compiles<F, check_param1_for_extfuture_ref_t>;
 //
 //	void f(ExtFuture<int> e);
 //	static_assert(is_function_taking_future_param<decltype(f), int>::value, "");
@@ -150,34 +150,44 @@ namespace ExtAsync
 	 * @return
 	 */
 
-	template <class R, typename Function, typename... Args>
-	struct run_specialization_helper
-	{
-		static auto run(Function&& function, Args&&... args) -> std::enable_if<function_arg_n_is_type_v<Function, 0, ExtFuture<R>>>
-		{
-			// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
-			// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-			ExtFuture<R> report_and_control;
+//	template <class R, typename Function, typename... Args>
+//	struct run_specialization_helper
+//	{
+//		static auto run(Function&& function, Args&&... args) -> std::enable_if<function_arg_n_is_type_v<Function, 0, ExtFuture<R>>>
+//		{
+//			// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+//			// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+//			ExtFuture<R> report_and_control;
+//
+//			QtConcurrent::run(function, report_and_control, args...);
+//
+//			qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+//			return report_and_control;
+//		}
+//	};
 
-			QtConcurrent::run(function, report_and_control, args...);
-
-			qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
-			return report_and_control;
-		}
-	};
-
-	template <typename Function, class R = int, typename... Args>// = typename function_traits<Function(Args...)>::return_type_t>
-	auto run(Function&& function, Args&&... args) -> void_t<decltype(function(std::declval<ExtFuture<R>&>()))>
+	template <typename F, class R = int, typename... Args>// = typename function_traits<F(Args...)>::return_type_t>
+	ExtFuture<R> run(F&& function, Args&&... args)
+//	->  requires<function_traits<F&&>::arg_t<0>::inner_t, Function, param1_is_extfuture_ref>
+//	-> std::enable_if_t<(sizeof...(Args) > 0),
+//		ExtFuture<type_of_param_pack_arg_0<Args...>>>
+//		ExtFuture<function_traits<decltype(F(ExtFuture<R>&))>::template arg_t<0>::inner_t>>
+	//void_t<decltype(function(std::declval<ExtFuture<R>&>()))>
 	{
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFuture<R> report_and_control;
 
-		QtConcurrent::run(function, report_and_control, args...);
+		QtConcurrent::run(function, std::ref(report_and_control), args...);
 
 		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 		return report_and_control;
 	}
+//	template <typename Function, class R = int, typename... Args>// = typename function_traits<Function(Args...)>::return_type_t>
+//	auto run(Function&& function, Args&&... args) -> fallback<ExtFuture<R>, Function, param1_is_extfuture_ref>
+//	{
+////		static_assert(0==1,"");
+//	}
 
 #if 0
 	template <typename Function, typename... Args>

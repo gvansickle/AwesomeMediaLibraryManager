@@ -35,12 +35,14 @@
 #include <type_traits>
 #include <functional>
 #include "function_traits.hpp"
+#include "cpp14_concepts.hpp"
 
 #include "ExtFutureWatcher.h"
 
-#if 0
-#include "cpp14_concepts.hpp"
 
+
+
+#if 0
 // Define some concepts.
 template <class T, class FutureRetureType>
 constexpr bool TapCallback = require<
@@ -135,7 +137,7 @@ public:
 
 	/// Type 1 tap() callback.
 	/// Takes a value of type T, returns void.
-	using TapCallbackType1 = std::function<void(QString)>;
+	using TapCallbackType1 = std::function<void(T)>;
 
 	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
 
@@ -350,6 +352,11 @@ public:
 		return tap(QApplication::instance(), tap_callback);
 	}
 
+	template <typename F, typename R = std::result_of_t<std::decay_t<F>(T)> >
+	auto tap(F&& tap_callback) -> std::enable_if_t<function_traits<F>::template argtype_is_v<0,T>, ExtFuture<typename T>&>
+	{
+		return tap(QApplication::instance(), tap_callback);
+	}
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.

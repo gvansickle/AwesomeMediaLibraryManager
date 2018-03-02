@@ -162,14 +162,31 @@ namespace alias
 template <typename T, template <typename> class Expression, typename AlwaysVoid = void_t<>>
 struct compiles : std::false_type {};
 
+/**
+ * @tparam T  type to examine.
+ * @tparam Expression  A template/template alias which if it can be compiled, results in returning true_type.
+ */
 template <typename T, template <typename> class Expression>
 struct compiles<T, Expression, void_t<Expression<T>>> : std::true_type {};
 
-template <typename ResultType, typename CheckType, template <typename> class ... Values>
-using requires = std::enable_if_t<conjunction<Values<CheckType>...>::value, ResultType>;
+/**
+ * SFINAE-based "requires".
+ * Return type is ResultType if all Concepts applied t CheckType are fulfilled, otherwise it's ill-formed and template
+ * will drop out of the resolution set.
+ * Example use:
+ * @code
+ *    template <typename T>
+ *    auto function(T t) -> requires<int, T, Concept1, Concept2>;
+ * @endcode
+ */
+template <typename ResultType, typename CheckType, template <typename> class ... Concepts>
+using requires = std::enable_if_t<conjunction<Concepts<CheckType>...>::value, ResultType>;
 
-template <typename ResultType, typename CheckType, template <typename> class ... Values>
-using fallback = std::enable_if_t<conjunction<negation<Values<CheckType>>...>::value, ResultType>;
+/**
+ *
+ */
+template <typename ResultType, typename CheckType, template <typename> class ... Concepts>
+using fallback = std::enable_if_t<conjunction<negation<Concepts<CheckType>>...>::value, ResultType>;
 /// @}
 
 namespace concepts
