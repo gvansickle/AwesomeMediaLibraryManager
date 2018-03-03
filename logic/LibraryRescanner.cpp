@@ -159,69 +159,6 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	return retval;
 }
 
-using namespace QtPromise;
-
-QPromise<QString> traverse_dirs(LibraryRescanner *thiz, const QUrl& dir_url, LibraryModel* lib_model)
-{
-	qDebug() << "ENTER traverse_dirs";
-	return QPromise<QString>([&](const QPromiseResolve<QString>& resolve, const QPromiseReject<QString>& reject) {
-
-		QFutureInterface<QString> future_interface = ReportingRunner::runFI(new AsyncDirScanner(dir_url,
-													  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-													  QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
-
-		ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
-
-		fw->onProgressChange([=](int min, int val, int max, QString text) -> void {
-						//qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-						Q_EMIT thiz->progressChanged(min, val, max, text);
-						;})
-					.onReportResult([=](QString s, int index) {
-						Q_UNUSED(index);
-						/// @note This lambda is called in an arbitrary thread context.
-						//qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-
-						// This is not threadsafe:
-						/// WRONG: this->m_current_libmodel->onIncomingFilename(s);
-
-						// This is threadsafe.
-						QMetaObject::invokeMethod(lib_model, "onIncomingFilename", Q_ARG(QString, s));
-
-						/// EXPERIMENTAL
-//						static int fail_counter = 0;
-//						fail_counter++;
-//						if(fail_counter > 5)
-//						{
-////							future_interface.cancel();
-//							//throw QException();
-//							qDebug() << "ERROR";
-//							return QPromise<QString>::reject("ERROR");
-//						}
-
-
-					})
-					.setFuture(future_interface);
-
-		qDebug() << "future is finished:" << fw->future().isFinished() << fw->future().isCanceled();
-
-		QObject::connect(fw, &ExtFutureWatcher<QString>::finished, [=](){
-			if (fw->isFinished() && !fw->isCanceled())
-			{
-				qDebug() << "RESOLVED";
-				resolve(fw->future().result());
-			}
-			else
-			{
-				qDebug() << "REJECTED";
-				reject("Error");
-			}
-
-			fw->deleteLater();
-		});
-	});
-	qDebug() << "LEAVE traverse_dirs";
-}
-
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
 	qDebug() << M_THREADNAME();
@@ -288,22 +225,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	qDebug() << "future is finished:" << fw->future().isFinished() <<"isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
 
-#elif 0 /// QtPromise 2
-
-	traverse_dirs(this, dir_url, this->m_current_libmodel).then([&](){
-		// promise was fulfilled.
-		qDebug() << M_THREADNAME() << "Directory scan complete.";
-		m_last_elapsed_time_dirscan = m_timer.elapsed();
-		qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
-		// Directory traversal complete, start rescan.
-		onDirTravFinished();
-	}).fail([](const QException& e){
-		// dir scanning threw an exception.
-		qWarning() << "EXCEPTION:" << e.what();
-	}).fail([](){
-		// Catch-all fail.
-		qWarning() << "FAIL";
-		;});
 #elif 1 /// ExtAsync
 
 //	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
@@ -330,47 +251,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //	future.cancel();
 //	//throw QException();
 //	qDebug() << "ERROR";
-
-
-
-
-#elif 0 /// USE_FUTUREWW
-
-	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
-	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
-    m_futureww_dirscan.on_result([this](auto a){
-		qDebug() << M_THREADNAME() << "INCOMING FILENAME:" << a;
-        this->m_current_libmodel->onIncomingFilename(a);
-    })
-    .on_progress([this](int min, int max, int val){
-		qDebug() << M_THREADNAME() << "PROGRESS";
-        emit progressRangeChanged(min, max);
-        emit progressValueChanged(val);
-    })
-	.then([=](){
-		qDebug() << M_THREADNAME() << "DIRTRAV RESCAN FINISHED";
-        onDirTravFinished();
-    });
-
-	Promise<QString> promise;
-
-	qDebug() << promise.state();
-	promise.then([=](Promise<QString>& p) -> Promise<QString>& {
-		qDebug() << M_THREADNAME() << "THEN1";
-		p.reportStarted();
-		p.reportFinished();
-		return p;});
-
-	qDebug() << "AFTER";
-#if 0
-			.tap([=](QFutureInterface<QString>& future){
-		qDebug() << M_THREADNAME() << "TAP";
-		return future;
-			;})
-#endif
-
-    m_futureww_dirscan = fut;
 
 #endif // Which future/promise to use.
 

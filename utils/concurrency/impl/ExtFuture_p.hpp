@@ -150,42 +150,4 @@ namespace ExtAsync
 	}
 }
 
-/**
- * ThenHelper which takes a callback which returns an ExtFuture<>.
- */
-//template <typename T>
-//template <typename F, typename R, typename... Args>
-//std::enable_if_t<R::returns_future::value, typename R::return_type>
-//ExtFuture<T>::ThenHelper(F&& func, arg_result<F, Args...>)
-//{
-//	static_assert(sizeof...(Args) <= 1, "Too many args");
-//
-//	using B = typename isExtFuture<R>::inner_t;
-//
-//	ExtFuture<B> promise;
-//	auto future = promise.future();
-//
-//	M_WARNING("TODO");
-//
-//
-//	return future;
-//
-//}
-
-#if 0
-/**
- * This is the function which actually is called by QtConcurrent::run() for the continuation.
- */
-template<class T>
-static QString ThenHelper(ExtFuture<T>* predecessor_future)
-{
-	qDb() << "THEN CALLED, WAITING";
-	predecessor_future->wait();
-	qDb() << "THEN CALLED, WAIT OVER, CALLING CALLBACK";
-	Q_CHECK_PTR(predecessor_future);
-	Q_CHECK_PTR(predecessor_future->m_continuation_function);
-	(*(predecessor_future->m_continuation_function))();
-	return QString("THEN DONE");
-}
-#endif
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_ */
