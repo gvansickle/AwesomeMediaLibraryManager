@@ -301,12 +301,6 @@ public:
 		return then(QApplication::instance(), then_callback);
 	}
 
-//	template <typename F, typename R = ExtFutureThenCallbackTraits<T, F>>
-//	typename R::then_return_type_t then(F&& func)
-//	{
-//		return ExtFuture<int>();
-//	}
-
 	/// @} // END .then() overloads.
 
 	/// @name .tap() overloads.
@@ -314,14 +308,19 @@ public:
 
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
+	 *
 	 * The callback passed to tap() is invoked with an reference to an instance of the predecessor's ExtFuture<> (i.e. this).
 	 *
-	 * @return  A reference to the predecessor ExtFuture<T>.
+	 * @param tap_callback  Callback with the signature void(T).
+	 *
+	 * @return  A reference to *this, i.e. ExtFuture<T>&.
 	 */
 	ExtFuture<T>& tap(QObject* context, TapCallbackType1 tap_callback)
 	{
-		m_tap_function = std::make_shared<TapCallbackType1>(tap_callback);
-		return TapHelper(context, *m_tap_function);
+		static_assert(function_return_type_is_v<decltype(tap_callback), void>, "");
+
+//		m_tap_function = std::make_shared<TapCallbackType1>(tap_callback);
+		return TapHelper(context, tap_callback);//*m_tap_function);
 	}
 
 	ExtFuture<T>& tap(TapCallbackType1 tap_callback)
@@ -340,23 +339,23 @@ public:
 		return tap(QApplication::instance(), prog_tap_callback);
 	}
 
-	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
-	ExtFuture<T>& tap(QObject* context, F&& tap_callback)
-	{
-		return TapHelper(context, tap_callback);
-	}
+//	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
+//	ExtFuture<T>& tap(QObject* context, F&& tap_callback)
+//	{
+//		return TapHelper(context, tap_callback);
+//	}
+//
+//	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
+//	ExtFuture<T>& tap(F&& tap_callback)
+//	{
+//		return tap(QApplication::instance(), tap_callback);
+//	}
 
-	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
-	ExtFuture<T>& tap(F&& tap_callback)
-	{
-		return tap(QApplication::instance(), tap_callback);
-	}
-
-	template <typename F, typename R = std::result_of_t<std::decay_t<F>(T)> >
-	auto tap(F&& tap_callback) -> std::enable_if_t<function_traits<F>::template argtype_is_v<0,T>, ExtFuture<T>&>
-	{
-		return tap(QApplication::instance(), tap_callback);
-	}
+//	template <typename F, typename R = std::result_of_t<std::decay_t<F>(T)> >
+//	auto tap(F&& tap_callback) -> std::enable_if_t<function_traits<F>::template argtype_is_v<0,T>, ExtFuture<T>&>
+//	{
+//		return tap(QApplication::instance(), tap_callback);
+//	}
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.
@@ -465,11 +464,11 @@ M_WARNING("TODO: LEAKS THIS");
 	/**
 	 * TapHelper which calls tap_callback whenever there's a new result ready.
 	 * @param guard_qobject
-	 * @param tap_callback
+	 * @param tap_callback   callable with signature void(T)
 	 * @return
 	 */
-	template <typename Function>
-	ExtFuture<T>& TapHelper(QObject *guard_qobject, Function&& tap_callback)
+	template <typename F>
+	ExtFuture<T>& TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
 		qDb() << "ENTER";
 		auto watcher = new QFutureWatcher<T>();
