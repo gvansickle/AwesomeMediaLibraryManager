@@ -281,7 +281,9 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			QThread::sleep(1);
 			extfuture.reportResult(867);
+			QThread::sleep(1);
 			extfuture.reportResult(5309);
+			QThread::sleep(1);
 			extfuture.reportFinished();
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
 		})
@@ -299,7 +301,11 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 			EXPECT_EQ(tap_call_counter, 1);
 		}
 		tap_call_counter++;
-		;}).wait();
+		;});
+
+	ASSERT_FALSE(future.isFinished());
+	future.wait();
+	ASSERT_TRUE(future.isFinished());
 }
 
 /// Static checks

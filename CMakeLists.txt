@@ -70,6 +70,9 @@ include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
 ### @todo? find_package(ECM 1.7.0 REQUIRED NO_MODULE)
+# For GoogleTest and Boost.
+set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED 1")
+include(DownloadProject)
 
 dir_summary()
 
@@ -167,6 +170,21 @@ if(FALSE)
 	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
 	endforeach()
 endif()
+
+# And Boost.  Sorry.
+# See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
+### CallableTraits only in 1.66+.
+#set(Boost_USE_MULTITHREADED      ON)
+#find_package(Boost 1.66.0 REQUIRED
+#  COMPONENTS CallableTraits
+#  )
+download_project(PROJ                boost_callable_traits
+	GIT_REPOSITORY https://github.com/boostorg/callable_traits.git
+	GIT_TAG        master
+	${UPDATE_DISCONNECTED_IF_AVAILABLE}
+	)
+add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
+message(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
@@ -547,9 +565,12 @@ target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${PROJECT_NAME}
     PROPERTIES AUTOMOC ON)
 # The libs.
+set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
+		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
+		callable_traits)
 target_link_libraries(${PROJECT_NAME}
-        Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+        ${PROJECT_COMMON_LINK_LIBS}
+		)
 add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
@@ -571,8 +592,6 @@ if(TRUE) # Enable test target.
 find_package(Qt5Test REQUIRED)
 include(CTest)
 find_package(Threads REQUIRED)
-set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED 1")
-include(DownloadProject)
 download_project(PROJ                googletest
                  GIT_REPOSITORY      https://github.com/google/googletest.git
                  GIT_TAG             master
@@ -610,8 +629,7 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${TEST_EXE_TARGET} PROPERTIES AUTOMOC ON)
 target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
-target_link_libraries(${TEST_EXE_TARGET} Qt5::Test Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-	${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})
 
 endif() # Enable test target.

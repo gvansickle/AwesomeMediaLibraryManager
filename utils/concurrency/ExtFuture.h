@@ -353,7 +353,7 @@ public:
 	}
 
 	template <typename F, typename R = std::result_of_t<std::decay_t<F>(T)> >
-	auto tap(F&& tap_callback) -> std::enable_if_t<function_traits<F>::template argtype_is_v<0,T>, ExtFuture<typename T>&>
+	auto tap(F&& tap_callback) -> std::enable_if_t<function_traits<F>::template argtype_is_v<0,T>, ExtFuture<T>&>
 	{
 		return tap(QApplication::instance(), tap_callback);
 	}

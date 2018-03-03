@@ -33,6 +33,7 @@ namespace function_traits_impl
 {
 	namespace test
 	{
+
 		// Normal free function taking/returning POD types.
 		int ft_test_func1(long a) { return static_cast<int>(a); };
 
@@ -70,7 +71,7 @@ namespace function_traits_impl
 		static_assert(std::is_same_v<functraits3::return_type_t, void*>, "Wrong return type");
 		static_assert(functraits3::arity_v == 1, "Wrong number of args");
 		static_assert(functraits3::return_type_is_v<void*>, "Wrong return type");
-		static_assert(functraits3::argtype_is_v<0, ft_test2_class&>, "Function does not take correct this ptr type as arg 0");
+		static_assert(functraits3::argtype_is_v<0, const ft_test2_class&>, "Function does not take correct this ptr type as arg 0");
 
 		// Lambda.
 		auto lambda1 = [](const char *str){ return str;};
