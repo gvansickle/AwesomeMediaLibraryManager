@@ -119,6 +119,8 @@ std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
  * - wait()
  * - await()
  * - tap()
+ *
+ * Note that QFuture<> is a ref-counted object which can be safely passed by value.
  */
 template <typename T>
 class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
@@ -127,22 +129,21 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 
 	static_assert(!std::is_void<T>::value, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
 
+	/// Like QFuture<T>, T must have a default constructor and a copy constructor.
+	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
+	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
+
 public:
 
 	/// Member alias for the contained type, ala boost::future<T>.
 	using value_type = T;
 	using is_ExtFuture_v = std::true_type;
 
-//	using ContinuationType = std::function<QString(QString)>;
-
-	/// Type 1 tap() callback.
-	/// Takes a value of type T, returns void.
-	using TapCallbackType1 = std::function<void(T)>;
+	/// .tap() callback type.
+	/// Takes a result value of type T, returns void.
+	using TapCallbackType = std::function<void(T)>;
 
 	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
-
-
-	using OnResultCallbackType1 = std::function<void(QString)>;
 
 	/**
 	 * Default constructor.
@@ -225,8 +226,17 @@ public:
 	~ExtFuture() override
 	{
 		qDb() << "DESTRUCTOR";
+		/// Warn if we're being destroyed before having been finished.
+		if(this->isStarted() && !this->isFinished())
+		{
+			if(this->isRunning())
+			{
+				// We're still running, this is almost certainly an error.
+				Q_ASSERT_X(0, "ExtFuture<> destructor", "Destroyed while still running");
+			}
+			qWr() << "STARTED, NOT FINISHED";
+		}
 
-//		qWr() << "m_continuation_function:" << (bool)m_continuation_function;
 		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
 	}
 
@@ -315,7 +325,7 @@ public:
 	 *
 	 * @return  A reference to *this, i.e. ExtFuture<T>&.
 	 */
-	ExtFuture<T>& tap(QObject* context, TapCallbackType1 tap_callback)
+	ExtFuture<T>& tap(QObject* context, TapCallbackType tap_callback)
 	{
 		static_assert(function_return_type_is_v<decltype(tap_callback), void>, "");
 
@@ -323,7 +333,7 @@ public:
 		return TapHelper(context, tap_callback);//*m_tap_function);
 	}
 
-	ExtFuture<T>& tap(TapCallbackType1 tap_callback)
+	ExtFuture<T>& tap(TapCallbackType tap_callback)
 	{
 		return tap(QApplication::instance(), tap_callback);
 	}
@@ -503,7 +513,7 @@ M_WARNING("TODO: LEAKS THIS");
 
 //	std::shared_ptr<ContinuationType> m_continuation_function;
 
-	std::shared_ptr<TapCallbackType1> m_tap_function;
+	std::shared_ptr<TapCallbackType> m_tap_function;
 
 	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 
