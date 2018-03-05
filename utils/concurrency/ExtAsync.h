@@ -178,7 +178,10 @@ namespace ExtAsync
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFuture<R> report_and_control;
 
-		QtConcurrent::run(function, std::ref(report_and_control), args...);
+		QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
+//		QtConcurrent::run([=]() mutable {
+//			return function(report_and_control, args...);
+//		});
 
 		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 		return report_and_control;
