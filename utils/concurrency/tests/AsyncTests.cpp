@@ -267,7 +267,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 	ASSERT_FALSE(future.isFinished());
 
 	// Separated .then() connect.
-	future.tap([&](int future_value) -> int {
+	future.tap([&](int future_value) {
 		if(num_then_calls == 0)
 		{
 			EXPECT_EQ(last_seen_result, 0);
