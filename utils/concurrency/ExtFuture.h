@@ -40,16 +40,6 @@
 #include "ExtFutureWatcher.h"
 
 
-
-
-#if 0
-// Define some concepts.
-template <class T, class FutureRetureType>
-constexpr bool TapCallback = require<
-	function_traits<T>::return_type_is_v<ExtFuture<FutureRetureType>>
->;
-#endif
-
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
 
@@ -120,7 +110,17 @@ std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
  * - await()
  * - tap()
  *
- * Note that QFuture<> is a ref-counted object which can be safely passed by value.
+ * Note that QFuture<> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<>
+ * has the same properties.  In this, they're both more similar to std::experimental::shared_future than ::future,
+ * the latter of which has a deleted copy constructor.
+ * QFuture<> itself only implements the following:
+ * - Default constructor, which initializes its "private" (actually currently public) "mutable QFutureInterface<T> d;" underlying
+ *   QFuterInterface<> object like so:
+ *     @code
+ *     	... : d(QFutureInterface<T>::canceledResult())
+ *     @endcode
+ * - An expicit QFuture(QFutureInterface<T> *p) constructor commented as "internal".
+ * QFuture<t> doesn't inherit from anything, so copy constructor/assignment/etc. are all defaults.
  */
 template <typename T>
 class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
@@ -130,12 +130,12 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 	static_assert(!std::is_void<T>::value, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
 
 	/// Like QFuture<T>, T must have a default constructor and a copy constructor.
-	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
-	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
+//	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
+//	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
 
 public:
 
-	/// Member alias for the contained type, ala boost::future<T>.
+	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
 	using is_ExtFuture_v = std::true_type;
 
@@ -178,7 +178,7 @@ public:
 		}
 	 *
 	 *
-	 * @param initialState
+	 * @param initialState  Defaults to State(Started | Running)
 	 */
 	ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started | QFutureInterfaceBase::State::Running))
 		: QFutureInterface<T>(initialState)
@@ -226,16 +226,22 @@ public:
 	~ExtFuture() override
 	{
 		qDb() << "DESTRUCTOR";
-		/// Warn if we're being destroyed before having been finished.
-		if(this->isStarted() && !this->isFinished())
-		{
-			if(this->isRunning())
-			{
-				// We're still running, this is almost certainly an error.
-				Q_ASSERT_X(0, "ExtFuture<> destructor", "Destroyed while still running");
-			}
-			qWr() << "STARTED, NOT FINISHED";
-		}
+		/// @note Since we're based on QFutureInterface<T> <- QFutureInterfaceBase, it handles the underlying
+		/// refcounting for us.  So we may be getting destroyed after we've been copied, which is ok.
+
+		/// @todo Find a way to assert if we're still running/not finished and haven't been copied.
+		/// This would indicate a dangling future.
+
+//		/// Warn if we're being destroyed before having been finished.
+//		if(this->isStarted() && !this->isFinished())
+//		{
+//			if(this->isRunning())
+//			{
+//				// We're still running, this is almost certainly an error.
+//				Q_ASSERT_X(0, "ExtFuture<> destructor", "Destroyed while still running");
+//			}
+//			qWr() << "STARTED, NOT FINISHED";
+//		}
 
 		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
 	}
@@ -249,11 +255,26 @@ public:
 	/// @}
 
 	/**
-	 * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
+	 * For explicitly unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
+	 * Inspired by Facebook's Folly Futures.
 	 */
-	template <typename F = T>
+	template <typename F>
 	std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
 	unwrap();
+
+//	template <typename ExtFutureT = std::enable_if_t<isExtFuture_v<T>, >>
+	/// Per:
+	/// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3857.pdf
+	/// http://en.cppreference.com/w/cpp/experimental/shared_future/then
+	/// We'll just return a "proxy" of the inner ExtFuture<> here, ignoring the
+	/// outer ExtFuture<>.
+	/// This should be pretty easy given our underlying QFutureInterface<>.
+//	ExtFuture<typename isExtFuture<T>::inner_t> unwrap()
+//	{
+////		static_assert(NestedExtFuture<T>, "");
+//		// this is a nested ExtFuture.
+//		return this->
+//	}
 
 	/**
 	 * Waits until the ExtFuture is finished, and returns the result.
@@ -268,26 +289,47 @@ public:
 	T get();
 
 	/// @name .then() overloads.
-	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016)
-	/// std::experimental::future-like .then() overloads for Qt5.
+	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like
+	/// .then() overloads for Qt5.
 	/// @{
 
 	/**
-	 * Attaches a continuation to this ExtFuture.
+	 * @todo Fallback Primary template which will static_assert().
+	 */
+//	template<class F, class R>
+//	auto then(F&&) -> std::enable_if_t<std::is_same_v<ct::return_type_t<F>, void>, void>
+//	{
+//		//static_assert(0,"");
+//	}
+
+	/**
+	 * std::experimental::future-like .then() which attaches a continuation function @a func to @a this,
+	 * where func's signature is:
+	 * 	@code
+	 * 		func(ExtFuture<T>) -> R
+	 * 	@endcode
+	 * where R != [void, ExtFuture<>]
+	 *
+	 * The continuation must take *this as its first parameter.  It will only be called when
+	 * the ExtFuture is finished.
+	 *
 	 * @note Like std::experimental::future::then(), the continuation function will be run on
 	 *       an unspecified thread.
 	 * @note ...but as currently implemented, it's always run on the app's main thread.
 	 *
-	 * @tparam F = Continuation function type.
+	 * @see The various .tap() overloads if you want to pass in a callback which receives the results as they
+	 *      are reported to this.
+	 *
+	 * @tparam F = Continuation function type.  Must accept *this by value as the first parameter.
 	 * @tparam R = Return value of continuation F(ExtFuture<T>).
 	 *
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
-	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>)> >
-	ExtFuture<R> then(QObject* context, F&& func)
+	template <typename F, typename R = ct::return_type_t<F> >
+	auto then(QObject* context, F&& func)
+		-> std::enable_if_t<!std::is_same_v<R, void>, ExtFuture<R>>
 	{
-//		m_continuation_function = std::make_shared<ContinuationType>(std::move(func));
-		return ThenHelper(context, func, *this);//*m_continuation_function);
+		return ThenHelper(context, func, *this);
 	}
 
 	/**
@@ -304,12 +346,19 @@ public:
 	 * @param then_callback
 	 * @returns ExtFuture<R>
 	 */
-	template <class F, class R = std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T> && NonNestedExtFuture<ExtFuture<R>>)>
+	template <class F, class R = ct::return_type_t<F> , REQUIRES(!IsExtFuture<R>)>
+	//= std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T> && NonNestedExtFuture<ExtFuture<R>>)>
 	ExtFuture<R> then( F&& then_callback )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
 		return then(QApplication::instance(), then_callback);
 	}
+
+//	template <class F, class R = ct::return_type_t<F>, REQUIRES(IsExtFuture<R>)>
+//	R then(F&& then_callback)
+//	{
+//		return then(QApplication::instance(), then_callback);
+//	}
 
 	/// @} // END .then() overloads.
 
@@ -378,6 +427,29 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Registers a callback of type void(void) which is always called when this is finished, regardless
+	 * of success or failure.
+	 * Useful for RAII-like cleanup, etc.
+	 *
+	 * @note This is sort of a cross between .then() and .tap().  It should return a copy of this,
+	 * not a reference to this like .tap() does (shouldn't it?), but the callback should be called when this is finished,
+	 * and before the returned ExtFuture<> is finished.
+	 *
+	 * @param finally_callback
+	 * @return
+	 */
+	template <class F>
+	ExtFuture<T> finally(F&& finally_callback)
+	{
+		// Wrap this in a .then().
+		auto retval = this->then([func = std::forward<F>(finally_callback)](ExtFuture<T> thiz) {
+			// Call the finally_callback.
+			std::move(func)();
+			return thiz;
+			});
+	}
+
 	/// @} // END .tap() overloads.
 
 	/**
@@ -443,7 +515,7 @@ protected:
 	}
 
 	/**
-	 * ThenHelper which takes a callback which returns an ExtFuture<>.
+	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
 	 */
 	template <typename F, typename... Args, typename R = std::result_of_t<F&&(Args...)>>
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
@@ -452,15 +524,43 @@ protected:
 		static_assert(sizeof...(Args) <= 1, "Too many args");
 
 		auto watcher = new QFutureWatcher<T>();
-M_WARNING("TODO: LEAKS THIS");
+
 		auto retval = new ExtFuture<R>();
-		qDb() << "NEW EXTFUTURE:" << *retval;
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, retval, args..., watcher](){
+		qDb() << "NEW EXTFUTURE:" << retval;
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, retval, args..., watcher]() {
 			// Call the then() callback function.
 			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
 			retval->reportResult(then_callback(args...));
+			retval->reportFinished();
+			qDb() << "RETVAL STATUS:" << retval;
+			watcher->deleteLater();
+		});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
+		watcher->setFuture(this->future());
+//		qDb() << "EXIT";
+		return *retval;
+	}
+
+	/**
+	 * FinallyHelper which takes a callback which returns an ExtFuture<>.
+	 */
+	template <typename F, typename R = ct::return_type_t<F>>
+	ExtFuture<T> FinallyHelper(QObject* context, F&& finally_callback)
+	{
+//		qDb() << "ENTER";
+		static_assert(std::tuple_size_v<ct::args_t<F>> == 0, "Too many args");
+
+		auto watcher = new QFutureWatcher<T>();
+M_WARNING("TODO: LEAKS THIS");
+		auto retval = new ExtFuture<R>();
+		qDb() << "NEW EXTFUTURE:" << *retval;
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [finally_callback, retval, watcher](){
+			// Call the then() callback function.
+			qDb() << "THEN WRAPPER CALLED";
+			// finally_callback() takes void, returns void.
+			finally_callback();
 			retval->reportFinished();
 			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
@@ -513,7 +613,7 @@ M_WARNING("TODO: LEAKS THIS");
 
 //	std::shared_ptr<ContinuationType> m_continuation_function;
 
-	std::shared_ptr<TapCallbackType> m_tap_function;
+//	std::shared_ptr<TapCallbackType> m_tap_function;
 
 	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 

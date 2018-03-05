@@ -31,7 +31,7 @@
 #include "future_type_traits.hpp"
 #include <tuple>
 
-/// This is me giving up.
+/// This is me giving up on trying to reinvent the function_traits wheel.
 #include <boost/callable_traits.hpp>
 
 namespace ct = boost::callable_traits;

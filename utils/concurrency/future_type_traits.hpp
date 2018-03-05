@@ -9,6 +9,7 @@
 #define UTILS_CONCURRENCY_FUTURE_TYPE_TRAITS_HPP_
 
 #include <type_traits>
+#include <tuple>
 
 #if 1 /// @todo Conditionalize on C++17 or the appropriate __has_whatever.
 
@@ -58,9 +59,44 @@ namespace std // Yeah, this is bad.
 	/// C++17
 	template< class T >
 	constexpr bool is_object_v = is_object<T>::value;
+
+	/// C++17
+	template <class T>
+	constexpr bool tuple_size_v = tuple_size<T>::value;
 };
 
+/**
+ * Static assert helpers which try to print the types involved when the assert fails.
+ * @rant Seriously, it's the 21st century and there's no decent way to simply dump this basic type information at compile time?
+ */
+#if 0
+template <bool V, class A>
+struct AssertionChecker
+{
+	static constexpr bool value = V;
+	using AssertionValue = value;
+};
 
+template <typename Assertion>
+struct AssertValue : AssertionChecker<Assertion::value, Assertion>
+{
+    static_assert(AssertionValue, "Assertion failed <see below for more information>");
+    static bool const value = Assertion::value;
+};
+
+static_assert(
+		AssertValue<
+			std::is_same_v<int, int>
+		>, "Test");
+#endif
+
+template <typename T>
+struct deduced_type;
+template<typename T>
+void show_deduced_type(T&& ) {
+
+    deduced_type<T>::show;
+}
 
 #endif
 

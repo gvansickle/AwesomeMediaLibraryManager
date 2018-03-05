@@ -30,7 +30,9 @@ template <typename F>
 std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
 ExtFuture<T>::unwrap()
 {
+	// Type of the inner ExtFuture<T>.
 	using InternalExtFutureType = ExtFuture<typename isExtFuture<T>::inner_t>;
+
 	InternalExtFutureType internal_extfuture;
 	return this->then([=](InternalExtFutureType internal_extfuture) -> InternalExtFutureType {
 		return internal_extfuture;
@@ -149,5 +151,9 @@ namespace ExtAsync
 
 	}
 }
+
+// Declare explicit instantiations of some common ExtFuture types.
+//extern template class ExtFuture<Unit>;
+//extern template class ExtFuture<QString>;
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_ */

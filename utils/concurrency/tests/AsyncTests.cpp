@@ -27,6 +27,7 @@
 #include <QTest>
 
 #include <type_traits>
+#include "../future_type_traits.hpp"
 #include "../function_traits.hpp"
 
 #include "../ExtAsync.h"
@@ -66,6 +67,10 @@ TEST_F(AsyncTestsSuiteFixture, QStringPrintTest)
 	ASSERT_EQ(test, "Test");
 }
 
+/**
+ * From a lambda passed to QtConcurrent::run(), sleeps for 1 sec and then returns a single QString.
+ * @return
+ */
 static QString delayed_string_func_1()
 {
 	auto retval = QtConcurrent::run([](){
@@ -79,6 +84,10 @@ static QString delayed_string_func_1()
 	return retval;
 }
 
+/**
+ * From a lambda passed to QtConcurrent::run(), sleeps for 1 sec and then returns a single QString.
+ * @return
+ */
 static ExtFuture<QString> delayed_string_func()
 {
 	auto retval = QtConcurrent::run([](){
@@ -88,6 +97,35 @@ static ExtFuture<QString> delayed_string_func()
 		qDb() << "SLEEP COMPLETE";
 		return QString("HELLO");
 	});
+
+	static_assert(std::is_same_v<decltype(retval), QFuture<QString>>, "");
+
+	return retval;
+}
+
+/**
+ * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
+ * sleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
+ *
+ * @todo Doesn't handle cancellation or progress reporting.
+ */
+static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
+{
+	auto retval = ExtAsync::run([=](ExtFuture<int>& future) {
+		int current_val = start_val;
+		for(int i=0; i<num_iterations; i++)
+		{
+			// Sleep for a second.
+			qDb() << "SLEEPING FOR 1 SEC";
+			QThread::sleep(1);
+			qDb() << "SLEEP COMPLETE, returning value to future:" << current_val;
+			future.reportResult(current_val);
+		}
+		// We're done.
+		future.reportFinished();
+	});
+
+	static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
 
 	return retval;
 }
@@ -217,6 +255,38 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	RecordProperty("Completed", true);
 }
 
+TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
+{
+	int last_seen_result = 0;
+	int num_then_calls = 0;
+
+	// Start generating a sequence of results.
+	auto future = async_int_generator(5, 3);
+
+	ASSERT_TRUE(future.isStarted());
+	ASSERT_FALSE(future.isFinished());
+
+	// Separated .then() connect.
+	future.tap([&](int future_value) -> int {
+		if(num_then_calls == 0)
+		{
+			EXPECT_EQ(last_seen_result, 0);
+		}
+
+		int expected_future_val = 5 + num_then_calls;
+		EXPECT_EQ(expected_future_val, future_value);
+		last_seen_result = future_value;
+		num_then_calls++;
+		;});
+#if 0
+		.finally([&]() {
+			EXPECT_EQ(num_then_calls, 3);
+			EXPECT_EQ(last_seen_result, 7);
+		;});
+#endif
+}
+
+
 TEST_F(AsyncTestsSuiteFixture,TestReadyFutures)
 {
 	ExtFuture<int> future = make_ready_future(45);
@@ -227,7 +297,7 @@ TEST_F(AsyncTestsSuiteFixture,TestReadyFutures)
 
 
 
-TEST_F(AsyncTestsSuiteFixture, UnwrapTest)
+TEST_F(AsyncTestsSuiteFixture, DISABLED_UnwrapTest)
 {
 
 //	auto future = QtConcurrent::run(delayed_string_func);
@@ -311,6 +381,9 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 /// Static checks
 void dummy(void)
 {
+
+	static_assert(std::is_default_constructible<QString>::value, "");
+
 	// From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
 	// "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
 	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >, "");

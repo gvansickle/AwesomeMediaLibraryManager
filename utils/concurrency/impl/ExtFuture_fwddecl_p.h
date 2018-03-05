@@ -62,27 +62,30 @@
  */
 struct Unit
 {
-  // These are structs rather than type aliases because MSVC 2017 RC has
-  // trouble correctly resolving dependent expressions in type aliases
-  // in certain very specific contexts, including a couple where this is
-  // used. See the known issues section here for more info:
-  // https://blogs.msdn.microsoft.com/vcblog/2016/06/07/expression-sfinae-improvements-in-vs-2015-update-3/
+	// These are structs rather than type aliases because MSVC 2017 RC has
+	// trouble correctly resolving dependent expressions in type aliases
+	// in certain very specific contexts, including a couple where this is
+	// used. See the known issues section here for more info:
+	// https://blogs.msdn.microsoft.com/vcblog/2016/06/07/expression-sfinae-improvements-in-vs-2015-update-3/
 
-  template <typename T>
-  struct Lift : std::conditional<std::is_same<T, void>::value, Unit, T> {};
-  template <typename T>
-  using LiftT = typename Lift<T>::type;
-  template <typename T>
-  struct Drop : std::conditional<std::is_same<T, Unit>::value, void, T> {};
-  template <typename T>
-  using DropT = typename Drop<T>::type;
+	// "Lift": Convert type T into Unit if it's void, T otherwise.
+	template <typename T>
+	struct Lift : std::conditional<std::is_same<T, void>::value, Unit, T> {};
+	template <typename T>
+	using LiftT = typename Lift<T>::type;
 
-  constexpr bool operator==(const Unit& /*other*/) const {
-    return true;
-  }
-  constexpr bool operator!=(const Unit& /*other*/) const {
-    return false;
-  }
+	// "Drop": Convert type into void if it's Unit, T otherwise.
+	template <typename T>
+	struct Drop : std::conditional<std::is_same<T, Unit>::value, void, T> {};
+	template <typename T>
+	using DropT = typename Drop<T>::type;
+
+	constexpr bool operator==(const Unit& /*other*/) const {
+	return true;
+	}
+	constexpr bool operator!=(const Unit& /*other*/) const {
+	return false;
+	}
 };
 
 constexpr Unit unit {};
@@ -146,38 +149,15 @@ constexpr bool NestedExtFuture = require<
 		IsExtFuture<T>,
 		IsExtFuture<isExtFuture_t<T>>
 	>;
+
+
+template <class F, class T>
+using has_extfuture_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>>()));
+
+template <class F, class T>
+using has_extfuture_as_first_param = is_detected<has_extfuture_as_first_param_type, F, T>;
+
+
 /// END concepts
-
-/**
- * Traits of a continuation of type F passed to ExtFuture<T>::then(ExtFuture<T>).
- *
- * then_return_type_t   The complete type (e.g. ExtFuture<int>) which should be returned from the .then() call.
- */
-template <typename T, typename F>
-struct ExtFutureThenCallbackTraits
-{
-//	typedef arg_result<T, F> arg;
-//	typedef std::conditional_t<
-//			CallableWith<F>::value, arg_result<F>,
-//			std::conditional_t<
-//						CallableWith<F, T&&>::value, arg_result<F, T&&>,
-//						arg_result<F, T&>
-//						>
-//				> arg;
-//	typedef isExtFuture2<typename arg::result_t> returns_future;
-
-
-
-	using callback_return_t = typename function_traits<F>::return_type_t;
-
-	/// The type which should be returned from the .then() call.
-	using then_return_type_t = ExtFuture<callback_return_t>;
-};
-
-/**
- *
- */
-
-
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_ */
