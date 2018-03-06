@@ -137,7 +137,8 @@ public:
 
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
-	using is_ExtFuture_v = std::true_type;
+	using is_ExtFuture = std::true_type;
+	static constexpr bool is_ExtFuture_v = true;
 
 	/// .tap() callback type.
 	/// Takes a result value of type T, returns void.
@@ -303,8 +304,8 @@ public:
 //	}
 
 	/**
-	 * std::experimental::future-like .then() which attaches a continuation function @a func to @a this,
-	 * where func's signature is:
+	 * std::experimental::future-like .then() which attaches a continuation function @a then_callback to @a this,
+	 * where then_callback's signature is:
 	 * 	@code
 	 * 		func(ExtFuture<T>) -> R
 	 * 	@endcode
@@ -326,10 +327,12 @@ public:
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
 	template <typename F, typename R = ct::return_type_t<F> >
-	auto then(QObject* context, F&& func)
-		-> std::enable_if_t<!std::is_same_v<R, void>, ExtFuture<R>>
+	auto then(QObject* context, F&& then_callback)
+		-> std::enable_if_t<!std::is_same_v<R, void> && !IsExtFuture<R>, // && argtype_n_is_v<F, 0, decltype(*this)>,
+		ExtFuture<R>>
 	{
-		return ThenHelper(context, func, *this);
+		static_assert(!std::is_same_v<R, void> && !IsExtFuture<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
+		return ThenHelper(context, then_callback, *this);
 	}
 
 	/**
@@ -351,7 +354,8 @@ public:
 	ExtFuture<R> then( F&& then_callback )
 	{
 //		std::function<R(T)> the_then_callback = then_callback;
-		return then(QApplication::instance(), then_callback);
+		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
+		return then(QApplication::instance(), std::forward<F>(then_callback));
 	}
 
 //	template <class F, class R = ct::return_type_t<F>, REQUIRES(IsExtFuture<R>)>
@@ -368,34 +372,36 @@ public:
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
 	 *
-	 * The callback passed to tap() is invoked with an reference to an instance of the predecessor's ExtFuture<> (i.e. this).
+	 * The callback passed to tap() is invoked with results from this, of type T, as they become available.
 	 *
 	 * @param tap_callback  Callback with the signature void(T).
 	 *
 	 * @return  A reference to *this, i.e. ExtFuture<T>&.
 	 */
-	ExtFuture<T>& tap(QObject* context, TapCallbackType tap_callback)
+	template <typename F, typename R = ct::return_type_t<F>, REQUIRES(argtype_n_is_v<F, 0, T>)>
+	ExtFuture<T>& tap(QObject* context, F&& tap_callback)
 	{
 		static_assert(function_return_type_is_v<decltype(tap_callback), void>, "");
 
-//		m_tap_function = std::make_shared<TapCallbackType1>(tap_callback);
-		return TapHelper(context, tap_callback);//*m_tap_function);
+//		m_tap_function = std::make_shared<TapCallbackType>(tap_callback);
+		return TapHelper(context, std::forward<F>(tap_callback)); // *m_tap_function);
 	}
 
-	ExtFuture<T>& tap(TapCallbackType tap_callback)
+	template <typename F, typename R = ct::return_type_t<F>, REQUIRES(argtype_n_is_v<F, 0, T>)>
+	ExtFuture<T>& tap(F tap_callback)
 	{
-		return tap(QApplication::instance(), tap_callback);
+		return tap(QApplication::instance(), std::forward<F>(tap_callback));
 	}
 
 	ExtFuture<T>& tap(QObject* context, TapCallbackTypeProgress prog_tap_callback)
 	{
-		m_tap_progress_function = std::make_shared<TapCallbackTypeProgress>(prog_tap_callback);
-		return TapProgressHelper(context, *m_tap_progress_function);
+//		m_tap_progress_function = std::make_shared<TapCallbackTypeProgress>(prog_tap_callback);
+		return TapProgressHelper(context, std::forward<TapCallbackTypeProgress>(prog_tap_callback));//*m_tap_progress_function);
 	}
 
 	ExtFuture<T>& tap(TapCallbackTypeProgress prog_tap_callback)
 	{
-		return tap(QApplication::instance(), prog_tap_callback);
+		return tap(QApplication::instance(), std::forward<TapCallbackTypeProgress>(prog_tap_callback));
 	}
 
 //	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
@@ -613,7 +619,7 @@ M_WARNING("TODO: LEAKS THIS");
 
 //	std::shared_ptr<ContinuationType> m_continuation_function;
 
-//	std::shared_ptr<TapCallbackType> m_tap_function;
+	std::shared_ptr<TapCallbackType> m_tap_function;
 
 	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 

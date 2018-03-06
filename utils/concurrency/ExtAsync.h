@@ -90,27 +90,6 @@ namespace ExtAsync
 {
 //M_WARNING("ExtAsync DECLARED");
 
-	template<typename T, typename = void>
-	struct has_callme : std::false_type {};
-
-	template<typename T>
-	struct has_callme<T, void_t<decltype(std::declval<T>().callme())>> : std::true_type {};
-
-//	// Primary (default) template.
-//	template <class, class = void, class... Args>
-//	struct takes_ExtFuture_ref_param : std::false_type {};
-//
-//	template <class F, class T, class... Args>
-//	struct takes_ExtFuture_ref_param<F, void_t<decltype(F(ExtFuture<T>&, Args...))>> //< Can be called.
-//		: std::true_type {};
-////		: std::is_same<std::declval<F>()(std::declval<Ts>()...));
-
-	template <class F>
-	using check_param1_for_extfuture_ref_t = decltype(std::declval<F>()(std::declval<ExtFuture<int>&>()));
-
-	template <class F>
-	using param1_is_extfuture_ref = compiles<F, check_param1_for_extfuture_ref_t>;
-//
 //	void f(ExtFuture<int> e);
 //	static_assert(is_function_taking_future_param<decltype(f), int>::value, "");
 
@@ -166,8 +145,9 @@ namespace ExtAsync
 //		}
 //	};
 
-	template <typename F, class R = int, typename... Args>// = typename function_traits<F(Args...)>::return_type_t>
-	ExtFuture<R> run(F&& function, Args&&... args)
+	template <typename F, class R = isExtFuture_t<ct::args_t<F, 0>>, typename... Args>
+		std::enable_if_t<argtype_n_is_v<F, 0, ExtFuture<R>&>, ExtFuture<R>>
+	 run(F&& function, Args&&... args)
 //	->  requires<function_traits<F&&>::arg_t<0>::inner_t, Function, param1_is_extfuture_ref>
 //	-> std::enable_if_t<(sizeof...(Args) > 0),
 //		ExtFuture<type_of_param_pack_arg_0<Args...>>>
@@ -213,11 +193,11 @@ namespace ExtAsync
 	 * @param function
 	 * @return
 	 */
-	template <typename FuncType, typename R = typename function_traits<FuncType>::return_type_t,
-			REQUIRES(!std::is_member_function_pointer_v<FuncType>)>
-	auto run(FuncType&& function) -> std::enable_if_t<!function_return_type_is_v<FuncType, void>, ExtFuture<R>>
+	template <typename F, typename R = ct::return_type_t<F>,
+			REQUIRES(!std::is_member_function_pointer_v<F>)>
+	auto run(F&& function) -> std::enable_if_t<!function_return_type_is_v<F, void>, ExtFuture<R>>
 	{
-	    return ExtFuture<R>(QtConcurrent::run(function));
+	    return ExtFuture<R>(QtConcurrent::run(std::forward<F>(function)));
 	}
 
 #if 0

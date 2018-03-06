@@ -157,6 +157,11 @@ using has_extfuture_as_first_param_type = decltype(std::declval<F>()(std::declva
 template <class F, class T>
 using has_extfuture_as_first_param = is_detected<has_extfuture_as_first_param_type, F, T>;
 
+template <class F, class T>
+using has_extfuture_ref_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>&>()));
+
+template <class F, class T>
+using has_extfuture_ref_as_first_param = is_detected<has_extfuture_ref_as_first_param_type, F, T>;
 
 /// END concepts
 

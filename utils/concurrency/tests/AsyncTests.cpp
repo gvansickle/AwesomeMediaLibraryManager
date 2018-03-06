@@ -81,7 +81,7 @@ static QString delayed_string_func_1()
 		return QString("delayed_string_func_1() output");
 	});
 
-	return retval;
+	return retval.result();
 }
 
 /**
@@ -324,6 +324,8 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
+	GTEST_COUT << "Future created" << std::endl;
+
 	future.tap([&](QString result){
 			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
 			ran_tap = true;
@@ -335,8 +337,9 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 			EXPECT_FALSE(ran_then);
 			ran_then = true;
 			return QString("Then Called");
-		;})
-		.wait();
+		;}).wait();
+
+//	future.wait();
 
 	ASSERT_TRUE(ran_tap);
 	ASSERT_TRUE(ran_then);

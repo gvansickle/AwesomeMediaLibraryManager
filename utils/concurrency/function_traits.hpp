@@ -80,6 +80,14 @@ using function_return_type_t = typename function_traits<F>::return_type_t;
 template <typename F, typename R>
 static constexpr bool function_return_type_is_v = std::is_same_v<function_return_type_t<F>, R>;
 
+/// Helper for providing argtype_t<F, N>.
+template <class F, std::size_t i>
+using argtype_t = typename std::tuple_element_t<i, ct::args_t<F>>;
+
+/// For checking if the type of arg N is T.
+template <class F, std::size_t i, class Expected>
+static constexpr bool argtype_n_is_v = std::is_same_v<argtype_t<F, i>, Expected>;
+
 /// @} // Convenience templates.
 
 #endif /* UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_ */
