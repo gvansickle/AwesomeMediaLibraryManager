@@ -84,6 +84,18 @@ namespace function_traits_impl
 
 		// Convenience templates.
 		static_assert(function_return_type_is_v<decltype(lambda1), const char*>, "Wrong return type");
+
+		template <typename T>
+		struct test_struct
+		{
+			using internal_type = T;
+		};
+
+		test_struct<long> test_struct_longs;
+		int test_var;
+		static_assert(std::is_same_v<contained_type_t<decltype(test_struct_longs)>, long>, "Wrong contained type");
+//		static_assert(std::is_same_v<!contained_type_t<decltype(test_var)>, long>, "Wrong contained type");
+//		static_assert(std::is_same_v<argtype_t<decltype(test_struct_longs), 0>, long>, "Wrong contained type");
 	}
 
 }

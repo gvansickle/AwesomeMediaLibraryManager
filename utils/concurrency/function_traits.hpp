@@ -88,6 +88,33 @@ using argtype_t = typename std::tuple_element_t<i, ct::args_t<F>>;
 template <class F, std::size_t i, class Expected>
 static constexpr bool argtype_n_is_v = std::is_same_v<argtype_t<F, i>, Expected>;
 
+/// Numer of args.
+template <class F>
+struct arity
+{
+	using arity_v = typename std::tuple_size<ct::args_t<F>>::value;
+};
+
+template <class F>
+static constexpr std::size_t arity_v = std::tuple_size<ct::args_t<F>>::value;
+
+
+/// For getting R from T<R>.
+template <class T>
+struct contained_type_impl
+{
+	using type = T;
+};
+
+template <template<typename> class T, typename R>
+struct contained_type_impl<T<R>>
+{
+	using type = typename contained_type_impl<R>::type;
+};
+
+template <class T>
+using contained_type_t = typename contained_type_impl<T>::type;
+
 /// @} // Convenience templates.
 
 #endif /* UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_ */

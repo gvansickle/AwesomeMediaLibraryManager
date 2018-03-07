@@ -46,6 +46,7 @@
 
 #include "utils/DebugHelpers.h"
 
+//#include "impl/ExtFuture_fwddecl_p.h"
 
 template <typename T> class ExtFuture;
 //template <typename T> class ExtAsyncTask;
@@ -88,11 +89,6 @@ private:
  */
 namespace ExtAsync
 {
-//M_WARNING("ExtAsync DECLARED");
-
-//	void f(ExtFuture<int> e);
-//	static_assert(is_function_taking_future_param<decltype(f), int>::value, "");
-
 	template <typename T>
 	static ExtFuture<T> run(ExtAsyncTask<T>* task)
 	{
@@ -128,35 +124,17 @@ namespace ExtAsync
 	 * @param args
 	 * @return
 	 */
-
-//	template <class R, typename Function, typename... Args>
-//	struct run_specialization_helper
-//	{
-//		static auto run(Function&& function, Args&&... args) -> std::enable_if<function_arg_n_is_type_v<Function, 0, ExtFuture<R>>>
-//		{
-//			// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
-//			// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-//			ExtFuture<R> report_and_control;
-//
-//			QtConcurrent::run(function, report_and_control, args...);
-//
-//			qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
-//			return report_and_control;
-//		}
-//	};
-
-	template <typename F, class R = isExtFuture_t<ct::args_t<F, 0>>, typename... Args>
-		std::enable_if_t<argtype_n_is_v<F, 0, ExtFuture<R>&>, ExtFuture<R>>
-	 run(F&& function, Args&&... args)
-//	->  requires<function_traits<F&&>::arg_t<0>::inner_t, Function, param1_is_extfuture_ref>
-//	-> std::enable_if_t<(sizeof...(Args) > 0),
-//		ExtFuture<type_of_param_pack_arg_0<Args...>>>
-//		ExtFuture<function_traits<decltype(F(ExtFuture<R>&))>::template arg_t<0>::inner_t>>
-	//void_t<decltype(function(std::declval<ExtFuture<R>&>()))>
+	template <class F, REQUIRES(std::is_function<F>()), REQUIRES(arity<F>::arity_v > 0),
+				class R = std::tuple_element_t<0, typename contained_type_impl<ct::args_t<F>>::type>,
+				class... Args,
+				REQUIRES(ct::is_invocable_v<F, ExtFuture<R>, Args...>)
+			  >
+	auto run(F&& function, Args&&... args) -> std::remove_reference_t<R>
 	{
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		ExtFuture<R> report_and_control;
+		using Rnoref = std::remove_reference_t<R>;
+		Rnoref report_and_control;
 
 		QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
 //		QtConcurrent::run([=]() mutable {
