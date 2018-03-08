@@ -89,6 +89,11 @@ private:
  */
 namespace ExtAsync
 {
+	namespace detail
+	{
+
+	}
+
 	template <typename T>
 	static ExtFuture<T> run(ExtAsyncTask<T>* task)
 	{
@@ -124,17 +129,19 @@ namespace ExtAsync
 	 * @param args
 	 * @return
 	 */
-	template <class F, REQUIRES(std::is_function<F>()), REQUIRES(arity<F>::arity_v > 0),
-				class R = std::tuple_element_t<0, typename contained_type_impl<ct::args_t<F>>::type>,
-				class... Args,
-				REQUIRES(ct::is_invocable_v<F, ExtFuture<R>, Args...>)
+	template <class F,
+				class R = typename std::tuple_element<0, typename contained_type_impl<typename ct::args<F>::type>::type>::type, // = std::tuple_element_t<0, typename contained_type_impl<ct::args_t<F>>::type>,
+				class... Args
 			  >
-	auto run(F&& function, Args&&... args) -> std::remove_reference_t<R>
+//	std::enable_if_t<ct::is_invocable<void, F, R, Args...>::value, std::remove_reference_t<R>>
+	auto run(F&& function, Args&&... args) -> decltype(function(std::declval<R>()), void(), std::remove_reference_t<R>{})
 	{
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		using Rnoref = std::remove_reference_t<R>;
 		Rnoref report_and_control;
+//		static_assert(ct::is_invocable_v<F, R, Args...>, "");
+//		static_assert(arity<F>::arity_v > 0);
 
 		QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
 //		QtConcurrent::run([=]() mutable {
@@ -171,9 +178,9 @@ namespace ExtAsync
 	 * @param function
 	 * @return
 	 */
-	template <typename F, typename R = ct::return_type_t<F>,
-			REQUIRES(!std::is_member_function_pointer_v<F>)>
-	auto run(F&& function) -> std::enable_if_t<!function_return_type_is_v<F, void>, ExtFuture<R>>
+	template <typename F, typename R = ct::return_type_t<F>>
+	std::enable_if_t<!std::is_member_function_pointer_v<F> && !function_return_type_is_v<F, void>, ExtFuture<R>>
+	run(F&& function)
 	{
 	    return ExtFuture<R>(QtConcurrent::run(std::forward<F>(function)));
 	}
