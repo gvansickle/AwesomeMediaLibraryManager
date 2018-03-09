@@ -95,8 +95,6 @@ namespace ExtAsync
 		template <class ExtFutureR>
 		struct run_helper_struct
 		{
-
-
 			template <class F, class... Args>
 			ExtFutureR run(F&& function, Args&&... args)
 			{
@@ -146,40 +144,16 @@ namespace ExtAsync
 		return report_and_control;
 	}
 
-	/// Work around for lack of function partial specialization.
-	template <typename T>
-	struct type	{ };
-
-	template <class F, class R, class... Args>
-	ExtFuture<R> run(type<R>, F&& function, Args&&... args)
-	{
-		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
-		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		using RetType = ExtFuture<R>;
-		RetType report_and_control;
-//		static_assert(ct::is_invocable_v<F, R, Args...>, "");
-//		static_assert(arity<F>::arity_v > 0);
-
-//				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
-//		QtConcurrent::run([=]() mutable {
-//			return function(report_and_control, args...);
-//		});
-
-		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
-		return report_and_control;
-	}
-
-//	template <class F, class... Args, class R = std::enable_if_t<ct::is_invocable_v<F, ExtFuture&, Args...>, ct::args_t<F>> //std::enable_if_t<true, ExtFuture<typename R>> >
-//	ExtFuture<R> run(F&& function, Args&&... args)
-//	{
-//		return run(type<R>{}, function, args...);
-//	}
-
-	template <class F, class R = ExtFuture<int>, class... Args>
-	R
+	/// Note use of C++14 auto return type deduction.
+	template <class F, /*class R = ExtFuture<int>,*/ class... Args>
+	auto
 	run(F&& function, Args&&... args)
 	{
-		detail::run_helper_struct<R> helper;
+//		static_assert(std::is_same_v<ct::invoke_result_t<F, R, Args...>, void>, "");
+		using argst = ct::args_t<F>;
+		using arg0t = std::tuple_element_t<0, argst>;
+		using ExtFutureR = std::remove_reference_t<arg0t>;
+		detail::run_helper_struct<ExtFutureR> helper;
 
 		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
 	}
