@@ -91,7 +91,31 @@ namespace ExtAsync
 {
 	namespace detail
 	{
+		// Primary template.
+		template <class ExtFutureR>
+		struct run_helper_struct
+		{
 
+
+			template <class F, class... Args>
+			ExtFutureR run(F&& function, Args&&... args)
+			{
+				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+				using RetType = ExtFutureR;
+				RetType report_and_control;
+		//		static_assert(ct::is_invocable_v<F, R, Args...>, "");
+		//		static_assert(arity<F>::arity_v > 0);
+
+				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
+		//		QtConcurrent::run([=]() mutable {
+		//			return function(report_and_control, args...);
+		//		});
+
+				qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+				return report_and_control;
+			}
+		};
 	}
 
 	template <typename T>
@@ -122,6 +146,45 @@ namespace ExtAsync
 		return report_and_control;
 	}
 
+	/// Work around for lack of function partial specialization.
+	template <typename T>
+	struct type	{ };
+
+	template <class F, class R, class... Args>
+	ExtFuture<R> run(type<R>, F&& function, Args&&... args)
+	{
+		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+		using RetType = ExtFuture<R>;
+		RetType report_and_control;
+//		static_assert(ct::is_invocable_v<F, R, Args...>, "");
+//		static_assert(arity<F>::arity_v > 0);
+
+//				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
+//		QtConcurrent::run([=]() mutable {
+//			return function(report_and_control, args...);
+//		});
+
+		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+		return report_and_control;
+	}
+
+//	template <class F, class... Args, class R = std::enable_if_t<ct::is_invocable_v<F, ExtFuture&, Args...>, ct::args_t<F>> //std::enable_if_t<true, ExtFuture<typename R>> >
+//	ExtFuture<R> run(F&& function, Args&&... args)
+//	{
+//		return run(type<R>{}, function, args...);
+//	}
+
+	template <class F, class R = ExtFuture<int>, class... Args>
+	R
+	run(F&& function, Args&&... args)
+	{
+		detail::run_helper_struct<R> helper;
+
+		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
+	}
+
+#if 0
 	/**
 	 * For free functions of the form:
 	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
@@ -129,16 +192,12 @@ namespace ExtAsync
 	 * @param args
 	 * @return
 	 */
-	template <class F,
-				class R = typename std::tuple_element<0, typename contained_type_impl<typename ct::args<F>::type>::type>::type, // = std::tuple_element_t<0, typename contained_type_impl<ct::args_t<F>>::type>,
-				class... Args
-			  >
-//	std::enable_if_t<ct::is_invocable<void, F, R, Args...>::value, std::remove_reference_t<R>>
-	auto run(F&& function, Args&&... args) -> decltype(function(std::declval<R>()), void(), std::remove_reference_t<R>{})
+	template <class F, class R, class... Args>
+	auto run(F&& function, Args&&... args) -> decltype(function(std::declval<R&>(), args...), void(), R{})
 	{
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		using Rnoref = std::remove_reference_t<R>;
+		using Rnoref = R;
 		Rnoref report_and_control;
 //		static_assert(ct::is_invocable_v<F, R, Args...>, "");
 //		static_assert(arity<F>::arity_v > 0);
@@ -151,6 +210,9 @@ namespace ExtAsync
 		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 		return report_and_control;
 	}
+#endif
+
+
 //	template <typename Function, class R = int, typename... Args>// = typename function_traits<Function(Args...)>::return_type_t>
 //	auto run(Function&& function, Args&&... args) -> fallback<ExtFuture<R>, Function, param1_is_extfuture_ref>
 //	{

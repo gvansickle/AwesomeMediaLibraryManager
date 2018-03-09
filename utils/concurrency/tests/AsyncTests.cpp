@@ -111,7 +111,7 @@ static ExtFuture<QString> delayed_string_func()
  */
 static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 {
-	auto retval = ExtAsync::run([=](ExtFuture<int>& future) {
+	ExtFuture<int> retval = ExtAsync::run([=](ExtFuture<int>& future) {
 		int current_val = start_val;
 		for(int i=0; i<num_iterations; i++)
 		{
