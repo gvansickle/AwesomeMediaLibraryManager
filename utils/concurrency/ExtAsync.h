@@ -100,15 +100,15 @@ namespace ExtAsync
 			{
 				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-				using RetType = ExtFutureR;
+				using RetType = std::remove_reference_t<ExtFutureR>;
 				RetType report_and_control;
 		//		static_assert(ct::is_invocable_v<F, R, Args...>, "");
-		//		static_assert(arity<F>::arity_v > 0);
+				static_assert(!std::is_reference<RetType>::value, "RetType shouldn't be a reference in here");
 
-				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
-		//		QtConcurrent::run([=]() mutable {
-		//			return function(report_and_control, args...);
-		//		});
+//				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
+				QtConcurrent::run([function](RetType extfuture, Args... args) {
+					return function(extfuture, args...);
+				}, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
 
 				qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 				return report_and_control;
@@ -144,12 +144,18 @@ namespace ExtAsync
 		return report_and_control;
 	}
 
+	/**
+	 * For free functions of the form:
+	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
+	 * @param function
+	 * @param args
+	 * @return
+	 */
 	/// Note use of C++14 auto return type deduction.
 	template <class F, /*class R = ExtFuture<int>,*/ class... Args>
 	auto
 	run(F&& function, Args&&... args)
 	{
-//		static_assert(std::is_same_v<ct::invoke_result_t<F, R, Args...>, void>, "");
 		using argst = ct::args_t<F>;
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;

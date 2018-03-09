@@ -273,11 +273,11 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 			EXPECT_EQ(last_seen_result, 0);
 		}
 
-		int expected_future_val = 5 + num_then_calls;
+		int expected_future_val = last_seen_result + 1;
 		EXPECT_EQ(expected_future_val, future_value);
 		last_seen_result = future_value;
 		num_then_calls++;
-		;});
+		;}).wait();
 #if 0
 		.finally([&]() {
 			EXPECT_EQ(num_then_calls, 3);
