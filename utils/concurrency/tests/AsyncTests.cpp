@@ -58,13 +58,17 @@ TEST_F(AsyncTestsSuiteFixture, ThisShouldFail)
 
 TEST_F(AsyncTestsSuiteFixture, ThisShouldPass)
 {
+	ASSERT_FALSE(has_finished(__PRETTY_FUNCTION__));
 	ASSERT_TRUE(true);
+	finished(__PRETTY_FUNCTION__);
+	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
 TEST_F(AsyncTestsSuiteFixture, QStringPrintTest)
 {
 	QString test = "Test";
 	ASSERT_EQ(test, "Test");
+	finished(__PRETTY_FUNCTION__);
 }
 
 /**
@@ -80,6 +84,8 @@ static QString delayed_string_func_1()
 		qDb() << "SLEEP COMPLETE";
 		return QString("delayed_string_func_1() output");
 	});
+
+	GTEST_COUT << "delayed_string_func_1() returning" << tostdstr(retval) << std::endl;
 
 	return retval.result();
 }
@@ -100,6 +106,8 @@ static ExtFuture<QString> delayed_string_func()
 
 	static_assert(std::is_same_v<decltype(retval), QFuture<QString>>, "");
 
+	GTEST_COUT << "delayed_string_func() returning" << tostdstr(retval) << std::endl;
+
 	return retval;
 }
 
@@ -116,16 +124,21 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 		for(int i=0; i<num_iterations; i++)
 		{
 			// Sleep for a second.
-			qDb() << "SLEEPING FOR 1 SEC";
+			GTEST_COUT << "SLEEPING FOR 1 SEC" << std::endl;
+
 			QThread::sleep(1);
-			qDb() << "SLEEP COMPLETE, returning value to future:" << current_val;
+			GTEST_COUT << "SLEEP COMPLETE, returning value to future:" << current_val << std::endl;
+
 			future.reportResult(current_val);
+			current_val++;
 		}
 		// We're done.
 		future.reportFinished();
 	});
 
 	static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
+
+	GTEST_COUT << "async_int_generator() returning" << tostdstr(retval.debug_string()) << std::endl;
 
 	return retval;
 }
@@ -138,6 +151,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	bool ran1 = false;
 	bool ran2 = false;
 	bool ran3 = false;
+	static const std::string testname {__PRETTY_FUNCTION__};
+
+	ASSERT_FALSE(has_finished(testname));
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
@@ -146,6 +162,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 
 	future
 	.then([&](ExtFuture<QString> extfuture) -> QString {
+		EXPECT_FALSE(has_finished(testname));
+
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		qDb() << "Then1, got extfuture:" << extfuture;
 		qDb() << "Then1, extfuture val:" << extfuture.get();
@@ -170,6 +188,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 		return QString("Then2 OUTPUT");
 	})
 	.then([&](ExtFuture<QString> extfuture) -> QString {
+		EXPECT_FALSE(has_finished(testname));
+
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		qDb() << "Then3, got extfuture:" << extfuture;
 		qDb() << "Then3, extfuture val:" << extfuture.get();
@@ -191,9 +211,12 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	ASSERT_TRUE(ran2);
 	ASSERT_TRUE(ran3);
 
-	qIn() << "Complete";
+	GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << tostdstr(future.debug_string()) << std::endl;
+
 	SUCCEED();
 	RecordProperty("Completed", true);
+
+	finished(__PRETTY_FUNCTION__);
 }
 
 TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
@@ -203,6 +226,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	bool ran1 = false;
 	bool ran2 = false;
 	bool ran3 = false;
+	static const std::string testname {__PRETTY_FUNCTION__};
+
+	ASSERT_FALSE(has_finished(testname));
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
@@ -250,49 +276,68 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	ASSERT_TRUE(ran2);
 	ASSERT_TRUE(ran3);
 
-	qIn() << "Complete";
-	SUCCEED();
-	RecordProperty("Completed", true);
+	GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << tostdstr(future.debug_string()) << std::endl;
+
+	finished(__PRETTY_FUNCTION__);
 }
 
 TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 {
 	int last_seen_result = 0;
-	int num_then_calls = 0;
+	int num_tap_calls = 0;
+	int start_val = 5;
+	int num_iterations = 3;
+	static const std::string testname {__PRETTY_FUNCTION__};
+
+	ASSERT_FALSE(has_finished(testname));
 
 	// Start generating a sequence of results.
-	auto future = async_int_generator(5, 3);
+	auto future = async_int_generator(start_val, num_iterations);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
 
 	// Separated .then() connect.
 	future.tap([&](int future_value) {
-		if(num_then_calls == 0)
+		GTEST_COUT << "testname: " << testname << std::endl;
+		EXPECT_FALSE(has_finished(testname));
+		GTEST_COUT << "num_tap_calls:" << num_tap_calls << std::endl;
+		if(num_tap_calls == 0)
 		{
+			EXPECT_EQ(start_val, 5);
 			EXPECT_EQ(last_seen_result, 0);
 		}
 
-		int expected_future_val = last_seen_result + 1;
+		int expected_future_val = start_val + num_tap_calls;
+		GTEST_COUT << "expected_future_val:" << expected_future_val << std::endl;
 		EXPECT_EQ(expected_future_val, future_value);
 		last_seen_result = future_value;
-		num_then_calls++;
+		num_tap_calls++;
 		;}).wait();
 #if 0
 		.finally([&]() {
-			EXPECT_EQ(num_then_calls, 3);
+			EXPECT_FALSE(has_finished(testname));
+			EXPECT_EQ(num_tap_calls, 3);
 			EXPECT_EQ(last_seen_result, 7);
 		;});
 #endif
+
+	finished(__PRETTY_FUNCTION__);
 }
 
 
 TEST_F(AsyncTestsSuiteFixture,TestReadyFutures)
 {
+	static const std::string testname {__PRETTY_FUNCTION__};
+
+	ASSERT_FALSE(has_finished(testname));
+
 	ExtFuture<int> future = make_ready_future(45);
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_TRUE(future.isFinished());
 	ASSERT_EQ(future.get(), 45);
+
+	finished(__PRETTY_FUNCTION__);
 }
 
 
@@ -321,17 +366,30 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 
 	bool ran_tap = false;
 	bool ran_then = false;
+	static const std::string testname {__PRETTY_FUNCTION__};
+
+	ASSERT_FALSE(has_finished(testname));
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
+
+	ASSERT_TRUE(future.isStarted());
+	ASSERT_FALSE(future.isFinished());
 
 	GTEST_COUT << "Future created" << std::endl;
 
 	future.tap([&](QString result){
+			GTEST_COUT << "testname: " << testname << std::endl;
+			EXPECT_FALSE(has_finished(testname));
+
+			GTEST_COUT << "in tap(), result:" << tostdstr(result) << std::endl;
 			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
 			ran_tap = true;
 			EXPECT_FALSE(ran_then);
 		;})
 		.then([&](ExtFuture<QString> extfuture){
+			EXPECT_FALSE(has_finished(testname));
+
+			GTEST_COUT << "in then(), extfuture:" << tostdstr(extfuture.get()) << std::endl;
 			EXPECT_EQ(extfuture.get(), QString("delayed_string_func_1() output"));
 			EXPECT_TRUE(ran_tap);
 			EXPECT_FALSE(ran_then);
@@ -339,17 +397,27 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 			return QString("Then Called");
 		;}).wait();
 
+	GTEST_COUT << "after wait()" << tostdstr(future.debug_string()) << std::endl;
+
 //	future.wait();
 
 	ASSERT_TRUE(ran_tap);
 	ASSERT_TRUE(ran_then);
+
+	ASSERT_FALSE(has_finished(testname));
+
+	finished(__PRETTY_FUNCTION__);
 }
 
 TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 {
 	int tap_call_counter = 0;
+	const std::string testname {__PRETTY_FUNCTION__};
+
+	ASSERT_FALSE(has_finished(testname));
 
 	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int>& extfuture) {
+			EXPECT_FALSE(has_finished(testname));
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			QThread::sleep(1);
@@ -361,6 +429,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
 		})
 	.tap([&](int value){
+		EXPECT_FALSE(has_finished(testname));
 		if(tap_call_counter == 0)
 		{
 			EXPECT_EQ(value, 867);
@@ -376,9 +445,16 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 		tap_call_counter++;
 		;});
 
+	ASSERT_TRUE(future.isStarted());
+	ASSERT_FALSE(future.isFinished());
+
 	ASSERT_FALSE(future.isFinished());
 	future.wait();
 	ASSERT_TRUE(future.isFinished());
+
+	ASSERT_FALSE(has_finished(testname));
+
+	finished(__PRETTY_FUNCTION__);
 }
 
 /// Static checks
