@@ -104,6 +104,9 @@ namespace ExtAsync
 			template <class F, class... Args, typename std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
 			ExtFutureR run(F&& function, Args&&... args)
 			{
+				/// @note Used
+				qWr() << "EXTASYNC::RUN: IN ExtFutureR run_helper_struct::run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
+
 				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 				using RetType = std::remove_reference_t<ExtFutureR>;
@@ -119,32 +122,14 @@ namespace ExtAsync
 				qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
 				return report_and_control;
 			}
-
-			/// For F = ReturnValue(args...)
-			template <class F, class... Args>
-			auto run(F&& function, Args&&... args) -> std::enable_if_t<!ct::has_void_return_v<F> && false/**/, ExtFuture<ct::return_type_t<F>>>
-			{
-				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
-				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-				using RetType = std::remove_reference_t<ExtFutureR>;
-				RetType report_and_control;
-		//		static_assert(ct::is_invocable_v<F, R, Args...>, "");
-				static_assert(!std::is_reference<RetType>::value, "RetType shouldn't be a reference in here");
-
-//				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
-				QtConcurrent::run([function](RetType extfuture, Args... args) {
-					return function(args...);
-				}, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
-
-				qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
-				return report_and_control;
-			}
 		};
 	}
 
 	template <typename T>
 	static ExtFuture<T> run(ExtAsyncTask<T>* task)
 	{
+		qWr() << "EXTASYNC::RUN: IN ExtFuture<T> run(ExtAsyncTask<T>* task):" << __PRETTY_FUNCTION__;
+
 		return (new ExtAsyncTaskRunner<T>(task))->start();
 	}
 
@@ -158,6 +143,8 @@ namespace ExtAsync
 	static ExtFuture<R>
 	run(This* thiz, F&& function, Args&&... args)
 	{
+		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
+
 		static_assert(sizeof...(Args) <= 1, "Too many args");
 		static_assert(function_traits<F>::arity_v > 1, "Callback must take at least one argument");
 
@@ -182,6 +169,9 @@ namespace ExtAsync
 	auto
 	run(F&& function, Args&&... args)
 	{
+		/// @note Used.
+		qWr() << "EXTASYNC::RUN: IN auto run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
+
 		using argst = ct::args_t<F>;
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;
@@ -189,27 +179,6 @@ namespace ExtAsync
 
 		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
 	}
-
-//	/**
-//	 * For free functions of the form:
-//	 * 	R ()(Args...)
-//	 * @param function
-//	 * @param args
-//	 * @return
-//	 */
-//	/// Note use of C++14 auto return type deduction.
-//	template <class F, /*class R = ExtFuture<int>,*/ class... Args, typename std::enable_if_t<!ct::has_void_return_v<F>, int> = 0>
-//	auto
-//	run(F&& function, Args&&... args)
-//	{
-////		using argst = ct::args_t<F>;
-////		using arg0t = std::tuple_element_t<0, argst>;
-////		using ExtFutureR = std::remove_reference_t<arg0t>;
-//		using ExtFutureR = ExtFuture<ct::return_type_t<F>>;
-//		detail::run_helper_struct<ExtFutureR> helper;
-//
-//		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
-//	}
 
 #if 0
 	/**
@@ -240,22 +209,6 @@ namespace ExtAsync
 #endif
 
 
-#if 0
-	template <typename Function, typename... Args>
-	static ExtFuture<void>
-	run(Function&& function, Args&&... args)
-	{
-		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
-		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		ExtFuture<void> report_and_control;
-
-		QtConcurrent::run(function, report_and_control, args...);
-
-		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
-		return report_and_control;
-	}
-#endif // void specialization.
-
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
 	 *
@@ -269,6 +222,9 @@ namespace ExtAsync
 		, ExtFuture<R>>
 	run(F&& function)
 	{
+		/// @note Used.
+		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(F&& function):" << __PRETTY_FUNCTION__;
+
 		ExtFuture<R> retfuture;
 
 		/*
@@ -279,30 +235,17 @@ namespace ExtAsync
 		 *      unless we decay off the reference-ness.
 		 */
 
-	    QtConcurrent::run([fn=std::decay_t<F>(function)](ExtFuture<R> retfuture) -> void {
+	    QtConcurrent::run([fn=std::decay_t<F>(function)](ExtFuture<R> retfuture) mutable -> void {
 	    	R retval;
 	    	// Call the function the user orginally passed in.
 	    	retval = fn();
 	    	// Report our single result.
 	    	retfuture.reportResult(retval);
 	    	retfuture.reportFinished();
-	    	;}, retfuture);
+	    	;}, std::forward<ExtFuture<R>>(retfuture));
 
 	    return retfuture;
 	}
-
-#if 0
-	inline static ExtFuture<QString>
-	run(std::function<void(void)> then_callback, ExtFuture<QString> predecessor_future)
-	{
-		ExtFuture<QString> return_future;
-
-	//	QtConcurrent::run(std::forward<Function>(function), std::forward<Args>(args)...);
-		QtConcurrent::run(ExtAsyncThisHelper, std::forward<std::function<void(void)>>(then_callback), std::forward<ExtFuture<QString>>(predecessor_future), std::forward<ExtFuture<QString>>(return_future));
-
-		return return_future;
-	}
-#endif
 
 	/**
 	 * Special run() function for .then() callbacks.
@@ -316,6 +259,7 @@ namespace ExtAsync
 	run_then(CallbackType then_callback, ExtFuture<T>& predecessor_future)
 	{
 //		ExtFuture<QString> return_future;
+		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run_then(CallbackType then_callback, ExtFuture<T>& predecessor_future):" << __PRETTY_FUNCTION__;
 		static_assert(std::is_same_v<R, ExtFuture<QString>>, "");
 
 		using ThenHelperType = ExtAsyncThenHelper<QString, std::function<void(QString)>>;
