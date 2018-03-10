@@ -32,6 +32,35 @@
 
 #include "../ExtAsync.h"
 
+/// Test helper macros.
+#define TC_ENTER() \
+	/* The name of this test as a static std::string. */ \
+	static const std::string testname {__PRETTY_FUNCTION__}; \
+	static volatile bool test_func_called = true; \
+	static volatile bool test_func_exited = false; \
+	static volatile bool test_func_no_longer_need_stack_ctx = false; \
+	ASSERT_FALSE(has_finished(testname));
+
+#define TC_EXPECT_NOT_EXIT() \
+	EXPECT_TRUE(test_func_called) << testname; \
+	EXPECT_FALSE(test_func_exited) << testname;
+
+#define TC_DONE_WITH_STACK() \
+	test_func_no_longer_need_stack_ctx = true;
+
+#define TC_EXIT() \
+	test_func_exited = true; \
+	GTEST_COUT << "EXITING: " << __PRETTY_FUNCTION__ << std::endl; \
+	ASSERT_TRUE(test_func_called); \
+	ASSERT_TRUE(test_func_exited); \
+	ASSERT_TRUE(test_func_no_longer_need_stack_ctx); \
+	/* Tell the harness that we're exiting. */ \
+	finished(__PRETTY_FUNCTION__); \
+
+
+
+
+
 
 void AsyncTestsSuiteFixture::SetUp()
 {
@@ -58,10 +87,18 @@ TEST_F(AsyncTestsSuiteFixture, ThisShouldFail)
 
 TEST_F(AsyncTestsSuiteFixture, ThisShouldPass)
 {
+	TC_ENTER();
+
+	TC_EXPECT_NOT_EXIT();
+
 	ASSERT_FALSE(has_finished(__PRETTY_FUNCTION__));
 	ASSERT_TRUE(true);
 	finished(__PRETTY_FUNCTION__);
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
+
+	TC_DONE_WITH_STACK();
+
+	TC_EXIT();
 }
 
 TEST_F(AsyncTestsSuiteFixture, QStringPrintTest)
@@ -157,9 +194,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	bool ran1 = false;
 	bool ran2 = false;
 	bool ran3 = false;
-	static const std::string testname {__PRETTY_FUNCTION__};
 
-	ASSERT_FALSE(has_finished(testname));
+	TC_ENTER();
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
@@ -168,7 +204,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 
 	future
 	.then([&](ExtFuture<QString> extfuture) -> QString {
-		EXPECT_FALSE(has_finished(testname));
+
+		TC_EXPECT_NOT_EXIT();
 
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		qDb() << "Then1, got extfuture:" << extfuture;
@@ -182,6 +219,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 		return QString("Then1 OUTPUT");
 	})
 	.then([&](ExtFuture<QString> extfuture) -> QString {
+
+		TC_EXPECT_NOT_EXIT();
+
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		qDb() << "Then2, got extfuture:" << extfuture;
 		qDb() << "Then2, extfuture val:" << extfuture.get();
@@ -194,7 +234,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 		return QString("Then2 OUTPUT");
 	})
 	.then([&](ExtFuture<QString> extfuture) -> QString {
-		EXPECT_FALSE(has_finished(testname));
+
+		TC_EXPECT_NOT_EXIT();
 
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		qDb() << "Then3, got extfuture:" << extfuture;
@@ -203,6 +244,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
 		ran3 = true;
+		TC_DONE_WITH_STACK();
 		return QString("Then3 OUTPUT");
 	}).wait();
 
@@ -219,10 +261,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 
 	GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << tostdstr(future.debug_string()) << std::endl;
 
-	SUCCEED();
-	RecordProperty("Completed", true);
-
-	finished(__PRETTY_FUNCTION__);
+	TC_EXIT();
 }
 
 TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
@@ -232,9 +271,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	bool ran1 = false;
 	bool ran2 = false;
 	bool ran3 = false;
-	static const std::string testname {__PRETTY_FUNCTION__};
 
-	ASSERT_FALSE(has_finished(testname));
+	TC_ENTER();
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
@@ -243,6 +281,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 
 	future
 	.then([&](ExtFuture<QString> extfuture) -> int {
+
+		TC_EXPECT_NOT_EXIT();
+
 		qDb() << "Then1, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
@@ -253,6 +294,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 		return 2;
 	})
 	.then([&](ExtFuture<int> extfuture) -> int {
+
+		TC_EXPECT_NOT_EXIT();
+
 		qDb() << "Then2, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
@@ -262,12 +306,17 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 		return 3;
 	})
 	.then([&](ExtFuture<int> extfuture) -> double {
+		TC_EXPECT_NOT_EXIT();
+
 		qDb() << "Then3, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
 		ran3 = true;
 		EXPECT_EQ(extfuture.get(), 3);
+
+		TC_DONE_WITH_STACK();
+
 		return 3.1415;
 	}).wait();
 
@@ -284,18 +333,15 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 
 	GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << tostdstr(future.debug_string()) << std::endl;
 
-	finished(__PRETTY_FUNCTION__);
+	TC_EXIT();
 }
 
 TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 {
 	int last_seen_result = 0;
-	int num_tap_calls = 0;
 	int start_val = 5;
 	int num_iterations = 3;
-	static const std::string testname {__PRETTY_FUNCTION__};
-
-	ASSERT_FALSE(has_finished(testname));
+	TC_ENTER();
 
 	// Start generating a sequence of results.
 	auto future = async_int_generator(start_val, num_iterations);
@@ -305,9 +351,17 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 
 	// Separated .then() connect.
 	future.tap([&](int future_value) {
+
+		TC_EXPECT_NOT_EXIT();
+
+		static int num_tap_calls = 0;
+
 		GTEST_COUT << "testname: " << testname << std::endl;
-		EXPECT_FALSE(has_finished(testname));
 		GTEST_COUT << "num_tap_calls:" << num_tap_calls << std::endl;
+
+		EXPECT_EQ(start_val, 5);
+		EXPECT_EQ(num_iterations, 3);
+
 		if(num_tap_calls == 0)
 		{
 			EXPECT_EQ(start_val, 5);
@@ -315,35 +369,44 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 		}
 
 		int expected_future_val = start_val + num_tap_calls;
-		GTEST_COUT << "expected_future_val:" << expected_future_val << std::endl;
-		EXPECT_EQ(expected_future_val, future_value);
+		GTEST_COUT << "expected_future_val: " << expected_future_val << std::endl;
+		EXPECT_EQ(expected_future_val, future_value) << "FAIL in ExtFuture_ExtAsyncRun_multi_result_test()";
 		last_seen_result = future_value;
 		num_tap_calls++;
+		EXPECT_LE(num_tap_calls, num_iterations);
+		if(num_tap_calls == num_iterations)
+		{
+			TC_DONE_WITH_STACK();
+		}
 		;}).wait();
+M_WARNING("THE ABOVE .wait() doesn't wait");
 #if 0
 		.finally([&]() {
+
+				TC_EXPECT_NOT_EXIT();
+
 			EXPECT_FALSE(has_finished(testname));
 			EXPECT_EQ(num_tap_calls, 3);
 			EXPECT_EQ(last_seen_result, 7);
 		;});
 #endif
 
-	finished(__PRETTY_FUNCTION__);
+	TC_EXIT();
 }
 
 
-TEST_F(AsyncTestsSuiteFixture,TestReadyFutures)
+TEST_F(AsyncTestsSuiteFixture, TestReadyFutures)
 {
-	static const std::string testname {__PRETTY_FUNCTION__};
-
-	ASSERT_FALSE(has_finished(testname));
+	TC_ENTER();
 
 	ExtFuture<int> future = make_ready_future(45);
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_TRUE(future.isFinished());
 	ASSERT_EQ(future.get(), 45);
 
-	finished(__PRETTY_FUNCTION__);
+	TC_DONE_WITH_STACK();
+
+	TC_EXIT();
 }
 
 
@@ -372,9 +435,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 
 	bool ran_tap = false;
 	bool ran_then = false;
-	static const std::string testname {__PRETTY_FUNCTION__};
-
-	ASSERT_FALSE(has_finished(testname));
+	TC_ENTER();
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
@@ -384,22 +445,26 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 	GTEST_COUT << "Future created" << std::endl;
 
 	future.tap([&](QString result){
+
+			TC_EXPECT_NOT_EXIT();
+
 			GTEST_COUT << "testname: " << testname << std::endl;
-			EXPECT_FALSE(has_finished(testname));
 
 			GTEST_COUT << "in tap(), result:" << tostdstr(result) << std::endl;
 			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
 			ran_tap = true;
 			EXPECT_FALSE(ran_then);
 		;})
-		.then([&](ExtFuture<QString> extfuture){
-			EXPECT_FALSE(has_finished(testname));
+		.then([&](ExtFuture<QString> extfuture) {
+
+			TC_EXPECT_NOT_EXIT();
 
 			GTEST_COUT << "in then(), extfuture:" << tostdstr(extfuture.get()) << std::endl;
 			EXPECT_EQ(extfuture.get(), QString("delayed_string_func_1() output"));
 			EXPECT_TRUE(ran_tap);
 			EXPECT_FALSE(ran_then);
 			ran_then = true;
+			TC_DONE_WITH_STACK();
 			return QString("Then Called");
 		;}).wait();
 
@@ -410,20 +475,16 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 	ASSERT_TRUE(ran_tap);
 	ASSERT_TRUE(ran_then);
 
-	ASSERT_FALSE(has_finished(testname));
-
-	finished(__PRETTY_FUNCTION__);
+	TC_EXIT();
 }
 
 TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 {
 	int tap_call_counter = 0;
-	const std::string testname {__PRETTY_FUNCTION__};
-
-	ASSERT_FALSE(has_finished(testname));
+	TC_ENTER();
 
 	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int>& extfuture) {
-			EXPECT_FALSE(has_finished(testname));
+			TC_EXPECT_NOT_EXIT();
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			QThread::sleep(1);
@@ -435,7 +496,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
 		})
 	.tap([&](int value){
-		EXPECT_FALSE(has_finished(testname));
+		TC_EXPECT_NOT_EXIT();
 		if(tap_call_counter == 0)
 		{
 			EXPECT_EQ(value, 867);
@@ -443,6 +504,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 		else if(tap_call_counter == 1)
 		{
 			EXPECT_EQ(value, 5309);
+			TC_DONE_WITH_STACK();
 		}
 		else
 		{
@@ -458,9 +520,9 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 	future.wait();
 	ASSERT_TRUE(future.isFinished());
 
-	ASSERT_FALSE(has_finished(testname));
+	TC_EXPECT_NOT_EXIT();
 
-	finished(__PRETTY_FUNCTION__);
+	TC_EXIT();
 }
 
 /// Static checks

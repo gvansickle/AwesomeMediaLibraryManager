@@ -100,8 +100,8 @@ namespace ExtAsync
 		template <class ExtFutureR>
 		struct run_helper_struct
 		{
-			/// For F = void(ExtFutureR&, args...)
-			template <class F, class... Args>
+			/// For F == void(ExtFutureR&, args...)
+			template <class F, class... Args, typename std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
 			ExtFutureR run(F&& function, Args&&... args)
 			{
 				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
@@ -122,7 +122,7 @@ namespace ExtAsync
 
 			/// For F = ReturnValue(args...)
 			template <class F, class... Args>
-			auto run(F&& function, Args&&... args) -> std::enable_if_t<!ct::has_void_return_v<F>, ExtFuture<ct::return_type_t<F>>>
+			auto run(F&& function, Args&&... args) -> std::enable_if_t<!ct::has_void_return_v<F> && false/**/, ExtFuture<ct::return_type_t<F>>>
 			{
 				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
@@ -178,7 +178,7 @@ namespace ExtAsync
 	 * @return
 	 */
 	/// Note use of C++14 auto return type deduction.
-	template <class F, /*class R = ExtFuture<int>,*/ class... Args>
+	template <class F, /*class R = ExtFuture<int>,*/ class... Args>//, typename std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
 	auto
 	run(F&& function, Args&&... args)
 	{
@@ -189,6 +189,27 @@ namespace ExtAsync
 
 		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
 	}
+
+//	/**
+//	 * For free functions of the form:
+//	 * 	R ()(Args...)
+//	 * @param function
+//	 * @param args
+//	 * @return
+//	 */
+//	/// Note use of C++14 auto return type deduction.
+//	template <class F, /*class R = ExtFuture<int>,*/ class... Args, typename std::enable_if_t<!ct::has_void_return_v<F>, int> = 0>
+//	auto
+//	run(F&& function, Args&&... args)
+//	{
+////		using argst = ct::args_t<F>;
+////		using arg0t = std::tuple_element_t<0, argst>;
+////		using ExtFutureR = std::remove_reference_t<arg0t>;
+//		using ExtFutureR = ExtFuture<ct::return_type_t<F>>;
+//		detail::run_helper_struct<ExtFutureR> helper;
+//
+//		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
+//	}
 
 #if 0
 	/**
@@ -219,12 +240,6 @@ namespace ExtAsync
 #endif
 
 
-//	template <typename Function, class R = int, typename... Args>// = typename function_traits<Function(Args...)>::return_type_t>
-//	auto run(Function&& function, Args&&... args) -> fallback<ExtFuture<R>, Function, param1_is_extfuture_ref>
-//	{
-////		static_assert(0==1,"");
-//	}
-
 #if 0
 	template <typename Function, typename... Args>
 	static ExtFuture<void>
@@ -248,7 +263,10 @@ namespace ExtAsync
 	 * @return
 	 */
 	template <typename F, typename R = ct::return_type_t<F>>
-	std::enable_if_t<!std::is_member_function_pointer_v<F> && !function_return_type_is_v<F, void>, ExtFuture<R>>
+		std::enable_if_t<!std::is_member_function_pointer_v<F>
+			&& !ct::has_void_return_v<F>
+//			&& ct::is_invocable_v<F>,
+		, ExtFuture<R>>
 	run(F&& function)
 	{
 		ExtFuture<R> retfuture;

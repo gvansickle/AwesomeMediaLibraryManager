@@ -57,7 +57,6 @@ protected:
 	void finished(std::string func)
 	{
 		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-		GTEST_COUT << "finished:" << func << std::endl;
 		m_finished_set.insert(func);
 	}
 };
