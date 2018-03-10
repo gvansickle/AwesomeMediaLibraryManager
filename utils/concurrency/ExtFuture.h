@@ -388,7 +388,7 @@ public:
 	}
 
 	template <typename F, typename R = ct::return_type_t<F>, REQUIRES(argtype_n_is_v<F, 0, T>)>
-	ExtFuture<T>& tap(F tap_callback)
+	ExtFuture<T>& tap(F&& tap_callback)
 	{
 		return tap(QApplication::instance(), std::forward<F>(tap_callback));
 	}
@@ -580,20 +580,27 @@ M_WARNING("TODO: LEAKS THIS");
 	/**
 	 * TapHelper which calls tap_callback whenever there's a new result ready.
 	 * @param guard_qobject
-	 * @param tap_callback   callable with signature void(T)
+	 * @param tap_callback   callable with signature void(*)(T)
 	 * @return
 	 */
 	template <typename F>
-	ExtFuture<T>& TapHelper(QObject *guard_qobject, F&& tap_callback)
+		std::enable_if_t<ct::is_invocable_r_v<void, F, T>, ExtFuture<T>&>
+	TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
+		static bool s_was_ever_called = false;
 		qDb() << "ENTER";
 		auto watcher = new QFutureWatcher<T>();
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
-		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject, [tap_callback, watcher](int index) {
-			qDb() << "TAP WRAPPER CALLED";
-			tap_callback(watcher->future().resultAt(index));
+		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
+				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
+					qDb() << "TAP WRAPPER CALLED";
+					tap_cb(watcher->future().resultAt(index));
+					s_was_ever_called = true;
+			});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
+			qWr() << "TAP ExtFutureWatcher DESTROYED";
+			Q_ASSERT(s_was_ever_called);
 		});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAP ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
 		qDb() << "EXIT";
 		return *this;

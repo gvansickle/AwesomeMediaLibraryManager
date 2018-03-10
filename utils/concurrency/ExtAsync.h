@@ -180,35 +180,6 @@ namespace ExtAsync
 		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
 	}
 
-#if 0
-	/**
-	 * For free functions of the form:
-	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
-	 * @param function
-	 * @param args
-	 * @return
-	 */
-	template <class F, class R, class... Args>
-	auto run(F&& function, Args&&... args) -> decltype(function(std::declval<R&>(), args...), void(), R{})
-	{
-		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
-		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		using Rnoref = R;
-		Rnoref report_and_control;
-//		static_assert(ct::is_invocable_v<F, R, Args...>, "");
-//		static_assert(arity<F>::arity_v > 0);
-
-		QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
-//		QtConcurrent::run([=]() mutable {
-//			return function(report_and_control, args...);
-//		});
-
-		qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
-		return report_and_control;
-	}
-#endif
-
-
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
 	 *
