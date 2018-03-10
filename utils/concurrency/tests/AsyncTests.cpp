@@ -85,6 +85,9 @@ static QString delayed_string_func_1()
 		return QString("delayed_string_func_1() output");
 	});
 
+	EXPECT_TRUE(retval.isStarted());
+	EXPECT_FALSE(retval.isFinished());
+
 	GTEST_COUT << "delayed_string_func_1() returning" << tostdstr(retval) << std::endl;
 
 	return retval.result();
@@ -105,6 +108,9 @@ static ExtFuture<QString> delayed_string_func()
 	});
 
 	static_assert(std::is_same_v<decltype(retval), QFuture<QString>>, "");
+
+	EXPECT_TRUE(retval.isStarted());
+	EXPECT_FALSE(retval.isFinished());
 
 	GTEST_COUT << "delayed_string_func() returning" << tostdstr(retval) << std::endl;
 
@@ -342,24 +348,24 @@ TEST_F(AsyncTestsSuiteFixture,TestReadyFutures)
 
 
 
-TEST_F(AsyncTestsSuiteFixture, DISABLED_UnwrapTest)
-{
+//TEST_F(AsyncTestsSuiteFixture, DISABLED_UnwrapTest)
+//{
 
-//	auto future = QtConcurrent::run(delayed_string_func);
-	ExtFuture<ExtFuture<QString>> future = ExtAsync::run(delayed_string_func);
-//	ExtFuture<QString> future = ExtAsync::run([&](ExtFuture<QString> future) {
-//		qDb() << "TEST: Running from main run lambda.";
-//		// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
-//		QThread::sleep(1);
-//		future.reportResult("Hello1");
-//		future.reportResult("Hello2");
-//		future.reportFinished(new QString("FINISHED"));
-//		qDb() << "TEST: Finished from main run lambda.";
-//		return ExtFuture<QString>(); //("FINISHED");
-//	});
+////	auto future = QtConcurrent::run(delayed_string_func);
+////	ExtFuture<ExtFuture<QString>> future = ExtAsync::run(delayed_string_func);
+////	ExtFuture<QString> future = ExtAsync::run([&](ExtFuture<QString> future) {
+////		qDb() << "TEST: Running from main run lambda.";
+////		// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
+////		QThread::sleep(1);
+////		future.reportResult("Hello1");
+////		future.reportResult("Hello2");
+////		future.reportFinished(new QString("FINISHED"));
+////		qDb() << "TEST: Finished from main run lambda.";
+////		return ExtFuture<QString>(); //("FINISHED");
+////	});
 
-//	ExtFuture<QString> unwrapped_future = future.unwrap();
-}
+////	ExtFuture<QString> unwrapped_future = future.unwrap();
+//}
 
 TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 {

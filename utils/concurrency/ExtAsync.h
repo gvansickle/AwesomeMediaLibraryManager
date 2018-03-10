@@ -91,12 +91,38 @@ namespace ExtAsync
 {
 	namespace detail
 	{
-		// Primary template.
+		template <class T, class = void>
+		struct is_void_takes_param : std::false_type {};
+		template <class T>
+		struct is_void_takes_param<T, void_t<ct::has_void_return<T>>>
+			: std::true_type {};
+
 		template <class ExtFutureR>
 		struct run_helper_struct
 		{
+			/// For F = void(ExtFutureR&, args...)
 			template <class F, class... Args>
 			ExtFutureR run(F&& function, Args&&... args)
+			{
+				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
+				using RetType = std::remove_reference_t<ExtFutureR>;
+				RetType report_and_control;
+				static_assert(ct::has_void_return_v<F>, "Callback must return void");
+				static_assert(!std::is_reference<RetType>::value, "RetType shouldn't be a reference in here");
+
+//				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
+				QtConcurrent::run([function](RetType extfuture, Args... args) {
+					return function(extfuture, args...);
+				}, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
+
+				qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+				return report_and_control;
+			}
+
+			/// For F = ReturnValue(args...)
+			template <class F, class... Args>
+			auto run(F&& function, Args&&... args) -> std::enable_if_t<!ct::has_void_return_v<F>, ExtFuture<ct::return_type_t<F>>>
 			{
 				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
@@ -107,7 +133,7 @@ namespace ExtAsync
 
 //				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
 				QtConcurrent::run([function](RetType extfuture, Args... args) {
-					return function(extfuture, args...);
+					return function(args...);
 				}, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
 
 				qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
@@ -216,7 +242,8 @@ namespace ExtAsync
 #endif // void specialization.
 
 	/**
-	 * Free function taking no params and returning non-void.
+	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
+	 *
 	 * @param function
 	 * @return
 	 */
@@ -224,7 +251,26 @@ namespace ExtAsync
 	std::enable_if_t<!std::is_member_function_pointer_v<F> && !function_return_type_is_v<F, void>, ExtFuture<R>>
 	run(F&& function)
 	{
-	    return ExtFuture<R>(QtConcurrent::run(std::forward<F>(function)));
+		ExtFuture<R> retfuture;
+
+		/*
+		 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
+		 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
+		 *      in the inner lambda.
+		 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
+		 *      unless we decay off the reference-ness.
+		 */
+
+	    QtConcurrent::run([fn=std::decay_t<F>(function)](ExtFuture<R> retfuture) -> void {
+	    	R retval;
+	    	// Call the function the user orginally passed in.
+	    	retval = fn();
+	    	// Report our single result.
+	    	retfuture.reportResult(retval);
+	    	retfuture.reportFinished();
+	    	;}, retfuture);
+
+	    return retfuture;
 	}
 
 #if 0
