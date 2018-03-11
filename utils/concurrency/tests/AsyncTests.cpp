@@ -30,15 +30,16 @@
 #include "../future_type_traits.hpp"
 #include "../function_traits.hpp"
 
+#include <atomic>
 #include "../ExtAsync.h"
 
 /// Test helper macros.
 #define TC_ENTER() \
 	/* The name of this test as a static std::string. */ \
 	static const std::string testname {__PRETTY_FUNCTION__}; \
-	static volatile bool test_func_called = true; \
-	static volatile bool test_func_exited = false; \
-	static volatile bool test_func_no_longer_need_stack_ctx = false; \
+	static std::atomic_bool test_func_called {true}; \
+	static std::atomic_bool test_func_exited {false}; \
+	static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
 	ASSERT_FALSE(has_finished(testname));
 
 #define TC_EXPECT_NOT_EXIT() \
@@ -198,9 +199,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	SCOPED_TRACE("START");
 //	qIn() << "START";
 
-	bool ran1 = false;
-	bool ran2 = false;
-	bool ran3 = false;
+	std::atomic_bool ran1 {false};
+	std::atomic_bool ran2 {false};
+	std::atomic_bool ran3 {false};
 
 	TC_ENTER();
 
@@ -345,9 +346,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 
 TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 {
-	int last_seen_result = 0;
-	int start_val = 5;
-	int num_iterations = 3;
+	constexpr int start_val = 5;
+	constexpr int num_iterations = 3;
 	TC_ENTER();
 
 	// Start generating a sequence of results.
@@ -361,6 +361,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 
 		TC_EXPECT_NOT_EXIT();
 
+		static int last_seen_result = 0;
 		static int num_tap_calls = 0;
 
 		GTEST_COUT << "testname: " << testname << std::endl;
@@ -491,7 +492,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 
 TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 {
-	int tap_call_counter = 0;
+	std::atomic_int tap_call_counter {0};
 	TC_ENTER();
 
 	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int>& extfuture) {
@@ -512,20 +513,24 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 		})
 	.tap([&](int value){
 		TC_EXPECT_NOT_EXIT();
-		if(tap_call_counter == 0)
+		/// Get a local copy of the counter value atomically.
+		int current_tap_call_count = tap_call_counter;
+		if(current_tap_call_count == 0)
 		{
 			EXPECT_EQ(value, 867);
 		}
-		else if(tap_call_counter == 1)
+		else if(current_tap_call_count == 1)
 		{
 			EXPECT_EQ(value, 5309);
 			TC_DONE_WITH_STACK();
 		}
 		else
 		{
-			EXPECT_EQ(tap_call_counter, 1);
+			EXPECT_EQ(current_tap_call_count, 1);
 		}
-		tap_call_counter++;
+		current_tap_call_count++;
+		// Asign the new value back atomically.
+		tap_call_counter = current_tap_call_count;
 		;});
 
 	ASSERT_TRUE(future.isStarted());
