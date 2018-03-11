@@ -114,16 +114,17 @@ namespace ExtAsync
 				static_assert(ct::has_void_return_v<F>, "Callback must return void");
 				static_assert(!std::is_reference<RetType>::value, "RetType shouldn't be a reference in here");
 
-//				QtConcurrent::run(std::forward<F>(function), std::ref(report_and_control), std::forward<Args>(args)...);
 				QtConcurrent::run([function](RetType extfuture, Args... args) {
 					return function(extfuture, args...);
 				}, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
 
-				qDb() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+				qWr() << "Returning ExtFuture:" << &report_and_control << report_and_control;
+				Q_ASSERT(report_and_control.isStarted());
+				Q_ASSERT(!report_and_control.isFinished());
 				return report_and_control;
 			}
 		};
-	}
+	} // END namespace detail
 
 	template <typename T>
 	static ExtFuture<T> run(ExtAsyncTask<T>* task)
@@ -171,7 +172,7 @@ namespace ExtAsync
 	{
 		/// @note Used.
 		qWr() << "EXTASYNC::RUN: IN auto run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
-
+		// Extract the type of the first arg of function, which should be an ExtFuture<?>&.
 		using argst = ct::args_t<F>;
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;

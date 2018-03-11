@@ -71,7 +71,7 @@ set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't incl
 include(InstallRequiredSystemLibraries)
 ### @todo? find_package(ECM 1.7.0 REQUIRED NO_MODULE)
 # For GoogleTest and Boost.
-set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED 1")
+set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(DownloadProject)
 
 dir_summary()
@@ -591,6 +591,7 @@ if(TRUE) # Enable test target.
 
 find_package(Qt5Test REQUIRED)
 include(CTest)
+### Google Test
 find_package(Threads REQUIRED)
 download_project(PROJ                googletest
                  GIT_REPOSITORY      https://github.com/google/googletest.git

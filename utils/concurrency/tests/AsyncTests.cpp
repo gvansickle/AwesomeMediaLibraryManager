@@ -117,7 +117,8 @@ static QString delayed_string_func_1()
 	auto retval = QtConcurrent::run([](){
 		// Sleep for a second.
 		qDb() << "ENTER, SLEEPING FOR 1 SEC";
-		QThread::sleep(1);
+//		QThread::sleep(1);
+		QTest::qWait(1000);
 		qDb() << "SLEEP COMPLETE";
 		return QString("delayed_string_func_1() output");
 	});
@@ -136,11 +137,12 @@ static QString delayed_string_func_1()
  */
 static ExtFuture<QString> delayed_string_func()
 {
+M_WARNING("THIS IS A QFuture<>");
 	auto retval = QtConcurrent::run([](){
 		// Sleep for a second.
 		qDb() << "ENTER, SLEEPING FOR 1 SEC";
 		QThread::sleep(1);
-		qDb() << "SLEEP COMPLETE";
+		qDb() << "SLEEP COMPLETE, returning HELLO";
 		return QString("HELLO");
 	});
 
@@ -162,6 +164,11 @@ static ExtFuture<QString> delayed_string_func()
  */
 static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 {
+	/** @todo
+	 * This run is:
+	[ "" ] EXTASYNC::RUN: IN auto run(F&& function, Args&&... args): auto ExtAsync::run(F &&, Args &&...) [F = (lambda at ../utils/concurrency/tests/AsyncTests.cpp:165:40), Args = <>]
+	[ "" ] EXTASYNC::RUN: IN ExtFutureR run_helper_struct::run(F&& function, Args&&... args): ExtFutureR ExtAsync::detail::run_helper_struct<ExtFuture<int> >::run(F &&, Args &&...) [ExtFutureR = ExtFuture<int>, F = (lambda at ../utils/concurrency/tests/AsyncTests.cpp:165:40), Args = <>]
+	*/
 	ExtFuture<int> retval = ExtAsync::run([=](ExtFuture<int>& future) {
 		int current_val = start_val;
 		for(int i=0; i<num_iterations; i++)
@@ -181,7 +188,7 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 
 	static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
 
-	GTEST_COUT << "async_int_generator() returning" << tostdstr(retval.debug_string()) << std::endl;
+	qDb() << "async_int_generator() returning ExtFuture<int>:" << retval.debug_string();
 
 	return retval;
 }
@@ -391,6 +398,10 @@ M_WARNING("THE ABOVE .wait() doesn't wait");
 		;});
 #endif
 
+	ASSERT_TRUE(future.isStarted());
+	ASSERT_FALSE(future.isRunning());
+	ASSERT_TRUE(future.isFinished());
+
 	TC_EXIT();
 }
 
@@ -487,11 +498,15 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 			TC_EXPECT_NOT_EXIT();
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
+			GTEST_COUT << "SLEEP 1" << std::endl;
 			QThread::sleep(1);
 			extfuture.reportResult(867);
+			GTEST_COUT << "SLEEP 1" << std::endl;
 			QThread::sleep(1);
 			extfuture.reportResult(5309);
+			GTEST_COUT << "SLEEP 1" << std::endl;
 			QThread::sleep(1);
+			GTEST_COUT << "FINISHED" << std::endl;
 			extfuture.reportFinished();
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
 		})
@@ -540,6 +555,4 @@ void dummy(void)
 //	static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<void> >, "");
 
 }
-
-
 

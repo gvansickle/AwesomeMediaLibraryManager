@@ -54,16 +54,6 @@ struct ExtAsyncProgress
 	QString text;
 };
 
-/**
- * A decay_copy for creating a copy of the specified function @a func.
- * @param func
- * @return
- */
-template <typename T>
-std::decay_t<T> decay_copy(T&& func)
-{
-	return std::forward<T>(func);
-}
 
 template <typename T>
 class UniqueIDMixin
@@ -130,8 +120,8 @@ class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 	static_assert(!std::is_void<T>::value, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
 
 	/// Like QFuture<T>, T must have a default constructor and a copy constructor.
-//	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
-//	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
+	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
+	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
 
 public:
 
@@ -390,7 +380,10 @@ public:
 	template <typename F, typename R = ct::return_type_t<F>, REQUIRES(argtype_n_is_v<F, 0, T>)>
 	ExtFuture<T>& tap(F&& tap_callback)
 	{
-		return tap(QApplication::instance(), std::forward<F>(tap_callback));
+		qWr() << "ENTER ExtFuture<T>& tap(F&& tap_callback)";
+		auto retval = tap(QApplication::instance(), std::forward<F>(tap_callback));
+		qWr() << "EXIT ExtFuture<T>& tap(F&& tap_callback)";
+		return *this;
 	}
 
 	ExtFuture<T>& tap(QObject* context, TapCallbackTypeProgress prog_tap_callback)
@@ -404,23 +397,6 @@ public:
 		return tap(QApplication::instance(), std::forward<TapCallbackTypeProgress>(prog_tap_callback));
 	}
 
-//	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
-//	ExtFuture<T>& tap(QObject* context, F&& tap_callback)
-//	{
-//		return TapHelper(context, tap_callback);
-//	}
-//
-//	template <typename F, typename R = std::result_of_t<std::decay_t<F>(ExtFuture<T>&)> >
-//	ExtFuture<T>& tap(F&& tap_callback)
-//	{
-//		return tap(QApplication::instance(), tap_callback);
-//	}
-
-//	template <typename F, typename R = std::result_of_t<std::decay_t<F>(T)> >
-//	auto tap(F&& tap_callback) -> std::enable_if_t<function_traits<F>::template argtype_is_v<0,T>, ExtFuture<T>&>
-//	{
-//		return tap(QApplication::instance(), tap_callback);
-//	}
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.
@@ -527,23 +503,29 @@ protected:
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
 	{
 //		qDb() << "ENTER";
+		static bool s_was_ever_called = false;
+
 		static_assert(sizeof...(Args) <= 1, "Too many args");
 
 		auto watcher = new QFutureWatcher<T>();
 
 		auto retval = new ExtFuture<R>();
 		qDb() << "NEW EXTFUTURE:" << retval;
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, retval, args..., watcher]() {
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, retval, args..., watcher]() mutable {
 			// Call the then() callback function.
 			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
 			retval->reportResult(then_callback(args...));
+			s_was_ever_called = true;
 			retval->reportFinished();
 			qDb() << "RETVAL STATUS:" << retval;
 			watcher->deleteLater();
 		});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
+			qWr() << "ThenHelper ExtFutureWatcher DESTROYED";
+			Q_ASSERT(s_was_ever_called);
+		});
 		watcher->setFuture(this->future());
 //		qDb() << "EXIT";
 		return *retval;
@@ -598,7 +580,7 @@ M_WARNING("TODO: LEAKS THIS");
 					s_was_ever_called = true;
 			});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
-			qWr() << "TAP ExtFutureWatcher DESTROYED";
+			qWr() << "TapHelper ExtFutureWatcher DESTROYED";
 			Q_ASSERT(s_was_ever_called);
 		});
 		watcher->setFuture(this->future());
