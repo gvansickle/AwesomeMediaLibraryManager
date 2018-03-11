@@ -617,6 +617,8 @@ add_executable(${TEST_EXE_TARGET}
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
 				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+# Add sanitizers.
+add_sanitizers(${TEST_EXE_TARGET})
 target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"

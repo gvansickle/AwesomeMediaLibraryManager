@@ -132,7 +132,7 @@ public:
 
 	/// .tap() callback type.
 	/// Takes a result value of type T, returns void.
-	using TapCallbackType = std::function<void(T)>;
+//	using TapCallbackType = std::function<void(T)>;
 
 	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
 
@@ -234,7 +234,7 @@ public:
 //			qWr() << "STARTED, NOT FINISHED";
 //		}
 
-		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
+//		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
 	}
 
 	/// @name Copy and move operators.
@@ -285,15 +285,6 @@ public:
 	/// @{
 
 	/**
-	 * @todo Fallback Primary template which will static_assert().
-	 */
-//	template<class F, class R>
-//	auto then(F&&) -> std::enable_if_t<std::is_same_v<ct::return_type_t<F>, void>, void>
-//	{
-//		//static_assert(0,"");
-//	}
-
-	/**
 	 * std::experimental::future-like .then() which attaches a continuation function @a then_callback to @a this,
 	 * where then_callback's signature is:
 	 * 	@code
@@ -322,7 +313,7 @@ public:
 		ExtFuture<R>>
 	{
 		static_assert(!std::is_same_v<R, void> && !IsExtFuture<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
-		return ThenHelper(context, then_callback, *this);
+		return ThenHelper(context, std::forward<F>(then_callback), *this);
 	}
 
 	/**
@@ -503,29 +494,31 @@ protected:
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
 	{
 //		qDb() << "ENTER";
-		static bool s_was_ever_called = false;
+		static std::atomic_bool s_was_ever_called {false};
 
 		static_assert(sizeof...(Args) <= 1, "Too many args");
 
 		auto watcher = new QFutureWatcher<T>();
 
 		auto retval = new ExtFuture<R>();
-		qDb() << "NEW EXTFUTURE:" << retval;
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [then_callback, retval, args..., watcher]() mutable {
+		qDb() << "NEW EXTFUTURE:" << *retval;
+		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher,
+						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable {
 			// Call the then() callback function.
 			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
-			retval->reportResult(then_callback(args...));
+			retval->reportResult(then_cb(std::move(args)...));
 			s_was_ever_called = true;
 			retval->reportFinished();
-			qDb() << "RETVAL STATUS:" << retval;
+			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
 			qWr() << "ThenHelper ExtFutureWatcher DESTROYED";
 			Q_ASSERT(s_was_ever_called);
 		});
+		// Start watching this ExtFuture.
 		watcher->setFuture(this->future());
 //		qDb() << "EXIT";
 		return *retval;
@@ -569,13 +562,15 @@ M_WARNING("TODO: LEAKS THIS");
 		std::enable_if_t<ct::is_invocable_r_v<void, F, T>, ExtFuture<T>&>
 	TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
-		static bool s_was_ever_called = false;
-		qDb() << "ENTER";
+		static std::atomic_bool s_was_ever_called {false};
+//		qDb() << "ENTER";
 		auto watcher = new QFutureWatcher<T>();
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
 				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
-					qDb() << "TAP WRAPPER CALLED";
+					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
+						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
+					// Call the tap callback with the incoming result value.
 					tap_cb(watcher->future().resultAt(index));
 					s_was_ever_called = true;
 			});
@@ -584,7 +579,7 @@ M_WARNING("TODO: LEAKS THIS");
 			Q_ASSERT(s_was_ever_called);
 		});
 		watcher->setFuture(this->future());
-		qDb() << "EXIT";
+//		qDb() << "EXIT";
 		return *this;
 	}
 
@@ -608,7 +603,7 @@ M_WARNING("TODO: LEAKS THIS");
 
 //	std::shared_ptr<ContinuationType> m_continuation_function;
 
-	std::shared_ptr<TapCallbackType> m_tap_function;
+//	std::shared_ptr<TapCallbackType> m_tap_function;
 
 	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 
