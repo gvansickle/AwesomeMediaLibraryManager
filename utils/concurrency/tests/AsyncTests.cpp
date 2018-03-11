@@ -391,9 +391,14 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 		EXPECT_LE(num_tap_calls, num_iterations);
 		if(num_tap_calls == num_iterations)
 		{
-			TC_DONE_WITH_STACK();
+//			TC_DONE_WITH_STACK();
 		}
-		;}).wait();
+		;}).then([](ExtFuture<int> extf) -> int {
+			qWr() << "IN THEN:" << extf;
+			TC_DONE_WITH_STACK();
+			return 1;
+		;})
+		.wait();
 M_WARNING("THE ABOVE .wait() doesn't wait");
 #if 0
 		.finally([&]() {
