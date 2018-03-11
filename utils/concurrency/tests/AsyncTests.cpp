@@ -40,17 +40,22 @@
 	static std::atomic_bool test_func_called {true}; \
 	static std::atomic_bool test_func_exited {false}; \
 	static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
+	static std::atomic_bool test_func_stack_is_gone {false}; \
 	ASSERT_FALSE(has_finished(testname));
 
 #define TC_EXPECT_NOT_EXIT() \
 	EXPECT_TRUE(test_func_called) << testname; \
 	EXPECT_FALSE(test_func_exited) << testname;
 
+#define TC_EXPECT_STACK() \
+	EXPECT_FALSE(test_func_stack_is_gone)
+
 #define TC_DONE_WITH_STACK() \
 	test_func_no_longer_need_stack_ctx = true;
 
 #define TC_EXIT() \
 	test_func_exited = true; \
+	test_func_stack_is_gone = true; \
 	GTEST_COUT << "EXITING: " << __PRETTY_FUNCTION__ << std::endl; \
 	ASSERT_TRUE(test_func_called); \
 	ASSERT_TRUE(test_func_exited); \
@@ -175,21 +180,22 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 		for(int i=0; i<num_iterations; i++)
 		{
 			// Sleep for a second.
-			GTEST_COUT << "SLEEPING FOR 1 SEC" << std::endl;
+			qWr() << "SLEEPING FOR 1 SEC";
 
 			QThread::sleep(1);
-			GTEST_COUT << "SLEEP COMPLETE, returning value to future:" << current_val << std::endl;
+			qWr() << "SLEEP COMPLETE, sending value to future:" << current_val;
 
 			future.reportResult(current_val);
 			current_val++;
 		}
 		// We're done.
+		qWr() << "REPORTING FINISHED";
 		future.reportFinished();
 	});
 
 	static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
 
-	qDb() << "async_int_generator() returning ExtFuture<int>:" << retval.debug_string();
+	qWr() << "RETURNING:" << retval;
 
 	return retval;
 }
@@ -346,8 +352,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 
 TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 {
-	constexpr int start_val = 5;
-	constexpr int num_iterations = 3;
+	std::atomic_int start_val {5};
+	std::atomic_int num_iterations {3};
 	TC_ENTER();
 
 	// Start generating a sequence of results.
@@ -360,6 +366,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 	future.tap([&](int future_value) {
 
 		TC_EXPECT_NOT_EXIT();
+		TC_EXPECT_STACK();
 
 		static int last_seen_result = 0;
 		static int num_tap_calls = 0;
@@ -445,8 +452,8 @@ TEST_F(AsyncTestsSuiteFixture, TestReadyFutures)
 TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 {
 
-	bool ran_tap = false;
-	bool ran_then = false;
+	static std::atomic_bool ran_tap {false};
+	static std::atomic_bool ran_then {false};
 	TC_ENTER();
 
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
@@ -459,6 +466,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 	future.tap([&](QString result){
 
 			TC_EXPECT_NOT_EXIT();
+			TC_EXPECT_STACK();
 
 			GTEST_COUT << "testname: " << testname << std::endl;
 
@@ -470,6 +478,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 		.then([&](ExtFuture<QString> extfuture) {
 
 			TC_EXPECT_NOT_EXIT();
+			TC_EXPECT_STACK();
 
 			GTEST_COUT << "in then(), extfuture:" << tostdstr(extfuture.get()) << std::endl;
 			EXPECT_EQ(extfuture.get(), QString("delayed_string_func_1() output"));
@@ -496,7 +505,10 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 	TC_ENTER();
 
 	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int>& extfuture) {
+
 			TC_EXPECT_NOT_EXIT();
+			TC_EXPECT_STACK();
+
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			GTEST_COUT << "SLEEP 1" << std::endl;
@@ -512,7 +524,10 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
 		})
 	.tap([&](int value){
+
 		TC_EXPECT_NOT_EXIT();
+		TC_EXPECT_STACK();
+
 		/// Get a local copy of the counter value atomically.
 		int current_tap_call_count = tap_call_counter;
 		if(current_tap_call_count == 0)

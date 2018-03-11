@@ -520,7 +520,7 @@ protected:
 		});
 		// Start watching this ExtFuture.
 		watcher->setFuture(this->future());
-//		qDb() << "EXIT";
+		qDb() << "RETURNING:" << *retval;
 		return *retval;
 	}
 
@@ -635,19 +635,6 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
-
-
-#if 0
-template<typename T>
-ExtFuture<QString> ExtFuture<T>::then(ContinuationType continuation_function)
-{
-	m_continuation_function = std::make_shared<ContinuationType>(continuation_function);
-	ExtFuture<QString> retval = ExtAsync::run_then(*m_continuation_function, *this).unwrap();
-	qDb() << "THEN Entered, returning:" << &retval << retval;
-	return retval;
-}
-#endif
-
 
 
 // Include the implementation.
