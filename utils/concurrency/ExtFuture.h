@@ -130,10 +130,7 @@ public:
 	using is_ExtFuture = std::true_type;
 	static constexpr bool is_ExtFuture_v = true;
 
-	/// .tap() callback type.
-	/// Takes a result value of type T, returns void.
-//	using TapCallbackType = std::function<void(T)>;
-
+	/// @todo REMOVE
 	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
 
 	/**
@@ -288,7 +285,7 @@ public:
 	 * std::experimental::future-like .then() which attaches a continuation function @a then_callback to @a this,
 	 * where then_callback's signature is:
 	 * 	@code
-	 * 		func(ExtFuture<T>) -> R
+	 * 		then_callback(ExtFuture<T>) -> R
 	 * 	@endcode
 	 * where R != [void, ExtFuture<>]
 	 *
@@ -309,7 +306,7 @@ public:
 	 */
 	template <typename F, typename R = ct::return_type_t<F> >
 	auto then(QObject* context, F&& then_callback)
-		-> std::enable_if_t<!std::is_same_v<R, void> && !IsExtFuture<R>, // && argtype_n_is_v<F, 0, decltype(*this)>,
+		-> std::enable_if_t<!std::is_same_v<R, void> && !IsExtFuture<R>,
 		ExtFuture<R>>
 	{
 		static_assert(!std::is_same_v<R, void> && !IsExtFuture<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
@@ -317,10 +314,12 @@ public:
 	}
 
 	/**
-	 * std::experimental::future-like .then() which takes a continuation function @a the_callback,
+	 * std::experimental::future-like .then() which takes a continuation function @a then_callback,
 	 * of signature:
-	 *
-	 *     then_callback(ExtFuture<T>) -> R
+	 * 	@code
+	 * 		then_callback(ExtFuture<T>) -> R
+	 * 	@endcode
+	 * where R != [void, ExtFuture<>]
 	 *
 	 * and returns an ExtFuture<R>.
 	 *
@@ -331,19 +330,11 @@ public:
 	 * @returns ExtFuture<R>
 	 */
 	template <class F, class R = ct::return_type_t<F> , REQUIRES(!IsExtFuture<R>)>
-	//= std::result_of_t<F&&(ExtFuture<T>)>, REQUIRES(!IsExtFuture<T> && NonNestedExtFuture<ExtFuture<R>>)>
 	ExtFuture<R> then( F&& then_callback )
 	{
-//		std::function<R(T)> the_then_callback = then_callback;
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
 		return then(QApplication::instance(), std::forward<F>(then_callback));
 	}
-
-//	template <class F, class R = ct::return_type_t<F>, REQUIRES(IsExtFuture<R>)>
-//	R then(F&& then_callback)
-//	{
-//		return then(QApplication::instance(), then_callback);
-//	}
 
 	/// @} // END .then() overloads.
 
@@ -495,7 +486,7 @@ protected:
 		auto retval = new ExtFuture<R>();
 		qDb() << "NEW EXTFUTURE:" << *retval;
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher,
-						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable {
+						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable -> void {
 			// Call the then() callback function.
 			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.

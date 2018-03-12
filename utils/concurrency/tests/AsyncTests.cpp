@@ -221,7 +221,11 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 
 		TC_EXPECT_NOT_EXIT();
 
+		// Check if .get() would block.  In the continuation, it shouldn't, since it shouldn't
+		// run until extfuture is finished.
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		EXPECT_FALSE(extfuture.isRunning());
+
 		qDb() << "Then1, got extfuture:" << extfuture;
 		qDb() << "Then1, extfuture val:" << extfuture.get();
 		EXPECT_EQ(ran1, false);
@@ -237,6 +241,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 		TC_EXPECT_NOT_EXIT();
 
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		EXPECT_FALSE(extfuture.isRunning());
+
 		qDb() << "Then2, got extfuture:" << extfuture;
 		qDb() << "Then2, extfuture val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
@@ -252,6 +258,8 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 		TC_EXPECT_NOT_EXIT();
 
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		EXPECT_FALSE(extfuture.isRunning());
+
 		qDb() << "Then3, got extfuture:" << extfuture;
 		qDb() << "Then3, extfuture val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
@@ -298,6 +306,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 
 		TC_EXPECT_NOT_EXIT();
 
+		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		EXPECT_FALSE(extfuture.isRunning());
+
 		qDb() << "Then1, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
@@ -311,6 +322,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 
 		TC_EXPECT_NOT_EXIT();
 
+		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		EXPECT_FALSE(extfuture.isRunning());
+
 		qDb() << "Then2, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
@@ -321,6 +335,9 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	})
 	.then([&](ExtFuture<int> extfuture) -> double {
 		TC_EXPECT_NOT_EXIT();
+
+		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+		EXPECT_FALSE(extfuture.isRunning());
 
 		qDb() << "Then3, got val:" << extfuture.get();
 		EXPECT_EQ(ran1, true);
@@ -397,6 +414,10 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 		}
 		;}).then([&](ExtFuture<int> extf) -> int {
 			EXPECT_EQ(tap_complete, true);
+
+			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+			EXPECT_FALSE(extfuture.isRunning());
+
 			qWr() << "IN THEN:" << extf;
 			TC_DONE_WITH_STACK();
 			return 1;
@@ -487,6 +508,9 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 
 			TC_EXPECT_NOT_EXIT();
 			TC_EXPECT_STACK();
+
+			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+			EXPECT_FALSE(extfuture.isRunning());
 
 			GTEST_COUT << "in then(), extfuture:" << tostdstr(extfuture.get()) << std::endl;
 			EXPECT_EQ(extfuture.get(), QString("delayed_string_func_1() output"));
