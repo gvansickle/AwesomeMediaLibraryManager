@@ -90,8 +90,8 @@ namespace ExtAsync
 				static_assert(ct::has_void_return_v<F>, "Callback must return void");
 				static_assert(!std::is_reference<RetType>::value, "RetType shouldn't be a reference in here");
 
-				QtConcurrent::run([function](RetType extfuture, Args... args) {
-					return function(extfuture, args...);
+				QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
+					return fn(extfuture, std::move(args)...);
 				}, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
 
 				qWr() << "Returning ExtFuture:" << &report_and_control << report_and_control;
@@ -114,12 +114,19 @@ namespace ExtAsync
 	 * ExtAsync::run() overload for member functions taking an ExtFuture<T>& as the first non-this param.
 	 * E.g.:
 	 * 		void Class::Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
+	 *
+	 * @returns The ExtFuture<T> passed to @a function.
 	 */
-	template <typename This, typename F, typename... Args, typename R = QString> //function_traits<F(This*, Args...)>, ///@todo WRONG, void.
-//			REQUIRES(std::is_class_v<This>)>// && function_arg_n_is_type_v<F, 0, decltype(ExtFuture<R>())>)>
-	static ExtFuture<R>
+	template <typename This, typename F, typename... Args,
+		std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
+	auto
 	run(This* thiz, F&& function, Args&&... args)
 	{
+		// Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+		using argst = ct::args_t<F>;
+		using arg1t = std::tuple_element_t<1, argst>;
+		using ExtFutureR = std::remove_reference_t<arg1t>;
+
 		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
 
 		static_assert(sizeof...(Args) <= 1, "Too many args");
@@ -127,9 +134,9 @@ namespace ExtAsync
 
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
-		ExtFuture<R> report_and_control;
+		ExtFutureR report_and_control;
 
-		QtConcurrent::run(thiz, function, report_and_control, args...);
+		QtConcurrent::run(thiz, std::forward<F>(function), report_and_control, std::forward<Args>(args)...);
 
 		return report_and_control;
 	}
@@ -142,7 +149,7 @@ namespace ExtAsync
 	 * @return
 	 */
 	/// Note use of C++14 auto return type deduction.
-	template <class F, /*class R = ExtFuture<int>,*/ class... Args>//, typename std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
+	template <class F, /*class R = ExtFuture<int>,*/ class... Args, std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
 	auto
 	run(F&& function, Args&&... args)
 	{
