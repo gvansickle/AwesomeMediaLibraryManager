@@ -406,12 +406,20 @@ public:
 	template <class F>
 	ExtFuture<T> finally(F&& finally_callback)
 	{
-		// Wrap this in a .then().
-		auto retval = this->then([func = std::forward<F>(finally_callback)](ExtFuture<T> thiz) {
+		// - Create a wrapper lambda for the actual finally callback which takes a reference to this.
+		// - Pass the wrapper to .then().
+		// -
+		auto retval = this->then([func = std::forward<F>(finally_callback)](ExtFuture<T> thiz) mutable {
 			// Call the finally_callback.
 			std::move(func)();
-			return thiz;
+
+			// This is Qt5 for .get().  Qt's futures always contain a QList of T's, not just a single result.
+#warning "TODO: should return .results()"
+			return thiz.get();
+//			return thiz;
 			});
+
+		return retval;
 	}
 
 	/// @} // END .tap() overloads.

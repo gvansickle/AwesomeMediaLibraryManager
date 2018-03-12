@@ -412,27 +412,26 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 //			TC_DONE_WITH_STACK();
 			tap_complete = true;
 		}
-		;}).then([&](ExtFuture<int> extf) -> int {
+		;}).then([&](ExtFuture<int> extfuture) -> int {
 			EXPECT_EQ(tap_complete, true);
 
 			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(extfuture.isRunning());
 
-			qWr() << "IN THEN:" << extf;
-			TC_DONE_WITH_STACK();
+			qWr() << "IN THEN:" << extfuture;
 			return 1;
 		;})
-		.wait();
-M_WARNING("THE ABOVE .wait() doesn't wait");
-#if 0
+//		.wait();
+//M_WARNING("THE ABOVE .wait() doesn't wait");
+#if 1
 		.finally([&]() {
 
-				TC_EXPECT_NOT_EXIT();
+			TC_EXPECT_NOT_EXIT();
 
-			EXPECT_FALSE(has_finished(testname));
-			EXPECT_EQ(num_tap_calls, 3);
-			EXPECT_EQ(last_seen_result, 7);
-		;});
+			EXPECT_EQ(tap_complete, true);
+
+			TC_DONE_WITH_STACK();
+		;}).wait();
 #endif
 
 	ASSERT_TRUE(future.isStarted());
