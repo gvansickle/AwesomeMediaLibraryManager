@@ -327,23 +327,7 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 
     m_timer.start();
 
-M_WARNING("EXPERIMENTAL");
-#if 0
-	m_async_task_manager.addFuture(QtConcurrent::mapped(items_to_rescan,
-									   std::bind(&LibraryRescanner::refresher_callback, this, _1)),
-								   [this](int index, QFuture<MetadataReturnVal> f){
-		qDebug() << "RESULT.  this:" << this << "int:" << index;
-		qDebug() << "Current thread:" << QThread::currentThread()->objectName();
-		this->onResultReadyAt(index, f);
-	},
-									[](){
-		qDebug() << "FINISHED";
-		qDebug() << "Current thread:" << QThread::currentThread()->objectName();
-		},
-									[](){ qDebug() << "CANCELLED"; }
-	);
-
-#elif 1
+#if 1
 
 	ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(items_to_rescan,
 	                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
@@ -354,10 +338,8 @@ M_WARNING("EXPERIMENTAL");
 	})
 	.tap(this, [=](ExtAsyncProgress prog) {
 		// Progress update tap.
-		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
+		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, progtext);
 	;})
-//	.then(this, [](){
-//		;})
 	.finally([this](){
 		qDb() << "METADATA RESCAN COMPLETE";
 		onRescanFinished();
