@@ -213,17 +213,16 @@ ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 	qDb() << "RETURNED FROM ExtAsync:" << result;
 
 	result.tap(this, [=](QString str){
-		qDb() << "FROM TAP:" << str;
-		qDb() << "IN onResultReady CALLBACK:" << result;
+//		qDb() << "FROM TAP:" << str;
+//		qDb() << "IN onResultReady CALLBACK:" << result;
 		runInObjectEventLoop([=](){ m_current_libmodel->onIncomingFilename(str);}, m_current_libmodel);
 	})
 	.tap(this, [=](ExtAsyncProgress prog) {
 		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
-
 	;})
 	.then(this, [=](ExtFuture<QString> dummy){
 		qDb() << "FROM THEN:" << dummy;
-		return QString("anotherdummy");
+		return unit;
 	;});
 
 
@@ -267,12 +266,12 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 		QString entry_path = m_dir_iterator.next();
 		auto file_info = m_dir_iterator.fileInfo();
 
-		qDb() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
+//		qDb() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
 		if(file_info.isDir())
 		{
 			QDir dir = file_info.absoluteDir();
-			qDb() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
+//			qDb() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
 
 			// Update the max range to be the number of files we know we've found so far plus the number
 			// of files potentially in this directory.
@@ -285,14 +284,14 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 			// It's a file.
 			num_files_found_so_far++;
 
-			qDb() << "ITS A FILE";
+//			qDb() << "ITS A FILE";
 
 			QUrl file_url = QUrl::fromLocalFile(entry_path);
 
 			// Send this path to the future.
 			future.reportResult(file_url.toString());
 
-			qDb() << "resultCount:" << future.resultCount();
+//			qDb() << "resultCount:" << future.resultCount();
 			// Update progress.
 			future.setProgressValueAndText(num_files_found_so_far, status_text);
 		}
@@ -344,12 +343,27 @@ M_WARNING("EXPERIMENTAL");
 									[](){ qDebug() << "CANCELLED"; }
 	);
 
-#elif 0
-	// Start the mapped operation, set the future watcher to the returned future, and we're scanning.
-	m_rescan_future_watcher.setFuture(QtConcurrent::mapped(
-			items_to_rescan,
-			std::bind(&LibraryRescanner::refresher_callback, this, _1)));
 #elif 1
+
+	ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(items_to_rescan,
+	                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
+
+	future.tap(this, [this](MetadataReturnVal a) {
+		// The result is ready tap.
+		this->processReadyResults(a);
+	})
+	.tap(this, [=](ExtAsyncProgress prog) {
+		// Progress update tap.
+		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
+	;})
+//	.then(this, [](){
+//		;})
+	.finally([this](){
+		qDb() << "METADATA RESCAN COMPLETE";
+		onRescanFinished();
+	});
+
+#elif 0
 
     m_futureww
 //	.on_resultat([](int at){
