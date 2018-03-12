@@ -452,14 +452,6 @@ public:
 	{
 		QString retval = "ID: " + this->id();
 		retval += ", STATE: (" + state() + ")";
-//		if(m_continuation_function)
-//		{
-//			retval += ", Continuation: nullptr";
-//		}
-//		else
-//		{
-//			retval += ", Continuation: valid";
-//		}
 		return retval;
 	}
 

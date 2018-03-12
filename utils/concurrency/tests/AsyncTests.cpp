@@ -354,6 +354,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 {
 	std::atomic_int start_val {5};
 	std::atomic_int num_iterations {3};
+	std::atomic_bool tap_complete {false};
 	TC_ENTER();
 
 	// Start generating a sequence of results.
@@ -392,8 +393,10 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 		if(num_tap_calls == num_iterations)
 		{
 //			TC_DONE_WITH_STACK();
+			tap_complete = true;
 		}
-		;}).then([](ExtFuture<int> extf) -> int {
+		;}).then([&](ExtFuture<int> extf) -> int {
+			EXPECT_EQ(tap_complete, true);
 			qWr() << "IN THEN:" << extf;
 			TC_DONE_WITH_STACK();
 			return 1;
@@ -517,13 +520,16 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			GTEST_COUT << "SLEEP 1" << std::endl;
-			QThread::sleep(1);
+			//QThread::sleep(1);
+			QTest::qWait(1000);
 			extfuture.reportResult(867);
 			GTEST_COUT << "SLEEP 1" << std::endl;
-			QThread::sleep(1);
+			//QThread::sleep(1);
+			QTest::qWait(1000);
 			extfuture.reportResult(5309);
 			GTEST_COUT << "SLEEP 1" << std::endl;
-			QThread::sleep(1);
+			//QThread::sleep(1);
+			QTest::qWait(1000);
 			GTEST_COUT << "FINISHED" << std::endl;
 			extfuture.reportFinished();
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
@@ -553,12 +559,15 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 		tap_call_counter = current_tap_call_count;
 		;});
 
+	// No wait, shouldn't have finished yet.
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
 
 	ASSERT_FALSE(future.isFinished());
 	future.wait();
 	ASSERT_TRUE(future.isFinished());
+
+	ASSERT_EQ(tap_call_counter, 2);
 
 	TC_EXPECT_NOT_EXIT();
 
