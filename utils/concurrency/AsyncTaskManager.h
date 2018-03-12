@@ -20,47 +20,22 @@
 #ifndef UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 #define UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 
+/// @todo Experimental
+#include <asyncfuture.h>
+#include "ReportingRunner.h"
+
+#include <QtConcurrent>
 #include <QObject>
 #include <QVector>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QList>
 
+#include <type_traits>
 #include <functional>
 #include <algorithm>
 
 class QFutureWatcherBase;
-
-/*
- *
- */
-class AsyncTaskManager: public QObject
-{
-public:
-	AsyncTaskManager(QObject *parent = 0);
-	virtual ~AsyncTaskManager();
-
-	template <typename T>
-	void addFuture(const QFuture<T>& future,
-			std::function<void(int, QFuture<T>)> on_result,
-			std::function<void()> on_finished,
-			std::function<void()> on_canceled)
-	{
-		auto watcher = new QFutureWatcher<T>(this);
-
-		// Make connections.
-		connect(watcher, &QFutureWatcher<T>::resultReadyAt, [=](int i){on_result(i, watcher->future());});
-		connect(watcher, &QFutureWatcher<T>::finished, on_finished);
-		connect(watcher, &QFutureWatcher<T>::canceled, on_canceled);
-
-		watcher->setFuture(future);
-		m_future_watchers.push_back(watcher);
-	}
-
-private:
-	QVector<QFutureWatcherBase*> m_future_watchers;
-
-};
 
 /**
  * The futureww ("FutureWatcherWatcher") class template.
@@ -71,9 +46,10 @@ class futureww : public QFutureWatcher<T>
 	using BASE_CLASS = QFutureWatcher<T>;
 
 public:
-    explicit futureww(QObject* parent = 0) : QFutureWatcher<T>(parent) {}
+	explicit futureww(QObject* parent = nullptr) : QFutureWatcher<T>(parent) {}
     ~futureww()
     {
+		qDebug() << "DESTRUCTOR CALLED";
         cancel();
 		BASE_CLASS::waitForFinished();
     }
@@ -89,14 +65,14 @@ public:
 	futureww<T>& operator=(QFuture<T> f) { BASE_CLASS::setFuture(f); return *this; }
 
 	/**
-     * Attaches a continuation to the futureww.
-     * @return Reference to the return value of @a continuation_function.
+	 * Attaches a continuation to the futureww.
+	 * @return Reference to the return value of @a continuation_function.
 	 */
-    template <typename ReturnFutureT>
-    ReturnFutureT& then(std::function<ReturnFutureT(QList<T>)> continuation_function)
+	template <typename ReturnFutureT>
+	ReturnFutureT& then(std::function<ReturnFutureT(QList<T>)> continuation_function)
 	{
-        m_continuation_function = std::move(continuation_function);
-        connect(this, &QFutureWatcher<T>::resultsReadyAt, m_continuation_function);
+		m_continuation_function = std::move(continuation_function);
+		connect(this, &QFutureWatcher<T>::resultsReadyAt, m_continuation_function);
 		return m_continuation_function(BASE_CLASS::future());
 	}
 
@@ -108,6 +84,26 @@ public:
         m_finished_function = std::move(finished_function);
 		QObject::connect(this, &QFutureWatcher<T>::finished, m_finished_function);
     }
+
+	/// @todo Attempt to be more std::experimental.  Incomplete and broken.
+	template<typename F>
+	QFuture<typename std::result_of<F(QFuture<T>&)>::type>
+		then(F&& func)
+	{
+		return ReportingRunner::run([](QFuture<T>&& fut, F&& func) {
+			fut.waitForFinished();
+			return std::forward<F>(func)(fut);
+		},
+		this, std::forward<F>(func)
+		);
+	}
+
+	futureww<T>& tap(std::function<void(QFutureInterface<T>&)> tap_function)
+	{
+		QFutureInterface<T> future(this->future());
+		tap_function(future);
+		return future;
+	}
 
     futureww<T>& on_resultat(std::function<void(int)> resultat_function)
 	{
@@ -156,5 +152,42 @@ private:
     std::function<void(int)> m_resultat_function {nullptr};
     std::function<void(T)> m_result_function {nullptr};
 };
+
+
+
+/*
+ *
+ */
+class AsyncTaskManager: public QObject
+{
+public:
+	AsyncTaskManager(QObject *parent = nullptr);
+	virtual ~AsyncTaskManager();
+
+	template <typename T>
+	void add_futureww(futureww<T> fww);
+
+	template <typename T>
+	void addFuture(const QFuture<T>& future,
+			std::function<void(int, QFuture<T>)> on_result,
+			std::function<void()> on_finished,
+			std::function<void()> on_canceled)
+	{
+		auto watcher = new QFutureWatcher<T>(this);
+
+		// Make connections.
+		connect(watcher, &QFutureWatcher<T>::resultReadyAt, [=](int i){on_result(i, watcher->future());});
+		connect(watcher, &QFutureWatcher<T>::finished, on_finished);
+		connect(watcher, &QFutureWatcher<T>::canceled, on_canceled);
+
+		watcher->setFuture(future);
+		m_future_watchers.push_back(watcher);
+	}
+
+private:
+	QVector<QFutureWatcherBase*> m_future_watchers;
+
+};
+
 
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */

@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -31,6 +31,16 @@ macro(dir_summary)
     message(STATUS "CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
     message(STATUS "CMAKE_RUNTIME_OUTPUT_DIRECTORY: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 endmacro()
+
+function(PREPEND_TO_EACH outvar prefix)
+	message(STATUS "PREPEND_TO_EACH: OUTVAR: ${outvar} PREFIX: ${prefix} ARGC: ${ARGC} ARGN: ${ARGN}")
+	set(listvar "")
+	foreach(element ${ARGN})
+		message(STATUS "FOREACH: ${element}")
+		list(APPEND listvar "${prefix}${element}")
+	endforeach()
+	set(${outvar} "${listvar}" PARENT_SCOPE)
+endfunction()
 
 macro(message_cpack_summary)
     message(STATUS "CPackIFW Tools found:")

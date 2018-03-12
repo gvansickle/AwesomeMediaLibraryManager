@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,9 +25,25 @@
 
 #include <QThread>
 #include <QtConcurrent>
+#if 0//def USE_BUNDLED_ASYNCFUTURE
+#include <asyncfuture.h>
+#include <utils/concurrency/ExtendedDeferred.h>
+
+// Simon Brunel's QtPromise.
+// https://github.com/simonbrunel/qtpromise
+#include <QtPromise>
+#endif
+
+//#include <utils/concurrency/ExtFutureWatcher.h>
+#include <utils/concurrency/ExtAsync.h>
+//#include <utils/concurrency/ExtFuture.h>
+
+#include <utils/concurrency/runextensions.h>
+
 #include <utils/DebugHelpers.h>
 
 #include "utils/AsyncDirScanner.h"
+#include "utils/concurrency/AsyncTaskManager.h"
 #include "utils/concurrency/ReportingRunner.h"
 #include "logic/LibraryModel.h"
 
@@ -35,43 +51,17 @@
 using std::placeholders::_1;
 
 
-LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_rescan_future_watcher(this), m_dir_traversal_future_watcher(this),
-	m_async_task_manager(this)
+LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_async_task_manager(this)
 {
+	setObjectName("TheLibraryRescanner");
+
 	// Somewhat redundant, but keep another pointer to the LibraryModel.
 	m_current_libmodel = parent;
-
-	// Create a QFutureWatcher and connect up signals/slots.
-	//m_rescan_future_watcher = new QFutureWatcher<VecLibRescannerMapItems>(this);
-
-	/// Forward QFutureWatcher progress signals.
-	connect(&m_rescan_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
-	connect(&m_rescan_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
-	connect(&m_rescan_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
-M_WARNING("QObject::connect: No such slot LibraryRescanner::onResultReadyAt(int) in /home/gary/src/AwesomeMediaLibraryManager/logic/LibraryRescanner.cpp:51");
-	connect(&m_rescan_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onResultReadyAt(int)));
-	connect(&m_rescan_future_watcher, SIGNAL(finished()), SLOT(onRescanFinished()));
-
-	//m_dir_traversal_future_watcher = new QFutureWatcher<QString>(this);
-
-	connect(&m_dir_traversal_future_watcher, SIGNAL(progressRangeChanged(int,int)), SIGNAL(progressRangeChanged(int,int)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(progressValueChanged(int)), SIGNAL(progressValueChanged(int)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(progressTextChanged(const QString &)), SIGNAL(progressTextChanged(const QString &)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(resultReadyAt(int)), SLOT(onDirTravResultReadyAt(int)));
-	connect(&m_dir_traversal_future_watcher, SIGNAL(finished()), SLOT(onDirTravFinished()));
-
-    // On Windows at least, these don't seem to throttle automatically as well as on Linux.
-    m_rescan_future_watcher.setPendingResultsLimit(1);
-    m_dir_traversal_future_watcher.setPendingResultsLimit(1);
 }
 
 LibraryRescanner::~LibraryRescanner()
 {
-	// Make sure we don't have any async tasks running when we get destroyed.
-	m_rescan_future_watcher.cancel();
-	m_dir_traversal_future_watcher.cancel();
-	m_rescan_future_watcher.waitForFinished();
-	m_dir_traversal_future_watcher.waitForFinished();
+
 }
 
 
@@ -169,38 +159,232 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	return retval;
 }
 
-
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
-	QFuture<QString> fut = ReportingRunner::run(new AsyncDirScanner(dir_url,
-	                                                                QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-	                                                                QDir::NoFilter, QDirIterator::Subdirectories));
+	qDebug() << M_THREADNAME();
+	qDebug() << "START:" << dir_url;
 
-M_WARNING("EXPERIMENTAL");
-#if 0
-    m_dir_traversal_future_watcher.setFuture(fut);
-#elif 1
-    m_futureww_dirscan.on_result([this](auto a){
-        this->m_current_libmodel->onIncomingFilename(a);
-    })
-    .on_progress([this](int min, int max, int val){
-        emit progressRangeChanged(min, max);
-        emit progressValueChanged(val);
-    })
-    .then([=](){
-        qDebug() << "DIRTRAV RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
-        onDirTravFinished();
-    });
-    m_futureww_dirscan = fut;
-#endif
+	// Time how long it takes.
+	m_timer.start();
 
-	emit progressTextChanged("Scanning directory tree");
+	// Create the ControlledTask which will scan the directory tree for files.
+
+#if 0 // USE_BUNDLED_SB_QTPROMISE Simon Brunel's qtpromise.
+	using namespace QtPromise;
+
+	QFutureInterface<QString> future_interface = ReportingRunner::runFI(new AsyncDirScanner(dir_url,
+												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+												  QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+
+	QPromise<QString> promise = qPromise(future_interface.future());
+
+	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
+
+	fw->onProgressChange([=](int min, int val, int max, QString text) -> void {
+					qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
+					Q_EMIT progressChanged(min, val, max, text);
+					;})
+				.onReportResult([this, &future_interface](QString s, int index) {
+					Q_UNUSED(index);
+					/// @note This lambda is called in an arbitrary thread context.
+//					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
+
+					// This is not threadsafe:
+					/// WRONG: this->m_current_libmodel->onIncomingFilename(s);
+
+//					/// EXPERIMENTAL
+//					static int fail_counter = 0;
+//					fail_counter++;
+//					if(fail_counter > 5)
+//					{
+////						future_interface.cancel();
+//						throw QException();
+//					}
+
+					// This is threadsafe.
+					QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
+				})
+				.setFuture(future_interface);
+
+	qDebug() << "future is finished:" << fw->future().isFinished() << "isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
+
+	promise.then([&](){
+		// promise was fulfilled.
+		qDebug() << M_THREADNAME() << "Directory scan complete.";
+		m_last_elapsed_time_dirscan = m_timer.elapsed();
+		qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+		// Directory traversal complete, start rescan.
+		onDirTravFinished();
+	}).fail([](const QException& e){
+		// dir scanning threw an exception.
+		qWarning() << "EXCEPTION:" << e.what();
+	}).fail([](){
+		// Catch-all fail.
+		qWarning() << "FAIL";
+		;}); //.wait();
+
+	qDebug() << "future is finished:" << fw->future().isFinished() <<"isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
+
+#elif 1 /// ExtAsync
+
+//	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
+	m_dirtrav_future = AsyncDirectoryTraversal(dir_url);
+	qDb() << "ExtFuture<> RETURNED FROM ASYNCDIRTRAV:" << m_dirtrav_future;
+	qDb() << "ATTACHING THEN, future:" << m_dirtrav_future;
+	m_dirtrav_future.then([=](ExtFuture<QString> the_future) -> QString {
+		qDb() << "then() Async Scan Complete, future:" << m_dirtrav_future;
+		qDb() << "Directory scan complete.";
+		m_last_elapsed_time_dirscan = m_timer.elapsed();
+		qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+		// Directory traversal complete, start rescan.
+		onDirTravFinished();
+		return QString("THEN DONE");
+	});
+	qDb() << "THEN ATTACHED, future:" << m_dirtrav_future;
+
+//	qDb() << "ATTACHING WAIT, future state:" << future;
+//	future.wait();
+//	qDb() << "WAIT ATTACHED, future state:" << future;
+
+//	future.waitForFinished();
+//	/// EXPERIMENTAL
+//	future.cancel();
+//	//throw QException();
+//	qDebug() << "ERROR";
+
+#endif // Which future/promise to use.
+
+	qDb() << "END:" << dir_url;
+}
+
+void LibraryRescanner::cancelAsyncDirectoryTraversal()
+{
+	m_dirtrav_future.cancel();
+}
+
+ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
+{
+	qDb() << "START ASYNC";
+
+	ExtFuture<QString> result = ExtAsync::run(this, &LibraryRescanner::SyncDirectoryTraversal, dir_url);
+
+//	m_dirtrav_future = ExtAsync::run(this, &LibraryRescanner::SyncDirectoryTraversal, dir_url);
+
+	qDb() << "RETURNED FROM ExtAsync:" << result;
+
+	result.tap(this, [=](QString str){
+		qDb() << "FROM TAP:" << str;
+		qDb() << "IN onResultReady CALLBACK:" << result;
+		runInObjectEventLoop([=](){ m_current_libmodel->onIncomingFilename(str);}, m_current_libmodel);
+	})
+	.tap(this, [=](ExtAsyncProgress prog) {
+		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
+
+	;})
+	.then(this, [=](ExtFuture<QString> dummy){
+		qDb() << "FROM THEN:" << dummy;
+		return QString("anotherdummy");
+	;});
+
+
+//	qDb() << "WAIT ASYNC";
+//	result.wait();
+//	qDb() << "END ASYNC";
+
+	return result;
+}
+
+void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl dir_url)
+{
+	qDb() << "ENTER SyncDirectoryTraversal";
+	future.setProgressRange(0, 100);
+
+	QDirIterator m_dir_iterator(dir_url.toLocalFile(),
+								QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+								QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+
+	int num_files_found_so_far = 0;
+	uint num_possible_files = 0;
+	QString status_text = QObject::tr("Scanning for music files");
+
+	future.setProgressRange(0, 0);
+	future.setProgressValueAndText(0, status_text);
+
+	while(m_dir_iterator.hasNext())
+	{
+		if(future.isCanceled())
+		{
+			// We've been cancelled.
+			break;
+		}
+		if(future.isPaused())
+		{
+			// We're paused, wait for a resume signal.
+			future.waitForResume();
+		}
+
+		// Go to the next entry and return the path to it.
+		QString entry_path = m_dir_iterator.next();
+		auto file_info = m_dir_iterator.fileInfo();
+
+		qDb() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
+
+		if(file_info.isDir())
+		{
+			QDir dir = file_info.absoluteDir();
+			qDb() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
+
+			// Update the max range to be the number of files we know we've found so far plus the number
+			// of files potentially in this directory.
+			num_possible_files = num_files_found_so_far + file_info.dir().count();
+
+			future.setProgressRange(0, num_possible_files);
+		}
+		else if(file_info.isFile())
+		{
+			// It's a file.
+			num_files_found_so_far++;
+
+			qDb() << "ITS A FILE";
+
+			QUrl file_url = QUrl::fromLocalFile(entry_path);
+
+			// Send this path to the future.
+			future.reportResult(file_url.toString());
+
+			qDb() << "resultCount:" << future.resultCount();
+			// Update progress.
+			future.setProgressValueAndText(num_files_found_so_far, status_text);
+		}
+	}
+
+	// We're done.  One last thing to clean up: We need to send the now-known max range out.
+	// Then we need to send out the final progress value again, because it might have been throttled away
+	// by Qt.
+	num_possible_files = num_files_found_so_far;
+	if (!future.isCanceled())
+	{
+		future.setProgressRange(0, num_possible_files);
+		future.setProgressValueAndText(num_files_found_so_far, status_text);
+	}
+
+	if (future.isCanceled())
+	{
+		// Report that we were canceled.
+		future.reportCanceled();
+	}
+	else
+	{
+		future.reportFinished();
+	}
+
+	qDebug() << "LEAVE SyncDirectoryTraversal";
 }
 
 void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan)
 {
 	// Send out progress text.
-	emit progressTextChanged("Rereading metadata");
+	QString progtext = tr("Rereading metadata");
 
     m_timer.start();
 
@@ -234,9 +418,8 @@ M_WARNING("EXPERIMENTAL");
 	.on_result([this](auto a){
     	this->processReadyResults(a);
     })
-    .on_progress([this](int min, int max, int val){
-    	emit progressRangeChanged(min, max);
-    	emit progressValueChanged(val);
+	.on_progress([=](int min, int max, int val){
+		emit progressChanged(min, val, max, progtext);
     })
     .then([=](){
     	qDebug() << "METADATA RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
@@ -245,15 +428,6 @@ M_WARNING("EXPERIMENTAL");
     m_futureww = QtConcurrent::mapped(items_to_rescan,
                                     std::bind(&LibraryRescanner::refresher_callback, this, _1));
 #endif
-}
-
-void LibraryRescanner::onResultReadyAt(int index, QFuture<MetadataReturnVal> f)
-{
-    //qDebug() << "Async Rescan reports result ready at" << index;
-
-    MetadataReturnVal lritem_vec = m_rescan_future_watcher.resultAt(index);
-
-    processReadyResults(lritem_vec);
 }
 
 void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
@@ -308,7 +482,7 @@ void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 		// Not sure what we got.
 		qCritical() << "pindexes/libentries/num_new_entries:" << lritem_vec.m_original_pindexes.size()
 															  << lritem_vec.m_new_libentries.size();
-															  //<< lritem_vec.m_new_libentries;
+															  // lritem_vec.m_new_libentries;
 		Q_ASSERT_X(0, "Scanning", "Not sure what we got");
 	}
 }
@@ -317,24 +491,18 @@ void LibraryRescanner::onRescanFinished()
 {
     auto elapsed = m_timer.elapsed();
 	qDebug() << "Async Rescan reports finished.";
+	qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 	qInfo() << "Metadata rescan took" << elapsed << "ms";
 	// Send out progress text.
-	emit progressTextChanged("Idle");
-}
-
-void LibraryRescanner::onDirTravResultReadyAt(int index)
-{
-	qDebug() << "Async Dir Trav reports result ready at" << index << "==" << m_dir_traversal_future_watcher.resultAt(index);
-
-	m_current_libmodel->onIncomingFilename(m_dir_traversal_future_watcher.resultAt(index));
+	emit progressChanged(0, 0, 0, "Idle");
 }
 
 void LibraryRescanner::onDirTravFinished()
 {
-	qDebug() << "Async Dir Trav reports fisished.";
+	qDb() << "Async Dir Trav reports fisished.";
 
 	// Send out progress text.
-	emit progressTextChanged("Idle");
+	emit progressChanged(0, 0, 0, "Idle");
 
 	/// @todo Should be a lambda.
 	///m_current_libmodel->onIncomingFilenamesComplete();

@@ -21,7 +21,7 @@
 #define MDILIBRARYVIEW_H
 
 #include "MDITreeViewBase.h"
-#include "logic/LibraryModel.h"
+#include "logic/LibraryModel.h" // Needed for covariant return type.
 #include "utils/DebugHelpers.h"
 
 #include <QUrl>
@@ -49,7 +49,7 @@ Q_SIGNALS:
 	 */
 	void sendToNowPlaying(LibraryEntryMimeData*);
 
-	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, std::shared_ptr<PlaylistModel>);
+	void sendEntryToPlaylist(std::shared_ptr<LibraryEntry>, QPointer<PlaylistModel>);
     void playTrackNowSignal(QUrl);
 
 public:

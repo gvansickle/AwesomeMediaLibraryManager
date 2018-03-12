@@ -26,14 +26,13 @@
 #include <QPointer>
 #include <QTreeWidget>
 
-#include <logic/LibraryModel.h>
-
 #include "utils/DebugHelpers.h"
 
 class QStandardItemModel;
 class QTreeView;
 class QMdiSubWindow;
 
+class LibraryModel;
 
 class CollectionDockWidget : public QDockWidget
 {

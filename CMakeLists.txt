@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -53,8 +53,15 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
+# Use ccache if it's available.
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+	set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
+
 # Include some basic cmake functions.
 include(GNUInstallDirs)
+include(CheckCXXCompilerFlag)
 include(CMakePrintHelpers)
 include(PrintTargetProperties)
 include(helperfunctions)
@@ -63,6 +70,9 @@ include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
 ### @todo? find_package(ECM 1.7.0 REQUIRED NO_MODULE)
+# For GoogleTest and Boost.
+set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
+include(DownloadProject)
 
 dir_summary()
 
@@ -97,8 +107,8 @@ print_compilers_and_params()
 # Be nice to visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-# Be nice and export compile commands by default, this is handy for clang-tidy
-# and for other tools.
+# Export compile commands.
+# FBO clang-tidy, iwyu, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set default install location to dist folder in build dir
@@ -116,6 +126,20 @@ configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Compiler flag support checks.
+set(EXTRA_CXX_COMPILE_FLAGS "")
+if(FALSE)
+check_cxx_compiler_flag("-Wdocumentation" CXX_W_DOCUMENTATION)
+if(CXX_W_DOCUMENTATION)
+	message(STATUS "Compile flag supported: ${CXX_W_DOCUMENTATION}")
+	list(APPEND EXTRA_CXX_COMPILE_FLAGS "-Wdocumentation")
+endif()
+endif()
+check_cxx_compiler_flag("-Wuninitialized" CXX_W_UNINIT)
+if(CXX_W_UNINIT)
+	message(STATUS "Compile flag supported: ${CXX_W_UNINIT}")
+	list(APPEND EXTRA_CXX_COMPILE_FLAGS "-Wuninitialized")
+endif()
 if(WIN32)
     # Make sure we're supporting Unicode on Windows.
     add_definitions(-DUNICODE -D_UNICODE)
@@ -133,18 +157,34 @@ get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
 message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
-# List plugin info.
-message(STATUS "*  Qt5::Gui Plugins:")
-foreach(plugin ${Qt5Gui_PLUGINS})
-  get_target_property(_loc ${plugin} LOCATION)
-  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-endforeach()
-message(STATUS "*  Qt5::Widgets Plugins:")
-foreach(plugin ${Qt5Widgets_PLUGINS})
-  get_target_property(_loc ${plugin} LOCATION)
-  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-endforeach()
+if(FALSE)
+	# List plugin info.
+	message(STATUS "*  Qt5::Gui Plugins:")
+	foreach(plugin ${Qt5Gui_PLUGINS})
+	  get_target_property(_loc ${plugin} LOCATION)
+	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+	endforeach()
+	message(STATUS "*  Qt5::Widgets Plugins:")
+	foreach(plugin ${Qt5Widgets_PLUGINS})
+	  get_target_property(_loc ${plugin} LOCATION)
+	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
+	endforeach()
+endif()
 
+# And Boost.  Sorry.
+# See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
+### CallableTraits only in 1.66+.
+#set(Boost_USE_MULTITHREADED      ON)
+#find_package(Boost 1.66.0 REQUIRED
+#  COMPONENTS CallableTraits
+#  )
+download_project(PROJ                boost_callable_traits
+	GIT_REPOSITORY https://github.com/boostorg/callable_traits.git
+	GIT_TAG        master
+	${UPDATE_DISCONNECTED_IF_AVAILABLE}
+	)
+add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
+message(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
@@ -165,6 +205,23 @@ if(FALSE)
 	endif()
 endif()
 
+# Custom cppclean target
+find_program(CPPCLEAN_PROGRAM NAMES cppclean)
+if(CPPCLEAN_PROGRAM AND FALSE) # << TRUE == USE_CPPCLEAN
+	set(CPPCLEAN_EXCLUDE_PATTERNS "cmake-build-*;build-*")
+	set(CPPCLEAN_INCLUDE_PATHS "${PROJECT_SOURCE_DIR}")
+	set(CPPCLEAN_EXCLUDE_SPECS "")
+	set(CPPCLEAN_INCLUDE_PATH_SPECS "")
+	PREPEND_TO_EACH(CPPCLEAN_EXCLUDE_SPECS "--exclude=" ${CPPCLEAN_EXCLUDE_PATTERNS})
+	PREPEND_TO_EACH(CPPCLEAN_INCLUDE_PATH_SPECS "--include-path=" ${CPPCLEAN_INCLUDE_PATHS})
+	add_custom_target(run_cppclean
+		ALL # @todo Change this so it's not run by default.
+		COMMAND "${CPPCLEAN_PROGRAM}" ${CPPCLEAN_EXCLUDE_SPECS} ${CPPCLEAN_INCLUDE_PATH_SPECS} "${PROJECT_SOURCE_DIR}"
+		COMMENT "Running cppclean"
+		VERBATIM
+		)
+endif()
+
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 
@@ -182,6 +239,9 @@ set(IDENTIFIER "io.github.gvansickle")
 ###
 ### The third-party packages we require.
 ###
+
+set(HEADER_FILES_THIRD_PARTY "")
+set(SOURCE_FILES_THIRD_PARTY "")
 
 include(ExternalProject)
 
@@ -219,7 +279,7 @@ else()
     add_dependencies(taglib taglib_bundled-install)
     ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
     message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
-    print_target_properties(taglib_bundled)
+#    print_target_properties(taglib_bundled)
     cmake_print_variables(CMAKE_C_COMPILER CMAKE_VERSION)
 
     set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -251,7 +311,7 @@ if(USE_BUNDLED_LIBCUE)
 
 	set(AMLM_LIBCUE_TARGET "libcue")
 
-	print_target_properties(${AMLM_LIBCUE_TARGET})
+#	print_target_properties(${AMLM_LIBCUE_TARGET})
 else()
 	# Use the system libcue.
 	pkg_check_modules(LIBCUE REQUIRED libcue
@@ -280,6 +340,15 @@ endif()
 # Verdigris is just two headers.
 set(USE_BUNDLED_VERDIGRIS 1)
 set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
+
+# AsyncFuture is just one header.
+set(USE_BUNDLED_ASYNCFUTURE 1)
+set(INCLUDE_DIR_ASYNCFUTURE third_party/asyncfuture)
+list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_ASYNCFUTURE}/asyncfuture.h)
+
+set(USE_BUNDLED_QTPROMISE 1)
+set(INCLUDE_DIR_QTPROMISE third_party/qtpromise/include)
+#list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_QTPROMISE}/QtPromise)
 
 # Main program header files.
 set(HEADER_FILES
@@ -322,7 +391,6 @@ set(HEADER_FILES
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	gui/ActivityProgressWidget.h
-	utils/concurrency/ReportingRunner.h
 	utils/AsyncDirScanner.h
 	gui/AboutBox.h
 	utils/RegisterQtMetatypes.h
@@ -380,7 +448,6 @@ set(SOURCE_FILES
 	utils/MapConverter.cpp
 	utils/Theme.cpp
 	utils/WorkerThreadBase.cpp
-	main.cpp
 	logic/LibraryRescanner.cpp
 	gui/ActivityProgressWidget.cpp
 	utils/concurrency/ReportingRunner.cpp
@@ -407,6 +474,7 @@ set(SOURCE_FILES
 	gui/menus/PlaylistContextMenuViewport.cpp
 	gui/menus/PlaylistContextMenu.cpp
 	gui/menus/ActionBundle.cpp
+	gui/mdi/MDIModelViewPair.cpp
 	logic/ColumnSpec.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
     )
@@ -417,14 +485,31 @@ set(HEADER_FILES_UTILS_NOMOC
 	utils/nomoc/nomocimpl.h)
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
+# Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
-	utils/concurrency/AsyncTaskManager.h)
+	utils/concurrency/ReportingRunner.h
+	utils/concurrency/AsyncTaskManager.h
+	utils/concurrency/ExtendedDeferred.h
+	utils/concurrency/ExtFuture.h
+	utils/concurrency/ExtFutureWatcher.h
+	utils/concurrency/impl/ExtFuture_fwddecl_p.h
+	utils/concurrency/impl/ExtFuture_p.hpp
+	utils/concurrency/ExtAsync.h
+	utils/concurrency/ExtAsyncTask.h
+	utils/concurrency/function_traits.hpp
+	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
-	utils/concurrency/AsyncTaskManager.cpp)
+	utils/concurrency/AsyncTaskManager.cpp
+	utils/concurrency/ExtAsync.cpp
+	utils/concurrency/function_traits.cpp
+	)
 
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 
+# Append the third_party files which need to be explicitly in the SOURCE_/HEADER_FILES vars.
+list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
+list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
@@ -447,7 +532,7 @@ qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 add_library(icon_rccs INTERFACE)
 target_sources(icon_rccs INTERFACE icons_oxygen icons_Tango icons_App)
-print_target_properties(icons_oxygen)
+#print_target_properties(icons_oxygen)
 
 
 ###
@@ -456,25 +541,36 @@ print_target_properties(icons_oxygen)
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-	    ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		main.cpp
+		${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
 # FBO Verdigris (esp. on Windows/MSVC).
 #add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${PROJECT_NAME} PRIVATE "QT_SHAREDPOINTER_TRACK_POINTERS" "USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}")
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"QT_DEPRECATED_WARNINGS"
+	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
+	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
+target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}
     PROPERTIES AUTOMOC ON)
 # The libs.
+set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
+		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
+		callable_traits)
 target_link_libraries(${PROJECT_NAME}
-        Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-        ${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
+        ${PROJECT_COMMON_LINK_LIBS}
+		)
 add_dependencies(${PROJECT_NAME} icon_rccs)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
@@ -486,9 +582,64 @@ Checks: '-*,llvm-twine-local'
 ...
 ")
 
-print_target_properties(${PROJECT_NAME})
+#print_target_properties(${PROJECT_NAME})
 
+###
+### Testing
+###
+if(TRUE) # Enable test target.
+
+find_package(Qt5Test REQUIRED)
+include(CTest)
+### Google Test
+find_package(Threads REQUIRED)
+download_project(PROJ                googletest
+                 GIT_REPOSITORY      https://github.com/google/googletest.git
+                 GIT_TAG             master
+                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
+)
+# Prevent GoogleTest from overriding our compiler/linker options
+# when building with Visual Studio
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+
+#enable_testing()
+set(TEST_EXE_TARGET alltests)
+set(SOURCE_FILES_TEST)
+set(HEADER_FILES_TEST)
+list(APPEND SOURCE_FILES_TEST
+	utils/concurrency/tests/AsyncTests.cpp)
+list(APPEND
+	tests/TestHelpers.h
+	utils/concurrency/tests/AsyncTests.h)
+
+add_executable(${TEST_EXE_TARGET}
+				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
+				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+# Add sanitizers.
+add_sanitizers(${TEST_EXE_TARGET})
+target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
+	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"QT_DEPRECATED_WARNINGS"
+	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
+	"QFUTURE_TEST")
+target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_include_directories(${TEST_EXE_TARGET} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
+target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
+target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
+set_target_properties(${TEST_EXE_TARGET} PROPERTIES AUTOMOC ON)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
+target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
+add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})
+
+endif() # Enable test target.
+
+###
 ### Installation.
+###
 install(TARGETS ${PROJECT_NAME}
                 RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
                 LIBRARY DESTINATION .

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,17 +22,19 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 
+#include <utils/concurrency/ExtFuture.h>
+
 #include <memory>
 #include <QtCore/QObject>
 #include <QElapsedTimer>
 #include <QtCore/QPersistentModelIndex>
 #include <QtCore/QFuture>
 #include <QtCore/QFutureWatcher>
+
 #include <utils/concurrency/AsyncTaskManager.h>
 
-#include "logic/LibraryEntry.h"
-
 class LibraryModel;
+class LibraryEntry;
 
 struct LibraryRescannerMapItem
 {
@@ -61,6 +63,7 @@ struct MetadataReturnVal
 };
 
 Q_DECLARE_METATYPE(MetadataReturnVal)
+Q_DECLARE_METATYPE(QFuture<MetadataReturnVal>)
 
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;
 
@@ -68,34 +71,29 @@ class LibraryRescanner : public QObject
 {
 	Q_OBJECT
 
+Q_SIGNALS:
+
+	/// Signal for progress changes.
+	void progressChanged(int min, int val, int max, QString text);
+
 public:
 	LibraryRescanner(LibraryModel* parent);
 	~LibraryRescanner() override;
 
 	void startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan);
 
-
-	QFutureWatcher<MetadataReturnVal> m_rescan_future_watcher;
-	QFutureWatcher<QString> m_dir_traversal_future_watcher;
-
 	QElapsedTimer m_timer;
+	qint64 m_last_elapsed_time_dirscan {0};
 
-signals:
-	/// @name Signals forwarded from the QFutureWatcher's.
-	///@{
-	void progressRangeChanged(int minimum, int maximum);
-	void progressValueChanged(int progressValue);
-	void progressTextChanged(const QString &progressText);
-	///@}
-
-public slots:
+public Q_SLOTS:
 	void startAsyncDirectoryTraversal(QUrl dir_url);
+	void cancelAsyncDirectoryTraversal();
 
-	void onDirTravResultReadyAt(int index);
+	/// @todo EXPERIMENTAL
+	ExtFuture<QString> AsyncDirectoryTraversal(QUrl dir_url);
+	void SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl dir_url);
+
 	void onDirTravFinished();
-
-	/// Slot called by m_rescan_future_watcher when it has a result available.
-	void onResultReadyAt(int index, QFuture<MetadataReturnVal> f);
 
     void processReadyResults(MetadataReturnVal lritem_vec);
 
@@ -113,6 +111,8 @@ private:
 	LibraryModel* m_current_libmodel;
 
 	AsyncTaskManager m_async_task_manager;
+
+	ExtFuture<QString> m_dirtrav_future;
 
     futureww<QString> m_futureww_dirscan;
     futureww<MetadataReturnVal> m_futureww;

@@ -21,5 +21,11 @@
 	{ include: ["\"wobjectdefs.h\"", "private", "<nomocdefs.h>", "public"] },
 	{ include: ["@[<\"]wobjectimpl.h[>\"]", "private", "<nomocimpl.h>", "public"] },
 	{ include: ["@[<\"]qdialogbuttonbox.h[>\"]", "private", "<QDialogButtonBox>", "public"] },
-	{ include: ["@[<\"]qglobal.h[>\"]", "private", "<QtGlobal>", "public"] }
+	{ include: ["@[<\"](QtCore/)?qglobal.h[>\"]", "private", "<QtGlobal>", "public"] },
+	{ include: ["@[<\"]qobjectdefs.h[>\"]", "private", "<QObject>", "public"] },
+	{ include: ["@[<\"]qapplication.h[>\"]", "private", "<QApplication>", "public"] },
+	{ include: ["@[<\"]qkeysequence.h[>\"]", "private", "<QKeySequence>", "public"] },
+	{ include: ["@[<\"]qnamespace.h[>\"]", "private", "<Qt>", "public"] },
+	{ include: ["@[<\"]qmdiarea.h[>\"]", "private", "<QMdiArea>", "public"] },
+	{ include: ["<bits/shared_ptr.h>", "private", "<memory>", "public"] }
 ]

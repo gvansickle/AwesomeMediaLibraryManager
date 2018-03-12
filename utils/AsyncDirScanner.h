@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -27,7 +27,6 @@
 
 #include <utils/concurrency/ReportingRunner.h>
 
-
 /**
  * Class for asynchronously scanning a directory tree.
  */
@@ -42,35 +41,9 @@ public:
 	{
 		// Nothing.
 	}
-	~AsyncDirScanner() override { qDebug() << "Destructor called"; }
+	~AsyncDirScanner() override;
 
-	void run(QFutureInterface<QString>& control) override
-	{
-		QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
-		int num_files_found_so_far = 0;
-
-		while(m_dir_iterator.hasNext())
-		{
-			if(control.isCanceled())
-			{
-				// We've been cancelled.
-				return;
-			}
-
-			num_files_found_so_far++;
-
-//			qDebug() << "Found URL:" << m_dir_iterator.filePath();
-			QUrl file_url = QUrl::fromLocalFile(m_dir_iterator.next());
-//			qDebug() << file_url;
-
-			/// Send this path to the future.
-			control.reportResult(file_url.toString());
-			// Update progress.
-			control.setProgressRange(0, num_files_found_so_far);
-			control.setProgressValue(num_files_found_so_far);
-			///control.setProgressValueAndText(num_files_found_so_far, "Hello");
-		}
-	}
+	void run(QFutureInterface<QString>& report_and_control) override;
 
 private:
 

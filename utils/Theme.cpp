@@ -24,7 +24,7 @@
 #include <QDebug>
 #include <QApplication>
 #include <QImageReader>
-#if 0 //QT_VERSION_CHECK(5,9,0)
+#if QT_VERSION_CHECK(5,9,0)
 #include <QOperatingSystemVersion>
 #else
 #include <QSysInfo>
@@ -38,10 +38,10 @@
 
 static bool isWindows()
 {
-#if 0 //QT_VERSION_CHECK(5,9,0)
+#if QT_VERSION_CHECK(5,9,0)
 	// @note Qt5.9, doesn't work on Linux yet.
 	QOperatingSystemVersion os_version = QOperatingSystemVersion::current();
-	return os_version.isAnyOfType({QOperatingSystemVersion::Windows})
+	return os_version.isAnyOfType({QOperatingSystemVersion::Windows});
 #else
 	return (QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based);
 #endif

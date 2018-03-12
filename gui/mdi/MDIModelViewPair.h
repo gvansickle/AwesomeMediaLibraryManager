@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -22,15 +22,14 @@
 
 #include <QPointer>
 
-class MDITreeViewBase;
-class LibraryModel;
 class QAbstractItemModel;
+class MDITreeViewBase;
 
 class MDIModelViewPair
 {
 public:
-	QPointer<QAbstractItemModel> m_model { nullptr };
-	QPointer<MDITreeViewBase> m_view { nullptr };
+	QPointer<QAbstractItemModel> m_model;
+	QPointer<MDITreeViewBase> m_view;
 
     bool m_model_was_existing { false };
     bool m_view_was_existing { false };
@@ -47,9 +46,9 @@ public:
 		m_model = derived_model_ptr;
 	}
 
-	bool hasModel() const { return m_model; }
-	bool hasView() const { return m_view; } ///< This really shouldn't ever be the case if there's no model.
-	bool hasModelAndView() const { return m_model && m_view; }
+	bool hasModel() const;
+	bool hasView() const;
+	bool hasModelAndView() const;
 };
 
 #endif //GUI_MDI_MDIVIEWPAIRMODEL_H

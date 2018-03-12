@@ -17,26 +17,19 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Experimental.h"
-#include "MDILibraryView.h"
-#include "MDIPlaylistView.h"
-#include "MDITreeViewBase.h"
-#include "PlayerControls.h"
-#include "MDINowPlayingView.h"
+//#include "MDILibraryView.h"
+//#include "MDIPlaylistView.h"
+
 
 #include <QMainWindow>
-#include <QStandardItem>
 #include <QUrl>
 
 #include <vector>
 #include <utility> // For std::pair<>
+#include <memory>
 
-#include <logic/LibraryModel.h>
-#include <logic/PlaylistModel.h>
 #include <logic/MP2.h>
-#include <gui/settings/SettingsDialog.h>
 #include "mdi/MDIModelViewPair.h"
-#include "logic/LibraryEntryMimeData.h"
 
 class QActionGroup;
 class QWidget;
@@ -45,6 +38,9 @@ class QMdiSubWindow;
 class MDIArea;
 class QSettings;
 
+class QStandardItem;
+class QStandardItemModel;
+
 class MDITreeViewBase;
 class MDILibraryView;
 class MDIPlaylistView;
@@ -52,6 +48,15 @@ class MetadataDockWidget;
 class CollectionDockWidget;
 class ActivityProgressWidget;
 class ActionBundle;
+class PlayerControls;
+class MDINowPlayingView;
+class Experimental;
+class SettingsDialog;
+class LibraryModel;
+class PlaylistModel;
+
+class LibraryEntry;
+class LibraryEntryMimeData;
 
 class MainWindow: public QMainWindow
 {
@@ -108,6 +113,8 @@ public Q_SLOTS:
 
     void onRescanLibrary();
 
+	void onCancelRescan();
+
     void startSettingsDialog();
 
     /// @name Edit action forwarders.
@@ -153,14 +160,14 @@ private Q_SLOTS:
 	 */
 	void onRemoveDirFromLibrary(QPointer<LibraryModel> libmodel);
 
-    void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model);
+	void onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model);
 	void onSendToNowPlaying(LibraryEntryMimeData* mime_data);
 
     void doExperiment();
 
 	void updateActionEnableStates();
     void updateActionEnableStates_Edit();
-	
+
     void onChangeWindowMode(QAction* action);
 
     /// Filter slots.
@@ -174,7 +181,7 @@ private:
     void createActions();
     void createActionsEdit();
 	void createActionsView();
-    
+
     void createMenus();
     void createToolBars();
     void createStatusBar();
@@ -189,7 +196,7 @@ private:
 	void addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair);
 	void addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpair);
 	MDITreeViewBase* activeChildMDIView();
-    
+
 	/// @name Bulk Signal/Slot Connection management.
     ///@{
     void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
@@ -228,8 +235,8 @@ private:
 	QMdiSubWindow* findSubWindow(QUrl url) const;
 	MDITreeViewBase* findSubWindowView(QUrl url) const;
     /// @}
-    
-    
+
+
     bool maybeSaveOnClose();
 
 
@@ -243,7 +250,7 @@ private:
     QUrl m_appdatadir;
 
     /// The media player instance.
-    MP2 m_player;
+	MP2* m_player;
 
     /// Experimental "scratch" widget for doing development experiments.
     Experimental* m_experimental;
@@ -277,7 +284,6 @@ private:
     /// @name File actions
     /// @{
     QAction* m_importLibAct;
-    QAction* m_rescanLibraryAct;
     QAction* m_saveLibraryAsAct;
     QAction* m_removeDirFromLibrary;
     QAction* m_newPlaylistAct;
@@ -301,13 +307,21 @@ private:
     QAction *m_act_select_all;
     /// @}
 
+	/// @name Tools actions
+	/// @{
+
+	QAction* m_rescanLibraryAct;
+	QAction* m_cancelRescanAct;
+
+	/// @}
+
 	/// View actions.
 	/// @{
 	QAction *m_act_lock_layout;
 	QAction *m_act_reset_layout;
 	ActionBundle* m_ab_docks;
 	/// @}
-    
+
     /// @name Window actions.
     /// @{
     QActionGroup *m_tabs_or_subwindows_group;

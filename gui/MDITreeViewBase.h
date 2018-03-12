@@ -236,20 +236,17 @@ protected Q_SLOTS:
 	/**
 	 * Override to implement context menu handler for @a index.  @a index is guaranteed to be valid.
 	 * @param event
-	 * @param index
+	 * @param row_indexes
 	 */
 	virtual void onContextMenuSelectedRows(QContextMenuEvent* event, const QPersistentModelIndexVec& row_indexes) { Q_UNUSED(event); Q_UNUSED(row_indexes); }
 
 	/**
 	 * Override to implement context menu handler for the viewport (blank area of treeview).
-	 * @param event
-	 * @param index
 	 */
 	virtual void onContextMenuViewport(QContextMenuEvent* event) { Q_UNUSED(event); }
 
 	/**
      * Slot called when the user activates (hits Enter or double-clicks) on an item.
-	 * @param index
 	 */
 	virtual void onActivated(const QModelIndex& index);
 

@@ -85,7 +85,7 @@ private:
 
 // Not declaring this as a metatype.  Needs a copy constructor, which we have privatized.
 // FWIW, QMimeData itself isn't declared as a metatype either.
-//Q_DECLARE_METATYPE(LibraryEntryMimeData)
+Q_DECLARE_METATYPE(LibraryEntryMimeData*)
 
 class MimeDataDumper : public QObject
 {

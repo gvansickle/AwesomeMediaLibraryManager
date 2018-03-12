@@ -18,15 +18,27 @@
  */
 
 
-#include "FilterWidget.h"
 #include "MainWindow.h"
+
+
+#include "Experimental.h"
+#include "FilterWidget.h"
 
 #include "MDITreeViewBase.h"
 #include "MDILibraryView.h"
 #include "MDIPlaylistView.h"
+#include "MDINowPlayingView.h"
+
+#include <gui/settings/SettingsDialog.h>
+#include <logic/LibraryModel.h>
+#include <logic/PlaylistModel.h>
+
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
 #include "CollectionDockWidget.h"
+#include "PlayerControls.h"
+
+#include "logic/LibraryEntryMimeData.h"
 
 #include "logic/LibrarySortFilterProxyModel.h"
 
@@ -60,6 +72,8 @@
 #include <QDirIterator>
 #include <QClipboard>
 #include <QSharedPointer>
+#include <QStandardItem>
+
 
 #include <functional>
 #include <algorithm>
@@ -78,6 +92,7 @@
 
 #include <gui/menus/ActionBundle.h>
 
+#include "utils/concurrency/ExtAsync.h"
 
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
@@ -85,7 +100,7 @@
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags), m_player(parent)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags)
 {
     // Name our GUI thread.
     QThread::currentThread()->setObjectName("GUIThread");
@@ -122,6 +137,9 @@ M_WARNING("TODO: ifdef this to development only")
 
     // The list of PlaylistModels.
     m_playlist_models.clear();
+
+	// The media player.
+	m_player = new MP2(this);
 
     m_controls = new PlayerControls(this);
 
@@ -324,6 +342,10 @@ void MainWindow::createActions()
 									QKeySequence::Refresh);
 	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
 
+	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
+									QKeySequence::Cancel);
+	connect_trig(m_cancelRescanAct, this, &MainWindow::onCancelRescan);
+
 	m_settingsAct = make_action(QIcon::fromTheme("configure"), tr("Settings..."), this,
 							   QKeySequence::Preferences, "Open the Settings dialog.");
 	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
@@ -442,7 +464,7 @@ void MainWindow::createActionsView()
 {
 	m_ab_docks = new ActionBundle(this);
 
-	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); //< Also an "emblem-unlocked"
+	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
@@ -494,6 +516,7 @@ void MainWindow::createMenus()
         {//scanLibraryAction,
 		 m_toolsMenu->addSection("Rescans"),
 		 m_rescanLibraryAct,
+		 m_cancelRescanAct,
 		 m_toolsMenu->addSection("Settings"),
 		 m_settingsAct,
                 });
@@ -538,6 +561,7 @@ void MainWindow::createToolBars()
 	m_fileToolBar->setObjectName("FileToolbar");
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
+							   m_cancelRescanAct,
 							 m_fileToolBar->addSeparator(),
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
@@ -642,7 +666,7 @@ void MainWindow::createConnections()
 	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
-	connectPlayerAndControls(&m_player, m_controls);
+	connectPlayerAndControls(m_player, m_controls);
 
     // Connect with the CollectionDockWidget.
 	connect(m_collection_dock_widget, &CollectionDockWidget::showLibraryModelSignal, this, &MainWindow::onShowLibrary);
@@ -730,7 +754,7 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
     qDebug() << "Connecting";
 	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
 
-	connectPlayerAndPlaylistView(&m_player, now_playing_view);
+	connectPlayerAndPlaylistView(m_player, now_playing_view);
 	connectPlayerControlsAndPlaylistView(m_controls, now_playing_view);
     qDebug() << "Connected";
 }
@@ -1081,6 +1105,9 @@ void MainWindow::onStartup()
 
 	// Open the windows the user had open at the end of last session.
 	openWindows();
+
+	M_WARNING("TEST, REMOVE");
+	ExtAsyncTest(this);
 }
 
 /**
@@ -1158,6 +1185,14 @@ void MainWindow::onRescanLibrary()
 	for(auto l : m_libmodels)
 	{
 		l->startRescan();
+	}
+}
+
+void MainWindow::onCancelRescan()
+{
+	for(auto l : m_libmodels)
+	{
+		l->cancelRescan();
 	}
 }
 
@@ -1269,10 +1304,10 @@ void MainWindow::openPlaylist()
 	qCritical() << "Not implemented";
 }
 
-void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, std::shared_ptr<PlaylistModel> playlist_model)
+void MainWindow::onSendEntryToPlaylist(std::shared_ptr<LibraryEntry> libentry, QPointer<PlaylistModel> playlist_model)
 {
-	qDebug() << QString("Sending entry to playlist:") << playlist_model.get();
-	if(playlist_model != nullptr)
+	qDebug() << QString("Sending entry to playlist:") << playlist_model;
+	if(!playlist_model.isNull())
 	{
 		auto new_playlist_entry = PlaylistModelItem::createFromLibraryEntry(libentry);
 		playlist_model->appendRow(new_playlist_entry);
