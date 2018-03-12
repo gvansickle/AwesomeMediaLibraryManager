@@ -169,64 +169,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	// Create the ControlledTask which will scan the directory tree for files.
 
-#if 0 // USE_BUNDLED_SB_QTPROMISE Simon Brunel's qtpromise.
-	using namespace QtPromise;
-
-	QFutureInterface<QString> future_interface = ReportingRunner::runFI(new AsyncDirScanner(dir_url,
-												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-												  QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
-
-	QPromise<QString> promise = qPromise(future_interface.future());
-
-	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
-
-	fw->onProgressChange([=](int min, int val, int max, QString text) -> void {
-					qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-					Q_EMIT progressChanged(min, val, max, text);
-					;})
-				.onReportResult([this, &future_interface](QString s, int index) {
-					Q_UNUSED(index);
-					/// @note This lambda is called in an arbitrary thread context.
-//					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-
-					// This is not threadsafe:
-					/// WRONG: this->m_current_libmodel->onIncomingFilename(s);
-
-//					/// EXPERIMENTAL
-//					static int fail_counter = 0;
-//					fail_counter++;
-//					if(fail_counter > 5)
-//					{
-////						future_interface.cancel();
-//						throw QException();
-//					}
-
-					// This is threadsafe.
-					QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
-				})
-				.setFuture(future_interface);
-
-	qDebug() << "future is finished:" << fw->future().isFinished() << "isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
-
-	promise.then([&](){
-		// promise was fulfilled.
-		qDebug() << M_THREADNAME() << "Directory scan complete.";
-		m_last_elapsed_time_dirscan = m_timer.elapsed();
-		qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
-		// Directory traversal complete, start rescan.
-		onDirTravFinished();
-	}).fail([](const QException& e){
-		// dir scanning threw an exception.
-		qWarning() << "EXCEPTION:" << e.what();
-	}).fail([](){
-		// Catch-all fail.
-		qWarning() << "FAIL";
-		;}); //.wait();
-
-	qDebug() << "future is finished:" << fw->future().isFinished() <<"isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
-
-#elif 1 /// ExtAsync
-
 //	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
 	m_dirtrav_future = AsyncDirectoryTraversal(dir_url);
 	qDb() << "ExtFuture<> RETURNED FROM ASYNCDIRTRAV:" << m_dirtrav_future;
@@ -251,8 +193,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //	future.cancel();
 //	//throw QException();
 //	qDebug() << "ERROR";
-
-#endif // Which future/promise to use.
 
 	qDb() << "END:" << dir_url;
 }
