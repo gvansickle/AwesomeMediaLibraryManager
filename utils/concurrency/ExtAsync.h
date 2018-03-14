@@ -149,11 +149,13 @@ namespace ExtAsync
 	/**
 	 * For free functions of the form:
 	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
+	 *
+	 * Note use of C++14 auto return type deduction.
+	 *
 	 * @param function
 	 * @param args
 	 * @return
 	 */
-	/// Note use of C++14 auto return type deduction.
 	template <class F, /*class R = ExtFuture<int>,*/ class... Args, std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
 	auto
 	run(F&& function, Args&&... args)
