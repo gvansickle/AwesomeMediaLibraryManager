@@ -108,7 +108,7 @@ print_compilers_and_params()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Export compile commands.
-# FBO clang-tidy, iwyu, etc.
+# FBO Eclipse, clang-tidy, iwyu, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set default install location to dist folder in build dir
@@ -169,6 +169,12 @@ if(FALSE)
 	  get_target_property(_loc ${plugin} LOCATION)
 	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
 	endforeach()
+endif()
+
+# Maybe some KDE extensions.
+if(TRUE) ## USE_KDE_KIO
+find_package(KF5KIO)
+set(KIO_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 endif()
 
 # And Boost.  Sorry.
@@ -568,6 +574,7 @@ set_target_properties(${PROJECT_NAME}
     PROPERTIES AUTOMOC ON)
 # The libs.
 set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
+		${KIO_LINK_LIBS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits)
 target_link_libraries(${PROJECT_NAME}

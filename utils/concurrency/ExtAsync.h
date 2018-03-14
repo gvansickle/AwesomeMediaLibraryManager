@@ -56,7 +56,12 @@ template <typename T> class ExtFuture;
 
 
 /**
- * A Qt5 analog to std::async().
+ * A Qt5 analog to "C++ Extensions for Concurrency, ISO/IEC TS 19571:2016" and a million other similar
+ * libraries floating around.  Ideas taken from all over:
+ * - C++ TS mentioned above
+ * - Facebook's Folly Futures
+ * - Boost
+ * - mhogomchungu's "tasks": https://github.com/mhogomchungu/tasks
  */
 
 /**
@@ -144,11 +149,13 @@ namespace ExtAsync
 	/**
 	 * For free functions of the form:
 	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
+	 *
+	 * Note use of C++14 auto return type deduction.
+	 *
 	 * @param function
 	 * @param args
 	 * @return
 	 */
-	/// Note use of C++14 auto return type deduction.
 	template <class F, /*class R = ExtFuture<int>,*/ class... Args, std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
 	auto
 	run(F&& function, Args&&... args)

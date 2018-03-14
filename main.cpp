@@ -89,7 +89,6 @@ int main(int argc, char *argv[])
 	RegisterQtMetatypes();
 
     // Load the icon resources.
-	bool opened = false;
 	auto rccs = {"icons_oxygen.rcc", "icons_Tango.rcc", "icons_App.rcc"};
 	for(auto fname : rccs)
 	{
