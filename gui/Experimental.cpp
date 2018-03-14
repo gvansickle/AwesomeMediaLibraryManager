@@ -20,7 +20,7 @@
 #include "Experimental.h"
 
 #define EX1 0
-#define EX2 1
+#define EX2 0
 
 #if EX1 == 1
 #include <KEncodingFileDialog>
@@ -49,12 +49,12 @@ void Experimental::DoExperiment()
 	 *
 	 */
 
-#if 0
+#if EX1 == 1
 
 	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
 #endif
 
-#if 1
+#if EX2 == 1
 	//"QT += KConfigCore KConfigGui"
 
 	if(KConfigDialog::showDialog("settings"))
