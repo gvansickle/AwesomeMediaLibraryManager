@@ -19,10 +19,18 @@
 
 #include "Experimental.h"
 
-//#include <KEncodingFileDialog>
+#define EX1 0
+#define EX2 1
 
-//#include <KConfigDialog>
-//#include <KConfigSkeleton>
+#if EX1 == 1
+#include <KEncodingFileDialog>
+//#include <KFileCustomDialog>
+#endif
+
+#if EX2 == 1
+#include <KConfigDialog>
+#include <KConfigSkeleton>
+#endif
 
 #include <QDebug>
 
@@ -35,10 +43,19 @@ void Experimental::DoExperiment()
 {
 	qDebug() << "Starting DoExperiment()";
 
-	///KEncodingFileDialog::getOpenFileNamesAndEncoding("", QUrl(), "All (*)", this, "Experimental open file");
+	/**
+	 * @todo
+	 * KFileCopyToMenu
+	 *
+	 */
 
 #if 0
-	"QT += KConfigCore KConfigGui"
+
+	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
+#endif
+
+#if 1
+	//"QT += KConfigCore KConfigGui"
 
 	if(KConfigDialog::showDialog("settings"))
 	  return;
