@@ -412,6 +412,7 @@ set(HEADER_FILES
 	gui/mdi/MDIModelViewPair.h
 	logic/ColumnSpec.h
 	logic/proxymodels/QPersistentModelIndexVec.h
+	utils/Logging.h
     )
 
 # Source file list.
@@ -477,6 +478,7 @@ set(SOURCE_FILES
 	gui/mdi/MDIModelViewPair.cpp
 	logic/ColumnSpec.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
+	utils/Logging.cpp
     )
 
 # NoMoc files.
