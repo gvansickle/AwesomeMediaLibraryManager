@@ -592,13 +592,7 @@ M_WARNING("TODO: LEAKS THIS");
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
-//	std::shared_ptr<ContinuationType> m_continuation_function;
-
-//	std::shared_ptr<TapCallbackType> m_tap_function;
-
 	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
-
-
 };
 
 

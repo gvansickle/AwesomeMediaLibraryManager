@@ -538,10 +538,7 @@ cmake_print_variables(META_FILES_TO_INCLUDE)
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
-add_library(icon_rccs INTERFACE)
-target_sources(icon_rccs INTERFACE icons_oxygen icons_Tango icons_App)
-#print_target_properties(icons_oxygen)
-
+set(icon_rccs icons_oxygen icons_Tango icons_App)
 
 ###
 ### The main executable.
@@ -580,7 +577,7 @@ set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5
 target_link_libraries(${PROJECT_NAME}
         ${PROJECT_COMMON_LINK_LIBS}
 		)
-add_dependencies(${PROJECT_NAME} icon_rccs)
+add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
 
@@ -667,7 +664,7 @@ install(FILES
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
     ALL
-    DEPENDS ${PROJECT_NAME} icon_rccs
+	DEPENDS ${PROJECT_NAME} icons_oxygen icons_Tango icons_App
     COMMENT "Packaging ${PROJECT_NAME}...")
 if(WIN32)
     # Add custom commands and install targets for Qt windeploy.

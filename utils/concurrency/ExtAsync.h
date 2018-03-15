@@ -62,6 +62,7 @@ template <typename T> class ExtFuture;
  * - Facebook's Folly Futures
  * - Boost
  * - mhogomchungu's "tasks": https://github.com/mhogomchungu/tasks
+ * - ....
  */
 
 /**
@@ -151,10 +152,6 @@ namespace ExtAsync
 	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
 	 *
 	 * Note use of C++14 auto return type deduction.
-	 *
-	 * @param function
-	 * @param args
-	 * @return
 	 */
 	template <class F, /*class R = ExtFuture<int>,*/ class... Args, std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
 	auto
@@ -180,7 +177,6 @@ namespace ExtAsync
 	template <typename F, typename R = ct::return_type_t<F>>
 		std::enable_if_t<!std::is_member_function_pointer_v<F>
 			&& !ct::has_void_return_v<F>
-//			&& ct::is_invocable_v<F>,
 		, ExtFuture<R>>
 	run(F&& function)
 	{
