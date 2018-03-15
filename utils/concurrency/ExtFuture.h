@@ -623,7 +623,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 
 
 // Include the implementation.
-#include <utils/concurrency/impl/ExtFuture_p.hpp>
+#include <utils/concurrency/impl/ExtFuture_impl.hpp>
 
 /**
  * Create and return a finished future of type ExtFuture<T>.
