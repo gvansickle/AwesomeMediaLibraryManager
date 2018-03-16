@@ -215,25 +215,12 @@ public:
 	 */
 	~ExtFuture() override
 	{
-		qDb() << "DESTRUCTOR";
+//		qDb() << "DESTRUCTOR";
 		/// @note Since we're based on QFutureInterface<T> <- QFutureInterfaceBase, it handles the underlying
 		/// refcounting for us.  So we may be getting destroyed after we've been copied, which is ok.
 
 		/// @todo Find a way to assert if we're still running/not finished and haven't been copied.
 		/// This would indicate a dangling future.
-
-//		/// Warn if we're being destroyed before having been finished.
-//		if(this->isStarted() && !this->isFinished())
-//		{
-//			if(this->isRunning())
-//			{
-//				// We're still running, this is almost certainly an error.
-//				Q_ASSERT_X(0, "ExtFuture<> destructor", "Destroyed while still running");
-//			}
-//			qWr() << "STARTED, NOT FINISHED";
-//		}
-
-//		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
 	}
 
 	/// @name Copy and move operators.

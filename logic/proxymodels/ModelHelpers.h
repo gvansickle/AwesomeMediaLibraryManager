@@ -116,14 +116,6 @@ inline static QModelIndexList mapToSource(const QModelIndexList& source_indices)
 	return retval;
 }
 
-//template <typename T>
-//QList<QPersistentModelIndex> selectedSourceRows(const T* item_selection_model, int column = 0)
-//{
-//	auto selected_rows = item_selection_model->selectedRows(column);
-//	auto selected_source_rows =
-//}
-
-
 inline static QAbstractItemModel* getRootModel(QAbstractItemModel* maybe_proxy_model)
 {
 	auto proxy_model = qobject_cast<QAbstractProxyModel*>(maybe_proxy_model);

@@ -383,3 +383,18 @@ QStringList LibraryEntry::getMetadata(QString key) const
 		return QStringList();
 	}
 }
+
+//
+// QDataStream operators
+//
+
+QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
+{
+	return out << QString("TBD");
+}
+
+QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
+{
+	qDebug() << QString("TBD");
+	return in;
+}

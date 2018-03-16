@@ -79,7 +79,7 @@ void SelectionFilterProxyModel::setSourceIndexToShow(const QPersistentModelIndex
 {
 	qDebug() << "Setting selected index to:" << source_index_to_filter_on;
 
-	qDebug() << "Source model:" << sourceModel() << "index model:" << source_index_to_filter_on.model();
+//	qDebug() << "Source model:" << sourceModel() << "index model:" << source_index_to_filter_on.model();
 
 //	Q_ASSERT(sourceModel() == source_index_to_filter_on.model());
 
