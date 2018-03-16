@@ -103,6 +103,7 @@ std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
  * Note that QFuture<> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<>
  * has the same properties.  In this, they're both more similar to std::experimental::shared_future than ::future,
  * the latter of which has a deleted copy constructor.
+ *
  * QFuture<> itself only implements the following:
  * - Default constructor, which initializes its "private" (actually currently public) "mutable QFutureInterface<T> d;" underlying
  *   QFuterInterface<> object like so:
@@ -110,6 +111,7 @@ std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
  *     	... : d(QFutureInterface<T>::canceledResult())
  *     @endcode
  * - An expicit QFuture(QFutureInterface<T> *p) constructor commented as "internal".
+ *
  * QFuture<t> doesn't inherit from anything, so copy constructor/assignment/etc. are all defaults.
  */
 template <typename T>

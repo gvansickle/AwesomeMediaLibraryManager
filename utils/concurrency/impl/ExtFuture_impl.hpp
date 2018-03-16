@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_
-#define UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_
+#ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
+#define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 
 
 /**
@@ -156,4 +156,4 @@ namespace ExtAsync
 //extern template class ExtFuture<Unit>;
 //extern template class ExtFuture<QString>;
 
-#endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_ */
+#endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_ */
