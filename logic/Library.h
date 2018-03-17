@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -72,5 +72,8 @@ public:
 	qint64 num_populated {0};
 
 };
+
+QDataStream &operator<<(QDataStream &out, const Library &myObj);
+QDataStream &operator>>(QDataStream &in, Library &myObj);
 
 #endif // LIBRARY_H

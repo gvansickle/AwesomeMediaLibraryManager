@@ -104,7 +104,7 @@ void Library::insertEntry(int row, std::shared_ptr<LibraryEntry> entry)
 void Library::replaceEntry(int row, std::shared_ptr<LibraryEntry> entry)
 {
 	//qDebug() << "Replacing row" << row << ", old/new:" << m_lib_entries[row] << "/" << entry;
-	qDebug() << "isPopulated: old/new:" << m_lib_entries[row]->isPopulated() << "/" << entry->isPopulated();
+//	qDebug() << "isPopulated: old/new:" << m_lib_entries[row]->isPopulated() << "/" << entry->isPopulated();
 	auto old_entry = m_lib_entries[row];
 	addingEntry(entry.get());
 	m_lib_entries[row] = entry;
