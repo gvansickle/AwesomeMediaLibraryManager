@@ -421,8 +421,10 @@ QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
 	quint32  magic_number;
 	in >> magic_number;
 	if(magic_number != LIBRARY_ENTRY_MAGIC_NUMBER)
+	{
 		/// @todo
 		return in;
+	}
 	// Read the version
 	quint32 version;
 	in >> version;

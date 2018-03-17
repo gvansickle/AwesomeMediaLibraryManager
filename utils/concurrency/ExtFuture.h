@@ -235,23 +235,11 @@ public:
 	 * For explicitly unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
 	 * Inspired by Facebook's Folly Futures.
 	 */
+#if 0 /// @todo
 	template <typename F>
 	std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
 	unwrap();
-
-//	template <typename ExtFutureT = std::enable_if_t<isExtFuture_v<T>, >>
-	/// Per:
-	/// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3857.pdf
-	/// http://en.cppreference.com/w/cpp/experimental/shared_future/then
-	/// We'll just return a "proxy" of the inner ExtFuture<> here, ignoring the
-	/// outer ExtFuture<>.
-	/// This should be pretty easy given our underlying QFutureInterface<>.
-//	ExtFuture<typename isExtFuture<T>::inner_t> unwrap()
-//	{
-////		static_assert(NestedExtFuture<T>, "");
-//		// this is a nested ExtFuture.
-//		return this->
-//	}
+#endif
 
 	/**
 	 * Waits until the ExtFuture is finished, and returns the result.
@@ -481,17 +469,17 @@ protected:
 		auto watcher = new QFutureWatcher<T>();
 
 		auto retval = new ExtFuture<R>();
-		qDb() << "NEW EXTFUTURE:" << *retval;
+//		qDb() << "NEW EXTFUTURE:" << *retval;
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher,
 						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable -> void {
 			// Call the then() callback function.
-			qDb() << "THEN WRAPPER CALLED";
+//			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
 			retval->reportResult(then_cb(std::move(args)...));
 			s_was_ever_called = true;
 			retval->reportFinished();
-			qDb() << "RETVAL STATUS:" << *retval;
+//			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
@@ -500,7 +488,7 @@ protected:
 		});
 		// Start watching this ExtFuture.
 		watcher->setFuture(this->future());
-		qDb() << "RETURNING:" << *retval;
+//		qDb() << "RETURNING:" << *retval;
 		return *retval;
 	}
 
@@ -510,7 +498,6 @@ protected:
 	template <typename F, typename R = ct::return_type_t<F>>
 	ExtFuture<T> FinallyHelper(QObject* context, F&& finally_callback)
 	{
-//		qDb() << "ENTER";
 		static_assert(std::tuple_size_v<ct::args_t<F>> == 0, "Too many args");
 
 		auto watcher = new QFutureWatcher<T>();
@@ -528,7 +515,6 @@ M_WARNING("TODO: LEAKS THIS");
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
-//		qDb() << "EXIT";
 		return *retval;
 	}
 
@@ -543,23 +529,22 @@ M_WARNING("TODO: LEAKS THIS");
 	TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
 		static std::atomic_bool s_was_ever_called {false};
-//		qDb() << "ENTER";
+
 		auto watcher = new QFutureWatcher<T>();
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
 				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
-					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
-						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
+//					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
+//						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
 					// Call the tap callback with the incoming result value.
 					tap_cb(watcher->future().resultAt(index));
 					s_was_ever_called = true;
 			});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
-			qWr() << "TapHelper ExtFutureWatcher DESTROYED";
+//			qWr() << "TapHelper ExtFutureWatcher DESTROYED";
 			Q_ASSERT(s_was_ever_called);
 		});
 		watcher->setFuture(this->future());
-//		qDb() << "EXIT";
 		return *this;
 	}
 
