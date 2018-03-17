@@ -266,12 +266,9 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 		QString entry_path = m_dir_iterator.next();
 		auto file_info = m_dir_iterator.fileInfo();
 
-//		qDb() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
-
 		if(file_info.isDir())
 		{
 			QDir dir = file_info.absoluteDir();
-//			qDb() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
 
 			// Update the max range to be the number of files we know we've found so far plus the number
 			// of files potentially in this directory.
@@ -284,14 +281,11 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 			// It's a file.
 			num_files_found_so_far++;
 
-//			qDb() << "ITS A FILE";
-
 			QUrl file_url = QUrl::fromLocalFile(entry_path);
 
 			// Send this path to the future.
 			future.reportResult(file_url.toString());
 
-//			qDb() << "resultCount:" << future.resultCount();
 			// Update progress.
 			future.setProgressValueAndText(num_files_found_so_far, status_text);
 		}
@@ -327,8 +321,6 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 
     m_timer.start();
 
-#if 1
-
 	ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(items_to_rescan,
 	                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
 
@@ -344,26 +336,6 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 		qDb() << "METADATA RESCAN COMPLETE";
 		onRescanFinished();
 	});
-
-#elif 0
-
-    m_futureww
-//	.on_resultat([](int at){
-//        qDebug() << "RESULT AT:" << at << "THREAD:" << QThread::currentThread()->objectName();
-//    })
-	.on_result([this](auto a){
-    	this->processReadyResults(a);
-    })
-	.on_progress([=](int min, int max, int val){
-		emit progressChanged(min, val, max, progtext);
-    })
-    .then([=](){
-    	qDebug() << "METADATA RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
-    	onRescanFinished();
-    });
-    m_futureww = QtConcurrent::mapped(items_to_rescan,
-                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
-#endif
 }
 
 void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
