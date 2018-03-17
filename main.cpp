@@ -132,13 +132,17 @@ int main(int argc, char *argv[])
     // Log the audio file types we support.
     /// @todo M_WARNING("TODO: Log supported file types")
 
+	// Logging test.
 	qDebug() << "TEST: Debug";
 	qWarning() << "TEST: Warning";
 	qCritical() << "TEST: Critical";
 
     // Create and show the main window.
-    MainWindow mainWin;
-    mainWin.show();
+	// From the KDE5 docs: https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#ab0c194be12f0ad123a9ba8be75bb85c9
+	// "KMainWindows must be created on the heap with 'new'"
+    MainWindow *mainWin = new MainWindow();
+    mainWin->show();
+
     return app.exec();
 }
 

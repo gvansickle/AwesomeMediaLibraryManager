@@ -20,6 +20,8 @@
 
 #include "MainWindow.h"
 
+#include <KMainWindow>
+#include <KXmlGui/KHelpMenu>
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -100,7 +102,7 @@
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : QMainWindow(parent, flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(parent, flags)
 {
     // Name our GUI thread.
     QThread::currentThread()->setObjectName("GUIThread");
@@ -549,6 +551,10 @@ void MainWindow::createMenus()
 	m_helpMenu->addSection("About");
 	m_helpMenu->addAction(m_aboutAct);
 	m_helpMenu->addAction(m_aboutQtAct);
+
+	// Create a second help menu via KHelpMenu.
+	QMenu* kmenu = this->helpMenu("KHelpMenu");
+	menuBar()->addMenu(kmenu);
 }
 
 

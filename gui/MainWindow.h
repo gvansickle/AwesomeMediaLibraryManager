@@ -21,7 +21,9 @@
 //#include "MDIPlaylistView.h"
 
 
-#include <QMainWindow>
+//#include <QMainWindow>
+#include <KMainWindow>
+
 #include <QUrl>
 
 #include <vector>
@@ -58,7 +60,7 @@ class PlaylistModel;
 class LibraryEntry;
 class LibraryEntryMimeData;
 
-class MainWindow: public QMainWindow
+class MainWindow: public KMainWindow
 {
 	Q_OBJECT
 
