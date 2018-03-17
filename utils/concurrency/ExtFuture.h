@@ -180,21 +180,13 @@ public:
 
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
+	 *
+	 * @todo Not sure if we need this or not.  .then() has an unwrapping overload.
 	 */
 //	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other);
 
 
-//	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other),
-//			m_continuation_function(other.m_continuation_function),
-//			m_tap_function(other.m_tap_function)
-//	{
-//		qIn() << "Copy Constructor";
-//
-////		if(other.m_continuation_function != nullptr)
-////		{
-////			Q_ASSERT(0);
-////		}
-//	}
+	// Do we need a non-default copy constructor?
 
 	ExtFuture(const QFutureInterface<T> &other) : QFutureInterface<T>(other)
 	{

@@ -402,7 +402,7 @@ void LibraryRescanner::onRescanFinished()
 	qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 	qInfo() << "Metadata rescan took" << elapsed << "ms";
 	// Send out progress text.
-	emit progressChanged(0, 0, 0, "Idle");
+	Q_EMIT progressChanged(0, 0, 0, "Idle");
 }
 
 void LibraryRescanner::onDirTravFinished()
@@ -410,7 +410,7 @@ void LibraryRescanner::onDirTravFinished()
 	qDb() << "Async Dir Trav reports fisished.";
 
 	// Send out progress text.
-	emit progressChanged(0, 0, 0, "Idle");
+	Q_EMIT progressChanged(0, 0, 0, "Idle");
 
 	/// @todo Should be a lambda.
 	///m_current_libmodel->onIncomingFilenamesComplete();
