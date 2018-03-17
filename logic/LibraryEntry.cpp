@@ -24,6 +24,8 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QJsonArray>
+#include <QDataStream>
+
 #include <QUrlQuery>
 
 #include "utils/MapConverter.h"
@@ -33,6 +35,10 @@
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 #include <utils/StringHelpers.h>
+
+
+#define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
+#define LIBRARY_ENTRY_VERSION 0x01
 
 LibraryEntry::LibraryEntry()
 {
@@ -390,11 +396,48 @@ QStringList LibraryEntry::getMetadata(QString key) const
 
 QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 {
-	return out << QString("TBD");
+	// Magic number and version.
+	out << (quint32)LIBRARY_ENTRY_MAGIC_NUMBER;
+	out << (quint32)LIBRARY_ENTRY_VERSION;
+	out.setVersion(QDataStream::Qt_5_9);
+	// Write the data.
+	out << myObj.m_url;
+	out << myObj.m_is_populated;
+	out << myObj.m_is_error;
+	out << myObj.m_is_subtrack;
+	out << myObj.m_offset_secs;
+	out << myObj.m_length_secs;
+//	if(isPopulated())
+//	{
+//		M_WARNING("TODO: Don't write out in the has-cached-metadata case")
+//		m_metadata.writeToJson(jo);
+//	}
+	return out;
 }
 
 QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
 {
-	qDebug() << QString("TBD");
+	// Read and check the header.
+	quint32  magic_number;
+	in >> magic_number;
+	if(magic_number != LIBRARY_ENTRY_MAGIC_NUMBER)
+		/// @todo
+		return in;
+	// Read the version
+	quint32 version;
+	in >> version;
+	if(version != LIBRARY_ENTRY_VERSION)
+	{
+		// @todo Can't understand the version.
+		return in;
+	}
+
+	in >> myObj.m_url;
+	in >> myObj.m_is_populated;
+	in >> myObj.m_is_error;
+	in >> myObj.m_is_subtrack;
+	in >> myObj.m_offset_secs;
+	in >> myObj.m_length_secs;
+
 	return in;
 }

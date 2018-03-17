@@ -76,3 +76,9 @@ void Metadata::writeToJson(QJsonObject& jo) const
 //	qDebug() << "Writing Metadata to QJsonObject:" << jo;
 	jo["metadata"] = QJsonObject::fromVariantMap(MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
 }
+
+QDataStream &operator<<(QDataStream &out, const Metadata &myObj)
+{
+	return out;
+}
+
