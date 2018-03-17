@@ -25,9 +25,6 @@
 #include <QFutureWatcher>
 #include <QThreadPool>
 
-////
-#include <QtPromise>
-
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 

@@ -21,7 +21,6 @@
 #define UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 
 /// @todo Experimental
-#include <asyncfuture.h>
 #include "ReportingRunner.h"
 
 #include <QtConcurrent>
