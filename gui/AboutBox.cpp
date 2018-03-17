@@ -47,7 +47,7 @@ AboutBox::AboutBox(QWidget *parent, const Qt::WindowFlags &flags) : QDialog(pare
         "<h2>The Awesome Media Library Manager</h2>"
         "<h3>Because the world needs a Media Library Manager which is Awesome.</h3>"
         "<h4>Version %2</h4>"
-        "<h4>Copyright (c) 2017 Gary R. Van Sickle</h4>"
+		"<h4>Copyright (c) 2017, 2018 Gary R. Van Sickle</h4>"
         "<hr>"
 		"<p><a href=\"https://github.com/gvansickle/AwesomeMediaLibraryManager\">AwesomeMediaLibraryManager</a> is free software: you can redistribute it and/or modify"
 		" it under the terms of the GNU General Public License as published by"

@@ -24,6 +24,9 @@
 #include <QStorageInfo>
 #include <QLoggingCategory>
 #include <QResource>
+#include <KAboutData>
+
+#include <utils/AboutDataSetup.h>
 
 #include <QImageReader>
 #include <QDebug>
@@ -60,6 +63,10 @@ int main(int argc, char *argv[])
 
 	// Create the Qt5 app.
     QApplication app(argc, argv);
+
+	// Set up the KAboutData.
+	KAboutData aboutData = AboutDataSetup::GetKAboutData();
+	KAboutData::setApplicationData(aboutData);
 
     // Set up top-level logging.
     logging.SetMessagePattern("["

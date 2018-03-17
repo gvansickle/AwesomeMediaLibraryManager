@@ -486,7 +486,7 @@ set(SOURCE_FILES
 	logic/ColumnSpec.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	utils/Logging.cpp
-    )
+	utils/AboutDataSetup.cpp utils/AboutDataSetup.h)
 
 # NoMoc files.
 set(HEADER_FILES_UTILS_NOMOC
