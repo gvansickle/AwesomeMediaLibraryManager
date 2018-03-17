@@ -25,6 +25,7 @@
 #include <QLoggingCategory>
 #include <QResource>
 #include <KAboutData>
+#include <QCommandLineParser>
 
 #include <utils/AboutDataSetup.h>
 
@@ -66,6 +67,16 @@ int main(int argc, char *argv[])
 
 	// Set up the KAboutData.
 	KAboutData aboutData = AboutDataSetup::GetKAboutData();
+
+	// Set the application metadata.
+	// "In addition to changing the result of applicationData(), this initializes the equivalent properties of QCoreApplication
+	// (and its subclasses) with information from aboutData, if an instance of that already exists. Those properties are:
+	//
+	//	QCoreApplication::applicationName
+	//  QCoreApplication::applicationVersion
+	//  QCoreApplication::organizationDomain
+	//  QGuiApplication::applicationDisplayName
+	//  QGuiApplication::desktopFileName (since 5.16)"
 	KAboutData::setApplicationData(aboutData);
 
     // Set up top-level logging.
@@ -78,14 +89,6 @@ int main(int argc, char *argv[])
     					+ logging.ClickableLinkPattern() +
 					   /*"%{function}:%{line}*/ " - %{message}"
 					   "%{if-fatal}%{backtrace}%{endif}");
-
-	// Set up app information.
-	app.setApplicationName("AwesomeMediaLibraryManager");
-    app.setApplicationVersion(toqstr(VersionInfo::get_version_quad()));
-    app.setOrganizationName("gvansickle");
-	app.setOrganizationDomain("gvansickle.github.io");
-    app.setApplicationDisplayName("Awesome Media Library Manager");
-	app.setDesktopFileName("AwesomeMediaLibraryManager.desktop");
 
 	// Start the log with the App ID and version info.
 	qInfo() << "LOGGING START";
@@ -112,6 +115,16 @@ int main(int argc, char *argv[])
 	appIcon.addFile(":/icons/oxygen-icons/64x64/apps/preferences-desktop-sound.png");
 	app.setWindowIcon(appIcon);
 
+	// Integrate KAboutData with commandline argument handling
+	QCommandLineParser parser;
+	aboutData.setupCommandLine(&parser);
+	// setup of app specific commandline args
+	// [...]
+	parser.process(app);
+	aboutData.processCommandLine(&parser);
+
+	// Application metadata set, now register to the D-Bus session
+	/// @todo No DBus functionality currently.
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
 	QSettings::setDefaultFormat(QSettings::IniFormat);
