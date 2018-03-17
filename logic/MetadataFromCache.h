@@ -50,4 +50,5 @@ private:
 	virtual MetadataFromCache* clone_impl() const override;
 };
 
+
 #endif // METADATAFROMCACHE_H

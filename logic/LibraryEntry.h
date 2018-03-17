@@ -63,6 +63,8 @@ public:
 	/// @{
 	void writeToJson(QJsonObject& jo) const;
 	void readFromJson(QJsonObject& jo);
+	friend QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
+	friend QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
 	/// @}
 
 	/// @todo Do we want to return some kind of actual Image class here instead?
@@ -116,7 +118,8 @@ inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libent
 {
 	return dbg << libentry.get();
 }
-//inline QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj) { return out << QString("TBD"); };
-//inline QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj) { qDebug() << QString("TBD") ; return in; };
+
+QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
+QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
 
 #endif // LIBRARYENTRY_H

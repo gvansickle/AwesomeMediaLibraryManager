@@ -39,7 +39,7 @@ class SelectionFilterProxyModel : public QSortFilterProxyModel
 			
 	using BASE_CLASS = QSortFilterProxyModel;
 
-signals:
+Q_SIGNALS:
 
 	void selectionModelChanged();
 
@@ -67,7 +67,7 @@ protected:
      */
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
-protected slots:
+protected Q_SLOTS:
 	void onSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 	void onModelChanged(QAbstractItemModel *model);
     

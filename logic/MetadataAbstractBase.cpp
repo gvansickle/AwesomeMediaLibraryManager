@@ -29,6 +29,17 @@
 #include <map>
 #include <string>
 
+/**
+ * Misc Metadata info:
+ *
+ * - DISCID (freedb):
+ * Shows up in cuesheet as e.g. "REM DISCID D00DA810" (http://wiki.hydrogenaud.io/index.php?title=Cue_sheet, http://wiki.hydrogenaud.io/index.php?title=EAC_CUE_Sheets)
+ * https://sound.stackexchange.com/questions/39229/how-is-discid-made-in-cue-sheet-files
+ * " As mentioned in the DiscID howto that you can find here : http://ftp.freedb.org/pub/freedb/misc/freedb_howto1.07.zip,
+ *   The disc ID is an 8-digit hexadecimal (base-16) number, computed using data from a CD's Table-of-Contents (TOC) in MSF (Minute Second Frame) form.
+ *   This document includes a description of the algorithm used to compute the DiscID of a given audio CD."
+ */
+
 /// Interface name to Taglib name map.
 /// @see http://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
 static const std::map<std::string, std::string> f_name_normalization_map =

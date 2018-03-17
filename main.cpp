@@ -36,29 +36,15 @@
 
 #include "resources/VersionInfo.h"
 
+#include "utils/Logging.h"
 
-static void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
-{
-	QString debug_str = qFormatLogMessage(type, context, msg);
-
-#ifdef Q_OS_WIN
-	OutputDebugString(debug_str.toStdWString().c_str());
-#else
-	std::cerr << debug_str.toStdString() << std::endl;
-#endif
-}
 
 int main(int argc, char *argv[])
 {
-    // Allow us to see qDebug() messages, except for mouse movement.
-    QLoggingCategory::setFilterRules("*.debug=true\n"
-                                     "qt.qpa.input*.debug=false\n"
-                                     "qt.*=false\n");
+	Logging logging;
 
-	if(true/** @todo We're running under a debugger.  This still doesn't work on Windows.*/)
-    {
-		qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
-    }
+	logging.SetFilterRules();
+	logging.InstallMessageHandler();
 
 	// App-wide settings.
 	// http://doc.qt.io/qt-5/qt.html#ApplicationAttribute-enum
@@ -76,13 +62,14 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     // Set up top-level logging.
-	qSetMessagePattern("["
+    logging.SetMessagePattern("["
 					   "%{time hh:mm:ss.zzz} "
 					   "%{threadid} "
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
 					   "%{if-fatal}FATAL%{endif}"
-					   "] "
-					   "%{function}:%{line} - %{message}"
+					   "]"
+    					+ logging.ClickableLinkPattern() +
+					   /*"%{function}:%{line}*/ " - %{message}"
 					   "%{if-fatal}%{backtrace}%{endif}");
 
 	// Set up app information.
@@ -102,7 +89,6 @@ int main(int argc, char *argv[])
 	RegisterQtMetatypes();
 
     // Load the icon resources.
-	bool opened = false;
 	auto rccs = {"icons_oxygen.rcc", "icons_Tango.rcc", "icons_App.rcc"};
 	for(auto fname : rccs)
 	{

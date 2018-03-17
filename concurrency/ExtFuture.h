@@ -103,6 +103,7 @@ std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
  * Note that QFuture<> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<>
  * has the same properties.  In this, they're both more similar to std::experimental::shared_future than ::future,
  * the latter of which has a deleted copy constructor.
+ *
  * QFuture<> itself only implements the following:
  * - Default constructor, which initializes its "private" (actually currently public) "mutable QFutureInterface<T> d;" underlying
  *   QFuterInterface<> object like so:
@@ -110,6 +111,7 @@ std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
  *     	... : d(QFutureInterface<T>::canceledResult())
  *     @endcode
  * - An expicit QFuture(QFutureInterface<T> *p) constructor commented as "internal".
+ *
  * QFuture<t> doesn't inherit from anything, so copy constructor/assignment/etc. are all defaults.
  */
 template <typename T>
@@ -178,21 +180,13 @@ public:
 
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
+	 *
+	 * @todo Not sure if we need this or not.  .then() has an unwrapping overload.
 	 */
 //	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other);
 
 
-//	ExtFuture(const ExtFuture<T>& other) : QFutureInterface<T>(other),
-//			m_continuation_function(other.m_continuation_function),
-//			m_tap_function(other.m_tap_function)
-//	{
-//		qIn() << "Copy Constructor";
-//
-////		if(other.m_continuation_function != nullptr)
-////		{
-////			Q_ASSERT(0);
-////		}
-//	}
+	// Do we need a non-default copy constructor?
 
 	ExtFuture(const QFutureInterface<T> &other) : QFutureInterface<T>(other)
 	{
@@ -213,25 +207,12 @@ public:
 	 */
 	~ExtFuture() override
 	{
-		qDb() << "DESTRUCTOR";
+//		qDb() << "DESTRUCTOR";
 		/// @note Since we're based on QFutureInterface<T> <- QFutureInterfaceBase, it handles the underlying
 		/// refcounting for us.  So we may be getting destroyed after we've been copied, which is ok.
 
 		/// @todo Find a way to assert if we're still running/not finished and haven't been copied.
 		/// This would indicate a dangling future.
-
-//		/// Warn if we're being destroyed before having been finished.
-//		if(this->isStarted() && !this->isFinished())
-//		{
-//			if(this->isRunning())
-//			{
-//				// We're still running, this is almost certainly an error.
-//				Q_ASSERT_X(0, "ExtFuture<> destructor", "Destroyed while still running");
-//			}
-//			qWr() << "STARTED, NOT FINISHED";
-//		}
-
-//		qWr() << "m_extfuture_watcher:" << m_extfuture_watcher;
 	}
 
 	/// @name Copy and move operators.
@@ -246,23 +227,11 @@ public:
 	 * For explicitly unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
 	 * Inspired by Facebook's Folly Futures.
 	 */
+#if 0 /// @todo
 	template <typename F>
 	std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
 	unwrap();
-
-//	template <typename ExtFutureT = std::enable_if_t<isExtFuture_v<T>, >>
-	/// Per:
-	/// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3857.pdf
-	/// http://en.cppreference.com/w/cpp/experimental/shared_future/then
-	/// We'll just return a "proxy" of the inner ExtFuture<> here, ignoring the
-	/// outer ExtFuture<>.
-	/// This should be pretty easy given our underlying QFutureInterface<>.
-//	ExtFuture<typename isExtFuture<T>::inner_t> unwrap()
-//	{
-////		static_assert(NestedExtFuture<T>, "");
-//		// this is a nested ExtFuture.
-//		return this->
-//	}
+#endif
 
 	/**
 	 * Waits until the ExtFuture is finished, and returns the result.
@@ -492,17 +461,17 @@ protected:
 		auto watcher = new QFutureWatcher<T>();
 
 		auto retval = new ExtFuture<R>();
-		qDb() << "NEW EXTFUTURE:" << *retval;
+//		qDb() << "NEW EXTFUTURE:" << *retval;
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher,
 						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable -> void {
 			// Call the then() callback function.
-			qDb() << "THEN WRAPPER CALLED";
+//			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
 			retval->reportResult(then_cb(std::move(args)...));
 			s_was_ever_called = true;
 			retval->reportFinished();
-			qDb() << "RETVAL STATUS:" << *retval;
+//			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
@@ -511,7 +480,7 @@ protected:
 		});
 		// Start watching this ExtFuture.
 		watcher->setFuture(this->future());
-		qDb() << "RETURNING:" << *retval;
+//		qDb() << "RETURNING:" << *retval;
 		return *retval;
 	}
 
@@ -521,7 +490,6 @@ protected:
 	template <typename F, typename R = ct::return_type_t<F>>
 	ExtFuture<T> FinallyHelper(QObject* context, F&& finally_callback)
 	{
-//		qDb() << "ENTER";
 		static_assert(std::tuple_size_v<ct::args_t<F>> == 0, "Too many args");
 
 		auto watcher = new QFutureWatcher<T>();
@@ -539,7 +507,6 @@ M_WARNING("TODO: LEAKS THIS");
 		});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
-//		qDb() << "EXIT";
 		return *retval;
 	}
 
@@ -554,23 +521,22 @@ M_WARNING("TODO: LEAKS THIS");
 	TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
 		static std::atomic_bool s_was_ever_called {false};
-//		qDb() << "ENTER";
+
 		auto watcher = new QFutureWatcher<T>();
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
 				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
-					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
-						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
+//					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
+//						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
 					// Call the tap callback with the incoming result value.
 					tap_cb(watcher->future().resultAt(index));
 					s_was_ever_called = true;
 			});
 		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
-			qWr() << "TapHelper ExtFutureWatcher DESTROYED";
+//			qWr() << "TapHelper ExtFutureWatcher DESTROYED";
 			Q_ASSERT(s_was_ever_called);
 		});
 		watcher->setFuture(this->future());
-//		qDb() << "EXIT";
 		return *this;
 	}
 
@@ -592,13 +558,7 @@ M_WARNING("TODO: LEAKS THIS");
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
-//	std::shared_ptr<ContinuationType> m_continuation_function;
-
-//	std::shared_ptr<TapCallbackType> m_tap_function;
-
 	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
-
-
 };
 
 
@@ -629,7 +589,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 
 
 // Include the implementation.
-#include <utils/concurrency/impl/ExtFuture_p.hpp>
+#include "impl/ExtFuture_impl.hpp"
 
 /**
  * Create and return a finished future of type ExtFuture<T>.

@@ -137,4 +137,9 @@ public:
 
 };
 
+
+QDataStream &operator<<(QDataStream &out, const Metadata &myObj);
+QDataStream &operator>>(QDataStream &in, Metadata &myObj);
+
+
 #endif // METADATA_H

@@ -17,10 +17,10 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_
-#define UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_
+#ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
+#define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 
-
+#if 0
 /**
  * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
  * Implementation based on Facebook's "folly" library's Future (Apache 2.0)
@@ -38,6 +38,8 @@ ExtFuture<T>::unwrap()
 		return internal_extfuture;
 		});
 }
+#endif
+
 
 template<typename T>
 T ExtFuture<T>::get()
@@ -156,4 +158,4 @@ namespace ExtAsync
 //extern template class ExtFuture<Unit>;
 //extern template class ExtFuture<QString>;
 
-#endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_P_HPP_ */
+#endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_ */

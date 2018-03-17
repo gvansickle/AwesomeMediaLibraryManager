@@ -108,7 +108,7 @@ print_compilers_and_params()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Export compile commands.
-# FBO clang-tidy, iwyu, etc.
+# FBO Eclipse, clang-tidy, iwyu, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set default install location to dist folder in build dir
@@ -169,6 +169,12 @@ if(FALSE)
 	  get_target_property(_loc ${plugin} LOCATION)
 	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
 	endforeach()
+endif()
+
+# Maybe some KDE extensions.
+if(TRUE) ## USE_KDE_KIO
+find_package(KF5KIO)
+set(KIO_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 endif()
 
 # And Boost.  Sorry.
@@ -412,6 +418,7 @@ set(HEADER_FILES
 	gui/mdi/MDIModelViewPair.h
 	logic/ColumnSpec.h
 	logic/proxymodels/QPersistentModelIndexVec.h
+	utils/Logging.h
     )
 
 # Source file list.
@@ -450,7 +457,7 @@ set(SOURCE_FILES
 	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
 	gui/ActivityProgressWidget.cpp
-	utils/concurrency/ReportingRunner.cpp
+	concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	gui/AboutBox.cpp
 	utils/RegisterQtMetatypes.cpp
@@ -477,6 +484,7 @@ set(SOURCE_FILES
 	gui/mdi/MDIModelViewPair.cpp
 	logic/ColumnSpec.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
+	utils/Logging.cpp
     )
 
 # NoMoc files.
@@ -487,21 +495,21 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
 # Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
-	utils/concurrency/ReportingRunner.h
-	utils/concurrency/AsyncTaskManager.h
-	utils/concurrency/ExtendedDeferred.h
-	utils/concurrency/ExtFuture.h
-	utils/concurrency/ExtFutureWatcher.h
-	utils/concurrency/impl/ExtFuture_fwddecl_p.h
-	utils/concurrency/impl/ExtFuture_p.hpp
-	utils/concurrency/ExtAsync.h
-	utils/concurrency/ExtAsyncTask.h
-	utils/concurrency/function_traits.hpp
+	concurrency/ReportingRunner.h
+	concurrency/AsyncTaskManager.h
+	concurrency/ExtendedDeferred.h
+	concurrency/ExtFuture.h
+	concurrency/ExtFutureWatcher.h
+	concurrency/impl/ExtFuture_fwddecl_p.h
+	concurrency/impl/ExtFuture_impl.hpp
+	concurrency/ExtAsync.h
+	concurrency/ExtAsyncTask.h
+	concurrency/function_traits.hpp
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
-	utils/concurrency/AsyncTaskManager.cpp
-	utils/concurrency/ExtAsync.cpp
-	utils/concurrency/function_traits.cpp
+	concurrency/AsyncTaskManager.cpp
+	concurrency/ExtAsync.cpp
+	concurrency/function_traits.cpp
 	)
 
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
@@ -530,10 +538,7 @@ cmake_print_variables(META_FILES_TO_INCLUDE)
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
-add_library(icon_rccs INTERFACE)
-target_sources(icon_rccs INTERFACE icons_oxygen icons_Tango icons_App)
-#print_target_properties(icons_oxygen)
-
+set(icon_rccs icons_oxygen icons_Tango icons_App)
 
 ###
 ### The main executable.
@@ -566,12 +571,13 @@ set_target_properties(${PROJECT_NAME}
     PROPERTIES AUTOMOC ON)
 # The libs.
 set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
+		${KIO_LINK_LIBS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits)
 target_link_libraries(${PROJECT_NAME}
         ${PROJECT_COMMON_LINK_LIBS}
 		)
-add_dependencies(${PROJECT_NAME} icon_rccs)
+add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
 
@@ -608,10 +614,10 @@ set(TEST_EXE_TARGET alltests)
 set(SOURCE_FILES_TEST)
 set(HEADER_FILES_TEST)
 list(APPEND SOURCE_FILES_TEST
-	utils/concurrency/tests/AsyncTests.cpp)
+	concurrency/tests/AsyncTests.cpp)
 list(APPEND
 	tests/TestHelpers.h
-	utils/concurrency/tests/AsyncTests.h)
+	concurrency/tests/AsyncTests.h)
 
 add_executable(${TEST_EXE_TARGET}
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
@@ -658,7 +664,7 @@ install(FILES
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
     ALL
-    DEPENDS ${PROJECT_NAME} icon_rccs
+	DEPENDS ${PROJECT_NAME} icons_oxygen icons_Tango icons_App
     COMMENT "Packaging ${PROJECT_NAME}...")
 if(WIN32)
     # Add custom commands and install targets for Qt windeploy.

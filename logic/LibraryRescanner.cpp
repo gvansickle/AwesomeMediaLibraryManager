@@ -25,26 +25,14 @@
 
 #include <QThread>
 #include <QtConcurrent>
-#if 0//def USE_BUNDLED_ASYNCFUTURE
-#include <asyncfuture.h>
-#include <utils/concurrency/ExtendedDeferred.h>
 
-// Simon Brunel's QtPromise.
-// https://github.com/simonbrunel/qtpromise
-#include <QtPromise>
-#endif
-
-//#include <utils/concurrency/ExtFutureWatcher.h>
-#include <utils/concurrency/ExtAsync.h>
-//#include <utils/concurrency/ExtFuture.h>
-
-#include <utils/concurrency/runextensions.h>
+#include <concurrency/ExtAsync.h>
 
 #include <utils/DebugHelpers.h>
 
 #include "utils/AsyncDirScanner.h"
-#include "utils/concurrency/AsyncTaskManager.h"
-#include "utils/concurrency/ReportingRunner.h"
+#include <concurrency/AsyncTaskManager.h>
+#include <concurrency/ReportingRunner.h>
 #include "logic/LibraryModel.h"
 
 
@@ -169,64 +157,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	// Create the ControlledTask which will scan the directory tree for files.
 
-#if 0 // USE_BUNDLED_SB_QTPROMISE Simon Brunel's qtpromise.
-	using namespace QtPromise;
-
-	QFutureInterface<QString> future_interface = ReportingRunner::runFI(new AsyncDirScanner(dir_url,
-												  QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-												  QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
-
-	QPromise<QString> promise = qPromise(future_interface.future());
-
-	ExtFutureWatcher<QString>* fw = new ExtFutureWatcher<QString>();
-
-	fw->onProgressChange([=](int min, int val, int max, QString text) -> void {
-					qDebug() << M_THREADNAME() << "PROGRESS+TEXT SIGNAL: " << min << val << max << text;
-					Q_EMIT progressChanged(min, val, max, text);
-					;})
-				.onReportResult([this, &future_interface](QString s, int index) {
-					Q_UNUSED(index);
-					/// @note This lambda is called in an arbitrary thread context.
-//					qDebug() << M_THREADNAME() << "RESULT:" << s << index;
-
-					// This is not threadsafe:
-					/// WRONG: this->m_current_libmodel->onIncomingFilename(s);
-
-//					/// EXPERIMENTAL
-//					static int fail_counter = 0;
-//					fail_counter++;
-//					if(fail_counter > 5)
-//					{
-////						future_interface.cancel();
-//						throw QException();
-//					}
-
-					// This is threadsafe.
-					QMetaObject::invokeMethod(this->m_current_libmodel, "onIncomingFilename", Q_ARG(QString, s));
-				})
-				.setFuture(future_interface);
-
-	qDebug() << "future is finished:" << fw->future().isFinished() << "isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
-
-	promise.then([&](){
-		// promise was fulfilled.
-		qDebug() << M_THREADNAME() << "Directory scan complete.";
-		m_last_elapsed_time_dirscan = m_timer.elapsed();
-		qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
-		// Directory traversal complete, start rescan.
-		onDirTravFinished();
-	}).fail([](const QException& e){
-		// dir scanning threw an exception.
-		qWarning() << "EXCEPTION:" << e.what();
-	}).fail([](){
-		// Catch-all fail.
-		qWarning() << "FAIL";
-		;}); //.wait();
-
-	qDebug() << "future is finished:" << fw->future().isFinished() <<"isPending/Fulfilled:" << promise.isPending() << promise.isFulfilled();
-
-#elif 1 /// ExtAsync
-
 //	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
 	m_dirtrav_future = AsyncDirectoryTraversal(dir_url);
 	qDb() << "ExtFuture<> RETURNED FROM ASYNCDIRTRAV:" << m_dirtrav_future;
@@ -252,8 +182,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //	//throw QException();
 //	qDebug() << "ERROR";
 
-#endif // Which future/promise to use.
-
 	qDb() << "END:" << dir_url;
 }
 
@@ -273,17 +201,16 @@ ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 	qDb() << "RETURNED FROM ExtAsync:" << result;
 
 	result.tap(this, [=](QString str){
-		qDb() << "FROM TAP:" << str;
-		qDb() << "IN onResultReady CALLBACK:" << result;
+//		qDb() << "FROM TAP:" << str;
+//		qDb() << "IN onResultReady CALLBACK:" << result;
 		runInObjectEventLoop([=](){ m_current_libmodel->onIncomingFilename(str);}, m_current_libmodel);
 	})
 	.tap(this, [=](ExtAsyncProgress prog) {
 		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
-
 	;})
 	.then(this, [=](ExtFuture<QString> dummy){
 		qDb() << "FROM THEN:" << dummy;
-		return QString("anotherdummy");
+		return unit;
 	;});
 
 
@@ -327,12 +254,9 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 		QString entry_path = m_dir_iterator.next();
 		auto file_info = m_dir_iterator.fileInfo();
 
-		qDb() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
-
 		if(file_info.isDir())
 		{
 			QDir dir = file_info.absoluteDir();
-			qDb() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
 
 			// Update the max range to be the number of files we know we've found so far plus the number
 			// of files potentially in this directory.
@@ -345,14 +269,11 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 			// It's a file.
 			num_files_found_so_far++;
 
-			qDb() << "ITS A FILE";
-
 			QUrl file_url = QUrl::fromLocalFile(entry_path);
 
 			// Send this path to the future.
 			future.reportResult(file_url.toString());
 
-			qDb() << "resultCount:" << future.resultCount();
 			// Update progress.
 			future.setProgressValueAndText(num_files_found_so_far, status_text);
 		}
@@ -388,46 +309,21 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 
     m_timer.start();
 
-M_WARNING("EXPERIMENTAL");
-#if 0
-	m_async_task_manager.addFuture(QtConcurrent::mapped(items_to_rescan,
-									   std::bind(&LibraryRescanner::refresher_callback, this, _1)),
-								   [this](int index, QFuture<MetadataReturnVal> f){
-		qDebug() << "RESULT.  this:" << this << "int:" << index;
-		qDebug() << "Current thread:" << QThread::currentThread()->objectName();
-		this->onResultReadyAt(index, f);
-	},
-									[](){
-		qDebug() << "FINISHED";
-		qDebug() << "Current thread:" << QThread::currentThread()->objectName();
-		},
-									[](){ qDebug() << "CANCELLED"; }
-	);
+	ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(items_to_rescan,
+	                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
 
-#elif 0
-	// Start the mapped operation, set the future watcher to the returned future, and we're scanning.
-	m_rescan_future_watcher.setFuture(QtConcurrent::mapped(
-			items_to_rescan,
-			std::bind(&LibraryRescanner::refresher_callback, this, _1)));
-#elif 1
-
-    m_futureww
-//	.on_resultat([](int at){
-//        qDebug() << "RESULT AT:" << at << "THREAD:" << QThread::currentThread()->objectName();
-//    })
-	.on_result([this](auto a){
-    	this->processReadyResults(a);
-    })
-	.on_progress([=](int min, int max, int val){
-		emit progressChanged(min, val, max, progtext);
-    })
-    .then([=](){
-    	qDebug() << "METADATA RESCAN FINISHED, THREAD:" << QThread::currentThread()->objectName();
-    	onRescanFinished();
-    });
-    m_futureww = QtConcurrent::mapped(items_to_rescan,
-                                    std::bind(&LibraryRescanner::refresher_callback, this, _1));
-#endif
+	future.tap(this, [this](MetadataReturnVal a) {
+		// The result is ready tap.
+		this->processReadyResults(a);
+	})
+	.tap(this, [=](ExtAsyncProgress prog) {
+		// Progress update tap.
+		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, progtext);
+	;})
+	.finally([this](){
+		qDb() << "METADATA RESCAN COMPLETE";
+		onRescanFinished();
+	});
 }
 
 void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
@@ -494,7 +390,7 @@ void LibraryRescanner::onRescanFinished()
 	qInfo() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 	qInfo() << "Metadata rescan took" << elapsed << "ms";
 	// Send out progress text.
-	emit progressChanged(0, 0, 0, "Idle");
+	Q_EMIT progressChanged(0, 0, 0, "Idle");
 }
 
 void LibraryRescanner::onDirTravFinished()
@@ -502,7 +398,7 @@ void LibraryRescanner::onDirTravFinished()
 	qDb() << "Async Dir Trav reports fisished.";
 
 	// Send out progress text.
-	emit progressChanged(0, 0, 0, "Idle");
+	Q_EMIT progressChanged(0, 0, 0, "Idle");
 
 	/// @todo Should be a lambda.
 	///m_current_libmodel->onIncomingFilenamesComplete();
