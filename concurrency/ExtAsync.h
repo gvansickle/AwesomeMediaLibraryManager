@@ -62,7 +62,8 @@ template <typename T> class ExtFuture;
  * - Facebook's Folly Futures
  * - Boost
  * - mhogomchungu's "tasks": https://github.com/mhogomchungu/tasks
- * - ....
+ * - Simon Brunel's QtPromise: https://github.com/simonbrunel/qtpromise
+ * - And many many other sources I can't even begin to remember.
  */
 
 /**
