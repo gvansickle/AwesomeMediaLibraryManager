@@ -457,7 +457,7 @@ set(SOURCE_FILES
 	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
 	gui/ActivityProgressWidget.cpp
-	utils/concurrency/ReportingRunner.cpp
+	concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	gui/AboutBox.cpp
 	utils/RegisterQtMetatypes.cpp
@@ -614,10 +614,10 @@ set(TEST_EXE_TARGET alltests)
 set(SOURCE_FILES_TEST)
 set(HEADER_FILES_TEST)
 list(APPEND SOURCE_FILES_TEST
-	utils/concurrency/tests/AsyncTests.cpp)
+	concurrency/tests/AsyncTests.cpp)
 list(APPEND
 	tests/TestHelpers.h
-	utils/concurrency/tests/AsyncTests.h)
+	concurrency/tests/AsyncTests.h)
 
 add_executable(${TEST_EXE_TARGET}
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
