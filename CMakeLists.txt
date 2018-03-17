@@ -171,13 +171,23 @@ if(FALSE)
 	endforeach()
 endif()
 
+#
 # Maybe some KDE extensions.
-if(TRUE) ## USE_KDE_KIO
-find_package(KF5KIO)
-set(KIO_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+#
+set(KIO_LINK_LIBS)
+if(TRUE) ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	find_package(KF5KIO)
+	list(APPEND KIO_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+endif()
+if(TRUE) ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
+	# ATM this is for KConfig.
+	find_package(KF5CoreAddons)
+	list(APPEND KIO_LINK_LIBS KF5::CoreAddons)
 endif()
 
-# And Boost.  Sorry.
+#
+# And Boost.  Sorry.  But just CallableTraits, has no other deps.
+#
 # See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
 ### CallableTraits only in 1.66+.
 #set(Boost_USE_MULTITHREADED      ON)
@@ -346,15 +356,6 @@ endif()
 # Verdigris is just two headers.
 set(USE_BUNDLED_VERDIGRIS 1)
 set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
-
-# AsyncFuture is just one header.
-set(USE_BUNDLED_ASYNCFUTURE 1)
-set(INCLUDE_DIR_ASYNCFUTURE third_party/asyncfuture)
-list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_ASYNCFUTURE}/asyncfuture.h)
-
-set(USE_BUNDLED_QTPROMISE 1)
-set(INCLUDE_DIR_QTPROMISE third_party/qtpromise/include)
-#list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_QTPROMISE}/QtPromise)
 
 # Main program header files.
 set(HEADER_FILES
@@ -557,10 +558,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
 	"QT_DEPRECATED_WARNINGS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
 if(NOT WIN32)
 target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
@@ -630,10 +629,8 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
 	"QT_DEPRECATED_WARNINGS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
 	"QFUTURE_TEST")
 target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_include_directories(${TEST_EXE_TARGET} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${TEST_EXE_TARGET} PROPERTIES AUTOMOC ON)
