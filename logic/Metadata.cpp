@@ -30,6 +30,8 @@
 #include <string>
 #include <map>
 
+#include <utils/DebugHelpers.h>
+
 static std::map<AudioFileType, std::string> f_filetype_to_string_map =
 {
 	{AudioFileType::UNKNOWN, "unknown"},
@@ -79,6 +81,12 @@ void Metadata::writeToJson(QJsonObject& jo) const
 
 QDataStream &operator<<(QDataStream &out, const Metadata &myObj)
 {
+	M_WARNING("TODO");
 	return out;
 }
 
+QDataStream &operator>>(QDataStream &in, Metadata &myObj)
+{
+	M_WARNING("TODO");
+	return in;
+}
