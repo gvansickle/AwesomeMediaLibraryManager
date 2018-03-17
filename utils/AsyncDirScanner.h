@@ -25,7 +25,7 @@
 #include <QDirIterator>
 #include <QDebug>
 
-#include <utils/concurrency/ReportingRunner.h>
+#include <concurrency/ReportingRunner.h>
 
 /**
  * Class for asynchronously scanning a directory tree.

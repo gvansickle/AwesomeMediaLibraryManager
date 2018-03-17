@@ -22,7 +22,7 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 
-#include <utils/concurrency/ExtFuture.h>
+#include <concurrency/ExtAsync.h>
 
 #include <memory>
 #include <QtCore/QObject>
@@ -31,7 +31,7 @@
 #include <QtCore/QFuture>
 #include <QtCore/QFutureWatcher>
 
-#include <utils/concurrency/AsyncTaskManager.h>
+#include <concurrency/AsyncTaskManager.h>
 
 class LibraryModel;
 class LibraryEntry;

@@ -25,26 +25,14 @@
 
 #include <QThread>
 #include <QtConcurrent>
-#if 0//def USE_BUNDLED_ASYNCFUTURE
-#include <asyncfuture.h>
-#include <utils/concurrency/ExtendedDeferred.h>
 
-// Simon Brunel's QtPromise.
-// https://github.com/simonbrunel/qtpromise
-#include <QtPromise>
-#endif
-
-//#include <utils/concurrency/ExtFutureWatcher.h>
-#include <utils/concurrency/ExtAsync.h>
-//#include <utils/concurrency/ExtFuture.h>
-
-#include <utils/concurrency/runextensions.h>
+#include <concurrency/ExtAsync.h>
 
 #include <utils/DebugHelpers.h>
 
 #include "utils/AsyncDirScanner.h"
-#include "utils/concurrency/AsyncTaskManager.h"
-#include "utils/concurrency/ReportingRunner.h"
+#include <concurrency/AsyncTaskManager.h>
+#include <concurrency/ReportingRunner.h>
 #include "logic/LibraryModel.h"
 
 
