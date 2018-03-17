@@ -495,21 +495,21 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
 # Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
-	utils/concurrency/ReportingRunner.h
-	utils/concurrency/AsyncTaskManager.h
-	utils/concurrency/ExtendedDeferred.h
-	utils/concurrency/ExtFuture.h
-	utils/concurrency/ExtFutureWatcher.h
-	utils/concurrency/impl/ExtFuture_fwddecl_p.h
-	utils/concurrency/impl/ExtFuture_impl.hpp
-	utils/concurrency/ExtAsync.h
-	utils/concurrency/ExtAsyncTask.h
-	utils/concurrency/function_traits.hpp
+	concurrency/ReportingRunner.h
+	concurrency/AsyncTaskManager.h
+	concurrency/ExtendedDeferred.h
+	concurrency/ExtFuture.h
+	concurrency/ExtFutureWatcher.h
+	concurrency/impl/ExtFuture_fwddecl_p.h
+	concurrency/impl/ExtFuture_impl.hpp
+	concurrency/ExtAsync.h
+	concurrency/ExtAsyncTask.h
+	concurrency/function_traits.hpp
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
-	utils/concurrency/AsyncTaskManager.cpp
-	utils/concurrency/ExtAsync.cpp
-	utils/concurrency/function_traits.cpp
+	concurrency/AsyncTaskManager.cpp
+	concurrency/ExtAsync.cpp
+	concurrency/function_traits.cpp
 	)
 
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
