@@ -174,15 +174,20 @@ endif()
 #
 # Maybe some KDE extensions.
 #
-set(KIO_LINK_LIBS)
+set(KF5_LINK_LIBS)
 if(TRUE) ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
 	find_package(KF5KIO)
-	list(APPEND KIO_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+	list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 endif()
 if(TRUE) ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	# ATM this is for KConfig.
 	find_package(KF5CoreAddons)
-	list(APPEND KIO_LINK_LIBS KF5::CoreAddons)
+	list(APPEND KF5_LINK_LIBS KF5::CoreAddons)
+endif()
+if(TRUE) ## USE_KF5_XMLGUI, git clone git://anongit.kde.org/kxmlgui.git
+	# ATM this is for KMainWindow.
+	find_package(KF5CmlGui)
+	list(APPEND KF5_LINK_LIBS KF5::XmlGui)
 endif()
 
 #
@@ -570,7 +575,7 @@ set_target_properties(${PROJECT_NAME}
     PROPERTIES AUTOMOC ON)
 # The libs.
 set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-		${KIO_LINK_LIBS}
+		${KF5_LINK_LIBS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits)
 target_link_libraries(${PROJECT_NAME}

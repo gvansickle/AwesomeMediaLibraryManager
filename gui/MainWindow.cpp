@@ -944,7 +944,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 
 void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 {
-	qDebug() << "Keyboard focus has changed from" << old << "to" << now;
+//	qDebug() << "Keyboard focus has changed from" << old << "to" << now;
 }
 
 void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)

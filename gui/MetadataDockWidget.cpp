@@ -252,7 +252,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
 
 void MetadataDockWidget::onProxyModelChange(bool has_rows)
 {
-	qDebug() << "MODELWATCHER DETECTED CHANGE IN PROXY MODEL";
+//	qDebug() << "MODELWATCHER DETECTED CHANGE IN PROXY MODEL";
 
 	if(has_rows)
 	{
