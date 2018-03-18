@@ -131,6 +131,8 @@ public Q_SLOTS:
 
     void startSettingsDialog();
 
+    void onOpenShortcutDlg();
+
     /// @name Edit action forwarders.
     /// @{
     void onCut();
@@ -195,6 +197,7 @@ private:
     void createActions();
     void createActionsEdit();
 	void createActionsView();
+	void createActionsTools();
 
     void createMenus();
     void createToolBars();
@@ -305,7 +308,6 @@ private:
     QAction* m_savePlaylistAct;
     QAction* m_exitAction;
     QAction* m_scanLibraryAction;
-    QAction* m_settingsAct;
     /// @}
 
     /// @name Edit actions.
@@ -326,7 +328,8 @@ private:
 
 	QAction* m_rescanLibraryAct;
 	QAction* m_cancelRescanAct;
-
+	QAction* m_settingsAct;
+	QAction* m_act_shortcuts_dialog;
 	/// @}
 
 	/// View actions.

@@ -23,6 +23,8 @@
 #include <KMainWindow>
 #include <KHelpMenu>
 #include <KToolBar>
+#include <KShortcutsDialog>
+#include <KActionCollection>
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -358,6 +360,8 @@ void MainWindow::createActions()
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
 
+	createActionsTools();
+
 	//
     // Window actions.
 	//
@@ -476,6 +480,14 @@ void MainWindow::createActionsView()
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
 }
 
+void MainWindow::createActionsTools()
+{
+	m_act_shortcuts_dialog = make_action(Theme::iconFromTheme(""),
+	                                 tr("Edit Shortcuts..."), this);
+
+	connect_trig(m_act_shortcuts_dialog, this, &MainWindow::onOpenShortcutDlg);
+}
+
 void MainWindow::createMenus()
 {
 	m_fileMenu = menuBar()->addMenu(tr("&File"));
@@ -524,6 +536,7 @@ void MainWindow::createMenus()
 		 m_cancelRescanAct,
 		 m_toolsMenu->addSection("Settings"),
 		 m_settingsAct,
+		 m_act_shortcuts_dialog
                 });
 
     // Create the Window menu.
@@ -1574,6 +1587,20 @@ void MainWindow::startSettingsDialog()
 	m_settings_dlg->activateWindow();
 }
 
+void MainWindow::onOpenShortcutDlg()
+{
+M_WARNING("TODO");
+	KActionCollection action_collection(this);
+	action_collection.addAction("Close", m_act_close);
+	action_collection.addAction("Close all", m_act_close_all);
+	KShortcutsDialog::configure( &action_collection );
+//	KShortcutsDialog dlg;
+////	dlg.addCollection(myActions);
+//	dlg.setModal(false);
+////	connect(&dlg, SIGNAL(saved()), this, SLOT(doExtraStuff()));
+//	dlg.configure();
+}
+
 void MainWindow::changeStyle(const QString& styleName)
 {
 	qDebug() << "signaled to set Style to" << styleName;
@@ -1667,4 +1694,5 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *subwindow)
 		}
 	}
 }
+
 
