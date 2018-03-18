@@ -189,6 +189,10 @@ if(TRUE) ## USE_KF5_XMLGUI, git clone git://anongit.kde.org/kxmlgui.git
 	find_package(KF5CmlGui)
 	list(APPEND KF5_LINK_LIBS KF5::XmlGui)
 endif()
+if(TRUE) ## USE_KF5_CONFIG
+	find_package(KF5Config)
+	list(APPEND KF5_LINK_LIBS KF5::Config KF5::ConfigWidgets)
+endif()
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
