@@ -44,14 +44,26 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
+set(QT_MIN_VERSION "5.3.0")
+set(KF5_MIN_VERSION "5.2.0")
+# KDE extra-cmake-modules, see https://api.kde.org/ecm/
+find_package(ECM REQUIRED NO_MODULE)
+
 # Add folder where we keep support *.cmake's.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_SOURCE_DIR}/cmake)
 
 # Prevent an in-root-of-src-tree build.
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
         message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
+
+### KDE stuff
+#include(KDEInstallDirs)
+#include(KDECMakeSettings)
+#include(KDECompilerSettings NO_POLICY_SCOPE)
+include(FeatureSummary)
+###
 
 # Use ccache if it's available.
 find_program(CCACHE_PROGRAM ccache)
@@ -175,24 +187,25 @@ endif()
 # Maybe some KDE extensions.
 #
 set(KF5_LINK_LIBS)
-if(TRUE) ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
-	find_package(KF5KIO)
-	list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-endif()
-if(TRUE) ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
-	# ATM this is for KConfig.
-	find_package(KF5CoreAddons)
-	list(APPEND KF5_LINK_LIBS KF5::CoreAddons)
-endif()
-if(TRUE) ## USE_KF5_XMLGUI, git clone git://anongit.kde.org/kxmlgui.git
+find_package(KF5 REQUIRED COMPONENTS
+	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
+	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+
+#if(TRUE) ## USE_KF5_XMLGUI, git clone git://anongit.kde.org/kxmlgui.git
 	# ATM this is for KMainWindow.
-	find_package(KF5CmlGui)
-	list(APPEND KF5_LINK_LIBS KF5::XmlGui)
-endif()
-if(TRUE) ## USE_KF5_CONFIG
-	find_package(KF5Config)
-	list(APPEND KF5_LINK_LIBS KF5::Config KF5::ConfigWidgets)
-endif()
+	XmlGui
+#endif()
+#if(TRUE) ## USE_KF5_CONFIG
+	Config
+	ConfigWidgets
+#endif()
+)
+list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+list(APPEND KF5_LINK_LIBS KF5::CoreAddons)
+list(APPEND KF5_LINK_LIBS KF5::XmlGui)
+list(APPEND KF5_LINK_LIBS KF5::ConfigCore KF5::ConfigGui)
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
@@ -549,6 +562,9 @@ qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 set(icon_rccs icons_oxygen icons_Tango icons_App)
+
+# Add KConfig file.
+KCONFIG_ADD_KCFG_FILES(SOURCE_FILES settings.kcfgc)
 
 ###
 ### The main executable.

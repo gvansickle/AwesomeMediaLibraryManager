@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+  <kcfgfile name="awesomemedialibrarymanagerrc"/>
+  <group name="General">
+    <entry name="UseQuestionMarks" type="Bool" key="question mark">
+      <label>Whether the "unsure" marker may be used.</label>
+      <default>true</default>
+    </entry>
+  </group>
+  <group name="Options">
+    <entry name="CustomWidth" type="Int" key="custom width">
+      <label>The width of the playing field.</label>
+      <min>5</min>
+      <max>50</max>
+      <default>10</default>
+    </entry>
+    <entry name="CustomHeight" type="Int" key="custom height">
+      <label>The height of the playing field.</label>
+      <min>5</min>
+      <max>50</max>
+      <default>10</default>
+    </entry>
+    <entry name="CustomMines" type="Int" key="custom mines">
+      <label>The number of mines in the playing field.</label>
+      <min>1</min>
+      <default>20</default>
+    </entry>
+  </group>
+</kcfg>
