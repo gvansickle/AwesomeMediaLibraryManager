@@ -357,7 +357,7 @@ private:
     QMenu* m_helpMenu;
 
     /// Toolbars
-    QToolBar* m_fileToolBar;
+    KToolBar* m_fileToolBar;
     QToolBar* m_toolbar_edit;
     QToolBar* m_settingsToolBar;
     QToolBar* m_controlsToolbar;

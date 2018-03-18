@@ -26,7 +26,7 @@ KAboutData AboutDataSetup::GetKAboutData()
 				KAboutLicense::GPL_V3, // licenceType
 				"Copyright (c) 2017, 2018 Gary R. Van Sickle", // copyrightStatement, "Returns the copyright statement."
 				/// @todo Not sure where this gets used.
-				QString(), // otherText
+				"Because the world needs a Media Library Manager which is Awesome.", // otherText
 				"https://github.com/gvansickle/AwesomeMediaLibraryManager", // homePageAddress
 				"https://github.com/gvansickle/AwesomeMediaLibraryManager/issues" // bugAddress
 				};

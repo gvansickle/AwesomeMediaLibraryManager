@@ -21,7 +21,8 @@
 #include "MainWindow.h"
 
 #include <KMainWindow>
-#include <KXmlGui/KHelpMenu>
+#include <KHelpMenu>
+#include <KToolBar>
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -108,7 +109,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(par
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
-
     // Get some standard paths.
     // App-specific cache directory.
     m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
@@ -168,6 +168,9 @@ M_WARNING("TODO: ifdef this to development only")
     setWindowTitle(qApp->applicationDisplayName());
 
     setUnifiedTitleAndToolBarOnMac(true);
+
+	// KF5: Autosave window layout settings.
+	setAutoSaveSettings();
 
     // Send ourself a message to re-load the files we had open last time we were closed.
     QTimer::singleShot(0, this, &MainWindow::onStartup);
@@ -553,8 +556,8 @@ void MainWindow::createMenus()
 	m_helpMenu->addAction(m_aboutQtAct);
 
 	// Create a second help menu via KHelpMenu.
-	QMenu* kmenu = this->helpMenu("KHelpMenu");
-	menuBar()->addMenu(kmenu);
+	auto khelpmenu = new KHelpMenu(this, "KHelpMenu");
+	menuBar()->addMenu(khelpmenu->menu());
 }
 
 
@@ -563,7 +566,8 @@ void MainWindow::createToolBars()
 	//
 	// File
 	//
-	m_fileToolBar = addToolBar(tr("File"));
+//	m_fileToolBar = addToolBar(tr("File"));
+	m_fileToolBar = this->toolBar("File");
 	m_fileToolBar->setObjectName("FileToolbar");
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
@@ -955,17 +959,17 @@ void MainWindow::onFocusChanged(QWidget* old, QWidget* now)
 
 void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr)
 {
-	qDebug() << "A child view is closing:" << viewptr << modelptr;
+//	qDebug() << "A child view is closing:" << viewptr << modelptr;
 
 	auto playlist = qobject_cast<MDIPlaylistView*>(viewptr);
 	auto nowplaying = qobject_cast<MDINowPlayingView*>(viewptr);
 	if(nowplaying)
 	{
-		qDebug() << "Was nowplaying view, ignoring:" << nowplaying;
+		qDebug() << "Tried to close nowplaying view, ignoring:" << nowplaying;
 	}
 	else if(playlist)
 	{
-		qDebug() << "Was playlist, deleting view from model-of-models";
+		qDebug() << "Closing playlist, deleting view from model-of-models";
 
 		auto parentindex = m_model_of_model_view_pairs->indexFromItem(m_stditem_playlist_views);
 		auto indexes_to_delete = m_model_of_model_view_pairs->match(parentindex, Qt::UserRole+1,
@@ -994,22 +998,22 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 void MainWindow::readSettings()
 {
         QSettings settings;
-        settings.beginGroup("mainwindow");
-        auto geometry = settings.value("geometry", QByteArray());
-        if(geometry.isNull() || !geometry.isValid())
-        {
-            qDebug() << "No saved window geometry, using defaults.";
-        }
-        else
-        {
-            restoreGeometry(geometry.toByteArray());
-        }
-        auto window_state = settings.value("window_state", QByteArray());
-        if(!window_state.isNull() && window_state.isValid())
-        {
-            restoreState(window_state.toByteArray());
-        }
-		settings.endGroup();
+//        settings.beginGroup("mainwindow");
+//        auto geometry = settings.value("geometry", QByteArray());
+//        if(geometry.isNull() || !geometry.isValid())
+//        {
+//            qDebug() << "No saved window geometry, using defaults.";
+//        }
+//        else
+//        {
+//            restoreGeometry(geometry.toByteArray());
+//        }
+//        auto window_state = settings.value("window_state", QByteArray());
+//        if(!window_state.isNull() && window_state.isValid())
+//        {
+//            restoreState(window_state.toByteArray());
+//        }
+//		settings.endGroup();
 }
 
 void MainWindow::readLibSettings(QSettings& settings)
