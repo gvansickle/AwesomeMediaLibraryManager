@@ -25,6 +25,10 @@
 #include <KToolBar>
 #include <KShortcutsDialog>
 #include <KActionCollection>
+// For KF5 KConfig infrastructure.
+#include <KConfigDialog>
+#include "settings.h"
+//
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -35,6 +39,7 @@
 #include "MDINowPlayingView.h"
 
 #include <gui/settings/SettingsDialog.h>
+#include <gui/settings/SettingsPageAppearance.h>
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 
@@ -1570,6 +1575,25 @@ void MainWindow::onDelete()
 
 void MainWindow::startSettingsDialog()
 {
+#if defined(HAVE_KF5)
+
+	// There could already be a cached instance of the setting dialog.
+	// If so simply show it.
+	if(KConfigDialog::showDialog("App Settings"))
+	{
+		return;
+	}
+
+	// No existing instance, create a new one.
+	KConfigDialog* dialog = new KConfigDialog(this, "App Settings", Settings::self());
+	dialog->setFaceType(KPageDialog::List);
+	dialog->addPage(new SettingsPageAppearance(dialog /*0*/), tr("General") );
+//	dialog->addPage(new Appearance(0, "Style"), i18n("Appearance") );
+	/// ...
+
+	dialog->show();
+
+#else
 	if(!m_settings_dlg)
 	{
 		// This is the first time anyone has opened the settings dialog.
@@ -1585,6 +1609,7 @@ void MainWindow::startSettingsDialog()
 	m_settings_dlg->show();
 	m_settings_dlg->raise();
 	m_settings_dlg->activateWindow();
+#endif
 }
 
 void MainWindow::onOpenShortcutDlg()

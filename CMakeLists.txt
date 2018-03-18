@@ -163,7 +163,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Sanitizers.
 find_package(Sanitizers)
 
+#
 # The Qt5 packages we require.
+#
 find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia Concurrent REQUIRED)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
@@ -184,24 +186,18 @@ if(FALSE)
 endif()
 
 #
-# Maybe some KDE extensions.
+# Maybe some KDE KF5 extensions.
 #
 set(KF5_LINK_LIBS)
 find_package(KF5 REQUIRED COMPONENTS
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
-
-#if(TRUE) ## USE_KF5_XMLGUI, git clone git://anongit.kde.org/kxmlgui.git
-	# ATM this is for KMainWindow.
 	XmlGui
-#endif()
-#if(TRUE) ## USE_KF5_CONFIG
 	Config
 	ConfigWidgets
-#endif()
 )
-list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::CoreAddons)
+list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::XmlGui)
 list(APPEND KF5_LINK_LIBS KF5::ConfigCore KF5::ConfigGui)
 
@@ -318,7 +314,7 @@ else()
     ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
     message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
 #    print_target_properties(taglib_bundled)
-    cmake_print_variables(CMAKE_C_COMPILER CMAKE_VERSION)
+	cmake_print_variables(CMAKE_CXX_COMPILER CMAKE_VERSION)
 
     set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set(taglib_INCLUDE_DIR "${INSTALL_DIR}/include")
@@ -442,6 +438,7 @@ set(HEADER_FILES
 	logic/ColumnSpec.h
 	logic/proxymodels/QPersistentModelIndexVec.h
 	utils/Logging.h
+	utils/AboutDataSetup.h
     )
 
 # Source file list.
@@ -508,7 +505,7 @@ set(SOURCE_FILES
 	logic/ColumnSpec.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	utils/Logging.cpp
-	utils/AboutDataSetup.cpp utils/AboutDataSetup.h)
+	utils/AboutDataSetup.cpp)
 
 # NoMoc files.
 set(HEADER_FILES_UTILS_NOMOC
@@ -535,6 +532,20 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/function_traits.cpp
 	)
 
+# UI files.
+set(SOURCE_FILES_UI
+	gui/settings/SettingsPageAppearance.cpp
+	gui/settings/SettingsPageAppearance.h
+	gui/settings/SettingsPageAppearance.ui)
+
+#
+# Append all the SOURCE_* subsets.
+#
+
+# *.ui files.
+list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
+
+# Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 
@@ -563,7 +574,7 @@ qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 set(icon_rccs icons_oxygen icons_Tango icons_App)
 
-# Add KConfig file.
+# Add KConfig source files to the common SOURCE_FILES list.
 KCONFIG_ADD_KCFG_FILES(SOURCE_FILES settings.kcfgc)
 
 ###
@@ -576,8 +587,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 		${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
         )
-# FBO Verdigris (esp. on Windows/MSVC).
-#add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
+# Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
@@ -586,13 +596,15 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 if(NOT WIN32)
-target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
+	target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
 endif()
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}
-    PROPERTIES AUTOMOC ON)
+    PROPERTIES
+    AUTOMOC ON
+    AUTOUIC ON)
 # The libs.
 set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
 		${KF5_LINK_LIBS}
@@ -658,7 +670,9 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
-set_target_properties(${TEST_EXE_TARGET} PROPERTIES AUTOMOC ON)
+set_target_properties(${TEST_EXE_TARGET} PROPERTIES
+	AUTOMOC ON
+	AUTOUIC ON)
 target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})
