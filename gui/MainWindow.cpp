@@ -563,11 +563,16 @@ void MainWindow::createMenus()
 
 void MainWindow::createToolBars()
 {
+#ifdef HAVE_KF5
+	#define addToolBar(str) this->toolBar((str))
+#else
+	#define addToolBar(str) addToolBar((str))
+#endif
+
 	//
 	// File
 	//
-//	m_fileToolBar = addToolBar(tr("File"));
-	m_fileToolBar = this->toolBar("File");
+	m_fileToolBar = addToolBar(tr("FileToolbar"));
 	m_fileToolBar->setObjectName("FileToolbar");
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,

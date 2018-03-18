@@ -17,12 +17,24 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#include "MDILibraryView.h"
-//#include "MDIPlaylistView.h"
+#define HAVE_KF5 1 // @todo
 
+#ifdef HAVE_KF5
 
-//#include <QMainWindow>
 #include <KMainWindow>
+
+class KToolBar;
+using ToolBarClass = KToolBar;
+
+#else // !HAVE_KF5
+
+#include <QMainWindow>
+
+class QToolBar;
+using ToolBarClass = QToolBar;
+
+#endif
+
 
 #include <QUrl>
 
@@ -357,11 +369,11 @@ private:
     QMenu* m_helpMenu;
 
     /// Toolbars
-    KToolBar* m_fileToolBar;
-    QToolBar* m_toolbar_edit;
-    QToolBar* m_settingsToolBar;
-    QToolBar* m_controlsToolbar;
-    QToolBar* m_filterToolbar;
+    ToolBarClass* m_fileToolBar;
+	ToolBarClass* m_toolbar_edit;
+	ToolBarClass* m_settingsToolBar;
+	ToolBarClass* m_controlsToolbar;
+	ToolBarClass* m_filterToolbar;
 
     /// Docks
 	CollectionDockWidget* m_collection_dock_widget;
