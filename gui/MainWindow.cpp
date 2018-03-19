@@ -40,6 +40,8 @@
 
 #include <gui/settings/SettingsDialog.h>
 #include <gui/settings/SettingsPageAppearance.h>
+#include <gui/settings/SettingsPageLibrary.h>
+
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
 
@@ -1588,7 +1590,7 @@ void MainWindow::startSettingsDialog()
 	KConfigDialog* dialog = new KConfigDialog(this, "App Settings", Settings::self());
 	dialog->setFaceType(KPageDialog::List);
 	dialog->addPage(new SettingsPageAppearance(dialog /*0*/), tr("General") );
-//	dialog->addPage(new Appearance(0, "Style"), i18n("Appearance") );
+	dialog->addPage(new SettingsPageLibrary(dialog), tr("Music Library") );
 	/// ...
 
 	dialog->show();

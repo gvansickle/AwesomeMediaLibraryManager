@@ -536,7 +536,10 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 set(SOURCE_FILES_UI
 	gui/settings/SettingsPageAppearance.cpp
 	gui/settings/SettingsPageAppearance.h
-	gui/settings/SettingsPageAppearance.ui)
+	gui/settings/SettingsPageAppearance.ui
+	gui/settings/SettingsPageLibrary.cpp
+	gui/settings/SettingsPageLibrary.h
+	gui/settings/SettingsPageLibrary.ui)
 
 #
 # Append all the SOURCE_* subsets.

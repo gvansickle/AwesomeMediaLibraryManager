@@ -10,6 +10,11 @@
       <default>true</default>
     </entry>
   </group>
+  <group name="Music Library">
+  	<entry name="LibraryURLs" type="UrlList" key="library url list">
+  		<label>The list of URLs to include in your music library</label>
+  	</entry>
+  </group>
   <group name="Options">
     <entry name="CustomWidth" type="Int" key="custom width">
       <label>The width of the playing field.</label>

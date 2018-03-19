@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SettingsPageAppearance</class>
- <widget class="QWidget" name="SettingsPageAppearance">
+ <class>SettingsPageLibrary</class>
+ <widget class="QWidget" name="SettingsPageLibrary">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -13,31 +13,34 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QFormLayout" name="formLayout">
-   <item row="2" column="1">
-    <widget class="QPlainTextEdit" name="kcfg_CustomHeight"/>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="KRatingWidget" name="kratingwidget"/>
    </item>
-   <item row="1" column="1">
-    <widget class="QSpinBox" name="kcfg_CustomWidth"/>
-   </item>
-   <item row="3" column="1">
-    <widget class="KUrlLabel" name="kurllabel"/>
-   </item>
-   <item row="0" column="1">
+   <item>
     <widget class="KTitleWidget" name="ktitlewidget"/>
+   </item>
+   <item>
+    <widget class="KCollapsibleGroupBox" name="kfgc_LibraryURLs"/>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>KUrlLabel</class>
-   <extends>QLabel</extends>
-   <header>kurllabel.h</header>
+   <class>KCollapsibleGroupBox</class>
+   <extends>QWidget</extends>
+   <header>kcollapsiblegroupbox.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>KTitleWidget</class>
    <extends>QWidget</extends>
    <header>ktitlewidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KRatingWidget</class>
+   <extends>QFrame</extends>
+   <header>kratingwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
