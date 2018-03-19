@@ -44,8 +44,8 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
-set(QT_MIN_VERSION "5.3.0")
-set(KF5_MIN_VERSION "5.2.0")
+set(QT_MIN_VERSION "5.9.0")
+set(KF5_MIN_VERSION "5.37.0")
 # KDE extra-cmake-modules, see https://api.kde.org/ecm/
 find_package(ECM REQUIRED NO_MODULE)
 

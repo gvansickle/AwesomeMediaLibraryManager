@@ -1589,7 +1589,7 @@ void MainWindow::startSettingsDialog()
 	// No existing instance, create a new one.
 	KConfigDialog* dialog = new KConfigDialog(this, "App Settings", Settings::self());
 	dialog->setFaceType(KPageDialog::List);
-	dialog->addPage(new SettingsPageAppearance(dialog /*0*/), tr("General") );
+	dialog->addPage(new SettingsPageAppearance(dialog), tr("Appearance") );
 	dialog->addPage(new SettingsPageLibrary(dialog), tr("Music Library") );
 	/// ...
 

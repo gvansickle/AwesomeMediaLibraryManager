@@ -15,6 +15,12 @@
   		<label>The list of URLs to include in your music library</label>
   	</entry>
   </group>
+  <group name="Appearance">
+  	<entry name="TrackFont" type="Font" key="track font">
+  		<label>The font used to display track info in the Library and Playlist windows</label></entry>
+  	<entry name="MetadataFont" type="Font" key="metadata font">
+  		<label>The font to use to display metadata in the Metadata Explorer</label></entry>
+  </group>
   <group name="Options">
     <entry name="CustomWidth" type="Int" key="custom width">
       <label>The width of the playing field.</label>
