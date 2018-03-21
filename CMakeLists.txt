@@ -534,6 +534,9 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 
 # UI files.
 set(SOURCE_FILES_UI
+	gui/settings/SettingsPageGeneral.cpp
+	gui/settings/SettingsPageGeneral.h
+	gui/settings/SettingsPageGeneral.ui
 	gui/settings/SettingsPageAppearance.cpp
 	gui/settings/SettingsPageAppearance.h
 	gui/settings/SettingsPageAppearance.ui

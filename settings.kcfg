@@ -3,11 +3,18 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+  <include>KPageDialog</include>
   <kcfgfile name="awesomemedialibrarymanagerrc"/>
   <group name="General">
     <entry name="UseQuestionMarks" type="Bool" key="question mark">
       <label>Whether the "unsure" marker may be used.</label>
       <default>true</default>
+    </entry>
+    <entry name="SettingsDialogFace" key="setting dialog type"
+    	type="Enum">
+    	<default>KPageDialog::FaceType::List</default>
+    	<choices name="KPageDialog::FaceType">
+    	</choices>
     </entry>
   </group>
   <group name="Music Library">

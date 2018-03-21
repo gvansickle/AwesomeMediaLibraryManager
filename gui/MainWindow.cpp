@@ -39,6 +39,7 @@
 #include "MDINowPlayingView.h"
 
 #include <gui/settings/SettingsDialog.h>
+#include <gui/settings/SettingsPageGeneral.h>
 #include <gui/settings/SettingsPageAppearance.h>
 #include <gui/settings/SettingsPageLibrary.h>
 
@@ -1589,6 +1590,7 @@ void MainWindow::startSettingsDialog()
 	// No existing instance, create a new one.
 	KConfigDialog* dialog = new KConfigDialog(this, "App Settings", Settings::self());
 	dialog->setFaceType(KPageDialog::List);
+	dialog->addPage(new SettingsPageGeneral(dialog), tr("General"));
 	dialog->addPage(new SettingsPageAppearance(dialog), tr("Appearance") );
 	dialog->addPage(new SettingsPageLibrary(dialog), tr("Music Library") );
 	/// ...
