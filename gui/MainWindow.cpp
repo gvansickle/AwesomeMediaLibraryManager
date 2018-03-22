@@ -25,8 +25,9 @@
 #include <KToolBar>
 #include <KShortcutsDialog>
 #include <KActionCollection>
+
 // For KF5 KConfig infrastructure.
-#include <KConfigDialog>
+//#include <KConfigDialog>
 #include "settings.h"
 //
 
@@ -39,9 +40,9 @@
 #include "MDINowPlayingView.h"
 
 #include <gui/settings/SettingsDialog.h>
-#include <gui/settings/SettingsPageGeneral.h>
-#include <gui/settings/SettingsPageAppearance.h>
-#include <gui/settings/SettingsPageLibrary.h>
+//#include <gui/settings/SettingsPageGeneral.h>
+//#include <gui/settings/SettingsPageAppearance.h>
+//#include <gui/settings/SettingsPageLibrary.h>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -1578,7 +1579,18 @@ void MainWindow::onDelete()
 
 void MainWindow::startSettingsDialog()
 {
-#if defined(HAVE_KF5)
+	KConfigDialog *dialog = KConfigDialog::exists( "settings" );
+	if( !dialog )
+	{
+		//KConfigDialog didn't find an instance of this dialog, so lets create it :
+		dialog = new SettingsDialog(this, "settings", Settings::self());
+
+//		connect( dialog, &KConfigDialog::settingsChanged,
+//				 this, &App::applySettings );
+	}
+	static_cast<SettingsDialog*>( dialog )->show( /*page*/);
+
+#if 0 //defined(HAVE_KF5)
 
 	// There could already be a cached instance of the setting dialog.
 	// If so simply show it.
@@ -1597,11 +1609,11 @@ void MainWindow::startSettingsDialog()
 
 	dialog->show();
 
-#else
+#elif 0
 	if(!m_settings_dlg)
 	{
 		// This is the first time anyone has opened the settings dialog.
-		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, this->windowFlags()), &QObject::deleteLater);
+		m_settings_dlg = QSharedPointer<SettingsDialog>(new SettingsDialog(this, "App Settings", Settings::self()), &QObject::deleteLater);
 	}
 
 	// Open the settings dialog modeless.

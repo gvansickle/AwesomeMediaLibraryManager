@@ -12,9 +12,15 @@
     </entry>
     <entry name="SettingsDialogFace" key="setting dialog type"
     	type="Enum">
-    	<default>KPageDialog::FaceType::List</default>
+    	<label>Layout style of this dialog</label>
     	<choices name="KPageDialog::FaceType">
-    	</choices>
+    		<choice name="Auto"></choice>
+    		<choice name="Plain"></choice>
+    		<choice name="List"></choice>
+    		<choice name="Tree"></choice>
+    		<choice name="Tabbed"></choice>
+   		</choices>
+    	<default>KPageDialog::FaceType::List</default>
     </entry>
   </group>
   <group name="Music Library">

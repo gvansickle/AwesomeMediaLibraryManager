@@ -18,8 +18,13 @@
  */
 
 #include "SettingsDialog.h"
-#include "SDPageAppearance.h"
-#include "SDPageLibrary.h"
+//#include "SDPageAppearance.h"
+//#include "SDPageLibrary.h"
+
+// Pages
+#include "SettingsPageGeneral.h"
+#include "SettingsPageAppearance.h"
+#include "SettingsPageLibrary.h"
 
 #include <QApplication>
 #include <QLayout>
@@ -31,29 +36,36 @@
 
 #include <utils/Theme.h>
 
+#include "settings.h"
 
-SettingsDialog::SettingsDialog(QWidget *parent, const Qt::WindowFlags &flags)
-	: SettingsDialogBase(parent, flags)
+SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config)
+	: KConfigDialog( parent, name, config )
 {
-	initSettingsModel();
+	// Create and add the pages.
+	setFaceType(KPageDialog::List);
+	addPage(new SettingsPageGeneral(this), tr("General"));
+	addPage(new SettingsPageAppearance(this), tr("Appearance") );
+	addPage(new SettingsPageLibrary(this), tr("Music Library") );
+	/// ...
 
-	// Add all the pages.
-	addPage(new SDPageAppearance(this, this));
-	addPage(new SDPageLibrary(this, this));
+	show();
+}
 
-	m_mapper->toFirst();
+SettingsDialog::~SettingsDialog()
+{
+
 }
 
 void SettingsDialog::initSettingsModel()
 {
-	auto si1 = new QStandardItem("true");
-	auto si2 = new QStandardItem("false");
-	m_settings_model = new QStandardItemModel;
-	m_settings_model->appendRow({si1, si2});
+//	auto si1 = new QStandardItem("true");
+//	auto si2 = new QStandardItem("false");
+//	m_settings_model = new QStandardItemModel;
+//	m_settings_model->appendRow({si1, si2});
 
-	// Create the mapper.
-	m_mapper = new QDataWidgetMapper;
-	m_mapper->setModel(m_settings_model);
+//	// Create the mapper.
+//	m_mapper = new QDataWidgetMapper;
+//	m_mapper->setModel(m_settings_model);
 }
 
 

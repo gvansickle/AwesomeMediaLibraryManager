@@ -20,25 +20,58 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOG_H
 #define AWESOMEMEDIALIBRARYMANAGER_SETTINGSDIALOG_H
 
-#include <QObject>
-#include <QDialog>
-#include <QPointer>
-#include <QDialogButtonBox>
-#include <QStackedWidget>
+#include <KConfigDialog>
+#include <KConfigSkeleton>
+#include <KWindowConfig>
 
-#include "SettingsDialogSideWidget.h"
-#include "SettingsDialogPageBase.h"
-#include "RegisteredField.h"
-#include "SettingsDialogBase.h"
+//#include <QObject>
+//#include <QDialog>
+//#include <QPointer>
+//#include <QDialogButtonBox>
+//#include <QStackedWidget>
+//
+//#include "SettingsDialogSideWidget.h"
+//#include "SettingsDialogPageBase.h"
+//#include "RegisteredField.h"
+//#include "SettingsDialogBase.h"
 
-class SettingsDialog : public SettingsDialogBase
+/**
+ * @todo How to use enums with KConfig, from /usr/share/config.kcfg/structviewpreferences.kcfg
+ *  Okteta: https://github.com/KDE/okteta/blob/master/kasten/controllers/view/structures/settings/structureviewpreferences.kcfg
+ *
+ *<?xml version="1.0" encoding="UTF-8"?>
+  <kcfg xmlns="http://www.kde.org/standards/kcfg/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <include>QSysInfo</include>
+  <include>view/structures/datatypes/datainformationbase.h</include>
+  <kcfgfile name="oktetastructuresrc" />
+  ////
+ * <group name="StructureSettings">
+    <entry name="ByteOrder" type="Enum">
+      <label context="@label:listbox">Byte order</label>
+      <choices name="QSysInfo::Endian">
+        <choice name="BigEndian"><label context="@item:inlistbox">Big endian</label></choice>
+        <choice name="LittleEndian"><label context="@item:inlistbox">Little endian</label></choice>
+      </choices>
+      <default>QSysInfo::LittleEndian</default>
+    </entry>
+    <entry name="LoadedStructures" type="StringList">
+      <default></default>
+    </entry>
+  </group>
+ *
+ * But apparently you still have to populate the combo box with items matching the label text (not choice name).
+ */
+
+class SettingsDialog : public KConfigDialog
 {
     Q_OBJECT
 
 public:
-	SettingsDialog(QWidget *parent = nullptr, const Qt::WindowFlags &flags = nullptr);
+	SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config);
+    ~SettingsDialog() override;
 
-	void initSettingsModel() override;
+	void initSettingsModel();
 };
 
 

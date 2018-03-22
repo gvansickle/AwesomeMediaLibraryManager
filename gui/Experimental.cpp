@@ -19,7 +19,7 @@
 
 #include "Experimental.h"
 
-#define EX1 0
+#define EX1 1
 #define EX2 0
 
 #if EX1 == 1
@@ -51,20 +51,11 @@ void Experimental::DoExperiment()
 
 #if EX1 == 1
 
+//	auto dlg = new KFileCustomDialog();
+
 	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
 #endif
 
 #if EX2 == 1
-	//"QT += KConfigCore KConfigGui"
-
-	if(KConfigDialog::showDialog("settings"))
-	  return;
-	KConfigDialog *dialog = new KConfigDialog(this, "settings", MySettings::self());
-	dialog->setFaceType(KPageDialog::List);
-	dialog->addPage(new General(0, "General"), i18n("General") );
-	dialog->addPage(new Appearance(0, "Style"), i18n("Appearance") );
-	connect(dialog, SIGNAL(settingsChanged(const QString&)), mainWidget, SLOT(loadSettings()));
-	connect(dialog, SIGNAL(settingsChanged(const QString&)), this, SLOT(loadSettings()));
-	dialog->show();
 #endif
 }

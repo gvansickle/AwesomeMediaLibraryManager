@@ -30,7 +30,33 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QComboBox" name="kcfg_SettingsDialogFace"/>
+         <widget class="QComboBox" name="kcfg_SettingsDialogFace">
+          <item>
+           <property name="text">
+            <string>Auto</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Plain</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>List</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Tree</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Tabbed</string>
+           </property>
+          </item>
+         </widget>
         </item>
        </layout>
       </item>
