@@ -56,6 +56,11 @@ SettingsDialog::~SettingsDialog()
 
 }
 
+void SettingsDialog::onSettingsChanged()
+{
+	setFaceType(Settings::settingsDialogFace());
+}
+
 void SettingsDialog::initSettingsModel()
 {
 //	auto si1 = new QStandardItem("true");
