@@ -18,8 +18,6 @@
  */
 
 #include "SettingsDialog.h"
-//#include "SDPageAppearance.h"
-//#include "SDPageLibrary.h"
 
 // Pages
 #include "SettingsPageGeneral.h"
@@ -35,6 +33,8 @@
 #include <QStandardItem>
 
 #include <utils/Theme.h>
+
+#include "../MainWindow.h"
 
 #include "settings.h"
 

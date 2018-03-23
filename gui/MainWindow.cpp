@@ -1582,11 +1582,10 @@ void MainWindow::startSettingsDialog()
 	KConfigDialog *dialog = KConfigDialog::exists( "settings" );
 	if( !dialog )
 	{
-		//KConfigDialog didn't find an instance of this dialog, so lets create it :
+		//KConfigDialog didn't find an instance of this dialog, so lets create it:
 		dialog = new SettingsDialog(this, "settings", Settings::self());
 
-//		connect( dialog, &KConfigDialog::settingsChanged,
-//				 this, &App::applySettings );
+		connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
 	}
 	static_cast<SettingsDialog*>( dialog )->show( /*page*/);
 
@@ -1691,6 +1690,13 @@ void MainWindow::onChangeWindowMode(QAction* action)
 		m_mdi_area->setViewMode(QMdiArea::SubWindowView);
 	}
 }
+
+void MainWindow::onSettingsChanged()
+{
+	qDb() << "SLOT: Settings changed";
+	
+}
+
 
 void MainWindow::onTextFilterChanged()
 {

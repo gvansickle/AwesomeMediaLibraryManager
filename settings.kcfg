@@ -33,6 +33,11 @@
   		<label>The font used to display track info in the Library and Playlist windows</label></entry>
   	<entry name="MetadataFont" type="Font" key="metadata font">
   		<label>The font to use to display metadata in the Metadata Explorer</label></entry>
+  	<entry name="UseAlternatingRowColors" type="Bool" key="use_alternating_row_colors">
+  		<default>true</default>
+  		<label>Use alternating row colors in Library and Playlist views</label>
+  		<tooltip>Check to show the rows of song lists in alternating colors</tooltip>
+  	</entry>
   </group>
   <group name="Options">
     <entry name="CustomWidth" type="Int" key="custom width">

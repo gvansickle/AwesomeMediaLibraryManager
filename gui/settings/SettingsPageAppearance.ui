@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>462</width>
     <height>300</height>
    </rect>
   </property>
@@ -38,7 +38,7 @@
         <item row="2" column="0">
          <widget class="QLabel" name="MetadataFontLabel">
           <property name="text">
-           <string>Metadata Explorer font</string>
+           <string>&amp;Metadata Explorer font</string>
           </property>
           <property name="buddy">
            <cstring>TrackFontLabel</cstring>
@@ -49,6 +49,22 @@
          <widget class="KFontRequester" name="kcfg_MetadataFont"/>
         </item>
        </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>GroupBox</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_3">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="kcfg_UseAlternatingRowColors">
+        <property name="text">
+         <string>Use alternating row colors</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

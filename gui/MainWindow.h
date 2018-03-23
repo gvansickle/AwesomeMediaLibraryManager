@@ -186,6 +186,8 @@ private Q_SLOTS:
 
     void onChangeWindowMode(QAction* action);
 
+    void onSettingsChanged();
+
     /// Filter slots.
     void onTextFilterChanged();
 
