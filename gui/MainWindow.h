@@ -83,6 +83,8 @@ Q_SIGNALS:
 	 */
 	void sendToNowPlaying(LibraryEntryMimeData* mime_data);
 
+	// User changed the settings in the Settings dialog.
+	void settingsChanged();
 
 public:
     MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());

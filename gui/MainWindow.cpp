@@ -26,11 +26,6 @@
 #include <KShortcutsDialog>
 #include <KActionCollection>
 
-// For KF5 KConfig infrastructure.
-//#include <KConfigDialog>
-#include "settings.h"
-//
-
 #include "Experimental.h"
 #include "FilterWidget.h"
 
@@ -39,10 +34,10 @@
 #include "MDIPlaylistView.h"
 #include "MDINowPlayingView.h"
 
+// For KF5 KConfig infrastructure.
+//#include <KConfigDialog>
+#include "settings.h"
 #include <gui/settings/SettingsDialog.h>
-//#include <gui/settings/SettingsPageGeneral.h>
-//#include <gui/settings/SettingsPageAppearance.h>
-//#include <gui/settings/SettingsPageLibrary.h>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -1694,7 +1689,7 @@ void MainWindow::onChangeWindowMode(QAction* action)
 void MainWindow::onSettingsChanged()
 {
 	qDb() << "SLOT: Settings changed";
-	
+	Q_EMIT settingsChanged();
 }
 
 

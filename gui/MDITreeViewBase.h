@@ -156,6 +156,9 @@ public Q_SLOTS:
     virtual void onDelete() {}
     /// @}
 
+	/// Settings from settings dialog changed.
+	virtual void onSettingsChanged();
+
 protected:
 
     QUrl m_current_url;

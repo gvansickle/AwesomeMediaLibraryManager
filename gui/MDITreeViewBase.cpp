@@ -42,6 +42,8 @@
 #include "logic/proxymodels/ModelHelpers.h"
 #include "logic/proxymodels/QPersistentModelIndexVec.h"
 
+#include "settings.h"
+
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)
 {
@@ -307,6 +309,13 @@ void MDITreeViewBase::onCopy()
 void MDITreeViewBase::onSelectAll()
 {
 	selectAll();
+}
+
+void MDITreeViewBase::onSettingsChanged()
+{
+	// Alternating row colors.
+	setAlternatingRowColors(Settings::useAlternatingRowColors());
+
 }
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)
