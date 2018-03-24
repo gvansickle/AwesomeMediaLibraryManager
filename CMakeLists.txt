@@ -64,10 +64,13 @@ endif()
 ### @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
 include(KDEInstallDirs)
 include(KDECMakeSettings)
+# KDECompilerSettings
+# Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
 # @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
 # @warning This also sets the compiler stds way too low (C89(!!))
 # @see https://api.kde.org/ecm/kde-module/KDECompilerSettings.html
 include(KDECompilerSettings NO_POLICY_SCOPE)
+### Set the required language standards.
 # C11
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -163,6 +166,7 @@ if(CXX_W_UNINIT)
 endif()
 if(WIN32)
     # Make sure we're supporting Unicode on Windows.
+	### @todo With KDECompileFlags we don't need this.
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
@@ -170,7 +174,8 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Sanitizers.
-find_package(Sanitizers)
+### @todo KDECompileFlags includes include(ECMEnableSanitizers), so we probably can get rid of this.
+#find_package(Sanitizers)
 
 #
 # The Qt5 packages we require.
@@ -195,7 +200,7 @@ if(FALSE)
 endif()
 
 #
-# Maybe some KDE KF5 extensions.
+# KDE KF5 libs.
 #
 set(KF5_LINK_LIBS)
 find_package(KF5 REQUIRED COMPONENTS
@@ -209,8 +214,6 @@ list(APPEND KF5_LINK_LIBS KF5::CoreAddons)
 list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::XmlGui)
 list(APPEND KF5_LINK_LIBS KF5::ConfigCore KF5::ConfigGui)
-
-feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
@@ -630,7 +633,14 @@ target_link_libraries(${PROJECT_NAME}
 		)
 add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
 # Add sanitizers.
-add_sanitizers(${PROJECT_NAME})
+#add_sanitizers(${PROJECT_NAME})
+### @note KF5:
+# The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
+# CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
+# The options are:
+#   address memory thread leak undefined
+# The sanitizers “address”, “memory” and “thread” are mutually exclusive. You cannot enable two of them in the same build.
+# "leak" requires the "address" sanitizer.
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
@@ -640,6 +650,9 @@ Checks: '-*,llvm-twine-local'
 ")
 
 #print_target_properties(${PROJECT_NAME})
+
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
 
 ###
 ### Testing
@@ -675,7 +688,7 @@ add_executable(${TEST_EXE_TARGET}
 				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 # Add sanitizers.
-add_sanitizers(${TEST_EXE_TARGET})
+#add_sanitizers(${TEST_EXE_TARGET})
 target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
