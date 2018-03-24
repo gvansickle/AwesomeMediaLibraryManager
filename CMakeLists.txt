@@ -69,7 +69,7 @@ include(KDECMakeSettings)
 # @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
 # @warning This also sets the compiler stds way too low (C89(!!))
 # @see https://api.kde.org/ecm/kde-module/KDECompilerSettings.html
-include(KDECompilerSettings NO_POLICY_SCOPE)
+#include(KDECompilerSettings NO_POLICY_SCOPE)
 ### Set the required language standards.
 # C11
 set(CMAKE_C_STANDARD 11)
@@ -77,8 +77,12 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # C++14
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-kde_enable_exceptions()
+#kde_enable_exceptions()
+# And undo even more of what KDECompilerSettings did to/for us.
+###string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 include(FeatureSummary)
+message("C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
+message("C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 ###
 
 # Use ccache if it's available.
@@ -88,7 +92,8 @@ if(CCACHE_PROGRAM)
 endif()
 
 # Include some basic cmake functions.
-include(GNUInstallDirs)
+### @todo Still needed after KDEInstallDirs?
+###include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
 include(CMakePrintHelpers)
 include(PrintTargetProperties)
@@ -132,7 +137,7 @@ message("*        GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
 
 print_compilers_and_params()
 
-# Be nice to visual studio
+# FBO at least visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Export compile commands.
@@ -175,7 +180,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Sanitizers.
 ### @todo KDECompileFlags includes include(ECMEnableSanitizers), so we probably can get rid of this.
-#find_package(Sanitizers)
+find_package(Sanitizers)
 
 #
 # The Qt5 packages we require.
@@ -590,7 +595,6 @@ cmake_print_variables(META_FILES_TO_INCLUDE)
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
-set(icon_rccs icons_oxygen icons_Tango icons_App)
 
 # Add KConfig source files to the common SOURCE_FILES list.
 KCONFIG_ADD_KCFG_FILES(SOURCE_FILES settings.kcfgc)
@@ -633,7 +637,7 @@ target_link_libraries(${PROJECT_NAME}
 		)
 add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
 # Add sanitizers.
-#add_sanitizers(${PROJECT_NAME})
+add_sanitizers(${PROJECT_NAME})
 ### @note KF5:
 # The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
 # CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
@@ -671,7 +675,8 @@ download_project(PROJ                googletest
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
+	EXCLUDE_FROM_ALL)
 
 #enable_testing()
 set(TEST_EXE_TARGET alltests)
@@ -688,7 +693,7 @@ add_executable(${TEST_EXE_TARGET}
 				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 # Add sanitizers.
-#add_sanitizers(${TEST_EXE_TARGET})
+add_sanitizers(${TEST_EXE_TARGET})
 target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
