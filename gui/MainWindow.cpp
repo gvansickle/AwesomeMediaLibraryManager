@@ -111,6 +111,9 @@
 
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(parent, flags)
 {
+	// Name our MainWindow.
+	setObjectName("TheAMLMMainWindow");
+
     // Name our GUI thread.
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
@@ -127,7 +130,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(par
     Theme::initialize();
 
     /// @todo
-    changeIconTheme(QIcon::themeName());
+M_WARNING("TODO")
+//	changeIconTheme(QIcon::themeName());
 
     // Follow the system style for the Icon&/|Text setting for toolbar buttons.
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
@@ -1123,7 +1127,8 @@ void MainWindow::writeLibSettings(QSettings& settings)
 void MainWindow::onStartup()
 {
     // Set the Icon Theme.
-    changeIconTheme(QIcon::themeName());
+	M_WARNING("TODO");
+//    changeIconTheme(QIcon::themeName());
 
 	initRootModels();
 
@@ -1137,9 +1142,6 @@ void MainWindow::onStartup()
 
 	// Open the windows the user had open at the end of last session.
 	openWindows();
-
-	M_WARNING("TEST, REMOVE");
-	ExtAsyncTest(this);
 }
 
 /**

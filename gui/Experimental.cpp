@@ -53,7 +53,9 @@ void Experimental::DoExperiment()
 
 //	auto dlg = new KFileCustomDialog();
 
-	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
+	QString filePath = QFileDialog::getOpenFileName( this, tr("Test") );
+
+//	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
 #endif
 
 #if EX2 == 1

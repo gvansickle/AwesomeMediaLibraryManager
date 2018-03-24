@@ -34,8 +34,8 @@
 NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory, const QString& filter, const QString& state_key)
 	: QFileDialog(parent, caption, directory.toLocalFile(), filter)
 {
-	//assert(directory is None or isinstance(directory, QUrl))
 	QString dir_as_str;
+
 	if(!directory.isEmpty())
 	{
 		qDebug() << "dir not empty";
@@ -46,25 +46,34 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 		qDebug() << "dir empty, setting to \"\"";
 		dir_as_str = "";
 	}
-
+#if 0
 	setObjectName("nafiledialog");
 	setViewMode(QFileDialog::Detail);
 	if(!use_native_dlg())
 	{
 		setOptions(QFileDialog::DontUseNativeDialog);
 	}
+#else
+	/**
+	 *
+		QFileDialog::DontUseNativeDialog
+		0x00000010
+		Don't use the native file dialog.
+ By default, the native file dialog is used ***unless you use a subclass of QFileDialog that contains the Q_OBJECT macro***,
+ or the platform does not have a native dialog of the type that you require.
+	 */
+//	setOptions(QFileDialog::DontUseNativeDialog);
+#endif
 	setFileMode(QFileDialog::AnyFile);
 	setAcceptMode(QFileDialog::AcceptSave);
-	setSupportedSchemes({"smb", "gvfs"});
-
-	///gtk3_dlg = None
-
+//	setSupportedSchemes({"smb", "gvfs"});
+#if 0
 	if(state_key.length() > 0)
 	{
 		// Persist the last state to/from this QSettings key.
 		m_settings_state_key = "file_dialogs/" + state_key;
 	}
-
+#endif
 	connect(this, &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
 }
 
@@ -298,6 +307,7 @@ void NetworkAwareFileDialog::restoreStateOverload()
 
 bool NetworkAwareFileDialog::use_native_dlg() const
 {
+	return true;
     if(/** @todo user_pref_native_file_dialog() | */
         ((QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
     {

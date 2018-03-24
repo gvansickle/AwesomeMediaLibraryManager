@@ -45,10 +45,19 @@
 
 int main(int argc, char *argv[])
 {
+	// Set up top-level logging.
 	Logging logging;
-
 	logging.SetFilterRules();
 	logging.InstallMessageHandler();
+	logging.SetMessagePattern("["
+					   "%{time hh:mm:ss.zzz} "
+					   "%{threadid} "
+					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
+					   "%{if-fatal}FATAL%{endif}"
+					   "]"
+						+ logging.ClickableLinkPattern() +
+					   /*"%{function}:%{line}*/ " - %{message}"
+					   "%{if-fatal}%{backtrace}%{endif}");
 
 	// App-wide settings.
 	// http://doc.qt.io/qt-5/qt.html#ApplicationAttribute-enum
@@ -66,6 +75,9 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
 	// Set up the KAboutData.
+	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
+	// "Make sure to create KAboutData instance only once the Q*Application instance has been created,
+	// if you are using KI18n's i18n() [...]"
 	KAboutData aboutData = AboutDataSetup::GetKAboutData();
 
 	// Set the application metadata.
@@ -77,23 +89,34 @@ int main(int argc, char *argv[])
 	//  QCoreApplication::organizationDomain
 	//  QGuiApplication::applicationDisplayName
 	//  QGuiApplication::desktopFileName (since 5.16)"
+	//
+	// https://community.kde.org/Frameworks/Porting_Notes#Build_System:
+	// "Make sure to call KAboutData::setApplicationData() only once the Q*Application instance has been created,
+	// otherwise the respective Q*Application metadata will not be set (e.g. QGuiApplication::applicationDisplayName),
+	// which other KF5 code now relies on."
+	// "If you want the config files placed in the correct location instead of being mixed up with other stuff,
+	// make sure you have QCoreApplication::setOrganizationDomainName()[1] call that sets the correct name for your application."
+	// [1] No such function, not really sure if they mean setOrganizationName(), setOrganizationDomain(), or setApplicationName().
+	//     ... looks like setOrganizationName() is empty of we don't explicitly set it below.
 	KAboutData::setApplicationData(aboutData);
+	app.setOrganizationName("gvansickle");
 
-    // Set up top-level logging.
-    logging.SetMessagePattern("["
-					   "%{time hh:mm:ss.zzz} "
-					   "%{threadid} "
-					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
-					   "%{if-fatal}FATAL%{endif}"
-					   "]"
-    					+ logging.ClickableLinkPattern() +
-					   /*"%{function}:%{line}*/ " - %{message}"
-					   "%{if-fatal}%{backtrace}%{endif}");
+	// Integrate KAboutData with commandline argument handling
+	QCommandLineParser parser;
+	aboutData.setupCommandLine(&parser);
+	// setup of app specific commandline args
+	// [...]
+	parser.process(app);
+	aboutData.processCommandLine(&parser);
+
+	// Application metadata set, now register to the D-Bus session
+	/// @todo No DBus functionality currently.
 
 	// Start the log with the App ID and version info.
 	qInfo() << "LOGGING START";
-	qInfo() << "Application:" << app.applicationDisplayName() << "(" << app.applicationName() << ")";
-	qInfo() << "    Version:" << app.applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
+	qInfo() << "Organization:" << app.organizationName() << "(" << app.organizationDomain() << ")";
+	qInfo() << " Application:" << app.applicationDisplayName() << "(" << app.applicationName() << ")";
+	qInfo() << "     Version:" << app.applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
 
 	// Register types with Qt.
 	RegisterQtMetatypes();
@@ -110,27 +133,15 @@ int main(int argc, char *argv[])
 	}
 
 	// Set the application Icon.
+	// "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
+	// the desktop file, make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo"))); (in GUI apps)."
 	///@todo Get an actual icon.
 	QIcon appIcon;
 	appIcon.addFile(":/icons/oxygen-icons/64x64/apps/preferences-desktop-sound.png");
 	app.setWindowIcon(appIcon);
 
-	// Integrate KAboutData with commandline argument handling
-	QCommandLineParser parser;
-	aboutData.setupCommandLine(&parser);
-	// setup of app specific commandline args
-	// [...]
-	parser.process(app);
-	aboutData.processCommandLine(&parser);
-
-	// Application metadata set, now register to the D-Bus session
-	/// @todo No DBus functionality currently.
-
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
 	QSettings::setDefaultFormat(QSettings::IniFormat);
-
-    // Log the audio file types we support.
-    /// @todo M_WARNING("TODO: Log supported file types")
 
 	// Logging test.
 	qDebug() << "TEST: Debug";

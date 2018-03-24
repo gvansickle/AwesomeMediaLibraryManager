@@ -57,6 +57,8 @@ void Theme::initialize()
 {
     // Get OS info.
 
+M_WARNING("TODO");
+#if 0
 
     QStringList supplemental_icon_theme_dirs;
 
@@ -135,7 +137,7 @@ void Theme::initialize()
             qDebug() << "isNull: " << test_icon.isNull();
         }
     }
-
+#endif
     qDebug() << "Current iconThemeName():" << QIcon::themeName();
     qDebug() << "Current themeSearchPaths():" << QIcon::themeSearchPaths();
 }
@@ -173,6 +175,8 @@ QStringList Theme::GetIconThemeNames()
 
 bool Theme::setThemeName(const QString& name)
 {
+M_WARNING("TODO");
+#if 0
 	///@todo This doen't work like it should
 	auto old_theme_name = QIcon::themeName();
 
@@ -186,6 +190,7 @@ bool Theme::setThemeName(const QString& name)
 		QIcon::setThemeName("oxygen-icons");
 		return false;
 	}
+#endif
 	return true;
 }
 
