@@ -44,13 +44,15 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
+# Min versions of Qt5 and KF5.
 set(QT_MIN_VERSION "5.9.0")
 set(KF5_MIN_VERSION "5.37.0")
+
 # KDE extra-cmake-modules, see https://api.kde.org/ecm/
-find_package(ECM REQUIRED NO_MODULE)
+find_package(ECM 5.38 REQUIRED NO_MODULE)
 
 # Add folder where we keep support *.cmake's.
-list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
 # Prevent an in-root-of-src-tree build.
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
@@ -58,10 +60,21 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
-### KDE stuff
-#include(KDEInstallDirs)
-#include(KDECMakeSettings)
-#include(KDECompilerSettings NO_POLICY_SCOPE)
+### KDE modules.
+### @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+# @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
+# @warning This also sets the compiler stds way too low (C89(!!))
+# @see https://api.kde.org/ecm/kde-module/KDECompilerSettings.html
+include(KDECompilerSettings NO_POLICY_SCOPE)
+# C11
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+# C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+kde_enable_exceptions()
 include(FeatureSummary)
 ###
 
@@ -133,10 +146,6 @@ endif()
 # Generate the version info file.
 configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
-
-# C++14
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")

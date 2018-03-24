@@ -101,17 +101,17 @@ constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args.
 
 template <class...> struct conjunction;
 template <class...> struct disjunction;
-template <class B> using negation = bool_constant<not B::value>;
+template <class B> using negation = bool_constant<!B::value>;
 
 template <class T, class... Ts>
 struct conjunction<T, Ts...> :
-  bool_constant<T::value and conjunction<Ts...>::value>
+  bool_constant<T::value && conjunction<Ts...>::value>
 { };
 template <> struct conjunction<> : std::true_type { };
 
 template <class T, class... Ts>
 struct disjunction<T, Ts...> :
-  bool_constant<T::value or disjunction<Ts...>::value>
+  bool_constant<T::value || disjunction<Ts...>::value>
 { };
 template <> struct disjunction<> : std::false_type { };
 
@@ -125,7 +125,7 @@ template <bool... Bs>
 constexpr bool either = disjunction<bool_constant<Bs>...>::value;
 
 template <bool... Bs>
-constexpr bool disallow = not require<Bs...>;
+constexpr bool disallow = !require<Bs...>;
 
 template <template <class...> class Op, class... Args>
 constexpr bool exists = is_detected<Op, Args...>::value;
