@@ -593,7 +593,7 @@ cmake_print_variables(META_FILES_TO_INCLUDE)
 #    set_property(SOURCE ${generated_rcc_file_name} PROPERTY SKIP_AUTOMOC ON)
 #endforeach()
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
-qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
+#qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 
 # Add KConfig source files to the common SOURCE_FILES list.
@@ -635,7 +635,7 @@ set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5
 target_link_libraries(${PROJECT_NAME}
         ${PROJECT_COMMON_LINK_LIBS}
 		)
-add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
+add_dependencies(${PROJECT_NAME} icons_oxygen icons_App)
 # Add sanitizers.
 add_sanitizers(${PROJECT_NAME})
 ### @note KF5:
@@ -725,7 +725,7 @@ install(FILES
     ### @todo I think these are installing on top of themselves.
     #icons_oxygen.rcc icons_Tango.rcc icons_App.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-    ${CMAKE_CURRENT_BINARY_DIR}/icons_Tango.rcc
+    #${CMAKE_CURRENT_BINARY_DIR}/icons_Tango.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
     DESTINATION .
     COMPONENT coreapp)
@@ -733,7 +733,7 @@ install(FILES
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
     ALL
-	DEPENDS ${PROJECT_NAME} icons_oxygen icons_Tango icons_App
+	DEPENDS ${PROJECT_NAME} icons_oxygen icons_App
     COMMENT "Packaging ${PROJECT_NAME}...")
 if(WIN32)
     # Add custom commands and install targets for Qt windeploy.
