@@ -112,7 +112,7 @@
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(parent, flags)
 {
 	// Name our MainWindow.
-	setObjectName("TheAMLMMainWindow");
+	setObjectName("MainWindow");
 
     // Name our GUI thread.
     QThread::currentThread()->setObjectName("GUIThread");
@@ -179,7 +179,8 @@ M_WARNING("TODO: ifdef this to development only")
 
     setUnifiedTitleAndToolBarOnMac(true);
 
-	// KF5: Autosave window layout settings.
+	// KF5: Activate Autosave of window layout settings.
+	// "Make sure you call this after all your *bars have been created."
 	setAutoSaveSettings();
 
     // Send ourself a message to re-load the files we had open last time we were closed.
@@ -1024,6 +1025,7 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 void MainWindow::readSettings()
 {
         QSettings settings;
+/// @todo OBSOLETE WITH KMainWindow.
 //        settings.beginGroup("mainwindow");
 //        auto geometry = settings.value("geometry", QByteArray());
 //        if(geometry.isNull() || !geometry.isValid())

@@ -140,6 +140,8 @@ M_WARNING("TODO");
 #endif
     qDebug() << "Current iconThemeName():" << QIcon::themeName();
     qDebug() << "Current themeSearchPaths():" << QIcon::themeSearchPaths();
+	qInfo() << "QPA Platform plugin name:" << qApp->platformName();
+
 }
 
 QStringList Theme::FindIconThemes()

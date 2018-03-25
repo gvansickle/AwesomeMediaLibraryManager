@@ -120,9 +120,9 @@ int main(int argc, char *argv[])
 
 	// Register types with Qt.
 	RegisterQtMetatypes();
-
+#if 0
     // Load the icon resources.
-	auto rccs = {"icons_oxygen.rcc", "icons_Tango.rcc", "icons_App.rcc"};
+	auto rccs = {"icons_oxygen.rcc", "icons_App.rcc"};
 	for(auto fname : rccs)
 	{
 		bool opened = QResource::registerResource(fname);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 			qCritical() << "FAILED TO OPEN RCC:" << fname;
 		}
 	}
-
+#endif
 	// Set the application Icon.
 	// "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
 	// the desktop file, make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo"))); (in GUI apps)."
@@ -148,11 +148,23 @@ int main(int argc, char *argv[])
 	qWarning() << "TEST: Warning";
 	qCritical() << "TEST: Critical";
 
-    // Create and show the main window.
-	// From the KDE5 docs: https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#ab0c194be12f0ad123a9ba8be75bb85c9
-	// "KMainWindows must be created on the heap with 'new'"
-    MainWindow *mainWin = new MainWindow();
-    mainWin->show();
+	qInfo() << "QPA Platform plugin name:" << app.platformName();
+
+	// Session management support.
+	if(app.isSessionRestored())
+	{
+		kRestoreMainWindows<MainWindow>();
+	}
+	else
+	{
+		// Normal startup.
+
+		// Create and show the main window.
+		// From the KDE5 docs: https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#ab0c194be12f0ad123a9ba8be75bb85c9
+		// "KMainWindows must be created on the heap with 'new'"
+		MainWindow *mainWin = new MainWindow();
+		mainWin->show();
+	}
 
     return app.exec();
 }

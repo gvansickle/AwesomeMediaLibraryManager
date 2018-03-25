@@ -234,6 +234,20 @@ private:
 
     void stopAllBackgroundThreads();
 
+	/// @name Session management.
+	/// @{
+
+	/// Override it if you need to save other data about your documents on session end.
+	/// sessionConfig is a config to which that data should be saved. Normally, you don't need this function.
+	/// But if you want to save data about your documents that are not in opened windows you might need it.
+	void saveGlobalProperties(KConfig *sessionConfig) override {}
+
+	/// Save instance-specific properties.
+	/// https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html
+	/// "Invoked when the session manager requests your application to save its state."
+	void saveProperties(KConfigGroup& config_group) override {}
+	/// @}
+
     /// @name Persistency
     ///@{
 
