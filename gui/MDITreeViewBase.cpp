@@ -314,7 +314,7 @@ void MDITreeViewBase::onSelectAll()
 void MDITreeViewBase::onSettingsChanged()
 {
 	// Alternating row colors.
-	setAlternatingRowColors(Settings::useAlternatingRowColors());
+	setAlternatingRowColors(AMLMSettings::useAlternatingRowColors());
 
 }
 

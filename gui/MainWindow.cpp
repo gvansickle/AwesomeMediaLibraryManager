@@ -1580,7 +1580,7 @@ void MainWindow::startSettingsDialog()
 	if( !dialog )
 	{
 		//KConfigDialog didn't find an instance of this dialog, so lets create it:
-		dialog = new SettingsDialog(this, "settings", Settings::self());
+		dialog = new SettingsDialog(this, "settings", AMLMSettings::self());
 
 		connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
 	}

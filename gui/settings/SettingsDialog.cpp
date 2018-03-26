@@ -58,7 +58,7 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::onSettingsChanged()
 {
-	setFaceType(Settings::settingsDialogFace());
+	setFaceType(AMLMSettings::settingsDialogFace());
 }
 
 void SettingsDialog::initSettingsModel()
