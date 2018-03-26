@@ -23,7 +23,7 @@
 #include <QStyle>
 #include <QStyleFactory>
 
-#include "settings.h"
+#include <AMLMSettings.h>
 
 #include <QString>
 #include <QDebug>
@@ -149,8 +149,21 @@ M_WARNING("TODO");
 
 	QStringList available_styles = QStyleFactory::keys();
 	QString desktop_style = QApplication::style()->objectName();
-//	if(Settings::)
 
+	if(AMLMSettings::widgetStyle().isEmpty())
+	{
+		// This is the first program start.
+		QStringList styles_to_ignore;
+//		styles_to_ignore << QStringLiteral("GTK+");
+	}
+
+}
+
+QString Theme::getUserDefaultStyle(const char* fallback)
+{
+	KSharedConfigPtr kdeGlobals = KSharedConfig::openConfig(QStringLiteral("kdeglobals"), KConfig::NoGlobals);
+	KConfigGroup cg(kdeGlobals, "KDE");
+	return cg.readEntry("widgetStyle", fallback);
 }
 
 QStringList Theme::FindIconThemes()

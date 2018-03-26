@@ -21,10 +21,15 @@
 #include <QApplication>
 #include <QSettings>
 #include <QIcon>
-#include <QStorageInfo>
 #include <QLoggingCategory>
 #include <QResource>
 #include <KAboutData>
+
+#include <KIconLoader>
+#include <KSharedConfig>
+#include <KConfigGroup>
+#include <QProcessEnvironment>
+
 #include <QCommandLineParser>
 
 #include <utils/AboutDataSetup.h>
@@ -67,15 +72,45 @@ int main(int argc, char *argv[])
 	/// @note Must be set before Q(Gui)Application is constructed.
 	QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 	/// @todo Look at:
-	///		Qt::AA_UseHighDpiPixmaps
 	///		Qt::AA_UseStyleSheetPropagationInWidgetStyles
 	///		Qt::AA_CompressHighFrequencyEvents (default is true on X11)
 
+	//
 	// Create the Qt5 app.
+	//
     QApplication app(argc, argv);
+
+	// Get our config for use later.
+	KSharedConfigPtr config = KSharedConfig::openConfig();
+	// Open or create two top-level config groups: "unmanaged" and "version".
+	// We use the pre-existence of "version" to detect if this is the first time we've started.
+	KConfigGroup grp(config, "unmanaged");
+	KConfigGroup initialGroup(config, "version");
+	if (!initialGroup.exists())
+	{
+		/// @todo Not sure if we want to be this draconian.
+		QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+		if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
+		{
+			qDb() << "KDE Desktop detected, using system icons";
+		}
+		else
+		{
+			// We are not on a KDE desktop, force breeze icon theme
+			grp.writeEntry("force_breeze", true);
+			qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
+		}
+	}
 
 	// Use HighDPI pixmaps as long as we're supporting High DPI scaling.
 	app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+
+	// If we're forcing Breeze icons, force them here.
+	bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
+	if (forceBreeze)
+	{
+		QIcon::setThemeName("breeze");
+	}
 
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
@@ -108,8 +143,10 @@ int main(int argc, char *argv[])
 	QCommandLineParser parser;
 	aboutData.setupCommandLine(&parser);
 	// setup of app specific commandline args
+	parser.setApplicationDescription(aboutData.shortDescription());
 	parser.addVersionOption();
 	parser.addHelpOption();
+	// ... addOption() additional options here.
 	parser.process(app);
 	aboutData.processCommandLine(&parser);
 

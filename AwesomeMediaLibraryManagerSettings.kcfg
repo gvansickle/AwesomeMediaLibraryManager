@@ -29,6 +29,8 @@
   	</entry>
   </group>
   <group name="Appearance">
+  	<entry name="widgetStyle" type="String" key="widget style">
+  		<label>The widget style to use for the program</label></entry>
   	<entry name="TrackFont" type="Font" key="track font">
   		<label>The font used to display track info in the Library and Playlist windows</label></entry>
   	<entry name="MetadataFont" type="Font" key="metadata font">

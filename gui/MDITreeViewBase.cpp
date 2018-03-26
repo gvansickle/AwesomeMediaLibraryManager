@@ -42,7 +42,7 @@
 #include "logic/proxymodels/ModelHelpers.h"
 #include "logic/proxymodels/QPersistentModelIndexVec.h"
 
-#include "settings.h"
+#include "AMLMSettings.h"
 
 
 MDITreeViewBase::MDITreeViewBase(QWidget* parent) : QTreeView(parent)

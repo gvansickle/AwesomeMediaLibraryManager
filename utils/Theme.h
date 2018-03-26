@@ -34,6 +34,8 @@ public:
 
     static void initialize();
 
+	static QString getUserDefaultStyle(const char* fallback = nullptr);
+
     static QStringList GetIconThemeNames();
 
 	static bool setThemeName(const QString& name);

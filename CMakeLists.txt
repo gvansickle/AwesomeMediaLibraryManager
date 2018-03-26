@@ -572,8 +572,8 @@ qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 
 # Add KConfig source files to the common SOURCE_FILES list and install it.
-install(FILES awesomemedialibrarymanagersettings.kcfg DESTINATION ${KCFG_INSTALL_DIR})
-kconfig_add_kcfg_files(SOURCE_FILES awesomemedialibrarymanagersettings.kcfgc)
+install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KCFG_INSTALL_DIR})
+kconfig_add_kcfg_files(SOURCE_FILES AwesomeMediaLibraryManagerSettings.kcfgc)
 
 ###
 ### The main executable.

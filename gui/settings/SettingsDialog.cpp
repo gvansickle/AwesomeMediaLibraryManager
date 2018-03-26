@@ -36,7 +36,7 @@
 
 #include "../MainWindow.h"
 
-#include "settings.h"
+#include <AMLMSettings.h>
 
 SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config)
 	: KConfigDialog( parent, name, config )

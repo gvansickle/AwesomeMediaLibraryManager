@@ -38,7 +38,7 @@
 
 // For KF5 KConfig infrastructure.
 //#include <KConfigDialog>
-#include "settings.h"
+#include <AMLMSettings.h>
 #include <gui/settings/SettingsDialog.h>
 
 #include <logic/LibraryModel.h>
