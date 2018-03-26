@@ -22,9 +22,13 @@
 #ifdef HAVE_KF5
 
 #include <KMainWindow>
+#include <KXmlGuiWindow>
 
 class KToolBar;
 using ToolBarClass = KToolBar;
+
+class KToggleAction;
+class KActionMenu;
 
 #else // !HAVE_KF5
 
@@ -72,11 +76,17 @@ class PlaylistModel;
 class LibraryEntry;
 class LibraryEntryMimeData;
 
-class MainWindow: public KMainWindow
+/**
+ * Awesome Media Library Manager's MainWindow class.
+ *
+ * @note I suspect deriving from KXmlGuiWindow instead of KMainWindow, when I'm not using XML for the GUI,
+ *       is going to bite me at some point.  But this gives me an actionCollection().  So there's that.
+ */
+class MainWindow: public KXmlGuiWindow ///KMainWindow
 {
 	Q_OBJECT
 
-	using BASE_CLASS = KMainWindow;
+	using BASE_CLASS = KXmlGuiWindow;
 
 Q_SIGNALS:
 	/**
@@ -89,7 +99,7 @@ Q_SIGNALS:
 	void settingsChanged();
 
 public:
-    MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
+	explicit MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
     ~MainWindow() override;
 
 	/**
@@ -104,6 +114,13 @@ public:
 	 * @note This arrangement is racey, need to find a better way to manage this.
 	 */
 	void view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* modelptr);
+
+	/**
+	 * Helper function to add an action to the actionCollection() with a name.
+	 * @param action_name
+	 * @param action
+	 */
+	void addAction(const QString& action_name, QAction* action);
 
 public Q_SLOTS:
 
@@ -166,8 +183,12 @@ private Q_SLOTS:
     void onSubWindowActivated(QMdiSubWindow* subwindow);
     void onFocusChanged(QWidget* old, QWidget* now);
 
+    /// @name Theme/Style related slots.
+    /// @{
     void changeStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
+    void onChangeStyle(QAction* action);
+	/// @}
 
     /**
 	 * Slot FBO the Collection sidebar to bring the MDILibraryView associated with @a libmodel to the fore
@@ -190,7 +211,15 @@ private Q_SLOTS:
 
     void onChangeWindowMode(QAction* action);
 
-    void onSettingsChanged();
+	/// @name Settings action related slots.
+	/// @{
+
+	/// Slot which shows/hides the menu bar.
+	void onShowMenuBar(bool show);
+
+	void onSettingsChanged();
+
+	/// @}
 
     /// Filter slots.
     void onTextFilterChanged();
@@ -204,6 +233,8 @@ private:
     void createActionsEdit();
 	void createActionsView();
 	void createActionsTools();
+	void createActionsSettings();
+
 
     void createMenus();
     void createToolBars();
@@ -284,8 +315,10 @@ private:
 
     bool maybeSaveOnClose();
 
+	void doChangeStyle();
 
-    /// @name Private data members.
+
+	/// @name Private data members.
     /// @{
 
     /// App-specific cache directory.
@@ -351,20 +384,29 @@ private:
     QAction *m_act_select_all;
     /// @}
 
-	/// @name Tools actions
-	/// @{
-
-	QAction* m_rescanLibraryAct;
-	QAction* m_cancelRescanAct;
-	QAction* m_settingsAct;
-	QAction* m_act_shortcuts_dialog;
-	/// @}
-
 	/// View actions.
 	/// @{
 	QAction *m_act_lock_layout;
 	QAction *m_act_reset_layout;
 	ActionBundle* m_ab_docks;
+	QActionGroup* m_actgroup_styles;
+	/// @}
+
+	/// @name Tools actions
+	/// @{
+	QAction* m_rescanLibraryAct;
+	QAction* m_cancelRescanAct;
+	/// @}
+
+	/// @name Settings actions.
+	/// @{
+	KToggleAction* m_act_ktog_show_menu_bar;
+	KToggleAction* m_act_ktog_show_tool_bar;
+	KToggleAction* m_act_ktog_show_status_bar;
+	/// Widget style action menu.
+	KActionMenu* m_act_styles_kaction_menu;
+	QAction* m_act_shortcuts_dialog;
+	QAction* m_settingsAct;
 	/// @}
 
     /// @name Window actions.
@@ -396,6 +438,7 @@ private:
     QMenu *m_menu_edit;
     QMenu* m_viewMenu;
     QMenu* m_toolsMenu;
+	QMenu *m_menu_settings;
     QMenu* m_menu_window;
     QMenu* m_helpMenu;
 

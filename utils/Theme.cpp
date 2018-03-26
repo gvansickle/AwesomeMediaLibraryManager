@@ -37,8 +37,13 @@
 #include <QDirIterator>
 #include <QUrl>
 #include <QRegularExpression>
+#include <KActionMenu>
+#include <gui/MainWindow.h>
 
 #include "DebugHelpers.h"
+
+
+QStringList Theme::m_available_styles;
 
 
 static bool isWindows()
@@ -147,7 +152,9 @@ M_WARNING("TODO");
     qDebug() << "Current themeSearchPaths():" << QIcon::themeSearchPaths();
 	qInfo() << "QPA Platform plugin name:" << qApp->platformName();
 
-	QStringList available_styles = QStyleFactory::keys();
+	// Get all the styles we have available.
+	m_available_styles = QStyleFactory::keys();
+	// Get the current desktop style.
 	QString desktop_style = QApplication::style()->objectName();
 
 	if(AMLMSettings::widgetStyle().isEmpty())
@@ -155,8 +162,61 @@ M_WARNING("TODO");
 		// This is the first program start.
 		QStringList styles_to_ignore;
 //		styles_to_ignore << QStringLiteral("GTK+");
+		if(styles_to_ignore.contains(desktop_style, Qt::CaseInsensitive))
+		{
+			// We don't want/can't use the current desktop style.
+			qIn() << "Current desktop style \"" << desktop_style << "\" can't be used, looking for alternatives.";
+
+			// Is Breeze available?
+			if(m_available_styles.contains(QStringLiteral("breeze"), Qt::CaseInsensitive))
+			{
+				// Yes, use it.
+				qIn() << "Style Breeze available, using it.";
+				AMLMSettings::setWidgetStyle(QStringLiteral("Breeze"));
+			}
+			else if(m_available_styles.contains(QStringLiteral("fusion"), Qt::CaseInsensitive))
+			{
+				// Second choice is Fusion, use that.
+				qIn() << "Style \"Fusion\" available, using it.";
+				AMLMSettings::setWidgetStyle(QStringLiteral("Fusion"));
+			}
+		}
+		else
+		{
+			// Use the current default desktop widget style.
+			qIn() << "Using current desktop style:" << desktop_style;
+			AMLMSettings::setWidgetStyle(QStringLiteral("Default"));
+		}
+	}
+}
+
+QActionGroup * Theme::getStylesActionGroup(MainWindow *main_window)
+{
+	KActionMenu *stylesAction = new KActionMenu(tr("Style"), main_window);
+	QActionGroup *stylesGroup = new QActionGroup(stylesAction);
+
+	// Add default style action
+	QAction *defaultStyle = new QAction(tr("Default"), stylesGroup);
+	defaultStyle->setData(QStringLiteral("Default"));
+	defaultStyle->setCheckable(true);
+	stylesAction->addAction(defaultStyle);
+	if (AMLMSettings::widgetStyle() == QLatin1String("Default") || AMLMSettings::widgetStyle().isEmpty())
+	{
+		defaultStyle->setChecked(true);
 	}
 
+	for(const QString &style : m_available_styles)
+	{
+		QAction *a = new QAction(style, stylesGroup);
+		a->setCheckable(true);
+		a->setData(style);
+		if (AMLMSettings::widgetStyle() == style) {
+			a->setChecked(true);
+		}
+		stylesAction->addAction(a);
+	}
+
+	return stylesGroup;
 }
 
 QString Theme::getUserDefaultStyle(const char* fallback)

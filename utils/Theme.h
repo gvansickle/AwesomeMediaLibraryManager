@@ -23,7 +23,9 @@
 #include <QWidget>
 #include <QIcon>
 #include <QStringList>
+#include <QActionGroup>
 
+class MainWindow;
 
 class Theme : public QWidget
 {
@@ -33,6 +35,9 @@ public:
     explicit Theme(QWidget *parent = nullptr);
 
     static void initialize();
+
+	// Get a "Widget Styles" QActionGroup.
+	static QActionGroup *getStylesActionGroup(MainWindow *main_window);
 
 	static QString getUserDefaultStyle(const char* fallback = nullptr);
 
@@ -55,14 +60,16 @@ public:
 	// Return a platform- and possibly theme-specific QKeySequence corresponding to the string @a key.
 	static QKeySequence keySequenceFromTheme(Theme::Key key);
 
-signals:
+Q_SIGNALS:
 
-public slots:
+public Q_SLOTS:
 
 private:
 	Q_DISABLE_COPY(Theme)
 
     static QStringList FindIconThemes();
+
+	static QStringList m_available_styles;
 };
 
 #endif // THEME_H

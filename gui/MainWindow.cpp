@@ -26,6 +26,7 @@
 #include <KShortcutsDialog>
 #include <KActionCollection>
 #include <KActionMenu>
+#include <KMessageBox>
 
 
 #include "Experimental.h"
@@ -111,7 +112,7 @@
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(parent, flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags)
 {
 	// Name our MainWindow.
 	setObjectName("MainWindow");
@@ -130,8 +131,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(par
 
 	readPreGUISettings();
 
-    // Look for icons.
+    // Set up our theming.
     Theme::initialize();
+    m_actgroup_styles = Theme::getStylesActionGroup(this);
+	m_act_styles_kaction_menu = qobject_cast<KActionMenu*>(m_actgroup_styles->parent());
+	Q_CHECK_PTR(m_act_styles_kaction_menu);
 
     /// @todo
 M_WARNING("TODO")
@@ -180,6 +184,7 @@ M_WARNING("TODO: ifdef this to development only")
     setWindowTitle(qApp->applicationDisplayName());
 
     setUnifiedTitleAndToolBarOnMac(true);
+
 
 	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
@@ -352,26 +357,9 @@ void MainWindow::createActions()
 	//
 	createActionsView();
 
-    //
-	// Tools actions.
-    //
-
-	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
-									QKeySequence::Refresh);
-	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
-
-	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
-									QKeySequence::Cancel);
-	connect_trig(m_cancelRescanAct, this, &MainWindow::onCancelRescan);
-
-	m_settingsAct = make_action(QIcon::fromTheme("configure"), tr("Settings..."), this,
-							   QKeySequence::Preferences, "Open the Settings dialog.");
-	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
-
-	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
-							   QKeySequence(), "Scan library for problems");
-
 	createActionsTools();
+
+	createActionsSettings();
 
 	//
     // Window actions.
@@ -493,10 +481,43 @@ void MainWindow::createActionsView()
 
 void MainWindow::createActionsTools()
 {
+	//
+	// Tools actions.
+	//
+
+	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
+									QKeySequence::Refresh);
+	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
+
+	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
+									QKeySequence::Cancel);
+	connect_trig(m_cancelRescanAct, this, &MainWindow::onCancelRescan);
+
+	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
+							   QKeySequence(), "Scan library for problems");
+
 	m_act_shortcuts_dialog = make_action(Theme::iconFromTheme(""),
 	                                 tr("Edit Shortcuts..."), this);
 
 	connect_trig(m_act_shortcuts_dialog, this, &MainWindow::onOpenShortcutDlg);
+}
+
+void MainWindow::createActionsSettings()
+{
+	// Show/hide menu bar.
+	m_act_ktog_show_menu_bar = KStandardAction::showMenubar(this, &MainWindow::onShowMenuBar, actionCollection());
+
+	// Styles menu.
+	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
+	connect(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::onChangeStyle);
+
+#if HAVE_KF5
+	m_settingsAct = KStandardAction::preferences(this, &MainWindow::startSettingsDialog, actionCollection());
+#else
+	m_settingsAct = make_action(QIcon::fromTheme("configure"), tr("Settings..."), this,
+							   QKeySequence::Preferences, "Open the Settings dialog.");
+	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
+#endif
 }
 
 void MainWindow::createMenus()
@@ -535,7 +556,7 @@ void MainWindow::createMenus()
 	m_ab_docks->appendToMenu(m_viewMenu);
 	m_viewMenu->addActions({
 							   m_act_lock_layout,
-							   m_act_reset_layout
+							   m_act_reset_layout,
 						   });
 
     // Tools menu.
@@ -545,10 +566,17 @@ void MainWindow::createMenus()
 		 m_toolsMenu->addSection("Rescans"),
 		 m_rescanLibraryAct,
 		 m_cancelRescanAct,
-		 m_toolsMenu->addSection("Settings"),
-		 m_settingsAct,
-		 m_act_shortcuts_dialog
                 });
+
+	// Settings menu.
+	m_menu_settings = menuBar()->addMenu(tr("&Settings"));
+	m_menu_settings->addActions({
+		m_act_ktog_show_menu_bar,
+		m_act_styles_kaction_menu,
+		m_toolsMenu->addSection("Settings"),
+		m_settingsAct,
+		m_act_shortcuts_dialog
+		});
 
     // Create the Window menu.
 	m_menu_window = menuBar()->addMenu(tr("&Window"));
@@ -1026,6 +1054,12 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 								  modelptr),
 				   m_playlist_models.end());
 	}
+}
+
+void MainWindow::addAction(const QString& action_name, QAction* action)
+{
+	actionCollection()->addAction(action_name, action);
+	actionCollection()->setDefaultShortcut(action, action->shortcut());
 }
 
 //////
@@ -1627,7 +1661,8 @@ void MainWindow::startSettingsDialog()
 void MainWindow::onOpenShortcutDlg()
 {
 M_WARNING("TODO");
-	KActionCollection action_collection(this);
+//	KActionCollection action_collection(this);
+	KActionCollection& action_collection = *actionCollection();
 	action_collection.addAction("Close", m_act_close);
 	action_collection.addAction("Close all", m_act_close_all);
 	KShortcutsDialog::configure( &action_collection );
@@ -1658,6 +1693,33 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 	}
 }
 
+void MainWindow::onChangeStyle(QAction *action)
+{
+	// Get the name of the style to change to.
+	QString style = action->data().toString();
+
+	// Update the settings first.
+	/// @todo Not sure if this is really correct.  If the new style e.g. causes a crash, we
+	///       will have maybe permanently hosed ourself by now always starting with that style.
+	AMLMSettings::setWidgetStyle(style);
+
+	// Do the actual style change work.
+	doChangeStyle();
+}
+
+void MainWindow::doChangeStyle()
+{
+	QString newStyle = AMLMSettings::widgetStyle();
+	if (newStyle.isEmpty() || newStyle == QStringLiteral("Default"))
+	{
+		newStyle = Theme::getUserDefaultStyle("Breeze");
+	}
+	QApplication::setStyle(QStyleFactory::create(newStyle));
+
+//	// Changing widget style resets color theme, so update color theme again
+//	ThemeManager::instance()->slotChangePalette();
+}
+
 void MainWindow::about()
 {
     AboutBox about_box(this);
@@ -1686,6 +1748,16 @@ void MainWindow::onChangeWindowMode(QAction* action)
 	{
 		m_mdi_area->setViewMode(QMdiArea::SubWindowView);
 	}
+}
+
+void MainWindow::onShowMenuBar(bool show)
+{
+	if (!show)
+	{
+		KMessageBox::information(this, tr("This will hide the menu bar completely. You can show it again by typing Ctrl+M."),
+								 tr("Hide menu bar"), QStringLiteral("show-menubar-warning"));
+	}
+	menuBar()->setVisible(show);
 }
 
 void MainWindow::onSettingsChanged()
@@ -1753,5 +1825,6 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *subwindow)
 		}
 	}
 }
+
 
 
