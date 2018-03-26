@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	// Enable high-DPI scaling in Qt on supported platforms.
 	// Makes Qt scale the main (device independent) coordinate system according to display scale factors provided by
 	// the operating system. This corresponds to setting the QT_AUTO_SCREEN​_SCALE_FACTOR environment variable to 1.
-	// Must be set before Q(Gui)Application is constructed.
+	/// @note Must be set before Q(Gui)Application is constructed.
 	QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 	/// @todo Look at:
 	///		Qt::AA_UseHighDpiPixmaps
@@ -73,6 +73,9 @@ int main(int argc, char *argv[])
 
 	// Create the Qt5 app.
     QApplication app(argc, argv);
+
+	// Use HighDPI pixmaps as long as we're supporting High DPI scaling.
+	app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
@@ -105,7 +108,8 @@ int main(int argc, char *argv[])
 	QCommandLineParser parser;
 	aboutData.setupCommandLine(&parser);
 	// setup of app specific commandline args
-	// [...]
+	parser.addVersionOption();
+	parser.addHelpOption();
 	parser.process(app);
 	aboutData.processCommandLine(&parser);
 
@@ -153,6 +157,7 @@ int main(int argc, char *argv[])
 	// Session management support.
 	if(app.isSessionRestored())
 	{
+		// Don't need to deal with KMainWindow::restore(), this takes care of it.
 		kRestoreMainWindows<MainWindow>();
 	}
 	else

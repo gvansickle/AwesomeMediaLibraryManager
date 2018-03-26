@@ -76,6 +76,8 @@ class MainWindow: public KMainWindow
 {
 	Q_OBJECT
 
+	using BASE_CLASS = KMainWindow;
+
 Q_SIGNALS:
 	/**
 	 * Signal which serves essentially as a repeater for other views which want to
@@ -83,7 +85,7 @@ Q_SIGNALS:
 	 */
 	void sendToNowPlaying(LibraryEntryMimeData* mime_data);
 
-	// User changed the settings in the Settings dialog.
+	/// User changed the settings in the Settings dialog.
 	void settingsChanged();
 
 public:
@@ -245,14 +247,22 @@ private:
 	/// Save instance-specific properties.
 	/// https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html
 	/// "Invoked when the session manager requests your application to save its state."
-	void saveProperties(KConfigGroup& config_group) override {}
+	/// - Not called when the user closes the app normally.
+	/// - No user interactions (dialogs) allowed in here.
+	void saveProperties(KConfigGroup& config_group) override;
+
+	/// Read instance-specific properties.
+	/// Called indirectly by restore().
+	void readProperties(const KConfigGroup& config_group) override;
 	/// @}
+
+	bool queryClose() override;
 
     /// @name Persistency
     ///@{
 
     /// Reads the primary settings.
-    void readSettings();
+	void readPreGUISettings();
     void onStartup();
     void openWindows();
     void writeSettings();

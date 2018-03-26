@@ -105,6 +105,7 @@ include(InstallRequiredSystemLibraries)
 ### @todo? find_package(ECM 1.7.0 REQUIRED NO_MODULE)
 # For GoogleTest and Boost.
 set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
+include(ExternalProject)
 include(DownloadProject)
 
 dir_summary()
@@ -214,11 +215,12 @@ find_package(KF5 REQUIRED COMPONENTS
 	XmlGui
 	Config
 	ConfigWidgets
+	WindowSystem
 )
 list(APPEND KF5_LINK_LIBS KF5::CoreAddons)
 list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::XmlGui)
-list(APPEND KF5_LINK_LIBS KF5::ConfigCore KF5::ConfigGui)
+list(APPEND KF5_LINK_LIBS KF5::ConfigCore KF5::ConfigGui KF5::WindowSystem)
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
@@ -294,14 +296,11 @@ set(IDENTIFIER "io.github.gvansickle")
 set(HEADER_FILES_THIRD_PARTY "")
 set(SOURCE_FILES_THIRD_PARTY "")
 
-include(ExternalProject)
-
 set(AMLM_LIBCUE_TARGET "")
 set(AMLM_TAGLIB_TARGET "")
 
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
-set(USE_BUNDLED_QXTGLOBALSHORTCUT FALSE)
 
 if(NOT WIN32)
     find_package(PkgConfig REQUIRED)
@@ -370,22 +369,6 @@ else()
 	if(LIBCUE_FOUND)
 		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
 	endif()
-endif()
-
-if(FALSE)
-if(USE_BUNDLED_QXTGLOBALSHORTCUT)
-	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
-	### @todo Looks like this is the most maintained fork: https://github.com/hluk/qxtglobalshortcut
-else()
-	find_package(PkgConfig REQUIRED)
-
-	pkg_check_modules(QXTGLOBALSHORTCUT_LIB REQUIRED qxtglobalshortcut
-		IMPORTED_TARGET)
-	if(QXTGLOBALSHORTCUT_LIB_FOUND)
-		set(AMLM_QXTGLOBALSHORTCUT_LIB_TARGET "PkgConfig::QXTGLOBALSHORTCUT_LIB")
-		# Doesn't work, this is an interface library: print_target_properties(${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
-	endif()
-endif()
 endif()
 
 # Verdigris is just two headers.
@@ -581,19 +564,8 @@ list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 add_project_meta(META_FILES_TO_INCLUDE)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
-# Qt5 Resource (qrc) files.
-# RESOURCE_FILES is a list of the generated output *.cpp file names.
-#qt5_add_resources(RESOURCE_FILES
-#        resources/oxygenicons.qrc
-#        resources/TangoIcons.qrc
-#        resources/AppIcon.qrc
-#        )
-#foreach(generated_rcc_file_name ${RESOURCE_FILES})
-#    message(STATUS "generated_rcc_file_name: ${generated_rcc_file_name}")
-#    set_property(SOURCE ${generated_rcc_file_name} PROPERTY SKIP_AUTOMOC ON)
-#endforeach()
+# Qt5 Binary Resource (rcc) files.
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
-#qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 
 # Add KConfig source files to the common SOURCE_FILES list.

@@ -52,8 +52,8 @@ KAboutData AboutDataSetup::GetKAboutData()
 	// Add me as the author.
 	retval.addAuthor(QObject::tr("Gary R. Van Sickle"), // The developer's name. It should be translated.
 					QObject::tr("Sole Proprietor"),
-					 QString("grvs@users.sourceforge.net"), // An Email address where the person can be reached. Can be left empty.
-					 "https://github.com/gvansickle", // The person's homepage or a relevant link. Start the address with "http://". "http://some.domain" is correct, "some.domain" is not. Can be left empty.
+					 QStringLiteral("grvs@users.sourceforge.net"), // An Email address where the person can be reached. Can be left empty.
+					 QStringLiteral("https://github.com/gvansickle"), // The person's homepage or a relevant link. Start the address with "http://". "http://some.domain" is correct, "some.domain" is not. Can be left empty.
 					 QString() // The person's Open Collaboration Services username. The provider can be optionally specified
 				);
 

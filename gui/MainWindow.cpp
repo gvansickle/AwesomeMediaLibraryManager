@@ -126,6 +126,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : KMainWindow(par
     m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
     qInfo() << "App data dir:" << m_appdatadir;
 
+	readPreGUISettings();
+
     // Look for icons.
     Theme::initialize();
 
@@ -173,13 +175,11 @@ M_WARNING("TODO: ifdef this to development only")
     ////// Connect up signals and slots.
     createConnections();
 
-    readSettings();
-
     setWindowTitle(qApp->applicationDisplayName());
 
     setUnifiedTitleAndToolBarOnMac(true);
 
-	// KF5: Activate Autosave of window layout settings.
+	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
 	setAutoSaveSettings();
 
@@ -578,6 +578,7 @@ void MainWindow::createMenus()
 	m_helpMenu->addAction(m_aboutQtAct);
 
 	// Create a second help menu via KHelpMenu.
+	/// @todo Remove one of these.
 	auto khelpmenu = new KHelpMenu(this, "KHelpMenu");
 	menuBar()->addMenu(khelpmenu->menu());
 }
@@ -860,6 +861,13 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	qDebug() << QString("Main Window received closeEvent.");
 
 	stopAllBackgroundThreads();
+
+	// Save auto-save settings if settings have changed.
+	if(settingsDirty() && autoSaveSettings())
+	{
+		saveAutoSaveSettings();
+	}
+
 	bool continue_with_close = maybeSaveOnClose();
 	if(continue_with_close)
 	{
@@ -1022,26 +1030,13 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 ////// Top-level QSettings save/restore.
 //////
 
-void MainWindow::readSettings()
+void MainWindow::readPreGUISettings()
 {
-        QSettings settings;
-/// @todo OBSOLETE WITH KMainWindow.
-//        settings.beginGroup("mainwindow");
-//        auto geometry = settings.value("geometry", QByteArray());
-//        if(geometry.isNull() || !geometry.isValid())
-//        {
-//            qDebug() << "No saved window geometry, using defaults.";
-//        }
-//        else
-//        {
-//            restoreGeometry(geometry.toByteArray());
-//        }
-//        auto window_state = settings.value("window_state", QByteArray());
-//        if(!window_state.isNull() && window_state.isValid())
-//        {
-//            restoreState(window_state.toByteArray());
-//        }
-//		settings.endGroup();
+	// Open the config file.
+	// No name == application name + "rc".
+	// No type == QStandardPaths::GenericConfigLocation
+	KConfigGroup config(KSharedConfig::openConfig(), "Settings");
+	/// @todo Add any readEntry()'s here.
 }
 
 void MainWindow::readLibSettings(QSettings& settings)
@@ -1082,10 +1077,11 @@ void MainWindow::writeSettings()
 {
 	qDebug() << "writeSettings() start";
 	QSettings settings;
-	settings.beginGroup("mainwindow");
-	settings.setValue("geometry", saveGeometry());
-	settings.setValue("window_state", saveState());
-	settings.endGroup();
+/// @todo REMOVE
+//	settings.beginGroup("mainwindow");
+//	settings.setValue("geometry", saveGeometry());
+//	settings.setValue("window_state", saveState());
+//	settings.endGroup();
 	// Write the open library settings.
 	writeLibSettings(settings);
 	qDebug() << "writeSettings() end";
@@ -1720,6 +1716,21 @@ void MainWindow::stopAllBackgroundThreads()
 	{
 		model->stopAllBackgroundThreads();
 	}
+}
+
+void MainWindow::saveProperties(KConfigGroup& config_group)
+{
+	BASE_CLASS::saveProperties(config_group);
+}
+
+void MainWindow::readProperties(const KConfigGroup& config_group)
+{
+	BASE_CLASS::readProperties(config_group);
+}
+
+bool MainWindow::queryClose()
+{
+	return BASE_CLASS::queryClose();
 }
 
 //////
