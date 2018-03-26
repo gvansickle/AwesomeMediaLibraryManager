@@ -81,8 +81,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # And undo even more of what KDECompilerSettings did to/for us.
 ###string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 include(FeatureSummary)
-message("C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
-message("C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
+message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
+message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 ###
 
 # Use ccache if it's available.
@@ -211,16 +211,19 @@ endif()
 set(KF5_LINK_LIBS)
 find_package(KF5 REQUIRED COMPONENTS
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
-	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
-	XmlGui
 	Config
 	ConfigWidgets
+	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	WidgetsAddons
+	XmlGui
+	GuiAddons
+	IconThemes
 	WindowSystem
 )
-list(APPEND KF5_LINK_LIBS KF5::CoreAddons)
+list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
 list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-list(APPEND KF5_LINK_LIBS KF5::XmlGui)
-list(APPEND KF5_LINK_LIBS KF5::ConfigCore KF5::ConfigGui KF5::WindowSystem)
+list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
+list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
@@ -568,8 +571,9 @@ cmake_print_variables(META_FILES_TO_INCLUDE)
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 
-# Add KConfig source files to the common SOURCE_FILES list.
-KCONFIG_ADD_KCFG_FILES(SOURCE_FILES settings.kcfgc)
+# Add KConfig source files to the common SOURCE_FILES list and install it.
+install(FILES awesomemedialibrarymanagersettings.kcfg DESTINATION ${KCFG_INSTALL_DIR})
+kconfig_add_kcfg_files(SOURCE_FILES awesomemedialibrarymanagersettings.kcfgc)
 
 ###
 ### The main executable.

@@ -20,6 +20,11 @@
 #include "Theme.h"
 
 #include <QIcon>
+#include <QStyle>
+#include <QStyleFactory>
+
+#include "settings.h"
+
 #include <QString>
 #include <QDebug>
 #include <QApplication>
@@ -141,6 +146,10 @@ M_WARNING("TODO");
     qDebug() << "Current iconThemeName():" << QIcon::themeName();
     qDebug() << "Current themeSearchPaths():" << QIcon::themeSearchPaths();
 	qInfo() << "QPA Platform plugin name:" << qApp->platformName();
+
+	QStringList available_styles = QStyleFactory::keys();
+	QString desktop_style = QApplication::style()->objectName();
+//	if(Settings::)
 
 }
 

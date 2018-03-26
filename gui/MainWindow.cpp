@@ -25,6 +25,8 @@
 #include <KToolBar>
 #include <KShortcutsDialog>
 #include <KActionCollection>
+#include <KActionMenu>
+
 
 #include "Experimental.h"
 #include "FilterWidget.h"

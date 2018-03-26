@@ -1,6 +1,6 @@
 # Code generation options for kconfig_compiler
-File=settings.kcfg
-ClassName=Settings
+File=awesomemedialibrarymanagersettings.kcfg
+ClassName=AMLMSettings
 Singleton=true
 Mutators=true
 DefaultValueGetters=Theme
