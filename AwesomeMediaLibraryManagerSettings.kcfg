@@ -4,7 +4,7 @@
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
   <include>KPageDialog</include>
-  <kcfgfile name="awesomemedialibrarymanagerrc"/>
+  <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
   <group name="General">
     <entry name="UseQuestionMarks" type="Bool" key="question mark">
       <label>Whether the "unsure" marker may be used.</label>
@@ -40,6 +40,8 @@
   		<label>Use alternating row colors in Library and Playlist views</label>
   		<tooltip>Check to show the rows of song lists in alternating colors</tooltip>
   	</entry>
+  	<entry name="LayoutIsLocked" type="Bool" key="layout_is_locked">
+  		<default>true</default></entry>
   </group>
   <group name="Options">
     <entry name="CustomWidth" type="Int" key="custom width">

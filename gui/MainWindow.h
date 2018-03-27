@@ -28,6 +28,7 @@ class KToolBar;
 using ToolBarClass = KToolBar;
 
 class KToggleAction;
+class KToggleToolBarAction;
 class KActionMenu;
 
 #else // !HAVE_KF5
@@ -217,6 +218,8 @@ private Q_SLOTS:
 	/// Slot which shows/hides the menu bar.
 	void onShowMenuBar(bool show);
 
+	void addViewMenuActions(QMenu* menu);
+
 	void onSettingsChanged();
 
 	/// @}
@@ -234,6 +237,9 @@ private:
 	void createActionsView();
 	void createActionsTools();
 	void createActionsSettings();
+
+//	void addViewMenuActions(QMenu* menu);
+
 
 
     void createMenus();
@@ -388,6 +394,9 @@ private:
 	/// @{
 	QAction *m_act_lock_layout;
 	QAction *m_act_reset_layout;
+	KToggleAction* m_act_ktog_show_menu_bar;
+	KToggleToolBarAction* m_act_ktog_show_tool_bar;
+	KToggleAction* m_act_ktog_show_status_bar;
 	ActionBundle* m_ab_docks;
 	QActionGroup* m_actgroup_styles;
 	/// @}
@@ -400,9 +409,6 @@ private:
 
 	/// @name Settings actions.
 	/// @{
-	KToggleAction* m_act_ktog_show_menu_bar;
-	KToggleAction* m_act_ktog_show_tool_bar;
-	KToggleAction* m_act_ktog_show_status_bar;
 	/// Widget style action menu.
 	KActionMenu* m_act_styles_kaction_menu;
 	QAction* m_act_shortcuts_dialog;

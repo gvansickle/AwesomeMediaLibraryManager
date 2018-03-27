@@ -23,6 +23,7 @@
 #include <KMainWindow>
 #include <KHelpMenu>
 #include <KToolBar>
+#include <KToggleToolBarAction>
 #include <KShortcutsDialog>
 #include <KActionCollection>
 #include <KActionMenu>
@@ -131,18 +132,23 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 	readPreGUISettings();
 
+	// Follow the system style for the Icon&/|Text setting for toolbar buttons.
+	setToolButtonStyle(Qt::ToolButtonFollowStyle);
+
     // Set up our theming.
     Theme::initialize();
     m_actgroup_styles = Theme::getStylesActionGroup(this);
 	m_act_styles_kaction_menu = qobject_cast<KActionMenu*>(m_actgroup_styles->parent());
 	Q_CHECK_PTR(m_act_styles_kaction_menu);
 
-    /// @todo
-M_WARNING("TODO")
-//	changeIconTheme(QIcon::themeName());
+	// doChangeStyle() if we need to.
+	if(!AMLMSettings::widgetStyle().isEmpty()
+			&& QString::compare(QApplication::style()->objectName(), AMLMSettings::widgetStyle(), Qt::CaseInsensitive) != 0)
+	{
+		// Initailize the different style.
+		doChangeStyle();
+	}
 
-    // Follow the system style for the Icon&/|Text setting for toolbar buttons.
-    setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
 	/// Set "document mode" for the tab bar of tabbed dock widgets.
 	setDocumentMode(true);
@@ -184,7 +190,6 @@ M_WARNING("TODO: ifdef this to development only")
     setWindowTitle(qApp->applicationDisplayName());
 
     setUnifiedTitleAndToolBarOnMac(true);
-
 
 	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
@@ -477,6 +482,8 @@ void MainWindow::createActionsView()
 	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
+
+	m_act_ktog_show_tool_bar = new KToggleToolBarAction("FileToolbar", tr("Show File Toolbar"), actionCollection());
 }
 
 void MainWindow::createActionsTools()
@@ -495,11 +502,6 @@ void MainWindow::createActionsTools()
 
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
-
-	m_act_shortcuts_dialog = make_action(Theme::iconFromTheme(""),
-	                                 tr("Edit Shortcuts..."), this);
-
-	connect_trig(m_act_shortcuts_dialog, this, &MainWindow::onOpenShortcutDlg);
 }
 
 void MainWindow::createActionsSettings()
@@ -512,12 +514,34 @@ void MainWindow::createActionsSettings()
 	connect(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::onChangeStyle);
 
 #if HAVE_KF5
+	m_act_shortcuts_dialog = KStandardAction::keyBindings(this, &MainWindow::onOpenShortcutDlg, actionCollection());
 	m_settingsAct = KStandardAction::preferences(this, &MainWindow::startSettingsDialog, actionCollection());
 #else
+	m_act_shortcuts_dialog = make_action(Theme::iconFromTheme(""),
+									 tr("Edit Shortcuts..."), this);
+
+	connect_trig(m_act_shortcuts_dialog, this, &MainWindow::onOpenShortcutDlg);
+
 	m_settingsAct = make_action(QIcon::fromTheme("configure"), tr("Settings..."), this,
 							   QKeySequence::Preferences, "Open the Settings dialog.");
 	connect_trig(m_settingsAct, this, &MainWindow::startSettingsDialog);
 #endif
+}
+
+void MainWindow::addViewMenuActions(QMenu* menu)
+{
+	menu->setTitle(tr("&View"));
+
+	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
+//	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
+	addAction("layout_locked", m_act_lock_layout);
+
+	menu->addSeparator();
+
+	// List doc widgets.
+
+	// List toolbars.
+
 }
 
 void MainWindow::createMenus()
@@ -557,6 +581,7 @@ void MainWindow::createMenus()
 	m_viewMenu->addActions({
 							   m_act_lock_layout,
 							   m_act_reset_layout,
+							   m_act_ktog_show_tool_bar,
 						   });
 
     // Tools menu.
@@ -572,8 +597,9 @@ void MainWindow::createMenus()
 	m_menu_settings = menuBar()->addMenu(tr("&Settings"));
 	m_menu_settings->addActions({
 		m_act_ktog_show_menu_bar,
+		m_toolsMenu->addSeparator(),
 		m_act_styles_kaction_menu,
-		m_toolsMenu->addSection("Settings"),
+		m_toolsMenu->addSeparator(),
 		m_settingsAct,
 		m_act_shortcuts_dialog
 		});
@@ -651,7 +677,7 @@ void MainWindow::createToolBars()
 	m_settingsToolBar->addAction(m_settingsAct);
 	m_settingsToolBar->addAction(m_experimentalAct);
 
-
+#ifndef HAVE_KF5
     // Create a combo box where the user can change the style.
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());
@@ -666,6 +692,7 @@ void MainWindow::createToolBars()
     iconComboBox->addItems(Theme::GetIconThemeNames());
 	m_settingsToolBar->addWidget(iconComboBox);
 	connect(iconComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeIconTheme);
+#endif
 
     // Create another toolbar for the player controls.
 	m_controlsToolbar = addToolBar("Player Controls");
@@ -888,7 +915,13 @@ bool MainWindow::maybeSaveOnClose()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+	/// @note Per KF5 docs:
+	/// https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#a2a4a27013543027fd70c707041068777
+	/// "We recommend that you reimplement queryClose() rather than closeEvent(). If you do it anyway,
+	/// ensure to call the base implementation to keep the feature of auto-saving window settings working."
 	qDebug() << QString("Main Window received closeEvent.");
+
+	KXmlGuiWindow::closeEvent(event);
 
 	stopAllBackgroundThreads();
 
@@ -1613,7 +1646,7 @@ void MainWindow::startSettingsDialog()
 	KConfigDialog *dialog = KConfigDialog::exists( "settings" );
 	if( !dialog )
 	{
-		//KConfigDialog didn't find an instance of this dialog, so lets create it:
+		// KConfigDialog didn't find an instance of this dialog, so lets create it:
 		dialog = new SettingsDialog(this, "settings", AMLMSettings::self());
 
 		connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
@@ -1757,7 +1790,8 @@ void MainWindow::onShowMenuBar(bool show)
 		KMessageBox::information(this, tr("This will hide the menu bar completely. You can show it again by typing Ctrl+M."),
 								 tr("Hide menu bar"), QStringLiteral("show-menubar-warning"));
 	}
-	menuBar()->setVisible(show);
+M_WARNING("TODO: CTRL+M doesn't get the bar back.");
+//	menuBar()->setVisible(show);
 }
 
 void MainWindow::onSettingsChanged()
