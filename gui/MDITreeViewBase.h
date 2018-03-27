@@ -156,7 +156,8 @@ public Q_SLOTS:
     virtual void onDelete() {}
     /// @}
 
-	/// Settings from settings dialog changed.
+	/// Settings from settings dialog changed,
+	/// Reload anything we get from the KConfig system.
 	virtual void onSettingsChanged();
 
 protected:

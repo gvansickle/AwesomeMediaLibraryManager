@@ -530,6 +530,7 @@ void MainWindow::createActionsSettings()
 
 void MainWindow::addViewMenuActions(QMenu* menu)
 {
+M_WARNING("TODO");
 	menu->setTitle(tr("&View"));
 
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
@@ -835,6 +836,8 @@ void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
     qDebug() << "Connecting" << lv << "and" << this;
 	connect(lv, &MDILibraryView::sendEntryToPlaylist, this, &MainWindow::onSendEntryToPlaylist);
 	connect(lv, &MDILibraryView::sendToNowPlaying, this, &MainWindow::onSendToNowPlaying);
+
+	connect(this, &MainWindow::settingsChanged, lv, &MDILibraryView::onSettingsChanged);
 }
 
 void MainWindow::connectPlaylistViewAndMainWindow(MDIPlaylistView* plv)
@@ -848,6 +851,8 @@ void MainWindow::connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playi
 {
     qDebug() << "Connecting";
 	connect(this, &MainWindow::sendToNowPlaying, now_playing_view, &MDINowPlayingView::onSendToNowPlaying);
+	connect(this, &MainWindow::settingsChanged, now_playing_view, &MDILibraryView::onSettingsChanged);
+
 
 	connectPlayerAndPlaylistView(m_player, now_playing_view);
 	connectPlayerControlsAndPlaylistView(m_controls, now_playing_view);
@@ -1649,26 +1654,7 @@ void MainWindow::startSettingsDialog()
 	}
 	static_cast<SettingsDialog*>( dialog )->show( /*page*/);
 
-#if 0 //defined(HAVE_KF5)
-
-	// There could already be a cached instance of the setting dialog.
-	// If so simply show it.
-	if(KConfigDialog::showDialog("App Settings"))
-	{
-		return;
-	}
-
-	// No existing instance, create a new one.
-	KConfigDialog* dialog = new KConfigDialog(this, "App Settings", Settings::self());
-	dialog->setFaceType(KPageDialog::List);
-	dialog->addPage(new SettingsPageGeneral(dialog), tr("General"));
-	dialog->addPage(new SettingsPageAppearance(dialog), tr("Appearance") );
-	dialog->addPage(new SettingsPageLibrary(dialog), tr("Music Library") );
-	/// ...
-
-	dialog->show();
-
-#elif 0
+#if 0
 	if(!m_settings_dlg)
 	{
 		// This is the first time anyone has opened the settings dialog.

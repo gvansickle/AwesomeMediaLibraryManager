@@ -6,11 +6,7 @@
   <include>KPageDialog</include>
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
   <group name="General">
-    <entry name="UseQuestionMarks" type="Bool" key="question mark">
-      <label>Whether the "unsure" marker may be used.</label>
-      <default>true</default>
-    </entry>
-    <entry name="SettingsDialogFace" key="setting dialog type"
+    <entry name="SettingsDialogFace" key="settings_dialog_type"
     	type="Enum">
     	<label>Layout style of this dialog</label>
     	<choices name="KPageDialog::FaceType">
@@ -24,16 +20,16 @@
     </entry>
   </group>
   <group name="Music Library">
-  	<entry name="LibraryURLs" type="UrlList" key="library url list">
+  	<entry name="LibraryURLs" type="UrlList" key="library_url_list">
   		<label>The list of URLs to include in your music library</label>
   	</entry>
   </group>
   <group name="Appearance">
-  	<entry name="widgetStyle" type="String" key="widget style">
+  	<entry name="widgetStyle" type="String" key="widget_style">
   		<label>The widget style to use for the program</label></entry>
-  	<entry name="TrackFont" type="Font" key="track font">
+  	<entry name="TrackFont" type="Font" key="track_font">
   		<label>The font used to display track info in the Library and Playlist windows</label></entry>
-  	<entry name="MetadataFont" type="Font" key="metadata font">
+  	<entry name="MetadataFont" type="Font" key="metadata_font">
   		<label>The font to use to display metadata in the Metadata Explorer</label></entry>
   	<entry name="UseAlternatingRowColors" type="Bool" key="use_alternating_row_colors">
   		<default>true</default>
@@ -55,11 +51,6 @@
       <min>5</min>
       <max>50</max>
       <default>10</default>
-    </entry>
-    <entry name="CustomMines" type="Int" key="custom mines">
-      <label>The number of mines in the playing field.</label>
-      <min>1</min>
-      <default>20</default>
     </entry>
   </group>
 </kcfg>

@@ -315,7 +315,6 @@ void MDITreeViewBase::onSettingsChanged()
 {
 	// Alternating row colors.
 	setAlternatingRowColors(AMLMSettings::useAlternatingRowColors());
-
 }
 
 void MDITreeViewBase::closeEvent(QCloseEvent* event)
