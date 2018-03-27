@@ -1193,10 +1193,6 @@ void MainWindow::writeLibSettings(QSettings& settings)
  */
 void MainWindow::onStartup()
 {
-    // Set the Icon Theme.
-	M_WARNING("TODO");
-//    changeIconTheme(QIcon::themeName());
-
 	initRootModels();
 
     // Create the "Now Playing" playlist and view.
@@ -1693,17 +1689,10 @@ void MainWindow::startSettingsDialog()
 
 void MainWindow::onOpenShortcutDlg()
 {
-M_WARNING("TODO");
-//	KActionCollection action_collection(this);
-	KActionCollection& action_collection = *actionCollection();
-	action_collection.addAction("Close", m_act_close);
-	action_collection.addAction("Close all", m_act_close_all);
-	KShortcutsDialog::configure( &action_collection );
-//	KShortcutsDialog dlg;
-////	dlg.addCollection(myActions);
-//	dlg.setModal(false);
-////	connect(&dlg, SIGNAL(saved()), this, SLOT(doExtraStuff()));
-//	dlg.configure();
+	// Start the Keyboard Shorcut editor dialog.
+	KShortcutsDialog::configure(actionCollection(), KShortcutsEditor::LetterShortcutsDisallowed, this);
+
+	AMLMSettings::self()->save();
 }
 
 void MainWindow::changeStyle(const QString& styleName)
