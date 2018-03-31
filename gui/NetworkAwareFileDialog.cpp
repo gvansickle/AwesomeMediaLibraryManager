@@ -31,6 +31,17 @@
 
 #include <utils/in.h>
 
+
+/**
+ * @note Notes
+ * - Per an old post on SO: https://stackoverflow.com/a/2609618, only the static QFileDialog factory functions use native dialogs.
+ *   This was 7 years ago, not certain if that's still the case.
+ * - Per https://stackoverflow.com/questions/42997657/pyqt5-filedialog-show-network-folders, "the gtk3 file dialog hides non-local files by default".
+ *   Can confirm that both gtk3 and gtk2 themes show a file chooser with no network or VFS browsing support.
+ *
+ */
+
+
 NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory, const QString& filter, const QString& state_key)
 	: QFileDialog(parent, caption, directory.toLocalFile(), filter)
 {

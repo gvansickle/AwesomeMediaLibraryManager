@@ -53,9 +53,16 @@ void Experimental::DoExperiment()
 
 //	auto dlg = new KFileCustomDialog();
 
-	QString filePath = QFileDialog::getOpenFileName( this, tr("Test") );
+//	QString filePath = QFileDialog::getOpenFileName( this, tr("Test") );
 
 //	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
+
+	QUrl filePath = QFileDialog::getExistingDirectoryUrl(this, tr("Test - SHOULD BE NATIVE - getExistingDirectoryUrl()"),
+															QUrl("/home/gary"), // Start dir
+															QFileDialog::ShowDirsOnly, // Options.
+															QStringList() << "smb" << "file" << "mtp" << "http" // Supported Schemes.
+															);
+
 #endif
 
 #if EX2 == 1

@@ -64,6 +64,9 @@ int main(int argc, char *argv[])
 					   /*"%{function}:%{line}*/ " - %{message}"
 					   "%{if-fatal}%{backtrace}%{endif}");
 
+	// Check our library path.
+	qInfo() << "QGuiApplication::libraryPaths():" << QGuiApplication::libraryPaths();
+
 	// App-wide settings.
 	// http://doc.qt.io/qt-5/qt.html#ApplicationAttribute-enum
 	// Enable high-DPI scaling in Qt on supported platforms.
