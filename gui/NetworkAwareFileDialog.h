@@ -26,6 +26,9 @@
 
 #include <utility> // for std::pair<>.
 
+/**
+ * A sysyphean attempt to be the Alpha and the Omega of file chooser dialogs.
+ */
 class NetworkAwareFileDialog : public QFileDialog
 {
 	Q_OBJECT
