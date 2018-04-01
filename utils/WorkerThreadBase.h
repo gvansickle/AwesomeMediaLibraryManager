@@ -37,11 +37,11 @@ public:
 
 	void moveToThread(QThread* targetThread);
 
-signals:
+Q_SIGNALS:
 	/// Signal we will emit when all work is complete and we should be destroyed.
 	void finished();
 
-public slots:
+public Q_SLOTS:
 	/// Signaled when the QThread is started.  Override.
 	virtual void WorkerStarted() = 0;
 	virtual void WorkerFinished() = 0;

@@ -30,7 +30,7 @@ class ModelChangeWatcher : public QObject
 {
     Q_OBJECT
     
-signals:
+Q_SIGNALS:
 
 	void modelHasRows(bool);
 
@@ -40,7 +40,7 @@ public:
     void setModelToWatch(QAbstractItemModel* model);
 	void disconnectFromCurrentModel();
 
-protected slots:
+protected Q_SLOTS:
     void onRowCountChanged();
     
 private:

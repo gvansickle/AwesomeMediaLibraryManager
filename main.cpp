@@ -36,6 +36,7 @@
 
 #include <QImageReader>
 #include <QDebug>
+#include <gtk/gtk.h>
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
 
@@ -64,6 +65,12 @@ int main(int argc, char *argv[])
 					   /*"%{function}:%{line}*/ " - %{message}"
 					   "%{if-fatal}%{backtrace}%{endif}");
 
+	// Logging test.
+	qInfo() << "LOGGING START";
+	qDebug() << "TEST: Debug";
+	qWarning() << "TEST: Warning";
+	qCritical() << "TEST: Critical";
+
 	// Check our library path.
 	qInfo() << "QGuiApplication::libraryPaths():" << QGuiApplication::libraryPaths();
 
@@ -82,6 +89,7 @@ int main(int argc, char *argv[])
 	// Create the Qt5 app.
 	//
     QApplication app(argc, argv);
+
 
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();
@@ -157,13 +165,13 @@ int main(int argc, char *argv[])
 	/// @todo No DBus functionality currently.
 
 	// Start the log with the App ID and version info.
-	qInfo() << "LOGGING START";
 	qInfo() << "Organization:" << app.organizationName() << "(" << app.organizationDomain() << ")";
 	qInfo() << " Application:" << app.applicationDisplayName() << "(" << app.applicationName() << ")";
 	qInfo() << "     Version:" << app.applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
 
 	// Register types with Qt.
 	RegisterQtMetatypes();
+M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 #if 0
     // Load the icon resources.
 	auto rccs = {"icons_oxygen.rcc", "icons_App.rcc"};
@@ -186,11 +194,6 @@ int main(int argc, char *argv[])
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
 	QSettings::setDefaultFormat(QSettings::IniFormat);
-
-	// Logging test.
-	qDebug() << "TEST: Debug";
-	qWarning() << "TEST: Warning";
-	qCritical() << "TEST: Critical";
 
 	qInfo() << "QPA Platform plugin name:" << app.platformName();
 

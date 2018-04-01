@@ -181,7 +181,7 @@ void CollectionDockWidget::onShowLib(QModelIndex modelindex)
 		return;
 	}
 
-	emit showLibraryModelSignal(libmodel);
+	Q_EMIT showLibraryModelSignal(libmodel);
 }
 
 void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
@@ -207,7 +207,7 @@ void CollectionDockWidget::onRemoveLib(QModelIndex modelindex)
 	if(retval == QMessageBox::Yes)
 	{
 		// Remove the directory.
-		emit removeLibModelFromLibSignal(libmodel);
+		Q_EMIT removeLibModelFromLibSignal(libmodel);
 		// Remove the entry in our Tree model.
 		m_sources_model->removeRow(modelindex.row(), modelindex.parent());
 	}
@@ -234,7 +234,7 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 	auto libmodel = modelindex.data(Qt::UserRole + 1).value<QPointer<LibraryModel>>();
 	if(libmodel)
 	{
-		emit showLibraryModelSignal(libmodel);
+		Q_EMIT showLibraryModelSignal(libmodel);
 		return;
 	}
 
@@ -242,7 +242,7 @@ void CollectionDockWidget::tree_doubleclick(QModelIndex modelindex)
 	qDebug() << "Playlistview:" << playlist_view << "MDISubwin:" << playlist_view->getQMdiSubWindow();
 	if(playlist_view)
 	{
-		emit activateSubwindow(playlist_view->getQMdiSubWindow());
+		Q_EMIT activateSubwindow(playlist_view->getQMdiSubWindow());
 	}
 }
 

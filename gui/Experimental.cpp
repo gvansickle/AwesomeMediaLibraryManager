@@ -23,8 +23,12 @@
 #define EX2 0
 
 #if EX1 == 1
-#include <KEncodingFileDialog>
+//#include <KEncodingFileDialog>
 //#include <KFileCustomDialog>
+#include <KUrlRequesterDialog>
+
+#include <gtkmm.h>
+#include <gtkmm/filechooserdialog.h>
 #endif
 
 #if EX2 == 1
@@ -33,6 +37,7 @@
 #endif
 
 #include <QDebug>
+#include <KIOWidgets/KUrlRequesterDialog>
 
 Experimental::Experimental(QWidget *parent) : QWidget(parent)
 {
@@ -57,12 +62,29 @@ void Experimental::DoExperiment()
 
 //	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
 
+#if 0
 	QUrl filePath = QFileDialog::getExistingDirectoryUrl(this, tr("Test - SHOULD BE NATIVE - getExistingDirectoryUrl()"),
 															QUrl("/home/gary"), // Start dir
 															QFileDialog::ShowDirsOnly, // Options.
 															QStringList() << "smb" << "file" << "mtp" << "http" // Supported Schemes.
 															);
+#endif
 
+//	KUrlRequesterDialog::getUrl();
+
+/// GTKMM
+#if 1
+//	int argc = 1;
+//	char *argv[] = {"myapp", 0};
+	auto kit = Gtk::Application::create("myapp");
+
+	Gtk::FileChooserDialog dialog("TEST - GTK FILECHOOSER", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+	dialog.set_local_only(false);
+	dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+	dialog.add_button("_Open", Gtk::RESPONSE_OK);
+	kit->run(dialog);
+
+#endif
 #endif
 
 #if EX2 == 1

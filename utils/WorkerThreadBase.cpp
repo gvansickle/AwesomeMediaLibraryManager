@@ -43,7 +43,7 @@ void WorkerThreadBase::WorkerStarted()
 void WorkerThreadBase::quit()
 {
     qDebug() << "Received signal to quit(), emitting finished.";
-    emit finished();
+	Q_EMIT finished();
 }
 
 void WorkerThreadBase::connectDefaultSignals(QThread *targetThread)

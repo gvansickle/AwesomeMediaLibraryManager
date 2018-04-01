@@ -245,11 +245,11 @@ void MP2::onPositionChanged(qint64 pos)
 	if(m_is_subtrack)
 	{
 		auto subtrack_pos = (pos-m_track_startpos_ms);
-		emit positionChanged2(subtrack_pos);
+		Q_EMIT positionChanged2(subtrack_pos);
 	}
 	else
 	{
-		emit positionChanged2(pos);
+		Q_EMIT positionChanged2(pos);
 	}
 	if(!m_seek_to_end_mode)
 	{
@@ -270,11 +270,11 @@ void MP2::onDurationChanged(qint64 duration)
 	qDebug() << QString("onDurationChanged: %1").arg(duration);
 	if(m_is_subtrack)
 	{
-		emit durationChanged2(m_track_endpos_ms - m_track_startpos_ms);
+		Q_EMIT durationChanged2(m_track_endpos_ms - m_track_startpos_ms);
 	}
 	else
 	{
-		emit durationChanged2(duration);
+		Q_EMIT durationChanged2(duration);
 	}
 }
 

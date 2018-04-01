@@ -62,5 +62,5 @@ void ModelChangeWatcher::disconnectFromCurrentModel()
 void ModelChangeWatcher::onRowCountChanged()
 {
 	qDebug() << "EMITTING rowCountChanged for model" << m_the_model << "num rows:" << m_the_model->rowCount();
-	emit modelHasRows(m_the_model->rowCount() > 0);
+	Q_EMIT modelHasRows(m_the_model->rowCount() > 0);
 }

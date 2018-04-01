@@ -468,14 +468,14 @@ void MDITreeViewBase::selectionChanged(const QItemSelection &selected, const QIt
 
 	if(!selected.empty())
 	{
-		emit copyAvailable(true);
+		Q_EMIT copyAvailable(true);
 		// Cut is never available if we're read-only.
-		emit cutAvailable(!isReadOnly());
+		Q_EMIT cutAvailable(!isReadOnly());
 	}
 	else
 	{
-		emit copyAvailable(false);
-		emit cutAvailable(false);
+		Q_EMIT copyAvailable(false);
+		Q_EMIT cutAvailable(false);
 	}
 }
 

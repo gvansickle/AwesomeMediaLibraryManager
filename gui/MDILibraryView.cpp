@@ -325,7 +325,7 @@ void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const Q
 		mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
 
 		// Send tracks to the "Now Playing" playlist and start playing the first one.
-		emit sendToNowPlaying(mime_data);
+		Q_EMIT sendToNowPlaying(mime_data);
 	}
 	else if(selected_action == context_menu->m_act_replace_playlist)
 	{
@@ -334,7 +334,7 @@ void MDILibraryView::onContextMenuSelectedRows(QContextMenuEvent* event, const Q
 		mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_REPLACE, DropTargetInstructions::PA_START_PLAYING };
 
 		// Replace tracks in the "Now Playing" playlist and start playing the first one.
-		emit sendToNowPlaying(mime_data);
+		Q_EMIT sendToNowPlaying(mime_data);
 	}
 }
 
@@ -374,7 +374,7 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 	// Send the tracks to the "Now Playing" playlist, by way of MainWindow.
 	LibraryEntryMimeData* mime_data = selectedRowsToMimeData(selected_row_pindexes);
 	mime_data->m_drop_target_instructions = { DropTargetInstructions::IDAE_APPEND, DropTargetInstructions::PA_START_PLAYING };
-	emit sendToNowPlaying(mime_data);
+	Q_EMIT sendToNowPlaying(mime_data);
 }
 
 /**
@@ -401,7 +401,7 @@ void MDILibraryView::onDoubleClicked(const QModelIndex &index)
 
 	Q_ASSERT(item != nullptr);
 	// Send it to the "Now Playing" playlist, by way of MainWindow.
-	emit sendToNowPlaying(item);
+	Q_EMIT sendToNowPlaying(item);
 #endif
 }
 

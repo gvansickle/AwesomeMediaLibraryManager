@@ -98,6 +98,7 @@ include(CheckCXXCompilerFlag)
 include(CMakePrintHelpers)
 include(PrintTargetProperties)
 include(helperfunctions)
+find_package(PkgConfig REQUIRED)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
@@ -226,6 +227,13 @@ list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::Ico
 list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 
 #
+# GTK Libs.
+# See https://wiki.gnome.org/Projects/gtkmm/UsingCMake, https://cmake.org/cmake/help/v3.10/module/FindPkgConfig.html
+set(GTK_LINK_LIB_TARGETS)
+pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
+list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+
+#
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
 #
 # See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
@@ -261,23 +269,6 @@ if(FALSE)
 	endif()
 endif()
 
-# Custom cppclean target
-find_program(CPPCLEAN_PROGRAM NAMES cppclean)
-if(CPPCLEAN_PROGRAM AND FALSE) # << TRUE == USE_CPPCLEAN
-	set(CPPCLEAN_EXCLUDE_PATTERNS "cmake-build-*;build-*")
-	set(CPPCLEAN_INCLUDE_PATHS "${PROJECT_SOURCE_DIR}")
-	set(CPPCLEAN_EXCLUDE_SPECS "")
-	set(CPPCLEAN_INCLUDE_PATH_SPECS "")
-	PREPEND_TO_EACH(CPPCLEAN_EXCLUDE_SPECS "--exclude=" ${CPPCLEAN_EXCLUDE_PATTERNS})
-	PREPEND_TO_EACH(CPPCLEAN_INCLUDE_PATH_SPECS "--include-path=" ${CPPCLEAN_INCLUDE_PATHS})
-	add_custom_target(run_cppclean
-		ALL # @todo Change this so it's not run by default.
-		COMMAND "${CPPCLEAN_PROGRAM}" ${CPPCLEAN_EXCLUDE_SPECS} ${CPPCLEAN_INCLUDE_PATH_SPECS} "${PROJECT_SOURCE_DIR}"
-		COMMENT "Running cppclean"
-		VERBATIM
-		)
-endif()
-
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 
@@ -306,8 +297,6 @@ set(AMLM_TAGLIB_TARGET "")
 set(USE_BUNDLED_LIBCUE TRUE)
 
 if(NOT WIN32)
-    find_package(PkgConfig REQUIRED)
-
     pkg_check_modules(TAGLIB REQUIRED taglib>=1.6
 			IMPORTED_TARGET)
 	if(TAGLIB_FOUND)
@@ -565,7 +554,7 @@ list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
-cmake_print_variables(META_FILES_TO_INCLUDE)
+#cmake_print_variables(META_FILES_TO_INCLUDE)
 
 # Qt5 Binary Resource (rcc) files.
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
@@ -590,6 +579,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variab
 target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
 	"QT_DEPRECATED_WARNINGS"
+	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
@@ -606,6 +596,7 @@ set_target_properties(${PROJECT_NAME}
 # The libs.
 set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
 		${KF5_LINK_LIBS}
+		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits)
 target_link_libraries(${PROJECT_NAME}
@@ -631,7 +622,6 @@ Checks: '-*,llvm-twine-local'
 
 #print_target_properties(${PROJECT_NAME})
 
-feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 
 ###
@@ -674,6 +664,7 @@ target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_var
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
 	"QT_DEPRECATED_WARNINGS"
+	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"QFUTURE_TEST")
 target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
@@ -786,8 +777,9 @@ message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION META_FILES_TO_INCLUDE)
+cmake_print_variables(CMAKE_CXX_COMPILER META_FILES_TO_INCLUDE)
 
 message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
 
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

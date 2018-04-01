@@ -513,7 +513,7 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 	{
 		// Activate the index to start playing it.
 		auto proxy_index = model()->index(last_row, 0, QModelIndex());
-		emit onActivated(proxy_index);
+		Q_EMIT onActivated(proxy_index);
 	}
 
 	// Manually delete the MimeData object, since it didn't go through the normal copy/paste or drag/drop channels.
@@ -586,7 +586,7 @@ void MDIPlaylistView::startPlaying(const QModelIndex& index)
 
 	// If the player isn't already playing, the index change above won't start it.  Send a signal to it to
 	// make sure it starts.
-	emit play();
+	Q_EMIT play();
 }
 
 QModelIndex MDIPlaylistView::to_underlying_qmodelindex(const QModelIndex &proxy_index)

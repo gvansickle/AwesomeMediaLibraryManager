@@ -261,13 +261,13 @@ QMediaPlayer::State PlayerControls::state() const
 void PlayerControls::onPlayAction()
 {
 	qDebug() << "play";
-	emit play();
+	Q_EMIT play();
 }
 
 void PlayerControls::onPauseAction()
 {
 	qDebug() << "pause";
-	emit pause();
+	Q_EMIT pause();
 }
 
 void PlayerControls::onTogglePlayPauseAction()
@@ -275,18 +275,18 @@ void PlayerControls::onTogglePlayPauseAction()
 	qDebug() << "toggle";
 	if(m_playerState == QMediaPlayer::StoppedState || m_playerState == QMediaPlayer::PausedState)
 	{
-		emit play();
+		Q_EMIT play();
 	}
 	else if(m_playerState == QMediaPlayer::PlayingState)
 	{
-		emit pause();
+		Q_EMIT pause();
 	}
 }
 
 
 void PlayerControls::muteClicked()
 {
-	emit changeMuting(!m_playerMuted);
+	Q_EMIT changeMuting(!m_playerMuted);
 }
 
 void PlayerControls::onDurationChanged(qint64 duration)

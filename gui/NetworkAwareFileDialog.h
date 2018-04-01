@@ -27,34 +27,53 @@
 #include <utility> // for std::pair<>.
 
 /**
- * A sysyphean attempt to be the Alpha and the Omega of file chooser dialogs.
+ * A sysyphean attempt to be all things to all people for file chooser dialogs.
+ * The simplest things....
  */
-class NetworkAwareFileDialog : public QFileDialog
+class NetworkAwareFileDialog : public QObject
 {
 	Q_OBJECT
+
+	/// @note We do not inherit from QFileDialog here because:
+	///       - Per an old post on SO: https://stackoverflow.com/a/2609618, only the static QFileDialog factory
+	///         functions can use native dialogs.
+	///       - Per http://doc.qt.io/qt-5/qfiledialog.html:
+	///         "QFileDialog::DontUseNativeDialog  Don't use the native file dialog. By default, the native file dialog is used unless
+	///          you use a subclass of QFileDialog that contains the Q_OBJECT macro, or the platform does not have a native dialog
+	///          of the type that you require."
+	using BASE_CLASS = QObject;
+
+Q_SIGNALS:
+
 
 public:
 	explicit NetworkAwareFileDialog(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &directory = QUrl(),
 									const QString &filter = QString(), const QString &state_key = QString());
+	~NetworkAwareFileDialog() override;
 
 
 	static std::pair<QUrl, QString> getSaveFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),
 												   const QUrl &dir = QUrl(),
 												   const QString &filter = QString(),
 												   const QString &state_key = QString(),
-												   Options options = Options(),
+												   QFileDialog::Options options = QFileDialog::Options(),
 												   const QStringList &supportedSchemes = QStringList());
 
 	static std::pair<QUrl, QString> getExistingDirectoryUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),
 															const QUrl &dir = QUrl(),
-															const QString &state_key = QString(), Options options = ShowDirsOnly,
+															const QString &state_key = QString(),
+															QFileDialog::Options options = QFileDialog::ShowDirsOnly,
 															const QStringList &supportedSchemes = QStringList());
-Q_SIGNALS:
+
+	bool is_dlg_native();
 
 public Q_SLOTS:
 	virtual void onFilterSelected(const QString& filter);
 
-	virtual int exec() override;
+	/// Workalike to QFileDialog's exec().
+	virtual int exec();
+
+	void onFinished(int result);
 
 private:
 	Q_DISABLE_COPY(NetworkAwareFileDialog)
@@ -78,6 +97,16 @@ private:
 
 	/// Persist the last state to/from this QSettings key.
 	QString m_settings_state_key;
+
+	/// Forward decl of our pImpl class.
+	class NAFDImpl;
+
+	/// The pImpl.
+	/// In the non-Qt world, this would be a std::unique_ptr, but....
+//	QSharedPointer<NAFDImpl> pImpl;
+	QWidget *m_parent_widget;
+	QSharedPointer<QFileDialog> m_the_qfiledialog;
+
 };
 
 #endif // NETWORKAWAREFILEDIALOG_H

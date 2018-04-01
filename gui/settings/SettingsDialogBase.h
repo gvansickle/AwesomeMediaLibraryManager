@@ -53,7 +53,7 @@ public:
 	void addMapping(QWidget *widget, int section);
 	void addMapping(QWidget *widget, int section, const QByteArray &propertyName);
 
-public slots:
+public Q_SLOTS:
     void changePage(QListWidgetItem *current, QListWidgetItem *previous);
 
     void onHelpRequested();

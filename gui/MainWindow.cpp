@@ -1420,7 +1420,7 @@ void MainWindow::onSendToNowPlaying(LibraryEntryMimeData *mime_data)
 {
 	// Resend the entry to the "Now Playing" playlist view.
 	qDebug() << "Re-emitting sendToNowPlaying() with mime_data:" << mime_data;
-	emit sendToNowPlaying(mime_data);
+	Q_EMIT sendToNowPlaying(mime_data);
 }
 
 /**

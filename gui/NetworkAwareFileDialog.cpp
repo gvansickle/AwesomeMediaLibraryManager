@@ -35,15 +35,29 @@
 /**
  * @note Notes
  * - Per an old post on SO: https://stackoverflow.com/a/2609618, only the static QFileDialog factory functions use native dialogs.
- *   This was 7 years ago, not certain if that's still the case.
+ *   This was 7 years ago, not certain if that's still the case.  I can confirm that with KF5, the dialog you get from a static
+ *   factory function doesn't seem to crash as much and looks slightly different.
+ * - Per http://doc.qt.io/qt-5/qfiledialog.html:
+ *   "QFileDialog::DontUseNativeDialog  Don't use the native file dialog. By default, the native file dialog is used unless
+ *	 you use a subclass of QFileDialog that contains the Q_OBJECT macro, or the platform does not have a native dialog
+ *   of the type that you require."
  * - Per https://stackoverflow.com/questions/42997657/pyqt5-filedialog-show-network-folders, "the gtk3 file dialog hides non-local files by default".
  *   Can confirm that both gtk3 and gtk2 themes show a file chooser with no network or VFS browsing support.
  *
  */
 
+class NetworkAwareFileDialog::NAFDImpl
+{
+public:
+	NAFDImpl();
 
-NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory, const QString& filter, const QString& state_key)
-	: QFileDialog(parent, caption, directory.toLocalFile(), filter)
+	QWidget *m_parent_widget;
+	QSharedPointer<QFileDialog> m_the_qfiledialog;
+};
+
+NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory,
+											   const QString& filter, const QString& state_key)
+	: QObject(parent), m_parent_widget(parent), m_the_qfiledialog(new QFileDialog(parent, caption, directory.toLocalFile(), filter))
 {
 	QString dir_as_str;
 
@@ -75,8 +89,8 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 	 */
 //	setOptions(QFileDialog::DontUseNativeDialog);
 #endif
-	setFileMode(QFileDialog::AnyFile);
-	setAcceptMode(QFileDialog::AcceptSave);
+	m_the_qfiledialog->setFileMode(QFileDialog::AnyFile);
+	m_the_qfiledialog->setAcceptMode(QFileDialog::AcceptSave);
 //	setSupportedSchemes({"smb", "gvfs"});
 #if 0
 	if(state_key.length() > 0)
@@ -85,7 +99,12 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 		m_settings_state_key = "file_dialogs/" + state_key;
 	}
 #endif
-	connect(this, &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
+	connect(m_the_qfiledialog.data(), &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
+}
+
+NetworkAwareFileDialog::~NetworkAwareFileDialog()
+{
+
 }
 
 /**
@@ -95,7 +114,9 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 																const QString& state_key, QFileDialog::Options options,
 																const QStringList& supportedSchemes)
 {
-	std::unique_ptr<NetworkAwareFileDialog> dlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, filter, state_key);
+	std::unique_ptr<NetworkAwareFileDialog> nafdlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, filter, state_key);
+
+	auto dlg = nafdlg->m_the_qfiledialog;
 
 	if(options)
 	{
@@ -106,6 +127,8 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 	{
 		dlg->setSupportedSchemes(supportedSchemes);
 	}
+
+	qWarning() << "is_dlg_native:" << nafdlg->is_dlg_native();
 
 	if(!dlg->exec())
 	{
@@ -122,7 +145,10 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget* parent, const QString& caption, const QUrl& dir, const QString& state_key,
 																		 QFileDialog::Options options, const QStringList& supportedSchemes)
 {
-	std::unique_ptr<NetworkAwareFileDialog> dlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, QString(), state_key);
+	std::unique_ptr<NetworkAwareFileDialog> nafdlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, QString(), state_key);
+
+	auto dlg = nafdlg->m_the_qfiledialog;
+
 	if(options)
 	{
 		dlg->setOptions(options);
@@ -134,12 +160,27 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 		dlg->setSupportedSchemes(supportedSchemes);
 	}
 
+	qWarning() << "is_dlg_native:" << nafdlg->is_dlg_native();
+
 	if(!dlg->exec())
 	{
 		return {QUrl(), ""};
 	}
 
 	return std::make_pair(dlg->selectedUrls()[0], dlg->selectedNameFilter());
+}
+
+bool NetworkAwareFileDialog::is_dlg_native()
+{
+	// Check if the dialog is native by seeing if we can get a non-null layout.
+	if(m_the_qfiledialog->layout() == nullptr)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
@@ -149,7 +190,7 @@ QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
 	QRegularExpressionMatch mo = re.match(filter);
 	if(!mo.hasMatch())
 	{
-		QMessageBox::critical(this, QApplication::applicationDisplayName(),
+		QMessageBox::critical(m_parent_widget, QApplication::applicationDisplayName(),
 							 "Can't determine file extension");
 	}
 	auto savefile_ext = mo.captured(1);
@@ -159,11 +200,14 @@ QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
 
 bool NetworkAwareFileDialog::isDirSelectDialog() const
 {
-	return in(std::set<FileMode>({QFileDialog::Directory, QFileDialog::DirectoryOnly}), fileMode());
+	return in(std::set<QFileDialog::FileMode>({QFileDialog::Directory, QFileDialog::DirectoryOnly}), m_the_qfiledialog->fileMode());
 }
 
 void NetworkAwareFileDialog::setDefaultSidebarUrls()
 {
+
+#warning "PUT BACK"
+#if 0
 	// This doesn't appear to do anything on Windows when using the system file dialog.
 	if(!use_native_dlg())
 	{
@@ -178,16 +222,17 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 		{
 			qDebug() << "Adding Sidebar URL:" << url;
 		}
-		setSidebarUrls(urls);
+		m_the_qfiledialog->setSidebarUrls(urls);
 	}
+#endif
 }
 
 void NetworkAwareFileDialog::onFilterSelected(const QString& filter)
 {
-	if(fileMode() != QFileDialog::Directory && fileMode() != QFileDialog::DirectoryOnly)
+	if(m_the_qfiledialog->fileMode() != QFileDialog::Directory && m_the_qfiledialog->fileMode() != QFileDialog::DirectoryOnly)
 	{
 		qDebug() << "Filter selected:" << filter;
-		setDefaultSuffix(filter_to_suffix(filter));
+		m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(filter));
 	}
 }
 
@@ -195,7 +240,18 @@ int NetworkAwareFileDialog::exec()
 {
 	restoreStateOverload();
 
+	/// @todo Trying to get at dialog after it's created to see if its native or not.
+#if 1
+	connect(m_the_qfiledialog.data(), &QFileDialog::finished, this, &NetworkAwareFileDialog::onFinished);
+	int retval = m_the_qfiledialog->exec();
+
+//	m_the_qfiledialog->show();
+//	m_the_qfiledialog->raise();
+//	m_the_qfiledialog->activateWindow();
+
+#else
 	int retval = exec_();
+#endif
 
 	if(retval && m_settings_state_key.length() > 0)
 	{
@@ -206,6 +262,23 @@ int NetworkAwareFileDialog::exec()
 	return retval;
 }
 
+void NetworkAwareFileDialog::onFinished(int result)
+{
+	auto sender = QObject::sender();
+	qDebug() << "sender:" << sender;
+
+	auto fd = qobject_cast<QFileDialog*>(sender);
+	if(fd == nullptr)
+	{
+		qWarning() << "fd == nullptr";
+	}
+	else
+	{
+		qInfo() << "layout():" << fd->layout();
+	}
+}
+
+
 
 int NetworkAwareFileDialog::exec_()
 {
@@ -215,11 +288,11 @@ int NetworkAwareFileDialog::exec_()
 		// On Windows at least, we don't have to do this for a native file dialog.
 		if(!isDirSelectDialog() && !use_native_dlg())
 		{
-			QString snf = selectedNameFilter();
+			QString snf = m_the_qfiledialog->selectedNameFilter();
 			qDebug() << QString("Initial selected name filter:") << snf;
-			setDefaultSuffix(filter_to_suffix(selectedNameFilter()));
+			m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(m_the_qfiledialog->selectedNameFilter()));
 		}
-		int retval = QFileDialog::exec();
+		int retval = m_the_qfiledialog->exec();
 		return retval;
 	}
 	else
@@ -250,22 +323,22 @@ void NetworkAwareFileDialog::saveStateOverload()
 {
 	QSettings settings;
 
-	QByteArray new_state = saveState();
+	QByteArray new_state = m_the_qfiledialog->saveState();
 	qDebug() << "Saving file dialog settings to settings key:" << m_settings_state_key;
 	settings.setValue(m_settings_state_key + "/qfd_state", QVariant::fromValue(new_state));
-	qDebug() << "Saving last dir URL: " << directoryUrl();
-	settings.setValue(m_settings_state_key + "/dir_url", QVariant::fromValue(directoryUrl()));
+	qDebug() << "Saving last dir URL: " << m_the_qfiledialog->directoryUrl();
+	settings.setValue(m_settings_state_key + "/dir_url", QVariant::fromValue(m_the_qfiledialog->directoryUrl()));
 
-	QString selected_name_filter = selectedNameFilter();
+	QString selected_name_filter = m_the_qfiledialog->selectedNameFilter();
 	qDebug() << "Saving last selected_name_filter: " << selected_name_filter;
 	settings.setValue(m_settings_state_key + "/name_filter", QVariant::fromValue(selected_name_filter));
 
-	QString selected_mime_type_filter = selectedMimeTypeFilter();
+	QString selected_mime_type_filter = m_the_qfiledialog->selectedMimeTypeFilter();
 	qDebug() << "Saving last selected_mime_type_filter: " << selected_mime_type_filter;
 	settings.setValue(m_settings_state_key + "/mime_type_filter", QVariant::fromValue(selected_mime_type_filter));
 
 	// Detail or List view.
-	QFileDialog::ViewMode view_mode  = viewMode();
+	QFileDialog::ViewMode view_mode  = m_the_qfiledialog->viewMode();
 	qDebug() << "Saving last view_mode: " << view_mode;
 	settings.setValue(m_settings_state_key + "/view_mode", QVariant::fromValue(view_mode));
 
@@ -288,7 +361,7 @@ void NetworkAwareFileDialog::restoreStateOverload()
 		QString selected_name_filter = settings.value(m_settings_state_key + "/name_filter").toString();
 		if(saved_state.size() > 0)
 		{
-			state_restored = restoreState(saved_state);
+			state_restored = m_the_qfiledialog->restoreState(saved_state);
 
 			/// @todo For reasons unknown, the above QFileDialog::restoreState() doesn't seem to work correctly,
 			/// at least on Linux.
@@ -296,12 +369,12 @@ void NetworkAwareFileDialog::restoreStateOverload()
 			/// a single m_state_key that all instances are sharing (which isn't the case).
 			/// So, we save/restore the directoryUrl manually.
 			qDebug() << "Restoring last dir URL to:" << last_dir_url;
-			setDirectoryUrl(last_dir_url);
+			m_the_qfiledialog->setDirectoryUrl(last_dir_url);
 			qDebug() << "Restoring selected_name_filter:" << selected_name_filter;
-			selectNameFilter(selected_name_filter);
+			m_the_qfiledialog->selectNameFilter(selected_name_filter);
 			// Note: MimeTypeFilters override NameFilters.
 			qDebug() << "Restoring selected_mime_type_filter:" << selected_mime_type_filter;
-			selectMimeTypeFilter(selected_mime_type_filter);
+			m_the_qfiledialog->selectMimeTypeFilter(selected_mime_type_filter);
 		}
 
 		if(state_restored == false)

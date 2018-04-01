@@ -28,7 +28,7 @@ class Experimental : public QWidget
 public:
 	explicit Experimental(QWidget *parent = 0);
 
-signals:
+Q_SIGNALS:
 
 public Q_SLOTS:
 

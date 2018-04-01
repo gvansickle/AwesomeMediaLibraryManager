@@ -439,7 +439,7 @@ bool LibraryModel::setData(const QModelIndex& index, const QVariant& value, int 
 	// Tell anybody that's listening that all data in this row has changed.
 	QModelIndex bottom_right_index = index.sibling(index.row(), columnCount()-1);
 //	qDebug() << "EMITTING DATACHANGED:" << index << index.parent() << bottom_right_index << bottom_right_index.parent() << Qt::ItemDataRole(role);
-	emit dataChanged(index, bottom_right_index, {role});
+	Q_EMIT dataChanged(index, bottom_right_index, {role});
 	return true;
 }
 
@@ -571,8 +571,8 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 	createCacheFile(url);
 
 	connectSignals();
-	emit statusSignal(LibState::ScanningForFiles, 0, 0);
-	emit startFileScanSignal(m_library.rootURL);
+	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
+	Q_EMIT startFileScanSignal(m_library.rootURL);
 
 	endResetModel();
 }
@@ -840,7 +840,7 @@ void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
 	qDebug() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
-	emit statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
+	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
 static QString table_row(std::string s1, std::string s2)
