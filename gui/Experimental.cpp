@@ -24,11 +24,11 @@
 
 #if EX1 == 1
 //#include <KEncodingFileDialog>
-//#include <KFileCustomDialog>
-#include <KUrlRequesterDialog>
+//#include <KUrlRequesterDialog>
+//#include <KBuildSycocaProgressDialog>
 
-#include <gtkmm.h>
-#include <gtkmm/filechooserdialog.h>
+//#include <gtkmm.h>
+//#include <gtkmm/filechooserdialog.h>
 #endif
 
 #if EX2 == 1
@@ -37,7 +37,7 @@
 #endif
 
 #include <QDebug>
-#include <KIOWidgets/KUrlRequesterDialog>
+#include <QFileDialog>
 
 Experimental::Experimental(QWidget *parent) : QWidget(parent)
 {
@@ -62,18 +62,35 @@ void Experimental::DoExperiment()
 
 //	KEncodingFileDialog::getOpenFileNamesAndEncoding("file", QUrl(), "All (*)", this, "Experimental open file");
 
+//	QUrl url = KDirSelectDialog::selectDirectory(QUrl("file://home/gary"), false, this, "KDE4 Dir Select Dialog");
+
 #if 0
 	QUrl filePath = QFileDialog::getExistingDirectoryUrl(this, tr("Test - SHOULD BE NATIVE - getExistingDirectoryUrl()"),
 															QUrl("/home/gary"), // Start dir
 															QFileDialog::ShowDirsOnly, // Options.
-															QStringList() << "smb" << "file" << "mtp" << "http" // Supported Schemes.
+															QStringList()  << "gvfs"//<< "network" << "smb" << "file" << "mtp" << "http" // Supported Schemes.
 															);
+#endif
+
+#if 0
+
+	QFileDialog* fd = new QFileDialog(this, "TEST - IS THIS NATIVE?", "file://home/gary");
+	fd->setFileMode(QFileDialog::Directory);
+	fd->setOptions(QFileDialog::ShowDirsOnly);
+	fd->setFilter(QDir::AllDirs);
+	fd->setAcceptMode(QFileDialog::AcceptOpen);
+
+
+	qInfo() << "layout:" << fd->layout();
+
+	fd->exec();
+
 #endif
 
 //	KUrlRequesterDialog::getUrl();
 
 /// GTKMM
-#if 1
+#if 0
 //	int argc = 1;
 //	char *argv[] = {"myapp", 0};
 	auto kit = Gtk::Application::create("myapp");

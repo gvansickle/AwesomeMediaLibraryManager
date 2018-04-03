@@ -205,9 +205,6 @@ bool NetworkAwareFileDialog::isDirSelectDialog() const
 
 void NetworkAwareFileDialog::setDefaultSidebarUrls()
 {
-
-#warning "PUT BACK"
-#if 0
 	// This doesn't appear to do anything on Windows when using the system file dialog.
 	if(!use_native_dlg())
 	{
@@ -215,7 +212,7 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 		{
 			QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::MusicLocation)[0]),
 			QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0]),
-			/// @todo if linux
+			/// @todo if linux && gvfs
 			QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::RuntimeLocation)[0] + "/gvfs")
 		};
 		for(auto url : urls)
@@ -224,7 +221,6 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 		}
 		m_the_qfiledialog->setSidebarUrls(urls);
 	}
-#endif
 }
 
 void NetworkAwareFileDialog::onFilterSelected(const QString& filter)

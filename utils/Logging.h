@@ -28,6 +28,8 @@ public:
 	void SetMessagePattern(const QString & pattern);
 
 	QString ClickableLinkPattern();
+
+	void dumpEnvVars();
 };
 
 /**
