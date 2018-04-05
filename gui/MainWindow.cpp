@@ -135,6 +135,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 	// Follow the system style for the Icon&/|Text setting for toolbar buttons.
 	setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
+//	// KDE
+//	setStandardToolBarMenuEnabled(true);
+
+
     // Set up our theming.
     Theme::initialize();
     m_actgroup_styles = Theme::getStylesActionGroup(this);
@@ -197,7 +201,6 @@ M_WARNING("TODO: ifdef this to development only")
 
     // Send ourself a message to re-load the files we had open last time we were closed.
     QTimer::singleShot(0, this, &MainWindow::onStartup);
-
 }
 
 MainWindow::~MainWindow()
