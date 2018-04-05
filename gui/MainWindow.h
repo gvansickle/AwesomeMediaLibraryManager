@@ -236,9 +236,7 @@ private:
     void createActionsEdit();
 	void createActionsView();
 	void createActionsTools();
-	void
-	createActionsSettings(
-		KActionCollection *ac);
+	void createActionsSettings(KActionCollection *ac);
 
 //	void addViewMenuActions(QMenu* menu);
 

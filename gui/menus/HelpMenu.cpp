@@ -20,9 +20,39 @@
 #include "HelpMenu.h"
 
 #include <KHelpMenu>
+#include <QMenu>
+#include <QAction>
+#include <QApplication>
+
+#include <utils/ConnectHelpers.h>
+#include <utils/ActionHelpers.h>
 
 HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData, bool showWhatsThis) : KHelpMenu(parent, aboutData, showWhatsThis)
 {
+	// Hide the switch languages entry.
+	auto lang_act = action(KHelpMenu::menuSwitchLanguage);
+	if(lang_act)
+	{
+		lang_act->setVisible(false);
+	}
+
+	// Grey out the "Handbook" section until we actually have help.
+	auto help_act = action(KHelpMenu::menuHelpContents);
+	if(help_act)
+	{
+		help_act->setDisabled(true);
+	}
+
+	// Add the "About QT" dialog between "About app" and "About KDE".
+	QAction* act_about_kde = action(KHelpMenu::menuAboutKDE);
+	QAction* act_aboutQt = make_action(QIcon::fromTheme("help-about-qt"), tr("About &Qt"), parent,
+	                           QKeySequence(),
+	                           "Show the Qt library's About box");
+	if(act_about_kde && act_aboutQt)
+	{
+		connect_trig(act_aboutQt, qApp, &QApplication::aboutQt);
+		menu()->insertAction(act_about_kde, act_aboutQt);
+	}
 
 }
 
