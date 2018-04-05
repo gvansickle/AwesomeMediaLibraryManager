@@ -20,10 +20,20 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_HELPMENU_H
 #define AWESOMEMEDIALIBRARYMANAGER_HELPMENU_H
 
+#include <KHelpMenu>
 
-class HelpMenu
+class KAboutData;
+
+class HelpMenu : public KHelpMenu
 {
+	Q_OBJECT
 
+	using BASE_CLASS = KHelpMenu;
+
+public:
+	explicit HelpMenu(QWidget *parent, const KAboutData &aboutData,
+					  bool showWhatsThis = true);
+	~HelpMenu();
 };
 
 

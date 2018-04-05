@@ -28,6 +28,7 @@
 #include <KActionCollection>
 #include <KActionMenu>
 #include <KMessageBox>
+#include <KAboutData>
 
 
 #include "Experimental.h"
@@ -104,6 +105,7 @@
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
 #include <gui/menus/ActionBundle.h>
+#include <gui/menus/HelpMenu.h>
 
 #include "concurrency/ExtAsync.h"
 
@@ -322,6 +324,9 @@ void MainWindow::updateActionEnableStates_Edit()
 
 void MainWindow::createActions()
 {
+	// Get the actionCollection() once here and pass the pointer to the sub-CreateAction*()'s.
+	KActionCollection *ac = actionCollection();
+
 	//
 	// File actions.
 	//
@@ -367,7 +372,7 @@ void MainWindow::createActions()
 
 	createActionsTools();
 
-	createActionsSettings();
+	createActionsSettings(ac);
 
 	//
     // Window actions.
@@ -440,6 +445,17 @@ void MainWindow::createActions()
 	m_experimentalAct = make_action(QIcon::fromTheme("edit-bomb"), "Experimental", this,
 								   QKeySequence(), "Invoke experimental code - USE AT YOUR OWN RISK");
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
+
+//M_WARNING("TODO: Experimental KDE")
+	// Provides a menu entry that allows showing/hiding the toolbar(s)
+//	setStandardToolBarMenuEnabled(true);
+
+	// Provides a menu entry that allows showing/hiding the statusbar
+//	createStandardStatusBarAction();
+
+	// Standard 'Configure' menu actions
+//	createSettingsActions();
+/// @end
 }
 
 void MainWindow::createActionsEdit()
@@ -507,18 +523,23 @@ void MainWindow::createActionsTools()
 							   QKeySequence(), "Scan library for problems");
 }
 
-void MainWindow::createActionsSettings()
+void MainWindow::createActionsSettings(KActionCollection *ac)
 {
-	// Show/hide menu bar.
-	m_act_ktog_show_menu_bar = KStandardAction::showMenubar(this, &MainWindow::onShowMenuBar, actionCollection());
+#if HAVE_KF5
 
-	// Styles menu.
+	// Styles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
 	connect(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::onChangeStyle);
 
-#if HAVE_KF5
-	m_act_shortcuts_dialog = KStandardAction::keyBindings(this, &MainWindow::onOpenShortcutDlg, actionCollection());
-	m_settingsAct = KStandardAction::preferences(this, &MainWindow::startSettingsDialog, actionCollection());
+	// Show/hide menu bar.
+	m_act_ktog_show_menu_bar = KStandardAction::showMenubar(this, &MainWindow::onShowMenuBar, ac);
+
+	// Open the shortcut configuration dialog.
+	m_act_shortcuts_dialog = KStandardAction::keyBindings(this, &MainWindow::onOpenShortcutDlg, ac);
+
+	// Open the application preferences dialog.
+	m_settingsAct = KStandardAction::preferences(this, &MainWindow::startSettingsDialog, ac);
+
 #else
 	m_act_shortcuts_dialog = make_action(Theme::iconFromTheme(""),
 									 tr("Edit Shortcuts..."), this);
@@ -641,6 +662,10 @@ void MainWindow::createMenus()
 	/// @todo Remove one of these.
 	auto khelpmenu = new KHelpMenu(this, "KHelpMenu");
 	menuBar()->addMenu(khelpmenu->menu());
+
+	// Create a third help menu.
+	auto help_menu = new HelpMenu(this, KAboutData::applicationData());
+	menuBar()->addMenu(help_menu->menu());
 }
 
 

@@ -18,3 +18,15 @@
  */
 
 #include "HelpMenu.h"
+
+#include <KHelpMenu>
+
+HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData, bool showWhatsThis) : KHelpMenu(parent, aboutData, showWhatsThis)
+{
+
+}
+
+HelpMenu::~HelpMenu()
+{
+
+}

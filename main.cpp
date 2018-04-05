@@ -172,6 +172,7 @@ int main(int argc, char *argv[])
 
 	// Register types with Qt.
 	RegisterQtMetatypes();
+
 M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 #if 0
     // Load the icon resources.
