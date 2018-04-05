@@ -153,7 +153,9 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 		dlg->setOptions(options);
 	}
 
+	// User must select a directory.
 	dlg->setFileMode(QFileDialog::Directory);
+	// List all directories and drives.  System is to allow KDE dialogs to see gvfs mounts.
 	dlg->setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Drives | QDir::System);
 	dlg->setAcceptMode(QFileDialog::AcceptOpen);
 	if(!supportedSchemes.empty())
@@ -235,18 +237,7 @@ int NetworkAwareFileDialog::exec()
 {
 	restoreStateOverload();
 
-	/// @todo Trying to get at dialog after it's created to see if its native or not.
-#if 0
-	connect(m_the_qfiledialog.data(), &QFileDialog::finished, this, &NetworkAwareFileDialog::onFinished);
-	int retval = m_the_qfiledialog->exec();
-
-//	m_the_qfiledialog->show();
-//	m_the_qfiledialog->raise();
-//	m_the_qfiledialog->activateWindow();
-
-#else
 	int retval = exec_();
-#endif
 
 	if(retval && m_settings_state_key.length() > 0)
 	{
