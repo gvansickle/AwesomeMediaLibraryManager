@@ -420,26 +420,8 @@ void MainWindow::createActions()
 
 	m_act_group_window = new QActionGroup(this);
 
-	//
     // Help actions.
-	//
-	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), tr("&Help"), this,
-	                        QKeySequence::HelpContents,
-							"Show help contents");
-	m_helpAct->setDisabled(true); /// @todo No help yet.
-	// Qt5 has a pre-fabbed "What's This" action which handles everything, we don't need to even add a handler or an icon.
-	m_whatsThisAct = QWhatsThis::createAction(this);
-	m_whatsThisAct->setStatusTip("Show more than a tooltip, less than full help on a GUI item");
-
-	m_aboutAct = make_action(QIcon::fromTheme("help-about"), tr("&About"), this,
-                           QKeySequence(),
-                            "Show the About box");
-	connect_trig(m_aboutAct, this, &MainWindow::about);
-
-	m_aboutQtAct = make_action(QIcon::fromTheme("help-about-qt"), tr("About &Qt"), this,
-                             QKeySequence(),
-                              "Show the Qt library's About box");
-	connect_trig(m_aboutQtAct, qApp, &QApplication::aboutQt);
+	createActionsHelp(ac);
 
 	/// Experimental actions
 	m_experimentalAct = make_action(QIcon::fromTheme("edit-bomb"), "Experimental", this,
@@ -552,6 +534,31 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 #endif
 }
 
+void MainWindow::createActionsHelp(KActionCollection* ac)
+{
+#if HAVE_KF5
+	// For KDE we use a derivation of KHelpMenu.
+#else
+	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), tr("&Help"), this,
+							QKeySequence::HelpContents,
+							"Show help contents");
+	m_helpAct->setDisabled(true); /// @todo No help yet.
+	// Qt5 has a pre-fabbed "What's This" action which handles everything, we don't need to even add a handler or an icon.
+	m_whatsThisAct = QWhatsThis::createAction(this);
+	m_whatsThisAct->setStatusTip("Show more than a tooltip, less than full help on a GUI item");
+
+	m_aboutAct = make_action(QIcon::fromTheme("help-about"), tr("&About"), this,
+						   QKeySequence(),
+							"Show the About box");
+	connect_trig(m_aboutAct, this, &MainWindow::about);
+
+	m_aboutQtAct = make_action(QIcon::fromTheme("help-about-qt"), tr("About &Qt"), this,
+							 QKeySequence(),
+							  "Show the Qt library's About box");
+	connect_trig(m_aboutQtAct, qApp, &QApplication::aboutQt);
+#endif
+}
+
 void MainWindow::addViewMenuActions(QMenu* menu)
 {
 M_WARNING("TODO");
@@ -610,7 +617,7 @@ void MainWindow::createMenus()
 						   });
 
     // Tools menu.
-	m_toolsMenu = menuBar()->addMenu("&Tools");
+	m_toolsMenu = menuBar()->addMenu(tr("&Tools"));
 	m_toolsMenu->addActions(
         {//scanLibraryAction,
 		 m_toolsMenu->addSection("Rescans"),
@@ -649,7 +656,8 @@ void MainWindow::createMenus()
 
     menuBar()->addSeparator();
 
-	// Create the help menu.
+	// Create the non-KDE help menu.
+#ifndef HAVE_KF5
 	m_helpMenu = menuBar()->addMenu("&Help");
 	m_helpMenu->addSection("Help");
 	m_helpMenu->addAction(m_helpAct);
@@ -657,15 +665,11 @@ void MainWindow::createMenus()
 	m_helpMenu->addSection("About");
 	m_helpMenu->addAction(m_aboutAct);
 	m_helpMenu->addAction(m_aboutQtAct);
-
-	// Create a second help menu via KHelpMenu.
-	/// @todo Remove one of these.
-	auto khelpmenu = new KHelpMenu(this, "KHelpMenu");
-	menuBar()->addMenu(khelpmenu->menu());
-
-	// Create a third help menu.
+#else
+	// Create a help menu based on KF5 KHelpMenu.
 	auto help_menu = new HelpMenu(this, KAboutData::applicationData());
 	menuBar()->addMenu(help_menu->menu());
+#endif // HAVE_KF5
 }
 
 

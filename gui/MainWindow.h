@@ -237,6 +237,7 @@ private:
 	void createActionsView();
 	void createActionsTools();
 	void createActionsSettings(KActionCollection *ac);
+	void createActionsHelp(KActionCollection *ac);
 
 //	void addViewMenuActions(QMenu* menu);
 
@@ -430,11 +431,13 @@ private:
     QAction* m_act_window_list_separator;
     /// @}
 
-    /// Help actions.
+	/// @name Help actions.
+#ifndef HAVE_KF5
     QAction* m_helpAct;
     QAction* m_whatsThisAct;
     QAction* m_aboutAct;
     QAction* m_aboutQtAct;
+#endif
 
     /// Experimental actions.
     QAction* m_experimentalAct;

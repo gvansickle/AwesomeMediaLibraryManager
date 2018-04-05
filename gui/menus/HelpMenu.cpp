@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "HelpMenu.h"
 
 #include <KHelpMenu>
@@ -29,6 +30,8 @@
 
 HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData, bool showWhatsThis) : KHelpMenu(parent, aboutData, showWhatsThis)
 {
+	setObjectName("main_help_menu");
+
 	// Hide the switch languages entry.
 	auto lang_act = action(KHelpMenu::menuSwitchLanguage);
 	if(lang_act)
