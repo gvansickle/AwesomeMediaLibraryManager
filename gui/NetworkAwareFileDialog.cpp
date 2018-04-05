@@ -30,30 +30,24 @@
 #include <set>
 
 #include <utils/in.h>
-
+#include <utils/DebugHelpers.h>
 
 /**
  * @note Notes
  * - Per an old post on SO: https://stackoverflow.com/a/2609618, only the static QFileDialog factory functions use native dialogs.
  *   This was 7 years ago, not certain if that's still the case.  I can confirm that with KF5, the dialog you get from a static
  *   factory function doesn't seem to crash as much and looks slightly different.
+ *
  * - Per http://doc.qt.io/qt-5/qfiledialog.html:
  *   "QFileDialog::DontUseNativeDialog  Don't use the native file dialog. By default, the native file dialog is used unless
  *	 you use a subclass of QFileDialog that contains the Q_OBJECT macro, or the platform does not have a native dialog
  *   of the type that you require."
+ *
  * - Per https://stackoverflow.com/questions/42997657/pyqt5-filedialog-show-network-folders, "the gtk3 file dialog hides non-local files by default".
  *   Can confirm that both gtk3 and gtk2 themes show a file chooser with no network or VFS browsing support.
  *
+ * - Stated nowhere, but sidebarUrls() only work with non-native dialogs.
  */
-
-class NetworkAwareFileDialog::NAFDImpl
-{
-public:
-	NAFDImpl();
-
-	QWidget *m_parent_widget;
-	QSharedPointer<QFileDialog> m_the_qfiledialog;
-};
 
 NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory,
 											   const QString& filter, const QString& state_key)
@@ -87,11 +81,11 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
  By default, the native file dialog is used ***unless you use a subclass of QFileDialog that contains the Q_OBJECT macro***,
  or the platform does not have a native dialog of the type that you require.
 	 */
-//	setOptions(QFileDialog::DontUseNativeDialog);
+	m_the_qfiledialog->setOptions(QFileDialog::DontUseNativeDialog);
 #endif
 	m_the_qfiledialog->setFileMode(QFileDialog::AnyFile);
 	m_the_qfiledialog->setAcceptMode(QFileDialog::AcceptSave);
-//	setSupportedSchemes({"smb", "gvfs"});
+//	m_the_qfiledialog->setSupportedSchemes({"file", "smb", "gvfs"});
 #if 0
 	if(state_key.length() > 0)
 	{
@@ -118,10 +112,12 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 
 	auto dlg = nafdlg->m_the_qfiledialog;
 
+	options |= QFileDialog::DontUseNativeDialog;
 	if(options)
 	{
 		dlg->setOptions(options);
 	}
+
 	dlg->setAcceptMode(QFileDialog::AcceptSave);
 	if(!supportedSchemes.empty())
 	{
@@ -130,7 +126,7 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 
 	qWarning() << "is_dlg_native:" << nafdlg->is_dlg_native();
 
-	if(!dlg->exec())
+	if(!nafdlg->exec())
 	{
 		return {QUrl(), ""};
 	}
@@ -142,18 +138,23 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 /**
  * Static member for creating a "Open Existing Dir" dialog.
  */
-std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget* parent, const QString& caption, const QUrl& dir, const QString& state_key,
-																		 QFileDialog::Options options, const QStringList& supportedSchemes)
+std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget* parent, const QString& caption, const QUrl& dir,
+																		 const QString& state_key,
+																		 QFileDialog::Options options,
+																		 const QStringList& supportedSchemes)
 {
 	std::unique_ptr<NetworkAwareFileDialog> nafdlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, QString(), state_key);
 
 	auto dlg = nafdlg->m_the_qfiledialog;
 
+	options |= QFileDialog::DontUseNativeDialog;
 	if(options)
 	{
 		dlg->setOptions(options);
 	}
+
 	dlg->setFileMode(QFileDialog::Directory);
+	dlg->setFilter(QDir::Dirs | QDir::NoDotAndDotDot | QDir::Drives | QDir::System);
 	dlg->setAcceptMode(QFileDialog::AcceptOpen);
 	if(!supportedSchemes.empty())
 	{
@@ -162,7 +163,7 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 
 	qWarning() << "is_dlg_native:" << nafdlg->is_dlg_native();
 
-	if(!dlg->exec())
+	if(!nafdlg->exec())
 	{
 		return {QUrl(), ""};
 	}
@@ -206,15 +207,13 @@ bool NetworkAwareFileDialog::isDirSelectDialog() const
 void NetworkAwareFileDialog::setDefaultSidebarUrls()
 {
 	// This doesn't appear to do anything on Windows when using the system file dialog.
-	if(!use_native_dlg())
+	if(true)//!use_native_dlg())
 	{
-		QList<QUrl> urls =
-		{
-			QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::MusicLocation)[0]),
-			QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0]),
+		QList<QUrl> urls;
+		urls << QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::MusicLocation)[0])
+			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0])
 			/// @todo if linux && gvfs
-			QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::RuntimeLocation)[0] + "/gvfs")
-		};
+			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::RuntimeLocation)[0] + "/gvfs");
 		for(auto url : urls)
 		{
 			qDebug() << "Adding Sidebar URL:" << url;
@@ -237,7 +236,7 @@ int NetworkAwareFileDialog::exec()
 	restoreStateOverload();
 
 	/// @todo Trying to get at dialog after it's created to see if its native or not.
-#if 1
+#if 0
 	connect(m_the_qfiledialog.data(), &QFileDialog::finished, this, &NetworkAwareFileDialog::onFinished);
 	int retval = m_the_qfiledialog->exec();
 
@@ -387,7 +386,9 @@ void NetworkAwareFileDialog::restoreStateOverload()
 
 bool NetworkAwareFileDialog::use_native_dlg() const
 {
-	return true;
+M_WARNING("TODO");
+	return false;
+
     if(/** @todo user_pref_native_file_dialog() | */
         ((QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
     {

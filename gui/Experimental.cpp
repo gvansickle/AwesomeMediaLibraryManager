@@ -64,11 +64,11 @@ void Experimental::DoExperiment()
 
 //	QUrl url = KDirSelectDialog::selectDirectory(QUrl("file://home/gary"), false, this, "KDE4 Dir Select Dialog");
 
-#if 0
+#if 1
 	QUrl filePath = QFileDialog::getExistingDirectoryUrl(this, tr("Test - SHOULD BE NATIVE - getExistingDirectoryUrl()"),
 															QUrl("/home/gary"), // Start dir
 															QFileDialog::ShowDirsOnly, // Options.
-															QStringList()  << "gvfs"//<< "network" << "smb" << "file" << "mtp" << "http" // Supported Schemes.
+															QStringList()  //<< "gvfs" << "network" << "smb" << "file" << "mtp" << "http" // Supported Schemes.
 															);
 #endif
 

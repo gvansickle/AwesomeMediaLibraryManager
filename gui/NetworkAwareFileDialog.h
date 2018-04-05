@@ -98,12 +98,6 @@ private:
 	/// Persist the last state to/from this QSettings key.
 	QString m_settings_state_key;
 
-	/// Forward decl of our pImpl class.
-	class NAFDImpl;
-
-	/// The pImpl.
-	/// In the non-Qt world, this would be a std::unique_ptr, but....
-//	QSharedPointer<NAFDImpl> pImpl;
 	QWidget *m_parent_widget;
 	QSharedPointer<QFileDialog> m_the_qfiledialog;
 
