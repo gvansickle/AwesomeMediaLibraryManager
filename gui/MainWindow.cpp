@@ -29,6 +29,7 @@
 #include <KActionMenu>
 #include <KMessageBox>
 #include <KAboutData>
+#include <KSharedConfig>
 
 
 #include "Experimental.h"
@@ -106,6 +107,7 @@
 
 #include <gui/menus/ActionBundle.h>
 #include <gui/menus/HelpMenu.h>
+#include <KXmlGui/KEditToolBar>
 
 #include "concurrency/ExtAsync.h"
 
@@ -522,6 +524,8 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 	// Open the application preferences dialog.
 	m_settingsAct = KStandardAction::preferences(this, &MainWindow::startSettingsDialog, ac);
 
+	m_act_config_toolbars = KStandardAction::configureToolbars(this, &MainWindow::onConfigureToolbars, ac);
+
 #else
 	m_act_shortcuts_dialog = make_action(Theme::iconFromTheme(""),
 									 tr("Edit Shortcuts..."), this);
@@ -633,7 +637,8 @@ void MainWindow::createMenus()
 		m_act_styles_kaction_menu,
 		m_toolsMenu->addSeparator(),
 		m_settingsAct,
-		m_act_shortcuts_dialog
+		m_act_shortcuts_dialog,
+		m_act_config_toolbars
 		});
 
     // Create the Window menu.
@@ -1799,6 +1804,26 @@ void MainWindow::onShowMenuBar(bool show)
 	}
 M_WARNING("TODO: CTRL+M doesn't get the bar back.");
 //	menuBar()->setVisible(show);
+}
+
+void MainWindow::onConfigureToolbars()
+{
+	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");
+
+	saveMainWindowSettings(config_group);
+
+	KEditToolBar dialog(factory(), this);
+
+	connect(&dialog, &KEditToolBar::newToolbarConfig, this, &MainWindow::onApplyToolbarConfig);
+
+	dialog.exec();
+}
+
+void MainWindow::onApplyToolbarConfig()
+{
+	auto config_group = KSharedConfig::openConfig()->group("MainWindowToolbarSettings");
+
+	applyMainWindowSettings(config_group);
 }
 
 void MainWindow::onSettingsChanged()

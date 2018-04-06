@@ -218,6 +218,10 @@ private Q_SLOTS:
 	/// Slot which shows/hides the menu bar.
 	void onShowMenuBar(bool show);
 
+	void onConfigureToolbars();
+
+	void onApplyToolbarConfig();
+
 	void addViewMenuActions(QMenu* menu);
 
 	void onSettingsChanged();
@@ -240,8 +244,6 @@ private:
 	void createActionsHelp(KActionCollection *ac);
 
 //	void addViewMenuActions(QMenu* menu);
-
-
 
     void createMenus();
     void createToolBars();
@@ -414,6 +416,7 @@ private:
 	KActionMenu* m_act_styles_kaction_menu;
 	QAction* m_act_shortcuts_dialog;
 	QAction* m_settingsAct;
+	QAction* m_act_config_toolbars;
 	/// @}
 
     /// @name Window actions.
