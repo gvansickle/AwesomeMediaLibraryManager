@@ -126,13 +126,23 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
-    // Get some standard paths.
-    // App-specific cache directory.
-    m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
-    qInfo() << "App cache dir:" << m_cachedir;
-    // App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
-    m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
-    qInfo() << "App data dir:" << m_appdatadir;
+	init();
+}
+
+MainWindow::~MainWindow()
+{
+
+}
+
+void MainWindow::init()
+{
+	// Get some standard paths.
+	// App-specific cache directory.
+	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+	qInfo() << "App cache dir:" << m_cachedir;
+	// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
+	m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+	qInfo() << "App data dir:" << m_appdatadir;
 
 	readPreGUISettings();
 
@@ -143,9 +153,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 //	setStandardToolBarMenuEnabled(true);
 
 
-    // Set up our theming.
-    Theme::initialize();
-    m_actgroup_styles = Theme::getStylesActionGroup(this);
+	// Set up our Theme/Style management and actions.
+	Theme::initialize();
+	m_actgroup_styles = Theme::getStylesActionGroup(this);
 	m_act_styles_kaction_menu = qobject_cast<KActionMenu*>(m_actgroup_styles->parent());
 	Q_CHECK_PTR(m_act_styles_kaction_menu);
 
@@ -164,52 +174,47 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 	setDockNestingEnabled(true);
 
 M_WARNING("TODO: ifdef this to development only")
-    m_experimental = new Experimental(this);
+	m_experimental = new Experimental(this);
 
-    // The list of LibraryModels.
-    m_libmodels.clear();
+	// The list of LibraryModels.
+	m_libmodels.clear();
 
-    // The list of PlaylistModels.
-    m_playlist_models.clear();
+	// The list of PlaylistModels.
+	m_playlist_models.clear();
 
 	// The media player.
 	m_player = new MP2(this);
 
-    m_controls = new PlayerControls(this);
+	m_controls = new PlayerControls(this);
 
-    // Create the MDIArea and set it as the central widget.
-    m_mdi_area = new MDIArea(this);
-    setCentralWidget(m_mdi_area);
+	// Create the MDIArea and set it as the central widget.
+	m_mdi_area = new MDIArea(this);
+	setCentralWidget(m_mdi_area);
 
 	// Connect the MDIArea subWindowActivated signal to a slot so we know when
 	// the subwindow activation changes.
-    connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
+	connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
-    createActions();
-    createMenus();
-    createToolBars();
-    createStatusBar();
+	createActions();
+	createMenus();
+	createToolBars();
+	createStatusBar();
 	createDockWidgets();
-    updateActionEnableStates();
+	updateActionEnableStates();
 
-    ////// Connect up signals and slots.
-    createConnections();
+	////// Connect up signals and slots.
+	createConnections();
 
-    setWindowTitle(qApp->applicationDisplayName());
+	setWindowTitle(qApp->applicationDisplayName());
 
-    setUnifiedTitleAndToolBarOnMac(true);
+	setUnifiedTitleAndToolBarOnMac(true);
 
 	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
 	setAutoSaveSettings();
 
-    // Send ourself a message to re-load the files we had open last time we were closed.
-    QTimer::singleShot(0, this, &MainWindow::onStartup);
-}
-
-MainWindow::~MainWindow()
-{
-
+	// Send ourself a message to re-load the files we had open last time we were closed.
+	QTimer::singleShot(0, this, &MainWindow::onStartup);
 }
 
 MainWindow* MainWindow::getInstance()

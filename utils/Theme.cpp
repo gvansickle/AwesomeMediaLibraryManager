@@ -161,7 +161,9 @@ M_WARNING("TODO");
 	{
 		// This is the first program start.
 		QStringList styles_to_ignore;
+		/// @note If we want to ignore any styles by name, this is where we'd list the names.
 //		styles_to_ignore << QStringLiteral("GTK+");
+
 		if(styles_to_ignore.contains(desktop_style, Qt::CaseInsensitive))
 		{
 			// We don't want/can't use the current desktop style.
@@ -192,25 +194,31 @@ M_WARNING("TODO");
 
 QActionGroup * Theme::getStylesActionGroup(MainWindow *main_window)
 {
+	/// Set up a "Style" menu.
+	/// Adapted from similar code in Kdenlive::MainWindow::init().
+
 	KActionMenu *stylesAction = new KActionMenu(tr("Style"), main_window);
 	QActionGroup *stylesGroup = new QActionGroup(stylesAction);
 
-	// Add default style action
+	// Add a "Default" style action
 	QAction *defaultStyle = new QAction(tr("Default"), stylesGroup);
 	defaultStyle->setData(QStringLiteral("Default"));
 	defaultStyle->setCheckable(true);
 	stylesAction->addAction(defaultStyle);
 	if (AMLMSettings::widgetStyle() == QLatin1String("Default") || AMLMSettings::widgetStyle().isEmpty())
 	{
+		// Settings has either nothing or "Default" as the selected style.
 		defaultStyle->setChecked(true);
 	}
 
+	// Add all available styles to the menu, checking the currently selected one.
 	for(const QString &style : m_available_styles)
 	{
 		QAction *a = new QAction(style, stylesGroup);
 		a->setCheckable(true);
 		a->setData(style);
-		if (AMLMSettings::widgetStyle() == style) {
+		if (AMLMSettings::widgetStyle() == style)
+		{
 			a->setChecked(true);
 		}
 		stylesAction->addAction(a);

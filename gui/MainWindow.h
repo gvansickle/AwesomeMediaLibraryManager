@@ -100,8 +100,14 @@ Q_SIGNALS:
 	void settingsChanged();
 
 public:
+	/// Constructor
 	explicit MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
+	/// Destructor
     ~MainWindow() override;
+	
+	/// Init function to offload all the init which used to be in the constructor.
+	void init();
+	
 
 	/**
 	 * Get a pointer to the MainWindow singleton.
@@ -118,8 +124,7 @@ public:
 
 	/**
 	 * Helper function to add an action to the actionCollection() with a name.
-	 * @param action_name
-	 * @param action
+	 * @note Inspired by similar functionality in Kdenlive's main window.
 	 */
 	void addAction(const QString& action_name, QAction* action);
 

@@ -36,7 +36,9 @@ public:
 
     static void initialize();
 
-	// Get a "Widget Styles" QActionGroup.
+	/**
+	 * Get a "Widget Styles" QActionGroup.
+	 */
 	static QActionGroup *getStylesActionGroup(MainWindow *main_window);
 
 	static QString getUserDefaultStyle(const char* fallback = nullptr);

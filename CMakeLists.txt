@@ -187,7 +187,12 @@ find_package(Sanitizers)
 #
 # The Qt5 packages we require.
 #
-find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia Concurrent REQUIRED)
+find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+	Core
+	Gui
+	Widgets
+	Multimedia
+	Concurrent)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
@@ -210,7 +215,7 @@ endif()
 # KDE KF5 libs.
 #
 set(KF5_LINK_LIBS)
-find_package(KF5 REQUIRED COMPONENTS
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	Config
 	ConfigWidgets
@@ -684,7 +689,7 @@ endif() # Enable test target.
 
 ###
 ### Installation.
-###
+### @todo Need ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}?  See https://techbase.kde.org/Development/Tutorials/Using_Actions#appnameui.rc_file
 install(TARGETS ${PROJECT_NAME}
                 RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
                 LIBRARY DESTINATION .
@@ -699,6 +704,8 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
     DESTINATION .
     COMPONENT coreapp)
+# The .rc file.
+install(FILES AwesomeMediaLibraryManager.rc DESTINATION ${KDE_INSTALL_KXMLGUI5DIR}/AwesomeMediaLibraryManager)
 
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
