@@ -19,18 +19,6 @@
 
 #include "Experimental.h"
 
-#define EX1 1
-#define EX2 0
-
-#if EX1 == 1
-//#include <KEncodingFileDialog>
-//#include <KUrlRequesterDialog>
-//#include <KBuildSycocaProgressDialog>
-
-#include <gtkmm.h>
-#include <gtkmm/filechooserdialog.h>
-#endif
-
 #if EX2 == 1
 #include <KConfigDialog>
 #include <KConfigSkeleton>
@@ -42,9 +30,30 @@
 #include <QApplication>
 #include <QFileDialog>
 
+#define EX1 1
+#define EX2 0
+
+#if EX1 == 1
+//#include <KEncodingFileDialog>
+//#include <KUrlRequesterDialog>
+//#include <KBuildSycocaProgressDialog>
+
+#include <glib-object.h>
+#include <gtkmm.h>
+#include <gtkmm/filechooserdialog.h>
+//#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+//#include <gdk/x11/gdkx11window.h>
+
+#undef Bool
+
+#endif
+
+
+
 Experimental::Experimental(QWidget *parent) : QWidget(parent)
 {
-
+	setAttribute(Qt::WA_NativeWindow);
 }
 
 void Experimental::DoExperiment()
@@ -110,7 +119,21 @@ void Experimental::DoExperiment()
 	std::string chosen_path;
 
 	Gtk::FileChooserDialog dialog("TEST - GTK FILECHOOSER", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER);
-	//dialog.set_transient_for(kit);
+	if(true) /// @todo We're on gnome.
+	{
+		WId x11_parent_window_id = this->winId();
+		qDebug() << "Parent WId:" << x11_parent_window_id;
+//		GdkWindow * gdk_parent_win = gdk_window_foreign_new(x11_parent_window_id);
+		GdkDisplay* display = gdk_display_get_default();
+		qDebug() << "Display:" << display;
+		GdkWindow * gdk_parent_win = gdk_x11_window_lookup_for_display(display, x11_parent_window_id);
+		qDebug() << "gdk_parent_win:" << gdk_parent_win;
+
+		auto gtk_parent_win = Glib::wrap(gdk_parent_win);
+		qDebug() << "Parent WId as GdkWindow:" << gdk_parent_win;
+//		dialog.set_transient_for(*gtk_parent_win.operator->());
+		dialog.set_parent_window(gtk_parent_win);
+	}
 	dialog.set_local_only(false);
 	dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
 	dialog.add_button("_Open", Gtk::RESPONSE_OK);
