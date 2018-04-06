@@ -1240,7 +1240,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
  */
 void MainWindow::onStartup()
 {
-
+	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
 	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
 
 	initRootModels();

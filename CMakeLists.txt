@@ -567,8 +567,8 @@ add_project_meta(META_FILES_TO_INCLUDE)
 # Qt5 Binary Resource (rcc) files.
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
-qt5_add_resources(RSCS resources/amlm.qrc)
-add_custom_target(CPPS_FROM_QRCS DEPENDS ${RSCS})
+# Qt5 non-binary Resource files.
+qt5_add_resources(SOURCE_FILES resources/amlm.qrc)
 
 # Add KConfig source files to the common SOURCE_FILES list and install it.
 install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KCFG_INSTALL_DIR})
@@ -608,7 +608,6 @@ set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5
 		${KF5_LINK_LIBS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
-		${CPPS_FROM_QRCS}
 		callable_traits)
 target_link_libraries(${PROJECT_NAME}
         ${PROJECT_COMMON_LINK_LIBS}
@@ -708,7 +707,7 @@ install(FILES
     DESTINATION .
     COMPONENT coreapp)
 # The .rc file.
-install(FILES AwesomeMediaLibraryManager.rc DESTINATION ${KDE_INSTALL_KXMLGUI5DIR}/AwesomeMediaLibraryManager)
+install(FILES AwesomeMediaLibraryManagerui.rc DESTINATION ${KDE_INSTALL_KXMLGUI5DIR}/AwesomeMediaLibraryManager)
 
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
