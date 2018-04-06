@@ -1240,6 +1240,9 @@ void MainWindow::writeLibSettings(QSettings& settings)
  */
 void MainWindow::onStartup()
 {
+
+	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
+
 	initRootModels();
 
     // Create the "Now Playing" playlist and view.
