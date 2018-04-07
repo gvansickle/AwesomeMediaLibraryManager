@@ -595,7 +595,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 if(NOT WIN32)
-	target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
+	target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb3;-fno-omit-frame-pointer")
 endif()
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
@@ -701,14 +701,13 @@ install(TARGETS ${PROJECT_NAME}
 	)
 install(FILES
     ### @todo I think these are installing on top of themselves.
-    #icons_oxygen.rcc icons_Tango.rcc icons_App.rcc
+	#icons_oxygen.rcc icons_App.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-    #${CMAKE_CURRENT_BINARY_DIR}/icons_Tango.rcc
     ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
     DESTINATION .
     COMPONENT coreapp)
 # The .rc file.
-install(FILES AwesomeMediaLibraryManagerui.rc DESTINATION ${KDE_INSTALL_KXMLGUI5DIR}/AwesomeMediaLibraryManager)
+#install(FILES AwesomeMediaLibraryManagerui.rc DESTINATION ${KDE_INSTALL_KXMLGUI5DIR}/AwesomeMediaLibraryManager)
 
 # Custom target for coordinating the packaging.
 add_custom_target(packaging

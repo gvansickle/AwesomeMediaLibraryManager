@@ -37,7 +37,8 @@
   		<tooltip>Check to show the rows of song lists in alternating colors</tooltip>
   	</entry>
   	<entry name="LayoutIsLocked" type="Bool" key="layout_is_locked">
-  		<default>true</default></entry>
+  		<default>true</default>
+  	</entry>
   </group>
   <group name="Options">
     <entry name="CustomWidth" type="Int" key="custom width">

@@ -451,13 +451,13 @@ private:
     QAction* m_experimentalAct;
 
     /// Menus
-    QMenu* m_fileMenu;
-    QMenu *m_menu_edit;
-    QMenu* m_viewMenu;
-    QMenu* m_toolsMenu;
-	QMenu *m_menu_settings;
+	QMenu* m_menu_file;
+	QMenu* m_menu_edit;
+	QMenu* m_menu_view;
+	QMenu* m_menu_tools;
+	QMenu* m_menu_settings;
     QMenu* m_menu_window;
-    QMenu* m_helpMenu;
+	QMenu* m_menu_help;
 
     /// Toolbars
     ToolBarClass* m_fileToolBar;

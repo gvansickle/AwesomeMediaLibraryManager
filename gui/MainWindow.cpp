@@ -465,9 +465,9 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 													  tr("Paste the clipboard's contents into the current selection"));
 #else
 
-	m_act_cut = KStandardAction::cut(ac);
-	m_act_copy = KStandardAction::copy(ac);
-	m_act_paste = KStandardAction::paste(ac);
+	m_act_cut = KStandardAction::cut(m_ab_cut_copy_paste_actions);
+	m_act_copy = KStandardAction::copy(m_ab_cut_copy_paste_actions);
+	m_act_paste = KStandardAction::paste(m_ab_cut_copy_paste_actions);
 
 #endif
 
@@ -605,18 +605,18 @@ M_WARNING("TODO");
 
 void MainWindow::createMenus()
 {
-	m_fileMenu = menuBar()->addMenu(tr("&File"));
+	m_menu_file = menuBar()->addMenu(tr("&File"));
 
-	m_fileMenu->addActions({//newFileAct,
-						  m_fileMenu->addSection("Libraries"),
+	m_menu_file->addActions({//newFileAct,
+						  m_menu_file->addSection("Libraries"),
 						  m_importLibAct,
 						  m_saveLibraryAsAct,
-						  m_fileMenu->addSection("Playlists"),
+						  m_menu_file->addSection("Playlists"),
 						  m_newPlaylistAct,
 						  m_openPlaylistAct,
 						  m_savePlaylistAct,
                           //saveAsAct,
-						  m_fileMenu->addSeparator(),
+						  m_menu_file->addSeparator(),
                           //closeAct,
                           //closeAllAct,
                           //fileMenu.addSeparator(),
@@ -635,19 +635,19 @@ void MainWindow::createMenus()
 	m_menu_edit->setTearOffEnabled(true);
 
     // Create the View menu.
-	m_viewMenu = menuBar()->addMenu(tr("&View"));
-	m_ab_docks->appendToMenu(m_viewMenu);
-	m_viewMenu->addActions({
+	m_menu_view = menuBar()->addMenu(tr("&View"));
+	m_ab_docks->appendToMenu(m_menu_view);
+	m_menu_view->addActions({
 							   m_act_lock_layout,
 							   m_act_reset_layout,
 							   m_act_ktog_show_tool_bar,
 						   });
 
     // Tools menu.
-	m_toolsMenu = menuBar()->addMenu(tr("&Tools"));
-	m_toolsMenu->addActions(
+	m_menu_tools = menuBar()->addMenu(tr("&Tools"));
+	m_menu_tools->addActions(
         {//scanLibraryAction,
-		 m_toolsMenu->addSection("Rescans"),
+		 m_menu_tools->addSection("Rescans"),
 		 m_rescanLibraryAct,
 		 m_cancelRescanAct,
                 });
@@ -656,9 +656,9 @@ void MainWindow::createMenus()
 	m_menu_settings = menuBar()->addMenu(tr("&Settings"));
 	m_menu_settings->addActions({
 		m_act_ktog_show_menu_bar,
-		m_toolsMenu->addSeparator(),
+		m_menu_tools->addSeparator(),
 		m_act_styles_kaction_menu,
-		m_toolsMenu->addSeparator(),
+		m_menu_tools->addSeparator(),
 		m_settingsAct,
 		m_act_shortcuts_dialog,
 		m_act_config_toolbars
@@ -1156,8 +1156,10 @@ void MainWindow::view_is_closing(MDITreeViewBase* viewptr, QAbstractItemModel* m
 
 void MainWindow::addAction(const QString& action_name, QAction* action)
 {
-	actionCollection()->addAction(action_name, action);
-	actionCollection()->setDefaultShortcut(action, action->shortcut());
+	auto ac = actionCollection();
+
+	ac->addAction(action_name, action);
+	ac->setDefaultShortcut(action, action->shortcut());
 }
 
 //////
@@ -1273,7 +1275,7 @@ void MainWindow::onStartup()
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
-	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
+//	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
 
 	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
