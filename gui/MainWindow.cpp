@@ -480,12 +480,14 @@ void MainWindow::createActionsEdit()
 	m_act_delete = make_action(Theme::iconFromTheme("edit-delete"), tr("&Delete"), m_ab_extended_edit_actions, QKeySequence::Delete,
                                                        tr("Delete this entry"));
     connect_trig(m_act_delete, this, &MainWindow::onDelete);
+	addAction("edit_delete", m_act_delete);
 
 	m_ab_extended_edit_actions->addSection(tr("Selections"));
 
 	m_act_select_all = make_action(Theme::iconFromTheme("edit-select-all"), tr("Select &All"), m_ab_extended_edit_actions,
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
 	connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
+	addAction("select_all", m_act_select_all);
 }
 
 void MainWindow::createActionsView()
