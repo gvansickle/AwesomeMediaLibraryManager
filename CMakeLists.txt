@@ -567,6 +567,7 @@ add_project_meta(META_FILES_TO_INCLUDE)
 # Qt5 Binary Resource (rcc) files.
 qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
 qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
+
 # Qt5 non-binary Resource files.
 qt5_add_resources(SOURCE_FILES resources/amlm.qrc)
 

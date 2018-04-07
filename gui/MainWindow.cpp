@@ -149,8 +149,9 @@ void MainWindow::init()
 	// Follow the system style for the Icon&/|Text setting for toolbar buttons.
 	setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
-//	// KDE
-//	setStandardToolBarMenuEnabled(true);
+	// KDE
+	createStandardStatusBarAction();
+	setStandardToolBarMenuEnabled(true);
 
 
 	// Set up our Theme/Style management and actions.
@@ -208,10 +209,6 @@ M_WARNING("TODO: ifdef this to development only")
 	setWindowTitle(qApp->applicationDisplayName());
 
 	setUnifiedTitleAndToolBarOnMac(true);
-
-	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
-	// "Make sure you call this after all your *bars have been created."
-	setAutoSaveSettings();
 
 	// Send ourself a message to re-load the files we had open last time we were closed.
 	QTimer::singleShot(0, this, &MainWindow::onStartup);
@@ -342,30 +339,37 @@ void MainWindow::createActions()
                                 QKeySequence("CTRL+SHIFT+O"),
                                 "Add a library location");
 	connect_trig(m_importLibAct, this, &MainWindow::importLib);
+	addAction("import_library", m_importLibAct);
 
 	m_saveLibraryAsAct = make_action(QIcon::fromTheme("folder-close"), "&Save library as...", this);
+	addAction("save_library_as", m_saveLibraryAsAct);
 
 	m_removeDirFromLibrary = make_action(QIcon::fromTheme("edit-delete"), "Remove &Dir from library...", this);
+	addAction("remove_dir_from_library", m_removeDirFromLibrary);
 
     ////// Playlist actions.
 	m_newPlaylistAct = make_action(QIcon::fromTheme("document-new"), "&New playlist...", this,
                                   QKeySequence::New,
                                   "Create a new playlist");
 	connect_trig(m_newPlaylistAct, this, &MainWindow::newPlaylist);
+	addAction("new_playlist", m_newPlaylistAct);
 
 	m_openPlaylistAct = make_action(QIcon::fromTheme("document-open"), "&Open playlist...", this,
                                 QKeySequence::Open,
                                 "Open an existing playlist");
+	addAction("open_playlist", m_openPlaylistAct);
 
 	m_savePlaylistAct = make_action(QIcon::fromTheme("document-save"), "&Save playlist as...", this,
                                    QKeySequence::Save);
 
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
+	addAction("save_playlist_as", m_savePlaylistAct);
 
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
 	connect_trig(m_exitAction, this, &MainWindow::close);
+	addAction("exit", m_exitAction);
 
 	//
 	// Edit actions.
@@ -456,14 +460,17 @@ void MainWindow::createActionsEdit()
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
 	connect_trig(m_act_cut, this, &MainWindow::onCut);
+	addAction("edit_cut", m_act_cut);
 
 	m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), m_ab_cut_copy_paste_actions, QKeySequence::Copy,
                                                      tr("Copy the current selection to the clipboard"));
     connect_trig(m_act_copy, this, &MainWindow::onCopy);
+	addAction("edit_copy", m_act_copy);
 
 	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), m_ab_cut_copy_paste_actions, QKeySequence::Paste,
                                                       tr("Paste the clipboard's contents into the current selection"));
 	connect_trig(m_act_paste, this, &MainWindow::onPaste);
+	addAction("edit_paste", m_act_paste);
 
 	// The action bundle containing the other edit actions.
 	m_ab_extended_edit_actions = new ActionBundle(this);
@@ -1240,9 +1247,6 @@ void MainWindow::writeLibSettings(QSettings& settings)
  */
 void MainWindow::onStartup()
 {
-	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
-	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
-
 	initRootModels();
 
     // Create the "Now Playing" playlist and view.
@@ -1255,6 +1259,14 @@ void MainWindow::onStartup()
 
 	// Open the windows the user had open at the end of last session.
 	openWindows();
+
+M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
+	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
+	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
+
+	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
+	// "Make sure you call this after all your *bars have been created."
+	setAutoSaveSettings();
 }
 
 /**

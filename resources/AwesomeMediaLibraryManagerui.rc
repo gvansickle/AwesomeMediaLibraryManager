@@ -5,21 +5,46 @@
      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
      xsi:schemaLocation="http://www.kde.org/standards/kxmlgui/1.0
                          http://www.kde.org/standards/kxmlgui/1.0/kxmlgui.xsd" >
- 
+
   <MenuBar>
     <Menu name="file" >
-      <Action name="clear" />
+    	<text>&amp;File</text>
+   		<Separator/>
+    	<Action name="import_library"/>
+	   	<Action name="save_library_as"/>
+	   	<Separator/>
+	   	<Action name="new_playlist"/>
+	   	<Action name="open_playlist"/>
+	   	<Action name="save_playlist_as"/>
+	   	<Separator/>
+      	<Action name="exit"/>
     </Menu>
-    <Menu >
-      <text>A&amp;nother Menu</text>
-      <Action name="clear" />
-    </Menu >
+    <Menu name="edit">
+      <text>&amp;Edit</text>
+      <Action name="edit_undo"/>
+      <Action name="edit_redo"/>
+      <Separator/>
+      <Action name="edit_cut"/>
+      <Action name="edit_copy"/>
+      <Action name="edit_paste"/>
+      <Action name="clear"/>
+      <Action name="delete"/>
+      <Separator/>
+      <Action name="revert"/>
+    </Menu>
+    <Menu name="settings">
+	    <text>&amp;Settings</text>
+	    <Merge name="StandardToolBarMenuHandler"/>
+	    <Action name="ksecretsync_configure" />
+	</Menu>
   </MenuBar>
- 
-  <ToolBar name="mainToolBar" >
-    <text>Main Toolbar</text>
+
+  <ToolBar name="tb_file" >
+    <text>File Toolbar</text>
     <Action name="clear" />
   </ToolBar>
- 
+  <ToolBar name="tb_edit" >
+    <text>Edit Toolbar</text>
+    <Action name="clear" />
+  </ToolBar>
 </gui>
-
