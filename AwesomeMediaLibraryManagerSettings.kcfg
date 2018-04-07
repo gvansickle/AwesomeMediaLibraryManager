@@ -24,6 +24,15 @@
   		<label>The list of URLs to include in your music library</label>
   	</entry>
   </group>
+  <group name="Collection">
+  	<entry name="Collection Source Paths" key="collection_source_urls" type="UrlList">
+        <label>List of source paths in the collection</label>
+    </entry>
+    <entry name="Watch for changes" key="collection_watch_for_changes" type="Bool">
+        <label>Watch Collection Source Paths for changes</label>
+        <default>true</default>
+    </entry>
+  </group>
   <group name="Appearance">
   	<entry name="widgetStyle" type="String" key="widget_style">
   		<label>The widget style to use for the program</label></entry>
