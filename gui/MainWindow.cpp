@@ -374,7 +374,7 @@ void MainWindow::createActions()
 	//
 	// Edit actions.
 	//
-	createActionsEdit();
+	createActionsEdit(ac);
 
 	//
 	// View actions.
@@ -451,24 +451,32 @@ void MainWindow::createActions()
 /// @end
 }
 
-void MainWindow::createActionsEdit()
+void MainWindow::createActionsEdit(KActionCollection *ac)
 {
 	// The cut/copy/paste action "sub-bundle".
 	m_ab_cut_copy_paste_actions = new ActionBundle(this);
-
+#ifndef HAVE_KF5
 	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
+	m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), m_ab_cut_copy_paste_actions, QKeySequence::Copy,
+													 tr("Copy the current selection to the clipboard"));
+	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), m_ab_cut_copy_paste_actions, QKeySequence::Paste,
+													  tr("Paste the clipboard's contents into the current selection"));
+#else
+
+	m_act_cut = KStandardAction::cut(ac);
+	m_act_copy = KStandardAction::copy(ac);
+	m_act_paste = KStandardAction::paste(ac);
+
+#endif
+
 	connect_trig(m_act_cut, this, &MainWindow::onCut);
 	addAction("edit_cut", m_act_cut);
 
-	m_act_copy = make_action(Theme::iconFromTheme("edit-copy"), tr("&Copy"), m_ab_cut_copy_paste_actions, QKeySequence::Copy,
-                                                     tr("Copy the current selection to the clipboard"));
     connect_trig(m_act_copy, this, &MainWindow::onCopy);
 	addAction("edit_copy", m_act_copy);
 
-	m_act_paste = make_action(Theme::iconFromTheme("edit-paste"), tr("&Paste"), m_ab_cut_copy_paste_actions, QKeySequence::Paste,
-                                                      tr("Paste the clipboard's contents into the current selection"));
 	connect_trig(m_act_paste, this, &MainWindow::onPaste);
 	addAction("edit_paste", m_act_paste);
 
@@ -512,6 +520,7 @@ void MainWindow::createActionsTools()
 	m_rescanLibraryAct = make_action(QIcon::fromTheme("view-refresh"), tr("&Rescan libray..."), this,
 									QKeySequence::Refresh);
 	connect_trig(m_rescanLibraryAct, this, &MainWindow::onRescanLibrary);
+	addAction("rescan_library", m_rescanLibraryAct);
 
 	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
 									QKeySequence::Cancel);

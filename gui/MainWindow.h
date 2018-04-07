@@ -242,7 +242,7 @@ private:
 	/// @name Startup Initialization
 	/// @{
     void createActions();
-    void createActionsEdit();
+	void createActionsEdit(KActionCollection *ac);
 	void createActionsView();
 	void createActionsTools();
 	void createActionsSettings(KActionCollection *ac);
