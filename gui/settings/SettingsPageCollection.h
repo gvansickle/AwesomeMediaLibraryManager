@@ -1,7 +1,7 @@
 #ifndef SETTINGSPAGECOLLECTION_H
 #define SETTINGSPAGECOLLECTION_H
 
-#include <QtGui/QWidget>
+#include <QWidget>
 
 namespace Ui {
 class SettingsPageCollection;

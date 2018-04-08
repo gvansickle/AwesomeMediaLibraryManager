@@ -21,6 +21,7 @@
 
 // Pages
 #include "SettingsPageGeneral.h"
+#include "SettingsPageCollection.h"
 #include "SettingsPageAppearance.h"
 #include "SettingsPageLibrary.h"
 
@@ -44,6 +45,7 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 	// Create and add the pages.
 	setFaceType(KPageDialog::List);
 	addPage(new SettingsPageGeneral(this), tr("General"));
+	addPage(new SettingsPageCollection(this), tr("Collection"));
 	addPage(new SettingsPageAppearance(this), tr("Appearance") );
 	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...

@@ -3,7 +3,8 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
-  <include>KPageDialog</include>
+	<include>KPageDialog</include>
+	<include>QStandardPaths</include>
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
   <group name="General">
     <entry name="SettingsDialogFace" key="settings_dialog_type"
@@ -25,13 +26,13 @@
   	</entry>
   </group>
   <group name="Collection">
-  	<entry name="Collection Source Paths" key="collection_source_urls" type="UrlList">
+  	<entry name="CollectionSourceUrls" key="collection_source_urls" type="StringList">
         <label>List of source paths in the collection</label>
-    </entry>
-    <entry name="Watch for changes" key="collection_watch_for_changes" type="Bool">
+		<default code="true">QStandardPaths::standardLocations(QStandardPaths::MusicLocation)</default>
+  	</entry>
+    <entry name="CollectionWatchForChanges" key="collection_watch_for_changes" type="Bool">
         <label>Watch Collection Source Paths for changes</label>
-        <default>true</default>
-    </entry>
+	</entry>
   </group>
   <group name="Appearance">
   	<entry name="widgetStyle" type="String" key="widget_style">

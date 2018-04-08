@@ -537,6 +537,9 @@ set(SOURCE_FILES_UI
 	gui/settings/SettingsPageGeneral.cpp
 	gui/settings/SettingsPageGeneral.h
 	gui/settings/SettingsPageGeneral.ui
+	gui/settings/SettingsPageCollection.cpp
+	gui/settings/SettingsPageCollection.h
+	gui/settings/SettingsPageCollection.ui
 	gui/settings/SettingsPageAppearance.cpp
 	gui/settings/SettingsPageAppearance.h
 	gui/settings/SettingsPageAppearance.ui
