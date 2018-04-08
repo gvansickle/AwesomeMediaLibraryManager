@@ -74,8 +74,6 @@ public:
 protected Q_SLOTS:
 
 	void onSettingsChanged();
-
-	void initSettingsModel();
 };
 
 

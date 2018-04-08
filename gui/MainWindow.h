@@ -420,7 +420,7 @@ private:
 	/// Widget style action menu.
 	KActionMenu* m_act_styles_kaction_menu;
 	QAction* m_act_shortcuts_dialog;
-	QAction* m_settingsAct;
+	QAction* m_act_settings;
 	QAction* m_act_config_toolbars;
 	/// @}
 
@@ -441,7 +441,7 @@ private:
 
 	/// @name Help actions.
 #ifndef HAVE_KF5
-    QAction* m_helpAct;
+	QAction* m_helpAct;
     QAction* m_whatsThisAct;
     QAction* m_aboutAct;
     QAction* m_aboutQtAct;

@@ -717,8 +717,6 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
     DESTINATION .
     COMPONENT coreapp)
-# The .rc file.
-#install(FILES AwesomeMediaLibraryManagerui.rc DESTINATION ${KDE_INSTALL_KXMLGUI5DIR}/AwesomeMediaLibraryManager)
 
 # Custom target for coordinating the packaging.
 add_custom_target(packaging

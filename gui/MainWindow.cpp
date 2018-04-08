@@ -41,7 +41,6 @@
 #include "MDINowPlayingView.h"
 
 // For KF5 KConfig infrastructure.
-//#include <KConfigDialog>
 #include <AMLMSettings.h>
 #include <gui/settings/SettingsDialog.h>
 
@@ -149,11 +148,6 @@ void MainWindow::init()
 	// Follow the system style for the Icon&/|Text setting for toolbar buttons.
 	setToolButtonStyle(Qt::ToolButtonFollowStyle);
 
-	// KDE
-	createStandardStatusBarAction();
-	setStandardToolBarMenuEnabled(true);
-
-
 	// Set up our Theme/Style management and actions.
 	Theme::initialize();
 	m_actgroup_styles = Theme::getStylesActionGroup(this);
@@ -202,6 +196,10 @@ M_WARNING("TODO: ifdef this to development only")
 	createStatusBar();
 	createDockWidgets();
 	updateActionEnableStates();
+
+	// KDE
+	createStandardStatusBarAction();
+	setStandardToolBarMenuEnabled(true);
 
 	////// Connect up signals and slots.
 	createConnections();
@@ -545,7 +543,7 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 	m_act_shortcuts_dialog = KStandardAction::keyBindings(this, &MainWindow::onOpenShortcutDlg, ac);
 
 	// Open the application preferences dialog.
-	m_settingsAct = KStandardAction::preferences(this, &MainWindow::startSettingsDialog, ac);
+	m_act_settings = KStandardAction::preferences(this, &MainWindow::startSettingsDialog, ac);
 
 	m_act_config_toolbars = KStandardAction::configureToolbars(this, &MainWindow::onConfigureToolbars, ac);
 
@@ -659,9 +657,9 @@ void MainWindow::createMenus()
 		m_menu_tools->addSeparator(),
 		m_act_styles_kaction_menu,
 		m_menu_tools->addSeparator(),
-		m_settingsAct,
 		m_act_shortcuts_dialog,
-		m_act_config_toolbars
+		m_act_config_toolbars,
+		m_act_settings
 		});
 
     // Create the Window menu.
@@ -735,7 +733,7 @@ void MainWindow::createToolBars()
 	//
 	m_settingsToolBar = addToolBar("Settings");
 	m_settingsToolBar->setObjectName("SettingsToolbar");
-	m_settingsToolBar->addAction(m_settingsAct);
+	m_settingsToolBar->addAction(m_act_settings);
 	m_settingsToolBar->addAction(m_experimentalAct);
 
 #ifndef HAVE_KF5
@@ -1796,6 +1794,8 @@ void MainWindow::doChangeStyle()
 
 //	// Changing widget style resets color theme, so update color theme again
 //	ThemeManager::instance()->slotChangePalette();
+
+	AMLMSettings::self()->save();
 }
 
 void MainWindow::about()

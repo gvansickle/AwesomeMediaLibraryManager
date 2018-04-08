@@ -45,10 +45,12 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 	// Create and add the pages.
 	setFaceType(KPageDialog::List);
 	addPage(new SettingsPageGeneral(this), tr("General"));
-	addPage(new SettingsPageCollection(this), tr("Collection"));
-	addPage(new SettingsPageAppearance(this), tr("Appearance") );
+	addPage(new SettingsPageCollection(this), tr("Collection"), "document-save");
+	addPage(new SettingsPageAppearance(this), tr("Appearance"), "preferences-desktop-color");
 	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
+
+	connect(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
 
 	show();
 }
@@ -63,17 +65,7 @@ void SettingsDialog::onSettingsChanged()
 	setFaceType(AMLMSettings::settingsDialogFace());
 }
 
-void SettingsDialog::initSettingsModel()
-{
-//	auto si1 = new QStandardItem("true");
-//	auto si2 = new QStandardItem("false");
-//	m_settings_model = new QStandardItemModel;
-//	m_settings_model->appendRow({si1, si2});
 
-//	// Create the mapper.
-//	m_mapper = new QDataWidgetMapper;
-//	m_mapper->setModel(m_settings_model);
-}
 
 
 
