@@ -46,10 +46,10 @@ project(AwesomeMediaLibraryManager
 
 # Min versions of Qt5 and KF5.
 set(QT_MIN_VERSION "5.9.0")
-set(KF5_MIN_VERSION "5.37.0")
+set(KF5_MIN_VERSION "5.44.0")
 
 # KDE extra-cmake-modules, see https://api.kde.org/ecm/
-find_package(ECM 5.38 REQUIRED NO_MODULE)
+find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
 
 # Add folder where we keep support *.cmake's.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
@@ -65,6 +65,7 @@ endif()
 set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
+include(ECMAddAppIcon)
 # KDECompilerSettings
 # Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
 # @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
@@ -104,7 +105,6 @@ find_package(PkgConfig REQUIRED)
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
-### @todo? find_package(ECM 1.7.0 REQUIRED NO_MODULE)
 # For GoogleTest and Boost.
 set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(ExternalProject)
@@ -799,6 +799,7 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 cmake_print_variables(CMAKE_CXX_COMPILER META_FILES_TO_INCLUDE)
+cmake_print_variables(META_FILES_TO_INCLUDE)
 
 message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
