@@ -15,13 +15,13 @@ DefaultSettingsHelper::DefaultSettingsHelper()
 
 }
 
-QList<QUrl> DefaultSettingsHelper::defaultCollectionUrlList()
+QStringList DefaultSettingsHelper::defaultCollectionUrlList()
 {
-	QList<QUrl> default_collection_paths;
+	QStringList default_collection_paths;
 	auto path_list = QStandardPaths::standardLocations(QStandardPaths::MusicLocation);
 	for(auto path : path_list)
 	{
-		default_collection_paths.append(QUrl::fromUserInput(path));
+		default_collection_paths.append(QUrl::fromUserInput(path).toDisplayString());
 	}
 	return default_collection_paths;
 }

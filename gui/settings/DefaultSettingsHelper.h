@@ -11,6 +11,7 @@
 #include <QObject>
 #include <QList>
 #include <QUrl>
+#include <QStringList>
 
 /*
  *
@@ -22,7 +23,7 @@ class DefaultSettingsHelper : public QObject
 public:
 	DefaultSettingsHelper();
 
-	static QList<QUrl> defaultCollectionUrlList();
+	static QStringList defaultCollectionUrlList();
 };
 
 #endif /* GUI_SETTINGS_DEFAULTSETTINGSHELPER_H_ */
