@@ -4,7 +4,7 @@
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
 	<include>KPageDialog</include>
-	<include>QStandardPaths</include>
+	<include>gui/settings/DefaultSettingsHelper.h</include>
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
   <group name="General">
     <entry name="SettingsDialogFace" key="settings_dialog_type"
@@ -26,9 +26,9 @@
   	</entry>
   </group>
   <group name="Collection">
-  	<entry name="CollectionSourceUrls" key="collection_source_urls" type="StringList">
+  	<entry name="CollectionSourceUrls" key="collection_source_urls" type="UrlList">
         <label>List of source paths in the collection</label>
-		<default code="true">QStandardPaths::standardLocations(QStandardPaths::MusicLocation)</default>
+		<default code="true">DefaultSettingsHelper::defaultCollectionUrlList()</default>
   	</entry>
     <entry name="CollectionWatchForChanges" key="collection_watch_for_changes" type="Bool">
         <label>Watch Collection Source Paths for changes</label>

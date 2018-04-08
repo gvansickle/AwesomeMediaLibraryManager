@@ -62,6 +62,7 @@ endif()
 
 ### KDE modules.
 ### @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
+set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 # KDECompilerSettings
@@ -532,20 +533,27 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/function_traits.cpp
 	)
 
+#add_subdirectory(gui)
+
 # UI files.
 set(SOURCE_FILES_UI
-	gui/settings/SettingsPageGeneral.cpp
-	gui/settings/SettingsPageGeneral.h
-	gui/settings/SettingsPageGeneral.ui
-	gui/settings/SettingsPageCollection.cpp
-	gui/settings/SettingsPageCollection.h
-	gui/settings/SettingsPageCollection.ui
-	gui/settings/SettingsPageAppearance.cpp
-	gui/settings/SettingsPageAppearance.h
-	gui/settings/SettingsPageAppearance.ui
-	gui/settings/SettingsPageLibrary.cpp
-	gui/settings/SettingsPageLibrary.h
-	gui/settings/SettingsPageLibrary.ui)
+	DefaultSettingsHelper.cpp
+	DefaultSettingsHelper.h
+	SettingsPageGeneral.cpp
+	SettingsPageGeneral.h
+	SettingsPageGeneral.ui
+	SettingsPageCollection.cpp
+	SettingsPageCollection.h
+	SettingsPageCollection.ui
+	SettingsPageAppearance.cpp
+	SettingsPageAppearance.h
+	SettingsPageAppearance.ui
+	SettingsPageLibrary.cpp
+	SettingsPageLibrary.h
+	SettingsPageLibrary.ui
+	)
+PREPEND_TO_EACH(SOURCE_FILES_UI "gui/settings/" ${SOURCE_FILES_UI})
+message(STATUS ">>>top ${SOURCE_FILES_UI}")
 
 #
 # Append all the SOURCE_* subsets.
@@ -575,7 +583,7 @@ qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
 qt5_add_resources(SOURCE_FILES resources/amlm.qrc)
 
 # Add KConfig source files to the common SOURCE_FILES list and install it.
-install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KCFG_INSTALL_DIR})
+install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR})
 kconfig_add_kcfg_files(SOURCE_FILES AwesomeMediaLibraryManagerSettings.kcfgc)
 
 ###
@@ -696,10 +704,10 @@ endif() # Enable test target.
 ###
 ### Installation.
 ### @todo Need ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}?  See https://techbase.kde.org/Development/Tutorials/Using_Actions#appnameui.rc_file
-install(TARGETS ${PROJECT_NAME}
-                RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
-                LIBRARY DESTINATION .
-                ARCHIVE DESTINATION .
+install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+				#LIBRARY DESTINATION .
+				#ARCHIVE DESTINATION .
 		COMPONENT coreapp
 	)
 install(FILES
