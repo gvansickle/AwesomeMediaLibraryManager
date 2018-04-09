@@ -31,7 +31,6 @@ class QStandardItemModel;
 
 #include "SettingsDialogSideWidget.h"
 #include "SettingsDialogPageBase.h"
-#include "RegisteredField.h"
 
 
 class SettingsDialogBase : public QDialog
@@ -74,8 +73,8 @@ private:
     // SettingsPages are friended to make the field() mechanism easier.
     friend SettingsDialogPageBase;
 
-    void addField(const RegisteredField& field);
-    void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
+//    void addField(const RegisteredField& field);
+//    void registerField(const QString &name, QWidget *widget, const char *property = Q_NULLPTR, const char *changedSignal = Q_NULLPTR);
 
     QPointer<SettingsDialogSideWidget> m_contents_side_widget;
 
@@ -86,7 +85,7 @@ private:
 
     /// The map of registeredField() names to values.
     QMap<QString, int> m_reg_field_index_map;
-    QVector<RegisteredField> m_registered_fields;
+//    QVector<RegisteredField> m_registered_fields;
 };
 
 

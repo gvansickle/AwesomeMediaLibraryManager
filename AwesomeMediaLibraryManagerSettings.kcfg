@@ -3,6 +3,7 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+      <include>Qt</include>
 	<include>KPageDialog</include>
 	<include>gui/settings/DefaultSettingsHelper.h</include>
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
@@ -18,6 +19,17 @@
     		<choice name="Tabbed"></choice>
    		</choices>
     	<default>KPageDialog::FaceType::List</default>
+    </entry>
+    <entry name="toolbarTextIconModeCombo" key="toolbar_global_text_icon_mode" type="Enum">
+    	<label context="@label:listbox">XXX Toolbar text/icon mode:</label>
+    	<choices name="Qt::ToolButtonStyle">
+    		<choice name="ToolButtonIconOnly"><label context="@item:inlistbox">Icon Only</label></choice>
+    		<choice name="ToolButtonTextOnly"><label context="@item:inlistbox">Text Only</label></choice>
+    		<choice name="ToolButtonTextBesideIcon"><label context="@item:inlistbox">Text Beside Icon</label></choice>
+    		<choice name="ToolButtonTextUnderIcon"><label context="@item:inlistbox">Text Under Icon</label></choice>
+    		<choice name="ToolButtonFollowStyle"><label context="@item:inlistbox">Follow Style</label></choice>
+   		</choices>
+    	<default>Qt::ToolButtonStyle::ToolButtonFollowStyle</default>
     </entry>
   </group>
   <group name="Music Library">

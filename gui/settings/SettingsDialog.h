@@ -24,17 +24,6 @@
 #include <KConfigSkeleton>
 #include <KWindowConfig>
 
-//#include <QObject>
-//#include <QDialog>
-//#include <QPointer>
-//#include <QDialogButtonBox>
-//#include <QStackedWidget>
-//
-//#include "SettingsDialogSideWidget.h"
-//#include "SettingsDialogPageBase.h"
-//#include "RegisteredField.h"
-//#include "SettingsDialogBase.h"
-
 /**
  * @todo How to use enums with KConfig, from /usr/share/config.kcfg/structviewpreferences.kcfg
  *  Okteta: https://github.com/KDE/okteta/blob/master/kasten/controllers/view/structures/settings/structureviewpreferences.kcfg

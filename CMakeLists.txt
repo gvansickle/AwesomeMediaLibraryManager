@@ -490,7 +490,7 @@ set(SOURCE_FILES
 	gui/settings/SDPageLibrary.h
 	gui/MDINowPlayingView.cpp
 	gui/MDINowPlayingView.h
-	gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
+	gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
 	logic/ModelUserRoles.cpp
 	gui/DragDropTreeViewStyleProxy.cpp
 	logic/proxymodels/SelectionFilterProxyModel.cpp

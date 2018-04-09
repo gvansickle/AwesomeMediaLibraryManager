@@ -56,7 +56,7 @@
    <item row="1" column="0">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
-      <string>GroupBox</string>
+      <string>Collection appearance</string>
      </property>
      <layout class="QFormLayout" name="formLayout_3">
       <item row="0" column="0">

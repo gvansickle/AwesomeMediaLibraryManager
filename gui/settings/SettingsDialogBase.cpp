@@ -97,37 +97,37 @@ void SettingsDialogBase::addPage(SettingsDialogPageBase *page)
     page->addContentsEntry(m_contents_side_widget);
 }
 
-void SettingsDialogBase::setField(const QString &name, const QVariant &value)
-{
-    auto index = m_reg_field_index_map.value(name, -1);
+//void SettingsDialogBase::setField(const QString &name, const QVariant &value)
+//{
+//    auto index = m_reg_field_index_map.value(name, -1);
 
-    if(index != -1)
-    {
-        // Found the field.
-        const RegisteredField &field = m_registered_fields.at(index);
-        auto retval = field.m_object->setProperty(field.m_property_name, value);
-        if(!retval)
-        {
-            qWarning("Couldn't write to property '%s'", field.m_property_name.constData());
-        }
-    }
-}
+//    if(index != -1)
+//    {
+//        // Found the field.
+//        const RegisteredField &field = m_registered_fields.at(index);
+//        auto retval = field.m_object->setProperty(field.m_property_name, value);
+//        if(!retval)
+//        {
+//            qWarning("Couldn't write to property '%s'", field.m_property_name.constData());
+//        }
+//    }
+//}
 
-QVariant SettingsDialogBase::field(const QString &name) const
-{
-    auto index = m_reg_field_index_map.value(name, -1);
-    if(index != -1)
-    {
-        const RegisteredField &field = m_registered_fields.at(index);
-        return field.m_object->property(field.m_property_name);
-    }
-    else
-    {
-        qWarning() << QString("No such field registered:") << name;
-    }
+//QVariant SettingsDialogBase::field(const QString &name) const
+//{
+//    auto index = m_reg_field_index_map.value(name, -1);
+//    if(index != -1)
+//    {
+//        const RegisteredField &field = m_registered_fields.at(index);
+//        return field.m_object->property(field.m_property_name);
+//    }
+//    else
+//    {
+//        qWarning() << QString("No such field registered:") << name;
+//    }
 
-	return QVariant();
-}
+//	return QVariant();
+//}
 
 void SettingsDialogBase::addMapping(QWidget* widget, int section)
 {
@@ -155,42 +155,42 @@ void SettingsDialogBase::onHelpRequested()
 }
 
 
-void SettingsDialogBase::addField(const RegisteredField &field)
-{
-    RegisteredField local_reg_field = field;
+//void SettingsDialogBase::addField(const RegisteredField &field)
+//{
+//    RegisteredField local_reg_field = field;
 
-    ///local_reg_field.resolve(defaultPropertyTable);
+//    ///local_reg_field.resolve(defaultPropertyTable);
 
-    /// @todo Check for dups.
+//    /// @todo Check for dups.
 
-    m_reg_field_index_map.insert(local_reg_field.m_name, m_registered_fields.size());
-    m_registered_fields.push_back(local_reg_field);
+//    m_reg_field_index_map.insert(local_reg_field.m_name, m_registered_fields.size());
+//    m_registered_fields.push_back(local_reg_field);
 
-	//connect(local_reg_field.m_object, SIGNAL(destroyed(QObject*)), this, SLOT(onRegisteredFieldDestroyed(QObject*)));
-}
+//	//connect(local_reg_field.m_object, SIGNAL(destroyed(QObject*)), this, SLOT(onRegisteredFieldDestroyed(QObject*)));
+//}
 
-void SettingsDialogBase::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)
-{
-    if(property == nullptr)
-    {
-        if(1/*isQFontComboBox*/)
-        {
-            property = "currentFont";
-        }
-    }
+//void SettingsDialogBase::registerField(const QString &name, QWidget *widget, const char *property, const char *changedSignal)
+//{
+//    if(property == nullptr)
+//    {
+//        if(1/*isQFontComboBox*/)
+//        {
+//            property = "currentFont";
+//        }
+//    }
 
-    if(changedSignal == nullptr)
-    {
-        if(1/*isQFontComboBox*/)
-        {
-            changedSignal = "currentFontChanged";
-        }
-    }
+//    if(changedSignal == nullptr)
+//    {
+//        if(1/*isQFontComboBox*/)
+//        {
+//            changedSignal = "currentFontChanged";
+//        }
+//    }
 
-    //m_registered_fields[name] = {widget, property, changedSignal};
+//    //m_registered_fields[name] = {widget, property, changedSignal};
 
-    //connect(widget, SIGNAL(changedSignal), [=](const QFont& newfont){ m_registered_fields[name].m_value = newfont; });
-}
+//    //connect(widget, SIGNAL(changedSignal), [=](const QFont& newfont){ m_registered_fields[name].m_value = newfont; });
+//}
 
 void SettingsDialogBase::accept()
 {

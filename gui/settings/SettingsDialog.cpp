@@ -44,8 +44,8 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 {
 	// Create and add the pages.
 	setFaceType(KPageDialog::List);
-	addPage(new SettingsPageGeneral(this), tr("General"));
-	addPage(new SettingsPageCollection(this), tr("Collection"), "document-save");
+    addPage(new SettingsPageGeneral(this), tr("General"), "preferences-desktop-sound");
+    addPage(new SettingsPageCollection(this), tr("Collection"), "applications-multimedia");
 	addPage(new SettingsPageAppearance(this), tr("Appearance"), "preferences-desktop-color");
 	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
@@ -62,6 +62,7 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::onSettingsChanged()
 {
+    qDebug() << "XXXXXXXXXXXX" << AMLMSettings::toolbarTextIconModeCombo();
 	setFaceType(AMLMSettings::settingsDialogFace());
 }
 

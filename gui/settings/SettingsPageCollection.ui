@@ -15,10 +15,35 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="KEditListWidget" name="kcfg_CollectionSourceUrls">
-     <property name="buttons">
-      <set>KEditListWidget::Add|KEditListWidget::Remove</set>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Collection root paths</string>
      </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="KEditListWidget" name="kcfg_CollectionSourceUrls">
+        <property name="buttons">
+         <set>KEditListWidget::Add|KEditListWidget::Remove</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Collection maintenance options</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="kcfg_CollectionWatchForChanges">
+        <property name="text">
+         <string>Watch Collection Source Paths for changes</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>747</width>
+    <height>549</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,52 +15,155 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="QGroupBox" name="groupBox">
-     <property name="title">
-      <string>General</string>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>1</number>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <layout class="QFormLayout" name="formLayout">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Settings dialog type</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="kcfg_SettingsDialogFace">
-          <item>
+     <widget class="QWidget" name="tab_SettingsDialog">
+      <attribute name="title">
+       <string>Settings dialog</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="settingsDialogTypeLabel">
            <property name="text">
-            <string>Auto</string>
+            <string>Settings dialog type</string>
            </property>
-          </item>
-          <item>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="kcfg_SettingsDialogFace">
+           <item>
+            <property name="text">
+             <string>Auto</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Plain</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>List</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Tree</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Tabbed</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Window">
+      <attribute name="title">
+       <string>Window</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <layout class="QFormLayout" name="formLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="multipleDocumentModeLabel">
            <property name="text">
-            <string>Plain</string>
+            <string>Multiple document mode:</string>
            </property>
-          </item>
-          <item>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="kcfg_multipleDocumentModeComboBox">
+           <item>
+            <property name="text">
+             <string>Tabs</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Subwindows</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="toolbarTextLabel">
            <property name="text">
-            <string>List</string>
+            <string>Toolbar text/icon mode:</string>
            </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="kcfg_toolbarTextIconModeCombo">
+           <item>
+            <property name="text">
+             <string>Icon Only</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Text Only</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Text Beside Icon</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Text Under Icon</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Follow Style</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_Miscellaneous">
+      <attribute name="title">
+       <string>Miscellaneous</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="1">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>File dialogs</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_3">
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="radioButton">
+            <property name="text">
+             <string>Nati&amp;ve File Dialogs</string>
+            </property>
+           </widget>
           </item>
-          <item>
-           <property name="text">
-            <string>Tree</string>
-           </property>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="radioButton_2">
+            <property name="text">
+             <string>GTK+&amp;3 File Dialogs</string>
+            </property>
+           </widget>
           </item>
-          <item>
-           <property name="text">
-            <string>Tabbed</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
