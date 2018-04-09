@@ -179,7 +179,9 @@ public Q_SLOTS:
 
 
 protected:
+	bool queryClose() override;
     void closeEvent(QCloseEvent* event) override;
+
 
 protected Q_SLOTS:
 
@@ -301,7 +303,6 @@ private:
 	void readProperties(const KConfigGroup& config_group) override;
 	/// @}
 
-	bool queryClose() override;
 
     /// @name Persistency
     ///@{

@@ -553,7 +553,6 @@ set(SOURCE_FILES_UI
 	SettingsPageLibrary.ui
 	)
 PREPEND_TO_EACH(SOURCE_FILES_UI "gui/settings/" ${SOURCE_FILES_UI})
-message(STATUS ">>>top ${SOURCE_FILES_UI}")
 
 #
 # Append all the SOURCE_* subsets.
