@@ -62,7 +62,6 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::onSettingsChanged()
 {
-    qDebug() << "XXXXXXXXXXXX" << AMLMSettings::toolbarTextIconModeCombo();
 	setFaceType(AMLMSettings::settingsDialogFace());
 }
 

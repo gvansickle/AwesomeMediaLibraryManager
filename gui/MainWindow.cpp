@@ -1862,6 +1862,24 @@ void MainWindow::onApplyToolbarConfig()
 void MainWindow::onSettingsChanged()
 {
 	qDb() << "SLOT: Settings changed";
+    qDb() << "Toolbar Text/Icon:" << AMLMSettings::toolbarTextIconModeCombo();
+
+    // Open up the config sections we need.
+//    KSharedConfigPtr top_level_config = KSharedConfig::openConfig();
+
+//    KConfigGroup config_grp_mainwindow(top_level_config, "MainWindow");
+//    KConfigGroup config_grp_toolbars(&config_grp_mainwindow, "Toolbars");
+
+    // Update all the toolbars.
+    auto text_icon_mode = AMLMSettings::toolbarTextIconModeCombo();
+    setToolButtonStyle(text_icon_mode);
+    auto toolbars = toolBars();
+    for(auto tb : toolbars)
+    {
+        qDb() << "Toolbar:" << tb->objectName();
+        tb->setToolButtonStyle(text_icon_mode);
+    }
+
 	Q_EMIT settingsChanged();
 }
 
