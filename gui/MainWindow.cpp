@@ -197,10 +197,6 @@ M_WARNING("TODO: ifdef this to development only")
 	createDockWidgets();
 	updateActionEnableStates();
 
-	// KDE
-	createStandardStatusBarAction();
-	setStandardToolBarMenuEnabled(true);
-
 	////// Connect up signals and slots.
 	createConnections();
 
@@ -377,9 +373,9 @@ void MainWindow::createActions()
 	//
 	// View actions.
 	//
-	createActionsView();
+	createActionsView(ac);
 
-	createActionsTools();
+	createActionsTools(ac);
 
 	createActionsSettings(ac);
 
@@ -496,20 +492,27 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 	addAction("select_all", m_act_select_all);
 }
 
-void MainWindow::createActionsView()
+void MainWindow::createActionsView(KActionCollection *ac)
 {
+	// View actions.
+
 	m_ab_docks = new ActionBundle(this);
 
+#ifndef HAVE_KF5
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
+#else
+	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), ac); // There's also an "emblem-unlocked"
+	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), ac);
+#endif
 	/// @todo These appear to be unreparentable, so we can't give them to an ActionBundle.
 //	m_ab_docks->addAction(m_libraryDockWidget->toggleViewAction());
 //	m_ab_docks->addAction(m_metadataDockWidget->toggleViewAction());
 
-	m_act_ktog_show_tool_bar = new KToggleToolBarAction("FileToolbar", tr("Show File Toolbar"), actionCollection());
+	m_act_ktog_show_tool_bar = new KToggleToolBarAction("FileToolbar", tr("Show File Toolbar"), ac);
 }
 
-void MainWindow::createActionsTools()
+void MainWindow::createActionsTools(KActionCollection *ac)
 {
 	//
 	// Tools actions.
@@ -591,13 +594,30 @@ M_WARNING("TODO");
 
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
 //	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
-	addAction("layout_locked", m_act_lock_layout);
-
-	menu->addSeparator();
+	menu->addAction(/*"layout_locked",*/ m_act_lock_layout);
 
 	// List doc widgets.
+	menu->addSection(tr("Docks"));
+//	QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
+//	for(auto dock : dockwidgets)
+//	{
+//		if(dock->parentWidget() == this)
+//		{
+//			menu->addAction(dock->toggleViewAction());
+//		}
+//	}
 
 	// List toolbars.
+	menu->addSection(tr("Toolbars"));
+    menu->addAction(toolBarMenuAction());
+//	auto tbs = toolBars();
+//	for(auto tb : tbs)
+//	{
+//		auto action = tb->toggleViewAction();
+//		menu->addAction(action);
+//	}
+
+	// Reset layout.
 
 }
 
@@ -633,13 +653,17 @@ void MainWindow::createMenus()
 	m_menu_edit->setTearOffEnabled(true);
 
     // Create the View menu.
-	m_menu_view = menuBar()->addMenu(tr("&View"));
-	m_ab_docks->appendToMenu(m_menu_view);
-	m_menu_view->addActions({
-							   m_act_lock_layout,
-							   m_act_reset_layout,
-							   m_act_ktog_show_tool_bar,
-						   });
+M_WARNING("TODO");
+//	m_menu_view = menuBar()->addMenu(tr("&View"));
+    m_menu_view = menuBar()->addMenu(tr("&View"));
+    addViewMenuActions(m_menu_view);
+//	menuBar()->addMenu(m_menu_view);
+//	m_ab_docks->appendToMenu(m_menu_view);
+//	m_menu_view->addActions({
+//							   m_act_lock_layout,
+//							   m_act_reset_layout,
+//							   m_act_ktog_show_tool_bar,
+//						   });
 
     // Tools menu.
 	m_menu_tools = menuBar()->addMenu(tr("&Tools"));
@@ -702,7 +726,7 @@ void MainWindow::createMenus()
 void MainWindow::createToolBars()
 {
 #ifdef HAVE_KF5
-	#define addToolBar(str) this->toolBar((str))
+	#define addToolBar(str) this->toolBar(str)
 #else
 	#define addToolBar(str) addToolBar((str))
 #endif
@@ -1271,13 +1295,20 @@ void MainWindow::onStartup()
 	// Open the windows the user had open at the end of last session.
 	openWindows();
 
+	// KDE
+	createStandardStatusBarAction();
+	setStandardToolBarMenuEnabled(true);
+
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
 //	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
+	// No Create, we don't have a
+	setupGUI(KXmlGuiWindow::Keys | StatusBar | ToolBar | Save);
 
 	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
-	setAutoSaveSettings();
+	/// @note this is done by setupGUI().
+	///setAutoSaveSettings();
 }
 
 /**

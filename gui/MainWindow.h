@@ -243,8 +243,8 @@ private:
 	/// @{
     void createActions();
 	void createActionsEdit(KActionCollection *ac);
-	void createActionsView();
-	void createActionsTools();
+	void createActionsView(KActionCollection *ac);
+	void createActionsTools(KActionCollection *ac);
 	void createActionsSettings(KActionCollection *ac);
 	void createActionsHelp(KActionCollection *ac);
 
