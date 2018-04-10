@@ -157,7 +157,7 @@ set(HEADER_FILES
 	logic/CueSheetParser.h
 	gui/settings/SettingsDialog.h
 	gui/settings/SettingsDialogSideWidget.h
-	resources/VersionInfo.h
+	../resources/VersionInfo.h
 	logic/ModelUserRoles.h
 	gui/DragDropTreeViewStyleProxy.h
 	logic/proxymodels/ModelHelpers.h
@@ -320,7 +320,7 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES})
 ###
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
 		main.cpp
-		${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
@@ -370,3 +370,69 @@ Checks: '-*,llvm-twine-local'
 ")
 
 #print_target_properties(${PROJECT_NAME})
+
+###
+### Testing
+###
+if(TRUE) # Enable test target.
+
+find_package(Qt5Test REQUIRED)
+include(CTest)
+### Google Test
+find_package(Threads REQUIRED)
+download_project(PROJ                googletest
+                 GIT_REPOSITORY      https://github.com/google/googletest.git
+                 GIT_TAG             master
+                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
+)
+# Prevent GoogleTest from overriding our compiler/linker options
+# when building with Visual Studio
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
+	EXCLUDE_FROM_ALL)
+
+#enable_testing()
+set(TEST_EXE_TARGET alltests)
+set(SOURCE_FILES_TEST)
+set(HEADER_FILES_TEST)
+list(APPEND SOURCE_FILES_TEST
+	concurrency/tests/AsyncTests.cpp)
+list(APPEND
+	tests/TestHelpers.h
+	concurrency/tests/AsyncTests.h)
+
+add_executable(${TEST_EXE_TARGET}
+				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
+				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+# Add sanitizers.
+add_sanitizers(${TEST_EXE_TARGET})
+target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
+	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"QT_DEPRECATED_WARNINGS"
+	"QT_NO_KEYWORDS"
+	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"QFUTURE_TEST")
+target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
+target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
+set_target_properties(${TEST_EXE_TARGET} PROPERTIES
+	AUTOMOC ON
+	AUTOUIC ON)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
+target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
+add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})
+
+endif() # Enable test target.
+
+###
+### Installation.
+### @todo Need ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}?  See https://techbase.kde.org/Development/Tutorials/Using_Actions#appnameui.rc_file
+install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+				#LIBRARY DESTINATION .
+				#ARCHIVE DESTINATION .
+		COMPONENT coreapp
+	)
+
