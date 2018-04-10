@@ -157,7 +157,7 @@ set(HEADER_FILES
 	logic/CueSheetParser.h
 	gui/settings/SettingsDialog.h
 	gui/settings/SettingsDialogSideWidget.h
-	../resources/VersionInfo.h
+	../resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
 	gui/DragDropTreeViewStyleProxy.h
 	logic/proxymodels/ModelHelpers.h
@@ -403,7 +403,7 @@ list(APPEND
 
 add_executable(${TEST_EXE_TARGET}
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
-				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+				${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 # Add sanitizers.
 add_sanitizers(${TEST_EXE_TARGET})
