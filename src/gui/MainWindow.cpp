@@ -125,6 +125,15 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
+    /// @note Per what Kdenlive is doing.
+    /// Call tree there is ~:
+    /// main()
+    ///   Core::build()
+    ///     Core::initialize()
+    ///       m_main_win = new MainWindow();
+    ///     m_main_win->init()
+    ///     ^^->show();
+    ///   app.exec()
 	init();
 }
 
@@ -142,6 +151,9 @@ void MainWindow::init()
 	// App-specific directory where persistent application data can be stored.  On Windows, this is the roaming, not local, path.
 	m_appdatadir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
 	qInfo() << "App data dir:" << m_appdatadir;
+
+    /// @note Don't know if we need this or not.  Krita does this in its main window constructor.
+    actionCollection()->addAssociatedWidget(this);
 
 	readPreGUISettings();
 
@@ -596,26 +608,28 @@ M_WARNING("TODO");
 //	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
 	menu->addAction(/*"layout_locked",*/ m_act_lock_layout);
 
-	// List doc widgets.
+    // List dock widgets.
 	menu->addSection(tr("Docks"));
-//	QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
-//	for(auto dock : dockwidgets)
-//	{
-//		if(dock->parentWidget() == this)
-//		{
-//			menu->addAction(dock->toggleViewAction());
-//		}
-//	}
+    QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
+    for(auto dock : dockwidgets)
+    {
+        qDb() << "Dock:" << dock;
+        if(dock->parentWidget() == this)
+        {
+            menu->addAction(dock->toggleViewAction());
+        }
+    }
 
 	// List toolbars.
 	menu->addSection(tr("Toolbars"));
     menu->addAction(toolBarMenuAction());
-//	auto tbs = toolBars();
-//	for(auto tb : tbs)
-//	{
-//		auto action = tb->toggleViewAction();
-//		menu->addAction(action);
-//	}
+    auto tbs = toolBars();
+    for(auto tb : tbs)
+    {
+        qDb() << "TabBar:" << tb;
+        auto action = tb->toggleViewAction();
+        menu->addAction(action);
+    }
 
 	// Reset layout.
 
@@ -1181,7 +1195,16 @@ void MainWindow::addAction(const QString& action_name, QAction* action)
 	auto ac = actionCollection();
 
 	ac->addAction(action_name, action);
-	ac->setDefaultShortcut(action, action->shortcut());
+    ac->setDefaultShortcut(action, action->shortcut());
+}
+
+QDockWidget *MainWindow::addDock(const QString &title, const QString &object_name, QWidget *widget, Qt::DockWidgetArea area)
+{
+    auto retval = new QDockWidget(title, this);
+    retval->setObjectName(object_name);
+    retval->setWidget(widget);
+    addDockWidget(area, retval);
+    return retval;
 }
 
 //////

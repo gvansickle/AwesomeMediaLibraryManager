@@ -128,6 +128,13 @@ public:
 	 */
 	void addAction(const QString& action_name, QAction* action);
 
+    /**
+     * Helper function for adding new dock widgets to the main window.
+     * @note Inspired by similar functionality in Kdenlive's main window.
+     */
+    QDockWidget* addDock(const QString& title, const QString& object_name, QWidget* widget,
+                         Qt::DockWidgetArea area = Qt::TopDockWidgetArea);
+
 public Q_SLOTS:
 
     /// Slot corresponding to the "Open Directory as new Library" action.
