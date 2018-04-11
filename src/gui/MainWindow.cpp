@@ -203,10 +203,12 @@ M_WARNING("TODO: ifdef this to development only")
 	connect(m_mdi_area, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
 	createActions();
-	createMenus();
 	createToolBars();
 	createStatusBar();
 	createDockWidgets();
+	/// @note Temporary move, should really be before createToolBars().
+	createMenus();
+
 	updateActionEnableStates();
 
 	////// Connect up signals and slots.
@@ -611,6 +613,7 @@ M_WARNING("TODO");
     // List dock widgets.
 	menu->addSection(tr("Docks"));
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
+    qDb() << "Docks:" << dockwidgets;
     for(auto dock : dockwidgets)
     {
         qDb() << "Dock:" << dock;
@@ -622,11 +625,18 @@ M_WARNING("TODO");
 
 	// List toolbars.
 	menu->addSection(tr("Toolbars"));
-    menu->addAction(toolBarMenuAction());
+
+M_WARNING("/// @todo This doesn't work because we havent called setupGUI() yet.");
+    auto tbma = toolBarMenuAction();
+    menu->addAction(tbma);
+
+    menu->addSection(tr("Toolbars2"));
     auto tbs = toolBars();
+    qDb() << "tb:" << tbs;
+
     for(auto tb : tbs)
     {
-        qDb() << "TabBar:" << tb;
+        qDb() << "ToolBar:" << tb;
         auto action = tb->toggleViewAction();
         menu->addAction(action);
     }
@@ -750,6 +760,7 @@ void MainWindow::createToolBars()
 	//
 	m_fileToolBar = addToolBar(tr("FileToolbar"));
 	m_fileToolBar->setObjectName("FileToolbar");
+    m_fileToolBar->setWindowTitle(tr("File"));
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
 							   m_cancelRescanAct,
@@ -1319,10 +1330,13 @@ void MainWindow::onStartup()
 	openWindows();
 
 	// KDE
-	createStandardStatusBarAction();
-	setStandardToolBarMenuEnabled(true);
+    // Don't need to do this when using setupGUI(StatusBar).
+//	createStandardStatusBarAction();
+    // Don't need to do this when using setupGUI(ToolBar).
+//	setStandardToolBarMenuEnabled(true);
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
+
 	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
 //	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
 	// No Create, we don't have a
