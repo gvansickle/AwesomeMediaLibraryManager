@@ -126,7 +126,7 @@ public:
 	 * Helper function to add an action to the actionCollection() with a name.
 	 * @note Inspired by similar functionality in Kdenlive's main window.
 	 */
-	void addAction(const QString& action_name, QAction* action);
+    void addAction(const QString& action_name, QAction* action);
 
     /**
      * Helper function for adding new dock widgets to the main window.
@@ -236,8 +236,6 @@ private Q_SLOTS:
 
 	void onApplyToolbarConfig();
 
-	void addViewMenuActions(QMenu* menu);
-
 	void onSettingsChanged();
 
 	/// @}
@@ -257,13 +255,17 @@ private:
 	void createActionsSettings(KActionCollection *ac);
 	void createActionsHelp(KActionCollection *ac);
 
-//	void addViewMenuActions(QMenu* menu);
-
     void createMenus();
     void createToolBars();
     void createStatusBar();
 	void createDockWidgets();
-	void initRootModels();
+
+    /**
+     * Must only be called after createActions(), createMenus()/toolbars()/statusBar()/DockWidgets().
+     */
+    void addViewMenuActions();
+
+    void initRootModels();
 	/// @}
 
     /// Equivalent of a "File->New" action for the Now Playing model/view.

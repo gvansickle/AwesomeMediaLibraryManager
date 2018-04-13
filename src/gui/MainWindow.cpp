@@ -132,6 +132,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     ///     Core::initialize()
     ///       m_main_win = new MainWindow();
     ///     m_main_win->init()
+    ///       // Then a bit of a mix.
+    ///       setCentralWidget()
+    ///       setupActions()
+    ///       create some docks
+    ///       create more actions
+    ///       create some menus
+    ///       setupGUI()
+    ///       create more menus
     ///     ^^->show();
     ///   app.exec()
 	init();
@@ -334,8 +342,14 @@ void MainWindow::updateActionEnableStates_Edit()
 	}
 }
 
+
+
 void MainWindow::createActions()
 {
+    // IMPORTANT SAFETY TIP: Per this: https://web.fe.up.pt/~jmcruz/etc/kde/kdeqt/kde3arch/xmlgui.html
+    // "KDE's class for toplevel windows, KMainWindow, inherits KXMLGUIClient and therefore supports XMLGUI
+    // out of the box. All actions created within it must have the client's actionCollection() as parent."
+
 	// Get the actionCollection() once here and pass the pointer to the sub-CreateAction*()'s.
 	KActionCollection *ac = actionCollection();
 
@@ -373,10 +387,14 @@ void MainWindow::createActions()
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 	addAction("save_playlist_as", m_savePlaylistAct);
 
+#ifndef HAVE_KF5
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
 	connect_trig(m_exitAction, this, &MainWindow::close);
+#else
+    m_exitAction = KStandardAction::quit(this, &MainWindow::close, ac);
+#endif
 	addAction("exit", m_exitAction);
 
 	//
@@ -462,7 +480,7 @@ void MainWindow::createActions()
 void MainWindow::createActionsEdit(KActionCollection *ac)
 {
 	// The cut/copy/paste action "sub-bundle".
-	m_ab_cut_copy_paste_actions = new ActionBundle(this);
+    m_ab_cut_copy_paste_actions = new ActionBundle(ac);
 #ifndef HAVE_KF5
 	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
@@ -479,6 +497,8 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 
 #endif
 
+//    ac->addAction("cut_copy_paste", static_cast<QActionGroup*>(m_ab_cut_copy_paste_actions));
+
 	connect_trig(m_act_cut, this, &MainWindow::onCut);
 	addAction("edit_cut", m_act_cut);
 
@@ -489,7 +509,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 	addAction("edit_paste", m_act_paste);
 
 	// The action bundle containing the other edit actions.
-	m_ab_extended_edit_actions = new ActionBundle(this);
+    m_ab_extended_edit_actions = new ActionBundle(ac);
 
 	m_ab_extended_edit_actions->addSection(tr("Delete"));
 
@@ -510,7 +530,7 @@ void MainWindow::createActionsView(KActionCollection *ac)
 {
 	// View actions.
 
-	m_ab_docks = new ActionBundle(this);
+    m_ab_docks = new ActionBundle(ac);
 
 #ifndef HAVE_KF5
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
@@ -540,9 +560,11 @@ void MainWindow::createActionsTools(KActionCollection *ac)
 	m_cancelRescanAct = make_action(Theme::iconFromTheme("process-stop"), tr("Cancel Rescan"), this,
 									QKeySequence::Cancel);
 	connect_trig(m_cancelRescanAct, this, &MainWindow::onCancelRescan);
+    addAction("cancel_rescan", m_cancelRescanAct);
 
 	m_scanLibraryAction = make_action(QIcon::fromTheme("tools-check-spelling"), "Scan library", this,
 							   QKeySequence(), "Scan library for problems");
+    addAction("scan_lib", m_scanLibraryAction);
 }
 
 void MainWindow::createActionsSettings(KActionCollection *ac)
@@ -601,17 +623,20 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
 #endif
 }
 
-void MainWindow::addViewMenuActions(QMenu* menu)
+/**
+ * @note This will only work properly if called after all Toolbars and Docks have been added
+ * and setupGUI() has been called.
+ */
+void MainWindow::addViewMenuActions()
 {
 M_WARNING("TODO");
-	menu->setTitle(tr("&View"));
 
 	m_act_lock_layout->setChecked(AMLMSettings::layoutIsLocked());
 //	connect(m_act_lock_layout, &QAction::toggled, this, &MainWindow::setLayoutLocked);
-	menu->addAction(/*"layout_locked",*/ m_act_lock_layout);
+    m_menu_view->addAction(m_act_lock_layout);
 
     // List dock widgets.
-	menu->addSection(tr("Docks"));
+    m_menu_view->addSection(tr("Docks"));
     QList<QDockWidget*> dockwidgets = findChildren<QDockWidget*>();
     qDb() << "Docks:" << dockwidgets;
     for(auto dock : dockwidgets)
@@ -619,18 +644,32 @@ M_WARNING("TODO");
         qDb() << "Dock:" << dock;
         if(dock->parentWidget() == this)
         {
-            menu->addAction(dock->toggleViewAction());
+            if(dock->toggleViewAction() == nullptr)
+            {
+                qWr() << "NULL TOGGLEVIEWACTION";
+            }
+            else
+            {
+                m_menu_view->addAction(dock->toggleViewAction());
+            }
         }
     }
 
 	// List toolbars.
-	menu->addSection(tr("Toolbars"));
+    m_menu_view->addSection(tr("Toolbars"));
 
-M_WARNING("/// @todo This doesn't work because we havent called setupGUI() yet.");
-    auto tbma = toolBarMenuAction();
-    menu->addAction(tbma);
+M_WARNING("/// @todo This doesn't work for unknown reasons.");
+//    auto tbma = toolBarMenuAction();
+//    if(tbma != nullptr)
+//    {
+//        m_menu_view->addAction(tbma);
+//    }
+//    else
+//    {
+//        qWr() << "NULL toolBarMenuAction";
+//    }
 
-    menu->addSection(tr("Toolbars2"));
+    m_menu_view->addSection(tr("Toolbars2"));
     auto tbs = toolBars();
     qDb() << "tb:" << tbs;
 
@@ -638,7 +677,7 @@ M_WARNING("/// @todo This doesn't work because we havent called setupGUI() yet."
     {
         qDb() << "ToolBar:" << tb;
         auto action = tb->toggleViewAction();
-        menu->addAction(action);
+        m_menu_view->addAction(action);
     }
 
 	// Reset layout.
@@ -678,9 +717,7 @@ void MainWindow::createMenus()
 
     // Create the View menu.
 M_WARNING("TODO");
-//	m_menu_view = menuBar()->addMenu(tr("&View"));
     m_menu_view = menuBar()->addMenu(tr("&View"));
-    addViewMenuActions(m_menu_view);
 //	menuBar()->addMenu(m_menu_view);
 //	m_ab_docks->appendToMenu(m_menu_view);
 //	m_menu_view->addActions({
@@ -759,6 +796,9 @@ void MainWindow::createToolBars()
 	// File
 	//
 	m_fileToolBar = addToolBar(tr("FileToolbar"));
+
+    Q_ASSERT(m_fileToolBar->parent() == this);
+
 	m_fileToolBar->setObjectName("FileToolbar");
     m_fileToolBar->setWindowTitle(tr("File"));
 	m_fileToolBar->addActions({m_importLibAct,
@@ -768,6 +808,13 @@ void MainWindow::createToolBars()
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
 							 m_savePlaylistAct});
+    for(auto a : m_fileToolBar->actions())
+    {
+        if(a->associatedWidgets().size() == 0)
+        {
+            qWr() << "File toolbar action" << a << "has no associatedWidgets()";
+        }
+    }
 
 	//
 	// Edit
@@ -826,12 +873,17 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWidgets()
 {
+#ifdef HAVE_KF5
+    auto dock_parent = actionCollection();
+#else
+    auto dock_parent = this;
+#endif
     // Create the Library/Playlist dock widget.
-	m_collection_dock_widget = new CollectionDockWidget(tr("Media Sources"), this);
+    m_collection_dock_widget = new CollectionDockWidget(tr("Media Sources"), this);
 	addDockWidget(Qt::LeftDockWidgetArea, m_collection_dock_widget);
 
     // Create the metadata dock widget.
-	m_metadataDockWidget = new MetadataDockWidget(tr("Metadata Explorer"), this);
+    m_metadataDockWidget = new MetadataDockWidget(tr("Metadata Explorer"), this);
 	m_metadataDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 	addDockWidget(Qt::RightDockWidgetArea, m_metadataDockWidget);
 }
@@ -1346,6 +1398,9 @@ M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 	// "Make sure you call this after all your *bars have been created."
 	/// @note this is done by setupGUI().
 	///setAutoSaveSettings();
+
+    // Post setupGUI(), we can now add the status/tool/dock actions.
+	addViewMenuActions();
 }
 
 /**
