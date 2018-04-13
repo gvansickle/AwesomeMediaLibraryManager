@@ -60,11 +60,15 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
+###
 ### KDE modules.
 ### @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
-set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
-include(KDEInstallDirs)
-include(KDECMakeSettings)
+###
+set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE) ##< Don't define the deprecated KDEInstallDirs.
+include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
+set(ENABLE_CLAZY ON)
+set(APPLE_FORCE_X11 ON)
+include(KDECMakeSettings NO_POLICY_SCOPE)
 include(ECMAddAppIcon)
 # KDECompilerSettings
 # Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
@@ -72,6 +76,16 @@ include(ECMAddAppIcon)
 # @warning This also sets the compiler stds way too low (C89(!!))
 # @see https://api.kde.org/ecm/kde-module/KDECompilerSettings.html
 #include(KDECompilerSettings NO_POLICY_SCOPE)
+# Sanitizers.
+### @note KF5:
+# The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
+# CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
+# The options are:
+#   address memory thread leak undefined
+# The sanitizers “address”, “memory” and “thread” are mutually exclusive. You cannot enable two of them in the same build.
+# "leak" requires the "address" sanitizer.
+### @note KDECompileFlags includes include(ECMEnableSanitizers).
+include(ECMEnableSanitizers)
 ### Set the required language standards.
 # C11
 set(CMAKE_C_STANDARD 11)
@@ -181,13 +195,9 @@ endif()
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# Sanitizers.
-### @todo KDECompileFlags includes include(ECMEnableSanitizers), so we probably can get rid of this.
-find_package(Sanitizers)
-
-#
-# The Qt5 packages we require.
-#
+###
+### The Qt5 packages we require.
+###
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Core
 	Gui
@@ -212,9 +222,9 @@ if(FALSE)
 	endforeach()
 endif()
 
-#
-# KDE KF5 libs.
-#
+###
+### KDE KF5 libs.
+###
 set(KF5_LINK_LIBS)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
@@ -398,7 +408,7 @@ message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-cmake_print_variables(CMAKE_CXX_COMPILER META_FILES_TO_INCLUDE)
+cmake_print_variables(CMAKE_CXX_COMPILER)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
 message_cpack_summary()

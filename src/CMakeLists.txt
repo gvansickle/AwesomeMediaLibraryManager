@@ -352,15 +352,6 @@ target_link_libraries(${PROJECT_NAME}
         ${PROJECT_COMMON_LINK_LIBS}
 		)
 add_dependencies(${PROJECT_NAME} icons_oxygen icons_App)
-# Add sanitizers.
-add_sanitizers(${PROJECT_NAME})
-### @note KF5:
-# The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
-# CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
-# The options are:
-#   address memory thread leak undefined
-# The sanitizers “address”, “memory” and “thread” are mutually exclusive. You cannot enable two of them in the same build.
-# "leak" requires the "address" sanitizer.
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
@@ -405,8 +396,6 @@ add_executable(${TEST_EXE_TARGET}
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
 				${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
-# Add sanitizers.
-add_sanitizers(${TEST_EXE_TARGET})
 target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
@@ -430,7 +419,15 @@ endif() # Enable test target.
 ### Installation.
 ###
 
-### @todo Need ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}?  See https://techbase.kde.org/Development/Tutorials/Using_Actions#appnameui.rc_file
+message(STATUS "START KDE vars")
+cmake_print_variables(KDE_INSTALL_TARGETS_DEFAULT_ARGS)
+message(STATUS "END KDE vars")
+
+### The AMLM binary.
+### @note ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} "should be used when libraries or user-executable applications are installed,
+###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
+###        other code.  Those should use KDE_INSTALL_PLUGINDIR, KDE_INSTALL_SBINDIR or KDE_INSTALL_LIBEXECDIR respectively."
+### @see https://api.kde.org/ecm/kde-module/KDEInstallDirs.html?highlight=kde_install_targets_default_args#kdeinstalldirs
 install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .
@@ -440,6 +437,7 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp
 	)
+# AppStream component metadata files.
 install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
 		COMPONENT coreapp
 	)
