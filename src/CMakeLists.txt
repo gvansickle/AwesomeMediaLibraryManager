@@ -428,11 +428,19 @@ endif() # Enable test target.
 
 ###
 ### Installation.
+###
+
 ### @todo Need ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}?  See https://techbase.kde.org/Development/Tutorials/Using_Actions#appnameui.rc_file
 install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
+		COMPONENT coreapp
+	)
+install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
+		COMPONENT coreapp
+	)
+install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
 		COMPONENT coreapp
 	)
 
