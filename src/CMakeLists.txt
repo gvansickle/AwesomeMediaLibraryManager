@@ -106,9 +106,10 @@ set(USE_BUNDLED_VERDIGRIS 1)
 set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
 
 
-# Add KConfig source files to the amlm_SRCS list and install it.
-install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR})
+# Add KConfig source files to the amlm_SRCS list.
 kconfig_add_kcfg_files(amlm_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
+# Target to get the deps on generated files right.
+add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
 # Main program header files.
 set(HEADER_FILES
@@ -419,10 +420,6 @@ endif() # Enable test target.
 ### Installation.
 ###
 
-message(STATUS "START KDE vars")
-cmake_print_variables(KDE_INSTALL_TARGETS_DEFAULT_ARGS)
-message(STATUS "END KDE vars")
-
 ### The AMLM binary.
 ### @note ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} "should be used when libraries or user-executable applications are installed,
 ###        [...] It MUST NOT be used for installing plugins, system admin executables or executables only intended for use internally by
@@ -432,13 +429,14 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
-		COMPONENT coreapp
-	)
+		COMPONENT coreapp)
+# Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
-		COMPONENT coreapp
-	)
+		COMPONENT coreapp)
 # AppStream component metadata files.
 install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
-		COMPONENT coreapp
-	)
+		COMPONENT coreapp)
+# KConfig file.
+install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR}
+	    COMPONENT coreapp)
 
