@@ -313,20 +313,22 @@ add_project_meta(META_FILES_TO_INCLUDE)
 #cmake_print_variables(META_FILES_TO_INCLUDE)
 
 
-# Custom target for coordinating the packaging.
-add_custom_target(packaging
-    ALL
-	DEPENDS ${PROJECT_NAME} icons_oxygen ${AppIcon_rcc}
-    COMMENT "Packaging ${PROJECT_NAME}...")
-if(WIN32)
-    # Add custom commands and install targets for Qt windeploy.
-    include(package/PackageWindows.cmake)
-endif()
-
+###
 ### Packaging
+###
 # From within the build directory, just run the following commands to create the package:
 # $ cmake ..
 # $ make package
+
+# Custom target for coordinating the packaging.
+add_custom_target(packaging
+	ALL
+	DEPENDS ${PROJECT_NAME} icons_oxygen ${AppIcon_rcc}
+	COMMENT "Packaging ${PROJECT_NAME}...")
+if(WIN32)
+	# Add custom commands and install targets for Qt windeploy.
+	include(package/PackageWindows.cmake)
+endif()
 
 # Relocate this?
 set(CPACK_GENERATOR NSIS)

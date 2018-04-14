@@ -442,10 +442,10 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#ARCHIVE DESTINATION .
 		COMPONENT coreapp)
 # Icons
-install(FILES ${AppIcon_rcc} DESTINATION ${KDE_INSTALL_APPDIR})
-install(FILES
-	    #${AppIcon_rcc}
-		${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
+install(FILES ${AppIcon_rcc}
+	    DESTINATION ${KDE_INSTALL_APPDIR}
+		COMPONENT coreapp)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 		DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
 # Desktop file.

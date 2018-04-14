@@ -112,7 +112,7 @@ private:
 	 *
 	 */
 
-    // Returns the final decision on whether we should use the native file dialog or not.
+    /// Returns the final decision on whether we should use the native file dialog or not.
 	bool use_native_dlg() const;
 
     /// @todo Returns the user-settable preference on whether to use native dialogs or not.

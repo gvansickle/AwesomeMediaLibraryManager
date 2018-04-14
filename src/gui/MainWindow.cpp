@@ -1391,8 +1391,11 @@ M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 
 	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
 //	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
-	// No Create, we don't have a
-	setupGUI(KXmlGuiWindow::Keys | StatusBar | ToolBar | Save);
+    // No Create, we going to try not using the XML file above.
+    // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
+    //   in a context menu and when opening the KEditToolBar dialog.
+    //   Without it, we seem to lose no functionality, but the crashes are gone.
+    setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
 
 	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
