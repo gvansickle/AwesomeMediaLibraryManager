@@ -314,6 +314,15 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES})
 file(GLOB ICONS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../resources/*-preferences-desktop-sound.png")
 ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
+
+# Qt5 Binary Resource (rcc) files.
+qt5_add_binary_resources(icons_oxygen ../resources/oxygenicons.qrc)
+set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
+set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
+set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
+# Set up the app icon for Linux, add a dep so it gets built.
+qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
+
 ###
 ### The main executable.
 ###
@@ -349,10 +358,8 @@ set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits)
-target_link_libraries(${PROJECT_NAME}
-        ${PROJECT_COMMON_LINK_LIBS}
-		)
-add_dependencies(${PROJECT_NAME} icons_oxygen icons_App)
+target_link_libraries(${PROJECT_NAME} ${PROJECT_COMMON_LINK_LIBS})
+add_dependencies(${PROJECT_NAME} icons_oxygen build_AppIcon_rcc)
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
@@ -429,6 +436,13 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
+		COMPONENT coreapp)
+# Icons
+install(FILES ${AppIcon_rcc} DESTINATION ${KDE_INSTALL_APPDIR})
+install(FILES
+	    #${AppIcon_rcc}
+		${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
+		DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}

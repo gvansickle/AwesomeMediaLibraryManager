@@ -184,6 +184,10 @@ M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 		{
 			qCritical() << "FAILED TO OPEN RCC:" << fname;
 		}
+		else
+		{
+			qIn() << "Loaded RCC file:" << fname;
+		}
 	}
 #endif
 	// Set the application Icon.
@@ -191,7 +195,7 @@ M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 	// the desktop file, make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo"))); (in GUI apps)."
 	///@todo Get an actual icon.
 	QIcon appIcon;
-    appIcon.addFile("128-preferences-desktop-sound.png");
+    appIcon.addFile(":/Icons/128-preferences-desktop-sound.png");
 	app.setWindowIcon(appIcon);
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
