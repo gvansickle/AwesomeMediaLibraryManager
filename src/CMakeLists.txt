@@ -309,10 +309,10 @@ list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 # Build the ultimate list of lists.
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES})
 
-# Sets the icon on Windows and OSX
-### @todo
-#file(GLOB ICONS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../data/icons/*-apps-AwesomeMediaLibraryManager.png")
-#ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
+# Sets the icon on Windows and OSX.
+# See https://api.kde.org/ecm/module/ECMAddAppIcon.html
+file(GLOB ICONS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../resources/*-preferences-desktop-sound.png")
+ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
 ###
 ### The main executable.
