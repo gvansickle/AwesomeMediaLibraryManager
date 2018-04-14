@@ -174,9 +174,9 @@ int main(int argc, char *argv[])
 	RegisterQtMetatypes();
 
 M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
-#if 0
+#if 1
     // Load the icon resources.
-	auto rccs = {"icons_oxygen.rcc", "icons_App.rcc"};
+	auto rccs = {"icons_oxygen.rcc", "AppIcon.rcc"};
 	for(auto fname : rccs)
 	{
 		bool opened = QResource::registerResource(fname);
@@ -191,7 +191,7 @@ M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 	// the desktop file, make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo"))); (in GUI apps)."
 	///@todo Get an actual icon.
 	QIcon appIcon;
-	appIcon.addFile(":/icons/oxygen-icons/64x64/apps/preferences-desktop-sound.png");
+    appIcon.addFile("128-preferences-desktop-sound.png");
 	app.setWindowIcon(appIcon);
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.

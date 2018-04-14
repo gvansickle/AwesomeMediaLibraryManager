@@ -311,26 +311,15 @@ add_subdirectory(src)
 add_project_meta(META_FILES_TO_INCLUDE)
 #cmake_print_variables(META_FILES_TO_INCLUDE)
 
-# Qt5 Binary Resource (rcc) files.
-qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
-qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
-
 # Qt5 non-binary Resource files.
 qt5_add_resources(SOURCE_FILES resources/amlm.qrc)
 
 
-install(FILES
-    ### @todo I think these are installing on top of themselves.
-	#icons_oxygen.rcc icons_App.rcc
-    ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-    ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
-    DESTINATION .
-    COMPONENT coreapp)
 
 # Custom target for coordinating the packaging.
 add_custom_target(packaging
     ALL
-	DEPENDS ${PROJECT_NAME} icons_oxygen icons_App
+	DEPENDS ${PROJECT_NAME} icons_oxygen ${AppIcon_rcc}
     COMMENT "Packaging ${PROJECT_NAME}...")
 if(WIN32)
     # Add custom commands and install targets for Qt windeploy.
