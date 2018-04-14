@@ -51,7 +51,7 @@
 
 NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory,
 											   const QString& filter, const QString& state_key)
-	: QObject(parent), m_parent_widget(parent), m_the_qfiledialog(new QFileDialog(parent, caption, directory.toLocalFile(), filter))
+    : QWidget(parent), m_parent_widget(parent), m_the_qfiledialog(new QFileDialog(parent, caption, directory.toLocalFile(), filter))
 {
 	QString dir_as_str;
 

@@ -108,8 +108,6 @@ if(CCACHE_PROGRAM)
 endif()
 
 # Include some basic cmake functions.
-### @todo Still needed after KDEInstallDirs?
-###include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
 include(CMakePrintHelpers)
 include(PrintTargetProperties)
@@ -192,6 +190,7 @@ if(WIN32)
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
+
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -208,6 +207,8 @@ get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
 message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
+message(STATUS "*   Qt5Core_FOUND: \"${Qt5Core_FOUND}\"")
+message(STATUS "*   Qt5Core_EXECUTABLE_COMPILE_FLAGS: \"${Qt5Core_EXECUTABLE_COMPILE_FLAGS}\"")
 if(FALSE)
 	# List plugin info.
 	message(STATUS "*  Qt5::Gui Plugins:")
@@ -310,10 +311,6 @@ add_subdirectory(src)
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
 #cmake_print_variables(META_FILES_TO_INCLUDE)
-
-# Qt5 non-binary Resource files.
-qt5_add_resources(SOURCE_FILES resources/amlm.qrc)
-
 
 
 # Custom target for coordinating the packaging.

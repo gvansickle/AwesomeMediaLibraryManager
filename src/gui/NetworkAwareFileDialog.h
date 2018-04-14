@@ -27,10 +27,10 @@
 #include <utility> // for std::pair<>.
 
 /**
- * A sysyphean attempt to be all things to all people for file chooser dialogs.
+ * A sisyphean attempt to be all things to all people for file chooser dialogs.
  * The simplest things....
  */
-class NetworkAwareFileDialog : public QObject
+class NetworkAwareFileDialog : public QWidget
 {
 	Q_OBJECT
 
@@ -44,7 +44,7 @@ class NetworkAwareFileDialog : public QObject
 	using BASE_CLASS = QObject;
 
 Q_SIGNALS:
-
+	/// @note No signals yet.
 
 public:
 	explicit NetworkAwareFileDialog(QWidget *parent = Q_NULLPTR, const QString &caption = QString(), const QUrl &directory = QUrl(),
@@ -79,6 +79,38 @@ private:
 	Q_DISABLE_COPY(NetworkAwareFileDialog)
 
 	QString filter_to_suffix(const QString &filter);
+
+	/**
+	 * Native vs. Non-native file dialogs.
+	 * (As of Qt 5.10, KF5 5.45)
+	 *
+	 * The situation:
+	 * - Per the Internet and the scraps of documentation I've been able to find, QFileDialog() should
+	 *   be the One True File Dialog Class on all platforms.  Anything platform specific should be getting
+	 *   handled at the Qt Platform Abstraction layer (QPA, http://doc.qt.io/qt-5/qpa.html).  This is
+	 *   partially true; if you only care about the local filesystem, QFileDialog seems to handle it.
+	 *
+	 * - Under Windows, as long as QFileDialog is using native file dialogs, again things seem to work as
+	 *   expected, with the addition of a fully functional "Network Neighborhood" etc.  Remote files/dirs
+	 *   seem to be handled seamlessly.
+	 *
+	 * - Gnome/gvfs/gio: If you're on Gnome and you want access to e.g. a Samba share under Gnome GVFS/GIO, which
+	 *   in the real Gtk+ file dialog you can browse to and double click to automount under /run/user/.../gvfs/,
+	 *   you're SOL: QFileDialog (native and non-native) will give you neither a "Network Neighborhood" or any
+	 *   other means to do that.  The only QFileDIalog-based partial workaround is to add /run/user/.../gvfs/
+	 *   to the sidebar URLs, and have the user use e.g. Nemo to automount a dir, then have him go
+	 *   into your app's QFileDialog and select the dir/file under the sidebar "gvfs" path.
+	 *   Yeah, pretty horrible.  Appears to be a deliberate decision at the QPA level.
+	 *
+	 * - KDE/KF5/KIO QPA under Gnome, QFileDialog using "native": The QPA will show you a "Network Neighborhood",
+	 *   and let you browse it,
+	 *   but as soon as you touch a Samba share, you get a segfault and your app is done.  This is
+	 *   a bug in KIO and/or the KDE QPA.  The last debug message is something to the effect of:
+	 *   "ERROR: QUrl("smb:///") found but QUrl("smb://") wasn't in the model, segfaulting!"
+	 *   This bug appears to have been there since at least 2010, so don't hold your breath.
+	 *   So yeah, worse than the Gnome situation.
+	 *
+	 */
 
     // Returns the final decision on whether we should use the native file dialog or not.
 	bool use_native_dlg() const;

@@ -323,6 +323,9 @@ set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
 # Set up the app icon for Linux, add a dep so it gets built.
 qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
+# Qt5 non-binary Resource files.
+qt5_add_resources(amlm_SRCS ../resources/amlm.qrc)
+
 ###
 ### The main executable.
 ###
@@ -336,6 +339,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
+	"KXMLGUI_NO_DEPRECATED=1"
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
