@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_SettingsDialog">
       <attribute name="title">
@@ -80,20 +80,6 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="kcfg_multipleDocumentModeComboBox">
-           <item>
-            <property name="text">
-             <string>Tabs</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Subwindows</string>
-            </property>
-           </item>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QLabel" name="toolbarTextLabel">
            <property name="text">
@@ -130,6 +116,20 @@
            </item>
           </widget>
          </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="kcfg_multipleDocumentModeComboBox">
+           <item>
+            <property name="text">
+             <string>Tabs</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Subwindows</string>
+            </property>
+           </item>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>
@@ -140,22 +140,29 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="0" column="1">
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="FileDialogGroupBox">
          <property name="title">
           <string>File dialogs</string>
          </property>
-         <layout class="QFormLayout" name="formLayout_3">
+         <layout class="QGridLayout" name="gridLayout_6">
           <item row="0" column="0">
-           <widget class="QRadioButton" name="radioButton">
+           <widget class="QRadioButton" name="kcfg_FileDialogsQFDPlusNative">
             <property name="text">
-             <string>Nati&amp;ve File Dialogs</string>
+             <string>Use QFileDialog with nati&amp;ve file dialogs</string>
             </property>
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QRadioButton" name="radioButton_2">
+           <widget class="QRadioButton" name="kcfg_FileDialogsQFDPlusNonNative">
             <property name="text">
-             <string>GTK+&amp;3 File Dialogs</string>
+             <string>Use &amp;QFileDialog with non-native file dialogs</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QRadioButton" name="kcfg_FileDialogsGTK3Direct">
+            <property name="text">
+             <string>Use GTK+&amp;3 file dialogs directly</string>
             </property>
            </widget>
           </item>
