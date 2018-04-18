@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
-      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+<kcfg xmlns="https://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://www.kde.org/standards/kcfg/1.0
+      https://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
     <include>Qt</include>
 	<include>KPageDialog</include>
 	<include>gui/settings/DefaultSettingsHelper.h</include>
@@ -21,6 +21,7 @@
    		</choices>
     	<default>KPageDialog::FaceType::List</default>
     </entry>
+    <!--Settings dialog, General page, Window tab-->
     <entry name="toolbarTextIconModeCombo" key="toolbar_global_text_icon_mode" type="Enum">
     	<label context="@label:listbox">XXX Toolbar text/icon mode:</label>
     	<choices name="Qt::ToolButtonStyle">
@@ -31,6 +32,26 @@
     		<choice name="ToolButtonFollowStyle"><label context="@item:inlistbox">Follow Style</label></choice>
    		</choices>
     	<default>Qt::ToolButtonStyle::ToolButtonFollowStyle</default>
+    </entry>
+    <entry name="fileDialogModeComboBox" key="settings_file_dialog_mode" type="StringList">
+    	<label context="@label:listbox">KCFG File dialog mode</label>
+
+    	<choices name="FileDialogMode">
+    		<choice name="QFDNative"><label context="@item:inlistbox">QFileDialog, native</label></choice>
+    		<choice name="QFDNonNative"><label context="@item:inlistbox">QFileDialog, non-native</label></choice>
+    		<choice name="GTK3Direct"><label context="@item:inlistbox">GTK+3 direct</label></choice>
+    	</choices>
+    	<default>QFDNative</default>
+    	<!--
+    	<code>
+    		QStringList dialog_modes;
+    		dialog_modes.append("QFileDialog, native");
+    		dialog_modes.append("QFileDialog, non-native");
+    		dialog_modes.append("GTK+3 direct");
+    	</code>
+    	<default  code="true">dialog_modes</default>
+    	    	    	-->
+
     </entry>
   </group>
   <group name="Music Library">

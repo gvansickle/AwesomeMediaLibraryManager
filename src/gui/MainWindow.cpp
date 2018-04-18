@@ -395,7 +395,7 @@ void MainWindow::createActions()
 #else
     m_exitAction = KStandardAction::quit(this, &MainWindow::close, ac);
 #endif
-	addAction("exit", m_exitAction);
+    addAction("file_quit", m_exitAction);
 
 	//
 	// Edit actions.
@@ -1838,7 +1838,8 @@ void MainWindow::onDelete()
 
 void MainWindow::startSettingsDialog()
 {
-	KConfigDialog *dialog = KConfigDialog::exists( "settings" );
+//	KConfigDialog *dialog = KConfigDialog::exists( "settings" );
+    auto dialog = SettingsDialog::exists("settings");
 	if( !dialog )
 	{
 		// KConfigDialog didn't find an instance of this dialog, so lets create it:
@@ -1846,7 +1847,8 @@ void MainWindow::startSettingsDialog()
 
 		connect(dialog, &KConfigDialog::settingsChanged, this, &MainWindow::onSettingsChanged);
 	}
-	static_cast<SettingsDialog*>( dialog )->show( /*page*/);
+    dialog->show( /*page*/);
+//    dialog->exec();
 
 #if 0
 	if(!m_settings_dlg)

@@ -38,6 +38,8 @@
 #include "../MainWindow.h"
 
 #include <AMLMSettings.h>
+#include <QComboBox>
+#include <QRegularExpression>
 
 SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config)
 	: KConfigDialog( parent, name, config )
@@ -47,12 +49,23 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
     addPage(new SettingsPageGeneral(this), tr("General"), "preferences-desktop-sound");
     addPage(new SettingsPageCollection(this), tr("Collection"), "applications-multimedia");
 	addPage(new SettingsPageAppearance(this), tr("Appearance"), "preferences-desktop-color");
-	addPage(new SettingsPageLibrary(this), tr("Music Library") );
+//	addPage(new SettingsPageLibrary(this), tr("Music Library") );
 	/// ...
 
 	connect(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
 
-	show();
+/// @todo experiment
+    QRegExp re("^kcfg_.*");
+    auto children = findChildren<QWidget*>(re, Qt::FindChildrenRecursively);
+    qDebug() << "CHILDREN:" << children;
+
+//    auto fmcombo = findChild<QComboBox*>("kcfg_toolbarTextIconModeCombo");//"kcfg_fileDialogModeComboBox");
+    auto fmcombo = findChild<QComboBox*>("kcfg_fileDialogModeComboBox");
+    qDebug() << "FMCOMBO:" << fmcombo->count();
+
+//    QList<Choice> ch = AMLMSettings::self()->fileDialogModeComboBoxItem()->choices();
+//    qDebug() << "Choices:" << ch;
+
 }
 
 SettingsDialog::~SettingsDialog()

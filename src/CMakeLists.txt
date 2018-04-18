@@ -106,10 +106,18 @@ set(USE_BUNDLED_VERDIGRIS 1)
 set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
 
 
-# Add KConfig source files to the amlm_SRCS list.
-kconfig_add_kcfg_files(amlm_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
-# Target to get the deps on generated files right.
-add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
+# Make the KConfig settings file its own library, so dependencies get handled correctly.
+kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
+message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
+#set_property(SOURCE ${amlm_settings_SRCS} PROPERTY GENERATED)
+#add_library(amlm_settings STATIC EXCLUDE_FROM_ALL "${amlm_settings_SRCS}")
+#target_link_libraries(amlm_settings
+#	                INTERFACE
+#					KF5::ConfigCore
+#					KF5::ConfigWidgets)
+
+### @todo Do we need this? Target to get the deps on generated files right.
+###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
 # Main program header files.
 set(HEADER_FILES
@@ -307,7 +315,7 @@ list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
 # Build the ultimate list of lists.
-list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES})
+list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES} ${amlm_settings_SRCS})
 
 # Sets the icon on Windows and OSX.
 # See https://api.kde.org/ecm/module/ECMAddAppIcon.html
@@ -325,6 +333,7 @@ qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_
 
 # Qt5 non-binary Resource files.
 qt5_add_resources(amlm_SRCS ../resources/amlm.qrc)
+
 
 ###
 ### The main executable.

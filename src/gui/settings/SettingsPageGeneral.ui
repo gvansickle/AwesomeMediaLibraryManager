@@ -11,13 +11,13 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_SettingsDialog">
       <attribute name="title">
@@ -130,6 +130,19 @@
            </item>
           </widget>
          </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="fileDialogModeLabel">
+           <property name="text">
+            <string>File dialog mode:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="kcfg_fileDialogModeComboBox_1"/>
+         </item>
+         <item row="3" column="1">
+          <widget class="KComboBox" name="kcfg_fileDialogModeComboBox"/>
+         </item>
         </layout>
        </item>
       </layout>
@@ -144,29 +157,7 @@
          <property name="title">
           <string>File dialogs</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_6">
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="kcfg_FileDialogsQFDPlusNative">
-            <property name="text">
-             <string>Use QFileDialog with nati&amp;ve file dialogs</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QRadioButton" name="kcfg_FileDialogsQFDPlusNonNative">
-            <property name="text">
-             <string>Use &amp;QFileDialog with non-native file dialogs</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QRadioButton" name="kcfg_FileDialogsGTK3Direct">
-            <property name="text">
-             <string>Use GTK+&amp;3 file dialogs directly</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         <layout class="QGridLayout" name="gridLayout_6"/>
         </widget>
        </item>
       </layout>
@@ -175,6 +166,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>KComboBox</class>
+   <extends>QComboBox</extends>
+   <header>kcombobox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
