@@ -33,7 +33,7 @@
    		</choices>
     	<default>Qt::ToolButtonStyle::ToolButtonFollowStyle</default>
     </entry>
-    <entry name="fileDialogModeComboBox" key="settings_file_dialog_mode" type="StringList">
+    <entry name="fileDialogModeComboBox" key="settings_file_dialog_mode" type="Enum">
     	<label context="@label:listbox">KCFG File dialog mode</label>
 
     	<choices name="FileDialogMode">
@@ -41,7 +41,7 @@
     		<choice name="QFDNonNative"><label context="@item:inlistbox">QFileDialog, non-native</label></choice>
     		<choice name="GTK3Direct"><label context="@item:inlistbox">GTK+3 direct</label></choice>
     	</choices>
-    	<default>QFDNative</default>
+    	<default>FileDialogMode::QFDNative</default>
     	<!--
     	<code>
     		QStringList dialog_modes;

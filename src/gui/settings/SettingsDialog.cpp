@@ -63,8 +63,16 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
     auto fmcombo = findChild<QComboBox*>("kcfg_fileDialogModeComboBox");
     qDebug() << "FMCOMBO:" << fmcombo->count();
 
-//    QList<Choice> ch = AMLMSettings::self()->fileDialogModeComboBoxItem()->choices();
-//    qDebug() << "Choices:" << ch;
+    auto item = AMLMSettings::self()->fileDialogModeComboBoxItem();
+    auto ch = item->choices();
+    qDebug() << "Choices:" << ch.count() << "Label:" << item->label() << "Group:" << item->group();
+    for(auto i = 0; i< ch.count(); i++)
+    {
+        auto txt = ch[i].label;
+        qDebug() << "Choice:" << txt;
+        fmcombo->addItem(txt);
+    }
+
 
 }
 
