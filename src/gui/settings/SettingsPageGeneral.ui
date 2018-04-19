@@ -78,12 +78,18 @@
            <property name="text">
             <string>Multiple document mode:</string>
            </property>
+           <property name="buddy">
+            <cstring>kcfg_multipleDocumentModeComboBox</cstring>
+           </property>
           </widget>
          </item>
          <item row="1" column="0">
           <widget class="QLabel" name="toolbarTextLabel">
            <property name="text">
             <string>Toolbar text/icon mode:</string>
+           </property>
+           <property name="buddy">
+            <cstring>kcfg_toolbarTextIconModeCombo</cstring>
            </property>
           </widget>
          </item>
@@ -135,12 +141,12 @@
            <property name="text">
             <string>File dialog mode:</string>
            </property>
+           <property name="buddy">
+            <cstring>kcfg_fileDialogModeComboBox</cstring>
+           </property>
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QComboBox" name="kcfg_fileDialogModeComboBox_1"/>
-         </item>
-         <item row="3" column="1">
           <widget class="KComboBox" name="kcfg_fileDialogModeComboBox"/>
          </item>
         </layout>
