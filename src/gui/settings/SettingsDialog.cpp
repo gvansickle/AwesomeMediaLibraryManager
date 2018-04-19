@@ -33,11 +33,16 @@
 #include <QDebug>
 #include <QStandardItem>
 
+#include <KCoreConfigSkeleton>
+
+#include <utils/DebugHelpers.h>
 #include <utils/Theme.h>
 
 #include "../MainWindow.h"
 
 #include <AMLMSettings.h>
+
+#include <KComboBox>
 #include <QComboBox>
 #include <QRegularExpression>
 
@@ -54,26 +59,26 @@ SettingsDialog::SettingsDialog(QWidget *parent, const char* name, KConfigSkeleto
 
 	connect(this, &KConfigDialog::settingsChanged, this, &SettingsDialog::onSettingsChanged);
 
-/// @todo experiment
-    QRegExp re("^kcfg_.*");
-    auto children = findChildren<QWidget*>(re, Qt::FindChildrenRecursively);
-    qDebug() << "CHILDREN:" << children;
+///// @todo experiment
+//    QRegExp re("^kcfg_.*");
+//    auto children = findChildren<QWidget*>(re, Qt::FindChildrenRecursively);
+//    qDebug() << "CHILDREN:" << children;
 
-//    auto fmcombo = findChild<QComboBox*>("kcfg_toolbarTextIconModeCombo");//"kcfg_fileDialogModeComboBox");
-    auto fmcombo = findChild<QComboBox*>("kcfg_fileDialogModeComboBox");
-    qDebug() << "FMCOMBO:" << fmcombo->count();
+////    auto fmcombo = findChild<QComboBox*>("kcfg_toolbarTextIconModeCombo");//"kcfg_fileDialogModeComboBox");
+//    auto fmcombo = findChild<QComboBox*>("kcfg_fileDialogModeComboBox");
+//    qDebug() << "FMCOMBO:" << fmcombo->count();
 
-    auto item = AMLMSettings::self()->fileDialogModeComboBoxItem();
-    auto ch = item->choices();
-    qDebug() << "Choices:" << ch.count() << "Label:" << item->label() << "Group:" << item->group();
-    for(auto i = 0; i< ch.count(); i++)
-    {
-        auto txt = ch[i].label;
-        qDebug() << "Choice:" << txt;
-        fmcombo->addItem(txt);
-    }
+//    auto item = AMLMSettings::self()->fileDialogModeComboBoxItem();
+//    auto ch = item->choices();
+//    qDebug() << "Choices:" << ch.count() << "Label:" << item->label() << "Group:" << item->group();
+//    for(auto i = 0; i< ch.count(); i++)
+//    {
+//        auto txt = ch[i].label;
+//        qDebug() << "Choice:" << txt;
+//        fmcombo->addItem(txt);
+//    }
 
-
+    parseWidgetsThatKDEForgotAbout();
 }
 
 SettingsDialog::~SettingsDialog()
@@ -81,9 +86,78 @@ SettingsDialog::~SettingsDialog()
 
 }
 
+void SettingsDialog::updateSettings()
+{
+    // Save our own window settings.
+    /// @todo Do we actually need to do this with KF5?
+    /// @todo Load this in the constructor.
+    KConfigGroup settings_dlg_group(AMLMSettings::self()->config(), "AMLMSettingsDialog");
+    KWindowConfig::saveWindowSize(windowHandle(), settings_dlg_group);
+
+    BASE_CLASS::updateSettings();
+}
+
+void SettingsDialog::updateWidgets()
+{
+//    parseWidgetsThatKDEForgotAbout();
+}
+
+void SettingsDialog::updateWidgetsDefault()
+{
+//    parseWidgetsThatKDEForgotAbout();
+}
+
 void SettingsDialog::onSettingsChanged()
 {
-	setFaceType(AMLMSettings::settingsDialogFace());
+    setFaceType(AMLMSettings::settingsDialogFace());
+}
+
+void SettingsDialog::parseWidgetsThatKDEForgotAbout()
+{
+    // K/QComboBoxes
+    // If there's a way to make combo boxes work with Enums without doing the setup by hand, I don't see it.
+    QRegExp re("^kcfg_.*");
+    auto children = findChildren<KComboBox*>(re, Qt::FindChildrenRecursively);
+    if(children.size() == 0)
+    {
+        qDb() << "Found no KComboBoxes";
+    }
+    else
+    {
+        qDb() << "CHILDREN:" << children;
+
+        for(auto combo : children)
+        {
+            // Get the name we need to look up the corresponding KConfigSkeletonItem.
+            QString kskel_item_name = combo->objectName().mid(5);
+            KConfigSkeletonItem* kskel_item = AMLMSettings::self()->findItem(kskel_item_name);
+            AMLMSettings::ItemEnum* the_enum = dynamic_cast<AMLMSettings::ItemEnum*>(kskel_item);
+            if(kskel_item == nullptr || the_enum == nullptr)
+            {
+                qWr() << "NO KCoreConfigSkeleton::ItemEnum FOR WIDGET:" << combo->objectName() << "kskel_name:" << kskel_item_name;
+            }
+            else
+            {
+                auto ch = the_enum->choices();
+                qDebug() << "Choices:" << ch.count() << "Label:" << the_enum->label() << "Group:" << the_enum->group();
+                for(auto i = 0; i< ch.count(); i++)
+                {
+                    auto txt = ch[i].label;
+                    qDebug() << "Choice:" << txt;
+                    combo->addItem(txt);
+                }
+            }
+        }
+    }
+
+}
+
+void SettingsDialog::setupWidget(KComboBox *box, KConfigSkeletonItem *item)
+{
+    if(box && item)
+    {
+
+    }
 }
 
 

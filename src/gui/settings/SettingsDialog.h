@@ -24,6 +24,10 @@
 #include <KConfigSkeleton>
 #include <KWindowConfig>
 
+class KComboBox;
+class QComboBox;
+
+
 /**
  * @todo How to use enums with KConfig, from /usr/share/config.kcfg/structviewpreferences.kcfg
  *  Okteta: https://github.com/KDE/okteta/blob/master/kasten/controllers/view/structures/settings/structureviewpreferences.kcfg
@@ -56,13 +60,44 @@ class SettingsDialog : public KConfigDialog
 {
     Q_OBJECT
 
+    using BASE_CLASS = KConfigDialog;
+
 public:
 	SettingsDialog(QWidget *parent, const char* name, KConfigSkeleton *config);
     ~SettingsDialog() override;
 
 protected Q_SLOTS:
 
+    /**
+     * Update the settings from the dialog.
+     * Example use: User clicks Ok or Apply button in a configure dialog.
+     */
+    void updateSettings() override;
+
+    /**
+     * Update the dialog based on the settings, before the dialog is shown.
+     *
+     * Example use: Initialisation of dialog.
+     * Example use: User clicks Reset button in a configure dialog.
+     */
+    void updateWidgets() override;
+
+    /**
+     * Update the dialog based on the default settings.
+     * Virtual function for custom additions.
+     *
+     * Example use: User clicks Defaults button in a configure dialog.
+     */
+    void updateWidgetsDefault() override;
+
 	void onSettingsChanged();
+
+protected:
+
+    virtual void parseWidgetsThatKDEForgotAbout();
+
+    virtual void setupWidget(KComboBox* box, KConfigSkeletonItem *item);
+
 };
 
 
