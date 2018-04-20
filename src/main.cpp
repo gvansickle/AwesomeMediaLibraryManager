@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
 M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 #if 1
     // Load the icon resources.
-	auto rccs = {"icons_oxygen.rcc", "AppIcon.rcc"};
+	auto rccs = {"icons_oxygen.rcc"};
 	for(auto fname : rccs)
 	{
 		bool opened = QResource::registerResource(fname);

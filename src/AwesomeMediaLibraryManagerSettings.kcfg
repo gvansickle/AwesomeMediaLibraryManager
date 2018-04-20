@@ -8,9 +8,8 @@
 	<include>gui/settings/DefaultSettingsHelper.h</include>
   <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
   <group name="General">
-	<!--Settings dialog, General page-->
-    <entry name="SettingsDialogFace" key="settings_dialog_type"
-    	type="Enum">
+	<!-- Settings dialog, General page -->
+    <entry name="SettingsDialogFace" key="settings_dialog_type"	type="Enum">
     	<label>Layout style of this dialog</label>
     	<choices name="KPageDialog::FaceType">
     		<choice name="Auto"></choice>

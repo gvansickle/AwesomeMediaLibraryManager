@@ -26,11 +26,23 @@
 #include <QSettings>
 #include <QStandardPaths>
 
+#define HAVE_GTKMM /// @todo
+#ifdef HAVE_GTKMM
+#include <glib-object.h>
+#include <gtkmm.h>
+#include <gtkmm/filechooserdialog.h>
+//#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
+//#include <gdk/x11/gdkx11window.h>
+#endif // HAVE_GTKMM
+
 #include <memory>
 #include <set>
 
 #include <utils/in.h>
 #include <utils/DebugHelpers.h>
+
+#include "AMLMSettings.h"
 
 /**
  * @note Notes
@@ -196,9 +208,27 @@ QString NetworkAwareFileDialog::filter_to_suffix(const QString &filter)
 		QMessageBox::critical(m_parent_widget, QApplication::applicationDisplayName(),
 							 "Can't determine file extension");
 	}
-	auto savefile_ext = mo.captured(1);
-	qDebug() << "Filename extension:" << savefile_ext;
+    auto savefile_ext = mo.captured(1);
+
+
+    qDebug() << "Filename extension:" << savefile_ext;
 	return savefile_ext;
+}
+
+bool NetworkAwareFileDialog::use_qfiledialog() const
+{
+    // Get the user's preference.
+    AMLMSettings::FileDialogMode user_pref_mode = AMLMSettings::fileDialogModeComboBox();
+
+    if(user_pref_mode == AMLMSettings::FileDialogMode::QFDNative
+            || user_pref_mode == AMLMSettings::FileDialogMode::QFDNonNative)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool NetworkAwareFileDialog::isDirSelectDialog() const
@@ -237,7 +267,16 @@ int NetworkAwareFileDialog::exec()
 {
 	restoreStateOverload();
 
-	int retval = exec_();
+    QDialog::DialogCode retval = QDialog::DialogCode::Rejected;
+
+    if(use_qfiledialog())
+    {
+        retval = exec_qfiledialog();
+    }
+    else if(use_native_dlg() /* && GTK3+ available */)
+    {
+        retval = exec_gtk3plus();
+    }
 
 	if(retval && m_settings_state_key.length() > 0)
 	{
@@ -266,23 +305,19 @@ void NetworkAwareFileDialog::onFinished(int result)
 
 
 
-int NetworkAwareFileDialog::exec_()
+QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
 {
-	if(true) //!use_gtk_dialog)
-	{
-		setDefaultSidebarUrls();
-		// On Windows at least, we don't have to do this for a native file dialog.
-		if(!isDirSelectDialog() && !use_native_dlg())
-		{
-			QString snf = m_the_qfiledialog->selectedNameFilter();
-			qDebug() << QString("Initial selected name filter:") << snf;
-			m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(m_the_qfiledialog->selectedNameFilter()));
-		}
-		int retval = m_the_qfiledialog->exec();
-		return retval;
-	}
-	else
-	{
+    setDefaultSidebarUrls();
+    // On Windows at least, we don't have to do this for a native file dialog.
+    if(!isDirSelectDialog() && !use_native_dlg())
+    {
+        QString snf = m_the_qfiledialog->selectedNameFilter();
+        qDebug() << QString("Initial selected name filter:") << snf;
+        m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(m_the_qfiledialog->selectedNameFilter()));
+    }
+    QDialog::DialogCode retval = static_cast<QDialog::DialogCode>(m_the_qfiledialog->exec());
+    return retval;
+
 #if 0
 		// Use the GTK File chooser.  This gives us access to the gvfs virtual folders and the network.
 		self.gtk3_dlg = Gtk.FileChooserDialog("Please choose a folder", None,
@@ -301,8 +336,71 @@ int NetworkAwareFileDialog::exec_()
 		//self.gtk3_dlg.destroy()
 		return response
 #endif
-		Q_ASSERT(0);
-	}
+}
+
+QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
+{
+    QDialog::DialogCode retval = QDialog::DialogCode::Accepted;
+#ifdef HAVE_GTKMM
+    // Per https://developer.gnome.org/gtkmm/stable/classGtk_1_1Main.html#details
+    // "Deprecated:	Use Gtk::Application instead."
+    ///Gtk::Main kit;
+
+    // Per https://developer.gnome.org/gtkmm/stable/classGtk_1_1Application.html#details
+    // "the application ID must be valid. See g_application_id_is_valid()."
+    // https://developer.gnome.org/gio/stable/GApplication.html#g-application-id-is-valid
+    // GIO::ApplicationFlags: https://developer.gnome.org/gio/stable/GApplication.html#GApplicationFlags
+    //    Not clear that any of the flags are applicable.
+    auto app = Gtk::Application::create(tostdstr(QApplication::desktopFileName()).c_str());
+    std::string chosen_path;
+
+    Gtk::FileChooserDialog dialog("TEST - GTK FILECHOOSER", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+    if(true) /// @todo We're on gnome.
+    {
+        WId x11_parent_window_id = this->winId();
+        qDebug() << "Parent WId:" << x11_parent_window_id;
+//		GdkWindow * gdk_parent_win = gdk_window_foreign_new(x11_parent_window_id);
+        GdkDisplay* display = gdk_display_get_default();
+        qDebug() << "Display:" << display;
+        GdkWindow * gdk_parent_win = gdk_x11_window_lookup_for_display(display, x11_parent_window_id);
+        qDebug() << "gdk_parent_win:" << gdk_parent_win;
+
+        auto gtk_parent_win = Glib::wrap(gdk_parent_win);
+        qDebug() << "Parent WId as GdkWindow:" << gdk_parent_win;
+//		dialog.set_transient_for(*gtk_parent_win.operator->());
+        dialog.set_parent_window(gtk_parent_win);
+    }
+    dialog.set_local_only(false);
+    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button("_Open", Gtk::RESPONSE_OK);
+    int result = dialog.run();
+//	int result = app->run(dialog);
+
+    switch(result)
+    {
+    case Gtk::RESPONSE_OK:
+    {
+        chosen_path = dialog.get_filename();
+        qDebug() << "Diretory selected:" << chosen_path;
+        break;
+    }
+    case Gtk::RESPONSE_CANCEL:
+    {
+        qDebug() << "User cancelled";
+        break;
+    }
+    default:
+    {
+        qDebug() << "Unknown result:" << result;
+        break;
+    }
+    }
+
+    return retval;
+#else
+    // Default to QFileDialog/Native if we ever get here.
+    return exec_qfiledialog();
+#endif // HAVE_GTKMM
 }
 
 void NetworkAwareFileDialog::saveStateOverload()
@@ -377,13 +475,26 @@ void NetworkAwareFileDialog::restoreStateOverload()
 
 bool NetworkAwareFileDialog::use_native_dlg() const
 {
-M_WARNING("TODO");
-	return false;
-
-    if(/** @todo user_pref_native_file_dialog() | */
+    if(user_pref_native_file_dialog() ||
         ((QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
     {
         // Use the native file dialogs.
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool NetworkAwareFileDialog::user_pref_native_file_dialog() const
+{
+    // Get the user's preference.
+    AMLMSettings::FileDialogMode user_pref_mode = AMLMSettings::fileDialogModeComboBox();
+
+    if(user_pref_mode == AMLMSettings::FileDialogMode::QFDNative
+            || user_pref_mode == AMLMSettings::FileDialogMode::GTK3Direct)
+    {
         return true;
     }
     else

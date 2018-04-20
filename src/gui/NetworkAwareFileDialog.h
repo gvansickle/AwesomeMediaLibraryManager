@@ -112,16 +112,32 @@ private:
 	 *
 	 */
 
-    /// Returns the final decision on whether we should use the native file dialog or not.
+	/**
+	 *  Returns the final decision on whether we should use QFileDialog or not.
+	 */
+	bool use_qfiledialog() const;
+
+    /**
+     *  Returns the final decision on whether we should use the native file dialog or not.
+     */
 	bool use_native_dlg() const;
 
-    /// @todo Returns the user-settable preference on whether to use native dialogs or not.
-	bool user_pref_native_file_dialog() const { return true; }
+    bool user_pref_native_file_dialog() const;
 
 	bool isDirSelectDialog() const;
 	void setDefaultSidebarUrls();
 
-	int exec_();
+    /// @name The exec_*() functions for the various native/non-native dialog options.
+    /// @{
+
+    QDialog::DialogCode exec_qfiledialog();
+
+    /**
+     * Use the GTK File chooser.  This gives us access to the gvfs/GIO virtual folders and the network.
+     */
+    QDialog::DialogCode exec_gtk3plus();
+
+    /// @}
 
 	/// "Overload" because these have base class equivalents of otherwise the same name.
 	void saveStateOverload();
