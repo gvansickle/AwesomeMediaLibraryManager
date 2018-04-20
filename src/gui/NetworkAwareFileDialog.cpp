@@ -25,6 +25,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QWindow>
 
 #define HAVE_GTKMM /// @todo
 #ifdef HAVE_GTKMM
@@ -61,12 +62,22 @@
  * - Stated nowhere, but sidebarUrls() only work with non-native dialogs.
  */
 
+/**
+ * @brief NetworkAwareFileDialog::NetworkAwareFileDialog
+ * @param parent
+ * @param caption   This is set as the QDialog's windowTitle() via setWindowTitle().
+ * @param directory
+ * @param filter
+ * @param state_key
+ */
 NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory,
 											   const QString& filter, const QString& state_key)
     : QWidget(parent), m_parent_widget(parent)
 {
 	QString dir_as_str;
+    setObjectName("NetAwareFileDialogProxy");
 
+    // Create the underlying QFileDialog.
     m_the_qfiledialog = QSharedPointer<QFileDialog>::create(parent, caption, directory.toLocalFile(), filter);
 
 	if(!directory.isEmpty())
@@ -79,25 +90,13 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 		qDebug() << "dir empty, setting to \"\"";
 		dir_as_str = "";
 	}
-#if 0
-	setObjectName("nafiledialog");
-	setViewMode(QFileDialog::Detail);
+
+//	setViewMode(QFileDialog::Detail);
 	if(!use_native_dlg())
 	{
 		setOptions(QFileDialog::DontUseNativeDialog);
 	}
-#else
-	/**
-	 *
-		QFileDialog::DontUseNativeDialog
-		0x00000010
-		Don't use the native file dialog.
-        By default, the native file dialog is used ***unless you use a subclass of QFileDialog that contains the Q_OBJECT macro***,
-        or the platform does not have a native dialog of the type that you require.
-	 */
-    setOptions(QFileDialog::DontUseNativeDialog);
-	m_the_qfiledialog->setOptions(QFileDialog::DontUseNativeDialog);
-#endif
+
 	m_the_qfiledialog->setFileMode(QFileDialog::AnyFile);
 	m_the_qfiledialog->setAcceptMode(QFileDialog::AcceptSave);
 //	m_the_qfiledialog->setSupportedSchemes({"file", "smb", "gvfs"});
@@ -108,6 +107,9 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 		m_settings_state_key = "file_dialogs/" + state_key;
 	}
 #endif
+
+    // We need to track the filter the user has selected (i.e. "Text files (*.txt)") via this signal.
+    // For QFileDialog there doesn't appear to be any better way to get this information after the exec() call returns.
 	connect(m_the_qfiledialog.data(), &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
 }
 
@@ -127,7 +129,6 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getSaveFileUrl(QWidget* parent,
 
 	auto dlg = nafdlg->m_the_qfiledialog;
 
-	options |= QFileDialog::DontUseNativeDialog;
 	if(options)
 	{
 		dlg->setOptions(options);
@@ -162,8 +163,6 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 
     auto &dlg = nafdlg; //->m_the_qfiledialog;
 
-M_WARNING("TODO");
-    options |= QFileDialog::DontUseNativeDialog;
 	if(options)
 	{
 		dlg->setOptions(options);
@@ -178,8 +177,6 @@ M_WARNING("TODO");
 	{
 		dlg->setSupportedSchemes(supportedSchemes);
 	}
-
-	qWarning() << "is_dlg_native:" << nafdlg->is_dlg_native();
 
 	if(!nafdlg->exec())
 	{
@@ -196,7 +193,6 @@ void NetworkAwareFileDialog::setSupportedSchemes(const QStringList &schemes)
 
 void NetworkAwareFileDialog::setOptions(QFileDialog::Options options)
 {
-//    m_options ^= options;
     m_the_qfiledialog->setOptions(options);
 }
 
@@ -265,6 +261,20 @@ bool NetworkAwareFileDialog::use_qfiledialog() const
     if(user_pref_mode == AMLMSettings::FileDialogMode::QFDNative
             || user_pref_mode == AMLMSettings::FileDialogMode::QFDNonNative)
     {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool NetworkAwareFileDialog::use_native_dlg() const
+{
+    if(user_pref_native_file_dialog() ||
+        ((QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
+    {
+        // Use the native file dialogs.
         return true;
     }
     else
@@ -357,6 +367,9 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
         qDebug() << QString("Initial selected name filter:") << snf;
         m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(m_the_qfiledialog->selectedNameFilter()));
     }
+
+    qInfo() << "Using QFileDialog, is_dlg_native:" << is_dlg_native();
+
     QDialog::DialogCode retval = static_cast<QDialog::DialogCode>(m_the_qfiledialog->exec());
     return retval;
 
@@ -380,8 +393,47 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
 #endif
 }
 
+#ifdef HAVE_GTKMM
+static Gtk::FileChooserAction map_to_Gtk_FileChooserAction(QFileDialog::FileMode filemode)
+{
+    // See GTKMM: https://developer.gnome.org/gtkmm/stable/group__gtkmmEnums.html#ga0d6076e7637ec501f26296e65fee2212
+    // and QFileDialog: http://doc.qt.io/qt-5/qfiledialog.html#QFileDialog-1
+
+    // Two don't cleanly map:
+    // Gtk::FILE_CHOOSER_ACTION_CREATE_FOLDER
+    //    Indicates a mode for creating a new folder.
+    //    The file chooser will let the user name an existing or new folder.
+    // QFileDialog::ExistingFiles:
+    //    "The names of zero or more existing files."
+
+    switch(filemode)
+    {
+    case QFileDialog::AnyFile:
+        // "The name of a file, whether it exists or not."
+        // == "The file chooser will let the user pick an existing file, or type in a new filename. "
+        return Gtk::FILE_CHOOSER_ACTION_SAVE;
+    case QFileDialog::ExistingFile:
+        // "The name of a single existing file."
+        // == "The file chooser will only let the user pick an existing file."
+        return Gtk::FILE_CHOOSER_ACTION_OPEN;
+    case QFileDialog::Directory:
+        // "The name of a directory. Both files and directories are displayed. However, the native Windows file dialog does not support displaying files in the directory chooser."
+        // == "Indicates an Open mode for selecting folders.  The file chooser will let the user pick an existing folder."
+        return Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER;
+    case QFileDialog::ExistingFiles:
+        // "The names of zero or more existing files."
+        // == "???"
+        Q_ASSERT(0);
+    default:
+        Q_ASSERT(0);
+    }
+}
+#endif // HAVE_GTKMM
+
 QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 {
+    // Use the GTK File chooser.  This gives us access to the gvfs virtual folders and the network.
+
     QDialog::DialogCode retval = QDialog::DialogCode::Accepted;
 #ifdef HAVE_GTKMM
     // Per https://developer.gnome.org/gtkmm/stable/classGtk_1_1Main.html#details
@@ -396,25 +448,62 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     auto app = Gtk::Application::create(tostdstr(QApplication::desktopFileName()).c_str());
     std::string chosen_path;
 
+    QWindow* parent_qwindow = this->windowHandle();
+    qDebug() << "parent_qwindow:" << parent_qwindow;
+
+
+    // Create the Gtk file dialog exactly how we want it, bypassing the QPA.
     // Gtk::FileChooserDialog docs:
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooser.html
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooserDialog.html#adc98a1e747613c9b6cb66c238f6f8da6
+    Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
 
-    Gtk::FileChooserDialog dialog("TEST - GTK FILECHOOSER", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER);
-    if(true) /// @todo We're on gnome.
+    dialog.show();
+
+    if(true) /// @todo We're on gnome/xcb.
     {
-        WId x11_parent_window_id = this->winId();
-        qDebug() << "Parent WId:" << x11_parent_window_id;
-//		GdkWindow * gdk_parent_win = gdk_window_foreign_new(x11_parent_window_id);
-        GdkDisplay* display = gdk_display_get_default();
-        qDebug() << "Display:" << display;
-        GdkWindow * gdk_parent_win = gdk_x11_window_lookup_for_display(display, x11_parent_window_id);
-        qDebug() << "gdk_parent_win:" << gdk_parent_win;
+        // On Linux/xcb, Qt5's WId is really an xcb_window_t.
+        // See https://gist.github.com/torarnv/c5dfe2d2bc0c089910ce.
 
-        auto gtk_parent_win = Glib::wrap(gdk_parent_win);
-        qDebug() << "Parent WId as GdkWindow:" << gdk_parent_win;
+        // So what we want to do here is set the Gtk3 dialog's (transient?)parent to be our Qt5 parent window.
+        // Per the link above, that means something like this:
+        // nativeWindow = GetXcbWindowOf???(dialog);
+        // qtWindow = this;
+        // QWindow::fromWinId(nativeWindow)->setParent(qtWindow);
+
+        WId xcb_parent_window_id = this->winId();
+        qDebug() << "Parent WId:" << xcb_parent_window_id;
+        QWindow* parent_window = this->windowHandle();
+        qDebug() << "parent_window:" << parent_window;
+
+
+        Glib::RefPtr<Gdk::Window> dialog_gdkpp_win = dialog.get_window();
+        qDebug() << "dialog_gdkpp_win:" << dialog_gdkpp_win.operator bool();
+        if(dialog_gdkpp_win)
+        {
+            qDebug() << "GDK_IS_X11_WINDOW(dialog_x11_win):" << GDK_IS_X11_WINDOW(dialog_gdkpp_win->gobj());
+            GdkWindow* dialog_gdk_win = dialog_gdkpp_win->gobj();
+            // Window == X11 window.
+            Window xcb_dialog_window_id = GDK_WINDOW_XID(dialog_gdk_win);
+            qDebug() << "xcb_dialog_window_id:" << xcb_dialog_window_id;
+
+            QWindow* file_dlg_qwindow_wrapper = QWindow::fromWinId(xcb_dialog_window_id);
+    //		GdkWindow * gdk_parent_win = gdk_window_foreign_new(x11_parent_window_id);
+    //        GdkDisplay* display = gdk_display_get_default();
+            qDebug() << "file_dlg_qwindow_wrapper:" << file_dlg_qwindow_wrapper;
+    //        GdkWindow * gdk_parent_win = gdk_x11_window_lookup_for_display(display, xcb_parent_window_id);
+    //        qDebug() << "gdk_parent_win:" << gdk_parent_win;
+
+            if(xcb_dialog_window_id!=0 && parent_window != nullptr)
+            {
+                QWindow::fromWinId(xcb_dialog_window_id)->setParent(parent_window);
+            }
+        }
+
+//        auto gtk_parent_win = Glib::wrap(gdk_parent_win);
+//        qDebug() << "Parent WId as GdkWindow:" << gdk_parent_win;
 //		dialog.set_transient_for(*gtk_parent_win.operator->());
-        dialog.set_parent_window(gtk_parent_win);
+//        dialog.set_parent_window(gtk_parent_win);
     }
     dialog.set_local_only(false);
     dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
@@ -521,20 +610,6 @@ void NetworkAwareFileDialog::restoreStateOverload()
 			//qDebug() << "Dir is" << directory() << directoryUrl();
 		}
 	}
-}
-
-bool NetworkAwareFileDialog::use_native_dlg() const
-{
-    if(user_pref_native_file_dialog() ||
-        ((QSysInfo::kernelType() == "winnt") && (QSysInfo::windowsVersion() & QSysInfo::WV_NT_based)) )
-    {
-        // Use the native file dialogs.
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 bool NetworkAwareFileDialog::user_pref_native_file_dialog() const

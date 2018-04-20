@@ -26,6 +26,20 @@
 #include <taglib/tag.h>
 #include <QTextCodec>
 
+#warning "TODO: SET THIS IN CMAKE"
+#define HAVE_GLIBMM
+#ifdef HAVE_GLIBMM
+#include <glibmm/ustring.h>
+#endif
+
+/// Functions for converting between the several thousand different and
+/// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
+/// There are only two assumptions made here:
+/// - Any const char* passed in is a pointer to a UTF-8 string.
+/// - Any std::strings are likewise really holding UTF-8 strings.
+///
+/// The simplest things....
+
 static inline std::string tostdstr(const char *cstr)
 {
 	// Handles the case where cstr == nullptr.
@@ -75,6 +89,15 @@ static inline QString toqstr(const TagLib::String& tstr)
 	// Convert from TagLib::String (UTF-16) to QString (UTF-16).
 	return QString::fromStdString(tstr.to8Bit(true));
 }
+
+#ifdef HAVE_GLIBMM
+static inline Glib::ustring toustring(const QString& qstr)
+{
+    // "Glib::ustring has implicit type conversions to and from std::string.
+    // These conversions do @em not convert to/from the current locale [...]"
+    return tostdstr(qstr);
+}
+#endif
 
 /// From a QStringList, return the first one.  If there isn't a first one, return an empty string.
 template <typename StringListType, typename StringType = typename StringListType::value_type>
