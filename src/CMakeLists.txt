@@ -109,13 +109,6 @@ set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
 message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
-#set_property(SOURCE ${amlm_settings_SRCS} PROPERTY GENERATED)
-#add_library(amlm_settings STATIC EXCLUDE_FROM_ALL "${amlm_settings_SRCS}")
-#target_link_libraries(amlm_settings
-#	                INTERFACE
-#					KF5::ConfigCore
-#					KF5::ConfigWidgets)
-
 ### @todo Do we need this? Target to get the deps on generated files right.
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
@@ -325,13 +318,14 @@ ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
 # Qt5 Binary Resource (rcc) files.
 qt5_add_binary_resources(icons_oxygen ../resources/oxygenicons.qrc)
-set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
-set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
-set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
+#set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
+#set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
+#set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
 # Set up the app icon for Linux, add a dep so it gets built.
-qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
+#qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
 # Qt5 non-binary Resource files.
+qt5_add_resources(amlm_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 qt5_add_resources(amlm_SRCS ../resources/amlm.qrc)
 
 
@@ -372,7 +366,7 @@ set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_COMMON_LINK_LIBS})
-add_dependencies(${PROJECT_NAME} icons_oxygen build_AppIcon_rcc)
+add_dependencies(${PROJECT_NAME} icons_oxygen)
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
