@@ -20,6 +20,7 @@
 #ifndef NETWORKAWAREFILEDIALOG_H
 #define NETWORKAWAREFILEDIALOG_H
 
+#include <QWidget>
 #include <QFileDialog>
 #include <QUrl>
 #include <QString>
@@ -41,7 +42,9 @@ class NetworkAwareFileDialog : public QWidget
 	///         "QFileDialog::DontUseNativeDialog  Don't use the native file dialog. By default, the native file dialog is used unless
 	///          you use a subclass of QFileDialog that contains the Q_OBJECT macro, or the platform does not have a native dialog
 	///          of the type that you require."
-	using BASE_CLASS = QObject;
+    ///       So NetworkAwareFileDialog is really a proxy QWidget which itself won't ever be displayed on-screen,
+    ///       but just serves as a helper for whatever file dialog class we ultimately do instantiate.
+    using BASE_CLASS = QWidget;
 
 Q_SIGNALS:
 	/// @note No signals yet.
@@ -51,19 +54,59 @@ public:
 									const QString &filter = QString(), const QString &state_key = QString());
 	~NetworkAwareFileDialog() override;
 
+	/// @name Static functions for the most common use cases.
+	/// @{
 
+	/**
+	 * Get a URL to save a file to.
+	 */
 	static std::pair<QUrl, QString> getSaveFileUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),
 												   const QUrl &dir = QUrl(),
 												   const QString &filter = QString(),
 												   const QString &state_key = QString(),
 												   QFileDialog::Options options = QFileDialog::Options(),
 												   const QStringList &supportedSchemes = QStringList());
-
+	/**
+	 * Get a URL to an existing directory.
+	 */
 	static std::pair<QUrl, QString> getExistingDirectoryUrl(QWidget *parent = Q_NULLPTR, const QString &caption = QString(),
 															const QUrl &dir = QUrl(),
 															const QString &state_key = QString(),
 															QFileDialog::Options options = QFileDialog::ShowDirsOnly,
 															const QStringList &supportedSchemes = QStringList());
+	/// @} // END static members.
+
+	/// @name QFileDialog interface "mirror" functions.
+	///       Goal here is to present as much of the QFileDialog interface as we need to without inheriting from QFileDialog.
+	///       If we did inherit from QFileDialog, we'd always get the non-native dialog.  Per http://doc.qt.io/qt-5/qfiledialog.html:
+	///       "By default, the native file dialog is used unless
+	///       you use a subclass of QFileDialog that contains the Q_OBJECT macro, or the platform does not have a native dialog
+	///       of the type that you require."
+	/// So yeah, there's that.
+	/// @{
+
+    void setSupportedSchemes(const QStringList &schemes);
+    QStringList supportedSchemes() const;
+
+	void setOptions(QFileDialog::Options options);
+
+    QList<QUrl> selectedUrls() const;
+
+    QString selectedNameFilter() const;
+
+    QDir::Filters filter() const;
+    void setFilter(QDir::Filters filters);
+
+    void setFileMode(QFileDialog::FileMode mode);
+    QFileDialog::FileMode fileMode() const;
+
+    void setAcceptMode(QFileDialog::AcceptMode mode);
+    QFileDialog::AcceptMode acceptMode() const;
+
+    void setSidebarUrls(const QList<QUrl> &urls);
+    QList<QUrl> sidebarUrls() const;
+
+    /// @}
 
 	bool is_dlg_native();
 
@@ -146,8 +189,21 @@ private:
 	/// Persist the last state to/from this QSettings key.
 	QString m_settings_state_key;
 
+    /// The parent of this "proxy" widget, which we'll also use as
+    /// the parent of the real file dialog.
 	QWidget *m_parent_widget;
+
+    /// The QFileDialog, if we create one.
+    /// @note For now we will always create one, even if we don't ultimately display it,
+    ///       to collect settings.
 	QSharedPointer<QFileDialog> m_the_qfiledialog;
+
+	/// @name Settings
+	/// @{
+
+	QFileDialog::Options m_options;
+
+	/// @}
 
 };
 

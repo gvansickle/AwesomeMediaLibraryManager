@@ -63,14 +63,16 @@
 
 NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& caption, const QUrl& directory,
 											   const QString& filter, const QString& state_key)
-    : QWidget(parent), m_parent_widget(parent), m_the_qfiledialog(new QFileDialog(parent, caption, directory.toLocalFile(), filter))
+    : QWidget(parent), m_parent_widget(parent)
 {
 	QString dir_as_str;
+
+    m_the_qfiledialog = QSharedPointer<QFileDialog>::create(parent, caption, directory.toLocalFile(), filter);
 
 	if(!directory.isEmpty())
 	{
 		qDebug() << "dir not empty";
-		dir_as_str = directory.toString();
+        dir_as_str = directory.toString();
 	}
 	else
 	{
@@ -90,9 +92,10 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 		QFileDialog::DontUseNativeDialog
 		0x00000010
 		Don't use the native file dialog.
- By default, the native file dialog is used ***unless you use a subclass of QFileDialog that contains the Q_OBJECT macro***,
- or the platform does not have a native dialog of the type that you require.
+        By default, the native file dialog is used ***unless you use a subclass of QFileDialog that contains the Q_OBJECT macro***,
+        or the platform does not have a native dialog of the type that you require.
 	 */
+    setOptions(QFileDialog::DontUseNativeDialog);
 	m_the_qfiledialog->setOptions(QFileDialog::DontUseNativeDialog);
 #endif
 	m_the_qfiledialog->setFileMode(QFileDialog::AnyFile);
@@ -157,9 +160,10 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 {
 	std::unique_ptr<NetworkAwareFileDialog> nafdlg = std::make_unique<NetworkAwareFileDialog>(parent, caption, dir, QString(), state_key);
 
-	auto dlg = nafdlg->m_the_qfiledialog;
+    auto &dlg = nafdlg; //->m_the_qfiledialog;
 
-	options |= QFileDialog::DontUseNativeDialog;
+M_WARNING("TODO");
+    options |= QFileDialog::DontUseNativeDialog;
 	if(options)
 	{
 		dlg->setOptions(options);
@@ -182,7 +186,45 @@ std::pair<QUrl, QString> NetworkAwareFileDialog::getExistingDirectoryUrl(QWidget
 		return {QUrl(), ""};
 	}
 
-	return std::make_pair(dlg->selectedUrls()[0], dlg->selectedNameFilter());
+    return std::make_pair(dlg->selectedUrls()[0], dlg->selectedNameFilter());
+}
+
+void NetworkAwareFileDialog::setSupportedSchemes(const QStringList &schemes)
+{
+    m_the_qfiledialog->setSupportedSchemes(schemes);
+}
+
+void NetworkAwareFileDialog::setOptions(QFileDialog::Options options)
+{
+//    m_options ^= options;
+    m_the_qfiledialog->setOptions(options);
+}
+
+QList<QUrl> NetworkAwareFileDialog::selectedUrls() const
+{
+M_WARNING("TODO");
+    return m_the_qfiledialog->selectedUrls();
+}
+
+QString NetworkAwareFileDialog::selectedNameFilter() const
+{
+M_WARNING("TODO");
+    return m_the_qfiledialog->selectedNameFilter();
+}
+
+void NetworkAwareFileDialog::setFilter(QDir::Filters filters)
+{
+    m_the_qfiledialog->setFilter(filters);
+}
+
+void NetworkAwareFileDialog::setFileMode(QFileDialog::FileMode mode)
+{
+    m_the_qfiledialog->setFileMode(mode);
+}
+
+void NetworkAwareFileDialog::setAcceptMode(QFileDialog::AcceptMode mode)
+{
+    m_the_qfiledialog->setAcceptMode(mode);
 }
 
 bool NetworkAwareFileDialog::is_dlg_native()
