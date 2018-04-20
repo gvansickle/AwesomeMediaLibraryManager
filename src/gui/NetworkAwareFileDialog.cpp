@@ -354,6 +354,10 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     auto app = Gtk::Application::create(tostdstr(QApplication::desktopFileName()).c_str());
     std::string chosen_path;
 
+    // Gtk::FileChooserDialog docs:
+    // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooser.html
+    // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooserDialog.html#adc98a1e747613c9b6cb66c238f6f8da6
+
     Gtk::FileChooserDialog dialog("TEST - GTK FILECHOOSER", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER);
     if(true) /// @todo We're on gnome.
     {
@@ -380,18 +384,22 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     {
     case Gtk::RESPONSE_OK:
     {
+#warning "TODO: Get the string out"
         chosen_path = dialog.get_filename();
         qDebug() << "Diretory selected:" << chosen_path;
+        retval = QDialog::DialogCode::Accepted;
         break;
     }
     case Gtk::RESPONSE_CANCEL:
     {
         qDebug() << "User cancelled";
+        retval = QDialog::DialogCode::Rejected;
         break;
     }
     default:
     {
         qDebug() << "Unknown result:" << result;
+        retval = QDialog::DialogCode::Rejected;
         break;
     }
     }
