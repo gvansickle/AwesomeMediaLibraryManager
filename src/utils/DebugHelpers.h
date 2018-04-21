@@ -65,6 +65,8 @@ idstr(const char *id_as_c_str, T id)
 
 #define M_IDSTR(id) idstr(#id ": ", id) + ", " +
 
+#define M_NAME_VAL(id) #id ":" << id
+
 /// Attempts to get the compiler to print a human-readable type at compile time.
 /// @note In the 21st century, this should be a solved problem.  It isn't.
 /// @see https://stackoverflow.com/a/46339450, https://stackoverflow.com/a/30276785

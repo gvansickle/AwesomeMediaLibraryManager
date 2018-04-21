@@ -30,13 +30,14 @@
 #define HAVE_GTKMM /// @todo
 
 #ifdef HAVE_GTKMM
+#include "helpers/NetAwareFileDialogGtk3.h"
 #include <QtX11Extras/QX11Info>
-#include <glib-object.h>
+//#include <glib-object.h>
 #include <gtkmm.h>
-#include <gtkmm/filechooserdialog.h>
-//#include <gdk/gdk.h>
+//#include <gtkmm/filechooserdialog.h>
+#include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-//#include <gdk/x11/gdkx11window.h>
+#include <gdk/x11/gdkx11window.h>
 #endif // HAVE_GTKMM
 
 #include <memory>
@@ -466,7 +467,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     dialog.show();
 
 //    dialog.set_transient_for(parent_qwindow->winId());
-    setTransientParent_xcb();
+//    setTransientParent_xcb();
 
     if(false) /// @todo We're on gnome/xcb.
     {
@@ -629,11 +630,13 @@ void NetworkAwareFileDialog::restoreStateOverload()
     }
 }
 
-#ifdef HAVE_GTKMM
+#if 0 //def HAVE_GTKMM
 void NetworkAwareFileDialog::setTransientParent_xcb()
 {
     QWindow* parent_qwindow = m_parent_widget->windowHandle();
     auto m_transientParent = parent_qwindow;
+
+    qDebug() << M_NAME_VAL(m_transientParent);
 
     if(m_transientParent)
     {

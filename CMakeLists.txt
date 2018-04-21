@@ -204,6 +204,7 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Multimedia
 	Concurrent
 	X11Extras)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent Qt5::X11Extras)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
@@ -253,14 +254,25 @@ pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
 
 ###
-### XCB libs.
+### X11 and XCB libs.
 ###
 if(TRUE)
+
+find_package(X11 REQUIRED)
+list(APPEND GTK_LINK_LIB_TARGETS ${X11_X11_LIB})
+
+find_package(X11_XCB REQUIRED)
+list(APPEND GTK_LINK_LIB_TARGETS ${X11_XCB_LIBRARIES})
+cmake_print_variables(X11_XCB_FOUND)
+
 find_package(XCB REQUIRED COMPONENTS
 	XCB
 	)
-list(APPEND GTK_LINK_LIB_TARGETS XCB::XCB)
+list(APPEND GTK_LINK_LIB_TARGETS ${XCB_TARGETS})
 cmake_print_variables(XCB_TARGETS)
+
+cmake_print_variables(GTK_LINK_LIB_TARGETS)
+
 endif()
 
 #

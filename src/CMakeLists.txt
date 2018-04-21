@@ -177,6 +177,8 @@ set(HEADER_FILES
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	gui/menus/HelpMenu.h
+	gui/helpers/NetAwareFileDialogGtk3.h
+	gui/helpers/Gtk3DialogHelper.h
     )
 
 # Source file list.
@@ -244,7 +246,10 @@ set(SOURCE_FILES
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
-	gui/menus/HelpMenu.cpp)
+	gui/menus/HelpMenu.cpp
+	gui/helpers/NetAwareFileDialogGtk3.cpp
+	gui/helpers/Gtk3DialogHelper.cpp
+	)
 
 # NoMoc files.
 set(HEADER_FILES_UTILS_NOMOC
@@ -360,7 +365,8 @@ set_target_properties(${PROJECT_NAME}
     AUTOMOC ON
     AUTOUIC ON)
 # The libs.
-set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent Qt5::X11Extras
+set(PROJECT_COMMON_LINK_LIBS
+		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIBS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
