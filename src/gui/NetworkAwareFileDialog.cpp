@@ -448,9 +448,10 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     auto app = Gtk::Application::create(tostdstr(QApplication::desktopFileName()).c_str());
     std::string chosen_path;
 
-    QWindow* parent_qwindow = this->windowHandle();
-    qDebug() << "parent_qwindow:" << parent_qwindow;
-
+//    QWindow* parent_qwindow = this->windowHandle();
+//    qDebug() << "parent_qwindow:" << parent_qwindow;
+//    WId xcb_parent_window_id = this->winId();
+//    qDebug() << "Parent WId:" << xcb_parent_window_id;
 
     // Create the Gtk file dialog exactly how we want it, bypassing the QPA.
     // Gtk::FileChooserDialog docs:
@@ -459,6 +460,8 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
 
     dialog.show();
+
+//    dialog.set_transient_for(parent_qwindow->winId());
 
     if(true) /// @todo We're on gnome/xcb.
     {
@@ -471,32 +474,49 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
         // qtWindow = this;
         // QWindow::fromWinId(nativeWindow)->setParent(qtWindow);
 
-        WId xcb_parent_window_id = this->winId();
-        qDebug() << "Parent WId:" << xcb_parent_window_id;
-        QWindow* parent_window = this->windowHandle();
-        qDebug() << "parent_window:" << parent_window;
+
+        QWindow* parent_qwindow = m_parent_widget->windowHandle();
+        qDebug() << "parent_qwindow:" << parent_qwindow;
 
 
         Glib::RefPtr<Gdk::Window> dialog_gdkpp_win = dialog.get_window();
         qDebug() << "dialog_gdkpp_win:" << dialog_gdkpp_win.operator bool();
         if(dialog_gdkpp_win)
         {
-            qDebug() << "GDK_IS_X11_WINDOW(dialog_x11_win):" << GDK_IS_X11_WINDOW(dialog_gdkpp_win->gobj());
             GdkWindow* dialog_gdk_win = dialog_gdkpp_win->gobj();
-            // Window == X11 window.
+
+            qDebug() << "GDK_IS_X11_WINDOW(dialog_gdk_win):" << GDK_IS_X11_WINDOW(dialog_gdk_win);
+            // Window == X11 window, ~= xcb_window_t == XCB window.
             Window xcb_dialog_window_id = GDK_WINDOW_XID(dialog_gdk_win);
             qDebug() << "xcb_dialog_window_id:" << xcb_dialog_window_id;
 
-            QWindow* file_dlg_qwindow_wrapper = QWindow::fromWinId(xcb_dialog_window_id);
+//            QWindow* file_dlg_qwindow_wrapper = QWindow::fromWinId(xcb_dialog_window_id);
     //		GdkWindow * gdk_parent_win = gdk_window_foreign_new(x11_parent_window_id);
     //        GdkDisplay* display = gdk_display_get_default();
-            qDebug() << "file_dlg_qwindow_wrapper:" << file_dlg_qwindow_wrapper;
+//            qDebug() << "file_dlg_qwindow_wrapper:" << file_dlg_qwindow_wrapper;
     //        GdkWindow * gdk_parent_win = gdk_x11_window_lookup_for_display(display, xcb_parent_window_id);
     //        qDebug() << "gdk_parent_win:" << gdk_parent_win;
 
-            if(xcb_dialog_window_id!=0 && parent_window != nullptr)
+            if(xcb_dialog_window_id !=0 && parent_qwindow != nullptr)
             {
-                QWindow::fromWinId(xcb_dialog_window_id)->setParent(parent_window);
+                qDebug() << "SETTING TRANSIENT PARENT" << xcb_dialog_window_id << parent_qwindow;
+                QWindow* qw = QWindow::fromWinId(xcb_dialog_window_id);
+                qDebug() << "qw:" << qw;
+                qw->setTransientParent(parent_qwindow);
+                qw->setFlags(Qt::Dialog);
+                qw->dumpObjectInfo();
+                qw->dumpObjectTree();
+
+//                if (true)
+//                {
+//                    xcb_window_t winId = parent_qwindow->winId();
+
+//                    xcb_void_cookie_t cookie = xcb_change_property_checked(m_conn, XCB_PROP_MODE_REPLACE, m_fileDialog->winId(),
+//                                                                           XCB_ATOM_WM_TRANSIENT_FOR, XCB_ATOM_WINDOW, 32,
+//                                                                           1, &winId);
+//                    xcb_request_check(m_conn, cookie);
+//                    xcb_flush(m_conn);
+//                }
             }
         }
 
