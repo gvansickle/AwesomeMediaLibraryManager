@@ -27,6 +27,14 @@
 
 #include <utility> // for std::pair<>.
 
+#warning "MOVE TO CMAKE"
+#define HAVE_GTKMM
+
+#ifdef HAVE_GTKMM
+#include <xcb/xcb.h>
+#include <xcb/xproto.h>
+#endif // HAVE_GTKMM
+
 /**
  * A sisyphean attempt to be all things to all people for file chooser dialogs.
  * The simplest things....
@@ -202,6 +210,15 @@ private:
     /// @note For now we will always create one, even if we don't ultimately display it,
     ///       to collect settings.
 	QSharedPointer<QFileDialog> m_the_qfiledialog;
+
+#ifdef HAVE_GTKMM
+    xcb_connection_t *m_xcb_connection;
+    xcb_window_t m_xcb_file_dlg_win;
+//    QWindow *m_transientParent;
+
+    void setTransientParent_xcb();
+
+#endif // HAVE_GTKMM
 };
 
 #endif // NETWORKAWAREFILEDIALOG_H

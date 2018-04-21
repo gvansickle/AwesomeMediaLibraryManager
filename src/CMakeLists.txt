@@ -360,7 +360,7 @@ set_target_properties(${PROJECT_NAME}
     AUTOMOC ON
     AUTOUIC ON)
 # The libs.
-set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
+set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent Qt5::X11Extras
 		${KF5_LINK_LIBS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}

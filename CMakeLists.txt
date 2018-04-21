@@ -202,7 +202,8 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Gui
 	Widgets
 	Multimedia
-	Concurrent)
+	Concurrent
+	X11Extras)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
@@ -250,6 +251,17 @@ list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 set(GTK_LINK_LIB_TARGETS)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+
+###
+### XCB libs.
+###
+if(TRUE)
+find_package(XCB REQUIRED COMPONENTS
+	XCB
+	)
+list(APPEND GTK_LINK_LIB_TARGETS XCB::XCB)
+cmake_print_variables(XCB_TARGETS)
+endif()
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.

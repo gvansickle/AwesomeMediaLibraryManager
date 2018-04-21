@@ -28,7 +28,9 @@
 #include <QWindow>
 
 #define HAVE_GTKMM /// @todo
+
 #ifdef HAVE_GTKMM
+#include <QtX11Extras/QX11Info>
 #include <glib-object.h>
 #include <gtkmm.h>
 #include <gtkmm/filechooserdialog.h>
@@ -76,6 +78,8 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 {
 	QString dir_as_str;
     setObjectName("NetAwareFileDialogProxy");
+
+    m_xcb_connection = QX11Info::connection();
 
     // Create the underlying QFileDialog.
     m_the_qfiledialog = QSharedPointer<QFileDialog>::create(parent, caption, directory.toLocalFile(), filter);
@@ -462,8 +466,9 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     dialog.show();
 
 //    dialog.set_transient_for(parent_qwindow->winId());
+    setTransientParent_xcb();
 
-    if(true) /// @todo We're on gnome/xcb.
+    if(false) /// @todo We're on gnome/xcb.
     {
         // On Linux/xcb, Qt5's WId is really an xcb_window_t.
         // See https://gist.github.com/torarnv/c5dfe2d2bc0c089910ce.
@@ -489,6 +494,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
             // Window == X11 window, ~= xcb_window_t == XCB window.
             Window xcb_dialog_window_id = GDK_WINDOW_XID(dialog_gdk_win);
             qDebug() << "xcb_dialog_window_id:" << xcb_dialog_window_id;
+            m_xcb_file_dlg_win = xcb_dialog_window_id;
 
 //            QWindow* file_dlg_qwindow_wrapper = QWindow::fromWinId(xcb_dialog_window_id);
     //		GdkWindow * gdk_parent_win = gdk_window_foreign_new(x11_parent_window_id);
@@ -506,17 +512,6 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
                 qw->setFlags(Qt::Dialog);
                 qw->dumpObjectInfo();
                 qw->dumpObjectTree();
-
-//                if (true)
-//                {
-//                    xcb_window_t winId = parent_qwindow->winId();
-
-//                    xcb_void_cookie_t cookie = xcb_change_property_checked(m_conn, XCB_PROP_MODE_REPLACE, m_fileDialog->winId(),
-//                                                                           XCB_ATOM_WM_TRANSIENT_FOR, XCB_ATOM_WINDOW, 32,
-//                                                                           1, &winId);
-//                    xcb_request_check(m_conn, cookie);
-//                    xcb_flush(m_conn);
-//                }
             }
         }
 
@@ -525,9 +520,11 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 //		dialog.set_transient_for(*gtk_parent_win.operator->());
 //        dialog.set_parent_window(gtk_parent_win);
     }
+
     dialog.set_local_only(false);
     dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button("_Open", Gtk::RESPONSE_OK);
+
     int result = dialog.run();
 //	int result = app->run(dialog);
 
@@ -629,8 +626,26 @@ void NetworkAwareFileDialog::restoreStateOverload()
 			qDebug() << "File dialog state restored successfully for m_state_key '" << m_settings_state_key << "'";
 			//qDebug() << "Dir is" << directory() << directoryUrl();
 		}
-	}
+    }
 }
+
+#ifdef HAVE_GTKMM
+void NetworkAwareFileDialog::setTransientParent_xcb()
+{
+    QWindow* parent_qwindow = m_parent_widget->windowHandle();
+    auto m_transientParent = parent_qwindow;
+
+    if(m_transientParent)
+    {
+        xcb_window_t tp_xcb_win = m_transientParent->winId();
+        xcb_void_cookie_t cookie = xcb_change_property_checked(m_xcb_connection, XCB_PROP_MODE_REPLACE,
+                                                               m_xcb_file_dlg_win, XCB_ATOM_WM_TRANSIENT_FOR,
+                                                               XCB_ATOM_WINDOW, 32, 1, &tp_xcb_win);
+        xcb_request_check(m_xcb_connection, cookie);
+        xcb_flush(m_xcb_connection);
+    }
+}
+#endif // HAVE_GTKMM
 
 bool NetworkAwareFileDialog::user_pref_native_file_dialog() const
 {
