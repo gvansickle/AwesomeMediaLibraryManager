@@ -21,60 +21,74 @@
 #define SRC_GUI_HELPERS_NETAWAREFILEDIALOGGTK3_H_
 
 #include <QObject>
+#include <QUrl>
+#include <QScopedPointer>
 
 
-//#include <qpa/qplatformdialoghelper.h>
+#include "Gtk3DialogHelper.h"
+
+///#include <qpa/qplatformdialoghelper.h>
+#include <QtGui/qpa/qplatformdialoghelper.h>
+
+typedef struct _GtkDialog GtkDialog;
+typedef struct _GtkFileFilter GtkFileFilter;
 
 /**
- * Heavily based on the Qt5 QGtk3*DialogHelpers:
+ * Heavily based on the Qt5 QGtk3FileDialogHelper:
+ * https://github.com/qt/qtbase/blob/dev/src/plugins/platformthemes/gtk3/qgtk3dialoghelpers.cpp
  * https://code.woboq.org/qt5/qtbase/src/plugins/platformthemes/gtk3/
  * https://code.woboq.org/qt5/qtbase/src/plugins/platformthemes/gtk3/qgtk3dialoghelpers.cpp.html
+ * ...and also QGnomePlatforms:
+ * https://github.com/MartinBriza/QGnomePlatform/blob/master/src/qgtk3dialoghelpers.cpp
  */
-
-#if 0
-
-class NetAwareFileDialogGtk3 : public QObject //QPlatformFileDialogHelper
+class NetAwareFileDialogGtk3 : public QPlatformFileDialogHelper
 {
     Q_OBJECT
 
-//    using BASE_CLASS = QPlatformFileDialogHelper;
+    using BASE_CLASS = QPlatformFileDialogHelper;
+
+#define NAFDGTK3_OVERRIDE override
+
+//Q_SIGNALS:
+//    void accept();
+//    void currentChanged(const QUrl& selected_url);
 
 public:
 	NetAwareFileDialogGtk3();
-    ~NetAwareFileDialogGtk3();
+    ~NetAwareFileDialogGtk3() override;
 
-//    bool show(Qt::WindowFlags flags, Qt::WindowModality modality, QWindow *parent) override;
-//    void exec() override;
-//    void hide() override;
+    bool show(Qt::WindowFlags flags, Qt::WindowModality modality, QWindow *parent) NAFDGTK3_OVERRIDE;
+    void exec() NAFDGTK3_OVERRIDE;
+    void hide() NAFDGTK3_OVERRIDE;
 
-//    bool defaultNameFilterDisables() const override;
-//    void setDirectory(const QUrl &directory) override;
-//    QUrl directory() const override;
-//    void selectFile(const QUrl &filename) override;
-//    QList<QUrl> selectedFiles() const override;
-//    void setFilter() override;
-//    void selectNameFilter(const QString &filter) override;
-//    QString selectedNameFilter() const override;
+    bool defaultNameFilterDisables() const NAFDGTK3_OVERRIDE;
+    void setDirectory(const QUrl &directory) NAFDGTK3_OVERRIDE;
+    QUrl directory() const NAFDGTK3_OVERRIDE;
+    void selectFile(const QUrl &filename) NAFDGTK3_OVERRIDE;
+    QList<QUrl> selectedFiles() const NAFDGTK3_OVERRIDE;
+    void setFilter() NAFDGTK3_OVERRIDE;
+    void selectNameFilter(const QString &filter) NAFDGTK3_OVERRIDE;
+    QString selectedNameFilter() const NAFDGTK3_OVERRIDE;
 
-//private Q_SLOTS:
-//    void onAccepted();
+private Q_SLOTS:
+    void onAccepted();
 
-//private:
-//    static void onSelectionChanged(GtkDialog *dialog, QGtk3FileDialogHelper *helper);
-//    static void onCurrentFolderChanged(QGtk3FileDialogHelper *helper);
-//    static void onFilterChanged(QGtk3FileDialogHelper *helper);
-//    void applyOptions();
-//    void setNameFilters(const QStringList &filters);
-//    void selectFileInternal(const QUrl &filename);
-//    void setFileChooserAction();
+private:
+    static void onSelectionChanged(GtkDialog *gtkDialog, NetAwareFileDialogGtk3 *helper);
+    static void onCurrentFolderChanged(NetAwareFileDialogGtk3 *dialog);
+    static void onFilterChanged(NetAwareFileDialogGtk3 *dialog);
 
-//    QUrl _dir;
-//    QList<QUrl> _selection;
-//    QHash<QString, GtkFileFilter*> _filters;
-//    QHash<GtkFileFilter*, QString> _filterNames;
-//    QScopedPointer<QGtk3Dialog> d;
+    void applyOptions();
+    void setNameFilters(const QStringList &filters);
+    void selectFileInternal(const QUrl &filename);
+    void setFileChooserAction();
+
+    QUrl m_dir;
+    QList<QUrl> m_selection;
+    QHash<QString, GtkFileFilter*> m_filters;
+    QHash<GtkFileFilter*, QString> m_filterNames;
+	QScopedPointer<Gtk3DialogHelper> d;
 
 };
-#endif
 
 #endif /* SRC_GUI_HELPERS_NETAWAREFILEDIALOGGTK3_H_ */

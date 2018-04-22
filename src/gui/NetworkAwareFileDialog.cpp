@@ -462,6 +462,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     // Gtk::FileChooserDialog docs:
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooser.html
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooserDialog.html#adc98a1e747613c9b6cb66c238f6f8da6
+
     Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
 
     dialog.show();

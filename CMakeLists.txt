@@ -203,7 +203,8 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Widgets
 	Multimedia
 	Concurrent
-	X11Extras)
+	X11Extras
+	)
 set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent Qt5::X11Extras)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
@@ -211,6 +212,9 @@ message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
 message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
 message(STATUS "*   Qt5Core_FOUND: \"${Qt5Core_FOUND}\"")
 message(STATUS "*   Qt5Core_EXECUTABLE_COMPILE_FLAGS: \"${Qt5Core_EXECUTABLE_COMPILE_FLAGS}\"")
+# For access to QPA headers.
+message(STATUS "*   Qt5Core_PRIVATE_INCLUDE_DIRS: ${Qt5Core_PRIVATE_INCLUDE_DIRS}")
+message(STATUS "*   Qt5Gui_PRIVATE_INCLUDE_DIRS: ${Qt5Gui_PRIVATE_INCLUDE_DIRS}")
 if(FALSE)
 	# List plugin info.
 	message(STATUS "*  Qt5::Gui Plugins:")
@@ -246,9 +250,10 @@ list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::Ico
 list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 
 
-#
-# GTK Libs.
-# See https://wiki.gnome.org/Projects/gtkmm/UsingCMake, https://cmake.org/cmake/help/v3.10/module/FindPkgConfig.html
+###
+### GTK Libs.
+### See https://wiki.gnome.org/Projects/gtkmm/UsingCMake, https://cmake.org/cmake/help/v3.10/module/FindPkgConfig.html
+###
 set(GTK_LINK_LIB_TARGETS)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
@@ -326,7 +331,9 @@ set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 set(IDENTIFIER "io.github.gvansickle")
 
 # So the source in src can find the "resources/" dir.
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+	${Qt5Core_PRIVATE_INCLUDE_DIRS}
+	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
 add_subdirectory(src)
 
