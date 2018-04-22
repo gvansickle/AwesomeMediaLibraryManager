@@ -21,11 +21,13 @@
 
 #include <utils/DebugHelpers.h>
 
+#include <QtGui/private/qguiapplication_p.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
 #include <QEventLoop>
+
 
 
 Gtk3DialogHelper::Gtk3DialogHelper(GtkWidget *gtkWidget) : m_gtkWidget(gtkWidget)
@@ -96,10 +98,10 @@ bool Gtk3DialogHelper::show(Qt::WindowFlags flags, Qt::WindowModality modality, 
     {
         gdk_window_set_modal_hint(gdkWindow, true);
         // See https://code.woboq.org/qt5/qtbase/src/gui/kernel/qguiapplication.cpp.html#_ZN22QGuiApplicationPrivate15showModalWindowEP7QWindow
-//        QGuiApplicationPrivate::showModalWindow(this);
-        qWarning() << "SHOULD BE CALLING QGuiApplicationPrivate::showModalWindow(this);";
+        QGuiApplicationPrivate::showModalWindow(this);
+//        qWarning() << "SHOULD BE CALLING QGuiApplicationPrivate::showModalWindow(this);";
         /// @todo We'll try this for now.
-        BASE_CLASS::show();
+//        BASE_CLASS::show();
     }
 
     gtk_widget_show(m_gtkWidget);
@@ -110,9 +112,9 @@ bool Gtk3DialogHelper::show(Qt::WindowFlags flags, Qt::WindowModality modality, 
 
 void Gtk3DialogHelper::hide()
 {
-//    QGuiApplicationPrivate::hideModalWindow(this);
+    QGuiApplicationPrivate::hideModalWindow(this);
     qWarning() << "SHOULD BE CALLING QGuiApplicationPrivate::hideModalWindow(this);";
-    BASE_CLASS::hide();
+//    BASE_CLASS::hide();
     gtk_widget_hide(m_gtkWidget);
 }
 

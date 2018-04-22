@@ -475,14 +475,17 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 
     Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
 
-//    gtk_widget_realize(GTK_WIDGET(dialog.gobj()));
+    dialog.set_local_only(false);
+
+    dialog.set_current_folder("/home/grvs");
+    dialog.set_action(Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+    dialog.add_button(GTK_STOCK_OK, GTK_RESPONSE_OK);
+    dialog.add_button(GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
 
 //    dialog.show();
     auto wrappeddlg = new Gtk3DialogHelper(GTK_WIDGET(dialog.gobj()));
 
 //    wrappeddlg->setParent(m_parent_widget->windowHandle());
-
-            //new Gtk3DialogHelper(dialog.gobj());
 
 //    dialog.set_transient_for(parent_qwindow->winId());
 //    setTransientParent_xcb();
@@ -540,11 +543,9 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 //        dialog.set_parent_window(gtk_parent_win);
     }
 
-    dialog.set_local_only(false);
-    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-    dialog.add_button("_Open", Gtk::RESPONSE_OK);
 
-    wrappeddlg->show(Qt::Dialog, Qt::WindowModal, m_parent_widget->windowHandle());
+
+    wrappeddlg->show(Qt::Dialog, Qt::ApplicationModal, m_parent_widget->windowHandle());
     wrappeddlg->exec();
 
 //    int result = dialog.run();
