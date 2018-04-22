@@ -296,7 +296,7 @@ bool NetworkAwareFileDialog::isDirSelectDialog() const
 void NetworkAwareFileDialog::setDefaultSidebarUrls()
 {
 	// This doesn't appear to do anything on Windows when using the system file dialog.
-	if(true)//!use_native_dlg())
+    if(!use_native_dlg())
 	{
 		QList<QUrl> urls;
 		urls << QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::MusicLocation)[0])
@@ -373,29 +373,16 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
         m_the_qfiledialog->setDefaultSuffix(filter_to_suffix(m_the_qfiledialog->selectedNameFilter()));
     }
 
+    // Force non-native dialog if that's what we want.
+    if(!use_native_dlg())
+    {
+        m_the_qfiledialog->setOption(QFileDialog::DontUseNativeDialog, true);
+    }
+
     qInfo() << "Using QFileDialog, is_dlg_native:" << is_dlg_native();
 
     QDialog::DialogCode retval = static_cast<QDialog::DialogCode>(m_the_qfiledialog->exec());
     return retval;
-
-#if 0
-		// Use the GTK File chooser.  This gives us access to the gvfs virtual folders and the network.
-		self.gtk3_dlg = Gtk.FileChooserDialog("Please choose a folder", None,
-									   Gtk.FileChooserAction.SELECT_FOLDER,
-									   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-										"Select", Gtk.ResponseType.OK))
-		self.gtk3_dlg.set_local_only(False)
-		response = self.gtk3_dlg.run()
-		if response == Gtk.ResponseType.OK:
-			print("Select clicked")
-			print("Folder selected: " + self.gtk3_dlg.get_filename())
-			response = QFileDialog.Accepted
-		elif response == Gtk.ResponseType.CANCEL:
-			print("Cancel clicked")
-			response = QFileDialog.Rejected
-		//self.gtk3_dlg.destroy()
-		return response
-#endif
 }
 
 #ifdef HAVE_GTKMM
