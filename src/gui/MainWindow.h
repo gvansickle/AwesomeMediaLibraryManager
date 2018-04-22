@@ -24,6 +24,11 @@
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
+namespace KIO
+{
+    class Job;
+}
+class KStatusBarJobTracker;
 class KToolBar;
 using ToolBarClass = KToolBar;
 
@@ -184,6 +189,7 @@ public Q_SLOTS:
 	 */
 	void setActiveSubWindow(QMdiSubWindow* window);
 
+    void registerJob(KIO::Job* new_job);
 
 protected:
 	bool queryClose() override;
@@ -482,6 +488,10 @@ private:
 
     /// The Activity Progress Widget.
     ActivityProgressWidget* m_activity_progress_widget;
+
+#ifdef HAVE_KF5
+    KStatusBarJobTracker* m_kf5_activity_progress_widget;
+#endif
 
     /// The Settings (AKA Preferences, AKA Config) dialog.
     QSharedPointer<SettingsDialog> m_settings_dlg;

@@ -179,6 +179,7 @@ set(HEADER_FILES
 	gui/menus/HelpMenu.h
 	gui/helpers/NetAwareFileDialogGtk3.h
 	gui/helpers/Gtk3DialogHelper.h
+	gui/expdialog.h
     )
 
 # Source file list.
@@ -249,6 +250,8 @@ set(SOURCE_FILES
 	gui/menus/HelpMenu.cpp
 	gui/helpers/NetAwareFileDialogGtk3.cpp
 	gui/helpers/Gtk3DialogHelper.cpp
+	gui/expdialog.cpp
+	gui/expdialog.ui
 	)
 
 # NoMoc files.

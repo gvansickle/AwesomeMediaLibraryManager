@@ -30,7 +30,9 @@
 #include <KMessageBox>
 #include <KAboutData>
 #include <KSharedConfig>
-
+#include <KIO/Job>
+#include <KIO/JobTracker>
+#include <KStatusBarJobTracker>
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -866,9 +868,19 @@ void MainWindow::createToolBars()
 
 void MainWindow::createStatusBar()
 {
+#ifdef HAVE_KF5
+    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
+    // parent: "the parent of this object and of the widget displaying the job progresses"
+    m_kf5_activity_progress_widget = new KStatusBarJobTracker(this, /*display cancel button*/ true);
+    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);
+//    KIO::setJobTracker(m_kf5_activity_progress_widget);
+//    statusBar()->addPermanentWidget(m_kf5_activity_progress_widget);
+
 	m_activity_progress_widget = new ActivityProgressWidget(this);
-	statusBar()->addPermanentWidget(m_activity_progress_widget);
-	statusBar()->showMessage("Ready");
+#else
+    statusBar()->addPermanentWidget(m_activity_progress_widget);
+#endif
+    statusBar()->showMessage("Ready");
 }
 
 void MainWindow::createDockWidgets()
@@ -1395,7 +1407,7 @@ M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
     // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
-    setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
+    setupGUI(KXmlGuiWindow::Keys | /*StatusBar | ToolBar |*/ Save);
 
 	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
 	// "Make sure you call this after all your *bars have been created."
@@ -1935,7 +1947,17 @@ void MainWindow::about()
 
 void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
 {
-	m_mdi_area->setActiveSubWindow(window);
+    m_mdi_area->setActiveSubWindow(window);
+}
+
+void MainWindow::registerJob(KIO::Job *new_job)
+{
+    statusBar()->show();
+    m_kf5_activity_progress_widget->registerJob(new_job);
+    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);
+    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
+    statusBar()->show();
+    m_kf5_activity_progress_widget->widget(new_job)->show();
 }
 
 
