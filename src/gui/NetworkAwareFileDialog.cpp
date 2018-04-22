@@ -440,7 +440,17 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     // Use the GTK File chooser.  This gives us access to the gvfs virtual folders and the network.
 
     QDialog::DialogCode retval = QDialog::DialogCode::Accepted;
-#ifdef HAVE_GTKMM
+#if 0
+
+    // I think this is the equivalent of:
+    // m_dlgHelper = static_cast<QPlatformFileDialogHelper*>(QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog));
+    auto dialog = new NetAwareFileDialogGtk3();
+
+//    dialog->setOptions(m_the_qfiledialog->options());
+    dialog->setFilter(); // ApplyOptions
+    dialog->exec();
+
+#elif 1 //def HAVE_GTKMM
     // Per https://developer.gnome.org/gtkmm/stable/classGtk_1_1Main.html#details
     // "Deprecated:	Use Gtk::Application instead."
     ///Gtk::Main kit;
@@ -463,9 +473,20 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooser.html
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooserDialog.html#adc98a1e747613c9b6cb66c238f6f8da6
 
-    Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
+//    Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
 
-    dialog.show();
+    auto dialog = gtk_file_chooser_dialog_new("", // Title
+                                              0,  // Parent
+                                              GTK_FILE_CHOOSER_ACTION_OPEN, // The open or save mode.
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                              GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+
+//    dialog.show();
+    auto wrappeddlg = new Gtk3DialogHelper(dialog);
+
+    wrappeddlg->setParent(m_parent_widget);
+
+            //new Gtk3DialogHelper(dialog.gobj());
 
 //    dialog.set_transient_for(parent_qwindow->winId());
 //    setTransientParent_xcb();
@@ -523,12 +544,15 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 //        dialog.set_parent_window(gtk_parent_win);
     }
 
-    dialog.set_local_only(false);
-    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-    dialog.add_button("_Open", Gtk::RESPONSE_OK);
+    wrappeddlg->exec();
 
-    int result = dialog.run();
-//	int result = app->run(dialog);
+//    dialog.set_local_only(false);
+//    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+//    dialog.add_button("_Open", Gtk::RESPONSE_OK);
+
+//    int result = dialog.run();
+
+    int result = 876;
 
     switch(result)
     {
