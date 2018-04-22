@@ -1,0 +1,19 @@
+# Desktop file for AMLM.
+# See spec at https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-1.1.html
+[Desktop Entry]
+Type=Application
+Version=1.1
+Name=AwesomeMediaLibraryManager
+GenericName=Audio Library Manager
+Comment=Audio Library Manager
+Exec=AwesomeMediaLibraryManager %U
+Icon=AwesomeMediaLibraryManager
+MimeType=application/x-grvs-libraryentryref;
+#MimeType=audio/aac;audio/mp4;audio/mpeg;audio/mpegurl;audio/vorbis;audio/x-flac;audio/x-mp3;audio/x-mpegurl;audio/x-oggflac;audio/x-speex;audio/x-vorbis;audio/x-wav;application/x-ogm-audio;audio/x-vorbis+ogg;audio/ogg;
+X-DocPath=AwesomeMediaLibraryManager/index.html
+X-KDE-Keywords=music
+X-KDE-Protocols=smb
+DBusActivatable=false
+Terminal=false
+# See https://specifications.freedesktop.org/menu-spec/menu-spec-1.0.html#category-registry
+Categories=Qt;KDE;AudioVideo;Audio;Player;

@@ -1,6 +1,10 @@
-<RCC version="1.0">
-	<qresource prefix="/Icons">
-		<file alias="AppIcon32">AppIcon32.png</file>
-		<file alias="AppIcon128">AppIcon128.png</file>
-	</qresource>
+<RCC>
+    <qresource prefix="/Icons">
+        <file alias="AppIcon32">AppIcon32.png</file>
+        <file alias="AppIcon128">AppIcon128.png</file>
+        <file>48-preferences-desktop-sound.png</file>
+        <file>64-preferences-desktop-sound.png</file>
+        <file>128-preferences-desktop-sound.png</file>
+        <file>scalable-preferences-desktop-sound.svgz</file>
+    </qresource>
 </RCC>

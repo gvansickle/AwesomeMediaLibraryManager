@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component type="desktop">
+  <id>io.github.gvansickle.awesomemedialibrarymanager.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-3.0</project_license>
+  <name>AwesomeMediaLibraryManager</name>
+  <summary>Media Library Manager</summary>
+  <description>
+    <p>Awesome Media Library Manager is a media library manager which is awesome.</p>
+    <p>Features:</p>
+	<ul>
+      <li>Feature 1</li>
+      <li>Feature 2</li>
+    </ul>
+  </description>
+<url type="homepage">https://github.com/gvansickle/AwesomeMediaLibraryManager</url>
+  <url type="bugtracker">https://github.com/gvansickle/AwesomeMediaLibraryManager/issues</url>
+<!--   <url type="help">help URL here</url> -->
+  <screenshots>
+<!--     <screenshot type="default"> -->
+<!--       <image>url here</image> -->
+<!--     </screenshot> -->
+<!--     <screenshot> -->
+<!--       <image>url here</image> -->
+<!--     </screenshot> -->
+  </screenshots>
+  <project_group>KDE</project_group>
+  <provides>
+    <binary>AwesomeMediaLibraryManager</binary>
+  </provides>
+</component>

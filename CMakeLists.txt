@@ -44,14 +44,62 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
+# Min versions of Qt5 and KF5.
+set(QT_MIN_VERSION "5.9.0")
+set(KF5_MIN_VERSION "5.44.0")
+
+# KDE extra-cmake-modules, see https://api.kde.org/ecm/
+find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
+
 # Add folder where we keep support *.cmake's.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
 # Prevent an in-root-of-src-tree build.
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
         message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
+
+###
+### KDE modules.
+### @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
+###
+set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE) ##< Don't define the deprecated KDEInstallDirs.
+include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
+set(ENABLE_CLAZY ON)
+set(APPLE_FORCE_X11 ON)
+include(KDECMakeSettings NO_POLICY_SCOPE)
+include(ECMAddAppIcon)
+# KDECompilerSettings
+# Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
+# @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
+# @warning This also sets the compiler stds way too low (C89(!!))
+# @see https://api.kde.org/ecm/kde-module/KDECompilerSettings.html
+#include(KDECompilerSettings NO_POLICY_SCOPE)
+# Sanitizers.
+### @note KF5:
+# The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
+# CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
+# The options are:
+#   address memory thread leak undefined
+# The sanitizers “address”, “memory” and “thread” are mutually exclusive. You cannot enable two of them in the same build.
+# "leak" requires the "address" sanitizer.
+### @note KDECompileFlags includes include(ECMEnableSanitizers).
+include(ECMEnableSanitizers)
+### Set the required language standards.
+# C11
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+# C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#kde_enable_exceptions()
+# And undo even more of what KDECompilerSettings did to/for us.
+###string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+include(FeatureSummary)
+message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
+message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
+###
 
 # Use ccache if it's available.
 find_program(CCACHE_PROGRAM ccache)
@@ -60,18 +108,18 @@ if(CCACHE_PROGRAM)
 endif()
 
 # Include some basic cmake functions.
-include(GNUInstallDirs)
 include(CheckCXXCompilerFlag)
 include(CMakePrintHelpers)
 include(PrintTargetProperties)
 include(helperfunctions)
+find_package(PkgConfig REQUIRED)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
-### @todo? find_package(ECM 1.7.0 REQUIRED NO_MODULE)
 # For GoogleTest and Boost.
 set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
+include(ExternalProject)
 include(DownloadProject)
 
 dir_summary()
@@ -104,7 +152,7 @@ message("*        GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
 
 print_compilers_and_params()
 
-# Be nice to visual studio
+# FBO at least visual studio
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Export compile commands.
@@ -122,10 +170,6 @@ endif()
 configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 
-# C++14
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")
 if(FALSE)
@@ -142,21 +186,35 @@ if(CXX_W_UNINIT)
 endif()
 if(WIN32)
     # Make sure we're supporting Unicode on Windows.
+	### @todo With KDECompileFlags we don't need this.
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
+
 
 # Find includes in corresponding build directories.
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# Sanitizers.
-find_package(Sanitizers)
-
-# The Qt5 packages we require.
-find_package(Qt5 COMPONENTS Core Gui Widgets Multimedia Concurrent REQUIRED)
+###
+### The Qt5 packages we require.
+###
+find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+	Core
+	Gui
+	Widgets
+	Multimedia
+	Concurrent
+	X11Extras
+	)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent Qt5::X11Extras)
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
 message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
+message(STATUS "*   Qt5Core_FOUND: \"${Qt5Core_FOUND}\"")
+message(STATUS "*   Qt5Core_EXECUTABLE_COMPILE_FLAGS: \"${Qt5Core_EXECUTABLE_COMPILE_FLAGS}\"")
+# For access to QPA headers.
+message(STATUS "*   Qt5Core_PRIVATE_INCLUDE_DIRS: ${Qt5Core_PRIVATE_INCLUDE_DIRS}")
+message(STATUS "*   Qt5Gui_PRIVATE_INCLUDE_DIRS: ${Qt5Gui_PRIVATE_INCLUDE_DIRS}")
 if(FALSE)
 	# List plugin info.
 	message(STATUS "*  Qt5::Gui Plugins:")
@@ -171,13 +229,60 @@ if(FALSE)
 	endforeach()
 endif()
 
-# Maybe some KDE extensions.
-if(TRUE) ## USE_KDE_KIO
-find_package(KF5KIO)
-set(KIO_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+###
+### KDE KF5 libs.
+###
+set(KF5_LINK_LIBS)
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
+	Config
+	ConfigWidgets
+	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	WidgetsAddons
+	XmlGui
+	GuiAddons
+	IconThemes
+	WindowSystem
+)
+list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
+list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
+list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
+
+
+###
+### GTK Libs.
+### See https://wiki.gnome.org/Projects/gtkmm/UsingCMake, https://cmake.org/cmake/help/v3.10/module/FindPkgConfig.html
+###
+set(GTK_LINK_LIB_TARGETS)
+pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
+list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+
+###
+### X11 and XCB libs.
+###
+if(TRUE)
+
+find_package(X11 REQUIRED)
+list(APPEND GTK_LINK_LIB_TARGETS ${X11_X11_LIB})
+
+find_package(X11_XCB REQUIRED)
+list(APPEND GTK_LINK_LIB_TARGETS ${X11_XCB_LIBRARIES})
+cmake_print_variables(X11_XCB_FOUND)
+
+find_package(XCB REQUIRED COMPONENTS
+	XCB
+	)
+list(APPEND GTK_LINK_LIB_TARGETS ${XCB_TARGETS})
+cmake_print_variables(XCB_TARGETS)
+
+cmake_print_variables(GTK_LINK_LIB_TARGETS)
+
 endif()
 
-# And Boost.  Sorry.
+#
+# And Boost.  Sorry.  But just CallableTraits, has no other deps.
+#
 # See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
 ### CallableTraits only in 1.66+.
 #set(Boost_USE_MULTITHREADED      ON)
@@ -211,23 +316,6 @@ if(FALSE)
 	endif()
 endif()
 
-# Custom cppclean target
-find_program(CPPCLEAN_PROGRAM NAMES cppclean)
-if(CPPCLEAN_PROGRAM AND FALSE) # << TRUE == USE_CPPCLEAN
-	set(CPPCLEAN_EXCLUDE_PATTERNS "cmake-build-*;build-*")
-	set(CPPCLEAN_INCLUDE_PATHS "${PROJECT_SOURCE_DIR}")
-	set(CPPCLEAN_EXCLUDE_SPECS "")
-	set(CPPCLEAN_INCLUDE_PATH_SPECS "")
-	PREPEND_TO_EACH(CPPCLEAN_EXCLUDE_SPECS "--exclude=" ${CPPCLEAN_EXCLUDE_PATTERNS})
-	PREPEND_TO_EACH(CPPCLEAN_INCLUDE_PATH_SPECS "--include-path=" ${CPPCLEAN_INCLUDE_PATHS})
-	add_custom_target(run_cppclean
-		ALL # @todo Change this so it's not run by default.
-		COMMAND "${CPPCLEAN_PROGRAM}" ${CPPCLEAN_EXCLUDE_SPECS} ${CPPCLEAN_INCLUDE_PATH_SPECS} "${PROJECT_SOURCE_DIR}"
-		COMMENT "Running cppclean"
-		VERBATIM
-		)
-endif()
-
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 
@@ -242,439 +330,36 @@ set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 # Reverse of app.setOrganizationDomain()?
 set(IDENTIFIER "io.github.gvansickle")
 
-###
-### The third-party packages we require.
-###
+# So the source in src can find the "resources/" dir.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+	${Qt5Core_PRIVATE_INCLUDE_DIRS}
+	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
-set(HEADER_FILES_THIRD_PARTY "")
-set(SOURCE_FILES_THIRD_PARTY "")
+add_subdirectory(src)
 
-include(ExternalProject)
-
-set(AMLM_LIBCUE_TARGET "")
-set(AMLM_TAGLIB_TARGET "")
-
-# Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
-set(USE_BUNDLED_LIBCUE TRUE)
-set(USE_BUNDLED_QXTGLOBALSHORTCUT FALSE)
-
-if(NOT WIN32)
-    find_package(PkgConfig REQUIRED)
-
-    pkg_check_modules(TAGLIB REQUIRED taglib>=1.6
-			IMPORTED_TARGET)
-	if(TAGLIB_FOUND)
-		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
-	endif()
-else()
-    # Use the in-tree copy of TagLib.  Requires some non-obvious cmake gyrations, since TagLib needs to be installed before you can realistically include its headers.
-    # Based somewhat on this SO answer: https://stackoverflow.com/a/45079298
-    add_library(taglib INTERFACE)
-    ExternalProject_Add(taglib_bundled
-            PREFIX "taglib_bundled"  # "Relative paths are interpreted with respect to CMAKE_CURRENT_BINARY_DIR at the point where ExternalProject_Add() is called."
-            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
-            INSTALL_DIR "taglib_bundled/install"
-            LOG_CONFIGURE TRUE
-            LOG_BUILD TRUE
-            LOG_INSTALL TRUE
-            # Configure step options.
-            CMAKE_ARGS "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF"
-            # Create a CMake target "taglib_bundled-install" which can be depended upon.
-            STEP_TARGETS install
-            )
-    add_dependencies(taglib taglib_bundled-install)
-    ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
-    message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
-#    print_target_properties(taglib_bundled)
-    cmake_print_variables(CMAKE_C_COMPILER CMAKE_VERSION)
-
-    set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(taglib_INCLUDE_DIR "${INSTALL_DIR}/include")
-    message(STATUS "taglib_LIBRARY: ${taglib_LIBRARY}")
-    message(STATUS "taglib_INCLUDE_DIR: ${taglib_INCLUDE_DIR}")
-
-    # Set INTERFACE properties on our taglib INTERFACE library.
-    # https://cmake.org/cmake/help/v3.10/command/add_library.html?highlight=add_librar#id6
-    target_link_libraries(taglib INTERFACE ${taglib_LIBRARY})
-    target_include_directories(taglib INTERFACE ${taglib_INCLUDE_DIR})
-    target_compile_definitions(taglib INTERFACE "TAGLIB_STATIC")
-
-    # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
-    # @todo looks like we no longer need this.
-    #file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
-
-    set(AMLM_TAGLIB_TARGET "taglib")
-
-    #print_target_properties(${AMLM_TAGLIB_TARGET})
-
-endif()
-
-if(USE_BUNDLED_LIBCUE)
-	# Use the in-tree copy of libcue.
-	add_subdirectory("third_party"
-		EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
-		)
-
-	set(AMLM_LIBCUE_TARGET "libcue")
-
-#	print_target_properties(${AMLM_LIBCUE_TARGET})
-else()
-	# Use the system libcue.
-	pkg_check_modules(LIBCUE REQUIRED libcue
-		IMPORTED_TARGET)
-	if(LIBCUE_FOUND)
-		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
-	endif()
-endif()
-
-if(FALSE)
-if(USE_BUNDLED_QXTGLOBALSHORTCUT)
-	message(FATAL "BUNDLED QXTGLOBALSHORTCUT NOT IMPLEMENTED")
-	### @todo Looks like this is the most maintained fork: https://github.com/hluk/qxtglobalshortcut
-else()
-	find_package(PkgConfig REQUIRED)
-
-	pkg_check_modules(QXTGLOBALSHORTCUT_LIB REQUIRED qxtglobalshortcut
-		IMPORTED_TARGET)
-	if(QXTGLOBALSHORTCUT_LIB_FOUND)
-		set(AMLM_QXTGLOBALSHORTCUT_LIB_TARGET "PkgConfig::QXTGLOBALSHORTCUT_LIB")
-		# Doesn't work, this is an interface library: print_target_properties(${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET})
-	endif()
-endif()
-endif()
-
-# Verdigris is just two headers.
-set(USE_BUNDLED_VERDIGRIS 1)
-set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
-
-# AsyncFuture is just one header.
-set(USE_BUNDLED_ASYNCFUTURE 1)
-set(INCLUDE_DIR_ASYNCFUTURE third_party/asyncfuture)
-list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_ASYNCFUTURE}/asyncfuture.h)
-
-set(USE_BUNDLED_QTPROMISE 1)
-set(INCLUDE_DIR_QTPROMISE third_party/qtpromise/include)
-#list(APPEND HEADER_FILES_THIRD_PARTY ${INCLUDE_DIR_QTPROMISE}/QtPromise)
-
-# Main program header files.
-set(HEADER_FILES
-	gui/CollectionDockWidget.h
-	gui/Experimental.h
-	gui/FilterWidget.h
-	gui/ItemDelegateLength.h
-	gui/MainWindow.h
-	gui/MDIArea.h
-	gui/MDILibraryView.h
-	gui/MDIPlaylistView.h
-	gui/MDITreeViewBase.h
-	gui/MetadataDockWidget.h
-	gui/NetworkAwareFileDialog.h
-	gui/PixmapLabel.h
-	gui/PlayerControls.h
-	logic/Library.h
-	logic/LibraryEntry.h
-	logic/LibraryEntryMimeData.h
-	logic/LibraryModel.h
-	logic/LibrarySortFilterProxyModel.h
-	logic/Metadata.h
-	logic/MetadataAbstractBase.h
-	logic/MetadataFromCache.h
-	logic/MetadataTaglib.h
-	logic/MP2.h
-	logic/ntp.h
-	logic/PlaylistModel.h
-	logic/PlaylistModelItem.h
-	logic/PlaylistSortFilterProxyModel.h
-	logic/TrackMetadata.h
-	utils/ActionHelpers.h
-	utils/ConnectHelpers.h
-	utils/DebugHelpers.h
-	utils/Fraction.h
-	utils/in.h
-	utils/MapConverter.h
-	utils/StringHelpers.h
-	utils/Theme.h
-	utils/WorkerThreadBase.h
-	logic/LibraryRescanner.h
-	gui/ActivityProgressWidget.h
-	utils/AsyncDirScanner.h
-	gui/AboutBox.h
-	utils/RegisterQtMetatypes.h
-	logic/CueSheetParser.h
-	gui/settings/SettingsDialog.h
-	gui/settings/SettingsDialogSideWidget.h
-	resources/VersionInfo.h
-	logic/ModelUserRoles.h
-	gui/DragDropTreeViewStyleProxy.h
-	logic/proxymodels/ModelHelpers.h
-	logic/proxymodels/SelectionFilterProxyModel.h
-	logic/proxymodels/ModelChangeWatcher.h
-	gui/helpers/Tips.h
-	gui/menus/DropMenu.h
-	gui/menus/LibraryContextMenu.h
-	gui/menus/PlaylistContextMenuViewport.h
-	gui/menus/PlaylistContextMenu.h
-	gui/menus/ActionBundle.h
-	gui/mdi/MDIModelViewPair.h
-	logic/ColumnSpec.h
-	logic/proxymodels/QPersistentModelIndexVec.h
-	utils/Logging.h
-    )
-
-# Source file list.
-set(SOURCE_FILES
-	gui/CollectionDockWidget.cpp
-	gui/Experimental.cpp
-	gui/FilterWidget.cpp
-	gui/ItemDelegateLength.cpp
-	gui/MainWindow.cpp
-	gui/MDIArea.cpp
-	gui/MDILibraryView.cpp
-	gui/MDIPlaylistView.cpp
-	gui/MDITreeViewBase.cpp
-	gui/MetadataDockWidget.cpp
-	gui/NetworkAwareFileDialog.cpp
-	gui/PixmapLabel.cpp
-	gui/PlayerControls.cpp
-	logic/Library.cpp
-	logic/LibraryEntry.cpp
-	logic/LibraryEntryMimeData.cpp
-	logic/LibraryModel.cpp
-	logic/LibrarySortFilterProxyModel.cpp
-	logic/Metadata.cpp
-	logic/MetadataAbstractBase.cpp
-	logic/MetadataFromCache.cpp
-	logic/MetadataTaglib.cpp
-	logic/MP2.cpp
-	logic/ntp.cpp
-	logic/PlaylistModel.cpp
-	logic/PlaylistModelItem.cpp
-	logic/PlaylistSortFilterProxyModel.cpp
-	logic/TrackMetadata.cpp
-	utils/Fraction.cpp
-	utils/MapConverter.cpp
-	utils/Theme.cpp
-	utils/WorkerThreadBase.cpp
-	logic/LibraryRescanner.cpp
-	gui/ActivityProgressWidget.cpp
-	concurrency/ReportingRunner.cpp
-	utils/AsyncDirScanner.cpp
-	gui/AboutBox.cpp
-	utils/RegisterQtMetatypes.cpp
-	logic/CueSheetParser.cpp
-	gui/settings/SettingsDialog.cpp
-	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h
-	gui/settings/SDPageAppearance.cpp gui/settings/SDPageAppearance.h
-	gui/settings/SettingsDialogSideWidget.cpp
-	gui/settings/SDPageLibrary.cpp
-	gui/settings/SDPageLibrary.h
-	gui/MDINowPlayingView.cpp
-	gui/MDINowPlayingView.h
-	gui/settings/RegisteredField.cpp gui/settings/RegisteredField.h gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
-	logic/ModelUserRoles.cpp
-	gui/DragDropTreeViewStyleProxy.cpp
-	logic/proxymodels/SelectionFilterProxyModel.cpp
-	logic/proxymodels/ModelChangeWatcher.cpp
-	gui/helpers/Tips.cpp
-	gui/menus/DropMenu.cpp
-	gui/menus/LibraryContextMenu.cpp
-	gui/menus/PlaylistContextMenuViewport.cpp
-	gui/menus/PlaylistContextMenu.cpp
-	gui/menus/ActionBundle.cpp
-	gui/mdi/MDIModelViewPair.cpp
-	logic/ColumnSpec.cpp
-	logic/proxymodels/QPersistentModelIndexVec.cpp
-	utils/Logging.cpp
-    )
-
-# NoMoc files.
-set(HEADER_FILES_UTILS_NOMOC
-	utils/nomoc/nomocdefs.h
-	utils/nomoc/nomocimpl.h)
-list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
-
-# Concurrency files.
-set(HEADER_FILES_UTILS_CONCURRENCY
-	concurrency/ReportingRunner.h
-	concurrency/AsyncTaskManager.h
-	concurrency/ExtendedDeferred.h
-	concurrency/ExtFuture.h
-	concurrency/ExtFutureWatcher.h
-	concurrency/impl/ExtFuture_fwddecl_p.h
-	concurrency/impl/ExtFuture_impl.hpp
-	concurrency/ExtAsync.h
-	concurrency/ExtAsyncTask.h
-	concurrency/function_traits.hpp
-	)
-set(SOURCE_FILES_UTILS_CONCURRENCY
-	concurrency/AsyncTaskManager.cpp
-	concurrency/ExtAsync.cpp
-	concurrency/function_traits.cpp
-	)
-
-list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
-list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
-
-# Append the third_party files which need to be explicitly in the SOURCE_/HEADER_FILES vars.
-list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
-list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
-cmake_print_variables(META_FILES_TO_INCLUDE)
+#cmake_print_variables(META_FILES_TO_INCLUDE)
 
-# Qt5 Resource (qrc) files.
-# RESOURCE_FILES is a list of the generated output *.cpp file names.
-#qt5_add_resources(RESOURCE_FILES
-#        resources/oxygenicons.qrc
-#        resources/TangoIcons.qrc
-#        resources/AppIcon.qrc
-#        )
-#foreach(generated_rcc_file_name ${RESOURCE_FILES})
-#    message(STATUS "generated_rcc_file_name: ${generated_rcc_file_name}")
-#    set_property(SOURCE ${generated_rcc_file_name} PROPERTY SKIP_AUTOMOC ON)
-#endforeach()
-qt5_add_binary_resources(icons_oxygen resources/oxygenicons.qrc)
-qt5_add_binary_resources(icons_Tango resources/TangoIcons.qrc)
-qt5_add_binary_resources(icons_App resources/AppIcon.qrc)
-set(icon_rccs icons_oxygen icons_Tango icons_App)
 
 ###
-### The main executable.
-###
-### @note Including HEADER_FILES in here so they get checked for existence.
-###
-add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
-		main.cpp
-		${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-        )
-# FBO Verdigris (esp. on Windows/MSVC).
-#add_definitions(-D__cpp_constexpr=201304 -D__cpp_variable_templates=201304)
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS"
-	"QT_DEPRECATED_WARNINGS"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
-	"QFUTURE_TEST")
-target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
-if(NOT WIN32)
-target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb;-fno-omit-frame-pointer")
-endif()
-target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
-# Only the Qt stuff needs AUTOMOC.
-### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
-set_target_properties(${PROJECT_NAME}
-    PROPERTIES AUTOMOC ON)
-# The libs.
-set(PROJECT_COMMON_LINK_LIBS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Concurrent
-		${KIO_LINK_LIBS}
-		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
-		callable_traits)
-target_link_libraries(${PROJECT_NAME}
-        ${PROJECT_COMMON_LINK_LIBS}
-		)
-add_dependencies(${PROJECT_NAME} icons_oxygen icons_Tango icons_App)
-# Add sanitizers.
-add_sanitizers(${PROJECT_NAME})
-
-# Stop clang-tidy from scanning generated files.
-file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
----
-Checks: '-*,llvm-twine-local'
-...
-")
-
-#print_target_properties(${PROJECT_NAME})
-
-###
-### Testing
-###
-if(TRUE) # Enable test target.
-
-find_package(Qt5Test REQUIRED)
-include(CTest)
-### Google Test
-find_package(Threads REQUIRED)
-download_project(PROJ                googletest
-                 GIT_REPOSITORY      https://github.com/google/googletest.git
-                 GIT_TAG             master
-                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-)
-# Prevent GoogleTest from overriding our compiler/linker options
-# when building with Visual Studio
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-
-#enable_testing()
-set(TEST_EXE_TARGET alltests)
-set(SOURCE_FILES_TEST)
-set(HEADER_FILES_TEST)
-list(APPEND SOURCE_FILES_TEST
-	concurrency/tests/AsyncTests.cpp)
-list(APPEND
-	tests/TestHelpers.h
-	concurrency/tests/AsyncTests.h)
-
-add_executable(${TEST_EXE_TARGET}
-				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
-				${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
-# Add sanitizers.
-add_sanitizers(${TEST_EXE_TARGET})
-target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS"
-	"QT_DEPRECATED_WARNINGS"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"USE_BUNDLED_ASYNCFUTURE=${USE_BUNDLED_ASYNCFUTURE}"
-	"QFUTURE_TEST")
-target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_include_directories(${TEST_EXE_TARGET} PRIVATE ${INCLUDE_DIR_ASYNCFUTURE} ${INCLUDE_DIR_QTPROMISE})
-target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
-target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
-set_target_properties(${TEST_EXE_TARGET} PROPERTIES AUTOMOC ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
-target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
-add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})
-
-endif() # Enable test target.
-
-###
-### Installation.
-###
-install(TARGETS ${PROJECT_NAME}
-                RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
-                LIBRARY DESTINATION .
-                ARCHIVE DESTINATION .
-		COMPONENT coreapp
-	)
-install(FILES
-    ### @todo I think these are installing on top of themselves.
-    #icons_oxygen.rcc icons_Tango.rcc icons_App.rcc
-    ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-    ${CMAKE_CURRENT_BINARY_DIR}/icons_Tango.rcc
-    ${CMAKE_CURRENT_BINARY_DIR}/icons_App.rcc
-    DESTINATION .
-    COMPONENT coreapp)
-
-# Custom target for coordinating the packaging.
-add_custom_target(packaging
-    ALL
-	DEPENDS ${PROJECT_NAME} icons_oxygen icons_Tango icons_App
-    COMMENT "Packaging ${PROJECT_NAME}...")
-if(WIN32)
-    # Add custom commands and install targets for Qt windeploy.
-    include(package/PackageWindows.cmake)
-endif()
-
 ### Packaging
+###
 # From within the build directory, just run the following commands to create the package:
 # $ cmake ..
 # $ make package
+
+# Custom target for coordinating the packaging.
+add_custom_target(packaging
+	ALL
+	DEPENDS ${PROJECT_NAME} icons_oxygen ${AppIcon_rcc}
+	COMMENT "Packaging ${PROJECT_NAME}...")
+if(WIN32)
+	# Add custom commands and install targets for Qt windeploy.
+	include(package/PackageWindows.cmake)
+endif()
 
 # Relocate this?
 set(CPACK_GENERATOR NSIS)
@@ -731,6 +416,7 @@ cpack_add_component(
 
 ### END INSTALLER STUFF
 
+
 ###
 ### Print summary.
 ###
@@ -741,8 +427,10 @@ message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-cmake_print_variables(CMAKE_C_COMPILER CMAKE_MAJOR_VERSION META_FILES_TO_INCLUDE)
+cmake_print_variables(CMAKE_CXX_COMPILER)
+cmake_print_variables(META_FILES_TO_INCLUDE)
 
 message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
 
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

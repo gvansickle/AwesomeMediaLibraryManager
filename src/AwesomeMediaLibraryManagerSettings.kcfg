@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="https://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://www.kde.org/standards/kcfg/1.0
+      https://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+    <include>Qt</include>
+	<include>KPageDialog</include>
+	<include>gui/settings/DefaultSettingsHelper.h</include>
+  <kcfgfile name="AwesomeMediaLibraryManagerrc"/>
+  <group name="General">
+	<!-- Settings dialog, General page -->
+    <entry name="SettingsDialogFace" key="settings_dialog_type"	type="Enum">
+    	<label>Layout style of this dialog</label>
+    	<choices name="KPageDialog::FaceType">
+    		<choice name="Auto"></choice>
+    		<choice name="Plain"></choice>
+    		<choice name="List"></choice>
+    		<choice name="Tree"></choice>
+    		<choice name="Tabbed"></choice>
+   		</choices>
+    	<default>KPageDialog::FaceType::List</default>
+    </entry>
+    <!--Settings dialog, General page, Window tab-->
+    <entry name="toolbarTextIconModeCombo" key="toolbar_global_text_icon_mode" type="Enum">
+    	<label context="@label:listbox">XXX Toolbar text/icon mode:</label>
+    	<choices name="Qt::ToolButtonStyle">
+    		<choice name="ToolButtonIconOnly"><label context="@item:inlistbox">Icon Only</label></choice>
+    		<choice name="ToolButtonTextOnly"><label context="@item:inlistbox">Text Only</label></choice>
+    		<choice name="ToolButtonTextBesideIcon"><label context="@item:inlistbox">Text Beside Icon</label></choice>
+    		<choice name="ToolButtonTextUnderIcon"><label context="@item:inlistbox">Text Under Icon</label></choice>
+    		<choice name="ToolButtonFollowStyle"><label context="@item:inlistbox">Follow Style</label></choice>
+   		</choices>
+    	<default>Qt::ToolButtonStyle::ToolButtonFollowStyle</default>
+    </entry>
+    <entry name="fileDialogModeComboBox" key="settings_file_dialog_mode" type="Enum">
+    	<label context="@label:listbox">KCFG File dialog mode</label>
+
+    	<choices name="FileDialogMode">
+    		<choice name="QFDNative"><label context="@item:inlistbox">QFileDialog, native</label></choice>
+    		<choice name="QFDNonNative"><label context="@item:inlistbox">QFileDialog, non-native</label></choice>
+    		<choice name="GTK3Direct"><label context="@item:inlistbox">GTK+3 direct</label></choice>
+    	</choices>
+    	<default>FileDialogMode::QFDNative</default>
+    	<!--
+    	<code>
+    		QStringList dialog_modes;
+    		dialog_modes.append("QFileDialog, native");
+    		dialog_modes.append("QFileDialog, non-native");
+    		dialog_modes.append("GTK+3 direct");
+    	</code>
+    	<default  code="true">dialog_modes</default>
+    	    	    	-->
+
+    </entry>
+  </group>
+  <group name="Music Library">
+  	<entry name="LibraryURLs" type="UrlList" key="library_url_list">
+  		<label>The list of URLs to include in your music library</label>
+  	</entry>
+  </group>
+  <group name="Collection">
+  	<entry name="CollectionSourceUrls" key="collection_source_urls" type="StringList">
+        <label>List of source paths in the collection</label>
+		<default code="true">DefaultSettingsHelper::defaultCollectionUrlList()</default>
+  	</entry>
+    <entry name="CollectionWatchForChanges" key="collection_watch_for_changes" type="Bool">
+        <label>Watch Collection Source Paths for changes</label>
+	</entry>
+  </group>
+  <group name="Appearance">
+  	<entry name="widgetStyle" type="String" key="widget_style">
+  		<label>The widget style to use for the program</label></entry>
+  	<entry name="TrackFont" type="Font" key="track_font">
+  		<label>The font used to display track info in the Library and Playlist windows</label></entry>
+  	<entry name="MetadataFont" type="Font" key="metadata_font">
+  		<label>The font to use to display metadata in the Metadata Explorer</label></entry>
+  	<entry name="UseAlternatingRowColors" type="Bool" key="use_alternating_row_colors">
+  		<default>true</default>
+  		<label>Use alternating row colors in Library and Playlist views</label>
+  		<tooltip>Check to show the rows of song lists in alternating colors</tooltip>
+  	</entry>
+  	<entry name="LayoutIsLocked" type="Bool" key="layout_is_locked">
+  		<default>true</default>
+  	</entry>
+  </group>
+  <group name="Options">
+    <entry name="CustomWidth" type="Int" key="custom width">
+      <label>The width of the playing field.</label>
+      <min>5</min>
+      <max>50</max>
+      <default>10</default>
+    </entry>
+    <entry name="CustomHeight" type="Int" key="custom height">
+      <label>The height of the playing field.</label>
+      <min>5</min>
+      <max>50</max>
+      <default>10</default>
+    </entry>
+  </group>
+</kcfg>
