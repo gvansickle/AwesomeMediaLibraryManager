@@ -473,18 +473,14 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooser.html
     // https://developer.gnome.org/gtkmm/stable/classGtk_1_1FileChooserDialog.html#adc98a1e747613c9b6cb66c238f6f8da6
 
-//    Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
+    Gtk::FileChooserDialog dialog(toustring(m_the_qfiledialog->windowTitle()), map_to_Gtk_FileChooserAction(m_the_qfiledialog->fileMode()));
 
-    auto dialog = gtk_file_chooser_dialog_new("", // Title
-                                              0,  // Parent
-                                              GTK_FILE_CHOOSER_ACTION_OPEN, // The open or save mode.
-                                              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                              GTK_STOCK_OK, GTK_RESPONSE_OK, NULL);
+//    gtk_widget_realize(GTK_WIDGET(dialog.gobj()));
 
 //    dialog.show();
-    auto wrappeddlg = new Gtk3DialogHelper(dialog);
+    auto wrappeddlg = new Gtk3DialogHelper(GTK_WIDGET(dialog.gobj()));
 
-    wrappeddlg->setParent(m_parent_widget);
+//    wrappeddlg->setParent(m_parent_widget->windowHandle());
 
             //new Gtk3DialogHelper(dialog.gobj());
 
@@ -544,15 +540,15 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 //        dialog.set_parent_window(gtk_parent_win);
     }
 
+    dialog.set_local_only(false);
+    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
+    dialog.add_button("_Open", Gtk::RESPONSE_OK);
+
+    wrappeddlg->show(Qt::Dialog, Qt::WindowModal, m_parent_widget->windowHandle());
     wrappeddlg->exec();
 
-//    dialog.set_local_only(false);
-//    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-//    dialog.add_button("_Open", Gtk::RESPONSE_OK);
-
 //    int result = dialog.run();
-
-    int result = 876;
+    int result = 987;
 
     switch(result)
     {
