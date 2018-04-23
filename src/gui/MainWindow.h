@@ -142,6 +142,8 @@ public:
     QDockWidget* addDock(const QString& title, const QString& object_name, QWidget* widget,
                          Qt::DockWidgetArea area = Qt::TopDockWidgetArea);
 
+    ToolBarClass* addToolBar(const QString &win_title, const QString& object_name);
+
 public Q_SLOTS:
 
     void onStartup();

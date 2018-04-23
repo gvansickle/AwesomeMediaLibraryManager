@@ -839,21 +839,15 @@ M_WARNING("TODO");
 
 void MainWindow::createToolBars()
 {
-#ifdef HAVE_KF5
-	#define addToolBar(str) this->toolBar(str)
-#else
-	#define addToolBar(str) addToolBar((str))
-#endif
-
 	//
 	// File
 	//
-	m_fileToolBar = addToolBar(tr("FileToolbar"));
+    m_fileToolBar = addToolBar(tr("File"), "mainToolbar");
 
     Q_ASSERT(m_fileToolBar->parent() == this);
 
-	m_fileToolBar->setObjectName("FileToolbar");
-    m_fileToolBar->setWindowTitle(tr("File"));
+//	m_fileToolBar->setObjectName("FileToolbar");
+//    m_fileToolBar->setWindowTitle(tr("File"));
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
 							   m_cancelRescanAct,
@@ -872,16 +866,16 @@ void MainWindow::createToolBars()
 	//
 	// Edit
 	//
-	m_toolbar_edit = addToolBar(tr("Edit"));
-	m_toolbar_edit->setObjectName("EditToolbar");
+    m_toolbar_edit = addToolBar(tr("Edit"), "EditToolbar");
+//    m_toolbar_edit->setObjectName("EditToolbar");
 	// Only add the cut/copy/paste subset of actions to the toolbar.
 	m_ab_cut_copy_paste_actions->appendToToolBar(m_toolbar_edit);
 
 	//
 	// Settings
 	//
-	m_settingsToolBar = addToolBar("Settings");
-	m_settingsToolBar->setObjectName("SettingsToolbar");
+    m_settingsToolBar = addToolBar(tr("Settings"), "SettingsToolbar");
+//	m_settingsToolBar->setObjectName("SettingsToolbar");
 	m_settingsToolBar->addAction(m_act_settings);
 	m_settingsToolBar->addAction(m_experimentalAct);
 
@@ -903,13 +897,13 @@ void MainWindow::createToolBars()
 #endif
 
     // Create another toolbar for the player controls.
-	m_controlsToolbar = addToolBar("Player Controls");
-	m_controlsToolbar->setObjectName("PlayerControlsToolbar");
+    m_controlsToolbar = addToolBar(tr("Player Controls"), "PlayerControlsToolbar");
+//	m_controlsToolbar->setObjectName("PlayerControlsToolbar");
 	m_controlsToolbar->addWidget(m_controls);
 
 	// Create a toolbar for filtering
-	m_filterToolbar = addToolBar("Filter");
-	m_filterToolbar->setObjectName("FilterToolbar");
+    m_filterToolbar = addToolBar(tr("Filter bar"), "FilterToolbar");
+//	m_filterToolbar->setObjectName("FilterToolbar");
 	FilterWidget* fw = new FilterWidget;
 	auto filterPatternLabel = new QLabel(tr("&Filter pattern:"));
 	m_filterToolbar->addWidget(filterPatternLabel);
@@ -927,11 +921,12 @@ void MainWindow::createStatusBar()
     m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);
 //    KIO::setJobTracker(m_kf5_activity_progress_widget);
 //    statusBar()->addPermanentWidget(m_kf5_activity_progress_widget);
+#endif
 
 	m_activity_progress_widget = new ActivityProgressWidget(this);
-#else
+
     statusBar()->addPermanentWidget(m_activity_progress_widget);
-#endif
+
     statusBar()->showMessage("Ready");
 }
 
@@ -1325,6 +1320,16 @@ void MainWindow::addAction(const QString& action_name, QAction* action)
     ac->setDefaultShortcut(action, action->shortcut());
 }
 
+ToolBarClass* MainWindow::addToolBar(const QString &win_title, const QString &object_name)
+{
+    // KMainWindow has a toolBar() factory function.  It takes a string, however that is used as
+    // the toolbar's objectName().
+    auto retval = toolBar(object_name);
+    retval->setWindowTitle(win_title);
+
+    return retval;
+}
+
 QDockWidget *MainWindow::addDock(const QString &title, const QString &object_name, QWidget *widget, Qt::DockWidgetArea area)
 {
     auto retval = new QDockWidget(title, this);
@@ -1333,6 +1338,7 @@ QDockWidget *MainWindow::addDock(const QString &title, const QString &object_nam
     addDockWidget(area, retval);
     return retval;
 }
+
 
 //////
 ////// Top-level QSettings save/restore.
