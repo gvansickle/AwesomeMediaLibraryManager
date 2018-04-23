@@ -30,8 +30,10 @@
 #include <KMessageBox>
 #include <KAboutData>
 #include <KSharedConfig>
+
 #include <KIO/Job>
 #include <KIO/JobTracker>
+#include <KJobWidgets>
 #include <KStatusBarJobTracker>
 
 #include "Experimental.h"
@@ -229,7 +231,56 @@ M_WARNING("TODO: ifdef this to development only")
 	setUnifiedTitleAndToolBarOnMac(true);
 
 	// Send ourself a message to re-load the files we had open last time we were closed.
-	QTimer::singleShot(0, this, &MainWindow::onStartup);
+    QTimer::singleShot(0, this, &MainWindow::onStartup);
+}
+
+void MainWindow::post_setupGUI_init()
+{
+    // KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
+    // "Make sure you call this after all your *bars have been created."
+    /// @note this is done by setupGUI().
+    ///setAutoSaveSettings();
+
+    // Post setupGUI(), we can now add the status/tool/dock actions.
+    addViewMenuActions();
+}
+
+/**
+ * Called by a "timer(0)" started in the constructor.
+ * Does some final setup work which should be done once the constructor has finished and the event loop has started.
+ */
+void MainWindow::onStartup()
+{
+    initRootModels();
+
+    // Create the "Now Playing" playlist and view.
+    newNowPlaying();
+
+    // Load any files which were opened at the time the last session was closed.
+    qInfo() << "Loading libraries open at end of last session...";
+    QSettings settings;
+    readLibSettings(settings);
+
+    // Open the windows the user had open at the end of last session.
+    openWindows();
+
+    // KDE
+    // Don't need to do this when using setupGUI(StatusBar).
+//	createStandardStatusBarAction();
+    // Don't need to do this when using setupGUI(ToolBar).
+//	setStandardToolBarMenuEnabled(true);
+
+M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
+
+    // Set up the GUI from the ui.rc file embedded in the app's QResource system.
+//	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
+    // No Create, we going to try not using the XML file above.
+    // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
+    //   in a context menu and when opening the KEditToolBar dialog.
+    //   Without it, we seem to lose no functionality, but the crashes are gone.
+    setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
+
+    post_setupGUI_init();
 }
 
 MainWindow* MainWindow::getInstance()
@@ -872,7 +923,8 @@ void MainWindow::createStatusBar()
     // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
     // parent: "the parent of this object and of the widget displaying the job progresses"
     m_kf5_activity_progress_widget = new KStatusBarJobTracker(this, /*display cancel button*/ true);
-    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);
+    KIO::setJobTracker(m_kf5_activity_progress_widget);
+    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);
 //    KIO::setJobTracker(m_kf5_activity_progress_widget);
 //    statusBar()->addPermanentWidget(m_kf5_activity_progress_widget);
 
@@ -1374,49 +1426,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	qDebug() << "writeLibSettings() end";
 }
 
-/**
- * Called by a "timer(0)" started in the constructor.
- * Does some final setup work which should be done once the constructor has finished and the event loop has started.
- */
-void MainWindow::onStartup()
-{
-	initRootModels();
 
-    // Create the "Now Playing" playlist and view.
-    newNowPlaying();
-
-	// Load any files which were opened at the time the last session was closed.
-	qInfo() << "Loading libraries open at end of last session...";
-	QSettings settings;
-	readLibSettings(settings);
-
-	// Open the windows the user had open at the end of last session.
-	openWindows();
-
-	// KDE
-    // Don't need to do this when using setupGUI(StatusBar).
-//	createStandardStatusBarAction();
-    // Don't need to do this when using setupGUI(ToolBar).
-//	setStandardToolBarMenuEnabled(true);
-
-M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
-
-	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
-//	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
-    // No Create, we going to try not using the XML file above.
-    // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
-    //   in a context menu and when opening the KEditToolBar dialog.
-    //   Without it, we seem to lose no functionality, but the crashes are gone.
-    setupGUI(KXmlGuiWindow::Keys | /*StatusBar | ToolBar |*/ Save);
-
-	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
-	// "Make sure you call this after all your *bars have been created."
-	/// @note this is done by setupGUI().
-	///setAutoSaveSettings();
-
-    // Post setupGUI(), we can now add the status/tool/dock actions.
-	addViewMenuActions();
-}
 
 /**
  * Open the windows the user had open at the end of last session.
@@ -1953,6 +1963,7 @@ void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
 void MainWindow::registerJob(KIO::Job *new_job)
 {
     statusBar()->show();
+    KJobWidgets::setWindow(new_job, this);
     m_kf5_activity_progress_widget->registerJob(new_job);
     m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);
     statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));

@@ -21,6 +21,8 @@
 #define EXPERIMENTAL_H
 
 #include <QWidget>
+#include <KIO/Job>
+#include <KIO/UDSEntry>
 
 class Experimental : public QWidget
 {
@@ -33,6 +35,8 @@ Q_SIGNALS:
 public Q_SLOTS:
 
 	void DoExperiment();
+
+    void onDirEntries(KIO::Job* job, const KIO::UDSEntryList& list);
 
 private:
 	Q_DISABLE_COPY(Experimental)

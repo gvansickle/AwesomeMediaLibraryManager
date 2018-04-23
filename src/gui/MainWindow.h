@@ -112,7 +112,9 @@ public:
 	
 	/// Init function to offload all the init which used to be in the constructor.
 	void init();
-	
+
+    /// Init function which is called after setupGUI() has been called.
+    void post_setupGUI_init();
 
 	/**
 	 * Get a pointer to the MainWindow singleton.
@@ -141,6 +143,9 @@ public:
                          Qt::DockWidgetArea area = Qt::TopDockWidgetArea);
 
 public Q_SLOTS:
+
+    void onStartup();
+
 
     /// Slot corresponding to the "Open Directory as new Library" action.
     /// This is ~= a "File->Open" action.
@@ -324,7 +329,6 @@ private:
 
     /// Reads the primary settings.
 	void readPreGUISettings();
-    void onStartup();
     void openWindows();
     void writeSettings();
     void writeLibSettings(QSettings& settings);

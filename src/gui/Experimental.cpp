@@ -35,8 +35,11 @@
 
 #if EX1 == 1
 
+#include <KIO/Job>
+#include <KIO/CopyJob>
 #include <KIO/ListJob>
-#include <KWidgetJobTracker>
+#include <KIO/DirectorySizeJob>
+//#include <KWidgetJobTracker>
 
 #include "MainWindow.h"
 #include "expdialog.h"
@@ -110,14 +113,33 @@ void Experimental::DoExperiment()
 
     // Try to use KIO to list the tree.
     KIO::ListJob* list_job = KIO::listRecursive(dir_url, KIO::JobFlag::DefaultFlags, false /*no hidden dirs*/);
+    KIO::DirectorySizeJob* ds_job = KIO::directorySize(dir_url);
+//    KIO::CopyJob* cp_job = KIO::copyAs(dir_url, QUrl("file://home/gary/deletme"));
 
     qDebug() << M_NAME_VAL(list_job);
 
-//    KIO::getJobTracker()->registerJob(list_job);
+    connect(list_job, &KIO::ListJob::entries, this, &Experimental::onDirEntries);
+
     qDebug() << "REGISTERING LIST JOB";
+//    KIO::getJobTracker()->registerJob(list_job);
+
+//    KIO::Job* total_job = new KIO::Job;
+//    KCompositeJob* total_job = new KCompositeJob(this);
+//    KIO::SimpleJob* total_job = new KIO::SimpleJob(this->parent());
+//    ds_job->setParentJob(total_job);
+//    list_job->setParentJob(ds_job);
+    list_job->setObjectName("ListJob");
+
+
     MainWindow::getInstance()->registerJob(list_job);
+    MainWindow::getInstance()->registerJob(ds_job);
+//    MainWindow::getInstance()->registerJob(cp_job);
+
     qDebug() << "STARTING LIST JOB";
     list_job->start();
+    qDebug() << "STARTING DS JOB";
+    ds_job->start();
+//    cp_job->start();
 
 //    dlg->TrackJob(list_job);
 
@@ -134,4 +156,12 @@ void Experimental::DoExperiment()
 
 #if EX2 == 1
 #endif
+}
+
+void Experimental::onDirEntries(KIO::Job *job, const KIO::UDSEntryList &list)
+{
+    for(auto e : list)
+    {
+        qInfo() << "GOT ENTRY:" << e.stringValue( KIO::UDSEntry::UDS_NAME );
+    }
 }
