@@ -114,6 +114,7 @@ message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
 
 # Main program header files.
 set(HEADER_FILES
+	AMLMApp.h
 	gui/CollectionDockWidget.h
 	gui/Experimental.h
 	gui/FilterWidget.h
@@ -185,6 +186,7 @@ set(HEADER_FILES
 
 # Source file list.
 set(SOURCE_FILES
+	AMLMApp.cpp
 	gui/CollectionDockWidget.cpp
 	gui/Experimental.cpp
 	gui/FilterWidget.cpp

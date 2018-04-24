@@ -85,7 +85,12 @@ void Experimental::DoExperiment()
 
 #if 1
 
-    auto dsj = new DirectoryScanJob(QUrl("file://home/gary/Music"), QStringList({"*.mp3","*.flac"}));
+    QUrl dir_url("file://home/gary/Music");
+    //QUrl("file://home/gary/Music"), QStringList({"*.mp3","*.flac"}));
+    auto dsj = new DirectoryScanJob(dir_url,
+                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+
 
     ThreadWeaver::stream() << dsj;
 
