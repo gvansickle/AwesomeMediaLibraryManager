@@ -36,7 +36,7 @@ class AMLMApp: public QApplication
     using BASE_CLASS = QApplication;
 
 public:
-    explicit AMLMApp(int argc, char *argv[]);
+    explicit AMLMApp(int& argc, char *argv[]);
 	~AMLMApp() override;
 
     static AMLMApp* instance() { return static_cast<AMLMApp*>( qApp ); }

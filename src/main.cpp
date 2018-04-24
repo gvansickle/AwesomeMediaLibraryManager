@@ -18,7 +18,10 @@
  */
 
 #include <QtGlobal>
-#include <QApplication>
+
+//#include <QApplication>
+#include "AMLMApp.h"
+
 #include <QSettings>
 #include <QIcon>
 #include <QLoggingCategory>
@@ -89,7 +92,7 @@ int main(int argc, char *argv[])
 	//
 	// Create the Qt5 app.
 	//
-    QApplication app(argc, argv);
+    AMLMApp app(argc, argv);
 
 
 	// Get our config for use later.
