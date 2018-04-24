@@ -846,8 +846,6 @@ void MainWindow::createToolBars()
 
     Q_ASSERT(m_fileToolBar->parent() == this);
 
-//	m_fileToolBar->setObjectName("FileToolbar");
-//    m_fileToolBar->setWindowTitle(tr("File"));
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
 							   m_cancelRescanAct,
@@ -867,15 +865,15 @@ void MainWindow::createToolBars()
 	// Edit
 	//
     m_toolbar_edit = addToolBar(tr("Edit"), "EditToolbar");
-//    m_toolbar_edit->setObjectName("EditToolbar");
-	// Only add the cut/copy/paste subset of actions to the toolbar.
+
+    // Only add the cut/copy/paste subset of actions to the toolbar.
 	m_ab_cut_copy_paste_actions->appendToToolBar(m_toolbar_edit);
 
 	//
 	// Settings
 	//
     m_settingsToolBar = addToolBar(tr("Settings"), "SettingsToolbar");
-//	m_settingsToolBar->setObjectName("SettingsToolbar");
+
 	m_settingsToolBar->addAction(m_act_settings);
 	m_settingsToolBar->addAction(m_experimentalAct);
 
@@ -898,12 +896,12 @@ void MainWindow::createToolBars()
 
     // Create another toolbar for the player controls.
     m_controlsToolbar = addToolBar(tr("Player Controls"), "PlayerControlsToolbar");
-//	m_controlsToolbar->setObjectName("PlayerControlsToolbar");
-	m_controlsToolbar->addWidget(m_controls);
+
+    m_controlsToolbar->addWidget(m_controls);
 
 	// Create a toolbar for filtering
     m_filterToolbar = addToolBar(tr("Filter bar"), "FilterToolbar");
-//	m_filterToolbar->setObjectName("FilterToolbar");
+
 	FilterWidget* fw = new FilterWidget;
 	auto filterPatternLabel = new QLabel(tr("&Filter pattern:"));
 	m_filterToolbar->addWidget(filterPatternLabel);
