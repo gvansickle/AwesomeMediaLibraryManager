@@ -180,6 +180,7 @@ set(HEADER_FILES
 	gui/helpers/NetAwareFileDialogGtk3.h
 	gui/helpers/Gtk3DialogHelper.h
 	gui/expdialog.h
+	concurrency/DirectoryScanJob.h
     )
 
 # Source file list.
@@ -252,6 +253,7 @@ set(SOURCE_FILES
 	gui/helpers/Gtk3DialogHelper.cpp
 	gui/expdialog.cpp
 	gui/expdialog.ui
+	concurrency/DirectoryScanJob.cpp
 	)
 
 # NoMoc files.

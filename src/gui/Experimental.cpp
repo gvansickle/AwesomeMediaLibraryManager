@@ -44,6 +44,8 @@
 #include "MainWindow.h"
 #include "expdialog.h"
 
+#include <concurrency/DirectoryScanJob.h>
+
 #endif
 
 
@@ -81,24 +83,17 @@ void Experimental::DoExperiment()
 															);
 #endif
 
-#if 0
+#if 1
 
-	QFileDialog* fd = new QFileDialog(this, "TEST - IS THIS NATIVE?", "file://home/gary");
-	fd->setFileMode(QFileDialog::Directory);
-	fd->setOptions(QFileDialog::ShowDirsOnly);
-	fd->setFilter(QDir::AllDirs);
-	fd->setAcceptMode(QFileDialog::AcceptOpen);
+    auto dsj = new DirectoryScanJob(QUrl("file://home/gary/Music"), QStringList({"*.mp3","*.flac"}));
 
-
-	qInfo() << "layout:" << fd->layout();
-
-	fd->exec();
+    ThreadWeaver::stream() << dsj;
 
 #endif
 
 //	KUrlRequesterDialog::getUrl();
 
-#if 1
+#if 0
 
     // Get dir url.
 //    QUrl dir_url = QFileDialog::getExistingDirectoryUrl(this, tr("EXPERIMENTAL - getExistingDirectoryUrl()"),
