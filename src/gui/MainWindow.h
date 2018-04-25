@@ -492,6 +492,7 @@ private:
 	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
 
+public:
     /// The Activity Progress Widget.
     ActivityProgressWidget* m_activity_progress_widget;
 

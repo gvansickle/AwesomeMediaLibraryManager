@@ -41,6 +41,8 @@
 #include <KIO/DirectorySizeJob>
 //#include <KWidgetJobTracker>
 
+#include "ActivityProgressWidget.h"
+
 #include "MainWindow.h"
 #include "expdialog.h"
 
@@ -91,8 +93,10 @@ void Experimental::DoExperiment()
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
+    auto queue = ThreadWeaver::stream();
 
-    ThreadWeaver::stream() << dsj;
+    MainWindow::getInstance()->m_activity_progress_widget->addActivity(queue);
+    queue << dsj;
 
 #endif
 

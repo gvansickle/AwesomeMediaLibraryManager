@@ -20,16 +20,16 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 #define AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 
-#include <nomocdefs.h>
-
-#include <QtWidgets/QWidget>
+#include <QWidget>
+#include <ThreadWeaver/QueueSignals>
+#include <ThreadWeaver/State>
 
 class QProgressBar;
 class QLabel;
 
 class ActivityProgressWidget : public QWidget
 {
-	W_OBJECT(ActivityProgressWidget)
+    Q_OBJECT
 
 public:
 	explicit ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f = Qt::WindowFlags());
@@ -39,8 +39,14 @@ public Q_SLOTS:
 
 	void onProgressChanged(int min, int val, int max, QString text);
 
-	/// @note This is only needed for the old-style connection syntax and/or QML exposure.
-//	W_SLOT(onProgressChanged)
+    /**
+     * Add a new ThreadWeaver Queue to the collection of activities.
+     */
+    void addActivity(ThreadWeaver::QueueSignals* activity);
+
+protected Q_SLOTS:
+
+    void onTWStateChanged(ThreadWeaver::State* new_state);
 
 private:
 	Q_DISABLE_COPY(ActivityProgressWidget)

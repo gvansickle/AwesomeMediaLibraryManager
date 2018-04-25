@@ -19,14 +19,13 @@
 
 #include "ActivityProgressWidget.h"
 
-#include <nomocimpl.h>
-
 #include <QLabel>
 #include <QProgressBar>
 #include <QHBoxLayout>
 #include <QDebug>
 
-W_OBJECT_IMPL(ActivityProgressWidget)
+#include "utils/DebugHelpers.h"
+
 
 ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f) : QWidget(parent, f)
 {
@@ -63,7 +62,18 @@ void ActivityProgressWidget::onProgressChanged(int min, int val, int max, QStrin
 	m_last_max = max;
 	m_last_val = val;
 
-	m_text_status_label->setText(createTextStatusString());
+    m_text_status_label->setText(createTextStatusString());
+}
+
+void ActivityProgressWidget::addActivity(ThreadWeaver::QueueSignals *activity)
+{
+    connect(activity, &ThreadWeaver::QueueSignals::stateChanged, this, &ActivityProgressWidget::onTWStateChanged);
+}
+
+void ActivityProgressWidget::onTWStateChanged(ThreadWeaver::State *new_state)
+{
+M_WARNING("DO SOMETHING HERE");
+    qDb() << new_state->stateName();
 }
 
 QString ActivityProgressWidget::createTextStatusString()
