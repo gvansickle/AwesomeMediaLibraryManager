@@ -17,39 +17,21 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <src/concurrency/ActivityManager.h>
+#include "concurrency/AMLMJob.h"
 
-#include <ThreadWeaver/QObjectDecorator>
-
-#include <utils/DebugHelpers.h>
-
-///
-ActivityManager ActivityManager::m_the_activity_manager;
-
-
-ActivityManager::ActivityManager()
-{
-    qDb() << "SINGLETON CREATED";
-}
-
-ActivityManager::~ActivityManager()
+AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
+    : KJob(parent), ThreadWeaver::IdDecorator(decoratee, autoDelete)
 {
 
 }
 
-void ActivityManager::addActivity(ThreadWeaver::QObjectDecorator* activity)
+AMLMJob::~AMLMJob()
 {
-    qDb() << "ACTIVITY ADDED:" << activity;
 
-    m_tw_activities.push_back(activity);
-
-    connect(activity, &ThreadWeaver::QObjectDecorator::done,
-            this, &ActivityManager::onActivityFinished);//this, &ActivityManager::onActivityFinished);
 }
 
-void ActivityManager::onActivityFinished(ThreadWeaver::JobPointer activity)
+AMLMJob *AMLMJob::make_amlmjob(ThreadWeaver::IdDecorator *tw_job)
 {
-    // Slot that indicates an activity is complete and should be removed from the list.
-    qDb() << "ACTIVITY FINISHED:" << activity;
+
 }
 

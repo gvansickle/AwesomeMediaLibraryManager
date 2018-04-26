@@ -277,12 +277,14 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsyncTask.h
 	concurrency/function_traits.hpp
 	concurrency/ActivityManager.h
+	concurrency/AMLMJob.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/AsyncTaskManager.cpp
 	concurrency/ExtAsync.cpp
 	concurrency/function_traits.cpp
 	concurrency/ActivityManager.cpp
+	concurrency/AMLMJob.cpp
 	)
 
 #add_subdirectory(gui)
