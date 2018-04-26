@@ -24,6 +24,11 @@
 #include <ThreadWeaver/QueueSignals>
 #include <ThreadWeaver/State>
 
+namespace ThreadWeaver
+{
+    class QObjectDecorator;
+}
+
 class QProgressBar;
 class QLabel;
 
@@ -42,11 +47,11 @@ public Q_SLOTS:
     /**
      * Add a new ThreadWeaver Queue to the collection of activities.
      */
-    void addActivity(ThreadWeaver::QueueSignals* activity);
+    void addActivity(ThreadWeaver::QObjectDecorator *activity);
 
 protected Q_SLOTS:
 
-    void onTWStateChanged(ThreadWeaver::State* new_state);
+    void onTWJobDone(ThreadWeaver::JobPointer job);
 
 private:
 	Q_DISABLE_COPY(ActivityProgressWidget)

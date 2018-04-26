@@ -22,10 +22,11 @@
 #include <QString>
 #include <QUrl>
 #include <QDirIterator>
+#include <ThreadWeaver/DebuggingAids>
 
 #include "utils/DebugHelpers.h"
 
-DirectoryScanJob::DirectoryScanJob(const QUrl &dir_url,
+DirectoryScanner::DirectoryScanner(const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
@@ -34,13 +35,13 @@ DirectoryScanJob::DirectoryScanJob(const QUrl &dir_url,
 
 }
 
-DirectoryScanJob::~DirectoryScanJob()
+DirectoryScanner::~DirectoryScanner()
 {
 
 }
 
 
-void DirectoryScanJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
+void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
 	qDb() << "Hello";
 
@@ -109,5 +110,20 @@ void DirectoryScanJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 //		{
 //			report_and_control.setProgressRange(0, num_possible_files);
 //			report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
-//		}
+        //		}
+}
+
+void DirectoryScanner::defaultBegin(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)
+{
+    qDb() << "BEGIN";
+}
+
+void DirectoryScanner::defaultEnd(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)
+{
+    qDb() << "END";
+}
+
+bool DirectoryScanner::success() const
+{
+    return true;
 }

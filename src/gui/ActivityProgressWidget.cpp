@@ -19,10 +19,18 @@
 
 #include "ActivityProgressWidget.h"
 
+// Qt5
+
 #include <QLabel>
 #include <QProgressBar>
 #include <QHBoxLayout>
 #include <QDebug>
+
+// KF5
+
+#include <ThreadWeaver/QObjectDecorator>
+
+// Ours
 
 #include "utils/DebugHelpers.h"
 
@@ -65,15 +73,15 @@ void ActivityProgressWidget::onProgressChanged(int min, int val, int max, QStrin
     m_text_status_label->setText(createTextStatusString());
 }
 
-void ActivityProgressWidget::addActivity(ThreadWeaver::QueueSignals *activity)
+void ActivityProgressWidget::addActivity(ThreadWeaver::QObjectDecorator* activity)
 {
-    connect(activity, &ThreadWeaver::QueueSignals::stateChanged, this, &ActivityProgressWidget::onTWStateChanged);
+    connect(activity, &ThreadWeaver::QObjectDecorator::done, this, &ActivityProgressWidget::onTWJobDone);
 }
 
-void ActivityProgressWidget::onTWStateChanged(ThreadWeaver::State *new_state)
+void ActivityProgressWidget::onTWJobDone(ThreadWeaver::JobPointer job)
 {
 M_WARNING("DO SOMETHING HERE");
-    qDb() << new_state->stateName();
+    qDb() << "JOB COMPLETE, STATUS:" << job->status();
 }
 
 QString ActivityProgressWidget::createTextStatusString()

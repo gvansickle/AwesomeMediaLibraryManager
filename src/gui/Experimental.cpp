@@ -89,13 +89,13 @@ void Experimental::DoExperiment()
 
     QUrl dir_url("file://home/gary/Music");
     //QUrl("file://home/gary/Music"), QStringList({"*.mp3","*.flac"}));
-    auto dsj = new DirectoryScanJob(dir_url,
+    auto dsj = new DirectoryScannerJob(dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     auto queue = ThreadWeaver::stream();
 
-    MainWindow::getInstance()->m_activity_progress_widget->addActivity(queue);
+    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
     queue << dsj;
 
 #endif
