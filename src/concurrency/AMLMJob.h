@@ -26,12 +26,12 @@
 #include <ThreadWeaver/QObjectDecorator>
 
 /**
- * Class which bridges the hard-to-understand gap between a ThreadWeaver {QObject,Id}Decorator and a KIO::Job-derived class.
+ * Class which bridges the hard-to-understand gap between a ThreadWeaver {QObject,Id}Decorator and a KJob-derived class.
  * Note multiple inheritance in effect here.  Ok since IdDecoration doesn't inherit from QObject.
  */
 class AMLMJob: public KJob, public ThreadWeaver::IdDecorator
 {
-    /// IdDecorator signals:
+    /// IdDecorator signals, only three:
     /*
     *  // This signal is emitted when this job is being processed by a thread.
     *  void started(ThreadWeaver::JobPointer);
@@ -40,6 +40,20 @@ class AMLMJob: public KJob, public ThreadWeaver::IdDecorator
     *  // This signal is emitted when success() returns false after the job is executed.
     *  void failed(ThreadWeaver::JobPointer);
     */
+	/// KJob signals, quite a few:
+	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
+	// void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
+	// void 	percent (KJob *job, unsigned long percent)
+	// void 	processedAmount (KJob *job, KJob::Unit unit, qulonglong amount)
+	// void 	processedSize (KJob *job, qulonglong size)
+	// void 	result (KJob *job)
+	// void 	resumed (KJob *job)
+	// void 	speed (KJob *job, unsigned long speed)
+	// void 	suspended (KJob *job)
+	// void 	totalAmount (KJob *job, KJob::Unit unit, qulonglong amount)
+	// void 	totalSize (KJob *job, qulonglong size)
+	// void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
+
 public:
     AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent = nullptr);
     ~AMLMJob();
