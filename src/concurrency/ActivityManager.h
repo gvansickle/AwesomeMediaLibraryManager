@@ -9,11 +9,14 @@
 #define SRC_CONCURRENCY_ActivityManager_H_
 
 #include <QObject>
+#include <QVector>
 
 namespace ThreadWeaver
 {
 	class QObjectDecorator;
+//    class JobPointer;
 }
+#include <ThreadWeaver/JobPointer>
 
 struct ActivityStatus
 {
@@ -39,6 +42,8 @@ public:
     ActivityManager();
     ~ActivityManager() override;
 
+    static ActivityManager& instance() { return m_the_activity_manager; }
+
     /**
      * Add a decorated ThreadWeaver Job/Queue/Weaver to the collection of activities.
      */
@@ -51,11 +56,13 @@ protected:
 
 protected Q_SLOTS:
 
-    void onActivityFinished(ThreadWeaver::QObjectDecorator *activity);
+    void onActivityFinished(ThreadWeaver::JobPointer activity);
 
 private:
 
-    QVector<ThreadWeaver::QObjectDecorator*> m_tw_activities;
+    static ActivityManager m_the_activity_manager;
+
+    QVector<ThreadWeaver::QObjectDecorator *> m_tw_activities;
 };
 
 #endif /* SRC_CONCURRENCY_ActivityManager_H_ */

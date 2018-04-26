@@ -127,6 +127,8 @@ void DirectoryScanner::defaultBegin(const ThreadWeaver::JobPointer &job, ThreadW
 void DirectoryScanner::defaultEnd(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)
 {
     qDb() << "END";
+
+    Q_EMIT ;
 }
 
 bool DirectoryScanner::success() const

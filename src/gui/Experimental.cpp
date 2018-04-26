@@ -41,6 +41,7 @@
 #include <KIO/DirectorySizeJob>
 //#include <KWidgetJobTracker>
 
+#include "concurrency/ActivityManager.h"
 #include "ActivityProgressWidget.h"
 
 #include "MainWindow.h"
@@ -95,6 +96,7 @@ void Experimental::DoExperiment()
 
     auto queue = ThreadWeaver::stream();
 
+    ActivityManager::instance().addActivity(dsj);
     MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
     queue << dsj;
 
