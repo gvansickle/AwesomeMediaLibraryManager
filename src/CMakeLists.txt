@@ -276,11 +276,13 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncTask.h
 	concurrency/function_traits.hpp
+	concurrency/ActivityManager.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/AsyncTaskManager.cpp
 	concurrency/ExtAsync.cpp
 	concurrency/function_traits.cpp
+	concurrency/ActivityManager.cpp
 	)
 
 #add_subdirectory(gui)

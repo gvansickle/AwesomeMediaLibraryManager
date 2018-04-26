@@ -45,6 +45,11 @@ public:
 	~DirectoryScanner() override;
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
+
+    // For both Begin and End here:
+    // "The default implementation is empty. job is the Job that the queue is executing. It is not necessarily
+    // equal to this. For example, Jobs that are decorated expose the decorator's address, not the address of
+    // the decorated object."
     void defaultBegin(const ThreadWeaver::JobPointer& job, ThreadWeaver::Thread *thread) override;
     void defaultEnd(const ThreadWeaver::JobPointer& job, ThreadWeaver::Thread *thread) override;
 
@@ -62,6 +67,17 @@ private:
 /**
  * Decorator to allow a wrapped DirectoryScanner to communicate with the outside world.
  * Inherits from QObject and IdDecorator.
+ *
+ * This decorator gets us the following defined signals:
+ *
+ *  // This signal is emitted when this job is being processed by a thread.
+ *  void started(ThreadWeaver::JobPointer);
+ *  // This signal is emitted when the job has been finished (no matter if it succeeded or not).
+ *  void done(ThreadWeaver::JobPointer);
+ *  // This signal is emitted when success() returns false after the job is executed.
+ *  void failed(ThreadWeaver::JobPointer);
+ *
+ * And that appears to be pretty much it, no progress or anything.
  */
 class DirectoryScannerJob : public ThreadWeaver::QObjectDecorator
 {

@@ -43,6 +43,11 @@ DirectoryScanner::~DirectoryScanner()
 
 void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
+	// Per the instructions here: https://api.kde.org/frameworks/threadweaver/html/classThreadWeaver_1_1Job.html#a1dd5d0ec7e1953576d6fe787f3cfd30c
+	// "Whenever publishing information about the job to the outside world, for example by emitting signals, use self,
+	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
+	// other things prevent thejob from being memory managed and deleted."
+
 	qDb() << "Hello";
 
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
@@ -115,6 +120,7 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 
 void DirectoryScanner::defaultBegin(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)
 {
+
     qDb() << "BEGIN";
 }
 
