@@ -23,6 +23,7 @@
 #include <QWidget>
 #include <ThreadWeaver/QueueSignals>
 #include <ThreadWeaver/State>
+#include <concurrency/AMLMJob.h>
 
 namespace ThreadWeaver
 {
@@ -48,6 +49,8 @@ public Q_SLOTS:
      * Add a new ThreadWeaver Queue to the collection of activities.
      */
     void addActivity(ThreadWeaver::QObjectDecorator *activity);
+
+    void addActivity(AMLMJob* activity);
 
 protected Q_SLOTS:
 

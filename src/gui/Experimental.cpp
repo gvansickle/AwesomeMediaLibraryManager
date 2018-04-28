@@ -40,13 +40,14 @@
 #include <KIO/ListJob>
 #include <KIO/DirectorySizeJob>
 //#include <KWidgetJobTracker>
+#include <ThreadWeaver/DebuggingAids>
 
 #include "concurrency/ActivityManager.h"
 #include "ActivityProgressWidget.h"
 
 #include "MainWindow.h"
-#include "expdialog.h"
 
+#include "expdialog.h"
 #include <concurrency/DirectoryScanJob.h>
 
 #endif
@@ -87,17 +88,24 @@ void Experimental::DoExperiment()
 #endif
 
 #if 1
+    ThreadWeaver::setDebugLevel(true, 5);
 
-    QUrl dir_url("file://home/gary/Music");
+    QUrl dir_url("smb://storey.local/music/");
     //QUrl("file://home/gary/Music"), QStringList({"*.mp3","*.flac"}));
-    auto dsj = new DirectoryScannerJob(dir_url,
+    auto ds = new DirectoryScanner/*Job*/(dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     auto queue = ThreadWeaver::stream();
 
+    auto amlm_job = new AMLMJob(ds, /*Autodelete?*/ false, this);
+    auto dsj = amlm_job;
+
     ActivityManager::instance().addActivity(dsj);
     MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
+
+    MainWindow::getInstance()->registerJob(dsj);
+
     queue << dsj;
 
 #endif

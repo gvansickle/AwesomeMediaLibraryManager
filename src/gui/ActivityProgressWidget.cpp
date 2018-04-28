@@ -78,6 +78,11 @@ void ActivityProgressWidget::addActivity(ThreadWeaver::QObjectDecorator* activit
     connect(activity, &ThreadWeaver::QObjectDecorator::done, this, &ActivityProgressWidget::onTWJobDone);
 }
 
+void ActivityProgressWidget::addActivity(AMLMJob *activity)
+{
+//    connect();
+}
+
 void ActivityProgressWidget::onTWJobDone(ThreadWeaver::JobPointer job)
 {
 M_WARNING("DO SOMETHING HERE");

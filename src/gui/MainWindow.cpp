@@ -31,6 +31,7 @@
 #include <KAboutData>
 #include <KSharedConfig>
 
+#include <KJob>
 #include <KIO/Job>
 #include <KIO/JobTracker>
 #include <KJobWidgets>
@@ -724,11 +725,8 @@ M_WARNING("/// @todo This doesn't work for unknown reasons.");
 
     m_menu_view->addSection(tr("Toolbars2"));
     auto tbs = toolBars();
-    qDb() << "tb:" << tbs;
-
     for(auto tb : tbs)
     {
-        qDb() << "ToolBar:" << tb;
         auto action = tb->toggleViewAction();
         m_menu_view->addAction(action);
     }
@@ -917,7 +915,6 @@ void MainWindow::createStatusBar()
     m_kf5_activity_progress_widget = new KStatusBarJobTracker(this, /*display cancel button*/ true);
     KIO::setJobTracker(m_kf5_activity_progress_widget);
     m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);
-//    KIO::setJobTracker(m_kf5_activity_progress_widget);
 //    statusBar()->addPermanentWidget(m_kf5_activity_progress_widget);
 #endif
 
@@ -1964,7 +1961,7 @@ void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
     m_mdi_area->setActiveSubWindow(window);
 }
 
-void MainWindow::registerJob(KIO::Job *new_job)
+void MainWindow::registerJob(KJob *new_job)
 {
     statusBar()->show();
     KJobWidgets::setWindow(new_job, this);

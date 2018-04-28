@@ -20,6 +20,8 @@
 #ifndef SRC_CONCURRENCY_ActivityManager_H_
 #define SRC_CONCURRENCY_ActivityManager_H_
 
+#include "AMLMJob.h"
+
 #include <QObject>
 #include <QVector>
 
@@ -28,6 +30,8 @@ namespace ThreadWeaver
 	class QObjectDecorator;
 }
 #include <ThreadWeaver/JobPointer>
+
+class AMLMJob;
 
 struct ActivityStatus
 {
@@ -60,6 +64,9 @@ public:
      */
     void addActivity(ThreadWeaver::QObjectDecorator *activity);
 
+    void addActivity(AMLMJob* activity);
+
+
 public Q_SLOTS:
 
 
@@ -69,11 +76,15 @@ protected Q_SLOTS:
 
     void onActivityFinished(ThreadWeaver::JobPointer activity);
 
+    void onActivityFinished(AMLMJob* activity);
+
 private:
 
     static ActivityManager m_the_activity_manager;
 
     QVector<ThreadWeaver::QObjectDecorator *> m_tw_activities;
+
+    QVector<AMLMJob*> m_amlm_activities;
 };
 
 #endif /* SRC_CONCURRENCY_ActivityManager_H_ */

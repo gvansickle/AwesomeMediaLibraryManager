@@ -24,6 +24,7 @@
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
+class KJob;
 namespace KIO
 {
     class Job;
@@ -196,7 +197,7 @@ public Q_SLOTS:
 	 */
 	void setActiveSubWindow(QMdiSubWindow* window);
 
-    void registerJob(KIO::Job* new_job);
+    void registerJob(KJob *new_job);
 
 protected:
 	bool queryClose() override;

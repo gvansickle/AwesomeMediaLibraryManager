@@ -17,13 +17,14 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <src/concurrency/ActivityManager.h>
+#include "ActivityManager.h"
 
+#include <concurrency/AMLMJob.h>
 #include <ThreadWeaver/QObjectDecorator>
 
 #include <utils/DebugHelpers.h>
 
-///
+/// The singleton.
 ActivityManager ActivityManager::m_the_activity_manager;
 
 
@@ -44,12 +45,30 @@ void ActivityManager::addActivity(ThreadWeaver::QObjectDecorator* activity)
     m_tw_activities.push_back(activity);
 
     connect(activity, &ThreadWeaver::QObjectDecorator::done,
-            this, &ActivityManager::onActivityFinished);//this, &ActivityManager::onActivityFinished);
+            this, qOverload<ThreadWeaver::JobPointer>(&ActivityManager::onActivityFinished));
+}
+
+void ActivityManager::addActivity(AMLMJob *activity)
+{
+    qDb() << "ACTIVITY ADDED, AMLMJob:" << activity;
+
+    m_amlm_activities.push_back(activity);
+
+    connect(activity, &AMLMJob::finished, [this](KJob* job){
+        auto as_amlmjob = qobject_cast<AMLMJob*>(job);
+        Q_CHECK_PTR(as_amlmjob);
+        onActivityFinished(as_amlmjob);
+    });
 }
 
 void ActivityManager::onActivityFinished(ThreadWeaver::JobPointer activity)
 {
     // Slot that indicates an activity is complete and should be removed from the list.
     qDb() << "ACTIVITY FINISHED:" << activity;
+}
+
+void ActivityManager::onActivityFinished(AMLMJob* activity)
+{
+    qDb() << "ACTIVITYFINISHED/AMLMJob" << activity;
 }
 

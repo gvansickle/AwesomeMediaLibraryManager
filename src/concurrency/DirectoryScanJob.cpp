@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "AMLMJob.h"
 #include "DirectoryScanJob.h"
 
 #include <QString>
@@ -50,6 +51,9 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 
 	qDb() << "Hello";
 
+    QSharedPointer<AMLMJob> aself = qSharedPointerCast<AMLMJob>(self);
+    Q_CHECK_PTR(aself);
+
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 
 		int num_files_found_so_far = 0;
@@ -76,12 +80,12 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 			QString entry_path = m_dir_iterator.next();
 			auto file_info = m_dir_iterator.fileInfo();
 
-            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
+//            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
 			if(file_info.isDir())
 			{
 				QDir dir = file_info.absoluteDir();
-                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
+//                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
 
 				// Update the max range to be the number of files we know we've found so far plus the number
 				// of files potentially in this directory.
@@ -94,7 +98,7 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 				// It's a file.
 				num_files_found_so_far++;
 
-                qDebug() << "ITS A FILE";
+//                qDebug() << "ITS A FILE";
 
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
