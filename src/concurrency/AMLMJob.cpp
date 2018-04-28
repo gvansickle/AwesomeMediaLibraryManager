@@ -56,7 +56,7 @@ AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
 
 AMLMJob::~AMLMJob()
 {
-    qDb() << "DELETE";
+    qDb() << "DESTRUCTOR";
 }
 
 void AMLMJob::start()
@@ -64,6 +64,26 @@ void AMLMJob::start()
     /// @todo Do we need to do anything here?  Has the TW Job started already?
 
     qDb() << "AMLMJob::start(), TWJob status:" << status();
+}
+
+void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
+{
+    KJob::setProcessedAmount(unit, amount);
+}
+
+void AMLMJob::setTotalAmount(KJob::Unit unit, qulonglong amount)
+{
+    KJob::setTotalAmount(unit, amount);
+}
+
+void AMLMJob::setPercent(unsigned long percentage)
+{
+    this->KJob::setPercent(percentage);
+}
+
+void AMLMJob::emitResult()
+{
+    KJob::emitResult();
 }
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)

@@ -19,9 +19,11 @@
 
 #include "AMLMApp.h"
 
+#include <KJob>
+
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
-
+    qRegisterMetaType<KJob::Unit>();
 }
 
 AMLMApp::~AMLMApp()

@@ -90,8 +90,8 @@ void Experimental::DoExperiment()
 #if 1
     ThreadWeaver::setDebugLevel(true, 5);
 
-    QUrl dir_url("smb://storey.local/music/");
-    //QUrl("file://home/gary/Music"), QStringList({"*.mp3","*.flac"}));
+//    QUrl dir_url("smb://storey.local/music/");
+    QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
     auto ds = new DirectoryScanner/*Job*/(dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);

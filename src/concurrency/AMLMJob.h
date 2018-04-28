@@ -123,6 +123,18 @@ public:
 
     Q_SCRIPTABLE void start() override;
 
+public:
+    // Making some of the Protected interface Public for the benefit of reporting.
+    // Don't really like this.
+
+    void setError(int errorCode);
+    void setErrorText(const QString &errorText);
+    void setProcessedAmount(Unit unit, qulonglong amount);
+    void setTotalAmount(Unit unit, qulonglong amount);
+    void setPercent(unsigned long percentage);
+
+    void emitResult();
+
 protected:
     /**
      * Override of ::IdDecorator.

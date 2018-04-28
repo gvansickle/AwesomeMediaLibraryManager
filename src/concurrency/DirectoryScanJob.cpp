@@ -60,8 +60,14 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 		uint num_possible_files = 0;
 		QString status_text = QObject::tr("Scanning for music files");
 
+        Q_EMIT aself->description(static_cast<KJob*>(aself.data()),
+                                  QObject::tr("Scanning for music files"),
+                                    QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
+                                    QPair<QString,QString>(QObject::tr("Current file:"), QObject::tr("")));
+
 //		report_and_control.setProgressRange(0, 0);
 //		report_and_control.setProgressValueAndText(0, status_text);
+        aself->setPercent(0);
 
 		while(m_dir_iterator.hasNext())
 		{
@@ -102,12 +108,20 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
+
+                Q_EMIT aself->description(static_cast<KJob*>(aself.data()),
+                                          QObject::tr("Scanning for music files"),
+                                            QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
+                                            QPair<QString,QString>(QObject::tr("Current file:"), file_url.toString()));
+
 				// Send this path to the future.
 //				report_and_control.reportResult(file_url.toString());
 
 //                qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
 				// Update progress.
 //				report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
+                aself->setProcessedAmount(KJob::Unit::Files, num_files_found_so_far);
+                aself->setTotalAmount(KJob::Unit::Files, num_possible_files);
 			}
 		}
 
@@ -120,6 +134,8 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 //			report_and_control.setProgressRange(0, num_possible_files);
 //			report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
         //		}
+
+        aself->emitResult();
 }
 
 void DirectoryScanner::defaultBegin(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)
