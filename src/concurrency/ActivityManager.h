@@ -52,12 +52,24 @@ class ActivityManager: public QObject
 Q_SIGNALS:
     void totalStatusChanged(ActivityStatus total_status);
 
+private:
+    /// Singleton, hide the constructor.
+    explicit ActivityManager(QObject* parent = nullptr);
 
 public:
-    ActivityManager();
     ~ActivityManager() override;
 
-    static ActivityManager& instance() { return m_the_activity_manager; }
+    /**
+     * Important safety tip per the Qt5 docs (http://doc.qt.io/qt-5/threads-qobject.html):
+     * "In general, creating QObjects before the QApplication is not supported and can lead to weird crashes on exit,
+     *  depending on the platform. This means static instances of QObject are also not supported. A properly
+     *  structured single or multi-threaded application should make the QApplication be the first created, and
+     *  last destroyed QObject."
+     */
+    static ActivityManager* instance();
+
+    /// Destruct the singleton.
+    static void destroy();
 
     /**
      * Add a decorated ThreadWeaver Job/Queue/Weaver to the collection of activities.
@@ -80,7 +92,10 @@ protected Q_SLOTS:
 
 private:
 
-    static ActivityManager m_the_activity_manager;
+    /// The singleton.
+    /// This cannot be a static value member because of Qt5 (surprise).  This
+    /// is a QObject and QObects need to be created after the QApplication is created.
+    static ActivityManager* m_the_activity_manager;
 
     QVector<ThreadWeaver::QObjectDecorator *> m_tw_activities;
 

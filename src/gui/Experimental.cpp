@@ -101,10 +101,10 @@ void Experimental::DoExperiment()
     auto amlm_job = new AMLMJob(ds, /*Autodelete?*/ false, this);
     auto dsj = amlm_job;
 
-    ActivityManager::instance().addActivity(dsj);
-    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
+    ActivityManager::instance()->addActivity(dsj);
+//    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
-    MainWindow::getInstance()->registerJob(dsj);
+//    MainWindow::getInstance()->registerJob(dsj);
 
     queue << dsj;
 

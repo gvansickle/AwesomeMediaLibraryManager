@@ -19,21 +19,32 @@
 
 #include "ActivityManager.h"
 
+#include "AMLMApp.h"
 #include <concurrency/AMLMJob.h>
 #include <ThreadWeaver/QObjectDecorator>
 
 #include <utils/DebugHelpers.h>
 
 /// The singleton.
-ActivityManager ActivityManager::m_the_activity_manager;
+ActivityManager* ActivityManager::m_the_activity_manager = nullptr;
 
 
-ActivityManager::ActivityManager()
+ActivityManager::ActivityManager(QObject *parent)
 {
     qDb() << "SINGLETON CREATED";
 }
 
 ActivityManager::~ActivityManager()
+{
+
+}
+
+ActivityManager *ActivityManager::instance()
+{
+    return m_the_activity_manager ? m_the_activity_manager : new ActivityManager(amlmApp);
+}
+
+void ActivityManager::destroy()
 {
 
 }

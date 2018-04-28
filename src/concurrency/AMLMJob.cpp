@@ -43,15 +43,15 @@ AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
     // internal QObjectDecorator->external QObjectDecorator interface.
     /// @todo Could we get rid of the internal QObjectDecorator?
     /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
-    connect(m_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::started);
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::started);
 
     //  void done(ThreadWeaver::JobPointer);
     // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    connect(m_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::done);
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::done);
 
     //  void failed(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
-    connect(m_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
 }
 
 AMLMJob::~AMLMJob()
@@ -88,8 +88,12 @@ void AMLMJob::emitResult()
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    qDb() << "HERE";
+
     // Essentially a duplicate of QObjectDecorator's implementation.
     Q_ASSERT(job());
+
+    qDb() << "autoDelete()?:" << autoDelete();
 
     Q_EMIT started(self);
 
@@ -98,6 +102,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    qDb() << "HERE";
     // Essentially a duplicate of QObjectDecorator's implementation.
     Q_ASSERT(job());
 

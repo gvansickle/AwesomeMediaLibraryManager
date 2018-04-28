@@ -31,7 +31,7 @@
  * This is the actual ThreadWeaver::Job.
  * Does not derive from QObject (or anything else).
  */
-class DirectoryScanner : public ThreadWeaver::Job
+class DirectoryScanner : public ThreadWeaver::Job      /// @todo Should we really be deriving from AMLMJob here instead of ThreadWeaver::Job?
 {
     /// @todo Do we actually need this?
     friend class DirectoryScannerJob;
@@ -50,6 +50,8 @@ public:
     // "The default implementation is empty. job is the Job that the queue is executing. It is not necessarily
     // equal to this. For example, Jobs that are decorated expose the decorator's address, not the address of
     // the decorated object."
+    /// @note DO NOT call the base class implementation of these here.  AMLMJob will do that.
+    /// @todo Should we really be deriving from AMLMJob here instead of ThreadWeaver::Job?
     void defaultBegin(const ThreadWeaver::JobPointer& job, ThreadWeaver::Thread *thread) override;
     void defaultEnd(const ThreadWeaver::JobPointer& job, ThreadWeaver::Thread *thread) override;
 

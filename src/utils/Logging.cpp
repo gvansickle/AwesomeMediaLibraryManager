@@ -58,7 +58,7 @@ QString Logging::ClickableLinkPattern()
 {
 	// In QtCreator, this magic pattern will result in a link you can click to go to the source of the message.
 	// Must start with three spaces.
-	/// @todo Doesn't seem to work.
+	/// @todo This doesn't seem to work with current QtCreator and relative paths anyway.
 	return "   Loc: [%{file}:%{line}]";
 }
 

@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
 					   "%{if-fatal}FATAL%{endif}"
 					   "]"
-						+ logging.ClickableLinkPattern() +
-					   /*"%{function}:%{line}*/ " - %{message}"
+					   /*	+ logging.ClickableLinkPattern() + */
+					   "%{function}:%{line} - %{message}"
 					   "%{if-fatal}%{backtrace}%{endif}");
 
 	// Logging test.
@@ -91,6 +91,7 @@ int main(int argc, char *argv[])
 
 	//
 	// Create the Qt5 app.
+    // @note Must be the first QObject created and the last QObject deleted.
 	//
     AMLMApp app(argc, argv);
 
@@ -176,8 +177,7 @@ int main(int argc, char *argv[])
 	// Register types with Qt.
 	RegisterQtMetatypes();
 
-M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
-#if 1
+M_WARNING("icons not installed properly");
     // Load the icon resources.
 	auto rccs = {"icons_oxygen.rcc"};
 	for(auto fname : rccs)
@@ -192,7 +192,7 @@ M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 			qIn() << "Loaded RCC file:" << fname;
 		}
 	}
-#endif
+
 	// Set the application Icon.
 	// "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
 	// the desktop file, make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo"))); (in GUI apps)."

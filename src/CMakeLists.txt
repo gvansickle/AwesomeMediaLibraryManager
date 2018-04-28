@@ -413,6 +413,8 @@ download_project(PROJ                googletest
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 	EXCLUDE_FROM_ALL)
+# We don't want AUTOMOC etc. applied to googletest.
+set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY SKIP_AUTOGEN ON)
 
 #enable_testing()
 set(TEST_EXE_TARGET alltests)

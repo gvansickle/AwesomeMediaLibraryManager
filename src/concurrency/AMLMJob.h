@@ -139,7 +139,7 @@ public:
 
 protected:
     /**
-     * Override of ::IdDecorator.
+     * Override of ::IdDecorator functions.
      */
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
     void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
@@ -150,8 +150,10 @@ private:
 
     /**
      * The ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy between us and the
+     *
+     * @note QJobPointer is typedef QSharedPointer<QObjectDecorator>.
      */
-    ThreadWeaver::QObjectDecorator* m_tw_job_qobj_decorator;
+    ThreadWeaver::QJobPointer m_tw_job_qobj_decorator;
 };
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */
