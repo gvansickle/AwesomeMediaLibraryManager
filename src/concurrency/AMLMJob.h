@@ -28,12 +28,14 @@
 
 /**
  * Class which bridges the hard-to-understand gap between a ThreadWeaver::{QObject,Id}Decorator and a KJob-derived class.
- * Note multiple inheritance in effect here.  Ok since ThreadWeaver::IdDecorator doesn't inherit from QObject.
  *
- * Goal is to make this one object be:
+ * Goal is to make this one object be both a floor wax and a dessert topping:
  * - A KJob to interfaces which need it, in particular:
  * -- KAbstractWidgetJobTracker and derived classes' registerJob()/unregisterJob() slots.
  * - A ThreadWeaver::IdDecorator for consumption by ThreadWeaver::Job::run(JobPointer self, Thread *thread)
+ *
+ * @note multiple inheritance in effect here.  Ok since ThreadWeaver::IdDecorator doesn't inherit from QObject.
+ *
  */
 class AMLMJob: public KJob, public ThreadWeaver::IdDecorator
 {
