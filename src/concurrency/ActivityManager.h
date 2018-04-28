@@ -74,7 +74,7 @@ public:
     /**
      * Add a decorated ThreadWeaver Job/Queue/Weaver to the collection of activities.
      */
-    void addActivity(ThreadWeaver::QObjectDecorator *activity);
+//    void addActivity(ThreadWeaver::QObjectDecorator *activity);
 
     void addActivity(AMLMJob* activity);
 

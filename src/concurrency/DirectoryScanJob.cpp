@@ -38,7 +38,7 @@ DirectoryScanner::DirectoryScanner(const QUrl &dir_url,
 
 DirectoryScanner::~DirectoryScanner()
 {
-
+    qDb() << "DESTRUCTOR";
 }
 
 
@@ -60,7 +60,7 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 		uint num_possible_files = 0;
 		QString status_text = QObject::tr("Scanning for music files");
 
-        Q_EMIT aself->description(static_cast<KJob*>(aself.data()),
+        Q_EMIT aself->description(aself->asKJob(),
                                   QObject::tr("Scanning for music files"),
                                     QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
                                     QPair<QString,QString>(QObject::tr("Current file:"), QObject::tr("")));
@@ -86,7 +86,7 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 			QString entry_path = m_dir_iterator.next();
 			auto file_info = m_dir_iterator.fileInfo();
 
-//            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
+            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
 			if(file_info.isDir())
 			{
@@ -109,7 +109,7 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
 
-                Q_EMIT aself->description(static_cast<KJob*>(aself.data()),
+                Q_EMIT aself->description(aself->asKJob(),
                                           QObject::tr("Scanning for music files"),
                                             QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
                                             QPair<QString,QString>(QObject::tr("Current file:"), file_url.toString()));
@@ -135,7 +135,11 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 //			report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
         //		}
 
+        qDb() << "EMITTING RESULT";
+
         aself->emitResult();
+
+        qDb() << "LEAVING RUN";
 }
 
 void DirectoryScanner::defaultBegin(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)

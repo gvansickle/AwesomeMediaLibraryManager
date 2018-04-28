@@ -125,6 +125,9 @@ public:
 
     Q_SCRIPTABLE void start() override;
 
+    KJob* asKJob();
+    ThreadWeaver::IdDecorator* asIdDecorator();
+
 public:
     // Making some of the Protected interface Public for the benefit of reporting.
     // Don't really like this.

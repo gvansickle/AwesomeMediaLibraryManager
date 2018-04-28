@@ -30,8 +30,11 @@
 /**
  * This is the actual ThreadWeaver::Job.
  * Does not derive from QObject (or anything else).
+ *
+ * @todo Q: Should we really be deriving from AMLMJob here instead of ThreadWeaver::Job?
+ *       A: Not sure, this is how ThreadWeaver examples do it, adding the decorator separately if necessary.
  */
-class DirectoryScanner : public ThreadWeaver::Job      /// @todo Should we really be deriving from AMLMJob here instead of ThreadWeaver::Job?
+class DirectoryScanner : public ThreadWeaver::Job
 {
     /// @todo Do we actually need this?
     friend class DirectoryScannerJob;

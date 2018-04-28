@@ -66,6 +66,20 @@ void AMLMJob::start()
     qDb() << "AMLMJob::start(), TWJob status:" << status();
 }
 
+KJob* AMLMJob::asKJob()
+{
+    auto retval = dynamic_cast<KJob*>(this);
+    Q_CHECK_PTR(retval);
+    return retval;
+}
+
+ThreadWeaver::IdDecorator* AMLMJob::asIdDecorator()
+{
+    auto retval = dynamic_cast<ThreadWeaver::IdDecorator*>(this);
+    Q_CHECK_PTR(retval);
+    return retval;
+}
+
 void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
 {
     KJob::setProcessedAmount(unit, amount);
@@ -109,8 +123,10 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     job()->defaultEnd(self, thread);
     if(!self->success())
     {
+        qWr() << "FAILED";
         Q_EMIT failed(self);
     }
+    qDb() << "EMITTING DONE";
     Q_EMIT done(self);
 }
 

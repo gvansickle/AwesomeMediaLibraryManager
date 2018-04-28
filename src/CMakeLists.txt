@@ -35,7 +35,7 @@ set(AMLM_TAGLIB_TARGET "")
 set(USE_BUNDLED_LIBCUE TRUE)
 
 if(NOT WIN32)
-    pkg_check_modules(TAGLIB REQUIRED taglib>=1.6
+    pkg_check_modules(TAGLIB REQUIRED taglib>=1.11
 			IMPORTED_TARGET)
 	if(TAGLIB_FOUND)
 		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
@@ -80,8 +80,10 @@ else()
     set(AMLM_TAGLIB_TARGET "taglib")
 
     #print_target_properties(${AMLM_TAGLIB_TARGET})
-
 endif()
+# Taglib doesn't want AUTOMOC etc. applied to it.
+### Can't do this if TARGET is INTERFACE.
+#set_property(TARGET ${AMLM_TAGLIB_TARGET} PROPERTY SKIP_AUTOGEN ON)
 
 if(USE_BUNDLED_LIBCUE)
 	# Use the in-tree copy of libcue.
@@ -100,6 +102,8 @@ else()
 		set(AMLM_LIBCUE_TARGET "PkgConfig::LIBCUE")
 	endif()
 endif()
+# libcue doesn't want AUTOMOC etc. applied to it.
+set_property(TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SKIP_AUTOGEN ON)
 
 # Verdigris is just two headers.
 set(USE_BUNDLED_VERDIGRIS 1)

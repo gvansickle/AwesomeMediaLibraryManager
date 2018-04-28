@@ -62,10 +62,10 @@ int main(int argc, char *argv[])
 					   "%{time hh:mm:ss.zzz} "
 					   "%{threadid} "
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
-					   "%{if-fatal}FATAL%{endif}"
-					   "]"
+                       "%{if-fatal}FATAL%{endif}"
+                       "] "
 					   /*	+ logging.ClickableLinkPattern() + */
-					   "%{function}:%{line} - %{message}"
+                       "%{function}:%{line} - %{message}"
 					   "%{if-fatal}%{backtrace}%{endif}");
 
 	// Logging test.

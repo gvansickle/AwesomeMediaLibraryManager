@@ -20,6 +20,7 @@
 #include "ActivityManager.h"
 
 #include "AMLMApp.h"
+#include <QObject>
 #include <concurrency/AMLMJob.h>
 #include <ThreadWeaver/QObjectDecorator>
 
@@ -49,15 +50,15 @@ void ActivityManager::destroy()
 
 }
 
-void ActivityManager::addActivity(ThreadWeaver::QObjectDecorator* activity)
-{
-    qDb() << "ACTIVITY ADDED:" << activity;
-
-    m_tw_activities.push_back(activity);
-
-    connect(activity, &ThreadWeaver::QObjectDecorator::done,
-            this, qOverload<ThreadWeaver::JobPointer>(&ActivityManager::onActivityFinished));
-}
+//void ActivityManager::addActivity(ThreadWeaver::QObjectDecorator* activity)
+//{
+//    qDb() << "ACTIVITY ADDED:" << activity;
+//
+//    m_tw_activities.push_back(activity);
+//
+//    connect(activity, &ThreadWeaver::QObjectDecorator::done,
+//            this, qOverload<ThreadWeaver::JobPointer>(&ActivityManager::onActivityFinished));
+//}
 
 void ActivityManager::addActivity(AMLMJob *activity)
 {
@@ -69,6 +70,12 @@ void ActivityManager::addActivity(AMLMJob *activity)
         auto as_amlmjob = qobject_cast<AMLMJob*>(job);
         Q_CHECK_PTR(as_amlmjob);
         onActivityFinished(as_amlmjob);
+    });
+
+    // Remove the job when it's destroyed on us.
+    connect(activity, &QObject::destroyed, [this](QObject* obj){
+        Q_CHECK_PTR(obj);
+        m_amlm_activities.removeAll(qobject_cast<AMLMJob*>(obj));
     });
 }
 

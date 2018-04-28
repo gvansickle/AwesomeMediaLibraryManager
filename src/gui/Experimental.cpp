@@ -88,7 +88,7 @@ void Experimental::DoExperiment()
 #endif
 
 #if 1
-    ThreadWeaver::setDebugLevel(true, 5);
+    ThreadWeaver::setDebugLevel(true, 3);
 
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
@@ -98,6 +98,7 @@ void Experimental::DoExperiment()
 
     auto queue = ThreadWeaver::stream();
 
+    /// @note ThreadWeaver deletes ds regardless here.
     auto amlm_job = new AMLMJob(ds, /*Autodelete?*/ false, this);
     auto dsj = amlm_job;
 
