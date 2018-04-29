@@ -32,13 +32,13 @@
 //}
 
 
-AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
-    : KJob(parent), ThreadWeaver::Job(),
-      m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(decoratee, autoDelete, this))
-{
-    // Connect the signals that need connecting.
-    make_connections();
-}
+//AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
+//    : KJob(parent), ThreadWeaver::Job(),
+//      m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(decoratee, autoDelete, this))
+//{
+//    // Connect the signals that need connecting.
+//    make_connections();
+//}
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job(),
     m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(this, false, this))
@@ -132,6 +132,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     else
     {
         qDb() << "Succeeded";
+        // Only emitted on success.
         /*KJob*/ emitResult();
     }
     qDb() << "EMITTING DONE";

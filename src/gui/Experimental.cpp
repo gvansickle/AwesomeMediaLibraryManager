@@ -88,30 +88,40 @@ void Experimental::DoExperiment()
 #endif
 
 #if 1
+
     ThreadWeaver::setDebugLevel(true, 3);
 
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
-    AMLMJob* dsj = new DirectoryScannerAMLMJob(this, dir_url,
+//    AMLMJob* dsj = new DirectoryScannerAMLMJob(this, dir_url,
+//                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+//                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    /*QSharedPointer<DirectoryScannerAMLMJob>*/ AMLMJobPtr dsj = QSharedPointer<DirectoryScannerAMLMJob>::create(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     QUrl dir_url2("file:///home/gary");
-    AMLMJob* dsj2 = new DirectoryScannerAMLMJob(this, dir_url2,
+    AMLMJobPtr dsj2 = QSharedPointer<DirectoryScannerAMLMJob>::create(this, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
 
-    auto queue = ThreadWeaver::stream();
+    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
-    ActivityManager::instance()->addActivity(dsj);
-    ActivityManager::instance()->addActivity(dsj2);
+//    ActivityManager::instance()->addActivity(dsj);//.dynamicCast<ThreadWeaver::JobInterface>());
+//    ActivityManager::instance()->addActivity(dsj2);
 //    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
-    MainWindow::getInstance()->registerJob(dsj);
-    MainWindow::getInstance()->registerJob(dsj2);
+//    MainWindow::getInstance()->registerJob(dsj);
+//    MainWindow::getInstance()->registerJob(dsj2);
 
-    queue << dsj << dsj2;
+    qIn() << "QUEUE STATE:" << queue->state();
+
+    // enqueue takes JobPointers.
+    queue->enqueue(dsj);
+    queue->enqueue(dsj2);
+//    queue << dsj << dsj2;
+    qIn() << "QUEUE STATE:" << queue->state();
 
 #endif
 

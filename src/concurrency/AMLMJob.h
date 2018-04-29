@@ -33,9 +33,10 @@
  * Goal is to make this one object be both a floor wax and a dessert topping:
  * - A KJob to interfaces which need it, in particular:
  * -- KAbstractWidgetJobTracker and derived classes' registerJob()/unregisterJob() slots.
+ * - A ThreadWeaver::Job to interfaces which need it
  * - A ThreadWeaver::IdDecorator for consumption by ThreadWeaver::Job::run(JobPointer self, Thread *thread)
  *
- * @note multiple inheritance in effect here.  Ok since ThreadWeaver::IdDecorator doesn't inherit from QObject.
+ * @note Multiple inheritance in effect here.  Ok since ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
 class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromThis<AMLMJob>
@@ -45,6 +46,9 @@ class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromTh
 
     /// ThreadWeaver::Job:
     /// - https://api.kde.org/frameworks/threadweaver/html/classThreadWeaver_1_1Job.html
+    /// - Jobs are started by the Queue they're added to, depending on the Queue state.  In suspended state, jobs can be added to the queue,
+    ///   but the threads remain suspended. In WorkingHard state, an idle thread may immediately execute the job, or it might be queued if
+    ///   all threads are busy.
     /// - Jobs may not be executed twice.
     /// - Job objects do not inherit QObject. To connect to signals when jobs are started or finished, see QObjectDecorator.
     ///
@@ -63,17 +67,16 @@ class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromTh
 
 Q_SIGNALS:
     /// ThreadWeaver::QObjectDecorator-like signals, only three:
-    /*
-    *  // This signal is emitted when this job is being processed by a thread.
-    *  void started(ThreadWeaver::JobPointer);
-    *  // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    *  void done(ThreadWeaver::JobPointer);
-    *  // This signal is emitted when success() returns false after the job is executed.
-    *  void failed(ThreadWeaver::JobPointer);
-    */
+	/// @{
+
+	// This signal is emitted when this TW::Job is being processed by a thread.
     void started(ThreadWeaver::JobPointer);
+    // This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
     void done(ThreadWeaver::JobPointer);
+    // This signal is emitted when success() returns false after the job is executed.
     void failed(ThreadWeaver::JobPointer);
+
+    /// @}
 
 	/// KJob signals, quite a few:
 	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
@@ -99,7 +102,7 @@ Q_SIGNALS:
     /// Signal from KJob::doKill().
     void signalKJobDoKill();
 
-    /// KJobTrackerInterface:
+    /// KJobTrackerInterface (== Watcher for KJob*s):
     /// https://cgit.kde.org/kcoreaddons.git/tree/src/lib/jobs/kjobtrackerinterface.h
     /// On call to registerJob(), The default implementation connects the following KJob signals
     /// to the respective protected slots of this class:
@@ -126,13 +129,19 @@ public:
     /**
      * ThreadWeaver::QObjectDecorator-like constructor.
      */
-    AMLMJob(ThreadWeaver::JobInterface *decoratee, bool autoDelete, QObject *parent = nullptr);
+//    AMLMJob(ThreadWeaver::JobInterface *decoratee, bool autoDelete, QObject *parent = nullptr);
 
     /// KJob-like constructor.
-    AMLMJob(QObject* parent = nullptr);
+    explicit AMLMJob(QObject* parent = nullptr);
 
     /// Destructor.
     ~AMLMJob() override;
+
+    /// @name Convesion operators.
+    /// @{
+
+    /// To a TW JobPointer, i.e. a QSharedPointer<JobInterface>.
+    explicit operator ThreadWeaver::JobPointer() { return asTWJobPointer(); }
 
     /// @name TW::Job overrides.
     /// @{
@@ -290,5 +299,7 @@ private:
      */
     ThreadWeaver::QJobPointer m_tw_job_qobj_decorator;
 };
+
+using AMLMJobPtr = QSharedPointer<AMLMJob>;
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */

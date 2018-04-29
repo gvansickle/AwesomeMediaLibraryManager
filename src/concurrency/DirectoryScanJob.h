@@ -52,7 +52,6 @@ class DirectoryScannerAMLMJob : public AMLMJob
 //    void failed(ThreadWeaver::JobPointer);
 
 public:
-//    explicit DirectoryScanner(/*ClassDerivedFromTW::Job*/* file);
     explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
