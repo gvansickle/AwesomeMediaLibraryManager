@@ -1,5 +1,5 @@
 #include <src/gui/ActivityProgressDialog.h>
-#include "ui_expdialog.h"
+#include "ui_ActivityProgressDialog.h"
 
 #include <KWidgetJobTracker>
 
