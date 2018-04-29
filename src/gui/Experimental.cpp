@@ -105,7 +105,7 @@ void Experimental::DoExperiment()
     ActivityManager::instance()->addActivity(dsj);
 //    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
-//    MainWindow::getInstance()->registerJob(dsj);
+    MainWindow::getInstance()->registerJob(dsj);
 
     queue << dsj;
 

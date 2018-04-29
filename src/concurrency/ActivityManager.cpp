@@ -33,6 +33,7 @@ ActivityManager* ActivityManager::m_the_activity_manager = nullptr;
 ActivityManager::ActivityManager(QObject *parent)
 {
     qDb() << "SINGLETON CREATED";
+    setObjectName("TheActivityManager");
 }
 
 ActivityManager::~ActivityManager()
@@ -67,6 +68,7 @@ void ActivityManager::addActivity(AMLMJob *activity)
     m_amlm_activities.push_back(activity);
 
     connect(activity, &AMLMJob::finished, [this](KJob* job){
+        qDb() << "GOT FINISHED SIGNAL";
         auto as_amlmjob = qobject_cast<AMLMJob*>(job);
         Q_CHECK_PTR(as_amlmjob);
         onActivityFinished(as_amlmjob);
@@ -74,6 +76,7 @@ void ActivityManager::addActivity(AMLMJob *activity)
 
     // Remove the job when it's destroyed on us.
     connect(activity, &QObject::destroyed, [this](QObject* obj){
+        qDb() << "GOT DESTROYED SIGNAL";
         Q_CHECK_PTR(obj);
         m_amlm_activities.removeAll(qobject_cast<AMLMJob*>(obj));
     });

@@ -76,18 +76,20 @@ Q_SIGNALS:
 
 	/// KJob signals, quite a few:
 	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
+    // void finished (KJob *job)
 	// void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
 	// void 	percent (KJob *job, unsigned long percent)
 	// void 	processedAmount (KJob *job, KJob::Unit unit, qulonglong amount)
 	// void 	processedSize (KJob *job, qulonglong size)
-	// void 	result (KJob *job)
+    // void result (KJob *job)
 	// void 	resumed (KJob *job)
 	// void 	speed (KJob *job, unsigned long speed)
-	// void 	suspended (KJob *job)
+    // void suspended (KJob *job)
 	// void 	totalAmount (KJob *job, KJob::Unit unit, qulonglong amount)
 	// void 	totalSize (KJob *job, qulonglong size)
 	// void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
-	/// KJobs are supported by KJobWidgets
+
+    /// KJobs are supported by KJobWidgets
 	/// https://api.kde.org/frameworks/kjobwidgets/html/namespaceKJobWidgets.html
 	///
 
@@ -170,6 +172,16 @@ public:
 
     /// Convenience member for getting a ThreadWeaver::IdDecorator* to this.
     ThreadWeaver::IdDecorator* asIdDecorator();
+
+public Q_SLOTS:
+
+    /// From KJob:
+    /// @{
+    // Default KJob implementations appear to be sufficient.
+//    bool kill(KJob::KillVerbosity verbosity=KJob::Quietly);
+//    bool resume();
+//    bool suspend();
+    /// @}
 
 public:
 
