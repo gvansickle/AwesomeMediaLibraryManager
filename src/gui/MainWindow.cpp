@@ -36,6 +36,7 @@
 #include <KIO/JobTracker>
 #include <KJobWidgets>
 #include <KStatusBarJobTracker>
+#include <KWidgetJobTracker>
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -44,6 +45,7 @@
 #include "MDILibraryView.h"
 #include "MDIPlaylistView.h"
 #include "MDINowPlayingView.h"
+#include "expdialog.h"
 
 // For KF5 KConfig infrastructure.
 #include <AMLMSettings.h>
@@ -69,6 +71,7 @@
 #include <QApplication>
 #include <QMainWindow>
 #include <QWidget>
+#include <QLayout>
 #include <QLabel>
 #include <QMenuBar>
 #include <QToolBar>
@@ -1970,6 +1973,15 @@ void MainWindow::registerJob(KJob *new_job)
     statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
     statusBar()->show();
     m_kf5_activity_progress_widget->widget(new_job)->show();
+
+//    auto prog_dlg = new QDialog(this);
+//    auto wjt = new KWidgetJobTracker(prog_dlg);
+//    wjt->registerJob(new_job);
+//    prog_dlg->layout()->addWidget(wjt->widget(new_job));
+//    prog_dlg->show();
+    auto expdlg = new ExpDialog(this);
+    expdlg->TrackJob(new_job);
+    expdlg->show();
 }
 
 
