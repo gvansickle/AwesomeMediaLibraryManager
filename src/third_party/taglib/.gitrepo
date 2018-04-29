@@ -6,6 +6,7 @@
 [subrepo]
 	remote = https://github.com/taglib/taglib.git
 	branch = master
-	commit = a80093167f93f4147ec153693d871780874f9747
+	commit = d8d56d39372928d98534a331ac0d3b2d0a2b14c9
 	parent = 2ff0f7a68846d7255b5079d861cafc6f7ce5f3eb
-	cmdver = 0.3.1
+	cmdver = 0.4.0
+	method = merge
