@@ -57,7 +57,7 @@ class DirectoryScanner : public AMLMJob //ThreadWeaver::Job
 
 public:
 //    explicit DirectoryScanner(/*ClassDerivedFromTW::Job*/* file);
-	explicit DirectoryScanner(const QUrl &dir_url,
+    explicit DirectoryScanner(QObject* parent, const QUrl &dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
@@ -73,41 +73,7 @@ private:
 	QDirIterator::IteratorFlags m_iterator_flags;
 };
 
-/**
- * Decorator to allow a wrapped DirectoryScanner to communicate with the outside world.
- * Inherits from QObject and IdDecorator.
- *
- * This decorator gets us the following defined signals:
- *
- *  // This signal is emitted when this job is being processed by a thread.
- *  void started(ThreadWeaver::JobPointer);
- *  // This signal is emitted when the job has been finished (no matter if it succeeded or not).
- *  void done(ThreadWeaver::JobPointer);
- *  // This signal is emitted when success() returns false after the job is executed.
- *  void failed(ThreadWeaver::JobPointer);
- *
- * And that appears to be pretty much it, no progress or anything.
- */
-class DirectoryScannerJob : public ThreadWeaver::QObjectDecorator
-{
-	Q_OBJECT
 
-public:
-	explicit DirectoryScannerJob(const QUrl &dir_url,
-            const QStringList &nameFilters,
-            QDir::Filters filters = QDir::NoFilter,
-            QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags,
-//            DirectoryScanner* dir_scanner = nullptr,
-            QObject* parent = 0)
-        : ThreadWeaver::QObjectDecorator(new DirectoryScanner(dir_url, nameFilters, filters, flags),
-                                         /*autoDelete?*/ false, parent)
-	{}
-
-//	DirectoryScanner* job() { return &m_dir_scanner; }
-
-private:
-//	DirectoryScanner m_dir_scanner;
-};
 
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

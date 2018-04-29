@@ -126,8 +126,8 @@ public:
      * ThreadWeaver::QObjectDecorator-like constructor.
      */
     AMLMJob(ThreadWeaver::JobInterface *decoratee, bool autoDelete, QObject *parent = nullptr);
-    /// ThreadWeaver::Job-like constructor.
-    AMLMJob();
+    /// KJob-like constructor.
+    AMLMJob(QObject* parent);
     /// Destructor.
     ~AMLMJob() override;
 

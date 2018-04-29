@@ -27,11 +27,12 @@
 
 #include "utils/DebugHelpers.h"
 
-DirectoryScanner::DirectoryScanner(const QUrl &dir_url,
+DirectoryScanner::DirectoryScanner(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-	: m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
+    : AMLMJob(parent),
+      m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
 
 }

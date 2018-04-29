@@ -40,7 +40,7 @@ AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
     make_connections();
 }
 
-AMLMJob::AMLMJob() : KJob(), ThreadWeaver::Job(),
+AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job(),
     m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(this, false, this))
 {
     make_connections();
