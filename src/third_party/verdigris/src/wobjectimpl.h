@@ -62,14 +62,14 @@ template<typename Strings, uint... Ints>
 struct IntermediateState {
     Strings strings;
     /// add a string to the strings state and add its index to the end of the int array
-    template<int L>
+    template<std::size_t L>
     constexpr auto addString(const StaticString<L> & s) const {
         auto s2 = binary::tree_append(strings, s);
         return IntermediateState<decltype(s2), Ints..., Strings::size>{s2};
     }
 
     /// same as before but add the IsUnresolvedType flag
-    template<uint Flag = IsUnresolvedType, int L>
+    template<uint Flag = IsUnresolvedType, std::size_t L>
     constexpr auto addTypeString(const StaticString<L> & s) const {
         auto s2 = binary::tree_append(strings, s);
         return IntermediateState<decltype(s2), Ints...,
@@ -107,37 +107,57 @@ constexpr auto generate(State s, Tree t) {
         Generator::template generate<Ofst>(s, binary::tree_head(t)), binary::tree_tail(t));
 }
 
-/**
- * Helper comparator that compare function pointers and return true if they are the same or
- * false if they are different. If they are of different type, they are different */
-template <typename T1, typename T2> constexpr bool getSignalIndexHelperCompare(T1, T2) { return false; }
+
+#if defined Q_CC_GNU && !defined Q_CC_CLANG /* Work around GCC bug 69681 */
 template <typename T> constexpr bool getSignalIndexHelperCompare(T f1, T f2) { return f1 == f2; }
-
-/** Helper to get information bout the notify signal of the property with index Idx of the object T */
-template<typename T, int Idx, typename BaseT = T>
+/** Helper to get information about the notify signal of the property within object T */
+template<typename T, int PropIdx, typename BaseT = T>
 struct ResolveNotifySignal {
-    static constexpr auto propertyInfo = w_PropertyState(w_number<>{},static_cast<T**>(nullptr));
-    static constexpr auto property = binary::get<Idx>(propertyInfo);
     static constexpr auto signalState = w_SignalState(w_number<>{},static_cast<BaseT**>(nullptr));
-
+    static constexpr auto propertyInfo = w_PropertyState(w_number<>{},static_cast<T**>(nullptr));
 private:
+    static constexpr auto prop = binary::get<PropIdx>(propertyInfo);
     // We need to use SFINAE because of GCC bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69681
     // For some reason, GCC fails to consider f1==f2 as a constexpr if f1 and f2 are pointer to
     // different function of the same type. Fortunately, when both are pointing to the same function
     // it compiles fine, so we can use SFINAE for it.
-    template<int SigIdx>
-    static constexpr std::enable_if_t<getSignalIndexHelperCompare(binary::get<SigIdx>(signalState).func, property.notify) || true, int>
-        helper(int)
-    { return getSignalIndexHelperCompare(binary::get<SigIdx>(signalState).func, property.notify) ? SigIdx : -1; }
+    template<int SigIdx,
+             bool Eq = getSignalIndexHelperCompare(binary::get<SigIdx>(signalState).func,
+                                                   prop.notify)>
+    static constexpr int helper(int)
+    { return Eq ? SigIdx : -1; }
     template<int SigIdx> static constexpr int helper(...) { return -1; }
 
     template<size_t... I>
-    static constexpr int computeSignalIndex(index_sequence<I...>) {
-        return std::max({-1, helper<I>(0)...});
+    static constexpr int computeSignalIndex(index_sequence<I...>)
+    { return std::max({-1, helper<I>(0)...}); }
+public:
+    static constexpr int signalIndex()
+    { return computeSignalIndex(make_index_sequence<signalState.size>()); }
+};
+#else
+/** Helper comparator that compares function pointers and return true if they are the same.
+ * If thier type are different, pointer to member functions are different
+ */
+template <typename T> constexpr bool getSignalIndexHelperCompare(T f1, T f2) { return f1 == f2; }
+template <typename T1, typename T2> constexpr bool getSignalIndexHelperCompare(T1, T2) { return false; }
+
+/** Helper to get information about the notify signal of the property within object T */
+template<typename T>
+struct ResolveNotifySignal {
+    static constexpr auto signalState = w_SignalState(w_number<>{},static_cast<T**>(nullptr));
+private:
+    template<typename F, size_t... I>
+    static constexpr int computeSignalIndex(F f, index_sequence<I...>) {
+        return std::max({-1,
+            (getSignalIndexHelperCompare(binary::get<I>(signalState).func,f) ? int(I) : -1)...});
     }
 public:
-    static constexpr int signalIndex = computeSignalIndex(make_index_sequence<signalState.size>());
+    template<typename F>
+    static constexpr int signalIndex(F f)
+    { return computeSignalIndex(f, make_index_sequence<signalState.size>()); }
 };
+#endif
 
 /** returns true if the object T has at least one property with a notify signal */
 template <typename T, std::size_t... I>
@@ -149,7 +169,7 @@ static constexpr bool hasNotifySignal(std::index_sequence<I...>)
 }
 
 /** Holds information about a class, including all the properties and methods */
-template<int NameLength, typename Methods, typename Constructors, typename Properties,
+template<std::size_t NameLength, typename Methods, typename Constructors, typename Properties,
             typename Enums, typename ClassInfos, typename Interfaces, int SignalCount>
 struct ObjectInfo {
     StaticString<NameLength> name;
@@ -199,7 +219,16 @@ struct ClassInfoGenerator {
     }
 };
 
+/* Helpers to auto-detect the access specifier */
+template <typename T, typename M, typename = void> struct isPublic : std::false_type {};
+template <typename T, typename M> struct isPublic<T, M, decltype(T::w_GetAccessSpecifierHelper(std::declval<M>()))> : std::true_type {};
+template <typename T, typename M, typename = void> struct isProtected : std::false_type {};
+template <typename T, typename = std::enable_if_t<!std::is_final<T>::value>>
+struct Derived : T { template<typename M, typename X = T> static decltype(X::w_GetAccessSpecifierHelper(std::declval<M>())) test(M); };
+template <typename T, typename M> struct isProtected<T, M, decltype(Derived<T>::test(std::declval<M>()))> : std::true_type {};
+
 // Generator for methods to be used in generate<>()
+template <typename T>
 struct MethodGenerator {
     template<typename Method> static constexpr int offset() { return 1 + Method::argCount * 2; }
     template<int ParamIndex, typename State, typename Method>
@@ -208,11 +237,15 @@ struct MethodGenerator {
                 template add<Method::argCount,
                              ParamIndex, //parameters
                              1, //tag, always \0
-                             adjustFlags(Method::flags)>();
+                             adjustFlags(Method::flags, typename Method::IntegralConstant())>();
     }
-    // because public and private are inverted
-    static constexpr uint adjustFlags(uint f) {
-        return (f & W_Access::Protected.value) ? f : (f ^ W_Access::Private.value);
+    template<typename M>
+    static constexpr uint adjustFlags(uint f, M) {
+        if (!(f & (W_Access::Protected.value | W_Access::Private.value | W_Access::Public.value))) {
+            // Auto-detect the access specifier
+            f |= isPublic<T, M>::value ? W_Access::Public.value : isProtected<T,M>::value ? W_Access::Protected.value : W_Access::Private.value;
+        }
+        return f & static_cast<uint>(~W_Access::Private.value); // Because QMetaMethod::Private is 0, but not W_Access::Private;
     }
 };
 
@@ -238,7 +271,7 @@ struct HandleType<T, false> {
         return ss.addTypeString(W_TypeRegistery<T>::name);
         static_assert(W_TypeRegistery<T>::registered, "Please Register T with W_REGISTER_ARGTYPE");
     }
-    template<typename Strings, int N>
+    template<typename Strings, std::size_t N>
     static constexpr auto result(const Strings &ss, StaticString<N> typeStr,
                                     typename std::enable_if<(N>1),int>::type=0) {
         return ss.addTypeString(typeStr);
@@ -283,7 +316,11 @@ private:
     static constexpr auto process(State s, Func, std::enable_if_t<
         std::is_same<T, typename QtPrivate::FunctionPointer<Func>::Object>::value, int> = 0)
     {
-        constexpr int signalIndex = ResolveNotifySignal<T, Idx>::signalIndex;
+#if defined Q_CC_GNU && !defined Q_CC_CLANG
+        constexpr int signalIndex = ResolveNotifySignal<T, Idx>::signalIndex();
+#else
+        constexpr int signalIndex = ResolveNotifySignal<T>::signalIndex(binary::get<Idx>(propertyInfo).notify);
+#endif
         static_assert(signalIndex >= 0, "NOTIFY signal not registered as a signal");
         return s.template add<signalIndex>();
     }
@@ -293,11 +330,17 @@ private:
     static constexpr auto process(State s, Func, std::enable_if_t<
         !std::is_same<T, typename QtPrivate::FunctionPointer<Func>::Object>::value, int> = 0)
     {
+#if defined Q_CC_GNU && !defined Q_CC_CLANG
         using Finder = ResolveNotifySignal<T, Idx, typename QtPrivate::FunctionPointer<Func>::Object>;
-        static_assert(Finder::signalIndex >= 0, "NOTIFY signal in parent class not registered as a W_SIGNAL");
-        static_assert(Finder::signalIndex < 0 || QT_VERSION >= QT_VERSION_CHECK(5, 10, 0),
+        constexpr int signalIndex = Finder::signalIndex();
+#else
+        using Finder = ResolveNotifySignal<typename QtPrivate::FunctionPointer<Func>::Object>;
+        constexpr int signalIndex = Finder::signalIndex(binary::get<Idx>(propertyInfo).notify);
+#endif
+        static_assert(signalIndex >= 0, "NOTIFY signal in parent class not registered as a W_SIGNAL");
+        static_assert(signalIndex < 0 || QT_VERSION >= QT_VERSION_CHECK(5, 10, 0),
                       "NOTIFY signal in parent class requires Qt 5.10");
-        constexpr auto sig = binary::get<Finder::signalIndex>(Finder::signalState);
+        constexpr auto sig = binary::get<signalIndex>(Finder::signalState);
         return s.template addTypeString<IsUnresolvedNotifySignal>(sig.name);
     }
 };
@@ -361,7 +404,7 @@ struct HandleArgsHelper<A, Args...> {
         return HandleArgsHelper<Args...>::result(r1, binary::tree_tail(paramTypes));
     }
 };
-template<int N> struct HandleArgNames {
+template<std::size_t N> struct HandleArgNames {
     template<typename Strings, typename Str>
     static constexpr auto result(const Strings &ss, StaticStringList<Str> pn)
     {
@@ -414,7 +457,7 @@ public:
 // Generator for constructor parameter to be used in generate<>()
 struct ConstructorParametersGenerator {
     template<typename> static constexpr int offset() { return 0; }
-    template<int, typename State, int N, typename... Args>
+    template<int, typename State, std::size_t N, typename... Args>
     static constexpr auto generate(State s, MetaConstructorInfo<N,Args...>) {
         auto s2 = s.template add<IsUnresolvedType | 1>();
         auto s3 = HandleArgsHelper<Args...>::result(s2, binary::tree<>{});
@@ -460,11 +503,11 @@ constexpr auto generateDataArray(const ObjI &objectInfo) {
         > header = { stringData };
 
     auto classInfos = generate<ClassInfoGenerator, paramIndex>(header , objectInfo.classInfos);
-    auto methods = generate<MethodGenerator, paramIndex>(classInfos , objectInfo.methods);
+    auto methods = generate<MethodGenerator<T>, paramIndex>(classInfos , objectInfo.methods);
     auto properties = generate<PropertyGenerator, 0>(methods, objectInfo.properties);
     auto notify = generate<NotifySignalGenerator<T, hasNotify>, 0>(properties, objectInfo.properties);
     auto enums = generate<EnumGenerator, enumValueOffset>(notify, objectInfo.enums);
-    auto constructors = generate<MethodGenerator, constructorParamIndex>(enums, objectInfo.constructors);
+    auto constructors = generate<MethodGenerator<T>, constructorParamIndex>(enums, objectInfo.constructors);
     auto parametters = generate<MethodParametersGenerator, 0>(constructors, objectInfo.methods);
     auto parametters2 = generate<ConstructorParametersGenerator, 0>(parametters, objectInfo.constructors);
     auto enumValues = generate<EnumValuesGenerator, 0>(parametters2, objectInfo.enums);
@@ -474,17 +517,17 @@ constexpr auto generateDataArray(const ObjI &objectInfo) {
 /**
  * Holder for the string data.  Just like in the moc generated code.
  */
-template<int N, int L> struct qt_meta_stringdata_t {
+template<std::size_t N, std::size_t L> struct qt_meta_stringdata_t {
      QByteArrayData data[N];
      char stringdata[L];
 };
 
 /** Builds the string data
- * \param S: a index_sequence that goes from 0 to the full size of the strings
- * \param I: a index_sequence that goes from 0 to the number of string
- * \param O: a index_sequence of the offsets
- * \param N: a index_sequence of the size of each strings
- * \param T: the W_MetaObjectCreatorHelper
+ * \tparam S an index_sequence that goes from 0 to the full size of the strings
+ * \tparam I an index_sequence that goes from 0 to the number of string
+ * \tparam O an index_sequence of the offsets
+ * \tparam N an index_sequence of the size of each strings
+ * \tparam T the W_MetaObjectCreatorHelper
  */
 template<typename S, typename I, typename O, typename N, typename T> struct BuildStringDataHelper;
 template<std::size_t... S, std::size_t... I, std::size_t... O, std::size_t...N, typename T>
@@ -653,7 +696,7 @@ static void registerMethodArgumentType(int _id, void **_a) {
         constexpr auto f = binary::get<I>(T::W_MetaObjectCreatorHelper::objectInfo.methods).func;
         using P = QtPrivate::FunctionPointer<std::remove_const_t<decltype(f)>>;
         auto _t = QtPrivate::ConnectionTypes<typename P::Arguments>::types();
-        uint arg = *reinterpret_cast<int*>(_a[1]);
+        uint arg = *reinterpret_cast<uint*>(_a[1]);
         *reinterpret_cast<int*>(_a[0]) = _t && arg < P::ArgumentCount ?
                 _t[arg] : -1;
     }

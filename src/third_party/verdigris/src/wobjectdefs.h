@@ -32,6 +32,8 @@
 #error Verdigris requires C++14 relaxed constexpr
 #endif
 
+#define W_VERSION 0x0100ff
+
 namespace w_internal {
 using std::index_sequence;  // From C++14, make sure to enable the C++14 option in your compiler
 
@@ -41,14 +43,14 @@ template<size_t... I1, size_t... I2>
 index_sequence<I1... , (I2 +(sizeof...(I1)))...>
 make_index_sequence_helper_merge(index_sequence<I1...>, index_sequence<I2...>);
 
-template<int N> struct make_index_sequence_helper {
+template<std::size_t N> struct make_index_sequence_helper {
     using part1 = typename make_index_sequence_helper<(N+1)/2>::result;
     using part2 = typename make_index_sequence_helper<N/2>::result;
     using result = decltype(make_index_sequence_helper_merge(part1(), part2()));
 };
 template<> struct make_index_sequence_helper<1> { using result = index_sequence<0>; };
 template<> struct make_index_sequence_helper<0> { using result = index_sequence<>; };
-template<int N> using make_index_sequence = typename make_index_sequence_helper<N>::result;
+template<std::size_t N> using make_index_sequence = typename make_index_sequence_helper<N>::result;
 
 /* workaround for MSVC bug that can't do decltype(xxx)::foo when xxx is dependent of a template */
 template<typename T> using identity_t = T;
@@ -71,6 +73,7 @@ namespace binary {
         static constexpr int Depth = 0;
         static constexpr int Count = 1;
         static constexpr bool Balanced = true;
+        template <int> constexpr T get() { return data; }
     };
 
     template <class A, class B> struct Node {
@@ -79,6 +82,10 @@ namespace binary {
         static constexpr int Count = A::Count + B::Count;
         static constexpr int Depth = A::Depth + 1;
         static constexpr bool Balanced = A::Depth == B::Depth && B::Balanced;
+        template <int N, typename = std::enable_if_t<(N < A::Count)>>
+        constexpr auto get(int = 0) { return a.template get<N>(); }
+        template <int N, typename = std::enable_if_t<(N >= A::Count)>>
+        constexpr auto get(uint = 0) { return b.template get<N - A::Count>(); }
     };
 
     /** Add the node 'N' to the tree 'T'  (helper for tree_append) */
@@ -100,15 +107,6 @@ namespace binary {
         typedef Node<typename AddPre<A, N>::Result, B > Result;
         static constexpr Result add(Node<A, B> t, N n) { return {AddPre<A, N>::add(t.a, n) , t.b }; }
     };
-
-    /** helper for binary::get<> */
-    template <class T, int I, typename = void> struct Get;
-    template <class N> struct Get<Leaf<N>, 0>
-    { static constexpr N get(Leaf<N> t) { return t.data; } };
-    template <class A, class B, int I> struct Get<Node<A,B>, I, std::enable_if_t<(A::Count <= I)>>
-    { static constexpr auto get(Node<A,B> t) { return Get<B,I - A::Count>::get(t.b); } };
-    template <class A, class B, int I> struct Get<Node<A,B>, I, std::enable_if_t<(A::Count > I)>>
-    { static constexpr auto get(Node<A,B> t) { return Get<A,I>::get(t.a); } };
 
     /** helper for tree_tail */
     template<typename A, typename B> struct Tail;
@@ -152,7 +150,7 @@ namespace binary {
      * get<N>(tree): Returns the element from the tree at index N.
      */
     template<int N, typename Root> constexpr auto get(tree<Root> t)
-    { return Get<Root, N>::get(t.root); }
+    { return t.root.template get<N>(); }
 
     /**
      * tree_tail(tree):  Returns a tree with the first element removed.
@@ -171,7 +169,7 @@ namespace binary {
     constexpr auto tree_head(tree<void>) { struct _{}; return _{}; }
     template<typename T> constexpr auto tree_head(T) { struct _{}; return _{}; }
 
-    template<int I, typename T> using tree_element_t = decltype(get<I>(std::declval<T>()));
+    template<std::size_t I, typename T> using tree_element_t = decltype(get<I>(std::declval<T>()));
 
     /**
      * tree_cat(tree1, tree2, ....): concatenate trees (like tuple_cat)
@@ -202,18 +200,18 @@ constexpr int summed = sums(Args...);
  */
 
 /** A compile time character array of size N  */
-template<int N> using StaticStringArray = const char [N];
+template<std::size_t N> using StaticStringArray = const char [N];
 
 /** Represents a string of size N  (N includes the '\0' at the end) */
-template<int N, typename = make_index_sequence<N>> struct StaticString;
-template<int N, std::size_t... I> struct StaticString<N, std::index_sequence<I...>>
+template<std::size_t N, typename = make_index_sequence<N>> struct StaticString;
+template<std::size_t N, std::size_t... I> struct StaticString<N, std::index_sequence<I...>>
 {
     StaticStringArray<N> data;
     constexpr StaticString(StaticStringArray<N> &d) : data{ (d[I])... } { }
-    static constexpr int size = N;
+    static constexpr std::size_t size = N;
     constexpr char operator[](int p) const { return data[p]; }
 };
-template <int N> constexpr StaticString<N> makeStaticString(StaticStringArray<N> &d) { return {d}; }
+template <std::size_t N> constexpr StaticString<N> makeStaticString(StaticStringArray<N> &d) { return {d}; }
 
 /** A list containing many StaticString with possibly different sizes */
 template<typename T = void> using StaticStringList = binary::tree<T>;
@@ -223,12 +221,12 @@ constexpr StaticStringList<> makeStaticStringList() { return {}; }
 template<typename... T>
 constexpr StaticStringList<> makeStaticStringList(StaticStringArray<1> &, T...)
 { return {}; }
-template<int N, typename... T>
+template<std::size_t N, typename... T>
 constexpr auto makeStaticStringList(StaticStringArray<N> &h, T&...t)
 { return binary::tree_prepend(makeStaticStringList(t...), StaticString<N>(h)); }
 
 /** Add a string in a StaticStringList */
-template<int L, typename T>
+template<std::size_t L, typename T>
 constexpr auto addString(const StaticStringList<T> &l, const StaticString<L> & s) {
     return binary::tree_append(l, s);
 }
@@ -283,9 +281,9 @@ namespace W_Access {
     AccessPublic = 0x02,
     AccessMask = 0x03, //mask
  */
-    constexpr w_internal::W_MethodFlags<0x00> Public{};
+    constexpr w_internal::W_MethodFlags<0x1000> Private{}; // Note: Private has a higher number to differentiate it from the default
     constexpr w_internal::W_MethodFlags<0x01> Protected{};
-    constexpr w_internal::W_MethodFlags<0x02> Private{}; // Note: Public and Private are reversed so Public can be the default
+    constexpr w_internal::W_MethodFlags<0x02> Public{};
 }
 
 // Mirror of QMetaMethod::MethodType
@@ -319,7 +317,7 @@ constexpr std::integral_constant<int, int(w_internal::PropertyFlags::Final)> W_F
 namespace w_internal {
 
 /** Holds information about a method */
-template<typename F, int NameLength, int Flags, typename ParamTypes, typename ParamNames = StaticStringList<>>
+template<typename F, std::size_t NameLength, int Flags, typename IC, typename ParamTypes, typename ParamNames = StaticStringList<>>
 struct MetaMethodInfo {
     F func;
     StaticString<NameLength> name;
@@ -327,36 +325,38 @@ struct MetaMethodInfo {
     ParamNames paramNames;
     static constexpr int argCount = QtPrivate::FunctionPointer<F>::ArgumentCount;
     static constexpr int flags = Flags;
+    using IntegralConstant = IC;
 };
 
 // Called from the W_SLOT macro
-template<typename F, int N, typename ParamTypes, int... Flags>
-constexpr MetaMethodInfo<F, N, summed<Flags...> | W_MethodType::Slot.value, ParamTypes>
-makeMetaSlotInfo(F f, StaticStringArray<N> &name, const ParamTypes &paramTypes, W_MethodFlags<Flags>...)
+template<typename F, std::size_t N, typename ParamTypes, int... Flags, typename IntegralConstant>
+constexpr MetaMethodInfo<F, N, summed<Flags...> | W_MethodType::Slot.value, IntegralConstant, ParamTypes>
+makeMetaSlotInfo(F f, StaticStringArray<N> &name, IntegralConstant, const ParamTypes &paramTypes, W_MethodFlags<Flags>...)
 { return { f, {name}, paramTypes, {} }; }
 
 // Called from the W_METHOD macro
-template<typename F, int N, typename ParamTypes, int... Flags>
-constexpr MetaMethodInfo<F, N, summed<Flags...> | W_MethodType::Method.value, ParamTypes>
-makeMetaMethodInfo(F f, StaticStringArray<N> &name, const ParamTypes &paramTypes, W_MethodFlags<Flags>...)
+template<typename F, std::size_t N, typename ParamTypes, int... Flags, typename IntegralConstant>
+constexpr MetaMethodInfo<F, N, summed<Flags...> | W_MethodType::Method.value, IntegralConstant, ParamTypes>
+makeMetaMethodInfo(F f, StaticStringArray<N> &name, IntegralConstant, const ParamTypes &paramTypes, W_MethodFlags<Flags>...)
 { return { f, {name}, paramTypes, {} }; }
 
 // Called from the W_SIGNAL macro
-template<typename F, int N, typename ParamTypes, typename ParamNames, int... Flags>
-constexpr MetaMethodInfo<F, N, summed<Flags...> | W_MethodType::Signal.value,
+template<typename F, std::size_t N, typename ParamTypes, typename ParamNames, int... Flags, typename IntegralConstant>
+constexpr MetaMethodInfo<F, N, summed<Flags...> | W_MethodType::Signal.value, IntegralConstant,
                             ParamTypes, ParamNames>
-makeMetaSignalInfo(F f, StaticStringArray<N> &name, const ParamTypes &paramTypes,
+makeMetaSignalInfo(F f, StaticStringArray<N> &name, IntegralConstant, const ParamTypes &paramTypes,
                     const ParamNames &paramNames, W_MethodFlags<Flags>...)
 { return { f, {name}, paramTypes, paramNames }; }
 
 /** Holds information about a constructor */
-template<int NameLength, typename... Args> struct MetaConstructorInfo {
-    static constexpr int argCount = sizeof...(Args);
+template<std::size_t NameLength, typename... Args> struct MetaConstructorInfo {
+    static constexpr std::size_t argCount = sizeof...(Args);
     static constexpr int flags = W_MethodType::Constructor.value | W_Access::Public.value;
+    using IntegralConstant = void*; // Used to detect the access specifier, but it is always public, so no need for this
     StaticString<NameLength> name;
-    template<int N>
-    constexpr MetaConstructorInfo<N, Args...> setName(StaticStringArray<N> &name)
-    { return { { name } }; }
+    template<std::size_t N>
+    constexpr MetaConstructorInfo<N, Args...> setName(StaticStringArray<N> &n)
+    { return { { n } }; }
     template<typename T, std::size_t... I>
     void createInstance(void **_a, std::index_sequence<I...>) const {
         *reinterpret_cast<T**>(_a[0]) =
@@ -368,7 +368,7 @@ template<typename...  Args> constexpr MetaConstructorInfo<1,Args...> makeMetaCon
 { return { {""} }; }
 
 /** Holds information about a property */
-template<typename Type, int NameLength, int TypeLength, typename Getter = std::nullptr_t,
+template<typename Type, std::size_t NameLength, std::size_t TypeLength, typename Getter = std::nullptr_t,
             typename Setter = std::nullptr_t, typename Member = std::nullptr_t,
             typename Notify = std::nullptr_t, typename Reset = std::nullptr_t, int Flags = 0>
 struct MetaPropertyInfo {
@@ -463,7 +463,7 @@ template <typename PropInfo, int Flag, typename... Tail>
 constexpr auto parseProperty(const PropInfo &p, std::integral_constant<int, Flag>, Tail... t)
 { return parseProperty(p.template addFlag<Flag>() ,t...); }
 
-template<typename T, int N1, int N2, typename ... Args>
+template<typename T, std::size_t N1, std::size_t N2, typename ... Args>
 constexpr auto makeMetaPropertyInfo(StaticStringArray<N1> &name, StaticStringArray<N2> &type, Args... args) {
     MetaPropertyInfo<T, N1, N2> meta
     { {name}, {type}, {}, {}, {}, {}, {} };
@@ -471,7 +471,7 @@ constexpr auto makeMetaPropertyInfo(StaticStringArray<N1> &name, StaticStringArr
 }
 
 /** Holds information about an enum */
-template<int NameLength, typename Values_, typename Names, int Flags>
+template<std::size_t NameLength, typename Values_, typename Names, int Flags>
 struct MetaEnumInfo {
     StaticString<NameLength> name;
     Names names;
@@ -481,7 +481,7 @@ struct MetaEnumInfo {
 };
 template<typename Enum, Enum... Value> struct enum_sequence {};
 // called from W_ENUM and W_FLAG
-template<typename Enum, int Flag, int NameLength, Enum... Values, typename Names>
+template<typename Enum, int Flag, std::size_t NameLength, Enum... Values, typename Names>
 constexpr MetaEnumInfo<NameLength, std::index_sequence<size_t(Values)...> , Names, Flag> makeMetaEnumInfo(
                 StaticStringArray<NameLength> &name, enum_sequence<Enum, Values...>, Names names) {
     return { {name}, names };
@@ -650,6 +650,21 @@ template <typename... Args> constexpr QOverload<Args...> qOverload = {};
 
 #define W_RETURN(R) -> decltype(R) { return R; }
 
+#ifndef Q_CC_MSVC
+//Define a unique integral_constant type for a given function pointer
+#define W_INTEGRAL_CONSTANT_HELPER(NAME, ...) std::integral_constant<decltype(W_OVERLOAD_RESOLVE(__VA_ARGS__)(&W_ThisType::NAME)), &W_ThisType::NAME>
+#else
+// On MSVC 2017 we trying to get a function pointer in the type cause compiler internal error, so use a simple hash function
+namespace w_internal {
+constexpr auto simple_hash(char const *p) {
+    unsigned long long h = *p;
+    while (*p++) h = ((h >> 8)*37ull)  ^ *p ^ ((h & 0xff) << 56) ;
+    return h;
+}
+}
+#define W_INTEGRAL_CONSTANT_HELPER(NAME, ...) std::integral_constant<unsigned long long, w_internal::simple_hash(#NAME #__VA_ARGS__)>
+#endif
+
 #define W_OBJECT_COMMON(TYPE) \
         using W_ThisType = TYPE; \
         static constexpr auto &W_UnscopedName = #TYPE; /* so we don't repeat it in W_CONSTRUCTOR */ \
@@ -742,15 +757,17 @@ template <typename... Args> constexpr QOverload<Args...> qOverload = {};
  *
  * The W_SLOT macro can have flags:
  * - Specifying the the access:  W_Access::Protected, W_Access::Private
- *   or W_Access::Public (the default)
+ *   or W_Access::Public. (By default, it is auto-detected from the location of this macro.)
  * - W_Compat: for deprecated methods (equivalent of Q_MOC_COMPAT)
  */
 #define W_SLOT(...) W_MACRO_MSVC_EXPAND(W_SLOT2(__VA_ARGS__, w_internal::W_EmptyFlag))
 #define W_SLOT2(NAME, ...) \
     W_STATE_APPEND(w_SlotState, w_internal::makeMetaSlotInfo( \
             W_OVERLOAD_RESOLVE(__VA_ARGS__)(&W_ThisType::NAME), #NAME,  \
+            W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)(), \
             W_PARAM_TOSTRING(W_OVERLOAD_TYPES(__VA_ARGS__)), \
-            W_OVERLOAD_REMOVE(__VA_ARGS__)))
+            W_OVERLOAD_REMOVE(__VA_ARGS__))) \
+    static inline void w_GetAccessSpecifierHelper(W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)) {}
 
 /**
  * W_INVOKABLE( <slot name> [, (<parameters types>) ]  [, <flags>]* )
@@ -760,8 +777,10 @@ template <typename... Args> constexpr QOverload<Args...> qOverload = {};
 #define W_INVOKABLE2(NAME, ...) \
     W_STATE_APPEND(w_MethodState, w_internal::makeMetaMethodInfo( \
             W_OVERLOAD_RESOLVE(__VA_ARGS__)(&W_ThisType::NAME), #NAME,  \
+            W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)(), \
             W_PARAM_TOSTRING(W_OVERLOAD_TYPES(__VA_ARGS__)), \
-            W_OVERLOAD_REMOVE(__VA_ARGS__)))
+            W_OVERLOAD_REMOVE(__VA_ARGS__))) \
+    static inline void w_GetAccessSpecifierHelper(W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)) {}
 
 /**
  * <signal signature>
@@ -785,7 +804,9 @@ template <typename... Args> constexpr QOverload<Args...> qOverload = {};
         W_RETURN(w_internal::binary::tree_append(w_SignalState(w_counter.prev(), w_this), \
             w_internal::makeMetaSignalInfo( \
                 W_OVERLOAD_RESOLVE(__VA_ARGS__)(&W_ThisType::NAME), #NAME, \
-                W_PARAM_TOSTRING(W_OVERLOAD_TYPES(__VA_ARGS__)), W_PARAM_TOSTRING(W_OVERLOAD_REMOVE(__VA_ARGS__)))))
+                W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)(), \
+                W_PARAM_TOSTRING(W_OVERLOAD_TYPES(__VA_ARGS__)), W_PARAM_TOSTRING(W_OVERLOAD_REMOVE(__VA_ARGS__))))) \
+    static inline void w_GetAccessSpecifierHelper(W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)) {}
 
 /** \macro W_SIGNAL_COMPAT
  * Same as W_SIGNAL, but set the W_Compat flag
@@ -802,7 +823,9 @@ template <typename... Args> constexpr QOverload<Args...> qOverload = {};
         W_RETURN(w_internal::binary::tree_append(w_SignalState(w_counter.prev(), w_this), \
             w_internal::makeMetaSignalInfo( \
                 W_OVERLOAD_RESOLVE(__VA_ARGS__)(&W_ThisType::NAME), #NAME, \
-                W_PARAM_TOSTRING(W_OVERLOAD_TYPES(__VA_ARGS__)), W_PARAM_TOSTRING(W_OVERLOAD_REMOVE(__VA_ARGS__)), W_Compat)))
+                W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)(), \
+                W_PARAM_TOSTRING(W_OVERLOAD_TYPES(__VA_ARGS__)), W_PARAM_TOSTRING(W_OVERLOAD_REMOVE(__VA_ARGS__)), W_Compat))) \
+    static inline void w_GetAccessSpecifierHelper(W_INTEGRAL_CONSTANT_HELPER(NAME, __VA_ARGS__)) {}
 
 /** W_CONSTRUCTOR(<parameter types>)
  * Declares that this class can be constructed with this list of argument.
