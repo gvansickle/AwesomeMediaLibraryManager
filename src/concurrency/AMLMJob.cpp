@@ -19,29 +19,18 @@
 
 #include "AMLMJob.h"
 
+#include <QSharedPointer>
 #include <ThreadWeaver/Job>
 
 #include "utils/DebugHelpers.h"
 
 /**
- * Static factory function.
+ * @todo Static factory function.
  */
-//AMLMJob *AMLMJob::make_amlmjob(ThreadWeaver::Job* tw_job)
-//{
-//    return new AMLMJob(tw_job, true, this);
-//}
 
-
-//AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
-//    : KJob(parent), ThreadWeaver::Job(),
-//      m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(decoratee, autoDelete, this))
-//{
-//    // Connect the signals that need connecting.
-//    make_connections();
-//}
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job(),
-    m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(this, false, this))
+    m_tw_job_qobj_decorator(ThreadWeaver::QJobPointer::create(this, false, this))
 {
     make_connections();
 }

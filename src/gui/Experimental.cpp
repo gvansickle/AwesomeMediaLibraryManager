@@ -96,7 +96,7 @@ void Experimental::DoExperiment()
 //    AMLMJob* dsj = new DirectoryScannerAMLMJob(this, dir_url,
 //                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 //                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-    /*QSharedPointer<DirectoryScannerAMLMJob>*/ AMLMJobPtr dsj = QSharedPointer<DirectoryScannerAMLMJob>::create(this, dir_url,
+    AMLMJobPtr dsj = QSharedPointer<DirectoryScannerAMLMJob>::create(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
@@ -115,13 +115,13 @@ void Experimental::DoExperiment()
 //    MainWindow::getInstance()->registerJob(dsj);
 //    MainWindow::getInstance()->registerJob(dsj2);
 
-    qIn() << "QUEUE STATE:" << queue->state();
+    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
     // enqueue takes JobPointers.
     queue->enqueue(dsj);
     queue->enqueue(dsj2);
 //    queue << dsj << dsj2;
-    qIn() << "QUEUE STATE:" << queue->state();
+    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
 #endif
 
