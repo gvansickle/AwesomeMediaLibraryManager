@@ -49,10 +49,14 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
 	// other things prevent thejob from being memory managed and deleted."
 
-	qDb() << "Hello";
+    qDb() << "IN RUN, TW Status:" << self->status();
 
-    QSharedPointer<AMLMJob> aself = qSharedPointerCast<AMLMJob>(self);
+    QSharedPointer<AMLMJob> aself = qSharedPointerDynamicCast<AMLMJob>(self);
     Q_CHECK_PTR(aself);
+
+    aself->setAutoDelete(false);
+    qDb() << "IN RUN, KJob isAutoDelete()?:" << aself->isAutoDelete();
+
 
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 
@@ -97,6 +101,7 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 				// of files potentially in this directory.
 				num_possible_files = num_files_found_so_far + file_info.dir().count();
 
+                aself->setTotalAmount(KJob::Unit::Files, num_possible_files);
 //				report_and_control.setProgressRange(0, num_possible_files);
 			}
 			else if(file_info.isFile())
@@ -121,7 +126,6 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 				// Update progress.
 //				report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
                 aself->setProcessedAmount(KJob::Unit::Files, num_files_found_so_far);
-                aself->setTotalAmount(KJob::Unit::Files, num_possible_files);
 			}
 		}
 
@@ -135,26 +139,11 @@ void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *
 //			report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
         //		}
 
-        qDb() << "EMITTING RESULT";
+//        qDb() << "EMITTING RESULT";
 
-        aself->emitResult();
+//        aself->asKJob()->emitResult();
 
         qDb() << "LEAVING RUN";
 }
 
-void DirectoryScanner::defaultBegin(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)
-{
-    qDb() << "BEGIN";
-}
 
-void DirectoryScanner::defaultEnd(const ThreadWeaver::JobPointer &job, ThreadWeaver::Thread *thread)
-{
-    qDb() << "END";
-
-//    Q_EMIT ;
-}
-
-bool DirectoryScanner::success() const
-{
-    return true;
-}

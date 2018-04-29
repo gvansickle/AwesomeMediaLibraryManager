@@ -33,25 +33,17 @@
 
 
 AMLMJob::AMLMJob(JobInterface *decoratee, bool autoDelete, QObject *parent)
-    : KJob(parent), ThreadWeaver::IdDecorator(decoratee, autoDelete),
+    : KJob(parent), ThreadWeaver::Job(),
       m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(decoratee, autoDelete, this))
 {
     // Connect the signals that need connecting.
+    make_connections();
+}
 
-    // void started(ThreadWeaver::JobPointer);
-    // This signal is emitted when this job is being processed by a thread.
-    // internal QObjectDecorator->external QObjectDecorator interface.
-    /// @todo Could we get rid of the internal QObjectDecorator?
-    /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::started);
-
-    //  void done(ThreadWeaver::JobPointer);
-    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::done);
-
-    //  void failed(ThreadWeaver::JobPointer);
-    // This signal is emitted when success() returns false after the job is executed.
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
+AMLMJob::AMLMJob() : KJob(), ThreadWeaver::Job(),
+    m_tw_job_qobj_decorator(new ThreadWeaver::QObjectDecorator(this, false, this))
+{
+    make_connections();
 }
 
 AMLMJob::~AMLMJob()
@@ -95,38 +87,86 @@ void AMLMJob::setPercent(unsigned long percentage)
     this->KJob::setPercent(percentage);
 }
 
-void AMLMJob::emitResult()
-{
-    KJob::emitResult();
-}
-
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "HERE";
+    qDb() << "BEGIN";
 
     // Essentially a duplicate of QObjectDecorator's implementation.
-    Q_ASSERT(job());
+    Q_CHECK_PTR(this);
+    Q_CHECK_PTR(self);
 
-    qDb() << "autoDelete()?:" << autoDelete();
+//    qDb() << "autoDelete()?:" << autoDelete();
 
     Q_EMIT started(self);
 
-    job()->defaultBegin(self, thread);
+    ThreadWeaver::Job::defaultBegin(self, thread);
 }
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "HERE";
-    // Essentially a duplicate of QObjectDecorator's implementation.
-    Q_ASSERT(job());
+    qDb() << "END";
 
-    job()->defaultEnd(self, thread);
+    // Essentially a duplicate of QObjectDecorator's implementation.
+    Q_CHECK_PTR(this);
+    Q_CHECK_PTR(self);
+
+    ThreadWeaver::Job::defaultEnd(self, thread);
     if(!self->success())
     {
         qWr() << "FAILED";
+        m_success = false;
         Q_EMIT failed(self);
     }
+    qDb() << "Succeeded";
+    m_success = true;
     qDb() << "EMITTING DONE";
     Q_EMIT done(self);
+}
+
+bool AMLMJob::doKill()
+{
+    Q_EMIT signalKJobDoKill();
+}
+
+bool AMLMJob::doSuspend()
+{
+    /// @todo
+    return false;
+}
+
+bool AMLMJob::doResume()
+{
+    /// @todo
+    return false;
+}
+
+void AMLMJob::make_connections()
+{
+    /// DirectConnection here to make this ~a function call.
+    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
+
+    // void started(ThreadWeaver::JobPointer);
+    // This signal is emitted when this job is being processed by a thread.
+    // internal QObjectDecorator->external QObjectDecorator interface.
+    /// @todo Could we get rid of the internal QObjectDecorator?
+    /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::started);
+
+    //  void done(ThreadWeaver::JobPointer);
+    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::done);
+
+    //  void failed(ThreadWeaver::JobPointer);
+    // This signal is emitted when success() returns false after the job is executed.
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
+}
+
+void AMLMJob::onKJobDoKill()
+{
+    qDb() << "ENTER";
+
+
+
+    qDb() << "EXIT";
 }
 

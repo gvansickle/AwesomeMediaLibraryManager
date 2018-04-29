@@ -24,8 +24,11 @@
 #include <QUrl>
 #include <QDir>
 #include <QDirIterator>
+
 #include <ThreadWeaver/ThreadWeaver>
 #include <ThreadWeaver/QObjectDecorator>
+
+#include "AMLMJob.h"
 
 /**
  * This is the actual ThreadWeaver::Job.
@@ -34,10 +37,23 @@
  * @todo Q: Should we really be deriving from AMLMJob here instead of ThreadWeaver::Job?
  *       A: Not sure, this is how ThreadWeaver examples do it, adding the decorator separately if necessary.
  */
-class DirectoryScanner : public ThreadWeaver::Job
+class DirectoryScanner : public AMLMJob //ThreadWeaver::Job
 {
-    /// @todo Do we actually need this?
-    friend class DirectoryScannerJob;
+    Q_OBJECT
+
+//Q_SIGNALS:
+//    /// ThreadWeaver::QObjectDecorator signals, only three:
+//    /*
+//    *  // This signal is emitted when this job is being processed by a thread.
+//    *  void started(ThreadWeaver::JobPointer);
+//    *  // This signal is emitted when the job has been finished (no matter if it succeeded or not).
+//    *  void done(ThreadWeaver::JobPointer);
+//    *  // This signal is emitted when success() returns false after the job is executed.
+//    *  void failed(ThreadWeaver::JobPointer);
+//    */
+//    void started(ThreadWeaver::JobPointer);
+//    void done(ThreadWeaver::JobPointer);
+//    void failed(ThreadWeaver::JobPointer);
 
 public:
 //    explicit DirectoryScanner(/*ClassDerivedFromTW::Job*/* file);
@@ -48,18 +64,6 @@ public:
 	~DirectoryScanner() override;
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
-
-    // For both Begin and End here:
-    // "The default implementation is empty. job is the Job that the queue is executing. It is not necessarily
-    // equal to this. For example, Jobs that are decorated expose the decorator's address, not the address of
-    // the decorated object."
-    /// @note DO NOT call the base class implementation of these here.  AMLMJob will do that.
-    /// @todo Should we really be deriving from AMLMJob here instead of ThreadWeaver::Job?
-    void defaultBegin(const ThreadWeaver::JobPointer& job, ThreadWeaver::Thread *thread) override;
-    void defaultEnd(const ThreadWeaver::JobPointer& job, ThreadWeaver::Thread *thread) override;
-
-    /// Return true if operation succeeded, false if not.
-    bool success() const override;
 
 private:
 

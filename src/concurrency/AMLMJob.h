@@ -37,7 +37,7 @@
  * @note multiple inheritance in effect here.  Ok since ThreadWeaver::IdDecorator doesn't inherit from QObject.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::IdDecorator
+class AMLMJob: public KJob, public ThreadWeaver::Job
 {
 
     Q_OBJECT
@@ -61,7 +61,7 @@ class AMLMJob: public KJob, public ThreadWeaver::IdDecorator
 
 
 Q_SIGNALS:
-    /// ThreadWeaver::QObjectDecorator signals, only three:
+    /// ThreadWeaver::QObjectDecorator-like signals, only three:
     /*
     *  // This signal is emitted when this job is being processed by a thread.
     *  void started(ThreadWeaver::JobPointer);
@@ -91,6 +91,11 @@ Q_SIGNALS:
 	/// https://api.kde.org/frameworks/kjobwidgets/html/namespaceKJobWidgets.html
 	///
 
+    /// @name Internal signals
+
+    /// Signal from KJob::doKill().
+    void signalKJobDoKill();
+
     /// KJobTrackerInterface:
     /// https://cgit.kde.org/kcoreaddons.git/tree/src/lib/jobs/kjobtrackerinterface.h
     /// On call to registerJob(), The default implementation connects the following KJob signals
@@ -119,33 +124,126 @@ public:
      * ThreadWeaver::QObjectDecorator-like constructor.
      */
     AMLMJob(ThreadWeaver::JobInterface *decoratee, bool autoDelete, QObject *parent = nullptr);
+    /// ThreadWeaver::Job-like constructor.
+    AMLMJob();
+    /// Destructor.
     ~AMLMJob() override;
 
-//    static AMLMJob* make_amlmjob(ThreadWeaver::Job* tw_job);
+    /// @name TW::Job overrides.
+    /// @{
 
+    /**
+     * Return whether the Job finished successfully or not.
+     * The default implementation simply returns true. Overload in derived classes if the derived Job class can fail.
+     *
+     * If a job fails (success() returns false), it will *NOT* resolve its dependencies when it finishes. This will make sure that
+     * Jobs that depend on the failed job will not be started.
+     *
+     * There is an important gotcha: When a Job object it deleted, it will always resolve its dependencies. If dependent jobs should
+     * not be executed after a failure, it is important to dequeue those before deleting the failed Job. A Sequence may be
+     * helpful for that purpose.
+     */
+    bool success() const override { return m_success; }
+
+    /**
+     * Abort the execution of the job.
+     * Call this method to ask the Job to abort if it is currently executed. Default implementation of
+     * the method does nothing.
+     * This method should return immediately, not after the abort has completed.
+     */
+    void requestAbort() override { /* nothing */ }
+
+    /// @} // END TW::Job overrides.
+
+    /// @name KJob overrides.
+    /// @{
+
+    /**
+     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously)."
+     */
     Q_SCRIPTABLE void start() override;
 
+    /// @}
+
+    /// Convenience member for getting a KJob* to this.
     KJob* asKJob();
+
+    /// Convenience member for getting a ThreadWeaver::IdDecorator* to this.
     ThreadWeaver::IdDecorator* asIdDecorator();
 
 public:
-    // Making some of the Protected interface Public for the benefit of reporting.
-    // Don't really like this.
 
-    void setError(int errorCode);
-    void setErrorText(const QString &errorText);
+    /// @name KJob overrides.
+    /// Making some of the Protected interface Public for the benefit of reporting.
+    /// Don't really like this.
+    /// @todo I think these don't need to be public now.
+    /// @{
+
+
     void setProcessedAmount(Unit unit, qulonglong amount);
     void setTotalAmount(Unit unit, qulonglong amount);
     void setPercent(unsigned long percentage);
 
-    void emitResult();
-
 protected:
-    /**
-     * Override of ::IdDecorator functions.
-     */
+
+    /// @name Override of TW::Job protected functions.
+    /// @{
+    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
     void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
+    /// @}
+
+    /// @name Override of KJob protected functions.
+    /// @{
+
+    /**
+     * Kill the job.  Default impl just returns false.
+     * Abort this job quietly.
+     * Simply kill the job, no error reporting or job deletion should be involved.
+     *
+     * @return true if job successfully killed, false otherwise.
+     */
+    bool doKill() override;
+
+    bool doSuspend() override;
+
+    bool doResume() override;
+
+    /**
+     * Emit the result signal, and suicide this job.
+     * @note Deletes this job using deleteLater(). It first notifies the observers to hide the
+     *       progress for this job using the finished() signal.
+     *       KJob implementation calls finsihJob(), which:
+     *       - Sets isFinished = true
+     *       - quit()s the internam event loop
+     *       - emits finished(this);
+     *       - if(emitResult) emit result(this)
+     *       - if(isAutoDelete) deleteLater();
+     *       This is probably sufficient behavior and we don't need to overload this (non-virtual) function.
+     */
+    /// void emitResult();
+
+    /// Defaults of these seem to be suitable.
+//    void setError(int errorCode);
+//    void setErrorText(const QString &errorText);
+
+    /// @}
+
+    /// @name New protected methods
+    /// @{
+    /// Make the internal signal-slot connections.
+    virtual void make_connections();
+    /// @}
+
+    /// New ThreadWeaver::Job-related members.
+    /// @{
+    bool m_aborted { false };
+    bool m_success { false };
+    /// @}
+
+protected Q_SLOTS:
+    /// Handle the doKill() operation.
+    void onKJobDoKill();
 
 private:
 
@@ -154,7 +252,10 @@ private:
     /**
      * The ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy between us and the
      *
-     * @note QJobPointer is typedef QSharedPointer<QObjectDecorator>.
+     * @note Two confusingly similar typedefs here:
+     *       From qobjectdecorator: "typedef QSharedPointer<QObjectDecorator> QJobPointer;".
+     *       From jobinterface.h:   "typedef QSharedPointer<JobInterface> JobPointer;"
+     *       Job is derived from JobInterface.  All in ThreadWeaver namespace.
      */
     ThreadWeaver::QJobPointer m_tw_job_qobj_decorator;
 };

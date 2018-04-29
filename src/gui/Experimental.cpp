@@ -92,14 +92,14 @@ void Experimental::DoExperiment()
 
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
-    auto ds = new DirectoryScanner/*Job*/(dir_url,
+    AMLMJob* ds = new DirectoryScanner/*Job*/(dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     auto queue = ThreadWeaver::stream();
 
     /// @note ThreadWeaver deletes ds regardless here.
-    auto amlm_job = new AMLMJob(ds, /*Autodelete?*/ false, this);
+    auto amlm_job = ds;//new AMLMJob(ds, /*Autodelete?*/ false, this);
     auto dsj = amlm_job;
 
     ActivityManager::instance()->addActivity(dsj);
