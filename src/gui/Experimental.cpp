@@ -112,8 +112,9 @@ void Experimental::DoExperiment()
 //    ActivityManager::instance()->addActivity(dsj2);
 //    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
-//    MainWindow::getInstance()->registerJob(dsj);
-//    MainWindow::getInstance()->registerJob(dsj2);
+    /// @todo Does this transfer ownership/parentage?
+    MainWindow::getInstance()->registerJob(dsj->asKJob());
+    MainWindow::getInstance()->registerJob(dsj2->asKJob());
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 

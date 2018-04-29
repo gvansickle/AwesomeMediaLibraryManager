@@ -71,7 +71,10 @@ class MDILibraryView;
 class MDIPlaylistView;
 class MetadataDockWidget;
 class CollectionDockWidget;
+
 class ActivityProgressWidget;
+class ExpDialog;
+
 class ActionBundle;
 class PlayerControls;
 class MDINowPlayingView;
@@ -499,6 +502,9 @@ public:
 
 #ifdef HAVE_KF5
     KStatusBarJobTracker* m_kf5_activity_progress_widget;
+
+    /// Status dialog.
+    ExpDialog* m_status_dlg { nullptr };
 #endif
 
     /// The Settings (AKA Preferences, AKA Config) dialog.

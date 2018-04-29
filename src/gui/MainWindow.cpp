@@ -1979,9 +1979,13 @@ void MainWindow::registerJob(KJob *new_job)
 //    wjt->registerJob(new_job);
 //    prog_dlg->layout()->addWidget(wjt->widget(new_job));
 //    prog_dlg->show();
-    auto expdlg = new ExpDialog(this);
-    expdlg->TrackJob(new_job);
-    expdlg->show();
+    if(!m_status_dlg)
+    {
+        // Create the Status dialog.
+        m_status_dlg = new ExpDialog(this);
+        m_status_dlg->show();
+    }
+    m_status_dlg->TrackJob(new_job);
 }
 
 
