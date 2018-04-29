@@ -31,13 +31,9 @@
 #include "AMLMJob.h"
 
 /**
- * This is the actual ThreadWeaver::Job.
- * Does not derive from QObject (or anything else).
  *
- * @todo Q: Should we really be deriving from AMLMJob here instead of ThreadWeaver::Job?
- *       A: Not sure, this is how ThreadWeaver examples do it, adding the decorator separately if necessary.
  */
-class DirectoryScanner : public AMLMJob //ThreadWeaver::Job
+class DirectoryScannerAMLMJob : public AMLMJob
 {
     Q_OBJECT
 
@@ -57,11 +53,11 @@ class DirectoryScanner : public AMLMJob //ThreadWeaver::Job
 
 public:
 //    explicit DirectoryScanner(/*ClassDerivedFromTW::Job*/* file);
-    explicit DirectoryScanner(QObject* parent, const QUrl &dir_url,
+    explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
-	~DirectoryScanner() override;
+	~DirectoryScannerAMLMJob() override;
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
 

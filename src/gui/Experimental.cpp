@@ -92,18 +92,26 @@ void Experimental::DoExperiment()
 
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
-    AMLMJob* dsj = new DirectoryScanner/*Job*/(this, dir_url,
+    AMLMJob* dsj = new DirectoryScannerAMLMJob(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+
+    QUrl dir_url2("file:///home/gary");
+    AMLMJob* dsj2 = new DirectoryScannerAMLMJob(this, dir_url2,
+                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+
 
     auto queue = ThreadWeaver::stream();
 
     ActivityManager::instance()->addActivity(dsj);
+    ActivityManager::instance()->addActivity(dsj2);
 //    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
     MainWindow::getInstance()->registerJob(dsj);
+    MainWindow::getInstance()->registerJob(dsj2);
 
-    queue << dsj;
+    queue << dsj << dsj2;
 
 #endif
 

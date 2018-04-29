@@ -27,7 +27,7 @@
 
 #include "utils/DebugHelpers.h"
 
-DirectoryScanner::DirectoryScanner(QObject *parent, const QUrl &dir_url,
+DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
@@ -37,13 +37,13 @@ DirectoryScanner::DirectoryScanner(QObject *parent, const QUrl &dir_url,
 
 }
 
-DirectoryScanner::~DirectoryScanner()
+DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
     qDb() << "DESTRUCTOR";
 }
 
 
-void DirectoryScanner::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
+void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
 	// Per the instructions here: https://api.kde.org/frameworks/threadweaver/html/classThreadWeaver_1_1Job.html#a1dd5d0ec7e1953576d6fe787f3cfd30c
 	// "Whenever publishing information about the job to the outside world, for example by emitting signals, use self,

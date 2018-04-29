@@ -66,9 +66,21 @@ KJob* AMLMJob::asKJob()
     return retval;
 }
 
+ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
+{
+    Q_CHECK_PTR(this);
+
+    auto shthis = sharedFromThis();
+    // ThreadWeaver::JobPointer == QSharedPointer<ThreadWeaver::JobInterface>
+    auto retval = qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(shthis);
+    Q_CHECK_PTR(retval);
+
+    return retval;
+}
+
 ThreadWeaver::IdDecorator* AMLMJob::asIdDecorator()
 {
-    auto retval = dynamic_cast<ThreadWeaver::IdDecorator*>(this);
+    auto retval = dynamic_cast<ThreadWeaver::IdDecorator*>(m_tw_job_qobj_decorator.data());
     Q_CHECK_PTR(retval);
     return retval;
 }
@@ -128,18 +140,21 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
 bool AMLMJob::doKill()
 {
+    qDb() << "DOKILL";
     Q_EMIT signalKJobDoKill();
 }
 
 bool AMLMJob::doSuspend()
 {
     /// @todo
+    qDb() << "TODO: DOSUSPEND";
     return false;
 }
 
 bool AMLMJob::doResume()
 {
     /// @todo
+    qDb() << "TODO: DORESUME";
     return false;
 }
 

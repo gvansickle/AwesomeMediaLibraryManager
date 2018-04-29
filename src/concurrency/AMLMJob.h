@@ -27,7 +27,8 @@
 #include <ThreadWeaver/QObjectDecorator>
 
 /**
- * Class which bridges the hard-to-understand gap between a ThreadWeaver::{QObject,Id}Decorator and a KJob-derived class.
+ * Base class for jobs which bridges the hard-to-understand gap between a
+ * ThreadWeaver::Job and a KJob-derived class.
  *
  * Goal is to make this one object be both a floor wax and a dessert topping:
  * - A KJob to interfaces which need it, in particular:
@@ -37,7 +38,7 @@
  * @note multiple inheritance in effect here.  Ok since ThreadWeaver::IdDecorator doesn't inherit from QObject.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job
+class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromThis<AMLMJob>
 {
 
     Q_OBJECT
@@ -126,8 +127,10 @@ public:
      * ThreadWeaver::QObjectDecorator-like constructor.
      */
     AMLMJob(ThreadWeaver::JobInterface *decoratee, bool autoDelete, QObject *parent = nullptr);
+
     /// KJob-like constructor.
-    AMLMJob(QObject* parent);
+    AMLMJob(QObject* parent = nullptr);
+
     /// Destructor.
     ~AMLMJob() override;
 
@@ -169,6 +172,9 @@ public:
 
     /// Convenience member for getting a KJob* to this.
     KJob* asKJob();
+
+    /// Convenience member for getting a ThreadWeaver::JobPointer (QSharedPointer<JobInterface>) to this.
+    ThreadWeaver::JobPointer asTWJobPointer();
 
     /// Convenience member for getting a ThreadWeaver::IdDecorator* to this.
     ThreadWeaver::IdDecorator* asIdDecorator();
