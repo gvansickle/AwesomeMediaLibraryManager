@@ -56,6 +56,7 @@ void AMLMJob::start()
     /// @todo Do we need to do anything here?  Has the TW Job started already?
 
     qDb() << "AMLMJob::start(), TWJob status:" << status();
+    /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
 }
 
 KJob* AMLMJob::asKJob()
@@ -114,13 +115,15 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     if(!self->success())
     {
         qWr() << "FAILED";
-        m_success = false;
-        Q_EMIT failed(self);
+        Q_EMIT /*TWJob*/ failed(self);
     }
-    qDb() << "Succeeded";
-    m_success = true;
+    else
+    {
+        qDb() << "Succeeded";
+        /*KJob*/ emitResult();
+    }
     qDb() << "EMITTING DONE";
-    Q_EMIT done(self);
+    Q_EMIT /*TWJob*/ done(self);
 }
 
 bool AMLMJob::doKill()
@@ -142,7 +145,7 @@ bool AMLMJob::doResume()
 
 void AMLMJob::make_connections()
 {
-    /// DirectConnection here to make this ~a function call.
+    /// Qt::DirectConnection here to make this ~a function call.
     connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
 
     // void started(ThreadWeaver::JobPointer);
@@ -159,6 +162,10 @@ void AMLMJob::make_connections()
     //  void failed(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
     connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
+
+    /// @todo Figure out how we're going to trigger KJob::result (emitResult()).
+    connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
+    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
 }
 
 void AMLMJob::onKJobDoKill()
@@ -168,5 +175,21 @@ void AMLMJob::onKJobDoKill()
 
 
     qDb() << "EXIT";
+}
+
+void AMLMJob::onKJobResult(KJob *job)
+{
+    /// Called when the KJob is finished.
+    qDb() << "KJOB RESULT" << job;
+
+    if(job->error())
+    {
+        // There was an error.
+    }
+}
+
+void AMLMJob::onKJobFinished(KJob *job)
+{
+    qDb() << "KJOB FINISHED" << job;
 }
 

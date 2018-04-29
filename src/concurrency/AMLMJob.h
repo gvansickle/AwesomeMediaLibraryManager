@@ -250,12 +250,25 @@ protected:
     /// New ThreadWeaver::Job-related members.
     /// @{
     bool m_aborted { false };
-    bool m_success { false };
+    bool m_success { true };
     /// @}
 
 protected Q_SLOTS:
+
+    /// @name Internal slots
+    /// @{
+
     /// Handle the doKill() operation.
     void onKJobDoKill();
+
+    /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
+    /// Only supposed to call KJob::error() from this slot.
+    void onKJobResult(KJob* job);
+
+    /// Always invoked by the KJob::finished signal regardless of reason.
+    void onKJobFinished(KJob* job);
+
+    /// @}
 
 private:
 
