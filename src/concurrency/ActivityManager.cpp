@@ -66,7 +66,7 @@ void ActivityManager::addActivity(AMLMJob *activity)
     qDb() << "ACTIVITY ADDED, AMLMJob:" << activity;
 
     m_amlm_activities.push_back(activity);
-
+#if TODO
     connect(activity, &AMLMJob::finished, [this](KJob* job){
         qDb() << "GOT FINISHED SIGNAL";
         auto as_amlmjob = qobject_cast<AMLMJob*>(job);
@@ -80,6 +80,7 @@ void ActivityManager::addActivity(AMLMJob *activity)
         Q_CHECK_PTR(obj);
         m_amlm_activities.removeAll(qobject_cast<AMLMJob*>(obj));
     });
+#endif
 }
 
 void ActivityManager::onActivityFinished(ThreadWeaver::JobPointer activity)

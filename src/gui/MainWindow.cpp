@@ -1967,12 +1967,12 @@ void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
 void MainWindow::registerJob(KJob *new_job)
 {
     statusBar()->show();
-    KJobWidgets::setWindow(new_job, this);
-    m_kf5_activity_progress_widget->registerJob(new_job);
-    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);
-    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
-    statusBar()->show();
-    m_kf5_activity_progress_widget->widget(new_job)->show();
+//    KJobWidgets::setWindow(new_job, this);
+//    m_kf5_activity_progress_widget->registerJob(new_job);
+//    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);//ProgressOnly);
+//    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
+//    statusBar()->show();
+//    m_kf5_activity_progress_widget->widget(new_job)->show();
 
 //    auto prog_dlg = new QDialog(this);
 //    auto wjt = new KWidgetJobTracker(prog_dlg);
