@@ -9,16 +9,16 @@ class KWidgetJobTracker;
 class KJob;
 
 namespace Ui {
-class ExpDialog;
+class ActivityProgressDialog;
 }
 
-class ExpDialog : public QDialog
+class ActivityProgressDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit ExpDialog(QWidget *parent = 0);
-    ~ExpDialog();
+    explicit ActivityProgressDialog(QWidget *parent = 0);
+    ~ActivityProgressDialog();
 
     void TrackJob(KJob *job);
 
@@ -27,7 +27,7 @@ protected Q_SLOTS:
     void kjobCompleted(KJob *pJob);
 
 private:
-    Ui::ExpDialog *ui;
+    Ui::ActivityProgressDialog *ui;
 
     KWidgetJobTracker *m_JobTracker;
 };

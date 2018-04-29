@@ -73,7 +73,7 @@ class MetadataDockWidget;
 class CollectionDockWidget;
 
 class ActivityProgressWidget;
-class ExpDialog;
+class ActivityProgressDialog;
 
 class ActionBundle;
 class PlayerControls;
@@ -504,7 +504,7 @@ public:
     KStatusBarJobTracker* m_kf5_activity_progress_widget;
 
     /// Status dialog.
-    ExpDialog* m_status_dlg { nullptr };
+    ActivityProgressDialog* m_status_dlg { nullptr };
 #endif
 
     /// The Settings (AKA Preferences, AKA Config) dialog.

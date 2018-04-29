@@ -47,7 +47,7 @@
 
 #include "MainWindow.h"
 
-#include "expdialog.h"
+#include <gui/ActivityProgressDialog.h>
 #include <concurrency/DirectoryScanJob.h>
 
 #endif

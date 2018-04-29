@@ -1,23 +1,23 @@
-#include "expdialog.h"
+#include <src/gui/ActivityProgressDialog.h>
 #include "ui_expdialog.h"
 
 #include <KWidgetJobTracker>
 
 #include <utils/DebugHelpers.h>
 
-ExpDialog::ExpDialog(QWidget *parent) :
+ActivityProgressDialog::ActivityProgressDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ExpDialog), m_JobTracker(nullptr)
+    ui(new Ui::ActivityProgressDialog), m_JobTracker(nullptr)
 {
     ui->setupUi(this);
 }
 
-ExpDialog::~ExpDialog()
+ActivityProgressDialog::~ActivityProgressDialog()
 {
     delete ui;
 }
 
-void ExpDialog::TrackJob(KJob *job)
+void ActivityProgressDialog::TrackJob(KJob *job)
 {
     if(m_JobTracker == nullptr)
     {
@@ -34,12 +34,12 @@ void ExpDialog::TrackJob(KJob *job)
     //    job->start();
 }
 
-void ExpDialog::kjobIncoming(KIO::Job *pJob, const KIO::UDSEntryList &pEntryList)
+void ActivityProgressDialog::kjobIncoming(KIO::Job *pJob, const KIO::UDSEntryList &pEntryList)
 {
     qInfo() << pEntryList;
 }
 
-void ExpDialog::kjobCompleted(KJob *pJob)
+void ActivityProgressDialog::kjobCompleted(KJob *pJob)
 {
     if(pJob->error() != 0)
     {
