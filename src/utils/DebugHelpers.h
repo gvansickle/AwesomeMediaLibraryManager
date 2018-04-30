@@ -25,6 +25,7 @@
 #include <QString>
 #include <QDebug>
 #include <QThread>
+#include <QModelIndex>
 
 #include "StringHelpers.h"
 
@@ -39,7 +40,7 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 /**
  * Stream to qDebug() to log the current thread name.
  */
-#define M_THREADNAME() "[" << QThread::currentThread()->objectName() << "]"
+#define M_THREADNAME() QStringLiteral("[") << QThread::currentThread()->objectName() << QStringLiteral("]")
 
 /**
  * qDebug() etc. replacements which prepends the current thread name.
@@ -48,6 +49,25 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 #define qIn() qInfo() << M_THREADNAME()
 #define qWr() qWarning() << M_THREADNAME()
 #define qCr() qCritical() << M_THREADNAME()
+
+///**
+// * QObject property dumper.
+// */
+//Q_DECLARE_METATYPE(QModelIndex)
+//inline static void dump_properties(QModelIndex* obj, QDebug dbg_stream = qDebug())
+//{
+//#define out() dbg_stream << M_THREADNAME()
+
+//    auto dynamic_prop_names = obj->dynamicPropertyNames();
+
+//    out() << toqstr("Dynamic properties of QObject:") << obj << toqstr(":");
+//    for(auto prop_name : dynamic_prop_names)
+//    {
+//        out() << prop_name << ":" << obj->property(prop_name);
+//    }
+
+//#undef out
+//}
 
 template <typename T>
 static inline auto idstr(const char *id_as_c_str, T id) -> std::enable_if_t<std::is_convertible<T, std::string>::value == true, std::string> /// SFINAE version for T already convertible to std::string.
