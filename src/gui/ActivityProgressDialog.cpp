@@ -2,8 +2,17 @@
 #include "ui_ActivityProgressDialog.h"
 
 #include <KWidgetJobTracker>
+#include <KWidgetItemDelegate>
 
 #include <utils/DebugHelpers.h>
+
+
+class WidgetItemDelegate : public KWidgetItemDelegate
+{
+
+};
+
+
 
 ActivityProgressDialog::ActivityProgressDialog(QWidget *parent) :
     QDialog(parent),
@@ -25,7 +34,13 @@ void ActivityProgressDialog::TrackJob(KJob *job)
     }
     m_JobTracker->registerJob(job);
     QWidget* progress_widget = m_JobTracker->widget(job);
+
     ui->m_ProgressLayout->insertWidget(0, progress_widget);
+//    auto last_item_idx = ui->listWidget->count();
+//    auto list_widget_item = new QListWidgetItem();
+//    ui->listWidget->addItem(list_widget_item);
+//    ui->listWidget->setItemWidget(list_widget_item, progress_widget);
+
     progress_widget->show();
 
     connect(job, SIGNAL(entries(KIO::Job*, KIO::UDSEntryList)), SLOT(kjobIncoming(KIO::Job*, KIO::UDSEntryList)));

@@ -1978,9 +1978,10 @@ void MainWindow::registerJob(KJob *new_job)
     {
         // Create the Status dialog.
         m_status_dlg = new ActivityProgressDialog(this);
-        m_status_dlg->show();
     }
+
     m_status_dlg->TrackJob(new_job);
+    m_status_dlg->show();
 }
 
 
