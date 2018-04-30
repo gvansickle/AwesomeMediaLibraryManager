@@ -34,7 +34,8 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &di
     : AMLMJob(parent),
       m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
-
+    M_WARNING("TODO");
+//    setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -65,12 +66,12 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     int num_discovered_dirs = 0;
     uint num_possible_files = 0;
     qint64 total_discovered_file_size_bytes = 0;
-    QString status_text = QObject::tr("Scanning for music files");
 
-    Q_EMIT description(aself->asKJob(),
-                              status_text, //QObject::tr("Scanning for music files"),
-                                QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
-                                QPair<QString,QString>(QObject::tr("Current file:"), QObject::tr("")));
+    QString status_text = tr("Scanning for music files");
+
+    Q_EMIT description(asKJob(), status_text,
+                                QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
+                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
 //		report_and_control.setProgressRange(0, 0);
 //		report_and_control.setProgressValueAndText(0, status_text);
@@ -136,8 +137,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 //                qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
 				// Update progress.
 //				report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
-                setProcessedAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
                 setTotalAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+                setProcessedAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
                 setProcessedAmount(KJob::Unit::Files, num_files_found_so_far);
 			}
 		}
