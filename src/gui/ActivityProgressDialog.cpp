@@ -41,24 +41,27 @@ void ActivityProgressDialog::TrackJob(KJob *job)
 
     // Register the KJob.
     m_JobTracker->registerJob(job);
-    // Get the widget associated with the KJob.
-    QWidget* progress_widget = m_JobTracker->widget(job);
+
+    // Get/Create the widget associated with the KJob.
+//    QWidget* progress_widget = m_JobTracker->widget(job);
 
 //    ui->m_ProgressLayout->insertWidget(0, progress_widget);
 //    auto last_item_idx = ui->m_listWidget->count();
     auto list_widget_item = new QListWidgetItem();
-    list_widget_item->setData(Qt::UserRole, QVariant::fromValue(progress_widget));
+    list_widget_item->setData(Qt::UserRole, QVariant::fromValue(m_JobTracker));
+    list_widget_item->setData(Qt::UserRole+1, QVariant::fromValue(job));
+
     ui->m_listWidget->addItem(list_widget_item);
 //    ui->listWidget->setItemWidget(list_widget_item, progress_widget);
 
-    progress_widget->show();
+//    progress_widget->show();
 
     connect(job, SIGNAL(entries(KIO::Job*, KIO::UDSEntryList)), SLOT(kjobIncoming(KIO::Job*, KIO::UDSEntryList)));
     connect(job, SIGNAL(result(KJob*)), SLOT(kjobCompleted(KJob*)));
-    connect(job, &KJob::finished, [=](KJob* job) mutable {
-        // Our widget is getting deleted out from under us.  Remove this list item.
-        delete list_widget_item;
-    });
+//    connect(job, &KJob::finished, [=](KJob* job) mutable {
+//        // Our widget is getting deleted out from under us.  Remove this list item.
+//        delete list_widget_item;
+//    });
 
     //    job->start();
 }

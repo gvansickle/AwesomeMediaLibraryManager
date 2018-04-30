@@ -2,13 +2,17 @@
 #define EXPDIALOG_H
 
 #include <QDialog>
-#include <KIO/Job>
-#include <KWidgetItemDelegate>
+#include <QAbstractItemView>
 #include <QStyledItemDelegate>
+
+#include <KIO/Job>
+#include <KWidgetJobTracker>
+#include <KWidgetItemDelegate>
+
 
 #include "utils/DebugHelpers.h"
 
-class KWidgetJobTracker;
+//class KWidgetJobTracker;
 class KJob;
 
 namespace Ui {
@@ -61,9 +65,35 @@ public:
                 this, SIGNAL(sizeHintChanged(QModelIndex)));
     }
 
-    ~WidgetItemDelegate() override {}
+    ~WidgetItemDelegate() override { qDb() << "DESTRUCTED"; }
 
 protected:
+
+//    inline static QWidget* toWidget(const QModelIndex &index) { return index.data(Qt::UserRole).value<QWidget*>(); }
+    inline static KWidgetJobTracker* toKJobTracker(const QModelIndex &index) { return index.data(Qt::UserRole).value<KWidgetJobTracker*>(); }
+    inline static KJob* toKJob(const QModelIndex &index) { return index.data(Qt::UserRole+1).value<KJob*>(); }
+    inline static QWidget* toWidget(const QModelIndex &index)
+    {
+        QWidget* widget = nullptr;
+
+        auto tracker = toKJobTracker(index);
+        auto job = toKJob(index);
+        if(tracker && job)
+        {
+            widget = tracker->widget(job);
+            if(!widget)
+            {
+                qWr() << "BAD WIDGET:" << widget;
+            }
+        }
+        else
+        {
+            qWr() << "BAD TRACKER/JOB:" << tracker << job;
+        }
+
+        return widget;
+    }
+
     QList<QWidget*> createItemWidgets(const QModelIndex &index) const override
     {
         // Per https://api.kde.org/4.x-api/kdelibs-apidocs/kdeui/html/classKWidgetItemDelegate.html#ae4adcebdc0c6e94d280565d10822f298:
@@ -81,17 +111,23 @@ protected:
         else
         {
             qDb() << "INDEX:" << index;
-            qDb() << "INDEX R/C:" << index.row() << index.column() << index.data(Qt::UserRole);
+            qDb() << "INDEX R/C/tracker/kjob:" << index.row() << index.column() << toKJobTracker(index) << toKJob(index);
 
-            auto widget = index.data(Qt::UserRole).value<QWidget*>();
-            if(!widget)
+            auto tracker = toKJobTracker(index);
+            auto job = toKJob(index);
+
+            if(!tracker || !job)
             {
-                qDb() << "NO WIDGET";
+                qDb() << "NO tracker or JOB";
             }
             else
             {
-                qDb() << "WIDGET:" << widget;
-                retval << widget;
+                qDb() << "tracker/job:" << tracker << job;
+                // Create the new progress widget.
+                QWidget* progress_widget = tracker->widget(job);
+                progress_widget->setParent(this->itemView());
+
+                retval << progress_widget;
             }
         }
 
@@ -115,7 +151,7 @@ protected:
             return hint;
         }
 
-        auto widget = index.data(Qt::UserRole).value<QWidget*>();
+        auto widget = toWidget(index); //index.data(Qt::UserRole).value<QWidget*>();
         if(!widget)
         {
             qDb() << "NO WIDGET";
@@ -129,6 +165,12 @@ protected:
 
         return hint;
     }
+
+    void updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+    {
+        m_styledDelegate->updateEditorGeometry(editor, option, index);
+    }
+
 
     void updateItemWidgets(const QList<QWidget*> widgets, const QStyleOptionViewItem &option,
                            const QPersistentModelIndex &index) const override
@@ -158,9 +200,22 @@ protected:
 
     }
 
+    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
+    {
+        return m_styledDelegate->createEditor(parent, option, index);
+    }
+
+    bool editorEvent(QEvent* event, QAbstractItemModel* model,
+                                              const QStyleOptionViewItem& option, const QModelIndex& index)
+    {
+        return static_cast<QAbstractItemDelegate*>(m_styledDelegate)->editorEvent(event, model, option, index);
+    }
+
 private:
     QStyledItemDelegate* m_styledDelegate { nullptr };
 
 };
+
+//Q_DECLARE_METATYPE(WidgetItemDelegate)
 
 #endif // EXPDIALOG_H

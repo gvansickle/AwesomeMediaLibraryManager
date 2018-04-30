@@ -25,7 +25,11 @@
     </widget>
    </item>
    <item row="0" column="0">
-    <widget class="QListWidget" name="m_listWidget"/>
+    <widget class="QListWidget" name="m_listWidget">
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustToContents</enum>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
