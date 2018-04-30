@@ -185,6 +185,7 @@ set(HEADER_FILES
 	gui/helpers/NetAwareFileDialogGtk3.h
 	gui/helpers/Gtk3DialogHelper.h
 	gui/ActivityProgressDialog.h
+	gui/widgets/ActivityProgressPopup.h
 	concurrency/DirectoryScanJob.h
     )
 
@@ -259,6 +260,7 @@ set(SOURCE_FILES
 	gui/helpers/Gtk3DialogHelper.cpp
 	gui/ActivityProgressDialog.cpp
 	gui/ActivityProgressDialog.ui
+	gui/widgets/ActivityProgressPopup.cpp
 	concurrency/DirectoryScanJob.cpp
 	)
 

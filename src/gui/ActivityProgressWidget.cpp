@@ -25,6 +25,7 @@
 #include <QProgressBar>
 #include <QHBoxLayout>
 #include <QDebug>
+#include <QToolButton>
 
 // KF5
 
@@ -47,11 +48,30 @@ ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::Window
 
 	m_progress_bar = new QProgressBar(this);
 
+    // Pause/Resume button
+    auto button_pause = new QToolButton(this);
+    button_pause->setIcon(QIcon::fromTheme("media-playback-pause"));
+//    button_pause->setMenu(menu);
+    button_pause->setStyleSheet("* { border: none; }");
+
+    // Stop button.
+    auto button_stop = new QToolButton(this);
+    button_stop->setIcon(QIcon::fromTheme("process-stop"));
+//    button_pause->setMenu(menu);
+    button_stop->setStyleSheet("* { border: none; }");
+
+    // Expand jobs button.
+    auto button_jobs = new QToolButton(this);
+    button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
+
 	auto layout = new QHBoxLayout();
 	layout->setContentsMargins(0, 0, 0, 0);
 	layout->addWidget(m_current_activity_label);
 	layout->addWidget(m_text_status_label);
 	layout->addWidget(m_progress_bar);
+    layout->addWidget(button_pause);
+    layout->addWidget(button_stop);
+    layout->addWidget(button_jobs);
 	setLayout(layout);
 }
 

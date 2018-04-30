@@ -39,7 +39,7 @@ class FilterWidget : public QLineEdit
 
 Q_SIGNALS:
 	void filterChanged()
-	  W_SIGNAL(filterChanged)
+    W_SIGNAL(filterChanged)
 
 public:
 	explicit FilterWidget(QWidget *parent = nullptr);
