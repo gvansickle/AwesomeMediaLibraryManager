@@ -74,20 +74,20 @@ ThreadWeaver::IdDecorator* AMLMJob::asIdDecorator()
     return retval;
 }
 
-void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
-{
-    KJob::setProcessedAmount(unit, amount);
-}
+//void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
+//{
+//    KJob::setProcessedAmount(unit, amount);
+//}
 
-void AMLMJob::setTotalAmount(KJob::Unit unit, qulonglong amount)
-{
-    KJob::setTotalAmount(unit, amount);
-}
+//void AMLMJob::setTotalAmount(KJob::Unit unit, qulonglong amount)
+//{
+//    KJob::setTotalAmount(unit, amount);
+//}
 
-void AMLMJob::setPercent(unsigned long percentage)
-{
-    this->KJob::setPercent(percentage);
-}
+//void AMLMJob::setPercent(unsigned long percentage)
+//{
+//    this->KJob::setPercent(percentage);
+//}
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {

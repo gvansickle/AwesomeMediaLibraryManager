@@ -61,18 +61,20 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 
-		int num_files_found_so_far = 0;
-		uint num_possible_files = 0;
-		QString status_text = QObject::tr("Scanning for music files");
+    int num_files_found_so_far = 0;
+    int num_discovered_dirs = 0;
+    uint num_possible_files = 0;
+    qint64 total_discovered_file_size_bytes = 0;
+    QString status_text = QObject::tr("Scanning for music files");
 
-        Q_EMIT aself->description(aself->asKJob(),
-                                  QObject::tr("Scanning for music files"),
-                                    QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
-                                    QPair<QString,QString>(QObject::tr("Current file:"), QObject::tr("")));
+    Q_EMIT description(aself->asKJob(),
+                              status_text, //QObject::tr("Scanning for music files"),
+                                QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
+                                QPair<QString,QString>(QObject::tr("Current file:"), QObject::tr("")));
 
 //		report_and_control.setProgressRange(0, 0);
 //		report_and_control.setProgressValueAndText(0, status_text);
-        aself->setPercent(0);
+        //setPercent(0);
 
 		while(m_dir_iterator.hasNext())
 		{
@@ -91,18 +93,22 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 			QString entry_path = m_dir_iterator.next();
 			auto file_info = m_dir_iterator.fileInfo();
 
-            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
+//            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
 			if(file_info.isDir())
 			{
 				QDir dir = file_info.absoluteDir();
+                num_discovered_dirs++;
+
 //                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
 
 				// Update the max range to be the number of files we know we've found so far plus the number
 				// of files potentially in this directory.
 				num_possible_files = num_files_found_so_far + file_info.dir().count();
 
-                aself->setTotalAmount(KJob::Unit::Files, num_possible_files);
+                setProcessedAmount(KJob::Unit::Directories, num_discovered_dirs);
+                setTotalAmount(KJob::Unit::Directories, num_discovered_dirs);
+                setTotalAmount(KJob::Unit::Files, num_possible_files);
 //				report_and_control.setProgressRange(0, num_possible_files);
 			}
 			else if(file_info.isFile())
@@ -110,11 +116,15 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 				// It's a file.
 				num_files_found_so_far++;
 
+                // How big is it?
+                auto file_size = file_info.size();
+                total_discovered_file_size_bytes += file_size;
+
 //                qDebug() << "ITS A FILE";
 
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
-                Q_EMIT aself->infoMessage(aself->asKJob(), tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
+                Q_EMIT infoMessage(aself->asKJob(), tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
 //                Q_EMIT aself->description(aself->asKJob(),
 //                                          QObject::tr("Scanning for music files"),
 //                                            QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
@@ -126,7 +136,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 //                qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
 				// Update progress.
 //				report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
-                aself->setProcessedAmount(KJob::Unit::Files, num_files_found_so_far);
+                setProcessedAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+                setTotalAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+                setProcessedAmount(KJob::Unit::Files, num_files_found_so_far);
 			}
 		}
 

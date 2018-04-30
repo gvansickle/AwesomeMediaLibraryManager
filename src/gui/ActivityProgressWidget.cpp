@@ -80,7 +80,12 @@ void ActivityProgressWidget::addActivity(ThreadWeaver::QObjectDecorator* activit
 
 void ActivityProgressWidget::addActivity(AMLMJob *activity)
 {
-//    connect();
+    //    connect();
+}
+
+void ActivityProgressWidget::TrackJob(KJob *job)
+{
+
 }
 
 void ActivityProgressWidget::onTWJobDone(ThreadWeaver::JobPointer job)

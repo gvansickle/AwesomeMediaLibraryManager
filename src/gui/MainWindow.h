@@ -492,6 +492,7 @@ private:
 	ToolBarClass* m_controlsToolbar;
 	ToolBarClass* m_filterToolbar;
 
+public:
     /// Docks
 	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
@@ -501,7 +502,7 @@ public:
     ActivityProgressWidget* m_activity_progress_widget;
 
 #ifdef HAVE_KF5
-    KStatusBarJobTracker* m_kf5_activity_progress_widget;
+    KStatusBarJobTracker* m_kf5_activity_progress_widget { nullptr };
 
     /// Status dialog.
     ActivityProgressDialog* m_status_dlg { nullptr };

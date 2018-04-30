@@ -2,6 +2,7 @@
 #include "ui_ActivityProgressDialog.h"
 
 #include <KWidgetJobTracker>
+#include <QStackedLayout>
 
 #include <utils/DebugHelpers.h>
 
@@ -16,19 +17,24 @@ ActivityProgressDialog::ActivityProgressDialog(QWidget *parent) :
     ui->setupUi(this);
 
     // QListWidget is-a QListView.
-    auto list_widget = ui->m_listWidget;
+//    auto list_widget = ui->m_listWidget;
+    auto list_widget = ui->m_scrollAreaWidgetContents;
+//    auto new_layout = new QStackedLayout(list_widget);
+//    new_layout->setStackingMode(QStackedLayout::StackAll);
+//    list_widget->setLayout(new_layout);
+//    qobject_cast<QStackedLayout*>(list_widget->layout())->setStackingMode(QStackedLayout::StackAll);
 
     // views don't take ownership of delegates.
-    m_delegate = new WidgetItemDelegate(ui->m_listWidget, ui->m_listWidget);
+//    m_delegate = new WidgetItemDelegate(list_widget, list_widget);
 
-    auto old_delegate = ui->m_listWidget->itemDelegate();
-    ui->m_listWidget->setItemDelegate(m_delegate);
-    old_delegate->deleteLater();
+//    auto old_delegate = list_widget->itemDelegate();
+//    list_widget->setItemDelegate(m_delegate);
+//    old_delegate->deleteLater();
 }
 
 ActivityProgressDialog::~ActivityProgressDialog()
 {
-    delete m_delegate;
+//    delete m_delegate;
     delete ui;
 }
 
@@ -43,15 +49,16 @@ void ActivityProgressDialog::TrackJob(KJob *job)
     m_JobTracker->registerJob(job);
 
     // Get/Create the widget associated with the KJob.
-//    QWidget* progress_widget = m_JobTracker->widget(job);
+    QWidget* progress_widget = m_JobTracker->widget(job);
+    ui->m_scrollAreaWidgetContents->layout()->addWidget(progress_widget);
 
 //    ui->m_ProgressLayout->insertWidget(0, progress_widget);
 //    auto last_item_idx = ui->m_listWidget->count();
-    auto list_widget_item = new QListWidgetItem();
-    list_widget_item->setData(Qt::UserRole, QVariant::fromValue(m_JobTracker));
-    list_widget_item->setData(Qt::UserRole+1, QVariant::fromValue(job));
+//    auto list_widget_item = new QListWidgetItem();
+//    list_widget_item->setData(Qt::UserRole, QVariant::fromValue(m_JobTracker));
+//    list_widget_item->setData(Qt::UserRole+1, QVariant::fromValue(job));
 
-    ui->m_listWidget->addItem(list_widget_item);
+//    ui->m_listWidget->addItem(list_widget_item);
 //    ui->listWidget->setItemWidget(list_widget_item, progress_widget);
 
 //    progress_widget->show();

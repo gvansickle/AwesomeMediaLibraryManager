@@ -213,9 +213,9 @@ public:
     /// @{
 
 
-    void setProcessedAmount(Unit unit, qulonglong amount);
-    void setTotalAmount(Unit unit, qulonglong amount);
-    void setPercent(unsigned long percentage);
+//    void setProcessedAmount(Unit unit, qulonglong amount);
+//    void setTotalAmount(Unit unit, qulonglong amount);
+//    void setPercent(unsigned long percentage);
 
 protected:
 

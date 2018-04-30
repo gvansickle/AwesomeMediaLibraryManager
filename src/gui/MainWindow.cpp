@@ -915,9 +915,9 @@ void MainWindow::createStatusBar()
 #ifdef HAVE_KF5
     // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
     // parent: "the parent of this object and of the widget displaying the job progresses"
-    m_kf5_activity_progress_widget = new KStatusBarJobTracker(this, /*display cancel button*/ true);
-    KIO::setJobTracker(m_kf5_activity_progress_widget);
-    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);
+//    m_kf5_activity_progress_widget = new KStatusBarJobTracker(this, /*display cancel button*/ true);
+//    KIO::setJobTracker(m_kf5_activity_progress_widget);
+//    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);
 //    statusBar()->addPermanentWidget(m_kf5_activity_progress_widget);
 #endif
 
@@ -1966,13 +1966,21 @@ void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
 
 void MainWindow::registerJob(KJob *new_job)
 {
-    statusBar()->show();
-//    KJobWidgets::setWindow(new_job, this);
-//    m_kf5_activity_progress_widget->registerJob(new_job);
-//    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);//ProgressOnly);
-//    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
 //    statusBar()->show();
-//    m_kf5_activity_progress_widget->widget(new_job)->show();
+
+    // Usage modeled on https://github.com/KDE/kjobwidgets/blob/master/tests/kjobtrackerstest.cpp
+    if(!m_kf5_activity_progress_widget)
+    {
+        // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
+        // parent: "the parent of this object and of the widget displaying the job progresses"
+        m_kf5_activity_progress_widget = new KStatusBarJobTracker(/*this*/statusBar(), /*display cancel button*/ true);
+    }
+//    KJobWidgets::setWindow(new_job, this);
+    m_kf5_activity_progress_widget->registerJob(new_job);
+    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);//ProgressOnly, LabelOnly);
+    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
+    m_kf5_activity_progress_widget->widget(new_job)->show();
+    statusBar()->show();
 
     if(!m_status_dlg)
     {

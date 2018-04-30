@@ -28,7 +28,11 @@
 #include <utils/DebugHelpers.h>
 
 #include <QApplication>
+#include <QStackedLayout>
+#include <QStackedWidget>
 #include <QFileDialog>
+#include <QDockWidget>
+#include <QScrollArea>
 
 #define EX1 1
 #define EX2 0
@@ -40,6 +44,9 @@
 #include <KIO/ListJob>
 #include <KIO/DirectorySizeJob>
 //#include <KWidgetJobTracker>
+
+#include <KMessageWidget>
+
 #include <ThreadWeaver/DebuggingAids>
 
 #include "concurrency/ActivityManager.h"
@@ -88,6 +95,22 @@ void Experimental::DoExperiment()
 #endif
 
 #if 1
+    auto mwin = MainWindow::getInstance();
+    auto dock = new QDockWidget(tr("Test dock"), mwin);
+    auto stack_wdgt = new QWidget(dock);
+    stack_wdgt->setLayout(new QVBoxLayout(dock));
+    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    dock->setWidget(stack_wdgt);
+    mwin->addDockWidget(Qt::LeftDockWidgetArea, dock);
+    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), stack_wdgt);
+    auto kmsg_wdgt2 = new KMessageWidget(tr("Second KMessageWidget test"), stack_wdgt);
+    stack_wdgt->layout()->addWidget(kmsg_wdgt);
+    stack_wdgt->layout()->addWidget(kmsg_wdgt2);
+
+    stack_wdgt->show();
+
+    kmsg_wdgt->animatedShow();
+    kmsg_wdgt2->animatedShow();
 
     ThreadWeaver::setDebugLevel(true, 3);
 
