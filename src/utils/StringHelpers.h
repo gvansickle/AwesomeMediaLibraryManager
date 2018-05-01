@@ -20,15 +20,15 @@
 #ifndef STRINGHELPERS_H
 #define STRINGHELPERS_H
 
+#include <config.h>
+
 #include <type_traits>
 #include <string>
 #include <QString>
 #include <taglib/tag.h>
 #include <QTextCodec>
 
-#warning "TODO: SET THIS IN CMAKE"
-#define HAVE_GLIBMM
-#ifdef HAVE_GLIBMM
+#if HAVE_GTKMM01
 #include <glibmm/ustring.h>
 #endif
 
@@ -90,7 +90,7 @@ static inline QString toqstr(const TagLib::String& tstr)
 	return QString::fromStdString(tstr.to8Bit(true));
 }
 
-#ifdef HAVE_GLIBMM
+#if HAVE_GTKMM01
 static inline Glib::ustring toustring(const QString& qstr)
 {
     // "Glib::ustring has implicit type conversions to and from std::string.

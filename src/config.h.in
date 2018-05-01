@@ -21,6 +21,9 @@
 #define AMLM_CONFIGURE_H
 
 /// Define to 1 if KF5 libraries were found.
-#cmakedefine01 HAVE_KF5
+#cmakedefine01 HAVE_KF501
+
+/// Define to 1 if glibmm library was found.
+#cmakedefine01 HAVE_GTKMM01
 
 #endif // AMLM_CONFIGURE_H

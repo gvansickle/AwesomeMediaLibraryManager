@@ -261,6 +261,7 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	WindowSystem
 	ThreadWeaver
 )
+set(HAVE_KF501 ${KF5_FOUND})
 list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
 list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
@@ -274,6 +275,7 @@ list(APPEND KF5_LINK_LIBS KF5::WindowSystem KF5::ThreadWeaver)
 set(GTK_LINK_LIB_TARGETS)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+set(HAVE_GTKMM01 ${GTKMM_FOUND})
 
 ###
 ### X11 and XCB libs.
@@ -357,7 +359,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
 configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 # Generate the amlm-configure.h file.
-configure_file(src/config.h.in
+configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
