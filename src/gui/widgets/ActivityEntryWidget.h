@@ -17,20 +17,33 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_GUI_WIDGETS_ACTIVITYPROGRESSPOPUP_H_
-#define SRC_GUI_WIDGETS_ACTIVITYPROGRESSPOPUP_H_
+#ifndef SRC_GUI_WIDGETS_ACTIVITYENTRYWIDGET_H_
+#define SRC_GUI_WIDGETS_ACTIVITYENTRYWIDGET_H_
 
 /// Qt5
-class QWidget;
+
+class QObject;
 #include <QWidgetAction>
+
+/// KF5
+
+class KMessageWidget;
 
 /*
  *
  */
-class ActivityProgressPopup : public QWidget
+class ActivityEntryWidget : public QWidgetAction
 {
 public:
-    ActivityProgressPopup(QWidget* parent = nullptr);
+    ActivityEntryWidget(QObject *parent = nullptr);
+    ~ActivityEntryWidget();
+
+protected:
+
+    QWidget* createWidget(QWidget *parent) override;
+    void deleteWidget(QWidget* widget) override;
+
+    KMessageWidget* m_message_widget;
 };
 
-#endif /* SRC_GUI_WIDGETS_ACTIVITYPROGRESSPOPUP_H_ */
+#endif /* SRC_GUI_WIDGETS_ACTIVITYENTRYWIDGET_H_ */

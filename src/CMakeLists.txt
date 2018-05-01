@@ -186,6 +186,7 @@ set(HEADER_FILES
 	gui/helpers/Gtk3DialogHelper.h
 	gui/ActivityProgressDialog.h
 	gui/widgets/ActivityProgressPopup.h
+	gui/widgets/ActivityEntryWidget.h
 	concurrency/DirectoryScanJob.h
     )
 
@@ -261,6 +262,7 @@ set(SOURCE_FILES
 	gui/ActivityProgressDialog.cpp
 	gui/ActivityProgressDialog.ui
 	gui/widgets/ActivityProgressPopup.cpp
+	gui/widgets/ActivityEntryWidget.cpp
 	concurrency/DirectoryScanJob.cpp
 	)
 

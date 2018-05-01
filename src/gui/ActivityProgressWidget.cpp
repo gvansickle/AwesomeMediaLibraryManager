@@ -39,6 +39,7 @@
 
 #include "utils/DebugHelpers.h"
 
+#include "widgets/ActivityEntryWidget.h"
 #include "widgets/ActivityProgressPopup.h"
 
 
@@ -83,7 +84,7 @@ ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::Window
 //    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), this);
 //    kmsg_wdgt->setCloseButtonVisible(true);
 //    pla_2->setDefaultWidget(kmsg_wdgt);
-    auto pla_2 = new ActivityEntry(menu_jobs);
+    auto pla_2 = new ActivityEntryWidget(menu_jobs);
     menu_jobs->addAction(pla_2);
     menu_jobs->addAction(tr("Test 1"));
     menu_jobs->addAction(tr("Test 2"));

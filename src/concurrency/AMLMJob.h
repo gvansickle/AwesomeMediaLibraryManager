@@ -204,19 +204,6 @@ public Q_SLOTS:
 //    bool suspend();
     /// @}
 
-public:
-
-    /// @name KJob overrides.
-    /// Making some of the Protected interface Public for the benefit of reporting.
-    /// Don't really like this.
-    /// @todo I think these don't need to be public now.
-    /// @{
-
-
-//    void setProcessedAmount(Unit unit, qulonglong amount);
-//    void setTotalAmount(Unit unit, qulonglong amount);
-//    void setPercent(unsigned long percentage);
-
 protected:
 
     /// @name Override of TW::Job protected functions.
