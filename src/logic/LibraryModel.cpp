@@ -19,6 +19,7 @@
 
 /** @file LibraryModel. */
 
+#include <gui/widgets/ActivityProgressWidget.h>
 #include "LibraryModel.h"
 
 #include "LibraryRescanner.h"
@@ -44,7 +45,6 @@
 
 #include "logic/ModelUserRoles.h"
 
-#include "gui/ActivityProgressWidget.h"
 
 LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_library()
 {

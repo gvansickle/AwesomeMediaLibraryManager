@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -18,7 +18,6 @@
  */
 
 #include "ActivityProgressWidget.h"
-#include "MainWindow.h"
 
 // Qt5
 
@@ -37,10 +36,11 @@
 
 // Ours
 
+#include <gui/MainWindow.h>
 #include "utils/DebugHelpers.h"
 
-#include "widgets/ActivityEntryWidget.h"
-#include "widgets/ActivityProgressPopup.h"
+#include "ActivityEntryWidget.h"
+#include "ActivityProgressPopup.h"
 
 
 ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f) : QWidget(parent, f)

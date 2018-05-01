@@ -50,7 +50,7 @@
 #include <ThreadWeaver/DebuggingAids>
 
 #include "concurrency/ActivityManager.h"
-#include "ActivityProgressWidget.h"
+#include <gui/widgets/ActivityProgressWidget.h>
 
 #include "MainWindow.h"
 

@@ -108,7 +108,7 @@
 #include <QMimeData>
 #include "logic/LibraryEntryMimeData.h"
 
-#include "gui/ActivityProgressWidget.h"
+#include "widgets/ActivityProgressWidget.h"
 #include "AboutBox.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 

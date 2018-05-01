@@ -157,7 +157,6 @@ set(HEADER_FILES
 	utils/Theme.h
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
-	gui/ActivityProgressWidget.h
 	utils/AsyncDirScanner.h
 	gui/AboutBox.h
 	utils/RegisterQtMetatypes.h
@@ -187,6 +186,7 @@ set(HEADER_FILES
 	gui/ActivityProgressDialog.h
 	gui/widgets/ActivityProgressPopup.h
 	gui/widgets/ActivityEntryWidget.h
+	gui/widgets/ActivityProgressWidget.h
 	concurrency/DirectoryScanJob.h
     )
 
@@ -226,7 +226,6 @@ set(SOURCE_FILES
 	utils/Theme.cpp
 	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
-	gui/ActivityProgressWidget.cpp
 	concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	gui/AboutBox.cpp
@@ -263,6 +262,7 @@ set(SOURCE_FILES
 	gui/ActivityProgressDialog.ui
 	gui/widgets/ActivityProgressPopup.cpp
 	gui/widgets/ActivityEntryWidget.cpp
+	gui/widgets/ActivityProgressWidget.cpp
 	concurrency/DirectoryScanJob.cpp
 	)
 
