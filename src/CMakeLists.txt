@@ -183,9 +183,6 @@ set(HEADER_FILES
 	gui/menus/HelpMenu.h
 	gui/helpers/NetAwareFileDialogGtk3.h
 	gui/helpers/Gtk3DialogHelper.h
-	gui/widgets/ActivityProgressPopup.h
-	gui/widgets/ActivityEntryWidget.h
-	gui/widgets/ActivityProgressWidget.h
 	concurrency/DirectoryScanJob.h
     )
 
@@ -257,16 +254,21 @@ set(SOURCE_FILES
 	gui/menus/HelpMenu.cpp
 	gui/helpers/NetAwareFileDialogGtk3.cpp
 	gui/helpers/Gtk3DialogHelper.cpp
-	gui/widgets/ActivityProgressPopup.cpp
-	gui/widgets/ActivityEntryWidget.cpp
-	gui/widgets/ActivityProgressWidget.cpp
 	concurrency/DirectoryScanJob.cpp
 	)
 
 set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	gui/activityprogressmanager/ActivityProgressDialog.h)
+	gui/activityprogressmanager/ActivityProgressDialog.h
+	gui/activityprogressmanager/ActivityProgressPopup.h
+	gui/activityprogressmanager/ActivityEntryWidget.h
+	gui/activityprogressmanager/ActivityProgressWidget.h
+	)
 set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	gui/activityprogressmanager/ActivityProgressDialog.cpp)
+	gui/activityprogressmanager/ActivityProgressDialog.cpp
+	gui/activityprogressmanager/ActivityProgressPopup.cpp
+	gui/activityprogressmanager/ActivityEntryWidget.cpp
+	gui/activityprogressmanager/ActivityProgressWidget.cpp
+	)
 set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	gui/activityprogressmanager/ActivityProgressDialog.ui)
 list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})

@@ -45,6 +45,9 @@
 #include "MDILibraryView.h"
 #include "MDIPlaylistView.h"
 #include "MDINowPlayingView.h"
+
+// Asynchronous activity progress monitoring.
+#include "activityprogressmanager/ActivityProgressWidget.h"
 #include "activityprogressmanager/ActivityProgressDialog.h"
 
 // For KF5 KConfig infrastructure.
@@ -108,7 +111,6 @@
 #include <QMimeData>
 #include "logic/LibraryEntryMimeData.h"
 
-#include "widgets/ActivityProgressWidget.h"
 #include "AboutBox.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
