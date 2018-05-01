@@ -194,12 +194,13 @@ M_WARNING("icons not installed properly");
 	}
 
 	// Set the application Icon.
-	// "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
-	// the desktop file, make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo"))); (in GUI apps)."
 	///@todo Get an actual icon.
 	QIcon appIcon;
     appIcon.addFile(":/Icons/128-preferences-desktop-sound.png");
-	app.setWindowIcon(appIcon);
+    // "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
+    // the desktop file [i.e. non-plasma], make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo")));
+    // (in GUI apps)."
+    QApplication::setWindowIcon(appIcon);
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
 	QSettings::setDefaultFormat(QSettings::IniFormat);

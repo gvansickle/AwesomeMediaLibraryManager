@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
 
 #include "MainWindow.h"
 
@@ -126,6 +127,10 @@
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
+/// Singleton pointer.
+QPointer<MainWindow> MainWindow::m_instance { nullptr };
+
+
 MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags)
 {
 	// Name our MainWindow.
@@ -134,6 +139,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     // Name our GUI thread.
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
+
+    /// Set the signleton pointer.
+    m_instance = this;
+
 
     /// @note Per what Kdenlive is doing.
     /// Call tree there is ~:
@@ -157,8 +166,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 MainWindow::~MainWindow()
 {
-
+    m_instance = nullptr;
 }
+
+QPointer<MainWindow> MainWindow::instance()
+{
+    return m_instance;
+}
+
 
 void MainWindow::init()
 {
@@ -287,22 +302,6 @@ M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
     setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
 
     post_setupGUI_init();
-}
-
-MainWindow* MainWindow::getInstance()
-{
-	// Search the qApp for the single MainWindow instance.
-	for(auto widget : qApp->topLevelWidgets())
-	{
-		if(MainWindow* is_main_window = qobject_cast<MainWindow*>(widget))
-		{
-			// Found it.
-			return is_main_window;
-		}
-	}
-
-	Q_ASSERT_X(0, "getInstance", "Couldn't find a MainWindow instance");
-	return nullptr;
 }
 
 /**
@@ -446,7 +445,7 @@ void MainWindow::createActions()
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 	addAction("save_playlist_as", m_savePlaylistAct);
 
-#ifndef HAVE_KF5
+#if HAVE_KF501
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
@@ -540,7 +539,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 {
 	// The cut/copy/paste action "sub-bundle".
     m_ab_cut_copy_paste_actions = new ActionBundle(ac);
-#ifndef HAVE_KF5
+#if HAVE_KF501
 	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
@@ -591,7 +590,7 @@ void MainWindow::createActionsView(KActionCollection *ac)
 
     m_ab_docks = new ActionBundle(ac);
 
-#ifndef HAVE_KF5
+#if HAVE_KF501
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 #else
@@ -628,7 +627,7 @@ void MainWindow::createActionsTools(KActionCollection *ac)
 
 void MainWindow::createActionsSettings(KActionCollection *ac)
 {
-#if HAVE_KF5
+#if HAVE_KF501
 
 	// Styles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
@@ -659,7 +658,7 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 
 void MainWindow::createActionsHelp(KActionCollection* ac)
 {
-#if HAVE_KF5
+#if HAVE_KF501
 	// For KDE we use a derivation of KHelpMenu.
 #else
 	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), tr("&Help"), this,
@@ -824,7 +823,7 @@ M_WARNING("TODO");
     menuBar()->addSeparator();
 
 	// Create the non-KDE help menu.
-#ifndef HAVE_KF5
+#if !HAVE_KF501
 	m_helpMenu = menuBar()->addMenu("&Help");
 	m_helpMenu->addSection("Help");
 	m_helpMenu->addAction(m_helpAct);
@@ -836,7 +835,7 @@ M_WARNING("TODO");
 	// Create a help menu based on KF5 KHelpMenu.
 	auto help_menu = new HelpMenu(this, KAboutData::applicationData());
 	menuBar()->addMenu(help_menu->menu());
-#endif // HAVE_KF5
+#endif // !HAVE_KF5
 }
 
 
@@ -880,7 +879,7 @@ void MainWindow::createToolBars()
 	m_settingsToolBar->addAction(m_act_settings);
 	m_settingsToolBar->addAction(m_experimentalAct);
 
-#ifndef HAVE_KF5
+#if HAVE_KF501
     // Create a combo box where the user can change the style.
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());

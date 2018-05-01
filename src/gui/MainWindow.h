@@ -17,9 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define HAVE_KF5 1 // @todo
+#include <config.h>
 
-#ifdef HAVE_KF5
+#if HAVE_KF501
 
 #include <KMainWindow>
 #include <KXmlGuiWindow>
@@ -37,7 +37,7 @@ class KToggleAction;
 class KToggleToolBarAction;
 class KActionMenu;
 
-#else // !HAVE_KF5
+#else // !HAVE_KF501
 
 #include <QMainWindow>
 
@@ -114,17 +114,18 @@ public:
 	explicit MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 	/// Destructor
     ~MainWindow() override;
-	
+
+	/**
+	 * Get a pointer to the MainWindow singleton.
+	 */
+    Q_DECL_DEPRECATED static MainWindow* getInstance() { return instance();}
+	static QPointer<MainWindow> instance();
+
 	/// Init function to offload all the init which used to be in the constructor.
 	void init();
 
     /// Init function which is called after setupGUI() has been called.
     void post_setupGUI_init();
-
-	/**
-	 * Get a pointer to the MainWindow singleton.
-	 */
-	static MainWindow* getInstance();
 
 	/**
 	 * Called from the closeEvent() of views just before they accept the event.
@@ -467,7 +468,7 @@ private:
     /// @}
 
 	/// @name Help actions.
-#ifndef HAVE_KF5
+#if !HAVE_KF501
 	QAction* m_helpAct;
     QAction* m_whatsThisAct;
     QAction* m_aboutAct;
@@ -500,12 +501,15 @@ public:
 
 private:
 
+    /// The MainWindow signleton.
+    static QPointer<MainWindow> m_instance;
+
     QPointer<ActivityProgressManager> m_activity_progress_manager;
 
     /// The Activity Progress Widget.
     ActivityProgressWidget* m_activity_progress_widget;
 
-#ifdef HAVE_KF5
+#if HAVE_KF501
     KStatusBarJobTracker* m_kf5_activity_progress_widget { nullptr };
 
     /// Status dialog.
