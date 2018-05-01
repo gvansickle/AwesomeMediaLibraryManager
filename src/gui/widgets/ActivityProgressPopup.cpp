@@ -5,11 +5,48 @@
  *      Author: gary
  */
 
-#include <src/gui/widgets/ActivityProgressPopup.h>
+#include "ActivityProgressPopup.h"
 
-ActivityProgressPopup::ActivityProgressPopup()
+#include <QToolButton>
+
+#include <KMessageWidget>
+
+
+ActivityEntry::ActivityEntry(QObject* parent) : QWidgetAction(parent)
 {
-	// TODO Auto-generated constructor stub
 
 }
+
+ActivityEntry::~ActivityEntry()
+{
+
+}
+
+QWidget* ActivityEntry::createWidget(QWidget *parent)
+{
+    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), parent);
+    kmsg_wdgt->setCloseButtonVisible(true);
+
+    connect(kmsg_wdgt, &KMessageWidget::hideAnimationFinished, [=]() { parent->removeAction(this); });
+
+    return kmsg_wdgt;
+}
+
+void ActivityEntry::deleteWidget(QWidget *widget)
+{
+    QWidgetAction::deleteWidget(widget);
+}
+
+
+ActivityProgressPopup::ActivityProgressPopup(QWidget *parent) : QWidget(parent)
+{
+    auto button_jobs = new QToolButton();
+    button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
+
+    auto progress_list_action = new QWidgetAction(this);
+    progress_list_action->setDefaultWidget(button_jobs);
+    addAction(progress_list_action);
+}
+
+
 

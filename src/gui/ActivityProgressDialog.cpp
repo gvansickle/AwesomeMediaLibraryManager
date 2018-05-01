@@ -2,7 +2,7 @@
 #include "ui_ActivityProgressDialog.h"
 
 #include <KWidgetJobTracker>
-#include <QStackedLayout>
+//#include <QStackedLayout>
 
 #include <utils/DebugHelpers.h>
 

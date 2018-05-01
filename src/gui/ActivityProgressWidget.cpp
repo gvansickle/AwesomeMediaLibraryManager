@@ -18,14 +18,18 @@
  */
 
 #include "ActivityProgressWidget.h"
+#include "MainWindow.h"
 
 // Qt5
 
 #include <QLabel>
+#include <QStatusBar>
 #include <QProgressBar>
 #include <QHBoxLayout>
 #include <QDebug>
 #include <QToolButton>
+#include <QMenu>
+#include <KMessageWidget>
 
 // KF5
 
@@ -34,6 +38,8 @@
 // Ours
 
 #include "utils/DebugHelpers.h"
+
+#include "widgets/ActivityProgressPopup.h"
 
 
 ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f) : QWidget(parent, f)
@@ -51,18 +57,38 @@ ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::Window
     // Pause/Resume button
     auto button_pause = new QToolButton(this);
     button_pause->setIcon(QIcon::fromTheme("media-playback-pause"));
-//    button_pause->setMenu(menu);
     button_pause->setStyleSheet("* { border: none; }");
 
     // Stop button.
     auto button_stop = new QToolButton(this);
     button_stop->setIcon(QIcon::fromTheme("process-stop"));
-//    button_pause->setMenu(menu);
     button_stop->setStyleSheet("* { border: none; }");
 
     // Expand jobs button.
+    auto menu_jobs = new QMenu(this);
     auto button_jobs = new QToolButton(this);
+    button_jobs->setPopupMode(QToolButton::InstantPopup);
     button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
+    button_jobs->setCheckable(true);
+    button_jobs->setMenu(menu_jobs);
+    auto button_jobs_popup = new ActivityProgressPopup(this);
+//    button_jobs->addAction(button_jobs_popup);
+//    auto button_jobs = new QToolButton(this);
+//    button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
+
+    auto progress_list_action = new QWidgetAction(this);
+    progress_list_action->setDefaultWidget(new QLabel(tr("Hello")));
+    menu_jobs->addAction(progress_list_action);
+//    auto pla_2 = new QWidgetAction(this);
+//    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), this);
+//    kmsg_wdgt->setCloseButtonVisible(true);
+//    pla_2->setDefaultWidget(kmsg_wdgt);
+    auto pla_2 = new ActivityEntry(menu_jobs);
+    menu_jobs->addAction(pla_2);
+    menu_jobs->addAction(tr("Test 1"));
+    menu_jobs->addAction(tr("Test 2"));
+//    progress_list_action->setDefaultWidget(button_jobs);
+//    MainWindow::getInstance()->statusBar()->addAction(progress_list_action);
 
 	auto layout = new QHBoxLayout();
 	layout->setContentsMargins(0, 0, 0, 0);

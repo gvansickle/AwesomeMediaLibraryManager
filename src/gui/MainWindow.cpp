@@ -65,6 +65,7 @@
 
 #include "utils/ConnectHelpers.h"
 #include "utils/ActionHelpers.h"
+#include "utils/DebugHelpers.h"
 
 #include <QObject>
 
@@ -82,7 +83,6 @@
 #include <QCloseEvent>
 #include <QStandardPaths>
 #include <QDebug>
-#include "utils/DebugHelpers.h"
 #include <QMdiSubWindow>
 #include <QTimer>
 #include <QMessageBox>
