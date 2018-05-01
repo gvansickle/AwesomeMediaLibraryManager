@@ -183,7 +183,6 @@ set(HEADER_FILES
 	gui/menus/HelpMenu.h
 	gui/helpers/NetAwareFileDialogGtk3.h
 	gui/helpers/Gtk3DialogHelper.h
-	gui/ActivityProgressDialog.h
 	gui/widgets/ActivityProgressPopup.h
 	gui/widgets/ActivityEntryWidget.h
 	gui/widgets/ActivityProgressWidget.h
@@ -258,13 +257,20 @@ set(SOURCE_FILES
 	gui/menus/HelpMenu.cpp
 	gui/helpers/NetAwareFileDialogGtk3.cpp
 	gui/helpers/Gtk3DialogHelper.cpp
-	gui/ActivityProgressDialog.cpp
-	gui/ActivityProgressDialog.ui
 	gui/widgets/ActivityProgressPopup.cpp
 	gui/widgets/ActivityEntryWidget.cpp
 	gui/widgets/ActivityProgressWidget.cpp
 	concurrency/DirectoryScanJob.cpp
 	)
+
+set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
+	gui/activityprogressmanager/ActivityProgressDialog.h)
+set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
+	gui/activityprogressmanager/ActivityProgressDialog.cpp)
+set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
+	gui/activityprogressmanager/ActivityProgressDialog.ui)
+list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+list(APPEND SOURCE_FILES ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER} ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
 
 # NoMoc files.
 set(HEADER_FILES_UTILS_NOMOC

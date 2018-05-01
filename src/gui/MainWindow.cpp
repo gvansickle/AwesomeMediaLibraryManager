@@ -45,7 +45,7 @@
 #include "MDILibraryView.h"
 #include "MDIPlaylistView.h"
 #include "MDINowPlayingView.h"
-#include "ActivityProgressDialog.h"
+#include "activityprogressmanager/ActivityProgressDialog.h"
 
 // For KF5 KConfig infrastructure.
 #include <AMLMSettings.h>

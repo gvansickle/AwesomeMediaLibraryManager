@@ -74,6 +74,7 @@ class CollectionDockWidget;
 
 class ActivityProgressWidget;
 class ActivityProgressDialog;
+class ActivityProgressManager;
 
 class ActionBundle;
 class PlayerControls;
@@ -497,7 +498,10 @@ public:
 	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
 
-public:
+private:
+
+    QPointer<ActivityProgressManager> m_activity_progress_manager;
+
     /// The Activity Progress Widget.
     ActivityProgressWidget* m_activity_progress_widget;
 

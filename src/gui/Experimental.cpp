@@ -54,7 +54,7 @@
 
 #include "MainWindow.h"
 
-#include <gui/ActivityProgressDialog.h>
+#include <gui/activityprogressmanager/ActivityProgressDialog.h>
 #include <concurrency/DirectoryScanJob.h>
 
 #endif
