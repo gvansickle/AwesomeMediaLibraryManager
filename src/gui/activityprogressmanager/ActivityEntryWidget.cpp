@@ -17,23 +17,36 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ActivityProgressPopup.h"
+#include <gui/activityprogressmanager/ActivityEntryWidget.h>
+#include <QObject>
 
-#include <QToolButton>
-
-
-
+#include <KMessageWidget>
 
 
-ActivityProgressPopup::ActivityProgressPopup(QWidget *parent) : QWidget(parent)
+ActivityEntryWidget::ActivityEntryWidget(QObject* parent) : QWidgetAction(parent)
 {
-    auto button_jobs = new QToolButton();
-    button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
 
-    auto progress_list_action = new QWidgetAction(this);
-    progress_list_action->setDefaultWidget(button_jobs);
-    addAction(progress_list_action);
 }
 
+ActivityEntryWidget::~ActivityEntryWidget()
+{
+
+}
+
+QWidget* ActivityEntryWidget::createWidget(QWidget *parent)
+{
+    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), parent);
+    kmsg_wdgt->setCloseButtonVisible(true);
+
+    // Remove the QWidgetAction when the activity is done.
+    connect(kmsg_wdgt, &KMessageWidget::hideAnimationFinished, [=]() { parent->removeAction(this); });
+
+    return kmsg_wdgt;
+}
+
+void ActivityEntryWidget::deleteWidget(QWidget *widget)
+{
+    QWidgetAction::deleteWidget(widget);
+}
 
 

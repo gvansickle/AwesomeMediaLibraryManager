@@ -50,11 +50,11 @@
 #include <ThreadWeaver/DebuggingAids>
 
 #include "concurrency/ActivityManager.h"
-#include <gui/widgets/ActivityProgressWidget.h>
+#include <gui/activityprogressmanager/ActivityProgressWidget.h>
 
 #include "MainWindow.h"
 
-#include <gui/activityprogressmanager/ActivityProgressDialog.h>
+#include "activityprogressmanager/ActivityProgressDialog.h"
 #include <concurrency/DirectoryScanJob.h>
 
 #endif

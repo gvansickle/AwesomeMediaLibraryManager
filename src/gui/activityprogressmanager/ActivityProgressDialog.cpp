@@ -1,4 +1,4 @@
-#include <gui/activityprogressmanager/ActivityProgressDialog.h>
+#include "ActivityProgressDialog.h"
 #include "ui_ActivityProgressDialog.h"
 
 #include <KWidgetJobTracker>
