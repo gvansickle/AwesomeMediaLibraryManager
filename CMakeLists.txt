@@ -184,9 +184,7 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         "Install path prefix, prepended onto install directories." FORCE )
 endif()
 
-# Generate the version info file.
-configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+
 
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")
@@ -353,6 +351,15 @@ set(IDENTIFIER "io.github.gvansickle")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+
+### Generate configured headers.
+# Generate the version info file.
+configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+# Generate the amlm-configure.h file.
+configure_file(src/config.h.in
+	${CMAKE_CURRENT_BINARY_DIR}/src/config.h
+	ESCAPE_QUOTES)
 
 add_subdirectory(src)
 
