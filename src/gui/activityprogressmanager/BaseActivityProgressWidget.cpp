@@ -17,16 +17,14 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ActivityProgressManager.h"
+#include "BaseActivityProgressWidget.h"
 
-ActivityProgressManager::ActivityProgressManager(QObject *parent) : BASE_CLASS(parent)
+BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_CLASS(parent)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
-ActivityProgressManager::~ActivityProgressManager()
+BaseActivityProgressWidget::~BaseActivityProgressWidget()
 {
-
 }
 

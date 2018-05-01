@@ -48,6 +48,7 @@
 #include "MDINowPlayingView.h"
 
 // Asynchronous activity progress monitoring.
+#include "activityprogressmanager/ActivityProgressManager.h"
 #include "activityprogressmanager/ActivityProgressWidget.h"
 #include "activityprogressmanager/ActivityProgressDialog.h"
 
@@ -131,7 +132,8 @@
 QPointer<MainWindow> MainWindow::m_instance { nullptr };
 
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags)
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags),
+    m_activity_progress_manager(new ActivityProgressManager(this))
 {
 	// Name our MainWindow.
 	setObjectName("MainWindow");
