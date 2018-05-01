@@ -29,8 +29,8 @@ if(WIN32)
     set(FLEX_FLAGS_EXTRA --wincompat)
 endif()
 
-find_package(BISON)
-find_package(FLEX)
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
 include(GNUInstallDirs)
 
