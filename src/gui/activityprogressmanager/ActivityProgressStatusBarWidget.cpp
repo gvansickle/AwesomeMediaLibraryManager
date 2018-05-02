@@ -19,15 +19,19 @@
 
 #include "ActivityProgressStatusBarWidget.h"
 
+#include <QProgressBar>
+
 ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget *object, QWidget *parent)
-    : q(object), m_job(job), m_widget(nullptr), m_being_deleted(false)
+    : KAbstractWidgetJobTracker(parent),
+      q(object), m_job(job), m_widget(nullptr), m_being_deleted(false)
 {
     init(job, parent);
+    registerJob(job);
 }
 
 ActivityProgressStatusBarWidget::~ActivityProgressStatusBarWidget()
 {
-    // TODO Auto-generated destructor stub
+    unregisterJob(m_job);
 }
 
 void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
@@ -35,13 +39,133 @@ void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
 
+    auto progbar = new QProgressBar(parent);
+
+    progbar->setFormat(tr("Testing: %p% (%v/%m)"));
+    progbar->setTextVisible(true);
+
+    m_widget = progbar;
+
 
 }
 
-void ActivityProgressStatusBarWidget::slotClean()
+QWidget *ActivityProgressStatusBarWidget::widget(KJob *job)
 {
-    // Just "clean" this widget instead of deleting it.
-    // I.e. clear/zero-out all information.
-#warning "TODO"
+    return m_widget;
 }
+
+void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qulonglong amount)
+{
+    switch (unit)
+    {
+    case KJob::Bytes:
+        m_totalSizeKnown = true;
+        // size is measured in bytes
+        if (m_totalSize == amount) {
+            return;
+        }
+        m_totalSize = amount;
+        if (startTime.isNull()) {
+            startTime.start();
+        }
+        break;
+
+//    case KJob::Files:
+//        if (totalFiles == amount) {
+//            return;
+//        }
+//        totalFiles = amount;
+//        showTotals();
+//        break;
+
+//    case KJob::Directories:
+//        if (totalDirs == amount) {
+//            return;
+//        }
+//        totalDirs = amount;
+//        showTotals();
+//        break;
+    }
+}
+
+void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
+{
+    QString tmp;
+
+    switch (unit) {
+    case KJob::Bytes:
+        if (m_processedSize == amount)
+        {
+            return;
+        }
+        m_processedSize = amount;
+
+        if (m_totalSizeKnown)
+        {
+            //~ singular %1 of %2 complete
+            //~ plural %1 of %2 complete
+//            tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 of %2 complete", "", amount)
+//                  .arg(/*KJobTrackerFormatters::byteSize(*/amount/*)*/)
+//                  .arg(totalSize);//.arg(KJobTrackerFormatters::byteSize(totalSize));
+            tmp = QString("%1 of %2 complete")
+                  .arg(/*KJobTrackerFormatters::byteSize(*/amount/*)*/)
+                  .arg(m_totalSize);
+
+            /// @todo GRVS
+            qobject_cast<QProgressBar*>(m_widget)->setRange(0, m_totalSize);
+            qobject_cast<QProgressBar*>(m_widget)->setValue(amount);
+        }
+        else
+        {
+            tmp = amount; //KJobTrackerFormatters::byteSize(amount);
+        }
+//        sizeLabel->setText(tmp);
+        if (!m_totalSizeKnown)
+        {
+            // update jumping progressbar
+//            progressBar->setValue(amount);
+            qobject_cast<QProgressBar*>(m_widget)->setValue(amount);
+        }
+        break;
+
+//    case KJob::Directories:
+//        if (processedDirs == amount) {
+//            return;
+//        }
+//        processedDirs = amount;
+
+//        //~ singular %1 / %n folder
+//        //~ plural %1 / %n folders
+//        tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
+//        tmp += QLatin1String("   ");
+//        //~ singular %1 / %n file
+//        //~ plural %1 / %n files
+//        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
+//        progressLabel->setText(tmp);
+//        break;
+
+//    case KJob::Files:
+//        if (processedFiles == amount) {
+//            return;
+//        }
+//        processedFiles = amount;
+
+//        if (totalDirs > 1) {
+//            //~ singular %1 / %n folder
+//            //~ plural %1 / %n folders
+//            tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
+//            tmp += QLatin1String("   ");
+//        }
+//        //~ singular %1 / %n file
+//        //~ plural %1 / %n files
+//        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
+//        progressLabel->setText(tmp);
+    }
+}
+
+void ActivityProgressStatusBarWidget::percent(KJob *job, unsigned long percent)
+{
+
+}
+
 

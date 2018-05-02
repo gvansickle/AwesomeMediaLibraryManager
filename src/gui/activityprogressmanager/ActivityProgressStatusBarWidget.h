@@ -20,8 +20,11 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
 
+class QWidget;
+#include <QTime>
 
-#include <QWidget>
+class KJob;
+#include <KAbstractWidgetJobTracker>
 
 #include "BaseActivityProgressWidget.h"
 
@@ -29,9 +32,11 @@
 /*
  *
  */
-class ActivityProgressStatusBarWidget: public QWidget
+class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker
 {
 	Q_OBJECT
+
+    using BASE_CLASS = KAbstractWidgetJobTracker;
 
 public:
     ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget* object, QWidget *parent);
@@ -39,25 +44,28 @@ public:
 
     void init(KJob *job, QWidget *parent);
 
+    QWidget *widget(KJob *job) override;
+
+
     BaseActivityProgressWidget *const q;
     KJob *const m_job;
     QWidget* m_widget;
     bool m_being_deleted;
 
-public Q_SLOTS:
-    virtual void description(const QString &title,
-                             const QPair<QString, QString> &field1,
-                             const QPair<QString, QString> &field2);
-    virtual void totalAmount(KJob::Unit unit, qulonglong amount);
-    virtual void percent(unsigned long percent);
-    virtual void speed(unsigned long value);
-    virtual void slotClean();
+protected Q_SLOTS:
 
-private Q_SLOTS:
-    void killJob();
+    void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    void percent(KJob *job, unsigned long percent) override;
+//    void speed(KJob *job, unsigned long value) override;
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event) override;
+private:
+    qulonglong m_processedSize;
+    bool m_totalSizeKnown;
+    qulonglong m_totalSize;
+
+    QTime startTime;
+
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_ */

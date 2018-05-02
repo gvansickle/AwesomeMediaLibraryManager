@@ -50,10 +50,12 @@
 #include <ThreadWeaver/DebuggingAids>
 
 #include "concurrency/ActivityManager.h"
-#include <gui/activityprogressmanager/ActivityProgressWidget.h>
 
 #include "MainWindow.h"
 
+#include "activityprogressmanager/ActivityProgressStatusBarWidget.h"
+#include "activityprogressmanager/BaseActivityProgressWidget.h"
+#include "activityprogressmanager/ActivityProgressWidget.h"
 #include "activityprogressmanager/ActivityProgressDialog.h"
 #include <concurrency/DirectoryScanJob.h>
 
@@ -95,7 +97,7 @@ void Experimental::DoExperiment()
 #endif
 
 #if 1
-    auto mwin = MainWindow::getInstance();
+    auto mwin = MainWindow::instance();
     auto dock = new QDockWidget(tr("Test dock"), mwin);
     auto stack_wdgt = new QWidget(dock);
     stack_wdgt->setLayout(new QVBoxLayout(dock));
@@ -136,8 +138,8 @@ void Experimental::DoExperiment()
 //    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
     /// @todo Does this transfer ownership/parentage?
-    MainWindow::getInstance()->registerJob(dsj->asKJob());
-    MainWindow::getInstance()->registerJob(dsj2->asKJob());
+    MainWindow::instance()->registerJob(dsj->asKJob());
+    MainWindow::instance()->registerJob(dsj2->asKJob());
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 

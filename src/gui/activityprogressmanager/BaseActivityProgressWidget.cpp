@@ -70,16 +70,19 @@ void BaseActivityProgressWidget::unregisterJob(KJob *job)
 
 QWidget *BaseActivityProgressWidget::widget(KJob *job)
 {
-    return m_activities_to_widgets_map.value(job, nullptr);
+    auto asbw = m_activities_to_widgets_map.value(job, nullptr);
+    if(asbw)
+    {
+        return asbw->widget(job);
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 #define M_WIDGET_OR_RETURN(the_job) auto widget = qobject_cast<ActivityProgressStatusBarWidget*>(m_activities_to_widgets_map.value(job, nullptr)); \
     if(!widget) { return; };
 
 
-void BaseActivityProgressWidget::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
-{
-    M_WIDGET_OR_RETURN(job);
 
-    widget->description(title, field1, field2);
-}
