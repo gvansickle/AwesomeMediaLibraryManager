@@ -98,21 +98,21 @@ void Experimental::DoExperiment()
 
 #if 1
     auto mwin = MainWindow::instance();
-    auto dock = new QDockWidget(tr("Test dock"), mwin);
-    auto stack_wdgt = new QWidget(dock);
-    stack_wdgt->setLayout(new QVBoxLayout(dock));
-    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    dock->setWidget(stack_wdgt);
-    mwin->addDockWidget(Qt::LeftDockWidgetArea, dock);
-    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), stack_wdgt);
-    auto kmsg_wdgt2 = new KMessageWidget(tr("Second KMessageWidget test"), stack_wdgt);
-    stack_wdgt->layout()->addWidget(kmsg_wdgt);
-    stack_wdgt->layout()->addWidget(kmsg_wdgt2);
+//    auto dock = new QDockWidget(tr("Test dock"), mwin);
+//    auto stack_wdgt = new QWidget(dock);
+//    stack_wdgt->setLayout(new QVBoxLayout(dock));
+//    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+//    dock->setWidget(stack_wdgt);
+//    mwin->addDockWidget(Qt::LeftDockWidgetArea, dock);
+//    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), stack_wdgt);
+//    auto kmsg_wdgt2 = new KMessageWidget(tr("Second KMessageWidget test"), stack_wdgt);
+//    stack_wdgt->layout()->addWidget(kmsg_wdgt);
+//    stack_wdgt->layout()->addWidget(kmsg_wdgt2);
 
-    stack_wdgt->show();
+//    stack_wdgt->show();
 
-    kmsg_wdgt->animatedShow();
-    kmsg_wdgt2->animatedShow();
+//    kmsg_wdgt->animatedShow();
+//    kmsg_wdgt2->animatedShow();
 
     ThreadWeaver::setDebugLevel(true, 3);
 

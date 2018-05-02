@@ -17,9 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/activityprogressmanager/ActivityEntryWidget.h>
-#include <gui/activityprogressmanager/ActivityProgressPopup.h>
-#include <gui/activityprogressmanager/ActivityProgressWidget.h>
+#include <config.h>
+
+#include "ActivityProgressWidget.h"
+
+/// Qt5
 #include <QLabel>
 #include <QStatusBar>
 #include <QProgressBar>
@@ -29,15 +31,14 @@
 #include <QMenu>
 #include <KMessageWidget>
 
-// KF5
-
+/// KF5
 #include <ThreadWeaver/QObjectDecorator>
 
-// Ours
-
+/// Ours
 #include <gui/MainWindow.h>
 #include "utils/DebugHelpers.h"
-
+#include "ActivityEntryWidget.h"
+#include "ActivityProgressPopup.h"
 
 
 ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::WindowFlags &f) : QWidget(parent, f)

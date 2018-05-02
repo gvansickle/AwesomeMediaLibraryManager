@@ -20,12 +20,17 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
 
+/// Qt5
 class QWidget;
+class QLabel;
+class QProgressBar;
 #include <QTime>
 
+/// KF5
 class KJob;
 #include <KAbstractWidgetJobTracker>
 
+/// Ours
 #include "BaseActivityProgressWidget.h"
 
 
@@ -43,14 +48,11 @@ public:
     ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget* object, QWidget *parent);
 	virtual ~ActivityProgressStatusBarWidget();
 
-    void init(KJob *job, QWidget *parent);
-
     QWidget *widget(KJob *job) override;
 
 
     BaseActivityProgressWidget *const q;
     KJob *const m_job;
-    QWidget* m_widget;
     bool m_being_deleted;
 
 protected Q_SLOTS:
@@ -58,17 +60,52 @@ protected Q_SLOTS:
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
 
+    /**
+     * "Called to display general description of a job.
+     *  A description has a title and two optional fields which can be used to complete the description.
+     *  Examples of titles are "Copying", "Creating resource", etc.
+     *  The fields of the description can be "Source" with an URL, and, "Destination" with an URL for a "Copying" description."
+     */
+    void description(KJob *job, const QString &title,
+                             const QPair<QString, QString> &field1,
+                             const QPair<QString, QString> &field2) override;
+    /**
+     * "Called to display state information about a job.
+     * Examples of message are "Resolving host", "Connecting to host...", etc."
+     */
+    void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
+    /**
+     * "Emitted to display a warning about a job."
+     */
+    void warning(KJob *job, const QString &plain, const QString &rich) override;
+
     void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
     void percent(KJob *job, unsigned long percent) override;
-//    void speed(KJob *job, unsigned long value) override;
+    void speed(KJob *job, unsigned long value) override;
 
-private:
+protected:
+
+    /// Create the widget.
+    /// Called by the constructor.
+    void init(KJob *job, QWidget *parent);
+
     qulonglong m_processedSize;
     bool m_is_total_size_known;
     qulonglong m_totalSize;
 
     QTime startTime;
+
+private:
+    Q_DISABLE_COPY(ActivityProgressStatusBarWidget)
+
+    /// The actual widget and its components.
+    /// This could maybe be factored out into its own class.
+    QWidget* m_widget;
+    QLabel* m_current_activity_label;
+    QLabel* m_text_status_label;
+    QProgressBar* m_progress_bar;
+
 
 };
 

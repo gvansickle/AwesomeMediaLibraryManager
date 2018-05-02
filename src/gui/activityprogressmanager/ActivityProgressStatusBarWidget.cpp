@@ -22,6 +22,8 @@
 #include "ActivityProgressStatusBarWidget.h"
 
 /// Qt5
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QProgressBar>
 
 /// Ours
@@ -46,19 +48,61 @@ void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
 
-    auto progbar = new QProgressBar(parent);
-
-    progbar->setFormat(tr("Testing: %p% (%v/%m)"));
-    progbar->setTextVisible(true);
-
-    m_widget = progbar;
+    m_widget = new QWidget(parent);
 
 
+    m_current_activity_label = new QLabel("Idle", parent);
+    m_current_activity_label->setToolTip("Current operation");
+    m_current_activity_label->setWhatsThis("This text shows the current operation in progress.");
+
+    // This is for displaying the KJob::infoMessage().
+    // ""Resolving host", "Connecting to host...", etc."
+    m_text_status_label = new QLabel("Idle", parent);
+    m_text_status_label->setToolTip("Status of the current operation");
+    m_text_status_label->setWhatsThis("This text shows the status of the current operation in progress.");
+
+    // The progress bar.
+    m_progress_bar = new QProgressBar(parent);
+    m_progress_bar->setFormat(tr("%p%"));
+    m_progress_bar->setTextVisible(true);
+
+    // The buttons.
+
+    // The main layout.
+    auto layout = new QHBoxLayout();
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addWidget(m_current_activity_label);
+    layout->addWidget(m_text_status_label);
+    layout->addWidget(m_progress_bar);
+//    layout->addWidget(button_pause);
+//    layout->addWidget(button_stop);
+//    layout->addWidget(button_jobs);
+
+    m_widget->setLayout(layout);
 }
 
 QWidget *ActivityProgressStatusBarWidget::widget(KJob *job)
 {
+    // Shouldn't ever get here before the widget is constructed (in the constructor).
+    Q_CHECK_PTR(m_widget);
     return m_widget;
+}
+
+void ActivityProgressStatusBarWidget::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+{
+    m_current_activity_label->setText(title);
+    /// @todo Don't really have anywhere to put fields.
+}
+
+void ActivityProgressStatusBarWidget::infoMessage(KJob *job, const QString &plain, const QString &rich)
+{
+    // Prefer rich if it's given.
+    m_text_status_label->setText(rich.isEmpty() ? plain : rich);
+}
+
+void ActivityProgressStatusBarWidget::warning(KJob *job, const QString &plain, const QString &rich)
+{
+
 }
 
 void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qulonglong amount)
@@ -68,11 +112,13 @@ void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qu
     case KJob::Bytes:
         m_is_total_size_known = true;
         // size is measured in bytes
-        if (m_totalSize == amount) {
+        if (m_totalSize == amount)
+        {
             return;
         }
         m_totalSize = amount;
-        if (startTime.isNull()) {
+        if (startTime.isNull())
+        {
             startTime.start();
         }
         break;
@@ -99,8 +145,6 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
 {
     QString tmp;
 
-    auto progbar = qobject_cast<QProgressBar*>(m_widget);
-
     switch (unit) {
     case KJob::Bytes:
         if (m_processedSize == amount)
@@ -108,35 +152,34 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
             return;
         }
         m_processedSize = amount;
+
         /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
         /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
         DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
-        auto str_processed = formattedDataSize(amount, 1, fmt);
+        auto str_processed = formattedDataSize(m_processedSize, 1, fmt);
 
         if (m_is_total_size_known)
         {
             //~ singular %1 of %2 complete
             //~ plural %1 of %2 complete
             auto str_total = formattedDataSize(m_totalSize, 1, fmt);
-            tmp = QString("%1 of %2 complete")
+            tmp = tr("%1 of %2 complete")
                   .arg(str_processed)
                   .arg(str_total);
 
             /// @todo GRVS
-            progbar->setRange(0, m_totalSize);
-            progbar->setValue(amount);
+            m_progress_bar->setRange(0, m_totalSize);
+            m_progress_bar->setValue(m_processedSize);
         }
         else
         {
             tmp = str_processed; //KJobTrackerFormatters::byteSize(amount);
         }
 //        sizeLabel->setText(tmp);
-        progbar->setFormat(tmp);
         if (!m_is_total_size_known)
         {
             // update jumping progressbar
-//            progressBar->setValue(amount);
-            progbar->setValue(amount);
+            m_progress_bar->setValue(m_processedSize);
         }
         break;
 
@@ -176,6 +219,11 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
 }
 
 void ActivityProgressStatusBarWidget::percent(KJob *job, unsigned long percent)
+{
+
+}
+
+void ActivityProgressStatusBarWidget::speed(KJob *job, unsigned long value)
 {
 
 }
