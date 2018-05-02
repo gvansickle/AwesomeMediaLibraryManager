@@ -262,6 +262,7 @@ set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	gui/activityprogressmanager/ActivityProgressDialog.h
 	gui/activityprogressmanager/ActivityProgressPopup.h
 	gui/activityprogressmanager/ActivityEntryWidget.h
+	gui/activityprogressmanager/ActivityProgressStatusBarWidget.h
 	gui/activityprogressmanager/ActivityProgressWidget.h
 	gui/activityprogressmanager/BaseActivityProgressWidget.h
 	)
@@ -270,6 +271,7 @@ set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	gui/activityprogressmanager/ActivityProgressDialog.cpp
 	gui/activityprogressmanager/ActivityProgressPopup.cpp
 	gui/activityprogressmanager/ActivityEntryWidget.cpp
+	gui/activityprogressmanager/ActivityProgressStatusBarWidget.cpp
 	gui/activityprogressmanager/ActivityProgressWidget.cpp
 	gui/activityprogressmanager/BaseActivityProgressWidget.cpp
 	)

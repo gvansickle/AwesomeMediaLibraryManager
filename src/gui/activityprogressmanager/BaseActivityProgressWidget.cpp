@@ -25,7 +25,11 @@
 /// KF5
 #include <KJob>
 
-BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_CLASS(parent)
+/// Ours
+#include "ActivityProgressStatusBarWidget.h"
+
+BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_CLASS(parent),
+    m_parent(parent)
 {
 
 }
@@ -36,16 +40,41 @@ BaseActivityProgressWidget::~BaseActivityProgressWidget()
 
 void BaseActivityProgressWidget::registerJob(KJob *job)
 {
+    KAbstractWidgetJobTracker::registerJob(job);
 
+    if(m_activities_to_widgets_map.contains(job))
+    {
+        return;
+    }
+
+    // Create a new widget for this job.
+    auto pw = new ActivityProgressStatusBarWidget(job, this, m_parent);
+    m_activities_to_widgets_map.insert(job, pw);
 }
 
 void BaseActivityProgressWidget::unregisterJob(KJob *job)
 {
+    KAbstractWidgetJobTracker::unregisterJob(job);
 
+    if(!m_activities_to_widgets_map.contains(job))
+    {
+        return;
+    }
+
+    if(!m_activities_to_widgets_map[job]->m_being_deleted)
+    {
+        delete m_activities_to_widgets_map[job];
+    }
+    m_activities_to_widgets_map.remove(job);
 }
 
 QWidget *BaseActivityProgressWidget::widget(KJob *job)
 {
+    if(!m_activities_to_widgets_map.contains(job))
+    {
+        return nullptr;
+    }
 
+    return m_activities_to_widgets_map[job];
 }
 

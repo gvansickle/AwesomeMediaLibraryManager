@@ -21,7 +21,6 @@
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMANAGER_H_
 
 /// Qt5
-#include <QMap>
 
 /// KF5
 #include <KJobTrackerInterface>
@@ -31,7 +30,8 @@ class KJob;
 class BaseActivityProgressWidget;
 
 /**
- *
+ * Some ideas here borrowed from:
+ * @link https://github.com/KDE/ktorrent/blob/master/libktcore/torrent/jobtracker.h (GPL2+)
  */
 class ActivityProgressManager: public KJobTrackerInterface
 {
@@ -50,18 +50,36 @@ public:
      *      unregisterJob() does this: job->disconnect(this);
      */
 
+public Q_SLOTS:
     void registerJob(KJob* job) override;
     void unregisterJob(KJob* job) override;
 
+public:
     virtual void jobRegistered(KJob* job) {}
     virtual void jobUnregistered(KJob* job) {}
 
+protected Q_SLOTS:
+    /**
+     * The following slots are inherited.
+     */
+    void finished(KJob *job) override;
+    void suspended(KJob *job) override;
+    void resumed(KJob *job) override;
+
+    void description(KJob *job, const QString &title,
+                             const QPair<QString, QString> &field1,
+                             const QPair<QString, QString> &field2) override;
+    void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
+    void warning(KJob *job, const QString &plain, const QString &rich) override;
+
+    void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    void percent(KJob *job, unsigned long percent) override;
+    void speed(KJob *job, unsigned long value) override;
 
 protected:
 
-    using ActiveActivitiesMap = QMap<KJob*, BaseActivityProgressWidget*>;
 
-    ActiveActivitiesMap m_activities_to_widgets_map;
 
 };
 

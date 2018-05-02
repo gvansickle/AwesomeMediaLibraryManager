@@ -22,10 +22,14 @@
 
 /// QT5
 class QWidget;
+#include <QMap>
 
 /// KF5
 class KJob;
 #include <KAbstractWidgetJobTracker>
+
+/// Ours
+class ActivityProgressStatusBarWidget;
 
 /**
  * Base class for AMLMJob progress widgets.
@@ -51,6 +55,7 @@ public:
 
     /**
      * @link https://api.kde.org/frameworks/kcoreaddons/html/classKJobTrackerInterface.html
+     * @link https://api.kde.org/frameworks/kcoreaddons/html/kjobtrackerinterface_8cpp_source.html
      * @link https://api.kde.org/frameworks/kjobwidgets/html/classKAbstractWidgetJobTracker.html
      * @link https://github.com/KDE/kjobwidgets/blob/master/src/kabstractwidgetjobtracker.cpp
      *
@@ -76,14 +81,39 @@ public:
      *  Forwards registerJob()/unregisterJob() to KJobTrackerInterface unchanged.
      */
 
+    QWidget *widget(KJob *job) override;
+
+public Q_SLOTS:
     void registerJob(KJob *job) override;
     void unregisterJob(KJob *job) override;
 
-    QWidget *widget(KJob *job) override;
 
 protected:
+    using ActiveActivitiesMap = QMap<KJob*, ActivityProgressStatusBarWidget*>;
 
+    ActiveActivitiesMap m_activities_to_widgets_map;
+    QWidget* m_parent;
 
+protected Q_SLOTS:
+    /**
+     * The following slots are inherited.
+     */
+    void finished(KJob *job) override;
+    void suspended(KJob *job) override;
+    void resumed(KJob *job) override;
+
+    void description(KJob *job, const QString &title,
+                             const QPair<QString, QString> &field1,
+                             const QPair<QString, QString> &field2) override;
+    void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
+    void warning(KJob *job, const QString &plain, const QString &rich) override;
+
+    void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    void percent(KJob *job, unsigned long percent) override;
+    void speed(KJob *job, unsigned long value) override;
+
+    void slotClean(KJob *job) override;
 
 };
 

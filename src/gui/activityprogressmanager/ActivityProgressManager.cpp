@@ -41,15 +41,20 @@ void ActivityProgressManager::registerJob(KJob *job)
 {
     // Hook the job's signals up to the slots we need to listen to.
     KJobTrackerInterface::registerJob(job);
+
+    // Tell any derived classes about the new job.
     jobRegistered(job);
 }
 
 void ActivityProgressManager::unregisterJob(KJob *job)
 {
+    // Disconnect any signals from this job.
     KJobTrackerInterface::unregisterJob(job);
+
+    // Tell any derived classes that the job is unregistered.
     jobUnregistered(job);
 
     // Remove any widgets we might have registered for this job.
-    m_activities_to_widgets_map.remove(job);
+//    m_activities_to_widgets_map.remove(job);
 }
 
