@@ -18,7 +18,7 @@ ActivityProgressDialog::ActivityProgressDialog(QWidget *parent) :
 
     // QListWidget is-a QListView.
 //    auto list_widget = ui->m_listWidget;
-    auto list_widget = ui->m_scrollAreaWidgetContents;
+//    auto list_widget = ui->m_blank_widget;
 //    auto new_layout = new QStackedLayout(list_widget);
 //    new_layout->setStackingMode(QStackedLayout::StackAll);
 //    list_widget->setLayout(new_layout);
@@ -42,15 +42,16 @@ void ActivityProgressDialog::TrackJob(KJob *job)
 {
     if(m_JobTracker == nullptr)
     {
-        m_JobTracker = new KWidgetJobTracker(this);
+        m_JobTracker = new KWidgetJobTracker(ui->m_blank_widget);
     }
 
     // Register the KJob.
     m_JobTracker->registerJob(job);
 
+
     // Get/Create the widget associated with the KJob.
     QWidget* progress_widget = m_JobTracker->widget(job);
-    ui->m_scrollAreaWidgetContents->layout()->addWidget(progress_widget);
+    ui->m_blank_widget->layout()->addWidget(progress_widget);
 
 //    ui->m_ProgressLayout->insertWidget(0, progress_widget);
 //    auto last_item_idx = ui->m_listWidget->count();
@@ -63,7 +64,7 @@ void ActivityProgressDialog::TrackJob(KJob *job)
 
 //    progress_widget->show();
 
-    connect(job, SIGNAL(entries(KIO::Job*, KIO::UDSEntryList)), SLOT(kjobIncoming(KIO::Job*, KIO::UDSEntryList)));
+//    connect(job, SIGNAL(entries(KIO::Job*, KIO::UDSEntryList)), SLOT(kjobIncoming(KIO::Job*, KIO::UDSEntryList)));
     connect(job, SIGNAL(result(KJob*)), SLOT(kjobCompleted(KJob*)));
 //    connect(job, &KJob::finished, [=](KJob* job) mutable {
 //        // Our widget is getting deleted out from under us.  Remove this list item.

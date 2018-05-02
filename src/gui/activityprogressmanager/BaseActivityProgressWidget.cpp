@@ -19,6 +19,12 @@
 
 #include "BaseActivityProgressWidget.h"
 
+/// QT5
+#include <QWidget>
+
+/// KF5
+#include <KJob>
+
 BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_CLASS(parent)
 {
 
@@ -26,5 +32,20 @@ BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_C
 
 BaseActivityProgressWidget::~BaseActivityProgressWidget()
 {
+}
+
+void BaseActivityProgressWidget::registerJob(KJob *job)
+{
+
+}
+
+void BaseActivityProgressWidget::unregisterJob(KJob *job)
+{
+
+}
+
+QWidget *BaseActivityProgressWidget::widget(KJob *job)
+{
+
 }
 

@@ -20,7 +20,15 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMANAGER_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMANAGER_H_
 
+/// Qt5
+#include <QMap>
+
+/// KF5
 #include <KJobTrackerInterface>
+class KJob;
+
+/// Ours
+class BaseActivityProgressWidget;
 
 /**
  *
@@ -32,7 +40,7 @@ class ActivityProgressManager: public KJobTrackerInterface
     using BASE_CLASS = KJobTrackerInterface;
 
 public:
-    ActivityProgressManager(QObject* parent = nullptr);
+    explicit ActivityProgressManager(QObject* parent = nullptr);
     ~ActivityProgressManager() override;
 
     /**
@@ -41,6 +49,20 @@ public:
      *      except for finished()->unregisterJob() do anything.
      *      unregisterJob() does this: job->disconnect(this);
      */
+
+    void registerJob(KJob* job) override;
+    void unregisterJob(KJob* job) override;
+
+    virtual void jobRegistered(KJob* job) {}
+    virtual void jobUnregistered(KJob* job) {}
+
+
+protected:
+
+    using ActiveActivitiesMap = QMap<KJob*, BaseActivityProgressWidget*>;
+
+    ActiveActivitiesMap m_activities_to_widgets_map;
+
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMANAGER_H_ */

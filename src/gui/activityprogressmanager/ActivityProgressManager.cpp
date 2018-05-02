@@ -19,14 +19,37 @@
 
 #include "ActivityProgressManager.h"
 
+/// QT5
+
+/// KF5
+#include <KJob>
+
+/// Ours
+#include "BaseActivityProgressWidget.h"
+
 ActivityProgressManager::ActivityProgressManager(QObject *parent) : BASE_CLASS(parent)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 ActivityProgressManager::~ActivityProgressManager()
 {
 
+}
+
+void ActivityProgressManager::registerJob(KJob *job)
+{
+    // Hook the job's signals up to the slots we need to listen to.
+    KJobTrackerInterface::registerJob(job);
+    jobRegistered(job);
+}
+
+void ActivityProgressManager::unregisterJob(KJob *job)
+{
+    KJobTrackerInterface::unregisterJob(job);
+    jobUnregistered(job);
+
+    // Remove any widgets we might have registered for this job.
+    m_activities_to_widgets_map.remove(job);
 }
 

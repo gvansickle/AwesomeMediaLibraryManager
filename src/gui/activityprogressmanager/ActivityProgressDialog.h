@@ -38,7 +38,7 @@ protected Q_SLOTS:
 private:
     Ui::ActivityProgressDialog *ui;
 
-    WidgetItemDelegate* m_delegate;
+//    WidgetItemDelegate* m_delegate;
 
     KWidgetJobTracker *m_JobTracker;
 };

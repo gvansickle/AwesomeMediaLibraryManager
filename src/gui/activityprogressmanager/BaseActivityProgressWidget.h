@@ -20,20 +20,71 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_BASEACTIVITYPROGRESSWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_BASEACTIVITYPROGRESSWIDGET_H_
 
-#include <QWidget>
+/// QT5
+class QWidget;
 
-/*
+/// KF5
+class KJob;
+#include <KAbstractWidgetJobTracker>
+
+/**
+ * Base class for AMLMJob progress widgets.
  *
+ * @note Derived from KAbstractWidgetJobTracker instead of simply using KStatusBarJobTracker or
+ *       KWidgetJobTracker.  The latter is great, but presents a UI really only suitable for use in a QDialog,
+ *       while the former would be usable in a status bar, but is missing a lot of basic tracking functionality.
+ *
+ * @note Due to inheritenace from KAbstractWidgetJobTracker, one instance of this class tracks one AMLMJob instance.
+ *       That's fine because that's the intent here.
  */
-class BaseActivityProgressWidget: public QWidget
+class BaseActivityProgressWidget: public KAbstractWidgetJobTracker
 {
     Q_OBJECT
 
-    using BASE_CLASS = QWidget;
+    using BASE_CLASS = KAbstractWidgetJobTracker;
+
+Q_SIGNALS:
 
 public:
-    BaseActivityProgressWidget(QWidget* parent = nullptr);
-	virtual ~BaseActivityProgressWidget();
+    explicit BaseActivityProgressWidget(QWidget* parent = nullptr);
+	~BaseActivityProgressWidget() override;
+
+    /**
+     * @link https://api.kde.org/frameworks/kcoreaddons/html/classKJobTrackerInterface.html
+     * @link https://api.kde.org/frameworks/kjobwidgets/html/classKAbstractWidgetJobTracker.html
+     * @link https://github.com/KDE/kjobwidgets/blob/master/src/kabstractwidgetjobtracker.cpp
+     *
+     * @note KAbstractWidgetJobTracker inherits from KJobTrackerInterface, and adds some useful functionality:
+     *       - "QWidget *widget(KJob *job)" pure-virtual interface for generating/returning the associated QWidget.
+     *       - void setStopOnClose(KJob *job, bool stopOnClose) functionality.  Sets whether the KJob should be stopped
+     *           if the widget is closed.
+     *       - void setAutoDelete(KJob* job, bool autoDelete) functionality.  Sets whether to delete
+     *           or only clean the widget.
+     *       - New protected slot "slotClean(KJob*)" does nothing, needs to be overridden if any action is necessary.
+     *       - Three new signals:
+     *         - resume(KJob*)
+     *         - stopped(KJob*)
+     *         - suspend(KJob*)
+     *       - Three related protected slots:
+     *         - slotStop(KJob*)/slotSuspend(KJob*)/slotResume(KJob*)
+     *         These all have default implementations which call the KJob functions, and look like they'll work
+     *         without reimplementation, but something needs to connect signals to them.
+     *       - Inherited and overridden protected slot:
+     *         - void finished(KJob*)
+     *         still does nothing, same as KJobTrackerInterface.
+     *
+     *  Forwards registerJob()/unregisterJob() to KJobTrackerInterface unchanged.
+     */
+
+    void registerJob(KJob *job) override;
+    void unregisterJob(KJob *job) override;
+
+    QWidget *widget(KJob *job) override;
+
+protected:
+
+
+
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_BASEACTIVITYPROGRESSWIDGET_H_ */
