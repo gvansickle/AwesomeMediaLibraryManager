@@ -29,8 +29,9 @@ class KJob;
 #include "BaseActivityProgressWidget.h"
 
 
-/*
- *
+/**
+ * Widget representing the progress/status/controls of a single KJob.
+ * Suitable for use in a status bar.
  */
 class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker
 {
@@ -54,6 +55,9 @@ public:
 
 protected Q_SLOTS:
 
+    /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
+    /// should be pushed down into a base class.
+
     void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
     void percent(KJob *job, unsigned long percent) override;
@@ -61,7 +65,7 @@ protected Q_SLOTS:
 
 private:
     qulonglong m_processedSize;
-    bool m_totalSizeKnown;
+    bool m_is_total_size_known;
     qulonglong m_totalSize;
 
     QTime startTime;

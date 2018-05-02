@@ -22,23 +22,50 @@
 
 #include <config.h>
 
+/// C++
 #include <type_traits>
 #include <string>
+
+/// Qt5
+#include <QtGlobal>
 #include <QString>
 #include <taglib/tag.h>
 #include <QTextCodec>
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
+#define HAVE_QLOCALE_FORMATTEDDATASIZE 1
+#include <QLocale>
+#endif
+
+/// KF5
+#if HAVE_KF501
+#   ifndef HAVE_QLOCALE_FORMATTEDDATASIZE
+    /// Needed to format numbers into "12.3 GB" etc. until we can rely on Qt 5.10, which supports
+    /// it in QLocale.
+#   include <KFormat>
+enum /*QLocale::*/DataSizeFormats
+{
+    /// Base 1024/IEC KiB, MiB, etc.
+    DataSizeIecFormat = 0,
+    /// Base 1024/SI kB, MB, etc.
+    DataSizeTraditionalFormat = 1,
+    /// Base 1000/SI kB, MB, etc.
+    DataSizeSIFormat = 2
+};
+#   endif // HAVE_QLOCALE_FORMATTEDDATASIZE
+#endif
 
 #if HAVE_GTKMM01
 #include <glibmm/ustring.h>
 #endif
 
-/// Functions for converting between the several thousand different and
+/// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
 /// There are only two assumptions made here:
 /// - Any const char* passed in is a pointer to a UTF-8 string.
 /// - Any std::strings are likewise really holding UTF-8 strings.
 ///
 /// The simplest things....
+/// @{
 
 static inline std::string tostdstr(const char *cstr)
 {
@@ -139,6 +166,34 @@ static inline bool isValidUTF8(const char* bytes)
 		return false;
 	}
 	return true;
+}
+
+/// @}
+
+/**
+ * Until we can rely on Qt 5.10's QLocale::formattedDataSize().
+ */
+static inline QString formattedDataSize(qint64 bytes, int precision = 2, DataSizeFormats format = DataSizeFormats::DataSizeIecFormat)
+{
+#ifdef HAVE_QLOCALE_FORMATTEDDATASIZE
+    // Use the Qt5 version.
+    return QLocale::formattedDataSize(bytes, precision, format);
+#else
+    // Use the KF5 equivalent.
+    KFormat::BinaryUnitDialect dialect;
+    switch(format)
+    {
+    case DataSizeFormats::DataSizeIecFormat:
+        dialect = KFormat::IECBinaryDialect;
+        break;
+    case DataSizeFormats::DataSizeTraditionalFormat:
+        dialect = KFormat::JEDECBinaryDialect;
+        break;
+    case DataSizeFormats::DataSizeSIFormat:
+        dialect = KFormat::MetricBinaryDialect;
+    }
+    return KFormat().formatByteSize(bytes, precision, dialect);
+#endif
 }
 
 #endif // STRINGHELPERS_H

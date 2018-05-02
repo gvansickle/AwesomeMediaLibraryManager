@@ -17,9 +17,16 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "ActivityProgressStatusBarWidget.h"
 
+/// Qt5
 #include <QProgressBar>
+
+/// Ours
+#include <utils/DebugHelpers.h>
+#include <utils/StringHelpers.h>
 
 ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget *object, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
@@ -59,7 +66,7 @@ void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qu
     switch (unit)
     {
     case KJob::Bytes:
-        m_totalSizeKnown = true;
+        m_is_total_size_known = true;
         // size is measured in bytes
         if (m_totalSize == amount) {
             return;
@@ -92,6 +99,8 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
 {
     QString tmp;
 
+    auto progbar = qobject_cast<QProgressBar*>(m_widget);
+
     switch (unit) {
     case KJob::Bytes:
         if (m_processedSize == amount)
@@ -99,32 +108,35 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
             return;
         }
         m_processedSize = amount;
+        /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
+        /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
+        DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
+        auto str_processed = formattedDataSize(amount, 1, fmt);
 
-        if (m_totalSizeKnown)
+        if (m_is_total_size_known)
         {
             //~ singular %1 of %2 complete
             //~ plural %1 of %2 complete
-//            tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 of %2 complete", "", amount)
-//                  .arg(/*KJobTrackerFormatters::byteSize(*/amount/*)*/)
-//                  .arg(totalSize);//.arg(KJobTrackerFormatters::byteSize(totalSize));
+            auto str_total = formattedDataSize(m_totalSize, 1, fmt);
             tmp = QString("%1 of %2 complete")
-                  .arg(/*KJobTrackerFormatters::byteSize(*/amount/*)*/)
-                  .arg(m_totalSize);
+                  .arg(str_processed)
+                  .arg(str_total);
 
             /// @todo GRVS
-            qobject_cast<QProgressBar*>(m_widget)->setRange(0, m_totalSize);
-            qobject_cast<QProgressBar*>(m_widget)->setValue(amount);
+            progbar->setRange(0, m_totalSize);
+            progbar->setValue(amount);
         }
         else
         {
-            tmp = amount; //KJobTrackerFormatters::byteSize(amount);
+            tmp = str_processed; //KJobTrackerFormatters::byteSize(amount);
         }
 //        sizeLabel->setText(tmp);
-        if (!m_totalSizeKnown)
+        progbar->setFormat(tmp);
+        if (!m_is_total_size_known)
         {
             // update jumping progressbar
 //            progressBar->setValue(amount);
-            qobject_cast<QProgressBar*>(m_widget)->setValue(amount);
+            progbar->setValue(amount);
         }
         break;
 
