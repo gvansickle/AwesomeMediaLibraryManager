@@ -40,8 +40,6 @@ BaseActivityProgressWidget::~BaseActivityProgressWidget()
 
 void BaseActivityProgressWidget::registerJob(KJob *job)
 {
-    KAbstractWidgetJobTracker::registerJob(job);
-
     if(m_activities_to_widgets_map.contains(job))
     {
         return;
@@ -50,6 +48,8 @@ void BaseActivityProgressWidget::registerJob(KJob *job)
     // Create a new widget for this job.
     auto pw = new ActivityProgressStatusBarWidget(job, this, m_parent);
     m_activities_to_widgets_map.insert(job, pw);
+
+    KAbstractWidgetJobTracker::registerJob(job);
 }
 
 void BaseActivityProgressWidget::unregisterJob(KJob *job)
@@ -70,11 +70,16 @@ void BaseActivityProgressWidget::unregisterJob(KJob *job)
 
 QWidget *BaseActivityProgressWidget::widget(KJob *job)
 {
-    if(!m_activities_to_widgets_map.contains(job))
-    {
-        return nullptr;
-    }
-
-    return m_activities_to_widgets_map[job];
+    return m_activities_to_widgets_map.value(job, nullptr);
 }
 
+#define M_WIDGET_OR_RETURN(the_job) auto widget = qobject_cast<ActivityProgressStatusBarWidget*>(m_activities_to_widgets_map.value(job, nullptr)); \
+    if(!widget) { return; };
+
+
+void BaseActivityProgressWidget::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+{
+    M_WIDGET_OR_RETURN(job);
+
+    widget->description(title, field1, field2);
+}
