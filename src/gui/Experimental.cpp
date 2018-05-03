@@ -33,6 +33,7 @@
 #include <QFileDialog>
 #include <QDockWidget>
 #include <QScrollArea>
+#include <QStorageInfo>
 
 #define EX1 1
 #define EX2 0
@@ -43,7 +44,7 @@
 #include <KIO/CopyJob>
 #include <KIO/ListJob>
 #include <KIO/DirectorySizeJob>
-//#include <KWidgetJobTracker>
+#include <KJobUiDelegate>
 
 #include <KMessageWidget>
 
@@ -114,13 +115,29 @@ void Experimental::DoExperiment()
 //    kmsg_wdgt->animatedShow();
 //    kmsg_wdgt2->animatedShow();
 
+    ///
+
+    auto mv = QStorageInfo::mountedVolumes();
+    QStringList mvsl;
+    for(auto m : mv)
+    {
+        mvsl << tr("FSType: ") + m.fileSystemType() + " DispName: " + m.displayName() + " RootPath: " + m.rootPath();
+    }
+    qIn() << "MOUNTED VOLUMES:" << mvsl;
+
+    ///
+
     ThreadWeaver::setDebugLevel(true, 3);
 
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
-//    AMLMJob* dsj = new DirectoryScannerAMLMJob(this, dir_url,
-//                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-//                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    KIO::DirectorySizeJob* dirsizejob = KIO::directorySize(dir_url);
+    connect(dirsizejob, &KIO::DirectorySizeJob::result, [=](KJob* kjob){
+        if(kjob->error())
+        {
+            kjob->uiDelegate()->showErrorMessage();
+        }
+    });
     AMLMJobPtr dsj = QSharedPointer<DirectoryScannerAMLMJob>::create(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
@@ -138,6 +155,7 @@ void Experimental::DoExperiment()
 //    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
     /// @todo Does this transfer ownership/parentage?
+    MainWindow::instance()->registerJob(dirsizejob);
     MainWindow::instance()->registerJob(dsj->asKJob());
     MainWindow::instance()->registerJob(dsj2->asKJob());
 

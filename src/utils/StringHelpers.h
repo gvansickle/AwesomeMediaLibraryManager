@@ -34,6 +34,15 @@
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
 #define HAVE_QLOCALE_FORMATTEDDATASIZE 1
 #include <QLocale>
+enum /*QLocale::*/DataSizeFormats
+{
+    /// Base 1024/IEC KiB, MiB, etc.
+    DataSizeIecFormat = QLocale::DataSizeIecFormat,
+    /// Base 1024/SI kB, MB, etc.
+    DataSizeTraditionalFormat = QLocale::DataSizeTraditionalFormat,
+    /// Base 1000/SI kB, MB, etc.
+    DataSizeSIFormat = QLocale::DataSizeSIFormat
+};
 #endif
 
 /// KF5
@@ -177,7 +186,7 @@ static inline QString formattedDataSize(qint64 bytes, int precision = 2, DataSiz
 {
 #ifdef HAVE_QLOCALE_FORMATTEDDATASIZE
     // Use the Qt5 version.
-    return QLocale::formattedDataSize(bytes, precision, format);
+    return QLocale().formattedDataSize(bytes, precision, (QLocale::DataSizeFormats)format);
 #else
     // Use the KF5 equivalent.
     KFormat::BinaryUnitDialect dialect;
