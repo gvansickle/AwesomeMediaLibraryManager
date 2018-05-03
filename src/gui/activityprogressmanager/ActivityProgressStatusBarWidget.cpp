@@ -23,12 +23,15 @@
 
 /// Qt5
 #include <QHBoxLayout>
+#include <QIcon>
 #include <QLabel>
 #include <QProgressBar>
+#include <QToolButton>
 
 /// Ours
 #include <utils/DebugHelpers.h>
 #include <utils/StringHelpers.h>
+#include <gui/helpers/Tips.h>
 
 ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget *object, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
@@ -67,6 +70,9 @@ void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     m_progress_bar->setTextVisible(true);
 
     // The buttons.
+    m_cancel_button = new QToolButton(parent);
+    m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
+    setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
 
     // The main layout.
     auto layout = new QHBoxLayout();
@@ -75,7 +81,7 @@ void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     layout->addWidget(m_text_status_label);
     layout->addWidget(m_progress_bar);
 //    layout->addWidget(button_pause);
-//    layout->addWidget(button_stop);
+    layout->addWidget(m_cancel_button);
 //    layout->addWidget(button_jobs);
 
     m_widget->setLayout(layout);

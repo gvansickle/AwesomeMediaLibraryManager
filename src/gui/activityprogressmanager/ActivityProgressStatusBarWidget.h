@@ -20,9 +20,12 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
 
+#include <config.h>
+
 /// Qt5
 class QWidget;
 class QLabel;
+class QToolButton;
 class QProgressBar;
 #include <QTime>
 
@@ -105,7 +108,10 @@ private:
     QLabel* m_current_activity_label;
     QLabel* m_text_status_label;
     QProgressBar* m_progress_bar;
-
+    // Cancel Operation button.
+    QToolButton *m_cancel_button;
+    // Pause/Resume button.
+    QToolButton *m_pause_resume_button;
 
 };
 
