@@ -314,7 +314,7 @@ download_project(PROJ                boost_callable_traits
 	${UPDATE_DISCONNECTED_IF_AVAILABLE}
 	)
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
-message(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
+message(STATUS ${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
@@ -363,7 +363,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${CMAKE_CURRENT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
-add_subdirectory(src)
+add_subdirectory(src EXCLUDE_FROM_ALL)
 
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files

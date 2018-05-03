@@ -107,7 +107,9 @@ set_property(TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SKIP_AUTOGEN ON)
 
 # Verdigris is just two headers.
 set(USE_BUNDLED_VERDIGRIS 1)
-set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
+#set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
+add_library(verdigris INTERFACE)
+target_include_directories(verdigris INTERFACE third_party/verdigris/src)
 
 
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
@@ -116,22 +118,21 @@ message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
 ### @todo Do we need this? Target to get the deps on generated files right.
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
+# Collect all the project-common external link library targets into a single variable.
+set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
+		${QT5_LINK_LIB_TARGETS}
+		${KF5_LINK_LIBS}
+		${GTK_LINK_LIB_TARGETS}
+		${AMLM_TAGLIB_TARGET}
+		${AMLM_LIBCUE_TARGET}
+		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
+		callable_traits
+		verdigris
+		)
+
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
-	gui/CollectionDockWidget.h
-	gui/Experimental.h
-	gui/FilterWidget.h
-	gui/ItemDelegateLength.h
-	gui/MainWindow.h
-	gui/MDIArea.h
-	gui/MDILibraryView.h
-	gui/MDIPlaylistView.h
-	gui/MDITreeViewBase.h
-	gui/MetadataDockWidget.h
-	gui/NetworkAwareFileDialog.h
-	gui/PixmapLabel.h
-	gui/PlayerControls.h
 	logic/Library.h
 	logic/LibraryEntry.h
 	logic/LibraryEntryMimeData.h
@@ -161,8 +162,6 @@ set(HEADER_FILES
 	gui/AboutBox.h
 	utils/RegisterQtMetatypes.h
 	logic/CueSheetParser.h
-	gui/settings/SettingsDialog.h
-	gui/settings/SettingsDialogSideWidget.h
 	../resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
 	gui/DragDropTreeViewStyleProxy.h
@@ -189,19 +188,6 @@ set(HEADER_FILES
 # Source file list.
 set(SOURCE_FILES
 	AMLMApp.cpp
-	gui/CollectionDockWidget.cpp
-	gui/Experimental.cpp
-	gui/FilterWidget.cpp
-	gui/ItemDelegateLength.cpp
-	gui/MainWindow.cpp
-	gui/MDIArea.cpp
-	gui/MDILibraryView.cpp
-	gui/MDIPlaylistView.cpp
-	gui/MDITreeViewBase.cpp
-	gui/MetadataDockWidget.cpp
-	gui/NetworkAwareFileDialog.cpp
-	gui/PixmapLabel.cpp
-	gui/PlayerControls.cpp
 	logic/Library.cpp
 	logic/LibraryEntry.cpp
 	logic/LibraryEntryMimeData.cpp
@@ -227,15 +213,8 @@ set(SOURCE_FILES
 	gui/AboutBox.cpp
 	utils/RegisterQtMetatypes.cpp
 	logic/CueSheetParser.cpp
-	gui/settings/SettingsDialog.cpp
-	gui/settings/SettingsDialogPageBase.cpp gui/settings/SettingsDialogPageBase.h
-	gui/settings/SDPageAppearance.cpp gui/settings/SDPageAppearance.h
-	gui/settings/SettingsDialogSideWidget.cpp
-	gui/settings/SDPageLibrary.cpp
-	gui/settings/SDPageLibrary.h
 	gui/MDINowPlayingView.cpp
 	gui/MDINowPlayingView.h
-	gui/settings/SettingsDialogBase.cpp gui/settings/SettingsDialogBase.h
 	logic/ModelUserRoles.cpp
 	gui/DragDropTreeViewStyleProxy.cpp
 	logic/proxymodels/SelectionFilterProxyModel.cpp
@@ -309,26 +288,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/AMLMJob.cpp
 	)
 
-#add_subdirectory(gui)
-
-# UI files.
-set(SOURCE_FILES_UI
-	DefaultSettingsHelper.cpp
-	DefaultSettingsHelper.h
-	SettingsPageGeneral.cpp
-	SettingsPageGeneral.h
-	SettingsPageGeneral.ui
-	SettingsPageCollection.cpp
-	SettingsPageCollection.h
-	SettingsPageCollection.ui
-	SettingsPageAppearance.cpp
-	SettingsPageAppearance.h
-	SettingsPageAppearance.ui
-	SettingsPageLibrary.cpp
-	SettingsPageLibrary.h
-	SettingsPageLibrary.ui
-	)
-PREPEND_TO_EACH(SOURCE_FILES_UI "gui/settings/" ${SOURCE_FILES_UI})
+add_subdirectory(gui EXCLUDE_FROM_ALL)
 
 #
 # Append all the SOURCE_* subsets.
@@ -366,6 +326,10 @@ qt5_add_binary_resources(icons_oxygen ../resources/oxygenicons.qrc)
 qt5_add_resources(amlm_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 qt5_add_resources(amlm_SRCS ../resources/amlm.qrc)
 
+# The link libs common to app and test builds.
+set(PROJECT_COMMON_LINK_LIBS
+		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
+		amlm_gui)
 
 ###
 ### The main executable.
@@ -397,13 +361,6 @@ set_target_properties(${PROJECT_NAME}
     PROPERTIES
     AUTOMOC ON
     AUTOUIC ON)
-# The libs.
-set(PROJECT_COMMON_LINK_LIBS
-		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIBS}
-		${GTK_LINK_LIB_TARGETS}
-		${AMLM_TAGLIB_TARGET} ${AMLM_LIBCUE_TARGET} ${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
-		callable_traits)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_COMMON_LINK_LIBS})
 add_dependencies(${PROJECT_NAME} icons_oxygen)
 
