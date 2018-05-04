@@ -24,13 +24,16 @@
 /// QT5
 #include <QWidget>
 #include <QToolButton>
+#include <QDialog>
 
 /// KF5
 #include <KJob>
+#include <KToolTipWidget>
 
 /// Ours
 #include "ActivityProgressStatusBarWidget.h"
 #include <concurrency/AMLMCompositeJob.h>
+#include <gui/MainWindow.h>
 
 BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_CLASS(parent),
     m_parent(parent), m_composite_job(new AMLMCompositeJob(this))
@@ -50,8 +53,11 @@ BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_C
 //    button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
     m_widget->addButton(button_jobs);
 
-    m_expanding_frame_widget = new ExpandingFrameWidget(m_widget);
-
+    m_expanding_frame_widget = new ExpandingFrameWidget();
+//    m_expanding_frame_widget->hide();
+//    m_exp_dlg = new QDialog(MainWindow::instance());
+//    m_exp_dlg->add
+    m_kttw = new KToolTipWidget(MainWindow::instance());
     connect(button_jobs, &QToolButton::toggled, this, &BaseActivityProgressWidget::toggleSubjobDisplay);
 }
 
@@ -113,11 +119,19 @@ void BaseActivityProgressWidget::showSubJobs()
 {
     m_expanding_frame_widget->raise();
     m_expanding_frame_widget->show();
+//    m_expanding_frame_widget->updateGeometry();
+
+    auto rect = m_widget->geometry();
+    auto pos = m_widget->parentWidget()->mapToGlobal(rect.topLeft());
+    rect.moveTo(pos);
+
+    m_kttw->showBelow(rect, m_expanding_frame_widget, MainWindow::instance()->windowHandle());
 }
 
 void BaseActivityProgressWidget::hideSubJobs()
 {
-    m_expanding_frame_widget->hide();
+//    m_expanding_frame_widget->hide();
+    m_kttw->hideLater();
 }
 
 void BaseActivityProgressWidget::subjobFinished(KJob *job)

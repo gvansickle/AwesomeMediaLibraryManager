@@ -22,10 +22,12 @@
 
 /// QT5
 class QWidget;
+class QDialog;
 #include <QMap>
 
 /// KF5
 class KJob;
+class KToolTipWidget;
 #include <KAbstractWidgetJobTracker>
 
 /// Ours
@@ -108,6 +110,8 @@ protected:
 
     /// Showable/hidable window containing all sub-trackers.
     ExpandingFrameWidget* m_expanding_frame_widget {nullptr};
+    QDialog* m_exp_dlg {nullptr};
+    KToolTipWidget* m_kttw {nullptr};
 
     AMLMCompositeJob* m_composite_job {nullptr};
 

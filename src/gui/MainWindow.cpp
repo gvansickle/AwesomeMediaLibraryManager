@@ -1992,14 +1992,14 @@ void MainWindow::registerJob(KJob *new_job)
 //    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
     statusBar()->show();
 
-    if(!m_status_dlg)
-    {
-        // Create the Status dialog.
-        m_status_dlg = new ActivityProgressDialog(this);
-    }
+//    if(!m_status_dlg)
+//    {
+//        // Create the Status dialog.
+//        m_status_dlg = new ActivityProgressDialog(this);
+//    }
 
-    m_status_dlg->TrackJob(new_job);
-    m_status_dlg->show();
+//    m_status_dlg->TrackJob(new_job);
+//    m_status_dlg->show();
 }
 
 
