@@ -17,9 +17,12 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <src/concurrency/AMLMCompositeJob.h>
+#include "AMLMCompositeJob.h"
 
-AMLMCompositeJob::AMLMCompositeJob()
+#include <QObject>
+
+
+AMLMCompositeJob::AMLMCompositeJob(QObject *parent) : /*AMLMJob(parent),*/ KCompositeJob(parent)
 {
 	// TODO Auto-generated constructor stub
 

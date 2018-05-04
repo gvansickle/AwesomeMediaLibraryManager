@@ -17,16 +17,30 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <src/gui/activityprogressmanager/ExpandingFrameWidget.h>
+#include <QLayout>
 
-ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent)
+#include "ExpandingFrameWidget.h"
+
+ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent) : BASE_CLASS(parent)
 {
-	// TODO Auto-generated constructor stub
-
+    // Set up the layout.
+    setLayout(new QVBoxLayout(this));
+    layout()->setSpacing(0);
+    layout()->setMargin(0);
 }
 
 ExpandingFrameWidget::~ExpandingFrameWidget()
 {
-	// TODO Auto-generated destructor stub
+    // TODO Auto-generated destructor stub
+}
+
+void ExpandingFrameWidget::addWidget(QWidget *new_widget)
+{
+    layout()->addWidget(new_widget);
+}
+
+void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
+{
+    layout()->removeWidget(new_widget);
 }
 

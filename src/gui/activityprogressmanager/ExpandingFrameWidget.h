@@ -20,6 +20,7 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
 
+class QWidget;
 #include <QFrame>
 
 /*
@@ -34,6 +35,10 @@ class ExpandingFrameWidget : public QFrame
 public:
     explicit ExpandingFrameWidget(QWidget* parent = nullptr);
      ~ExpandingFrameWidget() override;
+
+    void addWidget(QWidget* new_widget);
+
+    void removeWidget(QWidget* new_widget);
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_ */

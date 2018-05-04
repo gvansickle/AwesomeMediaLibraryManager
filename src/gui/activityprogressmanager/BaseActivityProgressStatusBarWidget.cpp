@@ -38,6 +38,7 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
     : BaseActivityProgressStatusBarWidget(parent)
 {
     // We have a vtable to this, go nuts with the virtual calls.
+    /// @note job is currently unused by init().
     init(job, parent);
 }
 

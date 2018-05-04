@@ -20,7 +20,10 @@
 #ifndef SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
 #define SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
 
-
+#include <QObject>
+#include <KJob>
+#include <KCompositeJob>
+#include <ThreadWeaver/Collection>
 
 #include "AMLMJob.h"
 
@@ -31,11 +34,15 @@ using AMLMCompositeJobPtr = QSharedPointer<AMLMCompositeJob>;
 /*
  *
  */
-class AMLMCompositeJob: public AMLMJob
+class AMLMCompositeJob: /*public AMLMJob,*/ public KCompositeJob, public ThreadWeaver::Collection, public QEnableSharedFromThis<AMLMCompositeJob>
 {
+    Q_OBJECT
+
 public:
-	AMLMCompositeJob();
-	virtual ~AMLMCompositeJob();
+    AMLMCompositeJob(QObject* parent);
+     ~AMLMCompositeJob() override;
+
+    Q_SCRIPTABLE void start() override {};
 };
 
 #endif /* SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_ */

@@ -1984,12 +1984,12 @@ void MainWindow::registerJob(KJob *new_job)
         // parent: "the parent of this object and of the widget displaying the job progresses"
 //        m_kf5_activity_progress_widget = new KStatusBarJobTracker(/*this*/statusBar(), /*display cancel button*/ true);
         m_kf5_activity_progress_widget = new BaseActivityProgressWidget(statusBar());
+        statusBar()->addPermanentWidget(m_kf5_activity_progress_widget->RootWidget());
     }
 //    KJobWidgets::setWindow(new_job, this);
     m_kf5_activity_progress_widget->registerJob(new_job);
 //    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);//ProgressOnly, LabelOnly);
 //    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
-    m_kf5_activity_progress_widget->widget(new_job)->show();
     statusBar()->show();
 
     if(!m_status_dlg)
