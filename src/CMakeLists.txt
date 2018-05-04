@@ -210,29 +210,6 @@ set(SOURCE_FILES
 	concurrency/DirectoryScanJob.cpp
 	)
 
-set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	gui/activityprogressmanager/ActivityProgressManager.h
-	gui/activityprogressmanager/ActivityProgressDialog.h
-	gui/activityprogressmanager/ActivityProgressPopup.h
-	gui/activityprogressmanager/ActivityEntryWidget.h
-	gui/activityprogressmanager/ActivityProgressStatusBarWidget.h
-	gui/activityprogressmanager/ActivityProgressWidget.h
-	gui/activityprogressmanager/BaseActivityProgressWidget.h
-	)
-set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	gui/activityprogressmanager/ActivityProgressManager.cpp
-	gui/activityprogressmanager/ActivityProgressDialog.cpp
-	gui/activityprogressmanager/ActivityProgressPopup.cpp
-	gui/activityprogressmanager/ActivityEntryWidget.cpp
-	gui/activityprogressmanager/ActivityProgressStatusBarWidget.cpp
-	gui/activityprogressmanager/ActivityProgressWidget.cpp
-	gui/activityprogressmanager/BaseActivityProgressWidget.cpp
-	)
-set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	gui/activityprogressmanager/ActivityProgressDialog.ui)
-list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-list(APPEND SOURCE_FILES ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER} ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-
 # NoMoc files.
 set(HEADER_FILES_UTILS_NOMOC
 	utils/nomoc/nomocdefs.h
@@ -280,9 +257,16 @@ list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
-# Build the ultimate list of lists.
+# From gui/.
+# @todo Make this a lib.
+prepend_to_each(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+prepend_to_each(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+prepend_to_each(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+list(APPEND SOURCE_FILES ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER} ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
 prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a real target.
 
+# Build the ultimate list of lists.
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 	${amlm_gui_SRCS} ### @todo Make this a real target.
 	)

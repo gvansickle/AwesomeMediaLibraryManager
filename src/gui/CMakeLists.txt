@@ -17,7 +17,7 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# gui files
+# gui header files
 set(gui_HEADER_FILES
 	AboutBox.h
 	CollectionDockWidget.h
@@ -45,7 +45,8 @@ set(gui_HEADER_FILES
 	helpers/NetAwareFileDialogGtk3.h
 	helpers/Gtk3DialogHelper.h
 	)
-	
+
+# gui source files
 set(gui_SOURCE_FILES
 	AboutBox.cpp
 	CollectionDockWidget.cpp
@@ -75,8 +76,6 @@ set(gui_SOURCE_FILES
 	helpers/NetAwareFileDialogGtk3.cpp
 	helpers/Gtk3DialogHelper.cpp
 	)
-
-
 
 # Settings dialog files (in settings/).
 set(gui_settings_SOURCE_FILES
@@ -109,6 +108,31 @@ set(gui_settings_SOURCE_FILES
 	)
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
+set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
+	activityprogressmanager/ActivityProgressManager.h
+	activityprogressmanager/ActivityProgressDialog.h
+	activityprogressmanager/ActivityProgressPopup.h
+	activityprogressmanager/ActivityEntryWidget.h
+	activityprogressmanager/ActivityProgressStatusBarWidget.h
+	activityprogressmanager/ActivityProgressWidget.h
+	activityprogressmanager/BaseActivityProgressWidget.h
+	PARENT_SCOPE
+	)
+set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
+	activityprogressmanager/ActivityProgressManager.cpp
+	activityprogressmanager/ActivityProgressDialog.cpp
+	activityprogressmanager/ActivityProgressPopup.cpp
+	activityprogressmanager/ActivityEntryWidget.cpp
+	activityprogressmanager/ActivityProgressStatusBarWidget.cpp
+	activityprogressmanager/ActivityProgressWidget.cpp
+	activityprogressmanager/BaseActivityProgressWidget.cpp
+	PARENT_SCOPE
+	)
+set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
+	activityprogressmanager/ActivityProgressDialog.ui
+	PARENT_SCOPE
+	)
+
 set(amlm_gui_SRCS
 	${gui_SOURCE_FILES}
 	${gui_HEADER_FILES}
@@ -117,35 +141,4 @@ set(amlm_gui_SRCS
 	)
 message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
-#add_library(amlm_gui_objlib OBJECT EXCLUDE_FROM_ALL ${amlm_gui_SRCS})
-#target_include_directories(amlm_gui_objlib
-#	PUBLIC
-#		${CMAKE_CURRENT_BINARY_DIR}/../src # For <config.h>
-#		)
 
-
-### @todo REFACTOR
-#set(nomoc_HEADERS ${HEADER_FILES_UTILS_NOMOC})
-#PREPEND_TO_EACH(nomoc_HEADERS "${PROJECT_SOURCE_DIR}/src/" ${nomoc_HEADERS})
-
-#add_library(amlm_gui STATIC ${amlm_gui_SRCS}
-			 #${nomoc_HEADERS} ### @todo REFACTOR 
-	#INTERFACE EXCLUDE_FROM_ALL
-	#GLOBAL # So this is target is visible in containing directories.
-#	)
-#target_sources(amlm_gui INTERFACE $<TARGET_OBJECTS:amlm_gui_objlib>)
-#target_include_directories(amlm_gui
-#	PUBLIC
-#		${PROJECT_BINARY_DIR}/src # For <config.h>, For generated kconfig settings files.
-#		${CMAKE_CURRENT_BINARY_DIR}/settings # For generated ui_Settings.*.h.
-#		${CMAKE_CURRENT_BINARY_DIR}
-#		${INCLUDE_DIR_VERDIGRIS}
-#		${PROJECT_SOURCE_DIR}/utils/nomoc ### @todo REFACTOR
-#		${PROJECT_SOURCE_DIR}
-#		${Qt5Core_PRIVATE_INCLUDE_DIRS}
-#		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-#		)
-#target_link_libraries(amlm_gui PRIVATE ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
-
-#print_properties()
-#print_target_properties(amlm_gui)
