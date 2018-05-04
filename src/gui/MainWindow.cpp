@@ -934,7 +934,7 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWidgets()
 {
-#ifdef HAVE_KF5
+#if HAVE_KF501
     auto dock_parent = actionCollection();
 #else
     auto dock_parent = this;

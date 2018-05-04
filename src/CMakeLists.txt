@@ -262,7 +262,8 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/AMLMJob.cpp
 	)
 
-add_subdirectory(gui EXCLUDE_FROM_ALL)
+add_subdirectory(gui)
+message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
 #
 # Append all the SOURCE_* subsets.
@@ -280,7 +281,11 @@ list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
 # Build the ultimate list of lists.
-list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES} ${amlm_settings_SRCS})
+prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a real target.
+
+list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
+	${amlm_gui_SRCS} ### @todo Make this a real target.
+	)
 
 # Sets the icon on Windows and OSX.
 # See https://api.kde.org/ecm/module/ECMAddAppIcon.html
@@ -300,10 +305,10 @@ qt5_add_binary_resources(icons_oxygen ../resources/oxygenicons.qrc)
 qt5_add_resources(amlm_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 qt5_add_resources(amlm_SRCS ../resources/amlm.qrc)
 
-# The link libs common to app and test builds.
+# The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
 		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
-		amlm_gui)
+		)
 
 ###
 ### The main executable.
@@ -313,6 +318,7 @@ set(PROJECT_COMMON_LINK_LIBS
 add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${amlm_settings_SRCS}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
@@ -382,6 +388,7 @@ list(APPEND
 add_executable(${TEST_EXE_TARGET}
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
 				${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+				${amlm_settings_SRCS}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE

@@ -350,7 +350,8 @@ set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 set(IDENTIFIER "io.github.gvansickle")
 
 # So the source in src can find the "resources/" dir.
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_BINARY_DIR}
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
@@ -360,10 +361,10 @@ configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 # Generate the amlm-configure.h file.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
-	${CMAKE_CURRENT_BINARY_DIR}/src/config.h
+	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
-add_subdirectory(src EXCLUDE_FROM_ALL)
+add_subdirectory(src)
 
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
