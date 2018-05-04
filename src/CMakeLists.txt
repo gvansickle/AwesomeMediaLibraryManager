@@ -230,6 +230,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/function_traits.hpp
 	concurrency/ActivityManager.h
 	concurrency/AMLMJob.h
+	concurrency/AMLMCompositeJob.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/AsyncTaskManager.cpp
@@ -237,6 +238,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/function_traits.cpp
 	concurrency/ActivityManager.cpp
 	concurrency/AMLMJob.cpp
+	concurrency/AMLMCompositeJob.cpp
 	)
 
 add_subdirectory(gui)

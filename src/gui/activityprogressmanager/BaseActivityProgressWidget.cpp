@@ -29,7 +29,7 @@
 #include "ActivityProgressStatusBarWidget.h"
 
 BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_CLASS(parent),
-    m_parent(parent)
+    m_parent(parent), m_composite_job(new KJob(this))
 {
 
 }
@@ -45,7 +45,7 @@ void BaseActivityProgressWidget::registerJob(KJob *job)
         return;
     }
 
-    // Create a new widget for this job.
+    // Create a new widget-based tracker for this job.
     auto pw = new ActivityProgressStatusBarWidget(job, this, m_parent);
     m_activities_to_widgets_map.insert(job, pw);
 

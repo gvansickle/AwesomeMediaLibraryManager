@@ -17,23 +17,25 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
-#define SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
+#ifndef SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
+#define SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
 
-#include <QFrame>
+
+
+#include "AMLMJob.h"
+
+/// Use the AMLMCompositeJobPtr alias to pass around refs to AMLMJob-derived jobs.
+class AMLMCompositeJob;
+using AMLMCompositeJobPtr = QSharedPointer<AMLMCompositeJob>;
 
 /*
  *
  */
-class ExpandingFrameWidget : public QFrame
+class AMLMCompositeJob: public AMLMJob
 {
-    Q_OBJECT
-
-    using BASE_CLASS = QFrame;
-
 public:
-    explicit ExpandingFrameWidget(QWidget* parent = nullptr);
-     ~ExpandingFrameWidget() override;
+	AMLMCompositeJob();
+	virtual ~AMLMCompositeJob();
 };
 
-#endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_ */
+#endif /* SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_ */

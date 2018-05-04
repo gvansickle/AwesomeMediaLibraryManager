@@ -47,6 +47,9 @@ public:
     explicit BaseActivityProgressStatusBarWidget(KJob *job, QWidget *parent);
     ~BaseActivityProgressStatusBarWidget() override;
 
+    /// Add buttons to the rhs of the layout.
+    virtual void addButton(QToolButton* new_button);
+
     virtual void setDescription(const QString& title,
                         const QPair<QString, QString> &field1,
                         const QPair<QString, QString> &field2);

@@ -30,6 +30,8 @@ class KJob;
 
 /// Ours
 class ActivityProgressStatusBarWidget;
+class BaseActivityProgressStatusBarWidget;
+class ExpandingFrameWidget;
 
 /**
  * Base class for AMLMJob widget-based multiple-job trackers.
@@ -87,15 +89,24 @@ public Q_SLOTS:
     void registerJob(KJob *job) override;
     void unregisterJob(KJob *job) override;
 
+public Q_SLOTS:
+
 
 protected:
     using ActiveActivitiesMap = QMap<KJob*, ActivityProgressStatusBarWidget*>;
 
     /// Map of all registered sub-Activities to sub-job-trackers.
     ActiveActivitiesMap m_activities_to_widgets_map;
-    QWidget* m_parent;
 
-    QFrame* m_expanded_widget;
+    QWidget* m_parent {nullptr};
+
+    /// The status widget showing the cumulative status of all registered sub-trackers.
+    BaseActivityProgressStatusBarWidget* m_widget {nullptr};
+
+    /// Showable/hidable window containing all sub-trackers.
+    ExpandingFrameWidget* m_expanding_frame_widget {nullptr};
+
+    KJob* m_composite_job {nullptr};
 
 protected Q_SLOTS:
     /**

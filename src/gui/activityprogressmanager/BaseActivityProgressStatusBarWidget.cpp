@@ -46,6 +46,12 @@ BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
 
 }
 
+void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
+{
+    new_button->setParent(this->parentWidget());
+    layout()->addWidget(new_button);
+}
+
 void BaseActivityProgressStatusBarWidget::setDescription(const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
     /// @todo Don't really have anywhere to put fields.

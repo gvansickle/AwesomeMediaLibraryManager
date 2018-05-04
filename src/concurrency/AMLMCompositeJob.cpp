@@ -17,23 +17,16 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
-#define SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
+#include <src/concurrency/AMLMCompositeJob.h>
 
-#include <QFrame>
-
-/*
- *
- */
-class ExpandingFrameWidget : public QFrame
+AMLMCompositeJob::AMLMCompositeJob()
 {
-    Q_OBJECT
+	// TODO Auto-generated constructor stub
 
-    using BASE_CLASS = QFrame;
+}
 
-public:
-    explicit ExpandingFrameWidget(QWidget* parent = nullptr);
-     ~ExpandingFrameWidget() override;
-};
+AMLMCompositeJob::~AMLMCompositeJob()
+{
+	// TODO Auto-generated destructor stub
+}
 
-#endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_ */

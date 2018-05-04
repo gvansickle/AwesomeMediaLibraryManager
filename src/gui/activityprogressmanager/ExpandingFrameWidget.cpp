@@ -19,7 +19,7 @@
 
 #include <src/gui/activityprogressmanager/ExpandingFrameWidget.h>
 
-ExpandingFrameWidget::ExpandingFrameWidget()
+ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent)
 {
 	// TODO Auto-generated constructor stub
 

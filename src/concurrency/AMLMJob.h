@@ -26,7 +26,7 @@
 #include <ThreadWeaver/IdDecorator>
 #include <ThreadWeaver/QObjectDecorator>
 
-/// Use this typedef to pass around refs to AMLMJob-derived jobs.
+/// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
 using AMLMJobPtr = QSharedPointer<AMLMJob>;
 
