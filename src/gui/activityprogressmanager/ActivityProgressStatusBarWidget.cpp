@@ -28,6 +28,9 @@
 #include <QProgressBar>
 #include <QToolButton>
 
+/// KF5
+#include <KIconLoader>
+
 /// Ours
 #include <utils/DebugHelpers.h>
 #include <utils/StringHelpers.h>
@@ -73,6 +76,10 @@ void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     m_cancel_button = new QToolButton(parent);
     m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
     setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
+    m_pause_resume_button = new QToolButton(parent);
+    m_pause_resume_button->setIcon(QIcon::fromTheme("media-playback-pause"));
+    setTips(m_pause_resume_button, tr("Pause/Resume"), tr("Pause or resume this operation"),
+    		tr("<h3>Pause/Resume</h3><br/>Pauses or resumes the operation"));
 
     // The main layout.
     auto layout = new QHBoxLayout();
@@ -80,7 +87,7 @@ void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     layout->addWidget(m_current_activity_label);
     layout->addWidget(m_text_status_label);
     layout->addWidget(m_progress_bar);
-//    layout->addWidget(button_pause);
+    layout->addWidget(m_pause_resume_button);
     layout->addWidget(m_cancel_button);
 //    layout->addWidget(button_jobs);
 

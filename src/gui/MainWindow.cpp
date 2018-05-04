@@ -38,6 +38,7 @@
 #include <KJobWidgets>
 #include <KStatusBarJobTracker>
 #include <KWidgetJobTracker>
+#include <KIconButton>
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -526,6 +527,7 @@ void MainWindow::createActions()
 								   QKeySequence(), "Invoke experimental code - USE AT YOUR OWN RISK");
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 
+
 //M_WARNING("TODO: Experimental KDE")
 	// Provides a menu entry that allows showing/hiding the toolbar(s)
 //	setStandardToolBarMenuEnabled(true);
@@ -880,7 +882,10 @@ void MainWindow::createToolBars()
     m_settingsToolBar = addToolBar(tr("Settings"), "SettingsToolbar");
 
 	m_settingsToolBar->addAction(m_act_settings);
+    m_settingsToolBar->addSeparator();
 	m_settingsToolBar->addAction(m_experimentalAct);
+    /// KF5 button that opens an Icon select dialog.
+    m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
 
 #if HAVE_KF501
     // Create a combo box where the user can change the style.

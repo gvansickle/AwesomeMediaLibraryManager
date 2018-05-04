@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "Theme.h"
 
 #include <QIcon>
@@ -37,11 +39,15 @@
 #include <QDirIterator>
 #include <QUrl>
 #include <QRegularExpression>
-#include <KActionMenu>
 #include <gui/MainWindow.h>
 
 #include "DebugHelpers.h"
 
+#if HAVE_KF501
+/// KF5
+#include <KIconLoader>
+#include <KActionMenu>
+#endif
 
 QStringList Theme::m_available_styles;
 
@@ -289,6 +295,13 @@ M_WARNING("TODO");
 QIcon Theme::iconFromTheme(const QString &icon_name)
 {
     QIcon retval;
+
+#if HAVE_KF501
+
+//    auto icon_loader = KIconLoader::global();
+//    icon_loader->loadIcon()
+
+#endif
 
     if(QIcon::hasThemeIcon(icon_name))
     {
