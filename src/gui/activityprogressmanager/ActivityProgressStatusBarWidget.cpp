@@ -29,7 +29,6 @@
 #include <QToolButton>
 
 /// KF5
-#include <KIconLoader>
 
 /// Ours
 #include <utils/DebugHelpers.h>
