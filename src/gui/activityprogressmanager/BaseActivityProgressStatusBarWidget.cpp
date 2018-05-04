@@ -1,8 +1,20 @@
 /*
- * BaseActivityProgressStatusBarWidget.cpp
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
- *  Created on: May 4, 2018
- *      Author: gary
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "BaseActivityProgressStatusBarWidget.h"
@@ -15,16 +27,46 @@
 #include <KJob>
 
 #include <gui/helpers/Tips.h>
+#include <utils/DebugHelpers.h>
 
-BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent)
+BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *job, QWidget *parent)
     : QFrame(parent)
 {
-
+    init(job, parent);
 }
 
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
 {
 
+}
+
+void BaseActivityProgressStatusBarWidget::setDescription(const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+{
+    /// @todo Don't really have anywhere to put fields.
+    Q_UNUSED(field1);
+    Q_UNUSED(field2);
+    m_current_activity_label->setText(title);
+}
+
+void BaseActivityProgressStatusBarWidget::setInfoMessage(const QString &text)
+{
+    m_text_status_label->setText(text);
+}
+
+void BaseActivityProgressStatusBarWidget::setWarning(const QString &text)
+{
+M_WARNING("TODO");
+    qWr() << text;
+}
+
+void BaseActivityProgressStatusBarWidget::setRange(int min, int max)
+{
+    m_progress_bar->setRange(min, max);
+}
+
+void BaseActivityProgressStatusBarWidget::setValue(int val)
+{
+    m_progress_bar->setValue(val);
 }
 
 void BaseActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
@@ -66,5 +108,5 @@ void BaseActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     layout->addWidget(m_cancel_button);
 //    layout->addWidget(button_jobs);
 
-    m_widget->setLayout(layout);
+    setLayout(layout);
 }

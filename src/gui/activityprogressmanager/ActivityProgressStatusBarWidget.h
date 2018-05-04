@@ -35,7 +35,7 @@ class KJob;
 
 /// Ours
 #include "BaseActivityProgressWidget.h"
-
+class BaseActivityProgressStatusBarWidget;
 
 /**
  * Widget representing the progress/status/controls of a single KJob.
@@ -49,7 +49,7 @@ class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker
 
 public:
     ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget* object, QWidget *parent);
-	virtual ~ActivityProgressStatusBarWidget();
+    ~ActivityProgressStatusBarWidget() override;
 
     QWidget *widget(KJob *job) override;
 
@@ -97,22 +97,13 @@ protected:
     bool m_is_total_size_known;
     qulonglong m_totalSize;
 
-    QTime startTime;
+    QTime m_start_time;
 
 private:
     Q_DISABLE_COPY(ActivityProgressStatusBarWidget)
 
-    /// The actual widget and its components.
-    /// This could maybe be factored out into its own class.
-    QWidget* m_widget;
-    QLabel* m_current_activity_label;
-    QLabel* m_text_status_label;
-    QProgressBar* m_progress_bar;
-    // Cancel Operation button.
-    QToolButton *m_cancel_button;
-    // Pause/Resume button.
-    QToolButton *m_pause_resume_button;
-
+    /// The actual widget.
+    BaseActivityProgressStatusBarWidget* m_widget;
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_ */

@@ -34,6 +34,7 @@
 #include <utils/DebugHelpers.h>
 #include <utils/StringHelpers.h>
 #include <gui/helpers/Tips.h>
+#include "BaseActivityProgressStatusBarWidget.h"
 
 ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget *object, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
@@ -51,46 +52,8 @@ ActivityProgressStatusBarWidget::~ActivityProgressStatusBarWidget()
 void ActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
 {
     // Create the widget.
-    /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
 
-    m_widget = new QWidget(parent);
-
-
-    m_current_activity_label = new QLabel("Idle", parent);
-    m_current_activity_label->setToolTip("Current operation");
-    m_current_activity_label->setWhatsThis("This text shows the current operation in progress.");
-
-    // This is for displaying the KJob::infoMessage().
-    // ""Resolving host", "Connecting to host...", etc."
-    m_text_status_label = new QLabel("Idle", parent);
-    m_text_status_label->setToolTip("Status of the current operation");
-    m_text_status_label->setWhatsThis("This text shows the status of the current operation in progress.");
-
-    // The progress bar.
-    m_progress_bar = new QProgressBar(parent);
-    m_progress_bar->setFormat(tr("%p%"));
-    m_progress_bar->setTextVisible(true);
-
-    // The buttons.
-    m_cancel_button = new QToolButton(parent);
-    m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
-    setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
-    m_pause_resume_button = new QToolButton(parent);
-    m_pause_resume_button->setIcon(QIcon::fromTheme("media-playback-pause"));
-    setTips(m_pause_resume_button, tr("Pause/Resume"), tr("Pause or resume this operation"),
-    		tr("<h3>Pause/Resume</h3><br/>Pauses or resumes the operation"));
-
-    // The main layout.
-    auto layout = new QHBoxLayout();
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(m_current_activity_label);
-    layout->addWidget(m_text_status_label);
-    layout->addWidget(m_progress_bar);
-    layout->addWidget(m_pause_resume_button);
-    layout->addWidget(m_cancel_button);
-//    layout->addWidget(button_jobs);
-
-    m_widget->setLayout(layout);
+    m_widget = new BaseActivityProgressStatusBarWidget(job, parent);
 }
 
 QWidget *ActivityProgressStatusBarWidget::widget(KJob *job)
@@ -102,19 +65,18 @@ QWidget *ActivityProgressStatusBarWidget::widget(KJob *job)
 
 void ActivityProgressStatusBarWidget::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
-    m_current_activity_label->setText(title);
-    /// @todo Don't really have anywhere to put fields.
+    m_widget->setDescription(title, field1, field2);
 }
 
 void ActivityProgressStatusBarWidget::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
     // Prefer rich if it's given.
-    m_text_status_label->setText(rich.isEmpty() ? plain : rich);
+    m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
 }
 
 void ActivityProgressStatusBarWidget::warning(KJob *job, const QString &plain, const QString &rich)
 {
-
+    m_widget->setWarning(rich.isEmpty() ? plain : rich);
 }
 
 void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qulonglong amount)
@@ -129,9 +91,9 @@ void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qu
             return;
         }
         m_totalSize = amount;
-        if (startTime.isNull())
+        if (m_start_time.isNull())
         {
-            startTime.start();
+            m_start_time.start();
         }
         break;
 
@@ -180,8 +142,8 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
                   .arg(str_total);
 
             /// @todo GRVS
-            m_progress_bar->setRange(0, m_totalSize);
-            m_progress_bar->setValue(m_processedSize);
+            m_widget->setRange(0, m_totalSize);
+            m_widget->setValue(qBound(0ULL, m_processedSize, m_totalSize));
         }
         else
         {
@@ -191,7 +153,8 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
         if (!m_is_total_size_known)
         {
             // update jumping progressbar
-            m_progress_bar->setValue(m_processedSize);
+            m_widget->setRange(0, 0);
+            m_widget->setValue(m_processedSize);
         }
         break;
 
