@@ -19,6 +19,7 @@
 
 # gui files
 set(gui_HEADER_FILES
+	AboutBox.h
 	CollectionDockWidget.h
 	Experimental.h
 	FilterWidget.h
@@ -32,8 +33,21 @@ set(gui_HEADER_FILES
 	NetworkAwareFileDialog.h
 	PixmapLabel.h
 	PlayerControls.h
+	helpers/Tips.h
+	menus/DropMenu.h
+	menus/LibraryContextMenu.h
+	menus/PlaylistContextMenuViewport.h
+	menus/PlaylistContextMenu.h
+	menus/ActionBundle.h
+	mdi/MDIModelViewPair.h
+	DragDropTreeViewStyleProxy.h
+	menus/HelpMenu.h
+	helpers/NetAwareFileDialogGtk3.h
+	helpers/Gtk3DialogHelper.h
 	)
+	
 set(gui_SOURCE_FILES
+	AboutBox.cpp
 	CollectionDockWidget.cpp
 	Experimental.cpp
 	FilterWidget.cpp
@@ -47,6 +61,19 @@ set(gui_SOURCE_FILES
 	NetworkAwareFileDialog.cpp
 	PixmapLabel.cpp
 	PlayerControls.cpp
+	MDINowPlayingView.cpp
+	MDINowPlayingView.h
+	DragDropTreeViewStyleProxy.cpp
+	helpers/Tips.cpp
+	menus/DropMenu.cpp
+	menus/LibraryContextMenu.cpp
+	menus/PlaylistContextMenuViewport.cpp
+	menus/PlaylistContextMenu.cpp
+	menus/ActionBundle.cpp
+	mdi/MDIModelViewPair.cpp
+	menus/HelpMenu.cpp
+	helpers/NetAwareFileDialogGtk3.cpp
+	helpers/Gtk3DialogHelper.cpp
 	)
 
 
@@ -108,11 +135,15 @@ add_library(amlm_gui STATIC ${gui_SRCS}
 target_include_directories(amlm_gui
 	PUBLIC
 		${CMAKE_BINARY_DIR}/src # For <config.h>
+		${CMAKE_BINARY_DIR} # For generated kconfig settings files.
 		${CMAKE_CURRENT_BINARY_DIR}/settings # For generated ui_Settings.*.h.
 		${CMAKE_CURRENT_BINARY_DIR}
+		${PROJECT_SOURCE_DIR}/utils/nomoc ### @todo REFACTOR
 		${PROJECT_SOURCE_DIR}
 		${Qt5Core_PRIVATE_INCLUDE_DIRS}
 		${Qt5Gui_PRIVATE_INCLUDE_DIRS}
 		)
 target_link_libraries(amlm_gui PRIVATE ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
 
+print_properties()
+print_target_properties(amlm_gui)

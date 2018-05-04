@@ -107,9 +107,9 @@ set_property(TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SKIP_AUTOGEN ON)
 
 # Verdigris is just two headers.
 set(USE_BUNDLED_VERDIGRIS 1)
-#set(INCLUDE_DIR_VERDIGRIS third_party/verdigris/src)
-add_library(verdigris INTERFACE)
-target_include_directories(verdigris INTERFACE third_party/verdigris/src)
+set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
+add_library(verdigris_target INTERFACE)
+target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
 
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
@@ -127,7 +127,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_LIBCUE_TARGET}
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
-		verdigris
+		verdigris_target
 		)
 
 # Main program header files.
@@ -159,29 +159,17 @@ set(HEADER_FILES
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	utils/AsyncDirScanner.h
-	gui/AboutBox.h
 	utils/RegisterQtMetatypes.h
 	logic/CueSheetParser.h
 	../resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
-	gui/DragDropTreeViewStyleProxy.h
 	logic/proxymodels/ModelHelpers.h
 	logic/proxymodels/SelectionFilterProxyModel.h
 	logic/proxymodels/ModelChangeWatcher.h
-	gui/helpers/Tips.h
-	gui/menus/DropMenu.h
-	gui/menus/LibraryContextMenu.h
-	gui/menus/PlaylistContextMenuViewport.h
-	gui/menus/PlaylistContextMenu.h
-	gui/menus/ActionBundle.h
-	gui/mdi/MDIModelViewPair.h
 	logic/ColumnSpec.h
 	logic/proxymodels/QPersistentModelIndexVec.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
-	gui/menus/HelpMenu.h
-	gui/helpers/NetAwareFileDialogGtk3.h
-	gui/helpers/Gtk3DialogHelper.h
 	concurrency/DirectoryScanJob.h
     )
 
@@ -210,29 +198,15 @@ set(SOURCE_FILES
 	logic/LibraryRescanner.cpp
 	concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
-	gui/AboutBox.cpp
 	utils/RegisterQtMetatypes.cpp
 	logic/CueSheetParser.cpp
-	gui/MDINowPlayingView.cpp
-	gui/MDINowPlayingView.h
 	logic/ModelUserRoles.cpp
-	gui/DragDropTreeViewStyleProxy.cpp
 	logic/proxymodels/SelectionFilterProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
-	gui/helpers/Tips.cpp
-	gui/menus/DropMenu.cpp
-	gui/menus/LibraryContextMenu.cpp
-	gui/menus/PlaylistContextMenuViewport.cpp
-	gui/menus/PlaylistContextMenu.cpp
-	gui/menus/ActionBundle.cpp
-	gui/mdi/MDIModelViewPair.cpp
 	logic/ColumnSpec.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
-	gui/menus/HelpMenu.cpp
-	gui/helpers/NetAwareFileDialogGtk3.cpp
-	gui/helpers/Gtk3DialogHelper.cpp
 	concurrency/DirectoryScanJob.cpp
 	)
 
@@ -295,7 +269,7 @@ add_subdirectory(gui EXCLUDE_FROM_ALL)
 #
 
 # *.ui files.
-list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
+### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})

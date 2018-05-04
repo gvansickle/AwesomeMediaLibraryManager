@@ -140,6 +140,18 @@ set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(ExternalProject)
 include(DownloadProject)
 
+# Right now we need all the verbosity we can get.
+set(CMAKE_VERBOSE_MAKEFILE  YES)
+#set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+set(CPACK_IFW_VERBOSE YES)
+#set(CMAKE_DEBUG_TARGET_PROPERTIES
+#		INCLUDE_DIRECTORIES
+#		COMPILE_DEFINITIONS
+#		POSITION_INDEPENDENT_CODE
+#		CONTAINER_SIZE_REQUIRED
+#		LIB_VERSION
+#		)
+
 dir_summary()
 
 # QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
@@ -315,18 +327,6 @@ download_project(PROJ                boost_callable_traits
 	)
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
 message(STATUS ${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
-
-# Right now we need all the verbosity we can get.
-set(CMAKE_VERBOSE_MAKEFILE  YES)
-set(GLOBAL_DEPENDS_DEBUG_MODE TRUE)
-set(CPACK_IFW_VERBOSE YES)
-#set(CMAKE_DEBUG_TARGET_PROPERTIES
-#		INCLUDE_DIRECTORIES
-#		COMPILE_DEFINITIONS
-#		POSITION_INDEPENDENT_CODE
-#		CONTAINER_SIZE_REQUIRED
-#		LIB_VERSION
-#		)
 
 # Use include-what-you-use.
 if(FALSE)
