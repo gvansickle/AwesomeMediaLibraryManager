@@ -42,7 +42,7 @@ BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_C
     auto button_jobs = new QToolButton(parent);
     button_jobs->setPopupMode(QToolButton::InstantPopup);
     button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
-//    button_jobs->setCheckable(true);
+    button_jobs->setCheckable(true);
 //    button_jobs->setMenu(menu_jobs);
 //    auto button_jobs_popup = new ActivityProgressPopup(this);
 //    button_jobs->addAction(button_jobs_popup);
@@ -51,6 +51,8 @@ BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_C
     m_widget->addButton(button_jobs);
 
     m_expanding_frame_widget = new ExpandingFrameWidget(m_widget);
+
+    connect(button_jobs, &QToolButton::toggled, this, &BaseActivityProgressWidget::toggleSubjobDisplay);
 }
 
 BaseActivityProgressWidget::~BaseActivityProgressWidget()
@@ -93,6 +95,34 @@ void BaseActivityProgressWidget::unregisterJob(KJob *job)
         delete m_activities_to_widgets_map[job];
     }
     m_activities_to_widgets_map.remove(job);
+}
+
+void BaseActivityProgressWidget::toggleSubjobDisplay(bool checked)
+{
+    if(checked)
+    {
+        showSubJobs();
+    }
+    else
+    {
+        hideSubJobs();
+    }
+}
+
+void BaseActivityProgressWidget::showSubJobs()
+{
+    m_expanding_frame_widget->raise();
+    m_expanding_frame_widget->show();
+}
+
+void BaseActivityProgressWidget::hideSubJobs()
+{
+    m_expanding_frame_widget->hide();
+}
+
+void BaseActivityProgressWidget::subjobFinished(KJob *job)
+{
+
 }
 
 QWidget *BaseActivityProgressWidget::widget(KJob *job)

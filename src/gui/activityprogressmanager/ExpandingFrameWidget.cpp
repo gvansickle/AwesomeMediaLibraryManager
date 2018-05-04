@@ -27,6 +27,7 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent) : BASE_CLASS(parent)
     setLayout(new QVBoxLayout(this));
     layout()->setSpacing(0);
     layout()->setMargin(0);
+    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 }
 
 ExpandingFrameWidget::~ExpandingFrameWidget()
@@ -36,11 +37,22 @@ ExpandingFrameWidget::~ExpandingFrameWidget()
 
 void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 {
+    new_widget->setParent(this);
     layout()->addWidget(new_widget);
+
+    // Resize if necessary.
+    if(width() < new_widget->width())
+    {
+        setMinimumWidth(new_widget->width());
+    }
+
+    /// @todo
+    setMinimumHeight(new_widget->height());
 }
 
 void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 {
+//    new_widget->setParent(this);
     layout()->removeWidget(new_widget);
 }
 

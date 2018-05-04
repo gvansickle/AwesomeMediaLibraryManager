@@ -112,6 +112,10 @@ protected:
     AMLMCompositeJob* m_composite_job {nullptr};
 
 protected Q_SLOTS:
+
+    void toggleSubjobDisplay(bool checked);
+
+
     /**
      * The following slots are inherited.
      */
@@ -131,6 +135,11 @@ protected Q_SLOTS:
 //    void speed(KJob *job, unsigned long value) override;
 
 //    void slotClean(KJob *job) override;
+
+private:
+    void showSubJobs();
+    void hideSubJobs();
+    void subjobFinished(KJob*);
 
 };
 
