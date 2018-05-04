@@ -29,9 +29,15 @@
 #include <gui/helpers/Tips.h>
 #include <utils/DebugHelpers.h>
 
-BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *job, QWidget *parent)
-    : QFrame(parent)
+BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent) : BASE_CLASS(parent)
 {
+
+}
+
+BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *job, QWidget *parent)
+    : BaseActivityProgressStatusBarWidget(parent)
+{
+    // We have a vtable to this, go nuts with the virtual calls.
     init(job, parent);
 }
 

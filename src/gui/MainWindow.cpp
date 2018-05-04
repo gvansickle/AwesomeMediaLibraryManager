@@ -1988,7 +1988,7 @@ void MainWindow::registerJob(KJob *new_job)
 //    KJobWidgets::setWindow(new_job, this);
     m_kf5_activity_progress_widget->registerJob(new_job);
 //    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);//ProgressOnly, LabelOnly);
-    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
+//    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
     m_kf5_activity_progress_widget->widget(new_job)->show();
     statusBar()->show();
 

@@ -93,9 +93,9 @@ protected:
     /// Called by the constructor.
     void init(KJob *job, QWidget *parent);
 
-    qulonglong m_processedSize;
-    bool m_is_total_size_known;
-    qulonglong m_totalSize;
+    qulonglong m_processedSize {0};
+    bool m_is_total_size_known {false};
+    qulonglong m_totalSize {0};
 
     QTime m_start_time;
 
@@ -103,7 +103,7 @@ private:
     Q_DISABLE_COPY(ActivityProgressStatusBarWidget)
 
     /// The actual widget.
-    BaseActivityProgressStatusBarWidget* m_widget;
+    BaseActivityProgressStatusBarWidget* m_widget {nullptr};
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_ */

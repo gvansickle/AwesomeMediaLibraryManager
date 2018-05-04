@@ -82,10 +82,10 @@ ActivityProgressWidget::ActivityProgressWidget(QWidget *parent, const Qt::Window
 //    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), this);
 //    kmsg_wdgt->setCloseButtonVisible(true);
 //    pla_2->setDefaultWidget(kmsg_wdgt);
-    auto pla_2 = new ActivityEntryWidget(menu_jobs);
-    menu_jobs->addAction(pla_2);
-    menu_jobs->addAction(tr("Test 1"));
-    menu_jobs->addAction(tr("Test 2"));
+//    auto pla_2 = new ActivityEntryWidget(menu_jobs);
+//    menu_jobs->addAction(pla_2);
+//    menu_jobs->addAction(tr("Test 1"));
+//    menu_jobs->addAction(tr("Test 2"));
 //    progress_list_action->setDefaultWidget(button_jobs);
 //    MainWindow::getInstance()->statusBar()->addAction(progress_list_action);
 

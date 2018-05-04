@@ -39,6 +39,10 @@ class BaseActivityProgressStatusBarWidget: public QFrame
 
     using BASE_CLASS = QFrame;
 
+    /// Private constructor to get us a fully-constructed vtable so we can
+    /// call virtual functions in the non-default constructor.
+    BaseActivityProgressStatusBarWidget(QWidget *parent);
+
 public:
     explicit BaseActivityProgressStatusBarWidget(KJob *job, QWidget *parent);
     ~BaseActivityProgressStatusBarWidget() override;
@@ -56,10 +60,11 @@ public /*Q_SLOTS*/:
 protected:
 
     /// Create the widget.
-    /// Called by the constructor.
-    void init(KJob *job, QWidget *parent);
+    /// Called by the public constructor.
+    virtual void init(KJob *job, QWidget *parent);
 
 private:
+    Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
 
     QLabel* m_current_activity_label {nullptr};
     QLabel* m_text_status_label {nullptr};

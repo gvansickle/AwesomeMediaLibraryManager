@@ -22,25 +22,27 @@
 #include "ActivityProgressStatusBarWidget.h"
 
 /// Qt5
-#include <QHBoxLayout>
-#include <QIcon>
-#include <QLabel>
-#include <QProgressBar>
-#include <QToolButton>
+//#include <QHBoxLayout>
+//#include <QIcon>
+//#include <QLabel>
+//#include <QProgressBar>
+//#include <QToolButton>
 
 /// KF5
 
 /// Ours
 #include <utils/DebugHelpers.h>
 #include <utils/StringHelpers.h>
-#include <gui/helpers/Tips.h>
+//#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 
 ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget *object, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
       q(object), m_job(job), m_widget(nullptr), m_being_deleted(false)
 {
+    // Create the widget.
     init(job, parent);
+    // Register the job.
     registerJob(job);
 }
 

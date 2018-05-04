@@ -32,7 +32,7 @@ class KJob;
 class ActivityProgressStatusBarWidget;
 
 /**
- * Base class for AMLMJob progress widgets.
+ * Base class for AMLMJob widget-based multiple-job trackers.
  *
  * @note Derived from KAbstractWidgetJobTracker instead of simply using KStatusBarJobTracker or
  *       KWidgetJobTracker.  The latter is great, but presents a UI really only suitable for use in a QDialog,
@@ -91,8 +91,11 @@ public Q_SLOTS:
 protected:
     using ActiveActivitiesMap = QMap<KJob*, ActivityProgressStatusBarWidget*>;
 
+    /// Map of all registered sub-Activities to sub-job-trackers.
     ActiveActivitiesMap m_activities_to_widgets_map;
     QWidget* m_parent;
+
+    QFrame* m_expanded_widget;
 
 protected Q_SLOTS:
     /**

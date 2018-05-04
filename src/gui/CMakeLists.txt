@@ -117,6 +117,7 @@ set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityProgressWidget.h
 	activityprogressmanager/BaseActivityProgressWidget.h
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
+	activityprogressmanager/ExpandingFrameWidget.h
 	PARENT_SCOPE
 	)
 set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
@@ -128,6 +129,7 @@ set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityProgressWidget.cpp
 	activityprogressmanager/BaseActivityProgressWidget.cpp
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
+	activityprogressmanager/ExpandingFrameWidget.cpp
 	PARENT_SCOPE
 	)
 set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
