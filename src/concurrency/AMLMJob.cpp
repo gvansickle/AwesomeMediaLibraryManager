@@ -151,6 +151,7 @@ bool AMLMJob::doResume()
 void AMLMJob::make_connections()
 {
     /// Qt::DirectConnection here to make this ~a function call.
+//    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
     connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
 
     // void started(ThreadWeaver::JobPointer);

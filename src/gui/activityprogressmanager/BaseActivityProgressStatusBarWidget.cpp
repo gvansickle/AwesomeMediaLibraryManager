@@ -28,6 +28,8 @@
 
 #include <gui/helpers/Tips.h>
 #include <utils/DebugHelpers.h>
+#include <utils/ConnectHelpers.h>
+
 
 BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent) : BASE_CLASS(parent)
 {
@@ -111,6 +113,8 @@ void BaseActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     m_pause_resume_button->setIcon(QIcon::fromTheme("media-playback-pause"));
     setTips(m_pause_resume_button, tr("Pause/Resume"), tr("Pause or resume this operation"),
             tr("<h3>Pause/Resume</h3><br/>Pauses or resumes the operation"));
+
+    connect(m_cancel_button, SIGNAL(triggered()), job, SLOT(kill()));
 
     // The main layout.
     auto layout = new QHBoxLayout(this);

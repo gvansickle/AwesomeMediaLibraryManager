@@ -57,6 +57,7 @@ public:
     BaseActivityProgressWidget *const q;
     KJob *const m_job;
     bool m_being_deleted;
+    bool m_is_job_registered { false };
 
 protected Q_SLOTS:
 
@@ -86,6 +87,14 @@ protected Q_SLOTS:
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
     void percent(KJob *job, unsigned long percent) override;
     void speed(KJob *job, unsigned long value) override;
+
+    void slotClean(KJob *job) override;
+
+    // These all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
+    // depend on the job supporting kill/suspend/resume.
+//    void slotResume(KJob *job) override;
+//    void slotStop(KJob *job) override;
+//    void slotSuspend(KJob *job) override;
 
 protected:
 

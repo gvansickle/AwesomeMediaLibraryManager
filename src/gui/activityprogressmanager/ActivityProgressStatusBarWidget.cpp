@@ -205,4 +205,10 @@ void ActivityProgressStatusBarWidget::speed(KJob *job, unsigned long value)
 
 }
 
+void ActivityProgressStatusBarWidget::slotClean(KJob *job)
+{
+
+}
+
+
 

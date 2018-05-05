@@ -39,6 +39,8 @@ class AMLMCompositeJob;
 /**
  * Base class for AMLMJob widget-based multiple-job trackers.
  *
+ * Sort of a mix of KWidgetJobTracker and KStatusBarJobTracker, but better.
+ *
  * @note Derived from KAbstractWidgetJobTracker instead of simply using KStatusBarJobTracker or
  *       KWidgetJobTracker.  The latter is great, but presents a UI really only suitable for use in a QDialog,
  *       while the former would be usable in a status bar, but is missing a lot of basic tracking functionality.
@@ -118,6 +120,8 @@ protected:
 protected Q_SLOTS:
 
     void toggleSubjobDisplay(bool checked);
+
+    void onShowProgressWidget();
 
 
     /**

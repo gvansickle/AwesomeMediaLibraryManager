@@ -79,11 +79,11 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 		while(m_dir_iterator.hasNext())
 		{
-//			if(report_and_control.isCanceled())
-//			{
-//				// We've been cancelled.
-//				break;
-//			}
+            if(m_flag_cancel)
+            {
+                // We've been cancelled.
+                break;
+            }
 //			if(report_and_control.isPaused())
 //			{
 //				// We're paused, wait for a resume signal.
@@ -158,6 +158,15 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 //        aself->asKJob()->emitResult();
 
         qDb() << "LEAVING RUN";
+}
+
+bool DirectoryScannerAMLMJob::doKill()
+{
+    // SET AN ATOMIC KILL FLAG
+    m_flag_cancel = 1;
+    // true if the operation is supported *and succeeded*, false otherwise
+    // So do we need to wait for kill confirmation?
+    return true;
 }
 
 

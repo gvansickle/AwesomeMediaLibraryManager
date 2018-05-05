@@ -29,6 +29,7 @@
 /// KF5
 #include <KJob>
 #include <KToolTipWidget>
+#include <QTimer>
 
 /// Ours
 #include "ActivityProgressStatusBarWidget.h"
@@ -69,37 +70,46 @@ QWidget* BaseActivityProgressWidget::RootWidget()
 
 void BaseActivityProgressWidget::registerJob(KJob *job)
 {
-    if(m_activities_to_widgets_map.contains(job))
-    {
-        return;
-    }
-
     // Create a new widget-based tracker for this job.
+    /// @note In KWidgetJobTracker, this derives from QWidget.
     auto pw = new ActivityProgressStatusBarWidget(job, this, m_parent);
+    pw->m_is_job_registered = true;
+//    pw->setAttribute(Qt::WA_DeleteOnClose);
+
     m_activities_to_widgets_map.insert(job, pw);
 
-    m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
+    /// @todo progressWidgetsToBeShown.enqueue(job);?
 
+    /// @todo
+    m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
     m_expanding_frame_widget->reposition();
 
     KAbstractWidgetJobTracker::registerJob(job);
+
+    QTimer::singleShot(500, this, &BaseActivityProgressWidget::onShowProgressWidget);
 }
 
 void BaseActivityProgressWidget::unregisterJob(KJob *job)
 {
     KAbstractWidgetJobTracker::unregisterJob(job);
 
-    if(!m_activities_to_widgets_map.contains(job))
+    /// @todo removeAll(job) from queue.
+
+    auto p_widget = m_activities_to_widgets_map.value(job, nullptr);
+    if(!p_widget)
     {
         return;
     }
 
-    if(!m_activities_to_widgets_map[job]->m_being_deleted)
-    {
-        m_expanding_frame_widget->removeWidget(m_activities_to_widgets_map[job]->widget(nullptr));
-        delete m_activities_to_widgets_map[job];
-    }
-    m_activities_to_widgets_map.remove(job);
+    p_widget->m_is_job_registered = false;
+/// @todo:    p_widget->deref();
+
+//    if(!m_activities_to_widgets_map[job]->m_being_deleted)
+//    {
+//        m_expanding_frame_widget->removeWidget(m_activities_to_widgets_map[job]->widget(nullptr));
+//        delete m_activities_to_widgets_map[job];
+//    }
+//    m_activities_to_widgets_map.remove(job);
 }
 
 void BaseActivityProgressWidget::toggleSubjobDisplay(bool checked)
@@ -112,6 +122,16 @@ void BaseActivityProgressWidget::toggleSubjobDisplay(bool checked)
     {
         hideSubJobs();
     }
+}
+
+void BaseActivityProgressWidget::onShowProgressWidget()
+{
+    // Called on a timer timeout after a new job is registered.
+
+    /// @todo If queue is empty return.
+
+    /// else dequeue job, look up qwidget, and show it.
+
 }
 
 void BaseActivityProgressWidget::showSubJobs()
