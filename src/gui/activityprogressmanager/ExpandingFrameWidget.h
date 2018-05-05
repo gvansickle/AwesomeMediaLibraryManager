@@ -23,6 +23,7 @@
 class QWidget;
 #include <QFrame>
 
+
 /*
  *
  */
@@ -39,6 +40,10 @@ public:
     void addWidget(QWidget* new_widget);
 
     void removeWidget(QWidget* new_widget);
+
+    void reposition();
+
+private:
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_ */

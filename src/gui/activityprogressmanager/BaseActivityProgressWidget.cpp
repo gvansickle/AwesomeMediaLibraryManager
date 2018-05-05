@@ -34,6 +34,7 @@
 #include "ActivityProgressStatusBarWidget.h"
 #include <concurrency/AMLMCompositeJob.h>
 #include <gui/MainWindow.h>
+#include "utils/DebugHelpers.h"
 
 BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_CLASS(parent),
     m_parent(parent), m_composite_job(new AMLMCompositeJob(this))
@@ -41,28 +42,24 @@ BaseActivityProgressWidget::BaseActivityProgressWidget(QWidget *parent) : BASE_C
     m_widget = new BaseActivityProgressStatusBarWidget(m_composite_job, parent);
 
     // Expand jobs button.
-//    auto menu_jobs = new QMenu(this);
-    auto button_jobs = new QToolButton(parent);
-    button_jobs->setPopupMode(QToolButton::InstantPopup);
-    button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
-    button_jobs->setCheckable(true);
-//    button_jobs->setMenu(menu_jobs);
-//    auto button_jobs_popup = new ActivityProgressPopup(this);
-//    button_jobs->addAction(button_jobs_popup);
-//    auto button_jobs = new QToolButton(this);
-//    button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
-    m_widget->addButton(button_jobs);
+    auto button_show_all_jobs = new QToolButton(parent);
+    button_show_all_jobs->setPopupMode(QToolButton::InstantPopup);
+    button_show_all_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
+    button_show_all_jobs->setCheckable(true);
+
+    m_widget->addButton(button_show_all_jobs);
 
     m_expanding_frame_widget = new ExpandingFrameWidget();
-//    m_expanding_frame_widget->hide();
-//    m_exp_dlg = new QDialog(MainWindow::instance());
-//    m_exp_dlg->add
-    m_kttw = new KToolTipWidget(MainWindow::instance());
-    connect(button_jobs, &QToolButton::toggled, this, &BaseActivityProgressWidget::toggleSubjobDisplay);
+    m_expanding_frame_widget->hide();
+//    m_kttw = new KToolTipWidget(MainWindow::instance());
+
+    connect(button_show_all_jobs, &QToolButton::toggled, this, &BaseActivityProgressWidget::toggleSubjobDisplay);
 }
 
 BaseActivityProgressWidget::~BaseActivityProgressWidget()
 {
+    delete m_expanding_frame_widget;
+    m_expanding_frame_widget = nullptr;
 }
 
 QWidget* BaseActivityProgressWidget::RootWidget()
@@ -82,6 +79,8 @@ void BaseActivityProgressWidget::registerJob(KJob *job)
     m_activities_to_widgets_map.insert(job, pw);
 
     m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
+
+    m_expanding_frame_widget->reposition();
 
     KAbstractWidgetJobTracker::registerJob(job);
 }
@@ -117,21 +116,60 @@ void BaseActivityProgressWidget::toggleSubjobDisplay(bool checked)
 
 void BaseActivityProgressWidget::showSubJobs()
 {
+    // Get the parent-relative geometry of the "root widget".
+    auto rect = RootWidget()->frameGeometry();
+    qDb() << "Root Frame Rect:" << rect << "parent:" << RootWidget()->parentWidget();
+
+    // Translate the the root widget's topLeft() to MainWindow coords.
+    auto pos_tl_global = RootWidget()->mapToGlobal(rect.topLeft());
+    qDb() << "Root Frame topLeft(), Global:" << pos_tl_global;
+
+//    m_expanding_frame_widget->popup(pos_tl_global);
     m_expanding_frame_widget->raise();
     m_expanding_frame_widget->show();
+
+#if 0
+    m_expanding_frame_widget->raise();
+    m_expanding_frame_widget->show();
+
 //    m_expanding_frame_widget->updateGeometry();
 
-    auto rect = m_widget->geometry();
-    auto pos = m_widget->parentWidget()->mapToGlobal(rect.topLeft());
-    rect.moveTo(pos);
+    // Get the parent-relative geometry of the "root widget".
+    auto rect = RootWidget()->frameGeometry();
+    qDb() << "Root Frame Rect:" << rect << "parent:" << RootWidget()->parentWidget();
 
-    m_kttw->showBelow(rect, m_expanding_frame_widget, MainWindow::instance()->windowHandle());
+    // Translate the the root widget's topLeft() to MainWindow coords.
+    auto pos_tl_global = RootWidget()->mapToGlobal(rect.topLeft());
+    qDb() << "Root Frame topLeft(), Global:" << pos_tl_global;
+
+    // Get the parent-relative pos of the expanding frame.
+    auto frame_pos_pr = m_expanding_frame_widget->pos();
+    qDb() << "Exp Frame topLeft():" << frame_pos_pr << "parent:" << m_expanding_frame_widget->parentWidget();
+
+    // Global.
+    auto frame_pos_global = m_expanding_frame_widget->mapToGlobal(frame_pos_pr);
+    qDb() << "Exp Frame topLeft() Global:" << frame_pos_pr;
+
+    auto frame_rect_pr = m_expanding_frame_widget->frameGeometry();
+    qDb() << "Exp Frame frameGeometry():" << frame_rect_pr;
+
+    // New width.
+    auto new_exp_w = rect.width();
+
+    // Move the bottomLeft() of the frame to the topLeft() of the root widget.
+    frame_rect_pr.moveBottomLeft(m_expanding_frame_widget->parentWidget()->mapFromGlobal(pos_tl_global));
+    Q_ASSERT(frame_rect_pr.isValid());
+    m_expanding_frame_widget->setGeometry(frame_rect_pr);
+    m_expanding_frame_widget->setMaximumWidth(new_exp_w);
+    qDb() << "Max size:" << m_expanding_frame_widget->maximumSize();
+#endif
+//    m_kttw->showBelow(rect, m_expanding_frame_widget, MainWindow::instance()->windowHandle());
 }
 
 void BaseActivityProgressWidget::hideSubJobs()
 {
-//    m_expanding_frame_widget->hide();
-    m_kttw->hideLater();
+    m_expanding_frame_widget->hide();
+//    m_kttw->hideLater();
 }
 
 void BaseActivityProgressWidget::subjobFinished(KJob *job)

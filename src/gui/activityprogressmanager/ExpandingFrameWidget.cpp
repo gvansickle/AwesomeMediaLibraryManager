@@ -17,19 +17,32 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QLayout>
-
 #include "ExpandingFrameWidget.h"
+
+#include <QLayout>
+#include <QWidget>
+
+#include <gui/MainWindow.h>
 
 ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent) : BASE_CLASS(parent)
 {
     // Set up the layout.
     Q_ASSERT(layout() == nullptr);
-    setLayout(new QVBoxLayout(this));
+    setLayout(new QVBoxLayout());
     layout()->setSpacing(0);
     layout()->setMargin(0);
-//    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
-//    setWindowFlags(Qt::Tool);//Qt::Dialog);
+
+    setBackgroundRole( QPalette::Window );
+    setAutoFillBackground( true );
+
+    setFrameStyle( QFrame::Box );
+
+    setMinimumWidth( 26 );
+    setMinimumHeight( 26 );
+
+    setContentsMargins( 4, 4, 4, 4 );
+    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+
 }
 
 ExpandingFrameWidget::~ExpandingFrameWidget()
@@ -56,5 +69,18 @@ void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 {
 //    new_widget->setParent(this);
     layout()->removeWidget(new_widget);
+}
+
+void ExpandingFrameWidget::reposition()
+{
+    adjustSize();
+
+    if(!MainWindow::instance())
+        return;
+
+    QPoint p;
+    p.setX(MainWindow::instance()->width() - width());
+    p.setY(MainWindow::instance()->height() - height());
+    move(p);
 }
 

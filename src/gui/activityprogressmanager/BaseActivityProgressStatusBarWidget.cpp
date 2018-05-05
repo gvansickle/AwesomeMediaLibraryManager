@@ -101,6 +101,7 @@ void BaseActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     m_progress_bar = new QProgressBar(this);
     m_progress_bar->setFormat(tr("%p%"));
     m_progress_bar->setTextVisible(true);
+    m_progress_bar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     // The buttons.
     m_cancel_button = new QToolButton(this);
