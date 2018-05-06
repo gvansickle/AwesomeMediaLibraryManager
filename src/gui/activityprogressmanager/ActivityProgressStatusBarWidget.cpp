@@ -36,7 +36,7 @@
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 
-ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(TWJobWrapper* job, BaseActivityProgressWidget *object, QWidget *parent)
+ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(AMLMJobPtr job, BaseActivityProgressWidget *object, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
       q(object), m_job(job), m_being_deleted(false)
 {
@@ -46,7 +46,7 @@ ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(TWJobWrapper* j
     registerJob(job);
 }
 
-ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarWidget::make_tracker(TWJobWrapper* job, BaseActivityProgressWidget *object, QWidget *parent)
+ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarWidget::make_shared(AMLMJobPtr job, BaseActivityProgressWidget *object, QWidget *parent)
 {
     return ActivityProgressStatusBarWidgetPtr::create(job, object, parent);
 }
@@ -56,13 +56,6 @@ ActivityProgressStatusBarWidget::~ActivityProgressStatusBarWidget()
     unregisterJob(m_job);
 }
 
-void ActivityProgressStatusBarWidget::init(TWJobWrapper *job, QWidget *parent)
-{
-    // Create the widget.
-
-    m_widget = new BaseActivityProgressStatusBarWidget(job, parent);
-}
-
 QWidget *ActivityProgressStatusBarWidget::widget(KJob *job)
 {
     // Shouldn't ever get here before the widget is constructed (in the constructor).
@@ -70,14 +63,29 @@ QWidget *ActivityProgressStatusBarWidget::widget(KJob *job)
     return m_widget;
 }
 
-void ActivityProgressStatusBarWidget::registerJob(TWJobWrapper* job)
+QWidget *ActivityProgressStatusBarWidget::widget(AMLMJobPtr job)
 {
-    BASE_CLASS::registerJob(job);
+    // Shouldn't ever get here before the widget is constructed (in the constructor).
+    Q_CHECK_PTR(m_widget);
+    return m_widget;
 }
 
-void ActivityProgressStatusBarWidget::unregisterJob(TWJobWrapper* job)
+void ActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
 {
-    BASE_CLASS::unregisterJob(job);
+    // Create the widget.
+
+    m_widget = new BaseActivityProgressStatusBarWidget(job, parent);
+}
+
+
+void ActivityProgressStatusBarWidget::registerJob(AMLMJobPtr job)
+{
+    BASE_CLASS::registerJob(job->asKJobSP());
+}
+
+void ActivityProgressStatusBarWidget::unregisterJob(AMLMJobPtr job)
+{
+    BASE_CLASS::unregisterJob(job->asKJobSP());
 }
 
 void ActivityProgressStatusBarWidget::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)

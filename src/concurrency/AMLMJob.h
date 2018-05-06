@@ -63,7 +63,7 @@
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
-using AMLMJobPtr = QPointer<AMLMJob>;
+using AMLMJobPtr = QSharedPointer<AMLMJob>;
 
 /**
  * Base class for jobs which bridges the hard-to-understand gap between a
@@ -354,6 +354,8 @@ private:
 
 ///////////////////////////////////////////////////////
 
+#if 0
+
 class TWJobWrapper : public KJob
 {
     Q_OBJECT
@@ -447,5 +449,8 @@ private:
     /// https://lxr.kde.org/source/frameworks/threadweaver/src/qobjectdecorator.cpp
     ThreadWeaver::QJobPointer m_the_tw_job_qobj_decorator;
 };
+
+#endif
+//////////////////////////////////////////////////
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */

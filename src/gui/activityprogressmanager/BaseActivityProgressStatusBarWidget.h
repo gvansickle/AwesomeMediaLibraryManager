@@ -45,7 +45,7 @@ class BaseActivityProgressStatusBarWidget: public QFrame
     BaseActivityProgressStatusBarWidget(QWidget *parent);
 
 public:
-    explicit BaseActivityProgressStatusBarWidget(TWJobWrapper* job, QWidget *parent);
+    explicit BaseActivityProgressStatusBarWidget(AMLMJobPtr job, QWidget *parent);
     ~BaseActivityProgressStatusBarWidget() override;
 
     /// Add buttons to the rhs of the layout.
@@ -65,7 +65,7 @@ protected:
 
     /// Create the widget.
     /// Called by the public constructor.
-    virtual void init(TWJobWrapper *job, QWidget *parent);
+    virtual void init(AMLMJobPtr job, QWidget *parent);
 
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)

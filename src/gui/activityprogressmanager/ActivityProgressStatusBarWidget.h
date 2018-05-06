@@ -46,7 +46,7 @@ using ActivityProgressStatusBarWidgetPtr = QSharedPointer<ActivityProgressStatus
 
 
 /**
- * Widget representing the progress/status/controls of a single KJob.
+ * K*WidgetJobTracker representing the progress/status/controls of a single KJob.
  * Suitable for use in a status bar.
  */
 class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker, public QEnableSharedFromThis<ActivityProgressStatusBarWidget>
@@ -56,24 +56,26 @@ class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker, public 
     using BASE_CLASS = KAbstractWidgetJobTracker;
 
 public: /// @todo private:
-    ActivityProgressStatusBarWidget(TWJobWrapper* job, BaseActivityProgressWidget* object, QWidget *parent);
+    ActivityProgressStatusBarWidget(AMLMJobPtr job, BaseActivityProgressWidget* object, QWidget *parent);
 
 public:
-    static ActivityProgressStatusBarWidgetPtr make_tracker(TWJobWrapper* job, BaseActivityProgressWidget* object, QWidget *parent);
+    static ActivityProgressStatusBarWidgetPtr make_shared(AMLMJobPtr job, BaseActivityProgressWidget* object, QWidget *parent);
     ~ActivityProgressStatusBarWidget() override;
 
+    /// Override of pure virtual base class version.  Takes a raw KJob*.
+    QWidget* widget(KJob* job) override;
 
-    QWidget *widget(KJob *job) override;
+    virtual QWidget* widget(AMLMJobPtr job);
 
 
     BaseActivityProgressWidget *const q;
-    TWJobWrapper* m_job;
+    AMLMJobPtr m_job;
     bool m_being_deleted;
     bool m_is_job_registered { false };
 
 public Q_SLOTS:
-    virtual void registerJob(TWJobWrapper* job);
-    virtual void unregisterJob(TWJobWrapper* job);
+    virtual void registerJob(AMLMJobPtr job);
+    virtual void unregisterJob(AMLMJobPtr job);
 
 
 protected Q_SLOTS:
@@ -117,7 +119,7 @@ protected:
 
     /// Create the widget.
     /// Called by the constructor.
-    void init(TWJobWrapper* job, QWidget *parent);
+    void init(AMLMJobPtr job, QWidget *parent);
 
     qulonglong m_processedSize {0};
     bool m_is_total_size_known {false};

@@ -93,20 +93,20 @@ public:
     /// @todo De-public?
     QWidget *widget(KJob *job) override;
 
-    virtual QWidget* widget(TWJobWrapper* amlmjob);
+    virtual QWidget* widget(AMLMJobPtr amlmjob);
 
 public Q_SLOTS:
     void registerJob(KJob *job) override;
     void unregisterJob(KJob *job) override;
 
-    virtual void registerJob(TWJobWrapper* job);
-    virtual void unregisterJob(TWJobWrapper* job);
+    virtual void registerJob(AMLMJobPtr job);
+    virtual void unregisterJob(AMLMJobPtr job);
 
 public Q_SLOTS:
 
 
 protected:
-    using ActiveActivitiesMap = QMap<TWJobWrapper*, ActivityProgressStatusBarWidgetPtr>;
+    using ActiveActivitiesMap = QMap<AMLMJobPtr, ActivityProgressStatusBarWidgetPtr>;
 
     /// Map of all registered sub-Activities to sub-job-trackers.
     ActiveActivitiesMap m_activities_to_widgets_map;

@@ -84,11 +84,11 @@ void BaseActivityProgressWidget::unregisterJob(KJob *job)
 
 }
 
-void BaseActivityProgressWidget::registerJob(TWJobWrapper* job)
+void BaseActivityProgressWidget::registerJob(AMLMJobPtr job)
 {
     // Create a new widget-based tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
-    auto pw = ActivityProgressStatusBarWidget::make_tracker(job, this, m_parent);
+    auto pw = ActivityProgressStatusBarWidget::make_shared(job, this, m_parent);
     pw->m_is_job_registered = true;
 //    pw->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -97,15 +97,16 @@ void BaseActivityProgressWidget::registerJob(TWJobWrapper* job)
     /// @todo progressWidgetsToBeShown.enqueue(job);?
 
     /// @todo
-    m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
+//    m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
+    m_expanding_frame_widget->addWidget(pw->widget(job->asKJobSP()));
     m_expanding_frame_widget->reposition();
 
-   registerJob((KJob*)job);
+   BASE_CLASS::registerJob(job->asKJobSP());
 }
 
-void BaseActivityProgressWidget::unregisterJob(TWJobWrapper* job)
+void BaseActivityProgressWidget::unregisterJob(AMLMJobPtr job)
 {
-    unregisterJob(job);
+    BASE_CLASS::unregisterJob(job->asKJobSP());
 
     auto p_widget = m_activities_to_widgets_map.value(job, nullptr);
     if(!p_widget)
@@ -214,7 +215,7 @@ QWidget *BaseActivityProgressWidget::widget(KJob *job)
     Q_ASSERT(0);
 }
 
-QWidget *BaseActivityProgressWidget::widget(TWJobWrapper* amlmjob)
+QWidget *BaseActivityProgressWidget::widget(AMLMJobPtr amlmjob)
 {
     /// Look up the widget for this job.
     auto asbw = m_activities_to_widgets_map.value(amlmjob, nullptr);

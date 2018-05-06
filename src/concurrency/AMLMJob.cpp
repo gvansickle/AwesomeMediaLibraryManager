@@ -234,6 +234,8 @@ void AMLMJob::onKJobFinished(KJob *job)
 
 /////////////////////////////////
 
+#if 0
+
 TWJobWrapper::TWJobWrapper(ThreadWeaver::JobPointer twjob, bool enable_auto_delete, QObject* parent) : KJob(parent),
     m_the_tw_job(twjob), m_is_autodelete_enabled(enable_auto_delete)
 {
@@ -313,3 +315,5 @@ void TWJobWrapper::requestAbort()
 //{
 //    qDb() << "KJOB FINISHED" << this;
 //}
+#endif
+////////////////////////////////////////////

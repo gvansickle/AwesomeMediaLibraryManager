@@ -1973,7 +1973,7 @@ void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
     m_mdi_area->setActiveSubWindow(window);
 }
 
-void MainWindow::registerJob(TWJobWrapper* new_job)
+void MainWindow::registerJob(AMLMJobPtr new_job)
 {
 //    statusBar()->show();
 

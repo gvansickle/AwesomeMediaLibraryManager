@@ -206,7 +206,7 @@ public Q_SLOTS:
 	 */
 	void setActiveSubWindow(QMdiSubWindow* window);
 
-    void registerJob(TWJobWrapper *new_job);
+    void registerJob(AMLMJobPtr new_job);
 
 protected:
 	bool queryClose() override;
