@@ -236,6 +236,7 @@ public:
     QPointer<KJob> asKJobSP();
 
     /// Convenience member for getting a ThreadWeaver::JobPointer (QPointer<JobInterface>) to this.
+    /// @todo There's problems here.
     ThreadWeaver::JobPointer asTWJobPointer();
 
 public Q_SLOTS:
@@ -380,6 +381,20 @@ private:
 
     /// Control structs/flags
     QAtomicInt m_flag_cancel {0};
+};
+
+template <typename T>
+class AMLMJob_Dec : public ThreadWeaver::QObjectDecorator
+{
+public:
+    AMLMJob_Dec(T* job, QObject* parent = nullptr) : QObjectDecorator(&m_amlmjob, false, parent),
+        m_amlmjob(job)
+    {}
+
+    T* job() { return &m_amlmjob; }
+
+private:
+    T m_amlmjob;
 };
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */

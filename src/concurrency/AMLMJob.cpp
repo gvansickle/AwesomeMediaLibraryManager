@@ -79,7 +79,8 @@ M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
     // ThreadWeaver::JobPointer is a QSharedPointer<TW::JobInterface>, so
     // we need to make sure we return a sp which doesn't duplicate the ref count.
 
-    auto retval = this->sharedFromThis();
+//    auto retval = this->sharedFromThis();
+    ThreadWeaver::JobPointer retval = m_tw_job_qobj_decorator;
 
     Q_ASSERT(retval);
 
