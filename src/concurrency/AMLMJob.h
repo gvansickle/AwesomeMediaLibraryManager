@@ -365,7 +365,7 @@ Q_SIGNALS:
 
 public:
     /// Constructor modeled on QObjectDecorator's.
-    explicit TWJobWrapper(ThreadWeaver::JobInterface* twjob, bool enable_auto_delete, QObject* parent = nullptr);
+    explicit TWJobWrapper(ThreadWeaver::JobPointer twjob, bool enable_auto_delete, QObject* parent = nullptr);
     ~TWJobWrapper() override;
 
     /**
@@ -381,8 +381,8 @@ public:
     virtual void setAutoDelete(bool enable_autodelete);
 
     /// For returning the decorated job().
-    const ThreadWeaver::JobInterface* job() const;
-    ThreadWeaver::JobInterface* job();
+    const ThreadWeaver::JobPointer job() const;
+    ThreadWeaver::JobPointer job();
 
     /// TW::Job-control and reporting interface
     /// @{
@@ -421,7 +421,7 @@ private:
     /// TW::Jobs by default do not autodelete.
     bool m_is_autodelete_enabled { false };
 
-    ThreadWeaver::JobInterface* m_the_tw_job;
+    ThreadWeaver::JobPointer m_the_tw_job;
 
     /// QSharedPointer to a QObjectDecorator.
     /// Hard of find any docs on this one.

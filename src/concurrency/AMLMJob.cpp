@@ -70,13 +70,13 @@ ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
 {
     Q_CHECK_PTR(this);
 
-    auto shthis = sharedFromThis();
-    // ThreadWeaver::JobPointer == QPointer<ThreadWeaver::JobInterface>
-    Q_ASSERT(0);
-    auto retval = nullptr; //QPointerDynamicCast<ThreadWeaver::JobInterface>(shthis);
+    return sharedFromThis();
+//    ThreadWeaver::JobPointer == QPointer<ThreadWeaver::JobInterface>
+//    Q_ASSERT(0);
+//    auto retval = QPointerDynamicCast<ThreadWeaver::JobInterface>(shthis);
 //    Q_CHECK_PTR(retval);
 
-    return retval;
+//    return retval;
 }
 
 //void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
@@ -234,11 +234,11 @@ void AMLMJob::onKJobFinished(KJob *job)
 
 /////////////////////////////////
 
-TWJobWrapper::TWJobWrapper(ThreadWeaver::JobInterface* twjob, bool enable_auto_delete, QObject* parent) : KJob(parent),
+TWJobWrapper::TWJobWrapper(ThreadWeaver::JobPointer twjob, bool enable_auto_delete, QObject* parent) : KJob(parent),
     m_the_tw_job(twjob), m_is_autodelete_enabled(enable_auto_delete)
 {
     // Now we create the QobjextDecorator and hook it up to the twjob.
-    m_the_tw_job_qobj_decorator = ThreadWeaver::QJobPointer::create(m_the_tw_job, enable_auto_delete, this);
+    m_the_tw_job_qobj_decorator = ThreadWeaver::QJobPointer::create(m_the_tw_job.data(), enable_auto_delete, this);
 
     // Connect signals to other signals/slots.
 //    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::done, this, &TWJobWrapper::done);
@@ -259,14 +259,14 @@ void TWJobWrapper::setAutoDelete(bool enable_autodelete)
     m_the_tw_job_qobj_decorator->setAutoDelete(enable_autodelete);
 }
 
-const ThreadWeaver::JobInterface *TWJobWrapper::job() const
+const ThreadWeaver::JobPointer TWJobWrapper::job() const
 {
-    return m_the_tw_job_qobj_decorator->job();
+    return m_the_tw_job;
 }
 
-ThreadWeaver::JobInterface *TWJobWrapper::job()
+ThreadWeaver::JobPointer TWJobWrapper::job()
 {
-    return m_the_tw_job_qobj_decorator->job();
+    return m_the_tw_job;
 }
 
 void TWJobWrapper::requestAbort()

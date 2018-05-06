@@ -145,9 +145,9 @@ void Experimental::DoExperiment()
 //                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 //                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories).data()
 //                );
-    TWJobWrapper* dsj = new TWJobWrapper(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+    TWJobWrapper* dsj = new TWJobWrapper(ThreadWeaver::JobPointer(DirectoryScannerAMLMJob(this, dir_url,
                         QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                        QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories).data(),
+                        QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories)),
                                        false,
                                        this);
     QUrl dir_url2("file:///home/gary");
@@ -155,9 +155,9 @@ void Experimental::DoExperiment()
 //                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 //                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories).data());
 
-    TWJobWrapper* dsj2 = new TWJobWrapper(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
+    TWJobWrapper* dsj2 = new TWJobWrapper(ThreadWeaver::JobPointer(DirectoryScannerAMLMJob(this, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories).data(),
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories)),
                                           false,
                                           this);
     qDb() << M_NAME_VAL(dsj->capabilities());
