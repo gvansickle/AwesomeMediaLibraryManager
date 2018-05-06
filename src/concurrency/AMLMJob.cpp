@@ -242,6 +242,28 @@ TWJobWrapper::TWJobWrapper(ThreadWeaver::JobPointer twjob, bool enable_auto_dele
 
     // Connect signals to other signals/slots.
 //    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::done, this, &TWJobWrapper::done);
+    /// Qt::DirectConnection here to make this ~a function call.
+//    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
+//    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
+
+    // void started(ThreadWeaver::JobPointer);
+    // This signal is emitted when this job is being processed by a thread.
+    // internal QObjectDecorator->external QObjectDecorator interface.
+    /// @todo Could we get rid of the internal QObjectDecorator?
+    /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
+//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::started);
+
+    //  void done(ThreadWeaver::JobPointer);
+    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
+//    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::done);
+
+    //  void failed(ThreadWeaver::JobPointer);
+    // This signal is emitted when success() returns false after the job is executed.
+//    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
+
+    /// @todo Figure out how we're going to trigger KJob::result (emitResult()).
+//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QJobPointer::result, this, &AMLMJob::onKJobResult);
+//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QJobPointer::finished, this, &AMLMJob::onKJobFinished);
 }
 
 TWJobWrapper::~TWJobWrapper()
@@ -275,3 +297,19 @@ void TWJobWrapper::requestAbort()
     qDb() << "AMLM:TW: SETTING ABORT FLAG";
     m_flag_cancel = 1;
 }
+
+//void TWJobWrapper::onKJobResult()
+//{
+//    /// Called when the KJob is finished.
+//    qDb() << "KJOB RESULT" << this;
+
+//    if(this->error())
+//    {
+//        // There was an error.
+//    }
+//}
+
+//void TWJobWrapper::onKJobFinished()
+//{
+//    qDb() << "KJOB FINISHED" << this;
+//}

@@ -37,7 +37,7 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget
 
 }
 
-BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(AMLMJobPtr job, QWidget *parent)
+BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(TWJobWrapper *job, QWidget *parent)
     : BaseActivityProgressStatusBarWidget(parent)
 {
     // We have a vtable to this, go nuts with the virtual calls.
@@ -85,7 +85,7 @@ void BaseActivityProgressStatusBarWidget::setValue(int val)
     m_progress_bar->setValue(val);
 }
 
-void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
+void BaseActivityProgressStatusBarWidget::init(TWJobWrapper* job, QWidget *parent)
 {
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp

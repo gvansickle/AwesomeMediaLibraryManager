@@ -84,7 +84,7 @@ void BaseActivityProgressWidget::unregisterJob(KJob *job)
 
 }
 
-void BaseActivityProgressWidget::registerJob(AMLMJobPtr job)
+void BaseActivityProgressWidget::registerJob(TWJobWrapper* job)
 {
     // Create a new widget-based tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
@@ -100,12 +100,12 @@ void BaseActivityProgressWidget::registerJob(AMLMJobPtr job)
     m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
     m_expanding_frame_widget->reposition();
 
-   registerJob(job.data());
+   registerJob((KJob*)job);
 }
 
-void BaseActivityProgressWidget::unregisterJob(AMLMJobPtr job)
+void BaseActivityProgressWidget::unregisterJob(TWJobWrapper* job)
 {
-    unregisterJob(job.data());
+    unregisterJob(job);
 
     auto p_widget = m_activities_to_widgets_map.value(job, nullptr);
     if(!p_widget)
@@ -211,16 +211,16 @@ void BaseActivityProgressWidget::subjobFinished(KJob *job)
 
 QWidget *BaseActivityProgressWidget::widget(KJob *job)
 {
-
+    Q_ASSERT(0);
 }
 
-QWidget *BaseActivityProgressWidget::widget(AMLMJobPtr amlmjob)
+QWidget *BaseActivityProgressWidget::widget(TWJobWrapper* amlmjob)
 {
     /// Look up the widget for this job.
     auto asbw = m_activities_to_widgets_map.value(amlmjob, nullptr);
     if(asbw)
     {
-        return asbw->widget(amlmjob.data());
+        return asbw->widget(amlmjob);
     }
     else
     {

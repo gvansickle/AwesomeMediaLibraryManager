@@ -414,6 +414,23 @@ protected:
      */
     virtual void requestAbort();
 
+protected Q_SLOTS:
+
+    /// @name Internal slots
+    /// @{
+
+//    /// Handle the doKill() operation.
+//    void onKJobDoKill();
+
+//    /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
+//    /// Only supposed to call KJob::error() from this slot.
+//    void onKJobResult();
+
+//    /// Always invoked by the KJob::finished signal regardless of reason.
+//    void onKJobFinished();
+
+    /// @}
+
 private:
 
     /// Control structs/flags

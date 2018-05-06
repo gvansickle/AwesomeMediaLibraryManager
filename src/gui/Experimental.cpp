@@ -177,8 +177,8 @@ void Experimental::DoExperiment()
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
     // enqueue takes JobPointers.
-    queue->enqueue(ThreadWeaver::JobPointer(dsj->job()));
-    queue->enqueue(ThreadWeaver::JobPointer(dsj2->job()));
+    queue->enqueue(dsj->job());
+    queue->enqueue(dsj2->job());
 //    queue << dsj << dsj2;
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
