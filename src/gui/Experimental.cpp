@@ -151,11 +151,15 @@ void Experimental::DoExperiment()
                                        false,
                                        this);
     QUrl dir_url2("file:///home/gary");
-    AMLMJobPtr dsj2 = AMLMJobPtr(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
+//    AMLMJobPtr dsj2 = AMLMJobPtr(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
+//                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+//                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories).data());
+
+    TWJobWrapper* dsj2 = new TWJobWrapper(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories).data());
-
-
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories).data(),
+                                          false,
+                                          this);
     qDb() << M_NAME_VAL(dsj->capabilities());
     qDb() << M_NAME_VAL(dsj2->capabilities());
 
@@ -174,7 +178,7 @@ void Experimental::DoExperiment()
 
     // enqueue takes JobPointers.
     queue->enqueue(ThreadWeaver::JobPointer(dsj->job()));
-    queue->enqueue(dsj2);
+    queue->enqueue(ThreadWeaver::JobPointer(dsj2->job()));
 //    queue << dsj << dsj2;
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
