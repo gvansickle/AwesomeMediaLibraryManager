@@ -27,17 +27,32 @@
 
 #include "utils/DebugHelpers.h"
 
+DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent) : BASE_CLASS(parent)
+{
+    setObjectName("DirectoryScannerAMLMJob");
+}
+
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-    : AMLMJob(parent),
-      m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
+    : DirectoryScannerAMLMJob(parent) //< Get our vtable set up.
 {
 M_WARNING("TODO");
 
+    // Should be in the constructor list, but we're deferring to another constructor.
+    // Jeez this language.....
+    m_dir_url = dir_url;
+    m_nameFilters = nameFilters;
+    m_dir_filters = filters;
+    m_iterator_flags = flags;
+
+
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
+
+    /// @note CALL TO VIRTUAL FROM CONSTRUCTOR.  This is OK here, since we're doing a two-stage construction.
+    set_QObjectdecorator();
 }
 
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent, const QUrl &dir_url,
@@ -173,6 +188,13 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 //        aself->asKJob()->emitResult();
 
         qDb() << "LEAVING RUN";
+}
+
+void DirectoryScannerAMLMJob::set_QObjectdecorator()
+{
+
+    // ThreadWeaver::QJobPointer::create(/*JobInterface *decoratee=*/this, /*bool autoDelete*/false, /*QObject *parent*/this)
+    m_tw_job_qobj_decorator = ThreadWeaver::QJobPointer::create(/* Decoratee==the derived this=*/this, false, this);
 }
 
 

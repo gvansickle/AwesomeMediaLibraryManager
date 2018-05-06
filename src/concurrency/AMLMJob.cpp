@@ -34,7 +34,7 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job(),
     /// @todo Does this actually work? decoratee wants to be the derived class instance, which won't exist at this point.
     m_tw_job_qobj_decorator(ThreadWeaver::QJobPointer::create(/*JobInterface *decoratee=*/this, /*bool autoDelete*/false, /*QObject *parent*/this))
 {
-    qDb() << M_NAME_VAL(m_tw_job_qobj_decorator);
+    qDb() << M_NAME_VAL(m_tw_job_qobj_decorator->job());
     make_connections();
 }
 

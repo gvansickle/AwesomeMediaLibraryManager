@@ -40,6 +40,8 @@ class DirectoryScannerAMLMJob : public AMLMJob, public QEnableSharedFromThis<Dir
 {
     Q_OBJECT
 
+    using BASE_CLASS = AMLMJob;
+
 //Q_SIGNALS:
 //    /// ThreadWeaver::QObjectDecorator signals, only three:
 //    /*
@@ -53,6 +55,10 @@ class DirectoryScannerAMLMJob : public AMLMJob, public QEnableSharedFromThis<Dir
 //    void started(ThreadWeaver::JobPointer);
 //    void done(ThreadWeaver::JobPointer);
 //    void failed(ThreadWeaver::JobPointer);
+
+protected:
+    /// First-stage constructor.
+    explicit DirectoryScannerAMLMJob(QObject* parent);
 
 public:
     explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,
@@ -72,6 +78,7 @@ public:
 
 protected:
 
+    void set_QObjectdecorator() override;
 
 private:
 

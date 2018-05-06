@@ -165,10 +165,17 @@ Q_SIGNALS:
     //    * so that you won't have to manually call unregisterJob().
 
 protected:
-    /// Private KJob-like constructor.
+    /// Protected KJob-like constructor.
+    /// Derive from and defer to this from derived classes as part of a two-stage constructor:
+    /// Once the derived constructor is called and returns, we'll have a valid AMLMJob this and a valid derived this.
+    /// We can then call virtual functions in subsequent constructors.
+    /// @note Don't try this at home.
+    ///
     /// @warning Because of QEnableSharedFromThis<>/std::enable_shared_from_this<>, don't do a "new AMLMJob()",
     ///          or calling sharedFromThis() will/should throw ~std::bad_weak_ptr.  Use AMLMJob::create() instead.
-    /// @warning This is an abstract base class, there is on AMLMJob::create().
+    ///
+    /// @warning This is an abstract base class, there is no AMLMJob::create().
+    ///
     explicit AMLMJob(QObject* parent = nullptr);
 
 public:
@@ -301,10 +308,15 @@ protected:
 
     /// @name New protected methods
     /// @{
+
+    /// Set up the QObjectDecorator from the derived class, not this base class.
+    virtual void set_QObjectdecorator() = 0;
+
     /// Make the internal signal-slot connections.
     virtual void make_connections();
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     virtual void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+
     /// @}
 
     /// New protected ThreadWeaver::Job-related members.
@@ -339,7 +351,7 @@ protected Q_SLOTS:
 
     /// @}
 
-private:
+protected:
 
     /**
      * QSharedPointer to the ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy
@@ -359,8 +371,13 @@ private:
      *  that to the derived class's constructor.  The decorator is holding a ref to the TW::Job, not the other way around like
      *  we're (trying) to do here.
      *
+     * @see set_QObjectdecorator()
+     *
      */
     ThreadWeaver::QJobPointer m_tw_job_qobj_decorator { nullptr };
+
+private:
+
 
     /// Control structs/flags
     QAtomicInt m_flag_cancel {0};
