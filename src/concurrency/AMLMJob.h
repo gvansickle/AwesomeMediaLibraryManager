@@ -56,13 +56,14 @@
 
 #include <QObject>
 #include <KJob>
+#include <QPointer>
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/IdDecorator>
 #include <ThreadWeaver/QObjectDecorator>
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
-using AMLMJobPtr = QSharedPointer<AMLMJob>;
+using AMLMJobPtr = QPointer<AMLMJob>;
 
 /**
  * Base class for jobs which bridges the hard-to-understand gap between a
@@ -163,26 +164,27 @@ Q_SIGNALS:
     //    *
     //    * so that you won't have to manually call unregisterJob().
 
-public:
-
-    /// KJob-like constructor.
+protected:
+    /// Private KJob-like constructor.
     /// @warning Because of QEnableSharedFromThis<>/std::enable_shared_from_this<>, don't do a "new AMLMJob()",
     ///          or calling sharedFromThis() will/should throw ~std::bad_weak_ptr.  Use AMLMJob::create() instead.
+    /// @warning This is an abstract base class, there is on AMLMJob::create().
     explicit AMLMJob(QObject* parent = nullptr);
 
+public:
+    AMLMJob() = delete;
     /// Destructor.
     ~AMLMJob() override;
 
-//    static AMLMJobPtr make_shared(QObject* parent = nullptr);
 
     /// @name Convesion operators.
     /// @{
 
-    /// To a TW JobPointer, i.e. a QSharedPointer<JobInterface>.
+    /// To a TW JobPointer, i.e. a QPointer<JobInterface>.
     explicit operator ThreadWeaver::JobPointer() { return asTWJobPointer(); }
 
-    /// To a QSharedPointer<KJob>.
-    explicit operator QSharedPointer<KJob>() { return asKJobSP(); }
+    /// To a QPointer<KJob>.
+    explicit operator QPointer<KJob>() { return asKJobSP(); }
 
     /// @}
 
@@ -224,9 +226,9 @@ public:
 
     /// @}
 
-    QSharedPointer<KJob> asKJobSP();
+    QPointer<KJob> asKJobSP();
 
-    /// Convenience member for getting a ThreadWeaver::JobPointer (QSharedPointer<JobInterface>) to this.
+    /// Convenience member for getting a ThreadWeaver::JobPointer (QPointer<JobInterface>) to this.
     ThreadWeaver::JobPointer asTWJobPointer();
 
 public Q_SLOTS:
@@ -335,12 +337,13 @@ protected Q_SLOTS:
 private:
 
     /**
-     * QSharedPointer to the ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy between us and the
+     * QPointer to the ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy between us and the
      *
      * @note Two confusingly similar typedefs here:
      *       From qobjectdecorator: "typedef QSharedPointer<QObjectDecorator> QJobPointer;".
      *       From jobinterface.h:   "typedef QSharedPointer<JobInterface> JobPointer;"
-     *       Job is derived from JobInterface.  All in ThreadWeaver namespace.
+     *       Job is derived from JobInterface, which in turn derives from nothing.
+     *       All in ThreadWeaver namespace.
      */
     ThreadWeaver::QJobPointer m_tw_job_qobj_decorator;
 
@@ -348,5 +351,50 @@ private:
     QAtomicInt m_flag_cancel {0};
 };
 
+class TWJobWrapper : public KJob
+{
+    Q_OBJECT
+
+Q_SIGNALS:
+    /// We'll emit KJob signals we construct from the wrapped TW::Job.
+    /// TW::QJobPointer signals are started/done/failed.
+//    void done();
+
+public:
+    /// Constructor modeled on QObjectDecorator's.
+    explicit TWJobWrapper(ThreadWeaver::JobInterface* twjob, bool enable_auto_delete, QObject* parent = nullptr);
+    ~TWJobWrapper() override;
+
+    /**
+     * Not virtual in the "real" decorators.
+     */
+    virtual void setAutoDelete(bool enable_autodelete);
+
+protected:
+    /**
+     * These three should be overridden and send any signals from self.
+     * For twjobs that get passed in here, I think that means they'll end up connected to
+     * at least m_the_tw_job_qobj_decorator.
+     */
+    // run(JobPointer self, Thread* thread);
+    // defaultBegin(JobPointer self, Thread* thread);
+    // defaultEnd(JobPointer self, Thread* thread);
+
+private:
+
+    /// Control structs/flags
+    QAtomicInt m_flag_cancel {0};
+    /// TW::Jobs by default do not autodelete.
+    bool m_is_autodelete_enabled { false };
+
+    ThreadWeaver::JobInterface* m_the_tw_job;
+
+    /// QSharedPointer to a QObjectDecorator.
+    /// Hard of find any docs on this one.
+    /// Source can be found here:
+    /// https://lxr.kde.org/source/frameworks/threadweaver/src/qobjectdecorator.h
+    /// https://lxr.kde.org/source/frameworks/threadweaver/src/qobjectdecorator.cpp
+    ThreadWeaver::QJobPointer m_the_tw_job_qobj_decorator;
+};
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */

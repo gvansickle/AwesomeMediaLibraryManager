@@ -30,10 +30,13 @@
 
 #include "AMLMJob.h"
 
+class DirectoryScannerAMLMJob;
+using DirectoryScannerAMLMJobPtr = QSharedPointer<DirectoryScannerAMLMJob>;
+
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob
+class DirectoryScannerAMLMJob : public AMLMJob, public QEnableSharedFromThis<DirectoryScannerAMLMJob>
 {
     Q_OBJECT
 
@@ -56,6 +59,13 @@ public:
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
+
+public:
+    static DirectoryScannerAMLMJobPtr make_shared(QObject* parent, const QUrl &dir_url,
+                                                  const QStringList &nameFilters,
+                                                  QDir::Filters filters = QDir::NoFilter,
+                                                  QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
+
 	~DirectoryScannerAMLMJob() override;
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;

@@ -19,7 +19,7 @@
 
 #include "AMLMJob.h"
 
-#include <QSharedPointer>
+#include <QPointer>
 #include <ThreadWeaver/Job>
 
 #include "utils/DebugHelpers.h"
@@ -55,12 +55,13 @@ void AMLMJob::start()
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
 }
 
-QSharedPointer<KJob> AMLMJob::asKJobSP()
+QPointer<KJob> AMLMJob::asKJobSP()
 {
     Q_CHECK_PTR(this);
 
-    auto shthis = sharedFromThis();
-    auto retval = qSharedPointerCast<KJob>(shthis);
+//    auto shthis = sharedFromThis();
+//    auto retval = (QPointer<KJob>)(qobject_cast<KJob>(this));
+    auto retval = this;
     Q_CHECK_PTR(retval);
     return retval;
 }
@@ -70,9 +71,10 @@ ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
     Q_CHECK_PTR(this);
 
     auto shthis = sharedFromThis();
-    // ThreadWeaver::JobPointer == QSharedPointer<ThreadWeaver::JobInterface>
-    auto retval = qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(shthis);
-    Q_CHECK_PTR(retval);
+    // ThreadWeaver::JobPointer == QPointer<ThreadWeaver::JobInterface>
+    Q_ASSERT(0);
+    auto retval = nullptr; //QPointerDynamicCast<ThreadWeaver::JobInterface>(shthis);
+//    Q_CHECK_PTR(retval);
 
     return retval;
 }
@@ -230,3 +232,24 @@ void AMLMJob::onKJobFinished(KJob *job)
     qDb() << "KJOB FINISHED" << job;
 }
 
+/////////////////////////////////
+
+TWJobWrapper::TWJobWrapper(ThreadWeaver::JobInterface* twjob, bool enable_auto_delete, QObject* parent) : KJob(parent),
+    m_the_tw_job(twjob), m_is_autodelete_enabled(enable_auto_delete)
+{
+    // Now we create the QobjextDecorator and hook it up to the twjob.
+    m_the_tw_job_qobj_decorator = ThreadWeaver::QJobPointer::create(m_the_tw_job, enable_auto_delete, this);
+
+    // Connect signals to other signals/slots.
+//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::done, this, &TWJobWrapper::done);
+}
+
+TWJobWrapper::~TWJobWrapper()
+{
+    /// @todo Unclear if we have to delete anything in here.
+}
+
+void TWJobWrapper::setAutoDelete(bool enable_autodelete)
+{
+    m_the_tw_job_qobj_decorator->setAutoDelete(enable_autodelete);
+}

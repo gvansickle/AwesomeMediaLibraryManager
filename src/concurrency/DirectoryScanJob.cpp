@@ -34,8 +34,18 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &di
     : AMLMJob(parent),
       m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
-    M_WARNING("TODO");
-//    setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
+M_WARNING("TODO");
+
+    // Set our capabilities.
+    setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
+}
+
+DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent, const QUrl &dir_url,
+                                    const QStringList &nameFilters,
+                                    QDir::Filters filters,
+                                    QDirIterator::IteratorFlags flags)
+{
+    return DirectoryScannerAMLMJobPtr::create(parent, dir_url, nameFilters, filters, flags);
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()

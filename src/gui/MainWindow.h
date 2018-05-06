@@ -56,6 +56,8 @@ using ToolBarClass = QToolBar;
 #include <logic/MP2.h>
 #include "mdi/MDIModelViewPair.h"
 
+#include "concurrency/AMLMJob.h"
+
 class QActionGroup;
 class QWidget;
 class QLabel;
@@ -203,7 +205,7 @@ public Q_SLOTS:
 	 */
 	void setActiveSubWindow(QMdiSubWindow* window);
 
-    void registerJob(KJob *new_job);
+    void registerJob(AMLMJobPtr new_job);
 
 protected:
 	bool queryClose() override;

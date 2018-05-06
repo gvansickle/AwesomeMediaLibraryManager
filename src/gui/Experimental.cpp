@@ -115,38 +115,43 @@ void Experimental::DoExperiment()
 //    kmsg_wdgt->animatedShow();
 //    kmsg_wdgt2->animatedShow();
 
-    ///
 
-    auto mv = QStorageInfo::mountedVolumes();
-    QStringList mvsl;
-    for(auto m : mv)
-    {
-        mvsl << tr("FSType: ") + m.fileSystemType() + " DispName: " + m.displayName() + " RootPath: " + m.rootPath();
-    }
-    qIn() << "MOUNTED VOLUMES:" << mvsl;
-
-    ///
 
     ThreadWeaver::setDebugLevel(true, 3);
 
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
     KIO::DirectorySizeJob* dirsizejob = KIO::directorySize(dir_url);
+    qDb() << "DirSizeJob:"
+          << M_NAME_VAL(dirsizejob->detailedErrorStrings())
+          << M_NAME_VAL(dirsizejob->capabilities());
     connect(dirsizejob, &KIO::DirectorySizeJob::result, [=](KJob* kjob){
         if(kjob->error())
         {
             kjob->uiDelegate()->showErrorMessage();
         }
     });
-    AMLMJobPtr dsj = QSharedPointer<DirectoryScannerAMLMJob>::create(this, dir_url,
+    connect(dirsizejob, &KIO::DirectorySizeJob::description, [=](KJob *job,
+            const QString &  	title,
+            const QPair< QString, QString > &  	field1,
+            const QPair< QString, QString > &  	field2){
+        qIn() << "Title:" << title;});
+
+    dirsizejob->start();
+
+
+    AMLMJobPtr dsj = DirectoryScannerAMLMJob::make_shared(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     QUrl dir_url2("file:///home/gary");
-    AMLMJobPtr dsj2 = QSharedPointer<DirectoryScannerAMLMJob>::create(this, dir_url2,
+    AMLMJobPtr dsj2 = DirectoryScannerAMLMJob::make_shared(this, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
+
+    qDb() << M_NAME_VAL(dsj->capabilities());
+    qDb() << M_NAME_VAL(dsj2->capabilities());
 
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
@@ -155,9 +160,9 @@ void Experimental::DoExperiment()
 //    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
     /// @todo Does this transfer ownership/parentage?
-    MainWindow::instance()->registerJob(dirsizejob);
-    MainWindow::instance()->registerJob(dsj->asKJobSP().data());
-    MainWindow::instance()->registerJob(dsj2->asKJobSP().data());
+//    MainWindow::instance()->registerJob(dirsizejob);
+    MainWindow::instance()->registerJob(dsj);
+    MainWindow::instance()->registerJob(dsj2);
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
