@@ -74,11 +74,16 @@ public:
 
 	~DirectoryScannerAMLMJob() override;
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
-
 protected:
 
+    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
+
     void set_QObjectdecorator() override;
+
+    /// Make the internal signal-slot connections.
+//    void make_connections() override;
+//    void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread) override;
+//    void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread) override;
 
 private:
 

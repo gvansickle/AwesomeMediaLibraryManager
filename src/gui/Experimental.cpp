@@ -165,6 +165,9 @@ void Experimental::DoExperiment()
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
+    qDb() << M_NAME_VAL(dsj);
+    qDb() << M_NAME_VAL(dsj2);
+
     // enqueue takes JobPointers (QSharedPtr<>).
     queue->enqueue(dsj->asTWJobPointer());
     queue->enqueue(dsj2->asTWJobPointer());

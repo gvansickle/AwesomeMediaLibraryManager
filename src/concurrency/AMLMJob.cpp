@@ -29,13 +29,12 @@
  */
 
 
-AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job(),
-    /// Attach the TW::Job to our QObjectDecorator.
-    /// @todo Does this actually work? decoratee wants to be the derived class instance, which won't exist at this point.
-    m_tw_job_qobj_decorator(ThreadWeaver::QJobPointer::create(/*JobInterface *decoratee=*/this, /*bool autoDelete*/false, /*QObject *parent*/this))
+AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job()
 {
-    qDb() << M_NAME_VAL(m_tw_job_qobj_decorator->job());
-    make_connections();
+    /// @warning  We DO NOT Attach the TW::Job to our QObjectDecorator here, since we need the derived object's this,
+    /// not the AMLMJob this.
+
+//    make_connections();
 }
 
 AMLMJob::~AMLMJob()
@@ -54,7 +53,7 @@ void AMLMJob::requestAbort()
 
 void AMLMJob::start()
 {
-    /// @todo Do we need to do anything here?  Has the TW Job started already?
+    /// @todo Do we need to do anything here?  The TW::Job starts by the TW::Queue/Weaver it's added to.
 
     qDb() << "AMLMJob::start(), TWJob status:" << status();
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
@@ -66,22 +65,25 @@ QPointer<KJob> AMLMJob::asKJobSP()
 
 //    auto shthis = sharedFromThis();
 //    auto retval = (QPointer<KJob>)(qobject_cast<KJob>(this));
-    auto retval = this;
+    QPointer<KJob> retval = this;
     Q_CHECK_PTR(retval);
+
     return retval;
 }
 
 ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
 {
+M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
     Q_CHECK_PTR(this);
 
-    return sharedFromThis();
-//    ThreadWeaver::JobPointer == QPointer<ThreadWeaver::JobInterface>
-//    Q_ASSERT(0);
-//    auto retval = QPointerDynamicCast<ThreadWeaver::JobInterface>(shthis);
-//    Q_CHECK_PTR(retval);
+    // ThreadWeaver::JobPointer is a QSharedPointer<TW::JobInterface>, so
+    // we need to make sure we return a sp which doesn't duplicate the ref count.
 
-//    return retval;
+    auto retval = this->sharedFromThis();
+
+    Q_ASSERT(retval);
+
+    return retval;
 }
 
 //void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
@@ -101,7 +103,7 @@ ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "BEGIN";
+    qDb() << "ENTER defaultBegin";
 
     // Essentially a duplicate of QObjectDecorator's implementation.
     Q_CHECK_PTR(this);
@@ -119,13 +121,14 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "END";
+    qDb() << "ENTER defaultEnd";
 
     // Essentially a duplicate of QObjectDecorator's implementation.
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
 
     ThreadWeaver::Job::defaultEnd(self, thread);
+
     if(!self->success())
     {
         qWr() << "FAILED";
@@ -171,7 +174,9 @@ bool AMLMJob::doResume()
 
 void AMLMJob::make_connections()
 {
-    qDb() << "MAKING CONNECTIONS";
+    qDb() << "MAKING CONNECTIONS, this:" << this;
+
+    Q_ASSERT(!m_tw_job_qobj_decorator.isNull());
 
     /// Qt::DirectConnection here to make this ~a function call.
 //    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
@@ -182,6 +187,7 @@ void AMLMJob::make_connections()
     // internal QObjectDecorator->external QObjectDecorator interface.
     /// @todo Could we get rid of the internal QObjectDecorator?
     /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
+    /// @note The .data() deref is necessary, connect can't otherwise connect through a QSharedPointer.
     connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::onTWStarted);
 
     //  void done(ThreadWeaver::JobPointer);
@@ -192,9 +198,12 @@ void AMLMJob::make_connections()
     // This signal is emitted when success() returns false after the job is executed.
     connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::onTWFailed);
 
+    // Connect up KJob signals/slots.
     /// @todo Figure out how we're going to trigger KJob::result (emitResult()).
     connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
     connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
+
+    qDb() << "MADE CONNECTIONS, this:" << this;
 }
 
 /**
@@ -202,12 +211,11 @@ void AMLMJob::make_connections()
  */
 void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    // Connections from self to m_tw_job_qobj_decorator.
-//    connect()
+
 }
 
 /**
- * Make connections we can only make while in defaultExit() and have the real JobPointer.
+ * Break connections we can only break while in defaultExit() and have the real JobPointer.
  */
 void AMLMJob::connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
@@ -254,88 +262,3 @@ void AMLMJob::onKJobFinished(KJob *job)
     qDb() << "KJOB FINISHED" << job;
 }
 
-/////////////////////////////////
-
-#if 0
-
-TWJobWrapper::TWJobWrapper(ThreadWeaver::JobPointer twjob, bool enable_auto_delete, QObject* parent) : KJob(parent),
-    m_the_tw_job(twjob), m_is_autodelete_enabled(enable_auto_delete)
-{
-    // Now we create the QobjextDecorator and hook it up to the twjob.
-    m_the_tw_job_qobj_decorator = ThreadWeaver::QJobPointer::create(m_the_tw_job.data(), enable_auto_delete, this);
-
-    // Connect signals to other signals/slots.
-//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::done, this, &TWJobWrapper::done);
-    /// Qt::DirectConnection here to make this ~a function call.
-//    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
-//    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
-
-    // void started(ThreadWeaver::JobPointer);
-    // This signal is emitted when this job is being processed by a thread.
-    // internal QObjectDecorator->external QObjectDecorator interface.
-    /// @todo Could we get rid of the internal QObjectDecorator?
-    /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
-//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::started);
-
-    //  void done(ThreadWeaver::JobPointer);
-    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-//    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::done);
-
-    //  void failed(ThreadWeaver::JobPointer);
-    // This signal is emitted when success() returns false after the job is executed.
-//    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
-
-    /// @todo Figure out how we're going to trigger KJob::result (emitResult()).
-//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QJobPointer::result, this, &AMLMJob::onKJobResult);
-//    connect(m_the_tw_job_qobj_decorator, &ThreadWeaver::QJobPointer::finished, this, &AMLMJob::onKJobFinished);
-}
-
-TWJobWrapper::~TWJobWrapper()
-{
-    /// @todo Unclear if we have to delete anything in here.
-}
-
-void TWJobWrapper::start()
-{
-
-}
-
-void TWJobWrapper::setAutoDelete(bool enable_autodelete)
-{
-    m_the_tw_job_qobj_decorator->setAutoDelete(enable_autodelete);
-}
-
-const ThreadWeaver::JobPointer TWJobWrapper::job() const
-{
-    return m_the_tw_job;
-}
-
-ThreadWeaver::JobPointer TWJobWrapper::job()
-{
-    return m_the_tw_job;
-}
-
-void TWJobWrapper::requestAbort()
-{
-    // Set atomic abort flag.
-    qDb() << "AMLM:TW: SETTING ABORT FLAG";
-    m_flag_cancel = 1;
-}
-
-//void TWJobWrapper::onKJobResult()
-//{
-//    /// Called when the KJob is finished.
-//    qDb() << "KJOB RESULT" << this;
-
-//    if(this->error())
-//    {
-//        // There was an error.
-//    }
-//}
-
-//void TWJobWrapper::onKJobFinished()
-//{
-//    qDb() << "KJOB FINISHED" << this;
-//}
-#endif
-////////////////////////////////////////////

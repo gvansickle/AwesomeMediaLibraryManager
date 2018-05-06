@@ -30,6 +30,7 @@
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent) : BASE_CLASS(parent)
 {
     setObjectName("DirectoryScannerAMLMJob");
+    qDb() << "STAGE 1 CONSTRUCTOR COMPLETE";
 }
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
@@ -78,7 +79,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
 	// other things prevent thejob from being memory managed and deleted."
 
-    qDb() << "IN RUN, self:" << self << "TW Status:" << self->status();
+    qDb() << "IN RUN, self:" << self << "TW self Status:" << self->status();
 
     AMLMJobPtr amlm_self = this;//qSharedPointerDynamicCast<AMLMJob>(self);
     Q_CHECK_PTR(amlm_self);
@@ -192,9 +193,13 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 void DirectoryScannerAMLMJob::set_QObjectdecorator()
 {
-
+    qDb() << "SETTING QObjectDecorator";
     // ThreadWeaver::QJobPointer::create(/*JobInterface *decoratee=*/this, /*bool autoDelete*/false, /*QObject *parent*/this)
     m_tw_job_qobj_decorator = ThreadWeaver::QJobPointer::create(/* Decoratee==the derived this=*/this, false, this);
+
+    qDb() << "TELLING BASECLASS TO MAKE CONNECTIONS";
+    // Have the base class make the connections.
+    make_connections();
 }
 
 

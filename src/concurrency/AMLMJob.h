@@ -242,8 +242,8 @@ public Q_SLOTS:
 
     /// @name KJob job control slots
     /// @note Default KJob implementations appear to be sufficient.  They call
-    ///       protected functions which we do need to override below, and then emit
-    ///       the proper signals to indicate the deed is done.
+    ///       the protected "doXxxx()" functions which we do need to override below,
+    ///       and then emit the proper signals to indicate the deed is done.
     /// @link https://api.kde.org/frameworks/kcoreaddons/html/kjob_8cpp_source.html#l00117
     /// @{
 
@@ -309,7 +309,7 @@ protected:
     /// @name New protected methods
     /// @{
 
-    /// Set up the QObjectDecorator from the derived class, not this base class.
+    /// Override to set up the QObjectDecorator from the derived class, not this base class.
     virtual void set_QObjectdecorator() = 0;
 
     /// Make the internal signal-slot connections.
@@ -323,7 +323,7 @@ protected:
     /// @{
 
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
-    bool twWasCancelRequested() const { return m_flag_cancel; }
+    bool twWasCancelRequested() const { return m_flag_cancel != 0; }
 
     bool m_aborted { false };
     bool m_success { true };
@@ -378,111 +378,8 @@ protected:
 
 private:
 
-
     /// Control structs/flags
     QAtomicInt m_flag_cancel {0};
 };
-
-
-///////////////////////////////////////////////////////
-
-#if 0
-
-class TWJobWrapper : public KJob
-{
-    Q_OBJECT
-
-Q_SIGNALS:
-    /// We'll emit KJob signals we construct from the wrapped TW::Job.
-    /// TW::QJobPointer signals are started/done/failed.
-//    void done();
-
-public:
-    /// Constructor modeled on QObjectDecorator's.
-    explicit TWJobWrapper(ThreadWeaver::JobPointer twjob, bool enable_auto_delete, QObject* parent = nullptr);
-    ~TWJobWrapper() override;
-
-    /**
-     * KJob:
-     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously)."
-     */
-    Q_SCRIPTABLE void start() override;
-
-    //// TW Decorator-like functions we need to expose.
-    /**
-     * Not virtual in the "real" decorators.
-     */
-    virtual void setAutoDelete(bool enable_autodelete);
-
-    /// For returning the decorated job().
-    const ThreadWeaver::JobPointer job() const;
-    ThreadWeaver::JobPointer job();
-
-    /// TW::Job-control and reporting interface
-    /// @{
-
-    /// Call this in twjob's ::run() function to see if you should cancel the loop.
-    bool wasCancelRequested() const { return m_flag_cancel; }
-
-
-
-    /// @}
-
-protected:
-    /**
-     * These three should be overridden and send any signals from self.
-     * For twjobs that get passed in here, I think that means they'll end up connected to
-     * at least m_the_tw_job_qobj_decorator.
-     */
-    // run(JobPointer self, Thread* thread);
-    // defaultBegin(JobPointer self, Thread* thread);
-    // defaultEnd(JobPointer self, Thread* thread);
-
-    /**
-     * Abort the execution of the job.
-     * Call this method to ask the Job to abort if it is currently executed.
-     * This method should return immediately, not after the abort has completed.
-     *
-     * @note TW::Job's default implementation of the method does nothing.
-     * @note TW::IdDecorator calls the TW::Job's implementation.
-     */
-    virtual void requestAbort();
-
-protected Q_SLOTS:
-
-    /// @name Internal slots
-    /// @{
-
-//    /// Handle the doKill() operation.
-//    void onKJobDoKill();
-
-//    /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
-//    /// Only supposed to call KJob::error() from this slot.
-//    void onKJobResult();
-
-//    /// Always invoked by the KJob::finished signal regardless of reason.
-//    void onKJobFinished();
-
-    /// @}
-
-private:
-
-    /// Control structs/flags
-    QAtomicInt m_flag_cancel {0};
-    /// TW::Jobs by default do not autodelete.
-    bool m_is_autodelete_enabled { false };
-
-    ThreadWeaver::JobPointer m_the_tw_job;
-
-    /// QSharedPointer to a QObjectDecorator.
-    /// Hard of find any docs on this one.
-    /// Source can be found here:
-    /// https://lxr.kde.org/source/frameworks/threadweaver/src/qobjectdecorator.h
-    /// https://lxr.kde.org/source/frameworks/threadweaver/src/qobjectdecorator.cpp
-    ThreadWeaver::QJobPointer m_the_tw_job_qobj_decorator;
-};
-
-#endif
-//////////////////////////////////////////////////
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */
