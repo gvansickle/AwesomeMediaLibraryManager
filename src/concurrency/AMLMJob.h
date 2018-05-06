@@ -351,6 +351,9 @@ private:
     QAtomicInt m_flag_cancel {0};
 };
 
+
+///////////////////////////////////////////////////////
+
 class TWJobWrapper : public KJob
 {
     Q_OBJECT
@@ -366,9 +369,30 @@ public:
     ~TWJobWrapper() override;
 
     /**
+     * KJob:
+     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously)."
+     */
+    Q_SCRIPTABLE void start() override;
+
+    //// TW Decorator-like functions we need to expose.
+    /**
      * Not virtual in the "real" decorators.
      */
     virtual void setAutoDelete(bool enable_autodelete);
+
+    /// For returning the decorated job().
+    const ThreadWeaver::JobInterface* job() const;
+    ThreadWeaver::JobInterface* job();
+
+    /// TW::Job-control and reporting interface
+    /// @{
+
+    /// Call this in twjob's ::run() function to see if you should cancel the loop.
+    bool wasCancelRequested() const { return m_flag_cancel; }
+
+
+
+    /// @}
 
 protected:
     /**
@@ -379,6 +403,16 @@ protected:
     // run(JobPointer self, Thread* thread);
     // defaultBegin(JobPointer self, Thread* thread);
     // defaultEnd(JobPointer self, Thread* thread);
+
+    /**
+     * Abort the execution of the job.
+     * Call this method to ask the Job to abort if it is currently executed.
+     * This method should return immediately, not after the abort has completed.
+     *
+     * @note TW::Job's default implementation of the method does nothing.
+     * @note TW::IdDecorator calls the TW::Job's implementation.
+     */
+    virtual void requestAbort();
 
 private:
 

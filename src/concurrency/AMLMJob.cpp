@@ -249,7 +249,29 @@ TWJobWrapper::~TWJobWrapper()
     /// @todo Unclear if we have to delete anything in here.
 }
 
+void TWJobWrapper::start()
+{
+
+}
+
 void TWJobWrapper::setAutoDelete(bool enable_autodelete)
 {
     m_the_tw_job_qobj_decorator->setAutoDelete(enable_autodelete);
+}
+
+const ThreadWeaver::JobInterface *TWJobWrapper::job() const
+{
+    return m_the_tw_job_qobj_decorator->job();
+}
+
+ThreadWeaver::JobInterface *TWJobWrapper::job()
+{
+    return m_the_tw_job_qobj_decorator->job();
+}
+
+void TWJobWrapper::requestAbort()
+{
+    // Set atomic abort flag.
+    qDb() << "AMLM:TW: SETTING ABORT FLAG";
+    m_flag_cancel = 1;
 }
