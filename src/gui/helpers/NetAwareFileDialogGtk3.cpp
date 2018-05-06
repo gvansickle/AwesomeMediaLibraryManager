@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "NetAwareFileDialogGtk3.h"
 
 #include <QWindow>
@@ -29,10 +31,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 
-#warning "MOVE TO CMAKE"
-#define HAVE_GTKMM
-
-#ifdef HAVE_GTKMM
+#if HAVE_GTKMM01
 #include <gtk/gtk.h>
 
 //#include "NetAwareFileDialogGtk3.h"
@@ -43,7 +42,7 @@
 //#include <gdk/gdk.h>
 //#include <gdk/gdkx.h>
 //#include <gdk/x11/gdkx11window.h>
-#endif // HAVE_GTKMM
+#endif // HAVE_GTKMM01
 
 #if 1
 

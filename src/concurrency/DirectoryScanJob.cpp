@@ -45,7 +45,9 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent,
                                     QDir::Filters filters,
                                     QDirIterator::IteratorFlags flags)
 {
-    return DirectoryScannerAMLMJobPtr::create(parent, dir_url, nameFilters, filters, flags);
+M_WARNING("TODO: NOT SHARED PTR");
+//    return DirectoryScannerAMLMJobPtr::create(parent, dir_url, nameFilters, filters, flags);
+    return new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags);
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -63,13 +65,13 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     qDb() << "IN RUN, self:" << self << "TW Status:" << self->status();
 
-    QSharedPointer<AMLMJob> aself = qSharedPointerDynamicCast<AMLMJob>(self);
-    Q_CHECK_PTR(aself);
-    auto kselfsp = qSharedPointerDynamicCast<KJob>(aself);
+    AMLMJobPtr amlm_self = this;//qSharedPointerDynamicCast<AMLMJob>(self);
+    Q_CHECK_PTR(amlm_self);
+    auto kselfsp = amlm_self->asKJobSP();
     Q_CHECK_PTR(kselfsp);
 
-    aself->setAutoDelete(false);
-    qDb() << "IN RUN, KJob isAutoDelete()?:" << aself->isAutoDelete();
+    amlm_self->setAutoDelete(false);
+    qDb() << "IN RUN, KJob isAutoDelete()?:" << amlm_self->isAutoDelete();
 
 
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);

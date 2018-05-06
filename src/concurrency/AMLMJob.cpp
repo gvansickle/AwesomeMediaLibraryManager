@@ -30,14 +30,19 @@
 
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job(),
-    m_tw_job_qobj_decorator(ThreadWeaver::QJobPointer::create(this, false, this))
+    /// Attach the TW::Job to our QObjectDecorator.
+    /// @todo Does this actually work? decoratee wants to be the derived class instance, which won't exist at this point.
+    m_tw_job_qobj_decorator(ThreadWeaver::QJobPointer::create(/*JobInterface *decoratee=*/this, /*bool autoDelete*/false, /*QObject *parent*/this))
 {
+    qDb() << M_NAME_VAL(m_tw_job_qobj_decorator);
     make_connections();
 }
 
 AMLMJob::~AMLMJob()
 {
     qDb() << "DESTRUCTOR";
+
+//    delete m_tw_job_qobj_decorator;
 }
 
 void AMLMJob::requestAbort()
@@ -103,9 +108,9 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     Q_CHECK_PTR(self);
 
     // Make connections which we need the "real" self for.
-    connections_make_defaultEnter(self, thread);
+    connections_make_defaultBegin(self, thread);
 
-//    qDb() << "autoDelete()?:" << autoDelete();
+//    qDb() << "autoDelete()?:" << self->autoDelete();
 
     Q_EMIT started(self);
 
@@ -166,6 +171,8 @@ bool AMLMJob::doResume()
 
 void AMLMJob::make_connections()
 {
+    qDb() << "MAKING CONNECTIONS";
+
     /// Qt::DirectConnection here to make this ~a function call.
 //    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
     connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
@@ -175,15 +182,15 @@ void AMLMJob::make_connections()
     // internal QObjectDecorator->external QObjectDecorator interface.
     /// @todo Could we get rid of the internal QObjectDecorator?
     /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::started);
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::onTWStarted);
 
     //  void done(ThreadWeaver::JobPointer);
     // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::done);
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::onTWDone);
 
     //  void failed(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::failed);
+    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::onTWFailed);
 
     /// @todo Figure out how we're going to trigger KJob::result (emitResult()).
     connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
@@ -193,10 +200,10 @@ void AMLMJob::make_connections()
 /**
  * Make connections we can only make while in defaultEnter() and have the real JobPointer.
  */
-void AMLMJob::connections_make_defaultEnter(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
+void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     // Connections from self to m_tw_job_qobj_decorator.
-
+//    connect()
 }
 
 /**
@@ -205,6 +212,21 @@ void AMLMJob::connections_make_defaultEnter(const ThreadWeaver::JobPointer &self
 void AMLMJob::connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
 
+}
+
+void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
+{
+    qDb() << "ENTER";
+}
+
+void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
+{
+    qDb() << "ENTER";
+}
+
+void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
+{
+    qDb() << "ENTER";
 }
 
 void AMLMJob::onKJobDoKill()

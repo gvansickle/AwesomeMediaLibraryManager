@@ -31,7 +31,7 @@
 #include "AMLMJob.h"
 
 class DirectoryScannerAMLMJob;
-using DirectoryScannerAMLMJobPtr = QSharedPointer<DirectoryScannerAMLMJob>;
+using DirectoryScannerAMLMJobPtr = DirectoryScannerAMLMJob*;//QSharedPointer<DirectoryScannerAMLMJob>;
 
 /**
  *

@@ -63,7 +63,7 @@
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
-using AMLMJobPtr = QSharedPointer<AMLMJob>;
+using AMLMJobPtr = AMLMJob*; //QSharedPointer<AMLMJob>;
 
 /**
  * Base class for jobs which bridges the hard-to-understand gap between a
@@ -303,7 +303,7 @@ protected:
     /// @{
     /// Make the internal signal-slot connections.
     virtual void make_connections();
-    virtual void connections_make_defaultEnter(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+    virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     virtual void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     /// @}
 
@@ -322,6 +322,11 @@ protected Q_SLOTS:
     /// @name Internal slots
     /// @{
 
+    /// @name From TW::QObjectDecorator's signals.
+    void onTWStarted(ThreadWeaver::JobPointer twjob);
+    void onTWDone(ThreadWeaver::JobPointer twjob);
+    void onTWFailed(ThreadWeaver::JobPointer twjob);
+
     /// Handle the doKill() operation.
     void onKJobDoKill();
 
@@ -337,15 +342,25 @@ protected Q_SLOTS:
 private:
 
     /**
-     * QPointer to the ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy between us and the
+     * QSharedPointer to the ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy
+     * between us and the TW::Job.
+     * Constructor is:
+     *     explicit QObjectDecorator(JobInterface *decoratee, bool autoDelete, QObject *parent = nullptr);
      *
      * @note Two confusingly similar typedefs here:
      *       From qobjectdecorator: "typedef QSharedPointer<QObjectDecorator> QJobPointer;".
      *       From jobinterface.h:   "typedef QSharedPointer<JobInterface> JobPointer;"
      *       Job is derived from JobInterface, which in turn derives from nothing.
-     *       All in ThreadWeaver namespace.
+     *       All in the ThreadWeaver namespace.
+     *
+     * @note This seems to run somewhat contrary to usage at
+     *  @link https://github.com/mirkoboehm/ThreadWeaverDemos/blob/0896e03e57a3d4a6195daa324e0af30277f24410/ImageViewer/QImageLoaderJob.h.
+     *  There he's deriving a separate class from QObjectDecorator, then at the call site creating a TW:Job instance, then passing
+     *  that to the derived class's constructor.  The decorator is holding a ref to the TW::Job, not the other way around like
+     *  we're (trying) to do here.
+     *
      */
-    ThreadWeaver::QJobPointer m_tw_job_qobj_decorator;
+    ThreadWeaver::QJobPointer m_tw_job_qobj_decorator { nullptr };
 
     /// Control structs/flags
     QAtomicInt m_flag_cancel {0};
