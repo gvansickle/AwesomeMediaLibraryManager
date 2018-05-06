@@ -43,7 +43,7 @@ LibraryContextMenu::LibraryContextMenu(const QString &title, QWidget *parent) : 
 
 	qDebug() << "Parent:" << parent;
 
-	auto mw = MainWindow::getInstance();
+    auto mw = MainWindow::instance();
 
 //	setTextandTips();
 

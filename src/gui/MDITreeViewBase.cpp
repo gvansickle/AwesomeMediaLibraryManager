@@ -324,7 +324,7 @@ void MDITreeViewBase::closeEvent(QCloseEvent* event)
 		// Closing this view.
 
 		// Tell the MainWindow that we're closing.
-		MainWindow::getInstance()->view_is_closing(this, underlyingModel());
+        MainWindow::instance()->view_is_closing(this, underlyingModel());
 
 		event->accept();
 	}
