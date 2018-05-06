@@ -61,7 +61,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
 	// other things prevent thejob from being memory managed and deleted."
 
-    qDb() << "IN RUN, TW Status:" << self->status();
+    qDb() << "IN RUN, self:" << self << "TW Status:" << self->status();
 
     QSharedPointer<AMLMJob> aself = qSharedPointerDynamicCast<AMLMJob>(self);
     Q_CHECK_PTR(aself);
