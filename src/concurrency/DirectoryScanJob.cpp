@@ -55,6 +55,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     QSharedPointer<AMLMJob> aself = qSharedPointerDynamicCast<AMLMJob>(self);
     Q_CHECK_PTR(aself);
+    auto kselfsp = qSharedPointerDynamicCast<KJob>(aself);
+    Q_CHECK_PTR(kselfsp);
 
     aself->setAutoDelete(false);
     qDb() << "IN RUN, KJob isAutoDelete()?:" << aself->isAutoDelete();
@@ -69,7 +71,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     QString status_text = tr("Scanning for music files");
 
-    Q_EMIT description(asKJob(), status_text,
+    Q_EMIT description(kselfsp.data(), status_text,
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
@@ -79,9 +81,10 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 		while(m_dir_iterator.hasNext())
 		{
-            if(m_flag_cancel)
+            if(twWasCancelRequested())
             {
                 // We've been cancelled.
+                qIn() << "CANCELLED";
                 break;
             }
 //			if(report_and_control.isPaused())
@@ -125,7 +128,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
-                Q_EMIT infoMessage(aself->asKJob(), tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
+                Q_EMIT infoMessage(kselfsp.data(), tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
 //                Q_EMIT aself->description(aself->asKJob(),
 //                                          QObject::tr("Scanning for music files"),
 //                                            QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
@@ -160,13 +163,5 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         qDb() << "LEAVING RUN";
 }
 
-bool DirectoryScannerAMLMJob::doKill()
-{
-    // SET AN ATOMIC KILL FLAG
-    m_flag_cancel = 1;
-    // true if the operation is supported *and succeeded*, false otherwise
-    // So do we need to wait for kill confirmation?
-    return true;
-}
 
 

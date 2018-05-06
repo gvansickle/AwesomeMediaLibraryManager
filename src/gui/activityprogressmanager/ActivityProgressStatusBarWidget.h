@@ -32,32 +32,49 @@ class QProgressBar;
 /// KF5
 class KJob;
 #include <KAbstractWidgetJobTracker>
+#include <QSharedPointer>
 
 /// Ours
-#include "BaseActivityProgressWidget.h"
+//#include "BaseActivityProgressWidget.h"
+#include <concurrency/AMLMJob.h>
+class BaseActivityProgressWidget;
 class BaseActivityProgressStatusBarWidget;
+
+
+class ActivityProgressStatusBarWidget;
+using ActivityProgressStatusBarWidgetPtr = QSharedPointer<ActivityProgressStatusBarWidget>;
+
 
 /**
  * Widget representing the progress/status/controls of a single KJob.
  * Suitable for use in a status bar.
  */
-class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker
+class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker, public QEnableSharedFromThis<ActivityProgressStatusBarWidget>
 {
 	Q_OBJECT
 
     using BASE_CLASS = KAbstractWidgetJobTracker;
 
+public: /// @todo private:
+    ActivityProgressStatusBarWidget(AMLMJobPtr job, BaseActivityProgressWidget* object, QWidget *parent);
+
 public:
-    ActivityProgressStatusBarWidget(KJob *job, BaseActivityProgressWidget* object, QWidget *parent);
+    static ActivityProgressStatusBarWidgetPtr make_tracker(AMLMJobPtr job, BaseActivityProgressWidget* object, QWidget *parent);
     ~ActivityProgressStatusBarWidget() override;
+
 
     QWidget *widget(KJob *job) override;
 
 
     BaseActivityProgressWidget *const q;
-    KJob *const m_job;
+    AMLMJobPtr m_job;
     bool m_being_deleted;
     bool m_is_job_registered { false };
+
+public Q_SLOTS:
+    virtual void registerJob(AMLMJobPtr job);
+    virtual void unregisterJob(AMLMJobPtr job);
+
 
 protected Q_SLOTS:
 
@@ -100,7 +117,7 @@ protected:
 
     /// Create the widget.
     /// Called by the constructor.
-    void init(KJob *job, QWidget *parent);
+    void init(AMLMJobPtr job, QWidget *parent);
 
     qulonglong m_processedSize {0};
     bool m_is_total_size_known {false};

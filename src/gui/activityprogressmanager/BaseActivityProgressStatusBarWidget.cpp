@@ -24,19 +24,20 @@
 #include <QProgressBar>
 #include <QHBoxLayout>
 
-#include <KJob>
+//#include <KJob>
 
 #include <gui/helpers/Tips.h>
 #include <utils/DebugHelpers.h>
 #include <utils/ConnectHelpers.h>
 
+#include "concurrency/AMLMJob.h"
 
 BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent) : BASE_CLASS(parent)
 {
 
 }
 
-BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *job, QWidget *parent)
+BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(AMLMJobPtr job, QWidget *parent)
     : BaseActivityProgressStatusBarWidget(parent)
 {
     // We have a vtable to this, go nuts with the virtual calls.
@@ -84,7 +85,7 @@ void BaseActivityProgressStatusBarWidget::setValue(int val)
     m_progress_bar->setValue(val);
 }
 
-void BaseActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
+void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
 {
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
@@ -106,15 +107,15 @@ void BaseActivityProgressStatusBarWidget::init(KJob *job, QWidget *parent)
     m_progress_bar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     // The buttons.
-    m_cancel_button = new QToolButton(this);
-    m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
-    setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
     m_pause_resume_button = new QToolButton(this);
     m_pause_resume_button->setIcon(QIcon::fromTheme("media-playback-pause"));
     setTips(m_pause_resume_button, tr("Pause/Resume"), tr("Pause or resume this operation"),
             tr("<h3>Pause/Resume</h3><br/>Pauses or resumes the operation"));
+    m_cancel_button = new QToolButton(this);
+    m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
+    setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
 
-    connect(m_cancel_button, SIGNAL(triggered()), job, SLOT(kill()));
+//    connect(m_cancel_button, SIGNAL(triggered()), job, SLOT(kill()));
 
     // The main layout.
     auto layout = new QHBoxLayout(this);

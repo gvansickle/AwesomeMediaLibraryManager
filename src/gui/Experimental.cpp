@@ -156,8 +156,8 @@ void Experimental::DoExperiment()
 
     /// @todo Does this transfer ownership/parentage?
     MainWindow::instance()->registerJob(dirsizejob);
-    MainWindow::instance()->registerJob(dsj->asKJob());
-    MainWindow::instance()->registerJob(dsj2->asKJob());
+    MainWindow::instance()->registerJob(dsj->asKJobSP().data());
+    MainWindow::instance()->registerJob(dsj2->asKJobSP().data());
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 

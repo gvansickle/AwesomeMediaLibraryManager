@@ -61,12 +61,9 @@ public:
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
 
 protected:
-    bool doKill() override;
+
 
 private:
-
-    /// Control structs/flags
-    QAtomicInt m_flag_cancel {0};
 
     QUrl m_dir_url;
     QStringList m_nameFilters;

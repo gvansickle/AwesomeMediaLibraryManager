@@ -20,6 +20,40 @@
 #ifndef SRC_CONCURRENCY_AMLMJOB_H_
 #define SRC_CONCURRENCY_AMLMJOB_H_
 
+
+/**
+ * Design notes
+ * To be the Alpha and Omega of *Job classes is a lot of work.  Let's start with the KJob and TW::Job lifecycles.
+ *
+ * @note TW:
+ * "It is essential for the ThreadWeaver library that as a kind of convention, the different creators of Job objects do
+ *  not touch the protected data members of the Job until somehow notified by the Job."
+ *
+ * TW:Job lifecycle
+ *  @note No QObject, no signals.
+ *  - twj = TW::Job-derived instance created by something (TW::Job itself is abstract, at least ::run() must be overloaded).
+ *  - twj submitted to TW::Queue/Weaver.
+ *  - TW::Queue decides when twj runs.  When started:
+ *  -- ::defaultBegin(JobPointer, Thread) (TW::Job default does literally nothing)
+ *  -- ::run(JobPointer, Thread)
+ *  --- ::run() runs to completion in Thread.  Control and reporting up to the run() override:
+ *  ---   - Need to override ::success() and arrange for it to report true/false.
+ *  ---   - Need to override ::requestAbort() and arrange for it to cause ::run() to abort.
+ *  -- ::status() will return Status_Success if ::run() ran to completion.
+ *  -- ::defaultEnd() (TW::Job default does some cleanup, is *not* empty).
+ *
+ *  TW::QObjectDecorator adds the following:
+ *  - Signal started(TW:JobPtr), when TW:Job has started execution.
+ *  - Signal done(TW:JobPtr), when TW:Job has completed execution, regardless of status.
+ *  - Signal failed(TW::JobPtr), when TW:Job's ::success() returns false after job is executed.
+ *  - defaultBegin() override which emits started(self) and calls job()->defaultBegin().
+ *  - defaultBegin() override which:
+ *    - Calls job()->defaultEnd()
+ *    - if(!success) emits failed(self)
+ *    - Always emits done(self).
+ *  - autoDelete() support.
+ */
+
 #include <QObject>
 #include <KJob>
 #include <ThreadWeaver/Job>
@@ -147,6 +181,9 @@ public:
     /// To a TW JobPointer, i.e. a QSharedPointer<JobInterface>.
     explicit operator ThreadWeaver::JobPointer() { return asTWJobPointer(); }
 
+    /// To a QSharedPointer<KJob>.
+    explicit operator QSharedPointer<KJob>() { return asKJobSP(); }
+
     /// @}
 
     /// @name TW::Job overrides.
@@ -167,11 +204,13 @@ public:
 
     /**
      * Abort the execution of the job.
-     * Call this method to ask the Job to abort if it is currently executed. Default implementation of
-     * the method does nothing.
+     * Call this method to ask the Job to abort if it is currently executed.
      * This method should return immediately, not after the abort has completed.
+     *
+     * @note TW::Job's default implementation of the method does nothing.
+     * @note TW::IdDecorator calls the TW::Job's implementation.
      */
-    void requestAbort() override { /* nothing */ }
+    void requestAbort() override;
 
     /// @} // END TW::Job overrides.
 
@@ -185,23 +224,24 @@ public:
 
     /// @}
 
-    /// Convenience member for getting a KJob* to this.
-    KJob* asKJob();
+    QSharedPointer<KJob> asKJobSP();
 
     /// Convenience member for getting a ThreadWeaver::JobPointer (QSharedPointer<JobInterface>) to this.
     ThreadWeaver::JobPointer asTWJobPointer();
 
-    /// Convenience member for getting a ThreadWeaver::IdDecorator* to this.
-    ThreadWeaver::IdDecorator* asIdDecorator();
-
 public Q_SLOTS:
 
-    /// From KJob:
+    /// @name KJob job control slots
+    /// @note Default KJob implementations appear to be sufficient.  They call
+    ///       protected functions which we do need to override below, and then emit
+    ///       the proper signals to indicate the deed is done.
+    /// @link https://api.kde.org/frameworks/kcoreaddons/html/kjob_8cpp_source.html#l00117
     /// @{
-    // Default KJob implementations appear to be sufficient.
+
 //    bool kill(KJob::KillVerbosity verbosity=KJob::Quietly);
 //    bool resume();
 //    bool suspend();
+
     /// @}
 
 protected:
@@ -217,16 +257,24 @@ protected:
     /// @{
 
     /**
-     * Kill the job.  Default impl just returns false.
+     * Kill the job.
      * Abort this job quietly.
      * Simply kill the job, no error reporting or job deletion should be involved.
+     *
+     * @note KJob::doKill() simply returns false.
      *
      * @return true if job successfully killed, false otherwise.
      */
     bool doKill() override;
 
+    /**
+     * @note KJob::doSuspend() simply returns false.
+     */
     bool doSuspend() override;
 
+    /**
+     * @note KJob::doResume() simply returns false.
+     */
     bool doResume() override;
 
     /**
@@ -253,10 +301,16 @@ protected:
     /// @{
     /// Make the internal signal-slot connections.
     virtual void make_connections();
+    virtual void connections_make_defaultEnter(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+    virtual void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     /// @}
 
-    /// New ThreadWeaver::Job-related members.
+    /// New protected ThreadWeaver::Job-related members.
     /// @{
+
+    /// Call this in your derived tw::run() function to see if you should cancel the loop.
+    bool twWasCancelRequested() const { return m_flag_cancel; }
+
     bool m_aborted { false };
     bool m_success { true };
     /// @}
@@ -280,8 +334,6 @@ protected Q_SLOTS:
 
 private:
 
-    /// @todo Do we also want to keep a copy of JobInterface *decoratee in here?
-
     /**
      * QSharedPointer to the ThreadWeaver::QObjectDecorator() we'll create and attach as a sort of proxy between us and the
      *
@@ -291,6 +343,9 @@ private:
      *       Job is derived from JobInterface.  All in ThreadWeaver namespace.
      */
     ThreadWeaver::QJobPointer m_tw_job_qobj_decorator;
+
+    /// Control structs/flags
+    QAtomicInt m_flag_cancel {0};
 };
 
 

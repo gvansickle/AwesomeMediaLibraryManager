@@ -40,6 +40,13 @@ AMLMJob::~AMLMJob()
     qDb() << "DESTRUCTOR";
 }
 
+void AMLMJob::requestAbort()
+{
+    // Set atomic abort flag.
+    qDb() << "AMLM:TW: SETTING ABORT FLAG";
+    m_flag_cancel = 1;
+}
+
 void AMLMJob::start()
 {
     /// @todo Do we need to do anything here?  Has the TW Job started already?
@@ -48,9 +55,12 @@ void AMLMJob::start()
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
 }
 
-KJob* AMLMJob::asKJob()
+QSharedPointer<KJob> AMLMJob::asKJobSP()
 {
-    auto retval = dynamic_cast<KJob*>(this);
+    Q_CHECK_PTR(this);
+
+    auto shthis = sharedFromThis();
+    auto retval = qSharedPointerCast<KJob>(shthis);
     Q_CHECK_PTR(retval);
     return retval;
 }
@@ -64,13 +74,6 @@ ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
     auto retval = qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(shthis);
     Q_CHECK_PTR(retval);
 
-    return retval;
-}
-
-ThreadWeaver::IdDecorator* AMLMJob::asIdDecorator()
-{
-    auto retval = dynamic_cast<ThreadWeaver::IdDecorator*>(m_tw_job_qobj_decorator.data());
-    Q_CHECK_PTR(retval);
     return retval;
 }
 
@@ -96,6 +99,9 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     // Essentially a duplicate of QObjectDecorator's implementation.
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
+
+    // Make connections which we need the "real" self for.
+    connections_make_defaultEnter(self, thread);
 
 //    qDb() << "autoDelete()?:" << autoDelete();
 
@@ -131,7 +137,15 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 bool AMLMJob::doKill()
 {
     qDb() << "DOKILL";
-    Q_EMIT signalKJobDoKill();
+
+    // Kill the TW::Job.
+    requestAbort();
+
+    onKJobDoKill();
+
+    /// @todo Need to wait for the final kill here?
+
+    return true;
 }
 
 bool AMLMJob::doSuspend()
@@ -172,6 +186,23 @@ void AMLMJob::make_connections()
     /// @todo Figure out how we're going to trigger KJob::result (emitResult()).
     connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
     connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
+}
+
+/**
+ * Make connections we can only make while in defaultEnter() and have the real JobPointer.
+ */
+void AMLMJob::connections_make_defaultEnter(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
+{
+    // Connections from self to m_tw_job_qobj_decorator.
+
+}
+
+/**
+ * Make connections we can only make while in defaultExit() and have the real JobPointer.
+ */
+void AMLMJob::connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
+{
+
 }
 
 void AMLMJob::onKJobDoKill()

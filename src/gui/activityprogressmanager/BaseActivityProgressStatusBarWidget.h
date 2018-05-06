@@ -28,7 +28,8 @@ class QProgressBar;
 class QToolButton;
 
 /// KF5
-class KJob;
+//class KJob;
+#include "concurrency/AMLMJob.h"
 
 /*
  *
@@ -44,7 +45,7 @@ class BaseActivityProgressStatusBarWidget: public QFrame
     BaseActivityProgressStatusBarWidget(QWidget *parent);
 
 public:
-    explicit BaseActivityProgressStatusBarWidget(KJob *job, QWidget *parent);
+    explicit BaseActivityProgressStatusBarWidget(AMLMJobPtr job, QWidget *parent);
     ~BaseActivityProgressStatusBarWidget() override;
 
     /// Add buttons to the rhs of the layout.
@@ -64,7 +65,7 @@ protected:
 
     /// Create the widget.
     /// Called by the public constructor.
-    virtual void init(KJob *job, QWidget *parent);
+    virtual void init(AMLMJobPtr job, QWidget *parent);
 
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
