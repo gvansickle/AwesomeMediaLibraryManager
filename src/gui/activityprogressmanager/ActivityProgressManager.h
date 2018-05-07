@@ -27,7 +27,7 @@
 class KJob;
 
 /// Ours
-class BaseActivityProgressWidget;
+class ActivityProgressTracker;
 
 /**
  * Some ideas here borrowed from:

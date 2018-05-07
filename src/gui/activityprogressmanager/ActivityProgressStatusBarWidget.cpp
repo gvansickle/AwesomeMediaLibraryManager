@@ -36,7 +36,7 @@
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 
-ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(AMLMJobPtr job, BaseActivityProgressWidget *object, QWidget *parent)
+ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
       q(object), m_job(job), m_being_deleted(false)
 {
@@ -46,7 +46,7 @@ ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(AMLMJobPtr job,
     registerJob(job);
 }
 
-ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarWidget::make_shared(AMLMJobPtr job, BaseActivityProgressWidget *object, QWidget *parent)
+ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarWidget::make_shared(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
 {
     return ActivityProgressStatusBarWidgetPtr::create(job, object, parent);
 }
@@ -75,6 +75,11 @@ void ActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
     // Create the widget.
 
     m_widget = new BaseActivityProgressStatusBarWidget(job, parent);
+
+    // Make the widget->tracker connections.
+    connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarWidget::slotStop);
+    connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarWidget::slotSuspend);
+    connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarWidget::slotResume);
 }
 
 

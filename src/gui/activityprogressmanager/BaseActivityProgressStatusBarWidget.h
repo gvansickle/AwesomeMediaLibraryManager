@@ -40,6 +40,18 @@ class BaseActivityProgressStatusBarWidget: public QFrame
 
     using BASE_CLASS = QFrame;
 
+Q_SIGNALS:
+    /// To the tracker: kill the job.
+    void cancel_job(AMLMJobPtr job);
+
+    /// To the tracker: pause the job.
+    void pause_job(AMLMJobPtr job);
+
+    /// To the tracker: resume the job.
+    void resume_job(AMLMJobPtr job);
+
+
+private:
     /// Private constructor to get us a fully-constructed vtable so we can
     /// call virtual functions in the non-default constructor.
     BaseActivityProgressStatusBarWidget(QWidget *parent);

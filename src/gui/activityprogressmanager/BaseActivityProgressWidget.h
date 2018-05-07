@@ -48,7 +48,7 @@ class AMLMCompositeJob;
  * @note Due to inheritenace from KAbstractWidgetJobTracker, one instance of this class tracks one AMLMJob instance.
  *       That's fine because that's the intent here.
  */
-class BaseActivityProgressWidget: public KAbstractWidgetJobTracker
+class ActivityProgressTracker: public KAbstractWidgetJobTracker
 {
     Q_OBJECT
 
@@ -57,8 +57,8 @@ class BaseActivityProgressWidget: public KAbstractWidgetJobTracker
 Q_SIGNALS:
 
 public:
-    explicit BaseActivityProgressWidget(QWidget* parent = nullptr);
-	~BaseActivityProgressWidget() override;
+    explicit ActivityProgressTracker(QWidget* parent = nullptr);
+    ~ActivityProgressTracker() override;
 
     /**
      * @link https://api.kde.org/frameworks/kcoreaddons/html/classKJobTrackerInterface.html

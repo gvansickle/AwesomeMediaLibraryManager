@@ -37,7 +37,7 @@ class KJob;
 /// Ours
 //#include "BaseActivityProgressWidget.h"
 #include <concurrency/AMLMJob.h>
-class BaseActivityProgressWidget;
+class ActivityProgressTracker;
 class BaseActivityProgressStatusBarWidget;
 
 
@@ -56,10 +56,10 @@ class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker, public 
     using BASE_CLASS = KAbstractWidgetJobTracker;
 
 public: /// @todo private:
-    ActivityProgressStatusBarWidget(AMLMJobPtr job, BaseActivityProgressWidget* object, QWidget *parent);
+    ActivityProgressStatusBarWidget(AMLMJobPtr job, ActivityProgressTracker* object, QWidget *parent);
 
 public:
-    static ActivityProgressStatusBarWidgetPtr make_shared(AMLMJobPtr job, BaseActivityProgressWidget* object, QWidget *parent);
+    static ActivityProgressStatusBarWidgetPtr make_shared(AMLMJobPtr job, ActivityProgressTracker* object, QWidget *parent);
     ~ActivityProgressStatusBarWidget() override;
 
     /// Override of pure virtual base class version.  Takes a raw KJob*.
@@ -68,7 +68,7 @@ public:
     virtual QWidget* widget(AMLMJobPtr job);
 
 
-    BaseActivityProgressWidget *const q;
+    ActivityProgressTracker *const q;
     AMLMJobPtr m_job;
     bool m_being_deleted;
     bool m_is_job_registered { false };

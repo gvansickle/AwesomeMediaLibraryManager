@@ -120,11 +120,12 @@ M_WARNING("TODO: if is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
     m_cancel_button = new QToolButton(this);
     m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
     setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
+M_WARNING("TODO: if is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
     if(job)
     {
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
+        connect(m_cancel_button, &QToolButton::triggered, this, [=](){ Q_EMIT cancel_job(job);});
     }
-//    connect(m_cancel_button, SIGNAL(triggered()), job, SLOT(kill()));
 
     // The main layout.
     auto layout = new QHBoxLayout(this);
