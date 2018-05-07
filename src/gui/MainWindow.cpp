@@ -120,7 +120,7 @@
 #include <gui/menus/ActionBundle.h>
 #include <gui/menus/HelpMenu.h>
 #include <KXmlGui/KEditToolBar>
-#include <gui/activityprogressmanager/BaseActivityProgressWidget.h>
+#include <gui/activityprogressmanager/ActivityProgressTracker.h>
 
 #include "concurrency/ExtAsync.h"
 
