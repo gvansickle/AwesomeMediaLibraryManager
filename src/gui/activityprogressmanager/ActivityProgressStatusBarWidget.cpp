@@ -70,6 +70,7 @@ QWidget *ActivityProgressStatusBarWidget::widget(AMLMJobPtr job)
     return m_widget;
 }
 
+
 void ActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
 {
     // Create the widget.
@@ -82,6 +83,16 @@ void ActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
     connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarWidget::slotResume);
 }
 
+
+void ActivityProgressStatusBarWidget::registerJob(KJob *job)
+{
+    BASE_CLASS::registerJob(job);
+}
+
+void ActivityProgressStatusBarWidget::unregisterJob(KJob *job)
+{
+    BASE_CLASS::unregisterJob(job);
+}
 
 void ActivityProgressStatusBarWidget::registerJob(AMLMJobPtr job)
 {
@@ -233,10 +244,16 @@ void ActivityProgressStatusBarWidget::speed(KJob *job, unsigned long value)
 
 }
 
+void ActivityProgressStatusBarWidget::finished(KJob *job)
+{
+
+}
+
 void ActivityProgressStatusBarWidget::slotClean(KJob *job)
 {
 
 }
+
 
 
 

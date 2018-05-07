@@ -74,6 +74,9 @@ public:
     bool m_is_job_registered { false };
 
 public Q_SLOTS:
+    void registerJob(KJob *job) override;
+    void unregisterJob(KJob *job) override;
+
     virtual void registerJob(AMLMJobPtr job);
     virtual void unregisterJob(AMLMJobPtr job);
 
@@ -82,6 +85,15 @@ protected Q_SLOTS:
 
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
+
+    /**
+     * The following slots are inherited from KAbstractWidgetJobTracker etc.
+     */
+    /// KAbstractWidgetJobTracker implementation does nothing.
+    void finished(KJob *job) override;
+//    void suspended(KJob *job) override;
+//    void resumed(KJob *job) override;
+
 
     /**
      * "Called to display general description of a job.
@@ -107,6 +119,7 @@ protected Q_SLOTS:
     void percent(KJob *job, unsigned long percent) override;
     void speed(KJob *job, unsigned long value) override;
 
+    /// KAbstractWidgetJobTracker implementation does nothing.
     void slotClean(KJob *job) override;
 
     // These all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
@@ -114,6 +127,7 @@ protected Q_SLOTS:
 //    void slotResume(KJob *job) override;
 //    void slotStop(KJob *job) override;
 //    void slotSuspend(KJob *job) override;
+
 
 protected:
 

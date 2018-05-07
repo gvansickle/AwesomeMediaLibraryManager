@@ -102,9 +102,6 @@ public Q_SLOTS:
     virtual void registerJob(AMLMJobPtr job);
     virtual void unregisterJob(AMLMJobPtr job);
 
-public Q_SLOTS:
-
-
 protected:
     using ActiveActivitiesMap = QMap<AMLMJobPtr, ActivityProgressStatusBarWidgetPtr>;
 
@@ -133,7 +130,8 @@ protected Q_SLOTS:
     /**
      * The following slots are inherited.
      */
-//    void finished(KJob *job) override;
+    /// KAbstractWidgetJobTracker implementation does nothing.
+    void finished(KJob *job) override;
 //    void suspended(KJob *job) override;
 //    void resumed(KJob *job) override;
 

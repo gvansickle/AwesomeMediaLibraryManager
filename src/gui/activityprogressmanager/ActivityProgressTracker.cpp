@@ -147,6 +147,11 @@ void ActivityProgressTracker::onShowProgressWidget()
 
 }
 
+void ActivityProgressTracker::finished(KJob *job)
+{
+    qDb() << "FINISHED:" << job;
+}
+
 void ActivityProgressTracker::showSubJobs()
 {
     // Get the parent-relative geometry of the "root widget".
