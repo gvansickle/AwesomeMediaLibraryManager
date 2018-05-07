@@ -31,7 +31,7 @@ class KToolTipWidget;
 #include <KAbstractWidgetJobTracker>
 
 /// Ours
-#include "ActivityProgressStatusBarWidget.h"
+#include <src/gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 class BaseActivityProgressStatusBarWidget;
 class ExpandingFrameWidget;
 class AMLMCompositeJob;

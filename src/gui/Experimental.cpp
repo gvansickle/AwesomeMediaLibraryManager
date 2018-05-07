@@ -54,7 +54,7 @@
 
 #include "MainWindow.h"
 
-#include "activityprogressmanager/ActivityProgressStatusBarWidget.h"
+#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include <gui/activityprogressmanager/ActivityProgressTracker.h>
 #include "activityprogressmanager/ActivityProgressWidget.h"
 #include "activityprogressmanager/ActivityProgressDialog.h"

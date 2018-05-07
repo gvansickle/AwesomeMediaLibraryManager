@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
-#define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_
+#ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARTRACKER_H_
+#define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARTRACKER_H_
 
 #include <config.h>
 
@@ -41,26 +41,26 @@ class ActivityProgressTracker;
 class BaseActivityProgressStatusBarWidget;
 
 
-class ActivityProgressStatusBarWidget;
-using ActivityProgressStatusBarWidgetPtr = QSharedPointer<ActivityProgressStatusBarWidget>;
+class ActivityProgressStatusBarTracker;
+using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;// QSharedPointer<ActivityProgressStatusBarTracker>;
 
 
 /**
  * K*WidgetJobTracker representing the progress/status/controls of a single KJob.
  * Suitable for use in a status bar.
  */
-class ActivityProgressStatusBarWidget: public KAbstractWidgetJobTracker, public QEnableSharedFromThis<ActivityProgressStatusBarWidget>
+class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker//, public QEnableSharedFromThis<ActivityProgressStatusBarTracker>
 {
 	Q_OBJECT
 
     using BASE_CLASS = KAbstractWidgetJobTracker;
 
 public: /// @todo private:
-    ActivityProgressStatusBarWidget(AMLMJobPtr job, ActivityProgressTracker* object, QWidget *parent);
+    ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker* object, QWidget *parent);
 
 public:
     static ActivityProgressStatusBarWidgetPtr make_shared(AMLMJobPtr job, ActivityProgressTracker* object, QWidget *parent);
-    ~ActivityProgressStatusBarWidget() override;
+    ~ActivityProgressStatusBarTracker() override;
 
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
@@ -142,10 +142,10 @@ protected:
     QTime m_start_time;
 
 private:
-    Q_DISABLE_COPY(ActivityProgressStatusBarWidget)
+    Q_DISABLE_COPY(ActivityProgressStatusBarTracker)
 
     /// The actual widget.
     BaseActivityProgressStatusBarWidget* m_widget {nullptr};
 };
 
-#endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARWIDGET_H_ */
+#endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARTRACKER_H_ */

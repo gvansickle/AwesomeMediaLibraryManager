@@ -31,10 +31,10 @@
 #include <QTimer>
 
 /// Ours
-#include "ActivityProgressStatusBarWidget.h"
 #include <concurrency/AMLMCompositeJob.h>
 #include <gui/activityprogressmanager/ActivityProgressTracker.h>
 #include <gui/MainWindow.h>
+#include <src/gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include "utils/DebugHelpers.h"
 
 ActivityProgressTracker::ActivityProgressTracker(QWidget *parent) : BASE_CLASS(parent),
@@ -88,7 +88,7 @@ void ActivityProgressTracker::registerJob(AMLMJobPtr job)
 {
     // Create a new widget-based tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
-    auto pw = ActivityProgressStatusBarWidget::make_shared(job, this, m_parent);
+    auto pw = ActivityProgressStatusBarTracker::make_shared(job, this, m_parent);
     pw->m_is_job_registered = true;
 //    pw->setAttribute(Qt::WA_DeleteOnClose);
 

@@ -18,25 +18,14 @@
  */
 
 #include <config.h>
+#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
-#include "ActivityProgressStatusBarWidget.h"
-
-/// Qt5
-//#include <QHBoxLayout>
-//#include <QIcon>
-//#include <QLabel>
-//#include <QProgressBar>
-//#include <QToolButton>
-
-/// KF5
-
-/// Ours
 #include <utils/DebugHelpers.h>
 #include <utils/StringHelpers.h>
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 
-ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
+ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
       q(object), m_job(job), m_being_deleted(false)
 {
@@ -46,24 +35,25 @@ ActivityProgressStatusBarWidget::ActivityProgressStatusBarWidget(AMLMJobPtr job,
     registerJob(job);
 }
 
-ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarWidget::make_shared(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
+ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarTracker::make_shared(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
 {
-    return ActivityProgressStatusBarWidgetPtr::create(job, object, parent);
+//    return ActivityProgressStatusBarWidgetPtr::create(job, object, parent);
+    return new ActivityProgressStatusBarTracker(job, object, parent);
 }
 
-ActivityProgressStatusBarWidget::~ActivityProgressStatusBarWidget()
+ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
     unregisterJob(m_job);
 }
 
-QWidget *ActivityProgressStatusBarWidget::widget(KJob *job)
+QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
 {
     // Shouldn't ever get here before the widget is constructed (in the constructor).
     Q_CHECK_PTR(m_widget);
     return m_widget;
 }
 
-QWidget *ActivityProgressStatusBarWidget::widget(AMLMJobPtr job)
+QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 {
     // Shouldn't ever get here before the widget is constructed (in the constructor).
     Q_CHECK_PTR(m_widget);
@@ -71,56 +61,56 @@ QWidget *ActivityProgressStatusBarWidget::widget(AMLMJobPtr job)
 }
 
 
-void ActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
+void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
 {
     // Create the widget.
 
     m_widget = new BaseActivityProgressStatusBarWidget(job, parent);
 
     // Make the widget->tracker connections.
-    connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarWidget::slotStop);
-    connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarWidget::slotSuspend);
-    connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarWidget::slotResume);
+    connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
+    connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
+    connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
 }
 
 
-void ActivityProgressStatusBarWidget::registerJob(KJob *job)
+void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 {
     BASE_CLASS::registerJob(job);
 }
 
-void ActivityProgressStatusBarWidget::unregisterJob(KJob *job)
+void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
 {
     BASE_CLASS::unregisterJob(job);
 }
 
-void ActivityProgressStatusBarWidget::registerJob(AMLMJobPtr job)
+void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 {
     BASE_CLASS::registerJob(job->asKJobSP());
 }
 
-void ActivityProgressStatusBarWidget::unregisterJob(AMLMJobPtr job)
+void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
 {
     BASE_CLASS::unregisterJob(job->asKJobSP());
 }
 
-void ActivityProgressStatusBarWidget::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
     m_widget->setDescription(title, field1, field2);
 }
 
-void ActivityProgressStatusBarWidget::infoMessage(KJob *job, const QString &plain, const QString &rich)
+void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
     // Prefer rich if it's given.
     m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
 }
 
-void ActivityProgressStatusBarWidget::warning(KJob *job, const QString &plain, const QString &rich)
+void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
 {
     m_widget->setWarning(rich.isEmpty() ? plain : rich);
 }
 
-void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qulonglong amount)
+void ActivityProgressStatusBarTracker::totalAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
     switch (unit)
     {
@@ -156,7 +146,7 @@ void ActivityProgressStatusBarWidget::totalAmount(KJob *job, KJob::Unit unit, qu
     }
 }
 
-void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
+void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
     QString tmp;
 
@@ -234,22 +224,22 @@ void ActivityProgressStatusBarWidget::processedAmount(KJob *job, KJob::Unit unit
     }
 }
 
-void ActivityProgressStatusBarWidget::percent(KJob *job, unsigned long percent)
+void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
 
 }
 
-void ActivityProgressStatusBarWidget::speed(KJob *job, unsigned long value)
+void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 {
 
 }
 
-void ActivityProgressStatusBarWidget::finished(KJob *job)
+void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
 
 }
 
-void ActivityProgressStatusBarWidget::slotClean(KJob *job)
+void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 {
 
 }

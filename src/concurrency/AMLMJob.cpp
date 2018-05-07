@@ -105,9 +105,10 @@ M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "ENTER defaultBegin";
-
     // Essentially a duplicate of QObjectDecorator's implementation.
+
+    qDb() << "ENTER defaultBegin, self/this:" << self << this;
+
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
 
@@ -123,7 +124,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "ENTER defaultEnd";
+    qDb() << "ENTER defaultEnd, self/this:" << self << this;
 
     // Essentially a duplicate of QObjectDecorator's implementation.
     Q_CHECK_PTR(this);
