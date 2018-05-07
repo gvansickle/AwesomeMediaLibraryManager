@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gui/activityprogressmanager/ActivityProgressTracker.h>
 #include "ActivityProgressManager.h"
 
 /// QT5
@@ -25,7 +26,6 @@
 #include <KJob>
 
 /// Ours
-#include "BaseActivityProgressWidget.h"
 
 ActivityProgressManager::ActivityProgressManager(QObject *parent) : BASE_CLASS(parent)
 {

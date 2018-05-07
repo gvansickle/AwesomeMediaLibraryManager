@@ -18,7 +18,6 @@
  */
 
 #include "BaseActivityProgressStatusBarWidget.h"
-#include "BaseActivityProgressWidget.h"
 #include "ExpandingFrameWidget.h"
 
 /// QT5
@@ -34,6 +33,7 @@
 /// Ours
 #include "ActivityProgressStatusBarWidget.h"
 #include <concurrency/AMLMCompositeJob.h>
+#include <gui/activityprogressmanager/ActivityProgressTracker.h>
 #include <gui/MainWindow.h>
 #include "utils/DebugHelpers.h"
 
