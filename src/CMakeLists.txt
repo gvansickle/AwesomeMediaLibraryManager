@@ -160,6 +160,7 @@ set(HEADER_FILES
 	logic/LibraryRescanner.h
 	utils/AsyncDirScanner.h
 	utils/RegisterQtMetatypes.h
+	utils/UniqueIDMixin.h
 	logic/CueSheetParser.h
 	../resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
@@ -199,6 +200,7 @@ set(SOURCE_FILES
 	concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	utils/RegisterQtMetatypes.cpp
+	utils/UniqueIDMixin.h
 	logic/CueSheetParser.cpp
 	logic/ModelUserRoles.cpp
 	logic/proxymodels/SelectionFilterProxyModel.cpp

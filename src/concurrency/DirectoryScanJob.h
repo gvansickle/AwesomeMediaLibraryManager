@@ -36,7 +36,7 @@ using DirectoryScannerAMLMJobPtr = DirectoryScannerAMLMJob*;//QSharedPointer<Dir
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob, public QEnableSharedFromThis<DirectoryScannerAMLMJob>
+class DirectoryScannerAMLMJob : public AMLMJob, public QEnableSharedFromThis<DirectoryScannerAMLMJob>, private UniqueIDMixin<DirectoryScannerAMLMJob>
 {
     Q_OBJECT
 

@@ -23,6 +23,7 @@
 #include <ThreadWeaver/Job>
 
 #include "utils/DebugHelpers.h"
+#include "utils/UniqueIDMixin.h"
 
 /**
  * @todo Static factory function.
@@ -34,7 +35,7 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job()
     /// @warning  We DO NOT Attach the TW::Job to our QObjectDecorator here, since we need the derived object's this,
     /// not the AMLMJob this.
 
-//    make_connections();
+    setObjectName("AMLMJOB");//uniqueQObjectName());
 }
 
 AMLMJob::~AMLMJob()

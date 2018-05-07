@@ -29,7 +29,7 @@
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent) : BASE_CLASS(parent)
 {
-    setObjectName("DirectoryScannerAMLMJob");
+    setObjectName(uniqueQObjectName());//"DirectoryScannerAMLMJob");
     qDb() << "STAGE 1 CONSTRUCTOR COMPLETE";
 }
 

@@ -61,6 +61,8 @@
 #include <ThreadWeaver/IdDecorator>
 #include <ThreadWeaver/QObjectDecorator>
 
+#include "utils/UniqueIDMixin.h"
+
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
 using AMLMJobPtr = AMLMJob*; //QSharedPointer<AMLMJob>;
@@ -78,7 +80,7 @@ using AMLMJobPtr = AMLMJob*; //QSharedPointer<AMLMJob>;
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromThis<AMLMJob>
+class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromThis<AMLMJob>//, private UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
