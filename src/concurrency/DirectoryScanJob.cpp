@@ -68,7 +68,7 @@ M_WARNING("TODO: NOT SHARED PTR");
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
-    qDb() << "DESTRUCTOR";
+    qDb() << "DESTRUCTOR:" << objectName();
 }
 
 
@@ -157,10 +157,6 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
                 Q_EMIT infoMessage(kselfsp.data(), tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
-//                Q_EMIT aself->description(aself->asKJob(),
-//                                          QObject::tr("Scanning for music files"),
-//                                            QPair<QString,QString>(QObject::tr("Root URL:"), m_dir_url.toString()),
-//                                            QPair<QString,QString>(QObject::tr("Current file:"), file_url.toString()));
 
 				// Send this path to the future.
 //				report_and_control.reportResult(file_url.toString());
@@ -187,6 +183,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 //        qDb() << "EMITTING RESULT";
 
 //        aself->asKJob()->emitResult();
+
+        amlm_self->setSuccessFlag(true);
 
         qDb() << "LEAVING RUN";
 }

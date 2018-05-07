@@ -111,11 +111,11 @@ Q_SIGNALS:
 	/// @{
 
 	// This signal is emitted when this TW::Job is being processed by a thread.
-    void started(ThreadWeaver::JobPointer);
+//    void started(ThreadWeaver::JobPointer);
     // This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
-    void done(ThreadWeaver::JobPointer);
+//    void done(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
-    void failed(ThreadWeaver::JobPointer);
+//    void failed(ThreadWeaver::JobPointer);
 
     /// @}
 
@@ -140,8 +140,7 @@ Q_SIGNALS:
 
     /// @name Internal signals
 
-    /// Signal from KJob::doKill().
-    void signalKJobDoKill();
+    // @todo
 
     /// KJobTrackerInterface (== Watcher for KJob*s):
     /// https://cgit.kde.org/kcoreaddons.git/tree/src/lib/jobs/kjobtrackerinterface.h
@@ -241,6 +240,13 @@ public:
     /// @todo There's problems here.
     ThreadWeaver::JobPointer asTWJobPointer();
 
+    /// @name Public interface FBO TW:Job::run().
+    /// @{
+    /// FBO the success() call.
+    void setSuccessFlag(bool success);
+
+    /// @}
+
 public Q_SLOTS:
 
     /// @name KJob job control slots
@@ -319,6 +325,8 @@ protected:
     virtual void make_connections();
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     virtual void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+
+
 
     /// @}
 

@@ -40,9 +40,11 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job()
 
 AMLMJob::~AMLMJob()
 {
-    qDb() << "DESTRUCTOR";
+    qDb() << "DESTRUCTOR:" << objectName();
 
+    // Apparently can't explicitly delete a QSharedPointer<>.
 //    delete m_tw_job_qobj_decorator;
+    m_tw_job_qobj_decorator.reset();
 }
 
 void AMLMJob::requestAbort()
@@ -88,6 +90,13 @@ M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
     return retval;
 }
 
+void AMLMJob::setSuccessFlag(bool success)
+{
+    qDb() << "SETTING SUCCESS:" << success;
+    m_success = success;
+}
+
+
 //void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
 //{
 //    KJob::setProcessedAmount(unit, amount);
@@ -106,6 +115,7 @@ M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     // Essentially a duplicate of QObjectDecorator's implementation.
+    /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
 
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
 
@@ -117,7 +127,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 //    qDb() << "autoDelete()?:" << self->autoDelete();
 
-    Q_EMIT started(self);
+    Q_EMIT m_tw_job_qobj_decorator->started(self);
 
     ThreadWeaver::Job::defaultBegin(self, thread);
 }
@@ -127,6 +137,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
 
     // Essentially a duplicate of QObjectDecorator's implementation.
+    /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
 
@@ -135,7 +146,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     if(!self->success())
     {
         qWr() << "FAILED";
-        Q_EMIT /*TWJob*/ failed(self);
+        Q_EMIT /*TWJob*/ m_tw_job_qobj_decorator->failed(self);
     }
     else
     {
@@ -144,11 +155,12 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
         /*KJob*/ emitResult();
     }
     qDb() << "EMITTING DONE";
-    Q_EMIT /*TWJob*/ done(self);
+    Q_EMIT /*TWJob*/ m_tw_job_qobj_decorator->done(self);
 }
 
 bool AMLMJob::doKill()
 {
+    // KJob::doKill().
     qDb() << "DOKILL";
 
     // Kill the TW::Job.
@@ -163,14 +175,14 @@ bool AMLMJob::doKill()
 
 bool AMLMJob::doSuspend()
 {
-    /// @todo
+    /// @todo // KJob::doSuspend().
     qDb() << "TODO: DOSUSPEND";
     return false;
 }
 
 bool AMLMJob::doResume()
 {
-    /// @todo
+    /// @todo // KJob::doResume().
     qDb() << "TODO: DORESUME";
     return false;
 }
@@ -203,8 +215,8 @@ void AMLMJob::make_connections()
     /// @}
 
     // Connect up KJob signals/slots.
-    /// @todo Figure out how we're going to trigger KJob::result (emitResult()).
     connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
+    /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
     connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
 
     qDb() << "MADE CONNECTIONS, this:" << this;
@@ -215,6 +227,7 @@ void AMLMJob::make_connections()
  */
 void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    qDb() << "ENTER";
 
 }
 

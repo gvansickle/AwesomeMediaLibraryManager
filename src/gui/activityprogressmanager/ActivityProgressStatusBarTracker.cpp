@@ -43,7 +43,10 @@ ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarTracker::make_shared
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
-    unregisterJob(m_job);
+    if(m_job)
+    {
+        unregisterJob(m_job);
+    }
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
@@ -76,21 +79,25 @@ void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
 
 void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 {
+    Q_ASSERT(job);
     BASE_CLASS::registerJob(job);
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
 {
+    Q_ASSERT(job);
     BASE_CLASS::unregisterJob(job);
 }
 
 void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 {
+    Q_ASSERT(job);
     BASE_CLASS::registerJob(job->asKJobSP());
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
 {
+    Q_ASSERT(job);
     BASE_CLASS::unregisterJob(job->asKJobSP());
 }
 
@@ -236,7 +243,7 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
-
+    qDb() << "KJobTrk: FINISHED";
 }
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
