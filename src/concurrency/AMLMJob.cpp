@@ -180,9 +180,8 @@ void AMLMJob::make_connections()
 
     Q_ASSERT(!m_tw_job_qobj_decorator.isNull());
 
-    /// Qt::DirectConnection here to make this ~a function call.
-//    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
-    connect(this, &AMLMJob::signalKJobDoKill, this, &AMLMJob::onKJobDoKill, Qt::DirectConnection);
+    /// @name Connections from TW::QObjectDecorator->this.
+    /// @{
 
     // void started(ThreadWeaver::JobPointer);
     // This signal is emitted when this job is being processed by a thread.
@@ -199,6 +198,8 @@ void AMLMJob::make_connections()
     //  void failed(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
     connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::onTWFailed);
+
+    /// @}
 
     // Connect up KJob signals/slots.
     /// @todo Figure out how we're going to trigger KJob::result (emitResult()).

@@ -31,8 +31,8 @@ class QToolButton;
 //class KJob;
 #include "concurrency/AMLMJob.h"
 
-/*
- *
+/**
+ * The actual widget for displaying the status and progress of a single AMLMJob.
  */
 class BaseActivityProgressStatusBarWidget: public QFrame
 {

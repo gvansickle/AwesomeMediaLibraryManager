@@ -111,10 +111,19 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
     m_pause_resume_button->setIcon(QIcon::fromTheme("media-playback-pause"));
     setTips(m_pause_resume_button, tr("Pause/Resume"), tr("Pause or resume this operation"),
             tr("<h3>Pause/Resume</h3><br/>Pauses or resumes the operation"));
+    // Set button disable state based on what the job supports.
+M_WARNING("TODO: if is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
+    if(job)
+    {
+        m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
+    }
     m_cancel_button = new QToolButton(this);
     m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
     setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
-
+    if(job)
+    {
+        m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
+    }
 //    connect(m_cancel_button, SIGNAL(triggered()), job, SLOT(kill()));
 
     // The main layout.
