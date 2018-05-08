@@ -124,6 +124,14 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
         connect(m_cancel_button, &QToolButton::clicked, this, [=](){
             qDb() << "EMITTING CANCEL_JOB";
             Q_EMIT cancel_job(job);});
+
+        // Connect up the disconnect signal from the job.
+        connect(job, &AMLMJob::finished, this, [=](){
+            qDb() << "GOT FINISHED SIGNAL, DISCONNECTING FROM JOB:" << job;
+            disconnect(job, nullptr, m_cancel_button, nullptr);
+            disconnect(job, nullptr, this, nullptr);
+            deleteLater();
+            ;});
     }
     else
     {
