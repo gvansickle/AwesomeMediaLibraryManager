@@ -129,11 +129,13 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     // Essentially a duplicate of QObjectDecorator's implementation.
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
+
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
 
-    ThreadWeaver::Job::defaultEnd(self, thread);
-
+    // Call base class implementation.
+    // "job()->defaultEnd(self, thread);"
+    this->ThreadWeaver::Job::defaultEnd(self, thread);
 
     if(!self->success())
     {

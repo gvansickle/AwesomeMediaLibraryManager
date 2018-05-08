@@ -75,11 +75,14 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
 	// other things prevent thejob from being memory managed and deleted."
 
-    qDb() << "IN RUN, self:" << self << "TW self Status:" << self->status();
+    qDb() << "IN RUN, self/->:" << self << self.data() << "TW self Status:" << self->status();
+    qDb() << "IN RUN, this:" << this;
 
     AMLMJobPtr amlm_self = dynamic_cast<AMLMJobPtr>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
+    qDb() << "IN RUN, " << M_NAME_VAL(amlm_self);
     Q_CHECK_PTR(amlm_self);
-    KJob* kselfsp = amlm_self;//->asKJobSP();
+    KJob* kselfsp = amlm_self;
+    qDb() << "IN RUN, " << M_NAME_VAL(kselfsp);
     Q_CHECK_PTR(kselfsp);
 
 //    amlm_self->setAutoDelete(false);
@@ -135,8 +138,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 				num_possible_files = num_files_found_so_far + file_info.dir().count();
 
                 setProcessedAmount(KJob::Unit::Directories, num_discovered_dirs);
-                setTotalAmount(KJob::Unit::Directories, num_discovered_dirs);
-                setTotalAmount(KJob::Unit::Files, num_possible_files);
+                setTotalAmount(KJob::Unit::Directories, num_discovered_dirs+1);
+                setTotalAmount(KJob::Unit::Files, num_possible_files+1);
 //				report_and_control.setProgressRange(0, num_possible_files);
 			}
 			else if(file_info.isFile())
@@ -160,7 +163,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 //                qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();
 				// Update progress.
 //				report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
-                setTotalAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+                setTotalAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
                 setProcessedAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
                 setProcessedAmount(KJob::Unit::Files, num_files_found_so_far);
 			}
