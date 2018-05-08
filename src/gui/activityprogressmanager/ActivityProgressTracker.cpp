@@ -40,7 +40,7 @@
 ActivityProgressTracker::ActivityProgressTracker(QWidget *parent) : BASE_CLASS(parent),
     m_parent(parent)
 {
-    m_widget = new BaseActivityProgressStatusBarWidget(nullptr, parent);
+    m_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
 
     // Expand jobs button.
     auto button_show_all_jobs = new QToolButton(parent);
@@ -88,9 +88,9 @@ void ActivityProgressTracker::registerJob(AMLMJobPtr job)
 {
     // Create a new widget-based tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
-    auto pw = ActivityProgressStatusBarTracker::make_shared(job, this, m_parent);
+    auto pw = new BaseActivityProgressStatusBarWidget(job, this, m_parent);
     pw->m_is_job_registered = true;
-//    pw->setAttribute(Qt::WA_DeleteOnClose);
+    pw->setAttribute(Qt::WA_DeleteOnClose);
 
     m_activities_to_widgets_map.insert(job, pw);
 
@@ -98,15 +98,19 @@ void ActivityProgressTracker::registerJob(AMLMJobPtr job)
 
     /// @todo
 //    m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
-    m_expanding_frame_widget->addWidget(pw->widget(job));
+    m_expanding_frame_widget->addWidget(pw);
     m_expanding_frame_widget->reposition();
 
    BASE_CLASS::registerJob(job);
+
+//   QTimer::singleShot(500, this, SLOT(_k_showProgressWidget()));
 }
 
 void ActivityProgressTracker::unregisterJob(AMLMJobPtr job)
 {
     BASE_CLASS::unregisterJob(job);
+
+    /// @todo remove from to-be-shown queue.
 
     auto p_widget = m_activities_to_widgets_map.value(job, nullptr);
     if(!p_widget)
@@ -117,12 +121,6 @@ void ActivityProgressTracker::unregisterJob(AMLMJobPtr job)
     p_widget->m_is_job_registered = false;
 /// @todo:    p_widget->deref();
 
-//    if(!m_activities_to_widgets_map[job]->m_being_deleted)
-//    {
-//        m_expanding_frame_widget->removeWidget(m_activities_to_widgets_map[job]->widget(nullptr));
-//        delete m_activities_to_widgets_map[job];
-//    }
-    //    m_activities_to_widgets_map.remove(job);
 }
 
 void ActivityProgressTracker::toggleSubjobDisplay(bool checked)
@@ -150,6 +148,8 @@ void ActivityProgressTracker::onShowProgressWidget()
 void ActivityProgressTracker::finished(KJob *job)
 {
     qDb() << "FINISHED:" << job;
+
+/// @todo    pw->destroyLater();
 }
 
 void ActivityProgressTracker::showSubJobs()
@@ -223,15 +223,7 @@ QWidget *ActivityProgressTracker::widget(KJob *job)
 QWidget *ActivityProgressTracker::widget(AMLMJobPtr amlmjob)
 {
     /// Look up the widget for this job.
-    auto asbw = m_activities_to_widgets_map.value(amlmjob, nullptr);
-    if(asbw)
-    {
-        return asbw->widget(amlmjob);
-    }
-    else
-    {
-        return nullptr;
-    }
+    return m_activities_to_widgets_map.value(amlmjob, nullptr);
 }
 
 #define M_WIDGET_OR_RETURN(the_job) auto widget = qobject_cast<ActivityProgressStatusBarWidget*>(m_activities_to_widgets_map.value(job, nullptr)); \

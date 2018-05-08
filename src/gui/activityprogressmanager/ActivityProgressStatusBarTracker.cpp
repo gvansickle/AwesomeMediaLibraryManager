@@ -68,7 +68,7 @@ void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
 {
     // Create the widget.
 
-    m_widget = new BaseActivityProgressStatusBarWidget(job, parent);
+    m_widget = new BaseActivityProgressStatusBarWidget(job, this, parent);
 
     // Make the widget->tracker connections.
     connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);

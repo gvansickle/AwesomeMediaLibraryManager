@@ -71,7 +71,6 @@ public:
     ActivityProgressTracker *const q;
     AMLMJobPtr m_job;
     bool m_being_deleted;
-    bool m_is_job_registered { false };
 
 public Q_SLOTS:
     void registerJob(KJob *job) override;

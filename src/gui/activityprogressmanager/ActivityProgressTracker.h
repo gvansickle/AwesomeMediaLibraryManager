@@ -103,7 +103,7 @@ public Q_SLOTS:
     virtual void unregisterJob(AMLMJobPtr job);
 
 protected:
-    using ActiveActivitiesMap = QMap<AMLMJobPtr, ActivityProgressStatusBarWidgetPtr>;
+    using ActiveActivitiesMap = QMap<AMLMJobPtr, BaseActivityProgressStatusBarWidget*>;
 
     /// Map of all registered sub-Activities to sub-job-trackers.
     ActiveActivitiesMap m_activities_to_widgets_map;
@@ -115,10 +115,6 @@ protected:
 
     /// Showable/hidable window containing all sub-trackers.
     ExpandingFrameWidget* m_expanding_frame_widget {nullptr};
-    QDialog* m_exp_dlg {nullptr};
-    KToolTipWidget* m_kttw {nullptr};
-
-//    AMLMCompositeJob* m_composite_job {nullptr};
 
 protected Q_SLOTS:
 
@@ -126,10 +122,11 @@ protected Q_SLOTS:
 
     void onShowProgressWidget();
 
-
     /**
      * The following slots are inherited.
      */
+    /// Called when a job is finished, in any case.
+    /// It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
     /// KAbstractWidgetJobTracker implementation does nothing.
     void finished(KJob *job) override;
 //    void suspended(KJob *job) override;

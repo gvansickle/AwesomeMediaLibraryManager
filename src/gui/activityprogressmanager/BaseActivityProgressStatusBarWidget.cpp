@@ -37,7 +37,7 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget
 
 }
 
-BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(AMLMJobPtr job, QWidget *parent)
+BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(AMLMJobPtr job, KAbstractWidgetJobTracker* tracker, QWidget *parent)
     : BaseActivityProgressStatusBarWidget(parent)
 {
     // We have a vtable to this, go nuts with the virtual calls.
