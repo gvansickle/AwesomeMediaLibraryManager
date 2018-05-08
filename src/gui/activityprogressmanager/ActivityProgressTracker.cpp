@@ -98,15 +98,15 @@ void ActivityProgressTracker::registerJob(AMLMJobPtr job)
 
     /// @todo
 //    m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
-    m_expanding_frame_widget->addWidget(pw->widget(job->asKJobSP()));
+    m_expanding_frame_widget->addWidget(pw->widget(job));
     m_expanding_frame_widget->reposition();
 
-   BASE_CLASS::registerJob(job->asKJobSP());
+   BASE_CLASS::registerJob(job);
 }
 
 void ActivityProgressTracker::unregisterJob(AMLMJobPtr job)
 {
-    BASE_CLASS::unregisterJob(job->asKJobSP());
+    BASE_CLASS::unregisterJob(job);
 
     auto p_widget = m_activities_to_widgets_map.value(job, nullptr);
     if(!p_widget)

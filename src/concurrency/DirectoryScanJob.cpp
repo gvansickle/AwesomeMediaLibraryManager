@@ -27,17 +27,17 @@
 
 #include "utils/DebugHelpers.h"
 
-DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent) : BASE_CLASS(parent)
-{
-    setObjectName(uniqueQObjectName());//"DirectoryScannerAMLMJob");
-    qDb() << "STAGE 1 CONSTRUCTOR COMPLETE";
-}
+//DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent) : BASE_CLASS(parent)
+//{
+//    setObjectName(uniqueQObjectName());//"DirectoryScannerAMLMJob");
+//    qDb() << "STAGE 1 CONSTRUCTOR COMPLETE";
+//}
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-    : DirectoryScannerAMLMJob(parent) //< Get our vtable set up.
+    : AMLMJob(parent) //< Get our vtable set up. @todo STILL NEED THIS???
 {
 M_WARNING("TODO");
 
@@ -51,9 +51,6 @@ M_WARNING("TODO");
 
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
-
-    /// @note CALL TO VIRTUAL FROM CONSTRUCTOR.  This is OK here, since we're doing a two-stage construction.
-    set_QObjectdecorator();
 }
 
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent, const QUrl &dir_url,
@@ -71,7 +68,6 @@ DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
     qDb() << "DESTRUCTOR:" << objectName();
 }
 
-
 void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
 	// Per the instructions here: https://api.kde.org/frameworks/threadweaver/html/classThreadWeaver_1_1Job.html#a1dd5d0ec7e1953576d6fe787f3cfd30c
@@ -81,12 +77,12 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     qDb() << "IN RUN, self:" << self << "TW self Status:" << self->status();
 
-    AMLMJobPtr amlm_self = this;//qSharedPointerDynamicCast<AMLMJob>(self);
+    AMLMJobPtr amlm_self = dynamic_cast<AMLMJobPtr>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
     Q_CHECK_PTR(amlm_self);
-    auto kselfsp = amlm_self->asKJobSP();
+    KJob* kselfsp = amlm_self;//->asKJobSP();
     Q_CHECK_PTR(kselfsp);
 
-    amlm_self->setAutoDelete(false);
+//    amlm_self->setAutoDelete(false);
     qDb() << "IN RUN, KJob isAutoDelete()?:" << amlm_self->isAutoDelete();
 
 
@@ -97,9 +93,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     uint num_possible_files = 0;
     qint64 total_discovered_file_size_bytes = 0;
 
-    QString status_text = tr("Scanning for music files");
+    QString status_text = QObject::tr("Scanning for music files");
 
-    Q_EMIT description(kselfsp.data(), status_text,
+    Q_EMIT amlm_self->description(kselfsp, status_text,
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
@@ -109,7 +105,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 		while(m_dir_iterator.hasNext())
 		{
-            if(twWasCancelRequested())
+            if(amlm_self->twWasCancelRequested())
             {
                 // We've been cancelled.
                 qIn() << "CANCELLED";
@@ -156,7 +152,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
-                Q_EMIT infoMessage(kselfsp.data(), tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
+                Q_EMIT infoMessage(kselfsp, QObject::tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
 
 				// Send this path to the future.
 //				report_and_control.reportResult(file_url.toString());
@@ -189,16 +185,6 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         qDb() << "LEAVING RUN";
 }
 
-void DirectoryScannerAMLMJob::set_QObjectdecorator()
-{
-    qDb() << "SETTING QObjectDecorator";
-    // ThreadWeaver::QJobPointer::create(/*JobInterface *decoratee=*/this, /*bool autoDelete*/false, /*QObject *parent*/this)
-    m_tw_job_qobj_decorator = ThreadWeaver::QJobPointer::create(/* Decoratee==the derived this=*/this, false, this);
-
-    qDb() << "TELLING BASECLASS TO MAKE CONNECTIONS";
-    // Have the base class make the connections.
-    make_connections();
-}
 
 
 

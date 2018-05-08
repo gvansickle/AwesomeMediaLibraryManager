@@ -36,7 +36,7 @@ using DirectoryScannerAMLMJobPtr = DirectoryScannerAMLMJob*;//QSharedPointer<Dir
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob, public QEnableSharedFromThis<DirectoryScannerAMLMJob>, private UniqueIDMixin<DirectoryScannerAMLMJob>
+class DirectoryScannerAMLMJob : public AMLMJob, /*public QEnableSharedFromThis<DirectoryScannerAMLMJob>,*/ private UniqueIDMixin<DirectoryScannerAMLMJob>
 {
     Q_OBJECT
 
@@ -58,7 +58,7 @@ class DirectoryScannerAMLMJob : public AMLMJob, public QEnableSharedFromThis<Dir
 
 protected:
     /// First-stage constructor.
-    explicit DirectoryScannerAMLMJob(QObject* parent);
+//    explicit DirectoryScannerAMLMJob(QObject* parent);
 
 public:
     explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,
@@ -72,13 +72,11 @@ public:
                                                   QDir::Filters filters = QDir::NoFilter,
                                                   QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
 
-	~DirectoryScannerAMLMJob() override;
+    ~DirectoryScannerAMLMJob() override;
 
 protected:
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
-
-    void set_QObjectdecorator() override;
 
     /// Make the internal signal-slot connections.
 //    void make_connections() override;
@@ -89,11 +87,9 @@ private:
 
     QUrl m_dir_url;
     QStringList m_nameFilters;
-	QDir::Filters m_dir_filters;
-	QDirIterator::IteratorFlags m_iterator_flags;
+    QDir::Filters m_dir_filters;
+    QDirIterator::IteratorFlags m_iterator_flags;
+
 };
-
-
-
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

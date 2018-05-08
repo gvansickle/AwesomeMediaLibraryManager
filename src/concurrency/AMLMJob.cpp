@@ -21,30 +21,21 @@
 
 #include <QPointer>
 #include <ThreadWeaver/Job>
+#include <ThreadWeaver/IdDecorator>
 
 #include "utils/DebugHelpers.h"
 #include "utils/UniqueIDMixin.h"
 
-/**
- * @todo Static factory function.
- */
 
-
-AMLMJob::AMLMJob(QObject *parent) : KJob(parent), ThreadWeaver::Job()
+AMLMJob::AMLMJob(QObject *parent)
+    : KJob(parent), ThreadWeaver::Job()
 {
-    /// @warning  We DO NOT Attach the TW::Job to our QObjectDecorator here, since we need the derived object's this,
-    /// not the AMLMJob this.
-
-    setObjectName("AMLMJOB");//uniqueQObjectName());
+    qDb() << M_NAME_VAL(this);
 }
 
 AMLMJob::~AMLMJob()
 {
     qDb() << "DESTRUCTOR:" << objectName();
-
-    // Apparently can't explicitly delete a QSharedPointer<>.
-//    delete m_tw_job_qobj_decorator;
-    m_tw_job_qobj_decorator.reset();
 }
 
 void AMLMJob::requestAbort()
@@ -62,40 +53,39 @@ void AMLMJob::start()
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
 }
 
-QPointer<KJob> AMLMJob::asKJobSP()
-{
-    Q_CHECK_PTR(this);
+//QPointer<KJob> AMLMJob::asKJobSP()
+//{
+//    Q_CHECK_PTR(this);
 
-//    auto shthis = sharedFromThis();
-//    auto retval = (QPointer<KJob>)(qobject_cast<KJob>(this));
-    QPointer<KJob> retval = this;
-    Q_CHECK_PTR(retval);
+////    auto shthis = sharedFromThis();
+////    auto retval = (QPointer<KJob>)(qobject_cast<KJob>(this));
+//    QPointer<KJob> retval = this;
+//    Q_CHECK_PTR(retval);
 
-    return retval;
-}
+//    return retval;
+//}
 
-ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
-{
-M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
-    Q_CHECK_PTR(this);
+//ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
+//{
+//M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
+//    Q_CHECK_PTR(this);
 
-    // ThreadWeaver::JobPointer is a QSharedPointer<TW::JobInterface>, so
-    // we need to make sure we return a sp which doesn't duplicate the ref count.
+//    // ThreadWeaver::JobPointer is a QSharedPointer<TW::JobInterface>, so
+//    // we need to make sure we return a sp which doesn't duplicate the ref count.
 
-//    auto retval = this->sharedFromThis();
-    ThreadWeaver::JobPointer retval = m_tw_job_qobj_decorator;
+////    auto retval = this->sharedFromThis();
+////    ThreadWeaver::JobPointer retval = m_tw_job_qobj_decorator;
 
-    Q_ASSERT(retval);
+////    Q_ASSERT(retval);
 
-    return retval;
-}
+//    return this;
+//}
 
 void AMLMJob::setSuccessFlag(bool success)
 {
     qDb() << "SETTING SUCCESS:" << success;
     m_success = success;
 }
-
 
 //void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
 //{
@@ -114,10 +104,11 @@ void AMLMJob::setSuccessFlag(bool success)
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    qDb() << "ENTER defaultBegin, self/this:" << self << this;
+
     // Essentially a duplicate of QObjectDecorator's implementation.
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
 
-    qDb() << "ENTER defaultBegin, self/this:" << self << this;
 
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
@@ -127,7 +118,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 //    qDb() << "autoDelete()?:" << self->autoDelete();
 
-    Q_EMIT m_tw_job_qobj_decorator->started(self);
+    Q_EMIT started(self);
 
     ThreadWeaver::Job::defaultBegin(self, thread);
 }
@@ -143,10 +134,11 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     ThreadWeaver::Job::defaultEnd(self, thread);
 
+
     if(!self->success())
     {
         qWr() << "FAILED";
-        Q_EMIT /*TWJob*/ m_tw_job_qobj_decorator->failed(self);
+        Q_EMIT /*TWJob*/ this->failed(self);
     }
     else
     {
@@ -155,7 +147,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
         /*KJob*/ emitResult();
     }
     qDb() << "EMITTING DONE";
-    Q_EMIT /*TWJob*/ m_tw_job_qobj_decorator->done(self);
+    Q_EMIT /*TWJob*/ this->done(self);
 }
 
 bool AMLMJob::doKill()
@@ -191,9 +183,9 @@ void AMLMJob::make_connections()
 {
     qDb() << "MAKING CONNECTIONS, this:" << this;
 
-    Q_ASSERT(!m_tw_job_qobj_decorator.isNull());
+//    Q_ASSERT(!m_tw_job_qobj_decorator.isNull());
 
-    /// @name Connections from TW::QObjectDecorator->this.
+    /// @name TW::IdDecorator connections.
     /// @{
 
     // void started(ThreadWeaver::JobPointer);
@@ -202,15 +194,15 @@ void AMLMJob::make_connections()
     /// @todo Could we get rid of the internal QObjectDecorator?
     /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
     /// @note The .data() deref is necessary, connect can't otherwise connect through a QSharedPointer.
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::started, this, &AMLMJob::onTWStarted);
+    connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
 
     //  void done(ThreadWeaver::JobPointer);
     // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::done, this, &AMLMJob::onTWDone);
+    connect(this, &AMLMJob::done, this, &AMLMJob::onTWDone);
 
     //  void failed(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
-    connect(m_tw_job_qobj_decorator.data(), &ThreadWeaver::QObjectDecorator::failed, this, &AMLMJob::onTWFailed);
+    connect(this, &AMLMJob::failed, this, &AMLMJob::onTWFailed);
 
     /// @}
 

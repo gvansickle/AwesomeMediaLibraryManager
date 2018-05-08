@@ -80,7 +80,8 @@ using AMLMJobPtr = AMLMJob*; //QSharedPointer<AMLMJob>;
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromThis<AMLMJob>//, private UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public ThreadWeaver::Job
+        //, public QEnableSharedFromThis<AMLMJob>//, private UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
@@ -107,15 +108,16 @@ class AMLMJob: public KJob, public ThreadWeaver::Job, public QEnableSharedFromTh
 
 
 Q_SIGNALS:
+
     /// ThreadWeaver::QObjectDecorator-like signals, only three:
 	/// @{
 
 	// This signal is emitted when this TW::Job is being processed by a thread.
-//    void started(ThreadWeaver::JobPointer);
+    void started(ThreadWeaver::JobPointer);
     // This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
-//    void done(ThreadWeaver::JobPointer);
+    void done(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
-//    void failed(ThreadWeaver::JobPointer);
+    void failed(ThreadWeaver::JobPointer);
 
     /// @}
 
@@ -178,6 +180,7 @@ protected:
     /// @warning This is an abstract base class, there is no AMLMJob::create().
     ///
     explicit AMLMJob(QObject* parent = nullptr);
+//    explicit AMLMJob(ThreadWeaver::JobInterface* job, bool auto_delete = true, QObject* parent = nullptr);
 
 public:
     AMLMJob() = delete;
@@ -189,10 +192,10 @@ public:
     /// @{
 
     /// To a TW JobPointer, i.e. a QPointer<JobInterface>.
-    explicit operator ThreadWeaver::JobPointer() { return asTWJobPointer(); }
+//    explicit operator ThreadWeaver::JobPointer() { return asTWJobPointer(); }
 
     /// To a QPointer<KJob>.
-    explicit operator QPointer<KJob>() { return asKJobSP(); }
+//    explicit operator QPointer<KJob>() { return asKJobSP(); }
 
     /// @}
 
@@ -234,12 +237,6 @@ public:
 
     /// @}
 
-    QPointer<KJob> asKJobSP();
-
-    /// Convenience member for getting a ThreadWeaver::JobPointer (QPointer<JobInterface>) to this.
-    /// @todo There's problems here.
-    ThreadWeaver::JobPointer asTWJobPointer();
-
     /// @name Public interface FBO TW:Job::run().
     /// @{
     /// FBO the success() call.
@@ -264,7 +261,7 @@ public Q_SLOTS:
 
 protected:
 
-    /// @name Override of TW::Job protected functions.
+    /// @name Override of TW::IdDecorator protected functions.
     /// @{
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
@@ -313,13 +310,10 @@ protected:
 //    void setError(int errorCode);
 //    void setErrorText(const QString &errorText);
 
-    /// @}
+    /// @} /// END Override of KJob protected functions.
 
     /// @name New protected methods
     /// @{
-
-    /// Override to set up the QObjectDecorator from the derived class, not this base class.
-    virtual void set_QObjectdecorator() = 0;
 
     /// Make the internal signal-slot connections.
     virtual void make_connections();
@@ -333,6 +327,7 @@ protected:
     /// New protected ThreadWeaver::Job-related members.
     /// @{
 
+public:
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
     bool twWasCancelRequested() const { return m_flag_cancel != 0; }
 
@@ -382,10 +377,9 @@ protected:
      *  that to the derived class's constructor.  The decorator is holding a ref to the TW::Job, not the other way around like
      *  we're (trying) to do here.
      *
-     * @see set_QObjectdecorator()
      *
      */
-    ThreadWeaver::QJobPointer m_tw_job_qobj_decorator { nullptr };
+//    ThreadWeaver::QJobPointer m_tw_job_qobj_decorator { nullptr };
 
 private:
 

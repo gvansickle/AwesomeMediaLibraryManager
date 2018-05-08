@@ -92,13 +92,13 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
 void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 {
     Q_ASSERT(job);
-    BASE_CLASS::registerJob(job->asKJobSP());
+    BASE_CLASS::registerJob(job);
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
 {
     Q_ASSERT(job);
-    BASE_CLASS::unregisterJob(job->asKJobSP());
+    BASE_CLASS::unregisterJob(job);
 }
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
