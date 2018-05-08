@@ -109,7 +109,6 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     // Essentially a duplicate of QObjectDecorator's implementation.
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
 
-
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
 
@@ -120,7 +119,8 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
     Q_EMIT started(self);
 
-    ThreadWeaver::Job::defaultBegin(self, thread);
+    // "job()->defaultBegin(self, thread);"
+    this->ThreadWeaver::Job::defaultBegin(self, thread);
 }
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
@@ -145,7 +145,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     else
     {
         qDb() << "Succeeded";
-        // Only emitted on success.
+        // Only call this on success.
         /*KJob*/ emitResult();
     }
     qDb() << "EMITTING DONE";
@@ -210,6 +210,8 @@ void AMLMJob::make_connections()
 
     // Connect up KJob signals/slots.
     connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
+    // Emitted by calling emitResult().
+    // Intended to notify UIs that should detach.
     /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
     connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
 

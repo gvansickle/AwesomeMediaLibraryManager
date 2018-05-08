@@ -121,7 +121,9 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
         M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
-        connect(m_cancel_button, &QToolButton::triggered, this, [=](){ Q_EMIT cancel_job(job);});
+        connect(m_cancel_button, &QToolButton::clicked, this, [=](){
+            qDb() << "EMITTING CANCEL_JOB";
+            Q_EMIT cancel_job(job);});
     }
     else
     {
