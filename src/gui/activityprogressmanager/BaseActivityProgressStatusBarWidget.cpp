@@ -25,6 +25,7 @@
 #include <QHBoxLayout>
 
 //#include <KJob>
+#include <KAbstractWidgetJobTracker>
 
 #include <gui/helpers/Tips.h>
 #include <utils/DebugHelpers.h>
@@ -40,6 +41,9 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget
 BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(AMLMJobPtr job, KAbstractWidgetJobTracker* tracker, QWidget *parent)
     : BaseActivityProgressStatusBarWidget(parent)
 {
+    m_tracker = tracker;
+    m_job = job;
+
     // We have a vtable to this, go nuts with the virtual calls.
     /// @note job is currently unused by init().
     init(job, parent);
@@ -124,6 +128,7 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
         connect(m_cancel_button, &QToolButton::clicked, this, [=](){
             qDb() << "EMITTING CANCEL_JOB";
             Q_EMIT cancel_job(job);});
+        connect(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
         // Connect up the disconnect signal from the job.
         connect(job, &AMLMJob::finished, this, [=](){
@@ -149,4 +154,18 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
     layout->addWidget(m_cancel_button);
 
     setLayout(layout);
+}
+
+void BaseActivityProgressStatusBarWidget::stop()
+{
+   if(m_is_job_registered)
+   {
+       m_tracker->slotStop(m_job);
+   }
+   close(); /// @todo closeNow();
+}
+
+void BaseActivityProgressStatusBarWidget::pause_resume(bool)
+{
+
 }

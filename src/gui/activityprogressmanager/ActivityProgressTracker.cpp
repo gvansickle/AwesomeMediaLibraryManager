@@ -52,7 +52,6 @@ ActivityProgressTracker::ActivityProgressTracker(QWidget *parent) : BASE_CLASS(p
 
     m_expanding_frame_widget = new ExpandingFrameWidget();
     m_expanding_frame_widget->hide();
-//    m_kttw = new KToolTipWidget(MainWindow::instance());
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressTracker::toggleSubjobDisplay);
 }
@@ -103,7 +102,7 @@ void ActivityProgressTracker::registerJob(AMLMJobPtr job)
 
    BASE_CLASS::registerJob(job);
 
-//   QTimer::singleShot(500, this, SLOT(_k_showProgressWidget()));
+   QTimer::singleShot(500, this, &ActivityProgressTracker::onShowProgressWidget);
 }
 
 void ActivityProgressTracker::unregisterJob(AMLMJobPtr job)
@@ -207,7 +206,6 @@ void ActivityProgressTracker::showSubJobs()
 void ActivityProgressTracker::hideSubJobs()
 {
     m_expanding_frame_widget->hide();
-//    m_kttw->hideLater();
 }
 
 void ActivityProgressTracker::subjobFinished(KJob *job)

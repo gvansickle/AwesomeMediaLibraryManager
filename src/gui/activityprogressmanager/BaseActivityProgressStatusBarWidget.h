@@ -86,6 +86,9 @@ protected:
     KAbstractWidgetJobTracker* m_tracker;
     AMLMJobPtr m_job;
 
+protected Q_SLOTS:
+    void stop();
+    void pause_resume(bool);
 
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
