@@ -70,6 +70,9 @@ public:
     virtual void setInfoMessage(const QString &text);
     virtual void setWarning(const QString &text);
 
+    // Cribbed from KWidgetJobTracker.
+    void ref();
+    void deref();
 
     bool m_is_job_registered { false };
 
@@ -82,6 +85,13 @@ protected:
     /// Create the widget.
     /// Called by the public constructor.
     virtual void init(AMLMJobPtr job, QWidget *parent);
+
+    void closeEvent(QCloseEvent* event) override;
+
+    // Cribbed from KWidgetJobTracker.
+    void closeNow();
+
+    int m_refcount {0};
 
     KAbstractWidgetJobTracker* m_tracker;
     AMLMJobPtr m_job;

@@ -69,6 +69,7 @@ QWidget* ActivityProgressTracker::RootWidget()
 
 void ActivityProgressTracker::registerJob(KJob *job)
 {
+    Q_ASSERT(0);
     KAbstractWidgetJobTracker::registerJob(job);
 
     QTimer::singleShot(500, this, &ActivityProgressTracker::onShowProgressWidget);
@@ -76,7 +77,18 @@ void ActivityProgressTracker::registerJob(KJob *job)
 
 void ActivityProgressTracker::unregisterJob(KJob *job)
 {
-    KAbstractWidgetJobTracker::unregisterJob(job);
+    auto amlmptr = qobject_cast<AMLMJobPtr>(job);
+    if(amlmptr)
+    {
+        qWr() << "GOT AMLMPTR as KJOB*, forwarding";
+        // Forward to the AMLM unregister.
+        unregisterJob(amlmptr);
+    }
+    else
+    {
+        Q_ASSERT(0);
+        KAbstractWidgetJobTracker::unregisterJob(job);
+    }
 
     /// @todo removeAll(job) from queue.
 
@@ -118,8 +130,7 @@ void ActivityProgressTracker::unregisterJob(AMLMJobPtr job)
     }
 
     p_widget->m_is_job_registered = false;
-/// @todo:    p_widget->deref();
-
+    p_widget->deref();
 }
 
 void ActivityProgressTracker::toggleSubjobDisplay(bool checked)

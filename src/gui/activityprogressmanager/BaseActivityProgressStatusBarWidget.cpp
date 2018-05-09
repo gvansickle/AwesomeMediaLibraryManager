@@ -56,7 +56,7 @@ BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
 
 void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
 {
-//    new_button->setParent(this->parentWidget());
+    // Reparents the button.
     layout()->addWidget(new_button);
 }
 
@@ -119,7 +119,7 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
     m_cancel_button->setIcon(QIcon::fromTheme("process-stop"));
     setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
 
-    // Set button disable states based on what the job supports.
+    // Set button disable states/make connections/etc. based on what the job supports.
     if(job)
     {
         M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
@@ -156,15 +156,74 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
     setLayout(layout);
 }
 
+void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
+{
+    if(m_is_job_registered && m_tracker->stopOnClose(m_job))
+    {
+        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+                                  Q_ARG(KJob*, m_job));
+    }
+
+    QWidget::closeEvent(event);
+}
+
+void BaseActivityProgressStatusBarWidget::ref()
+{
+    m_refcount++;
+}
+
+void BaseActivityProgressStatusBarWidget::deref()
+{
+    if(m_refcount)
+    {
+        m_refcount--;
+    }
+
+    if(!m_refcount)
+    {
+        if(true/*!keep open*/)
+        {
+            closeNow();
+        }
+        else
+        {
+//            slotClean();
+        }
+    }
+}
+
+void BaseActivityProgressStatusBarWidget::closeNow()
+{
+    close();
+
+    /// @todo Haven't analyzed the following scenario:
+    /// // It might happen the next scenario:
+    /// - Start a job which opens a progress widget. Keep it open. Address job is 0xdeadbeef
+    /// - Start a new job, which is given address 0xdeadbeef. A new window is opened.
+    ///   This one will take much longer to complete. The key 0xdeadbeef on the widget map now
+    ///   stores the new widget address.
+    /// - Close the first progress widget that was opened (and has already finished) while the
+    ///   last one is still running. We remove its reference on the map. Wrong.
+    /// For that reason we have to check if the map stores the widget as the current one.
+    /// ereslibre
+
+//    if (m_tracker->d->progressWidget[m_job] == this)
+//    {
+//        m_tracker->d->progressWidget.remove(m_job);
+//        m_tracker->d->progressWidgetsToBeShown.removeAll(m_job);
+//    }
+}
+
 void BaseActivityProgressStatusBarWidget::stop()
 {
    if(m_is_job_registered)
    {
+       // Notify that the job has been killed.
+       // Calls job->kill(KJob::EmitResults) then emits stopped(job).
        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
                                  Q_ARG(KJob*, m_job));
-//       m_tracker->slotStop(m_job);
    }
-   close(); /// @todo closeNow();
+   closeNow();
 }
 
 void BaseActivityProgressStatusBarWidget::pause_resume(bool)
