@@ -160,7 +160,9 @@ void BaseActivityProgressStatusBarWidget::stop()
 {
    if(m_is_job_registered)
    {
-       m_tracker->slotStop(m_job);
+       QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+                                 Q_ARG(KJob*, m_job));
+//       m_tracker->slotStop(m_job);
    }
    close(); /// @todo closeNow();
 }
