@@ -25,20 +25,14 @@
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 
-ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
+ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker *parent_tracker, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
-      q(object), m_job(job), m_being_deleted(false)
+      m_parent_tracker(parent_tracker), m_job(job)
 {
     // Create the widget.
     init(job, parent);
     // Register the job.
     registerJob(job);
-}
-
-ActivityProgressStatusBarWidgetPtr ActivityProgressStatusBarTracker::make_shared(AMLMJobPtr job, ActivityProgressTracker *object, QWidget *parent)
-{
-//    return ActivityProgressStatusBarWidgetPtr::create(job, object, parent);
-    return new ActivityProgressStatusBarTracker(job, object, parent);
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
@@ -75,7 +69,8 @@ void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
     connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
     connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
 
-#error "Make the tracker->widget connections.
+M_WARNING("TODO: Make the tracker->widget connections.");
+M_WARNING("TODO: Make the tracker->parent_tracker connections.");
 }
 
 

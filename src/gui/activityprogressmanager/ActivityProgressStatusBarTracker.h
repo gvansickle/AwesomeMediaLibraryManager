@@ -55,11 +55,9 @@ class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker//, publ
 
     using BASE_CLASS = KAbstractWidgetJobTracker;
 
-public: /// @todo private:
-    ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker* object, QWidget *parent);
-
 public:
-    static ActivityProgressStatusBarWidgetPtr make_shared(AMLMJobPtr job, ActivityProgressTracker* object, QWidget *parent);
+    ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker* parent_tracker, QWidget *parent);
+
     ~ActivityProgressStatusBarTracker() override;
 
     /// Override of pure virtual base class version.  Takes a raw KJob*.
@@ -67,10 +65,11 @@ public:
 
     virtual QWidget* widget(AMLMJobPtr job);
 
+    /// The tracker tracking this tracker.
+    ActivityProgressTracker* m_parent_tracker {nullptr};
 
-    ActivityProgressTracker *const q;
-    AMLMJobPtr m_job;
-    bool m_being_deleted;
+    /// The AMLMJob being tracked by this tracker.
+    AMLMJobPtr m_job { nullptr };
 
 public Q_SLOTS:
     void registerJob(KJob *job) override;
