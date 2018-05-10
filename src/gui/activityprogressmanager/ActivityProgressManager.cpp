@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/activityprogressmanager/ActivityProgressTracker.h>
+#include <gui/activityprogressmanager/ActivityProgressMultiTracker.h>
 #include "ActivityProgressManager.h"
 
 /// QT5

@@ -37,7 +37,7 @@ class KJob;
 /// Ours
 //#include "BaseActivityProgressWidget.h"
 #include <concurrency/AMLMJob.h>
-class ActivityProgressTracker;
+class ActivityProgressMultiTracker;
 class BaseActivityProgressStatusBarWidget;
 
 
@@ -56,7 +56,7 @@ class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker//, publ
     using BASE_CLASS = KAbstractWidgetJobTracker;
 
 public:
-    ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker* parent_tracker, QWidget *parent);
+    ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent);
 
     ~ActivityProgressStatusBarTracker() override;
 
@@ -66,7 +66,7 @@ public:
     virtual QWidget* widget(AMLMJobPtr job);
 
     /// The tracker tracking this tracker.
-    ActivityProgressTracker* m_parent_tracker {nullptr};
+    ActivityProgressMultiTracker* m_parent_tracker {nullptr};
 
     /// The AMLMJob being tracked by this tracker.
     AMLMJobPtr m_job { nullptr };

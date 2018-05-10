@@ -78,7 +78,7 @@ class CollectionDockWidget;
 class ActivityProgressWidget;
 class ActivityProgressDialog;
 class ActivityProgressManager;
-class ActivityProgressTracker;
+class ActivityProgressMultiTracker;
 
 class ActionBundle;
 class PlayerControls;
@@ -514,7 +514,7 @@ private:
     ActivityProgressWidget* m_activity_progress_widget;
 
 #if HAVE_KF501
-    ActivityProgressTracker* m_kf5_activity_progress_widget { nullptr };
+    ActivityProgressMultiTracker* m_kf5_activity_progress_widget { nullptr };
 
     /// Status dialog.
     ActivityProgressDialog* m_status_dlg { nullptr };

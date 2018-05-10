@@ -120,7 +120,7 @@
 #include <gui/menus/ActionBundle.h>
 #include <gui/menus/HelpMenu.h>
 #include <KXmlGui/KEditToolBar>
-#include <gui/activityprogressmanager/ActivityProgressTracker.h>
+#include <gui/activityprogressmanager/ActivityProgressMultiTracker.h>
 
 #include "concurrency/ExtAsync.h"
 
@@ -1983,7 +1983,7 @@ void MainWindow::registerJob(AMLMJobPtr new_job)
         // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
         // parent: "the parent of this object and of the widget displaying the job progresses"
 //        m_kf5_activity_progress_widget = new KStatusBarJobTracker(/*this*/statusBar(), /*display cancel button*/ true);
-        m_kf5_activity_progress_widget = new ActivityProgressTracker(statusBar());
+        m_kf5_activity_progress_widget = new ActivityProgressMultiTracker(statusBar());
         statusBar()->addPermanentWidget(m_kf5_activity_progress_widget->RootWidget());
     }
 //    KJobWidgets::setWindow(new_job, this);

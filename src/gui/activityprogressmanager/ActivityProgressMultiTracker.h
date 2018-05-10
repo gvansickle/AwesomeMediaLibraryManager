@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSTRACKER_H_
-#define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSTRACKER_H_
+#ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMULTITRACKER_H_
+#define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMULTITRACKER_H_
 
 /// QT5
 class QWidget;
@@ -45,10 +45,10 @@ class AMLMCompositeJob;
  *       KWidgetJobTracker.  The latter is great, but presents a UI really only suitable for use in a QDialog,
  *       while the former would be usable in a status bar, but is missing a lot of basic tracking functionality.
  *
- * @note Due to inheritenace from KAbstractWidgetJobTracker, one instance of this class tracks one AMLMJob instance.
+ * @note Due to inheritance from KAbstractWidgetJobTracker, one instance of this class tracks one AMLMJob instance.
  *       That's fine because that's the intent here.
  */
-class ActivityProgressTracker: public KAbstractWidgetJobTracker
+class ActivityProgressMultiTracker: public KAbstractWidgetJobTracker
 {
     Q_OBJECT
 
@@ -57,8 +57,8 @@ class ActivityProgressTracker: public KAbstractWidgetJobTracker
 Q_SIGNALS:
 
 public:
-    explicit ActivityProgressTracker(QWidget* parent = nullptr);
-    ~ActivityProgressTracker() override;
+    explicit ActivityProgressMultiTracker(QWidget* parent = nullptr);
+    ~ActivityProgressMultiTracker() override;
 
     /**
      * @link https://api.kde.org/frameworks/kcoreaddons/html/classKJobTrackerInterface.html
@@ -152,4 +152,4 @@ private:
 
 };
 
-#endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSTRACKER_H_ */
+#endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMULTITRACKER_H_ */

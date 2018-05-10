@@ -25,7 +25,7 @@
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 
-ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressTracker *parent_tracker, QWidget *parent)
+ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker *parent_tracker, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
       m_parent_tracker(parent_tracker), m_job(job)
 {
