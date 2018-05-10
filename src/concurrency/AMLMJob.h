@@ -122,10 +122,19 @@ Q_SIGNALS:
     /// @}
 
 	/// KJob signals, quite a few:
+    ///
 	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
+
+    /// "Emitted when the job is finished, in any case.
+    /// It is used to notify observers that the job is terminated and that progress can be hidden.
+    /// *** This is a private signal, it can't be emitted directly by subclasses of KJob, use emitResult() instead.
+    /// In general, to be notified of a job's completion, client code should connect to result() rather than finished(), so that kill(Quietly) is indeed quiet. However if you store a list of jobs
+    /// and they might get killed silently, then you must connect to this instead of result(), to avoid dangling pointers in your list."
     // void finished (KJob *job)
-	// void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
-	// void 	percent (KJob *job, unsigned long percent)
+
+    // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
+
+    // void 	percent (KJob *job, unsigned long percent)
 	// void 	processedAmount (KJob *job, KJob::Unit unit, qulonglong amount)
 	// void 	processedSize (KJob *job, qulonglong size)
     // void result (KJob *job)
@@ -296,7 +305,7 @@ protected:
      * Emit the result signal, and suicide this job.
      * @note Deletes this job using deleteLater(). It first notifies the observers to hide the
      *       progress for this job using the finished() signal.
-     *       KJob implementation calls finsihJob(), which:
+     *       KJob implementation calls finshJob(), which:
      *       - Sets isFinished = true
      *       - quit()s the internam event loop
      *       - emits finished(this);

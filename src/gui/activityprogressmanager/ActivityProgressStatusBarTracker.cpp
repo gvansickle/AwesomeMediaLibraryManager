@@ -74,6 +74,8 @@ void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
     connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
     connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
     connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
+
+#error "Make the tracker->widget connections.
 }
 
 
@@ -109,6 +111,7 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
     // Prefer rich if it's given.
+    qDb() << "INFOMESSAGE RECEIVED";
     m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
 }
 

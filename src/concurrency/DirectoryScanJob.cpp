@@ -85,7 +85,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     qDb() << "IN RUN, " << M_NAME_VAL(kselfsp);
     Q_CHECK_PTR(kselfsp);
 
-//    amlm_self->setAutoDelete(false);
+M_WARNING("TODO not sure if this is the right place to do this");
+    amlm_self->setAutoDelete(false);
+
     qDb() << "IN RUN, KJob isAutoDelete()?:" << amlm_self->isAutoDelete();
 
 
@@ -98,7 +100,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     QString status_text = QObject::tr("Scanning for music files");
 
-    Q_EMIT amlm_self->description(kselfsp, status_text,
+    Q_EMIT amlm_self->description(this, status_text,
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
@@ -131,7 +133,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 				QDir dir = file_info.absoluteDir();
                 num_discovered_dirs++;
 
-//                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
+                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
 
 				// Update the max range to be the number of files we know we've found so far plus the number
 				// of files potentially in this directory.
@@ -155,7 +157,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 				QUrl file_url = QUrl::fromLocalFile(entry_path);
 
-                Q_EMIT infoMessage(kselfsp, QObject::tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
+                Q_EMIT this->infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
 
 				// Send this path to the future.
 //				report_and_control.reportResult(file_url.toString());
