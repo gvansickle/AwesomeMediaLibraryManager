@@ -33,14 +33,32 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr jo
     init(job, parent);
     // Register the job.
     registerJob(job);
+
+    qDb() << "JOB PARENT:" << m_job->parent();
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
-    if(m_job)
-    {
-        unregisterJob(m_job);
-    }
+M_WARNING("TODO - CRASH");
+    /* We've already deleted our children before we get here:
+2   QObject::disconnect(QObject const *, const char *, QObject const *, const char *) qobject.cpp                          2983 0x7ffff2f3695a
+3   ActivityProgressStatusBarTracker::unregisterJob                                   ActivityProgressStatusBarTracker.cpp 116  0x4a7f8e
+4   ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker               ActivityProgressStatusBarTracker.cpp 42   0x4a7fe6
+5   ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker               ActivityProgressStatusBarTracker.cpp 38   0x4a8007
+6   QObjectPrivate::deleteChildren                                                    qobject.cpp                          1993 0x7ffff2f3829c
+7   QWidget::~QWidget                                                                 qwidget.cpp                          1703 0x7ffff3b353a2
+[...]
+*/
+    // Looks like m_job is our child, not completely clear where/how/why.  So we can't unregister here. ???
+//    if(m_job)
+//    {
+//        unregisterJob(m_job);
+//    }
+
+/**
+ * Not clear what's happening here. The DirScanJob is parented to Eperimental on construction.
+ */
+
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
@@ -88,6 +106,12 @@ void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
 {
     Q_ASSERT(job);
+
+    auto amlm_job = dynamic_cast<AMLMJobPtr>(job);
+    Q_ASSERT(amlm_job);
+
+    unregisterJob(amlm_job);
+
     BASE_CLASS::unregisterJob(job);
 }
 
