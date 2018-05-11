@@ -1978,18 +1978,16 @@ void MainWindow::registerJob(AMLMJobPtr new_job)
 //    statusBar()->show();
 
     // Usage modeled on https://github.com/KDE/kjobwidgets/blob/master/tests/kjobtrackerstest.cpp
-    if(!m_kf5_activity_progress_widget)
+    if(!m_activity_progress_multi_tracker)
     {
         // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
         // parent: "the parent of this object and of the widget displaying the job progresses"
-//        m_kf5_activity_progress_widget = new KStatusBarJobTracker(/*this*/statusBar(), /*display cancel button*/ true);
-        m_kf5_activity_progress_widget = new ActivityProgressMultiTracker(statusBar());
-        statusBar()->addPermanentWidget(m_kf5_activity_progress_widget->RootWidget());
+        m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
+        statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
     }
 //    KJobWidgets::setWindow(new_job, this);
-    m_kf5_activity_progress_widget->registerJob(new_job);
-//    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::ProgressOnly);//ProgressOnly, LabelOnly);
-//    statusBar()->addWidget(m_kf5_activity_progress_widget->widget(new_job));
+    m_activity_progress_multi_tracker->registerJob(new_job);
+
     statusBar()->show();
 
 //    if(!m_status_dlg)

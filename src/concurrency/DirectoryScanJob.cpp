@@ -39,7 +39,8 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &di
                                    QDirIterator::IteratorFlags flags)
     : AMLMJob(parent) //< Get our vtable set up. @todo STILL NEED THIS???
 {
-M_WARNING("TODO");
+    // Set our object name.
+    setObjectName(uniqueQObjectName());
 
     // Should be in the constructor list, but we're deferring to another constructor.
     // Jeez this language.....
@@ -75,7 +76,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
 	// other things prevent thejob from being memory managed and deleted."
 
-    qDb() << "IN RUN, self/->:" << self << self.data() << "TW self Status:" << self->status();
+    qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
 
     AMLMJobPtr amlm_self = dynamic_cast<AMLMJobPtr>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);

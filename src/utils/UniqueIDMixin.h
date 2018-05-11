@@ -26,25 +26,39 @@
 /// Qt5
 #include <QString>
 
+/// Ours
+#include <utils/crtp.h>
+
 template <typename T>
-class UniqueIDMixin
+class UniqueIDMixin : crtp<T, UniqueIDMixin>
 {
 	static std::atomic_uintmax_t m_next_id_num;
 
 	uintmax_t m_id_num;
 
 public:
-	UniqueIDMixin()
-	{
-		m_id_num = m_next_id_num;
-		m_next_id_num++;
-	}
 
-    QString uniqueQObjectName() const { return T::staticMetaObject.className() + QString("_") + id(); }
-	QString id() const { return QString("%1").arg(m_id_num); }
+    QString uniqueQObjectName() const
+    {
+        return T::staticMetaObject.className() + QString("_") + id();
+    }
+    QString id() const
+    {
+        return QString("%1").arg(m_id_num);
+    }
+
+private:
+    /// @note Private constructor and friended to T to avoid ambiguities
+    /// if this CRTP class is used as a base in several classes in a class hierarchy.
+    UniqueIDMixin()
+    {
+        m_id_num = m_next_id_num;
+        m_next_id_num++;
+    }
+    friend T;
 };
 
-//
+/// Per-type ID counter.
 template <typename T>
 std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
 

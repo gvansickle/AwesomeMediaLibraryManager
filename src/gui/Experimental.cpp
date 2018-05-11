@@ -156,9 +156,7 @@ void Experimental::DoExperiment()
 
 //    ActivityManager::instance()->addActivity(dsj);//.dynamicCast<ThreadWeaver::JobInterface>());
 //    ActivityManager::instance()->addActivity(dsj2);
-//    MainWindow::getInstance()->m_activity_progress_widget->addActivity(dsj);
 
-    /// @todo Does this transfer ownership/parentage?
 //    MainWindow::instance()->registerJob(dirsizejob);
     MainWindow::instance()->registerJob(dsj);
     MainWindow::instance()->registerJob(dsj2);

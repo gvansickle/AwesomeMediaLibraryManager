@@ -193,9 +193,6 @@ void AMLMJob::make_connections()
     // void started(ThreadWeaver::JobPointer);
     // This signal is emitted when this job is being processed by a thread.
     // internal QObjectDecorator->external QObjectDecorator interface.
-    /// @todo Could we get rid of the internal QObjectDecorator?
-    /// @answ No, because then AMLMJob would be multiply-derived from QObject twice, through KJob and TW::QObjectDecorator.
-    /// @note The .data() deref is necessary, connect can't otherwise connect through a QSharedPointer.
     connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
 
     //  void done(ThreadWeaver::JobPointer);
@@ -223,7 +220,7 @@ void AMLMJob::make_connections()
  */
 void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "ENTER";
+    qDb() << "ENTER connections_make_defaultBegin";
 
 }
 
@@ -232,31 +229,32 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
  */
 void AMLMJob::connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    qDb() << "ENTER connections_make_defaultExit";
 
 }
 
 void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
 {
-    qDb() << "ENTER";
+    qDb() << "ENTER onTWStarted";
 }
 
 void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
 {
-    qDb() << "ENTER";
+    qDb() << "ENTER onTWDone";
 }
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
 {
-    qDb() << "ENTER";
+    qDb() << "ENTER onTWFailed";
 }
 
 void AMLMJob::onKJobDoKill()
 {
-    qDb() << "ENTER";
+    qDb() << "ENTER onKJobDoKill";
 
 
 
-    qDb() << "EXIT";
+    qDb() << "EXIT onKJobDoKill";
 }
 
 void AMLMJob::onKJobResult(KJob *job)

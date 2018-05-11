@@ -80,7 +80,7 @@ using AMLMJobPtr = AMLMJob*; //QSharedPointer<AMLMJob>;
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job
+class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJob>
         //, public QEnableSharedFromThis<AMLMJob>//, private UniqueIDMixin<AMLMJob>
 {
 
@@ -106,6 +106,11 @@ class AMLMJob: public KJob, public ThreadWeaver::Job
     /// - KJob and its subclasses are meant to be used in a fire-and-forget way. Jobs will delete themselves when they finish using
     ///   deleteLater() (although this behaviour can be changed), so a job instance will disappear after the next event loop run.
 
+    /**
+     * @note CRTP: Still need this to avoid ambiguous name resolution.
+     * @see https://stackoverflow.com/a/46916924
+     */
+    using UniqueIDMixin<AMLMJob>::uniqueQObjectName;
 
 Q_SIGNALS:
 

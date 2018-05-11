@@ -29,6 +29,7 @@
 #include <ThreadWeaver/QObjectDecorator>
 
 #include "AMLMJob.h"
+#include "utils/UniqueIDMixin.h"
 
 class DirectoryScannerAMLMJob;
 using DirectoryScannerAMLMJobPtr = DirectoryScannerAMLMJob*;//QSharedPointer<DirectoryScannerAMLMJob>;
@@ -36,11 +37,17 @@ using DirectoryScannerAMLMJobPtr = DirectoryScannerAMLMJob*;//QSharedPointer<Dir
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob, /*public QEnableSharedFromThis<DirectoryScannerAMLMJob>,*/ private UniqueIDMixin<DirectoryScannerAMLMJob>
+class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectoryScannerAMLMJob>
 {
     Q_OBJECT
 
     using BASE_CLASS = AMLMJob;
+
+    /**
+     * @note CRTP: Still need this to avoid ambiguous name resolution.
+     * @see https://stackoverflow.com/a/46916924
+     */
+    using UniqueIDMixin<DirectoryScannerAMLMJob>::uniqueQObjectName;
 
 //Q_SIGNALS:
 //    /// ThreadWeaver::QObjectDecorator signals, only three:

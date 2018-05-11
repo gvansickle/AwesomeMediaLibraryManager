@@ -514,7 +514,7 @@ private:
     ActivityProgressWidget* m_activity_progress_widget;
 
 #if HAVE_KF501
-    ActivityProgressMultiTracker* m_kf5_activity_progress_widget { nullptr };
+    ActivityProgressMultiTracker* m_activity_progress_multi_tracker { nullptr };
 
     /// Status dialog.
     ActivityProgressDialog* m_status_dlg { nullptr };
