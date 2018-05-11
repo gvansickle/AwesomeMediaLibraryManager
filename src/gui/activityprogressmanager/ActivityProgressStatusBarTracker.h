@@ -35,7 +35,7 @@ class KJob;
 #include <QSharedPointer>
 
 /// Ours
-//#include "BaseActivityProgressWidget.h"
+#include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
 class ActivityProgressMultiTracker;
 class BaseActivityProgressStatusBarWidget;
@@ -49,11 +49,13 @@ using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;// 
  * K*WidgetJobTracker representing the progress/status/controls of a single KJob.
  * Suitable for use in a status bar.
  */
-class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker//, public QEnableSharedFromThis<ActivityProgressStatusBarTracker>
+class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker, public UniqueIDMixin<ActivityProgressStatusBarTracker>
 {
 	Q_OBJECT
 
     using BASE_CLASS = KAbstractWidgetJobTracker;
+
+    using UniqueIDMixin<ActivityProgressStatusBarTracker>::uniqueQObjectName;
 
 public:
     ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent);
@@ -77,6 +79,10 @@ public Q_SLOTS:
 
     virtual void registerJob(AMLMJobPtr job);
     virtual void unregisterJob(AMLMJobPtr job);
+
+    /// @todo Set in constructor.  Maybe shouldn't be?  Or construct these in MultiTracker?
+//    virtual void setParentTracker(KAbstractWidgetJobTracker* tracker);
+//    virtual void unsetParentTracker(KAbstractWidgetJobTracker* tracker);
 
 
 protected Q_SLOTS:

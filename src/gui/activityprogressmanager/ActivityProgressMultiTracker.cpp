@@ -35,7 +35,7 @@
 /// Ours
 #include <concurrency/AMLMCompositeJob.h>
 #include <gui/MainWindow.h>
-#include <src/gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+#include "ActivityProgressStatusBarTracker.h"
 #include "utils/DebugHelpers.h"
 
 ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BASE_CLASS(parent),
@@ -132,6 +132,16 @@ void ActivityProgressMultiTracker::unregisterJob(AMLMJobPtr job)
 
     p_widget->m_is_job_registered = false;
     p_widget->deref();
+}
+
+void ActivityProgressMultiTracker::registerTracker(KAbstractWidgetJobTracker *tracker)
+{
+    m_activities_to_widgets_map.va
+}
+
+void ActivityProgressMultiTracker::unregisterTracker(KAbstractWidgetJobTracker *tracker)
+{
+
 }
 
 void ActivityProgressMultiTracker::toggleSubjobDisplay(bool checked)

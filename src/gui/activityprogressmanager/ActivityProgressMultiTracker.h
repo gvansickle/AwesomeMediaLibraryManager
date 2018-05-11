@@ -31,7 +31,7 @@ class KToolTipWidget;
 #include <KAbstractWidgetJobTracker>
 
 /// Ours
-#include <src/gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+#include "ActivityProgressStatusBarTracker.h"
 class BaseActivityProgressStatusBarWidget;
 class ExpandingFrameWidget;
 class AMLMCompositeJob;
@@ -102,11 +102,17 @@ public Q_SLOTS:
     virtual void registerJob(AMLMJobPtr job);
     virtual void unregisterJob(AMLMJobPtr job);
 
+    /// This class doesn't handle jobs directly, but rather trackers attached to jobs.
+    virtual void registerTracker(KAbstractWidgetJobTracker* tracker);
+    virtual void unregisterTracker(KAbstractWidgetJobTracker* tracker);
+
 protected:
-    using ActiveActivitiesMap = QMap<AMLMJobPtr, BaseActivityProgressStatusBarWidget*>;
+    using ActiveActivitiesMap_DELETEME = QMap<AMLMJobPtr, BaseActivityProgressStatusBarWidget*>;
+    using ActiveActivitiesMap = QMap<AMLMJobPtr, ActivityProgressStatusBarTracker*>;
 
     /// Map of all registered sub-Activities to sub-job-trackers.
     ActiveActivitiesMap m_activities_to_widgets_map;
+
 
     QWidget* m_parent {nullptr};
 
