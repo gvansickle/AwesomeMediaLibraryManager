@@ -105,11 +105,12 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
 {
     Q_ASSERT(job);
+M_WARNING("TODO CRASHING HERE ON CLOSE");
+    // Call down to the base class first; widget may be deleted by deref() below.
+    BASE_CLASS::unregisterJob(job);
 
     m_widget->m_is_job_registered = false;
     m_widget->deref();
-
-    BASE_CLASS::unregisterJob(job);
 }
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)

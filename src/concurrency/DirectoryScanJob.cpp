@@ -185,7 +185,7 @@ M_WARNING("TODO not sure if this is the right place to do this");
 //        qDb() << "EMITTING RESULT";
 
 //        aself->asKJob()->emitResult();
-
+M_WARNING("TODO Not if cancelled");
         amlm_self->setSuccessFlag(true);
 
         qDb() << "LEAVING RUN";

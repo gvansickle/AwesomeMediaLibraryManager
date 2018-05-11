@@ -133,7 +133,7 @@ void ActivityProgressMultiTracker::unregisterJob(AMLMJobPtr job)
         return;
     }
     /// @todo less? More?
-    p_tracker->deleteLater();
+//    p_tracker->deleteLater();
 }
 
 void ActivityProgressMultiTracker::registerTracker(KAbstractWidgetJobTracker *tracker)
