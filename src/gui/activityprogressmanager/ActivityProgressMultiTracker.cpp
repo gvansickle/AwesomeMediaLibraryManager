@@ -122,15 +122,18 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 void ActivityProgressMultiTracker::unregisterJob(AMLMJobPtr job)
 {
     /// @todo Already unregistered in child tracker, need/want this too?
+    /// @answ Possibly, KAbstWJT keeps a map of jobs here too.  If we register above, we need to unregister.
     BASE_CLASS::unregisterJob(job);
 
-    /// @todo remove from to-be-shown queue.
+    /// @todo remove from to-be-shown queue?
 
     auto p_tracker = m_amlmjob_to_tracker_map.value(job, nullptr);
     if(!p_tracker)
     {
         return;
     }
+    /// @todo less? More?
+    p_tracker->deleteLater();
 }
 
 void ActivityProgressMultiTracker::registerTracker(KAbstractWidgetJobTracker *tracker)

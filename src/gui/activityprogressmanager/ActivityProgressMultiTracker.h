@@ -100,6 +100,17 @@ public Q_SLOTS:
     void unregisterJob(KJob *job) override;
 
     virtual void registerJob(AMLMJobPtr job);
+    /**
+     * From KJobTrackerInterface:
+     * "You need to manually call this method only if you re-implemented registerJob() without connecting KJob::finished to this slot."
+     * KJTI does this:
+     *  void KJobTrackerInterface::unregisterJob(KJob *job)
+     *  {
+     *     job->disconnect(this);
+     *  }
+     * KAbstractWJT just calls the above.
+     * KJTI does connect the signal->slot, so as long as we ultimately call the base class implementation in register we're good.
+     */
     virtual void unregisterJob(AMLMJobPtr job);
 
     /// This class doesn't handle jobs directly, but rather trackers attached to jobs.
