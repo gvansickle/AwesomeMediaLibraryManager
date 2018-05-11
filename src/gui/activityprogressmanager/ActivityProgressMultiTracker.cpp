@@ -41,6 +41,8 @@
 ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BASE_CLASS(parent),
     m_parent(parent)
 {
+	// The summary widget.
+	/// @todo nullptr AMLMJob.
     m_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
 
     // Expand jobs button.
@@ -98,45 +100,41 @@ void ActivityProgressMultiTracker::unregisterJob(KJob *job)
 
 void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 {
-    // Create a new widget-based tracker for this job.
+    // Create a new widget-based single-job tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
-    auto pw = new BaseActivityProgressStatusBarWidget(job, this, m_parent);
-    pw->m_is_job_registered = true;
-    pw->setAttribute(Qt::WA_DeleteOnClose);
+    auto new_tracker = new ActivityProgressStatusBarTracker(job, this, m_parent);
 
-    m_activities_to_widgets_map.insert(job, pw);
+    m_amlmjob_to_tracker_map.insert(job, new_tracker);
 
     /// @todo progressWidgetsToBeShown.enqueue(job);?
 
-    /// @todo
-//    m_expanding_frame_widget->addWidget(m_activities_to_widgets_map[job]->widget(nullptr));
-    m_expanding_frame_widget->addWidget(pw);
+    /// Add tracker's widget to the frame.
+    m_expanding_frame_widget->addWidget(m_amlmjob_to_tracker_map[job]->widget(job));
+//    m_expanding_frame_widget->addWidget(pw);
     m_expanding_frame_widget->reposition();
 
-   BASE_CLASS::registerJob(job);
+    /// @todo Already registered in child tracker, need/want this too?
+    BASE_CLASS::registerJob(job);
 
-   QTimer::singleShot(500, this, &ActivityProgressMultiTracker::onShowProgressWidget);
+    QTimer::singleShot(500, this, &ActivityProgressMultiTracker::onShowProgressWidget);
 }
 
 void ActivityProgressMultiTracker::unregisterJob(AMLMJobPtr job)
 {
+    /// @todo Already unregistered in child tracker, need/want this too?
     BASE_CLASS::unregisterJob(job);
 
     /// @todo remove from to-be-shown queue.
 
-    auto p_widget = m_activities_to_widgets_map.value(job, nullptr);
-    if(!p_widget)
+    auto p_tracker = m_amlmjob_to_tracker_map.value(job, nullptr);
+    if(!p_tracker)
     {
         return;
     }
-
-    p_widget->m_is_job_registered = false;
-    p_widget->deref();
 }
 
 void ActivityProgressMultiTracker::registerTracker(KAbstractWidgetJobTracker *tracker)
 {
-    m_activities_to_widgets_map.va
 }
 
 void ActivityProgressMultiTracker::unregisterTracker(KAbstractWidgetJobTracker *tracker)
@@ -243,7 +241,9 @@ QWidget *ActivityProgressMultiTracker::widget(KJob *job)
 QWidget *ActivityProgressMultiTracker::widget(AMLMJobPtr amlmjob)
 {
     /// Look up the widget for this job.
-    return m_activities_to_widgets_map.value(amlmjob, nullptr);
+    auto tracker = m_amlmjob_to_tracker_map.value(amlmjob, nullptr);
+    auto widget = tracker->widget(amlmjob);
+    return widget;
 }
 
 #define M_WIDGET_OR_RETURN(the_job) auto widget = qobject_cast<ActivityProgressStatusBarWidget*>(m_activities_to_widgets_map.value(job, nullptr)); \

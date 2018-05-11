@@ -111,7 +111,7 @@ protected:
     using ActiveActivitiesMap = QMap<AMLMJobPtr, ActivityProgressStatusBarTracker*>;
 
     /// Map of all registered sub-Activities to sub-job-trackers.
-    ActiveActivitiesMap m_activities_to_widgets_map;
+    ActiveActivitiesMap m_amlmjob_to_tracker_map;
 
 
     QWidget* m_parent {nullptr};

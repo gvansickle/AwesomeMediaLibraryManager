@@ -60,8 +60,7 @@ QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 
 void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
 {
-    // Create the widget.
-
+    // Create the widget for this new job.
     m_widget = new BaseActivityProgressStatusBarWidget(job, this, parent);
 
     // Make the widget->tracker connections.
@@ -77,6 +76,12 @@ M_WARNING("TODO: Make the tracker->parent_tracker connections.");
 void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 {
     Q_ASSERT(job);
+
+    auto amlm_job = dynamic_cast<AMLMJobPtr>(job);
+    Q_ASSERT(amlm_job);
+
+    registerJob(amlm_job);
+
     BASE_CLASS::registerJob(job);
 }
 
@@ -89,12 +94,21 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
 void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 {
     Q_ASSERT(job);
+
+    // Create the widget for this new job.
+	m_widget->m_is_job_registered = true;
+	m_widget->setAttribute(Qt::WA_DeleteOnClose);
+
     BASE_CLASS::registerJob(job);
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
 {
     Q_ASSERT(job);
+
+    m_widget->m_is_job_registered = false;
+    m_widget->deref();
+
     BASE_CLASS::unregisterJob(job);
 }
 
