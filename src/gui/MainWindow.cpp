@@ -144,7 +144,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
-    /// Set the signleton pointer.
+    // Set the signleton pointer.
     m_instance = this;
 
 
@@ -165,7 +165,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     ///       create more menus
     ///     ^^->show();
     ///   app.exec()
-	init();
+
+    // Do further init() in a separate function, but which we can still do in the constructor call.
+    init();
 }
 
 MainWindow::~MainWindow()
@@ -304,6 +306,13 @@ M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
     setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
+
+    // Create the master job tracker singleton.
+    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
+    // parent: "the parent of this object and of the widget displaying the job progresses"
+M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc above?");
+    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
+    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
 
     post_setupGUI_init();
 }
@@ -1329,12 +1338,17 @@ void MainWindow::addAction(const QString& action_name, QAction* action)
 
 ToolBarClass* MainWindow::addToolBar(const QString &win_title, const QString &object_name)
 {
-    // KMainWindow has a toolBar() factory function.  It takes a string, however that is used as
-    // the toolbar's objectName().
+    // KMainWindow has a toolBar() factory function.  It takes a "name" string, however that is used as
+    // the toolbar's objectName().  Need a windowTitle as well.
     auto retval = toolBar(object_name);
     retval->setWindowTitle(win_title);
 
     return retval;
+}
+
+ActivityProgressMultiTracker *MainWindow::master_tracker_instance()
+{
+
 }
 
 QDockWidget *MainWindow::addDock(const QString &title, const QString &object_name, QWidget *widget, Qt::DockWidgetArea area)

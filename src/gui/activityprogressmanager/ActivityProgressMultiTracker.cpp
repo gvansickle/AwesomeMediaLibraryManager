@@ -80,6 +80,7 @@ void ActivityProgressMultiTracker::registerJob(KJob *job)
 
 void ActivityProgressMultiTracker::unregisterJob(KJob *job)
 {
+M_WARNING("CRASH: Cancel can cause job == 0 here, not always though.");
     auto amlmptr = qobject_cast<AMLMJobPtr>(job);
     if(amlmptr)
     {

@@ -46,7 +46,7 @@ using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;// 
 
 
 /**
- * K*WidgetJobTracker representing the progress/status/controls of a single KJob.
+ * K*WidgetJobTracker representing the progress/status/controls of a single KJob/AMLMJob.
  * Suitable for use in a status bar.
  */
 class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker, public UniqueIDMixin<ActivityProgressStatusBarTracker>

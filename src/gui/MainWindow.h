@@ -95,7 +95,7 @@ class LibraryEntryMimeData;
  * Awesome Media Library Manager's MainWindow class.
  *
  * @note I suspect deriving from KXmlGuiWindow instead of KMainWindow, when I'm not using XML for the GUI,
- *       is going to bite me at some point.  But this gives me an actionCollection().  So there's that.
+ *       is going to bite me at some point (EDIT: == continuously).  But this gives me an actionCollection().  So there's that.
  */
 class MainWindow: public KXmlGuiWindow ///KMainWindow
 {
@@ -122,7 +122,6 @@ public:
 	/**
 	 * Get a pointer to the MainWindow singleton.
 	 */
-    Q_DECL_DEPRECATED static MainWindow* getInstance() { return instance();}
 	static QPointer<MainWindow> instance();
 
 	/// Init function to offload all the init which used to be in the constructor.
@@ -153,6 +152,11 @@ public:
                          Qt::DockWidgetArea area = Qt::TopDockWidgetArea);
 
     ToolBarClass* addToolBar(const QString &win_title, const QString& object_name);
+
+    /**
+     * Get ptr to the ActivityProgressMultiTracker singleton.
+     */
+    static ActivityProgressMultiTracker* master_tracker_instance();
 
 public Q_SLOTS:
 
@@ -514,6 +518,10 @@ private:
     ActivityProgressWidget* m_activity_progress_widget;
 
 #if HAVE_KF501
+    /**
+     * Master Tracker for all asynchronous activites.
+     * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
+     */
     ActivityProgressMultiTracker* m_activity_progress_multi_tracker { nullptr };
 
     /// Status dialog.

@@ -37,7 +37,7 @@ class ExpandingFrameWidget;
 class AMLMCompositeJob;
 
 /**
- * Base class for AMLMJob widget-based multiple-job trackers.
+ * (Base?) class for AMLMJob widget-based multiple-job trackers.
  *
  * Sort of a mix of KWidgetJobTracker and KStatusBarJobTracker, but better.
  *
@@ -45,8 +45,11 @@ class AMLMCompositeJob;
  *       KWidgetJobTracker.  The latter is great, but presents a UI really only suitable for use in a QDialog,
  *       while the former would be usable in a status bar, but is missing a lot of basic tracking functionality.
  *
- * @note Due to inheritance from KAbstractWidgetJobTracker, one instance of this class tracks one AMLMJob instance.
- *       That's fine because that's the intent here.
+ * @note Due to inheritance from KAbstractWidgetJobTracker, the assumption is that one instance of this class
+ *       tracks one AMLMJob instance.  In our use here, that's kind of not applicable, unless you make the
+ *       abstraction of all child trackers and jobs into a single "metaAMLMJob", which we don't have yet.
+ *       Causes complications; currently the KJob is a nullptr, which causes its own complications.
+ *
  */
 class ActivityProgressMultiTracker: public KAbstractWidgetJobTracker
 {
@@ -57,6 +60,10 @@ class ActivityProgressMultiTracker: public KAbstractWidgetJobTracker
 Q_SIGNALS:
 
 public:
+    /**
+     * Constructor.
+     * @note parent does have to be a QWidget not a QObject, since that's what the base class takes.
+     */
     explicit ActivityProgressMultiTracker(QWidget* parent = nullptr);
     ~ActivityProgressMultiTracker() override;
 

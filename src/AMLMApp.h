@@ -20,7 +20,11 @@
 #ifndef SRC_AMLMAPP_H_
 #define SRC_AMLMAPP_H_
 
+#include <config.h>
+
+/// Qt5
 #include <QApplication>
+
 
 /// Global pointer to the AMLMApp singleton.
 #define amlmApp (static_cast<AMLMApp*>(AMLMApp::instance()))
@@ -42,7 +46,6 @@ public:
     static AMLMApp* instance() { return static_cast<AMLMApp*>( qApp ); }
 
 private:
-
 
 };
 
