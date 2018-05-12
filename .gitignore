@@ -21,3 +21,5 @@ moc*.h
 /.settings
 /nbproject/
 /bin/
+/sa/
+/sareports/
