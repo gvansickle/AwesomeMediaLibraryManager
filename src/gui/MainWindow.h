@@ -210,8 +210,6 @@ public Q_SLOTS:
 	 */
 	void setActiveSubWindow(QMdiSubWindow* window);
 
-    void registerJob(AMLMJobPtr new_job);
-
 protected:
 	bool queryClose() override;
     void closeEvent(QCloseEvent* event) override;

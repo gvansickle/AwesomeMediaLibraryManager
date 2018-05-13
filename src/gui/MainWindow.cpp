@@ -172,6 +172,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 MainWindow::~MainWindow()
 {
+    // Shouldn't have been destroyed until now.
+    Q_CHECK_PTR(instance()->m_activity_progress_multi_tracker);
+    delete instance()->m_activity_progress_multi_tracker;
+    instance()->m_activity_progress_multi_tracker = nullptr;
+
     m_instance = nullptr;
 }
 
@@ -263,6 +268,13 @@ M_WARNING("TODO: ifdef this to development only")
 
 void MainWindow::post_setupGUI_init()
 {
+    // Create the master job tracker singleton.
+    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
+    // parent: "the parent of this object and of the widget displaying the job progresses"
+M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
+    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
+    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
+
     // KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
     // "Make sure you call this after all your *bars have been created."
     /// @note this is done by setupGUI().
@@ -306,13 +318,6 @@ M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
     setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
-
-    // Create the master job tracker singleton.
-    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
-    // parent: "the parent of this object and of the widget displaying the job progresses"
-M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc above?");
-    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
-    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
 
     post_setupGUI_init();
 }
@@ -1348,7 +1353,10 @@ ToolBarClass* MainWindow::addToolBar(const QString &win_title, const QString &ob
 
 ActivityProgressMultiTracker *MainWindow::master_tracker_instance()
 {
+    // Make sure it's been constructed.
+    Q_ASSERT(instance()->m_activity_progress_multi_tracker != nullptr);
 
+    return instance()->m_activity_progress_multi_tracker;
 }
 
 QDockWidget *MainWindow::addDock(const QString &title, const QString &object_name, QWidget *widget, Qt::DockWidgetArea area)
@@ -1986,34 +1994,6 @@ void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
 {
     m_mdi_area->setActiveSubWindow(window);
 }
-
-void MainWindow::registerJob(AMLMJobPtr new_job)
-{
-//    statusBar()->show();
-
-    // Usage modeled on https://github.com/KDE/kjobwidgets/blob/master/tests/kjobtrackerstest.cpp
-    if(!m_activity_progress_multi_tracker)
-    {
-        // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
-        // parent: "the parent of this object and of the widget displaying the job progresses"
-        m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
-        statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
-    }
-//    KJobWidgets::setWindow(new_job, this);
-    m_activity_progress_multi_tracker->registerJob(new_job);
-
-    statusBar()->show();
-
-//    if(!m_status_dlg)
-//    {
-//        // Create the Status dialog.
-//        m_status_dlg = new ActivityProgressDialog(this);
-//    }
-
-//    m_status_dlg->TrackJob(new_job);
-//    m_status_dlg->show();
-}
-
 
 void MainWindow::doExperiment()
 {

@@ -122,7 +122,7 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
     // Set button disable states/make connections/etc. based on what the job supports.
     if(job)
     {
-        M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
+M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
         connect(m_cancel_button, &QToolButton::clicked, this, [=](){
@@ -130,16 +130,26 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
             Q_EMIT cancel_job(job);});
         connect(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
+#if 0 // CRASHING
         // Connect up the disconnect signal from the job.
-        connect(job, &AMLMJob::finished, this, [=](){
-            qDb() << "GOT FINISHED SIGNAL, DISCONNECTING FROM JOB:" << job;
+M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
+        connect(job, &AMLMJob::finished, this, [=](KJob* finished_job){
+            Q_CHECK_PTR(this);
+            Q_CHECK_PTR(this->parent());
+            Q_CHECK_PTR(finished_job);
+            Q_CHECK_PTR(job);
+            Q_CHECK_PTR(m_cancel_button);
+
+//            qDb() << "GOT FINISHED SIGNAL, DISCONNECTING FROM JOB:" << job;
             disconnect(job, nullptr, m_cancel_button, nullptr);
             disconnect(job, nullptr, this, nullptr);
             deleteLater();
             ;});
+#endif
     }
     else
     {
+        // null Job (i.e. it's the root tracker/widget).
         m_pause_resume_button->setEnabled(false);
         m_cancel_button->setEnabled(false);
     }

@@ -158,8 +158,13 @@ void Experimental::DoExperiment()
 //    ActivityManager::instance()->addActivity(dsj2);
 
 //    MainWindow::instance()->registerJob(dirsizejob);
+#if 0
     MainWindow::instance()->registerJob(dsj);
     MainWindow::instance()->registerJob(dsj2);
+#else
+    MainWindow::master_tracker_instance()->registerJob(dsj);
+    MainWindow::master_tracker_instance()->registerJob(dsj2);
+#endif
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 

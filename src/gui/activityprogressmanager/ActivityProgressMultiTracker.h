@@ -63,6 +63,7 @@ public:
     /**
      * Constructor.
      * @note parent does have to be a QWidget not a QObject, since that's what the base class takes.
+     *       base class' base class KJobTrackerInterface OTOH takes only a QObject* as parent.
      */
     explicit ActivityProgressMultiTracker(QWidget* parent = nullptr);
     ~ActivityProgressMultiTracker() override;
@@ -106,7 +107,9 @@ public Q_SLOTS:
     void registerJob(KJob *job) override;
     void unregisterJob(KJob *job) override;
 
+    /// Creates a new tracker for @a job and registers it in the job->tracker map.
     virtual void registerJob(AMLMJobPtr job);
+
     /**
      * From KJobTrackerInterface:
      * "You need to manually call this method only if you re-implemented registerJob() without connecting KJob::finished to this slot."
@@ -120,17 +123,12 @@ public Q_SLOTS:
      */
     virtual void unregisterJob(AMLMJobPtr job);
 
-    /// This class doesn't handle jobs directly, but rather trackers attached to jobs.
-    virtual void registerTracker(KAbstractWidgetJobTracker* tracker);
-    virtual void unregisterTracker(KAbstractWidgetJobTracker* tracker);
-
 protected:
-    using ActiveActivitiesMap_DELETEME = QMap<AMLMJobPtr, BaseActivityProgressStatusBarWidget*>;
+
     using ActiveActivitiesMap = QMap<AMLMJobPtr, ActivityProgressStatusBarTracker*>;
 
-    /// Map of all registered sub-Activities to sub-job-trackers.
+    /// Map of all registered sub-Activities (AMLMJobPtrs) to sub-job-trackers (ActivityProgressStatusBarTracker*'s).
     ActiveActivitiesMap m_amlmjob_to_tracker_map;
-
 
     QWidget* m_parent {nullptr};
 

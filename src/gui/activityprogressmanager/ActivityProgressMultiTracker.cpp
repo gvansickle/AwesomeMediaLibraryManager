@@ -137,15 +137,6 @@ void ActivityProgressMultiTracker::unregisterJob(AMLMJobPtr job)
 //    p_tracker->deleteLater();
 }
 
-void ActivityProgressMultiTracker::registerTracker(KAbstractWidgetJobTracker *tracker)
-{
-}
-
-void ActivityProgressMultiTracker::unregisterTracker(KAbstractWidgetJobTracker *tracker)
-{
-
-}
-
 void ActivityProgressMultiTracker::toggleSubjobDisplay(bool checked)
 {
     if(checked)
@@ -224,7 +215,6 @@ void ActivityProgressMultiTracker::showSubJobs()
     m_expanding_frame_widget->setMaximumWidth(new_exp_w);
     qDb() << "Max size:" << m_expanding_frame_widget->maximumSize();
 #endif
-//    m_kttw->showBelow(rect, m_expanding_frame_widget, MainWindow::instance()->windowHandle());
 }
 
 void ActivityProgressMultiTracker::hideSubJobs()
@@ -239,19 +229,25 @@ void ActivityProgressMultiTracker::subjobFinished(KJob *job)
 
 QWidget *ActivityProgressMultiTracker::widget(KJob *job)
 {
+    /// @todo Should only be called with a nullptr KJob*, indicating it's the master progress widget that's being asked for.
+    Q_ASSERT(job == nullptr);
+
     Q_ASSERT(0);
 }
 
 QWidget *ActivityProgressMultiTracker::widget(AMLMJobPtr amlmjob)
 {
+    Q_CHECK_PTR(amlmjob);
+
     /// Look up the widget for this job.
     auto tracker = m_amlmjob_to_tracker_map.value(amlmjob, nullptr);
+    Q_CHECK_PTR(tracker);
+
     auto widget = tracker->widget(amlmjob);
+    Q_CHECK_PTR(widget);
+
     return widget;
 }
-
-#define M_WIDGET_OR_RETURN(the_job) auto widget = qobject_cast<ActivityProgressStatusBarWidget*>(m_activities_to_widgets_map.value(job, nullptr)); \
-    if(!widget) { return; };
 
 
 

@@ -76,6 +76,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
 	// other things prevent thejob from being memory managed and deleted."
 
+    /// @warning self: TW:JobPointer is a QSharedPtr<TW::JobInterface>, which inherits from nothing, especially not QObject.
+    ///          So "T qobject_cast(QObject *object)" in particular won't work here.
+
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
 
@@ -134,7 +137,7 @@ M_WARNING("TODO not sure if this is the right place to do this");
 				QDir dir = file_info.absoluteDir();
                 num_discovered_dirs++;
 
-                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
+//                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
 
 				// Update the max range to be the number of files we know we've found so far plus the number
 				// of files potentially in this directory.
