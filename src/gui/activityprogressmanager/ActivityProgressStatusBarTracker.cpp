@@ -18,14 +18,17 @@
  */
 
 #include <config.h>
-#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+
+#include "ActivityProgressStatusBarTracker.h"
 
 #include <utils/DebugHelpers.h>
 #include <utils/StringHelpers.h>
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
+#include "ActivityProgressMultiTracker.h"
 
-ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker *parent_tracker, QWidget *parent)
+
+ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
       m_parent_tracker(parent_tracker), m_job(job)
 {
@@ -95,12 +98,11 @@ void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 {
     Q_ASSERT(job);
 
-    auto amlm_job = dynamic_cast<AMLMJobPtr>(job);
+    auto amlm_job = qobject_cast<AMLMJobPtr>(job);
     Q_ASSERT(amlm_job);
 
+    // Forward to the AMLMJobPtr overload.
     registerJob(amlm_job);
-
-    BASE_CLASS::registerJob(job);
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
@@ -108,12 +110,11 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
     Q_CHECK_PTR(this);
     Q_ASSERT_X(job != nullptr, __PRETTY_FUNCTION__, "Bad incoming KJob*");
 M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic cast to an AMLMJobPtr");
-    auto amlm_job = dynamic_cast<AMLMJobPtr>(job);
+    auto amlm_job = qobject_cast<AMLMJobPtr>(job);
     Q_ASSERT_X(amlm_job != nullptr, __PRETTY_FUNCTION__, "Failed to cast KJob* to AMLMJobPtr");
 
+    // Forward to the AMLMJobPtr overload.
     unregisterJob(amlm_job);
-
-    BASE_CLASS::unregisterJob(job);
 }
 
 void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)

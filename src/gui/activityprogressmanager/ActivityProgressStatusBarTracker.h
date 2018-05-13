@@ -28,6 +28,7 @@ class QLabel;
 class QToolButton;
 class QProgressBar;
 #include <QTime>
+#include <QPointer>
 
 /// KF5
 class KJob;
@@ -38,8 +39,8 @@ class KJob;
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
 #include "BaseActivityProgressStatusBarWidget.h"
+//#include "ActivityProgressMultiTracker.h"
 class ActivityProgressMultiTracker;
-
 
 
 class ActivityProgressStatusBarTracker;
@@ -66,12 +67,6 @@ public:
     QWidget* widget(KJob* job) override;
 
     virtual QWidget* widget(AMLMJobPtr job);
-
-    /// The tracker tracking this tracker.
-    ActivityProgressMultiTracker* m_parent_tracker {nullptr};
-
-    /// The AMLMJob being tracked by this tracker.
-    AMLMJobPtr m_job { nullptr };
 
 public Q_SLOTS:
     void registerJob(KJob *job) override;
@@ -155,6 +150,12 @@ protected:
     qulonglong m_totalSize {0};
 
     QTime m_start_time;
+
+    /// The tracker tracking this tracker.
+    QPointer<ActivityProgressMultiTracker> m_parent_tracker {nullptr};
+
+    /// The AMLMJob being tracked by this tracker.
+    AMLMJobPtr m_job { nullptr };
 
 private:
     Q_DISABLE_COPY(ActivityProgressStatusBarTracker)
