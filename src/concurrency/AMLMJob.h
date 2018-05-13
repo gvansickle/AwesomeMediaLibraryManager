@@ -177,7 +177,7 @@ Q_SIGNALS:
     //    *  - percent()
     //    *  - speed()
     //    *
-    //    * If you re-implement this method, you may want to call the default
+    //    * If you re-implement this method [registerJob()], you may want to call the default
     //    * implementation or add at least:
     //    *
     //    * @code
@@ -218,7 +218,7 @@ public:
 
     /// @}
 
-    /// @name TW::Job overrides.
+    /// @name TW::Job public method overrides.
     /// @{
 
     /**
@@ -256,10 +256,15 @@ public:
 
     /// @}
 
-    /// @name Public interface FBO TW:Job::run().
+public:
+    /// @name New public interfaces FBO derived classes' overloads of TW:Job::run().
+    /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
 
-    /// FBO the success() call.
+    /// Call this in your derived tw::run() function to see if you should cancel the loop.
+    bool twWasCancelRequested() const { return m_flag_cancel != 0; }
+
+    /// Derived run() should call this before exiting.  FBO the success() method.
     void setSuccessFlag(bool success);
 
 //    void setAborted
@@ -343,15 +348,6 @@ protected:
     virtual void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
 
 
-
-    /// @}
-
-    /// New protected ThreadWeaver::Job-related members.
-    /// @{
-
-public:
-    /// Call this in your derived tw::run() function to see if you should cancel the loop.
-    bool twWasCancelRequested() const { return m_flag_cancel != 0; }
 
     /// @}
 

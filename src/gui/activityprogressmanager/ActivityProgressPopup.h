@@ -24,6 +24,13 @@
 class QWidget;
 #include <QWidgetAction>
 
+
+/**
+ * From https://community.kde.org/Frameworks/Porting_Notes#Application:
+ * "KPassivePopup: standardView() now returns a QWidget* instead of a KVBox*. The QWidget has a QVBoxLayout,
+ * i.e., additional widgets can be appended by calling widget->layout()->addWidget()."
+ */
+
 /*
  *
  */

@@ -51,11 +51,13 @@ class AMLMCompositeJob;
  *       Causes complications; currently the KJob is a nullptr, which causes its own complications.
  *
  */
-class ActivityProgressMultiTracker: public KAbstractWidgetJobTracker
+class ActivityProgressMultiTracker: public KAbstractWidgetJobTracker, public UniqueIDMixin<ActivityProgressMultiTracker>
 {
     Q_OBJECT
 
     using BASE_CLASS = KAbstractWidgetJobTracker;
+
+    using UniqueIDMixin<ActivityProgressMultiTracker>::uniqueQObjectName;
 
 Q_SIGNALS:
 

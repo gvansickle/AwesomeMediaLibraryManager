@@ -51,7 +51,8 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(AMLMJob
 
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
 {
-
+    /// @todo KWidgetJobTracker::Private::ProgressWidget deletes "tracker->d->eventLoopLocker" in here.
+    qDb() << "EMPTY DESTRUCTOR";
 }
 
 void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
@@ -171,7 +172,7 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
                                   Q_ARG(KJob*, m_job));
     }
 
-    QWidget::closeEvent(event);
+    BASE_CLASS::closeEvent(event);
 }
 
 void BaseActivityProgressStatusBarWidget::ref()

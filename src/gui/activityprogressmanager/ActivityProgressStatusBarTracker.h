@@ -29,16 +29,17 @@ class QToolButton;
 class QProgressBar;
 #include <QTime>
 #include <QPointer>
+#include <QSharedPointer>
 
 /// KF5
 class KJob;
 #include <KAbstractWidgetJobTracker>
-#include <QSharedPointer>
 
 /// Ours
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
 #include "BaseActivityProgressStatusBarWidget.h"
+//class BaseActivityProgressStatusBarWidget;
 class ActivityProgressMultiTracker;
 
 
@@ -56,6 +57,19 @@ class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker, public
     using BASE_CLASS = KAbstractWidgetJobTracker;
 
     using UniqueIDMixin<ActivityProgressStatusBarTracker>::uniqueQObjectName;
+
+Q_SIGNALS:
+    /// @name Inherited from KAbstractWidgetJobTracker
+    /// @{
+
+    /// KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
+    void stopped(KJob *job);
+    /// KAbstractWidgetJobTracker::slotSuspend(KJob*) emits this after calling job->suspend().
+    void suspend(KJob *job);
+    /// KAbstractWidgetJobTracker::slotResume(KJob*) emits this after calling job->resume().
+    void resume(KJob *job);
+
+    /// @}
 
 public:
     ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent);
@@ -81,7 +95,7 @@ public Q_SLOTS:
      *     job->disconnect(this);
      *  }
      * KAbstractWJT just calls the above.
-     * KJTI does connect the signal->slot, so as long as we ultimately call the base class implementation in register we're good.
+     * KJTI does connect the signal->slot, so as long as we ultimately call the base class implementation of registerjob() we're good.
      */
     virtual void unregisterJob(AMLMJobPtr job);
 

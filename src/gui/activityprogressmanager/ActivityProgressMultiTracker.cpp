@@ -136,10 +136,15 @@ void ActivityProgressMultiTracker::unregisterJob(AMLMJobPtr job)
     auto p_tracker = m_amlmjob_to_tracker_map.value(job, nullptr);
     if(!p_tracker)
     {
+        qWr() << "DIDNT FIND TRACKER FOR JOB:" << job;
         return;
     }
+
+    qWr() << "REMOVING TRACKER:" << p_tracker << "FOR JOB:" << job;
+    m_amlmjob_to_tracker_map.remove(job);
+
     /// @todo less? More?
-//    p_tracker->deleteLater();
+    p_tracker->deleteLater();
 }
 
 void ActivityProgressMultiTracker::toggleSubjobDisplay(bool checked)

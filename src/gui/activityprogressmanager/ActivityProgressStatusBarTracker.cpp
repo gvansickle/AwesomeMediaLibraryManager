@@ -82,7 +82,9 @@ QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
 {
     // Create the widget for this new job.
-    m_widget = new BaseActivityProgressStatusBarWidget(job, this, parent);
+    m_widget = new BaseActivityProgressStatusBarWidget(job, /*tracker=*/this, parent);
+
+    Q_CHECK_PTR(m_widget);
 
     // Make the widget->tracker connections.
     connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
@@ -124,18 +126,22 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
     // Create the widget for this new job.
 	m_widget->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
-//	m_widget->setAttribute(Qt::WA_DeleteOnClose);
+    m_widget->setAttribute(Qt::WA_DeleteOnClose);
 
     BASE_CLASS::registerJob(job);
+
+    /// @todo Need to do this?  From KWidgetJobTracker:
+    //QTimer::singleShot(500, this, SLOT(_k_showProgressWidget()));
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
 {
     Q_ASSERT(job);
-M_WARNING("TODO CRASHING HERE ON CLOSE");
+
     // Call down to the base class first; widget may be deleted by deref() below.
     BASE_CLASS::unregisterJob(job);
 
+    Q_CHECK_PTR(m_widget);
     m_widget->m_is_job_registered = false;
     m_widget->deref();
 }
@@ -149,7 +155,7 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
     // Prefer rich if it's given.
-    qDb() << "INFOMESSAGE RECEIVED";
+//    qDb() << "INFOMESSAGE RECEIVED";
     Q_CHECK_PTR(m_widget);
     m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
 }
@@ -200,6 +206,8 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 {
     QString tmp;
 
+    Q_CHECK_PTR(m_widget);
+
     switch (unit) {
     case KJob::Bytes:
         if (m_processedSize == amount)
@@ -223,7 +231,6 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
                   .arg(str_total);
 
             /// @todo GRVS
-            Q_CHECK_PTR(m_widget);
             m_widget->setRange(0, m_totalSize);
             m_widget->setValue(qBound(0ULL, m_processedSize, m_totalSize));
         }
@@ -234,7 +241,6 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 //        sizeLabel->setText(tmp);
         if (!m_is_total_size_known)
         {
-            Q_CHECK_PTR(m_widget);
             // update jumping progressbar
             m_widget->setRange(0, 0);
             m_widget->setValue(m_processedSize);
@@ -278,22 +284,22 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
-
+    qDb() << "KJobTrk: percent" << job << percent;
 }
 
 void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 {
-
+    qDb() << "KJobTrk: speed" << job << value;
 }
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
-    qDb() << "KJobTrk: FINISHED";
+    qDb() << "KJobTrk: FINISHED" << job;
 }
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 {
-
+    qDb() << "KJobTrk: slotClean" << job;
 }
 
 

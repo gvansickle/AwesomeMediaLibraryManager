@@ -94,26 +94,37 @@ protected:
     // Cribbed from KWidgetJobTracker.
     void closeNow();
 
-    int m_refcount {0};
 
-    KAbstractWidgetJobTracker* m_tracker;
-    AMLMJobPtr m_job;
+
 
 protected Q_SLOTS:
-    /// Called to cancel the job.
+
+    /// Invoke this to cancel the job.
     void stop();
+    /// Invoke this to pause or resume the job.
     void pause_resume(bool);
 
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
 
+    KAbstractWidgetJobTracker* m_tracker;
+    AMLMJobPtr m_job;
+
+    int m_refcount {0};
+
+    /// @name Child widgets
+    /// @{
+    /// Primary text.
     QLabel* m_current_activity_label {nullptr};
+    /// Detail text.
     QLabel* m_text_status_label {nullptr};
+    /// The progress bar.
     QProgressBar* m_progress_bar {nullptr};
-    // Cancel Operation button.
+    /// Cancel Operation button.
     QToolButton *m_cancel_button {nullptr};
-    // Pause/Resume button.
+    /// Pause/Resume button.
     QToolButton *m_pause_resume_button {nullptr};
+    /// @}
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_BASEACTIVITYPROGRESSSTATUSBARWIDGET_H_ */
