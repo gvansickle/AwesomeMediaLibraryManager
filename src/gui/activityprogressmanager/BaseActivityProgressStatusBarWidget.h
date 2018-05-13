@@ -100,6 +100,7 @@ protected:
     AMLMJobPtr m_job;
 
 protected Q_SLOTS:
+    /// Called to cancel the job.
     void stop();
     void pause_resume(bool);
 

@@ -101,9 +101,13 @@ M_WARNING("CRASH: Cancel can cause job == 0 here, not always though.");
 
 void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 {
+    Q_ASSERT(job != 0);
+
     // Create a new widget-based single-job tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
-    auto new_tracker = new ActivityProgressStatusBarTracker(job, this, m_parent);
+    auto new_tracker = new ActivityProgressStatusBarTracker(job, /*parent_tracker=*/this, /*parent QObject=*/m_parent);
+
+    Q_ASSERT(new_tracker != 0);
 
     m_amlmjob_to_tracker_map.insert(job, new_tracker);
 
@@ -115,7 +119,7 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
     m_expanding_frame_widget->reposition();
 
     /// @todo Already registered in child tracker, need/want this too?
-    BASE_CLASS::registerJob(job);
+//    BASE_CLASS::registerJob(job);
 
     QTimer::singleShot(500, this, &ActivityProgressMultiTracker::onShowProgressWidget);
 }
@@ -124,7 +128,7 @@ void ActivityProgressMultiTracker::unregisterJob(AMLMJobPtr job)
 {
     /// @todo Already unregistered in child tracker, need/want this too?
     /// @answ Possibly, KAbstWJT keeps a map of jobs here too.  If we register above, we need to unregister.
-    BASE_CLASS::unregisterJob(job);
+//    BASE_CLASS::unregisterJob(job);
 
     /// @todo remove from to-be-shown queue?
 

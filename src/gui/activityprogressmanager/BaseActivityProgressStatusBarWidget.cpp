@@ -125,9 +125,6 @@ void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
 M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
-        connect(m_cancel_button, &QToolButton::clicked, this, [=](){
-            qDb() << "EMITTING CANCEL_JOB";
-            Q_EMIT cancel_job(job);});
         connect(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
 #if 0 // CRASHING
@@ -228,10 +225,15 @@ void BaseActivityProgressStatusBarWidget::stop()
 {
    if(m_is_job_registered)
    {
-       // Notify that the job has been killed.
+       // Notify tracker that the job has been killed.
        // Calls job->kill(KJob::EmitResults) then emits stopped(job).
-       QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
                                  Q_ARG(KJob*, m_job));
+       Q_ASSERT(retval);
+
+       // Emit the TW:Job-has-been-cancelled signal.
+       qDb() << "EMITTING CANCEL_JOB";
+       Q_EMIT cancel_job(this->m_job);
    }
    closeNow();
 }

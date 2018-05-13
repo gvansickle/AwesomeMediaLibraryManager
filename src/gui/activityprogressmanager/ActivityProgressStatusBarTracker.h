@@ -37,17 +37,17 @@ class KJob;
 /// Ours
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
+#include "BaseActivityProgressStatusBarWidget.h"
 class ActivityProgressMultiTracker;
-class BaseActivityProgressStatusBarWidget;
+
 
 
 class ActivityProgressStatusBarTracker;
-using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;// QSharedPointer<ActivityProgressStatusBarTracker>;
+using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;
 
 
 /**
- * K*WidgetJobTracker representing the progress/status/controls of a single KJob/AMLMJob.
- * Suitable for use in a status bar.
+ * K*WidgetJobTracker tracking the progress/status/controls of a single AMLMJob.
  */
 class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker, public UniqueIDMixin<ActivityProgressStatusBarTracker>
 {
@@ -138,7 +138,7 @@ protected Q_SLOTS:
     void slotClean(KJob *job) override;
 
     // These all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
-    // depend on the job supporting kill/suspend/resume.
+    // depend on the KJob supporting kill/suspend/resume.
 //    void slotResume(KJob *job) override;
 //    void slotStop(KJob *job) override;
 //    void slotSuspend(KJob *job) override;
@@ -160,7 +160,7 @@ private:
     Q_DISABLE_COPY(ActivityProgressStatusBarTracker)
 
     /// The actual widget.
-    BaseActivityProgressStatusBarWidget* m_widget {nullptr};
+    QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARTRACKER_H_ */

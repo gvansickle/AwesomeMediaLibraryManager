@@ -258,8 +258,11 @@ public:
 
     /// @name Public interface FBO TW:Job::run().
     /// @{
+
     /// FBO the success() call.
     void setSuccessFlag(bool success);
+
+//    void setAborted
 
     /// @}
 

@@ -33,7 +33,7 @@ class KToolTipWidget;
 /// Ours
 #include "ActivityProgressStatusBarTracker.h"
 class BaseActivityProgressStatusBarWidget;
-class ExpandingFrameWidget;
+#include "ExpandingFrameWidget.h"
 class AMLMCompositeJob;
 
 /**
@@ -130,13 +130,13 @@ protected:
     /// Map of all registered sub-Activities (AMLMJobPtrs) to sub-job-trackers (ActivityProgressStatusBarTracker*'s).
     ActiveActivitiesMap m_amlmjob_to_tracker_map;
 
-    QWidget* m_parent {nullptr};
+    QPointer<QWidget> m_parent {nullptr};
 
     /// The status widget showing the cumulative status of all registered sub-trackers.
-    BaseActivityProgressStatusBarWidget* m_widget {nullptr};
+    QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
 
     /// Showable/hidable window containing all sub-trackers.
-    ExpandingFrameWidget* m_expanding_frame_widget {nullptr};
+    QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};
 
 protected Q_SLOTS:
 
