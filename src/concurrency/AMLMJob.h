@@ -65,7 +65,7 @@
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
-using AMLMJobPtr = AMLMJob*; //QSharedPointer<AMLMJob>;
+using AMLMJobPtr = QPointer<AMLMJob>;
 
 /**
  * Base class for jobs which bridges the hard-to-understand gap between a

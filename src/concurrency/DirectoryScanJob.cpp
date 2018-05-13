@@ -61,7 +61,7 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent,
 {
 M_WARNING("TODO: NOT SHARED PTR");
 //    return DirectoryScannerAMLMJobPtr::create(parent, dir_url, nameFilters, filters, flags);
-    return new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags);
+    return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -82,7 +82,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
 
-    AMLMJobPtr amlm_self = dynamic_cast<AMLMJobPtr>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
+//    ThreadWeaver::
+
+    AMLMJobPtr amlm_self = dynamic_cast<AMLMJob*>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
     qDb() << "IN RUN, " << M_NAME_VAL(amlm_self);
     Q_CHECK_PTR(amlm_self);
     KJob* kselfsp = amlm_self;

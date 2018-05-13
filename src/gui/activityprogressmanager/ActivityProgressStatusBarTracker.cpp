@@ -98,7 +98,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 {
     Q_ASSERT(job);
 
-    auto amlm_job = qobject_cast<AMLMJobPtr>(job);
+    AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
     Q_ASSERT(amlm_job);
 
     // Forward to the AMLMJobPtr overload.
@@ -110,7 +110,7 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
     Q_CHECK_PTR(this);
     Q_ASSERT_X(job != nullptr, __PRETTY_FUNCTION__, "Bad incoming KJob*");
 M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic cast to an AMLMJobPtr");
-    auto amlm_job = qobject_cast<AMLMJobPtr>(job);
+    AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
     Q_ASSERT_X(amlm_job != nullptr, __PRETTY_FUNCTION__, "Failed to cast KJob* to AMLMJobPtr");
 
     // Forward to the AMLMJobPtr overload.

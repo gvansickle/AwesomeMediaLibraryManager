@@ -39,7 +39,6 @@ class KJob;
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
 #include "BaseActivityProgressStatusBarWidget.h"
-//#include "ActivityProgressMultiTracker.h"
 class ActivityProgressMultiTracker;
 
 

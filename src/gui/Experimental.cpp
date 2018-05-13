@@ -140,14 +140,14 @@ void Experimental::DoExperiment()
     dirsizejob->start();
 
 
-    AMLMJobPtr dsj = DirectoryScannerAMLMJob::make_shared(this, dir_url,
+    AMLMJobPtr dsj(DirectoryScannerAMLMJob::make_shared(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
     QUrl dir_url2("file:///home/gary");
-    AMLMJobPtr dsj2 = DirectoryScannerAMLMJob::make_shared(this, dir_url2,
+    AMLMJobPtr dsj2(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
     qDb() << M_NAME_VAL(dsj->capabilities());
     qDb() << M_NAME_VAL(dsj2->capabilities());

@@ -24,15 +24,15 @@
 #include <QUrl>
 #include <QDir>
 #include <QDirIterator>
+#include <QPointer>
 
 #include <ThreadWeaver/ThreadWeaver>
-#include <ThreadWeaver/QObjectDecorator>
 
 #include "AMLMJob.h"
 #include "utils/UniqueIDMixin.h"
 
 class DirectoryScannerAMLMJob;
-using DirectoryScannerAMLMJobPtr = DirectoryScannerAMLMJob*;//QSharedPointer<DirectoryScannerAMLMJob>;
+using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;//QSharedPointer<DirectoryScannerAMLMJob>;
 
 /**
  *

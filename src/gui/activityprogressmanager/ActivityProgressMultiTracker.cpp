@@ -33,6 +33,7 @@
 #include <QTimer>
 
 /// Ours
+#include <concurrency/AMLMJob.h>
 #include <concurrency/AMLMCompositeJob.h>
 #include <gui/MainWindow.h>
 #include "ActivityProgressStatusBarTracker.h"
@@ -81,7 +82,7 @@ void ActivityProgressMultiTracker::registerJob(KJob *job)
 void ActivityProgressMultiTracker::unregisterJob(KJob *job)
 {
 M_WARNING("CRASH: Cancel can cause job == 0 here, not always though.");
-    auto amlmptr = qobject_cast<AMLMJobPtr>(job);
+    auto amlmptr = qobject_cast<AMLMJob*>(job);
     if(amlmptr)
     {
         qWr() << "GOT AMLMPTR as KJOB*, forwarding";
