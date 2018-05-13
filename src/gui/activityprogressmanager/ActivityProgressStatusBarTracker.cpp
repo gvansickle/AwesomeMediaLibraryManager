@@ -59,9 +59,9 @@ M_WARNING("TODO - CRASH");
 //    }
 
 /**
- * Not clear what's happening here. The DirScanJob is parented to Eperimental on construction.
+ * Not clear what's happening here. The DirScanJob is parented to Experimental on construction.
  */
-
+    qDb() << "DESTRUCTING THIS:" << this;
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
@@ -294,7 +294,13 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
-    qDb() << "KJobTrk: FINISHED" << job;
+    qDb() << "KJobTrk: FINISHED KJob:" << job;
+    qDb() << "KJobTrk: FINISHED :" << M_NAME_VAL(job->capabilities())
+          << M_NAME_VAL(job->isSuspended())
+          << M_NAME_VAL(job->isAutoDelete())
+          << M_NAME_VAL(job->error())
+          << M_NAME_VAL(job->errorText())
+          << M_NAME_VAL(job->errorString());
 }
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)

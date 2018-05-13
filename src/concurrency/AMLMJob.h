@@ -75,7 +75,6 @@ using AMLMJobPtr = QPointer<AMLMJob>;
  * - A KJob to interfaces which need it, in particular:
  * -- KAbstractWidgetJobTracker and derived classes' registerJob()/unregisterJob() slots.
  * - A ThreadWeaver::Job to interfaces which need it
- * - A ThreadWeaver::IdDecorator for consumption by ThreadWeaver::Job::run(JobPointer self, Thread *thread)
  *
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
@@ -122,11 +121,11 @@ Q_SIGNALS:
     /// ThreadWeaver::QObjectDecorator-like signals, only three:
 	/// @{
 
-	// This signal is emitted when this TW::Job is being processed by a thread.
+    /// This signal is emitted when this TW::Job is being processed by a thread.
     void started(ThreadWeaver::JobPointer);
-    // This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
+    /// This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
     void done(ThreadWeaver::JobPointer);
-    // This signal is emitted when success() returns false after the job is executed.
+    /// This signal is emitted when success() returns false after the job is executed.
     void failed(ThreadWeaver::JobPointer);
 
     /// @}
@@ -188,35 +187,19 @@ Q_SIGNALS:
 
 protected:
     /// Protected KJob-like constructor.
-    /// Derive from and defer to this from derived classes as part of a two-stage constructor:
+    /// Derive from and defer to this from derived classes, possibly as part of a two-stage constructor:
     /// Once the derived constructor is called and returns, we'll have a valid AMLMJob this and a valid derived this.
     /// We can then call virtual functions in subsequent constructors.
-    /// @note Don't try this at home.
+    /// @note Don't try that at home.
     ///
-    /// @warning Because of QEnableSharedFromThis<>/std::enable_shared_from_this<>, don't do a "new AMLMJob()",
-    ///          or calling sharedFromThis() will/should throw ~std::bad_weak_ptr.  Use AMLMJob::create() instead.
-    ///
-    /// @warning This is an abstract base class, there is no AMLMJob::create().
-    ///
+    /// @note KJob's constructor has this same signature.
     explicit AMLMJob(QObject* parent = nullptr);
-//    explicit AMLMJob(ThreadWeaver::JobInterface* job, bool auto_delete = true, QObject* parent = nullptr);
 
 public:
     AMLMJob() = delete;
     /// Destructor.
     ~AMLMJob() override;
 
-
-    /// @name Convesion operators.
-    /// @{
-
-    /// To a TW JobPointer, i.e. a QPointer<JobInterface>.
-//    explicit operator ThreadWeaver::JobPointer() { return asTWJobPointer(); }
-
-    /// To a QPointer<KJob>.
-//    explicit operator QPointer<KJob>() { return asKJobSP(); }
-
-    /// @}
 
     /// @name TW::Job public method overrides.
     /// @{
@@ -280,7 +263,44 @@ public Q_SLOTS:
     /// @link https://api.kde.org/frameworks/kcoreaddons/html/kjob_8cpp_source.html#l00117
     /// @{
 
+    /**
+     * KJob::kill() does this:
+     * https://cgit.kde.org/kcoreaddons.git/tree/src/lib/jobs/kjob.cpp
+     * @code
+     * if (doKill()) {
+     *      setError(KilledJobError);
+     *      finishJob(verbosity != Quietly);
+     *      return true;
+     *  } else {
+     *      return false;
+     *  }
+     * @endcode
+     * void finishJob(bool emitResult); is a private non-virt member, also called by emitResult() with param==true,
+     * https://cgit.kde.org/kcoreaddons.git/tree/src/lib/jobs/kjob.cpp#n96
+     * which does this:
+     * @code
+     * Q_D(KJob);
+        d->isFinished = true;
+
+        if (d->eventLoop) {
+            d->eventLoop->quit();
+        }
+
+        // If we are displaying a progress dialog, remove it first.
+        emit finished(this, QPrivateSignal());
+
+        if (emitResult) {
+            emit result(this, QPrivateSignal());
+        }
+
+        if (isAutoDelete()) {
+            deleteLater();
+        }
+     * @endcode
+     *
+     */
 //    bool kill(KJob::KillVerbosity verbosity=KJob::Quietly);
+
 //    bool resume();
 //    bool suspend();
 
@@ -299,11 +319,17 @@ protected:
     /// @{
 
     /**
-     * Kill the job.
+     * Kill the KJob.
      * Abort this job quietly.
      * Simply kill the job, no error reporting or job deletion should be involved.
      *
-     * @note KJob::doKill() simply returns false.
+     * @note KJob::doKill() does nothing, simply returns false.
+     *
+     * What we do here is:
+     * - Tell the TW::Job to kill itself with requestAbort();
+     * - Call our onKJobDoKill(), which currently does nothing.
+     *
+     * @todo Not clear if this should block until the job has been killed or not.
      *
      * @return true if job successfully killed, false otherwise.
      */
@@ -361,7 +387,8 @@ protected Q_SLOTS:
     void onTWDone(ThreadWeaver::JobPointer twjob);
     void onTWFailed(ThreadWeaver::JobPointer twjob);
 
-    /// Handle the doKill() operation.
+    /// Called from our doKill() operation.  Doesn't do anything by qDb() logging.
+    /// @todo Should be really be doing that?
     void onKJobDoKill();
 
     /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
@@ -379,7 +406,7 @@ private:
 
     /// Control structs/flags
     QAtomicInt m_flag_cancel {0};
-    QAtomicInt m_aborted { 0 };
+//    QAtomicInt m_aborted { 0 };
     QAtomicInt m_success { 1 };
 };
 

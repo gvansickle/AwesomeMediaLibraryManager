@@ -106,6 +106,7 @@ M_WARNING("TODO not sure if this is the right place to do this");
     int num_discovered_dirs = 0;
     uint num_possible_files = 0;
     qint64 total_discovered_file_size_bytes = 0;
+    bool stopped_due_to_cancel_req = false;
 
     QString status_text = QObject::tr("Scanning for music files");
 
@@ -123,6 +124,7 @@ M_WARNING("TODO not sure if this is the right place to do this");
             {
                 // We've been cancelled.
                 qIn() << "CANCELLED";
+                stopped_due_to_cancel_req = true;
                 break;
             }
 //			if(report_and_control.isPaused())
@@ -180,16 +182,15 @@ M_WARNING("TODO not sure if this is the right place to do this");
 			}
 		}
 
-		// We're done.  One last thing to clean up: We need to send the now-known max range out.
-		// Then we need to send out the final progress value again, because it might have been throttled away
-		// by Qt.
-//		num_possible_files = num_files_found_so_far;
-//		if (!report_and_control.isCanceled())
-//		{
-//			report_and_control.setProgressRange(0, num_possible_files);
-//			report_and_control.setProgressValueAndText(num_files_found_so_far, status_text);
-        //		}
-
+        // We've either completed our work or been cancelled.
+        if(stopped_due_to_cancel_req)
+        {
+            // Cancelled.
+        }
+        else
+        {
+             // Successful completion.
+        }
 //        qDb() << "EMITTING RESULT";
 
 //        aself->asKJob()->emitResult();

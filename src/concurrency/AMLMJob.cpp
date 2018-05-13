@@ -21,7 +21,8 @@
 
 #include <QPointer>
 #include <ThreadWeaver/Job>
-#include <ThreadWeaver/IdDecorator>
+//#include <ThreadWeaver/IdDecorator>
+#include <ThreadWeaver/DebuggingAids>
 
 #include "utils/DebugHelpers.h"
 #include "utils/UniqueIDMixin.h"
@@ -31,11 +32,15 @@ AMLMJob::AMLMJob(QObject *parent)
     : KJob(parent), ThreadWeaver::Job()
 {
     qDb() << M_NAME_VAL(this);
+
+    /// @todo This is debug, move/remove.
+    ThreadWeaver::setDebugLevel(true, 10);
+    qDb() << "Set TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 }
 
 AMLMJob::~AMLMJob()
 {
-    qDb() << "DESTRUCTOR:" << objectName();
+//    qDb() << "DESTRUCTOR:" << objectName();
 }
 
 void AMLMJob::requestAbort()
@@ -52,34 +57,6 @@ void AMLMJob::start()
     qDb() << "AMLMJob::start(), TWJob status:" << status();
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
 }
-
-//QPointer<KJob> AMLMJob::asKJobSP()
-//{
-//    Q_CHECK_PTR(this);
-
-////    auto shthis = sharedFromThis();
-////    auto retval = (QPointer<KJob>)(qobject_cast<KJob>(this));
-//    QPointer<KJob> retval = this;
-//    Q_CHECK_PTR(retval);
-
-//    return retval;
-//}
-
-//ThreadWeaver::JobPointer AMLMJob::asTWJobPointer()
-//{
-//M_WARNING("TODO: SHould this be returning this or the QObjectDecorator?");
-//    Q_CHECK_PTR(this);
-
-//    // ThreadWeaver::JobPointer is a QSharedPointer<TW::JobInterface>, so
-//    // we need to make sure we return a sp which doesn't duplicate the ref count.
-
-////    auto retval = this->sharedFromThis();
-////    ThreadWeaver::JobPointer retval = m_tw_job_qobj_decorator;
-
-////    Q_ASSERT(retval);
-
-//    return this;
-//}
 
 void AMLMJob::setSuccessFlag(bool success)
 {
@@ -105,6 +82,7 @@ void AMLMJob::setSuccessFlag(bool success)
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
+    qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
     // Essentially a duplicate of QObjectDecorator's implementation.
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
@@ -126,6 +104,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
+    qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
     // Essentially a duplicate of QObjectDecorator's implementation.
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
@@ -206,9 +185,18 @@ void AMLMJob::make_connections()
     /// @}
 
     // Connect up KJob signals/slots.
+    // Emitted as a byproduct of calling emitResult(), which simply calls KJob::finishJob(true),
+    // which:
+    // - quits any private event loop
+    // - emits finished(this)
+    // - Because of the true param, emits result(this)
+    // - If KJob isAutoDelete(), calls deleteLater().
+    // KJob::kill() will also cause the emission of ::result, via the same finsishJob() path, if KillVerbosity is
+    // not Quietly.
     connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
-    // Emitted by calling emitResult().
-    // Intended to notify UIs that should detach.
+
+    // Emitted by calling emitResult() and kill().
+    // Intended to notify UIs that should detach from the job.
     /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
     connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
 
@@ -221,7 +209,7 @@ void AMLMJob::make_connections()
 void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER connections_make_defaultBegin";
-
+    Q_CHECK_PTR(self);
 }
 
 /**
@@ -230,35 +218,38 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
 void AMLMJob::connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER connections_make_defaultExit";
-
+    Q_CHECK_PTR(self);
 }
 
 void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
 {
     qDb() << "ENTER onTWStarted";
+    Q_CHECK_PTR(twjob);
 }
 
 void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
 {
     qDb() << "ENTER onTWDone";
+    Q_CHECK_PTR(twjob);
 }
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
 {
     qDb() << "ENTER onTWFailed";
+    Q_CHECK_PTR(twjob);
 }
 
 void AMLMJob::onKJobDoKill()
 {
     qDb() << "ENTER onKJobDoKill";
 
-
-
     qDb() << "EXIT onKJobDoKill";
 }
 
 void AMLMJob::onKJobResult(KJob *job)
 {
+    Q_CHECK_PTR(job);
+
     /// Called when the KJob is finished.
     qDb() << "KJOB RESULT" << job;
 
@@ -270,6 +261,8 @@ void AMLMJob::onKJobResult(KJob *job)
 
 void AMLMJob::onKJobFinished(KJob *job)
 {
+    Q_CHECK_PTR(job);
+
     qDb() << "KJOB FINISHED" << job;
 }
 
