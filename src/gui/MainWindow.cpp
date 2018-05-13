@@ -268,13 +268,6 @@ M_WARNING("TODO: ifdef this to development only")
 
 void MainWindow::post_setupGUI_init()
 {
-    // Create the master job tracker singleton.
-    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
-    // parent: "the parent of this object and of the widget displaying the job progresses"
-M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
-    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
-    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
-
     // KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
     // "Make sure you call this after all your *bars have been created."
     /// @note this is done by setupGUI().
@@ -308,6 +301,13 @@ void MainWindow::onStartup()
 //	createStandardStatusBarAction();
     // Don't need to do this when using setupGUI(ToolBar).
 //	setStandardToolBarMenuEnabled(true);
+
+    // Create the master job tracker singleton.
+    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
+    // parent: "the parent of this object and of the widget displaying the job progresses"
+M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
+    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
+    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 
