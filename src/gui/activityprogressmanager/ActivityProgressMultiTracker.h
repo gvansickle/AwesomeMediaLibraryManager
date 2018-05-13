@@ -121,7 +121,9 @@ public Q_SLOTS:
      *     job->disconnect(this);
      *  }
      * KAbstractWJT just calls the above.
-     * KJTI does connect the signal->slot, so as long as we ultimately call the base class implementation in register we're good.
+     * KJTI does connect the signal->slot (many of them, job->this) in registerJob(), so as long as we ultimately call the base class
+     * implementation we're good.
+     * @warning ^^^ WHICH CURRENTLY WE ARE NOT DOING.
      */
     virtual void unregisterJob(AMLMJobPtr job);
 

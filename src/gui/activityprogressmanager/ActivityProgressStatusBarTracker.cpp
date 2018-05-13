@@ -98,6 +98,7 @@ M_WARNING("TODO: Make the tracker->parent_tracker connections.");
 
 void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 {
+    Q_CHECK_PTR(this);
     Q_ASSERT(job);
 
     AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
@@ -111,8 +112,10 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
 {
     Q_CHECK_PTR(this);
     Q_ASSERT_X(job != nullptr, __PRETTY_FUNCTION__, "Bad incoming KJob*");
+
 M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic cast to an AMLMJobPtr");
     AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
+
     Q_ASSERT_X(amlm_job != nullptr, __PRETTY_FUNCTION__, "Failed to cast KJob* to AMLMJobPtr");
 
     // Forward to the AMLMJobPtr overload.
@@ -121,7 +124,9 @@ M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic
 
 void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 {
+    Q_CHECK_PTR(this);
     Q_ASSERT(job);
+    Q_CHECK_PTR(m_widget);
 
     // Create the widget for this new job.
 	m_widget->m_is_job_registered = true;
@@ -294,6 +299,9 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
+    Q_CHECK_PTR(this);
+    Q_CHECK_PTR(job);
+
     qDb() << "KJobTrk: FINISHED KJob:" << job;
     qDb() << "KJobTrk: FINISHED :" << M_NAME_VAL(job->capabilities())
           << M_NAME_VAL(job->isSuspended())

@@ -256,6 +256,7 @@ void AMLMJob::onKJobResult(KJob *job)
     if(job->error())
     {
         // There was an error.
+        qWr() << "ERROR:" << job->error();
     }
 }
 

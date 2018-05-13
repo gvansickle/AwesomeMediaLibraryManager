@@ -186,16 +186,17 @@ M_WARNING("TODO not sure if this is the right place to do this");
         if(stopped_due_to_cancel_req)
         {
             // Cancelled.
+            amlm_self->setSuccessFlag(true);
         }
         else
         {
-             // Successful completion.
+            // Successful completion.
+            amlm_self->setSuccessFlag(true);
         }
 //        qDb() << "EMITTING RESULT";
 
 //        aself->asKJob()->emitResult();
 M_WARNING("TODO Not if cancelled");
-        amlm_self->setSuccessFlag(true);
 
         qDb() << "LEAVING RUN";
 }

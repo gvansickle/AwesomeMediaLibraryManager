@@ -26,6 +26,7 @@
 #include <QWidget>
 #include <QToolButton>
 #include <QDialog>
+#include <QSharedPointer>
 
 /// KF5
 #include <KJob>
@@ -119,8 +120,16 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 //    m_expanding_frame_widget->addWidget(pw);
     m_expanding_frame_widget->reposition();
 
+#if 0
     /// @todo Already registered in child tracker, need/want this too?
 //    BASE_CLASS::registerJob(job);
+#else
+    // Not calling the base class's registerJob() here, so need to connect job/finished to this/unregisterJob.
+//    QObject::connect(job, /*&AMLMJob::*/SIGNAL(finished(KJob*)), this, /*&ActivityProgressMultiTracker::*/SLOT(unregisterJob(AMLMJobPtr)));
+    QObject::connect(job, &KJob::finished, this, [=](KJob* kjob) {
+        AMLMJobPtr amlm_job_sp = qSharedPointerObjectCast<AMLMJob>(kjob);
+        unregisterJob(amlm_job_sp);});
+#endif
 
     QTimer::singleShot(500, this, &ActivityProgressMultiTracker::onShowProgressWidget);
 }
