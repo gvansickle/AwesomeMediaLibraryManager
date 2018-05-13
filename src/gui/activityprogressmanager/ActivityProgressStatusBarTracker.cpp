@@ -123,7 +123,8 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 
     // Create the widget for this new job.
 	m_widget->m_is_job_registered = true;
-	m_widget->setAttribute(Qt::WA_DeleteOnClose);
+    /// @todo Doesn't seem to matter crash-wise.
+//	m_widget->setAttribute(Qt::WA_DeleteOnClose);
 
     BASE_CLASS::registerJob(job);
 }
@@ -141,6 +142,7 @@ M_WARNING("TODO CRASHING HERE ON CLOSE");
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
+    Q_CHECK_PTR(m_widget);
     m_widget->setDescription(title, field1, field2);
 }
 
@@ -148,11 +150,13 @@ void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &pla
 {
     // Prefer rich if it's given.
     qDb() << "INFOMESSAGE RECEIVED";
+    Q_CHECK_PTR(m_widget);
     m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
 }
 
 void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
 {
+    Q_CHECK_PTR(m_widget);
     m_widget->setWarning(rich.isEmpty() ? plain : rich);
 }
 
@@ -219,6 +223,7 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
                   .arg(str_total);
 
             /// @todo GRVS
+            Q_CHECK_PTR(m_widget);
             m_widget->setRange(0, m_totalSize);
             m_widget->setValue(qBound(0ULL, m_processedSize, m_totalSize));
         }
@@ -229,6 +234,7 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 //        sizeLabel->setText(tmp);
         if (!m_is_total_size_known)
         {
+            Q_CHECK_PTR(m_widget);
             // update jumping progressbar
             m_widget->setRange(0, 0);
             m_widget->setValue(m_processedSize);

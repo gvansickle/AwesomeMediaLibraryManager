@@ -102,13 +102,13 @@ M_WARNING("CRASH: Cancel can cause job == 0 here, not always though.");
 
 void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 {
-    Q_ASSERT(job != 0);
+    Q_ASSERT(job != nullptr);
 
     // Create a new widget-based single-job tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
     auto new_tracker = new ActivityProgressStatusBarTracker(job, /*parent_tracker=*/this, /*parent QObject=*/m_parent);
 
-    Q_ASSERT(new_tracker != 0);
+    Q_ASSERT(new_tracker != nullptr);
 
     m_amlmjob_to_tracker_map.insert(job, new_tracker);
 

@@ -125,7 +125,7 @@ public Q_SLOTS:
 
 protected:
 
-    using ActiveActivitiesMap = QMap<AMLMJobPtr, ActivityProgressStatusBarTracker*>;
+    using ActiveActivitiesMap = QMap<AMLMJobPtr, QPointer<ActivityProgressStatusBarTracker>>;
 
     /// Map of all registered sub-Activities (AMLMJobPtrs) to sub-job-trackers (ActivityProgressStatusBarTracker*'s).
     ActiveActivitiesMap m_amlmjob_to_tracker_map;

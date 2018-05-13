@@ -82,9 +82,12 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
 
-//    ThreadWeaver::
+    // This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
+    // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
+    auto amlm_self_shared = qSharedPointerDynamicCast<AMLMJob>(self);
+    AMLMJobPtr amlm_self = amlm_self_shared.data();
+//    auto amlm_self_other = dynamic_cast<AMLMJob*>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
 
-    AMLMJobPtr amlm_self = dynamic_cast<AMLMJob*>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
     qDb() << "IN RUN, " << M_NAME_VAL(amlm_self);
     Q_CHECK_PTR(amlm_self);
     KJob* kselfsp = amlm_self;
