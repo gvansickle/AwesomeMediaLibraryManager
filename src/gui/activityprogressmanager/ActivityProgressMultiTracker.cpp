@@ -38,7 +38,7 @@
 #include <concurrency/AMLMCompositeJob.h>
 #include <gui/MainWindow.h>
 #include "ActivityProgressStatusBarTracker.h"
-#include "utils/DebugHelpers.h"
+#include "utils/TheSimplestThings.h"
 
 ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BASE_CLASS(parent),
     m_parent(parent)
@@ -83,7 +83,8 @@ void ActivityProgressMultiTracker::registerJob(KJob *job)
 void ActivityProgressMultiTracker::unregisterJob(KJob *job)
 {
 M_WARNING("CRASH: Cancel can cause job == 0 here, not always though.");
-    auto amlmptr = qobject_cast<AMLMJob*>(job);
+//    auto amlmptr = qobject_cast<AMLMJob*>(job);
+    auto amlmptr = qObjectCast<AMLMJob>(job);
     if(amlmptr)
     {
         qWr() << "GOT AMLMPTR as KJOB*, forwarding";
@@ -127,7 +128,8 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
     // Not calling the base class's registerJob() here, so need to connect job/finished to this/unregisterJob.
 //    QObject::connect(job, /*&AMLMJob::*/SIGNAL(finished(KJob*)), this, /*&ActivityProgressMultiTracker::*/SLOT(unregisterJob(AMLMJobPtr)));
     QObject::connect(job, &KJob::finished, this, [=](KJob* kjob) {
-        AMLMJobPtr amlm_job_sp = qSharedPointerObjectCast<AMLMJob>(kjob);
+//        AMLMJobPtr amlm_job_sp = qSharedPointerObjectCast<AMLMJob>(kjob);
+        AMLMJobPtr amlm_job_sp(qobject_cast<AMLMJob*>(kjob));
         unregisterJob(amlm_job_sp);});
 #endif
 

@@ -161,6 +161,8 @@ set(HEADER_FILES
 	utils/AsyncDirScanner.h
 	utils/RegisterQtMetatypes.h
 	utils/UniqueIDMixin.h
+	utils/QtCastHelpers.h
+	utils/TheSimplestThings.h
 	logic/CueSheetParser.h
 	../resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
