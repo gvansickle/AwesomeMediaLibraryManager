@@ -25,7 +25,7 @@
 #include <QDirIterator>
 #include <ThreadWeaver/DebuggingAids>
 
-#include "utils/DebugHelpers.h"
+#include "utils/TheSimplestThings.h"
 
 //DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent) : BASE_CLASS(parent)
 //{
@@ -84,8 +84,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     // This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
     // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
-    auto amlm_self_shared = qSharedPointerDynamicCast<AMLMJob>(self);
-    AMLMJobPtr amlm_self = amlm_self_shared.data();
+//    auto amlm_self_shared = qSharedPointerDynamicCast<AMLMJob>(self);
+//    AMLMJobPtr amlm_self = amlm_self_shared.data();
+    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
 //    auto amlm_self_other = dynamic_cast<AMLMJob*>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
 
     qDb() << "IN RUN, " << M_NAME_VAL(amlm_self);

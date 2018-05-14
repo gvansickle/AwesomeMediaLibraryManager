@@ -28,6 +28,15 @@
 #include "ActivityProgressMultiTracker.h"
 
 
+template <typename Lambda>
+void with_widget_or_skip(BaseActivityProgressStatusBarWidget* widget, Lambda l)
+{
+    if(widget)
+    {
+        l(widget);
+    }
+}
+
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent)
     : KAbstractWidgetJobTracker(parent),
       m_parent_tracker(parent_tracker), m_job(job)
@@ -131,9 +140,19 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
     // Create the widget for this new job.
 	m_widget->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
-    m_widget->setAttribute(Qt::WA_DeleteOnClose);
+//    m_widget->setAttribute(Qt::WA_DeleteOnClose);
 
     BASE_CLASS::registerJob(job);
+
+    qDb() << "KJobTrk: AMLMJob info:" << job;
+    qDb() << "KJobTrk:" << M_NAME_VAL(job->capabilities()) << "\n"
+          << M_NAME_VAL(job->isSuspended()) << "\n"
+          << M_NAME_VAL(job->isAutoDelete()) << "\n"
+          << M_NAME_VAL(job->error()) << "\n"
+          << M_NAME_VAL(job->errorText()) << "\n"
+          << M_NAME_VAL(job->errorString());
+
+    dump_tracker_info();
 
     /// @todo Need to do this?  From KWidgetJobTracker:
     //QTimer::singleShot(500, this, SLOT(_k_showProgressWidget()));
@@ -141,6 +160,7 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
 {
+    Q_CHECK_PTR(this);
     Q_ASSERT(job);
 
     // Call down to the base class first; widget may be deleted by deref() below.
@@ -151,24 +171,50 @@ void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
     m_widget->deref();
 }
 
+void ActivityProgressStatusBarTracker::dump_tracker_info()
+{
+    QVector<AMLMJobPtr> joblist;
+    joblist << m_job;
+
+    for(auto &i : joblist)
+    {
+        qIn() << "INFO FROM TRACKER:" << this << "RE JOB:" << i;
+        qIn() << M_NAME_VAL(autoDelete(i)) << "\n"
+              << M_NAME_VAL(stopOnClose(i)) << "\n";
+    }
+
+}
+
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
-    Q_CHECK_PTR(m_widget);
-    m_widget->setDescription(title, field1, field2);
+//    Q_CHECK_PTR(m_widget);
+//    m_widget->setDescription(title, field1, field2);
+
+    /// This follows the basic pattern of KWidgetJobTracker, with a little C++14 help.
+    /// All these "tracker->widget ~signal" handlers get the widget ptr (from a map in that case),
+    /// check for null, and if not null do the job.
+    with_widget_or_skip(m_widget, [=](auto* w){
+        w->setDescription(title, field1, field2);
+    });
 }
 
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
     // Prefer rich if it's given.
 //    qDb() << "INFOMESSAGE RECEIVED";
-    Q_CHECK_PTR(m_widget);
-    m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
+//    Q_CHECK_PTR(m_widget);
+//    m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
+    with_widget_or_skip(m_widget, [=](auto* w){
+        w->setInfoMessage(rich.isEmpty() ? plain : rich);
+        ;});
 }
 
 void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
 {
-    Q_CHECK_PTR(m_widget);
-    m_widget->setWarning(rich.isEmpty() ? plain : rich);
+    with_widget_or_skip(m_widget, [=](auto* w){;
+        w->setWarning(rich.isEmpty() ? plain : rich);
+    });
+
 }
 
 void ActivityProgressStatusBarTracker::totalAmount(KJob *job, KJob::Unit unit, qulonglong amount)
@@ -209,48 +255,48 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *job, KJob::Unit unit, q
 
 void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
-    QString tmp;
+    with_widget_or_skip(m_widget, [=](auto* w)
+    {
+        QString tmp;
 
-    Q_CHECK_PTR(m_widget);
+        switch (unit) {
+        case KJob::Bytes:
+            if (m_processedSize == amount)
+            {
+                return;
+            }
+            m_processedSize = amount;
 
-    switch (unit) {
-    case KJob::Bytes:
-        if (m_processedSize == amount)
-        {
-            return;
-        }
-        m_processedSize = amount;
+            /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
+            /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
+            DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
+            auto str_processed = formattedDataSize(m_processedSize, 1, fmt);
 
-        /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
-        /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
-        DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
-        auto str_processed = formattedDataSize(m_processedSize, 1, fmt);
+            if (m_is_total_size_known)
+            {
+                //~ singular %1 of %2 complete
+                //~ plural %1 of %2 complete
+                auto str_total = formattedDataSize(m_totalSize, 1, fmt);
+                tmp = tr("%1 of %2 complete")
+                      .arg(str_processed)
+                      .arg(str_total);
 
-        if (m_is_total_size_known)
-        {
-            //~ singular %1 of %2 complete
-            //~ plural %1 of %2 complete
-            auto str_total = formattedDataSize(m_totalSize, 1, fmt);
-            tmp = tr("%1 of %2 complete")
-                  .arg(str_processed)
-                  .arg(str_total);
-
-            /// @todo GRVS
-            m_widget->setRange(0, m_totalSize);
-            m_widget->setValue(qBound(0ULL, m_processedSize, m_totalSize));
-        }
-        else
-        {
-            tmp = str_processed; //KJobTrackerFormatters::byteSize(amount);
-        }
-//        sizeLabel->setText(tmp);
-        if (!m_is_total_size_known)
-        {
-            // update jumping progressbar
-            m_widget->setRange(0, 0);
-            m_widget->setValue(m_processedSize);
-        }
-        break;
+                /// @todo GRVS
+                w->setRange(0, m_totalSize);
+                w->setValue(qBound(0ULL, m_processedSize, m_totalSize));
+            }
+            else
+            {
+                tmp = str_processed; //KJobTrackerFormatters::byteSize(amount);
+            }
+    //        sizeLabel->setText(tmp);
+            if (!m_is_total_size_known)
+            {
+                // update jumping progressbar
+                m_widget->setRange(0, 0);
+                m_widget->setValue(m_processedSize);
+            }
+            break;
 
 //    case KJob::Directories:
 //        if (processedDirs == amount) {
@@ -284,21 +330,57 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 //        //~ plural %1 / %n files
 //        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
 //        progressLabel->setText(tmp);
-    }
+        }
+    });
 }
 
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
-    qDb() << "KJobTrk: percent" << job << percent;
+    with_widget_or_skip(m_widget, [=](auto* w){
+        qDb() << "KJobTrk: percent" << job << percent;
+
+        QString title = toqstr("PCT") + " (";
+        if (m_is_total_size_known)
+        {
+            /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
+            /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
+            DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
+
+            title += QString("%1% of %2").arg(percent).arg(formattedDataSize(m_totalSize, 1, fmt));
+
+        }
+//        else if (totalFiles)
+//        {
+//            //~ singular %1% of %n file
+//            //~ plural %1% of %n files
+//            title += QCoreApplication::translate("KWidgetJobTracker", "%1% of %n file(s)", "", totalFiles).arg(percent);
+//        }
+        else
+        {
+            title += QString("%1%").arg(percent);
+        }
+
+        title += ')';
+
+        w->setRange(0, 100);
+        w->setValue(percent);
+
+    });
 }
 
 void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 {
-    qDb() << "KJobTrk: speed" << job << value;
+    with_widget_or_skip(m_widget, [=](auto* w){
+        qDb() << "KJobTrk: speed" << job << value;
+    });
 }
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
+    with_widget_or_skip(m_widget, [=](auto* w){
+        qWr() << "FINISHED JOB:" << job << "WITH NO WIDGET";
+    });
+
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(job);
 
@@ -313,7 +395,9 @@ void ActivityProgressStatusBarTracker::finished(KJob *job)
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 {
-    qDb() << "KJobTrk: slotClean" << job;
+    with_widget_or_skip(m_widget, [=](auto* w){
+        qDb() << "KJobTrk: slotClean" << job;
+    });
 }
 
 

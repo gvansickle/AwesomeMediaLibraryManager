@@ -27,11 +27,14 @@
 //#include <KJob>
 #include <KAbstractWidgetJobTracker>
 
+/// Ours
 #include <gui/helpers/Tips.h>
-#include <utils/DebugHelpers.h>
+#include <utils/TheSimplestThings.h>
 #include <utils/ConnectHelpers.h>
-
 #include "concurrency/AMLMJob.h"
+/// @todo Make these two unnecessary if possible.
+#include "ActivityProgressStatusBarTracker.h"
+#include "ActivityProgressMultiTracker.h"
 
 BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent) : BASE_CLASS(parent)
 {
@@ -214,6 +217,28 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     ///   last one is still running. We remove its reference on the map. Wrong.
     /// For that reason we have to check if the map stores the widget as the current one.
     /// ereslibre
+
+    auto sbtracker = qobject_cast<ActivityProgressStatusBarTracker*>(m_tracker);
+    auto multitracker = qobject_cast<ActivityProgressMultiTracker*>(m_tracker);
+    if(sbtracker)
+    {
+        qDb() << "SBTRACKER";
+        if(sbtracker->m_widget == this)
+        {
+            // "Remove" this widget from the tracker.
+            qDb() << "SBTRACKER REMOVING" << sbtracker->m_widget;
+            sbtracker->m_widget = nullptr;
+        }
+    }
+    else if(multitracker)
+    {
+        qDb() << "TODO MULTITRACKER";
+    }
+    else
+    {
+        /// Should have been one of them.
+        Q_ASSERT(0);
+    }
 
 //    if (m_tracker->d->progressWidget[m_job] == this)
 //    {

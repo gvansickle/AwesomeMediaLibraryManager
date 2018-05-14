@@ -163,7 +163,11 @@ void Experimental::DoExperiment()
     MainWindow::instance()->registerJob(dsj2);
 #else
     MainWindow::master_tracker_instance()->registerJob(dsj);
+    MainWindow::master_tracker_instance()->setAutoDelete(dsj, false);
+    MainWindow::master_tracker_instance()->setStopOnClose(dsj, false);
     MainWindow::master_tracker_instance()->registerJob(dsj2);
+    MainWindow::master_tracker_instance()->setAutoDelete(dsj2, false);
+    MainWindow::master_tracker_instance()->setStopOnClose(dsj2, false);
 #endif
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();

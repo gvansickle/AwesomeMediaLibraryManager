@@ -106,6 +106,14 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 {
     Q_ASSERT(job != nullptr);
 
+    qDb() << "KJobTrk: AMLMJobPtr:" << job;
+    qDb() << "KJobTrk:" << M_NAME_VAL(job->capabilities())
+          << M_NAME_VAL(job->isSuspended())
+          << M_NAME_VAL(job->isAutoDelete())
+          << M_NAME_VAL(job->error())
+          << M_NAME_VAL(job->errorText())
+          << M_NAME_VAL(job->errorString());
+
     // Create a new widget-based single-job tracker for this job.
     /// @note In KWidgetJobTracker, this derives from QWidget.
     auto new_tracker = new ActivityProgressStatusBarTracker(job, /*parent_tracker=*/this, /*parent QObject=*/m_parent);
@@ -129,7 +137,7 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 //    QObject::connect(job, /*&AMLMJob::*/SIGNAL(finished(KJob*)), this, /*&ActivityProgressMultiTracker::*/SLOT(unregisterJob(AMLMJobPtr)));
     QObject::connect(job, &KJob::finished, this, [=](KJob* kjob) {
 //        AMLMJobPtr amlm_job_sp = qSharedPointerObjectCast<AMLMJob>(kjob);
-        AMLMJobPtr amlm_job_sp(qobject_cast<AMLMJob*>(kjob));
+        AMLMJobPtr amlm_job_sp = qobject_cast<AMLMJob*>(kjob);
         unregisterJob(amlm_job_sp);});
 #endif
 

@@ -73,11 +73,11 @@ public:
     virtual void setInfoMessage(const QString &text);
     virtual void setWarning(const QString &text);
 
+    bool m_is_job_registered { false };
+
     // Cribbed from KWidgetJobTracker.
     void ref();
     void deref();
-
-    bool m_is_job_registered { false };
 
 public /*Q_SLOTS*/:
     virtual void setRange(int min, int max);
@@ -93,9 +93,6 @@ protected:
 
     // Cribbed from KWidgetJobTracker.
     void closeNow();
-
-
-
 
 protected Q_SLOTS:
 

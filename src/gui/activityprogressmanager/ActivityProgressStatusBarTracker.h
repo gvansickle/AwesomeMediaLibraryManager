@@ -103,6 +103,8 @@ public Q_SLOTS:
 //    virtual void setParentTracker(KAbstractWidgetJobTracker* tracker);
 //    virtual void unsetParentTracker(KAbstractWidgetJobTracker* tracker);
 
+    void dump_tracker_info();
+
 
 protected Q_SLOTS:
 
@@ -151,6 +153,9 @@ protected Q_SLOTS:
 //    void slotStop(KJob *job) override;
 //    void slotSuspend(KJob *job) override;
 
+public: /// @todo FBO StatusBarWidget, make private.
+    /// The actual widget.
+    QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
 
 protected:
 
@@ -173,8 +178,7 @@ protected:
 private:
     Q_DISABLE_COPY(ActivityProgressStatusBarTracker)
 
-    /// The actual widget.
-    QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
+
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARTRACKER_H_ */
