@@ -164,7 +164,7 @@ set(HEADER_FILES
 	utils/QtCastHelpers.h
 	utils/TheSimplestThings.h
 	logic/CueSheetParser.h
-	../resources/VersionInfo.h    ### @todo
+	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
 	logic/proxymodels/ModelHelpers.h
 	logic/proxymodels/SelectionFilterProxyModel.h

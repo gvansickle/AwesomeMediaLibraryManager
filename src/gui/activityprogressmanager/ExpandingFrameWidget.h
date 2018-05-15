@@ -34,7 +34,7 @@ class ExpandingFrameWidget : public QFrame
     using BASE_CLASS = QFrame;
 
 public:
-    explicit ExpandingFrameWidget(QWidget* parent = nullptr);
+    explicit ExpandingFrameWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
      ~ExpandingFrameWidget() override;
 
     void addWidget(QWidget* new_widget);

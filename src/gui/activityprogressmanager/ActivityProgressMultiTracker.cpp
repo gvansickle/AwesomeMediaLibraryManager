@@ -65,8 +65,13 @@ ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BA
 
     m_widget->addButton(button_show_all_jobs);
 
-    m_expanding_frame_widget = new ExpandingFrameWidget();
-//    m_expanding_frame_widget->windowHandle()->setTransientParent(parent->windowHandle());
+    m_expanding_frame_widget = new ExpandingFrameWidget(m_widget);
+
+    /// @note Set Window type to be a top-level window, i.e. a Qt::Window, Qt::Popup, or Qt::Dialog (and a few others mainly Mac).
+//    m_expanding_frame_widget->setWindowFlags(Qt::Popup);
+//    m_expanding_frame_widget->setParent(parent);
+//    m_expanding_frame_widget->windowHandle()->setTransientParent(MainWindow::instance()->windowHandle());
+
     m_expanding_frame_widget->hide();
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressMultiTracker::toggleSubjobDisplay);
