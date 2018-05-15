@@ -172,6 +172,8 @@ protected Q_SLOTS:
 //    void slotClean(KJob *job) override;
 
 private:
+    Q_DISABLE_COPY(ActivityProgressMultiTracker)
+
     void showSubJobs();
     void hideSubJobs();
     void subjobFinished(KJob*);

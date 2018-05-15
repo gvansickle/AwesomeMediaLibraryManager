@@ -24,6 +24,7 @@
 #include <utils/Fraction.h>
 #include <logic/LibraryRescanner.h>
 #include <logic/LibraryEntryMimeData.h>
+#include <concurrency/AMLMJob.h>
 
 /**
  * Why do we need this?  According to: https://woboq.com/blog/qmetatype-knows-your-types.html
@@ -68,4 +69,6 @@ void RegisterQtMetatypes()
 
 	// #include <logic/LibraryEntryMimeData.h>
 	qRegisterMetaType<LibraryEntryMimeData*>();
+
+	qRegisterMetaType<AMLMJobPtr>();
 }

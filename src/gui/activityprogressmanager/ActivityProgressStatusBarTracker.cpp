@@ -41,6 +41,8 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr jo
     : KAbstractWidgetJobTracker(parent),
       m_parent_tracker(parent_tracker), m_job(job)
 {
+    setObjectName(uniqueQObjectName());
+
     // Create the widget.
     init(job, parent);
     // Register the job.
@@ -70,7 +72,7 @@ M_WARNING("TODO - CRASH");
 /**
  * Not clear what's happening here. The DirScanJob is parented to Experimental on construction.
  */
-    qDb() << "DESTRUCTING THIS:" << this;
+qDb() << "ActivityProgressStatusBarTracker DELETED";
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
@@ -110,6 +112,8 @@ void ActivityProgressStatusBarTracker::registerJob(KJob *job)
     Q_CHECK_PTR(this);
     Q_ASSERT(job);
 
+    qWr() << "REGISTERING KJOB:" << job;
+
     AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
     Q_ASSERT(amlm_job);
 
@@ -122,6 +126,8 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
     Q_CHECK_PTR(this);
     Q_ASSERT_X(job != nullptr, __PRETTY_FUNCTION__, "Bad incoming KJob*");
 
+    qWr() << "UNREGISTERING KJOB:" << job;
+
 M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic cast to an AMLMJobPtr");
     AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
 
@@ -129,6 +135,8 @@ M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic
 
     // Forward to the AMLMJobPtr overload.
     unregisterJob(amlm_job);
+
+    qWr() << "UNREGISTERED KJOB:" << amlm_job;
 }
 
 void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
@@ -167,8 +175,10 @@ void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
     BASE_CLASS::unregisterJob(job);
 
     Q_CHECK_PTR(m_widget);
-    m_widget->m_is_job_registered = false;
-    m_widget->deref();
+    with_widget_or_skip(m_widget, [=](auto* w){
+        w->m_is_job_registered = false;
+        w->deref();
+    });
 }
 
 void ActivityProgressStatusBarTracker::dump_tracker_info()

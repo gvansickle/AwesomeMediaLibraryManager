@@ -123,10 +123,13 @@ Q_SIGNALS:
 
     /// This signal is emitted when this TW::Job is being processed by a thread.
     void started(ThreadWeaver::JobPointer);
+//    void started(AMLMJobPtr);
     /// This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
     void done(ThreadWeaver::JobPointer);
+//    void done(AMLMJobPtr);
     /// This signal is emitted when success() returns false after the job is executed.
     void failed(ThreadWeaver::JobPointer);
+//    void failed(AMLMJobPtr);
 
     /// @}
 
@@ -405,11 +408,14 @@ protected Q_SLOTS:
 protected:
 
 private:
+    Q_DISABLE_COPY(AMLMJob)
 
     /// Control structs/flags
     QAtomicInt m_flag_cancel {0};
 //    QAtomicInt m_aborted { 0 };
     QAtomicInt m_success { 1 };
 };
+
+Q_DECLARE_METATYPE(AMLMJobPtr);
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */

@@ -31,6 +31,7 @@
 AMLMJob::AMLMJob(QObject *parent)
     : KJob(parent), ThreadWeaver::Job()
 {
+    setObjectName(uniqueQObjectName());
     qDb() << M_NAME_VAL(this);
 
     /// @todo This is debug, move/remove.
@@ -40,7 +41,7 @@ AMLMJob::AMLMJob(QObject *parent)
 
 AMLMJob::~AMLMJob()
 {
-//    qDb() << "DESTRUCTOR:" << objectName();
+    qDb() << "AMLMJob DELETED";
 }
 
 void AMLMJob::requestAbort()
