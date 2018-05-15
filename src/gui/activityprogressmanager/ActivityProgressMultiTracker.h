@@ -26,6 +26,7 @@
 class QWidget;
 class QDialog;
 #include <QMap>
+#include <QPointer>
 
 /// KF5
 class KJob;
