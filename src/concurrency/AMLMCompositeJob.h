@@ -20,7 +20,10 @@
 #ifndef SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
 #define SRC_CONCURRENCY_AMLMCOMPOSITEJOB_H_
 
+/// Qt5
 #include <QObject>
+#include <QPointer>
+
 #include <KJob>
 #include <KCompositeJob>
 #include <ThreadWeaver/Collection>
@@ -29,7 +32,7 @@
 
 /// Use the AMLMCompositeJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMCompositeJob;
-using AMLMCompositeJobPtr = QSharedPointer<AMLMCompositeJob>;
+using AMLMCompositeJobPtr = QPointer<AMLMCompositeJob>;
 
 /*
  *

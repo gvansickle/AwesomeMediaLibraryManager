@@ -306,7 +306,9 @@ void MainWindow::onStartup()
     // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
     // parent: "the parent of this object and of the widget displaying the job progresses"
 M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
-    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(statusBar());
+    auto sb = statusBar();
+    Q_CHECK_PTR(sb);
+    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(sb);
     statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");

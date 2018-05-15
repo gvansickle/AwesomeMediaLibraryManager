@@ -198,7 +198,8 @@ void AMLMJob::make_connections()
     // Emitted by calling emitResult() and kill().
     // Intended to notify UIs that should detach from the job.
     /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
-    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
+//    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
+    connect(this, &AMLMJob::finished, this, &AMLMJob::onKJobFinished);
 
     qDb() << "MADE CONNECTIONS, this:" << this;
 }

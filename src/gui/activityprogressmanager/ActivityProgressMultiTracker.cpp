@@ -23,6 +23,7 @@
 #include "ExpandingFrameWidget.h"
 
 /// QT5
+#include <QWindow>
 #include <QWidget>
 #include <QToolButton>
 #include <QDialog>
@@ -40,6 +41,15 @@
 #include "ActivityProgressStatusBarTracker.h"
 #include "utils/TheSimplestThings.h"
 
+template <typename Lambda>
+void with_widget_or_skip(BaseActivityProgressStatusBarWidget* widget, Lambda l)
+{
+    if(widget)
+    {
+        l(widget);
+    }
+}
+
 ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BASE_CLASS(parent),
     m_parent(parent)
 {
@@ -56,6 +66,7 @@ ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BA
     m_widget->addButton(button_show_all_jobs);
 
     m_expanding_frame_widget = new ExpandingFrameWidget();
+//    m_expanding_frame_widget->windowHandle()->setTransientParent(parent->windowHandle());
     m_expanding_frame_widget->hide();
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressMultiTracker::toggleSubjobDisplay);
@@ -135,10 +146,11 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
 #else
     // Not calling the base class's registerJob() here, so need to connect job/finished to this/unregisterJob.
 //    QObject::connect(job, /*&AMLMJob::*/SIGNAL(finished(KJob*)), this, /*&ActivityProgressMultiTracker::*/SLOT(unregisterJob(AMLMJobPtr)));
-    QObject::connect(job, &KJob::finished, this, [=](KJob* kjob) {
-//        AMLMJobPtr amlm_job_sp = qSharedPointerObjectCast<AMLMJob>(kjob);
-        AMLMJobPtr amlm_job_sp = qobject_cast<AMLMJob*>(kjob);
-        unregisterJob(amlm_job_sp);});
+//    QObject::connect(job, &KJob::finished, this, [=](KJob* kjob) {
+////        AMLMJobPtr amlm_job_sp = qSharedPointerObjectCast<AMLMJob>(kjob);
+//        AMLMJobPtr amlm_job_sp = qobject_cast<AMLMJob*>(kjob);
+//        unregisterJob(amlm_job_sp);});
+    connect(job, &KJob::finished, this, &ActivityProgressMultiTracker::finished);
 #endif
 
     QTimer::singleShot(500, this, &ActivityProgressMultiTracker::onShowProgressWidget);
@@ -190,7 +202,13 @@ void ActivityProgressMultiTracker::onShowProgressWidget()
 
 void ActivityProgressMultiTracker::finished(KJob *job)
 {
-    qDb() << "FINISHED:" << job;
+    // Any progress UI related to job can be hidden.
+
+    qDb() << "SLOT FINISHED, KJOB:" << job;
+
+    AMLMJobPtr amlm_job_sp = qobject_cast<AMLMJob*>(job);
+    Q_CHECK_PTR(amlm_job_sp);
+    unregisterJob(amlm_job_sp);
 
 /// @todo    pw->destroyLater();
 }
@@ -200,6 +218,9 @@ void ActivityProgressMultiTracker::showSubJobs()
     // Get the parent-relative geometry of the "root widget".
     auto rect = RootWidget()->frameGeometry();
     qDb() << "Root Frame Rect:" << rect << "parent:" << RootWidget()->parentWidget();
+
+//    m_expanding_frame_widget->windowHandle()->setTransientParent(RootWidget()->windowHandle());
+
 
     // Translate the the root widget's topLeft() to MainWindow coords.
     auto pos_tl_global = RootWidget()->mapToGlobal(rect.topLeft());

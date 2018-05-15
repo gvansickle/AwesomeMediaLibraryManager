@@ -380,7 +380,7 @@ add_executable(${TEST_EXE_TARGET}
 				${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 				${amlm_settings_SRCS}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
-target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+#target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS"
 	"QT_DEPRECATED_WARNINGS"
