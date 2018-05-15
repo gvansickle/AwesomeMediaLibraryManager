@@ -34,6 +34,7 @@
 
 #include "StringHelpers.h"
 #include "DebugHelpers.h"
+#include "ConnectHelpers.h"
 #include "QtCastHelpers.h"
 
 #endif /* SRC_UTILS_THESIMPLESTTHINGS_H_ */

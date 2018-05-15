@@ -20,6 +20,8 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMULTITRACKER_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSMULTITRACKER_H_
 
+#include <config.h>
+
 /// QT5
 class QWidget;
 class QDialog;
@@ -31,6 +33,7 @@ class KToolTipWidget;
 #include <KAbstractWidgetJobTracker>
 
 /// Ours
+#include <utils/UniqueIDMixin.h>
 #include "ActivityProgressStatusBarTracker.h"
 class BaseActivityProgressStatusBarWidget;
 #include "ExpandingFrameWidget.h"
@@ -127,6 +130,58 @@ public Q_SLOTS:
      */
     virtual void unregisterJob(AMLMJobPtr job);
 
+
+protected Q_SLOTS:
+
+    void toggleSubjobDisplay(bool checked);
+
+    void onShowProgressWidget();
+
+    /**
+     * The following slots are inherited from KAbstractWidgetJobTracker etc.
+     */
+    /// Called when a job is finished, in any case.
+    /// It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
+    /// KAbstractWidgetJobTracker implementation does nothing.
+    void finished(KJob *job) override;
+//    void suspended(KJob *job) override;
+//    void resumed(KJob *job) override;
+
+
+    /**
+     * "Called to display general description of a job.
+     *  A description has a title and two optional fields which can be used to complete the description.
+     *  Examples of titles are "Copying", "Creating resource", etc.
+     *  The fields of the description can be "Source" with an URL, and, "Destination" with an URL for a "Copying" description."
+     */
+//    void description(KJob *job, const QString &title,
+//                             const QPair<QString, QString> &field1,
+//                             const QPair<QString, QString> &field2) override;
+
+    /**
+     * "Called to display state information about a job.
+     * Examples of message are "Resolving host", "Connecting to host...", etc."
+     */
+//    void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
+    /**
+     * "Emitted to display a warning about a job."
+     */
+//    void warning(KJob *job, const QString &plain, const QString &rich) override;
+
+//    void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+//    void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+//    void percent(KJob *job, unsigned long percent) override;
+//    void speed(KJob *job, unsigned long value) override;
+
+    /// KAbstractWidgetJobTracker implementation does nothing.
+//    void slotClean(KJob *job) override;
+
+    // These all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
+    // depend on the KJob supporting kill/suspend/resume.
+//    void slotResume(KJob *job) override;
+//    void slotStop(KJob *job) override;
+//    void slotSuspend(KJob *job) override;
+
 protected:
 
     using ActiveActivitiesMap = QMap<AMLMJobPtr, QPointer<ActivityProgressStatusBarTracker>>;
@@ -141,35 +196,6 @@ protected:
 
     /// Showable/hidable window containing all sub-trackers.
     QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};
-
-protected Q_SLOTS:
-
-    void toggleSubjobDisplay(bool checked);
-
-    void onShowProgressWidget();
-
-    /**
-     * The following slots are inherited.
-     */
-    /// Called when a job is finished, in any case.
-    /// It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
-    /// KAbstractWidgetJobTracker implementation does nothing.
-    void finished(KJob *job) override;
-//    void suspended(KJob *job) override;
-//    void resumed(KJob *job) override;
-
-//    void description(KJob *job, const QString &title,
-//                             const QPair<QString, QString> &field1,
-//                             const QPair<QString, QString> &field2) override;
-//    void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
-//    void warning(KJob *job, const QString &plain, const QString &rich) override;
-
-//    void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
-//    void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
-//    void percent(KJob *job, unsigned long percent) override;
-//    void speed(KJob *job, unsigned long value) override;
-
-//    void slotClean(KJob *job) override;
 
 private:
     Q_DISABLE_COPY(ActivityProgressMultiTracker)
