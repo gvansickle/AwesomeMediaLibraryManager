@@ -40,4 +40,22 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
 //	return connect(sender_and_receiver, signal, sender_and_receiver, slot, type);
 //}
 
+/**
+ * If @a ptr is not nullptr, runs lambda @a l, passing it ptr as a param.
+ * Else @l is never called.
+ *
+ * @todo Not so much a connect helper, but pretty general-purpose.  Maybe move.
+ *
+ * @param ptr
+ * @param l
+ */
+template <typename PointerType, typename Lambda>
+void with_ptr_or_skip(PointerType ptr, Lambda l)
+{
+    if(ptr)
+    {
+        l(ptr);
+    }
+}
+
 #endif // CONNECTHELPERS_H

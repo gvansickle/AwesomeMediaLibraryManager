@@ -21,8 +21,9 @@
 
 #include "ActivityProgressStatusBarTracker.h"
 
-#include <utils/DebugHelpers.h>
-#include <utils/StringHelpers.h>
+//#include <utils/DebugHelpers.h>
+//#include <utils/StringHelpers.h>
+#include <utils/TheSimplestThings.h>
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 #include "ActivityProgressMultiTracker.h"
@@ -175,7 +176,7 @@ void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
     BASE_CLASS::unregisterJob(job);
 
     Q_CHECK_PTR(m_widget);
-    with_widget_or_skip(m_widget, [=](auto* w){
+    with_ptr_or_skip(m_widget, [=](auto w){
         w->m_is_job_registered = false;
         w->deref();
     });
