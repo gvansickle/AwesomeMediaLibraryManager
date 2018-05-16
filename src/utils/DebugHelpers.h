@@ -52,6 +52,8 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 #define qWr() qWarning() << M_THREADNAME()
 #define qCr() qCritical() << M_THREADNAME()
 
+#define M_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+
 ///**
 // * QObject property dumper.
 // */

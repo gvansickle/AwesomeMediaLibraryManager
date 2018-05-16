@@ -107,27 +107,35 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     // Shouldn't ever get here before the widget is constructed (in the constructor).
     if(job == nullptr)
     {
+        // The summary widget.
+        M_WARNIF((m_cumulative_status_widget == nullptr));
         return m_cumulative_status_widget;
     }
     else
     {
-        Q_CHECK_PTR(m_widget);
-        return m_widget;
+        // A specific KJob's widget.  Should have been created when the KJob was registered.
+        auto kjob_widget = m_amlmjob_to_widget_map.value(job, nullptr);
+        M_WARNIF((kjob_widget == nullptr));
+        Q_CHECK_PTR(kjob_widget);
+        return kjob_widget;
     }
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 {
-    // Shouldn't ever get here before the widget is constructed (in the constructor).
-    if(job == nullptr)
-    {
-        return m_cumulative_status_widget;
-    }
-    else
-    {
-        Q_CHECK_PTR(m_widget);
-        return m_widget;
-    }
+    KJob* kjob = qobject_cast<KJob*>(job);
+    M_WARNIF((kjob == nullptr));
+    return widget(kjob);
+//    // Shouldn't ever get here before the widget is constructed (in the constructor).
+//    if(job == nullptr)
+//    {
+//        return m_cumulative_status_widget;
+//    }
+//    else
+//    {
+//        Q_CHECK_PTR(m_widget);
+//        return m_widget;
+//    }
 }
 
 
