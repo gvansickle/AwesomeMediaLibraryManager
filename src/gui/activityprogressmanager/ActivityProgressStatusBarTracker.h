@@ -28,6 +28,7 @@ class QLabel;
 class QToolButton;
 class QProgressBar;
 #include <QTime>
+#include <QMap>
 #include <QPointer>
 #include <QSharedPointer>
 
@@ -41,6 +42,7 @@ class KJob;
 #include "BaseActivityProgressStatusBarWidget.h"
 //class BaseActivityProgressStatusBarWidget;
 class ActivityProgressMultiTracker;
+class ExpandingFrameWidget;
 
 
 class ActivityProgressStatusBarTracker;
@@ -72,14 +74,50 @@ Q_SIGNALS:
     /// @}
 
 public:
-    ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent);
-
+	/**
+     * Constructor.
+     * @note parent does have to be a QWidget not a QObject, since that's what the base class takes.
+     *       base class' base class KJobTrackerInterface OTOH takes only a QObject* as parent.
+     */
+    explicit ActivityProgressStatusBarTracker(QWidget* parent = nullptr);
+    explicit ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent);
     ~ActivityProgressStatusBarTracker() override;
+
+    /**
+     * @link https://api.kde.org/frameworks/kcoreaddons/html/classKJobTrackerInterface.html
+     * @link https://api.kde.org/frameworks/kcoreaddons/html/kjobtrackerinterface_8cpp_source.html
+     * @link https://api.kde.org/frameworks/kjobwidgets/html/classKAbstractWidgetJobTracker.html
+     * @link https://github.com/KDE/kjobwidgets/blob/master/src/kabstractwidgetjobtracker.cpp
+     *
+     * @note KAbstractWidgetJobTracker inherits from KJobTrackerInterface, and adds some useful functionality:
+     *       - "QWidget *widget(KJob *job)" pure-virtual interface for generating/returning the associated QWidget.
+     *       - void setStopOnClose(KJob *job, bool stopOnClose) functionality.  Sets whether the KJob should be stopped
+     *           if the widget is closed.
+     *       - void setAutoDelete(KJob* job, bool autoDelete) functionality.  Sets whether to delete
+     *           or only clean the widget.
+     *       - New protected slot "slotClean(KJob*)" does nothing, needs to be overridden if any action is necessary.
+     *       - Three new signals:
+     *         - resume(KJob*)
+     *         - stopped(KJob*)
+     *         - suspend(KJob*)
+     *       - Three related protected slots:
+     *         - slotStop(KJob*)/slotSuspend(KJob*)/slotResume(KJob*)
+     *         These all have default implementations which call the KJob functions, and look like they'll work
+     *         without reimplementation, but something needs to connect signals to them.
+     *       - Inherited and overridden protected slot:
+     *         - void finished(KJob*)
+     *         still does nothing, same as KJobTrackerInterface.
+     *
+     *  Forwards registerJob()/unregisterJob() to KJobTrackerInterface unchanged.
+     */
+
+	/// @todo Not sure we need this.    
+	QWidget* RootWidget();
 
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
 
-    virtual QWidget* widget(AMLMJobPtr job);
+    virtual QWidget* widget(AMLMJobPtr amlmjob);
 
 public Q_SLOTS:
     void registerJob(KJob *job) override;
@@ -95,18 +133,20 @@ public Q_SLOTS:
      *     job->disconnect(this);
      *  }
      * KAbstractWJT just calls the above.
-     * KJTI does connect the signal->slot, so as long as we ultimately call the base class implementation of registerjob() we're good.
+     * KJTI does connect the signal->slot (many of them, job->this) in registerJob(), so as long as we ultimately call the base class
+     * implementation we're good.
+     * @warning ^^^ WHICH CURRENTLY WE ARE NOT DOING???
      */
     virtual void unregisterJob(AMLMJobPtr job);
-
-    /// @todo Set in constructor.  Maybe shouldn't be?  Or construct these in MultiTracker?
-//    virtual void setParentTracker(KAbstractWidgetJobTracker* tracker);
-//    virtual void unsetParentTracker(KAbstractWidgetJobTracker* tracker);
 
     void dump_tracker_info();
 
 
 protected Q_SLOTS:
+
+	/// @todo NEW
+    void toggleSubjobDisplay(bool checked);
+    void onShowProgressWidget();
 
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
@@ -156,7 +196,7 @@ protected Q_SLOTS:
 //    void slotSuspend(KJob *job) override;
 
 public: /// @todo FBO StatusBarWidget, make private.
-    /// The actual widget.
+    /// @todo OLD: The actual widget.
     QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
 
 protected:
@@ -165,10 +205,16 @@ protected:
     /// Called by the constructor.
     void init(AMLMJobPtr job, QWidget *parent);
 
+	/// @todo NEW	
+    /// Map of all registered sub-jobs (AMLMJobPtrs) to sub-job-widgets (BaseActivityProgressStatusBarWidget*'s).
+    using ActiveActivitiesMap = QMap<AMLMJobPtr, QPointer<BaseActivityProgressStatusBarWidget>>;
+    ActiveActivitiesMap m_amlmjob_to_tracker_map;
+
+	/// @todo Another map?
     qulonglong m_processedSize {0};
     bool m_is_total_size_known {false};
     qulonglong m_totalSize {0};
-
+	/// @todo KJobs each have one of these.
     QTime m_start_time;
 
     /// The tracker tracking this tracker.
@@ -177,9 +223,20 @@ protected:
     /// The AMLMJob being tracked by this tracker.
     AMLMJobPtr m_job { nullptr };
 
+	/// @todo NEW	
+    /// The status widget showing the cumulative status of all registered sub-trackers.
+    QPointer<BaseActivityProgressStatusBarWidget> m_cumulative_status_widget {nullptr};
+	/// @todo NEW
+    /// Showable/hidable window containing all sub-trackers.
+    QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};
+
 private:
     Q_DISABLE_COPY(ActivityProgressStatusBarTracker)
 
+	/// @todo NEW
+    void showSubJobs();
+    void hideSubJobs();
+    void subjobFinished(KJob*);
 
 };
 

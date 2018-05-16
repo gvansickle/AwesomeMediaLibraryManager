@@ -22,6 +22,8 @@
 
 #include <type_traits>
 
+#include <QObject>
+#include <QMetaMethod>
 #include <QString>
 #include <QDebug>
 #include <QThread>
@@ -68,6 +70,40 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 
 //#undef out
 //}
+
+class SignalHook : public QObject
+{
+    Q_OBJECT
+
+public:
+    SignalHook(QObject* parent = nullptr) : QObject(parent) {}
+
+    void hook_all_signals(QObject* object)
+    {
+        m_object = object;
+        const QMetaObject *me = object->metaObject();
+        int methodCount = me->methodCount();
+        for(int i = 0; i < methodCount; i++)
+        {
+            QMetaMethod method = me->method(i);
+            if(method.methodType() == QMetaMethod::Signal)
+            {
+            	// Found a signal, hook it up to the single snoop handler.
+                qDb() << "Hooking signal:" << method.methodSignature() << "of QObject:" << object;
+                QObject::connect(object, "2"+method.methodSignature(), this, SLOT(signalFired()));
+            }
+        }
+    }
+
+public Q_SLOTS:
+	void signalFired()
+	{
+		qDb() << "SIGNAL FIRED FROM OBJECT:" << m_object;
+	}
+
+private:
+	QObject* m_object {nullptr};
+};
 
 template <typename T>
 static inline auto idstr(const char *id_as_c_str, T id) -> std::enable_if_t<std::is_convertible<T, std::string>::value == true, std::string> /// SFINAE version for T already convertible to std::string.

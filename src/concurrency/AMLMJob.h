@@ -54,13 +54,17 @@
  *  - autoDelete() support.
  */
 
+/// Qt5
 #include <QObject>
-#include <KJob>
 #include <QPointer>
+
+/// KF5
+#include <KJob>
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/IdDecorator>
 #include <ThreadWeaver/QObjectDecorator>
 
+/// Ours
 #include "utils/UniqueIDMixin.h"
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.

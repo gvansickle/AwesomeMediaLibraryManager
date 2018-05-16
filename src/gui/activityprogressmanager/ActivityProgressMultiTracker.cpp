@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "ActivityProgressMultiTracker.h"
 
 #include "BaseActivityProgressStatusBarWidget.h"
@@ -79,7 +81,7 @@ ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BA
 
 ActivityProgressMultiTracker::~ActivityProgressMultiTracker()
 {
-    qDb() << "ActivityProgressStatusBarTracker DELETED";
+    qDb() << "ActivityProgressMultiTracker DELETED";
 
     delete m_expanding_frame_widget;
     m_expanding_frame_widget = nullptr;

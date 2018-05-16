@@ -19,18 +19,25 @@
 
 #include "AMLMJob.h"
 
+/// Qt5
 #include <QPointer>
+
+/// KF5
 #include <ThreadWeaver/Job>
-//#include <ThreadWeaver/IdDecorator>
 #include <ThreadWeaver/DebuggingAids>
 
+/// Ours
 #include "utils/DebugHelpers.h"
 #include "utils/UniqueIDMixin.h"
-
 
 AMLMJob::AMLMJob(QObject *parent)
     : KJob(parent), ThreadWeaver::Job()
 {
+
+    // Let's try this...
+//    auto sh = new SignalHook(this);
+//    sh->hook_all_signals(this);
+
     setObjectName(uniqueQObjectName());
     qDb() << M_NAME_VAL(this);
 
