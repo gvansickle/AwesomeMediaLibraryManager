@@ -104,6 +104,9 @@ else()
 endif()
 # libcue doesn't want AUTOMOC etc. applied to it.
 set_property(TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SKIP_AUTOGEN ON)
+get_property(AMLM_LIBCUE_TARGET_SRCS TARGET ${AMLM_LIBCUE_TARGET} PROPERTY SOURCES)
+set_property(SOURCE ${AMLM_LIBCUE_TARGET_SRCS} PROPERTY SKIP_AUTOGEN ON)
+#message(STATUS "AMLM_LIBCUE_TARGET:SOURCES: ${AMLM_LIBCUE_TARGET_SRCS}")
 
 # Verdigris is just two headers.
 set(USE_BUNDLED_VERDIGRIS 1)
@@ -114,7 +117,9 @@ target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/
 
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
-message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
+#message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
+# Exclude the generated KConfig settings source files from AUTOMOC etc.
+set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON) 
 ### @todo Do we need this? Target to get the deps on generated files right.
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
@@ -246,7 +251,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	)
 
 add_subdirectory(gui)
-message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
+#message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
 #
 # Append all the SOURCE_* subsets.
@@ -264,7 +269,7 @@ list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
 # From gui/.
-# @todo Make this a lib.
+# @todo Make this a real target.
 prepend_to_each(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
 prepend_to_each(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER})
 prepend_to_each(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
@@ -279,12 +284,12 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 
 # Sets the icon on Windows and OSX.
 # See https://api.kde.org/ecm/module/ECMAddAppIcon.html
-file(GLOB ICONS_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../resources/*-preferences-desktop-sound.png")
+file(GLOB ICONS_SRCS "${PROJECT_SOURCE_DIR}/resources/*-preferences-desktop-sound.png")
 ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
 
 # Qt5 Binary Resource (rcc) files.
-qt5_add_binary_resources(icons_oxygen ../resources/oxygenicons.qrc)
+qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
@@ -292,8 +297,8 @@ qt5_add_binary_resources(icons_oxygen ../resources/oxygenicons.qrc)
 #qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
 # Qt5 non-binary Resource files.
-qt5_add_resources(amlm_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
-qt5_add_resources(amlm_SRCS ../resources/amlm.qrc)
+qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
+qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
@@ -362,8 +367,8 @@ download_project(PROJ                googletest
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 	EXCLUDE_FROM_ALL)
-# We don't want AUTOMOC etc. applied to googletest.
-set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY SKIP_AUTOGEN ON)
+
+
 
 #enable_testing()
 set(TEST_EXE_TARGET alltests)
@@ -393,6 +398,11 @@ target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${TEST_EXE_TARGET} PROPERTIES
 	AUTOMOC ON
 	AUTOUIC ON)
+# We don't want AUTOMOC etc. applied to googletest.
+set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
 target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})

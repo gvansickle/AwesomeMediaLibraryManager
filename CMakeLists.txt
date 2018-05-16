@@ -326,7 +326,7 @@ download_project(PROJ                boost_callable_traits
 	${UPDATE_DISCONNECTED_IF_AVAILABLE}
 	)
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
-message(STATUS ${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
+#message(STATUS ${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
 
 # Use include-what-you-use.
 if(FALSE)
