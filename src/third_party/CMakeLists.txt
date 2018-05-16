@@ -79,6 +79,7 @@ if(WIN32)
             $<INSTALL_INTERFACE:libcue>)
     target_compile_options(libcue PUBLIC -FIlibcue_config_win.h)
 endif()
+set_property(TARGET libcue PROPERTY SKIP_AUTOGEN ON)
 
 #install(TARGETS libcue
 #        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
