@@ -22,6 +22,7 @@
 #include "ActivityProgressStatusBarTracker.h"
 
 /// Qt5
+#include <QTimer>
 #include <QToolButton>
 
 
@@ -36,6 +37,7 @@
 
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent)
 {
+    m_parent_widget = parent;
     /// @todo CREATE THE SUMMARY WIDGET
     /// @todo nullptr AMLMJob.
     m_cumulative_status_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
@@ -61,17 +63,16 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 }
 
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent)
-    : KAbstractWidgetJobTracker(parent),
-      /*m_parent_tracker(parent_tracker),*/ m_job(job)
+    : KAbstractWidgetJobTracker(parent)
 {
     setObjectName(uniqueQObjectName());
 
     // Create the widget.
-    init(job, parent);
+    createWidgetForNewJob(job, parent);
     // Register the job.
     registerJob(job);
 
-    qDb() << "JOB PARENT:" << m_job->parent();
+    qDb() << "JOB PARENT:" << job->parent();
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
@@ -130,7 +131,7 @@ QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 }
 
 
-void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
+void ActivityProgressStatusBarTracker::createWidgetForNewJob(AMLMJobPtr job, QWidget *parent)
 {
     // Create the widget for this new job.
     m_widget = new BaseActivityProgressStatusBarWidget(job, /*tracker=*/this, parent);
@@ -138,6 +139,7 @@ void ActivityProgressStatusBarTracker::init(AMLMJobPtr job, QWidget *parent)
     Q_CHECK_PTR(m_widget);
 
     // Make the widget->tracker connections.
+    // Button->tracker connections.
     connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
     connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
     connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
@@ -183,12 +185,15 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 {
     Q_CHECK_PTR(this);
     Q_ASSERT(job);
-    Q_CHECK_PTR(m_widget);
+//    Q_CHECK_PTR(m_widget);
 
     // Create the widget for this new job.
-	m_widget->m_is_job_registered = true;
+    auto widget = new BaseActivityProgressStatusBarWidget(job, this, m_parent_widget);
+    widget->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
-//    m_widget->setAttribute(Qt::WA_DeleteOnClose);
+//    widget->setAttribute(Qt::WA_DeleteOnClose);
+
+    m_amlmjob_to_widget_map.insert(job, widget);
 
     BASE_CLASS::registerJob(job);
 
@@ -203,7 +208,7 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
     dump_tracker_info();
 
     /// @todo Need to do this?  From KWidgetJobTracker:
-    //QTimer::singleShot(500, this, SLOT(_k_showProgressWidget()));
+    QTimer::singleShot(500, this, SLOT(onShowProgressWidget()));
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
@@ -214,25 +219,23 @@ void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
     // Call down to the base class first; widget may be deleted by deref() below.
     BASE_CLASS::unregisterJob(job);
 
-    Q_CHECK_PTR(m_widget);
-    with_ptr_or_skip(m_widget, [=](auto w){
+    with_widget_or_skip(job, [=](auto w){
         w->m_is_job_registered = false;
         w->deref();
-    });
+        ;});
 }
 
 void ActivityProgressStatusBarTracker::dump_tracker_info()
 {
-    QVector<AMLMJobPtr> joblist;
-    joblist << m_job;
+//    QVector<AMLMJobPtr> joblist;
+//    joblist << m_amlmjob_to_widget_map.keys();
 
-    for(auto &i : joblist)
-    {
-        qIn() << "INFO FROM TRACKER:" << this << "RE JOB:" << i;
-        qIn() << M_NAME_VAL(autoDelete(i)) << "\n"
-              << M_NAME_VAL(stopOnClose(i)) << "\n";
-    }
-
+//    for(auto &i : joblist)
+//    {
+//        qIn() << "INFO FROM TRACKER:" << this << "RE JOB:" << i;
+//        qIn() << M_NAME_VAL(autoDelete(i)) << "\n"
+//              << M_NAME_VAL(stopOnClose(i)) << "\n";
+//    }
 }
 
 void ActivityProgressStatusBarTracker::onShowProgressWidget()
@@ -253,7 +256,7 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
     /// This follows the basic pattern of KWidgetJobTracker, with a little C++14 help.
     /// All these "tracker->widget ~signal" handlers get the widget ptr (from a map in that case),
     /// check for null, and if not null do the job.
-    with_ptr_or_skip(m_widget, [=](auto w){
+    with_widget_or_skip(job, [=](auto w){
         w->setDescription(title, field1, field2);
     });
 }
@@ -264,14 +267,14 @@ void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &pla
 //    qDb() << "INFOMESSAGE RECEIVED";
 //    Q_CHECK_PTR(m_widget);
 //    m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
-    with_ptr_or_skip(m_widget, [=](auto w){
+    with_widget_or_skip(job, [=](auto w){
         w->setInfoMessage(rich.isEmpty() ? plain : rich);
         ;});
 }
 
 void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
 {
-    with_ptr_or_skip(m_widget, [=](auto w){;
+    with_widget_or_skip(job, [=](auto w){
         w->setWarning(rich.isEmpty() ? plain : rich);
     });
 
@@ -315,7 +318,7 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *job, KJob::Unit unit, q
 
 void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
-    with_ptr_or_skip(m_widget, [=](auto w)
+    with_widget_or_skip(job, [=](auto w)
     {
         QString tmp;
 
@@ -396,7 +399,7 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
-    with_ptr_or_skip(m_widget, [=](auto w){
+    with_widget_or_skip(job, [=](auto w){
         qDb() << "KJobTrk: percent" << job << percent;
 
         QString title = toqstr("PCT") + " (";
@@ -430,14 +433,14 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
 void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 {
-    with_ptr_or_skip(m_widget, [=](auto w){
+    with_widget_or_skip(job, [=](auto w){
         qDb() << "KJobTrk: speed" << job << value;
     });
 }
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
-    with_ptr_or_skip(m_widget, [=](auto w){
+    with_widget_or_skip(job, [=](auto w){
         qWr() << "FINISHED JOB:" << job << "WITH NO WIDGET";
     });
 
@@ -455,7 +458,7 @@ void ActivityProgressStatusBarTracker::finished(KJob *job)
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 {
-    with_ptr_or_skip(m_widget, [=](auto w){
+    with_widget_or_skip(job, [=](auto w){
         qDb() << "KJobTrk: slotClean" << job;
     });
 }

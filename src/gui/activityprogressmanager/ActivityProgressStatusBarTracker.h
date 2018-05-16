@@ -201,12 +201,23 @@ protected:
 
     /// Create the widget.
     /// Called by the constructor.
-    void init(AMLMJobPtr job, QWidget *parent);
+    void createWidgetForNewJob(AMLMJobPtr job, QWidget *parent);
+
+    /// Templated job->widget lookup function.
+    template <typename JobPointerType, typename Lambda>
+    void with_widget_or_skip(JobPointerType job, Lambda l)
+    {
+        QPointer<BaseActivityProgressStatusBarWidget> widget = m_amlmjob_to_widget_map.value(job, nullptr);
+        if(widget)
+        {
+            l(widget);
+        }
+    }
 
 	/// @todo NEW	
     /// Map of all registered sub-jobs (AMLMJobPtrs) to sub-job-widgets (BaseActivityProgressStatusBarWidget*'s).
-    using ActiveActivitiesMap = QMap<AMLMJobPtr, QPointer<BaseActivityProgressStatusBarWidget>>;
-    ActiveActivitiesMap m_amlmjob_to_tracker_map;
+    using ActiveActivitiesMap = QMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
+    ActiveActivitiesMap m_amlmjob_to_widget_map;
 
 	/// @todo Another map?
     qulonglong m_processedSize {0};
@@ -219,7 +230,10 @@ protected:
 //    QPointer<ActivityProgressMultiTracker> m_parent_tracker {nullptr};
 
     /// The AMLMJob being tracked by this tracker.
-    AMLMJobPtr m_job { nullptr };
+//    AMLMJobPtr m_job { nullptr };
+
+    /// @todo NEW
+    QPointer<QWidget> m_parent_widget {nullptr};
 
 	/// @todo NEW	
     /// The status widget showing the cumulative status of all registered sub-trackers.
