@@ -42,7 +42,8 @@ class KJob;
 #include "BaseActivityProgressStatusBarWidget.h"
 //class BaseActivityProgressStatusBarWidget;
 class ActivityProgressMultiTracker;
-class ExpandingFrameWidget;
+//class ExpandingFrameWidget;
+#include "ExpandingFrameWidget.h"
 
 
 class ActivityProgressStatusBarTracker;
@@ -110,9 +111,6 @@ public:
      *
      *  Forwards registerJob()/unregisterJob() to KJobTrackerInterface unchanged.
      */
-
-	/// @todo Not sure we need this.    
-	QWidget* RootWidget();
 
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
@@ -218,7 +216,7 @@ protected:
     QTime m_start_time;
 
     /// The tracker tracking this tracker.
-    QPointer<ActivityProgressMultiTracker> m_parent_tracker {nullptr};
+//    QPointer<ActivityProgressMultiTracker> m_parent_tracker {nullptr};
 
     /// The AMLMJob being tracked by this tracker.
     AMLMJobPtr m_job { nullptr };

@@ -78,7 +78,7 @@ class CollectionDockWidget;
 class ActivityProgressWidget;
 class ActivityProgressDialog;
 class ActivityProgressManager;
-class ActivityProgressMultiTracker;
+class ActivityProgressStatusBarTracker;
 
 class ActionBundle;
 class PlayerControls;
@@ -154,9 +154,9 @@ public:
     ToolBarClass* addToolBar(const QString &win_title, const QString& object_name);
 
     /**
-     * Get ptr to the ActivityProgressMultiTracker singleton.
+     * Get ptr to the ActivityProgressStatusBarTracker singleton.
      */
-    static ActivityProgressMultiTracker* master_tracker_instance();
+    static ActivityProgressStatusBarTracker* master_tracker_instance();
 
 public Q_SLOTS:
 
@@ -520,7 +520,7 @@ private:
      * Master Tracker for all asynchronous activites.
      * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
      */
-    ActivityProgressMultiTracker* m_activity_progress_multi_tracker { nullptr };
+    ActivityProgressStatusBarTracker* m_activity_progress_multi_tracker { nullptr };
 
     /// Status dialog.
     ActivityProgressDialog* m_status_dlg { nullptr };

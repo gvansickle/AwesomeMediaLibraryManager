@@ -34,17 +34,11 @@
 #include "ActivityProgressMultiTracker.h"
 
 
-
-ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent)
-    : KAbstractWidgetJobTracker(parent),
-      m_parent_tracker(parent_tracker), m_job(job)
+ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent)
 {
-    setObjectName(uniqueQObjectName());
-
-	/// @todo CREATE THE SUMMARY WIDGET
-
-	/// @todo nullptr AMLMJob.
-    m_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
+    /// @todo CREATE THE SUMMARY WIDGET
+    /// @todo nullptr AMLMJob.
+    m_cumulative_status_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
 
     // Expand jobs button.
     auto button_show_all_jobs = new QToolButton(parent);
@@ -52,11 +46,9 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr jo
     button_show_all_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
     button_show_all_jobs->setCheckable(true);
 
-    m_widget->addButton(button_show_all_jobs);
-	/// @todo END CREATE THE SUMMARY WIDGET
+    m_cumulative_status_widget->addButton(button_show_all_jobs);
 
-	/// @todo CREATE THE EXPANDING FRAME
-	m_expanding_frame_widget = new ExpandingFrameWidget();
+    m_expanding_frame_widget = new ExpandingFrameWidget();
 
     /// @note Set Window type to be a top-level window, i.e. a Qt::Window, Qt::Popup, or Qt::Dialog (and a few others mainly Mac).
 //    m_expanding_frame_widget->setWindowFlags(Qt::Popup);
@@ -66,7 +58,13 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr jo
     m_expanding_frame_widget->hide();
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
-	/// @todo END CREATE THE EXPANDING FRAME
+}
+
+ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent)
+    : KAbstractWidgetJobTracker(parent),
+      /*m_parent_tracker(parent_tracker),*/ m_job(job)
+{
+    setObjectName(uniqueQObjectName());
 
     // Create the widget.
     init(job, parent);
@@ -106,15 +104,29 @@ qDb() << "ActivityProgressStatusBarTracker DELETED";
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
 {
     // Shouldn't ever get here before the widget is constructed (in the constructor).
-    Q_CHECK_PTR(m_widget);
-    return m_widget;
+    if(job == nullptr)
+    {
+        return m_cumulative_status_widget;
+    }
+    else
+    {
+        Q_CHECK_PTR(m_widget);
+        return m_widget;
+    }
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 {
     // Shouldn't ever get here before the widget is constructed (in the constructor).
-    Q_CHECK_PTR(m_widget);
-    return m_widget;
+    if(job == nullptr)
+    {
+        return m_cumulative_status_widget;
+    }
+    else
+    {
+        Q_CHECK_PTR(m_widget);
+        return m_widget;
+    }
 }
 
 

@@ -120,7 +120,7 @@
 #include <gui/menus/ActionBundle.h>
 #include <gui/menus/HelpMenu.h>
 #include <KXmlGui/KEditToolBar>
-#include <gui/activityprogressmanager/ActivityProgressMultiTracker.h>
+#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
 #include "concurrency/ExtAsync.h"
 
@@ -308,8 +308,8 @@ void MainWindow::onStartup()
 M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
     auto sb = statusBar();
     Q_CHECK_PTR(sb);
-    m_activity_progress_multi_tracker = new ActivityProgressMultiTracker(sb);
-    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->RootWidget());
+    m_activity_progress_multi_tracker = new ActivityProgressStatusBarTracker(sb);
+    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->widget(nullptr));
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 
@@ -1353,7 +1353,7 @@ ToolBarClass* MainWindow::addToolBar(const QString &win_title, const QString &ob
     return retval;
 }
 
-ActivityProgressMultiTracker *MainWindow::master_tracker_instance()
+ActivityProgressStatusBarTracker *MainWindow::master_tracker_instance()
 {
     // Make sure it's been constructed.
     Q_ASSERT(instance()->m_activity_progress_multi_tracker != nullptr);
