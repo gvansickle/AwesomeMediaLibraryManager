@@ -121,6 +121,7 @@ public Q_SLOTS:
     void registerJob(KJob *job) override;
     void unregisterJob(KJob *job) override;
 
+#if 0
     virtual void registerJob(AMLMJobPtr job);
     /**
      * From KJobTrackerInterface:
@@ -136,6 +137,7 @@ public Q_SLOTS:
      * @warning ^^^ WHICH CURRENTLY WE ARE NOT DOING???
      */
     virtual void unregisterJob(AMLMJobPtr job);
+#endif
 
     void dump_tracker_info();
 
@@ -194,11 +196,16 @@ protected Q_SLOTS:
 //    void slotSuspend(KJob *job) override;
 
 public:
-    /// FBO *StatusBarWidget/closeNow().
-    void removeJobAndWidgetFromMap(AMLMJobPtr ptr, QWidget* widget);
+    /// @name Public interface FBO *StatusBarWidget
+    /// @{
 
-    /// @todo OLD: The actual widget.
-//    QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
+    /// FBO closeNow().
+    void removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
+
+    /// FBO closeEvent()
+    void directCallSlotStop(KJob* kjob);
+
+    /// @}
 
 protected:
 
@@ -228,12 +235,6 @@ protected:
     qulonglong m_totalSize {0};
 	/// @todo KJobs each have one of these.
     QTime m_start_time;
-
-    /// The tracker tracking this tracker.
-//    QPointer<ActivityProgressMultiTracker> m_parent_tracker {nullptr};
-
-    /// The AMLMJob being tracked by this tracker.
-//    AMLMJobPtr m_job { nullptr };
 
     /// @todo NEW
     QPointer<QWidget> m_parent_widget {nullptr};

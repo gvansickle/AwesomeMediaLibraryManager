@@ -41,11 +41,12 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget
 
 }
 
-BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(AMLMJobPtr job, KAbstractWidgetJobTracker* tracker, QWidget *parent)
+BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *job, ActivityProgressStatusBarTracker *tracker, QWidget *parent)
     : BaseActivityProgressStatusBarWidget(parent)
 {
     m_tracker = tracker;
     m_job = job;
+    m_refcount = 1;
 
     // We have a vtable to this, go nuts with the virtual calls.
     /// @note job is currently unused by init().
@@ -93,7 +94,7 @@ void BaseActivityProgressStatusBarWidget::setValue(int val)
     m_progress_bar->setValue(val);
 }
 
-void BaseActivityProgressStatusBarWidget::init(AMLMJobPtr job, QWidget *parent)
+void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
 {
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
@@ -174,7 +175,7 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
         qDb() << "EMITTING SLOTSTOP";
         QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
                                   Q_ARG(KJob*, m_job));
-//        m_tracker->slotStop(m_job);
+        m_tracker->directCallSlotStop(m_job);
     }
 
     BASE_CLASS::closeEvent(event);
@@ -221,29 +222,11 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     /// ereslibre
 
     auto sbtracker = qobject_cast<ActivityProgressStatusBarTracker*>(m_tracker);
-    auto multitracker = qobject_cast<ActivityProgressMultiTracker*>(m_tracker);
+    Q_CHECK_PTR(sbtracker);
     if(sbtracker)
     {
         qDb() << "SBTRACKER";
         sbtracker->removeJobAndWidgetFromMap(m_job, this);
-//        /// @todo Should this not be calling widget()?
-//        auto widget = sbtracker->widget(this->m_job);
-//        if(widget == this)
-//        {
-//            // Remove this widget from the tracker.
-//            qDb() << "SBTRACKER REMOVING" << widget;
-//            sbtracker->m_widget = nullptr;
-//        }
-    }
-    else if(multitracker)
-    {
-        Q_ASSERT(0);
-        qDb() << "TODO MULTITRACKER";
-    }
-    else
-    {
-        /// Should have been one of them.
-        Q_ASSERT(0);
     }
 
 //    if (m_tracker->d->progressWidget[m_job] == this)
@@ -265,7 +248,7 @@ void BaseActivityProgressStatusBarWidget::stop()
 
        // Emit the TW:Job-has-been-cancelled signal.
        qDb() << "EMITTING CANCEL_JOB";
-       Q_EMIT cancel_job(this->m_job);
+//       Q_EMIT cancel_job(this->m_job);
    }
    closeNow();
 }

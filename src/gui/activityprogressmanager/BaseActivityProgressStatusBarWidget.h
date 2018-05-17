@@ -33,6 +33,7 @@ class KAbstractWidgetJobTracker;
 
 /// Ours
 #include "concurrency/AMLMJob.h"
+class ActivityProgressStatusBarTracker;
 
 /**
  * A widget for displaying the progress/status/controls of a single AMLMJob.
@@ -46,13 +47,13 @@ class BaseActivityProgressStatusBarWidget: public QFrame
 
 Q_SIGNALS:
     /// To the tracker: kill the job.
-    void cancel_job(AMLMJobPtr job);
+//    void cancel_job(AMLMJobPtr job);
 
     /// To the tracker: pause the job.
-    void pause_job(AMLMJobPtr job);
+//    void pause_job(AMLMJobPtr job);
 
     /// To the tracker: resume the job.
-    void resume_job(AMLMJobPtr job);
+//    void resume_job(AMLMJobPtr job);
 
 
 private:
@@ -61,7 +62,7 @@ private:
     BaseActivityProgressStatusBarWidget(QWidget *parent);
 
 public:
-    explicit BaseActivityProgressStatusBarWidget(AMLMJobPtr job, KAbstractWidgetJobTracker* tracker, QWidget *parent);
+    explicit BaseActivityProgressStatusBarWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
     ~BaseActivityProgressStatusBarWidget() override;
 
     /// Add buttons to the rhs of the layout.
@@ -87,7 +88,7 @@ protected:
 
     /// Create the widget.
     /// Called by the public constructor.
-    virtual void init(AMLMJobPtr job, QWidget *parent);
+    virtual void init(KJob* job, QWidget *parent);
 
     void closeEvent(QCloseEvent* event) override;
 
@@ -104,8 +105,8 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
 
-    KAbstractWidgetJobTracker* m_tracker;
-    AMLMJobPtr m_job;
+    ActivityProgressStatusBarTracker* m_tracker;
+    KJob* m_job;
 
     int m_refcount {0};
 

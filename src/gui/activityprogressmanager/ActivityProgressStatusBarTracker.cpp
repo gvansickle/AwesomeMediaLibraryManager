@@ -139,7 +139,7 @@ M_WARNING("TODO: Make the tracker->widget connections.");
 M_WARNING("TODO: Make the tracker->parent_tracker connections.");
 }
 
-
+#if 0
 void ActivityProgressStatusBarTracker::registerJob(KJob *job)
 {
     Q_CHECK_PTR(this);
@@ -171,12 +171,12 @@ M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic
 
     qWr() << "UNREGISTERED KJOB:" << amlm_job;
 }
+#endif
 
-void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
+void ActivityProgressStatusBarTracker::registerJob(KJob* job)
 {
     Q_CHECK_PTR(this);
     Q_ASSERT(job);
-//    Q_CHECK_PTR(m_widget);
 
     // Create the widget for this new job.
     auto widget = new BaseActivityProgressStatusBarWidget(job, this, m_expanding_frame_widget);
@@ -202,7 +202,7 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
     QTimer::singleShot(500, this, [=](){onShowProgressWidget(job);});
 }
 
-void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
+void ActivityProgressStatusBarTracker::unregisterJob(KJob* job)
 {
     Q_CHECK_PTR(this);
     Q_ASSERT(job);
@@ -463,13 +463,18 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
     });
 }
 
-void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(AMLMJobPtr ptr, QWidget *widget)
+void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget)
 {
     if(m_amlmjob_to_widget_map[ptr] == widget)
     {
         m_amlmjob_to_widget_map.remove(ptr);
         /// @todo Also to-be-shown queue?
     }
+}
+
+void ActivityProgressStatusBarTracker::directCallSlotStop(KJob *kjob)
+{
+    slotStop(kjob);
 }
 
 void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)

@@ -55,6 +55,7 @@ void with_widget_or_skip(BaseActivityProgressStatusBarWidget* widget, Lambda l)
 ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BASE_CLASS(parent),
     m_parent(parent)
 {
+#if 0
 	// The summary widget.
 	/// @todo nullptr AMLMJob.
     m_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
@@ -77,6 +78,7 @@ ActivityProgressMultiTracker::ActivityProgressMultiTracker(QWidget *parent) : BA
     m_expanding_frame_widget->hide();
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressMultiTracker::toggleSubjobDisplay);
+#endif
 }
 
 ActivityProgressMultiTracker::~ActivityProgressMultiTracker()
