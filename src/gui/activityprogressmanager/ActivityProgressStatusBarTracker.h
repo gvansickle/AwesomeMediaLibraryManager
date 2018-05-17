@@ -224,7 +224,6 @@ protected:
         }
     }
 
-	/// @todo NEW	
     /// Map of all registered sub-jobs (AMLMJobPtrs) to sub-job-widgets (BaseActivityProgressStatusBarWidget*'s).
     using ActiveActivitiesMap = QMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
     ActiveActivitiesMap m_amlmjob_to_widget_map;

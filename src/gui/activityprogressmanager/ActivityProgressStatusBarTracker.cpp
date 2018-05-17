@@ -186,6 +186,11 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* job)
 
     m_amlmjob_to_widget_map.insert(job, widget);
 
+    /// Add tracker's widget to the frame.
+    m_expanding_frame_widget->addWidget(widget);
+//    m_expanding_frame_widget->addWidget(pw);
+    m_expanding_frame_widget->reposition();
+
     BASE_CLASS::registerJob(job);
 
     qDb() << "KJobTrk: AMLMJob info:" << job;
@@ -505,6 +510,7 @@ void ActivityProgressStatusBarTracker::showSubJobs()
     qDb() << "Root Frame topLeft(), Global:" << pos_tl_global;
 
 //    m_expanding_frame_widget->popup(pos_tl_global);
+    m_expanding_frame_widget->updateGeometry();
     m_expanding_frame_widget->raise();
     m_expanding_frame_widget->show();
 

@@ -210,7 +210,7 @@ void BaseActivityProgressStatusBarWidget::closeNow()
 {
     close();
 
-    /// @todo Haven't analyzed the following scenario:
+    /// @todo Haven't analyzed the following scenario, but I think this covers it:
     /// // It might happen the next scenario:
     /// - Start a job which opens a progress widget. Keep it open. Address job is 0xdeadbeef
     /// - Start a new job, which is given address 0xdeadbeef. A new window is opened.
@@ -221,12 +221,10 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     /// For that reason we have to check if the map stores the widget as the current one.
     /// ereslibre
 
-    auto sbtracker = qobject_cast<ActivityProgressStatusBarTracker*>(m_tracker);
-    Q_CHECK_PTR(sbtracker);
-    if(sbtracker)
+    Q_CHECK_PTR(m_tracker);
+    if(m_tracker)
     {
-        qDb() << "SBTRACKER";
-        sbtracker->removeJobAndWidgetFromMap(m_job, this);
+        m_tracker->removeJobAndWidgetFromMap(m_job, this);
     }
 
 //    if (m_tracker->d->progressWidget[m_job] == this)
