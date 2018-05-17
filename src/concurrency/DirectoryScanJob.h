@@ -32,7 +32,7 @@
 #include "utils/UniqueIDMixin.h"
 
 class DirectoryScannerAMLMJob;
-using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;//QSharedPointer<DirectoryScannerAMLMJob>;
+using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
 
 /**
  *

@@ -133,7 +133,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     //    }
 //    Q_EMIT done(self);
 
-    this->ThreadWeaver::Job::defaultEnd(self, thread);
+//    this->ThreadWeaver::Job::defaultEnd(self, thread);
 
     if(!self->success())
     {
@@ -148,6 +148,9 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     }
     qDb() << "EMITTING DONE";
     Q_EMIT /*TWJob*/ this->done(self);
+
+    this->ThreadWeaver::Job::defaultEnd(self, thread);
+
 }
 
 bool AMLMJob::doKill()

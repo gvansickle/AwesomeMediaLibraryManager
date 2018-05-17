@@ -182,7 +182,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* job)
     auto widget = new BaseActivityProgressStatusBarWidget(job, this, m_expanding_frame_widget);
     widget->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
-//    widget->setAttribute(Qt::WA_DeleteOnClose);
+    widget->setAttribute(Qt::WA_DeleteOnClose);
 
     m_amlmjob_to_widget_map.insert(job, widget);
 
@@ -446,19 +446,19 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
     with_widget_or_skip(job, [=](auto w){
-        qWr() << "FINISHED JOB:" << job << "WITH NO WIDGET";
+        qWr() << "FINISHED JOB:" << job << "WITH WIDGET:" << w;
     });
 
-    Q_CHECK_PTR(this);
-    Q_CHECK_PTR(job);
+//    Q_CHECK_PTR(this);
+//    Q_CHECK_PTR(job);
 
-    qDb() << "KJobTrk: FINISHED KJob:" << job;
-    qDb() << "KJobTrk: FINISHED :" << M_NAME_VAL(job->capabilities())
-          << M_NAME_VAL(job->isSuspended())
-          << M_NAME_VAL(job->isAutoDelete())
-          << M_NAME_VAL(job->error())
-          << M_NAME_VAL(job->errorText())
-          << M_NAME_VAL(job->errorString());
+//    qDb() << "KJobTrk: FINISHED KJob:" << job;
+//    qDb() << "KJobTrk: FINISHED :" << M_NAME_VAL(job->capabilities())
+//          << M_NAME_VAL(job->isSuspended())
+//          << M_NAME_VAL(job->isAutoDelete())
+//          << M_NAME_VAL(job->error())
+//          << M_NAME_VAL(job->errorText())
+//          << M_NAME_VAL(job->errorString());
 }
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
