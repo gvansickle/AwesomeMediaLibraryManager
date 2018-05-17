@@ -62,19 +62,6 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
 }
 
-//ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressStatusBarTracker* parent_tracker, QWidget *parent)
-//    : BASE_CLASS(parent)
-//{
-//    setObjectName(uniqueQObjectName());
-
-//    // Create the widget.
-//    createWidgetForNewJob(job, parent);
-//    // Register the job.
-//    registerJob(job);
-
-//    qDb() << "JOB PARENT:" << job->parent();
-//}
-
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
 M_WARNING("TODO - CRASH");
@@ -124,18 +111,9 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
 QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 {
     KJob* kjob = qobject_cast<KJob*>(job);
+    Q_ASSERT(kjob != nullptr);
     M_WARNIF((kjob == nullptr));
     return widget(kjob);
-//    // Shouldn't ever get here before the widget is constructed (in the constructor).
-//    if(job == nullptr)
-//    {
-//        return m_cumulative_status_widget;
-//    }
-//    else
-//    {
-//        Q_CHECK_PTR(m_widget);
-//        return m_widget;
-//    }
 }
 
 
@@ -201,7 +179,7 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
 //    Q_CHECK_PTR(m_widget);
 
     // Create the widget for this new job.
-    auto widget = new BaseActivityProgressStatusBarWidget(job, this, m_parent_widget);
+    auto widget = new BaseActivityProgressStatusBarWidget(job, this, m_expanding_frame_widget);
     widget->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
 //    widget->setAttribute(Qt::WA_DeleteOnClose);
@@ -221,7 +199,7 @@ void ActivityProgressStatusBarTracker::registerJob(AMLMJobPtr job)
     dump_tracker_info();
 
     /// @todo Need to do this?  From KWidgetJobTracker:
-    QTimer::singleShot(500, this, SLOT(onShowProgressWidget()));
+    QTimer::singleShot(500, this, [=](){onShowProgressWidget(job);});
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(AMLMJobPtr job)
@@ -251,14 +229,23 @@ void ActivityProgressStatusBarTracker::dump_tracker_info()
 //    }
 }
 
-void ActivityProgressStatusBarTracker::onShowProgressWidget()
+void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
 {
     // Called on a timer timeout after a new job is registered.
+
+    Q_CHECK_PTR(kjob);
 
     /// @todo If queue is empty return.
 
     /// else dequeue job, look up qwidget, and show it.
 
+    // Look up the widget associated with this kjob.
+    // If it's been unregistered before we get here, this will return nullptr.
+    with_widget_or_skip(kjob, [=](auto w){
+        qDb() << "SHOWING WIDGET:" << w;
+        /// @todo without activating?
+        w->show();
+    });
 }
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)

@@ -82,7 +82,6 @@ public:
      *       base class' base class KJobTrackerInterface OTOH takes only a QObject* as parent.
      */
     explicit ActivityProgressStatusBarTracker(QWidget* parent = nullptr);
-//    explicit ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressStatusBarTracker *parent_tracker, QWidget *parent);
     ~ActivityProgressStatusBarTracker() override;
 
     /**
@@ -145,7 +144,7 @@ protected Q_SLOTS:
 
 	/// @todo NEW
     void toggleSubjobDisplay(bool checked);
-    void onShowProgressWidget();
+    void onShowProgressWidget(KJob *kjob);
 
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
