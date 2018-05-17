@@ -135,7 +135,7 @@ void ActivityProgressMultiTracker::registerJob(AMLMJobPtr job)
           << M_NAME_VAL(job->errorString());
 
     // Create a new widget for this job.
-    auto new_tracker = new ActivityProgressStatusBarTracker(job, /*parent_tracker=*/this, /*parent QObject=*/m_parent);
+    auto new_tracker = nullptr; //new ActivityProgressStatusBarTracker(job, /*parent_tracker=*/this, /*parent QObject=*/m_parent);
 
     Q_ASSERT(new_tracker != nullptr);
 

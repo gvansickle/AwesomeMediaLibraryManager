@@ -62,18 +62,18 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
 }
 
-ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent)
-    : KAbstractWidgetJobTracker(parent)
-{
-    setObjectName(uniqueQObjectName());
+//ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressStatusBarTracker* parent_tracker, QWidget *parent)
+//    : BASE_CLASS(parent)
+//{
+//    setObjectName(uniqueQObjectName());
 
-    // Create the widget.
-    createWidgetForNewJob(job, parent);
-    // Register the job.
-    registerJob(job);
+//    // Create the widget.
+//    createWidgetForNewJob(job, parent);
+//    // Register the job.
+//    registerJob(job);
 
-    qDb() << "JOB PARENT:" << job->parent();
-}
+//    qDb() << "JOB PARENT:" << job->parent();
+//}
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
@@ -141,16 +141,21 @@ QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 
 void ActivityProgressStatusBarTracker::createWidgetForNewJob(AMLMJobPtr job, QWidget *parent)
 {
-    // Create the widget for this new job.
-    m_widget = new BaseActivityProgressStatusBarWidget(job, /*tracker=*/this, parent);
+    Q_ASSERT(0);
 
-    Q_CHECK_PTR(m_widget);
+    Q_ASSERT(job != nullptr);
+    Q_ASSERT(parent != nullptr);
 
-    // Make the widget->tracker connections.
-    // Button->tracker connections.
-    connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
-    connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
-    connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
+//    // Create the widget for this new job.
+//    m_widget = new BaseActivityProgressStatusBarWidget(job, /*tracker=*/this, parent);
+
+//    Q_CHECK_PTR(m_widget);
+
+//    // Make the widget->tracker connections.
+//    // Button->tracker connections.
+//    connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
+//    connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
+//    connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
 
 M_WARNING("TODO: Make the tracker->widget connections.");
 M_WARNING("TODO: Make the tracker->parent_tracker connections.");
@@ -364,8 +369,8 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
             if (!m_is_total_size_known)
             {
                 // update jumping progressbar
-                m_widget->setRange(0, 0);
-                m_widget->setValue(m_processedSize);
+                w->setRange(0, 0);
+                w->setValue(m_processedSize);
             }
             break;
 
@@ -469,6 +474,15 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
     with_widget_or_skip(job, [=](auto w){
         qDb() << "KJobTrk: slotClean" << job;
     });
+}
+
+void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(AMLMJobPtr ptr, QWidget *widget)
+{
+    if(m_amlmjob_to_widget_map[ptr] == widget)
+    {
+        m_amlmjob_to_widget_map.remove(ptr);
+        /// @todo Also to-be-shown queue?
+    }
 }
 
 void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)

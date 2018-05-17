@@ -225,15 +225,19 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     if(sbtracker)
     {
         qDb() << "SBTRACKER";
-        if(sbtracker->m_widget == this)
-        {
-            // "Remove" this widget from the tracker.
-            qDb() << "SBTRACKER REMOVING" << sbtracker->m_widget;
-            sbtracker->m_widget = nullptr;
-        }
+        sbtracker->removeJobAndWidgetFromMap(m_job, this);
+//        /// @todo Should this not be calling widget()?
+//        auto widget = sbtracker->widget(this->m_job);
+//        if(widget == this)
+//        {
+//            // Remove this widget from the tracker.
+//            qDb() << "SBTRACKER REMOVING" << widget;
+//            sbtracker->m_widget = nullptr;
+//        }
     }
     else if(multitracker)
     {
+        Q_ASSERT(0);
         qDb() << "TODO MULTITRACKER";
     }
     else

@@ -82,7 +82,7 @@ public:
      *       base class' base class KJobTrackerInterface OTOH takes only a QObject* as parent.
      */
     explicit ActivityProgressStatusBarTracker(QWidget* parent = nullptr);
-    explicit ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressMultiTracker* parent_tracker, QWidget *parent);
+//    explicit ActivityProgressStatusBarTracker(AMLMJobPtr job, ActivityProgressStatusBarTracker *parent_tracker, QWidget *parent);
     ~ActivityProgressStatusBarTracker() override;
 
     /**
@@ -194,9 +194,12 @@ protected Q_SLOTS:
 //    void slotStop(KJob *job) override;
 //    void slotSuspend(KJob *job) override;
 
-public: /// @todo FBO StatusBarWidget, make private.
+public:
+    /// FBO *StatusBarWidget/closeNow().
+    void removeJobAndWidgetFromMap(AMLMJobPtr ptr, QWidget* widget);
+
     /// @todo OLD: The actual widget.
-    QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
+//    QPointer<BaseActivityProgressStatusBarWidget> m_widget {nullptr};
 
 protected:
 
