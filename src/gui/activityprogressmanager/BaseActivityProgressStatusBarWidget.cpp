@@ -173,8 +173,8 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
     if(m_is_job_registered && m_tracker->stopOnClose(m_job))
     {
         qDb() << "EMITTING SLOTSTOP";
-        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
-                                  Q_ARG(KJob*, m_job));
+//        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+//                                  Q_ARG(KJob*, m_job));
         m_tracker->directCallSlotStop(m_job);
     }
 
@@ -242,12 +242,15 @@ void BaseActivityProgressStatusBarWidget::stop()
    {
        // Notify tracker that the job has been killed.
        // Calls job->kill(KJob::EmitResults) then emits stopped(job).
-       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
-                                 Q_ARG(KJob*, m_job));
-       Q_ASSERT(retval);
+//       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+//                                 Q_ARG(KJob*, m_job));
+//       Q_ASSERT(retval);
+
+       m_tracker->directCallSlotStop(m_job);
+
 
        // Emit the TW:Job-has-been-cancelled signal.
-       qDb() << "EMITTING CANCEL_JOB";
+//       qDb() << "EMITTING CANCEL_JOB";
 //       Q_EMIT cancel_job(this->m_job);
    }
    closeNow();

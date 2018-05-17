@@ -92,7 +92,10 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
     qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
-    // Essentially a duplicate of QObjectDecorator's implementation.
+    // Essentially a duplicate of QObjectDecorator's implementation, which does this:
+    /// Q_ASSERT(job());
+    /// Q_EMIT started(self);
+    /// job()->defaultBegin(self, thread);
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
 
     Q_CHECK_PTR(this);
@@ -121,7 +124,15 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     Q_CHECK_PTR(self);
 
     // Call base class implementation.
-    // "job()->defaultEnd(self, thread);"
+    // This calls "d()->freeQueuePolicyResources(job);".
+    // QObjectDecorator does this, and never calls the base class:
+    //    Q_ASSERT(job());
+    //    job()->defaultEnd(self, thread);
+    //    if (!self->success()) {
+    //        Q_EMIT failed(self);
+    //    }
+//    Q_EMIT done(self);
+
     this->ThreadWeaver::Job::defaultEnd(self, thread);
 
     if(!self->success())
