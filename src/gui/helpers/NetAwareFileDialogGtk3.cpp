@@ -46,7 +46,11 @@
 
 #if 1
 
-
+// GTK 3.10 obsoleted a bunch of these.
+#define GTK_STOCK_OPEN_LABEL    "_Open"
+#define GTK_STOCK_SAVE_LABEL    "_Save"
+#define GTK_STOCK_OK_LABEL    "_Ok"
+#define GTK_STOCK_CANCEL_LABEL    "_Cancel"
 
 NetAwareFileDialogGtk3::NetAwareFileDialogGtk3()
 {
@@ -54,8 +58,11 @@ NetAwareFileDialogGtk3::NetAwareFileDialogGtk3()
     d.reset(new Gtk3DialogHelper(gtk_file_chooser_dialog_new("", // Title
                                                       nullptr,  // Parent
                                                       GTK_FILE_CHOOSER_ACTION_OPEN, // The open or save mode.
-                                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                      GTK_STOCK_OK, GTK_RESPONSE_OK, NULL)));
+//                                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+//                                                      GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                                      GTK_STOCK_CANCEL_LABEL, GTK_RESPONSE_CANCEL,
+                                                      GTK_STOCK_OK_LABEL, GTK_RESPONSE_OK,
+                                                      NULL)));
 
     // Connect up accept/reject signals.
     connect(d.data(), SIGNAL(accept()), this, SLOT(onAccepted()));
@@ -271,11 +278,11 @@ void NetAwareFileDialogGtk3::applyOptions()
         }
         else if (opts->acceptMode() == QFileDialogOptions::AcceptOpen)
         {
-            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_OPEN);// qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Open)));
+            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_OPEN_LABEL);// qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Open)));
         }
         else
         {
-            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_SAVE); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Save)));
+            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_SAVE_LABEL); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Save)));
         }
     }
 
@@ -288,7 +295,7 @@ void NetAwareFileDialogGtk3::applyOptions()
         }
         else
         {
-            gtk_button_set_label(GTK_BUTTON(rejectButton), GTK_STOCK_CANCEL); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Cancel)));
+            gtk_button_set_label(GTK_BUTTON(rejectButton), GTK_STOCK_CANCEL_LABEL); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Cancel)));
         }
     }
 }

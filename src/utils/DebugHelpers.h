@@ -63,10 +63,9 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 /// Stream out a warning of @a cond holds true.
 #define M_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
 
-inline static void dump_qobject(QObject* qobj, QDebug dbg_stream)
+inline static void dump_qobject(QObject* qobj)
 {
-    dbg_stream = qDebug();
-#define out() dbg_stream << M_THREADNAME()
+#define out() qDebug() << M_THREADNAME()
     out() << "Dumping ObjectInfo for QObject:" << qobj;
     // No known control on where this goes other than "to debug output".
     qobj->dumpObjectInfo();
