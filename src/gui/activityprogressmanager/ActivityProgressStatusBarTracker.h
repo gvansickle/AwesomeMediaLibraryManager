@@ -37,12 +37,11 @@ class KJob;
 #include <KAbstractWidgetJobTracker>
 
 /// Ours
-#include "utils/TheSimplestThings.h"
+#include <utils/TheSimplestThings.h>
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 //class BaseActivityProgressStatusBarWidget;
-class ActivityProgressMultiTracker;
 //class ExpandingFrameWidget;
 #include "ExpandingFrameWidget.h"
 

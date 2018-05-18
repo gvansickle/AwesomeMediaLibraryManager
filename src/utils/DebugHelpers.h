@@ -31,8 +31,16 @@
 
 #include "StringHelpers.h"
 
+
+
+/// @name General Qt5-specific debug helpers.
+/// @todo Move these to their own file.
+/// @{
+
 /**
  * Streaming operator for qDebug() << std::string.
+ *
+ * @note Seriously.
  */
 inline static QDebug& operator<<(QDebug& d, const std::string& s)
 {
@@ -40,7 +48,7 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 }
 
 /**
- * Stream to qDebug() to log the current thread name.
+ * Stream this macro to qDebug() to log the current thread name.
  */
 #define M_THREADNAME() QStringLiteral("[") + QThread::currentThread()->objectName() + QStringLiteral("]")
 
@@ -52,7 +60,19 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 #define qWr() qWarning() << M_THREADNAME()
 #define qCr() qCritical() << M_THREADNAME()
 
+/// Stream out a warning of @a cond holds true.
 #define M_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+
+inline static void dump_qobject(QObject* qobj, QDebug dbg_stream = qDebug())
+{
+#define out() dbg_stream << M_THREADNAME()
+    out() << "Dumping ObjectInfo for QObject:" << qobj;
+    // No known control on where this goes other than "to debug output".
+    qobj->dumpObjectInfo();
+    out() << "Dumping ObjectTree for QObject:" << qobj;
+    qobj->dumpObjectTree();
+#undef out
+}
 
 ///**
 // * QObject property dumper.
@@ -107,25 +127,35 @@ private:
 	QObject* m_object {nullptr};
 };
 
+/// @}
+
+
+/// @name Helpers for the M_IDSTR() macro below.
+/// @{
+
+/// SFINAE version for T already convertible to std::string.
 template <typename T>
-static inline auto idstr(const char *id_as_c_str, T id) -> std::enable_if_t<std::is_convertible<T, std::string>::value == true, std::string> /// SFINAE version for T already convertible to std::string.
+static inline auto idstr(const char *id_as_c_str, T id) -> std::enable_if_t<std::is_convertible<T, std::string>::value == true, std::string>
 {
 	return std::string(id_as_c_str) + "(" + id + ")";
 }
 
+/// SFINAE version for T not convertible to std::string.
 template <typename T>
 static inline
-std::enable_if_t<std::is_convertible<T, std::string>::value == false, std::string> /// SFINAE version for T not convertible to std::string.
+std::enable_if_t<std::is_convertible<T, std::string>::value == false, std::string>
 idstr(const char *id_as_c_str, T id)
 {
 	return std::string(id_as_c_str) + "(" + std::to_string(id) + ")";
 }
 
+/// @}
+
 #define M_IDSTR(id) idstr(#id ": ", id) + ", " +
 
 #define M_NAME_VAL(id) #id ":" << id
 
-/// Attempts to get the compiler to print a human-readable type at compile time.
+/// Attempts to get the compiler to print a human-readable type name at compile time.
 /// @note In the 21st century, this should be a solved problem.  It isn't.
 /// @see https://stackoverflow.com/a/46339450, https://stackoverflow.com/a/30276785
 //		typedef typename ft_test2_class::something_made_up X;
