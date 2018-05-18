@@ -33,6 +33,9 @@
 AMLMJob::AMLMJob(QObject *parent)
     : KJob(parent), ThreadWeaver::Job()
 {
+    /// @note Buried in TW::Private::Job_Private there's a mutex "mutex".
+    /// It is used in TW::Job in a number of places (e.g. aboutToBeQueued()/removeQueuePolicy()/etc.), but not by default in
+    /// anything we're overriding in here as far as I can see.
 
     // Let's try this...
 //    auto sh = new SignalHook(this);
@@ -68,7 +71,7 @@ void AMLMJob::start()
 
 void AMLMJob::setSuccessFlag(bool success)
 {
-    qDb() << "SETTING SUCCESS:" << success;
+    qDb() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
 }
 
@@ -108,7 +111,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
     Q_EMIT started(self);
 
-    // "job()->defaultBegin(self, thread);"
+    // ThreadWeaver::Job::defaultBegin() does literally nothing.
     this->ThreadWeaver::Job::defaultBegin(self, thread);
 }
 
@@ -149,6 +152,9 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     qDb() << "EMITTING DONE";
     Q_EMIT /*TWJob*/ this->done(self);
 
+    // ThreadWeaver::Job::defaultEnd() calls:
+    //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
+    //   Not certain, but assume doing that here at the very end is the safest place to do this.
     this->ThreadWeaver::Job::defaultEnd(self, thread);
 
 }
@@ -285,8 +291,8 @@ void AMLMJob::onKJobResult(KJob *job)
 
 void AMLMJob::onKJobFinished(KJob *job)
 {
-    Q_CHECK_PTR(job);
+//    Q_CHECK_PTR(job);
 
-    qDb() << "KJOB FINISHED" << job;
+//    qDb() << "KJOB FINISHED" << job;
 }
 

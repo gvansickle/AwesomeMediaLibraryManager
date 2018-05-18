@@ -114,7 +114,7 @@ public:
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
 
-    virtual QWidget* widget(AMLMJobPtr amlmjob);
+//    virtual QWidget* widget(AMLMJobPtr amlmjob);
 
 public Q_SLOTS:
     void registerJob(KJob *job) override;

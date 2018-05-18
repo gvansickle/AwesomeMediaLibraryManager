@@ -34,7 +34,7 @@
 #include "concurrency/AMLMJob.h"
 /// @todo Make these two unnecessary if possible.
 #include "ActivityProgressStatusBarTracker.h"
-#include "ActivityProgressMultiTracker.h"
+
 
 BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent) : BASE_CLASS(parent)
 {

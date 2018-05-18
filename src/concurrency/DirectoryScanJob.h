@@ -63,10 +63,6 @@ class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectorySc
 //    void done(ThreadWeaver::JobPointer);
 //    void failed(ThreadWeaver::JobPointer);
 
-protected:
-    /// First-stage constructor.
-//    explicit DirectoryScannerAMLMJob(QObject* parent);
-
 public:
     explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,
             const QStringList &nameFilters,

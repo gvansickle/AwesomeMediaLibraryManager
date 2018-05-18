@@ -43,7 +43,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     m_cumulative_status_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
 
     // Expand jobs button.
-    auto button_show_all_jobs = new QToolButton(parent);
+    auto button_show_all_jobs = new QToolButton(m_cumulative_status_widget);
     button_show_all_jobs->setPopupMode(QToolButton::InstantPopup);
     button_show_all_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
     button_show_all_jobs->setCheckable(true);
@@ -64,27 +64,13 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
-M_WARNING("TODO - CRASH");
-    /* We've already deleted our children before we get here:
-2   QObject::disconnect(QObject const *, const char *, QObject const *, const char *) qobject.cpp                          2983 0x7ffff2f3695a
-3   ActivityProgressStatusBarTracker::unregisterJob                                   ActivityProgressStatusBarTracker.cpp 116  0x4a7f8e
-4   ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker               ActivityProgressStatusBarTracker.cpp 42   0x4a7fe6
-5   ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker               ActivityProgressStatusBarTracker.cpp 38   0x4a8007
-6   QObjectPrivate::deleteChildren                                                    qobject.cpp                          1993 0x7ffff2f3829c
-7   QWidget::~QWidget                                                                 qwidget.cpp                          1703 0x7ffff3b353a2
-[...]
-*/
-    // Looks like m_job is our child, not completely clear where/how/why.  So we can't unregister here. ???
-//    if(m_job)
-//    {
-//        unregisterJob(m_job);
-//    }
+    // All KWidgetJobTracker does here is delet the private pImpl pointer.
 
-/**
- * Not clear what's happening here. The DirScanJob is parented to Experimental on construction.
- */
-qDb() << "ActivityProgressStatusBarTracker DELETED";
-	/// @todo NEW, IS THIS CORRECT?
+    qDb() << "ActivityProgressStatusBarTracker DELETED";
+
+    Q_ASSERT_X(0, "temp", "Destructor should only be called on app exit");
+
+    /// @todo NEW, IS THIS CORRECT?
     delete m_expanding_frame_widget;
     m_expanding_frame_widget = nullptr;
 }
@@ -108,6 +94,7 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     }
 }
 
+#if 0
 QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
 {
     KJob* kjob = qobject_cast<KJob*>(job);
@@ -115,7 +102,7 @@ QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
     M_WARNIF((kjob == nullptr));
     return widget(kjob);
 }
-
+#endif
 
 void ActivityProgressStatusBarTracker::createWidgetForNewJob(AMLMJobPtr job, QWidget *parent)
 {
@@ -175,46 +162,61 @@ M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic
 
 void ActivityProgressStatusBarTracker::registerJob(KJob* job)
 {
+    // Adapted from KWidgetJobTracker's version of this function.
     Q_CHECK_PTR(this);
     Q_ASSERT(job);
 
     // Create the widget for this new job.
-    auto widget = new BaseActivityProgressStatusBarWidget(job, this, m_expanding_frame_widget);
-    widget->m_is_job_registered = true;
+    auto wdgt = new BaseActivityProgressStatusBarWidget(job, this, m_expanding_frame_widget);
+    wdgt->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
-    widget->setAttribute(Qt::WA_DeleteOnClose);
+    wdgt->setAttribute(Qt::WA_DeleteOnClose);
+    // Insert the kjob/widget pair into our master map.
+    m_amlmjob_to_widget_map.insert(job, wdgt);
+    /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
-    m_amlmjob_to_widget_map.insert(job, widget);
-
-    /// Add tracker's widget to the frame.
-    m_expanding_frame_widget->addWidget(widget);
-//    m_expanding_frame_widget->addWidget(pw);
+    // Add the new widget to the expanging frame.
+    m_expanding_frame_widget->addWidget(wdgt);
     m_expanding_frame_widget->reposition();
 
+    // KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
+    //   KJobTrackerInterface::registerJob(KJob *job) does nothing but connect
+    //   many signals to slots.  Specifically finsihed-related:
+    //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(unregisterJob(KJob*)));
+    //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
     BASE_CLASS::registerJob(job);
 
-    qDb() << "KJobTrk: AMLMJob info:" << job;
-    qDb() << "KJobTrk:" << M_NAME_VAL(job->capabilities()) << "\n"
-          << M_NAME_VAL(job->isSuspended()) << "\n"
-          << M_NAME_VAL(job->isAutoDelete()) << "\n"
-          << M_NAME_VAL(job->error()) << "\n"
-          << M_NAME_VAL(job->errorText()) << "\n"
-          << M_NAME_VAL(job->errorString());
+//    qDb() << "KJobTrk: AMLMJob info:" << job;
+//    qDb() << "KJobTrk:" << M_NAME_VAL(job->capabilities()) << "\n"
+//          << M_NAME_VAL(job->isSuspended()) << "\n"
+//          << M_NAME_VAL(job->isAutoDelete()) << "\n"
+//          << M_NAME_VAL(job->error()) << "\n"
+//          << M_NAME_VAL(job->errorText()) << "\n"
+//          << M_NAME_VAL(job->errorString());
 
-    dump_tracker_info();
+//    dump_tracker_info();
 
-    /// @todo Need to do this?  From KWidgetJobTracker:
+    // KWidgetJobTracker does almost the following.
+    // It does not pass the job ptr thhough.
+    /// @todo Is that part of our problems?
     QTimer::singleShot(500, this, [=](){onShowProgressWidget(job);});
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(KJob* job)
 {
+    // Adapted from KWidgetJobTracker's version of this function.
+
     Q_CHECK_PTR(this);
-    Q_ASSERT(job);
+    Q_ASSERT(job != nullptr);
+
+    // KAbstractWidgetJobTracker::unregisterJob() calls:
+    //   KJobTrackerInterface::unregisterJob(job);, which calls:
+    //     job->disconnect(this);
 
     // Call down to the base class first; widget may be deleted by deref() below.
     BASE_CLASS::unregisterJob(job);
 
+    /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
     with_widget_or_skip(job, [=](auto w){
         w->m_is_job_registered = false;
         w->deref();
@@ -255,9 +257,6 @@ void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
-//    Q_CHECK_PTR(m_widget);
-//    m_widget->setDescription(title, field1, field2);
-
     /// This follows the basic pattern of KWidgetJobTracker, with a little C++14 help.
     /// All these "tracker->widget ~signal" handlers get the widget ptr (from a map in that case),
     /// check for null, and if not null do the job.
@@ -269,9 +268,6 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
     // Prefer rich if it's given.
-//    qDb() << "INFOMESSAGE RECEIVED";
-//    Q_CHECK_PTR(m_widget);
-//    m_widget->setInfoMessage(rich.isEmpty() ? plain : rich);
     with_widget_or_skip(job, [=](auto w){
         w->setInfoMessage(rich.isEmpty() ? plain : rich);
         ;});
@@ -445,6 +441,9 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
+    //
+    // KJobTrackerInterface::finished(KJob *job) does nothing.
+
     with_widget_or_skip(job, [=](auto w){
         qWr() << "FINISHED JOB:" << job << "WITH WIDGET:" << w;
     });
@@ -496,7 +495,6 @@ void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)
 
 void ActivityProgressStatusBarTracker::showSubJobs()
 {
-#warning "NEW"
     // Get the parent-relative geometry of the "root widget".
     auto summary_widget = widget(nullptr);
     auto rect = summary_widget->frameGeometry();

@@ -135,7 +135,7 @@ void ActivityProgressWidget::TrackJob(KJob *job)
 
 void ActivityProgressWidget::onTWJobDone(ThreadWeaver::JobPointer job)
 {
-M_WARNING("DO SOMETHING HERE");
+//    M_WARNING("DO SOMETHING HERE");
     qDb() << "JOB COMPLETE, STATUS:" << job->status();
 }
 

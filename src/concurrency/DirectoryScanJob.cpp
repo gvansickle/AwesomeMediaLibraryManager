@@ -27,17 +27,11 @@
 
 #include "utils/TheSimplestThings.h"
 
-//DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent) : BASE_CLASS(parent)
-//{
-//    setObjectName(uniqueQObjectName());//"DirectoryScannerAMLMJob");
-//    qDb() << "STAGE 1 CONSTRUCTOR COMPLETE";
-//}
-
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-    : AMLMJob(parent) //< Get our vtable set up. @todo STILL NEED THIS???
+    : AMLMJob(parent)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
@@ -187,7 +181,8 @@ M_WARNING("TODO not sure if this is the right place to do this");
         if(stopped_due_to_cancel_req)
         {
             // Cancelled.
-            amlm_self->setSuccessFlag(true);
+            /// @todo Is false correct here?
+            amlm_self->setSuccessFlag(false);
         }
         else
         {

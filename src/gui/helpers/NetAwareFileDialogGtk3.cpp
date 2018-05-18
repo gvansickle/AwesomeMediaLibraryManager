@@ -52,7 +52,7 @@ NetAwareFileDialogGtk3::NetAwareFileDialogGtk3()
 {
     // See https://developer.gnome.org/gtk3/stable/GtkFileChooser.html
     d.reset(new Gtk3DialogHelper(gtk_file_chooser_dialog_new("", // Title
-                                                      0,  // Parent
+                                                      nullptr,  // Parent
                                                       GTK_FILE_CHOOSER_ACTION_OPEN, // The open or save mode.
                                                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                                       GTK_STOCK_OK, GTK_RESPONSE_OK, NULL)));
