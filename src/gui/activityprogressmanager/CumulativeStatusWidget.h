@@ -44,4 +44,7 @@ private:
 
 };
 
+Q_DECLARE_METATYPE(CumulativeStatusWidget*)
+
+
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVESTATUSWIDGET_H_ */

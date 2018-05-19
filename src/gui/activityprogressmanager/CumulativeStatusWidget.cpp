@@ -19,7 +19,11 @@
 
 #include "CumulativeStatusWidget.h"
 
+/// Qt5
 #include <QToolButton>
+
+/// Ours
+#include "utils/TheSimplestThings.h"
 
 CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
     : BASE_CLASS(job, tracker, parent)
@@ -33,6 +37,13 @@ CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatus
     button_show_all_jobs->setCheckable(true);
 
     addButton(button_show_all_jobs);
+
+M_WARNING("TODO: This should depend on contained jobs count/state");
+    m_cancel_button->setEnabled(true);
+    connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
+                    qDb() << "CANCEL BUTTON CLICKED FROM CumulativeStatusWidget";
+                    Q_EMIT cancel_job(nullptr);
+                });
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &CumulativeStatusWidget::show_hide_subjob_display);
 }

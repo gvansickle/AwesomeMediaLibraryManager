@@ -118,6 +118,7 @@ private:
 
     int m_refcount {0};
 
+protected: ///< FBO CumulativeStatusWidget.  Probably a better way to do this.
     /// @name Child widgets
     /// @{
     /// Primary text.

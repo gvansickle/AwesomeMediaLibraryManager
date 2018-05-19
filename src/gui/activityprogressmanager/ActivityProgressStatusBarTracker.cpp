@@ -54,11 +54,12 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     connect(m_cumulative_status_widget, &CumulativeStatusWidget::show_hide_subjob_display,
             this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
 
-    /// @todo cancel_job state should be enabled/disabled based on child job cancelable capabilities.
-//    m_cumulative_status_widget->m_
+    /// @todo m_cumulative_status_widget's cancel_job button state should be enabled/disabled based on child job cancelable capabilities.
+
     // Connect the cumulative status widget button's signals to slots in this class, they need to apply to all sub-jobs.
-    connect(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
+    auto retval = connect(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
             this, &ActivityProgressStatusBarTracker::cancelAll);
+    Q_ASSERT((bool)retval);
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
@@ -198,6 +199,8 @@ void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
 void ActivityProgressStatusBarTracker::cancelAll()
 {
     QMutexLocker locker(&m_tsi_mutex);
+
+    qDb() << "CANCELLING ALL JOBS";
 
     m_amlmjob_to_widget_map.foreach([=](TSActiveActivitiesMap::iterator  it){
         qDb() << "Cancelling job:" << it.key() << "widget:" << it.value();
