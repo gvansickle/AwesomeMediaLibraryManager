@@ -60,7 +60,7 @@ M_WARNING("TODO: NOT SHARED PTR");
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
-    qDb() << "DirectoryScannerAMLMJob DELETED" << objectName();
+    qDb() << "DirectoryScannerAMLMJob DELETED:" << this << objectName();
 }
 
 void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)

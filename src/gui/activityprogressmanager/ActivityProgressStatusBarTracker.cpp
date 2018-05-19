@@ -143,6 +143,8 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob* job)
     // Adapted from KWidgetJobTracker's version of this function.
     QMutexLocker locker(&m_tsi_mutex);
 
+    qDb() << "UNREGISTERING JOB:" << job;
+
     Q_CHECK_PTR(this);
     Q_ASSERT(job != nullptr);
 

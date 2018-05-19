@@ -109,7 +109,10 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 //    qDb() << "autoDelete()?:" << self->autoDelete();
 
+    qDb() << "EMIT1";
     Q_EMIT started(self);
+    qDb() << "EMIT2";
+    Q_EMIT this->started(self);
 
     // ThreadWeaver::Job::defaultBegin() does literally nothing.
     this->ThreadWeaver::Job::defaultBegin(self, thread);
@@ -194,24 +197,6 @@ void AMLMJob::make_connections()
 
 //    Q_ASSERT(!m_tw_job_qobj_decorator.isNull());
 
-    /// @name TW::IdDecorator connections.
-    /// @{
-
-    // void started(ThreadWeaver::JobPointer);
-    // This signal is emitted when this job is being processed by a thread.
-    // internal QObjectDecorator->external QObjectDecorator interface.
-    connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
-
-    //  void done(ThreadWeaver::JobPointer);
-    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    connect(this, &AMLMJob::done, this, &AMLMJob::onTWDone);
-
-    //  void failed(ThreadWeaver::JobPointer);
-    // This signal is emitted when success() returns false after the job is executed.
-    connect(this, &AMLMJob::failed, this, &AMLMJob::onTWFailed);
-
-    /// @}
-
     // Connect up KJob signals/slots.
     // Emitted as a byproduct of calling emitResult(), which simply calls KJob::finishJob(true),
     // which:
@@ -239,6 +224,24 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
 {
     qDb() << "ENTER connections_make_defaultBegin";
     Q_CHECK_PTR(self);
+
+    /// @name TW::QObjectDecorator-like connections.
+    /// @{
+
+    // void started(ThreadWeaver::JobPointer);
+    // This signal is emitted when this job is being processed by a thread.
+    // internal QObjectDecorator->external QObjectDecorator interface.
+    connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
+
+    //  void done(ThreadWeaver::JobPointer);
+    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
+    connect(this, &AMLMJob::done, this, &AMLMJob::onTWDone);
+
+    //  void failed(ThreadWeaver::JobPointer);
+    // This signal is emitted when success() returns false after the job is executed.
+    connect(this, &AMLMJob::failed, this, &AMLMJob::onTWFailed);
+
+    /// @}
 }
 
 /**

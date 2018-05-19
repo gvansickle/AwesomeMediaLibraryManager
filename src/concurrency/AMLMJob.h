@@ -122,7 +122,10 @@ class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJ
 
 Q_SIGNALS:
 
-    /// ThreadWeaver::QObjectDecorator-like signals, only three:
+    /// @name ThreadWeaver::QObjectDecorator-like signals, only three:
+    /// @warning These are for AMLMJob internal-use only.
+    /// @warning Qt5 signals are always public in the C++ sense.  Slots are similarly public when called
+    ///          via the signal->slot mechanism, on direct calls they have the normal public/protected/private rules.
 	/// @{
 
     /// This signal is emitted when this TW::Job is being processed by a thread.
@@ -317,7 +320,7 @@ public Q_SLOTS:
 
 protected:
 
-    /// @name Override of TW::IdDecorator protected functions.
+    /// @name Override of TW::Job protected functions.
     /// @{
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
@@ -391,10 +394,15 @@ protected Q_SLOTS:
     /// @name Internal slots
     /// @{
 
-    /// @name From TW::QObjectDecorator's signals.
+    /// @name Connected to the TW::QObjectDecorator-like signals.
+    /// @{
+
+    /// Should be connected to the started(self) signal.
+    /// started() should be getting emitted in defaultBegin().
     void onTWStarted(ThreadWeaver::JobPointer twjob);
     void onTWDone(ThreadWeaver::JobPointer twjob);
     void onTWFailed(ThreadWeaver::JobPointer twjob);
+    /// @}
 
     /// Called from our doKill() operation.  Doesn't do anything by qDb() logging.
     /// @todo Should be really be doing that?
