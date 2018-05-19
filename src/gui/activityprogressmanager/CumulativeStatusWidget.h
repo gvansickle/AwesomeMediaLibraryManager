@@ -31,6 +31,10 @@ class CumulativeStatusWidget: public BaseActivityProgressStatusBarWidget
 
 	using BASE_CLASS = BaseActivityProgressStatusBarWidget;
 
+Q_SIGNALS:
+	/// Emitted when the user toggles the "show/hide subjobs" button.
+	void show_hide_subjob_display(bool show);
+
 public:
 	explicit CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
 	virtual ~CumulativeStatusWidget();

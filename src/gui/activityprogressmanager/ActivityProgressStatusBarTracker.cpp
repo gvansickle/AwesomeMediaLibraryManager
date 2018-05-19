@@ -37,18 +37,10 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     m_tsi_mutex(QMutex::Recursive /** @todo Shouldn't need to do this. */)
 {
     m_parent_widget = parent;
-    /// @todo CREATE THE SUMMARY WIDGET
-    /// @todo nullptr AMLMJob.
-//    m_cumulative_status_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
+
+    // Create the summary widget
+    /// @todo nullptr -> AMLMJob?
     m_cumulative_status_widget = new CumulativeStatusWidget(nullptr, this, parent);
-
-    // Expand jobs button.
-    auto button_show_all_jobs = new QToolButton(m_cumulative_status_widget);
-    button_show_all_jobs->setPopupMode(QToolButton::InstantPopup);
-    button_show_all_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
-    button_show_all_jobs->setCheckable(true);
-
-    m_cumulative_status_widget->addButton(button_show_all_jobs);
 
     m_expanding_frame_widget = new ExpandingFrameWidget();
 
@@ -59,12 +51,14 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
     m_expanding_frame_widget->hide();
 
-    connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
+    connect(m_cumulative_status_widget, &CumulativeStatusWidget::show_hide_subjob_display,
+            this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
 
     /// @todo cancel_job state should be enabled/disabled based on child job cancelable capabilities.
 //    m_cumulative_status_widget->m_
     // Connect the cumulative status widget button's signals to slots in this class, they need to apply to all sub-jobs.
-    connect(m_cumulative_status_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::cancelAll);
+    connect(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
+            this, &ActivityProgressStatusBarTracker::cancelAll);
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()

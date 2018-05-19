@@ -19,10 +19,22 @@
 
 #include "CumulativeStatusWidget.h"
 
+#include <QToolButton>
+
 CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
     : BASE_CLASS(job, tracker, parent)
 {
+    /// @note Requires base class init() to have been called so that sub-widgets are set up.
 
+    // Expand jobs button.
+    auto button_show_all_jobs = new QToolButton(this);
+    button_show_all_jobs->setPopupMode(QToolButton::InstantPopup);
+    button_show_all_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
+    button_show_all_jobs->setCheckable(true);
+
+    addButton(button_show_all_jobs);
+
+    connect(button_show_all_jobs, &QToolButton::toggled, this, &CumulativeStatusWidget::show_hide_subjob_display);
 }
 
 CumulativeStatusWidget::~CumulativeStatusWidget()
