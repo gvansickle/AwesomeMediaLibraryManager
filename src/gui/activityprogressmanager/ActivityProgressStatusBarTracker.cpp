@@ -30,7 +30,7 @@
 #include <utils/TheSimplestThings.h>
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
-#include "ActivityProgressMultiTracker.h"
+#include "CumulativeStatusWidget.h"
 
 
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent),
@@ -39,7 +39,8 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     m_parent_widget = parent;
     /// @todo CREATE THE SUMMARY WIDGET
     /// @todo nullptr AMLMJob.
-    m_cumulative_status_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
+//    m_cumulative_status_widget = new BaseActivityProgressStatusBarWidget(nullptr, this, parent);
+    m_cumulative_status_widget = new CumulativeStatusWidget(nullptr, this, parent);
 
     // Expand jobs button.
     auto button_show_all_jobs = new QToolButton(m_cumulative_status_widget);

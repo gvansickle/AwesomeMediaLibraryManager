@@ -41,8 +41,9 @@ class KJob;
 #include <utils/TheSimplestThings.h>
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
-#include "BaseActivityProgressStatusBarWidget.h"
-//class BaseActivityProgressStatusBarWidget;
+//#include "BaseActivityProgressStatusBarWidget.h"
+#include "CumulativeStatusWidget.h"
+class BaseActivityProgressStatusBarWidget;
 //class ExpandingFrameWidget;
 #include "ExpandingFrameWidget.h"
 
@@ -263,9 +264,7 @@ protected: // Methods
 
 protected: // Variable members
 
-    /// Map of all registered sub-jobs (AMLMJobPtrs) to sub-job-widgets (BaseActivityProgressStatusBarWidget*'s).
-//    using ActiveActivitiesMap = QMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
-//    ActiveActivitiesMap m_amlmjob_to_widget_map;
+    /// Map of all registered sub-jobs (KJob*) to sub-job-widgets (QPointer<BaseActivityProgressStatusBarWidget>'s).
     TSActiveActivitiesMap m_amlmjob_to_widget_map;
 
     /// Mutex for protecting the public Thread-Safe Interface.
@@ -282,7 +281,7 @@ protected: // Variable members
     QPointer<QWidget> m_parent_widget {nullptr};
 
     /// The status widget showing the cumulative status of all registered sub-trackers.
-    QPointer<BaseActivityProgressStatusBarWidget> m_cumulative_status_widget {nullptr};
+    QPointer<CumulativeStatusWidget> m_cumulative_status_widget {nullptr};
 
     /// Showable/hidable window containing all sub-trackers.
     QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};

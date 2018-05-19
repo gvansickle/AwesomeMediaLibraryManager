@@ -118,6 +118,7 @@ set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityProgressMultiTracker.h
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
 	activityprogressmanager/ExpandingFrameWidget.h
+	activityprogressmanager/CumulativeStatusWidget.h
 	PARENT_SCOPE
 	)
 set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
@@ -130,6 +131,7 @@ set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityProgressMultiTracker.cpp
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
 	activityprogressmanager/ExpandingFrameWidget.cpp
+	activityprogressmanager/CumulativeStatusWidget.cpp
 	PARENT_SCOPE
 	)
 set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
@@ -143,6 +145,7 @@ set(amlm_gui_SRCS
 	${gui_settings_SOURCE_FILES}
 	PARENT_SCOPE
 	)
-message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
+
+#message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
 

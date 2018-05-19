@@ -521,9 +521,6 @@ private:
      * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
      */
     ActivityProgressStatusBarTracker* m_activity_progress_multi_tracker { nullptr };
-
-    /// Status dialog.
-    ActivityProgressDialog* m_status_dlg { nullptr };
 #endif
 
     /// The Settings (AKA Preferences, AKA Config) dialog.
