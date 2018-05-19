@@ -137,9 +137,7 @@ void Experimental::DoExperiment()
             const QPair< QString, QString > &  	field2){
         qIn() << "Title:" << title;});
 
-    dirsizejob->start();
-
-
+    /// Two AMLMJobs
     AMLMJobPtr dsj(DirectoryScannerAMLMJob::make_shared(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
@@ -149,6 +147,9 @@ void Experimental::DoExperiment()
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
+    /// Another KF5 KIO Job.
+    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, KIO::DefaultFlags, /*includeHidden=*/false);
+
     qDb() << M_NAME_VAL(dsj->capabilities());
     qDb() << M_NAME_VAL(dsj2->capabilities());
 
@@ -157,26 +158,28 @@ void Experimental::DoExperiment()
 //    ActivityManager::instance()->addActivity(dsj);//.dynamicCast<ThreadWeaver::JobInterface>());
 //    ActivityManager::instance()->addActivity(dsj2);
 
-//    MainWindow::instance()->registerJob(dirsizejob);
-#if 0
-    MainWindow::instance()->registerJob(dsj);
-    MainWindow::instance()->registerJob(dsj2);
-#else
-    MainWindow::master_tracker_instance()->registerJob(dirsizejob);
+    auto master_job_tracker = MainWindow::master_tracker_instance();
+    Q_CHECK_PTR(master_job_tracker);
 
-    MainWindow::master_tracker_instance()->registerJob(dsj);
-    MainWindow::master_tracker_instance()->setAutoDelete(dsj, false);
-    MainWindow::master_tracker_instance()->setStopOnClose(dsj, false);
+    master_job_tracker->registerJob(dirsizejob);
 
-    MainWindow::master_tracker_instance()->registerJob(dsj2);
-    MainWindow::master_tracker_instance()->setAutoDelete(dsj2, false);
-    MainWindow::master_tracker_instance()->setStopOnClose(dsj2, false);
-#endif
+    master_job_tracker->registerJob(dsj);
+    master_job_tracker->setAutoDelete(dsj, false);
+    master_job_tracker->setStopOnClose(dsj, false);
+
+    master_job_tracker->registerJob(dsj2);
+    master_job_tracker->setAutoDelete(dsj2, false);
+    master_job_tracker->setStopOnClose(dsj2, false);
+
+    master_job_tracker->registerJob(kio_list_kiojob);
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
     qDb() << M_NAME_VAL(dsj);
     qDb() << M_NAME_VAL(dsj2);
+
+    dirsizejob->start();
+    kio_list_kiojob->start();
 
     // enqueue takes JobPointers (QSharedPtr<>).
 //    queue->enqueue(dsj);//->asTWJobPointer());

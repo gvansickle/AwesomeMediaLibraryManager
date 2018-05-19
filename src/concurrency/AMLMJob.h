@@ -385,8 +385,6 @@ protected:
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     virtual void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
 
-
-
     /// @}
 
 protected Q_SLOTS:

@@ -138,25 +138,25 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     QTimer::singleShot(500, this, [=](){onShowProgressWidget(kjob);});
 }
 
-void ActivityProgressStatusBarTracker::unregisterJob(KJob* job)
+void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)
 {
     // Adapted from KWidgetJobTracker's version of this function.
     QMutexLocker locker(&m_tsi_mutex);
 
-    qDb() << "UNREGISTERING JOB:" << job;
+    qDb() << "UNREGISTERING JOB:" << kjob;
 
     Q_CHECK_PTR(this);
-    Q_ASSERT(job != nullptr);
+    Q_ASSERT(kjob != nullptr);
 
     // KAbstractWidgetJobTracker::unregisterJob() calls:
     //   KJobTrackerInterface::unregisterJob(job);, which calls:
     //     job->disconnect(this);
 
     // Call down to the base class first; widget may be deleted by deref() below.
-    BASE_CLASS::unregisterJob(job);
+    BASE_CLASS::unregisterJob(kjob);
 
     /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
-    with_widget_or_skip(job, [=](auto w){
+    with_widget_or_skip(kjob, [=](auto w){
         w->m_is_job_registered = false;
         w->deref();
         ;});
@@ -197,12 +197,11 @@ void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
 
 void ActivityProgressStatusBarTracker::cancelAll()
 {
-#warning "TODO"
-
     QMutexLocker locker(&m_tsi_mutex);
 
     m_amlmjob_to_widget_map.foreach([=](TSActiveActivitiesMap::iterator  it){
         qDb() << "Cancelling job:" << it.key() << "widget:" << it.value();
+#warning "TODO: Cancel job"
         ;});
 }
 
@@ -503,7 +502,6 @@ void ActivityProgressStatusBarTracker::showSubJobs()
 
 void ActivityProgressStatusBarTracker::hideSubJobs()
 {
-#warning "NEW"
     m_expanding_frame_widget->hide();
 }
 

@@ -180,7 +180,7 @@ public Q_SLOTS:
      * KJTI does connect the signal->slot (many of them, job->this) in registerJob(), so as long as we ultimately call the base class
      * implementation we're good.
      */
-    void unregisterJob(KJob *job) override;
+    void unregisterJob(KJob *kjob) override;
 
     /// FBO closeNow().
     void SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
