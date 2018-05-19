@@ -27,15 +27,14 @@
 
 
 /// Ours
-//#include <utils/DebugHelpers.h>
-//#include <utils/StringHelpers.h>
 #include <utils/TheSimplestThings.h>
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 #include "ActivityProgressMultiTracker.h"
 
 
-ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent)
+ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent),
+    m_tsi_mutex(QMutex::Recursive /** @todo Shouldn't need to do this. */)
 {
     m_parent_widget = parent;
     /// @todo CREATE THE SUMMARY WIDGET
@@ -60,6 +59,8 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     m_expanding_frame_widget->hide();
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
+    // Connect the cumulative status widget button's signals to slots in this class, they need to apply to all sub-jobs.
+    connect(m_cumulative_status_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::cancelAll);
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
@@ -181,6 +182,17 @@ void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
         /// @todo without activating?
         w->show();
     });
+}
+
+void ActivityProgressStatusBarTracker::cancelAll()
+{
+#warning "TODO"
+
+    QMutexLocker locker(&m_tsi_mutex);
+
+    m_amlmjob_to_widget_map.foreach([=](TSActiveActivitiesMap::iterator  it){
+        qDb() << "Cancelling job:" << it.key() << "widget:" << it.value();
+        ;});
 }
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
@@ -397,6 +409,7 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 
 void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget)
 {
+    qDb() << "REMOVING FROM MAP:" << ptr << widget;
     if(m_amlmjob_to_widget_map[ptr] == widget)
     {
         m_amlmjob_to_widget_map.remove(ptr);

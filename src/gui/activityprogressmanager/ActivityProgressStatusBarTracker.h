@@ -50,6 +50,56 @@ class KJob;
 class ActivityProgressStatusBarTracker;
 using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;
 
+class TSActiveActivitiesMap
+{
+    using T = QPointer<BaseActivityProgressStatusBarWidget>;
+    using Key = KJob*;
+    using ActiveActivitiesMap = QMap<Key, T>;
+
+public:
+    TSActiveActivitiesMap() : m_map_mutex() {}
+
+    const T value(const Key &key, const T &defaultValue = T()) const
+    {
+        QMutexLocker locker(&m_map_mutex);
+        return m_kjob_to_widget_map.value(key, defaultValue);
+    }
+    void insert(const Key &key, const T &value)
+    {
+        QMutexLocker locker(&m_map_mutex);
+        m_kjob_to_widget_map.insert(key, value);
+    }
+    int remove(const Key &key)
+    {
+        QMutexLocker locker(&m_map_mutex);
+        return m_kjob_to_widget_map.remove(key);
+    }
+
+    const T operator[](const Key &key) const
+    {
+        return value(key);
+    }
+
+    template<typename Lambda>
+    void foreach(Lambda the_lambda)
+    {
+        QMutexLocker locker(&m_map_mutex);
+        for(auto i = m_kjob_to_widget_map.begin(); i != m_kjob_to_widget_map.end(); ++i)
+        {
+            the_lambda(i);
+        }
+    }
+
+    /// Public types
+    using iterator = ActiveActivitiesMap::iterator;
+
+private:
+
+    ActiveActivitiesMap m_kjob_to_widget_map;
+
+    /// Mutex for protecting the map.
+    mutable QMutex m_map_mutex;
+};
 
 /**
  * K*WidgetJobTracker tracking the progress/status/controls of a single AMLMJob.
@@ -144,6 +194,8 @@ protected Q_SLOTS:
     void toggleSubjobDisplay(bool checked);
     void onShowProgressWidget(KJob *kjob);
 
+    void cancelAll();
+
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
 
@@ -208,8 +260,9 @@ protected:
     void directCallSlotStop(KJob *kjob);
 
     /// Map of all registered sub-jobs (AMLMJobPtrs) to sub-job-widgets (BaseActivityProgressStatusBarWidget*'s).
-    using ActiveActivitiesMap = QMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
-    ActiveActivitiesMap m_amlmjob_to_widget_map;
+//    using ActiveActivitiesMap = QMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
+//    ActiveActivitiesMap m_amlmjob_to_widget_map;
+    TSActiveActivitiesMap m_amlmjob_to_widget_map;
 
     /// Mutex for protecting the public Thread-Safe Interface.
     QMutex m_tsi_mutex;

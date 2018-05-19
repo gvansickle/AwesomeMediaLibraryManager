@@ -132,6 +132,8 @@ void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
 M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
+
+        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_job);});
         connect(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
 #if 0 // CRASHING
@@ -175,7 +177,7 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
     if(m_is_job_registered && m_tracker->stopOnClose(m_job))
     {
         qDb() << "EMITTING SLOTSTOP";
-        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
                                   Q_ARG(KJob*, m_job));
 //        m_tracker->directCallSlotStop(m_job);
     }
@@ -243,7 +245,7 @@ void BaseActivityProgressStatusBarWidget::stop()
    {
        // Notify tracker that the job has been killed.
        // Calls job->kill(KJob::EmitResults) then emits stopped(job).
-       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
                                  Q_ARG(KJob*, m_job));
        Q_ASSERT(retval);
 

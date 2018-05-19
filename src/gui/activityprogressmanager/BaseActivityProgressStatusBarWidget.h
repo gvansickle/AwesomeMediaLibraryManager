@@ -47,7 +47,7 @@ class BaseActivityProgressStatusBarWidget: public QFrame
 
 Q_SIGNALS:
     /// To the tracker: kill the job.
-//    void cancel_job(AMLMJobPtr job);
+    void cancel_job(KJob* job);
 
     /// To the tracker: pause the job.
 //    void pause_job(AMLMJobPtr job);
