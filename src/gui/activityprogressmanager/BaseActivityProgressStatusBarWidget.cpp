@@ -51,11 +51,11 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
     m_refcount = 1;
 
     // We have a vtable to this, go nuts with the virtual calls.
-    /// @note job is currently unused by init().
     init(job, parent);
 
     /// Make the connections.
-    make_connections();
+    /// @todo
+//    make_connections();
 }
 
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
@@ -136,7 +136,6 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
 
-//M_WARNING("TODO: The ::stop() slot needs to be somehow activated here, prob from tracker.");
         // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
         /// @todo KWidgetJobTracker::Private::ProgressWidget only does click->stop signal here.
         /// Seems odd, should go back to the tracker to do the job stop etc.
@@ -166,6 +165,7 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
     else
     {
         // null Job (i.e. it's the root tracker/widget).
+        qDb() << "INIT() CALL FOR ROOT TRACKER WIDGET, JOB IS NULL";
         m_pause_resume_button->setEnabled(false);
         m_cancel_button->setEnabled(false);
     }

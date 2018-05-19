@@ -94,6 +94,7 @@ protected:
     virtual void init(KJob* job, QWidget *parent);
 
     /// Make the necessary connections between this Widget, the KJob, and the tracker.
+    /// @todo Currently unused.
     void make_connections(void);
 
     void closeEvent(QCloseEvent* event) override;
