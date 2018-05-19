@@ -57,7 +57,7 @@ AMLMJob::~AMLMJob()
 void AMLMJob::requestAbort()
 {
     // Set atomic abort flag.
-    qDb() << "AMLM:TW: SETTING ABORT FLAG";
+    qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
     m_flag_cancel = 1;
 }
 
@@ -65,7 +65,7 @@ void AMLMJob::start()
 {
     /// @todo Do we need to do anything here?  The TW::Job starts by the TW::Queue/Weaver it's added to.
 
-    qDb() << "AMLMJob::start(), TWJob status:" << status();
+    qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
 }
 
@@ -95,6 +95,8 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
     qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
+    qDb() << "TWJob status:" << status();
+
     // Essentially a duplicate of QObjectDecorator's implementation, which does this:
     /// Q_ASSERT(job());
     /// Q_EMIT started(self);
@@ -109,10 +111,8 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 //    qDb() << "autoDelete()?:" << self->autoDelete();
 
-    qDb() << "EMIT1";
+    qDb() << "EMITTING TW STARTED on TW::JobPointer:" << self;
     Q_EMIT started(self);
-    qDb() << "EMIT2";
-    Q_EMIT this->started(self);
 
     // ThreadWeaver::Job::defaultBegin() does literally nothing.
     this->ThreadWeaver::Job::defaultBegin(self, thread);
@@ -129,22 +129,10 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
 
-    // Call base class implementation.
-    // This calls "d()->freeQueuePolicyResources(job);".
-    // QObjectDecorator does this, and never calls the base class:
-    //    Q_ASSERT(job());
-    //    job()->defaultEnd(self, thread);
-    //    if (!self->success()) {
-    //        Q_EMIT failed(self);
-    //    }
-//    Q_EMIT done(self);
-
-//    this->ThreadWeaver::Job::defaultEnd(self, thread);
-
     if(!self->success())
     {
         qWr() << "FAILED";
-        Q_EMIT /*TWJob*/ this->failed(self);
+        Q_EMIT /*TWJob*/ failed(self);
     }
     else
     {
@@ -153,11 +141,18 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
         /*KJob*/ emitResult();
     }
     qDb() << "EMITTING DONE";
-    Q_EMIT /*TWJob*/ this->done(self);
+    Q_EMIT /*TWJob*/ done(self);
 
+    // Call base class defaultEnd() implementation.
     // ThreadWeaver::Job::defaultEnd() calls:
     //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
     //   Not certain, but assume doing that here at the very end is the safest place to do this.
+    // TW::QObjectDecorator does this, and never calls the base class:
+    //    Q_ASSERT(job());
+    //    job()->defaultEnd(self, thread);
+    //    if (!self->success()) {
+    //        Q_EMIT failed(self);
+    //    }
     this->ThreadWeaver::Job::defaultEnd(self, thread);
 
 }
@@ -197,7 +192,11 @@ void AMLMJob::make_connections()
 
 //    Q_ASSERT(!m_tw_job_qobj_decorator.isNull());
 
+    // @note TW::Job connections made in connections_make_defaultBegin().
+
     // Connect up KJob signals/slots.
+
+    // result()
     // Emitted as a byproduct of calling emitResult(), which simply calls KJob::finishJob(true),
     // which:
     // - quits any private event loop
