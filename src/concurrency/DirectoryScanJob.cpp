@@ -109,6 +109,9 @@ M_WARNING("TODO not sure if this is the right place to do this");
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
+    /// @todo EXPERIMENTAL
+//    QMutexLocker locker(self->mutex());
+
 //		report_and_control.setProgressRange(0, 0);
 //		report_and_control.setProgressValueAndText(0, status_text);
         //setPercent(0);

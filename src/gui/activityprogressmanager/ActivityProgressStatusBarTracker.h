@@ -31,6 +31,7 @@ class QProgressBar;
 #include <QMap>
 #include <QPointer>
 #include <QSharedPointer>
+#include <QMutex>
 
 /// KF5
 class KJob;
@@ -66,11 +67,11 @@ Q_SIGNALS:
     /// @{
 
     /// KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
-    void stopped(KJob *job);
+//    void stopped(KJob *job);
     /// KAbstractWidgetJobTracker::slotSuspend(KJob*) emits this after calling job->suspend().
-    void suspend(KJob *job);
+//    void suspend(KJob *job);
     /// KAbstractWidgetJobTracker::slotResume(KJob*) emits this after calling job->resume().
-    void resume(KJob *job);
+//    void resume(KJob *job);
 
     /// @}
 
@@ -114,14 +115,9 @@ public:
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
 
-//    virtual QWidget* widget(AMLMJobPtr amlmjob);
-
 public Q_SLOTS:
     void registerJob(KJob *job) override;
-    void unregisterJob(KJob *job) override;
 
-#if 0
-    virtual void registerJob(AMLMJobPtr job);
     /**
      * From KJobTrackerInterface:
      * "You need to manually call this method only if you re-implemented registerJob() without connecting KJob::finished to this slot."
@@ -133,13 +129,14 @@ public Q_SLOTS:
      * KAbstractWJT just calls the above.
      * KJTI does connect the signal->slot (many of them, job->this) in registerJob(), so as long as we ultimately call the base class
      * implementation we're good.
-     * @warning ^^^ WHICH CURRENTLY WE ARE NOT DOING???
      */
-    virtual void unregisterJob(AMLMJobPtr job);
-#endif
+    void unregisterJob(KJob *job) override;
 
-    void dump_tracker_info();
+    /// FBO closeNow().
+    void SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
 
+    /// FBO closeEvent()
+    void SLOT_directCallSlotStop(KJob* kjob);
 
 protected Q_SLOTS:
 
@@ -194,23 +191,7 @@ protected Q_SLOTS:
 //    void slotStop(KJob *job) override;
 //    void slotSuspend(KJob *job) override;
 
-public:
-    /// @name Public interface FBO *StatusBarWidget
-    /// @{
-
-    /// FBO closeNow().
-    void removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
-
-    /// FBO closeEvent()
-    void directCallSlotStop(KJob* kjob);
-
-    /// @}
-
 protected:
-
-    /// Create the widget.
-    /// Called by the constructor.
-    void createWidgetForNewJob(AMLMJobPtr job, QWidget *parent);
 
     /// Templated job->widget lookup function.
     template <typename JobPointerType, typename Lambda>
@@ -223,9 +204,15 @@ protected:
         }
     }
 
+    void removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget);
+    void directCallSlotStop(KJob *kjob);
+
     /// Map of all registered sub-jobs (AMLMJobPtrs) to sub-job-widgets (BaseActivityProgressStatusBarWidget*'s).
     using ActiveActivitiesMap = QMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
     ActiveActivitiesMap m_amlmjob_to_widget_map;
+
+    /// Mutex for protecting the public Thread-Safe Interface.
+    QMutex m_tsi_mutex;
 
 	/// @todo Another map?
     qulonglong m_processedSize {0};

@@ -19,10 +19,12 @@
 
 #include "BaseActivityProgressStatusBarWidget.h"
 
+/// Qt5
 #include <QLabel>
 #include <QToolButton>
 #include <QProgressBar>
 #include <QHBoxLayout>
+#include <QMutexLocker>
 
 //#include <KJob>
 #include <KAbstractWidgetJobTracker>
@@ -173,9 +175,9 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
     if(m_is_job_registered && m_tracker->stopOnClose(m_job))
     {
         qDb() << "EMITTING SLOTSTOP";
-//        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
-//                                  Q_ARG(KJob*, m_job));
-        m_tracker->directCallSlotStop(m_job);
+        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+                                  Q_ARG(KJob*, m_job));
+//        m_tracker->directCallSlotStop(m_job);
     }
 
     BASE_CLASS::closeEvent(event);
@@ -224,7 +226,8 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     Q_CHECK_PTR(m_tracker);
     if(m_tracker)
     {
-        m_tracker->removeJobAndWidgetFromMap(m_job, this);
+//        m_tracker->removeJobAndWidgetFromMap(m_job, this);
+        Q_EMIT signal_removeJobAndWidgetFromMap(m_job, this);
     }
 
 //    if (m_tracker->d->progressWidget[m_job] == this)
@@ -240,11 +243,11 @@ void BaseActivityProgressStatusBarWidget::stop()
    {
        // Notify tracker that the job has been killed.
        // Calls job->kill(KJob::EmitResults) then emits stopped(job).
-//       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
-//                                 Q_ARG(KJob*, m_job));
-//       Q_ASSERT(retval);
+       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::DirectConnection,
+                                 Q_ARG(KJob*, m_job));
+       Q_ASSERT(retval);
 
-       m_tracker->directCallSlotStop(m_job);
+//       m_tracker->directCallSlotStop(m_job);
 
 
        // Emit the TW:Job-has-been-cancelled signal.

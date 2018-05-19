@@ -55,6 +55,8 @@ Q_SIGNALS:
     /// To the tracker: resume the job.
 //    void resume_job(AMLMJobPtr job);
 
+    /// To the tracker: Remove the this widget and its job from the map.
+    void signal_removeJobAndWidgetFromMap(KJob* job, QWidget *parent);
 
 private:
     /// Private constructor to get us a fully-constructed vtable so we can
@@ -105,8 +107,8 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
 
-    ActivityProgressStatusBarTracker* m_tracker;
-    KJob* m_job;
+    ActivityProgressStatusBarTracker* m_tracker {nullptr};
+    KJob* m_job {nullptr};
 
     int m_refcount {0};
 
@@ -124,5 +126,7 @@ private:
     QToolButton *m_pause_resume_button {nullptr};
     /// @}
 };
+
+Q_DECLARE_METATYPE(BaseActivityProgressStatusBarWidget*)
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_BASEACTIVITYPROGRESSSTATUSBARWIDGET_H_ */

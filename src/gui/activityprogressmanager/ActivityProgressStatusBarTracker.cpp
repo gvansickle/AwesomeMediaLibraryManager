@@ -77,6 +77,8 @@ ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
 {
+    QMutexLocker locker(&m_tsi_mutex);
+
     // Shouldn't ever get here before the widget is constructed (in the constructor).
     if(job == nullptr)
     {
@@ -94,75 +96,11 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     }
 }
 
-#if 0
-QWidget *ActivityProgressStatusBarTracker::widget(AMLMJobPtr job)
-{
-    KJob* kjob = qobject_cast<KJob*>(job);
-    Q_ASSERT(kjob != nullptr);
-    M_WARNIF((kjob == nullptr));
-    return widget(kjob);
-}
-#endif
-
-void ActivityProgressStatusBarTracker::createWidgetForNewJob(AMLMJobPtr job, QWidget *parent)
-{
-    Q_ASSERT(0);
-
-    Q_ASSERT(job != nullptr);
-    Q_ASSERT(parent != nullptr);
-
-//    // Create the widget for this new job.
-//    m_widget = new BaseActivityProgressStatusBarWidget(job, /*tracker=*/this, parent);
-
-//    Q_CHECK_PTR(m_widget);
-
-//    // Make the widget->tracker connections.
-//    // Button->tracker connections.
-//    connect(m_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
-//    connect(m_widget, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
-//    connect(m_widget, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
-
-M_WARNING("TODO: Make the tracker->widget connections.");
-M_WARNING("TODO: Make the tracker->parent_tracker connections.");
-}
-
-#if 0
-void ActivityProgressStatusBarTracker::registerJob(KJob *job)
-{
-    Q_CHECK_PTR(this);
-    Q_ASSERT(job);
-
-    qWr() << "REGISTERING KJOB:" << job;
-
-    AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
-    Q_ASSERT(amlm_job);
-
-    // Forward to the AMLMJobPtr overload.
-    registerJob(amlm_job);
-}
-
-void ActivityProgressStatusBarTracker::unregisterJob(KJob *job)
-{
-    Q_CHECK_PTR(this);
-    Q_ASSERT_X(job != nullptr, __PRETTY_FUNCTION__, "Bad incoming KJob*");
-
-    qWr() << "UNREGISTERING KJOB:" << job;
-
-M_WARNING("CRASH: Looks like we can get in here with a KJob* which won't dynamic cast to an AMLMJobPtr");
-    AMLMJobPtr amlm_job = qobject_cast<AMLMJob*>(job);
-
-    Q_ASSERT_X(amlm_job != nullptr, __PRETTY_FUNCTION__, "Failed to cast KJob* to AMLMJobPtr");
-
-    // Forward to the AMLMJobPtr overload.
-    unregisterJob(amlm_job);
-
-    qWr() << "UNREGISTERED KJOB:" << amlm_job;
-}
-#endif
-
 void ActivityProgressStatusBarTracker::registerJob(KJob* job)
 {
     // Adapted from KWidgetJobTracker's version of this function.
+    QMutexLocker locker(&m_tsi_mutex);
+
     Q_CHECK_PTR(this);
     Q_ASSERT(job);
 
@@ -186,16 +124,6 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* job)
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
     BASE_CLASS::registerJob(job);
 
-//    qDb() << "KJobTrk: AMLMJob info:" << job;
-//    qDb() << "KJobTrk:" << M_NAME_VAL(job->capabilities()) << "\n"
-//          << M_NAME_VAL(job->isSuspended()) << "\n"
-//          << M_NAME_VAL(job->isAutoDelete()) << "\n"
-//          << M_NAME_VAL(job->error()) << "\n"
-//          << M_NAME_VAL(job->errorText()) << "\n"
-//          << M_NAME_VAL(job->errorString());
-
-//    dump_tracker_info();
-
     // KWidgetJobTracker does almost the following.
     // It does not pass the job ptr thhough.
     /// @todo Is that part of our problems?
@@ -205,6 +133,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* job)
 void ActivityProgressStatusBarTracker::unregisterJob(KJob* job)
 {
     // Adapted from KWidgetJobTracker's version of this function.
+    QMutexLocker locker(&m_tsi_mutex);
 
     Q_CHECK_PTR(this);
     Q_ASSERT(job != nullptr);
@@ -223,17 +152,16 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob* job)
         ;});
 }
 
-void ActivityProgressStatusBarTracker::dump_tracker_info()
+void ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget *widget)
 {
-//    QVector<AMLMJobPtr> joblist;
-//    joblist << m_amlmjob_to_widget_map.keys();
+    QMutexLocker locker(&m_tsi_mutex);
+    removeJobAndWidgetFromMap(ptr, widget);
+}
 
-//    for(auto &i : joblist)
-//    {
-//        qIn() << "INFO FROM TRACKER:" << this << "RE JOB:" << i;
-//        qIn() << M_NAME_VAL(autoDelete(i)) << "\n"
-//              << M_NAME_VAL(stopOnClose(i)) << "\n";
-//    }
+void ActivityProgressStatusBarTracker::SLOT_directCallSlotStop(KJob *kjob)
+{
+    QMutexLocker locker(&m_tsi_mutex);
+    directCallSlotStop(kjob);
 }
 
 void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
@@ -443,7 +371,7 @@ void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
     //
     // KJobTrackerInterface::finished(KJob *job) does nothing.
-
+    qWr() << "FINISHED KJob:" << job;
     with_widget_or_skip(job, [=](auto w){
         qWr() << "FINISHED JOB:" << job << "WITH WIDGET:" << w;
     });
