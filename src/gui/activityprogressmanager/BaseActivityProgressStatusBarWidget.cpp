@@ -47,7 +47,7 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
     : BaseActivityProgressStatusBarWidget(parent)
 {
     m_tracker = tracker;
-    m_job = job;
+    m_kjob = job;
     m_refcount = 1;
 
     // We have a vtable to this, go nuts with the virtual calls.
@@ -133,7 +133,7 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
 
-        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_job);});
+        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_kjob);});
         connect(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
 #if 0 // CRASHING
@@ -174,11 +174,11 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 {
-    if(m_is_job_registered && m_tracker->stopOnClose(m_job))
+    if(m_is_job_registered && m_tracker->stopOnClose(m_kjob))
     {
         qDb() << "EMITTING SLOTSTOP";
         QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-                                  Q_ARG(KJob*, m_job));
+                                  Q_ARG(KJob*, m_kjob));
 //        m_tracker->directCallSlotStop(m_job);
     }
 
@@ -229,7 +229,7 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     if(m_tracker)
     {
 //        m_tracker->removeJobAndWidgetFromMap(m_job, this);
-        Q_EMIT signal_removeJobAndWidgetFromMap(m_job, this);
+        Q_EMIT signal_removeJobAndWidgetFromMap(m_kjob, this);
     }
 
 //    if (m_tracker->d->progressWidget[m_job] == this)
@@ -246,7 +246,7 @@ void BaseActivityProgressStatusBarWidget::stop()
        // Notify tracker that the job has been killed.
        // Calls job->kill(KJob::EmitResults) then emits stopped(job).
        auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-                                 Q_ARG(KJob*, m_job));
+                                 Q_ARG(KJob*, m_kjob));
        Q_ASSERT(retval);
 
 //       m_tracker->directCallSlotStop(m_job);

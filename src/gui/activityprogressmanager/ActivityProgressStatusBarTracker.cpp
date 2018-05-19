@@ -59,17 +59,18 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     m_expanding_frame_widget->hide();
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
+
+    /// @todo cancel_job state should be enabled/disabled based on child job cancelable capabilities.
+//    m_cumulative_status_widget->m_
     // Connect the cumulative status widget button's signals to slots in this class, they need to apply to all sub-jobs.
     connect(m_cumulative_status_widget, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::cancelAll);
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
-    // All KWidgetJobTracker does here is delet the private pImpl pointer.
+    // All KWidgetJobTracker does here is delete the private pImpl pointer.
 
     qDb() << "ActivityProgressStatusBarTracker DELETED";
-
-    Q_ASSERT_X(0, "temp", "Destructor should only be called on app exit");
 
     /// @todo NEW, IS THIS CORRECT?
     delete m_expanding_frame_widget;
@@ -97,38 +98,44 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     }
 }
 
-void ActivityProgressStatusBarTracker::registerJob(KJob* job)
+void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 {
     // Adapted from KWidgetJobTracker's version of this function.
     QMutexLocker locker(&m_tsi_mutex);
 
     Q_CHECK_PTR(this);
-    Q_ASSERT(job);
+    Q_ASSERT(kjob);
 
     // Create the widget for this new job.
-    auto wdgt = new BaseActivityProgressStatusBarWidget(job, this, m_expanding_frame_widget);
+    auto wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
     wdgt->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
+
     // Insert the kjob/widget pair into our master map.
-    m_amlmjob_to_widget_map.insert(job, wdgt);
+    m_amlmjob_to_widget_map.insert(kjob, wdgt);
+
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
     // Add the new widget to the expanging frame.
     m_expanding_frame_widget->addWidget(wdgt);
     m_expanding_frame_widget->reposition();
 
+    /// EXP
+    connect_destroyed_debug(kjob);
+//    connect(job, &KJob::finished, this, [=](KJob *self){ qDb() << "TRACKER GOT FINISHED SIGNAL FROM JOB/SELF:" << job << self;});
+
     // KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
     //   KJobTrackerInterface::registerJob(KJob *job) does nothing but connect
-    //   many signals to slots.  Specifically finsihed-related:
+    //   many of the KJob signals to slots of this.  Specifically finsihed-related:
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(unregisterJob(KJob*)));
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
-    BASE_CLASS::registerJob(job);
+    BASE_CLASS::registerJob(kjob);
 
     // KWidgetJobTracker does almost the following.
-    // It does not pass the job ptr thhough.
+    // It does not pass the job ptr though.
     /// @todo Is that part of our problems?
-    QTimer::singleShot(500, this, [=](){onShowProgressWidget(job);});
+    QTimer::singleShot(500, this, [=](){onShowProgressWidget(kjob);});
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(KJob* job)
@@ -167,6 +174,8 @@ void ActivityProgressStatusBarTracker::SLOT_directCallSlotStop(KJob *kjob)
 
 void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
 {
+    QMutexLocker locker(&m_tsi_mutex);
+
     // Called on a timer timeout after a new job is registered.
 
     Q_CHECK_PTR(kjob);

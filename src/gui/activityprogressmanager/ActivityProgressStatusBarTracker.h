@@ -166,7 +166,7 @@ public:
     QWidget* widget(KJob* job) override;
 
 public Q_SLOTS:
-    void registerJob(KJob *job) override;
+    void registerJob(KJob *kjob) override;
 
     /**
      * From KJobTrackerInterface:
@@ -277,10 +277,9 @@ protected:
     /// @todo NEW
     QPointer<QWidget> m_parent_widget {nullptr};
 
-	/// @todo NEW	
     /// The status widget showing the cumulative status of all registered sub-trackers.
     QPointer<BaseActivityProgressStatusBarWidget> m_cumulative_status_widget {nullptr};
-	/// @todo NEW
+
     /// Showable/hidable window containing all sub-trackers.
     QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};
 

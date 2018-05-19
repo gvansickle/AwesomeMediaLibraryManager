@@ -21,6 +21,9 @@
 #define CONNECTHELPERS_H
 
 #include <QAction>
+#include <QApplication>
+
+#include "DebugHelpers.h"
 
 template <typename T, typename F>
 QMetaObject::Connection connect_trig(QAction* sender, const T* receiver, F slot, Qt::ConnectionType type = Qt::AutoConnection)
@@ -39,6 +42,25 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
 //{
 //	return connect(sender_and_receiver, signal, sender_and_receiver, slot, type);
 //}
+
+/**
+ * For connecting the @a sender's destroyed() signal.
+ * Qt5 docs re destroyed:
+ * "This signal is emitted immediately before the object obj is destroyed, and can not be blocked.
+ * All the objects's children are destroyed immediately after this signal is emitted."
+ */
+template <typename Sender>
+QMetaObject::Connection connect_destroyed_debug(Sender* sender, Qt::ConnectionType type = Qt::AutoConnection)
+{
+    QMetaObject::Connection retval;
+
+    retval = Sender::connect(sender, &Sender::destroyed, /*MainWindow::instance()*/qApp,
+                             [=](QObject* the_qobj){
+                            qDb() << "RECEIVED DESTROYED SIGNAL. OBJECT:" << the_qobj;
+                            ;},
+                            type);
+    return retval;
+}
 
 /**
  * If @a ptr is not nullptr, runs lambda @a l, passing it ptr as a param.

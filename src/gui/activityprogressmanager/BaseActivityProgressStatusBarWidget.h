@@ -23,6 +23,7 @@
 /// Qt5
 #include <QObject>
 #include <QFrame>
+#include <QPointer>
 class QLabel;
 class QProgressBar;
 class QToolButton;
@@ -108,7 +109,7 @@ private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
 
     ActivityProgressStatusBarTracker* m_tracker {nullptr};
-    KJob* m_job {nullptr};
+    QPointer<KJob> m_kjob {nullptr};
 
     int m_refcount {0};
 

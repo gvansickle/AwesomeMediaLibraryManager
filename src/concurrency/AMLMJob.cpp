@@ -51,7 +51,7 @@ AMLMJob::AMLMJob(QObject *parent)
 
 AMLMJob::~AMLMJob()
 {
-    qDb() << "AMLMJob DELETED";
+    qDb() << "AMLMJob DELETED" << this;
 }
 
 void AMLMJob::requestAbort()

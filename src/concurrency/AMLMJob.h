@@ -148,7 +148,7 @@ Q_SIGNALS:
     /// and they might get killed silently, then you must connect to this instead of result(), to avoid dangling pointers in your list."
     // void finished (KJob *job)
 
-    void finished(AMLMJob*);
+//    void finished(AMLMJob*);
 
     // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
 
@@ -334,7 +334,7 @@ protected:
      *
      * @note KJob::doKill() does nothing, simply returns false.
      *
-     * What we do here is:
+     * What our override here does:
      * - Tell the TW::Job to kill itself with requestAbort();
      * - Call our onKJobDoKill(), which currently does nothing.
      *
