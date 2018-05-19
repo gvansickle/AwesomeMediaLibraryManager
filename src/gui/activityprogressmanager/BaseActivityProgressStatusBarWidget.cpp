@@ -53,6 +53,9 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
     // We have a vtable to this, go nuts with the virtual calls.
     /// @note job is currently unused by init().
     init(job, parent);
+
+    /// Make the connections.
+    make_connections();
 }
 
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
@@ -133,7 +136,14 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
 
-        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_kjob);});
+//M_WARNING("TODO: The ::stop() slot needs to be somehow activated here, prob from tracker.");
+        // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
+        /// @todo KWidgetJobTracker::Private::ProgressWidget only does click->stop signal here.
+        /// Seems odd, should go back to the tracker to do the job stop etc.
+//        connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
+//            qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
+//            Q_EMIT cancel_job(m_kjob);
+//        });
         connect(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
 #if 0 // CRASHING
@@ -170,6 +180,22 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
     layout->addWidget(m_cancel_button);
 
     setLayout(layout);
+}
+
+void BaseActivityProgressStatusBarWidget::make_connections()
+{
+#if 0
+    if(m_kjob && m_tracker)
+    {
+//        // Connect cancel-clicked signal to tracker's remove-job signal.
+//        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_kjob);});
+    }
+    else
+    {
+        qWr() << "NO JOB/TRACKER:" << m_kjob << m_tracker;
+        Q_ASSERT(0);
+    }
+#endif
 }
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
@@ -241,6 +267,15 @@ void BaseActivityProgressStatusBarWidget::closeNow()
 
 void BaseActivityProgressStatusBarWidget::stop()
 {
+    /// KWidgetJobTracker::Private::ProgressWidget::_k_stop() does this here:
+    /// if (jobRegistered) {
+    ///    tracker->slotStop(job);
+    /// }
+    /// closeNow();
+    ///
+    /// ATM we're missing something, because when we do what should be ~equivalent below, the "cancel" button
+    /// is ignored.
+
    if(m_is_job_registered)
    {
        // Notify tracker that the job has been killed.
@@ -253,6 +288,8 @@ void BaseActivityProgressStatusBarWidget::stop()
 
 
        // Emit the TW:Job-has-been-cancelled signal.
+       /// @todo I think this was our main problem with the crashing on completion:
+       /// cancel_job() should be from the cancel button only, not as a notification such as this.
 //       qDb() << "EMITTING CANCEL_JOB";
 //       Q_EMIT cancel_job(this->m_job);
    }

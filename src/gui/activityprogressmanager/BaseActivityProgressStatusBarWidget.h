@@ -93,6 +93,9 @@ protected:
     /// Called by the public constructor.
     virtual void init(KJob* job, QWidget *parent);
 
+    /// Make the necessary connections between this Widget, the KJob, and the tracker.
+    void make_connections(void);
+
     void closeEvent(QCloseEvent* event) override;
 
     // Cribbed from KWidgetJobTracker.
@@ -100,6 +103,7 @@ protected:
 
 protected Q_SLOTS:
 
+    /// @todo Not clear why the functionality of these two are in the Widget; seems like it should be in the tracker.
     /// Invoke this to cancel the job.
     void stop();
     /// Invoke this to pause or resume the job.

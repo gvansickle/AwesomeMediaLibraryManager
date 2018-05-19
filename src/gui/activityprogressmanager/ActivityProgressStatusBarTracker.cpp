@@ -121,8 +121,13 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     m_expanding_frame_widget->addWidget(wdgt);
     m_expanding_frame_widget->reposition();
 
+    // Make connections.
+    /// @todo Should this really be here, or better in the onShowProgressWidget() call?
+    make_connections_with_newly_registered_job(kjob, wdgt);
+
     /// EXP
     connect_destroyed_debug(kjob);
+
 //    connect(job, &KJob::finished, this, [=](KJob *self){ qDb() << "TRACKER GOT FINISHED SIGNAL FROM JOB/SELF:" << job << self;});
 
     // KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
@@ -415,6 +420,14 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
     with_widget_or_skip(job, [=](auto w){
         qDb() << "KJobTrk: slotClean" << job;
     });
+}
+
+void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
+{
+    // Connect cancel-button-pressed signal to the
+//    connect(wdgt, &BaseActivityProgressStatusBarWidget::cancel_job, kjob, [=](KJob* the_kjob) {
+//        the_kjob->stop();
+//    });
 }
 
 void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget)

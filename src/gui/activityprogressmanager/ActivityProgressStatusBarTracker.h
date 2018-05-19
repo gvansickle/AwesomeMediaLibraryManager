@@ -243,7 +243,7 @@ protected Q_SLOTS:
 //    void slotStop(KJob *job) override;
 //    void slotSuspend(KJob *job) override;
 
-protected:
+protected: // Methods
 
     /// Templated job->widget lookup function.
     template <typename JobPointerType, typename Lambda>
@@ -256,8 +256,12 @@ protected:
         }
     }
 
+    void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
+
     void removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget);
     void directCallSlotStop(KJob *kjob);
+
+protected: // Variable members
 
     /// Map of all registered sub-jobs (AMLMJobPtrs) to sub-job-widgets (BaseActivityProgressStatusBarWidget*'s).
 //    using ActiveActivitiesMap = QMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
