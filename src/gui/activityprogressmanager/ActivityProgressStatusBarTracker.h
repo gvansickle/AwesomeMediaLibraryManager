@@ -56,6 +56,18 @@ using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgress
 
 /**
  * K*WidgetJobTracker tracking the progress/status/controls of a single AMLMJob.
+ *
+ * Sort of a mix of KWidgetJobTracker and KStatusBarJobTracker, but better.
+ *
+ * @note Derived from KAbstractWidgetJobTracker instead of simply using KStatusBarJobTracker or
+ *       KWidgetJobTracker.  The latter is great, but presents a UI really only suitable for use in a QDialog,
+ *       while the former would be usable in a status bar, but is missing a lot of basic tracking functionality.
+ *
+ * @note Due to inheritance from KAbstractWidgetJobTracker, the assumption is that one instance of this class
+ *       tracks one AMLMJob instance.  In our use here, that's kind of not applicable, unless you make the
+ *       abstraction of all child trackers and jobs into a single "metaAMLMJob", which we don't have yet.
+ *       Causes complications; currently the KJob is a nullptr, which causes its own complications.
+ *
  */
 class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker, public UniqueIDMixin<ActivityProgressStatusBarTracker>
 {
