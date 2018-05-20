@@ -32,6 +32,8 @@
 #include "BaseActivityProgressStatusBarWidget.h"
 #include "CumulativeStatusWidget.h"
 
+#include <KIO/ListJob>
+
 
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent),
     m_tsi_mutex(QMutex::Recursive /** @todo Shouldn't need to do this. */)
@@ -218,6 +220,11 @@ void ActivityProgressStatusBarTracker::cancelAll()
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
+    if(qobject_cast<KIO::ListJob*>(job) != 0)
+    {
+        qDb() << "WIDGET:" << job;
+    }
+
     /// This follows the basic pattern of KWidgetJobTracker, with a little C++14 help.
     /// All these "tracker->widget ~signal" handlers get the widget ptr (from a map in that case),
     /// check for null, and if not null do the job.
@@ -228,6 +235,11 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
+    if(qobject_cast<KIO::ListJob*>(job) != 0)
+    {
+        qDb() << "WIDGET:" << job;
+    }
+
     // Prefer rich if it's given.
     with_widget_or_skip(job, [=](auto w){
         w->setInfoMessage(rich.isEmpty() ? plain : rich);
@@ -244,6 +256,11 @@ void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, 
 
 void ActivityProgressStatusBarTracker::totalAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
+    if(qobject_cast<KIO::ListJob*>(job) != 0)
+    {
+        qDb() << "WIDGET:" << job;
+    }
+
     switch (unit)
     {
     case KJob::Bytes:
@@ -280,6 +297,11 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *job, KJob::Unit unit, q
 
 void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
+    if(qobject_cast<KIO::ListJob*>(job) != 0)
+    {
+        qDb() << "WIDGET:" << job << unit << amount;
+    }
+
     with_widget_or_skip(job, [=](auto w)
     {
         QString tmp;
@@ -361,6 +383,11 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
+    if(qobject_cast<KIO::ListJob*>(job) != 0)
+    {
+        qDb() << "WIDGET:" << job;
+    }
+
     with_widget_or_skip(job, [=](auto w){
         qDb() << "KJobTrk: percent" << job << percent;
 

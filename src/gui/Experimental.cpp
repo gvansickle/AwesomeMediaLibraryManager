@@ -148,7 +148,7 @@ void Experimental::DoExperiment()
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
     /// Another KF5 KIO Job.
-    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, KIO::DefaultFlags, /*includeHidden=*/false);
+    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
 
     qDb() << M_NAME_VAL(dsj->capabilities());
     qDb() << M_NAME_VAL(dsj2->capabilities());
@@ -172,6 +172,9 @@ void Experimental::DoExperiment()
     master_job_tracker->setStopOnClose(dsj2, false);
 
     master_job_tracker->registerJob(kio_list_kiojob);
+
+    // Shows prog and other signals hooked up to the tracker.
+    dump_qobject(kio_list_kiojob);
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
