@@ -130,17 +130,35 @@ Q_SIGNALS:
 
     /// This signal is emitted when this TW::Job is being processed by a thread.
     void started(ThreadWeaver::JobPointer);
-//    void started(AMLMJobPtr);
     /// This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
     void done(ThreadWeaver::JobPointer);
-//    void done(AMLMJobPtr);
     /// This signal is emitted when success() returns false after the job is executed.
     void failed(ThreadWeaver::JobPointer);
-//    void failed(AMLMJobPtr);
 
     /// @}
 
-	/// KJob signals, quite a few:
+    /// @name User-public/subclass-private internal KJob signals.
+    /// Here for reference only, these are KJob-private, i.e. can't be emitted directly.
+    /// @{
+
+    /// "Emitted when the job is finished, in any case. It is used to notify
+    /// observers that the job is terminated and that progress can be hidden."
+    /// Call emitResult(job) to emit.
+//    void finished(KJob *job);
+    /// "Emitted when the job is suspended."
+    /// No direct way to emit this?
+//    void suspended(KJob *job);
+    /// "Emitted when the job is resumed."
+    /// No direct way to emit this?
+//    void resumed(KJob *job);
+    /// "Emitted when the job is finished (except when killed with KJob::Quietly).
+    /// Use error to know if the job was finished with error."
+    /// Call emitResult(job) to emit.
+//    void result(KJob *job);
+
+    /// @}
+
+    /// Documenetd KJob signals, quite a few:
     ///
 	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
 
@@ -169,10 +187,6 @@ Q_SIGNALS:
     /// KJobs are supported by KJobWidgets
 	/// https://api.kde.org/frameworks/kjobwidgets/html/namespaceKJobWidgets.html
 	///
-
-    /// @name Internal signals
-
-    // @todo
 
     /// KJobTrackerInterface (== Watcher for KJob*s):
     /// https://cgit.kde.org/kcoreaddons.git/tree/src/lib/jobs/kjobtrackerinterface.h

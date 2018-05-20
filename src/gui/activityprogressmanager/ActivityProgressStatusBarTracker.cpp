@@ -202,10 +202,18 @@ void ActivityProgressStatusBarTracker::cancelAll()
 
     qDb() << "CANCELLING ALL JOBS";
 
-    m_amlmjob_to_widget_map.foreach([=](TSActiveActivitiesMap::iterator  it){
-        qDb() << "Cancelling job:" << it.key() << "widget:" << it.value();
-#warning "TODO: Cancel job"
-        ;});
+    //  Get a list of all the keys in the map.
+    QList<KJob*> joblist = m_amlmjob_to_widget_map.keys();
+
+    qDb() << "CANCELLING ALL JOBS: Num KJobs:" << m_amlmjob_to_widget_map.size() << "List size:" << joblist.size();
+
+    for(auto job : joblist)
+    {
+        qDb() << "Cancelling job:" << job; // << "widget:" << it.value();
+        job->kill();
+    }
+
+    qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
 }
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
@@ -422,10 +430,10 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
 {
-    // Connect cancel-button-pressed signal to the
-//    connect(wdgt, &BaseActivityProgressStatusBarWidget::cancel_job, kjob, [=](KJob* the_kjob) {
-//        the_kjob->stop();
-//    });
+    // For Widgets to reques deletion of their jobs ext from the map.
+    BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
+    connect(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
+            this, &ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap);
 }
 
 void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget)

@@ -255,6 +255,7 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     if(m_tracker)
     {
 //        m_tracker->removeJobAndWidgetFromMap(m_job, this);
+        qDb() << "EMITTING signal_removeJobAndWidgetFromMap:" << m_kjob << this;
         Q_EMIT signal_removeJobAndWidgetFromMap(m_kjob, this);
     }
 

@@ -81,16 +81,34 @@ public:
         return value(key);
     }
 
-    template<typename Lambda>
-    void foreach(Lambda the_lambda)
+    QList<Key> keys() const
+    {
+        QList<Key> retval;
+
+        QMutexLocker locker(&m_map_mutex);
+
+        retval = m_kjob_to_widget_map.keys();
+
+        return retval;
+    }
+
+    int size() const
     {
         QMutexLocker locker(&m_map_mutex);
-        for(auto i = m_kjob_to_widget_map.begin(); i != m_kjob_to_widget_map.end(); ++i)
+        return m_kjob_to_widget_map.size();
+    }
+
+#if 0
+    template<typename Lambda>
+    void for_each_key_value_pair(Lambda the_lambda)
+    {
+        QMutexLocker locker(&m_map_mutex);
+        for(ActiveActivitiesMap::iterator i = m_kjob_to_widget_map.begin(); i != m_kjob_to_widget_map.end(); ++i)
         {
             the_lambda(i);
         }
     }
-
+#endif
     /// Public types
     using iterator = ActiveActivitiesMap::iterator;
 
@@ -184,6 +202,7 @@ public Q_SLOTS:
     void unregisterJob(KJob *kjob) override;
 
     /// FBO closeNow().
+    /// This is emitted by child progress widgets in their "closeNow()" members.
     void SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
 
     /// FBO closeEvent()
