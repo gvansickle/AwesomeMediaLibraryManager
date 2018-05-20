@@ -21,20 +21,30 @@
 
 #include "LibraryRescanner.h"
 
+/// Std C++
 #include <functional>
 
+/// Qt5
 #include <QThread>
 #include <QtConcurrent>
 
-#include <concurrency/ExtAsync.h>
+/// KF5
+#include <KJobUiDelegate>
 
+/// Ours
+#include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
-#include "utils/AsyncDirScanner.h"
-#include <concurrency/AsyncTaskManager.h>
-#include <concurrency/ReportingRunner.h>
-#include "logic/LibraryModel.h"
+#include <concurrency/ExtAsync.h>
 
+#include "utils/AsyncDirScanner.h"
+#include <concurrency/ReportingRunner.h>
+#include <concurrency/AsyncTaskManager.h>
+
+#include <src/concurrency/DirectoryScanJob.h>
+#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+
+#include "logic/LibraryModel.h"
 
 using std::placeholders::_1;
 
@@ -155,6 +165,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	// Time how long it takes.
 	m_timer.start();
 
+#if 0
 	// Create the ControlledTask which will scan the directory tree for files.
 
 //	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
@@ -181,6 +192,43 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //	future.cancel();
 //	//throw QException();
 //	qDebug() << "ERROR";
+#else
+    auto master_job_tracker = MainWindow::master_tracker_instance();
+    Q_CHECK_PTR(master_job_tracker);
+
+    /*AMLMJobPtr*/ DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+
+    connect(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
+        qDb() << "FOUND:" << the_url;
+        runInObjectEventLoop([=](){
+            m_current_libmodel->onIncomingFilename(the_url.toString());}, m_current_libmodel);
+        ;});
+
+    /// @todo This would be a good candidate for an AMLMJob ".then()".
+    connect(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
+        qDb() << "DIRTRAV COMPLETE";
+        if(kjob->error())
+        {
+            qWr() << "DIRTRAV FAILED:" << kjob->errorText() << ":" << kjob->errorString();
+            kjob->uiDelegate()->showErrorMessage();
+        }
+        else
+        {
+            // Succeeded.
+            qIn() << "DIRTRAV SUCCEEDED";
+
+        }
+    });
+
+    master_job_tracker->registerJob(dirtrav_job);
+    master_job_tracker->setAutoDelete(dirtrav_job, false);
+    master_job_tracker->setStopOnClose(dirtrav_job, false);
+
+    dirtrav_job->start();
+
+#endif
 
 	qDb() << "END:" << dir_url;
 }

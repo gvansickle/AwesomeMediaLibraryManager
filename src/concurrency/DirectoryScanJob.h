@@ -49,7 +49,7 @@ class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectorySc
      */
     using UniqueIDMixin<DirectoryScannerAMLMJob>::uniqueQObjectName;
 
-//Q_SIGNALS:
+Q_SIGNALS:
 //    /// ThreadWeaver::QObjectDecorator signals, only three:
 //    /*
 //    *  // This signal is emitted when this job is being processed by a thread.
@@ -62,6 +62,14 @@ class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectorySc
 //    void started(ThreadWeaver::JobPointer);
 //    void done(ThreadWeaver::JobPointer);
 //    void failed(ThreadWeaver::JobPointer);
+
+    /**
+     * KIO::ListJob-like signal used to send the discovered directory entries to
+     * whoever may be listening.
+     * Differs in the parameters.  KIO::Job is a KJob here, and the UDSEntryList
+     * is not a list or a UDSEntry, but a single QUrl.
+     */
+    void entries(KJob* kjob, const QUrl& url);
 
 public:
     explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,

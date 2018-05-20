@@ -52,9 +52,6 @@ public Q_SLOTS:
 
     void addActivity(AMLMJob* activity);
 
-    void TrackJob(KJob *job);
-
-
 protected Q_SLOTS:
 
     void onTWJobDone(ThreadWeaver::JobPointer job);

@@ -168,7 +168,8 @@ M_WARNING("TODO not sure if this is the right place to do this");
 
                 Q_EMIT this->infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("RICH File: %1").arg(file_url.toString()));
 
-				// Send this path to the future.
+                // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
+                Q_EMIT this->entries(this, file_url);
 //				report_and_control.reportResult(file_url.toString());
 
 //                qDebug() << M_THREADNAME() << "resultCount:" << report_and_control.resultCount();

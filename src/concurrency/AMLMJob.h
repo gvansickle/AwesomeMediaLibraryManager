@@ -167,8 +167,6 @@ Q_SIGNALS:
     /// and they might get killed silently, then you must connect to this instead of result(), to avoid dangling pointers in your list."
     // void finished (KJob *job)
 
-//    void finished(AMLMJob*);
-
     // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
 
     // void 	percent (KJob *job, unsigned long percent)

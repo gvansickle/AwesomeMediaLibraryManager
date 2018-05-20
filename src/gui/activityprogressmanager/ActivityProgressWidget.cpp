@@ -128,11 +128,6 @@ void ActivityProgressWidget::addActivity(AMLMJob *activity)
     //    connect();
 }
 
-void ActivityProgressWidget::TrackJob(KJob *job)
-{
-
-}
-
 void ActivityProgressWidget::onTWJobDone(ThreadWeaver::JobPointer job)
 {
 //    M_WARNING("DO SOMETHING HERE");
