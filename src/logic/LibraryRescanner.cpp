@@ -226,7 +226,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     master_job_tracker->setAutoDelete(dirtrav_job, false);
     master_job_tracker->setStopOnClose(dirtrav_job, false);
 
+    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
     dirtrav_job->start();
+    queue->stream() << dirtrav_job;
 
 #endif
 
