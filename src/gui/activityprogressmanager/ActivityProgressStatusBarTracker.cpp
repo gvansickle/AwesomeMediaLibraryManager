@@ -113,6 +113,10 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     // Insert the kjob/widget pair into our master map.
     m_amlmjob_to_widget_map.insert(kjob, wdgt);
 
+M_WARNING("TODO");
+//    m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
+    m_cumulative_status_widget->setValue(m_amlmjob_to_widget_map.size());
+
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
     // Add the new widget to the expanging frame.

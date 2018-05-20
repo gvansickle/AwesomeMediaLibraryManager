@@ -41,6 +41,7 @@ class KJob;
 #include <utils/TheSimplestThings.h>
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
+#include <concurrency/ThreadsafeMap.h>
 //#include "BaseActivityProgressStatusBarWidget.h"
 #include "CumulativeStatusWidget.h"
 class BaseActivityProgressStatusBarWidget;
@@ -51,74 +52,7 @@ class BaseActivityProgressStatusBarWidget;
 class ActivityProgressStatusBarTracker;
 using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;
 
-class TSActiveActivitiesMap
-{
-    using T = QPointer<BaseActivityProgressStatusBarWidget>;
-    using Key = KJob*;
-    using ActiveActivitiesMap = QMap<Key, T>;
-
-public:
-    TSActiveActivitiesMap() : m_map_mutex() {}
-
-    const T value(const Key &key, const T &defaultValue = T()) const
-    {
-        QMutexLocker locker(&m_map_mutex);
-        return m_kjob_to_widget_map.value(key, defaultValue);
-    }
-    void insert(const Key &key, const T &value)
-    {
-        QMutexLocker locker(&m_map_mutex);
-        m_kjob_to_widget_map.insert(key, value);
-    }
-    int remove(const Key &key)
-    {
-        QMutexLocker locker(&m_map_mutex);
-        return m_kjob_to_widget_map.remove(key);
-    }
-
-    const T operator[](const Key &key) const
-    {
-        return value(key);
-    }
-
-    QList<Key> keys() const
-    {
-        QList<Key> retval;
-
-        QMutexLocker locker(&m_map_mutex);
-
-        retval = m_kjob_to_widget_map.keys();
-
-        return retval;
-    }
-
-    int size() const
-    {
-        QMutexLocker locker(&m_map_mutex);
-        return m_kjob_to_widget_map.size();
-    }
-
-#if 0
-    template<typename Lambda>
-    void for_each_key_value_pair(Lambda the_lambda)
-    {
-        QMutexLocker locker(&m_map_mutex);
-        for(ActiveActivitiesMap::iterator i = m_kjob_to_widget_map.begin(); i != m_kjob_to_widget_map.end(); ++i)
-        {
-            the_lambda(i);
-        }
-    }
-#endif
-    /// Public types
-    using iterator = ActiveActivitiesMap::iterator;
-
-private:
-
-    ActiveActivitiesMap m_kjob_to_widget_map;
-
-    /// Mutex for protecting the map.
-    mutable QMutex m_map_mutex;
-};
+using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
 
 /**
  * K*WidgetJobTracker tracking the progress/status/controls of a single AMLMJob.
@@ -293,7 +227,7 @@ protected: // Variable members
     qulonglong m_processedSize {0};
     bool m_is_total_size_known {false};
     qulonglong m_totalSize {0};
-	/// @todo KJobs each have one of these.
+    /// @todo KJobs each have one of these in KJobPrivate.
     QTime m_start_time;
 
     /// @todo NEW
