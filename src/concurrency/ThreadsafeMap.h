@@ -75,14 +75,15 @@ public:
         return m_kjob_to_widget_map.size();
     }
 
-#if 0
+#if 1
     template<typename Lambda>
-    void for_each_key_value_pair(Lambda the_lambda)
+    void for_each_key_value_pair(Lambda the_lambda) const
     {
         QMutexLocker locker(&m_map_mutex);
-        for(ActiveActivitiesMap::iterator i = m_kjob_to_widget_map.begin(); i != m_kjob_to_widget_map.end(); ++i)
+        for(typename ActiveActivitiesMap::const_iterator i = m_kjob_to_widget_map.cbegin();
+            i != m_kjob_to_widget_map.cend(); ++i)
         {
-            the_lambda(i);
+            the_lambda(i.key(), i.value());
         }
     }
 #endif

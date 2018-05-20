@@ -95,4 +95,6 @@ private:
 
 };
 
+Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
+
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

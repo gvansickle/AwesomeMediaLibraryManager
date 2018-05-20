@@ -99,6 +99,12 @@ void BaseActivityProgressStatusBarWidget::setValue(int val)
     m_progress_bar->setValue(val);
 }
 
+void BaseActivityProgressStatusBarWidget::setPercent(unsigned long pct)
+{
+    m_progress_bar->setRange(0,100);
+    m_progress_bar->setValue(pct);
+}
+
 void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
 {
     // Create the widget.
@@ -143,7 +149,7 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
 //            qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
 //            Q_EMIT cancel_job(m_kjob);
 //        });
-        connect(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
+        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
 #if 0 // CRASHING
         // Connect up the disconnect signal from the job.

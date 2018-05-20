@@ -215,6 +215,8 @@ protected: // Methods
     void removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget);
     void directCallSlotStop(KJob *kjob);
 
+    int calculate_summary_percent();
+
 protected: // Variable members
 
     /// Map of all registered sub-jobs (KJob*) to sub-job-widgets (QPointer<BaseActivityProgressStatusBarWidget>'s).

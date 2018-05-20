@@ -87,6 +87,13 @@ public /*Q_SLOTS*/:
     virtual void setRange(int min, int max);
     virtual void setValue(int val);
 
+    /// @todo This feels hackish.  These really should be slots if anything, and should
+    /// be connected to the associated tracker or maybe KJob.
+    /// The whole KJob status interface is protected.  In this percent() case, the KJob has
+    /// a protected setPercent(unsigned long pct) function which then emits the percent() signal.
+    /// This is a simple public forwarder FBO ActivityProgressStatusBarTracker's cumulative progress widget.
+    virtual void setPercent(unsigned long pct);
+
 protected:
 
     /// Create the widget.

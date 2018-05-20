@@ -47,7 +47,7 @@
  *  - Signal done(TW:JobPtr), when TW:Job has completed execution, regardless of status.
  *  - Signal failed(TW::JobPtr), when TW:Job's ::success() returns false after job is executed.
  *  - defaultBegin() override which emits started(self) and calls job()->defaultBegin().
- *  - defaultBegin() override which:
+ *  - defaultEnd() override which:
  *    - Calls job()->defaultEnd()
  *    - if(!success) emits failed(self)
  *    - Always emits done(self).
@@ -61,8 +61,6 @@
 /// KF5
 #include <KJob>
 #include <ThreadWeaver/Job>
-#include <ThreadWeaver/IdDecorator>
-#include <ThreadWeaver/QObjectDecorator>
 
 /// Ours
 #include "utils/UniqueIDMixin.h"

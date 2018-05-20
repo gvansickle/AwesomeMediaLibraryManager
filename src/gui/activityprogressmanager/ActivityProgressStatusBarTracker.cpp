@@ -25,6 +25,9 @@
 #include <QTimer>
 #include <QToolButton>
 
+/// KF5
+#include <KJob>
+#include <KIO/ListJob>
 
 /// Ours
 #include <utils/TheSimplestThings.h>
@@ -32,7 +35,6 @@
 #include "BaseActivityProgressStatusBarWidget.h"
 #include "CumulativeStatusWidget.h"
 
-#include <KIO/ListJob>
 
 
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent),
@@ -59,9 +61,8 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     /// @todo m_cumulative_status_widget's cancel_job button state should be enabled/disabled based on child job cancelable capabilities.
 
     // Connect the cumulative status widget button's signals to slots in this class, they need to apply to all sub-jobs.
-    auto retval = connect(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
-            this, &ActivityProgressStatusBarTracker::cancelAll);
-    Q_ASSERT((bool)retval);
+    connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
+                this, &ActivityProgressStatusBarTracker::cancelAll);
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
@@ -421,6 +422,10 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
         w->setRange(0, 100);
         w->setValue(percent);
 
+        /// @todo Notify summary widget.
+        auto cumulative_pct = calculate_summary_percent();
+        m_cumulative_status_widget->setPercent(cumulative_pct);
+
     });
 }
 
@@ -461,9 +466,9 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
 {
-    // For Widgets to reques deletion of their jobs ext from the map.
+    // For Widgets to request deletion of their jobs and associated data (including the pointer to themselves) from the map.
     BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
-    connect(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
+    connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
             this, &ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap);
 }
 
@@ -480,6 +485,33 @@ void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* ptr, QWid
 void ActivityProgressStatusBarTracker::directCallSlotStop(KJob *kjob)
 {
     slotStop(kjob);
+}
+
+int ActivityProgressStatusBarTracker::calculate_summary_percent()
+{
+    /// @todo This is about the most naive algorithm possible to get a cumulative percent complete,
+    ///       but it's good enough for the moment.
+    long long total_jobs = 0;
+    long long cumulative_completion_pct = 0;
+    m_amlmjob_to_widget_map.for_each_key_value_pair([&](KJob* job, BaseActivityProgressStatusBarWidget* widget) {
+        // We do this in here vs. a .size() outside this loop because in here we have
+        // the map locked, so the numbers will be consistent.
+        total_jobs += 1;
+        cumulative_completion_pct += job->percent();
+        ;});
+
+    int retval;
+    if(total_jobs == 0)
+    {
+        // Avoid a div-by-0.
+        retval = 0;
+    }
+    else
+    {
+        retval = static_cast<double>(cumulative_completion_pct)/total_jobs;
+    }
+
+    return retval;
 }
 
 void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)

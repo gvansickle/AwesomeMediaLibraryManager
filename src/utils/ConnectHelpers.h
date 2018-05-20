@@ -22,6 +22,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QMetaObject>
 
 #include "DebugHelpers.h"
 
@@ -42,6 +43,18 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
 //{
 //	return connect(sender_and_receiver, signal, sender_and_receiver, slot, type);
 //}
+
+/**
+ * Make a connection and assert if the attempt fails.
+ */
+template <typename... Args>
+void connect_or_die(Args&&... args)
+{
+    QMetaObject::Connection retval;
+
+    retval = QObject::connect(std::forward<Args>(args)...);
+    Q_ASSERT(static_cast<bool>(retval) != false);
+}
 
 /**
  * For connecting the @a sender's destroyed() signal.
