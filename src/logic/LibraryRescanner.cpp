@@ -196,7 +196,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
-    /*AMLMJobPtr*/ DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+    DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
@@ -226,9 +226,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     master_job_tracker->setAutoDelete(dirtrav_job, false);
     master_job_tracker->setStopOnClose(dirtrav_job, false);
 
-    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
     dirtrav_job->start();
-    queue->stream() << dirtrav_job;
 
 #endif
 

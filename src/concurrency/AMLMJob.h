@@ -61,6 +61,7 @@
 /// KF5
 #include <KJob>
 #include <ThreadWeaver/Job>
+#include <ThreadWeaver/QueueStream>
 
 /// Ours
 #include "utils/UniqueIDMixin.h"
@@ -259,6 +260,11 @@ public:
      */
     Q_SCRIPTABLE void start() override;
 
+    /**
+     * Start the TW::Job on the specified TW::QueueStream.
+     */
+    virtual void start(ThreadWeaver::QueueStream &qstream);
+
     /// @}
 
 public:
@@ -271,8 +277,6 @@ public:
 
     /// Derived run() should call this before exiting.  FBO the success() method.
     void setSuccessFlag(bool success);
-
-//    void setAborted
 
     /// @}
 
@@ -393,7 +397,7 @@ protected:
     /// Make the internal signal-slot connections.
     virtual void make_connections();
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
-    virtual void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+    virtual void connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
 
     /// @}
 

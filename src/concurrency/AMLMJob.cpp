@@ -23,8 +23,9 @@
 #include <QPointer>
 
 /// KF5
-#include <ThreadWeaver/Job>
 #include <ThreadWeaver/DebuggingAids>
+#include <ThreadWeaver/Job>
+#include <ThreadWeaver/Queue>
 
 /// Ours
 #include "utils/DebugHelpers.h"
@@ -63,10 +64,22 @@ void AMLMJob::requestAbort()
 
 void AMLMJob::start()
 {
-    /// @todo Do we need to do anything here?  The TW::Job starts by the TW::Queue/Weaver it's added to.
+    /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
 
     qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
+
+    /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
+    ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
+
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
+//    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
+    auto stream = queue->stream();
+    start(stream);
+}
+
+void AMLMJob::start(ThreadWeaver::QueueStream &qstream)
+{
+    qstream << this;
 }
 
 void AMLMJob::setSuccessFlag(bool success)
@@ -95,6 +108,9 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
     qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
+    Q_CHECK_PTR(this);
+    Q_CHECK_PTR(self);
+
     qDb() << "TWJob status:" << status();
 
     // Essentially a duplicate of QObjectDecorator's implementation, which does this:
@@ -102,9 +118,6 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     /// Q_EMIT started(self);
     /// job()->defaultBegin(self, thread);
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
-
-    Q_CHECK_PTR(this);
-    Q_CHECK_PTR(self);
 
     // Make connections which we need the "real" self for.
     connections_make_defaultBegin(self, thread);
@@ -123,11 +136,17 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
     qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
-    // Essentially a duplicate of QObjectDecorator's implementation.
-    /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
-
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
+
+    // Essentially a duplicate of TW::QObjectDecorator's implementation.
+    /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
+    // TW::QObjectDecorator does this, and never calls the base class:
+    //    Q_ASSERT(job());
+    //    job()->defaultEnd(self, thread);
+    //    if (!self->success()) {
+    //        Q_EMIT failed(self);
+    //    }
 
     if(!self->success())
     {
@@ -147,12 +166,6 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     // ThreadWeaver::Job::defaultEnd() calls:
     //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
     //   Not certain, but assume doing that here at the very end is the safest place to do this.
-    // TW::QObjectDecorator does this, and never calls the base class:
-    //    Q_ASSERT(job());
-    //    job()->defaultEnd(self, thread);
-    //    if (!self->success()) {
-    //        Q_EMIT failed(self);
-    //    }
     this->ThreadWeaver::Job::defaultEnd(self, thread);
 
 }
@@ -246,7 +259,7 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
 /**
  * Break connections we can only break while in defaultExit() and have the real JobPointer.
  */
-void AMLMJob::connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
+void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER connections_make_defaultExit";
     Q_CHECK_PTR(self);
