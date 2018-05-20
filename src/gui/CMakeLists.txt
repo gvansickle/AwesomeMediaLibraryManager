@@ -115,7 +115,6 @@ set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityEntryWidget.h
 	activityprogressmanager/ActivityProgressStatusBarTracker.h
 	activityprogressmanager/ActivityProgressWidget.h
-	activityprogressmanager/ActivityProgressMultiTracker.h
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
 	activityprogressmanager/ExpandingFrameWidget.h
 	activityprogressmanager/CumulativeStatusWidget.h
@@ -128,7 +127,6 @@ set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityEntryWidget.cpp
 	activityprogressmanager/ActivityProgressStatusBarTracker.cpp
 	activityprogressmanager/ActivityProgressWidget.cpp
-	activityprogressmanager/ActivityProgressMultiTracker.cpp
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
 	activityprogressmanager/ExpandingFrameWidget.cpp
 	activityprogressmanager/CumulativeStatusWidget.cpp
