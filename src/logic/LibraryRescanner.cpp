@@ -200,25 +200,26 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
-    connect(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
         qDb() << "FOUND:" << the_url;
         runInObjectEventLoop([=](){
             m_current_libmodel->onIncomingFilename(the_url.toString());}, m_current_libmodel);
         ;});
 
     /// @todo This would be a good candidate for an AMLMJob ".then()".
-    connect(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
-            qWr() << "DIRTRAV FAILED:" << kjob->errorText() << ":" << kjob->errorString();
-            kjob->uiDelegate()->showErrorMessage();
+            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+            auto uidelegate = kjob->uiDelegate();
+            Q_CHECK_PTR(uidelegate);
+            uidelegate->showErrorMessage();
         }
         else
         {
             // Succeeded.
             qIn() << "DIRTRAV SUCCEEDED";
-
         }
     });
 

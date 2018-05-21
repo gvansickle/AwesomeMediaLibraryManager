@@ -228,7 +228,8 @@ public:
     /// @{
 
     /**
-     * Return whether the Job finished successfully or not.
+     * TW::success().
+     * "Return whether the Job finished successfully or not.
      * The default implementation simply returns true. Overload in derived classes if the derived Job class can fail.
      *
      * If a job fails (success() returns false), it will *NOT* resolve its dependencies when it finishes. This will make sure that
@@ -236,7 +237,7 @@ public:
      *
      * There is an important gotcha: When a Job object it deleted, it will always resolve its dependencies. If dependent jobs should
      * not be executed after a failure, it is important to dequeue those before deleting the failed Job. A Sequence may be
-     * helpful for that purpose.
+     * helpful for that purpose."
      */
     bool success() const override { return m_success; }
 
@@ -275,9 +276,9 @@ public:
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
     bool twWasCancelRequested() const { return m_flag_cancel != 0; }
 
-    /// Derived run() should call this before exiting.  FBO the success() method.
+    /// Derived run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
-
+    void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 
 public Q_SLOTS:
@@ -338,6 +339,7 @@ protected:
     /// @{
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
+    /// @note run() must have set the correct success() value prior to exiting.
     void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
     /// @}
 
@@ -372,18 +374,24 @@ protected:
     bool doResume() override;
 
     /**
-     * Emit the result signal, and suicide this job.
+     * KJob::emitResult()
+     * Emit the result signal, and if job is autodelete, suicide this job.
      * @note Deletes this job using deleteLater(). It first notifies the observers to hide the
      *       progress for this job using the finished() signal.
      *       KJob implementation calls finshJob(), which:
      *       - Sets isFinished = true
-     *       - quit()s the internam event loop
+     *       - quit()s the internal event loop
      *       - emits finished(this);
-     *       - if(emitResult) emit result(this)
+     *       - if(emitResult) emit result(this) //< emitResult == true in this case.
      *       - if(isAutoDelete) deleteLater();
      *       This is probably sufficient behavior and we don't need to overload this (non-virtual) function.
      */
     /// void emitResult();
+
+    /**
+     * KJob::emitPercent()
+     */
+//    void KJob::emitPercent(qulonglong processedAmount, qulonglong totalAmount);
 
     /// Defaults of these seem to be suitable.
 //    void setError(int errorCode);
@@ -416,7 +424,7 @@ protected Q_SLOTS:
     void onTWFailed(ThreadWeaver::JobPointer twjob);
     /// @}
 
-    /// Called from our doKill() operation.  Doesn't do anything by qDb() logging.
+    /// Called from our doKill() operation.  Doesn't do anything but qDb() logging.
     /// @todo Should be really be doing that?
     void onKJobDoKill();
 
@@ -436,7 +444,7 @@ private:
 
     /// Control structs/flags
     QAtomicInt m_flag_cancel {0};
-//    QAtomicInt m_aborted { 0 };
+    QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
 };
 

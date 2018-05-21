@@ -26,10 +26,13 @@
 #include <ThreadWeaver/DebuggingAids>
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/Queue>
+#include <KJobWidgets>
+#include <KDialogJobUiDelegate>
 
 /// Ours
 #include "utils/DebugHelpers.h"
 #include "utils/UniqueIDMixin.h"
+#include <gui/MainWindow.h>
 
 AMLMJob::AMLMJob(QObject *parent)
     : KJob(parent), ThreadWeaver::Job()
@@ -44,6 +47,12 @@ AMLMJob::AMLMJob(QObject *parent)
 
     setObjectName(uniqueQObjectName());
     qDb() << M_NAME_VAL(this);
+
+    /// @todo This is sort of horrible, we should find a just-in-time way to do the uiDelegate.
+    /// ...and also, while this prevents crashes, we don't get any dialog etc. output on fail.
+    /// So not at all clear what's happening here.
+    KJobWidgets::setWindow(this, MainWindow::instance());
+    setUiDelegate(new KDialogJobUiDelegate());
 
     /// @todo This is debug, move/remove.
     ThreadWeaver::setDebugLevel(true, 10);
@@ -72,13 +81,13 @@ void AMLMJob::start()
     ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
 
     /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
-//    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
     auto stream = queue->stream();
     start(stream);
 }
 
 void AMLMJob::start(ThreadWeaver::QueueStream &qstream)
 {
+    // Simply queue this TW::Job onto the given QueueStream.  Job should start immediately.
     qstream << this;
 }
 
@@ -87,21 +96,6 @@ void AMLMJob::setSuccessFlag(bool success)
     qDb() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
 }
-
-//void AMLMJob::setProcessedAmount(KJob::Unit unit, qulonglong amount)
-//{
-//    KJob::setProcessedAmount(unit, amount);
-//}
-
-//void AMLMJob::setTotalAmount(KJob::Unit unit, qulonglong amount)
-//{
-//    KJob::setTotalAmount(unit, amount);
-//}
-
-//void AMLMJob::setPercent(unsigned long percentage)
-//{
-//    this->KJob::setPercent(percentage);
-//}
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
@@ -113,11 +107,15 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
     qDb() << "TWJob status:" << status();
 
-    // Essentially a duplicate of QObjectDecorator's implementation, which does this:
-    /// Q_ASSERT(job());
-    /// Q_EMIT started(self);
-    /// job()->defaultBegin(self, thread);
+    /// Essentially a duplicate of QObjectDecorator's implementation, which does this:
+    /// @code
+    ///   Q_ASSERT(job());
+    ///   Q_EMIT started(self);
+    ///   job()->defaultBegin(self, thread);
+    /// @endcode
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
+    /// We're actually in the job()->defaultBegin() part here, so we don't make that call.
+    /// started() hasn't been emitted yet.
 
     // Make connections which we need the "real" self for.
     connections_make_defaultBegin(self, thread);
@@ -141,26 +139,31 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     // Essentially a duplicate of TW::QObjectDecorator's implementation.
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
-    // TW::QObjectDecorator does this, and never calls the base class:
+    // TW::QObjectDecorator does this, and ~never calls the base class:
     //    Q_ASSERT(job());
     //    job()->defaultEnd(self, thread);
     //    if (!self->success()) {
     //        Q_EMIT failed(self);
     //    }
+    //    Q_EMIT done(self);
+    // job() is not self, it's the decorated job (TW::JobInterface*) passed to the IdDecorator constructor.
+    // So the call to job()->defaultEnd() is the call we're currently in, so we don't call it again which would
+    // infinitely recurse us.
+    /// @note run() must have set the correct success() value prior to exiting.
 
     if(!self->success())
     {
-        qWr() << "FAILED";
-        Q_EMIT /*TWJob*/ failed(self);
+        qWr() << objectName() << "FAILED";
+        Q_EMIT /*TW::QObjectDecorator*/ failed(self);
     }
     else
     {
-        qDb() << "Succeeded";
+        qDb() << objectName() << "Succeeded";
         // Only call this on success.
         /*KJob*/ emitResult();
     }
-    qDb() << "EMITTING DONE";
-    Q_EMIT /*TWJob*/ done(self);
+    qDb() << objectName() << "EMITTING DONE";
+    Q_EMIT /*TW::QObjectDecorator*/ done(self);
 
     // Call base class defaultEnd() implementation.
     // ThreadWeaver::Job::defaultEnd() calls:
@@ -203,8 +206,6 @@ void AMLMJob::make_connections()
 {
     qDb() << "MAKING CONNECTIONS, this:" << this;
 
-//    Q_ASSERT(!m_tw_job_qobj_decorator.isNull());
-
     // @note TW::Job connections made in connections_make_defaultBegin().
 
     // Connect up KJob signals/slots.
@@ -223,8 +224,8 @@ void AMLMJob::make_connections()
     // Emitted by calling emitResult() and kill().
     // Intended to notify UIs that should detach from the job.
     /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
-//    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
-    connect(this, &AMLMJob::finished, this, &AMLMJob::onKJobFinished);
+    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
+//    connect(this, &AMLMJob::finished, this, &AMLMJob::onKJobFinished);
 
     qDb() << "MADE CONNECTIONS, this:" << this;
 }
@@ -275,12 +276,50 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
 {
     qDb() << "ENTER onTWDone";
     Q_CHECK_PTR(twjob);
+
+    qDb() << "success()?:" << success();
+
+    // The TW::Job indicated completion.
+    // If the TW::Job failed, there's a failed() signal in flight as well.
+
+    // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
+    // We'll similarly deal with the fail case in onTWFailed().
+    if(/*TW::*/success())
+    {
+        // All KF5.
+        setError(NoError);
+        emitResult();
+    }
 }
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
 {
     qDb() << "ENTER onTWFailed";
     Q_CHECK_PTR(twjob);
+
+    // The TW::Job indicated failure.
+    // There's a done() signal in flight as well.
+    // Convert to a KJob result signal.
+
+    // Shouldn't be getting into here with a non-false success.
+    Q_ASSERT(twjob->success() != true);
+
+    if(!/*TW::*/twjob->success())
+    {
+        if(this->m_tw_job_was_cancelled)
+        {
+            // Cancelled.
+            // KF5
+            setError(KilledJobError);
+        }
+        else
+        {
+            // Some other error.
+            setError(KJob::UserDefinedError);
+            setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
+        }
+        emitResult();
+    }
 }
 
 void AMLMJob::onKJobDoKill()
@@ -306,8 +345,7 @@ void AMLMJob::onKJobResult(KJob *job)
 
 void AMLMJob::onKJobFinished(KJob *job)
 {
-//    Q_CHECK_PTR(job);
-
-//    qDb() << "KJOB FINISHED" << job;
+    Q_CHECK_PTR(job);
+    qDb() << "KJOB FINISHED" << job;
 }
 
