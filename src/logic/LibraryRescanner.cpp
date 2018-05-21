@@ -220,6 +220,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         {
             // Succeeded.
             qIn() << "DIRTRAV SUCCEEDED";
+            /// @todo These are copies, need refs.
+            m_last_elapsed_time_dirscan = m_timer.elapsed();
+            qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+
+            // Directory traversal complete, start rescan.
+            /// @note This is a slot.
+            onDirTravFinished();
         }
     });
 
