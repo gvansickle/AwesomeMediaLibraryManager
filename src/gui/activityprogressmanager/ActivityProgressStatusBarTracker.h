@@ -247,6 +247,7 @@ protected: // Variable members
     /// Mutex for protecting the public Thread-Safe Interface.
     QMutex m_tsi_mutex;
 
+#if 0
     /// @todo Another map? or?? KWidgetJobTracker has all these tracking vars in the Widget, which
     /// seems pretty wrong.
     qulonglong m_processedSize {0};
@@ -254,6 +255,7 @@ protected: // Variable members
     qulonglong m_totalSize {0};
     /// @todo KJobs each have one of these in KJobPrivate.
     QTime m_start_time;
+#endif
 
     /// The QWidget parent of this Tracker, not necessarily it's widget.
     QPointer<QWidget> m_parent_widget {nullptr};

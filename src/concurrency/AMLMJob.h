@@ -57,6 +57,7 @@
 /// Qt5
 #include <QObject>
 #include <QPointer>
+#include <QTime>
 
 /// KF5
 #include <KJob>
@@ -283,6 +284,7 @@ public:
     /// @}
 
     /// Dump info about this AMLMJob to stdout.
+    /// @todo
 
 public Q_SLOTS:
 
@@ -440,7 +442,7 @@ protected Q_SLOTS:
 
     /// @}
 
-protected:
+
 
 private:
     Q_DISABLE_COPY(AMLMJob)

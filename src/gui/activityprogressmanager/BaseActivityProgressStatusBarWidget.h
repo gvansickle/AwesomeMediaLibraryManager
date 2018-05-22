@@ -127,6 +127,21 @@ private:
 
     int m_refcount {0};
 
+public: /// @todo FBO tracker, could friend.
+
+    /// @name Status tracking variables.
+    /// @{
+
+    /// @todo Another map? or?? KWidgetJobTracker has all these tracking vars in the Widget, which
+    /// seems pretty wrong.
+    qulonglong m_processedSize {0};
+    bool m_is_total_size_known {false};
+    qulonglong m_totalSize {0};
+    /// @todo KJobs each have one of these in KJobPrivate.
+    QTime m_start_time;
+
+    /// @}
+
 protected: ///< FBO CumulativeStatusWidget.  Probably a better way to do this.
 
     /// @name Child widgets
