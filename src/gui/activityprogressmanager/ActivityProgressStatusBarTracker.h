@@ -131,6 +131,15 @@ public:
     QWidget* widget(KJob* job) override;
 
 public Q_SLOTS:
+
+    /**
+     * Register a KJob (or AMLMJob or any other derived job) with this tracker.
+     *
+     * At some point calls the base class impl, KAbstractWidgetJobTracker.
+     * KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
+     *   KJobTrackerInterface::registerJob(KJob *job) does nothing but connect
+     *   many of the KJob signals to slots of this.
+     */
     void registerJob(KJob *kjob) override;
 
     /**
@@ -160,6 +169,7 @@ protected Q_SLOTS:
     void toggleSubjobDisplay(bool checked);
     void onShowProgressWidget(KJob *kjob);
 
+    /// Cancel all tracked KJobs.
     void cancelAll();
 
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
@@ -237,14 +247,15 @@ protected: // Variable members
     /// Mutex for protecting the public Thread-Safe Interface.
     QMutex m_tsi_mutex;
 
-	/// @todo Another map?
+    /// @todo Another map? or?? KWidgetJobTracker has all these tracking vars in the Widget, which
+    /// seems pretty wrong.
     qulonglong m_processedSize {0};
     bool m_is_total_size_known {false};
     qulonglong m_totalSize {0};
     /// @todo KJobs each have one of these in KJobPrivate.
     QTime m_start_time;
 
-    /// @todo NEW
+    /// The QWidget parent of this Tracker, not necessarily it's widget.
     QPointer<QWidget> m_parent_widget {nullptr};
 
     /// The status widget showing the cumulative status of all registered sub-trackers.

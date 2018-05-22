@@ -37,7 +37,7 @@ using AMLMCompositeJobPtr = QPointer<AMLMCompositeJob>;
 /*
  *
  */
-class AMLMCompositeJob: /*public AMLMJob,*/ public KCompositeJob, public ThreadWeaver::Collection, public QEnableSharedFromThis<AMLMCompositeJob>
+class AMLMCompositeJob: public KCompositeJob
 {
     Q_OBJECT
 

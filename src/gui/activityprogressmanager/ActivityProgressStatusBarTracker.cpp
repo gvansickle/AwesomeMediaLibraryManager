@@ -438,7 +438,6 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 
 void ActivityProgressStatusBarTracker::finished(KJob *job)
 {
-    //
     // KJobTrackerInterface::finished(KJob *job) does nothing.
     qWr() << "FINISHED KJob:" << job;
     with_widget_or_skip(job, [=](auto w){

@@ -112,8 +112,10 @@ protected:
 protected Q_SLOTS:
 
     /// @todo Not clear why the functionality of these two are in the Widget; seems like it should be in the tracker.
+
     /// Invoke this to cancel the job.
     void stop();
+
     /// Invoke this to pause or resume the job.
     void pause_resume(bool);
 
@@ -126,6 +128,7 @@ private:
     int m_refcount {0};
 
 protected: ///< FBO CumulativeStatusWidget.  Probably a better way to do this.
+
     /// @name Child widgets
     /// @{
     /// Primary text.

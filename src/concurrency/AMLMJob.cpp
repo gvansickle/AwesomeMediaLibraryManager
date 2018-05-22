@@ -26,6 +26,7 @@
 #include <ThreadWeaver/DebuggingAids>
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/Queue>
+#include <KJob>
 #include <KJobWidgets>
 #include <KDialogJobUiDelegate>
 

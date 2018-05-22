@@ -278,8 +278,11 @@ public:
 
     /// Derived run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
+    /// Derived run() must call this before exiting.  FBO the onTWFailed() method to determine fail reason.
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
+
+    /// Dump info about this AMLMJob to stdout.
 
 public Q_SLOTS:
 
@@ -448,6 +451,9 @@ private:
     QAtomicInt m_success { 1 };
 };
 
+//Q_DECLARE_METATYPE(AMLMJob); /// @todo need default constructor and copy constructor.
 Q_DECLARE_METATYPE(AMLMJobPtr);
+
+
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */
