@@ -22,6 +22,8 @@
 
 #include "BaseActivityProgressStatusBarWidget.h"
 
+#include <utils/TheSimplestThings.h>
+
 /*
  *
  */
@@ -41,6 +43,8 @@ public:
 
 private:
 	Q_DISABLE_COPY(CumulativeStatusWidget)
+
+M_WARNING("TODO: Do we need a no-operation-in-progress child widget?");
 
 };
 

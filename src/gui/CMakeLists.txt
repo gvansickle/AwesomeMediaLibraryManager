@@ -108,39 +108,15 @@ set(gui_settings_SOURCE_FILES
 	)
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
-set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressManager.h
-	activityprogressmanager/ActivityProgressDialog.h
-	activityprogressmanager/ActivityProgressPopup.h
-	activityprogressmanager/ActivityEntryWidget.h
-	activityprogressmanager/ActivityProgressStatusBarTracker.h
-	activityprogressmanager/ActivityProgressWidget.h
-	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
-	activityprogressmanager/ExpandingFrameWidget.h
-	activityprogressmanager/CumulativeStatusWidget.h
-	PARENT_SCOPE
-	)
-set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressManager.cpp
-	activityprogressmanager/ActivityProgressDialog.cpp
-	activityprogressmanager/ActivityProgressPopup.cpp
-	activityprogressmanager/ActivityEntryWidget.cpp
-	activityprogressmanager/ActivityProgressStatusBarTracker.cpp
-	activityprogressmanager/ActivityProgressWidget.cpp
-	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
-	activityprogressmanager/ExpandingFrameWidget.cpp
-	activityprogressmanager/CumulativeStatusWidget.cpp
-	PARENT_SCOPE
-	)
-set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressDialog.ui
-	PARENT_SCOPE
-	)
+add_subdirectory(activityprogressmanager)
 
 set(amlm_gui_SRCS
 	${gui_SOURCE_FILES}
 	${gui_HEADER_FILES}
 	${gui_settings_SOURCE_FILES}
+	${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
+	${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
+	${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 	PARENT_SCOPE
 	)
 
