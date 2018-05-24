@@ -162,6 +162,7 @@ public Q_SLOTS:
 
     /**
      * Register a KJob (or AMLMJob or any other derived job) with this tracker.
+     * Connects the signals from the passed KJob* to slots in this class of the same name.
      *
      * At some point calls the base class impl, KAbstractWidgetJobTracker.
      * KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
@@ -180,6 +181,12 @@ public Q_SLOTS:
      *  - speed()"
      * Other than unregisterJob(), these default slots do nothing in KJobTrackerInterface, and are not overridden
      * in KAbstractWidgetJobTracker.
+     *
+     * @note Example of the connections made by KJobTrackerInterface::registerJob(KJob *job):
+     * @code
+     * QObject::connect(job, SIGNAL(processedAmount(KJob*,KJob::Unit,qulonglong)),
+     *               this, SLOT(processedAmount(KJob*,KJob::Unit,qulonglong)));
+     * @endcode
      */
     void registerJob(KJob *kjob) override;
 
@@ -213,6 +220,71 @@ protected Q_SLOTS:
     /// Cancel all tracked KJobs.
     void cancelAll();
 
+    /**
+     * Connections/signal/slots notes
+     *
+     * KWidgetJobTracker sets the progress signal/slot chain up like this:
+     * @code
+     * KJob* some_job = ...;
+     * KWidgetJobTracker::registerJob(some_job);
+     *      -> Creates a widget for the job
+     *      -> Adds both to a KWidgetJobTracker::Private job->widget map
+     *      KAbstractWidgetJobTracker::registerJob(some_job);
+     *          -> KJobTrackerInterface::registerJob(some_job);
+     *              -> Signal/slot connections which look like this:
+     *              QObject::connect(some_job, SIGNAL(processedAmount(KJob*,KJob::Unit,qulonglong)),
+                     this, SLOT(processedAmount(KJob*,KJob::Unit,qulonglong)));
+     * @endcode
+         So at this point, the KJob's signals are connected to the tracker's
+         slots of the same name.
+
+         @note KJobTrackerInterface's slots almost all do nothing.
+     *
+     * KWidgetJobTracker's slots are overloaded from KJobTrackerInterface's.  In general they
+     * follow this pattern:
+     * @code
+     * void KWidgetJobTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
+        {
+            // Get ptr to widget associated with the given job:
+            KWidgetJobTracker::Private::ProgressWidget *pWidget = d->progressWidget.value(job, nullptr);
+            if (!pWidget) {
+                return;
+            }
+            // Directly call the appropriate member of the widget with the new status values.
+            pWidget->processedAmount(unit, amount);
+                -> The widget contains almost all the progress and status information,
+                   not the tracker.  E.g.:
+                        qulonglong totalSize;
+                        qulonglong totalFiles;
+                        qulonglong totalDirs;
+                        qulonglong processedSize;
+                        qulonglong processedDirs;
+                        qulonglong processedFiles;
+        }
+     * @endcode
+     *
+     * The last part there isn't clear.  KJobPrivate itself contains what should be what's needed
+     * and canonical:
+     * class KCOREADDONS_EXPORT KJobPrivate
+     * {
+     * public:
+     * [...]
+     *   QString errorText;
+        int error;
+        KJob::Unit progressUnit;
+        QMap<KJob::Unit, qulonglong> processedAmount;
+        QMap<KJob::Unit, qulonglong> totalAmount;
+        unsigned long percentage;
+     *
+     * Most/all of this data can be accessed from protected or public KJob members.  E.g.:
+     * class KJob
+     * protected:
+     *     Sets the processed size. The processedAmount() and percent() signals
+     *      are emitted if the values changed. The percent() signal is emitted
+     *      only for the progress unit.
+     *     void setProcessedAmount(Unit unit, qulonglong amount);
+     */
+
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
 
@@ -225,7 +297,6 @@ protected Q_SLOTS:
     void finished(KJob *job) override;
 //    void suspended(KJob *job) override;
 //    void resumed(KJob *job) override;
-
 
     /**
      * "Called to display general description of a job.
@@ -249,7 +320,7 @@ protected Q_SLOTS:
     /// @name Progress tracking protected slots
     /// @{
     /**
-     * Directly supported by KJob::setTotalAmount():
+     * Directly supported by KJob:
      * - setTotalAmount(Unit,amount)
      * - public qulonglong processedAmount(Unit unit) const;
      * - var in KJobPrivate.

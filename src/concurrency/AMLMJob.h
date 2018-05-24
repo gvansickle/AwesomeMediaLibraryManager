@@ -72,6 +72,31 @@ class AMLMJob;
 using AMLMJobPtr = QPointer<AMLMJob>;
 
 /**
+* Where Does The State Live?
+*
+* KJobPrivate itself contains what should be what's needed
+* and canonical:
+* class KCOREADDONS_EXPORT KJobPrivate
+* {
+* public:
+* [...]
+*   QString errorText;
+   int error;
+   KJob::Unit progressUnit;
+   QMap<KJob::Unit, qulonglong> processedAmount;
+   QMap<KJob::Unit, qulonglong> totalAmount;
+   unsigned long percentage;
+*
+* Most/all of this data can be accessed from protected or public KJob members.  E.g.:
+* class KJob
+* protected:
+*     Sets the processed size. The processedAmount() and percent() signals
+*      are emitted if the values changed. The percent() signal is emitted
+*      only for the progress unit.
+*     void setProcessedAmount(Unit unit, qulonglong amount);
+*/
+
+/**
  * Base class for jobs which bridges the hard-to-understand gap between a
  * ThreadWeaver::Job and a KJob-derived class.
  *

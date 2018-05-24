@@ -132,7 +132,7 @@ void BaseActivityProgressStatusBarWidget::setTotalAmount(KJob *kjob, KJob::Unit 
 
 void BaseActivityProgressStatusBarWidget::setProcessedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
-    auto total_amount = kjob->totalAmount(unit);
+    auto prev_total_amount = kjob->totalAmount(unit);
 
     QString tmp;
 
@@ -143,7 +143,6 @@ void BaseActivityProgressStatusBarWidget::setProcessedAmount(KJob *kjob, KJob::U
             {
                 return;
             }
-//            w->m_processedSize = amount;
 
             /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
             /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
@@ -160,9 +159,9 @@ void BaseActivityProgressStatusBarWidget::setProcessedAmount(KJob *kjob, KJob::U
                       .arg(str_total);
 
                 /// @todo GRVS
-
+                if(prev_total_amount < amount)
                 setRange(0, amount);
-                setValue(qBound(0ULL, amount, total_amount));
+                setValue(qBound(0ULL, amount, prev_total_amount));
             }
             else
             {
