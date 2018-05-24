@@ -27,6 +27,7 @@ set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
 	activityprogressmanager/ExpandingFrameWidget.h
 	activityprogressmanager/CumulativeStatusWidget.h
+	activityprogressmanager/CumulativeAMLMJob.h
 	activityprogressmanager/AMLMProgressStatusStruct.h
 	PARENT_SCOPE
 	)
@@ -40,6 +41,7 @@ set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
 	activityprogressmanager/ExpandingFrameWidget.cpp
 	activityprogressmanager/CumulativeStatusWidget.cpp
+	activityprogressmanager/CumulativeAMLMJob.cpp
 	activityprogressmanager/AMLMProgressStatusStruct.cpp
 	PARENT_SCOPE
 	)

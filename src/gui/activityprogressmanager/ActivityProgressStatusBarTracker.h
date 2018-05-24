@@ -49,34 +49,6 @@ class BaseActivityProgressStatusBarWidget;
 #include "ExpandingFrameWidget.h"
 
 
-/////////
-
-// Experiment to see if we can create a special-purpose "CumulativeKJob", so that we can treat
-// the summary job/widget the same as the sub-jobs/widgets.
-class CumulativeAMLMJob : public AMLMJob, public UniqueIDMixin<CumulativeAMLMJob>
-{
-    Q_OBJECT
-
-    using BASE_CLASS = AMLMJob;
-
-    /**
-     * @note CRTP: Still need this to avoid ambiguous name resolution.
-     * @see https://stackoverflow.com/a/46916924
-     */
-    using UniqueIDMixin<CumulativeAMLMJob>::uniqueQObjectName;
-
-public:
-    CumulativeAMLMJob(QObject* parent) : BASE_CLASS(parent) {}
-
-    /// Nothing to start, this is more of a placeholder. Or maybe?????
-    Q_SCRIPTABLE void start() override {}
-
-protected:
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override { qDb() << "RUN GOT CALLED FOR SOME REASON"; }
-};
-
-////////
-
 class ActivityProgressStatusBarTracker;
 using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;
 
