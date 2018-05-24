@@ -27,6 +27,11 @@
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/Queue>
 #include <KJob>
+/// EXP
+/// /home/gary/src/kcoreaddons/src/lib/jobs/kjob_p.h
+//#include <kjob_p.h>
+#include "/home/gary/src/kcoreaddons/src/lib/jobs/kjob_p.h"
+///
 #include <KJobWidgets>
 #include <KDialogJobUiDelegate>
 
@@ -263,7 +268,7 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
  */
 void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "ENTER connections_make_defaultExit";
+    qDb() << "ENTER connections_break_defaultExit";
     Q_CHECK_PTR(self);
 }
 
@@ -316,9 +321,11 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
         else
         {
             // Some other error.
+            // KF5
             setError(KJob::UserDefinedError);
             setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
         }
+        // KF5: Regardless of success or fail, call emitResult().
         emitResult();
     }
 }

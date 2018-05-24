@@ -71,11 +71,7 @@ public:
     /// Add buttons to the rhs of the layout.
     virtual void addButton(QToolButton* new_button);
 
-    virtual void setDescription(const QString& title,
-                        const QPair<QString, QString> &field1,
-                        const QPair<QString, QString> &field2);
-    virtual void setInfoMessage(const QString &text);
-    virtual void setWarning(const QString &text);
+
 
     bool m_is_job_registered { false };
 
@@ -83,7 +79,16 @@ public:
     void ref();
     void deref();
 
-public /*Q_SLOTS*/:
+public Q_SLOTS:
+    virtual void setDescription(const QString& title,
+                        const QPair<QString, QString> &field1,
+                        const QPair<QString, QString> &field2);
+    virtual void setInfoMessage(const QString &text);
+    virtual void setWarning(const QString &text);
+
+    virtual void setTotalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+    virtual void setProcessedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+
     virtual void setRange(int min, int max);
     virtual void setValue(int val);
 
@@ -133,7 +138,7 @@ public: /// @todo FBO tracker, could friend.
     /// @{
 
     /// @todo Another map? or?? KWidgetJobTracker has all these tracking vars in the Widget, which
-    /// seems pretty wrong.
+    /// seems pretty wrong.  KJob keeps at least some of this info in the KJob.  And even more is hidden in KJobPrivate.
     qulonglong m_processedSize {0};
     bool m_is_total_size_known {false};
     qulonglong m_totalSize {0};

@@ -49,6 +49,34 @@ class BaseActivityProgressStatusBarWidget;
 #include "ExpandingFrameWidget.h"
 
 
+/////////
+
+// Experiment to see if we can create a special-purpose "CumulativeKJob", so that we can treat
+// the summary job/widget the same as the sub-jobs/widgets.
+class CumulativeAMLMJob : public AMLMJob, public UniqueIDMixin<CumulativeAMLMJob>
+{
+    Q_OBJECT
+
+    using BASE_CLASS = AMLMJob;
+
+    /**
+     * @note CRTP: Still need this to avoid ambiguous name resolution.
+     * @see https://stackoverflow.com/a/46916924
+     */
+    using UniqueIDMixin<CumulativeAMLMJob>::uniqueQObjectName;
+
+public:
+    CumulativeAMLMJob(QObject* parent) : BASE_CLASS(parent) {}
+
+    /// Nothing to start, this is more of a placeholder. Or maybe?????
+    Q_SCRIPTABLE void start() override {}
+
+protected:
+    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override { qDb() << "RUN GOT CALLED FOR SOME REASON"; }
+};
+
+////////
+
 class ActivityProgressStatusBarTracker;
 using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;
 
@@ -138,7 +166,20 @@ public Q_SLOTS:
      * At some point calls the base class impl, KAbstractWidgetJobTracker.
      * KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
      *   KJobTrackerInterface::registerJob(KJob *job) does nothing but connect
-     *   many of the KJob signals to slots of this.
+     *   many of the KJob signals to slots of this:
+     * "The default implementation connects the following KJob signals
+     * to the respective protected slots of this class:
+     *  - finished() (also connected to the unregisterJob() slot)
+     *  - suspended()
+     *  - resumed()
+     *  - description()
+     *  - infoMessage()
+     *  - totalAmount()
+     *  - processedAmount()
+     *  - percent()
+     *  - speed()"
+     * Other than unregisterJob(), these default slots do nothing in KJobTrackerInterface, and are not overridden
+     * in KAbstractWidgetJobTracker.
      */
     void registerJob(KJob *kjob) override;
 
@@ -205,10 +246,27 @@ protected Q_SLOTS:
      */
     void warning(KJob *job, const QString &plain, const QString &rich) override;
 
-    void totalAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    /// @name Progress tracking protected slots
+    /// @{
+    /**
+     * Directly supported by KJob::setTotalAmount():
+     * - setTotalAmount(Unit,amount)
+     * - public qulonglong processedAmount(Unit unit) const;
+     * - var in KJobPrivate.
+     */
+    void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount) override;
+    /**
+     * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
+     */
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+    /**
+     * Directly supported by KJob::percent() (var in KJobPrivate).
+     * Also a KJob Q_PROPERTY().
+     */
     void percent(KJob *job, unsigned long percent) override;
     void speed(KJob *job, unsigned long value) override;
+
+    /// @}
 
     /// KAbstractWidgetJobTracker implementation does nothing.
     void slotClean(KJob *job) override;

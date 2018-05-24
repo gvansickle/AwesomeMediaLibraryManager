@@ -27,6 +27,7 @@ set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
 	activityprogressmanager/ExpandingFrameWidget.h
 	activityprogressmanager/CumulativeStatusWidget.h
+	activityprogressmanager/AMLMProgressStatusStruct.h
 	PARENT_SCOPE
 	)
 set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
@@ -39,6 +40,7 @@ set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
 	activityprogressmanager/ExpandingFrameWidget.cpp
 	activityprogressmanager/CumulativeStatusWidget.cpp
+	activityprogressmanager/AMLMProgressStatusStruct.cpp
 	PARENT_SCOPE
 	)
 set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
@@ -46,3 +48,7 @@ set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	PARENT_SCOPE
 	)
 
+### @todo Remove dirs above, use these instead.
+# prepend_to_each(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+# prepend_to_each(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+# prepend_to_each(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
