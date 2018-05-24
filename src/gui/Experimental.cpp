@@ -154,9 +154,6 @@ void Experimental::DoExperiment()
 
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
-//    ActivityManager::instance()->addActivity(dsj);//.dynamicCast<ThreadWeaver::JobInterface>());
-//    ActivityManager::instance()->addActivity(dsj2);
-
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 

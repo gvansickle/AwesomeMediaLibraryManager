@@ -100,11 +100,11 @@ void BaseActivityProgressStatusBarWidget::setValue(int val)
     m_progress_bar->setValue(val);
 }
 
-void BaseActivityProgressStatusBarWidget::setPercent(unsigned long pct)
-{
-    m_progress_bar->setRange(0,100);
-    m_progress_bar->setValue(pct);
-}
+//void BaseActivityProgressStatusBarWidget::setPercent(unsigned long pct)
+//{
+//    m_progress_bar->setRange(0,100);
+//    m_progress_bar->setValue(pct);
+//}
 
 void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
 {
@@ -306,6 +306,15 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
 {
     qDb() << kjob << unit << amount;
 
+    if(kjob->totalAmount(unit) == amount)
+    {
+        qWr() << "NO CHANGE IN TOTAL AMOUNT:" << unit << amount;
+    }
+    else
+    {
+        qIn() << "CHANGE IN TOTAL AMOUNT:" << unit << kjob->totalAmount(unit) << "to:" << amount;
+    }
+
 //    qDb() << "GOT HERE";
     switch (unit)
     {
@@ -448,6 +457,8 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
 
 void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
 {
+M_WARNING("WHY DOES kjob GET IN HERE AS 0 sometimes? Prob the m_cumulative_status widget.");
+//    Q_CHECK_PTR(kjob);
     qDb() << kjob << percent;
 
     QString title = toqstr("PCT") + " (";
@@ -474,11 +485,17 @@ M_WARNING("TODO: Size is the primary unit, can't get at it");
 
     title += ')';
 
-    setRange(0, 100);
-    setValue(percent);
+    // Set the progress bar values.
+    m_progress_bar->setRange(0, 100);
+    m_progress_bar->setValue(percent);
+
+    // Do we need/care about this?
+    setWindowTitle(title);
 }
 
 void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 {
+    Q_CHECK_PTR(kjob);
+
     qDb() << kjob << value;
 }

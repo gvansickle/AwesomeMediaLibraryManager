@@ -364,10 +364,19 @@ protected: // Methods
     template <typename JobPointerType, typename Lambda>
     void with_widget_or_skip(JobPointerType job, Lambda l)
     {
+        // Check if the caller wanted the cumulative widget.
+        /// @todo Maybe put this in the regular map, and just be careful not to delete it on e.g. clearAll().
+//        if(job == nullptr)
+//        {
+//            l(m_cumulative_status_widget);
+//            return;
+//        }
+
         QPointer<BaseActivityProgressStatusBarWidget> widget = m_amlmjob_to_widget_map.value(job, nullptr);
         if(widget)
         {
             l(widget);
+            return;
         }
     }
 
@@ -385,16 +394,6 @@ protected: // Variable members
 
     /// Mutex for protecting the public Thread-Safe Interface.
     QMutex m_tsi_mutex;
-
-#if 0
-    /// @todo Another map? or?? KWidgetJobTracker has all these tracking vars in the Widget, which
-    /// seems pretty wrong.
-    qulonglong m_processedSize {0};
-    bool m_is_total_size_known {false};
-    qulonglong m_totalSize {0};
-    /// @todo KJobs each have one of these in KJobPrivate.
-    QTime m_start_time;
-#endif
 
     /// The QWidget parent of this Tracker, not necessarily it's widget.
     QPointer<QWidget> m_parent_widget {nullptr};

@@ -48,12 +48,12 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
     // Create the job which will contain all other jobs.
     /// @note At least that's the theory, eventually.
-    auto cumulative_job = new CumulativeAMLMJob(this);
+//    auto cumulative_job = new CumulativeAMLMJob(this);
 
     /// Register the job and widget.
     /// @todo Move?
-M_WARNING("TODO: Need to not delete this job/wdgt pair ever (e.g. on cancel)");
-    m_amlmjob_to_widget_map.insert(cumulative_job, qobject_cast<BaseActivityProgressStatusBarWidget*>(m_cumulative_status_widget));
+//M_WARNING("TODO: Need to not delete this job/wdgt pair ever (e.g. on cancel)");
+//    m_amlmjob_to_widget_map.insert(cumulative_job, qobject_cast<BaseActivityProgressStatusBarWidget*>(m_cumulative_status_widget));
 
     m_expanding_frame_widget = new ExpandingFrameWidget();
 
@@ -316,7 +316,7 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
         /// @todo Notify summary widget.
         auto cumulative_pct = calculate_summary_percent();
-        m_cumulative_status_widget->setPercent(cumulative_pct);
+        m_cumulative_status_widget->percent(nullptr, cumulative_pct);
 
     });
 }

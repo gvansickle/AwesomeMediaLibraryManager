@@ -30,7 +30,7 @@ CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatus
 {
     /// @note Requires base class init() to have been called so that sub-widgets are set up.
 
-    // Expand jobs button.
+    // Add an "Expand jobs" button.
     auto button_show_all_jobs = new QToolButton(this);
     button_show_all_jobs->setPopupMode(QToolButton::InstantPopup);
     button_show_all_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
