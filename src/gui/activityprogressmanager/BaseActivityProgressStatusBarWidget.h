@@ -82,6 +82,12 @@ public:
 
 public Q_SLOTS:
 
+    virtual void description(const QString& title,
+                        const QPair<QString, QString> &field1,
+                        const QPair<QString, QString> &field2);
+    virtual void infoMessage(const QString &text);
+    virtual void warning(const QString &text);
+
     /// @name Status/progress update slots.
     /// Should be connected to the analogous signals or called from the analogous slots
     /// in the tracker.
@@ -109,11 +115,11 @@ public Q_SLOTS:
     /// @}
 
     /// @todo Probably delete.
-    virtual void setDescription(const QString& title,
-                        const QPair<QString, QString> &field1,
-                        const QPair<QString, QString> &field2);
-    virtual void setInfoMessage(const QString &text);
-    virtual void setWarning(const QString &text);
+//    virtual void setDescription(const QString& title,
+//                        const QPair<QString, QString> &field1,
+//                        const QPair<QString, QString> &field2);
+//    virtual void setInfoMessage(const QString &text);
+//    virtual void setWarning(const QString &text);
 
     virtual void setRange(int min, int max);
     virtual void setValue(int val);

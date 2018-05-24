@@ -243,7 +243,7 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
     /// All these "tracker->widget ~signal" handlers get the widget ptr (from a map in that case),
     /// check for null, and if not null do the job.
     with_widget_or_skip(job, [=](auto w){
-        w->setDescription(title, field1, field2);
+        w->description(title, field1, field2);
     });
 }
 
@@ -256,14 +256,14 @@ void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &pla
 
     // Prefer rich if it's given.
     with_widget_or_skip(job, [=](auto w){
-        w->setInfoMessage(rich.isEmpty() ? plain : rich);
+        w->infoMessage(rich.isEmpty() ? plain : rich);
         ;});
 }
 
 void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
 {
     with_widget_or_skip(job, [=](auto w){
-        w->setWarning(rich.isEmpty() ? plain : rich);
+        w->warning(rich.isEmpty() ? plain : rich);
     });
 
 }
@@ -283,7 +283,6 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
     }
 
     with_widget_or_skip(kjob, [=](auto w){
-
         w->totalAmount(kjob, unit, amount);
     });
 }
@@ -315,8 +314,6 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
         w->percent(job, percent);
 
-
-
         /// @todo Notify summary widget.
         auto cumulative_pct = calculate_summary_percent();
         m_cumulative_status_widget->setPercent(cumulative_pct);
@@ -340,8 +337,8 @@ void ActivityProgressStatusBarTracker::finished(KJob *job)
         qWr() << "FINISHED JOB:" << job << "WITH WIDGET:" << w;
     });
 
-//    Q_CHECK_PTR(this);
-//    Q_CHECK_PTR(job);
+    Q_CHECK_PTR(this);
+    Q_CHECK_PTR(job);
 
     qDb() << "FINISHED KJob:" << job;
     AMLMJob::dump_job_info(job);

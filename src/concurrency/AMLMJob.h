@@ -90,7 +90,8 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 * Most/all of this data can be accessed from protected or public KJob members.  E.g.:
 * class KJob
 * protected:
-*     Sets the processed size. The processedAmount() and percent() signals
+*     setProcessedAmount():
+*      Sets the processed size. The processedAmount() and percent() signals
 *      are emitted if the values changed. The percent() signal is emitted
 *      only for the progress unit.
 *     void setProcessedAmount(Unit unit, qulonglong amount);
@@ -367,10 +368,12 @@ protected:
 
     /// @name Override of TW::Job protected functions.
     /// @{
+
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
     /// @note run() must have set the correct success() value prior to exiting.
     void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
+
     /// @}
 
     /// @name Override of KJob protected functions.

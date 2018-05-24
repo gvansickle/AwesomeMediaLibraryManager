@@ -70,7 +70,7 @@ void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
     layout()->addWidget(new_button);
 }
 
-void BaseActivityProgressStatusBarWidget::setDescription(const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+void BaseActivityProgressStatusBarWidget::description(const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
     /// @todo Don't really have anywhere to put fields.
     Q_UNUSED(field1);
@@ -78,13 +78,13 @@ void BaseActivityProgressStatusBarWidget::setDescription(const QString &title, c
     m_current_activity_label->setText(title);
 }
 
-void BaseActivityProgressStatusBarWidget::setInfoMessage(const QString &text)
+void BaseActivityProgressStatusBarWidget::infoMessage(const QString &text)
 {
     qDb() << "Setting INFOMESSAGE" << text;
     m_text_status_label->setText(text);
 }
 
-void BaseActivityProgressStatusBarWidget::setWarning(const QString &text)
+void BaseActivityProgressStatusBarWidget::warning(const QString &text)
 {
 M_WARNING("TODO");
 qWr() << text;
@@ -347,50 +347,65 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
 void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
     qDb() << kjob << unit << amount;
-    auto prev_total_amount = kjob->totalAmount(unit);
 
-    QString tmp;
+    auto prev_total_amount_of_this_unit = kjob->totalAmount(unit);
+    auto current_total_size_bytes = kjob->processedAmount(KJob::Unit::Bytes);
+
+    QString size_label_text;
 
     switch (unit)
     {
         case KJob::Bytes:
-            if (kjob->processedAmount(unit) == amount)
+        {
+            if (prev_total_amount_of_this_unit == amount)
             {
+                // No change, just return.
                 return;
             }
+            else
+            {
+                // Changed.
+                /// @todo Do we need to set processedSize etc in here, or has that already
+                /// been handled by the time we get here?
+            }
 
+            // Create the "current processedAmount" string.
             /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
             /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
             DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
-            auto str_processed = formattedDataSize(kjob->processedAmount(unit), 1, fmt);
+            auto str_processed = formattedDataSize(amount, 1, fmt);
 
             if (m_is_total_size_known)
             {
+                // We know the total size, so we can make a "n of total"-type of calculation.
                 //~ singular %1 of %2 complete
                 //~ plural %1 of %2 complete
-                auto str_total = formattedDataSize(kjob->processedAmount(unit), 1, fmt);
-                tmp = tr("%1 of %2 complete")
+                // Create the "%2" (total amount) string.
+                auto str_total = formattedDataSize(current_total_size_bytes, 1, fmt);
+                size_label_text = tr("%1 of %2 complete")
                       .arg(str_processed)
                       .arg(str_total);
 
                 /// @todo GRVS
-                if(prev_total_amount < amount)
+//                if(prev_total_amount_of_this_unit < amount)
                 setRange(0, amount);
-                setValue(qBound(0ULL, amount, prev_total_amount));
+                setValue(qBound(0ULL, amount, prev_total_amount_of_this_unit));
             }
             else
             {
-                tmp = str_processed; //KJobTrackerFormatters::byteSize(amount);
+                // We don't have a total size.
+                size_label_text = str_processed; //KJobTrackerFormatters::byteSize(amount);
             }
     //        sizeLabel->setText(tmp);
             if (!m_is_total_size_known)
             {
                 // update jumping progressbar
-                setRange(0, 0);
+                /// @todo Not in KWidgetJobTracker, not sure we need this here.
+//                setRange(0, 0);
                 setValue(amount);
             }
             break;
-
+        }
     //    case KJob::Directories:
     //        if (processedDirs == amount) {
     //            return;
@@ -407,22 +422,27 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
     //        progressLabel->setText(tmp);
     //        break;
 
-    //    case KJob::Files:
-    //        if (processedFiles == amount) {
-    //            return;
-    //        }
-    //        processedFiles = amount;
+//        case KJob::Files:
+//        {
+//            auto processedFiles = kjob->processedAmount(KJob::Unit::Files);
 
-    //        if (totalDirs > 1) {
-    //            //~ singular %1 / %n folder
-    //            //~ plural %1 / %n folders
-    //            tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
-    //            tmp += QLatin1String("   ");
-    //        }
-    //        //~ singular %1 / %n file
-    //        //~ plural %1 / %n files
-    //        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
-    //        progressLabel->setText(tmp);
+//            if (processedFiles == amount)
+//            {
+//                return;
+//            }
+//            processedFiles = amount;
+
+//            if (totalDirs > 1) {
+//                //~ singular %1 / %n folder
+//                //~ plural %1 / %n folders
+//                size_label_text = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
+//                size_label_text += QLatin1String("   ");
+//            }
+//            //~ singular %1 / %n file
+//            //~ plural %1 / %n files
+//            size_label_text += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
+//            progressLabel->setText(size_label_text);
+//        }
     }
 }
 
