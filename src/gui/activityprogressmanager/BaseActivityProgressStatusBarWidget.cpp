@@ -80,6 +80,7 @@ void BaseActivityProgressStatusBarWidget::setDescription(const QString &title, c
 
 void BaseActivityProgressStatusBarWidget::setInfoMessage(const QString &text)
 {
+    qDb() << "Setting INFOMESSAGE" << text;
     m_text_status_label->setText(text);
 }
 

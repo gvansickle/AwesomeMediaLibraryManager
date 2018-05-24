@@ -236,7 +236,7 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 {
     if(qobject_cast<KIO::ListJob*>(job) != 0)
     {
-        qDb() << "WIDGET:" << job;
+        qDb() << "WIDGET description:" << job << title;
     }
 
     /// This follows the basic pattern of KWidgetJobTracker, with a little C++14 help.
@@ -249,10 +249,10 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
-    if(qobject_cast<KIO::ListJob*>(job) != 0)
-    {
-        qDb() << "WIDGET:" << job;
-    }
+//    if(qobject_cast<KIO::ListJob*>(job) != 0)
+//    {
+//        qDb() << "WIDGET INFOMESSAGE:" << job << plain;
+//    }
 
     // Prefer rich if it's given.
     with_widget_or_skip(job, [=](auto w){
