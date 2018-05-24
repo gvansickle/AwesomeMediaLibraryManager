@@ -429,3 +429,23 @@ void BaseActivityProgressStatusBarWidget::pause_resume(bool)
 {
 
 }
+
+void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
+{
+    qDb() << kjob << unit << amount;
+}
+
+void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
+{
+    qDb() << kjob << unit << amount;
+}
+
+void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
+{
+    qDb() << kjob << percent;
+}
+
+void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
+{
+    qDb() << kjob << value;
+}

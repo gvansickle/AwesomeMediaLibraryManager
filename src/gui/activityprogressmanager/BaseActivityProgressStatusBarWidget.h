@@ -33,6 +33,7 @@ class KJob;
 class KAbstractWidgetJobTracker;
 
 /// Ours
+#include <utils/TheSimplestThings.h>
 #include "concurrency/AMLMJob.h"
 class ActivityProgressStatusBarTracker;
 
@@ -80,6 +81,34 @@ public:
     void deref();
 
 public Q_SLOTS:
+
+    /// @name Status/progress update slots.
+    /// Should be connected to the analogous signals or called from the analogous slots
+    /// in the tracker.
+    /// Note that these are public, vs. the protected slots in the KJob/Tracker classes.
+    /// @{
+
+    /**
+     * Directly supported by KJob:
+     * - setTotalAmount(Unit,amount)
+     * - public qulonglong processedAmount(Unit unit) const;
+     * - var in KJobPrivate.
+     */
+    virtual void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+    /**
+     * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
+     */
+    virtual void processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+    /**
+     * Directly supported by KJob::percent() (var in KJobPrivate).
+     * Also a KJob Q_PROPERTY().
+     */
+    virtual void percent(KJob *job, unsigned long percent);
+    virtual void speed(KJob *job, unsigned long value);
+
+    /// @}
+
+    /// @todo Probably delete.
     virtual void setDescription(const QString& title,
                         const QPair<QString, QString> &field1,
                         const QPair<QString, QString> &field2);
@@ -123,6 +152,8 @@ protected Q_SLOTS:
 
     /// Invoke this to pause or resume the job.
     void pause_resume(bool);
+
+
 
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)

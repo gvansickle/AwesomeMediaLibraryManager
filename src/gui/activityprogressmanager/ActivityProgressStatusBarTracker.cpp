@@ -284,7 +284,8 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
 
     with_widget_or_skip(kjob, [=](auto w){
 
-        w->setTotalAmount(kjob, unit, amount);
+        w->totalAmount(kjob, unit, amount);
+//        w->setTotalAmount(kjob, unit, amount);
 
 //        switch (unit)
 //        {
@@ -332,7 +333,8 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
     {
         QString tmp;
 
-        w->setProcessedAmount(job, unit, amount);
+        w->processedAmount(job, unit, amount);
+//        w->setProcessedAmount(job, unit, amount);
 
 //        switch (unit) {
 //        case KJob::Bytes:
@@ -419,6 +421,8 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
     with_widget_or_skip(job, [=](auto w){
         qDb() << "ActivityProgressStatusBarTracker: percent" << job << percent;
 
+        w->percent(job, percent);
+
         QString title = toqstr("PCT") + " (";
         if (w->m_is_total_size_known)
         {
@@ -442,8 +446,8 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
         title += ')';
 
-        w->setRange(0, 100);
-        w->setValue(percent);
+//        w->setRange(0, 100);
+//        w->setValue(percent);
 
         /// @todo Notify summary widget.
         auto cumulative_pct = calculate_summary_percent();
@@ -456,7 +460,7 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 {
     with_widget_or_skip(job, [=](auto w){
         qDb() << "KJob speed" << job << value;
-
+        w->speed(job, value);
     });
 }
 

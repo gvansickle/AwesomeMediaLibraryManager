@@ -283,6 +283,16 @@ protected Q_SLOTS:
      *      are emitted if the values changed. The percent() signal is emitted
      *      only for the progress unit.
      *     void setProcessedAmount(Unit unit, qulonglong amount);
+     *
+     * Notification of the progress widget
+     *
+     * We still need to notify the widgets.  In this tracker class, our analogous overrides
+     * such as KWidgetJobTracker::processedAmount() will be where it needs to happen.  Options:
+     * - Follow the same "directly call the appropriate widget function" pattern
+     * - Send a signal instead of a direct call
+     * - Send a single "update your status" signal to the widget, and the widget then updates itself by
+     *   querying the KJob it's connected to.
+     * - ???
      */
 
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
