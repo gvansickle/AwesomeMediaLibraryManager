@@ -90,127 +90,6 @@ M_WARNING("TODO");
 qWr() << text;
 }
 
-//void BaseActivityProgressStatusBarWidget::setTotalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
-//{
-//////    qDb() << "GOT HERE";
-////    switch (unit)
-////    {
-////    case KJob::Bytes:
-////        m_is_total_size_known = true;
-////        // size is measured in bytes
-////        if (kjob->totalAmount(unit) == amount)
-////        {
-////            return;
-////        }
-////        /// @todo Already handled by tracker?: w->m_totalSize = amount;
-//////        if (w->m_start_time.isNull())
-//////        {
-//////            w->m_start_time.start();
-//////        }
-////        m_progress_bar->setRange(0, kjob->totalAmount(unit));
-////        break;
-////    case KJob::Files:
-////        if (kjob->totalAmount(unit) == amount)
-////        {
-////            return;
-////        }
-//////        totalFiles = amount;
-////        /// @todo ???
-//////        showTotals();
-////        break;
-
-////    case KJob::Directories:
-////        if (kjob->totalAmount(unit) == amount)
-////        {
-////            return;
-////        }
-//////        totalDirs = amount;
-//////        showTotals();
-////        break;
-////    }
-//}
-
-void BaseActivityProgressStatusBarWidget::setProcessedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
-{
-    auto prev_total_amount = kjob->totalAmount(unit);
-
-    QString tmp;
-
-    switch (unit)
-    {
-        case KJob::Bytes:
-            if (kjob->processedAmount(unit) == amount)
-            {
-                return;
-            }
-
-            /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
-            /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
-            DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
-            auto str_processed = formattedDataSize(kjob->processedAmount(unit), 1, fmt);
-
-            if (m_is_total_size_known)
-            {
-                //~ singular %1 of %2 complete
-                //~ plural %1 of %2 complete
-                auto str_total = formattedDataSize(kjob->processedAmount(unit), 1, fmt);
-                tmp = tr("%1 of %2 complete")
-                      .arg(str_processed)
-                      .arg(str_total);
-
-                /// @todo GRVS
-                if(prev_total_amount < amount)
-                setRange(0, amount);
-                setValue(qBound(0ULL, amount, prev_total_amount));
-            }
-            else
-            {
-                tmp = str_processed; //KJobTrackerFormatters::byteSize(amount);
-            }
-    //        sizeLabel->setText(tmp);
-            if (!m_is_total_size_known)
-            {
-                // update jumping progressbar
-                setRange(0, 0);
-                setValue(amount);
-            }
-            break;
-
-    //    case KJob::Directories:
-    //        if (processedDirs == amount) {
-    //            return;
-    //        }
-    //        processedDirs = amount;
-
-    //        //~ singular %1 / %n folder
-    //        //~ plural %1 / %n folders
-    //        tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
-    //        tmp += QLatin1String("   ");
-    //        //~ singular %1 / %n file
-    //        //~ plural %1 / %n files
-    //        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
-    //        progressLabel->setText(tmp);
-    //        break;
-
-    //    case KJob::Files:
-    //        if (processedFiles == amount) {
-    //            return;
-    //        }
-    //        processedFiles = amount;
-
-    //        if (totalDirs > 1) {
-    //            //~ singular %1 / %n folder
-    //            //~ plural %1 / %n folders
-    //            tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
-    //            tmp += QLatin1String("   ");
-    //        }
-    //        //~ singular %1 / %n file
-    //        //~ plural %1 / %n files
-    //        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
-    //        progressLabel->setText(tmp);
-    }
-}
-
 void BaseActivityProgressStatusBarWidget::setRange(int min, int max)
 {
     m_progress_bar->setRange(min, max);
@@ -420,7 +299,7 @@ void BaseActivityProgressStatusBarWidget::stop()
 
 void BaseActivityProgressStatusBarWidget::pause_resume(bool)
 {
-
+    Q_ASSERT(0);
 }
 
 void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
@@ -550,6 +429,33 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
 void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
 {
     qDb() << kjob << percent;
+
+    QString title = toqstr("PCT") + " (";
+    if (m_is_total_size_known)
+    {
+        /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
+        /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
+        DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
+
+M_WARNING("TODO: Size is the primary unit, can't get at it");
+        title += QString("%1% of %2").arg(percent).arg(formattedDataSize(m_totalSize, 1, fmt));
+
+    }
+//    else if (totalFiles)
+//    {
+//        //~ singular %1% of %n file
+//        //~ plural %1% of %n files
+//        title += QCoreApplication::translate("KWidgetJobTracker", "%1% of %n file(s)", "", totalFiles).arg(percent);
+//    }
+    else
+    {
+        title += QString("%1%").arg(percent);
+    }
+
+    title += ')';
+
+    setRange(0, 100);
+    setValue(percent);
 }
 
 void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)

@@ -115,9 +115,6 @@ public Q_SLOTS:
     virtual void setInfoMessage(const QString &text);
     virtual void setWarning(const QString &text);
 
-//    virtual void setTotalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
-    virtual void setProcessedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
-
     virtual void setRange(int min, int max);
     virtual void setValue(int val);
 

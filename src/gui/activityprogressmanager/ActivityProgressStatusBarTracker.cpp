@@ -285,40 +285,6 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
     with_widget_or_skip(kjob, [=](auto w){
 
         w->totalAmount(kjob, unit, amount);
-//        w->setTotalAmount(kjob, unit, amount);
-
-//        switch (unit)
-//        {
-//        case KJob::Bytes:
-//            w->m_is_total_size_known = true;
-//            // size is measured in bytes
-//            if (w->m_totalSize == amount)
-//            {
-//                return;
-//            }
-//            w->m_totalSize = amount;
-//            if (w->m_start_time.isNull())
-//            {
-//                w->m_start_time.start();
-//            }
-//            break;
-
-    //    case KJob::Files:
-    //        if (totalFiles == amount) {
-    //            return;
-    //        }
-    //        totalFiles = amount;
-    //        showTotals();
-    //        break;
-
-    //    case KJob::Directories:
-    //        if (totalDirs == amount) {
-    //            return;
-    //        }
-    //        totalDirs = amount;
-    //        showTotals();
-    //        break;
-//        }
     });
 }
 
@@ -334,80 +300,6 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
         QString tmp;
 
         w->processedAmount(job, unit, amount);
-//        w->setProcessedAmount(job, unit, amount);
-
-//        switch (unit) {
-//        case KJob::Bytes:
-//            if (w->m_processedSize == amount)
-//            {
-//                return;
-//            }
-//            w->m_processedSize = amount;
-
-//            /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
-//            /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
-//            DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
-//            auto str_processed = formattedDataSize(w->m_processedSize, 1, fmt);
-
-//            if (w->m_is_total_size_known)
-//            {
-//                //~ singular %1 of %2 complete
-//                //~ plural %1 of %2 complete
-//                auto str_total = formattedDataSize(w->m_totalSize, 1, fmt);
-//                tmp = tr("%1 of %2 complete")
-//                      .arg(str_processed)
-//                      .arg(str_total);
-
-//                /// @todo GRVS
-//                w->setRange(0, w->m_totalSize);
-//                w->setValue(qBound(0ULL, w->m_processedSize, w->m_totalSize));
-//            }
-//            else
-//            {
-//                tmp = str_processed; //KJobTrackerFormatters::byteSize(amount);
-//            }
-//    //        sizeLabel->setText(tmp);
-//            if (!w->m_is_total_size_known)
-//            {
-//                // update jumping progressbar
-//                w->setRange(0, 0);
-//                w->setValue(w->m_processedSize);
-//            }
-//            break;
-
-//    case KJob::Directories:
-//        if (processedDirs == amount) {
-//            return;
-//        }
-//        processedDirs = amount;
-
-//        //~ singular %1 / %n folder
-//        //~ plural %1 / %n folders
-//        tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
-//        tmp += QLatin1String("   ");
-//        //~ singular %1 / %n file
-//        //~ plural %1 / %n files
-//        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
-//        progressLabel->setText(tmp);
-//        break;
-
-//    case KJob::Files:
-//        if (processedFiles == amount) {
-//            return;
-//        }
-//        processedFiles = amount;
-
-//        if (totalDirs > 1) {
-//            //~ singular %1 / %n folder
-//            //~ plural %1 / %n folders
-//            tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
-//            tmp += QLatin1String("   ");
-//        }
-//        //~ singular %1 / %n file
-//        //~ plural %1 / %n files
-//        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
-//        progressLabel->setText(tmp);
-//        }
     });
 }
 
@@ -423,31 +315,7 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
         w->percent(job, percent);
 
-//        QString title = toqstr("PCT") + " (";
-//        if (w->m_is_total_size_known)
-//        {
-//            /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
-//            /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
-//            DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
 
-//            title += QString("%1% of %2").arg(percent).arg(formattedDataSize(w->m_totalSize, 1, fmt));
-
-//        }
-//        else if (totalFiles)
-//        {
-//            //~ singular %1% of %n file
-//            //~ plural %1% of %n files
-//            title += QCoreApplication::translate("KWidgetJobTracker", "%1% of %n file(s)", "", totalFiles).arg(percent);
-//        }
-//        else
-//        {
-//            title += QString("%1%").arg(percent);
-//        }
-
-//        title += ')';
-
-//        w->setRange(0, 100);
-//        w->setValue(percent);
 
         /// @todo Notify summary widget.
         auto cumulative_pct = calculate_summary_percent();
