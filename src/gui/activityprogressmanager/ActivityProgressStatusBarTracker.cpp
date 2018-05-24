@@ -423,28 +423,28 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
         w->percent(job, percent);
 
-        QString title = toqstr("PCT") + " (";
-        if (w->m_is_total_size_known)
-        {
-            /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
-            /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
-            DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
+//        QString title = toqstr("PCT") + " (";
+//        if (w->m_is_total_size_known)
+//        {
+//            /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
+//            /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
+//            DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
 
-            title += QString("%1% of %2").arg(percent).arg(formattedDataSize(w->m_totalSize, 1, fmt));
+//            title += QString("%1% of %2").arg(percent).arg(formattedDataSize(w->m_totalSize, 1, fmt));
 
-        }
+//        }
 //        else if (totalFiles)
 //        {
 //            //~ singular %1% of %n file
 //            //~ plural %1% of %n files
 //            title += QCoreApplication::translate("KWidgetJobTracker", "%1% of %n file(s)", "", totalFiles).arg(percent);
 //        }
-        else
-        {
-            title += QString("%1%").arg(percent);
-        }
+//        else
+//        {
+//            title += QString("%1%").arg(percent);
+//        }
 
-        title += ')';
+//        title += ')';
 
 //        w->setRange(0, 100);
 //        w->setValue(percent);
@@ -475,13 +475,8 @@ void ActivityProgressStatusBarTracker::finished(KJob *job)
 //    Q_CHECK_PTR(this);
 //    Q_CHECK_PTR(job);
 
-//    qDb() << "KJobTrk: FINISHED KJob:" << job;
-//    qDb() << "KJobTrk: FINISHED :" << M_NAME_VAL(job->capabilities())
-//          << M_NAME_VAL(job->isSuspended())
-//          << M_NAME_VAL(job->isAutoDelete())
-//          << M_NAME_VAL(job->error())
-//          << M_NAME_VAL(job->errorText())
-//          << M_NAME_VAL(job->errorString());
+    qDb() << "FINISHED KJob:" << job;
+    AMLMJob::dump_job_info(job);
 }
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)

@@ -308,8 +308,8 @@ public:
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 
-    /// Dump info about this AMLMJob to stdout.
-    /// @todo
+    /// Dump info about the given KJob.
+    static void dump_job_info(KJob* kjob);
 
 public Q_SLOTS:
 

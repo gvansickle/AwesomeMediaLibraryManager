@@ -103,6 +103,25 @@ void AMLMJob::setSuccessFlag(bool success)
     m_success = success;
 }
 
+void AMLMJob::dump_job_info(KJob* kjob)
+{
+    qIn() << "INFO FOR AMLMJob:" << kjob;
+    qIn() << "Progress info:";
+    qIn() << "  Caps:" << kjob->capabilities();
+    qIn() << "  percent:" << kjob->percent();
+    for(auto unit : {KJob::Unit::Bytes, KJob::Unit::Files, KJob::Unit::Directories})
+    {
+        qIn() << "  processedAmount:" << kjob->processedAmount(unit);
+        qIn() << "  totalAmount:" << kjob->totalAmount(unit);
+    }
+    qIn() << "State info:";
+    qIn() << M_NAME_VAL(kjob->isSuspended());
+    qIn() << M_NAME_VAL(kjob->isAutoDelete());
+    qIn() << M_NAME_VAL(kjob->error());
+    qIn() << M_NAME_VAL(kjob->errorText());
+    qIn() << M_NAME_VAL(kjob->errorString());
+}
+
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
