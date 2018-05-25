@@ -82,6 +82,7 @@ public Q_SLOTS:
 
     /// @name Public slots analogous to the private versions of KAbstractWidgetJobTracker.
     /// @{
+
     virtual void description(const QString& title,
                         const QPair<QString, QString> &field1,
                         const QPair<QString, QString> &field2);
@@ -156,22 +157,22 @@ private:
 
     int m_refcount {0};
 
-public: /// @todo FBO tracker, could friend.
+protected:
 
     /// @name Status tracking variables.
     /// @{
 
-    /// @todo Another map? or?? KWidgetJobTracker has all these tracking vars in the Widget, which
+    /// @todo KWidgetJobTracker has all these tracking vars in the Widget, which
     /// seems pretty wrong.  KJob keeps at least some of this info in the KJob.  And even more is hidden in KJobPrivate.
-    qulonglong m_processedSize {0};
     bool m_is_total_size_known {false};
+    qulonglong m_processedSize {0};
     qulonglong m_totalSize {0};
+    /// @todo Same comment but these seem to be stored in a qmap in KJobPrivate.
+
     /// @todo KJobs each have one of these in KJobPrivate.
     QTime m_start_time;
 
     /// @}
-
-protected: ///< FBO CumulativeStatusWidget.  Probably a better way to do this.
 
     /// @name Child widgets
     /// @{

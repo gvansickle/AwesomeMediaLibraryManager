@@ -74,8 +74,8 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 /**
 * Where Does The State Live?
 *
-* KJobPrivate itself contains what should be what's needed
-* and canonical:
+* KJobPrivate itself contains what should be what's needed and canonical:
+*
 * class KCOREADDONS_EXPORT KJobPrivate
 * {
 * public:
@@ -90,11 +90,45 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 * Most/all of this data can be accessed from protected or public KJob members.  E.g.:
 * class KJob
 * protected:
-*     setProcessedAmount():
+*     KJob::setProcessedAmount(Unit unit, qulonglong amount)
 *      Sets the processed size. The processedAmount() and percent() signals
 *      are emitted if the values changed. The percent() signal is emitted
 *      only for the progress unit.
 *     void setProcessedAmount(Unit unit, qulonglong amount);
+*
+* The code looks like this:
+*
+* @code
+* protected: void KJob::setProcessedAmount(Unit unit, qulonglong amount)
+    {
+        Q_D(KJob);
+        bool should_emit = (d->processedAmount[unit] != amount);
+
+        d->processedAmount[unit] = amount;
+
+        if (should_emit) {
+            emit processedAmount(this, unit, amount);
+            if (unit == d->progressUnit) {
+                emit processedSize(this, amount);
+                emitPercent(d->processedAmount[unit], d->totalAmount[unit]);
+            }
+        }
+    }
+
+    Q_SIGNAL: // Private, don't emit directly, call setProcessedAmount().
+    void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount);
+
+    // Public read accessor.
+     * Returns the processed amount of a given unit for this job.
+     *
+     * @param unit the unit of the requested amount
+     * @return the processed size
+    //
+    Q_SCRIPTABLE qulonglong processedAmount(Unit unit) const;
+
+* @endcode
+*
+* So it would appear that there's no need to maintain any such state in the widget.
 */
 
 /**

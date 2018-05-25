@@ -201,10 +201,12 @@ void BaseActivityProgressStatusBarWidget::showTotals()
 
     if (processedFiles == 0 && processedDirs == 0)
     {
+        // No files or dirs processed yet.
         QString tmps;
         if (totalDirs > 1)
-            // that we have a singular to translate looks weired but is only logical
         {
+            // We know we have at least one directory to process.
+
             //~ singular %n folder
             //~ plural %n folders
             tmps = QCoreApplication::translate("KWidgetJobTracker", "%n folder(s)", "", totalDirs) + "   ";
@@ -212,6 +214,8 @@ void BaseActivityProgressStatusBarWidget::showTotals()
         //~ singular %n file
         //~ plural %n files
         tmps += QCoreApplication::translate("KWidgetJobTracker", "%n file(s)", "", totalFiles);
+
+        // Set the resulting string.
         m_text_status_label->setText(tmps);
     }
 }
@@ -333,15 +337,24 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
 {
     Q_CHECK_PTR(kjob);
 
-    auto kjob_total_amount = kjob->totalAmount(unit);
+    /// @todo These are taking the place of KWidgetJobTracker::Private::ProgressWidget's member vars of the same names,
+    /// which are kept up to date by the logic in these functions.  Unclear if this is correct, better, or worse.
+    auto processedFiles = kjob->processedAmount(KJob::Unit::Files);
+    auto totalFiles = kjob->totalAmount(KJob::Unit::Files);
+    auto processedDirs = kjob->processedAmount(KJob::Unit::Directories);
+    auto totalDirs = kjob->totalAmount(KJob::Unit::Directories);
 
-    if(kjob_total_amount == amount)
+    /// @todo Is this really what we should be using instead of m_total_size?
+    /// And/or totalFiles and totalDirs?
+    auto kjob_total_amount_in_current_units = kjob->totalAmount(unit);
+
+    if(kjob_total_amount_in_current_units == amount)
     {
         qWr() << "NO CHANGE IN TOTAL AMOUNT:" << unit << amount;
     }
     else
     {
-        qIn() << "CHANGE IN TOTAL AMOUNT:" << unit << kjob_total_amount << "to:" << amount;
+        qIn() << "CHANGE IN TOTAL AMOUNT:" << unit << kjob_total_amount_in_current_units << "to:" << amount;
     }
 
     switch (unit)
@@ -349,12 +362,13 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
     case KJob::Bytes:
         m_is_total_size_known = true;
         // size is measured in bytes
-        if (kjob_total_amount == amount)
+        if (m_totalSize == amount)
         {
             return;
         }
-        /// @todo Already handled by tracker?:
-//        m_totalSize = amount;
+        /// @todo Bytes are already handled by tracker, but size is a different case and
+        /// I haven't found a way to access it either read or write:
+        m_totalSize = amount;
         if (m_start_time.isNull())
         {
             m_start_time.start();
@@ -362,20 +376,22 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
 //        m_progress_bar->setRange(0, kjob->totalAmount(unit));
         break;
     case KJob::Files:
-        if(kjob_total_amount == amount)
-        {
-            return;
-        }
+        // Shouldn't be getting signalled unless totalFiles() has actually changed.
+//        if(kjob_total_amount_in_current_units == amount)
+//        {
+//            return;
+//        }
         /// @todo ???
 //        totalFiles = amount;
         showTotals();
         break;
 
     case KJob::Directories:
-        if (kjob_total_amount == amount)
-        {
-            return;
-        }
+        // Shouldn't be getting signalled unless totalFiles() has actually changed.
+//        if (kjob_total_amount_in_current_units == amount)
+//        {
+//            return;
+//        }
 //        totalDirs = amount;
         showTotals();
         break;
@@ -392,11 +408,18 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
     auto totalFiles = kjob->totalAmount(KJob::Unit::Files);
     auto processedDirs = kjob->processedAmount(KJob::Unit::Directories);
     auto totalDirs = kjob->totalAmount(KJob::Unit::Directories);
+    auto processedBytes = kjob->processedAmount(KJob::Unit::Bytes);
+    auto totalBytes = kjob->totalAmount(KJob::Unit::Bytes);
 
-    auto kjob_total_amount = kjob->totalAmount(unit);
+    /// KWidgetJobTracker uses totalSize as the member var for the total number of bytes
+    /// which are to be processed.  Set it up here as an alias, const because we shouldn't need
+    /// to ever update it (especially in this function).
+    const auto totalSize = totalBytes;
+
+//    auto kjob_total_amount = kjob->totalAmount(unit);
 
 //    auto prev_total_amount_of_this_unit = kjob->totalAmount(unit);
-    auto current_total_size_bytes = kjob->processedAmount(KJob::Unit::Bytes);
+//    auto current_total_size_bytes = kjob->processedAmount(KJob::Unit::Bytes);
 
     QString size_label_text;
 
@@ -404,81 +427,86 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
     {
         case KJob::Bytes:
         {
-            if (kjob_total_amount == amount)
-            {
-                // No change, just return.
-M_WARNING("I THINK THIS IS WRONG, these will almost always be equal?");
-                return;
-            }
-            else
-            {
-                // Changed.
-                /// @todo Do we need to set processedSize etc in here, or has that already
-                /// been handled by the time we get here?
-            }
+//            if (kjob_total_amount == amount)
+//            {
+//                // No change, just return.
+//M_WARNING("I THINK THIS IS WRONG, these will almost always be equal?");
+//                return;
+//            }
+//            else
+//            {
+//                // Changed.
+//                /// @todo Do we need to set processedSize etc in here, or has that already
+//                /// been handled by the time we get here?
+//            }
 //            processedSize = amount;
 
-            // Create the "current processedAmount" string.
+            // Create the "current processedAmount" string.  We need it below regardless of whether
+            // we know the total amount or not.
             /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
             /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
             DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
-            auto str_processed = formattedDataSize(amount, 1, fmt);
+            auto str_processed_bytes = formattedDataSize(amount, 1, fmt);
 
             if (m_is_total_size_known)
             {
-                // We know the total size, so we can make a "n of total"-type of calculation.
+                // We know the total size, so we can make a "n of n_total complete"-type string.
+
                 //~ singular %1 of %2 complete
                 //~ plural %1 of %2 complete
                 // Create the "%2" (total amount) string.
-                auto str_total = formattedDataSize(amount, 1, fmt);
+                auto str_total_bytes = formattedDataSize(totalSize, 1, fmt);
                 size_label_text = tr("%1 of %2 complete")
-                      .arg(str_processed)
-                      .arg(str_total);
+                      .arg(str_processed_bytes)
+                      .arg(str_total_bytes);
 
-                /// @todo GRVS
+                /// @todo KWJT doesn't do any of this here, not sure where it does in this case.
+                /// Maybe the percent slot?
 //                setRange(0, amount);
 //                setValue(qBound(0ULL, amount, prev_total_amount_of_this_unit));
-                m_progress_bar->setValue(amount);
+//                m_progress_bar->setValue(amount);
             }
             else
             {
                 // We don't have a total size.
-                size_label_text = str_processed; //KJobTrackerFormatters::byteSize(amount);
+                size_label_text = str_processed_bytes; //KJobTrackerFormatters::byteSize(amount);
             }
-            /// @todo Do we need this?
+
+            // Set the progress text we just put together.
+            /// @todo Do we need this/is this the right label?
             m_text_status_label->setText(size_label_text);
+
             if (!m_is_total_size_known)
             {
-                // update jumping progressbar
-                /// @todo Not in KWidgetJobTracker, not sure we need this here.
-//                setRange(0, 0);
-                setValue(amount);
+                // Don't know the total size, so set the progress bar's value to keep it animated.
+                m_progress_bar->setValue(amount);
             }
             break;
         }
-    //    case KJob::Directories:
-    //        if (processedDirs == amount) {
-    //            return;
-    //        }
-    //        processedDirs = amount;
+        case KJob::Directories:
+        {
+//            if (processedDirs == amount) {
+//                return;
+//            }
+//            processedDirs = amount;
 
-    //        //~ singular %1 / %n folder
-    //        //~ plural %1 / %n folders
-    //        tmp = QCoreApplication::translate("KWidgetJobTracker", "%1 / %n folder(s)", "", totalDirs).arg(processedDirs);
-    //        tmp += QLatin1String("   ");
-    //        //~ singular %1 / %n file
-    //        //~ plural %1 / %n files
-    //        tmp += QCoreApplication::translate("KWidgetJobTracker", "%1 / %n file(s)", "", totalFiles).arg(processedFiles);
-    //        progressLabel->setText(tmp);
-    //        break;
-
+            //~ singular %1 / %n folder
+            //~ plural %1 / %n folders
+            size_label_text = tr("%1 / %2 folder(s)").arg(processedDirs).arg(totalDirs);
+            size_label_text += QLatin1String("   ");
+            //~ singular %1 / %n file
+            //~ plural %1 / %n files
+            size_label_text += tr("%1 / %2 file(s)").arg(processedFiles).arg(totalFiles);
+            m_text_status_label->setText(size_label_text);
+            break;
+        }
         case KJob::Files:
         {
-            if (processedFiles == amount)
-            {
-                return;
-            }
-            processedFiles = amount;
+//            if (processedFiles == amount)
+//            {
+//                return;
+//            }
+//            processedFiles = amount;
 
             if (totalDirs > 1)
             {
@@ -499,7 +527,14 @@ void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long perc
 {
 M_WARNING("WHY DOES kjob GET IN HERE AS 0 sometimes? Prob the m_cumulative_status widget.");
 //    Q_CHECK_PTR(kjob);
+    if(kjob == nullptr)
+    {
+        qWr() << "PERCENT GOT NULL KJOB, BALKING";
+        return;
+    }
     qDb() << kjob << percent;
+
+    auto totalFiles = kjob->totalAmount(KJob::Unit::Files);
 
     QString title = toqstr("PCT") + " (";
     if (m_is_total_size_known)
@@ -512,12 +547,12 @@ M_WARNING("TODO: Size is the primary unit, can't get at it");
         title += QString("%1% of %2").arg(percent).arg(formattedDataSize(m_totalSize, 1, fmt));
 
     }
-//    else if (totalFiles)
-//    {
-//        //~ singular %1% of %n file
-//        //~ plural %1% of %n files
-//        title += QCoreApplication::translate("KWidgetJobTracker", "%1% of %n file(s)", "", totalFiles).arg(percent);
-//    }
+    else if (totalFiles)
+    {
+        //~ singular %1% of %n file
+        //~ plural %1% of %n files
+        title += tr("%1% of %2 file(s)").arg(percent).arg(totalFiles);
+    }
     else
     {
         title += QString("%1%").arg(percent);
