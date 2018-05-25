@@ -72,8 +72,6 @@ public:
     /// Add buttons to the rhs of the layout.
     virtual void addButton(QToolButton* new_button);
 
-
-
     bool m_is_job_registered { false };
 
     // Cribbed from KWidgetJobTracker.
@@ -126,6 +124,8 @@ protected:
     /// Create the widget.
     /// Called by the public constructor.
     virtual void init(KJob* job, QWidget *parent);
+
+    virtual void showTotals();
 
     /// Make the necessary connections between this Widget, the KJob, and the tracker.
     /// @todo Currently unused.

@@ -117,6 +117,8 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     Q_CHECK_PTR(this);
     Q_ASSERT(kjob);
 
+    AMLMJob::dump_job_info(kjob);
+
     // Create the widget for this new job.
     auto wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
     wdgt->m_is_job_registered = true;
@@ -167,6 +169,11 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)
 
     Q_CHECK_PTR(this);
     Q_ASSERT(kjob != nullptr);
+
+M_WARNING("TODO");
+//    m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
+//    m_cumulative_status_widget->setValue(m_amlmjob_to_widget_map.size());
+
 
     // KAbstractWidgetJobTracker::unregisterJob() calls:
     //   KJobTrackerInterface::unregisterJob(job);, which calls:
@@ -235,6 +242,21 @@ void ActivityProgressStatusBarTracker::cancelAll()
     qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
 }
 
+
+void ActivityProgressStatusBarTracker::finished(KJob *job)
+{
+    // KJobTrackerInterface::finished(KJob *job) does nothing.
+    qWr() << "FINISHED KJob:" << job;
+    with_widget_or_skip(job, [=](auto w){
+        qWr() << "FINISHED JOB:" << job << "WITH WIDGET:" << w;
+    });
+
+    Q_CHECK_PTR(this);
+    Q_CHECK_PTR(job);
+
+    AMLMJob::dump_job_info(job);
+}
+
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
     if(qobject_cast<KIO::ListJob*>(job) != 0)
@@ -252,10 +274,10 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
-//    if(qobject_cast<KIO::ListJob*>(job) != 0)
-//    {
-//        qDb() << "WIDGET INFOMESSAGE:" << job << plain;
-//    }
+    if(qobject_cast<KIO::ListJob*>(job) != 0)
+    {
+        qDb() << "WIDGET INFOMESSAGE:" << job << plain << rich;
+    }
 
     // Prefer rich if it's given.
     with_widget_or_skip(job, [=](auto w){
@@ -318,6 +340,7 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
         w->percent(job, percent);
 
         /// @todo Notify summary widget.
+M_WARNING("TODO GOES RECURSIVE");
         auto cumulative_pct = calculate_summary_percent();
         m_cumulative_status_widget->percent(nullptr, cumulative_pct);
 
@@ -330,21 +353,6 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
         qDb() << "KJob speed" << job << value;
         w->speed(job, value);
     });
-}
-
-void ActivityProgressStatusBarTracker::finished(KJob *job)
-{
-    // KJobTrackerInterface::finished(KJob *job) does nothing.
-    qWr() << "FINISHED KJob:" << job;
-    with_widget_or_skip(job, [=](auto w){
-        qWr() << "FINISHED JOB:" << job << "WITH WIDGET:" << w;
-    });
-
-    Q_CHECK_PTR(this);
-    Q_CHECK_PTR(job);
-
-    qDb() << "FINISHED KJob:" << job;
-    AMLMJob::dump_job_info(job);
 }
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
@@ -384,7 +392,7 @@ int ActivityProgressStatusBarTracker::calculate_summary_percent()
     long long total_jobs = 0;
     long long cumulative_completion_pct = 0;
     m_amlmjob_to_widget_map.for_each_key_value_pair([&](KJob* job, BaseActivityProgressStatusBarWidget* widget) {
-        // We do this in here vs. a .size() outside this loop because in here we have
+        // We do the total_jobs++ in here vs. a .size() outside this loop because in here we have
         // the map locked, so the numbers will be consistent.
         total_jobs += 1;
         cumulative_completion_pct += job->percent();
