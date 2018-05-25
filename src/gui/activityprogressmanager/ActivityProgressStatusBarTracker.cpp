@@ -47,7 +47,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
     // Create the job which will contain all other jobs.
     /// @note At least that's the theory, eventually.
-    m_cumulative_status_job = new CumulativeAMLMJob(this);
+    m_cumulative_status_job = new CumulativeAMLMJob(parent);
 
     // Create the summary widget
     /// @todo nullptr -> AMLMJob?
@@ -93,7 +93,7 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     QMutexLocker locker(&m_tsi_mutex);
 
     // Shouldn't ever get here before the widget is constructed (in the constructor).
-    if(job == nullptr)
+    if(job == nullptr || job == m_cumulative_status_job)
     {
         // The summary widget.
         M_WARNIF((m_cumulative_status_widget == nullptr));
@@ -127,7 +127,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     m_amlmjob_to_widget_map.insert(kjob, wdgt);
 
 M_WARNING("TODO");
-//    m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
+    m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
     m_cumulative_status_widget->setValue(m_amlmjob_to_widget_map.size());
 
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
