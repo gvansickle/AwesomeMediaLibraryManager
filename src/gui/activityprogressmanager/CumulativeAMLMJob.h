@@ -48,4 +48,7 @@ protected:
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override { qDb() << "RUN GOT CALLED FOR SOME REASON"; }
 };
 
+Q_DECLARE_METATYPE(CumulativeAMLMJob*)
+
+
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_CUMULATIVEAMLMJOB_H_ */

@@ -42,18 +42,21 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     // Save the parent widget.
     m_parent_widget = parent;
 
-    // Create the summary widget
-    /// @todo nullptr -> AMLMJob?
-    m_cumulative_status_widget = new CumulativeStatusWidget(nullptr, this, parent);
+    // Create the Cumulative tracker.
+//    m_cumulative_status_tracker = new ActivityProgressStatusBarTracker(parent);
 
     // Create the job which will contain all other jobs.
     /// @note At least that's the theory, eventually.
-//    auto cumulative_job = new CumulativeAMLMJob(this);
+    m_cumulative_status_job = new CumulativeAMLMJob(this);
 
-    /// Register the job and widget.
+    // Create the summary widget
+    /// @todo nullptr -> AMLMJob?
+    m_cumulative_status_widget = new CumulativeStatusWidget(m_cumulative_status_job, m_cumulative_status_tracker, parent);
+
+    /// Register the cumulative job and widget.
     /// @todo Move?
 //M_WARNING("TODO: Need to not delete this job/wdgt pair ever (e.g. on cancel)");
-//    m_amlmjob_to_widget_map.insert(cumulative_job, qobject_cast<BaseActivityProgressStatusBarWidget*>(m_cumulative_status_widget));
+//    m_cumulative_status_tracker->registerJob(cumulative_job, qobject_cast<BaseActivityProgressStatusBarWidget*>(m_cumulative_status_widget));
 
     m_expanding_frame_widget = new ExpandingFrameWidget();
 

@@ -42,20 +42,21 @@ class KJob;
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
 #include <concurrency/ThreadsafeMap.h>
-//#include "BaseActivityProgressStatusBarWidget.h"
+
 #include "CumulativeStatusWidget.h"
+#include "CumulativeAMLMJob.h"
 class BaseActivityProgressStatusBarWidget;
 //class ExpandingFrameWidget;
 #include "ExpandingFrameWidget.h"
 
 
 class ActivityProgressStatusBarTracker;
-using ActivityProgressStatusBarWidgetPtr = ActivityProgressStatusBarTracker*;
+using ActivityProgressStatusBarTrackerPtr = ActivityProgressStatusBarTracker*;
 
 using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
 
 /**
- * K*WidgetJobTracker tracking the progress/status/controls of a single AMLMJob.
+ * K*WidgetJobTracker tracking the progress/status/controls of a collection of KJobs/AMLMJobs.
  *
  * Sort of a mix of KWidgetJobTracker and KStatusBarJobTracker, but better.
  *
@@ -338,11 +339,11 @@ protected: // Methods
     {
         // Check if the caller wanted the cumulative widget.
         /// @todo Maybe put this in the regular map, and just be careful not to delete it on e.g. clearAll().
-//        if(job == nullptr)
-//        {
-//            l(m_cumulative_status_widget);
-//            return;
-//        }
+        if(job == m_cumulative_status_job)
+        {
+            l(m_cumulative_status_widget);
+            return;
+        }
 
         QPointer<BaseActivityProgressStatusBarWidget> widget = m_amlmjob_to_widget_map.value(job, nullptr);
         if(widget)
@@ -372,6 +373,8 @@ protected: // Variable members
 
     /// The status widget showing the cumulative status of all registered sub-trackers.
     QPointer<CumulativeStatusWidget> m_cumulative_status_widget {nullptr};
+    QPointer<CumulativeAMLMJob> m_cumulative_status_job {nullptr};
+    ActivityProgressStatusBarTracker* m_cumulative_status_tracker;
 
     /// Showable/hidable window containing all sub-trackers.
     QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};
