@@ -50,8 +50,11 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     m_cumulative_status_job = new CumulativeAMLMJob(parent);
 
     // Create the summary widget
-    /// @todo nullptr -> AMLMJob?
-    m_cumulative_status_widget = new CumulativeStatusWidget(m_cumulative_status_job, m_cumulative_status_tracker, parent);
+    /// @todo Should this have its own separate tracker?
+    m_cumulative_status_widget = new CumulativeStatusWidget(m_cumulative_status_job, this, parent);
+
+    // Make summary widget connections.
+    m_cumulative_status_widget->make_connections();
 
     /// Register the cumulative job and widget.
     /// @todo Move?
@@ -117,10 +120,13 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     Q_CHECK_PTR(this);
     Q_ASSERT(kjob);
 
+    qIn() << "REGISTERING JOB:" << kjob;
     AMLMJob::dump_job_info(kjob);
 
     // Create the widget for this new job.
     auto wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
+    // Make connections.
+    wdgt->make_connections();
     wdgt->m_is_job_registered = true;
     /// @todo Doesn't seem to matter crash-wise.
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
@@ -130,7 +136,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
 M_WARNING("TODO");
     m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
-    m_cumulative_status_widget->setValue(m_amlmjob_to_widget_map.size());
+//    m_cumulative_status_widget->setValue(m_amlmjob_to_widget_map.size());
 
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
@@ -169,6 +175,8 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)
 
     Q_CHECK_PTR(this);
     Q_ASSERT(kjob != nullptr);
+
+    AMLMJob::dump_job_info(kjob);
 
 M_WARNING("TODO");
 //    m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
@@ -339,11 +347,13 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
         w->percent(job, percent);
 
-        /// @todo Notify summary widget.
-M_WARNING("TODO GOES RECURSIVE");
-        auto cumulative_pct = calculate_summary_percent();
-        m_cumulative_status_widget->percent(nullptr, cumulative_pct);
+        if(job != nullptr && job != m_cumulative_status_job)
+        {
+        /// @todo Notify summary widget of the change.
 
+            auto cumulative_pct = calculate_summary_percent();
+            m_cumulative_status_widget->percent(m_cumulative_status_job, cumulative_pct);
+        }
     });
 }
 
@@ -360,6 +370,14 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
     with_widget_or_skip(job, [=](auto w){
         qDb() << "KJobTrk: slotClean" << job;
     });
+}
+
+bool ActivityProgressStatusBarTracker::is_cumulative_status_job(KJob *kjob)
+{
+    if(kjob == m_cumulative_status_job)
+    {
+        return true;
+    }
 }
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)

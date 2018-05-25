@@ -41,6 +41,11 @@ public:
 	explicit CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
 	virtual ~CumulativeStatusWidget();
 
+public Q_SLOTS:
+    /// Make the necessary connections between this Widget, the KJob, and the tracker.
+    /// Call this soon after the constructor is called and after init() is called.
+    void make_connections() override;
+
 private:
 	Q_DISABLE_COPY(CumulativeStatusWidget)
 

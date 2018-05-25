@@ -50,12 +50,8 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
     m_kjob = job;
     m_refcount = 1;
 
-    // We have a vtable to this, go nuts with the virtual calls.
-    init(job, parent);
-
-    /// Make the connections.
-    /// @todo
-//    make_connections();
+    // We have a vtable to this.
+    this->init(job, parent);
 }
 
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
@@ -149,7 +145,7 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
 //            qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
 //            Q_EMIT cancel_job(m_kjob);
 //        });
-        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
+//        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
 #if 0 // CRASHING
         // Connect up the disconnect signal from the job.
@@ -170,6 +166,7 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
     }
     else
     {
+        Q_ASSERT(0);
         // null Job (i.e. it's the root tracker/widget).
         qDb() << "INIT() CALL FOR ROOT TRACKER WIDGET, JOB IS NULL";
         m_pause_resume_button->setEnabled(false);
@@ -186,6 +183,32 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
     layout->addWidget(m_cancel_button);
 
     setLayout(layout);
+}
+
+void BaseActivityProgressStatusBarWidget::make_connections()
+{
+    qDb() << "BASE MAKE_CONNECTIONS";
+    if(true /* not summary widget */)
+    {
+        // Directly connect the cancel button to this class' stop() slot, which stops the job.
+        /// @note If we have the summary job fully working, this same connection would be fine;
+        /// the job would respond to the stop() by stopping all child jobs.
+        /// But we don't, so this function is overridden in the CumulativeStatusWidget class.
+        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
+    }
+
+#if 0
+    if(m_kjob && m_tracker)
+    {
+//        // Connect cancel-clicked signal to tracker's remove-job signal.
+//        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_kjob);});
+    }
+    else
+    {
+        qWr() << "NO JOB/TRACKER:" << m_kjob << m_tracker;
+        Q_ASSERT(0);
+    }
+#endif
 }
 
 void BaseActivityProgressStatusBarWidget::showTotals()
@@ -218,22 +241,6 @@ void BaseActivityProgressStatusBarWidget::showTotals()
         // Set the resulting string.
         m_text_status_label->setText(tmps);
     }
-}
-
-void BaseActivityProgressStatusBarWidget::make_connections()
-{
-#if 0
-    if(m_kjob && m_tracker)
-    {
-//        // Connect cancel-clicked signal to tracker's remove-job signal.
-//        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_kjob);});
-    }
-    else
-    {
-        qWr() << "NO JOB/TRACKER:" << m_kjob << m_tracker;
-        Q_ASSERT(0);
-    }
-#endif
 }
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)

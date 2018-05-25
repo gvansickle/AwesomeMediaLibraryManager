@@ -60,7 +60,7 @@ Q_SIGNALS:
     /// To the tracker: Remove the this widget and its job from the map.
     void signal_removeJobAndWidgetFromMap(KJob* job, QWidget *parent);
 
-private:
+protected:
     /// Private constructor to get us a fully-constructed vtable so we can
     /// call virtual functions in the non-default constructor.
     BaseActivityProgressStatusBarWidget(QWidget *parent);
@@ -79,6 +79,15 @@ public:
     void deref();
 
 public Q_SLOTS:
+
+    /// @name Slots for construction/setup.
+    /// @{
+
+    /// Make the necessary connections between this Widget, the KJob, and the tracker.
+    /// Call this soon after the constructor is called and after init() is called.
+    virtual void make_connections();
+
+    /// @}
 
     /// @name Public slots analogous to the private versions of KAbstractWidgetJobTracker.
     /// @{
@@ -127,10 +136,6 @@ protected:
     virtual void init(KJob* job, QWidget *parent);
 
     virtual void showTotals();
-
-    /// Make the necessary connections between this Widget, the KJob, and the tracker.
-    /// @todo Currently unused.
-    void make_connections(void);
 
     void closeEvent(QCloseEvent* event) override;
 

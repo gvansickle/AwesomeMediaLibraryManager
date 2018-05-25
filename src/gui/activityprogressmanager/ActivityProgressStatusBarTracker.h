@@ -353,6 +353,11 @@ protected: // Methods
         }
     }
 
+    /**
+     * Returns true if kjob is the "master" KJob.
+     */
+    bool is_cumulative_status_job(KJob* kjob);
+
     void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
 
     void removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget);
@@ -374,7 +379,7 @@ protected: // Variable members
     /// The status widget showing the cumulative status of all registered sub-trackers.
     QPointer<CumulativeStatusWidget> m_cumulative_status_widget {nullptr};
     QPointer<CumulativeAMLMJob> m_cumulative_status_job {nullptr};
-    ActivityProgressStatusBarTracker* m_cumulative_status_tracker;
+//    ActivityProgressStatusBarTracker* m_cumulative_status_tracker;
 
     /// Showable/hidable window containing all sub-trackers.
     QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};
