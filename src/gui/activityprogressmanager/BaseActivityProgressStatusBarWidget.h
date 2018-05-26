@@ -115,6 +115,13 @@ public Q_SLOTS:
      * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
     virtual void processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+
+    /**
+     * Slots for "Size" progress.
+     */
+    virtual void totalSize(KJob *kjob, qulonglong amount);
+    virtual void processedSize(KJob* kjob, qulonglong amount);
+
     /**
      * Directly supported by KJob::percent() (var in KJobPrivate).
      * Also a KJob Q_PROPERTY().
@@ -168,8 +175,8 @@ protected:
     /// @todo KWidgetJobTracker has all these tracking vars in the Widget, which
     /// seems pretty wrong.  KJob keeps at least some of this info in the KJob.  And even more is hidden in KJobPrivate.
     bool m_is_total_size_known {false};
-    qulonglong m_processedSize {0};
     qulonglong m_totalSize {0};
+    qulonglong m_processedSize {0};
     /// @todo Same comment but these seem to be stored in a qmap in KJobPrivate.
 
     /// @todo KJobs each have one of these in KJobPrivate.

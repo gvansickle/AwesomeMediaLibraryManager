@@ -533,6 +533,17 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
     }
 }
 
+void BaseActivityProgressStatusBarWidget::totalSize(KJob *kjob, qulonglong amount)
+{
+    m_totalSize = amount;
+}
+
+void BaseActivityProgressStatusBarWidget::processedSize(KJob *kjob, qulonglong amount)
+{
+    qDb() << "PROCSIZE:" << kjob << amount;
+    m_processedSize = amount;
+}
+
 void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
 {
 M_WARNING("WHY DOES kjob GET IN HERE AS 0 sometimes? Prob the m_cumulative_status widget.");
@@ -569,6 +580,8 @@ M_WARNING("TODO: Size is the primary unit, can't get at it");
     }
 
     title += ')';
+
+    qDb() << "PCT:" << kjob << percent;
 
     // Set the progress bar values.
     m_progress_bar->setRange(0, 100);

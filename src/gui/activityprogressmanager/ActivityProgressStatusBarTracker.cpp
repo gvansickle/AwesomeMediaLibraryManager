@@ -350,26 +350,53 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 
 void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
 {
-    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
-    {
-        qDb() << "KIO::SimpleJob:" << kjob;
-    }
-    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
-    {
-        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
-    }
+//    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
+//    {
+//        qDb() << "KIO::SimpleJob:" << kjob;
+//    }
+//    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
+//    {
+//        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
+//    }
+    with_widget_or_skip(kjob, [=](auto w){
+        qDb() << "ActivityProgressStatusBarTracker: totalSize:" << kjob << amount;
+
+        w->totalSize(kjob, amount);
+
+//        if(kjob != nullptr && kjob != m_cumulative_status_job)
+//        {
+//        /// @todo Notify summary widget of the change.
+
+//            auto cumulative_pct = calculate_summary_percent();
+//            m_cumulative_status_widget->totalSize(m_cumulative_status_job, cumulative_pct);
+//        }
+    });
 }
 
 void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amount)
 {
-    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
-    {
-        qDb() << "KIO::SimpleJob:" << kjob;
-    }
-    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
-    {
-        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
-    }
+//    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
+//    {
+//        qDb() << "KIO::SimpleJob:" << kjob;
+//    }
+//    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
+//    {
+//        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
+//    }
+
+    with_widget_or_skip(kjob, [=](auto w){
+        qDb() << "ActivityProgressStatusBarTracker: processedSize:" << kjob << amount;
+
+        w->processedSize(kjob, amount);
+
+//        if(kjob != nullptr && kjob != m_cumulative_status_job)
+//        {
+//        /// @todo Notify summary widget of the change.
+
+//            auto cumulative_pct = calculate_summary_percent();
+//            m_cumulative_status_widget->totalSize(m_cumulative_status_job, cumulative_pct);
+//        }
+    });
 }
 
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
