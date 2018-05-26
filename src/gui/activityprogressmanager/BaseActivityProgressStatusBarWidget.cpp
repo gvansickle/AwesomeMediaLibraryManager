@@ -25,9 +25,14 @@
 #include <QProgressBar>
 #include <QHBoxLayout>
 #include <QMutexLocker>
+#include <QToolTip>
+#include <QHelpEvent>
 
+/// KF5
 //#include <KJob>
 #include <KAbstractWidgetJobTracker>
+#include <KToolTipWidget>
+#include <QPalette>
 
 /// Ours
 #include <gui/helpers/Tips.h>
@@ -36,6 +41,7 @@
 #include "concurrency/AMLMJob.h"
 /// @todo Make these two unnecessary if possible.
 #include "ActivityProgressStatusBarTracker.h"
+#include <gui/MainWindow.h>
 
 
 BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(QWidget *parent) : BASE_CLASS(parent)
@@ -174,6 +180,12 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
         m_cancel_button->setEnabled(false);
     }
 
+    // The tooltip widget, and the widget within the widget.
+    m_tool_tip_widget = new KToolTipWidget(this);
+    m_tool_tip_label = new QLabel(this);
+    m_tool_tip_label->setBackgroundRole(QPalette::ToolTipBase);
+    m_tool_tip_label->setForegroundRole(QPalette::ToolTipText);
+
     // The main layout.
     auto layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -184,6 +196,8 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
     layout->addWidget(m_cancel_button);
 
     setLayout(layout);
+
+    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::make_connections()
@@ -244,6 +258,55 @@ void BaseActivityProgressStatusBarWidget::showTotals()
         // Set the resulting string.
         m_text_status_label->setText(tmps);
     }
+}
+
+void BaseActivityProgressStatusBarWidget::updateMainTooltip()
+{
+    QString tooltip_text;
+
+//    setToolTip(tooltip);
+    QPoint pos;
+//    QToolTip::showText(pos, QStringLiteral(""), this, QRect());
+
+//    if(!QToolTip::isVisible())
+//    {
+//        return;
+//    }
+
+    tooltip_text = tr("KJob<br/>")
+            + tr("Text1: %1<br/>").arg(m_current_activity_label->text())
+            + tr("Text2: %1<br/>").arg(m_text_status_label->text())
+            + tr("Speed: %1<br/>").arg("N/A")
+               ;
+
+    m_tool_tip_label->setText(tooltip_text);
+
+//    QToolTip::showText(pos, tooltip, this, QRect());
+    //    setToolTip(tooltip);
+}
+
+bool BaseActivityProgressStatusBarWidget::event(QEvent *event)
+{
+    if(event->type() == QEvent::ToolTip)
+    {
+        QHelpEvent* helpEvent = static_cast<QHelpEvent*>(event);
+
+        bool in_this_rect = this->rect().contains(helpEvent->pos());
+        if(in_this_rect)
+        {
+//            QToolTip::showText(helpEvent->globalPos(), m_tool_tip_label->text());
+            m_tool_tip_widget->showAt(helpEvent->globalPos(), m_tool_tip_label, MainWindow::instance()->windowHandle());
+        }
+        else
+        {
+//            QToolTip::hideText();
+            m_tool_tip_widget->hide();
+            event->ignore();
+        }
+
+        return true;
+    }
+    return QWidget::event(event);
 }
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
@@ -406,6 +469,8 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
         showTotals();
         break;
     }
+
+    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
@@ -531,17 +596,20 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
             m_text_status_label->setText(size_label_text);
         }
     }
+
+    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::totalSize(KJob *kjob, qulonglong amount)
 {
     m_totalSize = amount;
+    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::processedSize(KJob *kjob, qulonglong amount)
 {
-    qDb() << "PROCSIZE:" << kjob << amount;
     m_processedSize = amount;
+    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
@@ -587,6 +655,8 @@ M_WARNING("TODO: Size is the primary unit, can't get at it");
 
     // Do we need/care about this?
     setWindowTitle(title);
+
+    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
@@ -594,4 +664,6 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
     Q_CHECK_PTR(kjob);
 
     qDb() << "SPEED:" << kjob << value;
+
+    updateMainTooltip();
 }

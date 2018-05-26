@@ -24,6 +24,7 @@
 #include <QObject>
 #include <QFrame>
 #include <QPointer>
+#include <QLabel>
 class QLabel;
 class QProgressBar;
 class QToolButton;
@@ -31,6 +32,7 @@ class QToolButton;
 /// KF5
 class KJob;
 class KAbstractWidgetJobTracker;
+class KToolTipWidget;
 
 /// Ours
 #include <utils/TheSimplestThings.h>
@@ -127,6 +129,12 @@ public Q_SLOTS:
      * Also a KJob Q_PROPERTY().
      */
     virtual void percent(KJob *job, unsigned long percent);
+
+    /**
+     * Slot which receives the KJob's speed in bytes/sec.
+     * @param job
+     * @param value  Speed in bytes/second.
+     */
     virtual void speed(KJob *job, unsigned long value);
 
     /// @}
@@ -143,6 +151,13 @@ protected:
     virtual void init(KJob* job, QWidget *parent);
 
     virtual void showTotals();
+
+    virtual void updateMainTooltip();
+
+    /**
+     * Override the widget's event handler to intercept QEvent::ToolTip events.
+     */
+    bool event(QEvent* event) override;
 
     void closeEvent(QCloseEvent* event) override;
 
@@ -196,6 +211,10 @@ protected:
     QToolButton *m_cancel_button {nullptr};
     /// Pause/Resume button.
     QToolButton *m_pause_resume_button {nullptr};
+
+    KToolTipWidget* m_tool_tip_widget {nullptr};
+    QLabel* m_tool_tip_label {nullptr};
+
     /// @}
 };
 

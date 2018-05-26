@@ -466,6 +466,11 @@ protected:
     /// Defaults of these seem to be suitable.
 //    void setError(int errorCode);
 //    void setErrorText(const QString &errorText);
+//    void setProcessedAmount(Unit unit, qulonglong amount);
+//    void setTotalAmount(Unit unit, qulonglong amount);
+//    void setPercent(unsigned long percentage);
+    /// speed is in bytes/sec
+//    void emitSpeed(unsigned long speed);
 
     /// @} /// END Override of KJob protected functions.
 
