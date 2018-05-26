@@ -160,7 +160,10 @@ void Experimental::DoExperiment()
         AMLMJob::dump_job_info(kjob);
         ;});
     connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
-        qDb() << "ENTRIES:" << list;});
+        static long num_entries = 0;
+        num_entries += list.size();
+        qDb() << "ENTRIES:" << num_entries;
+    });
 
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
