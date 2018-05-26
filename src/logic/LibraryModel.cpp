@@ -23,7 +23,7 @@
 #include "LibraryModel.h"
 
 #include "LibraryRescanner.h"
-
+#include "LibraryRescannerMapItem.h"
 #include "LibraryEntryMimeData.h"
 
 #include <QtConcurrent>
@@ -766,8 +766,9 @@ void LibraryModel::onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex
 	}
 
 	// Delete the original LibraryEntry which pointed to the entire album.
-	removeRow(row);
+    removeRow(row);
 }
+
 
 void LibraryModel::createCacheFile(QUrl root_url)
 {
@@ -874,6 +875,61 @@ tttext += "</table>";
 	return tttext;
 }
 
+QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
+{
+    QVector<VecLibRescannerMapItems> items_to_rescan;
+
+    // Get a list of all entries we'll need to do an asynchronous rescan of the library.
+    if(rowCount() > 0)
+    {
+        // At least one row, so we have something to refresh.
+
+        // Collect a snapshot of info to send to the other thread for refreshing.
+
+        VecLibRescannerMapItems multientry;
+        std::shared_ptr<LibraryEntry> last_entry = nullptr;
+
+        for(auto i=0; i<rowCount(); ++i)
+        {
+            auto item = getItem(index(i,0));
+
+            qDebug() << "Item URL:" << i << item->getUrl();
+
+            if(last_entry != nullptr && item->isFromSameFileAs(last_entry.get()))
+            {
+                // It's from the same file as the last entry we looked at.
+                // Queue it up in the current batch.
+                multientry.push_back(LibraryRescannerMapItem({QPersistentModelIndex(index(i, 0)), item}));
+            }
+            else
+            {
+                // It's the first entry or It's from a different file.  Send out the previous rescan item(s) and start a new batch.
+                if(multientry.size() > 0)
+                {
+                    items_to_rescan.append(multientry);
+                    qDebug() << "PUSHING MULTIENTRY, SIZE:" << multientry.size();
+                }
+                multientry.clear();
+                multientry.push_back(LibraryRescannerMapItem({QPersistentModelIndex(index(i, 0)), item}));
+            }
+            last_entry = item;
+        }
+
+        if(multientry.size() > 0)
+        {
+            // It wasn't cleared by the last iteration above, so we have to append it here.
+            items_to_rescan.append(multientry);
+            qDebug() << "PUSHING LAST MULTIENTRY, SIZE:" << multientry.size();
+            multientry.clear();
+        }
+
+//         Tell the scanner what to rescan.
+//        m_rescanner->startAsyncRescan(items_to_rescan);
+    }
+
+    return items_to_rescan;
+}
+
 void LibraryModel::startRescan()
 {
 	// Start an asynchronous rescan of the library.
@@ -897,7 +953,7 @@ void LibraryModel::startRescan()
 			{
 				// It's from the same file as the last entry we looked at.
 				// Queue it up in the current batch.
-				multientry.push_back(LibraryRescannerMapItem({QPersistentModelIndex(index(i, 0)), item}));
+                multientry.push_back(LibraryRescannerMapItem({QPersistentModelIndex(index(i, 0)), item}));
 			}
 			else
 			{
@@ -908,7 +964,7 @@ void LibraryModel::startRescan()
 					qDebug() << "PUSHING MULTIENTRY, SIZE:" << multientry.size();
 				}
 				multientry.clear();
-				multientry.push_back(LibraryRescannerMapItem({QPersistentModelIndex(index(i, 0)), item}));
+                multientry.push_back(LibraryRescannerMapItem({QPersistentModelIndex(index(i, 0)), item}));
 			}
 			last_entry = item;
 		}

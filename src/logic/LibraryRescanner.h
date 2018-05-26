@@ -22,25 +22,31 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_LIBRARYRESCANNER_H
 
-#include <concurrency/ExtAsync.h>
-
+/// Std C++
 #include <memory>
-#include <QtCore/QObject>
-#include <QElapsedTimer>
-#include <QtCore/QPersistentModelIndex>
-#include <QtCore/QFuture>
-#include <QtCore/QFutureWatcher>
 
+/// Qt5
+#include <QObject>
+#include <QElapsedTimer>
+#include <QPersistentModelIndex>
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QVector>
+
+/// Ours
+#include <concurrency/ExtAsync.h>
 #include <concurrency/AsyncTaskManager.h>
+
+#include "LibraryRescannerMapItem.h"
 
 class LibraryModel;
 class LibraryEntry;
 
-struct LibraryRescannerMapItem
-{
-	QPersistentModelIndex pindex {QPersistentModelIndex()};
-	std::shared_ptr<LibraryEntry> item {nullptr};
-};
+//struct LibraryRescannerMapItem_old
+//{
+//	QPersistentModelIndex pindex {QPersistentModelIndex()};
+//	std::shared_ptr<LibraryEntry> item {nullptr};
+//};
 
 struct MetadataReturnVal
 {

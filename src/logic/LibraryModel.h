@@ -28,10 +28,12 @@
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
+#include <QVector>
 
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryEntry.h"
+#include "LibraryRescannerMapItem.h"
 
 class QFileDevice;
 
@@ -39,9 +41,10 @@ class LibraryPopulatorWorker;
 class LibraryRescanner;
 class ActivityProgressWidget;
 
-typedef QVector<QUrl> VecOfUrls;
-typedef QVector<std::shared_ptr<LibraryEntry>> VecOfLEs;
-typedef QVector<QPersistentModelIndex>  VecOfPMIs;
+using VecOfUrls = QVector<QUrl>;
+using VecOfLEs = QVector<std::shared_ptr<LibraryEntry> >;
+using VecOfPMIs = QVector<QPersistentModelIndex>;
+class LibraryRescannerMapItem;
 
 Q_DECLARE_METATYPE(VecOfUrls);
 Q_DECLARE_METATYPE(VecOfLEs);
@@ -172,6 +175,8 @@ public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
 	void onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
 	void onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
+
+    virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
 
 	/// Let's try something different.
 	virtual void startRescan();

@@ -175,6 +175,7 @@ set(HEADER_FILES
 	logic/proxymodels/SelectionFilterProxyModel.h
 	logic/proxymodels/ModelChangeWatcher.h
 	logic/ColumnSpec.h
+	logic/LibraryRescannerMapItem.h
 	logic/proxymodels/QPersistentModelIndexVec.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
@@ -214,6 +215,7 @@ set(SOURCE_FILES
 	logic/proxymodels/SelectionFilterProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
 	logic/ColumnSpec.cpp
+	logic/LibraryRescannerMapItem.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
