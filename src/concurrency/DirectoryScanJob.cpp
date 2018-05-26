@@ -91,11 +91,22 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 M_WARNING("TODO not sure if this is the right place to do this");
     amlm_self->setAutoDelete(false);
-
     qDb() << "IN RUN, KJob isAutoDelete()?:" << amlm_self->isAutoDelete();
 
-
+    // Create the QDirIterator.
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
+
+    // Check for errors.
+    QFileInfo file_info(m_dir_url.toLocalFile());
+    if(!(file_info.exists() && file_info.isReadable() && file_info.isDir()))
+    {
+        qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
+        qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
+        amlm_self->setSuccessFlag(false);
+        amlm_self->setWasCancelled(false);
+        return;
+    }
+
 
     int num_files_found_so_far = 0;
     int num_discovered_dirs = 0;
@@ -111,6 +122,7 @@ M_WARNING("TODO not sure if this is the right place to do this");
 
     setPercent(0);
 
+    // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
         if(amlm_self->twWasCancelRequested())
@@ -128,11 +140,17 @@ M_WARNING("TODO not sure if this is the right place to do this");
 
         // Go to the next entry and return the path to it.
         QString entry_path = m_dir_iterator.next();
+        // Get the QFileInfo for this entry.
         auto file_info = m_dir_iterator.fileInfo();
 
 //            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
-        if(file_info.isDir())
+        // First check that we have a valid file or dir: Currently exists and is readable by current user.
+        if(!(file_info.exists() && file_info.isReadable()))
+        {
+            qWr() << "UNREADABLE FILE:" << file_info.absoluteFilePath();
+        }
+        else if(file_info.isDir())
         {
             QDir dir = file_info.absoluteDir();
             num_discovered_dirs++;
@@ -174,7 +192,7 @@ M_WARNING("TODO not sure if this is the right place to do this");
     if(stopped_due_to_cancel_req)
     {
         // Cancelled.
-        // Is false is correct here.
+        // Success == false is correct here.
         amlm_self->setSuccessFlag(false);
         amlm_self->setWasCancelled(true);
     }
