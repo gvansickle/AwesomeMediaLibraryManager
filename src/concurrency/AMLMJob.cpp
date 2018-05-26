@@ -103,6 +103,21 @@ void AMLMJob::setSuccessFlag(bool success)
     m_success = success;
 }
 
+KJob::Unit AMLMJob::progressUnit() const
+{
+    return d_ptr->progressUnit;
+}
+
+qulonglong AMLMJob::processedSize() const
+{
+    return processedAmount(progressUnit());
+}
+
+qulonglong AMLMJob::totalSize() const
+{
+    return totalAmount(progressUnit());
+}
+
 void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 {
     if(!header.isEmpty())
@@ -237,6 +252,11 @@ bool AMLMJob::doResume()
     /// @todo // KJob::doResume().
     qDb() << "TODO: DORESUME";
     return false;
+}
+
+void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
+{
+    d_ptr->progressUnit = prog_unit;
 }
 
 void AMLMJob::make_connections()

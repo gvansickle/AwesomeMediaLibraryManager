@@ -346,6 +346,10 @@ public:
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 
+    Q_SCRIPTABLE KJob::Unit progressUnit() const;
+    Q_SCRIPTABLE qulonglong processedSize() const;
+    Q_SCRIPTABLE qulonglong totalSize() const;
+
     /// Dump info about the given KJob.
     static void dump_job_info(KJob* kjob, const QString &header = QString());
 
@@ -476,6 +480,11 @@ protected:
 
     /// @name New protected methods
     /// @{
+
+    /// Give derived classes write access to progressUnit.
+    /// Sets the Unit which will be used for percent complete and total/processedSize calculations.
+    /// Defaults to KJob::Unit::Bytes.
+    void setProgressUnit(KJob::Unit prog_unit);
 
     /// Make the internal signal-slot connections.
     virtual void make_connections();
