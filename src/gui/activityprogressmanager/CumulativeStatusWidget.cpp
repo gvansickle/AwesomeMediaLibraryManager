@@ -62,6 +62,14 @@ void CumulativeStatusWidget::make_connections()
 
 void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
 {
+    if(new_num_jobs > 0)
+    {
+        m_current_activity_label->setText(tr("Running"));
+    }
+    else
+    {
+        m_current_activity_label->setText(tr("Idle"));
+    }
     m_text_status_label->setText(tr("%1").arg(new_num_jobs));
 }
 

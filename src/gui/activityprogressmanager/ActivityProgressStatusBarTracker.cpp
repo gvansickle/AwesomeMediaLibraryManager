@@ -275,11 +275,6 @@ void ActivityProgressStatusBarTracker::finished(KJob *kjob)
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
-    if(qobject_cast<KIO::ListJob*>(job) != 0)
-    {
-        qDb() << "WIDGET description:" << job << title;
-    }
-
     /// This follows the basic pattern of KWidgetJobTracker, with a little C++14 help.
     /// All these "tracker->widget ~signal" handlers get the widget ptr (from a map in that case),
     /// check for null, and if not null do the job.
@@ -290,8 +285,6 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
-    qDb() << "WIDGET INFOMESSAGE:" << job << plain << rich;
-
     // Prefer rich if it's given.
     with_widget_or_skip(job, [=](auto w){
         w->infoMessage(job, rich.isEmpty() ? plain : rich);
@@ -352,15 +345,6 @@ void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
 
 void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amount)
 {
-//    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
-//    {
-//        qDb() << "KIO::SimpleJob:" << kjob;
-//    }
-//    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
-//    {
-//        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
-//    }
-
     with_widget_or_skip(kjob, [=](auto w){
         qDb() << "ActivityProgressStatusBarTracker: processedSize:" << kjob << amount;
 
