@@ -91,6 +91,9 @@ Q_SIGNALS:
 
     /// @}
 
+    // For notifying when the number of tracked jobs changes.
+    void number_of_jobs_changed(long long new_num_jobs);
+
 public:
 	/**
      * Constructor.
@@ -384,7 +387,7 @@ protected: // Methods
 
     void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
 
-    void removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget);
+    void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
     void directCallSlotStop(KJob *kjob);
 
     int calculate_summary_percent();

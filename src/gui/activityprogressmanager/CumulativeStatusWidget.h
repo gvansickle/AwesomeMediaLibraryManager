@@ -46,6 +46,9 @@ public Q_SLOTS:
     /// Call this soon after the constructor is called and after init() is called.
     void make_connections() override;
 
+    void slot_number_of_jobs_changed(long long new_num_jobs);
+
+
 private:
 	Q_DISABLE_COPY(CumulativeStatusWidget)
 

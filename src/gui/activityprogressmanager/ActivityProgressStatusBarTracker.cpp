@@ -78,6 +78,9 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     // Connect the cumulative status widget button's signals to slots in this class, they need to apply to all sub-jobs.
     connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
                 this, &ActivityProgressStatusBarTracker::cancelAll);
+
+    connect_or_die(this, &ActivityProgressStatusBarTracker::number_of_jobs_changed,
+                   m_cumulative_status_widget, &CumulativeStatusWidget::slot_number_of_jobs_changed);
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
@@ -134,6 +137,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     // Insert the kjob/widget pair into our master map.
     m_amlmjob_to_widget_map.insert(kjob, wdgt);
+    Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
 
 M_WARNING("TODO");
     m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
@@ -286,10 +290,7 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
 
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
-    if(qobject_cast<KIO::ListJob*>(job) != 0)
-    {
-        qDb() << "WIDGET INFOMESSAGE:" << job << plain << rich;
-    }
+    qDb() << "WIDGET INFOMESSAGE:" << job << plain << rich;
 
     // Prefer rich if it's given.
     with_widget_or_skip(job, [=](auto w){
@@ -310,23 +311,14 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
     // Incoming signal from kjob that setTotalAmount() has been called and d->totalAmount[unit] has
     // been updated.
 
-    /// @note KIO::SimpleJobPrivate hooks into here from "void SimpleJobPrivate::slotTotalSize(KIO::filesize_t size)",
-    /// where it does this:
+    /// @note KIO::SimpleJobPrivate hooks into the totalAmount mechanism from
+    /// "void SimpleJobPrivate::slotTotalSize(KIO::filesize_t size)", where it does this:
     ///    Q_Q(SimpleJob);
     ///    if (size != q->totalAmount(KJob::Bytes)) {
     ///        q->setTotalAmount(KJob::Bytes, size);
     ///    }
     /// Similar for processedSize().
     /// KIO::listJob etc. are documented to use this mechanism for reporting progress.
-
-    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
-    {
-        qDb() << "KIO::SimpleJob:" << kjob;
-    }
-    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
-    {
-        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
-    }
 
     with_widget_or_skip(kjob, [=](auto w){
         w->totalAmount(kjob, unit, amount);
@@ -335,29 +327,14 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
 
 void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
-    if(qobject_cast<KIO::ListJob*>(job) != 0)
-    {
-        qDb() << "WIDGET:" << job << unit << amount;
-    }
-
     with_widget_or_skip(job, [=](auto w)
     {
-        QString tmp;
-
         w->processedAmount(job, unit, amount);
     });
 }
 
 void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
 {
-//    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
-//    {
-//        qDb() << "KIO::SimpleJob:" << kjob;
-//    }
-//    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
-//    {
-//        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
-//    }
     with_widget_or_skip(kjob, [=](auto w){
         qDb() << "ActivityProgressStatusBarTracker: totalSize:" << kjob << amount;
 
@@ -453,13 +430,15 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     connect_or_die(kjob, &KJob::processedSize, this, &ActivityProgressStatusBarTracker::processedSize);
 }
 
-void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget)
+void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget)
 {
-    qDb() << "REMOVING FROM MAP:" << ptr << widget;
-    if(m_amlmjob_to_widget_map[ptr] == widget)
+    qDb() << "REMOVING FROM MAP:" << kjob << widget;
+    if(m_amlmjob_to_widget_map[kjob] == widget)
     {
-        m_amlmjob_to_widget_map.remove(ptr);
+        m_amlmjob_to_widget_map.remove(kjob);
         /// @todo Also to-be-shown queue?
+
+        Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
     }
 }
 

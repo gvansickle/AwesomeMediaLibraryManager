@@ -21,6 +21,7 @@
 
 /// Qt5
 #include <QToolButton>
+#include <QLabel>
 
 /// Ours
 #include "utils/TheSimplestThings.h"
@@ -41,10 +42,6 @@ CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatus
 
 M_WARNING("TODO: This should depend on contained jobs count/state");
     m_cancel_button->setEnabled(true);
-//    connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
-//                    qDb() << "CANCEL BUTTON CLICKED FROM CumulativeStatusWidget";
-//                    Q_EMIT cancel_job(nullptr);
-//                });
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &CumulativeStatusWidget::show_hide_subjob_display);
 }
@@ -60,6 +57,11 @@ void CumulativeStatusWidget::make_connections()
     connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
                     qDb() << "CANCEL BUTTON CLICKED FROM CumulativeStatusWidget";
                     Q_EMIT cancel_job(nullptr);
-                });
+    });
+}
+
+void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
+{
+    m_text_status_label->setText(tr("%1").arg(new_num_jobs));
 }
 
