@@ -365,7 +365,7 @@ public:
 			std::move(func)();
 
 			// This is Qt5 for .get().  Qt's futures always contain a QList of T's, not just a single result.
-#warning "TODO: should return .results()"
+/// @todo "TODO: should return .results()"
 			return thiz.get();
 //			return thiz;
 			});

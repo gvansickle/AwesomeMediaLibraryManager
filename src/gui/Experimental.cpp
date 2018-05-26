@@ -165,6 +165,12 @@ void Experimental::DoExperiment()
         qDb() << "ENTRIES:" << num_entries;
     });
 
+    /// And one last KF5 KIO job.
+    /// "emits the data through the data() signal."
+    QUrl web_src_url(QStringLiteral("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso?_ga=2.204957456.1400403342.1527338037-878124677.1491681087"));
+//    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));
+    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload, KIO::HideProgressInfo);
+
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
     master_job_tracker->registerJob(dirsizejob);
@@ -178,6 +184,8 @@ void Experimental::DoExperiment()
     master_job_tracker->setStopOnClose(dsj2, false);
 
     master_job_tracker->registerJob(kio_list_kiojob);
+
+    master_job_tracker->registerJob(inet_get_job);
 
     // Shows prog and other signals hooked up to the tracker.
     dump_qobject(kio_list_kiojob);
