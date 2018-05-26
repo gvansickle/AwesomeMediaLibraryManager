@@ -182,7 +182,7 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
 
     // The tooltip widget, and the widget within the widget.
     m_tool_tip_widget = new KToolTipWidget(this);
-    m_tool_tip_label = new QLabel(this);
+    m_tool_tip_label = new QLabel(m_tool_tip_widget);
     m_tool_tip_label->setBackgroundRole(QPalette::ToolTipBase);
     m_tool_tip_label->setForegroundRole(QPalette::ToolTipText);
 
@@ -279,6 +279,7 @@ void BaseActivityProgressStatusBarWidget::updateMainTooltip()
             + tr("Speed: %1<br/>").arg("N/A")
                ;
 
+//    m_tool_tip_label->setText(tooltip_text);
     m_tool_tip_label->setText(tooltip_text);
 
 //    QToolTip::showText(pos, tooltip, this, QRect());
