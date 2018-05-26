@@ -402,13 +402,9 @@ void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amou
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
     Q_CHECK_PTR(job);
-    if(qobject_cast<KIO::ListJob*>(job) != 0)
-    {
-        qDb() << "WIDGET:" << job;
-    }
 
     with_widget_or_skip(job, [=](auto w){
-        qDb() << "ActivityProgressStatusBarTracker: percent" << job << percent;
+        qDb() << "percent" << job << percent;
 
         w->percent(job, percent);
 

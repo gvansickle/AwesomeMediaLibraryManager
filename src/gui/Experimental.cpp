@@ -118,7 +118,8 @@ void Experimental::DoExperiment()
     Q_CHECK_PTR(master_job_tracker);
 
     // Set the global KIO job tracker.
-    KIO::setJobTracker(master_job_tracker);
+    // If we do this, the jobs will add themselves to the given tracker if they don't have HideProgressInfo set.
+//    KIO::setJobTracker(master_job_tracker);
 
     ThreadWeaver::setDebugLevel(true, 10);
 
@@ -153,14 +154,13 @@ void Experimental::DoExperiment()
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
     /// Another KF5 KIO Job.
-    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, KIO::DefaultFlags /*KIO::HideProgressInfo*/, /*includeHidden=*/false);
-    connect_or_die(kio_list_kiojob, &KJob::result, this, [](KJob* kjob){
+    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
+    connect_or_die(kio_list_kiojob, &KJob::result, this, [=](KJob* kjob){
         qIn() << "KIO::ListJob emitted result" << kjob;
         AMLMJob::dump_job_info(kjob);
         ;});
-
-    qDb() << M_NAME_VAL(dsj->capabilities());
-    qDb() << M_NAME_VAL(dsj2->capabilities());
+    connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
+        qDb() << "ENTRIES:" << list;});
 
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 

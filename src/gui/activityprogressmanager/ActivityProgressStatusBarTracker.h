@@ -330,7 +330,7 @@ protected Q_SLOTS:
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
 
     /**
-     * Slot
+     * Slots for "Size" progress.
      */
     virtual void totalSize(KJob *kjob, qulonglong amount);
 
