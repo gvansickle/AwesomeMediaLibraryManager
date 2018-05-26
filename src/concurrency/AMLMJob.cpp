@@ -236,6 +236,10 @@ bool AMLMJob::doKill()
     onKJobDoKill();
 
     /// @todo Need to wait for the final kill here?
+    /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
+    /// - finished is emitted
+    /// - result is optionally emitted
+    /// - deleteLater() is optionally called on the job.
 
     return true;
 }

@@ -201,7 +201,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
     connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
-        qDb() << "FOUND:" << the_url;
+        // Found a file matching the criteria.  Send it to the model.
+//        qDb() << "FOUND:" << the_url;
         runInObjectEventLoop([=](){
             m_current_libmodel->onIncomingFilename(the_url.toString());}, m_current_libmodel);
         ;});
@@ -220,7 +221,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         {
             // Succeeded.
             qIn() << "DIRTRAV SUCCEEDED";
-            /// @todo These are copies, need refs.
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 

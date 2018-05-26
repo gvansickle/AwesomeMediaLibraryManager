@@ -353,6 +353,17 @@ public:
     /// Dump info about the given KJob.
     static void dump_job_info(KJob* kjob, const QString &header = QString());
 
+public:
+
+    /// @name Callback interface.
+    /// @{
+
+    /// @todo
+
+    /// @}
+
+
+
 public Q_SLOTS:
 
     /// @name KJob job control slots
