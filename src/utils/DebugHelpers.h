@@ -98,7 +98,7 @@ class SignalHook : public QObject
     Q_OBJECT
 
 public:
-    SignalHook(QObject* parent = nullptr) : QObject(parent) {}
+    SignalHook(QObject* parent = nullptr) : QObject(parent) { hook_all_signals(this); }
 
     void hook_all_signals(QObject* object)
     {
@@ -117,10 +117,29 @@ public:
         }
     }
 
+protected:
+    void connectNotify(const QMetaMethod &signal) override
+    {
+        qDb() << "Signal connected:" << signal.access() << signal.methodSignature();
+    }
+
+    void disconnectNotify(const QMetaMethod &signal) override
+    {
+        qDb() << "Signal disconnected:" << signal.access() << signal.methodSignature();
+    }
+
 public Q_SLOTS:
-	void signalFired()
+    void signalFired()
 	{
-		qDb() << "SIGNAL FIRED FROM OBJECT:" << m_object;
+        // Determine as many details about the sent signal as we can.
+        QObject* sender = this;
+        const QMetaObject* sender_metaobject = sender->metaObject();
+        int sender_signal_index = senderSignalIndex();
+
+        QMetaMethod sender_method = sender_metaobject->method(sender_signal_index);
+
+        QString signal_signature = sender_method.methodSignature();
+        qDb() << "SIGNAL FIRED FROM OBJECT:" << m_object << ", SIGNAL:" << signal_signature;
 	}
 
 private:
