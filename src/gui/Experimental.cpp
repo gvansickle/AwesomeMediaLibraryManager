@@ -114,7 +114,11 @@ void Experimental::DoExperiment()
 //    kmsg_wdgt->animatedShow();
 //    kmsg_wdgt2->animatedShow();
 
+    auto master_job_tracker = MainWindow::master_tracker_instance();
+    Q_CHECK_PTR(master_job_tracker);
 
+    // Set the global KIO job tracker.
+    KIO::setJobTracker(master_job_tracker);
 
     ThreadWeaver::setDebugLevel(true, 10);
 
@@ -125,6 +129,7 @@ void Experimental::DoExperiment()
           << M_NAME_VAL(dirsizejob->detailedErrorStrings())
           << M_NAME_VAL(dirsizejob->capabilities());
     connect(dirsizejob, &KIO::DirectorySizeJob::result, [=](KJob* kjob){
+        qDb() << "GOT RESULT";
         if(kjob->error())
         {
             kjob->uiDelegate()->showErrorMessage();
@@ -134,6 +139,7 @@ void Experimental::DoExperiment()
             const QString &  	title,
             const QPair< QString, QString > &  	field1,
             const QPair< QString, QString > &  	field2){
+        qDb() << "GOT DESCRIPTION";
         qIn() << "Title:" << title;});
 
     /// Two AMLMJobs
@@ -147,15 +153,16 @@ void Experimental::DoExperiment()
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
     /// Another KF5 KIO Job.
-    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
+    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, KIO::DefaultFlags /*KIO::HideProgressInfo*/, /*includeHidden=*/false);
+    connect_or_die(kio_list_kiojob, &KJob::result, this, [](KJob* kjob){
+        qIn() << "KIO::ListJob emitted result" << kjob;
+        AMLMJob::dump_job_info(kjob);
+        ;});
 
     qDb() << M_NAME_VAL(dsj->capabilities());
     qDb() << M_NAME_VAL(dsj2->capabilities());
 
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
-
-    auto master_job_tracker = MainWindow::master_tracker_instance();
-    Q_CHECK_PTR(master_job_tracker);
 
     master_job_tracker->registerJob(dirsizejob);
 

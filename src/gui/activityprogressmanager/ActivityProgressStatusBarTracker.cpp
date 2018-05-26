@@ -53,7 +53,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     /// @todo Should this have its own separate tracker?
     m_cumulative_status_widget = new CumulativeStatusWidget(m_cumulative_status_job, this, parent);
 
-    // Make summary widget connections.
+    // Make cumulative status widget connections.
     m_cumulative_status_widget->make_connections();
 
     /// Register the cumulative job and widget.
@@ -86,7 +86,7 @@ ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 
     qDb() << "ActivityProgressStatusBarTracker DELETED";
 
-    /// @todo NEW, IS THIS CORRECT?
+    /// @todo IS THIS CORRECT, or should we be doing something like deleteLater() here?
     delete m_expanding_frame_widget;
     m_expanding_frame_widget = nullptr;
 }
@@ -96,17 +96,19 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     QMutexLocker locker(&m_tsi_mutex);
 
     // Shouldn't ever get here before the widget is constructed (in the constructor).
-    if(job == nullptr || job == m_cumulative_status_job)
+    /// @todo The nullptr is FBO the call in MainWindow::onStartup() only, find a better way.
+    if(is_cumulative_status_job(job) || job == nullptr)
     {
         // The summary widget.
-        M_WARNIF((m_cumulative_status_widget == nullptr));
+//        M_WARNIF((m_cumulative_status_widget == nullptr));
+        Q_CHECK_PTR(m_cumulative_status_widget);
         return m_cumulative_status_widget;
     }
     else
     {
         // A specific KJob's widget.  Should have been created when the KJob was registered.
         auto kjob_widget = m_amlmjob_to_widget_map.value(job, nullptr);
-        M_WARNIF((kjob_widget == nullptr));
+//        M_WARNIF((kjob_widget == nullptr));
         Q_CHECK_PTR(kjob_widget);
         return kjob_widget;
     }
@@ -128,7 +130,6 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     // Make connections.
     wdgt->make_connections();
     wdgt->m_is_job_registered = true;
-    /// @todo Doesn't seem to matter crash-wise.
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
 
     // Insert the kjob/widget pair into our master map.
@@ -159,6 +160,9 @@ M_WARNING("TODO");
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(unregisterJob(KJob*)));
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
     BASE_CLASS::registerJob(kjob);
+
+    qDb() << "REGISTERED JOB:" << kjob;
+    dump_qobject(kjob);
 
     // KWidgetJobTracker does almost the following.
     // It does not pass the job ptr though.
@@ -251,18 +255,18 @@ void ActivityProgressStatusBarTracker::cancelAll()
 }
 
 
-void ActivityProgressStatusBarTracker::finished(KJob *job)
+void ActivityProgressStatusBarTracker::finished(KJob *kjob)
 {
     // KJobTrackerInterface::finished(KJob *job) does nothing.
-    qWr() << "FINISHED KJob:" << job;
-    with_widget_or_skip(job, [=](auto w){
-        qWr() << "FINISHED JOB:" << job << "WITH WIDGET:" << w;
+    qWr() << "FINISHED KJob:" << kjob;
+    with_widget_or_skip(kjob, [=](auto w){
+        qWr() << "FINISHED JOB:" << kjob << "WITH WIDGET:" << w;
     });
 
     Q_CHECK_PTR(this);
-    Q_CHECK_PTR(job);
+    Q_CHECK_PTR(kjob);
 
-    AMLMJob::dump_job_info(job);
+    AMLMJob::dump_job_info(kjob);
 }
 
 void ActivityProgressStatusBarTracker::description(KJob *job, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
@@ -276,7 +280,7 @@ void ActivityProgressStatusBarTracker::description(KJob *job, const QString &tit
     /// All these "tracker->widget ~signal" handlers get the widget ptr (from a map in that case),
     /// check for null, and if not null do the job.
     with_widget_or_skip(job, [=](auto w){
-        w->description(title, field1, field2);
+        w->description(job, title, field1, field2);
     });
 }
 
@@ -289,14 +293,14 @@ void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &pla
 
     // Prefer rich if it's given.
     with_widget_or_skip(job, [=](auto w){
-        w->infoMessage(rich.isEmpty() ? plain : rich);
+        w->infoMessage(job, rich.isEmpty() ? plain : rich);
         ;});
 }
 
 void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
 {
     with_widget_or_skip(job, [=](auto w){
-        w->warning(rich.isEmpty() ? plain : rich);
+        w->warning(job, rich.isEmpty() ? plain : rich);
     });
 
 }
@@ -306,13 +310,22 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
     // Incoming signal from kjob that setTotalAmount() has been called and d->totalAmount[unit] has
     // been updated.
 
-    /// @todo Not clear what we really need to do in here.  I guess notify the widget.
-    /// KWidgetJobTracker::Private::ProgressWidget does a bunch of data tracking in this slot,
-    /// but we're not the widget (where it seems like it down't belong anyway).
+    /// @note KIO::SimpleJobPrivate hooks into here from "void SimpleJobPrivate::slotTotalSize(KIO::filesize_t size)",
+    /// where it does this:
+    ///    Q_Q(SimpleJob);
+    ///    if (size != q->totalAmount(KJob::Bytes)) {
+    ///        q->setTotalAmount(KJob::Bytes, size);
+    ///    }
+    /// Similar for processedSize().
+    /// KIO::listJob etc. are documented to use this mechanism for reporting progress.
 
-    if(qobject_cast<KIO::ListJob*>(kjob) != 0)
+    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
     {
-        qDb() << "WIDGET:" << kjob;
+        qDb() << "KIO::SimpleJob:" << kjob;
+    }
+    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
+    {
+        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
     }
 
     with_widget_or_skip(kjob, [=](auto w){
@@ -335,8 +348,33 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
     });
 }
 
+void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
+{
+    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
+    {
+        qDb() << "KIO::SimpleJob:" << kjob;
+    }
+    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
+    {
+        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
+    }
+}
+
+void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amount)
+{
+    if(qobject_cast<KIO::SimpleJob*>(kjob) != nullptr)
+    {
+        qDb() << "KIO::SimpleJob:" << kjob;
+    }
+    if(dynamic_cast<KIO::SimpleJob*>(kjob) != nullptr)
+    {
+        qDb() << "DYNAMIC CAST TO KIO::SimpleJob:" << kjob;
+    }
+}
+
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
+    Q_CHECK_PTR(job);
     if(qobject_cast<KIO::ListJob*>(job) != 0)
     {
         qDb() << "WIDGET:" << job;
@@ -378,6 +416,7 @@ bool ActivityProgressStatusBarTracker::is_cumulative_status_job(KJob *kjob)
     {
         return true;
     }
+    return false;
 }
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
@@ -386,6 +425,9 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
             this, &ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap);
+
+    connect_or_die(kjob, &KJob::totalSize, this, &ActivityProgressStatusBarTracker::totalSize);
+    connect_or_die(kjob, &KJob::processedSize, this, &ActivityProgressStatusBarTracker::processedSize);
 }
 
 void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* ptr, QWidget *widget)

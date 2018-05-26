@@ -103,8 +103,12 @@ void AMLMJob::setSuccessFlag(bool success)
     m_success = success;
 }
 
-void AMLMJob::dump_job_info(KJob* kjob)
+void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 {
+    if(!header.isEmpty())
+    {
+        qIn() << header;
+    }
     qIn() << "INFO FOR AMLMJob:" << kjob;
     qIn() << "Progress info:";
     qIn() << "  Caps:" << kjob->capabilities();
@@ -115,11 +119,21 @@ void AMLMJob::dump_job_info(KJob* kjob)
         qIn() << "  totalAmount:" << kjob->totalAmount(unit);
     }
     qIn() << "State info:";
-    qIn() << M_NAME_VAL(kjob->isSuspended());
-    qIn() << M_NAME_VAL(kjob->isAutoDelete());
-    qIn() << M_NAME_VAL(kjob->error());
-    qIn() << M_NAME_VAL(kjob->errorText());
-    qIn() << M_NAME_VAL(kjob->errorString());
+    qIn() << " " << M_NAME_VAL(kjob->isSuspended());
+    qIn() << " " << M_NAME_VAL(kjob->isAutoDelete());
+    qIn() << " " << M_NAME_VAL(kjob->error());
+    if(kjob->error() != 0)
+    {
+        // Per KF5 docs (https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#ae0ac2567b61681f4811d128825fbcd0b),
+        // "[errorString() and errorText()] Only call if error is not 0.".
+        qIn() << " " << M_NAME_VAL(kjob->errorText());
+        qIn() << " " << M_NAME_VAL(kjob->errorString());
+    }
+    else
+    {
+        qIn() << "  kjob->errorText(): N/A (error()==0)";
+        qIn() << "  kjob->errorString(): N/A (error()==0)";
+    }
 }
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
@@ -144,8 +158,6 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
     // Make connections which we need the "real" self for.
     connections_make_defaultBegin(self, thread);
-
-//    qDb() << "autoDelete()?:" << self->autoDelete();
 
     qDb() << "EMITTING TW STARTED on TW::JobPointer:" << self;
     Q_EMIT started(self);
@@ -344,9 +356,9 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
             setError(KJob::UserDefinedError);
             setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
         }
-        // KF5: Regardless of success or fail, call emitResult().
-        emitResult();
     }
+    // KF5: Regardless of success or fail, call emitResult().
+    emitResult();
 }
 
 void AMLMJob::onKJobDoKill()
@@ -356,23 +368,23 @@ void AMLMJob::onKJobDoKill()
     qDb() << "EXIT onKJobDoKill";
 }
 
-void AMLMJob::onKJobResult(KJob *job)
+void AMLMJob::onKJobResult(KJob *kjob)
 {
-    Q_CHECK_PTR(job);
+    Q_CHECK_PTR(kjob);
 
     /// Called when the KJob is finished.
-    qDb() << "KJOB RESULT" << job;
+    qDb() << "KJOB RESULT" << kjob;
 
-    if(job->error())
+    if(kjob->error())
     {
         // There was an error.
-        qWr() << "ERROR:" << job->error();
+        qWr() << "ERROR:" << kjob->error();
     }
 }
 
-void AMLMJob::onKJobFinished(KJob *job)
+void AMLMJob::onKJobFinished(KJob *kjob)
 {
-    Q_CHECK_PTR(job);
-    qDb() << "KJOB FINISHED" << job;
+    Q_CHECK_PTR(kjob);
+    qDb() << "KJOB FINISHED" << kjob;
 }
 

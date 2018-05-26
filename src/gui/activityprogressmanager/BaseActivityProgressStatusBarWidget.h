@@ -89,14 +89,14 @@ public Q_SLOTS:
 
     /// @}
 
-    /// @name Public slots analogous to the private versions of KAbstractWidgetJobTracker.
+    /// @name Public slots analogous to the private versions of KAbstractWidgetJobTracker/KJobTrackerInterface.
     /// @{
 
-    virtual void description(const QString& title,
-                        const QPair<QString, QString> &field1,
-                        const QPair<QString, QString> &field2);
-    virtual void infoMessage(const QString &text);
-    virtual void warning(const QString &text);
+    virtual void description(KJob* kjob, const QString& title,
+                             const QPair<QString, QString> &field1 = {QString(), QString()},
+                        const QPair<QString, QString> &field2 = {QString(), QString()});
+    virtual void infoMessage(KJob* kjob, const QString &text);
+    virtual void warning(KJob* kjob, const QString &text);
 
     /// @name Status/progress update slots.
     /// Should be connected to the analogous signals or called from the analogous slots
@@ -151,8 +151,6 @@ protected Q_SLOTS:
 
     /// Invoke this to pause or resume the job.
     void pause_resume(bool);
-
-
 
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)

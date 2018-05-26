@@ -141,17 +141,20 @@ public Q_SLOTS:
      * KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
      *   KJobTrackerInterface::registerJob(KJob *job) does nothing but connect
      *   many of the KJob signals to slots of this:
+     *
      * "The default implementation connects the following KJob signals
      * to the respective protected slots of this class:
      *  - finished() (also connected to the unregisterJob() slot)
      *  - suspended()
      *  - resumed()
-     *  - description()
-     *  - infoMessage()
+     *  - description() (all params)
+     *  - infoMessage() (all params)
+     *  - warning()     (all params)
      *  - totalAmount()
      *  - processedAmount()
      *  - percent()
      *  - speed()"
+     *
      * Other than unregisterJob(), these default slots do nothing in KJobTrackerInterface, and are not overridden
      * in KAbstractWidgetJobTracker.
      *
@@ -160,6 +163,18 @@ public Q_SLOTS:
      * QObject::connect(job, SIGNAL(processedAmount(KJob*,KJob::Unit,qulonglong)),
      *               this, SLOT(processedAmount(KJob*,KJob::Unit,qulonglong)));
      * @endcode
+     *
+     * When we get into KIO Jobs, they start to use KJob signals and slots which aren't automatically connected by the tracker
+     * for some reason:
+     *  // Emitted when we know the size of this job (data size in bytes for transfers,
+     *  // number of entries for listings, etc).  Private signal, emitted by calling setTotalAmount().
+     *  - totalSize(KJob*, alonglong size)
+     *  // Regularly emitted to show the progress of this job
+     *  // (current data size in bytes for transfers, entries listed, etc.).
+     *  // Private signal, emit by calling setProcessedAmount().
+     *  - processedSize(KJob *job, qulonglong size)
+     *
+     *  While the "size" value is stored in KJob, there's no accessors to it other than these signals.
      */
     void registerJob(KJob *kjob) override;
 
@@ -313,6 +328,14 @@ protected Q_SLOTS:
      * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
+
+    /**
+     * Slot
+     */
+    virtual void totalSize(KJob *kjob, qulonglong amount);
+
+    virtual void processedSize(KJob* kjob, qulonglong amount);
+
     /**
      * Directly supported by KJob::percent() (var in KJobPrivate).
      * Also a KJob Q_PROPERTY().
@@ -337,6 +360,7 @@ protected: // Methods
     template <typename JobPointerType, typename Lambda>
     void with_widget_or_skip(JobPointerType job, Lambda l)
     {
+        Q_CHECK_PTR(job);
         // Check if the caller wanted the cumulative widget.
         /// @todo Maybe put this in the regular map, and just be careful not to delete it on e.g. clearAll().
         if(job == m_cumulative_status_job)

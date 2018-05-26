@@ -47,7 +47,6 @@ M_WARNING("TODO: This should depend on contained jobs count/state");
 //                });
 
     connect(button_show_all_jobs, &QToolButton::toggled, this, &CumulativeStatusWidget::show_hide_subjob_display);
-//    make_connections();
 }
 
 CumulativeStatusWidget::~CumulativeStatusWidget()

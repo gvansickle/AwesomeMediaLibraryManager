@@ -318,7 +318,10 @@ public:
     /// @{
 
     /**
-     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously)."
+     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
+     *  asynchronously)."
+     *
+     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
      */
     Q_SCRIPTABLE void start() override;
 
@@ -344,7 +347,7 @@ public:
     /// @}
 
     /// Dump info about the given KJob.
-    static void dump_job_info(KJob* kjob);
+    static void dump_job_info(KJob* kjob, const QString &header = QString());
 
 public Q_SLOTS:
 
@@ -496,11 +499,11 @@ protected Q_SLOTS:
     void onKJobDoKill();
 
     /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
-    /// Only supposed to call KJob::error() from this slot.
-    void onKJobResult(KJob* job);
+    /// @note KJob::error() should only be called from this slot, per KF5 docs/comments.
+    void onKJobResult(KJob* kjob);
 
     /// Always invoked by the KJob::finished signal regardless of reason.
-    void onKJobFinished(KJob* job);
+    void onKJobFinished(KJob* kjob);
 
     /// @}
 

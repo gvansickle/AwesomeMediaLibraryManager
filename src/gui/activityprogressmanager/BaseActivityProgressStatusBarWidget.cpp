@@ -57,7 +57,7 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
 BaseActivityProgressStatusBarWidget::~BaseActivityProgressStatusBarWidget()
 {
     /// @todo KWidgetJobTracker::Private::ProgressWidget deletes "tracker->d->eventLoopLocker" in here.
-    qDb() << "BaseActivityProgressStatusBarWidget DELETED";
+    qDb() << "BaseActivityProgressStatusBarWidget DESTRUCTOR:" << this;
 }
 
 void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
@@ -66,20 +66,21 @@ void BaseActivityProgressStatusBarWidget::addButton(QToolButton *new_button)
     layout()->addWidget(new_button);
 }
 
-void BaseActivityProgressStatusBarWidget::description(const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
+void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2)
 {
+    qDb() << "GOT DESCRIPTION FROM KJOB:" << kjob << "TITLE:" << title;
     /// @todo Don't really have anywhere to put fields.
     Q_UNUSED(field1);
     Q_UNUSED(field2);
     m_current_activity_label->setText(title);
 }
 
-void BaseActivityProgressStatusBarWidget::infoMessage(const QString &text)
+void BaseActivityProgressStatusBarWidget::infoMessage(KJob* kjob, const QString &text)
 {
     m_text_status_label->setText(text);
 }
 
-void BaseActivityProgressStatusBarWidget::warning(const QString &text)
+void BaseActivityProgressStatusBarWidget::warning(KJob *kjob, const QString &text)
 {
 M_WARNING("TODO");
 qWr() << "WARNING:" << text;
@@ -195,6 +196,8 @@ void BaseActivityProgressStatusBarWidget::make_connections()
         /// the job would respond to the stop() by stopping all child jobs.
         /// But we don't, so this function is overridden in the CumulativeStatusWidget class.
         connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
+        // Description.
+        connect_or_die(m_kjob, &KJob::description, this, &BaseActivityProgressStatusBarWidget::description);
     }
 
 #if 0
@@ -355,14 +358,14 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
     /// And/or totalFiles and totalDirs?
     auto kjob_total_amount_in_current_units = kjob->totalAmount(unit);
 
-    if(kjob_total_amount_in_current_units == amount)
-    {
-        qWr() << "NO CHANGE IN TOTAL AMOUNT:" << unit << amount;
-    }
-    else
-    {
-        qIn() << "CHANGE IN TOTAL AMOUNT:" << unit << kjob_total_amount_in_current_units << "to:" << amount;
-    }
+//    if(kjob_total_amount_in_current_units == amount)
+//    {
+//        qWr() << "NO CHANGE IN TOTAL AMOUNT:" << unit << amount;
+//    }
+//    else
+//    {
+//        qIn() << "CHANGE IN TOTAL AMOUNT:" << unit << kjob_total_amount_in_current_units << "to:" << amount;
+//    }
 
     switch (unit)
     {
@@ -579,5 +582,5 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 {
     Q_CHECK_PTR(kjob);
 
-    qDb() << kjob << value;
+    qDb() << "SPEED:" << kjob << value;
 }
