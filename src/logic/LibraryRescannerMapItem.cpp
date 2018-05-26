@@ -19,14 +19,3 @@
 
 #include "LibraryRescannerMapItem.h"
 
-LibraryRescannerMapItem::LibraryRescannerMapItem()
-{
-	// TODO Auto-generated constructor stub
-
-}
-
-LibraryRescannerMapItem::~LibraryRescannerMapItem()
-{
-	// TODO Auto-generated destructor stub
-}
-

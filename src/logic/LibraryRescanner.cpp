@@ -226,7 +226,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
             // Directory traversal complete, start rescan.
             /// @note This is a slot.
-            onDirTravFinished();
+//            onDirTravFinished();
+            auto rescan_items = m_current_libmodel->getLibRescanItems();
+
+            startAsyncRescan(rescan_items);
         }
     });
 
