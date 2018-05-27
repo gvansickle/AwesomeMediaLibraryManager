@@ -55,9 +55,11 @@ public:
     explicit LibraryRescannerJob(QObject* parent);
 	~LibraryRescannerJob() override;
 
-    LibraryRescannerJobPtr setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, LibraryModel* current_libmodel);
 
 public Q_SLOTS:
+
+    void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, LibraryModel* current_libmodel);
+
     void processReadyResults(MetadataReturnVal lritem_vec);
 
 

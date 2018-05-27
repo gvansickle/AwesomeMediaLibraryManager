@@ -24,21 +24,33 @@
 #include <memory>
 
 /// Qt5
+#include <QDebug>
 #include <QPersistentModelIndex>
 #include <QVector>
 
-class LibraryEntry;
+/// Ours
+#include "LibraryEntry.h"
 
 /**
  *
  */
 struct LibraryRescannerMapItem
 {
+private:
+    Q_GADGET
+
+public:
 	QPersistentModelIndex pindex {QPersistentModelIndex()};
 	std::shared_ptr<LibraryEntry> item {nullptr};
 };
 
+//inline static QDebug operator<<(QDebug dbg, const LibraryRescannerMapItem &item)
+//{
+//    return dbg << QStringLiteral("LibraryRescannerMapItem(") << item.pindex << "," << item.item << ")";
+//}
+
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;
 
+Q_DECLARE_METATYPE(LibraryRescannerMapItem)
 
 #endif /* SRC_LOGIC_LIBRARYRESCANNERMAPITEM_H_ */

@@ -211,8 +211,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     else
     {
         qDb() << objectName() << "Succeeded";
-        // Only call this on success.
-        /*KJob*/ emitResult();
+        // @note No explicit succeeded signal.  Success is done() signal plus success() == true.
     }
     qDb() << objectName() << "EMITTING DONE";
     Q_EMIT /*TW::QObjectDecorator*/ done(self);
@@ -299,7 +298,9 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
     qDb() << "ENTER connections_make_defaultBegin";
     Q_CHECK_PTR(self);
 
-    /// @name TW::QObjectDecorator-like connections.
+    /// @name Make connections to the TW::QObjectDecorator-like connections.
+    /// These are the only started/ended connections between the "wrapped" ThreadWeaver::Job and
+    /// the KJob.
     /// @{
 
     // void started(ThreadWeaver::JobPointer);
@@ -344,6 +345,7 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // If the TW::Job failed, there's a failed() signal in flight as well.
 
     // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
+    // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
     // We'll similarly deal with the fail case in onTWFailed().
     if(/*TW::*/success())
     {
@@ -359,7 +361,7 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
     Q_CHECK_PTR(twjob);
 
     // The TW::Job indicated failure.
-    // There's a done() signal in flight as well.
+    // There's a TW::done() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
     // Convert to a KJob result signal.
 
     // Shouldn't be getting into here with a non-false success.
@@ -380,9 +382,10 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
             setError(KJob::UserDefinedError);
             setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
         }
+        // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
+        // We handle the success case in done/success above, so we handle the fail case here.
+        emitResult();
     }
-    // KF5: Regardless of success or fail, call emitResult().
-    emitResult();
 }
 
 void AMLMJob::onKJobDoKill()

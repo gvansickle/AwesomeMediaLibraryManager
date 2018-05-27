@@ -903,7 +903,7 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
             }
             else
             {
-                // It's the first entry or It's from a different file.  Send out the previous rescan item(s) and start a new batch.
+                // It's the first entry or it's from a different file.  Send out the previous rescan item(s) and start a new batch.
                 if(multientry.size() > 0)
                 {
                     items_to_rescan.append(multientry);
@@ -927,6 +927,7 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
 //        m_rescanner->startAsyncRescan(items_to_rescan);
     }
 
+    qDb() << "RETURNING ITEMS:" << items_to_rescan.size();
     return items_to_rescan;
 }
 

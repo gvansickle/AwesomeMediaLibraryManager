@@ -25,6 +25,7 @@
 #include <logic/LibraryRescanner.h>
 #include <logic/LibraryEntryMimeData.h>
 #include <concurrency/AMLMJob.h>
+#include <logic/LibraryRescannerMapItem.h>
 
 /**
  * Why do we need this?  According to: https://woboq.com/blog/qmetatype-knows-your-types.html
@@ -65,10 +66,16 @@ void RegisterQtMetatypes()
 	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
 
 	// From #include <logic/LibraryRescanner.h>
+	qRegisterMetaType<MetadataReturnVal>();
 	qRegisterMetaType<QFuture<MetadataReturnVal>>();
+	qRegisterMetaType<VecLibRescannerMapItems>("VecLibRescannerMapItems");
 
 	// #include <logic/LibraryEntryMimeData.h>
 	qRegisterMetaType<LibraryEntryMimeData*>();
 
 	qRegisterMetaType<AMLMJobPtr>();
+
+	qRegisterMetaType<LibraryRescannerMapItem>();
+	qRegisterMetaType<VecLibRescannerMapItems>();
+//	qRegisterMetaTypeStreamOperators<LibraryRescannerMapItem>("LibraryRescannerMapItem");
 }

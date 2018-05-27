@@ -227,12 +227,35 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
+
             // Directory traversal complete, start rescan.
             /// @note This is a slot.
 //            onDirTravFinished();
-            auto rescan_items = m_current_libmodel->getLibRescanItems();
+            QVector<VecLibRescannerMapItems> rescan_items;
 
+            qDb() << "GETTING RESCAN ITEMS";
+
+            return;
+
+            rescan_items = m_current_libmodel->getLibRescanItems();
+//            runInObjectEventLoop([&](){
+//                qDb() << "GETLIBRESCANITEMS";
+//                rescan_items = m_current_libmodel->getLibRescanItems();}, m_current_libmodel);
+
+            qDb() << "rescan_items:" << rescan_items.size();
+            Q_ASSERT(rescan_items.size() > 0);
+//            runInObjectEventLoop([&](){
+//                qDb() << "SETDATATOMAP";
+//                lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel); },
+//            lib_rescan_job);
+//            retval = QMetaObject::invokeMethod(lib_rescan_job, "setDataToMap",
+//                                      Q_ARG(QVector<VecLibRescannerMapItems>, rescan_items),
+//                                                    Q_ARG(LibraryModel*, m_current_libmodel));
+//            Q_ASSERT(retval == true);
             lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
+
+            // Start the metadata scan.
+            qDb() << "STARTING RESCAN";
             lib_rescan_job->start();
 //            startAsyncRescan(rescan_items);
         }
@@ -256,7 +279,7 @@ void LibraryRescanner::cancelAsyncDirectoryTraversal()
 {
 	m_dirtrav_future.cancel();
 }
-
+#if 0
 ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 {
 	qDb() << "START ASYNC";
@@ -368,6 +391,9 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 
 	qDebug() << "LEAVE SyncDirectoryTraversal";
 }
+#endif
+
+#if 0
 
 void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan)
 {
@@ -393,10 +419,10 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 	});
 }
 
+#endif
+
 void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 {
-
-
 	// We got one of ??? things back:
 	// - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
 	// - A single pindex and more than one LibraryEntry*, the result of the first scan after the file was found.
@@ -450,6 +476,7 @@ void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 	}
 }
 
+#if 0
 void LibraryRescanner::onRescanFinished()
 {
     auto elapsed = m_timer.elapsed();
@@ -472,4 +499,4 @@ void LibraryRescanner::onDirTravFinished()
 	m_current_libmodel->startRescan();
 }
 
-
+#endif

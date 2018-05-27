@@ -48,26 +48,46 @@ LibraryRescannerJob::~LibraryRescannerJob()
     qDb() << "LibraryRescannerJob DELETED:" << this << objectName();
 }
 
-LibraryRescannerJobPtr LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
+void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
                                                          LibraryModel* current_libmodel)
 {
     m_items_to_rescan = items_to_rescan;
     m_current_libmodel = current_libmodel;
-
-    return this;
 }
 
 void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
+    qDb() << "ENTER run";
 
     AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
 
-    // Send out progress text.
-    QString progtext = tr("Rereading metadata");
+    setProgressUnit(KJob::Unit::Files);
 
+    // Send out progress text.
+    QString status_text = tr("Rereading metadata");
+    Q_EMIT amlm_self->description(this, status_text);//,
+//                                QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
+//                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+
+    setTotalAmount(KJob::Unit::Files, m_items_to_rescan.size());
+
+    long num_items = 0;
+    for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
+    {
+        qDb() << "Item number:" << num_items;
+        MetadataReturnVal a = this->refresher_callback(*i);
+        this->processReadyResults(a);
+        num_items++;
+
+        setProcessedAmount(KJob::Unit::Files, num_items);
+    }
+
+    qDb() << "METADATA RESCAN COMPLETE";
+    amlm_self->setSuccessFlag(true);
+
+#if 0
     ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(m_items_to_rescan,
                                         std::bind(&LibraryRescannerJob::refresher_callback, this, _1));
-
     future.tap(this, [this](MetadataReturnVal a) {
         // The result is ready tap.
         this->processReadyResults(a);
@@ -83,11 +103,8 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 //        onRescanFinished();
         // Successful completion.
         amlm_self->setSuccessFlag(true);
-    });
-
-    /// @todo REMOVE THIS
-    future.wait();
-    QThread::sleep(1);
+    }).waitForFinished();
+#endif
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)
@@ -186,8 +203,6 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescannerJob::processReadyResults(MetadataReturnVal lritem_vec)
 {
-
-
     // We got one of ??? things back:
     // - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
     // - A single pindex and more than one LibraryEntry*, the result of the first scan after the file was found.

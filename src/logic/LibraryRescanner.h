@@ -90,15 +90,15 @@ public Q_SLOTS:
 	void cancelAsyncDirectoryTraversal();
 
 	/// @todo EXPERIMENTAL
-	ExtFuture<QString> AsyncDirectoryTraversal(QUrl dir_url);
-	void SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl dir_url);
+//	ExtFuture<QString> AsyncDirectoryTraversal(QUrl dir_url);
+//	void SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl dir_url);
 
-	void onDirTravFinished();
+//	void onDirTravFinished();
 
     void processReadyResults(MetadataReturnVal lritem_vec);
 
 	/// Slot called by m_rescan_future_watcher when the rescan is complete.
-	void onRescanFinished();
+//    void onRescanFinished();
 
 protected:
 	/// The map function for rescanning the library to reload metadata from the files.

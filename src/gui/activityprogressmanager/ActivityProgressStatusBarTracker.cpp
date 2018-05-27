@@ -329,8 +329,6 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
 {
     with_widget_or_skip(kjob, [=](auto w){
-        qDb() << "ActivityProgressStatusBarTracker: totalSize:" << kjob << amount;
-
         w->totalSize(kjob, amount);
 
 //        if(kjob != nullptr && kjob != m_cumulative_status_job)
@@ -346,8 +344,6 @@ void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
 void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amount)
 {
     with_widget_or_skip(kjob, [=](auto w){
-        qDb() << "ActivityProgressStatusBarTracker: processedSize:" << kjob << amount;
-
         w->processedSize(kjob, amount);
 
 //        if(kjob != nullptr && kjob != m_cumulative_status_job)
@@ -365,7 +361,6 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
     Q_CHECK_PTR(job);
 
     with_widget_or_skip(job, [=](auto w){
-        qDb() << "percent" << job << percent;
 
         w->percent(job, percent);
 
