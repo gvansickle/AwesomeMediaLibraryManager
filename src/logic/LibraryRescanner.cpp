@@ -47,10 +47,10 @@
 
 #include "logic/LibraryModel.h"
 
-using std::placeholders::_1;
+//using std::placeholders::_1;
 
 
-LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_async_task_manager(this)
+LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 {
 	setObjectName("TheLibraryRescanner");
 

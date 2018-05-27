@@ -172,9 +172,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 MainWindow::~MainWindow()
 {
     // Shouldn't have been destroyed until now.
-    Q_CHECK_PTR(instance()->m_activity_progress_multi_tracker);
-    delete instance()->m_activity_progress_multi_tracker;
-    instance()->m_activity_progress_multi_tracker = nullptr;
+    Q_CHECK_PTR(instance()->m_activity_progress_tracker);
+    delete instance()->m_activity_progress_tracker;
+    instance()->m_activity_progress_tracker = nullptr;
 
     m_instance = nullptr;
 }
@@ -307,8 +307,8 @@ void MainWindow::onStartup()
 M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
     auto sb = statusBar();
     Q_CHECK_PTR(sb);
-    m_activity_progress_multi_tracker = new ActivityProgressStatusBarTracker(sb);
-    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->widget(nullptr));
+    m_activity_progress_tracker = new ActivityProgressStatusBarTracker(sb);
+    statusBar()->addPermanentWidget(m_activity_progress_tracker->widget(nullptr));
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 
@@ -1350,9 +1350,9 @@ ToolBarClass* MainWindow::addToolBar(const QString &win_title, const QString &ob
 ActivityProgressStatusBarTracker *MainWindow::master_tracker_instance()
 {
     // Make sure it's been constructed.
-    Q_ASSERT(instance()->m_activity_progress_multi_tracker != nullptr);
+    Q_ASSERT(instance()->m_activity_progress_tracker != nullptr);
 
-    return instance()->m_activity_progress_multi_tracker;
+    return instance()->m_activity_progress_tracker;
 }
 
 QDockWidget *MainWindow::addDock(const QString &title, const QString &object_name, QWidget *widget, Qt::DockWidgetArea area)

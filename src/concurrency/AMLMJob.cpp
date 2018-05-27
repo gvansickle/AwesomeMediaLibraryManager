@@ -67,6 +67,8 @@ AMLMJob::AMLMJob(QObject *parent)
 
 AMLMJob::~AMLMJob()
 {
+    // KJob destructor checks if KJob->isFinished and emits finished(this) if so.
+    // Doesn't cancel the job.
     qDb() << "AMLMJob DELETED" << this;
 }
 

@@ -71,9 +71,15 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 
     setTotalAmount(KJob::Unit::Files, m_items_to_rescan.size());
 
-    long num_items = 0;
+    qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
     {
+        if(twWasCancelRequested())
+        {
+            // We were told to cancel.
+            break;
+        }
+
         qDb() << "Item number:" << num_items;
         MetadataReturnVal a = this->refresher_callback(*i);
         this->processReadyResults(a);
@@ -82,8 +88,20 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
         setProcessedAmount(KJob::Unit::Files, num_items);
     }
 
-    qDb() << "METADATA RESCAN COMPLETE";
-    amlm_self->setSuccessFlag(true);
+    // We've either completed our work or been cancelled.
+    if(twWasCancelRequested())
+    {
+        // Cancelled.
+        // Success == false is correct here.
+        amlm_self->setSuccessFlag(false);
+        amlm_self->setWasCancelled(true);
+    }
+    else
+    {
+        // Successful completion.
+        qDb() << "METADATA RESCAN COMPLETE";
+        amlm_self->setSuccessFlag(true);
+    }
 
 #if 0
     ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(m_items_to_rescan,

@@ -35,7 +35,7 @@
 
 /// Ours
 #include <concurrency/ExtAsync.h>
-#include <concurrency/AsyncTaskManager.h>
+#include <concurrency/AsyncTaskManager.h> ///< For futureww
 
 #include "LibraryRescannerMapItem.h"
 
@@ -73,9 +73,6 @@ class LibraryRescanner : public QObject
 
 Q_SIGNALS:
 
-	/// Signal for progress changes.
-	void progressChanged(int min, int val, int max, QString text);
-
 public:
 	LibraryRescanner(LibraryModel* parent);
 	~LibraryRescanner() override;
@@ -109,8 +106,6 @@ private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
 	LibraryModel* m_current_libmodel;
-
-	AsyncTaskManager m_async_task_manager;
 
 	ExtFuture<QString> m_dirtrav_future;
 

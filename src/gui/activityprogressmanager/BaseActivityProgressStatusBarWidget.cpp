@@ -314,10 +314,11 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 {
     if(m_is_job_registered && m_tracker->stopOnClose(m_kjob))
     {
-        qDb() << "EMITTING SLOTSTOP";
-        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-                                  Q_ARG(KJob*, m_kjob));
-//        m_tracker->directCallSlotStop(m_job);
+//        qDb() << "EMITTING SLOTSTOP";
+//        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
+//                                  Q_ARG(KJob*, m_kjob));
+        qDb() << "CALLING SLOTSTOP";
+        m_tracker->directCallSlotStop(m_kjob);
     }
 
     BASE_CLASS::closeEvent(event);

@@ -85,7 +85,8 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_libr
 
 LibraryModel::~LibraryModel()
 {
-    delete m_rescanner;
+//    delete m_rescanner;
+    m_rescanner->deleteLater();
 }
 
 QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)

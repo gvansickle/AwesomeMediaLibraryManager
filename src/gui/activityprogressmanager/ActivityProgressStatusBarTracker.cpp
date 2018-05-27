@@ -87,11 +87,12 @@ ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
     // All KWidgetJobTracker does here is delete the private pImpl pointer.
 
-    qDb() << "ActivityProgressStatusBarTracker DELETED";
+    qDb() << "DELETING ALL TRACKED OBJECTS";
+    cancelAll();
 
     /// @todo IS THIS CORRECT, or should we be doing something like deleteLater() here?
-    delete m_expanding_frame_widget;
-    m_expanding_frame_widget = nullptr;
+    m_expanding_frame_widget->deleteLater();
+//    m_expanding_frame_widget = nullptr;
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
@@ -450,6 +451,42 @@ int ActivityProgressStatusBarTracker::calculate_summary_percent()
         retval = static_cast<double>(cumulative_completion_pct)/total_jobs;
     }
 
+    return retval;
+}
+
+void ActivityProgressStatusBarTracker::setStopOnClose(KJob *kjob, bool stopOnClose)
+{
+//if (!progressWidget.contains(job))
+//{
+//        return;
+//}
+//progressWidget[job]->stopOnClose = stopOnClose;
+}
+
+bool ActivityProgressStatusBarTracker::stopOnClose(KJob *job) const
+{
+
+}
+
+void ActivityProgressStatusBarTracker::setAutoDelete(KJob *job, bool autoDelete)
+{
+    qDb() << ":::" << job << autoDelete;
+    with_widget_or_skip(job, [=](auto w) {
+        w->setAttribute(Qt::WA_DeleteOnClose, autoDelete);
+        qDb() << ":::" << job << w->testAttribute(Qt::WA_DeleteOnClose);
+
+    });
+}
+
+bool ActivityProgressStatusBarTracker::autoDelete(KJob *job) const
+{
+    // Follow KWidgetJobTracker::Private's lead here: autoDelete if we can't find the job or widget.
+    bool retval = true;
+    with_widget_or_skip(job, [&](auto w) {
+        retval = w->testAttribute(Qt::WA_DeleteOnClose);
+        qDb() << ":::" << job << retval;
+        });
+    qDb() << ":::" << job << retval;
     return retval;
 }
 
