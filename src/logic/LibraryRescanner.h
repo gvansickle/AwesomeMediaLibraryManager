@@ -42,12 +42,6 @@
 class LibraryModel;
 class LibraryEntry;
 
-//struct LibraryRescannerMapItem_old
-//{
-//	QPersistentModelIndex pindex {QPersistentModelIndex()};
-//	std::shared_ptr<LibraryEntry> item {nullptr};
-//};
-
 struct MetadataReturnVal
 {
 	QVector<QPersistentModelIndex> m_original_pindexes;

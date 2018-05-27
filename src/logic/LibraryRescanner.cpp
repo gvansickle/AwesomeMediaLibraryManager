@@ -42,6 +42,7 @@
 #include <concurrency/AsyncTaskManager.h>
 
 #include <src/concurrency/DirectoryScanJob.h>
+#include "LibraryRescannerJob.h"
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
 #include "logic/LibraryModel.h"
@@ -200,6 +201,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
+    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
+
     connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
         // Found a file matching the criteria.  Send it to the model.
 //        qDb() << "FOUND:" << the_url;
@@ -229,13 +232,18 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //            onDirTravFinished();
             auto rescan_items = m_current_libmodel->getLibRescanItems();
 
-            startAsyncRescan(rescan_items);
+            lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
+            lib_rescan_job->start();
+//            startAsyncRescan(rescan_items);
         }
     });
 
     master_job_tracker->registerJob(dirtrav_job);
     master_job_tracker->setAutoDelete(dirtrav_job, false);
     master_job_tracker->setStopOnClose(dirtrav_job, false);
+    master_job_tracker->registerJob(lib_rescan_job);
+    master_job_tracker->setAutoDelete(lib_rescan_job, false);
+    master_job_tracker->setStopOnClose(lib_rescan_job, false);
 
     dirtrav_job->start();
 

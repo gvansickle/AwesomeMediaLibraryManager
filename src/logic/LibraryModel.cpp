@@ -932,6 +932,7 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
 
 void LibraryModel::startRescan()
 {
+#if 0
 	// Start an asynchronous rescan of the library.
 	if(rowCount() > 0)
 	{
@@ -982,6 +983,7 @@ void LibraryModel::startRescan()
 	}
 
 	// Now we just let it do its thing.  It will call back through the public interface with updated metadata.
+#endif
 }
 
 void LibraryModel::cancelRescan()

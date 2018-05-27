@@ -176,6 +176,7 @@ set(HEADER_FILES
 	logic/proxymodels/ModelChangeWatcher.h
 	logic/ColumnSpec.h
 	logic/LibraryRescannerMapItem.h
+	logic/LibraryRescannerJob.h
 	logic/proxymodels/QPersistentModelIndexVec.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
@@ -216,6 +217,7 @@ set(SOURCE_FILES
 	logic/proxymodels/ModelChangeWatcher.cpp
 	logic/ColumnSpec.cpp
 	logic/LibraryRescannerMapItem.cpp
+	logic/LibraryRescannerJob.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
