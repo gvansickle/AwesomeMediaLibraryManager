@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,13 +17,19 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define HAVE_KF5 1 // @todo
+#include <config.h>
 
-#ifdef HAVE_KF5
+#if HAVE_KF501
 
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
+class KJob;
+namespace KIO
+{
+    class Job;
+}
+class KStatusBarJobTracker;
 class KToolBar;
 using ToolBarClass = KToolBar;
 
@@ -31,7 +37,7 @@ class KToggleAction;
 class KToggleToolBarAction;
 class KActionMenu;
 
-#else // !HAVE_KF5
+#else // !HAVE_KF501
 
 #include <QMainWindow>
 
@@ -50,6 +56,9 @@ using ToolBarClass = QToolBar;
 #include <logic/MP2.h>
 #include "mdi/MDIModelViewPair.h"
 
+#include "concurrency/AMLMJob.h"
+class TWJobWrapper;
+
 class QActionGroup;
 class QWidget;
 class QLabel;
@@ -65,7 +74,12 @@ class MDILibraryView;
 class MDIPlaylistView;
 class MetadataDockWidget;
 class CollectionDockWidget;
+
 class ActivityProgressWidget;
+class ActivityProgressDialog;
+class ActivityProgressManager;
+class ActivityProgressStatusBarTracker;
+
 class ActionBundle;
 class PlayerControls;
 class MDINowPlayingView;
@@ -81,7 +95,7 @@ class LibraryEntryMimeData;
  * Awesome Media Library Manager's MainWindow class.
  *
  * @note I suspect deriving from KXmlGuiWindow instead of KMainWindow, when I'm not using XML for the GUI,
- *       is going to bite me at some point.  But this gives me an actionCollection().  So there's that.
+ *       is going to bite me at some point (EDIT: == continuously).  But this gives me an actionCollection().  So there's that.
  */
 class MainWindow: public KXmlGuiWindow ///KMainWindow
 {
@@ -104,15 +118,17 @@ public:
 	explicit MainWindow(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 	/// Destructor
     ~MainWindow() override;
-	
-	/// Init function to offload all the init which used to be in the constructor.
-	void init();
-	
 
 	/**
 	 * Get a pointer to the MainWindow singleton.
 	 */
-	static MainWindow* getInstance();
+	static QPointer<MainWindow> instance();
+
+	/// Init function to offload all the init which used to be in the constructor.
+	void init();
+
+    /// Init function which is called after setupGUI() has been called.
+    void post_setupGUI_init();
 
 	/**
 	 * Called from the closeEvent() of views just before they accept the event.
@@ -135,7 +151,17 @@ public:
     QDockWidget* addDock(const QString& title, const QString& object_name, QWidget* widget,
                          Qt::DockWidgetArea area = Qt::TopDockWidgetArea);
 
+    ToolBarClass* addToolBar(const QString &win_title, const QString& object_name);
+
+    /**
+     * Get ptr to the ActivityProgressStatusBarTracker singleton.
+     */
+    static ActivityProgressStatusBarTracker* master_tracker_instance();
+
 public Q_SLOTS:
+
+    void onStartup();
+
 
     /// Slot corresponding to the "Open Directory as new Library" action.
     /// This is ~= a "File->Open" action.
@@ -183,7 +209,6 @@ public Q_SLOTS:
 	 * Slot which forwards the param to the QMdiArea.
 	 */
 	void setActiveSubWindow(QMdiSubWindow* window);
-
 
 protected:
 	bool queryClose() override;
@@ -318,7 +343,6 @@ private:
 
     /// Reads the primary settings.
 	void readPreGUISettings();
-    void onStartup();
     void openWindows();
     void writeSettings();
     void writeLibSettings(QSettings& settings);
@@ -450,7 +474,7 @@ private:
     /// @}
 
 	/// @name Help actions.
-#ifndef HAVE_KF5
+#if !HAVE_KF501
 	QAction* m_helpAct;
     QAction* m_whatsThisAct;
     QAction* m_aboutAct;
@@ -476,12 +500,28 @@ private:
 	ToolBarClass* m_controlsToolbar;
 	ToolBarClass* m_filterToolbar;
 
+public:
     /// Docks
 	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
 
+private:
+
+    /// The MainWindow signleton.
+    static QPointer<MainWindow> m_instance;
+
+    QPointer<ActivityProgressManager> m_activity_progress_manager;
+
     /// The Activity Progress Widget.
     ActivityProgressWidget* m_activity_progress_widget;
+
+#if HAVE_KF501
+    /**
+     * Master Tracker for all asynchronous activites.
+     * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
+     */
+    ActivityProgressStatusBarTracker* m_activity_progress_multi_tracker { nullptr };
+#endif
 
     /// The Settings (AKA Preferences, AKA Config) dialog.
     QSharedPointer<SettingsDialog> m_settings_dlg;

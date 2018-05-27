@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
 
 #include "MainWindow.h"
 
@@ -31,6 +32,13 @@
 #include <KAboutData>
 #include <KSharedConfig>
 
+#include <KJob>
+#include <KIO/Job>
+#include <KIO/JobTracker>
+#include <KJobWidgets>
+#include <KStatusBarJobTracker>
+#include <KWidgetJobTracker>
+#include <KIconButton>
 
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -39,6 +47,11 @@
 #include "MDILibraryView.h"
 #include "MDIPlaylistView.h"
 #include "MDINowPlayingView.h"
+
+// Asynchronous activity progress monitoring.
+#include "activityprogressmanager/ActivityProgressManager.h"
+#include "activityprogressmanager/ActivityProgressWidget.h"
+#include "activityprogressmanager/ActivityProgressDialog.h"
 
 // For KF5 KConfig infrastructure.
 #include <AMLMSettings.h>
@@ -58,12 +71,14 @@
 
 #include "utils/ConnectHelpers.h"
 #include "utils/ActionHelpers.h"
+#include "utils/DebugHelpers.h"
 
 #include <QObject>
 
 #include <QApplication>
 #include <QMainWindow>
 #include <QWidget>
+#include <QLayout>
 #include <QLabel>
 #include <QMenuBar>
 #include <QToolBar>
@@ -74,7 +89,6 @@
 #include <QCloseEvent>
 #include <QStandardPaths>
 #include <QDebug>
-#include "utils/DebugHelpers.h"
 #include <QMdiSubWindow>
 #include <QTimer>
 #include <QMessageBox>
@@ -100,13 +114,13 @@
 #include <QMimeData>
 #include "logic/LibraryEntryMimeData.h"
 
-#include "gui/ActivityProgressWidget.h"
 #include "AboutBox.h"
 #include "logic/proxymodels/ModelChangeWatcher.h"
 
 #include <gui/menus/ActionBundle.h>
 #include <gui/menus/HelpMenu.h>
 #include <KXmlGui/KEditToolBar>
+#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
 #include "concurrency/ExtAsync.h"
 
@@ -116,7 +130,12 @@
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags)
+/// Singleton pointer.
+QPointer<MainWindow> MainWindow::m_instance { nullptr };
+
+
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags),
+    m_activity_progress_manager(new ActivityProgressManager(this))
 {
 	// Name our MainWindow.
 	setObjectName("MainWindow");
@@ -124,6 +143,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     // Name our GUI thread.
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
+
+    // Set the signleton pointer.
+    m_instance = this;
+
 
     /// @note Per what Kdenlive is doing.
     /// Call tree there is ~:
@@ -142,13 +165,26 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     ///       create more menus
     ///     ^^->show();
     ///   app.exec()
-	init();
+
+    // Do further init() in a separate function, but which we can still do in the constructor call.
+    init();
 }
 
 MainWindow::~MainWindow()
 {
+    // Shouldn't have been destroyed until now.
+    Q_CHECK_PTR(instance()->m_activity_progress_multi_tracker);
+    delete instance()->m_activity_progress_multi_tracker;
+    instance()->m_activity_progress_multi_tracker = nullptr;
 
+    m_instance = nullptr;
 }
+
+QPointer<MainWindow> MainWindow::instance()
+{
+    return m_instance;
+}
+
 
 void MainWindow::init()
 {
@@ -227,23 +263,65 @@ M_WARNING("TODO: ifdef this to development only")
 	setUnifiedTitleAndToolBarOnMac(true);
 
 	// Send ourself a message to re-load the files we had open last time we were closed.
-	QTimer::singleShot(0, this, &MainWindow::onStartup);
+    QTimer::singleShot(0, this, &MainWindow::onStartup);
 }
 
-MainWindow* MainWindow::getInstance()
+void MainWindow::post_setupGUI_init()
 {
-	// Search the qApp for the single MainWindow instance.
-	for(auto widget : qApp->topLevelWidgets())
-	{
-		if(MainWindow* is_main_window = qobject_cast<MainWindow*>(widget))
-		{
-			// Found it.
-			return is_main_window;
-		}
-	}
+    // KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
+    // "Make sure you call this after all your *bars have been created."
+    /// @note this is done by setupGUI().
+    ///setAutoSaveSettings();
 
-	Q_ASSERT_X(0, "getInstance", "Couldn't find a MainWindow instance");
-	return nullptr;
+    // Post setupGUI(), we can now add the status/tool/dock actions.
+    addViewMenuActions();
+}
+
+/**
+ * Called by a "timer(0)" started in the constructor.
+ * Does some final setup work which should be done once the constructor has finished and the event loop has started.
+ */
+void MainWindow::onStartup()
+{
+    initRootModels();
+
+    // Create the "Now Playing" playlist and view.
+    newNowPlaying();
+
+    // Load any files which were opened at the time the last session was closed.
+    qInfo() << "Loading libraries open at end of last session...";
+    QSettings settings;
+    readLibSettings(settings);
+
+    // Open the windows the user had open at the end of last session.
+    openWindows();
+
+    // KDE
+    // Don't need to do this when using setupGUI(StatusBar).
+//	createStandardStatusBarAction();
+    // Don't need to do this when using setupGUI(ToolBar).
+//	setStandardToolBarMenuEnabled(true);
+
+    // Create the master job tracker singleton.
+    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
+    // parent: "the parent of this object and of the widget displaying the job progresses"
+M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
+    auto sb = statusBar();
+    Q_CHECK_PTR(sb);
+    m_activity_progress_multi_tracker = new ActivityProgressStatusBarTracker(sb);
+    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->widget(nullptr));
+
+M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
+
+    // Set up the GUI from the ui.rc file embedded in the app's QResource system.
+//	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
+    // No Create, we going to try not using the XML file above.
+    // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
+    //   in a context menu and when opening the KEditToolBar dialog.
+    //   Without it, we seem to lose no functionality, but the crashes are gone.
+    setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
+
+    post_setupGUI_init();
 }
 
 /**
@@ -387,7 +465,7 @@ void MainWindow::createActions()
 	connect_trig(m_savePlaylistAct, this, &MainWindow::savePlaylistAs);
 	addAction("save_playlist_as", m_savePlaylistAct);
 
-#ifndef HAVE_KF5
+#if HAVE_KF501
 	m_exitAction = make_action(QIcon::fromTheme("application-exit"), "E&xit", this,
                               QKeySequence::Quit,
                               "Exit application");
@@ -465,6 +543,7 @@ void MainWindow::createActions()
 								   QKeySequence(), "Invoke experimental code - USE AT YOUR OWN RISK");
 	connect_trig(m_experimentalAct, this, &MainWindow::doExperiment);
 
+
 //M_WARNING("TODO: Experimental KDE")
 	// Provides a menu entry that allows showing/hiding the toolbar(s)
 //	setStandardToolBarMenuEnabled(true);
@@ -481,7 +560,7 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
 {
 	// The cut/copy/paste action "sub-bundle".
     m_ab_cut_copy_paste_actions = new ActionBundle(ac);
-#ifndef HAVE_KF5
+#if HAVE_KF501
 	// Specifying the ActionBundle as each QAction's parent automatically adds it to the bundle.
 	m_act_cut = make_action(Theme::iconFromTheme("edit-cut"), tr("Cu&t"), m_ab_cut_copy_paste_actions, QKeySequence::Cut,
                                                     tr("Cut the current selection to the clipboard"));
@@ -532,7 +611,7 @@ void MainWindow::createActionsView(KActionCollection *ac)
 
     m_ab_docks = new ActionBundle(ac);
 
-#ifndef HAVE_KF5
+#if HAVE_KF501
 	m_act_lock_layout = make_action(Theme::iconFromTheme("emblem-locked"), tr("Lock layout"), this); // There's also an "emblem-unlocked"
 	m_act_reset_layout = make_action(Theme::iconFromTheme("view-multiple-objects"), tr("Reset layout"), this);
 #else
@@ -569,7 +648,7 @@ void MainWindow::createActionsTools(KActionCollection *ac)
 
 void MainWindow::createActionsSettings(KActionCollection *ac)
 {
-#if HAVE_KF5
+#if HAVE_KF501
 
 	// Styles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
@@ -600,7 +679,7 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 
 void MainWindow::createActionsHelp(KActionCollection* ac)
 {
-#if HAVE_KF5
+#if HAVE_KF501
 	// For KDE we use a derivation of KHelpMenu.
 #else
 	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), tr("&Help"), this,
@@ -671,11 +750,8 @@ M_WARNING("/// @todo This doesn't work for unknown reasons.");
 
     m_menu_view->addSection(tr("Toolbars2"));
     auto tbs = toolBars();
-    qDb() << "tb:" << tbs;
-
     for(auto tb : tbs)
     {
-        qDb() << "ToolBar:" << tb;
         auto action = tb->toggleViewAction();
         m_menu_view->addAction(action);
     }
@@ -768,7 +844,7 @@ M_WARNING("TODO");
     menuBar()->addSeparator();
 
 	// Create the non-KDE help menu.
-#ifndef HAVE_KF5
+#if !HAVE_KF501
 	m_helpMenu = menuBar()->addMenu("&Help");
 	m_helpMenu->addSection("Help");
 	m_helpMenu->addAction(m_helpAct);
@@ -780,27 +856,19 @@ M_WARNING("TODO");
 	// Create a help menu based on KF5 KHelpMenu.
 	auto help_menu = new HelpMenu(this, KAboutData::applicationData());
 	menuBar()->addMenu(help_menu->menu());
-#endif // HAVE_KF5
+#endif // !HAVE_KF5
 }
 
 
 void MainWindow::createToolBars()
 {
-#ifdef HAVE_KF5
-	#define addToolBar(str) this->toolBar(str)
-#else
-	#define addToolBar(str) addToolBar((str))
-#endif
-
 	//
 	// File
 	//
-	m_fileToolBar = addToolBar(tr("FileToolbar"));
+    m_fileToolBar = addToolBar(tr("File"), "mainToolbar");
 
     Q_ASSERT(m_fileToolBar->parent() == this);
 
-	m_fileToolBar->setObjectName("FileToolbar");
-    m_fileToolBar->setWindowTitle(tr("File"));
 	m_fileToolBar->addActions({m_importLibAct,
 	                           m_rescanLibraryAct,
 							   m_cancelRescanAct,
@@ -819,20 +887,23 @@ void MainWindow::createToolBars()
 	//
 	// Edit
 	//
-	m_toolbar_edit = addToolBar(tr("Edit"));
-	m_toolbar_edit->setObjectName("EditToolbar");
-	// Only add the cut/copy/paste subset of actions to the toolbar.
+    m_toolbar_edit = addToolBar(tr("Edit"), "EditToolbar");
+
+    // Only add the cut/copy/paste subset of actions to the toolbar.
 	m_ab_cut_copy_paste_actions->appendToToolBar(m_toolbar_edit);
 
 	//
 	// Settings
 	//
-	m_settingsToolBar = addToolBar("Settings");
-	m_settingsToolBar->setObjectName("SettingsToolbar");
-	m_settingsToolBar->addAction(m_act_settings);
-	m_settingsToolBar->addAction(m_experimentalAct);
+    m_settingsToolBar = addToolBar(tr("Settings"), "SettingsToolbar");
 
-#ifndef HAVE_KF5
+	m_settingsToolBar->addAction(m_act_settings);
+    m_settingsToolBar->addSeparator();
+	m_settingsToolBar->addAction(m_experimentalAct);
+    /// KF5 button that opens an Icon select dialog.
+    m_settingsToolBar->addWidget(new KIconButton(m_settingsToolBar));
+
+#if HAVE_KF501
     // Create a combo box where the user can change the style.
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());
@@ -850,13 +921,13 @@ void MainWindow::createToolBars()
 #endif
 
     // Create another toolbar for the player controls.
-	m_controlsToolbar = addToolBar("Player Controls");
-	m_controlsToolbar->setObjectName("PlayerControlsToolbar");
-	m_controlsToolbar->addWidget(m_controls);
+    m_controlsToolbar = addToolBar(tr("Player Controls"), "PlayerControlsToolbar");
+
+    m_controlsToolbar->addWidget(m_controls);
 
 	// Create a toolbar for filtering
-	m_filterToolbar = addToolBar("Filter");
-	m_filterToolbar->setObjectName("FilterToolbar");
+    m_filterToolbar = addToolBar(tr("Filter bar"), "FilterToolbar");
+
 	FilterWidget* fw = new FilterWidget;
 	auto filterPatternLabel = new QLabel(tr("&Filter pattern:"));
 	m_filterToolbar->addWidget(filterPatternLabel);
@@ -866,14 +937,25 @@ void MainWindow::createToolBars()
 
 void MainWindow::createStatusBar()
 {
+#ifdef HAVE_KF5
+    // https://api.kde.org/frameworks/kjobwidgets/html/classKStatusBarJobTracker.html
+    // parent: "the parent of this object and of the widget displaying the job progresses"
+//    m_kf5_activity_progress_widget = new KStatusBarJobTracker(this, /*display cancel button*/ true);
+//    KIO::setJobTracker(m_kf5_activity_progress_widget);
+//    m_kf5_activity_progress_widget->setStatusBarMode(KStatusBarJobTracker::LabelOnly);
+//    statusBar()->addPermanentWidget(m_kf5_activity_progress_widget);
+#endif
+
 	m_activity_progress_widget = new ActivityProgressWidget(this);
-	statusBar()->addPermanentWidget(m_activity_progress_widget);
-	statusBar()->showMessage("Ready");
+
+    statusBar()->addPermanentWidget(m_activity_progress_widget);
+
+    statusBar()->showMessage("Ready");
 }
 
 void MainWindow::createDockWidgets()
 {
-#ifdef HAVE_KF5
+#if HAVE_KF501
     auto dock_parent = actionCollection();
 #else
     auto dock_parent = this;
@@ -1261,6 +1343,24 @@ void MainWindow::addAction(const QString& action_name, QAction* action)
     ac->setDefaultShortcut(action, action->shortcut());
 }
 
+ToolBarClass* MainWindow::addToolBar(const QString &win_title, const QString &object_name)
+{
+    // KMainWindow has a toolBar() factory function.  It takes a "name" string, however that is used as
+    // the toolbar's objectName().  Need a windowTitle as well.
+    auto retval = toolBar(object_name);
+    retval->setWindowTitle(win_title);
+
+    return retval;
+}
+
+ActivityProgressStatusBarTracker *MainWindow::master_tracker_instance()
+{
+    // Make sure it's been constructed.
+    Q_ASSERT(instance()->m_activity_progress_multi_tracker != nullptr);
+
+    return instance()->m_activity_progress_multi_tracker;
+}
+
 QDockWidget *MainWindow::addDock(const QString &title, const QString &object_name, QWidget *widget, Qt::DockWidgetArea area)
 {
     auto retval = new QDockWidget(title, this);
@@ -1269,6 +1369,7 @@ QDockWidget *MainWindow::addDock(const QString &title, const QString &object_nam
     addDockWidget(area, retval);
     return retval;
 }
+
 
 //////
 ////// Top-level QSettings save/restore.
@@ -1362,49 +1463,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	qDebug() << "writeLibSettings() end";
 }
 
-/**
- * Called by a "timer(0)" started in the constructor.
- * Does some final setup work which should be done once the constructor has finished and the event loop has started.
- */
-void MainWindow::onStartup()
-{
-	initRootModels();
 
-    // Create the "Now Playing" playlist and view.
-    newNowPlaying();
-
-	// Load any files which were opened at the time the last session was closed.
-	qInfo() << "Loading libraries open at end of last session...";
-	QSettings settings;
-	readLibSettings(settings);
-
-	// Open the windows the user had open at the end of last session.
-	openWindows();
-
-	// KDE
-    // Don't need to do this when using setupGUI(StatusBar).
-//	createStandardStatusBarAction();
-    // Don't need to do this when using setupGUI(ToolBar).
-//	setStandardToolBarMenuEnabled(true);
-
-M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
-
-	// Set up the GUI from the ui.rc file embedded in the app's QResource system.
-//	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
-    // No Create, we going to try not using the XML file above.
-    // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
-    //   in a context menu and when opening the KEditToolBar dialog.
-    //   Without it, we seem to lose no functionality, but the crashes are gone.
-    setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
-
-	// KF5: Activate Autosave of toolbar/menubar/statusbar/window layout settings.
-	// "Make sure you call this after all your *bars have been created."
-	/// @note this is done by setupGUI().
-	///setAutoSaveSettings();
-
-    // Post setupGUI(), we can now add the status/tool/dock actions.
-	addViewMenuActions();
-}
 
 /**
  * Open the windows the user had open at the end of last session.
@@ -1935,9 +1994,8 @@ void MainWindow::about()
 
 void MainWindow::setActiveSubWindow(QMdiSubWindow* window)
 {
-	m_mdi_area->setActiveSubWindow(window);
+    m_mdi_area->setActiveSubWindow(window);
 }
-
 
 void MainWindow::doExperiment()
 {

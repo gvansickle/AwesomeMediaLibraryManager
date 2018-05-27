@@ -28,7 +28,7 @@ ModelChangeWatcher::ModelChangeWatcher(QObject *parent) : QObject(parent)
 
 void ModelChangeWatcher::setModelToWatch(QAbstractItemModel* model)
 {
-	qDebug() << "Connecting to model" << model;
+//	qDebug() << "Connecting to model" << model;
 
 	// Disconnect any currently-connected model.
 	if(m_the_model)
@@ -48,7 +48,7 @@ void ModelChangeWatcher::setModelToWatch(QAbstractItemModel* model)
 
 void ModelChangeWatcher::disconnectFromCurrentModel()
 {
-	qDebug() << "Disconnecting from model" << m_the_model;
+//	qDebug() << "Disconnecting from model" << m_the_model;
 
 	if(m_the_model)
 	{
@@ -61,6 +61,6 @@ void ModelChangeWatcher::disconnectFromCurrentModel()
 
 void ModelChangeWatcher::onRowCountChanged()
 {
-	qDebug() << "EMITTING rowCountChanged for model" << m_the_model << "num rows:" << m_the_model->rowCount();
+//	qDebug() << "EMITTING rowCountChanged for model" << m_the_model << "num rows:" << m_the_model->rowCount();
 	Q_EMIT modelHasRows(m_the_model->rowCount() > 0);
 }

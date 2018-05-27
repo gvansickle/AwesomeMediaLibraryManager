@@ -1,3 +1,6 @@
+_book
+dist
+node_modules
 *.gcno
 *.gcda
 *.moc
@@ -9,4 +12,5 @@ Makefile*
 moc_*.cpp
 moc_*.h
 coverage.info
+package-lock.json
 target_wrapper.bat

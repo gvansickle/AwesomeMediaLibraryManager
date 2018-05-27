@@ -32,7 +32,7 @@ PlaylistContextMenu::PlaylistContextMenu(const QString &title, QWidget *parent) 
 {
 	setTitle(title);
 
-	auto mw = MainWindow::getInstance();
+    auto mw = MainWindow::instance();
 
 	// Add cut/copy/paste to the context menu.
 	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);

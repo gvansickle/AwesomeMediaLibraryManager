@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "NetworkAwareFileDialog.h"
 
 #include <QApplication>
@@ -27,9 +29,7 @@
 #include <QStandardPaths>
 #include <QWindow>
 
-#define HAVE_GTKMM /// @todo
-
-#ifdef HAVE_GTKMM
+#if HAVE_GTKMM01
 #include "helpers/NetAwareFileDialogGtk3.h"
 #include <QtX11Extras/QX11Info>
 //#include <glib-object.h>
@@ -38,7 +38,7 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gdk/x11/gdkx11window.h>
-#endif // HAVE_GTKMM
+#endif // HAVE_GTKMM01
 
 #include <memory>
 #include <set>
@@ -385,7 +385,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
     return retval;
 }
 
-#ifdef HAVE_GTKMM
+#if HAVE_GTKMM01
 static Gtk::FileChooserAction map_to_Gtk_FileChooserAction(QFileDialog::FileMode filemode)
 {
     // See GTKMM: https://developer.gnome.org/gtkmm/stable/group__gtkmmEnums.html#ga0d6076e7637ec501f26296e65fee2212
@@ -420,7 +420,7 @@ static Gtk::FileChooserAction map_to_Gtk_FileChooserAction(QFileDialog::FileMode
         Q_ASSERT(0);
     }
 }
-#endif // HAVE_GTKMM
+#endif // HAVE_GTKMM01
 
 QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 {
@@ -437,7 +437,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     dialog->setFilter(); // ApplyOptions
     dialog->exec();
 
-#elif 1 //def HAVE_GTKMM
+#elif HAVE_GTKMM01
     // Per https://developer.gnome.org/gtkmm/stable/classGtk_1_1Main.html#details
     // "Deprecated:	Use Gtk::Application instead."
     ///Gtk::Main kit;
@@ -566,7 +566,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 #else
     // Default to QFileDialog/Native if we ever get here.
     return exec_qfiledialog();
-#endif // HAVE_GTKMM
+#endif // HAVE_GTKMM01
 }
 
 void NetworkAwareFileDialog::saveStateOverload()

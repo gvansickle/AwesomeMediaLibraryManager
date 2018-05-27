@@ -28,24 +28,36 @@
 #include <utils/DebugHelpers.h>
 
 #include <QApplication>
+#include <QStackedLayout>
+#include <QStackedWidget>
 #include <QFileDialog>
+#include <QDockWidget>
+#include <QScrollArea>
+#include <QStorageInfo>
 
 #define EX1 1
 #define EX2 0
 
 #if EX1 == 1
-//#include <KEncodingFileDialog>
-//#include <KUrlRequesterDialog>
-//#include <KBuildSycocaProgressDialog>
 
-#include <glib-object.h>
-#include <gtkmm.h>
-#include <gtkmm/filechooserdialog.h>
-//#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-//#include <gdk/x11/gdkx11window.h>
+#include <KIO/Job>
+#include <KIO/CopyJob>
+#include <KIO/ListJob>
+#include <KIO/DirectorySizeJob>
+#include <KJobUiDelegate>
 
-#undef Bool
+#include <KMessageWidget>
+
+#include <ThreadWeaver/DebuggingAids>
+
+#include "concurrency/ActivityManager.h"
+
+#include "MainWindow.h"
+
+#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+#include "activityprogressmanager/ActivityProgressWidget.h"
+#include "activityprogressmanager/ActivityProgressDialog.h"
+#include <concurrency/DirectoryScanJob.h>
 
 #endif
 
@@ -53,7 +65,7 @@
 
 Experimental::Experimental(QWidget *parent) : QWidget(parent)
 {
-	setAttribute(Qt::WA_NativeWindow);
+//	setAttribute(Qt::WA_NativeWindow);
 }
 
 void Experimental::DoExperiment()
@@ -84,81 +96,169 @@ void Experimental::DoExperiment()
 															);
 #endif
 
-#if 0
+#if 1
+    auto mwin = MainWindow::instance();
+//    auto dock = new QDockWidget(tr("Test dock"), mwin);
+//    auto stack_wdgt = new QWidget(dock);
+//    stack_wdgt->setLayout(new QVBoxLayout(dock));
+//    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+//    dock->setWidget(stack_wdgt);
+//    mwin->addDockWidget(Qt::LeftDockWidgetArea, dock);
+//    auto kmsg_wdgt = new KMessageWidget(tr("KMessageWidget test"), stack_wdgt);
+//    auto kmsg_wdgt2 = new KMessageWidget(tr("Second KMessageWidget test"), stack_wdgt);
+//    stack_wdgt->layout()->addWidget(kmsg_wdgt);
+//    stack_wdgt->layout()->addWidget(kmsg_wdgt2);
 
-	QFileDialog* fd = new QFileDialog(this, "TEST - IS THIS NATIVE?", "file://home/gary");
-	fd->setFileMode(QFileDialog::Directory);
-	fd->setOptions(QFileDialog::ShowDirsOnly);
-	fd->setFilter(QDir::AllDirs);
-	fd->setAcceptMode(QFileDialog::AcceptOpen);
+//    stack_wdgt->show();
 
+//    kmsg_wdgt->animatedShow();
+//    kmsg_wdgt2->animatedShow();
 
-	qInfo() << "layout:" << fd->layout();
+    auto master_job_tracker = MainWindow::master_tracker_instance();
+    Q_CHECK_PTR(master_job_tracker);
 
-	fd->exec();
+    // Set the global KIO job tracker.
+    // If we do this, the jobs will add themselves to the given tracker if they don't have HideProgressInfo set.
+//    KIO::setJobTracker(master_job_tracker);
+
+    ThreadWeaver::setDebugLevel(true, 10);
+
+//    QUrl dir_url("smb://storey.local/music/");
+    QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
+    KIO::DirectorySizeJob* dirsizejob = KIO::directorySize(dir_url);
+    qDb() << "DirSizeJob:"
+          << M_NAME_VAL(dirsizejob->detailedErrorStrings())
+          << M_NAME_VAL(dirsizejob->capabilities());
+    connect(dirsizejob, &KIO::DirectorySizeJob::result, [=](KJob* kjob){
+        qDb() << "GOT RESULT";
+        if(kjob->error())
+        {
+            kjob->uiDelegate()->showErrorMessage();
+        }
+    });
+    connect(dirsizejob, &KIO::DirectorySizeJob::description, [=](KJob *job,
+            const QString &  	title,
+            const QPair< QString, QString > &  	field1,
+            const QPair< QString, QString > &  	field2){
+        qDb() << "GOT DESCRIPTION";
+        qIn() << "Title:" << title;});
+
+    /// Two AMLMJobs
+    AMLMJobPtr dsj(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+
+    QUrl dir_url2("file:///home/gary");
+    AMLMJobPtr dsj2(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
+                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+
+    /// Another KF5 KIO Job.
+    KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
+    connect_or_die(kio_list_kiojob, &KJob::result, this, [=](KJob* kjob){
+        qIn() << "KIO::ListJob emitted result" << kjob;
+        AMLMJob::dump_job_info(kjob);
+        ;});
+    connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
+        static long num_entries = 0;
+        num_entries += list.size();
+        qDb() << "ENTRIES:" << num_entries;
+    });
+
+    /// And one last KF5 KIO job.
+    /// "emits the data through the data() signal."
+    QUrl web_src_url(QStringLiteral("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso?_ga=2.204957456.1400403342.1527338037-878124677.1491681087"));
+//    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));
+    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload, KIO::HideProgressInfo);
+
+    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
+
+    master_job_tracker->registerJob(dirsizejob);
+
+    master_job_tracker->registerJob(dsj);
+    master_job_tracker->setAutoDelete(dsj, false);
+    master_job_tracker->setStopOnClose(dsj, false);
+
+    master_job_tracker->registerJob(dsj2);
+    master_job_tracker->setAutoDelete(dsj2, false);
+    master_job_tracker->setStopOnClose(dsj2, false);
+
+    master_job_tracker->registerJob(kio_list_kiojob);
+
+    master_job_tracker->registerJob(inet_get_job);
+
+    // Shows prog and other signals hooked up to the tracker.
+    dump_qobject(kio_list_kiojob);
+
+    qIn() << "QUEUE STATE:" << queue->state()->stateName();
+
+    qDb() << M_NAME_VAL(dsj);
+    qDb() << M_NAME_VAL(dsj2);
+
+    dirsizejob->start();
+    kio_list_kiojob->start();
+
+    // enqueue takes JobPointers (QSharedPtr<>).
+//    queue->enqueue(dsj);//->asTWJobPointer());
+//    queue->enqueue(dsj2);//->asTWJobPointer());
+    queue->stream() << dsj << dsj2;
+    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
 #endif
 
 //	KUrlRequesterDialog::getUrl();
 
-/// GTKMM
-#if 1
-//	int argc = 1;
-//	char *argv[] = {"myapp", 0};
+#if 0
 
-	// Per https://developer.gnome.org/gtkmm/stable/classGtk_1_1Main.html#details
-	// "Deprecated:	Use Gtk::Application instead."
-	///Gtk::Main kit;
+    // Get dir url.
+//    QUrl dir_url = QFileDialog::getExistingDirectoryUrl(this, tr("EXPERIMENTAL - getExistingDirectoryUrl()"),
+//                                                            QUrl("/home/gary"), // Start dir
+//                                                            QFileDialog::ShowDirsOnly, // Options.
+//                                                            QStringList()  //<< "gvfs" << "network" << "smb" << "file" << "mtp" << "http" // Supported Schemes.
+//                                                            );
+    QUrl dir_url("smb://storey.local/music/");
 
-	// Per https://developer.gnome.org/gtkmm/stable/classGtk_1_1Application.html#details
-	// "the application ID must be valid. See g_application_id_is_valid()."
-	// https://developer.gnome.org/gio/stable/GApplication.html#g-application-id-is-valid
-	// GIO::ApplicationFlags: https://developer.gnome.org/gio/stable/GApplication.html#GApplicationFlags
-	//    Not clear that any of the flags are applicable.
-	auto app = Gtk::Application::create(tostdstr(QApplication::desktopFileName()).c_str());
-	std::string chosen_path;
+//    auto dlg = new ExpDialog(this);
+//    dlg->show();
 
-	Gtk::FileChooserDialog dialog("TEST - GTK FILECHOOSER", Gtk::FileChooserAction::FILE_CHOOSER_ACTION_SELECT_FOLDER);
-	if(true) /// @todo We're on gnome.
-	{
-		WId x11_parent_window_id = this->winId();
-		qDebug() << "Parent WId:" << x11_parent_window_id;
-//		GdkWindow * gdk_parent_win = gdk_window_foreign_new(x11_parent_window_id);
-		GdkDisplay* display = gdk_display_get_default();
-		qDebug() << "Display:" << display;
-		GdkWindow * gdk_parent_win = gdk_x11_window_lookup_for_display(display, x11_parent_window_id);
-		qDebug() << "gdk_parent_win:" << gdk_parent_win;
+    // Try to use KIO to list the tree.
+    KIO::ListJob* list_job = KIO::listRecursive(dir_url, KIO::JobFlag::DefaultFlags, false /*no hidden dirs*/);
+    KIO::DirectorySizeJob* ds_job = KIO::directorySize(dir_url);
+//    KIO::CopyJob* cp_job = KIO::copyAs(dir_url, QUrl("file://home/gary/deletme"));
 
-		auto gtk_parent_win = Glib::wrap(gdk_parent_win);
-		qDebug() << "Parent WId as GdkWindow:" << gdk_parent_win;
-//		dialog.set_transient_for(*gtk_parent_win.operator->());
-		dialog.set_parent_window(gtk_parent_win);
-	}
-	dialog.set_local_only(false);
-	dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-	dialog.add_button("_Open", Gtk::RESPONSE_OK);
-	int result = dialog.run();
-//	int result = app->run(dialog);
+    qDebug() << M_NAME_VAL(list_job);
 
-	switch(result)
-	{
-	case Gtk::RESPONSE_OK:
-	{
-		chosen_path = dialog.get_filename();
-		qDebug() << "Diretory selected:" << chosen_path;
-		break;
-	}
-	case Gtk::RESPONSE_CANCEL:
-	{
-		qDebug() << "User cancelled";
-		break;
-	}
-	default:
-	{
-		qDebug() << "Unknown result:" << result;
-		break;
-	}
-	}
+    connect(list_job, &KIO::ListJob::entries, this, &Experimental::onDirEntries);
+
+    qDebug() << "REGISTERING LIST JOB";
+//    KIO::getJobTracker()->registerJob(list_job);
+
+//    KIO::Job* total_job = new KIO::Job;
+//    KCompositeJob* total_job = new KCompositeJob(this);
+//    KIO::SimpleJob* total_job = new KIO::SimpleJob(this->parent());
+//    ds_job->setParentJob(total_job);
+//    list_job->setParentJob(ds_job);
+    list_job->setObjectName("ListJob");
+
+
+    MainWindow::getInstance()->registerJob(list_job);
+    MainWindow::getInstance()->registerJob(ds_job);
+//    MainWindow::getInstance()->registerJob(cp_job);
+
+    qDebug() << "STARTING LIST JOB";
+    list_job->start();
+    qDebug() << "STARTING DS JOB";
+    ds_job->start();
+//    cp_job->start();
+
+//    dlg->TrackJob(list_job);
+
+//    dlg->exec();
+
+//    KWidgetJobTracker* job_tracker_widget = new KWidgetJobTracker(this);
+//    job_tracker_widget->registerJob(list_job);
+
+//    connect(job, &KIO::ListJob::)
 
 #endif
 
@@ -166,4 +266,12 @@ void Experimental::DoExperiment()
 
 #if EX2 == 1
 #endif
+}
+
+void Experimental::onDirEntries(KIO::Job *job, const KIO::UDSEntryList &list)
+{
+    for(auto e : list)
+    {
+        qInfo() << "GOT ENTRY:" << e.stringValue( KIO::UDSEntry::UDS_NAME );
+    }
 }

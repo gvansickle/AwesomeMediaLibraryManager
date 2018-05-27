@@ -21,20 +21,31 @@
 
 #include "LibraryRescanner.h"
 
+/// Std C++
 #include <functional>
 
+/// Qt5
 #include <QThread>
 #include <QtConcurrent>
 
-#include <concurrency/ExtAsync.h>
+/// KF5
+#include <KJobUiDelegate>
 
+/// Ours
+#include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
-#include "utils/AsyncDirScanner.h"
-#include <concurrency/AsyncTaskManager.h>
-#include <concurrency/ReportingRunner.h>
-#include "logic/LibraryModel.h"
+#include <concurrency/ExtAsync.h>
 
+#include "utils/AsyncDirScanner.h"
+#include <concurrency/ReportingRunner.h>
+#include <concurrency/AsyncTaskManager.h>
+
+#include <src/concurrency/DirectoryScanJob.h>
+#include "LibraryRescannerJob.h"
+#include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+
+#include "logic/LibraryModel.h"
 
 using std::placeholders::_1;
 
@@ -155,6 +166,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	// Time how long it takes.
 	m_timer.start();
 
+#if 0
 	// Create the ControlledTask which will scan the directory tree for files.
 
 //	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
@@ -181,6 +193,68 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //	future.cancel();
 //	//throw QException();
 //	qDebug() << "ERROR";
+#else
+    auto master_job_tracker = MainWindow::master_tracker_instance();
+    Q_CHECK_PTR(master_job_tracker);
+
+    DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+
+    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
+
+    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
+        // Found a file matching the criteria.  Send it to the model.
+        runInObjectEventLoop([=](){
+            m_current_libmodel->onIncomingFilename(the_url.toString());}, m_current_libmodel);
+        ;});
+
+    /// @todo This would be a good candidate for an AMLMJob ".then()".
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
+        qDb() << "DIRTRAV COMPLETE";
+        if(kjob->error())
+        {
+            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+            auto uidelegate = kjob->uiDelegate();
+            Q_CHECK_PTR(uidelegate);
+            uidelegate->showErrorMessage();
+        }
+        else
+        {
+            // Succeeded, but we may still have outgoing filenames in flight.
+            qIn() << "DIRTRAV SUCCEEDED";
+            m_last_elapsed_time_dirscan = m_timer.elapsed();
+            qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+
+            // Directory traversal complete, start rescan.
+
+            QVector<VecLibRescannerMapItems> rescan_items;
+
+            qDb() << "GETTING RESCAN ITEMS";
+
+            rescan_items = m_current_libmodel->getLibRescanItems();
+
+            qDb() << "rescan_items:" << rescan_items.size();
+            Q_ASSERT(rescan_items.size() > 0);
+
+            lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
+
+            // Start the metadata scan.
+            qDb() << "STARTING RESCAN";
+            lib_rescan_job->start();
+        }
+    });
+
+    master_job_tracker->registerJob(dirtrav_job);
+    master_job_tracker->setAutoDelete(dirtrav_job, false);
+    master_job_tracker->setStopOnClose(dirtrav_job, false);
+    master_job_tracker->registerJob(lib_rescan_job);
+    master_job_tracker->setAutoDelete(lib_rescan_job, false);
+    master_job_tracker->setStopOnClose(lib_rescan_job, false);
+
+    dirtrav_job->start();
+
+#endif
 
 	qDb() << "END:" << dir_url;
 }
@@ -189,7 +263,7 @@ void LibraryRescanner::cancelAsyncDirectoryTraversal()
 {
 	m_dirtrav_future.cancel();
 }
-
+#if 0
 ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 {
 	qDb() << "START ASYNC";
@@ -301,6 +375,9 @@ void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl d
 
 	qDebug() << "LEAVE SyncDirectoryTraversal";
 }
+#endif
+
+#if 0
 
 void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan)
 {
@@ -326,10 +403,10 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 	});
 }
 
+#endif
+
 void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 {
-
-
 	// We got one of ??? things back:
 	// - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
 	// - A single pindex and more than one LibraryEntry*, the result of the first scan after the file was found.
@@ -383,6 +460,7 @@ void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 	}
 }
 
+#if 0
 void LibraryRescanner::onRescanFinished()
 {
     auto elapsed = m_timer.elapsed();
@@ -405,4 +483,4 @@ void LibraryRescanner::onDirTravFinished()
 	m_current_libmodel->startRescan();
 }
 
-
+#endif

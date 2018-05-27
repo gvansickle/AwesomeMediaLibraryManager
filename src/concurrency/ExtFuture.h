@@ -37,6 +37,8 @@
 #include "function_traits.hpp"
 #include "cpp14_concepts.hpp"
 
+#include <utils/UniqueIDMixin.h>
+
 #include "ExtFutureWatcher.h"
 
 
@@ -54,26 +56,6 @@ struct ExtAsyncProgress
 	QString text;
 };
 
-
-template <typename T>
-class UniqueIDMixin
-{
-	static std::atomic_uintmax_t m_next_id_num;
-
-	uintmax_t m_id_num;
-
-public:
-	UniqueIDMixin()
-	{
-		m_id_num = m_next_id_num;
-		m_next_id_num++;
-	}
-
-	QString id() const { return QString("%1").arg(m_id_num); }
-};
-//
-template <typename T>
-std::atomic_uintmax_t UniqueIDMixin<T>::m_next_id_num;
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "impl/ExtFuture_fwddecl_p.h"
@@ -383,7 +365,7 @@ public:
 			std::move(func)();
 
 			// This is Qt5 for .get().  Qt's futures always contain a QList of T's, not just a single result.
-#warning "TODO: should return .results()"
+/// @todo "TODO: should return .results()"
 			return thiz.get();
 //			return thiz;
 			});

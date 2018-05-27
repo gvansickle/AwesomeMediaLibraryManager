@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "Theme.h"
 
 #include <QIcon>
@@ -37,13 +39,32 @@
 #include <QDirIterator>
 #include <QUrl>
 #include <QRegularExpression>
-#include <KActionMenu>
 #include <gui/MainWindow.h>
 
 #include "DebugHelpers.h"
 
+#if HAVE_KF501
+/// KF5
+#include <KIconLoader>
+#include <KActionMenu>
+#endif
 
 QStringList Theme::m_available_styles;
+
+/**
+ * From https://community.kde.org/Frameworks/Porting_Notes#Application:
+ * "- KIcon: has been deprecated and moved to kde4support, prefer QIcon. Port KIcon("foo") to QIcon::fromTheme("foo")
+ *  and KIcon("foo", iconLoaderPtr) to QIcon(new KIconEngine("foo", iconLoaderPtr)) using KIconEngine from the
+ *  KIconThemes framework.
+ *  Note: XDG_DATA_DIRS has to be set to allow icons to be found. (Use kde-dev-scripts/kf5/convert-kicon.pl to automate
+ *  most of the conversion. )
+ *
+ *  - KPixmapSequence now can only be instanced with a fullPath, to use XDG icons use KIconLoader::loadPixmapSequence.
+ *
+ *  - Use QKeySequence instead of KShortcut to set shortcuts in actions."
+ */
+
+
 
 
 static bool isWindows()
@@ -289,6 +310,13 @@ M_WARNING("TODO");
 QIcon Theme::iconFromTheme(const QString &icon_name)
 {
     QIcon retval;
+
+#if HAVE_KF501
+
+//    auto icon_loader = KIconLoader::global();
+//    icon_loader->loadIcon()
+
+#endif
 
     if(QIcon::hasThemeIcon(icon_name))
     {

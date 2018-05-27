@@ -29,8 +29,8 @@ if(WIN32)
     set(FLEX_FLAGS_EXTRA --wincompat)
 endif()
 
-find_package(BISON)
-find_package(FLEX)
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -60,6 +60,10 @@ flex_target(CueScanner
         COMPILE_FLAGS ${FLEX_FLAGS_EXTRA})
 ADD_FLEX_BISON_DEPENDENCY(CueScanner CueParser)
 
+# Generated file doesn't want AUTOMOC etc. applied to it.
+# Actually this whole directory should be excluded.
+set_property(SOURCE "${libcue_BINARY_DIR}/cue_parser.h" PROPERTY SKIP_AUTOGEN ON)
+
 # Create the "libcue" target.
 add_library(libcue STATIC ${CUE_SOURCES}
         ${BISON_CueParser_OUTPUTS}
@@ -75,6 +79,7 @@ if(WIN32)
             $<INSTALL_INTERFACE:libcue>)
     target_compile_options(libcue PUBLIC -FIlibcue_config_win.h)
 endif()
+set_property(TARGET libcue PROPERTY SKIP_AUTOGEN ON)
 
 #install(TARGETS libcue
 #        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

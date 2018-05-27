@@ -22,14 +22,25 @@
 
 #include <type_traits>
 
+#include <QObject>
+#include <QMetaMethod>
 #include <QString>
 #include <QDebug>
 #include <QThread>
+#include <QModelIndex>
 
 #include "StringHelpers.h"
 
+
+
+/// @name General Qt5-specific debug helpers.
+/// @todo Move these to their own file.
+/// @{
+
 /**
  * Streaming operator for qDebug() << std::string.
+ *
+ * @note Seriously.
  */
 inline static QDebug& operator<<(QDebug& d, const std::string& s)
 {
@@ -37,9 +48,9 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 }
 
 /**
- * Stream to qDebug() to log the current thread name.
+ * Stream this macro to qDebug() to log the current thread name.
  */
-#define M_THREADNAME() "[" << QThread::currentThread()->objectName() << "]"
+#define M_THREADNAME() QStringLiteral("[") + QThread::currentThread()->objectName() + QStringLiteral("]")
 
 /**
  * qDebug() etc. replacements which prepends the current thread name.
@@ -49,25 +60,121 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 #define qWr() qWarning() << M_THREADNAME()
 #define qCr() qCritical() << M_THREADNAME()
 
+/// Stream out a warning of @a cond holds true.
+#define M_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+
+inline static void dump_qobject(QObject* qobj)
+{
+#define out() qDebug() << M_THREADNAME()
+    out() << "Dumping ObjectInfo for QObject:" << qobj;
+    // No known control on where this goes other than "to debug output".
+    qobj->dumpObjectInfo();
+    out() << "Dumping ObjectTree for QObject:" << qobj;
+    qobj->dumpObjectTree();
+#undef out
+}
+
+///**
+// * QObject property dumper.
+// */
+//Q_DECLARE_METATYPE(QModelIndex)
+//inline static void dump_properties(QModelIndex* obj, QDebug dbg_stream = qDebug())
+//{
+//#define out() dbg_stream << M_THREADNAME()
+
+//    auto dynamic_prop_names = obj->dynamicPropertyNames();
+
+//    out() << toqstr("Dynamic properties of QObject:") << obj << toqstr(":");
+//    for(auto prop_name : dynamic_prop_names)
+//    {
+//        out() << prop_name << ":" << obj->property(prop_name);
+//    }
+
+//#undef out
+//}
+
+class SignalHook : public QObject
+{
+    Q_OBJECT
+
+public:
+    SignalHook(QObject* parent = nullptr) : QObject(parent) { hook_all_signals(this); }
+
+    void hook_all_signals(QObject* object)
+    {
+        m_object = object;
+        const QMetaObject *me = object->metaObject();
+        int methodCount = me->methodCount();
+        for(int i = 0; i < methodCount; i++)
+        {
+            QMetaMethod method = me->method(i);
+            if(method.methodType() == QMetaMethod::Signal)
+            {
+            	// Found a signal, hook it up to the single snoop handler.
+                qDb() << "Hooking signal:" << method.methodSignature() << "of QObject:" << object;
+                QObject::connect(object, "2"+method.methodSignature(), this, SLOT(signalFired()));
+            }
+        }
+    }
+
+protected:
+    void connectNotify(const QMetaMethod &signal) override
+    {
+        qDb() << "Signal connected:" << signal.access() << signal.methodSignature();
+    }
+
+    void disconnectNotify(const QMetaMethod &signal) override
+    {
+        qDb() << "Signal disconnected:" << signal.access() << signal.methodSignature();
+    }
+
+public Q_SLOTS:
+    void signalFired()
+	{
+        // Determine as many details about the sent signal as we can.
+        QObject* sender = this;
+        const QMetaObject* sender_metaobject = sender->metaObject();
+        int sender_signal_index = senderSignalIndex();
+
+        QMetaMethod sender_method = sender_metaobject->method(sender_signal_index);
+
+        QString signal_signature = sender_method.methodSignature();
+        qDb() << "SIGNAL FIRED FROM OBJECT:" << m_object << ", SIGNAL:" << signal_signature;
+	}
+
+private:
+	QObject* m_object {nullptr};
+};
+
+/// @}
+
+
+/// @name Helpers for the M_IDSTR() macro below.
+/// @{
+
+/// SFINAE version for T already convertible to std::string.
 template <typename T>
-static inline auto idstr(const char *id_as_c_str, T id) -> std::enable_if_t<std::is_convertible<T, std::string>::value == true, std::string> /// SFINAE version for T already convertible to std::string.
+static inline auto idstr(const char *id_as_c_str, T id) -> std::enable_if_t<std::is_convertible<T, std::string>::value == true, std::string>
 {
 	return std::string(id_as_c_str) + "(" + id + ")";
 }
 
+/// SFINAE version for T not convertible to std::string.
 template <typename T>
 static inline
-std::enable_if_t<std::is_convertible<T, std::string>::value == false, std::string> /// SFINAE version for T not convertible to std::string.
+std::enable_if_t<std::is_convertible<T, std::string>::value == false, std::string>
 idstr(const char *id_as_c_str, T id)
 {
 	return std::string(id_as_c_str) + "(" + std::to_string(id) + ")";
 }
 
+/// @}
+
 #define M_IDSTR(id) idstr(#id ": ", id) + ", " +
 
 #define M_NAME_VAL(id) #id ":" << id
 
-/// Attempts to get the compiler to print a human-readable type at compile time.
+/// Attempts to get the compiler to print a human-readable type name at compile time.
 /// @note In the 21st century, this should be a solved problem.  It isn't.
 /// @see https://stackoverflow.com/a/46339450, https://stackoverflow.com/a/30276785
 //		typedef typename ft_test2_class::something_made_up X;

@@ -18,7 +18,10 @@
  */
 
 #include <QtGlobal>
-#include <QApplication>
+
+//#include <QApplication>
+#include "AMLMApp.h"
+
 #include <QSettings>
 #include <QIcon>
 #include <QLoggingCategory>
@@ -59,10 +62,10 @@ int main(int argc, char *argv[])
 					   "%{time hh:mm:ss.zzz} "
 					   "%{threadid} "
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
-					   "%{if-fatal}FATAL%{endif}"
-					   "]"
-						+ logging.ClickableLinkPattern() +
-					   /*"%{function}:%{line}*/ " - %{message}"
+                       "%{if-fatal}FATAL%{endif}"
+                       "] "
+					   /*	+ logging.ClickableLinkPattern() + */
+                       "%{function}:%{line} - %{message}"
 					   "%{if-fatal}%{backtrace}%{endif}");
 
 	// Logging test.
@@ -88,8 +91,9 @@ int main(int argc, char *argv[])
 
 	//
 	// Create the Qt5 app.
+    // @note Must be the first QObject created and the last QObject deleted.
 	//
-    QApplication app(argc, argv);
+    AMLMApp app(argc, argv);
 
 
 	// Get our config for use later.
@@ -98,31 +102,31 @@ int main(int argc, char *argv[])
 	// We use the pre-existence of "version" to detect if this is the first time we've started.
 	KConfigGroup grp(config, "unmanaged");
 	KConfigGroup initialGroup(config, "version");
-//	if (!initialGroup.exists())
-//	{
-//		/// @todo Not sure if we want to be this draconian.
-//		QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-//		if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
-//		{
-//			qDb() << "KDE Desktop detected, using system icons";
-//		}
-//		else
-//		{
-//			// We are not on a KDE desktop, force breeze icon theme
-//			grp.writeEntry("force_breeze", true);
-//			qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
-//		}
-//	}
+	if (!initialGroup.exists())
+	{
+		/// @todo Not sure if we want to be this draconian.
+		QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+		if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
+		{
+			qDb() << "KDE Desktop detected, using system icons";
+		}
+		else
+		{
+			// We are not on a KDE desktop, force breeze icon theme
+			grp.writeEntry("force_breeze", true);
+			qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
+		}
+	}
 
 	// Use HighDPI pixmaps as long as we're supporting High DPI scaling.
 	app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 
 	// If we're forcing Breeze icons, force them here.
-//	bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
-//	if (forceBreeze)
-//	{
-//		QIcon::setThemeName("breeze");
-//	}
+	bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
+	if (forceBreeze)
+	{
+		QIcon::setThemeName("breeze");
+	}
 
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
@@ -173,8 +177,7 @@ int main(int argc, char *argv[])
 	// Register types with Qt.
 	RegisterQtMetatypes();
 
-M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
-#if 1
+M_WARNING("icons not installed properly");
     // Load the icon resources.
 	auto rccs = {"icons_oxygen.rcc"};
 	for(auto fname : rccs)
@@ -189,14 +192,15 @@ M_WARNING("TODO: PUT THIS BACK FOR WINDOWS");
 			qIn() << "Loaded RCC file:" << fname;
 		}
 	}
-#endif
+
 	// Set the application Icon.
-	// "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
-	// the desktop file, make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo"))); (in GUI apps)."
 	///@todo Get an actual icon.
 	QIcon appIcon;
     appIcon.addFile(":/Icons/128-preferences-desktop-sound.png");
-	app.setWindowIcon(appIcon);
+    // "KAboutData::setApplicationData() no longer sets the app window icon. For shells which do not fetch the icon name via
+    // the desktop file [i.e. non-plasma], make sure to call QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("foo")));
+    // (in GUI apps)."
+    QApplication::setWindowIcon(appIcon);
 
 	// Always use INI format for app settings, so we don't hit registry restrictions on Windows.
 	QSettings::setDefaultFormat(QSettings::IniFormat);

@@ -44,40 +44,43 @@ project(AwesomeMediaLibraryManager
         DESCRIPTION "The Awesome Media Library Manager"
         LANGUAGES C CXX)
 
-# Min versions of Qt5 and KF5.
-set(QT_MIN_VERSION "5.9.0")
-set(KF5_MIN_VERSION "5.44.0")
-
-# KDE extra-cmake-modules, see https://api.kde.org/ecm/
-find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
-
-# Add folder where we keep support *.cmake's.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
-
 # Prevent an in-root-of-src-tree build.
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
         message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
+### Set the required language standards.
+# C11
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+# C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Min versions of Qt5, KF5, KF5/ECM.
+set(QT_MIN_VERSION "5.9.0")
+set(ECM_MIN_VERSION "5.44.0")
+set(KF5_MIN_VERSION "5.44.0")
+
 ###
-### KDE modules.
-### @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
+### ECM Setup ====================================================================================================
 ###
-set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE) ##< Don't define the deprecated KDEInstallDirs.
-include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
-set(ENABLE_CLAZY ON)
-set(APPLE_FORCE_X11 ON)
-include(KDECMakeSettings NO_POLICY_SCOPE)
+
+# KDE extra-cmake-modules, see https://api.kde.org/ecm/
+# @note find_package() MODULE vs. NO_MODULE (==CONFIG mode):
+# "Config mode provides an elaborate interface and search procedure. Much of the interface is provided for completeness
+#  and for use internally by find-modules loaded by Module mode. Most user code should simply call:
+#    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
+find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
+
+# Add dirs where we keep support *.cmake's, ECM, etc.
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+
+# ECM Macros
 include(ECMAddAppIcon)
-# KDECompilerSettings
-# Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
-# @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
-# @warning This also sets the compiler stds way too low (C89(!!))
-# @see https://api.kde.org/ecm/kde-module/KDECompilerSettings.html
-#include(KDECompilerSettings NO_POLICY_SCOPE)
 # Sanitizers.
-### @note KF5:
+# @note KF5:
 # The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
 # CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
 # The options are:
@@ -86,19 +89,34 @@ include(ECMAddAppIcon)
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
 include(ECMEnableSanitizers)
-### Set the required language standards.
-# C11
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-# C++14
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# KDE macros.
+# @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
+set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE) ##< Don't define the deprecated KDEInstallDirs.
+set(ENABLE_CLAZY ON)
+set(APPLE_FORCE_X11 ON)
+include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
+include(KDECMakeSettings)
+# KDECompilerSettings
+# Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
+# @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
+# @warning This also sets the compiler stds way too low (C89(!!))
+# @see https://api.kde.org/ecm/kde-module/KDECompilerSettings.html
+#include(KDECompilerSettings NO_POLICY_SCOPE)
 #kde_enable_exceptions()
 # And undo even more of what KDECompilerSettings did to/for us.
 ###string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
+###
+### END ECM Setup ====================================================================================================
+###
+
+# Std CMAKE includes.
 include(FeatureSummary)
+
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
+
 ###
 
 # Use ccache if it's available.
@@ -121,6 +139,18 @@ include(InstallRequiredSystemLibraries)
 set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(ExternalProject)
 include(DownloadProject)
+
+# Right now we need all the verbosity we can get.
+set(CMAKE_VERBOSE_MAKEFILE  YES)
+#set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+set(CPACK_IFW_VERBOSE YES)
+#set(CMAKE_DEBUG_TARGET_PROPERTIES
+#		INCLUDE_DIRECTORIES
+#		COMPILE_DEFINITIONS
+#		POSITION_INDEPENDENT_CODE
+#		CONTAINER_SIZE_REQUIRED
+#		LIB_VERSION
+#		)
 
 dir_summary()
 
@@ -166,9 +196,7 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         "Install path prefix, prepended onto install directories." FORCE )
 endif()
 
-# Generate the version info file.
-configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+
 
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")
@@ -243,11 +271,13 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	GuiAddons
 	IconThemes
 	WindowSystem
+	ThreadWeaver
 )
+set(HAVE_KF501 ${KF5_FOUND})
 list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
 list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
-list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
+list(APPEND KF5_LINK_LIBS KF5::WindowSystem KF5::ThreadWeaver)
 
 
 ###
@@ -257,6 +287,7 @@ list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 set(GTK_LINK_LIB_TARGETS)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+set(HAVE_GTKMM01 ${GTKMM_FOUND})
 
 ###
 ### X11 and XCB libs.
@@ -295,19 +326,7 @@ download_project(PROJ                boost_callable_traits
 	${UPDATE_DISCONNECTED_IF_AVAILABLE}
 	)
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
-message(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
-
-# Right now we need all the verbosity we can get.
-set(CMAKE_VERBOSE_MAKEFILE  YES)
-set(GLOBAL_DEPENDS_DEBUG_MODE TRUE)
-set(CPACK_IFW_VERBOSE YES)
-#set(CMAKE_DEBUG_TARGET_PROPERTIES
-#		INCLUDE_DIRECTORIES
-#		COMPILE_DEFINITIONS
-#		POSITION_INDEPENDENT_CODE
-#		CONTAINER_SIZE_REQUIRED
-#		LIB_VERSION
-#		)
+#message(STATUS ${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
 
 # Use include-what-you-use.
 if(FALSE)
@@ -331,9 +350,19 @@ set(RC_LEGALCOPYRIGHT "${FULL_COPYRIGHT_STRING}")
 set(IDENTIFIER "io.github.gvansickle")
 
 # So the source in src can find the "resources/" dir.
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+	${CMAKE_CURRENT_BINARY_DIR}
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+
+### Generate configured headers.
+# Generate the version info file.
+configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+# Generate the amlm-configure.h file.
+configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
+	${PROJECT_BINARY_DIR}/src/config.h
+	ESCAPE_QUOTES)
 
 add_subdirectory(src)
 

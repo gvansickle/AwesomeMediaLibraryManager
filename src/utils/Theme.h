@@ -62,7 +62,9 @@ public:
 	// Return a platform- and possibly theme-specific QKeySequence corresponding to the string @a key.
 	static QKeySequence keySequenceFromTheme(Theme::Key key);
 
-Q_SIGNALS:
+protected:
+
+
 
 public Q_SLOTS:
 

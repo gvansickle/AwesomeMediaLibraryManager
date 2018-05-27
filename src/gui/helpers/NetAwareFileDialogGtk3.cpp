@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "NetAwareFileDialogGtk3.h"
 
 #include <QWindow>
@@ -29,10 +31,7 @@
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 
-#warning "MOVE TO CMAKE"
-#define HAVE_GTKMM
-
-#ifdef HAVE_GTKMM
+#if HAVE_GTKMM01
 #include <gtk/gtk.h>
 
 //#include "NetAwareFileDialogGtk3.h"
@@ -43,20 +42,27 @@
 //#include <gdk/gdk.h>
 //#include <gdk/gdkx.h>
 //#include <gdk/x11/gdkx11window.h>
-#endif // HAVE_GTKMM
+#endif // HAVE_GTKMM01
 
 #if 1
 
-
+// GTK 3.10 obsoleted a bunch of these.
+#define GTK_STOCK_OPEN_LABEL    "_Open"
+#define GTK_STOCK_SAVE_LABEL    "_Save"
+#define GTK_STOCK_OK_LABEL    "_Ok"
+#define GTK_STOCK_CANCEL_LABEL    "_Cancel"
 
 NetAwareFileDialogGtk3::NetAwareFileDialogGtk3()
 {
     // See https://developer.gnome.org/gtk3/stable/GtkFileChooser.html
     d.reset(new Gtk3DialogHelper(gtk_file_chooser_dialog_new("", // Title
-                                                      0,  // Parent
+                                                      nullptr,  // Parent
                                                       GTK_FILE_CHOOSER_ACTION_OPEN, // The open or save mode.
-                                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                                      GTK_STOCK_OK, GTK_RESPONSE_OK, NULL)));
+//                                                      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+//                                                      GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                                      GTK_STOCK_CANCEL_LABEL, GTK_RESPONSE_CANCEL,
+                                                      GTK_STOCK_OK_LABEL, GTK_RESPONSE_OK,
+                                                      NULL)));
 
     // Connect up accept/reject signals.
     connect(d.data(), SIGNAL(accept()), this, SLOT(onAccepted()));
@@ -272,11 +278,11 @@ void NetAwareFileDialogGtk3::applyOptions()
         }
         else if (opts->acceptMode() == QFileDialogOptions::AcceptOpen)
         {
-            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_OPEN);// qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Open)));
+            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_OPEN_LABEL);// qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Open)));
         }
         else
         {
-            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_SAVE); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Save)));
+            gtk_button_set_label(GTK_BUTTON(acceptButton), GTK_STOCK_SAVE_LABEL); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Save)));
         }
     }
 
@@ -289,7 +295,7 @@ void NetAwareFileDialogGtk3::applyOptions()
         }
         else
         {
-            gtk_button_set_label(GTK_BUTTON(rejectButton), GTK_STOCK_CANCEL); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Cancel)));
+            gtk_button_set_label(GTK_BUTTON(rejectButton), GTK_STOCK_CANCEL_LABEL); //qUtf8Printable(QGtk3Theme::defaultStandardButtonText(QPlatformDialogHelper::Cancel)));
         }
     }
 }
