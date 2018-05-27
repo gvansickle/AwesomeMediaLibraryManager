@@ -31,7 +31,6 @@ set(gui_HEADER_FILES
 	MDITreeViewBase.h
 	MetadataDockWidget.h
 	NetworkAwareFileDialog.h
-	PixmapLabel.h
 	PlayerControls.h
 	helpers/Tips.h
 	menus/DropMenu.h
@@ -60,7 +59,6 @@ set(gui_SOURCE_FILES
 	MDITreeViewBase.cpp
 	MetadataDockWidget.cpp
 	NetworkAwareFileDialog.cpp
-	PixmapLabel.cpp
 	PlayerControls.cpp
 	MDINowPlayingView.cpp
 	MDINowPlayingView.h
@@ -109,6 +107,7 @@ set(gui_settings_SOURCE_FILES
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
 add_subdirectory(activityprogressmanager)
+add_subdirectory(widgets)
 
 set(amlm_gui_SRCS
 	${gui_SOURCE_FILES}
@@ -117,6 +116,9 @@ set(amlm_gui_SRCS
 	${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 	${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 	${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
+	${HEADER_FILES_GUI_WIDGETS}
+	${SOURCE_FILES_GUI_WIDGETS}
+	#${UI_FILES_GUI_WIDGETS}
 	PARENT_SCOPE
 	)
 

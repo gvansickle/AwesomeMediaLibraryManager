@@ -19,20 +19,22 @@
 
 #include "MetadataDockWidget.h"
 
-#include "PixmapLabel.h"
-#include "logic/ModelUserRoles.h"
+/// Std C++
+#include <functional>
 
+/// Qt5
 #include <QItemSelection>
 #include <QTreeView>
 #include <QTreeWidget>
 #include <QHBoxLayout>
 #include <QDebug>
-
 #include <QDataWidgetMapper>
 #include <QLineEdit>
 
-#include <functional>
+/// Ours
 
+#include "widgets/PixmapLabel.h"
+#include "logic/ModelUserRoles.h"
 #include <logic/MetadataAbstractBase.h>
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
