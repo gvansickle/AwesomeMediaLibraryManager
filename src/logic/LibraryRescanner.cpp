@@ -222,7 +222,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         }
         else
         {
-            // Succeeded.
+            // Succeeded, but we may still have outgoing filenames in flight.
             qIn() << "DIRTRAV SUCCEEDED";
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
@@ -234,8 +234,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             QVector<VecLibRescannerMapItems> rescan_items;
 
             qDb() << "GETTING RESCAN ITEMS";
-
-            return;
 
             rescan_items = m_current_libmodel->getLibRescanItems();
 //            runInObjectEventLoop([&](){
