@@ -57,6 +57,37 @@ void connect_or_die(Args&&... args)
 }
 
 /**
+ * Make a blocking signal-slot connection and assert if the attempt fails.
+ * Checks if the sender and receiver are in the same thread and makes either a
+ * Qt::DirectConnection if same or Qt::BlockingQueuedConnection if different.
+ */
+template <typename Sender, typename Signal, typename Receiver, typename Slot>
+void connect_blocking_or_die(Sender&& sender, Signal&& signal, Receiver&& receiver, Slot&& slot)
+{
+    QMetaObject::Connection retval;
+
+    auto sthread = sender->thread();
+    auto rthread = receiver->thread();
+    Qt::ConnectionType connection_type;
+
+    if(sthread == rthread)
+    {
+    	// Same thread.
+    	connection_type = Qt::DirectConnection;
+    }
+    else
+    {
+    	// Different threads.
+    	connection_type = Qt::BlockingQueuedConnection;
+    }
+    qDb() << "Connecting" << sender << "and" << receiver << "with connection type:" << connection_type;
+
+    retval = QObject::connect(std::forward<Sender>(sender), std::forward<Signal>(signal),
+    		std::forward<Receiver>(receiver), std::forward<Slot>(slot), connection_type);
+    Q_ASSERT(static_cast<bool>(retval) != false);
+}
+
+/**
  * For connecting the @a sender's destroyed() signal.
  * Qt5 docs re destroyed:
  * "This signal is emitted immediately before the object obj is destroyed, and can not be blocked.

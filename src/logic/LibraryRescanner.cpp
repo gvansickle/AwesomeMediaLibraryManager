@@ -203,9 +203,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
 
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
+    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
         // Found a file matching the criteria.  Send it to the model.
-//        qDb() << "FOUND:" << the_url;
         runInObjectEventLoop([=](){
             m_current_libmodel->onIncomingFilename(the_url.toString());}, m_current_libmodel);
         ;});
@@ -227,35 +226,22 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
-
             // Directory traversal complete, start rescan.
-            /// @note This is a slot.
-//            onDirTravFinished();
+
             QVector<VecLibRescannerMapItems> rescan_items;
 
             qDb() << "GETTING RESCAN ITEMS";
 
             rescan_items = m_current_libmodel->getLibRescanItems();
-//            runInObjectEventLoop([&](){
-//                qDb() << "GETLIBRESCANITEMS";
-//                rescan_items = m_current_libmodel->getLibRescanItems();}, m_current_libmodel);
 
             qDb() << "rescan_items:" << rescan_items.size();
             Q_ASSERT(rescan_items.size() > 0);
-//            runInObjectEventLoop([&](){
-//                qDb() << "SETDATATOMAP";
-//                lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel); },
-//            lib_rescan_job);
-//            retval = QMetaObject::invokeMethod(lib_rescan_job, "setDataToMap",
-//                                      Q_ARG(QVector<VecLibRescannerMapItems>, rescan_items),
-//                                                    Q_ARG(LibraryModel*, m_current_libmodel));
-//            Q_ASSERT(retval == true);
+
             lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
 
             // Start the metadata scan.
             qDb() << "STARTING RESCAN";
             lib_rescan_job->start();
-//            startAsyncRescan(rescan_items);
         }
     });
 
