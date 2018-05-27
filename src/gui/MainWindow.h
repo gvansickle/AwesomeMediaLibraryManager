@@ -19,6 +19,16 @@
 
 #include <config.h>
 
+/// Std C++
+
+#include <vector>
+#include <utility> // For std::pair<>
+#include <memory>
+
+/// Qt5
+#include <QUrl>
+
+/// KF5
 #if HAVE_KF501
 
 #include <KMainWindow>
@@ -46,18 +56,11 @@ using ToolBarClass = QToolBar;
 
 #endif
 
-
-#include <QUrl>
-
-#include <vector>
-#include <utility> // For std::pair<>
-#include <memory>
+/// Ours
 
 #include <logic/MP2.h>
 #include "mdi/MDIModelViewPair.h"
 
-#include "concurrency/AMLMJob.h"
-class TWJobWrapper;
 
 class QActionGroup;
 class QWidget;
@@ -510,14 +513,12 @@ private:
     /// The MainWindow signleton.
     static QPointer<MainWindow> m_instance;
 
-    QPointer<ActivityProgressManager> m_activity_progress_manager;
-
-    /// The Activity Progress Widget.
-    ActivityProgressWidget* m_activity_progress_widget;
+//    QPointer<ActivityProgressManager> m_activity_progress_manager;
 
 #if HAVE_KF501
     /**
      * Master Tracker for all asynchronous activites.
+     * Its widget is the progress bar in the status bar.
      * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
      */
     ActivityProgressStatusBarTracker* m_activity_progress_multi_tracker { nullptr };

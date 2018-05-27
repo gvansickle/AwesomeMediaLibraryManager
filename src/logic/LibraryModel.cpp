@@ -993,10 +993,3 @@ void LibraryModel::cancelRescan()
 	m_rescanner->cancelAsyncDirectoryTraversal();
 }
 
-void LibraryModel::connectProgressToActivityProgressWidget(ActivityProgressWidget *apw)
-{
-	m_rescanner->disconnect(apw);
-
-	connect(m_rescanner, &LibraryRescanner::progressChanged, apw, &ActivityProgressWidget::onProgressChanged,
-			Qt::QueuedConnection);
-}
