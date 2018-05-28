@@ -151,6 +151,19 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
         qIn() << "  kjob->errorText(): N/A (error()==0)";
         qIn() << "  kjob->errorString(): N/A (error()==0)";
     }
+
+    // QMetaObject info.
+	const QMetaObject* metaObject = kjob->metaObject();
+	auto method_count = metaObject->methodCount();
+	auto first_this_method_offset = metaObject->methodOffset();
+	qIn() << "All Methods (" << metaObject->methodCount() << "):";
+	for(int i = 0; i < metaObject->methodCount(); ++i)
+	{
+		auto metamethod = metaObject->method(i);
+		qIn() << " " << i << ":" << QString::fromLatin1(metamethod.methodSignature())
+			<< "Type:" << metamethod.methodType()
+			<< "Access:" << metamethod.access();
+	}
 }
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
@@ -284,8 +297,18 @@ bool AMLMJob::doResume()
 void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 {
     /// @todo This "KJobPrivate" crap is crap.
-//    d_ptr->progressUnit = prog_unit;
-    m_progress_unit = prog_unit;
+	//    d_ptr->progressUnit = prog_unit;
+
+	/// And if this works, it's gross.
+	const QMetaObject* metaObject = this->metaObject();
+	QStringList methods;
+	for(int i = metaObject->methodOffset(); i < metaObject->methodCount(); ++i)
+	{
+	    methods << QString::fromLatin1(metaObject->method(i).methodSignature());
+	}
+	qDb() << methods;
+
+//    m_progress_unit = prog_unit;
 }
 
 void AMLMJob::make_connections()

@@ -88,6 +88,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
         Q_EMIT processReadyResults(a);
         num_items++;
 
+M_WARNING("CRASH ON CANCEL");
         setProcessedAmount(KJob::Unit::Files, num_items);
     }
 

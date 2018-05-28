@@ -212,9 +212,11 @@ public Q_SLOTS:
 
 protected Q_SLOTS:
 
-	/// @todo NEW
+	///
     void toggleSubjobDisplay(bool checked);
-    void onShowProgressWidget(KJob *kjob);
+
+    /// Slot to display the progress widget for @a kjob.
+    void SLOT_onShowProgressWidget(KJob *kjob);
 
     /// Cancel all tracked KJobs.
     void cancelAll();

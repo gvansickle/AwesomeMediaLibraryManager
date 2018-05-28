@@ -392,7 +392,7 @@ add_executable(${TEST_EXE_TARGET}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"

@@ -62,7 +62,7 @@ protected:
 private:
 	Q_DISABLE_COPY(LibraryContextMenu)
 
-M_WARNING("TODO: These shouldn't be public.  Not sure what would be a better way to do this atm.");
+/// @todo M_WARNING("TODO: These shouldn't be public.  Not sure what would be a better way to do this atm.");
 public:
 	ActionBundle* m_ab_to_now_playing;
 	QAction* m_act_append_to_now_playing;

@@ -106,6 +106,13 @@ include(KDECMakeSettings)
 #kde_enable_exceptions()
 # And undo even more of what KDECompilerSettings did to/for us.
 ###string(REPLACE "-Werror=undef" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+# string(REGEX REPLACE "-O[^;]*" "-Og" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+# string(REGEX REPLACE "-g[^;]*" "-ggdb3" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+# string(REGEX REPLACE "-O[^;]*" "-Og" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+# string(REGEX REPLACE "-g[^;]*" "-ggdb3" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+#list(REMOVE_DUPLICATES CMAKE_CXX_FLAGS_DEBUG)
+set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb3 -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS_DEBUG "-Og -ggdb3 -fno-omit-frame-pointer")
 
 ###
 ### END ECM Setup ====================================================================================================
@@ -116,13 +123,16 @@ include(FeatureSummary)
 
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
+message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
 
-# Use ccache if it's available.
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-	set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+if(FALSE)
+	# Use ccache if it's available.
+	find_program(CCACHE_PROGRAM ccache)
+	if(CCACHE_PROGRAM)
+		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+	endif()
 endif()
 
 # Include some basic cmake functions.

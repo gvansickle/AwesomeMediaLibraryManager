@@ -168,7 +168,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     // KWidgetJobTracker does almost the following.
     // It does not pass the job ptr though.
     /// @todo Is that part of our problems?
-    QTimer::singleShot(500, this, [=](){onShowProgressWidget(kjob);});
+    QTimer::singleShot(500, this, [=](){SLOT_onShowProgressWidget(kjob);});
 }
 
 void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)
@@ -212,7 +212,7 @@ void ActivityProgressStatusBarTracker::SLOT_directCallSlotStop(KJob *kjob)
     directCallSlotStop(kjob);
 }
 
-void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
+void ActivityProgressStatusBarTracker::SLOT_onShowProgressWidget(KJob* kjob)
 {
     QMutexLocker locker(&m_tsi_mutex);
 
@@ -221,14 +221,14 @@ void ActivityProgressStatusBarTracker::onShowProgressWidget(KJob* kjob)
     Q_CHECK_PTR(kjob);
 
     /// @todo If queue is empty return.
-
     /// else dequeue job, look up qwidget, and show it.
 
     // Look up the widget associated with this kjob.
     // If it's been unregistered before we get here, this will return nullptr.
     with_widget_or_skip(kjob, [=](auto w){
         qDb() << "SHOWING WIDGET:" << w;
-        /// @todo without activating?
+        // Don't steal the focus from the current widget (e. g. Kate)
+        w->setAttribute(Qt::WA_ShowWithoutActivating);
         w->show();
     });
 }
