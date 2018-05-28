@@ -70,7 +70,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
     m_expanding_frame_widget->hide();
 
-    connect(m_cumulative_status_widget, &CumulativeStatusWidget::show_hide_subjob_display,
+    connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::show_hide_subjob_display,
             this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
 
     /// @todo m_cumulative_status_widget's cancel_job button state should be enabled/disabled based on child job cancelable capabilities.
@@ -140,10 +140,6 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     m_amlmjob_to_widget_map.insert(kjob, wdgt);
     Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
 
-M_WARNING("TODO");
-    m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
-//    m_cumulative_status_widget->setValue(m_amlmjob_to_widget_map.size());
-
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
     // Add the new widget to the expanging frame.
@@ -187,11 +183,6 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)
 
     AMLMJob::dump_job_info(kjob);
 
-M_WARNING("TODO");
-//    m_cumulative_status_widget->setRange(0, m_amlmjob_to_widget_map.size());
-//    m_cumulative_status_widget->setValue(m_amlmjob_to_widget_map.size());
-
-
     // KAbstractWidgetJobTracker::unregisterJob() calls:
     //   KJobTrackerInterface::unregisterJob(job);, which calls:
     //     job->disconnect(this);
@@ -202,6 +193,9 @@ M_WARNING("TODO");
     /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
     with_widget_or_skip(kjob, [=](auto w){
         w->m_is_job_registered = false;
+        // Remove the job's widget from the expanding frame.
+		m_expanding_frame_widget->removeWidget(w);
+		m_expanding_frame_widget->reposition();
         w->deref();
         ;});
 }
@@ -403,9 +397,9 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
 {
     // For Widgets to request deletion of their jobs and associated data (including the pointer to themselves) from the map.
     BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
+
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
             this, &ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap);
-
     connect_or_die(kjob, &KJob::totalSize, this, &ActivityProgressStatusBarTracker::totalSize);
     connect_or_die(kjob, &KJob::processedSize, this, &ActivityProgressStatusBarTracker::processedSize);
 }
