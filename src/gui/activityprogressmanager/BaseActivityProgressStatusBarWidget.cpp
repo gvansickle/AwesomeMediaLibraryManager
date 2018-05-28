@@ -667,5 +667,29 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 
     qDb() << "SPEED:" << kjob << value;
 
+#if 0
+    if(value == 0)
+	{
+    	// Stalled.
+    	//m_speed_label->setText(tr("Stalled"));
+	}
+    else
+	{
+    	const QString speedStr = KJobTrackerFormatters::byteSize(value);
+		if (totalSizeKnown)
+		{
+			const int remaining = 1000 * (totalSize - processedSize) / value;
+			//~ singular %1/s (%2 remaining)
+			//~ plural %1/s (%2 remaining)
+			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining).arg(speedStr).arg(
+									KJobTrackerFormatters::duration(remaining)));
+		}
+		else
+		{
+			// total size is not known
+			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
+		}
+	}
+#endif
     updateMainTooltip();
 }
