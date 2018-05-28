@@ -60,9 +60,6 @@ public Q_SLOTS:
 
     void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, LibraryModel* current_libmodel);
 
-    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
-
-
 protected:
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
