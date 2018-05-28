@@ -728,7 +728,7 @@ void LibraryModel::onIncomingFilename(QString filename)
 	appendRow(new_entry);
 }
 
-void LibraryModel::onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item)
+void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item)
 {
 	// item is a single song which has its metadata populated.
 	// Reconstruct the QModelIndex we sent out.
@@ -741,7 +741,7 @@ void LibraryModel::onIncomingPopulateRowWithItems_Single(QPersistentModelIndex p
 	finishIncoming();
 }
 
-void LibraryModel::onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items)
+void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items)
 {
 	if(!pindex.isValid())
 	{

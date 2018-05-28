@@ -49,7 +49,7 @@ class LibraryRescannerJob: public AMLMJob, public UniqueIDMixin<LibraryRescanner
     using UniqueIDMixin<LibraryRescannerJob>::uniqueQObjectName;
 
 Q_SIGNALS:
-
+    void processReadyResults(MetadataReturnVal lritem_vec);
 
 public:
     explicit LibraryRescannerJob(QObject* parent);
@@ -60,7 +60,7 @@ public Q_SLOTS:
 
     void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, LibraryModel* current_libmodel);
 
-    void processReadyResults(MetadataReturnVal lritem_vec);
+    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
 
 
 protected:

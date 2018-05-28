@@ -71,6 +71,9 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 
     setTotalAmount(KJob::Unit::Files, m_items_to_rescan.size());
 
+    // Make the internal connection to the SLOT_processReadyResults() slot.
+    connect(this, &LibraryRescannerJob::processReadyResults, this, &LibraryRescannerJob::SLOT_processReadyResults);
+
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
     {
@@ -82,7 +85,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 
         qDb() << "Item number:" << num_items;
         MetadataReturnVal a = this->refresher_callback(*i);
-        this->processReadyResults(a);
+        Q_EMIT SLOT_processReadyResults(a);
         num_items++;
 
         setProcessedAmount(KJob::Unit::Files, num_items);
@@ -91,20 +94,6 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
-//    if(twWasCancelRequested())
-//    {
-//        // Cancelled.
-//        // Success == false is correct here.
-//        amlm_self->setSuccessFlag(false);
-//        amlm_self->setWasCancelled(true);
-//    }
-//    else
-//    {
-//        // Successful completion.
-//        qDb() << "METADATA RESCAN COMPLETE";
-//        amlm_self->setSuccessFlag(true);
-//    }
-
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)
@@ -201,7 +190,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-void LibraryRescannerJob::processReadyResults(MetadataReturnVal lritem_vec)
+void LibraryRescannerJob::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 {
     // We got one of ??? things back:
     // - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
@@ -218,7 +207,7 @@ void LibraryRescannerJob::processReadyResults(MetadataReturnVal lritem_vec)
             && lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found)
     {
         // It's a valid, new, multi-track entry.
-        m_current_libmodel->onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
+        m_current_libmodel->SLOT_onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
     }
     else if(lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found
             && lritem_vec.m_original_pindexes.size() == lritem_vec.m_num_tracks_found)

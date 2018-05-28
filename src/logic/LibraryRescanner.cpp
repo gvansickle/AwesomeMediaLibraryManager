@@ -422,7 +422,7 @@ void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 			&& lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found)
 	{
 		// It's a valid, new, multi-track entry.
-		m_current_libmodel->onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
+		m_current_libmodel->SLOT_onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
 	}
 	else if(lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found
 			&& lritem_vec.m_original_pindexes.size() == lritem_vec.m_num_tracks_found)

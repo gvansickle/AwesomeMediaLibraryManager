@@ -155,11 +155,11 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
-    qDb() << "ENTER defaultBegin, self/this:" << self << this;
-    qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
-
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
+
+    qDb() << "ENTER defaultBegin, self/this:" << self << this;
+    qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
     qDb() << "TWJob status:" << status();
 
@@ -187,6 +187,9 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 {
     // Remember that self is a QSharedPointer<ThreadWeaver::JobInterface>.
 
+    Q_CHECK_PTR(this);
+    Q_CHECK_PTR(self);
+
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
     qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
@@ -197,7 +200,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     if(twWasCancelRequested())
     {
         // Cancelled.
-        // Success == false is correct here.
+        // KJob Success == false is correct in the cancel case.
         amlm_self->setSuccessFlag(false);
         amlm_self->setWasCancelled(true);
     }
@@ -206,9 +209,6 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
         // Successful completion.
         amlm_self->setSuccessFlag(true);
     }
-
-    Q_CHECK_PTR(this);
-    Q_CHECK_PTR(self);
 
     // Essentially a duplicate of TW::QObjectDecorator's implementation.
     /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4

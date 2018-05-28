@@ -173,8 +173,8 @@ public:
 
 public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
-	void onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
-	void onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
+    void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
+    void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
 
     virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
 

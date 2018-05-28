@@ -79,10 +79,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     // This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
     // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
-//    auto amlm_self_shared = qSharedPointerDynamicCast<AMLMJob>(self);
-//    AMLMJobPtr amlm_self = amlm_self_shared.data();
+
     AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-//    auto amlm_self_other = dynamic_cast<AMLMJob*>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
 
     qDb() << "IN RUN, " << M_NAME_VAL(amlm_self);
     Q_CHECK_PTR(amlm_self);
@@ -130,9 +128,9 @@ M_WARNING("TODO not sure if this is the right place to do this");
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
-            stopped_due_to_cancel_req = true;
             break;
         }
+        /// @todo Not sure how we'd pause once we get into the TW::run() function.
 //        if(report_and_control.isPaused())
 //        {
 //            // We're paused, wait for a resume signal.
@@ -192,19 +190,6 @@ M_WARNING("TODO not sure if this is the right place to do this");
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
-
-//    if(stopped_due_to_cancel_req)
-//    {
-//        // Cancelled.
-//        // Success == false is correct here.
-//        amlm_self->setSuccessFlag(false);
-//        amlm_self->setWasCancelled(true);
-//    }
-//    else
-//    {
-//        // Successful completion.
-//        amlm_self->setSuccessFlag(true);
-//    }
 
     qDb() << "LEAVING RUN";
 }
