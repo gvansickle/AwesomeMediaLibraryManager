@@ -160,8 +160,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
-	qDebug() << M_THREADNAME();
-	qDebug() << "START:" << dir_url;
+    qDb() << "START:" << dir_url;
 
 	// Time how long it takes.
 	m_timer.start();

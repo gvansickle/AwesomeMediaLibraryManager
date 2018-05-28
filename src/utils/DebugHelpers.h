@@ -51,17 +51,12 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 }
 
 /**
- * Stream this macro to qDebug() to log the current thread name.
+ * Shorter qDebug() etc. replacements.
  */
-#define M_THREADNAME() QStringLiteral("[") + QThread::currentThread()->objectName() + QStringLiteral("]")
-
-/**
- * qDebug() etc. replacements which prepends the current thread name.
- */
-#define qDb() qDebug() << M_THREADNAME()
-#define qIn() qInfo() << M_THREADNAME()
-#define qWr() qWarning() << M_THREADNAME()
-#define qCr() qCritical() << M_THREADNAME()
+#define qDb() qDebug()
+#define qIn() qInfo()
+#define qWr() qWarning()
+#define qCr() qCritical()
 
 /// Stream out a warning of @a cond holds true.
 #define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
@@ -73,7 +68,7 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 
 inline static void dump_qobject(QObject* qobj)
 {
-#define out() qDebug() << M_THREADNAME()
+#define out() qDebug()
     out() << "Dumping ObjectInfo for QObject:" << qobj;
     // No known control on where this goes other than "to debug output".
     qobj->dumpObjectInfo();
