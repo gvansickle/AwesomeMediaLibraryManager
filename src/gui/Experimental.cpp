@@ -122,7 +122,7 @@ void Experimental::DoExperiment()
 
     // Set the global KIO job tracker.
     // If we do this, the jobs will add themselves to the given tracker if they don't have HideProgressInfo set.
-//    KIO::setJobTracker(master_job_tracker);
+    KIO::setJobTracker(master_job_tracker);
 
     ThreadWeaver::setDebugLevel(true, 10);
 

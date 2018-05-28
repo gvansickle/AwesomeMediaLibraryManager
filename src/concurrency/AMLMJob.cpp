@@ -27,17 +27,15 @@
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/Queue>
 #include <KJob>
-/// EXP
-/// /home/gary/src/kcoreaddons/src/lib/jobs/kjob_p.h
-//#include <kjob_p.h>
-#include "/home/gary/src/kcoreaddons/src/lib/jobs/kjob_p.h"
-///
+
 #include <KJobWidgets>
 #include <KDialogJobUiDelegate>
 
 /// Ours
 #include "utils/DebugHelpers.h"
 #include "utils/UniqueIDMixin.h"
+#include "utils/QtCastHelpers.h"
+#include "utils/TheSimplestThings.h"
 #include <gui/MainWindow.h>
 
 AMLMJob::AMLMJob(QObject *parent)
@@ -107,7 +105,9 @@ void AMLMJob::setSuccessFlag(bool success)
 
 KJob::Unit AMLMJob::progressUnit() const
 {
-    return d_ptr->progressUnit;
+    // Shhh... you didn't see this.
+//    return d_ptr->progressUnit;
+    return m_progress_unit;
 }
 
 qulonglong AMLMJob::processedSize() const
@@ -185,8 +185,27 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    // Remember that self is a QSharedPointer<ThreadWeaver::JobInterface>.
+
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
     qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
+
+    // Cast self to an AMLMJobPtr, it should be one.
+    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+
+    // We've either completed our work or been cancelled.
+    if(twWasCancelRequested())
+    {
+        // Cancelled.
+        // Success == false is correct here.
+        amlm_self->setSuccessFlag(false);
+        amlm_self->setWasCancelled(true);
+    }
+    else
+    {
+        // Successful completion.
+        amlm_self->setSuccessFlag(true);
+    }
 
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
@@ -229,18 +248,21 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 bool AMLMJob::doKill()
 {
     // KJob::doKill().
-    qDb() << "DOKILL";
+    qDb() << "ENTER KJob::doKill()";
 
     // Kill the TW::Job.
     requestAbort();
 
-    onKJobDoKill();
+    /// @todo I think we need to not do this, and rather wait for ::run() to abort.
+    //onKJobDoKill();
 
     /// @todo Need to wait for the final kill here?
     /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
     /// - finished is emitted
     /// - result is optionally emitted
     /// - deleteLater() is optionally called on the job.
+
+    qDb() << "EXIT KJob::doKill()";
 
     return true;
 }
@@ -261,7 +283,9 @@ bool AMLMJob::doResume()
 
 void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 {
-    d_ptr->progressUnit = prog_unit;
+    /// @todo This "KJobPrivate" crap is crap.
+//    d_ptr->progressUnit = prog_unit;
+    m_progress_unit = prog_unit;
 }
 
 void AMLMJob::make_connections()
@@ -287,7 +311,6 @@ void AMLMJob::make_connections()
     // Intended to notify UIs that should detach from the job.
     /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
     connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
-//    connect(this, &AMLMJob::finished, this, &AMLMJob::onKJobFinished);
 
     qDb() << "MADE CONNECTIONS, this:" << this;
 }
@@ -407,7 +430,7 @@ void AMLMJob::onKJobResult(KJob *kjob)
     if(kjob->error())
     {
         // There was an error.
-        qWr() << "ERROR:" << kjob->error();
+        qWr() << "KJOB ERROR:" << kjob->errorString() << kjob->errorText() << kjob->error();
     }
 }
 

@@ -61,7 +61,12 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 #define qCr() qCritical() << M_THREADNAME()
 
 /// Stream out a warning of @a cond holds true.
-#define M_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+#define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+
+/// From -> To
+//#define AMLM_ASSERT_PTR_IS_CONVERTIBLE(a, b) if(dynamic_cast<std::remove_pointer_t<decltype(b)>>(a) == 0) \
+//    { qCr() << "pointers are not dynamic_cast<> convertible:" << #a ":" << a << #b ":" << b;  Q_ASSERT(0); }
+//#define AMLM_ASSERT_IS_CONVERTIBLE(a, b) if((a) == (b)) { qCr() << "Pointers not convertible:" << #a ":" << a << #b ":" << b; Q_ASSERT(0); }
 
 inline static void dump_qobject(QObject* qobj)
 {

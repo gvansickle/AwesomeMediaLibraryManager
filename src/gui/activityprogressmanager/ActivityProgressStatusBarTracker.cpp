@@ -454,6 +454,7 @@ int ActivityProgressStatusBarTracker::calculate_summary_percent()
     return retval;
 }
 
+#if 0
 void ActivityProgressStatusBarTracker::setStopOnClose(KJob *kjob, bool stopOnClose)
 {
 //if (!progressWidget.contains(job))
@@ -489,6 +490,7 @@ bool ActivityProgressStatusBarTracker::autoDelete(KJob *job) const
     qDb() << ":::" << job << retval;
     return retval;
 }
+#endif
 
 void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)
 {

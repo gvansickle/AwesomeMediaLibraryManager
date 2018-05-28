@@ -89,40 +89,22 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     }
 
     // We've either completed our work or been cancelled.
-    if(twWasCancelRequested())
-    {
-        // Cancelled.
-        // Success == false is correct here.
-        amlm_self->setSuccessFlag(false);
-        amlm_self->setWasCancelled(true);
-    }
-    else
-    {
-        // Successful completion.
-        qDb() << "METADATA RESCAN COMPLETE";
-        amlm_self->setSuccessFlag(true);
-    }
+    // Either way, defaultEnd() will handle setting the cancellation status as long as
+    // we set success/fail appropriately.
+//    if(twWasCancelRequested())
+//    {
+//        // Cancelled.
+//        // Success == false is correct here.
+//        amlm_self->setSuccessFlag(false);
+//        amlm_self->setWasCancelled(true);
+//    }
+//    else
+//    {
+//        // Successful completion.
+//        qDb() << "METADATA RESCAN COMPLETE";
+//        amlm_self->setSuccessFlag(true);
+//    }
 
-#if 0
-    ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(m_items_to_rescan,
-                                        std::bind(&LibraryRescannerJob::refresher_callback, this, _1));
-    future.tap(this, [this](MetadataReturnVal a) {
-        // The result is ready tap.
-        this->processReadyResults(a);
-    })
-    .tap(this, [=](ExtAsyncProgress prog) {
-        // Progress update tap.
-        setTotalAmount(KJob::Unit::Files, prog.max);
-        setProcessedAmount(KJob::Unit::Files, prog.val);
-//        Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, progtext);
-    ;})
-    .finally([=](){
-        qDb() << "METADATA RESCAN COMPLETE";
-//        onRescanFinished();
-        // Successful completion.
-        amlm_self->setSuccessFlag(true);
-    }).waitForFinished();
-#endif
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)

@@ -36,6 +36,8 @@ class QProgressBar;
 /// KF5
 class KJob;
 #include <KAbstractWidgetJobTracker>
+#include <KWidgetJobTracker>
+#include <KIO/JobUiDelegate>
 
 /// Ours
 #include <utils/TheSimplestThings.h>
@@ -55,6 +57,9 @@ using ActivityProgressStatusBarTrackerPtr = ActivityProgressStatusBarTracker*;
 
 using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
 
+//using APSBT_BASE = KWidgetJobTracker;
+using APSBT_BASE = KAbstractWidgetJobTracker;
+
 /**
  * K*WidgetJobTracker tracking the progress/status/controls of a collection of KJobs/AMLMJobs.
  *
@@ -70,11 +75,13 @@ using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgress
  *       Causes complications; currently the KJob is a nullptr, which causes its own complications.
  *
  */
-class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker, public UniqueIDMixin<ActivityProgressStatusBarTracker>
+class ActivityProgressStatusBarTracker: public APSBT_BASE/*KAbstractWidgetJobTracker*/,
+        public UniqueIDMixin<ActivityProgressStatusBarTracker>
 {
 	Q_OBJECT
 
-    using BASE_CLASS = KAbstractWidgetJobTracker;
+//    using BASE_CLASS = KAbstractWidgetJobTracker;
+    using BASE_CLASS = APSBT_BASE;
 
     using UniqueIDMixin<ActivityProgressStatusBarTracker>::uniqueQObjectName;
 
@@ -134,10 +141,6 @@ public:
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
 
-    using KAbstractWidgetJobTracker::setStopOnClose;
-    //    virtual bool stopOnClose(KJob *job) const;
-    //    virtual void setAutoDelete(KJob *job, bool autoDelete);
-    //    virtual bool autoDelete(KJob *job) const;
 
 public Q_SLOTS:
 
@@ -437,11 +440,11 @@ private:
     /// The KWidgetJobTracker::Private overrides however do do something, so we'll have to duplicate that functionality here.
     ///
     /// ...Yeah, something is pretty wrong with KF5 here.  This is the best I've been able to come up with.
-public:
-    virtual void setStopOnClose(KJob* kjob, bool stopOnClose);
-    virtual bool stopOnClose(KJob *job) const;
-    virtual void setAutoDelete(KJob *job, bool autoDelete);
-    virtual bool autoDelete(KJob *job) const;
+//public:
+//    virtual void setStopOnClose(KJob* kjob, bool stopOnClose);
+//    virtual bool stopOnClose(KJob *job) const;
+//    virtual void setAutoDelete(KJob *job, bool autoDelete);
+//    virtual bool autoDelete(KJob *job) const;
 
 private:
     /// For the pop-up window.

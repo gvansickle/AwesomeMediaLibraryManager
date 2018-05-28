@@ -60,6 +60,7 @@ M_WARNING("TODO: NOT SHARED PTR");
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
+M_WARNING("TODO: There's a problem with shared ptrs here");
     qDb() << "DirectoryScannerAMLMJob DELETED:" << this << objectName();
 }
 
@@ -189,18 +190,21 @@ M_WARNING("TODO not sure if this is the right place to do this");
     }
 
     // We've either completed our work or been cancelled.
-    if(stopped_due_to_cancel_req)
-    {
-        // Cancelled.
-        // Success == false is correct here.
-        amlm_self->setSuccessFlag(false);
-        amlm_self->setWasCancelled(true);
-    }
-    else
-    {
-        // Successful completion.
-        amlm_self->setSuccessFlag(true);
-    }
+    // Either way, defaultEnd() will handle setting the cancellation status as long as
+    // we set success/fail appropriately.
+
+//    if(stopped_due_to_cancel_req)
+//    {
+//        // Cancelled.
+//        // Success == false is correct here.
+//        amlm_self->setSuccessFlag(false);
+//        amlm_self->setWasCancelled(true);
+//    }
+//    else
+//    {
+//        // Successful completion.
+//        amlm_self->setSuccessFlag(true);
+//    }
 
     qDb() << "LEAVING RUN";
 }

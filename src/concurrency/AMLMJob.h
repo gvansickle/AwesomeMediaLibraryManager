@@ -423,7 +423,10 @@ protected:
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
-    /// @note run() must have set the correct success() value prior to exiting.
+    /**
+     * The defaultEnd() function, called immediately after run() returns.
+     * @note run() must have set the correct success() value prior to exiting.
+     */
     void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
 
     /// @}
@@ -541,6 +544,8 @@ private:
     QAtomicInt m_flag_cancel {0};
     QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
+
+    KJob::Unit m_progress_unit { KJob::Unit::Bytes };
 };
 
 //Q_DECLARE_METATYPE(AMLMJob); /// @todo need default constructor and copy constructor.
