@@ -17,29 +17,36 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtGlobal>
+#include <config.h>
 
-//#include <QApplication>
 #include "AMLMApp.h"
 
+/// Qt5
+
+#include <QtGlobal>
 #include <QSettings>
 #include <QIcon>
 #include <QLoggingCategory>
 #include <QResource>
-#include <KAboutData>
+#include <QProcessEnvironment>
+#include <QCommandLineParser>
+#include <QImageReader>
+#include <QDebug>
 
+/// KF5
+
+#include <KAboutData>
 #include <KIconLoader>
 #include <KSharedConfig>
 #include <KConfigGroup>
-#include <QProcessEnvironment>
 
-#include <QCommandLineParser>
+
+
+#include <gtk/gtk.h>
+
+/// Ours
 
 #include <utils/AboutDataSetup.h>
-
-#include <QImageReader>
-#include <QDebug>
-#include <gtk/gtk.h>
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
 
@@ -51,7 +58,9 @@
 
 #include "utils/Logging.h"
 
-
+/**
+ * Here's where the magic happens.
+ */
 int main(int argc, char *argv[])
 {
 	// Set up top-level logging.
@@ -60,7 +69,7 @@ int main(int argc, char *argv[])
 	logging.InstallMessageHandler();
 	logging.SetMessagePattern("["
 					   "%{time hh:mm:ss.zzz} "
-					   "%{threadid} "
+                       "%threadname15 "
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
                        "%{if-fatal}FATAL%{endif}"
                        "] "
@@ -90,11 +99,10 @@ int main(int argc, char *argv[])
 	///		Qt::AA_CompressHighFrequencyEvents (default is true on X11)
 
 	//
-	// Create the Qt5 app.
+    // Create the Qt5/KF5 app.
     // @note Must be the first QObject created and the last QObject deleted.
 	//
     AMLMApp app(argc, argv);
-
 
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();

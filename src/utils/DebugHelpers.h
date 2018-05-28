@@ -20,8 +20,10 @@
 #ifndef DEBUGHELPERS_H
 #define DEBUGHELPERS_H
 
+/// Std C++
 #include <type_traits>
 
+/// Qt5
 #include <QObject>
 #include <QMetaMethod>
 #include <QString>
@@ -29,6 +31,7 @@
 #include <QThread>
 #include <QModelIndex>
 
+/// Ours
 #include "StringHelpers.h"
 
 
