@@ -58,6 +58,8 @@
 #include <QObject>
 #include <QPointer>
 #include <QTime>
+#include <QMutex>
+#include <QWaitCondition>
 
 /// KF5
 #include <KJob>
@@ -305,7 +307,8 @@ public:
     /**
      * Abort the execution of the job.
      * Call this method to ask the Job to abort if it is currently executed.
-     * This method should return immediately, not after the abort has completed.
+     *
+     * @note This method should return immediately, not after the abort has completed.
      *
      * @note TW::Job's default implementation of the method does nothing.
      * @note TW::IdDecorator calls the TW::Job's implementation.
@@ -338,7 +341,7 @@ public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     /// @{
 
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
-    bool wasCancelRequested() const { return m_flag_cancel != 0; }
+    bool wasCancelRequested();
 
     /// Derived run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
@@ -539,8 +542,14 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(AMLMJob)
 
-    /// Control structs/flags
-    QAtomicInt m_flag_cancel {0};
+	/// Mutex and wait condition for cancel/pause/resume.
+    /// Mutex is created in unlocked state, non-recursive.
+	QMutex m_cancel_pause_resume_mutex;
+    QWaitCondition m_cancel_pause_resume_waitcond;
+    /// Flag telling the AMLMJob run() thread to cancel.
+    /// No need to be atomic due to the mutex/wc.
+    bool m_flag_cancel {false};
+//    QAtomicInt m_flag_cancel {0};
     QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
 

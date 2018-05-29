@@ -74,7 +74,24 @@ void AMLMJob::requestAbort()
 {
     // Set atomic abort flag.
     qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
-    m_flag_cancel = 1;
+//    m_flag_cancel = 1;
+
+    // Using a mutex/condition variable combo to allow both abort and pause/resume.
+    // This is sort of easier with C++11+, but it's Qt5, so....
+
+    // Lock the mutex.
+    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
+
+    // Signal to the run() loop that it should cancel.
+    m_flag_cancel = true;
+
+    // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
+	// by the notify, and then blocking because we still hold the mutex.
+	lock.unlock(); // == lock.unlock(); (ok, so that one's the same, still...)
+
+	// Notify all threads waiting on the condition variable that there's new status to look at.
+	// Really only one thread might be watching, but not much difference here.
+    m_cancel_pause_resume_waitcond.notify_all(); // == m_cv.notify_all(); (...well, it's about time Qt learned some modern C++.)
 }
 
 void AMLMJob::start()
@@ -95,6 +112,22 @@ void AMLMJob::start(ThreadWeaver::QueueStream &qstream)
 {
     // Simply queue this TW::Job onto the given QueueStream.  Job should start immediately.
     qstream << this;
+}
+
+bool AMLMJob::wasCancelRequested()
+{
+    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
+
+    // Were we told to abort?
+    if(m_flag_cancel)
+    {
+        return true;
+    }
+
+    // Wait if we have to.
+    // Well, here we don't have to.  Until we add pause/resume, we just have an expensive abort flag.
+//    m_cancel_pause_resume_waitcond.wait(lock.mutex());
+    return false;
 }
 
 void AMLMJob::setSuccessFlag(bool success)
@@ -193,7 +226,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     Q_EMIT started(self);
 
     // ThreadWeaver::Job::defaultBegin() does literally nothing.
-    this->ThreadWeaver::Job::defaultBegin(self, thread);
+    ThreadWeaver::Job::defaultBegin(self, thread);
 }
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
@@ -205,6 +238,11 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
     qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
+
+    // Call base class defaultEnd() implementation.
+    // ThreadWeaver::Job::defaultEnd() calls:
+    //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
+    ThreadWeaver::Job::defaultEnd(self, thread);
 
     // Cast self to an AMLMJobPtr, it should be one.
     AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
@@ -249,13 +287,6 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     }
     qDb() << objectName() << "EMITTING DONE";
     Q_EMIT /*TW::QObjectDecorator*/ done(self);
-
-    // Call base class defaultEnd() implementation.
-    // ThreadWeaver::Job::defaultEnd() calls:
-    //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
-    //   Not certain, but assume doing that here at the very end is the safest place to do this.
-    this->ThreadWeaver::Job::defaultEnd(self, thread);
-
 }
 
 bool AMLMJob::doKill()

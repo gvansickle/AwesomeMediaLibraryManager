@@ -111,8 +111,11 @@ include(KDECMakeSettings)
 # string(REGEX REPLACE "-O[^;]*" "-Og" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 # string(REGEX REPLACE "-g[^;]*" "-ggdb3" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 #list(REMOVE_DUPLICATES CMAKE_CXX_FLAGS_DEBUG)
-set(CMAKE_CXX_FLAGS_DEBUG "-Og -ggdb3 -fno-omit-frame-pointer")
-set(CMAKE_C_FLAGS_DEBUG "-Og -ggdb3 -fno-omit-frame-pointer")
+
+# Set some extra debug flags early.
+set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments")
+set(CMAKE_CXX_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
+set(CMAKE_C_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
 
 ###
 ### END ECM Setup ====================================================================================================
