@@ -26,6 +26,10 @@
 
 ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) : BASE_CLASS(parent, f)
 {
+    /// GRVS
+//    setWindowFlags(Qt::Dialog);
+//    show();
+
     // Set up the layout.
     Q_ASSERT(layout() == nullptr);
     setLayout(new QVBoxLayout());
@@ -41,6 +45,7 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) :
     setMinimumHeight( 26 );
 
     setContentsMargins( 4, 4, 4, 4 );
+    //layout()->setSizeConstraint(QLayout::SetNoConstraint);
     setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
 
 }
@@ -73,14 +78,14 @@ void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 
 void ExpandingFrameWidget::reposition()
 {
-    adjustSize();
+//    adjustSize();
 
-    if(!MainWindow::instance())
-        return;
+//    if(!MainWindow::instance())
+//        return;
 
-    QPoint p;
-    p.setX(MainWindow::instance()->width() - width());
-    p.setY(MainWindow::instance()->height() - height());
-    move(p);
+//    QPoint p;
+//    p.setX(MainWindow::instance()->width() - width());
+//    p.setY(MainWindow::instance()->height() - height());
+//    move(p);
 }
 
