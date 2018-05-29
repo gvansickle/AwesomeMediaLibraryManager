@@ -175,7 +175,6 @@ idstr(const char *id_as_c_str, T id)
 
 #define M_IDSTR(id) idstr(#id ": ", id) + ", " +
 
-#define M_NAME_VAL(id) #id ":" << id
 
 /// Attempts to get the compiler to print a human-readable type name at compile time.
 /// @note In the 21st century, this should be a solved problem.  It isn't.
@@ -201,6 +200,9 @@ void print_type_in_compilation_error(T&&)
 #define STRINGISE(x) STRINGISE_IMPL(x)
 #define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) "): "
 /// @}
+
+#define M_NAME_VAL(id) STRINGISE_IMPL(id) ":" << id
+
 
 /**
  * Portable compile-time warning message.

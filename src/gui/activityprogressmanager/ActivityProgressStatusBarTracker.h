@@ -36,8 +36,6 @@ class QProgressBar;
 /// KF5
 class KJob;
 #include <KAbstractWidgetJobTracker>
-#include <KWidgetJobTracker>
-#include <KIO/JobUiDelegate>
 
 /// Ours
 #include <utils/TheSimplestThings.h>
@@ -57,8 +55,6 @@ using ActivityProgressStatusBarTrackerPtr = ActivityProgressStatusBarTracker*;
 
 using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
 
-//using APSBT_BASE = KWidgetJobTracker;
-using APSBT_BASE = KAbstractWidgetJobTracker;
 
 /**
  * K*WidgetJobTracker tracking the progress/status/controls of a collection of KJobs/AMLMJobs.
@@ -75,13 +71,12 @@ using APSBT_BASE = KAbstractWidgetJobTracker;
  *       Causes complications; currently the KJob is a nullptr, which causes its own complications.
  *
  */
-class ActivityProgressStatusBarTracker: public APSBT_BASE/*KAbstractWidgetJobTracker*/,
+class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker,
         public UniqueIDMixin<ActivityProgressStatusBarTracker>
 {
 	Q_OBJECT
 
-//    using BASE_CLASS = KAbstractWidgetJobTracker;
-    using BASE_CLASS = APSBT_BASE;
+    using BASE_CLASS = KAbstractWidgetJobTracker;
 
     using UniqueIDMixin<ActivityProgressStatusBarTracker>::uniqueQObjectName;
 
@@ -141,6 +136,24 @@ public:
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
 
+    /// Adapted from KWidgetJobTracker::Private, sort of.
+    /// There's some sort of weirdness going on with these in KAbstractWidgetJobTracker::Private.
+    /// Comment reads:
+    /// "### KDE 5: make this methods virtual on KAbstractWidgetJobTracker and get rid out of this workaround. (ereslibre)"
+    /// Well it's KF5 now, so let's see if/what difference these make.
+    /// They're public in ::Private, so I guess that means they should be private: here.
+    /// KAbstractWidgetJobTracker however has them as *non-virtual public* functions which just call
+    /// the KAbstractWidgetJobTracker::Private versions (which do nothing).
+    /// The KWidgetJobTracker::Private overrides however do do something, so we'll have to duplicate that functionality here.
+    ///
+    /// ...Yeah, something is pretty wrong with KF5 here.  KJob has at least public setAutoDelete() and isAutoDelete()
+    /// members (but still non-virtual).  This is the best I've been able to come up with.
+    /// At this point I'm not sure that these members can work through the tracker interface at all.
+//public:
+//    virtual void setStopOnClose(KJob* kjob, bool stopOnClose);
+//    virtual bool stopOnClose(KJob *job) const;
+    virtual void setAutoDelete(KJob *kjob, bool autoDelete);
+    virtual bool autoDelete(KJob *kjob) const;
 
 public Q_SLOTS:
 
@@ -431,22 +444,6 @@ protected: // Variable members
 
 private:
     Q_DISABLE_COPY(ActivityProgressStatusBarTracker)
-
-    /// From KWidgetJobTracker::Private.  There's some sort of weirdness going on
-    /// with these in KAbstractWidgetJobTracker::Private.  Comment reads:
-    /// "### KDE 5: make this methods virtual on KAbstractWidgetJobTracker and get rid out of this workaround. (ereslibre)"
-    /// Well it's KF5 now, so let's see if/what difference these make.
-    /// They're public in ::Private, so I guess that means they should be private: here.
-    /// KAbstractWidgetJobTracker however has them as non-virtual public functions which just call
-    /// the KAbstractWidgetJobTracker::Private versions (which do nothing).
-    /// The KWidgetJobTracker::Private overrides however do do something, so we'll have to duplicate that functionality here.
-    ///
-    /// ...Yeah, something is pretty wrong with KF5 here.  This is the best I've been able to come up with.
-//public:
-//    virtual void setStopOnClose(KJob* kjob, bool stopOnClose);
-//    virtual bool stopOnClose(KJob *job) const;
-//    virtual void setAutoDelete(KJob *job, bool autoDelete);
-//    virtual bool autoDelete(KJob *job) const;
 
 private:
     /// For the pop-up window.

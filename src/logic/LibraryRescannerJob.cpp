@@ -77,7 +77,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
     {
-        if(twWasCancelRequested())
+        if(wasCancelRequested())
         {
             // We were told to cancel.
             break;

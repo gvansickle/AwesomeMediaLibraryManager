@@ -176,11 +176,11 @@ void Experimental::DoExperiment()
 
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
-#if 0
-    master_job_tracker->setAutoDelete(dsj, true);
-    Q_ASSERT(master_job_tracker->autoDelete(dsj) == true);
-    master_job_tracker->setAutoDelete(dsj, false);
-    Q_ASSERT(master_job_tracker->autoDelete(dsj) == false);
+#if 1
+    master_job_tracker->setAutoDelete(inet_get_job, true);
+    Q_ASSERT(master_job_tracker->autoDelete(inet_get_job) == true);
+    master_job_tracker->setAutoDelete(inet_get_job, false);
+    Q_ASSERT(master_job_tracker->autoDelete(inet_get_job) == false);
 #endif
 
     master_job_tracker->registerJob(dirsizejob);

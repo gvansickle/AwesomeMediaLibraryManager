@@ -462,29 +462,20 @@ bool ActivityProgressStatusBarTracker::stopOnClose(KJob *job) const
 {
 
 }
-
-void ActivityProgressStatusBarTracker::setAutoDelete(KJob *job, bool autoDelete)
-{
-    qDb() << ":::" << job << autoDelete;
-    with_widget_or_skip(job, [=](auto w) {
-        w->setAttribute(Qt::WA_DeleteOnClose, autoDelete);
-        qDb() << ":::" << job << w->testAttribute(Qt::WA_DeleteOnClose);
-
-    });
-}
-
-bool ActivityProgressStatusBarTracker::autoDelete(KJob *job) const
-{
-    // Follow KWidgetJobTracker::Private's lead here: autoDelete if we can't find the job or widget.
-    bool retval = true;
-    with_widget_or_skip(job, [&](auto w) {
-        retval = w->testAttribute(Qt::WA_DeleteOnClose);
-        qDb() << ":::" << job << retval;
-        });
-    qDb() << ":::" << job << retval;
-    return retval;
-}
 #endif
+
+void ActivityProgressStatusBarTracker::setAutoDelete(KJob *kjob, bool autoDelete)
+{
+    Q_CHECK_PTR(kjob);
+    kjob->setAutoDelete(autoDelete);
+}
+
+bool ActivityProgressStatusBarTracker::autoDelete(KJob *kjob) const
+{
+    Q_CHECK_PTR(kjob);
+    // The KJob knows if it's autoDelete or not.
+    return kjob->isAutoDelete();
+}
 
 void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)
 {

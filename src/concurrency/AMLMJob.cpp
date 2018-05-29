@@ -210,7 +210,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
 
     // We've either completed our work or been cancelled.
-    if(twWasCancelRequested())
+    if(wasCancelRequested())
     {
         // Cancelled.
         // KJob Success == false is correct in the cancel case.
@@ -397,8 +397,15 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // We'll similarly deal with the fail case in onTWFailed().
     if(/*TW::*/success())
     {
-        // All KF5.
+    	// Set the KJob::error() code.
         setError(NoError);
+
+        // Tell the KJob to:
+        // - Set d->isFinished
+        // - Quit the d->eventLoop if applicable.
+        // - emit finished(this)
+        // - emit result(this)
+        // - if the KJob is set to autoDelete(), call deleteLater().
         emitResult();
     }
 }
@@ -417,21 +424,29 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
 
     if(!/*TW::*/twjob->success())
     {
-        if(this->m_tw_job_was_cancelled)
+        // Set the KJob error info.
+    	if(this->m_tw_job_was_cancelled)
         {
             // Cancelled.
-            // KF5
+    		// KJob
             setError(KilledJobError);
         }
         else
         {
             // Some other error.
-            // KF5
+            // KJob
             setError(KJob::UserDefinedError);
             setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
         }
+
         // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
         // We handle the success case in done/success above, so we handle the fail case here.
+        // Tell the KJob to:
+		// - Set d->isFinished
+		// - Quit the d->eventLoop if applicable.
+		// - emit finished(this)
+		// - emit result(this)
+		// - if the KJob is set to autoDelete(), call deleteLater().
         emitResult();
     }
 }

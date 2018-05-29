@@ -124,7 +124,7 @@ M_WARNING("TODO not sure if this is the right place to do this");
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
-        if(amlm_self->twWasCancelRequested())
+        if(amlm_self->wasCancelRequested())
         {
             // We've been cancelled.
             qIn() << "CANCELLED";

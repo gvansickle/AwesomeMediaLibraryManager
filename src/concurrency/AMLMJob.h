@@ -332,13 +332,13 @@ public:
 
     /// @}
 
-public:
+public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     /// @name New public interfaces FBO derived classes' overloads of TW:Job::run().
     /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
 
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
-    bool twWasCancelRequested() const { return m_flag_cancel != 0; }
+    bool wasCancelRequested() const { return m_flag_cancel != 0; }
 
     /// Derived run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
@@ -350,6 +350,7 @@ public:
     Q_SCRIPTABLE qulonglong processedSize() const;
     Q_SCRIPTABLE qulonglong totalSize() const;
 
+public:
     /// Dump info about the given KJob.
     static void dump_job_info(KJob* kjob, const QString &header = QString());
 
@@ -534,8 +535,6 @@ protected Q_SLOTS:
     void onKJobFinished(KJob* kjob);
 
     /// @}
-
-
 
 private:
     Q_DISABLE_COPY(AMLMJob)
