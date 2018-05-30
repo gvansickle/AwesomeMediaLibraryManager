@@ -62,6 +62,7 @@ void CumulativeStatusWidget::make_connections()
 
 void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
 {
+	// Update the subwidget contents.
     if(new_num_jobs > 0)
     {
         m_current_activity_label->setText(tr("Running"));

@@ -19,9 +19,12 @@
 
 #include "ExpandingFrameWidget.h"
 
+/// Qt5
 #include <QLayout>
 #include <QWidget>
 
+/// Ours
+#include <utils/TheSimplestThings.h>
 #include <gui/MainWindow.h>
 
 ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) : BASE_CLASS(parent, f)
@@ -45,14 +48,26 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) :
     setMinimumHeight( 26 );
 
     setContentsMargins( 4, 4, 4, 4 );
-    //layout()->setSizeConstraint(QLayout::SetNoConstraint);
-    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+    // Make the frame confirm to the size of the contained widgets,
+    // i.e. the user can't resize it.
+    layout()->setSizeConstraint(QLayout::SetFixedSize);
+//    QSizePolicy sp();
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    updateGeometry();
+
+//    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+//    layout()->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
 
 }
 
 ExpandingFrameWidget::~ExpandingFrameWidget()
 {
     // TODO Auto-generated destructor stub
+}
+
+void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
+{
+    m_cumulative_status_bar_main_widget = status_bar_widget;
 }
 
 void ExpandingFrameWidget::addWidget(QWidget *new_widget)
@@ -74,18 +89,53 @@ void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 {
 //    new_widget->setParent(this);
     layout()->removeWidget(new_widget);
+
+    setFixedHeight(new_widget->height() * children().size() + 8);
+    reposition();
+}
+
+QSize ExpandingFrameWidget::sizeHint() const
+{
+    return BASE_CLASS::sizeHint();
+///
+    // parent is also the status bar widget.
+    auto sbw = parentWidget();
+
+    qDb() << "PARENT SIZE HINT:" << sbw->sizeHint();
+
+    return QSize(sbw->width(), 10);
 }
 
 void ExpandingFrameWidget::reposition()
 {
-//    adjustSize();
+    qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
 
-//    if(!MainWindow::instance())
-//        return;
+//    QSize s = sizeHint();
+//    s.setWidth(parentWidget()->width());
+//    resize(s);
+//    updateGeometry();
 
-//    QPoint p;
-//    p.setX(MainWindow::instance()->width() - width());
-//    p.setY(MainWindow::instance()->height() - height());
-//    move(p);
+//    // parent is also the status bar widget.
+////    auto sbw = parentWidget();
+
+////    // Set the width of this to match the parent.
+//////    setMinimumWidth(sbw->width());
+//////    setMaximumWidth(sbw->width());
+////    qDb() << "SIZE HINT:" << sbw->sizeHint();
+////    setMinimumSizeHint(sbw->sizeHint().width(), sbw->sizeHint().height());
+
+////    // Per instructions, call this after dinking with the widget's sizeHint()/Policy().
+////    updateGeometry();
+
+////    // Adjust the widget size to fit contents (via sizeHint()).
+////    adjustSize();
+
+////    if(!MainWindow::instance())
+////        return;
+
+////    QPoint p;
+////    p.setX(MainWindow::instance()->width() - width());
+////    p.setY(MainWindow::instance()->height() - height());
+////    move(p);
 }
 

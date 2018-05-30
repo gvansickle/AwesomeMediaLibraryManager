@@ -21,7 +21,9 @@
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
 
 class QWidget;
+#include <QSize>
 #include <QFrame>
+#include <QPointer>
 
 
 /*
@@ -37,13 +39,20 @@ public:
     explicit ExpandingFrameWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
      ~ExpandingFrameWidget() override;
 
+    void setMainProgressWidget(QWidget* status_bar_widget);
+
     void addWidget(QWidget* new_widget);
 
     void removeWidget(QWidget* new_widget);
 
+    QSize sizeHint() const override;
+
     void reposition();
 
 private:
+
+    QPointer<QWidget> m_cumulative_status_bar_main_widget;
+
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_ */

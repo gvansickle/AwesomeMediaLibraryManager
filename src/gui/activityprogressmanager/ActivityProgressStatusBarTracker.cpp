@@ -62,6 +62,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 //    m_cumulative_status_tracker->registerJob(cumulative_job, qobject_cast<BaseActivityProgressStatusBarWidget*>(m_cumulative_status_widget));
 
     m_expanding_frame_widget = new ExpandingFrameWidget(m_cumulative_status_widget, Qt::Tool);
+//    m_expanding_frame_widget->setMainProgressWidget(m_cumulative_status_widget);
 
     /// @note Set Window type to be a top-level window, i.e. a Qt::Window, Qt::Popup, or Qt::Dialog (and a few others mainly Mac).
 //    m_expanding_frame_widget->setWindowFlags(Qt::Popup);
@@ -505,7 +506,7 @@ void ActivityProgressStatusBarTracker::showSubJobs()
     qDb() << "Root Frame topLeft(), Global:" << pos_tl_global;
 
 //    m_expanding_frame_widget->popup(pos_tl_global);
-    m_expanding_frame_widget->updateGeometry();
+//    m_expanding_frame_widget->updateGeometry();
     m_expanding_frame_widget->raise();
     m_expanding_frame_widget->show();
 
