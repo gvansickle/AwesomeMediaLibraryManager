@@ -75,19 +75,11 @@ void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 {
     // Set the widget width to the same as the summary widget.
     new_widget->setFixedWidth(parentWidget()->width());
+
     // Widget will be reparented.
     layout()->addWidget(new_widget);
 
     reposition();
-
-//    // Resize if necessary.
-//    if(width() < new_widget->width())
-//    {
-//        setMinimumWidth(new_widget->width());
-//    }
-
-//    /// @todo
-//    setMinimumHeight(new_widget->height());
 }
 
 void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
@@ -120,14 +112,8 @@ void ExpandingFrameWidget::reposition()
 //    resize(s);
     updateGeometry();
 
-//    // parent is also the status bar widget.
-////    auto sbw = parentWidget();
-
-////    // Set the width of this to match the parent.
-//////    setMinimumWidth(sbw->width());
-//////    setMaximumWidth(sbw->width());
-////    qDb() << "SIZE HINT:" << sbw->sizeHint();
-////    setMinimumSizeHint(sbw->sizeHint().width(), sbw->sizeHint().height());
+    // parent is also the status bar widget.
+    auto sbw = parentWidget();
 
 ////    // Per instructions, call this after dinking with the widget's sizeHint()/Policy().
 ////    updateGeometry();
@@ -138,9 +124,11 @@ void ExpandingFrameWidget::reposition()
 ////    if(!MainWindow::instance())
 ////        return;
 
-////    QPoint p;
-////    p.setX(MainWindow::instance()->width() - width());
-////    p.setY(MainWindow::instance()->height() - height());
-////    move(p);
+    QPoint p;
+    QPoint pp = mapToGlobal(sbw->pos());
+    auto sum_pos = mapFromGlobal(pp);
+    p.setX(sum_pos.x() - width());
+    p.setY(sum_pos.y() - height());
+    move(p);
 }
 

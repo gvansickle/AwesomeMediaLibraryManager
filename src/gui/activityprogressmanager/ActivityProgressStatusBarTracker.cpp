@@ -501,14 +501,15 @@ void ActivityProgressStatusBarTracker::showSubJobs()
 //    m_expanding_frame_widget->windowHandle()->setTransientParent(RootWidget()->windowHandle());
 
 
-    // Translate the the root widget's topLeft() to MainWindow coords.
+    // Translate the the root widget's topLeft() to global coords.
     auto pos_tl_global = summary_widget->mapToGlobal(rect.topLeft());
     qDb() << "Root Frame topLeft(), Global:" << pos_tl_global;
 
 //    m_expanding_frame_widget->popup(pos_tl_global);
 //    m_expanding_frame_widget->updateGeometry();
-    m_expanding_frame_widget->raise();
+//    m_expanding_frame_widget->activateWindow();
     m_expanding_frame_widget->show();
+    m_expanding_frame_widget->raise();
 
     qDb() << "AFTER FRAME GEOMETRY:" << m_expanding_frame_widget->geometry();
 
