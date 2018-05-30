@@ -38,11 +38,12 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) :
     setLayout(new QVBoxLayout());
     layout()->setSpacing(0);
     layout()->setMargin(0);
+    layout()->setSizeConstraint(QLayout::SetFixedSize);
 
     setBackgroundRole( QPalette::Window );
     setAutoFillBackground( true );
 
-    setFrameStyle( QFrame::Box );
+//    setFrameStyle( QFrame::Box );
 
     setMinimumWidth( 26 );
     setMinimumHeight( 26 );
@@ -72,8 +73,12 @@ void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
 
 void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 {
+    // Set the widget width to the same as the summary widget.
+    new_widget->setFixedWidth(parentWidget()->width());
     // Widget will be reparented.
     layout()->addWidget(new_widget);
+
+    reposition();
 
 //    // Resize if necessary.
 //    if(width() < new_widget->width())
@@ -90,7 +95,7 @@ void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 //    new_widget->setParent(this);
     layout()->removeWidget(new_widget);
 
-    setFixedHeight(new_widget->height() * children().size() + 8);
+//    setFixedHeight(new_widget->height() * children().size() + 8);
     reposition();
 }
 
@@ -113,7 +118,7 @@ void ExpandingFrameWidget::reposition()
 //    QSize s = sizeHint();
 //    s.setWidth(parentWidget()->width());
 //    resize(s);
-//    updateGeometry();
+    updateGeometry();
 
 //    // parent is also the status bar widget.
 ////    auto sbw = parentWidget();
