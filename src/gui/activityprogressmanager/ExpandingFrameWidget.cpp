@@ -105,6 +105,7 @@ QSize ExpandingFrameWidget::sizeHint() const
 
 void ExpandingFrameWidget::reposition()
 {
+    qDb() << "PARENT:" << parentWidget();
     qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
 
 //    QSize s = sizeHint();
@@ -115,20 +116,13 @@ void ExpandingFrameWidget::reposition()
     // parent is also the status bar widget.
     auto sbw = parentWidget();
 
-////    // Per instructions, call this after dinking with the widget's sizeHint()/Policy().
-////    updateGeometry();
+M_WARNING("TODO: This positioning is just broken, rework.");
 
-////    // Adjust the widget size to fit contents (via sizeHint()).
-////    adjustSize();
-
-////    if(!MainWindow::instance())
-////        return;
-
-    QPoint p;
-    QPoint pp = mapToGlobal(sbw->pos());
-    auto sum_pos = mapFromGlobal(pp);
-    p.setX(sum_pos.x() - width());
-    p.setY(sum_pos.y() - height());
-    move(p);
+    QPoint our_new_pos;
+    QPoint global_parent_pos = sbw->mapToGlobal(sbw->pos());
+    auto origin_parent_pos = mapToParent(QPoint(0,0));
+    our_new_pos.setX(origin_parent_pos.x());
+    our_new_pos.setY(origin_parent_pos.y() - height());
+    move(our_new_pos);
 }
 
