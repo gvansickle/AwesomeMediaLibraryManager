@@ -197,27 +197,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
-    // First see how big the dir is.  Probably takes it's own sweet time, but then we get progress bars...
-    // ...while... rescanning the same... dirtree. ?
-    // Kinda worthless as all it emits is the final result.
-    KIO::DirectorySizeJob* dirsize_job = KIO::directorySize(dir_url);
-
-
     DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
-
-    connect_or_die(dirsize_job, &KIO::DirectorySizeJob::result, dirtrav_job, [=](KJob* kjob){
-        if(kjob->error())
-        {
-            kjob->uiDelegate()->showErrorMessage();
-        }
-        else
-        {
-            qIn() << "Found" << dirsize_job->totalSubdirs() << "subdirectories";
-            dirtrav_job->start();
-        }
-    });
 
     LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
 
@@ -263,9 +245,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         }
     });
 
-    qIn() << "Starting dirsize_job:" << dirsize_job;
-    master_job_tracker->registerJob(dirsize_job);
-
     master_job_tracker->registerJob(dirtrav_job);
     master_job_tracker->setAutoDelete(dirtrav_job, false);
     master_job_tracker->setStopOnClose(dirtrav_job, false);
@@ -274,7 +253,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     master_job_tracker->setStopOnClose(lib_rescan_job, false);
 
     // Start the asynchronous ball rolling.
-    dirsize_job->start();
+    dirtrav_job->start();
 
 #endif
 
