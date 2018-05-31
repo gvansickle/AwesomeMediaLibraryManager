@@ -63,6 +63,7 @@
 
 /// KF5
 #include <KJob>
+#include <KJobUiDelegate>
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/QueueStream>
 
@@ -390,11 +391,11 @@ public:
 		connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
 				if(kjob->error())
 				{
-					kjob->uiDelegate()->showErrorMessage();
+                    kjob->uiDelegate()->showErrorMessage();
 				}
 				else
 				{
-					std::forward<Func>(f)();
+                    f(kjob);
 				}
 			});
     }
