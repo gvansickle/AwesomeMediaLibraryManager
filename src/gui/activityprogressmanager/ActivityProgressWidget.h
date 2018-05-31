@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 #define AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H
 
+#if 0
+
 #include <QWidget>
 #include <ThreadWeaver/QueueSignals>
 #include <ThreadWeaver/State>
@@ -70,6 +72,6 @@ private:
 	QString createTextStatusString();
 
 };
-
+#endif
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_ACTIVITYPROGRESSWIDGET_H

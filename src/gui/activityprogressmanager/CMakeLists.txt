@@ -18,7 +18,6 @@
 #
 
 set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressManager.h
 	activityprogressmanager/ActivityProgressDialog.h
 	activityprogressmanager/ActivityProgressPopup.h
 	activityprogressmanager/ActivityEntryWidget.h
@@ -32,7 +31,6 @@ set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	PARENT_SCOPE
 	)
 set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressManager.cpp
 	activityprogressmanager/ActivityProgressDialog.cpp
 	activityprogressmanager/ActivityProgressPopup.cpp
 	activityprogressmanager/ActivityEntryWidget.cpp
