@@ -20,27 +20,23 @@
 set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityProgressDialog.h
 	activityprogressmanager/ActivityProgressPopup.h
-	activityprogressmanager/ActivityEntryWidget.h
 	activityprogressmanager/ActivityProgressStatusBarTracker.h
 	activityprogressmanager/ActivityProgressWidget.h
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
 	activityprogressmanager/ExpandingFrameWidget.h
 	activityprogressmanager/CumulativeStatusWidget.h
 	activityprogressmanager/CumulativeAMLMJob.h
-	activityprogressmanager/AMLMProgressStatusStruct.h
 	PARENT_SCOPE
 	)
 set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
 	activityprogressmanager/ActivityProgressDialog.cpp
 	activityprogressmanager/ActivityProgressPopup.cpp
-	activityprogressmanager/ActivityEntryWidget.cpp
 	activityprogressmanager/ActivityProgressStatusBarTracker.cpp
 	activityprogressmanager/ActivityProgressWidget.cpp
 	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
 	activityprogressmanager/ExpandingFrameWidget.cpp
 	activityprogressmanager/CumulativeStatusWidget.cpp
 	activityprogressmanager/CumulativeAMLMJob.cpp
-	activityprogressmanager/AMLMProgressStatusStruct.cpp
 	PARENT_SCOPE
 	)
 set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
