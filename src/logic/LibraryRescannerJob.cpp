@@ -69,7 +69,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 //                                QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
 //                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
-    setTotalAmount(KJob::Unit::Files, m_items_to_rescan.size());
+    setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
     // Make the internal connection to the SLOT_processReadyResults() slot.
     connect(amlm_self, &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
@@ -88,8 +88,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
         Q_EMIT processReadyResults(a);
         num_items++;
 
-M_WARNING("CRASH ON CANCEL");
-        setProcessedAmount(KJob::Unit::Files, num_items);
+        setProcessedAmountAndSize(KJob::Unit::Files, num_items);
     }
 
     // We've either completed our work or been cancelled.

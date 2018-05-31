@@ -238,8 +238,24 @@ Q_SIGNALS:
 	// void 	processedSize (KJob *job, qulonglong size)
     // void result (KJob *job)
 	// void 	resumed (KJob *job)
+    /// KJob::Speed
+    /// I'm not at all clear on how to really use the KJOB::speed functionality.  You call emitSpeed(value),
+    /// with whatever "value" is, it starts a 5 second timer, then... the timer times out... then I totally lose the plot.
+    /// Ah well.
 	// void 	speed (KJob *job, unsigned long speed)
     // void suspended (KJob *job)
+    /// Amount vs. Size
+    /// KJob looks somewhat broken when it comes to "Size".  It supports "Amount" units of Kjob::Bytes,
+    /// KJob::Files, and KJob::Directories, and while there is a "KJob::Unit progressUnit;" member, it's
+    /// hidden behind the pImpl and there's no way to see or change it as far as I can tell.  It's defaulted
+    /// to "KJob::Bytes", and is the unit used as the "Size" for both read and write.
+    /// All KJob Amount and Size updates come from (protected) calls to setProcessedAmount() and
+    /// setSizeAmount().  They set the amount of the given unit in the qmap, and emit processed/totalAmount()
+    /// signals.  Additionally, if the unit matches "progressUnit" (==Bytes), processed/totalSize() signals
+    /// are emitted, the percent complete mechanism is updated, and percent() is emitted.
+    /// So bottom line, it looks like if you want to use percent at all, you have to update the "KJob::Units::Bytes"
+    /// *Amount()s.  I guess that's ok, you can always call it whatever you want in the UI.
+    ///
 	// void 	totalAmount (KJob *job, KJob::Unit unit, qulonglong amount)
 	// void 	totalSize (KJob *job, qulonglong size)
 	// void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
@@ -349,9 +365,9 @@ public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 
-    Q_SCRIPTABLE KJob::Unit progressUnit() const;
-    Q_SCRIPTABLE qulonglong processedSize() const;
-    Q_SCRIPTABLE qulonglong totalSize() const;
+//    KJob::Unit progressUnit() const;
+//    qulonglong processedSize() const;
+//    qulonglong totalSize() const;
 
 public:
     /// Dump info about the given KJob.
@@ -504,6 +520,9 @@ protected:
     /// Defaults to KJob::Unit::Bytes.
     void setProgressUnit(KJob::Unit prog_unit);
 
+    virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
+    virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
+
     /// Make the internal signal-slot connections.
     virtual void make_connections();
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
@@ -549,10 +568,11 @@ private:
     /// Flag telling the AMLMJob run() thread to cancel.
     /// No need to be atomic due to the mutex/wc.
     bool m_flag_cancel {false};
-//    QAtomicInt m_flag_cancel {0};
+
     QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
 
+    /// Wishful thinking at the moment, but maybe I'll figure out how to separate "Size" from KJob::Bytes.
     KJob::Unit m_progress_unit { KJob::Unit::Bytes };
 };
 

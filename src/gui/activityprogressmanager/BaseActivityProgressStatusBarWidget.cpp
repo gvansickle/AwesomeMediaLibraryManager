@@ -92,22 +92,6 @@ M_WARNING("TODO");
 qWr() << "WARNING:" << text;
 }
 
-void BaseActivityProgressStatusBarWidget::setRange(int min, int max)
-{
-    m_progress_bar->setRange(min, max);
-}
-
-void BaseActivityProgressStatusBarWidget::setValue(int val)
-{
-    m_progress_bar->setValue(val);
-}
-
-//void BaseActivityProgressStatusBarWidget::setPercent(unsigned long pct)
-//{
-//    m_progress_bar->setRange(0,100);
-//    m_progress_bar->setValue(pct);
-//}
-
 void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
 {
     // Create the widget.

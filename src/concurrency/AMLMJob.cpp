@@ -136,6 +136,7 @@ void AMLMJob::setSuccessFlag(bool success)
     m_success = success;
 }
 
+#ifdef NOT_BROKEN
 KJob::Unit AMLMJob::progressUnit() const
 {
     // Shhh... you didn't see this.
@@ -152,6 +153,7 @@ qulonglong AMLMJob::totalSize() const
 {
     return totalAmount(progressUnit());
 }
+#endif
 
 void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 {
@@ -325,8 +327,29 @@ bool AMLMJob::doResume()
     return false;
 }
 
+void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
+{
+    if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
+    {
+        // Wasn't Bytes, also set Bytes so we get percent complete support.
+        setProcessedAmount(KJob::Unit::Bytes, amount);
+    }
+    setProcessedAmount(unit, amount);
+}
+
+void AMLMJob::setTotalAmountAndSize(KJob::Unit unit, qulonglong amount)
+{
+    if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
+    {
+        // Wasn't Bytes, also set Bytes so we get percent complete support.
+        setTotalAmount(KJob::Unit::Bytes, amount);
+    }
+    setTotalAmount(unit, amount);
+}
+
 void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 {
+#ifdef THIS_IS_EVER_NOT_BROKEN
     /// @todo This "KJobPrivate" crap is crap.
 	//    d_ptr->progressUnit = prog_unit;
 
@@ -338,8 +361,8 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 	    methods << QString::fromLatin1(metaObject->method(i).methodSignature());
 	}
 	qDb() << methods;
-
-//    m_progress_unit = prog_unit;
+#endif
+    m_progress_unit = prog_unit;
 }
 
 void AMLMJob::make_connections()
