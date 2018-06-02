@@ -479,13 +479,13 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
 
 void BaseActivityProgressStatusBarWidget::totalSize(KJob *kjob, qulonglong amount)
 {
-    qDb() << "GOT TOTALSIZE";
+//    qDb() << "GOT TOTALSIZE";
 //    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::processedSize(KJob *kjob, qulonglong amount)
 {
-    qDb() << "GOT PROCESSEDSIZE";
+//    qDb() << "GOT PROCESSEDSIZE";
 //    updateMainTooltip();
 }
 
@@ -500,15 +500,15 @@ void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long perc
     }
 
     qulonglong totalSize;
-    auto amlm_ptr = qobject_cast<AMLMJob*>(kjob);
-    if(amlm_ptr != nullptr)
+    auto amlm_ptr = dynamic_cast<AMLMJob*>(kjob);
+    if(amlm_ptr == nullptr)
     {
         qWr() << "KJob not an AMLMJob, size is bytes:" << kjob;
-        totalSize = amlm_ptr->totalSize();
+        totalSize = kjob->totalAmount(KJob::Unit::Bytes);
     }
     else
     {
-        totalSize = kjob->totalAmount(KJob::Unit::Bytes);
+        totalSize = amlm_ptr->totalSize();
     }
     auto totalFiles = kjob->totalAmount(KJob::Unit::Files);
 
@@ -565,17 +565,17 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 	{
         qulonglong totalSize;
         qulonglong processedSize;
-        auto amlm_ptr = qobject_cast<AMLMJob*>(kjob);
-        if(amlm_ptr != nullptr)
+        auto amlm_ptr = dynamic_cast<AMLMJob*>(kjob);
+        if(amlm_ptr == nullptr)
         {
             qWr() << "KJob not an AMLMJob, size is bytes:" << kjob;
-            totalSize = amlm_ptr->totalSize();
-            processedSize = amlm_ptr->processedSize();
+            totalSize = kjob->totalAmount(KJob::Unit::Bytes);
+            processedSize = kjob->processedAmount(KJob::Unit::Bytes);
         }
         else
         {
-            totalSize = kjob->totalAmount(KJob::Unit::Bytes);
-            processedSize = kjob->processedAmount(KJob::Unit::Bytes);
+            totalSize = amlm_ptr->totalSize();
+            processedSize = amlm_ptr->processedSize();
         }
 
         /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");

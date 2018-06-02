@@ -225,12 +225,10 @@ public Q_SLOTS:
      */
     void unregisterJob(KJob *kjob) override;
 
-    /// FBO closeNow().
-    /// This is emitted by child progress widgets in their "closeNow()" members.
-//    void SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
-
-    /// FBO closeEvent()
-//    void SLOT_directCallSlotStop(KJob* kjob);
+    /**
+     * Signalled by the destroyed() signal from a registered KJob*.
+     */
+    void SLOT_onKJobDestroyed(QObject* kjob);
 
 protected Q_SLOTS:
 

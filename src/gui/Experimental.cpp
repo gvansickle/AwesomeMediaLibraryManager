@@ -160,7 +160,7 @@ void Experimental::DoExperiment()
     KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
     connect_or_die(kio_list_kiojob, &KJob::result, this, [=](KJob* kjob){
         qIn() << "KIO::ListJob emitted result" << kjob;
-        AMLMJob::dump_job_info(kjob);
+//        AMLMJob::dump_job_info(kjob);
         ;});
     connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
         static long num_entries = 0;

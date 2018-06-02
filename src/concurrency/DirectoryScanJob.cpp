@@ -30,8 +30,7 @@
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
-                                   QDirIterator::IteratorFlags flags)
-    : AMLMJob(parent)
+                                   QDirIterator::IteratorFlags flags) : AMLMJob(parent)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
@@ -43,19 +42,8 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &di
     m_dir_filters = filters;
     m_iterator_flags = flags;
 
-
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
-}
-
-DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent, const QUrl &dir_url,
-                                    const QStringList &nameFilters,
-                                    QDir::Filters filters,
-                                    QDirIterator::IteratorFlags flags)
-{
-M_WARNING("TODO: NOT SHARED PTR");
-//    return QPointer<DirectoryScannerAMLMJob>::create(parent, dir_url, nameFilters, filters, flags);
-    return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
