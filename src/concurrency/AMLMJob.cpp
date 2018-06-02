@@ -60,11 +60,12 @@ AMLMJob::AMLMJob(QObject *parent)
 
     /// @todo This is debug, move/remove.
     ThreadWeaver::setDebugLevel(true, 10);
-    qDb() << "Set TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 }
 
 AMLMJob::~AMLMJob()
 {
+    // The KJob should have finished/been killed before we get deleted.
+//    Q_ASSERT(isFinished());
     // KJob destructor checks if KJob->isFinished and emits finished(this) if so.
     // Doesn't cancel the job.
     qDb() << "AMLMJob DELETED" << this;
@@ -72,18 +73,32 @@ AMLMJob::~AMLMJob()
 
 void AMLMJob::requestAbort()
 {
-    // Set atomic abort flag.
-    qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
-//    m_flag_cancel = 1;
-
     // Using a mutex/condition variable combo to allow both abort and pause/resume.
     // This is sort of easier with C++11+, but it's Qt5, so....
 
     // Lock the mutex.
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
+//    qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
+
     // Signal to the run() loop that it should cancel.
     m_flag_cancel = true;
+
+//    // Have we even started yet?
+//    if(status() < Status_Queued)
+//    {
+//        qDb() << "AMLM:TW: CANCELLED JOB HASNT STARTED:" << this;
+
+//        // No.
+//        // Fake a "done()" signal FBO doKill().
+//        // KJob Success == false is correct in the cancel case.
+//        setSuccessFlag(false);
+//        setWasCancelled(true);
+//        Q_EMIT done((ThreadWeaver::JobPointer)this);
+////        Q_EMIT done(qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(this));
+//    }
+
+
 
     // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
 	// by the notify, and then blocking because we still hold the mutex.
@@ -92,18 +107,33 @@ void AMLMJob::requestAbort()
 	// Notify all threads waiting on the condition variable that there's new status to look at.
 	// Really only one thread might be watching, but not much difference here.
     m_cancel_pause_resume_waitcond.notify_all(); // == m_cv.notify_all(); (...well, it's about time Qt learned some modern C++.)
+
+    qDb() << "AMLM:TW: LEAVING requestAbort():" << this;
+
 }
 
 void AMLMJob::start()
 {
+#if 0
+    // Lock the mutex.
+    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
+
+    // Have we been cancelled before we started?
+    if(m_flag_cancel)
+    {
+        // Yes, fake a "done()" signal FBO doKill().
+        // KJob Success == false is correct in the cancel case.
+        setSuccessFlag(false);
+        setWasCancelled(true);
+        Q_EMIT done(qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(this));
+    }
+#endif
     /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
 
     qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
 
     /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
     ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
-
-    /// @todo: QTimer::singleShot(0, this, SLOT(doWork()));
     auto stream = queue->stream();
     start(stream);
 }
@@ -135,25 +165,6 @@ void AMLMJob::setSuccessFlag(bool success)
     qDb() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
 }
-
-#ifdef NOT_BROKEN
-KJob::Unit AMLMJob::progressUnit() const
-{
-    // Shhh... you didn't see this.
-//    return d_ptr->progressUnit;
-    return m_progress_unit;
-}
-
-qulonglong AMLMJob::processedSize() const
-{
-    return processedAmount(progressUnit());
-}
-
-qulonglong AMLMJob::totalSize() const
-{
-    return totalAmount(progressUnit());
-}
-#endif
 
 void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 {
@@ -207,9 +218,6 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     Q_CHECK_PTR(self);
 
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
-    qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
-
-    qDb() << "TWJob status:" << status();
 
     /// Essentially a duplicate of QObjectDecorator's implementation, which does this:
     /// @code
@@ -239,7 +247,6 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     Q_CHECK_PTR(self);
 
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
-    qDb() << "Current TW::DebugLevel:" << ThreadWeaver::Debug << ThreadWeaver::DebugLevel;
 
     // Call base class defaultEnd() implementation.
     // ThreadWeaver::Job::defaultEnd() calls:
@@ -247,20 +254,23 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     ThreadWeaver::Job::defaultEnd(self, thread);
 
     // Cast self to an AMLMJobPtr, it should be one.
-    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+M_WARNING("TODO");
+//    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+    auto self_as_sp_to_amlmjob = qSharedPointerDynamicCast<AMLMJob>(self);
+    AMLMJobPtr amlm_self(self_as_sp_to_amlmjob.toWeakRef());
 
     // We've either completed our work or been cancelled.
     if(wasCancelRequested())
     {
         // Cancelled.
         // KJob Success == false is correct in the cancel case.
-        amlm_self->setSuccessFlag(false);
-        amlm_self->setWasCancelled(true);
+        setSuccessFlag(false);
+        setWasCancelled(true);
     }
     else
     {
         // Successful completion.
-        amlm_self->setSuccessFlag(true);
+        amlm_self.toStrongRef()->setSuccessFlag(true);
     }
 
     // Essentially a duplicate of TW::QObjectDecorator's implementation.
@@ -296,11 +306,16 @@ bool AMLMJob::doKill()
     // KJob::doKill().
     qDb() << "ENTER KJob::doKill()";
 
-    // Kill the TW::Job.
+//    QEventLoop local_event_loop(this);
+//    // Quit the local loop when the TW::Job signals that it's done.
+//    /// @todo Add timeout.
+//    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
+
+    // Tell the TW::Job to stop.
     requestAbort();
 
-    /// @todo I think we need to not do this, and rather wait for ::run() to abort.
-    //onKJobDoKill();
+    // Now wait for it to signal that it really did stop.
+//    local_event_loop.exec();
 
     /// @todo Need to wait for the final kill here?
     /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
@@ -430,6 +445,45 @@ void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self
     Q_CHECK_PTR(self);
 }
 
+void AMLMJob::TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob)
+{
+    // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
+    // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
+    // We'll similarly deal with the fail case in onTWFailed().
+    if(/*TW::*/twjob->success())
+    {
+        // Set the KJob::error() code.
+        setError(NoError);
+    }
+    else
+    {
+        // Set the KJob error info.
+        if(this->m_tw_job_was_cancelled)
+        {
+            // Cancelled.
+            // KJob
+            setError(KilledJobError);
+        }
+        else
+        {
+            // Some other error.
+            // KJob
+            setError(KJob::UserDefinedError);
+            setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
+        }
+    }
+
+    // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
+    // We handle the success case in done/success above, so we handle the fail case here.
+    // Tell the KJob to:
+    // - Set d->isFinished
+    // - Quit the d->eventLoop if applicable.
+    // - emit finished(this)
+    // - emit result(this)
+    // - if the KJob is set to autoDelete(), call deleteLater().
+    emitResult();
+}
+
 void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
 {
     qDb() << "ENTER onTWStarted";
@@ -446,22 +500,7 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // The TW::Job indicated completion.
     // If the TW::Job failed, there's a failed() signal in flight as well.
 
-    // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
-    // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
-    // We'll similarly deal with the fail case in onTWFailed().
-    if(/*TW::*/success())
-    {
-    	// Set the KJob::error() code.
-        setError(NoError);
-
-        // Tell the KJob to:
-        // - Set d->isFinished
-        // - Quit the d->eventLoop if applicable.
-        // - emit finished(this)
-        // - emit result(this)
-        // - if the KJob is set to autoDelete(), call deleteLater().
-        emitResult();
-    }
+    TWCommonDoneOrFailed(twjob);
 }
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
@@ -476,33 +515,7 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
     // Shouldn't be getting into here with a non-false success.
     Q_ASSERT(twjob->success() != true);
 
-    if(!/*TW::*/twjob->success())
-    {
-        // Set the KJob error info.
-    	if(this->m_tw_job_was_cancelled)
-        {
-            // Cancelled.
-    		// KJob
-            setError(KilledJobError);
-        }
-        else
-        {
-            // Some other error.
-            // KJob
-            setError(KJob::UserDefinedError);
-            setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
-        }
-
-        // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
-        // We handle the success case in done/success above, so we handle the fail case here.
-        // Tell the KJob to:
-		// - Set d->isFinished
-		// - Quit the d->eventLoop if applicable.
-		// - emit finished(this)
-		// - emit result(this)
-		// - if the KJob is set to autoDelete(), call deleteLater().
-        emitResult();
-    }
+    TWCommonDoneOrFailed(twjob);
 }
 
 void AMLMJob::onKJobDoKill()

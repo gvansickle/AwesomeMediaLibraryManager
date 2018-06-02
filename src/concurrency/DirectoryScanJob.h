@@ -24,7 +24,8 @@
 #include <QUrl>
 #include <QDir>
 #include <QDirIterator>
-#include <QPointer>
+#include <QWeakPointer>
+#include <QSharedPointer>
 
 #include <ThreadWeaver/ThreadWeaver>
 
@@ -32,7 +33,7 @@
 #include "utils/UniqueIDMixin.h"
 
 class DirectoryScannerAMLMJob;
-using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
+using DirectoryScannerAMLMJobPtr = QWeakPointer<DirectoryScannerAMLMJob>;
 
 /**
  *

@@ -87,6 +87,8 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
     // All KWidgetJobTracker does here is delete the private pImpl pointer.
+    // KWidgetJobTracker::Private's destructor then just deletes the eventLoopLocker, which is only
+    // non-null if the user has selected "Keep Open".
 
     qDb() << "DELETING ALL TRACKED OBJECTS";
     cancelAll();

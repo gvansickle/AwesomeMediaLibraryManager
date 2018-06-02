@@ -59,20 +59,21 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 {
     qDb() << "ENTER run";
 
-    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
+//    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
+    LibraryRescannerJobPtr amlm_self = qSharedPointerDynamicCast<LibraryRescannerJob>(self);
 
     setProgressUnit(KJob::Unit::Files);
 
     // Send out progress text.
     QString status_text = tr("Rereading metadata");
-    Q_EMIT amlm_self->description(this, status_text);//,
+    Q_EMIT description(this, status_text);//,
 //                                QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
 //                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
     setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
     // Make the internal connection to the SLOT_processReadyResults() slot.
-    connect(amlm_self, &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
+    connect(amlm_self.data(), &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
 
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)

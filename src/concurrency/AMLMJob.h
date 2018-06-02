@@ -56,7 +56,8 @@
 
 /// Qt5
 #include <QObject>
-#include <QPointer>
+#include <QWeakPointer>
+#include <QSharedPointer>
 #include <QTime>
 #include <QMutex>
 #include <QWaitCondition>
@@ -72,7 +73,7 @@
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
-using AMLMJobPtr = QPointer<AMLMJob>;
+using AMLMJobPtr = QWeakPointer<AMLMJob>;
 
 /**
 * Where Does The State Live?
@@ -160,7 +161,7 @@ using AMLMJobPtr = QPointer<AMLMJob>;
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public ThreadWeaver::Job, /*QEnableSharedFromThis<AMLMJob>,*/ public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
@@ -369,10 +370,6 @@ public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 
-//    KJob::Unit progressUnit() const;
-//    qulonglong processedSize() const;
-//    qulonglong totalSize() const;
-
 public:
     /// Dump info about the given KJob.
     static void dump_job_info(KJob* kjob, const QString &header = QString());
@@ -383,7 +380,7 @@ public:
     /// @{
 
     /**
-     * .then(ctx, callback) -> void
+     * .then(ctx, continuation) -> void
      */
     template <typename ContextType, typename Func>
     void then(ContextType&& ctx, Func&& f)
@@ -391,10 +388,12 @@ public:
 		connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
 				if(kjob->error())
 				{
+					// Report the error.
                     kjob->uiDelegate()->showErrorMessage();
 				}
 				else
 				{
+					// Call the continuation.
                     f(kjob);
 				}
 			});
@@ -408,7 +407,7 @@ public Q_SLOTS:
 
     /// @name KJob job control slots
     /// @note Default KJob implementations appear to be sufficient.  They call
-    ///       the protected "doXxxx()" functions which we do need to override below,
+    ///       the protected "doXxxx()" functions (which we do need to override below),
     ///       and then emit the proper signals to indicate the deed is done.
     /// @link https://api.kde.org/frameworks/kcoreaddons/html/kjob_8cpp_source.html#l00117
     /// @{
@@ -486,6 +485,10 @@ protected:
      * - Call our onKJobDoKill(), which currently does nothing.
      *
      * @todo Not clear if this should block until the job has been killed or not.
+     *       It looks like this should block until the job is really killed;
+     *       KAbstractWidgetJobTracker::slotStop() does this:
+     *         job->kill(KJob::EmitResult); // notify that the job has been killed
+     *         emit stopped(job);
      *
      * @return true if job successfully killed, false otherwise.
      */
@@ -547,6 +550,8 @@ protected:
     virtual void make_connections();
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     virtual void connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+
+    void TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob);
 
     /// @}
 

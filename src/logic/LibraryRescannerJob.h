@@ -24,6 +24,8 @@
 
 /// Qt5
 #include <QVector>
+#include <QWeakPointer>
+#include <QSharedPointer>
 
 /// Ours
 #include "LibraryRescannerMapItem.h"
@@ -31,7 +33,7 @@
 
 class LibraryModel;
 class LibraryRescannerJob;
-using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
+using LibraryRescannerJobPtr = QWeakPointer<LibraryRescannerJob>;
 
 /*
  *

@@ -54,8 +54,8 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent,
                                     QDirIterator::IteratorFlags flags)
 {
 M_WARNING("TODO: NOT SHARED PTR");
-//    return DirectoryScannerAMLMJobPtr::create(parent, dir_url, nameFilters, filters, flags);
-    return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
+    return QSharedPointer<DirectoryScannerAMLMJob>::create(parent, dir_url, nameFilters, filters, flags);
+//    return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -80,19 +80,16 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     // This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
     // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
 
-    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+M_WARNING("TODO");
+    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPointerDynamicCast<DirectoryScannerAMLMJob>(self);//= qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
 
     setProgressUnit(KJob::Unit::Directories);
 
-    qDb() << "IN RUN, " << M_NAME_VAL(amlm_self);
-    Q_CHECK_PTR(amlm_self);
-    KJob* kselfsp = amlm_self;
-    qDb() << "IN RUN, " << M_NAME_VAL(kselfsp);
-    Q_CHECK_PTR(kselfsp);
-
-M_WARNING("TODO not sure if this is the right place to do this");
-//    amlm_self->setAutoDelete(false);
-    qDb() << "IN RUN, KJob isAutoDelete()?:" << amlm_self->isAutoDelete();
+    qDb() << "IN RUN, " << M_NAME_VAL(dirscanjob_self);
+    Q_CHECK_PTR(dirscanjob_self);
+//    KJob* kselfsp = amlm_self;
+//    qDb() << "IN RUN, " << M_NAME_VAL(kselfsp);
+//    Q_CHECK_PTR(kselfsp);
 
     // Create the QDirIterator.
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
@@ -103,8 +100,8 @@ M_WARNING("TODO not sure if this is the right place to do this");
     {
         qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
         qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
-        amlm_self->setSuccessFlag(false);
-        amlm_self->setWasCancelled(false);
+        setSuccessFlag(false);
+        setWasCancelled(false);
         return;
     }
 
@@ -116,14 +113,14 @@ M_WARNING("TODO not sure if this is the right place to do this");
 
     QString status_text = QObject::tr("Scanning for music files");
 
-    Q_EMIT amlm_self->description(this, status_text,
+    Q_EMIT description(this, status_text,
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
-        if(amlm_self->wasCancelRequested())
+        if(wasCancelRequested())
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
