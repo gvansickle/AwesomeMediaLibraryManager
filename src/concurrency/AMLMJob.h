@@ -371,6 +371,9 @@ public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 
+    virtual qulonglong totalSize() const;
+    virtual qulonglong processedSize() const;
+
 public:
     /// Dump info about the given KJob.
     static void dump_job_info(KJob* kjob, const QString &header = QString());
@@ -543,6 +546,7 @@ protected:
     /// Sets the Unit which will be used for percent complete and total/processedSize calculations.
     /// Defaults to KJob::Unit::Bytes.
     void setProgressUnit(KJob::Unit prog_unit);
+    KJob::Unit progressUnit() const { return m_progress_unit; }
 
     virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
     virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);

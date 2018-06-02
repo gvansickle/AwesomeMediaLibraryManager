@@ -257,9 +257,8 @@ void BaseActivityProgressStatusBarWidget::updateMainTooltip()
 //        return;
 //    }
 
-    tooltip_text = tr("KJob<br/>")
-            + tr("Text1: %1<br/>").arg(m_current_activity_label->text())
-            + tr("Text2: %1<br/>").arg(m_text_status_label->text())
+    tooltip_text = tr("Async Job: %1<br/>").arg(m_current_activity_label->text())
+            + tr("Current Status: %1<br/>").arg(m_text_status_label->text())
             + tr("Speed: %1<br/>").arg("N/A")
                ;
 
@@ -298,11 +297,11 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 {
     if(m_is_job_registered && m_tracker->stopOnClose(m_kjob))
     {
-//        qDb() << "EMITTING SLOTSTOP";
-//        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-//                                  Q_ARG(KJob*, m_kjob));
-        qDb() << "CALLING SLOTSTOP";
-        m_tracker->directCallSlotStop(m_kjob);
+        qDb() << "EMITTING SLOTSTOP";
+        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
+                                  Q_ARG(KJob*, m_kjob));
+//        qDb() << "CALLING SLOTSTOP";
+//        m_tracker->directCallSlotStop(m_kjob);
     }
 
     BASE_CLASS::closeEvent(event);
@@ -378,11 +377,11 @@ void BaseActivityProgressStatusBarWidget::stop()
    {
        // Notify tracker that the job has been killed.
        // Calls job->kill(KJob::EmitResults) then emits stopped(job).
-//       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-//                                 Q_ARG(KJob*, m_kjob));
-//       Q_ASSERT(retval);
+       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
+                                 Q_ARG(KJob*, m_kjob));
+       Q_ASSERT(retval);
 
-       m_tracker->directCallSlotStop(m_kjob);
+//       m_tracker->directCallSlotStop(m_kjob);
    }
    closeNow();
 }
@@ -412,14 +411,8 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
     case KJob::Bytes:
         m_is_total_size_known = true;
         // Size is measured in bytes
-M_WARNING("TODO: Seems wrong.")
-        if (m_totalSize == amount)
-        {
-            return;
-        }
-        /// @todo Bytes are already handled by tracker, but size is a different case and
-        /// I haven't found a way to access it either read or write:
-        m_totalSize = amount;
+        /// @todo Bytes/size is already handled by the tracker.
+        /// Don't quite know what to make of the time stuff here.
         if (m_start_time.isNull())
         {
             m_start_time.start();
@@ -427,22 +420,11 @@ M_WARNING("TODO: Seems wrong.")
         break;
     case KJob::Files:
         // Shouldn't be getting signalled unless totalFiles() has actually changed.
-//        if(kjob_total_amount_in_current_units == amount)
-//        {
-//            return;
-//        }
-        /// @todo ???
-//        totalFiles = amount;
         showTotals();
         break;
 
     case KJob::Directories:
-        // Shouldn't be getting signalled unless totalFiles() has actually changed.
-//        if (kjob_total_amount_in_current_units == amount)
-//        {
-//            return;
-//        }
-//        totalDirs = amount;
+        // Shouldn't be getting signalled unless total dirs has actually changed.
         showTotals();
         break;
     }
@@ -568,6 +550,17 @@ void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long perc
         return;
     }
 
+    qulonglong totalSize;
+    auto amlm_ptr = qobject_cast<AMLMJob*>(kjob);
+    if(amlm_ptr != nullptr)
+    {
+        qWr() << "KJob not an AMLMJob, size is bytes:" << kjob;
+        totalSize = amlm_ptr->totalSize();
+    }
+    else
+    {
+        totalSize = kjob->totalAmount(KJob::Unit::Bytes);
+    }
     auto totalFiles = kjob->totalAmount(KJob::Unit::Files);
 
     QString title = toqstr("PCT") + " (";
@@ -577,8 +570,8 @@ void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long perc
         /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
         DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
 
-M_WARNING("TODO: Size is the primary unit, can't get at it");
-        title += QString("%1% of %2").arg(percent).arg(formattedDataSize(m_totalSize, 1, fmt));
+        /// @note Regardless of what you might want, this text is always going to be ~"x% of NN.N GB" (i.e. units == bytes).
+        title += tr("%1% of %2").arg(percent).arg(formattedDataSize(totalSize, 1, fmt));
 
     }
     else if (totalFiles)
@@ -589,7 +582,8 @@ M_WARNING("TODO: Size is the primary unit, can't get at it");
     }
     else
     {
-        title += QString("%1%").arg(percent);
+        // Just percent.
+        title += tr("%1%").arg(percent);
     }
 
     title += ')';
@@ -612,7 +606,7 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 
     qDb() << "SPEED:" << kjob << value;
 
-#if 0
+#if 1
     if(value == 0)
 	{
     	// Stalled.
@@ -620,19 +614,38 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 	}
     else
 	{
-    	const QString speedStr = KJobTrackerFormatters::byteSize(value);
-		if (totalSizeKnown)
+        qulonglong totalSize;
+        qulonglong processedSize;
+        auto amlm_ptr = qobject_cast<AMLMJob*>(kjob);
+        if(amlm_ptr != nullptr)
+        {
+            qWr() << "KJob not an AMLMJob, size is bytes:" << kjob;
+            totalSize = amlm_ptr->totalSize();
+            processedSize = amlm_ptr->processedSize();
+        }
+        else
+        {
+            totalSize = kjob->totalAmount(KJob::Unit::Bytes);
+            processedSize = kjob->processedAmount(KJob::Unit::Bytes);
+        }
+
+        /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
+        /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
+        DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
+
+        const QString speedStr = formattedDataSize(value, 1, fmt);
+        if (m_is_total_size_known)
 		{
 			const int remaining = 1000 * (totalSize - processedSize) / value;
 			//~ singular %1/s (%2 remaining)
 			//~ plural %1/s (%2 remaining)
-			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining).arg(speedStr).arg(
-									KJobTrackerFormatters::duration(remaining)));
+//			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining).arg(speedStr).arg(
+//									KJobTrackerFormatters::duration(remaining)));
 		}
 		else
 		{
 			// total size is not known
-			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
+//			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
 		}
 	}
 #endif

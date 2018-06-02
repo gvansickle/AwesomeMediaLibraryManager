@@ -55,6 +55,7 @@ public:
 
     const T operator[](const Key &key) const
     {
+        // .value() locks the mutex, so we need to not do it again here.
         return value(key);
     }
 

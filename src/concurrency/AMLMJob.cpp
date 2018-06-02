@@ -166,6 +166,16 @@ void AMLMJob::setSuccessFlag(bool success)
     m_success = success;
 }
 
+qulonglong AMLMJob::totalSize() const
+{
+    return totalAmount(progressUnit());
+}
+
+qulonglong AMLMJob::processedSize() const
+{
+    return processedAmount(progressUnit());
+}
+
 void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 {
     if(!header.isEmpty())

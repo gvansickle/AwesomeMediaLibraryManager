@@ -93,9 +93,7 @@ ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
     qDb() << "DELETING ALL TRACKED OBJECTS";
     cancelAll();
 
-    /// @todo IS THIS CORRECT, or should we be doing something like deleteLater() here?
     m_expanding_frame_widget->deleteLater();
-//    m_expanding_frame_widget = nullptr;
 }
 
 QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
@@ -319,6 +317,9 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
 
 void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
+    // Incoming signal from kjob that setProcessedAmount() has been called and d->processedAmount[unit] has
+    // been updated.
+
     with_widget_or_skip(job, [=](auto w)
     {
         w->processedAmount(job, unit, amount);
@@ -401,6 +402,7 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
 {
     // For Widgets to request deletion of their jobs and associated data (including the pointer to themselves) from the map.
     BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
+    Q_CHECK_PTR(wdgt_type);
 
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
             this, &ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap);
@@ -422,6 +424,7 @@ void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWi
 
 void ActivityProgressStatusBarTracker::directCallSlotStop(KJob *kjob)
 {
+	qDb() << "directCallSlotStop:" << kjob;
     slotStop(kjob);
 }
 
