@@ -205,8 +205,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
-//    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
-    auto lib_rescan_job = new LibraryRescannerJob(this);
+    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
+//    auto lib_rescan_job = new LibraryRescannerJob(this);
 
     connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
         // Found a file matching the criteria.  Send it to the model.
