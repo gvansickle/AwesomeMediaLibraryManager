@@ -237,7 +237,7 @@ Q_SIGNALS:
 
     /// @}
 
-    /// Documenetd KJob signals, quite a few:
+    /// @name Public KJob signals, quite a few:
     ///
 	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
 
@@ -249,10 +249,9 @@ Q_SIGNALS:
     // void finished (KJob *job)
 
     // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
+    // void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
 
-    // void 	percent (KJob *job, unsigned long percent)
-	// void 	processedAmount (KJob *job, KJob::Unit unit, qulonglong amount)
-	// void 	processedSize (KJob *job, qulonglong size)
+
     // void result (KJob *job)
 	// void 	resumed (KJob *job)
     /// KJob::Speed
@@ -264,7 +263,9 @@ Q_SIGNALS:
 
 	// void 	totalAmount (KJob *job, KJob::Unit unit, qulonglong amount)
 	// void 	totalSize (KJob *job, qulonglong size)
-	// void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
+    // void 	processedAmount (KJob *job, KJob::Unit unit, qulonglong amount)
+    // void 	processedSize (KJob *job, qulonglong size)
+    // void 	percent (KJob *job, unsigned long percent)
 
     /// KJobs are supported by KJobWidgets
 	/// https://api.kde.org/frameworks/kjobwidgets/html/namespaceKJobWidgets.html
@@ -280,7 +281,7 @@ Q_SIGNALS:
     //    *  - description()
     //    *  - infoMessage()
     //    *  - totalAmount()
-    //    *  - processedAmount()
+    //    *  - processedAmount() ///< @note KJob's xxxSize() signals aren't reflected in this interface.
     //    *  - percent()
     //    *  - speed()
     //    *

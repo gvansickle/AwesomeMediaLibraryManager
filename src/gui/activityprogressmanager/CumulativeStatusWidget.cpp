@@ -51,15 +51,6 @@ CumulativeStatusWidget::~CumulativeStatusWidget()
 
 }
 
-void CumulativeStatusWidget::make_connections()
-{
-    qDb() << "CumulativeStatusWidget MAKE_CONNECTIONS";
-    connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
-                    qDb() << "CANCEL BUTTON CLICKED FROM CumulativeStatusWidget";
-                    Q_EMIT cancel_job(nullptr);
-    });
-}
-
 void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
 {
 	// Update the subwidget contents.

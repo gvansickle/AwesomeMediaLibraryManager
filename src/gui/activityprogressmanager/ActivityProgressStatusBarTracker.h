@@ -84,16 +84,25 @@ Q_SIGNALS:
     /// @name Inherited from KAbstractWidgetJobTracker
     /// @{
 
-    /// KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
-//    void stopped(KJob *job);
-    /// KAbstractWidgetJobTracker::slotSuspend(KJob*) emits this after calling job->suspend().
-//    void suspend(KJob *job);
-    /// KAbstractWidgetJobTracker::slotResume(KJob*) emits this after calling job->resume().
-//    void resume(KJob *job);
+    /**
+     * KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
+     * "Emitted when the user aborted the operation"
+     */
+    void stopped(KJob *job);
+    /**
+     * KAbstractWidgetJobTracker::slotSuspend(KJob*) emits this after calling job->suspend().
+     * "Emitted when the user suspended the operation"
+     */
+    void suspend(KJob *job);
+    /**
+     * KAbstractWidgetJobTracker::slotResume(KJob*) emits this after calling job->resume().
+     * "Emitted when the user resumed the operation".
+     */
+    void resume(KJob *job);
 
     /// @}
 
-    // For signalling when the number of tracked jobs changes.
+    /// For signalling when the number of tracked jobs changes.
     void number_of_jobs_changed(long long new_num_jobs);
 
 public:
@@ -218,10 +227,10 @@ public Q_SLOTS:
 
     /// FBO closeNow().
     /// This is emitted by child progress widgets in their "closeNow()" members.
-    void SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
+//    void SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
 
     /// FBO closeEvent()
-    void SLOT_directCallSlotStop(KJob* kjob);
+//    void SLOT_directCallSlotStop(KJob* kjob);
 
 protected Q_SLOTS:
 
@@ -312,9 +321,10 @@ protected Q_SLOTS:
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
 
-    /**
-     * The following slots are inherited from KAbstractWidgetJobTracker etc.
-     */
+
+    /// @name The following slots are inherited from KAbstractWidgetJobTracker and/or KJobTrackerInterface.
+    /// @{
+
     /// Called when a job is finished, in any case.
     /// It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
     /// KAbstractWidgetJobTracker implementation does nothing.
@@ -349,18 +359,13 @@ protected Q_SLOTS:
      * - public qulonglong processedAmount(Unit unit) const;
      * - var in KJobPrivate.
      */
+    /// Slot from kjob indicating that setTotalAmount() has been called and d->totalAmount[unit] has
+    /// been updated.
     void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount) override;
     /**
      * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
-
-    /**
-     * Slots for "Size" progress.
-     */
-    virtual void totalSize(KJob *kjob, qulonglong amount);
-
-    virtual void processedSize(KJob* kjob, qulonglong amount);
 
     /**
      * Directly supported by KJob::percent() (var in KJobPrivate).
@@ -369,25 +374,49 @@ protected Q_SLOTS:
     void percent(KJob *job, unsigned long percent) override;
     void speed(KJob *job, unsigned long value) override;
 
-    /// @}
-
-    /// KAbstractWidgetJobTracker implementation does nothing.
+    /**
+     * "This method is called when the widget should be cleaned (after job is finished).
+     * redefine this for custom behavior."
+     * KAbstractWidgetJobTracker implementation does nothing.
+     */
     void slotClean(KJob *job) override;
 
-    // These all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
+    // These next three slotXxxx() slots all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
     // depend on the KJob supporting kill/suspend/resume.
-    /// Calls job->resume() and emits resume(job).
-//    void slotResume(KJob *job) override;
+
+    /// "This method should be called for correct cancellation of IO operation
+    ///  Connect this to the progress widgets buttons etc."
     /// Calls job->kill(KJob::EmitResult) and emits stopped(job).
-//    void slotStop(KJob *job) override;
-    /// Calls job->suspend() and emits suspend(job).
+    /// This override just calls base class.
+    void slotStop(KJob *job) override;
+
+    /**
+     * "This method should be called for pause/resume
+     * Connect this to the progress widgets buttons etc."
+     * Calls job->resume() and emits resume(job).
+     */
+//    void slotResume(KJob *job) override;
+    /**
+     * "This method should be called for pause/resume
+     * Connect this to the progress widgets buttons etc."
+     * Calls job->suspend() and emits suspend(job).
+     */
 //    void slotSuspend(KJob *job) override;
+
+    /// @} /// END Inherited from KAbstractWidgetJobTracker and/or KJobTrackerInterface.
+
+
+    /// @name Ours: Protected slots for KJob's "Size" progress.
+    /// @{
+    virtual void totalSize(KJob *kjob, qulonglong amount);
+    virtual void processedSize(KJob* kjob, qulonglong amount);
+    /// @}
 
 protected: // Methods
 
     /// Templated job->widget lookup function.
     template <typename JobPointerType, typename Lambda>
-    void with_widget_or_skip(JobPointerType job, Lambda l) const
+    inline void with_widget_or_skip(JobPointerType job, Lambda l) const
     {
         Q_CHECK_PTR(job);
         // Check if the caller wanted the cumulative widget.
@@ -406,6 +435,7 @@ protected: // Methods
         }
 
         qWr() << "NO WIDGET FOUND FOR JOB:" << job;
+//        Q_ASSERT(0);
     }
 
     /**
@@ -413,12 +443,10 @@ protected: // Methods
      */
     bool is_cumulative_status_job(KJob* kjob);
 
+    /// Most signal/slot connections will have already been made by the base classes.
     void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
 
     void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
-
-public: /// FBO Widget to call slotStop() directly.
-    void directCallSlotStop(KJob *kjob);
 
 protected:
 

@@ -54,7 +54,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     m_cumulative_status_widget = new CumulativeStatusWidget(m_cumulative_status_job, this, parent);
 
     // Make cumulative status widget connections.
-    m_cumulative_status_widget->make_connections();
+    /// @todo
 
     /// Register the cumulative job and widget.
     /// @todo Move?
@@ -90,6 +90,7 @@ ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
     // KWidgetJobTracker::Private's destructor then just deletes the eventLoopLocker, which is only
     // non-null if the user has selected "Keep Open".
 
+M_WARNING("TODO: Probably need to not call cancellAll() in here.");
     qDb() << "DELETING ALL TRACKED OBJECTS";
     cancelAll();
 
@@ -133,8 +134,8 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     // Create the widget for this new job.
     auto wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
     // Make connections.
-    wdgt->make_connections();
-    wdgt->m_is_job_registered = true;
+//    wdgt->make_connections();
+//    wdgt->m_is_job_registered = true;
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
 
     // Insert the kjob/widget pair into our master map.
@@ -193,25 +194,26 @@ void ActivityProgressStatusBarTracker::unregisterJob(KJob* kjob)
 
     /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
     with_widget_or_skip(kjob, [=](auto w){
-        w->m_is_job_registered = false;
+//        w->m_is_job_registered = false;
         // Remove the job's widget from the expanding frame.
 		m_expanding_frame_widget->removeWidget(w);
 		m_expanding_frame_widget->reposition();
+        removeJobAndWidgetFromMap(kjob, w);
         w->deref();
         ;});
 }
 
-void ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget *widget)
-{
-    QMutexLocker locker(&m_tsi_mutex);
-    removeJobAndWidgetFromMap(ptr, widget);
-}
+//void ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget *widget)
+//{
+//    QMutexLocker locker(&m_tsi_mutex);
+//    removeJobAndWidgetFromMap(ptr, widget);
+//}
 
-void ActivityProgressStatusBarTracker::SLOT_directCallSlotStop(KJob *kjob)
-{
-    QMutexLocker locker(&m_tsi_mutex);
-    directCallSlotStop(kjob);
-}
+//void ActivityProgressStatusBarTracker::SLOT_directCallSlotStop(KJob *kjob)
+//{
+//    QMutexLocker locker(&m_tsi_mutex);
+//    directCallSlotStop(kjob);
+//}
 
 void ActivityProgressStatusBarTracker::SLOT_onShowProgressWidget(KJob* kjob)
 {
@@ -248,7 +250,8 @@ void ActivityProgressStatusBarTracker::cancelAll()
     for(auto job : joblist)
     {
         qDb() << "Cancelling job:" << job; // << "widget:" << it.value();
-        job->kill();
+//        job->kill();
+        slotStop(job);
     }
 
     qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
@@ -298,7 +301,7 @@ void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, 
 
 void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
-    // Incoming signal from kjob that setTotalAmount() has been called and d->totalAmount[unit] has
+    // Slot from kjob that setTotalAmount() has been called and d->totalAmount[unit] has
     // been updated.
 
     /// @note KIO::SimpleJobPrivate hooks into the totalAmount mechanism from
@@ -389,6 +392,12 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
     });
 }
 
+void ActivityProgressStatusBarTracker::slotStop(KJob *job)
+{
+    qDb() << "GOT slotStop() for KJob:" << job;
+    BASE_CLASS::slotStop(job);
+}
+
 bool ActivityProgressStatusBarTracker::is_cumulative_status_job(KJob *kjob)
 {
     if(kjob == m_cumulative_status_job)
@@ -400,12 +409,20 @@ bool ActivityProgressStatusBarTracker::is_cumulative_status_job(KJob *kjob)
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
 {
-    // For Widgets to request deletion of their jobs and associated data (including the pointer to themselves) from the map.
+    // Most signal/slot connections will have already been made by the base classes.
+
     BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
     Q_CHECK_PTR(wdgt_type);
 
-    connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
-            this, &ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap);
+    // Connect the widget's "user wants to cancel" signal to this tracker's slotStop(KJob*) slot.
+    connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
+
+    // Connect this tracker's stopped(KJob*) signal to the
+
+    // For Widgets to request deletion of their jobs and associated data (including the pointer to themselves) from the map.
+M_WARNING("TODO I think this is wrong now.");
+//    connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::signal_removeJobAndWidgetFromMap,
+//            this, &ActivityProgressStatusBarTracker::SLOT_removeJobAndWidgetFromMap);
     connect_or_die(kjob, &KJob::totalSize, this, &ActivityProgressStatusBarTracker::totalSize);
     connect_or_die(kjob, &KJob::processedSize, this, &ActivityProgressStatusBarTracker::processedSize);
 }
@@ -420,12 +437,6 @@ void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWi
 
         Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
     }
-}
-
-void ActivityProgressStatusBarTracker::directCallSlotStop(KJob *kjob)
-{
-	qDb() << "directCallSlotStop:" << kjob;
-    slotStop(kjob);
 }
 
 int ActivityProgressStatusBarTracker::calculate_summary_percent()

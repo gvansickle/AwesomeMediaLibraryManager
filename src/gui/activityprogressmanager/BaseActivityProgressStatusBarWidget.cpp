@@ -132,10 +132,10 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
         /// @todo KWidgetJobTracker::Private::ProgressWidget only does click->stop signal here.
         /// Seems odd, should go back to the tracker to do the job stop etc.
-//        connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
-//            qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
-//            Q_EMIT cancel_job(m_kjob);
-//        });
+        connect_or_die(m_cancel_button, &QToolButton::clicked, this, [=](bool) {
+            qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
+            Q_EMIT cancel_job(m_kjob);
+        });
 //        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
 #if 0 // CRASHING
@@ -182,34 +182,6 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
     setLayout(layout);
 
     updateMainTooltip();
-}
-
-void BaseActivityProgressStatusBarWidget::make_connections()
-{
-    qDb() << "BASE MAKE_CONNECTIONS";
-    if(true /* not summary widget */)
-    {
-        // Directly connect the cancel button to this class' stop() slot, which stops the job.
-        /// @note If we have the summary job fully working, this same connection would be fine;
-        /// the job would respond to the stop() by stopping all child jobs.
-        /// But we don't, so this function is overridden in the CumulativeStatusWidget class.
-        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
-        // Description.
-        connect_or_die(m_kjob, &KJob::description, this, &BaseActivityProgressStatusBarWidget::description);
-    }
-
-#if 0
-    if(m_kjob && m_tracker)
-    {
-//        // Connect cancel-clicked signal to tracker's remove-job signal.
-//        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_kjob);});
-    }
-    else
-    {
-        qWr() << "NO JOB/TRACKER:" << m_kjob << m_tracker;
-        Q_ASSERT(0);
-    }
-#endif
 }
 
 void BaseActivityProgressStatusBarWidget::showTotals()
@@ -295,14 +267,14 @@ bool BaseActivityProgressStatusBarWidget::event(QEvent *event)
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 {
-    if(m_is_job_registered && m_tracker->stopOnClose(m_kjob))
-    {
-        qDb() << "EMITTING SLOTSTOP";
-        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-                                  Q_ARG(KJob*, m_kjob));
-//        qDb() << "CALLING SLOTSTOP";
-//        m_tracker->directCallSlotStop(m_kjob);
-    }
+//    if(m_is_job_registered && m_tracker->stopOnClose(m_kjob))
+//    {
+//        qDb() << "EMITTING SLOTSTOP";
+//        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
+//                                  Q_ARG(KJob*, m_kjob));
+////        qDb() << "CALLING SLOTSTOP";
+////        m_tracker->directCallSlotStop(m_kjob);
+//    }
 
     BASE_CLASS::closeEvent(event);
 }
@@ -327,6 +299,7 @@ void BaseActivityProgressStatusBarWidget::deref()
         }
         else
         {
+            Q_ASSERT(0);
 //            slotClean();
         }
     }
@@ -347,43 +320,19 @@ void BaseActivityProgressStatusBarWidget::closeNow()
     /// For that reason we have to check if the map stores the widget as the current one.
     /// ereslibre
 
-    Q_CHECK_PTR(m_tracker);
-    if(m_tracker)
-    {
-//        m_tracker->removeJobAndWidgetFromMap(m_job, this);
-        qDb() << "EMITTING signal_removeJobAndWidgetFromMap:" << m_kjob << this;
-        Q_EMIT signal_removeJobAndWidgetFromMap(m_kjob, this);
-    }
+//    Q_CHECK_PTR(m_tracker);
+//    if(m_tracker)
+//    {
+////        m_tracker->removeJobAndWidgetFromMap(m_job, this);
+//        qDb() << "EMITTING signal_removeJobAndWidgetFromMap:" << m_kjob << this;
+////        Q_EMIT signal_removeJobAndWidgetFromMap(m_kjob, this);
+//    }
 
 //    if (m_tracker->d->progressWidget[m_job] == this)
 //    {
 //        m_tracker->d->progressWidget.remove(m_job);
 //        m_tracker->d->progressWidgetsToBeShown.removeAll(m_job);
 //    }
-}
-
-void BaseActivityProgressStatusBarWidget::stop()
-{
-    /// KWidgetJobTracker::Private::ProgressWidget::_k_stop() does this here:
-    /// if (jobRegistered) {
-    ///    tracker->slotStop(job);
-    /// }
-    /// closeNow();
-    ///
-    /// ATM we're missing something, because when we do what should be ~equivalent below, the "cancel" button
-    /// is ignored.
-
-   if(m_is_job_registered)
-   {
-       // Notify tracker that the job has been killed.
-       // Calls job->kill(KJob::EmitResults) then emits stopped(job).
-       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-                                 Q_ARG(KJob*, m_kjob));
-       Q_ASSERT(retval);
-
-//       m_tracker->directCallSlotStop(m_kjob);
-   }
-   closeNow();
 }
 
 void BaseActivityProgressStatusBarWidget::pause_resume(bool)
@@ -530,14 +479,14 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
 
 void BaseActivityProgressStatusBarWidget::totalSize(KJob *kjob, qulonglong amount)
 {
-    m_totalSize = amount;
-    updateMainTooltip();
+    qDb() << "GOT TOTALSIZE";
+//    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::processedSize(KJob *kjob, qulonglong amount)
 {
-    m_processedSize = amount;
-    updateMainTooltip();
+    qDb() << "GOT PROCESSEDSIZE";
+//    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)

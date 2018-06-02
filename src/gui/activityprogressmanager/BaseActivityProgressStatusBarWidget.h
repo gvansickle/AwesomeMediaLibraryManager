@@ -60,7 +60,7 @@ Q_SIGNALS:
 //    void resume_job(AMLMJobPtr job);
 
     /// To the tracker: Remove the this widget and its job from the map.
-    void signal_removeJobAndWidgetFromMap(KJob* job, QWidget *parent);
+//    void signal_removeJobAndWidgetFromMap(KJob* job, QWidget *parent);
 
 protected:
     /// Private constructor to get us a fully-constructed vtable so we can
@@ -74,7 +74,7 @@ public:
     /// Add buttons to the rhs of the layout.
     virtual void addButton(QToolButton* new_button);
 
-    bool m_is_job_registered { false };
+//    bool m_is_job_registered { false };
 
     // Cribbed from KWidgetJobTracker.
     void ref();
@@ -85,9 +85,6 @@ public Q_SLOTS:
     /// @name Slots for construction/setup.
     /// @{
 
-    /// Make the necessary connections between this Widget, the KJob, and the tracker.
-    /// Call this soon after the constructor is called and after init() is called.
-    virtual void make_connections();
 
     /// @}
 
@@ -119,7 +116,10 @@ public Q_SLOTS:
     virtual void processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
 
     /**
-     * Slots for "Size" progress.
+     * Ours: Slots for "Size" progress.
+     * @note These slots do not exist in the KWidgetJobTracker::Private::ProgressWidget class this is
+     * somewhat based on, and the signals emitted from KJob are not reflected through the KJobTrackerInterface.
+     * Unclear if we really want/need these or not.
      */
     virtual void totalSize(KJob *kjob, qulonglong amount);
     virtual void processedSize(KJob* kjob, qulonglong amount);
@@ -165,9 +165,6 @@ protected Q_SLOTS:
 
     /// @todo Not clear why the functionality of these two are in the Widget; seems like it should be in the tracker.
 
-    /// Invoke this to cancel the job.
-    void stop();
-
     /// Invoke this to pause or resume the job.
     void pause_resume(bool);
 
@@ -187,8 +184,6 @@ protected:
     /// @todo KWidgetJobTracker has all these tracking vars in the Widget, which
     /// seems pretty wrong.  KJob keeps at least some of this info in the KJob.  And even more is hidden in KJobPrivate.
     bool m_is_total_size_known {false};
-    qulonglong m_totalSize {0};
-    qulonglong m_processedSize {0};
 
     /// @todo KJobs each have one of these in KJobPrivate.
     QTime m_start_time;
