@@ -86,8 +86,8 @@ M_WARNING("TODO");
     {
         qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
         qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
-        setSuccessFlag(false);
-        setWasCancelled(false);
+        dirscanjob_self->setSuccessFlag(false);
+        dirscanjob_self->setWasCancelled(false);
         return;
     }
 
@@ -106,7 +106,7 @@ M_WARNING("TODO");
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
-        if(wasCancelRequested())
+        if(dirscanjob_self->wasCancelRequested())
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
@@ -142,9 +142,9 @@ M_WARNING("TODO");
             // of files potentially in this directory.
             num_possible_files = num_files_found_so_far + file_info.dir().count();
 
-            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
-            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
-            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
+            dirscanjob_self->setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
+            dirscanjob_self->setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
+            dirscanjob_self->setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
         }
         else if(file_info.isFile())
         {
@@ -168,7 +168,7 @@ M_WARNING("TODO");
             /// Well, really there is, we could report this as summary info.  Ah well, for tomorrow.
 //            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
 //            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
-            setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+            dirscanjob_self->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
         }
     }
 

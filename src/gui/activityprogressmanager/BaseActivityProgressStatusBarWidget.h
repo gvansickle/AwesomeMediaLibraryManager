@@ -54,13 +54,10 @@ Q_SIGNALS:
     void cancel_job(KJob* job);
 
     /// To the tracker: pause the job.
-//    void pause_job(AMLMJobPtr job);
+    void pause_job(KJob* job);
 
     /// To the tracker: resume the job.
-//    void resume_job(AMLMJobPtr job);
-
-    /// To the tracker: Remove the this widget and its job from the map.
-//    void signal_removeJobAndWidgetFromMap(KJob* job, QWidget *parent);
+    void resume_job(KJob* job);
 
 protected:
     /// Private constructor to get us a fully-constructed vtable so we can
@@ -73,8 +70,6 @@ public:
 
     /// Add buttons to the rhs of the layout.
     virtual void addButton(QToolButton* new_button);
-
-//    bool m_is_job_registered { false };
 
     // Cribbed from KWidgetJobTracker.
     void ref();

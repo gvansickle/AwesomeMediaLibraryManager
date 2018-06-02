@@ -309,7 +309,6 @@ public:
     /// Destructor.
     ~AMLMJob() override;
 
-
     /// @name TW::Job public method overrides.
     /// @{
 
@@ -600,6 +599,7 @@ private:
     /// No need to be atomic due to the mutex/wc.
     bool m_flag_cancel {false};
 
+    QAtomicInt m_tw_got_done_or_fail { 0 };
     QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
 

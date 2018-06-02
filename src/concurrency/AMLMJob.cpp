@@ -79,7 +79,7 @@ void AMLMJob::requestAbort()
     // Lock the mutex.
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
-//    qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
+    qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
 
     // Signal to the run() loop that it should cancel.
     m_flag_cancel = true;
@@ -131,7 +131,6 @@ void AMLMJob::start()
     /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
 
     qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
-
     /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
     ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
     auto stream = queue->stream();
@@ -316,16 +315,16 @@ bool AMLMJob::doKill()
     // KJob::doKill().
     qDb() << "ENTER KJob::doKill()";
 
-//    QEventLoop local_event_loop(this);
-//    // Quit the local loop when the TW::Job signals that it's done.
-//    /// @todo Add timeout.
-//    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
+    QEventLoop local_event_loop(this);
+    // Quit the local loop when the TW::Job signals that it's done.
+    /// @todo Add timeout.
+    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
 
     // Tell the TW::Job to stop.
     requestAbort();
 
     // Now wait for it to signal that it really did stop.
-//    local_event_loop.exec();
+    local_event_loop.exec();
 
     /// @todo Need to wait for the final kill here?
     /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
@@ -457,6 +456,8 @@ void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self
 
 void AMLMJob::TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob)
 {
+    int we_have_been_here_before = m_tw_got_done_or_fail.fetchAndStoreOrdered(1);
+
     // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
     // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
     // We'll similarly deal with the fail case in onTWFailed().
@@ -482,16 +483,6 @@ void AMLMJob::TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob)
             setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
         }
     }
-
-    // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
-    // We handle the success case in done/success above, so we handle the fail case here.
-    // Tell the KJob to:
-    // - Set d->isFinished
-    // - Quit the d->eventLoop if applicable.
-    // - emit finished(this)
-    // - emit result(this)
-    // - if the KJob is set to autoDelete(), call deleteLater().
-    emitResult();
 }
 
 void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
@@ -511,6 +502,17 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // If the TW::Job failed, there's a failed() signal in flight as well.
 
     TWCommonDoneOrFailed(twjob);
+
+    // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
+    // We handle both success and fail cases here, since we always should get a ::done() event.
+    // Tell the KJob to:
+    // - Set d->isFinished
+    // - Quit the d->eventLoop if applicable.
+    // - emit finished(this)
+    // - emit result(this)
+    // - if the KJob is set to autoDelete(), call deleteLater().
+    qDb() << "ABOUT TO EMITRESULT()" << this;
+    emitResult();
 }
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)

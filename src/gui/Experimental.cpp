@@ -147,12 +147,12 @@ void Experimental::DoExperiment()
         qIn() << "Title:" << title;});
 
     /// Two AMLMJobs
-    DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(this, dir_url,
+    DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(nullptr, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     QUrl dir_url2("file:///home/gary");
-    DirectoryScannerAMLMJobPtr dsj2 = new DirectoryScannerAMLMJob(this, dir_url2,
+    DirectoryScannerAMLMJobPtr dsj2 = new DirectoryScannerAMLMJob(nullptr, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 

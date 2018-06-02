@@ -275,7 +275,7 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 ////        qDb() << "CALLING SLOTSTOP";
 ////        m_tracker->directCallSlotStop(m_kjob);
 //    }
-
+	qDb() << "closeEvent():" << event;
     BASE_CLASS::closeEvent(event);
 }
 
@@ -307,7 +307,19 @@ void BaseActivityProgressStatusBarWidget::deref()
 
 void BaseActivityProgressStatusBarWidget::closeNow()
 {
-    close();
+    // Directly call the close() slot.
+	qDb() << "closeNow(), deleteonclose?:" << testAttribute(Qt::WA_DeleteOnClose);
+	bool retval = close();
+	qDb() << "close() retval:" << retval << this;
+	if(retval == true)
+	{
+		qDb() << "Widget was closed:" << this;
+	}
+	else
+	{
+		qWr() << "WIDGET WAS NOT CLOSED:" << this;
+	}
+
 
     /// @todo Haven't fully analyzed the following scenario, but I think what we have below covers it:
     /// // It might happen the next scenario:
