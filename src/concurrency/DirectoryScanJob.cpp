@@ -154,8 +154,8 @@ M_WARNING("TODO");
             // of files potentially in this directory.
             num_possible_files = num_files_found_so_far + file_info.dir().count();
 
-            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
             setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
+            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
             setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
         }
         else if(file_info.isFile())
