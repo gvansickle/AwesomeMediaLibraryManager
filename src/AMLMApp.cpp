@@ -19,7 +19,9 @@
 
 #include "AMLMApp.h"
 
+/// KF5
 #include <KJob>
+#include <ThreadWeaver/Queue>
 
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
@@ -28,5 +30,8 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 
 AMLMApp::~AMLMApp()
 {
-
+    // Shut down ThreadWeaver.
+    ThreadWeaver::Queue::instance()->requestAbort();
+    ThreadWeaver::Queue::instance()->finish();
+    ThreadWeaver::Queue::instance()->shutDown();
 }

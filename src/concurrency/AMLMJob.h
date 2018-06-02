@@ -23,7 +23,7 @@
 
 /**
  * Design notes
- * To be the Alpha and Omega of *Job classes is a lot of work.  Let's start with the KJob and TW::Job lifecycles.
+ * To be the Alpha and Omega of Qt5/KF5 *Job classes is a lot of work.  Let's start with the KJob and TW::Job lifecycles.
  *
  * @note TW:
  * "It is essential for the ThreadWeaver library that as a kind of convention, the different creators of Job objects do
@@ -57,10 +57,15 @@
 /// Qt5
 #include <QObject>
 #include <QPointer>
+#include <QWeakPointer>
+#include <QSharedPointer>
 #include <QTime>
+#include <QMutex>
+#include <QWaitCondition>
 
 /// KF5
 #include <KJob>
+#include <KJobUiDelegate>
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/QueueStream>
 
@@ -129,6 +134,20 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 * @endcode
 *
 * So it would appear that there's no need to maintain any such state in the widget.
+* Except...
+*
+/// Amount vs. Size
+/// KJob looks somewhat broken when it comes to "Size".  It supports "Amount" units of Kjob::Bytes,
+/// KJob::Files, and KJob::Directories, and while there is a "KJob::Unit progressUnit;" member, it's
+/// hidden behind the pImpl and there's no way to see or change it as far as I can tell.  It's defaulted
+/// to "KJob::Bytes", and is the unit used as the "Size" for both read and write.
+/// All KJob Amount and Size updates come from (protected) calls to setProcessedAmount() and
+/// setSizeAmount().  They set the amount of the given unit in the qmap, and emit processed/totalAmount()
+/// signals.  Additionally, if the unit matches "progressUnit" (==Bytes), processed/totalSize() signals
+/// are emitted, the percent complete mechanism is updated, and percent() is emitted.
+/// So bottom line, it looks like if you want to use percent at all, you have to update the "KJob::Units::Bytes"
+/// *Amount()s.  I guess that's ok, you can always call it whatever you want in the UI.
+///
 */
 
 /**
@@ -143,7 +162,7 @@ using AMLMJobPtr = QPointer<AMLMJob>;
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public ThreadWeaver::Job, /*QEnableSharedFromThis<AMLMJob>,*/ public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
@@ -236,8 +255,13 @@ Q_SIGNALS:
 	// void 	processedSize (KJob *job, qulonglong size)
     // void result (KJob *job)
 	// void 	resumed (KJob *job)
+    /// KJob::Speed
+    /// I'm not at all clear on how to really use the KJOB::speed functionality.  You call emitSpeed(value),
+    /// with whatever "value" is, it starts a 5 second timer, then... the timer times out... then I totally lose the plot.
+    /// Ah well.
 	// void 	speed (KJob *job, unsigned long speed)
     // void suspended (KJob *job)
+
 	// void 	totalAmount (KJob *job, KJob::Unit unit, qulonglong amount)
 	// void 	totalSize (KJob *job, qulonglong size)
 	// void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
@@ -305,7 +329,8 @@ public:
     /**
      * Abort the execution of the job.
      * Call this method to ask the Job to abort if it is currently executed.
-     * This method should return immediately, not after the abort has completed.
+     *
+     * @note This method should return immediately, not after the abort has completed.
      *
      * @note TW::Job's default implementation of the method does nothing.
      * @note TW::IdDecorator calls the TW::Job's implementation.
@@ -332,13 +357,13 @@ public:
 
     /// @}
 
-public:
+public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     /// @name New public interfaces FBO derived classes' overloads of TW:Job::run().
     /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
 
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
-    bool twWasCancelRequested() const { return m_flag_cancel != 0; }
+    bool wasCancelRequested();
 
     /// Derived run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
@@ -346,19 +371,34 @@ public:
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 
-    Q_SCRIPTABLE KJob::Unit progressUnit() const;
-    Q_SCRIPTABLE qulonglong processedSize() const;
-    Q_SCRIPTABLE qulonglong totalSize() const;
-
+public:
     /// Dump info about the given KJob.
     static void dump_job_info(KJob* kjob, const QString &header = QString());
 
 public:
 
-    /// @name Callback interface.
+    /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
 
-    /// @todo
+    /**
+     * .then(ctx, continuation) -> void
+     */
+    template <typename ContextType, typename Func>
+    void then(ContextType&& ctx, Func&& f)
+    {
+		connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
+				if(kjob->error())
+				{
+					// Report the error.
+                    kjob->uiDelegate()->showErrorMessage();
+				}
+				else
+				{
+					// Call the continuation.
+                    f(kjob);
+				}
+			});
+    }
 
     /// @}
 
@@ -368,7 +408,7 @@ public Q_SLOTS:
 
     /// @name KJob job control slots
     /// @note Default KJob implementations appear to be sufficient.  They call
-    ///       the protected "doXxxx()" functions which we do need to override below,
+    ///       the protected "doXxxx()" functions (which we do need to override below),
     ///       and then emit the proper signals to indicate the deed is done.
     /// @link https://api.kde.org/frameworks/kcoreaddons/html/kjob_8cpp_source.html#l00117
     /// @{
@@ -423,7 +463,10 @@ protected:
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
-    /// @note run() must have set the correct success() value prior to exiting.
+    /**
+     * The defaultEnd() function, called immediately after run() returns.
+     * @note run() must have set the correct success() value prior to exiting.
+     */
     void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
 
     /// @}
@@ -443,6 +486,10 @@ protected:
      * - Call our onKJobDoKill(), which currently does nothing.
      *
      * @todo Not clear if this should block until the job has been killed or not.
+     *       It looks like this should block until the job is really killed;
+     *       KAbstractWidgetJobTracker::slotStop() does this:
+     *         job->kill(KJob::EmitResult); // notify that the job has been killed
+     *         emit stopped(job);
      *
      * @return true if job successfully killed, false otherwise.
      */
@@ -497,10 +544,15 @@ protected:
     /// Defaults to KJob::Unit::Bytes.
     void setProgressUnit(KJob::Unit prog_unit);
 
+    virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
+    virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
+
     /// Make the internal signal-slot connections.
     virtual void make_connections();
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     virtual void connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+
+    void TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob);
 
     /// @}
 
@@ -532,15 +584,22 @@ protected Q_SLOTS:
 
     /// @}
 
-
-
 private:
     Q_DISABLE_COPY(AMLMJob)
 
-    /// Control structs/flags
-    QAtomicInt m_flag_cancel {0};
+	/// Mutex and wait condition for cancel/pause/resume.
+    /// Mutex is created in unlocked state, non-recursive.
+	QMutex m_cancel_pause_resume_mutex;
+    QWaitCondition m_cancel_pause_resume_waitcond;
+    /// Flag telling the AMLMJob run() thread to cancel.
+    /// No need to be atomic due to the mutex/wc.
+    bool m_flag_cancel {false};
+
     QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
+
+    /// Wishful thinking at the moment, but maybe I'll figure out how to separate "Size" from KJob::Bytes.
+    KJob::Unit m_progress_unit { KJob::Unit::Bytes };
 };
 
 //Q_DECLARE_METATYPE(AMLMJob); /// @todo need default constructor and copy constructor.

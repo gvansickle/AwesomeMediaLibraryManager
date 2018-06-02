@@ -24,7 +24,8 @@
 #include <QUrl>
 #include <QDir>
 #include <QDirIterator>
-#include <QPointer>
+#include <QWeakPointer>
+#include <QSharedPointer>
 
 #include <ThreadWeaver/ThreadWeaver>
 

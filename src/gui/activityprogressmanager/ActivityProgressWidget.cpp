@@ -21,6 +21,8 @@
 
 #include "ActivityProgressWidget.h"
 
+#if 0 /// REUSE THIS FILE MAYBE
+
 /// Qt5
 #include <QLabel>
 #include <QStatusBar>
@@ -138,3 +140,5 @@ QString ActivityProgressWidget::createTextStatusString()
 {
 	return QString("%1/%2").arg(m_last_val).arg(m_last_max-m_last_min);
 }
+
+#endif /// REUSE

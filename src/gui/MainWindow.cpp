@@ -21,60 +21,15 @@
 
 #include "MainWindow.h"
 
-#include <KMainWindow>
-#include <KHelpMenu>
-#include <KToolBar>
-#include <KToggleToolBarAction>
-#include <KShortcutsDialog>
-#include <KActionCollection>
-#include <KActionMenu>
-#include <KMessageBox>
-#include <KAboutData>
-#include <KSharedConfig>
+/// Std C++
 
-#include <KJob>
-#include <KIO/Job>
-#include <KIO/JobTracker>
-#include <KJobWidgets>
-#include <KStatusBarJobTracker>
-#include <KWidgetJobTracker>
-#include <KIconButton>
+#include <functional>
+#include <algorithm>
+#include <type_traits>
 
-#include "Experimental.h"
-#include "FilterWidget.h"
-
-#include "MDITreeViewBase.h"
-#include "MDILibraryView.h"
-#include "MDIPlaylistView.h"
-#include "MDINowPlayingView.h"
-
-// Asynchronous activity progress monitoring.
-#include "activityprogressmanager/ActivityProgressManager.h"
-#include "activityprogressmanager/ActivityProgressWidget.h"
-#include "activityprogressmanager/ActivityProgressDialog.h"
-
-// For KF5 KConfig infrastructure.
-#include <AMLMSettings.h>
-#include <gui/settings/SettingsDialog.h>
-
-#include <logic/LibraryModel.h>
-#include <logic/PlaylistModel.h>
-
-#include "gui/MDIArea.h"
-#include "MetadataDockWidget.h"
-#include "CollectionDockWidget.h"
-#include "PlayerControls.h"
-
-#include "logic/LibraryEntryMimeData.h"
-
-#include "logic/LibrarySortFilterProxyModel.h"
-
-#include "utils/ConnectHelpers.h"
-#include "utils/ActionHelpers.h"
-#include "utils/DebugHelpers.h"
+/// Qt5
 
 #include <QObject>
-
 #include <QApplication>
 #include <QMainWindow>
 #include <QWidget>
@@ -101,17 +56,61 @@
 #include <QClipboard>
 #include <QSharedPointer>
 #include <QStandardItem>
+#include <QThread>
+#include <QWhatsThis>
+#include <QMimeData>
 
 
-#include <functional>
-#include <algorithm>
-#include <type_traits>
+/// KF5
+#include <KMainWindow>
+#include <KHelpMenu>
+#include <KToolBar>
+#include <KToggleToolBarAction>
+#include <KShortcutsDialog>
+#include <KActionCollection>
+#include <KActionMenu>
+#include <KMessageBox>
+#include <KAboutData>
+#include <KSharedConfig>
+#include <KJob>
+#include <KIO/Job>
+#include <KIO/JobTracker>
+#include <KJobWidgets>
+#include <KIconButton>
+#include <KXmlGui/KEditToolBar>
+
+/// Ours
+
+#include "Experimental.h"
+#include "FilterWidget.h"
+
+#include "MDITreeViewBase.h"
+#include "MDILibraryView.h"
+#include "MDIPlaylistView.h"
+#include "MDINowPlayingView.h"
+
+// For KF5 KConfig infrastructure.
+#include <AMLMSettings.h>
+#include <gui/settings/SettingsDialog.h>
+
+#include <logic/LibraryModel.h>
+#include <logic/PlaylistModel.h>
+
+#include "gui/MDIArea.h"
+#include "MetadataDockWidget.h"
+#include "CollectionDockWidget.h"
+#include "PlayerControls.h"
+
+#include "logic/LibraryEntryMimeData.h"
+
+#include "logic/LibrarySortFilterProxyModel.h"
+
+#include "utils/ConnectHelpers.h"
+#include "utils/ActionHelpers.h"
+#include "utils/DebugHelpers.h"
 
 #include <logic/MP2.h>
 #include <utils/Theme.h>
-#include <QtCore/QThread>
-#include <QtWidgets/QWhatsThis>
-#include <QMimeData>
 #include "logic/LibraryEntryMimeData.h"
 
 #include "AboutBox.h"
@@ -119,7 +118,8 @@
 
 #include <gui/menus/ActionBundle.h>
 #include <gui/menus/HelpMenu.h>
-#include <KXmlGui/KEditToolBar>
+
+// Asynchronous activity progress monitoring.
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
 #include "concurrency/ExtAsync.h"
@@ -134,8 +134,7 @@
 QPointer<MainWindow> MainWindow::m_instance { nullptr };
 
 
-MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags),
-    m_activity_progress_manager(new ActivityProgressManager(this))
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(parent, flags)
 {
 	// Name our MainWindow.
 	setObjectName("MainWindow");
@@ -144,7 +143,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
     QThread::currentThread()->setObjectName("GUIThread");
     qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
-    // Set the signleton pointer.
+    // Set the singleton pointer.
     m_instance = this;
 
 
@@ -173,9 +172,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 MainWindow::~MainWindow()
 {
     // Shouldn't have been destroyed until now.
-    Q_CHECK_PTR(instance()->m_activity_progress_multi_tracker);
-    delete instance()->m_activity_progress_multi_tracker;
-    instance()->m_activity_progress_multi_tracker = nullptr;
+    Q_CHECK_PTR(instance()->m_activity_progress_tracker);
+    delete instance()->m_activity_progress_tracker;
+    instance()->m_activity_progress_tracker = nullptr;
 
     m_instance = nullptr;
 }
@@ -308,8 +307,8 @@ void MainWindow::onStartup()
 M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this before initRootModels() etc in onStartup?");
     auto sb = statusBar();
     Q_CHECK_PTR(sb);
-    m_activity_progress_multi_tracker = new ActivityProgressStatusBarTracker(sb);
-    statusBar()->addPermanentWidget(m_activity_progress_multi_tracker->widget(nullptr));
+    m_activity_progress_tracker = new ActivityProgressStatusBarTracker(sb);
+    statusBar()->addPermanentWidget(m_activity_progress_tracker->widget(nullptr));
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 
@@ -946,9 +945,9 @@ void MainWindow::createStatusBar()
 //    statusBar()->addPermanentWidget(m_kf5_activity_progress_widget);
 #endif
 
-	m_activity_progress_widget = new ActivityProgressWidget(this);
+//	m_activity_progress_widget = new ActivityProgressWidget(this);
 
-    statusBar()->addPermanentWidget(m_activity_progress_widget);
+//    statusBar()->addPermanentWidget(m_activity_progress_widget);
 
     statusBar()->showMessage("Ready");
 }
@@ -1065,11 +1064,6 @@ void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls
 
 	// Connect play() signal-to-signal.
 	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-}
-
-void MainWindow::connectLibraryModelToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw)
-{
-	lm->connectProgressToActivityProgressWidget(apw);
 }
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
@@ -1356,9 +1350,9 @@ ToolBarClass* MainWindow::addToolBar(const QString &win_title, const QString &ob
 ActivityProgressStatusBarTracker *MainWindow::master_tracker_instance()
 {
     // Make sure it's been constructed.
-    Q_ASSERT(instance()->m_activity_progress_multi_tracker != nullptr);
+    Q_ASSERT(instance()->m_activity_progress_tracker != nullptr);
 
-    return instance()->m_activity_progress_multi_tracker;
+    return instance()->m_activity_progress_tracker;
 }
 
 QDockWidget *MainWindow::addDock(const QString &title, const QString &object_name, QWidget *widget, Qt::DockWidgetArea area)
@@ -1754,7 +1748,8 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 
 			m_libmodels.push_back(libmodel);
 
-			connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
+M_WARNING("TODO: Can this go completely?");
+//			connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
 
 			// Add the new library to the ModelViewPairs Model.
 			// The Collection Doc Widget uses this among others.

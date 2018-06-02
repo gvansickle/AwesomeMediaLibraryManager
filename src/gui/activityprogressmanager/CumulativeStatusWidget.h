@@ -39,7 +39,7 @@ Q_SIGNALS:
 
 public:
 	explicit CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
-	virtual ~CumulativeStatusWidget();
+    ~CumulativeStatusWidget() override;
 
 public Q_SLOTS:
     /// Make the necessary connections between this Widget, the KJob, and the tracker.
@@ -52,7 +52,7 @@ public Q_SLOTS:
 private:
 	Q_DISABLE_COPY(CumulativeStatusWidget)
 
-M_WARNING("TODO: Do we need a no-operation-in-progress child widget?");
+    /// @todo Do we need a no-operation-in-progress child widget?
 
 };
 

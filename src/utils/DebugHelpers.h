@@ -20,8 +20,10 @@
 #ifndef DEBUGHELPERS_H
 #define DEBUGHELPERS_H
 
+/// Std C++
 #include <type_traits>
 
+/// Qt5
 #include <QObject>
 #include <QMetaMethod>
 #include <QString>
@@ -29,6 +31,7 @@
 #include <QThread>
 #include <QModelIndex>
 
+/// Ours
 #include "StringHelpers.h"
 
 
@@ -48,24 +51,24 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 }
 
 /**
- * Stream this macro to qDebug() to log the current thread name.
+ * Shorter qDebug() etc. replacements.
  */
-#define M_THREADNAME() QStringLiteral("[") + QThread::currentThread()->objectName() + QStringLiteral("]")
-
-/**
- * qDebug() etc. replacements which prepends the current thread name.
- */
-#define qDb() qDebug() << M_THREADNAME()
-#define qIn() qInfo() << M_THREADNAME()
-#define qWr() qWarning() << M_THREADNAME()
-#define qCr() qCritical() << M_THREADNAME()
+#define qDb() qDebug()
+#define qIn() qInfo()
+#define qWr() qWarning()
+#define qCr() qCritical()
 
 /// Stream out a warning of @a cond holds true.
-#define M_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+#define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+
+/// From -> To
+//#define AMLM_ASSERT_PTR_IS_CONVERTIBLE(a, b) if(dynamic_cast<std::remove_pointer_t<decltype(b)>>(a) == 0) \
+//    { qCr() << "pointers are not dynamic_cast<> convertible:" << #a ":" << a << #b ":" << b;  Q_ASSERT(0); }
+//#define AMLM_ASSERT_IS_CONVERTIBLE(a, b) if((a) == (b)) { qCr() << "Pointers not convertible:" << #a ":" << a << #b ":" << b; Q_ASSERT(0); }
 
 inline static void dump_qobject(QObject* qobj)
 {
-#define out() qDebug() << M_THREADNAME()
+#define out() qDebug()
     out() << "Dumping ObjectInfo for QObject:" << qobj;
     // No known control on where this goes other than "to debug output".
     qobj->dumpObjectInfo();
@@ -172,7 +175,6 @@ idstr(const char *id_as_c_str, T id)
 
 #define M_IDSTR(id) idstr(#id ": ", id) + ", " +
 
-#define M_NAME_VAL(id) #id ":" << id
 
 /// Attempts to get the compiler to print a human-readable type name at compile time.
 /// @note In the 21st century, this should be a solved problem.  It isn't.
@@ -198,6 +200,9 @@ void print_type_in_compilation_error(T&&)
 #define STRINGISE(x) STRINGISE_IMPL(x)
 #define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) "): "
 /// @}
+
+#define M_NAME_VAL(id) STRINGISE_IMPL(id) ":" << id
+
 
 /**
  * Portable compile-time warning message.

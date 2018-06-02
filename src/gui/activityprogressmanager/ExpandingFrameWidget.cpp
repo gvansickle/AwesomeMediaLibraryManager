@@ -19,29 +19,45 @@
 
 #include "ExpandingFrameWidget.h"
 
+/// Qt5
 #include <QLayout>
 #include <QWidget>
 
+/// Ours
+#include <utils/TheSimplestThings.h>
 #include <gui/MainWindow.h>
 
 ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) : BASE_CLASS(parent, f)
 {
+    /// GRVS
+//    setWindowFlags(Qt::Dialog);
+//    show();
+
     // Set up the layout.
     Q_ASSERT(layout() == nullptr);
     setLayout(new QVBoxLayout());
     layout()->setSpacing(0);
     layout()->setMargin(0);
+    layout()->setSizeConstraint(QLayout::SetFixedSize);
 
     setBackgroundRole( QPalette::Window );
     setAutoFillBackground( true );
 
-    setFrameStyle( QFrame::Box );
+//    setFrameStyle( QFrame::Box );
 
     setMinimumWidth( 26 );
     setMinimumHeight( 26 );
 
     setContentsMargins( 4, 4, 4, 4 );
-    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+    // Make the frame confirm to the size of the contained widgets,
+    // i.e. the user can't resize it.
+    layout()->setSizeConstraint(QLayout::SetFixedSize);
+//    QSizePolicy sp();
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    updateGeometry();
+
+//    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+//    layout()->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
 
 }
 
@@ -50,37 +66,63 @@ ExpandingFrameWidget::~ExpandingFrameWidget()
     // TODO Auto-generated destructor stub
 }
 
+void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
+{
+    m_cumulative_status_bar_main_widget = status_bar_widget;
+}
+
 void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 {
+    // Set the widget width to the same as the summary widget.
+    new_widget->setFixedWidth(parentWidget()->width());
+
     // Widget will be reparented.
     layout()->addWidget(new_widget);
 
-//    // Resize if necessary.
-//    if(width() < new_widget->width())
-//    {
-//        setMinimumWidth(new_widget->width());
-//    }
-
-//    /// @todo
-//    setMinimumHeight(new_widget->height());
+    reposition();
 }
 
 void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 {
 //    new_widget->setParent(this);
     layout()->removeWidget(new_widget);
+
+//    setFixedHeight(new_widget->height() * children().size() + 8);
+    reposition();
+}
+
+QSize ExpandingFrameWidget::sizeHint() const
+{
+    return BASE_CLASS::sizeHint();
+///
+    // parent is also the status bar widget.
+    auto sbw = parentWidget();
+
+    qDb() << "PARENT SIZE HINT:" << sbw->sizeHint();
+
+    return QSize(sbw->width(), 10);
 }
 
 void ExpandingFrameWidget::reposition()
 {
-    adjustSize();
+    qDb() << "PARENT:" << parentWidget();
+    qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
 
-    if(!MainWindow::instance())
-        return;
+//    QSize s = sizeHint();
+//    s.setWidth(parentWidget()->width());
+//    resize(s);
+    updateGeometry();
 
-    QPoint p;
-    p.setX(MainWindow::instance()->width() - width());
-    p.setY(MainWindow::instance()->height() - height());
-    move(p);
+    // parent is also the status bar widget.
+    auto sbw = parentWidget();
+
+M_WARNING("TODO: This positioning is just broken, rework.");
+
+    QPoint our_new_pos;
+    QPoint global_parent_pos = sbw->mapToGlobal(sbw->pos());
+    auto origin_parent_pos = mapToParent(QPoint(0,0));
+    our_new_pos.setX(origin_parent_pos.x());
+    our_new_pos.setY(origin_parent_pos.y() - height());
+    move(our_new_pos);
 }
 

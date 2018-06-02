@@ -19,8 +19,26 @@
 
 #include <config.h>
 
-#if HAVE_KF501
+/// Std C++
 
+#include <vector>
+#include <utility> // For std::pair<>
+#include <memory>
+
+/// Qt5
+
+#include <QUrl>
+class QActionGroup;
+class QWidget;
+class QLabel;
+class QMdiSubWindow;
+class QSettings;
+class QStandardItem;
+class QStandardItemModel;
+
+/// KF5
+
+#if HAVE_KF501
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
@@ -46,40 +64,18 @@ using ToolBarClass = QToolBar;
 
 #endif
 
-
-#include <QUrl>
-
-#include <vector>
-#include <utility> // For std::pair<>
-#include <memory>
+/// Ours
 
 #include <logic/MP2.h>
 #include "mdi/MDIModelViewPair.h"
 
-#include "concurrency/AMLMJob.h"
-class TWJobWrapper;
-
-class QActionGroup;
-class QWidget;
-class QLabel;
-class QMdiSubWindow;
 class MDIArea;
-class QSettings;
-
-class QStandardItem;
-class QStandardItemModel;
-
 class MDITreeViewBase;
 class MDILibraryView;
 class MDIPlaylistView;
 class MetadataDockWidget;
 class CollectionDockWidget;
-
-class ActivityProgressWidget;
-class ActivityProgressDialog;
-class ActivityProgressManager;
 class ActivityProgressStatusBarTracker;
-
 class ActionBundle;
 class PlayerControls;
 class MDINowPlayingView;
@@ -307,8 +303,6 @@ private:
     void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
     void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
 
-	void connectLibraryModelToActivityProgressWidget(LibraryModel* lm, ActivityProgressWidget* apw);
-
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
 	void connectPlaylistViewAndMainWindow(MDIPlaylistView* plv);
 	void connectNowPlayingViewAndMainWindow(MDINowPlayingView* now_playing_view);
@@ -510,17 +504,13 @@ private:
     /// The MainWindow signleton.
     static QPointer<MainWindow> m_instance;
 
-    QPointer<ActivityProgressManager> m_activity_progress_manager;
-
-    /// The Activity Progress Widget.
-    ActivityProgressWidget* m_activity_progress_widget;
-
 #if HAVE_KF501
     /**
      * Master Tracker for all asynchronous activites.
+     * Its widget is the progress bar in the status bar.
      * Probably belongs in AMLMApp, but constructor needs a QWidget parent.
      */
-    ActivityProgressStatusBarTracker* m_activity_progress_multi_tracker { nullptr };
+    ActivityProgressStatusBarTracker* m_activity_progress_tracker { nullptr };
 #endif
 
     /// The Settings (AKA Preferences, AKA Config) dialog.

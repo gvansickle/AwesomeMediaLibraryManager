@@ -141,9 +141,6 @@ public Q_SLOTS:
 
     /// @} // END Public slots analogous to the private versions of KAbstractWidgetJobTracker.
 
-    virtual void setRange(int min, int max);
-    virtual void setValue(int val);
-
 protected:
 
     /// Create the widget.
@@ -192,7 +189,6 @@ protected:
     bool m_is_total_size_known {false};
     qulonglong m_totalSize {0};
     qulonglong m_processedSize {0};
-    /// @todo Same comment but these seem to be stored in a qmap in KJobPrivate.
 
     /// @todo KJobs each have one of these in KJobPrivate.
     QTime m_start_time;

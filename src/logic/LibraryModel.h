@@ -32,6 +32,7 @@
 
 #include "ColumnSpec.h"
 #include "Library.h"
+#include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "LibraryEntry.h"
 #include "LibraryRescannerMapItem.h"
 
@@ -145,7 +146,7 @@ public:
 
     virtual void setLibraryRootUrl(const QUrl& url);
 
-	virtual void connectProgressToActivityProgressWidget(ActivityProgressWidget* apw);
+//	virtual void connectProgressToActivityProgressWidget(ActivityProgressWidget* apw);
 	virtual void stopAllBackgroundThreads();
 	virtual void close(bool delete_cache = false);
 
@@ -173,8 +174,9 @@ public:
 
 public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
-	void onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
-	void onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
+    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
+    void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
+    void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
 
     virtual QVector<VecLibRescannerMapItems> getLibRescanItems();
 

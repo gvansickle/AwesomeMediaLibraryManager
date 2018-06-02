@@ -17,32 +17,17 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-set(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressDialog.h
-	activityprogressmanager/ActivityProgressPopup.h
-	activityprogressmanager/ActivityProgressStatusBarTracker.h
-	activityprogressmanager/ActivityProgressWidget.h
-	activityprogressmanager/BaseActivityProgressStatusBarWidget.h
-	activityprogressmanager/ExpandingFrameWidget.h
-	activityprogressmanager/CumulativeStatusWidget.h
-	activityprogressmanager/CumulativeAMLMJob.h
+set(HEADER_FILES_GUI_WIDGETS
+	widgets/PixmapLabel.h
 	PARENT_SCOPE
 	)
-set(SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressDialog.cpp
-	activityprogressmanager/ActivityProgressPopup.cpp
-	activityprogressmanager/ActivityProgressStatusBarTracker.cpp
-	activityprogressmanager/ActivityProgressWidget.cpp
-	activityprogressmanager/BaseActivityProgressStatusBarWidget.cpp
-	activityprogressmanager/ExpandingFrameWidget.cpp
-	activityprogressmanager/CumulativeStatusWidget.cpp
-	activityprogressmanager/CumulativeAMLMJob.cpp
+set(SOURCE_FILES_GUI_WIDGETS
+	widgets/PixmapLabel.cpp
 	PARENT_SCOPE
 	)
-set(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER
-	activityprogressmanager/ActivityProgressDialog.ui
-	PARENT_SCOPE
-	)
+# set(UI_FILES_GUI_WIDGETS
+# 	PARENT_SCOPE
+# 	)
 
 ### @todo Remove dirs above, use these instead.
 # prepend_to_each(HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})

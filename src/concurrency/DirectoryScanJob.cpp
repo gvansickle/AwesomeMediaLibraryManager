@@ -54,12 +54,13 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent,
                                     QDirIterator::IteratorFlags flags)
 {
 M_WARNING("TODO: NOT SHARED PTR");
-//    return DirectoryScannerAMLMJobPtr::create(parent, dir_url, nameFilters, filters, flags);
+//    return QPointer<DirectoryScannerAMLMJob>::create(parent, dir_url, nameFilters, filters, flags);
     return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
+M_WARNING("TODO: There's a problem with shared ptrs here");
     qDb() << "DirectoryScannerAMLMJob DELETED:" << this << objectName();
 }
 
@@ -78,20 +79,15 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     // This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
     // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
-//    auto amlm_self_shared = qSharedPointerDynamicCast<AMLMJob>(self);
-//    AMLMJobPtr amlm_self = amlm_self_shared.data();
-    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-//    auto amlm_self_other = dynamic_cast<AMLMJob*>(self.data());//qSharedPointerDynamicCast<AMLMJob>(self);
 
-    qDb() << "IN RUN, " << M_NAME_VAL(amlm_self);
-    Q_CHECK_PTR(amlm_self);
-    KJob* kselfsp = amlm_self;
-    qDb() << "IN RUN, " << M_NAME_VAL(kselfsp);
-    Q_CHECK_PTR(kselfsp);
+M_WARNING("TODO");
+//    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPointerDynamicCast<DirectoryScannerAMLMJob>(self);//= qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPtrToQPointerDynamicCast<DirectoryScannerAMLMJob>(self);
 
-M_WARNING("TODO not sure if this is the right place to do this");
-    amlm_self->setAutoDelete(false);
-    qDb() << "IN RUN, KJob isAutoDelete()?:" << amlm_self->isAutoDelete();
+    setProgressUnit(KJob::Unit::Directories);
+
+    qDb() << "IN RUN, " << M_NAME_VAL(dirscanjob_self);
+    Q_CHECK_PTR(dirscanjob_self);
 
     // Create the QDirIterator.
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
@@ -102,8 +98,8 @@ M_WARNING("TODO not sure if this is the right place to do this");
     {
         qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
         qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
-        amlm_self->setSuccessFlag(false);
-        amlm_self->setWasCancelled(false);
+        setSuccessFlag(false);
+        setWasCancelled(false);
         return;
     }
 
@@ -112,26 +108,23 @@ M_WARNING("TODO not sure if this is the right place to do this");
     int num_discovered_dirs = 0;
     uint num_possible_files = 0;
     qint64 total_discovered_file_size_bytes = 0;
-    bool stopped_due_to_cancel_req = false;
 
     QString status_text = QObject::tr("Scanning for music files");
 
-    Q_EMIT amlm_self->description(this, status_text,
+    Q_EMIT description(this, status_text,
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
-
-    setPercent(0);
 
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
-        if(amlm_self->twWasCancelRequested())
+        if(wasCancelRequested())
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
-            stopped_due_to_cancel_req = true;
             break;
         }
+        /// @todo Not sure how we'd pause once we get into the TW::run() function.
 //        if(report_and_control.isPaused())
 //        {
 //            // We're paused, wait for a resume signal.
@@ -161,9 +154,9 @@ M_WARNING("TODO not sure if this is the right place to do this");
             // of files potentially in this directory.
             num_possible_files = num_files_found_so_far + file_info.dir().count();
 
-            setProcessedAmount(KJob::Unit::Directories, num_discovered_dirs);
-            setTotalAmount(KJob::Unit::Directories, num_discovered_dirs+1);
-            setTotalAmount(KJob::Unit::Files, num_possible_files+1);
+            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
+            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
+            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
         }
         else if(file_info.isFile())
         {
@@ -176,31 +169,24 @@ M_WARNING("TODO not sure if this is the right place to do this");
 
             QUrl file_url = QUrl::fromLocalFile(entry_path);
 
-            Q_EMIT this->infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
+            Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
-            Q_EMIT this->entries(this, file_url);
+            Q_EMIT entries(this, file_url);
 
             // Update progress.
-            setTotalAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
-            setProcessedAmount(KJob::Unit::Bytes, total_discovered_file_size_bytes);
-            setProcessedAmount(KJob::Unit::Files, num_files_found_so_far);
+            /// @note Bytes is being used for "Size" == progress by the system.
+            /// No real need to accumulate that here anyway.
+            /// Well, really there is, we could report this as summary info.  Ah well, for tomorrow.
+//            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
+//            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+            setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
         }
     }
 
     // We've either completed our work or been cancelled.
-    if(stopped_due_to_cancel_req)
-    {
-        // Cancelled.
-        // Success == false is correct here.
-        amlm_self->setSuccessFlag(false);
-        amlm_self->setWasCancelled(true);
-    }
-    else
-    {
-        // Successful completion.
-        amlm_self->setSuccessFlag(true);
-    }
+    // Either way, defaultEnd() will handle setting the cancellation status as long as
+    // we set success/fail appropriately.
 
     qDb() << "LEAVING RUN";
 }

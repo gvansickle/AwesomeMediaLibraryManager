@@ -5,26 +5,53 @@
  *      Author: gary
  */
 
-#include "Logging.h"
+#include <config.h>
 
-#include <QtGlobal>
-#include <QString>
+/// Std C++
+#include <iostream>
+
+/// Qt5
+#include <QGuiApplication>
+#include <QLibraryInfo>
 #include <QLoggingCategory>
 #include <QProcessEnvironment>
-#include <QLibraryInfo>
-#include <QGuiApplication>
+#include <QString>
+#include <QThread>
 
-#include <iostream>
+/// Ours
+#include "Logging.h"
+
 
 Logging::Logging()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
 {
-	QString debug_str = qFormatLogMessage(type, context, msg);
+
+    QString debug_str;
+
+    //
+    auto cur_thread = QThread::currentThread();
+    QString thread_name;
+    if(cur_thread)
+    {
+        thread_name = cur_thread->objectName();
+    }
+
+    if(thread_name.isEmpty())
+    {
+        // No name yet, last-ditch we'll print the native thread ID.
+
+        auto cur_thread_id = QThread::currentThreadId();
+        thread_name = QString("%1").arg((unsigned long)cur_thread_id);
+    }
+    // Fit to 15 chars, fixed width.
+    thread_name = thread_name.leftJustified(15, '_', true);
+
+    debug_str = qFormatLogMessage(type, context, msg);
+
+    debug_str.replace(QStringLiteral("%threadname15"), thread_name);
 
 #ifdef Q_OS_WIN
 	OutputDebugString(debug_str.toStdWString().c_str());

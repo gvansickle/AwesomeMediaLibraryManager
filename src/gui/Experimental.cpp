@@ -34,6 +34,7 @@
 #include <QDockWidget>
 #include <QScrollArea>
 #include <QStorageInfo>
+#include <KDialogJobUiDelegate>
 
 #define EX1 1
 #define EX2 0
@@ -44,10 +45,13 @@
 #include <KIO/CopyJob>
 #include <KIO/ListJob>
 #include <KIO/DirectorySizeJob>
+#include <KIO/JobUiDelegate>
 #include <KJobUiDelegate>
 
 #include <KMessageWidget>
-
+#include <KUiServerJobTracker>
+#include <KJobWidgets>
+#include <ThreadWeaver/State>
 #include <ThreadWeaver/DebuggingAids>
 
 #include "concurrency/ActivityManager.h"
@@ -56,7 +60,7 @@
 
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include "activityprogressmanager/ActivityProgressWidget.h"
-#include "activityprogressmanager/ActivityProgressDialog.h"
+//#include "activityprogressmanager/ActivityProgressDialog.h"
 #include <concurrency/DirectoryScanJob.h>
 
 #endif
@@ -119,7 +123,7 @@ void Experimental::DoExperiment()
 
     // Set the global KIO job tracker.
     // If we do this, the jobs will add themselves to the given tracker if they don't have HideProgressInfo set.
-//    KIO::setJobTracker(master_job_tracker);
+    KIO::setJobTracker(master_job_tracker);
 
     ThreadWeaver::setDebugLevel(true, 10);
 
@@ -169,19 +173,19 @@ void Experimental::DoExperiment()
     /// "emits the data through the data() signal."
     QUrl web_src_url(QStringLiteral("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso?_ga=2.204957456.1400403342.1527338037-878124677.1491681087"));
 //    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));
-    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload, KIO::HideProgressInfo);
+    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload/*, KIO::HideProgressInfo*/);
 
     auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
     master_job_tracker->registerJob(dirsizejob);
 
-    master_job_tracker->registerJob(dsj);
-    master_job_tracker->setAutoDelete(dsj, false);
-    master_job_tracker->setStopOnClose(dsj, false);
+    master_job_tracker->registerJob(dsj.data());
+    master_job_tracker->setAutoDelete(dsj.data(), true);
+    master_job_tracker->setStopOnClose(dsj.data(), false);
 
-    master_job_tracker->registerJob(dsj2);
-    master_job_tracker->setAutoDelete(dsj2, false);
-    master_job_tracker->setStopOnClose(dsj2, false);
+    master_job_tracker->registerJob(dsj2.data());
+    master_job_tracker->setAutoDelete(dsj2.data(), true);
+    master_job_tracker->setStopOnClose(dsj2.data(), false);
 
     master_job_tracker->registerJob(kio_list_kiojob);
 
@@ -189,6 +193,14 @@ void Experimental::DoExperiment()
 
     // Shows prog and other signals hooked up to the tracker.
     dump_qobject(kio_list_kiojob);
+
+//    auto test_job = inet_get_job;
+//    KUiServerJobTracker *tracker3 = new KUiServerJobTracker(MainWindow::instance());
+//    tracker3->registerJob(test_job);
+//    KJobWidgets::setWindow(test_job, MainWindow::instance());
+////    test_job->setUiDelegate(new KDialogJobUiDelegate());
+//    test_job->setUiDelegate(new KIO::JobUiDelegate());
+    dump_qobject(inet_get_job);
 
     qIn() << "QUEUE STATE:" << queue->state()->stateName();
 

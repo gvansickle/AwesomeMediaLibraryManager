@@ -32,6 +32,7 @@
 #include <KJobUiDelegate>
 
 /// Ours
+#include <KIO/DirectorySizeJob>
 #include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
@@ -47,10 +48,10 @@
 
 #include "logic/LibraryModel.h"
 
-using std::placeholders::_1;
+//using std::placeholders::_1;
 
 
-LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_async_task_manager(this)
+LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 {
 	setObjectName("TheLibraryRescanner");
 
@@ -60,7 +61,7 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent), m_as
 
 LibraryRescanner::~LibraryRescanner()
 {
-
+M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS");
 }
 
 
@@ -160,8 +161,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
-	qDebug() << M_THREADNAME();
-	qDebug() << "START:" << dir_url;
+    qDb() << "START:" << dir_url;
 
 	// Time how long it takes.
 	m_timer.start();
@@ -201,7 +201,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
-    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
+//    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
+    auto lib_rescan_job = new LibraryRescannerJob(this);
 
     connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
         // Found a file matching the criteria.  Send it to the model.
@@ -210,7 +211,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         ;});
 
     /// @todo This would be a good candidate for an AMLMJob ".then()".
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
+//    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
+    dirtrav_job->then(this, [=](KJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -252,6 +254,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     master_job_tracker->setAutoDelete(lib_rescan_job, false);
     master_job_tracker->setStopOnClose(lib_rescan_job, false);
 
+    // Start the asynchronous ball rolling.
     dirtrav_job->start();
 
 #endif
@@ -422,7 +425,7 @@ void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 			&& lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found)
 	{
 		// It's a valid, new, multi-track entry.
-		m_current_libmodel->onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
+		m_current_libmodel->SLOT_onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
 	}
 	else if(lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found
 			&& lritem_vec.m_original_pindexes.size() == lritem_vec.m_num_tracks_found)

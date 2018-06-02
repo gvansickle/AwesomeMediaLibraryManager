@@ -24,6 +24,8 @@
 
 /// Qt5
 #include <QVector>
+#include <QWeakPointer>
+#include <QSharedPointer>
 
 /// Ours
 #include "LibraryRescannerMapItem.h"
@@ -49,7 +51,7 @@ class LibraryRescannerJob: public AMLMJob, public UniqueIDMixin<LibraryRescanner
     using UniqueIDMixin<LibraryRescannerJob>::uniqueQObjectName;
 
 Q_SIGNALS:
-
+    void processReadyResults(MetadataReturnVal lritem_vec);
 
 public:
     explicit LibraryRescannerJob(QObject* parent);
@@ -59,9 +61,6 @@ public:
 public Q_SLOTS:
 
     void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, LibraryModel* current_libmodel);
-
-    void processReadyResults(MetadataReturnVal lritem_vec);
-
 
 protected:
 
@@ -77,5 +76,7 @@ private:
     QVector<VecLibRescannerMapItems> m_items_to_rescan;
     LibraryModel* m_current_libmodel;
 };
+
+Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
 
 #endif /* SRC_LOGIC_LIBRARYRESCANNERJOB_H_ */

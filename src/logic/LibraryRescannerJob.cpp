@@ -59,52 +59,42 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 {
     qDb() << "ENTER run";
 
-    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
+//    LibraryRescannerJobPtr amlm_self = qSharedPointerDynamicCast<LibraryRescannerJob>(self);
 
     setProgressUnit(KJob::Unit::Files);
 
     // Send out progress text.
     QString status_text = tr("Rereading metadata");
-    Q_EMIT amlm_self->description(this, status_text);//,
+    Q_EMIT description(this, status_text);//,
 //                                QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
 //                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
-    setTotalAmount(KJob::Unit::Files, m_items_to_rescan.size());
+    setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
-    long num_items = 0;
+    // Make the internal connection to the SLOT_processReadyResults() slot.
+    connect(amlm_self.data(), &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
+
+    qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
     {
+        if(wasCancelRequested())
+        {
+            // We were told to cancel.
+            break;
+        }
+
         qDb() << "Item number:" << num_items;
         MetadataReturnVal a = this->refresher_callback(*i);
-        this->processReadyResults(a);
+        Q_EMIT processReadyResults(a);
         num_items++;
 
-        setProcessedAmount(KJob::Unit::Files, num_items);
+        setProcessedAmountAndSize(KJob::Unit::Files, num_items);
     }
 
-    qDb() << "METADATA RESCAN COMPLETE";
-    amlm_self->setSuccessFlag(true);
-
-#if 0
-    ExtFuture<MetadataReturnVal> future = QtConcurrent::mapped(m_items_to_rescan,
-                                        std::bind(&LibraryRescannerJob::refresher_callback, this, _1));
-    future.tap(this, [this](MetadataReturnVal a) {
-        // The result is ready tap.
-        this->processReadyResults(a);
-    })
-    .tap(this, [=](ExtAsyncProgress prog) {
-        // Progress update tap.
-        setTotalAmount(KJob::Unit::Files, prog.max);
-        setProcessedAmount(KJob::Unit::Files, prog.val);
-//        Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, progtext);
-    ;})
-    .finally([=](){
-        qDb() << "METADATA RESCAN COMPLETE";
-//        onRescanFinished();
-        // Successful completion.
-        amlm_self->setSuccessFlag(true);
-    }).waitForFinished();
-#endif
+    // We've either completed our work or been cancelled.
+    // Either way, defaultEnd() will handle setting the cancellation status as long as
+    // we set success/fail appropriately.
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)
@@ -201,57 +191,4 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-void LibraryRescannerJob::processReadyResults(MetadataReturnVal lritem_vec)
-{
-    // We got one of ??? things back:
-    // - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
-    // - A single pindex and more than one LibraryEntry*, the result of the first scan after the file was found.
-    // - Multiple pindexs and LibraryEntry*'s.  The result of a multi-track file rescan.
 
-    if(lritem_vec.m_num_tracks_found == 0)
-    {
-        qCritical() << "RESULT WAS EMPTY";
-    }
-
-    if(lritem_vec.m_num_tracks_found > 1
-       && lritem_vec.m_original_pindexes.size() == 1
-            && lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found)
-    {
-        // It's a valid, new, multi-track entry.
-        m_current_libmodel->onIncomingPopulateRowWithItems_Multiple(lritem_vec.m_original_pindexes[0], lritem_vec.m_new_libentries);
-    }
-    else if(lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found
-            && lritem_vec.m_original_pindexes.size() == lritem_vec.m_num_tracks_found)
-    {
-        // It's a matching set of pindexes and libentries.
-
-        for(int i=0; i<lritem_vec.m_num_tracks_found; ++i)
-        {
-            if (!lritem_vec.m_original_pindexes[i].isValid())
-            {
-                qWarning() << "Invalid persistent index, ignoring update";
-                return;
-            }
-
-            // None of the returned entries should be null.
-            Q_ASSERT(lritem_vec.m_new_libentries[i] != nullptr);
-
-            qDebug() << "Replacing entry"; // << item->getUrl();
-            // item is a single song which has its metadata populated.
-            // Reconstruct the QModelIndex we sent out.
-            auto initial_row_index = QModelIndex(lritem_vec.m_original_pindexes[i]);
-            auto row = initial_row_index.row();
-            qDebug() << QString("incoming single item, row %1").arg(row);
-            // Metadata's been populated.
-            m_current_libmodel->setData(initial_row_index, QVariant::fromValue(lritem_vec.m_new_libentries[i]));
-        }
-    }
-    else
-    {
-        // Not sure what we got.
-        qCritical() << "pindexes/libentries/num_new_entries:" << lritem_vec.m_original_pindexes.size()
-                                                              << lritem_vec.m_new_libentries.size();
-                                                              // lritem_vec.m_new_libentries;
-        Q_ASSERT_X(0, "Scanning", "Not sure what we got");
-    }
-}

@@ -55,6 +55,7 @@ using ActivityProgressStatusBarTrackerPtr = ActivityProgressStatusBarTracker*;
 
 using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
 
+
 /**
  * K*WidgetJobTracker tracking the progress/status/controls of a collection of KJobs/AMLMJobs.
  *
@@ -70,7 +71,8 @@ using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgress
  *       Causes complications; currently the KJob is a nullptr, which causes its own complications.
  *
  */
-class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker, public UniqueIDMixin<ActivityProgressStatusBarTracker>
+class ActivityProgressStatusBarTracker: public KAbstractWidgetJobTracker,
+        public UniqueIDMixin<ActivityProgressStatusBarTracker>
 {
 	Q_OBJECT
 
@@ -91,7 +93,7 @@ Q_SIGNALS:
 
     /// @}
 
-    // For notifying when the number of tracked jobs changes.
+    // For signalling when the number of tracked jobs changes.
     void number_of_jobs_changed(long long new_num_jobs);
 
 public:
@@ -133,6 +135,25 @@ public:
 
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
+
+    /// Adapted from KWidgetJobTracker::Private, sort of.
+    /// There's some sort of weirdness going on with these in KAbstractWidgetJobTracker::Private.
+    /// Comment reads:
+    /// "### KDE 5: make this methods virtual on KAbstractWidgetJobTracker and get rid out of this workaround. (ereslibre)"
+    /// Well it's KF5 now, so let's see if/what difference these make.
+    /// They're public in ::Private, so I guess that means they should be private: here.
+    /// KAbstractWidgetJobTracker however has them as *non-virtual public* functions which just call
+    /// the KAbstractWidgetJobTracker::Private versions (which do nothing).
+    /// The KWidgetJobTracker::Private overrides however do do something, so we'll have to duplicate that functionality here.
+    ///
+    /// ...Yeah, something is pretty wrong with KF5 here.  KJob has at least public setAutoDelete() and isAutoDelete()
+    /// members (but still non-virtual).  This is the best I've been able to come up with.
+    /// At this point I'm not sure that these members can work through the tracker interface at all.
+//public:
+//    virtual void setStopOnClose(KJob* kjob, bool stopOnClose);
+//    virtual bool stopOnClose(KJob *job) const;
+    virtual void setAutoDelete(KJob *kjob, bool autoDelete);
+    virtual bool autoDelete(KJob *kjob) const;
 
 public Q_SLOTS:
 
@@ -204,9 +225,11 @@ public Q_SLOTS:
 
 protected Q_SLOTS:
 
-	/// @todo NEW
+	///
     void toggleSubjobDisplay(bool checked);
-    void onShowProgressWidget(KJob *kjob);
+
+    /// Slot to display the progress widget for @a kjob.
+    void SLOT_onShowProgressWidget(KJob *kjob);
 
     /// Cancel all tracked KJobs.
     void cancelAll();
@@ -353,15 +376,18 @@ protected Q_SLOTS:
 
     // These all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
     // depend on the KJob supporting kill/suspend/resume.
+    /// Calls job->resume() and emits resume(job).
 //    void slotResume(KJob *job) override;
+    /// Calls job->kill(KJob::EmitResult) and emits stopped(job).
 //    void slotStop(KJob *job) override;
+    /// Calls job->suspend() and emits suspend(job).
 //    void slotSuspend(KJob *job) override;
 
 protected: // Methods
 
     /// Templated job->widget lookup function.
     template <typename JobPointerType, typename Lambda>
-    void with_widget_or_skip(JobPointerType job, Lambda l)
+    void with_widget_or_skip(JobPointerType job, Lambda l) const
     {
         Q_CHECK_PTR(job);
         // Check if the caller wanted the cumulative widget.
@@ -378,6 +404,8 @@ protected: // Methods
             l(widget);
             return;
         }
+
+        qWr() << "NO WIDGET FOUND FOR JOB:" << job;
     }
 
     /**
@@ -388,7 +416,11 @@ protected: // Methods
     void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
 
     void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
+
+public: /// FBO Widget to call slotStop() directly.
     void directCallSlotStop(KJob *kjob);
+
+protected:
 
     int calculate_summary_percent();
 
@@ -406,7 +438,6 @@ protected: // Variable members
     /// The status widget showing the cumulative status of all registered sub-trackers.
     QPointer<CumulativeStatusWidget> m_cumulative_status_widget {nullptr};
     QPointer<CumulativeAMLMJob> m_cumulative_status_job {nullptr};
-//    ActivityProgressStatusBarTracker* m_cumulative_status_tracker;
 
     /// Showable/hidable window containing all sub-trackers.
     QPointer<ExpandingFrameWidget> m_expanding_frame_widget {nullptr};
@@ -414,7 +445,8 @@ protected: // Variable members
 private:
     Q_DISABLE_COPY(ActivityProgressStatusBarTracker)
 
-	/// @todo NEW
+private:
+    /// For the pop-up window.
     void showSubJobs();
     void hideSubJobs();
     void subjobFinished(KJob*);

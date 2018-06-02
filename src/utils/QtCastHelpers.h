@@ -28,9 +28,11 @@
 
 #include <type_traits>
 
+class QObject;
 #include <QPointer>
 #include <QSharedPointer>
-class QObject;
+
+#include "DebugHelpers.h"
 
 /**
  * Dynamically cast a QSharedPointer<T> to a QPointer<DerivedFromT> (which under the hood is really a QWeakPointer<>).
@@ -41,10 +43,13 @@ QPointer<T> qSharedPtrToQPointerDynamicCast(QSharedPointer<Base> ptr_in)
 	// This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
 	// derived class, while not losing/screwing up the ref counts.  Hopefully.
 
-	// Get a QSharedPointer<T> from the QSharedPoiner<Base>.
-	QSharedPointer<T> amlm_self_shared = qSharedPointerDynamicCast<T>(ptr_in);
+    // Make sure what we're trying to do is even possible.
+    Q_ASSERT_X(dynamic_cast<T*>(ptr_in.data()) != 0, __PRETTY_FUNCTION__, "pointer is not dynamic_cast<> convertable");
 
-	QPointer<T> retval = amlm_self_shared.data();
+	// Get a QSharedPointer<T> from the QSharedPoiner<Base>.
+    QSharedPointer<T> ptr_out = qSharedPointerDynamicCast<T>(ptr_in);
+
+    QPointer<T> retval = ptr_out.data();
 
 	return retval;
 }

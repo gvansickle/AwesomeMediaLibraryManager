@@ -321,9 +321,11 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 	)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
-target_compile_definitions(${PROJECT_NAME} PRIVATE
+target_compile_definitions(${PROJECT_NAME}
+	PUBLIC
+	"QT_SHAREDPOINTER_TRACK_POINTERS=1"	
+	PRIVATE
 	"KXMLGUI_NO_DEPRECATED=1"
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 	"QT_DEPRECATED_WARNINGS=1"
 	"QT_NO_KEYWORDS=1"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
@@ -390,7 +392,7 @@ add_executable(${TEST_EXE_TARGET}
 				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
-	"QT_SHAREDPOINTER_TRACK_POINTERS"
+	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
