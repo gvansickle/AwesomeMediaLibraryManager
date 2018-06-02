@@ -197,9 +197,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
-    DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+//    DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+//                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+//                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+
+    DirectoryScannerAMLMJobPtr dirtrav_job = new DirectoryScannerAMLMJob(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
 //    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
     auto lib_rescan_job = new LibraryRescannerJob(this);

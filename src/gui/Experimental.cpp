@@ -60,7 +60,6 @@
 
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include "activityprogressmanager/ActivityProgressWidget.h"
-//#include "activityprogressmanager/ActivityProgressDialog.h"
 #include <concurrency/DirectoryScanJob.h>
 
 #endif
@@ -148,14 +147,14 @@ void Experimental::DoExperiment()
         qIn() << "Title:" << title;});
 
     /// Two AMLMJobs
-    AMLMJobPtr dsj(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+    DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(this, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     QUrl dir_url2("file:///home/gary");
-    AMLMJobPtr dsj2(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
+    DirectoryScannerAMLMJobPtr dsj2 = new DirectoryScannerAMLMJob(this, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     /// Another KF5 KIO Job.
     KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
