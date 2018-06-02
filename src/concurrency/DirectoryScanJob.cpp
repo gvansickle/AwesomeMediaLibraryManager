@@ -54,8 +54,8 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent,
                                     QDirIterator::IteratorFlags flags)
 {
 M_WARNING("TODO: NOT SHARED PTR");
-    return QSharedPointer<DirectoryScannerAMLMJob>::create(parent, dir_url, nameFilters, filters, flags);
-//    return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
+//    return QPointer<DirectoryScannerAMLMJob>::create(parent, dir_url, nameFilters, filters, flags);
+    return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -81,15 +81,13 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
 
 M_WARNING("TODO");
-    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPointerDynamicCast<DirectoryScannerAMLMJob>(self);//= qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+//    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPointerDynamicCast<DirectoryScannerAMLMJob>(self);//= qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPtrToQPointerDynamicCast<DirectoryScannerAMLMJob>(self);
 
     setProgressUnit(KJob::Unit::Directories);
 
     qDb() << "IN RUN, " << M_NAME_VAL(dirscanjob_self);
     Q_CHECK_PTR(dirscanjob_self);
-//    KJob* kselfsp = amlm_self;
-//    qDb() << "IN RUN, " << M_NAME_VAL(kselfsp);
-//    Q_CHECK_PTR(kselfsp);
 
     // Create the QDirIterator.
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
@@ -171,10 +169,10 @@ M_WARNING("TODO");
 
             QUrl file_url = QUrl::fromLocalFile(entry_path);
 
-            Q_EMIT this->infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
+            Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
-            Q_EMIT this->entries(this, file_url);
+            Q_EMIT entries(this, file_url);
 
             // Update progress.
             /// @note Bytes is being used for "Size" == progress by the system.

@@ -255,9 +255,9 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     // Cast self to an AMLMJobPtr, it should be one.
 M_WARNING("TODO");
-//    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-    auto self_as_sp_to_amlmjob = qSharedPointerDynamicCast<AMLMJob>(self);
-    AMLMJobPtr amlm_self(self_as_sp_to_amlmjob.toWeakRef());
+    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+//    auto self_as_sp_to_amlmjob = qSharedPointerDynamicCast<AMLMJob>(self);
+//    AMLMJobPtr amlm_self(self_as_sp_to_amlmjob.toWeakRef());
 
     // We've either completed our work or been cancelled.
     if(wasCancelRequested())
@@ -270,7 +270,7 @@ M_WARNING("TODO");
     else
     {
         // Successful completion.
-        amlm_self.toStrongRef()->setSuccessFlag(true);
+        setSuccessFlag(true);
     }
 
     // Essentially a duplicate of TW::QObjectDecorator's implementation.

@@ -33,7 +33,7 @@
 #include "utils/UniqueIDMixin.h"
 
 class DirectoryScannerAMLMJob;
-using DirectoryScannerAMLMJobPtr = QWeakPointer<DirectoryScannerAMLMJob>;
+using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
 
 /**
  *

@@ -33,7 +33,7 @@
 
 class LibraryModel;
 class LibraryRescannerJob;
-using LibraryRescannerJobPtr = QWeakPointer<LibraryRescannerJob>;
+using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
 
 /*
  *
@@ -76,5 +76,7 @@ private:
     QVector<VecLibRescannerMapItems> m_items_to_rescan;
     LibraryModel* m_current_libmodel;
 };
+
+Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
 
 #endif /* SRC_LOGIC_LIBRARYRESCANNERJOB_H_ */

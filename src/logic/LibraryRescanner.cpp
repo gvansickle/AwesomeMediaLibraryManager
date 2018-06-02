@@ -202,9 +202,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
 
 //    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
-    auto lib_rescan_job = QSharedPointer<LibraryRescannerJob>::create(this);
+    auto lib_rescan_job = new LibraryRescannerJob(this);
 
-    connect_blocking_or_die(dirtrav_job.data(), &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
+    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
         // Found a file matching the criteria.  Send it to the model.
         runInObjectEventLoop([=](){
             m_current_libmodel->onIncomingFilename(the_url.toString());}, m_current_libmodel);
@@ -212,7 +212,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     /// @todo This would be a good candidate for an AMLMJob ".then()".
 //    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
-    dirtrav_job.toStrongRef()->then(this, [=](KJob* kjob){
+    dirtrav_job->then(this, [=](KJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -247,15 +247,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         }
     });
 
-    master_job_tracker->registerJob(dirtrav_job.data());
-    master_job_tracker->setAutoDelete(dirtrav_job.data(), false);
-    master_job_tracker->setStopOnClose(dirtrav_job.data(), false);
-    master_job_tracker->registerJob(lib_rescan_job.data());
-    master_job_tracker->setAutoDelete(lib_rescan_job.data(), false);
-    master_job_tracker->setStopOnClose(lib_rescan_job.data(), false);
+    master_job_tracker->registerJob(dirtrav_job);
+    master_job_tracker->setAutoDelete(dirtrav_job, false);
+    master_job_tracker->setStopOnClose(dirtrav_job, false);
+    master_job_tracker->registerJob(lib_rescan_job);
+    master_job_tracker->setAutoDelete(lib_rescan_job, false);
+    master_job_tracker->setStopOnClose(lib_rescan_job, false);
 
     // Start the asynchronous ball rolling.
-    dirtrav_job.data()->start();
+    dirtrav_job->start();
 
 #endif
 

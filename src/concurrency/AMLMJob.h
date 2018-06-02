@@ -56,6 +56,7 @@
 
 /// Qt5
 #include <QObject>
+#include <QPointer>
 #include <QWeakPointer>
 #include <QSharedPointer>
 #include <QTime>
@@ -73,7 +74,7 @@
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
-using AMLMJobPtr = QWeakPointer<AMLMJob>;
+using AMLMJobPtr = QPointer<AMLMJob>;
 
 /**
 * Where Does The State Live?

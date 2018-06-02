@@ -59,8 +59,8 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
 {
     qDb() << "ENTER run";
 
-//    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
-    LibraryRescannerJobPtr amlm_self = qSharedPointerDynamicCast<LibraryRescannerJob>(self);
+    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
+//    LibraryRescannerJobPtr amlm_self = qSharedPointerDynamicCast<LibraryRescannerJob>(self);
 
     setProgressUnit(KJob::Unit::Files);
 
