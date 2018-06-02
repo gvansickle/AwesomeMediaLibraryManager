@@ -182,6 +182,7 @@ set(HEADER_FILES
 	utils/AboutDataSetup.h
 	concurrency/DirectoryScanJob.h
 	concurrency/ThreadsafeMap.h
+	concurrency/DebugSequence.h
     )
 
 # Source file list.
@@ -223,6 +224,7 @@ set(SOURCE_FILES
 	utils/AboutDataSetup.cpp
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
+	concurrency/DebugSequence.cpp
 	)
 
 # NoMoc files.
