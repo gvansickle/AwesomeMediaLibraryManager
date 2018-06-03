@@ -153,6 +153,9 @@ public:
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
 
+    ///
+    QWidget* get_status_bar_widget();
+
     /// Adapted from KWidgetJobTracker::Private, sort of.
     /// There's some sort of weirdness going on with these in KAbstractWidgetJobTracker::Private.
     /// Comment reads:

@@ -98,6 +98,8 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
 {
     QMutexLocker locker(&m_tsi_mutex);
 
+    Q_CHECK_PTR(job);
+
     // Shouldn't ever get here before the widget is constructed (in the constructor).
     /// @todo The nullptr is FBO the call in MainWindow::onStartup() only, find a better way.
     if(is_cumulative_status_job(job) || job == nullptr)
@@ -115,6 +117,12 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
         Q_CHECK_PTR(kjob_widget);
         return kjob_widget;
     }
+}
+
+QWidget *ActivityProgressStatusBarTracker::get_status_bar_widget()
+{
+    Q_CHECK_PTR(m_cumulative_status_widget);
+    return m_cumulative_status_widget;
 }
 
 void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
@@ -506,7 +514,7 @@ void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)
 void ActivityProgressStatusBarTracker::showSubJobs()
 {
     // Get the parent-relative geometry of the "root widget".
-    auto summary_widget = widget(nullptr);
+    auto summary_widget = get_status_bar_widget();
     auto rect = summary_widget->frameGeometry();
     qDb() << "Root Frame Rect:" << rect << "parent:" << summary_widget->parentWidget();
 
