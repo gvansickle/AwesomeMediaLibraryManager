@@ -20,6 +20,7 @@
 #include "AMLMJob.h"
 
 /// Qt5
+#include <KDialogJobUiDelegate>
 #include <QPointer>
 
 /// KF5
@@ -27,9 +28,7 @@
 #include <ThreadWeaver/Job>
 #include <ThreadWeaver/Queue>
 #include <KJob>
-
 #include <KJobWidgets>
-#include <KDialogJobUiDelegate>
 
 /// Ours
 #include "utils/DebugHelpers.h"
@@ -243,23 +242,23 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     // Cast self to an AMLMJobPtr, it should be one.
     AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
 
-M_WARNING("TODO: Right place?");
-    {
-        // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
-        // Lock the mutex.
-        QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
+//M_WARNING("TODO: Right place?");
+//    {
+//        // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
+//        // Lock the mutex.
+//        QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
-        // Ordinarily we'd set a flag or something here to signal to any listeners that the condition has occurred,
-        // but TW already has that for us in isFinished().
+//        // Ordinarily we'd set a flag or something here to signal to any listeners that the condition has occurred,
+//        // but TW already has that for us in isFinished().
 
-        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
-        // by the notify, and only to temporarily block again because we still hold the mutex.
-        lock.unlock();
+//        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
+//        // by the notify, and only to temporarily block again because we still hold the mutex.
+//        lock.unlock();
 
-        // Notify all threads waiting on the condition variable that there's new status to look at.
-        // Really only one thread might be watching (in doKill()), but not much difference here.
-        m_cancel_pause_resume_waitcond.notify_all();
-    }
+//        // Notify all threads waiting on the condition variable that there's new status to look at.
+//        // Really only one thread might be watching (in doKill()), but not much difference here.
+//        m_cancel_pause_resume_waitcond.notify_all();
+//    }
 
 
     // Call base class defaultEnd() implementation.
@@ -326,20 +325,30 @@ bool AMLMJob::doKill()
 qDb() << "START WAIT KJob::doKill()";
     // Now wait for it to signal that it really did stop.
 
-    // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
-    do
-    {
-        // Lock the mutex.
-        QMutexLocker lock(&m_cancel_pause_resume_mutex);
+//    ThreadWeaver::Queue::instance()->finish();
 
-        // Wait until somebody updates the CV and has some news for us, isFinished() in this case.
-        // This definitely goes a bit easier in straight C++11+.
-        /// @todo Add timeout.
-        m_cancel_pause_resume_waitcond.wait(lock.mutex());
-        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
-        // by the notify, and only to temporarily block again because we still hold the mutex.
-        lock.unlock();
-    } while(!isFinished());
+    // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
+//    do
+//    {
+//        // Lock the mutex.
+//        QMutexLocker lock(&m_cancel_pause_resume_mutex);
+
+//        // Wait until somebody updates the CV and has some news for us, isFinished() in this case.
+//        // This definitely goes a bit easier in straight C++11+.
+//        /// @todo Add timeout.
+//        m_cancel_pause_resume_waitcond.wait(lock.mutex());
+//        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
+//        // by the notify, and only to temporarily block again because we still hold the mutex.
+//        lock.unlock();
+//    } while(!isFinished());
+//    while(!isFinished())
+//    {
+//        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+//    }
+
+    QEventLoop loop(this);
+    connect_or_die(this, &AMLMJob::done, &loop, &QEventLoop::quit);
+    loop.exec();
 
 qDb() << "END WAIT KJob::doKill()";
 

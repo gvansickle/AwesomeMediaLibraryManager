@@ -127,24 +127,11 @@ void Experimental::DoExperiment()
     ThreadWeaver::setDebugLevel(true, 10);
 
 //    QUrl dir_url("smb://storey.local/music/");
-    QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
+    QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey,share=music");
     KIO::DirectorySizeJob* dirsizejob = KIO::directorySize(dir_url);
     qDb() << "DirSizeJob:"
           << M_NAME_VAL(dirsizejob->detailedErrorStrings())
           << M_NAME_VAL(dirsizejob->capabilities());
-    connect(dirsizejob, &KIO::DirectorySizeJob::result, [=](KJob* kjob){
-        qDb() << "GOT RESULT";
-        if(kjob->error())
-        {
-            kjob->uiDelegate()->showErrorMessage();
-        }
-    });
-    connect(dirsizejob, &KIO::DirectorySizeJob::description, [=](KJob *job,
-            const QString &  	title,
-            const QPair< QString, QString > &  	field1,
-            const QPair< QString, QString > &  	field2){
-        qDb() << "GOT DESCRIPTION";
-        qIn() << "Title:" << title;});
 
     /// Two AMLMJobs
     DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(nullptr, dir_url,
@@ -178,7 +165,7 @@ void Experimental::DoExperiment()
 
     master_job_tracker->registerJob(dirsizejob);
 
-    master_job_tracker->registerJob(dsj.data());
+    master_job_tracker->registerJob(dsj);
     master_job_tracker->setAutoDelete(dsj.data(), true);
     master_job_tracker->setStopOnClose(dsj.data(), false);
 
