@@ -315,16 +315,20 @@ bool AMLMJob::doKill()
     // KJob::doKill().
     qDb() << "ENTER KJob::doKill()";
 
-    QEventLoop local_event_loop(this);
-    // Quit the local loop when the TW::Job signals that it's done.
-    /// @todo Add timeout.
-    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
+//    DebugSequence dbs;
+
+//    QEventLoop local_event_loop(this);
+//    // Quit the local loop when the TW::Job signals that it's done.
+//    /// @todo Add timeout.
+//    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
 
     // Tell the TW::Job to stop.
     requestAbort();
 
-    // Now wait for it to signal that it really did stop.
-    local_event_loop.exec();
+//qDb() << "START WAIT KJob::doKill()";
+//    // Now wait for it to signal that it really did stop.
+//    local_event_loop.exec();
+//qDb() << "END WAIT KJob::doKill()";
 
     /// @todo Need to wait for the final kill here?
     /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
