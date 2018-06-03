@@ -27,12 +27,12 @@
 #include <QMutexLocker>
 #include <QToolTip>
 #include <QHelpEvent>
+#include <QPalette>
 
 /// KF5
 //#include <KJob>
 #include <KAbstractWidgetJobTracker>
 #include <KToolTipWidget>
-#include <QPalette>
 
 /// Ours
 #include <gui/helpers/Tips.h>

@@ -59,7 +59,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.9.0")
+set(QT_MIN_VERSION "5.10.0")
 set(ECM_MIN_VERSION "5.44.0")
 set(KF5_MIN_VERSION "5.44.0")
 
@@ -114,8 +114,12 @@ include(KDECMakeSettings)
 
 # Set some extra debug flags early.
 set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments")
+# if(TRUE)#CLANG)
+# 	string(APPEND ${AMLM_MAX_DEBUG_FLAGS} -Wthread-safety)
+# endif()
 set(CMAKE_CXX_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
 set(CMAKE_C_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
+
 
 ###
 ### END ECM Setup ====================================================================================================

@@ -62,6 +62,7 @@
 #include <QTime>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QSemaphore>
 
 /// KF5
 #include <KJob>
@@ -294,6 +295,10 @@ Q_SIGNALS:
     //    *
     //    * so that you won't have to manually call unregisterJob().
 
+    /// @name Internal signals
+
+    void INTERNAL_SIGNAL_requestAbort();
+
 protected:
     /// Protected KJob-like constructor.
     /// Derive from and defer to this from derived classes, possibly as part of a two-stage constructor:
@@ -327,7 +332,7 @@ public:
     bool success() const override { return m_success; }
 
     /**
-     * Abort the execution of the job.
+     * Abort the execution of the TW::Job.
      * Call this method to ask the Job to abort if it is currently executed.
      *
      * @note This method should return immediately, not after the abort has completed.

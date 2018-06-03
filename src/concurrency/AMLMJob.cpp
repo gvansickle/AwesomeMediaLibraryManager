@@ -84,32 +84,15 @@ void AMLMJob::requestAbort()
     // Signal to the run() loop that it should cancel.
     m_flag_cancel = true;
 
-//    // Have we even started yet?
-//    if(status() < Status_Queued)
-//    {
-//        qDb() << "AMLM:TW: CANCELLED JOB HASNT STARTED:" << this;
-
-//        // No.
-//        // Fake a "done()" signal FBO doKill().
-//        // KJob Success == false is correct in the cancel case.
-//        setSuccessFlag(false);
-//        setWasCancelled(true);
-//        Q_EMIT done((ThreadWeaver::JobPointer)this);
-////        Q_EMIT done(qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(this));
-//    }
-
-
-
     // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
-	// by the notify, and then blocking because we still hold the mutex.
+    // by the notify, and only to temporarily block again because we still hold the mutex.
 	lock.unlock(); // == lock.unlock(); (ok, so that one's the same, still...)
 
 	// Notify all threads waiting on the condition variable that there's new status to look at.
-	// Really only one thread might be watching, but not much difference here.
+    // Really only one thread might be watching (in doKill()), but not much difference here.
     m_cancel_pause_resume_waitcond.notify_all(); // == m_cv.notify_all(); (...well, it's about time Qt learned some modern C++.)
 
     qDb() << "AMLM:TW: LEAVING requestAbort():" << this;
-
 }
 
 void AMLMJob::start()
@@ -257,16 +240,32 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
 
+    // Cast self to an AMLMJobPtr, it should be one.
+    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+
+M_WARNING("TODO: Right place?");
+    {
+        // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
+        // Lock the mutex.
+        QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
+
+        // Ordinarily we'd set a flag or something here to signal to any listeners that the condition has occurred,
+        // but TW already has that for us in isFinished().
+
+        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
+        // by the notify, and only to temporarily block again because we still hold the mutex.
+        lock.unlock();
+
+        // Notify all threads waiting on the condition variable that there's new status to look at.
+        // Really only one thread might be watching (in doKill()), but not much difference here.
+        m_cancel_pause_resume_waitcond.notify_all();
+    }
+
+
     // Call base class defaultEnd() implementation.
     // ThreadWeaver::Job::defaultEnd() calls:
     //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
     ThreadWeaver::Job::defaultEnd(self, thread);
-
-    // Cast self to an AMLMJobPtr, it should be one.
-M_WARNING("TODO");
-    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-//    auto self_as_sp_to_amlmjob = qSharedPointerDynamicCast<AMLMJob>(self);
-//    AMLMJobPtr amlm_self(self_as_sp_to_amlmjob.toWeakRef());
 
     // We've either completed our work or been cancelled.
     if(wasCancelRequested())
@@ -315,20 +314,34 @@ bool AMLMJob::doKill()
     // KJob::doKill().
     qDb() << "ENTER KJob::doKill()";
 
-//    DebugSequence dbs;
-
-//    QEventLoop local_event_loop(this);
-//    // Quit the local loop when the TW::Job signals that it's done.
-//    /// @todo Add timeout.
+//
 //    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
+
+    /// @note The calling thread has to have an event loop.
+//    connect_blocking_or_die(this, INTERNAL_SIGNAL_requestAbort, , );
 
     // Tell the TW::Job to stop.
     requestAbort();
 
-//qDb() << "START WAIT KJob::doKill()";
-//    // Now wait for it to signal that it really did stop.
-//    local_event_loop.exec();
-//qDb() << "END WAIT KJob::doKill()";
+qDb() << "START WAIT KJob::doKill()";
+    // Now wait for it to signal that it really did stop.
+
+    // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
+    do
+    {
+        // Lock the mutex.
+        QMutexLocker lock(&m_cancel_pause_resume_mutex);
+
+        // Wait until somebody updates the CV and has some news for us, isFinished() in this case.
+        // This definitely goes a bit easier in straight C++11+.
+        /// @todo Add timeout.
+        m_cancel_pause_resume_waitcond.wait(lock.mutex());
+        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
+        // by the notify, and only to temporarily block again because we still hold the mutex.
+        lock.unlock();
+    } while(!isFinished());
+
+qDb() << "END WAIT KJob::doKill()";
 
     /// @todo Need to wait for the final kill here?
     /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
@@ -517,6 +530,8 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // - if the KJob is set to autoDelete(), call deleteLater().
     qDb() << "ABOUT TO EMITRESULT()" << this;
     emitResult();
+
+    qDb() << "EXIT onTWDone";
 }
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
