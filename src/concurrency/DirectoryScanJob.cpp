@@ -49,7 +49,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &di
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
 M_WARNING("TODO: There's a problem with shared ptrs here");
-    qDb() << "DirectoryScannerAMLMJob DELETED:" << this << objectName();
+    qDb() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
 }
 
 void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)

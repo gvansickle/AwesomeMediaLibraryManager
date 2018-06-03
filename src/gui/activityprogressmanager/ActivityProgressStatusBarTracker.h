@@ -105,6 +105,14 @@ Q_SIGNALS:
     /// For signalling when the number of tracked jobs changes.
     void number_of_jobs_changed(long long new_num_jobs);
 
+    /// @name Internal signals
+    /// @{
+
+    /// FBO cancelAll().
+    void INTERNAL_SIGNAL_slotStop(KJob* kjob);
+
+    /// @}
+
 public:
 	/**
      * Constructor.

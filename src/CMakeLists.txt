@@ -155,6 +155,7 @@ set(HEADER_FILES
 	logic/TrackMetadata.h
 	utils/ActionHelpers.h
 	utils/ConnectHelpers.h
+	utils/DebugBlock.h
 	utils/DebugHelpers.h
 	utils/Fraction.h
 	utils/in.h
@@ -203,6 +204,7 @@ set(SOURCE_FILES
 	logic/PlaylistModelItem.cpp
 	logic/PlaylistSortFilterProxyModel.cpp
 	logic/TrackMetadata.cpp
+	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
 	utils/Theme.cpp

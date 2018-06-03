@@ -205,6 +205,7 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+	/// @note We're in a non-GUI worker thread here.
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
 
@@ -232,6 +233,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+	/// @note We're in a non-GUI worker thread here.
     // Remember that self is a QSharedPointer<ThreadWeaver::JobInterface>.
 
     Q_CHECK_PTR(this);
@@ -346,9 +348,9 @@ qDb() << "START WAIT KJob::doKill()";
 //        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 //    }
 
-    QEventLoop loop(this);
-    connect_or_die(this, &AMLMJob::done, &loop, &QEventLoop::quit);
-    loop.exec();
+    QEventLoop* loop = new QEventLoop();
+    connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
+    loop->exec();
 
 qDb() << "END WAIT KJob::doKill()";
 
@@ -483,6 +485,10 @@ void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self
 void AMLMJob::TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob)
 {
     int we_have_been_here_before = m_tw_got_done_or_fail.fetchAndStoreOrdered(1);
+
+M_WARNING("Do we need to not be in the TW thread for the KJob setError's below?");
+
+	qDb() << "TW CTX?  ABOUT TO CALL KJob::setError() etc";
 
     // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
     // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.

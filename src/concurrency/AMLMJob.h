@@ -295,9 +295,7 @@ Q_SIGNALS:
     //    *
     //    * so that you won't have to manually call unregisterJob().
 
-    /// @name Internal signals
 
-    void INTERNAL_SIGNAL_requestAbort();
 
 protected:
     /// Protected KJob-like constructor.

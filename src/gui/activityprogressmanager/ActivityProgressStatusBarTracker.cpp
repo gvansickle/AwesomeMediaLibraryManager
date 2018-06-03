@@ -242,7 +242,9 @@ void ActivityProgressStatusBarTracker::cancelAll()
     {
         qDb() << "Cancelling job:" << job; // << "widget:" << it.value();
 //        job->kill();
-        slotStop(job);
+M_WARNING("SEEMS WRONG");
+//        slotStop(job);
+        Q_EMIT INTERNAL_SIGNAL_slotStop(job);
     }
 
     qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
@@ -410,6 +412,9 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
 
     // Connect the widget's "user wants to cancel" signal to this tracker's slotStop(KJob*) slot.
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
+    // Likewise, connect our internal slotStop() signal FBO cancelAll().
+    connect_or_die(this, &ActivityProgressStatusBarTracker::INTERNAL_SIGNAL_slotStop,
+                   this, &ActivityProgressStatusBarTracker::slotStop);
 
     /// @todo Connect this tracker's stopped(KJob*) signal to... not sure we need it.
 
