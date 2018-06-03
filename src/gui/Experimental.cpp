@@ -166,12 +166,12 @@ void Experimental::DoExperiment()
     master_job_tracker->registerJob(dirsizejob);
 
     master_job_tracker->registerJob(dsj);
-    master_job_tracker->setAutoDelete(dsj.data(), true);
-    master_job_tracker->setStopOnClose(dsj.data(), false);
+    master_job_tracker->setAutoDelete(dsj, true);
+    master_job_tracker->setStopOnClose(dsj, false);
 
-    master_job_tracker->registerJob(dsj2.data());
-    master_job_tracker->setAutoDelete(dsj2.data(), true);
-    master_job_tracker->setStopOnClose(dsj2.data(), false);
+    master_job_tracker->registerJob(dsj2);
+    master_job_tracker->setAutoDelete(dsj2, true);
+    master_job_tracker->setStopOnClose(dsj2, false);
 
     master_job_tracker->registerJob(kio_list_kiojob);
 
