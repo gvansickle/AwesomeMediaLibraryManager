@@ -158,7 +158,8 @@ protected:
 
 protected Q_SLOTS:
 
-    /// @todo Not clear why the functionality of these two are in the Widget; seems like it should be in the tracker.
+    /// Gives us a slot to hook the cancel button to, which will re-emit cancel_job(m_kjob).
+    void INTERNAL_SLOT_emit_cancel_job();
 
     /// Invoke this to pause or resume the job.
     void pause_resume(bool);

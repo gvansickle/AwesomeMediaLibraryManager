@@ -97,6 +97,8 @@ void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
 
+    qDb() << "CREATING WIDGET FOR:" << job;
+
     m_current_activity_label = new QLabel(tr("Idle"), this);
     m_current_activity_label->setToolTip("Current operation");
     m_current_activity_label->setWhatsThis("This text shows the current operation in progress.");
@@ -125,44 +127,24 @@ void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
     // Set button disable states/make connections/etc. based on what the job supports.
     if(job)
     {
-M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
-
-        // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
-        /// @todo KWidgetJobTracker::Private::ProgressWidget only does click->stop signal here.
-        /// Seems odd, should go back to the tracker to do the job stop etc.
-        connect_or_die(m_cancel_button, &QToolButton::clicked, this, [=](bool) {
-            qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
-            Q_EMIT cancel_job(m_kjob);
-        });
-//        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
-
-#if 0 // CRASHING
-        // Connect up the disconnect signal from the job.
-M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
-        connect(job, &AMLMJob::finished, this, [=](KJob* finished_job){
-            Q_CHECK_PTR(this);
-            Q_CHECK_PTR(this->parent());
-            Q_CHECK_PTR(finished_job);
-            Q_CHECK_PTR(job);
-            Q_CHECK_PTR(m_cancel_button);
-
-//            qDb() << "GOT FINISHED SIGNAL, DISCONNECTING FROM JOB:" << job;
-            disconnect(job, nullptr, m_cancel_button, nullptr);
-            disconnect(job, nullptr, this, nullptr);
-            deleteLater();
-            ;});
-#endif
     }
     else
     {
-        Q_ASSERT(0);
-        // null Job (i.e. it's the root tracker/widget).
-        qDb() << "INIT() CALL FOR ROOT TRACKER WIDGET, JOB IS NULL";
+M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
+
+        /// @todo null Job (i.e. it's the root tracker/widget).
+        qDb() << "INIT() CALL FOR CUMULATIVE TRACKER WIDGET, JOB IS NULL";
         m_pause_resume_button->setEnabled(false);
-        m_cancel_button->setEnabled(false);
+        m_cancel_button->setEnabled(true);
     }
+
+    // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
+    /// @todo KWidgetJobTracker::Private::ProgressWidget only does click->stop signal here.
+    /// Seems odd, should go back to the tracker to do the job stop etc.
+    connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job);
+//        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
     // The tooltip widget, and the widget within the widget.
     m_tool_tip_widget = new KToolTipWidget(this);
@@ -308,7 +290,7 @@ void BaseActivityProgressStatusBarWidget::deref()
 void BaseActivityProgressStatusBarWidget::closeNow()
 {
     // Directly call the close() slot.
-	qDb() << "closeNow(), deleteonclose?:" << testAttribute(Qt::WA_DeleteOnClose);
+    qDb() << "closeNow(), WA_DeleteOnClose?:" << testAttribute(Qt::WA_DeleteOnClose);
 	bool retval = close();
 	qDb() << "close() retval:" << retval << this;
 	if(retval == true)
@@ -344,7 +326,23 @@ void BaseActivityProgressStatusBarWidget::closeNow()
 //    {
 //        m_tracker->d->progressWidget.remove(m_job);
 //        m_tracker->d->progressWidgetsToBeShown.removeAll(m_job);
-//    }
+    //    }
+}
+
+void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()
+{
+    QPointer<KJob> kjob = m_kjob;
+
+    qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
+    if(kjob.isNull())
+    {
+        qWr() << "KJOB WAS NULL, NOT EMITTING CANCEL SIGNAL";
+    }
+    else
+    {
+        Q_CHECK_PTR(m_kjob);
+        Q_EMIT cancel_job(m_kjob);
+    }
 }
 
 void BaseActivityProgressStatusBarWidget::pause_resume(bool)

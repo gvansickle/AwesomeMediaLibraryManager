@@ -53,7 +53,7 @@ class BaseActivityProgressStatusBarWidget;
 class ActivityProgressStatusBarTracker;
 using ActivityProgressStatusBarTrackerPtr = ActivityProgressStatusBarTracker*;
 
-using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
+using TSActiveActivitiesMap = ThreadsafeMap<QPointer<KJob>, QPointer<BaseActivityProgressStatusBarWidget>>;
 
 
 /**
@@ -397,7 +397,7 @@ protected Q_SLOTS:
     ///  Connect this to the progress widgets buttons etc."
     /// Calls job->kill(KJob::EmitResult) and emits stopped(job).
     /// This override just calls base class.
-    void slotStop(KJob *job) override;
+    void slotStop(KJob *kjob) override;
 
     /**
      * "This method should be called for pause/resume
@@ -423,27 +423,27 @@ protected Q_SLOTS:
 
 protected: // Methods
 
-    /// Templated job->widget lookup function.
+    /// Templated kjob->widget lookup function.
     template <typename JobPointerType, typename Lambda>
-    inline void with_widget_or_skip(JobPointerType job, Lambda l) const
+    inline void with_widget_or_skip(JobPointerType kjob, Lambda l) const
     {
-        Q_CHECK_PTR(job);
+        Q_CHECK_PTR(kjob);
         // Check if the caller wanted the cumulative widget.
         /// @todo Maybe put this in the regular map, and just be careful not to delete it on e.g. clearAll().
-        if(job == m_cumulative_status_job)
+        if(kjob == m_cumulative_status_job)
         {
             l(m_cumulative_status_widget);
             return;
         }
 
-        QPointer<BaseActivityProgressStatusBarWidget> widget = m_amlmjob_to_widget_map.value(job, nullptr);
+        QPointer<BaseActivityProgressStatusBarWidget> widget = m_amlmjob_to_widget_map.value(kjob, nullptr);
         if(widget)
         {
             l(widget);
             return;
         }
 
-        qWr() << "NO WIDGET FOUND FOR JOB:" << job;
+        qWr() << "NO WIDGET FOUND FOR JOB:" << kjob;
 //        Q_ASSERT(0);
     }
 
@@ -455,6 +455,11 @@ protected: // Methods
     /// Most signal/slot connections will have already been made by the base classes.
     void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
 
+    /**
+     * Only call this from unregisterJob() and ??? with the mutex locked.
+     */
+    void INTERNAL_unregisterJob(KJob *kjob);
+
     void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
 
 protected:
@@ -463,11 +468,11 @@ protected:
 
 protected: // Variable members
 
+    /// Mutex for protecting the tracked job state.
+    QMutex m_tracked_job_state_mutex;
+
     /// Map of all registered sub-jobs (KJob*) to sub-job-widgets (QPointer<BaseActivityProgressStatusBarWidget>'s).
     TSActiveActivitiesMap m_amlmjob_to_widget_map;
-
-    /// Mutex for protecting the public Thread-Safe Interface.
-    QMutex m_tsi_mutex;
 
     /// The QWidget parent of this Tracker, not necessarily it's widget.
     QPointer<QWidget> m_parent_widget {nullptr};

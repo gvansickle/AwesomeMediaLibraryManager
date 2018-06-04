@@ -161,7 +161,7 @@ void Experimental::DoExperiment()
 //    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));
     KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload/*, KIO::HideProgressInfo*/);
 
-    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
+//    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
     master_job_tracker->registerJob(dirsizejob);
 
@@ -178,7 +178,7 @@ void Experimental::DoExperiment()
     master_job_tracker->registerJob(inet_get_job);
 
     // Shows prog and other signals hooked up to the tracker.
-    dump_qobject(kio_list_kiojob);
+//    dump_qobject(kio_list_kiojob);
 
 //    auto test_job = inet_get_job;
 //    KUiServerJobTracker *tracker3 = new KUiServerJobTracker(MainWindow::instance());
@@ -186,21 +186,24 @@ void Experimental::DoExperiment()
 //    KJobWidgets::setWindow(test_job, MainWindow::instance());
 ////    test_job->setUiDelegate(new KDialogJobUiDelegate());
 //    test_job->setUiDelegate(new KIO::JobUiDelegate());
-    dump_qobject(inet_get_job);
+//    dump_qobject(inet_get_job);
 
-    qIn() << "QUEUE STATE:" << queue->state()->stateName();
+//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
     qDb() << M_NAME_VAL(dsj);
     qDb() << M_NAME_VAL(dsj2);
 
     dirsizejob->start();
+    dsj->start();
+    dsj2->start();
     kio_list_kiojob->start();
+    inet_get_job->start();
 
     // enqueue takes JobPointers (QSharedPtr<>).
 //    queue->enqueue(dsj);//->asTWJobPointer());
 //    queue->enqueue(dsj2);//->asTWJobPointer());
-    queue->stream() << dsj << dsj2;
-    qIn() << "QUEUE STATE:" << queue->state()->stateName();
+//    queue->stream() << dsj << dsj2;
+//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
 #endif
 

@@ -28,7 +28,7 @@
 
 
 CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
-    : BASE_CLASS(job, tracker, parent)
+    : BASE_CLASS(nullptr, tracker, parent)
 {
     /// @note Requires base class init() to have been called so that sub-widgets are set up.
 
