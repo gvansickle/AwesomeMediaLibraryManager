@@ -348,7 +348,7 @@ qDb() << "START WAIT KJob::doKill()";
 //        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 //    }
 
-    QEventLoop* loop = new QEventLoop();
+    QEventLoop* loop = new QEventLoop(this);
     connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
     loop->exec();
 
@@ -484,11 +484,10 @@ void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self
 
 void AMLMJob::TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob)
 {
+    // We're out of the TW context and in a context with an event loop here.
+    AMLM_ASSERT_IN_GUITHREAD();
+
     int we_have_been_here_before = m_tw_got_done_or_fail.fetchAndStoreOrdered(1);
-
-M_WARNING("Do we need to not be in the TW thread for the KJob setError's below?");
-
-	qDb() << "TW CTX?  ABOUT TO CALL KJob::setError() etc";
 
     // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
     // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
