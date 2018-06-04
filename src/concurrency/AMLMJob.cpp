@@ -80,6 +80,8 @@ void AMLMJob::requestAbort()
 
     qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
 
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
     // Signal to the run() loop that it should cancel.
     m_flag_cancel = true;
 
@@ -110,6 +112,11 @@ void AMLMJob::start()
         Q_EMIT done(qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(this));
     }
 #endif
+
+    /// Kjob::setAutoDelete()
+    setAutoDelete(false);
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
     /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
 
     qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
@@ -208,6 +215,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 	/// @note We're in a non-GUI worker thread here.
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
     qDb() << "ENTER defaultBegin, self/this:" << self << this;
 
@@ -238,6 +246,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
 
@@ -348,7 +357,7 @@ qDb() << "START WAIT KJob::doKill()";
 //        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 //    }
 
-    QEventLoop* loop = new QEventLoop(this);
+    QEventLoop* loop = new QEventLoop();
     connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
     loop->exec();
 
@@ -441,6 +450,8 @@ void AMLMJob::make_connections()
     /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
     connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
 
+//#error "BOTH THE ABOVE NEED TO BE RETHOUGHT"
+
     qDb() << "MADE CONNECTIONS, this:" << this;
 }
 
@@ -526,6 +537,7 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
 {
     qDb() << "ENTER onTWDone";
     Q_CHECK_PTR(twjob);
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
     qDb() << "success()?:" << success();
 
@@ -533,6 +545,8 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // If the TW::Job failed, there's a failed() signal in flight as well.
 
     TWCommonDoneOrFailed(twjob);
+
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
     // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
     // We handle both success and fail cases here, since we always should get a ::done() event.
@@ -545,7 +559,74 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     qDb() << "ABOUT TO EMITRESULT()" << this;
     emitResult();
 
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
+
     qDb() << "EXIT onTWDone";
+    /// @fixme
+//#error "ON CANCEL, THINGS START TO FAIL HERE:"
+    /**
+     *[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWFailed:553 - ENTER onTWFailed
+[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:527 - ENTER onTWDone
+[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:530 - success()?: false
+[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:545 - ABOUT TO EMITRESULT() DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
+[20:57:04.274 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:425 - UNREGISTERING JOB: DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
+[20:57:04.274 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap:451 - REMOVING FROM MAP: DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0") BaseActivityProgressStatusBarWidget(0x1bb42c0)
+[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeNow:293 - closeNow(), WA_DeleteOnClose?: true
+[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeEvent:260 - closeEvent(): QCloseEvent(Close, 0x7fffffffbdf0)
+[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeNow:295 - close() retval: true BaseActivityProgressStatusBarWidget(0x1bb42c0)
+[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeNow:298 - Widget was closed: BaseActivityProgressStatusBarWidget(0x1bb42c0)
+[1]>>[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:548 - EXIT onTWDone
+[2]>>[20:57:04.274 GUIThread______ DEBUG] DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob:52 - DirectoryScannerAMLMJob DELETED: DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
+[20:57:04.274 GUIThread______ DEBUG] UniqueIDMixin::~UniqueIDMixin:66 - No double delete detected: "0"
+[20:57:04.274 GUIThread______ DEBUG] AMLMJob::~AMLMJob:70 - AMLMJob DELETED AMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
+[20:57:04.274 GUIThread______ DEBUG] UniqueIDMixin::~UniqueIDMixin:66 - No double delete detected: "1"
+[3]>>>[20:57:04.274 GUIThread______ DEBUG] AMLMJob::doKill:355 - END WAIT KJob::doKill()
+[20:57:04.274 GUIThread______ DEBUG] AMLMJob::doKill:363 - EXIT KJob::doKill()
+     */
+    /**
+     * So what happens is:
+     * 1 - We leave here
+     * 2 - the AMLMJob gets deleted
+     * 3*** - The doKill() event loop exits, which then allows KJob::kill() to continue, even though we now have no object.
+     * - So then it's this:
+     *
+     * if (doKill()) {
+        setError(KilledJobError);
+
+        finishJob(verbosity != Quietly);
+        return true;
+    } else {
+        return false;
+    }
+
+    ... and this (which is also called directly by emitResult()):
+
+void KJob::finishJob(bool emitResult)
+{
+    Q_D(KJob);
+    d->isFinished = true;
+
+    if (d->eventLoop) {
+        d->eventLoop->quit();
+    }
+
+    // If we are displaying a progress dialog, remove it first.
+    emit finished(this, QPrivateSignal());
+
+    if (emitResult) {
+        emit result(this, QPrivateSignal());
+    }
+
+    if (isAutoDelete()) {
+        deleteLater();
+    }
+}
+
+So I think the answer is:
+ - We need this object to survive doKill(),
+ - We can't do anything else after that, due to finishJob() possibly destroying us.
+     */
 }
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)

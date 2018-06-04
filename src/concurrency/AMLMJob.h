@@ -51,7 +51,12 @@
  *    - Calls job()->defaultEnd()
  *    - if(!success) emits failed(self)
  *    - Always emits done(self).
- *  - autoDelete() support.
+ *  - autoDelete() support (via TW::IdDecorator), appears to be completely controlled by
+ *    the decorator though:
+ *     // Auto-delete the decoratee or not.
+ *     void setAutoDelete(bool onOff);
+ *     // Will the decoratee be auto-deleted?
+ *     bool autoDelete() const;
  */
 
 /// Qt5

@@ -188,7 +188,7 @@ void ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed(QObject *kjob)
 
     Q_CHECK_PTR(kjob_ptr);
 
-    qDb() << "KJob destroyed:" << kjob_ptr;
+    qWr() << "KJOB DESTROYED:" << kjob_ptr;
 
 
 }
@@ -230,8 +230,8 @@ void ActivityProgressStatusBarTracker::cancelAll()
         qDb() << "Cancelling job:" << kjob; // << "widget:" << it.value();
 //        job->kill();
 M_WARNING("SEEMS WRONG");
-        slotStop(kjob);
-//        Q_EMIT INTERNAL_SIGNAL_slotStop(job);
+//        slotStop(kjob);
+        Q_EMIT INTERNAL_SIGNAL_slotStop(kjob);
     }
 
     qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
@@ -376,6 +376,7 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 void ActivityProgressStatusBarTracker::slotStop(KJob *kjob)
 {
     qDb() << "GOT slotStop() for KJob:" << kjob;
+
     Q_CHECK_PTR(kjob);
     BASE_CLASS::slotStop(kjob);
 }
