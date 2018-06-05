@@ -54,7 +54,6 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
 {
     m_tracker = tracker;
     m_kjob = job;
-    m_refcount = 1;
 
     // We have a vtable to this.
     this->init(job, parent);
@@ -259,74 +258,6 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 //    }
 	qDb() << "closeEvent():" << event;
     BASE_CLASS::closeEvent(event);
-}
-
-void BaseActivityProgressStatusBarWidget::ref()
-{
-    m_refcount++;
-}
-
-void BaseActivityProgressStatusBarWidget::deref()
-{
-    if(m_refcount)
-    {
-        m_refcount--;
-    }
-
-    if(!m_refcount)
-    {
-        if(true/*!keep open*/)
-        {
-            closeNow();
-        }
-        else
-        {
-            Q_ASSERT(0);
-//            slotClean();
-        }
-    }
-}
-
-void BaseActivityProgressStatusBarWidget::closeNow()
-{
-    // Directly call the close() slot.
-    qDb() << "closeNow(), WA_DeleteOnClose?:" << testAttribute(Qt::WA_DeleteOnClose);
-	bool retval = close();
-	qDb() << "close() retval:" << retval << this;
-	if(retval == true)
-	{
-		qDb() << "Widget was closed:" << this;
-	}
-	else
-	{
-		qWr() << "WIDGET WAS NOT CLOSED:" << this;
-	}
-
-
-    /// @todo Haven't fully analyzed the following scenario, but I think what we have below covers it:
-    /// // It might happen the next scenario:
-    /// - Start a job which opens a progress widget. Keep it open. Address job is 0xdeadbeef
-    /// - Start a new job, which is given address 0xdeadbeef. A new window is opened.
-    ///   This one will take much longer to complete. The key 0xdeadbeef on the widget map now
-    ///   stores the new widget address.
-    /// - Close the first progress widget that was opened (and has already finished) while the
-    ///   last one is still running. We remove its reference on the map. Wrong.
-    /// For that reason we have to check if the map stores the widget as the current one.
-    /// ereslibre
-
-//    Q_CHECK_PTR(m_tracker);
-//    if(m_tracker)
-//    {
-////        m_tracker->removeJobAndWidgetFromMap(m_job, this);
-//        qDb() << "EMITTING signal_removeJobAndWidgetFromMap:" << m_kjob << this;
-////        Q_EMIT signal_removeJobAndWidgetFromMap(m_kjob, this);
-//    }
-
-//    if (m_tracker->d->progressWidget[m_job] == this)
-//    {
-//        m_tracker->d->progressWidget.remove(m_job);
-//        m_tracker->d->progressWidgetsToBeShown.removeAll(m_job);
-    //    }
 }
 
 void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()

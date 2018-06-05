@@ -138,7 +138,8 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     // Create the widget for this new job.
     auto wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
-    wdgt->setAttribute(Qt::WA_DeleteOnClose);
+    // We don't delete on close here or we'll crash.
+//    wdgt->setAttribute(Qt::WA_DeleteOnClose);
 
     // Insert the kjob/widget pair into our master map.
     m_amlmjob_to_widget_map.insert(kjob, wdgt);
@@ -443,7 +444,6 @@ M_WARNING("KJob* could already be finished and autoDeleted here");
         m_expanding_frame_widget->removeWidget(w);
         m_expanding_frame_widget->reposition();
         removeJobAndWidgetFromMap(kjob, w);
-        w->deref();
         });
 }
 

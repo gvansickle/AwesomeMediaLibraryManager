@@ -71,10 +71,6 @@ public:
     /// Add buttons to the rhs of the layout.
     virtual void addButton(QToolButton* new_button);
 
-    // Cribbed from KWidgetJobTracker.
-    void ref();
-    void deref();
-
 public Q_SLOTS:
 
     /// @name Slots for construction/setup.
@@ -169,8 +165,6 @@ private:
 
     ActivityProgressStatusBarTracker* m_tracker {nullptr};
     QPointer<KJob> m_kjob {nullptr};
-
-    int m_refcount {0};
 
 protected:
 

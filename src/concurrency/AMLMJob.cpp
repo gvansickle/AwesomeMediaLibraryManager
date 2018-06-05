@@ -26,6 +26,7 @@
 /// KF5
 #include <ThreadWeaver/DebuggingAids>
 #include <ThreadWeaver/Job>
+#include <ThreadWeaver/QObjectDecorator>
 #include <ThreadWeaver/Queue>
 #include <KJob>
 #include <KJobWidgets>
@@ -305,6 +306,8 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     // infinitely recurse us.
     /// @note run() must have set the correct success() value prior to exiting.
 
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
     if(!self->success())
     {
         qWr() << objectName() << "FAILED";
@@ -315,7 +318,11 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
         qDb() << objectName() << "Succeeded";
         // @note No explicit succeeded signal.  Success is done() signal plus success() == true.
     }
+
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
     qDb() << objectName() << "EMITTING DONE";
+
     Q_EMIT /*TW::QObjectDecorator*/ done(self);
 }
 
@@ -323,6 +330,8 @@ bool AMLMJob::doKill()
 {
     // KJob::doKill().
     qDb() << "ENTER KJob::doKill()";
+
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
 //
 //    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
@@ -335,6 +344,8 @@ bool AMLMJob::doKill()
 
 qDb() << "START WAIT KJob::doKill()";
     // Now wait for it to signal that it really did stop.
+
+Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
 //    ThreadWeaver::Queue::instance()->finish();
 
@@ -360,6 +371,9 @@ qDb() << "START WAIT KJob::doKill()";
     QEventLoop* loop = new QEventLoop();
     connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
     loop->exec();
+
+Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
 
 qDb() << "END WAIT KJob::doKill()";
 

@@ -73,6 +73,7 @@
 #include <KJob>
 #include <KJobUiDelegate>
 #include <ThreadWeaver/Job>
+#include <ThreadWeaver/QObjectDecorator>
 #include <ThreadWeaver/QueueStream>
 
 /// Ours
@@ -81,6 +82,8 @@
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
 using AMLMJobPtr = QPointer<AMLMJob>;
+
+Q_DECLARE_METATYPE(AMLMJobPtr);
 
 /**
 * Where Does The State Live?
@@ -599,6 +602,8 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(AMLMJob)
 
+//    ThreadWeaver::QJobPointer m_the_tw_job;
+
 	/// Mutex and wait condition for cancel/pause/resume.
     /// Mutex is created in unlocked state, non-recursive.
 	QMutex m_cancel_pause_resume_mutex;
@@ -616,8 +621,5 @@ private:
 };
 
 //Q_DECLARE_METATYPE(AMLMJob); /// @todo need default constructor and copy constructor.
-Q_DECLARE_METATYPE(AMLMJobPtr);
-
-
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */
