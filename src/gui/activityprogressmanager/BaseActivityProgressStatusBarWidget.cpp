@@ -82,11 +82,15 @@ void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString 
 
 void BaseActivityProgressStatusBarWidget::infoMessage(KJob* kjob, const QString &text)
 {
+    Q_UNUSED(kjob);
+
     m_text_status_label->setText(text);
 }
 
 void BaseActivityProgressStatusBarWidget::warning(KJob *kjob, const QString &text)
 {
+    Q_UNUSED(kjob);
+
 M_WARNING("TODO");
 qWr() << "WARNING:" << text;
 }
