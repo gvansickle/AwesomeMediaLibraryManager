@@ -95,12 +95,12 @@ M_WARNING("TODO");
 qWr() << "WARNING:" << text;
 }
 
-void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
+void BaseActivityProgressStatusBarWidget::init(KJob* kjob, QWidget *parent)
 {
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
 
-    qDb() << "CREATING WIDGET FOR:" << job;
+    qDb() << "CREATING WIDGET FOR:" << kjob;
 
     m_current_activity_label = new QLabel(tr("Idle"), this);
     m_current_activity_label->setToolTip("Current operation");
@@ -128,10 +128,10 @@ void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
     setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
 
     // Set button disable states/make connections/etc. based on what the job supports.
-    if(job)
+    if(kjob)
     {
-        m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
-        m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
+        m_pause_resume_button->setEnabled(kjob->capabilities() & KJob::Suspendable);
+        m_cancel_button->setEnabled(kjob->capabilities() & KJob::Killable);
     }
     else
     {

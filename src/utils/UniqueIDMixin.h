@@ -63,7 +63,7 @@ public:
         }
         else
         {
-            qDb() << "No double delete detected:" << id();
+//            qDb() << "No double delete detected:" << id();
         }
 	}
 

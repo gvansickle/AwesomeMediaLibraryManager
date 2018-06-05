@@ -42,6 +42,8 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &di
     m_dir_filters = filters;
     m_iterator_flags = flags;
 
+    setProgressUnit(KJob::Unit::Directories);
+
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
 }
@@ -68,11 +70,6 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
-
-    setProgressUnit(KJob::Unit::Directories);
-
-    qDb() << "IN RUN, " << this; //M_NAME_VAL(dirscanjob_self);
-//    Q_CHECK_PTR(dirscanjob_self);
 
     // Create the QDirIterator.
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);

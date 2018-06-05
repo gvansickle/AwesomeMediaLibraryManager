@@ -376,9 +376,9 @@ public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
     bool wasCancelRequested();
 
-    /// Derived run() must call this before exiting.  FBO the TW::success() method.
+    /// Derived tw::run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
-    /// Derived run() must call this before exiting.  FBO the onTWFailed() method to determine fail reason.
+    /// Derived tw::run() must call this before exiting.  FBO the onTWFailed() method to determine fail reason.
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
 

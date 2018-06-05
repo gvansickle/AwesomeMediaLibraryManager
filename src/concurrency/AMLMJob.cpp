@@ -258,27 +258,6 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
 
-    // Cast self to an AMLMJobPtr, it should be one.
-//    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-
-//M_WARNING("TODO: Right place?");
-//    {
-//        // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
-//        // Lock the mutex.
-//        QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
-
-//        // Ordinarily we'd set a flag or something here to signal to any listeners that the condition has occurred,
-//        // but TW already has that for us in isFinished().
-
-//        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
-//        // by the notify, and only to temporarily block again because we still hold the mutex.
-//        lock.unlock();
-
-//        // Notify all threads waiting on the condition variable that there's new status to look at.
-//        // Really only one thread might be watching (in doKill()), but not much difference here.
-//        m_cancel_pause_resume_waitcond.notify_all();
-//    }
-
     // We've either completed our work or been cancelled.
     if(wasCancelRequested())
     {
@@ -355,7 +334,7 @@ qDb() << "START WAIT KJob::doKill()";
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    sleep(5);
+//    sleep(5);
 //    QEventLoop loop(this);
 //    connect_or_die(this, &AMLMJob::done, &loop, &QEventLoop::quit);
 //    loop.exec();

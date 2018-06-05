@@ -149,11 +149,11 @@ void Experimental::DoExperiment()
         qIn() << "KIO::ListJob emitted result" << kjob;
 //        AMLMJob::dump_job_info(kjob);
         ;});
-    connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
-        static long num_entries = 0;
-        num_entries += list.size();
-        qDb() << "ENTRIES:" << num_entries;
-    });
+//    connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
+//        static long num_entries = 0;
+//        num_entries += list.size();
+//        qDb() << "ENTRIES:" << num_entries;
+//    });
 
     /// And one last KF5 KIO job.
     /// "emits the data through the data() signal."
@@ -166,11 +166,11 @@ void Experimental::DoExperiment()
     master_job_tracker->registerJob(dirsizejob);
 
     master_job_tracker->registerJob(dsj);
-    master_job_tracker->setAutoDelete(dsj, true);
+//    master_job_tracker->setAutoDelete(dsj, true);
     master_job_tracker->setStopOnClose(dsj, false);
 
     master_job_tracker->registerJob(dsj2);
-    master_job_tracker->setAutoDelete(dsj2, true);
+//    master_job_tracker->setAutoDelete(dsj2, true);
     master_job_tracker->setStopOnClose(dsj2, false);
 
     master_job_tracker->registerJob(kio_list_kiojob);
@@ -193,6 +193,7 @@ void Experimental::DoExperiment()
     qDb() << M_NAME_VAL(dsj);
     qDb() << M_NAME_VAL(dsj2);
 
+    // Start all the jobs.
     dirsizejob->start();
     dsj->start();
     dsj2->start();
