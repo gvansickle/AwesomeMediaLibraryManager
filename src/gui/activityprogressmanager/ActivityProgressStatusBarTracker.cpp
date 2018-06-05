@@ -402,8 +402,8 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
     Q_CHECK_PTR(wdgt_type);
 
-    // Connect the kjob's destroyed() signal to a handler here.
-    connect_or_die(kjob, &QObject::destroyed, this, &ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed);
+//    // Connect the kjob's destroyed() signal to a handler here.
+//    connect_or_die(kjob, &QObject::destroyed, this, &ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed);
 
     // Connect the widget's "user wants to cancel" signal to this tracker's slotStop(KJob*) slot.
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
@@ -435,22 +435,23 @@ M_WARNING("KJob* could already be finished and autoDeleted here");
     //   KJobTrackerInterface::unregisterJob(job);, which calls:
     //     job->disconnect(this);
 
-    // Call down to the base class first; widget may be deleted by deref() below.
+    // Call down to the base class first.
+    /// @todo Maybe not?
     BASE_CLASS::unregisterJob(kjob_qp);
 
     /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
-    with_widget_or_skip(kjob, [=](auto w){
+    with_widget_or_skip(kjob_qp, [=](auto w){
         // Remove the job's widget from the expanding frame.
         m_expanding_frame_widget->removeWidget(w);
         m_expanding_frame_widget->reposition();
-        removeJobAndWidgetFromMap(kjob, w);
+        removeJobAndWidgetFromMap(kjob_qp, w);
         });
 }
 
 void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget)
 {
     qDb() << "REMOVING FROM MAP:" << kjob << widget;
-    if(m_amlmjob_to_widget_map[kjob] == widget)
+    if(m_amlmjob_to_widget_map.value(kjob, nullptr) == widget)
     {
         m_amlmjob_to_widget_map.remove(kjob);
         /// @todo Also to-be-shown queue?

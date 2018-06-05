@@ -149,9 +149,6 @@ protected:
 
     void closeEvent(QCloseEvent* event) override;
 
-    // Cribbed from KWidgetJobTracker.
-    void closeNow();
-
 protected Q_SLOTS:
 
     /// Gives us a slot to hook the cancel button to, which will re-emit cancel_job(m_kjob).

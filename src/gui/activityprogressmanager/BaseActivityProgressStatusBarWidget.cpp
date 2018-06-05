@@ -140,10 +140,7 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
     }
 
     // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
-    /// @todo KWidgetJobTracker::Private::ProgressWidget only does click->stop signal here.
-    /// Seems odd, should go back to the tracker to do the job stop etc.
     connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job);
-//        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
 
     // The tooltip widget, and the widget within the widget.
     m_tool_tip_widget = new KToolTipWidget(this);
@@ -256,16 +253,16 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 ////        qDb() << "CALLING SLOTSTOP";
 ////        m_tracker->directCallSlotStop(m_kjob);
 //    }
-	qDb() << "closeEvent():" << event;
+//	qDb() << "closeEvent():" << event;
     BASE_CLASS::closeEvent(event);
 }
 
 void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()
 {
-    QPointer<KJob> kjob = m_kjob;
+//    QPointer<KJob> kjob = m_kjob;
 
     qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
-    if(kjob.isNull())
+    if(m_kjob.isNull())
     {
         qWr() << "KJOB WAS NULL, NOT EMITTING CANCEL SIGNAL";
     }

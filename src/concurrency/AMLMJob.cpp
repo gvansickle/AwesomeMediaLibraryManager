@@ -57,15 +57,16 @@ AMLMJob::AMLMJob(QObject *parent)
     /// So not at all clear what's happening here.
     KJobWidgets::setWindow(this, MainWindow::instance());
     setUiDelegate(new KDialogJobUiDelegate());
-
-    /// @todo This is debug, move/remove.
-    ThreadWeaver::setDebugLevel(true, 10);
 }
 
 AMLMJob::~AMLMJob()
 {
     // The KJob should have finished/been killed before we get deleted.
 //    Q_ASSERT(isFinished());
+
+    Q_ASSERT(!m_i_was_deleted);
+    m_i_was_deleted = true;
+
     // KJob destructor checks if KJob->isFinished and emits finished(this) if so.
     // Doesn't cancel the job.
     qDb() << "AMLMJob DELETED" << this;
@@ -79,7 +80,7 @@ void AMLMJob::requestAbort()
     // Lock the mutex.
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
-    qDb() << "AMLM:TW: SETTING ABORT FLAG ON AMLMJOB:" << this;
+    qDb() << "AMLM:TW: SETTING CANCEL FLAG ON AMLMJOB:" << this;
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
@@ -252,7 +253,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     qDb() << "ENTER defaultEnd, self/this:" << self << this;
 
     // Cast self to an AMLMJobPtr, it should be one.
-    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
+//    AMLMJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
 
 //M_WARNING("TODO: Right place?");
 //    {
@@ -271,12 +272,6 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 //        // Really only one thread might be watching (in doKill()), but not much difference here.
 //        m_cancel_pause_resume_waitcond.notify_all();
 //    }
-
-
-    // Call base class defaultEnd() implementation.
-    // ThreadWeaver::Job::defaultEnd() calls:
-    //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
-    ThreadWeaver::Job::defaultEnd(self, thread);
 
     // We've either completed our work or been cancelled.
     if(wasCancelRequested())
@@ -307,6 +302,13 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     /// @note run() must have set the correct success() value prior to exiting.
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
+    qDb() << "START OF BASE IMPL";
+
+    // Call base class defaultEnd() implementation.
+    // ThreadWeaver::Job::defaultEnd() calls:
+    //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
+    ThreadWeaver::Job::defaultEnd(self, thread);
 
     if(!self->success())
     {
@@ -347,30 +349,11 @@ qDb() << "START WAIT KJob::doKill()";
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-//    ThreadWeaver::Queue::instance()->finish();
-
-    // Using a mutex/condition variable combo to signal that the TW thread is done to the doKill() etc. functions.
-//    do
-//    {
-//        // Lock the mutex.
-//        QMutexLocker lock(&m_cancel_pause_resume_mutex);
-
-//        // Wait until somebody updates the CV and has some news for us, isFinished() in this case.
-//        // This definitely goes a bit easier in straight C++11+.
-//        /// @todo Add timeout.
-//        m_cancel_pause_resume_waitcond.wait(lock.mutex());
-//        // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
-//        // by the notify, and only to temporarily block again because we still hold the mutex.
-//        lock.unlock();
-//    } while(!isFinished());
-//    while(!isFinished())
-//    {
-//        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-//    }
-
-    QEventLoop* loop = new QEventLoop();
-    connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
-    loop->exec();
+    sleep(5);
+//    QEventLoop loop(this);
+//    connect_or_die(this, &AMLMJob::done, &loop, &QEventLoop::quit);
+//    loop.exec();
+//    loop->deleteLater();
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
@@ -442,7 +425,7 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 
 void AMLMJob::make_connections()
 {
-    qDb() << "MAKING CONNECTIONS, this:" << this;
+//    qDb() << "MAKING CONNECTIONS, this:" << this;
 
     // @note TW::Job connections made in connections_make_defaultBegin().
 
@@ -457,16 +440,16 @@ void AMLMJob::make_connections()
     // - If KJob isAutoDelete(), calls deleteLater().
     // KJob::kill() will also cause the emission of ::result, via the same finsishJob() path, if KillVerbosity is
     // not Quietly.
-    connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
+//    connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
 
-    // Emitted by calling emitResult() and kill().
-    // Intended to notify UIs that should detach from the job.
-    /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
-    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
+//    // Emitted by calling emitResult() and kill().
+//    // Intended to notify UIs that should detach from the job.
+//    /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
+//    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
 
 //#error "BOTH THE ABOVE NEED TO BE RETHOUGHT"
 
-    qDb() << "MADE CONNECTIONS, this:" << this;
+//    qDb() << "MADE CONNECTIONS, this:" << this;
 }
 
 /**
@@ -511,8 +494,6 @@ void AMLMJob::TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob)
 {
     // We're out of the TW context and in a context with an event loop here.
     AMLM_ASSERT_IN_GUITHREAD();
-
-    int we_have_been_here_before = m_tw_got_done_or_fail.fetchAndStoreOrdered(1);
 
     // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
     // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.

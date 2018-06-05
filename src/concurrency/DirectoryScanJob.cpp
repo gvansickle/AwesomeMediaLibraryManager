@@ -62,6 +62,11 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     /// @warning self: TW:JobPointer is a QSharedPtr<TW::JobInterface>, which inherits from nothing, especially not QObject.
     ///          So "T qobject_cast(QObject *object)" in particular won't work here.
 
+    Q_UNUSED(self);
+
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
+
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
 
@@ -70,12 +75,12 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
 M_WARNING("TODO");
 //    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPointerDynamicCast<DirectoryScannerAMLMJob>(self);//= qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPtrToQPointerDynamicCast<DirectoryScannerAMLMJob>(self);
+//    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPtrToQPointerDynamicCast<DirectoryScannerAMLMJob>(self);
 
     setProgressUnit(KJob::Unit::Directories);
 
-    qDb() << "IN RUN, " << M_NAME_VAL(dirscanjob_self);
-    Q_CHECK_PTR(dirscanjob_self);
+    qDb() << "IN RUN, " << this; //M_NAME_VAL(dirscanjob_self);
+//    Q_CHECK_PTR(dirscanjob_self);
 
     // Create the QDirIterator.
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
@@ -86,8 +91,8 @@ M_WARNING("TODO");
     {
         qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
         qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
-        dirscanjob_self->setSuccessFlag(false);
-        dirscanjob_self->setWasCancelled(false);
+        setSuccessFlag(false);
+        setWasCancelled(false);
         return;
     }
 
@@ -106,7 +111,7 @@ M_WARNING("TODO");
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
-        if(dirscanjob_self->wasCancelRequested())
+        if(wasCancelRequested())
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
@@ -142,9 +147,9 @@ M_WARNING("TODO");
             // of files potentially in this directory.
             num_possible_files = num_files_found_so_far + file_info.dir().count();
 
-            dirscanjob_self->setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
-            dirscanjob_self->setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
-            dirscanjob_self->setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
+            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
+            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
+            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
         }
         else if(file_info.isFile())
         {
@@ -168,7 +173,7 @@ M_WARNING("TODO");
             /// Well, really there is, we could report this as summary info.  Ah well, for tomorrow.
 //            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
 //            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
-            dirscanjob_self->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+            setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
         }
     }
 

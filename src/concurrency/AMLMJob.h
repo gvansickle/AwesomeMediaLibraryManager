@@ -604,6 +604,8 @@ private:
 
 //    ThreadWeaver::QJobPointer m_the_tw_job;
 
+    bool m_i_was_deleted = false;
+
 	/// Mutex and wait condition for cancel/pause/resume.
     /// Mutex is created in unlocked state, non-recursive.
 	QMutex m_cancel_pause_resume_mutex;
