@@ -268,7 +268,8 @@ void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()
     qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
     if(m_kjob.isNull())
     {
-        qWr() << "KJOB WAS NULL, NOT EMITTING CANCEL SIGNAL";
+        qWr() << "KJOB WAS NULL, EMITTING cancel_job(nullptr)";
+        Q_EMIT cancel_job(nullptr);
     }
     else
     {
