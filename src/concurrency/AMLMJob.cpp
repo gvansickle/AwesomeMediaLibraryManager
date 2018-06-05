@@ -72,6 +72,12 @@ AMLMJob::~AMLMJob()
     qDb() << "AMLMJob DELETED" << this;
 }
 
+bool AMLMJob::success() const
+{
+    return m_success;
+}
+
+
 void AMLMJob::requestAbort()
 {
     // Using a mutex/condition variable combo to allow both abort and pause/resume.
@@ -423,9 +429,14 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
     m_progress_unit = prog_unit;
 }
 
+KJob::Unit AMLMJob::progressUnit() const
+{
+    return m_progress_unit;
+}
+
 void AMLMJob::make_connections()
 {
-//    qDb() << "MAKING CONNECTIONS, this:" << this;
+    //    qDb() << "MAKING CONNECTIONS, this:" << this;
 
     // @note TW::Job connections made in connections_make_defaultBegin().
 

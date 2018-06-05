@@ -66,16 +66,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
-
-    // This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
-    // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
-
-M_WARNING("TODO");
-//    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPointerDynamicCast<DirectoryScannerAMLMJob>(self);//= qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-//    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPtrToQPointerDynamicCast<DirectoryScannerAMLMJob>(self);
 
     setProgressUnit(KJob::Unit::Directories);
 

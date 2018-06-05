@@ -335,7 +335,7 @@ public:
      * not be executed after a failure, it is important to dequeue those before deleting the failed Job. A Sequence may be
      * helpful for that purpose."
      */
-    bool success() const override { return m_success; }
+    bool success() const override;
 
     /**
      * Abort the execution of the TW::Job.
@@ -553,11 +553,12 @@ protected:
     /// @name New protected methods
     /// @{
 
+    /// @warning For use only by KJob
     /// Give derived classes write access to progressUnit.
     /// Sets the Unit which will be used for percent complete and total/processedSize calculations.
     /// Defaults to KJob::Unit::Bytes.
     void setProgressUnit(KJob::Unit prog_unit);
-    KJob::Unit progressUnit() const { return m_progress_unit; }
+    KJob::Unit progressUnit() const;
 
     virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
     virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
