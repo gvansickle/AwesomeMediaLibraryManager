@@ -54,6 +54,7 @@ void RegisterQtMetatypes()
 {
 	// ThreadWeaver types.
     qRegisterMetaType<ThreadWeaver::Job*>( "ThreadWeaver::Job*" );
+    // KJob types.
     qRegisterMetaType<KJob*>( "KJob*" );
 
 
