@@ -39,7 +39,8 @@ class CumulativeAMLMJob : public AMLMJob, public UniqueIDMixin<CumulativeAMLMJob
     using UniqueIDMixin<CumulativeAMLMJob>::uniqueQObjectName;
 
 public:
-    CumulativeAMLMJob(QObject* parent) : BASE_CLASS(parent) {}
+    CumulativeAMLMJob(QObject* parent);
+    ~CumulativeAMLMJob() override;
 
     /// Nothing to start, this is more of a placeholder. Or maybe?????
     Q_SCRIPTABLE void start() override {}

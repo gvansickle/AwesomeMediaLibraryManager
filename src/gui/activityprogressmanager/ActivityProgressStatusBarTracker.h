@@ -178,7 +178,8 @@ public:
 public Q_SLOTS:
 
     /**
-     * Register a KJob (or AMLMJob or any other derived job) with this tracker.
+     * Register a KJob, AMLMJob, KIO::Job, or any other derived job with this tracker.
+     *
      * Connects the signals from the passed KJob* to slots in this class of the same name.
      *
      * At some point calls the base class impl, KAbstractWidgetJobTracker.
@@ -208,7 +209,16 @@ public Q_SLOTS:
      *               this, SLOT(processedAmount(KJob*,KJob::Unit,qulonglong)));
      * @endcode
      *
-     * When we get into KIO Jobs, they start to use KJob signals and slots which aren't automatically connected by the tracker
+     * @note KIO::Jobs
+     * When we get into KIO Jobs, there are a few things to be aware of:
+     *
+     * - They appear to registerJob() themselves with KIO::getJobTracker() automatically
+     *   if the HideProgressInfo flag is not given to the job's constructor.
+     *   This would be OK, but the registration doesn't seem to work properly; i.e. cancel buttons
+     *   etc. don't seem to get hooked up unless we manually register the job instead.
+     *   Possibly because it's *KJobTrackerInterface* *getJobTracker();???
+     *
+     * - They start to use KJob signals and slots which aren't automatically connected by the tracker
      * for some reason:
      *  // Emitted when we know the size of this job (data size in bytes for transfers,
      *  // number of entries for listings, etc).  Private signal, emitted by calling setTotalAmount().

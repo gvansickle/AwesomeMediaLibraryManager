@@ -20,3 +20,15 @@
 #include "CumulativeAMLMJob.h"
 
 
+
+CumulativeAMLMJob::CumulativeAMLMJob(QObject *parent) : BASE_CLASS(parent)
+{
+    setObjectName(uniqueQObjectName());
+}
+
+CumulativeAMLMJob::~CumulativeAMLMJob()
+{
+
+}
+
+

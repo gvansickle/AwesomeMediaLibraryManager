@@ -223,6 +223,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 	/// @note We're in a non-GUI worker thread here.
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
+
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
     qDb() << "ENTER defaultBegin, self/this:" << self << this;

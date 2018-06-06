@@ -136,10 +136,12 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     qIn() << "REGISTERING JOB:" << kjob;
 //    AMLMJob::dump_job_info(kjob);
 
+    Q_ASSERT(!is_cumulative_status_job(kjob));
+
     // Create the widget for this new job.
     auto wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
-    // We don't delete on close here or we'll crash.
-//    wdgt->setAttribute(Qt::WA_DeleteOnClose);
+    /// @todo Watch this, deleting the widget on close here has caused us to crash in the past.
+    wdgt->setAttribute(Qt::WA_DeleteOnClose);
 
     // Insert the kjob/widget pair into our master map.
     m_amlmjob_to_widget_map.insert(kjob, wdgt);
@@ -154,8 +156,6 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     // Make connections.
     /// @todo Should this really be here, or better in the onShowProgressWidget() call?
     make_connections_with_newly_registered_job(kjob, wdgt);
-
-//    connect(job, &KJob::finished, this, [=](KJob *self){ qDb() << "TRACKER GOT FINISHED SIGNAL FROM JOB/SELF:" << job << self;});
 
     // KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
     //   KJobTrackerInterface::registerJob(KJob *job) does nothing but connect

@@ -132,6 +132,7 @@ void Experimental::DoExperiment()
     qDb() << "DirSizeJob:"
           << M_NAME_VAL(dirsizejob->detailedErrorStrings())
           << M_NAME_VAL(dirsizejob->capabilities());
+    dirsizejob->setObjectName("DIRSIZEJOB");
 
     /// Two AMLMJobs
     DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(nullptr, dir_url,
@@ -154,23 +155,25 @@ void Experimental::DoExperiment()
 //        num_entries += list.size();
 //        qDb() << "ENTRIES:" << num_entries;
 //    });
+    kio_list_kiojob->setObjectName("LISTRECURSIVEJOB");
 
     /// And one last KF5 KIO job.
     /// "emits the data through the data() signal."
     QUrl web_src_url(QStringLiteral("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso?_ga=2.204957456.1400403342.1527338037-878124677.1491681087"));
 //    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));
-    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload/*, KIO::HideProgressInfo*/);
+    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload, KIO::HideProgressInfo);
+    inet_get_job->setObjectName("INET_GET_JOB");
 
 //    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
     master_job_tracker->registerJob(dirsizejob);
 
     master_job_tracker->registerJob(dsj);
-//    master_job_tracker->setAutoDelete(dsj, true);
+    master_job_tracker->setAutoDelete(dsj, true);
     master_job_tracker->setStopOnClose(dsj, false);
 
     master_job_tracker->registerJob(dsj2);
-//    master_job_tracker->setAutoDelete(dsj2, true);
+    master_job_tracker->setAutoDelete(dsj2, true);
     master_job_tracker->setStopOnClose(dsj2, false);
 
     master_job_tracker->registerJob(kio_list_kiojob);
