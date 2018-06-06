@@ -83,6 +83,13 @@ void AMLMJob::requestAbort()
     // Using a mutex/condition variable combo to allow both abort and pause/resume.
     // This is sort of easier with C++11+, but it's Qt5, so....
 
+    /**
+     * @todo There's still something wrong between this and requestAbort() and doKill() and
+     * I don't know what all else.  We get multiple of these from a single cancel button push,
+     * and the TW::Job doesn't actually end until much later (after several slotStop()s).
+     * Similar with KIO::Jobs.
+     */
+
     // Lock the mutex.
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
@@ -320,6 +327,13 @@ bool AMLMJob::doKill()
     qDb() << "ENTER KJob::doKill()";
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
+    /**
+     * @todo There's still something wrong between this and requestAbort() and doKill() and
+     * I don't know what all else.  We get multiple of these from a single cancel button push,
+     * and the TW::Job doesn't actually end until much later (after several slotStop()s).
+     * Similar with KIO::Jobs.
+     */
 
 //
 //    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
@@ -653,6 +667,13 @@ void AMLMJob::onKJobResult(KJob *kjob)
 
 void AMLMJob::onKJobFinished(KJob *kjob)
 {
+    /**
+     * @todo There's still something wrong between this and requestAbort() and doKill() and
+     * I don't know what all else.  We get multiple of these from a single cancel button push,
+     * and the TW::Job doesn't actually end until much later (after several slotStop()s).
+     * Similar with KIO::Jobs.
+     */
+
     Q_CHECK_PTR(kjob);
     qDb() << "KJOB FINISHED" << kjob;
 }

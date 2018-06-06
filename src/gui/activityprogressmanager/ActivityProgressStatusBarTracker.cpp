@@ -378,6 +378,13 @@ void ActivityProgressStatusBarTracker::slotStop(KJob *kjob)
 {
     qDb() << "GOT slotStop() for KJob:" << kjob;
 
+    /**
+     * @todo There's still something wrong between this and requestAbort() and doKill() and
+     * I don't know what all else.  We get multiple of these from a single cancel button push,
+     * and the TW::Job doesn't actually end until much later (after several slotStop()s).
+     * Similar with KIO::Jobs.
+     */
+
     if(kjob == nullptr || is_cumulative_status_job(kjob))
     {
         qWr() << "KJOB LOOKS LIKE CUMULATIVE STATUS JOB, BALKING";
