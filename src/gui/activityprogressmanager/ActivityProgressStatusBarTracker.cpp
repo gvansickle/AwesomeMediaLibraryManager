@@ -445,13 +445,18 @@ M_WARNING("KJob* could already be finished and autoDeleted here");
     /// @todo Maybe not?
     BASE_CLASS::unregisterJob(kjob_qp);
 
+    qDb() << "SIGNALS DISCONNECTED:" << kjob_qp;
+
     /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
     with_widget_or_skip(kjob_qp, [=](auto w){
         // Remove the job's widget from the expanding frame.
         m_expanding_frame_widget->removeWidget(w);
         m_expanding_frame_widget->reposition();
         removeJobAndWidgetFromMap(kjob_qp, w);
+        w->deleteLater();
         });
+
+    qDb() << "JOB UNREGISTERED:" << kjob_qp;
 }
 
 void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget)
