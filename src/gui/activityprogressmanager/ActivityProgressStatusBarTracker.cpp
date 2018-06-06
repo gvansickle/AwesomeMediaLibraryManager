@@ -378,7 +378,7 @@ void ActivityProgressStatusBarTracker::slotStop(KJob *kjob)
 {
     qDb() << "GOT slotStop() for KJob:" << kjob;
 
-    if(is_cumulative_status_job(kjob) || kjob == nullptr)
+    if(kjob == nullptr || is_cumulative_status_job(kjob))
     {
         qWr() << "KJOB LOOKS LIKE CUMULATIVE STATUS JOB, BALKING";
         return;
