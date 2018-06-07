@@ -53,11 +53,6 @@ public:
         return m_kjob_to_widget_map.remove(key);
     }
 
-    const T operator[](const Key &key) const
-    {
-        return value(key);
-    }
-
     QList<Key> keys() const
     {
         QList<Key> retval;
@@ -75,7 +70,7 @@ public:
         return m_kjob_to_widget_map.size();
     }
 
-#if 1
+
     template<typename Lambda>
     void for_each_key_value_pair(Lambda the_lambda) const
     {
@@ -86,9 +81,9 @@ public:
             the_lambda(i.key(), i.value());
         }
     }
-#endif
+
     /// Public types
-    using iterator = typename ActiveActivitiesMap::iterator;
+    using const_iterator = typename ActiveActivitiesMap::const_iterator;
 
 private:
 

@@ -78,12 +78,6 @@ public:
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
 
-public:
-    static DirectoryScannerAMLMJobPtr make_shared(QObject* parent, const QUrl &dir_url,
-                                                  const QStringList &nameFilters,
-                                                  QDir::Filters filters = QDir::NoFilter,
-                                                  QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
-
     ~DirectoryScannerAMLMJob() override;
 
 protected:

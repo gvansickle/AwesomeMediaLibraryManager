@@ -155,6 +155,7 @@ set(HEADER_FILES
 	logic/TrackMetadata.h
 	utils/ActionHelpers.h
 	utils/ConnectHelpers.h
+	utils/DebugBlock.h
 	utils/DebugHelpers.h
 	utils/Fraction.h
 	utils/in.h
@@ -182,6 +183,7 @@ set(HEADER_FILES
 	utils/AboutDataSetup.h
 	concurrency/DirectoryScanJob.h
 	concurrency/ThreadsafeMap.h
+	concurrency/DebugSequence.h
     )
 
 # Source file list.
@@ -202,6 +204,7 @@ set(SOURCE_FILES
 	logic/PlaylistModelItem.cpp
 	logic/PlaylistSortFilterProxyModel.cpp
 	logic/TrackMetadata.cpp
+	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
 	utils/Theme.cpp
@@ -223,6 +226,7 @@ set(SOURCE_FILES
 	utils/AboutDataSetup.cpp
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
+	concurrency/DebugSequence.cpp
 	)
 
 # NoMoc files.

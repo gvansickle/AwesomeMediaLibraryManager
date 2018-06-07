@@ -42,9 +42,6 @@ public:
     ~CumulativeStatusWidget() override;
 
 public Q_SLOTS:
-    /// Make the necessary connections between this Widget, the KJob, and the tracker.
-    /// Call this soon after the constructor is called and after init() is called.
-    void make_connections() override;
 
     void slot_number_of_jobs_changed(long long new_num_jobs);
 

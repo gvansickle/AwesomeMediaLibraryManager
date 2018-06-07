@@ -27,12 +27,12 @@
 #include <QMutexLocker>
 #include <QToolTip>
 #include <QHelpEvent>
+#include <QPalette>
 
 /// KF5
 //#include <KJob>
 #include <KAbstractWidgetJobTracker>
 #include <KToolTipWidget>
-#include <QPalette>
 
 /// Ours
 #include <gui/helpers/Tips.h>
@@ -54,7 +54,6 @@ BaseActivityProgressStatusBarWidget::BaseActivityProgressStatusBarWidget(KJob *j
 {
     m_tracker = tracker;
     m_kjob = job;
-    m_refcount = 1;
 
     // We have a vtable to this.
     this->init(job, parent);
@@ -83,19 +82,25 @@ void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString 
 
 void BaseActivityProgressStatusBarWidget::infoMessage(KJob* kjob, const QString &text)
 {
+    Q_UNUSED(kjob);
+
     m_text_status_label->setText(text);
 }
 
 void BaseActivityProgressStatusBarWidget::warning(KJob *kjob, const QString &text)
 {
+    Q_UNUSED(kjob);
+
 M_WARNING("TODO");
 qWr() << "WARNING:" << text;
 }
 
-void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
+void BaseActivityProgressStatusBarWidget::init(KJob* kjob, QWidget *parent)
 {
     // Create the widget.
     /// @link https://github.com/KDE/kjobwidgets/blob/master/src/kstatusbarjobtracker.cpp
+
+    qDb() << "CREATING WIDGET FOR:" << kjob;
 
     m_current_activity_label = new QLabel(tr("Idle"), this);
     m_current_activity_label->setToolTip("Current operation");
@@ -123,46 +128,23 @@ void BaseActivityProgressStatusBarWidget::init(KJob* job, QWidget *parent)
     setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
 
     // Set button disable states/make connections/etc. based on what the job supports.
-    if(job)
+    if(kjob)
     {
-M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
-        m_pause_resume_button->setEnabled(job->capabilities() & KJob::Suspendable);
-        m_cancel_button->setEnabled(job->capabilities() & KJob::Killable);
-
-        // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
-        /// @todo KWidgetJobTracker::Private::ProgressWidget only does click->stop signal here.
-        /// Seems odd, should go back to the tracker to do the job stop etc.
-//        connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
-//            qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
-//            Q_EMIT cancel_job(m_kjob);
-//        });
-//        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
-
-#if 0 // CRASHING
-        // Connect up the disconnect signal from the job.
-M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
-        connect(job, &AMLMJob::finished, this, [=](KJob* finished_job){
-            Q_CHECK_PTR(this);
-            Q_CHECK_PTR(this->parent());
-            Q_CHECK_PTR(finished_job);
-            Q_CHECK_PTR(job);
-            Q_CHECK_PTR(m_cancel_button);
-
-//            qDb() << "GOT FINISHED SIGNAL, DISCONNECTING FROM JOB:" << job;
-            disconnect(job, nullptr, m_cancel_button, nullptr);
-            disconnect(job, nullptr, this, nullptr);
-            deleteLater();
-            ;});
-#endif
+        m_pause_resume_button->setEnabled(kjob->capabilities() & KJob::Suspendable);
+        m_cancel_button->setEnabled(kjob->capabilities() & KJob::Killable);
     }
     else
     {
-        Q_ASSERT(0);
-        // null Job (i.e. it's the root tracker/widget).
-        qDb() << "INIT() CALL FOR ROOT TRACKER WIDGET, JOB IS NULL";
+M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
+
+        /// @todo null Job (i.e. it's the root tracker/widget).
+        qDb() << "INIT() CALL FOR CUMULATIVE TRACKER WIDGET, JOB IS NULL";
         m_pause_resume_button->setEnabled(false);
-        m_cancel_button->setEnabled(false);
+        m_cancel_button->setEnabled(true);
     }
+
+    // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
+    connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job);
 
     // The tooltip widget, and the widget within the widget.
     m_tool_tip_widget = new KToolTipWidget(this);
@@ -182,34 +164,6 @@ M_WARNING("CRASH: This is now crashing if you let the jobs complete.");
     setLayout(layout);
 
     updateMainTooltip();
-}
-
-void BaseActivityProgressStatusBarWidget::make_connections()
-{
-    qDb() << "BASE MAKE_CONNECTIONS";
-    if(true /* not summary widget */)
-    {
-        // Directly connect the cancel button to this class' stop() slot, which stops the job.
-        /// @note If we have the summary job fully working, this same connection would be fine;
-        /// the job would respond to the stop() by stopping all child jobs.
-        /// But we don't, so this function is overridden in the CumulativeStatusWidget class.
-        connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::stop);
-        // Description.
-        connect_or_die(m_kjob, &KJob::description, this, &BaseActivityProgressStatusBarWidget::description);
-    }
-
-#if 0
-    if(m_kjob && m_tracker)
-    {
-//        // Connect cancel-clicked signal to tracker's remove-job signal.
-//        connect(m_cancel_button, &QToolButton::clicked, this, [=](){ Q_EMIT cancel_job(m_kjob);});
-    }
-    else
-    {
-        qWr() << "NO JOB/TRACKER:" << m_kjob << m_tracker;
-        Q_ASSERT(0);
-    }
-#endif
 }
 
 void BaseActivityProgressStatusBarWidget::showTotals()
@@ -257,9 +211,8 @@ void BaseActivityProgressStatusBarWidget::updateMainTooltip()
 //        return;
 //    }
 
-    tooltip_text = tr("KJob<br/>")
-            + tr("Text1: %1<br/>").arg(m_current_activity_label->text())
-            + tr("Text2: %1<br/>").arg(m_text_status_label->text())
+    tooltip_text = tr("Async Job: %1<br/>").arg(m_current_activity_label->text())
+            + tr("Current Status: %1<br/>").arg(m_text_status_label->text())
             + tr("Speed: %1<br/>").arg("N/A")
                ;
 
@@ -296,95 +249,33 @@ bool BaseActivityProgressStatusBarWidget::event(QEvent *event)
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 {
-    if(m_is_job_registered && m_tracker->stopOnClose(m_kjob))
-    {
+//    if(m_is_job_registered && m_tracker->stopOnClose(m_kjob))
+//    {
 //        qDb() << "EMITTING SLOTSTOP";
 //        QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
 //                                  Q_ARG(KJob*, m_kjob));
-        qDb() << "CALLING SLOTSTOP";
-        m_tracker->directCallSlotStop(m_kjob);
-    }
-
+////        qDb() << "CALLING SLOTSTOP";
+////        m_tracker->directCallSlotStop(m_kjob);
+//    }
+//	qDb() << "closeEvent():" << event;
     BASE_CLASS::closeEvent(event);
 }
 
-void BaseActivityProgressStatusBarWidget::ref()
+void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()
 {
-    m_refcount++;
-}
+//    QPointer<KJob> kjob = m_kjob;
 
-void BaseActivityProgressStatusBarWidget::deref()
-{
-    if(m_refcount)
+    qDb() << "CANCEL BUTTON CLICKED, JOB:" << m_kjob;
+    if(m_kjob.isNull())
     {
-        m_refcount--;
+        qWr() << "KJOB WAS NULL, EMITTING cancel_job(nullptr)";
+        Q_EMIT cancel_job(nullptr);
     }
-
-    if(!m_refcount)
+    else
     {
-        if(true/*!keep open*/)
-        {
-            closeNow();
-        }
-        else
-        {
-//            slotClean();
-        }
+        Q_CHECK_PTR(m_kjob);
+        Q_EMIT cancel_job(m_kjob);
     }
-}
-
-void BaseActivityProgressStatusBarWidget::closeNow()
-{
-    close();
-
-    /// @todo Haven't fully analyzed the following scenario, but I think what we have below covers it:
-    /// // It might happen the next scenario:
-    /// - Start a job which opens a progress widget. Keep it open. Address job is 0xdeadbeef
-    /// - Start a new job, which is given address 0xdeadbeef. A new window is opened.
-    ///   This one will take much longer to complete. The key 0xdeadbeef on the widget map now
-    ///   stores the new widget address.
-    /// - Close the first progress widget that was opened (and has already finished) while the
-    ///   last one is still running. We remove its reference on the map. Wrong.
-    /// For that reason we have to check if the map stores the widget as the current one.
-    /// ereslibre
-
-    Q_CHECK_PTR(m_tracker);
-    if(m_tracker)
-    {
-//        m_tracker->removeJobAndWidgetFromMap(m_job, this);
-        qDb() << "EMITTING signal_removeJobAndWidgetFromMap:" << m_kjob << this;
-        Q_EMIT signal_removeJobAndWidgetFromMap(m_kjob, this);
-    }
-
-//    if (m_tracker->d->progressWidget[m_job] == this)
-//    {
-//        m_tracker->d->progressWidget.remove(m_job);
-//        m_tracker->d->progressWidgetsToBeShown.removeAll(m_job);
-//    }
-}
-
-void BaseActivityProgressStatusBarWidget::stop()
-{
-    /// KWidgetJobTracker::Private::ProgressWidget::_k_stop() does this here:
-    /// if (jobRegistered) {
-    ///    tracker->slotStop(job);
-    /// }
-    /// closeNow();
-    ///
-    /// ATM we're missing something, because when we do what should be ~equivalent below, the "cancel" button
-    /// is ignored.
-
-   if(m_is_job_registered)
-   {
-       // Notify tracker that the job has been killed.
-       // Calls job->kill(KJob::EmitResults) then emits stopped(job).
-//       auto retval = QMetaObject::invokeMethod(m_tracker, "slotStop", Qt::AutoConnection,
-//                                 Q_ARG(KJob*, m_kjob));
-//       Q_ASSERT(retval);
-
-       m_tracker->directCallSlotStop(m_kjob);
-   }
-   closeNow();
 }
 
 void BaseActivityProgressStatusBarWidget::pause_resume(bool)
@@ -412,14 +303,8 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
     case KJob::Bytes:
         m_is_total_size_known = true;
         // Size is measured in bytes
-M_WARNING("TODO: Seems wrong.")
-        if (m_totalSize == amount)
-        {
-            return;
-        }
-        /// @todo Bytes are already handled by tracker, but size is a different case and
-        /// I haven't found a way to access it either read or write:
-        m_totalSize = amount;
+        /// @todo Bytes/size is already handled by the tracker.
+        /// Don't quite know what to make of the time stuff here.
         if (m_start_time.isNull())
         {
             m_start_time.start();
@@ -427,22 +312,11 @@ M_WARNING("TODO: Seems wrong.")
         break;
     case KJob::Files:
         // Shouldn't be getting signalled unless totalFiles() has actually changed.
-//        if(kjob_total_amount_in_current_units == amount)
-//        {
-//            return;
-//        }
-        /// @todo ???
-//        totalFiles = amount;
         showTotals();
         break;
 
     case KJob::Directories:
-        // Shouldn't be getting signalled unless totalFiles() has actually changed.
-//        if (kjob_total_amount_in_current_units == amount)
-//        {
-//            return;
-//        }
-//        totalDirs = amount;
+        // Shouldn't be getting signalled unless total dirs has actually changed.
         showTotals();
         break;
     }
@@ -548,14 +422,14 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
 
 void BaseActivityProgressStatusBarWidget::totalSize(KJob *kjob, qulonglong amount)
 {
-    m_totalSize = amount;
-    updateMainTooltip();
+//    qDb() << "GOT TOTALSIZE";
+//    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::processedSize(KJob *kjob, qulonglong amount)
 {
-    m_processedSize = amount;
-    updateMainTooltip();
+//    qDb() << "GOT PROCESSEDSIZE";
+//    updateMainTooltip();
 }
 
 void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long percent)
@@ -568,6 +442,17 @@ void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long perc
         return;
     }
 
+    qulonglong totalSize;
+    auto amlm_ptr = dynamic_cast<AMLMJob*>(kjob);
+    if(amlm_ptr == nullptr)
+    {
+        qWr() << "KJob not an AMLMJob, size is bytes:" << kjob;
+        totalSize = kjob->totalAmount(KJob::Unit::Bytes);
+    }
+    else
+    {
+        totalSize = amlm_ptr->totalSize();
+    }
     auto totalFiles = kjob->totalAmount(KJob::Unit::Files);
 
     QString title = toqstr("PCT") + " (";
@@ -577,8 +462,8 @@ void BaseActivityProgressStatusBarWidget::percent(KJob *kjob, unsigned long perc
         /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
         DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
 
-M_WARNING("TODO: Size is the primary unit, can't get at it");
-        title += QString("%1% of %2").arg(percent).arg(formattedDataSize(m_totalSize, 1, fmt));
+        /// @note Regardless of what you might want, this text is always going to be ~"x% of NN.N GB" (i.e. units == bytes).
+        title += tr("%1% of %2").arg(percent).arg(formattedDataSize(totalSize, 1, fmt));
 
     }
     else if (totalFiles)
@@ -589,7 +474,8 @@ M_WARNING("TODO: Size is the primary unit, can't get at it");
     }
     else
     {
-        title += QString("%1%").arg(percent);
+        // Just percent.
+        title += tr("%1%").arg(percent);
     }
 
     title += ')';
@@ -612,7 +498,7 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 
     qDb() << "SPEED:" << kjob << value;
 
-#if 0
+#if 1
     if(value == 0)
 	{
     	// Stalled.
@@ -620,19 +506,38 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 	}
     else
 	{
-    	const QString speedStr = KJobTrackerFormatters::byteSize(value);
-		if (totalSizeKnown)
+        qulonglong totalSize;
+        qulonglong processedSize;
+        auto amlm_ptr = dynamic_cast<AMLMJob*>(kjob);
+        if(amlm_ptr == nullptr)
+        {
+            qWr() << "KJob not an AMLMJob, size is bytes:" << kjob;
+            totalSize = kjob->totalAmount(KJob::Unit::Bytes);
+            processedSize = kjob->processedAmount(KJob::Unit::Bytes);
+        }
+        else
+        {
+            totalSize = amlm_ptr->totalSize();
+            processedSize = amlm_ptr->processedSize();
+        }
+
+        /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
+        /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
+        DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
+
+        const QString speedStr = formattedDataSize(value, 1, fmt);
+        if (m_is_total_size_known)
 		{
 			const int remaining = 1000 * (totalSize - processedSize) / value;
 			//~ singular %1/s (%2 remaining)
 			//~ plural %1/s (%2 remaining)
-			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining).arg(speedStr).arg(
-									KJobTrackerFormatters::duration(remaining)));
+//			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining).arg(speedStr).arg(
+//									KJobTrackerFormatters::duration(remaining)));
 		}
 		else
 		{
 			// total size is not known
-			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
+//			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
 		}
 	}
 #endif

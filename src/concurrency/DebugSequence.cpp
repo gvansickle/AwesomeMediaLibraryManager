@@ -17,25 +17,16 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @file
- * Master header which includes a number of other helper headers which, in the 21st century,
- * we really shouldn't need.
- */
+#include "DebugSequence.h"
 
-#ifndef SRC_UTILS_THESIMPLESTTHINGS_H_
-#define SRC_UTILS_THESIMPLESTTHINGS_H_
+DebugSequence::DebugSequence()
+{
+	// TODO Auto-generated constructor stub
 
-/// If we're being analyzed by clang-tidy etc.
-#ifdef __clang_analyzer__
+}
 
+DebugSequence::~DebugSequence()
+{
+	// TODO Auto-generated destructor stub
+}
 
-#endif
-
-#include "StringHelpers.h"
-#include "DebugHelpers.h"
-#include "DebugBlock.h"
-#include "ConnectHelpers.h"
-#include "QtCastHelpers.h"
-
-#endif /* SRC_UTILS_THESIMPLESTTHINGS_H_ */

@@ -60,7 +60,6 @@
 
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include "activityprogressmanager/ActivityProgressWidget.h"
-//#include "activityprogressmanager/ActivityProgressDialog.h"
 #include <concurrency/DirectoryScanJob.h>
 
 #endif
@@ -128,71 +127,61 @@ void Experimental::DoExperiment()
     ThreadWeaver::setDebugLevel(true, 10);
 
 //    QUrl dir_url("smb://storey.local/music/");
-    QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey.local,share=music");
+    QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey,share=music");
     KIO::DirectorySizeJob* dirsizejob = KIO::directorySize(dir_url);
     qDb() << "DirSizeJob:"
           << M_NAME_VAL(dirsizejob->detailedErrorStrings())
           << M_NAME_VAL(dirsizejob->capabilities());
-    connect(dirsizejob, &KIO::DirectorySizeJob::result, [=](KJob* kjob){
-        qDb() << "GOT RESULT";
-        if(kjob->error())
-        {
-            kjob->uiDelegate()->showErrorMessage();
-        }
-    });
-    connect(dirsizejob, &KIO::DirectorySizeJob::description, [=](KJob *job,
-            const QString &  	title,
-            const QPair< QString, QString > &  	field1,
-            const QPair< QString, QString > &  	field2){
-        qDb() << "GOT DESCRIPTION";
-        qIn() << "Title:" << title;});
+    dirsizejob->setObjectName("DIRSIZEJOB");
 
     /// Two AMLMJobs
-    AMLMJobPtr dsj(DirectoryScannerAMLMJob::make_shared(this, dir_url,
+    DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(nullptr, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     QUrl dir_url2("file:///home/gary");
-    AMLMJobPtr dsj2(DirectoryScannerAMLMJob::make_shared(this, dir_url2,
+    DirectoryScannerAMLMJobPtr dsj2 = new DirectoryScannerAMLMJob(nullptr, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     /// Another KF5 KIO Job.
     KIO::ListJob* kio_list_kiojob = KIO::listRecursive(dir_url, /*KIO::DefaultFlags*/ KIO::HideProgressInfo, /*includeHidden=*/false);
     connect_or_die(kio_list_kiojob, &KJob::result, this, [=](KJob* kjob){
         qIn() << "KIO::ListJob emitted result" << kjob;
-        AMLMJob::dump_job_info(kjob);
+//        AMLMJob::dump_job_info(kjob);
         ;});
-    connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
-        static long num_entries = 0;
-        num_entries += list.size();
-        qDb() << "ENTRIES:" << num_entries;
-    });
+//    connect_or_die(kio_list_kiojob, &KIO::ListJob::entries, this, [this](KIO::Job *job, const KIO::UDSEntryList &list){
+//        static long num_entries = 0;
+//        num_entries += list.size();
+//        qDb() << "ENTRIES:" << num_entries;
+//    });
+    kio_list_kiojob->setObjectName("LISTRECURSIVEJOB");
 
     /// And one last KF5 KIO job.
     /// "emits the data through the data() signal."
     QUrl web_src_url(QStringLiteral("http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso?_ga=2.204957456.1400403342.1527338037-878124677.1491681087"));
 //    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));
-    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload/*, KIO::HideProgressInfo*/);
+    KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload, KIO::HideProgressInfo);
+    inet_get_job->setObjectName("INET_GET_JOB");
 
-    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
+//    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
     master_job_tracker->registerJob(dirsizejob);
 
-    master_job_tracker->registerJob(dsj.data());
-    master_job_tracker->setAutoDelete(dsj.data(), true);
-    master_job_tracker->setStopOnClose(dsj.data(), false);
+    master_job_tracker->registerJob(dsj);
+    master_job_tracker->setAutoDelete(dsj, true);
+    master_job_tracker->setStopOnClose(dsj, false);
 
-    master_job_tracker->registerJob(dsj2.data());
-    master_job_tracker->setAutoDelete(dsj2.data(), true);
-    master_job_tracker->setStopOnClose(dsj2.data(), false);
+    master_job_tracker->registerJob(dsj2);
+    master_job_tracker->setAutoDelete(dsj2, true);
+    master_job_tracker->setStopOnClose(dsj2, false);
 
     master_job_tracker->registerJob(kio_list_kiojob);
 
     master_job_tracker->registerJob(inet_get_job);
 
     // Shows prog and other signals hooked up to the tracker.
-    dump_qobject(kio_list_kiojob);
+//    dump_qobject(kio_list_kiojob);
 
 //    auto test_job = inet_get_job;
 //    KUiServerJobTracker *tracker3 = new KUiServerJobTracker(MainWindow::instance());
@@ -200,21 +189,25 @@ void Experimental::DoExperiment()
 //    KJobWidgets::setWindow(test_job, MainWindow::instance());
 ////    test_job->setUiDelegate(new KDialogJobUiDelegate());
 //    test_job->setUiDelegate(new KIO::JobUiDelegate());
-    dump_qobject(inet_get_job);
+//    dump_qobject(inet_get_job);
 
-    qIn() << "QUEUE STATE:" << queue->state()->stateName();
+//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
     qDb() << M_NAME_VAL(dsj);
     qDb() << M_NAME_VAL(dsj2);
 
+    // Start all the jobs.
     dirsizejob->start();
+    dsj->start();
+    dsj2->start();
     kio_list_kiojob->start();
+    inet_get_job->start();
 
     // enqueue takes JobPointers (QSharedPtr<>).
 //    queue->enqueue(dsj);//->asTWJobPointer());
 //    queue->enqueue(dsj2);//->asTWJobPointer());
-    queue->stream() << dsj << dsj2;
-    qIn() << "QUEUE STATE:" << queue->state()->stateName();
+//    queue->stream() << dsj << dsj2;
+//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
 #endif
 

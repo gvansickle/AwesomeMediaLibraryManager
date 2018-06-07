@@ -61,6 +61,8 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 /// Stream out a warning of @a cond holds true.
 #define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
 
+#define AMLM_ASSERT_IN_GUITHREAD() do { Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread()); } while(0)
+
 /// From -> To
 //#define AMLM_ASSERT_PTR_IS_CONVERTIBLE(a, b) if(dynamic_cast<std::remove_pointer_t<decltype(b)>>(a) == 0) \
 //    { qCr() << "pointers are not dynamic_cast<> convertible:" << #a ":" << a << #b ":" << b;  Q_ASSERT(0); }

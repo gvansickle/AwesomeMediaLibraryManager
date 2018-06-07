@@ -1,3 +1,6 @@
+
+#if 0
+
 #include "ActivityProgressDialog.h"
 #include "ui_ActivityProgressDialog.h"
 
@@ -90,3 +93,5 @@ void ActivityProgressDialog::kjobCompleted(KJob *pJob)
         qInfo() << "COMPLETE";
     }
 }
+
+#endif

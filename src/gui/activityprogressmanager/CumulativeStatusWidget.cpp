@@ -28,7 +28,7 @@
 
 
 CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
-    : BASE_CLASS(job, tracker, parent)
+    : BASE_CLASS(nullptr, tracker, parent)
 {
     /// @note Requires base class init() to have been called so that sub-widgets are set up.
 
@@ -49,15 +49,6 @@ M_WARNING("TODO: This should depend on contained jobs count/state");
 CumulativeStatusWidget::~CumulativeStatusWidget()
 {
 
-}
-
-void CumulativeStatusWidget::make_connections()
-{
-    qDb() << "CumulativeStatusWidget MAKE_CONNECTIONS";
-    connect(m_cancel_button, &QToolButton::clicked, this, [=]() {
-                    qDb() << "CANCEL BUTTON CLICKED FROM CumulativeStatusWidget";
-                    Q_EMIT cancel_job(nullptr);
-    });
 }
 
 void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)

@@ -17,25 +17,27 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @file
- * Master header which includes a number of other helper headers which, in the 21st century,
- * we really shouldn't need.
- */
-
-#ifndef SRC_UTILS_THESIMPLESTTHINGS_H_
-#define SRC_UTILS_THESIMPLESTTHINGS_H_
-
-/// If we're being analyzed by clang-tidy etc.
-#ifdef __clang_analyzer__
-
-
-#endif
-
-#include "StringHelpers.h"
-#include "DebugHelpers.h"
 #include "DebugBlock.h"
-#include "ConnectHelpers.h"
-#include "QtCastHelpers.h"
 
-#endif /* SRC_UTILS_THESIMPLESTTHINGS_H_ */
+static thread_local int ftl_indent_level = 0;
+static thread_local std::string ftl_indent_str = "";
+
+constexpr int c_indent_level_spaces = 4;
+
+DebugBlock::DebugBlock(const char* function_name) : m_function_name(function_name)
+{
+    ftl_indent_level++;
+    ftl_indent_str.assign(" ", ftl_indent_level*c_indent_level_spaces);
+}
+
+DebugBlock::~DebugBlock()
+{
+    ftl_indent_level--;
+    ftl_indent_str.assign(" ", ftl_indent_level*c_indent_level_spaces);
+}
+
+std::string DebugBlock::get_indent()
+{
+    return ftl_indent_str;
+}
+

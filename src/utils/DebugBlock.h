@@ -17,25 +17,32 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SRC_UTILS_DEBUGBLOCK_H_
+#define SRC_UTILS_DEBUGBLOCK_H_
+
+/// Std C++
+#include <string>
+
 /**
- * @file
- * Master header which includes a number of other helper headers which, in the 21st century,
- * we really shouldn't need.
+ * Intent here is to Bring Debugging Back(tm) to Qt5/KF5.
+ * This class in particular is intended to backfill some of the functionality
+ * of KDE4's KDebug::Block.
+ * https://api.kde.org/4.x-api/kdelibs-apidocs/kdecore/html/classKDebug_1_1Block.html
  */
+class DebugBlock
+{
+public:
+    explicit DebugBlock(const char* function_name);
+	virtual ~DebugBlock();
 
-#ifndef SRC_UTILS_THESIMPLESTTHINGS_H_
-#define SRC_UTILS_THESIMPLESTTHINGS_H_
+protected:
 
-/// If we're being analyzed by clang-tidy etc.
-#ifdef __clang_analyzer__
+    std::string get_indent();
 
+private:
+    const char *m_function_name;
+};
 
-#endif
+#define DEBUGBLOCK() DebugBlock(__PRETTY_FUNCTION__)
 
-#include "StringHelpers.h"
-#include "DebugHelpers.h"
-#include "DebugBlock.h"
-#include "ConnectHelpers.h"
-#include "QtCastHelpers.h"
-
-#endif /* SRC_UTILS_THESIMPLESTTHINGS_H_ */
+#endif /* SRC_UTILS_DEBUGBLOCK_H_ */

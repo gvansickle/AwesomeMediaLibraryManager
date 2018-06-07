@@ -30,8 +30,7 @@
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
-                                   QDirIterator::IteratorFlags flags)
-    : AMLMJob(parent)
+                                   QDirIterator::IteratorFlags flags) : AMLMJob(parent)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
@@ -43,25 +42,16 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &di
     m_dir_filters = filters;
     m_iterator_flags = flags;
 
+    setProgressUnit(KJob::Unit::Directories);
 
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
 }
 
-DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_shared(QObject *parent, const QUrl &dir_url,
-                                    const QStringList &nameFilters,
-                                    QDir::Filters filters,
-                                    QDirIterator::IteratorFlags flags)
-{
-M_WARNING("TODO: NOT SHARED PTR");
-//    return QPointer<DirectoryScannerAMLMJob>::create(parent, dir_url, nameFilters, filters, flags);
-    return DirectoryScannerAMLMJobPtr(new DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags));
-}
-
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
 M_WARNING("TODO: There's a problem with shared ptrs here");
-    qDb() << "DirectoryScannerAMLMJob DELETED:" << this << objectName();
+    qDb() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
 }
 
 void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
@@ -74,20 +64,12 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     /// @warning self: TW:JobPointer is a QSharedPtr<TW::JobInterface>, which inherits from nothing, especially not QObject.
     ///          So "T qobject_cast(QObject *object)" in particular won't work here.
 
+    Q_UNUSED(self);
+
+    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
-
-    // This unfortunate dance is needed to get a QPointer (which is really a QWeakPointer) to a dynamically-casted
-    // AMLMJob, while not losing/screwing up the ref counts.  Hopefully.
-
-M_WARNING("TODO");
-//    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPointerDynamicCast<DirectoryScannerAMLMJob>(self);//= qSharedPtrToQPointerDynamicCast<AMLMJob>(self);
-    DirectoryScannerAMLMJobPtr dirscanjob_self = qSharedPtrToQPointerDynamicCast<DirectoryScannerAMLMJob>(self);
-
-    setProgressUnit(KJob::Unit::Directories);
-
-    qDb() << "IN RUN, " << M_NAME_VAL(dirscanjob_self);
-    Q_CHECK_PTR(dirscanjob_self);
 
     // Create the QDirIterator.
 	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
@@ -154,8 +136,8 @@ M_WARNING("TODO");
             // of files potentially in this directory.
             num_possible_files = num_files_found_so_far + file_info.dir().count();
 
-            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
             setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
+            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
             setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
         }
         else if(file_info.isFile())

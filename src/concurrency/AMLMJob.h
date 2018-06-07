@@ -51,7 +51,12 @@
  *    - Calls job()->defaultEnd()
  *    - if(!success) emits failed(self)
  *    - Always emits done(self).
- *  - autoDelete() support.
+ *  - autoDelete() support (via TW::IdDecorator), appears to be completely controlled by
+ *    the decorator though:
+ *     // Auto-delete the decoratee or not.
+ *     void setAutoDelete(bool onOff);
+ *     // Will the decoratee be auto-deleted?
+ *     bool autoDelete() const;
  */
 
 /// Qt5
@@ -62,11 +67,13 @@
 #include <QTime>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QSemaphore>
 
 /// KF5
 #include <KJob>
 #include <KJobUiDelegate>
 #include <ThreadWeaver/Job>
+#include <ThreadWeaver/QObjectDecorator>
 #include <ThreadWeaver/QueueStream>
 
 /// Ours
@@ -75,6 +82,8 @@
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
 using AMLMJobPtr = QPointer<AMLMJob>;
+
+Q_DECLARE_METATYPE(AMLMJobPtr);
 
 /**
 * Where Does The State Live?
@@ -237,7 +246,7 @@ Q_SIGNALS:
 
     /// @}
 
-    /// Documenetd KJob signals, quite a few:
+    /// @name Public KJob signals, quite a few:
     ///
 	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
 
@@ -249,10 +258,9 @@ Q_SIGNALS:
     // void finished (KJob *job)
 
     // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
+    // void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
 
-    // void 	percent (KJob *job, unsigned long percent)
-	// void 	processedAmount (KJob *job, KJob::Unit unit, qulonglong amount)
-	// void 	processedSize (KJob *job, qulonglong size)
+
     // void result (KJob *job)
 	// void 	resumed (KJob *job)
     /// KJob::Speed
@@ -264,7 +272,9 @@ Q_SIGNALS:
 
 	// void 	totalAmount (KJob *job, KJob::Unit unit, qulonglong amount)
 	// void 	totalSize (KJob *job, qulonglong size)
-	// void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
+    // void 	processedAmount (KJob *job, KJob::Unit unit, qulonglong amount)
+    // void 	processedSize (KJob *job, qulonglong size)
+    // void 	percent (KJob *job, unsigned long percent)
 
     /// KJobs are supported by KJobWidgets
 	/// https://api.kde.org/frameworks/kjobwidgets/html/namespaceKJobWidgets.html
@@ -280,7 +290,7 @@ Q_SIGNALS:
     //    *  - description()
     //    *  - infoMessage()
     //    *  - totalAmount()
-    //    *  - processedAmount()
+    //    *  - processedAmount() ///< @note KJob's xxxSize() signals aren't reflected in this interface.
     //    *  - percent()
     //    *  - speed()
     //    *
@@ -292,6 +302,8 @@ Q_SIGNALS:
     //    * @endcode
     //    *
     //    * so that you won't have to manually call unregisterJob().
+
+
 
 protected:
     /// Protected KJob-like constructor.
@@ -308,7 +320,6 @@ public:
     /// Destructor.
     ~AMLMJob() override;
 
-
     /// @name TW::Job public method overrides.
     /// @{
 
@@ -324,10 +335,10 @@ public:
      * not be executed after a failure, it is important to dequeue those before deleting the failed Job. A Sequence may be
      * helpful for that purpose."
      */
-    bool success() const override { return m_success; }
+    bool success() const override;
 
     /**
-     * Abort the execution of the job.
+     * Abort the execution of the TW::Job.
      * Call this method to ask the Job to abort if it is currently executed.
      *
      * @note This method should return immediately, not after the abort has completed.
@@ -365,11 +376,14 @@ public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
     /// Call this in your derived tw::run() function to see if you should cancel the loop.
     bool wasCancelRequested();
 
-    /// Derived run() must call this before exiting.  FBO the TW::success() method.
+    /// Derived tw::run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
-    /// Derived run() must call this before exiting.  FBO the onTWFailed() method to determine fail reason.
+    /// Derived tw::run() must call this before exiting.  FBO the onTWFailed() method to determine fail reason.
     void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
     /// @}
+
+    virtual qulonglong totalSize() const;
+    virtual qulonglong processedSize() const;
 
 public:
     /// Dump info about the given KJob.
@@ -539,10 +553,12 @@ protected:
     /// @name New protected methods
     /// @{
 
+    /// @warning For use only by KJob
     /// Give derived classes write access to progressUnit.
     /// Sets the Unit which will be used for percent complete and total/processedSize calculations.
     /// Defaults to KJob::Unit::Bytes.
     void setProgressUnit(KJob::Unit prog_unit);
+    KJob::Unit progressUnit() const;
 
     virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
     virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
@@ -587,6 +603,10 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(AMLMJob)
 
+//    ThreadWeaver::QJobPointer m_the_tw_job;
+
+    bool m_i_was_deleted = false;
+
 	/// Mutex and wait condition for cancel/pause/resume.
     /// Mutex is created in unlocked state, non-recursive.
 	QMutex m_cancel_pause_resume_mutex;
@@ -595,6 +615,7 @@ private:
     /// No need to be atomic due to the mutex/wc.
     bool m_flag_cancel {false};
 
+    QAtomicInt m_tw_got_done_or_fail { 0 };
     QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
 
@@ -603,8 +624,5 @@ private:
 };
 
 //Q_DECLARE_METATYPE(AMLMJob); /// @todo need default constructor and copy constructor.
-Q_DECLARE_METATYPE(AMLMJobPtr);
-
-
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */

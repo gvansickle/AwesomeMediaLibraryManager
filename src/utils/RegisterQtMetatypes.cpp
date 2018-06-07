@@ -19,6 +19,9 @@
 
 #include "RegisterQtMetatypes.h"
 
+#include <ThreadWeaver/Job>
+#include <KJob>
+
 #include <logic/LibraryEntry.h>
 #include <logic/PlaylistModelItem.h>
 #include <utils/Fraction.h>
@@ -49,6 +52,12 @@
  */
 void RegisterQtMetatypes()
 {
+	// ThreadWeaver types.
+    qRegisterMetaType<ThreadWeaver::Job*>( "ThreadWeaver::Job*" );
+    // KJob types.
+    qRegisterMetaType<KJob*>( "KJob*" );
+
+
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
 	qRegisterMetaType<LibraryEntry>();
 	qRegisterMetaType<PlaylistModelItem>();

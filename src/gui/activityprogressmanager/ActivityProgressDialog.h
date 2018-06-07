@@ -1,6 +1,8 @@
 #ifndef EXPDIALOG_H
 #define EXPDIALOG_H
 
+#if 0
+
 #include <QDialog>
 #include <QAbstractItemView>
 #include <QStyledItemDelegate>
@@ -40,5 +42,6 @@ private:
     KWidgetJobTracker *m_JobTracker;
 };
 
+#endif
 
 #endif // EXPDIALOG_H

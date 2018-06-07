@@ -53,7 +53,7 @@ class BaseActivityProgressStatusBarWidget;
 class ActivityProgressStatusBarTracker;
 using ActivityProgressStatusBarTrackerPtr = ActivityProgressStatusBarTracker*;
 
-using TSActiveActivitiesMap = ThreadsafeMap<KJob*, QPointer<BaseActivityProgressStatusBarWidget>>;
+using TSActiveActivitiesMap = ThreadsafeMap<QPointer<KJob>, QPointer<BaseActivityProgressStatusBarWidget>>;
 
 
 /**
@@ -84,17 +84,34 @@ Q_SIGNALS:
     /// @name Inherited from KAbstractWidgetJobTracker
     /// @{
 
-    /// KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
-//    void stopped(KJob *job);
-    /// KAbstractWidgetJobTracker::slotSuspend(KJob*) emits this after calling job->suspend().
-//    void suspend(KJob *job);
-    /// KAbstractWidgetJobTracker::slotResume(KJob*) emits this after calling job->resume().
-//    void resume(KJob *job);
+    /**
+     * "Emitted when the user aborted the operation"
+     * KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
+     */
+    void stopped(KJob *job);
+    /**
+     * KAbstractWidgetJobTracker::slotSuspend(KJob*) emits this after calling job->suspend().
+     * "Emitted when the user suspended the operation"
+     */
+    void suspend(KJob *job);
+    /**
+     * KAbstractWidgetJobTracker::slotResume(KJob*) emits this after calling job->resume().
+     * "Emitted when the user resumed the operation".
+     */
+    void resume(KJob *job);
 
     /// @}
 
-    // For signalling when the number of tracked jobs changes.
+    /// For signalling when the number of tracked jobs changes.
     void number_of_jobs_changed(long long new_num_jobs);
+
+    /// @name Internal signals
+    /// @{
+
+    /// FBO cancelAll().
+    void INTERNAL_SIGNAL_slotStop(KJob* kjob);
+
+    /// @}
 
 public:
 	/**
@@ -136,6 +153,9 @@ public:
     /// Override of pure virtual base class version.  Takes a raw KJob*.
     QWidget* widget(KJob* job) override;
 
+    ///
+    QWidget* get_status_bar_widget();
+
     /// Adapted from KWidgetJobTracker::Private, sort of.
     /// There's some sort of weirdness going on with these in KAbstractWidgetJobTracker::Private.
     /// Comment reads:
@@ -158,7 +178,8 @@ public:
 public Q_SLOTS:
 
     /**
-     * Register a KJob (or AMLMJob or any other derived job) with this tracker.
+     * Register a KJob, AMLMJob, KIO::Job, or any other derived job with this tracker.
+     *
      * Connects the signals from the passed KJob* to slots in this class of the same name.
      *
      * At some point calls the base class impl, KAbstractWidgetJobTracker.
@@ -188,7 +209,16 @@ public Q_SLOTS:
      *               this, SLOT(processedAmount(KJob*,KJob::Unit,qulonglong)));
      * @endcode
      *
-     * When we get into KIO Jobs, they start to use KJob signals and slots which aren't automatically connected by the tracker
+     * @note KIO::Jobs
+     * When we get into KIO Jobs, there are a few things to be aware of:
+     *
+     * - They appear to registerJob() themselves with KIO::getJobTracker() automatically
+     *   if the HideProgressInfo flag is not given to the job's constructor.
+     *   This would be OK, but the registration doesn't seem to work properly; i.e. cancel buttons
+     *   etc. don't seem to get hooked up unless we manually register the job instead.
+     *   Possibly because it's *KJobTrackerInterface* *getJobTracker();???
+     *
+     * - They start to use KJob signals and slots which aren't automatically connected by the tracker
      * for some reason:
      *  // Emitted when we know the size of this job (data size in bytes for transfers,
      *  // number of entries for listings, etc).  Private signal, emitted by calling setTotalAmount().
@@ -216,12 +246,10 @@ public Q_SLOTS:
      */
     void unregisterJob(KJob *kjob) override;
 
-    /// FBO closeNow().
-    /// This is emitted by child progress widgets in their "closeNow()" members.
-    void SLOT_removeJobAndWidgetFromMap(KJob *ptr, QWidget* widget);
-
-    /// FBO closeEvent()
-    void SLOT_directCallSlotStop(KJob* kjob);
+    /**
+     * Signalled by the destroyed() signal from a registered KJob*.
+     */
+    void SLOT_onKJobDestroyed(QObject* kjob);
 
 protected Q_SLOTS:
 
@@ -312,12 +340,17 @@ protected Q_SLOTS:
     /// @todo There's a bunch of logic in here (tracking number of completed units, speed, etc.) which probably
     /// should be pushed down into a base class.
 
+
+    /// @name The following slots are inherited from KAbstractWidgetJobTracker and/or KJobTrackerInterface.
+    /// @{
+
     /**
-     * The following slots are inherited from KAbstractWidgetJobTracker etc.
+     * Called when a job is finished, in any case.
+     * It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
+     * KAbstractWidgetJobTracker implementation does nothing.
+     *
+     * @override KJobTrackerInterface, KAbstractWidgetJobTracker.
      */
-    /// Called when a job is finished, in any case.
-    /// It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
-    /// KAbstractWidgetJobTracker implementation does nothing.
     void finished(KJob *job) override;
 //    void suspended(KJob *job) override;
 //    void resumed(KJob *job) override;
@@ -349,18 +382,13 @@ protected Q_SLOTS:
      * - public qulonglong processedAmount(Unit unit) const;
      * - var in KJobPrivate.
      */
+    /// Slot from kjob indicating that setTotalAmount() has been called and d->totalAmount[unit] has
+    /// been updated.
     void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount) override;
     /**
      * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;
-
-    /**
-     * Slots for "Size" progress.
-     */
-    virtual void totalSize(KJob *kjob, qulonglong amount);
-
-    virtual void processedSize(KJob* kjob, qulonglong amount);
 
     /**
      * Directly supported by KJob::percent() (var in KJobPrivate).
@@ -369,43 +397,73 @@ protected Q_SLOTS:
     void percent(KJob *job, unsigned long percent) override;
     void speed(KJob *job, unsigned long value) override;
 
-    /// @}
-
-    /// KAbstractWidgetJobTracker implementation does nothing.
+    /**
+     * "This method is called when the widget should be cleaned (after job is finished).
+     * redefine this for custom behavior."
+     * KAbstractWidgetJobTracker implementation does nothing.
+     */
     void slotClean(KJob *job) override;
 
-    // These all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
+    // These next three slotXxxx() slots all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
     // depend on the KJob supporting kill/suspend/resume.
-    /// Calls job->resume() and emits resume(job).
+
+    /**
+     * "This [protected Q_SLOT] should be called for correct cancellation of IO operation
+     *  Connect this to the progress widgets buttons etc."
+     *
+     * Calls job->kill(KJob::EmitResult) and emits stopped(job).
+     * This override just calls base class.
+     *
+     * @override KAbstractWidgetJobTracker.
+     */
+    void slotStop(KJob *kjob) override;
+
+    /**
+     * "This method should be called for pause/resume
+     * Connect this to the progress widgets buttons etc."
+     * Calls job->resume() and emits resume(job).
+     */
 //    void slotResume(KJob *job) override;
-    /// Calls job->kill(KJob::EmitResult) and emits stopped(job).
-//    void slotStop(KJob *job) override;
-    /// Calls job->suspend() and emits suspend(job).
+    /**
+     * "This method should be called for pause/resume
+     * Connect this to the progress widgets buttons etc."
+     * Calls job->suspend() and emits suspend(job).
+     */
 //    void slotSuspend(KJob *job) override;
+
+    /// @} /// END Inherited from KAbstractWidgetJobTracker and/or KJobTrackerInterface.
+
+
+    /// @name Ours: Protected slots for KJob's "Size" progress.
+    /// @{
+    virtual void totalSize(KJob *kjob, qulonglong amount);
+    virtual void processedSize(KJob* kjob, qulonglong amount);
+    /// @}
 
 protected: // Methods
 
-    /// Templated job->widget lookup function.
+    /// Templated kjob->widget lookup function.
     template <typename JobPointerType, typename Lambda>
-    void with_widget_or_skip(JobPointerType job, Lambda l) const
+    inline void with_widget_or_skip(JobPointerType kjob, Lambda l) const
     {
-        Q_CHECK_PTR(job);
+        Q_CHECK_PTR(kjob);
         // Check if the caller wanted the cumulative widget.
         /// @todo Maybe put this in the regular map, and just be careful not to delete it on e.g. clearAll().
-        if(job == m_cumulative_status_job)
+        if(kjob == m_cumulative_status_job)
         {
             l(m_cumulative_status_widget);
             return;
         }
 
-        QPointer<BaseActivityProgressStatusBarWidget> widget = m_amlmjob_to_widget_map.value(job, nullptr);
+        QPointer<BaseActivityProgressStatusBarWidget> widget = m_amlmjob_to_widget_map.value(kjob, nullptr);
         if(widget)
         {
             l(widget);
             return;
         }
 
-        qWr() << "NO WIDGET FOUND FOR JOB:" << job;
+        qWr() << "NO WIDGET FOUND FOR JOB:" << kjob;
+//        Q_ASSERT(0);
     }
 
     /**
@@ -413,12 +471,17 @@ protected: // Methods
      */
     bool is_cumulative_status_job(KJob* kjob);
 
+    void make_internal_connections();
+
+    /// Most signal/slot connections will have already been made by the base classes.
     void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
 
-    void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
+    /**
+     * Only call this from unregisterJob() and ??? with the mutex locked.
+     */
+    void INTERNAL_unregisterJob(KJob *kjob);
 
-public: /// FBO Widget to call slotStop() directly.
-    void directCallSlotStop(KJob *kjob);
+    void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
 
 protected:
 
@@ -426,11 +489,11 @@ protected:
 
 protected: // Variable members
 
+    /// Mutex for protecting the tracked job state.
+    QMutex m_tracked_job_state_mutex;
+
     /// Map of all registered sub-jobs (KJob*) to sub-job-widgets (QPointer<BaseActivityProgressStatusBarWidget>'s).
     TSActiveActivitiesMap m_amlmjob_to_widget_map;
-
-    /// Mutex for protecting the public Thread-Safe Interface.
-    QMutex m_tsi_mutex;
 
     /// The QWidget parent of this Tracker, not necessarily it's widget.
     QPointer<QWidget> m_parent_widget {nullptr};

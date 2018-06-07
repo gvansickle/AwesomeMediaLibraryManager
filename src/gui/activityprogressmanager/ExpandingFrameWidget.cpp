@@ -63,7 +63,6 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) :
 
 ExpandingFrameWidget::~ExpandingFrameWidget()
 {
-    // TODO Auto-generated destructor stub
 }
 
 void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
@@ -98,15 +97,15 @@ QSize ExpandingFrameWidget::sizeHint() const
     // parent is also the status bar widget.
     auto sbw = parentWidget();
 
-    qDb() << "PARENT SIZE HINT:" << sbw->sizeHint();
+//    qDb() << "PARENT SIZE HINT:" << sbw->sizeHint();
 
     return QSize(sbw->width(), 10);
 }
 
 void ExpandingFrameWidget::reposition()
 {
-    qDb() << "PARENT:" << parentWidget();
-    qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
+//    qDb() << "PARENT:" << parentWidget();
+//    qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
 
 //    QSize s = sizeHint();
 //    s.setWidth(parentWidget()->width());

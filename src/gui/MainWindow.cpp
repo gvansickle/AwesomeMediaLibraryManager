@@ -308,7 +308,7 @@ M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this b
     auto sb = statusBar();
     Q_CHECK_PTR(sb);
     m_activity_progress_tracker = new ActivityProgressStatusBarTracker(sb);
-    statusBar()->addPermanentWidget(m_activity_progress_tracker->widget(nullptr));
+    statusBar()->addPermanentWidget(m_activity_progress_tracker->get_status_bar_widget());
 
 M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
 
