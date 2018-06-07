@@ -170,6 +170,7 @@ set(HEADER_FILES
 	utils/QtCastHelpers.h
 	utils/TheSimplestThings.h
 	logic/CueSheetParser.h
+	logic/CueSheet.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
 	logic/proxymodels/ModelHelpers.h
@@ -215,6 +216,7 @@ set(SOURCE_FILES
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
 	logic/CueSheetParser.cpp
+	logic/CueSheet.cpp
 	logic/ModelUserRoles.cpp
 	logic/proxymodels/SelectionFilterProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
