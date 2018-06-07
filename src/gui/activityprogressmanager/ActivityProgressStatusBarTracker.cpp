@@ -77,6 +77,9 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
     connect_or_die(this, &ActivityProgressStatusBarTracker::number_of_jobs_changed,
                    m_cumulative_status_widget, &CumulativeStatusWidget::slot_number_of_jobs_changed);
+
+    // Make our internal signal->slot connections.
+    make_internal_connections();
 }
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
@@ -405,6 +408,18 @@ bool ActivityProgressStatusBarTracker::is_cumulative_status_job(KJob *kjob)
     return false;
 }
 
+void ActivityProgressStatusBarTracker::make_internal_connections()
+{
+    // The tracker emits stopped(KJob*) when the user cancels a job through slotStop(KJob*).
+    connect_or_die(this, &ActivityProgressStatusBarTracker::stopped, this, [=](KJob* kjob){
+        qDb() << "STOPPED BY USER:" << kjob;
+                ;});
+
+    // Connect our internal slotStop()-was-emitted signal INTERNAL_SIGNAL_slotStop and re-emit FBO cancelAll().
+    connect_or_die(this, &ActivityProgressStatusBarTracker::INTERNAL_SIGNAL_slotStop,
+                   this, &ActivityProgressStatusBarTracker::slotStop);
+}
+
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
 {
     // Most signal/slot connections will have already been made by the base classes.
@@ -420,11 +435,7 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
 
     // Connect the widget's "user wants to cancel" signal to this tracker's slotStop(KJob*) slot.
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
-    // Likewise, connect our internal slotStop() signal FBO cancelAll().
-    connect_or_die(this, &ActivityProgressStatusBarTracker::INTERNAL_SIGNAL_slotStop,
-                   this, &ActivityProgressStatusBarTracker::slotStop);
 
-    /// @todo Connect this tracker's stopped(KJob*) signal to... not sure we need it.
 
     // Connect our Size signals.
     connect_or_die(kjob, &KJob::totalSize, this, &ActivityProgressStatusBarTracker::totalSize);

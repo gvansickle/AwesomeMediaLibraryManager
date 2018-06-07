@@ -85,8 +85,8 @@ Q_SIGNALS:
     /// @{
 
     /**
-     * KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
      * "Emitted when the user aborted the operation"
+     * KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
      */
     void stopped(KJob *job);
     /**
@@ -344,9 +344,13 @@ protected Q_SLOTS:
     /// @name The following slots are inherited from KAbstractWidgetJobTracker and/or KJobTrackerInterface.
     /// @{
 
-    /// Called when a job is finished, in any case.
-    /// It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
-    /// KAbstractWidgetJobTracker implementation does nothing.
+    /**
+     * Called when a job is finished, in any case.
+     * It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
+     * KAbstractWidgetJobTracker implementation does nothing.
+     *
+     * @override KJobTrackerInterface, KAbstractWidgetJobTracker.
+     */
     void finished(KJob *job) override;
 //    void suspended(KJob *job) override;
 //    void resumed(KJob *job) override;
@@ -403,10 +407,15 @@ protected Q_SLOTS:
     // These next three slotXxxx() slots all seem to have reasonable implementations in KAbstractWidgetJobTracker, and only
     // depend on the KJob supporting kill/suspend/resume.
 
-    /// "This method should be called for correct cancellation of IO operation
-    ///  Connect this to the progress widgets buttons etc."
-    /// Calls job->kill(KJob::EmitResult) and emits stopped(job).
-    /// This override just calls base class.
+    /**
+     * "This [protected Q_SLOT] should be called for correct cancellation of IO operation
+     *  Connect this to the progress widgets buttons etc."
+     *
+     * Calls job->kill(KJob::EmitResult) and emits stopped(job).
+     * This override just calls base class.
+     *
+     * @override KAbstractWidgetJobTracker.
+     */
     void slotStop(KJob *kjob) override;
 
     /**
@@ -461,6 +470,8 @@ protected: // Methods
      * Returns true if kjob is the "master" KJob.
      */
     bool is_cumulative_status_job(KJob* kjob);
+
+    void make_internal_connections();
 
     /// Most signal/slot connections will have already been made by the base classes.
     void make_connections_with_newly_registered_job(KJob* kjob, QWidget* wdgt);
