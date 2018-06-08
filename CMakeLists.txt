@@ -93,7 +93,7 @@ include(ECMEnableSanitizers)
 # KDE macros.
 # @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
 set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE) ##< Don't define the deprecated KDEInstallDirs.
-set(ENABLE_CLAZY ON)
+#set(ENABLE_CLAZY ON)
 set(APPLE_FORCE_X11 ON)
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 include(KDECMakeSettings)
@@ -113,10 +113,14 @@ include(KDECMakeSettings)
 #list(REMOVE_DUPLICATES CMAKE_CXX_FLAGS_DEBUG)
 
 # Set some extra debug flags early.
-set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments")
-# if(TRUE)#CLANG)
-# 	string(APPEND ${AMLM_MAX_DEBUG_FLAGS} -Wthread-safety)
-# endif()
+# See https://cmake.org/cmake/help/v3.11/variable/CMAKE_LANG_COMPILER_ID.html
+if(${CMAKE_CXX_COMPILER_ID} EQUAL Clang)
+	message(STATUS "DETECTED COMPILER IS CLANG")
+	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -Wthread-safety")
+elseif(${CMAKE_CXX_COMPILER_ID} EQUAL GNU)
+	message(STATUS "DETECTED COMPILER IS GCC")
+	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments")
+endif()
 set(CMAKE_CXX_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
 set(CMAKE_C_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
 
@@ -474,9 +478,11 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 cmake_print_variables(CMAKE_CXX_COMPILER)
+cmake_print_variables(CMAKE_CXX_FLAGS)
+cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
-message_cpack_summary()
+#message_cpack_summary()
 message(STATUS "======================== END CMAKE SUMMARY ====================================")
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

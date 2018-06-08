@@ -20,6 +20,13 @@
 #ifndef SRC_LOGIC_CUESHEET_H_
 #define SRC_LOGIC_CUESHEET_H_
 
+#include <config.h>
+
+/// Std C++
+#include <vector>
+
+#include "TrackMetadata.h"  ///< Per-track cue sheet info
+
 /*
  *
  */
@@ -28,6 +35,15 @@ class CueSheet
 public:
 	CueSheet();
 	virtual ~CueSheet();
+
+protected:
+
+    // File info
+    /// @todo More that one file per sheet?
+
+    // Per-Track info
+    std::vector<TrackMetadata> m_tracks;
+
 };
 
 #endif /* SRC_LOGIC_CUESHEET_H_ */
