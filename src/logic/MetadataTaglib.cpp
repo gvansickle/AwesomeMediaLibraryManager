@@ -306,6 +306,17 @@ bool MetadataTaglib::read(QUrl url)
     if(!cuesheet_str.empty())
     {
         auto cuesheet = CueSheet::TEMP_parse_cue_sheet_string(cuesheet_str, m_length_in_milliseconds);
+        Q_ASSERT(cuesheet);
+        if(cuesheet)
+        {
+            m_has_cuesheet = true;
+            m_num_tracks_on_media = cuesheet->get_total_num_tracks();
+
+            /// @todo MAYBE TEMP?
+            // Copy the cuesheet track info.
+            m_tracks = cuesheet->to_track_map();
+            Q_ASSERT(m_tracks.size() > 0);
+        }
 
 #else
 	// Did we find a cue sheet?

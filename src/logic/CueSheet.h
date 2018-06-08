@@ -26,6 +26,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <map>
 
 /// Qt5
 class QUrl;
@@ -51,6 +52,21 @@ public:
 	static std::unique_ptr<CueSheet> read_associated_cuesheet(const QUrl& url);
 
     static std::unique_ptr<CueSheet> TEMP_parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
+
+    /**
+     * Returns the parsed TrackMetadata entries as a std::map.
+     *
+     * @warning MAYBE TEMP?
+     */
+    std::map<int, TrackMetadata> to_track_map() const;
+
+    /// @name Accessors
+    /// @{
+
+    /// Return the total number of tracks reported by this cuesheet.
+    uint8_t get_total_num_tracks() const;
+
+    /// @}
 
     /// @todo TEMP
 //protected:
@@ -83,7 +99,7 @@ private:
      * @see https://xiph.org/flac/format.html#metadata_block_cuesheet
      * ""
      */
-    uint8_t m_num_tracks_on_media;
+    uint8_t m_num_tracks_on_media {0};
 
     /**
      * Cue sheet information on each track.

@@ -56,9 +56,37 @@ std::unique_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::strin
 {
     auto retval = std::make_unique<CueSheet>();
 
-    retval->parse_cue_sheet_string(cuesheet_text, total_length_in_ms);
+    bool parsed_ok = retval->parse_cue_sheet_string(cuesheet_text, total_length_in_ms);
+
+    if(!parsed_ok)
+    {
+        // Parsing failed, make sure we return an empty ptr.
+        return std::make_unique<CueSheet>();
+    }
 
     return retval;
+}
+
+std::map<int, TrackMetadata> CueSheet::to_track_map() const
+{
+    std::map<int, TrackMetadata> retval;
+
+    for(auto entry : m_tracks)
+    {
+        // CD tracks in a cuesheet are numbered 01 to 99.
+        if(entry.m_track_number != 0)
+        {
+            qDb() << "MAPPING TRACK:" << entry.m_track_number << entry.m_total_track_number;
+            retval[entry.m_track_number] = entry;
+        }
+    }
+
+    return retval;
+}
+
+uint8_t CueSheet::get_total_num_tracks() const
+{
+    return m_num_tracks_on_media;
 }
 
 bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
@@ -127,7 +155,7 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
             tm.m_length_post_gap = track_get_zero_post(t);
             tm.m_isrc = tostdstr(track_get_isrc(t));
             qDb() << "Track info:" << tm.toStdString();
-            // Using .at() for bounds checking.
+            // Using .at() here for the bounds checking.
             m_tracks.at(track_num) = tm;
         }
 
