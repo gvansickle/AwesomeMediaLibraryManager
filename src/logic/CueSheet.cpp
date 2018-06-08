@@ -52,6 +52,15 @@ std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url)
     return retval;
 }
 
+std::unique_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t total_length_in_ms)
+{
+    auto retval = std::make_unique<CueSheet>();
+
+    retval->parse_cue_sheet_string(cuesheet_text, total_length_in_ms);
+
+    return retval;
+}
+
 bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
 {
     // Try to parse the cue sheet we found with libcue.
@@ -72,15 +81,19 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
         // Libcue parsed it, let's extract what we need.
 
         m_num_tracks_on_media = cd_get_ntrack(cd);
-        //qDebug() << "Num Tracks:" << m_num_tracks;
+        qDebug() << "Num Tracks:" << m_num_tracks_on_media;
+
+        /// @todo Assert that num tracks == max track num.
+        m_tracks.resize(m_num_tracks_on_media+1);
+
         if(m_num_tracks_on_media < 2)
         {
-            qWarning() << "Num tracks is less than 2:" << m_num_tracks_on_media;
+            qWr() << "Num tracks is less than 2:" << m_num_tracks_on_media;
         }
         for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
         {
             Track* t = cd_get_track(cd, track_num);
-            //qDebug() << "Track filename:" << track_get_filename(t);
+            qDebug() << "Track filename:" << track_get_filename(t);
             Cdtext* cdt = track_get_cdtext(t);
             TrackMetadata tm;
             tm.m_PTI_TITLE = tostdstr(cdtext_get(PTI_TITLE, cdt));
@@ -93,12 +106,12 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
                 tm.m_indexes.push_back(ti);
                 if((ti==-1) && (i>1))
                 {
-                    qDebug() << "Found last index: " << i-1;
+                    qDb() << "Found last index: " << i-1;
                     break;
                 }
                 else
                 {
-                    //qDebug() << " Index:" << ti;
+                    qDb() << " Index:" << ti;
                 }
             }
             tm.m_track_number = track_num;
@@ -113,8 +126,9 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
             tm.m_length_pre_gap = track_get_zero_pre(t);
             tm.m_length_post_gap = track_get_zero_post(t);
             tm.m_isrc = tostdstr(track_get_isrc(t));
-            //qDebug() << "Track info:" << tm.toStdString();
-            m_tracks[track_num] = tm;
+            qDb() << "Track info:" << tm.toStdString();
+            // Using .at() for bounds checking.
+            m_tracks.at(track_num) = tm;
         }
 
         // Delete the Cd struct.

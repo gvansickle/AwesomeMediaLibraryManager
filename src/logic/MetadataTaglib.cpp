@@ -42,7 +42,9 @@
 #include <taglib/flacfile.h>
 #include <taglib/flacpicture.h>
 
-#include <logic/CueSheetParser.h>
+//#include <logic/CueSheetParser.h>
+#include <logic/CueSheet.h>
+
 
 #include <QDebug>
 #include "utils/DebugHelpers.h"
@@ -299,6 +301,13 @@ bool MetadataTaglib::read(QUrl url)
 		qWarning() << "AudioProperties was null";
 	}
 
+#if 1 // New CueSheet
+    // Did we find an embedded cue sheet?
+    if(!cuesheet_str.empty())
+    {
+        auto cuesheet = CueSheet::TEMP_parse_cue_sheet_string(cuesheet_str, m_length_in_milliseconds);
+
+#else
 	// Did we find a cue sheet?
 	if(!cuesheet_str.empty())
 	{
@@ -362,6 +371,7 @@ bool MetadataTaglib::read(QUrl url)
 			// All the other libcue structs we've opened are deleted with it.
 			cd_delete(cd);
 		}
+#endif
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
 		qDebug() << "Scanning for gaplessness...";

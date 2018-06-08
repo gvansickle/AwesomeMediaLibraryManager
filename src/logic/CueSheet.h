@@ -50,7 +50,10 @@ public:
      */
 	static std::unique_ptr<CueSheet> read_associated_cuesheet(const QUrl& url);
 
-protected:
+    static std::unique_ptr<CueSheet> TEMP_parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
+
+    /// @todo TEMP
+//protected:
 
     /**
      * Populate the data of this CueSheet by parsing the given cuesheet_text.
