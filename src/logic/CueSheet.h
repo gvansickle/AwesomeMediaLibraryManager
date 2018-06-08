@@ -24,11 +24,18 @@
 
 /// Std C++
 #include <vector>
+#include <memory>
+#include <cstdint>
 
-#include "TrackMetadata.h"  ///< Per-track cue sheet info
+/// Qt5
+class QUrl;
 
-/*
- *
+//#include "TrackMetadata.h"  ///< Per-track cue sheet info
+class TrackMetadata;
+
+/**
+ * CD cue sheet class.
+ * @link http://wiki.hydrogenaud.io/index.php?title=Cue_sheet
  */
 class CueSheet
 {
@@ -36,12 +43,48 @@ public:
 	CueSheet();
 	virtual ~CueSheet();
 
+    /**
+     * Factory function.
+     * Given a URL to an audio file, read the cue sheet either from the metadata in
+     * the file itself or from a *.cue file in the same directory.
+     */
+	static std::unique_ptr<CueSheet> read_associated_cuesheet(const QUrl& url);
+
 protected:
+
+    /**
+     * Populate the data of this CueSheet by parsing the given cuesheet_text.
+     *
+     * @return true if parsing succeeded, false otherwise.
+     */
+    bool parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
+
+private:
 
     // File info
     /// @todo More that one file per sheet?
 
-    // Per-Track info
+    /// @name Mandatory Info
+    /// @{
+
+    /**
+     * "Name and type of at least one file being indexed"
+     */
+    /// @todo
+
+
+    /// @}
+
+    /**
+     * Total number of tracks.
+     * @see https://xiph.org/flac/format.html#metadata_block_cuesheet
+     * ""
+     */
+    uint8_t m_num_tracks_on_media;
+
+    /**
+     * Cue sheet information on each track.
+     */
     std::vector<TrackMetadata> m_tracks;
 
 };
