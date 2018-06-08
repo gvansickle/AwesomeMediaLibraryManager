@@ -59,7 +59,6 @@
 #include "MainWindow.h"
 
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
-#include "activityprogressmanager/ActivityProgressWidget.h"
 #include <concurrency/DirectoryScanJob.h>
 
 #endif

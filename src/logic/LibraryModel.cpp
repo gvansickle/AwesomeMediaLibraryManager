@@ -19,7 +19,6 @@
 
 /** @file LibraryModel. */
 
-#include <gui/activityprogressmanager/ActivityProgressWidget.h>
 #include "LibraryModel.h"
 
 #include "LibraryRescanner.h"
