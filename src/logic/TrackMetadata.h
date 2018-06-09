@@ -37,8 +37,8 @@ public:
 	std::string toStdString() const;
 
 	long m_track_number {0};
-	long m_total_track_number {0};
-	Frames m_length_pre_gap {0};
+
+    Frames m_length_pre_gap {0};
 	Frames m_start_frames {0};
 	Frames m_length_frames {0};
 	Frames m_length_post_gap {0};

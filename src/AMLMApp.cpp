@@ -19,13 +19,23 @@
 
 #include "AMLMApp.h"
 
+/// Qt5
+//#include <QNetworkAccessManager>
+
 /// KF5
 #include <KJob>
 #include <ThreadWeaver/Queue>
 
+/// Ours
+#include <utils/TheSimplestThings.h>
+
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
     qRegisterMetaType<KJob::Unit>();
+
+    /// @todo EXPERIMENTAL
+//    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
+//    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
 }
 
 AMLMApp::~AMLMApp()

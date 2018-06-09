@@ -49,7 +49,7 @@ public:
      * Given a URL to an audio file, read the cue sheet either from the metadata in
      * the file itself or from a *.cue file in the same directory.
      */
-	static std::unique_ptr<CueSheet> read_associated_cuesheet(const QUrl& url);
+    static std::unique_ptr<CueSheet> read_associated_cuesheet(const QUrl& url, uint64_t total_length_in_ms);
 
     static std::unique_ptr<CueSheet> TEMP_parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
 

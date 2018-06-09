@@ -22,7 +22,11 @@
 #include "CueSheet.h"
 
 /// Qt5
+#include <QRegularExpression>
 #include <QUrl>
+
+/// KF5
+#include <KF5/KIOCore/KFileItem>
 
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
@@ -41,13 +45,52 @@ CueSheet::~CueSheet()
 {
 }
 
-std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url)
+std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
 {
     auto retval = std::make_unique<CueSheet>();
+    retval.reset();
 
     // Determine if we have a cue sheet embedded in the given file's metadata,
     // or if we have an associated *.cue file, or neither.
 
+    // Create the *.cue URL.
+    QUrl cue_url = url;
+    QString cue_url_as_str = cue_url.toString();
+    Q_ASSERT(!cue_url_as_str.isEmpty());
+    cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
+    cue_url = cue_url_as_str;
+    Q_ASSERT(cue_url.isValid());
+//    {
+//        qWr() << "URL has no filename:" << cue_url;
+//    }
+
+    auto kfileitem = new KFileItem(cue_url /*, mimetype = unknown, mode=unknown */);
+
+    Q_ASSERT(kfileitem);
+    qIn() << "URL Info:" << cue_url;
+    qIn() << "MIME type:" << kfileitem->mimetype();
+    qIn() << "Local?:" << kfileitem->isLocalFile();
+    qIn() << "mostLocalUrl:" << kfileitem->mostLocalUrl();
+
+    // Try to open it.
+    QFile cuefile(cue_url.toLocalFile());
+    bool status = cuefile.open(QIODevice::ReadOnly);
+    if(!status)
+    {
+        qDb() << "Couldn't open cue file:" << cue_url;
+        return retval;
+    }
+    // Read the whole file.
+    QByteArray ba = cuefile.readAll();
+    if(ba.isEmpty())
+    {
+        qDb() << "Couldn't read cue file:" << cue_url;
+        return retval;
+    }
+
+    auto ba_as_stdstr = ba.toStdString();
+
+    retval = TEMP_parse_cue_sheet_string(ba_as_stdstr, total_length_in_ms);
 
     return retval;
 }
@@ -61,7 +104,9 @@ std::unique_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::strin
     if(!parsed_ok)
     {
         // Parsing failed, make sure we return an empty ptr.
-        return std::make_unique<CueSheet>();
+//        return std::make_unique<CueSheet>();
+        /// @todo This seems pretty inefficient.
+        retval.reset();
     }
 
     return retval;
@@ -76,7 +121,6 @@ std::map<int, TrackMetadata> CueSheet::to_track_map() const
         // CD tracks in a cuesheet are numbered 01 to 99.
         if(entry.m_track_number != 0)
         {
-            qDb() << "MAPPING TRACK:" << entry.m_track_number << entry.m_total_track_number;
             retval[entry.m_track_number] = entry;
         }
     }
@@ -127,6 +171,7 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
             tm.m_PTI_TITLE = tostdstr(cdtext_get(PTI_TITLE, cdt));
             tm.m_PTI_PERFORMER = tostdstr(cdtext_get(PTI_PERFORMER, cdt));
             ///@todo There's more we could get here.
+
             for(auto i = 0; i<99; ++i)
             {
                 //qDebug() << "Reading track index:" << i;
@@ -142,6 +187,7 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
                     qDb() << " Index:" << ti;
                 }
             }
+
             tm.m_track_number = track_num;
             tm.m_start_frames = track_get_start(t);
             tm.m_length_frames = track_get_length(t);
@@ -154,7 +200,7 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
             tm.m_length_pre_gap = track_get_zero_pre(t);
             tm.m_length_post_gap = track_get_zero_post(t);
             tm.m_isrc = tostdstr(track_get_isrc(t));
-            qDb() << "Track info:" << tm.toStdString();
+//            qDb() << "Track info:" << tm.toStdString();
             // Using .at() here for the bounds checking.
             m_tracks.at(track_num) = tm;
         }

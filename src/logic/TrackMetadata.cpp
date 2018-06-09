@@ -31,7 +31,7 @@ std::string TrackMetadata::toStdString() const
 	std::string retval;
 
     retval = M_IDSTR(m_PTI_TITLE) M_IDSTR(m_PTI_PERFORMER) "";
-	retval += M_IDSTR(m_track_number) M_IDSTR(m_total_track_number) M_IDSTR(m_length_pre_gap) M_IDSTR(m_start_frames) "";
+    retval += M_IDSTR(m_track_number) /*M_IDSTR(m_total_track_number)*/ M_IDSTR(m_length_pre_gap) M_IDSTR(m_start_frames) "";
 	retval += M_IDSTR(m_length_frames) M_IDSTR(m_length_post_gap) M_IDSTR(m_isrc) "";
 
 	return retval;

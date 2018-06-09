@@ -156,8 +156,9 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 				/// Create the new entry.
 				auto new_entry = std::make_shared<LibraryEntry>(*this);
 				new_entry->m_track_number = tn;
-				new_entry->m_total_track_number = sheet_track.m_total_track_number;
-				new_entry->m_metadata = track_metadata;
+M_WARNING("THIS IS ALWAYS 0")
+//				new_entry->m_total_track_number = sheet_track.m_total_track_number;
+                new_entry->m_metadata = track_metadata;
 				new_entry->m_offset_secs = m_offset_secs;
 				new_entry->m_length_secs = m_length_secs;
 				new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
