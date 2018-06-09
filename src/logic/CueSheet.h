@@ -30,9 +30,12 @@
 
 /// Qt5
 class QUrl;
+#include <QDataStream>
 
+/// Ours
 //#include "TrackMetadata.h"  ///< Per-track cue sheet info
 class TrackMetadata;
+#include "CueSheetParser.h"
 
 /**
  * CD cue sheet class.
@@ -58,7 +61,7 @@ public:
      *
      * @warning MAYBE TEMP?
      */
-    std::map<int, TrackMetadata> to_track_map() const;
+    std::map<int, TrackMetadata> get_track_map() const;
 
     /// @name Accessors
     /// @{
@@ -102,10 +105,23 @@ private:
     uint8_t m_num_tracks_on_media {0};
 
     /**
-     * Cue sheet information on each track.
+     * Cue sheet-derived information on each track.
+     * @note Map key is the track number, 1 to 99.
+     * @ref https://xiph.org/flac/format.html#cuesheet_track
+     * "Track number.
+     * - A track number of 0 is not allowed to avoid conflicting with the CD-DA spec, which reserves this for the lead-in.
+     * - For CD-DA the number must be 1-99, or 170 for the lead-out;
+     * - for non-CD-DA, the track number must for 255 for the lead-out.
+     * - It is not required but encouraged to start with track 1 and increase sequentially.
+     * - Track numbers must be unique within a CUESHEET."
      */
-    std::vector<TrackMetadata> m_tracks;
+//    std::vector<TrackMetadata> m_tracks;
+    std::map<int, TrackMetadata> m_tracks;
 
+    static CueSheetParser m_cue_sheet_parser;
 };
+
+QDataStream &operator<<(QDataStream &out, const CueSheet &myObj);
+QDataStream &operator>>(QDataStream &in, CueSheet &myObj);
 
 #endif /* SRC_LOGIC_CUESHEET_H_ */

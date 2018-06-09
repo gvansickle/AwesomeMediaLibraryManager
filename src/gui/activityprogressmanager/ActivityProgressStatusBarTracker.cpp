@@ -201,12 +201,15 @@ void ActivityProgressStatusBarTracker::SLOT_onShowProgressWidget(KJob* kjob)
 {
     QMutexLocker locker(&m_tracked_job_state_mutex);
 
-    // Called on a timer timeout after a new job is registered.
+M_WARNING("DEBUG");
+return;
 
+    // Called on a timer timeout after a new job is registered.
     Q_CHECK_PTR(kjob);
 
     /// @todo If queue is empty return.
     /// else dequeue job, look up qwidget, and show it.
+M_WARNING("BUG: The kjob could be finished and deleted before we get here.");
 
     // Look up the widget associated with this kjob.
     // If it's been unregistered before we get here, this will return nullptr.

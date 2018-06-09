@@ -150,8 +150,6 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 	return retval;
 }
 
-CueSheetParser MetadataTaglib::m_cue_sheet_parser;
-
 
 MetadataTaglib::MetadataTaglib() : MetadataAbstractBase()
 {
@@ -218,7 +216,7 @@ bool MetadataTaglib::read(QUrl url)
 	}
 	else
 	{
-		qDebug() << "No generic CUESHEET";
+//		qDebug() << "No generic CUESHEET";
 	}
 
 	// Downcast it to whatever type it really is.
@@ -301,9 +299,9 @@ bool MetadataTaglib::read(QUrl url)
 		qWarning() << "AudioProperties was null";
 	}
 
-#if 1 // New CueSheet
 
     std::unique_ptr<CueSheet> cuesheet;
+    cuesheet.reset();
 
     // Did we find an embedded cue sheet?
     if(!cuesheet_str.empty())
@@ -325,74 +323,9 @@ bool MetadataTaglib::read(QUrl url)
 
         /// @todo MAYBE TEMP?
         // Copy the cuesheet track info.
-        m_tracks = cuesheet->to_track_map();
+        m_tracks = cuesheet->get_track_map();
         Q_ASSERT(m_tracks.size() > 0);
 
-#else
-	// Did we find a cue sheet?
-	if(!cuesheet_str.empty())
-	{
-		// Try to parse the cue sheet we found with libcue.
-		Cd *cd = m_cue_sheet_parser.parse_cue_sheet_string(cuesheet_str.c_str());
-		if(cd == nullptr)
-		{
-			qWarning() << "Embedded cue sheet parsing failed.";
-		}
-		else
-		{
-			m_has_cuesheet = true;
-
-			m_num_tracks_on_media = cd_get_ntrack(cd);
-			//qDebug() << "Num Tracks:" << m_num_tracks;
-			if(m_num_tracks_on_media < 2)
-			{
-				qWarning() << "Num tracks is less than 2:" << m_num_tracks_on_media;
-			}
-			for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
-			{
-				Track* t = cd_get_track(cd, track_num);
-				//qDebug() << "Track filename:" << track_get_filename(t);
-				Cdtext* cdt = track_get_cdtext(t);
-				TrackMetadata tm;
-				tm.m_PTI_TITLE = tostdstr(cdtext_get(PTI_TITLE, cdt));
-				tm.m_PTI_PERFORMER = tostdstr(cdtext_get(PTI_PERFORMER, cdt));
-                ///@todo There's more we could get here.
-				for(auto i = 0; i<99; ++i)
-				{
-					//qDebug() << "Reading track index:" << i;
-					long ti = track_get_index(t, i);
-					tm.m_indexes.push_back(ti);
-					if((ti==-1) && (i>1))
-					{
-						qDebug() << "Found last index: " << i-1;
-						break;
-					}
-					else
-					{
-						//qDebug() << " Index:" << ti;
-					}
-				}
-				tm.m_track_number = track_num;
-				tm.m_start_frames = track_get_start(t);
-				tm.m_length_frames = track_get_length(t);
-				if(tm.m_length_frames < 0)
-				{
-					// This is the last track.  We have to calculate the length from the total recording time minus the start offset.
-					Q_ASSERT(m_length_in_milliseconds > 0);
-					tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
-				}
-				tm.m_length_pre_gap = track_get_zero_pre(t);
-				tm.m_length_post_gap = track_get_zero_post(t);
-				tm.m_isrc = tostdstr(track_get_isrc(t));
-				//qDebug() << "Track info:" << tm.toStdString();
-				m_tracks[track_num] = tm;
-			}
-
-			// Delete the Cd struct.
-			// All the other libcue structs we've opened are deleted with it.
-			cd_delete(cd);
-		}
-#endif
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
 		qDebug() << "Scanning for gaplessness...";

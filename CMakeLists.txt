@@ -114,15 +114,15 @@ include(KDECMakeSettings)
 
 # Set some extra debug flags early.
 # See https://cmake.org/cmake/help/v3.11/variable/CMAKE_LANG_COMPILER_ID.html
-if(${CMAKE_CXX_COMPILER_ID} EQUAL Clang)
-	message(STATUS "DETECTED COMPILER IS CLANG")
-	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -Wthread-safety")
-elseif(${CMAKE_CXX_COMPILER_ID} EQUAL GNU)
-	message(STATUS "DETECTED COMPILER IS GCC")
-	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments")
-endif()
-set(CMAKE_CXX_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
-set(CMAKE_C_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
+# if(${CMAKE_CXX_COMPILER_ID} EQUAL Clang)
+# 	message(STATUS "DETECTED COMPILER IS CLANG")
+# 	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -Wthread-safety")
+# elseif(${CMAKE_CXX_COMPILER_ID} EQUAL GNU)
+# 	message(STATUS "DETECTED COMPILER IS GCC")
+# 	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments")
+# endif()
+# set(CMAKE_CXX_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
+# set(CMAKE_C_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
 
 
 ###

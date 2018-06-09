@@ -35,6 +35,7 @@
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 #include "CueSheetParser.h"
 
+CueSheetParser CueSheet::m_cue_sheet_parser;
 
 CueSheet::CueSheet()
 {
@@ -64,13 +65,13 @@ std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, ui
 //        qWr() << "URL has no filename:" << cue_url;
 //    }
 
-    auto kfileitem = new KFileItem(cue_url /*, mimetype = unknown, mode=unknown */);
+//    auto kfileitem = new KFileItem(cue_url /*, mimetype = unknown, mode=unknown */);
 
-    Q_ASSERT(kfileitem);
-    qIn() << "URL Info:" << cue_url;
-    qIn() << "MIME type:" << kfileitem->mimetype();
-    qIn() << "Local?:" << kfileitem->isLocalFile();
-    qIn() << "mostLocalUrl:" << kfileitem->mostLocalUrl();
+//    Q_ASSERT(kfileitem);
+//    qIn() << "URL Info:" << cue_url;
+//    qIn() << "MIME type:" << kfileitem->mimetype();
+//    qIn() << "Local?:" << kfileitem->isLocalFile();
+//    qIn() << "mostLocalUrl:" << kfileitem->mostLocalUrl();
 
     // Try to open it.
     QFile cuefile(cue_url.toLocalFile());
@@ -88,7 +89,7 @@ std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, ui
         return retval;
     }
 
-    auto ba_as_stdstr = ba.toStdString();
+    std::string ba_as_stdstr(ba.cbegin(), ba.cend());
 
     retval = TEMP_parse_cue_sheet_string(ba_as_stdstr, total_length_in_ms);
 
@@ -112,20 +113,22 @@ std::unique_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::strin
     return retval;
 }
 
-std::map<int, TrackMetadata> CueSheet::to_track_map() const
+std::map<int, TrackMetadata> CueSheet::get_track_map() const
 {
-    std::map<int, TrackMetadata> retval;
+    return m_tracks;
+//    std::map<int, TrackMetadata> retval;
 
-    for(auto entry : m_tracks)
-    {
-        // CD tracks in a cuesheet are numbered 01 to 99.
-        if(entry.m_track_number != 0)
-        {
-            retval[entry.m_track_number] = entry;
-        }
-    }
+//    for(auto entry : m_tracks)
+//    {
+//        // CD tracks in a cuesheet are numbered 01 to 99.
+//        if(entry.m_track_number != 0)
+//        {
+//            retval[entry.m_track_number] = entry;
+//            qDb() << entry.m_track_number << entry.m_PTI_TITLE;
+//        }
+//    }
 
-    return retval;
+//    return retval;
 }
 
 uint8_t CueSheet::get_total_num_tracks() const
@@ -136,7 +139,8 @@ uint8_t CueSheet::get_total_num_tracks() const
 bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
 {
     // Try to parse the cue sheet we found with libcue.
-    CueSheetParser csp;
+//    CueSheetParser csp;
+    auto& csp = m_cue_sheet_parser;
 
 M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
     /// @todo NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.
@@ -156,7 +160,7 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
         qDebug() << "Num Tracks:" << m_num_tracks_on_media;
 
         /// @todo Assert that num tracks == max track num.
-        m_tracks.resize(m_num_tracks_on_media+1);
+//        m_tracks.resize(m_num_tracks_on_media+1);
 
         if(m_num_tracks_on_media < 2)
         {
@@ -165,7 +169,7 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
         for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
         {
             Track* t = cd_get_track(cd, track_num);
-            qDebug() << "Track filename:" << track_get_filename(t);
+//            qDebug() << "Track filename:" << track_get_filename(t);
             Cdtext* cdt = track_get_cdtext(t);
             TrackMetadata tm;
             tm.m_PTI_TITLE = tostdstr(cdtext_get(PTI_TITLE, cdt));
@@ -201,8 +205,13 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
             tm.m_length_post_gap = track_get_zero_post(t);
             tm.m_isrc = tostdstr(track_get_isrc(t));
 //            qDb() << "Track info:" << tm.toStdString();
-            // Using .at() here for the bounds checking.
-            m_tracks.at(track_num) = tm;
+            // Using .insert() here to detect duplicate track numbers, which shouldn't ever exist per cue sheet specs.
+            auto insert_status = m_tracks.insert({track_num, tm});
+            if(insert_status.second != true)
+            {
+                // No insertion took place, must have been a dup.
+                qWr() << "DUPLICATE CUESHEET TRACK ENTRIES:" << track_num;/// << tm << *insert_status.first;
+            }
         }
 
         // Delete the Cd struct.
