@@ -356,17 +356,17 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 		QStringList sl;
 		for(auto entry : tm)
 		{
-qDb() << "entry:" << entry;
+//qDb() << "entry:" << entry;
 			sl.clear();
 			QString key = QString::fromStdString(entry.first);
 			QVariant temp_val = retval[key];
-qDb() << "temp_val:" << temp_val;
+//qDb() << "temp_val:" << temp_val;
 			for(auto s : entry.second)
 			{
-qDb() << "Appending to temp_val:" << s;
+//qDb() << "Appending to temp_val:" << s;
 				sl.append(QString::fromStdString(s));
 			}
-qDb() << "sl:" << sl;
+//qDb() << "sl:" << sl;
 			retval[key] = QVariant::fromValue(sl);
 		}
 	}

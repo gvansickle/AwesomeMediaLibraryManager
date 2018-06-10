@@ -913,10 +913,10 @@ void MainWindow::createToolBars()
 	connect(styleComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeStyle);
 
     // Create a combo box with icon themes.
-	QComboBox* iconComboBox = new QComboBox;
-    iconComboBox->addItems(Theme::GetIconThemeNames());
-	m_settingsToolBar->addWidget(iconComboBox);
-	connect(iconComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeIconTheme);
+    QComboBox* iconThemeComboBox = new QComboBox;
+    iconThemeComboBox->addItems(Theme::GetIconThemeNames());
+    m_settingsToolBar->addWidget(iconThemeComboBox);
+    connect_or_die(iconThemeComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeIconTheme);
 #endif
 
     // Create another toolbar for the player controls.
@@ -1942,7 +1942,7 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 {
 	qDebug() << "signaled to set Icon Theme to" << iconThemeName;
 
-	Theme::setThemeName(iconThemeName);
+    Theme::setIconThemeName(iconThemeName);
 
 	for(auto w : qApp->allWidgets())
 	{

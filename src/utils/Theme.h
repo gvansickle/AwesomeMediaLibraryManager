@@ -43,11 +43,16 @@ public:
 
 	static QString getUserDefaultStyle(const char* fallback = nullptr);
 
+    /// @name Icon Theme interface.
+    /// @{
     static QStringList GetIconThemeNames();
 
-	static bool setThemeName(const QString& name);
+    static bool setIconThemeName(const QString& name);
 
     static QIcon iconFromTheme(const QString& icon_name);
+    static QIcon iconFromTheme(const QStringList& icon_name);
+
+    /// @}
 
 	/**
  	 * Enumeration of some additional Qt::Key-like key names which don't exist in Qt 5.10.

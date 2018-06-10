@@ -169,9 +169,15 @@ M_WARNING("TODO");
         }
     }
 #endif
-    qDebug() << "Current iconThemeName():" << QIcon::themeName();
-    qDebug() << "Current themeSearchPaths():" << QIcon::themeSearchPaths();
+    qDebug() << "Current QIcon::iconThemeName():" << QIcon::themeName();
+    qDebug() << "Current QIcon::themeSearchPaths():" << QIcon::themeSearchPaths();
 	qInfo() << "QPA Platform plugin name:" << qApp->platformName();
+
+
+    // Find all the icon themes we have access to.
+    QStringList retval = FindIconThemes();
+    qIn() << "Discovered Icon Themes:" << retval;
+
 
 	// Get all the styles we have available.
 	m_available_styles = QStyleFactory::keys();
@@ -207,7 +213,7 @@ M_WARNING("TODO");
 		else
 		{
 			// Use the current default desktop widget style.
-			qIn() << "Using current desktop style:" << desktop_style;
+            qIn() << "Using current desktop widget style:" << desktop_style;
 			AMLMSettings::setWidgetStyle(QStringLiteral("Default"));
 		}
 	}
@@ -286,9 +292,14 @@ QStringList Theme::GetIconThemeNames()
 	return FindIconThemes();
 }
 
-bool Theme::setThemeName(const QString& name)
+bool Theme::setIconThemeName(const QString& name)
 {
 M_WARNING("TODO");
+
+    qDb() << "Trying to set icon theme name to:" << name;
+
+    QIcon::setThemeName(name);
+
 #if 0
 	///@todo This doen't work like it should
 	auto old_theme_name = QIcon::themeName();
@@ -304,11 +315,15 @@ M_WARNING("TODO");
 		return false;
 	}
 #endif
+
 	return true;
 }
 
 QIcon Theme::iconFromTheme(const QString &icon_name)
 {
+#if 1
+    return Theme::iconFromTheme(QStringList(icon_name));
+#else
     QIcon retval;
 
 #if HAVE_KF501
@@ -329,7 +344,31 @@ QIcon Theme::iconFromTheme(const QString &icon_name)
     }
 
     return retval;
+#endif
 }
+
+QIcon Theme::iconFromTheme(const QStringList &icon_names)
+{
+    QIcon retval;
+
+    // Go through all given names and return the first QIcon we find.
+    for(const auto name : icon_names)
+    {
+        retval = QIcon::fromTheme(name);
+        if(!retval.isNull())
+        {
+            // Found one.
+            qDb() << "Returning theme icon:" << name;
+            return retval;
+        }
+    }
+
+    // Couldn't find it.
+    qDb() << "Failed to find icon with any of the names" << icon_names << "in icon them search paths.";
+
+    return retval;
+}
+
 QKeySequence Theme::keySequenceFromTheme(Theme::Key key)
 {
     switch(key)
