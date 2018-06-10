@@ -474,8 +474,8 @@ protected:
 	{
 		static_assert(std::tuple_size_v<ct::args_t<F>> == 0, "Too many args");
 
-		auto watcher = new QFutureWatcher<T>();
-M_WARNING("TODO: LEAKS THIS");
+        auto watcher = new QFutureWatcher<T>();
+/// M_WARNING("TODO: LEAKS THIS ExtFuture<>");
 		auto retval = new ExtFuture<R>();
 		qDb() << "NEW EXTFUTURE:" << *retval;
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [finally_callback, retval, watcher](){
@@ -487,7 +487,7 @@ M_WARNING("TODO: LEAKS THIS");
 			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
 		});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "ThenHelper ExtFutureWatcher DESTROYED";});
+        QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "FinallyHelper ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
 		return *retval;
 	}

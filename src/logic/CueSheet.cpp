@@ -39,6 +39,58 @@
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 
 
+
+/**
+ * Same disc ripped with two different rippers:
+ *
+ * Bad embedded cue sheet:
+ *
+ *METADATA block #2
+  type: 4 (VORBIS_COMMENT)
+  is last: false
+  length: 201
+  vendor string: reference libFLAC 1.3.1 20141125
+  comments: 9
+    comment[0]: ARTIST=Squeeze
+    comment[1]: TITLE=Goodbye Girl
+    comment[2]: ALBUM=Greatest Hits
+    comment[3]: DATE=1992
+    comment[4]: TRACKNUMBER=02
+    comment[5]: GENRE=Unknown
+    comment[6]: DISCNUMBER=1
+    comment[7]: TOTALDISCS=1
+    comment[8]: TOTALTRACKS=20
+ *
+ *
+ * Good embedded cue sheet:
+ *
+ * METADATA block #2
+  type: 4 (VORBIS_COMMENT)
+  is last: false
+  length: 8825
+  vendor string: reference libFLAC 1.3.1 20141125
+  comments: 33
+    comment[0]: CUESHEET=REM DISCID 1911F314
+PERFORMER "Squeeze"
+TITLE "Greatest Hits"
+CATALOG 0082839718127
+REM DATE 1992
+REM DISCNUMBER 1
+REM TOTALDISCS 1
+REM COMMENT "CUERipper v2.1.6 Copyright (C) 2008-13 Grigory Chudov"
+FILE "Squeeze - Greatest Hits.flac" WAVE
+  TRACK 01 AUDIO
+    PERFORMER "Squeeze"
+    TITLE "Take Me, I'm Yours"
+    ISRC GBAAM7801003
+    INDEX 01 00:00:00
+  TRACK 02 AUDIO
+    PERFORMER "Squeeze"
+    TITLE "Goodbye Girl"
+  [...]
+ *
+ */
+
 std::mutex CueSheet::m_libcue_mutex;
 
 AMLM_QREG_CALLBACK([](){

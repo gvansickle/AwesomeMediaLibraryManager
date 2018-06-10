@@ -57,18 +57,6 @@ CollectionDockWidget::CollectionDockWidget(const QString &title, QWidget *parent
 	m_collection_tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
 	connect(m_collection_tree_view, &QTreeView::customContextMenuRequested, this, &CollectionDockWidget::onTreeContextMenu);
 
-	/// @todo EXPERIMENTAL
-	if(false)
-	{
-	m_tree_widget = new QTreeWidget(this);
-	QPushButton *topLevelButton = new QPushButton("Top Level Button");
-	QTreeWidgetItem *topLevelItem = new QTreeWidgetItem();
-	m_tree_widget->addTopLevelItem(topLevelItem);
-	m_tree_widget->setItemWidget(topLevelItem, 0, topLevelButton);
-
-	center_widget->addWidget(m_tree_widget);
-	}
-
 	center_widget->addWidget(m_collection_tree_view);
 
 	// Set the widget for this dock widget.
@@ -92,11 +80,6 @@ void CollectionDockWidget::addActionExperimental(QAction* act)
 	QToolButton *button = new QToolButton();
 	button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	button->setDefaultAction(act);
-
-	QTreeWidgetItem *treewidgetitem = new QTreeWidgetItem();
-	auto parent = m_tree_widget->invisibleRootItem()->child(0);
-	parent->addChild(treewidgetitem);
-	m_tree_widget->setItemWidget(treewidgetitem, 0, button);
 }
 
 void CollectionDockWidget::onTreeContextMenu(const QPoint& point)

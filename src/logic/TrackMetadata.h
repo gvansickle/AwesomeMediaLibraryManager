@@ -57,6 +57,8 @@ public:
     X(PTI_MESSAGE) \
     X(PTI_UPC_ISRC)
 
+    // PTI_DISC_ID == binary disc identification info.
+    // PTI_GENRE == binary genre.
 #define PTI_BIN_LIST \
     X(PTI_DISC_ID) \
     X(PTI_GENRE) \
@@ -64,12 +66,20 @@ public:
     X(PTI_TOC_INFO2) \
     X(PTI_SIZE_INFO)
 
+    /// @name Declaration of all CD-TEXT string "pack type indicators".
+    /// @{
 #define X(id) std::string m_ ## id ;
     PTI_STR_LIST
 #undef X
+    /// @}
 
-	// PTI_DISC_ID == binary disc identification info.
-	// PTI_GENRE == binary genre.
+    /// @name Declaration of all CD-TEXT binary "pack type indicators".
+    /// @todo What type should these really be?
+    /// @{
+#define X(id) std::string m_ ## id ;
+    PTI_BIN_LIST
+#undef X
+    /// @}
 
 	/// ISRC code.  May be empty.
 	std::string m_isrc;

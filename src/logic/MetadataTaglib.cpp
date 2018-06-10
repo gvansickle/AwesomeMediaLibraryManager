@@ -294,7 +294,7 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 //        }
 		m_tag_map = PropertyMapToTagMap(pm);
 
-#warning "BUG: THIS IS COMING BACK WITH ONE ENTRY"
+M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
 
 //        qDb() << m_tag_map;
 #endif
