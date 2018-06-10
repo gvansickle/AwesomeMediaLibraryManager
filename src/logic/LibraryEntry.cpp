@@ -60,7 +60,7 @@ QVector<LibraryEntry*> LibraryEntry::fromUrl(QUrl fileurl)
 
 std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
 {
-	// Populate the metadata.  Assumption is that all we have before calling this is self.url.
+    // Populate the metadata.  Assumption is that all we have before calling this is the url.
 	// returns A list of LibraryEntry's, or self if self.url was not a multi-track file.
 
 	std::vector<std::shared_ptr<LibraryEntry>> retval;
@@ -164,6 +164,9 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 				new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
 				new_entry->m_is_populated = true;
 				new_entry->m_is_error = false;
+
+                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+
 				retval.push_back(new_entry);
 			}
 		}

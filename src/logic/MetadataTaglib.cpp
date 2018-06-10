@@ -322,6 +322,7 @@ bool MetadataTaglib::read(QUrl url)
         m_num_tracks_on_media = cuesheet->get_total_num_tracks();
 
         /// @todo MAYBE TEMP?
+        qDb() << "CUESHEET:" << *cuesheet;
         // Copy the cuesheet track info.
         m_tracks = cuesheet->get_track_map();
         Q_ASSERT(m_tracks.size() > 0);

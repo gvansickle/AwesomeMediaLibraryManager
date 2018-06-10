@@ -27,6 +27,7 @@
 #include <memory>
 #include <cstdint>
 #include <map>
+#include <mutex>
 
 /// Qt5
 class QUrl;
@@ -71,8 +72,8 @@ public:
 
     /// @}
 
-    /// @todo TEMP
-//protected:
+
+protected:
 
     /**
      * Populate the data of this CueSheet by parsing the given cuesheet_text.
@@ -80,6 +81,8 @@ public:
      * @return true if parsing succeeded, false otherwise.
      */
     bool parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
+
+    friend QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
 private:
 
@@ -115,11 +118,15 @@ private:
      * - It is not required but encouraged to start with track 1 and increase sequentially.
      * - Track numbers must be unique within a CUESHEET."
      */
-//    std::vector<TrackMetadata> m_tracks;
     std::map<int, TrackMetadata> m_tracks;
 
-    static CueSheetParser m_cue_sheet_parser;
+	// Mutex for serializing acces to libcue.  Libcue isn't thread-safe.
+    static std::mutex m_libcue_mutex;
 };
+
+Q_DECLARE_METATYPE(CueSheet);
+
+QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
 QDataStream &operator<<(QDataStream &out, const CueSheet &myObj);
 QDataStream &operator>>(QDataStream &in, CueSheet &myObj);

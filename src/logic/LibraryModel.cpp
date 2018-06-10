@@ -258,6 +258,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 				for(QString& key: metadata_choices)
 				{
 					QStringList metadata_value_str_list = item->getMetadata(key);
+//                    qDb() << "KEY:" << key << "LIST:" << metadata_value_str_list;
 					if(!metadata_value_str_list.isEmpty() && !metadata_value_str_list[0].isEmpty())
 					{
 						//qDebug() << "was valid: (" << metadata_value_str_list[0] << ")";

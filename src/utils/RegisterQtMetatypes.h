@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,8 +20,12 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 #define AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 
+#include <functional>
 
 void RegisterQtMetatypes();
 
+void RegisterQTRegCallback(std::function<void(void)> f);
+
+#define AMLM_QREG_CALLBACK(f) static int xxxx_dummy_var = (RegisterQTRegCallback(f), 0);
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

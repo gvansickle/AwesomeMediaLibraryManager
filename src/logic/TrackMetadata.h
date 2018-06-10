@@ -20,8 +20,12 @@
 #ifndef TRACKMETADATA_H
 #define TRACKMETADATA_H
 
+/// Stc C++
 #include <string>
 #include <vector>
+
+/// Qt5
+#include <QtCore>
 
 // Cue Sheet Frame == 1/75th of a second.
 using Frames = long;
@@ -44,12 +48,26 @@ public:
 	Frames m_length_post_gap {0};
 
 	/// cdtext "pack type indicators".
-	std::string m_PTI_TITLE;
-	std::string m_PTI_PERFORMER;
-	std::string m_PTI_SONGWRITER;
-	std::string m_PTI_COMPOSER;
-	std::string m_PTI_ARRANGER;
-	std::string m_PTI_MESSAGE;
+#define PTI_STR_LIST \
+    X(PTI_TITLE) \
+    X(PTI_PERFORMER) \
+    X(PTI_SONGWRITER) \
+    X(PTI_COMPOSER) \
+    X(PTI_ARRANGER) \
+    X(PTI_MESSAGE) \
+    X(PTI_UPC_ISRC)
+
+#define PTI_BIN_LIST \
+    X(PTI_DISC_ID) \
+    X(PTI_GENRE) \
+    X(PTI_TOC_INFO1) \
+    X(PTI_TOC_INFO2) \
+    X(PTI_SIZE_INFO)
+
+#define X(id) std::string m_ ## id ;
+    PTI_STR_LIST
+#undef X
+
 	// PTI_DISC_ID == binary disc identification info.
 	// PTI_GENRE == binary genre.
 
@@ -64,6 +82,12 @@ public:
 	bool m_is_part_of_gapless_set {false};
 
 	Frames last_frame() const { return m_start_frames+m_length_frames; }
+
+    friend QDebug operator<<(QDebug dbg, const TrackMetadata &tm);
 };
+
+Q_DECLARE_METATYPE(TrackMetadata);
+
+QDebug operator<<(QDebug dbg, const TrackMetadata &tm);
 
 #endif // TRACKMETADATA_H

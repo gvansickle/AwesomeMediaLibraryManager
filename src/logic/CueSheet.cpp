@@ -28,14 +28,23 @@
 /// KF5
 #include <KF5/KIOCore/KFileItem>
 
+/// Libcue
+#include <libcue.h>
+
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
+#include <utils/RegisterQtMetatypes.h>
 
 /// Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
-#include "CueSheetParser.h"
 
-CueSheetParser CueSheet::m_cue_sheet_parser;
+
+std::mutex CueSheet::m_libcue_mutex;
+
+AMLM_QREG_CALLBACK([](){
+    qRegisterMetaType<CueSheet>()
+    ;});
+//static int dummy = (RegisterQTRegCallback([](){qDb() << "HELLO";}), 0);
 
 CueSheet::CueSheet()
 {
@@ -116,19 +125,6 @@ std::unique_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::strin
 std::map<int, TrackMetadata> CueSheet::get_track_map() const
 {
     return m_tracks;
-//    std::map<int, TrackMetadata> retval;
-
-//    for(auto entry : m_tracks)
-//    {
-//        // CD tracks in a cuesheet are numbered 01 to 99.
-//        if(entry.m_track_number != 0)
-//        {
-//            retval[entry.m_track_number] = entry;
-//            qDb() << entry.m_track_number << entry.m_PTI_TITLE;
-//        }
-//    }
-
-//    return retval;
 }
 
 uint8_t CueSheet::get_total_num_tracks() const
@@ -138,15 +134,21 @@ uint8_t CueSheet::get_total_num_tracks() const
 
 bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
 {
-    // Try to parse the cue sheet we found with libcue.
-//    CueSheetParser csp;
-    auto& csp = m_cue_sheet_parser;
+	// Mutex FBO libcue.  Libcue isn't thread-safe.
+	std::lock_guard<std::mutex> lock(m_libcue_mutex);
+
+	// libcue (actually flex) can't handle invalid UTF-8.
+    Q_ASSERT_X(isValidUTF8(cuesheet_text.c_str()), __func__, "Invalid UTF-8 cuesheet string.");
+
+	// Try to parse the cue sheet we found with libcue.
+	Cd* cd = cue_parse_string(cuesheet_text.c_str());
+
+	Q_ASSERT_X(cd != nullptr, __PRETTY_FUNCTION__, "failed to parse cuesheet string");
 
 M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
     /// @todo NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.
     uint64_t m_length_in_milliseconds = length_in_ms;
 
-    Cd *cd = csp.parse_cue_sheet_string(cuesheet_text.c_str());
     if(cd == nullptr)
     {
         qWr() << "Embedded cue sheet parsing failed.";
@@ -158,9 +160,6 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
 
         m_num_tracks_on_media = cd_get_ntrack(cd);
         qDebug() << "Num Tracks:" << m_num_tracks_on_media;
-
-        /// @todo Assert that num tracks == max track num.
-//        m_tracks.resize(m_num_tracks_on_media+1);
 
         if(m_num_tracks_on_media < 2)
         {
@@ -223,3 +222,17 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
     }
 }
 
+
+QDebug operator<<(QDebug dbg, const CueSheet &cuesheet)
+{
+    QDebugStateSaver saver(dbg);
+
+    dbg << "CueSheet";
+
+    for(auto i : cuesheet.m_tracks)
+    {
+        dbg << i.first << i.second;
+    }
+
+    return dbg;
+}

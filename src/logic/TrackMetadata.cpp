@@ -37,3 +37,14 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
+
+QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
+{
+    QDebugStateSaver saver(dbg);
+
+#define X(id) dbg << #id ":" << tm.m_ ## id ;
+    PTI_STR_LIST
+#undef X
+
+    return dbg;
+}

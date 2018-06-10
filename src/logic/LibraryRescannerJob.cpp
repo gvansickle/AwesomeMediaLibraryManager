@@ -127,6 +127,9 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
                     qCritical() << "NOT POPULATED" << i.get();
                 }
                 retval.push_back(i);
+
+                qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
+
             }
         }
         else if (item->isPopulated() && item->isSubtrack())

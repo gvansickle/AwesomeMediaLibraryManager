@@ -19,6 +19,10 @@
 
 #include "RegisterQtMetatypes.h"
 
+/// Std C++
+#include <vector>
+#include <functional>
+
 #include <ThreadWeaver/Job>
 #include <KJob>
 
@@ -50,8 +54,20 @@
  * Docs:
  * http://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1
  */
+
+
+static std::vector<std::function<void(void)>> f_register_callbacks;
+
+
 void RegisterQtMetatypes()
 {
+
+    // Call all the registration callbacks.
+    for(auto f : f_register_callbacks)
+    {
+        f();
+    }
+
 	// ThreadWeaver types.
     qRegisterMetaType<ThreadWeaver::Job*>( "ThreadWeaver::Job*" );
     // KJob types.
@@ -87,4 +103,9 @@ void RegisterQtMetatypes()
 	qRegisterMetaType<LibraryRescannerMapItem>();
 	qRegisterMetaType<VecLibRescannerMapItems>();
 //	qRegisterMetaTypeStreamOperators<LibraryRescannerMapItem>("LibraryRescannerMapItem");
+}
+
+void RegisterQTRegCallback(std::function<void ()> f)
+{
+    f_register_callbacks.push_back(f);
 }
