@@ -44,7 +44,6 @@ std::mutex CueSheet::m_libcue_mutex;
 AMLM_QREG_CALLBACK([](){
     qRegisterMetaType<CueSheet>()
     ;});
-//static int dummy = (RegisterQTRegCallback([](){qDb() << "HELLO";}), 0);
 
 CueSheet::CueSheet()
 {
@@ -169,11 +168,14 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
         {
             Track* t = cd_get_track(cd, track_num);
 //            qDebug() << "Track filename:" << track_get_filename(t);
+            // Get the CD-Text info.
             Cdtext* cdt = track_get_cdtext(t);
+
             TrackMetadata tm;
-            tm.m_PTI_TITLE = tostdstr(cdtext_get(PTI_TITLE, cdt));
-            tm.m_PTI_PERFORMER = tostdstr(cdtext_get(PTI_PERFORMER, cdt));
-            ///@todo There's more we could get here.
+            // get the Pack Type Indicator data.
+#define X(id) tm.m_ ## id = tostdstr(cdtext_get( id , cdt ));
+            PTI_STR_LIST
+#undef X
 
             for(auto i = 0; i<99; ++i)
             {
@@ -227,12 +229,14 @@ QDebug operator<<(QDebug dbg, const CueSheet &cuesheet)
 {
     QDebugStateSaver saver(dbg);
 
-    dbg << "CueSheet";
-
+    dbg << "CueSheet(";
+    dbg << "{\n";
     for(auto i : cuesheet.m_tracks)
     {
-        dbg << i.first << i.second;
+        dbg << "KEY:" << i.first << "VALUE:" << i.second << "\n";
     }
+    dbg << "}\n";
+    dbg << ")\n";
 
     return dbg;
 }

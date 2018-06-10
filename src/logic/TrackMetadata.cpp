@@ -17,9 +17,18 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "TrackMetadata.h"
 
-#include <utils/DebugHelpers.h>
+/// Ours, Qt5/KF5-related
+#include <utils/TheSimplestThings.h>
+#include <utils/RegisterQtMetatypes.h>
+
+
+AMLM_QREG_CALLBACK([](){
+    qRegisterMetaType<TrackMetadata>()
+    ;});
 
 TrackMetadata::TrackMetadata()
 {
@@ -42,7 +51,7 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
 {
     QDebugStateSaver saver(dbg);
 
-#define X(id) dbg << #id ":" << tm.m_ ## id ;
+#define X(id) dbg << "TrackMetadata(" << #id ":" << tm.m_ ## id << ")\n";
     PTI_STR_LIST
 #undef X
 

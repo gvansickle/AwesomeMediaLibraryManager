@@ -122,13 +122,13 @@ TagMap MetadataAbstractBase::filled_fields() const
 {
 	if(hasBeenRead() && !isError())
 	{
-		//qDebug() << "Converting filled_fields to TagMap";
+        qDebug() << "Converting filled_fields to TagMap";
 		TagMap retval;
 		for(auto key_val_pairs : m_tag_map) ///@todo EXP m_pm)
 		{
-			//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
+            qDebug() << "Native Key:" << key_val_pairs.first;
 			std::string key = reverse_lookup(key_val_pairs.first); ///@todo EXP.toCString());
-			//qDebug() << "Normalized key:" << key;
+            qDebug() << "Normalized key:" << key;
 
 			if(key.empty() || key.length() == 0)
 			{
@@ -149,7 +149,7 @@ M_WARNING("TODO: Find a better way to track new keys.")
 			}
 			retval[key] = out_val;
 		}
-		//qDebug() << "Returning:" << retval;
+        qDebug() << "Returning:" << retval;
 		return retval;
 	}
 	else
