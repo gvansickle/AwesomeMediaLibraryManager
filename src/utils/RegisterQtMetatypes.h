@@ -24,8 +24,8 @@
 
 void RegisterQtMetatypes();
 
-void RegisterQTRegCallback(std::function<void(void)> f);
+int RegisterQTRegCallback(const std::function<void(void)>& f);
 
-#define AMLM_QREG_CALLBACK(f) static int xxxx_dummy_var = (RegisterQTRegCallback(f), 0);
+#define AMLM_QREG_CALLBACK(f) static int xxxx_dummy_var ##__LINE__ = RegisterQTRegCallback(f);
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

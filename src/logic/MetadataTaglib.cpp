@@ -336,7 +336,7 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
         m_num_tracks_on_media = cuesheet->get_total_num_tracks();
 
         /// @todo MAYBE TEMP?
-        qDb() << "CUESHEET:" << *cuesheet;
+//        qDb() << "CUESHEET:" << *cuesheet;
         // Copy the cuesheet track info.
         m_tracks = cuesheet->get_track_map();
         Q_ASSERT(m_tracks.size() > 0);
@@ -346,7 +346,7 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
 		qDebug() << "Scanning for gaplessness...";
 		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
 		{
-            qDb() << "TRACK:" << track_num << m_tracks[track_num];
+//            qDb() << "TRACK:" << track_num << m_tracks[track_num];
 
 			auto next_tracknum = track_num+1;
 			TrackMetadata tm1 = m_tracks[track_num];
@@ -383,14 +383,14 @@ Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 	MetadataTaglib retval(*this);
 
 	// Now replace the track map with only the entry for this one track.
-qIn() << "BEFORE:" << retval.m_tracks;
+//qIn() << "BEFORE:" << retval.m_tracks;
 	std::map<int, TrackMetadata> new_track_map;
 	auto track_entry = m_tracks.at(track_index);
 	new_track_map.insert({track_index, track_entry});
 
 	retval.m_tracks = new_track_map;
 
-qIn() << "AFTER:" << retval.m_tracks;
+//qIn() << "AFTER:" << retval.m_tracks;
 
 	// Copy any track-specific CDTEXT data to the "top level" metadata.
 M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate")

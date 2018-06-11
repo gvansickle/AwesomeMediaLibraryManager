@@ -94,6 +94,7 @@ FILE "Squeeze - Greatest Hits.flac" WAVE
 std::mutex CueSheet::m_libcue_mutex;
 
 AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering CueSheet";
     qRegisterMetaType<CueSheet>()
     ;});
 

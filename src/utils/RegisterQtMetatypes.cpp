@@ -63,8 +63,9 @@ void RegisterQtMetatypes()
 {
 
     // Call all the registration callbacks.
-    for(auto f : f_register_callbacks)
+    for(std::function<void(void)>& f : f_register_callbacks)
     {
+        qDb() << "Calling registration callback, total:" << f_register_callbacks.size();
         f();
     }
 
@@ -105,7 +106,12 @@ void RegisterQtMetatypes()
 //	qRegisterMetaTypeStreamOperators<LibraryRescannerMapItem>("LibraryRescannerMapItem");
 }
 
-void RegisterQTRegCallback(std::function<void ()> f)
+int RegisterQTRegCallback(const std::function<void(void)>& f)
 {
     f_register_callbacks.push_back(f);
+
+    std::cerr << "Registering callback:" << &f << ", size now:" << f_register_callbacks.size() << "\n";
+
+    // Return a non-const but dummy value.
+    return 2;//static_cast<int>(&f);
 }

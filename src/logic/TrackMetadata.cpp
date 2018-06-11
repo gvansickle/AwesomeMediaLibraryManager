@@ -27,7 +27,8 @@
 
 
 AMLM_QREG_CALLBACK([](){
-    qRegisterMetaType<TrackMetadata>()
+	qIn() << "Registering TrackMetadata";
+    qRegisterMetaType<TrackMetadata>();
     ;});
 
 TrackMetadata::TrackMetadata()
