@@ -96,11 +96,7 @@ set(gui_settings_SOURCE_FILES
 	SettingsDialog.cpp
 	SettingsDialogPageBase.cpp
 	SettingsDialogPageBase.h
-	SDPageAppearance.cpp
-	SDPageAppearance.h
 	SettingsDialogSideWidget.cpp
-	SDPageLibrary.cpp
-	SDPageLibrary.h
 	SettingsDialogBase.cpp
 	SettingsDialogBase.h
 	)
