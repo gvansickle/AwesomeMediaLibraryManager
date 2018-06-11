@@ -92,13 +92,7 @@ set(gui_settings_SOURCE_FILES
 	SettingsPageLibrary.h
 	SettingsPageLibrary.ui
 	SettingsDialog.h
-	SettingsDialogSideWidget.h
 	SettingsDialog.cpp
-	SettingsDialogPageBase.cpp
-	SettingsDialogPageBase.h
-	SettingsDialogSideWidget.cpp
-	SettingsDialogBase.cpp
-	SettingsDialogBase.h
 	)
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
