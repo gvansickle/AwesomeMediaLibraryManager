@@ -216,7 +216,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     /// @todo This would be a good candidate for an AMLMJob ".then()".
 //    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
-    dirtrav_job->then(this, [=](KJob* kjob){
+    dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {

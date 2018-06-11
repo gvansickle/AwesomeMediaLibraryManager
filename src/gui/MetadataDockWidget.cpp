@@ -48,6 +48,8 @@
 #include <utils/Theme.h>
 #include <utils/StringHelpers.h>
 
+#include <logic/CoverArtJob.h>
+
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
     setObjectName("MetadataDockWidget");
@@ -209,6 +211,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		}
 
 		// Display the cover image.
+#if THE_OLD_SYCHRONOUS_WAY
 		auto cover_image_bytes = libentry->getCoverImageBytes();
 		if(cover_image_bytes.size() != 0)
 		{
@@ -233,11 +236,56 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
 			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 		}
+#else // THE NEW ASYNCHRONOUS WAY
+        auto coverartjob = new CoverArtJob(this);
+        coverartjob->AsyncGetCoverArt(libentry->getUrl());
+        coverartjob->then(this, [=](CoverArtJob* kjob) {
+            if(kjob->error() || kjob->m_byte_array.size() == 0)
+            {
+                qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+                auto uidelegate = kjob->uiDelegate();
+                Q_CHECK_PTR(uidelegate);
+                uidelegate->showErrorMessage();
+            }
+            else
+            {
+                // Succeeded, pick up the image.
+
+                auto& cover_image_bytes = kjob->m_byte_array;
+
+                if(cover_image_bytes.size() != 0)
+                {
+                    qDebug("Cover image found"); ///@todo << cover_image.mime_type;
+                    QImage image;
+                    if(image.loadFromData(cover_image_bytes) == true)
+                    {
+                        ///qDebug() << "Image:" << image;
+                        m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+                        //m_cover_image_label.adjustSize()
+                    }
+                    else
+                    {
+                        qWarning() << "Error attempting to load image.";
+                        QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+                        m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+                    }
+                }
+                else
+                {
+                    // No image available.
+                    QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+                    m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+                }
+            }
+        });
+        coverartjob->start();
+#endif
 	}
 	else
 	{
 		qWarning() << "PLAYLIST ITEM IS INVALID";
 	}
+
 }
 
 void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap)

@@ -172,6 +172,7 @@ set(HEADER_FILES
 	logic/CueSheetParser.h
 	logic/CueSheet.h
 	logic/CoverArtJob.h
+	logic/TagLibHelpers.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
 	logic/proxymodels/ModelHelpers.h

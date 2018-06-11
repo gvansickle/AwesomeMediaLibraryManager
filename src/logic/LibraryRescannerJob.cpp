@@ -95,6 +95,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
+    setSuccessFlag(true);
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)

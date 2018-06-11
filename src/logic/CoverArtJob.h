@@ -49,6 +49,8 @@ public:
 	explicit CoverArtJob(QObject* parent);
 	~CoverArtJob() override;
 
+    QByteArray m_byte_array;
+
 public Q_SLOTS:
 
     void AsyncGetCoverArt(const QUrl& url);

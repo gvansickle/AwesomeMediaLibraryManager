@@ -21,13 +21,18 @@
 
 #include "Metadata.h"
 
+/// Std C++
 #include <map>
 #include <set>
 #include <vector>
 #include <string>
 #include <type_traits>
 
-// TagLib includes.
+/// Qt5
+#include <QUrl>
+#include <QDebug>
+
+/// TagLib includes.
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
@@ -42,14 +47,12 @@
 #include <taglib/flacfile.h>
 #include <taglib/flacpicture.h>
 
-//#include <logic/CueSheetParser.h>
+/// Ours
 #include <logic/CueSheet.h>
-
-
-#include <QDebug>
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
-#include <QUrl>
+#include "TagLibHelpers.h"
+
 
 static std::set<std::string> f_newly_discovered_keys;
 
@@ -102,26 +105,7 @@ static std::string reverse_lookup(const std::string& native_key)
 }
 #endif
 
-/// @name The TagLib::FileRef constructor takes a TagLib::FileName, which:
-/// - on Linux is typedef for const char *
-/// - on Windows is an actual class with both const char * and const wchar_t * members.
-/// So here's a couple templates to smooth this over.
-/// @{
-template<typename StringType, typename FNType = TagLib::FileName>
-std::enable_if_t<std::is_same<FNType, const char*>::value, TagLib::FileRef>
-openFileRef(const StringType& local_path)
-{
-	// TagLib::FileName is a const char *, so this is likely Linux.  Translate the QString accordingly and open the FileRef.
-	return TagLib::FileRef(local_path.toStdString().c_str());
-}
-template<typename StringType, typename FNType = TagLib::FileName>
-std::enable_if_t<!std::is_same<FNType, const char *>::value, TagLib::FileRef>
-openFileRef(const StringType& local_path)
-{
-	// TagLib::FileName is not const char *, so this is likely Windows.  Translate the QString accordingly and open the FileRef.
-	return TagLib::FileRef(local_path.toStdWString().c_str());
-}
-/// @}
+
 
 std::set<std::string> MetadataTaglib::getNewTags()
 {
