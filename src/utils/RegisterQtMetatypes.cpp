@@ -106,7 +106,7 @@ void RegisterQtMetatypes()
 //	qRegisterMetaTypeStreamOperators<LibraryRescannerMapItem>("LibraryRescannerMapItem");
 }
 
-int RegisterQTRegCallback(const std::function<void(void)>& f)
+int RegisterQTRegCallback(std::function<void(void)> f)
 {
     f_register_callbacks.push_back(f);
 
