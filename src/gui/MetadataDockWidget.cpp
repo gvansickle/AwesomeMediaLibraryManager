@@ -30,6 +30,7 @@
 #include <QDebug>
 #include <QDataWidgetMapper>
 #include <QLineEdit>
+#include <QSplitter>
 
 /// Ours
 
@@ -57,6 +58,11 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
 	m_proxy_model_watcher = new ModelChangeWatcher(this);
 	m_proxy_model_watcher->setModelToWatch(m_proxy_model);
 
+    // Main widget is a splitter.
+    auto mainWidget = new QSplitter(this);
+    mainWidget->setOrientation(Qt::Vertical);
+//    auto mainWidget = new QWidget(this);
+
     // Main layout is vertical.
     auto mainLayout = new QVBoxLayout();
 
@@ -73,13 +79,17 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_cover_image_label->setText("IMAGE HERE");
 
 	/// @todo Make this into the real Metadata tree view.  Until then, keep it hidden.
-	mainLayout->addWidget(m_metadata_tree_view);
+//	mainLayout->addWidget(m_metadata_tree_view);
 	m_metadata_tree_view->hide();
 
+#if 1 // splitter
+    mainWidget->addWidget(m_metadata_widget);
+    mainWidget->addWidget(m_cover_image_label);
+#else
     mainLayout->addWidget(m_metadata_widget);
     mainLayout->addWidget(m_cover_image_label);
-    auto mainWidget = new QWidget(this);
     mainWidget->setLayout(mainLayout);
+#endif
     setWidget(mainWidget);
 
 	// Connect up to the proxy model.  We won't have to disconnect/reconnect since we own this proxy model.
