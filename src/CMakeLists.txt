@@ -171,6 +171,7 @@ set(HEADER_FILES
 	utils/TheSimplestThings.h
 	logic/CueSheetParser.h
 	logic/CueSheet.h
+	logic/CoverArtJob.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
 	logic/proxymodels/ModelHelpers.h
@@ -217,6 +218,7 @@ set(SOURCE_FILES
 	utils/UniqueIDMixin.h
 	logic/CueSheetParser.cpp
 	logic/CueSheet.cpp
+	logic/CoverArtJob.cpp
 	logic/ModelUserRoles.cpp
 	logic/proxymodels/SelectionFilterProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
