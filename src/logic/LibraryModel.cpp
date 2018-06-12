@@ -39,6 +39,7 @@
 #include <QJsonDocument>
 #include <QTemporaryFile>
 #include <QDir>
+#include <QFileIconProvider>
 
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
@@ -194,26 +195,42 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 		}
 	}
 
-	if(role == Qt::DecorationRole && SectionID::Status == getSectionFromCol(index.column()))
-	{
-		// Return an icon indicating the populated status of this entry.
-		auto item = getItem(index);
-		if(item->isPopulated())
-		{
-			if(item->isError())
-			{
-				return m_IconError;
-			}
-			else
-			{
-				return m_IconOk;
-			}
-		}
-		else
-		{
-			return m_IconUnknown;
-		}
-	}
+    if(role == Qt::DecorationRole)
+    {
+        auto sectionid = getSectionFromCol(index.column());
+        if(SectionID::Status == sectionid)
+        {
+            // Return an icon indicating the populated status of this entry.
+            auto item = getItem(index);
+            if(item->isPopulated())
+            {
+                if(item->isError())
+                {
+                    return m_IconError;
+                }
+                else
+                {
+                    return m_IconOk;
+                }
+            }
+            else
+            {
+                return m_IconUnknown;
+            }
+        }
+//        else if(SectionID::FileType == sectionid)
+//        {
+//            // Return an icon for the MIME type of the file containing the track.
+//            QFileIconProvider fip;
+//            auto item = getItem(index);
+//            QFileInfo finfo(item->getUrl().toLocalFile());
+//            return fip.icon(finfo);
+//        }
+        else
+        {
+            return QVariant();
+        }
+    }
 	if(role == Qt::DisplayRole || role == Qt::ToolTipRole)
 	{
 		auto item = getItem(index);
