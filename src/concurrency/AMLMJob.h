@@ -411,12 +411,10 @@ public:
 				else
 				{
                     // Cast to the derived job type.
-//                    using JobType = std::remove_pointer_t<decltype((this))>;
                     using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
                     auto* jobptr = dynamic_cast<JobType*>(kjob);
                     Q_ASSERT(jobptr);
 					// Call the continuation.
-//                    f(kjob);
                     f(jobptr);
 				}
 			});

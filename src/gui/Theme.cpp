@@ -19,14 +19,10 @@
 
 #include <config.h>
 
-#include "Theme.h"
-
+/// Qt5
 #include <QIcon>
 #include <QStyle>
 #include <QStyleFactory>
-
-#include <AMLMSettings.h>
-
 #include <QString>
 #include <QDebug>
 #include <QApplication>
@@ -39,15 +35,20 @@
 #include <QDirIterator>
 #include <QUrl>
 #include <QRegularExpression>
-#include <gui/MainWindow.h>
+#include <QMimeType>
 
-#include "DebugHelpers.h"
-
-#if HAVE_KF501
 /// KF5
+#if HAVE_KF501
 #include <KIconLoader>
 #include <KActionMenu>
 #endif
+
+/// Ours.
+#include <AMLMSettings.h>
+#include <gui/Theme.h>
+#include <gui/MainWindow.h>
+#include <utils/DebugHelpers.h>
+
 
 QStringList Theme::m_available_styles;
 
@@ -219,7 +220,7 @@ M_WARNING("TODO");
 	}
 }
 
-QActionGroup * Theme::getStylesActionGroup(MainWindow *main_window)
+QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 {
 	/// Set up a "Style" menu.
 	/// Adapted from similar code in Kdenlive::MainWindow::init().
@@ -367,6 +368,12 @@ QIcon Theme::iconFromTheme(const QStringList &icon_names)
     qDb() << "Failed to find icon with any of the names" << icon_names << "in icon them search paths.";
 
     return retval;
+}
+
+QIcon Theme::iconFromTheme(const QMimeType &mime_type)
+{
+    // Return an icon from the theme matching the MIME type.
+    return iconFromTheme({mime_type.iconName(), mime_type.genericIconName()});
 }
 
 QKeySequence Theme::keySequenceFromTheme(Theme::Key key)

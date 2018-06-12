@@ -161,7 +161,6 @@ set(HEADER_FILES
 	utils/in.h
 	utils/MapConverter.h
 	utils/StringHelpers.h
-	utils/Theme.h
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	utils/AsyncDirScanner.h
@@ -210,7 +209,6 @@ set(SOURCE_FILES
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
-	utils/Theme.cpp
 	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
 	concurrency/ReportingRunner.cpp

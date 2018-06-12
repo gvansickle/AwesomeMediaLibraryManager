@@ -110,7 +110,7 @@
 #include "utils/DebugHelpers.h"
 
 #include <logic/MP2.h>
-#include <utils/Theme.h>
+#include "Theme.h"
 #include "logic/LibraryEntryMimeData.h"
 
 #include "AboutBox.h"
@@ -205,7 +205,7 @@ void MainWindow::init()
 
 	// Set up our Theme/Style management and actions.
 	Theme::initialize();
-	m_actgroup_styles = Theme::getStylesActionGroup(this);
+    m_actgroup_styles = Theme::getWidgetStylesActionGroup(this);
 	m_act_styles_kaction_menu = qobject_cast<KActionMenu*>(m_actgroup_styles->parent());
 	Q_CHECK_PTR(m_act_styles_kaction_menu);
 
@@ -680,6 +680,7 @@ void MainWindow::createActionsHelp(KActionCollection* ac)
 {
 #if HAVE_KF501
 	// For KDE we use a derivation of KHelpMenu.
+    Q_UNUSED(ac);
 #else
 	m_helpAct = make_action(Theme::iconFromTheme("help-contents"), tr("&Help"), this,
 							QKeySequence::HelpContents,

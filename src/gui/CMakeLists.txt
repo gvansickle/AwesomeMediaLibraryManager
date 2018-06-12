@@ -43,6 +43,7 @@ set(gui_HEADER_FILES
 	menus/HelpMenu.h
 	helpers/NetAwareFileDialogGtk3.h
 	helpers/Gtk3DialogHelper.h
+	Theme.h
 	)
 
 # gui source files
@@ -73,6 +74,7 @@ set(gui_SOURCE_FILES
 	menus/HelpMenu.cpp
 	helpers/NetAwareFileDialogGtk3.cpp
 	helpers/Gtk3DialogHelper.cpp
+	Theme.cpp
 	)
 
 # Settings dialog files (in settings/).

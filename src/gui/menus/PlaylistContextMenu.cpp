@@ -17,11 +17,11 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gui/Theme.h>
 #include "PlaylistContextMenu.h"
 
 #include <QDebug>
 
-#include "utils/Theme.h"
 #include "utils/ActionHelpers.h"
 #include "gui/helpers/Tips.h"
 #include "ActionBundle.h"

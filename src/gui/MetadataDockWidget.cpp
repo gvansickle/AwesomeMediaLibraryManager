@@ -40,12 +40,12 @@
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
+#include <gui/Theme.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelChangeWatcher.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
 
-#include <utils/Theme.h>
 #include <utils/StringHelpers.h>
 
 #include <logic/CoverArtJob.h>

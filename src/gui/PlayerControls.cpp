@@ -32,7 +32,7 @@
 #include <qxtglobalshortcut.h>
 #endif
 
-#include "utils/Theme.h"
+#include <gui/Theme.h>
 #include "utils/ConnectHelpers.h"
 #include "utils/ActionHelpers.h"
 

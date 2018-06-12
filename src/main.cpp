@@ -43,6 +43,7 @@
 
 
 #include <gtk/gtk.h>
+#include <gui/Theme.h>
 
 /// Ours
 
@@ -51,7 +52,6 @@
 #include "utils/StringHelpers.h"
 
 #include "gui/MainWindow.h"
-#include "utils/Theme.h"
 #include "utils/RegisterQtMetatypes.h"
 
 #include "resources/VersionInfo.h"
