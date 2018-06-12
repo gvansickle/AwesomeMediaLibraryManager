@@ -116,7 +116,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         // Go to the next entry and return the path to it.
         QString entry_path = m_dir_iterator.next();
         // Get the QFileInfo for this entry.
-        auto file_info = m_dir_iterator.fileInfo();
+        QFileInfo file_info = m_dir_iterator.fileInfo();
 
 //            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
