@@ -21,11 +21,29 @@
 #define AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 
 #include <functional>
+#include <vector>
 
 void RegisterQtMetatypes();
 
 int RegisterQTRegCallback(std::function<void(void)> f);
 
-#define AMLM_QREG_CALLBACK(f) static int xxxx_dummy_var ##__LINE__ = RegisterQTRegCallback(f);
+class QtRegCallbackRegistry
+{
+public:
+    QtRegCallbackRegistry() {};
+
+    static QtRegCallbackRegistry& instance();
+
+    void register_callback(std::function<void(void)> callback);
+
+private:
+    static std::vector<std::function<void(void)>> m_registered_callbacks;
+};
+
+//#define AMLM_QREG_CALLBACK(f) static int xxxx_dummy_var ##__LINE__ = RegisterQTRegCallback(f);
+//#define AMLM_QREG_CALLBACK(f) QtRegCallbackRegistry::instance()->register_callback(f)
+//template <class T>
+//void AMLM_QREG_CALLBACK(T f) static auto dummy = [](){ QtRegCallbackRegistry::instance()->register_callback(f); }();
+#define AMLM_QREG_CALLBACK(f) static int dummy = [](){ QtRegCallbackRegistry::instance().register_callback(f); return 5; }();
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

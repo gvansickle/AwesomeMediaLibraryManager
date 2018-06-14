@@ -173,7 +173,7 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, /*QEnableSharedFromThis<AMLMJob>,*/ public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT

@@ -58,6 +58,8 @@
 
 static std::vector<std::function<void(void)>> f_register_callbacks;
 
+static QtRegCallbackRegistry f_callback_registry;
+std::vector<std::function<void(void)>> QtRegCallbackRegistry::m_registered_callbacks;
 
 void RegisterQtMetatypes()
 {
@@ -114,4 +116,15 @@ int RegisterQTRegCallback(std::function<void(void)> f)
 
     // Return a non-const but dummy value.
     return 2;//static_cast<int>(&f);
+}
+
+QtRegCallbackRegistry& QtRegCallbackRegistry::instance()
+{
+    return f_callback_registry;
+}
+
+void QtRegCallbackRegistry::register_callback(std::function<void(void)> callback)
+{
+    m_registered_callbacks.push_back(callback);
+    std::cerr << "Registering callback:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
 }

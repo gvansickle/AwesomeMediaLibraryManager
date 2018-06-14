@@ -153,7 +153,7 @@ private:
 };
 
 
-
+#if 0
 /*
  *
  */
@@ -187,6 +187,6 @@ private:
 	QVector<QFutureWatcherBase*> m_future_watchers;
 
 };
-
+#endif
 
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */

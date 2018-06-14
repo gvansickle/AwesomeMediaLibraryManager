@@ -18,7 +18,7 @@
  */
 
 #include "AsyncTaskManager.h"
-
+#if 0
 AsyncTaskManager::AsyncTaskManager(QObject *parent) : QObject(parent)
 {
 
@@ -29,3 +29,4 @@ AsyncTaskManager::~AsyncTaskManager()
 
 }
 
+#endif
