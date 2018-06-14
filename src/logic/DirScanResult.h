@@ -33,16 +33,30 @@ class DirScanResult
 {
 public:
 	DirScanResult();
-    DirScanResult(const QUrl& found_url, const QUrl& found_url_finfo);
+    DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
 	virtual ~DirScanResult();
+
+    /**
+     * URLs:
+     * - Sidecar cuesheet
+     * - Sidecar album art (folder.jpg/cover.jpg)
+     * Bools:
+     * - Is result:
+     * -- Dir with only single album/disc rip
+     * -- Dir with random files
+     */
 
     bool hasSidecarCuesheet() const;
 
 protected:
 
     QUrl m_found_url;
-    QUrl m_dir_url;
     QFileInfo m_found_url_finfo;
+
+    QUrl m_dir_url;
+
 };
+
+Q_DECLARE_METATYPE(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

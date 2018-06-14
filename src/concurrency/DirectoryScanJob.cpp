@@ -25,7 +25,9 @@
 #include <QDirIterator>
 #include <ThreadWeaver/DebuggingAids>
 
+/// Ours
 #include "utils/TheSimplestThings.h"
+#include <logic/DirScanResult.h>
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
@@ -151,6 +153,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
             total_discovered_file_size_bytes += file_size;
 
             QUrl file_url = QUrl::fromLocalFile(entry_path);
+
+            /// @todo
+            DirScanResult dir_scan_result(file_url, file_info);
 
             Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 

@@ -24,13 +24,19 @@ DirScanResult::DirScanResult()
 
 }
 
-DirScanResult::DirScanResult(const QUrl &found_url, const QUrl &found_url_finfo)
+DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 {
-
+    m_found_url = found_url;
+    m_found_url_finfo = found_url_finfo;
 }
 
 DirScanResult::~DirScanResult()
 {
+}
+
+bool DirScanResult::hasSidecarCuesheet() const
+{
+
 }
 
 
