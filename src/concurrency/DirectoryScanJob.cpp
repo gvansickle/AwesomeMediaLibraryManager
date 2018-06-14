@@ -65,6 +65,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     ///          So "T qobject_cast(QObject *object)" in particular won't work here.
 
     Q_UNUSED(self);
+    Q_UNUSED(thread);
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 

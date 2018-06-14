@@ -181,6 +181,7 @@ set(HEADER_FILES
 	logic/LibraryRescannerMapItem.h
 	logic/LibraryRescannerJob.h
 	logic/proxymodels/QPersistentModelIndexVec.h
+	logic/DirScanResult.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	concurrency/DirectoryScanJob.h
@@ -225,6 +226,7 @@ set(SOURCE_FILES
 	logic/LibraryRescannerMapItem.cpp
 	logic/LibraryRescannerJob.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
+	logic/DirScanResult.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	concurrency/DirectoryScanJob.cpp
