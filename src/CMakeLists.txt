@@ -255,7 +255,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/AMLMCompositeJob.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
-	concurrency/AsyncTaskManager.cpp
 	concurrency/ExtAsync.cpp
 	concurrency/function_traits.cpp
 	concurrency/ActivityManager.cpp

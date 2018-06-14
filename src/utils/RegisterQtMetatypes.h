@@ -30,7 +30,7 @@ int RegisterQTRegCallback(std::function<void(void)> f);
 class QtRegCallbackRegistry
 {
 public:
-    QtRegCallbackRegistry() {};
+    QtRegCallbackRegistry() {}
 
     static QtRegCallbackRegistry& instance();
 
