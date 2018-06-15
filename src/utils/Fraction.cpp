@@ -33,12 +33,11 @@
 #include "utils/RegisterQtMetatypes.h"
 
 
-static void cb1(void) { qIn() << "Registering Fraction"; };
-
-AMLM_QREG_CALLBACK(cb1);
-//AMLM_QREG_CALLBACK([](){
-//    qIn() << "Registering Fraction";
-//});
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering Fraction";
+    qRegisterMetaType<Fraction>();
+	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
+});
 
 /// Calculate the Greatest Common Divisor.
 static qint64 gcd(qint64 x, qint64 y)

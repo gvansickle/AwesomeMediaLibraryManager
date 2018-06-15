@@ -27,12 +27,17 @@ void RegisterQtMetatypes();
 
 int RegisterQTRegCallback(std::function<void(void)> f);
 
+/**
+ * Singleton class for static-init-time registering of callbacks to be called
+ * immediately after the QApp has been created.
+ *
+ * Uses the Construct On First Use Idiom.
+ * https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
+ */
 class QtRegCallbackRegistry
 {
 public:
     QtRegCallbackRegistry() = default;
-
-//    static QtRegCallbackRegistry& instance();
 
     void register_callback(std::function<void(void)> callback);
     static void static_append(std::function<void(void)> f);
@@ -42,22 +47,8 @@ private:
     std::vector<std::function<void(void)>> m_registered_callbacks;
 };
 
-//static std::vector<std::function<void(void)>> static_append(std::function<void(void)> f)
-//{
-//    QtRegCallbackRegistry::instance().register_callback(f)
-//}
-
-/**
- * For the Construct On First Use Idiom.
- * https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
- */
 QtRegCallbackRegistry& reginstance();
 
-//#define AMLM_QREG_CALLBACK(f) static int xxxx_dummy_var ##__LINE__ = RegisterQTRegCallback(f);
-//#define AMLM_QREG_CALLBACK(f) QtRegCallbackRegistry::instance().register_callback(f)
-//template <class T>
-//void AMLM_QREG_CALLBACK(T f) static auto dummy = [](){ QtRegCallbackRegistry::instance()->register_callback(f); }();
-//#define AMLM_QREG_CALLBACK(f) static int dummy = (QtRegCallbackRegistry::instance().register_callback(f), 8765);
 #define AMLM_QREG_CALLBACK(f) static int dummy = (reginstance().register_callback(f), 0)
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

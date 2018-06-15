@@ -56,22 +56,10 @@
  */
 
 
-//static std::vector<std::function<void(void)>> f_register_callbacks;
-
-//static QtRegCallbackRegistry f_callback_registry;
-//std::vector<std::function<void(void)>> QtRegCallbackRegistry::m_registered_callbacks;
-
 void RegisterQtMetatypes()
 {
-
-    // Call all the registration callbacks.
-//    for(std::function<void(void)>& f : f_register_callbacks)
-//    {
-//        qDb() << "Calling registration callback, total:" << f_register_callbacks.size();
-//        f();
-//    }
-//    QtRegCallbackRegistry::instance().call_registration_callbacks();
-    reginstance().call_registration_callbacks();
+    // Call all the registration callbacks which have been registered during static-init time.
+	reginstance().call_registration_callbacks();
 
 	// ThreadWeaver types.
     qRegisterMetaType<ThreadWeaver::Job*>( "ThreadWeaver::Job*" );
@@ -92,9 +80,6 @@ void RegisterQtMetatypes()
 		};
 	QMetaType::registerConverter< std::shared_ptr<PlaylistModelItem>, std::shared_ptr<LibraryEntry> >(PlaylistModelItemToLibraryEntry);
 
-	qRegisterMetaType<Fraction>();
-	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
-
 	// From #include <logic/LibraryRescanner.h>
 	qRegisterMetaType<MetadataReturnVal>();
 	qRegisterMetaType<QFuture<MetadataReturnVal>>();
@@ -110,20 +95,6 @@ void RegisterQtMetatypes()
 //	qRegisterMetaTypeStreamOperators<LibraryRescannerMapItem>("LibraryRescannerMapItem");
 }
 
-//int RegisterQTRegCallback(std::function<void(void)> f)
-//{
-//    f_register_callbacks.push_back(f);
-
-//    std::cerr << "Registering callback:" << &f << ", size now:" << f_register_callbacks.size() << "\n";
-
-//    // Return a non-const but dummy value.
-//    return 2;//static_cast<int>(&f);
-//}
-
-//QtRegCallbackRegistry& QtRegCallbackRegistry::instance()
-//{
-//    return f_callback_registry;
-//}
 
 void QtRegCallbackRegistry::register_callback(std::function<void(void)> callback)
 {

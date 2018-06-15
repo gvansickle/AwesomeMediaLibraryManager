@@ -35,6 +35,8 @@ using Frames = long;
  */
 class TrackMetadata
 {
+    Q_GADGET
+
 public:
 	TrackMetadata();
 
