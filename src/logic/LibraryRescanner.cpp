@@ -168,7 +168,7 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 
 LibraryRescanner::~LibraryRescanner()
 {
-M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS");
+M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS, OR THE JOBS SHOULDNT BE OWNED BY THIS");
 }
 
 
@@ -392,10 +392,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     master_job_tracker->registerJob(dirtrav_job);
     master_job_tracker->setAutoDelete(dirtrav_job, false);
-    master_job_tracker->setStopOnClose(dirtrav_job, false);
+    master_job_tracker->setStopOnClose(dirtrav_job, true);
     master_job_tracker->registerJob(lib_rescan_job);
     master_job_tracker->setAutoDelete(lib_rescan_job, false);
-    master_job_tracker->setStopOnClose(lib_rescan_job, false);
+    master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
     // Start the asynchronous ball rolling.
     dirtrav_job->start();
@@ -409,6 +409,7 @@ void LibraryRescanner::cancelAsyncDirectoryTraversal()
 {
 	m_dirtrav_future.cancel();
 }
+
 #if 0
 ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 {

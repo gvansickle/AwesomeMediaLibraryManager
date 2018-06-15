@@ -19,6 +19,14 @@
 
 #include "DirScanResult.h"
 
+#include <config.h>
+
+/// Qt5
+#include <QUrl>
+#include <QFileInfo>
+#include <QDir>
+#include <QRegularExpression>
+
 DirScanResult::DirScanResult()
 {
 
@@ -34,9 +42,28 @@ DirScanResult::~DirScanResult()
 {
 }
 
-bool DirScanResult::hasSidecarCuesheet() const
+void DirScanResult::determineDirProps()
 {
+    if(false) // local file
+    {
+        QDir dir_url_qdir = m_found_url_finfo.dir();
+        m_dir_url = QUrl::fromLocalFile(dir_url_qdir.absolutePath());
+    }
+    else // Works for any URL.
+    {
+        m_dir_url = m_found_url.adjusted(QUrl::RemoveFilename);
+    }
 
+    // Sidecar cue sheet?
+    // Create the *.cue URL.
+    m_cue_url = m_found_url;
+    QString cue_url_as_str = m_cue_url.toString();
+    Q_ASSERT(!cue_url_as_str.isEmpty());
+    cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
+    m_cue_url = cue_url_as_str;
+    Q_ASSERT(m_cue_url.isValid());
 }
+
+
 
 

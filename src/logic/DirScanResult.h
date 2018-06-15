@@ -31,6 +31,8 @@
  */
 class DirScanResult
 {
+    Q_GADGET
+
 public:
 	DirScanResult();
     DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
@@ -46,14 +48,38 @@ public:
      * -- Dir with random files
      */
 
-    bool hasSidecarCuesheet() const;
+    enum DirProp
+    {
+        /// Directory contains only one album, not just e.g. a dump of mp3's.
+        SingleAlbum = 0x01,
+        /// Directory contains a single audio file.
+        SingleFile = 0x02,
+        /// Directory contains a separate cue sheet file.
+        /// @note Does not preclude an embedded cuesheet.
+        HasCueSheet = 0x04,
+        /// Directory has one or more album art files.
+        HasArt = 0x08,
+        /// Dir is just a bunch of MP3's.
+        JBOMP3s = 0x10,
+        /// Nothing is known about the dir.
+        Unknown = 0x80
+    };
+    Q_DECLARE_FLAGS(DirProps, DirProp)
+    Q_FLAG(DirProps)
+
+    DirProps getDirProps() const { return m_dir_props; }
 
 protected:
+
+    void determineDirProps();
 
     QUrl m_found_url;
     QFileInfo m_found_url_finfo;
 
+    DirProps m_dir_props { Unknown };
+
     QUrl m_dir_url;
+    QUrl m_cue_url;
 
 };
 

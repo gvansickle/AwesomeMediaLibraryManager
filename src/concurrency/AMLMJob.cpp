@@ -311,7 +311,7 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     else
     {
         qDb() << objectName() << "Succeeded";
-        // @note No explicit succeeded signal.  Success is done() signal plus success() == true.
+        // @note No explicit TW::succeeded signal.  Success is TW::done() signal plus TW::success() == true.
     }
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
@@ -367,6 +367,9 @@ qDb() << "END WAIT KJob::doKill()";
     /// - deleteLater() is optionally called on the job.
 
     qDb() << "EXIT KJob::doKill()";
+
+    // Try to detect that we've survived at least to this point.
+    Q_ASSERT(!m_i_was_deleted);
 
     return true;
 }
