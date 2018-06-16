@@ -26,8 +26,11 @@
 #include <QUrl>
 #include <QFileInfo>
 
+/// Ours
+#include <utils/QtHelpers.h>
+
 /**
- *
+ * A single hit found during a directory scan.
  */
 class DirScanResult
 {
@@ -71,6 +74,8 @@ public:
 
 protected:
 
+    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+
     void determineDirProps();
 
     QUrl m_found_url;
@@ -79,10 +84,14 @@ protected:
     DirProps m_dir_props { Unknown };
 
     QUrl m_dir_url;
+
     QUrl m_cue_url;
+    QFileInfo m_cue_url_finifo;
 
 };
 
 Q_DECLARE_METATYPE(DirScanResult);
+
+QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

@@ -27,6 +27,17 @@
 #include <QDir>
 #include <QRegularExpression>
 
+/// Ours, Qt5/KF5-related
+#include <utils/TheSimplestThings.h>
+#include <utils/RegisterQtMetatypes.h>
+
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering DirScanResult";
+    qRegisterMetaType<DirScanResult>();
+    qRegisterMetaTypeStreamOperators<DirScanResult>();
+});
+
+
 DirScanResult::DirScanResult()
 {
 
@@ -54,16 +65,48 @@ void DirScanResult::determineDirProps()
         m_dir_url = m_found_url.adjusted(QUrl::RemoveFilename);
     }
 
-    // Sidecar cue sheet?
+    // Is there a sidecar cue sheet?
     // Create the *.cue URL.
-    m_cue_url = m_found_url;
-    QString cue_url_as_str = m_cue_url.toString();
+    auto possible_cue_url = m_found_url;
+    QString cue_url_as_str = possible_cue_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
-    m_cue_url = cue_url_as_str;
-    Q_ASSERT(m_cue_url.isValid());
+    possible_cue_url = cue_url_as_str;
+    Q_ASSERT(possible_cue_url.isValid());
+    // Does the file exist?
+    if(true /** @todo local file*/)
+    {
+        QFileInfo fi(possible_cue_url.toLocalFile());
+        if(fi.exists())
+        {
+            // It's there.
+            m_cue_url = possible_cue_url;
+            m_cue_url_finifo = fi;
+            m_dir_props |= HasCueSheet;
+        }
+    }
+    else
+    {
+        Q_ASSERT_X(0, "dirprops", "NOT IMPLEMENTED: Non-local determination of sidecar cue files.");
+    }
 }
 
+#define DATASTREAM_FIELDS(X) \
+    X(m_found_url) /*X(m_found_url_finfo)*/ X(m_dir_props) X(m_cue_url) /*X(m_cue_url_finifo)*/
 
+QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
+{
+#define X(field) << myObj.field
+    out DATASTREAM_FIELDS(X);
+#undef X
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
+{
+#define X(field) >> myObj.field
+    return in DATASTREAM_FIELDS(X);
+#undef X
+}
 
 

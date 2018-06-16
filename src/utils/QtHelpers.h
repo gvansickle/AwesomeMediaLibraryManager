@@ -17,25 +17,27 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @file
- * Master header which includes a number of other helper headers which, in the 21st century,
- * we really shouldn't need.
+#ifndef SRC_UTILS_QTHELPERS_H_
+#define SRC_UTILS_QTHELPERS_H_
+
+/*
+ *
  */
+class QtHelpers
+{
+public:
+	QtHelpers();
+	virtual ~QtHelpers();
+};
 
-#ifndef SRC_UTILS_THESIMPLESTTHINGS_H_
-#define SRC_UTILS_THESIMPLESTTHINGS_H_
+#define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
+	friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \
+	friend_placeholder QDataStream &operator>>(QDataStream &in, classname & myObj);
 
-/// If we're being analyzed by clang-tidy etc.
-#ifdef __clang_analyzer__ ///< @todo This actually never is defined by anything.
+#define QTH_DECLARE_QDATASTREAM_OPS(classname) \
+	IMPL_QTH_DECLARE_QDATASTREAM_OPS(/**/, classname)
 
+#define QTH_FRIEND_QDATASTREAM_OPS(classname) \
+	IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend, classname)
 
-#endif
-
-#include "StringHelpers.h"
-#include "DebugHelpers.h"
-#include "DebugBlock.h"
-#include "ConnectHelpers.h"
-#include "QtCastHelpers.h"
-
-#endif /* SRC_UTILS_THESIMPLESTTHINGS_H_ */
+#endif /* SRC_UTILS_QTHELPERS_H_ */

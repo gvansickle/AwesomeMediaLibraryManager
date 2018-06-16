@@ -184,6 +184,7 @@ set(HEADER_FILES
 	logic/DirScanResult.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
+	utils/QtHelpers.h
 	concurrency/DirectoryScanJob.h
 	concurrency/ThreadsafeMap.h
 	concurrency/DebugSequence.h
@@ -229,6 +230,7 @@ set(SOURCE_FILES
 	logic/DirScanResult.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
+	utils/QtHelpers.cpp
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
