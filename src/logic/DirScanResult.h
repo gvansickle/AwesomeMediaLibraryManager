@@ -34,6 +34,7 @@
 class FileModificationInfo
 {
     Q_GADGET
+
 public:
     FileModificationInfo() = default;
     FileModificationInfo(const QFileInfo &fmodinfo)
@@ -99,7 +100,7 @@ public:
         /// Dir is just a bunch of MP3's.
         JBOMP3s = 0x10,
         /// Nothing is known about the dir.
-        Unknown = 0x80
+        Unknown = 0x00
     };
     Q_DECLARE_FLAGS(DirProps, DirProp)
     Q_FLAG(DirProps)
@@ -114,6 +115,8 @@ protected:
 
     void determineDirProps();
 
+    QVector<QUrl> otherMediaFilesInDir(const QFileInfo& finfo);
+
     DirProps m_dir_props { Unknown };
 
     /// The media URL which was found.
@@ -123,7 +126,10 @@ protected:
 
     QUrl m_dir_url;
 
+    /// URL to a sidecar cuesheet.  May be empty if none was found.
     QUrl m_cue_url;
+    /// Info for detecting changes
+    FileModificationInfo m_cue_url_modinfo;
 
     QFileInfo m_found_url_finfo;
     QFileInfo m_cue_url_finifo;

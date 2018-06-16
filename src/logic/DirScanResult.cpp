@@ -93,8 +93,16 @@ void DirScanResult::determineDirProps()
     }
 }
 
+QVector<QUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
+{
+    // Get the parent directory.
+    auto dir = finfo.dir();
+
+M_WARNING("TODO");
+}
+
 #define DATASTREAM_FIELDS(X) \
-    X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) /*X(m_cue_url_finifo)*/
+    X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
 
 QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
 {
