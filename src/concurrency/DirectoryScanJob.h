@@ -20,6 +20,9 @@
 #ifndef SRC_CONCURRENCY_DIRECTORYSCANJOB_H_
 #define SRC_CONCURRENCY_DIRECTORYSCANJOB_H_
 
+#include <config.h>
+
+/// Qt5
 #include <QObject>
 #include <QUrl>
 #include <QDir>
@@ -27,8 +30,10 @@
 #include <QWeakPointer>
 #include <QSharedPointer>
 
+/// KF5
 #include <ThreadWeaver/ThreadWeaver>
 
+#include <logic/DirScanResult.h>
 #include "AMLMJob.h"
 #include "utils/UniqueIDMixin.h"
 
@@ -70,7 +75,8 @@ Q_SIGNALS:
      * Differs in the parameters.  KIO::Job is a KJob here, and the UDSEntryList
      * is not a list or a UDSEntry, but a single QUrl.
      */
-    void entries(KJob* kjob, const QUrl& url);
+//    void entries(KJob* kjob, const QUrl& url);
+    void entries(KJob* kjob, const DirScanResult& url);
 
 public:
     explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,

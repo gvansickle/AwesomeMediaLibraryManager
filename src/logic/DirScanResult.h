@@ -25,9 +25,43 @@
 /// Qt5
 #include <QUrl>
 #include <QFileInfo>
+#include <QDateTime>
+#include <QDataStream>
 
 /// Ours
 #include <utils/QtHelpers.h>
+
+class FileModificationInfo
+{
+    Q_GADGET
+public:
+    FileModificationInfo() = default;
+    FileModificationInfo(const QFileInfo &fmodinfo)
+        : m_size(fmodinfo.size()),
+          m_last_modified_timestamp(fmodinfo.lastModified()),
+          m_metadata_last_modified_timestamp(fmodinfo.metadataChangeTime()) {}
+    FileModificationInfo(const FileModificationInfo& fmodinfo) = default;
+    ~FileModificationInfo() = default;
+
+    /// File size, or 0 if couldn't be determined.
+    qint64 m_size;
+    /// Last modified time.  Invalid if can't be determined(?).
+    QDateTime m_last_modified_timestamp;
+    /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
+    QDateTime m_metadata_last_modified_timestamp;
+
+    friend QDataStream &operator<<(QDataStream &out, const FileModificationInfo & myObj)
+    {
+        return out << myObj.m_size << myObj.m_last_modified_timestamp << myObj.m_metadata_last_modified_timestamp;
+    }
+    friend QDataStream &operator>>(QDataStream &in, FileModificationInfo & myObj)
+    {
+        return in >> myObj.m_size >> myObj.m_last_modified_timestamp >> myObj.m_metadata_last_modified_timestamp;
+    }
+};
+
+Q_DECLARE_METATYPE(FileModificationInfo);
+QTH_DECLARE_QDATASTREAM_OPS(FileModificationInfo);
 
 /**
  * A single hit found during a directory scan.
@@ -72,22 +106,27 @@ public:
 
     DirProps getDirProps() const { return m_dir_props; }
 
+    QUrl getMediaQUrl() const { return m_found_url; }
+
 protected:
 
     QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 
     void determineDirProps();
 
-    QUrl m_found_url;
-    QFileInfo m_found_url_finfo;
-
     DirProps m_dir_props { Unknown };
+
+    /// The media URL which was found.
+    QUrl m_found_url;
+    /// Info for detecting changes
+    FileModificationInfo m_found_url_modinfo;
 
     QUrl m_dir_url;
 
     QUrl m_cue_url;
-    QFileInfo m_cue_url_finifo;
 
+    QFileInfo m_found_url_finfo;
+    QFileInfo m_cue_url_finifo;
 };
 
 Q_DECLARE_METATYPE(DirScanResult);

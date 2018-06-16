@@ -160,7 +160,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
             Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
-            Q_EMIT entries(this, file_url);
+//            Q_EMIT entries(this, file_url);
+            Q_EMIT entries(this, dir_scan_result);
 
             // Update progress.
             /// @note Bytes is being used for "Size" == progress by the system.

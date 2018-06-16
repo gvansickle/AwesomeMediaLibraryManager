@@ -47,6 +47,8 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 {
     m_found_url = found_url;
     m_found_url_finfo = found_url_finfo;
+
+    determineDirProps();
 }
 
 DirScanResult::~DirScanResult()
@@ -92,7 +94,7 @@ void DirScanResult::determineDirProps()
 }
 
 #define DATASTREAM_FIELDS(X) \
-    X(m_found_url) /*X(m_found_url_finfo)*/ X(m_dir_props) X(m_cue_url) /*X(m_cue_url_finifo)*/
+    X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) /*X(m_cue_url_finifo)*/
 
 QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
 {
