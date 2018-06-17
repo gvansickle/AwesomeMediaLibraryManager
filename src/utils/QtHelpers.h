@@ -20,6 +20,8 @@
 #ifndef SRC_UTILS_QTHELPERS_H_
 #define SRC_UTILS_QTHELPERS_H_
 
+#include <config.h>
+
 /*
  *
  */
@@ -30,9 +32,20 @@ public:
 	virtual ~QtHelpers();
 };
 
+#define IMPL_QTH_DECLARE_QDEBUG_OP(friend_placeholder, classname) \
+	friend_placeholder QDebug operator<<(QDebug out, const classname & obj);
+
 #define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
 	friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \
 	friend_placeholder QDataStream &operator>>(QDataStream &in, classname & myObj);
+
+///
+
+#define QTH_DECLARE_QDEBUG_OP(classname) \
+	IMPL_QTH_DECLARE_QDEBUG_OP(/**/, classname)
+
+#define QTH_FRIEND_QDEBUG_OP(classname) \
+	IMPL_QTH_DECLARE_QDEBUG_OP(friend, classname)
 
 #define QTH_DECLARE_QDATASTREAM_OPS(classname) \
 	IMPL_QTH_DECLARE_QDATASTREAM_OPS(/**/, classname)

@@ -161,6 +161,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
 //            Q_EMIT entries(this, file_url);
+            qDb() << "DIRSCANRESULT:" << dir_scan_result;
             Q_EMIT entries(this, dir_scan_result);
 
             // Update progress.

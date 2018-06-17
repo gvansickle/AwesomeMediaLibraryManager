@@ -27,6 +27,7 @@
 #include <QFileInfo>
 #include <QDateTime>
 #include <QDataStream>
+#include <QDebug>
 
 /// Ours
 #include <utils/QtHelpers.h>
@@ -50,6 +51,12 @@ public:
     QDateTime m_last_modified_timestamp;
     /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
     QDateTime m_metadata_last_modified_timestamp;
+
+//    QTH_FRIEND_QDEBUG_OP(FileModificationInfo);
+    friend QDebug operator<<(QDebug dbg, const FileModificationInfo& obj)
+    {
+        return dbg << obj.m_size << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
+    }
 
     friend QDataStream &operator<<(QDataStream &out, const FileModificationInfo & myObj)
     {
@@ -94,7 +101,7 @@ public:
         SingleFile = 0x02,
         /// Directory contains a separate cue sheet file.
         /// @note Does not preclude an embedded cuesheet.
-        HasCueSheet = 0x04,
+        HasSidecarCueSheet = 0x04,
         /// Directory has one or more album art files.
         HasArt = 0x08,
         /// Dir is just a bunch of MP3's.
@@ -107,13 +114,20 @@ public:
 
     DirProps getDirProps() const { return m_dir_props; }
 
+    /// Get the URL which points to the actual media file found.
     QUrl getMediaQUrl() const { return m_found_url; }
+
+    /// URL to any sidecar cuesheet found.
+    /// If one was found, DirProp::HasSidecarCueSheet will be set.
+    /// Returned URL will not be valid if there was no sidecar cue sheet.
+    QUrl getSidecarCuesheetQUrl() const { return m_cue_url; }
+
+    QTH_FRIEND_QDEBUG_OP(DirScanResult);
+    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 
 protected:
 
-    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
-
-    void determineDirProps();
+    void determineDirProps(const QFileInfo &);
 
     QVector<QUrl> otherMediaFilesInDir(const QFileInfo& finfo);
 
@@ -130,13 +144,11 @@ protected:
     QUrl m_cue_url;
     /// Info for detecting changes
     FileModificationInfo m_cue_url_modinfo;
-
-    QFileInfo m_found_url_finfo;
-    QFileInfo m_cue_url_finifo;
 };
 
 Q_DECLARE_METATYPE(DirScanResult);
 
+QTH_DECLARE_QDEBUG_OP(DirScanResult);
 QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

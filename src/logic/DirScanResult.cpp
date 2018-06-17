@@ -43,23 +43,24 @@ DirScanResult::DirScanResult()
 
 }
 
-DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
+DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo) : m_found_url_modinfo(found_url_finfo)
 {
     m_found_url = found_url;
-    m_found_url_finfo = found_url_finfo;
 
-    determineDirProps();
+
+    determineDirProps(found_url_finfo);
 }
 
 DirScanResult::~DirScanResult()
 {
 }
 
-void DirScanResult::determineDirProps()
+void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 {
+    // Separate out just the directory part of the URL.
     if(false) // local file
     {
-        QDir dir_url_qdir = m_found_url_finfo.dir();
+        QDir dir_url_qdir = found_url_finfo.dir();
         m_dir_url = QUrl::fromLocalFile(dir_url_qdir.absolutePath());
     }
     else // Works for any URL.
@@ -83,8 +84,7 @@ void DirScanResult::determineDirProps()
         {
             // It's there.
             m_cue_url = possible_cue_url;
-            m_cue_url_finifo = fi;
-            m_dir_props |= HasCueSheet;
+            m_dir_props |= HasSidecarCueSheet;
         }
     }
     else
@@ -104,6 +104,14 @@ M_WARNING("TODO");
 #define DATASTREAM_FIELDS(X) \
     X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
 
+QDebug operator<<(QDebug dbg, const DirScanResult & obj)
+{
+#define X(field) << obj.field
+    dbg DATASTREAM_FIELDS(X);
+#undef X
+    return dbg;
+}
+
 QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
 {
 #define X(field) << myObj.field
@@ -119,4 +127,4 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 #undef X
 }
 
-
+#undef DATASTREAM_FIELDS
