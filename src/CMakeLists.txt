@@ -152,6 +152,7 @@ set(HEADER_FILES
 	logic/PlaylistModel.h
 	logic/PlaylistModelItem.h
 	logic/PlaylistSortFilterProxyModel.h
+	logic/SupportedMimeTypes.h
 	logic/TrackMetadata.h
 	utils/ActionHelpers.h
 	utils/ConnectHelpers.h
@@ -207,6 +208,7 @@ set(SOURCE_FILES
 	logic/PlaylistModel.cpp
 	logic/PlaylistModelItem.cpp
 	logic/PlaylistSortFilterProxyModel.cpp
+	logic/SupportedMimeTypes.cpp
 	logic/TrackMetadata.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
