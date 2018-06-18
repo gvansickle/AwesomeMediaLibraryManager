@@ -29,17 +29,27 @@
  */
 class SupportedMimeTypes: public QObject
 {
+    Q_OBJECT
+
 public:
-	SupportedMimeTypes();
+    explicit SupportedMimeTypes(QObject* parent);
     ~SupportedMimeTypes() override;
 
+    static SupportedMimeTypes& instance();
+
     QVector<QMimeType> supportedAudioMimeTypes() const;
-    QStringList supportedAudioMimeTypesAsExtensions() const;
+    QStringList supportedAudioMimeTypesAsFilterStringList() const;
+    QStringList supportedAudioMimeTypesAsSuffixStringList() const;
 
 protected:
     QStringList m_mime_audio_types;
     QStringList m_mime_audio_associated_types;
     QStringList m_mime_playlist_types;
+
+private:
+
+    static SupportedMimeTypes* m_the_instance;
+
 };
 
 #endif /* SRC_LOGIC_SUPPORTEDMIMETYPES_H_ */

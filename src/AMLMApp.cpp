@@ -28,6 +28,8 @@
 
 /// Ours
 #include <utils/TheSimplestThings.h>
+#include <logic/SupportedMimeTypes.h>
+
 
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
@@ -36,6 +38,9 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
     /// @todo EXPERIMENTAL
 //    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
+
+    // Create the singletons we'll need for any app invocation.
+    /* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
 }
 
 AMLMApp::~AMLMApp()

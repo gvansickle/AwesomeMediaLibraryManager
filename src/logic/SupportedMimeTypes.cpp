@@ -25,8 +25,21 @@
 
 #include <utils/StringHelpers.h>
 
-SupportedMimeTypes::SupportedMimeTypes()
+
+SupportedMimeTypes* SupportedMimeTypes::m_the_instance {nullptr};
+
+SupportedMimeTypes& SupportedMimeTypes::instance()
 {
+    return *m_the_instance;
+}
+
+SupportedMimeTypes::SupportedMimeTypes(QObject* parent) : QObject(parent)
+{
+    Q_ASSERT(m_the_instance == nullptr);
+
+    m_the_instance = this;
+
+    // "*.flac", "*.mp3", "*.ogg", "*.wav"
     m_mime_audio_types << "audio/flac" << "audio/mpeg" << "audio/ogg" << "audio/x-flac+ogg" << "audio/x-vorbis+ogg" << "audio/x-wav";
     m_mime_audio_associated_types << "application/x-cue";
     m_mime_playlist_types << "audio/x-mpegurl" /* *.m3u/8/ .vlc */ << "application/xspf+xml";
@@ -52,7 +65,7 @@ QVector<QMimeType> SupportedMimeTypes::supportedAudioMimeTypes() const
     return retval;
 }
 
-QStringList SupportedMimeTypes::supportedAudioMimeTypesAsExtensions() const
+QStringList SupportedMimeTypes::supportedAudioMimeTypesAsFilterStringList() const
 {
     QStringList retval;
 
@@ -62,6 +75,26 @@ QStringList SupportedMimeTypes::supportedAudioMimeTypesAsExtensions() const
     {
         retval.push_back(s.filterString());
     }
+
+    return retval;
+}
+
+QStringList SupportedMimeTypes::supportedAudioMimeTypesAsSuffixStringList() const
+{
+    QStringList retval;
+
+    auto mimetypes = supportedAudioMimeTypes();
+
+    for(const auto& s : mimetypes)
+    {
+        auto suffixes = s.suffixes();
+        for(const auto& substr : suffixes)
+        {
+            retval.push_back("*." + substr);
+        }
+    }
+
+    retval.removeDuplicates();
 
     return retval;
 }

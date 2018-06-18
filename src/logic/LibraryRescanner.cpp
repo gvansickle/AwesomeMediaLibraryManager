@@ -20,6 +20,7 @@
 /** @file Implementation of LibraryRescanner, an asynchronous helper for LibraryModel. */
 
 #include "LibraryRescanner.h"
+#include "SupportedMimeTypes.h"
 
 /// Std C++
 #include <functional>
@@ -30,9 +31,9 @@
 
 /// KF5
 #include <KJobUiDelegate>
+#include <KIO/DirectorySizeJob>
 
 /// Ours
-#include <KIO/DirectorySizeJob>
 #include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
@@ -328,16 +329,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
-//    DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
-//                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-//                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+    auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
-    DirectoryScannerAMLMJobPtr dirtrav_job = new DirectoryScannerAMLMJob(this, dir_url,
-                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+    DirectoryScannerAMLMJobPtr dirtrav_job = new DirectoryScannerAMLMJob(this, dir_url, extensions,
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
-//    auto lib_rescan_job = new LibraryRescannerJob(this);
 
     connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find){
         // Found a file matching the criteria.  Send it to the model.
