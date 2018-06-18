@@ -88,6 +88,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         return;
     }
 
+    setProgressUnit(KJob::Unit::Files);
 
     int num_files_found_so_far = 0;
     int num_discovered_dirs = 0;
@@ -120,8 +121,6 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         QString entry_path = m_dir_iterator.next();
         // Get the QFileInfo for this entry.
         QFileInfo file_info = m_dir_iterator.fileInfo();
-
-//            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
 
         // First check that we have a valid file or dir: Currently exists and is readable by current user.
         if(!(file_info.exists() && file_info.isReadable()))
