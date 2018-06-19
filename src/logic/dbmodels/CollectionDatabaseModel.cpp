@@ -87,8 +87,6 @@ void CollectionDatabaseModel::create_db_tables(QSqlDatabase *db)
             qDb() << query.executedQuery();
         }
     }
-
-
 }
 
 QSqlRelationalTableModel *CollectionDatabaseModel::get_rel_table(QObject *parent)

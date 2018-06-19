@@ -108,11 +108,6 @@ protected:
 	/// Runs in an arbitrary thread context, so must be threadsafe.
 	MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
 
-    ///////////////////////////////////////////////////////////// EXPERIMENTAL
-    bool open_db_connection(QUrl db_file);
-    void create_db_tables(QSqlDatabase *db);
-    ///////////////////////////////////////////////////////////// EXPERIMENTAL
-
 private:
 	Q_DISABLE_COPY(LibraryRescanner)
 

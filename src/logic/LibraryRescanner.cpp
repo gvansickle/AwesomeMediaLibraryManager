@@ -50,116 +50,6 @@
 #include "logic/LibraryModel.h"
 
 
-////////////////////////////////////////////////////////////////////////
-
-#include <QSqlError>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QSqlRelationalTableModel>
-#include <QMessageBox>
-
-static bool create_sqlite_database_connection()
-{
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-
-    /// @todo TEMP hardcoded db file name in home dir.
-    auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-    QString ab_file = db_dir + "/AMLMTestdb.sqlite3";
-
-//    db.setDatabaseName(":memory:");
-    db.setDatabaseName(ab_file);
-
-    // Enable regexes.
-    db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
-
-    // Create the db.
-    if (!db.open()) {
-        QMessageBox::critical(nullptr, QObject::tr("Cannot open database"),
-            QObject::tr("Unable to establish a database connection.\n"
-                        "This example needs SQLite support. Please read "
-                        "the Qt SQL driver documentation for information how "
-                        "to build it.\n\n"
-                        "Click Cancel to exit."), QMessageBox::Cancel);
-        return false;
-    }
-
-    QSqlQuery query;
-    query.exec("create table person (id int primary key, "
-               "firstname varchar(20), lastname varchar(20))");
-    query.exec("insert into person values(101, 'Danny', 'Young')");
-    query.exec("insert into person values(102, 'Christine', 'Holand')");
-    query.exec("insert into person values(103, 'Lars', 'Gordon')");
-    query.exec("insert into person values(104, 'Roberto', 'Robitaille')");
-    query.exec("insert into person values(105, 'Maria', 'Papadopoulos')");
-
-    query.exec("create table items (id int primary key,"
-                                             "imagefile int,"
-                                             "itemtype varchar(20),"
-                                             "description varchar(100))");
-    query.exec("insert into items "
-               "values(0, 0, 'Qt',"
-               "'Qt is a full development framework with tools designed to "
-               "streamline the creation of stunning applications and  "
-               "amazing user interfaces for desktop, embedded and mobile "
-               "platforms.')");
-    query.exec("insert into items "
-               "values(1, 1, 'Qt Quick',"
-               "'Qt Quick is a collection of techniques designed to help "
-               "developers create intuitive, modern-looking, and fluid "
-               "user interfaces using a CSS & JavaScript like language.')");
-    query.exec("insert into items "
-               "values(2, 2, 'Qt Creator',"
-               "'Qt Creator is a powerful cross-platform integrated "
-               "development environment (IDE), including UI design tools "
-               "and on-device debugging.')");
-    query.exec("insert into items "
-               "values(3, 3, 'Qt Project',"
-               "'The Qt Project governs the open source development of Qt, "
-               "allowing anyone wanting to contribute to join the effort "
-               "through a meritocratic structure of approvers and "
-               "maintainers.')");
-
-    query.exec("create table images (itemid int, file varchar(20))");
-    query.exec("insert into images values(0, 'images/qt-logo.png')");
-    query.exec("insert into images values(1, 'images/qt-quick.png')");
-    query.exec("insert into images values(2, 'images/qt-creator.png')");
-    query.exec("insert into images values(3, 'images/qt-project.png')");
-
-    qDb() << "DBQ 1";
-    auto person_record_names = db.record("person");
-    qDb() << "DATABASE NAMES:" << person_record_names;
-
-    return true;
-}
-
-void init_db_model(QSqlRelationalTableModel *model)
-{
-
-}
-
-void create_relational_tables()
-{
-    QSqlQuery query;
-    query.exec("create table employee(id int primary key, name varchar(20), city int, country int)");
-    query.exec("insert into employee values(1, 'Espen', 5000, 47)");
-    query.exec("insert into employee values(2, 'Harald', 80000, 49)");
-    query.exec("insert into employee values(3, 'Sam', 100, 1)");
-
-    query.exec("create table city(id int, name varchar(20))");
-    query.exec("insert into city values(100, 'San Jose')");
-    query.exec("insert into city values(5000, 'Oslo')");
-    query.exec("insert into city values(80000, 'Munich')");
-
-    query.exec("create table country(id int, name varchar(20))");
-    query.exec("insert into country values(1, 'USA')");
-    query.exec("insert into country values(47, 'Norway')");
-    query.exec("insert into country values(49, 'Germany')");
-}
-
-////////////////////////////////////////////////////////////////////////
-
-
 LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 {
 	setObjectName("TheLibraryRescanner");
@@ -268,92 +158,6 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-/////////////////////// EXP
-
-//bool LibraryRescanner::open_db_connection(QUrl db_file)
-//{
-//    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ "experimental_db_connection");
-
-//    /// @todo TEMP hardcoded db file name in home dir.
-//    auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-//    QString ab_file = db_dir + "/AMLMTestdb.sqlite3";
-
-////    db.setDatabaseName(":memory:");
-//    db.setDatabaseName(ab_file);
-
-//    // Enable regexes.
-//    db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
-
-//    // Create the db.
-//    if (!db.open()) {
-//        QMessageBox::critical(nullptr, QObject::tr("Cannot open database"),
-//            QObject::tr("Unable to establish a database connection.\n"
-//                        "This example needs SQLite support. Please read "
-//                        "the Qt SQL driver documentation for information how "
-//                        "to build it.\n\n"
-//                        "Click Cancel to exit."), QMessageBox::Cancel);
-//        return false;
-//    }
-
-//    return true;
-//}
-
-//void LibraryRescanner::create_db_tables(QSqlDatabase *db)
-//{
-//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
-
-//    QStringList tables;
-
-//    tables.append("CREATE TABLE DirScanResults ("
-//                  "id INTEGER DEFAULT NULL PRIMARY KEY AUTOINCREMENT,"
-//                  "url TEXT NOT NULL"
-//                  ")");
-//    for (int i = 0; i < tables.count(); ++i)
-//    {
-//        QSqlQuery query(db_conn);
-//        if (!query.exec(tables[i]))
-//        {
-//            qDb() << query.lastError();
-//            qDb() << query.executedQuery();
-//        }
-//    }
-
-//    QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(this, db_conn);
-
-//    rel_table_model->setTable("DirScanResults");
-//    rel_table_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-//    rel_table_model->select();
-//    rel_table_model->setHeaderData(0, Qt::Horizontal, tr("HEADER_Id"));
-//    rel_table_model->setHeaderData(1, Qt::Horizontal, tr("HEADER_Url"));
-//    rel_table_model->submitAll();
-//}
-
-/////////////////////// EXP
-
-#if 0
-/// EXPERIMENTAL
-create_sqlite_database_connection();
-create_relational_tables();
-// Add a table of QUrls.
-QSqlQuery query;
-query.exec("create table qurls (id INTEGER primary key, url TEXT)");
-QSqlRelationalTableModel model;
-//    init_db_model(&model);
-model.setTable("qurls");
-model.setEditStrategy(QSqlTableModel::OnManualSubmit);
-//    model.setRelation(2, QSqlRelation("city", "id", "name"));
-//    model.setRelation(3, QSqlRelation("country", "id", "name"));
-model.setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-//    model.setHeaderData(1, Qt::Horizontal, QObject::tr("Name"));
-//    model.setHeaderData(2, Qt::Horizontal, QObject::tr("City"));
-//    model.setHeaderData(3, Qt::Horizontal, QObject::tr("Country"));
-model.setHeaderData(1, Qt::Horizontal, QObject::tr("QUrl"));
-model.select();
-//    // Can we get the first record?
-//    qDb() << "EMPLOYEE ROW 1 RECORD:" << model.record(1);
-/// EXPERIMENTAL
-#endif
-
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 {
     qDb() << "START:" << dir_url;
@@ -399,28 +203,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
 
-//// EXP
-//    open_db_connection(QUrl("dummy"));
-//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
-//    create_db_tables(&db_conn);
-//    auto* model = new QSqlRelationalTableModel(this, db_conn);
-//    model->setTable("DirScanResults");
-//    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-//    model->select();
-//// EXP
-
     connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find)  {
         // Found a file matching the criteria.  Send it to the model.
         runInObjectEventLoop([=](){
-            /// EXP
-//            static int index = 0;
-//            QSqlQuery query;
-//            query.prepare("insert into qurls (id, url)"
-//                          "VALUES (:id, :url)");
-//            query.bindValue(0, index);
-//            query.bindValue(1, the_url.toString());
-//            query.exec();
-            /// EXP
             m_current_libmodel->onIncomingFilename(the_find.getMediaQUrl().toString());}, m_current_libmodel);
         ;});
 
