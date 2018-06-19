@@ -41,6 +41,18 @@
 #include <QDir>
 #include <QFileIconProvider>
 
+////////////////////////////////////////////////////////////////////////
+#include <QSqlError>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlRecord>
+#include <QSqlRelationalTableModel>
+#include <QSqlRecord>
+#include <QMessageBox>
+#include <QSqlField>
+#include <logic/dbmodels/CollectionDatabaseModel.h>
+//////////////////////////////////////////////////////////////////////////
+
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 
@@ -82,6 +94,13 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_libr
 	m_rescanner = new LibraryRescanner(this);
 
 	// Connections.
+
+    //////// EXP
+    m_coll_db_model = new CollectionDatabaseModel(this);
+    m_coll_db_model->open_db_connection(QUrl("dummy"));
+    m_coll_db_model->create_db_tables();
+    m_sql_model = m_coll_db_model->get_rel_table(this);//new QSqlRelationalTableModel(this, db_conn);
+
 }
 
 LibraryModel::~LibraryModel()
@@ -741,6 +760,38 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 
 void LibraryModel::onIncomingFilename(QString filename)
 {
+//    //////// EXP
+//    open_db_connection(QUrl("dummy"));
+//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
+//    create_db_tables(&db_conn);
+//    auto* model = new QSqlRelationalTableModel(this, db_conn);
+//    model->setTable("DirScanResults");
+//    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+//    model->select();
+//    static int index = 0;
+    // Get an empty record from the model.
+    QSqlRecord record = m_sql_model->record();
+    qDb() << "EMPTY RECORD:" << record;
+    Q_ASSERT(record.count() == 2);
+//    QSqlField id_field("id", QVariant::Type::Int);
+//    id_field.setGenerated(false);
+    // Remove the id/primary key so it gets auto-incremented by the DB.
+    record.remove(0);
+//    QSqlField url_field("url", QVariant::Type::String);
+//    record.append(id_field);
+//    record.setGenerated("id", false);
+//    record.setValue("id", index);
+//    index++;
+//    record.append(url_field);
+    record.setValue("url", QUrl::fromLocalFile(filename));
+    qDb() << "Field Count:" << record.count();
+//    Q_ASSERT(record.count() == 2);
+    bool status = m_sql_model->insertRecord(-1, record);
+    Q_ASSERT_X(status, "", "INSERT FAILED");
+    status = m_sql_model->submitAll();
+    Q_ASSERT_X(status, "", "SUBMIT FAILED");
+    //////// EXP
+
 	auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
 	qDebug() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);

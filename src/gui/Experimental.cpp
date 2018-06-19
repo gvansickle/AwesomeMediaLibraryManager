@@ -210,62 +210,6 @@ void Experimental::DoExperiment()
 
 #endif
 
-//	KUrlRequesterDialog::getUrl();
-
-#if 0
-
-    // Get dir url.
-//    QUrl dir_url = QFileDialog::getExistingDirectoryUrl(this, tr("EXPERIMENTAL - getExistingDirectoryUrl()"),
-//                                                            QUrl("/home/gary"), // Start dir
-//                                                            QFileDialog::ShowDirsOnly, // Options.
-//                                                            QStringList()  //<< "gvfs" << "network" << "smb" << "file" << "mtp" << "http" // Supported Schemes.
-//                                                            );
-    QUrl dir_url("smb://storey.local/music/");
-
-//    auto dlg = new ExpDialog(this);
-//    dlg->show();
-
-    // Try to use KIO to list the tree.
-    KIO::ListJob* list_job = KIO::listRecursive(dir_url, KIO::JobFlag::DefaultFlags, false /*no hidden dirs*/);
-    KIO::DirectorySizeJob* ds_job = KIO::directorySize(dir_url);
-//    KIO::CopyJob* cp_job = KIO::copyAs(dir_url, QUrl("file://home/gary/deletme"));
-
-    qDebug() << M_NAME_VAL(list_job);
-
-    connect(list_job, &KIO::ListJob::entries, this, &Experimental::onDirEntries);
-
-    qDebug() << "REGISTERING LIST JOB";
-//    KIO::getJobTracker()->registerJob(list_job);
-
-//    KIO::Job* total_job = new KIO::Job;
-//    KCompositeJob* total_job = new KCompositeJob(this);
-//    KIO::SimpleJob* total_job = new KIO::SimpleJob(this->parent());
-//    ds_job->setParentJob(total_job);
-//    list_job->setParentJob(ds_job);
-    list_job->setObjectName("ListJob");
-
-
-    MainWindow::getInstance()->registerJob(list_job);
-    MainWindow::getInstance()->registerJob(ds_job);
-//    MainWindow::getInstance()->registerJob(cp_job);
-
-    qDebug() << "STARTING LIST JOB";
-    list_job->start();
-    qDebug() << "STARTING DS JOB";
-    ds_job->start();
-//    cp_job->start();
-
-//    dlg->TrackJob(list_job);
-
-//    dlg->exec();
-
-//    KWidgetJobTracker* job_tracker_widget = new KWidgetJobTracker(this);
-//    job_tracker_widget->registerJob(list_job);
-
-//    connect(job, &KIO::ListJob::)
-
-#endif
-
 #endif
 
 #if EX2 == 1

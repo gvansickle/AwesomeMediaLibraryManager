@@ -52,6 +52,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 
+#include <QSqlError>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlRecord>
@@ -264,8 +265,70 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 		qCritical() << "GOT EMPTY LIST OF LIBRARY ENTRIES TO RESCAN";
 	}
 
-	return retval;
+    return retval;
 }
+
+/////////////////////// EXP
+
+//bool LibraryRescanner::open_db_connection(QUrl db_file)
+//{
+//    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ "experimental_db_connection");
+
+//    /// @todo TEMP hardcoded db file name in home dir.
+//    auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+//    QString ab_file = db_dir + "/AMLMTestdb.sqlite3";
+
+////    db.setDatabaseName(":memory:");
+//    db.setDatabaseName(ab_file);
+
+//    // Enable regexes.
+//    db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
+
+//    // Create the db.
+//    if (!db.open()) {
+//        QMessageBox::critical(nullptr, QObject::tr("Cannot open database"),
+//            QObject::tr("Unable to establish a database connection.\n"
+//                        "This example needs SQLite support. Please read "
+//                        "the Qt SQL driver documentation for information how "
+//                        "to build it.\n\n"
+//                        "Click Cancel to exit."), QMessageBox::Cancel);
+//        return false;
+//    }
+
+//    return true;
+//}
+
+//void LibraryRescanner::create_db_tables(QSqlDatabase *db)
+//{
+//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
+
+//    QStringList tables;
+
+//    tables.append("CREATE TABLE DirScanResults ("
+//                  "id INTEGER DEFAULT NULL PRIMARY KEY AUTOINCREMENT,"
+//                  "url TEXT NOT NULL"
+//                  ")");
+//    for (int i = 0; i < tables.count(); ++i)
+//    {
+//        QSqlQuery query(db_conn);
+//        if (!query.exec(tables[i]))
+//        {
+//            qDb() << query.lastError();
+//            qDb() << query.executedQuery();
+//        }
+//    }
+
+//    QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(this, db_conn);
+
+//    rel_table_model->setTable("DirScanResults");
+//    rel_table_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+//    rel_table_model->select();
+//    rel_table_model->setHeaderData(0, Qt::Horizontal, tr("HEADER_Id"));
+//    rel_table_model->setHeaderData(1, Qt::Horizontal, tr("HEADER_Url"));
+//    rel_table_model->submitAll();
+//}
+
+/////////////////////// EXP
 
 #if 0
 /// EXPERIMENTAL
@@ -336,7 +399,17 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
 
-    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find){
+//// EXP
+//    open_db_connection(QUrl("dummy"));
+//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
+//    create_db_tables(&db_conn);
+//    auto* model = new QSqlRelationalTableModel(this, db_conn);
+//    model->setTable("DirScanResults");
+//    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+//    model->select();
+//// EXP
+
+    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find)  {
         // Found a file matching the criteria.  Send it to the model.
         runInObjectEventLoop([=](){
             /// EXP
@@ -347,7 +420,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //            query.bindValue(0, index);
 //            query.bindValue(1, the_url.toString());
 //            query.exec();
-//            index++;
             /// EXP
             m_current_libmodel->onIncomingFilename(the_find.getMediaQUrl().toString());}, m_current_libmodel);
         ;});
