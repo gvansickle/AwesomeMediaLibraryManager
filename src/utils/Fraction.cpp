@@ -17,12 +17,27 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "Fraction.h"
 
+/// Std C++
+#include <numeric>
+
+/// Qt5
 #include <QString>
 #include <QDataStream>
 
-#include <numeric>
+/// Ours
+#include "utils/TheSimplestThings.h"
+#include "utils/RegisterQtMetatypes.h"
+
+
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering Fraction";
+    qRegisterMetaType<Fraction>();
+	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
+});
 
 /// Calculate the Greatest Common Divisor.
 static qint64 gcd(qint64 x, qint64 y)

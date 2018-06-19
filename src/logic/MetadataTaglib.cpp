@@ -21,13 +21,18 @@
 
 #include "Metadata.h"
 
+/// Std C++
 #include <map>
 #include <set>
 #include <vector>
 #include <string>
 #include <type_traits>
 
-// TagLib includes.
+/// Qt5
+#include <QUrl>
+#include <QDebug>
+
+/// TagLib includes.
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
@@ -42,12 +47,12 @@
 #include <taglib/flacfile.h>
 #include <taglib/flacpicture.h>
 
-#include <logic/CueSheetParser.h>
-
-#include <QDebug>
+/// Ours
+#include <logic/CueSheet.h>
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
-#include <QUrl>
+#include "TagLibHelpers.h"
+
 
 static std::set<std::string> f_newly_discovered_keys;
 
@@ -100,26 +105,7 @@ static std::string reverse_lookup(const std::string& native_key)
 }
 #endif
 
-/// @name The TagLib::FileRef constructor takes a TagLib::FileName, which:
-/// - on Linux is typedef for const char *
-/// - on Windows is an actual class with both const char * and const wchar_t * members.
-/// So here's a couple templates to smooth this over.
-/// @{
-template<typename StringType, typename FNType = TagLib::FileName>
-std::enable_if_t<std::is_same<FNType, const char*>::value, TagLib::FileRef>
-openFileRef(const StringType& local_path)
-{
-	// TagLib::FileName is a const char *, so this is likely Linux.  Translate the QString accordingly and open the FileRef.
-	return TagLib::FileRef(local_path.toStdString().c_str());
-}
-template<typename StringType, typename FNType = TagLib::FileName>
-std::enable_if_t<!std::is_same<FNType, const char *>::value, TagLib::FileRef>
-openFileRef(const StringType& local_path)
-{
-	// TagLib::FileName is not const char *, so this is likely Windows.  Translate the QString accordingly and open the FileRef.
-	return TagLib::FileRef(local_path.toStdWString().c_str());
-}
-/// @}
+
 
 std::set<std::string> MetadataTaglib::getNewTags()
 {
@@ -147,8 +133,6 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 	//qDebug() << "Returning:" << retval;
 	return retval;
 }
-
-CueSheetParser MetadataTaglib::m_cue_sheet_parser;
 
 
 MetadataTaglib::MetadataTaglib() : MetadataAbstractBase()
@@ -216,7 +200,7 @@ bool MetadataTaglib::read(QUrl url)
 	}
 	else
 	{
-		qDebug() << "No generic CUESHEET";
+//		qDebug() << "No generic CUESHEET";
 	}
 
 	// Downcast it to whatever type it really is.
@@ -282,8 +266,22 @@ bool MetadataTaglib::read(QUrl url)
     }
     else
     {
+M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produced by EAC");
+    /// @todo The sidecar cue sheet support will then also kick in, and you get weirdness like a track will have two names.
+    /// Need to do some kind of comparison/validity check.
+#if 1
 		auto pm = tag->properties();
+
+//        for(auto e : pm)
+//        {
+//            qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
+//        }
 		m_tag_map = PropertyMapToTagMap(pm);
+
+M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
+
+//        qDb() << m_tag_map;
+#endif
     }
 
 	// Read the AudioProperties.
@@ -299,74 +297,41 @@ bool MetadataTaglib::read(QUrl url)
 		qWarning() << "AudioProperties was null";
 	}
 
-	// Did we find a cue sheet?
-	if(!cuesheet_str.empty())
-	{
-		// Try to parse the cue sheet we found with libcue.
-		Cd *cd = m_cue_sheet_parser.parse_cue_sheet_string(cuesheet_str.c_str());
-		if(cd == nullptr)
-		{
-			qWarning() << "Embedded cue sheet parsing failed.";
-		}
-		else
-		{
-			m_has_cuesheet = true;
 
-			m_num_tracks_on_media = cd_get_ntrack(cd);
-			//qDebug() << "Num Tracks:" << m_num_tracks;
-			if(m_num_tracks_on_media < 2)
-			{
-				qWarning() << "Num tracks is less than 2:" << m_num_tracks_on_media;
-			}
-			for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
-			{
-				Track* t = cd_get_track(cd, track_num);
-				//qDebug() << "Track filename:" << track_get_filename(t);
-				Cdtext* cdt = track_get_cdtext(t);
-				TrackMetadata tm;
-				tm.m_PTI_TITLE = tostdstr(cdtext_get(PTI_TITLE, cdt));
-				tm.m_PTI_PERFORMER = tostdstr(cdtext_get(PTI_PERFORMER, cdt));
-                ///@todo There's more we could get here.
-				for(auto i = 0; i<99; ++i)
-				{
-					//qDebug() << "Reading track index:" << i;
-					long ti = track_get_index(t, i);
-					tm.m_indexes.push_back(ti);
-					if((ti==-1) && (i>1))
-					{
-						qDebug() << "Found last index: " << i-1;
-						break;
-					}
-					else
-					{
-						//qDebug() << " Index:" << ti;
-					}
-				}
-				tm.m_track_number = track_num;
-				tm.m_start_frames = track_get_start(t);
-				tm.m_length_frames = track_get_length(t);
-				if(tm.m_length_frames < 0)
-				{
-					// This is the last track.  We have to calculate the length from the total recording time minus the start offset.
-					Q_ASSERT(m_length_in_milliseconds > 0);
-					tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
-				}
-				tm.m_length_pre_gap = track_get_zero_pre(t);
-				tm.m_length_post_gap = track_get_zero_post(t);
-				tm.m_isrc = tostdstr(track_get_isrc(t));
-				//qDebug() << "Track info:" << tm.toStdString();
-				m_tracks[track_num] = tm;
-			}
+    std::unique_ptr<CueSheet> cuesheet;
+    cuesheet.reset();
 
-			// Delete the Cd struct.
-			// All the other libcue structs we've opened are deleted with it.
-			cd_delete(cd);
-		}
+    // Did we find an embedded cue sheet?
+    if(!cuesheet_str.empty())
+    {
+        cuesheet = CueSheet::TEMP_parse_cue_sheet_string(cuesheet_str, m_length_in_milliseconds);
+        Q_ASSERT(cuesheet);
+    }
+    else
+    {
+        // Try to read a possible sidecar cue sheet file.
+        cuesheet = CueSheet::read_associated_cuesheet(m_audio_file_url, m_length_in_milliseconds);
+    }
+
+    // Did we find a cue sheet?
+    if(cuesheet)
+    {
+        m_has_cuesheet = true;
+        m_num_tracks_on_media = cuesheet->get_total_num_tracks();
+
+        /// @todo MAYBE TEMP?
+//        qDb() << "CUESHEET:" << *cuesheet;
+        // Copy the cuesheet track info.
+        m_tracks = cuesheet->get_track_map();
+        Q_ASSERT(m_tracks.size() > 0);
+
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
 		qDebug() << "Scanning for gaplessness...";
 		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
 		{
+//            qDb() << "TRACK:" << track_num << m_tracks[track_num];
+
 			auto next_tracknum = track_num+1;
 			TrackMetadata tm1 = m_tracks[track_num];
 			TrackMetadata tm2 = m_tracks[next_tracknum];
@@ -402,19 +367,23 @@ Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 	MetadataTaglib retval(*this);
 
 	// Now replace the track map with only the entry for this one track.
-
+//qIn() << "BEFORE:" << retval.m_tracks;
 	std::map<int, TrackMetadata> new_track_map;
 	auto track_entry = m_tracks.at(track_index);
 	new_track_map.insert({track_index, track_entry});
 
 	retval.m_tracks = new_track_map;
 
+//qIn() << "AFTER:" << retval.m_tracks;
+
 	// Copy any track-specific CDTEXT data to the "top level" metadata.
 M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate")
 	if(track_entry.m_PTI_TITLE.size() > 0)
 	{
+    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
 		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
+    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 	}
 	if(track_entry.m_PTI_PERFORMER.size() > 0)
 	{

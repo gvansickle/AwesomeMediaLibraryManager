@@ -25,7 +25,9 @@
 #include <QDirIterator>
 #include <ThreadWeaver/DebuggingAids>
 
+/// Ours
 #include "utils/TheSimplestThings.h"
+#include <logic/DirScanResult.h>
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
@@ -65,6 +67,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     ///          So "T qobject_cast(QObject *object)" in particular won't work here.
 
     Q_UNUSED(self);
+    Q_UNUSED(thread);
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
@@ -85,6 +88,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         return;
     }
 
+    setProgressUnit(KJob::Unit::Files);
 
     int num_files_found_so_far = 0;
     int num_discovered_dirs = 0;
@@ -116,9 +120,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         // Go to the next entry and return the path to it.
         QString entry_path = m_dir_iterator.next();
         // Get the QFileInfo for this entry.
-        auto file_info = m_dir_iterator.fileInfo();
-
-//            qDebug() << "PATH:" << entry_path << "FILEINFO Dir/File:" << file_info.isDir() << file_info.isFile();
+        QFileInfo file_info = m_dir_iterator.fileInfo();
 
         // First check that we have a valid file or dir: Currently exists and is readable by current user.
         if(!(file_info.exists() && file_info.isReadable()))
@@ -151,10 +153,15 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
             QUrl file_url = QUrl::fromLocalFile(entry_path);
 
+            /// @todo
+            DirScanResult dir_scan_result(file_url, file_info);
+
             Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
-            Q_EMIT entries(this, file_url);
+//            Q_EMIT entries(this, file_url);
+            qDb() << "DIRSCANRESULT:" << dir_scan_result;
+            Q_EMIT entries(this, dir_scan_result);
 
             // Update progress.
             /// @note Bytes is being used for "Size" == progress by the system.

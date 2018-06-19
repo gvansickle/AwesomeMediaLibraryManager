@@ -68,9 +68,6 @@ private:
 	QPointer<QStandardItemModel> m_sources_model;
 	QTreeView* m_collection_tree_view;
 
-M_WARNING("EXPERIMENTAL");
-	QPointer<QTreeWidget> m_tree_widget;
-
 	QPointer<LibraryModel> modelIndexToLibraryModelPtr(const QModelIndex& modelindex) const;
 
 	void doLibraryContextMenu(QPoint treepos);

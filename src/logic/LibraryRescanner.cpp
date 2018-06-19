@@ -20,6 +20,7 @@
 /** @file Implementation of LibraryRescanner, an asynchronous helper for LibraryModel. */
 
 #include "LibraryRescanner.h"
+#include "SupportedMimeTypes.h"
 
 /// Std C++
 #include <functional>
@@ -30,9 +31,9 @@
 
 /// KF5
 #include <KJobUiDelegate>
+#include <KIO/DirectorySizeJob>
 
 /// Ours
-#include <KIO/DirectorySizeJob>
 #include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
@@ -48,8 +49,6 @@
 
 #include "logic/LibraryModel.h"
 
-//using std::placeholders::_1;
-
 
 LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 {
@@ -61,7 +60,7 @@ LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 
 LibraryRescanner::~LibraryRescanner()
 {
-M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS");
+M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS, OR THE JOBS SHOULDNT BE OWNED BY THIS");
 }
 
 
@@ -156,7 +155,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 		qCritical() << "GOT EMPTY LIST OF LIBRARY ENTRIES TO RESCAN";
 	}
 
-	return retval;
+    return retval;
 }
 
 void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
@@ -197,26 +196,20 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
-//    DirectoryScannerAMLMJobPtr dirtrav_job(DirectoryScannerAMLMJob::make_shared(this, dir_url,
-//                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-//                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories));
+    auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
-    DirectoryScannerAMLMJobPtr dirtrav_job = new DirectoryScannerAMLMJob(this, dir_url,
-                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+    DirectoryScannerAMLMJobPtr dirtrav_job = new DirectoryScannerAMLMJob(this, dir_url, extensions,
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
-//    auto lib_rescan_job = new LibraryRescannerJob(this);
 
-    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const QUrl& the_url){
+    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find)  {
         // Found a file matching the criteria.  Send it to the model.
         runInObjectEventLoop([=](){
-            m_current_libmodel->onIncomingFilename(the_url.toString());}, m_current_libmodel);
+            m_current_libmodel->onIncomingFilename(the_find.getMediaQUrl().toString());}, m_current_libmodel);
         ;});
 
-    /// @todo This would be a good candidate for an AMLMJob ".then()".
-//    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::result, this, [=](KJob* kjob){
-    dirtrav_job->then(this, [=](KJob* kjob){
+    dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -253,10 +246,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     master_job_tracker->registerJob(dirtrav_job);
     master_job_tracker->setAutoDelete(dirtrav_job, false);
-    master_job_tracker->setStopOnClose(dirtrav_job, false);
+    master_job_tracker->setStopOnClose(dirtrav_job, true);
     master_job_tracker->registerJob(lib_rescan_job);
     master_job_tracker->setAutoDelete(lib_rescan_job, false);
-    master_job_tracker->setStopOnClose(lib_rescan_job, false);
+    master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
     // Start the asynchronous ball rolling.
     dirtrav_job->start();
@@ -270,6 +263,7 @@ void LibraryRescanner::cancelAsyncDirectoryTraversal()
 {
 	m_dirtrav_future.cancel();
 }
+
 #if 0
 ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
 {

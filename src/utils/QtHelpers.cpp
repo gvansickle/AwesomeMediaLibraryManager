@@ -17,15 +17,16 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AsyncTaskManager.h"
+#include "QtHelpers.h"
 
-AsyncTaskManager::AsyncTaskManager(QObject *parent) : QObject(parent)
+QtHelpers::QtHelpers()
 {
+	// TODO Auto-generated constructor stub
 
 }
 
-AsyncTaskManager::~AsyncTaskManager()
+QtHelpers::~QtHelpers()
 {
-
+	// TODO Auto-generated destructor stub
 }
 

@@ -43,6 +43,7 @@
 
 
 #include <gtk/gtk.h>
+#include <gui/Theme.h>
 
 /// Ours
 
@@ -51,7 +52,6 @@
 #include "utils/StringHelpers.h"
 
 #include "gui/MainWindow.h"
-#include "utils/Theme.h"
 #include "utils/RegisterQtMetatypes.h"
 
 #include "resources/VersionInfo.h"
@@ -113,28 +113,28 @@ int main(int argc, char *argv[])
 	if (!initialGroup.exists())
 	{
 		/// @todo Not sure if we want to be this draconian.
-		QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-		if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
-		{
-			qDb() << "KDE Desktop detected, using system icons";
-		}
-		else
-		{
-			// We are not on a KDE desktop, force breeze icon theme
-			grp.writeEntry("force_breeze", true);
-			qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
-		}
+//		QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+//		if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
+//		{
+//			qDb() << "KDE Desktop detected, using system icons";
+//		}
+//		else
+//		{
+//			// We are not on a KDE desktop, force breeze icon theme
+//			grp.writeEntry("force_breeze", true);
+//			qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
+//		}
 	}
 
 	// Use HighDPI pixmaps as long as we're supporting High DPI scaling.
 	app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 
 	// If we're forcing Breeze icons, force them here.
-	bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
-	if (forceBreeze)
-	{
-		QIcon::setThemeName("breeze");
-	}
+//	bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
+//	if (forceBreeze)
+//	{
+//		QIcon::setThemeName("breeze");
+//	}
 
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System

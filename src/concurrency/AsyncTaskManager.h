@@ -152,41 +152,4 @@ private:
     std::function<void(T)> m_result_function {nullptr};
 };
 
-
-
-/*
- *
- */
-class AsyncTaskManager: public QObject
-{
-public:
-	AsyncTaskManager(QObject *parent = nullptr);
-	virtual ~AsyncTaskManager();
-
-	template <typename T>
-	void add_futureww(futureww<T> fww);
-
-	template <typename T>
-	void addFuture(const QFuture<T>& future,
-			std::function<void(int, QFuture<T>)> on_result,
-			std::function<void()> on_finished,
-			std::function<void()> on_canceled)
-	{
-		auto watcher = new QFutureWatcher<T>(this);
-
-		// Make connections.
-		connect(watcher, &QFutureWatcher<T>::resultReadyAt, [=](int i){on_result(i, watcher->future());});
-		connect(watcher, &QFutureWatcher<T>::finished, on_finished);
-		connect(watcher, &QFutureWatcher<T>::canceled, on_canceled);
-
-		watcher->setFuture(future);
-		m_future_watchers.push_back(watcher);
-	}
-
-private:
-	QVector<QFutureWatcherBase*> m_future_watchers;
-
-};
-
-
 #endif /* UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_ */

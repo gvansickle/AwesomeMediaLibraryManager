@@ -30,6 +30,10 @@
 #include <QUrl>
 #include <QVector>
 
+////// EXP
+class CollectionDatabaseModel;
+class QSqlRelationalTableModel;
+
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
@@ -188,7 +192,8 @@ public Q_SLOTS:
 	void onIncomingFilename(QString filename);
 
 protected:
-	/// @name Subclass model change handlers.
+
+    /// @name Subclass model change handlers.
 	/// Override these in subclasses if you need to do some extra work when the associated base class
 	/// function is called, but you don't need to fully override the function.
 	/// @{
@@ -232,6 +237,10 @@ protected:
 
 private:
 	Q_DISABLE_COPY(LibraryModel)
+
+    ////// EXP
+    CollectionDatabaseModel* m_coll_db_model {nullptr};
+    QSqlRelationalTableModel* m_sql_model;
 
 	/// The directory where we'll put the LibraryModel's cache file.
 	QUrl m_cachedir;

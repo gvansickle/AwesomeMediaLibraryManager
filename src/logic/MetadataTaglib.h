@@ -28,13 +28,13 @@ class MetadataTaglib : public MetadataAbstractBase
 {
 public:
 	MetadataTaglib();
-	virtual ~MetadataTaglib() override;
+    ~MetadataTaglib() override;
 
-	virtual bool isFromCache() const override { return false; }
+    bool isFromCache() const override { return false; }
 
 	static std::set<std::string> getNewTags();
 
-	virtual bool read(QUrl url) override;
+    bool read(QUrl url) override;
 
 	/// Audio stream properites.
 	/// @{
@@ -47,19 +47,17 @@ public:
 	/// @{
 
 	///virtual TrackMetadata track(int i) const override;
-	virtual Metadata get_one_track_metadata(int track_index) const override;
+    Metadata get_one_track_metadata(int track_index) const override;
 
 	/// @}
 
 	/// Embedded art.
 	/// @todo virtual int numEmbeddedPictures() const override;
-	virtual QByteArray getCoverArtBytes() const override;
+    QByteArray getCoverArtBytes() const override;
 
 private:
 
-	virtual MetadataTaglib* clone_impl() const override;
-
-	static CueSheetParser m_cue_sheet_parser;
+    MetadataTaglib* clone_impl() const override;
 };
 
 #endif // METADATATAGLIB_H

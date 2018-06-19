@@ -30,6 +30,7 @@
 #include <QDebug>
 #include <QDataWidgetMapper>
 #include <QLineEdit>
+#include <QSplitter>
 
 /// Ours
 
@@ -39,13 +40,15 @@
 #include <logic/LibraryEntry.h>
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
+#include <gui/Theme.h>
 #include <logic/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelChangeWatcher.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
 
-#include <utils/Theme.h>
 #include <utils/StringHelpers.h>
+
+#include <logic/CoverArtJob.h>
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {
@@ -56,6 +59,11 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
 	// Set up the watcher.
 	m_proxy_model_watcher = new ModelChangeWatcher(this);
 	m_proxy_model_watcher->setModelToWatch(m_proxy_model);
+
+    // Main widget is a splitter.
+    auto mainWidget = new QSplitter(this);
+    mainWidget->setOrientation(Qt::Vertical);
+//    auto mainWidget = new QWidget(this);
 
     // Main layout is vertical.
     auto mainLayout = new QVBoxLayout();
@@ -73,13 +81,17 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_cover_image_label->setText("IMAGE HERE");
 
 	/// @todo Make this into the real Metadata tree view.  Until then, keep it hidden.
-	mainLayout->addWidget(m_metadata_tree_view);
+//	mainLayout->addWidget(m_metadata_tree_view);
 	m_metadata_tree_view->hide();
 
+#if 1 // splitter
+    mainWidget->addWidget(m_metadata_widget);
+    mainWidget->addWidget(m_cover_image_label);
+#else
     mainLayout->addWidget(m_metadata_widget);
     mainLayout->addWidget(m_cover_image_label);
-    auto mainWidget = new QWidget(this);
     mainWidget->setLayout(mainLayout);
+#endif
     setWidget(mainWidget);
 
 	// Connect up to the proxy model.  We won't have to disconnect/reconnect since we own this proxy model.
@@ -199,6 +211,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		}
 
 		// Display the cover image.
+#if THE_OLD_SYCHRONOUS_WAY
 		auto cover_image_bytes = libentry->getCoverImageBytes();
 		if(cover_image_bytes.size() != 0)
 		{
@@ -223,11 +236,56 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
 			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 		}
+#else // THE NEW ASYNCHRONOUS WAY
+        auto coverartjob = new CoverArtJob(this);
+        coverartjob->AsyncGetCoverArt(libentry->getUrl());
+        coverartjob->then(this, [=](CoverArtJob* kjob) {
+            if(kjob->error() || kjob->m_byte_array.size() == 0)
+            {
+                qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+                auto uidelegate = kjob->uiDelegate();
+                Q_CHECK_PTR(uidelegate);
+                uidelegate->showErrorMessage();
+            }
+            else
+            {
+                // Succeeded, pick up the image.
+
+                auto& cover_image_bytes = kjob->m_byte_array;
+
+                if(cover_image_bytes.size() != 0)
+                {
+                    qDebug("Cover image found"); ///@todo << cover_image.mime_type;
+                    QImage image;
+                    if(image.loadFromData(cover_image_bytes) == true)
+                    {
+                        ///qDebug() << "Image:" << image;
+                        m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+                        //m_cover_image_label.adjustSize()
+                    }
+                    else
+                    {
+                        qWarning() << "Error attempting to load image.";
+                        QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+                        m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+                    }
+                }
+                else
+                {
+                    // No image available.
+                    QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+                    m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+                }
+            }
+        });
+        coverartjob->start();
+#endif
 	}
 	else
 	{
 		qWarning() << "PLAYLIST ITEM IS INVALID";
 	}
+
 }
 
 void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap)

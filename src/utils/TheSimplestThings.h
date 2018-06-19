@@ -27,7 +27,7 @@
 #define SRC_UTILS_THESIMPLESTTHINGS_H_
 
 /// If we're being analyzed by clang-tidy etc.
-#ifdef __clang_analyzer__
+#ifdef __clang_analyzer__ ///< @todo This actually never is defined by anything.
 
 
 #endif

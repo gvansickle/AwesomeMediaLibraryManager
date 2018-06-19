@@ -152,6 +152,8 @@ set(HEADER_FILES
 	logic/PlaylistModel.h
 	logic/PlaylistModelItem.h
 	logic/PlaylistSortFilterProxyModel.h
+	logic/SupportedMimeTypes.h
+	logic/dbmodels/CollectionDatabaseModel.h
 	logic/TrackMetadata.h
 	utils/ActionHelpers.h
 	utils/ConnectHelpers.h
@@ -161,7 +163,6 @@ set(HEADER_FILES
 	utils/in.h
 	utils/MapConverter.h
 	utils/StringHelpers.h
-	utils/Theme.h
 	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	utils/AsyncDirScanner.h
@@ -170,6 +171,9 @@ set(HEADER_FILES
 	utils/QtCastHelpers.h
 	utils/TheSimplestThings.h
 	logic/CueSheetParser.h
+	logic/CueSheet.h
+	logic/CoverArtJob.h
+	logic/TagLibHelpers.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
 	logic/proxymodels/ModelHelpers.h
@@ -179,8 +183,10 @@ set(HEADER_FILES
 	logic/LibraryRescannerMapItem.h
 	logic/LibraryRescannerJob.h
 	logic/proxymodels/QPersistentModelIndexVec.h
+	logic/DirScanResult.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
+	utils/QtHelpers.h
 	concurrency/DirectoryScanJob.h
 	concurrency/ThreadsafeMap.h
 	concurrency/DebugSequence.h
@@ -203,11 +209,12 @@ set(SOURCE_FILES
 	logic/PlaylistModel.cpp
 	logic/PlaylistModelItem.cpp
 	logic/PlaylistSortFilterProxyModel.cpp
+	logic/SupportedMimeTypes.cpp
+	logic/dbmodels/CollectionDatabaseModel.cpp
 	logic/TrackMetadata.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
-	utils/Theme.cpp
 	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
 	concurrency/ReportingRunner.cpp
@@ -215,6 +222,8 @@ set(SOURCE_FILES
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
 	logic/CueSheetParser.cpp
+	logic/CueSheet.cpp
+	logic/CoverArtJob.cpp
 	logic/ModelUserRoles.cpp
 	logic/proxymodels/SelectionFilterProxyModel.cpp
 	logic/proxymodels/ModelChangeWatcher.cpp
@@ -222,8 +231,10 @@ set(SOURCE_FILES
 	logic/LibraryRescannerMapItem.cpp
 	logic/LibraryRescannerJob.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
+	logic/DirScanResult.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
+	utils/QtHelpers.cpp
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
@@ -252,7 +263,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/AMLMCompositeJob.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
-	concurrency/AsyncTaskManager.cpp
 	concurrency/ExtAsync.cpp
 	concurrency/function_traits.cpp
 	concurrency/ActivityManager.cpp

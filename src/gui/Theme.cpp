@@ -19,14 +19,10 @@
 
 #include <config.h>
 
-#include "Theme.h"
-
+/// Qt5
 #include <QIcon>
 #include <QStyle>
 #include <QStyleFactory>
-
-#include <AMLMSettings.h>
-
 #include <QString>
 #include <QDebug>
 #include <QApplication>
@@ -39,15 +35,20 @@
 #include <QDirIterator>
 #include <QUrl>
 #include <QRegularExpression>
-#include <gui/MainWindow.h>
+#include <QMimeType>
 
-#include "DebugHelpers.h"
-
-#if HAVE_KF501
 /// KF5
+#if HAVE_KF501
 #include <KIconLoader>
 #include <KActionMenu>
 #endif
+
+/// Ours.
+#include <AMLMSettings.h>
+#include <gui/Theme.h>
+#include <gui/MainWindow.h>
+#include <utils/DebugHelpers.h>
+
 
 QStringList Theme::m_available_styles;
 
@@ -169,9 +170,15 @@ M_WARNING("TODO");
         }
     }
 #endif
-    qDebug() << "Current iconThemeName():" << QIcon::themeName();
-    qDebug() << "Current themeSearchPaths():" << QIcon::themeSearchPaths();
+    qDebug() << "Current QIcon::iconThemeName():" << QIcon::themeName();
+    qDebug() << "Current QIcon::themeSearchPaths():" << QIcon::themeSearchPaths();
 	qInfo() << "QPA Platform plugin name:" << qApp->platformName();
+
+
+    // Find all the icon themes we have access to.
+    QStringList retval = FindIconThemes();
+    qIn() << "Discovered Icon Themes:" << retval;
+
 
 	// Get all the styles we have available.
 	m_available_styles = QStyleFactory::keys();
@@ -207,13 +214,13 @@ M_WARNING("TODO");
 		else
 		{
 			// Use the current default desktop widget style.
-			qIn() << "Using current desktop style:" << desktop_style;
+            qIn() << "Using current desktop widget style:" << desktop_style;
 			AMLMSettings::setWidgetStyle(QStringLiteral("Default"));
 		}
 	}
 }
 
-QActionGroup * Theme::getStylesActionGroup(MainWindow *main_window)
+QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 {
 	/// Set up a "Style" menu.
 	/// Adapted from similar code in Kdenlive::MainWindow::init().
@@ -286,9 +293,14 @@ QStringList Theme::GetIconThemeNames()
 	return FindIconThemes();
 }
 
-bool Theme::setThemeName(const QString& name)
+bool Theme::setIconThemeName(const QString& name)
 {
 M_WARNING("TODO");
+
+    qDb() << "Trying to set icon theme name to:" << name;
+
+    QIcon::setThemeName(name);
+
 #if 0
 	///@todo This doen't work like it should
 	auto old_theme_name = QIcon::themeName();
@@ -304,11 +316,15 @@ M_WARNING("TODO");
 		return false;
 	}
 #endif
+
 	return true;
 }
 
 QIcon Theme::iconFromTheme(const QString &icon_name)
 {
+#if 1
+    return Theme::iconFromTheme(QStringList(icon_name));
+#else
     QIcon retval;
 
 #if HAVE_KF501
@@ -329,7 +345,37 @@ QIcon Theme::iconFromTheme(const QString &icon_name)
     }
 
     return retval;
+#endif
 }
+
+QIcon Theme::iconFromTheme(const QStringList &icon_names)
+{
+    QIcon retval;
+
+    // Go through all given names and return the first QIcon we find.
+    for(const auto name : icon_names)
+    {
+        retval = QIcon::fromTheme(name);
+        if(!retval.isNull())
+        {
+            // Found one.
+            qDb() << "Returning theme icon:" << name;
+            return retval;
+        }
+    }
+
+    // Couldn't find it.
+    qDb() << "Failed to find icon with any of the names" << icon_names << "in icon them search paths.";
+
+    return retval;
+}
+
+QIcon Theme::iconFromTheme(const QMimeType &mime_type)
+{
+    // Return an icon from the theme matching the MIME type.
+    return iconFromTheme({mime_type.iconName(), mime_type.genericIconName()});
+}
+
 QKeySequence Theme::keySequenceFromTheme(Theme::Key key)
 {
     switch(key)

@@ -20,6 +20,8 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_CUESHEETPARSER_H
 #define AWESOMEMEDIALIBRARYMANAGER_CUESHEETPARSER_H
 
+#if 0
+
 // libcue includes.
 #include <libcue.h>
 #include <mutex>
@@ -39,6 +41,6 @@ private:
 
 	std::mutex m_mutex;
 };
-
+#endif
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_CUESHEETPARSER_H

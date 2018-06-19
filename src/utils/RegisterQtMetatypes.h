@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,8 +20,35 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 #define AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 
+#include <functional>
+#include <vector>
 
 void RegisterQtMetatypes();
 
+int RegisterQTRegCallback(std::function<void(void)> f);
+
+/**
+ * Singleton class for static-init-time registering of callbacks to be called
+ * immediately after the QApp has been created.
+ *
+ * Uses the Construct On First Use Idiom.
+ * https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
+ */
+class QtRegCallbackRegistry
+{
+public:
+    QtRegCallbackRegistry() = default;
+
+    void register_callback(std::function<void(void)> callback);
+    static void static_append(std::function<void(void)> f);
+    void call_registration_callbacks();
+
+private:
+    std::vector<std::function<void(void)>> m_registered_callbacks;
+};
+
+QtRegCallbackRegistry& reginstance();
+
+#define AMLM_QREG_CALLBACK(f) static int dummy = (reginstance().register_callback(f), 0)
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

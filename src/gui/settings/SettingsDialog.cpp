@@ -36,11 +36,10 @@
 #include <KCoreConfigSkeleton>
 
 #include <utils/DebugHelpers.h>
-#include <utils/Theme.h>
-
 #include "../MainWindow.h"
 
 #include <AMLMSettings.h>
+#include <gui/Theme.h>
 
 #include <KComboBox>
 #include <QComboBox>

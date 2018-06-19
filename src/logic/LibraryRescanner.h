@@ -42,6 +42,12 @@
 class LibraryModel;
 class LibraryEntry;
 
+//////////////// EXP
+class QSqlDatabase;
+//////////////// EXP
+
+
+
 struct MetadataReturnVal
 {
 	QVector<QPersistentModelIndex> m_original_pindexes;

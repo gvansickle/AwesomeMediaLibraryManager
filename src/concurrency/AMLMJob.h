@@ -78,6 +78,8 @@
 
 /// Ours
 #include "utils/UniqueIDMixin.h"
+#include "utils/ConnectHelpers.h"
+#include "concurrency/function_traits.hpp"
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
@@ -171,7 +173,7 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, /*QEnableSharedFromThis<AMLMJob>,*/ public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
@@ -400,7 +402,7 @@ public:
     template <typename ContextType, typename Func>
     void then(ContextType&& ctx, Func&& f)
     {
-		connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
+        connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
 				if(kjob->error())
 				{
 					// Report the error.
@@ -408,8 +410,12 @@ public:
 				}
 				else
 				{
+                    // Cast to the derived job type.
+                    using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
+                    auto* jobptr = dynamic_cast<JobType*>(kjob);
+                    Q_ASSERT(jobptr);
 					// Call the continuation.
-                    f(kjob);
+                    f(jobptr);
 				}
 			});
     }

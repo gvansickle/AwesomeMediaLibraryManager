@@ -33,7 +33,7 @@ SelectionFilterProxyModel::~SelectionFilterProxyModel()
 
 void SelectionFilterProxyModel::setSourceModel(QAbstractItemModel* sourceModel)
 {
-	qDebug() << "Setting source model to:" << sourceModel << "root model is:" << getRootModel(sourceModel);
+//	qDebug() << "Setting source model to:" << sourceModel << "root model is:" << getRootModel(sourceModel);
 
 	// Clear out the old index to show, it doesn't apply to the new model.
 	m_current_selected_index = QPersistentModelIndex();
@@ -52,7 +52,7 @@ void SelectionFilterProxyModel::setSelectionModel(QItemSelectionModel* filter_se
 	if(m_filter_selection_model)
 	{
 		// Already have a selection model set.  Disconnect from it.
-		qDebug() << "Disconnecting from current selection model:" << m_filter_selection_model;
+//		qDebug() << "Disconnecting from current selection model:" << m_filter_selection_model;
 		m_filter_selection_model->disconnect(this);
 	}
 
@@ -106,8 +106,8 @@ bool SelectionFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelInde
 
 	if(m_current_selected_index == index)
 	{
-		qDebug() << "Accepting selected index:" << index;
-		qDebug() << "index model:" << index.model();
+//		qDebug() << "Accepting selected index:" << index;
+//		qDebug() << "index model:" << index.model();
 		return true;
 	}
 
@@ -131,7 +131,7 @@ void SelectionFilterProxyModel::onSelectionChanged(const QItemSelection& selecte
 
 void SelectionFilterProxyModel::onModelChanged(QAbstractItemModel* model)
 {
-	qDebug() << "MODEL CHANGED:" << model;
+//	qDebug() << "MODEL CHANGED:" << model;
 
 	Q_UNIMPLEMENTED();
 }

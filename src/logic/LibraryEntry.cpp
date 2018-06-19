@@ -60,7 +60,7 @@ QVector<LibraryEntry*> LibraryEntry::fromUrl(QUrl fileurl)
 
 std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
 {
-	// Populate the metadata.  Assumption is that all we have before calling this is self.url.
+    // Populate the metadata.  Assumption is that all we have before calling this is the url.
 	// returns A list of LibraryEntry's, or self if self.url was not a multi-track file.
 
 	std::vector<std::shared_ptr<LibraryEntry>> retval;
@@ -156,13 +156,17 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 				/// Create the new entry.
 				auto new_entry = std::make_shared<LibraryEntry>(*this);
 				new_entry->m_track_number = tn;
-				new_entry->m_total_track_number = sheet_track.m_total_track_number;
-				new_entry->m_metadata = track_metadata;
+//M_WARNING("THIS IS ALWAYS 0")
+                new_entry->m_total_track_number = file_metadata.numTracks();
+                new_entry->m_metadata = track_metadata;
 				new_entry->m_offset_secs = m_offset_secs;
 				new_entry->m_length_secs = m_length_secs;
 				new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
 				new_entry->m_is_populated = true;
 				new_entry->m_is_error = false;
+
+                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+
 				retval.push_back(new_entry);
 			}
 		}
@@ -352,17 +356,17 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 		QStringList sl;
 		for(auto entry : tm)
 		{
-			///qDebug() << "entry:" << entry;
+//qDb() << "entry:" << entry;
 			sl.clear();
 			QString key = QString::fromStdString(entry.first);
 			QVariant temp_val = retval[key];
-			///qDebug() << "temp_val:" << temp_val;
+//qDb() << "temp_val:" << temp_val;
 			for(auto s : entry.second)
 			{
-				///qDebug() << "Appending to temp_val:" << s;
+//qDb() << "Appending to temp_val:" << s;
 				sl.append(QString::fromStdString(s));
 			}
-			///qDebug() << "sl:" << sl;
+//qDb() << "sl:" << sl;
 			retval[key] = QVariant::fromValue(sl);
 		}
 	}

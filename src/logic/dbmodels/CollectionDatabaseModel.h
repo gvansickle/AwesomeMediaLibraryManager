@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,30 +17,31 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
-#define AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
+#ifndef SRC_LOGIC_DBMODELS_COLLECTIONDATABASEMODEL_H_
+#define SRC_LOGIC_DBMODELS_COLLECTIONDATABASEMODEL_H_
 
+#include <config.h>
 
-#include "SettingsDialogPageBase.h"
-
+/// Qt5
 #include <QObject>
+#include <QUrl>
+class QSqlDatabase;
+class QSqlRelationalTableModel;
 
-class QFontComboBox;
-
-class SDPageAppearance : public SettingsDialogPageBase
+/*
+ *
+ */
+class CollectionDatabaseModel : public QObject
 {
-    Q_OBJECT
-
 public:
-	SDPageAppearance(SettingsDialogBase *settings_dialog_parent, QWidget *parent);
+    CollectionDatabaseModel(QObject *parent);
+	virtual ~CollectionDatabaseModel();
 
-	void addContentsEntry(SettingsDialogSideWidget *contents_widget) override;
+    bool open_db_connection(QUrl db_file);
 
-	void onApply() override;
+    void create_db_tables(QSqlDatabase *db = nullptr);
 
-private:
-    QFontComboBox* m_track_font_selector;
+    QSqlRelationalTableModel* get_rel_table(QObject* parent = nullptr);
 };
 
-
-#endif //AWESOMEMEDIALIBRARYMANAGER_SDPAGEAPPEARANCE_H
+#endif /* SRC_LOGIC_DBMODELS_COLLECTIONDATABASEMODEL_H_ */

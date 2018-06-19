@@ -18,7 +18,7 @@
  */
 
 #include <gui/menus/DropMenu.h>
-#include "utils/Theme.h"
+#include <gui/Theme.h>
 
 DropMenu::DropMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
 {

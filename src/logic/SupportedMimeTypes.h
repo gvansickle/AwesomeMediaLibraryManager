@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,35 +17,39 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SETTINGSDIALOGSIDEWIDGET_H
-#define SETTINGSDIALOGSIDEWIDGET_H
+#ifndef SRC_LOGIC_SUPPORTEDMIMETYPES_H_
+#define SRC_LOGIC_SUPPORTEDMIMETYPES_H_
 
 #include <QObject>
-#include <QListWidget>
+#include <QVector>
+#include <QMimeType>
 
-class QString;
-class QIcon;
-
-/**
- * @todo write docs
+/*
+ *
  */
-class SettingsDialogSideWidget : public QListWidget
+class SupportedMimeTypes: public QObject
 {
     Q_OBJECT
 
 public:
+    explicit SupportedMimeTypes(QObject* parent);
+    ~SupportedMimeTypes() override;
 
-    /**
-     * Constructor
-     */
-    SettingsDialogSideWidget(QWidget* parent);
+    static SupportedMimeTypes& instance();
 
-	void addPageEntry(const QString& label_text, const QIcon& icon,
-	                  const QString& tooltip_str = QString(),
-	                  const QString& statustip_str = QString(),
-	                  const QString& whatsthis_str = QString());
-	int sizeHintForColumn(int column) const override;
-	QSize sizeHint() const override;
+    QVector<QMimeType> supportedAudioMimeTypes() const;
+    QStringList supportedAudioMimeTypesAsFilterStringList() const;
+    QStringList supportedAudioMimeTypesAsSuffixStringList() const;
+
+protected:
+    QStringList m_mime_audio_types;
+    QStringList m_mime_audio_associated_types;
+    QStringList m_mime_playlist_types;
+
+private:
+
+    static SupportedMimeTypes* m_the_instance;
+
 };
 
-#endif // SETTINGSDIALOGSIDEWIDGET_H
+#endif /* SRC_LOGIC_SUPPORTEDMIMETYPES_H_ */

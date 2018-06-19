@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,12 +20,18 @@
 #ifndef THEME_H
 #define THEME_H
 
+#include <config.h>
+
+/// Qt5
 #include <QWidget>
 #include <QIcon>
 #include <QStringList>
 #include <QActionGroup>
+class QMimeType;
 
+/// Ours
 class MainWindow;
+
 
 class Theme : public QWidget
 {
@@ -39,15 +45,21 @@ public:
 	/**
 	 * Get a "Widget Styles" QActionGroup.
 	 */
-	static QActionGroup *getStylesActionGroup(MainWindow *main_window);
+    static QActionGroup *getWidgetStylesActionGroup(MainWindow *main_window);
 
 	static QString getUserDefaultStyle(const char* fallback = nullptr);
 
+    /// @name Icon Theme interface.
+    /// @{
     static QStringList GetIconThemeNames();
 
-	static bool setThemeName(const QString& name);
+    static bool setIconThemeName(const QString& name);
 
     static QIcon iconFromTheme(const QString& icon_name);
+    static QIcon iconFromTheme(const QStringList& icon_name);
+    static QIcon iconFromTheme(const QMimeType& mime_type);
+
+    /// @}
 
 	/**
  	 * Enumeration of some additional Qt::Key-like key names which don't exist in Qt 5.10.

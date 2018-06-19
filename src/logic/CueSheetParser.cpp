@@ -19,6 +19,8 @@
 
 #include "CueSheetParser.h"
 
+#if 0
+
 #include <QtGlobal>
 #include <utils/StringHelpers.h>
 
@@ -92,4 +94,6 @@ Cd *CueSheetParser::parse_cue_sheet_string(const char *bytes)
 				bad_cuesheets.append(entry)
 		cuesheet_fixer = CueSheetFixDialog(self, bad_cuesheets)
 		cuesheet_fixer.exec_()
+#endif
+
 #endif
