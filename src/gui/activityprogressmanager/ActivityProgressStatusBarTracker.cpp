@@ -25,6 +25,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QToolButton>
+#include <QWindow>
 
 /// KF5
 #include <KJob>
@@ -72,8 +73,11 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     /// @todo m_cumulative_status_widget's cancel_job button state should be enabled/disabled based on child job cancelable capabilities.
     connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
                 this, &ActivityProgressStatusBarTracker::cancelAll);
-    connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::show_hide_subjob_display,
+    connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::SIGNAL_show_hide_subjob_display,
             this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
+
+    connect_or_die(m_expanding_frame_widget, &ExpandingFrameWidget::visibilityChanged,
+                   m_cumulative_status_widget, &CumulativeStatusWidget::SLOT_SubjobDisplayVisible);
 
     connect_or_die(this, &ActivityProgressStatusBarTracker::number_of_jobs_changed,
                    m_cumulative_status_widget, &CumulativeStatusWidget::slot_number_of_jobs_changed);

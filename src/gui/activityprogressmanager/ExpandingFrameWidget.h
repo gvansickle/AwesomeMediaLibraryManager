@@ -36,11 +36,17 @@ class ExpandingFrameWidget : public QDialog
 
     using BASE_CLASS = QDialog;
 
+Q_SIGNALS:
+    /// We don't get this signal with widgets, only QWindows.
+    void visibilityChanged(bool);
+
 public:
     explicit ExpandingFrameWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
      ~ExpandingFrameWidget() override;
 
     void setMainProgressWidget(QWidget* status_bar_widget);
+
+    void setVisible(bool visible) override;
 
     void addWidget(QWidget* new_widget);
 

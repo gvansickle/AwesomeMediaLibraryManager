@@ -70,6 +70,12 @@ void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
     m_cumulative_status_bar_main_widget = status_bar_widget;
 }
 
+void ExpandingFrameWidget::setVisible(bool visible)
+{
+    BASE_CLASS::setVisible(visible);
+    Q_EMIT visibilityChanged(visible);
+}
+
 void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 {
     // Set the widget width to the same as the summary widget.
