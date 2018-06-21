@@ -36,6 +36,7 @@
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 #include "CumulativeStatusWidget.h"
+#include <gui/MainWindow.h>
 
 ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *parent) : BASE_CLASS(parent),
     m_tracked_job_state_mutex(QMutex::Recursive /** @todo Shouldn't need to do recursive, but it does make things easier at the moment. */)
@@ -59,7 +60,8 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 //M_WARNING("TODO: Need to not delete this job/wdgt pair ever (e.g. on cancel)");
 //    m_cumulative_status_tracker->registerJob(cumulative_job, qobject_cast<BaseActivityProgressStatusBarWidget*>(m_cumulative_status_widget));
 
-    m_expanding_frame_widget = new ExpandingFrameWidget(m_cumulative_status_widget, Qt::Tool);
+//    m_expanding_frame_widget = new ExpandingFrameWidget(m_cumulative_status_widget, Qt::Tool);
+        m_expanding_frame_widget = new ExpandingFrameWidget(MainWindow::instance()->statusBar());
 //    m_expanding_frame_widget->setMainProgressWidget(m_cumulative_status_widget);
 
     /// @note Set Window type to be a top-level window, i.e. a Qt::Window, Qt::Popup, or Qt::Dialog (and a few others mainly Mac).

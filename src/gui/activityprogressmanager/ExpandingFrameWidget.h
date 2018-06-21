@@ -30,11 +30,11 @@ class QWidget;
 /*
  *
  */
-class ExpandingFrameWidget : public QDialog
+class ExpandingFrameWidget : public QWidget
 {
     Q_OBJECT
 
-    using BASE_CLASS = QDialog;
+    using BASE_CLASS = QWidget;
 
 Q_SIGNALS:
     /// We don't get this signal with widgets, only QWindows.
@@ -55,6 +55,10 @@ public:
     QSize sizeHint() const override;
 
     void reposition();
+
+protected:
+    void resizeEvent(QResizeEvent* ev) override;
+    bool eventFilter( QObject* o, QEvent* e) override;
 
 private:
 

@@ -27,11 +27,12 @@
 #include <utils/TheSimplestThings.h>
 #include <gui/MainWindow.h>
 
-ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) : BASE_CLASS(parent, f)
+ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) : BASE_CLASS(parent,
+                                                                               Qt::Window | Qt::FramelessWindowHint | Qt::ToolTip)
+                                                                               //f)
 {
-    /// GRVS
-//    setWindowFlags(Qt::Dialog);
-//    show();
+    setWindowFlags(Qt::WindowDoesNotAcceptFocus | windowFlags());
+    qApp->installEventFilter(this);
 
     // Set up the layout.
     Q_ASSERT(layout() == nullptr);
@@ -67,7 +68,10 @@ ExpandingFrameWidget::~ExpandingFrameWidget()
 
 void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
 {
+M_WARNING("THIS SHOULD BE PARENTED TO THE STATUS BAR, NOT THE WIDGET");
     m_cumulative_status_bar_main_widget = status_bar_widget;
+
+    reposition();
 }
 
 void ExpandingFrameWidget::setVisible(bool visible)
@@ -110,6 +114,17 @@ QSize ExpandingFrameWidget::sizeHint() const
 
 void ExpandingFrameWidget::reposition()
 {
+#if 1 /// Another try
+    if(!m_cumulative_status_bar_main_widget)
+    {
+        return;
+    }
+    QPoint p;
+    p.setX(m_cumulative_status_bar_main_widget->width() - width());
+    p.setY(-height());
+    auto global_point = m_cumulative_status_bar_main_widget->mapToGlobal(p);
+    move(global_point);
+#else
 //    qDb() << "PARENT:" << parentWidget();
 //    qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
 
@@ -129,5 +144,23 @@ M_WARNING("TODO: This positioning is just broken, rework.");
     our_new_pos.setX(origin_parent_pos.x());
     our_new_pos.setY(origin_parent_pos.y() - height());
     move(our_new_pos);
+#endif
+}
+
+void ExpandingFrameWidget::resizeEvent(QResizeEvent *ev)
+{
+    reposition();
+    BASE_CLASS::resizeEvent(ev);
+}
+
+bool ExpandingFrameWidget::eventFilter(QObject *o, QEvent *e)
+{
+    if (e->type() == QEvent::Move || e->type() == QEvent::Resize) {
+        reposition();
+    } else if (e->type() == QEvent::Close) {
+        close();
+    }
+
+    return QWidget::eventFilter(o,e);
 }
 
