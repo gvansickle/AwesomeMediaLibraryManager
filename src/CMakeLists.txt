@@ -187,9 +187,6 @@ set(HEADER_FILES
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
-	concurrency/DirectoryScanJob.h
-	concurrency/ThreadsafeMap.h
-	concurrency/DebugSequence.h
     )
 
 # Source file list.
@@ -217,7 +214,6 @@ set(SOURCE_FILES
 	utils/MapConverter.cpp
 	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
-	concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
@@ -235,9 +231,6 @@ set(SOURCE_FILES
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	utils/QtHelpers.cpp
-	concurrency/DirectoryScanJob.cpp
-	concurrency/ThreadsafeMap.cpp
-	concurrency/DebugSequence.cpp
 	)
 
 # NoMoc files.
@@ -258,16 +251,21 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncTask.h
 	concurrency/function_traits.hpp
-	concurrency/ActivityManager.h
 	concurrency/AMLMJob.h
 	concurrency/AMLMCompositeJob.h
+	concurrency/DirectoryScanJob.h
+	concurrency/ThreadsafeMap.h
+	concurrency/DebugSequence.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
 	concurrency/function_traits.cpp
-	concurrency/ActivityManager.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
+	concurrency/ReportingRunner.cpp
+	concurrency/DirectoryScanJob.cpp
+	concurrency/ThreadsafeMap.cpp
+	concurrency/DebugSequence.cpp
 	)
 
 add_subdirectory(gui)

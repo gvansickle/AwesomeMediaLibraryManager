@@ -54,8 +54,6 @@
 #include <ThreadWeaver/State>
 #include <ThreadWeaver/DebuggingAids>
 
-#include "concurrency/ActivityManager.h"
-
 #include "MainWindow.h"
 
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>

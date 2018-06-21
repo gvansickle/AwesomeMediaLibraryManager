@@ -560,6 +560,7 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // - emit result(this)
     // - if the KJob is set to autoDelete(), call deleteLater().
     qDb() << "ABOUT TO EMITRESULT()" << this;
+M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
     emitResult();
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
