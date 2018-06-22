@@ -27,10 +27,11 @@
 #include <utils/TheSimplestThings.h>
 #include <gui/MainWindow.h>
 
-ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent) : BASE_CLASS(parent,
+ExpandingFrameWidget::ExpandingFrameWidget(QWidget *main_progress_bar_widget, QWidget *parent) : BASE_CLASS(parent,
                                                                                Qt::Window | Qt::FramelessWindowHint | Qt::ToolTip)
-                                                                               //f)
 {
+    m_cumulative_status_bar_main_widget = main_progress_bar_widget;
+
     setWindowFlags(Qt::WindowDoesNotAcceptFocus | windowFlags());
     qApp->installEventFilter(this);
 
@@ -44,8 +45,6 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent) : BASE_CLASS(parent,
     setBackgroundRole( QPalette::Window );
     setAutoFillBackground( true );
 
-//    setFrameStyle( QFrame::Box );
-
     setMinimumWidth( 26 );
     setMinimumHeight( 26 );
 
@@ -53,25 +52,13 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent) : BASE_CLASS(parent,
     // Make the frame confirm to the size of the contained widgets,
     // i.e. the user can't resize it.
     layout()->setSizeConstraint(QLayout::SetFixedSize);
-//    QSizePolicy sp();
+
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     updateGeometry();
-
-//    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
-//    layout()->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
-
 }
 
 ExpandingFrameWidget::~ExpandingFrameWidget()
 {
-}
-
-void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
-{
-M_WARNING("THIS SHOULD BE PARENTED TO THE STATUS BAR, NOT THE WIDGET");
-    m_cumulative_status_bar_main_widget = status_bar_widget;
-
-    reposition();
 }
 
 void ExpandingFrameWidget::setVisible(bool visible)
@@ -83,7 +70,7 @@ void ExpandingFrameWidget::setVisible(bool visible)
 void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 {
     // Set the widget width to the same as the summary widget.
-    new_widget->setFixedWidth(parentWidget()->width());
+    new_widget->setFixedWidth(m_cumulative_status_bar_main_widget->width());
 
     // Widget will be reparented.
     layout()->addWidget(new_widget);
@@ -93,58 +80,33 @@ void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 
 void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 {
-//    new_widget->setParent(this);
     layout()->removeWidget(new_widget);
 
-//    setFixedHeight(new_widget->height() * children().size() + 8);
     reposition();
 }
 
 QSize ExpandingFrameWidget::sizeHint() const
 {
     return BASE_CLASS::sizeHint();
-///
-    // parent is also the status bar widget.
-    auto sbw = parentWidget();
-
-//    qDb() << "PARENT SIZE HINT:" << sbw->sizeHint();
+#if 0
+    auto sbw = m_cumulative_status_bar_main_widget;
 
     return QSize(sbw->width(), 10);
+#endif
 }
 
 void ExpandingFrameWidget::reposition()
 {
-#if 1 /// Another try
     if(!m_cumulative_status_bar_main_widget)
     {
         return;
     }
+
     QPoint p;
     p.setX(m_cumulative_status_bar_main_widget->width() - width());
     p.setY(-height());
     auto global_point = m_cumulative_status_bar_main_widget->mapToGlobal(p);
     move(global_point);
-#else
-//    qDb() << "PARENT:" << parentWidget();
-//    qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
-
-//    QSize s = sizeHint();
-//    s.setWidth(parentWidget()->width());
-//    resize(s);
-    updateGeometry();
-
-    // parent is also the status bar widget.
-    auto sbw = parentWidget();
-
-M_WARNING("TODO: This positioning is just broken, rework.");
-
-    QPoint our_new_pos;
-    QPoint global_parent_pos = sbw->mapToGlobal(sbw->pos());
-    auto origin_parent_pos = mapToParent(QPoint(0,0));
-    our_new_pos.setX(origin_parent_pos.x());
-    our_new_pos.setY(origin_parent_pos.y() - height());
-    move(our_new_pos);
-#endif
 }
 
 void ExpandingFrameWidget::resizeEvent(QResizeEvent *ev)
@@ -155,12 +117,15 @@ void ExpandingFrameWidget::resizeEvent(QResizeEvent *ev)
 
 bool ExpandingFrameWidget::eventFilter(QObject *o, QEvent *e)
 {
-    if (e->type() == QEvent::Move || e->type() == QEvent::Resize) {
+    if(e->type() == QEvent::Move || e->type() == QEvent::Resize)
+    {
         reposition();
-    } else if (e->type() == QEvent::Close) {
+    }
+    else if(e->type() == QEvent::Close)
+    {
         close();
     }
 
-    return QWidget::eventFilter(o,e);
+    return BASE_CLASS::eventFilter(o,e);
 }
 

@@ -22,7 +22,6 @@
 
 #include <QWidget>
 #include <QSize>
-//#include <QFrame>
 #include <QDialog>
 #include <QPointer>
 
@@ -37,14 +36,12 @@ class ExpandingFrameWidget : public QWidget
     using BASE_CLASS = QWidget;
 
 Q_SIGNALS:
-    /// We don't get this signal with widgets, only QWindows.
+    /// We don't get this signal with QWidgets, only QWindows.
     void visibilityChanged(bool);
 
 public:
-    explicit ExpandingFrameWidget(QWidget* parent = nullptr);
+    explicit ExpandingFrameWidget(QWidget* main_progress_bar_widget, QWidget* parent = nullptr);
      ~ExpandingFrameWidget() override;
-
-    void setMainProgressWidget(QWidget* status_bar_widget);
 
     void setVisible(bool visible) override;
 
@@ -62,6 +59,7 @@ protected:
 
 private:
 
+    // The widget in the status bar which we will align with.
     QPointer<QWidget> m_cumulative_status_bar_main_widget;
 
 };

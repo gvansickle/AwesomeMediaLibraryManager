@@ -22,7 +22,6 @@
 #include "AMLMApp.h"
 
 /// Qt5
-
 #include <QtGlobal>
 #include <QSettings>
 #include <QIcon>
@@ -34,19 +33,17 @@
 #include <QDebug>
 
 /// KF5
-
 #include <KAboutData>
 #include <KIconLoader>
 #include <KSharedConfig>
 #include <KConfigGroup>
 
 
-
+/// GTK
 #include <gtk/gtk.h>
-#include <gui/Theme.h>
 
 /// Ours
-
+#include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
