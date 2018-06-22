@@ -26,6 +26,7 @@
 #include <QTimer>
 #include <QToolButton>
 #include <QWindow>
+#include <QStatusBar>
 
 /// KF5
 #include <KJob>

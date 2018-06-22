@@ -27,7 +27,7 @@
 #include <utils/TheSimplestThings.h>
 #include <gui/MainWindow.h>
 
-ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) : BASE_CLASS(parent,
+ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent) : BASE_CLASS(parent,
                                                                                Qt::Window | Qt::FramelessWindowHint | Qt::ToolTip)
                                                                                //f)
 {

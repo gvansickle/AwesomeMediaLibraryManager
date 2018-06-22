@@ -20,7 +20,7 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
 
-class QWidget;
+#include <QWidget>
 #include <QSize>
 //#include <QFrame>
 #include <QDialog>
@@ -41,7 +41,7 @@ Q_SIGNALS:
     void visibilityChanged(bool);
 
 public:
-    explicit ExpandingFrameWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit ExpandingFrameWidget(QWidget* parent = nullptr);
      ~ExpandingFrameWidget() override;
 
     void setMainProgressWidget(QWidget* status_bar_widget);
