@@ -61,14 +61,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 //M_WARNING("TODO: Need to not delete this job/wdgt pair ever (e.g. on cancel)");
 //    m_cumulative_status_tracker->registerJob(cumulative_job, qobject_cast<BaseActivityProgressStatusBarWidget*>(m_cumulative_status_widget));
 
-//    m_expanding_frame_widget = new ExpandingFrameWidget(m_cumulative_status_widget, Qt::Tool);
-        m_expanding_frame_widget = new ExpandingFrameWidget(m_cumulative_status_widget, MainWindow::instance()->statusBar());
-//        m_expanding_frame_widget->setMainProgressWidget(m_cumulative_status_widget);
-
-    /// @note Set Window type to be a top-level window, i.e. a Qt::Window, Qt::Popup, or Qt::Dialog (and a few others mainly Mac).
-//    m_expanding_frame_widget->setWindowFlags(Qt::Popup);
-//    m_expanding_frame_widget->setParent(parent);
-//    m_expanding_frame_widget->windowHandle()->setTransientParent(MainWindow::instance()->windowHandle());
+    m_expanding_frame_widget = new ExpandingFrameWidget(m_cumulative_status_widget, MainWindow::instance()->statusBar());
 
     m_expanding_frame_widget->hide();
 
