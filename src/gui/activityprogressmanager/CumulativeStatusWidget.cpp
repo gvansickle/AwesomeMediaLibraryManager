@@ -36,9 +36,7 @@ CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatus
     // Add an "Expand jobs" button.
     m_button_show_all_jobs = new QToolButton(this);
     Theme::QToolButtonArrowIconFromTheme(m_button_show_all_jobs, "go-up", Qt::UpArrow);
-//    m_button_show_all_jobs->setPopupMode(QToolButton::InstantPopup);
     m_button_show_all_jobs->setCheckable(true);
-    m_button_show_all_jobs->setAutoRaise(true);
 
     addButton(m_button_show_all_jobs);
 
@@ -58,6 +56,7 @@ void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
 	// Update the subwidget contents.
     if(new_num_jobs > 0)
     {
+M_WARNING("TODO: Propagate job messages here");
         m_current_activity_label->setText(tr("Running"));
     }
     else

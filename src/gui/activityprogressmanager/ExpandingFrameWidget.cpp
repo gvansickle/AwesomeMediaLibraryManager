@@ -49,7 +49,7 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *main_progress_bar_widget, QW
     setMinimumHeight( 26 );
 
     setContentsMargins( 4, 4, 4, 4 );
-    // Make the frame confirm to the size of the contained widgets,
+    // Make the widget size confirm to the size of the contained widgets,
     // i.e. the user can't resize it.
     layout()->setSizeConstraint(QLayout::SetFixedSize);
 
@@ -88,11 +88,6 @@ void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 QSize ExpandingFrameWidget::sizeHint() const
 {
     return BASE_CLASS::sizeHint();
-#if 0
-    auto sbw = m_cumulative_status_bar_main_widget;
-
-    return QSize(sbw->width(), 10);
-#endif
 }
 
 void ExpandingFrameWidget::reposition()
