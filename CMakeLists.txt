@@ -167,6 +167,21 @@ set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(ExternalProject)
 include(DownloadProject)
 
+# Doxygen
+# Require dot, treat the other components as optional
+# https://cmake.org/cmake/help/v3.12/module/FindDoxygen.html
+find_package(Doxygen
+             REQUIRED dot
+             OPTIONAL_COMPONENTS mscgen dia)
+set(DOXYGEN_GENERATE_HTML YES)
+set(DOXYGEN_GENERATE_MAN NO)
+set(DOXYGEN_EXCLUDE_PATTERNS "*/cmake-*;*/build*;*/src/third_party") # Per docs, merged with defaults excludes.
+set(DOXYGEN_OUTPUT_DIRECTORY doxygen_html)
+doxygen_add_docs(doxygen ALL
+	${PROJECT_SOURCE_DIR}
+    COMMENT "Generate doxygen html"
+)
+
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 #set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
@@ -182,6 +197,7 @@ set(CPACK_IFW_VERBOSE YES)
 dir_summary()
 
 # QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
+### @todo This can probably go away.
 init_os_bundle()
 
 set(PROJECT_AUTHOR "Gary R. Van Sickle")

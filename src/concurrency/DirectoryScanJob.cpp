@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
  * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
@@ -30,20 +32,16 @@
 #include <logic/DirScanResult.h>
 #include <concurrency/ExtAsync.h>
 
-DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
+DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
-                                   QDirIterator::IteratorFlags flags) : AMLMJob(parent)
+                                   QDirIterator::IteratorFlags flags)
+    : AMLMJob(parent), m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
+    m_use_extasync = true;
+
     // Set our object name.
     setObjectName(uniqueQObjectName());
-
-    // Should be in the constructor list, but we're deferring to another constructor.
-    // Jeez this language.....
-    m_dir_url = dir_url;
-    m_nameFilters = nameFilters;
-    m_dir_filters = filters;
-    m_iterator_flags = flags;
 
     setProgressUnit(KJob::Unit::Directories);
 

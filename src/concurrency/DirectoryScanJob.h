@@ -80,7 +80,7 @@ Q_SIGNALS:
     void entries(KJob* kjob, const DirScanResult& url);
 
 public:
-    explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,
+    explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
@@ -91,14 +91,9 @@ protected:
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
 
-    /// Make the internal signal-slot connections.
-//    void make_connections() override;
-//    void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread) override;
-//    void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread) override;
+    void work_function(ExtFuture<DirScanResult>& the_future);
 
 private:
-
-    virtual void work_function(ExtFuture<DirScanResult>& the_future);
 
     QUrl m_dir_url;
     QStringList m_nameFilters;

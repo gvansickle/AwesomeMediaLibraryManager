@@ -97,21 +97,30 @@ void AMLMJob::requestAbort()
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    // Lock the TW::Job.  We need to do this for cancelling a TW::Job which hasn't started yet.
-    QMutexLocker twjob_lock(mutex());
-    if(status() < JobInterface::Status::Status_Queued)
+    if(!m_use_extasync)
     {
-        // TW::Job has not yet been queued.
+        // Lock the TW::Job.  We need to do this for cancelling a TW::Job which hasn't started yet.
+        QMutexLocker twjob_lock(mutex());
+        if(status() < JobInterface::Status::Status_Queued)
+        {
+            // TW::Job has not yet been queued.
 
-        /// QueueInterface::dequeue()
-        /// "If the job was queued but not started so far, it is removed from the queue."
-        /// You can always call dequeue, it will return true if the job was dequeued. However if the job is not in the queue anymore,
-        /// it is already being executed, it is too late to dequeue, and dequeue will return false. The return value is thread-safe - if
-        /// true is returned, the job was still waiting, and has been dequeued. If not, the job was not waiting in the queue.
+            /// QueueInterface::dequeue()
+            /// "If the job was queued but not started so far, it is removed from the queue."
+            /// You can always call dequeue, it will return true if the job was dequeued. However if the job is not in the queue anymore,
+            /// it is already being executed, it is too late to dequeue, and dequeue will return false. The return value is thread-safe - if
+            /// true is returned, the job was still waiting, and has been dequeued. If not, the job was not waiting in the queue.
+        }
     }
 
     // Signal to the TW::run() loop that it should cancel.
     m_tw_flag_cancel = true;
+
+    if(m_use_extasync)
+    {
+        /// @todo signal the ExtFuture to cancel.
+        /// m_???->cancel();
+    }
 
     // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
     // by the notify, and only to temporarily block again because we still hold the mutex.

@@ -479,6 +479,27 @@ public Q_SLOTS:
 
 protected:
 
+    /// Flag telling the base class whether to use the TW::Job or the ExtAsync underlying implementation.
+    /// @note Temp, moving away from ThreadWeaver.
+    bool m_use_extasync {true};
+
+    template<class T>
+    struct ExtAsyncWorkFunctionContext
+    {
+        /**
+         * The ExtAsync work function.
+         * @param the_future
+         */
+        template <class T, template<class> class ExtFutureT>
+        void work_function(ExtFutureT<T>& the_future) { Q_ASSERT(0); };
+
+        template <class T, template<class> class ExtFutureT>
+        static ExtFutureT<T> m_the_extfuture;
+    };
+
+    template <class T>
+    ExtAsyncWorkFunctionContext<T> m_extasync_wfctx;
+
     /// @name Override of TW::Job protected functions.
     /// @{
 
