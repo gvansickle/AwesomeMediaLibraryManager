@@ -74,8 +74,8 @@ set(KF5_MIN_VERSION "5.44.0")
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
-# Add dirs where we keep support *.cmake's, ECM, etc.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+# Add dirs where we keep support *.cmake's, ucm, ECM, etc.
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
 # ECM Macros
 include(ECMAddAppIcon)
@@ -134,6 +134,12 @@ include(FeatureSummary)
 
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
+
+# This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
+# cmake and/or Qt Creator.
+include(ucm)
+ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -fsanitize=address CONFIG DEBUG)
+
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
@@ -167,11 +173,11 @@ set(CMAKE_VERBOSE_MAKEFILE  YES)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #		INCLUDE_DIRECTORIES
-#		COMPILE_DEFINITIONS
+#        COMPILE_DEFINITIONS
 #		POSITION_INDEPENDENT_CODE
 #		CONTAINER_SIZE_REQUIRED
 #		LIB_VERSION
-#		)
+#        )
 
 dir_summary()
 
