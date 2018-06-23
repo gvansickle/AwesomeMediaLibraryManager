@@ -38,6 +38,13 @@
 #include "utils/TheSimplestThings.h"
 #include <gui/MainWindow.h>
 
+/**
+ * Object life cycles
+ *
+ * External     AMLMJob     KJob        TW::Job
+ *	--start-->   start()
+ */
+
 AMLMJob::AMLMJob(QObject *parent)
     : KJob(parent), ThreadWeaver::Job()
 {
@@ -111,6 +118,14 @@ void AMLMJob::requestAbort()
     qDb() << "AMLM:TW: LEAVING requestAbort():" << this;
 }
 
+/**
+ * KJob override.
+ *
+ * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
+ *  asynchronously)."
+ *
+ * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
+ */
 void AMLMJob::start()
 {
 #if 0
@@ -344,21 +359,23 @@ bool AMLMJob::doKill()
     // Tell the TW::Job to stop.
     requestAbort();
 
-qDb() << "START WAIT KJob::doKill()";
+qDb() << "START WAIT:" << objectName();
     // Now wait for it to signal that it really did stop.
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
 //    sleep(5);
-//    QEventLoop loop(this);
-//    connect_or_die(this, &AMLMJob::done, &loop, &QEventLoop::quit);
-//    loop.exec();
-//    loop->deleteLater();
+    auto loop = new QEventLoop();
+    connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
+    loop->exec();
+    qDb() << "WAIT: BROKE OUT OF LOOP";
+M_WARNING("WE NEVER GET PAST THIS POINT, looks like we've been deleted just before the above qDb()");
+    loop->deleteLater();
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
 
-qDb() << "END WAIT KJob::doKill()";
+qDb() << "END WAIT:" << objectName();
 
     /// @todo Need to wait for the final kill here?
     /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
@@ -370,6 +387,10 @@ qDb() << "END WAIT KJob::doKill()";
 
     // Try to detect that we've survived at least to this point.
     Q_ASSERT(!m_i_was_deleted);
+
+    // We should never get here before the TW::Job has signaled that it's done.
+    qDb() << M_NAME_VAL(m_flag_cancel) << M_NAME_VAL(m_tw_got_done_or_fail) << M_NAME_VAL(m_tw_job_was_cancelled);
+    Q_ASSERT(!(m_flag_cancel && !m_tw_got_done_or_fail && !m_tw_job_was_cancelled));
 
     return true;
 }
@@ -568,25 +589,20 @@ M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
 
     qDb() << "EXIT onTWDone";
     /// @fixme
-//#error "ON CANCEL, THINGS START TO FAIL HERE:"
+#error "ON CANCEL, THINGS START TO FAIL HERE.  WE ARE IMMEDIATELY DESTRUCTED FOR SOME REASON."
     /**
-     *[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWFailed:553 - ENTER onTWFailed
-[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:527 - ENTER onTWDone
-[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:530 - success()?: false
-[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:545 - ABOUT TO EMITRESULT() DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
-[20:57:04.274 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:425 - UNREGISTERING JOB: DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
-[20:57:04.274 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap:451 - REMOVING FROM MAP: DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0") BaseActivityProgressStatusBarWidget(0x1bb42c0)
-[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeNow:293 - closeNow(), WA_DeleteOnClose?: true
-[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeEvent:260 - closeEvent(): QCloseEvent(Close, 0x7fffffffbdf0)
-[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeNow:295 - close() retval: true BaseActivityProgressStatusBarWidget(0x1bb42c0)
-[20:57:04.274 GUIThread______ DEBUG] BaseActivityProgressStatusBarWidget::closeNow:298 - Widget was closed: BaseActivityProgressStatusBarWidget(0x1bb42c0)
-[1]>>[20:57:04.274 GUIThread______ DEBUG] AMLMJob::onTWDone:548 - EXIT onTWDone
-[2]>>[20:57:04.274 GUIThread______ DEBUG] DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob:52 - DirectoryScannerAMLMJob DELETED: DirectoryScannerAMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
-[20:57:04.274 GUIThread______ DEBUG] UniqueIDMixin::~UniqueIDMixin:66 - No double delete detected: "0"
-[20:57:04.274 GUIThread______ DEBUG] AMLMJob::~AMLMJob:70 - AMLMJob DELETED AMLMJob(0x1baa2c0, name = "DirectoryScannerAMLMJob_0")
-[20:57:04.274 GUIThread______ DEBUG] UniqueIDMixin::~UniqueIDMixin:66 - No double delete detected: "1"
-[3]>>>[20:57:04.274 GUIThread______ DEBUG] AMLMJob::doKill:355 - END WAIT KJob::doKill()
-[20:57:04.274 GUIThread______ DEBUG] AMLMJob::doKill:363 - EXIT KJob::doKill()
+[22:30:34.689 GUIThread______ DEBUG] AMLMJob::onTWFailed:658 - ENTER onTWFailed
+[22:30:34.689 GUIThread______ DEBUG] AMLMJob::onTWDone:561 - ENTER onTWDone
+[22:30:34.690 GUIThread______ DEBUG] AMLMJob::onTWDone:565 - success()?: false
+[22:30:34.690 GUIThread______ DEBUG] AMLMJob::onTWDone:582 - ABOUT TO EMITRESULT() DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
+[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:456 - UNREGISTERING JOB: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
+[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:471 - SIGNALS DISCONNECTED: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
+[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap:487 - REMOVING FROM MAP: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0") BaseActivityProgressStatusBarWidget(0x60d000abfc00)
+[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:482 - JOB UNREGISTERED: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
+[22:30:34.690 GUIThread______ DEBUG] AMLMJob::onTWDone:589 - EXIT onTWDone
+[22:30:34.690 GUIThread______ DEBUG] DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob:56 - DirectoryScannerAMLMJob DELETED: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
+[22:30:34.690 GUIThread______ DEBUG] AMLMJob::~AMLMJob:79 - AMLMJob DELETED AMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
+[22:30:34.693 GUIThread______ DEBUG] AMLMJob::doKill:371 - WAIT: BROKE OUT OF LOOP
      */
     /**
      * So what happens is:

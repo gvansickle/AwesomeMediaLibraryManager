@@ -220,10 +220,11 @@ Q_SIGNALS:
 
     /// This signal is emitted when this TW::Job is being processed by a thread.
     void started(ThreadWeaver::JobPointer);
-    /// This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
-    void done(ThreadWeaver::JobPointer);
     /// This signal is emitted when success() returns false after the job is executed.
     void failed(ThreadWeaver::JobPointer);
+    /// This signal is emitted when the TW::Job has been finished (always, no matter if it succeeded or not).
+    void done(ThreadWeaver::JobPointer);
+
 
     /// @}
 
