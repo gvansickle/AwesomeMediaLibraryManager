@@ -548,7 +548,6 @@ protected:
 // START IMPLEMENTATION
 //
 
-//M_WARNING("INCLUDING ExtAsync.h");
 #include "ExtAsync.h"
 
 

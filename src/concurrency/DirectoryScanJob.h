@@ -35,6 +35,7 @@
 
 #include <logic/DirScanResult.h>
 #include "AMLMJob.h"
+#include <concurrency/ExtFuture.h>
 #include "utils/UniqueIDMixin.h"
 
 class DirectoryScannerAMLMJob;
@@ -96,6 +97,8 @@ protected:
 //    void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread) override;
 
 private:
+
+    virtual void work_function(ExtFuture<DirScanResult>& the_future);
 
     QUrl m_dir_url;
     QStringList m_nameFilters;

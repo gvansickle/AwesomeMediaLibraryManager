@@ -20,12 +20,15 @@
 #ifndef DEBUGHELPERS_H
 #define DEBUGHELPERS_H
 
+#include <config.h>
+
 /// Std C++
 #include <type_traits>
 
 /// Qt5
 #include <QObject>
 #include <QMetaMethod>
+#include <QException>
 #include <QString>
 #include <QDebug>
 #include <QThread>
@@ -60,6 +63,16 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 
 /// Stream out a warning of @a cond holds true.
 #define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+
+/// Throw if condition is true.
+template <class ExceptionType = QException, class... Args>
+void throwif(bool condition, Args... args)
+{
+	if(condition)
+	{
+        throw ExceptionType(args...);
+	}
+}
 
 #define AMLM_ASSERT_IN_GUITHREAD() do { Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread()); } while(0)
 

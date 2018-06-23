@@ -51,20 +51,21 @@ class UniqueIDMixin : crtp<T, UniqueIDMixin>
 public:
 	virtual ~UniqueIDMixin()
 	{
-		std::unique_lock<std::mutex> lock(m_deleted_ids_mutex);
+        /// @todo I don't think this actually works, not sure.
+//		std::unique_lock<std::mutex> lock(m_deleted_ids_mutex);
 
-		// Record that this ID has been deleted.
-        auto retval = m_deleted_ids.insert(m_id_num);
-        if(retval.second == false)
-        {
-            // Was already in the map.
-            // It's already been deleted.
-            Q_ASSERT_X(0, "", "DOUBLE DELETE");
-        }
-        else
-        {
-//            qDb() << "No double delete detected:" << id();
-        }
+//		// Record that this ID has been deleted.
+//        auto retval = m_deleted_ids.insert(m_id_num);
+//        if(retval.second == false)
+//        {
+//            // Was already in the map.
+//            // It's already been deleted.
+//            Q_ASSERT_X(0, "", "DOUBLE DELETE");
+//        }
+//        else
+//        {
+////            qDb() << "No double delete detected:" << id();
+//        }
 	}
 
     QString uniqueQObjectName() const

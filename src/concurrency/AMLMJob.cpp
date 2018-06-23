@@ -90,13 +90,6 @@ void AMLMJob::requestAbort()
     // Using a mutex/condition variable combo to allow both abort and pause/resume.
     // This is sort of easier with C++11+, but it's Qt5, so....
 
-    /**
-     * @todo There's still something wrong between this and requestAbort() and doKill() and
-     * I don't know what all else.  We get multiple of these from a single cancel button push,
-     * and the TW::Job doesn't actually end until much later (after several slotStop()s).
-     * Similar with KIO::Jobs.
-     */
-
     // Lock the mutex.
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
@@ -104,8 +97,21 @@ void AMLMJob::requestAbort()
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    // Signal to the run() loop that it should cancel.
-    m_flag_cancel = true;
+    // Lock the TW::Job.  We need to do this for cancelling a TW::Job which hasn't started yet.
+    QMutexLocker twjob_lock(mutex());
+    if(status() < JobInterface::Status::Status_Queued)
+    {
+        // TW::Job has not yet been queued.
+
+        /// QueueInterface::dequeue()
+        /// "If the job was queued but not started so far, it is removed from the queue."
+        /// You can always call dequeue, it will return true if the job was dequeued. However if the job is not in the queue anymore,
+        /// it is already being executed, it is too late to dequeue, and dequeue will return false. The return value is thread-safe - if
+        /// true is returned, the job was still waiting, and has been dequeued. If not, the job was not waiting in the queue.
+    }
+
+    // Signal to the TW::run() loop that it should cancel.
+    m_tw_flag_cancel = true;
 
     // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
     // by the notify, and only to temporarily block again because we still hold the mutex.
@@ -167,7 +173,7 @@ bool AMLMJob::wasCancelRequested()
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
     // Were we told to abort?
-    if(m_flag_cancel)
+    if(m_tw_flag_cancel)
     {
         return true;
     }
@@ -277,6 +283,8 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 	/// @note We're in a non-GUI worker thread here.
     // Remember that self is a QSharedPointer<ThreadWeaver::JobInterface>.
 
+M_WARNING("SHOULD MAKE USE OF TW::status() somewhere, Status_Success,_RUNNING,_Failed,etc");
+
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
@@ -345,22 +353,17 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
 bool AMLMJob::doKill()
 {
     // KJob::doKill().
+    /// @note The calling thread has to have an event loop.
+
     qDb() << "ENTER KJob::doKill()";
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    /**
-     * @todo There's still something wrong between this and requestAbort() and doKill() and
-     * I don't know what all else.  We get multiple of these from a single cancel button push,
-     * and the TW::Job doesn't actually end until much later (after several slotStop()s).
-     * Similar with KIO::Jobs.
-     */
-
-//
-//    connect(this, &AMLMJob::done, &local_event_loop, &QEventLoop::quit);
-
-    /// @note The calling thread has to have an event loop.
-//    connect_blocking_or_die(this, INTERNAL_SIGNAL_requestAbort, , );
+    // The TW::Job may not have even started yet.  Handle that case here.
+//    if()
+//    {
+//        /// Status_New?
+//    }
 
     // Tell the TW::Job to stop.
     requestAbort();
@@ -383,8 +386,8 @@ Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDe
 
 qDb() << "END WAIT:" << objectName();
 
-    /// @todo Need to wait for the final kill here?
-    /// A: Not completely clear.  It looks like KJob::kill() shouldn't return until:
+    /// @todo Need to wait for the final kill here.
+    /// It looks like KJob::kill() shouldn't return until:
     /// - finished is emitted
     /// - result is optionally emitted
     /// - deleteLater() is optionally called on the job.
@@ -396,8 +399,8 @@ qDb() << "END WAIT:" << objectName();
 
     // We should never get here before the TW::Job has signaled that it's done.
 M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultEnd() but comes up 0 here.");
-    qDb() << M_NAME_VAL(m_flag_cancel) << M_NAME_VAL(m_tw_job_is_done) << M_NAME_VAL(m_tw_job_was_cancelled);
-    Q_ASSERT(!(m_flag_cancel && !m_tw_job_is_done && !m_tw_job_was_cancelled));
+//    qDb() << M_NAME_VAL(m_tw_flag_cancel) << M_NAME_VAL(m_tw_job_is_done) << M_NAME_VAL(m_tw_job_was_cancelled);
+//    throwif(!!(m_tw_flag_cancel && !m_tw_job_is_done && !m_tw_job_was_cancelled));
 
     return true;
 }

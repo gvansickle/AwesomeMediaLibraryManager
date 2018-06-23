@@ -268,14 +268,20 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 		ran3 = true;
 		TC_DONE_WITH_STACK();
 		return QString("Then3 OUTPUT");
-	}).wait();
+    }).wait();
 
-	ASSERT_TRUE(future.isFinished());
+    ASSERT_TRUE(future.isFinished());
 
 	qDb() << "STARING WAIT";
 	/// @todo This doesn't wait here, but the attached wait() above does. Which maybe makes sense.
 	future.wait();
 	qDb() << "ENDING WAIT";
+
+//    qDb() << "STARTING waitForFinished()";
+//    future.future().waitForFinished();
+//    qDb() << "ENDING waitForFinished()";
+
+    ASSERT_TRUE(future.isFinished());
 
 	ASSERT_TRUE(ran1);
 	ASSERT_TRUE(ran2);

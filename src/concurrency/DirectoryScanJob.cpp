@@ -28,6 +28,7 @@
 /// Ours
 #include "utils/TheSimplestThings.h"
 #include <logic/DirScanResult.h>
+#include <concurrency/ExtAsync.h>
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl &dir_url,
                                    const QStringList &nameFilters,
@@ -74,8 +75,18 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
 
+    auto future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
+
+    future.future().waitForFinished();
+
+    qDb() << "LEAVING RUN";
+}
+
+void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult>&  the_future)
+{
+
     // Create the QDirIterator.
-	QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
+    QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 
     // Check for errors.
     QFileInfo file_info(m_dir_url.toLocalFile());
@@ -84,7 +95,6 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
         qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
         setSuccessFlag(false);
-        setWasCancelled(false);
         return;
     }
 
@@ -133,8 +143,6 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
             QDir dir = file_info.absoluteDir();
             num_discovered_dirs++;
 
-//                qDebug() << "FOUND DIRECTORY" << dir << " WITH COUNT:" << dir.count();
-
             // Update the max range to be the number of files we know we've found so far plus the number
             // of files potentially in this directory.
             num_possible_files = num_files_found_so_far + file_info.dir().count();
@@ -177,8 +185,12 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
+    if(!wasCancelRequested())
+    {
+        setSuccessFlag(true);
+    }
 
-    qDb() << "LEAVING RUN";
+    the_future.reportFinished();
 }
 
 
