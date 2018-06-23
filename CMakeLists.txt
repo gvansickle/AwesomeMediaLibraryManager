@@ -75,7 +75,7 @@ set(KF5_MIN_VERSION "5.44.0")
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
 # Add dirs where we keep support *.cmake's, ECM, etc.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
 # ECM Macros
 include(ECMAddAppIcon)
