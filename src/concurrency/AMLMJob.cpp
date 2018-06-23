@@ -180,8 +180,10 @@ bool AMLMJob::wasCancelRequested()
 
 void AMLMJob::setSuccessFlag(bool success)
 {
+    /// Called from TW::Job thread.
     qDb() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
+    m_tw_job_run_reported_success_or_fail = 1;
 }
 
 qulonglong AMLMJob::totalSize() const
@@ -286,13 +288,14 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     {
         // Cancelled.
         // KJob Success == false is correct in the cancel case.
+        qDb() << "Cancelled";
         setSuccessFlag(false);
         setWasCancelled(true);
     }
     else
     {
-        // Successful completion.
-        setSuccessFlag(true);
+        // Wasn't a cancel, so run() finished and should have explicitly set success/fail.
+        Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
     }
 
     // Essentially a duplicate of TW::QObjectDecorator's implementation.
@@ -332,6 +335,9 @@ void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thr
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
     qDb() << objectName() << "EMITTING DONE";
+
+    // Flag that the TW::Job is finished.
+    m_tw_job_is_done = 1;
 
     Q_EMIT /*TW::QObjectDecorator*/ done(self);
 }
@@ -390,8 +396,8 @@ qDb() << "END WAIT:" << objectName();
 
     // We should never get here before the TW::Job has signaled that it's done.
 M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultEnd() but comes up 0 here.");
-    qDb() << M_NAME_VAL(m_flag_cancel) << M_NAME_VAL(m_tw_got_done_or_fail) << M_NAME_VAL(m_tw_job_was_cancelled);
-    Q_ASSERT(!(m_flag_cancel && !m_tw_got_done_or_fail && !m_tw_job_was_cancelled));
+    qDb() << M_NAME_VAL(m_flag_cancel) << M_NAME_VAL(m_tw_job_is_done) << M_NAME_VAL(m_tw_job_was_cancelled);
+    Q_ASSERT(!(m_flag_cancel && !m_tw_job_is_done && !m_tw_job_was_cancelled));
 
     return true;
 }

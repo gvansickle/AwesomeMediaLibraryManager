@@ -88,6 +88,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
         return;
     }
 
+    // Count progress in terms of files found.
     setProgressUnit(KJob::Unit::Files);
 
     int num_files_found_so_far = 0;
@@ -155,13 +156,9 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
             /// @todo
             DirScanResult dir_scan_result(file_url, file_info);
+            qDb() << "DIRSCANRESULT:" << dir_scan_result;
 
             Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
-
-            // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
-//            Q_EMIT entries(this, file_url);
-            qDb() << "DIRSCANRESULT:" << dir_scan_result;
-            Q_EMIT entries(this, dir_scan_result);
 
             // Update progress.
             /// @note Bytes is being used for "Size" == progress by the system.
@@ -170,6 +167,10 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 //            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
 //            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
             setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+
+            // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
+//            Q_EMIT entries(this, file_url);
+            Q_EMIT entries(this, dir_scan_result);
         }
     }
 
