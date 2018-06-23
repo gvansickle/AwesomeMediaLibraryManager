@@ -6,7 +6,7 @@
 [subrepo]
 	remote = https://github.com/woboq/verdigris.git
 	branch = master
-	commit = 19cf9a45dd3282011e42721d25f148b5c95b406e
-	parent = fdb8f77c6ac830cb22614c2588b95a527ebf68ca
+	commit = ed9a5293eed7177441e87f4106218788cc7cd0c2
+	parent = 2ddd60c7df0dce857fe3dd22eef05726be8d61ee
 	cmdver = 0.4.0
 	method = merge
