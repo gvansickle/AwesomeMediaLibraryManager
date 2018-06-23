@@ -94,6 +94,8 @@ M_WARNING("TODO: Probably need to not call cancellAll() in here.");
     qDb() << "DELETING ALL TRACKED OBJECTS";
     cancelAll();
 
+    Q_ASSERT(m_amlmjob_to_widget_map.size() == 0);
+
     m_expanding_frame_widget->deleteLater();
 }
 
