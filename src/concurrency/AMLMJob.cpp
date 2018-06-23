@@ -364,13 +364,13 @@ qDb() << "START WAIT:" << objectName();
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-//    sleep(5);
-    auto loop = new QEventLoop();
-    connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
-    loop->exec();
-    qDb() << "WAIT: BROKE OUT OF LOOP";
-M_WARNING("WE NEVER GET PAST THIS POINT, looks like we've been deleted just before the above qDb()");
-    loop->deleteLater();
+    sleep(5);
+//    auto loop = new QEventLoop();
+//    connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
+//    loop->exec();
+//    qDb() << "WAIT: BROKE OUT OF LOOP";
+//M_WARNING("WE NEVER GET PAST THIS POINT, looks like we've been deleted just before the above qDb()");
+//    loop->deleteLater();
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
@@ -389,6 +389,7 @@ qDb() << "END WAIT:" << objectName();
     Q_ASSERT(!m_i_was_deleted);
 
     // We should never get here before the TW::Job has signaled that it's done.
+M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultEnd() but comes up 0 here.");
     qDb() << M_NAME_VAL(m_flag_cancel) << M_NAME_VAL(m_tw_got_done_or_fail) << M_NAME_VAL(m_tw_job_was_cancelled);
     Q_ASSERT(!(m_flag_cancel && !m_tw_got_done_or_fail && !m_tw_job_was_cancelled));
 
@@ -567,7 +568,7 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
 
     // The TW::Job indicated completion.
     // If the TW::Job failed, there's a failed() signal in flight as well.
-
+qDb() << "PARENT:" << parent();
     TWCommonDoneOrFailed(twjob);
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
@@ -580,7 +581,7 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // - emit finished(this)
     // - emit result(this)
     // - if the KJob is set to autoDelete(), call deleteLater().
-    qDb() << "ABOUT TO EMITRESULT()" << this;
+    qDb() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
 M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
     emitResult();
 
@@ -589,7 +590,7 @@ M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
 
     qDb() << "EXIT onTWDone";
     /// @fixme
-#error "ON CANCEL, THINGS START TO FAIL HERE.  WE ARE IMMEDIATELY DESTRUCTED FOR SOME REASON."
+//#error "ON CANCEL, THINGS START TO FAIL HERE.  WE ARE IMMEDIATELY DESTRUCTED FOR SOME REASON."
     /**
 [22:30:34.689 GUIThread______ DEBUG] AMLMJob::onTWFailed:658 - ENTER onTWFailed
 [22:30:34.689 GUIThread______ DEBUG] AMLMJob::onTWDone:561 - ENTER onTWDone

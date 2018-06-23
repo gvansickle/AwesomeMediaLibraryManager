@@ -138,6 +138,16 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     Q_CHECK_PTR(this);
     Q_ASSERT(kjob);
 
+    // Monitor hack to detect if kjob gets deleted.
+    /// @todo This is from KUIServerJobTracker and I guess is used all over Qt-land, but there has to be a better way.
+    QPointer<KJob> jobWatch = kjob;
+
+    if(!jobWatch)
+    {
+        qDb() << "Job deleted while being registered";
+        return;
+    }
+
     qIn() << "REGISTERING JOB:" << kjob;
 //    AMLMJob::dump_job_info(kjob);
 
@@ -147,10 +157,6 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     auto wdgt = new BaseActivityProgressStatusBarWidget(kjob, this, m_expanding_frame_widget);
     /// @todo Watch this, deleting the widget on close here has caused us to crash in the past.
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
-
-    // Insert the kjob/widget pair into our master map.
-    m_amlmjob_to_widget_map.insert(kjob, wdgt);
-    Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
 
     /// @todo enqueue on a widgets-to-be-shown queue?  Not clear why that exists in KWidgetJobTracker.
 
@@ -162,12 +168,30 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     /// @todo Should this really be here, or better in the onShowProgressWidget() call?
     make_connections_with_newly_registered_job(kjob, wdgt);
 
+    if(!jobWatch)
+    {
+        qDb() << "Job deleted while being registered";
+        delete wdgt;
+        return;
+    }
+
     // KAbstractWidgetJobTracker::registerJob(KJob *job) simply calls:
     //   KJobTrackerInterface::registerJob(KJob *job) does nothing but connect
     //   many of the KJob signals to slots of this.  Specifically finsihed-related:
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(unregisterJob(KJob*)));
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
     BASE_CLASS::registerJob(kjob);
+
+    if(!jobWatch)
+    {
+        qDb() << "Job deleted while being registered";
+        delete wdgt;
+        return;
+    }
+
+    // Insert the kjob/widget pair into our master map.
+    m_amlmjob_to_widget_map.insert(kjob, wdgt);
+    Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
 
     qDb() << "REGISTERED JOB:" << kjob;
 //    dump_qobject(kjob);
@@ -382,6 +406,15 @@ void ActivityProgressStatusBarTracker::slotClean(KJob *job)
     });
 }
 
+/**
+ * "This [protected Q_SLOT] should be called for correct cancellation of IO operation
+ *  Connect this to the progress widgets buttons etc."
+ *
+ * Calls job->kill(KJob::EmitResult) and emits stopped(job).
+ * This override just calls base class.
+ *
+ * @override KAbstractWidgetJobTracker.
+ */
 void ActivityProgressStatusBarTracker::slotStop(KJob *kjob)
 {
     qDb() << "GOT slotStop() for KJob:" << kjob;
@@ -440,6 +473,8 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
 
     // Connect the widget's "user wants to cancel" signal to this tracker's slotStop(KJob*) slot.
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
+    connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
+    connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
 
 
     // Connect our Size signals.
@@ -452,6 +487,7 @@ void ActivityProgressStatusBarTracker::INTERNAL_unregisterJob(KJob *kjob)
     QPointer<KJob> kjob_qp(kjob);
 
 M_WARNING("KJob* could already be finished and autoDeleted here");
+    Q_CHECK_PTR(kjob_qp);
 
     qDb() << "UNREGISTERING JOB:" << kjob_qp;
 
@@ -468,6 +504,8 @@ M_WARNING("KJob* could already be finished and autoDeleted here");
     /// @todo Maybe not?
     BASE_CLASS::unregisterJob(kjob_qp);
 
+    Q_CHECK_PTR(kjob_qp);
+
     qDb() << "SIGNALS DISCONNECTED:" << kjob_qp;
 
     /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
@@ -478,6 +516,8 @@ M_WARNING("KJob* could already be finished and autoDeleted here");
         removeJobAndWidgetFromMap(kjob_qp, w);
         w->deleteLater();
         });
+
+    Q_CHECK_PTR(kjob_qp);
 
     qDb() << "JOB UNREGISTERED:" << kjob_qp;
 }
@@ -576,49 +616,10 @@ void ActivityProgressStatusBarTracker::showSubJobs()
     auto pos_tl_global = summary_widget->mapToGlobal(rect.topLeft());
     qDb() << "Root Frame topLeft(), Global:" << pos_tl_global;
 
-//    m_expanding_frame_widget->popup(pos_tl_global);
-//    m_expanding_frame_widget->updateGeometry();
-//    m_expanding_frame_widget->activateWindow();
     m_expanding_frame_widget->show();
     m_expanding_frame_widget->raise();
 
     qDb() << "AFTER FRAME GEOMETRY:" << m_expanding_frame_widget->geometry();
-
-#if 0
-    m_expanding_frame_widget->raise();
-    m_expanding_frame_widget->show();
-
-//    m_expanding_frame_widget->updateGeometry();
-
-    // Get the parent-relative geometry of the "root widget".
-    auto rect = RootWidget()->frameGeometry();
-    qDb() << "Root Frame Rect:" << rect << "parent:" << RootWidget()->parentWidget();
-
-    // Translate the the root widget's topLeft() to MainWindow coords.
-    auto pos_tl_global = RootWidget()->mapToGlobal(rect.topLeft());
-    qDb() << "Root Frame topLeft(), Global:" << pos_tl_global;
-
-    // Get the parent-relative pos of the expanding frame.
-    auto frame_pos_pr = m_expanding_frame_widget->pos();
-    qDb() << "Exp Frame topLeft():" << frame_pos_pr << "parent:" << m_expanding_frame_widget->parentWidget();
-
-    // Global.
-    auto frame_pos_global = m_expanding_frame_widget->mapToGlobal(frame_pos_pr);
-    qDb() << "Exp Frame topLeft() Global:" << frame_pos_pr;
-
-    auto frame_rect_pr = m_expanding_frame_widget->frameGeometry();
-    qDb() << "Exp Frame frameGeometry():" << frame_rect_pr;
-
-    // New width.
-    auto new_exp_w = rect.width();
-
-    // Move the bottomLeft() of the frame to the topLeft() of the root widget.
-    frame_rect_pr.moveBottomLeft(m_expanding_frame_widget->parentWidget()->mapFromGlobal(pos_tl_global));
-    Q_ASSERT(frame_rect_pr.isValid());
-    m_expanding_frame_widget->setGeometry(frame_rect_pr);
-    m_expanding_frame_widget->setMaximumWidth(new_exp_w);
-    qDb() << "Max size:" << m_expanding_frame_widget->maximumSize();
-#endif
 }
 
 void ActivityProgressStatusBarTracker::hideSubJobs()
