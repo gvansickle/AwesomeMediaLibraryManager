@@ -80,6 +80,7 @@
 #include "utils/UniqueIDMixin.h"
 #include "utils/ConnectHelpers.h"
 #include "concurrency/function_traits.hpp"
+#include "concurrency/ExtAsync.h"
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
@@ -500,7 +501,9 @@ protected:
 //    template <class T>
 //    ExtAsyncWorkFunctionContext<T> m_extasync_wfctx;
 
-//    virtual ExtFuture<>
+    /// @todo Should be pure virtual, or better yet
+//    virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
+
 
     /// @name Override of TW::Job protected functions.
     /// @{
@@ -598,7 +601,7 @@ protected:
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
     virtual void connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
 
-    void TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob);
+    void KJobCommonDoneOrFailed(bool success);
 
     /// @}
 

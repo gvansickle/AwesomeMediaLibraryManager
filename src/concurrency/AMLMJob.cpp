@@ -540,15 +540,16 @@ void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self
     Q_CHECK_PTR(self);
 }
 
-void AMLMJob::TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob)
+void AMLMJob::KJobCommonDoneOrFailed(bool success)
 {
     // We're out of the TW context and in a context with an event loop here.
+    /// Not sure if that matters....
     AMLM_ASSERT_IN_GUITHREAD();
 
     // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
     // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
     // We'll similarly deal with the fail case in onTWFailed().
-    if(/*TW::*/twjob->success())
+    if(success)
     {
         // Set the KJob::error() code.
         setError(NoError);
@@ -589,7 +590,7 @@ void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
     // The TW::Job indicated completion.
     // If the TW::Job failed, there's a failed() signal in flight as well.
 qDb() << "PARENT:" << parent();
-    TWCommonDoneOrFailed(twjob);
+    KJobCommonDoneOrFailed(twjob->success());
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
@@ -682,7 +683,7 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
     // Shouldn't be getting into here with a non-false success.
     Q_ASSERT(twjob->success() != true);
 
-    TWCommonDoneOrFailed(twjob);
+    KJobCommonDoneOrFailed(twjob->success());
 }
 
 void AMLMJob::onKJobDoKill()

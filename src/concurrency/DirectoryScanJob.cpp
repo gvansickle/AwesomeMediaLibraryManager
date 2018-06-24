@@ -64,6 +64,8 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
                                               nameFilters,
                                               filters,
                                               flags);
+    /// @todo Hook things up in here.
+
     return retval;
 }
 
