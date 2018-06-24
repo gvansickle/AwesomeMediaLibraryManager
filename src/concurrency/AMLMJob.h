@@ -620,10 +620,6 @@ protected Q_SLOTS:
     void onTWFailed(ThreadWeaver::JobPointer twjob);
     /// @}
 
-    /// Called from our doKill() operation.  Doesn't do anything but qDb() logging.
-    /// @todo Should be really be doing that?
-    void onKJobDoKill();
-
     /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
     /// @note KJob::error() should only be called from this slot, per KF5 docs/comments.
     void onKJobResult(KJob* kjob);

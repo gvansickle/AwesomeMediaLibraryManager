@@ -175,6 +175,8 @@ void AMLMJob::start()
 
 void AMLMJob::start(ThreadWeaver::QueueStream &qstream)
 {
+    Q_ASSERT(!m_use_extasync);
+
     // Simply queue this TW::Job onto the given QueueStream.  Job should start immediately.
     qstream << this;
 }
@@ -261,6 +263,8 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 
 void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    Q_ASSERT(!m_use_extasync);
+
 	/// @note We're in a non-GUI worker thread here.
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(self);
@@ -291,6 +295,8 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
 
 void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    Q_ASSERT(!m_use_extasync);
+
 	/// @note We're in a non-GUI worker thread here.
     // Remember that self is a QSharedPointer<ThreadWeaver::JobInterface>.
 
@@ -365,6 +371,9 @@ bool AMLMJob::doKill()
 {
     // KJob::doKill().
     /// @note The calling thread has to have an event loop.
+
+    /// @todo Will need to reimplement in here for ExtAsync.
+    Q_ASSERT(!m_use_extasync);
 
     qDb() << "ENTER KJob::doKill()";
 
@@ -510,6 +519,8 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
     qDb() << "ENTER connections_make_defaultBegin";
     Q_CHECK_PTR(self);
 
+    Q_ASSERT(!m_use_extasync);
+
     /// @name Make connections to the TW::QObjectDecorator-like connections.
     /// These are the only started/ended connections between the "wrapped" ThreadWeaver::Job and
     /// the KJob.
@@ -536,6 +547,8 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
  */
 void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
 {
+    Q_ASSERT(!m_use_extasync);
+
     qDb() << "ENTER connections_break_defaultExit";
     Q_CHECK_PTR(self);
 }
@@ -575,12 +588,16 @@ void AMLMJob::KJobCommonDoneOrFailed(bool success)
 
 void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
 {
+    Q_ASSERT(!m_use_extasync);
+
     qDb() << "ENTER onTWStarted";
     Q_CHECK_PTR(twjob);
 }
 
 void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
 {
+    Q_ASSERT(!m_use_extasync);
+
     qDb() << "ENTER onTWDone";
     Q_CHECK_PTR(twjob);
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
@@ -673,6 +690,8 @@ So I think the answer is:
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
 {
+    Q_ASSERT(!m_use_extasync);
+
     qDb() << "ENTER onTWFailed";
     Q_CHECK_PTR(twjob);
 
@@ -684,13 +703,6 @@ void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
     Q_ASSERT(twjob->success() != true);
 
     KJobCommonDoneOrFailed(twjob->success());
-}
-
-void AMLMJob::onKJobDoKill()
-{
-    qDb() << "ENTER onKJobDoKill";
-
-    qDb() << "EXIT onKJobDoKill";
 }
 
 void AMLMJob::onKJobResult(KJob *kjob)

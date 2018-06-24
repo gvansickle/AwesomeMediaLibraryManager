@@ -72,6 +72,13 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
 void DirectoryScannerAMLMJob::start()
 {
     /*ExtFuture<DirScanResult>*/ m_ext_future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
+    m_ext_future.then([&](ExtFuture<DirScanResult> extfuture) -> int {
+        qDb() << "GOT TO THEN";
+        Q_ASSERT(extfuture.isFinished());
+        KJobCommonDoneOrFailed(!extfuture.isCanceled());
+        emitResult();
+        return 1;
+        ;});
 }
 
 void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
@@ -83,6 +90,8 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
 
     /// @warning self: TW:JobPointer is a QSharedPtr<TW::JobInterface>, which inherits from nothing, especially not QObject.
     ///          So "T qobject_cast(QObject *object)" in particular won't work here.
+
+Q_ASSERT(0);
 
     Q_UNUSED(self);
     Q_UNUSED(thread);
@@ -217,7 +226,7 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
-    if(!wasCancelRequested())
+    if(!(wasCancelRequested() || the_future.isCanceled()))
     {
         setSuccessFlag(true);
     }

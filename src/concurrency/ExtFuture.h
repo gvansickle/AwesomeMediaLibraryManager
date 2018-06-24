@@ -344,6 +344,8 @@ public:
 		return *this;
 	}
 
+    /// @} // END .tap() overloads.
+
 	/**
 	 * Registers a callback of type void(void) which is always called when this is finished, regardless
 	 * of success or failure.
@@ -375,7 +377,7 @@ public:
 		return retval;
 	}
 
-	/// @} // END .tap() overloads.
+
 
 	/**
 	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
