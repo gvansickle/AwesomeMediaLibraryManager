@@ -769,6 +769,7 @@ void LibraryModel::onIncomingFilename(QString filename)
 //    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
 //    model->select();
 //    static int index = 0;
+#if 0
     // Get an empty record from the model.
     QSqlRecord record = m_sql_model->record();
     qDb() << "EMPTY RECORD:" << record;
@@ -790,10 +791,11 @@ void LibraryModel::onIncomingFilename(QString filename)
     Q_ASSERT_X(status, "", "INSERT FAILED");
     status = m_sql_model->submitAll();
     Q_ASSERT_X(status, "", "SUBMIT FAILED");
+#endif
     //////// EXP
 
 	auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
-	qDebug() << "URL:" << new_entry->getUrl();
+	qDb() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);
 }
 

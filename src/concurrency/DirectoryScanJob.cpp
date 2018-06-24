@@ -52,7 +52,24 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
 M_WARNING("TODO: There's a problem with shared ptrs here");
-    qDb() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
+qDb() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
+}
+
+DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QUrl dir_url,
+                                                             const QStringList &nameFilters,
+                                                             QDir::Filters filters,
+                                                             QDirIterator::IteratorFlags flags)
+{
+    auto retval = new DirectoryScannerAMLMJob(parent, dir_url,
+                                              nameFilters,
+                                              filters,
+                                              flags);
+    return retval;
+}
+
+void DirectoryScannerAMLMJob::start()
+{
+    /*ExtFuture<DirScanResult>*/ m_ext_future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
 }
 
 void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
@@ -69,7 +86,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     Q_UNUSED(thread);
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
+Q_ASSERT(0);
     qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
     qDb() << "IN RUN, this:" << this;
 
@@ -102,13 +119,15 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
     int num_files_found_so_far = 0;
     int num_discovered_dirs = 0;
     uint num_possible_files = 0;
-    qint64 total_discovered_file_size_bytes = 0;
 
     QString status_text = QObject::tr("Scanning for music files");
 
     Q_EMIT description(this, status_text,
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+
+    the_future.setProgressRange(0, 0);
+    the_future.setProgressValueAndText(0, status_text);
 
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
@@ -120,10 +139,10 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
             break;
         }
         /// @todo Not sure how we'd pause once we get into the TW::run() function.
-//        if(report_and_control.isPaused())
+//        if(the_future.isPaused())
 //        {
 //            // We're paused, wait for a resume signal.
-//            report_and_control.waitForResume();
+//            the_future.waitForResume();
 //        }
 
         // Go to the next entry and return the path to it.
@@ -148,6 +167,8 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
             setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
             setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
             setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
+            /// NEW
+            the_future.setProgressRange(0, num_possible_files);
         }
         else if(file_info.isFile())
         {
@@ -155,8 +176,8 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
             num_files_found_so_far++;
 
             // How big is it?
-            auto file_size = file_info.size();
-            total_discovered_file_size_bytes += file_size;
+//            auto file_size = file_info.size();
+//            total_discovered_file_size_bytes += file_size;
 
             QUrl file_url = QUrl::fromLocalFile(entry_path);
 
@@ -173,6 +194,8 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
 //            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
 //            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
             setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+            /// NEW
+            the_future.setProgressValueAndText(num_files_found_so_far, status_text);
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
 //            Q_EMIT entries(this, file_url);
@@ -187,11 +210,13 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
     {
         setSuccessFlag(true);
     }
+    num_possible_files = num_files_found_so_far;
+    if (!the_future.isCanceled())
+    {
+        the_future.setProgressRange(0, num_possible_files);
+        the_future.setProgressValueAndText(num_files_found_so_far, status_text);
+    }
 
     /// CHANGE
-    m_the_future.reportFinished();
+    the_future.reportFinished();
 }
-
-
-
-

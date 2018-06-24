@@ -481,7 +481,7 @@ protected:
 
     /// Flag telling the base class whether to use the TW::Job or the ExtAsync underlying implementation.
     /// @note Temp, moving away from ThreadWeaver.
-    bool m_use_extasync {true};
+    bool m_use_extasync {false};
 
 //    template<class T>
 //    struct ExtAsyncWorkFunctionContext
@@ -632,8 +632,6 @@ protected Q_SLOTS:
 
 private:
     Q_DISABLE_COPY(AMLMJob)
-
-//    ThreadWeaver::QJobPointer m_the_tw_job;
 
     bool m_i_was_deleted = false;
 

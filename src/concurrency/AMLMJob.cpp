@@ -158,6 +158,8 @@ void AMLMJob::start()
     }
 #endif
 
+    Q_ASSERT(!m_use_extasync);
+
     /// Kjob::setAutoDelete()
     setAutoDelete(false);
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
@@ -382,7 +384,7 @@ qDb() << "START WAIT:" << objectName();
 
 Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    sleep(5);
+//    sleep(5);
 //    auto loop = new QEventLoop();
 //    connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
 //    loop->exec();

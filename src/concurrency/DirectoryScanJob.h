@@ -87,16 +87,27 @@ public:
 
     ~DirectoryScannerAMLMJob() override;
 
+    static DirectoryScannerAMLMJobPtr make_job(QObject *parent, QUrl dir_url,
+                                               const QStringList &nameFilters,
+                                               QDir::Filters filters,
+                                               QDirIterator::IteratorFlags flags);
+
+    /**
+     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
+     *  asynchronously)."
+     *
+     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
+     */
+    Q_SCRIPTABLE void start() override;
+
 protected:
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
 
-    void work_function(ExtFuture<DirScanResult>& the_future);
-
 private:
 
-    ExtFuture<DirScanResult> m_the_future;
-    auto m_workfn = std::mem_fn();
+    void work_function(ExtFuture<DirScanResult>& the_future);
+    ExtFuture<DirScanResult> m_ext_future;
 
     QUrl m_dir_url;
     QStringList m_nameFilters;
@@ -106,5 +117,6 @@ private:
 };
 
 Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
+
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */
