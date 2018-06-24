@@ -104,6 +104,11 @@ protected:
 
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
 
+    /**
+    * @return true if job successfully killed, false otherwise.
+    */
+    bool doKill() override;
+
 private:
 
     void work_function(ExtFuture<DirScanResult>& the_future);

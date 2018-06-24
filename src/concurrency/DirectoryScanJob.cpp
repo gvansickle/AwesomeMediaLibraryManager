@@ -97,6 +97,15 @@ Q_ASSERT(0);
     qDb() << "LEAVING RUN";
 }
 
+bool DirectoryScannerAMLMJob::doKill()
+{
+    qDb() << "ENTER DOKILL";
+    m_ext_future.cancel();
+    m_ext_future.wait();
+    qDb() << "EXIT DOKILL";
+    return true;
+}
+
 void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future)
 {
 
