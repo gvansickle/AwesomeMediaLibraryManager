@@ -141,7 +141,7 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
-        if(wasCancelRequested())
+        if(wasCancelRequested() || the_future.isCanceled())
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
