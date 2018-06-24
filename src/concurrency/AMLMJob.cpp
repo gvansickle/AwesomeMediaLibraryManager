@@ -379,12 +379,6 @@ bool AMLMJob::doKill()
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    // The TW::Job may not have even started yet.  Handle that case here.
-//    if()
-//    {
-//        /// Status_New?
-//    }
-
     // Tell the TW::Job to stop.
     requestAbort();
 
@@ -531,26 +525,17 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
     // internal QObjectDecorator->external QObjectDecorator interface.
     connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
 
-    //  void done(ThreadWeaver::JobPointer);
-    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    connect(this, &AMLMJob::done, this, &AMLMJob::onTWDone);
-
     //  void failed(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
     connect(this, &AMLMJob::failed, this, &AMLMJob::onTWFailed);
 
+    //  void done(ThreadWeaver::JobPointer);
+    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
+    connect(this, &AMLMJob::done, this, [=](ThreadWeaver::JobPointer twjob) {
+        onUnderlyingAsyncJobDone(twjob->success());
+    });
+
     /// @}
-}
-
-/**
- * Break connections we can only break while in defaultExit() and have the real JobPointer.
- */
-void AMLMJob::connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
-{
-    Q_ASSERT(!m_use_extasync);
-
-    qDb() << "ENTER connections_break_defaultExit";
-    Q_CHECK_PTR(self);
 }
 
 void AMLMJob::KJobCommonDoneOrFailed(bool success)
@@ -581,7 +566,7 @@ void AMLMJob::KJobCommonDoneOrFailed(bool success)
             // Some other error.
             // KJob
             setError(KJob::UserDefinedError);
-            setErrorText(QString("Unknown, non-Killed-Job error on ThreadWeaver job"));
+            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(this->objectName()));
         }
     }
 }
@@ -594,20 +579,20 @@ void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
     Q_CHECK_PTR(twjob);
 }
 
-void AMLMJob::onTWDone(ThreadWeaver::JobPointer twjob)
+void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
-    Q_ASSERT(!m_use_extasync);
+//    Q_ASSERT(!m_use_extasync);
 
-    qDb() << "ENTER onTWDone";
-    Q_CHECK_PTR(twjob);
+    qDb() << "ENTER onUnderlyingAsyncJobDone, m_use_extasync:" << m_use_extasync;
+
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    qDb() << "success()?:" << success();
+    qDb() << "success?:" << success;
 
     // The TW::Job indicated completion.
     // If the TW::Job failed, there's a failed() signal in flight as well.
 qDb() << "PARENT:" << parent();
-    KJobCommonDoneOrFailed(twjob->success());
+    KJobCommonDoneOrFailed(success);
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
@@ -626,7 +611,7 @@ M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
 
-    qDb() << "EXIT onTWDone";
+    qDb() << "EXIT onUnderlyingAsyncJobDone";
     /// @fixme
 //#error "ON CANCEL, THINGS START TO FAIL HERE.  WE ARE IMMEDIATELY DESTRUCTED FOR SOME REASON."
     /**

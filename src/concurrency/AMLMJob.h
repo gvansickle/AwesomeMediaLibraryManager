@@ -404,6 +404,8 @@ public:
     template <typename ContextType, typename Func>
     void then(ContextType&& ctx, Func&& f)
     {
+        // result(KJob*) signal:
+        // "Emitted when the job is finished (except when killed with KJob::Quietly)."
         connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
 				if(kjob->error())
 				{
@@ -518,6 +520,69 @@ protected:
 
     /// @}
 
+    /// @name ExtAsync job support functions / function templates.
+    /// @{
+
+    template <class ExtFutureT>
+    void defaultEnd(ExtFutureT& extfuture)
+    {
+        Q_ASSERT(m_use_extasync);
+        qDb() << "ENTER defaultEnd, extfuture:" << extfuture;
+
+        // We've either completed our work or been cancelled.
+        if(wasCancelRequested() || extfuture.isCanceled())
+        {
+            // Cancelled.
+            // KJob Success == false is correct in the cancel case.
+            qDb() << "Cancelled";
+            setSuccessFlag(false);
+            setWasCancelled(true);
+        }
+        else
+        {
+            // Wasn't a cancel, so run()/worker_function() finished and should have explicitly set success/fail.
+            Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
+        }
+
+        // Essentially a duplicate of TW::QObjectDecorator's implementation.
+        /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
+        // TW::QObjectDecorator does this, and ~never calls the base class:
+        //    Q_ASSERT(job());
+        //    job()->defaultEnd(self, thread);
+        //    if (!self->success()) {
+        //        Q_EMIT failed(self);
+        //    }
+        //    Q_EMIT done(self);
+        // job() is not self, it's the decorated job (TW::JobInterface*) passed to the IdDecorator constructor.
+        // So the call to job()->defaultEnd() is the call we're currently in, so we don't call it again which would
+        // infinitely recurse us.
+        /// @note run() must have set the correct success() value prior to exiting.
+
+        Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+
+        // Call base class defaultEnd() implementation.
+        /// @note Vestige of ThreadWeaver support for clearing queuePolicies, probably no longer needed for anything.
+
+        if(!m_success)
+        {
+            qWr() << objectName() << "FAILED";
+//            Q_EMIT /*TW::QObjectDecorator*/ failed(self);
+        }
+        else
+        {
+            qDb() << objectName() << "Succeeded";
+            // @note No explicit TW::succeeded signal.  Success is TW::done() signal plus TW::success() == true.
+        }
+
+//        qDb() << objectName() << "EMITTING DONE";
+
+        // Flag that the TW::Job is finished.
+        m_tw_job_is_done = 1;
+
+//        Q_EMIT /*TW::QObjectDecorator*/ done(self);
+    }
+    /// @}
+
     /// @name Override of KJob protected functions.
     /// @{
 
@@ -541,6 +606,17 @@ protected:
      * @return true if job successfully killed, false otherwise.
      */
     bool doKill() override;
+
+    template <class ExtFutureT>
+    bool doKill(ExtFutureT& extfuture)
+    {
+        //
+        qDb() << "ENTER TEMPL DOKILL";
+        extfuture.cancel();
+        extfuture.wait();
+        qDb() << "EXIT TEMPL DOKILL";
+        return true;
+    }
 
     /**
      * @note KJob::doSuspend() simply returns false.
@@ -599,8 +675,12 @@ protected:
     /// Make the internal signal-slot connections.
     virtual void make_connections();
     virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
-    virtual void connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
 
+    /**
+     * Sets the KJob error code / string.
+     *
+     * @param success  true if the underlying job completed successfully and wasn't cancelled.  false otherwise.
+     */
     void KJobCommonDoneOrFailed(bool success);
 
     /// @}
@@ -616,8 +696,8 @@ protected Q_SLOTS:
     /// Should be connected to the started(self) signal.
     /// started() should be getting emitted in defaultBegin().
     void onTWStarted(ThreadWeaver::JobPointer twjob);
-    void onTWDone(ThreadWeaver::JobPointer twjob);
     void onTWFailed(ThreadWeaver::JobPointer twjob);
+    void onUnderlyingAsyncJobDone(bool success);
     /// @}
 
     /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).

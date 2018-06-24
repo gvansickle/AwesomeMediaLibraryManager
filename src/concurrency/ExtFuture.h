@@ -565,10 +565,6 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 	return dbg;
 }
 
-
-
-
-
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 

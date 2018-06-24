@@ -72,49 +72,37 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
 void DirectoryScannerAMLMJob::start()
 {
     /*ExtFuture<DirScanResult>*/ m_ext_future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
+    qDb() << "ExtFuture<>:" << m_ext_future;
     m_ext_future.then([&](ExtFuture<DirScanResult> extfuture) -> int {
         qDb() << "GOT TO THEN";
         Q_ASSERT(extfuture.isFinished());
-        KJobCommonDoneOrFailed(!extfuture.isCanceled());
-        emitResult();
+        defaultEnd(m_ext_future);
+        onUnderlyingAsyncJobDone(!extfuture.isCanceled());
+//        KJobCommonDoneOrFailed(!extfuture.isCanceled());
+//        emitResult();
         return 1;
         ;});
 }
 
 void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
-	// Per the instructions here: https://api.kde.org/frameworks/threadweaver/html/classThreadWeaver_1_1Job.html#a1dd5d0ec7e1953576d6fe787f3cfd30c
-	// "Whenever publishing information about the job to the outside world, for example by emitting signals, use self,
-	// not this. self is the reference counted object handled by the queue. Using it as signal parameters will amongst
-	// other things prevent thejob from being memory managed and deleted."
-
-    /// @warning self: TW:JobPointer is a QSharedPtr<TW::JobInterface>, which inherits from nothing, especially not QObject.
-    ///          So "T qobject_cast(QObject *object)" in particular won't work here.
-
-Q_ASSERT(0);
+    Q_ASSERT(0);
 
     Q_UNUSED(self);
     Q_UNUSED(thread);
-
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-Q_ASSERT(0);
-    qDb() << "IN RUN, self/self.data():" << self << self.data() << "TW self Status:" << self->status();
-    qDb() << "IN RUN, this:" << this;
-
-    auto future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
-
-    future.future().waitForFinished();
-
-    qDb() << "LEAVING RUN";
 }
 
 bool DirectoryScannerAMLMJob::doKill()
 {
-    qDb() << "ENTER DOKILL";
-    m_ext_future.cancel();
-    m_ext_future.wait();
-    qDb() << "EXIT DOKILL";
-    return true;
+    qDb() << "ENTER OVERRIDE DOKILL";
+    bool retval = AMLMJob::doKill(m_ext_future);
+    qDb() << "EXIT OVERRIDE DOKILL:" << retval;
+    return retval;
+//    qDb() << "ENTER DOKILL";
+//    m_ext_future.cancel();
+//    m_ext_future.wait();
+//    qDb() << "EXIT DOKILL";
+//    return true;
 }
 
 void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future)
@@ -156,6 +144,7 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
+            the_future.reportCanceled();
             break;
         }
         /// @todo Not sure how we'd pause once we get into the TW::run() function.
