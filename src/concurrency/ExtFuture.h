@@ -94,7 +94,9 @@ struct ExtAsyncProgress
  *     @endcode
  * - An expicit QFuture(QFutureInterface<T> *p) constructor commented as "internal".
  *
- * QFuture<t> doesn't inherit from anything, so copy constructor/assignment/etc. are all defaults.
+ * QFuture<T> and QFutureInterfaceBase don't inherit from anything.  QFutureInterface<T> only inherits
+ * from QFutureInterfaceBase.  Specifically, nothing inherits from QObject, so we're pretty free to use templating
+ * and multiple inheritance.
  */
 template <typename T>
 class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
@@ -112,7 +114,7 @@ public:
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
 	using is_ExtFuture = std::true_type;
-	static constexpr bool is_ExtFuture_v = true;
+	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
 
 	/// @todo REMOVE
 	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;

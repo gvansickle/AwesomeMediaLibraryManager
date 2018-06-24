@@ -95,6 +95,9 @@ protected:
 
 private:
 
+    ExtFuture<DirScanResult> m_the_future;
+    auto m_workfn = std::mem_fn();
+
     QUrl m_dir_url;
     QStringList m_nameFilters;
     QDir::Filters m_dir_filters;

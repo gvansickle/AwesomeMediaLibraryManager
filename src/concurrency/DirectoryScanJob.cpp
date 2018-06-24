@@ -80,7 +80,7 @@ void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::T
     qDb() << "LEAVING RUN";
 }
 
-void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult>&  the_future)
+void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future)
 {
 
     // Create the QDirIterator.
@@ -188,7 +188,8 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult>&  the_futur
         setSuccessFlag(true);
     }
 
-    the_future.reportFinished();
+    /// CHANGE
+    m_the_future.reportFinished();
 }
 
 

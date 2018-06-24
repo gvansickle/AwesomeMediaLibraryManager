@@ -483,22 +483,24 @@ protected:
     /// @note Temp, moving away from ThreadWeaver.
     bool m_use_extasync {true};
 
-    template<class T>
-    struct ExtAsyncWorkFunctionContext
-    {
-        /**
-         * The ExtAsync work function.
-         * @param the_future
-         */
-        template <class T, template<class> class ExtFutureT>
-        void work_function(ExtFutureT<T>& the_future) { Q_ASSERT(0); };
+//    template<class T>
+//    struct ExtAsyncWorkFunctionContext
+//    {
+//        /**
+//         * The ExtAsync work function.
+//         * @param the_future
+//         */
+//        template <class T, template<class> class ExtFutureT>
+//        void work_function(ExtFutureT<T>& the_future) { Q_ASSERT(0); };
 
-        template <class T, template<class> class ExtFutureT>
-        static ExtFutureT<T> m_the_extfuture;
-    };
+//        template <class T, template<class> class ExtFutureT>
+//        static ExtFutureT<T> m_the_extfuture;
+//    };
 
-    template <class T>
-    ExtAsyncWorkFunctionContext<T> m_extasync_wfctx;
+//    template <class T>
+//    ExtAsyncWorkFunctionContext<T> m_extasync_wfctx;
+
+//    virtual ExtFuture<>
 
     /// @name Override of TW::Job protected functions.
     /// @{
