@@ -77,19 +77,8 @@ void DirectoryScannerAMLMJob::start()
         qDb() << "GOT TO THEN";
         Q_ASSERT(extfuture.isFinished());
         defaultEnd(m_ext_future);
-        onUnderlyingAsyncJobDone(!extfuture.isCanceled());
-//        KJobCommonDoneOrFailed(!extfuture.isCanceled());
-//        emitResult();
         return 1;
         ;});
-}
-
-void DirectoryScannerAMLMJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
-{
-    Q_ASSERT(0);
-
-    Q_UNUSED(self);
-    Q_UNUSED(thread);
 }
 
 bool DirectoryScannerAMLMJob::doKill()
@@ -98,11 +87,6 @@ bool DirectoryScannerAMLMJob::doKill()
     bool retval = AMLMJob::doKill(m_ext_future);
     qDb() << "EXIT OVERRIDE DOKILL:" << retval;
     return retval;
-//    qDb() << "ENTER DOKILL";
-//    m_ext_future.cancel();
-//    m_ext_future.wait();
-//    qDb() << "EXIT DOKILL";
-//    return true;
 }
 
 void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future)

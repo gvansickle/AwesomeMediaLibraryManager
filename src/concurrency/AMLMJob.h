@@ -220,7 +220,7 @@ Q_SIGNALS:
 	/// @{
 
     /// This signal is emitted when this TW::Job is being processed by a thread.
-    void started(ThreadWeaver::JobPointer);
+//    void started(ThreadWeaver::JobPointer);
     /// This signal is emitted when success() returns false after the job is executed.
     void failed(ThreadWeaver::JobPointer);
     /// This signal is emitted when the TW::Job has been finished (always, no matter if it succeeded or not).
@@ -486,31 +486,11 @@ protected:
     /// @note Temp, moving away from ThreadWeaver.
     bool m_use_extasync {false};
 
-//    template<class T>
-//    struct ExtAsyncWorkFunctionContext
-//    {
-//        /**
-//         * The ExtAsync work function.
-//         * @param the_future
-//         */
-//        template <class T, template<class> class ExtFutureT>
-//        void work_function(ExtFutureT<T>& the_future) { Q_ASSERT(0); };
-
-//        template <class T, template<class> class ExtFutureT>
-//        static ExtFutureT<T> m_the_extfuture;
-//    };
-
-//    template <class T>
-//    ExtAsyncWorkFunctionContext<T> m_extasync_wfctx;
-
-    /// @todo Should be pure virtual, or better yet
-//    virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
-
-
     /// @name Override of TW::Job protected functions.
+    /// @todo OBSOLETE, REPLACE AND REMOVE.
     /// @{
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
+    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override {}
     void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
     /**
      * The defaultEnd() function, called immediately after run() returns.
@@ -579,8 +559,27 @@ protected:
         // Flag that the TW::Job is finished.
         m_tw_job_is_done = 1;
 
+        /// @todo Direct call to onUnderlyingAsyncJobDone()?
+//        onUnderlyingAsyncJobDone(m_success);
+        onUnderlyingAsyncJobDone(!extfuture.isCanceled());
 //        Q_EMIT /*TW::QObjectDecorator*/ done(self);
     }
+
+    /**
+     * KJob: Kill the async underlying job.
+     * Abort this job quietly.
+     * Simply kill the job, no error reporting or job deletion should be involved.
+     */
+    template <class ExtFutureT>
+    bool doKill(ExtFutureT& extfuture)
+    {
+        qDb() << "ENTER TEMPL DOKILL";
+        extfuture.cancel();
+        extfuture.wait();
+        qDb() << "EXIT TEMPL DOKILL";
+        return true;
+    }
+
     /// @}
 
     /// @name Override of KJob protected functions.
@@ -606,17 +605,6 @@ protected:
      * @return true if job successfully killed, false otherwise.
      */
     bool doKill() override;
-
-    template <class ExtFutureT>
-    bool doKill(ExtFutureT& extfuture)
-    {
-        //
-        qDb() << "ENTER TEMPL DOKILL";
-        extfuture.cancel();
-        extfuture.wait();
-        qDb() << "EXIT TEMPL DOKILL";
-        return true;
-    }
 
     /**
      * @note KJob::doSuspend() simply returns false.
@@ -695,7 +683,7 @@ protected Q_SLOTS:
 
     /// Should be connected to the started(self) signal.
     /// started() should be getting emitted in defaultBegin().
-    void onTWStarted(ThreadWeaver::JobPointer twjob);
+//    void onTWStarted(ThreadWeaver::JobPointer twjob);
     void onTWFailed(ThreadWeaver::JobPointer twjob);
     void onUnderlyingAsyncJobDone(bool success);
     /// @}
@@ -703,9 +691,6 @@ protected Q_SLOTS:
     /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
     /// @note KJob::error() should only be called from this slot, per KF5 docs/comments.
     void onKJobResult(KJob* kjob);
-
-    /// Always invoked by the KJob::finished signal regardless of reason.
-    void onKJobFinished(KJob* kjob);
 
     /// @}
 

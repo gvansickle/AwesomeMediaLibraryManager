@@ -38,19 +38,10 @@
 #include "utils/TheSimplestThings.h"
 #include <gui/MainWindow.h>
 
-/**
- * Object life cycles
- *
- * External     AMLMJob     KJob        TW::Job
- *	--start-->   start()
- */
 
 AMLMJob::AMLMJob(QObject *parent)
     : KJob(parent), ThreadWeaver::Job()
 {
-    /// @note Buried in TW::Private::Job_Private there's a mutex "mutex".
-    /// It is used in TW::Job in a number of places (e.g. aboutToBeQueued()/removeQueuePolicy()/etc.), but not by default in
-    /// anything we're overriding in here as far as I can see.
 
     // Let's try this...
 //    auto sh = new SignalHook(this);
@@ -287,7 +278,7 @@ void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::T
     connections_make_defaultBegin(self, thread);
 
     qDb() << "EMITTING TW STARTED on TW::JobPointer:" << self;
-    Q_EMIT started(self);
+//    Q_EMIT started(self);
 
     // ThreadWeaver::Job::defaultBegin() does literally nothing.
     ThreadWeaver::Job::defaultBegin(self, thread);
@@ -495,9 +486,10 @@ void AMLMJob::make_connections()
     // not Quietly.
 //    connect(this, &KJob::result, this, &AMLMJob::onKJobResult);
 
-//    // Emitted by calling emitResult() and kill().
-//    // Intended to notify UIs that should detach from the job.
-//    /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
+    // finished()
+    // Emitted by calling emitResult() and kill().
+    // Intended to notify UIs that should detach from the job.
+    /// @todo This event fires and gets to AMLMJob::onKJobFinished() after this has been destructed.
 //    connect(this, &KJob::finished, this, &AMLMJob::onKJobFinished);
 
 //#error "BOTH THE ABOVE NEED TO BE RETHOUGHT"
@@ -523,7 +515,7 @@ void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self
     // void started(ThreadWeaver::JobPointer);
     // This signal is emitted when this job is being processed by a thread.
     // internal QObjectDecorator->external QObjectDecorator interface.
-    connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
+//    connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
 
     //  void failed(ThreadWeaver::JobPointer);
     // This signal is emitted when success() returns false after the job is executed.
@@ -571,18 +563,16 @@ void AMLMJob::KJobCommonDoneOrFailed(bool success)
     }
 }
 
-void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
-{
-    Q_ASSERT(!m_use_extasync);
+//void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
+//{
+//    Q_ASSERT(!m_use_extasync);
 
-    qDb() << "ENTER onTWStarted";
-    Q_CHECK_PTR(twjob);
-}
+//    qDb() << "ENTER onTWStarted";
+//    Q_CHECK_PTR(twjob);
+//}
 
 void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
-//    Q_ASSERT(!m_use_extasync);
-
     qDb() << "ENTER onUnderlyingAsyncJobDone, m_use_extasync:" << m_use_extasync;
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
@@ -596,7 +586,7 @@ qDb() << "PARENT:" << parent();
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    // Regardless of success or fail of the TW::Job, we need to call emitResult() only once.
+    // Regardless of success or fail of the underlying job, we need to call KJob::emitResult() only once.
     // We handle both success and fail cases here, since we always should get a ::done() event.
     // Tell the KJob to:
     // - Set d->isFinished
@@ -675,6 +665,8 @@ So I think the answer is:
 
 void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
 {
+    /// @note No direct succes/failed indication from ExtFuture<>, only isFinished() and isCancelled().
+    /// You can throw and catch exceptions though.
     Q_ASSERT(!m_use_extasync);
 
     qDb() << "ENTER onTWFailed";
@@ -704,16 +696,5 @@ void AMLMJob::onKJobResult(KJob *kjob)
     }
 }
 
-void AMLMJob::onKJobFinished(KJob *kjob)
-{
-    /**
-     * @todo There's still something wrong between this and requestAbort() and doKill() and
-     * I don't know what all else.  We get multiple of these from a single cancel button push,
-     * and the TW::Job doesn't actually end until much later (after several slotStop()s).
-     * Similar with KIO::Jobs.
-     */
 
-    Q_CHECK_PTR(kjob);
-    qDb() << "KJOB FINISHED" << kjob;
-}
 
