@@ -488,71 +488,9 @@ protected:
         ext_future.then([&](ExtFutureT extfuture) -> int {
             qDb() << "GOT TO THEN";
             Q_ASSERT(extfuture.isFinished());
-            defaultEnd(ext_future);
+            defaultEnd();
             return 1;
             ;});
-    }
-
-    template <class ExtFutureT>
-    void defaultEnd(ExtFutureT& extfuture)
-    {
-        Q_ASSERT(m_use_extasync);
-        qDb() << "ENTER defaultEnd, extfuture:" << extfuture;
-
-        // We've either completed our work or been cancelled.
-        if(wasCancelRequested() || extfuture.isCanceled())
-        {
-            // Cancelled.
-            // KJob Success == false is correct in the cancel case.
-            qDb() << "Cancelled";
-            setSuccessFlag(false);
-            setWasCancelled(true);
-        }
-        else
-        {
-            // Wasn't a cancel, so run()/worker_function() finished and should have explicitly set success/fail.
-            Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
-        }
-
-        // Essentially a duplicate of TW::QObjectDecorator's implementation.
-        /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
-        // TW::QObjectDecorator does this, and ~never calls the base class:
-        //    Q_ASSERT(job());
-        //    job()->defaultEnd(self, thread);
-        //    if (!self->success()) {
-        //        Q_EMIT failed(self);
-        //    }
-        //    Q_EMIT done(self);
-        // job() is not self, it's the decorated job (TW::JobInterface*) passed to the IdDecorator constructor.
-        // So the call to job()->defaultEnd() is the call we're currently in, so we don't call it again which would
-        // infinitely recurse us.
-        /// @note run() must have set the correct success() value prior to exiting.
-
-        Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-        // Call base class defaultEnd() implementation.
-        /// @note Vestige of ThreadWeaver support for clearing queuePolicies, probably no longer needed for anything.
-
-        if(!m_success)
-        {
-            qWr() << objectName() << "FAILED";
-//            Q_EMIT /*TW::QObjectDecorator*/ failed(self);
-        }
-        else
-        {
-            qDb() << objectName() << "Succeeded";
-            // @note No explicit TW::succeeded signal.  Success is TW::done() signal plus TW::success() == true.
-        }
-
-//        qDb() << objectName() << "EMITTING DONE";
-
-        // Flag that the TW::Job is finished.
-        m_tw_job_is_done = 1;
-
-        /// @todo Direct call to onUnderlyingAsyncJobDone()?
-//        onUnderlyingAsyncJobDone(m_success);
-        onUnderlyingAsyncJobDone(!extfuture.isCanceled());
-//        Q_EMIT /*TW::QObjectDecorator*/ done(self);
     }
 
     /// @}
