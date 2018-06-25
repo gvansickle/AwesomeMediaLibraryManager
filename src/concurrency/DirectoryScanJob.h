@@ -88,10 +88,7 @@ public:
 
 protected:
 
-    /**
-    * @return true if job successfully killed, false otherwise.
-    */
-    bool doKill() override;
+    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
 
 private:
 

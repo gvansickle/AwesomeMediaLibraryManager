@@ -65,14 +65,6 @@ void CoverArtJob::start()
     BASE_CLASS::start(m_ext_future);
 }
 
-bool CoverArtJob::doKill()
-{
-    qDb() << "ENTER OVERRIDE DOKILL";
-    bool retval = BASE_CLASS::doKill(m_ext_future);
-    qDb() << "EXIT OVERRIDE DOKILL:" << retval;
-    return retval;
-}
-
 void CoverArtJob::AsyncGetCoverArt(const QUrl &url)
 {
     m_audio_file_url = url;

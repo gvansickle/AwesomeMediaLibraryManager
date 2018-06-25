@@ -182,6 +182,14 @@ bool AMLMJob::wasCancelRequested()
         return true;
     }
 
+    if(m_use_extasync)
+    {
+        if(get_future_ref().isCanceled())
+        {
+            return true;
+        }
+    }
+
     // Wait if we have to.
     // Well, here we don't have to.  Until we add pause/resume, we just have an expensive abort flag.
 //    m_cancel_pause_resume_waitcond.wait(lock.mutex());
@@ -364,8 +372,15 @@ bool AMLMJob::doKill()
     /// @note The calling thread has to have an event loop.
 
     /// @todo Will need to reimplement in here for ExtAsync.
-    Q_ASSERT(!m_use_extasync);
-
+    if(m_use_extasync)
+    {
+        qDb() << "ENTER EXTASYNC DOKILL";
+        get_future_ref().cancel();
+        get_future_ref().waitForFinished();
+        qDb() << "EXIT EXTASYNC DOKILL";
+    }
+    else
+    {
     qDb() << "ENTER KJob::doKill()";
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
@@ -406,7 +421,7 @@ qDb() << "END WAIT:" << objectName();
 M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultEnd() but comes up 0 here.");
 //    qDb() << M_NAME_VAL(m_tw_flag_cancel) << M_NAME_VAL(m_tw_job_is_done) << M_NAME_VAL(m_tw_job_was_cancelled);
 //    throwif(!!(m_tw_flag_cancel && !m_tw_job_is_done && !m_tw_job_was_cancelled));
-
+    }
     return true;
 }
 

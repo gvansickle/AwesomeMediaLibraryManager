@@ -36,6 +36,8 @@ using std::placeholders::_1;
 
 LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
 {
+    m_use_extasync = true;
+
     // Set our object name.
     setObjectName(uniqueQObjectName());
 
@@ -48,6 +50,20 @@ LibraryRescannerJob::~LibraryRescannerJob()
     qDb() << "LibraryRescannerJob DELETED:" << this << objectName();
 }
 
+LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
+{
+    auto retval = new LibraryRescannerJob(parent);
+    /// @todo Hook things up in here.
+
+    return retval;
+}
+
+void LibraryRescannerJob::start()
+{
+    m_ext_future = ExtAsync::run(this, &LibraryRescannerJob::work_function);
+    BASE_CLASS::start(m_ext_future);
+}
+
 void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
                                                          LibraryModel* current_libmodel)
 {
@@ -55,11 +71,12 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
     m_current_libmodel = current_libmodel;
 }
 
-void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
+void LibraryRescannerJob::work_function(ExtFuture<MetadataReturnVal>& the_future)
+///run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER run";
 
-    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
+//    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
 //    LibraryRescannerJobPtr amlm_self = qSharedPointerDynamicCast<LibraryRescannerJob>(self);
 
     setProgressUnit(KJob::Unit::Files);
@@ -73,7 +90,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
     // Make the internal connection to the SLOT_processReadyResults() slot.
-    connect(amlm_self.data(), &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
+    connect(this, &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
 
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
@@ -99,6 +116,9 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     {
     	setSuccessFlag(true);
     }
+
+    /// @todo push down
+    the_future.reportFinished();
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)

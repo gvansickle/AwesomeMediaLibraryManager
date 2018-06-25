@@ -67,12 +67,7 @@ public Q_SLOTS:
 
 protected:
 
-//    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
-
-    /**
-	* @return true if job successfully killed, false otherwise.
-	*/
-	bool doKill() override;
+    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
 
 private:
 

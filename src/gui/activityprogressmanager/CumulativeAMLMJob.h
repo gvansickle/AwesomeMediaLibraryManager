@@ -46,7 +46,15 @@ public:
     Q_SCRIPTABLE void start() override {}
 
 protected:
+
+    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
+
     void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override { qDb() << "RUN GOT CALLED FOR SOME REASON"; }
+
+private:
+
+    ExtFuture<int> m_ext_future;
+
 };
 
 Q_DECLARE_METATYPE(CumulativeAMLMJob*)

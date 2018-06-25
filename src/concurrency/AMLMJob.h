@@ -503,6 +503,8 @@ protected:
     /// @name ExtAsync job support functions / function templates.
     /// @{
 
+    virtual QFutureInterfaceBase& get_future_ref() = 0;
+
     template <class ExtFutureT>
     void start(ExtFutureT& ext_future)
     {
@@ -575,21 +577,6 @@ protected:
 //        onUnderlyingAsyncJobDone(m_success);
         onUnderlyingAsyncJobDone(!extfuture.isCanceled());
 //        Q_EMIT /*TW::QObjectDecorator*/ done(self);
-    }
-
-    /**
-     * KJob: Kill the async underlying job.
-     * Abort this job quietly.
-     * Simply kill the job, no error reporting or job deletion should be involved.
-     */
-    template <class ExtFutureT>
-    bool doKill(ExtFutureT& extfuture)
-    {
-        qDb() << "ENTER TEMPL DOKILL";
-        extfuture.cancel();
-        extfuture.wait();
-        qDb() << "EXIT TEMPL DOKILL";
-        return true;
     }
 
     /// @}

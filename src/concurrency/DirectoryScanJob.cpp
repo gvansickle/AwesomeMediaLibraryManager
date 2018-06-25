@@ -79,14 +79,6 @@ void DirectoryScannerAMLMJob::start()
     BASE_CLASS::start(m_ext_future);
 }
 
-bool DirectoryScannerAMLMJob::doKill()
-{
-    qDb() << "ENTER OVERRIDE DOKILL";
-    bool retval = BASE_CLASS::doKill(m_ext_future);
-    qDb() << "EXIT OVERRIDE DOKILL:" << retval;
-    return retval;
-}
-
 void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future)
 {
 
