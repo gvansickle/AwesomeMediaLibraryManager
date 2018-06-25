@@ -315,13 +315,12 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	GuiAddons
 	IconThemes
 	WindowSystem
-	ThreadWeaver
 )
 set(HAVE_KF501 ${KF5_FOUND})
 list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
 list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
-list(APPEND KF5_LINK_LIBS KF5::WindowSystem KF5::ThreadWeaver)
+list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 
 
 ###

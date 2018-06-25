@@ -17,16 +17,17 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "AMLMApp.h"
 
-/// Qt5
-//#include <QNetworkAccessManager>
+// Qt5
 
-/// KF5
+
+// KF5
 #include <KJob>
-#include <ThreadWeaver/Queue>
 
-/// Ours
+// Ours
 #include <utils/TheSimplestThings.h>
 #include <logic/SupportedMimeTypes.h>
 
@@ -45,8 +46,5 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 
 AMLMApp::~AMLMApp()
 {
-    // Shut down ThreadWeaver.
-    ThreadWeaver::Queue::instance()->requestAbort();
-    ThreadWeaver::Queue::instance()->finish();
-    ThreadWeaver::Queue::instance()->shutDown();
+    // Shut down whatever still needs shutting down.
 }

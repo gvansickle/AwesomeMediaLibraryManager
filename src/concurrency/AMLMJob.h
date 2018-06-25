@@ -59,7 +59,7 @@
  *     bool autoDelete() const;
  */
 
-/// Qt5
+// Qt5
 #include <QObject>
 #include <QPointer>
 #include <QWeakPointer>
@@ -69,14 +69,11 @@
 #include <QWaitCondition>
 #include <QSemaphore>
 
-/// KF5
+// KF5
 #include <KJob>
 #include <KJobUiDelegate>
-//#include <ThreadWeaver/Job>
-//#include <ThreadWeaver/QObjectDecorator>
-//#include <ThreadWeaver/QueueStream>
 
-/// Ours
+// Ours
 #include "utils/UniqueIDMixin.h"
 #include "utils/ConnectHelpers.h"
 #include "concurrency/function_traits.hpp"

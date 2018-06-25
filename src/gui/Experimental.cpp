@@ -51,8 +51,6 @@
 #include <KMessageWidget>
 #include <KUiServerJobTracker>
 #include <KJobWidgets>
-#include <ThreadWeaver/State>
-#include <ThreadWeaver/DebuggingAids>
 
 #include "MainWindow.h"
 
@@ -121,8 +119,6 @@ void Experimental::DoExperiment()
     // If we do this, the jobs will add themselves to the given tracker if they don't have HideProgressInfo set.
     KIO::setJobTracker(master_job_tracker);
 
-    ThreadWeaver::setDebugLevel(true, 10);
-
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey,share=music");
     KIO::DirectorySizeJob* dirsizejob = KIO::directorySize(dir_url);
@@ -161,8 +157,6 @@ void Experimental::DoExperiment()
     KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload, KIO::HideProgressInfo);
     inet_get_job->setObjectName("INET_GET_JOB");
 
-//    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
-
     master_job_tracker->registerJob(dirsizejob);
 
     master_job_tracker->registerJob(dsj);
@@ -188,8 +182,6 @@ void Experimental::DoExperiment()
 //    test_job->setUiDelegate(new KIO::JobUiDelegate());
 //    dump_qobject(inet_get_job);
 
-//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
-
     qDb() << M_NAME_VAL(dsj);
     qDb() << M_NAME_VAL(dsj2);
 
@@ -199,12 +191,6 @@ void Experimental::DoExperiment()
     dsj2->start();
     kio_list_kiojob->start();
     inet_get_job->start();
-
-    // enqueue takes JobPointers (QSharedPtr<>).
-//    queue->enqueue(dsj);//->asTWJobPointer());
-//    queue->enqueue(dsj2);//->asTWJobPointer());
-//    queue->stream() << dsj << dsj2;
-//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
 #endif
 
