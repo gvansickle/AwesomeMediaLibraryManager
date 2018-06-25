@@ -49,6 +49,16 @@ public:
 	explicit CoverArtJob(QObject* parent);
 	~CoverArtJob() override;
 
+    static CoverArtJobPtr make_job(QObject *parent, const QUrl& url);
+
+    /**
+     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
+     *  asynchronously)."
+     *
+     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
+     */
+    Q_SCRIPTABLE void start() override;
+
     QByteArray m_byte_array;
 
 public Q_SLOTS:
@@ -57,9 +67,17 @@ public Q_SLOTS:
 
 protected:
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
+//    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
+
+    /**
+	* @return true if job successfully killed, false otherwise.
+	*/
+	bool doKill() override;
 
 private:
+
+    void work_function(ExtFuture<QByteArray>& the_future);
+    ExtFuture<QByteArray> m_ext_future;
 
     QUrl m_audio_file_url;
 };

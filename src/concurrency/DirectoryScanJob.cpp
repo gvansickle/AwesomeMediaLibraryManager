@@ -25,7 +25,6 @@
 #include <QString>
 #include <QUrl>
 #include <QDirIterator>
-#include <ThreadWeaver/DebuggingAids>
 
 /// Ours
 #include "utils/TheSimplestThings.h"
@@ -55,6 +54,11 @@ M_WARNING("TODO: There's a problem with shared ptrs here");
 qDb() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
 }
 
+M_WARNING("TODO: These next three functions are identical in all derived classes"
+          "and should be pushed to the base class.  But the type of m_ext_future is"
+          "different in each derived class, and I can't find a great way to propagate it down."
+          "Maybe more CRTP?");
+
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QUrl dir_url,
                                                              const QStringList &nameFilters,
                                                              QDir::Filters filters,
@@ -71,21 +75,14 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
 
 void DirectoryScannerAMLMJob::start()
 {
-    /*ExtFuture<DirScanResult>*/ m_ext_future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
+    m_ext_future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
     BASE_CLASS::start(m_ext_future);
-//    qDb() << "ExtFuture<>:" << m_ext_future;
-//    m_ext_future.then([&](ExtFuture<DirScanResult> extfuture) -> int {
-//        qDb() << "GOT TO THEN";
-//        Q_ASSERT(extfuture.isFinished());
-//        defaultEnd(m_ext_future);
-//        return 1;
-//        ;});
 }
 
 bool DirectoryScannerAMLMJob::doKill()
 {
     qDb() << "ENTER OVERRIDE DOKILL";
-    bool retval = AMLMJob::doKill(m_ext_future);
+    bool retval = BASE_CLASS::doKill(m_ext_future);
     qDb() << "EXIT OVERRIDE DOKILL:" << retval;
     return retval;
 }

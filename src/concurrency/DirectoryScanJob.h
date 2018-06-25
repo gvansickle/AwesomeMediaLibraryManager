@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QObject>
 #include <QUrl>
 #include <QDir>
@@ -30,9 +30,7 @@
 #include <QWeakPointer>
 #include <QSharedPointer>
 
-/// KF5
-#include <ThreadWeaver/ThreadWeaver>
-
+// Ours
 #include <logic/DirScanResult.h>
 #include "AMLMJob.h"
 #include <concurrency/ExtFuture.h>
@@ -57,18 +55,6 @@ class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectorySc
     using UniqueIDMixin<DirectoryScannerAMLMJob>::uniqueQObjectName;
 
 Q_SIGNALS:
-//    /// ThreadWeaver::QObjectDecorator signals, only three:
-//    /*
-//    *  // This signal is emitted when this job is being processed by a thread.
-//    *  void started(ThreadWeaver::JobPointer);
-//    *  // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-//    *  void done(ThreadWeaver::JobPointer);
-//    *  // This signal is emitted when success() returns false after the job is executed.
-//    *  void failed(ThreadWeaver::JobPointer);
-//    */
-//    void started(ThreadWeaver::JobPointer);
-//    void done(ThreadWeaver::JobPointer);
-//    void failed(ThreadWeaver::JobPointer);
 
     /**
      * KIO::ListJob-like signal used to send the discovered directory entries to

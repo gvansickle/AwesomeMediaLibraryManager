@@ -40,10 +40,37 @@
 
 CoverArtJob::CoverArtJob(QObject* parent) : BASE_CLASS(parent)
 {
+	m_use_extasync = true;
+    /// @todo Probably need to get autodelete working.
+	setAutoDelete(false);
 }
 
 CoverArtJob::~CoverArtJob()
 {
+}
+
+CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
+{
+    auto retval = new CoverArtJob(parent);
+    retval->AsyncGetCoverArt(url);
+
+    /// @todo Hook things up in here.
+
+    return retval;
+}
+
+void CoverArtJob::start()
+{
+    m_ext_future = ExtAsync::run(this, &CoverArtJob::work_function);
+    BASE_CLASS::start(m_ext_future);
+}
+
+bool CoverArtJob::doKill()
+{
+    qDb() << "ENTER OVERRIDE DOKILL";
+    bool retval = BASE_CLASS::doKill(m_ext_future);
+    qDb() << "EXIT OVERRIDE DOKILL:" << retval;
+    return retval;
 }
 
 void CoverArtJob::AsyncGetCoverArt(const QUrl &url)
@@ -100,10 +127,11 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
     return QByteArray();
 }
 
-void CoverArtJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
+void CoverArtJob::work_function(ExtFuture<QByteArray>& the_future)
+///run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
-    Q_UNUSED(self);
-    Q_UNUSED(thread);
+//    Q_UNUSED(self);
+//    Q_UNUSED(thread);
 
     // Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
 
@@ -152,5 +180,8 @@ void CoverArtJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *threa
     }
 
     Q_EMIT SIGNAL_ImageBytes(retval);
+
+    /// @todo CHANGE: Move to base class?
+    the_future.reportFinished();
 }
 
