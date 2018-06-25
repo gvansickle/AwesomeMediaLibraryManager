@@ -504,6 +504,18 @@ protected:
     /// @{
 
     template <class ExtFutureT>
+    void start(ExtFutureT& ext_future)
+    {
+        qDb() << "ExtFuture<>:" << ext_future;
+        ext_future.then([&](ExtFutureT extfuture) -> int {
+            qDb() << "GOT TO THEN";
+            Q_ASSERT(extfuture.isFinished());
+            defaultEnd(ext_future);
+            return 1;
+            ;});
+    }
+
+    template <class ExtFutureT>
     void defaultEnd(ExtFutureT& extfuture)
     {
         Q_ASSERT(m_use_extasync);

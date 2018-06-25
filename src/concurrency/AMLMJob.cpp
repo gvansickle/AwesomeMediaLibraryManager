@@ -563,14 +563,6 @@ void AMLMJob::KJobCommonDoneOrFailed(bool success)
     }
 }
 
-//void AMLMJob::onTWStarted(ThreadWeaver::JobPointer twjob)
-//{
-//    Q_ASSERT(!m_use_extasync);
-
-//    qDb() << "ENTER onTWStarted";
-//    Q_CHECK_PTR(twjob);
-//}
-
 void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
     qDb() << "ENTER onUnderlyingAsyncJobDone, m_use_extasync:" << m_use_extasync;

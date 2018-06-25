@@ -102,8 +102,6 @@ public:
 
 protected:
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override {}
-
     /**
     * @return true if job successfully killed, false otherwise.
     */

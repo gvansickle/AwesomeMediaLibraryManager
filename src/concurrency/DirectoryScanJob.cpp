@@ -72,13 +72,14 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
 void DirectoryScannerAMLMJob::start()
 {
     /*ExtFuture<DirScanResult>*/ m_ext_future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
-    qDb() << "ExtFuture<>:" << m_ext_future;
-    m_ext_future.then([&](ExtFuture<DirScanResult> extfuture) -> int {
-        qDb() << "GOT TO THEN";
-        Q_ASSERT(extfuture.isFinished());
-        defaultEnd(m_ext_future);
-        return 1;
-        ;});
+    BASE_CLASS::start(m_ext_future);
+//    qDb() << "ExtFuture<>:" << m_ext_future;
+//    m_ext_future.then([&](ExtFuture<DirScanResult> extfuture) -> int {
+//        qDb() << "GOT TO THEN";
+//        Q_ASSERT(extfuture.isFinished());
+//        defaultEnd(m_ext_future);
+//        return 1;
+//        ;});
 }
 
 bool DirectoryScannerAMLMJob::doKill()
