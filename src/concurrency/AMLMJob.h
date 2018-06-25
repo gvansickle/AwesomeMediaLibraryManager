@@ -72,9 +72,9 @@
 /// KF5
 #include <KJob>
 #include <KJobUiDelegate>
-#include <ThreadWeaver/Job>
-#include <ThreadWeaver/QObjectDecorator>
-#include <ThreadWeaver/QueueStream>
+//#include <ThreadWeaver/Job>
+//#include <ThreadWeaver/QObjectDecorator>
+//#include <ThreadWeaver/QueueStream>
 
 /// Ours
 #include "utils/UniqueIDMixin.h"
@@ -163,18 +163,12 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
 */
 
 /**
- * Base class for jobs which bridges the hard-to-understand gap between a
- * ThreadWeaver::Job and a KJob-derived class.
+ * Base class for jobs which bridges the gap between an ExtAsync job and a KJob-derived class.
  *
- * Goal is to make this one object be both a floor wax and a dessert topping:
- * - A KJob to interfaces which need it, in particular:
- * -- KAbstractWidgetJobTracker and derived classes' registerJob()/unregisterJob() slots.
- * - A ThreadWeaver::Job to interfaces which need it
- *
- * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
+ * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
@@ -213,21 +207,9 @@ class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJ
 
 Q_SIGNALS:
 
-    /// @name ThreadWeaver::QObjectDecorator-like signals, only three:
-    /// @warning These are for AMLMJob internal-use only.
     /// @warning Qt5 signals are always public in the C++ sense.  Slots are similarly public when called
     ///          via the signal->slot mechanism, on direct calls they have the normal public/protected/private rules.
-	/// @{
 
-    /// This signal is emitted when this TW::Job is being processed by a thread.
-//    void started(ThreadWeaver::JobPointer);
-    /// This signal is emitted when success() returns false after the job is executed.
-    void failed(ThreadWeaver::JobPointer);
-    /// This signal is emitted when the TW::Job has been finished (always, no matter if it succeeded or not).
-    void done(ThreadWeaver::JobPointer);
-
-
-    /// @}
 
     /// @name User-public/subclass-private internal KJob signals.
     /// Here for reference only, these are KJob-private, i.e. can't be emitted directly.
@@ -339,7 +321,7 @@ public:
      * not be executed after a failure, it is important to dequeue those before deleting the failed Job. A Sequence may be
      * helpful for that purpose."
      */
-    bool success() const override;
+//    bool success() const override;
 
     /**
      * Abort the execution of the TW::Job.
@@ -350,7 +332,7 @@ public:
      * @note TW::Job's default implementation of the method does nothing.
      * @note TW::IdDecorator calls the TW::Job's implementation.
      */
-    void requestAbort() override;
+    void requestAbort();
 
     /// @} // END TW::Job overrides.
 
@@ -364,11 +346,6 @@ public:
      * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
      */
     Q_SCRIPTABLE void start() override;
-
-    /**
-     * Start the TW::Job on the specified TW::QueueStream.
-     */
-    virtual void start(ThreadWeaver::QueueStream &qstream);
 
     /// @}
 
@@ -490,13 +467,12 @@ protected:
     /// @todo OBSOLETE, REPLACE AND REMOVE.
     /// @{
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override {}
-    void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
+//    void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
     /**
      * The defaultEnd() function, called immediately after run() returns.
      * @note run() must have set the correct success() value prior to exiting.
      */
-    void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
+    void defaultEnd();
 
     /// @}
 
@@ -660,8 +636,8 @@ protected:
     virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
 
     /// Make the internal signal-slot connections.
-    virtual void make_connections();
-    virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
+//    virtual void make_connections();
+//    virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
 
     /**
      * Sets the KJob error code / string.
@@ -680,10 +656,7 @@ protected Q_SLOTS:
     /// @name Connected to the TW::QObjectDecorator-like signals.
     /// @{
 
-    /// Should be connected to the started(self) signal.
-    /// started() should be getting emitted in defaultBegin().
-//    void onTWStarted(ThreadWeaver::JobPointer twjob);
-    void onTWFailed(ThreadWeaver::JobPointer twjob);
+//    void onTWFailed(ThreadWeaver::JobPointer twjob);
     void onUnderlyingAsyncJobDone(bool success);
     /// @}
 

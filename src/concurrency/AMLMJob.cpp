@@ -24,10 +24,6 @@
 #include <QPointer>
 
 /// KF5
-#include <ThreadWeaver/DebuggingAids>
-#include <ThreadWeaver/Job>
-#include <ThreadWeaver/QObjectDecorator>
-#include <ThreadWeaver/Queue>
 #include <KJob>
 #include <KJobWidgets>
 
@@ -39,8 +35,7 @@
 #include <gui/MainWindow.h>
 
 
-AMLMJob::AMLMJob(QObject *parent)
-    : KJob(parent), ThreadWeaver::Job()
+AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
 
     // Let's try this...
@@ -70,11 +65,6 @@ AMLMJob::~AMLMJob()
     qDb() << "AMLMJob DELETED" << this;
 }
 
-bool AMLMJob::success() const
-{
-    return m_success;
-}
-
 
 void AMLMJob::requestAbort()
 {
@@ -87,22 +77,6 @@ void AMLMJob::requestAbort()
     qDb() << "AMLM:TW: SETTING CANCEL FLAG ON AMLMJOB:" << this;
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-    if(!m_use_extasync)
-    {
-        // Lock the TW::Job.  We need to do this for cancelling a TW::Job which hasn't started yet.
-        QMutexLocker twjob_lock(mutex());
-        if(status() < JobInterface::Status::Status_Queued)
-        {
-            // TW::Job has not yet been queued.
-
-            /// QueueInterface::dequeue()
-            /// "If the job was queued but not started so far, it is removed from the queue."
-            /// You can always call dequeue, it will return true if the job was dequeued. However if the job is not in the queue anymore,
-            /// it is already being executed, it is too late to dequeue, and dequeue will return false. The return value is thread-safe - if
-            /// true is returned, the job was still waiting, and has been dequeued. If not, the job was not waiting in the queue.
-        }
-    }
 
     // Signal to the TW::run() loop that it should cancel.
     m_tw_flag_cancel = true;
@@ -157,19 +131,11 @@ void AMLMJob::start()
 
     /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
 
-    qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
-    /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
-    ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
-    auto stream = queue->stream();
-    start(stream);
-}
-
-void AMLMJob::start(ThreadWeaver::QueueStream &qstream)
-{
-    Q_ASSERT(!m_use_extasync);
-
-    // Simply queue this TW::Job onto the given QueueStream.  Job should start immediately.
-    qstream << this;
+//    qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
+//    /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
+//    ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
+//    auto stream = queue->stream();
+//    start(stream);
 }
 
 bool AMLMJob::wasCancelRequested()
@@ -260,110 +226,74 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 	}
 }
 
-void AMLMJob::defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
+void AMLMJob::defaultEnd()
 {
-    Q_ASSERT(!m_use_extasync);
-
 	/// @note We're in a non-GUI worker thread here.
-    Q_CHECK_PTR(this);
-    Q_CHECK_PTR(self);
 
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-    qDb() << "ENTER defaultBegin, self/this:" << self << this;
-
-    /// Essentially a duplicate of QObjectDecorator's implementation, which does this:
-    /// @code
-    ///   Q_ASSERT(job());
-    ///   Q_EMIT started(self);
-    ///   job()->defaultBegin(self, thread);
-    /// @endcode
-    /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
-    /// We're actually in the job()->defaultBegin() part here, so we don't make that call.
-    /// started() hasn't been emitted yet.
-
-    // Make connections which we need the "real" self for.
-    connections_make_defaultBegin(self, thread);
-
-    qDb() << "EMITTING TW STARTED on TW::JobPointer:" << self;
-//    Q_EMIT started(self);
-
-    // ThreadWeaver::Job::defaultBegin() does literally nothing.
-    ThreadWeaver::Job::defaultBegin(self, thread);
-}
-
-void AMLMJob::defaultEnd(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
-{
-    Q_ASSERT(!m_use_extasync);
-
-	/// @note We're in a non-GUI worker thread here.
-    // Remember that self is a QSharedPointer<ThreadWeaver::JobInterface>.
+    auto extfutureref = get_future_ref();
 
 M_WARNING("SHOULD MAKE USE OF TW::status() somewhere, Status_Success,_RUNNING,_Failed,etc");
 
     Q_CHECK_PTR(this);
-    Q_CHECK_PTR(self);
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-    qDb() << "ENTER defaultEnd, self/this:" << self << this;
-
-    // We've either completed our work or been cancelled.
-    if(wasCancelRequested())
-    {
-        // Cancelled.
-        // KJob Success == false is correct in the cancel case.
-        qDb() << "Cancelled";
-        setSuccessFlag(false);
-        setWasCancelled(true);
-    }
-    else
-    {
-        // Wasn't a cancel, so run() finished and should have explicitly set success/fail.
-        Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
-    }
-
-    // Essentially a duplicate of TW::QObjectDecorator's implementation.
-    /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
-    // TW::QObjectDecorator does this, and ~never calls the base class:
-    //    Q_ASSERT(job());
-    //    job()->defaultEnd(self, thread);
-    //    if (!self->success()) {
-    //        Q_EMIT failed(self);
-    //    }
-    //    Q_EMIT done(self);
-    // job() is not self, it's the decorated job (TW::JobInterface*) passed to the IdDecorator constructor.
-    // So the call to job()->defaultEnd() is the call we're currently in, so we don't call it again which would
-    // infinitely recurse us.
-    /// @note run() must have set the correct success() value prior to exiting.
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    qDb() << "START OF BASE IMPL";
+qDb() << "ENTER defaultEnd()";
 
-    // Call base class defaultEnd() implementation.
-    // ThreadWeaver::Job::defaultEnd() calls:
-    //   d()->freeQueuePolicyResources(job);, which loops over an array of queuePolicies and frees them.
-    ThreadWeaver::Job::defaultEnd(self, thread);
+        // We've either completed our work or been cancelled.
+        if(wasCancelRequested())
+        {
+            // Cancelled.
+            // KJob Success == false is correct in the cancel case.
+            qDb() << "Cancelled";
+            setSuccessFlag(false);
+            setWasCancelled(true);
+        }
+        else
+        {
+            // Wasn't a cancel, so run()/worker_function() finished and should have explicitly set success/fail.
+            Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
+        }
 
-    if(!self->success())
-    {
-        qWr() << objectName() << "FAILED";
-        Q_EMIT /*TW::QObjectDecorator*/ failed(self);
-    }
-    else
-    {
-        qDb() << objectName() << "Succeeded";
-        // @note No explicit TW::succeeded signal.  Success is TW::done() signal plus TW::success() == true.
-    }
+        // Essentially a duplicate of TW::QObjectDecorator's implementation.
+        /// @link https://cgit.kde.org/threadweaver.git/tree/src/qobjectdecorator.cpp?id=a36f37705746561edf10affd77d22852076469b4
+        // TW::QObjectDecorator does this, and ~never calls the base class:
+        //    Q_ASSERT(job());
+        //    job()->defaultEnd(self, thread);
+        //    if (!self->success()) {
+        //        Q_EMIT failed(self);
+        //    }
+        //    Q_EMIT done(self);
+        // job() is not self, it's the decorated job (TW::JobInterface*) passed to the IdDecorator constructor.
+        // So the call to job()->defaultEnd() is the call we're currently in, so we don't call it again which would
+        // infinitely recurse us.
+        /// @note run() must have set the correct success() value prior to exiting.
 
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+        Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    qDb() << objectName() << "EMITTING DONE";
+        // Call base class defaultEnd() implementation.
+        /// @note Vestige of ThreadWeaver support for clearing queuePolicies, probably no longer needed for anything.
 
-    // Flag that the TW::Job is finished.
-    m_tw_job_is_done = 1;
+        if(!m_success)
+        {
+            qWr() << objectName() << "FAILED";
+//            Q_EMIT /*TW::QObjectDecorator*/ failed(self);
+        }
+        else
+        {
+            qDb() << objectName() << "Succeeded";
+            // @note No explicit TW::succeeded signal.  Success is TW::done() signal plus TW::success() == true.
+        }
 
-    Q_EMIT /*TW::QObjectDecorator*/ done(self);
+//        qDb() << objectName() << "EMITTING DONE";
+
+        // Flag that the TW::Job is finished.
+        m_tw_job_is_done = 1;
+
+        /// @todo Direct call to onUnderlyingAsyncJobDone()?
+//        onUnderlyingAsyncJobDone(m_success);
+        onUnderlyingAsyncJobDone(!extfutureref.isCanceled());
+//        Q_EMIT /*TW::QObjectDecorator*/ done(self);
 }
 
 bool AMLMJob::doKill()
@@ -371,48 +301,10 @@ bool AMLMJob::doKill()
     // KJob::doKill().
     /// @note The calling thread has to have an event loop.
 
-    /// @todo Will need to reimplement in here for ExtAsync.
-    if(m_use_extasync)
-    {
-        qDb() << "ENTER EXTASYNC DOKILL";
-        get_future_ref().cancel();
-        get_future_ref().waitForFinished();
-        qDb() << "EXIT EXTASYNC DOKILL";
-    }
-    else
-    {
-    qDb() << "ENTER KJob::doKill()";
+    qDb() << "ENTER EXTASYNC DOKILL";
+    get_future_ref().cancel();
+    get_future_ref().waitForFinished();
 
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-    // Tell the TW::Job to stop.
-    requestAbort();
-
-qDb() << "START WAIT:" << objectName();
-    // Now wait for it to signal that it really did stop.
-
-Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-//    sleep(5);
-//    auto loop = new QEventLoop();
-//    connect_or_die(this, &AMLMJob::done, loop, &QEventLoop::quit);
-//    loop->exec();
-//    qDb() << "WAIT: BROKE OUT OF LOOP";
-//M_WARNING("WE NEVER GET PAST THIS POINT, looks like we've been deleted just before the above qDb()");
-//    loop->deleteLater();
-
-Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-
-qDb() << "END WAIT:" << objectName();
-
-    /// @todo Need to wait for the final kill here.
-    /// It looks like KJob::kill() shouldn't return until:
-    /// - finished is emitted
-    /// - result is optionally emitted
-    /// - deleteLater() is optionally called on the job.
-
-    qDb() << "EXIT KJob::doKill()";
 
     // Try to detect that we've survived at least to this point.
     Q_ASSERT(!m_i_was_deleted);
@@ -421,7 +313,9 @@ qDb() << "END WAIT:" << objectName();
 M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultEnd() but comes up 0 here.");
 //    qDb() << M_NAME_VAL(m_tw_flag_cancel) << M_NAME_VAL(m_tw_job_is_done) << M_NAME_VAL(m_tw_job_was_cancelled);
 //    throwif(!!(m_tw_flag_cancel && !m_tw_job_is_done && !m_tw_job_was_cancelled));
-    }
+
+    qDb() << "EXIT EXTASYNC DOKILL";
+
     return true;
 }
 
@@ -482,8 +376,8 @@ KJob::Unit AMLMJob::progressUnit() const
     return m_progress_unit;
 }
 
-void AMLMJob::make_connections()
-{
+//void AMLMJob::make_connections()
+//{
     //    qDb() << "MAKING CONNECTIONS, this:" << this;
 
     // @note TW::Job connections made in connections_make_defaultBegin().
@@ -510,40 +404,7 @@ void AMLMJob::make_connections()
 //#error "BOTH THE ABOVE NEED TO BE RETHOUGHT"
 
 //    qDb() << "MADE CONNECTIONS, this:" << this;
-}
-
-/**
- * Make connections we can only make while in defaultEnter() and have the real JobPointer.
- */
-void AMLMJob::connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread)
-{
-    qDb() << "ENTER connections_make_defaultBegin";
-    Q_CHECK_PTR(self);
-
-    Q_ASSERT(!m_use_extasync);
-
-    /// @name Make connections to the TW::QObjectDecorator-like connections.
-    /// These are the only started/ended connections between the "wrapped" ThreadWeaver::Job and
-    /// the KJob.
-    /// @{
-
-    // void started(ThreadWeaver::JobPointer);
-    // This signal is emitted when this job is being processed by a thread.
-    // internal QObjectDecorator->external QObjectDecorator interface.
-//    connect(this, &AMLMJob::started, this, &AMLMJob::onTWStarted);
-
-    //  void failed(ThreadWeaver::JobPointer);
-    // This signal is emitted when success() returns false after the job is executed.
-    connect(this, &AMLMJob::failed, this, &AMLMJob::onTWFailed);
-
-    //  void done(ThreadWeaver::JobPointer);
-    // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-    connect(this, &AMLMJob::done, this, [=](ThreadWeaver::JobPointer twjob) {
-        onUnderlyingAsyncJobDone(twjob->success());
-    });
-
-    /// @}
-}
+//}
 
 void AMLMJob::KJobCommonDoneOrFailed(bool success)
 {
@@ -668,25 +529,6 @@ So I think the answer is:
  - We need this object to survive doKill(),
  - We can't do anything else after that, due to finishJob() possibly destroying us.
      */
-}
-
-void AMLMJob::onTWFailed(ThreadWeaver::JobPointer twjob)
-{
-    /// @note No direct succes/failed indication from ExtFuture<>, only isFinished() and isCancelled().
-    /// You can throw and catch exceptions though.
-    Q_ASSERT(!m_use_extasync);
-
-    qDb() << "ENTER onTWFailed";
-    Q_CHECK_PTR(twjob);
-
-    // The TW::Job indicated failure.
-    // There's a TW::done() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
-    // Convert to a KJob result signal.
-
-    // Shouldn't be getting into here with a non-false success.
-    Q_ASSERT(twjob->success() != true);
-
-    KJobCommonDoneOrFailed(twjob->success());
 }
 
 void AMLMJob::onKJobResult(KJob *kjob)

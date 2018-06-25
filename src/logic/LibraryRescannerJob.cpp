@@ -20,19 +20,18 @@
 #include "LibraryEntry.h"
 #include "LibraryRescannerJob.h"
 
-/// Std C++
+// Std C++
 #include <memory>
 #include <functional>
-using std::placeholders::_1;
 
-
-/// Qt5
+// Qt5
 #include <QtConcurrent>
 
-/// Ours
+// Ours
 #include <concurrency/ExtAsync.h>
 #include <utils/TheSimplestThings.h>
 #include "LibraryModel.h"
+
 
 LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
 {
@@ -72,12 +71,8 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
 }
 
 void LibraryRescannerJob::work_function(ExtFuture<MetadataReturnVal>& the_future)
-///run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
     qDb() << "ENTER run";
-
-//    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
-//    LibraryRescannerJobPtr amlm_self = qSharedPointerDynamicCast<LibraryRescannerJob>(self);
 
     setProgressUnit(KJob::Unit::Files);
 
