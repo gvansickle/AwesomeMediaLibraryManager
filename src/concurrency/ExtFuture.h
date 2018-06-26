@@ -116,9 +116,6 @@ public:
 	using is_ExtFuture = std::true_type;
 	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
 
-	/// @todo REMOVE
-//	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
-
 	/**
 	 * Default constructor.
 	 *
@@ -544,8 +541,6 @@ protected:
 
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
-
-//	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 };
 
 
