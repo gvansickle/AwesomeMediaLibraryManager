@@ -82,11 +82,11 @@ struct ExtAsyncProgress
  * - await()
  * - tap()
  *
- * Note that QFuture<> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<>
+ * Note that QFuture<T> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<T>
  * has the same properties.  In this, they're both more similar to std::experimental::shared_future than ::future,
  * the latter of which has a deleted copy constructor.
  *
- * QFuture<> itself only implements the following:
+ * QFuture<T> itself only implements the following:
  * - Default constructor, which initializes its "private" (actually currently public) "mutable QFutureInterface<T> d;" underlying
  *   QFuterInterface<> object like so:
  *     @code
@@ -117,7 +117,7 @@ public:
 	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
 
 	/// @todo REMOVE
-	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
+//	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
 
 	/**
 	 * Default constructor.
@@ -321,6 +321,7 @@ public:
 		return *this;
 	}
 
+#if 0
 	ExtFuture<T>& tap(QObject* context, TapCallbackTypeProgress prog_tap_callback)
 	{
 //		m_tap_progress_function = std::make_shared<TapCallbackTypeProgress>(prog_tap_callback);
@@ -331,7 +332,7 @@ public:
 	{
 		return tap(QApplication::instance(), std::forward<TapCallbackTypeProgress>(prog_tap_callback));
 	}
-
+#endif
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.
@@ -544,7 +545,7 @@ protected:
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 
-	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
+//	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 };
 
 

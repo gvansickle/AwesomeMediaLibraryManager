@@ -17,15 +17,17 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "AMLMJob.h"
 
 /// Qt5
-#include <KDialogJobUiDelegate>
 #include <QPointer>
 
 /// KF5
 #include <KJob>
 #include <KJobWidgets>
+#include <KDialogJobUiDelegate>
 
 /// Ours
 #include "utils/DebugHelpers.h"
@@ -65,38 +67,6 @@ AMLMJob::~AMLMJob()
     qDb() << "AMLMJob DELETED" << this;
 }
 
-
-void AMLMJob::requestAbort()
-{
-    // Using a mutex/condition variable combo to allow both abort and pause/resume.
-    // This is sort of easier with C++11+, but it's Qt5, so....
-
-    // Lock the mutex.
-    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
-
-    qDb() << "AMLM:TW: SETTING CANCEL FLAG ON AMLMJOB:" << this;
-
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-    // Signal to the TW::run() loop that it should cancel.
-    m_tw_flag_cancel = true;
-
-    if(m_use_extasync)
-    {
-        /// @todo signal the ExtFuture to cancel.
-        /// m_???->cancel();
-    }
-
-    // Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
-    // by the notify, and only to temporarily block again because we still hold the mutex.
-	lock.unlock(); // == lock.unlock(); (ok, so that one's the same, still...)
-
-	// Notify all threads waiting on the condition variable that there's new status to look at.
-    // Really only one thread might be watching (in doKill()), but not much difference here.
-    m_cancel_pause_resume_waitcond.notify_all(); // == m_cv.notify_all(); (...well, it's about time Qt learned some modern C++.)
-
-    qDb() << "AMLM:TW: LEAVING requestAbort():" << this;
-}
 
 /**
  * KJob override.
@@ -164,7 +134,7 @@ bool AMLMJob::wasCancelRequested()
 
 void AMLMJob::setSuccessFlag(bool success)
 {
-    /// Called from TW::Job thread.
+    /// Called from underlying ExtAsync thread.
     qDb() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
     m_tw_job_run_reported_success_or_fail = 1;
@@ -232,7 +202,7 @@ void AMLMJob::defaultEnd()
 
     auto extfutureref = get_future_ref();
 
-M_WARNING("SHOULD MAKE USE OF TW::status() somewhere, Status_Success,_RUNNING,_Failed,etc");
+M_WARNING("SHOULD MAKE USE OF extfutureref.status() somewhere, Status_Success,_RUNNING,_Failed,etc");
 
     Q_CHECK_PTR(this);
 

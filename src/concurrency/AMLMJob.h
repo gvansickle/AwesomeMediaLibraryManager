@@ -20,44 +20,7 @@
 #ifndef SRC_CONCURRENCY_AMLMJOB_H_
 #define SRC_CONCURRENCY_AMLMJOB_H_
 
-
-/**
- * Design notes
- * To be the Alpha and Omega of Qt5/KF5 *Job classes is a lot of work.  Let's start with the KJob and TW::Job lifecycles.
- *
- * @note TW:
- * "It is essential for the ThreadWeaver library that as a kind of convention, the different creators of Job objects do
- *  not touch the protected data members of the Job until somehow notified by the Job."
- *
- * TW:Job lifecycle
- *  @note No QObject, no signals.
- *  - twj = TW::Job-derived instance created by something (TW::Job itself is abstract, at least ::run() must be overloaded).
- *  - twj submitted to TW::Queue/Weaver.
- *  - TW::Queue decides when twj runs.  When started:
- *  -- ::defaultBegin(JobPointer, Thread) (TW::Job default does literally nothing)
- *  -- ::run(JobPointer, Thread)
- *  --- ::run() runs to completion in Thread.  Control and reporting up to the run() override:
- *  ---   - Need to override ::success() and arrange for it to report true/false.
- *  ---   - Need to override ::requestAbort() and arrange for it to cause ::run() to abort.
- *  -- ::status() will return Status_Success if ::run() ran to completion.
- *  -- ::defaultEnd() (TW::Job default does some cleanup, is *not* empty).
- *
- *  TW::QObjectDecorator adds the following:
- *  - Signal started(TW:JobPtr), when TW:Job has started execution.
- *  - Signal done(TW:JobPtr), when TW:Job has completed execution, regardless of status.
- *  - Signal failed(TW::JobPtr), when TW:Job's ::success() returns false after job is executed.
- *  - defaultBegin() override which emits started(self) and calls job()->defaultBegin().
- *  - defaultEnd() override which:
- *    - Calls job()->defaultEnd()
- *    - if(!success) emits failed(self)
- *    - Always emits done(self).
- *  - autoDelete() support (via TW::IdDecorator), appears to be completely controlled by
- *    the decorator though:
- *     // Auto-delete the decoratee or not.
- *     void setAutoDelete(bool onOff);
- *     // Will the decoratee be auto-deleted?
- *     bool autoDelete() const;
- */
+#include <config.h>
 
 // Qt5
 #include <QObject>
@@ -79,11 +42,13 @@
 #include "concurrency/function_traits.hpp"
 #include "concurrency/ExtAsync.h"
 
+
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
 using AMLMJobPtr = QPointer<AMLMJob>;
 
 Q_DECLARE_METATYPE(AMLMJobPtr);
+
 
 /**
 * Where Does The State Live?
@@ -329,7 +294,7 @@ public:
      * @note TW::Job's default implementation of the method does nothing.
      * @note TW::IdDecorator calls the TW::Job's implementation.
      */
-    void requestAbort();
+//    void requestAbort();
 
     /// @} // END TW::Job overrides.
 
@@ -384,6 +349,7 @@ public:
 				if(kjob->error())
 				{
 					// Report the error.
+                    qWr() << "Reporting error via uiDelegate()";
                     kjob->uiDelegate()->showErrorMessage();
 				}
 				else
@@ -504,13 +470,13 @@ protected:
      *
      * What our override here does:
      * - Tell the TW::Job to kill itself with requestAbort();
-     * - Call our onKJobDoKill(), which currently does nothing.
      *
-     * @todo Not clear if this should block until the job has been killed or not.
-     *       It looks like this should block until the job is really killed;
+     * @note It looks like this should block until the job is really confirmed to be killed.
      *       KAbstractWidgetJobTracker::slotStop() does this:
+     * @code
      *         job->kill(KJob::EmitResult); // notify that the job has been killed
      *         emit stopped(job);
+     * @endcode
      *
      * @return true if job successfully killed, false otherwise.
      */
@@ -570,10 +536,6 @@ protected:
     virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
     virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
 
-    /// Make the internal signal-slot connections.
-//    virtual void make_connections();
-//    virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
-
     /**
      * Sets the KJob error code / string.
      *
@@ -588,12 +550,7 @@ protected Q_SLOTS:
     /// @name Internal slots
     /// @{
 
-    /// @name Connected to the TW::QObjectDecorator-like signals.
-    /// @{
-
-//    void onTWFailed(ThreadWeaver::JobPointer twjob);
     void onUnderlyingAsyncJobDone(bool success);
-    /// @}
 
     /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
     /// @note KJob::error() should only be called from this slot, per KF5 docs/comments.

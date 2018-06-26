@@ -20,9 +20,13 @@
 #ifndef SRC_LOGIC_COVERARTJOB_H_
 #define SRC_LOGIC_COVERARTJOB_H_
 
-#include "concurrency/AMLMJob.h"
+#include <config.h>
 
+// Qt5
 #include <QUrl>
+
+// Ours
+#include "concurrency/AMLMJob.h"
 
 class CoverArtJob;
 using CoverArtJobPtr = QPointer<CoverArtJob>;

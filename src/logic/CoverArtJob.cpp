@@ -120,11 +120,7 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
 }
 
 void CoverArtJob::work_function(ExtFuture<QByteArray>& the_future)
-///run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
 {
-//    Q_UNUSED(self);
-//    Q_UNUSED(thread);
-
     // Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
 
     QByteArray& retval = m_byte_array;

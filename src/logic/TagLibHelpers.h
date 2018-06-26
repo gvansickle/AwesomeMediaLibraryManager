@@ -21,6 +21,7 @@
 #ifndef SRC_LOGIC_TAGLIBHELPERS_H_
 #define SRC_LOGIC_TAGLIBHELPERS_H_
 
+#include <config.h>
 
 /// @name The TagLib::FileRef constructor takes a TagLib::FileName, which:
 /// - on Linux is typedef for const char *
