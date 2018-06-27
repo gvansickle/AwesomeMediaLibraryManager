@@ -128,12 +128,12 @@ void Experimental::DoExperiment()
     dirsizejob->setObjectName("DIRSIZEJOB");
 
     /// Two AMLMJobs
-    DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(nullptr, dir_url,
+    DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(nullptr, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     QUrl dir_url2("file:///home/gary");
-    DirectoryScannerAMLMJobPtr dsj2 = new DirectoryScannerAMLMJob(nullptr, dir_url2,
+    DirectoryScannerAMLMJobPtr dsj2 = DirectoryScannerAMLMJob::make_job(nullptr, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 

@@ -452,6 +452,7 @@ protected:
 //			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
+M_WARNING("CRASH ON CANCEL HERE");
 			retval->reportResult(then_cb(std::move(args)...));
 			s_was_ever_called = true;
 			retval->reportFinished();

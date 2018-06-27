@@ -53,9 +53,11 @@ class LibraryRescannerJob: public AMLMJob, public UniqueIDMixin<LibraryRescanner
 Q_SIGNALS:
     void processReadyResults(MetadataReturnVal lritem_vec);
 
-public:
+protected:
     explicit LibraryRescannerJob(QObject* parent);
-	~LibraryRescannerJob() override;
+
+public:
+    ~LibraryRescannerJob() override;
 
     static LibraryRescannerJobPtr make_job(QObject *parent);
 

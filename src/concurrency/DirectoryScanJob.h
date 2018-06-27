@@ -64,13 +64,12 @@ Q_SIGNALS:
      */
 //    void entries(KJob* kjob, const QUrl& url);
     void entries(KJob* kjob, const DirScanResult& url);
-
-public:
+protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
-
+public:
     ~DirectoryScannerAMLMJob() override;
 
     static DirectoryScannerAMLMJobPtr make_job(QObject *parent, QUrl dir_url,
