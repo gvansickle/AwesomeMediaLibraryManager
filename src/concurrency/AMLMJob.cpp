@@ -300,6 +300,8 @@ bool AMLMJob::doResume()
 {
     /// @todo // KJob::doResume().
     qDb() << "TODO: DORESUME";
+    Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
+    get_future_ref().setPaused(false);
     return false;
 }
 

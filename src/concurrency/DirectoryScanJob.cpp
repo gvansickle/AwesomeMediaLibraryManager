@@ -43,7 +43,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
     setProgressUnit(KJob::Unit::Directories);
 
     // Set our capabilities.
-    setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
+    setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -120,11 +120,11 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
             break;
         }
         /// @todo Not sure how we'd pause once we get into the TW::run() function.
-//        if(the_future.isPaused())
-//        {
-//            // We're paused, wait for a resume signal.
-//            the_future.waitForResume();
-//        }
+        if(the_future.isPaused())
+        {
+            // We're paused, wait for a resume signal.
+            the_future.waitForResume();
+        }
 
         // Go to the next entry and return the path to it.
         QString entry_path = m_dir_iterator.next();
