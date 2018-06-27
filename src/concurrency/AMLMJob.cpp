@@ -254,16 +254,20 @@ qDb() << "ENTER defaultEnd()";
         // Flag that the TW::Job is finished.
         m_tw_job_is_done = 1;
 
-        /// @todo Direct call to onUnderlyingAsyncJobDone()?
+        /// @todo Direct call to onUnderlyingAsyncJobDone(), or should we send a signal?
 //        onUnderlyingAsyncJobDone(m_success);
         onUnderlyingAsyncJobDone(!extfutureref.isCanceled());
-//        Q_EMIT /*TW::QObjectDecorator*/ done(self);
 }
 
 bool AMLMJob::doKill()
 {
     // KJob::doKill().
     /// @note The calling thread has to have an event loop.
+
+    if(!(capabilities() & KJob::Capability::Killable))
+    {
+        Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
+    }
 
     qDb() << "ENTER EXTASYNC DOKILL";
     get_future_ref().cancel();
@@ -286,8 +290,10 @@ M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultE
 bool AMLMJob::doSuspend()
 {
     /// @todo // KJob::doSuspend().
-    qDb() << "TODO: DOSUSPEND";
-    return false;
+    qDb() << "DOSUSPEND";
+    Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
+    get_future_ref().setPaused(true);
+    return true;
 }
 
 bool AMLMJob::doResume()

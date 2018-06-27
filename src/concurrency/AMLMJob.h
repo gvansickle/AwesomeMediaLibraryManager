@@ -268,25 +268,6 @@ public:
     /// Destructor.
     ~AMLMJob() override;
 
-    /// @name TW::Job public method overrides.
-    /// @{
-
-    /**
-     * TW::success().
-     * "Return whether the Job finished successfully or not.
-     * The default implementation simply returns true. Overload in derived classes if the derived Job class can fail.
-     *
-     * If a job fails (success() returns false), it will *NOT* resolve its dependencies when it finishes. This will make sure that
-     * Jobs that depend on the failed job will not be started.
-     *
-     * There is an important gotcha: When a Job object it deleted, it will always resolve its dependencies. If dependent jobs should
-     * not be executed after a failure, it is important to dequeue those before deleting the failed Job. A Sequence may be
-     * helpful for that purpose."
-     */
-//    bool success() const override;
-
-    /// @} // END TW::Job overrides.
-
     /// @name KJob overrides.
     /// @{
 
@@ -411,22 +392,11 @@ public Q_SLOTS:
 
 protected:
 
-    /// Flag telling the base class whether to use the TW::Job or the ExtAsync underlying implementation.
-    /// @note Temp, moving away from ThreadWeaver.
-//    bool m_use_extasync {false};
-
-    /// @name Override of TW::Job protected functions.
-    /// @todo OBSOLETE, REPLACE AND REMOVE.
-    /// @{
-
-//    void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
     /**
      * The defaultEnd() function, called immediately after run() returns.
      * @note run() must have set the correct success() value prior to exiting.
      */
     void defaultEnd();
-
-    /// @}
 
     /// @name ExtAsync job support functions / function templates.
     /// @{
