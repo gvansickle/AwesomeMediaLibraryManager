@@ -40,7 +40,6 @@
 
 CoverArtJob::CoverArtJob(QObject* parent, const QUrl &url) : BASE_CLASS(parent), m_audio_file_url(url)
 {
-	m_use_extasync = true;
     /// @todo Probably need to get autodelete working.
 	setAutoDelete(false);
 }

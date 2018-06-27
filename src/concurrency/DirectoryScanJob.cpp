@@ -37,8 +37,6 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
                                    QDirIterator::IteratorFlags flags)
     : AMLMJob(parent), m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
-    m_use_extasync = true;
-
     // Set our object name.
     setObjectName(uniqueQObjectName());
 

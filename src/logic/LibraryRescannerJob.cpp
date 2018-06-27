@@ -35,8 +35,6 @@
 
 LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
 {
-    m_use_extasync = true;
-
     // Set our object name.
     setObjectName(uniqueQObjectName());
 

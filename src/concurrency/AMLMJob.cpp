@@ -68,45 +68,45 @@ AMLMJob::~AMLMJob()
 }
 
 
-/**
- * KJob override.
- *
- * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
- *  asynchronously)."
- *
- * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
- */
-void AMLMJob::start()
-{
-#if 0
-    // Lock the mutex.
-    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
+///**
+// * KJob override.
+// *
+// * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
+// *  asynchronously)."
+// *
+// * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
+// */
+//void AMLMJob::start()
+//{
+//#if 0
+//    // Lock the mutex.
+//    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
-    // Have we been cancelled before we started?
-    if(m_flag_cancel)
-    {
-        // Yes, fake a "done()" signal FBO doKill().
-        // KJob Success == false is correct in the cancel case.
-        setSuccessFlag(false);
-        setWasCancelled(true);
-        Q_EMIT done(qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(this));
-    }
-#endif
+//    // Have we been cancelled before we started?
+//    if(m_flag_cancel)
+//    {
+//        // Yes, fake a "done()" signal FBO doKill().
+//        // KJob Success == false is correct in the cancel case.
+//        setSuccessFlag(false);
+//        setWasCancelled(true);
+//        Q_EMIT done(qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(this));
+//    }
+//#endif
 
-    Q_ASSERT(!m_use_extasync);
+//    Q_ASSERT(!m_use_extasync);
 
-    /// Kjob::setAutoDelete()
-    setAutoDelete(false);
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
+//    /// Kjob::setAutoDelete()
+//    setAutoDelete(false);
+//    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
-    /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
+//    /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
 
-//    qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
-//    /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
-//    ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
-//    auto stream = queue->stream();
-//    start(stream);
-}
+////    qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
+////    /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
+////    ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
+////    auto stream = queue->stream();
+////    start(stream);
+//}
 
 bool AMLMJob::wasCancelRequested()
 {
@@ -118,12 +118,10 @@ bool AMLMJob::wasCancelRequested()
         return true;
     }
 
-    if(m_use_extasync)
+
+    if(get_future_ref().isCanceled())
     {
-        if(get_future_ref().isCanceled())
-        {
-            return true;
-        }
+        return true;
     }
 
     // Wait if we have to.
@@ -411,7 +409,7 @@ void AMLMJob::KJobCommonDoneOrFailed(bool success)
 
 void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
-    qDb() << "ENTER onUnderlyingAsyncJobDone, m_use_extasync:" << m_use_extasync;
+    qDb() << "ENTER onUnderlyingAsyncJobDone";
 
     Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 

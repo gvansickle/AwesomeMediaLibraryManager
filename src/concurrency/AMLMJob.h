@@ -285,17 +285,6 @@ public:
      */
 //    bool success() const override;
 
-    /**
-     * Abort the execution of the TW::Job.
-     * Call this method to ask the Job to abort if it is currently executed.
-     *
-     * @note This method should return immediately, not after the abort has completed.
-     *
-     * @note TW::Job's default implementation of the method does nothing.
-     * @note TW::IdDecorator calls the TW::Job's implementation.
-     */
-//    void requestAbort();
-
     /// @} // END TW::Job overrides.
 
     /// @name KJob overrides.
@@ -307,7 +296,7 @@ public:
      *
      * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
      */
-    Q_SCRIPTABLE void start() override;
+//    Q_SCRIPTABLE void start() override;
 
     /// @}
 
@@ -424,7 +413,7 @@ protected:
 
     /// Flag telling the base class whether to use the TW::Job or the ExtAsync underlying implementation.
     /// @note Temp, moving away from ThreadWeaver.
-    bool m_use_extasync {false};
+//    bool m_use_extasync {false};
 
     /// @name Override of TW::Job protected functions.
     /// @todo OBSOLETE, REPLACE AND REMOVE.
