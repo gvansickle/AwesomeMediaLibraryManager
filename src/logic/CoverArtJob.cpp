@@ -41,7 +41,7 @@
 CoverArtJob::CoverArtJob(QObject* parent, const QUrl &url) : BASE_CLASS(parent), m_audio_file_url(url)
 {
     /// @todo Probably need to get autodelete working.
-	setAutoDelete(false);
+//	setAutoDelete(false);
 }
 
 CoverArtJob::~CoverArtJob()

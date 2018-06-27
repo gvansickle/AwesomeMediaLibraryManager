@@ -204,8 +204,6 @@ M_WARNING("SHOULD MAKE USE OF extfutureref.status() somewhere, Status_Success,_R
 
     Q_CHECK_PTR(this);
 
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
 qDb() << "ENTER defaultEnd()";
 
         // We've either completed our work or been cancelled.
@@ -236,8 +234,6 @@ qDb() << "ENTER defaultEnd()";
         // So the call to job()->defaultEnd() is the call we're currently in, so we don't call it again which would
         // infinitely recurse us.
         /// @note run() must have set the correct success() value prior to exiting.
-
-        Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
         // Call base class defaultEnd() implementation.
         /// @note Vestige of ThreadWeaver support for clearing queuePolicies, probably no longer needed for anything.
@@ -411,16 +407,12 @@ void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
     qDb() << "ENTER onUnderlyingAsyncJobDone";
 
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
     qDb() << "success?:" << success;
 
     // The TW::Job indicated completion.
     // If the TW::Job failed, there's a failed() signal in flight as well.
 qDb() << "PARENT:" << parent();
     KJobCommonDoneOrFailed(success);
-
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
 
     // Regardless of success or fail of the underlying job, we need to call KJob::emitResult() only once.
     // We handle both success and fail cases here, since we always should get a ::done() event.
@@ -433,9 +425,6 @@ qDb() << "PARENT:" << parent();
     qDb() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
 M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
     emitResult();
-
-    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
 
     qDb() << "EXIT onUnderlyingAsyncJobDone";
     /// @fixme
