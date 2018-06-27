@@ -49,8 +49,12 @@ class CoverArtJob : public AMLMJob, public UniqueIDMixin<CoverArtJob>
 Q_SIGNALS:
     void SIGNAL_ImageBytes(QByteArray);
 
+protected:
+
+    explicit CoverArtJob(QObject* parent, const QUrl& url);
+
 public:
-	explicit CoverArtJob(QObject* parent);
+
 	~CoverArtJob() override;
 
     static CoverArtJobPtr make_job(QObject *parent, const QUrl& url);
@@ -64,10 +68,6 @@ public:
     Q_SCRIPTABLE void start() override;
 
     QByteArray m_byte_array;
-
-public Q_SLOTS:
-
-    void AsyncGetCoverArt(const QUrl& url);
 
 protected:
 

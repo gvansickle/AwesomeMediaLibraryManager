@@ -237,8 +237,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 		}
 #else // THE NEW ASYNCHRONOUS WAY
-        auto coverartjob = new CoverArtJob(this);
-        coverartjob->AsyncGetCoverArt(libentry->getUrl());
+        auto coverartjob = CoverArtJob::make_job(this, libentry->getUrl());
         coverartjob->then(this, [=](CoverArtJob* kjob) {
             if(kjob->error() || kjob->m_byte_array.size() == 0)
             {

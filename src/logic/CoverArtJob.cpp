@@ -38,7 +38,7 @@
 /// Ours
 #include "TagLibHelpers.h"
 
-CoverArtJob::CoverArtJob(QObject* parent) : BASE_CLASS(parent)
+CoverArtJob::CoverArtJob(QObject* parent, const QUrl &url) : BASE_CLASS(parent), m_audio_file_url(url)
 {
 	m_use_extasync = true;
     /// @todo Probably need to get autodelete working.
@@ -51,8 +51,7 @@ CoverArtJob::~CoverArtJob()
 
 CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
 {
-    auto retval = new CoverArtJob(parent);
-    retval->AsyncGetCoverArt(url);
+    auto retval = new CoverArtJob(parent, url);
 
     /// @todo Hook things up in here.
 
@@ -63,11 +62,6 @@ void CoverArtJob::start()
 {
     m_ext_future = ExtAsync::run(this, &CoverArtJob::work_function);
     BASE_CLASS::start(m_ext_future);
-}
-
-void CoverArtJob::AsyncGetCoverArt(const QUrl &url)
-{
-    m_audio_file_url = url;
 }
 
 ///
