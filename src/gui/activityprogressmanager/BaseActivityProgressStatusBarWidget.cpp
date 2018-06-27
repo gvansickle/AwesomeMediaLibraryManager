@@ -19,7 +19,7 @@
 
 #include "BaseActivityProgressStatusBarWidget.h"
 
-/// Qt5
+// Qt5
 #include <QLabel>
 #include <QToolButton>
 #include <QProgressBar>
@@ -29,12 +29,12 @@
 #include <QHelpEvent>
 #include <QPalette>
 
-/// KF5
+// KF5
 //#include <KJob>
 #include <KAbstractWidgetJobTracker>
 #include <KToolTipWidget>
 
-/// Ours
+// Ours
 #include <gui/helpers/Tips.h>
 #include <utils/TheSimplestThings.h>
 #include <utils/ConnectHelpers.h>
@@ -143,8 +143,9 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
         m_cancel_button->setEnabled(true);
     }
 
-    // Emit the cancel_job(KJob*) signal when the cancel button is clicked.
+    // Emit the pause_/cancel_job(KJob*) signal when the cancel button is clicked.
     connect_or_die(m_cancel_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job);
+    connect_or_die(m_pause_resume_button, &QToolButton::clicked, this, &BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_SuspendResume);
 
     // The tooltip widget, and the widget within the widget.
     m_tool_tip_widget = new KToolTipWidget(this);
@@ -278,9 +279,23 @@ void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()
     }
 }
 
-void BaseActivityProgressStatusBarWidget::pause_resume(bool)
+void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_SuspendResume(bool clicked)
 {
-    Q_ASSERT(0);
+    if(!m_kjob.isNull())
+    {
+        qDb() << "not null"   ;
+        static bool temp_toggle = false;
+        if(temp_toggle == false)
+        {
+            // Pause
+            Q_EMIT pause_job(m_kjob);
+        }
+        else
+        {
+            Q_EMIT resume_job(m_kjob);
+        }
+        temp_toggle = !temp_toggle;
+    }
 }
 
 void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)

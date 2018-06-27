@@ -119,11 +119,12 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
             the_future.reportCanceled();
             break;
         }
-        /// @todo Not sure how we'd pause once we get into the TW::run() function.
         if(the_future.isPaused())
         {
             // We're paused, wait for a resume signal.
+            qDb() << "PAUSING";
             the_future.waitForResume();
+            qDb() << "RESUMING";
         }
 
         // Go to the next entry and return the path to it.

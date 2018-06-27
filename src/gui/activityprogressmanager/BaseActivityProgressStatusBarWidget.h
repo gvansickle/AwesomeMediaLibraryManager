@@ -155,7 +155,7 @@ protected Q_SLOTS:
     void INTERNAL_SLOT_emit_cancel_job();
 
     /// Invoke this to pause or resume the job.
-    void pause_resume(bool);
+    void INTERNAL_SLOT_SuspendResume(bool clicked);
 
 private:
     Q_DISABLE_COPY(BaseActivityProgressStatusBarWidget)
