@@ -269,9 +269,10 @@ bool AMLMJob::doKill()
         Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
     }
 
-    qDb() << "ENTER EXTASYNC DOKILL";
+    qDb() << "START EXTASYNC DOKILL";
     get_future_ref().cancel();
     get_future_ref().waitForFinished();
+    qDb() << "END EXTASYNC DOKILL";
 
 
     // Try to detect that we've survived at least to this point.
@@ -281,8 +282,6 @@ bool AMLMJob::doKill()
 M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultEnd() but comes up 0 here.");
 //    qDb() << M_NAME_VAL(m_tw_flag_cancel) << M_NAME_VAL(m_tw_job_is_done) << M_NAME_VAL(m_tw_job_was_cancelled);
 //    throwif(!!(m_tw_flag_cancel && !m_tw_job_is_done && !m_tw_job_was_cancelled));
-
-    qDb() << "EXIT EXTASYNC DOKILL";
 
     return true;
 }
@@ -494,6 +493,41 @@ So I think the answer is:
  - We need this object to survive doKill(),
  - We can't do anything else after that, due to finishJob() possibly destroying us.
      */
+
+    /////////////////
+    /**
+      * More notes:
+      *
+      * - On a kill():
+      * -- the kjob error will first be set to KilledJobError,
+      * -- finishJob(false):
+      * -- then d->isFinished = true;
+      * -- then the signals are emitted.
+      * -- signal finished() is always emitted
+      * XX signal result() may not be emitted, if this is a kill(quietly).
+      * -- if job is autodelete, deleteLater.
+      *
+      * - On normal completion:
+      * -- Shoudn't be any kjob error.
+      * -- finishJob(true):
+      * -- then d->isFinished = true;
+      * -- then the signals are emitted.
+      * -- signal finished() is always emitted
+      * ++ signal result() is emitted()
+      * -- if job is autodelete, deleteLater.
+      *
+      * - On error:
+      * -- Same as normal completion but with an error code?
+      *
+      * - signal finished() is always emitted, and always before result(), which won't be emitted on cancel.
+      *
+      * So:
+      * - Catch finished(), check error code, and if it's KilledJobError we're being cancelled, and need to propagate the cancel.
+      * - If error code is not KilledJobError, we're going to get a result() signal.  There we need to
+      *   check the error code again, and it'll be either success or fail.  Fail probably looks much like cancel, need any chains
+      *   to be killed.
+      *
+      * */
 }
 
 void AMLMJob::onKJobResult(KJob *kjob)

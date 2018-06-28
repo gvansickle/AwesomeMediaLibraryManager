@@ -137,8 +137,13 @@ message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}"
 
 # This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
 # cmake and/or Qt Creator.
+# https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -fsanitize=address CONFIG DEBUG)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)
+endif()
 
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 

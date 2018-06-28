@@ -135,31 +135,11 @@ class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>
 
     Q_OBJECT
 
-    /// ThreadWeaver::Job:
-    /// - https://api.kde.org/frameworks/threadweaver/html/classThreadWeaver_1_1Job.html
-    /// - Jobs are started by the Queue they're added to, depending on the Queue state.  In suspended state, jobs can be added to the queue,
-    ///   but the threads remain suspended. In WorkingHard state, an idle thread may immediately execute the job, or it might be queued if
-    ///   all threads are busy.
-    /// - Jobs may not be executed twice.
-    /// - Job objects do not inherit QObject. To connect to signals when jobs are started or finished, see QObjectDecorator.
-    ///
-    /// virtual void ThreadWeaver::Job::run(JobPointer self, Thread *thread)
-    /// The Job will be executed in the specified thread. thread may be zero, indicating that the job is being executed some other way
-    /// (for example, synchroneously by some other job). self specifies the job as the queue sees it. Whenever publishing information
-    /// about the job to the outside world, for example by emitting signals, use self, not this. self is the reference counted object
-    /// handled by the queue. Using it as signal parameters will amongst other things prevent thejob from being memory managed and deleted.
-    ///
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
     /// - errorString() should also be reimplemented by any subclasses that introduce new error codes.
     /// - KJob and its subclasses are meant to be used in a fire-and-forget way. Jobs will delete themselves when they finish using
     ///   deleteLater() (although this behaviour can be changed), so a job instance will disappear after the next event loop run.
-    ///
-    /// @note Two confusingly similar typedefs here:
-    ///       From qobjectdecorator: "typedef QSharedPointer<QObjectDecorator> QJobPointer;".
-    ///       From jobinterface.h:   "typedef QSharedPointer<JobInterface> JobPointer;"
-    ///       Job is derived from JobInterface, which in turn derives from nothing.
-    ///       All in the ThreadWeaver namespace.
 
     /**
      * @note CRTP: Still need this to avoid ambiguous name resolution.
@@ -316,6 +296,22 @@ public:
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
         connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
+M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
+            // Need to determine if the result was success, error, or cancel.
+            // In the latter two cases, we need to make sure any chained AMLMJobs are either
+            // cancelled (or notified of the failure?).
+            switch(kjob->error())
+            {
+            // "[kjob->error()] Returns the error code, if there has been an error.
+            // Only call this method from the slot connected to result()."
+            case NoError:
+                break;
+            case KilledJobError:
+                break;
+            default:
+                // UserDefinedError or some other error.
+                break;
+            }
 				if(kjob->error())
 				{
 					// Report the error.
