@@ -140,6 +140,7 @@ message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}"
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+ucm_add_flags(-fmessage-length=0)
 ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -fsanitize=address CONFIG DEBUG)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)

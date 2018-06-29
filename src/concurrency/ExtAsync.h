@@ -109,13 +109,13 @@ namespace ExtAsync
 		};
 	} // END namespace detail
 
-	template <typename T>
-	static ExtFuture<T> run(ExtAsyncTask<T>* task)
-	{
-		qWr() << "EXTASYNC::RUN: IN ExtFuture<T> run(ExtAsyncTask<T>* task):" << __PRETTY_FUNCTION__;
+//	template <typename T>
+//	static ExtFuture<T> run(ExtAsyncTask<T>* task)
+//	{
+//		qWr() << "EXTASYNC::RUN: IN ExtFuture<T> run(ExtAsyncTask<T>* task):" << __PRETTY_FUNCTION__;
 
-		return (new ExtAsyncTaskRunner<T>(task))->start();
-	}
+//		return (new ExtAsyncTaskRunner<T>(task))->start();
+//	}
 
 	/**
 	 * ExtAsync::run() overload for member functions taking an ExtFuture<T>& as the first non-this param.
