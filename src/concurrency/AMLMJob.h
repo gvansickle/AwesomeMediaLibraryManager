@@ -402,6 +402,13 @@ protected:
     void start(ExtFutureT& ext_future)
     {
         qDb() << "ExtFuture<>:" << ext_future;
+        if(ext_future.isCanceled())
+        {
+            // We were canceled before we were started.
+            // Report (STARTED | CANCELED | FINISHED)
+            ext_future.reportFinished();
+            return;
+        }
         ext_future.then([&](ExtFutureT extfuture) -> int {
             qDb() << "GOT TO THEN";
             Q_ASSERT(extfuture.isFinished());
@@ -523,7 +530,6 @@ private:
     QWaitCondition m_cancel_pause_resume_waitcond;
 
     QAtomicInt m_tw_job_run_reported_success_or_fail {0};
-    QAtomicInt m_tw_job_is_done { 0 };
     QAtomicInt m_tw_job_was_cancelled { 0 };
     QAtomicInt m_success { 1 };
 

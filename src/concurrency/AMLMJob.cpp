@@ -221,9 +221,6 @@ qDb() << objectName() << "ENTER defaultEnd()";
         // infinitely recurse us.
         /// @note run() must have set the correct success() value prior to exiting.
 
-        // Call base class defaultEnd() implementation.
-        /// @note Vestige of ThreadWeaver support for clearing queuePolicies, probably no longer needed for anything.
-
         if(!m_success)
         {
             qWr() << objectName() << "FAILED";
@@ -236,9 +233,6 @@ qDb() << objectName() << "ENTER defaultEnd()";
         }
 
 //        qDb() << objectName() << "EMITTING DONE";
-
-        // Flag that the TW::Job is finished.
-        m_tw_job_is_done = 1;
 
         /// @todo Direct call to onUnderlyingAsyncJobDone(), or should we send a signal?
 //        onUnderlyingAsyncJobDone(m_success);
