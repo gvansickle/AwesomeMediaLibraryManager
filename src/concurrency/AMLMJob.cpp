@@ -39,11 +39,6 @@
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
-
-    // Let's try this...
-//    auto sh = new SignalHook(this);
-//    sh->hook_all_signals(this);
-
     setObjectName(uniqueQObjectName());
     qDb() << M_NAME_VAL(this);
 
@@ -113,20 +108,11 @@ bool AMLMJob::wasCancelRequested()
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
     // Were we told to abort?
-    if(m_tw_flag_cancel)
-    {
-        return true;
-    }
-
-
     if(get_future_ref().isCanceled())
     {
         return true;
     }
 
-    // Wait if we have to.
-    // Well, here we don't have to.  Until we add pause/resume, we just have an expensive abort flag.
-//    m_cancel_pause_resume_waitcond.wait(lock.mutex());
     return false;
 }
 
@@ -270,8 +256,9 @@ bool AMLMJob::doKill()
     }
 
     qDb() << "START EXTASYNC DOKILL";
-    get_future_ref().cancel();
-    get_future_ref().waitForFinished();
+    auto ef = get_future_ref();
+    ef.cancel();
+    ef.waitForFinished();
     qDb() << "END EXTASYNC DOKILL";
 
 
@@ -496,13 +483,13 @@ So I think the answer is:
 
     /////////////////
     /**
-      * More notes:
+      * More Kjob notes:
       *
       * - On a kill():
       * -- the kjob error will first be set to KilledJobError,
       * -- finishJob(false):
       * -- then d->isFinished = true;
-      * -- then the signals are emitted.
+      * -- then the signals are emitted:
       * -- signal finished() is always emitted
       * XX signal result() may not be emitted, if this is a kill(quietly).
       * -- if job is autodelete, deleteLater.

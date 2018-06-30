@@ -522,9 +522,6 @@ private:
     /// Mutex is created in unlocked state, non-recursive.
 	QMutex m_cancel_pause_resume_mutex;
     QWaitCondition m_cancel_pause_resume_waitcond;
-    /// Flag telling the AMLMJob run() thread to cancel.
-    /// No need to be atomic due to the mutex/wc.
-    bool m_tw_flag_cancel {false};
 
     QAtomicInt m_tw_job_run_reported_success_or_fail {0};
     QAtomicInt m_tw_job_is_done { 0 };
