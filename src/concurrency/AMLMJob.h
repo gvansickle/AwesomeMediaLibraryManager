@@ -405,16 +405,38 @@ protected:
         if(ext_future.isCanceled())
         {
             // We were canceled before we were started.
+            /// @note Canceling alone won't finish the extfuture.
             // Report (STARTED | CANCELED | FINISHED)
             ext_future.reportFinished();
             return;
         }
+#ifdef QT_NO_EXCEPTIONS
+#error "WE NEED EXCEPTIONS"
+#else
+        try
+        {
+#endif
         ext_future.then([&](ExtFutureT extfuture) -> int {
             qDb() << "GOT TO THEN";
             Q_ASSERT(extfuture.isFinished());
+            /// @todo OR DOES THIS GO DOWN BELOW?
             defaultEnd();
             return 1;
             ;});
+        }
+        catch(QException &e)
+        {
+            /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
+            /*QFutureInterfaceBase::*/ext_future.reportException(e);
+        }
+        catch(...)
+        {
+            /*QFutureInterfaceBase::*/ext_future.reportException(QUnhandledException());
+        }
+
+        /// @todo deafultEnd() HERE?
+
+        ext_future.reportFinished();
     }
 
     /// @}

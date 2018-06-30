@@ -153,7 +153,7 @@ public:
 	 *
 	 * @param initialState  Defaults to State(Started | Running)
 	 */
-	ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started | QFutureInterfaceBase::State::Running))
+    ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started /*| QFutureInterfaceBase::State::Running*/))
 		: QFutureInterface<T>(initialState)
 	{
 		qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
