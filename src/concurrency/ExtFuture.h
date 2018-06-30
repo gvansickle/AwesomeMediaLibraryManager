@@ -136,7 +136,9 @@ public:
 			const bool alreadyFinished = !isRunning();
 			lock.unlock();
 
-			if (!alreadyFinished) {
+            if (!alreadyFinished)
+            {
+                /// GRVS: Not finsihed, so start running it?
 				d->pool()->d_func()->stealAndRunRunnable(d->runnable);
 
 				lock.relock();
@@ -305,7 +307,6 @@ public:
 	{
 		static_assert(function_return_type_is_v<decltype(tap_callback), void>, "");
 
-//		m_tap_function = std::make_shared<TapCallbackType>(tap_callback);
 		return TapHelper(context, std::forward<F>(tap_callback)); // *m_tap_function);
 	}
 
@@ -544,13 +545,60 @@ M_WARNING("CRASH ON CANCEL HERE");
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 };
 
-
 //
 // START IMPLEMENTATION
 //
 
 #include "ExtAsync.h"
 
+/**
+ * Return the combined state flags of a class ultimately derived from QFutureInterfaceBase.
+ */
+//template<typename T>
+//QFutureInterfaceBase::State status(T& qfuture_int_base_derived)
+//{
+//    QMutexLocker lock(qfuture_int_base_derived.mutex());
+//    // States from QFutureInterfaceBase.
+//    /// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
+//    ///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
+//    ///			#ifndef QFUTURE_TEST
+//    ///			private:
+//    ///			#endif
+//    ///				QFutureInterfaceBasePrivate *d;
+//    /// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
+//    /// actually a QAtomicInt, so we'd already be thread-safe here without the mutex if we could get at it.
+
+////    std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+////        {QFutureInterfaceBase::NoState, "NoState"},
+////        {QFutureInterfaceBase::Running, "Running"},
+////        {QFutureInterfaceBase::Started,  "Started"},
+////        {QFutureInterfaceBase::Finished,  "Finished"},
+////        {QFutureInterfaceBase::Canceled,  "Canceled"},
+////        {QFutureInterfaceBase::Paused,   "Paused"},
+////        {QFutureInterfaceBase::Throttled, "Throttled"}
+////    };
+//    const static QFutureInterfaceBase::State c_states[] = {
+//        QFutureInterfaceBase::State::NoState,
+//        QFutureInterfaceBase::State::Running,
+//        QFutureInterfaceBase::State::Started,
+//        QFutureInterfaceBase::State::Finished,
+//        QFutureInterfaceBase::State::Canceled,
+//        QFutureInterfaceBase::State::Paused,
+//        QFutureInterfaceBase::State::Throttled
+//    };
+
+
+//    QFutureInterfaceBase::State retval {QFutureInterfaceBase::State::NoState};
+//    for(QFutureInterfaceBase::State i : c_states)
+//    {
+//        if(qfuture_int_base_derived.queryState(i))
+//        {
+//            retval += (QFutureInterfaceBase::State)i;
+//        }
+//    }
+
+//    return retval;
+//}
 
 template <typename T>
 QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)

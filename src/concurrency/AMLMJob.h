@@ -271,8 +271,7 @@ public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
 
     /// Derived tw::run() must call this before exiting.  FBO the TW::success() method.
     void setSuccessFlag(bool success);
-    /// Derived tw::run() must call this before exiting.  FBO the onTWFailed() method to determine fail reason.
-    void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
+
     /// @}
 
     virtual qulonglong totalSize() const;

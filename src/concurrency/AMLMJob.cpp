@@ -190,7 +190,7 @@ M_WARNING("SHOULD MAKE USE OF extfutureref.status() somewhere, Status_Success,_R
 
     Q_CHECK_PTR(this);
 
-qDb() << "ENTER defaultEnd()";
+qDb() << objectName() << "ENTER defaultEnd()";
 
         // We've either completed our work or been cancelled.
         if(wasCancelRequested())
@@ -199,7 +199,7 @@ qDb() << "ENTER defaultEnd()";
             // KJob Success == false is correct in the cancel case.
             qDb() << "Cancelled";
             setSuccessFlag(false);
-            setWasCancelled(true);
+            m_tw_job_was_cancelled = true;
         }
         else
         {
@@ -381,7 +381,7 @@ void AMLMJob::KJobCommonDoneOrFailed(bool success)
     else
     {
         // Set the KJob error info.
-        if(this->m_tw_job_was_cancelled)
+        if(get_future_ref().isCanceled())
         {
             // Cancelled.
             // KJob

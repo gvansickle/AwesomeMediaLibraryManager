@@ -603,6 +603,52 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 	TC_EXIT();
 }
 
+TEST_F(AsyncTestsSuiteFixture, ExtFuture_CancelPromise)
+{
+    TC_ENTER();
+
+    ExtFuture<Unit> f;
+    ExtFuture<Unit> result;
+
+    result.reportStarted();
+    f = result;
+    ASSERT_FALSE(f.isCanceled());
+    result.reportCanceled();
+    ASSERT_TRUE(f.isCanceled());
+    result.reportFinished();
+    ASSERT_TRUE(f.isCanceled());
+    result.waitForFinished();
+    ASSERT_TRUE(f.isCanceled());
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
+TEST_F(AsyncTestsSuiteFixture, ExtFuture_CancelFuture)
+{
+    TC_ENTER();
+
+    ExtFuture<Unit> result;
+    ExtFuture<Unit> f;
+
+    ASSERT_TRUE(f.isStarted());
+
+    result.reportStarted();
+    f = result.future();
+
+    ASSERT_TRUE(f.isStarted());
+
+    ASSERT_FALSE(result.isCanceled());
+    f.cancel();
+
+    ASSERT_TRUE(result.isCanceled());
+
+    result.reportFinished();
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
 /// Static checks
 void dummy(void)
 {
