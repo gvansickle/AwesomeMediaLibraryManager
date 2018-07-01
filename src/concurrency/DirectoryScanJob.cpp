@@ -71,15 +71,8 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
     return retval;
 }
 
-void DirectoryScannerAMLMJob::start()
+void DirectoryScannerAMLMJob::runFunctor()
 {
-    m_ext_future = ExtAsync::run(this, &DirectoryScannerAMLMJob::work_function);
-    BASE_CLASS::start(m_ext_future);
-}
-
-void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future)
-{
-
     // Create the QDirIterator.
     QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 
@@ -106,8 +99,8 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
                                 QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
                                 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
-    the_future.setProgressRange(0, 0);
-    the_future.setProgressValueAndText(0, status_text);
+    m_ext_future.setProgressRange(0, 0);
+    m_ext_future.setProgressValueAndText(0, status_text);
 
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
@@ -116,14 +109,14 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
         {
             // We've been cancelled.
             qIn() << "CANCELLED";
-            the_future.reportCanceled();
+            m_ext_future.reportCanceled();
             break;
         }
-        if(the_future.isPaused())
+        if(m_ext_future.isPaused())
         {
             // We're paused, wait for a resume signal.
             qDb() << "PAUSING";
-            the_future.waitForResume();
+            m_ext_future.waitForResume();
             qDb() << "RESUMING";
         }
 
@@ -150,7 +143,7 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
             setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
             setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
             /// NEW
-            the_future.setProgressRange(0, num_possible_files);
+            m_ext_future.setProgressRange(0, num_possible_files);
         }
         else if(file_info.isFile())
         {
@@ -177,7 +170,7 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
 //            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
             setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
             /// NEW
-            the_future.setProgressValueAndText(num_files_found_so_far, status_text);
+            m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
 //            Q_EMIT entries(this, file_url);
@@ -188,17 +181,17 @@ void DirectoryScannerAMLMJob::work_function(ExtFuture<DirScanResult> &the_future
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
-    if(!(wasCancelRequested() || the_future.isCanceled()))
+    if(!(wasCancelRequested() || m_ext_future.isCanceled()))
     {
         setSuccessFlag(true);
     }
     num_possible_files = num_files_found_so_far;
-    if (!the_future.isCanceled())
+    if (!m_ext_future.isCanceled())
     {
-        the_future.setProgressRange(0, num_possible_files);
-        the_future.setProgressValueAndText(num_files_found_so_far, status_text);
+        m_ext_future.setProgressRange(0, num_possible_files);
+        m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
     }
 
     /// CHANGE
-    the_future.reportFinished();
+    m_ext_future.reportFinished();
 }

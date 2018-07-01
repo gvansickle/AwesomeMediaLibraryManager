@@ -77,6 +77,12 @@ public:
         return QString("%1").arg(m_id_num);
     }
 
+    void setUniqueId()
+    {
+        // Give the object a name.
+        this->underlying().setObjectName(this->underlying().uniqueQObjectName());
+    }
+
 private:
     /// @note Private constructor and friended to T to avoid ambiguities
     /// if this CRTP class is used as a base in several classes in a class hierarchy.

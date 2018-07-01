@@ -61,13 +61,13 @@ public:
 
     static LibraryRescannerJobPtr make_job(QObject *parent);
 
-    /**
-     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
-     *  asynchronously)."
-     *
-     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
-     */
-    Q_SCRIPTABLE void start() override;
+//    /**
+//     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
+//     *  asynchronously)."
+//     *
+//     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
+//     */
+//    Q_SCRIPTABLE void start() override;
 
 public Q_SLOTS:
 
@@ -77,6 +77,8 @@ protected:
 
     QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
 
+    void runFunctor() override;
+
     /// The map function for rescanning the library to reload metadata from the files.
     /// Runs in an arbitrary thread context, so must be threadsafe.
     MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
@@ -84,7 +86,6 @@ protected:
 private:
     Q_DISABLE_COPY(LibraryRescannerJob)
 
-    void work_function(ExtFuture<MetadataReturnVal>& the_future);
     ExtFuture<MetadataReturnVal> m_ext_future;
 
     QVector<VecLibRescannerMapItems> m_items_to_rescan;

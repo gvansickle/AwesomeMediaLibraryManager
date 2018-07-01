@@ -209,6 +209,20 @@ void print_type_in_compilation_error(T&&)
 #define M_PRINT_TYPEOF_VAR_IN_ERROR(v) bool x = decltype((v))::no_such_member_so_you_can_see_the_type_name;
 #define M_PRINT_TYPEOF_TEMPLATE_PARAM_T(T) typedef typename T::no_such_member_so_you_can_see_the_type_name X;
 
+/**
+ * @name Attempts to get the compiler to print a human-readable constexpr value at compile time.
+ * @note In the 21st century, this also should be a solved problem.  It isn't.
+ * @link https://stackoverflow.com/a/4977816
+ */
+/// @{
+template<int constant>
+struct print_constexpr_in_compilation_warning
+{
+    operator char() { return constant + 256; }  //always overflow
+};
+#define STATIC_PRINT_CONSTEXPR_VAL(constant) char(print_constexpr_in_compilation_warning<constant>())
+/// @}
+
 /// @name Preprocessor helpers for M_WARNING().
 /// @{
 #define STRINGISE_IMPL(x) #x

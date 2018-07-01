@@ -40,8 +40,7 @@
 
 CoverArtJob::CoverArtJob(QObject* parent, const QUrl &url) : BASE_CLASS(parent), m_audio_file_url(url)
 {
-    /// @todo Probably need to get autodelete working.
-//	setAutoDelete(false);
+
 }
 
 CoverArtJob::~CoverArtJob()
@@ -57,11 +56,11 @@ CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
     return retval;
 }
 
-void CoverArtJob::start()
-{
-    m_ext_future = ExtAsync::run(this, &CoverArtJob::work_function);
-    BASE_CLASS::start(m_ext_future);
-}
+//void CoverArtJob::start()
+//{
+//    m_ext_future = ExtAsync::run(this, &CoverArtJob::runFunctor);
+//    BASE_CLASS::start<decltype(*this)>(m_ext_future);
+//}
 
 ///
 /// Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const and company.
@@ -112,7 +111,7 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
     return QByteArray();
 }
 
-void CoverArtJob::work_function(ExtFuture<QByteArray>& the_future)
+void CoverArtJob::runFunctor()
 {
     // Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
 
@@ -163,6 +162,6 @@ void CoverArtJob::work_function(ExtFuture<QByteArray>& the_future)
     Q_EMIT SIGNAL_ImageBytes(retval);
 
     /// @todo CHANGE: Move to base class?
-    the_future.reportFinished();
+    m_ext_future.reportFinished();
 }
 

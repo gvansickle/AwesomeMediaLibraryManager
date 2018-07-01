@@ -31,7 +31,7 @@
 #include <utils/Fraction.h>
 #include <logic/LibraryRescanner.h>
 #include <logic/LibraryEntryMimeData.h>
-#include <concurrency/AMLMJob.h>
+//#include <concurrency/AMLMJob.h>
 #include <logic/LibraryRescannerMapItem.h>
 
 /**
@@ -86,7 +86,7 @@ void RegisterQtMetatypes()
 	// #include <logic/LibraryEntryMimeData.h>
 	qRegisterMetaType<LibraryEntryMimeData*>();
 
-	qRegisterMetaType<AMLMJobPtr>();
+//	qRegisterMetaType<AMLMJobPtr>();
 
 	qRegisterMetaType<LibraryRescannerMapItem>();
 	qRegisterMetaType<VecLibRescannerMapItems>();

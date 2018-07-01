@@ -39,7 +39,9 @@
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
-    setObjectName(uniqueQObjectName());
+//    setObjectName(uniqueQObjectName());
+//    setUniqueId();
+
     qDb() << M_NAME_VAL(this);
 
     /// @todo This is sort of horrible, we should find a just-in-time way to do the uiDelegate.
@@ -186,7 +188,7 @@ void AMLMJob::defaultEnd()
 
     auto extfutureref = get_future_ref();
 
-M_WARNING("SHOULD MAKE USE OF extfutureref.status() somewhere, Status_Success,_RUNNING,_Failed,etc");
+/// ("SHOULD MAKE USE OF extfutureref.status() somewhere, Status_Success,_RUNNING,_Failed,etc");
 
     Q_CHECK_PTR(this);
 
@@ -239,6 +241,57 @@ qDb() << objectName() << "ENTER defaultEnd()";
         onUnderlyingAsyncJobDone(!extfutureref.isCanceled());
 }
 
+void AMLMJob::start()
+{
+//    auto ef = get_future_ref();
+    doStart();
+}
+
+
+void AMLMJob::run()
+{
+    auto ef = get_future_ref();
+
+//    qDb() << "ExtFuture<>:" << ef;
+    if(ef.isCanceled())
+    {
+        // We were canceled before we were started.
+        /// @note Canceling alone won't finish the extfuture.
+        // Report (STARTED | CANCELED | FINISHED)
+        ef.reportFinished();
+        return;
+    }
+#ifdef QT_NO_EXCEPTIONS
+#error "WE NEED EXCEPTIONS"
+#else
+    try
+    {
+#endif
+//        ef.then([&](ExtFutureT extfuture) -> int {
+//            qDb() << "GOT TO THEN";
+//            Q_ASSERT(extfuture.isFinished());
+//            /// @todo OR DOES THIS GO DOWN BELOW?
+//            defaultEnd();
+//            return 1;
+//            ;});
+        this->runFunctor();
+    }
+    catch(QException &e)
+    {
+        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
+        ef.reportException(e);
+    }
+    catch(...)
+    {
+        ef.reportException(QUnhandledException());
+    }
+
+    /// @todo defaultEnd() HERE?
+    defaultEnd();
+
+    ef.reportFinished();
+}
+
 bool AMLMJob::doKill()
 {
     // KJob::doKill().
@@ -259,10 +312,7 @@ bool AMLMJob::doKill()
     // Try to detect that we've survived at least to this point.
     Q_ASSERT(!m_i_was_deleted);
 
-    // We should never get here before the TW::Job has signaled that it's done.
-M_WARNING("TODO: got_done is never set by anything, cancelled is set by defaultEnd() but comes up 0 here.");
-//    qDb() << M_NAME_VAL(m_tw_flag_cancel) << M_NAME_VAL(m_tw_job_is_done) << M_NAME_VAL(m_tw_job_was_cancelled);
-//    throwif(!!(m_tw_flag_cancel && !m_tw_job_is_done && !m_tw_job_was_cancelled));
+    // We should never get here before the undelying job has signaled that it's done.
 
     return true;
 }

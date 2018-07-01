@@ -50,6 +50,30 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
+///// Ours
+//#include <utils/crtp.h>
+//#include <utils/DebugHelpers.h>
+//
+template <typename T>
+class ExtFutureTMixin : crtp<T, ExtFutureTMixin>
+{
+public:
+
+    using ExtFutureT = ExtFuture<T>;
+
+    ExtFutureT& get_extfuture_ref() { return m_ext_future; }
+
+//    virtual ~ExtFutureTMixin() = default;
+
+private:
+//    /// @note Private constructor and friended to T to avoid ambiguities
+//    /// if this CRTP class is used as a base in several classes in a class hierarchy.
+//    ExtFutureTMixin() = default;
+
+//    friend AMLMDerivedClassType;
+    ExtFuture<T> m_ext_future;
+};
+
 /**
 * Where Does The State Live?
 *
@@ -252,16 +276,35 @@ public:
     /// @{
 
     /**
-     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
-     *  asynchronously)."
+     * Starts the job asynchronously.
      *
-     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
+     * When the job is finished, result() is emitted.
+     *
+     * Warning: Never implement any synchronous workload in this method. This method
+     * should just trigger the job startup, not do any work itself. It is expected to
+     * be non-blocking.
+     *
+     * This is the method all subclasses need to implement.
+     * It should setup and trigger the workload of the job. It should not do any
+     * work itself. This includes all signals and terminating the job, e.g. by
+     * emitResult(). The workload, which could be another method of the
+     * subclass, is to be triggered using the event loop, e.g. by code like:
+     * \code
+     * void ExampleJob::start()
+     * {
+     *  QTimer::singleShot(0, this, SLOT(doWork()));
+     * }
+     * \endcode
+     *
+     * @note GRVS: Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
      */
-//    Q_SCRIPTABLE void start() override;
+    Q_SCRIPTABLE void start() override;
 
     /// @}
 
-public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
+
+
+public:
     /// @name New public interfaces FBO derived classes' overloads of TW:Job::run().
     /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
@@ -398,46 +441,65 @@ protected:
 
     virtual QFutureInterfaceBase& get_future_ref() = 0;
 
-    template <class ExtFutureT>
-    void start(ExtFutureT& ext_future)
+    virtual void doStart()
     {
-        qDb() << "ExtFuture<>:" << ext_future;
-        if(ext_future.isCanceled())
-        {
-            // We were canceled before we were started.
-            /// @note Canceling alone won't finish the extfuture.
-            // Report (STARTED | CANCELED | FINISHED)
-            ext_future.reportFinished();
-            return;
-        }
-#ifdef QT_NO_EXCEPTIONS
-#error "WE NEED EXCEPTIONS"
-#else
-        try
-        {
-#endif
-        ext_future.then([&](ExtFutureT extfuture) -> int {
-            qDb() << "GOT TO THEN";
-            Q_ASSERT(extfuture.isFinished());
-            /// @todo OR DOES THIS GO DOWN BELOW?
-            defaultEnd();
-            return 1;
-            ;});
-        }
-        catch(QException &e)
-        {
-            /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-            /*QFutureInterfaceBase::*/ext_future.reportException(e);
-        }
-        catch(...)
-        {
-            /*QFutureInterfaceBase::*/ext_future.reportException(QUnhandledException());
-        }
-
-        /// @todo deafultEnd() HERE?
-
-        ext_future.reportFinished();
+        /// @note The "&AMLMJob::runFunctor" should resolve to the virtual override,
+        /// from what I can determine atm.  We'll soon find out.
+        ExtAsync::run(this, &AMLMJob::runFunctor);
     }
+
+//    template <class ExtFutureT>
+//    void start(ExtFutureT& ext_future)
+//    {
+//        qDb() << "ExtFuture<>:" << ext_future;
+//        if(ext_future.isCanceled())
+//        {
+//            // We were canceled before we were started.
+//            /// @note Canceling alone won't finish the extfuture.
+//            // Report (STARTED | CANCELED | FINISHED)
+//            ext_future.reportFinished();
+//            return;
+//        }
+//#ifdef QT_NO_EXCEPTIONS
+//#error "WE NEED EXCEPTIONS"
+//#else
+//        try
+//        {
+//#endif
+//            ext_future.then([&](ExtFutureT extfuture) -> int {
+//                qDb() << "GOT TO THEN";
+//                Q_ASSERT(extfuture.isFinished());
+//                /// @todo OR DOES THIS GO DOWN BELOW?
+////                defaultEnd();
+//                return 1;
+//                ;});
+//        }
+//        catch(QException &e)
+//        {
+//            /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
+//            /*QFutureInterfaceBase::*/ext_future.reportException(e);
+//        }
+//        catch(...)
+//        {
+//            /*QFutureInterfaceBase::*/ext_future.reportException(QUnhandledException());
+//        }
+
+//        /// @todo defaultEnd() HERE?
+//        defaultEnd();
+
+//        ext_future.reportFinished();
+//    }
+
+    /// Last-stage wrapper around the runFunctor().
+    /// Handles most of the common ExtFuture start/finished/canceled/exception code.
+    virtual void run();
+
+    /**
+     * The function which gets run to do the work by ExtAsync::run().
+     * Must be overridden in derived classes.
+     * Reporting and control should be handled via the derived class's m_ext_future member.
+     */
+    virtual void runFunctor() = 0;
 
     /// @}
 
@@ -543,6 +605,11 @@ protected Q_SLOTS:
 
 private:
     Q_DISABLE_COPY(AMLMJob)
+
+    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
+    {
+      return new ExtFuture<Unit>;
+    }
 
     bool m_i_was_deleted = false;
 

@@ -24,6 +24,9 @@
 #include <src/concurrency/AMLMJob.h>
 #include <utils/TheSimplestThings.h>
 
+class CumulativeAMLMJob;
+using CumulativeAMLMJobPtr = QPointer<CumulativeAMLMJob>;
+
 // Experiment to see if we can create a special-purpose "CumulativeKJob", so that we can treat
 // the summary job/widget the same as the sub-jobs/widgets.
 class CumulativeAMLMJob : public AMLMJob, public UniqueIDMixin<CumulativeAMLMJob>
@@ -42,6 +45,8 @@ public:
     CumulativeAMLMJob(QObject* parent);
     ~CumulativeAMLMJob() override;
 
+    static CumulativeAMLMJobPtr make_job(QObject *parent);
+
     /// Nothing to start, this is more of a placeholder. Or maybe?????
     Q_SCRIPTABLE void start() override {}
 
@@ -49,7 +54,7 @@ protected:
 
     QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
 
-//    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override { qDb() << "RUN GOT CALLED FOR SOME REASON"; }
+    void runFunctor() override {}
 
 private:
 

@@ -109,6 +109,7 @@ namespace ExtAsync
 		};
 	} // END namespace detail
 
+
 //	template <typename T>
 //	static ExtFuture<T> run(ExtAsyncTask<T>* task)
 //	{
@@ -116,6 +117,27 @@ namespace ExtAsync
 
 //		return (new ExtAsyncTaskRunner<T>(task))->start();
 //	}
+
+    /**
+     * Helper struct for creating SFINAE-friendly function overloads-of-last-resort.
+     *
+     * @link https://gracicot.github.io/tricks/2017/07/01/deleted-function-diagnostic.html
+     *
+     * ...and this trick actually doesn't work.  It semi-works on gcc with C++11, but C++14 just gives the "use of deleted function" error.
+     */
+    struct TemplateOverloadResolutionFailed
+    {
+        template <typename T>
+        TemplateOverloadResolutionFailed(T&&)
+        {
+            static_assert(!std::is_same_v<T,T>, "Unable to find an appropriate template.");
+        };
+    };
+
+    /**
+     * ExtAsync::run() overload-of-last-resort to flag that none of the other templates matched.
+     */
+//    void run(TemplateOverloadResolutionFailed, ...) = delete;
 
 	/**
 	 * ExtAsync::run() overload for member functions taking an ExtFuture<T>& as the first non-this param.
@@ -125,18 +147,30 @@ namespace ExtAsync
 	 * @returns The ExtFuture<T> passed to @a function.
 	 */
 	template <typename This, typename F, typename... Args,
-		std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
+        std::enable_if_t<ct::has_void_return_v<F> && (arity_v<F> == 2), int> = 0>
+//        std::enable_if_t<ct::is_invocable_r_v<void, F&&, Args...>, int> = 0>
 	auto
 	run(This* thiz, F&& function, Args&&... args)
 	{
-		// Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+        /// @todo TEMP this currently limits the callback to look like C::F(ExtFuture<>&).
+        static_assert(sizeof...(Args) <= 1, "Too many extra args given to run() call");
+        static_assert(sizeof...(Args) == 0, "TODO: More than 0 args passed to run() call");
+
+//        constexpr auto calback_arg_num = function_traits<F>::arity_v;
+        constexpr auto calback_arg_num = arity_v<F>;
+        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
+        static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
+
+        // Get a std::tuple<> containing the types of all args of F.
 		using argst = ct::args_t<F>;
-		using arg1t = std::tuple_element_t<1, argst>;
+        /// @todo TEMP debug restriction
+//        static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
+        // Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+        using arg1t = std::tuple_element_t<1, argst>;
 		using ExtFutureR = std::remove_reference_t<arg1t>;
 
 		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
 
-		static_assert(sizeof...(Args) <= 1, "Too many args");
 		static_assert(function_traits<F>::arity_v > 1, "Callback must take at least one argument");
 
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
@@ -147,6 +181,36 @@ namespace ExtAsync
 
 		return report_and_control;
 	}
+
+    /**
+     * ExtAsync::run() overload for member functions of classes derived from AMLMJob taking zero params.
+     * E.g.:
+     * 		void Class::Function();
+     *
+     * @returns
+     */
+    template <typename This, typename F,
+        std::enable_if_t<ct::is_invocable_r_v<void, F, This*>, int> = 0>
+    auto
+    run(This* thiz, F&& function) //decltype(This::ExtFutureType)
+    {
+        constexpr auto calback_arg_num = arity_v<F>;
+        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
+        static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
+
+        // Get a std::tuple<> containing the types of all args of F.
+//        using argst = ct::args_t<F>;
+        /// @todo TEMP debug restriction
+//        static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
+        // Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+//        using arg1t = std::tuple_element_t<1, argst>;
+
+        qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
+
+        QtConcurrent::run(thiz, std::forward<F>(function));
+
+        return;// thiz->get_future_ref();
+    }
 
 	/**
 	 * For free functions of the form:

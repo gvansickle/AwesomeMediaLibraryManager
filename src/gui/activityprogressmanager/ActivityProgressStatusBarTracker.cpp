@@ -47,7 +47,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
     // Create the job which will contain all other jobs.
     /// @note At least that's the theory, eventually.
-    m_cumulative_status_job = new CumulativeAMLMJob(parent);
+    m_cumulative_status_job = CumulativeAMLMJob::make_job(parent);
 
     // Create the summary widget
     /// @todo Should this have its own separate tracker?

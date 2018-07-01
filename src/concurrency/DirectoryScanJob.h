@@ -42,7 +42,7 @@ using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectoryScannerAMLMJob>
+class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectoryScannerAMLMJob>, public ExtFutureTMixin<DirScanResult>
 {
     Q_OBJECT
 
@@ -70,6 +70,12 @@ protected:
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
 public:
+
+    /// @name Public types
+    /// @{
+    using ExtFutureType = ExtFuture<DirScanResult>;
+    /// @}
+
     ~DirectoryScannerAMLMJob() override;
 
     static DirectoryScannerAMLMJobPtr make_job(QObject *parent, QUrl dir_url,
@@ -77,21 +83,17 @@ public:
                                                QDir::Filters filters,
                                                QDirIterator::IteratorFlags flags);
 
-    /**
-     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
-     *  asynchronously)."
-     *
-     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
-     */
-    Q_SCRIPTABLE void start() override;
-
 protected:
 
-    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
+    QFutureInterfaceBase& get_future_ref() override
+    {
+        return get_extfuture_ref();
+    }
+
+    void runFunctor() override;
 
 private:
 
-    void work_function(ExtFuture<DirScanResult>& the_future);
     ExtFuture<DirScanResult> m_ext_future;
 
     QUrl m_dir_url;

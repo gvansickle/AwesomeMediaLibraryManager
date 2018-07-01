@@ -13,8 +13,9 @@
  * - Allows CRTP use in class hierarchies while avoiding the diamond problem
  *    (I was never able to get virt. inheritance to help with that here)
  * - Allows public derivation from multiple CRTP base classes. [1]
- * - Eliminates the need for the derived CRTP class to static_cast<> itself to the derived class; use the
- *   "underlying()" members instead.
+ * - Eliminates the need for the derived CRTP class to static_cast<> itself to the derived class; in
+ *   classes derived from crtp<>, use the "underlying()" members instead.
+ *   For MixedIntoClass->crtp<> however, see note 1 below.
  * Per https://www.fluentcpp.com/2017/05/19/crtp-helper/
  *
  * @note [1] Still need to do this in client classes to avoid ambiguous name resolution:
@@ -35,6 +36,7 @@ struct crtp
     T const& underlying() const { return static_cast<T const&>(*this); }
 private:
     crtp(){}
+    /// crtpType<> exists only to differentiate dytes.
     friend crtpType<T>;
 };
 

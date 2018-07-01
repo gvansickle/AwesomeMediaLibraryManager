@@ -55,11 +55,11 @@ LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
     return retval;
 }
 
-void LibraryRescannerJob::start()
-{
-    m_ext_future = ExtAsync::run(this, &LibraryRescannerJob::work_function);
-    BASE_CLASS::start(m_ext_future);
-}
+//void LibraryRescannerJob::start()
+//{
+//    m_ext_future = ExtAsync::run(this, &LibraryRescannerJob::runFunctor);
+//    BASE_CLASS::start(m_ext_future);
+//}
 
 void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
                                                          LibraryModel* current_libmodel)
@@ -68,7 +68,7 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
     m_current_libmodel = current_libmodel;
 }
 
-void LibraryRescannerJob::work_function(ExtFuture<MetadataReturnVal>& the_future)
+void LibraryRescannerJob::runFunctor()
 {
     qDb() << "ENTER run";
 
@@ -111,7 +111,7 @@ void LibraryRescannerJob::work_function(ExtFuture<MetadataReturnVal>& the_future
     }
 
     /// @todo push down
-    the_future.reportFinished();
+    m_ext_future.reportFinished();
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)
