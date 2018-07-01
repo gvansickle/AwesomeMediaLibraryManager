@@ -33,14 +33,15 @@
 // Qt5
 #include <QFutureInterface>
 
-
+// Ours
+#include <utils/QtHelpers.h>
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 #include "function_traits.hpp"
 #include "cpp14_concepts.hpp"
 #include <utils/UniqueIDMixin.h>
-#include "ExtFutureWatcher.h"
 #include "ExtFutureState.h"
+#include "ExtFutureWatcher.h"
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
@@ -391,7 +392,7 @@ public:
 //	void await();
 
 	/**
-	 * Get this' current state as a string.
+     * Get this' current state as a ExtFutureState::States.
 	 *
 	 * @return QString describing the current state of the ExtFuture.
 	 */
@@ -563,6 +564,14 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 	return dbg;
 }
 
+template <typename T>
+std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
+{
+    outstream << "ExtFuture<T>(" << extfuture.state() << ")";
+
+    return outstream;
+}
+
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 
@@ -634,13 +643,6 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 
 #endif
 
-/// Concept checks.
-static_assert(IsExtFuture<ExtFuture<int>>, "");
-static_assert(NonNestedExtFuture<ExtFuture<int>>, "");
-static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-static_assert(!NestedExtFuture<ExtFuture<int>>, "");
-static_assert(!IsExtFuture<int>, "");
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 

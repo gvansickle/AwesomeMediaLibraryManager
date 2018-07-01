@@ -32,6 +32,12 @@ public:
 	virtual ~QtHelpers();
 };
 
+//template<class StreamType, class T>
+//StreamType& operator<<(StreamType& outstream, const T& obj)
+//{
+//    return outstream << obj;
+//}
+
 #define IMPL_QTH_DECLARE_QDEBUG_OP(friend_placeholder, classname) \
 	friend_placeholder QDebug operator<<(QDebug out, const classname & obj);
 

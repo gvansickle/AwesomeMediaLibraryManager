@@ -321,6 +321,5 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
 
 #include "ExtFutureWatcher.h"
 
-void ExtAsyncTest(QObject *context);
 
 #endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */
