@@ -89,6 +89,9 @@ protected:
 //        return get_extfuture_ref();
     }
 
+    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+
+
     void runFunctor() override;
 
 private:

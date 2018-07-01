@@ -326,6 +326,19 @@ public:
 
 public:
 
+    /**
+     * DO NOT ACTUALLY CALL THIS FUNCTION.
+     * It's an attempt to get the derived ExtFuture<T> type to the templated member functions.
+     */
+    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
+    {
+        Q_ASSERT(0);
+        return new ExtFuture<Unit>;
+    }
+    virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
+
+    virtual QFutureInterfaceBase& get_future_ref() = 0;
+
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
 
@@ -442,8 +455,6 @@ protected:
 
     /// @name ExtAsync job support functions / function templates.
     /// @{
-
-    virtual QFutureInterfaceBase& get_future_ref() = 0;
 
     virtual void doStart()
     {
@@ -568,10 +579,7 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(AMLMJob)
 
-//    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
-//    {
-//      return new ExtFuture<Unit>;
-//    }
+//    ExtFuture<Unit> m_fallback_extfuture;
 
     bool m_i_was_deleted = false;
 

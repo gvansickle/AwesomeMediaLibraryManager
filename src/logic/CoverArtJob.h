@@ -65,6 +65,9 @@ public:
 
     QByteArray m_byte_array;
 
+    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+
+
 protected:
 
     QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }

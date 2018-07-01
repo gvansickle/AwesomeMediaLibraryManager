@@ -192,17 +192,18 @@ namespace ExtAsync
     template <typename This, typename F,
         std::enable_if_t<std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>, int> = 0>
     auto
-    run(This* thiz, F&& function) //decltype(This::ExtFutureType)
+    run(This* thiz, F&& function) -> decltype(std::declval<This*>()->get_extfuture_ref())
     {
         constexpr auto calback_arg_num = arity_v<F>;
 //        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
         static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
 
-        qWr() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
+        qInfo() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
 
         QtConcurrent::run(thiz, std::forward<F>(function));
-#error "NEED TO RETURN A FUTURE HERE"
-        return;// thiz->get_future_ref();
+        qInfo() << "AFTER QtConcurrent::run(), thiz:" << thiz;
+//#error "NEED TO RETURN A FUTURE HERE"
+        return thiz->get_extfuture_ref();
     }
 
 	/**

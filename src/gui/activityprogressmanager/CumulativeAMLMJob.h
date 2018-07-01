@@ -42,6 +42,9 @@ class CumulativeAMLMJob : public AMLMJob, public UniqueIDMixin<CumulativeAMLMJob
     using UniqueIDMixin<CumulativeAMLMJob>::uniqueQObjectName;
 
 public:
+
+    using ExtFutureType = ExtFuture<Unit>;
+
     CumulativeAMLMJob(QObject* parent);
     ~CumulativeAMLMJob() override;
 
@@ -53,12 +56,13 @@ public:
 protected:
 
     QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
+    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
     void runFunctor() override {}
 
 private:
 
-    ExtFuture<int> m_ext_future;
+    ExtFutureType m_ext_future;
 
 };
 
