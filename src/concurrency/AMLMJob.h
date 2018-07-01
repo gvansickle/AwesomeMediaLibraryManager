@@ -335,10 +335,13 @@ public:
     template <typename ContextType, typename Func>
     void then(ContextType&& ctx, Func&& f)
     {
+        qDb() << objectName() << "ENTERED THEN";
+
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
         connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
 M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
+qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
             // Need to determine if the result was success, error, or cancel.
             // In the latter two cases, we need to make sure any chained AMLMJobs are either
             // cancelled (or notified of the failure?).
@@ -354,22 +357,23 @@ M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
                 // UserDefinedError or some other error.
                 break;
             }
-				if(kjob->error())
-				{
-					// Report the error.
-                    qWr() << "Reporting error via uiDelegate()";
-                    kjob->uiDelegate()->showErrorMessage();
-				}
-				else
-				{
-                    // Cast to the derived job type.
-                    using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
-                    auto* jobptr = dynamic_cast<JobType*>(kjob);
-                    Q_ASSERT(jobptr);
-					// Call the continuation.
-                    f(jobptr);
-				}
-			});
+
+            if(kjob->error())
+            {
+                // Report the error.
+                qWr() << "Reporting error via uiDelegate()";
+                kjob->uiDelegate()->showErrorMessage();
+            }
+            else
+            {
+                // Cast to the derived job type.
+                using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
+                auto* jobptr = dynamic_cast<JobType*>(kjob);
+                Q_ASSERT(jobptr);
+                // Call the continuation.
+                f(jobptr);
+            }
+        });
     }
 
     /// @}
@@ -564,10 +568,10 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(AMLMJob)
 
-    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
-    {
-      return new ExtFuture<Unit>;
-    }
+//    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
+//    {
+//      return new ExtFuture<Unit>;
+//    }
 
     bool m_i_was_deleted = false;
 

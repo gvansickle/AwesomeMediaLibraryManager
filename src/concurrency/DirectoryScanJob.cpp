@@ -191,7 +191,4 @@ void DirectoryScannerAMLMJob::runFunctor()
         m_ext_future.setProgressRange(0, num_possible_files);
         m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
     }
-
-    /// CHANGE
-    m_ext_future.reportFinished();
 }

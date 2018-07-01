@@ -39,7 +39,7 @@
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
-//    setObjectName(uniqueQObjectName());
+    setObjectName(uniqueQObjectName());
 //    setUniqueId();
 
     qDb() << M_NAME_VAL(this);
@@ -286,10 +286,10 @@ void AMLMJob::run()
         ef.reportException(QUnhandledException());
     }
 
-    /// @todo defaultEnd() HERE?
-    defaultEnd();
-
     ef.reportFinished();
+
+    // Do the post-run work.
+    defaultEnd();
 }
 
 bool AMLMJob::doKill()
