@@ -191,4 +191,6 @@ void DirectoryScannerAMLMJob::runFunctor()
         m_ext_future.setProgressRange(0, num_possible_files);
         m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
     }
+
+    qDb() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
 }

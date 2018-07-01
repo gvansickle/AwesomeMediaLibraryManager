@@ -85,7 +85,8 @@ protected:
 
     QFutureInterfaceBase& get_future_ref() override
     {
-        return get_extfuture_ref();
+        return m_ext_future;
+//        return get_extfuture_ref();
     }
 
     void runFunctor() override;

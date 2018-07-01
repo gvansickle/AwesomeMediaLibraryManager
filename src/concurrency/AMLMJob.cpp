@@ -275,6 +275,7 @@ void AMLMJob::run()
 //            return 1;
 //            ;});
         this->runFunctor();
+        qDb() << "Functor complete";
     }
     catch(QException &e)
     {
@@ -286,9 +287,11 @@ void AMLMJob::run()
         ef.reportException(QUnhandledException());
     }
 
+    qDb() << "REPORTING FINISHED";
     ef.reportFinished();
 
     // Do the post-run work.
+    qDb() << "Calling default end";
     defaultEnd();
 }
 

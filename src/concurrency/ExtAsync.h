@@ -198,10 +198,10 @@ namespace ExtAsync
 //        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
         static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
 
-        qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
+        qWr() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
 
         QtConcurrent::run(thiz, std::forward<F>(function));
-
+#error "NEED TO RETURN A FUTURE HERE"
         return;// thiz->get_future_ref();
     }
 
