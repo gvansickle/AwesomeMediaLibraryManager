@@ -287,7 +287,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	ASSERT_TRUE(ran2);
 	ASSERT_TRUE(ran3);
 
-	GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << tostdstr(future.debug_string()) << std::endl;
+    GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << future << std::endl;
 
 	TC_EXIT();
 }
@@ -368,7 +368,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	ASSERT_TRUE(ran2);
 	ASSERT_TRUE(ran3);
 
-	GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << tostdstr(future.debug_string()) << std::endl;
+    GTEST_COUT << __PRETTY_FUNCTION__ << "returning" << future << std::endl;
 
 	TC_EXIT();
 }
@@ -526,7 +526,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 			return QString("Then Called");
 		;}).wait();
 
-	GTEST_COUT << "after wait()" << tostdstr(future.debug_string()) << std::endl;
+    GTEST_COUT << "after wait()" << future << std::endl;
 
 //	future.wait();
 

@@ -25,22 +25,22 @@
 #ifndef UTILS_CONCURRENCY_EXTFUTURE_H_
 #define UTILS_CONCURRENCY_EXTFUTURE_H_
 
-
-#include <QFutureInterface>
-
-#include <utils/StringHelpers.h>
-#include <utils/DebugHelpers.h>
-
+// Std C++
 #include <memory>
 #include <type_traits>
 #include <functional>
+
+// Qt5
+#include <QFutureInterface>
+
+
+#include <utils/StringHelpers.h>
+#include <utils/DebugHelpers.h>
 #include "function_traits.hpp"
 #include "cpp14_concepts.hpp"
-
 #include <utils/UniqueIDMixin.h>
-
 #include "ExtFutureWatcher.h"
-
+#include "ExtFutureState.h"
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
@@ -395,18 +395,18 @@ public:
 	 *
 	 * @return QString describing the current state of the ExtFuture.
 	 */
-	QString state() const;
+    ExtFutureState::States state() const;
 
 	/**
 	 * Get a string describing this ExtFuture<>, suitable for debug output.
 	 * @return
 	 */
-	QString debug_string() const
-	{
-		QString retval = "ID: " + this->id();
-		retval += ", STATE: (" + state() + ")";
-		return retval;
-	}
+//	QString debug_string() const
+//	{
+//		QString retval = "ID: " + this->id();
+//		retval += ", STATE: (" + state() + ")";
+//		return retval;
+//	}
 
 	/// @name Operators
 	/// @{
@@ -551,61 +551,14 @@ protected:
 
 #include "ExtAsync.h"
 
-/**
- * Return the combined state flags of a class ultimately derived from QFutureInterfaceBase.
- */
-//template<typename T>
-//QFutureInterfaceBase::State status(T& qfuture_int_base_derived)
-//{
-//    QMutexLocker lock(qfuture_int_base_derived.mutex());
-//    // States from QFutureInterfaceBase.
-//    /// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
-//    ///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
-//    ///			#ifndef QFUTURE_TEST
-//    ///			private:
-//    ///			#endif
-//    ///				QFutureInterfaceBasePrivate *d;
-//    /// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
-//    /// actually a QAtomicInt, so we'd already be thread-safe here without the mutex if we could get at it.
 
-////    std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
-////        {QFutureInterfaceBase::NoState, "NoState"},
-////        {QFutureInterfaceBase::Running, "Running"},
-////        {QFutureInterfaceBase::Started,  "Started"},
-////        {QFutureInterfaceBase::Finished,  "Finished"},
-////        {QFutureInterfaceBase::Canceled,  "Canceled"},
-////        {QFutureInterfaceBase::Paused,   "Paused"},
-////        {QFutureInterfaceBase::Throttled, "Throttled"}
-////    };
-//    const static QFutureInterfaceBase::State c_states[] = {
-//        QFutureInterfaceBase::State::NoState,
-//        QFutureInterfaceBase::State::Running,
-//        QFutureInterfaceBase::State::Started,
-//        QFutureInterfaceBase::State::Finished,
-//        QFutureInterfaceBase::State::Canceled,
-//        QFutureInterfaceBase::State::Paused,
-//        QFutureInterfaceBase::State::Throttled
-//    };
-
-
-//    QFutureInterfaceBase::State retval {QFutureInterfaceBase::State::NoState};
-//    for(QFutureInterfaceBase::State i : c_states)
-//    {
-//        if(qfuture_int_base_derived.queryState(i))
-//        {
-//            retval += (QFutureInterfaceBase::State)i;
-//        }
-//    }
-
-//    return retval;
-//}
 
 template <typename T>
 QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 {
 	QDebugStateSaver saver(dbg);
 
-	dbg << "ExtFuture<T>(" << extfuture.debug_string() << ")";
+    dbg << "ExtFuture<T>(" << extfuture.state() /*.debug_string()*/ << ")";
 
 	return dbg;
 }

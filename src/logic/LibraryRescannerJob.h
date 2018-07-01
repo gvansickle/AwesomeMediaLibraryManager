@@ -73,7 +73,7 @@ public Q_SLOTS:
 
 protected:
 
-    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
+//    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
     void runFunctor() override;

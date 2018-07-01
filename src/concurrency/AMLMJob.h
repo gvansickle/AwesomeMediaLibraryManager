@@ -330,14 +330,14 @@ public:
      * DO NOT ACTUALLY CALL THIS FUNCTION.
      * It's an attempt to get the derived ExtFuture<T> type to the templated member functions.
      */
-    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
-    {
-        Q_ASSERT(0);
-        return new ExtFuture<Unit>;
-    }
+//    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
+//    {
+//        Q_ASSERT(0);
+//        return new ExtFuture<Unit>;
+//    }
     virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
 
-    virtual QFutureInterfaceBase& get_future_ref() = 0;
+//    virtual QFutureInterfaceBase& get_future_ref() = 0;
 
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{

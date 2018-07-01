@@ -83,11 +83,11 @@ public:
 
 protected:
 
-    QFutureInterfaceBase& get_future_ref() override
-    {
-        return m_ext_future;
-//        return get_extfuture_ref();
-    }
+//    QFutureInterfaceBase& get_future_ref() override
+//    {
+//        return m_ext_future;
+////        return get_extfuture_ref();
+//    }
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 

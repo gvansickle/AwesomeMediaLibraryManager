@@ -110,7 +110,7 @@ bool AMLMJob::wasCancelRequested()
     QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
 
     // Were we told to abort?
-    if(get_future_ref().isCanceled())
+    if(get_extfuture_ref().isCanceled())
     {
         return true;
     }
@@ -186,7 +186,7 @@ void AMLMJob::defaultEnd()
 {
 	/// @note We're in a non-GUI worker thread here.
 
-    auto extfutureref = get_future_ref();
+    auto extfutureref = get_extfuture_ref();
 
 /// ("SHOULD MAKE USE OF extfutureref.status() somewhere, Status_Success,_RUNNING,_Failed,etc");
 
@@ -243,14 +243,14 @@ qDb() << objectName() << "ENTER defaultEnd()";
 
 void AMLMJob::start()
 {
-//    auto ef = get_future_ref();
+//    auto ef = get_extfuture_ref();
     doStart();
 }
 
 
 void AMLMJob::run()
 {
-    auto ef = get_future_ref();
+    auto ef = get_extfuture_ref();
 
 //    qDb() << "ExtFuture<>:" << ef;
     if(ef.isCanceled())
@@ -306,7 +306,7 @@ bool AMLMJob::doKill()
     }
 
     qDb() << "START EXTASYNC DOKILL";
-    auto ef = get_future_ref();
+    auto ef = get_extfuture_ref();
     ef.cancel();
     ef.waitForFinished();
     qDb() << "END EXTASYNC DOKILL";
@@ -325,7 +325,7 @@ bool AMLMJob::doSuspend()
     /// @todo // KJob::doSuspend().
     qDb() << "DOSUSPEND";
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
-    get_future_ref().setPaused(true);
+    get_extfuture_ref().setPaused(true);
     return true;
 }
 
@@ -334,7 +334,7 @@ bool AMLMJob::doResume()
     /// @todo // KJob::doResume().
     qDb() << "TODO: DORESUME";
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
-    get_future_ref().setPaused(false);
+    get_extfuture_ref().setPaused(false);
     return false;
 }
 
@@ -413,7 +413,7 @@ KJob::Unit AMLMJob::progressUnit() const
 
 void AMLMJob::KJobCommonDoneOrFailed(bool success)
 {
-    // We're out of the TW context and in a context with an event loop here.
+    // We're out of the underlying ExtAsync::run() context and in a context with an event loop here.
     /// Not sure if that matters....
     AMLM_ASSERT_IN_GUITHREAD();
 
@@ -428,7 +428,7 @@ void AMLMJob::KJobCommonDoneOrFailed(bool success)
     else
     {
         // Set the KJob error info.
-        if(get_future_ref().isCanceled())
+        if(get_extfuture_ref().isCanceled())
         {
             // Cancelled.
             // KJob

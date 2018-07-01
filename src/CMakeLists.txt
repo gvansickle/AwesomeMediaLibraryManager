@@ -244,6 +244,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ReportingRunner.h
 	concurrency/AsyncTaskManager.h
 	concurrency/ExtendedDeferred.h
+	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
 	concurrency/ExtFutureWatcher.h
 	concurrency/impl/ExtFuture_fwddecl_p.h

@@ -202,7 +202,7 @@ namespace ExtAsync
 
         QtConcurrent::run(thiz, std::forward<F>(function));
         qInfo() << "AFTER QtConcurrent::run(), thiz:" << thiz;
-//#error "NEED TO RETURN A FUTURE HERE"
+
         return thiz->get_extfuture_ref();
     }
 
