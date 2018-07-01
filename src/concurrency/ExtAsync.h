@@ -190,20 +190,13 @@ namespace ExtAsync
      * @returns
      */
     template <typename This, typename F,
-        std::enable_if_t<ct::is_invocable_r_v<void, F, This*>, int> = 0>
+        std::enable_if_t<std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>, int> = 0>
     auto
     run(This* thiz, F&& function) //decltype(This::ExtFutureType)
     {
         constexpr auto calback_arg_num = arity_v<F>;
-        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
+//        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
         static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
-
-        // Get a std::tuple<> containing the types of all args of F.
-//        using argst = ct::args_t<F>;
-        /// @todo TEMP debug restriction
-//        static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
-        // Extract the type of the first arg of function, which should be an ExtFuture<?>&.
-//        using arg1t = std::tuple_element_t<1, argst>;
 
         qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
 

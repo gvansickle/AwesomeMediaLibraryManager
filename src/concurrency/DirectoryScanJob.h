@@ -59,11 +59,9 @@ Q_SIGNALS:
     /**
      * KIO::ListJob-like signal used to send the discovered directory entries to
      * whoever may be listening.
-     * Differs in the parameters.  KIO::Job is a KJob here, and the UDSEntryList
-     * is not a list or a UDSEntry, but a single QUrl.
      */
-//    void entries(KJob* kjob, const QUrl& url);
     void entries(KJob* kjob, const DirScanResult& url);
+
 protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
             const QStringList &nameFilters,

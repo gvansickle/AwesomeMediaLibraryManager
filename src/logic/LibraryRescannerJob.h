@@ -57,17 +57,15 @@ protected:
     explicit LibraryRescannerJob(QObject* parent);
 
 public:
+
+    /// @name Public types
+    /// @{
+    using ExtFutureType = ExtFuture<MetadataReturnVal>;
+    /// @}
+
     ~LibraryRescannerJob() override;
 
     static LibraryRescannerJobPtr make_job(QObject *parent);
-
-//    /**
-//     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
-//     *  asynchronously)."
-//     *
-//     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
-//     */
-//    Q_SCRIPTABLE void start() override;
 
 public Q_SLOTS:
 

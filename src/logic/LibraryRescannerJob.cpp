@@ -55,12 +55,6 @@ LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
     return retval;
 }
 
-//void LibraryRescannerJob::start()
-//{
-//    m_ext_future = ExtAsync::run(this, &LibraryRescannerJob::runFunctor);
-//    BASE_CLASS::start(m_ext_future);
-//}
-
 void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
                                                          LibraryModel* current_libmodel)
 {
