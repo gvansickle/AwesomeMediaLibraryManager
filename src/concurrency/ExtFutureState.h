@@ -98,30 +98,9 @@ public:
 
         return retval;
     }
-
-//    QTH_FRIEND_QDEBUG_OP(ExtFutureState::States);
-//    QTH_FRIEND_QDATASTREAM_OPS(ExtFutureState::States);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::States)
 
-//QTH_DECLARE_QDEBUG_OP(ExtFutureState::States);
-//QTH_DECLARE_QDATASTREAM_OPS(ExtFutureState::States);
-
-//template<class StreamType>
-//StreamType& operator<<(StreamType& outstream, ExtFutureState::States const& obj)
-//{
-//    return outstream << obj;
-//}
-
-//inline QDebug operator<<(QDebug outstream, ExtFutureState::States const& obj)
-//{
-//    return outstream << obj;
-//}
-
-//inline std::ostream& operator<<(std::ostream& outstream, ExtFutureState::States const& obj)
-//{
-//    return outstream << obj;
-//}
 
 #endif /* SRC_CONCURRENCY_EXTFUTURESTATE_H_ */
