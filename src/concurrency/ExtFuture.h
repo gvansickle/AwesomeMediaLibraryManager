@@ -402,20 +402,9 @@ public:
 	/**
      * Get this' current state as a ExtFutureState::States.
 	 *
-	 * @return QString describing the current state of the ExtFuture.
+     * @return A QFlags<>-derived type describing the current state of the ExtFuture.
 	 */
     ExtFutureState::States state() const;
-
-	/**
-	 * Get a string describing this ExtFuture<>, suitable for debug output.
-	 * @return
-	 */
-//	QString debug_string() const
-//	{
-//		QString retval = "ID: " + this->id();
-//		retval += ", STATE: (" + state() + ")";
-//		return retval;
-//	}
 
 	/// @name Operators
 	/// @{

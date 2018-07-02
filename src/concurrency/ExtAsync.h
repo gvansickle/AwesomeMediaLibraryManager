@@ -90,7 +90,7 @@ namespace ExtAsync
 				/// @note Used
 				qWr() << "EXTASYNC::RUN: IN ExtFutureR run_helper_struct::run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
 
-				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+                // ExtFuture<> will default to (STARTED).  This is so that any calls of waitForFinished()
 				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 				using RetType = std::remove_reference_t<ExtFutureR>;
 				RetType report_and_control;
@@ -177,7 +177,7 @@ namespace ExtAsync
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFutureR report_and_control;
 
-		QtConcurrent::run(thiz, std::forward<F>(function), report_and_control, std::forward<Args>(args)...);
+        QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)), report_and_control, std::forward<Args>(args)...);
 
 		return report_and_control;
 	}
@@ -200,7 +200,7 @@ namespace ExtAsync
 
         qInfo() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
 
-        QtConcurrent::run(thiz, std::forward<F>(function));
+        QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)));
         qInfo() << "AFTER QtConcurrent::run(), thiz:" << thiz;
 
         return thiz->get_extfuture_ref();
