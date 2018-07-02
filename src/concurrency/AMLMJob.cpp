@@ -324,7 +324,7 @@ bool AMLMJob::doResume()
     qDb() << "TODO: DORESUME";
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
     get_extfuture_ref().setPaused(false);
-    return false;
+    return true;
 }
 
 void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
@@ -406,7 +406,7 @@ void AMLMJob::setKJobErrorInfo(bool success)
     /// Not sure if that matters....
 //    AMLM_ASSERT_IN_GUITHREAD();
 
-    // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
+    // Convert underlying finished to a KJob::result(KJob*) signal, but only in the success case.
     // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
     // We'll similarly deal with the fail case in onTWFailed().
     if(success)
