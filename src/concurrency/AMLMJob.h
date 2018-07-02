@@ -447,9 +447,9 @@ protected:
 
     virtual void doStart()
     {
-        /// @note The "&AMLMJob::runFunctor" should resolve to the virtual override,
-        /// from what I can determine atm.  We'll soon find out.
-        ExtAsync::run(this, &AMLMJob::runFunctor);
+//        / @note The "&AMLMJob::runFunctor" should resolve to the virtual override,
+//        / from what I can determine atm.  We'll soon find out.
+        ExtAsync::run(this, &AMLMJob::run);
     }
 
     /// Last-stage wrapper around the runFunctor().

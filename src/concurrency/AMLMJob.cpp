@@ -244,7 +244,7 @@ void AMLMJob::run()
 {
     auto ef = get_extfuture_ref();
 
-//    qDb() << "ExtFuture<>:" << ef;
+    qDb() << "ExtFuture<> state:" << ExtFutureState::state(ef);
     if(ef.isCanceled())
     {
         // We were canceled before we were started.
@@ -406,9 +406,9 @@ KJob::Unit AMLMJob::progressUnit() const
 
 void AMLMJob::setKJobErrorInfo(bool success)
 {
-    // We're out of the underlying ExtAsync::run() context and in a context with an event loop here.
+    // We're still in the underlying ExtAsync::run() context and may not have an event loop here.
     /// Not sure if that matters....
-    AMLM_ASSERT_IN_GUITHREAD();
+//    AMLM_ASSERT_IN_GUITHREAD();
 
     // Convert TW::done to a KJob::result(KJob*) signal, only in the success case.
     // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
