@@ -224,7 +224,7 @@ namespace ExtAsync
 		using ExtFutureR = std::remove_reference_t<arg0t>;
 		detail::run_helper_struct<ExtFutureR> helper;
 
-		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
+        return helper.run(std::forward<F>(std::decay_t<F>(function)), std::forward<Args>(args)...);
 	}
 
 	/**

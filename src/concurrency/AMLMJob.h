@@ -437,23 +437,17 @@ public Q_SLOTS:
 protected:
 
     /**
-     * The defaultEnd() function, called immediately after run() returns.
-     * @note run() must have set the correct success() value prior to exiting.
+     * The defaultEnd() function, called at the very end of run() before it returns.
+     * @note run() must have set the correct success() value prior to calling this.
      */
-    void defaultEnd();
+    void runEnd();
 
     /// @name ExtAsync job support functions / function templates.
     /// @{
 
-    virtual void doStart()
-    {
-//        / @note The "&AMLMJob::runFunctor" should resolve to the virtual override,
-//        / from what I can determine atm.  We'll soon find out.
-        ExtAsync::run(this, &AMLMJob::run);
-    }
-
     /// Last-stage wrapper around the runFunctor().
     /// Handles most of the common ExtFuture start/finished/canceled/exception code.
+    /// Should not need to be overridded in derived classes.
     virtual void run();
 
     /**
@@ -557,6 +551,8 @@ protected Q_SLOTS:
     /// @name Internal slots
     /// @{
 
+    /// Directly called by runEnd().
+    /// Calls setKJobErrorInfo() and emitResult().
     void onUnderlyingAsyncJobDone(bool success);
 
     /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).

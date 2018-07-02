@@ -174,7 +174,7 @@ void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 	}
 }
 
-void AMLMJob::defaultEnd()
+void AMLMJob::runEnd()
 {
 	/// @note We're in a non-GUI worker thread here.
 
@@ -235,8 +235,7 @@ qDb() << objectName() << "ENTER defaultEnd()";
 
 void AMLMJob::start()
 {
-//    auto ef = get_extfuture_ref();
-    doStart();
+    ExtAsync::run(this, &AMLMJob::run);
 }
 
 
@@ -260,15 +259,12 @@ void AMLMJob::run()
     try
     {
 #endif
-//        ef.then([&](ExtFutureT extfuture) -> int {
-//            qDb() << "GOT TO THEN";
-//            Q_ASSERT(extfuture.isFinished());
-//            /// @todo OR DOES THIS GO DOWN BELOW?
-//            defaultEnd();
-//            return 1;
-//            ;});
+        // Start the work.  We should be in the Running state if we're in here.
+        /// @todo But we're not Running here.  Not sure why.
+//        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
+        qDb() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
         this->runFunctor();
-        qDb() << "Functor complete";
+        qDb() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
     }
     catch(QException &e)
     {
@@ -285,7 +281,7 @@ void AMLMJob::run()
 
     // Do the post-run work.
     qDb() << "Calling default end";
-    defaultEnd();
+    runEnd();
 }
 
 bool AMLMJob::doKill()
