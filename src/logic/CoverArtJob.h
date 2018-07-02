@@ -67,10 +67,7 @@ public:
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
-
 protected:
-
-//    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
 
     void runFunctor() override;
 

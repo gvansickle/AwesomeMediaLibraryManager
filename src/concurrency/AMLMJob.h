@@ -326,18 +326,7 @@ public:
 
 public:
 
-    /**
-     * DO NOT ACTUALLY CALL THIS FUNCTION.
-     * It's an attempt to get the derived ExtFuture<T> type to the templated member functions.
-     */
-//    virtual ExtFuture<Unit>* get_raw_ptr_to_extfuture()
-//    {
-//        Q_ASSERT(0);
-//        return new ExtFuture<Unit>;
-//    }
     virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
-
-//    virtual QFutureInterfaceBase& get_future_ref() = 0;
 
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
@@ -374,7 +363,7 @@ qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
             if(kjob->error())
             {
                 // Report the error.
-                qWr() << "Reporting error via uiDelegate()";
+                qWr() << "Reporting error via uiDelegate():" << kjob->error() << kjob->errorString() << ":" << kjob->errorText();
                 kjob->uiDelegate()->showErrorMessage();
             }
             else
@@ -559,7 +548,7 @@ protected:
      *
      * @param success  true if the underlying job completed successfully and wasn't cancelled.  false otherwise.
      */
-    void KJobCommonDoneOrFailed(bool success);
+    void setKJobErrorInfo(bool success);
 
     /// @}
 

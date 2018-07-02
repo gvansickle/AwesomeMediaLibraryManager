@@ -691,6 +691,23 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_CancelFuture)
     TC_EXIT();
 }
 
+
+///// ExtAsync<>::run() tests.
+
+TEST_F(AsyncTestsSuiteFixture, ExtAsync_run_freefunc)
+{
+    TC_ENTER();
+
+    ExtFuture<int> extfuture = ExtAsync::run([=](){ return 4;});
+
+    int retval = extfuture.get();
+
+    ASSERT_EQ(retval, 4);
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
 /// Static checks
 void dummy(void)
 {

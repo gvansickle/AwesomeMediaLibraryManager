@@ -229,6 +229,14 @@ public:
 	 */
 	T get();
 
+    /**
+     * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
+     */
+    T result()
+    {
+        return this->future().result();
+    }
+
 	/// @name .then() overloads.
 	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like
 	/// .then() overloads for Qt5.

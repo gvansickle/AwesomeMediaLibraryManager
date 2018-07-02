@@ -95,14 +95,6 @@ AMLMJob::~AMLMJob()
 //    /// Kjob::setAutoDelete()
 //    setAutoDelete(false);
 //    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-
-//    /// @note The TW::Job starts as soon as it's added to a TW::Queue/Weaver.
-
-////    qDb() << "AMLMJob::start() called on:" << this << "TWJob status:" << status();
-////    /// By default for now, we'll do the simplest thing and queue the TW::job up on the default TW::Queue.
-////    ThreadWeaver::Queue* queue = ThreadWeaver::Queue::instance();
-////    auto stream = queue->stream();
-////    start(stream);
 //}
 
 bool AMLMJob::wasCancelRequested()
@@ -259,6 +251,7 @@ void AMLMJob::run()
         /// @note Canceling alone won't finish the extfuture.
         // Report (STARTED | CANCELED | FINISHED)
         ef.reportFinished();
+        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
         return;
     }
 #ifdef QT_NO_EXCEPTIONS
@@ -411,7 +404,7 @@ KJob::Unit AMLMJob::progressUnit() const
 //    qDb() << "MADE CONNECTIONS, this:" << this;
 //}
 
-void AMLMJob::KJobCommonDoneOrFailed(bool success)
+void AMLMJob::setKJobErrorInfo(bool success)
 {
     // We're out of the underlying ExtAsync::run() context and in a context with an event loop here.
     /// Not sure if that matters....
@@ -453,7 +446,7 @@ void AMLMJob::onUnderlyingAsyncJobDone(bool success)
     // The TW::Job indicated completion.
     // If the TW::Job failed, there's a failed() signal in flight as well.
 qDb() << "PARENT:" << parent();
-    KJobCommonDoneOrFailed(success);
+    setKJobErrorInfo(success);
 
     // Regardless of success or fail of the underlying job, we need to call KJob::emitResult() only once.
     // We handle both success and fail cases here, since we always should get a ::done() event.

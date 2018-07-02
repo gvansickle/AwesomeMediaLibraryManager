@@ -53,10 +53,9 @@ public:
     /// Nothing to start, this is more of a placeholder. Or maybe?????
     Q_SCRIPTABLE void start() override {}
 
-protected:
-
-//    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+
+protected:
 
     void runFunctor() override {}
 
