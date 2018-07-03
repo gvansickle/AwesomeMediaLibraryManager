@@ -235,6 +235,7 @@ qDb() << objectName() << "ENTER defaultEnd()";
 
 void AMLMJob::start()
 {
+    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
     ExtAsync::run(this, &AMLMJob::run);
 }
 
@@ -400,39 +401,6 @@ KJob::Unit AMLMJob::progressUnit() const
 //    qDb() << "MADE CONNECTIONS, this:" << this;
 //}
 
-void AMLMJob::setKJobErrorInfo(bool success)
-{
-    // We're still in the underlying ExtAsync::run() context and may not have an event loop here.
-    /// Not sure if that matters....
-//    AMLM_ASSERT_IN_GUITHREAD();
-
-    // Convert underlying finished to a KJob::result(KJob*) signal, but only in the success case.
-    // There could be a TW::failed() signal in flight as well, so we have to be careful we don't call KF5::emitResult() twice.
-    // We'll similarly deal with the fail case in onTWFailed().
-    if(success)
-    {
-        // Set the KJob::error() code.
-        setError(NoError);
-    }
-    else
-    {
-        // Set the KJob error info.
-        if(get_extfuture_ref().isCanceled())
-        {
-            // Cancelled.
-            // KJob
-            setError(KilledJobError);
-        }
-        else
-        {
-            // Some other error.
-            // KJob
-            setError(KJob::UserDefinedError);
-            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(this->objectName()));
-        }
-    }
-}
-
 void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
     qDb() << "ENTER onUnderlyingAsyncJobDone";
@@ -521,15 +489,6 @@ So I think the answer is:
     /**
       * More Kjob notes:
       *
-      * - On a kill():
-      * -- the kjob error will first be set to KilledJobError,
-      * -- finishJob(false):
-      * -- then d->isFinished = true;
-      * -- then the signals are emitted:
-      * -- signal finished() is always emitted
-      * XX signal result() may not be emitted, if this is a kill(quietly).
-      * -- if job is autodelete, deleteLater.
-      *
       * - On normal completion:
       * -- Shoudn't be any kjob error.
       * -- finishJob(true):
@@ -539,8 +498,24 @@ So I think the answer is:
       * ++ signal result() is emitted()
       * -- if job is autodelete, deleteLater.
       *
+      * - On a kill():
+      * -- the kjob error will first be set to KilledJobError,
+      * -- finishJob(false):
+      * -- then d->isFinished = true;
+      * -- then the signals are emitted:
+      * -- signal finished() is always emitted
+      * XX signal result() may not be emitted, if this is a kill(quietly).
+      * -- if job is autodelete, deleteLater.
+      *
       * - On error:
       * -- Same as normal completion but with an error code?
+      *
+      * - On KJob destruction:
+      * -- if(d->isFinished)
+      *   {
+      *     emit finished(this);
+      *   }
+      *   delete d_ptr, speedtimer, and uiDelegate.
       *
       * - signal finished() is always emitted, and always before result(), which won't be emitted on cancel.
       *
@@ -551,6 +526,39 @@ So I think the answer is:
       *   to be killed.
       *
       * */
+}
+
+void AMLMJob::setKJobErrorInfo(bool success)
+{
+    // We're still in the underlying ExtAsync::run() context and may not have an event loop here.
+    /// @note GRVS: Threadsafety not clear.  KJob doesn't do any locking FWICT around these variable sets.
+//    AMLM_ASSERT_IN_GUITHREAD();
+
+    // Convert underlying finished to a KJob::result(KJob*) signal, but only in the success case.
+    // We have to be careful we don't call KF5::emitResult() twice.
+    // We'll similarly deal with the fail case in onTWFailed().
+    if(success)
+    {
+        // Set the KJob::error() code.
+        setError(NoError);
+    }
+    else
+    {
+        // Set the KJob error info.
+        if(get_extfuture_ref().isCanceled())
+        {
+            // Cancelled.
+            // KJob
+            setError(KilledJobError);
+        }
+        else
+        {
+            // Some other error.
+            // KJob
+            setError(KJob::UserDefinedError);
+            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(this->objectName()));
+        }
+    }
 }
 
 void AMLMJob::onKJobResult(KJob *kjob)

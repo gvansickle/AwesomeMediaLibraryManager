@@ -95,29 +95,6 @@ ExtFutureState::States ExtFuture<T>::state() const
     ExtFutureState::States current_state = ExtFutureState::state(*this);
 
     return current_state;
-
-//	QString retval = "";
-//	for(auto i : list)
-//	{
-//		if(QFutureInterfaceBase::queryState(i.first))
-//		{
-//			if(retval.size() != 0)
-//			{
-//				// Add a separator.
-//				retval += " | ";
-//			}
-//			retval += toqstr(i.second);
-//		}
-//	}
-
-//	if(retval.size() == 0)
-//	{
-//		return QString("UNKNOWN");
-//	}
-//	else
-//	{
-//		return retval;
-//	}
 }
 
 namespace ExtAsync

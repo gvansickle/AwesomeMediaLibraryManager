@@ -52,11 +52,6 @@ M_WARNING("TODO: There's a problem with shared ptrs here");
 qDb() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
 }
 
-M_WARNING("TODO: These next three functions are identical in all derived classes"
-          "and should be pushed to the base class.  But the type of m_ext_future is"
-          "different in each derived class, and I can't find a great way to propagate it down."
-          "Maybe more CRTP?");
-
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QUrl dir_url,
                                                              const QStringList &nameFilters,
                                                              QDir::Filters filters,

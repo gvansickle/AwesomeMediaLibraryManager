@@ -309,10 +309,10 @@ public:
     /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
 
-    /// Call this in your derived tw::run() function to see if you should cancel the loop.
+    /// Call this in your derived runFunctor() function to see if you should cancel the loop.
     bool wasCancelRequested();
 
-    /// Derived tw::run() must call this before exiting.  FBO the TW::success() method.
+    /// Derived runFunctor() must call this before exiting.
     void setSuccessFlag(bool success);
 
     /// @}
@@ -342,7 +342,7 @@ public:
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
         connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
-M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
+/// @todo M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
 qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
             // Need to determine if the result was success, error, or cancel.
             // In the latter two cases, we need to make sure any chained AMLMJobs are either
@@ -436,12 +436,6 @@ public Q_SLOTS:
 
 protected:
 
-    /**
-     * The defaultEnd() function, called at the very end of run() before it returns.
-     * @note run() must have set the correct success() value prior to calling this.
-     */
-    void runEnd();
-
     /// @name ExtAsync job support functions / function templates.
     /// @{
 
@@ -457,6 +451,12 @@ protected:
      */
     virtual void runFunctor() = 0;
 
+    /**
+     * The runEnd() function, called at the very end of run() before it returns.
+     * @note run() must have set the correct success() value prior to calling this.
+     */
+    void runEnd();
+
     /// @}
 
     /// @name Override of KJob protected functions.
@@ -470,9 +470,10 @@ protected:
      * @note KJob::doKill() does nothing, simply returns false.
      *
      * What our override here does:
-     * - Tell the TW::Job to kill itself with requestAbort();
+     * Tells the runFunctor() to kill itself by calling .cancel() on its ExtFuture<>, then
+     * waits for it to finish via waitForFinished().
      *
-     * @note It looks like this should block until the job is really confirmed to be killed.
+     * @note It does look like this should block until the job is really confirmed to be killed.
      *       KAbstractWidgetJobTracker::slotStop() does this:
      * @code
      *         job->kill(KJob::EmitResult); // notify that the job has been killed

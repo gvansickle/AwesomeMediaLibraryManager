@@ -22,7 +22,7 @@
 #include "AMLMApp.h"
 
 // Qt5
-
+#include <QProcessEnvironment>
 
 // KF5
 #include <KJob>
@@ -47,4 +47,28 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 AMLMApp::~AMLMApp()
 {
     // Shut down whatever still needs shutting down.
+}
+
+void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
+{
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
+    {
+        qDb() << "KDE Desktop detected, using system icons";
+    }
+    else
+    {
+        // We are not on a KDE desktop, force breeze icon theme
+        group.writeEntry("force_breeze", true);
+        qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
+    }
+
+M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.");
+
+    // If we're forcing Breeze icons, force them here.
+    bool forceBreeze = group.readEntry("force_breeze", QVariant(false)).toBool();
+    if (forceBreeze)
+    {
+        QIcon::setThemeName("breeze");
+    }
 }

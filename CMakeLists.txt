@@ -132,25 +132,25 @@ include(KDECMakeSettings)
 # Std CMAKE includes.
 include(FeatureSummary)
 
-message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
-message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
-
 # This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
 # cmake and/or Qt Creator.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-ucm_add_flags(-fmessage-length=0)
-ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -fsanitize=address CONFIG DEBUG)
+	message(STATUS "C++ Compiler is GCC")
+	ucm_add_flags(-fmessage-length=0)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -fsanitize=address CONFIG DEBUG)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)
+	message(STATUS "C++ Compiler is Clang")
+	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)
 endif()
-
+message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
+message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
 
-if(FALSE)
+if(true)
 	# Use ccache if it's available.
 	find_program(CCACHE_PROGRAM ccache)
 	if(CCACHE_PROGRAM)
