@@ -28,22 +28,25 @@
 //#include "ExtFuture.h"
 //#include "ExtFutureWatcher.h"
 
-
+// Std C++
 #include <type_traits>
-#include "future_type_traits.hpp"
-#include "function_traits.hpp"
-#include "cpp14_concepts.hpp"
 #include <functional>
 #include <memory>
 
+// Our Std C++ backfill
+#include "future_type_traits.hpp"
+#include "function_traits.hpp"
+#include "cpp14_concepts.hpp"
+
+// Qt5
 #include <QEvent>
 #include <QObject>
 #include <QtConcurrent>
 #include <QtCore/QFutureInterface>
 #include <QRunnable>
-
 #include <QCoreApplication>
 
+// Ours
 #include "utils/DebugHelpers.h"
 
 //#include "impl/ExtFuture_fwddecl_p.h"

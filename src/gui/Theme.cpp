@@ -302,6 +302,13 @@ M_WARNING("TODO");
 
     QIcon::setThemeName(name);
 
+    // Did it take?
+    auto current_theme_name = QIcon::themeName();
+    if(current_theme_name != name)
+    {
+        qWr() << "New theme name didn't take:" << name << "!=" << current_theme_name;
+    }
+
 #if 0
 	///@todo This doen't work like it should
 	auto old_theme_name = QIcon::themeName();

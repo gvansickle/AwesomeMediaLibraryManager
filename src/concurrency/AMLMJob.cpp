@@ -35,6 +35,13 @@
 #include "utils/QtCastHelpers.h"
 #include "utils/TheSimplestThings.h"
 #include <gui/MainWindow.h>
+#include <utils/RegisterQtMetatypes.h>
+
+
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering KJob::Unit";
+    qRegisterMetaType<KJob::Unit>();
+});
 
 
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
@@ -65,42 +72,8 @@ AMLMJob::~AMLMJob()
 }
 
 
-///**
-// * KJob override.
-// *
-// * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
-// *  asynchronously)."
-// *
-// * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
-// */
-//void AMLMJob::start()
-//{
-//#if 0
-//    // Lock the mutex.
-//    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
-
-//    // Have we been cancelled before we started?
-//    if(m_flag_cancel)
-//    {
-//        // Yes, fake a "done()" signal FBO doKill().
-//        // KJob Success == false is correct in the cancel case.
-//        setSuccessFlag(false);
-//        setWasCancelled(true);
-//        Q_EMIT done(qSharedPointerDynamicCast<ThreadWeaver::JobInterface>(this));
-//    }
-//#endif
-
-//    Q_ASSERT(!m_use_extasync);
-
-//    /// Kjob::setAutoDelete()
-//    setAutoDelete(false);
-//    Q_ASSERT_X(!isAutoDelete(), __PRETTY_FUNCTION__, "AMLMJob needs to not be autoDelete");
-//}
-
 bool AMLMJob::wasCancelRequested()
 {
-    QMutexLocker lock(&m_cancel_pause_resume_mutex); // == std::unique_lock<std::mutex> lock(m_mutex);
-
     // Were we told to abort?
     if(get_extfuture_ref().isCanceled())
     {
@@ -193,7 +166,6 @@ qDb() << objectName() << "ENTER defaultEnd()";
             // KJob Success == false is correct in the cancel case.
             qDb() << "Cancelled";
             setSuccessFlag(false);
-            m_tw_job_was_cancelled = true;
         }
         else
         {
@@ -236,9 +208,13 @@ qDb() << objectName() << "ENTER defaultEnd()";
 void AMLMJob::start()
 {
     // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
+    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
+    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
+    // Note that calling the destructor of (by deleting) the returned future is ok:
+    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
+    // "Note that this neither waits nor cancels the asynchronous computation."
     ExtAsync::run(this, &AMLMJob::run);
 }
-
 
 void AMLMJob::run()
 {
@@ -306,6 +282,7 @@ bool AMLMJob::doKill()
     Q_ASSERT(!m_i_was_deleted);
 
     // We should never get here before the undelying job has signaled that it's done.
+    Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
     return true;
 }

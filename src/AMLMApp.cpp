@@ -30,12 +30,11 @@
 // Ours
 #include <utils/TheSimplestThings.h>
 #include <logic/SupportedMimeTypes.h>
+#include <gui/Theme.h>
 
 
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
-    qRegisterMetaType<KJob::Unit>();
-
     /// @todo EXPERIMENTAL
 //    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
@@ -61,14 +60,5 @@ void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
         // We are not on a KDE desktop, force breeze icon theme
         group.writeEntry("force_breeze", true);
         qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
-    }
-
-M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.");
-
-    // If we're forcing Breeze icons, force them here.
-    bool forceBreeze = group.readEntry("force_breeze", QVariant(false)).toBool();
-    if (forceBreeze)
-    {
-        QIcon::setThemeName("breeze");
     }
 }

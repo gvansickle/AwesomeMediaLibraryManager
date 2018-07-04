@@ -121,6 +121,14 @@ int main(int argc, char *argv[])
         app.KDEOrForceBreeze(grp);
 	}
 
+    // If we're forcing Breeze icons, force them here.
+    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.");
+    bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
+    if (forceBreeze)
+    {
+        Theme::setIconThemeName("breeze");
+    }
+
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
 	// "Make sure to create KAboutData instance only once the Q*Application instance has been created,
