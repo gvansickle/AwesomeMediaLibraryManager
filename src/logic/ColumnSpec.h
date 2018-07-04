@@ -20,9 +20,9 @@
 #ifndef LOGIC_COLUMNSPEC_H_
 #define LOGIC_COLUMNSPEC_H_
 
+#include <QMetaEnum>
 #include <QString>
 #include <QStringList>
-#include <QMetaEnum>
 
 
 
@@ -51,8 +51,8 @@ public:
 
 	virtual operator int() const { return m_val; }
 
-	template<typename DerivedType>
-	operator SectionID() { return DerivedType(); }
+//	template<typename DerivedType>
+//	operator SectionID() { return DerivedType(); }
 
 	static const char* valueToKey(Enumerator val) { return QMetaEnum::fromType<SectionID::Enumerator>().valueToKey(val); }
 

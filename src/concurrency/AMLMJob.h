@@ -556,16 +556,10 @@ protected Q_SLOTS:
     /// Calls setKJobErrorInfo() and emitResult().
     void onUnderlyingAsyncJobDone(bool success);
 
-    /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
-    /// @note KJob::error() should only be called from this slot, per KF5 docs/comments.
-    void onKJobResult(KJob* kjob);
-
     /// @}
 
 private:
     Q_DISABLE_COPY(AMLMJob)
-
-//    ExtFuture<Unit> m_fallback_extfuture;
 
     bool m_i_was_deleted = false;
 

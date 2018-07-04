@@ -1749,9 +1749,6 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 
 			m_libmodels.push_back(libmodel);
 
-M_WARNING("TODO: Can this go completely?");
-//			connectLibraryModelToActivityProgressWidget(libmodel.data(), m_activity_progress_widget);
-
 			// Add the new library to the ModelViewPairs Model.
 			// The Collection Doc Widget uses this among others.
 			QStandardItem* new_lib_row_item = new QStandardItem(libmodel->getLibraryName());

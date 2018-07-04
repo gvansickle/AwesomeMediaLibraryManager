@@ -296,8 +296,6 @@ QStringList Theme::GetIconThemeNames()
 
 bool Theme::setIconThemeName(const QString& name)
 {
-M_WARNING("TODO");
-
     qDb() << "Trying to set icon theme name to:" << name;
 
     QIcon::setThemeName(name);
