@@ -40,7 +40,7 @@ Q_SIGNALS:
     void visibilityChanged(bool);
 
 public:
-    explicit ExpandingFrameWidget(QWidget* main_progress_bar_widget, QWidget* parent = nullptr);
+    explicit ExpandingFrameWidget(QWidget* main_progress_bar_widget, QWidget* parent);
      ~ExpandingFrameWidget() override;
 
     void setVisible(bool visible) override;
@@ -59,7 +59,7 @@ protected:
 
 private:
 
-    // The widget in the status bar which we will align with.
+    // The widget in the status bar which we're going to be the popup for.
     QPointer<QWidget> m_cumulative_status_bar_main_widget;
 
 };

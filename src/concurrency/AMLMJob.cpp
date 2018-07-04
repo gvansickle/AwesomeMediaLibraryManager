@@ -287,8 +287,6 @@ void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 
     qDb() << "success?:" << success;
 
-    // The TW::Job indicated completion.
-    // If the TW::Job failed, there's a failed() signal in flight as well.
 qDb() << "PARENT:" << parent();
     setKJobErrorInfo(success);
 
@@ -305,27 +303,8 @@ M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
     emitResult();
 
     qDb() << "EXIT onUnderlyingAsyncJobDone";
-    /// @fixme
-//#error "ON CANCEL, THINGS START TO FAIL HERE.  WE ARE IMMEDIATELY DESTRUCTED FOR SOME REASON."
-    /**
-[22:30:34.689 GUIThread______ DEBUG] AMLMJob::onTWFailed:658 - ENTER onTWFailed
-[22:30:34.689 GUIThread______ DEBUG] AMLMJob::onTWDone:561 - ENTER onTWDone
-[22:30:34.690 GUIThread______ DEBUG] AMLMJob::onTWDone:565 - success()?: false
-[22:30:34.690 GUIThread______ DEBUG] AMLMJob::onTWDone:582 - ABOUT TO EMITRESULT() DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
-[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:456 - UNREGISTERING JOB: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
-[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:471 - SIGNALS DISCONNECTED: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
-[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap:487 - REMOVING FROM MAP: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0") BaseActivityProgressStatusBarWidget(0x60d000abfc00)
-[22:30:34.690 GUIThread______ DEBUG] ActivityProgressStatusBarTracker::INTERNAL_unregisterJob:482 - JOB UNREGISTERED: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
-[22:30:34.690 GUIThread______ DEBUG] AMLMJob::onTWDone:589 - EXIT onTWDone
-[22:30:34.690 GUIThread______ DEBUG] DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob:56 - DirectoryScannerAMLMJob DELETED: DirectoryScannerAMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
-[22:30:34.690 GUIThread______ DEBUG] AMLMJob::~AMLMJob:79 - AMLMJob DELETED AMLMJob(0x60d000abfa60, name = "DirectoryScannerAMLMJob_0")
-[22:30:34.693 GUIThread______ DEBUG] AMLMJob::doKill:371 - WAIT: BROKE OUT OF LOOP
-     */
     /**
      * So what happens is:
-     * 1 - We leave here
-     * 2 - the AMLMJob gets deleted
-     * 3*** - The doKill() event loop exits, which then allows KJob::kill() to continue, even though we now have no object.
      * - So then it's this:
      *
      * if (doKill()) {
@@ -379,11 +358,13 @@ bool AMLMJob::doKill()
         Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
     }
 
-    qDb() << "START EXTASYNC DOKILL";
+    // Cancel and wait for the runFunctor() to finish.
+//    qDb() << "START EXTASYNC DOKILL";
     auto ef = get_extfuture_ref();
     ef.cancel();
     ef.waitForFinished();
-    qDb() << "END EXTASYNC DOKILL";
+    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
+//    qDb() << "END EXTASYNC DOKILL";
 
 
     // Try to detect that we've survived at least to this point.
@@ -393,6 +374,8 @@ bool AMLMJob::doKill()
     Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
     return true;
+
+    /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
 }
 
 bool AMLMJob::doSuspend()
@@ -453,8 +436,6 @@ KJob::Unit AMLMJob::progressUnit() const
 {
     return m_progress_unit;
 }
-
-
 
 void AMLMJob::setKJobErrorInfo(bool success)
 {
