@@ -49,7 +49,7 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     setObjectName(uniqueQObjectName());
 //    setUniqueId();
 
-    qDb() << M_NAME_VAL(this);
+    qDbo() << M_NAME_VAL(this);
 
     /// @todo This is sort of horrible, we should find a just-in-time way to do the uiDelegate.
     /// ...and also, while this prevents crashes, we don't get any dialog etc. output on fail.
@@ -68,7 +68,7 @@ AMLMJob::~AMLMJob()
 
     // KJob destructor checks if KJob->isFinished and emits finished(this) if so.
     // Doesn't cancel the job.
-    qDb() << "AMLMJob DELETED" << this;
+    qDbo() << "AMLMJob DELETED" << this;
 }
 
 
@@ -81,7 +81,7 @@ bool AMLMJob::wasCancelRequested()
 void AMLMJob::setSuccessFlag(bool success)
 {
     /// Called from underlying ExtAsync thread.
-    qDb() << "SETTING SUCCESS/FAIL:" << success;
+    qDbo() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
     m_tw_job_run_reported_success_or_fail = 1;
 }
@@ -155,51 +155,58 @@ void AMLMJob::start()
 
 
 /**
-  * More Kjob notes:
-  *
-  * - On normal completion:
-  * -- Shoudn't be any kjob error.
-  * -- finishJob(true):
-  * -- then d->isFinished = true;
-  * -- then the signals are emitted.
-  * -- signal finished() is always emitted
-  * ++ signal result() is emitted()
-  * -- if job is autodelete, deleteLater.
-  *
-  * - On a kill():
-  * -- the kjob error will first be set to KilledJobError,
-  * -- finishJob(false):
-  * -- then d->isFinished = true;
-  * -- then the signals are emitted:
-  * -- signal finished() is always emitted
-  * XX signal result() may not be emitted, if this is a kill(quietly).
-  * -- if job is autodelete, deleteLater.
-  *
-  * - On error:
-  * -- Same as normal completion but with an error code?
-  *
-  * - On KJob destruction, its destructor does this:
-  * -- if(d->isFinished)
-  *   {
-  *     emit finished(this);
-  *   }
-  *   delete d_ptr, speedtimer, and uiDelegate.
-  *
-  * - signal finished() is always emitted, and always before result(), which won't be emitted on cancel.
-  *
-  * So:
-  * - Catch finished(), check error code, and if it's KilledJobError we're being cancelled, and need to propagate the cancel.
-  * - If error code is not KilledJobError, we're going to get a result() signal.  There we need to
-  *   check the error code again, and it'll be either success or fail.  Fail probably looks much like cancel, need any chains
-  *   to be killed.
-  *
-  */
+ * KJob completion notes:
+ *
+ * - On normal completion:
+ * -- Shoudn't be any kjob error.
+ * -- finishJob(true):
+ * -- then d->isFinished = true;
+ * -- then the signals are emitted.
+ * -- signal finished() is always emitted
+ * ++ signal result() is emitted()
+ * -- if job is autodelete, deleteLater.
+ *
+ * - On a KJob::kill():
+ * -- the kjob error will first be set to KilledJobError,
+ * -- finishJob(emitResult = (verbosity != Quietly)):
+ * -- then d->isFinished = true;
+ * -- then the signals are emitted:
+ * -- signal finished() is always emitted
+ * XX signal result() may not be emitted, if this is a kill(quietly).
+ * -- if job is autodelete, deleteLater.
+ *
+ * - On error:
+ * -- Same as normal completion but with an error code?
+ *
+ * - On KJob destruction, its destructor does this:
+ * -- if(d->isFinished)
+ *   {
+ *     emit finished(this);
+ *   }
+ *   delete d_ptr, speedtimer, and uiDelegate.
+ *
+ * - signal finished() is always emitted, and always before result(), which won't be emitted on cancel.
+ *
+ * - Regarding QObject::deleteLater():
+ * -- @link http://doc.qt.io/qt-5/qobject.html#deleteLater
+ *    "if deleteLater() is called on an object that lives in a thread with no running event loop, the object
+ *    will be destroyed when the thread finishes."
+ *
+ * So:
+ * - Catch finished(), check error code, and if it's KilledJobError we're being cancelled, and need to propagate the cancel.
+ * - If error code is not KilledJobError, we're going to get a result() signal.  There we need to
+ *   check the error code again, and it'll be either success or fail.  Fail probably looks much like cancel, need any chains
+ *   to be killed.
+ *
+ */
 
 void AMLMJob::run()
 {
+    /// @note We're in an arbitrary thread here without an event loop.
+
     auto ef = get_extfuture_ref();
 
-    qDb() << "ExtFuture<> state:" << ExtFutureState::state(ef);
+    qDbo() << "ExtFuture<> state:" << ExtFutureState::state(ef);
     if(ef.isCanceled())
     {
         // We were canceled before we were started.
@@ -218,9 +225,9 @@ void AMLMJob::run()
         // Start the work.  We should be in the Running state if we're in here.
         /// @todo But we're not Running here.  Not sure why.
 //        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
-        qDb() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
+        qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
         this->runFunctor();
-        qDb() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
+        qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
     }
     catch(QException &e)
     {
@@ -232,31 +239,31 @@ void AMLMJob::run()
         ef.reportException(QUnhandledException());
     }
 
-    qDb() << "REPORTING FINISHED";
+    qDbo() << "REPORTING FINISHED";
     ef.reportFinished();
     Q_ASSERT(ef.isStarted() && ef.isFinished());
 
     // Do the post-run work.
-    qDb() << "Calling default end";
+    qDbo() << "Calling default end";
     runEnd();
 }
 
 void AMLMJob::runEnd()
 {
-    /// @note We're in a non-GUI worker thread here.
+    /// @note We're still in a non-GUI worker thread here.
 
     auto extfutureref = get_extfuture_ref();
 
     Q_CHECK_PTR(this);
 
-    qDb() << objectName() << "ENTER defaultEnd()";
+    qDbo() << "ENTER defaultEnd()";
 
     // We've either completed our work or been cancelled.
     if(wasCancelRequested())
     {
         // Cancelled.
         // KJob Success == false is correct in the cancel case.
-        qDb() << "Cancelled";
+        qDbo() << "Cancelled";
         setSuccessFlag(false);
     }
     else
@@ -269,26 +276,39 @@ void AMLMJob::runEnd()
 
     if(!m_success)
     {
-        qWr() << objectName() << "FAILED";
+        qWro() << "FAILED";
     }
     else
     {
-        qDb() << objectName() << "Succeeded";
+        qDbo() << "Succeeded";
+    }
+
+    // Set the three KJob error fields.
+    setKJobErrorInfo(!extfutureref.isCanceled());
+
+    qDbo() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
+/// @todo Still true?: M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
+    emitResult();
+
+    // emitResult() may have resulted in a this->deleteLater(), via finishJob().
+    if(isAutoDelete())
+    {
+        m_possible_delete_later_pending = true;
     }
 
     /// @todo Direct call to onUnderlyingAsyncJobDone(), or should we send a signal?
 //        onUnderlyingAsyncJobDone(m_success);
-    onUnderlyingAsyncJobDone(!extfutureref.isCanceled());
+//    onUnderlyingAsyncJobDone(!extfutureref.isCanceled());
 }
 
 void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
-    qDb() << "ENTER onUnderlyingAsyncJobDone";
+    qDbo() << "ENTER onUnderlyingAsyncJobDone";
 
-    qDb() << "success?:" << success;
+    qDbo() << "success?:" << success;
 
-qDb() << "PARENT:" << parent();
-    setKJobErrorInfo(success);
+qDbo() << "PARENT:" << parent();
+//    setKJobErrorInfo(success);
 
     // Regardless of success or fail of the underlying job, we need to call KJob::emitResult() only once.
     // We handle both success and fail cases here, since we always should get a ::done() event.
@@ -298,11 +318,11 @@ qDb() << "PARENT:" << parent();
     // - emit finished(this)
     // - emit result(this)
     // - if the KJob is set to autoDelete(), call deleteLater().
-    qDb() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
-M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
-    emitResult();
+//    qDbo() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
+//M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
+//    emitResult();
 
-    qDb() << "EXIT onUnderlyingAsyncJobDone";
+    qDbo() << "EXIT onUnderlyingAsyncJobDone";
     /**
      * So what happens is:
      * - So then it's this:
@@ -346,12 +366,24 @@ So I think the answer is:
 
     /////////////////
 
+//    if(isAutoDelete())
+//    {
+//        // KJob::finishJob() will have called deleteLater() on us.
+//        m_possible_delete_later_pending = true;
+//    }
+
+}
+
+void AMLMJob::assert_no_deletelater()
+{
+    Q_ASSERT(!m_possible_delete_later_pending);
 }
 
 bool AMLMJob::doKill()
 {
     // KJob::doKill().
-    /// @note The calling thread has to have an event loop.
+    /// @note The calling thread has to have an event loop, and actually AFAICT should be the main app thread.
+    AMLM_ASSERT_IN_GUITHREAD();
 
     if(!(capabilities() & KJob::Capability::Killable))
     {
@@ -359,19 +391,21 @@ bool AMLMJob::doKill()
     }
 
     // Cancel and wait for the runFunctor() to finish.
-//    qDb() << "START EXTASYNC DOKILL";
+    /// @note Seeing the assert below, sometimes not finished, sometimes is.  Started | Canceled always.
+    ///       Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start().
+//    qDbo() << "START EXTASYNC DOKILL";
     auto ef = get_extfuture_ref();
     ef.cancel();
     ef.waitForFinished();
-    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
-//    qDb() << "END EXTASYNC DOKILL";
+//    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
+    // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
+    AMLM_ASSERT_EQ(ExtFutureState::state(ef), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
+
+//    qDbo() << "END EXTASYNC DOKILL";
 
 
     // Try to detect that we've survived at least to this point.
     Q_ASSERT(!m_i_was_deleted);
-
-    // We should never get here before the undelying job has signaled that it's done.
-    Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
     return true;
 
@@ -427,7 +461,7 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 	{
 	    methods << QString::fromLatin1(metaObject->method(i).methodSignature());
 	}
-	qDb() << methods;
+    qDbo() << methods;
 #endif
     m_progress_unit = prog_unit;
 }
@@ -439,7 +473,7 @@ KJob::Unit AMLMJob::progressUnit() const
 
 void AMLMJob::setKJobErrorInfo(bool success)
 {
-    // We're still in the underlying ExtAsync::run() context and may not have an event loop here.
+    // We're still in the underlying ExtAsync::run() context and don't have an event loop here.
     /// @note GRVS: Threadsafety not clear.  KJob doesn't do any locking FWICT around these variable sets.
 //    AMLM_ASSERT_IN_GUITHREAD();
 
@@ -469,8 +503,5 @@ void AMLMJob::setKJobErrorInfo(bool success)
         }
     }
 }
-
-
-
 
 

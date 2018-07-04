@@ -22,10 +22,10 @@
 
 #include <config.h>
 
-/// Std C++
+// Std C++
 #include <type_traits>
 
-/// Qt5
+// Qt5
 #include <QObject>
 #include <QMetaMethod>
 #include <QException>
@@ -34,7 +34,7 @@
 #include <QThread>
 #include <QModelIndex>
 
-/// Ours
+// Ours
 #include "StringHelpers.h"
 
 
@@ -61,8 +61,31 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 #define qWr() qWarning()
 #define qCr() qCritical()
 
+/// @name QDebug streams with QObject name
+/// @{
+#define qDbo() qDebug() << objectName()
+#define qIno() qInfo() << objectName()
+#define qWro() qWarning() << objectName()
+#define qCro() qCritical() << objectName()
+/// @}
+
 /// Stream out a warning of @a cond holds true.
 #define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+
+/// @name Assert helpers which should come as std equipment in the 21st century, but inexplicably don't.
+/// @{
+
+#define AMLM_ASSERT_EQ(a, b) \
+		do { auto la = a; auto lb = b; \
+			if((la) != (lb)) \
+			{\
+				qCr() << "ASSERTION FAILED: " #a " = " << la << " != " #b " =" << lb; \
+				Q_ASSERT((a) == (b)); \
+				Q_ASSERT_X(0, "AMLM_ASSERT_EQ", "MACRO BROKEN, DISAGREES WITH Q_ASSERT"); \
+			}\
+		} while(0)
+
+/// @}
 
 /// Throw if condition is true.
 template <class ExceptionType = QException, class... Args>

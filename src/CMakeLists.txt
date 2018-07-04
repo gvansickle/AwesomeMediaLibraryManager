@@ -393,10 +393,12 @@ set(TEST_EXE_TARGET alltests)
 set(SOURCE_FILES_TEST)
 set(HEADER_FILES_TEST)
 list(APPEND SOURCE_FILES_TEST
-	concurrency/tests/AsyncTests.cpp)
-list(APPEND
+	concurrency/tests/AsyncTests.cpp
+	concurrency/tests/AMLMJobTests.cpp)
+list(APPEND HEADER_FILES_TEST
 	tests/TestHelpers.h
-	concurrency/tests/AsyncTests.h)
+	concurrency/tests/AsyncTests.h
+	concurrency/tests/AMLMJobTests.h)
 
 add_executable(${TEST_EXE_TARGET}
 				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}

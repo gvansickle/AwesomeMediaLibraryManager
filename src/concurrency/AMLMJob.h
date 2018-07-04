@@ -480,6 +480,8 @@ protected:
      *         emit stopped(job);
      * @endcode
      *
+     * @warning this may/will be deleteLater()'ed at any time after this function returns true.
+     *
      * @return true if job successfully killed, false otherwise.
      */
     bool doKill() override;
@@ -561,6 +563,9 @@ protected Q_SLOTS:
 private:
     Q_DISABLE_COPY(AMLMJob)
 
+    void assert_no_deletelater();
+
+    bool m_possible_delete_later_pending = false;
     bool m_i_was_deleted = false;
 
     QAtomicInt m_tw_job_run_reported_success_or_fail {0};
