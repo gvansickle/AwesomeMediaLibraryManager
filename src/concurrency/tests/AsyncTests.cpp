@@ -35,40 +35,6 @@
 
 #include "../ExtAsync.h"
 
-/// Test helper macros.
-#define TC_ENTER() \
-	/* The name of this test as a static std::string. */ \
-	static const std::string testname {__PRETTY_FUNCTION__}; \
-	static std::atomic_bool test_func_called {true}; \
-	static std::atomic_bool test_func_exited {false}; \
-	static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
-	static std::atomic_bool test_func_stack_is_gone {false}; \
-	ASSERT_FALSE(has_finished(testname));
-
-#define TC_EXPECT_NOT_EXIT() \
-	EXPECT_TRUE(test_func_called) << testname; \
-	EXPECT_FALSE(test_func_exited) << testname;
-
-#define TC_EXPECT_STACK() \
-	EXPECT_FALSE(test_func_stack_is_gone)
-
-#define TC_DONE_WITH_STACK() \
-	test_func_no_longer_need_stack_ctx = true;
-
-#define TC_EXIT() \
-	test_func_exited = true; \
-	test_func_stack_is_gone = true; \
-	GTEST_COUT << "EXITING: " << __PRETTY_FUNCTION__ << std::endl; \
-	ASSERT_TRUE(test_func_called); \
-	ASSERT_TRUE(test_func_exited); \
-	ASSERT_TRUE(test_func_no_longer_need_stack_ctx); \
-	/* Tell the harness that we're exiting. */ \
-	finished(__PRETTY_FUNCTION__); \
-
-
-
-
-
 
 void AsyncTestsSuiteFixture::SetUp()
 {
@@ -145,8 +111,7 @@ static QString delayed_string_func_1()
  */
 static ExtFuture<QString> delayed_string_func()
 {
-M_WARNING("THIS IS A QFuture<>");
-	auto retval = QtConcurrent::run([](){
+    QFuture<QString> retval = QtConcurrent::run([](){
 		// Sleep for a second.
 		qDb() << "ENTER, SLEEPING FOR 1 SEC";
 		QThread::sleep(1);
@@ -226,7 +191,13 @@ TEST_F(AsyncTestsSuiteFixture, QtConcurrentSanityTest)
     QTest::qSleep(1000);
     GTEST_COUT << "CHECKING COUNTER FOR 1\n";
     EXPECT_EQ(counter, 1);
-//    EXPECT_TRUE(f.isFinished());
+
+    GTEST_COUT << "CANCELING\n";
+    f.cancel();
+    EXPECT_TRUE(f.isCanceled());
+    f.waitForFinished();
+    EXPECT_TRUE(f.isCanceled());
+    EXPECT_TRUE(f.isFinished());
 
     f.waitForFinished();
     EXPECT_TRUE(f.isStarted());
