@@ -20,6 +20,10 @@
 #ifndef TESTS_TESTHELPERS_H_
 #define TESTS_TESTHELPERS_H_
 
+// Qt5
+#include <Qt>
+#include <QString>
+
 QT_BEGIN_NAMESPACE
 
 /// To let Google Test print QStrings.
