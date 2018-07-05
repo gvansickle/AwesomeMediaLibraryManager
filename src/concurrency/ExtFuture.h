@@ -127,7 +127,7 @@ public:
 	 *
 	 * 		m_future_interface.setRunnable(this);
 	 *
-	 * Not sure if we need to do that here or not.
+     * Not sure if we need to do that here or not, we don't have a QRunnable to give it.
 	 *
 	 * This is the code we're fighting:
 	 *

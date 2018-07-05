@@ -341,11 +341,16 @@ public:
     template <typename ContextType, typename Func>
     void then(ContextType&& ctx, Func&& f)
     {
+        Q_ASSERT(!m_possible_delete_later_pending);
+
         qDb() << objectName() << "ENTERED THEN";
 
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
         connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
+
+            Q_ASSERT(!m_possible_delete_later_pending);
+
 /// @todo M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
 qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
             // Need to determine if the result was success, error, or cancel.
@@ -573,7 +578,8 @@ private:
 
     void assert_no_deletelater();
 
-    bool m_possible_delete_later_pending = false;
+public:     bool m_possible_delete_later_pending = false;
+private:
     bool m_i_was_deleted = false;
 
     QAtomicInt m_tw_job_run_reported_success_or_fail {0};

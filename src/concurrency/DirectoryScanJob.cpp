@@ -1,5 +1,3 @@
-#include <utility>
-
 /*
  * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
@@ -48,8 +46,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
-M_WARNING("TODO: There's a problem with shared ptrs here");
-qDb() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
+    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
 }
 
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QUrl dir_url,
@@ -68,6 +65,8 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
 
 void DirectoryScannerAMLMJob::runFunctor()
 {
+    Q_ASSERT(!m_possible_delete_later_pending);
+
     // Create the QDirIterator.
     QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 
@@ -75,8 +74,8 @@ void DirectoryScannerAMLMJob::runFunctor()
     QFileInfo file_info(m_dir_url.toLocalFile());
     if(!(file_info.exists() && file_info.isReadable() && file_info.isDir()))
     {
-        qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
-        qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
+        qWro() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
+        qWro() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
         setSuccessFlag(false);
         return;
     }
@@ -100,6 +99,8 @@ void DirectoryScannerAMLMJob::runFunctor()
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
+        Q_ASSERT(!m_possible_delete_later_pending);
+
         if(wasCancelRequested())
         {
             // We've been cancelled.
@@ -110,9 +111,9 @@ void DirectoryScannerAMLMJob::runFunctor()
         if(m_ext_future.isPaused())
         {
             // We're paused, wait for a resume signal.
-            qDb() << "PAUSING";
+            qDbo() << "PAUSING";
             m_ext_future.waitForResume();
-            qDb() << "RESUMING";
+            qDbo() << "RESUMING";
         }
 
         // Go to the next entry and return the path to it.
@@ -123,7 +124,7 @@ void DirectoryScannerAMLMJob::runFunctor()
         // First check that we have a valid file or dir: Currently exists and is readable by current user.
         if(!(file_info.exists() && file_info.isReadable()))
         {
-            qWr() << "UNREADABLE FILE:" << file_info.absoluteFilePath();
+            qWro() << "UNREADABLE FILE:" << file_info.absoluteFilePath();
         }
         else if(file_info.isDir())
         {
@@ -153,7 +154,7 @@ void DirectoryScannerAMLMJob::runFunctor()
 
             /// @todo
             DirScanResult dir_scan_result(file_url, file_info);
-            qDb() << "DIRSCANRESULT:" << dir_scan_result;
+            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
 
             Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 
@@ -187,5 +188,5 @@ void DirectoryScannerAMLMJob::runFunctor()
         m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
     }
 
-    qDb() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
+    qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
 }
