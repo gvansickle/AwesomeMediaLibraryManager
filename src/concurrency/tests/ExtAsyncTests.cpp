@@ -35,12 +35,12 @@
 #include "ExtAsyncTests.h"
 
 
-void AsyncTestsSuiteFixture::SetUp()
+void ExtAsyncTestsSuiteFixture::SetUp()
 {
 	GTEST_COUT << "SetUp()" << std::endl;
 }
 
-void AsyncTestsSuiteFixture::TearDown()
+void ExtAsyncTestsSuiteFixture::TearDown()
 {
 	GTEST_COUT << "TearDown()" << std::endl;
 }
@@ -52,13 +52,13 @@ void AsyncTestsSuiteFixture::TearDown()
 ///
 
 #if 0
-TEST_F(AsyncTestsSuiteFixture, ThisShouldFail)
+TEST_F(ExtAsyncTestsSuiteFixture, ThisShouldFail)
 {
 	ASSERT_TRUE(false);
 }
 #endif
 
-TEST_F(AsyncTestsSuiteFixture, ThisShouldPass)
+TEST_F(ExtAsyncTestsSuiteFixture, ThisShouldPass)
 {
 	TC_ENTER();
 
@@ -74,7 +74,7 @@ TEST_F(AsyncTestsSuiteFixture, ThisShouldPass)
 	TC_EXIT();
 }
 
-TEST_F(AsyncTestsSuiteFixture, QStringPrintTest)
+TEST_F(ExtAsyncTestsSuiteFixture, QStringPrintTest)
 {
 	QString test = "Test";
 	ASSERT_EQ(test, "Test");
@@ -170,7 +170,7 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 // TESTS
 //
 
-TEST_F(AsyncTestsSuiteFixture, QtConcurrentSanityTest)
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 {
     int counter = 0;
 
@@ -203,7 +203,7 @@ TEST_F(AsyncTestsSuiteFixture, QtConcurrentSanityTest)
     EXPECT_TRUE(f.isFinished());
 }
 
-TEST_F(AsyncTestsSuiteFixture, ExtFuture_copy_assign_tests)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFuture_copy_assign_tests)
 {
     SCOPED_TRACE("START");
     TC_ENTER();
@@ -235,7 +235,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_copy_assign_tests)
     TC_EXIT();
 }
 
-TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 {
 	SCOPED_TRACE("START");
 //	qIn() << "START";
@@ -327,7 +327,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_ExtFutures)
 	TC_EXIT();
 }
 
-TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 {
 //	qIn() << "START";
 
@@ -408,7 +408,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFutureThenChainingTest_MixedTypes)
 	TC_EXIT();
 }
 
-TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 {
 	std::atomic_int start_val {5};
 	std::atomic_int num_iterations {3};
@@ -483,7 +483,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_ExtAsyncRun_multi_result_test)
 }
 
 
-TEST_F(AsyncTestsSuiteFixture, TestReadyFutures)
+TEST_F(ExtAsyncTestsSuiteFixture, TestReadyFutures)
 {
 	TC_ENTER();
 
@@ -497,9 +497,13 @@ TEST_F(AsyncTestsSuiteFixture, TestReadyFutures)
 	TC_EXIT();
 }
 
+//TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRun_NoExtFutureInterface)
+//{
+//    auto f = ExtAsync::run([=]() -> int { return 1;});
+//    EXPECT_EQ(f.result(), 1);
+//}
 
-
-//TEST_F(AsyncTestsSuiteFixture, DISABLED_UnwrapTest)
+//TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_UnwrapTest)
 //{
 
 ////	auto future = QtConcurrent::run(delayed_string_func);
@@ -518,7 +522,7 @@ TEST_F(AsyncTestsSuiteFixture, TestReadyFutures)
 ////	ExtFuture<QString> unwrapped_future = future.unwrap();
 //}
 
-TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
+TEST_F(ExtAsyncTestsSuiteFixture, TapAndThen_OneResult)
 {
 
 	static std::atomic_bool ran_tap {false};
@@ -571,7 +575,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_OneResult)
 	TC_EXIT();
 }
 
-TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
+TEST_F(ExtAsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 {
 	std::atomic_int tap_call_counter {0};
 	TC_ENTER();
@@ -641,7 +645,7 @@ TEST_F(AsyncTestsSuiteFixture, TapAndThen_MultipleResults)
 /**
  * Test basic cancel properties.
  */
-TEST_F(AsyncTestsSuiteFixture, ExtFuture_BasicCancel)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFuture_BasicCancel)
 {
     TC_ENTER();
 
@@ -677,7 +681,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_BasicCancel)
 /**
  * Cancel the Promise side, see if the Future side detects it.
  */
-TEST_F(AsyncTestsSuiteFixture, ExtFuture_CancelPromise)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFuture_CancelPromise)
 {
     TC_ENTER();
 
@@ -701,7 +705,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_CancelPromise)
 /**
  * Cancel the Future side, see if the promise side detects it.
  */
-TEST_F(AsyncTestsSuiteFixture, ExtFuture_CancelFuture)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFuture_CancelFuture)
 {
     TC_ENTER();
 
@@ -729,7 +733,7 @@ TEST_F(AsyncTestsSuiteFixture, ExtFuture_CancelFuture)
 
 ///// ExtAsync<>::run() tests.
 
-TEST_F(AsyncTestsSuiteFixture, ExtAsync_run_freefunc)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsync_run_freefunc)
 {
     TC_ENTER();
 

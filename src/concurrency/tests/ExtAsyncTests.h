@@ -35,7 +35,7 @@
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for AsyncTests.
  */
-class AsyncTestsSuiteFixture : public ::testing::Test
+class ExtAsyncTestsSuiteFixture : public ::testing::Test
 {
 protected:
 
