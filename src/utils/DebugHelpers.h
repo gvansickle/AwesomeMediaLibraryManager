@@ -76,11 +76,11 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 /// @{
 
 #define AMLM_ASSERT_EQ(a, b) \
-		do { auto la = a; auto lb = b; \
-			if((la) != (lb)) \
+		do { auto la = (a); auto lb = (b); \
+			if(la != lb) \
 			{\
 				qCr() << "ASSERTION FAILED: " #a " = " << la << " != " #b " =" << lb; \
-				Q_ASSERT((a) == (b)); \
+				Q_ASSERT(la == lb); \
 				Q_ASSERT_X(0, "AMLM_ASSERT_EQ", "MACRO BROKEN, DISAGREES WITH Q_ASSERT"); \
 			}\
 		} while(0)

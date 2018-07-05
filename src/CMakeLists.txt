@@ -344,7 +344,7 @@ target_compile_definitions(${PROJECT_NAME}
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-if(NOT WIN32)
+if(FALSE) # OBSOLETE? NOT WIN32)
 	target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb3;-fno-omit-frame-pointer")
 endif()
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -390,21 +390,24 @@ add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 
 #enable_testing()
 set(TEST_EXE_TARGET alltests)
-set(SOURCE_FILES_TEST)
-set(HEADER_FILES_TEST)
-list(APPEND SOURCE_FILES_TEST
+set(AMLM_SOURCE_FILES_TEST "")
+set(AMLM_HEADER_FILES_TEST "")
+list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/AsyncTests.cpp
 	concurrency/tests/AMLMJobTests.cpp)
-list(APPEND HEADER_FILES_TEST
-	tests/TestHelpers.h
+list(APPEND AMLM_HEADER_FILES_TEST
+	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 	concurrency/tests/AsyncTests.h
 	concurrency/tests/AMLMJobTests.h)
 
-add_executable(${TEST_EXE_TARGET}
-				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
-				${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-				${amlm_settings_SRCS}
-				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+add_executable(${TEST_EXE_TARGET})
+target_sources(${TEST_EXE_TARGET}
+	PUBLIC
+	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
+		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${amlm_settings_SRCS}
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+	)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS=1"

@@ -19,6 +19,9 @@
 
 #include "AsyncTests.h"
 
+#include <type_traits>
+#include <atomic>
+
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
 #include <tests/TestHelpers.h>
@@ -26,11 +29,10 @@
 #include <QString>
 #include <QTest>
 
-#include <type_traits>
 #include "../future_type_traits.hpp"
 #include "../function_traits.hpp"
 
-#include <atomic>
+
 #include "../ExtAsync.h"
 
 /// Test helper macros.
@@ -198,6 +200,37 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 	qWr() << "RETURNING:" << retval;
 
 	return retval;
+}
+
+//
+// TESTS
+//
+
+TEST_F(AsyncTestsSuiteFixture, QtConcurrentSanityTest)
+{
+    int counter = 0;
+
+    QFuture<int> f = QtConcurrent::run([&]() mutable -> int {
+        GTEST_COUT << "Entered callback\n";
+        sleep(1);
+        counter = 1;
+        GTEST_COUT << "T+1 secs\n";
+        sleep(1);
+        counter = 2;
+        return 5;
+        ;});
+
+    EXPECT_TRUE(f.isStarted());
+    QTest::qSleep(500);
+    EXPECT_TRUE(f.isRunning()); // In sleep(1)
+    QTest::qSleep(1000);
+    GTEST_COUT << "CHECKING COUNTER FOR 1\n";
+    EXPECT_EQ(counter, 1);
+//    EXPECT_TRUE(f.isFinished());
+
+    f.waitForFinished();
+    EXPECT_TRUE(f.isStarted());
+    EXPECT_TRUE(f.isFinished());
 }
 
 TEST_F(AsyncTestsSuiteFixture, ExtFuture_copy_assign_tests)

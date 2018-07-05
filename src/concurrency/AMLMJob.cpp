@@ -56,6 +56,8 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     /// So not at all clear what's happening here.
     KJobWidgets::setWindow(this, MainWindow::instance());
     setUiDelegate(new KDialogJobUiDelegate());
+
+//    connect_or_die(app??, &??::SIGNAL_aboutToShutDown, this, &AMLMJob::SLOT_extfuture_aboutToShutdown);
 }
 
 AMLMJob::~AMLMJob()
@@ -96,54 +98,12 @@ qulonglong AMLMJob::processedSize() const
     return processedAmount(progressUnit());
 }
 
-void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
-{
-    if(!header.isEmpty())
-    {
-        qIn() << header;
-    }
-    qIn() << "INFO FOR AMLMJob:" << kjob;
-    qIn() << "Progress info:";
-    qIn() << "  Caps:" << kjob->capabilities();
-    qIn() << "  percent:" << kjob->percent();
-    for(auto unit : {KJob::Unit::Bytes, KJob::Unit::Files, KJob::Unit::Directories})
-    {
-        qIn() << "  processedAmount:" << kjob->processedAmount(unit);
-        qIn() << "  totalAmount:" << kjob->totalAmount(unit);
-    }
-    qIn() << "State info:";
-    qIn() << " " << M_NAME_VAL(kjob->isSuspended());
-    qIn() << " " << M_NAME_VAL(kjob->isAutoDelete());
-    qIn() << " " << M_NAME_VAL(kjob->error());
-    if(kjob->error() != 0)
-    {
-        // Per KF5 docs (https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#ae0ac2567b61681f4811d128825fbcd0b),
-        // "[errorString() and errorText()] Only call if error is not 0.".
-        qIn() << " " << M_NAME_VAL(kjob->errorText());
-        qIn() << " " << M_NAME_VAL(kjob->errorString());
-    }
-    else
-    {
-        qIn() << "  kjob->errorText(): N/A (error()==0)";
-        qIn() << "  kjob->errorString(): N/A (error()==0)";
-    }
-
-    // QMetaObject info.
-	const QMetaObject* metaObject = kjob->metaObject();
-	auto method_count = metaObject->methodCount();
-	auto first_this_method_offset = metaObject->methodOffset();
-	qIn() << "All Methods (" << metaObject->methodCount() << "):";
-	for(int i = 0; i < metaObject->methodCount(); ++i)
-	{
-		auto metamethod = metaObject->method(i);
-		qIn() << " " << i << ":" << QString::fromLatin1(metamethod.methodSignature())
-			<< "Type:" << metamethod.methodType()
-			<< "Access:" << metamethod.access();
-	}
-}
-
 void AMLMJob::start()
 {
+//    auto& ef = get_extfuture_ref();
+//    connect_or_die(ef, &ExtFuture<Unit>::finished, this, &AMLMJob::SLOT_extfuture_finished);
+//    connect_or_die(ef, &ExtFuture<Unit>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
+
     // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
     // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
     // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
@@ -158,6 +118,7 @@ void AMLMJob::start()
  * KJob completion notes:
  *
  * - On normal completion:
+ * - Subclass calls emitResult(), which directly calls finishJob(true).
  * -- Shoudn't be any kjob error.
  * -- finishJob(true):
  * -- then d->isFinished = true;
@@ -210,10 +171,25 @@ void AMLMJob::run()
     if(ef.isCanceled())
     {
         // We were canceled before we were started.
-        /// @note Canceling alone won't finish the extfuture.
+        /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
+        /// I think this is the right thing to do.
+        /// QFIBase::reportFinished() does nothing if we're already isFinished(), else does:
+        /// @code
+        /// switch_from_to(d->state, Running, Finished);
+        /// d->waitCondition.wakeAll();
+        /// d->sendCallOut(QFutureCallOutEvent(QFutureCallOutEvent::Finished));
+        /// @endcode
+        /// QFutureInterface<T>::reportFinished(const T* result) adds a possible reportResult() call:
+        /// @code
+        /// if (result)
+        ///    reportResult(result);
+        /// QFutureInterfaceBase::reportFinished();
+        /// @endcode
+
         // Report (STARTED | CANCELED | FINISHED)
         ef.reportFinished();
-        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
+//        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
+        AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
         return;
     }
 #ifdef QT_NO_EXCEPTIONS
@@ -241,6 +217,9 @@ void AMLMJob::run()
 
     qDbo() << "REPORTING FINISHED";
     ef.reportFinished();
+    // We should only have two possible states here, excl. exceptions for the moment:
+    // - Started | Finished
+    // - Started | Canceled | Finished if job was canceled.
     Q_ASSERT(ef.isStarted() && ef.isFinished());
 
     // Do the post-run work.
@@ -374,6 +353,34 @@ So I think the answer is:
 
 }
 
+
+
+/////
+/// These are similar to kdevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
+///
+void AMLMJob::SLOT_extfuture_finished()
+{
+    m_extfuture_watcher->deleteLater();
+    emitResult();
+}
+
+void AMLMJob::SLOT_extfuture_canceled()
+{
+    // Nothing but deleteLater() the watcher.
+    m_extfuture_watcher->deleteLater();
+}
+
+void AMLMJob::SLOT_extfuture_aboutToShutdown()
+{
+    kill();
+}
+////
+///
+///
+
+
+
+
 void AMLMJob::assert_no_deletelater()
 {
     Q_ASSERT(!m_possible_delete_later_pending);
@@ -391,14 +398,21 @@ bool AMLMJob::doKill()
     }
 
     // Cancel and wait for the runFunctor() to finish.
-    /// @note Seeing the assert below, sometimes not finished, sometimes is.  Started | Canceled always.
-    ///       Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start().
+
 //    qDbo() << "START EXTASYNC DOKILL";
     auto ef = get_extfuture_ref();
     ef.cancel();
+
+    /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
+    setError(KilledJobError);
+
     ef.waitForFinished();
-//    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
+    qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
+
+    //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
     // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
+    /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
+    ///       Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start().
     AMLM_ASSERT_EQ(ExtFutureState::state(ef), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
 
 //    qDbo() << "END EXTASYNC DOKILL";
@@ -505,3 +519,48 @@ void AMLMJob::setKJobErrorInfo(bool success)
 }
 
 
+void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
+{
+    if(!header.isEmpty())
+    {
+        qIn() << header;
+    }
+    qIn() << "INFO FOR AMLMJob:" << kjob;
+    qIn() << "Progress info:";
+    qIn() << "  Caps:" << kjob->capabilities();
+    qIn() << "  percent:" << kjob->percent();
+    for(auto unit : {KJob::Unit::Bytes, KJob::Unit::Files, KJob::Unit::Directories})
+    {
+        qIn() << "  processedAmount:" << kjob->processedAmount(unit);
+        qIn() << "  totalAmount:" << kjob->totalAmount(unit);
+    }
+    qIn() << "State info:";
+    qIn() << " " << M_NAME_VAL(kjob->isSuspended());
+    qIn() << " " << M_NAME_VAL(kjob->isAutoDelete());
+    qIn() << " " << M_NAME_VAL(kjob->error());
+    if(kjob->error() != 0)
+    {
+        // Per KF5 docs (https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#ae0ac2567b61681f4811d128825fbcd0b),
+        // "[errorString() and errorText()] Only call if error is not 0.".
+        qIn() << " " << M_NAME_VAL(kjob->errorText());
+        qIn() << " " << M_NAME_VAL(kjob->errorString());
+    }
+    else
+    {
+        qIn() << "  kjob->errorText(): N/A (error()==0)";
+        qIn() << "  kjob->errorString(): N/A (error()==0)";
+    }
+
+    // QMetaObject info.
+    const QMetaObject* metaObject = kjob->metaObject();
+    auto method_count = metaObject->methodCount();
+    auto first_this_method_offset = metaObject->methodOffset();
+    qIn() << "All Methods (" << metaObject->methodCount() << "):";
+    for(int i = 0; i < metaObject->methodCount(); ++i)
+    {
+        auto metamethod = metaObject->method(i);
+        qIn() << " " << i << ":" << QString::fromLatin1(metamethod.methodSignature())
+            << "Type:" << metamethod.methodType()
+            << "Access:" << metamethod.access();
+    }
+}

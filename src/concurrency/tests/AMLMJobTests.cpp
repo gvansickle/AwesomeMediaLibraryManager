@@ -19,19 +19,25 @@
 
 #include "AMLMJobTests.h"
 
+// Std C++
+#include <type_traits>
+#include <atomic>
+
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
-#include <tests/TestHelpers.h>
 
+
+// Qt5
 #include <QString>
 #include <QTest>
 
-#include <type_traits>
+
+// Ours
 #include "../future_type_traits.hpp"
 #include "../function_traits.hpp"
-
-#include <atomic>
+#include <tests/TestHelpers.h>
 #include "../AMLMJob.h"
+#include <src/concurrency/DirectoryScanJob.h>
 
 
 void AMLMJobTests::SetUp()
@@ -57,3 +63,45 @@ TEST_F(AMLMJobTests, ThisShouldPass)
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
+TEST_F(AMLMJobTests, CancelTest)
+{
+    ExtFutureWatcher<DirScanResult> watcher;
+
+	// Dummy dir so the dir scanner job has something to chew on.
+	QUrl dir_url = QUrl::fromLocalFile("~/");
+    DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(nullptr, dir_url,
+	                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+
+    // Connect signals and slots.
+    connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, [=](KJob* kjob){
+        ASSERT_EQ(kjob, dsj);
+        EXPECT_EQ(kjob->error(), KJob::KilledJobError);
+
+        ;});
+    connect_or_die(dsj, &DirectoryScannerAMLMJob::result, [=](KJob* kjob){
+        ASSERT_EQ(kjob, dsj);
+
+        EXPECT_EQ(kjob->error(), KJob::KilledJobError);
+
+		;});
+
+    watcher.setFuture(dsj->get_extfuture_ref());
+
+    // Start the job.
+    dsj->start();
+
+    // Spin waiting for the job to complete.
+    /// Don't think this is waiting.
+    while(watcher.isRunning())
+    {
+        qDb() << "isRunning()";
+        qApp->processEvents();
+    }
+    watcher.waitForFinished();
+
+    // Cancel the job.
+    dsj->kill();
+
+//    ASSERT_EQ(dsj->get_extfuture_ref(), );
+}

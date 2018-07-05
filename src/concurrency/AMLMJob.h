@@ -51,28 +51,28 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
 ///// Ours
-//#include <utils/crtp.h>
-//#include <utils/DebugHelpers.h>
-//
-template <typename T>
-class ExtFutureTMixin : crtp<T, ExtFutureTMixin>
-{
-public:
+////#include <utils/crtp.h>
+////#include <utils/DebugHelpers.h>
+////
+//template <typename T>
+//class ExtFutureTMixin : crtp<T, ExtFutureTMixin>
+//{
+//public:
 
-    using ExtFutureT = ExtFuture<T>;
+//    using ExtFutureT = ExtFuture<T>;
 
-    ExtFutureT& get_extfuture_ref() { return m_ext_future; }
+//    ExtFutureT& get_extfuture_ref() { return m_ext_future; }
 
-//    virtual ~ExtFutureTMixin() = default;
+////    virtual ~ExtFutureTMixin() = default;
 
-private:
-//    /// @note Private constructor and friended to T to avoid ambiguities
-//    /// if this CRTP class is used as a base in several classes in a class hierarchy.
-//    ExtFutureTMixin() = default;
+//private:
+////    /// @note Private constructor and friended to T to avoid ambiguities
+////    /// if this CRTP class is used as a base in several classes in a class hierarchy.
+////    ExtFutureTMixin() = default;
 
-//    friend AMLMDerivedClassType;
-    ExtFuture<T> m_ext_future;
-};
+////    friend AMLMDerivedClassType;
+//    ExtFuture<T> m_ext_future;
+//};
 
 /**
 * Where Does The State Live?
@@ -328,6 +328,10 @@ public:
 
     virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
 
+    /// @todo experimental
+    /*private:*/ QFutureWatcher<void>* m_extfuture_watcher = new QFutureWatcher<void>();
+    virtual QFutureWatcher<void>* get_extfuture_ptr_w() { return m_extfuture_watcher; }
+
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
 
@@ -557,6 +561,10 @@ protected Q_SLOTS:
     /// Directly called by runEnd().
     /// Calls setKJobErrorInfo() and emitResult().
     void onUnderlyingAsyncJobDone(bool success);
+
+    void SLOT_extfuture_finished();
+    void SLOT_extfuture_canceled();
+    void SLOT_extfuture_aboutToShutdown();
 
     /// @}
 

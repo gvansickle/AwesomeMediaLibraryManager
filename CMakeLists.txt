@@ -511,6 +511,7 @@ cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
 #message_cpack_summary()
-message(STATUS "======================== END CMAKE SUMMARY ====================================")
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+message(STATUS "======================== END CMAKE SUMMARY ====================================")
