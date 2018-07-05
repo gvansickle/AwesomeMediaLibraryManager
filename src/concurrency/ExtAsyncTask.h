@@ -27,8 +27,8 @@
 /// Based on this Stack Overflow reply: https://stackoverflow.com/a/16729619
 
 /**
- * Subclass this to get a controllable, reporting-enabled task which can be passed to one of the ExtAsync::run() overloads.
- * Note that this class does not derive from QObject (or any other class for that matter).
+ * Subclass ExtAsyncTask<> to get a controllable, reporting-enabled task which can be passed to one of the ExtAsync::run()
+ * overloads.  Note that this class does not derive from QObject (or any other class for that matter).
  *
  * @tparam T  The type returned in the ExtFuture<T>.
  */
@@ -60,7 +60,7 @@ public:
 
 
 /**
- * Used as an intermediary helper class between the ExtAsyc::run() functions and an
+ * Used as an intermediary helper class between the ExtAsync::run() functions and an
  * instance of ExtAsyncTask<T>.  Handles the setup and teardown.  Setup handled in the run() function
  * includes reporting started and not starting if already cancelled.  Teardown includes reporting finished,
  * if finishing was due to cancellation, and propagating and reporting exceptions.
@@ -173,7 +173,7 @@ void ExtAsyncTaskRunner<T>::run()
     }
 #endif
 
-    // Again it seems like we also should be checking isCanceled() and calling reportCancelled() here, but
+    // Again it seems like we also should be checking isCanceled() and calling reportCanceled() here, but
     // RunFunctionTask<T> doesn't.  It simply does this:
     //
     // this->reportResult(result);
@@ -183,7 +183,7 @@ void ExtAsyncTaskRunner<T>::run()
     // E.g., see this test case: https://github.com/qt/qtbase/blob/8cc27590bd2a04ce841cdb66f234ff13f11148af/tests/auto/corelib/thread/qfuturewatcher/tst_qfuturewatcher.cpp#L638
     // There the future is reportFinished() before being cancelled (through a watcher), and the results are then never delivered.
     //
-    // Also, we're reporting results differently, so we don't need a call to reportResults().
+    // Also, we're reporting results differently, so we maybe don't need a call to reportResults().
 
 //    if (this->isCanceled())
 //    {

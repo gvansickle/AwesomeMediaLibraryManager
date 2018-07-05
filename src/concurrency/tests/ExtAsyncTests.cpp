@@ -17,8 +17,6 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AsyncTests.h"
-
 #include <type_traits>
 #include <atomic>
 
@@ -34,6 +32,7 @@
 
 
 #include "../ExtAsync.h"
+#include "ExtAsyncTests.h"
 
 
 void AsyncTestsSuiteFixture::SetUp()
@@ -114,7 +113,7 @@ static ExtFuture<QString> delayed_string_func()
     QFuture<QString> retval = QtConcurrent::run([](){
 		// Sleep for a second.
 		qDb() << "ENTER, SLEEPING FOR 1 SEC";
-		QThread::sleep(1);
+		QTest::qSleep(1000);
 		qDb() << "SLEEP COMPLETE, returning HELLO";
 		return QString("HELLO");
 	});
