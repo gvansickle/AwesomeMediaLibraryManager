@@ -42,7 +42,7 @@ using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectoryScannerAMLMJob>///, public ExtFutureTMixin<DirScanResult>
+class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectoryScannerAMLMJob>
 {
     Q_OBJECT
 

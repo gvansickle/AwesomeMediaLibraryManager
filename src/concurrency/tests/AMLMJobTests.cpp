@@ -50,6 +50,80 @@ void AMLMJobTests::TearDown()
 	GTEST_COUT << "TearDown()" << std::endl;
 }
 
+// Test derived AMLMJob
+
+class TestAMLMJob1;
+using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
+
+class TestAMLMJob1 : public AMLMJob, public UniqueIDMixin<TestAMLMJob1>
+{
+	Q_OBJECT
+
+	using BASE_CLASS = AMLMJob;
+
+	/**
+	 * @note CRTP: Still need this to avoid ambiguous name resolution.
+	 * @see https://stackoverflow.com/a/46916924
+	 */
+	using UniqueIDMixin<TestAMLMJob1>::uniqueQObjectName;
+
+protected:
+	explicit TestAMLMJob1(QObject* parent) : AMLMJob(parent)
+	{
+		// Set our object name.
+		setObjectName(uniqueQObjectName());
+
+	}
+
+public:
+    /// @name Public types
+    /// @{
+    using ExtFutureType = ExtFuture<int>;
+    /// @}
+
+    ~TestAMLMJob1() override
+    {
+
+    }
+
+    static TestAMLMJob1Ptr make_job(QObject *parent)
+    {
+        auto retval = new TestAMLMJob1(parent);
+        return retval;
+    }
+
+    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+
+protected:
+
+    void runFunctor() override
+    {
+        // Iterate through the directory tree.
+        for(int i =0; i<10; i++)
+        {
+            Q_ASSERT(!m_possible_delete_later_pending);
+
+            if(wasCancelRequested())
+            {
+                // We've been cancelled.
+                qIno() << "CANCELLED";
+                m_ext_future.reportCanceled();
+                break;
+            }
+            if(m_ext_future.isPaused())
+            {
+                // We're paused, wait for a resume signal.
+                qDbo() << "PAUSING";
+                m_ext_future.waitForResume();
+                qDbo() << "RESUMING";
+            }
+        }
+    }
+
+private:
+    ExtFuture<int> m_ext_future;
+};
+
 ///
 /// Test Cases
 ///
@@ -105,3 +179,5 @@ TEST_F(AMLMJobTests, CancelTest)
 
 //    ASSERT_EQ(dsj->get_extfuture_ref(), );
 }
+
+#include "AMLMJobTests.moc"

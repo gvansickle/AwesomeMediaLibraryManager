@@ -329,8 +329,8 @@ public:
     virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
 
     /// @todo experimental
-    /*private:*/ QFutureWatcher<void>* m_extfuture_watcher = new QFutureWatcher<void>();
-    virtual QFutureWatcher<void>* get_extfuture_ptr_w() { return m_extfuture_watcher; }
+//    /*private:*/ QFutureWatcher<void>* m_extfuture_watcher = new QFutureWatcher<void>();
+//    virtual QFutureWatcher<void>* get_extfuture_ptr_w() { return m_extfuture_watcher; }
 
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
@@ -567,20 +567,20 @@ protected Q_SLOTS:
     /// Calls setKJobErrorInfo() and emitResult().
     void onUnderlyingAsyncJobDone(bool success);
 
-    void SLOT_extfuture_finished();
-    void SLOT_extfuture_canceled();
-    void SLOT_extfuture_aboutToShutdown();
+//    void SLOT_extfuture_finished();
+//    void SLOT_extfuture_canceled();
+//    void SLOT_extfuture_aboutToShutdown();
 
     /// @}
 
 private:
     Q_DISABLE_COPY(AMLMJob)
 
-    void assert_no_deletelater();
-
-public:     bool m_possible_delete_later_pending = false;
-private:
+public:
+    bool m_possible_delete_later_pending = false;
     bool m_i_was_deleted = false;
+
+private:
 
     QAtomicInt m_tw_job_run_reported_success_or_fail {0};
     QAtomicInt m_success { 1 };

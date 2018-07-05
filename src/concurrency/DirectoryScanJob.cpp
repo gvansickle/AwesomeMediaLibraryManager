@@ -46,7 +46,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
-    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this; // << objectName();
+    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
 }
 
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QUrl dir_url,
@@ -100,11 +100,12 @@ void DirectoryScannerAMLMJob::runFunctor()
     while(m_dir_iterator.hasNext())
     {
         Q_ASSERT(!m_possible_delete_later_pending);
+        Q_ASSERT(!m_i_was_deleted);
 
         if(wasCancelRequested())
         {
             // We've been cancelled.
-            qIn() << "CANCELLED";
+            qIno() << "CANCELLED";
             m_ext_future.reportCanceled();
             break;
         }

@@ -175,7 +175,7 @@ void AMLMJob::run()
 {
     Q_ASSERT(!m_possible_delete_later_pending);
 
-    /// @note We're in an arbitrary thread here without an event loop.
+    /// @note We're in an arbitrary thread here probably without an event loop.
 
     auto ef = get_extfuture_ref();
 
@@ -185,6 +185,17 @@ void AMLMJob::run()
         // We were canceled before we were started.
         /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
         /// I think this is the right thing to do.
+        ///
+        /// QtCreator::runextensions.h::AsyncJob::run() does the same thing here:
+        /// @code
+        /// if (futureInterface.isCanceled())
+        /// {
+        ///     futureInterface.reportFinished();
+        ///     return;
+        /// }
+        /// runHelper(...);
+        /// @endcode
+        ///
         /// QFIBase::reportFinished() does nothing if we're already isFinished(), else does:
         /// @code
         /// switch_from_to(d->state, Running, Finished);
@@ -226,12 +237,31 @@ void AMLMJob::run()
         ef.reportException(QUnhandledException());
     }
 
+    /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
+    /// QtCreator::runextensions.h::AsyncJob::run() calls runHelper(), which then does this here:
+    /// @code
+    /// // invalidates data, which is moved into the call
+    /// runAsyncImpl(futureInterface, std::move(std::get<index>(data))...); // GRVS: The runFunctor() above.
+    /// if (futureInterface.isPaused())
+    ///         futureInterface.waitForResume();
+    /// futureInterface.reportFinished();
+    /// @endcode
+    /// So it seems we should be safe doing the same thing.
+
+    if(ef.isPaused())
+    {
+        // ExtAsync<> is paused, so wait for it to be resumed.
+        qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
+        ef.waitForResume();
+    }
     qDbo() << "REPORTING FINISHED";
     ef.reportFinished();
+
     // We should only have two possible states here, excl. exceptions for the moment:
     // - Started | Finished
     // - Started | Canceled | Finished if job was canceled.
     Q_ASSERT(ef.isStarted() && ef.isFinished());
+//    AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Finished));
 
     // Do the post-run work.
     qDbo() << "Calling default end";
@@ -248,7 +278,7 @@ void AMLMJob::runEnd()
 
     Q_CHECK_PTR(this);
 
-    qDbo() << "ENTER defaultEnd()";
+    qDbo() << "ENTER runEnd()";
 
     // We've either completed our work or been cancelled.
     if(wasCancelRequested())
@@ -287,10 +317,6 @@ void AMLMJob::runEnd()
     {
         m_possible_delete_later_pending = true;
     }
-
-    /// @todo Direct call to onUnderlyingAsyncJobDone(), or should we send a signal?
-//        onUnderlyingAsyncJobDone(m_success);
-//    onUnderlyingAsyncJobDone(!extfutureref.isCanceled());
 }
 
 void AMLMJob::onUnderlyingAsyncJobDone(bool success)
@@ -373,6 +399,7 @@ So I think the answer is:
 /////
 /// These are similar to kdevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
 ///
+#if 0
 void AMLMJob::SLOT_extfuture_finished()
 {
     Q_ASSERT(!m_possible_delete_later_pending);
@@ -393,17 +420,11 @@ void AMLMJob::SLOT_extfuture_aboutToShutdown()
 {
     kill();
 }
+#endif
 ////
 ///
 ///
 
-
-
-
-void AMLMJob::assert_no_deletelater()
-{
-    Q_ASSERT(!m_possible_delete_later_pending);
-}
 
 bool AMLMJob::doKill()
 {
