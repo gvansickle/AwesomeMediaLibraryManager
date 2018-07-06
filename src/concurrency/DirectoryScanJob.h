@@ -85,6 +85,8 @@ public:
 
 protected:
 
+    DirectoryScannerAMLMJob* asDerivedTypePtr() override { return this; }
+
     void runFunctor() override;
 
 private:

@@ -56,12 +56,6 @@ CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
     return retval;
 }
 
-//void CoverArtJob::start()
-//{
-//    m_ext_future = ExtAsync::run(this, &CoverArtJob::runFunctor);
-//    BASE_CLASS::start<decltype(*this)>(m_ext_future);
-//}
-
 ///
 /// Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const and company.
 ///
@@ -160,8 +154,5 @@ void CoverArtJob::runFunctor()
     }
 
     Q_EMIT SIGNAL_ImageBytes(retval);
-
-    /// @todo CHANGE: Move to base class?
-    m_ext_future.reportFinished();
 }
 

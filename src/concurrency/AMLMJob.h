@@ -341,15 +341,17 @@ public:
     template <typename ContextType, typename Func>
     void then(ContextType&& ctx, Func&& f)
     {
-        Q_ASSERT(!m_possible_delete_later_pending);
+//        Q_ASSERT(!m_possible_delete_later_pending);
 
-        qDb() << objectName() << "ENTERED THEN";
+        qDb() << this->objectName() << "ENTERED THEN";
+
+//        QPointer<KJob> pkjob = kjob;
 
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
         connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
 
-            Q_ASSERT(!m_possible_delete_later_pending);
+//            Q_ASSERT(!m_possible_delete_later_pending);
 
 /// @todo M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
 qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
@@ -448,15 +450,18 @@ protected:
     /// @name ExtAsync job support functions / function templates.
     /// @{
 
+    virtual AMLMJob* asDerivedTypePtr() = 0;
+
     /// Last-stage wrapper around the runFunctor().
     /// Handles most of the common ExtFuture start/finished/canceled/exception code.
     /// Should not need to be overridded in derived classes.
     virtual void run();
 
     /**
-     * The function which gets run to do the work by ExtAsync::run().
+     * The function which is run by ExtAsync::run() to do the work.
      * Must be overridden in derived classes.
      * Reporting and control should be handled via the derived class's m_ext_future member.
+     *
      */
     virtual void runFunctor() = 0;
 
@@ -567,9 +572,9 @@ protected Q_SLOTS:
     /// Calls setKJobErrorInfo() and emitResult().
     void onUnderlyingAsyncJobDone(bool success);
 
-//    void SLOT_extfuture_finished();
-//    void SLOT_extfuture_canceled();
-//    void SLOT_extfuture_aboutToShutdown();
+    void SLOT_extfuture_finished();
+    void SLOT_extfuture_canceled();
+    void SLOT_extfuture_aboutToShutdown();
 
     /// @}
 
@@ -580,7 +585,12 @@ public:
     bool m_possible_delete_later_pending = false;
     bool m_i_was_deleted = false;
 
+    QAtomicInt m_run_functor_returned {0};
+    QAtomicInt m_run_returned {0};
+
 private:
+
+    QFutureWatcher<void>* m_watcher;
 
     QAtomicInt m_tw_job_run_reported_success_or_fail {0};
     QAtomicInt m_success { 1 };

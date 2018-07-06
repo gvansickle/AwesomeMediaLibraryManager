@@ -190,4 +190,5 @@ void DirectoryScannerAMLMJob::runFunctor()
     }
 
     qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
+    m_run_functor_returned = 1;
 }

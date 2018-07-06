@@ -110,9 +110,10 @@ void AMLMJob::start()
 {
     Q_ASSERT(!m_possible_delete_later_pending);
 
-//    auto& ef = get_extfuture_ref();
-//    connect_or_die(ef, &ExtFuture<Unit>::finished, this, &AMLMJob::SLOT_extfuture_finished);
-//    connect_or_die(ef, &ExtFuture<Unit>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
+    m_watcher = new QFutureWatcher<void>();
+    auto& ef = get_extfuture_ref();
+    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
+    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
 
     // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
     // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -121,6 +122,7 @@ void AMLMJob::start()
     // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
     // "Note that this neither waits nor cancels the asynchronous computation."
     ExtAsync::run(this, &AMLMJob::run);
+//    m_watcher->setFuture(this->get_extfuture_ref().future());
 }
 
 
@@ -177,7 +179,7 @@ void AMLMJob::run()
 
     /// @note We're in an arbitrary thread here probably without an event loop.
 
-    auto ef = get_extfuture_ref();
+    auto ef = this->get_extfuture_ref();
 
     qDbo() << "ExtFuture<> state:" << ExtFutureState::state(ef);
     if(ef.isCanceled())
@@ -198,9 +200,9 @@ void AMLMJob::run()
         ///
         /// QFIBase::reportFinished() does nothing if we're already isFinished(), else does:
         /// @code
-        /// switch_from_to(d->state, Running, Finished);
-        /// d->waitCondition.wakeAll();
-        /// d->sendCallOut(QFutureCallOutEvent(QFutureCallOutEvent::Finished));
+        /// 	switch_from_to(d->state, Running, Finished);
+        /// 	d->waitCondition.wakeAll();
+        /// 	d->sendCallOut(QFutureCallOutEvent(QFutureCallOutEvent::Finished));
         /// @endcode
         /// QFutureInterface<T>::reportFinished(const T* result) adds a possible reportResult() call:
         /// @code
@@ -225,6 +227,7 @@ void AMLMJob::run()
 //        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
         qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
         this->runFunctor();
+        m_run_functor_returned = 1;
         qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
     }
     catch(QException &e)
@@ -261,11 +264,14 @@ void AMLMJob::run()
     // - Started | Finished
     // - Started | Canceled | Finished if job was canceled.
     Q_ASSERT(ef.isStarted() && ef.isFinished());
+//    Q_ASSERT(ef.isCanceled());
 //    AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Finished));
 
     // Do the post-run work.
-    qDbo() << "Calling default end";
+    qDbo() << "Calling runEnd()";
     runEnd();
+
+    m_run_returned = 1;
 }
 
 void AMLMJob::runEnd()
@@ -310,24 +316,19 @@ void AMLMJob::runEnd()
 
     qDbo() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
 /// @todo Still true?: M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
+    Q_ASSERT(m_run_functor_returned);
     emitResult();
 
     // emitResult() may have resulted in a this->deleteLater(), via finishJob().
     if(isAutoDelete())
     {
+        qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
         m_possible_delete_later_pending = true;
     }
 }
 
 void AMLMJob::onUnderlyingAsyncJobDone(bool success)
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
-
-    qDbo() << "ENTER onUnderlyingAsyncJobDone";
-
-    qDbo() << "success?:" << success;
-
-qDbo() << "PARENT:" << parent();
 //    setKJobErrorInfo(success);
 
     // Regardless of success or fail of the underlying job, we need to call KJob::emitResult() only once.
@@ -383,15 +384,6 @@ So I think the answer is:
  - We need this object to survive doKill(),
  - We can't do anything else after that, due to finishJob() possibly destroying us.
      */
-
-    /////////////////
-
-//    if(isAutoDelete())
-//    {
-//        // KJob::finishJob() will have called deleteLater() on us.
-//        m_possible_delete_later_pending = true;
-//    }
-
 }
 
 
@@ -399,12 +391,11 @@ So I think the answer is:
 /////
 /// These are similar to kdevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
 ///
-#if 0
 void AMLMJob::SLOT_extfuture_finished()
 {
     Q_ASSERT(!m_possible_delete_later_pending);
 
-    m_extfuture_watcher->deleteLater();
+    m_watcher->deleteLater();
     emitResult();
 }
 
@@ -413,14 +404,14 @@ void AMLMJob::SLOT_extfuture_canceled()
     Q_ASSERT(!m_possible_delete_later_pending);
 
     // Nothing but deleteLater() the watcher.
-    m_extfuture_watcher->deleteLater();
+    m_watcher->deleteLater();
 }
 
 void AMLMJob::SLOT_extfuture_aboutToShutdown()
 {
     kill();
 }
-#endif
+
 ////
 ///
 ///
@@ -442,7 +433,7 @@ bool AMLMJob::doKill()
     // Cancel and wait for the runFunctor() to finish.
 
 //    qDbo() << "START EXTASYNC DOKILL";
-    auto ef = get_extfuture_ref();
+    auto ef = this->get_extfuture_ref();
     ef.cancel();
 
     /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
@@ -450,6 +441,7 @@ bool AMLMJob::doKill()
 
     ef.waitForFinished();
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
+    Q_ASSERT(m_run_functor_returned);
 
     //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
     // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
@@ -462,7 +454,8 @@ bool AMLMJob::doKill()
 
     // Try to detect that we've survived at least to this point.
     Q_ASSERT(!m_i_was_deleted);
-
+    qWro() << "doKill() may have resulted in a this->deleteLater(), via finishJob().";
+    m_possible_delete_later_pending = true;
     return true;
 
     /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().

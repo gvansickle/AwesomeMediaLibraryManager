@@ -69,6 +69,8 @@ public:
 
 protected:
 
+    CoverArtJob* asDerivedTypePtr() override { return this; }
+
     void runFunctor() override;
 
 private:

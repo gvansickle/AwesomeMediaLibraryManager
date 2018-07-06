@@ -76,6 +76,8 @@ protected:
 //    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
+    LibraryRescannerJob* asDerivedTypePtr() override { return this; }
+
     void runFunctor() override;
 
     /// The map function for rescanning the library to reload metadata from the files.

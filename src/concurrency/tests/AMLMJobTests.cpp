@@ -72,7 +72,7 @@ protected:
 	{
 		// Set our object name.
 		setObjectName(uniqueQObjectName());
-
+        setCapabilities(KJob::Capability::Killable);
 	}
 
 public:
@@ -93,6 +93,9 @@ public:
     }
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+    TestAMLMJob1* asDerivedTypePtr() override { return this; }
+
+    int m_counter {0};
 
 protected:
 
@@ -117,6 +120,11 @@ protected:
                 m_ext_future.waitForResume();
                 qDbo() << "RESUMING";
             }
+
+            GTEST_COUT << "Sleeping for 1 second\n";
+            QTest::qSleep(1000);
+            GTEST_COUT << "Incementing counter\n";
+            m_counter++;
         }
     }
 
@@ -179,5 +187,20 @@ TEST_F(AMLMJobTests, CancelTest)
 
 //    ASSERT_EQ(dsj->get_extfuture_ref(), );
 }
+
+TEST_F(AMLMJobTests, CancelTest2)
+{
+    auto j = TestAMLMJob1::make_job(nullptr);
+    j->start();
+
+    QTest::qSleep(500);
+    EXPECT_EQ(j->m_counter, 0);
+    QTest::qSleep(700);
+    EXPECT_EQ(j->m_counter, 1);
+    QTest::qSleep(500);
+    // Cancel.
+    j->kill();
+}
+
 
 #include "AMLMJobTests.moc"
