@@ -19,6 +19,7 @@
 
 #include <type_traits>
 #include <atomic>
+#include <functional>
 
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
@@ -201,6 +202,102 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     f.waitForFinished();
     EXPECT_TRUE(f.isStarted());
     EXPECT_TRUE(f.isFinished());
+}
+
+template <typename T> QFuture<T> finishedFuture(const T &val) {
+   QFutureInterface<T> fi;
+   fi.reportFinished(&val);
+   return QFuture<T>(&fi);
+}
+
+template <typename T> QFuture<T> startedNotCanceledFuture() {
+   QFutureInterface<T> fi;
+   fi.reportStarted();
+   return QFuture<T>(&fi);
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentQFutureStateOnCancel)
+{
+    int counter = 0;
+#define GTEST_COUT qDb()
+    GTEST_COUT << "HERE1\n"; // << std::endl;
+
+    QFuture<int> the_future = startedNotCanceledFuture<int>();
+
+    ASSERT_TRUE(the_future.isStarted());
+    ASSERT_FALSE(the_future.isCanceled());
+    ASSERT_FALSE(the_future.isFinished());
+
+    GTEST_COUT << "CALLING QTC::run()\n";// << std::endl;
+
+    /**
+     * Per docs:
+     * "Note that function may not run immediately; function will only be run once a thread becomes available."
+     * @link http://doc.qt.io/qt-5/qtconcurrent.html#mappedReduced-1
+     *
+     * Since a QFuture<> starts out canceled, we will get into the callback with the future Started | Canceled.
+     */
+    /// @warning Need to pass by reference here to avoid copying the future, which blocks.
+//    std::ref<QFuture<int>> futref{the_future};
+    auto f = QtConcurrent::run([&](QFuture<int>& the_passed_future) mutable {
+        GTEST_COUT << "Entered callback, passed future state:\n"; // << ExtFutureState::state(the_passed_future);
+        ASSERT_TRUE(the_passed_future.isStarted());
+//        QTest::qSleep(100);
+        ASSERT_FALSE(the_passed_future.isCanceled());
+            while(!the_passed_future.isCanceled())
+            {
+            	GTEST_COUT << "LOOP " << counter;
+                QTest::qSleep(1000);
+                counter++;
+                GTEST_COUT << "+1 secs, counter = " << counter << "\n";
+            }
+         GTEST_COUT << "Exiting callback, passed future state:\n"; // << ExtFutureState::state(the_passed_future);
+         ;}, std::ref(the_future));
+
+    GTEST_COUT << "Passed the run() call, got the future.\n";// << std::endl;
+
+    EXPECT_TRUE(the_future.isStarted());
+    EXPECT_TRUE(f.isStarted());
+
+    GTEST_COUT << "WAITING FOR 5 SECS\n";// << std::endl;
+    // qWait() doesn't block the event loop, qSleep() does.
+    QTest::qWait(5000);
+
+    GTEST_COUT << "CANCELING\n";// << std::endl;
+
+    the_future.cancel();
+    QTest::qWait(1000);
+
+    EXPECT_TRUE(f.isFinished());
+
+    EXPECT_TRUE(the_future.isStarted());
+    EXPECT_TRUE(the_future.isCanceled());
+#error "This is never finished, but f above is."
+    EXPECT_TRUE(the_future.isFinished());
+
+    the_future.waitForFinished();
+//    the_future.result();
+    GTEST_COUT << "FUTURE IS FINISHED\n";// << std::endl;
+
+    EXPECT_TRUE(the_future.isStarted());
+    EXPECT_TRUE(the_future.isCanceled());
+    EXPECT_TRUE(the_future.isFinished());
+#define GTEST_COUT std::cout << "[          ] [ INFO ]"
+//    QTest::qWait(500);
+//    EXPECT_TRUE(the_future.isRunning()); // In sleep(1)
+//    QTest::qWait(1000);
+//    GTEST_COUT << "CHECKING COUNTER FOR 1\n";
+//    EXPECT_EQ(counter, 1);
+
+//    GTEST_COUT << "CANCELING\n";
+//    f.cancel();
+//    EXPECT_TRUE(f.isCanceled());
+//    f.waitForFinished();
+
+
+//    f.waitForFinished();
+//    EXPECT_TRUE(f.isStarted());
+//    EXPECT_TRUE(f.isFinished());
 }
 
 TEST_F(ExtAsyncTestsSuiteFixture, ExtFuture_copy_assign_tests)
