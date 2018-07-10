@@ -204,26 +204,28 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     EXPECT_TRUE(f.isFinished());
 }
 
-template <typename T> QFuture<T> finishedFuture(const T &val) {
+template <typename T> QFuture<T>
+finishedFuture(const T &val) {
    QFutureInterface<T> fi;
    fi.reportFinished(&val);
    return QFuture<T>(&fi);
 }
 
-template <typename T> QFuture<T> startedNotCanceledFuture() {
+template <typename T>
+QFuture<T> startedNotCanceledFuture() {
    QFutureInterface<T> fi;
    fi.reportStarted();
    return QFuture<T>(&fi);
 }
 
-
-TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunQFutureStateOnCancel)
+template <typename FutureTypeT>
+void QtConcurrentRunFutureStateOnCancelGuts()
 {
     int counter = 0;
 #define GTEST_COUT qDb()
     GTEST_COUT << "HERE1\n"; // << std::endl;
 
-    QFuture<int> the_future = startedNotCanceledFuture<int>();
+    FutureTypeT the_future = startedNotCanceledFuture<int>();
 
     ASSERT_TRUE(the_future.isStarted());
     ASSERT_FALSE(the_future.isCanceled());
@@ -240,14 +242,14 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunQFutureStateOnCancel)
      */
     /// @warning Need to pass by reference here to avoid copying the future, which blocks.
 //    std::ref<QFuture<int>> futref{the_future};
-    auto f = QtConcurrent::run([&](QFuture<int>& the_passed_future) mutable {
+    auto f = QtConcurrent::run([&](FutureTypeT& the_passed_future) mutable {
         GTEST_COUT << "Entered callback, passed future state:\n"; // << ExtFutureState::state(the_passed_future);
         ASSERT_TRUE(the_passed_future.isStarted());
 //        QTest::qSleep(100);
         ASSERT_FALSE(the_passed_future.isCanceled());
             while(!the_passed_future.isCanceled())
             {
-            	GTEST_COUT << "LOOP " << counter;
+                GTEST_COUT << "LOOP " << counter;
                 QTest::qSleep(1000);
                 counter++;
                 GTEST_COUT << "+1 secs, counter = " << counter << "\n";
@@ -285,6 +287,17 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunQFutureStateOnCancel)
     EXPECT_TRUE(the_future.isFinished());
 #define GTEST_COUT std::cout << "[          ] [ INFO ]"
 }
+
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunQFutureStateOnCancel)
+{
+    QtConcurrentRunFutureStateOnCancelGuts<QFuture<int>>();
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunExtFutureStateOnCancel)
+{
+    QtConcurrentRunFutureStateOnCancelGuts<ExtFuture<int>>();
+}
+
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancel)
 {
