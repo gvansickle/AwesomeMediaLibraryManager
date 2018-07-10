@@ -298,8 +298,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunExtFutureStateOnCancel)
     QtConcurrentRunFutureStateOnCancelGuts<ExtFuture<int>>();
 }
 
-
-TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancel)
+template <typename FutureTypeT>
+void QtConcurrentMappedFutureStateOnCancel()
 {
     std::atomic_int counter{0};
 
@@ -319,7 +319,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancel)
      */
     /// @warning Need to pass by reference here to avoid copying the future, which blocks.
 //    std::ref<QFuture<int>> futref{the_future};
-    QFuture<int> f = startedNotCanceledFuture<int>();
+    FutureTypeT f = startedNotCanceledFuture<int>();
+
     std::function<int(const int&)> lambda = [&](const int& the_passed_value) -> int {
         GTEST_COUT << "Entered callback, passed value:" << the_passed_value;
 
@@ -374,6 +375,15 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancel)
 #define GTEST_COUT std::cout << "[          ] [ INFO ]"
 }
 
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancel)
+{
+    QtConcurrentMappedFutureStateOnCancel<QFuture<int>>();
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancel)
+{
+    QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>();
+}
 
 TEST_F(ExtAsyncTestsSuiteFixture, ExtFuture_copy_assign_tests)
 {
