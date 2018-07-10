@@ -254,7 +254,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
      * Since a QFuture<> starts out canceled, we will get into the callback with the future Started | Canceled.
      */
     /// @warning Need to pass by reference here to avoid copying the future, which blocks... no, it doesn't, why are we doing this?
-    auto f = QtConcurrent::run([&](FutureTypeT& the_passed_future) mutable {
+    auto f = QtConcurrent::run([&counter](FutureTypeT& the_passed_future) mutable {
         GTEST_COUT << "Entered callback, passed future state:" << ExtFutureState::state(the_passed_future);
 
             EXPECT_TRUE(the_passed_future.isStarted());
@@ -273,7 +273,8 @@ void QtConcurrentRunFutureStateOnCancelGuts()
             // Only way to exit the loop is by external cancellation.
             EXPECT_TRUE(the_passed_future.isCanceled());
 
-            // We need to finish the future ourselves in this case.
+            /// @note For both QFuture<> and ExtFuture<>, we need to finish the future ourselves in this case.
+            ///       Not sure if the waitForFinished() should be here or rely on caller to do it.
             reportFinished(the_passed_future);
             the_passed_future.waitForFinished();
 
