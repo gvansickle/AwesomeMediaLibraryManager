@@ -98,6 +98,15 @@ public:
 
         return retval;
     }
+
+    /**
+     * Return the combined state flags of a class ultimately derived from QFuture<T>.
+     */
+    template<typename T>
+    static ExtFutureState::States state(QFuture<T>& qfuture_derived)
+    {
+        return state(qfuture_derived.d);
+    }
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::States)
