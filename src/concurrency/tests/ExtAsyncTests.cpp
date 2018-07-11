@@ -305,7 +305,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
 //    the_future.waitForFinished();
 //    the_future.result();
 
-    GTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(the_future);
+    /*GTEST_COUT*/ SUCCEED() << "FUTURE IS FINISHED:" << ExtFutureState::state(the_future);
 
     EXPECT_TRUE(the_future.isStarted());
     EXPECT_TRUE(the_future.isCanceled());
