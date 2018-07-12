@@ -83,7 +83,7 @@ public:
 
     ~TestAMLMJob1() override
     {
-
+        EXPECT_TRUE(m_run_functor_returned);
     }
 
     static TestAMLMJob1Ptr make_job(QObject *parent)
@@ -122,10 +122,14 @@ protected:
             }
 
             GTEST_COUT << "Sleeping for 1 second\n";
+        /// @todo BROKEN.  On cancel, during this qSleep() we seem to get prempted and
+        ///  return to doKill() with m_ext_future == Canceled, fall through the "ef.waitForFinished();"
+        /// there, and die.
             QTest::qSleep(1000);
             GTEST_COUT << "Incementing counter\n";
             m_counter++;
         }
+        m_run_functor_returned = 1;
     }
 
 private:

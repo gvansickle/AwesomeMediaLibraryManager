@@ -430,10 +430,10 @@ bool AMLMJob::doKill()
         Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
     }
 
-    // Cancel and wait for the runFunctor() to finish.
+    // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
 
 //    qDbo() << "START EXTASYNC DOKILL";
-    auto ef = this->get_extfuture_ref();
+    auto& ef = this->get_extfuture_ref();
     ef.cancel();
 
     /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
