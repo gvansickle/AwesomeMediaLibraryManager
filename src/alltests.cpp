@@ -17,25 +17,26 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Qt5
 #include <QApplication>
 #include <QLoggingCategory>
 #include <QTimer>
 #include <QDebug>
-#include "utils/DebugHelpers.h"
-#include "utils/StringHelpers.h"
-
-#include "utils/RegisterQtMetatypes.h"
-#include "resources/VersionInfo.h"
-
-#include "utils/Logging.h"
-
-
 #include <QtTest>
 
-#include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
+// Ours
+#include "utils/DebugHelpers.h"
+#include "utils/StringHelpers.h"
+#include "utils/RegisterQtMetatypes.h"
+#include "resources/VersionInfo.h"
+#include "utils/Logging.h"
 #include <tests/TestHelpers.h>
 
+// Google Test
+#include <gtest/gtest.h>
+//#include <gmock/gmock-matchers.h>
+
+// Make sure we've compiled correctly.
 #if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
 #error "Google Test wasn't compiled for a multithreaded environment."
 #endif

@@ -45,7 +45,7 @@ public:
     explicit AMLMApp(int& argc, char *argv[]);
 	~AMLMApp() override;
 
-    static AMLMApp* instance() { return static_cast<AMLMApp*>( qApp ); }
+    static AMLMApp* instance() { return dynamic_cast<AMLMApp*>( qApp ); }
 
     void KDEOrForceBreeze(KConfigGroup group);
 

@@ -17,24 +17,26 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Std C++
 #include <type_traits>
 #include <atomic>
 #include <functional>
 
-#include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
-#include <tests/TestHelpers.h>
-
+// Qt5
 #include <QString>
 #include <QTest>
 #include <QFutureInterfaceBase> // shhh, we're not supposed to use this.  For calling .reportFinished() on QFuture<>s inside a run().
 
+// Google Test
+#include <gtest/gtest.h>
+//#include <gmock/gmock-matchers.h>
+
+// Ours
 #include "../future_type_traits.hpp"
 #include "../function_traits.hpp"
-
-
 #include "../ExtAsync.h"
 #include "ExtAsyncTests.h"
+#include <tests/TestHelpers.h>
 
 
 void ExtAsyncTestsSuiteFixture::SetUp()
@@ -92,8 +94,8 @@ static QString delayed_string_func_1()
 	auto retval = QtConcurrent::run([](){
 		// Sleep for a second.
 		qDb() << "ENTER, SLEEPING FOR 1 SEC";
-//		QThread::sleep(1);
-		QTest::qWait(1000);
+        QTest::qSleep(1000);
+//		QTest::qWait(1000);
 		qDb() << "SLEEP COMPLETE";
 		return QString("delayed_string_func_1() output");
 	});
@@ -205,29 +207,44 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     EXPECT_TRUE(f.isFinished());
 }
 
-template <typename T> QFuture<T>
-finishedFuture(const T &val) {
+/**
+ * Helper to which returns a finished QFuture<T>.
+ */
+template <typename T>
+QFuture<T> finishedFuture(const T &val)
+{
    QFutureInterface<T> fi;
    fi.reportFinished(&val);
    return QFuture<T>(&fi);
 }
 
+/**
+ * Helper which returns a Started but not Cancelled QFuture<T>.
+ */
 template <typename T>
-QFuture<T> startedNotCanceledFuture() {
-   QFutureInterface<T> fi;
-   fi.reportStarted();
-   return QFuture<T>(&fi);
+QFuture<T> startedNotCanceledFuture()
+{
+    SCOPED_TRACE("");
+    QFutureInterface<T> fi;
+    fi.reportStarted();
+    EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
+    return QFuture<T>(&fi);
 }
 
 template <typename T>
 void reportFinished(QFuture<T>& f)
 {
+    SCOPED_TRACE("");
     f.d.reportFinished();
+    // May have been already canceled by the caller.
+    EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
 }
 
 template <typename T>
 void reportFinished(ExtFuture<T>& f)
 {
+    SCOPED_TRACE("");
+
     f.reportFinished();
 }
 
@@ -305,7 +322,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
 //    the_future.waitForFinished();
 //    the_future.result();
 
-    /*GTEST_COUT*/ SUCCEED() << "FUTURE IS FINISHED:" << ExtFutureState::state(the_future);
+    GTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(the_future);
 
     EXPECT_TRUE(the_future.isStarted());
     EXPECT_TRUE(the_future.isCanceled());

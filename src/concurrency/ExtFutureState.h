@@ -47,6 +47,7 @@ public:
         Throttled = QFutureInterfaceBase::Throttled
     };
     Q_DECLARE_FLAGS(States, State)
+    // Exposes the enum to the Meta-Object System.
     Q_FLAG(States)
 
     /**

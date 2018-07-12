@@ -60,6 +60,17 @@
 #endif
 
 
+enum /*__attribute__((enum_extensibility(closed), flag_enum))*/ BITS
+{
+    A = 0x01,
+    B = 0x02
+};
+
+//static BITS a = A;
+//static BITS b = B;
+//static BITS c = a|b;
+//static BITS d = c+1;
+
 
 Experimental::Experimental(QWidget *parent) : QWidget(parent)
 {
