@@ -360,7 +360,8 @@ void AMLMJob::run()
     qDbo() << "Calling runEnd()";
     runEnd();
 
-    m_run_returned = 1;
+    // Notify any possible doKill() that we've really truly have stopped the worker job.
+    m_run_returned.release();
 }
 
 void AMLMJob::runEnd()
@@ -460,18 +461,20 @@ bool AMLMJob::doKill()
 
     // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
 
-//    qDbo() << "START EXTASYNC DOKILL";
+    qDbo() << "START EXTASYNC DOKILL";
     auto& ef = asDerivedTypePtr()->get_extfuture_ref();
     ef.cancel();
 
     /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
     setError(KilledJobError);
 
+    // Wait for the ExtFuture<> to report Finished or cancelled.
+    /// @todo Is this even meaningful with the semaphore below?
     ef.waitForFinished();
-    while(!m_run_returned)
-    {
-        /// @todo Wait better than this.
-    }
+
+    // Wait for the async job to really finish.
+    m_run_returned.acquire();
+
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
 /// @warning This asserts for reasons TBD.
 //    Q_ASSERT(m_run_functor_returned);

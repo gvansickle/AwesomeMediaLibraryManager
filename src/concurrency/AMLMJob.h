@@ -586,7 +586,9 @@ public:
     bool m_i_was_deleted = false;
 
     QAtomicInt m_run_functor_returned {0};
-    QAtomicInt m_run_returned {0};
+//    QAtomicInt m_run_returned {0};
+    QSemaphore m_run_returned;
+
 
 private:
 
