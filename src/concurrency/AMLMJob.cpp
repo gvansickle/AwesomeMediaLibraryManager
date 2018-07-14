@@ -80,7 +80,7 @@ bool AMLMJob::wasCancelRequested()
     Q_ASSERT(!m_i_was_deleted);
 
     // Were we told to abort?
-    return this->get_extfuture_ref().isCanceled();
+    return asDerivedTypePtr()->get_extfuture_ref().isCanceled();
 }
 
 void AMLMJob::setSuccessFlag(bool success)
@@ -122,7 +122,7 @@ void AMLMJob::start()
     // Note that calling the destructor of (by deleting) the returned future is ok:
     // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
     // "Note that this neither waits nor cancels the asynchronous computation."
-    ExtAsync::run(this, &AMLMJob::run);
+    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
 //    m_watcher->setFuture(this->get_extfuture_ref());
 }
 
@@ -259,7 +259,7 @@ void AMLMJob::run()
 
     /// @note We're in an arbitrary thread here probably without an event loop.
 
-    auto ef = this->get_extfuture_ref();
+    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
     qDbo() << "ExtFuture<> state:" << ExtFutureState::state(ef);
     if(ef.isCanceled())
@@ -311,7 +311,7 @@ void AMLMJob::run()
         /// @todo But we're not Running here.  Not sure why.
 //        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
         qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
-        this->runFunctor();
+        asDerivedTypePtr()->runFunctor();
 
         m_run_functor_returned = 1;
         qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
@@ -369,7 +369,7 @@ void AMLMJob::runEnd()
 
     /// @note We're still in a non-GUI worker thread here.
 
-    auto extfutureref = get_extfuture_ref();
+    auto& extfutureref = asDerivedTypePtr()->get_extfuture_ref();
 
     Q_CHECK_PTR(this);
 
@@ -403,7 +403,7 @@ void AMLMJob::runEnd()
     // Set the three KJob error fields.
     setKJobErrorInfo(!extfutureref.isCanceled());
 
-    qDbo() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
+    qDbo() << "ABOUT TO EMITRESULT():" << asDerivedTypePtr() << "isAutoDelete?:" << isAutoDelete();
 /// @todo Still true?: M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
     Q_ASSERT(m_run_functor_returned);
     emitResult();
@@ -461,7 +461,7 @@ bool AMLMJob::doKill()
     // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
 
 //    qDbo() << "START EXTASYNC DOKILL";
-    auto& ef = this->get_extfuture_ref();
+    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
     ef.cancel();
 
     /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
@@ -496,7 +496,7 @@ bool AMLMJob::doSuspend()
 
     /// KJob::doSuspend().
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
-    this->get_extfuture_ref().setPaused(true);
+    asDerivedTypePtr()->get_extfuture_ref().setPaused(true);
     return true;
 }
 
@@ -506,7 +506,7 @@ bool AMLMJob::doResume()
 
     /// KJob::doResume().
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
-    this->get_extfuture_ref().setPaused(false);
+    asDerivedTypePtr()->get_extfuture_ref().setPaused(false);
     return true;
 }
 
@@ -543,7 +543,7 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 	//    d_ptr->progressUnit = prog_unit;
 
 	/// And if this works, it's gross.
-	const QMetaObject* metaObject = this->metaObject();
+    const QMetaObject* metaObject = asDerivedTypePtr()->metaObject();
 	QStringList methods;
 	for(int i = metaObject->methodOffset(); i < metaObject->methodCount(); ++i)
 	{
@@ -580,7 +580,7 @@ void AMLMJob::setKJobErrorInfo(bool success)
     else
     {
         // Set the KJob error info.
-        if(this->get_extfuture_ref().isCanceled())
+        if(asDerivedTypePtr()->get_extfuture_ref().isCanceled())
         {
             // Cancelled.
             // KJob
@@ -591,7 +591,7 @@ void AMLMJob::setKJobErrorInfo(bool success)
             // Some other error.
             // KJob
             setError(KJob::UserDefinedError);
-            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(this->objectName()));
+            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(asDerivedTypePtr()->objectName()));
         }
     }
 }

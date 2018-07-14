@@ -95,7 +95,7 @@ public:
         return retval;
     }
 
-    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+    ExtFutureType& get_extfuture_ref() override { return asDerivedTypePtr()->m_ext_future; }
     TestAMLMJob1* asDerivedTypePtr() override { return this; }
 
     int m_counter {0};
