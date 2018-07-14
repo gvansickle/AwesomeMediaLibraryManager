@@ -473,6 +473,7 @@ bool AMLMJob::doKill()
     ef.waitForFinished();
 
     // Wait for the async job to really finish.
+    /// @todo We need to handle this for the never-started case.
     m_run_returned.acquire();
 
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
