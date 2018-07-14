@@ -481,6 +481,8 @@ protected:
      * Abort this job quietly.
      * Simply kill the job, no error reporting or job deletion should be involved.
      *
+     * @note Not a slot.
+     *
      * @note KJob::doKill() does nothing, simply returns false.
      *
      * What our override here does:
@@ -501,11 +503,13 @@ protected:
     bool doKill() override;
 
     /**
+     * Not a slot.
      * @note KJob::doSuspend() simply returns false.
      */
     bool doSuspend() override;
 
     /**
+     * Not a slot.
      * @note KJob::doResume() simply returns false.
      */
     bool doResume() override;
@@ -567,10 +571,6 @@ protected Q_SLOTS:
 
     /// @name Internal slots
     /// @{
-
-    /// Directly called by runEnd().
-    /// Calls setKJobErrorInfo() and emitResult().
-    void onUnderlyingAsyncJobDone(bool success);
 
     void SLOT_extfuture_finished();
     void SLOT_extfuture_canceled();

@@ -174,6 +174,48 @@ void AMLMJob::start()
  *
  */
 
+/**
+ * kill()/finishJob():
+ *
+ * So what happens is:
+ * - So then it's this:
+ *
+ * if (doKill()) {
+    setError(KilledJobError);
+
+    finishJob(verbosity != Quietly);
+    return true;
+    } else {
+        return false;
+    }
+
+    ... and this (which is also called directly by emitResult()):
+
+    void KJob::finishJob(bool emitResult)
+    {
+    Q_D(KJob);
+    d->isFinished = true;
+
+    if (d->eventLoop) {
+        d->eventLoop->quit();
+    }
+
+    // If we are displaying a progress dialog, remove it first.
+    emit finished(this, QPrivateSignal());
+
+    if (emitResult) {
+        emit result(this, QPrivateSignal());
+    }
+
+    if (isAutoDelete()) {
+        deleteLater();
+    }
+    }
+
+    So I think the answer is:
+    - We need this object to survive doKill(),
+    - We can't do anything else after that, due to finishJob() possibly destroying us.
+ */
 
 /**
  * qt-creator FileSearch functor has this structure:
@@ -210,6 +252,9 @@ void AMLMJob::start()
 
 void AMLMJob::run()
 {
+    /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
+    /// QMutexLocker locker(&manager->mutex);
+
     Q_ASSERT(!m_possible_delete_later_pending);
 
     /// @note We're in an arbitrary thread here probably without an event loop.
@@ -254,6 +299,11 @@ void AMLMJob::run()
 #ifdef QT_NO_EXCEPTIONS
 #error "WE NEED EXCEPTIONS"
 #else
+
+    /// QThreadPoolThread::run():
+///    // run the task
+///    locker.unlock();
+
     try
     {
 #endif
@@ -276,6 +326,9 @@ void AMLMJob::run()
         /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
         ef.reportException(QUnhandledException());
     }
+
+    /// QThreadPoolThread::run():
+    /// locker.relock();
 
     /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
     /// QtCreator::runextensions.h::AsyncJob::run() calls runHelper(), which then does this here:
@@ -363,67 +416,6 @@ void AMLMJob::runEnd()
     }
 }
 
-void AMLMJob::onUnderlyingAsyncJobDone(bool success)
-{
-//    setKJobErrorInfo(success);
-
-    // Regardless of success or fail of the underlying job, we need to call KJob::emitResult() only once.
-    // We handle both success and fail cases here, since we always should get a ::done() event.
-    // Tell the KJob to:
-    // - Set d->isFinished
-    // - Quit the d->eventLoop if applicable.
-    // - emit finished(this)
-    // - emit result(this)
-    // - if the KJob is set to autoDelete(), call deleteLater().
-//    qDbo() << "ABOUT TO EMITRESULT():" << this << "isAutoDelete?:" << isAutoDelete();
-//M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
-//    emitResult();
-
-    qDbo() << "EXIT onUnderlyingAsyncJobDone";
-    /**
-     * So what happens is:
-     * - So then it's this:
-     *
-     * if (doKill()) {
-        setError(KilledJobError);
-
-        finishJob(verbosity != Quietly);
-        return true;
-    } else {
-        return false;
-    }
-
-    ... and this (which is also called directly by emitResult()):
-
-void KJob::finishJob(bool emitResult)
-{
-    Q_D(KJob);
-    d->isFinished = true;
-
-    if (d->eventLoop) {
-        d->eventLoop->quit();
-    }
-
-    // If we are displaying a progress dialog, remove it first.
-    emit finished(this, QPrivateSignal());
-
-    if (emitResult) {
-        emit result(this, QPrivateSignal());
-    }
-
-    if (isAutoDelete()) {
-        deleteLater();
-    }
-}
-
-So I think the answer is:
- - We need this object to survive doKill(),
- - We can't do anything else after that, due to finishJob() possibly destroying us.
-     */
-}
-
-
-
 /////
 /// These are similar to kdevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
 ///
@@ -504,7 +496,7 @@ bool AMLMJob::doSuspend()
 
     /// KJob::doSuspend().
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
-    get_extfuture_ref().setPaused(true);
+    this->get_extfuture_ref().setPaused(true);
     return true;
 }
 
@@ -514,7 +506,7 @@ bool AMLMJob::doResume()
 
     /// KJob::doResume().
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
-    get_extfuture_ref().setPaused(false);
+    this->get_extfuture_ref().setPaused(false);
     return true;
 }
 
@@ -588,7 +580,7 @@ void AMLMJob::setKJobErrorInfo(bool success)
     else
     {
         // Set the KJob error info.
-        if(get_extfuture_ref().isCanceled())
+        if(this->get_extfuture_ref().isCanceled())
         {
             // Cancelled.
             // KJob

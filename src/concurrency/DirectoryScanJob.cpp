@@ -102,21 +102,6 @@ void DirectoryScannerAMLMJob::runFunctor()
         Q_ASSERT(!m_possible_delete_later_pending);
         Q_ASSERT(!m_i_was_deleted);
 
-        if(wasCancelRequested())
-        {
-            // We've been cancelled.
-            qIno() << "CANCELLED";
-            m_ext_future.reportCanceled();
-            break;
-        }
-        if(m_ext_future.isPaused())
-        {
-            // We're paused, wait for a resume signal.
-            qDbo() << "PAUSING";
-            m_ext_future.waitForResume();
-            qDbo() << "RESUMING";
-        }
-
         // Go to the next entry and return the path to it.
         QString entry_path = m_dir_iterator.next();
         // Get the QFileInfo for this entry.
@@ -173,6 +158,21 @@ void DirectoryScannerAMLMJob::runFunctor()
 //            Q_EMIT entries(this, file_url);
             Q_EMIT entries(this, dir_scan_result);
         }
+
+        if(wasCancelRequested())
+        {
+            // We've been cancelled.
+            qIno() << "CANCELLED";
+            m_ext_future.reportCanceled();
+            break;
+        }
+        if(m_ext_future.isPaused())
+        {
+            // We're paused, wait for a resume signal.
+            qDbo() << "PAUSING";
+            m_ext_future.waitForResume();
+            qDbo() << "RESUMING";
+        }
     }
 
     // We've either completed our work or been cancelled.
@@ -190,5 +190,4 @@ void DirectoryScannerAMLMJob::runFunctor()
     }
 
     qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
-    m_run_functor_returned = 1;
 }
