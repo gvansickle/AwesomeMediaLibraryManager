@@ -468,6 +468,10 @@ bool AMLMJob::doKill()
     setError(KilledJobError);
 
     ef.waitForFinished();
+    while(!m_run_returned)
+    {
+        /// @todo Wait better than this.
+    }
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
 /// @warning This asserts for reasons TBD.
 //    Q_ASSERT(m_run_functor_returned);
@@ -485,7 +489,7 @@ bool AMLMJob::doKill()
     Q_ASSERT(!m_i_was_deleted);
 
     /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
-    qWro() << "doKill() may have resulted in a this->deleteLater(), via finishJob().";
+    qWro() << "doKill() returning, may result in a this->deleteLater(), via finishJob().";
     m_possible_delete_later_pending = true;
     return true;
 }

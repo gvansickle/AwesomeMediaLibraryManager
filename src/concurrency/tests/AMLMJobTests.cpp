@@ -152,44 +152,48 @@ TEST_F(AMLMJobTests, ThisShouldPass)
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
-TEST_F(AMLMJobTests, DISABLED_DirScanCancelTest)
+TEST_F(AMLMJobTests, DirScanCancelTest)
 {
     ExtFutureWatcher<DirScanResult> watcher;
 
 	// Dummy dir so the dir scanner job has something to chew on.
-	QUrl dir_url = QUrl::fromLocalFile("~/");
+    QUrl dir_url = QUrl::fromLocalFile("/");
     DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(nullptr, dir_url,
 	                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     // Connect signals and slots.
     connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, [=](KJob* kjob){
+        qIn() << "GOT FINISHED";
         ASSERT_EQ(kjob, dsj);
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
 
         ;});
     connect_or_die(dsj, &DirectoryScannerAMLMJob::result, [=](KJob* kjob){
+        qIn() << "GOT RESULT";
         ASSERT_EQ(kjob, dsj);
 
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
 
-		;});
+        ;});
 
     watcher.setFuture(dsj->get_extfuture_ref());
 
     // Start the job.
     dsj->start();
 
-    // Spin waiting for the job to complete.
-    /// Don't think this is waiting.
-    while(watcher.isRunning())
-    {
-        qDb() << "isRunning()";
-        qApp->processEvents();
-    }
-    watcher.waitForFinished();
+//    // Spin waiting for the job to complete.
+//    /// Don't think this is waiting.
+//    while(watcher.isRunning())
+//    {
+//        qDb() << "isRunning()";
+//        qApp->processEvents();
+//    }
+//    watcher.waitForFinished();
 
-    // Cancel the job.
+    // Cancel the job after 2 secs.
+    QTest::qSleep(2000);
+
     dsj->kill();
 
 //    ASSERT_EQ(dsj->get_extfuture_ref(), );
