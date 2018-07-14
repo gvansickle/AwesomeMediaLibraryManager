@@ -251,9 +251,10 @@ void reportFinished(ExtFuture<T>& f)
 template <typename FutureTypeT>
 void QtConcurrentRunFutureStateOnCancelGuts()
 {
+    SCOPED_TRACE("");
+
     int counter = 0;
 #define GTEST_COUT qDb()
-    GTEST_COUT << "HERE1\n"; // << std::endl;
 
     FutureTypeT the_future = startedNotCanceledFuture<int>();
 
@@ -261,7 +262,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     ASSERT_FALSE(the_future.isCanceled());
     ASSERT_FALSE(the_future.isFinished());
 
-    GTEST_COUT << "CALLING QTC::run()\n";// << std::endl;
+    GTEST_COUT << "CALLING QTC::run()";
 
     /**
      * Per docs:
@@ -313,7 +314,8 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     QTest::qSleep(1000);
 
     // We don't really care about the future returned from QtConcurrent::run(), but it should be finished by now.
-    EXPECT_TRUE(f.isFinished());
+    /// @todo Sometimes not coming back finished?
+    EXPECT_TRUE(f.isFinished()) << ExtFutureState::state(f);
 
     EXPECT_TRUE(the_future.isStarted());
     EXPECT_TRUE(the_future.isCanceled());

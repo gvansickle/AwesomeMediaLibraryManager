@@ -49,15 +49,6 @@ namespace ExtAsync { namespace detail {} }
 template <class T>
 class ExtFuture;
 
-struct ExtAsyncProgress
-{
-	int min;
-	int val;
-	int max;
-	QString text;
-};
-
-
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "impl/ExtFuture_fwddecl_p.h"
 
@@ -420,6 +411,9 @@ public:
 
 	/// @} // END Operators
 
+    template <class FutureType>
+    static ExtFutureState::States state(FutureType future);
+
 protected:
 
 	void EnsureFWInstantiated()
@@ -549,7 +543,17 @@ protected:
 
 #include "ExtAsync.h"
 
+//template <typename T, typename FutureType>
+//ExtFutureState::States ExtFuture<T>::state(FutureType future)
+//{
 
+//}
+
+template<typename T>
+static ExtFutureState::States state(QFuture<T>& qfuture_derived)
+{
+    return state(qfuture_derived.d);
+}
 
 template <typename T>
 QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
@@ -588,7 +592,7 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
  * @param value
  * @return
  */
-#if 0
+#if 0 // make ready/finished
 template<typename T, typename X, typename U = std::decay_t<T>, typename V = std::conditional<std::is_same_v<U, std::reference_wrapper<X>>,X&,U>>
 ExtFuture</*typename std::decay_t<T>*/V> make_ready_future(T&& value)
 {
@@ -638,7 +642,7 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
 }
 
-#endif
+#endif // END make ready/finished
 
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
