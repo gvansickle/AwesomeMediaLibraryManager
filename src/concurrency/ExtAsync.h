@@ -47,6 +47,7 @@
 #include <QCoreApplication>
 
 // Ours
+#include "ExtFutureState.h"
 #include "utils/DebugHelpers.h"
 
 //#include "impl/ExtFuture_fwddecl_p.h"
@@ -190,7 +191,7 @@ namespace ExtAsync
      * E.g.:
      * 		void Class::Function();
      *
-     * @returns
+     * @returns An ExtFuture<>, probably of Unit type.
      */
     template <typename This, typename F,
         std::enable_if_t<std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>, int> = 0>
@@ -201,10 +202,10 @@ namespace ExtAsync
 //        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
         static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
 
-        qInfo() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
+        qIn() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
 
         QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)));
-        qInfo() << "AFTER QtConcurrent::run(), thiz:" << thiz;
+        qIn() << "AFTER QtConcurrent::run(), thiz:" << thiz << "ExtFuture state:" << ExtFutureState::state(thiz->get_extfuture_ref());
 
         return thiz->get_extfuture_ref();
     }

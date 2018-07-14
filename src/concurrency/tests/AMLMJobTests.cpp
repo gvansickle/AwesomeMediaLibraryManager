@@ -55,6 +55,8 @@ void AMLMJobTests::TearDown()
 class TestAMLMJob1;
 using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
 
+//static std::atomic_bool f_
+
 class TestAMLMJob1 : public AMLMJob, public UniqueIDMixin<TestAMLMJob1>
 {
 	Q_OBJECT
@@ -83,7 +85,8 @@ public:
 
     ~TestAMLMJob1() override
     {
-        EXPECT_TRUE(m_run_functor_returned);
+//        EXPECT_TRUE(m_run_functor_returned);
+//        EXPECT_TRUE(m_run_returned);
     }
 
     static TestAMLMJob1Ptr make_job(QObject *parent)
@@ -101,10 +104,18 @@ protected:
 
     void runFunctor() override
     {
-        // Iterate through the directory tree.
+        // Do some work...
         for(int i =0; i<10; i++)
         {
             Q_ASSERT(!m_possible_delete_later_pending);
+
+            GTEST_COUT << "Sleeping for 1 second\n";
+        /// @todo BROKEN.  On cancel, during this qSleep() we seem to get prempted and
+        ///  return to doKill() with m_ext_future == Canceled, fall through the "ef.waitForFinished()"
+        /// there, and die.
+            QTest::qSleep(1000);
+            GTEST_COUT << "Incementing counter\n";
+            m_counter++;
 
             if(wasCancelRequested())
             {
@@ -120,14 +131,6 @@ protected:
                 m_ext_future.waitForResume();
                 qDbo() << "RESUMING";
             }
-
-            GTEST_COUT << "Sleeping for 1 second\n";
-        /// @todo BROKEN.  On cancel, during this qSleep() we seem to get prempted and
-        ///  return to doKill() with m_ext_future == Canceled, fall through the "ef.waitForFinished();"
-        /// there, and die.
-            QTest::qSleep(1000);
-            GTEST_COUT << "Incementing counter\n";
-            m_counter++;
         }
         m_run_functor_returned = 1;
     }

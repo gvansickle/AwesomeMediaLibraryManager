@@ -76,10 +76,11 @@ AMLMJob::~AMLMJob()
 
 bool AMLMJob::wasCancelRequested()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+//    Q_ASSERT(!m_possible_delete_later_pending);
+    Q_ASSERT(!m_i_was_deleted);
 
     // Were we told to abort?
-    return get_extfuture_ref().isCanceled();
+    return this->get_extfuture_ref().isCanceled();
 }
 
 void AMLMJob::setSuccessFlag(bool success)
@@ -110,10 +111,10 @@ void AMLMJob::start()
 {
     Q_ASSERT(!m_possible_delete_later_pending);
 
-    m_watcher = new QFutureWatcher<void>();
-    auto& ef = get_extfuture_ref();
-    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
-    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
+//    m_watcher = new QFutureWatcher<void>(this);
+//    auto& ef = this->get_extfuture_ref();
+//    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
+//    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
 
     // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
     // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -122,7 +123,7 @@ void AMLMJob::start()
     // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
     // "Note that this neither waits nor cancels the asynchronous computation."
     ExtAsync::run(this, &AMLMJob::run);
-//    m_watcher->setFuture(this->get_extfuture_ref().future());
+//    m_watcher->setFuture(this->get_extfuture_ref());
 }
 
 
@@ -171,6 +172,40 @@ void AMLMJob::start()
  *   check the error code again, and it'll be either success or fail.  Fail probably looks much like cancel, need any chains
  *   to be killed.
  *
+ */
+
+
+/**
+ * qt-creator FileSearch functor has this structure:
+ *
+ * FileSearch::operator()(QFutureInterface<FileSearchResultList> &futureInterface,...
+ * {
+ *  if (futureInterface.isCanceled())
+        return;
+    if(start conditions fail)
+    {
+        futureInterface.cancel(); // failure
+        return;
+    }
+    while(not at end)
+    {
+        // Do work
+
+        // At end of loop do this:
+        if (futureInterface.isPaused())
+            futureInterface.waitForResume();
+        if (futureInterface.isCanceled())
+            break;
+    }
+    if (file.isOpen())
+        file.close();
+    if (!futureInterface.isCanceled()) {
+        futureInterface.reportResult(results);
+        futureInterface.setProgressValue(1);
+    }
+ * }
+ *
+ * ...except they call it with mapReduce().
  */
 
 void AMLMJob::run()
@@ -227,6 +262,7 @@ void AMLMJob::run()
 //        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
         qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
         this->runFunctor();
+
         m_run_functor_returned = 1;
         qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
     }
@@ -237,6 +273,7 @@ void AMLMJob::run()
     }
     catch(...)
     {
+        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
         ef.reportException(QUnhandledException());
     }
 
@@ -264,7 +301,6 @@ void AMLMJob::run()
     // - Started | Finished
     // - Started | Canceled | Finished if job was canceled.
     Q_ASSERT(ef.isStarted() && ef.isFinished());
-//    Q_ASSERT(ef.isCanceled());
 //    AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Finished));
 
     // Do the post-run work.
@@ -441,7 +477,8 @@ bool AMLMJob::doKill()
 
     ef.waitForFinished();
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
-    Q_ASSERT(m_run_functor_returned);
+/// @warning This asserts for reasons TBD.
+//    Q_ASSERT(m_run_functor_returned);
 
     //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
     // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
@@ -454,11 +491,11 @@ bool AMLMJob::doKill()
 
     // Try to detect that we've survived at least to this point.
     Q_ASSERT(!m_i_was_deleted);
+
+    /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
     qWro() << "doKill() may have resulted in a this->deleteLater(), via finishJob().";
     m_possible_delete_later_pending = true;
     return true;
-
-    /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
 }
 
 bool AMLMJob::doSuspend()

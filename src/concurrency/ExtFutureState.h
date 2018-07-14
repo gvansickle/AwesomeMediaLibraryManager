@@ -112,5 +112,30 @@ public:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::States)
 
+/**
+ * QDebug stream operator for QFutureInterface<T>'s.
+ */
+template <typename T>
+QDebug operator<<(QDebug dbg, const QFutureInterface<T> &qfi)
+{
+    QDebugStateSaver saver(dbg);
+
+    dbg << "QFutureInterface<T>(" << ExtFutureState::state(qfi) << ")";
+
+    return dbg;
+}
+
+/**
+ * QDebug stream operator for QFutureInterfaceBase's.
+ */
+template <typename T>
+QDebug operator<<(QDebug dbg, const QFutureInterfaceBase &qfi)
+{
+    QDebugStateSaver saver(dbg);
+
+    dbg << "QFutureInterfaceBase(" << ExtFutureState::state(qfi) << ")";
+
+    return dbg;
+}
 
 #endif /* SRC_CONCURRENCY_EXTFUTURESTATE_H_ */
