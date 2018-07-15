@@ -17,18 +17,16 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ACTIVITY_H
-#    define ACTIVITY_H
+#include "ExtAsyncTaskTests.h"
 
-class Activity
+ExtAsyncTaskTests::ExtAsyncTaskTests()
 {
-public:
-	Activity();
-	Activity(const Activity& orig);
-	virtual ~Activity();
-private:
+	// TODO Auto-generated constructor stub
 
-};
+}
 
-#endif /* ACTIVITY_H */
+ExtAsyncTaskTests::~ExtAsyncTaskTests()
+{
+	// TODO Auto-generated destructor stub
+}
 

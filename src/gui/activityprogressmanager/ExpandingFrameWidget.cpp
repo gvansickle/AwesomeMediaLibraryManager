@@ -27,11 +27,13 @@
 #include <utils/TheSimplestThings.h>
 #include <gui/MainWindow.h>
 
-ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) : BASE_CLASS(parent, f)
+ExpandingFrameWidget::ExpandingFrameWidget(QWidget *main_progress_bar_widget, QWidget *parent) : BASE_CLASS(parent,
+                                                                               Qt::Window | Qt::FramelessWindowHint | Qt::ToolTip)
 {
-    /// GRVS
-//    setWindowFlags(Qt::Dialog);
-//    show();
+    m_cumulative_status_bar_main_widget = main_progress_bar_widget;
+
+    setWindowFlags(Qt::WindowDoesNotAcceptFocus | windowFlags());
+    qApp->installEventFilter(this);
 
     // Set up the layout.
     Q_ASSERT(layout() == nullptr);
@@ -43,37 +45,32 @@ ExpandingFrameWidget::ExpandingFrameWidget(QWidget *parent, Qt::WindowFlags f) :
     setBackgroundRole( QPalette::Window );
     setAutoFillBackground( true );
 
-//    setFrameStyle( QFrame::Box );
-
     setMinimumWidth( 26 );
     setMinimumHeight( 26 );
 
     setContentsMargins( 4, 4, 4, 4 );
-    // Make the frame confirm to the size of the contained widgets,
+    // Make the widget size confirm to the size of the contained widgets,
     // i.e. the user can't resize it.
     layout()->setSizeConstraint(QLayout::SetFixedSize);
-//    QSizePolicy sp();
+
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     updateGeometry();
-
-//    setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
-//    layout()->setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
-
 }
 
 ExpandingFrameWidget::~ExpandingFrameWidget()
 {
 }
 
-void ExpandingFrameWidget::setMainProgressWidget(QWidget *status_bar_widget)
+void ExpandingFrameWidget::setVisible(bool visible)
 {
-    m_cumulative_status_bar_main_widget = status_bar_widget;
+    BASE_CLASS::setVisible(visible);
+    Q_EMIT visibilityChanged(visible);
 }
 
 void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 {
     // Set the widget width to the same as the summary widget.
-    new_widget->setFixedWidth(parentWidget()->width());
+    new_widget->setFixedWidth(m_cumulative_status_bar_main_widget->width());
 
     // Widget will be reparented.
     layout()->addWidget(new_widget);
@@ -83,45 +80,47 @@ void ExpandingFrameWidget::addWidget(QWidget *new_widget)
 
 void ExpandingFrameWidget::removeWidget(QWidget *new_widget)
 {
-//    new_widget->setParent(this);
     layout()->removeWidget(new_widget);
 
-//    setFixedHeight(new_widget->height() * children().size() + 8);
     reposition();
 }
 
 QSize ExpandingFrameWidget::sizeHint() const
 {
     return BASE_CLASS::sizeHint();
-///
-    // parent is also the status bar widget.
-    auto sbw = parentWidget();
-
-//    qDb() << "PARENT SIZE HINT:" << sbw->sizeHint();
-
-    return QSize(sbw->width(), 10);
 }
 
 void ExpandingFrameWidget::reposition()
 {
-//    qDb() << "PARENT:" << parentWidget();
-//    qDb() << "PARENT SIZE HINT:" << parentWidget()->sizeHint();
+    if(!m_cumulative_status_bar_main_widget)
+    {
+        return;
+    }
 
-//    QSize s = sizeHint();
-//    s.setWidth(parentWidget()->width());
-//    resize(s);
-    updateGeometry();
+    QPoint p;
+    p.setX(m_cumulative_status_bar_main_widget->width() - width());
+    p.setY(-height());
+    auto global_point = m_cumulative_status_bar_main_widget->mapToGlobal(p);
+    move(global_point);
+}
 
-    // parent is also the status bar widget.
-    auto sbw = parentWidget();
+void ExpandingFrameWidget::resizeEvent(QResizeEvent *ev)
+{
+    reposition();
+    BASE_CLASS::resizeEvent(ev);
+}
 
-M_WARNING("TODO: This positioning is just broken, rework.");
+bool ExpandingFrameWidget::eventFilter(QObject *o, QEvent *e)
+{
+    if(e->type() == QEvent::Move || e->type() == QEvent::Resize)
+    {
+        reposition();
+    }
+    else if(e->type() == QEvent::Close)
+    {
+        close();
+    }
 
-    QPoint our_new_pos;
-    QPoint global_parent_pos = sbw->mapToGlobal(sbw->pos());
-    auto origin_parent_pos = mapToParent(QPoint(0,0));
-    our_new_pos.setX(origin_parent_pos.x());
-    our_new_pos.setY(origin_parent_pos.y() - height());
-    move(our_new_pos);
+    return BASE_CLASS::eventFilter(o,e);
 }
 

@@ -36,6 +36,7 @@
 #include <QUrl>
 #include <QRegularExpression>
 #include <QMimeType>
+#include <QToolButton>
 
 /// KF5
 #if HAVE_KF501
@@ -295,11 +296,16 @@ QStringList Theme::GetIconThemeNames()
 
 bool Theme::setIconThemeName(const QString& name)
 {
-M_WARNING("TODO");
-
     qDb() << "Trying to set icon theme name to:" << name;
 
     QIcon::setThemeName(name);
+
+    // Did it take?
+    auto current_theme_name = QIcon::themeName();
+    if(current_theme_name != name)
+    {
+        qWr() << "New theme name didn't take:" << name << "!=" << current_theme_name;
+    }
 
 #if 0
 	///@todo This doen't work like it should
@@ -374,6 +380,20 @@ QIcon Theme::iconFromTheme(const QMimeType &mime_type)
 {
     // Return an icon from the theme matching the MIME type.
     return iconFromTheme({mime_type.iconName(), mime_type.genericIconName()});
+}
+
+void Theme::QToolButtonArrowIconFromTheme(QToolButton *button, const QString &icon_name, Qt::ArrowType arrow_type_fallback)
+{
+    QIcon up_icon = Theme::iconFromTheme(icon_name);
+    if(up_icon.isNull())
+    {
+        // Use the arrow type instead of a normal icon.
+        button->setArrowType(arrow_type_fallback);
+    }
+    else
+    {
+        button->setIcon(up_icon);
+    }
 }
 
 QKeySequence Theme::keySequenceFromTheme(Theme::Key key)

@@ -20,19 +20,18 @@
 #include "LibraryEntry.h"
 #include "LibraryRescannerJob.h"
 
-/// Std C++
+// Std C++
 #include <memory>
 #include <functional>
-using std::placeholders::_1;
 
-
-/// Qt5
+// Qt5
 #include <QtConcurrent>
 
-/// Ours
+// Ours
 #include <concurrency/ExtAsync.h>
 #include <utils/TheSimplestThings.h>
 #include "LibraryModel.h"
+
 
 LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
 {
@@ -48,6 +47,14 @@ LibraryRescannerJob::~LibraryRescannerJob()
     qDb() << "LibraryRescannerJob DELETED:" << this << objectName();
 }
 
+LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
+{
+    auto retval = new LibraryRescannerJob(parent);
+    /// @todo Hook things up in here.
+
+    return retval;
+}
+
 void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
                                                          LibraryModel* current_libmodel)
 {
@@ -55,12 +62,9 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
     m_current_libmodel = current_libmodel;
 }
 
-void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
+void LibraryRescannerJob::runFunctor()
 {
     qDb() << "ENTER run";
-
-    LibraryRescannerJobPtr amlm_self = qSharedPtrToQPointerDynamicCast<LibraryRescannerJob>(self);
-//    LibraryRescannerJobPtr amlm_self = qSharedPointerDynamicCast<LibraryRescannerJob>(self);
 
     setProgressUnit(KJob::Unit::Files);
 
@@ -73,7 +77,7 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
     // Make the internal connection to the SLOT_processReadyResults() slot.
-    connect(amlm_self.data(), &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
+    connect(this, &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
 
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
@@ -95,7 +99,13 @@ void LibraryRescannerJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Threa
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
-    setSuccessFlag(true);
+    if(!wasCancelRequested())
+    {
+    	setSuccessFlag(true);
+    }
+
+    /// @todo push down
+    m_ext_future.reportFinished();
 }
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)

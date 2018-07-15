@@ -26,4 +26,16 @@
 /// Define to 1 if glibmm library was found.
 #cmakedefine01 HAVE_GTKMM01
 
+/// Define to the C compiler ID CMAKE is using.
+// https://cmake.org/cmake/help/v3.12/variable/CMAKE_LANG_COMPILER_ID.html#variable:CMAKE_%3CLANG%3E_COMPILER_ID
+// GNU = gcc, Clang = clang
+#cmakedefine CMAKE_C_COMPILER_ID "@CMAKE_C_COMPILER_ID@"
+#cmakedefine CMAKE_C_COMPILER "@CMAKE_C_COMPILER@"
+
+/// Define to the C compiler ID CMAKE is using.
+// https://cmake.org/cmake/help/v3.12/variable/CMAKE_LANG_COMPILER_ID.html#variable:CMAKE_%3CLANG%3E_COMPILER_ID
+// GNU = g++, Clang = clang
+#cmakedefine CMAKE_CXX_COMPILER_ID "@CMAKE_CXX_COMPILER_ID@"
+#cmakedefine CMAKE_CXX_COMPILER "@CMAKE_CXX_COMPILER@"
+
 #endif // AMLM_CONFIGURE_H

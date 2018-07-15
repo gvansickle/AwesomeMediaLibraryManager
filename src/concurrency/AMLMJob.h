@@ -20,46 +20,9 @@
 #ifndef SRC_CONCURRENCY_AMLMJOB_H_
 #define SRC_CONCURRENCY_AMLMJOB_H_
 
+#include <config.h>
 
-/**
- * Design notes
- * To be the Alpha and Omega of Qt5/KF5 *Job classes is a lot of work.  Let's start with the KJob and TW::Job lifecycles.
- *
- * @note TW:
- * "It is essential for the ThreadWeaver library that as a kind of convention, the different creators of Job objects do
- *  not touch the protected data members of the Job until somehow notified by the Job."
- *
- * TW:Job lifecycle
- *  @note No QObject, no signals.
- *  - twj = TW::Job-derived instance created by something (TW::Job itself is abstract, at least ::run() must be overloaded).
- *  - twj submitted to TW::Queue/Weaver.
- *  - TW::Queue decides when twj runs.  When started:
- *  -- ::defaultBegin(JobPointer, Thread) (TW::Job default does literally nothing)
- *  -- ::run(JobPointer, Thread)
- *  --- ::run() runs to completion in Thread.  Control and reporting up to the run() override:
- *  ---   - Need to override ::success() and arrange for it to report true/false.
- *  ---   - Need to override ::requestAbort() and arrange for it to cause ::run() to abort.
- *  -- ::status() will return Status_Success if ::run() ran to completion.
- *  -- ::defaultEnd() (TW::Job default does some cleanup, is *not* empty).
- *
- *  TW::QObjectDecorator adds the following:
- *  - Signal started(TW:JobPtr), when TW:Job has started execution.
- *  - Signal done(TW:JobPtr), when TW:Job has completed execution, regardless of status.
- *  - Signal failed(TW::JobPtr), when TW:Job's ::success() returns false after job is executed.
- *  - defaultBegin() override which emits started(self) and calls job()->defaultBegin().
- *  - defaultEnd() override which:
- *    - Calls job()->defaultEnd()
- *    - if(!success) emits failed(self)
- *    - Always emits done(self).
- *  - autoDelete() support (via TW::IdDecorator), appears to be completely controlled by
- *    the decorator though:
- *     // Auto-delete the decoratee or not.
- *     void setAutoDelete(bool onOff);
- *     // Will the decoratee be auto-deleted?
- *     bool autoDelete() const;
- */
-
-/// Qt5
+// Qt5
 #include <QObject>
 #include <QPointer>
 #include <QWeakPointer>
@@ -69,23 +32,47 @@
 #include <QWaitCondition>
 #include <QSemaphore>
 
-/// KF5
+// KF5
 #include <KJob>
 #include <KJobUiDelegate>
-#include <ThreadWeaver/Job>
-#include <ThreadWeaver/QObjectDecorator>
-#include <ThreadWeaver/QueueStream>
 
-/// Ours
+// Ours
 #include "utils/UniqueIDMixin.h"
 #include "utils/ConnectHelpers.h"
 #include "concurrency/function_traits.hpp"
+#include "concurrency/ExtAsync.h"
+
 
 /// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
 using AMLMJobPtr = QPointer<AMLMJob>;
 
 Q_DECLARE_METATYPE(AMLMJobPtr);
+
+
+///// Ours
+////#include <utils/crtp.h>
+////#include <utils/DebugHelpers.h>
+////
+//template <typename T>
+//class ExtFutureTMixin : crtp<T, ExtFutureTMixin>
+//{
+//public:
+
+//    using ExtFutureT = ExtFuture<T>;
+
+//    ExtFutureT& get_extfuture_ref() { return m_ext_future; }
+
+////    virtual ~ExtFutureTMixin() = default;
+
+//private:
+////    /// @note Private constructor and friended to T to avoid ambiguities
+////    /// if this CRTP class is used as a base in several classes in a class hierarchy.
+////    ExtFutureTMixin() = default;
+
+////    friend AMLMDerivedClassType;
+//    ExtFuture<T> m_ext_future;
+//};
 
 /**
 * Where Does The State Live?
@@ -162,47 +149,21 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
 */
 
 /**
- * Base class for jobs which bridges the hard-to-understand gap between a
- * ThreadWeaver::Job and a KJob-derived class.
+ * Base class for jobs which bridges the gap between an ExtAsync job and a KJob-derived class.
  *
- * Goal is to make this one object be both a floor wax and a dessert topping:
- * - A KJob to interfaces which need it, in particular:
- * -- KAbstractWidgetJobTracker and derived classes' registerJob()/unregisterJob() slots.
- * - A ThreadWeaver::Job to interfaces which need it
- *
- * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject; ThreadWeaver::Job inherits only from from JobInterface.
+ * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
 
-    /// ThreadWeaver::Job:
-    /// - https://api.kde.org/frameworks/threadweaver/html/classThreadWeaver_1_1Job.html
-    /// - Jobs are started by the Queue they're added to, depending on the Queue state.  In suspended state, jobs can be added to the queue,
-    ///   but the threads remain suspended. In WorkingHard state, an idle thread may immediately execute the job, or it might be queued if
-    ///   all threads are busy.
-    /// - Jobs may not be executed twice.
-    /// - Job objects do not inherit QObject. To connect to signals when jobs are started or finished, see QObjectDecorator.
-    ///
-    /// virtual void ThreadWeaver::Job::run(JobPointer self, Thread *thread)
-    /// The Job will be executed in the specified thread. thread may be zero, indicating that the job is being executed some other way
-    /// (for example, synchroneously by some other job). self specifies the job as the queue sees it. Whenever publishing information
-    /// about the job to the outside world, for example by emitting signals, use self, not this. self is the reference counted object
-    /// handled by the queue. Using it as signal parameters will amongst other things prevent thejob from being memory managed and deleted.
-    ///
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
     /// - errorString() should also be reimplemented by any subclasses that introduce new error codes.
     /// - KJob and its subclasses are meant to be used in a fire-and-forget way. Jobs will delete themselves when they finish using
     ///   deleteLater() (although this behaviour can be changed), so a job instance will disappear after the next event loop run.
-    ///
-    /// @note Two confusingly similar typedefs here:
-    ///       From qobjectdecorator: "typedef QSharedPointer<QObjectDecorator> QJobPointer;".
-    ///       From jobinterface.h:   "typedef QSharedPointer<JobInterface> JobPointer;"
-    ///       Job is derived from JobInterface, which in turn derives from nothing.
-    ///       All in the ThreadWeaver namespace.
 
     /**
      * @note CRTP: Still need this to avoid ambiguous name resolution.
@@ -212,20 +173,9 @@ class AMLMJob: public KJob, public ThreadWeaver::Job, public UniqueIDMixin<AMLMJ
 
 Q_SIGNALS:
 
-    /// @name ThreadWeaver::QObjectDecorator-like signals, only three:
-    /// @warning These are for AMLMJob internal-use only.
     /// @warning Qt5 signals are always public in the C++ sense.  Slots are similarly public when called
     ///          via the signal->slot mechanism, on direct calls they have the normal public/protected/private rules.
-	/// @{
 
-    /// This signal is emitted when this TW::Job is being processed by a thread.
-    void started(ThreadWeaver::JobPointer);
-    /// This signal is emitted when the TW::Job has been finished (no matter if it succeeded or not).
-    void done(ThreadWeaver::JobPointer);
-    /// This signal is emitted when success() returns false after the job is executed.
-    void failed(ThreadWeaver::JobPointer);
-
-    /// @}
 
     /// @name User-public/subclass-private internal KJob signals.
     /// Here for reference only, these are KJob-private, i.e. can't be emitted directly.
@@ -266,7 +216,7 @@ Q_SIGNALS:
     // void result (KJob *job)
 	// void 	resumed (KJob *job)
     /// KJob::Speed
-    /// I'm not at all clear on how to really use the KJOB::speed functionality.  You call emitSpeed(value),
+    /// I'm not at all clear on how to really use the KJob::speed functionality.  You call emitSpeed(value),
     /// with whatever "value" is, it starts a 5 second timer, then... the timer times out... then I totally lose the plot.
     /// Ah well.
 	// void 	speed (KJob *job, unsigned long speed)
@@ -305,7 +255,7 @@ Q_SIGNALS:
     //    *
     //    * so that you won't have to manually call unregisterJob().
 
-
+    void SIGNAL_internal_call_emitResult();
 
 protected:
     /// Protected KJob-like constructor.
@@ -322,66 +272,47 @@ public:
     /// Destructor.
     ~AMLMJob() override;
 
-    /// @name TW::Job public method overrides.
-    /// @{
-
-    /**
-     * TW::success().
-     * "Return whether the Job finished successfully or not.
-     * The default implementation simply returns true. Overload in derived classes if the derived Job class can fail.
-     *
-     * If a job fails (success() returns false), it will *NOT* resolve its dependencies when it finishes. This will make sure that
-     * Jobs that depend on the failed job will not be started.
-     *
-     * There is an important gotcha: When a Job object it deleted, it will always resolve its dependencies. If dependent jobs should
-     * not be executed after a failure, it is important to dequeue those before deleting the failed Job. A Sequence may be
-     * helpful for that purpose."
-     */
-    bool success() const override;
-
-    /**
-     * Abort the execution of the TW::Job.
-     * Call this method to ask the Job to abort if it is currently executed.
-     *
-     * @note This method should return immediately, not after the abort has completed.
-     *
-     * @note TW::Job's default implementation of the method does nothing.
-     * @note TW::IdDecorator calls the TW::Job's implementation.
-     */
-    void requestAbort() override;
-
-    /// @} // END TW::Job overrides.
-
     /// @name KJob overrides.
     /// @{
 
     /**
-     * "Subclasses must implement start(), which should trigger the execution of the job (although the work should be done
-     *  asynchronously)."
+     * Starts the job asynchronously.
      *
-     * @note Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
+     * When the job is finished, result() is emitted.
+     *
+     * Warning: Never implement any synchronous workload in this method. This method
+     * should just trigger the job startup, not do any work itself. It is expected to
+     * be non-blocking.
+     *
+     * This is the method all subclasses need to implement.
+     * It should setup and trigger the workload of the job. It should not do any
+     * work itself. This includes all signals and terminating the job, e.g. by
+     * emitResult(). The workload, which could be another method of the
+     * subclass, is to be triggered using the event loop, e.g. by code like:
+     * \code
+     * void ExampleJob::start()
+     * {
+     *  QTimer::singleShot(0, this, SLOT(doWork()));
+     * }
+     * \endcode
+     *
+     * @note GRVS: Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
      */
     Q_SCRIPTABLE void start() override;
 
-    /**
-     * Start the TW::Job on the specified TW::QueueStream.
-     */
-    virtual void start(ThreadWeaver::QueueStream &qstream);
-
     /// @}
 
-public: /// @warning FBO DERIVED CLASSES ACCESSING THROUGH A POINTER ONLY
+public:
     /// @name New public interfaces FBO derived classes' overloads of TW:Job::run().
     /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
 
-    /// Call this in your derived tw::run() function to see if you should cancel the loop.
+    /// Call this in your derived runFunctor() function to see if you should cancel the loop.
     bool wasCancelRequested();
 
-    /// Derived tw::run() must call this before exiting.  FBO the TW::success() method.
+    /// Derived runFunctor() must call this before exiting.
     void setSuccessFlag(bool success);
-    /// Derived tw::run() must call this before exiting.  FBO the onTWFailed() method to determine fail reason.
-    void setWasCancelled(bool cancelled) { m_tw_job_was_cancelled = cancelled; }
+
     /// @}
 
     virtual qulonglong totalSize() const;
@@ -393,6 +324,12 @@ public:
 
 public:
 
+    virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
+
+    /// @todo experimental
+//    /*private:*/ QFutureWatcher<void>* m_extfuture_watcher = new QFutureWatcher<void>();
+//    virtual QFutureWatcher<void>* get_extfuture_ptr_w() { return m_extfuture_watcher; }
+
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
 
@@ -402,22 +339,52 @@ public:
     template <typename ContextType, typename Func>
     void then(ContextType&& ctx, Func&& f)
     {
+//        Q_ASSERT(!m_possible_delete_later_pending);
+
+        qDb() << this->objectName() << "ENTERED THEN";
+
+//        QPointer<KJob> pkjob = kjob;
+
+        // result(KJob*) signal:
+        // "Emitted when the job is finished (except when killed with KJob::Quietly)."
         connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
-				if(kjob->error())
-				{
-					// Report the error.
-                    kjob->uiDelegate()->showErrorMessage();
-				}
-				else
-				{
-                    // Cast to the derived job type.
-                    using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
-                    auto* jobptr = dynamic_cast<JobType*>(kjob);
-                    Q_ASSERT(jobptr);
-					// Call the continuation.
-                    f(jobptr);
-				}
-			});
+
+//            Q_ASSERT(!m_possible_delete_later_pending);
+
+/// @todo M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
+qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
+            // Need to determine if the result was success, error, or cancel.
+            // In the latter two cases, we need to make sure any chained AMLMJobs are either
+            // cancelled (or notified of the failure?).
+            switch(kjob->error())
+            {
+            // "[kjob->error()] Returns the error code, if there has been an error.
+            // Only call this method from the slot connected to result()."
+            case NoError:
+                break;
+            case KilledJobError:
+                break;
+            default:
+                // UserDefinedError or some other error.
+                break;
+            }
+
+            if(kjob->error())
+            {
+                // Report the error.
+                qWr() << "Reporting error via uiDelegate():" << kjob->error() << kjob->errorString() << ":" << kjob->errorText();
+                kjob->uiDelegate()->showErrorMessage();
+            }
+            else
+            {
+                // Cast to the derived job type.
+                using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
+                auto* jobptr = dynamic_cast<JobType*>(kjob);
+                Q_ASSERT(jobptr);
+                // Call the continuation.
+                f(jobptr);
+            }
+        });
     }
 
     /// @}
@@ -478,16 +445,30 @@ public Q_SLOTS:
 
 protected:
 
-    /// @name Override of TW::Job protected functions.
+    /// @name ExtAsync job support functions / function templates.
     /// @{
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override = 0;
-    void defaultBegin(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
+    virtual AMLMJob* asDerivedTypePtr() = 0;
+
+    /// Last-stage wrapper around the runFunctor().
+    /// Handles most of the common ExtFuture start/finished/canceled/exception code.
+    /// Should not need to be overridded in derived classes.
+    virtual void run();
+
     /**
-     * The defaultEnd() function, called immediately after run() returns.
-     * @note run() must have set the correct success() value prior to exiting.
+     * The function which is run by ExtAsync::run() to do the work.
+     * Must be overridden in derived classes.
+     * Reporting and control should be handled via the derived class's m_ext_future member.
+     *
      */
-    void defaultEnd(const ThreadWeaver::JobPointer& self, ThreadWeaver::Thread *thread) override;
+    virtual void runFunctor() = 0;
+
+    /**
+     * Call this at the bottom of your runFunctor() override.
+     * Handles pause/resume internally.
+     * @return true if runFunctor() loop should break.
+     */
+    bool functorHandlePauseResumeAndCancel();
 
     /// @}
 
@@ -499,28 +480,35 @@ protected:
      * Abort this job quietly.
      * Simply kill the job, no error reporting or job deletion should be involved.
      *
+     * @note Not a slot.
+     *
      * @note KJob::doKill() does nothing, simply returns false.
      *
      * What our override here does:
-     * - Tell the TW::Job to kill itself with requestAbort();
-     * - Call our onKJobDoKill(), which currently does nothing.
+     * Tells the runFunctor() to kill itself by calling .cancel() on its ExtFuture<>, then
+     * waits for it to finish via waitForFinished().
      *
-     * @todo Not clear if this should block until the job has been killed or not.
-     *       It looks like this should block until the job is really killed;
+     * @note It does look like this should block until the job is really confirmed to be killed.
      *       KAbstractWidgetJobTracker::slotStop() does this:
+     * @code
      *         job->kill(KJob::EmitResult); // notify that the job has been killed
      *         emit stopped(job);
+     * @endcode
+     *
+     * @warning this may/will be deleteLater()'ed at any time after this function returns true.
      *
      * @return true if job successfully killed, false otherwise.
      */
     bool doKill() override;
 
     /**
+     * Not a slot.
      * @note KJob::doSuspend() simply returns false.
      */
     bool doSuspend() override;
 
     /**
+     * Not a slot.
      * @note KJob::doResume() simply returns false.
      */
     bool doResume() override;
@@ -569,12 +557,12 @@ protected:
     virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
     virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
 
-    /// Make the internal signal-slot connections.
-    virtual void make_connections();
-    virtual void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
-    virtual void connections_break_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread);
-
-    void TWCommonDoneOrFailed(ThreadWeaver::JobPointer twjob);
+    /**
+     * Sets the KJob error code / string.
+     *
+     * @param success  true if the underlying job completed successfully and wasn't cancelled.  false otherwise.
+     */
+    void setKJobErrorInfo(bool success);
 
     /// @}
 
@@ -583,46 +571,38 @@ protected Q_SLOTS:
     /// @name Internal slots
     /// @{
 
-    /// @name Connected to the TW::QObjectDecorator-like signals.
-    /// @{
+    void SLOT_on_destroyed(QObject* obj);
 
-    /// Should be connected to the started(self) signal.
-    /// started() should be getting emitted in defaultBegin().
-    void onTWStarted(ThreadWeaver::JobPointer twjob);
-    void onTWDone(ThreadWeaver::JobPointer twjob);
-    void onTWFailed(ThreadWeaver::JobPointer twjob);
-    /// @}
+    void SLOT_extfuture_finished();
+    void SLOT_extfuture_canceled();
+    void SLOT_extfuture_aboutToShutdown();
 
-    /// Called from our doKill() operation.  Doesn't do anything but qDb() logging.
-    /// @todo Should be really be doing that?
-    void onKJobDoKill();
+    void SLOT_kjob_finished(KJob* kjob);
+    void SLOT_kjob_result(KJob* kjob);
 
-    /// Handle the KJob::result() signal when the job is finished (except when killed with KJob::Quietly).
-    /// @note KJob::error() should only be called from this slot, per KF5 docs/comments.
-    void onKJobResult(KJob* kjob);
-
-    /// Always invoked by the KJob::finished signal regardless of reason.
-    void onKJobFinished(KJob* kjob);
+    void SLOT_call_emitResult();
 
     /// @}
 
 private:
     Q_DISABLE_COPY(AMLMJob)
 
-//    ThreadWeaver::QJobPointer m_the_tw_job;
+public:
 
     bool m_i_was_deleted = false;
 
-	/// Mutex and wait condition for cancel/pause/resume.
-    /// Mutex is created in unlocked state, non-recursive.
-	QMutex m_cancel_pause_resume_mutex;
-    QWaitCondition m_cancel_pause_resume_waitcond;
-    /// Flag telling the AMLMJob run() thread to cancel.
-    /// No need to be atomic due to the mutex/wc.
-    bool m_flag_cancel {false};
+    /**
+     * Semaphores for coordinating the sync and async operations in doKill().
+     */
+    QMutex m_start_vs_dokill_mutex;
+    QSemaphore m_run_was_started {0};
+    QSemaphore m_run_returned {0};
 
-    QAtomicInt m_tw_got_done_or_fail { 0 };
-    QAtomicInt m_tw_job_was_cancelled { 0 };
+
+private:
+
+    QFutureWatcher<void>* m_watcher;
+
     QAtomicInt m_success { 1 };
 
     /// Wishful thinking at the moment, but maybe I'll figure out how to separate "Size" from KJob::Bytes.

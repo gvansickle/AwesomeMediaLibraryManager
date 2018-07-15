@@ -26,7 +26,6 @@
 
 #include <KJob>
 #include <KCompositeJob>
-#include <ThreadWeaver/Collection>
 
 #include "AMLMJob.h"
 

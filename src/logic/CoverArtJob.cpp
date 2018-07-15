@@ -38,17 +38,22 @@
 /// Ours
 #include "TagLibHelpers.h"
 
-CoverArtJob::CoverArtJob(QObject* parent) : BASE_CLASS(parent)
+CoverArtJob::CoverArtJob(QObject* parent, const QUrl &url) : BASE_CLASS(parent), m_audio_file_url(url)
 {
+
 }
 
 CoverArtJob::~CoverArtJob()
 {
 }
 
-void CoverArtJob::AsyncGetCoverArt(const QUrl &url)
+CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
 {
-    m_audio_file_url = url;
+    auto retval = new CoverArtJob(parent, url);
+
+    /// @todo Hook things up in here.
+
+    return retval;
 }
 
 ///
@@ -100,11 +105,8 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
     return QByteArray();
 }
 
-void CoverArtJob::run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread)
+void CoverArtJob::runFunctor()
 {
-    Q_UNUSED(self);
-    Q_UNUSED(thread);
-
     // Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
 
     QByteArray& retval = m_byte_array;

@@ -135,7 +135,9 @@ void RunControllableTask<T>::run()
 		/// A "StoredFunctorCall0" struct (or one of dozens of variants) from
 		/// the header /usr/include/qt5/QtConcurrent/qtconcurrentstoredfunctioncall.h
 		/// come into play here, and effectively does something like this:
+		/// @code
 		///     void runFunctor() override { this->result = function(); }
+		/// @endcode
 		/// Since we want to be able to send up interim results and progress, we
 		/// need to do something else.
 		this->m_task->run(*this);

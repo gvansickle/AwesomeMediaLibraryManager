@@ -74,8 +74,8 @@ set(KF5_MIN_VERSION "5.44.0")
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
-# Add dirs where we keep support *.cmake's, ECM, etc.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+# Add dirs where we keep support *.cmake's, ucm, ECM, etc.
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
 # ECM Macros
 include(ECMAddAppIcon)
@@ -132,13 +132,25 @@ include(KDECMakeSettings)
 # Std CMAKE includes.
 include(FeatureSummary)
 
+# This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
+# cmake and/or Qt Creator.
+# https://github.com/onqtam/ucm#ucm_add_flags
+include(ucm)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	message(STATUS "C++ Compiler is GCC")
+	ucm_add_flags(-fmessage-length=0)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments CONFIG DEBUG)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+	message(STATUS "C++ Compiler is Clang")
+	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)
+endif()
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
 
-if(FALSE)
+if(true)
 	# Use ccache if it's available.
 	find_program(CCACHE_PROGRAM ccache)
 	if(CCACHE_PROGRAM)
@@ -161,21 +173,37 @@ set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(ExternalProject)
 include(DownloadProject)
 
+# Doxygen
+# Require dot, treat the other components as optional
+# https://cmake.org/cmake/help/v3.12/module/FindDoxygen.html
+find_package(Doxygen
+             REQUIRED dot
+             OPTIONAL_COMPONENTS mscgen dia)
+set(DOXYGEN_GENERATE_HTML YES)
+set(DOXYGEN_GENERATE_MAN NO)
+set(DOXYGEN_EXCLUDE_PATTERNS "*/cmake-*;*/build*;*/src/third_party") # Per docs, merged with defaults excludes.
+set(DOXYGEN_OUTPUT_DIRECTORY doxygen_html)
+doxygen_add_docs(doxygen ALL
+	${PROJECT_SOURCE_DIR}
+    COMMENT "Generate doxygen html"
+)
+
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 #set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #		INCLUDE_DIRECTORIES
-#		COMPILE_DEFINITIONS
+#        COMPILE_DEFINITIONS
 #		POSITION_INDEPENDENT_CODE
 #		CONTAINER_SIZE_REQUIRED
 #		LIB_VERSION
-#		)
+#        )
 
 dir_summary()
 
 # QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
+### @todo This can probably go away.
 init_os_bundle()
 
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
@@ -293,13 +321,12 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	GuiAddons
 	IconThemes
 	WindowSystem
-	ThreadWeaver
 )
 set(HAVE_KF501 ${KF5_FOUND})
 list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
 list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
 list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
-list(APPEND KF5_LINK_LIBS KF5::WindowSystem KF5::ThreadWeaver)
+list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 
 
 ###
@@ -484,6 +511,7 @@ cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
 cmake_print_variables(META_FILES_TO_INCLUDE)
 
 #message_cpack_summary()
-message(STATUS "======================== END CMAKE SUMMARY ====================================")
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+message(STATUS "======================== END CMAKE SUMMARY ====================================")

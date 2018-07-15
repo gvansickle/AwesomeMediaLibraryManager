@@ -19,11 +19,11 @@
 
 #include "RegisterQtMetatypes.h"
 
-/// Std C++
+// Std C++
 #include <vector>
 #include <functional>
 
-#include <ThreadWeaver/Job>
+// KF5
 #include <KJob>
 
 #include <logic/LibraryEntry.h>
@@ -31,7 +31,7 @@
 #include <utils/Fraction.h>
 #include <logic/LibraryRescanner.h>
 #include <logic/LibraryEntryMimeData.h>
-#include <concurrency/AMLMJob.h>
+//#include <concurrency/AMLMJob.h>
 #include <logic/LibraryRescannerMapItem.h>
 
 /**
@@ -61,10 +61,8 @@ void RegisterQtMetatypes()
     // Call all the registration callbacks which have been registered during static-init time.
 	reginstance().call_registration_callbacks();
 
-	// ThreadWeaver types.
-    qRegisterMetaType<ThreadWeaver::Job*>( "ThreadWeaver::Job*" );
     // KJob types.
-    qRegisterMetaType<KJob*>( "KJob*" );
+    qRegisterMetaType<KJob*>();
 
 
 	// Register the types we want to be able to use in Qt's queued signal and slot connections or in QObject's property system.
@@ -88,7 +86,7 @@ void RegisterQtMetatypes()
 	// #include <logic/LibraryEntryMimeData.h>
 	qRegisterMetaType<LibraryEntryMimeData*>();
 
-	qRegisterMetaType<AMLMJobPtr>();
+//	qRegisterMetaType<AMLMJobPtr>();
 
 	qRegisterMetaType<LibraryRescannerMapItem>();
 	qRegisterMetaType<VecLibRescannerMapItems>();

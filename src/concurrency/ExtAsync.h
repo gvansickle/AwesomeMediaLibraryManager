@@ -28,22 +28,26 @@
 //#include "ExtFuture.h"
 //#include "ExtFutureWatcher.h"
 
-
+// Std C++
 #include <type_traits>
-#include "future_type_traits.hpp"
-#include "function_traits.hpp"
-#include "cpp14_concepts.hpp"
 #include <functional>
 #include <memory>
 
+// Our Std C++ backfill
+#include "future_type_traits.hpp"
+#include "function_traits.hpp"
+#include "cpp14_concepts.hpp"
+
+// Qt5
 #include <QEvent>
 #include <QObject>
 #include <QtConcurrent>
 #include <QtCore/QFutureInterface>
 #include <QRunnable>
-
 #include <QCoreApplication>
 
+// Ours
+#include "ExtFutureState.h"
 #include "utils/DebugHelpers.h"
 
 //#include "impl/ExtFuture_fwddecl_p.h"
@@ -90,7 +94,7 @@ namespace ExtAsync
 				/// @note Used
 				qWr() << "EXTASYNC::RUN: IN ExtFutureR run_helper_struct::run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
 
-				// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
+                // ExtFuture<> will default to (STARTED).  This is so that any calls of waitForFinished()
 				// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 				using RetType = std::remove_reference_t<ExtFutureR>;
 				RetType report_and_control;
@@ -109,13 +113,35 @@ namespace ExtAsync
 		};
 	} // END namespace detail
 
-	template <typename T>
-	static ExtFuture<T> run(ExtAsyncTask<T>* task)
-	{
-		qWr() << "EXTASYNC::RUN: IN ExtFuture<T> run(ExtAsyncTask<T>* task):" << __PRETTY_FUNCTION__;
 
-		return (new ExtAsyncTaskRunner<T>(task))->start();
-	}
+//	template <typename T>
+//	static ExtFuture<T> run(ExtAsyncTask<T>* task)
+//	{
+//		qWr() << "EXTASYNC::RUN: IN ExtFuture<T> run(ExtAsyncTask<T>* task):" << __PRETTY_FUNCTION__;
+
+//		return (new ExtAsyncTaskRunner<T>(task))->start();
+//	}
+
+    /**
+     * Helper struct for creating SFINAE-friendly function overloads-of-last-resort.
+     *
+     * @link https://gracicot.github.io/tricks/2017/07/01/deleted-function-diagnostic.html
+     *
+     * ...and this trick actually doesn't work.  It semi-works on gcc with C++11, but C++14 just gives the "use of deleted function" error.
+     */
+    struct TemplateOverloadResolutionFailed
+    {
+        template <typename T>
+        TemplateOverloadResolutionFailed(T&&)
+        {
+            static_assert(!std::is_same_v<T,T>, "Unable to find an appropriate template.");
+        };
+    };
+
+    /**
+     * ExtAsync::run() overload-of-last-resort to flag that none of the other templates matched.
+     */
+//    void run(TemplateOverloadResolutionFailed, ...) = delete;
 
 	/**
 	 * ExtAsync::run() overload for member functions taking an ExtFuture<T>& as the first non-this param.
@@ -125,28 +151,64 @@ namespace ExtAsync
 	 * @returns The ExtFuture<T> passed to @a function.
 	 */
 	template <typename This, typename F, typename... Args,
-		std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
+        std::enable_if_t<ct::has_void_return_v<F> && (arity_v<F> == 2), int> = 0>
+//        std::enable_if_t<ct::is_invocable_r_v<void, F&&, Args...>, int> = 0>
 	auto
 	run(This* thiz, F&& function, Args&&... args)
 	{
-		// Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+        /// @todo TEMP this currently limits the callback to look like C::F(ExtFuture<>&).
+        static_assert(sizeof...(Args) <= 1, "Too many extra args given to run() call");
+        static_assert(sizeof...(Args) == 0, "TODO: More than 0 args passed to run() call");
+
+//        constexpr auto calback_arg_num = function_traits<F>::arity_v;
+        constexpr auto calback_arg_num = arity_v<F>;
+        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
+        static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
+
+        // Get a std::tuple<> containing the types of all args of F.
 		using argst = ct::args_t<F>;
-		using arg1t = std::tuple_element_t<1, argst>;
+        /// @todo TEMP debug restriction
+//        static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
+        // Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+        using arg1t = std::tuple_element_t<1, argst>;
 		using ExtFutureR = std::remove_reference_t<arg1t>;
 
 		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
 
-		static_assert(sizeof...(Args) <= 1, "Too many args");
 		static_assert(function_traits<F>::arity_v > 1, "Callback must take at least one argument");
 
 		// ExtFuture<> will default to (STARTED | RUNNING).  This is so that any calls of waitForFinished()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFutureR report_and_control;
 
-		QtConcurrent::run(thiz, std::forward<F>(function), report_and_control, std::forward<Args>(args)...);
+        QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)), report_and_control, std::forward<Args>(args)...);
 
 		return report_and_control;
 	}
+
+    /**
+     * ExtAsync::run() overload for member functions of classes derived from AMLMJob taking zero params.
+     * E.g.:
+     * 		void Class::Function();
+     *
+     * @returns An ExtFuture<>, probably of Unit type.
+     */
+    template <typename This, typename F,
+        std::enable_if_t<std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>, int> = 0>
+    auto
+    run(This* thiz, F&& function) -> decltype(std::declval<This*>()->get_extfuture_ref())
+    {
+        constexpr auto calback_arg_num = arity_v<F>;
+//        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
+        static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
+
+        qIn() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
+
+        QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)));
+        qIn() << "AFTER QtConcurrent::run(), thiz:" << thiz << "ExtFuture state:" << ExtFutureState::state(thiz->get_extfuture_ref());
+
+        return thiz->get_extfuture_ref();
+    }
 
 	/**
 	 * For free functions of the form:
@@ -166,7 +228,7 @@ namespace ExtAsync
 		using ExtFutureR = std::remove_reference_t<arg0t>;
 		detail::run_helper_struct<ExtFutureR> helper;
 
-		return helper.run(std::forward<F>(function), std::forward<Args>(args)...);
+        return helper.run(std::forward<F>(std::decay_t<F>(function)), std::forward<Args>(args)...);
 	}
 
 	/**
@@ -263,6 +325,5 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
 
 #include "ExtFutureWatcher.h"
 
-void ExtAsyncTest(QObject *context);
 
 #endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */

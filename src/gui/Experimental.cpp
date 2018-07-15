@@ -51,10 +51,6 @@
 #include <KMessageWidget>
 #include <KUiServerJobTracker>
 #include <KJobWidgets>
-#include <ThreadWeaver/State>
-#include <ThreadWeaver/DebuggingAids>
-
-#include "concurrency/ActivityManager.h"
 
 #include "MainWindow.h"
 
@@ -63,6 +59,17 @@
 
 #endif
 
+
+enum /*__attribute__((enum_extensibility(closed), flag_enum))*/ BITS
+{
+    A = 0x01,
+    B = 0x02
+};
+
+//static BITS a = A;
+//static BITS b = B;
+//static BITS c = a|b;
+//static BITS d = c+1;
 
 
 Experimental::Experimental(QWidget *parent) : QWidget(parent)
@@ -123,8 +130,6 @@ void Experimental::DoExperiment()
     // If we do this, the jobs will add themselves to the given tracker if they don't have HideProgressInfo set.
     KIO::setJobTracker(master_job_tracker);
 
-    ThreadWeaver::setDebugLevel(true, 10);
-
 //    QUrl dir_url("smb://storey.local/music/");
     QUrl dir_url("file:///run/user/1000/gvfs/smb-share:server=storey,share=music");
     KIO::DirectorySizeJob* dirsizejob = KIO::directorySize(dir_url);
@@ -134,12 +139,12 @@ void Experimental::DoExperiment()
     dirsizejob->setObjectName("DIRSIZEJOB");
 
     /// Two AMLMJobs
-    DirectoryScannerAMLMJobPtr dsj = new DirectoryScannerAMLMJob(nullptr, dir_url,
+    DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(nullptr, dir_url,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     QUrl dir_url2("file:///home/gary");
-    DirectoryScannerAMLMJobPtr dsj2 = new DirectoryScannerAMLMJob(nullptr, dir_url2,
+    DirectoryScannerAMLMJobPtr dsj2 = DirectoryScannerAMLMJob::make_job(nullptr, dir_url2,
                                     QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
@@ -162,8 +167,6 @@ void Experimental::DoExperiment()
 //    QUrl local_dest_url(QStringLiteral("file://home/gary/testfile.html"));
     KIO::TransferJob* inet_get_job = KIO::get(web_src_url, KIO::LoadType::Reload, KIO::HideProgressInfo);
     inet_get_job->setObjectName("INET_GET_JOB");
-
-//    auto* queue = ThreadWeaver::Queue::instance(); //ThreadWeaver::stream();
 
     master_job_tracker->registerJob(dirsizejob);
 
@@ -190,8 +193,6 @@ void Experimental::DoExperiment()
 //    test_job->setUiDelegate(new KIO::JobUiDelegate());
 //    dump_qobject(inet_get_job);
 
-//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
-
     qDb() << M_NAME_VAL(dsj);
     qDb() << M_NAME_VAL(dsj2);
 
@@ -201,12 +202,6 @@ void Experimental::DoExperiment()
     dsj2->start();
     kio_list_kiojob->start();
     inet_get_job->start();
-
-    // enqueue takes JobPointers (QSharedPtr<>).
-//    queue->enqueue(dsj);//->asTWJobPointer());
-//    queue->enqueue(dsj2);//->asTWJobPointer());
-//    queue->stream() << dsj << dsj2;
-//    qIn() << "QUEUE STATE:" << queue->state()->stateName();
 
 #endif
 

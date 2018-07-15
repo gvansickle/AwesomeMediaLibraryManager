@@ -198,10 +198,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
-    DirectoryScannerAMLMJobPtr dirtrav_job = new DirectoryScannerAMLMJob(this, dir_url, extensions,
+    DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
                                     QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
-    LibraryRescannerJobPtr lib_rescan_job = new LibraryRescannerJob(this);
+    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
     connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find)  {
         // Found a file matching the criteria.  Send it to the model.

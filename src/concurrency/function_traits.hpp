@@ -95,6 +95,9 @@ struct arity
 	using arity_v = typename std::tuple_size<ct::args_t<F>>::value;
 };
 
+/**
+ * Returns the number arguments (including the @c this pointer if applicable) taken by function @a F.
+ */
 template <class F>
 static constexpr std::size_t arity_v = std::tuple_size<ct::args_t<F>>::value;
 

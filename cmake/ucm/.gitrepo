@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/onqtam/ucm.git
+	branch = master
+	commit = 03abc887788004736f5b242a8b4eef7cbc2b55c4
+	parent = c17c11d65517437032f383d5c0732e29940afb57
+	method = merge
+	cmdver = 0.4.0

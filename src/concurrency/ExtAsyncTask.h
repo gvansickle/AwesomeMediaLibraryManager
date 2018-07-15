@@ -20,11 +20,16 @@
 #ifndef UTILS_CONCURRENCY_EXTASYNCTASK_H_
 #define UTILS_CONCURRENCY_EXTASYNCTASK_H_
 
+#include <config.h>
+
+#include "ExtFuture.h"
+
 /// Based on this Stack Overflow reply: https://stackoverflow.com/a/16729619
 
 /**
- * Subclass this to get a controllable, reporting-enabled task which can be passed to one of the ExtAsync::run() overloads.
- * Note that this class does not derive from QObject (or any other class for that matter).
+ * Subclass ExtAsyncTask<> to get a controllable, reporting-enabled task which can be passed to one of the ExtAsync::run()
+ * overloads.  Note that this class does not derive from QObject (or any other class for that matter).
+ *
  * @tparam T  The type returned in the ExtFuture<T>.
  */
 template <typename T, typename FutureType = ExtFuture<T>>
@@ -55,32 +60,31 @@ public:
 
 
 /**
- * Used as an intermediary helper class between the ExtAsyc::run() functions and an
+ * Used as an intermediary helper class between the ExtAsync::run() functions and an
  * instance of ExtAsyncTask<T>.  Handles the setup and teardown.  Setup handled in the run() function
  * includes reporting started and not starting if already cancelled.  Teardown includes reporting finished,
  * if finishing was due to cancellation, and propagating and reporting exceptions.
  * QRunnable handles autoDelete() and ref counting.
  *
- * @note This is a sort of combination of the RunFunctionTaskBase<> and RunFunctionTask<> class templates
- * from Qt5.
+ * @note These are based on the RunFunctionTaskBase<> and RunFunctionTask<> class templates from Qt5's internals.
+ * @link https://github.com/qt/qtbase/blob/5.11/src/concurrent/qtconcurrentrunbase.h
  *
  * @note It appears that QRunnable will not be copyable in Qt6.  Not sure if that will affect us or not.
- *
- * @see /usr/include/qt5/QtConcurrent/qtconcurrentrunbase.h
  */
 template <typename T>
-class ExtAsyncTaskRunner : public ExtFuture<T>, public QRunnable
+class ExtAsyncTaskRunnerBase : public ExtFuture<T>, public QRunnable
 {
 public:
-    explicit ExtAsyncTaskRunner(ExtAsyncTask<T>* tsk) : m_task(tsk) { }
-    virtual ~ExtAsyncTaskRunner()
+    explicit ExtAsyncTaskRunnerBase(ExtAsyncTask<T>* tsk) : m_task(tsk) { }
+     ~ExtAsyncTaskRunnerBase() override
     {
     	qDb() << "DESTRUCTOR";
     	delete m_task;
     }
 
 	/**
-	 * start() function analogous to those in Qt5's RunFunctionTaskBase<>.
+     * start() function analogous to the two overloads in Qt5's RunFunctionTaskBase<>.
+     * There, start() simply calls start(QThreadPool::globalInstance()).
 	 */
     ExtFuture<T> start(QThreadPool *pool = QThreadPool::globalInstance());
 
@@ -88,8 +92,11 @@ public:
 	 * The run() function is analogous to that in Qt5's RunFunctionTask<> class template.
 	 * It's an overridden virtual function inherited from QRunnable.
 	 */
-	void run() override;
+    void run() override {}
 
+    virtual void runFunctor() = 0;
+
+    /// @todo Remove?
 	ExtAsyncTask<T> *m_task;
 };
 
@@ -105,58 +112,88 @@ ExtAsyncTask<T, FutureType>::~ExtAsyncTask()
 //// ExtAsyncTaskRunner<T> Implementation below.
 
 template<typename T>
-ExtFuture<T> ExtAsyncTaskRunner<T>::start(QThreadPool* pool)
+ExtFuture<T> ExtAsyncTaskRunnerBase<T>::start(QThreadPool* pool)
 {
 	this->setThreadPool(pool);
 	this->setRunnable(this);
 	// Report that we've started via the QFutureInterface.
 	this->reportStarted();
-	/// @note The original has: "this->future();" here.
+    /// @note Qt5 has: "QFuture<T> theFuture = this->future();" here.
 	/// Since ExtFuture<-QFutureInterface and the latter is a
-	/// QFuture "factory" of sorts, returning a copy of ourselves seems
-	/// correct here.
+    /// QFuture "factory" of sorts, returning a copy of ourselves should be correct here.
 	ExtFuture<T> extfuture = *this;
 	pool->start(this, /*m_priority*/ 0);
 	return extfuture;
 }
 
+template<class T>
+class ExtAsyncTaskRunner : public ExtAsyncTaskRunnerBase<T>
+{
+public:
+    void run() override;
+
+    /// The result (QList<T>?) returned by the function we'll end up running.
+    /// @todo Not sure we need this or not, or if it should be a QList<T> or an ExtFuture<T>.
+    T result;
+};
+
 template<typename T>
 void ExtAsyncTaskRunner<T>::run()
 {
-	if (this->isCanceled())
-	{
-		this->reportFinished();
-		return;
-	}
+    if (this->isCanceled())
+    {
+        // We've been cancelled before we started, just report finished.
+        /// @note It seems like we also should be calling reportCancelled(),
+        /// but neither of Qt5's RunFunctionTask<T> nor Qt Creator's AsyncJob<> (derived only from QRunnable)
+        /// do so.
+        this->reportFinished();
+        return;
+    }
 #ifndef QT_NO_EXCEPTIONS
-	try {
+    try {
 #endif
-		// Run the actual worker function.
-		/// In Qt5 QtConcurrent's RunFunctionTask*<>, this is done somewhat differently.
-		/// A "StoredFunctorCall0" struct (or one of dozens of variants) from
-		/// the header /usr/include/qt5/QtConcurrent/qtconcurrentstoredfunctioncall.h
-		/// come into play here, and effectively does something like this:
-		///     void runFunctor() override { this->result = function(); }
-		/// Since we want to be able to send up interim results and progress through a
-		/// QFutureInterface<> of some sort, we need to do something else.
-		this->m_task->run(*this);
+        // Run the actual worker function.
+        /// In Qt5 QtConcurrent's RunFunctionTask*<>, this is done somewhat differently.
+        /// A "StoredFunctorCall0" struct (or one of dozens of variants) from
+        /// the header /usr/include/qt5/QtConcurrent/qtconcurrentstoredfunctioncall.h
+        /// come into play here, and effectively does something like this:
+        ///     void runFunctor() override { this->result = function(); }
+        /// Since we want to be able to send up interim results and progress through a
+        /// QFutureInterface<T> of some sort, we need to do something else.
+        this->m_task->run(*this);
 #ifndef QT_NO_EXCEPTIONS
-	} catch (QException &e) {
-		ExtFuture<T>::reportException(e);
-	} catch (...) {
-		ExtFuture<T>::reportException(QUnhandledException());
-	}
+    }
+    catch (QException &e)
+    {
+        ExtFuture<T>::reportException(e);
+    }
+    catch (...)
+    {
+        ExtFuture<T>::reportException(QUnhandledException());
+    }
 #endif
-	if (this->isCanceled())
-	{
-		// Report that we were canceled.
-		this->reportCanceled();
-	}
-	else
-	{
-		this->reportFinished();
-	}
-}
 
+    // Again it seems like we also should be checking isCanceled() and calling reportCanceled() here, but
+    // RunFunctionTask<T> doesn't.  It simply does this:
+    //
+    // this->reportResult(result);
+    // this->reportFinished();
+    //
+    // I think the answer to this semi-mystery is that cancelled QFutures do not deliver any more events.
+    // E.g., see this test case: https://github.com/qt/qtbase/blob/8cc27590bd2a04ce841cdb66f234ff13f11148af/tests/auto/corelib/thread/qfuturewatcher/tst_qfuturewatcher.cpp#L638
+    // There the future is reportFinished() before being cancelled (through a watcher), and the results are then never delivered.
+    //
+    // Also, we're reporting results differently, so we maybe don't need a call to reportResults().
+
+//    if (this->isCanceled())
+//    {
+//        // Report that we were canceled.
+//        this->reportCanceled();
+//    }
+//    else
+//    {
+        this->reportFinished();
+//    }
+}
 
 #endif /* UTILS_CONCURRENCY_EXTASYNCTASK_H_ */

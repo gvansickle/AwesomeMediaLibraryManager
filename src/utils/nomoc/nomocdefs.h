@@ -20,12 +20,24 @@
 #ifndef UTILS_NOMOC_NOMOCDEFS_H_
 #define UTILS_NOMOC_NOMOCDEFS_H_
 
+/**
+ * @file
+ *
+ * Wrapper for Verdigris, the "Qt5 minus moc" library.  Lets us build with or without it.
+ *
+ * @link https://code.woboq.org/woboq/verdigris/tutorial/tutorial.cpp.html
+ * @link https://code.woboq.org/woboq/verdigris/src/wobjectdefs.h.html
+ */
+
 #ifdef USE_BUNDLED_VERDIGRIS
 #include <wobjectdefs.h>
 #else
 #define W_OBJECT(classname) Q_OBJECT
-#define W_SIGNAL(...) ;
+#define W_GADGET(classname) Q_GADGET
+#define W_NAMESPACE(NSNAME) Q_NAMESPACE
+#define W_SIGNAL(...) /* nothing except a ";" */ ;
 #define W_SLOT(...) /* nothing */
+#define W_INVOKABLE(...) /* nothing */
 #endif
 
 #endif /* UTILS_NOMOC_NOMOCDEFS_H_ */

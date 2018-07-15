@@ -20,22 +20,25 @@
 #ifndef UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_
 #define UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_
 
-#include <QObject>
-
-
-#include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
-
-#include <tests/TestHelpers.h>
-
+// Std C++
 #include <map>
 #include <string>
 #include <mutex>
 
+// Qt5
+#include <QObject>
+
+// Google Test
+#include <gtest/gtest.h>
+//#include <gmock/gmock-matchers.h>
+
+// Ours
+#include <tests/TestHelpers.h>
+
 /**
- * Test Suite (ISTQB) or "Test Case" (Google) for AsyncTests.
+ * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  */
-class AsyncTestsSuiteFixture : public ::testing::Test
+class ExtAsyncTestsSuiteFixture : public ::testing::Test
 {
 protected:
 

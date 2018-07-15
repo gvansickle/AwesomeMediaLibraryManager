@@ -22,7 +22,6 @@
 #include "AMLMApp.h"
 
 /// Qt5
-
 #include <QtGlobal>
 #include <QSettings>
 #include <QIcon>
@@ -34,19 +33,17 @@
 #include <QDebug>
 
 /// KF5
-
 #include <KAboutData>
 #include <KIconLoader>
 #include <KSharedConfig>
 #include <KConfigGroup>
 
 
-
+/// GTK
 #include <gtk/gtk.h>
-#include <gui/Theme.h>
 
 /// Ours
-
+#include <gui/Theme.h>
 #include <utils/AboutDataSetup.h>
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
@@ -57,6 +54,9 @@
 #include "resources/VersionInfo.h"
 
 #include "utils/Logging.h"
+
+M_WARNING("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER)
+M_WARNING("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER)
 
 /**
  * Here's where the magic happens.
@@ -104,37 +104,30 @@ int main(int argc, char *argv[])
 	//
     AMLMApp app(argc, argv);
 
+    // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
+    app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();
 	// Open or create two top-level config groups: "unmanaged" and "version".
 	// We use the pre-existence of "version" to detect if this is the first time we've started.
 	KConfigGroup grp(config, "unmanaged");
 	KConfigGroup initialGroup(config, "version");
-	if (!initialGroup.exists())
+    if (!initialGroup.exists())
 	{
+        // First-time startup.
+
 		/// @todo Not sure if we want to be this draconian.
-//		QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-//		if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
-//		{
-//			qDb() << "KDE Desktop detected, using system icons";
-//		}
-//		else
-//		{
-//			// We are not on a KDE desktop, force breeze icon theme
-//			grp.writeEntry("force_breeze", true);
-//			qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
-//		}
+        app.KDEOrForceBreeze(grp);
 	}
 
-	// Use HighDPI pixmaps as long as we're supporting High DPI scaling.
-	app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
-
-	// If we're forcing Breeze icons, force them here.
-//	bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
-//	if (forceBreeze)
-//	{
-//		QIcon::setThemeName("breeze");
-//	}
+    // If we're forcing Breeze icons, force them here.
+    M_WARNING("Not picking up these icons FWICT.  Also interfering with user selected icon theme, and doesn't get saved.");
+    bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
+    if (forceBreeze)
+    {
+        Theme::setIconThemeName("breeze");
+    }
 
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System

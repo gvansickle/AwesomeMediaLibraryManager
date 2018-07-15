@@ -17,17 +17,14 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Activity.h"
+#ifndef SRC_CONCURRENCY_TESTS_EXTASYNCTASKTESTS_H_
+#define SRC_CONCURRENCY_TESTS_EXTASYNCTASKTESTS_H_
 
-Activity::Activity()
+class ExtAsyncTaskTests
 {
-}
+public:
+	ExtAsyncTaskTests();
+	virtual ~ExtAsyncTaskTests();
+};
 
-Activity::Activity(const Activity& orig)
-{
-}
-
-Activity::~Activity()
-{
-}
-
+#endif /* SRC_CONCURRENCY_TESTS_EXTASYNCTASKTESTS_H_ */

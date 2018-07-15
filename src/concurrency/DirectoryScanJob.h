@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QObject>
 #include <QUrl>
 #include <QDir>
@@ -30,11 +30,10 @@
 #include <QWeakPointer>
 #include <QSharedPointer>
 
-/// KF5
-#include <ThreadWeaver/ThreadWeaver>
-
+// Ours
 #include <logic/DirScanResult.h>
 #include "AMLMJob.h"
+#include <concurrency/ExtFuture.h>
 #include "utils/UniqueIDMixin.h"
 
 class DirectoryScannerAMLMJob;
@@ -56,46 +55,43 @@ class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectorySc
     using UniqueIDMixin<DirectoryScannerAMLMJob>::uniqueQObjectName;
 
 Q_SIGNALS:
-//    /// ThreadWeaver::QObjectDecorator signals, only three:
-//    /*
-//    *  // This signal is emitted when this job is being processed by a thread.
-//    *  void started(ThreadWeaver::JobPointer);
-//    *  // This signal is emitted when the job has been finished (no matter if it succeeded or not).
-//    *  void done(ThreadWeaver::JobPointer);
-//    *  // This signal is emitted when success() returns false after the job is executed.
-//    *  void failed(ThreadWeaver::JobPointer);
-//    */
-//    void started(ThreadWeaver::JobPointer);
-//    void done(ThreadWeaver::JobPointer);
-//    void failed(ThreadWeaver::JobPointer);
 
     /**
      * KIO::ListJob-like signal used to send the discovered directory entries to
      * whoever may be listening.
-     * Differs in the parameters.  KIO::Job is a KJob here, and the UDSEntryList
-     * is not a list or a UDSEntry, but a single QUrl.
      */
-//    void entries(KJob* kjob, const QUrl& url);
     void entries(KJob* kjob, const DirScanResult& url);
 
-public:
-    explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl &dir_url,
+protected:
+    explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
+public:
+
+    /// @name Public types
+    /// @{
+    using ExtFutureType = ExtFuture<DirScanResult>;
+    /// @}
 
     ~DirectoryScannerAMLMJob() override;
 
+    static DirectoryScannerAMLMJobPtr make_job(QObject *parent, QUrl dir_url,
+                                               const QStringList &nameFilters,
+                                               QDir::Filters filters,
+                                               QDirIterator::IteratorFlags flags);
+
+    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+
 protected:
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
+    DirectoryScannerAMLMJob* asDerivedTypePtr() override { return this; }
 
-    /// Make the internal signal-slot connections.
-//    void make_connections() override;
-//    void connections_make_defaultBegin(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread) override;
-//    void connections_make_defaultExit(const ThreadWeaver::JobPointer &self, ThreadWeaver::Thread *thread) override;
+    void runFunctor() override;
 
 private:
+
+    ExtFuture<DirScanResult> m_ext_future;
 
     QUrl m_dir_url;
     QStringList m_nameFilters;
@@ -105,5 +101,6 @@ private:
 };
 
 Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
+
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

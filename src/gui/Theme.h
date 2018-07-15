@@ -28,6 +28,7 @@
 #include <QStringList>
 #include <QActionGroup>
 class QMimeType;
+class QToolButton;
 
 /// Ours
 class MainWindow;
@@ -58,6 +59,8 @@ public:
     static QIcon iconFromTheme(const QString& icon_name);
     static QIcon iconFromTheme(const QStringList& icon_name);
     static QIcon iconFromTheme(const QMimeType& mime_type);
+
+    static void QToolButtonArrowIconFromTheme(QToolButton* button, const QString& icon_name, Qt::ArrowType arrow_type_fallback);
 
     /// @}
 

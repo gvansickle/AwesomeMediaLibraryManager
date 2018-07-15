@@ -187,9 +187,6 @@ set(HEADER_FILES
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
-	concurrency/DirectoryScanJob.h
-	concurrency/ThreadsafeMap.h
-	concurrency/DebugSequence.h
     )
 
 # Source file list.
@@ -217,7 +214,6 @@ set(SOURCE_FILES
 	utils/MapConverter.cpp
 	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
-	concurrency/ReportingRunner.cpp
 	utils/AsyncDirScanner.cpp
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
@@ -235,9 +231,6 @@ set(SOURCE_FILES
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	utils/QtHelpers.cpp
-	concurrency/DirectoryScanJob.cpp
-	concurrency/ThreadsafeMap.cpp
-	concurrency/DebugSequence.cpp
 	)
 
 # NoMoc files.
@@ -251,6 +244,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ReportingRunner.h
 	concurrency/AsyncTaskManager.h
 	concurrency/ExtendedDeferred.h
+	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
 	concurrency/ExtFutureWatcher.h
 	concurrency/impl/ExtFuture_fwddecl_p.h
@@ -258,16 +252,21 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncTask.h
 	concurrency/function_traits.hpp
-	concurrency/ActivityManager.h
 	concurrency/AMLMJob.h
 	concurrency/AMLMCompositeJob.h
+	concurrency/DirectoryScanJob.h
+	concurrency/ThreadsafeMap.h
+	concurrency/DebugSequence.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
 	concurrency/function_traits.cpp
-	concurrency/ActivityManager.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
+	concurrency/ReportingRunner.cpp
+	concurrency/DirectoryScanJob.cpp
+	concurrency/ThreadsafeMap.cpp
+	concurrency/DebugSequence.cpp
 	)
 
 add_subdirectory(gui)
@@ -345,7 +344,7 @@ target_compile_definitions(${PROJECT_NAME}
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-if(NOT WIN32)
+if(FALSE) # OBSOLETE? NOT WIN32)
 	target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb3;-fno-omit-frame-pointer")
 endif()
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -391,19 +390,26 @@ add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 
 #enable_testing()
 set(TEST_EXE_TARGET alltests)
-set(SOURCE_FILES_TEST)
-set(HEADER_FILES_TEST)
-list(APPEND SOURCE_FILES_TEST
-	concurrency/tests/AsyncTests.cpp)
-list(APPEND
-	tests/TestHelpers.h
-	concurrency/tests/AsyncTests.h)
+set(AMLM_SOURCE_FILES_TEST "")
+set(AMLM_HEADER_FILES_TEST "")
+list(APPEND AMLM_SOURCE_FILES_TEST
+	concurrency/tests/ExtAsyncTaskTests.cpp
+	concurrency/tests/ExtAsyncTests.cpp
+	concurrency/tests/AMLMJobTests.cpp)
+list(APPEND AMLM_HEADER_FILES_TEST
+	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+	concurrency/tests/ExtAsyncTaskTests.h
+	concurrency/tests/ExtAsyncTests.h
+	concurrency/tests/AMLMJobTests.h)
 
-add_executable(${TEST_EXE_TARGET}
-				alltests.cpp ${SOURCE_FILES_TEST} ${HEADER_FILES_TEST}
-				${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
-				${amlm_settings_SRCS}
-				${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+add_executable(${TEST_EXE_TARGET})
+target_sources(${TEST_EXE_TARGET}
+	PUBLIC
+	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
+		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${amlm_settings_SRCS}
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+	)
 #target_compile_features(${TEST_EXE_TARGET} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_SHAREDPOINTER_TRACK_POINTERS=1"

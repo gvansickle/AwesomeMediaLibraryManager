@@ -25,37 +25,29 @@
 #ifndef UTILS_CONCURRENCY_EXTFUTURE_H_
 #define UTILS_CONCURRENCY_EXTFUTURE_H_
 
-
-#include <QFutureInterface>
-
-#include <utils/StringHelpers.h>
-#include <utils/DebugHelpers.h>
-
+// Std C++
 #include <memory>
 #include <type_traits>
 #include <functional>
+
+// Qt5
+#include <QFutureInterface>
+
+// Ours
+#include <utils/QtHelpers.h>
+#include <utils/StringHelpers.h>
+#include <utils/DebugHelpers.h>
 #include "function_traits.hpp"
 #include "cpp14_concepts.hpp"
-
 #include <utils/UniqueIDMixin.h>
-
+#include "ExtFutureState.h"
 #include "ExtFutureWatcher.h"
-
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
 
 template <class T>
 class ExtFuture;
-
-struct ExtAsyncProgress
-{
-	int min;
-	int val;
-	int max;
-	QString text;
-};
-
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "impl/ExtFuture_fwddecl_p.h"
@@ -82,11 +74,11 @@ struct ExtAsyncProgress
  * - await()
  * - tap()
  *
- * Note that QFuture<> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<>
+ * Note that QFuture<T> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<T>
  * has the same properties.  In this, they're both more similar to std::experimental::shared_future than ::future,
  * the latter of which has a deleted copy constructor.
  *
- * QFuture<> itself only implements the following:
+ * QFuture<T> itself only implements the following:
  * - Default constructor, which initializes its "private" (actually currently public) "mutable QFutureInterface<T> d;" underlying
  *   QFuterInterface<> object like so:
  *     @code
@@ -94,7 +86,9 @@ struct ExtAsyncProgress
  *     @endcode
  * - An expicit QFuture(QFutureInterface<T> *p) constructor commented as "internal".
  *
- * QFuture<t> doesn't inherit from anything, so copy constructor/assignment/etc. are all defaults.
+ * QFuture<T> and QFutureInterfaceBase don't inherit from anything.  QFutureInterface<T> only inherits
+ * from QFutureInterfaceBase.  Specifically, nothing inherits from QObject, so we're pretty free to use templating
+ * and multiple inheritance.
  */
 template <typename T>
 class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
@@ -112,10 +106,7 @@ public:
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
 	using is_ExtFuture = std::true_type;
-	static constexpr bool is_ExtFuture_v = true;
-
-	/// @todo REMOVE
-	using TapCallbackTypeProgress = std::function<void(ExtAsyncProgress)>;
+	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
 
 	/**
 	 * Default constructor.
@@ -127,7 +118,7 @@ public:
 	 *
 	 * 		m_future_interface.setRunnable(this);
 	 *
-	 * Not sure if we need to do that here or not.
+     * Not sure if we need to do that here or not, we don't have a QRunnable to give it.
 	 *
 	 * This is the code we're fighting:
 	 *
@@ -137,7 +128,9 @@ public:
 			const bool alreadyFinished = !isRunning();
 			lock.unlock();
 
-			if (!alreadyFinished) {
+            if (!alreadyFinished)
+            {
+                /// GRVS: Not finsihed, so start running it?
 				d->pool()->d_func()->stealAndRunRunnable(d->runnable);
 
 				lock.relock();
@@ -152,7 +145,7 @@ public:
 	 *
 	 * @param initialState  Defaults to State(Started | Running)
 	 */
-	ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started | QFutureInterfaceBase::State::Running))
+    ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started /*| QFutureInterfaceBase::State::Running*/))
 		: QFutureInterface<T>(initialState)
 	{
 		qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
@@ -226,6 +219,14 @@ public:
 	 * @return The result value of this ExtFuture.
 	 */
 	T get();
+
+    /**
+     * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
+     */
+    T result()
+    {
+        return this->future().result();
+    }
 
 	/// @name .then() overloads.
 	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like
@@ -306,7 +307,6 @@ public:
 	{
 		static_assert(function_return_type_is_v<decltype(tap_callback), void>, "");
 
-//		m_tap_function = std::make_shared<TapCallbackType>(tap_callback);
 		return TapHelper(context, std::forward<F>(tap_callback)); // *m_tap_function);
 	}
 
@@ -319,6 +319,7 @@ public:
 		return *this;
 	}
 
+#if 0
 	ExtFuture<T>& tap(QObject* context, TapCallbackTypeProgress prog_tap_callback)
 	{
 //		m_tap_progress_function = std::make_shared<TapCallbackTypeProgress>(prog_tap_callback);
@@ -329,7 +330,7 @@ public:
 	{
 		return tap(QApplication::instance(), std::forward<TapCallbackTypeProgress>(prog_tap_callback));
 	}
-
+#endif
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.
@@ -341,6 +342,8 @@ public:
 	{
 		return *this;
 	}
+
+    /// @} // END .tap() overloads.
 
 	/**
 	 * Registers a callback of type void(void) which is always called when this is finished, regardless
@@ -373,7 +376,7 @@ public:
 		return retval;
 	}
 
-	/// @} // END .tap() overloads.
+
 
 	/**
 	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
@@ -388,22 +391,11 @@ public:
 //	void await();
 
 	/**
-	 * Get this' current state as a string.
+     * Get this' current state as a ExtFutureState::States.
 	 *
-	 * @return QString describing the current state of the ExtFuture.
+     * @return A QFlags<>-derived type describing the current state of the ExtFuture.
 	 */
-	QString state() const;
-
-	/**
-	 * Get a string describing this ExtFuture<>, suitable for debug output.
-	 * @return
-	 */
-	QString debug_string() const
-	{
-		QString retval = "ID: " + this->id();
-		retval += ", STATE: (" + state() + ")";
-		return retval;
-	}
+    ExtFutureState::States state() const;
 
 	/// @name Operators
 	/// @{
@@ -418,6 +410,9 @@ public:
 //	bool operator==(const QFuture<T>& other) const { return this->future() == other; }
 
 	/// @} // END Operators
+
+    template <class FutureType>
+    static ExtFutureState::States state(FutureType future);
 
 protected:
 
@@ -450,6 +445,7 @@ protected:
 //			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
+/// @todo ("CRASH ON CANCEL HERE");
 			retval->reportResult(then_cb(std::move(args)...));
 			s_was_ever_called = true;
 			retval->reportFinished();
@@ -539,32 +535,43 @@ protected:
 
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
-
-	std::shared_ptr<TapCallbackTypeProgress> m_tap_progress_function;
 };
-
 
 //
 // START IMPLEMENTATION
 //
 
-//M_WARNING("INCLUDING ExtAsync.h");
 #include "ExtAsync.h"
 
+//template <typename T, typename FutureType>
+//ExtFutureState::States ExtFuture<T>::state(FutureType future)
+//{
+
+//}
+
+template<typename T>
+static ExtFutureState::States state(QFuture<T>& qfuture_derived)
+{
+    return state(qfuture_derived.d);
+}
 
 template <typename T>
 QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 {
 	QDebugStateSaver saver(dbg);
 
-	dbg << "ExtFuture<T>(" << extfuture.debug_string() << ")";
+    dbg << "ExtFuture<T>(" << extfuture.state() /*.debug_string()*/ << ")";
 
 	return dbg;
 }
 
+template <typename T>
+std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
+{
+    outstream << "ExtFuture<T>( state=" << qUtf8Printable(asString(extfuture.state())) << ")";
 
-
-
+    return outstream;
+}
 
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
@@ -585,7 +592,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
  * @param value
  * @return
  */
-#if 0
+#if 0 // make ready/finished
 template<typename T, typename X, typename U = std::decay_t<T>, typename V = std::conditional<std::is_same_v<U, std::reference_wrapper<X>>,X&,U>>
 ExtFuture</*typename std::decay_t<T>*/V> make_ready_future(T&& value)
 {
@@ -635,15 +642,8 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
 }
 
-#endif
+#endif // END make ready/finished
 
-/// Concept checks.
-static_assert(IsExtFuture<ExtFuture<int>>, "");
-static_assert(NonNestedExtFuture<ExtFuture<int>>, "");
-static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-static_assert(!NestedExtFuture<ExtFuture<int>>, "");
-static_assert(!IsExtFuture<int>, "");
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 

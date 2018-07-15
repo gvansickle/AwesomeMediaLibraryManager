@@ -180,7 +180,7 @@ protected:
 };
 
 template <typename T>
-inline ExtFutureWatcher<T>& ExtFutureWatcher<T>::setFuture(QFutureInterface<T> &future_interface)
+inline ExtFutureWatcher<T>& ExtFutureWatcher<T>::setFuture(QFutureInterface<T>& future_interface)
 {
 	// Move ourselves to the utility thread.
 	this->moveToThread(m_utility_thread);

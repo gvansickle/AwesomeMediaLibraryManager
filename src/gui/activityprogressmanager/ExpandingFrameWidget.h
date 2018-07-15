@@ -20,9 +20,8 @@
 #ifndef SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
 #define SRC_GUI_ACTIVITYPROGRESSMANAGER_EXPANDINGFRAMEWIDGET_H_
 
-class QWidget;
+#include <QWidget>
 #include <QSize>
-//#include <QFrame>
 #include <QDialog>
 #include <QPointer>
 
@@ -30,17 +29,21 @@ class QWidget;
 /*
  *
  */
-class ExpandingFrameWidget : public QDialog
+class ExpandingFrameWidget : public QWidget
 {
     Q_OBJECT
 
-    using BASE_CLASS = QDialog;
+    using BASE_CLASS = QWidget;
+
+Q_SIGNALS:
+    /// We don't get this signal with QWidgets, only QWindows.
+    void visibilityChanged(bool);
 
 public:
-    explicit ExpandingFrameWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit ExpandingFrameWidget(QWidget* main_progress_bar_widget, QWidget* parent);
      ~ExpandingFrameWidget() override;
 
-    void setMainProgressWidget(QWidget* status_bar_widget);
+    void setVisible(bool visible) override;
 
     void addWidget(QWidget* new_widget);
 
@@ -50,8 +53,13 @@ public:
 
     void reposition();
 
+protected:
+    void resizeEvent(QResizeEvent* ev) override;
+    bool eventFilter( QObject* o, QEvent* e) override;
+
 private:
 
+    // The widget in the status bar which we're going to be the popup for.
     QPointer<QWidget> m_cumulative_status_bar_main_widget;
 
 };

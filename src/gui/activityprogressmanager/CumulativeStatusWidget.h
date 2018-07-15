@@ -24,8 +24,8 @@
 
 #include <utils/TheSimplestThings.h>
 
-/*
- *
+/**
+ * The StatusWidget which is contained in the status bar.
  */
 class CumulativeStatusWidget: public BaseActivityProgressStatusBarWidget
 {
@@ -35,7 +35,7 @@ class CumulativeStatusWidget: public BaseActivityProgressStatusBarWidget
 
 Q_SIGNALS:
 	/// Emitted when the user toggles the "show/hide subjobs" button.
-	void show_hide_subjob_display(bool show);
+    void SIGNAL_show_hide_subjob_display(bool show);
 
 public:
 	explicit CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
@@ -45,9 +45,12 @@ public Q_SLOTS:
 
     void slot_number_of_jobs_changed(long long new_num_jobs);
 
+    void SLOT_SubjobDisplayVisible(bool);
 
 private:
 	Q_DISABLE_COPY(CumulativeStatusWidget)
+
+    QToolButton* m_button_show_all_jobs;
 
     /// @todo Do we need a no-operation-in-progress child widget?
 

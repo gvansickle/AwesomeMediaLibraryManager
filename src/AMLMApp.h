@@ -22,9 +22,11 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QApplication>
 
+// KF5
+#include <KConfigGroup>
 
 /// Global pointer to the AMLMApp singleton.
 #define amlmApp (static_cast<AMLMApp*>(AMLMApp::instance()))
@@ -43,7 +45,9 @@ public:
     explicit AMLMApp(int& argc, char *argv[]);
 	~AMLMApp() override;
 
-    static AMLMApp* instance() { return static_cast<AMLMApp*>( qApp ); }
+    static AMLMApp* instance() { return dynamic_cast<AMLMApp*>( qApp ); }
+
+    void KDEOrForceBreeze(KConfigGroup group);
 
 private:
 

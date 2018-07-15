@@ -307,7 +307,7 @@ private:
 
     // No notify signal
     template<int, typename State>
-    static constexpr auto process(State s, std::nullptr_t) {
+    static constexpr auto process(State s, Empty) {
         return s.template add<0>();
     }
 
@@ -604,14 +604,14 @@ inline auto propSet(F f, O *o, const T &t) W_RETURN(((o->*f)(t),0))
 template <typename F, typename O, typename T>
 inline auto propSet(F f, O *o, const T &t) W_RETURN(o->*f = t)
 template <typename O, typename T>
-inline void propSet(std::nullptr_t, O *, const T &) {}
+inline void propSet(Empty, O *, const T &) {}
 
 template <typename F, typename O, typename T>
 inline auto propGet(F f, O *o, T &t) W_RETURN(t = (o->*f)())
 template <typename F, typename O, typename T>
 inline auto propGet(F f, O *o, T &t) W_RETURN(t = o->*f)
 template <typename O, typename T>
-inline void propGet(std::nullptr_t, O *, T &) {}
+inline void propGet(Empty, O *, T &) {}
 
 template <typename F, typename M, typename O>
 inline auto propNotify(F f, M m, O *o) W_RETURN(((o->*f)(o->*m),0))
@@ -714,22 +714,22 @@ static void propertyOperation(T *_o, QMetaObject::Call _c, int _id, void **_a) {
     using Type = typename decltype(p)::PropertyType;
     switch(+_c) {
     case QMetaObject::ReadProperty:
-        if (p.getter != nullptr) {
+        if (p.getter) {
             propGet(p.getter, _o, *reinterpret_cast<Type*>(_a[0]));
-        } else if (p.member != nullptr) {
+        } else if (p.member) {
             propGet(p.member, _o, *reinterpret_cast<Type*>(_a[0]));
         }
         break;
     case QMetaObject::WriteProperty:
-        if (p.setter != nullptr) {
+        if (p.setter) {
             propSet(p.setter, _o, *reinterpret_cast<Type*>(_a[0]));
-        } else if (p.member != nullptr) {
+        } else if (p.member) {
             propSet(p.member, _o, *reinterpret_cast<Type*>(_a[0]));
             propNotify(p.notify, p.member, _o);
         }
         break;
     case QMetaObject::ResetProperty:
-        if (p.reset != nullptr) {
+        if (p.reset) {
             propReset(p.reset, _o);
         }
         break;
@@ -838,12 +838,8 @@ template<typename T, typename... Ts> auto qt_static_metacall_impl(Ts &&... args)
 }
 } // w_internal
 
-#ifdef Q_OS_WIN
-// On Windows, taking the address of exported symbols is not a constexpr. (At least with MinGW 5.3)
-// So the staticMetaObject can't be constexpr because of the pointer to the base class QMetaObject
-#define W_STATICMETAOBJECT_CONSTEXPR
-#else
-#define W_STATICMETAOBJECT_CONSTEXPR constexpr
+#ifndef QT_INIT_METAOBJECT // Defined in qglobal.h since Qt 5.10
+#define QT_INIT_METAOBJECT
 #endif
 
 // W_OBJECT_IMPL was designed to take advantage of the GNU extension that ... can have zero arguments.
@@ -868,7 +864,7 @@ template<typename T, typename... Ts> auto qt_static_metacall_impl(Ts &&... args)
         static constexpr auto string_data = data.first; \
         static constexpr auto int_data = data.second; \
     }; \
-    W_MACRO_TEMPLATE_STUFF(__VA_ARGS__) W_STATICMETAOBJECT_CONSTEXPR const QMetaObject W_MACRO_FIRST_REMOVEPAREN(__VA_ARGS__)::staticMetaObject = \
+    W_MACRO_TEMPLATE_STUFF(__VA_ARGS__) const QT_INIT_METAOBJECT QMetaObject W_MACRO_FIRST_REMOVEPAREN(__VA_ARGS__)::staticMetaObject = \
         w_internal::createMetaObject<W_MACRO_FIRST_REMOVEPAREN(__VA_ARGS__)::W_ThisType>();
 
 #define W_OBJECT_IMPL(...) \

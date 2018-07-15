@@ -25,6 +25,7 @@
 
 /// Ours
 #include "utils/TheSimplestThings.h"
+#include <gui/Theme.h>
 
 
 CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent)
@@ -33,17 +34,16 @@ CumulativeStatusWidget::CumulativeStatusWidget(KJob* job, ActivityProgressStatus
     /// @note Requires base class init() to have been called so that sub-widgets are set up.
 
     // Add an "Expand jobs" button.
-    auto button_show_all_jobs = new QToolButton(this);
-    button_show_all_jobs->setPopupMode(QToolButton::InstantPopup);
-    button_show_all_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
-    button_show_all_jobs->setCheckable(true);
+    m_button_show_all_jobs = new QToolButton(this);
+    Theme::QToolButtonArrowIconFromTheme(m_button_show_all_jobs, "go-up", Qt::UpArrow);
+    m_button_show_all_jobs->setCheckable(true);
 
-    addButton(button_show_all_jobs);
+    addButton(m_button_show_all_jobs);
 
 M_WARNING("TODO: This should depend on contained jobs count/state");
     m_cancel_button->setEnabled(true);
 
-    connect(button_show_all_jobs, &QToolButton::toggled, this, &CumulativeStatusWidget::show_hide_subjob_display);
+    connect(m_button_show_all_jobs, &QToolButton::toggled, this, &CumulativeStatusWidget::SIGNAL_show_hide_subjob_display);
 }
 
 CumulativeStatusWidget::~CumulativeStatusWidget()
@@ -56,6 +56,7 @@ void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
 	// Update the subwidget contents.
     if(new_num_jobs > 0)
     {
+M_WARNING("TODO: Propagate job messages here");
         m_current_activity_label->setText(tr("Running"));
     }
     else
@@ -63,5 +64,20 @@ void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
         m_current_activity_label->setText(tr("Idle"));
     }
     m_text_status_label->setText(tr("%1").arg(new_num_jobs));
+}
+
+void CumulativeStatusWidget::SLOT_SubjobDisplayVisible(bool visible)
+{
+    // Update the hide/show button depending on whether the subjob display is visible.
+    if(visible)
+    {
+        Theme::QToolButtonArrowIconFromTheme(m_button_show_all_jobs, "go-down", Qt::DownArrow);
+        m_button_show_all_jobs->setChecked(true);
+    }
+    else
+    {
+        Theme::QToolButtonArrowIconFromTheme(m_button_show_all_jobs, "go-up", Qt::UpArrow);
+        m_button_show_all_jobs->setChecked(false);
+    }
 }
 

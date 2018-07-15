@@ -20,9 +20,13 @@
 #ifndef SRC_LOGIC_COVERARTJOB_H_
 #define SRC_LOGIC_COVERARTJOB_H_
 
-#include "concurrency/AMLMJob.h"
+#include <config.h>
 
+// Qt5
 #include <QUrl>
+
+// Ours
+#include "concurrency/AMLMJob.h"
 
 class CoverArtJob;
 using CoverArtJobPtr = QPointer<CoverArtJob>;
@@ -45,21 +49,33 @@ class CoverArtJob : public AMLMJob, public UniqueIDMixin<CoverArtJob>
 Q_SIGNALS:
     void SIGNAL_ImageBytes(QByteArray);
 
+protected:
+
+    explicit CoverArtJob(QObject* parent, const QUrl& url);
+
 public:
-	explicit CoverArtJob(QObject* parent);
+    /// @name Public types
+    /// @{
+    using ExtFutureType = ExtFuture<QByteArray>;
+    /// @}
+
 	~CoverArtJob() override;
+
+    static CoverArtJobPtr make_job(QObject *parent, const QUrl& url);
 
     QByteArray m_byte_array;
 
-public Q_SLOTS:
-
-    void AsyncGetCoverArt(const QUrl& url);
+    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
 protected:
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
+    CoverArtJob* asDerivedTypePtr() override { return this; }
+
+    void runFunctor() override;
 
 private:
+
+    ExtFutureType m_ext_future;
 
     QUrl m_audio_file_url;
 };

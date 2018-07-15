@@ -32,3 +32,11 @@ CumulativeAMLMJob::~CumulativeAMLMJob()
 }
 
 
+CumulativeAMLMJobPtr CumulativeAMLMJob::make_job(QObject *parent)
+{
+    auto retval = new CumulativeAMLMJob(parent);
+
+    /// @todo Hook things up in here.
+
+    return retval;
+}

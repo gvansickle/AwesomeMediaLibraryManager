@@ -20,6 +20,10 @@
 #ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 
+#include <config.h>
+
+#include "../ExtFutureState.h"
+
 #if 0
 /**
  * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
@@ -60,7 +64,7 @@ void ExtFuture<T>::wait() const
 }
 
 template<typename T>
-QString ExtFuture<T>::state() const
+ExtFutureState::States ExtFuture<T>::state() const
 {
 	// States from QFutureInterfaceBase.
 	/// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
@@ -78,7 +82,7 @@ QString ExtFuture<T>::state() const
 	///		    return d->state.load() & state;
 	///	    }
 
-	std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+    const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
 		{QFutureInterfaceBase::NoState, "NoState"},
 		{QFutureInterfaceBase::Running, "Running"},
 		{QFutureInterfaceBase::Started,  "Started"},
@@ -88,28 +92,9 @@ QString ExtFuture<T>::state() const
 		{QFutureInterfaceBase::Throttled, "Throttled"}
 	};
 
-	QString retval = "";
-	for(auto i : list)
-	{
-		if(QFutureInterfaceBase::queryState(i.first))
-		{
-			if(retval.size() != 0)
-			{
-				// Add a separator.
-				retval += " | ";
-			}
-			retval += toqstr(i.second);
-		}
-	}
+    ExtFutureState::States current_state = ExtFutureState::state(*this);
 
-	if(retval.size() == 0)
-	{
-		return QString("UNKNOWN");
-	}
-	else
-	{
-		return retval;
-	}
+    return current_state;
 }
 
 namespace ExtAsync

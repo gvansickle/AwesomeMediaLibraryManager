@@ -20,18 +20,21 @@
 #ifndef DEBUGHELPERS_H
 #define DEBUGHELPERS_H
 
-/// Std C++
+#include <config.h>
+
+// Std C++
 #include <type_traits>
 
-/// Qt5
+// Qt5
 #include <QObject>
 #include <QMetaMethod>
+#include <QException>
 #include <QString>
 #include <QDebug>
 #include <QThread>
 #include <QModelIndex>
 
-/// Ours
+// Ours
 #include "StringHelpers.h"
 
 
@@ -58,8 +61,41 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 #define qWr() qWarning()
 #define qCr() qCritical()
 
+/// @name QDebug streams with QObject name
+/// @{
+#define qDbo() qDebug() << objectName()
+#define qIno() qInfo() << objectName()
+#define qWro() qWarning() << objectName()
+#define qCro() qCritical() << objectName()
+/// @}
+
 /// Stream out a warning of @a cond holds true.
-#define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << cond; }
+#define AMLM_WARNIF(cond) if((cond)) { qWr() << #cond << (cond); }
+
+/// @name Assert helpers which should come as std equipment in the 21st century, but inexplicably don't.
+/// @{
+
+#define AMLM_ASSERT_EQ(a, b) \
+		do { auto la = (a); auto lb = (b); \
+			if(la != lb) \
+			{\
+				qCr() << "ASSERTION FAILED: " #a " = " << la << " != " #b " =" << lb; \
+				Q_ASSERT(la == lb); \
+				Q_ASSERT_X(0, "AMLM_ASSERT_EQ", "MACRO BROKEN, DISAGREES WITH Q_ASSERT"); \
+			}\
+		} while(0)
+
+/// @}
+
+/// Throw if condition is true.
+template <class ExceptionType = QException, class... Args>
+void throwif(bool condition, Args... args)
+{
+	if(condition)
+	{
+        throw ExceptionType(args...);
+	}
+}
 
 #define AMLM_ASSERT_IN_GUITHREAD() do { Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread()); } while(0)
 
@@ -195,6 +231,20 @@ void print_type_in_compilation_error(T&&)
 //#define M_PRINT_TYPE_IN_ERROR(T) typedef typename T::something_made_up X;
 #define M_PRINT_TYPEOF_VAR_IN_ERROR(v) bool x = decltype((v))::no_such_member_so_you_can_see_the_type_name;
 #define M_PRINT_TYPEOF_TEMPLATE_PARAM_T(T) typedef typename T::no_such_member_so_you_can_see_the_type_name X;
+
+/**
+ * @name Attempts to get the compiler to print a human-readable constexpr value at compile time.
+ * @note In the 21st century, this also should be a solved problem.  It isn't.
+ * @link https://stackoverflow.com/a/4977816
+ */
+/// @{
+template<int constant>
+struct print_constexpr_in_compilation_warning
+{
+    operator char() { return constant + 256; }  //always overflow
+};
+#define STATIC_PRINT_CONSTEXPR_VAL(constant) char(print_constexpr_in_compilation_warning<constant>())
+/// @}
 
 /// @name Preprocessor helpers for M_WARNING().
 /// @{

@@ -53,10 +53,19 @@ class LibraryRescannerJob: public AMLMJob, public UniqueIDMixin<LibraryRescanner
 Q_SIGNALS:
     void processReadyResults(MetadataReturnVal lritem_vec);
 
-public:
+protected:
     explicit LibraryRescannerJob(QObject* parent);
-	~LibraryRescannerJob() override;
 
+public:
+
+    /// @name Public types
+    /// @{
+    using ExtFutureType = ExtFuture<MetadataReturnVal>;
+    /// @}
+
+    ~LibraryRescannerJob() override;
+
+    static LibraryRescannerJobPtr make_job(QObject *parent);
 
 public Q_SLOTS:
 
@@ -64,7 +73,12 @@ public Q_SLOTS:
 
 protected:
 
-    void run(ThreadWeaver::JobPointer self, ThreadWeaver::Thread *thread) override;
+//    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
+    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+
+    LibraryRescannerJob* asDerivedTypePtr() override { return this; }
+
+    void runFunctor() override;
 
     /// The map function for rescanning the library to reload metadata from the files.
     /// Runs in an arbitrary thread context, so must be threadsafe.
@@ -72,6 +86,8 @@ protected:
 
 private:
     Q_DISABLE_COPY(LibraryRescannerJob)
+
+    ExtFuture<MetadataReturnVal> m_ext_future;
 
     QVector<VecLibRescannerMapItems> m_items_to_rescan;
     LibraryModel* m_current_libmodel;
