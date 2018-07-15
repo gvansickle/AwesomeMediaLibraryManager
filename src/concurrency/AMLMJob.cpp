@@ -61,7 +61,10 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
     connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
 
-//    connect_or_die(app??, &??::SIGNAL_aboutToShutDown, this, &AMLMJob::SLOT_extfuture_aboutToShutdown);
+    connect_or_die(this, &QObject::destroyed, this, &AMLMJob::SLOT_on_destroyed);
+    connect_or_die(this, &QObject::destroyed, qApp, [=](QObject* obj){
+        qWro() << "OBJECT DESTROYED:" << obj;
+        });
 }
 
 AMLMJob::~AMLMJob()
@@ -650,6 +653,11 @@ void AMLMJob::setKJobErrorInfo(bool success)
             setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(asDerivedTypePtr()->objectName()));
         }
     }
+}
+
+void AMLMJob::SLOT_on_destroyed(QObject *obj)
+{
+    qDbo() << "OBJECT DESTROYED:" << obj;
 }
 
 

@@ -571,6 +571,8 @@ protected Q_SLOTS:
     /// @name Internal slots
     /// @{
 
+    void SLOT_on_destroyed(QObject* obj);
+
     void SLOT_extfuture_finished();
     void SLOT_extfuture_canceled();
     void SLOT_extfuture_aboutToShutdown();

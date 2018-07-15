@@ -148,7 +148,7 @@ TEST_F(AMLMJobTests, ThisShouldPass)
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
-TEST_F(AMLMJobTests, DISABLED_DirScanCancelTest)
+TEST_F(AMLMJobTests, DirScanCancelTest)
 {
     ExtFutureWatcher<DirScanResult> watcher;
 
