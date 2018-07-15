@@ -216,6 +216,8 @@ TEST_F(AMLMJobTests, CancelTest)
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     ASSERT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    ASSERT_TRUE(kjob_result_spy.isValid());
 
     ExtFuture<int> ef = j->get_extfuture_ref();
 
@@ -246,12 +248,17 @@ TEST_F(AMLMJobTests, CancelTest)
     ASSERT_TRUE(ef.isCanceled()) << ef;
 
     // Wait for the KJob to signal that it's deleted.
-//    ASSERT_TRUE(kjob_finished_spy.wait());
+    EXPECT_TRUE(kjob_finished_spy.wait());
+    EXPECT_TRUE(kjob_result_spy.wait());
 }
 
 TEST_F(AMLMJobTests, CancelBeforeStartTest)
 {
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    ASSERT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    ASSERT_TRUE(kjob_result_spy.isValid());
 
     ExtFuture<int> ef = j->get_extfuture_ref();
 
@@ -274,6 +281,9 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 //    EXPECT_EQ(j->m_counter, 1);
 //    QTest::qSleep(500);
 
+    // Wait for the KJob to signal that it's deleted.
+    EXPECT_TRUE(kjob_finished_spy.wait());
+    EXPECT_TRUE(kjob_result_spy.wait());
 }
 
 #include "AMLMJobTests.moc"

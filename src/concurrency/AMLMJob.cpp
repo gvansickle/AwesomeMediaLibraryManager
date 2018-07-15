@@ -305,6 +305,7 @@ void AMLMJob::run()
         qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
         ef.waitForResume();
     }
+
     qDbo() << "REPORTING FINISHED";
     ef.reportFinished();
 
@@ -316,59 +317,36 @@ void AMLMJob::run()
 
     // Do the post-run work.
     qDbo() << "Calling runEnd()";
-    runEnd();
+///////////////
+//    // We've either completed our work or been cancelled.
+//    if(wasCancelRequested())
+//    {
+//        // Cancelled.
+//        // KJob Success == false is correct in the cancel case.
+//        qDbo() << "Cancelled";
+//        setSuccessFlag(false);
+//    }
+//    else
+//    {
+//        // Wasn't a cancel, so runFunctor() finished and should have explicitly set success/fail.
+//        Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
+//    }
+////////////////////////
+//    runEnd();
+
+    // Set the three KJob error fields.
+    setKJobErrorInfo(!ef.isCanceled());
+
+    qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
+    if(isAutoDelete())
+    {
+        // emitResult() may result in a this->deleteLater(), via finishJob().
+        qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
+    }
+    emitResult();
 
     // Notify any possible doKill() that we really truly have stopped the async worker thread.
     m_run_returned.release();
-}
-
-void AMLMJob::runEnd()
-{
-    /// @note We're still in a non-GUI worker thread here.
-
-    auto& extfutureref = asDerivedTypePtr()->get_extfuture_ref();
-
-    Q_CHECK_PTR(this);
-
-    qDbo() << "ENTER runEnd()";
-
-    // We've either completed our work or been cancelled.
-    if(wasCancelRequested())
-    {
-        // Cancelled.
-        // KJob Success == false is correct in the cancel case.
-        qDbo() << "Cancelled";
-        setSuccessFlag(false);
-    }
-    else
-    {
-        // Wasn't a cancel, so runFunctor() finished and should have explicitly set success/fail.
-        Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
-    }
-
-    /// @note run() must have set the correct success() value prior to exiting.
-
-    if(!m_success)
-    {
-        qWro() << "FAILED";
-    }
-    else
-    {
-        qDbo() << "Succeeded";
-    }
-
-    // Set the three KJob error fields.
-    setKJobErrorInfo(!extfutureref.isCanceled());
-
-    qDbo() << "ABOUT TO EMITRESULT():" << asDerivedTypePtr() << "isAutoDelete?:" << isAutoDelete();
-    emitResult();
-
-    // emitResult() may have resulted in a this->deleteLater(), via finishJob().
-    if(isAutoDelete())
-    {
-        qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
-//        m_possible_delete_later_pending = true;
-    }
 }
 
 bool AMLMJob::functorHandlePauseResumeAndCancel()

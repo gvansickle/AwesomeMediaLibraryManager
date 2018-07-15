@@ -466,12 +466,6 @@ protected:
     virtual void runFunctor() = 0;
 
     /**
-     * The runEnd() function, called at the very end of run() before it returns.
-     * @note run() must have set the correct success() value prior to calling this.
-     */
-    void runEnd();
-
-    /**
      * Call this at the bottom of your runFunctor() override.
      * Handles pause/resume internally.
      * @return true if runFunctor() loop should break.
