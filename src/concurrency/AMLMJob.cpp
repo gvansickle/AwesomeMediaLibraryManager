@@ -474,8 +474,8 @@ bool AMLMJob::doKill()
     {
         // run() was never even started.
         qIno() << "ExtAsync<> job never started";
-        // Pretend it was for the logic below, Unacquire the semaphore.
-        m_run_was_started.release();
+        // Pretend it started and finished for the logic below, Unacquire the semaphore.
+        m_run_returned.release();
 
         // We'll cancel the future.
     }
