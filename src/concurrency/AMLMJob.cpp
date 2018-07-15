@@ -316,7 +316,6 @@ void AMLMJob::run()
     // We should only have two possible states here, excl. exceptions for the moment:
     // - Started | Finished
     // - Started | Canceled | Finished if job was canceled.
-//    Q_ASSERT(ef.isStarted() && ef.isFinished());
     AMLM_ASSERT_EQ(ef.isStarted(), true);
     AMLM_ASSERT_EQ(ef.isFinished(), true);
 
@@ -468,14 +467,7 @@ bool AMLMJob::doKill()
 
     auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
-    // Is the underlying async job actually running, or have we already been cancelled?
-//    if(ef.isCanceled())
-//    {
-//        // Already canceled.
-//        qWro() << "ExtAsync<> job already cancelled";
-//        return true;
-//    }
-
+    // Is the underlying async job actually running, or have we already been cancelled, or never started?
     bool was_not_started = m_cancel_token.tryAcquire();
     if(!was_not_started && ef.isCanceled())
     {
@@ -506,15 +498,13 @@ bool AMLMJob::doKill()
     setError(KilledJobError);
 
     // Wait for the ExtFuture<> to report Finished or cancelled.
-    /// @todo Is this even meaningful with the semaphore below?
+    /// @todo Is this even meaningful with the semaphore acquire below?
     ef.waitForFinished();
 
     // Wait for the async job to really finish, i.e. for the run() member to finish.
     m_cancel_token.acquire();
 
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
-/// @warning This asserts for reasons TBD.
-//    Q_ASSERT(m_run_functor_returned);
 
     //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
     // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
