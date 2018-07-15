@@ -1207,7 +1207,8 @@ MDITreeViewBase* MainWindow::activeChildMDIView()
  */
 QMdiSubWindow* MainWindow::findSubWindow(QUrl url) const
 {
-	for(auto window : m_mdi_area->subWindowList())
+    const auto &subwinlist = m_mdi_area->subWindowList();
+    for(const auto& window : subwinlist)
 	{
 		auto widget = window->widget();
         qDebug() << "windowFilePath:" << widget << widget->windowFilePath();
@@ -1788,7 +1789,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			// The Collection Doc Widget uses this among others.
 			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_view->getDisplayName());
 			new_playlist_row_item->setData(QVariant::fromValue(playlist_view));
-			new_playlist_row_item->setData(QIcon::fromTheme("view-media-playlist"), Qt::DecorationRole);
+            new_playlist_row_item->setData(QIcon::fromTheme("view-media-playlist"), Qt::DecorationRole);
 			QString tttext = tr("<b>%1</b><hr>%2").arg(playlist_view->getDisplayName()).arg(playlist_view->windowFilePath());
 			new_playlist_row_item->setData(QVariant(tttext), Qt::ToolTipRole);
 			m_stditem_playlist_views->appendRow(new_playlist_row_item);
@@ -1942,7 +1943,7 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 
     Theme::setIconThemeName(iconThemeName);
 
-	for(auto w : qApp->allWidgets())
+    for(auto& w : qApp->allWidgets())
 	{
 		QEvent style_changed_event(QEvent::StyleChange);
 		QCoreApplication::sendEvent(w, &style_changed_event);

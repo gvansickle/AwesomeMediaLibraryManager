@@ -37,19 +37,30 @@
 #include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
-#include <concurrency/ExtAsync.h>
+/// Ours, Qt5/KF5-related
+#include <utils/TheSimplestThings.h>
+#include <utils/RegisterQtMetatypes.h>
 
 #include "utils/AsyncDirScanner.h"
+#include <concurrency/ExtAsync.h>
 #include <concurrency/ReportingRunner.h>
 #include <concurrency/AsyncTaskManager.h>
+#include <concurrency/DirectoryScanJob.h>
 
-#include <src/concurrency/DirectoryScanJob.h>
 #include "LibraryRescannerJob.h"
+
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
 #include "logic/LibraryModel.h"
 
 
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering LibraryRescanner types";
+	// From #include <logic/LibraryRescanner.h>
+	qRegisterMetaType<MetadataReturnVal>();
+	qRegisterMetaType<QFuture<MetadataReturnVal>>();
+	qRegisterMetaType<VecLibRescannerMapItems>("VecLibRescannerMapItems");
+    });
 
 
 LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)

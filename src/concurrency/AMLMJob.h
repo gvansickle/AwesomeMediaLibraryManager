@@ -466,7 +466,7 @@ protected:
     /**
      * Call this at the bottom of your runFunctor() override.
      * Handles pause/resume internally.
-     * @return true if runFunctor() loop should break.
+     * @return true if loop in runFunctor() should break due to being canceled.
      */
     bool functorHandlePauseResumeAndCancel();
 

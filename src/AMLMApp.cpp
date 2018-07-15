@@ -45,7 +45,7 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 
 AMLMApp::~AMLMApp()
 {
-    // Shut down whatever still needs shutting down.
+    /// @todo Shut down whatever still needs shutting down.
 }
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)

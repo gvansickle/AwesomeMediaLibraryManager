@@ -25,8 +25,7 @@
  * Qt5 analogs to std::async().
  */
 
-//#include "ExtFuture.h"
-//#include "ExtFutureWatcher.h"
+#include <config.h>
 
 // Std C++
 #include <type_traits>
@@ -42,7 +41,7 @@
 #include <QEvent>
 #include <QObject>
 #include <QtConcurrent>
-#include <QtCore/QFutureInterface>
+#include <QFutureInterface>
 #include <QRunnable>
 #include <QCoreApplication>
 

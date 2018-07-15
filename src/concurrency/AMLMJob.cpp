@@ -349,7 +349,8 @@ bool AMLMJob::functorHandlePauseResumeAndCancel()
     }
     if (ef.isCanceled())
     {
-        // Caller should break out of while() loop.
+        // The job has been canceled.
+        // The calling runFunctor() should break out of while() loop.
         return true;
     }
     else

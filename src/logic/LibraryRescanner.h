@@ -42,11 +42,6 @@
 class LibraryModel;
 class LibraryEntry;
 
-//////////////// EXP
-class QSqlDatabase;
-//////////////// EXP
-
-
 
 struct MetadataReturnVal
 {
