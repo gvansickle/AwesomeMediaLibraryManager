@@ -50,6 +50,8 @@
 #include "logic/LibraryModel.h"
 
 
+
+
 LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
 {
 	setObjectName("TheLibraryRescanner");

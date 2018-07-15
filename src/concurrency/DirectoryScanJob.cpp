@@ -156,19 +156,12 @@ void DirectoryScannerAMLMJob::runFunctor()
             Q_EMIT entries(this, dir_scan_result);
         }
 
-        if(wasCancelRequested())
+        if(functorHandlePauseResumeAndCancel())
         {
             // We've been cancelled.
             qIno() << "CANCELLED";
             m_ext_future.reportCanceled();
             break;
-        }
-        if(m_ext_future.isPaused())
-        {
-            // We're paused, wait for a resume signal.
-            qDbo() << "PAUSING";
-            m_ext_future.waitForResume();
-            qDbo() << "RESUMING";
         }
     }
 

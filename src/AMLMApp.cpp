@@ -25,7 +25,7 @@
 #include <QProcessEnvironment>
 
 // KF5
-#include <KJob>
+//#include <KJob>
 
 // Ours
 #include <utils/TheSimplestThings.h>

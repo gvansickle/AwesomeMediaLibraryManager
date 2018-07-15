@@ -39,7 +39,7 @@ LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
     setObjectName(uniqueQObjectName());
 
     // Set our capabilities.
-    setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
+    setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 }
 
 LibraryRescannerJob::~LibraryRescannerJob()
@@ -82,18 +82,20 @@ void LibraryRescannerJob::runFunctor()
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
     {
-        if(wasCancelRequested())
-        {
-            // We were told to cancel.
-            break;
-        }
-
         qDb() << "Item number:" << num_items;
         MetadataReturnVal a = this->refresher_callback(*i);
         Q_EMIT processReadyResults(a);
         num_items++;
 
         setProcessedAmountAndSize(KJob::Unit::Files, num_items);
+
+        if(functorHandlePauseResumeAndCancel())
+        {
+            // We've been cancelled.
+            qIno() << "CANCELLED";
+            m_ext_future.reportCanceled();
+            break;
+        }
     }
 
     // We've either completed our work or been cancelled.
