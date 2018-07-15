@@ -57,6 +57,10 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     KJobWidgets::setWindow(this, MainWindow::instance());
     setUiDelegate(new KDialogJobUiDelegate());
 
+    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
+    connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
+    connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
+
 //    connect_or_die(app??, &??::SIGNAL_aboutToShutDown, this, &AMLMJob::SLOT_extfuture_aboutToShutdown);
 }
 
@@ -92,7 +96,7 @@ void AMLMJob::setSuccessFlag(bool success)
     /// Called from underlying ExtAsync thread.
     qDbo() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
-    m_tw_job_run_reported_success_or_fail = 1;
+//    m_tw_job_run_reported_success_or_fail = 1;
 }
 
 qulonglong AMLMJob::totalSize() const
@@ -111,9 +115,7 @@ qulonglong AMLMJob::processedSize() const
 
 void AMLMJob::start()
 {
-    QMutexLocker lock(&m_start_vs_cancel_mutex);
-
-    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
+    QMutexLocker lock(&m_start_vs_dokill_mutex);
 
 //    m_watcher = new QFutureWatcher<void>(this);
 //    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
@@ -259,6 +261,8 @@ void AMLMJob::run()
         // Report (STARTED | CANCELED | FINISHED)
         ef.reportFinished();
         AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
+
+        m_run_returned.release();
         return;
     }
 #ifdef QT_NO_EXCEPTIONS
@@ -284,9 +288,6 @@ void AMLMJob::run()
         /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
         ef.reportException(QUnhandledException());
     }
-
-    /// QThreadPoolThread::run():
-    /// locker.relock();
 
     /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
     /// QtCreator::runextensions.h::AsyncJob::run() calls runHelper(), which then does this here:
@@ -326,7 +327,9 @@ void AMLMJob::run()
         // emitResult() may result in a this->deleteLater(), via finishJob().
         qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
     }
-//    emitResult();
+
+    // emitResult().
+    // We use a signal/slot here since we're in an arbitrary context.
     Q_EMIT SIGNAL_internal_call_emitResult();
 
     // Notify any possible doKill() that we really truly have stopped the async worker thread.
@@ -335,13 +338,13 @@ void AMLMJob::run()
 
 bool AMLMJob::functorHandlePauseResumeAndCancel()
 {
-    auto& extfutureref = asDerivedTypePtr()->get_extfuture_ref();
+    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
-    if (extfutureref.isPaused())
+    if (ef.isPaused())
     {
-        extfutureref.waitForResume();
+        ef.waitForResume();
     }
-    if (extfutureref.isCanceled())
+    if (ef.isCanceled())
     {
         // Caller should break out of while() loop.
         return true;
@@ -376,13 +379,24 @@ void AMLMJob::SLOT_extfuture_aboutToShutdown()
     kill();
 }
 
-void AMLMJob::SLOT_call_emitResult()
+void AMLMJob::SLOT_kjob_finished(KJob *kjob)
 {
-    emitResult();
+    qDbo() << "GOT KJOB FINISHED:" << kjob;
+}
+
+void AMLMJob::SLOT_kjob_result(KJob *kjob)
+{
+    qDbo() << "GOT KJOB RESULT:" << kjob << ", error():" << kjob->error();
 }
 ////
 ///
 ///
+
+void AMLMJob::SLOT_call_emitResult()
+{
+    emitResult();
+}
+
 
 /**
  * KJob::doKill() override.
@@ -433,7 +447,7 @@ void AMLMJob::SLOT_call_emitResult()
  */
 bool AMLMJob::doKill()
 {
-    QMutexLocker lock(&m_start_vs_cancel_mutex);
+    QMutexLocker lock(&m_start_vs_dokill_mutex);
 
     qDbo() << "START EXTASYNC DOKILL";
 
@@ -448,21 +462,23 @@ bool AMLMJob::doKill()
 
     auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
-    // Is the underlying async job actually running, or have we already been cancelled, or never started?
+    // Is the underlying ExtAsync job currently running, or have we already been cancelled, or never started?
     bool run_returned = m_run_returned.tryAcquire();
     if(run_returned)
     {
-        // We have nothing to cancel.
+        // run() completed, we have nothing to cancel.
         if(ef.isCanceled())
         {
             // We were have already been canceled.
             qWro() << "ExtAsync<> job already cancelled";
+            AMLM_ASSERT_EQ(ef.isFinished(), true);
         }
         else if(ef.isFinished())
         {
             // run() finished normally.
-            qIno() << "ExtAsync<> job already finished normally";
+            qIno() << "ExtAsync<> job already finished";
         }
+
         // Unacquire the semaphore so we can pend on it below if we've been called twice or something like that.
         m_run_returned.release();
         return true;
@@ -474,8 +490,13 @@ bool AMLMJob::doKill()
     {
         // run() was never even started.
         qIno() << "ExtAsync<> job never started";
+        AMLM_ASSERT_EQ(m_run_was_started.available(), 0);
+        AMLM_ASSERT_EQ(m_run_returned.available(), 0);
+///
         // Pretend it started and finished for the logic below, Unacquire the semaphore.
+        ef.reportFinished();
         m_run_returned.release();
+        AMLM_ASSERT_EQ(m_run_returned.available(), 1);
 
         // We'll cancel the future.
     }
@@ -490,7 +511,8 @@ bool AMLMJob::doKill()
     ef.cancel();
 
     /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
-    setError(KilledJobError);
+//    setError(KilledJobError);
+    setKJobErrorInfo(false);
 
     // Wait for the ExtFuture<> to report Finished or cancelled.
     /// @todo Is this even meaningful with the semaphore acquire below?
@@ -500,6 +522,8 @@ bool AMLMJob::doKill()
     /// @todo won't be acqable if killed before started.
     m_run_returned.acquire();
 
+    /// @todo Difference here btw cancel before and after start.
+    /// Before: Started | Canceled, After: S|F|C.
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
 
     //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
@@ -514,8 +538,11 @@ bool AMLMJob::doKill()
     // Try to detect that we've survived at least to this point.
     Q_ASSERT(!m_i_was_deleted);
 
-    /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
-    qWro() << "doKill() returning, may result in a this->deleteLater(), via finishJob().";
+    if(isAutoDelete())
+    {
+        /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
+        qWro() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
+    }
     return true;
 }
 

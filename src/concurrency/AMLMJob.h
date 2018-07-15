@@ -575,6 +575,9 @@ protected Q_SLOTS:
     void SLOT_extfuture_canceled();
     void SLOT_extfuture_aboutToShutdown();
 
+    void SLOT_kjob_finished(KJob* kjob);
+    void SLOT_kjob_result(KJob* kjob);
+
     void SLOT_call_emitResult();
 
     /// @}
@@ -589,7 +592,7 @@ public:
     /**
      * Semaphores for coordinating the sync and async operations in doKill().
      */
-    QMutex m_start_vs_cancel_mutex;
+    QMutex m_start_vs_dokill_mutex;
     QSemaphore m_run_was_started {0};
     QSemaphore m_run_returned {0};
 
@@ -598,7 +601,6 @@ private:
 
     QFutureWatcher<void>* m_watcher;
 
-    QAtomicInt m_tw_job_run_reported_success_or_fail {0};
     QAtomicInt m_success { 1 };
 
     /// Wishful thinking at the moment, but maybe I'll figure out how to separate "Size" from KJob::Bytes.

@@ -119,20 +119,6 @@ protected:
             GTEST_COUT << "Reporting counter result\n";
             m_ext_future.reportResult(m_counter);
 
-//            if(wasCancelRequested())
-//            {
-//                // We've been cancelled.
-//                qIno() << "CANCELLED";
-//                m_ext_future.reportCanceled();
-//                break;
-//            }
-//            if(m_ext_future.isPaused())
-//            {
-//                // We're paused, wait for a resume signal.
-//                qDbo() << "PAUSING";
-//                m_ext_future.waitForResume();
-//                qDbo() << "RESUMING";
-//            }
             if(functorHandlePauseResumeAndCancel())
             {
                 // We've been cancelled.
@@ -212,13 +198,17 @@ TEST_F(AMLMJobTests, DISABLED_DirScanCancelTest)
 
 TEST_F(AMLMJobTests, CancelTest)
 {
-    auto j = TestAMLMJob1::make_job(nullptr);
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
     j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     ASSERT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
     ASSERT_TRUE(kjob_result_spy.isValid());
+
+    connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
+        qDb() << "GOT SIGNAL FINISHED:" << kjob;
+                });
 
     ExtFuture<int> ef = j->get_extfuture_ref();
 
@@ -256,6 +246,8 @@ TEST_F(AMLMJobTests, CancelTest)
 
 TEST_F(AMLMJobTests, CancelBeforeStartTest)
 {
+    RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
+
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
     j->setAutoDelete(false);
 
@@ -263,6 +255,10 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
     ASSERT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
     ASSERT_TRUE(kjob_result_spy.isValid());
+
+    connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
+        qDb() << "GOT SIGNAL FINISHED:" << kjob;
+                });
 
     ExtFuture<int> ef = j->get_extfuture_ref();
 
@@ -285,7 +281,8 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 //    EXPECT_EQ(j->m_counter, 1);
 //    QTest::qSleep(500);
 
-    // Wait for the KJob to signal that it's deleted.
+    // Wait for the KJob to signal that it's finished.
+    // Won't get a result() signal here because it's kill()'ed Quietly.
     EXPECT_TRUE(kjob_finished_spy.wait());
     EXPECT_FALSE(kjob_result_spy.wait());
 }

@@ -90,7 +90,7 @@ ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 
     QMutexLocker locker(&m_tracked_job_state_mutex);
 
-M_WARNING("TODO: Probably need to not call cancellAll() in here.");
+    /// @todo Not sure if this is right or not: M_WARNING("TODO: Probably need to not call cancellAll() in here.");
     qDb() << "DELETING ALL TRACKED OBJECTS";
     cancelAll();
 
@@ -262,7 +262,7 @@ void ActivityProgressStatusBarTracker::cancelAll()
     {
         qDb() << "Cancelling job:" << kjob; // << "widget:" << it.value();
 //        job->kill();
-M_WARNING("SEEMS WRONG");
+/// @todo M_WARNING("SEEMS WRONG");
 //        slotStop(kjob);
         Q_EMIT INTERNAL_SIGNAL_slotStop(kjob);
     }
