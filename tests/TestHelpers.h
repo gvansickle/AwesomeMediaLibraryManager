@@ -20,9 +20,15 @@
 #ifndef TESTS_TESTHELPERS_H_
 #define TESTS_TESTHELPERS_H_
 
+// Std C++
+#include <sstream>
+
 // Qt5
 #include <Qt>
 #include <QString>
+
+// Ours
+#include <src/concurrency/ExtFuture.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,8 +40,52 @@ inline void PrintTo(const QString &qString, ::std::ostream *os)
 
 QT_END_NAMESPACE
 
+/// To let Google Test print ExtFutures.
+template <class T>
+inline void PrintTo(const ExtFuture<T> &ef, ::std::ostream *os)
+{
+    QString str;
+    QDebug dbg(&str);
+    dbg << ef;
+    PrintTo(str, os);
+}
+
 /// Quick and dirty way to add information to the test log.
 #define GTEST_COUT std::cout << "[          ] [ INFO ]"
+
+/// @name Hopefully less quick-and-dirty way to add information to test output.
+/// @{
+//namespace testing
+//{
+//    namespace internal
+//    {
+//    enum GTestColor {
+//        COLOR_DEFAULT,
+//        COLOR_RED,
+//        COLOR_GREEN,
+//        COLOR_YELLOW
+//    };
+
+/// @warning This is static in gtest now.
+//    extern void ColoredPrintf(GTestColor color, const char* fmt, ...);
+//    } // namespace internal
+//} // namespace testing
+
+//#define PRINTF(...)  do { testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] "); testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, __VA_ARGS__); } while(0)
+
+//// C++ stream interface
+//class TestCout : public std::stringstream
+//{
+//public:
+//    ~TestCout()
+//    {
+//        PRINTF("%s", str().c_str());
+//    }
+//};
+
+//#define TEST_COUT  TestCout()
+
+/// @}
 
 /// @name Additional test helper macros.
 /// @{

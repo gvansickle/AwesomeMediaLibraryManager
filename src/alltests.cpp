@@ -64,22 +64,22 @@ int main(int argc, char *argv[])
 	Logging logging;
 
 	logging.SetFilterRules();
-
 	logging.InstallMessageHandler();
+    // Set up top-level logging.
+    logging.SetMessagePattern("[          ] "
+                              "["
+                              "%{time hh:mm:ss.zzz} "
+                              "%threadname15 "
+                              "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
+                              "%{if-fatal}FATAL%{endif}"
+                              "] "
+                              /*	+ logging.ClickableLinkPattern() + */
+                              "%{function}:%{line} - %{message}"
+                              "%{if-fatal}%{backtrace}%{endif}");
 
 	// Create the Qt5 app.
 	QApplication app(argc, argv);
 
-	// Set up top-level logging.
-	logging.SetMessagePattern("[          ] ["
-					   "%{time hh:mm:ss.zzz} "
-					   "%{threadid} "
-					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
-					   "%{if-fatal}FATAL%{endif}"
-					   "] "
-						+ logging.ClickableLinkPattern() +
-					   /*"%{function}:%{line}*/ " - %{message}"
-					   "%{if-fatal}%{backtrace}%{endif}");
 
 	// Start the log with the App ID and version info.
 	qInfo() << "LOGGING START";

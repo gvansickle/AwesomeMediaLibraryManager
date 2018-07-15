@@ -112,6 +112,14 @@ public:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::States)
 
+inline static QString asString(ExtFutureState::States states)
+{
+    QString str;
+    QDebug dbg(&str);
+    dbg << states;
+    return str;
+}
+
 /**
  * QDebug stream operator for QFutureInterface<T>'s.
  */

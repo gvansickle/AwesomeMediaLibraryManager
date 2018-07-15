@@ -216,7 +216,7 @@ Q_SIGNALS:
     // void result (KJob *job)
 	// void 	resumed (KJob *job)
     /// KJob::Speed
-    /// I'm not at all clear on how to really use the KJOB::speed functionality.  You call emitSpeed(value),
+    /// I'm not at all clear on how to really use the KJob::speed functionality.  You call emitSpeed(value),
     /// with whatever "value" is, it starts a 5 second timer, then... the timer times out... then I totally lose the plot.
     /// Ah well.
 	// void 	speed (KJob *job, unsigned long speed)
@@ -586,8 +586,11 @@ public:
     bool m_i_was_deleted = false;
 
     QAtomicInt m_run_functor_returned {0};
-//    QAtomicInt m_run_returned {0};
-    QSemaphore m_run_returned;
+
+    /**
+     * Semaphore for coordinating the sync and async operations in doKill().
+     */
+    QSemaphore m_cancel_token {0};
 
 
 private:

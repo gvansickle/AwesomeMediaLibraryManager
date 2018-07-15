@@ -62,6 +62,11 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 
 AMLMJob::~AMLMJob()
 {
+    // The ExtAsync job should not be running here.
+    /// @todo Except we can't check it here, since get_extfuture_ref()is pure virtual,
+    /// and the derived class' destructor will have already been called.
+//    Q_ASSERT(this->get_extfuture_ref().isRunning() == false);
+
     // The KJob should have finished/been killed before we get deleted.
 //    Q_ASSERT(isFinished());
 
@@ -122,6 +127,7 @@ void AMLMJob::start()
     // Note that calling the destructor of (by deleting) the returned future is ok:
     // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
     // "Note that this neither waits nor cancels the asynchronous computation."
+    m_cancel_token.release();
     ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
 //    m_watcher->setFuture(this->get_extfuture_ref());
 }
@@ -174,48 +180,7 @@ void AMLMJob::start()
  *
  */
 
-/**
- * kill()/finishJob():
- *
- * So what happens is:
- * - So then it's this:
- *
- * if (doKill()) {
-    setError(KilledJobError);
 
-    finishJob(verbosity != Quietly);
-    return true;
-    } else {
-        return false;
-    }
-
-    ... and this (which is also called directly by emitResult()):
-
-    void KJob::finishJob(bool emitResult)
-    {
-    Q_D(KJob);
-    d->isFinished = true;
-
-    if (d->eventLoop) {
-        d->eventLoop->quit();
-    }
-
-    // If we are displaying a progress dialog, remove it first.
-    emit finished(this, QPrivateSignal());
-
-    if (emitResult) {
-        emit result(this, QPrivateSignal());
-    }
-
-    if (isAutoDelete()) {
-        deleteLater();
-    }
-    }
-
-    So I think the answer is:
-    - We need this object to survive doKill(),
-    - We can't do anything else after that, due to finishJob() possibly destroying us.
- */
 
 /**
  * qt-creator FileSearch functor has this structure:
@@ -307,7 +272,7 @@ void AMLMJob::run()
     try
     {
 #endif
-        // Start the work.  We should be in the Running state if we're in here.
+        // Start the work by calling the functor.  We should be in the Running state if we're in here.
         /// @todo But we're not Running here.  Not sure why.
 //        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
         qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
@@ -360,8 +325,8 @@ void AMLMJob::run()
     qDbo() << "Calling runEnd()";
     runEnd();
 
-    // Notify any possible doKill() that we've really truly have stopped the worker job.
-    m_run_returned.release();
+    // Notify any possible doKill() that we really truly have stopped the async worker thread.
+    m_cancel_token.release();
 }
 
 void AMLMJob::runEnd()
@@ -440,14 +405,61 @@ void AMLMJob::SLOT_extfuture_aboutToShutdown()
 {
     kill();
 }
-
 ////
 ///
 ///
 
+/**
+ * KJob::doKill() override.
+ *
+ * kill()/finishJob():
+ *
+ * So what happens is:
+ * - So then it's this:
+ *
+ * if (doKill())
+ * {
+      setError(KilledJobError);
 
+      finishJob(verbosity != Quietly);
+      return true;
+   }
+   else
+   {
+      return false;
+   }
+
+    ... and this (which is also called directly by emitResult()):
+
+    void KJob::finishJob(bool emitResult)
+    {
+    Q_D(KJob);
+    d->isFinished = true;
+
+    if (d->eventLoop) {
+        d->eventLoop->quit();
+    }
+
+    // If we are displaying a progress dialog, remove it first.
+    emit finished(this, QPrivateSignal());
+
+    if (emitResult) {
+        emit result(this, QPrivateSignal());
+    }
+
+    if (isAutoDelete()) {
+        deleteLater();
+    }
+    }
+
+    So I think the answer is:
+    - We need this object to survive doKill(),
+    - We can't do anything else after that, due to finishJob() possibly destroying us.
+ */
 bool AMLMJob::doKill()
 {
+    qDbo() << "START EXTASYNC DOKILL";
+
     Q_ASSERT(!m_possible_delete_later_pending);
 
     // KJob::doKill().
@@ -459,10 +471,40 @@ bool AMLMJob::doKill()
         Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
     }
 
-    // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
-
-    qDbo() << "START EXTASYNC DOKILL";
     auto& ef = asDerivedTypePtr()->get_extfuture_ref();
+
+    // Is the underlying async job actually running, or have we already been cancelled?
+//    if(ef.isCanceled())
+//    {
+//        // Already canceled.
+//        qWro() << "ExtAsync<> job already cancelled";
+//        return true;
+//    }
+
+    bool was_not_started = m_cancel_token.tryAcquire();
+    if(!was_not_started && ef.isCanceled())
+    {
+        // We were have already been canceled.
+        qWro() << "ExtAsync<> job already cancelled";
+        // Unacquire the semaphore so we can pend on it below if we've been called twice or something like that.
+        m_cancel_token.release();
+        return true;
+    }
+    else if(was_not_started)
+    {
+        // We were never even started.
+        qWro() << "ExtAsync<> job never started";
+        m_cancel_token.release();
+        // Cancel the future.
+        ef.cancel();
+    }
+    else
+    {
+        // Unacquire the semaphore so we can pend on it below.
+        m_cancel_token.release();
+    }
+
+    // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
     ef.cancel();
 
     /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
@@ -472,9 +514,8 @@ bool AMLMJob::doKill()
     /// @todo Is this even meaningful with the semaphore below?
     ef.waitForFinished();
 
-    // Wait for the async job to really finish.
-    /// @todo We need to handle this for the never-started case.
-    m_run_returned.acquire();
+    // Wait for the async job to really finish, i.e. for the run() member to finish.
+    m_cancel_token.acquire();
 
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
 /// @warning This asserts for reasons TBD.

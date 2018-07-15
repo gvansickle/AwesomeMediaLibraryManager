@@ -568,7 +568,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
-    outstream << "ExtFuture<T>(" << extfuture.state() << ")";
+    outstream << "ExtFuture<T>( state=" << qUtf8Printable(asString(extfuture.state())) << ")";
 
     return outstream;
 }

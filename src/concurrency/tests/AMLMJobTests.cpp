@@ -50,13 +50,13 @@ void AMLMJobTests::TearDown()
 	GTEST_COUT << "TearDown()" << std::endl;
 }
 
-// Test derived AMLMJob
+
 
 class TestAMLMJob1;
 using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
-
-//static std::atomic_bool f_
-
+/**
+ * Test job derived from AMLMJob.
+ */
 class TestAMLMJob1 : public AMLMJob, public UniqueIDMixin<TestAMLMJob1>
 {
 	Q_OBJECT
@@ -85,7 +85,8 @@ public:
 
     ~TestAMLMJob1() override
     {
-//        EXPECT_TRUE(m_run_functor_returned);
+        SCOPED_TRACE("DESTRUCTOR");
+        EXPECT_EQ(this->get_extfuture_ref().isRunning(), false);
 //        EXPECT_TRUE(m_run_returned);
     }
 
@@ -104,18 +105,21 @@ protected:
 
     void runFunctor() override
     {
+        SCOPED_TRACE("");
+
         // Do some work...
         for(int i =0; i<10; i++)
         {
             Q_ASSERT(!m_possible_delete_later_pending);
 
             GTEST_COUT << "Sleeping for 1 second\n";
-        /// @todo BROKEN.  On cancel, during this qSleep() we seem to get prempted and
-        ///  return to doKill() with m_ext_future == Canceled, fall through the "ef.waitForFinished()"
-        /// there, and die.
             QTest::qSleep(1000);
+
             GTEST_COUT << "Incementing counter\n";
             m_counter++;
+
+            GTEST_COUT << "Reporting counter result\n";
+            m_ext_future.reportResult(m_counter);
 
             if(wasCancelRequested())
             {
@@ -132,6 +136,8 @@ protected:
                 qDbo() << "RESUMING";
             }
         }
+
+        setSuccessFlag(!wasCancelRequested());
         m_run_functor_returned = 1;
     }
 
@@ -152,12 +158,13 @@ TEST_F(AMLMJobTests, ThisShouldPass)
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
-TEST_F(AMLMJobTests, DirScanCancelTest)
+TEST_F(AMLMJobTests, DISABLED_DirScanCancelTest)
 {
     ExtFutureWatcher<DirScanResult> watcher;
 
 	// Dummy dir so the dir scanner job has something to chew on.
     QUrl dir_url = QUrl::fromLocalFile("/");
+    RecordProperty("dirscanned", tostdstr(dir_url.toString()));
     DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(nullptr, dir_url,
 	                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
@@ -199,9 +206,52 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
 //    ASSERT_EQ(dsj->get_extfuture_ref(), );
 }
 
-TEST_F(AMLMJobTests, CancelTest2)
+TEST_F(AMLMJobTests, CancelTest)
 {
     auto j = TestAMLMJob1::make_job(nullptr);
+
+    ExtFuture<int> ef = j->get_extfuture_ref();
+
+    // Start the job.
+    GTEST_COUT << "START\n";
+    j->start();
+
+    ASSERT_TRUE(ef.isStarted()) << ef.state();
+
+    // Let it run for a while.
+    QTest::qSleep(500);
+    EXPECT_EQ(j->m_counter, 0);
+    QTest::qSleep(700);
+    EXPECT_EQ(j->m_counter, 1);
+    QTest::qSleep(500);
+
+    // Should not be canceled or finished yet.
+    ASSERT_FALSE(ef.isCanceled()) << ef;
+    ASSERT_FALSE(ef.isFinished()) << ef;
+
+    // Cancel the running job.
+    GTEST_COUT << "CANCELING JOB\n";
+    bool kill_succeeded = j->kill(KJob::KillVerbosity::Quietly);
+
+    ASSERT_TRUE(kill_succeeded) << ef;
+    ASSERT_TRUE(ef.isCanceled()) << ef;
+}
+
+TEST_F(AMLMJobTests, CancelBeforeStartTest)
+{
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
+
+    ExtFuture<int> ef = j->get_extfuture_ref();
+
+    ASSERT_TRUE(ef.isStarted()) << ef;
+    ASSERT_FALSE(ef.isRunning()) << ef;
+
+    // Job hasn't started yet, kill it.
+    bool kill_succeeded = j->kill();
+
+    ASSERT_TRUE(kill_succeeded) << ef;
+    ASSERT_TRUE(ef.isCanceled()) << ef;
+
     j->start();
 
     QTest::qSleep(500);
@@ -209,9 +259,7 @@ TEST_F(AMLMJobTests, CancelTest2)
     QTest::qSleep(700);
     EXPECT_EQ(j->m_counter, 1);
     QTest::qSleep(500);
-    // Cancel.
-    j->kill();
-}
 
+}
 
 #include "AMLMJobTests.moc"
