@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H
+#define AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H
 
 #include <config.h>
 
@@ -31,6 +31,7 @@
 /// Qt5
 
 #include <QUrl>
+
 class QActionGroup;
 class QWidget;
 class QLabel;
@@ -49,7 +50,8 @@ class KJob;
 namespace KIO
 {
     class Job;
-}
+} // namespace KIO
+
 class KStatusBarJobTracker;
 class KToolBar;
 using ToolBarClass = KToolBar;
@@ -520,4 +522,4 @@ private:
     QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 
-#endif // MAINWINDOW_H
+#endif // AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H
