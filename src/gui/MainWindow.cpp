@@ -876,9 +876,11 @@ void MainWindow::createToolBars()
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
 							 m_savePlaylistAct});
-    for(auto a : m_fileToolBar->actions())
+
+    const auto& actionlist = m_fileToolBar->actions();
+    for(const auto& a : actionlist)
     {
-        if(a->associatedWidgets().size() == 0)
+        if(a->associatedWidgets().empty())
         {
             qWr() << "File toolbar action" << a << "has no associatedWidgets()";
         }
@@ -1056,15 +1058,15 @@ void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *play
 	}
 }
 
-void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view)
+void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)
 {
 	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
-	connect(m_controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-	connect(m_controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect(controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect(controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 
 	// Connect play() signal-to-signal.
-	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect(playlist_view, &MDIPlaylistView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)

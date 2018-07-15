@@ -17,6 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
 #include <config.h>
 
 /// Std C++
@@ -301,7 +304,7 @@ private:
     ///@{
     void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
     void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
-    void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
+    void connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view);
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
 	void connectPlaylistViewAndMainWindow(MDIPlaylistView* plv);
@@ -517,3 +520,4 @@ private:
     QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 
+#endif // MAINWINDOW_H
