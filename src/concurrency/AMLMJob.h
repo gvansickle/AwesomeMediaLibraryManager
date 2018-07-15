@@ -582,7 +582,7 @@ private:
     Q_DISABLE_COPY(AMLMJob)
 
 public:
-    bool m_possible_delete_later_pending = false;
+
     bool m_i_was_deleted = false;
 
     QAtomicInt m_run_functor_returned {0};

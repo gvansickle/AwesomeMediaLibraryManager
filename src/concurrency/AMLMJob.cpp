@@ -90,7 +90,7 @@ bool AMLMJob::wasCancelRequested()
 
 void AMLMJob::setSuccessFlag(bool success)
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     /// Called from underlying ExtAsync thread.
     qDbo() << "SETTING SUCCESS/FAIL:" << success;
@@ -100,21 +100,21 @@ void AMLMJob::setSuccessFlag(bool success)
 
 qulonglong AMLMJob::totalSize() const
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     return totalAmount(progressUnit());
 }
 
 qulonglong AMLMJob::processedSize() const
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     return processedAmount(progressUnit());
 }
 
 void AMLMJob::start()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
 //    m_watcher = new QFutureWatcher<void>(this);
 //    auto& ef = this->get_extfuture_ref();
@@ -220,7 +220,7 @@ void AMLMJob::run()
     /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
     /// QMutexLocker locker(&manager->mutex);
 
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     /// @note We're in an arbitrary thread here probably without an event loop.
 
@@ -277,8 +277,6 @@ void AMLMJob::run()
 //        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
         qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
         asDerivedTypePtr()->runFunctor();
-
-        m_run_functor_returned = 1;
         qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
     }
     catch(QException &e)
@@ -318,8 +316,9 @@ void AMLMJob::run()
     // We should only have two possible states here, excl. exceptions for the moment:
     // - Started | Finished
     // - Started | Canceled | Finished if job was canceled.
-    Q_ASSERT(ef.isStarted() && ef.isFinished());
-//    AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Finished));
+//    Q_ASSERT(ef.isStarted() && ef.isFinished());
+    AMLM_ASSERT_EQ(ef.isStarted(), true);
+    AMLM_ASSERT_EQ(ef.isFinished(), true);
 
     // Do the post-run work.
     qDbo() << "Calling runEnd()";
@@ -331,8 +330,6 @@ void AMLMJob::run()
 
 void AMLMJob::runEnd()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
-
     /// @note We're still in a non-GUI worker thread here.
 
     auto& extfutureref = asDerivedTypePtr()->get_extfuture_ref();
@@ -370,15 +367,13 @@ void AMLMJob::runEnd()
     setKJobErrorInfo(!extfutureref.isCanceled());
 
     qDbo() << "ABOUT TO EMITRESULT():" << asDerivedTypePtr() << "isAutoDelete?:" << isAutoDelete();
-/// @todo Still true?: M_WARNING("ASSERTS HERE IF NO FILES FOUND.");
-    Q_ASSERT(m_run_functor_returned);
     emitResult();
 
     // emitResult() may have resulted in a this->deleteLater(), via finishJob().
     if(isAutoDelete())
     {
         qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
-        m_possible_delete_later_pending = true;
+//        m_possible_delete_later_pending = true;
     }
 }
 
@@ -387,7 +382,7 @@ void AMLMJob::runEnd()
 ///
 void AMLMJob::SLOT_extfuture_finished()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     m_watcher->deleteLater();
     emitResult();
@@ -395,7 +390,7 @@ void AMLMJob::SLOT_extfuture_finished()
 
 void AMLMJob::SLOT_extfuture_canceled()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     // Nothing but deleteLater() the watcher.
     m_watcher->deleteLater();
@@ -460,7 +455,7 @@ bool AMLMJob::doKill()
 {
     qDbo() << "START EXTASYNC DOKILL";
 
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     // KJob::doKill().
     /// @note The calling thread has to have an event loop, and actually AFAICT should be the main app thread.
@@ -535,13 +530,12 @@ bool AMLMJob::doKill()
 
     /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
     qWro() << "doKill() returning, may result in a this->deleteLater(), via finishJob().";
-    m_possible_delete_later_pending = true;
     return true;
 }
 
 bool AMLMJob::doSuspend()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     /// KJob::doSuspend().
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
@@ -551,7 +545,7 @@ bool AMLMJob::doSuspend()
 
 bool AMLMJob::doResume()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     /// KJob::doResume().
     Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
@@ -561,7 +555,7 @@ bool AMLMJob::doResume()
 
 void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
     {
@@ -573,7 +567,7 @@ void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
 
 void AMLMJob::setTotalAmountAndSize(KJob::Unit unit, qulonglong amount)
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
     {
@@ -585,7 +579,7 @@ void AMLMJob::setTotalAmountAndSize(KJob::Unit unit, qulonglong amount)
 
 void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
 #ifdef THIS_IS_EVER_NOT_BROKEN
     /// @todo This "KJobPrivate" crap is crap.
@@ -605,14 +599,14 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 
 KJob::Unit AMLMJob::progressUnit() const
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     return m_progress_unit;
 }
 
 void AMLMJob::setKJobErrorInfo(bool success)
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
+    //Q_ASSERT(!m_possible_delete_later_pending);
 
     // We're still in the underlying ExtAsync::run() context and don't have an event loop here.
     /// @note GRVS: Threadsafety not clear.  KJob doesn't do any locking FWICT around these variable sets.

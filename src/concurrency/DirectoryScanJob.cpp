@@ -65,8 +65,6 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
 
 void DirectoryScannerAMLMJob::runFunctor()
 {
-    Q_ASSERT(!m_possible_delete_later_pending);
-
     // Create the QDirIterator.
     QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
 
@@ -99,7 +97,6 @@ void DirectoryScannerAMLMJob::runFunctor()
     // Iterate through the directory tree.
     while(m_dir_iterator.hasNext())
     {
-        Q_ASSERT(!m_possible_delete_later_pending);
         Q_ASSERT(!m_i_was_deleted);
 
         // Go to the next entry and return the path to it.

@@ -110,8 +110,6 @@ protected:
         // Do some work...
         for(int i =0; i<10; i++)
         {
-            Q_ASSERT(!m_possible_delete_later_pending);
-
             GTEST_COUT << "Sleeping for 1 second\n";
             QTest::qSleep(1000);
 
@@ -233,6 +231,8 @@ TEST_F(AMLMJobTests, CancelTest)
     GTEST_COUT << "CANCELING JOB\n";
     bool kill_succeeded = j->kill(KJob::KillVerbosity::Quietly);
 
+    // j is now probably going to be deleteLater()'ed.
+
     ASSERT_TRUE(kill_succeeded) << ef;
     ASSERT_TRUE(ef.isCanceled()) << ef;
 }
@@ -249,16 +249,18 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
     // Job hasn't started yet, kill it.
     bool kill_succeeded = j->kill();
 
+    // j is now probably going to be deleteLater()'ed.
+
     ASSERT_TRUE(kill_succeeded) << ef;
     ASSERT_TRUE(ef.isCanceled()) << ef;
 
-    j->start();
+//    j->start();
 
-    QTest::qSleep(500);
-    EXPECT_EQ(j->m_counter, 0);
-    QTest::qSleep(700);
-    EXPECT_EQ(j->m_counter, 1);
-    QTest::qSleep(500);
+//    QTest::qSleep(500);
+//    EXPECT_EQ(j->m_counter, 0);
+//    QTest::qSleep(700);
+//    EXPECT_EQ(j->m_counter, 1);
+//    QTest::qSleep(500);
 
 }
 
