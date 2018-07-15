@@ -109,28 +109,28 @@ qulonglong AMLMJob::processedSize() const
     return processedAmount(progressUnit());
 }
 
-//void AMLMJob::start()
-//{
-//    QMutexLocker lock(&m_start_vs_cancel_mutex);
+void AMLMJob::start()
+{
+    QMutexLocker lock(&m_start_vs_cancel_mutex);
 
-//    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
+    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
 
 //    m_watcher = new QFutureWatcher<void>(this);
 //    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 //    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
 //    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
 
-//    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
-//    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
-//    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
-//    // Note that calling the destructor of (by deleting) the returned future is ok:
-//    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
-//    // "Note that this neither waits nor cancels the asynchronous computation."
-//    /// Indicate to the cancel logic that we did start.
-//    m_run_was_started.release();
-//    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
+    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
+    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
+    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
+    // Note that calling the destructor of (by deleting) the returned future is ok:
+    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
+    // "Note that this neither waits nor cancels the asynchronous computation."
+    /// Indicate to the cancel logic that we did start.
+    m_run_was_started.release();
+    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
 //    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
-//}
+}
 
 
 /**
@@ -474,6 +474,9 @@ bool AMLMJob::doKill()
     {
         // run() was never even started.
         qIno() << "ExtAsync<> job never started";
+        // Pretend it was for the logic below, Unacquire the semaphore.
+        m_run_was_started.release();
+
         // We'll cancel the future.
     }
     else
@@ -494,6 +497,7 @@ bool AMLMJob::doKill()
     ef.waitForFinished();
 
     // Wait for the async job to really finish, i.e. for the run() member to finish.
+    /// @todo won't be acqable if killed before started.
     m_run_returned.acquire();
 
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);

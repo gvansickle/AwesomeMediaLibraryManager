@@ -257,6 +257,8 @@ TEST_F(AMLMJobTests, CancelTest)
 TEST_F(AMLMJobTests, CancelBeforeStartTest)
 {
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
+    j->setAutoDelete(false);
+
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     ASSERT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
@@ -285,7 +287,7 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 
     // Wait for the KJob to signal that it's deleted.
     EXPECT_TRUE(kjob_finished_spy.wait());
-    EXPECT_TRUE(kjob_result_spy.wait());
+    EXPECT_FALSE(kjob_result_spy.wait());
 }
 
 #include "AMLMJobTests.moc"
