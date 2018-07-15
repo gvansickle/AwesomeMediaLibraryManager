@@ -214,6 +214,31 @@ void AMLMJob::start()
  *
  * ...except they call it with mapReduce().
  */
+/// @note Canceling alone won't finish the extfuture, so we finish it manually here.
+/// I think this is the right thing to do.
+///
+/// QtCreator::runextensions.h::AsyncJob::run() does the same thing here:
+/// @code
+/// if (futureInterface.isCanceled())
+/// {
+///     futureInterface.reportFinished();
+///     return;
+/// }
+/// runHelper(...);
+/// @endcode
+///
+/// QFIBase::reportFinished() does nothing if we're already isFinished(), else does:
+/// @code
+/// 	switch_from_to(d->state, Running, Finished);
+/// 	d->waitCondition.wakeAll();
+/// 	d->sendCallOut(QFutureCallOutEvent(QFutureCallOutEvent::Finished));
+/// @endcode
+/// QFutureInterface<T>::reportFinished(const T* result) adds a possible reportResult() call:
+/// @code
+/// if (result)
+///    reportResult(result);
+/// QFutureInterfaceBase::reportFinished();
+/// @endcode
 
 void AMLMJob::run()
 {
@@ -231,31 +256,6 @@ void AMLMJob::run()
     {
         // We were canceled before we were started.
         /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
-        /// I think this is the right thing to do.
-        ///
-        /// QtCreator::runextensions.h::AsyncJob::run() does the same thing here:
-        /// @code
-        /// if (futureInterface.isCanceled())
-        /// {
-        ///     futureInterface.reportFinished();
-        ///     return;
-        /// }
-        /// runHelper(...);
-        /// @endcode
-        ///
-        /// QFIBase::reportFinished() does nothing if we're already isFinished(), else does:
-        /// @code
-        /// 	switch_from_to(d->state, Running, Finished);
-        /// 	d->waitCondition.wakeAll();
-        /// 	d->sendCallOut(QFutureCallOutEvent(QFutureCallOutEvent::Finished));
-        /// @endcode
-        /// QFutureInterface<T>::reportFinished(const T* result) adds a possible reportResult() call:
-        /// @code
-        /// if (result)
-        ///    reportResult(result);
-        /// QFutureInterfaceBase::reportFinished();
-        /// @endcode
-
         // Report (STARTED | CANCELED | FINISHED)
         ef.reportFinished();
         AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
@@ -264,17 +264,12 @@ void AMLMJob::run()
 #ifdef QT_NO_EXCEPTIONS
 #error "WE NEED EXCEPTIONS"
 #else
-
-    /// QThreadPoolThread::run():
-///    // run the task
-///    locker.unlock();
-
     try
     {
 #endif
         // Start the work by calling the functor.  We should be in the Running state if we're in here.
         /// @todo But we're not Running here.  Not sure why.
-//        Q_ASSERT(ExtFutureState::state(ef) == (ExtFutureState::Started | ExtFutureState::Running));
+//        AMLM_ASSERT_EQ(ef.isRunning(), true);
         qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
         asDerivedTypePtr()->runFunctor();
         qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
@@ -373,6 +368,25 @@ void AMLMJob::runEnd()
     {
         qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
 //        m_possible_delete_later_pending = true;
+    }
+}
+
+bool AMLMJob::functorHandlePauseResumeAndCancel()
+{
+    auto& extfutureref = asDerivedTypePtr()->get_extfuture_ref();
+
+    if (extfutureref.isPaused())
+    {
+        extfutureref.waitForResume();
+    }
+    if (extfutureref.isCanceled())
+    {
+        // Caller should break out of while() loop.
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 

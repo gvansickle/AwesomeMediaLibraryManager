@@ -105,7 +105,7 @@ protected:
 
     void runFunctor() override
     {
-        SCOPED_TRACE("");
+        SCOPED_TRACE("InFunctor");
 
         // Do some work...
         for(int i =0; i<10; i++)
@@ -119,24 +119,30 @@ protected:
             GTEST_COUT << "Reporting counter result\n";
             m_ext_future.reportResult(m_counter);
 
-            if(wasCancelRequested())
+//            if(wasCancelRequested())
+//            {
+//                // We've been cancelled.
+//                qIno() << "CANCELLED";
+//                m_ext_future.reportCanceled();
+//                break;
+//            }
+//            if(m_ext_future.isPaused())
+//            {
+//                // We're paused, wait for a resume signal.
+//                qDbo() << "PAUSING";
+//                m_ext_future.waitForResume();
+//                qDbo() << "RESUMING";
+//            }
+            if(functorHandlePauseResumeAndCancel())
             {
                 // We've been cancelled.
                 qIno() << "CANCELLED";
                 m_ext_future.reportCanceled();
                 break;
             }
-            if(m_ext_future.isPaused())
-            {
-                // We're paused, wait for a resume signal.
-                qDbo() << "PAUSING";
-                m_ext_future.waitForResume();
-                qDbo() << "RESUMING";
-            }
         }
 
         setSuccessFlag(!wasCancelRequested());
-        m_run_functor_returned = 1;
     }
 
 private:

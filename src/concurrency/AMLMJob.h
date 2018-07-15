@@ -471,6 +471,13 @@ protected:
      */
     void runEnd();
 
+    /**
+     * Call this at the bottom of your runFunctor() override.
+     * Handles pause/resume internally.
+     * @return true if runFunctor() loop should break.
+     */
+    bool functorHandlePauseResumeAndCancel();
+
     /// @}
 
     /// @name Override of KJob protected functions.
