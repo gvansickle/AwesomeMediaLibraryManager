@@ -255,7 +255,7 @@ Q_SIGNALS:
     //    *
     //    * so that you won't have to manually call unregisterJob().
 
-
+    void SIGNAL_internal_call_emitResult();
 
 protected:
     /// Protected KJob-like constructor.
@@ -298,7 +298,31 @@ public:
      *
      * @note GRVS: Per comments, KF5 KIO::Jobs autostart; this is overridden to be a no-op.
      */
-    Q_SCRIPTABLE void start() override;
+    Q_SCRIPTABLE void start() override { asDerivedTypePtr()->start_t<decltype(asDerivedTypePtr())>(); }
+
+    template <class T>
+    void start_t()
+    {
+        QMutexLocker lock(&m_start_vs_cancel_mutex);
+
+        connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
+
+//        m_watcher = new QFutureWatcher<void>(this);
+//        auto& ef = asDerivedTypePtr()->get_extfuture_ref();
+//        connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
+//        connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
+
+        // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
+        // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
+        // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
+        // Note that calling the destructor of (by deleting) the returned future is ok:
+        // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
+        // "Note that this neither waits nor cancels the asynchronous computation."
+        /// Indicate to the cancel logic that we did start.
+        m_run_was_started.release();
+        ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
+//        m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
+    }
 
     /// @}
 
@@ -576,6 +600,8 @@ protected Q_SLOTS:
     void SLOT_extfuture_finished();
     void SLOT_extfuture_canceled();
     void SLOT_extfuture_aboutToShutdown();
+
+    void SLOT_call_emitResult();
 
     /// @}
 

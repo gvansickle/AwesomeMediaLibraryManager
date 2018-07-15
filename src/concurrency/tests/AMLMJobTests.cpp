@@ -213,6 +213,7 @@ TEST_F(AMLMJobTests, DISABLED_DirScanCancelTest)
 TEST_F(AMLMJobTests, CancelTest)
 {
     auto j = TestAMLMJob1::make_job(nullptr);
+    j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     ASSERT_TRUE(kjob_finished_spy.isValid());
@@ -247,9 +248,10 @@ TEST_F(AMLMJobTests, CancelTest)
     ASSERT_TRUE(kill_succeeded) << ef;
     ASSERT_TRUE(ef.isCanceled()) << ef;
 
-    // Wait for the KJob to signal that it's deleted.
+    // Wait for the KJob to signal that it's finished.
+    // Won't get a result() signal here because it's kill()'ed Quietly.
     EXPECT_TRUE(kjob_finished_spy.wait());
-    EXPECT_TRUE(kjob_result_spy.wait());
+    EXPECT_FALSE(kjob_result_spy.wait(500));
 }
 
 TEST_F(AMLMJobTests, CancelBeforeStartTest)

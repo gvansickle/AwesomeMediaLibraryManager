@@ -81,7 +81,6 @@ AMLMJob::~AMLMJob()
 
 bool AMLMJob::wasCancelRequested()
 {
-//    Q_ASSERT(!m_possible_delete_later_pending);
     Q_ASSERT(!m_i_was_deleted);
 
     // Were we told to abort?
@@ -90,8 +89,6 @@ bool AMLMJob::wasCancelRequested()
 
 void AMLMJob::setSuccessFlag(bool success)
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
     /// Called from underlying ExtAsync thread.
     qDbo() << "SETTING SUCCESS/FAIL:" << success;
     m_success = success;
@@ -112,25 +109,28 @@ qulonglong AMLMJob::processedSize() const
     return processedAmount(progressUnit());
 }
 
-void AMLMJob::start()
-{
-    QMutexLocker lock(&m_start_vs_cancel_mutex);
+//void AMLMJob::start()
+//{
+//    QMutexLocker lock(&m_start_vs_cancel_mutex);
+
+//    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
+
 //    m_watcher = new QFutureWatcher<void>(this);
-//    auto& ef = this->get_extfuture_ref();
+//    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 //    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
 //    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
 
-    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
-    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
-    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
-    // Note that calling the destructor of (by deleting) the returned future is ok:
-    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
-    // "Note that this neither waits nor cancels the asynchronous computation."
-    /// Indicate to the cancel logic that we did start.
-    m_run_was_started.release();
-    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
-//    m_watcher->setFuture(this->get_extfuture_ref());
-}
+//    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
+//    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
+//    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
+//    // Note that calling the destructor of (by deleting) the returned future is ok:
+//    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
+//    // "Note that this neither waits nor cancels the asynchronous computation."
+//    /// Indicate to the cancel logic that we did start.
+//    m_run_was_started.release();
+//    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
+//    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
+//}
 
 
 /**
@@ -316,23 +316,6 @@ void AMLMJob::run()
     AMLM_ASSERT_EQ(ef.isFinished(), true);
 
     // Do the post-run work.
-    qDbo() << "Calling runEnd()";
-///////////////
-//    // We've either completed our work or been cancelled.
-//    if(wasCancelRequested())
-//    {
-//        // Cancelled.
-//        // KJob Success == false is correct in the cancel case.
-//        qDbo() << "Cancelled";
-//        setSuccessFlag(false);
-//    }
-//    else
-//    {
-//        // Wasn't a cancel, so runFunctor() finished and should have explicitly set success/fail.
-//        Q_ASSERT(m_tw_job_run_reported_success_or_fail == 1);
-//    }
-////////////////////////
-//    runEnd();
 
     // Set the three KJob error fields.
     setKJobErrorInfo(!ef.isCanceled());
@@ -343,7 +326,8 @@ void AMLMJob::run()
         // emitResult() may result in a this->deleteLater(), via finishJob().
         qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
     }
-    emitResult();
+//    emitResult();
+    Q_EMIT SIGNAL_internal_call_emitResult();
 
     // Notify any possible doKill() that we really truly have stopped the async worker thread.
     m_run_returned.release();
@@ -390,6 +374,11 @@ void AMLMJob::SLOT_extfuture_canceled()
 void AMLMJob::SLOT_extfuture_aboutToShutdown()
 {
     kill();
+}
+
+void AMLMJob::SLOT_call_emitResult()
+{
+    emitResult();
 }
 ////
 ///
