@@ -114,8 +114,7 @@ qulonglong AMLMJob::processedSize() const
 
 void AMLMJob::start()
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
+    QMutexLocker lock(&m_start_vs_cancel_mutex);
 //    m_watcher = new QFutureWatcher<void>(this);
 //    auto& ef = this->get_extfuture_ref();
 //    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
@@ -127,7 +126,8 @@ void AMLMJob::start()
     // Note that calling the destructor of (by deleting) the returned future is ok:
     // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
     // "Note that this neither waits nor cancels the asynchronous computation."
-    m_cancel_token.release();
+    /// Indicate to the cancel logic that we did start.
+    m_run_was_started.release();
     ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
 //    m_watcher->setFuture(this->get_extfuture_ref());
 }
@@ -183,7 +183,7 @@ void AMLMJob::start()
 
 
 /**
- * qt-creator FileSearch functor has this structure:
+ * qt-creator FileSearch functor (inherits from nothing) has this structure:
  *
  * FileSearch::operator()(QFutureInterface<FileSearchResultList> &futureInterface,...
  * {
@@ -242,12 +242,12 @@ void AMLMJob::start()
 
 void AMLMJob::run()
 {
+    /// @note We're in an arbitrary thread here probably without an event loop.
+
     /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
     /// QMutexLocker locker(&manager->mutex);
 
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
-    /// @note We're in an arbitrary thread here probably without an event loop.
+    m_run_was_started.release();
 
     auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
@@ -319,7 +319,7 @@ void AMLMJob::run()
     runEnd();
 
     // Notify any possible doKill() that we really truly have stopped the async worker thread.
-    m_cancel_token.release();
+    m_run_returned.release();
 }
 
 void AMLMJob::runEnd()
@@ -466,9 +466,9 @@ void AMLMJob::SLOT_extfuture_aboutToShutdown()
  */
 bool AMLMJob::doKill()
 {
-    qDbo() << "START EXTASYNC DOKILL";
+    QMutexLocker lock(&m_start_vs_cancel_mutex);
 
-    //Q_ASSERT(!m_possible_delete_later_pending);
+    qDbo() << "START EXTASYNC DOKILL";
 
     // KJob::doKill().
     /// @note The calling thread has to have an event loop, and actually AFAICT should be the main app thread.
@@ -482,27 +482,38 @@ bool AMLMJob::doKill()
     auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
     // Is the underlying async job actually running, or have we already been cancelled, or never started?
-    bool was_not_started = m_cancel_token.tryAcquire();
-    if(!was_not_started && ef.isCanceled())
+    bool run_returned = m_run_returned.tryAcquire();
+    if(run_returned)
     {
-        // We were have already been canceled.
-        qWro() << "ExtAsync<> job already cancelled";
+        // We have nothing to cancel.
+        if(ef.isCanceled())
+        {
+            // We were have already been canceled.
+            qWro() << "ExtAsync<> job already cancelled";
+        }
+        else if(ef.isFinished())
+        {
+            // run() finished normally.
+            qIno() << "ExtAsync<> job already finished normally";
+        }
         // Unacquire the semaphore so we can pend on it below if we've been called twice or something like that.
-        m_cancel_token.release();
+        m_run_returned.release();
         return true;
     }
-    else if(was_not_started)
+    // Else run() hasn't returned, and we didn't acquire the semaphore.
+
+    bool run_was_started = m_run_was_started.tryAcquire();
+    if(!run_was_started)
     {
-        // We were never even started.
-        qWro() << "ExtAsync<> job never started";
-        m_cancel_token.release();
-        // Cancel the future.
-        ef.cancel();
+        // run() was never even started.
+        qIno() << "ExtAsync<> job never started";
+        // We'll cancel the future.
     }
     else
     {
-        // Unacquire the semaphore so we can pend on it below.
-        m_cancel_token.release();
+        // run() was started.
+        // Unacquire the semaphore.
+        m_run_was_started.release();
     }
 
     // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
@@ -516,7 +527,7 @@ bool AMLMJob::doKill()
     ef.waitForFinished();
 
     // Wait for the async job to really finish, i.e. for the run() member to finish.
-    m_cancel_token.acquire();
+    m_run_returned.acquire();
 
     qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
 

@@ -592,12 +592,12 @@ public:
 
     bool m_i_was_deleted = false;
 
-    QAtomicInt m_run_functor_returned {0};
-
     /**
-     * Semaphore for coordinating the sync and async operations in doKill().
+     * Semaphores for coordinating the sync and async operations in doKill().
      */
-    QSemaphore m_cancel_token {0};
+    QMutex m_start_vs_cancel_mutex;
+    QSemaphore m_run_was_started {0};
+    QSemaphore m_run_returned {0};
 
 
 private:

@@ -30,7 +30,7 @@
 // Qt5
 #include <QString>
 #include <QTest>
-
+#include <QSignalSpy>
 
 // Ours
 #include "../future_type_traits.hpp"
@@ -85,8 +85,8 @@ public:
 
     ~TestAMLMJob1() override
     {
-        SCOPED_TRACE("DESTRUCTOR");
-        EXPECT_EQ(this->get_extfuture_ref().isRunning(), false);
+//        SCOPED_TRACE("DESTRUCTOR");
+//        EXPECT_EQ(this->get_extfuture_ref().isRunning(), false);
 //        EXPECT_TRUE(m_run_returned);
     }
 
@@ -214,6 +214,9 @@ TEST_F(AMLMJobTests, CancelTest)
 {
     auto j = TestAMLMJob1::make_job(nullptr);
 
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    ASSERT_TRUE(kjob_finished_spy.isValid());
+
     ExtFuture<int> ef = j->get_extfuture_ref();
 
     // Start the job.
@@ -241,6 +244,9 @@ TEST_F(AMLMJobTests, CancelTest)
 
     ASSERT_TRUE(kill_succeeded) << ef;
     ASSERT_TRUE(ef.isCanceled()) << ef;
+
+    // Wait for the KJob to signal that it's deleted.
+//    ASSERT_TRUE(kjob_finished_spy.wait());
 }
 
 TEST_F(AMLMJobTests, CancelBeforeStartTest)
