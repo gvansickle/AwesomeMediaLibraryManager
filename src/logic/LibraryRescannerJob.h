@@ -66,10 +66,12 @@ public:
     ~LibraryRescannerJob() override;
 
     static LibraryRescannerJobPtr make_job(QObject *parent);
+    static LibraryRescannerJobPtr make_job(QObject *parent, LibraryRescannerMapItem item_to_refresh, const LibraryModel *current_libmodel);
+
 
 public Q_SLOTS:
 
-    void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, LibraryModel* current_libmodel);
+    void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, const LibraryModel* current_libmodel);
 
 protected:
 
@@ -90,7 +92,7 @@ private:
     ExtFuture<MetadataReturnVal> m_ext_future;
 
     QVector<VecLibRescannerMapItems> m_items_to_rescan;
-    LibraryModel* m_current_libmodel;
+    const LibraryModel* m_current_libmodel;
 };
 
 Q_DECLARE_METATYPE(LibraryRescannerJobPtr);

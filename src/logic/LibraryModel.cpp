@@ -22,6 +22,7 @@
 #include "LibraryModel.h"
 
 #include "LibraryRescanner.h"
+#include "LibraryRescannerJob.h"
 #include "LibraryRescannerMapItem.h"
 #include "LibraryEntryMimeData.h"
 
@@ -96,10 +97,10 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_libr
 	// Connections.
 
     //////// EXP
-    m_coll_db_model = new CollectionDatabaseModel(this);
-    m_coll_db_model->open_db_connection(QUrl("dummy"));
-    m_coll_db_model->create_db_tables();
-    m_sql_model = m_coll_db_model->get_rel_table(this);//new QSqlRelationalTableModel(this, db_conn);
+//    m_coll_db_model = new CollectionDatabaseModel(this);
+//    m_coll_db_model->open_db_connection(QUrl("dummy"));
+//    m_coll_db_model->create_db_tables();
+//    m_sql_model = m_coll_db_model->get_rel_table(this);//new QSqlRelationalTableModel(this, db_conn);
 
 }
 
@@ -190,6 +191,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 //	Qt::ItemDataRole id_role = Qt::ItemDataRole(role);
 //	qDebug() << "index:" << index.isValid() << index.row() << index.column() << "role:" << id_role;
 
+    // Handle invalid indexes.
 	if(!index.isValid())
 	{
 		if(role == Qt::UserRole)
@@ -202,6 +204,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 			return QVariant();
 		}
 	}
+
+    // index is valid.
 
 	if(role == ModelUserRoles::PointerToItemRole)
 	{
@@ -256,6 +260,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 		auto sec_id = getSectionFromCol(index.column());
 		if(item->isPopulated())
 		{
+            // Item has data.
 			QVariant metaentry;
 			if(sec_id == SectionID::Status)
 			{
@@ -323,6 +328,11 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 			{
 				return QVariant(item->getUrl());
 			}
+
+            // Start an async job to read the data for this entry.
+            /// @todo
+            auto to_load = LibraryRescannerMapItem({QPersistentModelIndex(index), item});
+            LibraryRescannerJob::make_job(this, to_load, this);
 		}
 	}
 	return QVariant();

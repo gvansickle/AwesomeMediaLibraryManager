@@ -19,6 +19,9 @@ namespace AMLM
 
 class Artist : public EntityBase {};
 class Release : public EntityBase {};
+class ReleaseGroup : public EntityBase {};
+class Medium : public EntityBase {};
+class Track : public EntityBase {};
 
 }; // END namespace AMLM
 

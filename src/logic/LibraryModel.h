@@ -32,7 +32,7 @@
 
 ////// EXP
 class CollectionDatabaseModel;
-class QSqlRelationalTableModel;
+//class QSqlRelationalTableModel;
 
 #include "ColumnSpec.h"
 #include "Library.h"
@@ -102,8 +102,10 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+    // Returns the data stored under the given role for the item referred to by the index.
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
+    // Returns a map with values for all predefined roles in the model for the item at the given index.
 	QMap<int, QVariant> itemData(const QModelIndex &index) const override;
 
 	QHash<int, QByteArray> roleNames() const override;
@@ -240,7 +242,7 @@ private:
 
     ////// EXP
     CollectionDatabaseModel* m_coll_db_model {nullptr};
-    QSqlRelationalTableModel* m_sql_model;
+//    QSqlRelationalTableModel* m_sql_model;
 
 	/// The directory where we'll put the LibraryModel's cache file.
 	QUrl m_cachedir;
