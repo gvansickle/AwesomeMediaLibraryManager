@@ -78,7 +78,6 @@
 #include <KXmlGui/KEditToolBar>
 
 /// Ours
-
 #include "Experimental.h"
 #include "FilterWidget.h"
 

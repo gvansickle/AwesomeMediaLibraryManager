@@ -155,6 +155,7 @@ set(HEADER_FILES
 	logic/SupportedMimeTypes.h
 	logic/dbmodels/CollectionDatabaseModel.h
 	logic/TrackMetadata.h
+	logic/dbmodels/EntityBase.h
 	utils/ActionHelpers.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
@@ -209,6 +210,7 @@ set(SOURCE_FILES
 	logic/SupportedMimeTypes.cpp
 	logic/dbmodels/CollectionDatabaseModel.cpp
 	logic/TrackMetadata.cpp
+	logic/dbmodels/EntityBase.h
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
