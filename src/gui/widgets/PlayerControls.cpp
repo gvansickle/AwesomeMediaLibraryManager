@@ -17,8 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "PlayerControls.h"
-
+#include <gui/widgets/PlayerControls.h>
 #include <QToolButton>
 #include <QStyle>
 #include <QSlider>

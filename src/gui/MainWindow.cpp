@@ -21,14 +21,12 @@
 
 #include "MainWindow.h"
 
-/// Std C++
-
+// Std C++
 #include <functional>
 #include <algorithm>
 #include <type_traits>
 
-/// Qt5
-
+// Qt5
 #include <QObject>
 #include <QApplication>
 #include <QMainWindow>
@@ -99,7 +97,7 @@
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
 #include "CollectionDockWidget.h"
-#include "PlayerControls.h"
+#include "widgets/PlayerControls.h"
 
 #include "logic/LibraryEntryMimeData.h"
 

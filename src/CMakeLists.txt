@@ -296,6 +296,7 @@ prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a rea
 # Build the ultimate list of lists.
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 	${amlm_gui_SRCS} ### @todo Make this a real target.
+	${amlm_gui_widget_SRCS} ### @todo
 	)
 
 # Sets the icon on Windows and OSX.
