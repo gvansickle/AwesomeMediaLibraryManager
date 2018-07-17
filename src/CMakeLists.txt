@@ -140,6 +140,7 @@ set(HEADER_FILES
 	AMLMApp.h
 	logic/Library.h
 	logic/LibraryEntry.h
+	logic/LibraryEntryLoaderJob.h
 	logic/LibraryEntryMimeData.h
 	logic/LibraryModel.h
 	logic/LibrarySortFilterProxyModel.h
@@ -195,6 +196,7 @@ set(SOURCE_FILES
 	AMLMApp.cpp
 	logic/Library.cpp
 	logic/LibraryEntry.cpp
+	logic/LibraryEntryLoaderJob.cpp
 	logic/LibraryEntryMimeData.cpp
 	logic/LibraryModel.cpp
 	logic/LibrarySortFilterProxyModel.cpp
