@@ -19,6 +19,9 @@
 
 #include "LibraryEntryLoaderJob.h"
 
+#include "LibraryRescanner.h"
+#include <utils/DebugHelpers.h>
+
 LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
     auto retval = new LibraryEntryLoaderJob(parent, pmi, libentry);
@@ -28,7 +31,8 @@ LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersi
     return retval;
 }
 
-LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry) : BASE_CLASS(parent)
+LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
+    : BASE_CLASS(parent), m_pmi(pmi), m_libentry(libentry)
 {
 
 }
@@ -40,7 +44,61 @@ LibraryEntryLoaderJob::~LibraryEntryLoaderJob()
 
 void LibraryEntryLoaderJob::runFunctor()
 {
+    qDbo() << "START RUNFUNCTOR" << m_pmi << m_libentry;
 
+    MetadataReturnVal retval;
+
+    Q_ASSERT(m_pmi.isValid());
+
+    if(!m_libentry->isPopulated())
+    {
+        // Item's metadata has not been looked at.  We may have multiple tracks.
+
+        // Only one pindex though.
+        retval.m_original_pindexes.push_back(m_pmi);
+
+        auto vec_items = m_libentry->populate();
+        for (const auto& i : vec_items)
+        {
+            if (!i->isPopulated())
+            {
+                qCritical() << "NOT POPULATED" << i.get();
+            }
+            retval.push_back(i);
+
+            qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
+
+        }
+    }
+    else if (m_libentry->isPopulated() && m_libentry->isSubtrack())
+    {
+        qCro() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << m_libentry->getUrl();
+        Q_ASSERT(0);
+    }
+    else
+    {
+        //qDebug() << "Re-reading metatdata for item" << item->getUrl();
+        std::shared_ptr<LibraryEntry> new_entry = m_libentry->refresh_metadata();
+
+        if(new_entry == nullptr)
+        {
+            // Couldn't load the metadata from the file.
+            // Only option here is to return the old item, which should now be marked with an error.
+            qCritical() << "Couldn't load metadata for file" << m_libentry->getUrl();
+            retval.m_original_pindexes.push_back(m_pmi);
+            retval.m_new_libentries.push_back(m_libentry);
+            retval.m_num_tracks_found = 1;
+        }
+        else
+        {
+            // Repackage it and return.
+            retval.m_original_pindexes.push_back(m_pmi);
+            retval.m_new_libentries.push_back(new_entry);
+            retval.m_num_tracks_found = 1;
+        }
+    }
+
+    m_ext_future.reportResult(retval);
 }
 
 #include "moc_LibraryEntryLoaderJob.cpp"

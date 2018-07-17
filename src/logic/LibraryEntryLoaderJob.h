@@ -33,6 +33,7 @@
 // Ours
 #include <concurrency/AMLMJob.h>
 #include "LibraryEntry.h"
+#include "LibraryRescanner.h" // For MetadataReturnVal
 
 
 class LibraryEntryLoaderJob;
@@ -55,14 +56,12 @@ protected:
 public:
     /// @name Public types
     /// @{
-    using ExtFutureType = ExtFuture<QByteArray>;
+    using ExtFutureType = ExtFuture<MetadataReturnVal>;
     /// @}
 
     ~LibraryEntryLoaderJob() override;
 
     static LibraryEntryLoaderJobPtr make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
-
-    QByteArray m_byte_array;
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
@@ -76,6 +75,8 @@ private:
 
     ExtFutureType m_ext_future;
 
+    QPersistentModelIndex m_pmi;
+    std::shared_ptr<LibraryEntry> m_libentry;
 };
 
 #endif // LIBRARYENTRYLOADERJOB_H

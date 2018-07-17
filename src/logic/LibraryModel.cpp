@@ -322,50 +322,50 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
             /// @todo
             qDb() << "STARTING ASYNC LOAD";
             auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
-//            load_entry_job->then(this, [=](LibraryRescannerJob* kjob) {
-//                if(kjob->error() || kjob->m_byte_array.size() == 0)
-//                {
-//                    // Error.  Load the "No image available" icon.
-//                    qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-//                    // Report error via uiDelegate()
-//                    /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
-//                    /// every time there's an error.
-//    //                auto uidelegate = kjob->uiDelegate();
-//    //                Q_CHECK_PTR(uidelegate);
-//    //                uidelegate->showErrorMessage();
-//                    QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-//                    m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-//                }
-//                else
-//                {
-//                    // Succeeded, pick up the image.
+            load_entry_job->then(this, [=](LibraryEntryLoaderJob* kjob) {
+                if(kjob->error())
+                {
+                    // Error.  Load the "No image available" icon.
+                    qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+                    // Report error via uiDelegate()
+                    /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
+                    /// every time there's an error.
+    //                auto uidelegate = kjob->uiDelegate();
+    //                Q_CHECK_PTR(uidelegate);
+    //                uidelegate->showErrorMessage();
+                }
+                else
+                {
+                    // Succeeded, pick up the image.
 
-//                    auto& cover_image_bytes = kjob->m_byte_array;
+                    auto& cover_image_bytes = kjob->m_byte_array;
 
-//                    if(cover_image_bytes.size() != 0)
-//                    {
-//                        qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-//                        QImage image;
-//                        if(image.loadFromData(cover_image_bytes) == true)
-//                        {
-//                            ///qDebug() << "Image:" << image;
-//                            m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-//                            //m_cover_image_label.adjustSize()
-//                        }
-//                        else
-//                        {
-//                            qWarning() << "Error attempting to load image.";
-//                            QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-//                            m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-//                        }
-//                    }
-//                    else
-//                    {
-//                        // No image available.
-//                        QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-//                        m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-//                    }
-//                }
+                    if(cover_image_bytes.size() != 0)
+                    {
+                        qDebug("Cover image found"); ///@todo << cover_image.mime_type;
+                        QImage image;
+                        if(image.loadFromData(cover_image_bytes) == true)
+                        {
+                            ///qDebug() << "Image:" << image;
+                            m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+                            //m_cover_image_label.adjustSize()
+                        }
+                        else
+                        {
+                            qWarning() << "Error attempting to load image.";
+                            QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+                            m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+                        }
+                    }
+                    else
+                    {
+                        // No image available.
+                        QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+                        m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+                    }
+                }
+            load_entry_job->start();
+
             ////////////////
 
 			if(role == Qt::DisplayRole)
