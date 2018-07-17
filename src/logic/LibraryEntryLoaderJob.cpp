@@ -19,6 +19,15 @@
 
 #include "LibraryEntryLoaderJob.h"
 
+LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
+{
+    auto retval = new LibraryEntryLoaderJob(parent, pmi, libentry);
+
+    /// @todo Hook things up in here.
+
+    return retval;
+}
+
 LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry) : BASE_CLASS(parent)
 {
 

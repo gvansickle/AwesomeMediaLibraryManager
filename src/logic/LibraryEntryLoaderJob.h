@@ -20,17 +20,18 @@
 #ifndef LIBRARYENTRYLOADERJOB_H
 #define LIBRARYENTRYLOADERJOB_H
 
-
-
 #include <config.h>
 
 // Std C++
 #include <memory>
 
 // Qt5
+#include <QObject>
+#include <QPersistentModelIndex>
+#include <QPointer>
 
 // Ours
-#include <src/concurrency/AMLMJob.h>
+#include <concurrency/AMLMJob.h>
 #include "LibraryEntry.h"
 
 
