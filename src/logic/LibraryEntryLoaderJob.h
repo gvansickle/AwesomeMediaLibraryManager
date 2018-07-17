@@ -20,12 +20,19 @@
 #ifndef LIBRARYENTRYLOADERJOB_H
 #define LIBRARYENTRYLOADERJOB_H
 
+
+
 #include <config.h>
+
+// Std C++
+#include <memory>
 
 // Qt5
 
 // Ours
 #include <src/concurrency/AMLMJob.h>
+#include "LibraryEntry.h"
+
 
 class LibraryEntryLoaderJob;
 using LibraryEntryLoaderJobPtr = QPointer<LibraryEntryLoaderJob>;
@@ -42,7 +49,7 @@ Q_SIGNALS:
 //    void SIGNAL_ImageBytes(QByteArray);
 
 protected:
-    explicit LibraryEntryLoaderJob(QObject* parent);
+    explicit LibraryEntryLoaderJob(QObject* parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
 public:
     /// @name Public types
@@ -52,7 +59,7 @@ public:
 
     ~LibraryEntryLoaderJob() override;
 
-    static LibraryEntryLoaderJobPtr make_job(QObject *parent, const QUrl& url);
+    static LibraryEntryLoaderJobPtr make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
     QByteArray m_byte_array;
 

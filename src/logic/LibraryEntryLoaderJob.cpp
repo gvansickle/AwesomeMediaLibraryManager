@@ -19,7 +19,7 @@
 
 #include "LibraryEntryLoaderJob.h"
 
-LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent) : BASE_CLASS(parent)
+LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry) : BASE_CLASS(parent)
 {
 
 }

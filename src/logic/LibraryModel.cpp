@@ -55,6 +55,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Library.h"
+#include "LibraryEntryLoaderJob.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 
 #include "logic/ModelUserRoles.h"
@@ -320,8 +321,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
             // Start an async job to read the data for this entry.
             /// @todo
             qDb() << "STARTING ASYNC LOAD";
-            auto to_load = LibraryRescannerMapItem({QPersistentModelIndex(index), item});
-            auto load_entry_job = LibraryRescannerJob::make_job(nullptr, to_load, this);
+            auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
 //            load_entry_job->then(this, [=](LibraryRescannerJob* kjob) {
 //                if(kjob->error() || kjob->m_byte_array.size() == 0)
 //                {
