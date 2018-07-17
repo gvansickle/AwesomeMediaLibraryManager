@@ -322,7 +322,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
             /// @todo
             qDb() << "STARTING ASYNC LOAD";
             auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
-            load_entry_job->then(this, [=](LibraryEntryLoaderJob* kjob) {
+            load_entry_job->then(this, [=](LibraryEntryLoaderJob* kjob) -> void {
                 if(kjob->error())
                 {
                     // Error.  Load the "No image available" icon.
@@ -336,34 +336,15 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 }
                 else
                 {
-                    // Succeeded, pick up the image.
-
-                    auto& cover_image_bytes = kjob->m_byte_array;
-
-                    if(cover_image_bytes.size() != 0)
-                    {
-                        qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-                        QImage image;
-                        if(image.loadFromData(cover_image_bytes) == true)
-                        {
-                            ///qDebug() << "Image:" << image;
-                            m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-                            //m_cover_image_label.adjustSize()
-                        }
-                        else
-                        {
-                            qWarning() << "Error attempting to load image.";
-                            QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                            m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-                        }
-                    }
-                    else
-                    {
-                        // No image available.
-                        QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                        m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-                    }
+                    // Succeeded, update the model.
+                    MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
+					
+					/// @todo Q_EMIT ?
+					//runInObjectEventLoop(this, &LibraryModel::SLOT_processReadyResults(new_vals));
+					QMetaObject::invokeMethod(this, "SLOT_processReadyResults", Q_ARG(MetadataReturnVal, new_vals));
+                    
                 }
+			});
             load_entry_job->start();
 
             ////////////////

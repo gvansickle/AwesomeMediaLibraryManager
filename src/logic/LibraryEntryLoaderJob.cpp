@@ -62,11 +62,11 @@ void LibraryEntryLoaderJob::runFunctor()
         {
             if (!i->isPopulated())
             {
-                qCritical() << "NOT POPULATED" << i.get();
+                qCro() << "NOT POPULATED" << i.get();
             }
             retval.push_back(i);
 
-            qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
+            qDbo() << "LIBENTRY METADATA:" << i->getAllMetadata();
 
         }
     }
