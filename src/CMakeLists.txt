@@ -212,7 +212,7 @@ set(SOURCE_FILES
 	logic/SupportedMimeTypes.cpp
 	logic/dbmodels/CollectionDatabaseModel.cpp
 	logic/TrackMetadata.cpp
-	logic/dbmodels/EntityBase.h
+	logic/dbmodels/EntityBase.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
