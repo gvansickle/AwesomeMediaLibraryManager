@@ -30,14 +30,13 @@
 #include <QUrl>
 #include <QVector>
 
-////// EXP
-class CollectionDatabaseModel;
-//class QSqlRelationalTableModel;
+//class CollectionDatabaseModel;
 
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "LibraryEntry.h"
+#include "LibraryEntryLoaderJob.h"
 #include "LibraryRescannerMapItem.h"
 
 class QFileDevice;
@@ -49,7 +48,7 @@ class ActivityProgressWidget;
 using VecOfUrls = QVector<QUrl>;
 using VecOfLEs = QVector<std::shared_ptr<LibraryEntry> >;
 using VecOfPMIs = QVector<QPersistentModelIndex>;
-class LibraryRescannerMapItem;
+struct LibraryRescannerMapItem;
 
 Q_DECLARE_METATYPE(VecOfUrls);
 Q_DECLARE_METATYPE(VecOfLEs);
@@ -79,9 +78,12 @@ Q_SIGNALS:
     /// Status/Progress signal.
     void statusSignal(LibState, qint64, qint64);
 
+    /// Signal-to-self for async loading of metadata for a single LibraryEntry.
+    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
+
 public:
 	explicit LibraryModel(QObject *parent = nullptr);
-	virtual ~LibraryModel() override;
+    ~LibraryModel() override;
 
 	/**
 	 * Open a new LibraryModel on the specified QUrl.
@@ -173,10 +175,10 @@ public:
 	/// Drag and drop support.
 	///
 
-	virtual Qt::DropActions supportedDragActions() const override;
-	virtual Qt::DropActions supportedDropActions() const override;
-	virtual QStringList mimeTypes() const override;
-	virtual QMimeData* mimeData(const QModelIndexList &indexes) const override;
+    Qt::DropActions supportedDragActions() const override;
+    Qt::DropActions supportedDropActions() const override;
+    QStringList mimeTypes() const override;
+    QMimeData* mimeData(const QModelIndexList &indexes) const override;
 
 public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
@@ -241,7 +243,7 @@ private:
 	Q_DISABLE_COPY(LibraryModel)
 
     ////// EXP
-    CollectionDatabaseModel* m_coll_db_model {nullptr};
+//    CollectionDatabaseModel* m_coll_db_model {nullptr};
 //    QSqlRelationalTableModel* m_sql_model;
 
 	/// The directory where we'll put the LibraryModel's cache file.
@@ -252,6 +254,8 @@ private:
 
 	/// Icons for various entry states.
 	QVariant m_IconError, m_IconOk, m_IconUnknown;
+
+    mutable std::map<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
 };
 
 Q_DECLARE_METATYPE(LibraryModel*)

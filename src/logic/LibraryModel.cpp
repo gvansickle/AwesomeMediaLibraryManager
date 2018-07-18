@@ -259,7 +259,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 	{
 		auto item = getItem(index);
 		auto sec_id = getSectionFromCol(index.column());
-		if(item->isPopulated())
+        if(item->isPopulated())
 		{
             // Item has data.
 			QVariant metaentry;
@@ -317,35 +317,44 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 		else
 		{
 			// Entry hasn't been populated yet.
+            if(m_pending_async_item_loads.find(item) == m_pending_async_item_loads.cend())
+            {
+                // Already an outstanding request.
+                qDbo() << "Waiting on pending async load";
+            }
+            else
+            {
+                // Start an async job to read the data for this entry.
+                /// @todo
+                qDb() << "STARTING ASYNC LOAD";
+                auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
+                m_pending_async_item_loads[item] = load_entry_job;
+                load_entry_job->then(this, [=](LibraryEntryLoaderJob* kjob) -> void {
+                    if(kjob->error())
+                    {
+                        // Error.  Load the "No image available" icon.
+                        qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+                        // Report error via uiDelegate()
+                        /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
+                        /// every time there's an error.
+                        //                auto uidelegate = kjob->uiDelegate();
+                        //                Q_CHECK_PTR(uidelegate);
+                        //                uidelegate->showErrorMessage();
+                    }
+                    else
+                    {
+                        // Succeeded, update the model.
+                        m_pending_async_item_loads.erase(item);
+                        MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
+                        Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
+                        /// @todo Q_EMIT ?
+                        //runInObjectEventLoop(this, &LibraryModel::SLOT_processReadyResults(new_vals));
+                        //					QMetaObject::invokeMethod(this, "SLOT_processReadyResults", Q_ARG(MetadataReturnVal, new_vals));
 
-            // Start an async job to read the data for this entry.
-            /// @todo
-            qDb() << "STARTING ASYNC LOAD";
-            auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
-            load_entry_job->then(this, [=](LibraryEntryLoaderJob* kjob) -> void {
-                if(kjob->error())
-                {
-                    // Error.  Load the "No image available" icon.
-                    qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-                    // Report error via uiDelegate()
-                    /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
-                    /// every time there's an error.
-    //                auto uidelegate = kjob->uiDelegate();
-    //                Q_CHECK_PTR(uidelegate);
-    //                uidelegate->showErrorMessage();
-                }
-                else
-                {
-                    // Succeeded, update the model.
-                    MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
-					
-					/// @todo Q_EMIT ?
-					//runInObjectEventLoop(this, &LibraryModel::SLOT_processReadyResults(new_vals));
-					QMetaObject::invokeMethod(this, "SLOT_processReadyResults", Q_ARG(MetadataReturnVal, new_vals));
-                    
-                }
-			});
-            load_entry_job->start();
+                    }
+                });
+                load_entry_job->start();
+            }
 
             ////////////////
 
@@ -456,13 +465,13 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 		}
 		else
 		{
-			qWarning() << "NULL internalPointer, returning 'None' item";
+            qWro() << "NULL internalPointer, returning 'None' item";
 			return nullptr;
 		}
 	}
 	else
 	{
-		qWarning() << "Invalid index, returning 'None' item";
+        qWro() << "Invalid index, returning 'None' item";
 		return nullptr;
 	}
 }
@@ -995,6 +1004,7 @@ void LibraryModel::deleteCache()
 
 void LibraryModel::connectSignals()
 {
+    connect_or_die(this, &LibraryModel::SIGNAL_selfSendReadyResults, this, &LibraryModel::SLOT_processReadyResults);
 	connect(this, &LibraryModel::startFileScanSignal, m_rescanner, &LibraryRescanner::startAsyncDirectoryTraversal);
 }
 

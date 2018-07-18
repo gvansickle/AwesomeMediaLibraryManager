@@ -48,7 +48,12 @@ void LibraryEntryLoaderJob::runFunctor()
 
     MetadataReturnVal retval;
 
-    Q_ASSERT(m_pmi.isValid());
+    // Make sure the index is still valid.  The model may have been destroyed since the message was sent.
+    if(!m_pmi.isValid())
+    {
+        qWro() << "INVALID QPersistentModelIndex:" << m_pmi << ", ABORTING LOAD";
+        return;
+    }
 
     if(!m_libentry->isPopulated())
     {
