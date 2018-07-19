@@ -314,13 +314,14 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 				return QVariant(metaentry);
 			}
 		}
-		else
+        else
 		{
 			// Entry hasn't been populated yet.
-            if(m_pending_async_item_loads.find(item) == m_pending_async_item_loads.cend())
+            auto pending_asyn_req = m_pending_async_item_loads.find(item);
+            if(pending_asyn_req != m_pending_async_item_loads.cend())
             {
                 // Already an outstanding request.
-                qDbo() << "Waiting on pending async load";
+                qDbo() << "Async load already pending for item:" << item;
             }
             else
             {
@@ -623,7 +624,7 @@ int LibraryModel::getColFromSection(SectionID section_id) const
 			return i;
 		}
 	}
-	qCritical() << "No such section:" << (int)section_id;
+    qCritical() << "No such section:" << static_cast<int>(section_id);
 	return -1;
 }
 
@@ -1024,7 +1025,7 @@ void LibraryModel::finishIncoming()
 static QString table_row(std::string s1, std::string s2)
 {
 	QString retval = "<tr>";
-	for(auto s : {s1, s2})
+    for(const auto& s : {s1, s2})
 	{
 		retval += "<td>" + toqstr(s) + "</td>";
 	}
