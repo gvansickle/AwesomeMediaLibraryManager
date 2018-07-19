@@ -43,15 +43,15 @@
 #include <QFileIconProvider>
 
 ////////////////////////////////////////////////////////////////////////
-#include <QSqlError>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QSqlRelationalTableModel>
-#include <QSqlRecord>
-#include <QMessageBox>
-#include <QSqlField>
-#include <logic/dbmodels/CollectionDatabaseModel.h>
+//#include <QSqlError>
+//#include <QSqlDatabase>
+//#include <QSqlQuery>
+//#include <QSqlRecord>
+//#include <QSqlRelationalTableModel>
+//#include <QSqlRecord>
+//#include <QMessageBox>
+//#include <QSqlField>
+//#include <logic/dbmodels/CollectionDatabaseModel.h>
 //////////////////////////////////////////////////////////////////////////
 
 #include "Library.h"
@@ -344,9 +344,11 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                     else
                     {
                         // Succeeded, update the model.
-                        m_pending_async_item_loads.erase(item);
+                        qIno() << "ASYNC LOAD COMPLETE:" << kjob;
+//                        m_pending_async_item_loads.erase(item);
                         MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
                         Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
+                        m_pending_async_item_loads.erase(item);
                         /// @todo Q_EMIT ?
                         //runInObjectEventLoop(this, &LibraryModel::SLOT_processReadyResults(new_vals));
                         //					QMetaObject::invokeMethod(this, "SLOT_processReadyResults", Q_ARG(MetadataReturnVal, new_vals));
@@ -790,11 +792,11 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 		}
 	}
 
-	if(row_items.size() > 0)
+    if(!row_items.empty())
 	{
 		qDebug() << QString("Returning %1 row(s)").arg(row_items.size());
 		LibraryEntryMimeData* e = new LibraryEntryMimeData();
-		e->setData(mimeTypes()[0], QByteArray());
+        e->setData(/*mimeTypes()[0]*/*mimeTypes().cbegin(), QByteArray());
 		e->m_lib_item_list = row_items;
 		e->setUrls(urls);
 		return e;
@@ -1079,7 +1081,7 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
             else
             {
                 // It's the first entry or it's from a different file.  Send out the previous rescan item(s) and start a new batch.
-                if(multientry.size() > 0)
+                if(!multientry.empty())
                 {
                     items_to_rescan.append(multientry);
                     qDebug() << "PUSHING MULTIENTRY, SIZE:" << multientry.size();
@@ -1090,7 +1092,7 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
             last_entry = item;
         }
 
-        if(multientry.size() > 0)
+        if(!multientry.empty())
         {
             // It wasn't cleared by the last iteration above, so we have to append it here.
             items_to_rescan.append(multientry);
