@@ -33,10 +33,10 @@
 
 // Ours
 #include "../future_type_traits.hpp"
-#include "../function_traits.hpp"
 #include "../ExtAsync.h"
 #include "ExtAsyncTests.h"
 #include <tests/TestHelpers.h>
+#include "../../future/function_traits.hpp"
 
 
 void ExtAsyncTestsSuiteFixture::SetUp()

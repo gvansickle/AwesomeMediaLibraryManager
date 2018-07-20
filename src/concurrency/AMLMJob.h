@@ -36,10 +36,10 @@
 #include <KJob>
 #include <KJobUiDelegate>
 
+#include "../future/function_traits.hpp"
 // Ours
 #include "utils/UniqueIDMixin.h"
 #include "utils/ConnectHelpers.h"
-#include "concurrency/function_traits.hpp"
 #include "concurrency/ExtAsync.h"
 
 

@@ -23,7 +23,7 @@
  * All compile-time tests, no runtime hit.
  */
 
-#include "function_traits.hpp"
+#include "../future/function_traits.hpp"
 
 #include <utility>
 
