@@ -34,7 +34,13 @@ LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersi
 LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
     : BASE_CLASS(parent), m_pmi(pmi), m_libentry(libentry)
 {
+    // Set our object name.
+    setObjectName(uniqueQObjectName());
 
+    setProgressUnit(KJob::Unit::Files);
+
+    // Set our capabilities.
+    setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
 }
 
 LibraryEntryLoaderJob::~LibraryEntryLoaderJob()

@@ -108,6 +108,18 @@ Q_SIGNALS:
     /// @name Internal signals
     /// @{
 
+    /// For passing signals from kjobs to their widgets.
+    void SLOT_finished(KJob*);// (also connected to the unregisterJob() slot)
+    void SLOT_suspended(KJob*);
+    void SLOT_resumed(KJob*);
+    void SLOT_description(KJob*);
+    void SLOT_infoMessage(KJob*);
+    void SLOT_totalAmount(KJob*, KJob::Unit unit, qulonglong amount);
+    void SLOT_processedAmount(KJob*);
+    void SLOT_percent(KJob*);
+    void SLOT_speed(KJob*, unsigned long value);
+
+
     /// FBO cancelAll().
     void INTERNAL_SIGNAL_slotStop(KJob* kjob);
 

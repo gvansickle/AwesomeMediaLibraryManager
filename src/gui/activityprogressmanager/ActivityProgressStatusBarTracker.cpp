@@ -468,6 +468,9 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     BaseActivityProgressStatusBarWidget* wdgt_type = qobject_cast<BaseActivityProgressStatusBarWidget*>(wdgt);
     Q_CHECK_PTR(wdgt_type);
 
+    // Connect signals from this to widget slots.
+    connect_or_die(this, , wdgt_type, );
+
 //    // Connect the kjob's destroyed() signal to a handler here.
 //    connect_or_die(kjob, &QObject::destroyed, this, &ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed);
 
@@ -559,6 +562,11 @@ int ActivityProgressStatusBarTracker::calculate_summary_percent()
     }
 
     return retval;
+}
+
+void ActivityProgressStatusBarTracker::connectWidgetSlots(QWidget *widget)
+{
+    connect_or_die();
 }
 
 #if 0
