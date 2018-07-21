@@ -255,7 +255,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/impl/ExtFuture_impl.hpp
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncTask.h
-	concurrency/function_traits.hpp
 	concurrency/AMLMJob.h
 	concurrency/AMLMCompositeJob.h
 	concurrency/DirectoryScanJob.h
@@ -264,7 +263,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
-	concurrency/function_traits.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
 	concurrency/ReportingRunner.cpp
@@ -282,6 +280,11 @@ add_subdirectory(gui)
 
 # *.ui files.
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
+
+# The Future
+add_library(amlm_src_future "")
+include(future/CMakeLists.txt)
+
 
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
@@ -301,6 +304,7 @@ prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a rea
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 	${amlm_gui_SRCS} ### @todo Make this a real target.
 	${amlm_gui_widget_SRCS} ### @todo
+#	${amlm_src_future_SRCS}
 	)
 
 # Sets the icon on Windows and OSX.
@@ -323,6 +327,7 @@ qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
+		amlm_src_future
 		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
 		)
 

@@ -108,7 +108,6 @@ include(widgets/CMakeLists.txt)
 #    AUTOUIC ON)
 #target_link_libraries(widgets ${PROJECT_COMMON_LINK_LIBS})
 
-
 set(amlm_gui_SRCS
 	${gui_SOURCE_FILES}
 	${gui_HEADER_FILES}
