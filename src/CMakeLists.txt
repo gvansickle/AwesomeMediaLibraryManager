@@ -124,6 +124,7 @@ set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
 # Collect all the project-common external link library targets into a single variable.
+set(INTERNAL_LINK_LIB_TARGETS amlm_src_future)
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIBS}
@@ -134,6 +135,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		callable_traits
 		verdigris_target
 		)
+
 
 # Main program header files.
 set(HEADER_FILES
@@ -327,7 +329,6 @@ qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
-		amlm_src_future
 		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
 		)
 

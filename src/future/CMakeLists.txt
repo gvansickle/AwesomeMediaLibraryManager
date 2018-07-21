@@ -36,7 +36,8 @@ prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FI
 
 target_sources(amlm_src_future
 	PUBLIC
-#list(APPEND amlm_future_SRCS
 	${HEADER_FILES_SRC_FUTURE}
 	${SOURCE_FILES_SRC_FUTURE}
 	)
+target_link_libraries(amlm_src_future PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
+target_include_directories(amlm_src_future PUBLIC "${CMAKE_CURRENT_LIST_DIR}")

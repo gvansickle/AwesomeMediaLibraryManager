@@ -33,8 +33,8 @@
 #include <QSignalSpy>
 
 // Ours
-#include "../future_type_traits.hpp"
-#include "../function_traits.hpp"
+#include <future/future_type_traits.hpp>
+#include <future/function_traits.hpp>
 #include <tests/TestHelpers.h>
 #include "../AMLMJob.h"
 #include <src/concurrency/DirectoryScanJob.h>

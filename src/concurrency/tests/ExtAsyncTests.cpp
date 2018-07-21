@@ -32,7 +32,7 @@
 //#include <gmock/gmock-matchers.h>
 
 // Ours
-#include "../future_type_traits.hpp"
+#include <future/future_type_traits.hpp>
 #include "../ExtAsync.h"
 #include "ExtAsyncTests.h"
 #include <tests/TestHelpers.h>
