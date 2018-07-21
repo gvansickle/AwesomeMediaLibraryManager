@@ -68,10 +68,10 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 	// Some sanity checks first.
 	if(!m_url.isValid())
 	{
-		qWarning() << "Invalid URL:" << m_url;
+        qWr() << "Invalid URL:" << m_url;
 		return retval;
 	}
-	if( !force_refresh && isPopulated() )
+    if(!force_refresh && isPopulated() )
 	{
 		// Nothing to do.
 		qDebug() << "Already populated.";

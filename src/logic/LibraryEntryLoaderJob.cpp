@@ -50,7 +50,7 @@ LibraryEntryLoaderJob::~LibraryEntryLoaderJob()
 
 void LibraryEntryLoaderJob::runFunctor()
 {
-    qDbo() << "START RUNFUNCTOR" << m_pmi << m_libentry;
+    qDbo() << "START LibraryEntryLoaderJob RUNFUNCTOR" << m_pmi << m_libentry;
 
     MetadataReturnVal retval;
 
@@ -60,6 +60,10 @@ void LibraryEntryLoaderJob::runFunctor()
         qWro() << "INVALID QPersistentModelIndex:" << m_pmi << ", ABORTING LOAD";
         return;
     }
+    // Make sure the LibraryEntry hasn't been deleted.  It shouldn't have been since we hold a shared_ptr<> to it.
+    Q_ASSERT(m_libentry);
+    // Make sure the LibraryEntry has a valid QUrl.  It should, but ATM we're getting here with empty URLs.
+    Q_ASSERT(m_libentry->getUrl().isValid());
 
     if(!m_libentry->isPopulated())
     {
@@ -68,6 +72,7 @@ void LibraryEntryLoaderJob::runFunctor()
         // Only one pindex though.
         retval.m_original_pindexes.push_back(m_pmi);
 
+        qIno() << "LOADING ITEM:" << m_libentry;
         auto vec_items = m_libentry->populate();
         for (const auto& i : vec_items)
         {
@@ -88,14 +93,16 @@ void LibraryEntryLoaderJob::runFunctor()
     }
     else
     {
+        // Item needs to be refreshed.
+
         //qDebug() << "Re-reading metatdata for item" << item->getUrl();
         std::shared_ptr<LibraryEntry> new_entry = m_libentry->refresh_metadata();
 
-        if(new_entry == nullptr)
+        if(!new_entry)
         {
             // Couldn't load the metadata from the file.
             // Only option here is to return the old item, which should now be marked with an error.
-            qCritical() << "Couldn't load metadata for file" << m_libentry->getUrl();
+            qCro() << "Couldn't load metadata for file" << m_libentry->getUrl();
             retval.m_original_pindexes.push_back(m_pmi);
             retval.m_new_libentries.push_back(m_libentry);
             retval.m_num_tracks_found = 1;
@@ -108,6 +115,8 @@ void LibraryEntryLoaderJob::runFunctor()
             retval.m_num_tracks_found = 1;
         }
     }
+
+    Q_ASSERT(retval.m_num_tracks_found > 0);
 
     m_ext_future.reportResult(retval);
 }

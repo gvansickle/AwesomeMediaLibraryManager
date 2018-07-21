@@ -858,7 +858,7 @@ void LibraryModel::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 
     if(lritem_vec.m_num_tracks_found == 0)
     {
-        qCritical() << "RESULT WAS EMPTY";
+        qCro() << "RESULT WAS EMPTY";
     }
 
     if(lritem_vec.m_num_tracks_found > 1
