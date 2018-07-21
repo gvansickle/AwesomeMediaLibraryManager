@@ -356,9 +356,13 @@ protected Q_SLOTS:
     /// @{
 
     /**
+     * Slot finished(), overridden from KJobTrackerInterface, KAbstractWidgetJobTracker.
+     *
      * Called when a job is finished, in any case.
      * It is used to notify that the job is terminated and that progress UI (if any) can be hidden.
      * KAbstractWidgetJobTracker implementation does nothing.
+     *
+     * We send a signal to the the widget to hide itself.
      *
      * @override KJobTrackerInterface, KAbstractWidgetJobTracker.
      */

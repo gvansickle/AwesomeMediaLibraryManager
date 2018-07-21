@@ -171,7 +171,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     if(!jobWatch)
     {
         qDb() << "Job deleted while being registered";
-        delete wdgt;
+        wdgt->deleteLater();
         return;
     }
 
@@ -185,7 +185,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     if(!jobWatch)
     {
         qDb() << "Job deleted while being registered";
-        delete wdgt;
+        wdgt->deleteLater();
         return;
     }
 
@@ -275,14 +275,14 @@ void ActivityProgressStatusBarTracker::finished(KJob *kjob)
 {
     // KJobTrackerInterface::finished(KJob *job) does nothing.
     qWr() << "FINISHED KJob:" << kjob;
-    with_widget_or_skip(kjob, [=](auto w){
-        qWr() << "FINISHED JOB:" << kjob << "WITH WIDGET:" << w;
-        Q_CHECK_PTR(kjob);
-        Q_CHECK_PTR(w);
-        w->hide();
-    });
+//    with_widget_or_skip(kjob, [=](auto w){
+//        qWr() << "FINISHED JOB:" << kjob << "WITH WIDGET:" << w;
+//        Q_CHECK_PTR(kjob);
+//        Q_CHECK_PTR(w);
+//        w->hide();
+//    });
 
-    Q_CHECK_PTR(this);
+//    Q_CHECK_PTR(this);
 
 //    AMLMJob::dump_job_info(kjob);
 }
@@ -500,6 +500,9 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     connect_or_die(kjob, &KJob::totalSize, wdgt_type, &BaseActivityProgressStatusBarWidget::totalSize);
     connect_or_die(kjob, &KJob::processedSize, wdgt_type, &BaseActivityProgressStatusBarWidget::processedSize);
 
+    // kjob->widget, tells the widget to hide itself since kjob emitted finished().
+    // kjob->tracker is already done in base class: connect_or_die(kjob, &KJob::finished, this, &ActivityProgressStatusBarTracker::finished);
+    connect_or_die(kjob, &KJob::finished, wdgt_type, &BaseActivityProgressStatusBarWidget::hide);
 
 //    // Connect the kjob's destroyed() signal to a handler here.
 //    connect_or_die(kjob, &QObject::destroyed, this, &ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed);

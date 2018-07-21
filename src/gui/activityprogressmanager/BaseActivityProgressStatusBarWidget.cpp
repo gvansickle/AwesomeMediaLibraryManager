@@ -384,8 +384,7 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
                 // Create the "%2" (total amount) string.
                 auto str_total_bytes = formattedDataSize(totalSize, 1, fmt);
                 size_label_text = tr("%1 of %2 complete")
-                      .arg(str_processed_bytes)
-                      .arg(str_total_bytes);
+                      .arg(str_processed_bytes, str_total_bytes);
             }
             else
             {
