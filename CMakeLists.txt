@@ -136,9 +136,9 @@ include(FeatureSummary)
 # cmake and/or Qt Creator.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
+ucm_add_flags(-fmessage-length=0)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-fmessage-length=0)
 	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments CONFIG DEBUG)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")

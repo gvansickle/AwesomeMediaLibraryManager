@@ -20,6 +20,11 @@
 #ifndef CONNECTHELPERS_H
 #define CONNECTHELPERS_H
 
+// Boost
+#include <boost/callable_traits.hpp>
+namespace ct = boost::callable_traits;
+
+// Qt5
 #include <QAction>
 #include <QApplication>
 #include <QMetaObject>
@@ -37,12 +42,6 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
 {
   return Sender::connect(sender, &Sender::clicked, receiver, slot, type);
 }
-
-//template <typename T, typename Signal, typename Slot>
-//QMetaObject::Connection connect(T* sender_and_receiver, Signal signal, Slot slot, Qt::ConnectionType type = Qt::AutoConnection)
-//{
-//	return connect(sender_and_receiver, signal, sender_and_receiver, slot, type);
-//}
 
 /**
  * Make a connection and assert if the attempt fails.
@@ -65,14 +64,25 @@ void connect_or_die(Args&&... args)
  * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
  * to connecting to member functions."
  */
-template <class T, class U, class TPMF, class UPMF, class ConnectionType>
-void connect_or_die(T* t, TPMF tpmf, U* u, UPMF upmf, ConnectionType connection_type = Qt::AutoConnection)
+template <class TPMF, class T = ct::class_of_t<TPMF>, class UPMF, class U = ct::class_of_t<UPMF>>
+void connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
 {
     QMetaObject::Connection retval;
 
-    retval = QObject::connect(t, tpmf, u, upmf, connection_type | Qt::UniqueConnection);
+    retval = QObject::connect(t, tpmf, u, upmf, Qt::ConnectionType(connection_type | Qt::UniqueConnection));
     Q_ASSERT(static_cast<bool>(retval) != false);
 }
+
+//inline static
+//void connect_or_die(const QObject *sender, const QMetaMethod &signal,
+//                    const QObject *receiver, const QMetaMethod &method,
+//                    Qt::ConnectionType type = Qt::AutoConnection)
+//{
+//    QMetaObject::Connection retval;
+
+//    retval = QObject::connect(sender, signal, receiver, method, Qt::ConnectionType(type | Qt::UniqueConnection));
+//    Q_ASSERT(static_cast<bool>(retval) != false);
+//}
 
 /**
  * Make a blocking signal-slot connection and assert if the attempt fails.

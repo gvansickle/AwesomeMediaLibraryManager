@@ -95,14 +95,19 @@ public Q_SLOTS:
     /// @{
 
     /**
+     * KJob Slot
+     * @warning Also a regular public function with the same name.
      * Directly supported by KJob:
      * - setTotalAmount(Unit,amount)
      * - public qulonglong processedAmount(Unit unit) const;
      * - var in KJobPrivate.
      */
     virtual void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+
     /**
-     * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
+     * KJob Slot
+     * @warning Also a regular public function with the same name.
+     *  Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
     virtual void processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
 
