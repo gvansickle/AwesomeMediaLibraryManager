@@ -23,11 +23,11 @@
  * All compile-time tests, no runtime hit.
  */
 
-#include "../future/function_traits.hpp"
+#include "function_traits.hpp"
 
 #include <utility>
 
-#include "utils/DebugHelpers.h"
+#include <utils/DebugHelpers.h>
 
 namespace function_traits_impl
 {

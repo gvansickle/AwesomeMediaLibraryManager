@@ -11,8 +11,8 @@
 #include <type_traits>
 #include <tuple>
 
-#if 1 /// @todo Conditionalize on C++17 or the appropriate __has_whatever.
-
+/// Backfill for C++17 type trait variable templates (std::is_same_v, etc.)
+#if !defined(__cpp_lib_type_trait_variable_templates) || __cpp_lib_type_trait_variable_templates < 201510
 
 namespace std // Yeah, this is bad.
 {
@@ -65,6 +65,9 @@ namespace std // Yeah, this is bad.
 	constexpr bool tuple_size_v = tuple_size<T>::value;
 };
 
+#endif // __cpp_lib_type_trait_variable_templates < 201510
+
+
 /**
  * Static assert helpers which try to print the types involved when the assert fails.
  * @rant Seriously, it's the 21st century and there's no decent way to simply dump this basic type information at compile time?
@@ -93,12 +96,10 @@ static_assert(
 template <typename T>
 struct deduced_type;
 template<typename T>
-void show_deduced_type(T&& ) {
+void show_deduced_type(T&& )
+{
 
     deduced_type<T>::show;
 }
-
-#endif
-
 
 #endif /* UTILS_CONCURRENCY_FUTURE_TYPE_TRAITS_HPP_ */

@@ -21,8 +21,8 @@
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_
 
 #include <type_traits>
-#include "../function_traits.hpp"
-#include "../cpp14_concepts.hpp"
+#include <future/function_traits.hpp>
+#include <future/cpp14_concepts.hpp>
 
 /**
  * "Unit" vs. "void" concept from Facebook's "folly" library (Apache 2.0).

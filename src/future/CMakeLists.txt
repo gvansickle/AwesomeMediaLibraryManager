@@ -18,10 +18,12 @@
 #
 
 set(HEADER_FILES_SRC_FUTURE
-	function_traits.cpp
+	function_traits.hpp
+	future_type_traits.hpp
+	cpp14_concepts.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
-	function_traits.h
+	function_traits.cpp
 	)
 #set(UI_FILES_SRC_FUTURE
 #	PARENT_SCOPE
@@ -32,9 +34,9 @@ prepend_to_each(HEADER_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FI
 prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_FUTURE})
 # prepend_to_each(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
 
-#target_sources(widgets
-#	PUBLIC
-list(APPEND amlm_future_SRCS
+target_sources(amlm_src_future
+	PUBLIC
+#list(APPEND amlm_future_SRCS
 	${HEADER_FILES_SRC_FUTURE}
 	${SOURCE_FILES_SRC_FUTURE}
 	)

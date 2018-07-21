@@ -37,8 +37,8 @@
 #include <utils/QtHelpers.h>
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
-#include "cpp14_concepts.hpp"
 #include <utils/UniqueIDMixin.h>
+#include "../future/cpp14_concepts.hpp"
 #include "../future/function_traits.hpp"
 #include "ExtFutureState.h"
 #include "ExtFutureWatcher.h"

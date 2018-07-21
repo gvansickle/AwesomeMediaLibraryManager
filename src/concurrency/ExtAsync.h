@@ -33,8 +33,9 @@
 #include <memory>
 
 // Our Std C++ backfill
-#include "future_type_traits.hpp"
-#include "cpp14_concepts.hpp"
+#include <future/future_type_traits.hpp>
+#include <future/cpp14_concepts.hpp>
+#include <future/function_traits.hpp>
 
 // Qt5
 #include <QEvent>
@@ -44,7 +45,6 @@
 #include <QRunnable>
 #include <QCoreApplication>
 
-#include "../future/function_traits.hpp"
 // Ours
 #include "ExtFutureState.h"
 #include "utils/DebugHelpers.h"
