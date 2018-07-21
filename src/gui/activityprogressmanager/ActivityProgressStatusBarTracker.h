@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 class QWidget;
 class QLabel;
 class QToolButton;
@@ -33,11 +33,11 @@ class QProgressBar;
 #include <QSharedPointer>
 #include <QMutex>
 
-/// KF5
+// KF5
 class KJob;
 #include <KAbstractWidgetJobTracker>
 
-/// Ours
+// Ours
 #include <utils/TheSimplestThings.h>
 #include <utils/UniqueIDMixin.h>
 #include <concurrency/AMLMJob.h>
@@ -46,7 +46,6 @@ class KJob;
 #include "CumulativeStatusWidget.h"
 #include "CumulativeAMLMJob.h"
 class BaseActivityProgressStatusBarWidget;
-//class ExpandingFrameWidget;
 #include "ExpandingFrameWidget.h"
 
 
@@ -88,17 +87,17 @@ Q_SIGNALS:
      * "Emitted when the user aborted the operation"
      * KAbstractWidgetJobTracker::slotStop(KJob*) emits this after calling job->kill(KJob::EmitResults).
      */
-    void stopped(KJob *job);
+//    void stopped(KJob *job);
     /**
      * KAbstractWidgetJobTracker::slotSuspend(KJob*) emits this after calling job->suspend().
      * "Emitted when the user suspended the operation"
      */
-    void suspend(KJob *job);
+//    void suspend(KJob *job);
     /**
      * KAbstractWidgetJobTracker::slotResume(KJob*) emits this after calling job->resume().
      * "Emitted when the user resumed the operation".
      */
-    void resume(KJob *job);
+//    void resume(KJob *job);
 
     /// @}
 
@@ -108,16 +107,16 @@ Q_SIGNALS:
     /// @name Internal signals
     /// @{
 
-    /// For passing signals from kjobs to their widgets.
-    void SLOT_finished(KJob*);// (also connected to the unregisterJob() slot)
-    void SLOT_suspended(KJob*);
-    void SLOT_resumed(KJob*);
-    void SLOT_description(KJob*);
-    void SLOT_infoMessage(KJob*);
-    void SLOT_totalAmount(KJob*, KJob::Unit unit, qulonglong amount);
-    void SLOT_processedAmount(KJob*);
-    void SLOT_percent(KJob*);
-    void SLOT_speed(KJob*, unsigned long value);
+    /// For forwarding signals from kjobs to their widgets.
+    void SIGNAL_finished(KJob*);// (also connected to the unregisterJob() slot)
+    void SIGNAL_suspended(KJob*);
+    void SIGNAL_resumed(KJob*);
+    void SIGNAL_description(KJob *kjob, const QString &title, const QPair<QString, QString> &field1, const QPair<QString, QString> &field2);
+    void SIGNAL_infoMessage(KJob*);
+    void SIGNAL_totalAmount(KJob*, KJob::Unit unit, qulonglong amount);
+    void SIGNAL_processedAmount(KJob *job, KJob::Unit unit, qulonglong amount);
+    void SIGNAL_percent(KJob*);
+    void SIGNAL_speed(KJob*, unsigned long value);
 
 
     /// FBO cancelAll().
@@ -368,20 +367,23 @@ protected Q_SLOTS:
 //    void resumed(KJob *job) override;
 
     /**
+     * Slot, KJobTrackerInterface.
      * "Called to display general description of a job.
      *  A description has a title and two optional fields which can be used to complete the description.
      *  Examples of titles are "Copying", "Creating resource", etc.
      *  The fields of the description can be "Source" with an URL, and, "Destination" with an URL for a "Copying" description."
      */
-    void description(KJob *job, const QString &title,
+    void description(KJob *kjob, const QString &title,
                              const QPair<QString, QString> &field1,
                              const QPair<QString, QString> &field2) override;
     /**
+     * Slot
      * "Called to display state information about a job.
      * Examples of message are "Resolving host", "Connecting to host...", etc."
      */
     void infoMessage(KJob *job, const QString &plain, const QString &rich) override;
     /**
+     * Slot
      * "Emitted to display a warning about a job."
      */
     void warning(KJob *job, const QString &plain, const QString &rich) override;
@@ -398,6 +400,7 @@ protected Q_SLOTS:
     /// been updated.
     void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount) override;
     /**
+     * Slot
      * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
     void processedAmount(KJob *job, KJob::Unit unit, qulonglong amount) override;

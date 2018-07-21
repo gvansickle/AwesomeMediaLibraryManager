@@ -62,7 +62,7 @@ Q_SIGNALS:
 protected:
     /// Private constructor to get us a fully-constructed vtable so we can
     /// call virtual functions in the non-default constructor.
-    BaseActivityProgressStatusBarWidget(QWidget *parent);
+    explicit BaseActivityProgressStatusBarWidget(QWidget *parent);
 
 public:
     explicit BaseActivityProgressStatusBarWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);

@@ -46,6 +46,10 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
 
 /**
  * Make a connection and assert if the attempt fails.
+ * This is the general case, including lambdas.  Unfortunately:
+ * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
+ * to connecting to member functions."
+ * The overload below tries to catch the case where UniqueConnection does apply.
  */
 template <typename... Args>
 void connect_or_die(Args&&... args)
@@ -53,6 +57,20 @@ void connect_or_die(Args&&... args)
     QMetaObject::Connection retval;
 
     retval = QObject::connect(std::forward<Args>(args)...);
+    Q_ASSERT(static_cast<bool>(retval) != false);
+}
+
+/**
+ * Make a Qt::UniqueConnection connection and assert if the attempt fails.
+ * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
+ * to connecting to member functions."
+ */
+template <class T, class U, class TPMF, class UPMF, class ConnectionType>
+void connect_or_die(T* t, TPMF tpmf, U* u, UPMF upmf, ConnectionType connection_type = Qt::AutoConnection)
+{
+    QMetaObject::Connection retval;
+
+    retval = QObject::connect(t, tpmf, u, upmf, connection_type | Qt::UniqueConnection);
     Q_ASSERT(static_cast<bool>(retval) != false);
 }
 

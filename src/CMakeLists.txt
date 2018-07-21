@@ -284,9 +284,8 @@ add_subdirectory(gui)
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
 # The Future
-add_library(amlm_src_future "")
+add_library(amlm_src_future EXCLUDE_FROM_ALL "")
 include(future/CMakeLists.txt)
-
 
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
@@ -413,7 +412,7 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	concurrency/tests/ExtAsyncTests.h
 	concurrency/tests/AMLMJobTests.h)
 
-add_executable(${TEST_EXE_TARGET})
+add_executable(${TEST_EXE_TARGET} "")
 target_sources(${TEST_EXE_TARGET}
 	PUBLIC
 	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
