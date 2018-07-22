@@ -70,8 +70,14 @@ void LibraryEntryLoaderJob::runFunctor()
     }
     // Make sure the LibraryEntry hasn't been deleted.  It shouldn't have been since we hold a shared_ptr<> to it.
     Q_ASSERT(m_libentry);
+
     // Make sure the LibraryEntry has a valid QUrl.  It should, but ATM we're getting here with empty URLs.
-    AMLM_ASSERT_EQ(m_libentry->getUrl().isValid(), true);
+//    AMLM_ASSERT_EQ(m_libentry->getUrl().isValid(), true);
+    if(!m_libentry->getUrl().isValid())
+    {
+        qWro() << "INVALID URL";
+        return;
+    }
 
     if(!m_libentry->isPopulated())
     {

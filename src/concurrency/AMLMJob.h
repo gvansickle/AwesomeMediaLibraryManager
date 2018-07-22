@@ -36,8 +36,9 @@
 #include <KJob>
 #include <KJobUiDelegate>
 
-#include "../future/function_traits.hpp"
 // Ours
+#include <src/future/function_traits.hpp>
+#include <src/future/static_if.hpp>
 #include "utils/UniqueIDMixin.h"
 #include "utils/ConnectHelpers.h"
 #include "concurrency/ExtAsync.h"
@@ -340,8 +341,8 @@ public:
     void then(ContextType&& ctx, Func&& f)
     {
 //        Q_ASSERT(!m_possible_delete_later_pending);
-
-        qDb() << this->objectName() << "ENTERED THEN";
+//        cpp::static_if<ct::function_type_t<decltype(*this)::objectName>>([&](auto f){});
+        qDbo() << "ENTERED THEN";
 
 //        QPointer<KJob> pkjob = kjob;
 

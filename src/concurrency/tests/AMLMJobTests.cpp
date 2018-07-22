@@ -148,6 +148,26 @@ TEST_F(AMLMJobTests, ThisShouldPass)
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
+TEST_F(AMLMJobTests, ThenTest)
+{
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
+    j->then(this, [=](TestAMLMJob1* j_kjob) -> void {
+        if(j_kjob->error())
+        {
+            // Error.
+            GTEST_COUT << "ASYNC JOB FAILED:"; // << j_kjob->error() << ":" << j_kjob->errorText() << ":" << j_kjob->errorString();
+        }
+        else
+        {
+            // Succeeded, update the model.
+            GTEST_COUT << "ASYNC JOB COMPLETE:";// << j_kjob;
+            int new_val = j_kjob->get_extfuture_ref().get();
+        }
+    });
+    j->start();
+}
+
+
 TEST_F(AMLMJobTests, DirScanCancelTest)
 {
     ExtFutureWatcher<DirScanResult> watcher;

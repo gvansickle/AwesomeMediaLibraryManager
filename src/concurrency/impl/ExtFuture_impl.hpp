@@ -48,6 +48,7 @@ ExtFuture<T>::unwrap()
 template<typename T>
 T ExtFuture<T>::get()
 {
+M_WARNING("segfaulting.");
 	wait();
 	return this->future().result();
 }

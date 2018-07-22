@@ -330,11 +330,11 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 qDb() << "STARTING ASYNC LOAD";
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
                 m_pending_async_item_loads[item] = load_entry_job;
-                load_entry_job->then(this, [=](LibraryEntryLoaderJob* kjob) -> void {
-                    if(kjob->error())
+                load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
+                    if(loader_kjob->error())
                     {
                         // Error.  Load the "No image available" icon.
-                        qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+                        qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << loader_kjob->error() << ":" << loader_kjob->errorText() << ":" << loader_kjob->errorString();
                         // Report error via uiDelegate()
                         /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
                         /// every time there's an error.
@@ -345,10 +345,10 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                     else
                     {
                         // Succeeded, update the model.
-                        qIno() << "ASYNC LOAD COMPLETE:" << kjob;
+                        qIno() << "ASYNC LOAD COMPLETE:" << loader_kjob;
 //                        m_pending_async_item_loads.erase(item);
 //                        MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
-                        LibraryEntryLoaderJobResult new_vals = kjob->get_extfuture_ref().get();
+                        LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture_ref().get();
                         Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
                         m_pending_async_item_loads.erase(item);
                         /// @todo Q_EMIT ?
