@@ -20,7 +20,14 @@
 #include "LibraryEntryLoaderJob.h"
 
 #include "LibraryRescanner.h"
+#include <utils/RegisterQtMetatypes.h>
 #include <utils/DebugHelpers.h>
+
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering LibraryEntryLoaderJob types";
+    qRegisterMetaType<ExtFuture<LibraryEntryLoaderJobResult>>();
+    qRegisterMetaType<LibraryEntryLoaderJobResult>();
+    });
 
 LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
@@ -52,7 +59,8 @@ void LibraryEntryLoaderJob::runFunctor()
 {
     qDbo() << "START LibraryEntryLoaderJob RUNFUNCTOR" << m_pmi << m_libentry;
 
-    MetadataReturnVal retval;
+//    MetadataReturnVal retval;
+    LibraryEntryLoaderJobResult retval(m_pmi, m_libentry);
 
     // Make sure the index is still valid.  The model may have been destroyed since the message was sent.
     if(!m_pmi.isValid())
@@ -63,14 +71,11 @@ void LibraryEntryLoaderJob::runFunctor()
     // Make sure the LibraryEntry hasn't been deleted.  It shouldn't have been since we hold a shared_ptr<> to it.
     Q_ASSERT(m_libentry);
     // Make sure the LibraryEntry has a valid QUrl.  It should, but ATM we're getting here with empty URLs.
-    Q_ASSERT(m_libentry->getUrl().isValid());
+    AMLM_ASSERT_EQ(m_libentry->getUrl().isValid(), true);
 
     if(!m_libentry->isPopulated())
     {
         // Item's metadata has not been looked at.  We may have multiple tracks.
-
-        // Only one pindex though.
-        retval.m_original_pindexes.push_back(m_pmi);
 
         qIno() << "LOADING ITEM:" << m_libentry;
         auto vec_items = m_libentry->populate();
@@ -103,14 +108,14 @@ void LibraryEntryLoaderJob::runFunctor()
             // Couldn't load the metadata from the file.
             // Only option here is to return the old item, which should now be marked with an error.
             qCro() << "Couldn't load metadata for file" << m_libentry->getUrl();
-            retval.m_original_pindexes.push_back(m_pmi);
+//            retval.m_original_pindexes.push_back(m_pmi);
             retval.m_new_libentries.push_back(m_libentry);
             retval.m_num_tracks_found = 1;
         }
         else
         {
             // Repackage it and return.
-            retval.m_original_pindexes.push_back(m_pmi);
+//            retval.m_original_pindexes.push_back(m_pmi);
             retval.m_new_libentries.push_back(new_entry);
             retval.m_num_tracks_found = 1;
         }
@@ -120,5 +125,3 @@ void LibraryEntryLoaderJob::runFunctor()
 
     m_ext_future.reportResult(retval);
 }
-
-#include "moc_LibraryEntryLoaderJob.cpp"

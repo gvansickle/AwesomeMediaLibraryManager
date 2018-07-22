@@ -36,6 +36,41 @@
 #include "LibraryRescanner.h" // For MetadataReturnVal
 
 
+class LibraryEntryLoaderJobResult
+{
+	Q_GADGET
+
+public:
+    LibraryEntryLoaderJobResult() = default;
+    explicit LibraryEntryLoaderJobResult(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> le)
+    {
+        m_original_pindex = pmi;
+        m_original_libentry = le;
+    }
+
+//protected:
+    QPersistentModelIndex m_original_pindex;
+    std::shared_ptr<LibraryEntry> m_original_libentry;
+
+    QVector<std::shared_ptr<LibraryEntry>> m_new_libentries;
+    int m_num_tracks_found {0};
+
+//    void push_back(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> le)
+//    {
+//        m_original_pindexes.push_back(pmi);
+//        m_new_libentries.push_back(le);
+//        m_num_tracks_found++;
+//    }
+
+    void push_back(std::shared_ptr<LibraryEntry> le)
+    {
+        m_new_libentries.push_back(le);
+        m_num_tracks_found++;
+    }
+};
+Q_DECLARE_METATYPE(LibraryEntryLoaderJobResult);
+Q_DECLARE_METATYPE(ExtFuture<LibraryEntryLoaderJobResult>);
+
 class LibraryEntryLoaderJob;
 using LibraryEntryLoaderJobPtr = QPointer<LibraryEntryLoaderJob>;
 
@@ -53,10 +88,12 @@ Q_SIGNALS:
 protected:
     explicit LibraryEntryLoaderJob(QObject* parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
+
 public:
     /// @name Public types
     /// @{
-    using ExtFutureType = ExtFuture<MetadataReturnVal>;
+//    using ExtFutureType = ExtFuture<MetadataReturnVal>;
+    using ExtFutureType = ExtFuture<LibraryEntryLoaderJobResult>;
     /// @}
 
     ~LibraryEntryLoaderJob() override;

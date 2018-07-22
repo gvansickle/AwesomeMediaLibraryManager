@@ -237,7 +237,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             qIn() << "DIRTRAV SUCCEEDED";
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
-
+#if 0
             // Directory traversal complete, start rescan.
 
             QVector<VecLibRescannerMapItems> rescan_items;
@@ -254,6 +254,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             // Start the metadata scan.
             qDb() << "STARTING RESCAN";
             lib_rescan_job->start();
+#endif
         }
     });
 

@@ -30,8 +30,6 @@
 #include <QUrl>
 #include <QVector>
 
-//class CollectionDatabaseModel;
-
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
@@ -79,7 +77,8 @@ Q_SIGNALS:
     void statusSignal(LibState, qint64, qint64);
 
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
-    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
+//    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
+    void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results) const;
 
 public:
 	explicit LibraryModel(QObject *parent = nullptr);
@@ -183,6 +182,7 @@ public:
 public Q_SLOTS:
 	/// All this is for reading the metadata from a non-GUI thread.
     void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
+    void SLOT_processReadyResults(LibraryEntryLoaderJobResult loader_results);
     void SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item);
     void SLOT_onIncomingPopulateRowWithItems_Multiple(QPersistentModelIndex pindex, VecOfLEs items);
 

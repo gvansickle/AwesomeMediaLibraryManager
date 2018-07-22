@@ -92,7 +92,8 @@ void LibraryRescannerJob::runFunctor()
     setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
     // Make the internal connection to the SLOT_processReadyResults() slot.
-    connect(this, &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
+    connect(this, &LibraryRescannerJob::processReadyResults,
+            m_current_libmodel, qOverload<MetadataReturnVal>(&LibraryModel::SLOT_processReadyResults));
 
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)

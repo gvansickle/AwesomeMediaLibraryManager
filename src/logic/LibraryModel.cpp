@@ -347,7 +347,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                         // Succeeded, update the model.
                         qIno() << "ASYNC LOAD COMPLETE:" << kjob;
 //                        m_pending_async_item_loads.erase(item);
-                        MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
+//                        MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
+                        LibraryEntryLoaderJobResult new_vals = kjob->get_extfuture_ref().get();
                         Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
                         m_pending_async_item_loads.erase(item);
                         /// @todo Q_EMIT ?
@@ -797,7 +798,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 	{
 		qDebug() << QString("Returning %1 row(s)").arg(row_items.size());
 		LibraryEntryMimeData* e = new LibraryEntryMimeData();
-        e->setData(/*mimeTypes()[0]*/*mimeTypes().cbegin(), QByteArray());
+        e->setData(*mimeTypes().cbegin(), QByteArray());
 		e->m_lib_item_list = row_items;
 		e->setUrls(urls);
 		return e;
@@ -870,6 +871,62 @@ void LibraryModel::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
     }
     else if(lritem_vec.m_new_libentries.size() == lritem_vec.m_num_tracks_found
             && lritem_vec.m_original_pindexes.size() == lritem_vec.m_num_tracks_found)
+    {
+        // It's a matching set of pindexes and libentries.
+
+        for(int i=0; i<lritem_vec.m_num_tracks_found; ++i)
+        {
+            if (!lritem_vec.m_original_pindexes[i].isValid())
+            {
+                qWarning() << "Invalid persistent index, ignoring update";
+                return;
+            }
+
+            // None of the returned entries should be null.
+            Q_ASSERT(lritem_vec.m_new_libentries[i] != nullptr);
+
+            qDebug() << "Replacing entry"; // << item->getUrl();
+            // item is a single song which has its metadata populated.
+            // Reconstruct the QModelIndex we sent out.
+            auto initial_row_index = QModelIndex(lritem_vec.m_original_pindexes[i]);
+            auto row = initial_row_index.row();
+            qDebug() << QString("incoming single item, row %1").arg(row);
+            // Metadata's been populated.
+            setData(initial_row_index, QVariant::fromValue(lritem_vec.m_new_libentries[i]));
+        }
+    }
+    else
+    {
+        // Not sure what we got.
+        qCritical() << "pindexes/libentries/num_new_entries:" << lritem_vec.m_original_pindexes.size()
+                                                              << lritem_vec.m_new_libentries.size();
+                                                              // lritem_vec.m_new_libentries;
+        Q_ASSERT_X(0, "Scanning", "Not sure what we got");
+    }
+}
+
+void LibraryModel::SLOT_processReadyResults(LibraryEntryLoaderJobResult loader_results)
+{
+    // We got one of ??? things back:
+    // - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
+    // - A single pindex and more than one LibraryEntry*, the result of the first scan after the file was found.
+    // - Multiple pindexs and LibraryEntry*'s.  The result of a multi-track file rescan.
+
+    if(loader_results.m_num_tracks_found == 0)
+    {
+        // Found nothing, error out the entry.
+        qCro() << "RESULT WAS EMPTY";
+        /// @todo
+    }
+
+    if(loader_results.m_num_tracks_found > 1
+            && loader_results.m_new_libentries.size() == loader_results.m_num_tracks_found)
+    {
+        // It's a valid, new, multi-track entry.
+        SLOT_onIncomingPopulateRowWithItems_Multiple(loader_results.m_original_pindex, loader_results.m_new_libentries);
+    }
+    else if(loader_results.m_new_libentries.size() == loader_results.m_num_tracks_found
+            && loader_results.m_original_pindexes.size() == loader_results.m_num_tracks_found)
     {
         // It's a matching set of pindexes and libentries.
 
