@@ -21,6 +21,7 @@
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_
 
 #include <type_traits>
+#include <future/future_type_traits.hpp>
 #include <future/function_traits.hpp>
 #include <future/cpp14_concepts.hpp>
 
@@ -155,13 +156,13 @@ template <class F, class T>
 using has_extfuture_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>>()));
 
 template <class F, class T>
-using has_extfuture_as_first_param = is_detected<has_extfuture_as_first_param_type, F, T>;
+using has_extfuture_as_first_param = std::is_detected<has_extfuture_as_first_param_type, F, T>;
 
 template <class F, class T>
 using has_extfuture_ref_as_first_param_type = decltype(std::declval<F>()(std::declval<ExtFuture<T>&>()));
 
 template <class F, class T>
-using has_extfuture_ref_as_first_param = is_detected<has_extfuture_ref_as_first_param_type, F, T>;
+using has_extfuture_ref_as_first_param = std::is_detected<has_extfuture_ref_as_first_param_type, F, T>;
 
 /// END concepts
 

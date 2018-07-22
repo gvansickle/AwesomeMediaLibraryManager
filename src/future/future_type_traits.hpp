@@ -11,18 +11,25 @@
 #include <type_traits>
 #include <tuple>
 
-/// Backfill for C++17 type trait variable templates (std::is_same_v, etc.)
-#if !defined(__cpp_lib_type_trait_variable_templates) || __cpp_lib_type_trait_variable_templates < 201510
+/// Backfill for C++17 std::void_t.
+#if !defined(__cpp_lib_void_t) || (__cpp_lib_void_t < 201411)
+namespace std
+{
+    /// void_t
+    template <class...>
+    using void_t = void;
+    //template<typename... Ts> struct make_void { typedef void type;};
+    //template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+}
+#endif // std::void_t
 
+/// Backfill for C++17 type trait variable templates (std::is_same_v, etc.)
+#if !defined(__cpp_lib_type_trait_variable_templates) || (__cpp_lib_type_trait_variable_templates < 201510)
 namespace std // Yeah, this is bad.
 {
 	/// C++17 is_same_v
 	template <typename T, class U>
 	constexpr bool is_same_v = std::is_same<T, U>::value;
-
-	/// C++17 void_t
-	template <typename... >
-	using void_t = void;
 
 	/// C++17 is_base_of_v
 	template <class Base, class Derived>
@@ -63,9 +70,135 @@ namespace std // Yeah, this is bad.
 	/// C++17
 	template <class T>
 	constexpr bool tuple_size_v = tuple_size<T>::value;
-};
-
+} // END std
 #endif // __cpp_lib_type_trait_variable_templates < 201510
+
+
+
+/// Backfill for C++17 detection idiom (std::is_detected, etc.)
+/// These would be defined in <experimental/type_traits>.
+#if !defined(__cpp_lib_experimental_detect) || (__cpp_lib_experimental_detect < 201505)
+namespace std // I know, I know.
+{
+	// No support for detection idiom.  Per http://en.cppreference.com/w/cpp/experimental/lib_extensions_2
+	namespace detail
+	{
+		template <class Default, class AlwaysVoid,
+			  template<class...> class Op, class... Args>
+		struct detector
+		{
+		  using value_t = std::false_type;
+		  using type = Default;
+		};
+
+		template <class Default, template<class...> class Op, class... Args>
+		struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
+		  using value_t = std::true_type;
+		  using type = Op<Args...>;
+		};
+
+	} // namespace detail
+
+	/**
+	 * Library Fundamentals TS v2 class used by detected_t to indicate detection failure.
+	 * @link https://en.cppreference.com/w/cpp/experimental/nonesuch
+	 */
+	struct nonesuch final
+	{
+	  nonesuch () = delete;
+	  ~nonesuch () = delete;
+	  nonesuch (nonesuch const&) = delete;
+	  void operator = (nonesuch const&) = delete;
+	};
+
+	/**
+	 * is_detected<Op, Args>
+	 * "Is it valid to instantiate Op with Args?"
+	 * I.e. is
+	 */
+	template <template<class...> class Op, class... Args>
+	using is_detected = typename detail::detector<nonesuch, void, Op, Args...>::value_t;
+
+	template <template<class...> class Op, class... Args>
+	using detected_t = typename detail::detector<nonesuch, void, Op, Args...>::type;
+
+	template <class Default, template<class...> class Op, class... Args>
+	using detected_or = detail::detector<Default, void, Op, Args...>;
+
+	template< template<class...> class Op, class... Args >
+	constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+
+	template< class Default, template<class...> class Op, class... Args >
+	using detected_or_t = typename detected_or<Default, Op, Args...>::type;
+
+	template <class Expected, template<class...> class Op, class... Args>
+	using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
+
+	template <class Expected, template<class...> class Op, class... Args>
+	constexpr bool is_detected_exact_v = is_detected_exact<Expected, Op, Args...>::value;
+
+	template <class To, template<class...> class Op, class... Args>
+	using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
+
+	template <class To, template<class...> class Op, class... Args>
+	constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args...>::value;
+} // END std
+#endif // __cpp_lib_experimental_detect No support for detection idiom.
+
+#if !defined(__cpp_lib_bool_constant) || (__cpp_lib_bool_constant < 201505)
+namespace std
+{
+    template <bool B>
+    using bool_constant = std::integral_constant<bool, B>;
+} // END std
+#endif // __cpp_lib_bool_constant
+
+/// Backfill for C++17 Logical Operator Type Traits
+#if !defined(__cpp_lib_logical_traits) || (__cpp_lib_logical_traits < 201510)
+namespace std
+{
+	template <class...> struct conjunction;
+	template <class...> struct disjunction;
+	template <class B> using negation = bool_constant<!B::value>;
+
+	template <class T, class... Ts>
+	struct conjunction<T, Ts...> :
+	  bool_constant<T::value && conjunction<Ts...>::value>
+	{ };
+	template <> struct conjunction<> : std::true_type { };
+
+	template <class T, class... Ts>
+	struct disjunction<T, Ts...> :
+	  bool_constant<T::value || disjunction<Ts...>::value>
+	{ };
+	template <> struct disjunction<> : std::false_type { };
+} // END std
+#endif // __cpp_lib_logical_traits
+
+
+/// Template variable wrappers.
+/// @todo Concepts?
+/// @{
+
+template <bool... Bs>
+constexpr bool require = std::conjunction<std::bool_constant<Bs>...>::value;
+
+template <bool... Bs>
+constexpr bool either = std::disjunction<std::bool_constant<Bs>...>::value;
+
+template <bool... Bs>
+constexpr bool disallow = !require<Bs...>;
+
+template <template <class...> class Op, class... Args>
+constexpr bool exists = std::is_detected<Op, Args...>::value;
+
+template <class To, template <class...> class Op, class... Args>
+constexpr bool converts_to = std::is_detected_convertible<To, Op, Args...>::value;
+
+template <class Exact, template <class...> class Op, class... Args>
+constexpr bool identical_to = std::is_detected_exact<Exact, Op, Args...>::value;
+
+/// @}
 
 
 /**

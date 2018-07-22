@@ -80,7 +80,7 @@ namespace ExtAsync
 		template <class T, class = void>
 		struct is_void_takes_param : std::false_type {};
 		template <class T>
-		struct is_void_takes_param<T, void_t<ct::has_void_return<T>>>
+		struct is_void_takes_param<T, std::void_t<ct::has_void_return<T>>>
 			: std::true_type {};
 
 		template <class ExtFutureR>
