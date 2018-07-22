@@ -17,6 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "ExtAsyncTests.h"
+
+
 // Std C++
 #include <type_traits>
 #include <atomic>
@@ -34,7 +37,6 @@
 // Ours
 #include <future/future_type_traits.hpp>
 #include "../ExtAsync.h"
-#include "ExtAsyncTests.h"
 #include <tests/TestHelpers.h>
 #include "../../future/function_traits.hpp"
 
