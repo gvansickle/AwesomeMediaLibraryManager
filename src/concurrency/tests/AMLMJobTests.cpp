@@ -92,7 +92,7 @@ public:
 
     static TestAMLMJob1Ptr make_job(QObject *parent)
     {
-        auto retval = new TestAMLMJob1(parent);
+        TestAMLMJob1Ptr retval = new TestAMLMJob1(parent);
         return retval;
     }
 
@@ -148,23 +148,65 @@ TEST_F(AMLMJobTests, ThisShouldPass)
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
+TEST_F(AMLMJobTests, SynchronousExecTest)
+{
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
+    j->setAutoDelete(false);
+
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    ASSERT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    ASSERT_TRUE(kjob_result_spy.isValid());
+
+    bool status = j->exec();
+
+    EXPECT_EQ(status, true);
+
+    GTEST_COUT << "FINISHED CT:" << kjob_finished_spy.count();
+    GTEST_COUT << "RESULT CT:" << kjob_result_spy.count();
+
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 1);
+}
+
 TEST_F(AMLMJobTests, ThenTest)
 {
-    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
-    j->then(this, [=](TestAMLMJob1* j_kjob) -> void {
-        if(j_kjob->error())
+    QObject* ctx = new QObject(qApp);
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
+    j->setAutoDelete(false);
+
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    ASSERT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    ASSERT_TRUE(kjob_result_spy.isValid());
+
+    j->then(ctx, [=](TestAMLMJob1* j_kjob) -> void {
+        if(j->error())
         {
             // Error.
-            GTEST_COUT << "ASYNC JOB FAILED:"; // << j_kjob->error() << ":" << j_kjob->errorText() << ":" << j_kjob->errorString();
+            GTEST_COUT << "ASYNC JOB FAILED:\r\n"; // << j_kjob->error() << ":" << j_kjob->errorText() << ":" << j_kjob->errorString();
         }
         else
         {
             // Succeeded, update the model.
-            GTEST_COUT << "ASYNC JOB COMPLETE:";// << j_kjob;
-            int new_val = j_kjob->get_extfuture_ref().get();
+            GTEST_COUT << "ASYNC JOB COMPLETE:\r\n";// << j_kjob;
+            int new_val = j_kjob->get_extfuture_ref().qtget_first();
         }
     });
+    // Start the job.
     j->start();
+
+    // Wait for job to finish.
+    EXPECT_TRUE(QTest::qWaitFor([&](){return kjob_result_spy.count() == 1; }, 15000));
+//    while(!j->isFinished())
+//    {
+//    }
+    j->get_extfuture_ref().waitForFinished();
+
+    GTEST_COUT << "JOB EXTFUTURE:" << j->get_extfuture_ref().state() << "\n";
+    QList<int> extf_int = j->get_extfuture_ref().get();
+
+    EXPECT_EQ(extf_int.size(), 10);
 }
 
 

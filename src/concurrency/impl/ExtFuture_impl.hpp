@@ -46,7 +46,7 @@ ExtFuture<T>::unwrap()
 
 
 template<typename T>
-T ExtFuture<T>::get()
+T ExtFuture<T>::qtget_first()
 {
 M_WARNING("segfaulting.");
 	wait();
@@ -54,7 +54,7 @@ M_WARNING("segfaulting.");
 }
 
 template<typename T>
-void ExtFuture<T>::wait() const
+void ExtFuture<T>::wait()
 {
     while (!this->isFinished())
     {

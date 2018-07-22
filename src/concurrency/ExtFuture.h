@@ -148,7 +148,8 @@ public:
     ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started /*| QFutureInterfaceBase::State::Running*/))
 		: QFutureInterface<T>(initialState)
 	{
-		qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
+        //qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
+        AMLM_ASSERT_EQ(initialState, QFutureInterfaceBase::State::Started);
 	}
 
 	ExtFuture(const ExtFuture<T>& other) = default;
@@ -209,7 +210,7 @@ public:
 #endif
 
 	/**
-	 * Waits until the ExtFuture is finished, and returns the result.
+     * Waits until the ExtFuture is finished, and returns the first result.
 	 * Essentially the same semantics as std::future::get().
 	 *
 	 * @note Calls .wait() then returns this->future().result().  This keeps Qt's event loops running.
@@ -218,7 +219,17 @@ public:
 	 *
 	 * @return The result value of this ExtFuture.
 	 */
-	T get();
+    T qtget_first();
+
+    /**
+     * Waits until the ExtFuture<T> is finished, and returns the resulting QList<T>.
+     * Essentially the same semantics as std::future::get().
+     *
+     * @note Directly calls this->future().results().  This blocks any event loop in this thread.
+     *
+     * @return The results value of this ExtFuture.
+     */
+    QList<T> get() { return this->future().results(); }
 
     /**
      * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
@@ -363,14 +374,14 @@ public:
 		// - Create a wrapper lambda for the actual finally callback which takes a reference to this.
 		// - Pass the wrapper to .then().
 		// -
-		auto retval = this->then([func = std::forward<F>(finally_callback)](ExtFuture<T> thiz) mutable {
+        auto retval = this->then([func = std::forward<F>(finally_callback)](ExtFuture<T> thiz) mutable {
 			// Call the finally_callback.
 			std::move(func)();
 
 			// This is Qt5 for .get().  Qt's futures always contain a QList of T's, not just a single result.
 /// @todo "TODO: should return .results()"
-			return thiz.get();
-//			return thiz;
+            return thiz.qtget_first();
+//            return thiz;
 			});
 
 		return retval;
@@ -385,7 +396,7 @@ public:
 	 * Effectively the same semantics as std::future::wait(), but with Qt's-event-loop pumping, so it only
 	 * semi-blocks the thread.
 	 */
-	void wait() const;
+    void wait();
 
 	/// @todo
 //	void await();

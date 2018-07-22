@@ -337,12 +337,13 @@ public:
     /**
      * .then(ctx, continuation) -> void
      */
-    template <typename ContextType, typename Func>
-    void then(ContextType&& ctx, Func&& f)
+    template <typename ContextType, typename Func,
+              REQUIRES(std::is_base_of_v<QObject, ContextType>)>
+    void then(const ContextType *ctx, Func&& f)
     {
 //        Q_ASSERT(!m_possible_delete_later_pending);
 //        cpp::static_if<ct::function_type_t<decltype(*this)::objectName>>([&](auto f){});
-        qDbo() << "ENTERED THEN";
+        qDb() << "ENTERED THEN";
 
 //        QPointer<KJob> pkjob = kjob;
 

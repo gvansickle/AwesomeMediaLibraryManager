@@ -24,11 +24,15 @@
 #include <boost/callable_traits.hpp>
 namespace ct = boost::callable_traits;
 
+// Std C++ backfill
+#include <future/cpp14_concepts.hpp>
+
 // Qt5
 #include <QAction>
 #include <QApplication>
 #include <QMetaObject>
 
+// Ours
 #include "DebugHelpers.h"
 
 template <typename T, typename F>
@@ -64,7 +68,8 @@ void connect_or_die(Args&&... args)
  * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
  * to connecting to member functions."
  */
-template <class TPMF, class T = ct::class_of_t<TPMF>, class UPMF, class U = ct::class_of_t<UPMF>>
+template <class TPMF, class T = ct::class_of_t<TPMF>, class UPMF, class U = ct::class_of_t<UPMF>,
+          REQUIRES(std::is_member_function_pointer_v<UPMF>)>
 void connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
 {
     QMetaObject::Connection retval;

@@ -142,7 +142,7 @@ namespace std // I know, I know.
 
 	template <class To, template<class...> class Op, class... Args>
 	constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args...>::value;
-} // END std
+} // std
 #endif // __cpp_lib_experimental_detect No support for detection idiom.
 
 #if !defined(__cpp_lib_bool_constant) || (__cpp_lib_bool_constant < 201505)

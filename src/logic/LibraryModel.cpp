@@ -348,7 +348,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                         qIno() << "ASYNC LOAD COMPLETE:" << loader_kjob;
 //                        m_pending_async_item_loads.erase(item);
 //                        MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
-                        LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture_ref().get();
+                        LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture_ref().qtget_first();
                         Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
                         m_pending_async_item_loads.erase(item);
                         /// @todo Q_EMIT ?
