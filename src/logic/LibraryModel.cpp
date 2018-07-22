@@ -917,51 +917,55 @@ void LibraryModel::SLOT_processReadyResults(LibraryEntryLoaderJobResult loader_r
         // Found nothing, error out the entry.
         qCro() << "RESULT WAS EMPTY";
         /// @todo
+        Q_ASSERT(0);
     }
 
-    if(loader_results.m_num_tracks_found > 1
-            && loader_results.m_new_libentries.size() == loader_results.m_num_tracks_found)
+    /// @todo Eventually can go away.
+    AMLM_ASSERT_EQ(loader_results.m_new_libentries.size(), loader_results.m_num_tracks_found);
+
+    if(loader_results.m_new_libentries.size() > 1)
     {
-        // It's a valid, new, multi-track entry.
+        // It's a single file/multi-track.
         SLOT_onIncomingPopulateRowWithItems_Multiple(loader_results.m_original_pindex, loader_results.m_new_libentries);
     }
-    else if(loader_results.m_new_libentries.size() == loader_results.m_num_tracks_found
-            && loader_results.m_original_pindexes.size() == loader_results.m_num_tracks_found)
+    else if(loader_results.m_new_libentries.size() == 1)
     {
-        // It's a matching set of pindexes and libentries.
+        // It's a single file/single track.
+        SLOT_onIncomingPopulateRowWithItems_Single(loader_results.m_original_pindex, loader_results.m_new_libentries[0]);
 
-        for(int i=0; i<lritem_vec.m_num_tracks_found; ++i)
-        {
-            if (!lritem_vec.m_original_pindexes[i].isValid())
-            {
-                qWarning() << "Invalid persistent index, ignoring update";
-                return;
-            }
+//        for(int i=0; i<loader_results.m_num_tracks_found; ++i)
+//        {
+//            if (!loader_results.m_original_pindex.isValid())
+//            {
+//                qWarning() << "Invalid persistent index, ignoring update";
+//                Q_ASSERT(0);
+//                return;
+//            }
 
-            // None of the returned entries should be null.
-            Q_ASSERT(lritem_vec.m_new_libentries[i] != nullptr);
+//            // None of the returned entries should be null.
+//            Q_ASSERT(loader_results.m_new_libentries[i] != nullptr);
 
-            qDebug() << "Replacing entry"; // << item->getUrl();
-            // item is a single song which has its metadata populated.
-            // Reconstruct the QModelIndex we sent out.
-            auto initial_row_index = QModelIndex(lritem_vec.m_original_pindexes[i]);
-            auto row = initial_row_index.row();
-            qDebug() << QString("incoming single item, row %1").arg(row);
-            // Metadata's been populated.
-            setData(initial_row_index, QVariant::fromValue(lritem_vec.m_new_libentries[i]));
-        }
+//            qDebug() << "Replacing entry"; // << item->getUrl();
+//            // item is a single song which has its metadata populated.
+//            // Reconstruct the QModelIndex we sent out.
+//            auto initial_row_index = QModelIndex(loader_results.m_original_pindexes[i]);
+//            auto row = initial_row_index.row();
+//            qDebug() << QString("incoming single item, row %1").arg(row);
+//            // Metadata's been populated.
+//            setData(initial_row_index, QVariant::fromValue(loader_results.m_new_libentries[i]));
+//        }
     }
     else
     {
         // Not sure what we got.
-        qCritical() << "pindexes/libentries/num_new_entries:" << lritem_vec.m_original_pindexes.size()
-                                                              << lritem_vec.m_new_libentries.size();
+        qCritical() << "pindexes/libentries/num_new_entries:" << loader_results.m_original_pindex
+                                                              << loader_results.m_new_libentries.size();
                                                               // lritem_vec.m_new_libentries;
         Q_ASSERT_X(0, "Scanning", "Not sure what we got");
     }
 }
 
-void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item)
+void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, std::shared_ptr<LibraryEntry> item)
 {
 	// item is a single song which has its metadata populated.
 	// Reconstruct the QModelIndex we sent out.
@@ -1064,7 +1068,8 @@ void LibraryModel::deleteCache()
 
 void LibraryModel::connectSignals()
 {
-    connect_or_die(this, &LibraryModel::SIGNAL_selfSendReadyResults, this, &LibraryModel::SLOT_processReadyResults);
+    connect_or_die(this, &LibraryModel::SIGNAL_selfSendReadyResults,
+                   this, qOverload<LibraryEntryLoaderJobResult>(&LibraryModel::SLOT_processReadyResults));
 	connect(this, &LibraryModel::startFileScanSignal, m_rescanner, &LibraryRescanner::startAsyncDirectoryTraversal);
 }
 
@@ -1079,7 +1084,7 @@ void LibraryModel::finishIncoming()
 	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
-static QString table_row(std::string s1, std::string s2)
+static QString table_row(const std::string& s1, const std::string& s2)
 {
 	QString retval = "<tr>";
     for(const auto& s : {s1, s2})
