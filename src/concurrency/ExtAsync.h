@@ -257,7 +257,7 @@ namespace ExtAsync
 
 	    QtConcurrent::run([fn=std::decay_t<F>(function)](ExtFuture<R> retfuture) mutable -> void {
 	    	R retval;
-	    	// Call the function the user orginally passed in.
+	    	// Call the function the user originally passed in.
 	    	retval = fn();
 	    	// Report our single result.
 	    	retfuture.reportResult(retval);

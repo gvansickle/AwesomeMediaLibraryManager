@@ -53,6 +53,11 @@ void ExtFutureTest::TearDown()
     GTEST_COUT << "TearDown()" << std::endl;
 }
 
+
+//
+// TESTS
+//
+
 TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
     ExtFuture<int64_t> ef = make_ready_future(25L);

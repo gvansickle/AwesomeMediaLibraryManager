@@ -38,8 +38,6 @@ inline void PrintTo(const QString &qString, ::std::ostream *os)
     *os << qUtf8Printable(qString);
 }
 
-QT_END_NAMESPACE
-
 /// To let Google Test print ExtFutures.
 template <class T>
 inline void PrintTo(const ExtFuture<T> &ef, ::std::ostream *os)
@@ -50,8 +48,12 @@ inline void PrintTo(const ExtFuture<T> &ef, ::std::ostream *os)
     PrintTo(str, os);
 }
 
+QT_END_NAMESPACE
+
+
 /// Quick and dirty way to add information to the test log.
-#define GTEST_COUT std::cout << "[          ] [ INFO ]"
+#define GTEST_COUT_ORIGINAL std::cout << "[          ] [ INFO ] "
+#define GTEST_COUT GTEST_COUT_ORIGINAL
 
 /// @name Hopefully less quick-and-dirty way to add information to test output.
 /// @{
