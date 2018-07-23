@@ -34,6 +34,7 @@
 #include <future/future_type_traits.hpp>
 #include <future/function_traits.hpp>
 #include <future/cpp14_concepts.hpp>
+#include <future/deduced_type.hpp>
 #include <future/Unit.hpp>
 
 // Qt5
@@ -58,7 +59,8 @@ class ExtFuture;
 
 
 /**
- * An extended QFutureInterface<T> class.
+ * A std::shared_future<>-like class implemented on top of Qt5's QFutureInterface<T> class and other facilities.
+ *
  * Actually more like a combined promise and future.
  *
  * Promise (producer/writer) functionality:
@@ -75,7 +77,6 @@ class ExtFuture;
  * - get()
  * - then()
  * - wait()
- * - await()
  * - tap()
  *
  * Note that QFuture<T> is a ref-counted object which can be safely passed by value; intent is that ExtFuture<T>
@@ -126,6 +127,7 @@ public:
 	 *
 	 * This is the code we're fighting:
 	 *
+     * @code
 	 * void QFutureInterfaceBase::waitForFinished()
 		{
 			QMutexLocker lock(&d->m_mutex);
@@ -134,7 +136,7 @@ public:
 
             if (!alreadyFinished)
             {
-                /// GRVS: Not finsihed, so start running it?
+                /// GRVS: Not finished, so start running it?
 				d->pool()->d_func()->stealAndRunRunnable(d->runnable);
 
 				lock.relock();
@@ -145,11 +147,11 @@ public:
 
 			d->m_exceptionStore.throwPossibleException();
 		}
-	 *
+     * @endcode
 	 *
 	 * @param initialState  Defaults to State(Started | Running)
 	 */
-    ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started /*| QFutureInterfaceBase::State::Running*/))
+    explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started))
 		: QFutureInterface<T>(initialState)
 	{
         //qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
@@ -199,7 +201,7 @@ public:
 	/// @{
 
 	ExtFuture<T>& operator=(const ExtFuture<T>& other) = default;
-	ExtFuture<T>& operator=(ExtFuture<T>&& other) = default;
+    ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept = default;
 
 	/// @}
 
@@ -557,14 +559,6 @@ protected:
 // START IMPLEMENTATION
 //
 
-#include "ExtAsync.h"
-
-//template <typename T, typename FutureType>
-//ExtFutureState::States ExtFuture<T>::state(FutureType future)
-//{
-
-//}
-
 template<typename T>
 static ExtFutureState::States state(QFuture<T>& qfuture_derived)
 {
@@ -615,23 +609,7 @@ ExtFuture</*typename std::decay_t<T>*/V> make_ready_future(T&& value)
 	return ExtAsync::detail::make_ready_future<typename std::decay<T>::type>(value);
 }
 #else
-template <typename T>
-struct deduced_type_impl
-{
-	using type = T;
-};
-template <typename T>
-struct deduced_type_impl<std::reference_wrapper<T>>
-{
-	using type = T&;
-};
-template <typename T>
-struct deduced_type
-{
-	using type = typename deduced_type_impl<std::decay_t<T>>::type;
-};
-template <typename T>
-using deduced_type_t = typename deduced_type<T>::type;
+
 
 /**
  * Creates a completed future containing the value @a value.

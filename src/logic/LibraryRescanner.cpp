@@ -79,9 +79,11 @@ M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS, OR THE JOBS SHOULDNT BE OWNED BY T
 
 MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapItems& mapitem)
 {
+    MetadataReturnVal retval;
+#if 0
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
-	MetadataReturnVal retval;
+
 
 	// If we have more than a single entry in the incoming list, we have a multi-track file to refresh.
 	if(mapitem.size() == 1)
@@ -167,7 +169,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	{
 		qCritical() << "GOT EMPTY LIST OF LIBRARY ENTRIES TO RESCAN";
 	}
-
+#endif
     return retval;
 }
 
