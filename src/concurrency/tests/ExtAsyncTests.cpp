@@ -191,7 +191,7 @@ QFuture<T> make_finished_QFuture(const T &val)
  * Helper which returns a Started but not Cancelled QFuture<T>.
  */
 template <typename T>
-QFuture<T> make_startedNotCanceledQFuture()
+QFuture<T> make_startedNotCanceled_QFuture()
 {
     SCOPED_TRACE("");
     QFutureInterface<T> fi;
@@ -258,7 +258,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     GTEST_COUT << "WAITING FOR FINISHED" << std::endl;
     f.waitForFinished();
     GTEST_COUT << "QFUTURE FINISHED" << std::endl;
-//    EXPECT_TRUE(f.isCanceled());
+    EXPECT_FALSE(f.isCanceled());
     EXPECT_TRUE(f.isFinished());
 
     // Can't cancel a QtConcurrent::run() future, so the callback should have run to completion.
@@ -286,7 +286,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     std::atomic_int counter {0};
 #define GTEST_COUT qDb()
 
-    FutureTypeT the_future = make_startedNotCanceledQFuture<int>();
+    FutureTypeT the_future = make_startedNotCanceled_QFuture<int>();
 
     ASSERT_TRUE(the_future.isStarted());
     ASSERT_FALSE(the_future.isCanceled());
@@ -393,7 +393,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
      * Since a QFuture<> starts out canceled, we will get into the callback with the future Started | Canceled.
      */
 
-    FutureTypeT f = make_startedNotCanceledQFuture<int>();
+    FutureTypeT f = make_startedNotCanceled_QFuture<int>();
 
     std::function<int(const int&)> lambda = [&](const int& the_passed_value) -> int {
         GTEST_COUT << "Entered callback, passed value:" << the_passed_value;
@@ -457,7 +457,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
     }
     else
     {
-        EXPECT_EQ(f.resultCount(), 1);
+        EXPECT_EQ(f.resultCount(), 10);
     }
 
     /// @todo THIS IS WRONG, waitForFinished() followed by .result() segfaults.

@@ -131,8 +131,11 @@ void AMLMJob::start()
     // Note that calling the destructor of (by deleting) the returned future is ok:
     // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
     // "Note that this neither waits nor cancels the asynchronous computation."
-    /// Indicate to the cancel logic that we did start.
+
+    // Indicate to the cancel logic that we did start.
     m_run_was_started.release();
+
+    // Run.
     ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
 //    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
 }
@@ -451,11 +454,12 @@ void AMLMJob::SLOT_call_emitResult()
  */
 bool AMLMJob::doKill()
 {
+    // KJob::doKill().
+
     QMutexLocker lock(&m_start_vs_dokill_mutex);
 
     qDbo() << "START EXTASYNC DOKILL";
 
-    // KJob::doKill().
     /// @note The calling thread has to have an event loop, and actually AFAICT should be the main app thread.
     AMLM_ASSERT_IN_GUITHREAD();
 
@@ -523,7 +527,7 @@ bool AMLMJob::doKill()
     ef.waitForFinished();
 
     // Wait for the async job to really finish, i.e. for the run() member to finish.
-    /// @todo won't be acqable if killed before started.
+    /// @todo won't be acq'able if killed before started.
     m_run_returned.acquire();
 
     /// @todo Difference here btw cancel before and after start.

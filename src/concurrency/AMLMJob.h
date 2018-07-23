@@ -44,8 +44,8 @@
 #include "concurrency/ExtAsync.h"
 
 
-/// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
+/// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 using AMLMJobPtr = QPointer<AMLMJob>;
 
 Q_DECLARE_METATYPE(AMLMJobPtr);

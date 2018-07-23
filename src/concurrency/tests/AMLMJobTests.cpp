@@ -83,12 +83,7 @@ public:
     using ExtFutureType = ExtFuture<int>;
     /// @}
 
-    ~TestAMLMJob1() override
-    {
-//        SCOPED_TRACE("DESTRUCTOR");
-//        EXPECT_EQ(this->get_extfuture_ref().isRunning(), false);
-//        EXPECT_TRUE(m_run_returned);
-    }
+    ~TestAMLMJob1() override = default;
 
     static TestAMLMJob1Ptr make_job(QObject *parent)
     {
@@ -99,7 +94,7 @@ public:
     ExtFutureType& get_extfuture_ref() override { return asDerivedTypePtr()->m_ext_future; }
     TestAMLMJob1* asDerivedTypePtr() override { return this; }
 
-    int m_counter {0};
+    std::atomic_int m_counter {0};
 
 protected:
 
@@ -299,6 +294,7 @@ TEST_F(AMLMJobTests, CancelTest)
 
     ASSERT_TRUE(kill_succeeded) << ef;
     ASSERT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_EQ(j->error(), KJob::KilledJobError);
 
     // Wait for the KJob to signal that it's finished.
     // Won't get a result() signal here because it's kill()'ed Quietly.
@@ -311,7 +307,7 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
     RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
-    j->setAutoDelete(false);
+//    j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     ASSERT_TRUE(kjob_finished_spy.isValid());
@@ -332,8 +328,9 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 
     // j is now probably going to be deleteLater()'ed.
 
-    ASSERT_TRUE(kill_succeeded) << ef;
-    ASSERT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_TRUE(kill_succeeded) << ef;
+    EXPECT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_EQ(j->error(), KJob::KilledJobError);
 
 //    j->start();
 
@@ -345,8 +342,8 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 
     // Wait for the KJob to signal that it's finished.
     // Won't get a result() signal here because it's kill()'ed Quietly.
-    EXPECT_TRUE(kjob_finished_spy.wait());
-    EXPECT_FALSE(kjob_result_spy.wait());
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 0);
 }
 
 #include "AMLMJobTests.moc"
