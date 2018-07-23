@@ -188,16 +188,14 @@ public:
 	 * QFutureInterface<>'s destructor isn't marked either virtual or override.  By the
 	 * rules of C++, QFutureInterface<>'s destructor is in fact virtual ("once virtual always virtual"),
 	 * so we're good.  Marking this override to avoid further confusion.
+     *
+     * @note Since we're based on QFutureInterface<T> <- QFutureInterfaceBase, it handles the underlying
+     * refcounting for us.  So we may be getting destroyed after we've been copied, which is ok.
+     *
+     * @todo Find a way to assert if we're still running/not finished and haven't been copied.
+     * This would indicate a dangling future.
 	 */
-	~ExtFuture() override
-	{
-//		qDb() << "DESTRUCTOR";
-		/// @note Since we're based on QFutureInterface<T> <- QFutureInterfaceBase, it handles the underlying
-		/// refcounting for us.  So we may be getting destroyed after we've been copied, which is ok.
-
-		/// @todo Find a way to assert if we're still running/not finished and haven't been copied.
-		/// This would indicate a dangling future.
-	}
+    ~ExtFuture() override = default;
 
 	/// @name Copy and move operators.
 	/// @{
@@ -206,16 +204,6 @@ public:
     ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept = default;
 
 	/// @}
-
-	/**
-	 * For explicitly unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
-	 * Inspired by Facebook's Folly Futures.
-	 */
-#if 0 /// @todo
-	template <typename F>
-	std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
-	unwrap();
-#endif
 
 	/**
      * Waits until the ExtFuture is finished, and returns the first result.
@@ -589,6 +577,14 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 
 
+template<typename T>
+T ExtFuture<T>::qtget_first()
+{
+M_WARNING("segfaulting.");
+    wait();
+    return this->future().result();
+}
+
 // Include the implementation.
 #include "impl/ExtFuture_impl.hpp"
 
@@ -613,16 +609,105 @@ ExtFuture</*typename std::decay_t<T>*/V> make_ready_future(T&& value)
 #else
 
 
+
+
+template<typename T>
+void ExtFuture<T>::wait()
+{
+    while (!this->isFinished())
+    {
+        // Pump the event loop.
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    }
+}
+
+template<typename T>
+ExtFutureState::States ExtFuture<T>::state() const
+{
+    // States from QFutureInterfaceBase.
+    /// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
+    ///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
+    ///			#ifndef QFUTURE_TEST
+    ///			private:
+    ///			#endif
+    ///				QFutureInterfaceBasePrivate *d;
+    /// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
+    /// actually a QAtomicInt, so we're not thread-safe here.
+    /// This is the queryState() code from qfutureinterface.cpp:
+    ///
+    ///     bool QFutureInterfaceBase::queryState(State state) const
+    ///	    {
+    ///		    return d->state.load() & state;
+    ///	    }
+
+    const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+        {QFutureInterfaceBase::NoState, "NoState"},
+        {QFutureInterfaceBase::Running, "Running"},
+        {QFutureInterfaceBase::Started,  "Started"},
+        {QFutureInterfaceBase::Finished,  "Finished"},
+        {QFutureInterfaceBase::Canceled,  "Canceled"},
+        {QFutureInterfaceBase::Paused,   "Paused"},
+        {QFutureInterfaceBase::Throttled, "Throttled"}
+    };
+
+    ExtFutureState::States current_state = ExtFutureState::state(*this);
+
+    return current_state;
+}
+
+namespace ExtAsync
+{
+    namespace detail
+    {
+        template<typename T>
+        ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
+        {
+            ExtFuture<T> extfuture;
+
+            extfuture.reportStarted();
+            extfuture.reportResult(std::forward<T>(value));
+            extfuture.reportFinished();
+
+            return extfuture;
+        }
+
+        /// @todo
+//		inline ExtFuture<void> make_ready_future()
+//		{
+//			ExtFuture<void> extfuture;
+//
+//			extfuture.reportStarted();
+//			extfuture.reportFinished();
+//
+//			return extfuture;
+//		}
+
+        template <typename T, typename R = typename std::decay_t<T>>
+        ExtFuture<R> make_exceptional_future(const QException& exception)
+        {
+            ExtFuture<R> extfuture;
+
+            extfuture.reportStarted();
+            extfuture.reportException(exception);
+            extfuture.reportFinished();
+
+            return extfuture;
+        }
+
+    }
+}
+
 /**
  * Creates a completed future containing the value @a value.
  *
  * @param value
- * @return
+ * @return  A ready ExtFuture<deduced_type_t<T>>();
  */
 template <int = 0, int..., class T, REQUIRES(!IsExtFuture<T>)>
 ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
 {
-	return /*ExtFuture<deduced_type_t<T>>();*/ ExtAsync::detail::make_ready_future(std::forward<T>(value));
+    return ExtAsync::detail::make_ready_future(std::forward<T>(value));
 }
 
 /// overload for ExtFutue<Unit>.
