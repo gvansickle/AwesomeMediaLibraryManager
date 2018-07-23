@@ -411,7 +411,7 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
-	concurrency/tests/ExtFutureTests.cpp
+	concurrency/tests/ExtFutureTests.h
 	concurrency/tests/AMLMJobTests.h)
 
 add_executable(${TEST_EXE_TARGET} "")

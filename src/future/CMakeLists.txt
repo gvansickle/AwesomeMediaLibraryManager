@@ -22,6 +22,7 @@ set(HEADER_FILES_SRC_FUTURE
 	future_type_traits.hpp
 	cpp14_concepts.hpp
 	static_if.hpp
+	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp

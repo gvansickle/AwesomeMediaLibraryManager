@@ -24,6 +24,10 @@
 #include <atomic>
 #include <functional>
 
+// Future Std C++
+#include <future/future_type_traits.hpp>
+#include <future/function_traits.hpp>
+
 // Qt5
 #include <QString>
 #include <QTest>
@@ -34,7 +38,46 @@
 //#include <gmock/gmock-matchers.h>
 
 // Ours
-#include <future/future_type_traits.hpp>
-#include "../ExtAsync.h"
 #include <tests/TestHelpers.h>
-#include "../../future/function_traits.hpp"
+
+#include "../ExtFuture.h"
+
+
+void ExtFutureTest::SetUp()
+{
+    GTEST_COUT << "SetUp()" << std::endl;
+}
+
+void ExtFutureTest::TearDown()
+{
+    GTEST_COUT << "TearDown()" << std::endl;
+}
+
+TEST_F(ExtFutureTest, ReadyFutureCompletion)
+{
+    ExtFuture<int64_t> ef = make_ready_future(25L);
+
+    QList<int64_t> results = ef.get();
+
+    EXPECT_EQ(ef.state(), ExtFutureState::Started | ExtFutureState::Finished);
+
+    EXPECT_EQ(results.size(), 1);
+    EXPECT_EQ(results[0], 25L);
+}
+
+
+/// Static checks
+void ExtFutureTestdummy(void)
+{
+
+    static_assert(std::is_default_constructible<QString>::value, "");
+
+    // From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
+    // "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
+    static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >, "");
+    int v;
+    static_assert(std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >, "");
+    /// @todo
+//    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >, "");
+
+}

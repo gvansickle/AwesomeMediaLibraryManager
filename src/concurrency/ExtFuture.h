@@ -30,6 +30,12 @@
 #include <type_traits>
 #include <functional>
 
+// Future Std C++
+#include <future/future_type_traits.hpp>
+#include <future/function_traits.hpp>
+#include <future/cpp14_concepts.hpp>
+#include <future/Unit.hpp>
+
 // Qt5
 #include <QFutureInterface>
 
@@ -38,8 +44,6 @@
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 #include <utils/UniqueIDMixin.h>
-#include "../future/cpp14_concepts.hpp"
-#include "../future/function_traits.hpp"
 #include "ExtFutureState.h"
 #include "ExtFutureWatcher.h"
 
@@ -640,11 +644,11 @@ ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
 	return /*ExtFuture<deduced_type_t<T>>();*/ ExtAsync::detail::make_ready_future(std::forward<T>(value));
 }
 
-/// overload for ExtFutue<void>.
+/// overload for ExtFutue<Unit>.
 /// @todo
-//inline ExtFuture<void> make_ready_future()
+//inline ExtFuture<Unit> make_ready_future()
 //{
-//	return ExtAsync::detail::make_ready_future();
+//    return ExtAsync::detail::make_ready_future(unit);
 //}
 
 template <int = 0, int..., class T = void>
