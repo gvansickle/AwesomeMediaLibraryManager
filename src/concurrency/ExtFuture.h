@@ -172,12 +172,14 @@ public:
 
 	ExtFuture(const QFutureInterface<T> &other) : QFutureInterface<T>(other)
 	{
-		qDb() << "future state:" << *this;
+        //qDb() << "future state:" << *this;
+//        Q_ASSERT(this->state() == other.state());
 	}
 
 	ExtFuture(QFuture<T> other_future) : QFutureInterface<T>(other_future.d)
 	{
-		qDb() << "future state:" << *this;
+        //qDb() << "future state:" << *this;
+//        Q_ASSERT(this->state() == other_future.d.state());
 	}
 
 	/**

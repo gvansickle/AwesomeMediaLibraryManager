@@ -18,6 +18,7 @@
 #
 
 set(HEADER_FILES_SRC_FUTURE
+	deduced_type.hpp
 	function_traits.hpp
 	future_type_traits.hpp
 	cpp14_concepts.hpp
