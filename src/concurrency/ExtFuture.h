@@ -585,32 +585,6 @@ M_WARNING("segfaulting.");
     return this->future().result();
 }
 
-// Include the implementation.
-#include "impl/ExtFuture_impl.hpp"
-
-/**
- * Create and return a finished future of type ExtFuture<T>.
- *
- * Intended to be a mostly-work-alike to std::experimental::make_ready_future.
- * @see http://en.cppreference.com/w/cpp/experimental/make_ready_future
- *
- * @todo Specialize for void, or use Unit.
- * @todo return type decay rules when decay<T> is ref wrapper.
- *
- * @param value
- * @return
- */
-#if 0 // make ready/finished
-template<typename T, typename X, typename U = std::decay_t<T>, typename V = std::conditional<std::is_same_v<U, std::reference_wrapper<X>>,X&,U>>
-ExtFuture</*typename std::decay_t<T>*/V> make_ready_future(T&& value)
-{
-	return ExtAsync::detail::make_ready_future<typename std::decay<T>::type>(value);
-}
-#else
-
-
-
-
 template<typename T>
 void ExtFuture<T>::wait()
 {
@@ -704,6 +678,18 @@ namespace ExtAsync
  * @param value
  * @return  A ready ExtFuture<deduced_type_t<T>>();
  */
+/**
+ * Create and return a finished future of type ExtFuture<T>.
+ *
+ * Intended to be a mostly-work-alike to std::experimental::make_ready_future.
+ * @see http://en.cppreference.com/w/cpp/experimental/make_ready_future
+ *
+ * @todo Specialize for void, or use Unit.
+ * @todo return type decay rules when decay<T> is ref wrapper.
+ *
+ * @param value
+ * @return
+ */
 template <int = 0, int..., class T, REQUIRES(!IsExtFuture<T>)>
 ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
 {
@@ -722,9 +708,6 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 {
 	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
 }
-
-#endif // END make ready/finished
-
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 
