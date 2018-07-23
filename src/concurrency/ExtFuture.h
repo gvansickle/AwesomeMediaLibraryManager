@@ -236,6 +236,7 @@ public:
     QList<T> get() { return this->future().results(); }
 
     /**
+     * Like .get(), but only returns the first value in the ExtFuture<>'s QList.
      * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
      */
     T result()

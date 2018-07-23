@@ -65,9 +65,25 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
     EXPECT_EQ(results[0], 25L);
 }
 
+TEST_F(ExtFutureTest, FutureSingleThread)
+{
+    ExtFuture<int> ef;
+
+    EXPECT_EQ(ef.state(), ExtFutureState::Started);
+
+    ef.reportResult(1);
+
+    EXPECT_EQ(ef.resultCount(), 1);
+    EXPECT_EQ(ef.get()[0], 1);
+
+    ef.reportResult(2);
+
+    EXPECT_EQ(ef.resultCount(), 2);
+    EXPECT_EQ(ef.get()[1], 2);
+}
 
 /// Static checks
-void ExtFutureTestdummy(void)
+void ExtFutureTestDummy(void)
 {
 
     static_assert(std::is_default_constructible<QString>::value, "");
