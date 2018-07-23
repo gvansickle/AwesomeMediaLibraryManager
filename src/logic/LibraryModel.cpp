@@ -42,17 +42,6 @@
 #include <QDir>
 #include <QFileIconProvider>
 
-////////////////////////////////////////////////////////////////////////
-//#include <QSqlError>
-//#include <QSqlDatabase>
-//#include <QSqlQuery>
-//#include <QSqlRecord>
-//#include <QSqlRelationalTableModel>
-//#include <QSqlRecord>
-//#include <QMessageBox>
-//#include <QSqlField>
-//#include <logic/dbmodels/CollectionDatabaseModel.h>
-//////////////////////////////////////////////////////////////////////////
 
 #include "Library.h"
 #include "LibraryEntryLoaderJob.h"
@@ -61,7 +50,7 @@
 #include "logic/ModelUserRoles.h"
 
 
-LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_library()
+LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 {
 	// App-specific cache directory.
 	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
@@ -331,6 +320,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
                 m_pending_async_item_loads[item] = load_entry_job;
                 load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
+                	AMLM_ASSERT_IN_GUITHREAD();
                     if(loader_kjob->error())
                     {
                         // Error.  Load the "No image available" icon.
@@ -346,15 +336,21 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                     {
                         // Succeeded, update the model.
                         qIno() << "ASYNC LOAD COMPLETE:" << loader_kjob;
-//                        m_pending_async_item_loads.erase(item);
-//                        MetadataReturnVal new_vals = kjob->get_extfuture_ref().get();
-                        LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture_ref().qtget_first();
-                        Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
-                        m_pending_async_item_loads.erase(item);
-                        /// @todo Q_EMIT ?
-                        //runInObjectEventLoop(this, &LibraryModel::SLOT_processReadyResults(new_vals));
-                        //					QMetaObject::invokeMethod(this, "SLOT_processReadyResults", Q_ARG(MetadataReturnVal, new_vals));
+                        auto num_results = loader_kjob->get_extfuture_ref().resultCount();
+                        qIno() << "ASYNC LOAD INFO: ExtFuture state:" << loader_kjob->get_extfuture_ref().state()
+                               << "RESULTCOUNT:" << num_results;
 
+                        if(num_results == 0)
+                        {
+                            // No results.
+                            qWro() << "NO RESULTS, ERROR:" << loader_kjob->error();
+                        }
+                        else
+                        {
+                            LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture_ref().get()[0];
+                            Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
+                        }
+                        m_pending_async_item_loads.erase(item);
                     }
                 });
                 load_entry_job->start();

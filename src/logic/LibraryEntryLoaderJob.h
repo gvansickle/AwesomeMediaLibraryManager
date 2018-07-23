@@ -42,11 +42,13 @@ class LibraryEntryLoaderJobResult
 
 public:
     LibraryEntryLoaderJobResult() = default;
+    LibraryEntryLoaderJobResult(const LibraryEntryLoaderJobResult& other) = default;
     explicit LibraryEntryLoaderJobResult(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> le)
     {
         m_original_pindex = pmi;
         m_original_libentry = le;
     }
+    ~LibraryEntryLoaderJobResult() = default;
 
 //protected:
     QPersistentModelIndex m_original_pindex;
@@ -60,9 +62,14 @@ public:
         m_new_libentries.push_back(le);
         m_num_tracks_found++;
     }
+
+//    QTH_FRIEND_QDEBUG_OP(LibraryEntryLoaderJobResult);
+//    QTH_FRIEND_QDATASTREAM_OPS(LibraryEntryLoaderJobResult);
 };
 Q_DECLARE_METATYPE(LibraryEntryLoaderJobResult);
 Q_DECLARE_METATYPE(ExtFuture<LibraryEntryLoaderJobResult>);
+//QTH_DECLARE_QDEBUG_OP(LibraryEntryLoaderJobResult);
+//QTH_DECLARE_QDATASTREAM_OPS(LibraryEntryLoaderJobResult);
 
 class LibraryEntryLoaderJob;
 using LibraryEntryLoaderJobPtr = QPointer<LibraryEntryLoaderJob>;
@@ -75,8 +82,7 @@ class LibraryEntryLoaderJob : public AMLMJob, public UniqueIDMixin<LibraryEntryL
 
     using UniqueIDMixin<LibraryEntryLoaderJob>::uniqueQObjectName;
 
-Q_SIGNALS:
-//    void SIGNAL_ImageBytes(QByteArray);
+//Q_SIGNALS:
 
 protected:
     explicit LibraryEntryLoaderJob(QObject* parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
@@ -87,6 +93,14 @@ public:
     /// @{
 //    using ExtFutureType = ExtFuture<MetadataReturnVal>;
     using ExtFutureType = ExtFuture<LibraryEntryLoaderJobResult>;
+
+    // Errors.
+    enum
+    {
+      InvalidQPersistentModelIndex = UserDefinedError,
+      InvalidLibraryEntryURL,
+    };
+
     /// @}
 
     ~LibraryEntryLoaderJob() override;

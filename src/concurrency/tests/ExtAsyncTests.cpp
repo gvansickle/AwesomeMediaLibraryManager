@@ -491,37 +491,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelAllCom
     QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(false);
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureCopyAssignTests)
-{
-    SCOPED_TRACE("START");
-    TC_ENTER();
 
-    // default constructors
-    ExtFuture<int> intFuture;
-    intFuture.waitForFinished();
-    ExtFuture<QString> stringFuture;
-    stringFuture.waitForFinished();
-    ExtFuture<Unit> unitFuture;
-    unitFuture.waitForFinished();
-    ExtFuture<Unit> defaultUnitFuture;
-    defaultUnitFuture.waitForFinished();
-
-    // copy constructor
-    ExtFuture<int> intFuture2(intFuture);
-    ExtFuture<Unit> UnitFuture2(defaultUnitFuture);
-
-    // assigmnent operator
-    intFuture2 = ExtFuture<int>();
-    UnitFuture2 = ExtFuture<Unit>();
-
-    // state
-    ASSERT_EQ(intFuture2.isStarted(), true);
-    /// @note This is a difference between QFuture<> and ExtFuture<>, there's no reason this future should be finished here.
-//    ASSERT_EQ(intFuture2.isFinished(), true);
-
-    TC_DONE_WITH_STACK();
-    TC_EXIT();
-}
 
 TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 {

@@ -87,9 +87,39 @@ TEST_F(ExtFutureTest, FutureSingleThread)
     EXPECT_EQ(ef.get()[1], 2);
 }
 
-/// Static checks
-void ExtFutureTestDummy(void)
+TEST_F(ExtFutureTest, CopyAssignTests)
 {
+    SCOPED_TRACE("CopyAssignTests");
+
+    // default constructors
+    ExtFuture<int> extfuture_int;
+    extfuture_int.waitForFinished();
+
+    ExtFuture<QString> extfuture_string;
+    extfuture_string.waitForFinished();
+
+    ExtFuture<Unit> ef_unit;
+    ef_unit.waitForFinished();
+
+    ExtFuture<Unit> ef_unit2;
+    ef_unit2.waitForFinished();
+
+    // copy constructor
+    ExtFuture<int> ef_int2(extfuture_int);
+    ExtFuture<Unit> ef_unit3(ef_unit2);
+
+    // assigmnent operator
+    ef_int2 = ExtFuture<int>();
+    ef_unit3 = ExtFuture<Unit>();
+
+    // state
+    ASSERT_EQ(ef_int2.isStarted(), true);
+    /// @note This is a difference between QFuture<> and ExtFuture<>, there's no reason this future should be finished here.
+//    ASSERT_EQ(ef_int2.isFinished(), true);
+}
+
+/// Static checks
+TEST_F(ExtFutureTest, StaticAsserts){
 
     static_assert(std::is_default_constructible<QString>::value, "");
 

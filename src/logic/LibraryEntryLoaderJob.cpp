@@ -25,9 +25,41 @@
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryEntryLoaderJob types";
-    qRegisterMetaType<ExtFuture<LibraryEntryLoaderJobResult>>();
     qRegisterMetaType<LibraryEntryLoaderJobResult>();
+    qRegisterMetaType<ExtFuture<LibraryEntryLoaderJobResult>>();
     });
+
+/// Stream operations for LibraryEntryLoaderJobResults
+/// @{
+#if 0
+#define DATASTREAM_FIELDS(X) \
+    X(m_original_pindex) X(m_original_libentry) X(m_new_libentries) X(m_num_tracks_found)
+
+
+QDebug operator<<(QDebug dbg, const LibraryEntryLoaderJobResult & obj)
+{
+#define X(field) << obj.field
+    dbg DATASTREAM_FIELDS(X);
+#undef X
+    return dbg;
+}
+
+QDataStream &operator<<(QDataStream &out, const LibraryEntryLoaderJobResult & myObj)
+{
+#define X(field) << myObj.field
+    out DATASTREAM_FIELDS(X);
+#undef X
+    return out;
+}
+
+QDataStream &operator>>(QDataStream &in, LibraryEntryLoaderJobResult & myObj)
+{
+#define X(field) >> myObj.field
+    return in DATASTREAM_FIELDS(X);
+#undef X
+}
+#endif
+/// @}
 
 LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
@@ -66,6 +98,7 @@ void LibraryEntryLoaderJob::runFunctor()
     if(!m_pmi.isValid())
     {
         qWro() << "INVALID QPersistentModelIndex:" << m_pmi << ", ABORTING LOAD";
+        setError(InvalidQPersistentModelIndex);
         return;
     }
     // Make sure the LibraryEntry hasn't been deleted.  It shouldn't have been since we hold a shared_ptr<> to it.
@@ -76,6 +109,7 @@ void LibraryEntryLoaderJob::runFunctor()
     if(!m_libentry->getUrl().isValid())
     {
         qWro() << "INVALID URL";
+        setError(InvalidLibraryEntryURL);
         return;
     }
 

@@ -17,28 +17,39 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Object header
 #include "LibraryEntry.h"
-#include "TrackMetadata.h"
-#include "ntp.h"
 
+// Qt5
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QJsonArray>
 #include <QDataStream>
-
 #include <QUrlQuery>
 
+// Ours.
 #include "utils/MapConverter.h"
 #include "utils/DebugHelpers.h"
+#include "TrackMetadata.h"
+#include "ntp.h"
 
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 #include <utils/StringHelpers.h>
+#include <utils/QtHelpers.h>
+#include <utils/RegisterQtMetatypes.h>
 
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01
+
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering LibraryEntry types";
+    qRegisterMetaType<LibraryEntry>();
+//    qRegisterMetaType<ExtFuture<LibraryEntryLoaderJobResult>>();
+    });
+
 
 LibraryEntry::LibraryEntry()
 {

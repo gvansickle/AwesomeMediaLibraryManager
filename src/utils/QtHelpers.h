@@ -42,8 +42,8 @@ public:
 	friend_placeholder QDebug operator<<(QDebug out, const classname & obj);
 
 #define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
-	friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \
-	friend_placeholder QDataStream &operator>>(QDataStream &in, classname & myObj);
+    friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \
+    friend_placeholder QDataStream &operator>>(QDataStream &in, classname & myObj);
 
 ///
 
@@ -58,5 +58,35 @@ public:
 
 #define QTH_FRIEND_QDATASTREAM_OPS(classname) \
 	IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend, classname)
+
+/**
+ * Use the above in your header, then put something like this in your .cpp file:
+ *
+ * #define DATASTREAM_FIELDS(X) \
+    X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
+
+	QDebug operator<<(QDebug dbg, const DirScanResult & obj)
+	{
+	#define X(field) << obj.field
+		dbg DATASTREAM_FIELDS(X);
+	#undef X
+		return dbg;
+	}
+
+	QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
+	{
+	#define X(field) << myObj.field
+		out DATASTREAM_FIELDS(X);
+	#undef X
+		return out;
+	}
+
+	QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
+	{
+	#define X(field) >> myObj.field
+		return in DATASTREAM_FIELDS(X);
+	#undef X
+	}
+ */
 
 #endif /* SRC_UTILS_QTHELPERS_H_ */
