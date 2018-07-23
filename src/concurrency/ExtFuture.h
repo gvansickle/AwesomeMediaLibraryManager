@@ -225,7 +225,10 @@ public:
      *
      * @return The results value of this ExtFuture.
      */
-    QList<T> get() { return this->future().results(); }
+    QList<T> get()
+    {
+        return this->future().results();
+    }
 
     /**
      * Like .get(), but only returns the first value in the ExtFuture<>'s QList.
@@ -646,17 +649,6 @@ namespace ExtAsync
             return extfuture;
         }
 
-        /// @todo
-//		inline ExtFuture<void> make_ready_future()
-//		{
-//			ExtFuture<void> extfuture;
-//
-//			extfuture.reportStarted();
-//			extfuture.reportFinished();
-//
-//			return extfuture;
-//		}
-
         template <typename T, typename R = typename std::decay_t<T>>
         ExtFuture<R> make_exceptional_future(const QException& exception)
         {
@@ -695,13 +687,6 @@ ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
 {
     return ExtAsync::detail::make_ready_future(std::forward<T>(value));
 }
-
-/// overload for ExtFutue<Unit>.
-/// @todo
-//inline ExtFuture<Unit> make_ready_future()
-//{
-//    return ExtAsync::detail::make_ready_future(unit);
-//}
 
 template <int = 0, int..., class T = void>
 ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception)

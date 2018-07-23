@@ -20,9 +20,11 @@
 #ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 
+#if 0
 #include <config.h>
 
 #include "../ExtFutureState.h"
+#endif
 
 #if 0
 /**
