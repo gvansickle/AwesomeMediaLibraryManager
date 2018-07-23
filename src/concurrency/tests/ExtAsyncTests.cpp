@@ -435,12 +435,12 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 
     EXPECT_TRUE(f.isStarted());
     EXPECT_FALSE(f.isFinished());
+    EXPECT_TRUE(f.isRunning());
 
     GTEST_COUT << "WAITING FOR 1 SECS";// << std::endl;
     // qWait() doesn't block the event loop, qSleep() does.
     QTest::qWait(1000);
 
-    EXPECT_TRUE(f.isRunning());
 
     GTEST_COUT << "CANCELING:" << ExtFutureState::state(f);
     f.cancel();
@@ -479,6 +479,16 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelNoComple
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelNoCompletions)
 {
     QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(true);
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelAllCompletions)
+{
+    QtConcurrentMappedFutureStateOnCancel<QFuture<int>>(false);
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelAllCompletions)
+{
+    QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(false);
 }
 
 TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureCopyAssignTests)
