@@ -265,7 +265,7 @@ protected:
     /// We can then call virtual functions in subsequent constructors.
     /// @note Don't try that at home.
     ///
-    /// @note KJob's constructor has this same signature.
+    /// @note KJob's constructor has this same signature, in particular nonconst pointer to parent.
     explicit AMLMJob(QObject* parent = nullptr);
 
 public:
@@ -341,20 +341,16 @@ public:
               REQUIRES(std::is_base_of_v<QObject, ContextType>)>
     void then(const ContextType *ctx, Func&& f)
     {
-//        Q_ASSERT(!m_possible_delete_later_pending);
-//        cpp::static_if<ct::function_type_t<decltype(*this)::objectName>>([&](auto f){});
         qDb() << "ENTERED THEN";
 
 //        QPointer<KJob> pkjob = kjob;
 
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
-        connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
+        connect(this, &KJob::result, ctx, [=](KJob* kjob){
 
-//            Q_ASSERT(!m_possible_delete_later_pending);
+//            qDbo() << "IN THEN CALLBACK, KJob:" << kjob;
 
-/// @todo M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
-qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
             // Need to determine if the result was success, error, or cancel.
             // In the latter two cases, we need to make sure any chained AMLMJobs are either
             // cancelled (or notified of the failure?).

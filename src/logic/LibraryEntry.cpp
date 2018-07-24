@@ -47,7 +47,6 @@
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryEntry types";
     qRegisterMetaType<LibraryEntry>();
-//    qRegisterMetaType<ExtFuture<LibraryEntryLoaderJobResult>>();
     });
 
 

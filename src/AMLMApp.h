@@ -28,12 +28,14 @@
 // KF5
 #include <KConfigGroup>
 
-/// Global pointer to the AMLMApp singleton.
-#define amlmApp (static_cast<AMLMApp*>(AMLMApp::instance()))
 
+/**
+ * qApp-alike macro for getting a pointer to the AMLMApp singleton.
+ */
+#define amlmApp AMLMApp::instance()
 
-/*
- *
+/**
+ * The AMLM Application singleton.
  */
 class AMLMApp: public QApplication
 {
@@ -42,15 +44,23 @@ class AMLMApp: public QApplication
     using BASE_CLASS = QApplication;
 
 public:
-    explicit AMLMApp(int& argc, char *argv[]);
+    /**
+     * Ordinarily would be a protected member for a singleton.
+     * Passed in params may be modified by QApplication.
+     *
+     * @param argc  argc passed into main().
+     * @param argv  argv passed into main().
+     */
+    explicit AMLMApp(int& argc, char **argv);
 	~AMLMApp() override;
 
-    static AMLMApp* instance() { return dynamic_cast<AMLMApp*>( qApp ); }
+    static AMLMApp* instance();
 
     void KDEOrForceBreeze(KConfigGroup group);
 
 private:
 
+    static AMLMApp* m_the_instance;
 };
 
 #endif /* SRC_AMLMAPP_H_ */

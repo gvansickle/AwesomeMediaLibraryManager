@@ -61,10 +61,10 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
     connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
 
-    connect_or_die(this, &QObject::destroyed, this, &AMLMJob::SLOT_on_destroyed);
-    connect_or_die(this, &QObject::destroyed, qApp, [=](QObject* obj){
-        qWro() << "OBJECT DESTROYED:" << obj;
-        });
+//    connect_or_die(this, &QObject::destroyed, this, &AMLMJob::SLOT_on_destroyed);
+//    connect_or_die(this, &QObject::destroyed, qApp, [=](QObject* obj){
+//        qWro() << "OBJECT DESTROYED:" << obj;
+//        });
 }
 
 AMLMJob::~AMLMJob()

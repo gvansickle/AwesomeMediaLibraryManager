@@ -21,16 +21,10 @@
 
 #include "LibraryModel.h"
 
-#include "LibraryRescanner.h"
-#include "LibraryRescannerJob.h"
-#include "LibraryRescannerMapItem.h"
-#include "LibraryEntryMimeData.h"
+// Stc C++
 
+// Qt5
 #include <QtConcurrent>
-
-#include "utils/StringHelpers.h"
-#include "utils/DebugHelpers.h"
-
 #include <QFileDevice>
 #include <QStandardPaths>
 #include <QIcon>
@@ -42,12 +36,26 @@
 #include <QDir>
 #include <QFileIconProvider>
 
-
+// Ours
+#include <utils/RegisterQtMetatypes.h>
+#include "LibraryRescanner.h"
+#include "LibraryRescannerJob.h"
+#include "LibraryRescannerMapItem.h"
+#include "LibraryEntryMimeData.h"
+#include "utils/StringHelpers.h"
+#include "utils/DebugHelpers.h"
 #include "Library.h"
 #include "LibraryEntryLoaderJob.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
-
 #include "logic/ModelUserRoles.h"
+
+
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering LibraryModel types";
+    qRegisterMetaType<VecOfUrls>();
+    qRegisterMetaType<VecOfLEs>();
+    qRegisterMetaType<VecOfPMIs>();
+    });
 
 
 LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
@@ -63,7 +71,7 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 
 	// Set up the columns.
 	m_columnSpecs.clear();
-	m_columnSpecs.push_back({SectionID::Status, "?", QStringList("status_icon"), true});
+    m_columnSpecs.push_back({SectionID::Status, "?", QStringList("status_icon"), true});
 	m_columnSpecs.push_back({SectionID::Title, "Title", QStringList("track_name")});
 	m_columnSpecs.push_back({SectionID::Artist, "Artist", QStringList({"track_performer", "track_artist", "album_artist"})});
 	m_columnSpecs.push_back({SectionID::Album, "Album", QStringList("album_name")});
@@ -76,22 +84,10 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 	m_IconOk = QVariant(QIcon::fromTheme("audio-x-generic"));
 	m_IconUnknown = QVariant(QIcon::fromTheme("dialog-question"));
 
-	/// @todo Move these somewhere?
-	qRegisterMetaType<VecOfUrls>("VecOfUrls");
-	qRegisterMetaType<VecOfLEs>("VecOfLEs");
-	qRegisterMetaType<VecOfPMIs>("VecOfPMIs");
-
 	// Create the asynchronous rescanner.
 	m_rescanner = new LibraryRescanner(this);
 
 	// Connections.
-
-    //////// EXP
-//    m_coll_db_model = new CollectionDatabaseModel(this);
-//    m_coll_db_model->open_db_connection(QUrl("dummy"));
-//    m_coll_db_model->create_db_tables();
-//    m_sql_model = m_coll_db_model->get_rel_table(this);//new QSqlRelationalTableModel(this, db_conn);
-
 }
 
 LibraryModel::~LibraryModel()
@@ -312,10 +308,10 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 // Already an outstanding request.
                 qDbo() << "Async load already pending for item:" << item;
             }
-            else
+            else if(1)
             {
                 // Start an async job to read the data for this entry.
-                /// @todo
+
                 qDb() << "STARTING ASYNC LOAD";
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
                 m_pending_async_item_loads[item] = load_entry_job;
@@ -323,7 +319,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 	AMLM_ASSERT_IN_GUITHREAD();
                     if(loader_kjob->error())
                     {
-                        // Error.  Load the "No image available" icon.
+                        // Error.
                         qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << loader_kjob->error() << ":" << loader_kjob->errorText() << ":" << loader_kjob->errorString();
                         // Report error via uiDelegate()
                         /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
@@ -805,43 +801,9 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 }
 
 
-void LibraryModel::onIncomingFilename(QString filename)
+void LibraryModel::SLOT_onIncomingFilename(QString filename)
 {
-//    //////// EXP
-//    open_db_connection(QUrl("dummy"));
-//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
-//    create_db_tables(&db_conn);
-//    auto* model = new QSqlRelationalTableModel(this, db_conn);
-//    model->setTable("DirScanResults");
-//    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-//    model->select();
-//    static int index = 0;
-#if 0
-    // Get an empty record from the model.
-    QSqlRecord record = m_sql_model->record();
-    qDb() << "EMPTY RECORD:" << record;
-    Q_ASSERT(record.count() == 2);
-//    QSqlField id_field("id", QVariant::Type::Int);
-//    id_field.setGenerated(false);
-    // Remove the id/primary key so it gets auto-incremented by the DB.
-    record.remove(0);
-//    QSqlField url_field("url", QVariant::Type::String);
-//    record.append(id_field);
-//    record.setGenerated("id", false);
-//    record.setValue("id", index);
-//    index++;
-//    record.append(url_field);
-    record.setValue("url", QUrl::fromLocalFile(filename));
-    qDb() << "Field Count:" << record.count();
-//    Q_ASSERT(record.count() == 2);
-    bool status = m_sql_model->insertRecord(-1, record);
-    Q_ASSERT_X(status, "", "INSERT FAILED");
-    status = m_sql_model->submitAll();
-    Q_ASSERT_X(status, "", "SUBMIT FAILED");
-#endif
-    //////// EXP
-
-	auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
+    auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
 	qDb() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);
 }
@@ -965,9 +927,11 @@ void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIn
 {
 	// item is a single song which has its metadata populated.
 	// Reconstruct the QModelIndex we sent out.
-	auto initial_row_index = QModelIndex(pindex);
-//	qDebug() << QString("incoming single item, row %1").arg(row);
-	// Metadata's been populated.
+    Q_ASSERT(pindex.isValid());
+    Q_ASSERT(pindex.model() == this);
+    const QModelIndex& initial_row_index = pindex;
+
+    // Metadata's been populated.
 	setData(initial_row_index, QVariant::fromValue(item));
 //	setData(initial_row_index, QVariant::fromValue(item), ModelUserRoles::PointerToItemRole);
 
@@ -1076,7 +1040,7 @@ void LibraryModel::disconnectIncomingSignals()
 void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
-	qDebug() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
+    qDbo() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
 	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 

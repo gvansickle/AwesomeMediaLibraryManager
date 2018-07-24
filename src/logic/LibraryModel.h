@@ -193,7 +193,7 @@ public Q_SLOTS:
 
 	virtual void cancelRescan();
 
-	void onIncomingFilename(QString filename);
+    void SLOT_onIncomingFilename(QString filename);
 
 protected:
 
@@ -241,10 +241,6 @@ protected:
 
 private:
 	Q_DISABLE_COPY(LibraryModel)
-
-    ////// EXP
-//    CollectionDatabaseModel* m_coll_db_model {nullptr};
-//    QSqlRelationalTableModel* m_sql_model;
 
 	/// The directory where we'll put the LibraryModel's cache file.
 	QUrl m_cachedir;

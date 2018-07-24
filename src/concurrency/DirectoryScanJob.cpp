@@ -147,6 +147,12 @@ void DirectoryScannerAMLMJob::runFunctor()
             /// Well, really there is, we could report this as summary info.  Ah well, for tomorrow.
 //            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
 //            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+            if(totalAmount(KJob::Unit::Files) <= num_files_found_so_far)
+            {
+                num_possible_files = num_files_found_so_far+1;
+                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
+            }
+
             setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
             /// NEW
             m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);

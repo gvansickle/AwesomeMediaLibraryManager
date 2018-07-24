@@ -32,9 +32,13 @@
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
 
+// Pointer to the singleton.
+AMLMApp *AMLMApp::m_the_instance = nullptr;
 
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
+    Q_ASSERT(m_the_instance == nullptr);
+
     /// @todo EXPERIMENTAL
 //    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
@@ -46,6 +50,15 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 AMLMApp::~AMLMApp()
 {
     /// @todo Shut down whatever still needs shutting down.
+
+	// No more singleton.
+	m_the_instance = nullptr;
+}
+
+AMLMApp *AMLMApp::instance()
+{
+    Q_ASSERT(m_the_instance != nullptr);
+    return m_the_instance;
 }
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)

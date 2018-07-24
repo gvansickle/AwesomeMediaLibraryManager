@@ -91,10 +91,10 @@ protected:
 public:
     /// @name Public types
     /// @{
-//    using ExtFutureType = ExtFuture<MetadataReturnVal>;
+
     using ExtFutureType = ExtFuture<LibraryEntryLoaderJobResult>;
 
-    // Errors.
+    /// Errors.
     enum
     {
       InvalidQPersistentModelIndex = UserDefinedError,
