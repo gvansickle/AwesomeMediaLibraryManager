@@ -50,20 +50,14 @@ AMLM_QREG_CALLBACK([](){
     });
 
 
-LibraryEntry::LibraryEntry()
-{
-}
-
-LibraryEntry::LibraryEntry(QUrl url)
+LibraryEntry::LibraryEntry(const QUrl &url)
 {
 	this->m_url = url;
 }
 
-QVector<LibraryEntry*> LibraryEntry::fromUrl(QUrl fileurl)
+std::shared_ptr<LibraryEntry> LibraryEntry::fromUrl(const QUrl &fileurl)
 {
-	QVector<LibraryEntry*> retval;
-
-	retval.append(new LibraryEntry(fileurl));
+    std::shared_ptr<LibraryEntry> retval = std::make_shared<LibraryEntry>(fileurl);
 
 	return retval;
 }

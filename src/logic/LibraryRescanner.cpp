@@ -218,10 +218,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
-    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find)  {
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](KJob* kjob, const DirScanResult& the_find)  {
         // Found a file matching the criteria.  Send it to the model.
-        runInObjectEventLoop([=](){
-            m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaQUrl().toString());}, m_current_libmodel);
+        Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaQUrl().toString());
         ;});
 
     dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){

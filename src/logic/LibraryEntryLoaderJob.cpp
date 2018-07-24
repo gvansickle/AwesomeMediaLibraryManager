@@ -97,8 +97,9 @@ void LibraryEntryLoaderJob::runFunctor()
 {
     qDbo() << "START LibraryEntryLoaderJob RUNFUNCTOR" << m_pmi << m_libentry;
 
-//    MetadataReturnVal retval;
     LibraryEntryLoaderJobResult retval(m_pmi, m_libentry);
+
+    Q_ASSERT(retval.isValid());
 
     // Make sure the index is still valid.  The model may have been destroyed since the message was sent.
     if(!m_pmi.isValid())
@@ -166,6 +167,8 @@ void LibraryEntryLoaderJob::runFunctor()
             retval.m_num_tracks_found = 1;
         }
     }
+
+    Q_ASSERT(retval.isValid());
 
     Q_ASSERT(retval.m_num_tracks_found > 0);
 

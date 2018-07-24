@@ -60,6 +60,8 @@ AMLMApp::~AMLMApp()
 
 	// No more singleton.
 	m_the_instance = nullptr;
+
+    qDb() << "AMLMApp SINGLETON DESTROYED";
 }
 
 AMLMApp *AMLMApp::instance()

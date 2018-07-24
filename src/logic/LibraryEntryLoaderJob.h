@@ -50,6 +50,12 @@ public:
     }
     ~LibraryEntryLoaderJobResult() = default;
 
+    bool isValid() const
+    {
+        return (m_new_libentries.size() == m_num_tracks_found)
+                && (m_original_libentry);
+    }
+
 //protected:
     QPersistentModelIndex m_original_pindex;
     std::shared_ptr<LibraryEntry> m_original_libentry;
@@ -106,6 +112,8 @@ public:
     ~LibraryEntryLoaderJob() override;
 
     static LibraryEntryLoaderJobPtr make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
+
+    /// Overload which makes the AMLMApp singleton the parent.
     static LibraryEntryLoaderJobPtr make_job(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }

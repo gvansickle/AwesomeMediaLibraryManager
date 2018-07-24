@@ -49,6 +49,6 @@ private:
 
 QtRegCallbackRegistry& reginstance();
 
-#define AMLM_QREG_CALLBACK(f) static int dummy = (reginstance().register_callback(f), 0)
+#define AMLM_QREG_CALLBACK(f) static const int dummy = (reginstance().register_callback(f), 0)
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

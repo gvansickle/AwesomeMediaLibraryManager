@@ -803,7 +803,7 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 
 void LibraryModel::SLOT_onIncomingFilename(QString filename)
 {
-    auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
+    auto new_entry = LibraryEntry::fromUrl(filename);
 	qDb() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);
 }

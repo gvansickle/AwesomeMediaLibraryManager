@@ -39,12 +39,13 @@
 class LibraryEntry
 {
 public:
-	LibraryEntry();
+    LibraryEntry() = default;
 	LibraryEntry(const LibraryEntry& other) = default;
-    explicit LibraryEntry(QUrl m_url);
-	virtual ~LibraryEntry() = default;
+    virtual ~LibraryEntry() = default;
 
-	static QVector<LibraryEntry*> fromUrl(QUrl fileurl = QUrl());
+    explicit LibraryEntry(const QUrl& m_url);
+
+    static std::shared_ptr<LibraryEntry> fromUrl(const QUrl& fileurl = QUrl());
 
 	std::vector<std::shared_ptr<LibraryEntry> > populate(bool force_refresh = false);
 

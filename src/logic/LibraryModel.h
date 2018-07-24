@@ -39,9 +39,7 @@
 
 class QFileDevice;
 
-class LibraryPopulatorWorker;
 class LibraryRescanner;
-class ActivityProgressWidget;
 
 using VecOfUrls = QVector<QUrl>;
 using VecOfLEs = QVector<std::shared_ptr<LibraryEntry> >;
