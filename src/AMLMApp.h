@@ -43,6 +43,10 @@ class AMLMApp: public QApplication
 
     using BASE_CLASS = QApplication;
 
+Q_SIGNALS:
+
+	void aboutToShutdown();
+
 public:
     /**
      * Ordinarily would be a protected member for a singleton.
@@ -56,11 +60,20 @@ public:
 
     static AMLMApp* instance();
 
+    bool shuttingDown() const;
+
     void KDEOrForceBreeze(KConfigGroup group);
 
+public Q_SLOTS:
+
+    void SLOT_onAboutToQuit();
+
 private:
+    Q_DISABLE_COPY(AMLMApp)
 
     static AMLMApp* m_the_instance;
+
+    bool m_shutting_down {false};
 };
 
 #endif /* SRC_AMLMAPP_H_ */
