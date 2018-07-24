@@ -19,6 +19,7 @@
 
 #include "LibraryEntryLoaderJob.h"
 
+#include <AMLMApp.h>
 #include "LibraryRescanner.h"
 #include <utils/RegisterQtMetatypes.h>
 #include <utils/DebugHelpers.h>
@@ -68,6 +69,11 @@ LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersi
     /// @todo Hook things up in here.
 
     return retval;
+}
+
+LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
+{
+    return make_job(AMLMApp::instance(), pmi, libentry);
 }
 
 LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)

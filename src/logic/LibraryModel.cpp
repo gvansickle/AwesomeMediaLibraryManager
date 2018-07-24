@@ -313,7 +313,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 // Start an async job to read the data for this entry.
 
                 qDb() << "STARTING ASYNC LOAD";
-                auto load_entry_job = LibraryEntryLoaderJob::make_job(nullptr, QPersistentModelIndex(index), item);
+                auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
                 m_pending_async_item_loads[item] = load_entry_job;
                 load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
                 	AMLM_ASSERT_IN_GUITHREAD();

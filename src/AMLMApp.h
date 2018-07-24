@@ -44,7 +44,7 @@ class AMLMApp: public QApplication
     using BASE_CLASS = QApplication;
 
 Q_SIGNALS:
-
+    /// Emitted upon reception of aboutToQuit() signal.
 	void aboutToShutdown();
 
 public:
@@ -60,20 +60,34 @@ public:
 
     static AMLMApp* instance();
 
+    /**
+     * @return true if this app is in the process of shutting down.
+     */
     bool shuttingDown() const;
 
     void KDEOrForceBreeze(KConfigGroup group);
 
 public Q_SLOTS:
-
+    /**
+     * Connected to this app's aboutToQuit() signal.
+     */
     void SLOT_onAboutToQuit();
+
+protected:
+
+    /**
+     * Called from the SLOT_onAboutToQuit() slot to handle the shutdown of app subcomponents.
+     */
+    void perform_controlled_shutdown();
 
 private:
     Q_DISABLE_COPY(AMLMApp)
 
+    /// The AMLMApp singleton.
     static AMLMApp* m_the_instance;
 
     bool m_shutting_down {false};
+    bool m_controlled_shutdown_complete {false};
 };
 
 #endif /* SRC_AMLMAPP_H_ */

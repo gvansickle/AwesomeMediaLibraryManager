@@ -89,10 +89,25 @@ void AMLMApp::SLOT_onAboutToQuit()
 
     if(!m_shutting_down)
     {
-        m_shutting_down = true;
-
-        /// @todo Do whatever shutdown we need to here.
+        perform_controlled_shutdown();
     }
 
     qDbo() << "App shutdown complete.";
+}
+
+void AMLMApp::perform_controlled_shutdown()
+{
+    // Signal to ourselves that we're in the process of shutting down.
+    m_shutting_down = true;
+
+    // Signal to the world that we're in the process of shutting down.
+    Q_EMIT aboutToShutdown();
+
+    if(!m_controlled_shutdown_complete)
+    {
+        /// @todo Do whatever shutdown we need to here.
+    }
+
+    m_controlled_shutdown_complete = true;
+
 }

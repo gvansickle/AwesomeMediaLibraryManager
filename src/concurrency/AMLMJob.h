@@ -327,10 +327,6 @@ public:
 
     virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
 
-    /// @todo experimental
-//    /*private:*/ QFutureWatcher<void>* m_extfuture_watcher = new QFutureWatcher<void>();
-//    virtual QFutureWatcher<void>* get_extfuture_ptr_w() { return m_extfuture_watcher; }
-
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
 
@@ -573,7 +569,6 @@ protected Q_SLOTS:
 
     void SLOT_extfuture_finished();
     void SLOT_extfuture_canceled();
-    void SLOT_extfuture_aboutToShutdown();
 
     void SLOT_kjob_finished(KJob* kjob);
     void SLOT_kjob_result(KJob* kjob);
@@ -584,6 +579,15 @@ protected Q_SLOTS:
 
 private:
     Q_DISABLE_COPY(AMLMJob)
+
+private Q_SLOTS:
+
+    /**
+     * Connected to the App's aboutToShutdown() signal in the constructor.
+     * Simply calls kill().
+     * Similar to mechanism in KDevelop's ::ICore & ::ImportProjectJob.
+     */
+    void SLOT_onAboutToShutdown();
 
 public:
 

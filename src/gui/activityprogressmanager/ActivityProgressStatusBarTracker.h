@@ -186,6 +186,11 @@ public:
     virtual void setAutoDelete(KJob *kjob, bool autoDelete);
     virtual bool autoDelete(KJob *kjob) const;
 
+    /**
+     * @return The number of jobs currently being tracked by this tracker.
+     */
+    int getNumTrackedJobs() const;
+
 public Q_SLOTS:
 
     /**
@@ -533,6 +538,15 @@ private:
     void hideSubJobs();
     void subjobFinished(KJob*);
 
+private Q_SLOTS:
+
+    /**
+     * Connected to the App's aboutToShutdown() signal in the constructor.
+     * Intent is to kill() all registered jobs.
+     * Similar to mechanism in KDevelop's ::ICore & ::ImportProjectJob.
+     * @todo How do we kill unkillable kjobs?
+     */
+    void SLOT_onAboutToShutdown();
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSSTATUSBARTRACKER_H_ */

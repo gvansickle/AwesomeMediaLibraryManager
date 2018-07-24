@@ -106,6 +106,7 @@ public:
     ~LibraryEntryLoaderJob() override;
 
     static LibraryEntryLoaderJobPtr make_job(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
+    static LibraryEntryLoaderJobPtr make_job(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 

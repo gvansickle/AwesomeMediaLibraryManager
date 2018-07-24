@@ -33,6 +33,7 @@
 #include <KIO/ListJob>
 
 /// Ours
+#include <AMLMApp.h>
 #include <utils/TheSimplestThings.h>
 //#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
@@ -110,7 +111,6 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     if(is_cumulative_status_job(job) || job == nullptr)
     {
         // The summary widget.
-//        M_WARNIF((m_cumulative_status_widget == nullptr));
         Q_CHECK_PTR(m_cumulative_status_widget);
         return m_cumulative_status_widget;
     }
@@ -118,7 +118,6 @@ QWidget *ActivityProgressStatusBarTracker::widget(KJob *job)
     {
         // A specific KJob's widget.  Should have been created when the KJob was registered.
         auto kjob_widget = m_amlmjob_to_widget_map.value(job, nullptr);
-//        M_WARNIF((kjob_widget == nullptr));
         Q_CHECK_PTR(kjob_widget);
         return kjob_widget;
     }
@@ -459,6 +458,8 @@ void ActivityProgressStatusBarTracker::make_internal_connections()
     // Connect our internal slotStop()-was-emitted signal INTERNAL_SIGNAL_slotStop and re-emit FBO cancelAll().
     connect_or_die(this, &ActivityProgressStatusBarTracker::INTERNAL_SIGNAL_slotStop,
                    this, &ActivityProgressStatusBarTracker::slotStop);
+
+    connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &ActivityProgressStatusBarTracker::SLOT_onAboutToShutdown);
 }
 
 void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_job(KJob *kjob, QWidget *wdgt)
@@ -626,6 +627,11 @@ bool ActivityProgressStatusBarTracker::autoDelete(KJob *kjob) const
     return kjob->isAutoDelete();
 }
 
+int ActivityProgressStatusBarTracker::getNumTrackedJobs() const
+{
+    return m_amlmjob_to_widget_map.size();
+}
+
 void ActivityProgressStatusBarTracker::toggleSubjobDisplay(bool checked)
 {
     if(checked)
@@ -661,6 +667,13 @@ void ActivityProgressStatusBarTracker::showSubJobs()
 void ActivityProgressStatusBarTracker::hideSubJobs()
 {
     m_expanding_frame_widget->hide();
+}
+
+void ActivityProgressStatusBarTracker::SLOT_onAboutToShutdown()
+{
+    qIno() << "SHUTDOWN, TRACKING" << getNumTrackedJobs() << "JOBS, CANCELLING ALL";
+    cancelAll();
+    qIno() << "SHUTDOWN, NOW TRACKING" << getNumTrackedJobs() << "JOBS";
 }
 
 
