@@ -18,10 +18,12 @@
 #
 
 set(HEADER_FILES_GUI_WIDGETS
+	CollectionStatsWidget.h
 	PixmapLabel.h
 	PlayerControls.h
 	)
 set(SOURCE_FILES_GUI_WIDGETS
+	CollectionStatsWidget.cpp
 	PixmapLabel.cpp
 	PlayerControls.cpp
 	)
