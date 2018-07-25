@@ -17,24 +17,14 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/actions/ActionHelpers.h>
-#include <gui/Theme.h>
-#include "PlaylistContextMenu.h"
+#ifndef SRC_GUI_ACTIONS_STANDARDACTIONS_H_
+#define SRC_GUI_ACTIONS_STANDARDACTIONS_H_
 
-#include <QDebug>
-
-#include "gui/helpers/Tips.h"
-#include "ActionBundle.h"
-
-#include "gui/MainWindow.h"
-
-PlaylistContextMenu::PlaylistContextMenu(const QString &title, QWidget *parent) : QMenu(title, parent)
+class StandardActions
 {
-	setTitle(title);
+public:
+	StandardActions();
+	virtual ~StandardActions();
+};
 
-    auto mw = MainWindow::instance();
-
-	// Add cut/copy/paste to the context menu.
-	mw->m_ab_cut_copy_paste_actions->appendToMenu(this);
-}
-
+#endif /* SRC_GUI_ACTIONS_STANDARDACTIONS_H_ */

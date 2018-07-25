@@ -88,6 +88,7 @@
 
 // For KF5 KConfig infrastructure.
 #include <AMLMSettings.h>
+#include <gui/actions/ActionHelpers.h>
 #include <gui/settings/SettingsDialog.h>
 #include <gui/widgets/CollectionStatsWidget.h>
 #include <gui/widgets/CollectionView.h>
@@ -105,7 +106,6 @@
 #include "logic/LibrarySortFilterProxyModel.h"
 
 #include "utils/ConnectHelpers.h"
-#include "utils/ActionHelpers.h"
 #include "utils/DebugHelpers.h"
 
 #include <logic/MP2.h>

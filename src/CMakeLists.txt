@@ -159,7 +159,6 @@ set(HEADER_FILES
 	logic/dbmodels/CollectionDatabaseModel.h
 	logic/TrackMetadata.h
 	logic/dbmodels/EntityBase.h
-	utils/ActionHelpers.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h

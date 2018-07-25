@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gui/actions/ActionHelpers.h>
 #include <gui/Theme.h>
 #include "LibraryContextMenu.h"
 
@@ -26,7 +27,6 @@
 #include <QTextTable>
 
 #include "gui/helpers/Tips.h"
-#include "utils/ActionHelpers.h"
 #include "ActionBundle.h"
 
 #include "gui/MainWindow.h"
