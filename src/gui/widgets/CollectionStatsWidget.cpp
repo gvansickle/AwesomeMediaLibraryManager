@@ -25,6 +25,8 @@
 
 CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 {
+    setObjectName("CollectionStatsWidget");
+
     // No layout, specify how to size this widget's children.
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 

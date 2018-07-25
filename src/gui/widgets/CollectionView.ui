@@ -17,10 +17,7 @@
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>Top Group Box</string>
-       </property>
+      <widget class="QFrame" name="frame">
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="1">
          <widget class="QToolButton" name="toolButton_3">
@@ -39,26 +36,12 @@
       <widget class="QTableView" name="tableView"/>
      </item>
      <item>
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="title">
-        <string>Bottom Group Box</string>
-       </property>
+      <widget class="QFrame" name="frame_2">
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
-         <widget class="QToolButton" name="toolButton">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
+         <widget class="FilterWidget" name="lineEdit_2"/>
         </item>
         <item row="0" column="1">
-         <widget class="QToolButton" name="toolButton_2">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
          <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -78,6 +61,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>FilterWidget</class>
+   <extends>QLineEdit</extends>
+   <header location="global">gui/FilterWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
