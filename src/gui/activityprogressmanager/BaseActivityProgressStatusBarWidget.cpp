@@ -122,6 +122,7 @@ void BaseActivityProgressStatusBarWidget::init(KJob* kjob, QWidget *parent)
 
     // The buttons.
     m_pause_resume_button = new QToolButton(this);
+    m_pause_resume_button->setCheckable(true);
     m_pause_resume_button->setIcon(QIcon::fromTheme("media-playback-pause"));
     setTips(m_pause_resume_button, tr("Pause/Resume"), tr("Pause or resume this operation"),
             tr("<h3>Pause/Resume</h3><br/>Pauses or resumes the operation"));
@@ -273,6 +274,16 @@ void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
 //    }
 //	qDb() << "closeEvent():" << event;
     BASE_CLASS::closeEvent(event);
+}
+
+void BaseActivityProgressStatusBarWidget::suspended(KJob *)
+{
+    m_pause_resume_button->setChecked(true);
+}
+
+void BaseActivityProgressStatusBarWidget::resumed(KJob *)
+{
+    m_pause_resume_button->setChecked(false);
 }
 
 void BaseActivityProgressStatusBarWidget::INTERNAL_SLOT_emit_cancel_job()

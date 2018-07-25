@@ -76,6 +76,9 @@ public Q_SLOTS:
     /// @name Public slots analogous to the private versions of KAbstractWidgetJobTracker/KJobTrackerInterface.
     /// @{
 
+    virtual void suspended(KJob*);
+    virtual void resumed(KJob*);
+
     virtual void description(KJob* kjob, const QString& title,
                              const QPair<QString, QString> &field1 = {QString(), QString()},
                         const QPair<QString, QString> &field2 = {QString(), QString()});
@@ -182,7 +185,7 @@ protected:
 
     /// Description text, Job Title.
     /// Something like "Copying".
-    QLabel* m_job_title_label {nullptr};
+    QPointer<QLabel> m_job_title_label {nullptr};
 
     /// Detail text, Field 1.
     /// Example given at @link https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#a145f7a7648f06ef79cf526a2c6125b88

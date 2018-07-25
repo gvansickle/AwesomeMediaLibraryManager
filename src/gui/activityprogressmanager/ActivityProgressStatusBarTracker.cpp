@@ -511,6 +511,9 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     connect_or_die(kjob, &KJob::processedSize, wdgt_type, &BaseActivityProgressStatusBarWidget::processedSize);
     connect_or_die(kjob, qOverload<KJob*, unsigned long>(&KJob::percent), wdgt_type, &BaseActivityProgressStatusBarWidget::percent);
     connect_or_die(kjob, &KJob::speed, wdgt_type, &BaseActivityProgressStatusBarWidget::speed);
+    // Suspend/resume state.
+    connect_or_die(kjob, &KJob::suspended, wdgt_type, &BaseActivityProgressStatusBarWidget::suspended);
+    connect_or_die(kjob, &KJob::resumed, wdgt_type, &BaseActivityProgressStatusBarWidget::resumed);
 
     // kjob->widget, tells the widget to hide itself since kjob emitted finished().
     // kjob->tracker is already done in base class: connect_or_die(kjob, &KJob::finished, this, &ActivityProgressStatusBarTracker::finished);
