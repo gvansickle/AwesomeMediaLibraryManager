@@ -301,9 +301,9 @@ void ActivityProgressStatusBarTracker::description(KJob *kjob, const QString &ti
 void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &plain, const QString &rich)
 {
     // Prefer rich if it's given.
-    with_widget_or_skip(job, [=](auto w){
-        w->infoMessage(job, rich.isEmpty() ? plain : rich);
-        ;});
+//    with_widget_or_skip(job, [=](auto w){
+//        w->infoMessage(job, rich.isEmpty() ? plain : rich);
+//        ;});
 }
 
 void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
@@ -316,6 +316,8 @@ void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, 
 
 void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
+    /// @note Ignoring *Amount() signals for now, using *Size() for overall progress.
+
     // Slot from kjob that setTotalAmount() has been called and d->totalAmount[unit] has
     // been updated.
 
@@ -335,6 +337,7 @@ void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, 
 
 void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit unit, qulonglong amount)
 {
+    /// @note Ignoring *Amount() signals for now, using *Size() for overall progress.
     // Incoming signal from kjob that setProcessedAmount() has been called and d->processedAmount[unit] has
     // been updated.
 
@@ -377,11 +380,11 @@ void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amou
 
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 {
-    Q_CHECK_PTR(job);
+//    Q_CHECK_PTR(job);
 
-    with_widget_or_skip(job, [=](auto w){
+//    with_widget_or_skip(job, [=](auto w){
 
-        w->percent(job, percent);
+//        w->percent(job, percent);
 
         if(job != nullptr && job != m_cumulative_status_job)
         {
@@ -390,7 +393,7 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
             auto cumulative_pct = calculate_summary_percent();
             m_cumulative_status_widget->percent(m_cumulative_status_job, cumulative_pct);
         }
-    });
+//    });
 }
 
 void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
@@ -498,12 +501,15 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     // Connect some signals directly from the kjob to the widget's slots.
     //
     connect_or_die(kjob, &KJob::description, wdgt_type, &BaseActivityProgressStatusBarWidget::description);
+    connect_or_die(kjob, &KJob::infoMessage, wdgt_type, &BaseActivityProgressStatusBarWidget::infoMessage);
+    connect_or_die(kjob, &KJob::warning, wdgt_type, &BaseActivityProgressStatusBarWidget::warning);
     connect_or_die(kjob, qOverload<KJob*, KJob::Unit, qulonglong>(&KJob::totalAmount),
                    wdgt_type, &BaseActivityProgressStatusBarWidget::totalAmount);
     connect_or_die(kjob, qOverload<KJob*, KJob::Unit, qulonglong>(&KJob::processedAmount),
                    wdgt_type, &BaseActivityProgressStatusBarWidget::processedAmount);
     connect_or_die(kjob, &KJob::totalSize, wdgt_type, &BaseActivityProgressStatusBarWidget::totalSize);
     connect_or_die(kjob, &KJob::processedSize, wdgt_type, &BaseActivityProgressStatusBarWidget::processedSize);
+    connect_or_die(kjob, qOverload<KJob*, unsigned long>(&KJob::percent), wdgt_type, &BaseActivityProgressStatusBarWidget::percent);
     connect_or_die(kjob, &KJob::speed, wdgt_type, &BaseActivityProgressStatusBarWidget::speed);
 
     // kjob->widget, tells the widget to hide itself since kjob emitted finished().
