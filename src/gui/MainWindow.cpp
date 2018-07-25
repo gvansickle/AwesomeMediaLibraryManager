@@ -90,6 +90,7 @@
 #include <AMLMSettings.h>
 #include <gui/settings/SettingsDialog.h>
 #include <gui/widgets/CollectionStatsWidget.h>
+#include <gui/widgets/CollectionView.h>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -284,6 +285,10 @@ void MainWindow::onStartup()
 
     // Create the "Now Playing" playlist and view.
     newNowPlaying();
+
+    /// @experimental
+    // Create a new Collection view.
+    newCollectionView();
 
     // Load any files which were opened at the time the last session was closed.
     qInfo() << "Loading libraries open at end of last session...";
@@ -1650,6 +1655,17 @@ void MainWindow::newNowPlaying()
 	connectNowPlayingViewAndMainWindow(child);
 
     statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(child->windowTitle()));
+}
+
+void MainWindow::newCollectionView()
+{
+    qDbo() << "Creating new CollectionView";
+    auto child = new CollectionView(this);
+    qDbo() << "Created new CollectionView:" << child;
+    qDbo() << "Adding to mdi area";
+    auto mdi_child = m_mdi_area->addSubWindow(child);
+    Q_CHECK_PTR(mdi_child);
+    mdi_child->show();
 }
 
 /**

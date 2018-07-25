@@ -33,8 +33,10 @@ class QSqlRelationalTableModel;
  */
 class CollectionDatabaseModel : public QObject
 {
+    Q_OBJECT
+
 public:
-    CollectionDatabaseModel(QObject *parent);
+    explicit CollectionDatabaseModel(QObject *parent);
      ~CollectionDatabaseModel() override;
 
     bool open_db_connection(QUrl db_file);

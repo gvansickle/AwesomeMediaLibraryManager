@@ -299,6 +299,8 @@ private:
     /// Equivalent of a "File->New" action for the Now Playing model/view.
     void newNowPlaying();
 
+    void newCollectionView();
+
 	void addChildMDIView(MDITreeViewBase* child);
 	void addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair);
 	void addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpair);
