@@ -73,12 +73,6 @@ public:
 
 public Q_SLOTS:
 
-    /// @name Slots for construction/setup.
-    /// @{
-
-
-    /// @}
-
     /// @name Public slots analogous to the private versions of KAbstractWidgetJobTracker/KJobTrackerInterface.
     /// @{
 

@@ -347,7 +347,7 @@ void ActivityProgressStatusBarTracker::processedAmount(KJob *job, KJob::Unit uni
 
 void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
 {
-    with_widget_or_skip(kjob, [=](auto w){
+//    with_widget_or_skip(kjob, [=](auto w){
 //        w->totalSize(kjob, amount);
 
         if(kjob != nullptr && kjob != m_cumulative_status_job)
@@ -357,12 +357,12 @@ void ActivityProgressStatusBarTracker::totalSize(KJob *kjob, qulonglong amount)
             auto cumulative_pct = calculate_summary_percent();
             m_cumulative_status_widget->totalSize(m_cumulative_status_job, cumulative_pct);
         }
-    });
+//    });
 }
 
 void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amount)
 {
-    with_widget_or_skip(kjob, [=](auto w){
+//    with_widget_or_skip(kjob, [=](auto w){
 //        w->processedSize(kjob, amount);
 
         if(kjob != nullptr && kjob != m_cumulative_status_job)
@@ -372,7 +372,7 @@ void ActivityProgressStatusBarTracker::processedSize(KJob *kjob, qulonglong amou
             auto cumulative_pct = calculate_summary_percent();
             m_cumulative_status_widget->totalSize(m_cumulative_status_job, cumulative_pct);
         }
-    });
+//    });
 }
 
 void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
@@ -395,10 +395,10 @@ void ActivityProgressStatusBarTracker::percent(KJob *job, unsigned long percent)
 
 void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 {
-    with_widget_or_skip(job, [=](auto w){
-        qDb() << "KJob speed" << job << value;
-        w->speed(job, value);
-    });
+//    with_widget_or_skip(job, [=](auto w){
+//        qDb() << "KJob speed" << job << value;
+//        w->speed(job, value);
+//    });
 }
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
@@ -475,7 +475,8 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
      *
      * @link https://api.kde.org/frameworks/kcoreaddons/html/classKJobTrackerInterface.html#a02be1fe828ead6c57601272950c1cd4d
      *
-     * The default implementation connects the following KJob signals to the respective protected slots of this class:
+     * The default implementation connects the following KJob signals to the respective protected slots of
+     * this tracker class:
 //    finished() (also connected to the unregisterJob() slot)
 //    suspended()
 //    resumed()
@@ -488,11 +489,14 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
 
      */
 
-    // Connect the total/processedSize signals, which are not connected by the tracker base classes for some reason.
+    // Connect the total/processedSize signals to this tracker, which are not connected by the tracker base classes for some reason.
+    // We'll use that for the overall progress bar.
     connect_or_die(kjob, &KJob::totalSize, this, &ActivityProgressStatusBarTracker::totalSize);
     connect_or_die(kjob, &KJob::processedSize, this, &ActivityProgressStatusBarTracker::processedSize);
 
+    //
     // Connect some signals directly from the kjob to the widget's slots.
+    //
     connect_or_die(kjob, &KJob::description, wdgt_type, &BaseActivityProgressStatusBarWidget::description);
     connect_or_die(kjob, qOverload<KJob*, KJob::Unit, qulonglong>(&KJob::totalAmount),
                    wdgt_type, &BaseActivityProgressStatusBarWidget::totalAmount);
@@ -500,6 +504,7 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
                    wdgt_type, &BaseActivityProgressStatusBarWidget::processedAmount);
     connect_or_die(kjob, &KJob::totalSize, wdgt_type, &BaseActivityProgressStatusBarWidget::totalSize);
     connect_or_die(kjob, &KJob::processedSize, wdgt_type, &BaseActivityProgressStatusBarWidget::processedSize);
+    connect_or_die(kjob, &KJob::speed, wdgt_type, &BaseActivityProgressStatusBarWidget::speed);
 
     // kjob->widget, tells the widget to hide itself since kjob emitted finished().
     // kjob->tracker is already done in base class: connect_or_die(kjob, &KJob::finished, this, &ActivityProgressStatusBarTracker::finished);
@@ -508,7 +513,9 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
 //    // Connect the kjob's destroyed() signal to a handler here.
 //    connect_or_die(kjob, &QObject::destroyed, this, &ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed);
 
-    // Connect the widget's "user wants to cancel" signal to this tracker's slotStop(KJob*) slot.
+    //
+    // Connect the widget's signals such as "user wants to cancel" to this tracker's slotStop(KJob*) slot.
+    //
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::cancel_job, this, &ActivityProgressStatusBarTracker::slotStop);
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::pause_job, this, &ActivityProgressStatusBarTracker::slotSuspend);
     connect_or_die(wdgt_type, &BaseActivityProgressStatusBarWidget::resume_job, this, &ActivityProgressStatusBarTracker::slotResume);
