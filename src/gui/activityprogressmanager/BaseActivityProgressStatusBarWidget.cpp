@@ -548,13 +548,16 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
         DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
 
         const QString speedStr = formattedDataSize(value, 1, fmt);
+
+        // If we know the total size, we can calculate time remaining.
         if (m_is_total_size_known)
 		{
-            const qint64 remaining = 1000 * (totalSize - processedSize) / value;
+            const qulonglong msecs_remaining = 1000 * (totalSize - processedSize) / value;
+
 			//~ singular %1/s (%2 remaining)
 			//~ plural %1/s (%2 remaining)
-            m_speed_label->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining)
-                                   .arg(speedStr).arg(formattedDataSize(remaining, 1, fmt)));
+            m_speed_label->setText(tr("%1/s (%2 remaining)", "", /*singular/plural=*/msecs_remaining)
+                                   .arg(speedStr).arg(formattedDuration(msecs_remaining, 0)));
 		}
 		else
 		{

@@ -22,15 +22,16 @@
 
 #include <config.h>
 
-/// C++
+// Std C++
 #include <type_traits>
 #include <string>
 
-/// Qt5
+// Qt5
 #include <QtGlobal>
 #include <QString>
-#include <taglib/tag.h>
+#include <QTime>
 #include <QTextCodec>
+
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
 #define HAVE_QLOCALE_FORMATTEDDATASIZE 1
 #include <QLocale>
@@ -45,12 +46,13 @@ enum /*QLocale::*/DataSizeFormats
 };
 #endif
 
-/// KF5
+// KF5
 #if HAVE_KF501
 #   ifndef HAVE_QLOCALE_FORMATTEDDATASIZE
     /// Needed to format numbers into "12.3 GB" etc. until we can rely on Qt 5.10, which supports
     /// it in QLocale.
 #   include <KFormat>
+#include <QTime>
 enum /*QLocale::*/DataSizeFormats
 {
     /// Base 1024/IEC KiB, MiB, etc.
@@ -66,6 +68,9 @@ enum /*QLocale::*/DataSizeFormats
 #if HAVE_GTKMM01
 #include <glibmm/ustring.h>
 #endif
+
+// TagLib
+#include <taglib/tag.h>
 
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
@@ -204,5 +209,33 @@ static inline QString formattedDataSize(qint64 bytes, int precision = 2, DataSiz
     return KFormat().formatByteSize(bytes, precision, dialect);
 #endif
 }
+
+static inline QString formattedDuration(qint64 msecs, int precision = 3)
+{
+    Q_ASSERT(precision >= 0);
+    Q_ASSERT(precision <= 3);
+    // T=0.
+    QTime t(0,0);
+    Qt::DateFormat duration_fmt;
+    int chars_to_clip_from_end = 0;
+    if(precision > 0)
+    {
+        // Default precision 3 is ISO 8601 "HH:mm:ss.zzz"
+        duration_fmt = Qt::ISODateWithMs;
+        chars_to_clip_from_end = 3-precision;
+    }
+    else if(precision == 0)
+    {
+        // ISO 8601, "HH:mm:ss".
+        duration_fmt = Qt::ISODate;
+        chars_to_clip_from_end = 0;
+    }
+    QString secs_str = t.addMSecs(msecs).toString(duration_fmt);
+    Q_ASSERT(secs_str.size() > 0);
+    secs_str.resize(secs_str.size()-chars_to_clip_from_end);
+
+    return secs_str;
+}
+
 
 #endif // STRINGHELPERS_H
