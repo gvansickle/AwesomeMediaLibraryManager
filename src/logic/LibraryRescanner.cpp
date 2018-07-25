@@ -37,17 +37,30 @@
 #include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
-#include <concurrency/ExtAsync.h>
+/// Ours, Qt5/KF5-related
+#include <utils/TheSimplestThings.h>
+#include <utils/RegisterQtMetatypes.h>
 
 #include "utils/AsyncDirScanner.h"
+#include <concurrency/ExtAsync.h>
 #include <concurrency/ReportingRunner.h>
 #include <concurrency/AsyncTaskManager.h>
+#include <concurrency/DirectoryScanJob.h>
 
-#include <src/concurrency/DirectoryScanJob.h>
 #include "LibraryRescannerJob.h"
+
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
 #include "logic/LibraryModel.h"
+
+
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering LibraryRescanner types";
+	// From #include <logic/LibraryRescanner.h>
+	qRegisterMetaType<MetadataReturnVal>();
+	qRegisterMetaType<QFuture<MetadataReturnVal>>();
+	qRegisterMetaType<VecLibRescannerMapItems>("VecLibRescannerMapItems");
+    });
 
 
 LibraryRescanner::LibraryRescanner(LibraryModel* parent) : QObject(parent)
@@ -66,9 +79,11 @@ M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS, OR THE JOBS SHOULDNT BE OWNED BY T
 
 MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapItems& mapitem)
 {
+    MetadataReturnVal retval;
+#if 0
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
-	MetadataReturnVal retval;
+
 
 	// If we have more than a single entry in the incoming list, we have a multi-track file to refresh.
 	if(mapitem.size() == 1)
@@ -154,7 +169,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
 	{
 		qCritical() << "GOT EMPTY LIST OF LIBRARY ENTRIES TO RESCAN";
 	}
-
+#endif
     return retval;
 }
 
@@ -203,10 +218,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
-    connect_blocking_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, this, [=](KJob* kjob, const DirScanResult& the_find)  {
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](KJob* kjob, const DirScanResult& the_find)  {
         // Found a file matching the criteria.  Send it to the model.
-        runInObjectEventLoop([=](){
-            m_current_libmodel->onIncomingFilename(the_find.getMediaQUrl().toString());}, m_current_libmodel);
+        Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaQUrl().toString());
         ;});
 
     dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
@@ -224,7 +238,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             qIn() << "DIRTRAV SUCCEEDED";
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
-
+#if 0
             // Directory traversal complete, start rescan.
 
             QVector<VecLibRescannerMapItems> rescan_items;
@@ -241,6 +255,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             // Start the metadata scan.
             qDb() << "STARTING RESCAN";
             lib_rescan_job->start();
+#endif
         }
     });
 

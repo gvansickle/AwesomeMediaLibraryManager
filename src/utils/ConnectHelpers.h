@@ -20,10 +20,19 @@
 #ifndef CONNECTHELPERS_H
 #define CONNECTHELPERS_H
 
+// Boost
+#include <boost/callable_traits.hpp>
+namespace ct = boost::callable_traits;
+
+// Std C++ backfill
+#include <future/cpp14_concepts.hpp>
+
+// Qt5
 #include <QAction>
 #include <QApplication>
 #include <QMetaObject>
 
+// Ours
 #include "DebugHelpers.h"
 
 template <typename T, typename F>
@@ -38,14 +47,12 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
   return Sender::connect(sender, &Sender::clicked, receiver, slot, type);
 }
 
-//template <typename T, typename Signal, typename Slot>
-//QMetaObject::Connection connect(T* sender_and_receiver, Signal signal, Slot slot, Qt::ConnectionType type = Qt::AutoConnection)
-//{
-//	return connect(sender_and_receiver, signal, sender_and_receiver, slot, type);
-//}
-
 /**
  * Make a connection and assert if the attempt fails.
+ * This is the general case, including lambdas.  Unfortunately:
+ * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
+ * to connecting to member functions."
+ * The overload below tries to catch the case where UniqueConnection does apply.
  */
 template <typename... Args>
 void connect_or_die(Args&&... args)
@@ -55,6 +62,32 @@ void connect_or_die(Args&&... args)
     retval = QObject::connect(std::forward<Args>(args)...);
     Q_ASSERT(static_cast<bool>(retval) != false);
 }
+
+/**
+ * Make a Qt::UniqueConnection connection and assert if the attempt fails.
+ * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
+ * to connecting to member functions."
+ */
+template <class TPMF, class T = ct::class_of_t<TPMF>, class UPMF, class U = ct::class_of_t<UPMF>,
+          REQUIRES(std::is_member_function_pointer_v<UPMF>)>
+void connect_or_die(const T* t, TPMF tpmf, const U* u, UPMF upmf, Qt::ConnectionType connection_type = Qt::AutoConnection)
+{
+    QMetaObject::Connection retval;
+
+    retval = QObject::connect(t, tpmf, u, upmf, Qt::ConnectionType(connection_type | Qt::UniqueConnection));
+    Q_ASSERT(static_cast<bool>(retval) != false);
+}
+
+//inline static
+//void connect_or_die(const QObject *sender, const QMetaMethod &signal,
+//                    const QObject *receiver, const QMetaMethod &method,
+//                    Qt::ConnectionType type = Qt::AutoConnection)
+//{
+//    QMetaObject::Connection retval;
+
+//    retval = QObject::connect(sender, signal, receiver, method, Qt::ConnectionType(type | Qt::UniqueConnection));
+//    Q_ASSERT(static_cast<bool>(retval) != false);
+//}
 
 /**
  * Make a blocking signal-slot connection and assert if the attempt fails.

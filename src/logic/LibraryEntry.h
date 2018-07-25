@@ -20,23 +20,32 @@
 #ifndef LIBRARYENTRY_H
 #define LIBRARYENTRY_H
 
-#include <QObject>
-#include <QUrl>
+// Std C++
 #include <vector>
 #include <memory>
 
+// Qt5
+#include <QObject>
+#include <QUrl>
+
+// Qt5 Helpers
+#include <utils/QtHelpers.h>
+
+// Ours
 #include "logic/Metadata.h"
 #include "utils/Fraction.h"
+
 
 class LibraryEntry
 {
 public:
-	LibraryEntry();
+    LibraryEntry() = default;
 	LibraryEntry(const LibraryEntry& other) = default;
-	LibraryEntry(QUrl m_url);
-	virtual ~LibraryEntry() = default;
+    virtual ~LibraryEntry() = default;
 
-	static QVector<LibraryEntry*> fromUrl(QUrl fileurl = QUrl());
+    explicit LibraryEntry(const QUrl& m_url);
+
+    static std::shared_ptr<LibraryEntry> fromUrl(const QUrl& fileurl = QUrl());
 
 	std::vector<std::shared_ptr<LibraryEntry> > populate(bool force_refresh = false);
 
@@ -63,8 +72,10 @@ public:
 	/// @{
 	void writeToJson(QJsonObject& jo) const;
 	void readFromJson(QJsonObject& jo);
-	friend QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
-	friend QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
+
+    QTH_FRIEND_QDATASTREAM_OPS(LibraryEntry);
+//    friend QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
+//	friend QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
 	/// @}
 
 	/// @todo Do we want to return some kind of actual Image class here instead?
@@ -80,7 +91,7 @@ public:
 
 	QStringList getMetadata(QString key) const;
 
-private:
+protected:
 
 	QUrl m_url;
 
@@ -119,7 +130,10 @@ inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libent
 	return dbg << libentry.get();
 }
 
-QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
-QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
+QTH_DECLARE_QDATASTREAM_OPS(LibraryEntry);
+QTH_DECLARE_QDATASTREAM_OPS(std::shared_ptr<LibraryEntry>);
+
+//QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
+//QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
 
 #endif // LIBRARYENTRY_H

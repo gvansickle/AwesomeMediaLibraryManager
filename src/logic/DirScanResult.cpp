@@ -32,16 +32,11 @@
 #include <utils/RegisterQtMetatypes.h>
 
 AMLM_QREG_CALLBACK([](){
-    qIn() << "Registering DirScanResult";
+    qIn() << "Registering DirScanResult, FileModificationInfo";
     qRegisterMetaType<DirScanResult>();
-    qRegisterMetaTypeStreamOperators<DirScanResult>();
+    qRegisterMetaType<FileModificationInfo>();
 });
 
-
-DirScanResult::DirScanResult()
-{
-
-}
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo) : m_found_url_modinfo(found_url_finfo)
 {
@@ -49,10 +44,6 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 
 
     determineDirProps(found_url_finfo);
-}
-
-DirScanResult::~DirScanResult()
-{
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
@@ -112,6 +103,7 @@ QDebug operator<<(QDebug dbg, const DirScanResult & obj)
     return dbg;
 }
 
+#if 0
 QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
 {
 #define X(field) << myObj.field
@@ -126,5 +118,6 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
     return in DATASTREAM_FIELDS(X);
 #undef X
 }
+#endif
 
 #undef DATASTREAM_FIELDS

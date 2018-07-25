@@ -42,11 +42,6 @@
 class LibraryModel;
 class LibraryEntry;
 
-//////////////// EXP
-class QSqlDatabase;
-//////////////// EXP
-
-
 
 struct MetadataReturnVal
 {
@@ -70,6 +65,7 @@ struct MetadataReturnVal
 
 Q_DECLARE_METATYPE(MetadataReturnVal)
 Q_DECLARE_METATYPE(QFuture<MetadataReturnVal>)
+Q_DECLARE_METATYPE(ExtFuture<MetadataReturnVal>)
 
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;
 

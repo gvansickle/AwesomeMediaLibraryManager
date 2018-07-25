@@ -20,9 +20,11 @@
 #ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 
+#if 0
 #include <config.h>
 
 #include "../ExtFutureState.h"
+#endif
 
 #if 0
 /**
@@ -44,16 +46,18 @@ ExtFuture<T>::unwrap()
 }
 #endif
 
-
+#if 0
 template<typename T>
-T ExtFuture<T>::get()
+T ExtFuture<T>::qtget_first()
 {
+M_WARNING("segfaulting.");
 	wait();
 	return this->future().result();
 }
 
+
 template<typename T>
-void ExtFuture<T>::wait() const
+void ExtFuture<T>::wait()
 {
     while (!this->isFinished())
     {
@@ -97,6 +101,7 @@ ExtFutureState::States ExtFuture<T>::state() const
     return current_state;
 }
 
+
 namespace ExtAsync
 {
 	namespace detail
@@ -138,7 +143,7 @@ namespace ExtAsync
 
 	}
 }
-
+#endif
 // Declare explicit instantiations of some common ExtFuture types.
 //extern template class ExtFuture<Unit>;
 //extern template class ExtFuture<QString>;

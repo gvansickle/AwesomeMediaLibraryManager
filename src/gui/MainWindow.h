@@ -17,6 +17,9 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H
+#define AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H
+
 #include <config.h>
 
 /// Std C++
@@ -28,6 +31,7 @@
 /// Qt5
 
 #include <QUrl>
+
 class QActionGroup;
 class QWidget;
 class QLabel;
@@ -46,7 +50,8 @@ class KJob;
 namespace KIO
 {
     class Job;
-}
+} // namespace KIO
+
 class KStatusBarJobTracker;
 class KToolBar;
 using ToolBarClass = KToolBar;
@@ -301,7 +306,7 @@ private:
     ///@{
     void connectPlayerAndControls(MP2 *m_player, PlayerControls *m_controls);
     void connectPlayerAndPlaylistView(MP2 *m_player, MDIPlaylistView *playlist_view);
-    void connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view);
+    void connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view);
 
     void connectLibraryViewAndMainWindow(MDILibraryView* lv);
 	void connectPlaylistViewAndMainWindow(MDIPlaylistView* plv);
@@ -517,3 +522,4 @@ private:
     QSharedPointer<SettingsDialog> m_settings_dlg;
 };
 
+#endif // AWESOMEMEDIALIBRARYMANAGER_SRC_GUI_MAINWINDOW_H

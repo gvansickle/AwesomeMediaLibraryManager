@@ -30,11 +30,12 @@
 #include <KDialogJobUiDelegate>
 
 /// Ours
+#include <AMLMApp.h>
+#include <gui/MainWindow.h>
 #include "utils/DebugHelpers.h"
 #include "utils/UniqueIDMixin.h"
 #include "utils/QtCastHelpers.h"
 #include "utils/TheSimplestThings.h"
-#include <gui/MainWindow.h>
 #include <utils/RegisterQtMetatypes.h>
 
 
@@ -61,10 +62,12 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
     connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
 
-    connect_or_die(this, &QObject::destroyed, this, &AMLMJob::SLOT_on_destroyed);
-    connect_or_die(this, &QObject::destroyed, qApp, [=](QObject* obj){
-        qWro() << "OBJECT DESTROYED:" << obj;
-        });
+    connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
+
+//    connect_or_die(this, &QObject::destroyed, this, &AMLMJob::SLOT_on_destroyed);
+//    connect_or_die(this, &QObject::destroyed, qApp, [=](QObject* obj){
+//        qWro() << "OBJECT DESTROYED:" << obj;
+//        });
 }
 
 AMLMJob::~AMLMJob()
@@ -131,8 +134,11 @@ void AMLMJob::start()
     // Note that calling the destructor of (by deleting) the returned future is ok:
     // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
     // "Note that this neither waits nor cancels the asynchronous computation."
-    /// Indicate to the cancel logic that we did start.
+
+    // Indicate to the cancel logic that we did start.
     m_run_was_started.release();
+
+    // Run.
     ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
 //    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
 }
@@ -349,7 +355,8 @@ bool AMLMJob::functorHandlePauseResumeAndCancel()
     }
     if (ef.isCanceled())
     {
-        // Caller should break out of while() loop.
+        // The job has been canceled.
+        // The calling runFunctor() should break out of while() loop.
         return true;
     }
     else
@@ -359,7 +366,7 @@ bool AMLMJob::functorHandlePauseResumeAndCancel()
 }
 
 /////
-/// These are similar to kdevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
+/// These are similar to KDevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
 ///
 void AMLMJob::SLOT_extfuture_finished()
 {
@@ -375,11 +382,6 @@ void AMLMJob::SLOT_extfuture_canceled()
 
     // Nothing but deleteLater() the watcher.
     m_watcher->deleteLater();
-}
-
-void AMLMJob::SLOT_extfuture_aboutToShutdown()
-{
-    kill();
 }
 
 void AMLMJob::SLOT_kjob_finished(KJob *kjob)
@@ -398,6 +400,13 @@ void AMLMJob::SLOT_kjob_result(KJob *kjob)
 void AMLMJob::SLOT_call_emitResult()
 {
     emitResult();
+}
+
+void AMLMJob::SLOT_onAboutToShutdown()
+{
+    qDbo() << "SHUTDOWN, KILLING";
+    kill();
+    qDbo() << "SHUTDOWN, KILLED";
 }
 
 
@@ -450,11 +459,12 @@ void AMLMJob::SLOT_call_emitResult()
  */
 bool AMLMJob::doKill()
 {
+    // KJob::doKill().
+
     QMutexLocker lock(&m_start_vs_dokill_mutex);
 
     qDbo() << "START EXTASYNC DOKILL";
 
-    // KJob::doKill().
     /// @note The calling thread has to have an event loop, and actually AFAICT should be the main app thread.
     AMLM_ASSERT_IN_GUITHREAD();
 
@@ -522,7 +532,7 @@ bool AMLMJob::doKill()
     ef.waitForFinished();
 
     // Wait for the async job to really finish, i.e. for the run() member to finish.
-    /// @todo won't be acqable if killed before started.
+    /// @todo won't be acq'able if killed before started.
     m_run_returned.acquire();
 
     /// @todo Difference here btw cancel before and after start.

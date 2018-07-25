@@ -25,27 +25,49 @@
 #include <QProcessEnvironment>
 
 // KF5
-#include <KJob>
+//#include <KJob>
 
 // Ours
 #include <utils/TheSimplestThings.h>
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
 
+// Pointer to the singleton.
+AMLMApp *AMLMApp::m_the_instance = nullptr;
 
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
+    Q_ASSERT(m_the_instance == nullptr);
+
+    m_the_instance = this;
+
+    setObjectName("TheAMLMApp");
+
     /// @todo EXPERIMENTAL
 //    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
 
     // Create the singletons we'll need for any app invocation.
     /* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
+
+    /// @note This is a self-connection, not sure this will work as intended.
+    connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
 }
 
 AMLMApp::~AMLMApp()
 {
-    // Shut down whatever still needs shutting down.
+    /// @todo Shut down whatever still needs shutting down.
+
+	// No more singleton.
+	m_the_instance = nullptr;
+
+    qDb() << "AMLMApp SINGLETON DESTROYED";
+}
+
+AMLMApp *AMLMApp::instance()
+{
+    Q_ASSERT(m_the_instance != nullptr);
+    return m_the_instance;
 }
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
@@ -61,4 +83,33 @@ void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
         group.writeEntry("force_breeze", true);
         qDb() << "Non KDE Desktop detected, forcing Breeze icon theme";
     }
+}
+
+void AMLMApp::SLOT_onAboutToQuit()
+{
+    qDbo() << "App about to quit, shutting down.";
+
+    if(!m_shutting_down)
+    {
+        perform_controlled_shutdown();
+    }
+
+    qDbo() << "App shutdown complete.";
+}
+
+void AMLMApp::perform_controlled_shutdown()
+{
+    // Signal to ourselves that we're in the process of shutting down.
+    m_shutting_down = true;
+
+    // Signal to the world that we're in the process of shutting down.
+    Q_EMIT aboutToShutdown();
+
+    if(!m_controlled_shutdown_complete)
+    {
+        /// @todo Do whatever shutdown we need to here.
+    }
+
+    m_controlled_shutdown_complete = true;
+
 }

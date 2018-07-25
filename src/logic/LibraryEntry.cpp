@@ -17,43 +17,47 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Object header
 #include "LibraryEntry.h"
-#include "TrackMetadata.h"
-#include "ntp.h"
 
+// Qt5
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QJsonArray>
 #include <QDataStream>
-
 #include <QUrlQuery>
 
+// Ours.
 #include "utils/MapConverter.h"
 #include "utils/DebugHelpers.h"
+#include "TrackMetadata.h"
+#include "ntp.h"
 
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 #include <utils/StringHelpers.h>
+#include <utils/QtHelpers.h>
+#include <utils/RegisterQtMetatypes.h>
 
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01
 
-LibraryEntry::LibraryEntry()
-{
-}
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering LibraryEntry types";
+    qRegisterMetaType<LibraryEntry>();
+    });
 
-LibraryEntry::LibraryEntry(QUrl url)
+
+LibraryEntry::LibraryEntry(const QUrl &url)
 {
 	this->m_url = url;
 }
 
-QVector<LibraryEntry*> LibraryEntry::fromUrl(QUrl fileurl)
+std::shared_ptr<LibraryEntry> LibraryEntry::fromUrl(const QUrl &fileurl)
 {
-	QVector<LibraryEntry*> retval;
-
-	retval.append(new LibraryEntry(fileurl));
+    std::shared_ptr<LibraryEntry> retval = std::make_shared<LibraryEntry>(fileurl);
 
 	return retval;
 }
@@ -68,10 +72,10 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 	// Some sanity checks first.
 	if(!m_url.isValid())
 	{
-		qWarning() << "Invalid URL:" << m_url;
+        qWr() << "Invalid URL:" << m_url;
 		return retval;
 	}
-	if( !force_refresh && isPopulated() )
+    if(!force_refresh && isPopulated() )
 	{
 		// Nothing to do.
 		qDebug() << "Already populated.";

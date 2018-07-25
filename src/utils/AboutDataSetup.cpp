@@ -35,12 +35,12 @@ KAboutData AboutDataSetup::GetKAboutData()
 {
 	KAboutData retval {
 				"AwesomeMediaLibraryManager", // componentName, "Returns the application's internal name."
-				"Awesome Media Library Manager", // displayName, "Returns the translated program name."
+				QObject::tr("Awesome Media Library Manager"), // displayName, "Returns the translated program name."
 				toqstr(VersionInfo::get_full_version_info_string()), // version, "Returns the program's version."
 				"An Audio Media Library Manager using the Qt 5 GUI framework", // shortDescription
 				KAboutLicense::GPL_V3, // licenceType
-				"Copyright (c) 2017, 2018 Gary R. Van Sickle", // copyrightStatement, "Returns the copyright statement."
-				"Because the world needs a Media Library Manager which is Awesome.", // otherText, added to About box.
+				QObject::tr("Copyright (c) 2017, 2018 Gary R. Van Sickle"), // copyrightStatement, "Returns the copyright statement."
+				QObject::tr("Because the world needs a Media Library Manager which is Awesome."), // otherText, added to About box.
 				"https://github.com/gvansickle/AwesomeMediaLibraryManager", // homePageAddress
 				"https://github.com/gvansickle/AwesomeMediaLibraryManager/issues" // bugAddress
 				};

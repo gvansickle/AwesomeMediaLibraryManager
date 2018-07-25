@@ -31,7 +31,6 @@ set(gui_HEADER_FILES
 	MDITreeViewBase.h
 	MetadataDockWidget.h
 	NetworkAwareFileDialog.h
-	PlayerControls.h
 	helpers/Tips.h
 	menus/DropMenu.h
 	menus/LibraryContextMenu.h
@@ -60,7 +59,6 @@ set(gui_SOURCE_FILES
 	MDITreeViewBase.cpp
 	MetadataDockWidget.cpp
 	NetworkAwareFileDialog.cpp
-	PlayerControls.cpp
 	MDINowPlayingView.cpp
 	MDINowPlayingView.h
 	DragDropTreeViewStyleProxy.cpp
@@ -99,7 +97,16 @@ set(gui_settings_SOURCE_FILES
 PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILES})
 
 add_subdirectory(activityprogressmanager)
-add_subdirectory(widgets)
+
+### @todo
+#add_library(widgets "")
+set(amlm_widget_SRCS "")
+include(widgets/CMakeLists.txt)
+#set_target_properties(widgets
+#    PROPERTIES
+#    AUTOMOC ON
+#    AUTOUIC ON)
+#target_link_libraries(widgets ${PROJECT_COMMON_LINK_LIBS})
 
 set(amlm_gui_SRCS
 	${gui_SOURCE_FILES}
@@ -108,11 +115,17 @@ set(amlm_gui_SRCS
 	${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 	${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
 	${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-	${HEADER_FILES_GUI_WIDGETS}
-	${SOURCE_FILES_GUI_WIDGETS}
+	#${amlm_gui_widget_SRCS}
+	#${HEADER_FILES_GUI_WIDGETS}
+	#${SOURCE_FILES_GUI_WIDGETS}
 	#${UI_FILES_GUI_WIDGETS}
 	PARENT_SCOPE
 	)
+
+set(amlm_gui_widget_SRCS
+ 	${amlm_widget_SRCS}
+ 	PARENT_SCOPE
+ 	)
 
 #message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 

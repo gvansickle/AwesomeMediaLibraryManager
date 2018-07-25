@@ -37,16 +37,20 @@ class FileModificationInfo
     Q_GADGET
 
 public:
+    /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
+    /// @{
     FileModificationInfo() = default;
-    FileModificationInfo(const QFileInfo &fmodinfo)
+    FileModificationInfo(const FileModificationInfo& fmodinfo) = default;
+    ~FileModificationInfo() = default;
+    /// @}
+
+    explicit FileModificationInfo(const QFileInfo &fmodinfo)
         : m_size(fmodinfo.size()),
           m_last_modified_timestamp(fmodinfo.lastModified()),
           m_metadata_last_modified_timestamp(fmodinfo.metadataChangeTime()) {}
-    FileModificationInfo(const FileModificationInfo& fmodinfo) = default;
-    ~FileModificationInfo() = default;
 
     /// File size, or 0 if couldn't be determined.
-    qint64 m_size;
+    qint64 m_size {0};
     /// Last modified time.  Invalid if can't be determined(?).
     QDateTime m_last_modified_timestamp;
     /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
@@ -58,18 +62,18 @@ public:
         return dbg << obj.m_size << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
     }
 
-    friend QDataStream &operator<<(QDataStream &out, const FileModificationInfo & myObj)
-    {
-        return out << myObj.m_size << myObj.m_last_modified_timestamp << myObj.m_metadata_last_modified_timestamp;
-    }
-    friend QDataStream &operator>>(QDataStream &in, FileModificationInfo & myObj)
-    {
-        return in >> myObj.m_size >> myObj.m_last_modified_timestamp >> myObj.m_metadata_last_modified_timestamp;
-    }
+//    friend QDataStream &operator<<(QDataStream &out, const FileModificationInfo & myObj)
+//    {
+//        return out << myObj.m_size << myObj.m_last_modified_timestamp << myObj.m_metadata_last_modified_timestamp;
+//    }
+//    friend QDataStream &operator>>(QDataStream &in, FileModificationInfo & myObj)
+//    {
+//        return in >> myObj.m_size >> myObj.m_last_modified_timestamp >> myObj.m_metadata_last_modified_timestamp;
+//    }
 };
 
 Q_DECLARE_METATYPE(FileModificationInfo);
-QTH_DECLARE_QDATASTREAM_OPS(FileModificationInfo);
+//QTH_DECLARE_QDATASTREAM_OPS(FileModificationInfo);
 
 /**
  * A single hit found during a directory scan.
@@ -79,9 +83,13 @@ class DirScanResult
     Q_GADGET
 
 public:
-	DirScanResult();
+    /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
+    DirScanResult() = default;
+    DirScanResult(const DirScanResult& other) = default;
+    virtual ~DirScanResult() = default;
+
+    /// Constructor for public consumption.
     DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
-	virtual ~DirScanResult();
 
     /**
      * URLs:
@@ -122,8 +130,8 @@ public:
     /// Returned URL will not be valid if there was no sidecar cue sheet.
     QUrl getSidecarCuesheetQUrl() const { return m_cue_url; }
 
-    QTH_FRIEND_QDEBUG_OP(DirScanResult);
-    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+    QTH_FRIEND_QDEBUG_OP(DirScanResult)
+//    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 
 protected:
 
@@ -149,6 +157,6 @@ protected:
 Q_DECLARE_METATYPE(DirScanResult);
 
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
-QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
+//QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

@@ -21,14 +21,12 @@
 
 #include "MainWindow.h"
 
-/// Std C++
-
+// Std C++
 #include <functional>
 #include <algorithm>
 #include <type_traits>
 
-/// Qt5
-
+// Qt5
 #include <QObject>
 #include <QApplication>
 #include <QMainWindow>
@@ -80,7 +78,6 @@
 #include <KXmlGui/KEditToolBar>
 
 /// Ours
-
 #include "Experimental.h"
 #include "FilterWidget.h"
 
@@ -99,7 +96,7 @@
 #include "gui/MDIArea.h"
 #include "MetadataDockWidget.h"
 #include "CollectionDockWidget.h"
-#include "PlayerControls.h"
+#include "widgets/PlayerControls.h"
 
 #include "logic/LibraryEntryMimeData.h"
 
@@ -876,9 +873,11 @@ void MainWindow::createToolBars()
 							 m_newPlaylistAct,
 							 m_openPlaylistAct,
 							 m_savePlaylistAct});
-    for(auto a : m_fileToolBar->actions())
+
+    const auto& actionlist = m_fileToolBar->actions();
+    for(const auto& a : actionlist)
     {
-        if(a->associatedWidgets().size() == 0)
+        if(a->associatedWidgets().empty())
         {
             qWr() << "File toolbar action" << a << "has no associatedWidgets()";
         }
@@ -1056,15 +1055,15 @@ void MainWindow::connectPlayerAndPlaylistView(MP2 *player, MDIPlaylistView *play
 	}
 }
 
-void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *m_controls, MDIPlaylistView *playlist_view)
+void MainWindow::connectPlayerControlsAndPlaylistView(PlayerControls *controls, MDIPlaylistView *playlist_view)
 {
 	/// @note Qt::ConnectionType() cast here is due to the mixed flag/enum nature of the type.  Qt::UniqueConnection (0x80) can be bitwise-
 	/// OR-ed in with any other connection type, which are 0,1,2,3.
-	connect(m_controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
-	connect(m_controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect(controls, &PlayerControls::next, playlist_view, &MDIPlaylistView::next, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect(controls, &PlayerControls::previous, playlist_view, &MDIPlaylistView::previous, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 
 	// Connect play() signal-to-signal.
-	connect(playlist_view, &MDIPlaylistView::play, m_controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+    connect(playlist_view, &MDIPlaylistView::play, controls, &PlayerControls::play, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 }
 
 void MainWindow::connectLibraryViewAndMainWindow(MDILibraryView *lv)
@@ -1207,7 +1206,8 @@ MDITreeViewBase* MainWindow::activeChildMDIView()
  */
 QMdiSubWindow* MainWindow::findSubWindow(QUrl url) const
 {
-	for(auto window : m_mdi_area->subWindowList())
+    const auto &subwinlist = m_mdi_area->subWindowList();
+    for(const auto& window : subwinlist)
 	{
 		auto widget = window->widget();
         qDebug() << "windowFilePath:" << widget << widget->windowFilePath();
@@ -1788,7 +1788,7 @@ void MainWindow::addChildMDIModelViewPair_Playlist(const MDIModelViewPair& mvpai
 			// The Collection Doc Widget uses this among others.
 			QStandardItem* new_playlist_row_item = new QStandardItem(playlist_view->getDisplayName());
 			new_playlist_row_item->setData(QVariant::fromValue(playlist_view));
-			new_playlist_row_item->setData(QIcon::fromTheme("view-media-playlist"), Qt::DecorationRole);
+            new_playlist_row_item->setData(QIcon::fromTheme("view-media-playlist"), Qt::DecorationRole);
 			QString tttext = tr("<b>%1</b><hr>%2").arg(playlist_view->getDisplayName()).arg(playlist_view->windowFilePath());
 			new_playlist_row_item->setData(QVariant(tttext), Qt::ToolTipRole);
 			m_stditem_playlist_views->appendRow(new_playlist_row_item);
@@ -1942,7 +1942,7 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 
     Theme::setIconThemeName(iconThemeName);
 
-	for(auto w : qApp->allWidgets())
+    for(auto& w : qApp->allWidgets())
 	{
 		QEvent style_changed_event(QEvent::StyleChange);
 		QCoreApplication::sendEvent(w, &style_changed_event);

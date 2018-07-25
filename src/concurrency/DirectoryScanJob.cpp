@@ -147,6 +147,12 @@ void DirectoryScannerAMLMJob::runFunctor()
             /// Well, really there is, we could report this as summary info.  Ah well, for tomorrow.
 //            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
 //            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+            if(totalAmount(KJob::Unit::Files) <= num_files_found_so_far)
+            {
+                num_possible_files = num_files_found_so_far+1;
+                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
+            }
+
             setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
             /// NEW
             m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
@@ -156,19 +162,12 @@ void DirectoryScannerAMLMJob::runFunctor()
             Q_EMIT entries(this, dir_scan_result);
         }
 
-        if(wasCancelRequested())
+        if(functorHandlePauseResumeAndCancel())
         {
             // We've been cancelled.
             qIno() << "CANCELLED";
             m_ext_future.reportCanceled();
             break;
-        }
-        if(m_ext_future.isPaused())
-        {
-            // We're paused, wait for a resume signal.
-            qDbo() << "PAUSING";
-            m_ext_future.waitForResume();
-            qDbo() << "RESUMING";
         }
     }
 

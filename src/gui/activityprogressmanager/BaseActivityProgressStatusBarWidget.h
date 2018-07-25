@@ -50,19 +50,19 @@ class BaseActivityProgressStatusBarWidget: public QFrame
     using BASE_CLASS = QFrame;
 
 Q_SIGNALS:
-    /// To the tracker: kill the job.
+    /// Signal to the tracker: kill the job.
     void cancel_job(KJob* job);
 
-    /// To the tracker: pause the job.
+    /// Signal to the tracker: pause the job.
     void pause_job(KJob* job);
 
-    /// To the tracker: resume the job.
+    /// Signal to the tracker: resume the job.
     void resume_job(KJob* job);
 
 protected:
     /// Private constructor to get us a fully-constructed vtable so we can
     /// call virtual functions in the non-default constructor.
-    BaseActivityProgressStatusBarWidget(QWidget *parent);
+    explicit BaseActivityProgressStatusBarWidget(QWidget *parent);
 
 public:
     explicit BaseActivityProgressStatusBarWidget(KJob* job, ActivityProgressStatusBarTracker* tracker, QWidget *parent);
@@ -73,14 +73,11 @@ public:
 
 public Q_SLOTS:
 
-    /// @name Slots for construction/setup.
-    /// @{
-
-
-    /// @}
-
     /// @name Public slots analogous to the private versions of KAbstractWidgetJobTracker/KJobTrackerInterface.
     /// @{
+
+    virtual void suspended(KJob*);
+    virtual void resumed(KJob*);
 
     virtual void description(KJob* kjob, const QString& title,
                              const QPair<QString, QString> &field1 = {QString(), QString()},
@@ -95,14 +92,19 @@ public Q_SLOTS:
     /// @{
 
     /**
+     * KJob Slot
+     * @warning Also a regular public function with the same name.
      * Directly supported by KJob:
      * - setTotalAmount(Unit,amount)
      * - public qulonglong processedAmount(Unit unit) const;
      * - var in KJobPrivate.
      */
     virtual void totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
+
     /**
-     * Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
+     * KJob Slot
+     * @warning Also a regular public function with the same name.
+     *  Directly supported by KJob::processedAmount() (setProcessedAmount(Unit,amount), var in KJobPrivate).
      */
     virtual void processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount);
 
@@ -116,6 +118,7 @@ public Q_SLOTS:
     virtual void processedSize(KJob* kjob, qulonglong amount);
 
     /**
+     * KJob slot.
      * Directly supported by KJob::percent() (var in KJobPrivate).
      * Also a KJob Q_PROPERTY().
      */
@@ -179,17 +182,40 @@ protected:
 
     /// @name Child widgets
     /// @{
-    /// Primary text.
-    QLabel* m_current_activity_label {nullptr};
-    /// Detail text.
-    QLabel* m_text_status_label {nullptr};
+
+    /// Description text, Job Title.
+    /// Something like "Copying".
+    QPointer<QLabel> m_job_title_label {nullptr};
+
+    /// Detail text, Field 1.
+    /// Example given at @link https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#a145f7a7648f06ef79cf526a2c6125b88
+    /// is ""Source" with an URL".
+    QLabel* m_field1_label {nullptr};
+
+    /// Detail text, Field 2.
+    /// Example given at @link https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#a145f7a7648f06ef79cf526a2c6125b88
+    /// is ""Destination" with an URL".
+    QLabel* m_field2_label {nullptr};
+
+    /// Info message label.
+    /// @link https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#afed68ccf8ff292cb95ca8d286080cc61
+    /// Display[s] state information about this job.
+    /// Examples of message are "Resolving host", "Connecting to host...", etc.
+    QLabel* m_info_message_label {nullptr};
+
+    /// Speed label.
+    QLabel* m_speed_label {nullptr};
+
     /// The progress bar.
     QProgressBar* m_progress_bar {nullptr};
+
     /// Cancel Operation button.
     QToolButton *m_cancel_button {nullptr};
+
     /// Pause/Resume button.
     QToolButton *m_pause_resume_button {nullptr};
 
+    /// Tooltip for when the user hovers anywhere over the widget.
     KToolTipWidget* m_tool_tip_widget {nullptr};
     QLabel* m_tool_tip_label {nullptr};
 

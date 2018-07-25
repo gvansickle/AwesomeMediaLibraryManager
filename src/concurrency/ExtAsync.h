@@ -25,8 +25,7 @@
  * Qt5 analogs to std::async().
  */
 
-//#include "ExtFuture.h"
-//#include "ExtFutureWatcher.h"
+#include <config.h>
 
 // Std C++
 #include <type_traits>
@@ -34,15 +33,15 @@
 #include <memory>
 
 // Our Std C++ backfill
-#include "future_type_traits.hpp"
-#include "function_traits.hpp"
-#include "cpp14_concepts.hpp"
+#include <future/future_type_traits.hpp>
+#include <future/cpp14_concepts.hpp>
+#include <future/function_traits.hpp>
 
 // Qt5
 #include <QEvent>
 #include <QObject>
 #include <QtConcurrent>
-#include <QtCore/QFutureInterface>
+#include <QFutureInterface>
 #include <QRunnable>
 #include <QCoreApplication>
 
@@ -81,7 +80,7 @@ namespace ExtAsync
 		template <class T, class = void>
 		struct is_void_takes_param : std::false_type {};
 		template <class T>
-		struct is_void_takes_param<T, void_t<ct::has_void_return<T>>>
+		struct is_void_takes_param<T, std::void_t<ct::has_void_return<T>>>
 			: std::true_type {};
 
 		template <class ExtFutureR>
@@ -258,7 +257,7 @@ namespace ExtAsync
 
 	    QtConcurrent::run([fn=std::decay_t<F>(function)](ExtFuture<R> retfuture) mutable -> void {
 	    	R retval;
-	    	// Call the function the user orginally passed in.
+	    	// Call the function the user originally passed in.
 	    	retval = fn();
 	    	// Report our single result.
 	    	retfuture.reportResult(retval);
@@ -294,7 +293,7 @@ static void runInObjectEventLoop(F && fun, QObject * obj = qApp) {
       Fun fun;
       Event(Fun && fun) : QEvent(QEvent::None), fun(std::move(fun)) {}
       Event(const Fun & fun) : QEvent(QEvent::None), fun(fun) {}
-      ~Event() { fun(); }
+      ~Event() override { fun(); }
    };
    QCoreApplication::postEvent(obj, new Event(std::forward<F>(fun)));
 }
@@ -318,7 +317,7 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
       R(T::* method)();
       Event(T * obj, R(T::*method)()):
          QEvent(QEvent::None), obj(obj), method(method) {}
-      ~Event() { (obj->*method)(); }
+      ~Event() override { (obj->*method)(); }
    };
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }

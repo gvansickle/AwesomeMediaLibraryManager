@@ -33,8 +33,8 @@
 #include <QSignalSpy>
 
 // Ours
-#include "../future_type_traits.hpp"
-#include "../function_traits.hpp"
+#include <future/future_type_traits.hpp>
+#include <future/function_traits.hpp>
 #include <tests/TestHelpers.h>
 #include "../AMLMJob.h"
 #include <src/concurrency/DirectoryScanJob.h>
@@ -83,23 +83,18 @@ public:
     using ExtFutureType = ExtFuture<int>;
     /// @}
 
-    ~TestAMLMJob1() override
-    {
-//        SCOPED_TRACE("DESTRUCTOR");
-//        EXPECT_EQ(this->get_extfuture_ref().isRunning(), false);
-//        EXPECT_TRUE(m_run_returned);
-    }
+    ~TestAMLMJob1() override = default;
 
     static TestAMLMJob1Ptr make_job(QObject *parent)
     {
-        auto retval = new TestAMLMJob1(parent);
+        TestAMLMJob1Ptr retval = new TestAMLMJob1(parent);
         return retval;
     }
 
     ExtFutureType& get_extfuture_ref() override { return asDerivedTypePtr()->m_ext_future; }
     TestAMLMJob1* asDerivedTypePtr() override { return this; }
 
-    int m_counter {0};
+    std::atomic_int m_counter {0};
 
 protected:
 
@@ -147,6 +142,68 @@ TEST_F(AMLMJobTests, ThisShouldPass)
 	finished(__PRETTY_FUNCTION__);
 	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
+
+TEST_F(AMLMJobTests, SynchronousExecTest)
+{
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
+    j->setAutoDelete(false);
+
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    ASSERT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    ASSERT_TRUE(kjob_result_spy.isValid());
+
+    bool status = j->exec();
+
+    EXPECT_EQ(status, true);
+
+    GTEST_COUT << "FINISHED CT:" << kjob_finished_spy.count();
+    GTEST_COUT << "RESULT CT:" << kjob_result_spy.count();
+
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 1);
+}
+
+TEST_F(AMLMJobTests, ThenTest)
+{
+    QObject* ctx = new QObject(qApp);
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
+    j->setAutoDelete(false);
+
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    ASSERT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    ASSERT_TRUE(kjob_result_spy.isValid());
+
+    j->then(ctx, [=](TestAMLMJob1* j_kjob) -> void {
+        if(j->error())
+        {
+            // Error.
+            GTEST_COUT << "ASYNC JOB FAILED:\r\n"; // << j_kjob->error() << ":" << j_kjob->errorText() << ":" << j_kjob->errorString();
+        }
+        else
+        {
+            // Succeeded, update the model.
+            GTEST_COUT << "ASYNC JOB COMPLETE:\r\n";// << j_kjob;
+            int new_val = j_kjob->get_extfuture_ref().qtget_first();
+        }
+    });
+    // Start the job.
+    j->start();
+
+    // Wait for job to finish.
+    EXPECT_TRUE(QTest::qWaitFor([&](){return kjob_result_spy.count() == 1; }, 15000));
+//    while(!j->isFinished())
+//    {
+//    }
+    j->get_extfuture_ref().waitForFinished();
+
+    GTEST_COUT << "JOB EXTFUTURE:" << j->get_extfuture_ref().state() << "\n";
+    QList<int> extf_int = j->get_extfuture_ref().get();
+
+    EXPECT_EQ(extf_int.size(), 10);
+}
+
 
 TEST_F(AMLMJobTests, DirScanCancelTest)
 {
@@ -237,6 +294,7 @@ TEST_F(AMLMJobTests, CancelTest)
 
     ASSERT_TRUE(kill_succeeded) << ef;
     ASSERT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_EQ(j->error(), KJob::KilledJobError);
 
     // Wait for the KJob to signal that it's finished.
     // Won't get a result() signal here because it's kill()'ed Quietly.
@@ -249,7 +307,7 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
     RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
-    j->setAutoDelete(false);
+//    j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     ASSERT_TRUE(kjob_finished_spy.isValid());
@@ -270,8 +328,9 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 
     // j is now probably going to be deleteLater()'ed.
 
-    ASSERT_TRUE(kill_succeeded) << ef;
-    ASSERT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_TRUE(kill_succeeded) << ef;
+    EXPECT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_EQ(j->error(), KJob::KilledJobError);
 
 //    j->start();
 
@@ -283,8 +342,8 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 
     // Wait for the KJob to signal that it's finished.
     // Won't get a result() signal here because it's kill()'ed Quietly.
-    EXPECT_TRUE(kjob_finished_spy.wait());
-    EXPECT_FALSE(kjob_result_spy.wait());
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 0);
 }
 
 #include "AMLMJobTests.moc"

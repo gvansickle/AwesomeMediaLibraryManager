@@ -57,13 +57,13 @@ void CumulativeStatusWidget::slot_number_of_jobs_changed(long long new_num_jobs)
     if(new_num_jobs > 0)
     {
 M_WARNING("TODO: Propagate job messages here");
-        m_current_activity_label->setText(tr("Running"));
+        m_job_title_label->setText(tr("Running"));
     }
     else
     {
-        m_current_activity_label->setText(tr("Idle"));
+        m_job_title_label->setText(tr("Idle"));
     }
-    m_text_status_label->setText(tr("%1").arg(new_num_jobs));
+    m_info_message_label->setText(tr("%1").arg(new_num_jobs));
 }
 
 void CumulativeStatusWidget::SLOT_SubjobDisplayVisible(bool visible)

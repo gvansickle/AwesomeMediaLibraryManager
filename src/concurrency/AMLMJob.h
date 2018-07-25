@@ -37,14 +37,15 @@
 #include <KJobUiDelegate>
 
 // Ours
+#include <src/future/function_traits.hpp>
+#include <src/future/static_if.hpp>
 #include "utils/UniqueIDMixin.h"
 #include "utils/ConnectHelpers.h"
-#include "concurrency/function_traits.hpp"
 #include "concurrency/ExtAsync.h"
 
 
-/// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 class AMLMJob;
+/// Use the AMLMJobPtr alias to pass around refs to AMLMJob-derived jobs.
 using AMLMJobPtr = QPointer<AMLMJob>;
 
 Q_DECLARE_METATYPE(AMLMJobPtr);
@@ -264,7 +265,7 @@ protected:
     /// We can then call virtual functions in subsequent constructors.
     /// @note Don't try that at home.
     ///
-    /// @note KJob's constructor has this same signature.
+    /// @note KJob's constructor has this same signature, in particular nonconst pointer to parent.
     explicit AMLMJob(QObject* parent = nullptr);
 
 public:
@@ -326,33 +327,26 @@ public:
 
     virtual QFutureInterfaceBase& get_extfuture_ref() = 0;
 
-    /// @todo experimental
-//    /*private:*/ QFutureWatcher<void>* m_extfuture_watcher = new QFutureWatcher<void>();
-//    virtual QFutureWatcher<void>* get_extfuture_ptr_w() { return m_extfuture_watcher; }
-
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
 
     /**
      * .then(ctx, continuation) -> void
      */
-    template <typename ContextType, typename Func>
-    void then(ContextType&& ctx, Func&& f)
+    template <typename ContextType, typename Func,
+              REQUIRES(std::is_base_of_v<QObject, ContextType>)>
+    void then(const ContextType *ctx, Func&& f)
     {
-//        Q_ASSERT(!m_possible_delete_later_pending);
-
-        qDb() << this->objectName() << "ENTERED THEN";
+        qDb() << "ENTERED THEN";
 
 //        QPointer<KJob> pkjob = kjob;
 
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
-        connect_or_die(this, &AMLMJob::result, ctx, [=](KJob* kjob){
+        connect(this, &KJob::result, ctx, [=](KJob* kjob){
 
-//            Q_ASSERT(!m_possible_delete_later_pending);
+//            qDbo() << "IN THEN CALLBACK, KJob:" << kjob;
 
-/// @todo M_WARNING("ARE WE ONE LEVEL NESTED TOO DEEPLY HERE?");
-qDb() << objectName() << "IN THEN CALLBACK, KJob:" << kjob;
             // Need to determine if the result was success, error, or cancel.
             // In the latter two cases, we need to make sure any chained AMLMJobs are either
             // cancelled (or notified of the failure?).
@@ -466,7 +460,7 @@ protected:
     /**
      * Call this at the bottom of your runFunctor() override.
      * Handles pause/resume internally.
-     * @return true if runFunctor() loop should break.
+     * @return true if loop in runFunctor() should break due to being canceled.
      */
     bool functorHandlePauseResumeAndCancel();
 
@@ -575,7 +569,6 @@ protected Q_SLOTS:
 
     void SLOT_extfuture_finished();
     void SLOT_extfuture_canceled();
-    void SLOT_extfuture_aboutToShutdown();
 
     void SLOT_kjob_finished(KJob* kjob);
     void SLOT_kjob_result(KJob* kjob);
@@ -586,6 +579,15 @@ protected Q_SLOTS:
 
 private:
     Q_DISABLE_COPY(AMLMJob)
+
+private Q_SLOTS:
+
+    /**
+     * Connected to the App's aboutToShutdown() signal in the constructor.
+     * Simply calls kill().
+     * Similar to mechanism in KDevelop's ::ICore & ::ImportProjectJob.
+     */
+    void SLOT_onAboutToShutdown();
 
 public:
 

@@ -124,6 +124,7 @@ set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
 # Collect all the project-common external link library targets into a single variable.
+set(INTERNAL_LINK_LIB_TARGETS amlm_src_future)
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIBS}
@@ -135,11 +136,13 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		verdigris_target
 		)
 
+
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
 	logic/Library.h
 	logic/LibraryEntry.h
+	logic/LibraryEntryLoaderJob.h
 	logic/LibraryEntryMimeData.h
 	logic/LibraryModel.h
 	logic/LibrarySortFilterProxyModel.h
@@ -155,6 +158,7 @@ set(HEADER_FILES
 	logic/SupportedMimeTypes.h
 	logic/dbmodels/CollectionDatabaseModel.h
 	logic/TrackMetadata.h
+	logic/dbmodels/EntityBase.h
 	utils/ActionHelpers.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
@@ -194,6 +198,7 @@ set(SOURCE_FILES
 	AMLMApp.cpp
 	logic/Library.cpp
 	logic/LibraryEntry.cpp
+	logic/LibraryEntryLoaderJob.cpp
 	logic/LibraryEntryMimeData.cpp
 	logic/LibraryModel.cpp
 	logic/LibrarySortFilterProxyModel.cpp
@@ -209,6 +214,7 @@ set(SOURCE_FILES
 	logic/SupportedMimeTypes.cpp
 	logic/dbmodels/CollectionDatabaseModel.cpp
 	logic/TrackMetadata.cpp
+	logic/dbmodels/EntityBase.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
@@ -251,7 +257,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/impl/ExtFuture_impl.hpp
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncTask.h
-	concurrency/function_traits.hpp
 	concurrency/AMLMJob.h
 	concurrency/AMLMCompositeJob.h
 	concurrency/DirectoryScanJob.h
@@ -260,7 +265,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
-	concurrency/function_traits.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
 	concurrency/ReportingRunner.cpp
@@ -279,6 +283,10 @@ add_subdirectory(gui)
 # *.ui files.
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
+# The Future
+add_library(amlm_src_future EXCLUDE_FROM_ALL "")
+include(future/CMakeLists.txt)
+
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
@@ -296,6 +304,8 @@ prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a rea
 # Build the ultimate list of lists.
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 	${amlm_gui_SRCS} ### @todo Make this a real target.
+	${amlm_gui_widget_SRCS} ### @todo
+#	${amlm_src_future_SRCS}
 	)
 
 # Sets the icon on Windows and OSX.
@@ -395,14 +405,16 @@ set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
+	concurrency/tests/ExtFutureTests.cpp
 	concurrency/tests/AMLMJobTests.cpp)
 list(APPEND AMLM_HEADER_FILES_TEST
 	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
+	concurrency/tests/ExtFutureTests.h
 	concurrency/tests/AMLMJobTests.h)
 
-add_executable(${TEST_EXE_TARGET})
+add_executable(${TEST_EXE_TARGET} "")
 target_sources(${TEST_EXE_TARGET}
 	PUBLIC
 	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}

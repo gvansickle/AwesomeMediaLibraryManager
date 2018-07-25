@@ -39,7 +39,7 @@ LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
     setObjectName(uniqueQObjectName());
 
     // Set our capabilities.
-    setCapabilities(KJob::Capability::Killable /*| KJob::Capability::Suspendable*/);
+    setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 }
 
 LibraryRescannerJob::~LibraryRescannerJob()
@@ -55,8 +55,23 @@ LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent)
     return retval;
 }
 
+LibraryRescannerJobPtr LibraryRescannerJob::make_job(QObject *parent, LibraryRescannerMapItem item_to_refresh,
+                                                     const LibraryModel* current_libmodel)
+{
+    auto retval = new LibraryRescannerJob(parent);
+
+    QVector<VecLibRescannerMapItems> vec_vec_items_to_refresh;
+    VecLibRescannerMapItems vec_items_to_refresh;
+    vec_items_to_refresh.push_back(item_to_refresh);
+    vec_vec_items_to_refresh.push_back(vec_items_to_refresh);
+
+    retval->setDataToMap(vec_vec_items_to_refresh, current_libmodel);
+
+    return retval;
+}
+
 void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan,
-                                                         LibraryModel* current_libmodel)
+                                                        const LibraryModel* current_libmodel)
 {
     m_items_to_rescan = items_to_rescan;
     m_current_libmodel = current_libmodel;
@@ -77,23 +92,26 @@ void LibraryRescannerJob::runFunctor()
     setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
 
     // Make the internal connection to the SLOT_processReadyResults() slot.
-    connect(this, &LibraryRescannerJob::processReadyResults, m_current_libmodel, &LibraryModel::SLOT_processReadyResults);
+    connect(this, &LibraryRescannerJob::processReadyResults,
+            m_current_libmodel, qOverload<MetadataReturnVal>(&LibraryModel::SLOT_processReadyResults));
 
     qulonglong num_items = 0;
     for(QVector<VecLibRescannerMapItems>::const_iterator i = m_items_to_rescan.cbegin(); i != m_items_to_rescan.cend(); ++i)
     {
-        if(wasCancelRequested())
-        {
-            // We were told to cancel.
-            break;
-        }
-
         qDb() << "Item number:" << num_items;
         MetadataReturnVal a = this->refresher_callback(*i);
         Q_EMIT processReadyResults(a);
         num_items++;
 
         setProcessedAmountAndSize(KJob::Unit::Files, num_items);
+
+        if(functorHandlePauseResumeAndCancel())
+        {
+            // We've been cancelled.
+            qIno() << "CANCELLED";
+            m_ext_future.reportCanceled();
+            break;
+        }
     }
 
     // We've either completed our work or been cancelled.

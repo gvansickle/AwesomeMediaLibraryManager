@@ -28,12 +28,14 @@
 // KF5
 #include <KConfigGroup>
 
-/// Global pointer to the AMLMApp singleton.
-#define amlmApp (static_cast<AMLMApp*>(AMLMApp::instance()))
 
+/**
+ * qApp-alike macro for getting a pointer to the AMLMApp singleton.
+ */
+#define amlmApp AMLMApp::instance()
 
-/*
- *
+/**
+ * The AMLM Application singleton.
  */
 class AMLMApp: public QApplication
 {
@@ -41,16 +43,51 @@ class AMLMApp: public QApplication
 
     using BASE_CLASS = QApplication;
 
+Q_SIGNALS:
+    /// Emitted upon reception of aboutToQuit() signal.
+	void aboutToShutdown();
+
 public:
-    explicit AMLMApp(int& argc, char *argv[]);
+    /**
+     * Ordinarily would be a protected member for a singleton.
+     * Passed in params may be modified by QApplication.
+     *
+     * @param argc  argc passed into main().
+     * @param argv  argv passed into main().
+     */
+    explicit AMLMApp(int& argc, char **argv);
 	~AMLMApp() override;
 
-    static AMLMApp* instance() { return dynamic_cast<AMLMApp*>( qApp ); }
+    static AMLMApp* instance();
+
+    /**
+     * @return true if this app is in the process of shutting down.
+     */
+    bool shuttingDown() const;
 
     void KDEOrForceBreeze(KConfigGroup group);
 
-private:
+public Q_SLOTS:
+    /**
+     * Connected to this app's aboutToQuit() signal.
+     */
+    void SLOT_onAboutToQuit();
 
+protected:
+
+    /**
+     * Called from the SLOT_onAboutToQuit() slot to handle the shutdown of app subcomponents.
+     */
+    void perform_controlled_shutdown();
+
+private:
+    Q_DISABLE_COPY(AMLMApp)
+
+    /// The AMLMApp singleton.
+    static AMLMApp* m_the_instance;
+
+    bool m_shutting_down {false};
+    bool m_controlled_shutdown_complete {false};
 };
 
 #endif /* SRC_AMLMAPP_H_ */

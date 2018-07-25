@@ -21,15 +21,10 @@
 
 #include "LibraryModel.h"
 
-#include "LibraryRescanner.h"
-#include "LibraryRescannerMapItem.h"
-#include "LibraryEntryMimeData.h"
+// Stc C++
 
+// Qt5
 #include <QtConcurrent>
-
-#include "utils/StringHelpers.h"
-#include "utils/DebugHelpers.h"
-
 #include <QFileDevice>
 #include <QStandardPaths>
 #include <QIcon>
@@ -41,25 +36,29 @@
 #include <QDir>
 #include <QFileIconProvider>
 
-////////////////////////////////////////////////////////////////////////
-#include <QSqlError>
-#include <QSqlDatabase>
-#include <QSqlQuery>
-#include <QSqlRecord>
-#include <QSqlRelationalTableModel>
-#include <QSqlRecord>
-#include <QMessageBox>
-#include <QSqlField>
-#include <logic/dbmodels/CollectionDatabaseModel.h>
-//////////////////////////////////////////////////////////////////////////
-
+// Ours
+#include <utils/RegisterQtMetatypes.h>
+#include "LibraryRescanner.h"
+#include "LibraryRescannerJob.h"
+#include "LibraryRescannerMapItem.h"
+#include "LibraryEntryMimeData.h"
+#include "utils/StringHelpers.h"
+#include "utils/DebugHelpers.h"
 #include "Library.h"
+#include "LibraryEntryLoaderJob.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
-
 #include "logic/ModelUserRoles.h"
 
 
-LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_library()
+AMLM_QREG_CALLBACK([](){
+    qIn() << "Registering LibraryModel types";
+    qRegisterMetaType<VecOfUrls>();
+    qRegisterMetaType<VecOfLEs>();
+    qRegisterMetaType<VecOfPMIs>();
+    });
+
+
+LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 {
 	// App-specific cache directory.
 	m_cachedir = QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
@@ -72,7 +71,7 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_libr
 
 	// Set up the columns.
 	m_columnSpecs.clear();
-	m_columnSpecs.push_back({SectionID::Status, "?", QStringList("status_icon"), true});
+    m_columnSpecs.push_back({SectionID::Status, "?", QStringList("status_icon"), true});
 	m_columnSpecs.push_back({SectionID::Title, "Title", QStringList("track_name")});
 	m_columnSpecs.push_back({SectionID::Artist, "Artist", QStringList({"track_performer", "track_artist", "album_artist"})});
 	m_columnSpecs.push_back({SectionID::Album, "Album", QStringList("album_name")});
@@ -85,22 +84,10 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent), m_libr
 	m_IconOk = QVariant(QIcon::fromTheme("audio-x-generic"));
 	m_IconUnknown = QVariant(QIcon::fromTheme("dialog-question"));
 
-	/// @todo Move these somewhere?
-	qRegisterMetaType<VecOfUrls>("VecOfUrls");
-	qRegisterMetaType<VecOfLEs>("VecOfLEs");
-	qRegisterMetaType<VecOfPMIs>("VecOfPMIs");
-
 	// Create the asynchronous rescanner.
 	m_rescanner = new LibraryRescanner(this);
 
 	// Connections.
-
-    //////// EXP
-    m_coll_db_model = new CollectionDatabaseModel(this);
-    m_coll_db_model->open_db_connection(QUrl("dummy"));
-    m_coll_db_model->create_db_tables();
-    m_sql_model = m_coll_db_model->get_rel_table(this);//new QSqlRelationalTableModel(this, db_conn);
-
 }
 
 LibraryModel::~LibraryModel()
@@ -190,6 +177,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 //	Qt::ItemDataRole id_role = Qt::ItemDataRole(role);
 //	qDebug() << "index:" << index.isValid() << index.row() << index.column() << "role:" << id_role;
 
+    // Handle invalid indexes.
 	if(!index.isValid())
 	{
 		if(role == Qt::UserRole)
@@ -202,6 +190,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 			return QVariant();
 		}
 	}
+
+    // index is valid.
 
 	if(role == ModelUserRoles::PointerToItemRole)
 	{
@@ -254,8 +244,9 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 	{
 		auto item = getItem(index);
 		auto sec_id = getSectionFromCol(index.column());
-		if(item->isPopulated())
+        if(item->isPopulated())
 		{
+            // Item has data.
 			QVariant metaentry;
 			if(sec_id == SectionID::Status)
 			{
@@ -308,20 +299,72 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 				return QVariant(metaentry);
 			}
 		}
-		else
+        else
 		{
 			// Entry hasn't been populated yet.
+            auto pending_asyn_req = m_pending_async_item_loads.find(item);
+            if(pending_asyn_req != m_pending_async_item_loads.cend())
+            {
+                // Already an outstanding request.
+                qDbo() << "Async load already pending for item:" << item;
+            }
+            else if(1)
+            {
+                // Start an async job to read the data for this entry.
+
+                qDb() << "STARTING ASYNC LOAD";
+                auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
+                m_pending_async_item_loads[item] = load_entry_job;
+                load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
+                	AMLM_ASSERT_IN_GUITHREAD();
+                    if(loader_kjob->error())
+                    {
+                        // Error.
+                        qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << loader_kjob->error() << ":" << loader_kjob->errorText() << ":" << loader_kjob->errorString();
+                        // Report error via uiDelegate()
+                        /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
+                        /// every time there's an error.
+                        //                auto uidelegate = kjob->uiDelegate();
+                        //                Q_CHECK_PTR(uidelegate);
+                        //                uidelegate->showErrorMessage();
+                    }
+                    else
+                    {
+                        // Succeeded, update the model.
+                        qIno() << "ASYNC LOAD COMPLETE:" << loader_kjob;
+                        auto num_results = loader_kjob->get_extfuture_ref().resultCount();
+                        qIno() << "ASYNC LOAD INFO: ExtFuture state:" << loader_kjob->get_extfuture_ref().state()
+                               << "RESULTCOUNT:" << num_results;
+
+                        if(num_results == 0)
+                        {
+                            // No results.
+                            qWro() << "NO RESULTS, ERROR:" << loader_kjob->error();
+                        }
+                        else
+                        {
+                            LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture_ref().get()[0];
+                            Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
+                        }
+                        m_pending_async_item_loads.erase(item);
+                    }
+                });
+                load_entry_job->start();
+            }
+
+            ////////////////
+
 			if(role == Qt::DisplayRole)
 			{
 				if(sec_id == SectionID::Length)
 				{
 					return QVariant::fromValue(Fraction("0/1"));
 				}
-				return QVariant("?");
+                return QVariant("?");
 			}
 			else if( role == Qt::ToolTipRole)
 			{
-				return QVariant(item->getUrl());
+                return QVariant(item->getUrl());
 			}
 		}
 	}
@@ -418,13 +461,13 @@ std::shared_ptr<LibraryEntry> LibraryModel::getItem(const QModelIndex& index) co
 		}
 		else
 		{
-			qWarning() << "NULL internalPointer, returning 'None' item";
+            qWro() << "NULL internalPointer, returning 'None' item";
 			return nullptr;
 		}
 	}
 	else
 	{
-		qWarning() << "Invalid index, returning 'None' item";
+        qWro() << "Invalid index, returning 'None' item";
 		return nullptr;
 	}
 }
@@ -574,7 +617,7 @@ int LibraryModel::getColFromSection(SectionID section_id) const
 			return i;
 		}
 	}
-	qCritical() << "No such section:" << (int)section_id;
+    qCritical() << "No such section:" << static_cast<int>(section_id);
 	return -1;
 }
 
@@ -743,11 +786,11 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 		}
 	}
 
-	if(row_items.size() > 0)
+    if(!row_items.empty())
 	{
 		qDebug() << QString("Returning %1 row(s)").arg(row_items.size());
 		LibraryEntryMimeData* e = new LibraryEntryMimeData();
-		e->setData(mimeTypes()[0], QByteArray());
+        e->setData(*mimeTypes().cbegin(), QByteArray());
 		e->m_lib_item_list = row_items;
 		e->setUrls(urls);
 		return e;
@@ -758,43 +801,9 @@ QMimeData* LibraryModel::mimeData(const QModelIndexList& indexes) const
 }
 
 
-void LibraryModel::onIncomingFilename(QString filename)
+void LibraryModel::SLOT_onIncomingFilename(QString filename)
 {
-//    //////// EXP
-//    open_db_connection(QUrl("dummy"));
-//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
-//    create_db_tables(&db_conn);
-//    auto* model = new QSqlRelationalTableModel(this, db_conn);
-//    model->setTable("DirScanResults");
-//    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-//    model->select();
-//    static int index = 0;
-#if 0
-    // Get an empty record from the model.
-    QSqlRecord record = m_sql_model->record();
-    qDb() << "EMPTY RECORD:" << record;
-    Q_ASSERT(record.count() == 2);
-//    QSqlField id_field("id", QVariant::Type::Int);
-//    id_field.setGenerated(false);
-    // Remove the id/primary key so it gets auto-incremented by the DB.
-    record.remove(0);
-//    QSqlField url_field("url", QVariant::Type::String);
-//    record.append(id_field);
-//    record.setGenerated("id", false);
-//    record.setValue("id", index);
-//    index++;
-//    record.append(url_field);
-    record.setValue("url", QUrl::fromLocalFile(filename));
-    qDb() << "Field Count:" << record.count();
-//    Q_ASSERT(record.count() == 2);
-    bool status = m_sql_model->insertRecord(-1, record);
-    Q_ASSERT_X(status, "", "INSERT FAILED");
-    status = m_sql_model->submitAll();
-    Q_ASSERT_X(status, "", "SUBMIT FAILED");
-#endif
-    //////// EXP
-
-	auto new_entry = std::shared_ptr<LibraryEntry>(LibraryEntry::fromUrl(filename)[0]);
+    auto new_entry = LibraryEntry::fromUrl(filename);
 	qDb() << "URL:" << new_entry->getUrl();
 	appendRow(new_entry);
 }
@@ -808,7 +817,7 @@ void LibraryModel::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 
     if(lritem_vec.m_num_tracks_found == 0)
     {
-        qCritical() << "RESULT WAS EMPTY";
+        qCro() << "RESULT WAS EMPTY";
     }
 
     if(lritem_vec.m_num_tracks_found > 1
@@ -854,13 +863,75 @@ void LibraryModel::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
     }
 }
 
-void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, LibraryEntry* item)
+void LibraryModel::SLOT_processReadyResults(LibraryEntryLoaderJobResult loader_results)
+{
+    // We got one of ??? things back:
+    // - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..
+    // - A single pindex and more than one LibraryEntry*, the result of the first scan after the file was found.
+    // - Multiple pindexs and LibraryEntry*'s.  The result of a multi-track file rescan.
+
+    if(loader_results.m_num_tracks_found == 0)
+    {
+        // Found nothing, error out the entry.
+        qCro() << "RESULT WAS EMPTY";
+        /// @todo
+        Q_ASSERT(0);
+    }
+
+    /// @todo Eventually can go away.
+    AMLM_ASSERT_EQ(loader_results.m_new_libentries.size(), loader_results.m_num_tracks_found);
+
+    if(loader_results.m_new_libentries.size() > 1)
+    {
+        // It's a single file/multi-track.
+        SLOT_onIncomingPopulateRowWithItems_Multiple(loader_results.m_original_pindex, loader_results.m_new_libentries);
+    }
+    else if(loader_results.m_new_libentries.size() == 1)
+    {
+        // It's a single file/single track.
+        SLOT_onIncomingPopulateRowWithItems_Single(loader_results.m_original_pindex, loader_results.m_new_libentries[0]);
+
+//        for(int i=0; i<loader_results.m_num_tracks_found; ++i)
+//        {
+//            if (!loader_results.m_original_pindex.isValid())
+//            {
+//                qWarning() << "Invalid persistent index, ignoring update";
+//                Q_ASSERT(0);
+//                return;
+//            }
+
+//            // None of the returned entries should be null.
+//            Q_ASSERT(loader_results.m_new_libentries[i] != nullptr);
+
+//            qDebug() << "Replacing entry"; // << item->getUrl();
+//            // item is a single song which has its metadata populated.
+//            // Reconstruct the QModelIndex we sent out.
+//            auto initial_row_index = QModelIndex(loader_results.m_original_pindexes[i]);
+//            auto row = initial_row_index.row();
+//            qDebug() << QString("incoming single item, row %1").arg(row);
+//            // Metadata's been populated.
+//            setData(initial_row_index, QVariant::fromValue(loader_results.m_new_libentries[i]));
+//        }
+    }
+    else
+    {
+        // Not sure what we got.
+        qCritical() << "pindexes/libentries/num_new_entries:" << loader_results.m_original_pindex
+                                                              << loader_results.m_new_libentries.size();
+                                                              // lritem_vec.m_new_libentries;
+        Q_ASSERT_X(0, "Scanning", "Not sure what we got");
+    }
+}
+
+void LibraryModel::SLOT_onIncomingPopulateRowWithItems_Single(QPersistentModelIndex pindex, std::shared_ptr<LibraryEntry> item)
 {
 	// item is a single song which has its metadata populated.
 	// Reconstruct the QModelIndex we sent out.
-	auto initial_row_index = QModelIndex(pindex);
-//	qDebug() << QString("incoming single item, row %1").arg(row);
-	// Metadata's been populated.
+    Q_ASSERT(pindex.isValid());
+    Q_ASSERT(pindex.model() == this);
+    const QModelIndex& initial_row_index = pindex;
+
+    // Metadata's been populated.
 	setData(initial_row_index, QVariant::fromValue(item));
 //	setData(initial_row_index, QVariant::fromValue(item), ModelUserRoles::PointerToItemRole);
 
@@ -957,6 +1028,8 @@ void LibraryModel::deleteCache()
 
 void LibraryModel::connectSignals()
 {
+    connect_or_die(this, &LibraryModel::SIGNAL_selfSendReadyResults,
+                   this, qOverload<LibraryEntryLoaderJobResult>(&LibraryModel::SLOT_processReadyResults));
 	connect(this, &LibraryModel::startFileScanSignal, m_rescanner, &LibraryRescanner::startAsyncDirectoryTraversal);
 }
 
@@ -967,14 +1040,14 @@ void LibraryModel::disconnectIncomingSignals()
 void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
-	qDebug() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
+    qDbo() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
 	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
-static QString table_row(std::string s1, std::string s2)
+static QString table_row(const std::string& s1, const std::string& s2)
 {
 	QString retval = "<tr>";
-	for(auto s : {s1, s2})
+    for(const auto& s : {s1, s2})
 	{
 		retval += "<td>" + toqstr(s) + "</td>";
 	}
@@ -1031,7 +1104,7 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
             else
             {
                 // It's the first entry or it's from a different file.  Send out the previous rescan item(s) and start a new batch.
-                if(multientry.size() > 0)
+                if(!multientry.empty())
                 {
                     items_to_rescan.append(multientry);
                     qDebug() << "PUSHING MULTIENTRY, SIZE:" << multientry.size();
@@ -1042,7 +1115,7 @@ QVector<VecLibRescannerMapItems> LibraryModel::getLibRescanItems()
             last_entry = item;
         }
 
-        if(multientry.size() > 0)
+        if(!multientry.empty())
         {
             // It wasn't cleared by the last iteration above, so we have to append it here.
             items_to_rescan.append(multientry);

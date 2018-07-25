@@ -25,9 +25,14 @@
 
 #include "function_traits.hpp"
 
+// Std C++
 #include <utility>
 
-#include "utils/DebugHelpers.h"
+// Std C++ backfill.
+#include <future/future_type_traits.hpp>
+
+// Ours
+#include <utils/DebugHelpers.h>
 
 namespace function_traits_impl
 {
@@ -51,7 +56,7 @@ namespace function_traits_impl
 		public:
 			ft_test2_class* ft_test2a_member_fn(double d) { return this; };
 
-			void* ft_test2a_const_member_fn() const { return (void*)this; };
+            void* ft_test2a_const_member_fn() const { return (void*)this; };
 
 			void ft_test2b_returns_void(void) { volatile int a; a = 2; };
 		};

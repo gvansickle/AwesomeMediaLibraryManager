@@ -74,23 +74,16 @@ void RegisterQtMetatypes()
 	// Cast std::shared_ptr<PlaylistModelItem> to std::shared_ptr<LibraryEntry>.
 	auto PlaylistModelItemToLibraryEntry = [](const std::shared_ptr<PlaylistModelItem> plmi)
 		{
+			// dynamic_pointer_cast<> takes care of keeping the shared ptr ref counts correct.
 			return std::dynamic_pointer_cast<LibraryEntry>(plmi);
 		};
 	QMetaType::registerConverter< std::shared_ptr<PlaylistModelItem>, std::shared_ptr<LibraryEntry> >(PlaylistModelItemToLibraryEntry);
 
-	// From #include <logic/LibraryRescanner.h>
-	qRegisterMetaType<MetadataReturnVal>();
-	qRegisterMetaType<QFuture<MetadataReturnVal>>();
-	qRegisterMetaType<VecLibRescannerMapItems>("VecLibRescannerMapItems");
-
 	// #include <logic/LibraryEntryMimeData.h>
 	qRegisterMetaType<LibraryEntryMimeData*>();
 
-//	qRegisterMetaType<AMLMJobPtr>();
-
 	qRegisterMetaType<LibraryRescannerMapItem>();
 	qRegisterMetaType<VecLibRescannerMapItems>();
-//	qRegisterMetaTypeStreamOperators<LibraryRescannerMapItem>("LibraryRescannerMapItem");
 }
 
 
