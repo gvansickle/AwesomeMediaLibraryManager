@@ -156,6 +156,12 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
     m_tool_tip_label->setForegroundRole(QPalette::ToolTipText);
 
 
+    // QVBoxLayout for the description text.
+    auto desc_vlayout = new QVBoxLayout();
+    desc_vlayout->setContentsMargins(0, 0, 0, 0);
+    desc_vlayout->addWidget(m_job_title_label);
+    desc_vlayout->addWidget(m_info_message_label);
+
     // The QVBoxLayout for the progress bar and info text.
     auto prog_vlayout = new QVBoxLayout();
     prog_vlayout->setContentsMargins(0, 0, 0, 0);
@@ -165,8 +171,7 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
     // The main layout.
     auto layout = new QHBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(m_job_title_label);
-    layout->addWidget(m_info_message_label);
+    layout->addLayout(desc_vlayout);
     layout->addLayout(prog_vlayout);
     layout->addWidget(m_pause_resume_button);
     layout->addWidget(m_cancel_button);
@@ -197,11 +202,11 @@ void BaseActivityProgressStatusBarWidget::showTotals()
 
             //~ singular %n folder
             //~ plural %n folders
-            tmps = QCoreApplication::translate("KWidgetJobTracker", "%n folder(s)", "", totalDirs) + "   ";
+            tmps = tr("%n folder(s)", "", totalDirs) + "   ";
         }
         //~ singular %n file
         //~ plural %n files
-        tmps += QCoreApplication::translate("KWidgetJobTracker", "%n file(s)", "", totalFiles);
+        tmps += tr("%n file(s)", "", totalFiles);
 
         // Set the resulting string.
         m_info_message_label->setText(tmps);
@@ -223,10 +228,9 @@ void BaseActivityProgressStatusBarWidget::updateMainTooltip()
 
     tooltip_text = tr("Async Job: %1<br/>").arg(m_job_title_label->text())
             + tr("Current Status: %1<br/>").arg(m_info_message_label->text())
-            + tr("Speed: %1<br/>").arg("N/A")
+            + tr("Speed: %1<br/>").arg(m_speed_label->text())
                ;
 
-//    m_tool_tip_label->setText(tooltip_text);
     m_tool_tip_label->setText(tooltip_text);
 
 //    QToolTip::showText(pos, tooltip, this, QRect());
