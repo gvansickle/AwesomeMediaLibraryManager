@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QObject>
 #include <QUrl>
 class QSqlDatabase;

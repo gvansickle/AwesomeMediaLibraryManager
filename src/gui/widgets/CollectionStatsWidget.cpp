@@ -19,9 +19,35 @@
 
 #include "CollectionStatsWidget.h"
 
+#include <type_traits>
+
 #include <QLabel>
 
 CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 {
-    new QLabel(tr("Hello"), this);
+    // No layout, specify how to size this widget's children.
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+//    m_widget_text = new QLabel(tr("Hello"), this);
+    m_widget_text = new QTextEdit(tr("Hello"), this);
+    m_widget_text->setReadOnly(true);
+//    m_widget_text->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_sources_model_watcher = new ModelChangeWatcher(this);
+
+    connect(m_sources_model_watcher, &ModelChangeWatcher::modelHasRows, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);
+}
+
+void CollectionStatsWidget::setModel(QPointer<LibraryModel> model)
+{
+    m_sources_model = model;
+    m_sources_model_watcher->setModelToWatch(m_sources_model);
+}
+
+void CollectionStatsWidget::SLOT_modelChanged()
+{
+    // Model changed, update stats.
+    auto num_tracks = m_sources_model->rowCount();
+    QString new_txt = "<h3>Collection Stats</h3>";
+    new_txt += QString("Number of tracks: %1").arg(num_tracks);
+    m_widget_text->setText(new_txt);
 }

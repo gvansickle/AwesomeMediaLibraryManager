@@ -20,7 +20,16 @@
 #ifndef COLLECTIONSTATSWIDGET_H
 #define COLLECTIONSTATSWIDGET_H
 
+// Qt5
+#include <QLabel>
+#include <QPointer>
+#include <QStandardItemModel>
+#include <QTextEdit>
 #include <QWidget>
+
+// Ours
+#include <logic/proxymodels/ModelChangeWatcher.h>
+#include <logic/LibraryModel.h>
 
 class CollectionStatsWidget : public QWidget
 {
@@ -28,9 +37,21 @@ class CollectionStatsWidget : public QWidget
 public:
     explicit CollectionStatsWidget(QWidget *parent = nullptr);
 
+    void setModel(QPointer<LibraryModel> model);
+
 Q_SIGNALS:
 
 public Q_SLOTS:
+
+    void SLOT_modelChanged();
+
+protected:
+
+//    QLabel* m_widget_text;
+    QTextEdit* m_widget_text;
+    QPointer<LibraryModel> m_sources_model;
+
+    ModelChangeWatcher* m_sources_model_watcher { nullptr };
 };
 
 #endif // COLLECTIONSTATSWIDGET_H

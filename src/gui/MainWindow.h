@@ -46,6 +46,8 @@ class QStandardItemModel;
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
+#include <gui/widgets/CollectionStatsWidget.h>
+
 class KJob;
 namespace KIO
 {
@@ -504,6 +506,7 @@ public:
 	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
     QDockWidget* m_collection_stats_dock_widget;
+    CollectionStatsWidget* m_collection_stats_widget;
 
 private:
 
