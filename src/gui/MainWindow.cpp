@@ -89,6 +89,7 @@
 // For KF5 KConfig infrastructure.
 #include <AMLMSettings.h>
 #include <gui/settings/SettingsDialog.h>
+#include <gui/widgets/CollectionStatsWidget.h>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -962,6 +963,13 @@ void MainWindow::createDockWidgets()
     // Create the Library/Playlist dock widget.
     m_collection_dock_widget = new CollectionDockWidget(tr("Media Sources"), this);
 	addDockWidget(Qt::LeftDockWidgetArea, m_collection_dock_widget);
+
+    // Create the Collection Stats dock widget.
+    m_collection_stats_dock_widget = new QDockWidget(tr("Collection Stats"), this);
+    m_collection_stats_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    auto collection_stats_widget = new CollectionStatsWidget(m_collection_stats_dock_widget);
+    m_collection_stats_dock_widget->setWidget(collection_stats_widget);
+    addDockWidget(Qt::LeftDockWidgetArea, m_collection_stats_dock_widget);
 
     // Create the metadata dock widget.
     m_metadataDockWidget = new MetadataDockWidget(tr("Metadata Explorer"), this);

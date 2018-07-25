@@ -19,7 +19,9 @@
 
 #include "CollectionStatsWidget.h"
 
+#include <QLabel>
+
 CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 {
-
+    new QLabel(tr("Hello"), this);
 }

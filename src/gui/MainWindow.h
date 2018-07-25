@@ -503,6 +503,7 @@ public:
     /// Docks
 	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
+    QDockWidget* m_collection_stats_dock_widget;
 
 private:
 
