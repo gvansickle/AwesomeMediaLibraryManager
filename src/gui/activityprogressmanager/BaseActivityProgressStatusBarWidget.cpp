@@ -577,7 +577,7 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 		else
 		{
 			// total size is not known
-            m_speed_label->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
+            m_speed_label->setText(tr("%1/s", "speed in bytes per second").arg(speedStr));
 		}
 	}
 
