@@ -203,6 +203,9 @@ public Q_SLOTS:
     void onPaste();
     void onSelectAll();
     void onDelete();
+    void SLOT_find();
+    void SLOT_find_next();
+    void SLOT_find_prev();
     /// @}
 
 
@@ -433,6 +436,9 @@ private:
     QAction *m_act_paste;
     QAction *m_act_delete;
     QAction *m_act_select_all;
+    QAction* m_act_find;
+    QAction* m_act_find_next;
+    QAction* m_act_find_prev;
     /// @}
 
 	/// View actions.

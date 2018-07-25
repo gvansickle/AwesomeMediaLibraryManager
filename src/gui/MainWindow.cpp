@@ -78,6 +78,7 @@
 #include <KXmlGui/KEditToolBar>
 
 /// Ours
+#include <src/gui/actions/StandardActions.h>
 #include "Experimental.h"
 #include "FilterWidget.h"
 
@@ -605,6 +606,12 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
 	connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
 	addAction("select_all", m_act_select_all);
+
+    // Find
+//    m_ab_find_actions = new ActionBundle(ac);
+    m_act_find = StandardActions::find(this, &MainWindow::SLOT_find, ac);
+    m_act_find_next = StandardActions::findNext(this, &MainWindow::SLOT_find_next, ac);
+    m_act_find_prev = StandardActions::findPrev(this, &MainWindow::SLOT_find_prev, ac);
 }
 
 void MainWindow::createActionsView(KActionCollection *ac)
@@ -792,6 +799,9 @@ void MainWindow::createMenus()
 	m_ab_extended_edit_actions->appendToMenu(m_menu_edit);
 	// Let's see what this does, just for fun.
 	m_menu_edit->setTearOffEnabled(true);
+	m_menu_edit->addAction(m_act_find);
+	m_menu_edit->addAction(m_act_find_next);
+	m_menu_edit->addAction(m_act_find_prev);
 
     // Create the View menu.
 M_WARNING("TODO");
@@ -1911,7 +1921,22 @@ void MainWindow::onDelete()
 	if(child_treeview)
 	{
 		child_treeview->onDelete();
-	}
+    }
+}
+
+void MainWindow::SLOT_find()
+{
+
+}
+
+void MainWindow::SLOT_find_next()
+{
+
+}
+
+void MainWindow::SLOT_find_prev()
+{
+
 }
 
 void MainWindow::startSettingsDialog()

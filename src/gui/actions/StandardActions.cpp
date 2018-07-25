@@ -17,16 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gui/actions/StandardActions.h>
+#include "StandardActions.h"
 
-StandardActions::StandardActions()
-{
-	// TODO Auto-generated constructor stub
 
-}
-
-StandardActions::~StandardActions()
-{
-	// TODO Auto-generated destructor stub
-}
 

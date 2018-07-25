@@ -20,11 +20,21 @@
 #ifndef SRC_GUI_ACTIONS_STANDARDACTIONS_H_
 #define SRC_GUI_ACTIONS_STANDARDACTIONS_H_
 
-class StandardActions
-{
-public:
-	StandardActions();
-	virtual ~StandardActions();
-};
+#include <config.h>
+
+#if HAVE_KF501
+/// @link https://api.kde.org/frameworks/kconfigwidgets/html/namespaceKStandardAction.html#a741bca99a57745c202717fa273bc7f9b
+#include <KStandardAction>
+
+namespace StandardActions = KStandardAction;
+
+#else
+
+// We'll roll our own.
+/// @todo
+
+#endif // HAVE_KF501
+
+
 
 #endif /* SRC_GUI_ACTIONS_STANDARDACTIONS_H_ */
