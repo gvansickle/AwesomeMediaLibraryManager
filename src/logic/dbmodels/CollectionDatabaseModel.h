@@ -35,7 +35,7 @@ class CollectionDatabaseModel : public QObject
 {
 public:
     CollectionDatabaseModel(QObject *parent);
-	virtual ~CollectionDatabaseModel();
+     ~CollectionDatabaseModel() override;
 
     bool open_db_connection(QUrl db_file);
 

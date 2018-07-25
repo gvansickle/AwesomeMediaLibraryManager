@@ -31,7 +31,7 @@ CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 //    m_widget_text = new QLabel(tr("Hello"), this);
     m_widget_text = new QTextEdit(tr("Hello"), this);
     m_widget_text->setReadOnly(true);
-//    m_widget_text->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_widget_text->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_sources_model_watcher = new ModelChangeWatcher(this);
 
     connect(m_sources_model_watcher, &ModelChangeWatcher::modelHasRows, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);

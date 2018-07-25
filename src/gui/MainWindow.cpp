@@ -733,9 +733,8 @@ M_WARNING("TODO");
     }
 
 	// List toolbars.
-    m_menu_view->addSection(tr("Toolbars"));
-
 M_WARNING("/// @todo This doesn't work for unknown reasons.");
+//    m_menu_view->addSection(tr("Toolbars"));
 //    auto tbma = toolBarMenuAction();
 //    if(tbma != nullptr)
 //    {
@@ -746,7 +745,7 @@ M_WARNING("/// @todo This doesn't work for unknown reasons.");
 //        qWr() << "NULL toolBarMenuAction";
 //    }
 
-    m_menu_view->addSection(tr("Toolbars2"));
+    m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
     for(auto tb : tbs)
     {

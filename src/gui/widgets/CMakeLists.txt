@@ -19,21 +19,24 @@
 
 set(HEADER_FILES_GUI_WIDGETS
 	CollectionStatsWidget.h
+	CollectionView.h
 	PixmapLabel.h
 	PlayerControls.h
 	)
 set(SOURCE_FILES_GUI_WIDGETS
 	CollectionStatsWidget.cpp
+	CollectionView.cpp
 	PixmapLabel.cpp
 	PlayerControls.cpp
 	)
-# set(UI_FILES_GUI_WIDGETS
-# 	)
+set(UI_FILES_GUI_WIDGETS
+	CollectionView.ui
+ 	)
 
 # Prepend directory. 
 prepend_to_each(HEADER_FILES_GUI_WIDGETS "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_GUI_WIDGETS})
 prepend_to_each(SOURCE_FILES_GUI_WIDGETS "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_GUI_WIDGETS})
-# prepend_to_each(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+prepend_to_each(UI_FILES_GUI_WIDGETS "${CMAKE_CURRENT_LIST_DIR}/" ${UI_FILES_GUI_WIDGETS})
 
 #target_sources(widgets
 #	PUBLIC
