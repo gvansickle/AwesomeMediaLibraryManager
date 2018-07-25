@@ -77,14 +77,14 @@ void BaseActivityProgressStatusBarWidget::description(KJob *kjob, const QString 
     /// @todo Don't really have anywhere to put fields.
     Q_UNUSED(field1);
     Q_UNUSED(field2);
-    m_current_activity_label->setText(title);
+    m_job_title_label->setText(title);
 }
 
 void BaseActivityProgressStatusBarWidget::infoMessage(KJob* kjob, const QString &text)
 {
     Q_UNUSED(kjob);
 
-    m_text_status_label->setText(text);
+    m_info_message_label->setText(text);
 }
 
 void BaseActivityProgressStatusBarWidget::warning(KJob *kjob, const QString &text)
@@ -102,21 +102,23 @@ void BaseActivityProgressStatusBarWidget::init(KJob* kjob, QWidget *parent)
 
     qDb() << "CREATING WIDGET FOR:" << kjob;
 
-    m_current_activity_label = new QLabel(tr("Idle"), this);
-    m_current_activity_label->setToolTip("Current operation");
-    m_current_activity_label->setWhatsThis("This text shows the current operation in progress.");
+    m_job_title_label = new QLabel(tr("Idle"), this);
+    m_job_title_label->setToolTip("Current operation");
+    m_job_title_label->setWhatsThis("This text shows the current operation in progress.");
 
     // This is for displaying the KJob::infoMessage().
     // ""Resolving host", "Connecting to host...", etc."
-    m_text_status_label = new QLabel(tr("Idle"), this);
-    m_text_status_label->setToolTip("Status of the current operation");
-    m_text_status_label->setWhatsThis("This text shows the status of the current operation in progress.");
+    m_info_message_label = new QLabel(tr("Idle"), this);
+    m_info_message_label->setToolTip("Status of the current operation");
+    m_info_message_label->setWhatsThis("This text shows the status of the current operation in progress.");
 
     // The progress bar.
     m_progress_bar = new QProgressBar(this);
     m_progress_bar->setFormat(tr("%p%"));
     m_progress_bar->setTextVisible(true);
     m_progress_bar->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    m_speed_label = new QLabel("N/A", this);
 
     // The buttons.
     m_pause_resume_button = new QToolButton(this);
@@ -153,12 +155,19 @@ M_WARNING("TODO: The if() is FOR THE MAIN BAR WHICH IS CURRENTLY JOBLESS");
     m_tool_tip_label->setBackgroundRole(QPalette::ToolTipBase);
     m_tool_tip_label->setForegroundRole(QPalette::ToolTipText);
 
+
+    // The QVBoxLayout for the progress bar and info text.
+    auto prog_vlayout = new QVBoxLayout();
+    prog_vlayout->setContentsMargins(0, 0, 0, 0);
+    prog_vlayout->addWidget(m_progress_bar);
+    prog_vlayout->addWidget(m_speed_label);
+
     // The main layout.
-    auto layout = new QHBoxLayout(this);
+    auto layout = new QHBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(m_current_activity_label);
-    layout->addWidget(m_text_status_label);
-    layout->addWidget(m_progress_bar);
+    layout->addWidget(m_job_title_label);
+    layout->addWidget(m_info_message_label);
+    layout->addLayout(prog_vlayout);
     layout->addWidget(m_pause_resume_button);
     layout->addWidget(m_cancel_button);
 
@@ -195,7 +204,7 @@ void BaseActivityProgressStatusBarWidget::showTotals()
         tmps += QCoreApplication::translate("KWidgetJobTracker", "%n file(s)", "", totalFiles);
 
         // Set the resulting string.
-        m_text_status_label->setText(tmps);
+        m_info_message_label->setText(tmps);
     }
 }
 
@@ -212,8 +221,8 @@ void BaseActivityProgressStatusBarWidget::updateMainTooltip()
 //        return;
 //    }
 
-    tooltip_text = tr("Async Job: %1<br/>").arg(m_current_activity_label->text())
-            + tr("Current Status: %1<br/>").arg(m_text_status_label->text())
+    tooltip_text = tr("Async Job: %1<br/>").arg(m_job_title_label->text())
+            + tr("Current Status: %1<br/>").arg(m_info_message_label->text())
             + tr("Speed: %1<br/>").arg("N/A")
                ;
 
@@ -359,8 +368,8 @@ void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit
 
     /// @todo KWidgetJobTracker uses two labels for size (bytes here) and progress (files and dirs).
     /// We'll set up aliases here, but for now we only have one label for both.
-    QLabel* sizeLabel = m_text_status_label;
-    QLabel* progressLabel = m_text_status_label;
+    QLabel* sizeLabel = m_info_message_label;
+    QLabel* progressLabel = m_info_message_label;
 
     QString size_label_text;
 
@@ -512,11 +521,10 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 
     qDb() << "SPEED:" << kjob << value;
 
-#if 1
     if(value == 0)
 	{
     	// Stalled.
-    	//m_speed_label->setText(tr("Stalled"));
+        m_speed_label->setText(tr("Stalled"));
 	}
     else
 	{
@@ -542,18 +550,18 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
         const QString speedStr = formattedDataSize(value, 1, fmt);
         if (m_is_total_size_known)
 		{
-			const int remaining = 1000 * (totalSize - processedSize) / value;
+            const qint64 remaining = 1000 * (totalSize - processedSize) / value;
 			//~ singular %1/s (%2 remaining)
 			//~ plural %1/s (%2 remaining)
-//			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining).arg(speedStr).arg(
-//									KJobTrackerFormatters::duration(remaining)));
+            m_speed_label->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s (%2 remaining)", "", remaining)
+                                   .arg(speedStr).arg(formattedDataSize(remaining, 1, fmt)));
 		}
 		else
 		{
 			// total size is not known
-//			speedLabel->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
+            m_speed_label->setText(QCoreApplication::translate("KWidgetJobTracker", "%1/s", "speed in bytes per second").arg(speedStr));
 		}
 	}
-#endif
+
     updateMainTooltip();
 }

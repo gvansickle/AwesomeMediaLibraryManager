@@ -526,8 +526,6 @@ M_WARNING("KJob* could already be finished and autoDeleted here");
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(kjob_qp);
 
-//    AMLMJob::dump_job_info(kjob);
-
     // KAbstractWidgetJobTracker::unregisterJob() calls:
     //   KJobTrackerInterface::unregisterJob(job);, which calls:
     //     job->disconnect(this);
