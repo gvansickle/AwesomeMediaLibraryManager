@@ -48,7 +48,7 @@
 #include "LibraryEntryLoaderJob.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
-
+#include <logic/dbmodels/CollectionDatabaseModel.h>
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
@@ -86,6 +86,8 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 
 	// Create the asynchronous rescanner.
 	m_rescanner = new LibraryRescanner(this);
+
+
 
 	// Connections.
 }

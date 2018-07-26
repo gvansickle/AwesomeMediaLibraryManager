@@ -26,6 +26,7 @@
 #include <QSqlQuery>
 #include <QStandardPaths>
 #include <QSqlRelationalTableModel>
+#include <QSqlRecord>
 
 /// Ours
 #include <utils/DebugHelpers.h>
@@ -40,7 +41,7 @@ CollectionDatabaseModel::~CollectionDatabaseModel()
 
 }
 
-bool CollectionDatabaseModel::open_db_connection(QUrl db_file)
+QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ "experimental_db_connection");
 
@@ -53,6 +54,13 @@ bool CollectionDatabaseModel::open_db_connection(QUrl db_file)
 
     // Enable regexes.
     db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
+    db.setConnectOptions("PRAGMA foreign_keys = 1;");
+
+    QSqlQuery q = db.exec("PRAGMA foreign_keys = 1;");
+    if(db.lastError().type() != QSqlError::NoError)
+    {
+        qWro() << "PRAGMA FAILED";
+    }
 
     // Open the db.
     if (!db.open()) {
@@ -62,48 +70,143 @@ bool CollectionDatabaseModel::open_db_connection(QUrl db_file)
                         "the Qt SQL driver documentation for information how "
                         "to build it.\n\n"
                         "Click Cancel to exit."), QMessageBox::Cancel);
-        return false;
+        return db.lastError();
     }
 
-    return true;
+    /// @todo Return if the DB exists and looks to be in good condition.
+    if(false /* DB looks good. */)
+    {
+        return QSqlError();
+    }
+
+    CreatePrimaryTables(db);
+    CreateRelationalTables(db);
+
+    db.commit();
+
+    return QSqlError();
 }
 
-void CollectionDatabaseModel::create_db_tables(QSqlDatabase *db)
+QSqlError CollectionDatabaseModel::CreatePrimaryTables(QSqlDatabase &db)
 {
-    auto db_conn = QSqlDatabase::database("experimental_db_connection");
+//    auto db_conn = QSqlDatabase::database("experimental_db_connection");
+    auto& db_conn = db;
 
     QStringList tables;
 
-    tables.append("CREATE TABLE IF NOT EXISTS DirScanResults ("
-                  "id INTEGER DEFAULT NULL PRIMARY KEY AUTOINCREMENT,"
-                  "url TEXT NOT NULL"
+    tables.append("CREATE TABLE DirScanResults ("
+                  "dirscanid INTEGER PRIMARY KEY,"
+                  "media_url TEXT NOT NULL,"
+                  "sidecar_cuesheet_url TEXT,"
+                  /// @todo experimental
+                  "dirscanrelease INTEGER REFERENCES Release"
                   ")");
-    for (int i = 0; i < tables.count(); ++i)
+    tables.append("CREATE TABLE Artist ("
+                  "artistid INTEGER PRIMARY KEY,"
+                  "name TEXT"
+                  ")");
+    tables.append("CREATE TABLE Release ("
+                  "releaseid INTEGER PRIMARY KEY,"
+                  "name TEXT,"
+                  "releaseartist INTEGER REFERENCES Artist"
+                  ")");
+
+    // Create tables.
+    for(int i = 0; i < tables.count(); ++i)
     {
         QSqlQuery query(db_conn);
         if (!query.exec(tables[i]))
         {
-            qDb() << query.lastError();
-            qDb() << query.executedQuery();
+            qCro() << query.lastError();
+            qCro() << query.executedQuery();
+            return query.lastError();
         }
     }
+
+    return QSqlError();
 }
 
-QSqlRelationalTableModel *CollectionDatabaseModel::get_rel_table(QObject *parent)
+QSqlError CollectionDatabaseModel::CreateRelationalTables(QSqlDatabase& db)
 {
+//    auto db = QSqlDatabase::database("experimental_db_connection");
+
+//    QSqlQuery q(db);
+//    if(!q.exec(""))
+//    {
+//        return q.lastError();
+//    }
+
+    return QSqlError();
+}
+
+QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *parent)
+{
+    qDbo() << "Here";
     auto db_conn = QSqlDatabase::database("experimental_db_connection");
     Q_ASSERT(db_conn.isValid());
+    // Enable regexes.
+    db_conn.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
+    db_conn.setConnectOptions("PRAGMA foreign_keys = 1;");
+    QSqlQuery q("PRAGMA foreign_keys = 1", db_conn);
+    if(!q.exec())
+    {
+        qWro() << "PRAGMA FAILED";
+    }
+//    db_conn.setConnectOptions("PRAGMA foreign_keys = ON");
 
     QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(parent, db_conn);
     Q_CHECK_PTR(rel_table_model);
 
     rel_table_model->setTable("DirScanResults");
     rel_table_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    rel_table_model->select();
+    // Left join to show rows with NULL foreign keys.
+    rel_table_model->setJoinMode(QSqlRelationalTableModel::LeftJoin);
+
+    rel_table_model->setRelation(4, QSqlRelation("Release", "releaseid", "name"));
+
     rel_table_model->setHeaderData(0, Qt::Horizontal, tr("HEADER_Id"));
-    rel_table_model->setHeaderData(1, Qt::Horizontal, tr("HEADER_Url"));
+    rel_table_model->setHeaderData(1, Qt::Horizontal, tr("HEADER_Media_Url"));
+    rel_table_model->setHeaderData(2, Qt::Horizontal, tr("HEADER_SidecarCuesheet_Url"));
+    rel_table_model->setHeaderData(3, Qt::Horizontal, tr("HEADER_Release_name"));
+
+    rel_table_model->select();
+
     bool status = rel_table_model->submitAll();
     Q_ASSERT_X(status, "", "SUBMIT FAILED");
+    m_relational_table_model = rel_table_model;
+
     return rel_table_model;
+}
+
+QSqlError CollectionDatabaseModel::addDirScanResult(const QUrl &medi_url)
+{
+//    QSqlQuery q;
+//    if(!q.prepare(QLatin1String("INSERT INTO ")));
+
+    QSqlRecord newrec = m_relational_table_model->record();
+
+    qDb() << "NEWREC:" << newrec;
+    newrec.setValue("media_url", QVariant(medi_url.toString()));
+    qDb() << "NEWREC:" << newrec;
+
+    bool status = m_relational_table_model->insertRecord(0, newrec);
+    qDb() << "INSERT STATUS:" << status;
+    m_relational_table_model->select();
+
+    status = m_relational_table_model->submitAll();
+    Q_ASSERT_X(status, "", "SUBMIT FAILED");
+
+    return QSqlError();
+}
+
+QVariant CollectionDatabaseModel::addMediaUrl(QSqlQuery &q, const QUrl &url)
+{
+
+
+}
+
+void CollectionDatabaseModel::InitializeModel()
+{
+    m_relational_table_model = new QSqlRelationalTableModel(this);
 }
 

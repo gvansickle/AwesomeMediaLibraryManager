@@ -24,9 +24,11 @@
 
 // Qt5
 #include <QObject>
+#include <QSqlError>
+#include <QSqlQuery>
 #include <QUrl>
 class QSqlDatabase;
-class QSqlRelationalTableModel;
+#include <QSqlRelationalTableModel>
 
 /*
  *
@@ -39,11 +41,23 @@ public:
     explicit CollectionDatabaseModel(QObject *parent);
      ~CollectionDatabaseModel() override;
 
-    bool open_db_connection(QUrl db_file);
+    QSqlError InitDb(QUrl db_file);
 
-    void create_db_tables(QSqlDatabase *db = nullptr);
+    QSqlRelationalTableModel* make_reltable_model(QObject* parent = nullptr);
 
-    QSqlRelationalTableModel* get_rel_table(QObject* parent = nullptr);
+    QSqlError addDirScanResult(const QUrl& medi_url);
+
+    QVariant addMediaUrl(QSqlQuery &q, const QUrl& url);
+
+protected:
+
+    QSqlError CreatePrimaryTables(QSqlDatabase &db);
+    QSqlError CreateRelationalTables(QSqlDatabase &db);
+
+    void InitializeModel();
+
+    QSqlRelationalTableModel* m_relational_table_model {nullptr};
+
 };
 
 #endif /* SRC_LOGIC_DBMODELS_COLLECTIONDATABASEMODEL_H_ */
