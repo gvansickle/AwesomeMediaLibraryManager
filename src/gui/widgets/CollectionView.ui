@@ -13,61 +13,54 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QFrame" name="frame">
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="1">
+       <widget class="QToolButton" name="toolButton_3">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="lineEdit"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QFrame" name="frame">
-       <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="1">
-         <widget class="QToolButton" name="toolButton_3">
-          <property name="text">
-           <string>...</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QLineEdit" name="lineEdit"/>
-        </item>
-       </layout>
-      </widget>
+      <widget class="QTreeView" name="treeView"/>
      </item>
      <item>
-      <widget class="QTableView" name="tableView"/>
-     </item>
-     <item>
-      <widget class="QFrame" name="frame_2">
-       <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="1">
-         <widget class="FilterWidget" name="CTRLFFilterWidget"/>
-        </item>
-        <item row="0" column="2">
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>&amp;Filter pattern:</string>
-          </property>
-          <property name="buddy">
-           <cstring>CTRLFFilterWidget</cstring>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+      <widget class="QTreeView" name="treeView_exp"/>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame_2">
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="0" column="2">
+       <widget class="QLCDNumber" name="lcdNumber_num_hits"/>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>&amp;Filter pattern:</string>
+        </property>
+        <property name="buddy">
+         <cstring>CTRLFFilterWidget</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="FilterWidget" name="CTRLFFilterWidget"/>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>

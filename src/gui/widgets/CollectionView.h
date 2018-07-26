@@ -10,6 +10,7 @@ class CollectionView;
 }
 
 class QTableView;
+class TreeModel;
 
 class CollectionView : public QWidget
 {
@@ -21,7 +22,8 @@ public:
 
     void setMainModel(QSqlRelationalTableModel* model);
 
-    QTableView* getTableView();
+	void setPane2Model(TreeModel* tmp);
+
 
 private:
     Ui::CollectionView *ui;

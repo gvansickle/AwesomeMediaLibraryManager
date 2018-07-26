@@ -127,7 +127,7 @@
 
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
-// the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and counless
+// the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and countless
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
@@ -1680,6 +1680,7 @@ void MainWindow::newCollectionView()
     auto model = AMLMApp::instance()->cdb_instance()->get_reltable_model();
     child->setMainModel(model);
 //    child->getTableView()->setModel(model);
+    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
 
     mdi_child->show();
 }

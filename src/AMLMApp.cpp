@@ -26,7 +26,6 @@
 #include <QUrl>
 
 // KF5
-//#include <KJob>
 
 // Ours
 #include <utils/TheSimplestThings.h>
@@ -58,7 +57,24 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
     auto rel_table_model = m_cdb_model->make_reltable_model(this);
     m_cdb_model->addDirScanResult(QUrl("http://gbsfjdhg"));
     m_cdb_model->addDirScanResult(QUrl("http://the_next_one"), 1);
-    /// @end
+
+	QString str =
+	"Getting Started				How to familiarize yourself with Qt Designer\n"
+	" Launching Designer			Running the Qt Designer application\n"
+	" The User Interface			How to interact with Qt Designer\n"
+
+	"Designing a Component			Creating a GUI for your application\n"
+	" Creating a Dialog			How to create a dialog\n"
+	" Composing the Dialog		Putting widgets into the dialog example\n"
+	" Creating a Layout			Arranging widgets on a form\n"
+	" Signal and Slot Connections		Making widget communicate with each other\n"
+			;
+
+
+
+	m_cdb2_model_instance = new TreeModel({"URL", "Album"}, str, this);
+
+	/// @end Experiments
 
     /// @note This is a self-connection, not sure this will work as intended.
     connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);

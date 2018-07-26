@@ -1,6 +1,8 @@
 #include "CollectionView.h"
 #include "ui_CollectionView.h"
 
+#include <logic/models/AbstractTreeModel.h>
+
 CollectionView::CollectionView(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::CollectionView)
@@ -15,11 +17,19 @@ CollectionView::~CollectionView()
 
 void CollectionView::setMainModel(QSqlRelationalTableModel *model)
 {
-    ui->tableView->setModel(model);
-    ui->tableView->setItemDelegate(new QSqlRelationalDelegate(ui->tableView));
+    auto view = ui->treeView;
+    view->setModel(model);
+	view->setItemDelegate(new QSqlRelationalDelegate(view));
 }
 
-QTableView *CollectionView::getTableView()
+void CollectionView::setPane2Model(TreeModel* model)
 {
-    return ui->tableView;
+	auto view = ui->treeView_exp;
+	view->setModel(model);
+	for (int column = 0; column < model->columnCount(); ++column)
+	{
+		view->resizeColumnToContents(column);
+	}
 }
+
+

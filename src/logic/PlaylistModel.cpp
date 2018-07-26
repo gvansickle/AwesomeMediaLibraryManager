@@ -251,6 +251,13 @@ bool PlaylistModel::dropMimeData(const QMimeData* data, Qt::DropAction action, i
 	/// It ultimately calls QAbstractItemModel::decodeData() and deserializes a QDataStream coming from the QMimeData,
 	/// and it does a ton of work to get every row and column separately entered into the model.
 
+	/**
+	 *  Also, Per @link http://www.qtcentre.org/threads/5910-QTreeWidget-Drag-and-drop:
+	 * "For QTreeWidget derived class dropMimeData() gets called only when there is a "data drop", so to say.
+	 *  For move operations, it does not get called. It gets called when you try to copy the data.
+	 *  For Move or Internal move operations QTreeWidget::dropEvent() gets called."
+	 */
+
 	// Per example code here: http://doc.qt.io/qt-5/model-view-programming.html#using-drag-and-drop-with-item-views, "Inserting dropped data into a model".
 	// "The model first has to make sure that the operation should be acted on,
 	// the data supplied is in a format that can be used,

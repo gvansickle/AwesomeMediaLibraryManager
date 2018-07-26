@@ -95,19 +95,19 @@ protected:
     ///
     /// Pure virtual function overrides.
     ///
-    virtual QString getNewFilenameTemplate() const override;
-    virtual QString defaultNameFilter() override;
+	QString getNewFilenameTemplate() const override;
+	QString defaultNameFilter() override;
 
     void setEmptyModel() override;
 
-	virtual void serializeDocument(QFileDevice& file) override;
-    virtual void deserializeDocument(QFileDevice& file) override;
+	void serializeDocument(QFileDevice& file) override;
+	void deserializeDocument(QFileDevice& file) override;
 
-    virtual bool isModified() const override;
+	bool isModified() const override;
 
-    virtual QString getSaveAsDialogKey() const override;
+	QString getSaveAsDialogKey() const override;
 
-    virtual bool onBlankAreaToolTip(QHelpEvent* event) override;
+	bool onBlankAreaToolTip(QHelpEvent* event) override;
 
     /// Drag and Drop
     void dragEnterEvent(QDragEnterEvent *event) override;

@@ -226,7 +226,7 @@ QSqlError CollectionDatabaseModel::addDirScanResult(const QUrl &media_url, int r
     newrec.setValue("media_url", QVariant(media_url.toString()));
     if(release != 0)
     {
-        newrec.setValue("releasename", QVariant(/*release*/"Free Fallin"));//1);
+        newrec.setValue("releasename", release);// QVariant(/*release*/"Free Fallin"));//1);
     }
     qDb() << "NEWREC:" << newrec;
 

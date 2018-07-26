@@ -272,6 +272,13 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/DebugSequence.cpp
 	)
 
+set(SOURCE_FILES_LOGIC_MODELS
+	logic/models/AbstractTreeModelItem.h
+	logic/models/AbstractTreeModelItem.cpp
+	logic/models/AbstractTreeModel.h
+	logic/models/AbstractTreeModel.cpp
+	)
+
 add_subdirectory(gui)
 #message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
@@ -289,6 +296,9 @@ include(future/CMakeLists.txt)
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
+
+# Models
+list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
 
 # Append the third_party files which need to be explicitly in the SOURCE_/HEADER_FILES vars.
 list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
