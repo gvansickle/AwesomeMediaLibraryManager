@@ -57,9 +57,9 @@
 #include <QThread>
 #include <QWhatsThis>
 #include <QMimeData>
+#include <QTableView>
 
-
-/// KF5
+// KF5
 #include <KMainWindow>
 #include <KHelpMenu>
 #include <KToolBar>
@@ -77,7 +77,8 @@
 #include <KIconButton>
 #include <KXmlGui/KEditToolBar>
 
-/// Ours
+// Ours
+#include "AMLMApp.h"
 #include <src/gui/actions/StandardActions.h>
 #include "Experimental.h"
 #include "FilterWidget.h"
@@ -1675,6 +1676,11 @@ void MainWindow::newCollectionView()
     qDbo() << "Adding to mdi area";
     auto mdi_child = m_mdi_area->addSubWindow(child);
     Q_CHECK_PTR(mdi_child);
+
+    auto model = AMLMApp::instance()->cdb_instance()->get_reltable_model();
+    child->setMainModel(model);
+//    child->getTableView()->setModel(model);
+
     mdi_child->show();
 }
 

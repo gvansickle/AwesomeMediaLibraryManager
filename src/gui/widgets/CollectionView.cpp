@@ -12,3 +12,14 @@ CollectionView::~CollectionView()
 {
     delete ui;
 }
+
+void CollectionView::setMainModel(QSqlRelationalTableModel *model)
+{
+    ui->tableView->setModel(model);
+    ui->tableView->setItemDelegate(new QSqlRelationalDelegate(ui->tableView));
+}
+
+QTableView *CollectionView::getTableView()
+{
+    return ui->tableView;
+}

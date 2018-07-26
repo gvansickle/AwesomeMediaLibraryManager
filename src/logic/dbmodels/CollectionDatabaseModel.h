@@ -42,19 +42,27 @@ public:
      ~CollectionDatabaseModel() override;
 
     QSqlError InitDb(QUrl db_file);
+    QSqlDatabase OpenDatabaseConnection(const QString& connection_name);
 
     QSqlRelationalTableModel* make_reltable_model(QObject* parent = nullptr);
+    QSqlRelationalTableModel* get_reltable_model() { return m_relational_table_model; }
 
-    QSqlError addDirScanResult(const QUrl& medi_url);
+    QSqlError addDirScanResult(const QUrl& media_url, int release = 0);
 
     QVariant addMediaUrl(QSqlQuery &q, const QUrl& url);
 
+    void RunQuery(const QString& query, QSqlDatabase& db_conn);
+
 protected:
+
+    bool IfExistsAskForDelete(const QUrl& filename);
 
     QSqlError CreatePrimaryTables(QSqlDatabase &db);
     QSqlError CreateRelationalTables(QSqlDatabase &db);
 
     void InitializeModel();
+
+    QString m_connection_name = "the_connection_name";
 
     QSqlRelationalTableModel* m_relational_table_model {nullptr};
 

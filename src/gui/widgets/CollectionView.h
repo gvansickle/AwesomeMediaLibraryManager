@@ -2,10 +2,14 @@
 #define COLLECTIONVIEW_H
 
 #include <QWidget>
+#include <QSqlRelationalTableModel>
+#include <QSqlRelationalDelegate>
 
 namespace Ui {
 class CollectionView;
 }
+
+class QTableView;
 
 class CollectionView : public QWidget
 {
@@ -13,7 +17,11 @@ class CollectionView : public QWidget
 
 public:
     explicit CollectionView(QWidget *parent = nullptr);
-    ~CollectionView();
+    ~CollectionView() override;
+
+    void setMainModel(QSqlRelationalTableModel* model);
+
+    QTableView* getTableView();
 
 private:
     Ui::CollectionView *ui;

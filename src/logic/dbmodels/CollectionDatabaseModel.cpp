@@ -27,9 +27,12 @@
 #include <QStandardPaths>
 #include <QSqlRelationalTableModel>
 #include <QSqlRecord>
+#include <QFile>
 
 /// Ours
 #include <utils/DebugHelpers.h>
+#include <AMLMApp.h>
+#include <gui/MainWindow.h>
 
 CollectionDatabaseModel::CollectionDatabaseModel(QObject* parent) : QObject(parent)
 {
@@ -43,24 +46,35 @@ CollectionDatabaseModel::~CollectionDatabaseModel()
 
 QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ "experimental_db_connection");
+    // Add/Create the database connection.
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ m_connection_name);
+
+    if(!db.isValid())
+    {
+        return db.lastError();
+    }
 
     /// @todo TEMP hardcoded db file name in home dir.
     auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
     QString ab_file = db_dir + "/AMLMTestdb.sqlite3";
 
 //    db.setDatabaseName(":memory:");
+
+    // Ask to delete file if it exists.
+    if(!IfExistsAskForDelete(QUrl::fromLocalFile(ab_file)))
+    {
+        // File exists and user doesn't want to delete or delete failed.
+        return QSqlError("driver text", "File exists", QSqlError::ConnectionError);
+    }
+
+    // Set up the database connection.
+    //
     db.setDatabaseName(ab_file);
 
     // Enable regexes.
     db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
+    // Enable foreign key support.
     db.setConnectOptions("PRAGMA foreign_keys = 1;");
-
-    QSqlQuery q = db.exec("PRAGMA foreign_keys = 1;");
-    if(db.lastError().type() != QSqlError::NoError)
-    {
-        qWro() << "PRAGMA FAILED";
-    }
 
     // Open the db.
     if (!db.open()) {
@@ -73,6 +87,12 @@ QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
         return db.lastError();
     }
 
+    QSqlQuery q = db.exec("PRAGMA foreign_keys = 1;");
+    if(db.lastError().type() != QSqlError::NoError)
+    {
+        qWro() << "PRAGMA FAILED";
+    }
+
     /// @todo Return if the DB exists and looks to be in good condition.
     if(false /* DB looks good. */)
     {
@@ -82,9 +102,31 @@ QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
     CreatePrimaryTables(db);
     CreateRelationalTables(db);
 
-    db.commit();
-
     return QSqlError();
+}
+
+QSqlDatabase CollectionDatabaseModel::OpenDatabaseConnection(const QString &connection_name)
+{
+    qDbo() << "Here";
+    QSqlDatabase db_conn = QSqlDatabase::database(connection_name);
+    Q_ASSERT(db_conn.isValid());
+    // Enable regexes.
+    db_conn.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
+    db_conn.setConnectOptions("PRAGMA foreign_keys = 1;");
+    db_conn.open();
+    {
+    QSqlQuery q("PRAGMA foreign_keys = 1;", db_conn);
+    if(!q.exec())
+    {
+        qWro() << "PRAGMA FAILED";
+    }
+    qDbo() << "LAST QUERY:" << q.lastQuery();
+//    db_conn.setConnectOptions("PRAGMA foreign_keys = ON");
+    }
+
+    RunQuery("PRAGMA foreign_keys;", db_conn);
+
+    return db_conn;
 }
 
 QSqlError CollectionDatabaseModel::CreatePrimaryTables(QSqlDatabase &db)
@@ -107,9 +149,15 @@ QSqlError CollectionDatabaseModel::CreatePrimaryTables(QSqlDatabase &db)
                   ")");
     tables.append("CREATE TABLE Release ("
                   "releaseid INTEGER PRIMARY KEY,"
-                  "name TEXT,"
+                  "releasename TEXT,"
                   "releaseartist INTEGER REFERENCES Artist"
                   ")");
+
+    // Dummy data.
+    tables.append("INSERT INTO Artist values(0, '<all>')");
+    tables.append("INSERT INTO Artist values(1, 'Tom Petty')");
+    tables.append("INSERT INTO Release values(0, '<all>', 0)");
+    tables.append("INSERT INTO Release values(1, 'Free Fallin', 1)");
 
     // Create tables.
     for(int i = 0; i < tables.count(); ++i)
@@ -142,17 +190,8 @@ QSqlError CollectionDatabaseModel::CreateRelationalTables(QSqlDatabase& db)
 QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *parent)
 {
     qDbo() << "Here";
-    auto db_conn = QSqlDatabase::database("experimental_db_connection");
-    Q_ASSERT(db_conn.isValid());
-    // Enable regexes.
-    db_conn.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
-    db_conn.setConnectOptions("PRAGMA foreign_keys = 1;");
-    QSqlQuery q("PRAGMA foreign_keys = 1", db_conn);
-    if(!q.exec())
-    {
-        qWro() << "PRAGMA FAILED";
-    }
-//    db_conn.setConnectOptions("PRAGMA foreign_keys = ON");
+    QSqlDatabase db_conn = OpenDatabaseConnection(m_connection_name);
+
 
     QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(parent, db_conn);
     Q_CHECK_PTR(rel_table_model);
@@ -162,14 +201,15 @@ QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *
     // Left join to show rows with NULL foreign keys.
     rel_table_model->setJoinMode(QSqlRelationalTableModel::LeftJoin);
 
-    rel_table_model->setRelation(4, QSqlRelation("Release", "releaseid", "name"));
+//    rel_table_model->setRelation(4, QSqlRelation("Release", "releaseid", "releasename"));
+    rel_table_model->setRelation(3, QSqlRelation("Release", "releaseid", "releasename"));
 
     rel_table_model->setHeaderData(0, Qt::Horizontal, tr("HEADER_Id"));
     rel_table_model->setHeaderData(1, Qt::Horizontal, tr("HEADER_Media_Url"));
     rel_table_model->setHeaderData(2, Qt::Horizontal, tr("HEADER_SidecarCuesheet_Url"));
-    rel_table_model->setHeaderData(3, Qt::Horizontal, tr("HEADER_Release_name"));
+    rel_table_model->setHeaderData(3, Qt::Horizontal, tr("HEADER_Releasename"));
 
-    rel_table_model->select();
+//    rel_table_model->select();
 
     bool status = rel_table_model->submitAll();
     Q_ASSERT_X(status, "", "SUBMIT FAILED");
@@ -178,23 +218,29 @@ QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *
     return rel_table_model;
 }
 
-QSqlError CollectionDatabaseModel::addDirScanResult(const QUrl &medi_url)
+QSqlError CollectionDatabaseModel::addDirScanResult(const QUrl &media_url, int release)
 {
-//    QSqlQuery q;
-//    if(!q.prepare(QLatin1String("INSERT INTO ")));
-
     QSqlRecord newrec = m_relational_table_model->record();
 
     qDb() << "NEWREC:" << newrec;
-    newrec.setValue("media_url", QVariant(medi_url.toString()));
+    newrec.setValue("media_url", QVariant(media_url.toString()));
+    if(release != 0)
+    {
+        newrec.setValue("releasename", QVariant(/*release*/"Free Fallin"));//1);
+    }
     qDb() << "NEWREC:" << newrec;
 
-    bool status = m_relational_table_model->insertRecord(0, newrec);
-    qDb() << "INSERT STATUS:" << status;
-    m_relational_table_model->select();
+    if(m_relational_table_model->insertRecord(-1, newrec))
+    {
+        qDb() << "INSERTRECORD SUCCEEDED:";
+        bool status = m_relational_table_model->submitAll();
+        Q_ASSERT_X(status, "", "SUBMIT FAILED");
+    }
+    else
+    {
+        Q_ASSERT_X(0, "", "INSERTRECORD FAILED");
+    }
 
-    status = m_relational_table_model->submitAll();
-    Q_ASSERT_X(status, "", "SUBMIT FAILED");
 
     return QSqlError();
 }
@@ -204,6 +250,47 @@ QVariant CollectionDatabaseModel::addMediaUrl(QSqlQuery &q, const QUrl &url)
 
 
 }
+
+void CollectionDatabaseModel::RunQuery(const QString &query, QSqlDatabase& db_conn)
+{
+//    auto db_conn = OpenDatabaseConnection(m_connection_name);
+
+    QSqlQuery q(query, db_conn);
+    if(!q.exec())
+    {
+        qWro() << "QUERY FAILED:" << q.lastError() << q.lastQuery();
+        return;
+    }
+    qDbo() << "QUERY:" << q.lastQuery();
+    while(q.next())
+    {
+        qDbo() << "QUERY RESULT:" << q.value(0);
+    }
+}
+
+bool CollectionDatabaseModel::IfExistsAskForDelete(const QUrl &filename)
+{
+    QFile the_file(filename.toLocalFile());
+    if(the_file.exists())
+    {
+        QMessageBox::StandardButton retval = QMessageBox::warning(MainWindow::instance(), tr("File exists"),
+                                                                  tr("The file '%1' already exists.\n"
+                                                               "Do you want to delete it?").arg(filename.toLocalFile()),
+                                          QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if(retval == QMessageBox::Yes)
+        {
+            return the_file.remove();
+        }
+        else
+        {
+            return false;
+        }
+    }
+    // else file doesn't exist.
+    return true;
+}
+
+
 
 void CollectionDatabaseModel::InitializeModel()
 {

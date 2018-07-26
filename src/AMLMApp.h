@@ -28,6 +28,8 @@
 // KF5
 #include <KConfigGroup>
 
+#include <logic/dbmodels/CollectionDatabaseModel.h>
+
 
 /**
  * qApp-alike macro for getting a pointer to the AMLMApp singleton.
@@ -60,6 +62,8 @@ public:
 
     static AMLMApp* instance();
 
+    CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
+
     /**
      * @return true if this app is in the process of shutting down.
      */
@@ -85,6 +89,8 @@ private:
 
     /// The AMLMApp singleton.
     static AMLMApp* m_the_instance;
+
+    CollectionDatabaseModel* m_cdb_model;
 
     bool m_shutting_down {false};
     bool m_controlled_shutdown_complete {false};

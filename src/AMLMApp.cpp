@@ -23,6 +23,7 @@
 
 // Qt5
 #include <QProcessEnvironment>
+#include <QUrl>
 
 // KF5
 //#include <KJob>
@@ -31,6 +32,7 @@
 #include <utils/TheSimplestThings.h>
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
+#include <logic/dbmodels/CollectionDatabaseModel.h>
 
 // Pointer to the singleton.
 AMLMApp *AMLMApp::m_the_instance = nullptr;
@@ -49,6 +51,14 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 
     // Create the singletons we'll need for any app invocation.
     /* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
+
+    /// @todo Experiments
+    m_cdb_model = new CollectionDatabaseModel(this);
+    m_cdb_model->InitDb(QUrl("dummyfile.sqlite3"));
+    auto rel_table_model = m_cdb_model->make_reltable_model(this);
+    m_cdb_model->addDirScanResult(QUrl("http://gbsfjdhg"));
+    m_cdb_model->addDirScanResult(QUrl("http://the_next_one"), 1);
+    /// @end
 
     /// @note This is a self-connection, not sure this will work as intended.
     connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
