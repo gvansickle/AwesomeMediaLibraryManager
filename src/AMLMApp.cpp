@@ -72,7 +72,7 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 
 
 
-	m_cdb2_model_instance = new TreeModel({"URL", "Album"}, str, this);
+	m_cdb2_model_instance = new AbstractTreeModel({"URL", "Album"}, str, this);
 
 	/// @end Experiments
 

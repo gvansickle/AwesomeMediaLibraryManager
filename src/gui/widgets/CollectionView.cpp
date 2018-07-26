@@ -22,7 +22,7 @@ void CollectionView::setMainModel(QSqlRelationalTableModel *model)
 	view->setItemDelegate(new QSqlRelationalDelegate(view));
 }
 
-void CollectionView::setPane2Model(TreeModel* model)
+void CollectionView::setPane2Model(AbstractTreeModel* model)
 {
 	auto view = ui->treeView_exp;
 	view->setModel(model);

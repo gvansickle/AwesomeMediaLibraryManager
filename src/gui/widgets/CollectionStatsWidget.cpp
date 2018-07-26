@@ -22,19 +22,22 @@
 #include <type_traits>
 
 #include <QLabel>
+#include <QVBoxLayout>
 
 CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 {
     setObjectName("CollectionStatsWidget");
 
-    // No layout, specify how to size this widget's children.
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	auto layout = new QVBoxLayout();
 
 //    m_widget_text = new QLabel(tr("Hello"), this);
-    m_widget_text = new QTextEdit(tr("Hello"), this);
+	m_widget_text = new QTextEdit(tr("STATS GO HERE"), this);
     m_widget_text->setReadOnly(true);
     m_widget_text->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_sources_model_watcher = new ModelChangeWatcher(this);
+
+	layout->addWidget(m_widget_text);
+	setLayout(layout);
 
     connect(m_sources_model_watcher, &ModelChangeWatcher::modelHasRows, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);
 }

@@ -66,7 +66,7 @@ public:
     static AMLMApp* instance();
 
     CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
-	TreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
+	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
     /**
      * @return true if this app is in the process of shutting down.
@@ -96,7 +96,7 @@ private:
 
     CollectionDatabaseModel* m_cdb_model;
 
-	TreeModel* m_cdb2_model_instance;
+	AbstractTreeModel* m_cdb2_model_instance;
 
     bool m_shutting_down {false};
     bool m_controlled_shutdown_complete {false};
