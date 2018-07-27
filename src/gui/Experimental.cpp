@@ -83,12 +83,12 @@ void Experimental::DoExperiment()
 	qDebug() << "Starting DoExperiment()";
 
     /// @todo Experiments
-    auto m_cdb_model = new CollectionDatabaseModel(this);
-    m_cdb_model->InitDb(QUrl("dummyfile.sqlite3"));
-    auto rel_table_model = m_cdb_model->make_reltable_model(this);
-    m_cdb_model->addDirScanResult(QUrl("http://gbsfjdhg"));
-    m_cdb_model->addDirScanResult(QUrl("http://the_next_one"));
-    /// @end
+//    auto m_cdb_model = new CollectionDatabaseModel(this);
+//    m_cdb_model->InitDb(QUrl("dummyfile.sqlite3"));
+//    auto rel_table_model = m_cdb_model->make_reltable_model(this);
+//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
+//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"));
+//    /// @end
 
 #if EX1 == 1
 

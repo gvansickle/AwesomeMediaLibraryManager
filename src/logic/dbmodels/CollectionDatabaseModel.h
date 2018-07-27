@@ -23,12 +23,16 @@
 #include <config.h>
 
 // Qt5
+#include <QMutex>
 #include <QObject>
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUrl>
 class QSqlDatabase;
 #include <QSqlRelationalTableModel>
+
+// Ours.
+#include <logic/DirScanResult.h>
 
 /*
  *
@@ -44,16 +48,24 @@ public:
     QSqlError InitDb(QUrl db_file);
     QSqlDatabase OpenDatabaseConnection(const QString& connection_name);
 
+	static QSqlDatabase database(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
+
+	void LogDriverFeatures(QSqlDriver* driver) const;
+
     QSqlRelationalTableModel* make_reltable_model(QObject* parent = nullptr);
     QSqlRelationalTableModel* get_reltable_model() { return m_relational_table_model; }
 
-    QSqlError addDirScanResult(const QUrl& media_url, int release = 0);
-
-    QVariant addMediaUrl(QSqlQuery &q, const QUrl& url);
-
     void RunQuery(const QString& query, QSqlDatabase& db_conn);
 
+public Q_SLOT:
+	QSqlError SLOT_addDirScanResult(DirScanResult dsr);
+
+	QVariant addDirScanResult(QSqlQuery &q, const DirScanResult& dsr);
+
 protected:
+
+	static QMutex m_db_mutex;
+	static QHash<QThread*, QHash<QString, QSqlDatabase>> m_db_instances;
 
     bool IfExistsAskForDelete(const QUrl& filename);
 
@@ -65,6 +77,7 @@ protected:
     QString m_connection_name = "the_connection_name";
 
     QSqlRelationalTableModel* m_relational_table_model {nullptr};
+	QSqlQuery* m_prepped_insert_query;
 
 };
 

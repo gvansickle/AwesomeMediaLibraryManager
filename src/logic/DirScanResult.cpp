@@ -40,8 +40,7 @@ AMLM_QREG_CALLBACK([](){
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo) : m_found_url_modinfo(found_url_finfo)
 {
-    m_found_url = found_url;
-
+	m_media_url = found_url;
 
     determineDirProps(found_url_finfo);
 }
@@ -56,12 +55,12 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
     }
     else // Works for any URL.
     {
-        m_dir_url = m_found_url.adjusted(QUrl::RemoveFilename);
+		m_dir_url = m_media_url.adjusted(QUrl::RemoveFilename);
     }
 
     // Is there a sidecar cue sheet?
     // Create the *.cue URL.
-    auto possible_cue_url = m_found_url;
+	auto possible_cue_url = m_media_url;
     QString cue_url_as_str = possible_cue_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
@@ -93,7 +92,7 @@ M_WARNING("TODO");
 }
 
 #define DATASTREAM_FIELDS(X) \
-    X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
+	X(m_media_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
 
 QDebug operator<<(QDebug dbg, const DirScanResult & obj)
 {

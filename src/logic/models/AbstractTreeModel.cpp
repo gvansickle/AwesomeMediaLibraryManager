@@ -52,9 +52,14 @@
 **
 ****************************************************************************/
 
-#include <logic/models/AbstractTreeModel.h>
-#include <logic/models/AbstractTreeModelItem.h>
+// This class's header.
+#include "AbstractTreeModel.h"
+
+// Qt5
 #include <QtWidgets>
+
+// Ours
+#include "AbstractTreeModelItem.h"
 
 
 

@@ -60,7 +60,7 @@ Q_SIGNALS:
      * KIO::ListJob-like signal used to send the discovered directory entries to
      * whoever may be listening.
      */
-    void entries(KJob* kjob, const DirScanResult& url);
+	void entries(DirScanResult dsr, KJob* kjob);
 
 protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,

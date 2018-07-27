@@ -34,6 +34,7 @@
 #include <KIO/DirectorySizeJob>
 
 /// Ours
+#include <AMLMApp.h>
 #include <gui/MainWindow.h>
 #include <utils/DebugHelpers.h>
 
@@ -214,13 +215,35 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](KJob* kjob, const DirScanResult& the_find)  {
+	/// @todo EXPERIMENTAL: Also send it to the SQLITE DB model.
+	auto dbmodel = AMLMApp::instance()->cdb_instance();
+//	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, &CollectionDatabaseModel::SLOT_addDirScanResult);
+	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, [=](auto dsr, auto kjob)
+	{
+		qIno() << "DBSTART";
+		auto db_conn = dbmodel->OpenDatabaseConnection("the_connection_name");
+
+//		auto prepped_insert_query = new QSqlQuery(db_conn);
+		QSqlQuery prepped_insert_query(db_conn);
+
+		bool status = prepped_insert_query.prepare(QLatin1String(
+			"INSERT INTO DirScanResults(media_url, sidecar_cuesheet_url, dirscanrelease) values (?, ?, ?)"));
+		Q_ASSERT(status);
+
+		dbmodel->addDirScanResult(prepped_insert_query, dsr);
+//		db_conn->SLOT_addDirScanResult();
+		qIno() << "DBEND";
+	});
+
+
+	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](DirScanResult the_find, KJob* kjob)  {
         // Found a file matching the criteria.  Send it to the model.
-        Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaQUrl().toString());
+		m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaQUrl().toString());
+
         ;});
 
     dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){

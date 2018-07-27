@@ -27,12 +27,17 @@
 #include <QStandardPaths>
 #include <QSqlRelationalTableModel>
 #include <QSqlRecord>
+#include <QSqlDriver>
 #include <QFile>
 
 /// Ours
 #include <utils/DebugHelpers.h>
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
+
+
+QMutex CollectionDatabaseModel::m_db_mutex;
+QHash<QThread*, QHash<QString, QSqlDatabase>> CollectionDatabaseModel::m_db_instances;
 
 CollectionDatabaseModel::CollectionDatabaseModel(QObject* parent) : QObject(parent)
 {
@@ -47,7 +52,7 @@ CollectionDatabaseModel::~CollectionDatabaseModel()
 QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
 {
     // Add/Create the database connection.
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ m_connection_name);
+	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ m_connection_name);
 
     if(!db.isValid())
     {
@@ -93,6 +98,8 @@ QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
         qWro() << "PRAGMA FAILED";
     }
 
+	LogDriverFeatures(db.driver());
+
     /// @todo Return if the DB exists and looks to be in good condition.
     if(false /* DB looks good. */)
     {
@@ -107,26 +114,81 @@ QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
 
 QSqlDatabase CollectionDatabaseModel::OpenDatabaseConnection(const QString &connection_name)
 {
-    qDbo() << "Here";
-    QSqlDatabase db_conn = QSqlDatabase::database(connection_name);
-    Q_ASSERT(db_conn.isValid());
-    // Enable regexes.
-    db_conn.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
-    db_conn.setConnectOptions("PRAGMA foreign_keys = 1;");
-    db_conn.open();
+	QSqlDatabase db_conn = /*QSqlDatabase::*/database(connection_name);
+	Q_ASSERT(db_conn.isValid());
+//    // Enable regexes.
+//    db_conn.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
+//    db_conn.setConnectOptions("PRAGMA foreign_keys = 1;");
+//    db_conn.open();
+
     {
-    QSqlQuery q("PRAGMA foreign_keys = 1;", db_conn);
-    if(!q.exec())
-    {
-        qWro() << "PRAGMA FAILED";
-    }
-    qDbo() << "LAST QUERY:" << q.lastQuery();
-//    db_conn.setConnectOptions("PRAGMA foreign_keys = ON");
+		QSqlQuery q("PRAGMA foreign_keys = 1;", db_conn);
+		if(!q.exec())
+		{
+			qWro() << "PRAGMA FAILED";
+		}
+		qDbo() << "LAST QUERY:" << q.lastQuery();
     }
 
     RunQuery("PRAGMA foreign_keys;", db_conn);
 
-    return db_conn;
+	return db_conn;
+}
+
+QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name)
+{
+	QMutexLocker locker(&m_db_mutex);
+	QThread *thread = QThread::currentThread();
+
+	// if we have a connection for this thread, return it
+	auto it_thread = m_db_instances.find(thread);
+	if (it_thread != m_db_instances.end())
+	{
+		auto it_conn = it_thread.value().find(connection_name);
+		if (it_conn != it_thread.value().end())
+		{
+			qDb() << "ALREADY HAVE DATABASE FOR THREAD:" << thread->objectName();
+			return it_conn.value();
+		}
+	}
+
+	// otherwise, create a new connection for this thread
+	qDb() << "CLONING DATABASE FOR THREAD:" << thread->objectName();
+	QSqlDatabase connection = QSqlDatabase::cloneDatabase(
+				QSqlDatabase::database(connection_name),
+				QString("%1_%2").arg(connection_name).arg((std::uintptr_t)thread));
+
+	Q_ASSERT(connection.isValid());
+
+	// Enable regexes.
+//	connection.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
+//	connection.setConnectOptions("PRAGMA foreign_keys = 1;");
+
+	// open the database connection
+	// initialize the database connection
+	if (!connection.open())
+	{
+		throw std::runtime_error("Unable to open the new database connection.");
+	}
+
+	m_db_instances[thread][connection_name] = connection;
+	return connection;
+}
+
+void CollectionDatabaseModel::LogDriverFeatures(QSqlDriver* driver) const
+{
+#define M_NAME_AND_VAL(name) #name ":" << driver->hasFeature( QSqlDriver::name )
+
+	qIno() << "DB Driver Features:";
+	qIno() << M_NAME_AND_VAL(Transactions);
+	qIno() << M_NAME_AND_VAL(QuerySize);
+	qIno() << M_NAME_AND_VAL(BatchOperations);
+	qIno() << M_NAME_AND_VAL(SimpleLocking);
+	qIno() << M_NAME_AND_VAL(EventNotifications);
+	qIno() << "DB Notification Subscriptions:";
+	qIno() << driver->subscribedToNotifications();
+
+#undef M_NAME_AND_VAL
 }
 
 QSqlError CollectionDatabaseModel::CreatePrimaryTables(QSqlDatabase &db)
@@ -189,67 +251,90 @@ QSqlError CollectionDatabaseModel::CreateRelationalTables(QSqlDatabase& db)
 
 QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *parent)
 {
-    qDbo() << "Here";
+	qDbo() << "OPENCONNECTION";
     QSqlDatabase db_conn = OpenDatabaseConnection(m_connection_name);
+	qDbo() << "Here";
 
 
     QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(parent, db_conn);
     Q_CHECK_PTR(rel_table_model);
 
     rel_table_model->setTable("DirScanResults");
-    rel_table_model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+	rel_table_model->setEditStrategy(QSqlTableModel::OnRowChange);
     // Left join to show rows with NULL foreign keys.
     rel_table_model->setJoinMode(QSqlRelationalTableModel::LeftJoin);
 
 //    rel_table_model->setRelation(4, QSqlRelation("Release", "releaseid", "releasename"));
     rel_table_model->setRelation(3, QSqlRelation("Release", "releaseid", "releasename"));
 
-    rel_table_model->setHeaderData(0, Qt::Horizontal, tr("HEADER_Id"));
-    rel_table_model->setHeaderData(1, Qt::Horizontal, tr("HEADER_Media_Url"));
-    rel_table_model->setHeaderData(2, Qt::Horizontal, tr("HEADER_SidecarCuesheet_Url"));
-    rel_table_model->setHeaderData(3, Qt::Horizontal, tr("HEADER_Releasename"));
+	rel_table_model->setHeaderData(0, Qt::Horizontal, tr("ID"));
+	rel_table_model->setHeaderData(1, Qt::Horizontal, tr("Media URL"));
+	rel_table_model->setHeaderData(2, Qt::Horizontal, tr("Sidecar Cuesheet URL"));
+	rel_table_model->setHeaderData(3, Qt::Horizontal, tr("Release Name"));
 
-//    rel_table_model->select();
+	rel_table_model->select();
 
-    bool status = rel_table_model->submitAll();
+	bool status = rel_table_model->submitAll();
     Q_ASSERT_X(status, "", "SUBMIT FAILED");
     m_relational_table_model = rel_table_model;
+
+	m_prepped_insert_query = new QSqlQuery(db_conn);
+	status = m_prepped_insert_query->prepare(QLatin1String(
+		"INSERT INTO DirScanResults(media_url, sidecar_cuesheet_url, dirscanrelease) values (?, ?, ?)"));
+	Q_ASSERT(status);
+
 
     return rel_table_model;
 }
 
-QSqlError CollectionDatabaseModel::addDirScanResult(const QUrl &media_url, int release)
+QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 {
+	addDirScanResult(*m_prepped_insert_query, dsr);
+#if 0
+	qDb() << "GETTING NEWREC";
     QSqlRecord newrec = m_relational_table_model->record();
+	qDb() << "GOT NEWREC";// << newrec;
 
-    qDb() << "NEWREC:" << newrec;
-    newrec.setValue("media_url", QVariant(media_url.toString()));
-    if(release != 0)
-    {
-        newrec.setValue("releasename", release);// QVariant(/*release*/"Free Fallin"));//1);
-    }
-    qDb() << "NEWREC:" << newrec;
+	newrec.setValue("media_url", QVariant(dsr.getMediaQUrl().toString()));
+	QUrl sidecar_cuesheet = dsr.getSidecarCuesheetQUrl();
+	if(sidecar_cuesheet.isValid())
+	{
+		newrec.setValue("sidecar_cuesheet_url", QVariant(dsr.getMediaQUrl().toString()));
+	}
+//    if(release != 0)
+//    {
+//        newrec.setValue("releasename", release);// QVariant(/*release*/"Free Fallin"));//1);
+//    }
+//    qDb() << "NEWREC:" << newrec;
 
     if(m_relational_table_model->insertRecord(-1, newrec))
     {
         qDb() << "INSERTRECORD SUCCEEDED:";
-        bool status = m_relational_table_model->submitAll();
+		bool status = m_relational_table_model->submit();
+		qDb() << "SUBMIT SUCCEEDED:";
         Q_ASSERT_X(status, "", "SUBMIT FAILED");
     }
     else
     {
         Q_ASSERT_X(0, "", "INSERTRECORD FAILED");
     }
+#endif
 
-
-    return QSqlError();
+	return QSqlError();
 }
 
-QVariant CollectionDatabaseModel::addMediaUrl(QSqlQuery &q, const QUrl &url)
+QVariant CollectionDatabaseModel::addDirScanResult(QSqlQuery& q, const DirScanResult& dsr)
 {
+	qDbo() << "START";
 
-
+	q.addBindValue(dsr.getMediaQUrl());
+	q.addBindValue(dsr.getSidecarCuesheetQUrl());
+	q.addBindValue(QVariant());
+	q.exec();
+	qDbo() << "END";
+	return q.lastInsertId();
 }
+
 
 void CollectionDatabaseModel::RunQuery(const QString &query, QSqlDatabase& db_conn)
 {

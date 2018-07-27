@@ -3,6 +3,9 @@
 
 #include <logic/models/AbstractTreeModel.h>
 
+#include <QTimer>
+#include <QDebug>
+
 CollectionView::CollectionView(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::CollectionView)
@@ -20,6 +23,12 @@ void CollectionView::setMainModel(QSqlRelationalTableModel *model)
     auto view = ui->treeView;
     view->setModel(model);
 	view->setItemDelegate(new QSqlRelationalDelegate(view));
+
+	auto tmr = new QTimer(this);
+	connect(tmr, &QTimer::timeout, view, [=](){
+		qDebug() << "Trying to refresh";
+		view->selectAll();});
+	tmr->start(1000);
 }
 
 void CollectionView::setPane2Model(AbstractTreeModel* model)

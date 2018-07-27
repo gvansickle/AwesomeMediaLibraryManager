@@ -34,7 +34,7 @@
 
 class FileModificationInfo
 {
-    Q_GADGET
+//    Q_GADGET
 
 public:
     /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
@@ -80,13 +80,15 @@ Q_DECLARE_METATYPE(FileModificationInfo);
  */
 class DirScanResult
 {
-    Q_GADGET
+	Q_GADGET
 
 public:
     /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
+	/// @{
     DirScanResult() = default;
     DirScanResult(const DirScanResult& other) = default;
     virtual ~DirScanResult() = default;
+	/// @}
 
     /// Constructor for public consumption.
     DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
@@ -123,7 +125,7 @@ public:
     DirProps getDirProps() const { return m_dir_props; }
 
     /// Get the URL which points to the actual media file found.
-    QUrl getMediaQUrl() const { return m_found_url; }
+	QUrl getMediaQUrl() const { return m_media_url; }
 
     /// URL to any sidecar cuesheet found.
     /// If one was found, DirProp::HasSidecarCueSheet will be set.
@@ -139,17 +141,19 @@ protected:
 
     QVector<QUrl> otherMediaFilesInDir(const QFileInfo& finfo);
 
+	/// Absolute URL to the directory.
+	QUrl m_dir_url;
+
     DirProps m_dir_props { Unknown };
 
     /// The media URL which was found.
-    QUrl m_found_url;
+	QUrl m_media_url;
     /// Info for detecting changes
     FileModificationInfo m_found_url_modinfo;
 
-    QUrl m_dir_url;
-
     /// URL to a sidecar cuesheet.  May be empty if none was found.
     QUrl m_cue_url;
+
     /// Info for detecting changes
     FileModificationInfo m_cue_url_modinfo;
 };

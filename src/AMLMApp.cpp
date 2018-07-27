@@ -55,8 +55,8 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
     m_cdb_model = new CollectionDatabaseModel(this);
     m_cdb_model->InitDb(QUrl("dummyfile.sqlite3"));
     auto rel_table_model = m_cdb_model->make_reltable_model(this);
-    m_cdb_model->addDirScanResult(QUrl("http://gbsfjdhg"));
-    m_cdb_model->addDirScanResult(QUrl("http://the_next_one"), 1);
+//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
+//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"), 1);
 
 	QString str =
 	"Getting Started				How to familiarize yourself with Qt Designer\n"

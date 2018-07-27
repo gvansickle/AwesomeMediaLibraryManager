@@ -159,7 +159,7 @@ void DirectoryScannerAMLMJob::runFunctor()
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
 //            Q_EMIT entries(this, file_url);
-            Q_EMIT entries(this, dir_scan_result);
+			Q_EMIT entries(dir_scan_result, this);
         }
 
         if(functorHandlePauseResumeAndCancel())

@@ -87,8 +87,6 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 	// Create the asynchronous rescanner.
 	m_rescanner = new LibraryRescanner(this);
 
-
-
 	// Connections.
 }
 
@@ -310,7 +308,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 // Already an outstanding request.
                 qDbo() << "Async load already pending for item:" << item;
             }
-            else if(1)
+			else if(0)
             {
                 // Start an async job to read the data for this entry.
 
@@ -1032,6 +1030,9 @@ void LibraryModel::connectSignals()
 {
     connect_or_die(this, &LibraryModel::SIGNAL_selfSendReadyResults,
                    this, qOverload<LibraryEntryLoaderJobResult>(&LibraryModel::SLOT_processReadyResults));
+
+	// Connect model signal to start scanning a URL to the async filesystem traverser.
+	/// @todo This is clunky, refactor.
 	connect(this, &LibraryModel::startFileScanSignal, m_rescanner, &LibraryRescanner::startAsyncDirectoryTraversal);
 }
 
