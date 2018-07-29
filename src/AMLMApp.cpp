@@ -23,6 +23,7 @@
 
 // Qt5
 #include <QProcessEnvironment>
+#include <QStandardPaths>
 #include <QUrl>
 
 // KF5
@@ -44,19 +45,41 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 
     setObjectName("TheAMLMApp");
 
-    /// @todo EXPERIMENTAL
+
+}
+
+AMLMApp::~AMLMApp()
+{
+    /// @todo Shut down whatever still needs shutting down.
+
+	// No more singleton.
+	m_the_instance = nullptr;
+
+	qDb() << "AMLMApp SINGLETON DESTROYED";
+}
+
+void AMLMApp::Init()
+{
+	/// @todo EXPERIMENTAL
 //    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
 
-    // Create the singletons we'll need for any app invocation.
-    /* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
+	// Create the singletons we'll need for any app invocation.
+	/* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
 
-    /// @todo Experiments
-    m_cdb_model = new CollectionDatabaseModel(this);
-    m_cdb_model->InitDb(QUrl("dummyfile.sqlite3"));
-    auto rel_table_model = m_cdb_model->make_reltable_model(this);
-//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
-//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"), 1);
+	/// @todo Experiments
+	m_cdb_model = new CollectionDatabaseModel(this);
+
+	/// @todo TEMP hardcoded db file name in home dir.
+	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+	QString db_file = db_dir + "/AMLMTestdb.sqlite3";
+
+	// Create or open the database.
+	m_cdb_model->InitDb(QUrl::fromLocalFile(db_file), "maindb");
+
+	auto rel_table_model = m_cdb_model->make_reltable_model(this);
+//	m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
+//	m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"), 1);
 
 	QString str =
 	"Getting Started				How to familiarize yourself with Qt Designer\n"
@@ -76,18 +99,8 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 
 	/// @end Experiments
 
-    /// @note This is a self-connection, not sure this will work as intended.
-    connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
-}
-
-AMLMApp::~AMLMApp()
-{
-    /// @todo Shut down whatever still needs shutting down.
-
-	// No more singleton.
-	m_the_instance = nullptr;
-
-    qDb() << "AMLMApp SINGLETON DESTROYED";
+	/// @note This is a self-connection, not sure this will work as intended.
+	connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
 }
 
 AMLMApp *AMLMApp::instance()

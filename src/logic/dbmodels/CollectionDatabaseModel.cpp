@@ -29,6 +29,9 @@
 #include <QSqlRecord>
 #include <QSqlDriver>
 #include <QFile>
+#include <QUrl>
+#include <QUrlQuery>
+#include <QString>
 
 /// Ours
 #include <utils/DebugHelpers.h>
@@ -49,65 +52,27 @@ CollectionDatabaseModel::~CollectionDatabaseModel()
 
 }
 
-QSqlError CollectionDatabaseModel::InitDb(QUrl db_file)
+QSqlError CollectionDatabaseModel::InitDb(const QUrl& db_file, const QString& connection_name)
 {
-    // Add/Create the database connection.
-	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ m_connection_name);
+	// Ask to delete file if it exists.
+	/// @todo Temp, remove this after debugging.
+	if(!IfExistsAskForDelete(db_file))
+	{
+		// File exists and user doesn't want to delete or delete failed.
+		return QSqlError("driver text", "File exists", QSqlError::ConnectionError);
+	}
 
-    if(!db.isValid())
-    {
-        return db.lastError();
-    }
+	// Store the filename and connection name.
+	m_db_file = db_file;
+	m_connection_name = connection_name;
 
-    /// @todo TEMP hardcoded db file name in home dir.
-    auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-    QString ab_file = db_dir + "/AMLMTestdb.sqlite3";
+	QUrlQuery rwc_query;
+	rwc_query.addQueryItem("mode", "rwc");
+	QUrl db_rwc = db_file;
+	db_rwc.setQuery(rwc_query);
+	auto db = CreateInitAndOpenDBConnection(db_rwc, connection_name);
 
-//    db.setDatabaseName(":memory:");
-
-    // Ask to delete file if it exists.
-    if(!IfExistsAskForDelete(QUrl::fromLocalFile(ab_file)))
-    {
-        // File exists and user doesn't want to delete or delete failed.
-        return QSqlError("driver text", "File exists", QSqlError::ConnectionError);
-    }
-
-    // Set up the database connection.
-    //
-    db.setDatabaseName(ab_file);
-
-    // Enable regexes.
-    db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
-    // Enable foreign key support.
-    db.setConnectOptions("PRAGMA foreign_keys = 1;");
-
-    // Open the db.
-    if (!db.open()) {
-        QMessageBox::critical(nullptr, QObject::tr("Cannot open database"),
-            QObject::tr("Unable to establish a database connection.\n"
-                        "This program needs SQLite support. Please read "
-                        "the Qt SQL driver documentation for information how "
-                        "to build it.\n\n"
-                        "Click Cancel to exit."), QMessageBox::Cancel);
-        return db.lastError();
-    }
-
-    QSqlQuery q = db.exec("PRAGMA foreign_keys = 1;");
-    if(db.lastError().type() != QSqlError::NoError)
-    {
-        qWro() << "PRAGMA FAILED";
-    }
-
-	LogDriverFeatures(db.driver());
-
-    /// @todo Return if the DB exists and looks to be in good condition.
-    if(false /* DB looks good. */)
-    {
-        return QSqlError();
-    }
-
-    CreatePrimaryTables(db);
-    CreateRelationalTables(db);
+	CreateSchema(db);
 
     return QSqlError();
 }
@@ -116,19 +81,14 @@ QSqlDatabase CollectionDatabaseModel::OpenDatabaseConnection(const QString &conn
 {
 	QSqlDatabase db_conn = /*QSqlDatabase::*/database(connection_name);
 	Q_ASSERT(db_conn.isValid());
-//    // Enable regexes.
-//    db_conn.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
-//    db_conn.setConnectOptions("PRAGMA foreign_keys = 1;");
-//    db_conn.open();
 
-    {
-		QSqlQuery q("PRAGMA foreign_keys = 1;", db_conn);
-		if(!q.exec())
-		{
-			qWro() << "PRAGMA FAILED";
-		}
-		qDbo() << "LAST QUERY:" << q.lastQuery();
-    }
+	QSqlQuery q("PRAGMA foreign_keys = 1;", db_conn);
+	if(!q.exec())
+	{
+		qWro() << "PRAGMA FAILED";
+	}
+	qDbo() << "LAST QUERY:" << q.lastQuery();
+
 
     RunQuery("PRAGMA foreign_keys;", db_conn);
 
@@ -161,7 +121,6 @@ QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name)
 	Q_ASSERT(connection.isValid());
 
 	// Enable regexes.
-//	connection.setConnectOptions("QSQLITE_ENABLE_REGEXP=1");
 //	connection.setConnectOptions("PRAGMA foreign_keys = 1;");
 
 	// open the database connection
@@ -191,7 +150,18 @@ void CollectionDatabaseModel::LogDriverFeatures(QSqlDriver* driver) const
 #undef M_NAME_AND_VAL
 }
 
-QSqlError CollectionDatabaseModel::CreatePrimaryTables(QSqlDatabase &db)
+void CollectionDatabaseModel::LogConnectionInfo(const QSqlDatabase& db_connection) const
+{
+	qIno() << "DB Connection info:";
+	qIno() << "  Connection Name:" << db_connection.connectionName();
+	qIno() << "  Connection's Database Name:" << db_connection.databaseName();
+	qIno() << "  Connection's Driver Name:" << db_connection.driverName();
+	qIno() << "  Connection Options string:" << db_connection.connectOptions();
+	qIno() << "DB Connection summary:";
+	qIno() << "  Connection Names:" << QSqlDatabase::connectionNames();
+}
+
+QSqlError CollectionDatabaseModel::CreateSchema(QSqlDatabase &db)
 {
 //    auto db_conn = QSqlDatabase::database("experimental_db_connection");
     auto& db_conn = db;
@@ -236,23 +206,11 @@ QSqlError CollectionDatabaseModel::CreatePrimaryTables(QSqlDatabase &db)
     return QSqlError();
 }
 
-QSqlError CollectionDatabaseModel::CreateRelationalTables(QSqlDatabase& db)
-{
-//    auto db = QSqlDatabase::database("experimental_db_connection");
-
-//    QSqlQuery q(db);
-//    if(!q.exec(""))
-//    {
-//        return q.lastError();
-//    }
-
-    return QSqlError();
-}
-
 QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *parent)
 {
 	qDbo() << "OPENCONNECTION";
-    QSqlDatabase db_conn = OpenDatabaseConnection(m_connection_name);
+	QSqlDatabase db_conn = OpenDatabaseConnection(m_connection_name);
+//	QSqlDatabase db_conn = database(m_connection_name);
 	qDbo() << "Here";
 
 
@@ -276,7 +234,8 @@ QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *
 
 	bool status = rel_table_model->submitAll();
     Q_ASSERT_X(status, "", "SUBMIT FAILED");
-    m_relational_table_model = rel_table_model;
+
+	m_relational_table_model = rel_table_model;
 
 	m_prepped_insert_query = new QSqlQuery(db_conn);
 	status = m_prepped_insert_query->prepare(QLatin1String(
@@ -372,7 +331,66 @@ bool CollectionDatabaseModel::IfExistsAskForDelete(const QUrl &filename)
         }
     }
     // else file doesn't exist.
-    return true;
+	return true;
+}
+
+QSqlDatabase CollectionDatabaseModel::CreateInitAndOpenDBConnection(const QUrl& db_file, const QString& connection_name)
+{
+	qDb() << "CIO database connection:" << db_file << "connection_name";
+
+	// Add a database to the list of db connections using the QSQLITE driver,
+	// and create a connection named m_connection_name.
+	// Note that this connection can only be used in this thread which created it; to access the db
+	// from other threads, that thread has to close or create a new connection.
+	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ connection_name);
+
+	if(!db.isValid())
+	{
+		qCro() << "Database connection is invalid:" << db;
+		return db;
+	}
+
+	// Set up the database connection.
+	// We have to do this setup prior to the final step of calling .open().
+
+	// Enable regexes, OPEN_URI, and optionally read-only.
+	/// @see @link https://www.sqlite.org/c3ref/open.html and @link https://www.sqlite.org/uri.html
+	///  as to why we want URI filename support.
+	/// Driver source: @link https://code.woboq.org/qt5/qtbase/src/plugins/sqldrivers/sqlite/qsql_sqlite.cpp.html#576openUriOption
+	bool read_only = false;
+	db.setConnectOptions(QString("QSQLITE_ENABLE_REGEXP=1;QSQLITE_OPEN_URI=1;QSQLITE_OPEN_READONLY=%1;").arg(read_only?1:0));
+
+	// Set the filename of the DB.
+	db.setDatabaseName(db_file.toString());
+
+	/// @todo Enable foreign key support.
+//	db.setConnectOptions("PRAGMA foreign_keys = 1;");
+
+	LogDriverFeatures(db.driver());
+
+	// Finally open the db.
+	if (!db.open()) {
+		QMessageBox::critical(nullptr, QObject::tr("Cannot open database"),
+			QObject::tr("Unable to establish a database connection.\n"
+						"This program needs SQLite support. Please read "
+						"the Qt SQL driver documentation for information how "
+						"to build it.\n\n"
+						"Click Cancel to exit."), QMessageBox::Cancel);
+		return db;
+	}
+
+	// PRAGMAs.  Enable foreign key support.
+	QSqlQuery q = db.exec("PRAGMA foreign_keys = 1;");
+	if(db.lastError().type() != QSqlError::NoError)
+	{
+		qWro() << "PRAGMA FAILED";
+	}
+
+	LogConnectionInfo(db);
+
+	/// @todo Final check if the DB exists and looks to be in good condition.
+
+	return db;
 }
 
 

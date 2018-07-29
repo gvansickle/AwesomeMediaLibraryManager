@@ -45,12 +45,23 @@ public:
     explicit CollectionDatabaseModel(QObject *parent);
      ~CollectionDatabaseModel() override;
 
-    QSqlError InitDb(QUrl db_file);
+    /**
+     * Open or Create a SQLite database file at @p db_file.
+	 *
+	 * Should only be called once per database file.  Subsequently use OpenDatabaseConnection() to get connections.
+	 *
+     * @param db_file
+     * @return
+     */
+	QSqlError InitDb(const QUrl& db_file, const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
+
     QSqlDatabase OpenDatabaseConnection(const QString& connection_name);
 
 	static QSqlDatabase database(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
 
 	void LogDriverFeatures(QSqlDriver* driver) const;
+
+	void LogConnectionInfo(const QSqlDatabase& db_connection) const;
 
     QSqlRelationalTableModel* make_reltable_model(QObject* parent = nullptr);
     QSqlRelationalTableModel* get_reltable_model() { return m_relational_table_model; }
@@ -69,10 +80,15 @@ protected:
 
     bool IfExistsAskForDelete(const QUrl& filename);
 
-    QSqlError CreatePrimaryTables(QSqlDatabase &db);
-    QSqlError CreateRelationalTables(QSqlDatabase &db);
+	QSqlDatabase CreateInitAndOpenDBConnection(const QUrl& db_file, const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
+
+	QSqlError CreateSchema(QSqlDatabase &db);
 
     void InitializeModel();
+
+private:
+
+	QUrl m_db_file;
 
     QString m_connection_name = "the_connection_name";
 

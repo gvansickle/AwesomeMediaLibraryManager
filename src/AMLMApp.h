@@ -63,7 +63,13 @@ public:
     explicit AMLMApp(int& argc, char **argv);
 	~AMLMApp() override;
 
+	/**
+	 * Post-constructor initialization.
+	 */
+	void Init();
+
     static AMLMApp* instance();
+
 
     CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }

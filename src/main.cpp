@@ -63,6 +63,8 @@ M_WARNING("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CM
  */
 int main(int argc, char *argv[])
 {
+	QThread::currentThread()->setObjectName("MAIN");
+
 	// Set up top-level logging.
 	Logging logging;
 	logging.SetFilterRules();
@@ -103,6 +105,7 @@ int main(int argc, char *argv[])
     // @note Must be the first QObject created and the last QObject deleted.
 	//
     AMLMApp app(argc, argv);
+	app.Init();
 
     // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
     app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
