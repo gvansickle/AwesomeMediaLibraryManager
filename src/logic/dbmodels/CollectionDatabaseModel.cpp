@@ -63,17 +63,19 @@ QSqlError CollectionDatabaseModel::InitDb(const QUrl& db_file, const QString& co
 	m_db_file = db_file;
 	m_connection_name = connection_name;
 
-	QUrlQuery rwc_query;
-	rwc_query.addQueryItem("mode", "rwc");
-	QUrl db_rwc = db_file;
-	db_rwc.setQuery(rwc_query);
-	auto db = CreateInitAndOpenDBConnection(db_rwc.toLocalFile(), connection_name);
+//	QUrlQuery rwc_query;
+//	rwc_query.addQueryItem("mode", "rwc");
+//	QUrl db_rwc = db_file;
+//	db_rwc.setQuery(rwc_query);
+	auto db = AddInitAndOpenDBConnection(db_file.toLocalFile(), connection_name, true, true);
 
 	Q_ASSERT(db.isValid());
 
-	CreateSchema(db);
+	register_root_database_connection(db, connection_name);
 
-    return QSqlError();
+	auto err = CreateSchema(db);
+
+	return err;
 }
 
 QSqlDatabase CollectionDatabaseModel::OpenDatabaseConnection(const QString &connection_name)
@@ -84,6 +86,15 @@ QSqlDatabase CollectionDatabaseModel::OpenDatabaseConnection(const QString &conn
 	RunQuery("PRAGMA foreign_keys;", db_conn);
 
 	return db_conn;
+}
+
+void CollectionDatabaseModel::register_root_database_connection(const QSqlDatabase& connection, const QString& connection_name)
+{
+	QMutexLocker locker(&m_db_mutex);
+	QThread *thread = QThread::currentThread();
+
+	qIno() << "REGSITERING ROOT DB CONNECTION:" << thread << connection_name;
+	m_db_instances[thread][connection_name] = connection;
 }
 
 QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name)
@@ -98,14 +109,14 @@ QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name)
 		auto it_conn = it_thread.value().find(connection_name);
 		if (it_conn != it_thread.value().end())
 		{
-			qDb() << "ALREADY HAVE DATABASE FOR THREAD:" << thread->objectName();
+			qDb() << "ALREADY HAVE DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << connection_name;
 			return it_conn.value();
 		}
 	}
 
 	// Otherwise, create a new connection for this thread by cloning from one existing in
 	// a different thread.
-	qDb() << "CLONING DATABASE FOR THREAD:" << thread->objectName();
+	qDb() << "CLONING DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << connection_name;
 	QSqlDatabase connection = QSqlDatabase::cloneDatabase(
 				QSqlDatabase::database(connection_name),
 				QString("%1_%2").arg(connection_name).arg((std::uintptr_t)thread));
@@ -120,6 +131,9 @@ QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name)
 
 	// Re-Apply the pragmas.
 	ApplyPragmas(connection);
+
+	// Log some debug info.
+	LogConnectionInfo(connection);
 
 	qIno() << "REGSITERING NEW DB CONNECTION:" << thread << connection_name;
 	m_db_instances[thread][connection_name] = connection;
@@ -165,23 +179,27 @@ QSqlError CollectionDatabaseModel::CreateSchema(QSqlDatabase &db)
                   "media_url TEXT NOT NULL,"
                   "sidecar_cuesheet_url TEXT,"
                   /// @todo experimental
-                  "dirscanrelease INTEGER REFERENCES Release"
-                  ")");
+				  "dirscanrelease INTEGER,"
+				  "FOREIGN KEY(dirscanrelease) REFERENCES Release(releaseid)"
+				  ");");
     tables.append("CREATE TABLE Artist ("
                   "artistid INTEGER PRIMARY KEY,"
                   "name TEXT"
-                  ")");
+				  ");");
     tables.append("CREATE TABLE Release ("
                   "releaseid INTEGER PRIMARY KEY,"
                   "releasename TEXT,"
                   "releaseartist INTEGER REFERENCES Artist"
-                  ")");
+				  ");");
+	tables.append("CREATE INDEX dirscanindex ON Release(releaseid);"
+				  );
 
     // Dummy data.
-    tables.append("INSERT INTO Artist values(0, '<all>')");
-    tables.append("INSERT INTO Artist values(1, 'Tom Petty')");
-    tables.append("INSERT INTO Release values(0, '<all>', 0)");
-    tables.append("INSERT INTO Release values(1, 'Free Fallin', 1)");
+	tables.append("INSERT INTO Artist values(0, '<all>');");
+	tables.append("INSERT INTO Artist values(1, 'Tom Petty');");
+	tables.append("INSERT INTO Release values(0, '<all>', 0);");
+	tables.append("INSERT INTO Release values(1, 'Free Fallin', 1);");
+	tables.append("INSERT INTO DirScanResults values(0, 'http://', NULL, 1);");
 
     // Create tables.
     for(int i = 0; i < tables.count(); ++i)
@@ -240,8 +258,9 @@ QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *
 
 QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 {
-	addDirScanResult(*m_prepped_insert_query, dsr);
 #if 0
+	addDirScanResult(*m_prepped_insert_query, dsr);
+#else
 	qDb() << "GETTING NEWREC";
     QSqlRecord newrec = m_relational_table_model->record();
 	qDb() << "GOT NEWREC";// << newrec;
@@ -250,7 +269,7 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 	QUrl sidecar_cuesheet = dsr.getSidecarCuesheetQUrl();
 	if(sidecar_cuesheet.isValid())
 	{
-		newrec.setValue("sidecar_cuesheet_url", QVariant(dsr.getMediaQUrl().toString()));
+		newrec.setValue("sidecar_cuesheet_url", QVariant(dsr.getSidecarCuesheetQUrl().toString()));
 	}
 //    if(release != 0)
 //    {
@@ -261,9 +280,9 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
     if(m_relational_table_model->insertRecord(-1, newrec))
     {
         qDb() << "INSERTRECORD SUCCEEDED:";
-		bool status = m_relational_table_model->submit();
+		bool status = m_relational_table_model->submitAll();
 		qDb() << "SUBMIT SUCCEEDED:";
-        Q_ASSERT_X(status, "", "SUBMIT FAILED");
+		Q_ASSERT_X(status, "", "SUBMIT FAILED");
     }
     else
     {
@@ -329,7 +348,8 @@ bool CollectionDatabaseModel::IfExistsAskForDelete(const QUrl &filename)
 	return true;
 }
 
-QSqlDatabase CollectionDatabaseModel::CreateInitAndOpenDBConnection(const QUrl& db_file, const QString& connection_name)
+QSqlDatabase CollectionDatabaseModel::AddInitAndOpenDBConnection(const QUrl& db_file, const QString& connection_name,
+																	bool write, bool create)
 {
 	qDb() << "CIO database connection:" << db_file << "connection_name:" << connection_name;
 
@@ -352,8 +372,12 @@ QSqlDatabase CollectionDatabaseModel::CreateInitAndOpenDBConnection(const QUrl& 
 	/// @see @link https://www.sqlite.org/c3ref/open.html and @link https://www.sqlite.org/uri.html
 	///  as to why we want URI filename support.
 	/// Driver source: @link https://code.woboq.org/qt5/qtbase/src/plugins/sqldrivers/sqlite/qsql_sqlite.cpp.html#576openUriOption
-	bool read_only = false;
 	db.setConnectOptions(QString("QSQLITE_ENABLE_REGEXP=1;"));//QSQLITE_OPEN_URI=1;QSQLITE_OPEN_READONLY=%1;").arg(read_only?1:0));
+
+	if(!write)
+	{
+		db.setConnectOptions("QSQLITE_OPEN_READONLY=1;");
+	}
 
 	// Set the filename of the DB.
 	db.setDatabaseName(db_file.toString());
@@ -374,11 +398,6 @@ QSqlDatabase CollectionDatabaseModel::CreateInitAndOpenDBConnection(const QUrl& 
 
 	// PRAGMAs.  Enable foreign key support.
 	ApplyPragmas(db);
-//	QSqlQuery q = db.exec("PRAGMA foreign_keys = 1;");
-//	if(db.lastError().type() != QSqlError::NoError)
-//	{
-//		qWro() << "PRAGMA FAILED";
-//	}
 
 	LogConnectionInfo(db);
 	RunQuery("PRAGMA foreign_keys;", db);
@@ -406,13 +425,6 @@ QSqlError CollectionDatabaseModel::ApplyPragmas(QSqlDatabase& db_conn)
 	QSqlError err = SqlPRAGMA(db_conn, "foreign_keys = 1");
 	Q_ASSERT(err.type() == QSqlError::NoError);
 
-//	auto retval = RunQuery("PRAGMA foreign_keys = 1;", db_conn);
-//	Q_ASSERT(retval == 1);
-
-//	if(!retval.isValid())
-//	{
-//		return db_conn.lastError();
-//	}
 	return err;
 }
 

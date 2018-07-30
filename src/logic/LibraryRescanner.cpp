@@ -60,7 +60,7 @@ AMLM_QREG_CALLBACK([](){
 	// From #include <logic/LibraryRescanner.h>
 	qRegisterMetaType<MetadataReturnVal>();
 	qRegisterMetaType<QFuture<MetadataReturnVal>>();
-	qRegisterMetaType<VecLibRescannerMapItems>("VecLibRescannerMapItems");
+	qRegisterMetaType<VecLibRescannerMapItems>();
     });
 
 
@@ -222,10 +222,12 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	/// @todo EXPERIMENTAL: Also send it to the SQLITE DB model.
 	auto dbmodel = AMLMApp::instance()->cdb_instance();
 //	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, &CollectionDatabaseModel::SLOT_addDirScanResult);
-	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, [=](auto dsr, auto kjob)
+	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, [=](auto dsr, auto kjob)
 	{
 		qIno() << "DBSTART";
+#if 0
 		auto db_conn = dbmodel->OpenDatabaseConnection("the_connection_name");
+
 
 //		auto prepped_insert_query = new QSqlQuery(db_conn);
 		QSqlQuery prepped_insert_query(db_conn);
@@ -234,8 +236,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			"INSERT INTO DirScanResults(media_url, sidecar_cuesheet_url, dirscanrelease) values (?, ?, ?)"));
 		Q_ASSERT(status);
 
-		dbmodel->addDirScanResult(prepped_insert_query, dsr);
-//		db_conn->SLOT_addDirScanResult();
+//		dbmodel->addDirScanResult(prepped_insert_query, dsr);
+#else
+		dbmodel->SLOT_addDirScanResult(dsr);
+#endif
 		qIno() << "DBEND";
 	});
 

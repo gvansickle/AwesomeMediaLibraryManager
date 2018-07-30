@@ -82,12 +82,14 @@ protected:
 	/// @{
 	QMutex m_db_mutex;
 	QHash<QThread*, QHash<QString, QSqlDatabase>> m_db_instances;
+	void register_root_database_connection(const QSqlDatabase& connection, const QString& connection_name);
 	QSqlDatabase database(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
 	/// @}
 
     bool IfExistsAskForDelete(const QUrl& filename);
 
-	QSqlDatabase CreateInitAndOpenDBConnection(const QUrl& db_file, const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
+	QSqlDatabase AddInitAndOpenDBConnection(const QUrl& db_file, const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection),
+											   bool write = false, bool create = false);
 
 	QSqlError SqlPRAGMA(QSqlDatabase& db_conn, const QString& str);
 
