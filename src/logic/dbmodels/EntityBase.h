@@ -39,8 +39,9 @@ namespace AMLM
 		virtual ~EntityBase() = default;
 
 	public:
-		static void schema() {};
+		static QString schema() { return ""; };
 	};
+
 
 
 	/**
@@ -56,23 +57,21 @@ namespace AMLM
 		explicit CollectionMedium(const DirScanResult& dsr);
 		~CollectionMedium() override = default;
 
+		static QString schema();
+
 	protected:
 
 		/// Absolute URL to the directory.
-		QUrl m_dir_url;
+		ExtUrl m_dir_url;
 
+		/// Properties of the directory.
 		DirScanResult::DirProps m_dir_props { DirScanResult::DirProp::Unknown };
 
-		/// The media URL which was found.
-		QUrl m_media_url;
-		/// Info for detecting changes
-		FileModificationInfo m_found_url_modinfo;
+		/// The URLs of the media files plus Info for detecting changes
+		QVector<ExtUrl> m_media_urls;
 
 		/// URL to a sidecar cuesheet.  May be empty if none was found.
-		QUrl m_cue_url;
-
-		/// Info for detecting changes
-		FileModificationInfo m_cue_url_modinfo;
+		ExtUrl m_cue_url;
 	};
 
 	class ISRC : public EntityBase {};
@@ -86,5 +85,8 @@ namespace AMLM
 }; // END namespace AMLM
 
 Q_DECLARE_METATYPE(AMLM::EntityBase);
+Q_DECLARE_METATYPE(AMLM::CollectionMedium);
+Q_DECLARE_METATYPE(AMLM::ISRC);
+
 
 #endif // ENTITYBASE_H

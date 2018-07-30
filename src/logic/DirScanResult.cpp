@@ -32,7 +32,8 @@
 #include <utils/RegisterQtMetatypes.h>
 
 AMLM_QREG_CALLBACK([](){
-    qIn() << "Registering DirScanResult, FileModificationInfo";
+	qIn() << "Registering ExtUrl, DirScanResult, FileModificationInfo";
+	qRegisterMetaType<ExtUrl>();
     qRegisterMetaType<DirScanResult>();
     qRegisterMetaType<FileModificationInfo>();
 });

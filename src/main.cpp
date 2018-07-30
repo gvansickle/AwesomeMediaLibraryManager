@@ -49,7 +49,6 @@
 #include "utils/StringHelpers.h"
 
 #include "gui/MainWindow.h"
-#include "utils/RegisterQtMetatypes.h"
 
 #include "resources/VersionInfo.h"
 
@@ -178,8 +177,7 @@ int main(int argc, char *argv[])
 	qInfo() << " Application:" << AMLMApp::applicationDisplayName() << "(" << AMLMApp::applicationName() << ")";
 	qInfo() << "     Version:" << AMLMApp::applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
 
-	// Register types with Qt.
-	RegisterQtMetatypes();
+
 
 M_WARNING("icons not installed properly");
     // Load the icon resources.

@@ -35,6 +35,7 @@
 #include <QString>
 
 /// Ours
+#include "SQLHelpers.h"
 #include <utils/DebugHelpers.h>
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
@@ -187,10 +188,10 @@ QSqlError CollectionDatabaseModel::CreateSchema(QSqlDatabase &db)
 
     QStringList tables;
 
-    tables.append("CREATE TABLE DirScanResults ("
-                  "dirscanid INTEGER PRIMARY KEY,"
-                  "media_url TEXT NOT NULL,"
-                  "sidecar_cuesheet_url TEXT,"
+	tables.append(CREATE_TABLE "DirScanResults ("
+				  "dirscanid " IPK ","
+				  "media_url" TEXT NOT_NULL ","
+				  "sidecar_cuesheet_url" TEXT ","
                   /// @todo experimental
 				  "dirscanrelease INTEGER,"
 				  "FOREIGN KEY(dirscanrelease) REFERENCES Release(releaseid)"
@@ -232,10 +233,6 @@ QSqlError CollectionDatabaseModel::CreateSchema(QSqlDatabase &db)
 QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *parent, QSqlDatabase db_conn)
 {
 	qDbo() << "OPENCONNECTION";
-//	QSqlDatabase db_conn = OpenDatabaseConnection(m_connection_name);
-//	QSqlDatabase db_conn = database(m_connection_name);
-	qDbo() << "Here";
-
 
 	QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(parent, db_conn);
     Q_CHECK_PTR(rel_table_model);

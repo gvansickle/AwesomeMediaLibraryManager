@@ -19,15 +19,37 @@
 
 #include "EntityBase.h"
 
-#include <src/logic/DirScanResult.h>
+#include "SQLHelpers.h"
 
+#include <utils/RegisterQtMetatypes.h>
+#include <src/logic/DirScanResult.h>
+#include <utils/DebugHelpers.h>
+
+
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering Database Entity types";
+	qRegisterMetaType<AMLM::EntityBase>();
+	qRegisterMetaType<AMLM::CollectionMedium>();
+	qRegisterMetaType<AMLM::ISRC>();
+});
 
 namespace AMLM
 {
 
 	CollectionMedium::CollectionMedium(const DirScanResult& dsr)
 	{
+//		m_dir_url = dsr.getDirProps();
+		m_dir_props = dsr.getDirProps();
+//		m_media_urls = dsr.getMediaQUrl();
+		m_cue_url = dsr.getSidecarCuesheetQUrl();
+	}
 
+	QString CollectionMedium::schema()
+	{
+		return "m_dir_url" TEXT NOT_NULL ","
+				"m_dir_props" BLOB ","
+				"m_media_urls" BLOB ","
+				"m_cue_url" TEXT;
 	}
 
 

@@ -32,6 +32,30 @@
 /// Ours
 #include <utils/QtHelpers.h>
 
+
+class ExtUrl
+{
+public:
+//	ExtUrl() = default;
+//	~ExtUrl() = default;
+
+	operator QUrl() const { return m_url; }
+
+	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
+
+	/// The QUrl.
+	QUrl m_url;
+	/// File size, or 0 if couldn't be determined.
+	qint64 m_size {0};
+	/// Last modified time.  Invalid if can't be determined(?).
+	QDateTime m_last_modified_timestamp;
+	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
+	QDateTime m_metadata_last_modified_timestamp;
+
+};
+Q_DECLARE_METATYPE(ExtUrl);
+
+
 class FileModificationInfo
 {
 //    Q_GADGET

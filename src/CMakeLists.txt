@@ -160,6 +160,7 @@ set(HEADER_FILES
 	logic/dbmodels/CollectionDatabaseModel.h
 	logic/dbmodels/DBConnectionManager.h
 	logic/dbmodels/EntityBase.h
+	logic/dbmodels/SQLHelpers.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h

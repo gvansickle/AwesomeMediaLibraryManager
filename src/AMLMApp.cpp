@@ -33,6 +33,8 @@
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
 #include <logic/dbmodels/CollectionDatabaseModel.h>
+#include <utils/RegisterQtMetatypes.h>
+
 
 // Pointer to the singleton.
 AMLMApp *AMLMApp::m_the_instance = nullptr;
@@ -60,6 +62,9 @@ AMLMApp::~AMLMApp()
 
 void AMLMApp::Init()
 {
+	// Register our types with Qt.
+	RegisterQtMetatypes();
+
 	/// @todo EXPERIMENTAL
 //    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
