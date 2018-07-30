@@ -165,12 +165,12 @@ public:
     DirProps getDirProps() const { return m_dir_props; }
 
     /// Get the URL which points to the actual media file found.
-	QUrl getMediaQUrl() const { return m_media_url; }
+	QUrl getMediaQUrl() const { return m_media_exturl; }
 
     /// URL to any sidecar cuesheet found.
     /// If one was found, DirProp::HasSidecarCueSheet will be set.
     /// Returned URL will not be valid if there was no sidecar cue sheet.
-    QUrl getSidecarCuesheetQUrl() const { return m_cue_url; }
+	QUrl getSidecarCuesheetQUrl() const { return m_cue_exturl; }
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
 //    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
@@ -179,23 +179,23 @@ protected:
 
     void determineDirProps(const QFileInfo &);
 
-    QVector<QUrl> otherMediaFilesInDir(const QFileInfo& finfo);
+	QVector<ExtUrl> otherMediaFilesInDir(const QFileInfo& finfo);
 
 	/// Absolute URL to the directory.
-	ExtUrl m_dir_url;
+	ExtUrl m_dir_exturl;
 
     DirProps m_dir_props { Unknown };
 
     /// The media URL which was found.
-	ExtUrl m_media_url;
+	ExtUrl m_media_exturl;
     /// Info for detecting changes
-    FileModificationInfo m_found_url_modinfo;
+//    FileModificationInfo m_found_url_modinfo;
 
     /// URL to a sidecar cuesheet.  May be empty if none was found.
-	ExtUrl m_cue_url;
+	ExtUrl m_cue_exturl;
 
     /// Info for detecting changes
-    FileModificationInfo m_cue_url_modinfo;
+//    FileModificationInfo m_cue_url_modinfo;
 };
 
 Q_DECLARE_METATYPE(DirScanResult);

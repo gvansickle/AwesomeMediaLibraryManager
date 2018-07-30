@@ -103,7 +103,7 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
 #undef DATASTREAM_FIELDS
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
-	: m_media_url(found_url, &found_url_finfo)
+	: m_media_exturl(found_url, &found_url_finfo)
 {
 	determineDirProps(found_url_finfo);
 }
@@ -121,13 +121,13 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 #endif
 	// Works for any URL.
     {
-		m_dir_url = m_media_url.m_url.adjusted(QUrl::RemoveFilename);
+		m_dir_exturl = m_media_exturl.m_url.adjusted(QUrl::RemoveFilename);
     }
 
     // Is there a sidecar cue sheet?
 
     // Create the *.cue URL.
-	ExtUrl possible_cue_url = m_media_url;
+	ExtUrl possible_cue_url = m_media_exturl;
 	QString cue_url_as_str = possible_cue_url.m_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
@@ -141,7 +141,7 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
         if(fi.exists())
         {
             // It's there.
-            m_cue_url = possible_cue_url;
+			m_cue_exturl = possible_cue_url;
             m_dir_props |= HasSidecarCueSheet;
         }
     }
@@ -151,7 +151,7 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
     }
 }
 
-QVector<QUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
+QVector<ExtUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
 {
     // Get the parent directory.
     auto dir = finfo.dir();
@@ -160,7 +160,7 @@ M_WARNING("TODO");
 }
 
 #define DATASTREAM_FIELDS(X) \
-	X(m_media_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
+	X(m_dir_exturl) X(m_dir_props) X(m_media_exturl) X(m_cue_exturl)
 
 QDebug operator<<(QDebug dbg, const DirScanResult & obj)
 {
