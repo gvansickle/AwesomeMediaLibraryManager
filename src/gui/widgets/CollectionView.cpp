@@ -24,9 +24,12 @@ void CollectionView::setMainModel(QSqlRelationalTableModel *model)
     view->setModel(model);
 	view->setItemDelegate(new QSqlRelationalDelegate(view));
 
+	model->select();
+
 	auto tmr = new QTimer(this);
 	connect(tmr, &QTimer::timeout, view, [=](){
 		qDebug() << "Trying to refresh";
+//		model->submitAll();
 		model->select();
 //		view->selectAll();
 	});

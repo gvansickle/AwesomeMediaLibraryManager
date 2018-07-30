@@ -279,7 +279,7 @@ void CollectionDatabaseModel::LogModelInfo(QSqlRelationalTableModel* model) cons
 
 QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 {
-#if 1
+#if 0
 	addDirScanResult(*m_prepped_insert_query, dsr);
 #else
 	qDb() << "GETTING NEWREC";
