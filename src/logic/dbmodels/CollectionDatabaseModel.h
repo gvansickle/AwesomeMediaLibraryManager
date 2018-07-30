@@ -57,8 +57,6 @@ public:
 
     QSqlDatabase OpenDatabaseConnection(const QString& connection_name);
 
-	static QSqlDatabase database(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
-
 	void LogDriverFeatures(QSqlDriver* driver) const;
 
 	void LogConnectionInfo(const QSqlDatabase& db_connection) const;
@@ -66,7 +64,11 @@ public:
     QSqlRelationalTableModel* make_reltable_model(QObject* parent = nullptr);
     QSqlRelationalTableModel* get_reltable_model() { return m_relational_table_model; }
 
-    void RunQuery(const QString& query, QSqlDatabase& db_conn);
+	/**
+	 * Helper function to inefficiently run a simple query (e.g. PRAGMAs) and return
+	 * a single result value.
+	 */
+	QVariant RunQuery(const QString& query, QSqlDatabase& db_conn);
 
 public Q_SLOT:
 	QSqlError SLOT_addDirScanResult(DirScanResult dsr);
@@ -75,12 +77,21 @@ public Q_SLOT:
 
 protected:
 
-	static QMutex m_db_mutex;
-	static QHash<QThread*, QHash<QString, QSqlDatabase>> m_db_instances;
+	/// @name A mechanism for keeping track of the connections we have opened per thread.
+	/// We need this so we don't delete an existing connection accidentally.
+	/// @{
+	QMutex m_db_mutex;
+	QHash<QThread*, QHash<QString, QSqlDatabase>> m_db_instances;
+	QSqlDatabase database(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
+	/// @}
 
     bool IfExistsAskForDelete(const QUrl& filename);
 
 	QSqlDatabase CreateInitAndOpenDBConnection(const QUrl& db_file, const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
+
+	QSqlError SqlPRAGMA(QSqlDatabase& db_conn, const QString& str);
+
+	QSqlError ApplyPragmas(QSqlDatabase& db_conn);
 
 	QSqlError CreateSchema(QSqlDatabase &db);
 

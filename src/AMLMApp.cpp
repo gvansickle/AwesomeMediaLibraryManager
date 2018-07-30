@@ -75,7 +75,7 @@ void AMLMApp::Init()
 	QString db_file = db_dir + "/AMLMTestdb.sqlite3";
 
 	// Create or open the database.
-	m_cdb_model->InitDb(QUrl::fromLocalFile(db_file), "maindb");
+	m_cdb_model->InitDb(QUrl::fromLocalFile(db_file), "the_connection_name");
 
 	auto rel_table_model = m_cdb_model->make_reltable_model(this);
 //	m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
