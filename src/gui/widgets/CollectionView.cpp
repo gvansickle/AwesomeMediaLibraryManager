@@ -30,7 +30,7 @@ void CollectionView::setMainModel(QSqlRelationalTableModel *model)
 	connect(tmr, &QTimer::timeout, view, [=](){
 		qDebug() << "Trying to refresh";
 //		model->submitAll();
-		model->select();
+//		model->select();
 //		view->selectAll();
 	});
 	tmr->start(1000);

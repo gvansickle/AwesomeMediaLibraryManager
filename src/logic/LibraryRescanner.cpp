@@ -220,10 +220,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	/// @todo EXPERIMENTAL: Also send it to the SQLITE DB model.
 	auto dbmodel = AMLMApp::instance()->cdb_instance();
 //	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, &CollectionDatabaseModel::SLOT_addDirScanResult);
-	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, [=](auto dsr, auto kjob)
+	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, [=](auto dsr, auto kjob)
 	{
 		qIno() << "DBSTART";
-#if 1
+#if 0
 		auto db_conn = dbmodel->OpenDatabaseConnection("the_connection_name", true);
 
 //		auto prepped_insert_query = new QSqlQuery(db_conn);

@@ -281,7 +281,7 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 {
 #if 0
 	addDirScanResult(*m_prepped_insert_query, dsr);
-#else
+#elif 0
 	qDb() << "GETTING NEWREC";
     QSqlRecord newrec = m_relational_table_model->record();
 	qDb() << "GOT NEWREC";// << newrec;
@@ -301,7 +301,7 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
     if(m_relational_table_model->insertRecord(-1, newrec))
     {
         qDb() << "INSERTRECORD SUCCEEDED:";
-		bool status = m_relational_table_model->submitAll();
+		bool status = m_relational_table_model->submit();
 		qDb() << "SUBMIT SUCCEEDED:";
 		Q_ASSERT_X(status, "", "SUBMIT FAILED");
     }
@@ -309,6 +309,15 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
     {
         Q_ASSERT_X(0, "", "INSERTRECORD FAILED");
     }
+#else
+	int row = m_relational_table_model->rowCount();
+	qDbo() << "ROW:" << row;
+	bool status = m_relational_table_model->insertRow(row);
+	Q_ASSERT(status);
+	auto index = m_relational_table_model->index(row, 1);
+	status = m_relational_table_model->setData(index, QVariant(dsr.getMediaQUrl().toString()));
+	Q_ASSERT(status);
+	m_relational_table_model->submit();
 #endif
 
 	return QSqlError();
