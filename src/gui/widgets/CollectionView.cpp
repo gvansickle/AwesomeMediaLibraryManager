@@ -27,7 +27,9 @@ void CollectionView::setMainModel(QSqlRelationalTableModel *model)
 	auto tmr = new QTimer(this);
 	connect(tmr, &QTimer::timeout, view, [=](){
 		qDebug() << "Trying to refresh";
-		view->selectAll();});
+		model->select();
+//		view->selectAll();
+	});
 	tmr->start(1000);
 }
 

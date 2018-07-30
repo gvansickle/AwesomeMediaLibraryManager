@@ -42,7 +42,7 @@ class CollectionDatabaseModel : public QObject
     Q_OBJECT
 
 public:
-    explicit CollectionDatabaseModel(QObject *parent);
+	explicit CollectionDatabaseModel(QObject *parent);
      ~CollectionDatabaseModel() override;
 
     /**
@@ -55,7 +55,8 @@ public:
      */
 	QSqlError InitDb(const QUrl& db_file, const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
 
-    QSqlDatabase OpenDatabaseConnection(const QString& connection_name);
+	QSqlDatabase OpenDatabaseConnection(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection),
+										bool write = false, bool create = false);
 
 	void LogDriverFeatures(QSqlDriver* driver) const;
 
@@ -63,6 +64,7 @@ public:
 
     QSqlRelationalTableModel* make_reltable_model(QObject* parent = nullptr);
     QSqlRelationalTableModel* get_reltable_model() { return m_relational_table_model; }
+	void LogModelInfo(QSqlRelationalTableModel* model) const;
 
 	/**
 	 * Helper function to inefficiently run a simple query (e.g. PRAGMAs) and return
@@ -83,7 +85,7 @@ protected:
 	QMutex m_db_mutex;
 	QHash<QThread*, QHash<QString, QSqlDatabase>> m_db_instances;
 	void register_root_database_connection(const QSqlDatabase& connection, const QString& connection_name);
-	QSqlDatabase database(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection));
+	QSqlDatabase database(const QString& connection_name = QLatin1String(QSqlDatabase::defaultConnection), bool read_only = true);
 	/// @}
 
     bool IfExistsAskForDelete(const QUrl& filename);

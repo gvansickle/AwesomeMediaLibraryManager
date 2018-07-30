@@ -84,8 +84,6 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
 #if 0
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
-
-
 	// If we have more than a single entry in the incoming list, we have a multi-track file to refresh.
 	if(mapitem.size() == 1)
 	{
@@ -222,12 +220,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	/// @todo EXPERIMENTAL: Also send it to the SQLITE DB model.
 	auto dbmodel = AMLMApp::instance()->cdb_instance();
 //	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, &CollectionDatabaseModel::SLOT_addDirScanResult);
-	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, [=](auto dsr, auto kjob)
+	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, [=](auto dsr, auto kjob)
 	{
 		qIno() << "DBSTART";
-#if 0
-		auto db_conn = dbmodel->OpenDatabaseConnection("the_connection_name");
-
+#if 1
+		auto db_conn = dbmodel->OpenDatabaseConnection("the_connection_name", true);
 
 //		auto prepped_insert_query = new QSqlQuery(db_conn);
 		QSqlQuery prepped_insert_query(db_conn);
@@ -236,7 +233,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			"INSERT INTO DirScanResults(media_url, sidecar_cuesheet_url, dirscanrelease) values (?, ?, ?)"));
 		Q_ASSERT(status);
 
-//		dbmodel->addDirScanResult(prepped_insert_query, dsr);
+		dbmodel->addDirScanResult(prepped_insert_query, dsr);
 #else
 		dbmodel->SLOT_addDirScanResult(dsr);
 #endif

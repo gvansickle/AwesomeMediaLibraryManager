@@ -28,6 +28,7 @@
 #include <QSqlRelationalTableModel>
 #include <QSqlRecord>
 #include <QSqlDriver>
+#include <QSqlIndex>
 #include <QFile>
 #include <QUrl>
 #include <QUrlQuery>
@@ -63,27 +64,27 @@ QSqlError CollectionDatabaseModel::InitDb(const QUrl& db_file, const QString& co
 	m_db_file = db_file;
 	m_connection_name = connection_name;
 
-//	QUrlQuery rwc_query;
-//	rwc_query.addQueryItem("mode", "rwc");
-//	QUrl db_rwc = db_file;
-//	db_rwc.setQuery(rwc_query);
-	auto db = AddInitAndOpenDBConnection(db_file.toLocalFile(), connection_name, true, true);
+//	auto db = AddInitAndOpenDBConnection(db_file.toLocalFile(), connection_name, true, true);
+	auto db = database(connection_name, false);
 
 	Q_ASSERT(db.isValid());
 
-	register_root_database_connection(db, connection_name);
+//	register_root_database_connection(db, connection_name);
 
 	auto err = CreateSchema(db);
 
 	return err;
 }
 
-QSqlDatabase CollectionDatabaseModel::OpenDatabaseConnection(const QString &connection_name)
+QSqlDatabase CollectionDatabaseModel::OpenDatabaseConnection(const QString &connection_name, bool write, bool create)
 {
-	QSqlDatabase db_conn = /*QSqlDatabase::*/database(connection_name);
+	QSqlDatabase db_conn = /*QSqlDatabase::*/database(connection_name, !write);
+//	QSqlDatabase db_conn = AddInitAndOpenDBConnection(m_db_file, connection_name, write, create);
 	Q_ASSERT(db_conn.isValid());
 
 	RunQuery("PRAGMA foreign_keys;", db_conn);
+
+//	register_root_database_connection(db_conn, connection_name);
 
 	return db_conn;
 }
@@ -97,46 +98,56 @@ void CollectionDatabaseModel::register_root_database_connection(const QSqlDataba
 	m_db_instances[thread][connection_name] = connection;
 }
 
-QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name)
+QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name, bool read_only)
 {
 	QMutexLocker locker(&m_db_mutex);
 	QThread *thread = QThread::currentThread();
+
+	QString rwdecorated_connection_name = QString("%1_%2")
+			.arg(connection_name)
+			.arg(read_only?"r":"rwc");
+
+	QString new_connection_name = QString("%1_%2")
+			.arg(rwdecorated_connection_name)
+			.arg(reinterpret_cast<std::uintptr_t>(thread));
 
 	// If we have a connection with the given name for this thread, return it.
 	auto it_thread = m_db_instances.find(thread);
 	if (it_thread != m_db_instances.end())
 	{
-		auto it_conn = it_thread.value().find(connection_name);
+		auto it_conn = it_thread.value().find(new_connection_name);
 		if (it_conn != it_thread.value().end())
 		{
-			qDb() << "ALREADY HAVE DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << connection_name;
+			qDb() << "ALREADY HAVE DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << rwdecorated_connection_name;
 			return it_conn.value();
 		}
 	}
 
 	// Otherwise, create a new connection for this thread by cloning from one existing in
 	// a different thread.
-	qDb() << "CLONING DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << connection_name;
-	QSqlDatabase connection = QSqlDatabase::cloneDatabase(
-				QSqlDatabase::database(connection_name),
-				QString("%1_%2").arg(connection_name).arg((std::uintptr_t)thread));
+//	qDb() << "CLONING DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << rwdecorated_connection_name;
+//	QSqlDatabase connection = QSqlDatabase::cloneDatabase(
+//				QSqlDatabase::database(connection_name),
+//				new_connection_name);
+	qDb() << "ADDING NEW DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << rwdecorated_connection_name;
+	QSqlDatabase connection = AddInitAndOpenDBConnection(m_db_file, new_connection_name, !read_only);
 
 	Q_ASSERT(connection.isValid());
 
-	// open the database connection
-	if (!connection.open())
-	{
-		throw std::runtime_error("Unable to open the new database connection.");
-	}
+//	// open the database connection
+//	if (!connection.open())
+//	{
+//		throw std::runtime_error("Unable to open the new database connection.");
+//	}
 
-	// Re-Apply the pragmas.
-	ApplyPragmas(connection);
+//	// Re-Apply the pragmas.
+//	ApplyPragmas(connection);
 
 	// Log some debug info.
 	LogConnectionInfo(connection);
 
-	qIno() << "REGSITERING NEW DB CONNECTION:" << thread << connection_name;
-	m_db_instances[thread][connection_name] = connection;
+	qIno() << "REGSITERING NEW DB CONNECTION:" << thread << new_connection_name;
+	m_db_instances[thread][new_connection_name] = connection;
 	return connection;
 }
 
@@ -232,7 +243,6 @@ QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *
     // Left join to show rows with NULL foreign keys.
     rel_table_model->setJoinMode(QSqlRelationalTableModel::LeftJoin);
 
-//    rel_table_model->setRelation(4, QSqlRelation("Release", "releaseid", "releasename"));
     rel_table_model->setRelation(3, QSqlRelation("Release", "releaseid", "releasename"));
 
 	rel_table_model->setHeaderData(0, Qt::Horizontal, tr("ID"));
@@ -247,18 +257,29 @@ QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *
 
 	m_relational_table_model = rel_table_model;
 
+	LogModelInfo(m_relational_table_model);
+
 	m_prepped_insert_query = new QSqlQuery(db_conn);
 	status = m_prepped_insert_query->prepare(QLatin1String(
 		"INSERT INTO DirScanResults(media_url, sidecar_cuesheet_url, dirscanrelease) values (?, ?, ?)"));
 	Q_ASSERT(status);
 
 
-    return rel_table_model;
+	return rel_table_model;
+}
+
+void CollectionDatabaseModel::LogModelInfo(QSqlRelationalTableModel* model) const
+{
+	qIno() << "RelTableModel info:";
+	qIno() << "  Primary key:" << model->primaryKey().name();
+	qIno() << "  Is dirty:" << model->isDirty();
+	qIno() << "  DB connection name:" << model->database().connectionName();
+	qIno() << "  Current Edit Strategy:" << model->editStrategy();
 }
 
 QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 {
-#if 0
+#if 1
 	addDirScanResult(*m_prepped_insert_query, dsr);
 #else
 	qDb() << "GETTING NEWREC";
@@ -357,7 +378,7 @@ QSqlDatabase CollectionDatabaseModel::AddInitAndOpenDBConnection(const QUrl& db_
 	// and create a connection named m_connection_name.
 	// Note that this connection can only be used in this thread which created it; to access the db
 	// from other threads, that thread has to close or create a new connection.
-	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", /*connectionName=*/ connection_name);
+	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", connection_name);
 
 	if(!db.isValid())
 	{
@@ -372,7 +393,8 @@ QSqlDatabase CollectionDatabaseModel::AddInitAndOpenDBConnection(const QUrl& db_
 	/// @see @link https://www.sqlite.org/c3ref/open.html and @link https://www.sqlite.org/uri.html
 	///  as to why we want URI filename support.
 	/// Driver source: @link https://code.woboq.org/qt5/qtbase/src/plugins/sqldrivers/sqlite/qsql_sqlite.cpp.html#576openUriOption
-	db.setConnectOptions(QString("QSQLITE_ENABLE_REGEXP=1;"));//QSQLITE_OPEN_URI=1;QSQLITE_OPEN_READONLY=%1;").arg(read_only?1:0));
+	/// @note Seems that OPEN_URI doesn't work.
+	db.setConnectOptions("QSQLITE_ENABLE_REGEXP=1;"); //QSQLITE_OPEN_URI=1
 
 	if(!write)
 	{
@@ -380,8 +402,7 @@ QSqlDatabase CollectionDatabaseModel::AddInitAndOpenDBConnection(const QUrl& db_
 	}
 
 	// Set the filename of the DB.
-	db.setDatabaseName(db_file.toString());
-	LogConnectionInfo(db);
+	db.setDatabaseName(db_file.toLocalFile());
 
 	LogDriverFeatures(db.driver());
 
