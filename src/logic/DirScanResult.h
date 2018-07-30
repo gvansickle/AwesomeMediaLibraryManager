@@ -36,9 +36,13 @@
 class ExtUrl
 {
 public:
-//	ExtUrl() = default;
-//	~ExtUrl() = default;
+	ExtUrl() = default;
+	ExtUrl(const ExtUrl& other) = default;
+	~ExtUrl() = default;
 
+	explicit ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo = nullptr);
+
+	/// User-defined conversion to QUrl.
 	operator QUrl() const { return m_url; }
 
 	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
@@ -48,12 +52,20 @@ public:
 	/// File size, or 0 if couldn't be determined.
 	qint64 m_size {0};
 	/// Last modified time.  Invalid if can't be determined(?).
-	QDateTime m_last_modified_timestamp;
+	QDateTime m_last_modified_timestamp {};
 	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
-	QDateTime m_metadata_last_modified_timestamp;
+	QDateTime m_metadata_last_modified_timestamp {};
+
+	bool isValid() { return m_url.isValid(); }
+
+protected:
+
+	void LoadModInfo();
 
 };
 Q_DECLARE_METATYPE(ExtUrl);
+QTH_DECLARE_QDEBUG_OP(ExtUrl);
+QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
 
 
 class FileModificationInfo
@@ -170,17 +182,17 @@ protected:
     QVector<QUrl> otherMediaFilesInDir(const QFileInfo& finfo);
 
 	/// Absolute URL to the directory.
-	QUrl m_dir_url;
+	ExtUrl m_dir_url;
 
     DirProps m_dir_props { Unknown };
 
     /// The media URL which was found.
-	QUrl m_media_url;
+	ExtUrl m_media_url;
     /// Info for detecting changes
     FileModificationInfo m_found_url_modinfo;
 
     /// URL to a sidecar cuesheet.  May be empty if none was found.
-    QUrl m_cue_url;
+	ExtUrl m_cue_url;
 
     /// Info for detecting changes
     FileModificationInfo m_cue_url_modinfo;

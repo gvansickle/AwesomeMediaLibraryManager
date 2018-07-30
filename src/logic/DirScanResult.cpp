@@ -31,46 +31,113 @@
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
+
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl, DirScanResult, FileModificationInfo";
 	qRegisterMetaType<ExtUrl>();
+	qRegisterMetaTypeStreamOperators<ExtUrl>();
     qRegisterMetaType<DirScanResult>();
     qRegisterMetaType<FileModificationInfo>();
 });
 
 
-DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo) : m_found_url_modinfo(found_url_finfo)
+ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 {
-	m_media_url = found_url;
+	if(qurl_finfo != nullptr)
+	{
+		m_size = qurl_finfo->size();
+		m_last_modified_timestamp = qurl_finfo->lastModified();
+		m_metadata_last_modified_timestamp = qurl_finfo->metadataChangeTime();
+	}
+	else
+	{
+		LoadModInfo();
+	}
+}
 
-    determineDirProps(found_url_finfo);
+void ExtUrl::LoadModInfo()
+{
+	Q_ASSERT(m_url.isValid());
+
+	// Is this a local file?
+	if(m_url.isLocalFile())
+	{
+		// Yes, we can get the mod info fairly cheaply.
+		QFileInfo fi(m_url.toLocalFile());
+		if(fi.exists())
+		{
+			// File exists.
+			m_size = fi.size();
+			m_last_modified_timestamp = fi.lastModified();
+			m_metadata_last_modified_timestamp = fi.metadataChangeTime();
+		}
+	}
+}
+
+#define DATASTREAM_FIELDS(X) \
+	X(m_url) X(m_size) X(m_last_modified_timestamp) X(m_metadata_last_modified_timestamp)
+
+QDebug operator<<(QDebug dbg, const ExtUrl& obj)
+{
+#define X(field) << obj.field
+	dbg DATASTREAM_FIELDS(X);
+#undef X
+	return dbg;
+}
+
+QDataStream &operator<<(QDataStream &out, const ExtUrl& myObj)
+{
+#define X(field) << myObj.field
+	out DATASTREAM_FIELDS(X);
+#undef X
+	return out;
+}
+
+QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
+{
+#define X(field) >> myObj.field
+	return in DATASTREAM_FIELDS(X);
+#undef X
+}
+
+#undef DATASTREAM_FIELDS
+
+DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
+	: m_media_url(found_url, &found_url_finfo)
+{
+	determineDirProps(found_url_finfo);
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 {
     // Separate out just the directory part of the URL.
+#if 0 // DELETE THIS
     if(false) // local file
     {
         QDir dir_url_qdir = found_url_finfo.dir();
         m_dir_url = QUrl::fromLocalFile(dir_url_qdir.absolutePath());
     }
-    else // Works for any URL.
+	else
+#endif
+	// Works for any URL.
     {
-		m_dir_url = m_media_url.adjusted(QUrl::RemoveFilename);
+		m_dir_url = m_media_url.m_url.adjusted(QUrl::RemoveFilename);
     }
 
     // Is there a sidecar cue sheet?
+
     // Create the *.cue URL.
-	auto possible_cue_url = m_media_url;
-    QString cue_url_as_str = possible_cue_url.toString();
+	ExtUrl possible_cue_url = m_media_url;
+	QString cue_url_as_str = possible_cue_url.m_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
     possible_cue_url = cue_url_as_str;
     Q_ASSERT(possible_cue_url.isValid());
-    // Does the file exist?
+
+	// Does the possible cue sheet file actually exist?
     if(true /** @todo local file*/)
     {
-        QFileInfo fi(possible_cue_url.toLocalFile());
+		QFileInfo fi(possible_cue_url.m_url.toLocalFile());
         if(fi.exists())
         {
             // It's there.
@@ -121,3 +188,5 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 #endif
 
 #undef DATASTREAM_FIELDS
+
+
