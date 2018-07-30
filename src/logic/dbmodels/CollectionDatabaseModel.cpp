@@ -129,10 +129,6 @@ QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name, b
 //	QSqlDatabase connection = QSqlDatabase::cloneDatabase(
 //				QSqlDatabase::database(connection_name),
 //				new_connection_name);
-	qDb() << "ADDING NEW DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << rwdecorated_connection_name;
-	QSqlDatabase connection = AddInitAndOpenDBConnection(m_db_file, new_connection_name, !read_only);
-
-	Q_ASSERT(connection.isValid());
 
 //	// open the database connection
 //	if (!connection.open())
@@ -142,6 +138,12 @@ QSqlDatabase CollectionDatabaseModel::database(const QString& connection_name, b
 
 //	// Re-Apply the pragmas.
 //	ApplyPragmas(connection);
+
+	// We need to do a full addDatabase().
+	qDb() << "ADDING NEW DATABASE CONNECTION FOR THREAD/CONNECTION:" << thread->objectName() << rwdecorated_connection_name;
+	QSqlDatabase connection = AddInitAndOpenDBConnection(m_db_file, new_connection_name, !read_only);
+
+	Q_ASSERT(connection.isValid());
 
 	// Log some debug info.
 	LogConnectionInfo(connection);

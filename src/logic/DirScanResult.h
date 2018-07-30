@@ -75,6 +75,8 @@ public:
 Q_DECLARE_METATYPE(FileModificationInfo);
 //QTH_DECLARE_QDATASTREAM_OPS(FileModificationInfo);
 
+class CollectionMedium;
+
 /**
  * A single hit found during a directory scan.
  */
@@ -92,6 +94,8 @@ public:
 
     /// Constructor for public consumption.
     DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
+
+	friend class CollectionMedium;
 
     /**
      * URLs:

@@ -20,6 +20,10 @@
 #ifndef DBCONNECTIONMANAGER_H
 #define DBCONNECTIONMANAGER_H
 
+#include <config.h>
+
+// Qt5
+#include <QMutex>
 #include <QObject>
 
 class DBConnectionManager : public QObject
