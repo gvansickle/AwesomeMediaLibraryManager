@@ -227,15 +227,15 @@ QSqlError CollectionDatabaseModel::CreateSchema(QSqlDatabase &db)
     return QSqlError();
 }
 
-QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *parent)
+QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *parent, QSqlDatabase db_conn)
 {
 	qDbo() << "OPENCONNECTION";
-	QSqlDatabase db_conn = OpenDatabaseConnection(m_connection_name);
+//	QSqlDatabase db_conn = OpenDatabaseConnection(m_connection_name);
 //	QSqlDatabase db_conn = database(m_connection_name);
 	qDbo() << "Here";
 
 
-    QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(parent, db_conn);
+	QSqlRelationalTableModel* rel_table_model = new QSqlRelationalTableModel(parent, db_conn);
     Q_CHECK_PTR(rel_table_model);
 
     rel_table_model->setTable("DirScanResults");

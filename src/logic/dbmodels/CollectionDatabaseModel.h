@@ -62,8 +62,8 @@ public:
 
 	void LogConnectionInfo(const QSqlDatabase& db_connection) const;
 
-    QSqlRelationalTableModel* make_reltable_model(QObject* parent = nullptr);
-    QSqlRelationalTableModel* get_reltable_model() { return m_relational_table_model; }
+	QSqlRelationalTableModel* make_reltable_model(QObject* parent, QSqlDatabase db_conn);
+
 	void LogModelInfo(QSqlRelationalTableModel* model) const;
 
 	/**

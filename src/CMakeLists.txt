@@ -156,8 +156,9 @@ set(HEADER_FILES
 	logic/PlaylistModelItem.h
 	logic/PlaylistSortFilterProxyModel.h
 	logic/SupportedMimeTypes.h
-	logic/dbmodels/CollectionDatabaseModel.h
 	logic/TrackMetadata.h
+	logic/dbmodels/CollectionDatabaseModel.h
+	logic/dbmodels/DBConnectionManager.h
 	logic/dbmodels/EntityBase.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
@@ -211,8 +212,9 @@ set(SOURCE_FILES
 	logic/PlaylistModelItem.cpp
 	logic/PlaylistSortFilterProxyModel.cpp
 	logic/SupportedMimeTypes.cpp
-	logic/dbmodels/CollectionDatabaseModel.cpp
 	logic/TrackMetadata.cpp
+	logic/dbmodels/CollectionDatabaseModel.cpp
+	logic/dbmodels/DBConnectionManager.cpp
 	logic/dbmodels/EntityBase.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
