@@ -243,7 +243,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](DirScanResult the_find, KJob* kjob)  {
         // Found a file matching the criteria.  Send it to the model.
-		m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaQUrl().toString());
+		m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaExtUrl().m_url.toString());
 
         ;});
 

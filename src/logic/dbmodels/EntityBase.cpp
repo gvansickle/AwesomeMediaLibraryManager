@@ -41,7 +41,7 @@ namespace AMLM
 //		m_dir_url = dsr.getDirProps();
 		m_dir_props = dsr.getDirProps();
 //		m_media_urls = dsr.getMediaQUrl();
-		m_cue_url = dsr.getSidecarCuesheetQUrl();
+		m_cue_url = dsr.getSidecarCuesheetExtUrl();
 	}
 
 	QString CollectionMedium::schema()

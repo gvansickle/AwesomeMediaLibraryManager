@@ -35,6 +35,8 @@
 
 class ExtUrl
 {
+	Q_GADGET
+
 public:
 	ExtUrl() = default;
 	ExtUrl(const ExtUrl& other) = default;
@@ -43,7 +45,7 @@ public:
 	explicit ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo = nullptr);
 
 	/// User-defined conversion to QUrl.
-	operator QUrl() const { return m_url; }
+	explicit operator QUrl() const { return m_url; }
 
 	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
 
@@ -52,20 +54,21 @@ public:
 	/// File size, or 0 if couldn't be determined.
 	qint64 m_size {0};
 	/// Last modified time.  Invalid if can't be determined(?).
-	QDateTime m_last_modified_timestamp {};
+	QDateTime m_last_modified_timestamp;
 	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
-	QDateTime m_metadata_last_modified_timestamp {};
+	QDateTime m_metadata_last_modified_timestamp;
 
-	bool isValid() { return m_url.isValid(); }
+//	bool isValid() { return m_url.isValid(); }
 
 protected:
 
 	void LoadModInfo();
 
 };
+
 Q_DECLARE_METATYPE(ExtUrl);
 QTH_DECLARE_QDEBUG_OP(ExtUrl);
-QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
+//QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
 
 
 class FileModificationInfo
@@ -165,19 +168,19 @@ public:
     DirProps getDirProps() const { return m_dir_props; }
 
     /// Get the URL which points to the actual media file found.
-	QUrl getMediaQUrl() const { return m_media_exturl; }
+	const ExtUrl& getMediaExtUrl() const { return m_media_exturl; }
 
     /// URL to any sidecar cuesheet found.
     /// If one was found, DirProp::HasSidecarCueSheet will be set.
     /// Returned URL will not be valid if there was no sidecar cue sheet.
-	QUrl getSidecarCuesheetQUrl() const { return m_cue_exturl; }
+	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
 //    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 
 protected:
 
-    void determineDirProps(const QFileInfo &);
+	void determineDirProps(const QFileInfo& finfo);
 
 	QVector<ExtUrl> otherMediaFilesInDir(const QFileInfo& finfo);
 

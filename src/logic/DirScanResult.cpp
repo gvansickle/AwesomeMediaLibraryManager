@@ -127,12 +127,13 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
     // Is there a sidecar cue sheet?
 
     // Create the *.cue URL.
-	ExtUrl possible_cue_url = m_media_exturl;
+	ExtUrl possible_cue_url;
+	possible_cue_url = QUrl(m_media_exturl);
 	QString cue_url_as_str = possible_cue_url.m_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
     possible_cue_url = cue_url_as_str;
-    Q_ASSERT(possible_cue_url.isValid());
+	Q_ASSERT(possible_cue_url.m_url.isValid());
 
 	// Does the possible cue sheet file actually exist?
     if(true /** @todo local file*/)

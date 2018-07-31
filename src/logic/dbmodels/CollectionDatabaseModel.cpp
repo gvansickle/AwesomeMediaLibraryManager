@@ -39,6 +39,7 @@
 #include <utils/DebugHelpers.h>
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
+#include <logic/DirScanResult.h>
 
 
 CollectionDatabaseModel::CollectionDatabaseModel(QObject* parent) : QObject(parent)
@@ -314,7 +315,7 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 	bool status = m_relational_table_model->insertRow(row);
 	Q_ASSERT(status);
 	auto index = m_relational_table_model->index(row, 1);
-	status = m_relational_table_model->setData(index, QVariant(dsr.getMediaQUrl().toString()));
+	status = m_relational_table_model->setData(index, QVariant(dsr.getMediaExtUrl().m_url.toString()));
 	Q_ASSERT(status);
 	m_relational_table_model->submit();
 #endif
@@ -326,8 +327,8 @@ QVariant CollectionDatabaseModel::addDirScanResult(QSqlQuery& q, const DirScanRe
 {
 	qDbo() << "START";
 
-	q.addBindValue(dsr.getMediaQUrl());
-	q.addBindValue(dsr.getSidecarCuesheetQUrl());
+	q.addBindValue(QVariant::fromValue<ExtUrl>(dsr.getMediaExtUrl()));
+	q.addBindValue(QVariant::fromValue<ExtUrl>(dsr.getSidecarCuesheetExtUrl()));
 	q.addBindValue(QVariant());
 	q.exec();
 	qDbo() << "END";
