@@ -93,8 +93,6 @@ protected:
 
 private:
 
-    ExtFuture<DirScanResult> m_ext_future;
-
     QUrl m_dir_url;
     QStringList m_nameFilters;
     QDir::Filters m_dir_filters;
@@ -103,15 +101,5 @@ private:
 };
 
 Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
-
-//class DSJob2 : public AMLMJobT<ExtFuture<QUrl>>
-//{
-//	Q_OBJECT
-
-//public:
-//	DSJob2(QUrl url) : AMLMJobT(m_extfuture) {}
-
-//	ExtFuture<QUrl> m_extfuture;
-//};
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

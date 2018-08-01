@@ -235,7 +235,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 		dbmodel->addDirScanResult(prepped_insert_query, dsr);
 #else
-		dbmodel->SLOT_addDirScanResult(dsr);
+//		dbmodel->SLOT_addDirScanResult(dsr);
 #endif
 		qIno() << "DBEND";
 	});

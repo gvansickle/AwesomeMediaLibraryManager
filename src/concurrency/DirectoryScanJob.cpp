@@ -42,6 +42,12 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
+
+	// Hook things up in here.
+	m_ext_future.tap([=](DirScanResult dsr) {
+		qDbo() << "GOT HERE";
+		Q_EMIT entries(dsr, this);
+		});
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -58,9 +64,8 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
                                               nameFilters,
                                               filters,
                                               flags);
-    /// @todo Hook things up in here.
 
-    return retval;
+	return retval;
 }
 
 void DirectoryScannerAMLMJob::runFunctor()
@@ -159,7 +164,8 @@ void DirectoryScannerAMLMJob::runFunctor()
 
             // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
 //            Q_EMIT entries(this, file_url);
-			Q_EMIT entries(dir_scan_result, this);
+//			Q_EMIT entries(dir_scan_result, this);
+			m_ext_future.reportResult(dir_scan_result);
         }
 
         if(functorHandlePauseResumeAndCancel())

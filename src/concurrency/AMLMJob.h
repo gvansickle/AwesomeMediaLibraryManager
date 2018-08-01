@@ -638,8 +638,6 @@ private:
 template <class ExtFutureT>
 class AMLMJobT : public AMLMJob
 {
-//	Q_OBJECT
-
 	using BASE_CLASS = AMLMJob;
 
 public:
@@ -648,28 +646,15 @@ public:
 	{
 		qDbo() << "WORKED:" << m_ext_future.state();
 
-//		m_ext_future = ef;
-
-		// Hook up signals and such to the future.
+		// Hook up signals and such to the ExtFuture<T>.
 		/// @todo
-	}
-
-	static AMLMJobT* make_job(ExtFutureT ef, QObject* parent = nullptr)
-	{
-		auto job = new AMLMJobT(ef, parent);
-		qDebug() << "WORKED:" << ef;
-	}
-
-	virtual void runFunctor()
-	{
-
 	}
 
 	ExtFutureT& get_extfuture_ref() override { return m_ext_future; }
 
-	ExtFutureT m_ext_future;
-
 protected:
+
+	ExtFutureT m_ext_future;
 
 	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
 
