@@ -62,8 +62,8 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
     connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
 
-M_WARNING("FOR TEST ONLY, PUT THIS BACK");
-//    connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
+//M_WARNING("FOR TEST ONLY, PUT THIS BACK");
+	connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
 
 //    connect_or_die(this, &QObject::destroyed, this, &AMLMJob::SLOT_on_destroyed);
 //    connect_or_die(this, &QObject::destroyed, qApp, [=](QObject* obj){
