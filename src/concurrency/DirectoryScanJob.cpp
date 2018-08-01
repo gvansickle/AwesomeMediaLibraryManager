@@ -33,7 +33,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-    : AMLMJob(parent), m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
+	: BASE_CLASS(parent), m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
@@ -49,7 +49,7 @@ DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
     qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
 }
 
-DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QUrl dir_url,
+DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, const QUrl& dir_url,
                                                              const QStringList &nameFilters,
                                                              QDir::Filters filters,
                                                              QDirIterator::IteratorFlags flags)

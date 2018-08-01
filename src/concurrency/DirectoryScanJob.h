@@ -39,14 +39,16 @@
 class DirectoryScannerAMLMJob;
 using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
 
+
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectoryScannerAMLMJob>
+class DirectoryScannerAMLMJob : public /*AMLMJob*/ AMLMJobT<ExtFuture<DirScanResult>>, public UniqueIDMixin<DirectoryScannerAMLMJob>
 {
     Q_OBJECT
 
-    using BASE_CLASS = AMLMJob;
+//    using BASE_CLASS = AMLMJob;
+	using BASE_CLASS = AMLMJobT<ExtFuture<DirScanResult>>;
 
     /**
      * @note CRTP: Still need this to avoid ambiguous name resolution.
@@ -76,10 +78,10 @@ public:
 
     ~DirectoryScannerAMLMJob() override;
 
-    static DirectoryScannerAMLMJobPtr make_job(QObject *parent, QUrl dir_url,
-                                               const QStringList &nameFilters,
-                                               QDir::Filters filters,
-                                               QDirIterator::IteratorFlags flags);
+	static DirectoryScannerAMLMJobPtr make_job(QObject *parent, const QUrl& dir_url,
+											   const QStringList &nameFilters,
+											   QDir::Filters filters,
+											   QDirIterator::IteratorFlags flags);
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
@@ -102,5 +104,14 @@ private:
 
 Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
 
+//class DSJob2 : public AMLMJobT<ExtFuture<QUrl>>
+//{
+//	Q_OBJECT
+
+//public:
+//	DSJob2(QUrl url) : AMLMJobT(m_extfuture) {}
+
+//	ExtFuture<QUrl> m_extfuture;
+//};
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

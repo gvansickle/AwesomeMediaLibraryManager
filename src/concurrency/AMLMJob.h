@@ -52,17 +52,17 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
 ///// Ours
-////#include <utils/crtp.h>
-////#include <utils/DebugHelpers.h>
-////
+//#include <utils/crtp.h>
+//#include <utils/DebugHelpers.h>
+
 //template <typename T>
 //class ExtFutureTMixin : crtp<T, ExtFutureTMixin>
 //{
 //public:
 
-//    using ExtFutureT = ExtFuture<T>;
+//	using ExtFutureT = ExtFuture<T>;
 
-//    ExtFutureT& get_extfuture_ref() { return m_ext_future; }
+////	ExtFutureT& get_extfuture_ref() { return m_ext_future; }
 
 ////    virtual ~ExtFutureTMixin() = default;
 
@@ -72,8 +72,14 @@ Q_DECLARE_METATYPE(AMLMJobPtr);
 ////    ExtFutureTMixin() = default;
 
 ////    friend AMLMDerivedClassType;
-//    ExtFuture<T> m_ext_future;
+////	ExtFuture<T> m_ext_future;
 //};
+
+template <class T>
+struct AMLMJob_traits
+{
+	using ExtFutureType = typename T::ExtFutureT;
+};
 
 /**
 * Where Does The State Live?
@@ -171,6 +177,8 @@ class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>
      * @see https://stackoverflow.com/a/46916924
      */
     using UniqueIDMixin<AMLMJob>::uniqueQObjectName;
+
+	using BASE_CLASS = KJob;
 
 Q_SIGNALS:
 
@@ -380,6 +388,20 @@ public:
             }
         });
     }
+
+	/**
+	 * .tap(ctx, continuation) -> void
+	 *
+	 * @tparam continuation  Invocable taking an ExtFuture<T> of that used by the derived type.
+	 * @returns @todo Should be another ExtFuture.
+	 */
+//	template <typename ContextType, typename FuncType,
+//			  REQUIRES(std::is_base_of_v<QObject, ContextType> &&
+//			  ct::is_invocable_r_v<void, FuncType, std::result_of_t<this->get_extfuture_ref()>>)>
+//	void tap(const ContextType *ctx, Func&& f)
+//	{
+
+//	}
 
     /// @}
 
@@ -612,5 +634,52 @@ private:
 };
 
 //Q_DECLARE_METATYPE(AMLMJob); /// @todo need default constructor and copy constructor.
+
+template <class ExtFutureT>
+class AMLMJobT : public AMLMJob
+{
+//	Q_OBJECT
+
+	using BASE_CLASS = AMLMJob;
+
+public:
+
+	explicit AMLMJobT(QObject* parent = nullptr) : BASE_CLASS(parent)
+	{
+		qDbo() << "WORKED:" << m_ext_future.state();
+
+//		m_ext_future = ef;
+
+		// Hook up signals and such to the future.
+		/// @todo
+	}
+
+	static AMLMJobT* make_job(ExtFutureT ef, QObject* parent = nullptr)
+	{
+		auto job = new AMLMJobT(ef, parent);
+		qDebug() << "WORKED:" << ef;
+	}
+
+	virtual void runFunctor()
+	{
+
+	}
+
+	ExtFutureT& get_extfuture_ref() override { return m_ext_future; }
+
+	ExtFutureT m_ext_future;
+
+protected:
+
+	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
+
+};
+
+//template<class ExtFutureT>
+//inline static auto* make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
+//{
+//	auto job = new AMLMJobT(ef, parent);
+//	qDebug() << "WORKED:" << ef;
+//}
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */
