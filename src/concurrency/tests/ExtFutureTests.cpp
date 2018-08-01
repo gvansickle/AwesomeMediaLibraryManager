@@ -118,8 +118,99 @@ TEST_F(ExtFutureTest, CopyAssignTests)
 //    ASSERT_EQ(ef_int2.isFinished(), true);
 }
 
+/**
+ * Test basic cancel properties.
+ */
+TEST_F(ExtFutureTest, ExtFutureBasicCancel)
+{
+    TC_ENTER();
+
+    ExtFuture<Unit> f;
+
+    qDb() << "Starting extfuture:" << f;
+
+    ASSERT_TRUE(f.isStarted());
+    ASSERT_FALSE(f.isCanceled());
+    ASSERT_FALSE(f.isFinished());
+
+    f.cancel();
+
+    qDb() << "Cancelled extfuture:" << f;
+
+    ASSERT_TRUE(f.isStarted());
+    ASSERT_TRUE(f.isCanceled());
+
+    // Cancelling alone won't finish the extfuture.
+    ASSERT_FALSE(f.isFinished());
+
+    f.reportFinished();
+    f.waitForFinished();
+
+    ASSERT_TRUE(f.isFinished());
+
+    qDb() << "Cancelled and finished extfuture:" << f;
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
+
+/**
+ * Cancel the Promise side, see if the Future side detects it.
+ */
+TEST_F(ExtFutureTest, ExtFutureCancelPromise)
+{
+    TC_ENTER();
+
+    ExtFuture<Unit> f;
+    ExtFuture<Unit> result;
+
+    result.reportStarted();
+    f = result;
+    ASSERT_FALSE(f.isCanceled());
+    result.reportCanceled();
+    ASSERT_TRUE(f.isCanceled());
+    result.reportFinished();
+    ASSERT_TRUE(f.isCanceled());
+    result.waitForFinished();
+    ASSERT_TRUE(f.isCanceled());
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
+/**
+ * Cancel the Future side, see if the promise side detects it.
+ */
+TEST_F(ExtFutureTest, ExtFutureCancelFuture)
+{
+    TC_ENTER();
+
+    ExtFuture<Unit> result;
+    ExtFuture<Unit> f;
+
+    ASSERT_TRUE(f.isStarted());
+
+    result.reportStarted();
+    f = result.future();
+
+    ASSERT_TRUE(f.isStarted());
+
+    ASSERT_FALSE(result.isCanceled());
+    f.cancel();
+
+    ASSERT_TRUE(result.isCanceled());
+
+    result.reportFinished();
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
+
 /// Static checks
-TEST_F(ExtFutureTest, StaticAsserts){
+TEST_F(ExtFutureTest, StaticAsserts)
+{
 
     static_assert(std::is_default_constructible<QString>::value, "");
 
