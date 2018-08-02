@@ -66,7 +66,7 @@ public:
 	/**
 	 * Post-constructor initialization.
 	 */
-	void Init();
+	void Init(bool gtest_only = false);
 
     static AMLMApp* instance();
 

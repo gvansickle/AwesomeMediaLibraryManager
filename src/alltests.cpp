@@ -25,6 +25,7 @@
 #include <QtTest>
 
 // Ours
+#include "AMLMApp.h"
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
 #include "utils/RegisterQtMetatypes.h"
@@ -61,6 +62,8 @@ public:
 
 int main(int argc, char *argv[])
 {
+	QThread::currentThread()->setObjectName("MAIN");
+
 	Logging logging;
 
 	logging.SetFilterRules();
@@ -78,7 +81,13 @@ int main(int argc, char *argv[])
                               "%{if-fatal}%{backtrace}%{endif}");
 
 	// Create the Qt5 app.
-	QApplication app(argc, argv);
+//	QApplication app(argc, argv);
+	//
+    // Create the Qt5/KF5 app.
+    // @note Must be the first QObject created and the last QObject deleted.
+	//
+    AMLMApp app(argc, argv);
+	app.Init(true);
 
 
 	// Start the log with the App ID and version info.

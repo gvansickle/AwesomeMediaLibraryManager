@@ -58,10 +58,16 @@ AMLMApp::~AMLMApp()
 	qDb() << "AMLMApp SINGLETON DESTROYED";
 }
 
-void AMLMApp::Init()
+void AMLMApp::Init(bool gtest_only)
 {
 	// Register our types with Qt.
 	RegisterQtMetatypes();
+
+	/// @todo This is ugly, refactor this.
+	if(gtest_only)
+	{
+		return;
+	}
 
 	/// @todo EXPERIMENTAL
 //    QNetworkAccessManager* nam = new QNetworkAccessManager(this);
