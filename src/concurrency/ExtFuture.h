@@ -330,19 +330,6 @@ public:
 		return *this;
 	}
 
-#if 0
-	ExtFuture<T>& tap(QObject* context, TapCallbackTypeProgress prog_tap_callback)
-	{
-//		m_tap_progress_function = std::make_shared<TapCallbackTypeProgress>(prog_tap_callback);
-		return TapProgressHelper(context, std::forward<TapCallbackTypeProgress>(prog_tap_callback));//*m_tap_progress_function);
-	}
-
-	ExtFuture<T>& tap(TapCallbackTypeProgress prog_tap_callback)
-	{
-		return tap(QApplication::instance(), std::forward<TapCallbackTypeProgress>(prog_tap_callback));
-	}
-#endif
-
 	/**
 	 * Degenerate .tap() case where no callback is specified.
 	 * Basically a no-op, simply returns a reference to *this.
@@ -509,7 +496,7 @@ protected:
 		std::enable_if_t<ct::is_invocable_r_v<void, F, T>, ExtFuture<T>&>
 	TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
-		static std::atomic_bool s_was_ever_called {false};
+//		static std::atomic_bool s_was_ever_called {false};
 
 		auto watcher = new QFutureWatcher<T>();
 		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
@@ -519,12 +506,12 @@ protected:
 //						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
 					// Call the tap callback with the incoming result value.
 					tap_cb(watcher->future().resultAt(index));
-					s_was_ever_called = true;
+//					s_was_ever_called = true;
 			});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
-//			qWr() << "TapHelper ExtFutureWatcher DESTROYED";
-			Q_ASSERT(s_was_ever_called);
-		});
+//		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
+//            qWr() << "TapHelper ExtFutureWatcher DESTROYED";
+////			Q_ASSERT(s_was_ever_called);
+//		});
 		watcher->setFuture(this->future());
 		return *this;
 	}
