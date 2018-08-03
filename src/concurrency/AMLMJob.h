@@ -642,19 +642,45 @@ class AMLMJobT : public AMLMJob
 
 public:
 
-	explicit AMLMJobT(QObject* parent = nullptr) : BASE_CLASS(parent)
+	using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
+
+	explicit AMLMJobT(QObject* parent = nullptr) : BASE_CLASS(parent), m_ext_watcher(parent)
 	{
 		qDbo() << "WORKED:" << m_ext_future.state();
 
 		// Hook up signals and such to the ExtFuture<T>.
-		/// @todo
+		HookUpExtFutureSignals();
 	}
 
 	ExtFutureT& get_extfuture_ref() override { return m_ext_future; }
 
+protected Q_SLOT:
+
+	virtual void SLOT_onResultsReadyAt(ExtFutureT& ef, int begin, int end) = 0;
+
+
 protected:
 
+	void HookUpExtFutureSignals()
+	{
+		// Main connection we need is results.
+		// resultsReadyAt(range): There are results ready immediately at the given index range.
+		connect_or_die(&m_ext_watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
+					   [=](int beginIndex, int endIndex) {
+			// Directly call the overridden slot with all the info needed to get the results.
+			/// @todo Hold extfuture here.
+			SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
+			;});
+
+		// All connections made, so set the watched future.
+		m_ext_watcher.setFuture(m_ext_future.future());
+	}
+
+	/// The ExtFuture.
 	ExtFutureT m_ext_future;
+
+	/// The watcher for the ExtFuture.
+	ExtFutureWatcherT m_ext_watcher;
 
 	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
 

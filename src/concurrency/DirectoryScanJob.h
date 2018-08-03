@@ -91,6 +91,18 @@ protected:
 
     void runFunctor() override;
 
+protected Q_SLOT:
+
+	 void SLOT_onResultsReadyAt(ExtFutureType& ef, int begin, int end) override
+	 {
+		 qDbo() << "GOT RESULTS:" << begin << end;
+
+		 for(int i=begin; i<end; i++)
+		 {
+			 Q_EMIT entries(ef.future().resultAt(i), this);
+		 }
+	 }
+
 private:
 
     QUrl m_dir_url;

@@ -43,11 +43,11 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 
-	// Hook things up in here.
-	m_ext_future.tap([=](DirScanResult dsr) {
-		qDbo() << "GOT HERE";
-		Q_EMIT entries(dsr, this);
-		});
+//	// Hook things up in here.
+//	m_ext_future.tap([=](DirScanResult dsr) {
+//		qDbo() << "GOT HERE";
+//		Q_EMIT entries(dsr, this);
+//		});
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -162,9 +162,7 @@ void DirectoryScannerAMLMJob::runFunctor()
             /// NEW
             m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
 
-            // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
-//            Q_EMIT entries(this, file_url);
-//			Q_EMIT entries(dir_scan_result, this);
+			// Report the URL we found to the future.
 			m_ext_future.reportResult(dir_scan_result);
         }
 
@@ -178,7 +176,7 @@ void DirectoryScannerAMLMJob::runFunctor()
     }
 
     // We've either completed our work or been cancelled.
-    // Either way, defaultEnd() will handle setting the cancellation status as long as
+	// Either way, run() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
     if(!wasCancelRequested())
     {
