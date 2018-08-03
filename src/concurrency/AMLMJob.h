@@ -672,6 +672,9 @@ protected:
 			SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
 			;});
 
+		/// @todo EXP: Throttling.
+//		m_ext_watcher.setPendingResultsLimit(2);
+
 		// All connections made, so set the watched future.
 		m_ext_watcher.setFuture(m_ext_future.future());
 	}
