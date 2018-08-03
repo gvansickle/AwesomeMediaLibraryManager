@@ -64,6 +64,8 @@ Q_SIGNALS:
      */
 	void entries(DirScanResult dsr, KJob* kjob);
 
+	void SIGNAL_resultsReadyAt(ExtFuture<DirScanResult>& ef, int begin, int end);
+
 protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
             const QStringList &nameFilters,
@@ -99,7 +101,8 @@ protected Q_SLOT:
 
 		 for(int i=begin; i<end; i++)
 		 {
-			 Q_EMIT entries(ef.future().resultAt(i), this);
+//			 Q_EMIT entries(ef.future().resultAt(i), this);
+			 Q_EMIT SIGNAL_resultsReadyAt(ef, begin, end);
 		 }
 	 }
 

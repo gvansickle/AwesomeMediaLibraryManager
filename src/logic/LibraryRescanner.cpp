@@ -240,6 +240,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		qIno() << "DBEND";
 	});
 
+	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, dbmodel, [=](auto ef, int begin, int end){
+		for(int i=begin; i<end; i++)
+		{
+			dbmodel->SLOT_addDirScanResult(ef.future().resultAt(i));
+		}
+		;});
+
 
 	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](DirScanResult the_find, KJob* kjob)  {
         // Found a file matching the criteria.  Send it to the model.
