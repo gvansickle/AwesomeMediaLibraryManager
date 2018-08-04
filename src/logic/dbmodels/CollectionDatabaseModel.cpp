@@ -268,6 +268,14 @@ QSqlRelationalTableModel *CollectionDatabaseModel::make_reltable_model(QObject *
 	return rel_table_model;
 }
 
+ScanResultsTableModel* CollectionDatabaseModel::make_scantable_model(QObject* parent)
+{
+	/// @todo
+	auto retval = new ScanResultsTableModel(parent);
+	m_scan_results_table = retval;
+	return retval;
+}
+
 void CollectionDatabaseModel::LogModelInfo(QSqlRelationalTableModel* model) const
 {
 	qIno() << "RelTableModel info:";
@@ -309,7 +317,7 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
     {
         Q_ASSERT_X(0, "", "INSERTRECORD FAILED");
     }
-#else
+#elif 0
 	int row = m_relational_table_model->rowCount();
 	qDbo() << "ROW:" << row;
 	bool status = m_relational_table_model->insertRow(row);
@@ -318,6 +326,9 @@ QSqlError CollectionDatabaseModel::SLOT_addDirScanResult(DirScanResult dsr)
 	status = m_relational_table_model->setData(index, QVariant(dsr.getMediaExtUrl().m_url.toString()));
 	Q_ASSERT(status);
 	m_relational_table_model->submit();
+#else
+	// ScanResultsTableModel
+	m_scan_results_table->appendRow(dsr);
 #endif
 
 	return QSqlError();

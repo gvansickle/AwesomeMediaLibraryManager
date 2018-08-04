@@ -1677,9 +1677,11 @@ void MainWindow::newCollectionView()
     auto mdi_child = m_mdi_area->addSubWindow(child);
     Q_CHECK_PTR(mdi_child);
 
-	auto model = AMLMApp::instance()->cdb_instance()->make_reltable_model(this, AMLMApp::instance()->cdb_instance()->OpenDatabaseConnection("the_connection_name", false, false));
+//	auto model = AMLMApp::instance()->cdb_instance()->make_reltable_model(this, AMLMApp::instance()->cdb_instance()->OpenDatabaseConnection("the_connection_name", false, false));
+	auto model = AMLMApp::instance()->cdb_instance()->make_scantable_model(this);
 	qDbo() << "RELMODEL:" << model;
-    child->setMainModel(model);
+//    child->setMainModel(model);
+	child->setMainModel2(model);
 //    child->getTableView()->setModel(model);
     child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
 

@@ -20,6 +20,7 @@
 #ifndef SRC_LOGIC_DBMODELS_COLLECTIONDATABASEMODEL_H_
 #define SRC_LOGIC_DBMODELS_COLLECTIONDATABASEMODEL_H_
 
+
 #include <config.h>
 
 // Qt5
@@ -33,6 +34,7 @@ class QSqlDatabase;
 
 // Ours.
 #include <logic/DirScanResult.h>
+#include <logic/dbmodels/ScanResultsTableModel.h>
 
 /*
  *
@@ -63,6 +65,8 @@ public:
 	void LogConnectionInfo(const QSqlDatabase& db_connection) const;
 
 	QSqlRelationalTableModel* make_reltable_model(QObject* parent, QSqlDatabase db_conn);
+
+	ScanResultsTableModel* make_scantable_model(QObject* parent);
 
 	void LogModelInfo(QSqlRelationalTableModel* model) const;
 
@@ -109,6 +113,9 @@ private:
 
     QSqlRelationalTableModel* m_relational_table_model {nullptr};
 	QSqlQuery* m_prepped_insert_query;
+
+	/// @todo Make this its own singleton?
+	ScanResultsTableModel* m_scan_results_table {nullptr};
 
 };
 

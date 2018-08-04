@@ -36,6 +36,12 @@ void CollectionView::setMainModel(QSqlRelationalTableModel *model)
 	tmr->start(1000);
 }
 
+void CollectionView::setMainModel2(ScanResultsTableModel* model)
+{
+	auto view = ui->treeView;
+	view->setModel(model);
+}
+
 void CollectionView::setPane2Model(AbstractTreeModel* model)
 {
 	auto view = ui->treeView_exp;

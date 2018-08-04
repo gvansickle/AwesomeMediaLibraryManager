@@ -12,7 +12,8 @@ QVariant EnhancedAbstractTableModel::headerData(int section, Qt::Orientation ori
 
 bool EnhancedAbstractTableModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
 {
-	if (value != headerData(section, orientation, role)) {
+	if (value != headerData(section, orientation, role))
+	{
 		// FIXME: Implement me!
 		Q_EMIT headerDataChanged(orientation, section, section);
 		return true;
@@ -91,3 +92,28 @@ bool EnhancedAbstractTableModel::removeColumns(int column, int count, const QMod
 	// FIXME: Implement me!
 	endRemoveColumns();
 }
+
+//void EnhancedAbstractTableModel::appendRows(int row, int count, const QModelIndex& parent,
+//											const std::vector<std::vector<const QVariant&>>& itemData)
+//{
+//	beginInsertRows(parent, row, row + count - 1);
+
+//	// DERIVED CLASS: Allocate empty rows.
+//	this->insertEmptyRows(row, count, parent);
+
+//	// setItemData() for each row.
+//	int rindex = 0;
+//	for(auto& this_row : itemData)
+//	{
+//		int colindex = 0;
+//		for(const QVariant& this_col : this_row)
+//		{
+//			// DERIVED CLASS: Set Qt::EditRole ItemData.
+//			this->setUnderlyingItemData(row+rindex, colindex, this_col);
+//			colindex++;
+//		}
+//		rindex++;
+//	}
+
+//	endInsertRows();
+//}

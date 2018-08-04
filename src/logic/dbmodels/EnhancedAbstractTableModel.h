@@ -35,6 +35,25 @@ public:
 	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 	bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex()) override;
 
+	/// @name Additional interfaces beyond the QAbstractItemModel interface.
+	/// @{
+
+	/**
+	 * Append a row to the model.
+	 * Equivalent to calling insertRows() and then setItemData(*, Qt::EditRole) on every column.
+	 *
+	 * @param row
+	 * @param count
+	 * @param parent
+	 */
+//	virtual void appendRows(int row, int count, const QModelIndex &parent, const std::vector<std::vector<const QVariant&> >& itemData);
+	/// @}
+
+protected:
+
+//	virtual bool insertEmptyRows(int row, int count, const QModelIndex &parent = QModelIndex()) = 0;
+//	virtual void setUnderlyingItemData(int row, int col, QVariant value) = 0;
+
 private:
 };
 
