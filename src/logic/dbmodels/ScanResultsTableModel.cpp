@@ -47,5 +47,7 @@ void ScanResultsTableModel::appendRow(DirScanResult dsr)
 
 QVariant ScanResultsTableModel::getData(int row, int col, int role) const
 {
-	return m_scan_results[row][col];
+	auto retval = m_scan_results[row][col];
+	qDbo() << "RETURNING:" << row << col << retval;
+	return retval;
 }
