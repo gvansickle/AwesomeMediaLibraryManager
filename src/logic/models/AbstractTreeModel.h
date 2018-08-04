@@ -103,7 +103,7 @@ private:
 	void setupModelData(const QStringList &lines, AbstractTreeModelItem *parent);
 	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
 
-	AbstractTreeModelItem *rootItem;
+	AbstractTreeModelItem *m_root_item;
 };
 
 

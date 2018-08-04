@@ -220,6 +220,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	/// @todo EXPERIMENTAL: Also send it to the SQLITE DB model.
 	auto dbmodel = AMLMApp::instance()->cdb_instance();
 //	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, &CollectionDatabaseModel::SLOT_addDirScanResult);
+#if 0
 	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, dbmodel, [=](auto dsr, auto kjob)
 	{
 		qIno() << "DBSTART";
@@ -239,11 +240,43 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 #endif
 		qIno() << "DBEND";
 	});
+#endif
 
+#if 0
+	// dbmodel with lightweight signal.
 	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, dbmodel, [=](auto ef, int begin, int end){
 		for(int i=begin; i<end; i++)
 		{
 			dbmodel->SLOT_addDirScanResult(ef.future().resultAt(i));
+		}
+		;});
+#endif
+
+	// New Tree model.
+	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
+	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, tree_model, [=](auto ef, int begin, int end){
+
+		auto first_new_row = tree_model->rowCount();
+		int current_row = first_new_row;
+		tree_model->insertRows(first_new_row, (end-begin), QModelIndex());
+
+		for(int i=begin; i<end; i++)
+		{
+			QVariantList column_data;
+			DirScanResult dsr = ef.future().resultAt(i);
+			column_data.append(QVariant::fromValue(dsr.getDirProps()));
+			column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
+			column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+
+			for (int column = 0; column < column_data.size(); ++column)
+			{
+				auto mi = tree_model->index(current_row, column);
+				tree_model->setData(mi, column_data[column]);
+				//parent->child(parent->childCount() - 1)->setData(column, columnData[column]);
+			}
+			++current_row;
+
+//			dbmodel->SLOT_addDirScanResult(ef.future().resultAt(i));
 		}
 		;});
 

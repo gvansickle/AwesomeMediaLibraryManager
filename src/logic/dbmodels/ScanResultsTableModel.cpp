@@ -42,12 +42,13 @@ void ScanResultsTableModel::appendRow(DirScanResult dsr)
 	row.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl()));
 
 	m_scan_results.append(row);
+
 	endInsertRows();
 }
 
 QVariant ScanResultsTableModel::getData(int row, int col, int role) const
 {
 	auto retval = m_scan_results[row][col];
-	qDbo() << "RETURNING:" << row << col << retval;
+//	qDbo() << "RETURNING:" << row << col << role << retval;
 	return retval;
 }

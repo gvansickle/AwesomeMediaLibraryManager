@@ -43,11 +43,12 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 
-//	// Hook things up in here.
-//	m_ext_future.tap([=](DirScanResult dsr) {
-//		qDbo() << "GOT HERE";
-//		Q_EMIT entries(dsr, this);
-//		});
+	// Hook things up in here.
+	/// @todo virtual?
+	m_ext_future.tap([=](DirScanResult dsr) {
+		qDbo() << "GOT HERE";
+		Q_EMIT entries(dsr, this);
+		});
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -64,6 +65,7 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
                                               nameFilters,
                                               filters,
                                               flags);
+
 
 	return retval;
 }
