@@ -64,7 +64,8 @@ QVariant EnhancedAbstractTableModel::data(const QModelIndex &index, int role) co
 
 bool EnhancedAbstractTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-	if (data(index, role) != value) {
+	if (data(index, role) != value)
+	{
 		// FIXME: Implement me!
 		Q_EMIT dataChanged(index, index, QVector<int>() << role);
 		return true;
