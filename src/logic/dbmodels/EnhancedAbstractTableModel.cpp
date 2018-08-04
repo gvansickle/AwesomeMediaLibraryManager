@@ -76,7 +76,9 @@ bool EnhancedAbstractTableModel::setData(const QModelIndex &index, const QVarian
 Qt::ItemFlags EnhancedAbstractTableModel::flags(const QModelIndex &index) const
 {
 	if (!index.isValid())
+	{
 		return Qt::NoItemFlags;
+	}
 
 	return Qt::ItemIsEditable; // FIXME: Implement me!
 }
