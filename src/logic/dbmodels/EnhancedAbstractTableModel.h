@@ -53,6 +53,10 @@ protected:
 
 //	virtual bool insertEmptyRows(int row, int count, const QModelIndex &parent = QModelIndex()) = 0;
 //	virtual void setUnderlyingItemData(int row, int col, QVariant value) = 0;
+	virtual QVariant getData(int row, int col, int role = Qt::DisplayRole) const = 0;
+
+	/// Header data, indexed by section, role.
+	QMultiMap<QPair<int, Qt::ItemDataRole>, QVariant> m_horizontal_header_data;
 
 private:
 };

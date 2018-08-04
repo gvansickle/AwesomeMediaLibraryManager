@@ -23,9 +23,15 @@ class ScanResultsTableModel : public EnhancedAbstractTableModel
 public:
 	explicit ScanResultsTableModel(QObject *parent = nullptr);
 
+
+	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
 	virtual void appendRow(DirScanResult dsr);
 
 protected:
+
+	virtual QVariant getData(int row, int col, int role = Qt::DisplayRole) const;
 
 	using rowtype = QVariantList;
 	QVector<rowtype> m_scan_results;

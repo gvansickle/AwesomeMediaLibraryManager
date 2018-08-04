@@ -7,14 +7,24 @@ EnhancedAbstractTableModel::EnhancedAbstractTableModel(QObject *parent)
 
 QVariant EnhancedAbstractTableModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-	// FIXME: Implement me!
+	/// @note Implemented. // FIXME: Implement me!
+	QPair<int, Qt::ItemDataRole> section_role {section, static_cast<Qt::ItemDataRole>(role)};
+	auto retval = m_horizontal_header_data.value(section_role, QVariant());
+	return retval;
 }
 
 bool EnhancedAbstractTableModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
 {
 	if (value != headerData(section, orientation, role))
 	{
-		// FIXME: Implement me!
+		/// @note Implemented // FIXME: Implement me!
+		QPair<int, Qt::ItemDataRole> section_role {section, static_cast<Qt::ItemDataRole>(role)};
+		if(m_horizontal_header_data.contains(section_role, value))
+		{
+			// multimap already has this same key/key/value, nothing to do.
+			return false;
+		}
+		m_horizontal_header_data.replace(section_role, value);
 		Q_EMIT headerDataChanged(orientation, section, section);
 		return true;
 	}
@@ -41,10 +51,15 @@ int EnhancedAbstractTableModel::columnCount(const QModelIndex &parent) const
 QVariant EnhancedAbstractTableModel::data(const QModelIndex &index, int role) const
 {
 	if (!index.isValid())
+	{
 		return QVariant();
+	}
 
-	// FIXME: Implement me!
-	return QVariant();
+	/// @note Implemented. // FIXME: Implement me!
+
+	return getData(index.row(), index.column(), role);
+
+//	return QVariant();
 }
 
 bool EnhancedAbstractTableModel::setData(const QModelIndex &index, const QVariant &value, int role)
