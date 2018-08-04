@@ -159,6 +159,7 @@ set(HEADER_FILES
 	logic/TrackMetadata.h
 	logic/dbmodels/CollectionDatabaseModel.h
 	logic/dbmodels/DBConnectionManager.h
+	logic/dbmodels/EnhancedAbstractListModel.h
 	logic/dbmodels/EnhancedAbstractTableModel.h
 	logic/dbmodels/EntityBase.h
 	logic/dbmodels/ScanResultsTableModel.h
@@ -218,6 +219,7 @@ set(SOURCE_FILES
 	logic/TrackMetadata.cpp
 	logic/dbmodels/CollectionDatabaseModel.cpp
 	logic/dbmodels/DBConnectionManager.cpp
+	logic/dbmodels/EnhancedAbstractListModel.cpp
 	logic/dbmodels/EnhancedAbstractTableModel.cpp
 	logic/dbmodels/ScanResultsTableModel.cpp
 	logic/dbmodels/EntityBase.cpp
