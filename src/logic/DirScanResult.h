@@ -32,7 +32,10 @@
 /// Ours
 #include <utils/QtHelpers.h>
 
-
+/**
+ * An extended URL class.
+ * Extensions are data used to detect if the referenced item has changed.
+ */
 class ExtUrl
 {
 	Q_GADGET
@@ -42,12 +45,35 @@ public:
 	ExtUrl(const ExtUrl& other) = default;
 	~ExtUrl() = default;
 
+    /**
+     * Construct an ExtUrl from a QUrl and QFileInfo.
+     * Use case is e.g. results of a directory scan, where we'd have QFileInfo available.
+     */
 	explicit ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo = nullptr);
 
 	/// User-defined conversion to QUrl.
 	explicit operator QUrl() const { return m_url; }
 
 	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
+
+
+    /// ExtUrl Status enum.
+    enum Status
+    {
+        Exists = 0x01,
+        Accessible = 0x02,
+        IsStale = 0x04
+    };
+    Q_DECLARE_FLAGS(Statuses, Status)
+    Q_FLAG(Statuses)
+
+    /**
+     * Check the status of the URL, if it is accessible, if it's stale, etc.
+     */
+    Status getStatus();
+
+    /// @name Data members.
+    /// @{
 
 	/// The QUrl.
 	QUrl m_url;
@@ -57,6 +83,8 @@ public:
 	QDateTime m_last_modified_timestamp;
 	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
 	QDateTime m_metadata_last_modified_timestamp;
+
+    /// @}
 
 //	bool isValid() { return m_url.isValid(); }
 
@@ -202,7 +230,7 @@ protected:
 };
 
 Q_DECLARE_METATYPE(DirScanResult);
-
+Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirProps);
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
 //QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
 

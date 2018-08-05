@@ -61,7 +61,7 @@ Q_SIGNALS:
      * KIO::ListJob-like signal used to send the discovered directory entries to
      * whoever may be listening.
      */
-	void entries(DirScanResult dsr, KJob* kjob);
+    void entries(DirScanResult dsr, KJob* kjob);
 
 	void SIGNAL_resultsReadyAt(ExtFuture<DirScanResult>& ef, int begin, int end);
 
@@ -98,11 +98,7 @@ protected Q_SLOT:
 	 {
 		 qDbo() << "GOT RESULTS:" << begin << end;
 
-		 for(int i=begin; i<end; i++)
-		 {
-//			 Q_EMIT entries(ef.future().resultAt(i), this);
-			 Q_EMIT SIGNAL_resultsReadyAt(ef, begin, end);
-		 }
+         Q_EMIT SIGNAL_resultsReadyAt(ef, begin, end);
 	 }
 
 private:

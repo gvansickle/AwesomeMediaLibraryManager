@@ -47,17 +47,20 @@ public:
 
 ///
 
+#define QTH_FRIEND_QDEBUG_OP(classname) \
+    IMPL_QTH_DECLARE_QDEBUG_OP(friend, classname)
+
 #define QTH_DECLARE_QDEBUG_OP(classname) \
 	IMPL_QTH_DECLARE_QDEBUG_OP(/**/, classname)
 
-#define QTH_FRIEND_QDEBUG_OP(classname) \
-	IMPL_QTH_DECLARE_QDEBUG_OP(friend, classname)
+
+#define QTH_FRIEND_QDATASTREAM_OPS(classname) \
+    IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend, classname)
 
 #define QTH_DECLARE_QDATASTREAM_OPS(classname) \
 	IMPL_QTH_DECLARE_QDATASTREAM_OPS(/**/, classname)
 
-#define QTH_FRIEND_QDATASTREAM_OPS(classname) \
-	IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend, classname)
+
 
 /**
  * Use the above in your header, then put something like this in your .cpp file:
@@ -67,6 +70,7 @@ public:
 
 	QDebug operator<<(QDebug dbg, const DirScanResult & obj)
 	{
+        QDebugStateSaver saver(debug);
 	#define X(field) << obj.field
 		dbg DATASTREAM_FIELDS(X);
 	#undef X
