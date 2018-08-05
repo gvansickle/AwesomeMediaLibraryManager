@@ -55,7 +55,7 @@ template <class T>
 class ExtFuture;
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
-#include "ExtFuture_fwddecl_p.h"
+#include "ExtAsync_traits.h"
 
 
 /**

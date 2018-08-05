@@ -261,7 +261,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
 	concurrency/ExtFutureWatcher.h
-	concurrency/ExtFuture_fwddecl_p.h
+	concurrency/ExtAsync_traits.h
 	concurrency/impl/ExtFuture_impl.hpp
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncTask.h
