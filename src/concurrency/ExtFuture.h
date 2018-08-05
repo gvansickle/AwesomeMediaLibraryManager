@@ -234,9 +234,16 @@ public:
      * Like .get(), but only returns the first value in the ExtFuture<>'s QList.
      * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
      */
-    T result()
+    inline T result() const
     {
-        return this->future().result();
+        this->waitForResult(0);
+        return this->resultReference(0);
+    }
+
+    inline T resultAt(int index) const
+    {
+        this->waitForResult(index);
+        return this->resultReference(index);
     }
 
 	/// @name .then() overloads.
