@@ -103,8 +103,8 @@ void AMLMApp::Init(bool gtest_only)
 			;
 
 
-
-	m_cdb2_model_instance = new AbstractTreeModel({"URL", "Album"}, str, this);
+    /// @todo Move this somewhere.
+    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecareCueURL"}, str, this);
 
 	/// @end Experiments
 
