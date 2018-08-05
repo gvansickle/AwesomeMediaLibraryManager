@@ -38,8 +38,8 @@ namespace AMLM
 		EntityBase(const EntityBase& other) = default;
 		virtual ~EntityBase() = default;
 
-	public:
-		static QString schema() { return ""; };
+//	public:
+//		static QString schema() { return ""; };
 	};
 
 

@@ -55,7 +55,7 @@ template <class T>
 class ExtFuture;
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
-#include "impl/ExtFuture_fwddecl_p.h"
+#include "ExtFuture_fwddecl_p.h"
 
 
 /**
@@ -236,8 +236,7 @@ public:
      */
     inline T result() const
     {
-        this->waitForResult(0);
-        return this->resultReference(0);
+        return this->resultAt(0);
     }
 
     inline T resultAt(int index) const

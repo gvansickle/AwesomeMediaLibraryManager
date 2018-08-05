@@ -33,7 +33,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-	: BASE_CLASS(parent), m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
+    : BASE_CLASS(parent), m_dir_url(dir_url), m_name_filters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
@@ -73,7 +73,7 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
 void DirectoryScannerAMLMJob::runFunctor()
 {
     // Create the QDirIterator.
-    QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
+    QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_name_filters, m_dir_filters, m_iterator_flags);
 
     // Check for errors.
     QFileInfo file_info(m_dir_url.toLocalFile());

@@ -43,9 +43,6 @@
    <item>
     <widget class="QFrame" name="frame_2">
      <layout class="QGridLayout" name="gridLayout_3">
-      <item row="0" column="2">
-       <widget class="QLCDNumber" name="lcdNumber_num_hits"/>
-      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
@@ -58,6 +55,13 @@
       </item>
       <item row="0" column="1">
        <widget class="FilterWidget" name="CTRLFFilterWidget"/>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="lcdNumber_num_hits">
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>

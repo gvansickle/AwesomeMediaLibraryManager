@@ -47,7 +47,6 @@ class DirectoryScannerAMLMJob : public AMLMJobT<ExtFuture<DirScanResult>>, publi
 {
     Q_OBJECT
 
-//    using BASE_CLASS = AMLMJob;
 	using BASE_CLASS = AMLMJobT<ExtFuture<DirScanResult>>;
 
     /**
@@ -108,8 +107,9 @@ protected Q_SLOT:
 
 private:
 
+    /// The URL we'll start the traversal from.
     QUrl m_dir_url;
-    QStringList m_nameFilters;
+    QStringList m_name_filters;
     QDir::Filters m_dir_filters;
     QDirIterator::IteratorFlags m_iterator_flags;
 

@@ -51,29 +51,8 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
-///// Ours
-//#include <utils/crtp.h>
-//#include <utils/DebugHelpers.h>
+// Ours
 
-//template <typename T>
-//class ExtFutureTMixin : crtp<T, ExtFutureTMixin>
-//{
-//public:
-
-//	using ExtFutureT = ExtFuture<T>;
-
-////	ExtFutureT& get_extfuture_ref() { return m_ext_future; }
-
-////    virtual ~ExtFutureTMixin() = default;
-
-//private:
-////    /// @note Private constructor and friended to T to avoid ambiguities
-////    /// if this CRTP class is used as a base in several classes in a class hierarchy.
-////    ExtFutureTMixin() = default;
-
-////    friend AMLMDerivedClassType;
-////	ExtFuture<T> m_ext_future;
-//};
 
 template <class T>
 struct AMLMJob_traits
