@@ -38,8 +38,8 @@ namespace AMLM
 		EntityBase(const EntityBase& other) = default;
 		virtual ~EntityBase() = default;
 
-//	public:
-//		static QString schema() { return ""; };
+    public:
+
 	};
 
 
@@ -56,8 +56,6 @@ namespace AMLM
 		CollectionMedium(const CollectionMedium& other) = default;
 		explicit CollectionMedium(const DirScanResult& dsr);
 		~CollectionMedium() override = default;
-
-		static QString schema();
 
 	protected:
 

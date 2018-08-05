@@ -44,14 +44,4 @@ namespace AMLM
 		m_cue_url = dsr.getSidecarCuesheetExtUrl();
 	}
 
-	QString CollectionMedium::schema()
-	{
-		return "m_dir_url" TEXT NOT_NULL ","
-				"m_dir_props" BLOB ","
-				"m_media_urls" BLOB ","
-				"m_cue_url" TEXT;
-	}
-
-
-
 } // namespace AMLM

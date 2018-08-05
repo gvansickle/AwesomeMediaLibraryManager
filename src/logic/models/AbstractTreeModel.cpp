@@ -226,6 +226,29 @@ bool AbstractTreeModel::removeRows(int position, int rows, const QModelIndex &pa
     return success;
 }
 
+bool AbstractTreeModel::appendItems(QVector<AbstractTreeModelItem *> new_items, const QModelIndex &parent)
+{
+
+    if(!parent.isValid())
+    {
+
+    }
+
+    auto parent_item = getItem(parent);
+    Q_CHECK_PTR(parent_item);
+
+    auto first_new_row = parent_item->childCount();
+
+    /// @todo What do we need to do to support/handle different num of columns?
+    beginInsertRows(parent, first_new_row, first_new_row + new_items.size());
+
+    parent_item->appendChildren(new_items);
+
+    endInsertRows();
+
+    return true;
+}
+
 int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 {
     AbstractTreeModelItem *parentItem = getItem(parent);

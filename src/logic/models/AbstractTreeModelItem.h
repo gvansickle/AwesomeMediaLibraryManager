@@ -59,6 +59,8 @@
 #include <QVariant>
 #include <QVector>
 
+#include <utils/QtHelpers.h>
+
 /**
  * Generic item for use in TreeModel.
  */
@@ -66,19 +68,38 @@ class AbstractTreeModelItem
 {
 public:
 	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
-	~AbstractTreeModelItem();
+    virtual ~AbstractTreeModelItem();
 
 	AbstractTreeModelItem *child(int number);
+
+    /// The number of children this item has.
     int childCount() const;
+
     int columnCount() const;
     QVariant data(int column) const;
+
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
-	AbstractTreeModelItem *parent();
+
+    AbstractTreeModelItem *parent();
+
     bool removeChildren(int position, int count);
     bool removeColumns(int position, int columns);
+
+    /// The row number of this item in its parent's list of children.
     int childNumber() const;
+
     bool setData(int column, const QVariant &value);
+
+    bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
+
+    QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)
+
+protected:
+
+    /// Sets this item's parent item to parent_item.
+    /// Primarily for use in appendChildren().
+    virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
 private:
 
@@ -92,5 +113,6 @@ private:
 	AbstractTreeModelItem *m_parent_item;
 };
 
+QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
 
 #endif // ABSTRACTTREEMODELITEM_H

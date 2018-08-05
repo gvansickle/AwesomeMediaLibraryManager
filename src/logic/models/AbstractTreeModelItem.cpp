@@ -55,8 +55,11 @@
 
 #include "AbstractTreeModelItem.h"
 
+// Qt5
 #include <QStringList>
 
+// Ours
+#include <utils/DebugHelpers.h>
 
 AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent)
 {
@@ -68,6 +71,24 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 {
 	qDeleteAll(m_child_items);
 }
+
+// Debug streaming.
+#define DATASTREAM_FIELDS(X) \
+    X(m_parent_item) X(m_item_data) X(m_child_items)
+
+//QDebug operator<<(QDebug dbg, const AbstractTreeModelItem & obj)
+//{
+//#define X(field) << obj.field
+//    dbg DATASTREAM_FIELDS(X);
+//#undef X
+//    return dbg;
+//}
+
+#define X(field) << obj.field
+QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem, {
+                             dbg DATASTREAM_FIELDS(X);
+                     });
+#undef X
 
 AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
 {
@@ -187,5 +208,26 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 
 	m_item_data[column] = value;
     return true;
+}
+
+bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem *> new_children)
+{
+    /// @todo Support add columns?
+    for(auto* child : new_children)
+    {
+        child->setParentItem(this);
+        qDb() << "APPENDING TO ITEM:" << this;
+        qDb() << "       CHILD ITEM:" << *child;
+        m_child_items.push_back(child);
+    }
+
+    return true;
+}
+
+void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
+{
+    AMLM_WARNIF(m_parent_item != nullptr);
+
+    m_parent_item = parent_item;
 }
 

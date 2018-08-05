@@ -36,6 +36,7 @@
 /// Ours
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
+#include <logic/models/AbstractTreeModelItem.h>
 #include <utils/DebugHelpers.h>
 
 /// Ours, Qt5/KF5-related
@@ -254,8 +255,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	// New Tree model.
 	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
-	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, tree_model, [=](auto ef, int begin, int end){
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, tree_model, [=](auto& ef, int begin, int end){
 
+#if 0
 		auto first_new_row = tree_model->rowCount();
 		int current_row = first_new_row;
 		tree_model->insertRows(first_new_row, (end-begin), QModelIndex());
@@ -278,6 +280,22 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 //			dbmodel->SLOT_addDirScanResult(ef.future().resultAt(i));
 		}
+#else
+        QVector<AbstractTreeModelItem*> new_items;
+        for(int i=begin; i<end; i++)
+        {
+            QVector<QVariant> column_data;
+            DirScanResult dsr = ef.future().resultAt(i);
+
+            column_data.append(QVariant::fromValue(dsr.getDirProps()).toString());
+            column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
+            column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+
+            new_items.push_back(new AbstractTreeModelItem(column_data));
+        }
+
+        tree_model->appendItems(new_items);
+#endif
 		;});
 
 

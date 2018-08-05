@@ -99,6 +99,14 @@ public:
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
 
+    /// @name Extended model interface.
+    /// @{
+
+    /// Append a vector of AbstractTreeModelItem's as children of @p parent.
+    virtual bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
+
+    /// @}
+
 private:
 	void setupModelData(const QStringList &lines, AbstractTreeModelItem *parent);
 	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
