@@ -86,7 +86,7 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
     IMPL_QTH_DECLARE_QDEBUG_OP(friend, classname)
 
 /**
- * QDebug output stream operator helpwer macro.
+ * QDebug output stream operator helper macro.
  */
 #define QTH_DECLARE_QDEBUG_OP(classname) \
 	IMPL_QTH_DECLARE_QDEBUG_OP(/**/, classname)
@@ -95,7 +95,7 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
     QDebug operator<<(QDebug dbg, const classname & obj)\
     {\
         QDebugStateSaver saver(dbg);\
-        __VA_ARGS__ \
+        dbg << #classname "(" __VA_ARGS__ << ")";\
         return dbg; \
     }
 

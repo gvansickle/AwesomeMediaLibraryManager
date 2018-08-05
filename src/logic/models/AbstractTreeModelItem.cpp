@@ -85,9 +85,9 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 //}
 
 #define X(field) << obj.field
-QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem, {
-                             dbg DATASTREAM_FIELDS(X);
-                     });
+QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
+                             DATASTREAM_FIELDS(X)
+                     );
 #undef X
 
 AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
