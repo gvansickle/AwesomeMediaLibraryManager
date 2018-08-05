@@ -570,7 +570,6 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 template<typename T>
 T ExtFuture<T>::qtget_first()
 {
-M_WARNING("segfaulting.");
     wait();
     return this->future().result();
 }
