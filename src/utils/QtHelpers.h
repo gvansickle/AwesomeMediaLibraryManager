@@ -95,7 +95,7 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
     QDebug operator<<(QDebug dbg, const classname & obj)\
     {\
         QDebugStateSaver saver(dbg);\
-        dbg << #classname "(" __VA_ARGS__ << ")";\
+        dbg << #classname " (" __VA_ARGS__ << ")";\
         return dbg; \
     }
 
