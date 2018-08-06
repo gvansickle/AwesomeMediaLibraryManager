@@ -42,9 +42,11 @@
 
 // Ours
 #include <utils/QtHelpers.h>
+#include <utils/ConnectHelpers.h>
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 #include <utils/UniqueIDMixin.h>
+
 #include "ExtFutureState.h"
 #include "ExtFutureWatcher.h"
 
@@ -98,7 +100,7 @@ class ExtFuture;
 template <typename T>
 class ExtFuture : public QFutureInterface<T>, public UniqueIDMixin<ExtFuture<T>>
 {
-	using BASE_CLASS = QFutureInterface<T>;
+    using BASE_CLASS = QFutureInterface<T>;
 
 	static_assert(!std::is_void<T>::value, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
 
@@ -152,8 +154,8 @@ public:
 	 * @param initialState  Defaults to State(Started | Running)
 	 */
     explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started))
-		: QFutureInterface<T>(initialState)
-	{
+        : QFutureInterface<T>(initialState)
+    {
         //qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
         AMLM_ASSERT_EQ(initialState, QFutureInterfaceBase::State::Started);
 	}
@@ -219,15 +221,17 @@ public:
 
     /**
      * Waits until the ExtFuture<T> is finished, and returns the resulting QList<T>.
-     * Essentially the same semantics as std::future::get().
+     * Essentially the same semantics as std::future::get(); shared_future::get() always returns a reference instead.
      *
      * @note Directly calls this->future().results().  This blocks any event loop in this thread.
      *
      * @return The results value of this ExtFuture.
      */
-    QList<T> get()
+    QList<T> get() const
     {
-        return this->future().results();
+        /// @todo Not wild about this const_cast<>, but QFuture<> has a QFutureInterface<T>
+        /// as a "private" mutable d value member, so this should be OK.
+        return const_cast<ExtFuture<T>*>(this)->results();
     }
 
     /**
@@ -236,13 +240,13 @@ public:
      */
     inline T result() const
     {
-        return this->resultAt(0);
+        return const_cast<ExtFuture<T>*>(this)->resultAt(0);
     }
 
     inline T resultAt(int index) const
     {
-        this->waitForResult(index);
-        return this->resultReference(index);
+        const_cast<ExtFuture<T>*>(this)->waitForResult(index);
+        return const_cast<ExtFuture<T>*>(this)->resultReference(index);
     }
 
 	/// @name .then() overloads.
@@ -335,6 +339,24 @@ public:
 		qWr() << "EXIT ExtFuture<T>& tap(F&& tap_callback)";
 		return *this;
 	}
+
+    /**
+     * tap() overload for "streaming" ExtFutures.
+     * Callback takes a reference to this, a begin index, and an end index.
+     */
+    template<typename TapCallbackType,
+             REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&, int, int>)>
+    ExtFuture<T>& tap(TapCallbackType&& tap_callback)
+    {
+        EnsureFWInstantiated();
+
+        connect_or_die(m_extfuture_watcher, &ExtFutureWatcher<T>::resultsReadyAt,
+                       /*context,*/ [=](int begin, int end){
+            tap_callback(*this, begin, end);
+            ;});
+
+        return *this;
+    }
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.
@@ -505,7 +527,7 @@ protected:
 //		static std::atomic_bool s_was_ever_called {false};
 
 		auto watcher = new QFutureWatcher<T>();
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+        connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
 				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
 //					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
@@ -685,6 +707,7 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 {
 	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
 }
+
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 

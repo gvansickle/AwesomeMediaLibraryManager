@@ -73,7 +73,7 @@ AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &
 	}
 
 	m_root_item = new AbstractTreeModelItem(rootData);
-	setupModelData(data.split(QString("\n")), m_root_item);
+    setupModelData(data.split(QString("\n")), m_root_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -236,12 +236,6 @@ bool AbstractTreeModel::removeRows(int position, int rows, const QModelIndex &pa
 
 bool AbstractTreeModel::appendItems(QVector<AbstractTreeModelItem *> new_items, const QModelIndex &parent)
 {
-
-    if(!parent.isValid())
-    {
-
-    }
-
     auto parent_item = getItem(parent);
     Q_CHECK_PTR(parent_item);
 
