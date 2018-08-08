@@ -38,31 +38,45 @@
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  */
-class ExtAsyncTestsSuiteFixture : public ::testing::Test
+class ExtAsyncTestsSuiteFixture : public ExtAsyncTestsSuiteFixtureBase//::testing::Test
 {
 protected:
 
-	void SetUp() override;
-	void TearDown() override;
+//	void SetUp() override;
+//	void TearDown() override;
 
 	// Objects declared here can be used by all tests in this Fixture.
 
 	/// Map of test cases which have finished.
-	std::set<std::string> m_finished_set;
-	std::mutex m_finished_map_mutex;
+//    std::mutex m_finished_map_mutex;
+//    std::set<std::string> m_finished_set;
+//    std::string m_currently_running_test;
 
-	bool has_finished(std::string func)
-	{
-		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-		return m_finished_set.count(func) > 0;
+//    std::string get_currently_running_test()
+//    {
+//        std::lock_guard<std::mutex> lock(m_finished_map_mutex);
+//        return m_currently_running_test;
+//    }
 
-	}
+//    void starting(std::string func)
+//    {
+//        std::lock_guard<std::mutex> lock(m_finished_map_mutex);
+//        m_currently_running_test = func;
+//    }
 
-	void finished(std::string func)
-	{
-		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-		m_finished_set.insert(func);
-	}
+//	bool has_finished(std::string func)
+//	{
+//		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
+//		return m_finished_set.count(func) > 0;
+
+//	}
+
+//	void finished(std::string func)
+//	{
+//		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
+//		m_finished_set.insert(func);
+//        m_currently_running_test.clear();
+//	}
 };
 
 

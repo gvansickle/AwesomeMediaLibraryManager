@@ -45,15 +45,15 @@
 #include "../ExtAsync.h"
 
 
-void ExtAsyncTestsSuiteFixture::SetUp()
-{
-	GTEST_COUT << "SetUp()" << std::endl;
-}
+//void ExtAsyncTestsSuiteFixture::SetUp()
+//{
+//	GTEST_COUT << "SetUp()" << std::endl;
+//}
 
-void ExtAsyncTestsSuiteFixture::TearDown()
-{
-	GTEST_COUT << "TearDown()" << std::endl;
-}
+//void ExtAsyncTestsSuiteFixture::TearDown()
+//{
+//	GTEST_COUT << "TearDown()" << std::endl;
+//}
 
 
 
@@ -782,6 +782,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 	static std::atomic_bool ran_then {false};
 	TC_ENTER();
 
+    using FutureType = ExtFuture<QString>;
+
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1);
 
 	ASSERT_TRUE(future.isStarted());
@@ -789,7 +791,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 
 	GTEST_COUT << "Future created" << std::endl;
 
-	future.tap([&](QString result){
+    future.test_tap([](FutureType& ef){
+        qDb() << "Future: " << &ef;
+        })
+        .tap([&](QString result){
 
 			TC_EXPECT_NOT_EXIT();
 			TC_EXPECT_STACK();
@@ -816,11 +821,14 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			ran_then = true;
 			TC_DONE_WITH_STACK();
 			return QString("Then Called");
-		;}).wait();
+        }).wait();
 
     GTEST_COUT << "after wait(): " << future << std::endl;
 
-//	future.wait();
+//    future.wait();
+    ASSERT_TRUE(future.isStarted());
+    ASSERT_FALSE(future.isRunning());
+    ASSERT_TRUE(future.isFinished());
 
 	ASSERT_TRUE(ran_tap);
 	ASSERT_TRUE(ran_then);
@@ -878,7 +886,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 		current_tap_call_count++;
 		// Asign the new value back atomically.
 		tap_call_counter = current_tap_call_count;
-		;});
+        });
 
 	// No wait, shouldn't have finished yet.
 	ASSERT_TRUE(future.isStarted());

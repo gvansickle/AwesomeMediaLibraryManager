@@ -44,15 +44,15 @@
 #include "../ExtFuture.h"
 
 
-void ExtFutureTest::SetUp()
-{
-    GTEST_COUT << "SetUp()" << std::endl;
-}
+//void ExtFutureTest::SetUp()
+//{
+//    GTEST_COUT << "SetUp()" << std::endl;
+//}
 
-void ExtFutureTest::TearDown()
-{
-    GTEST_COUT << "TearDown()" << std::endl;
-}
+//void ExtFutureTest::TearDown()
+//{
+//    GTEST_COUT << "TearDown()" << std::endl;
+//}
 
 /**
  * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,

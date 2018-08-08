@@ -227,11 +227,12 @@ public:
      *
      * @return The results value of this ExtFuture.
      */
-    QList<T> get() const
+    QList<T> get() //const
     {
         /// @todo Not wild about this const_cast<>, but QFuture<> has a QFutureInterface<T>
         /// as a "private" mutable d value member, so this should be OK.
-        return const_cast<ExtFuture<T>*>(this)->results();
+//        return const_cast<ExtFuture<T>*>(this)->results();
+        return this->future().results();
     }
 
     /**
@@ -240,7 +241,8 @@ public:
      */
     inline T result() const
     {
-        return const_cast<ExtFuture<T>*>(this)->resultAt(0);
+//        return const_cast<ExtFuture<T>*>(this)->resultAt(0);
+        return this->future().resultAt(0);
     }
 
     inline T resultAt(int index) const
@@ -355,6 +357,19 @@ public:
             tap_callback(*this, begin, end);
             ;});
 
+        return *this;
+    }
+
+    /**
+     * A .tap() variant intended solely for testing.  Allows the callback to set the future's objectName,
+     * perhaps register it with a watcher, etc.
+     * @note Unlike other .tap()s, the callback is called immediately, not when the ExtFuture has finished.
+     */
+    template<typename TapCallbackType,
+             REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&>)>
+    ExtFuture<T>& test_tap(TapCallbackType&& tap_callback)
+    {
+        tap_callback(*this);
         return *this;
     }
 
