@@ -48,7 +48,13 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 	m_ext_future.tap([=](DirScanResult dsr) {
 		qDbo() << "GOT HERE";
 		Q_EMIT entries(dsr, this);
-		});
+    });
+}
+
+DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(int i, QObject *parent, QUrl dir_url, const QStringList &nameFilters, QDir::Filters filters, QDirIterator::IteratorFlags flags)
+    : DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags)
+{
+
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -67,7 +73,19 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
                                               flags);
 
 
-	return retval;
+    return retval;
+}
+
+DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job2(QObject *parent, const QUrl &dir_url, const QStringList &nameFilters, QDir::Filters filters, QDirIterator::IteratorFlags flags)
+{
+    auto retval = new DirectoryScannerAMLMJob(2, parent, dir_url,
+                                              nameFilters,
+                                              filters,
+                                              flags);
+
+    return retval;
+
+
 }
 
 void DirectoryScannerAMLMJob::runFunctor()
@@ -193,3 +211,4 @@ void DirectoryScannerAMLMJob::runFunctor()
 
     qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
 }
+

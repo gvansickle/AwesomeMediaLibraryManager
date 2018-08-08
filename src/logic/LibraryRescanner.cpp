@@ -213,7 +213,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
-    DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
+    DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job2(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);

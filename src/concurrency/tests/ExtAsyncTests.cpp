@@ -45,16 +45,6 @@
 #include "../ExtAsync.h"
 
 
-//void ExtAsyncTestsSuiteFixture::SetUp()
-//{
-//	GTEST_COUT << "SetUp()" << std::endl;
-//}
-
-//void ExtAsyncTestsSuiteFixture::TearDown()
-//{
-//	GTEST_COUT << "TearDown()" << std::endl;
-//}
-
 
 
 ///
@@ -917,6 +907,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRunFreefunc)
     int retval = extfuture.qtget_first();
 
     ASSERT_EQ(retval, 4);
+
+//    EXPECT_TRUE();
 
     TC_DONE_WITH_STACK();
     TC_EXIT();
