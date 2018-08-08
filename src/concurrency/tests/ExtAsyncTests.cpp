@@ -146,12 +146,7 @@ static ExtFuture<QString> delayed_string_func()
  */
 static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 {
-	/** @todo
-	 * This run is:
-	[ "" ] EXTASYNC::RUN: IN auto run(F&& function, Args&&... args): auto ExtAsync::run(F &&, Args &&...) [F = (lambda at ../utils/concurrency/tests/AsyncTests.cpp:165:40), Args = <>]
-	[ "" ] EXTASYNC::RUN: IN ExtFutureR run_helper_struct::run(F&& function, Args&&... args): ExtFutureR ExtAsync::detail::run_helper_struct<ExtFuture<int> >::run(F &&, Args &&...) [ExtFutureR = ExtFuture<int>, F = (lambda at ../utils/concurrency/tests/AsyncTests.cpp:165:40), Args = <>]
-	*/
-	ExtFuture<int> retval = ExtAsync::run([=](ExtFuture<int>& future) {
+    ExtFuture<int> retval = ExtAsync::run_efarg([=](ExtFuture<int>& future) {
 		int current_val = start_val;
 		for(int i=0; i<num_iterations; i++)
 		{
@@ -167,7 +162,7 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
 		// We're done.
 		qWr() << "REPORTING FINISHED";
 		future.reportFinished();
-	});
+    });
 
 	static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
 
@@ -823,7 +818,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			return QString("Then Called");
 		;}).wait();
 
-    GTEST_COUT << "after wait()" << future << std::endl;
+    GTEST_COUT << "after wait(): " << future << std::endl;
 
 //	future.wait();
 
@@ -838,7 +833,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 	std::atomic_int tap_call_counter {0};
 	TC_ENTER();
 
-	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int>& extfuture) {
+    ExtFuture<int> future = ExtAsync::run_efarg([&](ExtFuture<int>& extfuture) {
 
 			TC_EXPECT_NOT_EXIT();
 			TC_EXPECT_STACK();
@@ -846,16 +841,16 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			GTEST_COUT << "SLEEP 1" << std::endl;
-			//QThread::sleep(1);
-			QTest::qWait(1000);
+            QTest::qSleep(1000);
+            //QTest::qWait(1000);
 			extfuture.reportResult(867);
 			GTEST_COUT << "SLEEP 1" << std::endl;
-			//QThread::sleep(1);
-			QTest::qWait(1000);
+            QTest::qSleep(1000);
+            //QTest::qWait(1000);
 			extfuture.reportResult(5309);
 			GTEST_COUT << "SLEEP 1" << std::endl;
-			//QThread::sleep(1);
-			QTest::qWait(1000);
+            QTest::qSleep(1000);
+            //QTest::qWait(1000);
 			GTEST_COUT << "FINISHED" << std::endl;
 			extfuture.reportFinished();
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;

@@ -210,26 +210,30 @@ namespace ExtAsync
     }
 
 	/**
-	 * For free functions of the form:
+     * Asynchronously run a free function of the form:
 	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
-	 *
-	 * Note use of C++14 auto return type deduction.
+     * Creates and returns an ExtFuture<T>.
 	 */
-	template <class F, /*class R = ExtFuture<int>,*/ class... Args, std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
-	auto
-	run(F&& function, Args&&... args)
-	{
-		/// @note Used.
-		qWr() << "EXTASYNC::RUN: IN auto run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
-		// Extract the type of the first arg of function, which should be an ExtFuture<?>&.
-		using argst = ct::args_t<F>;
-		using arg0t = std::tuple_element_t<0, argst>;
-		using ExtFutureR = std::remove_reference_t<arg0t>;
-		detail::run_helper_struct<ExtFutureR> helper;
+    template<class CallbackType,
+             class ExtFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
+             class T = isExtFuture_t<ExtFutureT>,
+             REQUIRES(isExtFuture_v<ExtFutureT>)
+             >
+    auto run_efarg(CallbackType&& callback) -> ExtFuture<T>
+    {
+        using argst = ct::args_t<CallbackType>;
+        using arg0t = std::tuple_element_t<0, argst>;
+        using ExtFutureR = std::remove_reference_t<arg0t>;
+        static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
 
-        return helper.run(std::forward<F>(std::decay_t<F>(function)), std::forward<Args>(args)...);
-	}
+        ExtFutureR retval;
 
+        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), std::ref(retval));
+
+        return retval;
+    }
+
+#if 1
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
 	 *
@@ -266,8 +270,9 @@ namespace ExtAsync
 
 	    return retfuture;
 	}
-};
+#endif
 
+};
 
 /// @todo Move this include.
 #include "ExtAsyncTask.h"

@@ -26,6 +26,12 @@
 #include <future/cpp14_concepts.hpp>
 #include <future/Unit.hpp>
 
+// Forward declare the ExtAsync namespace
+namespace ExtAsync { namespace detail {} }
+
+template <class T>
+class ExtFuture;
+
 template <typename T>
 struct isExtFuture : std::false_type
 {

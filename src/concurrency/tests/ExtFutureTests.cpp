@@ -67,7 +67,8 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
     [ "" ] EXTASYNC::RUN: IN auto run(F&& function, Args&&... args): auto ExtAsync::run(F &&, Args &&...) [F = (lambda at ../utils/concurrency/tests/AsyncTests.cpp:165:40), Args = <>]
     [ "" ] EXTASYNC::RUN: IN ExtFutureR run_helper_struct::run(F&& function, Args&&... args): ExtFutureR ExtAsync::detail::run_helper_struct<ExtFuture<int> >::run(F &&, Args &&...) [ExtFutureR = ExtFuture<int>, F = (lambda at ../utils/concurrency/tests/AsyncTests.cpp:165:40), Args = <>]
     */
-    ExtFuture<int> retval = ExtAsync::run([=](ExtFuture<int>& future) {
+
+    ExtFuture<int> future = ExtAsync::run_efarg([=](ExtFuture<int>& future) {
         int current_val = start_val;
         for(int i=0; i<num_iterations; i++)
         {
@@ -85,11 +86,11 @@ static ExtFuture<int> async_int_generator(int start_val, int num_iterations)
         future.reportFinished();
     });
 
-    static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
+    static_assert(std::is_same_v<decltype(future), ExtFuture<int>>, "");
 
-    qWr() << "RETURNING:" << retval;
+    qWr() << "RETURNING:" << future;
 
-    return retval;
+    return future;
 }
 
 //
