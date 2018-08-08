@@ -98,6 +98,7 @@ QT_END_NAMESPACE
 	static std::atomic_bool test_func_exited {false}; \
 	static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
 	static std::atomic_bool test_func_stack_is_gone {false}; \
+    GTEST_COUT << "ENTERING: " << __PRETTY_FUNCTION__ << std::endl; \
 	ASSERT_FALSE(has_finished(testname));
 
 #define TC_EXPECT_NOT_EXIT() \
