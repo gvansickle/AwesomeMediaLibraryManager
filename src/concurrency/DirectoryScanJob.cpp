@@ -51,12 +51,6 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
     });
 }
 
-DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(int i, QObject *parent, QUrl dir_url, const QStringList &nameFilters, QDir::Filters filters, QDirIterator::IteratorFlags flags)
-    : DirectoryScannerAMLMJob(parent, dir_url, nameFilters, filters, flags)
-{
-
-}
-
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
     qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
@@ -74,18 +68,6 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
 
 
     return retval;
-}
-
-DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job2(QObject *parent, const QUrl &dir_url, const QStringList &nameFilters, QDir::Filters filters, QDirIterator::IteratorFlags flags)
-{
-    auto retval = new DirectoryScannerAMLMJob(2, parent, dir_url,
-                                              nameFilters,
-                                              filters,
-                                              flags);
-
-    return retval;
-
-
 }
 
 void DirectoryScannerAMLMJob::runFunctor()

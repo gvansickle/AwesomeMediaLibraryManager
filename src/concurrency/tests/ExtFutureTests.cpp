@@ -247,7 +247,7 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
 }
 
 /**
- * Test "basic cancel properties"streaming" tap().
+ * Test "streaming" tap().
  */
 TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {
@@ -276,7 +276,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     ef.waitForFinished();
 
-    qDb() << "Post tap().get(), extfuture:" << ef;
+    qDb() << "Post .tap().get(), extfuture:" << ef;
 
     EXPECT_TRUE(ef.isStarted());
     EXPECT_FALSE(ef.isCanceled());

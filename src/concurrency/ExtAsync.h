@@ -233,7 +233,7 @@ namespace ExtAsync
         return retval;
     }
 
-#if 1
+
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
 	 *
@@ -243,6 +243,7 @@ namespace ExtAsync
 	template <typename F, typename R = ct::return_type_t<F>>
 		std::enable_if_t<!std::is_member_function_pointer_v<F>
 			&& !ct::has_void_return_v<F>
+        && ct::is_invocable_r_v<R, F, void>
 		, ExtFuture<R>>
 	run(F&& function)
 	{
@@ -270,7 +271,45 @@ namespace ExtAsync
 
 	    return retfuture;
 	}
-#endif
+
+    /**
+     * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise, and returning non-void/non-ExtFuture<>.
+     *
+     * @param function
+     * @return
+     */
+    template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, class Arg,
+        REQUIRES(!std::is_member_function_pointer_v<CallbackType>
+              && !isExtFuture_v<R> && !std::is_same_v<R, void>
+            && ct::is_invocable_r_v<R, CallbackType, Arg>)
+        >
+    ExtFuture<R> run_1param(CallbackType&& function, Arg args)
+    {
+        /// @note Used.
+        qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(F&& function):" << __PRETTY_FUNCTION__;
+
+//        ExtFuture<R> retfuture;
+
+        /*
+         * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
+         *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
+         *      in the inner lambda.
+         *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
+         *      unless we decay off the reference-ness.
+         */
+
+        return QtConcurrent::run([fn=std::decay_t<CallbackType>(function)](const Arg args) {
+            R retval;
+            // Call the function the user originally passed in.
+            retval = fn(args);
+            // Report our single result.
+//            retfuture.reportResult(retval);
+//            retfuture.reportFinished();
+            return retval;
+            }, std::forward<Arg>(args));
+
+//        return retfuture;
+    }
 
 };
 

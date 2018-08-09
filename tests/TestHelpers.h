@@ -101,8 +101,6 @@ class ExtAsyncTestsSuiteFixtureBase : public ::testing::Test
 {
 protected:
 
-//    void SetUp() override;
-//    void TearDown() override;
     void SetUp() override
     {
         GTEST_COUT << "SetUp()" << std::endl;

@@ -71,10 +71,6 @@ protected:
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
 
-    explicit DirectoryScannerAMLMJob(int i, QObject* parent, QUrl dir_url,
-            const QStringList &nameFilters,
-            QDir::Filters filters = QDir::NoFilter,
-            QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
 public:
 
     /// @name Public types
@@ -89,10 +85,6 @@ public:
 											   QDir::Filters filters,
 											   QDirIterator::IteratorFlags flags);
 
-    static DirectoryScannerAMLMJobPtr make_job2(QObject *parent, const QUrl& dir_url,
-                                               const QStringList &nameFilters,
-                                               QDir::Filters filters,
-                                               QDirIterator::IteratorFlags flags);
 
     ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
@@ -101,10 +93,6 @@ protected:
     DirectoryScannerAMLMJob* asDerivedTypePtr() override { return this; }
 
     void runFunctor() override;
-
-    void runFunctor2();
-
-    int /*ret val unused*/ ReduceFunction(DirScanResult& result, const DirScanResult& intermediate);
 
 protected Q_SLOT:
 

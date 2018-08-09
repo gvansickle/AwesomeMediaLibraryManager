@@ -239,16 +239,17 @@ public:
      * Like .get(), but only returns the first value in the ExtFuture<>'s QList.
      * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
      */
-    inline T result() const
+    inline T result() //const
     {
 //        return const_cast<ExtFuture<T>*>(this)->resultAt(0);
         return this->future().resultAt(0);
     }
 
-    inline T resultAt(int index) const
+    inline T resultAt(int index) //const
     {
-        const_cast<ExtFuture<T>*>(this)->waitForResult(index);
-        return const_cast<ExtFuture<T>*>(this)->resultReference(index);
+//        const_cast<ExtFuture<T>*>(this)->waitForResult(index);
+//        return const_cast<ExtFuture<T>*>(this)->resultReference(index);
+        return this->future().resultAt(index);
     }
 
 	/// @name .then() overloads.
