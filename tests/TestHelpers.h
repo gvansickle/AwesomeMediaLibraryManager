@@ -149,7 +149,7 @@ protected:
 /// @{
 #define TC_ENTER() \
 	/* The name of this test as a static std::string. */ \
-	static const std::string testname {__PRETTY_FUNCTION__}; \
+    static const std::string testname {__PRETTY_FUNCTION__}; \
 	static std::atomic_bool test_func_called {true}; \
 	static std::atomic_bool test_func_exited {false}; \
 	static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
@@ -158,6 +158,9 @@ protected:
     ASSERT_FALSE(has_finished(testname)); \
     ASSERT_TRUE(get_currently_running_test().empty()) << get_currently_running_test();\
     starting(testname);
+
+#define TC_EXPECT_THIS_TC() \
+    EXPECT_EQ(get_currently_running_test(), testname);
 
 #define TC_EXPECT_NOT_EXIT() \
 	EXPECT_TRUE(test_func_called) << testname; \

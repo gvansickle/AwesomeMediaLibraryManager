@@ -520,7 +520,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelAllCom
 TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 {
 	SCOPED_TRACE("START");
-//	qIn() << "START";
 
 	std::atomic_bool ran1 {false};
 	std::atomic_bool ran2 {false};
@@ -536,7 +535,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 	ASSERT_FALSE(future.isFinished());
 
 	future
-	.then([&](ExtFuture<QString> extfuture) -> QString {
+    .then([&](ExtFuture<QString> extfuture) -> QString {
 
 		TC_EXPECT_NOT_EXIT();
 
@@ -555,7 +554,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
 		return QString("Then1 OUTPUT");
 	})
-	.then([&](ExtFuture<QString> extfuture) -> QString {
+    .then([&](ExtFuture<QString> extfuture) -> QString {
 
 		TC_EXPECT_NOT_EXIT();
 
@@ -572,7 +571,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_EQ(the_str, QString("Then1 OUTPUT"));
 		return QString("Then2 OUTPUT");
 	})
-	.then([&](ExtFuture<QString> extfuture) -> QString {
+    .then([&](ExtFuture<QString> extfuture) -> QString {
 
 		TC_EXPECT_NOT_EXIT();
 
@@ -699,6 +698,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 	std::atomic_int num_iterations {3};
 	std::atomic_bool tap_complete {false};
 	TC_ENTER();
+    TC_EXPECT_THIS_TC();
 
 	// Start generating a sequence of results.
 	auto future = async_int_generator(start_val, num_iterations);
@@ -711,6 +711,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 
 		TC_EXPECT_NOT_EXIT();
 		TC_EXPECT_STACK();
+        TC_EXPECT_THIS_TC();
 
 		static int last_seen_result = 0;
 		static int num_tap_calls = 0;
@@ -739,6 +740,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 			tap_complete = true;
 		}
 		;}).then([&](ExtFuture<int> extfuture) -> int {
+            TC_EXPECT_THIS_TC();
+
 			EXPECT_EQ(tap_complete, true);
 
 			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
@@ -751,7 +754,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 //M_WARNING("THE ABOVE .wait() doesn't wait");
 #if 1
 		.finally([&]() {
-
+            TC_EXPECT_THIS_TC();
 			TC_EXPECT_NOT_EXIT();
 
 			EXPECT_EQ(tap_complete, true);
@@ -764,6 +767,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 	ASSERT_FALSE(future.isRunning());
 	ASSERT_TRUE(future.isFinished());
 
+    TC_EXPECT_THIS_TC();
 	TC_EXIT();
 }
 
@@ -815,9 +819,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
     std::atomic_bool generator_complete {false};
 
 	TC_ENTER();
+    TC_EXPECT_THIS_TC();
 
     using FutureType = ExtFuture<QString>;
 
+    QString wait_result;
+    GTEST_COUT << "STARTING FUTURE";
     ExtFuture<QString> future = ExtAsync::run_1param(delayed_string_func_1, std::ref(generator_complete));
 
 	ASSERT_TRUE(future.isStarted());
@@ -836,6 +843,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			TC_EXPECT_STACK();
 
 			GTEST_COUT << "testname: " << testname << std::endl;
+            TC_EXPECT_THIS_TC();
 
 			GTEST_COUT << "in tap(), result:" << tostdstr(result) << std::endl;
 			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
@@ -846,6 +854,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
             SCOPED_TRACE("");
 			TC_EXPECT_NOT_EXIT();
 			TC_EXPECT_STACK();
+            TC_EXPECT_THIS_TC();
 
 			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(extfuture.isRunning());
@@ -857,9 +866,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			ran_then = true;
 			TC_DONE_WITH_STACK();
 			return QString("Then Called");
-        }).wait();
+    }).test_tap([&](auto ef){ wait_result = ef.result();}).wait();
 
     GTEST_COUT << "after wait(): " << future << std::endl;
+    ASSERT_EQ(wait_result, QString("Then Called"));
 
 //    future.wait();
     ASSERT_TRUE(future.isStarted());
