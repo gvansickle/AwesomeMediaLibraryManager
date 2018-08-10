@@ -274,7 +274,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
         }
     }).get();
 
-    ef.waitForFinished();
+    ef.future().waitForFinished();
 
     qDb() << "Post .tap().get(), extfuture:" << ef;
 

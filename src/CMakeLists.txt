@@ -423,12 +423,14 @@ set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
+	concurrency/tests/ExtAsyncTestCommon.cpp
 	concurrency/tests/ExtFutureTests.cpp
 	concurrency/tests/AMLMJobTests.cpp)
 list(APPEND AMLM_HEADER_FILES_TEST
 	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
+	concurrency/tests/ExtAsyncTestCommon.h
 	concurrency/tests/ExtFutureTests.h
 	concurrency/tests/AMLMJobTests.h)
 
