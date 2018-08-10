@@ -103,12 +103,18 @@ protected:
 
     void SetUp() override
     {
-        GTEST_COUT << "SetUp()" << std::endl;
+        auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
+        GTEST_COUT << "SetUp() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
+        starting(get_test_id_string());
     }
 
     void TearDown() override
     {
-        GTEST_COUT << "TearDown()" << std::endl;
+        auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
+        auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
+        GTEST_COUT << "TearDown() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
+        finished(get_test_id_string());
+//        EXPECT_TRUE(has_finished(get_test_id_string()));
     }
 
     // Objects declared here can be used by all tests in this Fixture.
@@ -117,6 +123,13 @@ protected:
     std::mutex m_finished_map_mutex;
     std::set<std::string> m_finished_set;
     std::string m_currently_running_test;
+
+    std::string get_test_id_string()
+    {
+        auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
+        auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
+        return test_id;
+    }
 
     std::string get_currently_running_test()
     {
@@ -130,34 +143,31 @@ protected:
         m_currently_running_test = func;
     }
 
-    bool has_finished(std::string func)
-    {
-        std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-        return m_finished_set.count(func) > 0;
-
-    }
-
     void finished(std::string func)
     {
         std::lock_guard<std::mutex> lock(m_finished_map_mutex);
         m_finished_set.insert(func);
         m_currently_running_test.clear();
     }
+
+    bool has_finished(std::string func)
+    {
+        std::lock_guard<std::mutex> lock(m_finished_map_mutex);
+        return m_finished_set.count(func) > 0;
+    }
+
 };
 
 /// @name Additional test helper macros.
 /// @{
 #define TC_ENTER() \
 	/* The name of this test as a static std::string. */ \
-    static const std::string testname {__PRETTY_FUNCTION__}; \
+    static const std::string testname {get_test_id_string()}; \
+    ExtAsync::name_qthread();\
 	static std::atomic_bool test_func_called {true}; \
 	static std::atomic_bool test_func_exited {false}; \
 	static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
-	static std::atomic_bool test_func_stack_is_gone {false}; \
-    GTEST_COUT << "ENTERING: " << __PRETTY_FUNCTION__ << std::endl; \
-    ASSERT_FALSE(has_finished(testname)); \
-    ASSERT_TRUE(get_currently_running_test().empty()) << get_currently_running_test();\
-    starting(testname);
+    static std::atomic_bool test_func_stack_is_gone {false};
 
 #define TC_EXPECT_THIS_TC() \
     EXPECT_EQ(get_currently_running_test(), testname);
@@ -178,9 +188,7 @@ protected:
 	GTEST_COUT << "EXITING: " << __PRETTY_FUNCTION__ << std::endl; \
 	ASSERT_TRUE(test_func_called); \
 	ASSERT_TRUE(test_func_exited); \
-	ASSERT_TRUE(test_func_no_longer_need_stack_ctx); \
-	/* Tell the harness that we're exiting. */ \
-	finished(__PRETTY_FUNCTION__);
+    ASSERT_TRUE(test_func_no_longer_need_stack_ctx);
 
 /// @}
 

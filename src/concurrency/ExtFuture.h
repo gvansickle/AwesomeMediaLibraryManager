@@ -293,7 +293,7 @@ public:
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback,
 	 * of signature:
 	 * 	@code
-	 * 		then_callback(ExtFuture<T>) -> R
+     * 		R then_callback(ExtFuture<T>)
 	 * 	@endcode
 	 * where R != [void, ExtFuture<>]
 	 *
@@ -305,7 +305,8 @@ public:
 	 * @param then_callback
 	 * @returns ExtFuture<R>
 	 */
-	template <class F, class R = ct::return_type_t<F> , REQUIRES(!IsExtFuture<R>)>
+    template <class F, class R = ct::return_type_t<F>,
+            REQUIRES(!IsExtFuture<R> && !std::is_same_v<R, void>)>
 	ExtFuture<R> then( F&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
@@ -322,24 +323,25 @@ public:
 	 *
 	 * The callback passed to tap() is invoked with results from this, of type T, as they become available.
 	 *
-	 * @param tap_callback  Callback with the signature void(T).
+     * @param tap_callback  Callback with the signature void()(T).
 	 *
 	 * @return  A reference to *this, i.e. ExtFuture<T>&.
 	 */
-	template <typename F, typename R = ct::return_type_t<F>, REQUIRES(argtype_n_is_v<F, 0, T>)>
-	ExtFuture<T>& tap(QObject* context, F&& tap_callback)
+    template <typename TapCallbackType, typename R = ct::return_type_t<TapCallbackType>,
+              REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
+    ExtFuture<T>& tap(QObject* context, TapCallbackType&& tap_callback)
 	{
 		static_assert(function_return_type_is_v<decltype(tap_callback), void>, "");
 
-		return TapHelper(context, std::forward<F>(tap_callback)); // *m_tap_function);
+        return TapHelper(context, std::forward<TapCallbackType>(tap_callback)); // *m_tap_function);
 	}
 
 	template <typename F, typename R = ct::return_type_t<F>, REQUIRES(argtype_n_is_v<F, 0, T>)>
 	ExtFuture<T>& tap(F&& tap_callback)
 	{
-		qWr() << "ENTER ExtFuture<T>& tap(F&& tap_callback)";
+        qIn() << "ENTER ExtFuture<T>& tap(F&& tap_callback)";
 		auto retval = tap(QApplication::instance(), std::forward<F>(tap_callback));
-		qWr() << "EXIT ExtFuture<T>& tap(F&& tap_callback)";
+        qIn() << "EXIT ExtFuture<T>& tap(F&& tap_callback)";
 		return *this;
 	}
 
