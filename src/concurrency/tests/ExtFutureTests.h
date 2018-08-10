@@ -40,29 +40,13 @@
  */
 class ExtFutureTest : public ExtAsyncTestsSuiteFixtureBase//::testing::Test
 {
+	using BASE_CLASS = ExtAsyncTestsSuiteFixtureBase;
+
 protected:
 
 //	void SetUp() override;
 //	void TearDown() override;
 
-	// Objects declared here can be used by all tests in this Fixture.
-
-//	/// Map of test cases which have finished.
-//	std::set<std::string> m_finished_set;
-//	std::mutex m_finished_map_mutex;
-
-//	bool has_finished(std::string func)
-//	{
-//		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-//		return m_finished_set.count(func) > 0;
-
-//	}
-
-//	void finished(std::string func)
-//	{
-//		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-//		m_finished_set.insert(func);
-//	}
 
 };
 

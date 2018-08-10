@@ -40,6 +40,7 @@
 
 // Ours
 #include <tests/TestHelpers.h>
+#include "ExtAsyncTestCommon.h"
 
 // Classes Under Test.
 #include "../ExtAsync.h"
@@ -126,41 +127,7 @@ static ExtFuture<QString> delayed_string_func()
 	return retval;
 }
 
-/**
- * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
- * sleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
- *
- * @todo Doesn't handle cancellation or progress reporting.
- */
-static ExtFuture<int> async_int_generator(int start_val, int num_iterations, std::atomic_bool& generator_run_completed)
-{
-    SCOPED_TRACE("In async_int_generator");
 
-    ExtFuture<int> retval = ExtAsync::run_efarg([=, &generator_run_completed](ExtFuture<int>& future) {
-		int current_val = start_val;
-		for(int i=0; i<num_iterations; i++)
-		{
-			// Sleep for a second.
-			qWr() << "SLEEPING FOR 1 SEC";
-
-            QTest::qSleep(1000);
-			qWr() << "SLEEP COMPLETE, sending value to future:" << current_val;
-
-			future.reportResult(current_val);
-			current_val++;
-		}
-		// We're done.
-		qWr() << "REPORTING FINISHED";
-        generator_run_completed = true;
-		future.reportFinished();
-    });
-
-	static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
-
-	qWr() << "RETURNING:" << retval;
-
-	return retval;
-}
 
 /**
  * Helper to which returns a finished QFuture<T>.
@@ -701,21 +668,20 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 	TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_ExtFutureExtAsyncRunMultiResultTest)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 {
 	std::atomic_int start_val {5};
 	std::atomic_int num_iterations {3};
 	std::atomic_bool tap_complete {false};
-    std::atomic_bool generator_complete {false};
-	TC_ENTER();
+
+    TC_ENTER();
     TC_EXPECT_THIS_TC();
 
 	// Start generating a sequence of results.
-    auto future = async_int_generator(start_val, num_iterations, std::ref(generator_complete));
+    auto future = async_int_generator(start_val, num_iterations, this);//std::ref(generator_complete));
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
-    ASSERT_EQ(generator_complete, false);
 
 	// Separated .then() connect.
 	future.tap([&](int future_value) {
@@ -753,7 +719,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_ExtFutureExtAsyncRunMultiResultTest)
         })
         .then([&](ExtFuture<int> extfuture) -> int {
             TC_EXPECT_THIS_TC();
-            EXPECT_EQ(generator_complete, true);
 
 			EXPECT_EQ(tap_complete, true);
 
@@ -779,7 +744,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_ExtFutureExtAsyncRunMultiResultTest)
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isRunning());
 	ASSERT_TRUE(future.isFinished());
-    ASSERT_EQ(generator_complete, true);
 
     TC_EXPECT_THIS_TC();
 	TC_EXIT();
@@ -825,7 +789,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TestMakeReadyFutures)
 ////	ExtFuture<QString> unwrapped_future = future.unwrap();
 //}
 
-TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_TapAndThenOneResult)
+TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 {
     SCOPED_TRACE("");
 	static std::atomic_bool ran_tap {false};
@@ -903,13 +867,13 @@ TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_TapAndThenOneResult)
 	TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_TapAndThenMultipleResults)
+TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 {
 	std::atomic_int tap_call_counter {0};
 	TC_ENTER();
     TC_EXPECT_THIS_TC();
 
-    ExtFuture<int> future = ExtAsync::run_efarg([&](ExtFuture<int>& extfuture) -> int {
+    ExtFuture<int> future = ExtAsync::run_efarg([&](ExtFuture<int>& extfuture) {
             SCOPED_TRACE("");
 
 			TC_EXPECT_NOT_EXIT();
@@ -982,11 +946,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRunFreefunc)
 
     ExtFuture<int> extfuture = /*ExtAsync*/QtConcurrent::run([=](){ return 4;});
 
-    int retval = extfuture.qtget_first();
+    QList<int> retval = extfuture.get();
 
-    ASSERT_EQ(retval, 4);
-
-//    EXPECT_TRUE();
+    ASSERT_EQ(retval.size(), 1);
+    ASSERT_EQ(retval[0], 4);
 
     TC_DONE_WITH_STACK();
     TC_EXIT();

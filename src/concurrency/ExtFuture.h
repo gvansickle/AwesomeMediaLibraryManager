@@ -231,8 +231,8 @@ public:
     {
         /// @todo Not wild about this const_cast<>, but QFuture<> has a QFutureInterface<T>
         /// as a "private" mutable d value member, so this should be OK.
-//        return const_cast<ExtFuture<T>*>(this)->results();
-        return this->future().results();
+//		return const_cast<ExtFuture<T>*>(this)->results();
+		return this->future().results();
     }
 
     /**
