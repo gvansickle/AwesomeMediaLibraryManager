@@ -271,6 +271,9 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
         }
     }).get();
 
+    // .get() above should block.
+    ASSERT_TRUE(ef.isFinished());
+
     ef.waitForFinished();
 
     qDb() << "Post .tap().get(), extfuture:" << ef;

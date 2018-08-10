@@ -33,7 +33,8 @@
 //#include <gmock/gmock-matchers.h>
 
 // Ours
-#include <tests/TestHelpers.h>
+//#include <tests/TestHelpers.h>
+#include "ExtAsyncTestCommon.h"
 
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
@@ -43,10 +44,6 @@ class ExtFutureTest : public ExtAsyncTestsSuiteFixtureBase//::testing::Test
 	using BASE_CLASS = ExtAsyncTestsSuiteFixtureBase;
 
 protected:
-
-//	void SetUp() override;
-//	void TearDown() override;
-
 
 };
 
