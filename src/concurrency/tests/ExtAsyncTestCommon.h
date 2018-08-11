@@ -23,7 +23,7 @@
 // Std C++
 #include <memory>
 #include <string>
-#include <stack>
+#include <deque>
 
 // Qt5
 #include <QTest>
@@ -60,6 +60,38 @@ protected:
  */
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase* fixture);
 
+
+/**
+ * Helper class for maintaining state across Google Test fixture invocations.
+ * Each TEST_F() gets its own complete copy of the ::testing::Test class,
+ * so we need something static to maintain statistics, sanity checks, etc.
+ */
+class InterState
+{
+public:
+
+    std::string get_currently_running_test();
+
+    void starting(std::string func);
+
+    void finished(std::string func);
+
+    void register_generator(trackable_generator_base* generator);
+
+    void unregister_generator(trackable_generator_base* generator);
+
+    bool check_generators();
+
+protected:
+
+    /// @name Tracking state and a mutex to protect it.
+    /// @{
+    std::mutex m_fixture_state_mutex;
+    std::string m_currently_running_test;
+    std::deque<trackable_generator_base*> m_generator_stack;
+    /// @}
+};
+
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  * @link https://github.com/google/googletest/blob/master/googletest/docs/faq.md#can-i-derive-a-test-fixture-from-another
@@ -69,20 +101,28 @@ class ExtAsyncTestsSuiteFixtureBase : public ::testing::Test
 
 protected:
 
+    /// Per-"test-case" (test fixture) set-up.
+    /// Called before the first test in this test case.
+    /// Can be omitted if not needed.
+    static void SetUpTestCase() { }
+
+    /// Per-"test-case" (test fixture) tear-down.
+    /// Called after the last test in this test case.
+    /// Can be omitted if not needed.
+    static void TearDownTestCase() { }
+
     void SetUp() override;
     virtual bool expect_all_preconditions();
 
     void TearDown() override;
     virtual bool expect_all_postconditions();
 
-    // Objects declared here can be used by all tests in this Fixture.
+    // Objects declared here can be used by all tests in this Fixture.  However,
+    // "googletest does not reuse the same test fixture for multiple tests. Any changes one test makes to the fixture do not affect other tests."
+    // @link https://github.com/google/googletest/blob/master/googletest/docs/primer.md
 
-    /// Map of test cases which have finished.
-    std::mutex m_fixture_state_mutex;
-    std::set<std::string> m_finished_set;
-    std::string m_currently_running_test;
-    std::stack<trackable_generator_base*> m_generator_stack;
-
+    /// Static object for tracking state across TEST_F()'s.
+    static InterState m_interstate;
 
     std::string get_currently_running_test();
 
@@ -92,7 +132,7 @@ protected:
 
     bool has_finished(std::string func);
 
-    void check_generators();
+    bool check_generators();
 
 
 public:
@@ -101,7 +141,6 @@ public:
     void register_generator(trackable_generator_base* generator);
 
     void unregister_generator(trackable_generator_base* generator);
-
 };
 
 /// @name Additional test helper macros.
@@ -223,17 +262,17 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         for(int i=0; i<num_iterations; i++)
         {
             // Sleep for a second.
-            qIn() << "SLEEPING FOR 1 SEC";
+            GTEST_COUT_qDB << "SLEEPING FOR 1 SEC";
 
             QTest::qSleep(1000);
-            qIn() << "SLEEP COMPLETE, sending value to future:" << current_val;
+            GTEST_COUT_qDB << "SLEEP COMPLETE, sending value to future:" << current_val;
 
             reportResult(future, current_val);
             current_val++;
         }
 
         // We're done.
-        qIn() << "REPORTING FINISHED";
+        GTEST_COUT_qDB << "REPORTING FINISHED";
         fixture->unregister_generator(tgb);
         delete tgb;
 
@@ -255,18 +294,18 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
-        qDb() << "Qt run()";
+        GTEST_COUT_qDB << "Qt run()";
         auto qrunfuture = QtConcurrent::run(lambda, retval);
     }
     else
     {
-        qDb() << "ExtAsync::run()";
+        GTEST_COUT_qDB << "ExtAsync::run()";
         retval = ExtAsync::run_efarg(lambda);
     }
 
     static_assert(std::is_same_v<decltype(retval), ReturnFutureT>, "");
 
-    qIn() << "RETURNING future:" << state(retval);
+    GTEST_COUT_qDB << "RETURNING future:" << state(retval);
 
     EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)

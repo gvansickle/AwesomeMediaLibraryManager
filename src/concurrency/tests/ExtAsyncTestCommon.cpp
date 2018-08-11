@@ -56,7 +56,71 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
     return retval.result();
 }
 
+
+/// InterState
+
+std::string InterState::get_currently_running_test()
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    return m_currently_running_test;
+}
+
+void InterState::starting(std::string func)
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    ASSERT_TRUE(m_currently_running_test.empty());
+    m_currently_running_test = func;
+}
+
+void InterState::finished(std::string func)
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+//    m_finished_set.insert(func);
+    ASSERT_FALSE(m_currently_running_test.empty());
+    m_currently_running_test.clear();
+}
+
+void InterState::register_generator(trackable_generator_base *generator)
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    SCOPED_TRACE("register_generator");
+    GTEST_COUT_qDB << "REGISTERING GENERATOR:" << generator->get_generator_id();
+    m_generator_stack.push_back(generator);
+}
+
+void InterState::unregister_generator(trackable_generator_base *generator)
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    SCOPED_TRACE("unregister_generator");
+    GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
+    // Get the topmost generator.
+    auto tgen = m_generator_stack.back();
+    EXPECT_STREQ(tgen->get_generator_id().c_str(), generator->get_generator_id().c_str()) << "Unregistering incorrect generator: Top: " << tgen->get_generator_id() << ", Unreg: " << generator->get_generator_id();
+    m_generator_stack.pop_back();
+}
+
+bool InterState::check_generators()
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    if(!m_generator_stack.empty())
+    {
+        // Generator still registered.
+
+        for(auto g = m_generator_stack.cbegin(); g != m_generator_stack.cend(); ++g)
+        {
+            GTEST_COUT_qDB << "REGISTERED GENERATOR:" << (*g)->get_generator_id();
+        }
+
+        return false;
+    }
+    return true;
+}
+
+
+
 /// ExtAsyncTestsSuiteFixtureBase
+
+InterState ExtAsyncTestsSuiteFixtureBase::m_interstate;
 
 void ExtAsyncTestsSuiteFixtureBase::SetUp()
 {
@@ -69,8 +133,7 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
 
 bool ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    EXPECT_TRUE(m_currently_running_test.empty());
+    EXPECT_TRUE(m_interstate.get_currently_running_test().empty()) << "A test was already running";
     return true;
 }
 
@@ -86,46 +149,35 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
 
 bool ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    EXPECT_EQ(m_generator_stack.size(), 0) << "Generator was not unregistered. Top generator ptr: " << m_generator_stack.top()
-                                           << "Top generator ID: " << m_generator_stack.top()->get_generator_id();
+    EXPECT_TRUE(m_interstate.check_generators()) << "Generators not cleaned up";
     return true;
 }
 
 std::string ExtAsyncTestsSuiteFixtureBase::get_currently_running_test()
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    return m_currently_running_test;
+    return m_interstate.get_currently_running_test();
 }
 
 void ExtAsyncTestsSuiteFixtureBase::starting(std::string func)
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    m_currently_running_test = func;
+    m_interstate.starting(func);
 }
 
 void ExtAsyncTestsSuiteFixtureBase::finished(std::string func)
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    m_finished_set.insert(func);
-    m_currently_running_test.clear();
+    m_interstate.finished(func);
 }
 
-bool ExtAsyncTestsSuiteFixtureBase::has_finished(std::string func)
+bool ExtAsyncTestsSuiteFixtureBase::check_generators()
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    return m_finished_set.count(func) > 0;
+    return m_interstate.check_generators();
 }
 
-void ExtAsyncTestsSuiteFixtureBase::check_generators()
-{
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    SCOPED_TRACE("check_generators");
-//    GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
-//    auto tgen = m_generator_stack.top();
-//    EXPECT_EQ(tgen, generator) << "Unregistering incorrect generator";
-//    m_generator_stack.pop();
-}
+//bool ExtAsyncTestsSuiteFixtureBase::has_finished(std::string func)
+//{
+//    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+//    return m_finished_set.count(func) > 0;
+//}
 
 std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string()
 {
@@ -136,20 +188,14 @@ std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string()
 
 void ExtAsyncTestsSuiteFixtureBase::register_generator(trackable_generator_base *generator)
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    SCOPED_TRACE("register_generator");
-    GTEST_COUT_qDB << "REGISTERING GENERATOR:" << generator->get_generator_id();
-    m_generator_stack.push(generator);
+    m_interstate.register_generator(generator);
+
 }
 
 void ExtAsyncTestsSuiteFixtureBase::unregister_generator(trackable_generator_base *generator)
 {
-    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    SCOPED_TRACE("unregister_generator");
-    GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
-    // Get the topmost generator.
-    auto tgen = m_generator_stack.top();
-    EXPECT_EQ(tgen, generator) << "Unregistering incorrect generator: Top: " << tgen->get_generator_id() << ", Unreg: " << generator->get_generator_id();
-    m_generator_stack.pop();
+    m_interstate.unregister_generator(generator);
 }
+
+
 

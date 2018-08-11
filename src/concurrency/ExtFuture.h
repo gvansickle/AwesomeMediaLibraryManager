@@ -151,13 +151,15 @@ public:
 		}
      * @endcode
 	 *
-	 * @param initialState  Defaults to State(Started | Running)
+     * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
+     *        if it isn't both started and running.
 	 */
-    explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started))
+    explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
+                                                                                              | QFutureInterfaceBase::State::Running))
         : QFutureInterface<T>(initialState)
     {
         //qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
-        AMLM_ASSERT_EQ(initialState, QFutureInterfaceBase::State::Started);
+//        AMLM_ASSERT_EQ(initialState, QFutureInterfaceBase::State::Started);
 	}
 
     /// Default copy constructor.
@@ -238,6 +240,11 @@ public:
 
         return const_cast<ExtFuture<T>*>(this)->results();
 //		return this->future().results();
+    }
+
+    QList<T> results() // const
+    {
+        return this->BASE_CLASS::results();
     }
 
     /**

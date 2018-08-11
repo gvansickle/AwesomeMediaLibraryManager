@@ -235,12 +235,20 @@ static inline void name_qthread()
         static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
 
         ExtFutureR retval;
+        qDb() << "FUTURE:" << retval;
 
         // retval is passed by copy here.
 //        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
-        QtConcurrent::run([=](ExtFutureR ef){
-            callback(ef);
-        }, retval);
+        QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
+            qDb() << "FUTURE:" << ef;
+            callback_fn(ef);
+            qDb() << "POST CALLBACK FUTURE:" << ef;
+        }, std::forward<ExtFutureR>(retval));
+
+//        QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
+//            return fn(extfuture, std::move(args)...);
+//        }, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
+
 
         return retval;
     }

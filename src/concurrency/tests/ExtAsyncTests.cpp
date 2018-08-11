@@ -63,10 +63,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ThisShouldPass)
 
 	TC_EXPECT_NOT_EXIT();
 
-	ASSERT_FALSE(has_finished(__PRETTY_FUNCTION__));
 	ASSERT_TRUE(true);
-	finished(__PRETTY_FUNCTION__);
-	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
 
 	TC_DONE_WITH_STACK();
 
@@ -77,7 +74,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, QStringPrintTest)
 {
 	QString test = "Test";
 	ASSERT_EQ(test, "Test");
-	finished(__PRETTY_FUNCTION__);
 }
 
 /**

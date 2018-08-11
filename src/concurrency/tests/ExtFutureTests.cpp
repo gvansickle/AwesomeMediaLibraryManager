@@ -73,17 +73,19 @@ TEST_F(ExtFutureTest, FutureSingleThread)
 
     ExtFuture<int> ef;
 
-    EXPECT_EQ(ef.state(), ExtFutureState::Started);
+    EXPECT_EQ(ef.state(), ExtFutureState::Started | ExtFutureState::Running);
 
     ef.reportResult(1);
 
     EXPECT_EQ(ef.resultCount(), 1);
-    EXPECT_EQ(ef.get()[0], 1);
+//    EXPECT_EQ(ef.get()[0], 1);
+    EXPECT_EQ(ef.result(), 1);
 
     ef.reportResult(2);
 
     EXPECT_EQ(ef.resultCount(), 2);
-    EXPECT_EQ(ef.get()[1], 2);
+//    EXPECT_EQ(ef.get()[1], 2);
+    EXPECT_EQ(ef.result(), 2);
 
     TC_DONE_WITH_STACK();
     TC_EXIT();
@@ -226,9 +228,9 @@ QList<int> results_test(int startval, int iterations, ExtFutureTest* fixture)
 //    EXPECT_TRUE(f.isStarted());
 //    EXPECT_FALSE(f.isFinished());
 
-    GTEST_COUT_qDB << "START WAIT" << state(f);
+    GTEST_COUT_qDB << "START RESULTS()" << state(f);
     QList<int> retval = f.results();
-    GTEST_COUT_qDB << "END WAIT:" << state(f);
+    GTEST_COUT_qDB << "END RESULTS():" << state(f);
 
     // .results() should block until future is finished.
     EXPECT_TRUE(f.isStarted());
