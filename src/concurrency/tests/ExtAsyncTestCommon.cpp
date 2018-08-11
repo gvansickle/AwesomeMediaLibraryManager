@@ -29,42 +29,43 @@ trackable_generator_base::trackable_generator_base(ExtAsyncTestsSuiteFixtureBase
     m_generator_id = test_id;
 }
 
-ExtFuture<int> async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase *fixture)
-{
-    SCOPED_TRACE("In async_int_generator");
+//template<class ReturnFuture = ExtFuture<int>>
+//ReturnFuture async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase *fixture)
+//{
+//    SCOPED_TRACE("In async_int_generator");
 
-    auto tgb = new trackable_generator_base(fixture);
-    fixture->register_generator(tgb);
+//    auto tgb = new trackable_generator_base(fixture);
+//    fixture->register_generator(tgb);
 
-    ExtFuture<int> retval = ExtAsync::run_efarg([&](ExtFuture<int>& future) {
-            int current_val = start_val;
-            SCOPED_TRACE("In async_int_generator callback");
-            for(int i=0; i<num_iterations; i++)
-    {
-        // Sleep for a second.
-        qIn() << "SLEEPING FOR 1 SEC";
+//    ReturnFuture retval = ExtAsync::run_efarg([&](ExtFuture<int>& future) {
+//            int current_val = start_val;
+//            SCOPED_TRACE("In async_int_generator callback");
+//            for(int i=0; i<num_iterations; i++)
+//            {
+//                // Sleep for a second.
+//                qIn() << "SLEEPING FOR 1 SEC";
 
-        QTest::qSleep(1000);
-        qIn() << "SLEEP COMPLETE, sending value to future:" << current_val;
+//                QTest::qSleep(1000);
+//                qIn() << "SLEEP COMPLETE, sending value to future:" << current_val;
 
-        future.reportResult(current_val);
-        current_val++;
-    }
+//                future.reportResult(current_val);
+//                current_val++;
+//            }
 
-    // We're done.
-    qIn() << "REPORTING FINISHED";
-    fixture->unregister_generator(tgb);
-    delete tgb;
+//            // We're done.
+//            qIn() << "REPORTING FINISHED";
+//            fixture->unregister_generator(tgb);
+//            delete tgb;
 
-    future.reportFinished();
-});
+//            future.reportFinished();
+//        });
 
-static_assert(std::is_same_v<decltype(retval), ExtFuture<int>>, "");
+//    static_assert(std::is_same_v<decltype(retval), ReturnFuture>, "");
 
-qIn() << "RETURNING:" << retval;
+//    qIn() << "RETURNING:" << retval;
 
-return retval;
-}
+//    return retval;
+//}
 
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 {
@@ -73,7 +74,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
     auto tgb = new trackable_generator_base(fixture);
     fixture->register_generator(tgb);
 
-    auto retval = QtConcurrent::run([&](){
+    ExtFuture<QString> retval = QtConcurrent::run([&](){
         // Sleep for a second.
         qDb() << "ENTER, SLEEPING FOR 1 SEC";
         QTest::qSleep(1000);
@@ -88,7 +89,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
     EXPECT_TRUE(retval.isStarted());
     EXPECT_FALSE(retval.isFinished());
 
-    GTEST_COUT << "delayed_string_func_1() returning" << tostdstr(retval) << std::endl;
+    GTEST_COUT << "delayed_string_func_1() returning" << retval << std::endl;
 
     return retval.result();
 }
@@ -150,6 +151,7 @@ void ExtAsyncTestsSuiteFixtureBase::register_generator(trackable_generator_base 
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
     SCOPED_TRACE("register_generator");
+    GTEST_COUT_qDB << "REGISTERING GENERATOR:" << generator->get_generator_id();
     m_generator_stack.push(generator);
 }
 
@@ -157,6 +159,7 @@ void ExtAsyncTestsSuiteFixtureBase::unregister_generator(trackable_generator_bas
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
     SCOPED_TRACE("unregister_generator");
+    GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
     auto tgen = m_generator_stack.top();
     EXPECT_EQ(tgen, generator) << "Unregistering incorrect generator";
     m_generator_stack.pop();

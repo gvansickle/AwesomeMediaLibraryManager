@@ -46,49 +46,6 @@
 #include "../ExtFuture.h"
 
 
-//void ExtFutureTest::SetUp()
-//{
-//    GTEST_COUT << "SetUp()" << std::endl;
-//}
-
-//void ExtFutureTest::TearDown()
-//{
-//    GTEST_COUT << "TearDown()" << std::endl;
-//}
-
-///**
-// * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
-// * sleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
-// *
-// * @todo Doesn't handle cancellation or progress reporting.
-// */
-//static ExtFuture<int> async_int_generator(int start_val, int num_iterations, std::atomic_bool& generator_run_completed)
-//{
-//    ExtFuture<int> future = ExtAsync::run_efarg([=](ExtFuture<int>& future) {
-//        int current_val = start_val;
-//        for(int i=0; i<num_iterations; i++)
-//        {
-//            // Sleep for a second.
-//            qWr() << "SLEEPING FOR 1 SEC";
-
-//            QThread::sleep(1);
-//            qWr() << "SLEEP COMPLETE, sending value to future:" << current_val;
-
-//            future.reportResult(current_val);
-//            current_val++;
-//        }
-//        // We're done.
-//        qWr() << "REPORTING FINISHED";
-//        future.reportFinished();
-//    });
-
-//    static_assert(std::is_same_v<decltype(future), ExtFuture<int>>, "");
-
-//    qWr() << "RETURNING:" << future;
-
-//    return future;
-//}
-
 //
 // TESTS
 //
@@ -143,7 +100,7 @@ TEST_F(ExtFutureTest, CopyAssignTests)
     ExtFuture<int> ef_int2(extfuture_int);
     ExtFuture<Unit> ef_unit3(ef_unit2);
 
-    // assigmnent operator
+    // Assignment operator
     ef_int2 = ExtFuture<int>();
     ef_unit3 = ExtFuture<Unit>();
 
@@ -175,7 +132,7 @@ TEST_F(ExtFutureTest, ExtFutureBasicCancel)
     ASSERT_TRUE(f.isStarted());
     ASSERT_TRUE(f.isCanceled());
 
-    // Cancelling alone won't finish the extfuture.
+    // Canceling alone won't finish the extfuture.
     ASSERT_FALSE(f.isFinished());
 
     f.reportFinished();
@@ -242,6 +199,58 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
     TC_EXIT();
 }
 
+
+template <class FutureType>
+QList<int> results_test(int startval, int iterations, ExtFutureTest* fixture)
+{
+    SCOPED_TRACE("In results_test");
+
+    FutureType f = async_int_generator<FutureType>(startval, iterations, fixture);
+    QList<int> retval = f.results();
+
+    // .results() should block until future is finished.
+    EXPECT_TRUE(f.isStarted());
+    EXPECT_TRUE(f.isFinished());
+
+    return retval;
+}
+
+/**
+ * Test QFuture results().
+ */
+TEST_F(ExtFutureTest, QFutureResults)
+{
+    SCOPED_TRACE("QFutureResults");
+
+    TC_ENTER();
+
+    QList<int> expected_results {2,3,4,5,6};
+    QList<int> results = results_test<QFuture<int>>(2, 5, this);
+
+    ASSERT_EQ(results, expected_results);
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
+/**
+ * Test ExtFuture<> results().
+ */
+TEST_F(ExtFutureTest, Results)
+{
+    SCOPED_TRACE("Results");
+
+    TC_ENTER();
+
+    QList<int> expected_results {2,3,4,5,6};
+    QList<int> results = results_test<ExtFuture<int>>(2, 5, this);
+
+    ASSERT_EQ(results, expected_results);
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
+}
+
 /**
  * Test "streaming" tap().
  */
@@ -251,7 +260,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     using eftype = ExtFuture<int>;
 
-    eftype ef = async_int_generator(2, 5, this);
+    eftype ef = async_int_generator<eftype>(2, 5, this);
 
     qDb() << "Starting extfuture:" << ef;
 
@@ -263,16 +272,18 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     qDb() << "Attaching tap and get()";
 
-    async_results_from_get = ef.tap([&](eftype& ef, int begin, int end){
-            GTEST_COUT << "IN TAP";
-        for(int i = begin; i<end; i++)
-        {
-            async_results_from_tap.push_back(ef.resultAt(i));
-        }
-    }).get();
+//    async_results_from_get = ef.tap([&](eftype& ef, int begin, int end){
+//            GTEST_COUT << "IN TAP";
+//        for(int i = begin; i<end; i++)
+//        {
+//            async_results_from_tap.push_back(ef.resultAt(i));
+//        }
+//    }).get();
+
+    async_results_from_get = ef.future().results();
 
     // .get() above should block.
-    ASSERT_TRUE(ef.isFinished());
+    EXPECT_TRUE(ef.isFinished());
 
     ef.waitForFinished();
 
@@ -284,6 +295,8 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
 //    EXPECT_EQ(async_results_from_get.size(), 5);
 //    EXPECT_EQ(async_results_from_tap.size(), 5);
+
+    ASSERT_TRUE(ef.isFinished());
 
     TC_DONE_WITH_STACK();
     TC_EXIT();
