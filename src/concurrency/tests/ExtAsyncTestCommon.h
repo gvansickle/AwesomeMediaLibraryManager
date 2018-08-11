@@ -70,11 +70,13 @@ class InterState
 {
 public:
 
-    std::string get_currently_running_test();
-
     void starting(std::string func);
 
     void finished(std::string func);
+
+    std::string get_currently_running_test() const;
+
+    bool is_test_currently_running() const;
 
     void register_generator(trackable_generator_base* generator);
 
@@ -86,7 +88,7 @@ protected:
 
     /// @name Tracking state and a mutex to protect it.
     /// @{
-    std::mutex m_fixture_state_mutex;
+    mutable std::mutex m_fixture_state_mutex;
     std::string m_currently_running_test;
     std::deque<trackable_generator_base*> m_generator_stack;
     /// @}
@@ -102,10 +104,10 @@ class ExtAsyncTestsSuiteFixtureBase : public ::testing::Test
 protected:
 
     void SetUp() override;
-    virtual bool expect_all_preconditions();
+    virtual void expect_all_preconditions();
 
     void TearDown() override;
-    virtual bool expect_all_postconditions();
+    virtual void expect_all_postconditions();
 
     // Objects declared here can be used by all tests in this Fixture.  However,
     // "googletest does not reuse the same test fixture for multiple tests. Any changes one test makes to the fixture do not affect other tests."

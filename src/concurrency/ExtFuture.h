@@ -366,7 +366,7 @@ public:
     ExtFuture<T>& tap(TapCallbackType&& tap_callback)
     {
         EnsureFWInstantiated();
-
+        Q_ASSERT(this->resultCount() == 0);
         connect_or_die(m_extfuture_watcher, &ExtFutureWatcher<T>::resultsReadyAt,
                        /*context,*/ [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) {
             qDb() << "IN TAP CALLBACK";

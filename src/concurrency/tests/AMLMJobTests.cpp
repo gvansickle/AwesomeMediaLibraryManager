@@ -137,10 +137,10 @@ private:
 
 TEST_F(AMLMJobTests, ThisShouldPass)
 {
-	ASSERT_FALSE(has_finished(__PRETTY_FUNCTION__));
-	ASSERT_TRUE(true);
+    EXPECT_FALSE(has_finished(__PRETTY_FUNCTION__));
+    EXPECT_TRUE(true);
 	finished(__PRETTY_FUNCTION__);
-	ASSERT_TRUE(has_finished(__PRETTY_FUNCTION__));
+    EXPECT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
 TEST_F(AMLMJobTests, SynchronousExecTest)
@@ -149,9 +149,9 @@ TEST_F(AMLMJobTests, SynchronousExecTest)
     j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    ASSERT_TRUE(kjob_finished_spy.isValid());
+    EXPECT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
-    ASSERT_TRUE(kjob_result_spy.isValid());
+    EXPECT_TRUE(kjob_result_spy.isValid());
 
     bool status = j->exec();
 
@@ -171,9 +171,9 @@ TEST_F(AMLMJobTests, ThenTest)
     j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    ASSERT_TRUE(kjob_finished_spy.isValid());
+    EXPECT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
-    ASSERT_TRUE(kjob_result_spy.isValid());
+    EXPECT_TRUE(kjob_result_spy.isValid());
 
     j->then(ctx, [=](TestAMLMJob1* j_kjob) -> void {
         if(j->error())
@@ -219,13 +219,13 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
     // Connect signals and slots.
     connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, [=](KJob* kjob){
         qIn() << "GOT FINISHED";
-        ASSERT_EQ(kjob, dsj);
+        EXPECT_EQ(kjob, dsj);
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
 
         ;});
     connect_or_die(dsj, &DirectoryScannerAMLMJob::result, [=](KJob* kjob){
         qIn() << "GOT RESULT";
-        ASSERT_EQ(kjob, dsj);
+        EXPECT_EQ(kjob, dsj);
 
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
 
@@ -250,7 +250,7 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
 
     dsj->kill();
 
-//    ASSERT_EQ(dsj->get_extfuture_ref(), );
+//    EXPECT_EQ(dsj->get_extfuture_ref(), );
 }
 
 TEST_F(AMLMJobTests, CancelTest)
@@ -259,9 +259,9 @@ TEST_F(AMLMJobTests, CancelTest)
     j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    ASSERT_TRUE(kjob_finished_spy.isValid());
+    EXPECT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
-    ASSERT_TRUE(kjob_result_spy.isValid());
+    EXPECT_TRUE(kjob_result_spy.isValid());
 
     connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
@@ -273,7 +273,7 @@ TEST_F(AMLMJobTests, CancelTest)
     GTEST_COUT << "START\n";
     j->start();
 
-    ASSERT_TRUE(ef.isStarted()) << ef.state();
+    EXPECT_TRUE(ef.isStarted()) << ef.state();
 
     // Let it run for a while.
     QTest::qSleep(500);
@@ -283,8 +283,8 @@ TEST_F(AMLMJobTests, CancelTest)
     QTest::qSleep(500);
 
     // Should not be canceled or finished yet.
-    ASSERT_FALSE(ef.isCanceled()) << ef;
-    ASSERT_FALSE(ef.isFinished()) << ef;
+    EXPECT_FALSE(ef.isCanceled()) << ef;
+    EXPECT_FALSE(ef.isFinished()) << ef;
 
     // Cancel the running job.
     GTEST_COUT << "CANCELING JOB\n";
@@ -292,8 +292,8 @@ TEST_F(AMLMJobTests, CancelTest)
 
     // j is now probably going to be deleteLater()'ed.
 
-    ASSERT_TRUE(kill_succeeded) << ef;
-    ASSERT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_TRUE(kill_succeeded) << ef.state();
+    EXPECT_TRUE(ef.isCanceled()) << ef.state();
     EXPECT_EQ(j->error(), KJob::KilledJobError);
 
     // Wait for the KJob to signal that it's finished.
@@ -310,9 +310,9 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 //    j->setAutoDelete(false);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    ASSERT_TRUE(kjob_finished_spy.isValid());
+    EXPECT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
-    ASSERT_TRUE(kjob_result_spy.isValid());
+    EXPECT_TRUE(kjob_result_spy.isValid());
 
     connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
@@ -320,8 +320,8 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
 
     ExtFuture<int> ef = j->get_extfuture_ref();
 
-    ASSERT_TRUE(ef.isStarted()) << ef;
-    ASSERT_FALSE(ef.isRunning()) << ef;
+    EXPECT_TRUE(ef.isStarted()) << ef.state();
+//    EXPECT_FALSE(ef.isRunning()) << ef.state();
 
     // Job hasn't started yet, kill it.
     bool kill_succeeded = j->kill();

@@ -293,7 +293,8 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     using eftype = ExtFuture<int>;
 
-    eftype ef = async_int_generator<eftype>(2, 5, this);
+    QList<int> expected_results {1,2,3,4,5,6};
+    eftype ef = async_int_generator<eftype>(1, 6, this);
 
     GTEST_COUT_qDB << "Starting ef state:" << ef.state();
 
@@ -309,10 +310,14 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
+            GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
             async_results_from_tap.push_back(ef.resultAt(i));
         }
     });//.get();
 
+    EXPECT_FALSE(ef.isFinished());
+
+    /// @todo AGAIN THIS DOESN'T BLOCK
     async_results_from_get = ef.results();
 
     // .get() above should block.
@@ -327,8 +332,10 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
     EXPECT_FALSE(ef.isCanceled());
     EXPECT_TRUE(ef.isFinished());
 
-    EXPECT_EQ(async_results_from_get.size(), 5);
-    EXPECT_EQ(async_results_from_tap.size(), 5);
+    EXPECT_EQ(async_results_from_get.size(), 6);
+    EXPECT_EQ(async_results_from_get, expected_results);
+    EXPECT_EQ(async_results_from_tap.size(), 6);
+    EXPECT_EQ(async_results_from_tap, expected_results);
 
     ASSERT_TRUE(ef.isFinished());
 

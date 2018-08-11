@@ -763,22 +763,22 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			ran_then = true;
 			TC_DONE_WITH_STACK();
 			return QString("Then Called");
-    }).test_tap([&](auto ef){
+    })/*.test_tap([&](auto ef){
         GTEST_COUT_qDB << "IN TEST_TAP";
         wait_result = ef.result();
         EXPECT_TRUE(wait_result[0] == QString("Then Called"));
-    }).wait();
+    })*/.wait();
 
-    GTEST_COUT << "after wait(): " << future << std::endl;
-    ASSERT_EQ(wait_result, QString("Then Called"));
+//    GTEST_COUT_qDB << "after wait(): " << future.state().toString() << std::endl;
+//    ASSERT_EQ(wait_result, QString("Then Called"));
 
 //    future.wait();
-    ASSERT_TRUE(future.isStarted());
-    ASSERT_FALSE(future.isRunning());
-    ASSERT_TRUE(future.isFinished());
+    EXPECT_TRUE(future.isStarted());
+    EXPECT_FALSE(future.isRunning());
+    EXPECT_TRUE(future.isFinished());
 
-	ASSERT_TRUE(ran_tap);
-	ASSERT_TRUE(ran_then);
+    EXPECT_TRUE(ran_tap);
+    EXPECT_TRUE(ran_then);
 
 	TC_EXIT();
 }

@@ -59,7 +59,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 
 /// InterState
 
-std::string InterState::get_currently_running_test()
+std::string InterState::get_currently_running_test() const
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
     return m_currently_running_test;
@@ -79,6 +79,12 @@ void InterState::finished(std::string func)
     ASSERT_STREQ(m_currently_running_test.c_str(), func.c_str());
     ASSERT_FALSE(m_currently_running_test.empty());
     m_currently_running_test.clear();
+}
+
+bool InterState::is_test_currently_running() const
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    return !m_currently_running_test.empty();
 }
 
 void InterState::register_generator(trackable_generator_base *generator)
@@ -128,14 +134,16 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
     SCOPED_TRACE("In SetUp()");
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     GTEST_COUT << "SetUp() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
-    ASSERT_TRUE(expect_all_preconditions());
+    EXPECT_NO_FATAL_FAILURE({
+                                expect_all_preconditions();
+                            });
     starting(get_test_id_string());
 }
 
-bool ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
+void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 {
+    ASSERT_FALSE(m_interstate.is_test_currently_running()) << "A test was already running";
     EXPECT_TRUE(m_interstate.get_currently_running_test().empty()) << "A test was already running";
-    return true;
 }
 
 void ExtAsyncTestsSuiteFixtureBase::TearDown()
@@ -144,14 +152,15 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
     GTEST_COUT << "TearDown() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
-    ASSERT_TRUE(expect_all_postconditions());
+    EXPECT_NO_FATAL_FAILURE({
+                                expect_all_postconditions();
+                            });
     finished(get_test_id_string());
 }
 
-bool ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()
+void ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()
 {
     EXPECT_TRUE(m_interstate.check_generators()) << "Generators not cleaned up";
-    return true;
 }
 
 std::string ExtAsyncTestsSuiteFixtureBase::get_currently_running_test()
