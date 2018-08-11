@@ -45,6 +45,9 @@
 
 #include "../ExtFuture.h"
 
+/// Types for gtest's "Typed Test" support.
+//using FutureTypes = ::testing::Types<ExtFuture<int>, QFuture<int>>;
+//TYPED_TEST_CASE(ExtFutureTest, FutureTypes);
 
 //
 // TESTS
@@ -85,10 +88,38 @@ TEST_F(ExtFutureTest, FutureSingleThread)
 
     EXPECT_EQ(ef.resultCount(), 2);
 //    EXPECT_EQ(ef.get()[1], 2);
-    EXPECT_EQ(ef.result(), 2);
+    EXPECT_EQ(ef.resultAt(1), 2);
 
     TC_DONE_WITH_STACK();
     TC_EXIT();
+}
+
+template <template <typename T> class FutureType>
+void CopyAssign()
+{
+    /// Default constructors.
+    /// QFuture<> default constructs to Started|Canceled|Finished.
+    FutureType<int> extfuture_int;
+
+    FutureType<QString> extfuture_string;
+
+    FutureType<Unit> ef_unit;
+
+    FutureType<Unit> ef_unit2;
+
+
+    // copy constructor
+    FutureType<int> ef_int2(extfuture_int);
+    FutureType<Unit> ef_unit3(ef_unit2);
+
+    // Assignment operator
+    ef_int2 = FutureType<int>();
+    ef_unit3 = FutureType<Unit>();
+
+    // state
+    ASSERT_EQ(ef_int2.isStarted(), true);
+    /// @note This is a difference between QFuture<> and ExtFuture<>, there's no reason this future should be finished here.
+//    ASSERT_EQ(ef_int2.isFinished(), true);
 }
 
 TEST_F(ExtFutureTest, CopyAssignTests)
@@ -97,31 +128,9 @@ TEST_F(ExtFutureTest, CopyAssignTests)
 
     TC_ENTER();
 
-    // default constructors
-    ExtFuture<int> extfuture_int;
-    extfuture_int.waitForFinished();
+    CopyAssign<QFuture>();
 
-    ExtFuture<QString> extfuture_string;
-    extfuture_string.waitForFinished();
-
-    ExtFuture<Unit> ef_unit;
-    ef_unit.waitForFinished();
-
-    ExtFuture<Unit> ef_unit2;
-    ef_unit2.waitForFinished();
-
-    // copy constructor
-    ExtFuture<int> ef_int2(extfuture_int);
-    ExtFuture<Unit> ef_unit3(ef_unit2);
-
-    // Assignment operator
-    ef_int2 = ExtFuture<int>();
-    ef_unit3 = ExtFuture<Unit>();
-
-    // state
-    ASSERT_EQ(ef_int2.isStarted(), true);
-    /// @note This is a difference between QFuture<> and ExtFuture<>, there's no reason this future should be finished here.
-//    ASSERT_EQ(ef_int2.isFinished(), true);
+    CopyAssign<ExtFuture>();
 
     TC_DONE_WITH_STACK();
     TC_EXIT();
@@ -217,8 +226,8 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
 }
 
 
-template <class FutureType>
-QList<int> results_test(int startval, int iterations, ExtFutureTest* fixture)
+template <class FutureType, class TestFixtureType>
+QList<int> results_test(int startval, int iterations, TestFixtureType* fixture)
 {
     SCOPED_TRACE("In results_test");
 

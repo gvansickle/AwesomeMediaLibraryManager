@@ -101,16 +101,6 @@ class ExtAsyncTestsSuiteFixtureBase : public ::testing::Test
 
 protected:
 
-    /// Per-"test-case" (test fixture) set-up.
-    /// Called before the first test in this test case.
-    /// Can be omitted if not needed.
-    static void SetUpTestCase() { }
-
-    /// Per-"test-case" (test fixture) tear-down.
-    /// Called after the last test in this test case.
-    /// Can be omitted if not needed.
-    static void TearDownTestCase() { }
-
     void SetUp() override;
     virtual bool expect_all_preconditions();
 
@@ -136,6 +126,17 @@ protected:
 
 
 public:
+
+    /// Per-"test-case" (test fixture) set-up.
+    /// Called before the first test in this test case.
+    /// Can be omitted if not needed.
+    static void SetUpTestCase() { }
+
+    /// Per-"test-case" (test fixture) tear-down.
+    /// Called after the last test in this test case.
+    /// Can be omitted if not needed.
+    static void TearDownTestCase() { }
+
     std::string get_test_id_string();
 
     void register_generator(trackable_generator_base* generator);
@@ -150,7 +151,7 @@ public:
 
 #define TC_ENTER() \
     /* The name of this test as a static std::string. */ \
-    static const std::string testname {get_test_id_string()}; \
+    static const std::string testname {this->get_test_id_string()}; \
     ExtAsync::name_qthread();\
     static std::atomic_bool test_func_called {true}; \
     static std::atomic_bool test_func_exited {false}; \
@@ -204,6 +205,19 @@ QFuture<T> make_startedNotCanceled_QFuture()
     fi.reportStarted();
     EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
     return QFuture<T>(&fi);
+}
+
+/**
+ * Helper for creating a non-canceled QFuture<T>.  Default constructor leaves it canceled and finished.
+ */
+template<class FutureT, class T>
+FutureT make_default_future()
+{
+    SCOPED_TRACE("make_default_future");
+    QFutureInterface<T> fi;
+    fi.reportStarted();
+    EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
+    return FutureT(&fi);
 }
 
 template <typename T>
@@ -292,16 +306,16 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     EXPECT_TRUE(retval.isStarted());
     EXPECT_FALSE(retval.isFinished());
 
-    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
-    {
-        GTEST_COUT_qDB << "Qt run()";
-        auto qrunfuture = QtConcurrent::run(lambda, retval);
-    }
-    else
-    {
+//    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+//    {
+//        GTEST_COUT_qDB << "Qt run()";
+//        auto qrunfuture = QtConcurrent::run(lambda, retval);
+//    }
+//    else
+//    {
         GTEST_COUT_qDB << "ExtAsync::run()";
         retval = ExtAsync::run_efarg(lambda);
-    }
+//    }
 
     static_assert(std::is_same_v<decltype(retval), ReturnFutureT>, "");
 

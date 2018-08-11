@@ -39,9 +39,16 @@
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  */
-class ExtFutureTest : public ExtAsyncTestsSuiteFixtureBase//::testing::Test
+//template <class FutureTypeT>
+class ExtFutureTest : public ExtAsyncTestsSuiteFixtureBase
 {
 	using BASE_CLASS = ExtAsyncTestsSuiteFixtureBase;
+
+public:
+
+//    using FutureType = FutureTypeT;
+//    static FutureTypeT shared_;
+//    FutureTypeT value_;
 
 protected:
 

@@ -76,6 +76,7 @@ void InterState::finished(std::string func)
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
 //    m_finished_set.insert(func);
+    ASSERT_STREQ(m_currently_running_test.c_str(), func.c_str());
     ASSERT_FALSE(m_currently_running_test.empty());
     m_currently_running_test.clear();
 }
