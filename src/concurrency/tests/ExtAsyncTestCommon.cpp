@@ -29,44 +29,6 @@ trackable_generator_base::trackable_generator_base(ExtAsyncTestsSuiteFixtureBase
     m_generator_id = test_id;
 }
 
-//template<class ReturnFuture = ExtFuture<int>>
-//ReturnFuture async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase *fixture)
-//{
-//    SCOPED_TRACE("In async_int_generator");
-
-//    auto tgb = new trackable_generator_base(fixture);
-//    fixture->register_generator(tgb);
-
-//    ReturnFuture retval = ExtAsync::run_efarg([&](ExtFuture<int>& future) {
-//            int current_val = start_val;
-//            SCOPED_TRACE("In async_int_generator callback");
-//            for(int i=0; i<num_iterations; i++)
-//            {
-//                // Sleep for a second.
-//                qIn() << "SLEEPING FOR 1 SEC";
-
-//                QTest::qSleep(1000);
-//                qIn() << "SLEEP COMPLETE, sending value to future:" << current_val;
-
-//                future.reportResult(current_val);
-//                current_val++;
-//            }
-
-//            // We're done.
-//            qIn() << "REPORTING FINISHED";
-//            fixture->unregister_generator(tgb);
-//            delete tgb;
-
-//            future.reportFinished();
-//        });
-
-//    static_assert(std::is_same_v<decltype(retval), ReturnFuture>, "");
-
-//    qIn() << "RETURNING:" << retval;
-
-//    return retval;
-//}
-
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 {
     SCOPED_TRACE("In delayed_string_func_1");
@@ -101,7 +63,15 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
     SCOPED_TRACE("In SetUp()");
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     GTEST_COUT << "SetUp() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
+    ASSERT_TRUE(expect_all_preconditions());
     starting(get_test_id_string());
+}
+
+bool ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    EXPECT_TRUE(m_currently_running_test.empty());
+    return true;
 }
 
 void ExtAsyncTestsSuiteFixtureBase::TearDown()
@@ -110,9 +80,16 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
     GTEST_COUT << "TearDown() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
+    ASSERT_TRUE(expect_all_postconditions());
+    finished(get_test_id_string());
+}
+
+bool ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
     EXPECT_EQ(m_generator_stack.size(), 0) << "Generator was not unregistered. Top generator ptr: " << m_generator_stack.top()
                                            << "Top generator ID: " << m_generator_stack.top()->get_generator_id();
-    finished(get_test_id_string());
+    return true;
 }
 
 std::string ExtAsyncTestsSuiteFixtureBase::get_currently_running_test()
@@ -140,6 +117,16 @@ bool ExtAsyncTestsSuiteFixtureBase::has_finished(std::string func)
     return m_finished_set.count(func) > 0;
 }
 
+void ExtAsyncTestsSuiteFixtureBase::check_generators()
+{
+    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+    SCOPED_TRACE("check_generators");
+//    GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
+//    auto tgen = m_generator_stack.top();
+//    EXPECT_EQ(tgen, generator) << "Unregistering incorrect generator";
+//    m_generator_stack.pop();
+}
+
 std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string()
 {
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
@@ -160,8 +147,9 @@ void ExtAsyncTestsSuiteFixtureBase::unregister_generator(trackable_generator_bas
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
     SCOPED_TRACE("unregister_generator");
     GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
+    // Get the topmost generator.
     auto tgen = m_generator_stack.top();
-    EXPECT_EQ(tgen, generator) << "Unregistering incorrect generator";
+    EXPECT_EQ(tgen, generator) << "Unregistering incorrect generator: Top: " << tgen->get_generator_id() << ", Unreg: " << generator->get_generator_id();
     m_generator_stack.pop();
 }
 

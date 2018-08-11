@@ -105,50 +105,6 @@ static ExtFuture<QString> delayed_string_func()
 }
 
 
-
-/**
- * Helper to which returns a finished QFuture<T>.
- */
-template <typename T>
-QFuture<T> make_finished_QFuture(const T &val)
-{
-   QFutureInterface<T> fi;
-   fi.reportFinished(&val);
-   return QFuture<T>(&fi);
-}
-
-/**
- * Helper which returns a Started but not Cancelled QFuture<T>.
- */
-template <typename T>
-QFuture<T> make_startedNotCanceled_QFuture()
-{
-    SCOPED_TRACE("");
-    QFutureInterface<T> fi;
-    fi.reportStarted();
-    EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
-    return QFuture<T>(&fi);
-}
-
-//template <typename T>
-//void reportFinished(QFuture<T>& f)
-//{
-//    SCOPED_TRACE("reportFinished(QFuture<T>& f)");
-//    f.d.reportFinished();
-//    // May have been already canceled by the caller.
-//    EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
-//}
-
-//template <typename T>
-//void reportFinished(ExtFuture<T>& f)
-//{
-//    SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
-
-//    f.reportFinished();
-
-//    EXPECT_TRUE(f.isFinished());
-//}
-
 //
 // TESTS
 //

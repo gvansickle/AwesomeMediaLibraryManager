@@ -53,20 +53,6 @@ protected:
     std::string m_generator_id;
 };
 
-//template <class FutureTypeT>
-//class async_test_generator : public trackable_generator_base
-//{
-//public:
-//    explicit async_test_generator(ExtAsyncTestsSuiteFixtureBase* fixture) : m_fixture(fixture) {}
-//    virtual ~async_test_generator() {}
-
-//    virtual void register_gen() { m_fixture->register_generator(this); }
-//    virtual void unregister_gen() { m_fixture->unregister_generator(this); }
-
-//protected:
-//    ExtAsyncTestsSuiteFixtureBase* m_fixture;
-//};
-
 
 /**
  * From a lambda passed to QtConcurrent::run(), sleeps for 1 sec and then returns a single QString.
@@ -84,8 +70,10 @@ class ExtAsyncTestsSuiteFixtureBase : public ::testing::Test
 protected:
 
     void SetUp() override;
+    virtual bool expect_all_preconditions();
 
     void TearDown() override;
+    virtual bool expect_all_postconditions();
 
     // Objects declared here can be used by all tests in this Fixture.
 
@@ -103,6 +91,9 @@ protected:
     void finished(std::string func);
 
     bool has_finished(std::string func);
+
+    void check_generators();
+
 
 public:
     std::string get_test_id_string();
@@ -152,6 +143,30 @@ public:
 /// @name Template helpers to allow the same syntax for QFuture<> and ExtFuture<> in tests.
 /// @{
 
+/**
+ * Helper to which returns a finished QFuture<T>.
+ */
+template <typename T>
+QFuture<T> make_finished_QFuture(const T &val)
+{
+   QFutureInterface<T> fi;
+   fi.reportFinished(&val);
+   return QFuture<T>(&fi);
+}
+
+/**
+ * Helper which returns a Started but not Cancelled QFuture<T>.
+ */
+template <typename T>
+QFuture<T> make_startedNotCanceled_QFuture()
+{
+    SCOPED_TRACE("");
+    QFutureInterface<T> fi;
+    fi.reportStarted();
+    EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
+    return QFuture<T>(&fi);
+}
+
 template <typename T>
 void reportFinished(QFuture<T>& f)
 {
@@ -174,6 +189,8 @@ void reportFinished(ExtFuture<T>& f)
 template <typename FutureT, class ResultType>
 void reportResult(FutureT& f, ResultType t)
 {
+    SCOPED_TRACE("reportResult");
+
     if constexpr (isExtFuture_v<FutureT>)
     {
         f.reportResult(t);
@@ -224,19 +241,45 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     };
 
     ReturnFutureT retval;
+    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+    {
+        // QFuture() creates an empty, cancelled future (Start|Canceled|Finished).
+        GTEST_COUT_qDB << "QFuture<>, clearing state";
+        retval = make_startedNotCanceled_QFuture<int>();
+    }
+
+    GTEST_COUT_qDB << "ReturnFuture initial state:" << state(retval);
+
+    EXPECT_TRUE(retval.isStarted());
+    EXPECT_FALSE(retval.isFinished());
 
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
+        qDb() << "Qt run()";
         auto qrunfuture = QtConcurrent::run(lambda, retval);
     }
     else
     {
+        qDb() << "ExtAsync::run()";
         retval = ExtAsync::run_efarg(lambda);
     }
 
     static_assert(std::is_same_v<decltype(retval), ReturnFutureT>, "");
 
-    qIn() << "RETURNING future:" << &retval;
+    qIn() << "RETURNING future:" << state(retval);
+
+    EXPECT_TRUE(retval.isStarted());
+//    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+//    {
+//        // QFuture starts out Start|Canceled|Finished.
+//        EXPECT_TRUE(retval.isCanceled());
+//        EXPECT_TRUE(retval.isFinished());
+//    }
+//    else
+//    {
+//        EXPECT_FALSE(retval.isCanceled());
+//        EXPECT_FALSE(retval.isFinished());
+//    }
 
     return retval;
 }

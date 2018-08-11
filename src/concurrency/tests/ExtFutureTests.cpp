@@ -52,6 +52,8 @@
 
 TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
+    TC_ENTER();
+
     ExtFuture<int64_t> ef = make_ready_future(25L);
 
     QList<int64_t> results = ef.get();
@@ -60,10 +62,15 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
 
     EXPECT_EQ(results.size(), 1);
     EXPECT_EQ(results[0], 25L);
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
 }
 
 TEST_F(ExtFutureTest, FutureSingleThread)
 {
+    TC_ENTER();
+
     ExtFuture<int> ef;
 
     EXPECT_EQ(ef.state(), ExtFutureState::Started);
@@ -77,11 +84,16 @@ TEST_F(ExtFutureTest, FutureSingleThread)
 
     EXPECT_EQ(ef.resultCount(), 2);
     EXPECT_EQ(ef.get()[1], 2);
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
 }
 
 TEST_F(ExtFutureTest, CopyAssignTests)
 {
     SCOPED_TRACE("CopyAssignTests");
+
+    TC_ENTER();
 
     // default constructors
     ExtFuture<int> extfuture_int;
@@ -108,6 +120,9 @@ TEST_F(ExtFutureTest, CopyAssignTests)
     ASSERT_EQ(ef_int2.isStarted(), true);
     /// @note This is a difference between QFuture<> and ExtFuture<>, there's no reason this future should be finished here.
 //    ASSERT_EQ(ef_int2.isFinished(), true);
+
+    TC_DONE_WITH_STACK();
+    TC_EXIT();
 }
 
 /**
@@ -205,8 +220,15 @@ QList<int> results_test(int startval, int iterations, ExtFutureTest* fixture)
 {
     SCOPED_TRACE("In results_test");
 
+    GTEST_COUT_qDB << "START GENERATOR";
+
     FutureType f = async_int_generator<FutureType>(startval, iterations, fixture);
+//    EXPECT_TRUE(f.isStarted());
+//    EXPECT_FALSE(f.isFinished());
+
+    GTEST_COUT_qDB << "START WAIT" << state(f);
     QList<int> retval = f.results();
+    GTEST_COUT_qDB << "END WAIT:" << state(f);
 
     // .results() should block until future is finished.
     EXPECT_TRUE(f.isStarted());
@@ -227,7 +249,7 @@ TEST_F(ExtFutureTest, QFutureResults)
     QList<int> expected_results {2,3,4,5,6};
     QList<int> results = results_test<QFuture<int>>(2, 5, this);
 
-    ASSERT_EQ(results, expected_results);
+    EXPECT_EQ(results, expected_results);
 
     TC_DONE_WITH_STACK();
     TC_EXIT();
@@ -245,7 +267,7 @@ TEST_F(ExtFutureTest, Results)
     QList<int> expected_results {2,3,4,5,6};
     QList<int> results = results_test<ExtFuture<int>>(2, 5, this);
 
-    ASSERT_EQ(results, expected_results);
+    EXPECT_EQ(results, expected_results);
 
     TC_DONE_WITH_STACK();
     TC_EXIT();

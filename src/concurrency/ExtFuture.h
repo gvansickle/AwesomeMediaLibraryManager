@@ -593,7 +593,13 @@ protected:
 template<typename T>
 static ExtFutureState::States state(QFuture<T>& qfuture_derived)
 {
-    return state(qfuture_derived.d);
+    return ExtFutureState::state(qfuture_derived.d);
+}
+
+template<typename T>
+static ExtFutureState::States state(ExtFuture<T>& ef)
+{
+    return ef.state();
 }
 
 template <typename T>
