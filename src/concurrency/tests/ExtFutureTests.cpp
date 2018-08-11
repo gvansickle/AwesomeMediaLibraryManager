@@ -295,7 +295,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     eftype ef = async_int_generator<eftype>(2, 5, this);
 
-    qDb() << "Starting extfuture:" << ef;
+    GTEST_COUT_qDB << "Starting ef state:" << ef.state();
 
     ASSERT_TRUE(ef.isStarted());
     ASSERT_FALSE(ef.isCanceled());
@@ -303,31 +303,32 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     QList<int> async_results_from_tap, async_results_from_get;
 
-    qDb() << "Attaching tap and get()";
+    GTEST_COUT_qDB << "Attaching tap and get()";
 
-//    async_results_from_get = ef.tap([&](eftype& ef, int begin, int end){
-//            GTEST_COUT << "IN TAP";
-//        for(int i = begin; i<end; i++)
-//        {
-//            async_results_from_tap.push_back(ef.resultAt(i));
-//        }
-//    }).get();
+    /*async_results_from_get =*/ ef.tap([&](eftype& ef, int begin, int end) {
+            GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
+        for(int i = begin; i<end; i++)
+        {
+            async_results_from_tap.push_back(ef.resultAt(i));
+        }
+    });//.get();
 
-    async_results_from_get = ef.future().results();
+    async_results_from_get = ef.results();
 
     // .get() above should block.
     EXPECT_TRUE(ef.isFinished());
 
+    // This shouldn't do anything, should already be finished.
     ef.waitForFinished();
 
-    qDb() << "Post .tap().get(), extfuture:" << ef;
+    GTEST_COUT_qDB << "Post .tap().get(), extfuture:" << ef.state();
 
-//    EXPECT_TRUE(ef.isStarted());
-//    EXPECT_FALSE(ef.isCanceled());
-//    EXPECT_TRUE(ef.isFinished());
+    EXPECT_TRUE(ef.isStarted());
+    EXPECT_FALSE(ef.isCanceled());
+    EXPECT_TRUE(ef.isFinished());
 
-//    EXPECT_EQ(async_results_from_get.size(), 5);
-//    EXPECT_EQ(async_results_from_tap.size(), 5);
+    EXPECT_EQ(async_results_from_get.size(), 5);
+    EXPECT_EQ(async_results_from_tap.size(), 5);
 
     ASSERT_TRUE(ef.isFinished());
 

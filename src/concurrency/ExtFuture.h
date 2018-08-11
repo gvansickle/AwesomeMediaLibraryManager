@@ -368,8 +368,9 @@ public:
         EnsureFWInstantiated();
 
         connect_or_die(m_extfuture_watcher, &ExtFutureWatcher<T>::resultsReadyAt,
-                       /*context,*/ [=](int begin, int end){
-            tap_callback(*this, begin, end);
+                       /*context,*/ [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) {
+            qDb() << "IN TAP CALLBACK";
+            tap_cb(*this, begin, end);
             ;});
 
         return *this;
@@ -447,11 +448,11 @@ public:
 //	void await();
 
 	/**
-     * Get this' current state as a ExtFutureState::States.
+     * Get this' current state as a ExtFutureState::State.
 	 *
      * @return A QFlags<>-derived type describing the current state of the ExtFuture.
 	 */
-    ExtFutureState::States state() const;
+    ExtFutureState::State state() const;
 
 	/// @name Operators
 	/// @{
@@ -468,7 +469,7 @@ public:
 	/// @} // END Operators
 
     template <class FutureType>
-    static ExtFutureState::States state(FutureType future);
+    static ExtFutureState::State state(FutureType future);
 
 protected:
 
@@ -477,6 +478,7 @@ protected:
 		if(!m_extfuture_watcher)
 		{
 			m_extfuture_watcher = new ExtFutureWatcher<T>();
+            m_extfuture_watcher->setFuture(*this);
 		}
 	}
 
@@ -598,13 +600,13 @@ protected:
 //
 
 template<typename T>
-static ExtFutureState::States state(QFuture<T>& qfuture_derived)
+static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
 {
     return ExtFutureState::state(qfuture_derived.d);
 }
 
 template<typename T>
-static ExtFutureState::States state(ExtFuture<T>& ef)
+static ExtFutureState::State state(const ExtFuture<T>& ef)
 {
     return ef.state();
 }
@@ -622,7 +624,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
-    outstream << "ExtFuture<T>( state=" << qUtf8Printable(asString(extfuture.state())) << ")";
+    outstream << "ExtFuture<T>( state=" << qUtf8Printable(toString(extfuture.state())) << ")";
 
     return outstream;
 }
@@ -650,9 +652,9 @@ void ExtFuture<T>::wait()
 }
 
 template<typename T>
-ExtFutureState::States ExtFuture<T>::state() const
+ExtFutureState::State ExtFuture<T>::state() const
 {
-    // States from QFutureInterfaceBase.
+    // State from QFutureInterfaceBase.
     /// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
     ///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
     ///			#ifndef QFUTURE_TEST
@@ -678,7 +680,7 @@ ExtFutureState::States ExtFuture<T>::state() const
         {QFutureInterfaceBase::Throttled, "Throttled"}
     };
 
-    ExtFutureState::States current_state = ExtFutureState::state(*this);
+    ExtFutureState::State current_state = ExtFutureState::state(*this);
 
     return current_state;
 }

@@ -36,7 +36,8 @@ class ExtFutureState
 
 public:
 
-    enum State
+	/// Current ExtFuture state flags.
+    enum StateFlag
     {
         NoState = QFutureInterfaceBase::NoState,
         Running = QFutureInterfaceBase::Running,
@@ -46,15 +47,29 @@ public:
         Paused = QFutureInterfaceBase::Paused,
         Throttled = QFutureInterfaceBase::Throttled
     };
-    Q_DECLARE_FLAGS(States, State)
+    Q_DECLARE_FLAGS(State, StateFlag)
     // Exposes the enum to the Meta-Object System.
-    Q_FLAG(States)
+    Q_FLAG(State)
+
+//    enum State
+//    {
+//        NoState = QFutureInterfaceBase::NoState,
+//        Running = QFutureInterfaceBase::Running,
+//        Started = QFutureInterfaceBase::Started,
+//        Finished = QFutureInterfaceBase::Finished,
+//        Canceled = QFutureInterfaceBase::Canceled,
+//        Paused = QFutureInterfaceBase::Paused,
+//        Throttled = QFutureInterfaceBase::Throttled
+//    };
+//    Q_DECLARE_FLAGS(States, State)
+//    // Exposes the enum to the Meta-Object System.
+//    Q_FLAG(States)
 
     /**
      * Return the combined state flags of a class ultimately derived from QFutureInterfaceBase.
      */
     template<typename T>
-    static ExtFutureState::States state(T& qfuture_int_base_derived)
+    static ExtFutureState::State state(const T& qfuture_int_base_derived)
     {
         QMutexLocker lock(qfuture_int_base_derived.mutex());
         // States from QFutureInterfaceBase.
@@ -76,7 +91,7 @@ public:
     //        {QFutureInterfaceBase::Paused,   "Paused"},
     //        {QFutureInterfaceBase::Throttled, "Throttled"}
     //    };
-        const static QFutureInterfaceBase::State c_states[] = {
+        constexpr static QFutureInterfaceBase::State c_states[] = {
             QFutureInterfaceBase::State::NoState,
             QFutureInterfaceBase::State::Running,
             QFutureInterfaceBase::State::Started,
@@ -87,7 +102,7 @@ public:
         };
 
 
-        ExtFutureState::States retval {State::NoState};
+        ExtFutureState::State retval {StateFlag::NoState};
         for(QFutureInterfaceBase::State i : c_states)
         {
             if(qfuture_int_base_derived.queryState(i))
@@ -104,15 +119,15 @@ public:
      * Return the combined state flags of a class ultimately derived from QFuture<T>.
      */
     template<typename T>
-    static ExtFutureState::States state(QFuture<T>& qfuture_derived)
+    static ExtFutureState::State state(QFuture<T>& qfuture_derived)
     {
         return state(qfuture_derived.d);
     }
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::States)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::State)
 
-inline static QString asString(ExtFutureState::States states)
+inline static QString toString(ExtFutureState::State states)
 {
     QString str;
     QDebug dbg(&str);
