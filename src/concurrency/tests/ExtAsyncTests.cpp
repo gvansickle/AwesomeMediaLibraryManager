@@ -707,7 +707,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TestMakeReadyFutures)
 ////	ExtFuture<QString> unwrapped_future = future.unwrap();
 //}
 
-TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_TapAndThenOneResult)
+TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 {
     SCOPED_TRACE("");
 	static std::atomic_bool ran_tap {false};
@@ -764,6 +764,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_TapAndThenOneResult)
 			TC_DONE_WITH_STACK();
 			return QString("Then Called");
     }).test_tap([&](auto ef){
+        GTEST_COUT_qDB << "IN TEST_TAP";
         wait_result = ef.result();
         EXPECT_TRUE(wait_result[0] == QString("Then Called"));
     }).wait();
