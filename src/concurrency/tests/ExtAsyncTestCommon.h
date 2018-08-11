@@ -36,6 +36,7 @@
 //#include <tests/TestHelpers.h>
 #include "../ExtFuture.h"
 #include "../ExtAsync.h"
+#include "../ExtAsync_traits.h"
 
 
 class ExtAsyncTestsSuiteFixtureBase;
@@ -66,13 +67,6 @@ protected:
 //    ExtAsyncTestsSuiteFixtureBase* m_fixture;
 //};
 
-/**
- * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
- * QTest::qSleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
- *
- * @todo Doesn't handle cancellation or progress reporting.
- */
-ExtFuture<int> async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase* fixture);
 
 /**
  * From a lambda passed to QtConcurrent::run(), sleeps for 1 sec and then returns a single QString.
@@ -121,6 +115,9 @@ public:
 
 /// @name Additional test helper macros.
 /// @{
+
+#define GTEST_COUT_qDB qDb()
+
 #define TC_ENTER() \
     /* The name of this test as a static std::string. */ \
     static const std::string testname {get_test_id_string()}; \
@@ -152,6 +149,97 @@ public:
 
 /// @}
 
+/// @name Template helpers to allow the same syntax for QFuture<> and ExtFuture<> in tests.
+/// @{
+
+template <typename T>
+void reportFinished(QFuture<T>& f)
+{
+    SCOPED_TRACE("reportFinished(QFuture<T>& f)");
+    f.d.reportFinished();
+    // May have been already canceled by the caller.
+    EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
+}
+
+template <typename T>
+void reportFinished(ExtFuture<T>& f)
+{
+    SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
+
+    f.reportFinished();
+
+    EXPECT_TRUE(f.isFinished());
+}
+
+template <typename FutureT, class ResultType>
+void reportResult(FutureT& f, ResultType t)
+{
+    if constexpr (isExtFuture_v<FutureT>)
+    {
+        f.reportResult(t);
+    }
+    else
+    {
+        f.d.reportResult(t);
+    }
+}
+
+/// @}
+
+/**
+ * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
+ * QTest::qSleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
+ *
+ * @todo Doesn't handle cancellation or progress reporting.
+ */
+template<class ReturnFutureT>
+ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase *fixture)
+{
+    SCOPED_TRACE("In async_int_generator");
+
+    auto tgb = new trackable_generator_base(fixture);
+    fixture->register_generator(tgb);
+
+    auto lambda = [=](ReturnFutureT future) {
+        int current_val = start_val;
+        SCOPED_TRACE("In async_int_generator callback");
+        for(int i=0; i<num_iterations; i++)
+        {
+            // Sleep for a second.
+            qIn() << "SLEEPING FOR 1 SEC";
+
+            QTest::qSleep(1000);
+            qIn() << "SLEEP COMPLETE, sending value to future:" << current_val;
+
+            reportResult(future, current_val);
+            current_val++;
+        }
+
+        // We're done.
+        qIn() << "REPORTING FINISHED";
+        fixture->unregister_generator(tgb);
+        delete tgb;
+
+        reportFinished(future);
+    };
+
+    ReturnFutureT retval;
+
+    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+    {
+        auto qrunfuture = QtConcurrent::run(lambda, retval);
+    }
+    else
+    {
+        retval = ExtAsync::run_efarg(lambda);
+    }
+
+    static_assert(std::is_same_v<decltype(retval), ReturnFutureT>, "");
+
+    qIn() << "RETURNING future:" << &retval;
+
+    return retval;
+}
 
 
 

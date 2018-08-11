@@ -160,7 +160,10 @@ public:
         AMLM_ASSERT_EQ(initialState, QFutureInterfaceBase::State::Started);
 	}
 
+    /// Default copy constructor.
+    /// @note Do we need a non-default copy constructor?
 	ExtFuture(const ExtFuture<T>& other) = default;
+
 
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
@@ -170,9 +173,8 @@ public:
 //	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other);
 
 
-	// Do we need a non-default copy constructor?
 
-	ExtFuture(const QFutureInterface<T> &other) : QFutureInterface<T>(other)
+    ExtFuture(const QFutureInterface<T>& other) : QFutureInterface<T>(other)
 	{
         //qDb() << "future state:" << *this;
 //        Q_ASSERT(this->state() == other.state());
@@ -199,10 +201,10 @@ public:
 	 */
     ~ExtFuture() override = default;
 
-	/// @name Copy and move operators.
+    /// @name Copy and Move Assignment operators.
 	/// @{
 
-	ExtFuture<T>& operator=(const ExtFuture<T>& other) = default;
+    ExtFuture<T>& operator=(const ExtFuture<T>& other) = default;
     ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept = default;
 
 	/// @}
@@ -230,9 +232,12 @@ public:
     QList<T> get() //const
     {
         /// @todo Not wild about this const_cast<>, but QFuture<> has a QFutureInterface<T>
-        /// as a "private" mutable d value member, so this should be OK.
-//		return const_cast<ExtFuture<T>*>(this)->results();
-		return this->future().results();
+        /// as a "private" mutable d value member and does this:
+        ///     QList<T> results() const { return d.results(); }
+        /// ...so hopefully this should be OK.
+
+        return const_cast<ExtFuture<T>*>(this)->results();
+//		return this->future().results();
     }
 
     /**

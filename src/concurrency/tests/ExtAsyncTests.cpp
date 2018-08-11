@@ -80,29 +80,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, QStringPrintTest)
 	finished(__PRETTY_FUNCTION__);
 }
 
-///**
-// * From a lambda passed to QtConcurrent::run(), sleeps for 1 sec and then returns a single QString.
-// * @return
-// */
-//static QString delayed_string_func_1(std::atomic_bool& generator_run_completed)
-//{
-//    auto retval = QtConcurrent::run([&](){
-//		// Sleep for a second.
-//		qDb() << "ENTER, SLEEPING FOR 1 SEC";
-//        QTest::qSleep(1000);
-//		qDb() << "SLEEP COMPLETE";
-//        generator_run_completed.store(true);
-//		return QString("delayed_string_func_1() output");
-//	});
-
-//	EXPECT_TRUE(retval.isStarted());
-//	EXPECT_FALSE(retval.isFinished());
-
-//	GTEST_COUT << "delayed_string_func_1() returning" << tostdstr(retval) << std::endl;
-
-//	return retval.result();
-//}
-
 /**
  * From a lambda passed to QtConcurrent::run(), sleeps for 1 sec and then returns a single QString.
  * @return
@@ -153,24 +130,24 @@ QFuture<T> make_startedNotCanceled_QFuture()
     return QFuture<T>(&fi);
 }
 
-template <typename T>
-void reportFinished(QFuture<T>& f)
-{
-    SCOPED_TRACE("reportFinished(QFuture<T>& f)");
-    f.d.reportFinished();
-    // May have been already canceled by the caller.
-    EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
-}
+//template <typename T>
+//void reportFinished(QFuture<T>& f)
+//{
+//    SCOPED_TRACE("reportFinished(QFuture<T>& f)");
+//    f.d.reportFinished();
+//    // May have been already canceled by the caller.
+//    EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
+//}
 
-template <typename T>
-void reportFinished(ExtFuture<T>& f)
-{
-    SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
+//template <typename T>
+//void reportFinished(ExtFuture<T>& f)
+//{
+//    SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
 
-    f.reportFinished();
+//    f.reportFinished();
 
-    EXPECT_TRUE(f.isFinished());
-}
+//    EXPECT_TRUE(f.isFinished());
+//}
 
 //
 // TESTS
@@ -237,7 +214,6 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     SCOPED_TRACE("QtConcurrentRunFutureStateOnCancelGuts");
 
     std::atomic_int counter {0};
-#define GTEST_COUT qDb()
 
     FutureTypeT the_future = make_startedNotCanceled_QFuture<int>();
 
@@ -245,7 +221,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     ASSERT_FALSE(the_future.isCanceled());
     ASSERT_FALSE(the_future.isFinished());
 
-    GTEST_COUT << "CALLING QTC::run()";
+    GTEST_COUT_qDB << "CALLING QTC::run()";
 
     /**
      * Per docs:
@@ -256,19 +232,19 @@ void QtConcurrentRunFutureStateOnCancelGuts()
      */
     /// @warning Need to pass by reference here to avoid copying the future, which blocks... no, it doesn't, why are we doing this?
     auto f = QtConcurrent::run([&counter](FutureTypeT& the_passed_future) mutable {
-        GTEST_COUT << "Entered callback, passed future state:" << ExtFutureState::state(the_passed_future);
+        GTEST_COUT_qDB << "Entered callback, passed future state:" << ExtFutureState::state(the_passed_future);
 
             EXPECT_TRUE(the_passed_future.isStarted());
             EXPECT_FALSE(the_passed_future.isCanceled());
 
             while(!the_passed_future.isCanceled())
             {
-                GTEST_COUT << "LOOP COUNTER: " << counter;
+                GTEST_COUT_qDB << "LOOP COUNTER: " << counter;
 
                 // Pretend to do 1 second of work.
                 QTest::qSleep(1000);
                 counter++;
-                GTEST_COUT << "+1 secs, counter = " << counter;
+                GTEST_COUT_qDB << "+1 secs, counter = " << counter;
             }
 
             // Only way to exit the while loop above is by external cancellation.
@@ -279,21 +255,21 @@ void QtConcurrentRunFutureStateOnCancelGuts()
             reportFinished(the_passed_future);
             the_passed_future.waitForFinished();
 
-         GTEST_COUT << "Exiting callback, passed future state:" << ExtFutureState::state(the_passed_future);
+         GTEST_COUT_qDB << "Exiting callback, passed future state:" << ExtFutureState::state(the_passed_future);
          ;}, std::ref(the_future));
 
-    GTEST_COUT << "Passed the run() call, got the future:" << ExtFutureState::state(the_future);
+    GTEST_COUT_qDB << "Passed the run() call, got the future:" << ExtFutureState::state(the_future);
 
     EXPECT_TRUE(the_future.isStarted());
     EXPECT_TRUE(f.isStarted());
 
-    GTEST_COUT << "WAITING FOR 5 SECS...";
+    GTEST_COUT_qDB << "WAITING FOR 5 SECS...";
     // qWait() doesn't block the event loop, qSleep() does.
     QTest::qWait(5000);
 
-    GTEST_COUT << "CANCELING THE FUTURE:" << ExtFutureState::state(the_future);
+    GTEST_COUT_qDB << "CANCELING THE FUTURE:" << ExtFutureState::state(the_future);
     the_future.cancel();
-    GTEST_COUT << "CANCELED FUTURE STATE:" << ExtFutureState::state(the_future);
+    GTEST_COUT_qDB << "CANCELED FUTURE STATE:" << ExtFutureState::state(the_future);
 
     QTest::qSleep(1000);
 
@@ -308,13 +284,12 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     the_future.waitForFinished();
 //    the_future.result();
 
-    GTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(the_future);
+    GTEST_COUT_qDB << "FUTURE IS FINISHED:" << ExtFutureState::state(the_future);
 
     EXPECT_TRUE(the_future.isStarted());
     EXPECT_TRUE(the_future.isCanceled());
     EXPECT_FALSE(the_future.isRunning());
     EXPECT_TRUE(the_future.isFinished());
-#define GTEST_COUT GTEST_COUT_ORIGINAL
 }
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunQFutureStateOnCancel)
@@ -669,7 +644,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_ExtFutureExtAsyncRunMultiResultTest)
     TC_EXPECT_THIS_TC();
 
 	// Start generating a sequence of results.
-    auto future = async_int_generator(start_val, num_iterations, this);
+    ExtFuture<int> future = async_int_generator<ExtFuture<int>>(start_val, num_iterations, this);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());

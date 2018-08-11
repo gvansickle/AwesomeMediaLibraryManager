@@ -236,7 +236,11 @@ static inline void name_qthread()
 
         ExtFutureR retval;
 
-        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), std::ref(retval));
+        // retval is passed by copy here.
+//        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
+        QtConcurrent::run([=](ExtFutureR ef){
+            callback(ef);
+        }, retval);
 
         return retval;
     }
