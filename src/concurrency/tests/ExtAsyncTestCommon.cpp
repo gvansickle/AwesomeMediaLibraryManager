@@ -36,7 +36,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
     auto tgb = new trackable_generator_base(fixture);
     fixture->register_generator(tgb);
 
-    ExtFuture<QString> retval = QtConcurrent::run([&](){
+    ExtFuture<QString> retval = QtConcurrent::run([&]() -> QString {
         // Sleep for a second.
         qDb() << "ENTER, SLEEPING FOR 1 SEC";
         QTest::qSleep(1000);

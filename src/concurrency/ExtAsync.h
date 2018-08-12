@@ -201,7 +201,7 @@ static inline void name_qthread()
      * @returns An ExtFuture<>, probably of Unit type.
      */
     template <typename This, typename F,
-        std::enable_if_t<std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>, int> = 0>
+        REQUIRES(std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>)>
     auto
     run(This* thiz, F&& function) -> decltype(std::declval<This*>()->get_extfuture_ref())
     {
@@ -276,9 +276,9 @@ static inline void name_qthread()
         // retval is passed by copy here.
 //        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
         QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
-            qDb() << "FUTURE:" << state(ef);
+            qDb() << "FUTURE:" << ExtFutureState::state(ef);
             callback_fn(ef);
-            qDb() << "POST CALLBACK FUTURE:" << state(ef);
+            qDb() << "POST CALLBACK FUTURE:" << ExtFutureState::state(ef);
         }, std::forward<ExtFutureR>(retval));
 
         return retval;
