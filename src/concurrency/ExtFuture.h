@@ -601,39 +601,7 @@ protected:
 // START IMPLEMENTATION
 //
 
-template<typename T>
-static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
-{
-    return ExtFutureState::state(qfuture_derived.d);
-}
 
-template<typename T>
-static ExtFutureState::State state(const ExtFuture<T>& ef)
-{
-    return ef.state();
-}
-
-//Q_DECLARE_METATYPE(ExtFuture);
-//Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
-
-
-template<typename T>
-T ExtFuture<T>::qtget_first()
-{
-    wait();
-    return this->future().result();
-}
-
-template<typename T>
-void ExtFuture<T>::wait()
-{
-    while (!this->isFinished())
-    {
-        // Pump the event loop.
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    }
-}
 
 #else // New ExtFuture<>
 
@@ -1224,6 +1192,40 @@ protected:
 
 	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
 };
+
+template<typename T>
+static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
+{
+    return ExtFutureState::state(qfuture_derived.d);
+}
+
+template<typename T>
+static ExtFutureState::State state(const ExtFuture<T>& ef)
+{
+    return ef.state();
+}
+
+//Q_DECLARE_METATYPE(ExtFuture);
+//Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
+
+
+template<typename T>
+T ExtFuture<T>::qtget_first()
+{
+    wait();
+    return this->result();
+}
+
+template<typename T>
+void ExtFuture<T>::wait()
+{
+    while (!this->isFinished())
+    {
+        // Pump the event loop.
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    }
+}
 
 #endif // New ExtFuture<>
 
