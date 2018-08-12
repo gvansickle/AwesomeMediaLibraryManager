@@ -586,7 +586,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 	TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_ExtFutureExtAsyncRunMultiResultTest)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 {
 	std::atomic_int start_val {5};
 	std::atomic_int num_iterations {3};
@@ -611,7 +611,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_ExtFutureExtAsyncRunMultiResultTest)
 		static int last_seen_result = 0;
 		static int num_tap_calls = 0;
 
-		GTEST_COUT << "testname: " << testname << std::endl;
+        GTEST_COUT << "testname: " << static_test_id_string << std::endl;
 		GTEST_COUT << "num_tap_calls:" << num_tap_calls << std::endl;
 
 		EXPECT_EQ(start_val, 5);

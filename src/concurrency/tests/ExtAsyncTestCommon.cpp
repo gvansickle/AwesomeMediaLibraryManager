@@ -137,7 +137,6 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
     EXPECT_NO_FATAL_FAILURE({
                                 expect_all_preconditions();
                             });
-    starting(get_test_id_string());
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
@@ -151,11 +150,10 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
     SCOPED_TRACE("In TearDown()");
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
-    GTEST_COUT << "TearDown() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
+    GTEST_COUT << "TearDown() for test_id: " << test_id << std::endl;
     EXPECT_NO_FATAL_FAILURE({
                                 expect_all_postconditions();
                             });
-    finished(get_test_id_string());
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()
@@ -182,12 +180,6 @@ bool ExtAsyncTestsSuiteFixtureBase::check_generators()
 {
     return m_interstate.check_generators();
 }
-
-//bool ExtAsyncTestsSuiteFixtureBase::has_finished(std::string func)
-//{
-//    std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-//    return m_finished_set.count(func) > 0;
-//}
 
 std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string()
 {

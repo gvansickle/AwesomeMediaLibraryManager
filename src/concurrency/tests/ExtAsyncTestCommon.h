@@ -139,6 +139,10 @@ public:
     /// Can be omitted if not needed.
     static void TearDownTestCase() { }
 
+    /**
+     * Returns the Fixture_TestCase name of the currently running test.
+     * @note Deliberately not threadsafe.  Only call this in the TC_ENTER() and TC_EXIT() macros.
+     */
     std::string get_test_id_string();
 
     void register_generator(trackable_generator_base* generator);
@@ -153,7 +157,8 @@ public:
 
 #define TC_ENTER() \
     /* The name of this test as a static std::string. */ \
-    static const std::string testname {this->get_test_id_string()}; \
+    static const std::string static_test_id_string {this->get_test_id_string()}; \
+    starting(static_test_id_string); \
     ExtAsync::name_qthread();\
     static std::atomic_bool test_func_called {true}; \
     static std::atomic_bool test_func_exited {false}; \
@@ -161,11 +166,11 @@ public:
     static std::atomic_bool test_func_stack_is_gone {false};
 
 #define TC_EXPECT_THIS_TC() \
-    EXPECT_EQ(get_currently_running_test(), testname);
+    EXPECT_EQ(get_currently_running_test(), static_test_id_string);
 
 #define TC_EXPECT_NOT_EXIT() \
-    EXPECT_TRUE(test_func_called) << testname; \
-    EXPECT_FALSE(test_func_exited) << testname;
+    EXPECT_TRUE(test_func_called) << static_test_id_string; \
+    EXPECT_FALSE(test_func_exited) << static_test_id_string;
 
 #define TC_EXPECT_STACK() \
     EXPECT_FALSE(test_func_stack_is_gone)
@@ -178,7 +183,9 @@ public:
     test_func_stack_is_gone = true; \
     ASSERT_TRUE(test_func_called); \
     ASSERT_TRUE(test_func_exited); \
-    ASSERT_TRUE(test_func_no_longer_need_stack_ctx);
+    ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
+    finished(static_test_id_string);
+
 
 /// @}
 
