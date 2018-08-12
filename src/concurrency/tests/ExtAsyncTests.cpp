@@ -783,7 +783,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 	TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_TapAndThenMultipleResults)
+TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 {
 	std::atomic_int tap_call_counter {0};
 	TC_ENTER();
@@ -837,14 +837,14 @@ TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_TapAndThenMultipleResults)
         });
 
 	// No wait, shouldn't have finished yet.
-	ASSERT_TRUE(future.isStarted());
-	ASSERT_FALSE(future.isFinished());
+    EXPECT_TRUE(future.isStarted());
+    EXPECT_FALSE(future.isFinished());
 
-	ASSERT_FALSE(future.isFinished());
+    EXPECT_FALSE(future.isFinished());
 	future.wait();
-	ASSERT_TRUE(future.isFinished());
+    EXPECT_TRUE(future.isFinished());
 
-	ASSERT_EQ(tap_call_counter, 2);
+    EXPECT_EQ(tap_call_counter, 2);
 
     TC_EXPECT_THIS_TC();
 	TC_EXPECT_NOT_EXIT();
