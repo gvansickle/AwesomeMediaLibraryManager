@@ -285,7 +285,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         for(int i=begin; i<end; i++)
         {
             QVector<QVariant> column_data;
-            DirScanResult dsr = ef.future().resultAt(i);
+            DirScanResult dsr = ef.resultAt(i);
 
             column_data.append(QVariant::fromValue(dsr.getDirProps()).toString());
             column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
