@@ -306,19 +306,19 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     GTEST_COUT_qDB << "Attaching tap and get()";
 
-    /*async_results_from_get =*/ ef.tap([&](eftype& ef, int begin, int end) {
+    async_results_from_get = ef.tap([&](eftype& ef, int begin, int end) {
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
             GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
             async_results_from_tap.push_back(ef.resultAt(i));
         }
-    });//.get();
+    }).get();
 
     EXPECT_FALSE(ef.isFinished());
 
     /// @todo AGAIN THIS DOESN'T BLOCK
-    async_results_from_get = ef.results();
+//    async_results_from_get = ef.results();
 
     // .get() above should block.
     EXPECT_TRUE(ef.isFinished());

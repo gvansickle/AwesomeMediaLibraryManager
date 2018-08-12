@@ -825,14 +825,14 @@ public:
      *
      * @return The results value of this ExtFuture.
      */
-    QList<T> get() //const
+    QList<T> get() const
     {
         /// @todo Not wild about this const_cast<>, but QFuture<> has a QFutureInterface<T>
         /// as a "private" mutable d value member and does this:
         ///     QList<T> results() const { return d.results(); }
         /// ...so hopefully this should be OK.
 
-        return const_cast<ExtFuture<T>*>(this)->results();
+        return this->BASE_CLASS::results();
 //		return this->future().results();
     }
 
@@ -931,7 +931,7 @@ public:
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
 	 *
-	 * The callback passed to tap() is invoked with results from this, of type T, as they become available.
+     * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
 	 *
      * @param tap_callback  Callback with the signature void()(T).
 	 *
@@ -946,12 +946,23 @@ public:
         return TapHelper(context, std::forward<TapCallbackType>(tap_callback)); // *m_tap_function);
 	}
 
-	template <typename F, typename R = ct::return_type_t<F>, REQUIRES(argtype_n_is_v<F, 0, T>)>
-	ExtFuture<T>& tap(F&& tap_callback)
+    /**
+     * Attaches a "tap" callback to this ExtFuture.
+     *
+     * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
+     *
+     * @param tap_callback  Callback with the signature void()(T).
+     *
+     * @return  A reference to *this, i.e. ExtFuture<T>&.
+     */
+    template <typename TapCallbackType,
+              REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
+    ExtFuture<T>& tap(TapCallbackType&& tap_callback)
 	{
         qIn() << "ENTER ExtFuture<T>& tap(F&& tap_callback)";
-		auto retval = tap(QApplication::instance(), std::forward<F>(tap_callback));
+        auto retval = tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
         qIn() << "EXIT ExtFuture<T>& tap(F&& tap_callback)";
+
 		return *this;
 	}
 
@@ -964,9 +975,10 @@ public:
     ExtFuture<T>& tap(TapCallbackType&& tap_callback)
     {
         EnsureFWInstantiated();
+
         Q_ASSERT(this->resultCount() == 0);
         connect_or_die(m_extfuture_watcher, &ExtFutureWatcher<T>::resultsReadyAt,
-                       /*context,*/ [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) {
+                       m_extfuture_watcher, [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) {
             qDb() << "IN TAP CALLBACK";
             tap_cb(*this, begin, end);
             ;});
