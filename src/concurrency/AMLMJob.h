@@ -297,13 +297,13 @@ public:
 
     /// Call this in your derived runFunctor() function to see if you should cancel the loop.
     //bool wasCancelRequested();
-//    template <class ExtFutureT, ExtFutureT ef = nullptr>
+    template <class ExtFutureT>
     bool wasCancelRequested()
     {
         Q_ASSERT(!m_i_was_deleted);
 
         // Were we told to abort?
-        return get_extfuture_ref().isCanceled();
+        return asDerivedTypePtr()->get_extfuture_ref().isCanceled();
     }
 
     /// Derived runFunctor() must call this before exiting.
@@ -320,7 +320,7 @@ public:
 
 public:
 
-    virtual ExtFuture<Unit>& get_extfuture_ref() = 0;
+    virtual ExtFuture<int>& get_extfuture_ref() = 0;
 
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
@@ -639,7 +639,7 @@ public:
 		HookUpExtFutureSignals();
 	}
 
-    ExtFutureT& get_extfuture_ref() override { return m_ext_future; }
+    ExtFutureT& get_extfuture_ref() { return m_ext_future; }
 
 protected Q_SLOT:
 
