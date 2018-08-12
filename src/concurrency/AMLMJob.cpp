@@ -90,13 +90,13 @@ AMLMJob::~AMLMJob()
 }
 
 
-bool AMLMJob::wasCancelRequested()
-{
-    Q_ASSERT(!m_i_was_deleted);
+//bool AMLMJob::wasCancelRequested()
+//{
+//    Q_ASSERT(!m_i_was_deleted);
 
-    // Were we told to abort?
-    return asDerivedTypePtr()->get_extfuture_ref().isCanceled();
-}
+//    // Were we told to abort?
+//    return asDerivedTypePtr()->get_extfuture_ref().isCanceled();
+//}
 
 void AMLMJob::setSuccessFlag(bool success)
 {
@@ -263,7 +263,7 @@ void AMLMJob::run()
 
     auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
-    qDbo() << "ExtFuture<> state:" << ExtFutureState::state(ef);
+    qDbo() << "ExtFuture<> state:" << ef.state();
     if(ef.isCanceled())
     {
         // We were canceled before we were started.

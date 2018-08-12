@@ -802,43 +802,48 @@ public:
 
     void reportStarted()
     {
-        this->reportStarted();
+        this->d.reportStarted();
     }
 
-    void reportFinished()
-    {
-        this->reportFinished();
-    }
+//    void reportFinished()
+//    {
+//        this->d.reportFinished();
+//    }
 
     void reportCanceled()
     {
-        this->reportCanceled();
+        this->d.reportCanceled();
     }
 
     void reportException(const QException &e)
     {
-        this->reportException(e);
+        this->d.reportException(e);
     }
 
     void reportResultsReady(int beginIndex, int endIndex)
     {
-        this->reportResultsReady(beginIndex, endIndex);
+        this->d.reportResultsReady(beginIndex, endIndex);
+    }
+
+    void waitForResume()
+    {
+        this->d.waitForResume();
     }
 
     /// Status reporting
 
     void setProgressRange(int minimum, int maximum)
     {
-        this->setProgressRange(minimum, maximum);
+        this->d.setProgressRange(minimum, maximum);
     }
     void setProgressValue(int progressValue)
     {
-        this->setProgressValue(progressValue);
+        this->d.setProgressValue(progressValue);
     }
 
     void setProgressValueAndText(int progressValue, const QString &progressText)
     {
-        this->setProgressValueAndText(progressValue, progressText);
+        this->d.setProgressValueAndText(progressValue, progressText);
     }
 
     /// @}
@@ -880,21 +885,25 @@ public:
 //    }
 
     /**
+     * QFuture<T> has result(), results(), resultAt(), and isResultReadyAt().
+     */
+
+    /**
      * Like .get(), but only returns the first value in the ExtFuture<>'s QList.
      * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
      */
-    inline T result() //const
-    {
-//        return const_cast<ExtFuture<T>*>(this)->resultAt(0);
-        return this->future().resultAt(0);
-    }
+//    inline T result() //const
+//    {
+////        return const_cast<ExtFuture<T>*>(this)->resultAt(0);
+//        return this->future().resultAt(0);
+//    }
 
-    inline T resultAt(int index) //const
-    {
-//        const_cast<ExtFuture<T>*>(this)->waitForResult(index);
-//        return const_cast<ExtFuture<T>*>(this)->resultReference(index);
-        return this->future().resultAt(index);
-    }
+//    inline T resultAt(int index) //const
+//    {
+////        const_cast<ExtFuture<T>*>(this)->waitForResult(index);
+////        return const_cast<ExtFuture<T>*>(this)->resultReference(index);
+//        return this->future().resultAt(index);
+//    }
 
 	/// @name .then() overloads.
 	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like

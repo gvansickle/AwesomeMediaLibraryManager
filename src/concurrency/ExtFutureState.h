@@ -22,6 +22,9 @@
 
 #include <config.h>
 
+// Std C++ backfill
+#include <future/cpp14_concepts.hpp>
+
 // Qt5
 #include <QtCore>
 #include <QFlags>
@@ -29,6 +32,7 @@
 
 // Ours
 #include <utils/QtHelpers.h>
+#include "ExtAsync_traits.h"
 
 class ExtFutureState
 {
@@ -68,7 +72,7 @@ public:
     /**
      * Return the combined state flags of a class ultimately derived from QFutureInterfaceBase.
      */
-    template<typename T>
+    template<typename T, REQUIRES(!isExtFuture_v<T>)>
     static ExtFutureState::State state(const T& qfuture_int_base_derived)
     {
         QMutexLocker lock(qfuture_int_base_derived.mutex());
