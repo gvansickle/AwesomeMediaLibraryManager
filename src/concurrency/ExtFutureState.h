@@ -119,7 +119,7 @@ public:
      * Return the combined state flags of a class ultimately derived from QFuture<T>.
      */
     template<typename T>
-    static ExtFutureState::State state(QFuture<T>& qfuture_derived)
+    static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
     {
         return state(qfuture_derived.d);
     }
