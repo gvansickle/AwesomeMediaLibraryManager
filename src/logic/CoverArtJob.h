@@ -34,11 +34,11 @@ using CoverArtJobPtr = QPointer<CoverArtJob>;
 /*
  *
  */
-class CoverArtJob : public AMLMJob, public UniqueIDMixin<CoverArtJob>
+class CoverArtJob : public AMLMJobT<ExtFuture<QByteArray>>, public UniqueIDMixin<CoverArtJob>
 {
 	Q_OBJECT
 
-	using BASE_CLASS = AMLMJob;
+    using BASE_CLASS = AMLMJobT<ExtFuture<QByteArray>>;
 
 	/**
 	 * @note CRTP: Still need this to avoid ambiguous name resolution.
@@ -65,7 +65,7 @@ public:
 
     QByteArray m_byte_array;
 
-    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+//    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
 
 protected:
 
@@ -75,7 +75,7 @@ protected:
 
 private:
 
-    ExtFutureType m_ext_future;
+//    ExtFutureType m_ext_future;
 
     QUrl m_audio_file_url;
 };

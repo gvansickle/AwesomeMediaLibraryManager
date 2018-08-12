@@ -36,7 +36,7 @@ struct crtp
     T const& underlying() const { return static_cast<T const&>(*this); }
 private:
     crtp(){}
-    /// crtpType<> exists only to differentiate dytes.
+    /// crtpType<> exists only to differentiate types.
     friend crtpType<T>;
 };
 

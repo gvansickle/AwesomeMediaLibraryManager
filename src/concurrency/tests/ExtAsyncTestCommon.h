@@ -310,7 +310,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         retval = make_startedNotCanceled_QFuture<int>();
     }
 
-    GTEST_COUT_qDB << "ReturnFuture initial state:" << state(retval);
+    GTEST_COUT_qDB << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
     EXPECT_TRUE(retval.isStarted());
     EXPECT_FALSE(retval.isFinished());
@@ -328,7 +328,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     static_assert(std::is_same_v<decltype(retval), ReturnFutureT>, "");
 
-    GTEST_COUT_qDB << "RETURNING future:" << state(retval);
+    GTEST_COUT_qDB << "RETURNING future:" << ExtFutureState::state(retval);
 
     EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)

@@ -38,11 +38,11 @@ using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
 /*
  *
  */
-class LibraryRescannerJob: public AMLMJob, public UniqueIDMixin<LibraryRescannerJob>
+class LibraryRescannerJob: public AMLMJobT<ExtFuture<MetadataReturnVal>>, public UniqueIDMixin<LibraryRescannerJob>
 {
     Q_OBJECT
 
-    using BASE_CLASS = AMLMJob;
+    using BASE_CLASS = AMLMJobT<ExtFuture<MetadataReturnVal>>;
 
     /**
      * @note CRTP: Still need this to avoid ambiguous name resolution.

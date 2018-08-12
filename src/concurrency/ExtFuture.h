@@ -1156,7 +1156,7 @@ protected:
 			Q_ASSERT(s_was_ever_called);
 		});
 		// Start watching this ExtFuture.
-		watcher->setFuture(this->future());
+        watcher->setFuture(*this);
 //		qDb() << "RETURNING:" << *retval;
 		return *retval;
 	}

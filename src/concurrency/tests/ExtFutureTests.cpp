@@ -237,9 +237,9 @@ QList<int> results_test(int startval, int iterations, TestFixtureType* fixture)
 //    EXPECT_TRUE(f.isStarted());
 //    EXPECT_FALSE(f.isFinished());
 
-    GTEST_COUT_qDB << "START RESULTS()" << state(f);
+    GTEST_COUT_qDB << "START RESULTS()" << ExtFutureState::state(f);
     QList<int> retval = f.results();
-    GTEST_COUT_qDB << "END RESULTS():" << state(f);
+    GTEST_COUT_qDB << "END RESULTS():" << ExtFutureState::state(f);
 
     // .results() should block until future is finished.
     EXPECT_TRUE(f.isStarted());

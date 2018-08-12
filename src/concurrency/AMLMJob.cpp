@@ -120,29 +120,29 @@ qulonglong AMLMJob::processedSize() const
     return processedAmount(progressUnit());
 }
 
-void AMLMJob::start()
-{
-    QMutexLocker lock(&m_start_vs_dokill_mutex);
+//void AMLMJob::start()
+//{
+//    QMutexLocker lock(&m_start_vs_dokill_mutex);
 
-//    m_watcher = new QFutureWatcher<void>(this);
-//    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
-//    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
-//    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
+////    m_watcher = new QFutureWatcher<void>(this);
+////    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
+////    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
+////    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
 
-    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
-    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
-    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
-    // Note that calling the destructor of (by deleting) the returned future is ok:
-    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
-    // "Note that this neither waits nor cancels the asynchronous computation."
+//    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
+//    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
+//    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
+//    // Note that calling the destructor of (by deleting) the returned future is ok:
+//    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
+//    // "Note that this neither waits nor cancels the asynchronous computation."
 
-    // Indicate to the cancel logic that we did start.
-    m_run_was_started.release();
+//    // Indicate to the cancel logic that we did start.
+//    m_run_was_started.release();
 
-    // Run.
-    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
-//    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
-}
+//    // Run.
+//    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
+////    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
+//}
 
 
 /**
@@ -252,119 +252,119 @@ void AMLMJob::start()
 /// QFutureInterfaceBase::reportFinished();
 /// @endcode
 
-void AMLMJob::run()
-{
-    /// @note We're in an arbitrary thread here probably without an event loop.
+//void AMLMJob::run()
+//{
+//    /// @note We're in an arbitrary thread here probably without an event loop.
 
-    /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
-    /// QMutexLocker locker(&manager->mutex);
+//    /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
+//    /// QMutexLocker locker(&manager->mutex);
 
-    m_run_was_started.release();
+//    m_run_was_started.release();
 
-    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
+//    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
-    qDbo() << "ExtFuture<> state:" << ef.state();
-    if(ef.isCanceled())
-    {
-        // We were canceled before we were started.
-        /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
-        // Report (STARTED | CANCELED | FINISHED)
-        ef.reportFinished();
-        AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
+//    qDbo() << "ExtFuture<> state:" << ef.state();
+//    if(ef.isCanceled())
+//    {
+//        // We were canceled before we were started.
+//        /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
+//        // Report (STARTED | CANCELED | FINISHED)
+//        ef.reportFinished();
+//        AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
-        m_run_returned.release();
-        return;
-    }
-#ifdef QT_NO_EXCEPTIONS
-#error "WE NEED EXCEPTIONS"
-#else
-    try
-    {
-#endif
-        // Start the work by calling the functor.  We should be in the Running state if we're in here.
-        /// @todo But we're not Running here.  Not sure why.
-//        AMLM_ASSERT_EQ(ef.isRunning(), true);
-        qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
-        asDerivedTypePtr()->runFunctor();
-        qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
-    }
-    catch(QException &e)
-    {
-        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-        ef.reportException(e);
-    }
-    catch(...)
-    {
-        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-        ef.reportException(QUnhandledException());
-    }
+//        m_run_returned.release();
+//        return;
+//    }
+//#ifdef QT_NO_EXCEPTIONS
+//#error "WE NEED EXCEPTIONS"
+//#else
+//    try
+//    {
+//#endif
+//        // Start the work by calling the functor.  We should be in the Running state if we're in here.
+//        /// @todo But we're not Running here.  Not sure why.
+////        AMLM_ASSERT_EQ(ef.isRunning(), true);
+//        qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
+//        asDerivedTypePtr()->runFunctor();
+//        qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
+//    }
+//    catch(QException &e)
+//    {
+//        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
+//        ef.reportException(e);
+//    }
+//    catch(...)
+//    {
+//        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
+//        ef.reportException(QUnhandledException());
+//    }
 
-    /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
-    /// QtCreator::runextensions.h::AsyncJob::run() calls runHelper(), which then does this here:
-    /// @code
-    /// // invalidates data, which is moved into the call
-    /// runAsyncImpl(futureInterface, std::move(std::get<index>(data))...); // GRVS: The runFunctor() above.
-    /// if (futureInterface.isPaused())
-    ///         futureInterface.waitForResume();
-    /// futureInterface.reportFinished();
-    /// @endcode
-    /// So it seems we should be safe doing the same thing.
+//    /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
+//    /// QtCreator::runextensions.h::AsyncJob::run() calls runHelper(), which then does this here:
+//    /// @code
+//    /// // invalidates data, which is moved into the call
+//    /// runAsyncImpl(futureInterface, std::move(std::get<index>(data))...); // GRVS: The runFunctor() above.
+//    /// if (futureInterface.isPaused())
+//    ///         futureInterface.waitForResume();
+//    /// futureInterface.reportFinished();
+//    /// @endcode
+//    /// So it seems we should be safe doing the same thing.
 
-    if(ef.isPaused())
-    {
-        // ExtAsync<> is paused, so wait for it to be resumed.
-        qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
-        ef.waitForResume();
-    }
+//    if(ef.isPaused())
+//    {
+//        // ExtAsync<> is paused, so wait for it to be resumed.
+//        qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
+//        ef.waitForResume();
+//    }
 
-    qDbo() << "REPORTING FINISHED";
-    ef.reportFinished();
+//    qDbo() << "REPORTING FINISHED";
+//    ef.reportFinished();
 
-    // We should only have two possible states here, excl. exceptions for the moment:
-    // - Started | Finished
-    // - Started | Canceled | Finished if job was canceled.
-    AMLM_ASSERT_EQ(ef.isStarted(), true);
-    AMLM_ASSERT_EQ(ef.isFinished(), true);
+//    // We should only have two possible states here, excl. exceptions for the moment:
+//    // - Started | Finished
+//    // - Started | Canceled | Finished if job was canceled.
+//    AMLM_ASSERT_EQ(ef.isStarted(), true);
+//    AMLM_ASSERT_EQ(ef.isFinished(), true);
 
-    // Do the post-run work.
+//    // Do the post-run work.
 
-    // Set the three KJob error fields.
-    setKJobErrorInfo(!ef.isCanceled());
+//    // Set the three KJob error fields.
+//    setKJobErrorInfo(!ef.isCanceled());
 
-    qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
-    if(isAutoDelete())
-    {
-        // emitResult() may result in a this->deleteLater(), via finishJob().
-        qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
-    }
+//    qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
+//    if(isAutoDelete())
+//    {
+//        // emitResult() may result in a this->deleteLater(), via finishJob().
+//        qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
+//    }
 
-    // emitResult().
-    // We use a signal/slot here since we're in an arbitrary context.
-    Q_EMIT SIGNAL_internal_call_emitResult();
+//    // emitResult().
+//    // We use a signal/slot here since we're in an arbitrary context.
+//    Q_EMIT SIGNAL_internal_call_emitResult();
 
-    // Notify any possible doKill() that we really truly have stopped the async worker thread.
-    m_run_returned.release();
-}
+//    // Notify any possible doKill() that we really truly have stopped the async worker thread.
+//    m_run_returned.release();
+//}
 
-bool AMLMJob::functorHandlePauseResumeAndCancel()
-{
-    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
+//bool AMLMJob::functorHandlePauseResumeAndCancel()
+//{
+//    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
 
-    if (ef.isPaused())
-    {
-        ef.waitForResume();
-    }
-    if (ef.isCanceled())
-    {
-        // The job has been canceled.
-        // The calling runFunctor() should break out of while() loop.
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+//    if (ef.isPaused())
+//    {
+//        ef.waitForResume();
+//    }
+//    if (ef.isCanceled())
+//    {
+//        // The job has been canceled.
+//        // The calling runFunctor() should break out of while() loop.
+//        return true;
+//    }
+//    else
+//    {
+//        return false;
+//    }
+//}
 
 /////
 /// These are similar to KDevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
@@ -458,6 +458,7 @@ void AMLMJob::SLOT_onAboutToShutdown()
     - We need this object to survive doKill(),
     - We can't do anything else after that, due to finishJob() possibly destroying us.
  */
+#if 0
 bool AMLMJob::doKill()
 {
     // KJob::doKill().
@@ -579,6 +580,7 @@ bool AMLMJob::doResume()
     asDerivedTypePtr()->get_extfuture_ref().setPaused(false);
     return true;
 }
+#endif
 
 void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
 {
@@ -631,40 +633,40 @@ KJob::Unit AMLMJob::progressUnit() const
     return m_progress_unit;
 }
 
-void AMLMJob::setKJobErrorInfo(bool success)
-{
-    //Q_ASSERT(!m_possible_delete_later_pending);
+//void AMLMJob::setKJobErrorInfo(bool success)
+//{
+//    //Q_ASSERT(!m_possible_delete_later_pending);
 
-    // We're still in the underlying ExtAsync::run() context and don't have an event loop here.
-    /// @note GRVS: Threadsafety not clear.  KJob doesn't do any locking FWICT around these variable sets.
-//    AMLM_ASSERT_IN_GUITHREAD();
+//    // We're still in the underlying ExtAsync::run() context and don't have an event loop here.
+//    /// @note GRVS: Threadsafety not clear.  KJob doesn't do any locking FWICT around these variable sets.
+////    AMLM_ASSERT_IN_GUITHREAD();
 
-    // Convert underlying finished to a KJob::result(KJob*) signal, but only in the success case.
-    // We have to be careful we don't call KF5::emitResult() twice.
-    // We'll similarly deal with the fail case in onTWFailed().
-    if(success)
-    {
-        // Set the KJob::error() code.
-        setError(NoError);
-    }
-    else
-    {
-        // Set the KJob error info.
-        if(asDerivedTypePtr()->get_extfuture_ref().isCanceled())
-        {
-            // Cancelled.
-            // KJob
-            setError(KilledJobError);
-        }
-        else
-        {
-            // Some other error.
-            // KJob
-            setError(KJob::UserDefinedError);
-            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(asDerivedTypePtr()->objectName()));
-        }
-    }
-}
+//    // Convert underlying finished to a KJob::result(KJob*) signal, but only in the success case.
+//    // We have to be careful we don't call KF5::emitResult() twice.
+//    // We'll similarly deal with the fail case in onTWFailed().
+//    if(success)
+//    {
+//        // Set the KJob::error() code.
+//        setError(NoError);
+//    }
+//    else
+//    {
+//        // Set the KJob error info.
+//        if(isCanceled())
+//        {
+//            // Cancelled.
+//            // KJob
+//            setError(KilledJobError);
+//        }
+//        else
+//        {
+//            // Some other error.
+//            // KJob
+//            setError(KJob::UserDefinedError);
+//            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(asDerivedTypePtr()->objectName()));
+//        }
+//    }
+//}
 
 void AMLMJob::SLOT_on_destroyed(QObject *obj)
 {

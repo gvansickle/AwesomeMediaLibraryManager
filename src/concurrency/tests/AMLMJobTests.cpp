@@ -57,11 +57,11 @@ using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
 /**
  * Test job derived from AMLMJob.
  */
-class TestAMLMJob1 : public AMLMJob, public UniqueIDMixin<TestAMLMJob1>
+class TestAMLMJob1 : public AMLMJobT<ExtFuture<int>>, public UniqueIDMixin<TestAMLMJob1>
 {
 	Q_OBJECT
 
-	using BASE_CLASS = AMLMJob;
+    using BASE_CLASS = AMLMJobT<ExtFuture<int>>;
 
 	/**
 	 * @note CRTP: Still need this to avoid ambiguous name resolution.
@@ -70,7 +70,7 @@ class TestAMLMJob1 : public AMLMJob, public UniqueIDMixin<TestAMLMJob1>
 	using UniqueIDMixin<TestAMLMJob1>::uniqueQObjectName;
 
 protected:
-	explicit TestAMLMJob1(QObject* parent) : AMLMJob(parent)
+    explicit TestAMLMJob1(QObject* parent) : BASE_CLASS(parent)
 	{
 		// Set our object name.
 		setObjectName(uniqueQObjectName());
@@ -91,7 +91,7 @@ public:
         return retval;
     }
 
-    ExtFutureType& get_extfuture_ref() override { return asDerivedTypePtr()->m_ext_future; }
+    ExtFutureType& get_extfuture_ref() { return this->asDerivedTypePtr()->m_ext_future; }
     TestAMLMJob1* asDerivedTypePtr() override { return this; }
 
     std::atomic_int m_counter {0};
@@ -318,7 +318,7 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
                 });
 
-    ExtFuture<int> ef = j->get_extfuture_ref();
+    ExtFuture<int>& ef = j->get_extfuture_ref();
 
     EXPECT_TRUE(ef.isStarted()) << ef.state();
 //    EXPECT_FALSE(ef.isRunning()) << ef.state();

@@ -33,7 +33,7 @@
 #include "LibraryModel.h"
 
 
-LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
+LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJobT(parent)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
@@ -117,7 +117,7 @@ void LibraryRescannerJob::runFunctor()
     // We've either completed our work or been cancelled.
     // Either way, defaultEnd() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
-    if(!wasCancelRequested<ExtFutureType>())
+    if(!wasCancelRequested())
     {
     	setSuccessFlag(true);
     }
