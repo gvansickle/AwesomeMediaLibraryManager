@@ -91,7 +91,6 @@ public:
         return retval;
     }
 
-    ExtFutureType& get_extfuture_ref() { return this->asDerivedTypePtr()->m_ext_future; }
     TestAMLMJob1* asDerivedTypePtr() override { return this; }
 
     std::atomic_int m_counter {0};
@@ -125,9 +124,6 @@ protected:
 
         setSuccessFlag(!wasCancelRequested());
     }
-
-private:
-    ExtFuture<int> m_ext_future;
 };
 
 ///
@@ -231,7 +227,7 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
 
         ;});
 
-    watcher.setFuture(dsj->get_extfuture_ref());
+    watcher.setFuture(dsj->get_extfuture_ref().d);
 
     // Start the job.
     dsj->start();

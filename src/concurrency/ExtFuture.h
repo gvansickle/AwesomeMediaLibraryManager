@@ -724,6 +724,13 @@ public:
     /// @note Do we need a non-default copy constructor?
 	ExtFuture(const ExtFuture<T>& other) = default;
 
+    /// Copy construct from QFuture.
+    ExtFuture(QFuture<T>& f) : BASE_CLASS(f) {}
+    /// Move construct from QFuture.
+    ExtFuture(QFuture<T>&& f) : BASE_CLASS(f) {}
+
+    explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
+        : BASE_CLASS::d(*p) {}
 
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.

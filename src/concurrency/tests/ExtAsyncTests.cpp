@@ -167,7 +167,11 @@ void QtConcurrentRunFutureStateOnCancelGuts()
 
     std::atomic_int counter {0};
 
-    FutureTypeT the_future = make_startedNotCanceled_QFuture<int>();
+    FutureTypeT the_future;
+    if constexpr (std::is_same_v<FutureTypeT, QFuture<int>>)
+    {
+        the_future = make_startedNotCanceled_QFuture<int>();
+    }
 
     ASSERT_TRUE(the_future.isStarted());
     ASSERT_FALSE(the_future.isCanceled());
@@ -275,7 +279,11 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
      * Since a QFuture<> starts out canceled, we will get into the callback with the future Started | Canceled.
      */
 
-    FutureTypeT f = make_startedNotCanceled_QFuture<int>();
+    FutureTypeT f;
+    if constexpr (std::is_same_v<FutureTypeT, QFuture<int>>)
+    {
+        f = make_startedNotCanceled_QFuture<int>();
+    }
 
     std::function<int(const int&)> lambda = [&](const int& the_passed_value) -> int {
         GTEST_COUT << "Entered callback, passed value:" << the_passed_value;

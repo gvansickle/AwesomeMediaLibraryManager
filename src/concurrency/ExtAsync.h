@@ -271,7 +271,7 @@ static inline void name_qthread()
 //        EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
         retval = QFutureT(&fi);
 
-        qDb() << "FUTURE:" << state(retval);
+        qDb() << "FUTURE:" << ExtFutureState::state(retval);
 
         // retval is passed by copy here.
 //        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);

@@ -31,6 +31,9 @@
 
 #include "utils/DebugHelpers.h"
 
+template <class T>
+class ExtFuture;
+
 /**
  * An extended QFutureWatcher<> class.
  *
@@ -91,6 +94,11 @@ public:
 	 * Overload of setFuture() which takes a QFutureInterface<T> instead of a QFuture<T>.
 	 */
 	ExtFutureWatcher<T>& setFuture(QFutureInterface<T> &future_interface);
+
+    /**
+     * Overload of setFuture() which takes an ExtFuture<T>& instead of a QFuture<T>&.
+     */
+    ExtFutureWatcher<T>& setFuture(const ExtFuture<T> &ext_future);
 
 	/// @name Signal callback interface.
 	/// @{
@@ -186,7 +194,17 @@ inline ExtFutureWatcher<T>& ExtFutureWatcher<T>::setFuture(QFutureInterface<T>& 
 	this->moveToThread(m_utility_thread);
 
 	BASE_CLASS::setFuture(future_interface.future());
-	return *this;
+    return *this;
+}
+
+template<typename T>
+ExtFutureWatcher<T>& ExtFutureWatcher<T>::setFuture(const ExtFuture<T>& ext_future)
+{
+    // Move ourselves to the utility thread.
+    this->moveToThread(m_utility_thread);
+
+    BASE_CLASS::setFuture(ext_future);
+    return *this;
 }
 
 template<typename T>

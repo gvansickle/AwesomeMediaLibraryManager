@@ -464,7 +464,7 @@ protected:
     /// Last-stage wrapper around the runFunctor().
     /// Handles most of the common ExtFuture start/finished/canceled/exception code.
     /// Should not need to be overridded in derived classes.
-    virtual void run();
+//    virtual void run();
 
     /**
      * The function which is run by ExtAsync::run() to do the work.

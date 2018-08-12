@@ -204,22 +204,22 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
 {
     TC_ENTER();
 
-    ExtFuture<Unit> result;
-    ExtFuture<Unit> f;
+    ExtFuture<Unit> promise_side;
+    ExtFuture<Unit> future_side;
 
-    ASSERT_TRUE(f.isStarted());
+    ASSERT_TRUE(future_side.isStarted());
 
-    result.reportStarted();
-    f = result.future();
+    promise_side.reportStarted();
+    future_side = promise_side;
 
-    ASSERT_TRUE(f.isStarted());
+    ASSERT_TRUE(future_side.isStarted());
 
-    ASSERT_FALSE(result.isCanceled());
-    f.cancel();
+    ASSERT_FALSE(promise_side.isCanceled());
+    future_side.cancel();
 
-    ASSERT_TRUE(result.isCanceled());
+    ASSERT_TRUE(promise_side.isCanceled());
 
-    result.reportFinished();
+    promise_side.reportFinished();
 
     TC_DONE_WITH_STACK();
     TC_EXIT();
