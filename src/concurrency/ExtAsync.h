@@ -235,14 +235,14 @@ static inline void name_qthread()
         static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
 
         ExtFutureR retval;
-        qDb() << "FUTURE:" << state(retval);
+        qDb() << "FUTURE:" << retval.state();
 
         // retval is passed by copy here.
 //        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
         QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
-            qDb() << "FUTURE:" << state(ef);
+            qDb() << "FUTURE:" << ef.state();
             callback_fn(ef);
-            qDb() << "POST CALLBACK FUTURE:" << state(ef);
+            qDb() << "POST CALLBACK FUTURE:" << ef.state();
         }, std::forward<ExtFutureR>(retval));
 
 //        QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
@@ -255,7 +255,7 @@ static inline void name_qthread()
 
     template<class CallbackType,
              class QFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
-             REQUIRES(std::is_convertible_v<QFutureT, QFuture<void>>)
+             REQUIRES(!isExtFuture_v<QFutureT> && std::is_convertible_v<QFutureT, QFuture<void>>)
              >
     auto run_efarg(CallbackType&& callback) -> QFutureT
     {

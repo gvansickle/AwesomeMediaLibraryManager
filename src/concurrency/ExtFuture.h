@@ -613,24 +613,6 @@ static ExtFutureState::State state(const ExtFuture<T>& ef)
     return ef.state();
 }
 
-template <typename T>
-QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
-{
-	QDebugStateSaver saver(dbg);
-
-    dbg << "ExtFuture<T>(" << extfuture.state() /*.debug_string()*/ << ")";
-
-	return dbg;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
-{
-    outstream << "ExtFuture<T>( state=" << qUtf8Printable(toString(extfuture.state())) << ")";
-
-    return outstream;
-}
-
 //Q_DECLARE_METATYPE(ExtFuture);
 //Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
 
@@ -1340,6 +1322,23 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
 }
 
+template <typename T>
+QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
+{
+    QDebugStateSaver saver(dbg);
+
+    dbg << "ExtFuture<T>(" << extfuture.state() /*.debug_string()*/ << ")";
+
+    return dbg;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
+{
+    outstream << "ExtFuture<T>( state=" << qUtf8Printable(toString(extfuture.state())) << ")";
+
+    return outstream;
+}
 
 #endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
 

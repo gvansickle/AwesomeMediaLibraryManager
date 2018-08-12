@@ -315,16 +315,16 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     EXPECT_TRUE(retval.isStarted());
     EXPECT_FALSE(retval.isFinished());
 
-//    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
-//    {
-//        GTEST_COUT_qDB << "Qt run()";
-//        auto qrunfuture = QtConcurrent::run(lambda, retval);
-//    }
-//    else
-//    {
+    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+    {
+        GTEST_COUT_qDB << "Qt run()";
+        auto qrunfuture = QtConcurrent::run(lambda, retval);
+    }
+    else
+    {
         GTEST_COUT_qDB << "ExtAsync::run()";
         retval = ExtAsync::run_efarg(lambda);
-//    }
+    }
 
     static_assert(std::is_same_v<decltype(retval), ReturnFutureT>, "");
 

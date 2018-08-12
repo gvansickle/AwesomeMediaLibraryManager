@@ -51,7 +51,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
     EXPECT_TRUE(retval.isStarted());
     EXPECT_FALSE(retval.isFinished());
 
-    GTEST_COUT_qDB << "delayed_string_func_1() returning future:" << retval.state() << std::endl;
+    GTEST_COUT_qDB << "delayed_string_func_1() returning future:" << retval.state();
 
     return retval.result();
 }
