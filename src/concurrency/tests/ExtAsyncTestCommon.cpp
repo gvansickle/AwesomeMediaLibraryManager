@@ -25,8 +25,9 @@
 
 trackable_generator_base::trackable_generator_base(ExtAsyncTestsSuiteFixtureBase *fixture)
 {
-    auto test_id = fixture->get_test_id_string();
+    auto test_id = fixture->get_test_id_string_from_fixture();
     m_generator_id = test_id;
+    m_belongs_to_test_case_id = fixture->get_test_id_string_from_fixture();
 }
 
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
@@ -100,6 +101,10 @@ void InterState::unregister_generator(trackable_generator_base *generator)
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
     SCOPED_TRACE("unregister_generator");
     GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
+
+    // Only makes sense if a test case is running.
+//    EXPECT_EQ(m_currently_running_test.empty()) << "No test case running when trying to unregister generator";
+
     // Get the topmost generator.
     auto tgen = m_generator_stack.back();
     EXPECT_STREQ(tgen->get_generator_id().c_str(), generator->get_generator_id().c_str()) << "Unregistering incorrect generator: Top: " << tgen->get_generator_id() << ", Unreg: " << generator->get_generator_id();
@@ -181,7 +186,7 @@ bool ExtAsyncTestsSuiteFixtureBase::check_generators()
     return m_interstate.check_generators();
 }
 
-std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string()
+std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string_from_fixture()
 {
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
@@ -190,12 +195,14 @@ std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string()
 
 void ExtAsyncTestsSuiteFixtureBase::register_generator(trackable_generator_base *generator)
 {
+    ASSERT_TRUE(m_interstate.is_test_currently_running()) << "No test was running";
     m_interstate.register_generator(generator);
 
 }
 
 void ExtAsyncTestsSuiteFixtureBase::unregister_generator(trackable_generator_base *generator)
 {
+    ASSERT_TRUE(m_interstate.is_test_currently_running()) << "No test was running";
     m_interstate.unregister_generator(generator);
 }
 

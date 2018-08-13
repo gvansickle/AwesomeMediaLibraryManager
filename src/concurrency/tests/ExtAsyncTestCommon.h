@@ -49,8 +49,11 @@ public:
 
     std::string get_generator_id() const { return m_generator_id; }
 
+    std::string get_belongs_to_test_case_id() const { return m_belongs_to_test_case_id; }
+
 protected:
     std::string m_generator_id;
+    std::string m_belongs_to_test_case_id;
 };
 
 
@@ -143,7 +146,7 @@ public:
      * Returns the Fixture_TestCase name of the currently running test.
      * @note Deliberately not threadsafe.  Only call this in the TC_ENTER() and TC_EXIT() macros.
      */
-    std::string get_test_id_string();
+    std::string get_test_id_string_from_fixture();
 
     void register_generator(trackable_generator_base* generator);
 
@@ -157,9 +160,8 @@ public:
 
 #define TC_ENTER() \
     /* The name of this test as a static std::string. */ \
-    static const std::string static_test_id_string {this->get_test_id_string()}; \
+    static const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
     starting(static_test_id_string); \
-    ExtAsync::name_qthread();\
     static std::atomic_bool test_func_called {true}; \
     static std::atomic_bool test_func_exited {false}; \
     static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \

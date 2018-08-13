@@ -64,7 +64,7 @@ public:
 		this->setObjectName("ExtFutureWatcher");
 		// Give the utility thread a name.
 		m_utility_thread->setObjectName("UtilityThread");
-		// Connect the finished signal to the deleteLater() slot.
+        // Connect the QThread's finished signal to the deleteLater() slot.
 		QObject::connect(m_utility_thread, &QThread::finished, &QThread::deleteLater);
 		m_utility_thread->start();
 	}

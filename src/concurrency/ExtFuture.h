@@ -831,36 +831,16 @@ public:
         /// as a "private" mutable d value member and does this:
         ///     QList<T> results() const { return d.results(); }
         /// ...so hopefully this should be OK.
-
-        return this->BASE_CLASS::results();
+        qDb() << "IN GET, " << *this;
+        auto retval = this->results();
+        qDb() << "LEAVING GET, " << *this;
 //		return this->future().results();
+        return retval;
     }
-
-//    QList<T> results() // const
-//    {
-//        return this->BASE_CLASS::results();
-//    }
 
     /**
      * QFuture<T> has result(), results(), resultAt(), and isResultReadyAt().
      */
-
-    /**
-     * Like .get(), but only returns the first value in the ExtFuture<>'s QList.
-     * Not sure why this doesn't exist in sub-QFuture<> classes, but its doesn't.
-     */
-//    inline T result() //const
-//    {
-////        return const_cast<ExtFuture<T>*>(this)->resultAt(0);
-//        return this->future().resultAt(0);
-//    }
-
-//    inline T resultAt(int index) //const
-//    {
-////        const_cast<ExtFuture<T>*>(this)->waitForResult(index);
-////        return const_cast<ExtFuture<T>*>(this)->resultReference(index);
-//        return this->future().resultAt(index);
-//    }
 
 	/// @name .then() overloads.
 	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like
@@ -923,6 +903,17 @@ public:
 		return then(QApplication::instance(), std::forward<F>(then_callback));
 	}
 
+//    template <class ThenCallbackType, class R = ct::return_type_t<ThenCallbackType>,
+//              REQUIRES(isExtFuture_v<R> && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+//    ExtFuture<R> then(ThenCallbackType&& then_callback)
+//    {
+//        QList<R> retval_contents;
+
+//        return then([&](ExtFuture<T> ef){
+//            retval_contents = ef.results();
+//            }).;
+//    }
+
 	/// @} // END .then() overloads.
 
 	/// @name .tap() overloads.
@@ -968,22 +959,36 @@ public:
 
     /**
      * tap() overload for "streaming" ExtFutures.
-     * Callback takes a reference to this, a begin index, and an end index.
+     * Callback takes a reference to this, a begin index, and an end index:
+     * @code
+     *      void TapCallback(ExtFuture<T>& ef, int begin, int end)
+     * @endcode
      */
     template<typename TapCallbackType,
              REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&, int, int>)>
-    ExtFuture<T>& tap(TapCallbackType&& tap_callback)
+    ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
     {
-        EnsureFWInstantiated();
+//        EnsureFWInstantiated();
 
-        Q_ASSERT(this->resultCount() == 0);
-        connect_or_die(m_extfuture_watcher, &ExtFutureWatcher<T>::resultsReadyAt,
-                       m_extfuture_watcher, [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) {
-            qDb() << "IN TAP CALLBACK";
+        ExtFuture<T>* ef_copy = new ExtFuture<T>;
+
+        auto* watcher = new_self_destruct_futurewatcher(context);
+
+        connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt,
+                       context, [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) mutable {
+            qDb() << "IN TAP CALLBACK, begin:" << begin << ", end:" << end;
             tap_cb(*this, begin, end);
             ;});
+        connect_or_die(watcher, &QFutureWatcher<T>::finished, context, [=]() mutable {
+            qDb() << "FUTURE FINISHED:" << *this;
+            *ef_copy = *this;
+            Q_ASSERT(ef_copy->isFinished());
+            qDb() << "FUTURE REALLY FINISHED" << *ef_copy;
+        });
 
-        return *this;
+        watcher->setFuture(*this);
+
+        return *ef_copy;
     }
 
     /**
@@ -1043,8 +1048,6 @@ public:
 		return retval;
 	}
 
-
-
 	/**
 	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
 	 * event loop running.
@@ -1053,9 +1056,6 @@ public:
 	 * semi-blocks the thread.
 	 */
     void wait();
-
-	/// @todo
-//	void await();
 
 	/**
      * Get this' current state as a ExtFutureState::State.
@@ -1091,6 +1091,25 @@ protected:
             m_extfuture_watcher->setFuture(*this);
 		}
 	}
+
+    QFutureWatcher<T>* new_self_destruct_futurewatcher(QObject* parent = nullptr)
+    {
+        QFutureWatcher<T>* retval = new QFutureWatcher<T>(parent);
+
+        connect_or_die(retval, &QFutureWatcherBase::finished, [=](){
+            qDb() << "FINISHED";
+            retval->deleteLater();
+        });
+        connect_or_die(retval, &QFutureWatcherBase::canceled, [=](){
+            qDb() << "CANCELED";
+            retval->deleteLater();
+            ;});
+//        connect_or_die(retval, &QFutureWatcherBase::destroyed, [=](){
+//            qDb() << "DESTROYED";
+//            ;});
+
+        return retval;
+    }
 
 	/**
 	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
@@ -1202,7 +1221,7 @@ protected:
 	}
 
 
-	ExtFutureWatcher<T>* m_extfuture_watcher = nullptr;
+    ExtFutureWatcher<T>* m_extfuture_watcher {nullptr};
 };
 
 template<typename T>
@@ -1336,20 +1355,26 @@ ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception
 	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
 }
 
+/**
+ * QDebug stream operator.
+ */
 template <typename T>
 QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 {
     QDebugStateSaver saver(dbg);
 
-    dbg << "ExtFuture<T>(" << extfuture.state() /*.debug_string()*/ << ")";
+    dbg << "ExtFuture<T>( state=" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
 
     return dbg;
 }
 
+/**
+ * srd::ostream stream operator (for gtest).
+ */
 template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
-    outstream << "ExtFuture<T>( state=" << qUtf8Printable(toString(extfuture.state())) << ")";
+    outstream << "ExtFuture<T>( state=" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << qUtf8Printable(toString(extfuture.state())) << ")";
 
     return outstream;
 }

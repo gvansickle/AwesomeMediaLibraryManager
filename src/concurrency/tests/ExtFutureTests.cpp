@@ -291,6 +291,8 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {
     TC_ENTER();
 
+    static std::atomic_int num_tap_completions {0};
+
     using eftype = ExtFuture<int>;
 
     QList<int> expected_results {1,2,3,4,5,6};
@@ -306,19 +308,26 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
     GTEST_COUT_qDB << "Attaching tap and get()";
 
-    async_results_from_get = ef.tap([&](eftype& ef, int begin, int end) {
+//    async_results_from_get =
+    ef.tap(QCoreApplication::instance(), [&](eftype& ef, int begin, int end) {
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
             GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
             async_results_from_tap.push_back(ef.resultAt(i));
+            num_tap_completions++;
         }
-    }).get();
+    });
 
-    EXPECT_FALSE(ef.isFinished());
+    GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << ef;
 
-    /// @todo AGAIN THIS DOESN'T BLOCK
-//    async_results_from_get = ef.results();
+    ef.wait();
+
+    GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << ef;
+    async_results_from_get = ef.results();
+
+    EXPECT_TRUE(ef.isFinished());
+    EXPECT_EQ(num_tap_completions, 6);
 
     // .get() above should block.
     EXPECT_TRUE(ef.isFinished());
