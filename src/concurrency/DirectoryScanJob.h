@@ -63,7 +63,7 @@ Q_SIGNALS:
      */
     void entries(DirScanResult dsr, KJob* kjob);
 
-	void SIGNAL_resultsReadyAt(ExtFuture<DirScanResult>& ef, int begin, int end);
+    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
 
 protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
@@ -86,7 +86,7 @@ public:
 											   QDirIterator::IteratorFlags flags);
 
 
-//    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
 
 protected:
 
@@ -96,7 +96,7 @@ protected:
 
 protected Q_SLOT:
 
-	 void SLOT_onResultsReadyAt(ExtFutureType& ef, int begin, int end) override
+     void SLOT_onResultsReadyAt(const ExtFutureType& ef, int begin, int end) override
 	 {
 		 qDbo() << "GOT RESULTS:" << begin << end;
 

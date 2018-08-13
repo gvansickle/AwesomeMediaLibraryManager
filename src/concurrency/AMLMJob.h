@@ -64,12 +64,6 @@ struct AMLMJob_traits
 
 };
 
-template <class ExtFutureT>
-struct AMLMJobFutureHelper
-{
-    ExtFutureT m_ext_future;
-};
-
 /**
 * Where Does The State Live?
 *
@@ -637,20 +631,16 @@ class AMLMJobT : public AMLMJob
 
 public:
 
-	using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
+    using ExtFutureWatcherT = ExtFutureWatcher<typename ExtFutureT::value_type>;
 
-	explicit AMLMJobT(QObject* parent = nullptr) : BASE_CLASS(parent), m_ext_watcher(parent)
+    explicit AMLMJobT(QObject* parent = nullptr, QObject* watcher_parent = nullptr)
+        : BASE_CLASS(parent), m_ext_watcher(0, watcher_parent)
 	{
 		qDbo() << "WORKED:" << m_ext_future.state();
 
-		// Hook up signals and such to the ExtFuture<T>.
-		HookUpExtFutureSignals();
+        // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
+        HookUpExtFutureSignals(&m_ext_watcher);
 	}
-
-    void setFuture(ExtFutureT& ef)
-    {
-        m_ext_future = ef;
-    }
 
     ExtFutureT& get_extfuture_ref()
     {
@@ -677,13 +667,13 @@ public:
         m_run_was_started.release();
 
         // Run.
-        ExtAsync::run(this, &AMLMJobT::run);
+        ExtAsync::run(this, &AMLMJobT<ExtFutureT>::run);
     //    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
     }
 
 protected Q_SLOT:
 
-    virtual void SLOT_onResultsReadyAt(ExtFutureT& ef, int begin, int end) {}
+    virtual void SLOT_onResultsReadyAt(const ExtFutureT& ef, int begin, int end) {}
 
 
 protected:
@@ -697,7 +687,7 @@ protected:
 
         m_run_was_started.release();
 
-        auto& ef = asDerivedTypePtr()->get_extfuture_ref();
+        auto& ef = m_ext_future;
 
         qDbo() << "ExtFuture<> state:" << ef.state();
         if(ef.isCanceled())
@@ -937,21 +927,26 @@ protected:
         }
     }
 
-	void HookUpExtFutureSignals()
+    template <class WatcherType>
+    void HookUpExtFutureSignals(WatcherType* watcher)
 	{
 		// Main connection we need is results.
 		// resultsReadyAt(range): There are results ready immediately at the given index range.
-		connect_or_die(&m_ext_watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
-					   [=](int beginIndex, int endIndex) {
-			// Directly call the overridden slot with all the info needed to get the results.
-			/// @todo Hold extfuture here.
-			SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
-			;});
+//		connect_or_die(&m_ext_watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
+//					   [=](int beginIndex, int endIndex) {
+//			// Directly call the overridden slot with all the info needed to get the results.
+//			/// @todo Hold extfuture here.
+//			SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
+//            });
+        watcher->connect_onResultsReadyAt(QApplication::instance(), [=](const ExtFutureT& ef, int beginIndex, int endIndex) {
+            SLOT_onResultsReadyAt(ef, beginIndex, endIndex);
+            });
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
 
 		// All connections made, so set the watched future.
+        // "To avoid a race condition, it is important to call this function after doing the connections."
         m_ext_watcher.setFuture(m_ext_future);
 	}
 

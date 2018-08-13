@@ -90,7 +90,7 @@ protected:
         SCOPED_TRACE("InFunctor");
 
         // Do some work...
-        for(int i =0; i<10; i++)
+        for(int i = 0; i<10; i++)
         {
             GTEST_COUT << "Sleeping for 1 second\n";
             QTest::qSleep(1000);
@@ -134,6 +134,33 @@ TEST_F(AMLMJobTests, SynchronousExecTest)
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
     j->setAutoDelete(false);
+
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    EXPECT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    EXPECT_TRUE(kjob_result_spy.isValid());
+
+    bool status = j->exec();
+
+    EXPECT_EQ(status, true);
+
+    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
+    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 1);
+
+    j->deleteLater();
+
+    TC_EXIT();
+}
+
+TEST_F(AMLMJobTests, SynchronousExecTestWithAutoDelete)
+{
+    TC_ENTER();
+
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
+    j->setAutoDelete(true);
 
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     EXPECT_TRUE(kjob_finished_spy.isValid());

@@ -33,7 +33,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-    : BASE_CLASS(parent), m_dir_url(dir_url), m_name_filters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
+    : BASE_CLASS(parent, this), m_dir_url(dir_url), m_name_filters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
@@ -45,10 +45,10 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 
 	// Hook things up in here.
 	/// @todo virtual?
-	m_ext_future.tap([=](DirScanResult dsr) {
-		qDbo() << "GOT HERE";
-		Q_EMIT entries(dsr, this);
-    });
+//	m_ext_future.tap([=](DirScanResult dsr) {
+//		qDbo() << "GOT HERE";
+//		Q_EMIT entries(dsr, this);
+//    });
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()

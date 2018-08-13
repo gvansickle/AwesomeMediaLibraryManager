@@ -20,15 +20,24 @@
 #ifndef UTILS_CONCURRENCY_EXTFUTUREWATCHER_H_
 #define UTILS_CONCURRENCY_EXTFUTUREWATCHER_H_
 
-#include <QFutureWatcher>
-
+// Std C++
 #include <functional>
 #include <limits> // For numerical_limits.
 
+// Future Std C++
+#include <future/future_type_traits.hpp>
+#include <future/function_traits.hpp>
+#include <future/cpp14_concepts.hpp>
+#include <future/deduced_type.hpp>
+#include <future/Unit.hpp>
+
+// Qt5
+#include <QFutureWatcher>
 #include <QApplication>
 #include <QDebug>
 #include <QThread>
 
+// Ours
 #include "utils/DebugHelpers.h"
 
 template <class T>
@@ -51,21 +60,42 @@ public:
 	using OnProgressWithTextChangeType = std::function<void(int, int, int, QString)>;
 	using OnReportResultType = std::function<void(T, int)>;
 
-	explicit ExtFutureWatcher(QObject *parent = nullptr) : QFutureWatcher<T>(parent), m_utility_thread(new QThread(/*no parent*/))
+    explicit ExtFutureWatcher(int dummy, QObject *parent = nullptr)
+        : QFutureWatcher<T>(parent)
+    {
+        qWr() << "CONSTRUCTOR CALLED WITH ONLY PARENT:" << parent;
+
+        {
+            // Work just like a normal QFutureWatcher<T>.
+            // Give ourselves a default name.
+            this->setObjectName("ExtFutureWatcher");
+        }
+//        else
+//        {
+//            Q_ASSERT_X(0, __func__, "NOT IMPLEMENTED");
+//        }
+    }
+
+    explicit ExtFutureWatcher(QObject *parent = nullptr, QObject* thread_parent = nullptr)
+        : QFutureWatcher<T>(parent), m_utility_thread(new QThread(thread_parent))
 	{
 		// @note We don't give the QThread ourselves as a parent, so that it doesn't get deleted
 		// before we do.  Since we'll be running in that thread, that's an important safety tip.
 		if(parent != nullptr)
 		{
 			// If we're created with a parent, we can't moveToThread() later.
-			qWarning() << "CONSTRUCTOR CALLED WITH NON-NULL PARENT:" << parent;
+            qWr() << "CONSTRUCTOR CALLED WITH NON-NULL PARENT:" << parent;
 		}
+        if(thread_parent != nullptr)
+        {
+            qWr() << "CONSTRUCTOR CALLED WITH NON-NULL THREAD PARENT:" << parent;
+        }
 		// Give ourselves a default name.
 		this->setObjectName("ExtFutureWatcher");
 		// Give the utility thread a name.
 		m_utility_thread->setObjectName("UtilityThread");
         // Connect the QThread's finished signal to the deleteLater() slot.
-		QObject::connect(m_utility_thread, &QThread::finished, &QThread::deleteLater);
+        connect_or_die(m_utility_thread, &QThread::finished, &QThread::deleteLater);
 		m_utility_thread->start();
 	}
 
@@ -75,19 +105,22 @@ public:
 	/// so we're good.  Marking this override to avoid confusion.
 	~ExtFutureWatcher() override
 	{
-		// I have no idea if this is the right way to go about this.
-		// It's definitely too much to be doing in a destructor, but hey, this is Qt, when in Rome....
-		// Move ourselves off the utility thread to the main thread, so we can wait for the utility thread to quit.
-		// Note: Doesn't seem to make any difference as long as we don't wait(), and use deleteLater().
-		//this->moveToThread(QApplication::instance()->thread());
-		qDebug() << "QUITTING UTILITY THREAD";
-		m_utility_thread->quit();
-		// Note: Waiting here seems to be useless.  We don't seem to have been moved to the main thread
-		// by the time we get here, and we can't wait on our own threac.
-		//qDebug() << "WAITING FOR UTILITY THREAD TO QUIT";
-		//m_utility_thread->wait();
-		qDebug() << "DELETELATER utilitythread";
-		m_utility_thread->deleteLater();
+        if(m_utility_thread)
+        {
+            // I have no idea if this is the right way to go about this.
+            // It's definitely too much to be doing in a destructor, but hey, this is Qt, when in Rome....
+            // Move ourselves off the utility thread to the main thread, so we can wait for the utility thread to quit.
+            // Note: Doesn't seem to make any difference as long as we don't wait(), and use deleteLater().
+            //this->moveToThread(QApplication::instance()->thread());
+            qDebug() << "QUITTING UTILITY THREAD";
+            m_utility_thread->quit();
+            // Note: Waiting here seems to be useless.  We don't seem to have been moved to the main thread
+            // by the time we get here, and we can't wait on our own threac.
+            //qDebug() << "WAITING FOR UTILITY THREAD TO QUIT";
+            //m_utility_thread->wait();
+            qDebug() << "DELETELATER utilitythread";
+            m_utility_thread->deleteLater();
+        }
 	}
 
 	/**
@@ -129,6 +162,21 @@ public:
 		return *this;
 	}
 
+    template <class ResultsReadyAtCallback,
+              REQUIRES(ct::is_invocable_r_v<void, ResultsReadyAtCallback, const ExtFuture<T>&, int, int>)>
+    ExtFutureWatcher<T>& connect_onResultsReadyAt(QObject* context, ResultsReadyAtCallback&& callback)
+    {
+        /// @todo CONTEXT
+        if(context == nullptr)
+        {
+            context = this;
+        }
+        connect_or_die(this, &ExtFutureWatcher::resultsReadyAt, context, [=](int begin, int end){
+            callback(this->future(), begin, end);
+        });
+        return *this;
+    }
+
 	template <typename F>
 	ExtFutureWatcher<T>& then(QObject* context, F&& func)
 	{
@@ -156,7 +204,7 @@ protected /*slots*/: // Template, can't have "real" slots.
 protected:
 
 	/// The thread in which the callbacks will be executed.
-	QThread* m_utility_thread;
+    QThread* m_utility_thread {nullptr};
 
 	void connectAllOnProgressCallbacks();
 
