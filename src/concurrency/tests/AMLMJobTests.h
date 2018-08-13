@@ -33,37 +33,20 @@
 //#include <gmock/gmock-matchers.h>
 
 // Ours
-#include <tests/TestHelpers.h>
+//#include <tests/TestHelpers.h>
+#include "ExtAsyncTestCommon.h"
 
 
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for AMLMJobTests.
  */
-class AMLMJobTests : public ::testing::Test
+class AMLMJobTests : public ExtAsyncTestsSuiteFixtureBase
 {
 protected:
 
-	void SetUp() override;
-	void TearDown() override;
 
 	// Objects declared here can be used by all tests in this Fixture.
 
-	/// Map of test cases which have finished.
-	std::set<std::string> m_finished_set;
-	std::mutex m_finished_map_mutex;
-
-	bool has_finished(std::string func)
-	{
-		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-		return m_finished_set.count(func) > 0;
-
-	}
-
-	void finished(std::string func)
-	{
-		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-		m_finished_set.insert(func);
-	}
 };
 
 #endif /* SRC_CONCURRENCY_TESTS_AMLMJOBTESTS_H_ */

@@ -40,18 +40,6 @@
 #include <src/concurrency/DirectoryScanJob.h>
 
 
-void AMLMJobTests::SetUp()
-{
-	GTEST_COUT << "SetUp()" << std::endl;
-}
-
-void AMLMJobTests::TearDown()
-{
-	GTEST_COUT << "TearDown()" << std::endl;
-}
-
-
-
 class TestAMLMJob1;
 using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
 /**
@@ -133,10 +121,7 @@ protected:
 
 TEST_F(AMLMJobTests, ThisShouldPass)
 {
-    EXPECT_FALSE(has_finished(__PRETTY_FUNCTION__));
     EXPECT_TRUE(true);
-	finished(__PRETTY_FUNCTION__);
-    EXPECT_TRUE(has_finished(__PRETTY_FUNCTION__));
 }
 
 TEST_F(AMLMJobTests, SynchronousExecTest)
@@ -153,8 +138,8 @@ TEST_F(AMLMJobTests, SynchronousExecTest)
 
     EXPECT_EQ(status, true);
 
-    GTEST_COUT << "FINISHED CT:" << kjob_finished_spy.count();
-    GTEST_COUT << "RESULT CT:" << kjob_result_spy.count();
+    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
+    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
 
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
