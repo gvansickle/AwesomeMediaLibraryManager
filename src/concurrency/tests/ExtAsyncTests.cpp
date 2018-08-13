@@ -722,7 +722,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 	static std::atomic_bool ran_then {false};
 
 	TC_ENTER();
-    TC_EXPECT_THIS_TC();
 
     using FutureType = ExtFuture<QString>;
 

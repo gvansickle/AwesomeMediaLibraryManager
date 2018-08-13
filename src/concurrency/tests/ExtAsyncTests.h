@@ -39,7 +39,7 @@
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  */
-class ExtAsyncTestsSuiteFixture : public ExtAsyncTestsSuiteFixtureBase//::testing::Test
+class ExtAsyncTestsSuiteFixture : public ExtAsyncTestsSuiteFixtureBase
 {
 //public:
 //    // For type-parameterized tests.

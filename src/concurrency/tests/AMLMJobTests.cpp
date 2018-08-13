@@ -121,11 +121,17 @@ protected:
 
 TEST_F(AMLMJobTests, ThisShouldPass)
 {
+    TC_ENTER();
+
     EXPECT_TRUE(true);
+
+    TC_EXIT();
 }
 
 TEST_F(AMLMJobTests, SynchronousExecTest)
 {
+    TC_ENTER();
+
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
     j->setAutoDelete(false);
 
@@ -143,10 +149,14 @@ TEST_F(AMLMJobTests, SynchronousExecTest)
 
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
+
+    TC_EXIT();
 }
 
 TEST_F(AMLMJobTests, ThenTest)
 {
+    TC_ENTER();
+
     QObject* ctx = new QObject(qApp);
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
     j->setAutoDelete(false);
@@ -183,11 +193,15 @@ TEST_F(AMLMJobTests, ThenTest)
     QList<int> extf_int = j->get_extfuture_ref().get();
 
     EXPECT_EQ(extf_int.size(), 10);
+
+    TC_EXIT();
 }
 
 
 TEST_F(AMLMJobTests, DirScanCancelTest)
 {
+    TC_ENTER();
+
     ExtFutureWatcher<DirScanResult> watcher;
 
 	// Dummy dir so the dir scanner job has something to chew on.
@@ -232,6 +246,7 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
     dsj->kill();
 
 //    EXPECT_EQ(dsj->get_extfuture_ref(), );
+    TC_EXIT();
 }
 
 TEST_F(AMLMJobTests, CancelTest)

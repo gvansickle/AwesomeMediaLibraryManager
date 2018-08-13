@@ -165,7 +165,9 @@ public:
     static std::atomic_bool test_func_called {true}; \
     static std::atomic_bool test_func_exited {false}; \
     static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
-    static std::atomic_bool test_func_stack_is_gone {false};
+    static std::atomic_bool test_func_stack_is_gone {false}; \
+    TC_EXPECT_THIS_TC();
+
 
 #define TC_EXPECT_THIS_TC() \
     EXPECT_EQ(get_currently_running_test(), static_test_id_string);
@@ -181,6 +183,8 @@ public:
     test_func_no_longer_need_stack_ctx = true;
 
 #define TC_EXIT() \
+    TC_EXPECT_THIS_TC(); \
+    TC_DONE_WITH_STACK(); \
     test_func_exited = true; \
     test_func_stack_is_gone = true; \
     ASSERT_TRUE(test_func_called); \
