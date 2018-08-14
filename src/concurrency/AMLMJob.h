@@ -656,6 +656,10 @@ public:
     //    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
     //    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
 
+        // All connections have already been made, so set the watched future.
+        // "To avoid a race condition, it is important to call this function after doing the connections."
+        m_ext_watcher.setFuture(m_ext_future);
+
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
         // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
         // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
@@ -667,8 +671,7 @@ public:
         m_run_was_started.release();
 
         // Run.
-        ExtAsync::run(this, &AMLMJobT<ExtFutureT>::run);
-    //    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
+        ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
     }
 
 protected Q_SLOT:
@@ -792,7 +795,7 @@ protected:
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
 
-        auto& ef = asDerivedTypePtr()->get_extfuture_ref();
+        auto& ef = m_ext_future;
 
         // Is the underlying ExtAsync job currently running, or have we already been cancelled, or never started?
         bool run_returned = m_run_returned.tryAcquire();
@@ -884,7 +887,7 @@ protected:
 
         /// KJob::doSuspend().
         Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
-        asDerivedTypePtr()->get_extfuture_ref().setPaused(true);
+        m_ext_future.setPaused(true);
         return true;
     }
 
@@ -894,7 +897,7 @@ protected:
 
         /// KJob::doResume().
         Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
-        asDerivedTypePtr()->get_extfuture_ref().setPaused(false);
+        m_ext_future.setPaused(false);
         return true;
     }
 
@@ -945,9 +948,6 @@ protected:
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
 
-		// All connections made, so set the watched future.
-        // "To avoid a race condition, it is important to call this function after doing the connections."
-        m_ext_watcher.setFuture(m_ext_future);
 	}
 
     /// @name KJob-related support functions.

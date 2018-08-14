@@ -171,8 +171,9 @@ public:
         {
             context = this;
         }
-        connect_or_die(this, &ExtFutureWatcher::resultsReadyAt, context, [=](int begin, int end){
-            callback(this->future(), begin, end);
+        connect_or_die(this, &ExtFutureWatcher::resultsReadyAt, context,
+                       [=, callback_copy = std::decay_t<ResultsReadyAtCallback>(callback)](int begin, int end){
+            callback_copy(this->future(), begin, end);
         });
         return *this;
     }
