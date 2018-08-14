@@ -58,17 +58,11 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     KJobWidgets::setWindow(this, MainWindow::instance());
     setUiDelegate(new KDialogJobUiDelegate());
 
-    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
+//    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
     connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
     connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
 
-//M_WARNING("FOR TEST ONLY, PUT THIS BACK");
 	connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
-
-//    connect_or_die(this, &QObject::destroyed, this, &AMLMJob::SLOT_on_destroyed);
-//    connect_or_die(this, &QObject::destroyed, qApp, [=](QObject* obj){
-//        qWro() << "OBJECT DESTROYED:" << obj;
-//        });
 }
 
 AMLMJob::~AMLMJob()
@@ -88,15 +82,6 @@ AMLMJob::~AMLMJob()
     // Doesn't cancel the job.
     qDbo() << "AMLMJob DELETED" << this;
 }
-
-
-//bool AMLMJob::wasCancelRequested()
-//{
-//    Q_ASSERT(!m_i_was_deleted);
-
-//    // Were we told to abort?
-//    return asDerivedTypePtr()->get_extfuture_ref().isCanceled();
-//}
 
 void AMLMJob::setSuccessFlag(bool success)
 {
@@ -119,31 +104,6 @@ qulonglong AMLMJob::processedSize() const
 
     return processedAmount(progressUnit());
 }
-
-//void AMLMJob::start()
-//{
-//    QMutexLocker lock(&m_start_vs_dokill_mutex);
-
-////    m_watcher = new QFutureWatcher<void>(this);
-////    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
-////    connect_or_die(m_watcher, &QFutureWatcher<void>::finished, this, &AMLMJob::SLOT_extfuture_finished);
-////    connect_or_die(m_watcher, &QFutureWatcher<void>::canceled, this, &AMLMJob::SLOT_extfuture_canceled);
-
-//    // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
-//    // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
-//    // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
-//    // Note that calling the destructor of (by deleting) the returned future is ok:
-//    // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
-//    // "Note that this neither waits nor cancels the asynchronous computation."
-
-//    // Indicate to the cancel logic that we did start.
-//    m_run_was_started.release();
-
-//    // Run.
-//    ExtAsync::run(asDerivedTypePtr(), &AMLMJob::run);
-////    m_watcher->setFuture(asDerivedTypePtr()->get_extfuture_ref());
-//}
-
 
 /**
  * KJob completion notes:
@@ -346,25 +306,6 @@ qulonglong AMLMJob::processedSize() const
 //    m_run_returned.release();
 //}
 
-//bool AMLMJob::functorHandlePauseResumeAndCancel()
-//{
-//    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
-
-//    if (ef.isPaused())
-//    {
-//        ef.waitForResume();
-//    }
-//    if (ef.isCanceled())
-//    {
-//        // The job has been canceled.
-//        // The calling runFunctor() should break out of while() loop.
-//        return true;
-//    }
-//    else
-//    {
-//        return false;
-//    }
-//}
 
 /////
 /// These are similar to KDevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
@@ -373,7 +314,7 @@ void AMLMJob::SLOT_extfuture_finished()
 {
     //Q_ASSERT(!m_possible_delete_later_pending);
 
-    m_watcher->deleteLater();
+//    m_watcher->deleteLater();
     emitResult();
 }
 
@@ -382,7 +323,7 @@ void AMLMJob::SLOT_extfuture_canceled()
     //Q_ASSERT(!m_possible_delete_later_pending);
 
     // Nothing but deleteLater() the watcher.
-    m_watcher->deleteLater();
+//    m_watcher->deleteLater();
 }
 
 void AMLMJob::SLOT_kjob_finished(KJob *kjob)
@@ -398,10 +339,10 @@ void AMLMJob::SLOT_kjob_result(KJob *kjob)
 ///
 ///
 
-void AMLMJob::SLOT_call_emitResult()
-{
-    emitResult();
-}
+//void AMLMJob::SLOT_call_emitResult()
+//{
+//    emitResult();
+//}
 
 void AMLMJob::SLOT_onAboutToShutdown()
 {
@@ -632,47 +573,6 @@ KJob::Unit AMLMJob::progressUnit() const
 
     return m_progress_unit;
 }
-
-//void AMLMJob::setKJobErrorInfo(bool success)
-//{
-//    //Q_ASSERT(!m_possible_delete_later_pending);
-
-//    // We're still in the underlying ExtAsync::run() context and don't have an event loop here.
-//    /// @note GRVS: Threadsafety not clear.  KJob doesn't do any locking FWICT around these variable sets.
-////    AMLM_ASSERT_IN_GUITHREAD();
-
-//    // Convert underlying finished to a KJob::result(KJob*) signal, but only in the success case.
-//    // We have to be careful we don't call KF5::emitResult() twice.
-//    // We'll similarly deal with the fail case in onTWFailed().
-//    if(success)
-//    {
-//        // Set the KJob::error() code.
-//        setError(NoError);
-//    }
-//    else
-//    {
-//        // Set the KJob error info.
-//        if(isCanceled())
-//        {
-//            // Cancelled.
-//            // KJob
-//            setError(KilledJobError);
-//        }
-//        else
-//        {
-//            // Some other error.
-//            // KJob
-//            setError(KJob::UserDefinedError);
-//            setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(asDerivedTypePtr()->objectName()));
-//        }
-//    }
-//}
-
-void AMLMJob::SLOT_on_destroyed(QObject *obj)
-{
-    qDbo() << "OBJECT DESTROYED:" << obj;
-}
-
 
 void AMLMJob::dump_job_info(KJob* kjob, const QString& header)
 {
