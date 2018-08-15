@@ -50,6 +50,9 @@ class AMLMApp: public QApplication
 
 Q_SIGNALS:
     /// Emitted upon reception of aboutToQuit() signal.
+    /// Per @link http://doc.qt.io/qt-5/qcoreapplication.html#exec:
+    /// "We recommend that you connect clean-up code to the aboutToQuit() signal, instead of putting it
+    /// in your application's main() function because on some platforms the exec() call may not return."
 	void aboutToShutdown();
 
 public:
@@ -68,6 +71,9 @@ public:
 	 */
 	void Init(bool gtest_only = false);
 
+    /**
+     * @returns the AMLMApp singleton.
+     */
     static AMLMApp* instance();
 
 

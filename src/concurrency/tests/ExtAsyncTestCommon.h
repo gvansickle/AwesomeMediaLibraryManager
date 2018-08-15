@@ -130,7 +130,7 @@ protected:
 
     bool check_generators();
 
-    QEventLoop* m_event_loop {nullptr};
+    QObject* m_event_loop_object {nullptr};
     QSignalSpy* m_delete_spy {nullptr};
 
 public:

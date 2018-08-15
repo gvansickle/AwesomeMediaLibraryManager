@@ -48,7 +48,7 @@
 class StartAndFinish : public ::testing::Environment
 {
 public:
-	virtual ~StartAndFinish() {}
+    ~StartAndFinish() override {}
 
 	// Print the start message.
 	void SetUp() override { 	GTEST_COUT << "TEST STARTING" << std::endl; }
