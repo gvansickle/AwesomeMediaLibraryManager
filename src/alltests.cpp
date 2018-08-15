@@ -70,9 +70,9 @@ class ThrowListener : public testing::EmptyTestEventListener
   }
 };
 
+///
 /// @note main() mods to support Qt5 threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
-
-
+///
 int main(int argc, char *argv[])
 {
 	QThread::currentThread()->setObjectName("MAIN");

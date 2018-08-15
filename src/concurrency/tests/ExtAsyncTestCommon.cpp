@@ -142,6 +142,11 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
     EXPECT_NO_FATAL_FAILURE({
                                 expect_all_preconditions();
                             });
+
+    // Make sure an event loop is running, and set it up to be destructed.
+    /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
+//    m_event_loop = new QEventLoop(qApp);
+//    m_delete_spy = new QSignalSpy(m_event_loop, &QObject::destroyed);
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
@@ -153,6 +158,13 @@ void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 void ExtAsyncTestsSuiteFixtureBase::TearDown()
 {
     SCOPED_TRACE("In TearDown()");
+
+    // Tear down the event loop.
+    /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
+//    m_event_loop->deleteLater();
+//    m_delete_spy->wait(100);
+//    m_delete_spy->deleteLater();
+
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
     GTEST_COUT << "TearDown() for test_id: " << test_id << std::endl;

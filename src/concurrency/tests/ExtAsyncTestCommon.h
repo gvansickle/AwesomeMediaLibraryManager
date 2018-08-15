@@ -26,6 +26,7 @@
 #include <deque>
 
 // Qt5
+#include <QSignalSpy>
 #include <QTest>
 
 // Google Test
@@ -129,6 +130,8 @@ protected:
 
     bool check_generators();
 
+    QEventLoop* m_event_loop {nullptr};
+    QSignalSpy* m_delete_spy {nullptr};
 
 public:
 
