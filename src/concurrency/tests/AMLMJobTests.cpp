@@ -40,6 +40,141 @@
 #include <src/concurrency/DirectoryScanJob.h>
 
 
+////////////////////////
+
+#include "AMLMApp.h"
+
+class ProjectFolderItem;
+class IProjectFileManager;
+
+class ImportProjectJob: public KJob
+{
+    Q_OBJECT
+public:
+    ImportProjectJob(ProjectFolderItem *folder, IProjectFileManager *importer);
+    ~ImportProjectJob() override;
+
+public:
+    void start() override;
+    bool doKill() override;
+
+private Q_SLOTS:
+    void importDone();
+    void importCanceled();
+    void aboutToShutdown();
+
+private:
+    class ImportProjectJobPrivate* const d;
+    friend class ImportProjectJobPrivate;
+};
+
+class ProjectFolderItem
+{
+public:
+    int m_num_subdirs = 4;
+};
+
+class IProjectFileManager
+{
+
+};
+
+class ImportProjectJobPrivate
+{
+public:
+    ImportProjectJobPrivate() {}
+
+//    ProjectFolderItem *m_folder;
+//    IProjectFileManager *m_importer;
+    QFutureWatcher<void> *m_watcher;
+//    QPointer<IProject> m_project;
+    bool cancel = false;
+
+    void import(ProjectFolderItem* /*folder*/)
+    {
+        int loop_counter = 0;
+        int max_loops = 10;
+        while(!cancel)
+        {
+            QTest::qSleep(100);
+            GTEST_COUT_qDB << "LOOP:" << loop_counter;
+            loop_counter++;
+            if(loop_counter > max_loops)
+            {
+                GTEST_COUT_qDB << "EXITING LOOP";
+                break;
+            }
+        }
+#if 0
+        Q_FOREACH(ProjectFolderItem* sub, m_importer->parse(folder))
+        {
+            if(!cancel) {
+                import(sub);
+            }
+        }
+#endif
+    }
+};
+
+ImportProjectJob::ImportProjectJob(ProjectFolderItem *folder, IProjectFileManager *importer)
+    : KJob(nullptr), d(new ImportProjectJobPrivate )
+{
+//    d->m_importer = importer;
+//    d->m_folder = folder;
+//    d->m_project = folder->project();
+
+//    setObjectName(QString("Project Import: %1", d->m_project->name()));
+    setObjectName(QString("ImportProjectJob"));
+    connect(AMLMApp::instance(), &AMLMApp::aboutToShutdown,
+            this, &ImportProjectJob::aboutToShutdown);
+}
+
+ImportProjectJob::~ImportProjectJob()
+{
+    delete d;
+}
+
+void ImportProjectJob::start()
+{
+    d->m_watcher = new QFutureWatcher<void>();
+    connect(d->m_watcher, &QFutureWatcher<void>::finished, this, &ImportProjectJob::importDone);
+    connect(d->m_watcher, &QFutureWatcher<void>::canceled, this, &ImportProjectJob::importCanceled);
+    QFuture<void> f = QtConcurrent::run(d, &ImportProjectJobPrivate::import, nullptr /*d->m_folder*/);
+    d->m_watcher->setFuture(f);
+}
+
+void ImportProjectJob::importDone()
+{
+    d->m_watcher->deleteLater(); /* Goodbye to the QFutureWatcher */
+
+    emitResult();
+}
+
+bool ImportProjectJob::doKill()
+{
+    d->m_watcher->cancel();
+    d->cancel=true;
+
+    setError(1);
+    setErrorText("Project import canceled.");
+
+    d->m_watcher->waitForFinished();
+    return true;
+}
+
+void ImportProjectJob::aboutToShutdown()
+{
+    kill();
+}
+
+void ImportProjectJob::importCanceled()
+{
+    d->m_watcher->deleteLater();
+}
+
+////////////////////////
+
+
 class TestAMLMJob1;
 using TestAMLMJob1Ptr = QPointer<TestAMLMJob1>;
 /**
@@ -128,7 +263,40 @@ TEST_F(AMLMJobTests, ThisShouldPass)
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, SynchronousExecTest)
+TEST_F(AMLMJobTests, IPJSynchronousExec)
+{
+    TC_ENTER();
+
+    auto j = new ImportProjectJob(nullptr, nullptr);
+
+//    j->setAutoDelete(false);
+
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    EXPECT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    EXPECT_TRUE(kjob_result_spy.isValid());
+//    QSignalSpy kjob_destroyed_spy(j, &QObject::destroyed);
+
+    bool status = j->exec();
+
+    // j has probably deleted itself here.
+
+    EXPECT_EQ(status, true);
+
+    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
+    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 1);
+
+//    QTest::qWait(100);
+//    EXPECT_TRUE(kjob_destroyed_spy.wait(1000));
+//    j->deleteLater();
+
+    TC_EXIT();
+}
+
+TEST_F(AMLMJobTests, SynchronousExec)
 {
     TC_ENTER();
 

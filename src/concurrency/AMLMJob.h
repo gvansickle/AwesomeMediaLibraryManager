@@ -586,9 +586,9 @@ public:
     /**
      * Semaphores for coordinating the sync and async operations in doKill().
      */
-    QMutex m_start_vs_dokill_mutex;
-    QSemaphore m_run_was_started {0};
-    QSemaphore m_run_returned {0};
+//    QMutex m_start_vs_dokill_mutex;
+//    QSemaphore m_run_was_started {0};
+//    QSemaphore m_run_returned {0};
 
 
 private:
@@ -608,16 +608,13 @@ class AMLMJobT : public AMLMJob
 
 public:
 
-    using ExtFutureWatcherT = ExtFutureWatcher<typename ExtFutureT::value_type>;
+    using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
     using ThisType = AMLMJobT<ExtFutureT>;
 
     explicit AMLMJobT(QObject* parent = nullptr, QObject* watcher_parent = nullptr)
-        : BASE_CLASS(parent), m_ext_watcher(0, watcher_parent)
+        : BASE_CLASS(parent)//, m_ext_watcher(0, watcher_parent)
 	{
 		qDbo() << "WORKED:" << m_ext_future.state();
-
-        // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
-        HookUpExtFutureSignals(&m_ext_watcher);
 	}
 
     ExtFutureT& get_extfuture_ref()
@@ -627,16 +624,19 @@ public:
 
     Q_SCRIPTABLE void start() override
     {
-        QMutexLocker lock(&m_start_vs_dokill_mutex);
+//        QMutexLocker lock(&m_start_vs_dokill_mutex);
 
     //    m_watcher = new QFutureWatcher<void>(this);
     //    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
-        connect_or_die(&m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
-        connect_or_die(&m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
+        m_ext_watcher = new ExtFutureWatcherT();
+        // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
+        HookUpExtFutureSignals(m_ext_watcher);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
 
         // All connections have already been made, so set the watched future.
         // "To avoid a race condition, it is important to call this function after doing the connections."
-        m_ext_watcher.setFuture(m_ext_future);
+        m_ext_watcher->setFuture(m_ext_future);
 
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
         // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -646,7 +646,7 @@ public:
         // "Note that this neither waits nor cancels the asynchronous computation."
 
         // Indicate to the cancel logic that we did start.
-        m_run_was_started.release();
+//        m_run_was_started.release();
 
         // Run.
         ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
@@ -669,7 +669,7 @@ protected:
         /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
         /// QMutexLocker locker(&manager->mutex);
 
-        m_run_was_started.release();
+//        m_run_was_started.release();
 
         auto& ef = m_ext_future;
 
@@ -682,7 +682,7 @@ protected:
             ef.reportFinished();
             AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
-            m_run_returned.release();
+//            m_run_returned.release();
             return;
         }
     #ifdef QT_NO_EXCEPTIONS
@@ -754,7 +754,7 @@ protected:
 //        Q_EMIT SIGNAL_internal_call_emitResult();
 
         // Notify any possible doKill() that we really truly have stopped the async worker thread.
-        m_run_returned.release();
+//        m_run_returned.release();
     }
 
     bool doKill() override { return doKillT(); }
@@ -765,7 +765,7 @@ protected:
     {
         // KJob::doKill().
 
-        QMutexLocker lock(&m_start_vs_dokill_mutex);
+//        QMutexLocker lock(&m_start_vs_dokill_mutex);
 
         qDbo() << "START EXTASYNC DOKILL";
 
@@ -841,10 +841,10 @@ protected:
             m_run_was_started.release();
         }
 #else
-        m_ext_watcher.cancel();
+        m_ext_watcher->cancel();
 #endif
         // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
-        ef.cancel();
+//        ef.cancel();
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
     //    setError(KilledJobError);
@@ -871,7 +871,7 @@ protected:
 
     //    qDbo() << "END EXTASYNC DOKILL";
 #else
-        m_ext_watcher.waitForFinished();
+        m_ext_watcher->waitForFinished();
 #endif
 
         // Try to detect that we've survived at least to this point.
@@ -947,15 +947,15 @@ protected:
 	{
 		// Main connection we need is results.
 		// resultsReadyAt(range): There are results ready immediately at the given index range.
-//		connect_or_die(&m_ext_watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
-//					   [=](int beginIndex, int endIndex) {
-//			// Directly call the overridden slot with all the info needed to get the results.
-//			/// @todo Hold extfuture here.
-//			SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
-//            });
-        watcher->connect_onResultsReadyAt(QApplication::instance(), [=](const ExtFutureT& ef, int beginIndex, int endIndex) {
-            SLOT_onResultsReadyAt(ef, beginIndex, endIndex);
+        connect_or_die(watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
+                       [=](int beginIndex, int endIndex) {
+            // Directly call the overridden slot with all the info needed to get the results.
+            /// @todo Hold extfuture here.
+            SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
             });
+//        watcher->connect_onResultsReadyAt(QApplication::instance(), [=](const ExtFutureT& ef, int beginIndex, int endIndex) {
+//            SLOT_onResultsReadyAt(ef, beginIndex, endIndex);
+//            });
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
@@ -1011,7 +1011,7 @@ protected:
 	ExtFutureT m_ext_future;
 
 	/// The watcher for the ExtFuture.
-	ExtFutureWatcherT m_ext_watcher;
+    ExtFutureWatcherT* m_ext_watcher;
 
 	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
 
