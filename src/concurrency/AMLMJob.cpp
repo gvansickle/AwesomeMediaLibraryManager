@@ -58,10 +58,10 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
     KJobWidgets::setWindow(this, MainWindow::instance());
     setUiDelegate(new KDialogJobUiDelegate());
 
-//    connect_or_die(this, &AMLMJob::SIGNAL_internal_call_emitResult, this, &AMLMJob::SLOT_call_emitResult);
     connect_or_die(this, &KJob::finished, this, &AMLMJob::SLOT_kjob_finished);
     connect_or_die(this, &KJob::result, this, &AMLMJob::SLOT_kjob_result);
 
+    // Master app shutdown signal connection.
 	connect_or_die(AMLMApp::instance(), &AMLMApp::aboutToShutdown, this, &AMLMJob::SLOT_onAboutToShutdown);
 }
 
@@ -310,21 +310,19 @@ qulonglong AMLMJob::processedSize() const
 /////
 /// These are similar to KDevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
 ///
-void AMLMJob::SLOT_extfuture_finished()
-{
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
+//void AMLMJob::SLOT_extfuture_finished()
+//{
 //    m_watcher->deleteLater();
-    emitResult();
-}
+//    emitResult();
+//}
 
-void AMLMJob::SLOT_extfuture_canceled()
-{
-    //Q_ASSERT(!m_possible_delete_later_pending);
+//void AMLMJob::SLOT_extfuture_canceled()
+//{
+//    //Q_ASSERT(!m_possible_delete_later_pending);
 
-    // Nothing but deleteLater() the watcher.
+//    // Nothing but deleteLater() the watcher.
 //    m_watcher->deleteLater();
-}
+//}
 
 void AMLMJob::SLOT_kjob_finished(KJob *kjob)
 {
@@ -339,10 +337,7 @@ void AMLMJob::SLOT_kjob_result(KJob *kjob)
 ///
 ///
 
-//void AMLMJob::SLOT_call_emitResult()
-//{
-//    emitResult();
-//}
+
 
 void AMLMJob::SLOT_onAboutToShutdown()
 {

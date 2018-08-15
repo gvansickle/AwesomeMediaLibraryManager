@@ -557,8 +557,8 @@ protected Q_SLOTS:
     /// @name Internal slots
     /// @{
 
-    void SLOT_extfuture_finished();
-    void SLOT_extfuture_canceled();
+//    void SLOT_extfuture_finished();
+//    void SLOT_extfuture_canceled();
 
     void SLOT_kjob_finished(KJob* kjob);
     void SLOT_kjob_result(KJob* kjob);
@@ -582,14 +582,6 @@ private Q_SLOTS:
 public:
 
     bool m_i_was_deleted = false;
-
-    /**
-     * Semaphores for coordinating the sync and async operations in doKill().
-     */
-//    QMutex m_start_vs_dokill_mutex;
-//    QSemaphore m_run_was_started {0};
-//    QSemaphore m_run_returned {0};
-
 
 private:
 
@@ -630,9 +622,9 @@ public:
     //    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
         m_ext_watcher = new ExtFutureWatcherT();
         // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
-        HookUpExtFutureSignals(m_ext_watcher);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
+        HookUpExtFutureSignals(m_ext_watcher);
 
         // All connections have already been made, so set the watched future.
         // "To avoid a race condition, it is important to call this function after doing the connections."
@@ -652,10 +644,22 @@ public:
         ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
     }
 
-protected Q_SLOT:
+protected: // Q_SLOTS:
 
     virtual void SLOT_onResultsReadyAt(const ExtFutureT& ef, int begin, int end) {}
 
+    virtual void SLOT_extfuture_finished()
+    {
+        // Job is finished.  Delete the watcher and emit the KJob result.
+        // The emitResult() call will send out a KJob::finished() signal.
+        m_ext_watcher->deleteLater();
+        emitResult();
+    }
+
+    virtual void SLOT_extfuture_canceled()
+    {
+        m_ext_watcher->deleteLater();
+    }
 
 protected:
 
@@ -764,8 +768,6 @@ protected:
     bool doKillT()
     {
         // KJob::doKill().
-
-//        QMutexLocker lock(&m_start_vs_dokill_mutex);
 
         qDbo() << "START EXTASYNC DOKILL";
 
@@ -887,8 +889,6 @@ protected:
 
     bool doSuspendT()
     {
-        //Q_ASSERT(!m_possible_delete_later_pending);
-
         /// KJob::doSuspend().
         Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to suspend an unsuspendable AMLMJob.");
         m_ext_future.setPaused(true);
@@ -897,8 +897,6 @@ protected:
 
     bool doResumeT()
     {
-        //Q_ASSERT(!m_possible_delete_later_pending);
-
         /// KJob::doResume().
         Q_ASSERT_X(capabilities() & KJob::Capability::Suspendable, __func__, "Trying to resume an unresumable AMLMJob.");
         m_ext_future.setPaused(false);
