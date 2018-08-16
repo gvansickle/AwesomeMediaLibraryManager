@@ -607,6 +607,9 @@ public:
         : BASE_CLASS(parent)//, m_ext_watcher(0, watcher_parent)
 	{
 		qDbo() << "WORKED:" << m_ext_future.state();
+	    // Watcher creation is here vs. in start() to mitigate against cancel-before-start segfaults.  Seems to work.
+	    // We could get a doKill() call at any time after we leave this constructor.
+        m_ext_watcher = new ExtFutureWatcherT();
 	}
 
     ExtFutureT& get_extfuture_ref()
@@ -616,19 +619,10 @@ public:
 
     Q_SCRIPTABLE void start() override
     {
-//        QMutexLocker lock(&m_start_vs_dokill_mutex);
-
-    //    m_watcher = new QFutureWatcher<void>(this);
-    //    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
-        m_ext_watcher = new ExtFutureWatcherT();
         // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
         HookUpExtFutureSignals(m_ext_watcher);
-
-        // All connections have already been made, so set the watched future.
-        // "To avoid a race condition, it is important to call this function after doing the connections."
-        m_ext_watcher->setFuture(m_ext_future);
 
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
         // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -637,11 +631,12 @@ public:
         // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
         // "Note that this neither waits nor cancels the asynchronous computation."
 
-        // Indicate to the cancel logic that we did start.
-//        m_run_was_started.release();
-
         // Run.
         ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
+
+        // All connections have already been made, so set the watched future.
+        // "To avoid a race condition, it is important to call this function after doing the connections."
+        m_ext_watcher->setFuture(m_ext_future);
     }
 
 protected: // Q_SLOTS:
@@ -672,8 +667,6 @@ protected:
 
         /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
         /// QMutexLocker locker(&manager->mutex);
-
-//        m_run_was_started.release();
 
         auto& ef = m_ext_future;
 
@@ -795,9 +788,10 @@ protected:
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
 
+#if 0 // NO_WATCHER
+
         auto& ef = m_ext_future;
 
-#if 0 // NO_WATCHER
         // Is the underlying ExtAsync job currently running, or have we already been cancelled, or never started?
         bool run_returned = m_run_returned.tryAcquire();
         if(run_returned)

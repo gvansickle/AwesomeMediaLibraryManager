@@ -58,6 +58,9 @@ public:
     void start() override;
     bool doKill() override;
 
+public: // Added for test development.
+    const QFuture<void>& get_extfuture_ref() const;
+
 private Q_SLOTS:
     void importDone();
     void importCanceled();
@@ -179,6 +182,11 @@ void ImportProjectJob::importCanceled()
     d->m_watcher->deleteLater();
 }
 
+const QFuture<void>& ImportProjectJob::get_extfuture_ref() const
+{
+    return d->m_watcher->future();
+}
+
 ////////////////////////
 
 
@@ -234,6 +242,11 @@ protected:
         // Do some work...
         for(int i = 0; i<10; i++)
         {
+            if(m_ext_future.isCanceled())
+            {
+                break;
+            }
+
             GTEST_COUT << "Sleeping for 1 second\n";
             QTest::qSleep(1000);
 
@@ -529,7 +542,8 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
     // j is now probably going to be deleteLater()'ed.
 
     EXPECT_TRUE(kill_succeeded) << ef;
-    EXPECT_TRUE(ef.isCanceled()) << ef;
+    /// @note No notification to the Future since no watcher has been set up yet.
+//    EXPECT_TRUE(ef.isCanceled()) << ef;
     EXPECT_EQ(j->error(), KJob::KilledJobError);
 
 //    j->start();
@@ -565,10 +579,11 @@ TEST_F(AMLMJobTests, IPJCancelBeforeStart)
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
                 });
 
-//    ExtFuture<int>& ef = j->get_extfuture_ref();
+    // No watcher to get a future from.
+//    /*ExtFuture<int>&*/ const QFuture<void>& ef = j->get_extfuture_ref();
 
-//    EXPECT_TRUE(ef.isStarted()) << ef.state();
-//    EXPECT_FALSE(ef.isRunning()) << ef.state();
+//    EXPECT_TRUE(ef.isStarted()) << state(ef);
+//    EXPECT_FALSE(ef.isRunning()) << state(ef);
 
     // Job hasn't started yet (we never called start()), kill it.
     bool kill_succeeded = j->kill();
