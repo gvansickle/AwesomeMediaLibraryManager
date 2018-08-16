@@ -124,6 +124,11 @@ ImportProjectJob::ImportProjectJob(ProjectFolderItem *folder, IProjectFileManage
 //    d->m_project = folder->project();
 
 //    setObjectName(QString("Project Import: %1", d->m_project->name()));
+
+    /// @note GRVS Moved here to try to mitigate against cancel-before-start segfaults.
+    /// Seems to work.  We could get a doKill() call at any time after we leave this constructor.
+    d->m_watcher = new QFutureWatcher<void>();
+
     setObjectName(QString("ImportProjectJob"));
     connect(AMLMApp::instance(), &AMLMApp::aboutToShutdown,
             this, &ImportProjectJob::aboutToShutdown);
@@ -136,7 +141,6 @@ ImportProjectJob::~ImportProjectJob()
 
 void ImportProjectJob::start()
 {
-    d->m_watcher = new QFutureWatcher<void>();
     connect(d->m_watcher, &QFutureWatcher<void>::finished, this, &ImportProjectJob::importDone);
     connect(d->m_watcher, &QFutureWatcher<void>::canceled, this, &ImportProjectJob::importCanceled);
     // Starting QtConcurrent::run().
@@ -496,8 +500,10 @@ TEST_F(AMLMJobTests, CancelTest)
     EXPECT_FALSE(kjob_result_spy.wait(500));
 }
 
-TEST_F(AMLMJobTests, CancelBeforeStartTest)
+TEST_F(AMLMJobTests, CancelBeforeStart)
 {
+    TC_ENTER();
+
     RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
@@ -517,7 +523,7 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
     EXPECT_TRUE(ef.isStarted()) << ef.state();
 //    EXPECT_FALSE(ef.isRunning()) << ef.state();
 
-    // Job hasn't started yet, kill it.
+    // Job hasn't started yet (we never called start()), kill it.
     bool kill_succeeded = j->kill();
 
     // j is now probably going to be deleteLater()'ed.
@@ -538,6 +544,55 @@ TEST_F(AMLMJobTests, CancelBeforeStartTest)
     // Won't get a result() signal here because it's kill()'ed Quietly.
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 0);
+
+    TC_EXIT();
+}
+
+TEST_F(AMLMJobTests, IPJCancelBeforeStart)
+{
+    TC_ENTER();
+
+    auto j = new ImportProjectJob(nullptr, nullptr);
+
+//    j->setAutoDelete(false);
+
+    QSignalSpy kjob_finished_spy(j, &KJob::finished);
+    EXPECT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(j, &KJob::result);
+    EXPECT_TRUE(kjob_result_spy.isValid());
+//    QSignalSpy kjob_destroyed_spy(j, &QObject::destroyed);
+    connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
+        qDb() << "GOT SIGNAL FINISHED:" << kjob;
+                });
+
+//    ExtFuture<int>& ef = j->get_extfuture_ref();
+
+//    EXPECT_TRUE(ef.isStarted()) << ef.state();
+//    EXPECT_FALSE(ef.isRunning()) << ef.state();
+
+    // Job hasn't started yet (we never called start()), kill it.
+    bool kill_succeeded = j->kill();
+
+    // j is now probably going to be deleteLater()'ed.
+
+    EXPECT_TRUE(kill_succeeded) << j;
+//    EXPECT_TRUE(ef.isCanceled()) << ef;
+    EXPECT_EQ(j->error(), KJob::KilledJobError);
+
+//    j->start();
+
+//    QTest::qSleep(500);
+//    EXPECT_EQ(j->m_counter, 0);
+//    QTest::qSleep(700);
+//    EXPECT_EQ(j->m_counter, 1);
+//    QTest::qSleep(500);
+
+    // Wait for the KJob to signal that it's finished.
+    // Won't get a result() signal here because it's kill()'ed Quietly.
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 0);
+
+    TC_EXIT();
 }
 
 #include "AMLMJobTests.moc"
