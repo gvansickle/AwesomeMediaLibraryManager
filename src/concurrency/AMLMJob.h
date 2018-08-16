@@ -247,8 +247,6 @@ Q_SIGNALS:
     //    *
     //    * so that you won't have to manually call unregisterJob().
 
-    void SIGNAL_internal_call_emitResult();
-
 protected:
     /// Protected KJob-like constructor.
     /// Derive from and defer to this from derived classes, possibly as part of a two-stage constructor:

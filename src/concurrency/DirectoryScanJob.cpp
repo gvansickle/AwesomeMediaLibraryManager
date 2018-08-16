@@ -45,10 +45,10 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 
 	// Hook things up in here.
 	/// @todo virtual?
-//	m_ext_future.tap([=](DirScanResult dsr) {
-//		qDbo() << "GOT HERE";
-//		Q_EMIT entries(dsr, this);
-//    });
+	m_ext_future.tap([=](DirScanResult dsr) {
+		qDbo() << "GOT HERE";
+		Q_EMIT entries(dsr, this);
+    });
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()

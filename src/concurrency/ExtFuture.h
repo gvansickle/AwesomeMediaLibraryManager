@@ -1104,9 +1104,6 @@ protected:
             qDb() << "CANCELED";
             retval->deleteLater();
             ;});
-//        connect_or_die(retval, &QFutureWatcherBase::destroyed, [=](){
-//            qDb() << "DESTROYED";
-//            ;});
 
         return retval;
     }
@@ -1118,30 +1115,23 @@ protected:
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
 	{
 //		qDb() << "ENTER";
-		static std::atomic_bool s_was_ever_called {false};
 
 		static_assert(sizeof...(Args) <= 1, "Too many args");
 
 		auto watcher = new QFutureWatcher<T>();
 
 		auto retval = new ExtFuture<R>();
-//		qDb() << "NEW EXTFUTURE:" << *retval;
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher,
+
+        QObject::connect(watcher, &QFutureWatcherBase::finished, watcher,
 						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable -> void {
 			// Call the then() callback function.
 //			qDb() << "THEN WRAPPER CALLED";
 			// f() takes void, val, or ExtFuture<T>.
 			// f() returns void, a type R, or an ExtFuture<R>
-/// @todo ("CRASH ON CANCEL HERE");
 			retval->reportResult(then_cb(std::move(args)...));
-			s_was_ever_called = true;
 			retval->reportFinished();
 //			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
-		});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
-			qWr() << "ThenHelper ExtFutureWatcher DESTROYED";
-			Q_ASSERT(s_was_ever_called);
 		});
 		// Start watching this ExtFuture.
         watcher->setFuture(*this);
@@ -1185,8 +1175,6 @@ protected:
 		std::enable_if_t<ct::is_invocable_r_v<void, F, T>, ExtFuture<T>&>
 	TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
-//		static std::atomic_bool s_was_ever_called {false};
-
 		auto watcher = new QFutureWatcher<T>();
         connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
@@ -1195,12 +1183,7 @@ protected:
 //						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
 					// Call the tap callback with the incoming result value.
 					tap_cb(watcher->future().resultAt(index));
-//					s_was_ever_called = true;
 			});
-//		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){
-//            qWr() << "TapHelper ExtFutureWatcher DESTROYED";
-////			Q_ASSERT(s_was_ever_called);
-//		});
         watcher->setFuture(*this);
 		return *this;
 	}
@@ -1210,7 +1193,7 @@ protected:
 	{
 		qDb() << "ENTER";
 		auto watcher = new ExtFutureWatcher<T>();
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+        connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		watcher->onProgressChange([f, watcher](int min, int val, int max, QString text){
 			f({min, val, max, text});
 			;});
