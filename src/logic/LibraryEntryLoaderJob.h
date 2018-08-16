@@ -116,7 +116,7 @@ public:
     /// Overload which makes the AMLMApp singleton the parent.
     static LibraryEntryLoaderJobPtr make_job(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
-//    ExtFutureType* get_extfuture_ref() override { return m_ext_future; }
+    ExtFutureType* get_extfuture_ref() override { return m_ext_future; }
 
 protected:
 

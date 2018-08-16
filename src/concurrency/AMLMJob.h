@@ -583,7 +583,7 @@ public:
 
 private:
 
-    QAtomicInt m_success { 1 };
+//    QAtomicInt m_success { 1 };
 
     /// Wishful thinking at the moment, but maybe I'll figure out how to separate "Size" from KJob::Bytes.
     KJob::Unit m_progress_unit { KJob::Unit::Bytes };
@@ -677,7 +677,6 @@ protected:
             ef.reportFinished();
             AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
-//            m_run_returned.release();
             return;
         }
     #ifdef QT_NO_EXCEPTIONS
@@ -786,58 +785,9 @@ protected:
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
 
-#if 0 // NO_WATCHER
-
-        auto& ef = m_ext_future;
-
-        // Is the underlying ExtAsync job currently running, or have we already been cancelled, or never started?
-        bool run_returned = m_run_returned.tryAcquire();
-        if(run_returned)
-        {
-            // run() completed, we have nothing to cancel.
-            if(ef.isCanceled())
-            {
-                // We were have already been canceled.
-                qWro() << "ExtAsync<> job already cancelled";
-                AMLM_ASSERT_EQ(ef.isFinished(), true);
-            }
-            else if(ef.isFinished())
-            {
-                // run() finished normally.
-                qIno() << "ExtAsync<> job already finished";
-            }
-
-            // Unacquire the semaphore so we can pend on it below if we've been called twice or something like that.
-            m_run_returned.release();
-            return true;
-        }
-        // Else run() hasn't returned, and we didn't acquire the semaphore.
-
-        bool run_was_started = m_run_was_started.tryAcquire();
-        if(!run_was_started)
-        {
-            // run() was never even started.
-            qIno() << "ExtAsync<> job never started";
-            AMLM_ASSERT_EQ(m_run_was_started.available(), 0);
-            AMLM_ASSERT_EQ(m_run_returned.available(), 0);
-
-            // Pretend it started and finished for the logic below, Unacquire the semaphore.
-            ef.reportFinished();
-            m_run_returned.release();
-            AMLM_ASSERT_EQ(m_run_returned.available(), 1);
-
-            // We'll cancel the future.
-        }
-        else
-        {
-            // run() was started.
-            // Unacquire the semaphore.
-            m_run_was_started.release();
-        }
-#else
-        m_ext_watcher->cancel();
-#endif
         // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
+        m_ext_watcher->cancel();
+
 //        ef.cancel();
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
@@ -853,9 +803,7 @@ protected:
         /// @todo won't be acq'able if killed before started.
         m_run_returned.acquire();
 
-        /// @todo Difference here btw cancel before and after start.
-        /// Before: Started | Canceled, After: S|F|C.
-        qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
+
 
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
         // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
@@ -866,6 +814,10 @@ protected:
     //    qDbo() << "END EXTASYNC DOKILL";
 #else
         m_ext_watcher->waitForFinished();
+
+        /// @todo Difference here btw cancel before and after start.
+        /// Before: Started | Canceled, After: S|F|C.
+        qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
 #endif
 
         // Try to detect that we've survived at least to this point.

@@ -308,7 +308,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 // Already an outstanding request.
                 qDbo() << "Async load already pending for item:" << item;
             }
-			else if(0)
+			else// if(0)
             {
                 // Start an async job to read the data for this entry.
 

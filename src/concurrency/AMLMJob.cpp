@@ -86,22 +86,18 @@ AMLMJob::~AMLMJob()
 void AMLMJob::setSuccessFlag(bool success)
 {
     /// Called from underlying ExtAsync thread.
+M_WARNING("DOESN'T DO ANYTHING");
     qDbo() << "SETTING SUCCESS/FAIL:" << success;
-    m_success = success;
-//    m_tw_job_run_reported_success_or_fail = 1;
+//    m_success = success;
 }
 
 qulonglong AMLMJob::totalSize() const
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
     return totalAmount(progressUnit());
 }
 
 qulonglong AMLMJob::processedSize() const
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
     return processedAmount(progressUnit());
 }
 
@@ -307,23 +303,6 @@ qulonglong AMLMJob::processedSize() const
 //}
 
 
-/////
-/// These are similar to KDevelop::ImportProjectJob().  Now I'm not sure they make sense for us....
-///
-//void AMLMJob::SLOT_extfuture_finished()
-//{
-//    m_watcher->deleteLater();
-//    emitResult();
-//}
-
-//void AMLMJob::SLOT_extfuture_canceled()
-//{
-//    //Q_ASSERT(!m_possible_delete_later_pending);
-
-//    // Nothing but deleteLater() the watcher.
-//    m_watcher->deleteLater();
-//}
-
 void AMLMJob::SLOT_kjob_finished(KJob *kjob)
 {
     qDbo() << "GOT KJOB FINISHED:" << kjob;
@@ -333,10 +312,6 @@ void AMLMJob::SLOT_kjob_result(KJob *kjob)
 {
     qDbo() << "GOT KJOB RESULT:" << kjob << ", error():" << kjob->error();
 }
-////
-///
-///
-
 
 
 void AMLMJob::SLOT_onAboutToShutdown()
@@ -520,8 +495,6 @@ bool AMLMJob::doResume()
 
 void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
     if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
     {
         // Unit wasn't the progress unit, so also set Bytes so we get percent complete support.
@@ -532,8 +505,6 @@ void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
 
 void AMLMJob::setTotalAmountAndSize(KJob::Unit unit, qulonglong amount)
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
     if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
     {
         // Unit wasn't the progress unit, so also set Bytes so we get percent complete support.
@@ -544,8 +515,6 @@ void AMLMJob::setTotalAmountAndSize(KJob::Unit unit, qulonglong amount)
 
 void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
 #ifdef THIS_IS_EVER_NOT_BROKEN
     /// @todo This "KJobPrivate" crap is crap.
 	//    d_ptr->progressUnit = prog_unit;
@@ -564,8 +533,6 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 
 KJob::Unit AMLMJob::progressUnit() const
 {
-    //Q_ASSERT(!m_possible_delete_later_pending);
-
     return m_progress_unit;
 }
 
