@@ -65,7 +65,7 @@ public:
 
     QByteArray m_byte_array;
 
-    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
+//    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
 
 protected:
 

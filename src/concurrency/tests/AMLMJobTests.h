@@ -44,7 +44,6 @@ class AMLMJobTests : public ExtAsyncTestsSuiteFixtureBase
 {
 protected:
 
-
 	// Objects declared here can be used by all tests in this Fixture.
 
 };

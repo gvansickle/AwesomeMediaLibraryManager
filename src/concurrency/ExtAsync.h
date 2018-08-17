@@ -49,8 +49,6 @@
 #include "ExtFutureState.h"
 #include "utils/DebugHelpers.h"
 
-//#include "impl/ExtFuture_fwddecl_p.h"
-
 template <typename T> class ExtFuture;
 //template <typename T> class ExtAsyncTask;
 //template <typename T> class ExtAsyncTaskRunner;
@@ -323,7 +321,8 @@ static inline void name_qthread()
 	}
 
     /**
-     * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise, and returning non-void/non-ExtFuture<>.
+     * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise,
+     * and returning non-void/non-ExtFuture<>.
      *
      * @param function
      * @return
@@ -364,10 +363,9 @@ static inline void name_qthread()
 };
 
 /// @todo Move this include.
-#include "ExtAsyncTask.h"
+//#include "ExtAsyncTask.h"
 
 
-#include "ExtFuture.h"
 
 
 /**

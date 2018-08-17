@@ -817,7 +817,7 @@ protected:
 
         /// @todo Difference here btw cancel before and after start.
         /// Before: Started | Canceled, After: S|F|C.
-        qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(ef);
+        qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(m_ext_future);
 #endif
 
         // Try to detect that we've survived at least to this point.
@@ -949,7 +949,7 @@ protected:
 
     /// @}
 
-	/// The ExtFuture.
+    /// The ExtFuture<T>.
 	ExtFutureT m_ext_future;
 
 	/// The watcher for the ExtFuture.
