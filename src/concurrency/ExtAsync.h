@@ -165,7 +165,6 @@ static inline void name_qthread()
         static_assert(sizeof...(Args) <= 1, "Too many extra args given to run() call");
         static_assert(sizeof...(Args) == 0, "TODO: More than 0 args passed to run() call");
 
-//        constexpr auto calback_arg_num = function_traits<F>::arity_v;
         constexpr auto calback_arg_num = arity_v<F>;
         STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
         static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
@@ -174,7 +173,7 @@ static inline void name_qthread()
 		using argst = ct::args_t<F>;
         /// @todo TEMP debug restriction
 //        static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
-        // Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+        // Extract the type of the first non-this arg of function, which should be an ExtFuture<?>&.
         using arg1t = std::tuple_element_t<1, argst>;
 		using ExtFutureR = std::remove_reference_t<arg1t>;
 
@@ -186,7 +185,7 @@ static inline void name_qthread()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFutureR report_and_control;
 
-        QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)), report_and_control, std::forward<Args>(args)...);
+        QtConcurrent::run(std::forward<This*>(thiz), std::forward<F>(std::decay_t<F>(function)), report_and_control, std::forward<Args>(args)...);
 
 		return report_and_control;
 	}
