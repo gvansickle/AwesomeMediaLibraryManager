@@ -292,18 +292,17 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
 
             new_items.push_back(new AbstractTreeModelItem(column_data));
+
+            // Found a file matching the criteria.  Send it to the model.
+            /// @todo Forward the signal.
+            m_current_libmodel->SLOT_onIncomingFilename(dsr.getMediaExtUrl().m_url.toString());
         }
 
         tree_model->appendItems(new_items);
+
 #endif
 		;});
 
-
-	connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](DirScanResult the_find, KJob* kjob)  {
-        // Found a file matching the criteria.  Send it to the model.
-		m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaExtUrl().m_url.toString());
-
-        ;});
 
     dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
