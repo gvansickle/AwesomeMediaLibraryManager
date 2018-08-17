@@ -242,11 +242,6 @@ protected:
         // Do some work...
         for(int i = 0; i<10; i++)
         {
-            if(m_ext_future.isCanceled())
-            {
-                break;
-            }
-
             GTEST_COUT << "Sleeping for 1 second\n";
             QTest::qSleep(1000);
 
@@ -261,11 +256,14 @@ protected:
                 // We've been cancelled.
                 qIno() << "CANCELLED";
                 m_ext_future.reportCanceled();
+                m_ext_future.reportFinished();
                 break;
             }
         }
 
         setSuccessFlag(!wasCancelRequested());
+
+        m_ext_future.reportFinished();
     }
 };
 

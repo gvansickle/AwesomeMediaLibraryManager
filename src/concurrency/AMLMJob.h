@@ -735,12 +735,12 @@ protected:
         // Set the three KJob error fields.
         setKJobErrorInfo(!ef.isCanceled());
 
-        qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
-        if(isAutoDelete())
-        {
-            // emitResult() may result in a this->deleteLater(), via finishJob().
-            qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
-        }
+//        qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
+//        if(isAutoDelete())
+//        {
+//            // emitResult() may result in a this->deleteLater(), via finishJob().
+//            qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
+//        }
 
         // emitResult().
         // We use a signal/slot here since we're in an arbitrary context.
@@ -797,17 +797,13 @@ protected:
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
 #else
-
-
-    //    qDbo() << "END EXTASYNC DOKILL";
-
-        // Wait for the runFunctor() to actually report Finished, not just Canceled.
+        // Wait for the runFunctor() to report Finished.
         m_ext_watcher->waitForFinished();
 
         // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
         /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
         ///       Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start().
-        AMLM_ASSERT_EQ(m_ext_future.state(), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
+//        AMLM_ASSERT_EQ(m_ext_future.state(), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
 
         /// @todo Difference here between cancel before and after start.
         /// Before: Started | Canceled, After: S|F|C.
@@ -847,8 +843,6 @@ protected:
      */
     bool wasCancelRequested()
     {
-        Q_ASSERT(!m_i_was_deleted);
-
         // Were we told to abort?
         return m_ext_future.isCanceled();
     }
