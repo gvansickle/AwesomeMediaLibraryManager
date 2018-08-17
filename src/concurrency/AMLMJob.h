@@ -558,8 +558,9 @@ protected Q_SLOTS:
     void SLOT_kjob_finished(KJob* kjob);
     void SLOT_kjob_result(KJob* kjob);
 
-//    void SLOT_call_emitResult();
-
+    // Really would like to be able to do this, but Qt5 doesn't.
+//    template <class T>
+//    void SLOT_onResultsReadyAt(T ef, int begin, int end);
     /// @}
 
 private:
@@ -619,7 +620,7 @@ public:
 
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
         // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
-        // role is handled by the ExtFuture<> ref returned by get_extfuture_ref().
+        // role is handled by the ExtFuture<> m_ext_future and m_ext_watcher.
         // Note that calling the destructor of (by deleting) the returned future is ok:
         // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
         // "Note that this neither waits nor cancels the asynchronous computation."
@@ -634,6 +635,11 @@ public:
 
 protected: // Q_SLOTS:
 
+    /**
+     * @todo This is what happens when your framework is stuck in 199-late.
+     * This slot shouldn't even exist, it would be much better to have a signal with this signature in the
+     * base class.  But you can't have templated Q_SIGNALs.
+     */
     virtual void SLOT_onResultsReadyAt(const ExtFutureT& ef, int begin, int end) {}
 
     virtual void SLOT_extfuture_finished()

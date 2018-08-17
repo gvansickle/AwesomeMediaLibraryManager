@@ -255,7 +255,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	// New Tree model.
 	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, tree_model, [=](auto& ef, int begin, int end){
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, tree_model, [=](const auto& ef, int begin, int end){
 
 #if 0
 		auto first_new_row = tree_model->rowCount();

@@ -38,17 +38,10 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
     // Set our object name.
     setObjectName(uniqueQObjectName());
 
-    setProgressUnit(KJob::Unit::Directories);
+    setProgressUnit(KJob::Unit::Files);
 
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
-
-	// Hook things up in here.
-	/// @todo virtual?
-	m_ext_future.tap([=](DirScanResult dsr) {
-		qDbo() << "GOT HERE";
-		Q_EMIT entries(dsr, this);
-    });
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()

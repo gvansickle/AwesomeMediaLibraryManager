@@ -29,7 +29,6 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QUrl>
-class QSqlDatabase;
 #include <QSqlRelationalTableModel>
 
 // Ours.

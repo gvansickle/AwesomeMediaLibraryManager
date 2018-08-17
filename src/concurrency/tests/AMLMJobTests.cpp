@@ -184,6 +184,7 @@ void ImportProjectJob::importCanceled()
 
 const QFuture<void>& ImportProjectJob::get_extfuture_ref() const
 {
+    M_WARNING("RETURNING REF TO TEMPORARY");
     return d->m_watcher->future();
 }
 
@@ -242,13 +243,13 @@ protected:
         // Do some work...
         for(int i = 0; i<10; i++)
         {
-            GTEST_COUT << "Sleeping for 1 second\n";
+            GTEST_COUT_qDB << "Sleeping for 1 second\n";
             QTest::qSleep(1000);
 
-            GTEST_COUT << "Incementing counter\n";
+            GTEST_COUT_qDB << "Incementing counter\n";
             m_counter++;
 
-            GTEST_COUT << "Reporting counter result\n";
+            GTEST_COUT_qDB << "Reporting counter result\n";
             m_ext_future.reportResult(m_counter);
 
             if(functorHandlePauseResumeAndCancel())
@@ -415,8 +416,6 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
 {
     TC_ENTER();
 
-    ExtFutureWatcher<DirScanResult> watcher;
-
 	// Dummy dir so the dir scanner job has something to chew on.
     QUrl dir_url = QUrl::fromLocalFile("/");
     RecordProperty("dirscanned", tostdstr(dir_url.toString()));
@@ -439,19 +438,8 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
 
         ;});
 
-    watcher.setFuture(dsj->get_extfuture_ref().d);
-
     // Start the job.
     dsj->start();
-
-//    // Spin waiting for the job to complete.
-//    /// Don't think this is waiting.
-//    while(watcher.isRunning())
-//    {
-//        qDb() << "isRunning()";
-//        qApp->processEvents();
-//    }
-//    watcher.waitForFinished();
 
     // Cancel the job after 2 secs.
     QTest::qSleep(2000);

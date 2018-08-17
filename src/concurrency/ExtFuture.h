@@ -821,16 +821,12 @@ public:
      * Waits until the ExtFuture<T> is finished, and returns the resulting QList<T>.
      * Essentially the same semantics as std::future::get(); shared_future::get() always returns a reference instead.
      *
-     * @note Directly calls this->future().results().  This blocks any event loop in this thread.
+     * @note Directly calls this->results().  This blocks any event loop in this thread.
      *
      * @return The results value of this ExtFuture.
      */
     QList<T> get() const
     {
-        /// @todo Not wild about this const_cast<>, but QFuture<> has a QFutureInterface<T>
-        /// as a "private" mutable d value member and does this:
-        ///     QList<T> results() const { return d.results(); }
-        /// ...so hopefully this should be OK.
         qDb() << "IN GET, " << *this;
         auto retval = this->results();
         qDb() << "LEAVING GET, " << *this;
@@ -1096,11 +1092,11 @@ protected:
     {
         QFutureWatcher<T>* retval = new QFutureWatcher<T>(parent);
 
-        connect_or_die(retval, &QFutureWatcherBase::finished, [=](){
+        connect_or_die(retval, &QFutureWatcherBase::finished, retval, [=](){
             qDb() << "FINISHED";
             retval->deleteLater();
         });
-        connect_or_die(retval, &QFutureWatcherBase::canceled, [=](){
+        connect_or_die(retval, &QFutureWatcherBase::canceled, retval, [=](){
             qDb() << "CANCELED";
             retval->deleteLater();
             ;});

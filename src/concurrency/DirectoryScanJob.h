@@ -58,11 +58,9 @@ class DirectoryScannerAMLMJob : public AMLMJobT<ExtFuture<DirScanResult>>, publi
 Q_SIGNALS:
 
     /**
-     * KIO::ListJob-like signal used to send the discovered directory entries to
+     * Signal used to send the discovered directory entries to
      * whoever may be listening.
      */
-    void entries(DirScanResult dsr, KJob* kjob);
-
     void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
 
 protected:
