@@ -601,7 +601,7 @@ public:
         : BASE_CLASS(parent)//, m_ext_watcher(0, watcher_parent)
 	{
 		qDbo() << "WORKED:" << m_ext_future.state();
-	    // Watcher creation is here vs. in start() to mitigate against cancel-before-start segfaults.  Seems to work.
+        // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
         m_ext_watcher = new ExtFutureWatcherT();
 	}
@@ -640,43 +640,51 @@ protected: // Q_SLOTS:
      * This slot shouldn't even exist, it would be much better to have a signal with this signature in the
      * base class.  But you can't have templated Q_SIGNALs.
      */
-    virtual void SLOT_onResultsReadyAt(const ExtFutureT& ef, int begin, int end) {}
+    virtual void SLOT_onResultsReadyAt(const ExtFutureT& ef, int begin, int end)
+    {
+        qWro() << "Base class override called, should never happen.  ef/begin/end:" << ef << begin << end;
+//        Q_ASSERT_X(0, __func__, "Base class override called, should never happen.");
+    }
 
     virtual void SLOT_extfuture_finished()
     {
         // Job is finished.  Delete the watcher and emit the KJob result.
         // The emitResult() call will send out a KJob::finished() signal.
+        qDbo() << "GOT EXTFUTURE FINISHED";
         m_ext_watcher->deleteLater();
         emitResult();
     }
 
     virtual void SLOT_extfuture_canceled()
     {
+        qDbo() << "GOT EXTFUTURE CANCELED";
         m_ext_watcher->deleteLater();
     }
 
 protected:
 
     /// Last-stage wrapper around the runFunctor().
-    /// Handles most of the common ExtFuture start/finished/canceled/exception code.
+    /// Handles most of the common ExtFuture<T> start/finished/canceled/exception code.
     /// Should not need to be overridded in derived classes.
     virtual void run()
     {
         /// @note We're in an arbitrary thread here probably without an event loop.
 
-        /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
-        /// QMutexLocker locker(&manager->mutex);
-
         auto& ef = m_ext_future;
 
-        qDbo() << "ExtFuture<> state:" << ef.state();
+        qDbo() << "ExtFuture<T> state:" << ef.state();
+
+        // Check if we were canceled before we were started.
         if(ef.isCanceled())
         {
             // We were canceled before we were started.
+            // Report (STARTED | CANCELED | FINISHED) and just return.
             /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
-            // Report (STARTED | CANCELED | FINISHED)
             ef.reportFinished();
             AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
+
+M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture_finished() to be called,"
+          "not SLOT_extfuture_canceled().  Do we need an emitResult() here.");
 
             return;
         }

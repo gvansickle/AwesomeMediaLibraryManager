@@ -367,7 +367,7 @@ TEST_F(AMLMJobTests, SynchronousExecTestWithAutoDelete)
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, ThenTest)
+TEST_F(AMLMJobTests, DISABLED_ThenTest)
 {
     TC_ENTER();
 
