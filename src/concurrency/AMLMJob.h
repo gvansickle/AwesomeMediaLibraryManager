@@ -51,9 +51,6 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
-// Ours
-
-
 template <class T>
 struct AMLMJob_traits
 {
@@ -583,8 +580,6 @@ public:
 
 private:
 
-//    QAtomicInt m_success { 1 };
-
     /// Wishful thinking at the moment, but maybe I'll figure out how to separate "Size" from KJob::Bytes.
     KJob::Unit m_progress_unit { KJob::Unit::Bytes };
 };
@@ -787,8 +782,6 @@ protected:
 
         // Tell Future and hence job to Cancel.
         m_ext_watcher->cancel();
-
-//        ef.cancel();
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
     //    setError(KilledJobError);

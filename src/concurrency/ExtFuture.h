@@ -1352,7 +1352,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 }
 
 /**
- * srd::ostream stream operator (for gtest).
+ * std::ostream stream operator (for gtest).
  */
 template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
