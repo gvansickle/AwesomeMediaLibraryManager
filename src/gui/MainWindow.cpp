@@ -224,7 +224,7 @@ void MainWindow::init()
 	setAnimated(true);
 	setDockNestingEnabled(true);
 
-M_WARNING("TODO: ifdef this to development only")
+    /// @todo ifdef this to development only.
 	m_experimental = new Experimental(this);
 
 	// The list of LibraryModels.
@@ -315,11 +315,9 @@ M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this b
     m_activity_progress_tracker = new ActivityProgressStatusBarTracker(sb);
     statusBar()->addPermanentWidget(m_activity_progress_tracker->get_status_bar_widget());
 
-M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
-
     // Set up the GUI from the ui.rc file embedded in the app's QResource system.
 //	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
-    // No Create, we going to try not using the XML file above.
+    // No Create, we're going to try not using the XML file above.
     // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
