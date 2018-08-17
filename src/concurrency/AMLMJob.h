@@ -785,7 +785,7 @@ protected:
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
 
-        // Cancel and wait for the runFunctor() to actually report Finished, not just Canceled.
+        // Tell Future and hence job to Cancel.
         m_ext_watcher->cancel();
 
 //        ef.cancel();
@@ -795,27 +795,21 @@ protected:
         setKJobErrorInfo(false);
 
 #if 0
-        // Wait for the ExtFuture<> to report Finished or cancelled.
-        /// @todo Is this even meaningful with the semaphore acquire below?
-        ef.waitForFinished();
-
-        // Wait for the async job to really finish, i.e. for the run() member to finish.
-        /// @todo won't be acq'able if killed before started.
-        m_run_returned.acquire();
-
-
-
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
+#else
+
+
+    //    qDbo() << "END EXTASYNC DOKILL";
+
+        // Wait for the runFunctor() to actually report Finished, not just Canceled.
+        m_ext_watcher->waitForFinished();
+
         // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
         /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
         ///       Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start().
-    //    AMLM_ASSERT_EQ(ExtFutureState::state(ef), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
+        AMLM_ASSERT_EQ(m_ext_future.state(), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
 
-    //    qDbo() << "END EXTASYNC DOKILL";
-#else
-        m_ext_watcher->waitForFinished();
-
-        /// @todo Difference here btw cancel before and after start.
+        /// @todo Difference here between cancel before and after start.
         /// Before: Started | Canceled, After: S|F|C.
         qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(m_ext_future);
 #endif
