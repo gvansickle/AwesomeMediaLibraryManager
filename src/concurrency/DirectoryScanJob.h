@@ -61,7 +61,8 @@ Q_SIGNALS:
      * Signal used to send the discovered directory entries to
      * whoever may be listening.
      */
-    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
+//    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
+    void SIGNAL_resultsReadyAt(int begin, int end);
 
 protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
@@ -84,8 +85,6 @@ public:
 											   QDirIterator::IteratorFlags flags);
 
 
-//    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
-
 protected:
 
     DirectoryScannerAMLMJob* asDerivedTypePtr() override { return this; }
@@ -94,12 +93,12 @@ protected:
 
 protected Q_SLOT:
 
-     void SLOT_onResultsReadyAt(const ExtFutureType& ef, int begin, int end) override
-	 {
-		 qDbo() << "GOT RESULTS:" << begin << end;
+//     void SLOT_onResultsReadyAt(const ExtFutureType& ef, int begin, int end) override
+//	 {
+//		 qDbo() << "GOT RESULTS:" << begin << end;
 
-         Q_EMIT SIGNAL_resultsReadyAt(ef, begin, end);
-	 }
+//         Q_EMIT SIGNAL_resultsReadyAt(ef, begin, end);
+//	 }
 
 private:
 

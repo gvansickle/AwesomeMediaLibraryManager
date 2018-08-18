@@ -162,6 +162,13 @@ class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>
 
 Q_SIGNALS:
 
+    /// @name ExtFuture<T> signals we want to expose to the outside world.
+    /// @{
+
+    void SIGNAL_resultsReadyAt(int begin, int end);
+
+    /// @}
+
     /// @warning Qt5 signals are always public in the C++ sense.  Slots are similarly public when called
     ///          via the signal->slot mechanism, on direct calls they have the normal public/protected/private rules.
 
@@ -640,11 +647,11 @@ protected: // Q_SLOTS:
      * This slot shouldn't even exist, it would be much better to have a signal with this signature in the
      * base class.  But you can't have templated Q_SIGNALs.
      */
-    virtual void SLOT_onResultsReadyAt(const ExtFutureT& ef, int begin, int end)
-    {
-        qWro() << "Base class override called, should never happen.  ef/begin/end:" << ef << begin << end;
-//        Q_ASSERT_X(0, __func__, "Base class override called, should never happen.");
-    }
+//    virtual void SLOT_onResultsReadyAt(const ExtFutureT& ef, int begin, int end)
+//    {
+//        qWro() << "Base class override called, should never happen.  ef/begin/end:" << ef << begin << end;
+////        Q_ASSERT_X(0, __func__, "Base class override called, should never happen.");
+//    }
 
     virtual void SLOT_extfuture_finished()
     {
@@ -884,15 +891,17 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
 	{
 		// Main connection we need is results.
 		// resultsReadyAt(range): There are results ready immediately at the given index range.
-        connect_or_die(watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
-                       [=](int beginIndex, int endIndex) {
-            // Directly call the overridden slot with all the info needed to get the results.
-            /// @todo Hold extfuture here.
-            SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
-            });
-//        watcher->connect_onResultsReadyAt(QApplication::instance(), [=](const ExtFutureT& ef, int beginIndex, int endIndex) {
-//            SLOT_onResultsReadyAt(ef, beginIndex, endIndex);
+//        connect_or_die(watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
+//                       [=](int beginIndex, int endIndex) {
+//            // Directly call the overridden slot with all the info needed to get the results.
+//            /// @todo This is problematic and inefficient.
+//            SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
 //            });
+
+        // Signal-to-signal connection.
+//        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &std::remove_reference_t<decltype(*this)>::SIGNAL_onResultsReadyAt);
+//        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_onResultsReadyAt);
+        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
