@@ -62,6 +62,21 @@ struct AMLMJob_traits
 };
 
 /**
+ * Unbelieveable PITA.
+ * https://stackoverflow.com/questions/39186348/connection-of-pure-virtual-signal-of-interface-class?rq=1
+ * https://stackoverflow.com/questions/17943496/declare-abstract-signal-in-interface-class?noredirect=1&lq=1
+ */
+class IExtFutureWatcher
+{
+public:
+    virtual ~IExtFutureWatcher() {}
+
+//Q_SIGNALS:
+    virtual void SIGNAL_resultsReadyAt(int begin, int end) = 0;
+};
+Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
+
+/**
 * Where Does The State Live?
 *
 * KJobPrivate itself contains what should be what's needed and canonical:
@@ -141,10 +156,11 @@ struct AMLMJob_traits
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>, public IExtFutureWatcher
 {
 
     Q_OBJECT
+    Q_INTERFACES(IExtFutureWatcher)
 
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
@@ -165,7 +181,7 @@ Q_SIGNALS:
     /// @name ExtFuture<T> signals we want to expose to the outside world.
     /// @{
 
-    void SIGNAL_resultsReadyAt(int begin, int end);
+    void SIGNAL_resultsReadyAt(int begin, int end) override;
 
     /// @}
 
@@ -592,8 +608,6 @@ private:
     KJob::Unit m_progress_unit { KJob::Unit::Bytes };
 };
 
-//Q_DECLARE_METATYPE(AMLMJob); /// @todo need default constructor and copy constructor.
-
 template <class ExtFutureT>
 class AMLMJobT : public AMLMJob
 {
@@ -604,8 +618,8 @@ public:
     using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
     using ThisType = AMLMJobT<ExtFutureT>;
 
-    explicit AMLMJobT(QObject* parent = nullptr, QObject* watcher_parent = nullptr)
-        : BASE_CLASS(parent)//, m_ext_watcher(0, watcher_parent)
+    explicit AMLMJobT(QObject* parent = nullptr)
+        : BASE_CLASS(parent)
 	{
 		qDbo() << "WORKED:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
@@ -918,8 +932,6 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
      */
     void setKJobErrorInfo(bool success)
     {
-        //Q_ASSERT(!m_possible_delete_later_pending);
-
         // We're still in the underlying ExtAsync::run() context and don't have an event loop here.
         /// @note GRVS: Threadsafety not clear.  KJob doesn't do any locking FWICT around these variable sets.
     //    AMLM_ASSERT_IN_GUITHREAD();

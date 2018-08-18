@@ -193,15 +193,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	// New Tree model.
 	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
 
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, this,
-                   [=](int b, int e){
-        qDbo() << "THIS SHOULD BE GETTING CALLED:" << b << e;
-    });
-
-               #if 0
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt,
                    tree_model,
                    [=](/*const auto& ef,*/ int begin, int end) {
-Q_ASSERT(0); /// NEVER CALLED.
         const auto& ef = dirtrav_job->get_extfuture_ref();
         QVector<AbstractTreeModelItem*> new_items;
         for(int i=begin; i<end; i++)
@@ -223,7 +217,7 @@ Q_ASSERT(0); /// NEVER CALLED.
         tree_model->appendItems(new_items);
 
 		;});
-#endif
+
 
     dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
