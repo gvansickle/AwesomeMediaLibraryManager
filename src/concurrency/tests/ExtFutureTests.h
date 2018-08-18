@@ -33,36 +33,24 @@
 //#include <gmock/gmock-matchers.h>
 
 // Ours
-#include <tests/TestHelpers.h>
+//#include <tests/TestHelpers.h>
+#include "ExtAsyncTestCommon.h"
 
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  */
-class ExtFutureTest : public ::testing::Test
+//template <class FutureTypeT>
+class ExtFutureTest : public ExtAsyncTestsSuiteFixtureBase
 {
+	using BASE_CLASS = ExtAsyncTestsSuiteFixtureBase;
+
+public:
+
+//    using FutureType = FutureTypeT;
+//    static FutureTypeT shared_;
+//    FutureTypeT value_;
+
 protected:
-
-	void SetUp() override;
-	void TearDown() override;
-
-	// Objects declared here can be used by all tests in this Fixture.
-
-	/// Map of test cases which have finished.
-	std::set<std::string> m_finished_set;
-	std::mutex m_finished_map_mutex;
-
-	bool has_finished(std::string func)
-	{
-		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-		return m_finished_set.count(func) > 0;
-
-	}
-
-	void finished(std::string func)
-	{
-		std::lock_guard<std::mutex> lock(m_finished_map_mutex);
-		m_finished_set.insert(func);
-	}
 
 };
 

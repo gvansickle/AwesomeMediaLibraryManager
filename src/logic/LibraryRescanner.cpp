@@ -34,7 +34,9 @@
 #include <KIO/DirectorySizeJob>
 
 /// Ours
+#include <AMLMApp.h>
 #include <gui/MainWindow.h>
+#include <logic/models/AbstractTreeModelItem.h>
 #include <utils/DebugHelpers.h>
 
 /// Ours, Qt5/KF5-related
@@ -59,7 +61,7 @@ AMLM_QREG_CALLBACK([](){
 	// From #include <logic/LibraryRescanner.h>
 	qRegisterMetaType<MetadataReturnVal>();
 	qRegisterMetaType<QFuture<MetadataReturnVal>>();
-	qRegisterMetaType<VecLibRescannerMapItems>("VecLibRescannerMapItems");
+	qRegisterMetaType<VecLibRescannerMapItems>();
     });
 
 
@@ -82,8 +84,6 @@ MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapI
     MetadataReturnVal retval;
 #if 0
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
-
-
 
 	// If we have more than a single entry in the incoming list, we have a multi-track file to refresh.
 	if(mapitem.size() == 1)
@@ -180,48 +180,44 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	// Time how long it takes.
 	m_timer.start();
 
-#if 0
-	// Create the ControlledTask which will scan the directory tree for files.
-
-//	ExtFuture<QString> future = AsyncDirectoryTraversal(dir_url);
-	m_dirtrav_future = AsyncDirectoryTraversal(dir_url);
-	qDb() << "ExtFuture<> RETURNED FROM ASYNCDIRTRAV:" << m_dirtrav_future;
-	qDb() << "ATTACHING THEN, future:" << m_dirtrav_future;
-	m_dirtrav_future.then([=](ExtFuture<QString> the_future) -> QString {
-		qDb() << "then() Async Scan Complete, future:" << m_dirtrav_future;
-		qDb() << "Directory scan complete.";
-		m_last_elapsed_time_dirscan = m_timer.elapsed();
-		qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
-		// Directory traversal complete, start rescan.
-		onDirTravFinished();
-		return QString("THEN DONE");
-	});
-	qDb() << "THEN ATTACHED, future:" << m_dirtrav_future;
-
-//	qDb() << "ATTACHING WAIT, future state:" << future;
-//	future.wait();
-//	qDb() << "WAIT ATTACHED, future state:" << future;
-
-//	future.waitForFinished();
-//	/// EXPERIMENTAL
-//	future.cancel();
-//	//throw QException();
-//	qDebug() << "ERROR";
-#else
     auto master_job_tracker = MainWindow::master_tracker_instance();
     Q_CHECK_PTR(master_job_tracker);
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
-                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
     LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::entries, m_current_libmodel, [=](KJob* kjob, const DirScanResult& the_find)  {
-        // Found a file matching the criteria.  Send it to the model.
-        Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(the_find.getMediaQUrl().toString());
-        ;});
+	// New Tree model.
+	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
+
+    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt,
+                   tree_model,
+                   [=](/*const auto& ef,*/ int begin, int end) {
+        const auto& ef = dirtrav_job->get_extfuture_ref();
+        QVector<AbstractTreeModelItem*> new_items;
+        for(int i=begin; i<end; i++)
+        {
+            QVector<QVariant> column_data;
+            DirScanResult dsr = ef.resultAt(i);
+
+            column_data.append(QVariant::fromValue(dsr.getDirProps()).toString());
+            column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
+            column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+
+            new_items.push_back(new AbstractTreeModelItem(column_data));
+
+            // Found a file matching the criteria.  Send it to the model.
+            /// @todo Forward the signal.
+            m_current_libmodel->SLOT_onIncomingFilename(dsr.getMediaExtUrl().m_url.toString());
+        }
+
+        tree_model->appendItems(new_items);
+
+		;});
+
 
     dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
@@ -269,8 +265,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     // Start the asynchronous ball rolling.
     dirtrav_job->start();
 
-#endif
-
 	qDb() << "END:" << dir_url;
 }
 
@@ -278,120 +272,6 @@ void LibraryRescanner::cancelAsyncDirectoryTraversal()
 {
 	m_dirtrav_future.cancel();
 }
-
-#if 0
-ExtFuture<QString> LibraryRescanner::AsyncDirectoryTraversal(QUrl dir_url)
-{
-	qDb() << "START ASYNC";
-
-	ExtFuture<QString> result = ExtAsync::run(this, &LibraryRescanner::SyncDirectoryTraversal, dir_url);
-
-//	m_dirtrav_future = ExtAsync::run(this, &LibraryRescanner::SyncDirectoryTraversal, dir_url);
-
-	qDb() << "RETURNED FROM ExtAsync:" << result;
-
-	result.tap(this, [=](QString str){
-//		qDb() << "FROM TAP:" << str;
-//		qDb() << "IN onResultReady CALLBACK:" << result;
-		runInObjectEventLoop([=](){ m_current_libmodel->onIncomingFilename(str);}, m_current_libmodel);
-	})
-	.tap(this, [=](ExtAsyncProgress prog) {
-		Q_EMIT this->progressChanged(prog.min, prog.val, prog.max, prog.text);
-	;})
-	.then(this, [=](ExtFuture<QString> dummy){
-		qDb() << "FROM THEN:" << dummy;
-		return unit;
-	;});
-
-
-//	qDb() << "WAIT ASYNC";
-//	result.wait();
-//	qDb() << "END ASYNC";
-
-	return result;
-}
-
-void LibraryRescanner::SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl dir_url)
-{
-	qDb() << "ENTER SyncDirectoryTraversal";
-	future.setProgressRange(0, 100);
-
-	QDirIterator m_dir_iterator(dir_url.toLocalFile(),
-								QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
-								QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-
-	int num_files_found_so_far = 0;
-	uint num_possible_files = 0;
-	QString status_text = QObject::tr("Scanning for music files");
-
-	future.setProgressRange(0, 0);
-	future.setProgressValueAndText(0, status_text);
-
-	while(m_dir_iterator.hasNext())
-	{
-		if(future.isCanceled())
-		{
-			// We've been cancelled.
-			break;
-		}
-		if(future.isPaused())
-		{
-			// We're paused, wait for a resume signal.
-			future.waitForResume();
-		}
-
-		// Go to the next entry and return the path to it.
-		QString entry_path = m_dir_iterator.next();
-		auto file_info = m_dir_iterator.fileInfo();
-
-		if(file_info.isDir())
-		{
-			QDir dir = file_info.absoluteDir();
-
-			// Update the max range to be the number of files we know we've found so far plus the number
-			// of files potentially in this directory.
-			num_possible_files = num_files_found_so_far + file_info.dir().count();
-
-			future.setProgressRange(0, num_possible_files);
-		}
-		else if(file_info.isFile())
-		{
-			// It's a file.
-			num_files_found_so_far++;
-
-			QUrl file_url = QUrl::fromLocalFile(entry_path);
-
-			// Send this path to the future.
-			future.reportResult(file_url.toString());
-
-			// Update progress.
-			future.setProgressValueAndText(num_files_found_so_far, status_text);
-		}
-	}
-
-	// We're done.  One last thing to clean up: We need to send the now-known max range out.
-	// Then we need to send out the final progress value again, because it might have been throttled away
-	// by Qt.
-	num_possible_files = num_files_found_so_far;
-	if (!future.isCanceled())
-	{
-		future.setProgressRange(0, num_possible_files);
-		future.setProgressValueAndText(num_files_found_so_far, status_text);
-	}
-
-	if (future.isCanceled())
-	{
-		// Report that we were canceled.
-		future.reportCanceled();
-	}
-	else
-	{
-		future.reportFinished();
-	}
-
-	qDebug() << "LEAVE SyncDirectoryTraversal";
-}
-#endif
 
 #if 0
 

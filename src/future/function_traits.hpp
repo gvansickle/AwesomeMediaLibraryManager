@@ -39,7 +39,6 @@
 
 namespace ct = boost::callable_traits;
 
-
 /**
  * Non-specialization for all callables.
  *
@@ -57,9 +56,24 @@ struct function_traits
 
 	using return_type_t = ct::return_type_t<T>;
 
-    /// Helper for providing arg_t<N> vs. arg<N>::type.
-	template <std::size_t i>
-	using arg_t = typename std::tuple_element_t<i, ct::args_t<T>>;
+    /// Helpers for providing arg_t<N> vs. arg<N>::type.
+    template<class... Types>
+    struct pack
+    {
+        static constexpr std::size_t size = sizeof...(Types);
+        using to_tuple_plus_void = std::tuple<Types..., void>;
+    };
+//    template <class Tuple>
+//    struct
+//    {
+//        using append_void_to_tuple_t = std::tuple<>;
+//    };
+
+//    template <class Tuple>
+//    using sfinae_tuple = decltype(std::tuple_cat(std::declval<Tuple>, std::tuple<void>()));
+
+    template <std::size_t i>
+    using arg_t = typename std::tuple_element_t<i, ct::args_t<T>>;
 
     /// For checking if the type of arg N is T.
     template <std::size_t i, class Expected>

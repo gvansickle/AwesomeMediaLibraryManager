@@ -49,7 +49,6 @@
 #include "utils/StringHelpers.h"
 
 #include "gui/MainWindow.h"
-#include "utils/RegisterQtMetatypes.h"
 
 #include "resources/VersionInfo.h"
 
@@ -63,6 +62,8 @@ M_WARNING("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CM
  */
 int main(int argc, char *argv[])
 {
+	QThread::currentThread()->setObjectName("MAIN");
+
 	// Set up top-level logging.
 	Logging logging;
 	logging.SetFilterRules();
@@ -103,9 +104,10 @@ int main(int argc, char *argv[])
     // @note Must be the first QObject created and the last QObject deleted.
 	//
     AMLMApp app(argc, argv);
+	app.Init();
 
     // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
-    app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+	AMLMApp::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();
@@ -154,7 +156,7 @@ int main(int argc, char *argv[])
 	// [1] No such function, not really sure if they mean setOrganizationName(), setOrganizationDomain(), or setApplicationName().
 	//     ... looks like setOrganizationName() is empty of we don't explicitly set it below.
 	KAboutData::setApplicationData(aboutData);
-	app.setOrganizationName("gvansickle");
+	AMLMApp::setOrganizationName("gvansickle");
 
 	// Integrate KAboutData with commandline argument handling
 	QCommandLineParser parser;
@@ -171,12 +173,11 @@ int main(int argc, char *argv[])
 	/// @todo No DBus functionality currently.
 
 	// Start the log with the App ID and version info.
-	qInfo() << "Organization:" << app.organizationName() << "(" << app.organizationDomain() << ")";
-	qInfo() << " Application:" << app.applicationDisplayName() << "(" << app.applicationName() << ")";
-	qInfo() << "     Version:" << app.applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
+	qInfo() << "Organization:" << AMLMApp::organizationName() << "(" << AMLMApp::organizationDomain() << ")";
+	qInfo() << " Application:" << AMLMApp::applicationDisplayName() << "(" << AMLMApp::applicationName() << ")";
+	qInfo() << "     Version:" << AMLMApp::applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
 
-	// Register types with Qt.
-	RegisterQtMetatypes();
+
 
 M_WARNING("icons not installed properly");
     // Load the icon resources.

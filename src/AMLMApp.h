@@ -28,6 +28,11 @@
 // KF5
 #include <KConfigGroup>
 
+// Ours
+#include <logic/dbmodels/CollectionDatabaseModel.h>
+
+#include <logic/models/AbstractTreeModel.h>
+
 
 /**
  * qApp-alike macro for getting a pointer to the AMLMApp singleton.
@@ -45,6 +50,9 @@ class AMLMApp: public QApplication
 
 Q_SIGNALS:
     /// Emitted upon reception of aboutToQuit() signal.
+    /// Per @link http://doc.qt.io/qt-5/qcoreapplication.html#exec:
+    /// "We recommend that you connect clean-up code to the aboutToQuit() signal, instead of putting it
+    /// in your application's main() function because on some platforms the exec() call may not return."
 	void aboutToShutdown();
 
 public:
@@ -58,7 +66,19 @@ public:
     explicit AMLMApp(int& argc, char **argv);
 	~AMLMApp() override;
 
+	/**
+	 * Post-constructor initialization.
+	 */
+	void Init(bool gtest_only = false);
+
+    /**
+     * @returns the AMLMApp singleton.
+     */
     static AMLMApp* instance();
+
+
+    CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
+	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
     /**
      * @return true if this app is in the process of shutting down.
@@ -85,6 +105,10 @@ private:
 
     /// The AMLMApp singleton.
     static AMLMApp* m_the_instance;
+
+    CollectionDatabaseModel* m_cdb_model;
+
+	AbstractTreeModel* m_cdb2_model_instance;
 
     bool m_shutting_down {false};
     bool m_controlled_shutdown_complete {false};

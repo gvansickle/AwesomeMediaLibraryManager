@@ -153,6 +153,7 @@ void CoverArtJob::runFunctor()
         setSuccessFlag(false);
     }
 
+M_WARNING("TODO: Getting asserts here on app close during dir scan.");
     Q_EMIT SIGNAL_ImageBytes(retval);
 }
 

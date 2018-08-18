@@ -88,10 +88,6 @@ public Q_SLOTS:
 	void startAsyncDirectoryTraversal(QUrl dir_url);
 	void cancelAsyncDirectoryTraversal();
 
-	/// @todo EXPERIMENTAL
-//	ExtFuture<QString> AsyncDirectoryTraversal(QUrl dir_url);
-//	void SyncDirectoryTraversal(ExtFuture<QString>& future, QUrl dir_url);
-
 //	void onDirTravFinished();
 
     void processReadyResults(MetadataReturnVal lritem_vec);

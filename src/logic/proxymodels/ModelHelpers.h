@@ -53,7 +53,12 @@ inline static QItemSelection mapQItemSelectionToSource(const QItemSelection& pro
     return proxy_selection;
 }
 
-
+/**
+ * Converts a QItemSelection to a QVector of the equivalent QPersistentModelIndex'es.
+ * @param selection
+ * @param col
+ * @return
+ */
 inline static QPersistentModelIndexVec pindexes(const QItemSelection& selection, int col = -1)
 {
 	QModelIndexList index_vec = selection.indexes();

@@ -32,11 +32,44 @@ public:
 	virtual ~QtHelpers();
 };
 
-//template<class StreamType, class T>
-//StreamType& operator<<(StreamType& outstream, const T& obj)
-//{
-//    return outstream << obj;
-//}
+#if 0
+template<class StreamType, class T>
+inline static StreamType operator<<(StreamType outstream, const T& obj)
+{
+    return outstream << obj;
+}
+#endif
+
+/**
+ * Use the below macros in your header, then put something like this in your .cpp file:
+ *
+ * #define DATASTREAM_FIELDS(X) \
+    X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
+
+    QDebug operator<<(QDebug dbg, const DirScanResult & obj)
+    {
+        QDebugStateSaver saver(debug);
+    #define X(field) << obj.field
+        dbg DATASTREAM_FIELDS(X);
+    #undef X
+        return dbg;
+    }
+
+    QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
+    {
+    #define X(field) << myObj.field
+        out DATASTREAM_FIELDS(X);
+    #undef X
+        return out;
+    }
+
+    QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
+    {
+    #define X(field) >> myObj.field
+        return in DATASTREAM_FIELDS(X);
+    #undef X
+    }
+ */
 
 #define IMPL_QTH_DECLARE_QDEBUG_OP(friend_placeholder, classname) \
 	friend_placeholder QDebug operator<<(QDebug out, const classname & obj);
@@ -45,48 +78,35 @@ public:
     friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \
     friend_placeholder QDataStream &operator>>(QDataStream &in, classname & myObj);
 
-///
 
+/**
+ * QDebug "friender".
+ */
+#define QTH_FRIEND_QDEBUG_OP(classname) \
+    IMPL_QTH_DECLARE_QDEBUG_OP(friend, classname)
+
+/**
+ * QDebug output stream operator helper macro.
+ */
 #define QTH_DECLARE_QDEBUG_OP(classname) \
 	IMPL_QTH_DECLARE_QDEBUG_OP(/**/, classname)
 
-#define QTH_FRIEND_QDEBUG_OP(classname) \
-	IMPL_QTH_DECLARE_QDEBUG_OP(friend, classname)
+#define QTH_DEFINE_QDEBUG_OP(classname, ...) \
+    QDebug operator<<(QDebug dbg, const classname & obj)\
+    {\
+        QDebugStateSaver saver(dbg);\
+        dbg << #classname " (" __VA_ARGS__ << ")";\
+        return dbg; \
+    }
+
+#define QTH_FRIEND_QDATASTREAM_OPS(classname) \
+    IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend, classname)
 
 #define QTH_DECLARE_QDATASTREAM_OPS(classname) \
 	IMPL_QTH_DECLARE_QDATASTREAM_OPS(/**/, classname)
 
-#define QTH_FRIEND_QDATASTREAM_OPS(classname) \
-	IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend, classname)
 
-/**
- * Use the above in your header, then put something like this in your .cpp file:
- *
- * #define DATASTREAM_FIELDS(X) \
-    X(m_found_url) X(m_found_url_modinfo) X(m_dir_props) X(m_cue_url) X(m_cue_url_modinfo)
 
-	QDebug operator<<(QDebug dbg, const DirScanResult & obj)
-	{
-	#define X(field) << obj.field
-		dbg DATASTREAM_FIELDS(X);
-	#undef X
-		return dbg;
-	}
 
-	QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
-	{
-	#define X(field) << myObj.field
-		out DATASTREAM_FIELDS(X);
-	#undef X
-		return out;
-	}
-
-	QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
-	{
-	#define X(field) >> myObj.field
-		return in DATASTREAM_FIELDS(X);
-	#undef X
-	}
- */
 
 #endif /* SRC_UTILS_QTHELPERS_H_ */

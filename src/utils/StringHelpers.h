@@ -31,6 +31,7 @@
 #include <QString>
 #include <QTime>
 #include <QTextCodec>
+#include <QUrl>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
 #define HAVE_QLOCALE_FORMATTEDDATASIZE 1
@@ -99,6 +100,11 @@ static inline std::string tostdstr(const QString& qstr)
 	// From the Qt5 docs:
 	// "Returns a std::string object with the data contained in this QString. The Unicode data is converted into 8-bit characters using the toUtf8() function."
 	return qstr.toStdString();
+}
+
+static inline std::string tostdstr(const QUrl& qurl)
+{
+	return tostdstr(qurl.toString());
 }
 
 static inline std::string tostdstr(const TagLib::String &tstr)

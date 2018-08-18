@@ -38,11 +38,11 @@ using LibraryRescannerJobPtr = QPointer<LibraryRescannerJob>;
 /*
  *
  */
-class LibraryRescannerJob: public AMLMJob, public UniqueIDMixin<LibraryRescannerJob>
+class LibraryRescannerJob: public AMLMJobT<ExtFuture<MetadataReturnVal>>, public UniqueIDMixin<LibraryRescannerJob>
 {
     Q_OBJECT
 
-    using BASE_CLASS = AMLMJob;
+    using BASE_CLASS = AMLMJobT<ExtFuture<MetadataReturnVal>>;
 
     /**
      * @note CRTP: Still need this to avoid ambiguous name resolution.
@@ -75,9 +75,6 @@ public Q_SLOTS:
 
 protected:
 
-//    QFutureInterfaceBase& get_future_ref() override { return m_ext_future; }
-    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
-
     LibraryRescannerJob* asDerivedTypePtr() override { return this; }
 
     void runFunctor() override;
@@ -88,8 +85,6 @@ protected:
 
 private:
     Q_DISABLE_COPY(LibraryRescannerJob)
-
-    ExtFuture<MetadataReturnVal> m_ext_future;
 
     QVector<VecLibRescannerMapItems> m_items_to_rescan;
     const LibraryModel* m_current_libmodel;

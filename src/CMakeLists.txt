@@ -156,10 +156,14 @@ set(HEADER_FILES
 	logic/PlaylistModelItem.h
 	logic/PlaylistSortFilterProxyModel.h
 	logic/SupportedMimeTypes.h
-	logic/dbmodels/CollectionDatabaseModel.h
 	logic/TrackMetadata.h
+	logic/dbmodels/CollectionDatabaseModel.h
+	logic/dbmodels/DBConnectionManager.h
+	logic/dbmodels/EnhancedAbstractListModel.h
+	logic/dbmodels/EnhancedAbstractTableModel.h
 	logic/dbmodels/EntityBase.h
-	utils/ActionHelpers.h
+	logic/dbmodels/ScanResultsTableModel.h
+	logic/dbmodels/SQLHelpers.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h
@@ -212,8 +216,12 @@ set(SOURCE_FILES
 	logic/PlaylistModelItem.cpp
 	logic/PlaylistSortFilterProxyModel.cpp
 	logic/SupportedMimeTypes.cpp
-	logic/dbmodels/CollectionDatabaseModel.cpp
 	logic/TrackMetadata.cpp
+	logic/dbmodels/CollectionDatabaseModel.cpp
+	logic/dbmodels/DBConnectionManager.cpp
+	logic/dbmodels/EnhancedAbstractListModel.cpp
+	logic/dbmodels/EnhancedAbstractTableModel.cpp
+	logic/dbmodels/ScanResultsTableModel.cpp
 	logic/dbmodels/EntityBase.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
@@ -253,7 +261,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
 	concurrency/ExtFutureWatcher.h
-	concurrency/impl/ExtFuture_fwddecl_p.h
+	concurrency/ExtAsync_traits.h
 	concurrency/impl/ExtFuture_impl.hpp
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncTask.h
@@ -273,6 +281,13 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/DebugSequence.cpp
 	)
 
+set(SOURCE_FILES_LOGIC_MODELS
+	logic/models/AbstractTreeModelItem.h
+	logic/models/AbstractTreeModelItem.cpp
+	logic/models/AbstractTreeModel.h
+	logic/models/AbstractTreeModel.cpp
+	)
+
 add_subdirectory(gui)
 #message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
@@ -290,6 +305,9 @@ include(future/CMakeLists.txt)
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
+
+# Models
+list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
 
 # Append the third_party files which need to be explicitly in the SOURCE_/HEADER_FILES vars.
 list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
@@ -405,12 +423,14 @@ set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
+	concurrency/tests/ExtAsyncTestCommon.cpp
 	concurrency/tests/ExtFutureTests.cpp
 	concurrency/tests/AMLMJobTests.cpp)
 list(APPEND AMLM_HEADER_FILES_TEST
 	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
+	concurrency/tests/ExtAsyncTestCommon.h
 	concurrency/tests/ExtFutureTests.h
 	concurrency/tests/AMLMJobTests.h)
 

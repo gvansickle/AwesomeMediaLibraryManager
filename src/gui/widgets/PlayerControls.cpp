@@ -34,7 +34,7 @@
 
 #include <gui/Theme.h>
 #include "utils/ConnectHelpers.h"
-#include "utils/ActionHelpers.h"
+#include <gui/actions/ActionHelpers.h>
 
 PlayerControls::PlayerControls(QWidget *parent) : QWidget(parent)
 {

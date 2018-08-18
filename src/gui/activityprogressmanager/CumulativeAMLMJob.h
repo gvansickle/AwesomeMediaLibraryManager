@@ -53,7 +53,7 @@ public:
     /// Nothing to start, this is more of a placeholder. Or maybe?????
     Q_SCRIPTABLE void start() override {}
 
-    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
+    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
 
 protected:
 
