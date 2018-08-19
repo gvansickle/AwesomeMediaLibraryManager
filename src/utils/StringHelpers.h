@@ -73,6 +73,7 @@ enum /*QLocale::*/DataSizeFormats
 // TagLib
 #include <taglib/tag.h>
 
+
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
 /// There are only two assumptions made here:

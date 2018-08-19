@@ -22,14 +22,14 @@
 
 #if 0
 
-#define IPK " INTEGER PRIMARY KEY"
-#define CREATE_TABLE "CREATE TABLE "
-#define SQL_NULL " NULL "
-#define INT " INT "
-#define REAL64 " REAL "
-#define TEXT " TEXT "
-#define BLOB " BLOB "
-#define NOT_NULL " NOT NULL "
+//#define IPK " INTEGER PRIMARY KEY"
+//#define CREATE_TABLE "CREATE TABLE "
+//#define SQL_NULL " NULL "
+//#define INT " INT "
+//#define REAL64 " REAL "
+//#define TEXT " TEXT "
+//#define BLOB " BLOB "
+//#define NOT_NULL " NOT NULL "
 
 #endif
 

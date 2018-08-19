@@ -87,7 +87,7 @@ include(ECMAddAppIcon)
 # CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
 # The options are:
 #   address memory thread leak undefined
-# The sanitizers “address”, “memory” and “thread” are mutually exclusive. You cannot enable two of them in the same build.
+# The sanitizers "address", "memory" and "thread" are mutually exclusive. You cannot enable two of them in the same build.
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
 include(ECMEnableSanitizers)
@@ -148,6 +148,9 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)
 endif()
+if(WIN32)
+ucm_add_flags(/showIncludes)
+endif(WIN32)
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")

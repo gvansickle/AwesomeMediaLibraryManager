@@ -79,6 +79,8 @@ if(WIN32)
             $<INSTALL_INTERFACE:libcue>)
     target_compile_options(libcue PUBLIC -FIlibcue_config_win.h)
 endif()
+set_target_properties(libcue
+	PROPERTIES C_VISIBILITY_PRESET hidden)
 set_property(TARGET libcue PROPERTY SKIP_AUTOGEN ON)
 
 #install(TARGETS libcue
