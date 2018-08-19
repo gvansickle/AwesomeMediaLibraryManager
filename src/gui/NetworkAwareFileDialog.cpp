@@ -29,7 +29,7 @@
 #include <QStandardPaths>
 #include <QWindow>
 
-#if HAVE_GTKMM01
+#if HAVE_GTKMM01 == 1
 #include "helpers/NetAwareFileDialogGtk3.h"
 #include <QtX11Extras/QX11Info>
 //#include <glib-object.h>
@@ -38,7 +38,7 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gdk/x11/gdkx11window.h>
-#endif // HAVE_GTKMM01
+#endif // HAVE_GTKMM01 == 1
 
 #include <memory>
 #include <set>
@@ -80,7 +80,9 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 	QString dir_as_str;
     setObjectName("NetAwareFileDialogProxy");
 
+#if HAVE_GTKMM01 == 1
     m_xcb_connection = QX11Info::connection();
+#endif // HAVE_GTKMM01 == 1
 
     // Create the underlying QFileDialog.
     m_the_qfiledialog = QSharedPointer<QFileDialog>::create(parent, caption, directory.toLocalFile(), filter);
@@ -330,10 +332,13 @@ int NetworkAwareFileDialog::exec()
     {
         retval = exec_qfiledialog();
     }
+
+#if HAVE_GTKMM01 == 1
     else if(use_native_dlg() /* && GTK3+ available */)
     {
         retval = exec_gtk3plus();
     }
+#endif // HAVE_GTKMM01 == 1
 
 	if(retval && m_settings_state_key.length() > 0)
 	{
@@ -385,7 +390,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
     return retval;
 }
 
-#if HAVE_GTKMM01
+#if HAVE_GTKMM01 == 1
 static Gtk::FileChooserAction map_to_Gtk_FileChooserAction(QFileDialog::FileMode filemode)
 {
     // See GTKMM: https://developer.gnome.org/gtkmm/stable/group__gtkmmEnums.html#ga0d6076e7637ec501f26296e65fee2212
@@ -422,6 +427,8 @@ static Gtk::FileChooserAction map_to_Gtk_FileChooserAction(QFileDialog::FileMode
 }
 #endif // HAVE_GTKMM01
 
+
+#if HAVE_GTKMM01 == 1
 QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
 {
     // Use the GTK File chooser.  This gives us access to the gvfs virtual folders and the network.
@@ -568,6 +575,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_gtk3plus()
     return exec_qfiledialog();
 #endif // HAVE_GTKMM01
 }
+#endif // HAVE_GTKMM01 == 1
 
 void NetworkAwareFileDialog::saveStateOverload()
 {
@@ -639,7 +647,7 @@ void NetworkAwareFileDialog::restoreStateOverload()
     }
 }
 
-#if 0 //def HAVE_GTKMM
+#if HAVE_GTKMM01 == 1
 void NetworkAwareFileDialog::setTransientParent_xcb()
 {
     QWindow* parent_qwindow = m_parent_widget->windowHandle();

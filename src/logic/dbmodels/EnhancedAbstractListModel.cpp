@@ -27,6 +27,7 @@ EnhancedAbstractListModel::EnhancedAbstractListModel(QObject *parent)
 QVariant EnhancedAbstractListModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	// FIXME: Implement me!
+    return QVariant();
 }
 
 bool EnhancedAbstractListModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
@@ -48,6 +49,7 @@ int EnhancedAbstractListModel::rowCount(const QModelIndex &parent) const
 		return 0;
 
 	// FIXME: Implement me!
+    return 0;
 }
 
 QVariant EnhancedAbstractListModel::data(const QModelIndex &index, int role) const
@@ -82,6 +84,8 @@ bool EnhancedAbstractListModel::insertRows(int row, int count, const QModelIndex
 	beginInsertRows(parent, row, row + count - 1);
 	// FIXME: Implement me!
 	endInsertRows();
+
+    return false;
 }
 
 bool EnhancedAbstractListModel::removeRows(int row, int count, const QModelIndex &parent)
@@ -89,4 +93,6 @@ bool EnhancedAbstractListModel::removeRows(int row, int count, const QModelIndex
 	beginRemoveRows(parent, row, row + count - 1);
 	// FIXME: Implement me!
 	endRemoveRows();
+
+    return false;
 }
