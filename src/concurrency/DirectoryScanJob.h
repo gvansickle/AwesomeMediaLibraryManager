@@ -39,14 +39,15 @@
 class DirectoryScannerAMLMJob;
 using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
 
+
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectoryScannerAMLMJob>
+class DirectoryScannerAMLMJob : public AMLMJobT<ExtFuture<DirScanResult>>, public UniqueIDMixin<DirectoryScannerAMLMJob>
 {
     Q_OBJECT
 
-    using BASE_CLASS = AMLMJob;
+	using BASE_CLASS = AMLMJobT<ExtFuture<DirScanResult>>;
 
     /**
      * @note CRTP: Still need this to avoid ambiguous name resolution.
@@ -57,16 +58,18 @@ class DirectoryScannerAMLMJob : public AMLMJob, public UniqueIDMixin<DirectorySc
 Q_SIGNALS:
 
     /**
-     * KIO::ListJob-like signal used to send the discovered directory entries to
+     * Signal used to send the discovered directory entries to
      * whoever may be listening.
      */
-    void entries(KJob* kjob, const DirScanResult& url);
+//    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
+    void SIGNAL_resultsReadyAt(int begin, int end);
 
 protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
+
 public:
 
     /// @name Public types
@@ -76,12 +79,11 @@ public:
 
     ~DirectoryScannerAMLMJob() override;
 
-    static DirectoryScannerAMLMJobPtr make_job(QObject *parent, QUrl dir_url,
-                                               const QStringList &nameFilters,
-                                               QDir::Filters filters,
-                                               QDirIterator::IteratorFlags flags);
+	static DirectoryScannerAMLMJobPtr make_job(QObject *parent, const QUrl& dir_url,
+											   const QStringList &nameFilters,
+											   QDir::Filters filters,
+											   QDirIterator::IteratorFlags flags);
 
-    ExtFutureType& get_extfuture_ref() override { return m_ext_future; }
 
 protected:
 
@@ -89,18 +91,25 @@ protected:
 
     void runFunctor() override;
 
+protected Q_SLOT:
+
+//     void SLOT_onResultsReadyAt(const ExtFutureType& ef, int begin, int end) override
+//	 {
+//		 qDbo() << "GOT RESULTS:" << begin << end;
+
+//         Q_EMIT SIGNAL_resultsReadyAt(ef, begin, end);
+//	 }
+
 private:
 
-    ExtFuture<DirScanResult> m_ext_future;
-
+    /// The URL we'll start the traversal from.
     QUrl m_dir_url;
-    QStringList m_nameFilters;
+    QStringList m_name_filters;
     QDir::Filters m_dir_filters;
     QDirIterator::IteratorFlags m_iterator_flags;
 
 };
 
 Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
-
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */

@@ -25,6 +25,7 @@
 #endif
 
 #include <QDebug>
+#include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <utils/DebugHelpers.h>
 
 #include <QApplication>
@@ -36,7 +37,7 @@
 #include <QStorageInfo>
 #include <KDialogJobUiDelegate>
 
-#define EX1 1
+#define EX1 0
 #define EX2 0
 
 #if EX1 == 1
@@ -81,11 +82,13 @@ void Experimental::DoExperiment()
 {
 	qDebug() << "Starting DoExperiment()";
 
-	/**
-	 * @todo
-	 * KFileCopyToMenu
-	 *
-	 */
+    /// @todo Experiments
+//    auto m_cdb_model = new CollectionDatabaseModel(this);
+//    m_cdb_model->InitDb(QUrl("dummyfile.sqlite3"));
+//    auto rel_table_model = m_cdb_model->make_reltable_model(this);
+//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
+//    m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"));
+//    /// @end
 
 #if EX1 == 1
 

@@ -33,7 +33,7 @@
 #include "LibraryModel.h"
 
 
-LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJob(parent)
+LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJobT(parent)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());

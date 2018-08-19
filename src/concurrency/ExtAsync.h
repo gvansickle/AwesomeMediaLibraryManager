@@ -49,8 +49,6 @@
 #include "ExtFutureState.h"
 #include "utils/DebugHelpers.h"
 
-//#include "impl/ExtFuture_fwddecl_p.h"
-
 template <typename T> class ExtFuture;
 //template <typename T> class ExtAsyncTask;
 //template <typename T> class ExtAsyncTaskRunner;
@@ -110,8 +108,16 @@ namespace ExtAsync
 				return report_and_control;
 			}
 		};
+
 	} // END namespace detail
 
+static std::atomic_int64_t s_qthread_id {0};
+
+static inline void name_qthread()
+{
+    int64_t id = ++s_qthread_id;
+    QThread::currentThread()->setObjectName(QString("%1_").arg(id) + QThread::currentThread()->objectName() );
+};
 
 //	template <typename T>
 //	static ExtFuture<T> run(ExtAsyncTask<T>* task)
@@ -159,7 +165,6 @@ namespace ExtAsync
         static_assert(sizeof...(Args) <= 1, "Too many extra args given to run() call");
         static_assert(sizeof...(Args) == 0, "TODO: More than 0 args passed to run() call");
 
-//        constexpr auto calback_arg_num = function_traits<F>::arity_v;
         constexpr auto calback_arg_num = arity_v<F>;
         STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
         static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
@@ -168,7 +173,7 @@ namespace ExtAsync
 		using argst = ct::args_t<F>;
         /// @todo TEMP debug restriction
 //        static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
-        // Extract the type of the first arg of function, which should be an ExtFuture<?>&.
+        // Extract the type of the first non-this arg of function, which should be an ExtFuture<?>&.
         using arg1t = std::tuple_element_t<1, argst>;
 		using ExtFutureR = std::remove_reference_t<arg1t>;
 
@@ -180,7 +185,7 @@ namespace ExtAsync
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFutureR report_and_control;
 
-        QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)), report_and_control, std::forward<Args>(args)...);
+        QtConcurrent::run(std::forward<This*>(thiz), std::forward<F>(std::decay_t<F>(function)), report_and_control, std::forward<Args>(args)...);
 
 		return report_and_control;
 	}
@@ -193,7 +198,7 @@ namespace ExtAsync
      * @returns An ExtFuture<>, probably of Unit type.
      */
     template <typename This, typename F,
-        std::enable_if_t<std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>, int> = 0>
+        REQUIRES(std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>)>
     auto
     run(This* thiz, F&& function) -> decltype(std::declval<This*>()->get_extfuture_ref())
     {
@@ -210,25 +215,71 @@ namespace ExtAsync
     }
 
 	/**
-	 * For free functions of the form:
+     * Asynchronously run a free function of the form:
 	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
-	 *
-	 * Note use of C++14 auto return type deduction.
+     * Creates and returns an ExtFuture<T>.
 	 */
-	template <class F, /*class R = ExtFuture<int>,*/ class... Args, std::enable_if_t<ct::has_void_return_v<F>, int> = 0>
-	auto
-	run(F&& function, Args&&... args)
-	{
-		/// @note Used.
-		qWr() << "EXTASYNC::RUN: IN auto run(F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
-		// Extract the type of the first arg of function, which should be an ExtFuture<?>&.
-		using argst = ct::args_t<F>;
-		using arg0t = std::tuple_element_t<0, argst>;
-		using ExtFutureR = std::remove_reference_t<arg0t>;
-		detail::run_helper_struct<ExtFutureR> helper;
+    template<class CallbackType,
+             class ExtFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
+             class T = isExtFuture_t<ExtFutureT>,
+             REQUIRES(isExtFuture_v<ExtFutureT>)
+             >
+    auto run_efarg(CallbackType&& callback) -> ExtFuture<T>
+    {
+        using argst = ct::args_t<CallbackType>;
+        using arg0t = std::tuple_element_t<0, argst>;
+        using ExtFutureR = std::remove_reference_t<arg0t>;
+        static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
 
-        return helper.run(std::forward<F>(std::decay_t<F>(function)), std::forward<Args>(args)...);
-	}
+        ExtFutureR retval;
+        qDb() << "FUTURE:" << retval.state();
+
+        // retval is passed by copy here.
+//        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
+        QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
+            qDb() << "FUTURE:" << ef.state();
+            callback_fn(ef);
+            qDb() << "POST CALLBACK FUTURE:" << ef.state();
+        }, std::forward<ExtFutureR>(retval));
+
+//        QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
+//            return fn(extfuture, std::move(args)...);
+//        }, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
+
+
+        return retval;
+    }
+
+    template<class CallbackType,
+             class QFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
+             REQUIRES(!isExtFuture_v<QFutureT> && std::is_convertible_v<QFutureT, QFuture<void>>)
+             >
+    auto run_efarg(CallbackType&& callback) -> QFutureT
+    {
+        using argst = ct::args_t<CallbackType>;
+        using arg0t = std::tuple_element_t<0, argst>;
+        using ExtFutureR = std::remove_reference_t<arg0t>;
+//        static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
+
+        ExtFutureR retval;
+        using QFIT_type = decltype(retval.d);
+        QFIT_type fi;
+        fi.reportStarted();
+//        EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
+        retval = QFutureT(&fi);
+
+        qDb() << "FUTURE:" << ExtFutureState::state(retval);
+
+        // retval is passed by copy here.
+//        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
+        QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
+            qDb() << "FUTURE:" << ExtFutureState::state(ef);
+            callback_fn(ef);
+            qDb() << "POST CALLBACK FUTURE:" << ExtFutureState::state(ef);
+        }, std::forward<ExtFutureR>(retval));
+
+        return retval;
+    }
 
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
@@ -239,6 +290,7 @@ namespace ExtAsync
 	template <typename F, typename R = ct::return_type_t<F>>
 		std::enable_if_t<!std::is_member_function_pointer_v<F>
 			&& !ct::has_void_return_v<F>
+        && ct::is_invocable_r_v<R, F, void>
 		, ExtFuture<R>>
 	run(F&& function)
 	{
@@ -266,14 +318,53 @@ namespace ExtAsync
 
 	    return retfuture;
 	}
+
+    /**
+     * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise,
+     * and returning non-void/non-ExtFuture<>.
+     *
+     * @param function
+     * @return
+     */
+    template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, class Arg,
+        REQUIRES(!std::is_member_function_pointer_v<CallbackType>
+              && !isExtFuture_v<R> && !std::is_same_v<R, void>
+            && ct::is_invocable_r_v<R, CallbackType, Arg>)
+        >
+    ExtFuture<R> run_1param(CallbackType&& function, Arg args)
+    {
+        /// @note Used.
+        qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(F&& function):" << __PRETTY_FUNCTION__;
+
+//        ExtFuture<R> retfuture;
+
+        /*
+         * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
+         *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
+         *      in the inner lambda.
+         *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
+         *      unless we decay off the reference-ness.
+         */
+
+        return QtConcurrent::run([fn=std::decay_t<CallbackType>(function)](const Arg args) {
+            R retval;
+            // Call the function the user originally passed in.
+            retval = fn(args);
+            // Report our single result.
+//            retfuture.reportResult(retval);
+//            retfuture.reportFinished();
+            return retval;
+            }, std::forward<Arg>(args));
+
+//        return retfuture;
+    }
+
 };
 
-
 /// @todo Move this include.
-#include "ExtAsyncTask.h"
+//#include "ExtAsyncTask.h"
 
 
-#include "ExtFuture.h"
 
 
 /**

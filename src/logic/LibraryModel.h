@@ -30,6 +30,8 @@
 #include <QUrl>
 #include <QVector>
 
+#include <logic/dbmodels/CollectionDatabaseModel.h>
+
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
@@ -81,6 +83,8 @@ Q_SIGNALS:
 public:
 	explicit LibraryModel(QObject *parent = nullptr);
     ~LibraryModel() override;
+
+    CollectionDatabaseModel *m_cdb_model;
 
 	/**
 	 * Open a new LibraryModel on the specified QUrl.

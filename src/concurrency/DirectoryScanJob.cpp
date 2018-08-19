@@ -33,15 +33,20 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
-    : AMLMJob(parent), m_dir_url(dir_url), m_nameFilters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
+    : BASE_CLASS(parent), m_dir_url(dir_url), m_name_filters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
 
-    setProgressUnit(KJob::Unit::Directories);
+    setProgressUnit(KJob::Unit::Files);
 
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
+
+    /// @todo Temp, delete.
+    connect_or_die(this, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, this, [=](int begin, int end){
+        qDbo() << "Got signal:" << begin << end;
+    });
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -49,7 +54,7 @@ DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
     qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
 }
 
-DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QUrl dir_url,
+DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, const QUrl& dir_url,
                                                              const QStringList &nameFilters,
                                                              QDir::Filters filters,
                                                              QDirIterator::IteratorFlags flags)
@@ -58,7 +63,6 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
                                               nameFilters,
                                               filters,
                                               flags);
-    /// @todo Hook things up in here.
 
     return retval;
 }
@@ -66,7 +70,7 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, QU
 void DirectoryScannerAMLMJob::runFunctor()
 {
     // Create the QDirIterator.
-    QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_nameFilters, m_dir_filters, m_iterator_flags);
+    QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_name_filters, m_dir_filters, m_iterator_flags);
 
     // Check for errors.
     QFileInfo file_info(m_dir_url.toLocalFile());
@@ -157,9 +161,8 @@ void DirectoryScannerAMLMJob::runFunctor()
             /// NEW
             m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
 
-            // Send the URL we found to the future.  Well, in this case, just Q_EMIT it.
-//            Q_EMIT entries(this, file_url);
-            Q_EMIT entries(this, dir_scan_result);
+			// Report the URL we found to the future.
+			m_ext_future.reportResult(dir_scan_result);
         }
 
         if(functorHandlePauseResumeAndCancel())
@@ -172,7 +175,7 @@ void DirectoryScannerAMLMJob::runFunctor()
     }
 
     // We've either completed our work or been cancelled.
-    // Either way, defaultEnd() will handle setting the cancellation status as long as
+	// Either way, run() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
     if(!wasCancelRequested())
     {
@@ -187,3 +190,4 @@ void DirectoryScannerAMLMJob::runFunctor()
 
     qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
 }
+

@@ -57,9 +57,9 @@
 #include <QThread>
 #include <QWhatsThis>
 #include <QMimeData>
+#include <QTableView>
 
-
-/// KF5
+// KF5
 #include <KMainWindow>
 #include <KHelpMenu>
 #include <KToolBar>
@@ -77,7 +77,9 @@
 #include <KIconButton>
 #include <KXmlGui/KEditToolBar>
 
-/// Ours
+// Ours
+#include "AMLMApp.h"
+#include <src/gui/actions/StandardActions.h>
 #include "Experimental.h"
 #include "FilterWidget.h"
 
@@ -88,7 +90,10 @@
 
 // For KF5 KConfig infrastructure.
 #include <AMLMSettings.h>
+#include <gui/actions/ActionHelpers.h>
 #include <gui/settings/SettingsDialog.h>
+#include <gui/widgets/CollectionStatsWidget.h>
+#include <gui/widgets/CollectionView.h>
 
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -103,7 +108,6 @@
 #include "logic/LibrarySortFilterProxyModel.h"
 
 #include "utils/ConnectHelpers.h"
-#include "utils/ActionHelpers.h"
 #include "utils/DebugHelpers.h"
 
 #include <logic/MP2.h>
@@ -123,7 +127,7 @@
 
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
-// the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and counless
+// the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and countless
 // other variations on the theme, with my own adaptations liberally applied throughout.
 //
 
@@ -220,7 +224,7 @@ void MainWindow::init()
 	setAnimated(true);
 	setDockNestingEnabled(true);
 
-M_WARNING("TODO: ifdef this to development only")
+    /// @todo ifdef this to development only.
 	m_experimental = new Experimental(this);
 
 	// The list of LibraryModels.
@@ -284,6 +288,10 @@ void MainWindow::onStartup()
     // Create the "Now Playing" playlist and view.
     newNowPlaying();
 
+    /// @experimental
+    // Create a new Collection view.
+    newCollectionView();
+
     // Load any files which were opened at the time the last session was closed.
     qInfo() << "Loading libraries open at end of last session...";
     QSettings settings;
@@ -307,11 +315,9 @@ M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this b
     m_activity_progress_tracker = new ActivityProgressStatusBarTracker(sb);
     statusBar()->addPermanentWidget(m_activity_progress_tracker->get_status_bar_widget());
 
-M_WARNING("TODO This seems pretty late, but crashes if I move it up.");
-
     // Set up the GUI from the ui.rc file embedded in the app's QResource system.
 //	setupGUI(KXmlGuiWindow::Default, ":/kxmlgui5/AwesomeMediaLibraryManagerui.rc");
-    // No Create, we going to try not using the XML file above.
+    // No Create, we're going to try not using the XML file above.
     // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
@@ -599,6 +605,12 @@ void MainWindow::createActionsEdit(KActionCollection *ac)
                                                                QKeySequence::SelectAll, tr("Select all items in the current list"));
 	connect_trig(m_act_select_all, this, &MainWindow::onSelectAll);
 	addAction("select_all", m_act_select_all);
+
+    // Find
+//    m_ab_find_actions = new ActionBundle(ac);
+    m_act_find = StandardActions::find(this, &MainWindow::SLOT_find, ac);
+    m_act_find_next = StandardActions::findNext(this, &MainWindow::SLOT_find_next, ac);
+    m_act_find_prev = StandardActions::findPrev(this, &MainWindow::SLOT_find_prev, ac);
 }
 
 void MainWindow::createActionsView(KActionCollection *ac)
@@ -732,9 +744,8 @@ M_WARNING("TODO");
     }
 
 	// List toolbars.
-    m_menu_view->addSection(tr("Toolbars"));
-
 M_WARNING("/// @todo This doesn't work for unknown reasons.");
+//    m_menu_view->addSection(tr("Toolbars"));
 //    auto tbma = toolBarMenuAction();
 //    if(tbma != nullptr)
 //    {
@@ -745,7 +756,7 @@ M_WARNING("/// @todo This doesn't work for unknown reasons.");
 //        qWr() << "NULL toolBarMenuAction";
 //    }
 
-    m_menu_view->addSection(tr("Toolbars2"));
+    m_menu_view->addSection(tr("Toolbars"));
     auto tbs = toolBars();
     for(auto tb : tbs)
     {
@@ -787,6 +798,9 @@ void MainWindow::createMenus()
 	m_ab_extended_edit_actions->appendToMenu(m_menu_edit);
 	// Let's see what this does, just for fun.
 	m_menu_edit->setTearOffEnabled(true);
+	m_menu_edit->addAction(m_act_find);
+	m_menu_edit->addAction(m_act_find_next);
+	m_menu_edit->addAction(m_act_find_prev);
 
     // Create the View menu.
 M_WARNING("TODO");
@@ -963,6 +977,13 @@ void MainWindow::createDockWidgets()
     m_collection_dock_widget = new CollectionDockWidget(tr("Media Sources"), this);
 	addDockWidget(Qt::LeftDockWidgetArea, m_collection_dock_widget);
 
+    // Create the Collection Stats dock widget.
+    m_collection_stats_dock_widget = new QDockWidget(tr("Collection Stats"), this);
+    m_collection_stats_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_collection_stats_widget = new CollectionStatsWidget(m_collection_stats_dock_widget);
+    m_collection_stats_dock_widget->setWidget(m_collection_stats_widget);
+    addDockWidget(Qt::LeftDockWidgetArea, m_collection_stats_dock_widget);
+
     // Create the metadata dock widget.
     m_metadataDockWidget = new MetadataDockWidget(tr("Metadata Explorer"), this);
 	m_metadataDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -999,7 +1020,7 @@ void MainWindow::initRootModels()
 void MainWindow::createConnections()
 {
 	/// @todo
-	connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
+    connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(m_player, m_controls);
@@ -1645,6 +1666,26 @@ void MainWindow::newNowPlaying()
     statusBar()->showMessage(tr("Opened 'Now Playing' Playlist '%1'").arg(child->windowTitle()));
 }
 
+void MainWindow::newCollectionView()
+{
+    qDbo() << "Creating new CollectionView";
+    auto child = new CollectionView(this);
+    qDbo() << "Created new CollectionView:" << child;
+    qDbo() << "Adding to mdi area";
+    auto mdi_child = m_mdi_area->addSubWindow(child);
+    Q_CHECK_PTR(mdi_child);
+
+//	auto model = AMLMApp::instance()->cdb_instance()->make_reltable_model(this, AMLMApp::instance()->cdb_instance()->OpenDatabaseConnection("the_connection_name", false, false));
+	auto model = AMLMApp::instance()->cdb_instance()->make_scantable_model(this);
+	qDbo() << "RELMODEL:" << model;
+//    child->setMainModel(model);
+	child->setMainModel2(model);
+//    child->getTableView()->setModel(model);
+    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
+
+    mdi_child->show();
+}
+
 /**
  * Top-level menu/toolbar action for opening an existing playlist.
  * ~= "File->Open...".
@@ -1748,6 +1789,9 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			Q_ASSERT(!model_really_already_existed);
 
 			m_libmodels.push_back(libmodel);
+
+            /// @todo This needs cleanup.
+            m_collection_stats_widget->setModel(libmodel);
 
 			// Add the new library to the ModelViewPairs Model.
 			// The Collection Doc Widget uses this among others.
@@ -1885,7 +1929,22 @@ void MainWindow::onDelete()
 	if(child_treeview)
 	{
 		child_treeview->onDelete();
-	}
+    }
+}
+
+void MainWindow::SLOT_find()
+{
+
+}
+
+void MainWindow::SLOT_find_next()
+{
+
+}
+
+void MainWindow::SLOT_find_prev()
+{
+
 }
 
 void MainWindow::startSettingsDialog()

@@ -17,10 +17,10 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gui/actions/ActionHelpers.h>
 #include "MP2.h"
 #include "ntp.h"
 
-#include "utils/ActionHelpers.h"
 #include "utils/ConnectHelpers.h"
 
 #include <QMediaPlaylist>

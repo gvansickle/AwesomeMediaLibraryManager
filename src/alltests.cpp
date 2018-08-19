@@ -25,6 +25,7 @@
 #include <QtTest>
 
 // Ours
+#include "AMLMApp.h"
 #include "utils/DebugHelpers.h"
 #include "utils/StringHelpers.h"
 #include "utils/RegisterQtMetatypes.h"
@@ -47,7 +48,7 @@
 class StartAndFinish : public ::testing::Environment
 {
 public:
-	virtual ~StartAndFinish() {}
+    ~StartAndFinish() override {}
 
 	// Print the start message.
 	void SetUp() override { 	GTEST_COUT << "TEST STARTING" << std::endl; }
@@ -56,11 +57,26 @@ public:
 	void TearDown() override { 	GTEST_COUT << "TEST COMPLETE" << std::endl; }
 };
 
+// Turn ASSERT failures into exceptions, to allow ASSERTs from subroutines to stop the calling test.
+/// @link https://github.com/google/googletest/blob/master/googletest/docs/advanced.md#asserting-on-subroutines-with-an-exception
+class ThrowListener : public testing::EmptyTestEventListener
+{
+  void OnTestPartResult(const testing::TestPartResult& result) override
+  {
+    if (result.type() == testing::TestPartResult::kFatalFailure)
+    {
+      throw testing::AssertionException(result);
+    }
+  }
+};
+
+///
 /// @note main() mods to support Qt5 threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
-
-
+///
 int main(int argc, char *argv[])
 {
+	QThread::currentThread()->setObjectName("MAIN");
+
 	Logging logging;
 
 	logging.SetFilterRules();
@@ -77,8 +93,12 @@ int main(int argc, char *argv[])
                               "%{function}:%{line} - %{message}"
                               "%{if-fatal}%{backtrace}%{endif}");
 
-	// Create the Qt5 app.
-	QApplication app(argc, argv);
+	//
+    // Create the Qt5/KF5 app.
+    // @note Must be the first QObject created and the last QObject deleted.
+	//
+    AMLMApp app(argc, argv);
+	app.Init(true);
 
 
 	// Start the log with the App ID and version info.
@@ -94,6 +114,9 @@ int main(int argc, char *argv[])
 	// Create a new environment object and register it with gtest.
 	// Don't delete it, gtest takes ownership.
 	::testing::AddGlobalTestEnvironment(new StartAndFinish());
+
+	// Add the exception listener as the last listener.
+	testing::UnitTest::GetInstance()->listeners().Append(new ThrowListener);
 
 	auto retval = RUN_ALL_TESTS();
 

@@ -17,14 +17,20 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_
-#define UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_
+#ifndef UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_
+#define UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_
 
 #include <type_traits>
 #include <future/future_type_traits.hpp>
 #include <future/function_traits.hpp>
 #include <future/cpp14_concepts.hpp>
 #include <future/Unit.hpp>
+
+// Forward declare the ExtAsync namespace
+namespace ExtAsync { namespace detail {} }
+
+template <class T>
+class ExtFuture;
 
 template <typename T>
 struct isExtFuture : std::false_type
@@ -99,4 +105,4 @@ using has_extfuture_ref_as_first_param = std::is_detected<has_extfuture_ref_as_f
 
 /// END concepts
 
-#endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_FWDDECL_P_H_ */
+#endif /* UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_ */

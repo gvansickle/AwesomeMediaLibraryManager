@@ -46,6 +46,8 @@ class QStandardItemModel;
 #include <KMainWindow>
 #include <KXmlGuiWindow>
 
+#include <gui/widgets/CollectionStatsWidget.h>
+
 class KJob;
 namespace KIO
 {
@@ -201,6 +203,9 @@ public Q_SLOTS:
     void onPaste();
     void onSelectAll();
     void onDelete();
+    void SLOT_find();
+    void SLOT_find_next();
+    void SLOT_find_prev();
     /// @}
 
 
@@ -296,6 +301,8 @@ private:
 
     /// Equivalent of a "File->New" action for the Now Playing model/view.
     void newNowPlaying();
+
+    void newCollectionView();
 
 	void addChildMDIView(MDITreeViewBase* child);
 	void addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair);
@@ -429,6 +436,9 @@ private:
     QAction *m_act_paste;
     QAction *m_act_delete;
     QAction *m_act_select_all;
+    QAction* m_act_find;
+    QAction* m_act_find_next;
+    QAction* m_act_find_prev;
     /// @}
 
 	/// View actions.
@@ -503,6 +513,8 @@ public:
     /// Docks
 	CollectionDockWidget* m_collection_dock_widget;
     MetadataDockWidget* m_metadataDockWidget;
+    QDockWidget* m_collection_stats_dock_widget;
+    CollectionStatsWidget* m_collection_stats_widget;
 
 private:
 

@@ -18,6 +18,7 @@
  */
 
 
+#include <gui/actions/ActionHelpers.h>
 #include "HelpMenu.h"
 
 #include <KHelpMenu>
@@ -26,7 +27,6 @@
 #include <QApplication>
 
 #include <utils/ConnectHelpers.h>
-#include <utils/ActionHelpers.h>
 
 HelpMenu::HelpMenu(QWidget* parent, const KAboutData& aboutData, bool showWhatsThis) : KHelpMenu(parent, aboutData, showWhatsThis)
 {

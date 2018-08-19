@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -35,7 +35,9 @@
 #include <logic/LibraryRescannerMapItem.h>
 
 /**
- * Why do we need this?  According to: https://woboq.com/blog/qmetatype-knows-your-types.html
+ * Why do we need this qRegisterMetaType<> mechanism?  It appears that we really don't.
+ *
+ * According to: https://woboq.com/blog/qmetatype-knows-your-types.html
  *
  * "It enables things such as QVariant wrapping of custom types, copy of queued connection arguments, and more."
  *
@@ -53,6 +55,21 @@
  *
  * Docs:
  * http://doc.qt.io/qt-5/qmetatype.html#qRegisterMetaType-1
+ *
+ * And one more, from here: @link ftp://ftp.informatik.hu-berlin.de/pub/Linux/Qt/QT/videos/DevDays2011/TrainingDay/DevDays2011_-_Advanced_Qt_-_A_Deep_Dive.pdf
+ *
+ * Cross-Thread Signals/Slots with Custom Classes
+ * - If you want to emit signals across threads that use custom
+ * (your own) data types, those data types need to be made
+ * known to Qt for serializing.
+ * - Tell Qt about your types with Q_DECLARE_METATYPE:
+ * class MyType { ... };
+ * Q_DECLARE_METATYPE(MyType)
+ * - In case Qt complains it does not know MyType, check that you have
+ * Q_DECLARE_METATYPE(MyType) in the header file of the class, outside any namespace.
+ *
+ * If that still does not solve the problem, you have to call qRegisterMetaType<MyType>()
+ * yourself.
  */
 
 
