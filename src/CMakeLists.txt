@@ -34,7 +34,7 @@ set(AMLM_TAGLIB_TARGET "")
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
 
-if(NOT WIN32)
+if(FALSE)#NOT WIN32)
     pkg_check_modules(TAGLIB REQUIRED taglib>=1.11
 			IMPORTED_TARGET)
 	if(TAGLIB_FOUND)
@@ -361,7 +361,8 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+### @todo No longer required?
+#target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 	"QT_SHAREDPOINTER_TRACK_POINTERS=1"	

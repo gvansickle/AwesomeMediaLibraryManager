@@ -34,6 +34,8 @@ cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
 message(STATUS "CMake-time PATH: $ENV{PATH}")
+message(STATUS "CMake-time CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+message(STATUS "CMake-time CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 include(cmake/GetVersionInfo.cmake)
 
 # Basic information about project
@@ -54,7 +56,7 @@ endif()
 # C11
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-# C++14
+# C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -174,6 +176,7 @@ include(ExternalProject)
 include(DownloadProject)
 
 # Doxygen
+if(FALSE) ### TODO
 # Require dot, treat the other components as optional
 # https://cmake.org/cmake/help/v3.12/module/FindDoxygen.html
 find_package(Doxygen
@@ -187,6 +190,7 @@ doxygen_add_docs(doxygen ALL
 	${PROJECT_SOURCE_DIR}
     COMMENT "Generate doxygen html"
 )
+endif()
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
@@ -281,9 +285,16 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Multimedia
 	Sql
 	Concurrent
-	X11Extras
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Sql Qt5::Concurrent Qt5::X11Extras)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Sql Qt5::Concurrent)
+
+# Unix-only
+if(UNIX)
+    find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+        X11Extras)
+    list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
+endif(UNIX)
+
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
@@ -334,14 +345,16 @@ list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 ### See https://wiki.gnome.org/Projects/gtkmm/UsingCMake, https://cmake.org/cmake/help/v3.10/module/FindPkgConfig.html
 ###
 set(GTK_LINK_LIB_TARGETS)
+if(UNIX)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
 set(HAVE_GTKMM01 ${GTKMM_FOUND})
+endif(UNIX)
 
 ###
 ### X11 and XCB libs.
 ###
-if(TRUE)
+if(UNIX)
 
 find_package(X11 REQUIRED)
 list(APPEND GTK_LINK_LIB_TARGETS ${X11_X11_LIB})
@@ -358,7 +371,7 @@ cmake_print_variables(XCB_TARGETS)
 
 cmake_print_variables(GTK_LINK_LIB_TARGETS)
 
-endif()
+endif(UNIX)
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.

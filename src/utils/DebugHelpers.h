@@ -255,6 +255,16 @@ struct print_constexpr_in_compilation_warning
 
 #define M_NAME_VAL(id) STRINGISE_IMPL(id) ":" << id
 
+/**
+ * Portable __PRETTY_FUNCTION__.
+ * @see @link https://msdn.microsoft.com/library/b0084kay.aspx
+ */
+#if defined(_MSC_VER)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#else
+/* Nothing, gcc and clang's __PRETTY_FUNCTION__ are synonymous with __FUNCSIG__ */
+#endif
+
 
 /**
  * Portable compile-time warning message.
