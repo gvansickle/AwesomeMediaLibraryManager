@@ -44,6 +44,7 @@ else()
     # Use the in-tree copy of TagLib.  Requires some non-obvious cmake gyrations, since TagLib needs to be installed before you can realistically include its headers.
     # Based somewhat on this SO answer: https://stackoverflow.com/a/45079298
     add_library(taglib INTERFACE)
+	set(TAGLIB_SHARED_OR_STATIC "-DBUILD_SHARED_LIBS=OFF") #-DENABLE_STATIC_RUNTIME=ON")
     ExternalProject_Add(taglib_bundled
             PREFIX "taglib_bundled"  # "Relative paths are interpreted with respect to CMAKE_CURRENT_BINARY_DIR at the point where ExternalProject_Add() is called."
             SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
@@ -52,7 +53,7 @@ else()
             LOG_BUILD TRUE
             LOG_INSTALL TRUE
             # Configure step options.
-            CMAKE_ARGS "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF"
+            CMAKE_ARGS "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF" ${TAGLIB_SHARED_OR_STATIC}
             # Create a CMake target "taglib_bundled-install" which can be depended upon.
             STEP_TARGETS install
             )
