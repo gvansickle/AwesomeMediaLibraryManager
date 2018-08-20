@@ -20,6 +20,10 @@
 #ifndef SRC_GUI_HELPERS_GTK3DIALOGHELPER_H_
 #define SRC_GUI_HELPERS_GTK3DIALOGHELPER_H_
 
+#include <config.h>
+
+#if HAVE_GTKMM01 == 1
+
 #include <QWindow>
 
 //#include <gtk/gtk.h>
@@ -62,5 +66,7 @@ private Q_SLOTS:
 private:
     GtkWidget *m_gtkWidget;
 };
+
+#endif // HAVE_GTKMM01 == 1
 
 #endif /* SRC_GUI_HELPERS_GTK3DIALOGHELPER_H_ */

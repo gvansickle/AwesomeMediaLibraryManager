@@ -140,5 +140,5 @@ void Gtk3DialogHelper::onParentWindowDestroyed()
     setParent(0);
 }
 
-#endif
+#endif // HAVE_GTKMM01 == 1
 
