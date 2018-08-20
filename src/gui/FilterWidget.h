@@ -20,8 +20,9 @@
 #ifndef FILTERWIDGET_H
 #define FILTERWIDGET_H
 
-#include <nomocdefs.h>
+//#include <nomocdefs.h>
 
+#include <QObject>
 #include <QLineEdit>
 #include <QRegExp>
 
@@ -32,26 +33,27 @@ Q_DECLARE_METATYPE(QRegExp::PatternSyntax)
 
 class FilterWidget : public QLineEdit
 {
-	W_OBJECT(FilterWidget)
+	//W_OBJECT(FilterWidget)
+	Q_OBJECT
 
-	//Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	//Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
+	Q_PROPERTY(Qt::CaseSensitivity caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
+	Q_PROPERTY(QRegExp::PatternSyntax patternSyntax READ patternSyntax WRITE setPatternSyntax)
 
 Q_SIGNALS:
-	void filterChanged()
-    W_SIGNAL(filterChanged)
+	void filterChanged();
+    //W_SIGNAL(filterChanged)
 
 public:
 	explicit FilterWidget(QWidget *parent = nullptr);
 
 	Qt::CaseSensitivity caseSensitivity() const;
-	void setCaseSensitivity(Qt::CaseSensitivity);
+	void setCaseSensitivity(Qt::CaseSensitivity cs);
 
 	QRegExp::PatternSyntax patternSyntax() const;
-	void setPatternSyntax(QRegExp::PatternSyntax);
+	void setPatternSyntax(QRegExp::PatternSyntax s);
 
-	W_PROPERTY(Qt::CaseSensitivity, caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
-	W_PROPERTY(QRegExp::PatternSyntax, patternSyntax READ patternSyntax WRITE setPatternSyntax)
+	//W_PROPERTY(Qt::CaseSensitivity, caseSensitivity READ caseSensitivity WRITE setCaseSensitivity)
+	//W_PROPERTY(QRegExp::PatternSyntax, patternSyntax READ patternSyntax WRITE setPatternSyntax)
 
 public Q_SLOTS:
 

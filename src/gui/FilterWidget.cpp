@@ -19,7 +19,7 @@
 
 #include "FilterWidget.h"
 
-#include <nomocimpl.h>
+//#include <nomocimpl.h>
 
 #include <QIcon>
 #include <QPixmap>
@@ -31,7 +31,7 @@
 #include <QWidgetAction>
 #include <QDebug>
 
-W_OBJECT_IMPL(FilterWidget)
+//W_OBJECT_IMPL(FilterWidget)
 
 FilterWidget::FilterWidget(QWidget *parent) : QLineEdit(parent), m_patternGroup(new QActionGroup(this))
 {
