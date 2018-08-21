@@ -22,6 +22,9 @@
 
 #include <config.h>
 
+// Std C
+#include <cstring>
+
 // Std C++
 #include <type_traits>
 #include <string>

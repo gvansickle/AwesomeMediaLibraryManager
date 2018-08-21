@@ -34,11 +34,19 @@ set(AMLM_TAGLIB_TARGET "")
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
 
-if(FALSE)#NOT WIN32)
-    pkg_check_modules(TAGLIB REQUIRED taglib>=1.11
-			IMPORTED_TARGET)
+if(TRUE)#NOT WIN32)
+	#pkg_check_modules(TAGLIB REQUIRED taglib>=1.11
+	#		IMPORTED_TARGET)
+	#if(TAGLIB_FOUND)
+	#	set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
+	#endif()
+	set(TAGLIB_MIN_VERSION "1.11.1")
+	find_package(Taglib REQUIRED)
 	if(TAGLIB_FOUND)
-		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
+		add_library(taglib INTERFACE)
+		target_link_libraries(taglib INTERFACE ${TAGLIB_LIBRARIES})
+		target_include_directories(taglib INTERFACE ${TAGLIB_INCLUDES})
+		set(AMLM_TAGLIB_TARGET "taglib")
 	endif()
 else()
     # Use the in-tree copy of TagLib.  Requires some non-obvious cmake gyrations, since TagLib needs to be installed before you can realistically include its headers.

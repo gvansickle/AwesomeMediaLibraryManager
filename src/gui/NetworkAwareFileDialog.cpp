@@ -647,7 +647,7 @@ void NetworkAwareFileDialog::restoreStateOverload()
     }
 }
 
-#if HAVE_GTKMM01 == 1
+#if HAVE_GTKMM01
 void NetworkAwareFileDialog::setTransientParent_xcb()
 {
     QWindow* parent_qwindow = m_parent_widget->windowHandle();
@@ -665,7 +665,7 @@ void NetworkAwareFileDialog::setTransientParent_xcb()
         xcb_flush(m_xcb_connection);
     }
 }
-#endif // HAVE_GTKMM
+#endif // HAVE_GTKMM01
 
 bool NetworkAwareFileDialog::user_pref_native_file_dialog() const
 {

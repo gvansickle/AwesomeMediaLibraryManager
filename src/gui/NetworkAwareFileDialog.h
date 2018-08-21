@@ -187,12 +187,12 @@ private:
 
     QDialog::DialogCode exec_qfiledialog();
 
-#if HAVE_GTKMM01 == 1
+#if HAVE_GTKMM01
     /**
      * Use the GTK File chooser.  This gives us access to the gvfs/GIO virtual folders and the network.
      */
     QDialog::DialogCode exec_gtk3plus();
-#endif // HAVE_GTKMM01 == 1
+#endif // HAVE_GTKMM01
 
     /// @}
 
@@ -212,12 +212,12 @@ private:
     ///       to collect settings.
 	QSharedPointer<QFileDialog> m_the_qfiledialog;
 
-#if HAVE_GTKMM01 == 1
+#if HAVE_GTKMM01
     xcb_connection_t *m_xcb_connection;
     xcb_window_t m_xcb_file_dlg_win;
 //    QWindow *m_transientParent;
 
-//    void setTransientParent_xcb();
+    void setTransientParent_xcb();
 
 #endif // HAVE_GTKMM01
 };
