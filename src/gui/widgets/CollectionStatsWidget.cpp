@@ -42,6 +42,14 @@ CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
     connect(m_sources_model_watcher, &ModelChangeWatcher::modelHasRows, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);
 }
 
+QDockWidget *CollectionStatsWidget::make_dockwidget(const QString &title, QWidget *parent)
+{
+    auto retval = new QDockWidget(tr("Collection Stats"), parent);
+    retval->setObjectName("DockWidget" + objectName());
+    retval->setWidget(this);
+    return retval;
+}
+
 void CollectionStatsWidget::setModel(QPointer<LibraryModel> model)
 {
     m_sources_model = model;

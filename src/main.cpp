@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
                        "] "
 					   /*	+ logging.ClickableLinkPattern() + */
                        "%{function}:%{line} - %{message}"
-					   "%{if-fatal}%{backtrace}%{endif}");
+                       /* "%{if-fatal}%{backtrace}%{endif}" */);
 
 	// Logging test.
 	qInfo() << "LOGGING START";

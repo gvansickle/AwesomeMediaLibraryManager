@@ -21,6 +21,7 @@
 
 
 /// TagLib includes.
+#if 0
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
@@ -34,6 +35,21 @@
 #include <taglib/apetag.h>
 #include <taglib/flacfile.h>
 #include <taglib/flacpicture.h>
+#else
+#include <tag.h>
+#include <fileref.h>
+#include <tpropertymap.h>
+#include <audioproperties.h>
+#include <mpegfile.h>
+#include <vorbisfile.h>
+#include <wavfile.h>
+#include <attachedpictureframe.h>
+#include <id3v1tag.h>
+#include <id3v2tag.h>
+#include <apetag.h>
+#include <flacfile.h>
+#include <flacpicture.h>
+#endif
 
 /// Ours
 #include "TagLibHelpers.h"

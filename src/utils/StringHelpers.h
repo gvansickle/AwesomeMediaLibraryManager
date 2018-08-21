@@ -74,7 +74,7 @@ enum /*QLocale::*/DataSizeFormats
 #endif
 
 // TagLib
-#include <taglib/tag.h>
+#include <tag.h>
 
 
 /// @name Functions for converting between the several thousand different and
