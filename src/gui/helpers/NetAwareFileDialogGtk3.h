@@ -20,7 +20,9 @@
 #ifndef SRC_GUI_HELPERS_NETAWAREFILEDIALOGGTK3_H_
 #define SRC_GUI_HELPERS_NETAWAREFILEDIALOGGTK3_H_
 
-#if HAVE_GTKMM01 == 1
+#include <config.h>
+
+#if HAVE_GTKMM01
 
 #include <QObject>
 #include <QUrl>

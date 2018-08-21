@@ -23,7 +23,7 @@
 
 #include <utils/DebugHelpers.h>
 
-#if HAVE_GTKMM01 == 1
+#if HAVE_GTKMM01
 
 #include <QWindow>
 #include <QEventLoop>
