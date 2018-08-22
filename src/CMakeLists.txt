@@ -369,7 +369,7 @@ Checks: '-*,llvm-twine-local'
 ###
 ### Testing
 ###
-if(TRUE) # Enable test target.
+if(FALSE) # Enable test target.
 
 find_package(Qt5Test REQUIRED)
 include(CTest)
