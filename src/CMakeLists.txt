@@ -34,65 +34,25 @@ set(AMLM_TAGLIB_TARGET "")
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
 
-if(TRUE)#NOT WIN32)
-	#pkg_check_modules(TAGLIB REQUIRED taglib>=1.11
-	#		IMPORTED_TARGET)
-	#if(TAGLIB_FOUND)
-	#	set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
-	#endif()
-	set(TAGLIB_MIN_VERSION "1.11.0")
-	find_package(Taglib REQUIRED)
-	if(TAGLIB_FOUND)
-		add_library(taglib INTERFACE)
-		target_link_libraries(taglib INTERFACE ${TAGLIB_LIBRARIES})
-		target_include_directories(taglib INTERFACE ${TAGLIB_INCLUDES})
-		get_target_property(V1 taglib INTERFACE_INCLUDE_DIRECTORIES)
-		message("V1: ${V1}")
-		set(AMLM_TAGLIB_TARGET "taglib")
-	endif()
-else()
-    # Use the in-tree copy of TagLib.  Requires some non-obvious cmake gyrations, since TagLib needs to be installed before you can realistically include its headers.
-    # Based somewhat on this SO answer: https://stackoverflow.com/a/45079298
-    add_library(taglib INTERFACE)
-	set(TAGLIB_SHARED_OR_STATIC "-DBUILD_SHARED_LIBS=OFF") #-DENABLE_STATIC_RUNTIME=ON")
-    ExternalProject_Add(taglib_bundled
-            PREFIX "taglib_bundled"  # "Relative paths are interpreted with respect to CMAKE_CURRENT_BINARY_DIR at the point where ExternalProject_Add() is called."
-            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
-            INSTALL_DIR "taglib_bundled/install"
-            LOG_CONFIGURE TRUE
-            LOG_BUILD TRUE
-            LOG_INSTALL TRUE
-            # Configure step options.
-            CMAKE_ARGS "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF" ${TAGLIB_SHARED_OR_STATIC}
-            # Create a CMake target "taglib_bundled-install" which can be depended upon.
-            STEP_TARGETS install
-            )
-    add_dependencies(taglib taglib_bundled-install)
-    ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
-    message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
-#    print_target_properties(taglib_bundled)
-	cmake_print_variables(CMAKE_CXX_COMPILER CMAKE_VERSION)
 
-    set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(taglib_INCLUDE_DIR "${INSTALL_DIR}/include")
-    message(STATUS "taglib_LIBRARY: ${taglib_LIBRARY}")
-    message(STATUS "taglib_INCLUDE_DIR: ${taglib_INCLUDE_DIR}")
-
-    # Set INTERFACE properties on our taglib INTERFACE library.
-    # https://cmake.org/cmake/help/v3.10/command/add_library.html?highlight=add_librar#id6
-    target_link_libraries(taglib INTERFACE ${taglib_LIBRARY})
-    target_include_directories(taglib INTERFACE ${taglib_INCLUDE_DIR})
-    target_compile_definitions(taglib INTERFACE "TAGLIB_STATIC")
-
-    # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
-    # @todo looks like we no longer need this.
-    #file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
-
-    set(AMLM_TAGLIB_TARGET "taglib")
-
-    #print_target_properties(${AMLM_TAGLIB_TARGET})
+set(TAGLIB_MIN_VERSION "1.11.0")
+find_package(Taglib REQUIRED)
+if(TAGLIB_FOUND)
+	add_library(taglib INTERFACE)
+	set_property(TARGET taglib PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${TAGLIB_INCLUDES})
+	set_property(TARGET taglib PROPERTY INTERFACE_LINK_LIBRARIES ${TAGLIB_LIBRARIES})
+	set_property(TARGET taglib PROPERTY INTERFACE_CFLAGS ${TAGLIB_CFLAGS})
+	#target_include_directories(taglib INTERFACE_INCLUDE_DIRECTORIES ${TAGLIB_INCLUDES})
+	get_target_property(TL_INTERFACE_INCLUDE_DIRECTORIES taglib INTERFACE_INCLUDE_DIRECTORIES)
+	get_target_property(TL_INTERFACE_LINK_LIBRARIES taglib INTERFACE_LINK_LIBRARIES)
+	get_target_property(TL_INTERFACE_CFLAGS taglib INTERFACE_CFLAGS)
+	cmake_print_variables(TL_INTERFACE_INCLUDE_DIRECTORIES)
+	cmake_print_variables(TL_INTERFACE_LINK_LIBRARIES)
+	cmake_print_variables(TL_INTERFACE_CFLAGS)
+	set(AMLM_TAGLIB_TARGET "taglib")
 endif()
-# Taglib doesn't want AUTOMOC etc. applied to it.
+
+
 ### Can't do this if TARGET is INTERFACE.
 #set_property(TARGET ${AMLM_TAGLIB_TARGET} PROPERTY SKIP_AUTOGEN ON)
 
