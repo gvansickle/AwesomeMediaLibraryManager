@@ -459,6 +459,14 @@ install(FILES ${AppIcon_rcc}
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 		DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
+### @note New KF5 icon theme install for windows and mac
+### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
+if(WIN32)
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
+		DESTINATION ${KDE_INSTALL_ICONDIR}
+		RENAME "icontheme.rcc"
+		COMPONENT coreapp)
+endif(WIN32)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
