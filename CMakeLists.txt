@@ -349,7 +349,7 @@ list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 ### GTK Libs.
 ### See https://wiki.gnome.org/Projects/gtkmm/UsingCMake, https://cmake.org/cmake/help/v3.10/module/FindPkgConfig.html
 ###
-set(GTK_LINK_LIB_TARGETS)
+set(GTK_LINK_LIB_TARGETS "")
 if(UNIX)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)

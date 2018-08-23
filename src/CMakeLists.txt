@@ -452,12 +452,13 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
 		COMPONENT coreapp)
-# Icons
+# App Icon
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
+# Default bundled icons.
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-		DESTINATION ${KDE_INSTALL_APPDIR}
+	    DESTINATION ${KDE_INSTALL_ICONDIR}
 		COMPONENT coreapp)
 ### @note New KF5 icon theme install for windows and mac
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
