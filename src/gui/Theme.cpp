@@ -86,9 +86,107 @@ Theme::Theme(QWidget *parent) : QWidget(parent)
 
 }
 
+bool Theme::checkForTestIcon()
+{
+    M_WARNING("XXXXXX");
+    qIn() << "Icon Theme Name:" << QIcon::themeName();
+    qIn() << "Icon Theme Search Paths:" << QIcon::themeSearchPaths();
+    QString test_icon_name = "folder-open";
+
+    if(QIcon::hasThemeIcon(test_icon_name))
+    {
+        qDb() << "QIcon:" << QIcon::fromTheme(test_icon_name);
+        return true;
+    }
+    else
+    {
+        qWr() << "Found no icon named:" << test_icon_name;
+        return false;
+    }
+}
+
+void Theme::dump_resource_tree(const QString &root)
+{
+    QDirIterator it(root, QDirIterator::Subdirectories);
+    while (it.hasNext())
+    {
+        qIn() << it.next();
+    }
+}
+
 void Theme::initialize()
 {
     // Get OS info.
+
+    ///////
+
+    /// This is not directly related with what we're trying to do here.
+    /// At startup it's empty anyway.
+    /// @see http://doc.qt.io/qt-5/qdir.html#setSearchPaths.
+//    qIn() << "Registered resource paths:";
+//    for(const auto& respath : QDir::searchPaths("icontheme"))
+//    {
+//        qIn() << respath;
+//    }
+
+    auto app_dir_path = QCoreApplication::applicationDirPath();
+    qIn() << "App dir path:" << app_dir_path;
+
+    qIn() << "QStandardPaths::AppDataLocation:";
+    auto app_data_path = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+    for(const auto& adp : app_data_path)
+    {
+        qIn() << "  " << adp;
+    }
+
+    qIn() << "Initial Icon Theme Search Paths:";
+    for(const auto& respath : QIcon::themeSearchPaths())
+    {
+        qIn() << "  " << respath;
+    }
+    qIn() << "Initial Icon Theme Fallback Search Paths:";
+    for(const auto& respath : QIcon::fallbackSearchPaths())
+    {
+        qIn() << "  " << respath;
+    }
+
+    // Interesting stuff in here by default.
+    dump_resource_tree(":/");
+
+    // Load the icon resources.
+    int rccs_loaded = 0;
+    auto rccs = {app_dir_path + tr("/data/icons/icontheme.rcc"),
+                 app_dir_path + tr("/data/icons/icons_oxygen.rcc")};
+    for(const auto& fname : rccs)
+    {
+        // Look for the specified file.
+        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+
+        if(full_path.isEmpty())
+        {
+            qWr() << "Couldn't find icon resource file:" << fname;
+            continue;
+        }
+
+        bool opened = QResource::registerResource(fname);
+        if(!opened)
+        {
+            qCr() << "FAILED TO OPEN RCC:" << fname;
+        }
+        else
+        {
+            qIn() << "Loaded RCC file:" << fname;
+            rccs_loaded++;
+        }
+    }
+
+//    Q_ASSERT(rccs_loaded > 0);
+
+    //    M_WARNING("XXXXXX");
+    //    Theme::check
+
+
+    //////
 
 M_WARNING("TODO");
 #if 0
@@ -171,10 +269,38 @@ M_WARNING("TODO");
         }
     }
 #endif
+    qIn() << "QPA Platform plugin name:" << qApp->platformName();
+
+    // Add supplementary paths to supplemental_icon_theme_dirs depending on OS.
+    /// @note
+//    QStringList supplemental_icon_theme_dirs;
+//    QStringList bundled_theme_search_paths;
+//    if(isWindows())
+//    {
+//        // Need to add a path so KF5::KIconTheme can get to the bundled icontheme.rcc
+//        for(const QString& app_data_path : QStandardPaths::standardLocations(QStandardPaths::AppDataLocation))
+//        {
+//            bundled_theme_search_paths << app_data_path + "/icons";
+//        }
+//        qIn() << "Windows, adding paths to ThemeSearchPaths:" << bundled_theme_search_paths;
+
+//        QIcon::setThemeSearchPaths({":/icons/oxygen", ":/icons"});//bundled_theme_search_paths);
+//    }
+
+//    M_WARNING("XXXXXX");
+    checkForTestIcon();
+
+    /// @todo DONT HARDCODE
+    QIcon::setThemeName("oxygen");
+
+    checkForTestIcon();
+
+    QIcon::setThemeName("oxygen-icons");
+
+    checkForTestIcon();
+
     qDebug() << "Current QIcon::iconThemeName():" << QIcon::themeName();
     qDebug() << "Current QIcon::themeSearchPaths():" << QIcon::themeSearchPaths();
-	qInfo() << "QPA Platform plugin name:" << qApp->platformName();
-
 
     // Find all the icon themes we have access to.
     QStringList retval = FindIconThemes();
@@ -359,7 +485,7 @@ QIcon Theme::iconFromTheme(const QStringList &icon_names)
     QIcon retval;
 
     // Go through all given names and return the first QIcon we find.
-    for(const auto name : icon_names)
+    for(const auto& name : icon_names)
     {
         retval = QIcon::fromTheme(name);
         if(!retval.isNull())
@@ -371,7 +497,7 @@ QIcon Theme::iconFromTheme(const QStringList &icon_names)
     }
 
     // Couldn't find it.
-    qDb() << "Failed to find icon with any of the names" << icon_names << "in icon them search paths.";
+    qDb() << "Failed to find icon with any of the names" << icon_names << "in icon theme search paths.";
 
     return retval;
 }

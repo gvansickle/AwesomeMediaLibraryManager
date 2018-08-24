@@ -461,13 +461,18 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 	    DESTINATION ${KDE_INSTALL_ICONDIR}
 		COMPONENT coreapp)
 ### @note New KF5 icon theme install for windows and mac
+### @note "icontheme.rcc" apparently has to be in bin/data/ (not a subdir) for it to be picked up.
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
 if(WIN32)
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-		DESTINATION ${KDE_INSTALL_ICONDIR}
+		DESTINATION ${KDE_INSTALL_APPDIR}
 		RENAME "icontheme.rcc"
 		COMPONENT coreapp)
 endif(WIN32)
+### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
+ecm_install_icons(ICONS ${ICONS_SRCS}
+	DESTINATION ${KDE_INSTALL_ICONDIR}
+	THEME hicolor)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)

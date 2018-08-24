@@ -60,6 +60,10 @@ public:
     static QIcon iconFromTheme(const QStringList& icon_name);
     static QIcon iconFromTheme(const QMimeType& mime_type);
 
+    static bool checkForTestIcon();
+
+    static void dump_resource_tree(const QString& root);
+
     static void QToolButtonArrowIconFromTheme(QToolButton* button, const QString& icon_name, Qt::ArrowType arrow_type_fallback);
 
     /// @}

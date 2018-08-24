@@ -80,6 +80,7 @@ find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
 # ECM Macros
+include(ECMInstallIcons)
 include(ECMAddAppIcon)
 # Sanitizers.
 # @note KF5:
@@ -201,13 +202,13 @@ endif()
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 #set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
-#set(CMAKE_DEBUG_TARGET_PROPERTIES
-#		INCLUDE_DIRECTORIES
-#        COMPILE_DEFINITIONS
-#		POSITION_INDEPENDENT_CODE
-#		CONTAINER_SIZE_REQUIRED
-#		LIB_VERSION
-#        )
+set(CMAKE_DEBUG_TARGET_PROPERTIES
+	    INCLUDE_DIRECTORIES
+		COMPILE_DEFINITIONS
+		POSITION_INDEPENDENT_CODE
+		CONTAINER_SIZE_REQUIRED
+		LIB_VERSION
+		)
 
 dir_summary()
 
@@ -247,11 +248,14 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # FBO Eclipse, clang-tidy, iwyu, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Set default install location to dist folder in build dir
+# Set default install location to "install" folder in build dir
 # we do not want to install to /usr by default
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/dist" CACHE PATH
+	set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH
         "Install path prefix, prepended onto install directories." FORCE )
+	message(STATUS "Setting CMAKE_INSTALL_PREFIX to ${CMAKE_INSTALL_PREFIX}")
+else()
+	message(WARNING "CMAKE_INSTALL_PREFIX set to default ${CMAKE_INSTALL_PREFIX}")
 endif()
 
 
@@ -328,6 +332,7 @@ endif()
 ###
 set(KF5_LINK_LIBS)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	Config
 	ConfigWidgets
@@ -437,7 +442,7 @@ add_subdirectory(src)
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
-#cmake_print_variables(META_FILES_TO_INCLUDE)
+cmake_print_variables(META_FILES_TO_INCLUDE)
 
 
 ###

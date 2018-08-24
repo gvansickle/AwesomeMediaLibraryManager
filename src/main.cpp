@@ -129,8 +129,9 @@ int main(int argc, char *argv[])
     bool forceBreeze = grp.readEntry("force_breeze", QVariant(false)).toBool();
     if (forceBreeze)
     {
-        Theme::setIconThemeName("breeze");
+//        Theme::setIconThemeName("breeze");
     }
+
 
 	// Set up the KAboutData.
 	// From: https://community.kde.org/Frameworks/Porting_Notes#Build_System
@@ -178,23 +179,6 @@ int main(int argc, char *argv[])
 	qInfo() << " Application:" << AMLMApp::applicationDisplayName() << "(" << AMLMApp::applicationName() << ")";
 	qInfo() << "     Version:" << AMLMApp::applicationVersion() << "(" << VersionInfo::get_full_version_info_string() << ")";
 
-
-
-M_WARNING("icons not installed properly");
-    // Load the icon resources.
-	auto rccs = {"icons_oxygen.rcc"};
-	for(auto fname : rccs)
-	{
-		bool opened = QResource::registerResource(fname);
-		if(!opened)
-		{
-			qCritical() << "FAILED TO OPEN RCC:" << fname;
-		}
-		else
-		{
-			qIn() << "Loaded RCC file:" << fname;
-		}
-	}
 
 	// Set the application Icon.
 	///@todo Get an actual icon.
