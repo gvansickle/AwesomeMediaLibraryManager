@@ -1,0 +1,2 @@
+echo In kdev_gdbinit.txt file\n
+shell echo "From shell"
