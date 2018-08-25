@@ -161,8 +161,9 @@ void Theme::initialize()
     for(const auto& fname : rccs)
     {
         // Look for the specified file.
-        QString full_path;
+
 //        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+        QString full_path;
         if(true /** @todo FIXME For fining the icons when built and installed, but not installed on system. */)
         {
             full_path = app_dir_path + "/../share/icons/" + fname;
