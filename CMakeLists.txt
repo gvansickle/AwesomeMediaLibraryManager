@@ -52,6 +52,9 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
+# Early include of some basic cmake stuff.
+include(CMakePrintHelpers)
+
 ### Set the required language standards.
 # C11
 set(CMAKE_C_STANDARD 11)
@@ -74,6 +77,7 @@ set(ECM_MIN_VERSION "5.44.0")
 # "Config mode provides an elaborate interface and search procedure. Much of the interface is provided for completeness
 #  and for use internally by find-modules loaded by Module mode. Most user code should simply call:
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
+find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
 # Add dirs where we keep support *.cmake's, ucm, ECM, etc.
@@ -179,10 +183,8 @@ endif()
 
 # Include some basic cmake functions.
 include(CheckCXXCompilerFlag)
-include(CMakePrintHelpers)
 include(PrintTargetProperties)
 include(helperfunctions)
-find_package(PkgConfig REQUIRED)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
@@ -528,17 +530,20 @@ cpack_add_component(
 ### Print summary.
 ###
 message(STATUS "======================== START CMAKE SUMMARY ====================================")
-message(STATUS "PROJECT_NAME: ${PROJECT_NAME}")
-message(STATUS "PROJECT_NAME INCLUDE_DIRECTORIES: ${PNID}")
-message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
-message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
-message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
-message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-cmake_print_variables(CMAKE_CXX_COMPILER)
-cmake_print_variables(CMAKE_CXX_FLAGS)
-cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
-cmake_print_variables(META_FILES_TO_INCLUDE)
-print_varlist(CMAKE_EXPORT_COMPILE_COMMANDS)
+message(STATUS "Variables:")
+print_varlist(
+	PROJECT_NAME
+	CMAKE_BINARY_DIR
+	PROJECT_BINARY_DIR
+	CMAKE_LIBRARY_PATH
+	CMAKE_PREFIX_PATH
+	CMAKE_CXX_COMPILER
+	CMAKE_CXX_FLAGS
+	CMAKE_CXX_FLAGS_DEBUG
+	CMAKE_EXPORT_COMPILE_COMMANDS
+	CMAKE_INSTALL_PREFIX 
+	KDE_INSTALL_ICONDIR
+	META_FILES_TO_INCLUDE)
 
 #message_cpack_summary()
 

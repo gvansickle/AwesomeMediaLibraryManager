@@ -131,6 +131,13 @@ void Theme::initialize()
     auto app_dir_path = QCoreApplication::applicationDirPath();
     qIn() << "App dir path:" << app_dir_path;
 
+	// Log QStandardPaths::AppDataLocation, it's particularly critical and problematic.
+	// Among other things, our icon *.rcc files should be under at least one of these directories.
+	// When debugging/running the program, even when built+installed, these paths aren't automatically correct.
+	// The built-source "prefix.sh" file is intended to take care of that, at least on Linux, at gdb-time.
+	// For icons in particular, the env var "XDG_DATA_DIRS" is critical here.  prefix.sh prepends "<builddir>/<installdir>/share" to it,
+	// which appears to be enough to both add it to this list of paths, and add it to QIcon::themeSearchPaths(), where it gets
+	// the "/icons" dir appended to it (not sure what's doing that, the QPA?).
     qIn() << "QStandardPaths::AppDataLocation:";
     auto app_data_path = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
     for(const auto& adp : app_data_path)
@@ -162,11 +169,16 @@ void Theme::initialize()
     {
         // Look for the specified file.
 
-//        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
-        QString full_path;
-        if(true /** @todo FIXME For fining the icons when built and installed, but not installed on system. */)
+        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+//        QString full_path;
+        if(true)
         {
-            full_path = app_dir_path + "/../share/icons/" + fname;
+        	/**
+        	 * @todo FIXME For finding the icons when built and installed, but not installed on system.
+        	 * This is what prefix.sh is for, Windows equivalent?
+        	 */
+
+            //full_path = app_dir_path + "/../share/icons/" + fname;
         }
 
         if(full_path.isEmpty())
@@ -174,6 +186,10 @@ void Theme::initialize()
             qWr() << "Couldn't locate icon resource file:" << fname;
             continue;
         }
+        else
+		{
+			qIn() << "Located resource file:" << fname << "found at absoulte path:" << full_path;
+		}
 
         bool opened = QResource::registerResource(full_path);
         if(!opened)
