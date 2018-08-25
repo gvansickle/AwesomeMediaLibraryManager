@@ -538,6 +538,7 @@ cmake_print_variables(CMAKE_CXX_COMPILER)
 cmake_print_variables(CMAKE_CXX_FLAGS)
 cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
 cmake_print_variables(META_FILES_TO_INCLUDE)
+print_varlist(CMAKE_EXPORT_COMPILE_COMMANDS)
 
 #message_cpack_summary()
 

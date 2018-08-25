@@ -71,7 +71,7 @@ QStringList Theme::m_available_styles;
 
 static bool isWindows()
 {
-#if QT_VERSION_CHECK(5,9,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5,9,0)
 	// @note Qt5.9, doesn't work on Linux yet.
 	QOperatingSystemVersion os_version = QOperatingSystemVersion::current();
 	return os_version.isAnyOfType({QOperatingSystemVersion::Windows});
@@ -88,14 +88,13 @@ Theme::Theme(QWidget *parent) : QWidget(parent)
 
 bool Theme::checkForTestIcon()
 {
-    M_WARNING("XXXXXX");
     qIn() << "Icon Theme Name:" << QIcon::themeName();
     qIn() << "Icon Theme Search Paths:" << QIcon::themeSearchPaths();
     QString test_icon_name = "folder-open";
 
     if(QIcon::hasThemeIcon(test_icon_name))
     {
-        qDb() << "QIcon:" << QIcon::fromTheme(test_icon_name);
+        qDb() << "Found icon named " << test_icon_name << ":" << QIcon::fromTheme(test_icon_name);
         return true;
     }
     else
@@ -154,37 +153,43 @@ void Theme::initialize()
     }
 #endif
 
-    // Interesting stuff in here by default.
-    dump_resource_tree(":/");
 
     // Load the icon resources.
     int rccs_loaded = 0;
-    auto rccs = {app_dir_path + tr("/data/icons/icontheme.rcc"),
-                 app_dir_path + tr("/data/icons/icons_oxygen.rcc")};
+    auto rccs = {"icontheme.rcc",
+                 "icons_oxygen.rcc"};
     for(const auto& fname : rccs)
     {
         // Look for the specified file.
-        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+        QString full_path;
+//        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+        if(true /** @todo FIXME For fining the icons when built and installed, but not installed on system. */)
+        {
+            full_path = app_dir_path + "/../share/icons/" + fname;
+        }
 
         if(full_path.isEmpty())
         {
-            qWr() << "Couldn't find icon resource file:" << fname;
+            qWr() << "Couldn't locate icon resource file:" << fname;
             continue;
         }
 
-        bool opened = QResource::registerResource(fname);
+        bool opened = QResource::registerResource(full_path);
         if(!opened)
         {
-            qCr() << "FAILED TO OPEN RCC:" << fname;
+            qCr() << "FAILED TO OPEN RCC:" << full_path;
         }
         else
         {
-            qIn() << "Loaded RCC file:" << fname;
+            qIn() << "Loaded RCC file:" << full_path;
             rccs_loaded++;
         }
     }
 
-//    Q_ASSERT(rccs_loaded > 0);
+    // Interesting stuff in here by default.
+    dump_resource_tree(":/");
+
+    Q_ASSERT(rccs_loaded > 0);
 
     //    M_WARNING("XXXXXX");
     //    Theme::check
