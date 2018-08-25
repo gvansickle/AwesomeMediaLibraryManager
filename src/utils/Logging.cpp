@@ -56,7 +56,7 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 
     debug_str.replace(QStringLiteral("%threadname15"), thread_name);
 
-M_WARNING("OutputDebugString not defined");
+    /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.
 #if 0 //def Q_OS_WIN
 	OutputDebugString(debug_str.toStdWString().c_str());
 #else
@@ -76,7 +76,9 @@ void Logging::InstallMessageHandler()
 {
 	if(true/** @todo We're running under a debugger.  This still doesn't work on Windows.*/)
     {
-//		qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
+#ifndef Q_OS_WIN
+        qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
+#endif
     }
 }
 
