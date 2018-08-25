@@ -144,11 +144,15 @@ void Theme::initialize()
     {
         qIn() << "  " << respath;
     }
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+    // QIcon::fallbackSearchPaths() Introduced in Qt5 5.11.0.
     qIn() << "Initial Icon Theme Fallback Search Paths:";
     for(const auto& respath : QIcon::fallbackSearchPaths())
     {
         qIn() << "  " << respath;
     }
+#endif
 
     // Interesting stuff in here by default.
     dump_resource_tree(":/");

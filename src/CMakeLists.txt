@@ -36,13 +36,15 @@ set(USE_BUNDLED_LIBCUE TRUE)
 
 
 set(TAGLIB_MIN_VERSION "1.11.0")
-find_package(Taglib REQUIRED)
+find_package(Taglib)
+set_package_properties(Taglib PROPERTIES TYPE REQUIRED PURPOSE "Required for reading media file metadata.")
 if(TAGLIB_FOUND)
 	add_library(taglib INTERFACE)
 	set_property(TARGET taglib PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${TAGLIB_INCLUDES})
 	set_property(TARGET taglib PROPERTY INTERFACE_LINK_LIBRARIES ${TAGLIB_LIBRARIES})
 	set_property(TARGET taglib PROPERTY INTERFACE_CFLAGS ${TAGLIB_CFLAGS})
-	#target_include_directories(taglib INTERFACE_INCLUDE_DIRECTORIES ${TAGLIB_INCLUDES})
+	### Can't do this if TARGET is INTERFACE.
+	#set_property(TARGET ${AMLM_TAGLIB_TARGET} PROPERTY SKIP_AUTOGEN ON)
 	get_target_property(TL_INTERFACE_INCLUDE_DIRECTORIES taglib INTERFACE_INCLUDE_DIRECTORIES)
 	get_target_property(TL_INTERFACE_LINK_LIBRARIES taglib INTERFACE_LINK_LIBRARIES)
 	get_target_property(TL_INTERFACE_CFLAGS taglib INTERFACE_CFLAGS)
@@ -52,9 +54,6 @@ if(TAGLIB_FOUND)
 	set(AMLM_TAGLIB_TARGET "taglib")
 endif()
 
-
-### Can't do this if TARGET is INTERFACE.
-#set_property(TARGET ${AMLM_TAGLIB_TARGET} PROPERTY SKIP_AUTOGEN ON)
 
 if(USE_BUNDLED_LIBCUE)
 	# Use the in-tree copy of libcue.
@@ -463,16 +462,20 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 ### @note New KF5 icon theme install for windows and mac
 ### @note "icontheme.rcc" apparently has to be in bin/data/ (not a subdir) for it to be picked up.
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
-if(WIN32)
+if(TRUE)#WIN32)
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-		DESTINATION ${KDE_INSTALL_APPDIR}
+		DESTINATION ${KDE_INSTALL_ICONDIR}
 		RENAME "icontheme.rcc"
 		COMPONENT coreapp)
-endif(WIN32)
+endif()
 ### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
 ecm_install_icons(ICONS ${ICONS_SRCS}
 	DESTINATION ${KDE_INSTALL_ICONDIR}
 	THEME hicolor)
+ecm_install_icons(ICONS
+    DESTINATION ${KDE_INSTALL_ICONDIR}
+    THEME hicolor
+)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)

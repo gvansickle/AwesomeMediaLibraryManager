@@ -17,6 +17,13 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+function(print_varlist)
+	foreach(element ${ARGN})
+		#cmake_print_variables(element)
+		message(STATUS "${element}: \'${${element}}\'")
+	endforeach()
+endfunction()
+
 function(print_compilers_and_params)
     foreach(lang C CXX)
         message("* Compiler for language ${lang}: ${CMAKE_${lang}_COMPILER}")

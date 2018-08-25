@@ -62,8 +62,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.10.0")
-set(ECM_MIN_VERSION "5.44.0")
 set(KF5_MIN_VERSION "5.44.0")
+set(ECM_MIN_VERSION "5.44.0")
 
 ###
 ### ECM Setup ====================================================================================================
@@ -79,7 +79,10 @@ find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 # Add dirs where we keep support *.cmake's, ucm, ECM, etc.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
-# ECM Macros
+###
+### ECM Macros
+### Note: The order here follows that of KDevelop.  Some macros used there are omitted here.
+###
 include(ECMInstallIcons)
 include(ECMAddAppIcon)
 # Sanitizers.
@@ -95,11 +98,19 @@ include(ECMEnableSanitizers)
 
 # KDE macros.
 # @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
-set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE) ##< Don't define the deprecated KDEInstallDirs.
-#set(ENABLE_CLAZY ON)
-set(APPLE_FORCE_X11 ON)
+# @note Don't set the to true:
+# "If KDE_INSTALL_DIRS_NO_DEPRECATED is set to TRUE, only those variables defined by the GNUInstallDirs module
+# (shipped with CMake) are defined."
+# That is what happens, but I'm not clear on why this var would control that; are all the KDE Install Dirs deprecated?
+#set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
+
+# @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
+# @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
+set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
+#set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
 include(KDECMakeSettings)
+
 # KDECompilerSettings
 # Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
 # @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
@@ -202,13 +213,13 @@ endif()
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 #set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
-set(CMAKE_DEBUG_TARGET_PROPERTIES
-	    INCLUDE_DIRECTORIES
-		COMPILE_DEFINITIONS
-		POSITION_INDEPENDENT_CODE
-		CONTAINER_SIZE_REQUIRED
-		LIB_VERSION
-		)
+#set(CMAKE_DEBUG_TARGET_PROPERTIES
+#	    INCLUDE_DIRECTORIES
+#		COMPILE_DEFINITIONS
+#		POSITION_INDEPENDENT_CODE
+#		CONTAINER_SIZE_REQUIRED
+#		LIB_VERSION
+#		)
 
 dir_summary()
 
@@ -248,6 +259,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # FBO Eclipse, clang-tidy, iwyu, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# The.  Simplest.  Things.
 # Set default install location to "install" folder in build dir
 # we do not want to install to /usr by default
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -257,18 +269,12 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 else()
 	message(WARNING "CMAKE_INSTALL_PREFIX set to default ${CMAKE_INSTALL_PREFIX}")
 endif()
+print_varlist(CMAKE_INSTALL_PREFIX KDE_INSTALL_ICONDIR)
 
 
 
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")
-if(FALSE)
-check_cxx_compiler_flag("-Wdocumentation" CXX_W_DOCUMENTATION)
-if(CXX_W_DOCUMENTATION)
-	message(STATUS "Compile flag supported: ${CXX_W_DOCUMENTATION}")
-	list(APPEND EXTRA_CXX_COMPILE_FLAGS "-Wdocumentation")
-endif()
-endif()
 check_cxx_compiler_flag("-Wuninitialized" CXX_W_UNINIT)
 if(CXX_W_UNINIT)
 	message(STATUS "Compile flag supported: ${CXX_W_UNINIT}")
