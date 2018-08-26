@@ -7,10 +7,13 @@
 
 #include <config.h>
 
-/// Std C++
+// Header for this file.
+#include "Logging.h"
+
+// Std C++
 #include <iostream>
 
-/// Qt5
+// Qt5
 #include <QGuiApplication>
 #include <QLibraryInfo>
 #include <QLoggingCategory>
@@ -18,8 +21,8 @@
 #include <QString>
 #include <QThread>
 
-/// Ours
-#include "Logging.h"
+// Ours
+#include "DebugHelpers.h"
 
 
 Logging::Logging()
@@ -53,7 +56,8 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 
     debug_str.replace(QStringLiteral("%threadname15"), thread_name);
 
-#ifdef Q_OS_WIN
+    /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.
+#if 0 //def Q_OS_WIN
 	OutputDebugString(debug_str.toStdWString().c_str());
 #else
 	std::cerr << debug_str.toStdString() << std::endl;
@@ -72,7 +76,9 @@ void Logging::InstallMessageHandler()
 {
 	if(true/** @todo We're running under a debugger.  This still doesn't work on Windows.*/)
     {
-		qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
+#ifndef Q_OS_WIN
+        qInstallMessageHandler(printDebugMessagesWhileDebuggingHandler);
+#endif
     }
 }
 

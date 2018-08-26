@@ -121,6 +121,8 @@ AMLMApp *AMLMApp::instance()
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
 {
+M_WARNING("REMOVE");
+return;
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
     {

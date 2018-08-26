@@ -21,15 +21,19 @@
 
 #include "CueSheet.h"
 
-/// Qt5
+// Qt5
 #include <QRegularExpression>
 #include <QUrl>
 
-/// KF5
-#include <KF5/KIOCore/KFileItem>
+// KF5
+//#include <KF5/KIOCore/KFileItem>
 
-/// Libcue
+/// @todo Looks like VS2017 headers are broken here.  libcue.h includes <stdio.h> outside the extern "C",
+/// and apparently MS's stdio.h isn't C++-safe.
+extern "C" {
+// Libcue
 #include <libcue.h>
+}
 
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>

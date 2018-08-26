@@ -188,7 +188,7 @@ QSqlError CollectionDatabaseModel::CreateSchema(QSqlDatabase &db)
     auto& db_conn = db;
 
     QStringList tables;
-
+#if 0
 	tables.append(CREATE_TABLE "DirScanResults ("
 				  "dirscanid " IPK ","
 				  "media_url" TEXT NOT_NULL ","
@@ -215,7 +215,7 @@ QSqlError CollectionDatabaseModel::CreateSchema(QSqlDatabase &db)
 	tables.append("INSERT INTO Release values(0, '<all>', 0);");
 	tables.append("INSERT INTO Release values(1, 'Free Fallin', 1);");
 	tables.append("INSERT INTO DirScanResults values(0, 'http://', NULL, 1);");
-
+#endif
     // Create tables.
     for(int i = 0; i < tables.count(); ++i)
     {

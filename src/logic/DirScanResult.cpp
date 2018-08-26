@@ -158,6 +158,7 @@ QVector<ExtUrl> DirScanResult::otherMediaFilesInDir(const QFileInfo& finfo)
     auto dir = finfo.dir();
 Q_ASSERT(0);
 M_WARNING("TODO");
+    return QVector<ExtUrl>();
 }
 
 #define DATASTREAM_FIELDS(X) \

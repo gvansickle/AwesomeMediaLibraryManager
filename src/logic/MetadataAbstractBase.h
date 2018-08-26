@@ -29,9 +29,10 @@
 
 #include "TrackMetadata.h"
 
-#include <taglib/tag.h>
-#include <taglib/fileref.h>
-#include <taglib/tpropertymap.h>
+// Taglib
+#include <tag.h>
+#include <fileref.h>
+#include <tpropertymap.h>
 
 enum class AudioFileType
 {

@@ -57,7 +57,7 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
     TC_ENTER();
 
-    ExtFuture<int64_t> ef = make_ready_future(25L);
+    ExtFuture<int64_t> ef = make_ready_future(25LL);
 
     QList<int64_t> results = ef.get();
 

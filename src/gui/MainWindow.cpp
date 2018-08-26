@@ -321,7 +321,8 @@ M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this b
     // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
-    setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
+M_WARNING("Crashing here on Windows");
+    setupGUI(KXmlGuiWindow::/*Keys | */StatusBar | /*ToolBar |*/ Save);
 
     post_setupGUI_init();
 }
@@ -978,9 +979,10 @@ void MainWindow::createDockWidgets()
 	addDockWidget(Qt::LeftDockWidgetArea, m_collection_dock_widget);
 
     // Create the Collection Stats dock widget.
-    m_collection_stats_dock_widget = new QDockWidget(tr("Collection Stats"), this);
+//    m_collection_stats_dock_widget = new QDockWidget(tr("Collection Stats"), this);
+    m_collection_stats_widget = new CollectionStatsWidget();
+    m_collection_stats_dock_widget = m_collection_stats_widget->make_dockwidget(tr("Collection Stats"), this);
     m_collection_stats_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_collection_stats_widget = new CollectionStatsWidget(m_collection_stats_dock_widget);
     m_collection_stats_dock_widget->setWidget(m_collection_stats_widget);
     addDockWidget(Qt::LeftDockWidgetArea, m_collection_stats_dock_widget);
 

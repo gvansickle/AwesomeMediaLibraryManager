@@ -17,9 +17,14 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.h>
+
 #include "Gtk3DialogHelper.h"
 
 #include <utils/DebugHelpers.h>
+
+// We don't want any of this on Windows, or if we don't have GTK.
+#if HAVE_GTKMM01 == 1
 
 #include <QtGui/private/qguiapplication_p.h>
 
@@ -27,7 +32,6 @@
 #include <gdk/gdkx.h>
 
 #include <QEventLoop>
-
 
 
 Gtk3DialogHelper::Gtk3DialogHelper(GtkWidget *gtkWidget) : m_gtkWidget(gtkWidget)
@@ -136,4 +140,5 @@ void Gtk3DialogHelper::onParentWindowDestroyed()
     setParent(0);
 }
 
+#endif // HAVE_GTKMM01 == 1
 

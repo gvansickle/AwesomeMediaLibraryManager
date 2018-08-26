@@ -20,6 +20,10 @@
 #ifndef SRC_GUI_HELPERS_NETAWAREFILEDIALOGGTK3_H_
 #define SRC_GUI_HELPERS_NETAWAREFILEDIALOGGTK3_H_
 
+#include <config.h>
+
+#if HAVE_GTKMM01
+
 #include <QObject>
 #include <QUrl>
 #include <QScopedPointer>
@@ -90,5 +94,7 @@ private:
 	QScopedPointer<Gtk3DialogHelper> d;
 
 };
+
+#endif // HAVE_GTKMM01 == 1
 
 #endif /* SRC_GUI_HELPERS_NETAWAREFILEDIALOGGTK3_H_ */

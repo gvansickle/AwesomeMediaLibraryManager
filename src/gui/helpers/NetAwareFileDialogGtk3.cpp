@@ -21,17 +21,18 @@
 
 #include "NetAwareFileDialogGtk3.h"
 
+#include <utils/DebugHelpers.h>
+
+#if HAVE_GTKMM01
+
 #include <QWindow>
 #include <QEventLoop>
-
-#include <utils/DebugHelpers.h>
 
 /// @todo
 ///#include <private/qguiapplication_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 
-#if HAVE_GTKMM01
 #include <gtk/gtk.h>
 
 //#include "NetAwareFileDialogGtk3.h"
@@ -42,9 +43,6 @@
 //#include <gdk/gdk.h>
 //#include <gdk/gdkx.h>
 //#include <gdk/x11/gdkx11window.h>
-#endif // HAVE_GTKMM01
-
-#if 1
 
 // GTK 3.10 obsoleted a bunch of these.
 #define GTK_STOCK_OPEN_LABEL    "_Open"
@@ -353,6 +351,7 @@ void NetAwareFileDialogGtk3::setFileChooserAction()
     gtk_file_chooser_set_action(GTK_FILE_CHOOSER(gtkDialog), action);
 }
 
-#endif ////
 // m_dlgHelper = static_cast<QPlatformFileDialogHelper*>(QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(QPlatformTheme::FileDialog));
+
+#endif // HAVE_GTKMM01
 

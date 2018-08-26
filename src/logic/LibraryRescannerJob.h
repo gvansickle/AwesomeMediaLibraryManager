@@ -20,7 +20,6 @@
 #ifndef SRC_LOGIC_LIBRARYRESCANNERJOB_H_
 #define SRC_LOGIC_LIBRARYRESCANNERJOB_H_
 
-#include <src/concurrency/AMLMJob.h>
 
 /// Qt5
 #include <QVector>
@@ -30,6 +29,7 @@
 /// Ours
 #include "LibraryRescannerMapItem.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
+#include <src/concurrency/AMLMJob.h>
 
 class LibraryModel;
 class LibraryRescannerJob;

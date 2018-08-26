@@ -33,9 +33,10 @@
 #include "TrackMetadata.h"
 #include "ntp.h"
 
-#include <taglib/tag.h>
-#include <taglib/fileref.h>
-#include <taglib/tpropertymap.h>
+// TagLib
+#include <tag.h>
+#include <fileref.h>
+#include <tpropertymap.h>
 #include <utils/StringHelpers.h>
 #include <utils/QtHelpers.h>
 #include <utils/RegisterQtMetatypes.h>

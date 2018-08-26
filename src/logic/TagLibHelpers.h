@@ -23,6 +23,8 @@
 
 #include <config.h>
 
+#include <type_traits>
+
 /// @name The TagLib::FileRef constructor takes a TagLib::FileName, which:
 /// - on Linux is typedef for const char *
 /// - on Windows is an actual class with both const char * and const wchar_t * members.

@@ -34,6 +34,8 @@ cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
 message(STATUS "CMake-time PATH: $ENV{PATH}")
+message(STATUS "CMake-time CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+message(STATUS "CMake-time CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 include(cmake/GetVersionInfo.cmake)
 
 # Basic information about project
@@ -50,18 +52,21 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
+# Early include of some basic cmake stuff.
+include(CMakePrintHelpers)
+
 ### Set the required language standards.
 # C11
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-# C++14
+# C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.10.0")
-set(ECM_MIN_VERSION "5.44.0")
 set(KF5_MIN_VERSION "5.44.0")
+set(ECM_MIN_VERSION "5.44.0")
 
 ###
 ### ECM Setup ====================================================================================================
@@ -72,12 +77,17 @@ set(KF5_MIN_VERSION "5.44.0")
 # "Config mode provides an elaborate interface and search procedure. Much of the interface is provided for completeness
 #  and for use internally by find-modules loaded by Module mode. Most user code should simply call:
 #    find_package(<package> [major[.minor]] [EXACT] [REQUIRED|QUIET])"
+find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
 # Add dirs where we keep support *.cmake's, ucm, ECM, etc.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 
-# ECM Macros
+###
+### ECM Macros
+### Note: The order here follows that of KDevelop.  Some macros used there are omitted here.
+###
+include(ECMInstallIcons)
 include(ECMAddAppIcon)
 # Sanitizers.
 # @note KF5:
@@ -85,18 +95,26 @@ include(ECMAddAppIcon)
 # CMakeLists.txt or on the command line) to a semicolon-separated list of sanitizers you wish to enable.
 # The options are:
 #   address memory thread leak undefined
-# The sanitizers “address”, “memory” and “thread” are mutually exclusive. You cannot enable two of them in the same build.
+# The sanitizers "address", "memory" and "thread" are mutually exclusive. You cannot enable two of them in the same build.
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
 include(ECMEnableSanitizers)
 
 # KDE macros.
 # @see https://api.kde.org/ecm/manual/ecm-kde-modules.7.html
-set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE) ##< Don't define the deprecated KDEInstallDirs.
-#set(ENABLE_CLAZY ON)
-set(APPLE_FORCE_X11 ON)
+# @note Don't set the to true:
+# "If KDE_INSTALL_DIRS_NO_DEPRECATED is set to TRUE, only those variables defined by the GNUInstallDirs module
+# (shipped with CMake) are defined."
+# That is what happens, but I'm not clear on why this var would control that; are all the KDE Install Dirs deprecated?
+#set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
+
+# @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
+# @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
+set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
+#set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
 include(KDECMakeSettings)
+
 # KDECompilerSettings
 # Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
 # @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
@@ -136,7 +154,9 @@ include(FeatureSummary)
 # cmake and/or Qt Creator.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
+if(UNIX)
 ucm_add_flags(-fmessage-length=0)
+endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
 	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments CONFIG DEBUG)
@@ -144,6 +164,9 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)
 endif()
+if(WIN32)
+#ucm_add_flags(/showIncludes)
+endif(WIN32)
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
@@ -160,10 +183,8 @@ endif()
 
 # Include some basic cmake functions.
 include(CheckCXXCompilerFlag)
-include(CMakePrintHelpers)
 include(PrintTargetProperties)
 include(helperfunctions)
-find_package(PkgConfig REQUIRED)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
@@ -174,6 +195,7 @@ include(ExternalProject)
 include(DownloadProject)
 
 # Doxygen
+if(FALSE) ### TODO
 # Require dot, treat the other components as optional
 # https://cmake.org/cmake/help/v3.12/module/FindDoxygen.html
 find_package(Doxygen
@@ -187,18 +209,19 @@ doxygen_add_docs(doxygen ALL
 	${PROJECT_SOURCE_DIR}
     COMMENT "Generate doxygen html"
 )
+endif()
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
 #set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
-#		INCLUDE_DIRECTORIES
-#        COMPILE_DEFINITIONS
+#	    INCLUDE_DIRECTORIES
+#		COMPILE_DEFINITIONS
 #		POSITION_INDEPENDENT_CODE
 #		CONTAINER_SIZE_REQUIRED
 #		LIB_VERSION
-#        )
+#		)
 
 dir_summary()
 
@@ -238,24 +261,22 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # FBO Eclipse, clang-tidy, iwyu, etc.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Set default install location to dist folder in build dir
+# The.  Simplest.  Things.
+# Set default install location to "install" folder in build dir
 # we do not want to install to /usr by default
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/dist" CACHE PATH
+	set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH
         "Install path prefix, prepended onto install directories." FORCE )
+	message(STATUS "Setting CMAKE_INSTALL_PREFIX to ${CMAKE_INSTALL_PREFIX}")
+else()
+	message(WARNING "CMAKE_INSTALL_PREFIX set to default ${CMAKE_INSTALL_PREFIX}")
 endif()
+print_varlist(CMAKE_INSTALL_PREFIX KDE_INSTALL_ICONDIR)
 
 
 
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")
-if(FALSE)
-check_cxx_compiler_flag("-Wdocumentation" CXX_W_DOCUMENTATION)
-if(CXX_W_DOCUMENTATION)
-	message(STATUS "Compile flag supported: ${CXX_W_DOCUMENTATION}")
-	list(APPEND EXTRA_CXX_COMPILE_FLAGS "-Wdocumentation")
-endif()
-endif()
 check_cxx_compiler_flag("-Wuninitialized" CXX_W_UNINIT)
 if(CXX_W_UNINIT)
 	message(STATUS "Compile flag supported: ${CXX_W_UNINIT}")
@@ -281,9 +302,16 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Multimedia
 	Sql
 	Concurrent
-	X11Extras
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Sql Qt5::Concurrent Qt5::X11Extras)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Sql Qt5::Concurrent)
+
+# Unix-only
+if(UNIX)
+    find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+        X11Extras)
+    list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
+endif(UNIX)
+
 get_target_property(Qt5Core_location Qt5::Core LOCATION)
 message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
 message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
@@ -310,15 +338,18 @@ endif()
 ###
 ### KDE KF5 libs.
 ###
+# Krita has ~this warning: "don't reorder these, this is the order they depend on each other."
 set(KF5_LINK_LIBS)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
-	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
+	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
 	Config
-	ConfigWidgets
-	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
 	WidgetsAddons
-	XmlGui
+	# Completion
+	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	GuiAddons
+	ConfigWidgets ## Not in Krita from this until WindowSystem.
+	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	XmlGui
 	IconThemes
 	WindowSystem
 )
@@ -333,15 +364,17 @@ list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 ### GTK Libs.
 ### See https://wiki.gnome.org/Projects/gtkmm/UsingCMake, https://cmake.org/cmake/help/v3.10/module/FindPkgConfig.html
 ###
-set(GTK_LINK_LIB_TARGETS)
+set(GTK_LINK_LIB_TARGETS "")
+if(UNIX)
 pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
 list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
 set(HAVE_GTKMM01 ${GTKMM_FOUND})
+endif(UNIX)
 
 ###
 ### X11 and XCB libs.
 ###
-if(TRUE)
+if(UNIX)
 
 find_package(X11 REQUIRED)
 list(APPEND GTK_LINK_LIB_TARGETS ${X11_X11_LIB})
@@ -358,7 +391,7 @@ cmake_print_variables(XCB_TARGETS)
 
 cmake_print_variables(GTK_LINK_LIB_TARGETS)
 
-endif()
+endif(UNIX)
 
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
@@ -419,7 +452,7 @@ add_subdirectory(src)
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
-#cmake_print_variables(META_FILES_TO_INCLUDE)
+cmake_print_variables(META_FILES_TO_INCLUDE)
 
 
 ###
@@ -499,16 +532,20 @@ cpack_add_component(
 ### Print summary.
 ###
 message(STATUS "======================== START CMAKE SUMMARY ====================================")
-message(STATUS "PROJECT_NAME: ${PROJECT_NAME}")
-message(STATUS "PROJECT_NAME INCLUDE_DIRECTORIES: ${PNID}")
-message(STATUS "CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
-message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
-message(STATUS "CMAKE_LIBRARY_PATH: ${CMAKE_LIBRARY_PATH}")
-message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-cmake_print_variables(CMAKE_CXX_COMPILER)
-cmake_print_variables(CMAKE_CXX_FLAGS)
-cmake_print_variables(CMAKE_CXX_FLAGS_DEBUG)
-cmake_print_variables(META_FILES_TO_INCLUDE)
+message(STATUS "Variables:")
+print_varlist(
+	PROJECT_NAME
+	CMAKE_BINARY_DIR
+	PROJECT_BINARY_DIR
+	CMAKE_LIBRARY_PATH
+	CMAKE_PREFIX_PATH
+	CMAKE_CXX_COMPILER
+	CMAKE_CXX_FLAGS
+	CMAKE_CXX_FLAGS_DEBUG
+	CMAKE_EXPORT_COMPILE_COMMANDS
+	CMAKE_INSTALL_PREFIX 
+	KDE_INSTALL_ICONDIR
+	META_FILES_TO_INCLUDE)
 
 #message_cpack_summary()
 

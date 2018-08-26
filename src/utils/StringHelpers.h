@@ -22,6 +22,9 @@
 
 #include <config.h>
 
+// Std C
+#include <cstring>
+
 // Std C++
 #include <type_traits>
 #include <string>
@@ -71,7 +74,8 @@ enum /*QLocale::*/DataSizeFormats
 #endif
 
 // TagLib
-#include <taglib/tag.h>
+#include <tag.h>
+
 
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
@@ -180,7 +184,7 @@ static inline bool isValidUTF8(const char* bytes)
 {
 	QTextCodec::ConverterState state;
 	QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-	const QString text = codec->toUnicode(bytes, strlen(bytes), &state);
+    const QString text = codec->toUnicode(bytes, std::strlen(bytes), &state);
 	if (state.invalidChars > 0)
 	{
 		return false;

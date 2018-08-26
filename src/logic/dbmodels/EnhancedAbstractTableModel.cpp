@@ -57,6 +57,7 @@ int EnhancedAbstractTableModel::rowCount(const QModelIndex &parent) const
 		return 0;
 
 	// FIXME: Implement me!
+    return 0;
 }
 
 int EnhancedAbstractTableModel::columnCount(const QModelIndex &parent) const
@@ -65,6 +66,7 @@ int EnhancedAbstractTableModel::columnCount(const QModelIndex &parent) const
 		return 0;
 
 	// FIXME: Implement me!
+    return 0;
 }
 
 QVariant EnhancedAbstractTableModel::data(const QModelIndex &index, int role) const
@@ -107,6 +109,7 @@ bool EnhancedAbstractTableModel::insertRows(int row, int count, const QModelInde
 	beginInsertRows(parent, row, row + count - 1);
 	// FIXME: Implement me!
 	endInsertRows();
+    return false;
 }
 
 bool EnhancedAbstractTableModel::insertColumns(int column, int count, const QModelIndex &parent)
@@ -114,6 +117,7 @@ bool EnhancedAbstractTableModel::insertColumns(int column, int count, const QMod
 	beginInsertColumns(parent, column, column + count - 1);
 	// FIXME: Implement me!
 	endInsertColumns();
+    return false;
 }
 
 bool EnhancedAbstractTableModel::removeRows(int row, int count, const QModelIndex &parent)
@@ -121,6 +125,8 @@ bool EnhancedAbstractTableModel::removeRows(int row, int count, const QModelInde
 	beginRemoveRows(parent, row, row + count - 1);
 	// FIXME: Implement me!
 	endRemoveRows();
+
+    return false;
 }
 
 bool EnhancedAbstractTableModel::removeColumns(int column, int count, const QModelIndex &parent)
@@ -128,6 +134,7 @@ bool EnhancedAbstractTableModel::removeColumns(int column, int count, const QMod
 	beginRemoveColumns(parent, column, column + count - 1);
 	// FIXME: Implement me!
 	endRemoveColumns();
+    return false;
 }
 
 //void EnhancedAbstractTableModel::appendRows(int row, int count, const QModelIndex& parent,

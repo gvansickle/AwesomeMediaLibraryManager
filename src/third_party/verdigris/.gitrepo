@@ -7,5 +7,5 @@
 	remote = https://github.com/woboq/verdigris.git
 	branch = master
 	commit = 1434cc066b035e24b43df514cf17080907199dd3
-	parent = a3c4375e432f0ec613a00c004f4ef0c080008c67
+	parent = b84f008660f9cfc236277d0f5ac2bce892659887
 	cmdver = 0.3.1

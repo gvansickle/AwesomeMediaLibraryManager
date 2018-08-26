@@ -21,6 +21,7 @@
 #define COLLECTIONSTATSWIDGET_H
 
 // Qt5
+#include <QDockWidget>
 #include <QLabel>
 #include <QPointer>
 #include <QStandardItemModel>
@@ -36,6 +37,8 @@ class CollectionStatsWidget : public QWidget
     Q_OBJECT
 public:
     explicit CollectionStatsWidget(QWidget *parent = nullptr);
+
+    QDockWidget* make_dockwidget(const QString &title, QWidget *parent = nullptr);
 
     void setModel(QPointer<LibraryModel> model);
 

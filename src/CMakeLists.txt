@@ -34,56 +34,26 @@ set(AMLM_TAGLIB_TARGET "")
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
 
-if(NOT WIN32)
-    pkg_check_modules(TAGLIB REQUIRED taglib>=1.11
-			IMPORTED_TARGET)
-	if(TAGLIB_FOUND)
-		set(AMLM_TAGLIB_TARGET "PkgConfig::TAGLIB")
-	endif()
-else()
-    # Use the in-tree copy of TagLib.  Requires some non-obvious cmake gyrations, since TagLib needs to be installed before you can realistically include its headers.
-    # Based somewhat on this SO answer: https://stackoverflow.com/a/45079298
-    add_library(taglib INTERFACE)
-    ExternalProject_Add(taglib_bundled
-            PREFIX "taglib_bundled"  # "Relative paths are interpreted with respect to CMAKE_CURRENT_BINARY_DIR at the point where ExternalProject_Add() is called."
-            SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/taglib"
-            INSTALL_DIR "taglib_bundled/install"
-            LOG_CONFIGURE TRUE
-            LOG_BUILD TRUE
-            LOG_INSTALL TRUE
-            # Configure step options.
-            CMAKE_ARGS "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>" "-DBUILD_BINDINGS=OFF"
-            # Create a CMake target "taglib_bundled-install" which can be depended upon.
-            STEP_TARGETS install
-            )
-    add_dependencies(taglib taglib_bundled-install)
-    ExternalProject_Get_Property(taglib_bundled INSTALL_DIR)
-    message(STATUS "taglib_bundled INSTALL_DIR: ${INSTALL_DIR}")
-#    print_target_properties(taglib_bundled)
-	cmake_print_variables(CMAKE_CXX_COMPILER CMAKE_VERSION)
 
-    set(taglib_LIBRARY "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${CMAKE_STATIC_LIBRARY_PREFIX}tag${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(taglib_INCLUDE_DIR "${INSTALL_DIR}/include")
-    message(STATUS "taglib_LIBRARY: ${taglib_LIBRARY}")
-    message(STATUS "taglib_INCLUDE_DIR: ${taglib_INCLUDE_DIR}")
-
-    # Set INTERFACE properties on our taglib INTERFACE library.
-    # https://cmake.org/cmake/help/v3.10/command/add_library.html?highlight=add_librar#id6
-    target_link_libraries(taglib INTERFACE ${taglib_LIBRARY})
-    target_include_directories(taglib INTERFACE ${taglib_INCLUDE_DIR})
-    target_compile_definitions(taglib INTERFACE "TAGLIB_STATIC")
-
-    # Workaround needed to prevent cmake from complaining about INTERFACE_INCLUDE_DIRECTORIES being a "nonexistent path".
-    # @todo looks like we no longer need this.
-    #file(MAKE_DIRECTORY ${INSTALL_DIR}/include)
-
-    set(AMLM_TAGLIB_TARGET "taglib")
-
-    #print_target_properties(${AMLM_TAGLIB_TARGET})
+set(TAGLIB_MIN_VERSION "1.11.0")
+find_package(Taglib)
+set_package_properties(Taglib PROPERTIES TYPE REQUIRED PURPOSE "Required for reading media file metadata.")
+if(TAGLIB_FOUND)
+	add_library(taglib INTERFACE)
+	set_property(TARGET taglib PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${TAGLIB_INCLUDES})
+	set_property(TARGET taglib PROPERTY INTERFACE_LINK_LIBRARIES ${TAGLIB_LIBRARIES})
+	set_property(TARGET taglib PROPERTY INTERFACE_CFLAGS ${TAGLIB_CFLAGS})
+	### Can't do this if TARGET is INTERFACE.
+	#set_property(TARGET ${AMLM_TAGLIB_TARGET} PROPERTY SKIP_AUTOGEN ON)
+	get_target_property(TL_INTERFACE_INCLUDE_DIRECTORIES taglib INTERFACE_INCLUDE_DIRECTORIES)
+	get_target_property(TL_INTERFACE_LINK_LIBRARIES taglib INTERFACE_LINK_LIBRARIES)
+	get_target_property(TL_INTERFACE_CFLAGS taglib INTERFACE_CFLAGS)
+	cmake_print_variables(TL_INTERFACE_INCLUDE_DIRECTORIES)
+	cmake_print_variables(TL_INTERFACE_LINK_LIBRARIES)
+	cmake_print_variables(TL_INTERFACE_CFLAGS)
+	set(AMLM_TAGLIB_TARGET "taglib")
 endif()
-# Taglib doesn't want AUTOMOC etc. applied to it.
-### Can't do this if TARGET is INTERFACE.
-#set_property(TARGET ${AMLM_TAGLIB_TARGET} PROPERTY SKIP_AUTOGEN ON)
+
 
 if(USE_BUNDLED_LIBCUE)
 	# Use the in-tree copy of libcue.
@@ -361,7 +331,8 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
+### @todo No longer required?
+#target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 	"QT_SHAREDPOINTER_TRACK_POINTERS=1"	
@@ -372,9 +343,6 @@ target_compile_definitions(${PROJECT_NAME}
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-if(FALSE) # OBSOLETE? NOT WIN32)
-	target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb3;-fno-omit-frame-pointer")
-endif()
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
@@ -382,7 +350,7 @@ set_target_properties(${PROJECT_NAME}
     PROPERTIES
     AUTOMOC ON
     AUTOUIC ON)
-target_link_libraries(${PROJECT_NAME} ${PROJECT_COMMON_LINK_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
 add_dependencies(${PROJECT_NAME} icons_oxygen)
 
 # Stop clang-tidy from scanning generated files.
@@ -397,7 +365,7 @@ Checks: '-*,llvm-twine-local'
 ###
 ### Testing
 ###
-if(TRUE) # Enable test target.
+if(FALSE) # Enable test target.
 
 find_package(Qt5Test REQUIRED)
 include(CTest)
@@ -480,13 +448,31 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
 		COMPONENT coreapp)
-# Icons
+# App Icon
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
+# Default bundled icons.
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-		DESTINATION ${KDE_INSTALL_APPDIR}
+	    DESTINATION ${KDE_INSTALL_ICONDIR}
 		COMPONENT coreapp)
+### @note New KF5 icon theme install for windows and mac
+### @note "icontheme.rcc" apparently has to be in bin/data/ (not a subdir) for it to be picked up.
+### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
+if(TRUE)#WIN32)
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
+		DESTINATION ${KDE_INSTALL_ICONDIR}
+		RENAME "icontheme.rcc"
+		COMPONENT coreapp)
+endif()
+### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
+ecm_install_icons(ICONS ${ICONS_SRCS}
+	DESTINATION ${KDE_INSTALL_ICONDIR}
+	THEME hicolor)
+ecm_install_icons(ICONS
+    DESTINATION ${KDE_INSTALL_ICONDIR}
+    THEME hicolor
+)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
