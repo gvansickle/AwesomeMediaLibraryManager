@@ -343,9 +343,6 @@ target_compile_definitions(${PROJECT_NAME}
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"QFUTURE_TEST")
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-if(FALSE) # OBSOLETE? NOT WIN32)
-	target_compile_options(${PROJECT_NAME} PUBLIC "-Og;-ggdb3;-fno-omit-frame-pointer")
-endif()
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
@@ -353,7 +350,7 @@ set_target_properties(${PROJECT_NAME}
     PROPERTIES
     AUTOMOC ON
     AUTOUIC ON)
-target_link_libraries(${PROJECT_NAME} ${PROJECT_COMMON_LINK_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
 add_dependencies(${PROJECT_NAME} icons_oxygen)
 
 # Stop clang-tidy from scanning generated files.

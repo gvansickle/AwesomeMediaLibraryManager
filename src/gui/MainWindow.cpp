@@ -321,7 +321,8 @@ M_WARNING("Q: Don't know if statusBar() is the correct parent here.  Need this b
     // No ToolBar, because even though we have toolbars, adding that flag causes crashes somewhere
     //   in a context menu and when opening the KEditToolBar dialog.
     //   Without it, we seem to lose no functionality, but the crashes are gone.
-    setupGUI(KXmlGuiWindow::Keys | StatusBar | /*ToolBar |*/ Save);
+M_WARNING("Crashing here on Windows");
+    setupGUI(KXmlGuiWindow::/*Keys | */StatusBar | /*ToolBar |*/ Save);
 
     post_setupGUI_init();
 }

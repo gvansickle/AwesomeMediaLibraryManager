@@ -206,7 +206,7 @@ void Theme::initialize()
     // Interesting stuff in here by default.
     dump_resource_tree(":/");
 
-    Q_ASSERT(rccs_loaded > 0);
+//    Q_ASSERT(rccs_loaded > 0);
 
     //    M_WARNING("XXXXXX");
     //    Theme::check

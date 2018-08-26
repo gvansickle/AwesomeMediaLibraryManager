@@ -338,16 +338,18 @@ endif()
 ###
 ### KDE KF5 libs.
 ###
+# Krita has ~this warning: "don't reorder these, this is the order they depend on each other."
 set(KF5_LINK_LIBS)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
-	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	Config
-	ConfigWidgets
-	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
 	WidgetsAddons
-	XmlGui
+	# Completion
+	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	GuiAddons
+	ConfigWidgets ## Not in Krita from this until WindowSystem.
+	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	XmlGui
 	IconThemes
 	WindowSystem
 )
