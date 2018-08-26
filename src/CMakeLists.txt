@@ -365,10 +365,19 @@ Checks: '-*,llvm-twine-local'
 ###
 ### Testing
 ###
-if(FALSE) # Enable test target.
+if(TRUE) # Enable test target.
 
 find_package(Qt5Test REQUIRED)
 include(CTest)
+
+# @note We don't really need to do this, but will for expediency.  Per the docs:
+# "CMake will generate tests only if the enable_testing() command has been invoked.
+# The CTest module invokes the command automatically when the BUILD_TESTING option is ON."
+# @todo Also per the docs, this has to be in the source directory root, but it seems to work here:
+# "Note that ctest expects to find a test file in the build directory root.
+# Therefore, this command should be in the source directory root."
+enable_testing()
+
 ### Google Test
 find_package(Threads REQUIRED)
 download_project(PROJ                googletest
@@ -382,9 +391,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 	EXCLUDE_FROM_ALL)
 
-
-
-#enable_testing()
 set(TEST_EXE_TARGET alltests)
 set(AMLM_SOURCE_FILES_TEST "")
 set(AMLM_HEADER_FILES_TEST "")
@@ -426,8 +432,8 @@ set_target_properties(${TEST_EXE_TARGET} PROPERTIES
 # We don't want AUTOMOC etc. applied to googletest.
 set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
-set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
+#set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
+#set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
 target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})

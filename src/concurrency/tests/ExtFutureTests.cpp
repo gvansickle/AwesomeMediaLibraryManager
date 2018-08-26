@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <atomic>
 #include <functional>
+#include <cstdint>
 
 // Future Std C++
 #include <future/future_type_traits.hpp>
@@ -57,7 +58,9 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
     TC_ENTER();
 
-    ExtFuture<int64_t> ef = make_ready_future(25LL);
+    /// @note Important safety tip: nL and nLL are different sizes on Windows vs. Linux.
+    /// <cstdint> to the rescue.
+    ExtFuture<int64_t> ef = make_ready_future(INT64_C(25));
 
     QList<int64_t> results = ef.get();
 
