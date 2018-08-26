@@ -47,6 +47,7 @@ project(AwesomeMediaLibraryManager
         LANGUAGES C CXX)
 
 # Prevent an in-root-of-src-tree build.
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
         message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
@@ -111,7 +112,7 @@ include(ECMEnableSanitizers)
 # @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
-set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
+#set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
 #set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
 include(KDECMakeSettings)
 
@@ -194,26 +195,9 @@ set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
 include(ExternalProject)
 include(DownloadProject)
 
-# Doxygen
-if(FALSE) ### TODO
-# Require dot, treat the other components as optional
-# https://cmake.org/cmake/help/v3.12/module/FindDoxygen.html
-find_package(Doxygen
-             REQUIRED dot
-             OPTIONAL_COMPONENTS mscgen dia)
-set(DOXYGEN_GENERATE_HTML YES)
-set(DOXYGEN_GENERATE_MAN NO)
-set(DOXYGEN_EXCLUDE_PATTERNS "*/cmake-*;*/build*;*/src/third_party") # Per docs, merged with defaults excludes.
-set(DOXYGEN_OUTPUT_DIRECTORY doxygen_html)
-doxygen_add_docs(doxygen ALL
-	${PROJECT_SOURCE_DIR}
-    COMMENT "Generate doxygen html"
-)
-endif()
-
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
-#set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #	    INCLUDE_DIRECTORIES
@@ -375,7 +359,6 @@ endif(UNIX)
 ### X11 and XCB libs.
 ###
 if(UNIX)
-
 find_package(X11 REQUIRED)
 list(APPEND GTK_LINK_LIB_TARGETS ${X11_X11_LIB})
 
@@ -387,10 +370,7 @@ find_package(XCB REQUIRED COMPONENTS
 	XCB
 	)
 list(APPEND GTK_LINK_LIB_TARGETS ${XCB_TARGETS})
-cmake_print_variables(XCB_TARGETS)
-
-cmake_print_variables(GTK_LINK_LIB_TARGETS)
-
+print_varlist(XCB_TARGETS GTK_LINK_LIB_TARGETS)
 endif(UNIX)
 
 #
@@ -407,8 +387,7 @@ download_project(PROJ                boost_callable_traits
 	GIT_TAG        master
 	${UPDATE_DISCONNECTED_IF_AVAILABLE}
 	)
-add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
-#message(STATUS ${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR})
+add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR} EXCLUDE_FROM_ALL)
 
 # Use include-what-you-use.
 if(FALSE)
@@ -452,7 +431,6 @@ add_subdirectory(src)
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
-cmake_print_variables(META_FILES_TO_INCLUDE)
 
 
 ###
@@ -544,8 +522,11 @@ print_varlist(
 	CMAKE_CXX_FLAGS_DEBUG
 	CMAKE_EXPORT_COMPILE_COMMANDS
 	CMAKE_INSTALL_PREFIX 
+	KDE_INSTALL_BINDIR
+	KDE_INSTALL_DATADIR
 	KDE_INSTALL_ICONDIR
-	META_FILES_TO_INCLUDE)
+	META_FILES_TO_INCLUDE
+	KDE_INSTALL_TARGETS_DEFAULT_ARGS)
 
 #message_cpack_summary()
 

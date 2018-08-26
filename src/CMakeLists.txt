@@ -335,7 +335,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"	
+	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 	PRIVATE
 	"KXMLGUI_NO_DEPRECATED=1"
 	"QT_DEPRECATED_WARNINGS=1"
@@ -462,8 +462,16 @@ install(FILES ${AppIcon_rcc}
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 	    DESTINATION ${KDE_INSTALL_ICONDIR}
 		COMPONENT coreapp)
-### @note New KF5 icon theme install for windows and mac
-### @note "icontheme.rcc" apparently has to be in bin/data/ (not a subdir) for it to be picked up.
+
+###
+### KF5 icon theme install for especially Windows and Mac.
+###
+### Per the docs @link https://api.kde.org/frameworks/kiconthemes/html/index.html, as long as icontheme.rcc
+### is installed "in a directory found by QStandardPaths::AppDataLocation", the KDE QPA should find it.
+### I'm not sure that actually works.  Even on Linux, it seems that "icontheme.rcc" apparently has to be in
+### ${KDE_INSTALL_BINDIR}/data/ (bin/data/), and not in any of the actual QStandardPaths::AppDataLocation dirs
+### (Linux: "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>") for it to be picked up.
+###
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
 if(TRUE)#WIN32)
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
