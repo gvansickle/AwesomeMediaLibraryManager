@@ -54,6 +54,11 @@ public:
     /// @{
     static QStringList GetIconThemeNames();
 
+    /**
+     * Query KIconTheme etc. and get the current info on icon themes.
+     */
+    static void LogIconThemeInfo();
+
     static bool setIconThemeName(const QString& name);
 
     static QIcon iconFromTheme(const QString& icon_name);

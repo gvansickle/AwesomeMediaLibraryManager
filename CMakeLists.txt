@@ -127,7 +127,6 @@ include(ECMEnableSanitizers)
 #set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
 
 
-
 # KDECompilerSettings
 # Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
 # @note This disables exceptions.  We'll turn them back on with kde_enable_exceptions() below.
@@ -143,25 +142,12 @@ include(ECMEnableSanitizers)
 # string(REGEX REPLACE "-g[^;]*" "-ggdb3" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 #list(REMOVE_DUPLICATES CMAKE_CXX_FLAGS_DEBUG)
 
-# Set some extra debug flags early.
-# See https://cmake.org/cmake/help/v3.11/variable/CMAKE_LANG_COMPILER_ID.html
-# if(${CMAKE_CXX_COMPILER_ID} EQUAL Clang)
-# 	message(STATUS "DETECTED COMPILER IS CLANG")
-# 	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -Wthread-safety")
-# elseif(${CMAKE_CXX_COMPILER_ID} EQUAL GNU)
-# 	message(STATUS "DETECTED COMPILER IS GCC")
-# 	set(AMLM_MAX_DEBUG_FLAGS "-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments")
-# endif()
-# set(CMAKE_CXX_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
-# set(CMAKE_C_FLAGS_DEBUG ${AMLM_MAX_DEBUG_FLAGS})
-
-
 ###
 ### END ECM Setup ====================================================================================================
 ###
 
 
-
+# Set some extra debug flags early.
 # This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
 # cmake and/or Qt Creator.
 # https://github.com/onqtam/ucm#ucm_add_flags
