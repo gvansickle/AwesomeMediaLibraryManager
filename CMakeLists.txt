@@ -86,10 +86,27 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmak
 
 ###
 ### ECM Macros
-### Note: The order here follows that of KDevelop.  Some macros used there are omitted here.
+### Note: The order here follows that of KDevelop and Calligra's top-level CMakeLists.txt's.  Some macros used there are omitted here.
 ###
+
+# ECM KDE macros
+# @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
+# @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
+include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
+#set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
+#set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
+include(KDECMakeSettings NO_POLICY_SCOPE)
+
+# CMake macros.
+include(FeatureSummary)
+
+# ECM macros.
+include(ECMOptionalAddSubdirectory)
 include(ECMInstallIcons)
 include(ECMAddAppIcon)
+include(ECMAddTests)
+include(ECMMarkAsTest)
+
 # Sanitizers.
 # @note KF5:
 # The sanitizers are not enabled by default. Instead, you must set ECM_ENABLE_SANITIZERS (either in your
@@ -109,12 +126,7 @@ include(ECMEnableSanitizers)
 # That is what happens, but I'm not clear on why this var would control that; are all the KDE Install Dirs deprecated?
 #set(KDE_INSTALL_DIRS_NO_DEPRECATED TRUE)
 
-# @note Order matters for these next two include()s.  Per the docs, InstallDirs needs to come before CMakeSettings.
-# @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
-include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
-#set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
-#set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
-include(KDECMakeSettings)
+
 
 # KDECompilerSettings
 # Enables more warnings.  Transitively includes include(ECMEnableSanitizers).
@@ -148,8 +160,7 @@ include(KDECMakeSettings)
 ### END ECM Setup ====================================================================================================
 ###
 
-# Std CMAKE includes.
-include(FeatureSummary)
+
 
 # This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
 # cmake and/or Qt Creator.

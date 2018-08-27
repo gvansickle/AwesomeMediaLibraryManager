@@ -482,11 +482,12 @@ endif()
 ### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
 ecm_install_icons(ICONS ${ICONS_SRCS}
 	DESTINATION ${KDE_INSTALL_ICONDIR}
-	THEME hicolor)
+	THEME hicolor
+	)
 ecm_install_icons(ICONS
     DESTINATION ${KDE_INSTALL_ICONDIR}
     THEME hicolor
-)
+	)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)

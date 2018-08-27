@@ -169,9 +169,8 @@ void Theme::initialize()
     {
         // Look for the specified file.
 
-        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
-//        QString full_path;
-        if(true)
+        QString full_path;
+        if(false /** @fixme */)
         {
         	/**
         	 * @todo FIXME For finding the icons when built and installed, but not installed on system.
@@ -179,6 +178,16 @@ void Theme::initialize()
         	 */
 
             //full_path = app_dir_path + "/../share/icons/" + fname;
+            full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+        }
+        else
+        {
+            full_path = app_dir_path + "/../share/icons/" + fname;
+            if(!QFile::exists(full_path))
+            {
+                qDb() << "No file at:" << full_path;
+                full_path.clear();
+            }
         }
 
         if(full_path.isEmpty())
@@ -203,7 +212,7 @@ void Theme::initialize()
         }
     }
 
-//    Q_ASSERT(rccs_loaded > 0);
+    Q_ASSERT(rccs_loaded > 0);
 
     // Interesting stuff in here by default.
     dump_resource_tree(":/");
