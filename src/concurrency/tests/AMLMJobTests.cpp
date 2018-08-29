@@ -288,13 +288,11 @@ TEST_F(AMLMJobTests, IPJSynchronousExec)
 
     auto j = new ImportProjectJob(nullptr, nullptr);
 
-//    j->setAutoDelete(false);
-
     QSignalSpy kjob_finished_spy(j, &KJob::finished);
     EXPECT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
     EXPECT_TRUE(kjob_result_spy.isValid());
-//    QSignalSpy kjob_destroyed_spy(j, &QObject::destroyed);
+    QSignalSpy kjob_destroyed_spy(j, &QObject::destroyed);
 
     bool status = j->exec();
 
@@ -308,9 +306,7 @@ TEST_F(AMLMJobTests, IPJSynchronousExec)
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
 
-//    QTest::qWait(100);
-//    EXPECT_TRUE(kjob_destroyed_spy.wait(1000));
-//    j->deleteLater();
+    EXPECT_TRUE(kjob_destroyed_spy.wait());
 
     TC_EXIT();
 }
@@ -326,6 +322,7 @@ TEST_F(AMLMJobTests, SynchronousExec)
     EXPECT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
     EXPECT_TRUE(kjob_result_spy.isValid());
+    QSignalSpy kjob_deleted(j, &KJob::destroyed);
 
     bool status = j->exec();
 
@@ -338,6 +335,9 @@ TEST_F(AMLMJobTests, SynchronousExec)
     EXPECT_EQ(kjob_result_spy.count(), 1);
 
     j->deleteLater();
+
+    // Wait for the delete to happen.
+    ASSERT_TRUE(kjob_deleted.wait());
 
     TC_EXIT();
 }
@@ -353,8 +353,11 @@ TEST_F(AMLMJobTests, SynchronousExecTestWithAutoDelete)
     EXPECT_TRUE(kjob_finished_spy.isValid());
     QSignalSpy kjob_result_spy(j, &KJob::result);
     EXPECT_TRUE(kjob_result_spy.isValid());
+    QSignalSpy kjob_deleted(j, &KJob::destroyed);
 
+    GTEST_COUT_qDB << "Calling exec() on:" << j;
     bool status = j->exec();
+    GTEST_COUT_qDB << "exec() returned, status=" << status;
 
     EXPECT_EQ(status, true);
 
@@ -363,6 +366,9 @@ TEST_F(AMLMJobTests, SynchronousExecTestWithAutoDelete)
 
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
+
+    // Wait for the auto-delete to happen.
+    ASSERT_TRUE(kjob_deleted.wait());
 
     TC_EXIT();
 }
@@ -423,6 +429,12 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
 	                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
+    QSignalSpy kjob_finished_spy(dsj, &KJob::finished);
+    EXPECT_TRUE(kjob_finished_spy.isValid());
+    QSignalSpy kjob_result_spy(dsj, &KJob::result);
+    EXPECT_TRUE(kjob_result_spy.isValid());
+    QSignalSpy kjob_deleted(dsj, &KJob::destroyed);
+
     // Connect signals and slots.
     connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, [=](KJob* kjob){
         qIn() << "GOT FINISHED";
@@ -445,6 +457,14 @@ TEST_F(AMLMJobTests, DirScanCancelTest)
     QTest::qSleep(2000);
 
     dsj->kill();
+
+    // Wait for the cancel to finish.
+    ASSERT_TRUE(kjob_result_spy.wait());
+    // We make sure it was a cancel in the restl handler above.
+
+    // Wait for the auto-delete to happen.
+    /// @todo Is this correct?
+    ASSERT_TRUE(kjob_deleted.wait());
 
 //    EXPECT_EQ(dsj->get_extfuture_ref(), );
     TC_EXIT();

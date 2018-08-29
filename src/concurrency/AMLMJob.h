@@ -632,6 +632,21 @@ public:
         return m_ext_future;
     }
 
+    /**
+     * Return a copy of the future.
+     */
+    ExtFutureT get_extfuture()
+    {
+        return m_ext_future;
+    }
+
+    static std::unique_ptr<AMLMJobT> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
+    {
+        auto job = std::make_unique<AMLMJobT>(ef, parent);
+        //	qDebug() << "WORKED:" << ef;
+        return job;
+    }
+
     Q_SCRIPTABLE void start() override
     {
         // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
@@ -958,7 +973,7 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
                 // Some other error.
                 // KJob
                 setError(KJob::UserDefinedError);
-                setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(asDerivedTypePtr()->objectName()));
+                setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(this->objectName()));
             }
         }
     }

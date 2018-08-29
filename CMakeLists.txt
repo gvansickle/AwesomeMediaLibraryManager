@@ -340,6 +340,10 @@ list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::
 list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
 list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 
+###### EXPERIMENT
+#find_package(Breeze REQUIRED)
+#list(APPEND KF5_LINK_LIBS Breeze)
+
 
 ###
 ### GTK Libs.
@@ -422,6 +426,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
+# Add the subdirs.
 add_subdirectory(src)
 
 
@@ -433,6 +438,7 @@ add_project_meta(META_FILES_TO_INCLUDE)
 ###
 ### Packaging
 ###
+if(false) # This has to be broken now.
 # From within the build directory, just run the following commands to create the package:
 # $ cmake ..
 # $ make package
@@ -500,7 +506,7 @@ cpack_add_component(
 #    SOURCES package/qtifw/create_start_menu_shortcuts.qs
 #    COMMENT "Dummy target to show package configuration files in Qt Creator interface")
 
-### END INSTALLER STUFF
+endif()### END INSTALLER STUFF
 
 
 ###
