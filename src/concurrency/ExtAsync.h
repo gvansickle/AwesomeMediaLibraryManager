@@ -200,7 +200,7 @@ static inline void name_qthread()
     template <typename This, typename F,
         REQUIRES(std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>)>
     auto
-    run(This* thiz, F&& function) -> decltype(std::declval<This*>()->get_extfuture_ref())
+    run(This* thiz, F&& function) -> decltype(std::declval<This*>()->get_extfuture())
     {
         constexpr auto calback_arg_num = arity_v<F>;
 //        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
@@ -209,9 +209,9 @@ static inline void name_qthread()
         qIn() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
 
         QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)));
-        qIn() << "AFTER QtConcurrent::run(), thiz:" << thiz << "ExtFuture state:" << ExtFutureState::state(thiz->get_extfuture_ref());
+        qIn() << "AFTER QtConcurrent::run(), thiz:" << thiz << "ExtFuture state:" << ExtFutureState::state(thiz->get_extfuture());
 
-        return thiz->get_extfuture_ref();
+        return thiz->get_extfuture();
     }
 
 	/**

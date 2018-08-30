@@ -627,10 +627,10 @@ public:
         m_ext_watcher = new ExtFutureWatcherT();
 	}
 
-    ExtFutureT& get_extfuture_ref()
-    {
-        return m_ext_future;
-    }
+//    ExtFutureT& get_extfuture_ref()
+//    {
+//        return m_ext_future;
+//    }
 
     /**
      * Return a copy of the future.
@@ -706,18 +706,16 @@ protected:
     {
         /// @note We're in an arbitrary thread here probably without an event loop.
 
-        auto& ef = m_ext_future;
-
-        qDbo() << "ExtFuture<T> state:" << ef.state();
+        qDbo() << "ExtFuture<T> state:" << m_ext_future.state();
 
         // Check if we were canceled before we were started.
-        if(ef.isCanceled())
+        if(m_ext_future.isCanceled())
         {
             // We were canceled before we were started.
             // Report (STARTED | CANCELED | FINISHED) and just return.
             /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
-            ef.reportFinished();
-            AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
+            m_ext_future.reportFinished();
+            AMLM_ASSERT_EQ(ExtFutureState::state(m_ext_future), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
 M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture_finished() to be called,"
           "not SLOT_extfuture_canceled().  Do we need an emitResult() here.");
@@ -733,19 +731,19 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
             // Start the work by calling the functor.  We should be in the Running state if we're in here.
             /// @todo But we're not Running here.  Not sure why.
     //        AMLM_ASSERT_EQ(ef.isRunning(), true);
-            qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
+            qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(m_ext_future);
             this->runFunctor();
-            qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
+            qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(m_ext_future);
         }
         catch(QException &e)
         {
             /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-            ef.reportException(e);
+            m_ext_future.reportException(e);
         }
         catch(...)
         {
             /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-            ef.reportException(QUnhandledException());
+            m_ext_future.reportException(QUnhandledException());
         }
 
         /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
@@ -759,26 +757,26 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
         /// @endcode
         /// So it seems we should be safe doing the same thing.
 
-        if(ef.isPaused())
+        if(m_ext_future.isPaused())
         {
             // ExtAsync<> is paused, so wait for it to be resumed.
             qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
-            ef.waitForResume();
+            m_ext_future.waitForResume();
         }
 
         qDbo() << "REPORTING FINISHED";
-        ef.reportFinished();
+        m_ext_future.reportFinished();
 
         // We should only have two possible states here, excl. exceptions for the moment:
         // - Started | Finished
         // - Started | Canceled | Finished if job was canceled.
-        AMLM_ASSERT_EQ(ef.isStarted(), true);
-        AMLM_ASSERT_EQ(ef.isFinished(), true);
+        AMLM_ASSERT_EQ(m_ext_future.isStarted(), true);
+        AMLM_ASSERT_EQ(m_ext_future.isFinished(), true);
 
         // Do the post-run work.
 
         // Set the three KJob error fields.
-        setKJobErrorInfo(!ef.isCanceled());
+        setKJobErrorInfo(!m_ext_future.isCanceled());
 
 //        qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
 //        if(isAutoDelete())
@@ -792,8 +790,6 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
         /// @note We rely on the ExtFutureWatcher::finished() signal for emitting this.
 //        Q_EMIT SIGNAL_internal_call_emitResult();
 
-        // Notify any possible doKill() that we really truly have stopped the async worker thread.
-//        m_run_returned.release();
     }
 
     bool doKill() override { return doKillT(); }

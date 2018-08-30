@@ -195,6 +195,18 @@ public:
     ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
     finished(static_test_id_string);
 
+/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
+#define M_QSIGNALSPIES_SET(kjobptr) \
+    QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
+    EXPECT_TRUE(kjob_finished_spy.isValid()); \
+    QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
+    EXPECT_TRUE(kjob_result_spy.isValid()); \
+    QSignalSpy kjob_destroyed(kjobptr, &KJob::destroyed); \
+    EXPECT_TRUE(kjob_destroyed.isValid());
+
+#define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
+    EXPECT_TRUE(kjob_destroyed.wait());
+
 
 /// @}
 

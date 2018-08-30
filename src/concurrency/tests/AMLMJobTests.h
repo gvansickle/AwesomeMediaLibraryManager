@@ -48,4 +48,10 @@ protected:
 
 };
 
+class AMLMJobTestsParameterized : public AMLMJobTests,
+        public ::testing::WithParamInterface<bool>
+{
+
+};
+
 #endif /* SRC_CONCURRENCY_TESTS_AMLMJOBTESTS_H_ */

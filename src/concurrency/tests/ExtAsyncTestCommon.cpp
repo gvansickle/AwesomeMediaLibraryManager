@@ -152,8 +152,8 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 {
-    ASSERT_FALSE(m_interstate.is_test_currently_running()) << "A test was already running";
-    EXPECT_TRUE(m_interstate.get_currently_running_test().empty()) << "A test was already running";
+    ASSERT_FALSE(m_interstate.is_test_currently_running()) << "A test was still running:" << get_currently_running_test();
+    EXPECT_TRUE(m_interstate.get_currently_running_test().empty()) << "A test was still running" << get_currently_running_test();
 }
 
 void ExtAsyncTestsSuiteFixtureBase::TearDown()
@@ -163,8 +163,9 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
     // Tear down the event loop.
     /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
     m_event_loop_object->deleteLater();
-    qDb() << "Waiting for event loop...";
-    m_delete_spy->wait(1000*60);
+    qDb() << "Waiting for event loop to be destroyed...";
+    auto didnt_time_out = m_delete_spy->wait(1000*60);
+    ASSERT_TRUE(didnt_time_out);
     delete m_delete_spy;
     m_event_loop_object = nullptr;
     m_delete_spy = nullptr;

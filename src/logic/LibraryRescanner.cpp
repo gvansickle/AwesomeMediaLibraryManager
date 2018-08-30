@@ -196,7 +196,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt,
                    tree_model,
                    [=](/*const auto& ef,*/ int begin, int end) {
-        const auto& ef = dirtrav_job->get_extfuture_ref();
+        auto ef = dirtrav_job->get_extfuture();
         QVector<AbstractTreeModelItem*> new_items;
         for(int i=begin; i<end; i++)
         {

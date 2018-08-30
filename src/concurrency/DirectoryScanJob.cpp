@@ -51,7 +51,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
-    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
+//    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
 }
 
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, const QUrl& dir_url,
@@ -187,6 +187,8 @@ void DirectoryScannerAMLMJob::runFunctor()
         m_ext_future.setProgressRange(0, num_possible_files);
         m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
     }
+
+    m_ext_future.reportFinished();
 
     qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
 }
