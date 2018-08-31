@@ -934,6 +934,9 @@ protected:
 //        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_onResultsReadyAt);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_paused);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_resumed);
+
         connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
 
 		/// @todo EXP: Throttling.
