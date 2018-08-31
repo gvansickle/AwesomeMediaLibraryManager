@@ -57,7 +57,7 @@ struct AMLMJob_traits
     using type = T;
     using ExtFutureType = typename T::ExtFutureT;
 
-    ExtFutureType& get_future_ref() { return T::m_ext_future; }
+    ExtFutureType get_future() { return T::m_ext_future; }
 
 };
 
@@ -644,9 +644,7 @@ public:
 
     Q_SCRIPTABLE void start() override
     {
-        // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
+        // Hook up signals and such to the ExtFutureWatcher<T>.
         HookUpExtFutureSignals(m_ext_watcher);
 
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
@@ -664,7 +662,7 @@ public:
         m_ext_watcher->setFuture(m_ext_future);
     }
 
-protected: // Q_SLOTS:
+protected: //Q_SLOTS:
 
     /**
      * @todo This is what happens when your framework is stuck in 199-late.
@@ -676,6 +674,11 @@ protected: // Q_SLOTS:
 //        qWro() << "Base class override called, should never happen.  ef/begin/end:" << ef << begin << end;
 ////        Q_ASSERT_X(0, __func__, "Base class override called, should never happen.");
 //    }
+
+    virtual void SLOT_started()
+    {
+        qDbo() << "GOT EXTFUTURE STARTED";
+    }
 
     virtual void SLOT_extfuture_finished()
     {
@@ -690,6 +693,16 @@ protected: // Q_SLOTS:
     {
         qDbo() << "GOT EXTFUTURE CANCELED";
         m_ext_watcher->deleteLater();
+    }
+
+    virtual void SLOT_paused()
+    {
+        qDbo() << "GOT EXTFUTURE PAUSED";
+    }
+
+    virtual void SLOT_resumed()
+    {
+        qDbo() << "GOT EXTFUTURE RESUMED";
     }
 
 protected:
@@ -709,12 +722,11 @@ protected:
             // We were canceled before we were started.
             // Report (STARTED | CANCELED | FINISHED) and just return.
             /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
+            m_ext_future.reportCanceled();
             m_ext_future.reportFinished();
             AMLM_ASSERT_EQ(ExtFutureState::state(m_ext_future), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
-M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture_finished() to be called,"
-          "not SLOT_extfuture_canceled().  Do we need an emitResult() here.");
-
+            // Do we need an emitResult() here?
             return;
         }
     #ifdef QT_NO_EXCEPTIONS
@@ -920,6 +932,8 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
         // Signal-to-signal connection.
 //        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &std::remove_reference_t<decltype(*this)>::SIGNAL_onResultsReadyAt);
 //        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_onResultsReadyAt);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
         connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
 
 		/// @todo EXP: Throttling.
