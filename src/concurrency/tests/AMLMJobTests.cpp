@@ -316,14 +316,17 @@ TEST_F(AMLMJobTests, IPJSynchronousExec)
     TC_EXIT();
 }
 
-TEST_P(AMLMJobTestsParameterized, SynchronousExecPAutoDelete)
+TEST_P(AMLMJobTestsParameterized, SynchronousExecTestAMLMJob1PAutoDelete)
 {
     TC_ENTER();
 
-    GTEST_COUT_qDB << "Autodelete?:" << GetParam();
+    //    QFETCH(bool, autodelete);
+    bool autodelete = GetParam();
+
+    GTEST_COUT_qDB << "Autodelete?:" << autodelete;
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
-    j->setAutoDelete(GetParam());
+    j->setAutoDelete(autodelete);
 
     M_QSIGNALSPIES_SET(j);
 
@@ -337,7 +340,48 @@ TEST_P(AMLMJobTestsParameterized, SynchronousExecPAutoDelete)
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
 
-    if(!GetParam())
+    if(!autodelete)
+    {
+        // Not autodelete.
+        j->deleteLater();
+    }
+
+    // Wait for the delete to happen.
+    M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+
+    TC_EXIT();
+}
+
+TEST_P(AMLMJobTestsParameterized, AsynchronousExecTestAMLMJob1PAutoDelete)
+{
+    TC_ENTER();
+
+    //    QFETCH(bool, autodelete);
+    bool autodelete = GetParam();
+
+    GTEST_COUT_qDB << "Autodelete?:" << autodelete;
+
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(amlmApp);
+    j->setAutoDelete(autodelete);
+
+    M_QSIGNALSPIES_SET(j);
+
+    // Start the job asynchronously.
+    j->start();
+
+    // Wait for successful KJob completion.
+    EXPECT_TRUE(kjob_finished_spy.wait());
+//    EXPECT_TRUE(kjob_result_spy.wait());
+
+//    EXPECT_EQ(status, true);
+
+    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
+    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+
+    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 1);
+
+    if(!autodelete)
     {
         // Not autodelete.
         j->deleteLater();
@@ -398,10 +442,15 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
 {
     TC_ENTER();
 
+    std::atomic_bool got_job_destroyed_signal {false};
+
+//    QFETCH(bool, autodelete);
+    bool autodelete = GetParam();
+
 	// Dummy dir so the dir scanner job has something to chew on.
     QUrl dir_url = QUrl::fromLocalFile("/");
-    RecordProperty("dirscanned", tostdstr(dir_url.toString()));
-    DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(qApp, dir_url,
+
+    DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(amlmApp, dir_url,
 	                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
@@ -410,25 +459,23 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
     ASSERT_TRUE(dsj->isAutoDelete());
 
     // Set autodelete or not.
-    GTEST_COUT_qDB << "Setting Autodelete to:" << GetParam();
-    dsj->setAutoDelete(GetParam());
+    GTEST_COUT_qDB << "Setting Autodelete to:" << autodelete;
+    dsj->setAutoDelete(autodelete);
 
     // Connect signals and slots.
     connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, qApp, [=](KJob* kjob){
-        qIn() << "GOT FINISHED";
+        GTEST_COUT_qDB << "GOT FINISHED";
         EXPECT_EQ(kjob, dsj);
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
-
         ;});
     connect_or_die(dsj, &DirectoryScannerAMLMJob::result, qApp, [=](KJob* kjob){
-        qIn() << "GOT RESULT";
+        GTEST_COUT_qDB << "GOT RESULT";
         EXPECT_EQ(kjob, dsj);
-
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
-
         ;});
-    connect_or_die(dsj, &QObject::destroyed, qApp, [=](QObject* obj){
+    connect_or_die(dsj, &QObject::destroyed, qApp, [&](QObject* obj){
         GTEST_COUT_qDB << "GOT DESTROYED SIGNAL:" << obj;
+        got_job_destroyed_signal = true;
     });
 
     // Dump some info.
@@ -445,18 +492,26 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
     ASSERT_NE(dsj, nullptr);
 
     // Wait for the cancel to finish.
-    ASSERT_TRUE(kjob_result_spy.wait());
     // We make sure it was a cancel in the result handler above.
+    EXPECT_TRUE(kjob_finished_spy.wait());
 
-    if(!GetParam())
+    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
+    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+
+//    EXPECT_EQ(kjob_finished_spy.count(), 1);
+    EXPECT_EQ(kjob_result_spy.count(), 1);
+
+    if(!autodelete)
     {
         dsj->deleteLater();
     }
 
     GTEST_COUT_qDB << "Waiting for destroyed signal";
+    //amlmApp->processEvents(QEventLoop::AllEvents, 1000);
     TC_Wait(100);
     // Wait for the (auto-)delete to happen.
-    M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+//    M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+    EXPECT_TRUE(got_job_destroyed_signal);
 //    bool didnt_time_out = kjob_destroyed_spy.wait();
     GTEST_COUT_qDB << "Done Waiting for destroyed signal";
 //    EXPECT_TRUE(didnt_time_out);

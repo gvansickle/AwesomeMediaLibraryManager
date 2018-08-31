@@ -215,13 +215,11 @@ static inline void TC_Wait(int ms)
     EXPECT_TRUE(kjob_finished_spy.isValid()); \
     QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
     EXPECT_TRUE(kjob_result_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy(kjobptr, SIGNAL(destroyed(QObject*))); \
-    EXPECT_TRUE(kjob_destroyed_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy2(kjobptr, SIGNAL(destroyed())); \
-    EXPECT_TRUE(kjob_destroyed_spy2.isValid());
+    QSignalSpy kjob_destroyed_spy(static_cast<QObject*>(kjobptr), &QObject::destroyed); \
+    EXPECT_TRUE(kjob_destroyed_spy.isValid());
 
 #define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
-    EXPECT_TRUE(kjob_destroyed_spy.wait() || kjob_destroyed_spy2.wait());
+    EXPECT_TRUE(kjob_destroyed_spy.wait());
 
 /// @}
 

@@ -69,10 +69,17 @@ struct AMLMJob_traits
 class IExtFutureWatcher
 {
 public:
-    virtual ~IExtFutureWatcher() {}
+    virtual ~IExtFutureWatcher() = default;
 
 //Q_SIGNALS:
     virtual void SIGNAL_resultsReadyAt(int begin, int end) = 0;
+
+    // KJob signals.
+    virtual void finished(KJob *job) = 0;
+    virtual void result(KJob *job) = 0;
+
+    // QObject signals.
+    virtual void destroyed(QObject* obj) = 0;
 };
 Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
 
@@ -196,7 +203,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished, in any case. It is used to notify
     /// observers that the job is terminated and that progress can be hidden."
     /// Call emitResult(job) to emit.
-//    void finished(KJob *job);
+    void finished(KJob *job) override;
     /// "Emitted when the job is suspended."
     /// No direct way to emit this?
 //    void suspended(KJob *job);
@@ -206,7 +213,10 @@ Q_SIGNALS:
     /// "Emitted when the job is finished (except when killed with KJob::Quietly).
     /// Use error to know if the job was finished with error."
     /// Call emitResult(job) to emit.
-//    void result(KJob *job);
+    void result(KJob *job) override;
+
+    // QObject signals.
+    void destroyed(QObject* obj) override;
 
     /// @}
 
@@ -621,7 +631,7 @@ public:
     explicit AMLMJobT(QObject* parent = nullptr)
         : BASE_CLASS(parent)
 	{
-		qDbo() << "WORKED:" << m_ext_future.state();
+        qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
         m_ext_watcher = new ExtFutureWatcherT();
@@ -635,6 +645,9 @@ public:
         return m_ext_future;
     }
 
+    /**
+     * Factory function for creating AMLMJobT's wrapping the passed-in ExtFuture<T>
+     */
     static std::unique_ptr<AMLMJobT> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
     {
         auto job = std::make_unique<AMLMJobT>(ef, parent);
@@ -675,8 +688,9 @@ protected: //Q_SLOTS:
 ////        Q_ASSERT_X(0, __func__, "Base class override called, should never happen.");
 //    }
 
-    virtual void SLOT_started()
+    virtual void SLOT_extfuture_started()
     {
+        // The watcher has started watching the future.
         qDbo() << "GOT EXTFUTURE STARTED";
     }
 
@@ -695,12 +709,12 @@ protected: //Q_SLOTS:
         m_ext_watcher->deleteLater();
     }
 
-    virtual void SLOT_paused()
+    virtual void SLOT_extfuture_paused()
     {
         qDbo() << "GOT EXTFUTURE PAUSED";
     }
 
-    virtual void SLOT_resumed()
+    virtual void SLOT_extfuture_resumed()
     {
         qDbo() << "GOT EXTFUTURE RESUMED";
     }
@@ -799,9 +813,12 @@ protected:
 
     }
 
+    /// @name Virtual overrides to forward these calls to their templated counterparts.
+    /// @{
     bool doKill() override { return doKillT(); }
     bool doSuspend() override { return doSuspendT(); }
     bool doResume() override { return doResumeT(); }
+    /// @}
 
     bool doKillT()
     {
@@ -833,12 +850,16 @@ protected:
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
 
-        // Tell Future and hence job to Cancel.
+        // Tell the Future and hence job to Cancel.
         m_ext_watcher->cancel();
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
-    //    setError(KilledJobError);
-        setKJobErrorInfo(false);
+        /// @todo Is it possible for us to have been deleted before this call due to the cancel() above?
+        setError(KJob::KilledJobError);
+        /// @todo This text should probably be set somehow by the underlying async job.
+        setErrorText(tr("Job killed"));
+
+//        setKJobErrorInfo(false);
 
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
@@ -893,19 +914,20 @@ protected:
     }
 
     /**
-     * Call this at the bottom of your runFunctor() override.
-     * Handles pause/resume internally.
+     * Call this at the bottom of your runFunctor() override.  If the call returns true,
+     * you're being canceled and must break out of the loop and return.
+     *
+     * Handles pause/resume completely internally, nothing needs to be done in the calling loop.
+     *
      * @return true if loop in runFunctor() should break due to being canceled.
      */
     bool functorHandlePauseResumeAndCancel()
     {
-        auto& ef = m_ext_future;
-
-        if (ef.isPaused())
+        if (m_ext_future.isPaused())
         {
-            ef.waitForResume();
+            m_ext_future.waitForResume();
         }
-        if (ef.isCanceled())
+        if (m_ext_future.isCanceled())
         {
             // The job has been canceled.
             // The calling runFunctor() should break out of while() loop.
@@ -920,24 +942,20 @@ protected:
     template <class WatcherType>
     void HookUpExtFutureSignals(WatcherType* watcher)
 	{
-		// Main connection we need is results.
-		// resultsReadyAt(range): There are results ready immediately at the given index range.
-//        connect_or_die(watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
-//                       [=](int beginIndex, int endIndex) {
-//            // Directly call the overridden slot with all the info needed to get the results.
-//            /// @todo This is problematic and inefficient.
-//            SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
-//            });
-
-        // Signal-to-signal connection.
-//        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &std::remove_reference_t<decltype(*this)>::SIGNAL_onResultsReadyAt);
-//        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_onResultsReadyAt);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_paused);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_resumed);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
 
+        // Signal-to-signal connections.
+        // forward resultsReadyAt() signal.
         connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
+        // KJob signal forwarders.
+        connect_or_die(this, &KJob::finished, this, &ThisType::finished);
+        connect_or_die(this, &KJob::result, this, &ThisType::result);
+        // QObject forwarders.
+        connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
@@ -980,7 +998,9 @@ protected:
                 // Some other error.
                 // KJob
                 setError(KJob::UserDefinedError);
-                setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(this->objectName()));
+                setErrorText(QString("Unknown, non-Killed-Job error on %1: %2")
+                             .arg(this->metaObject()->className())
+                             .arg(this->objectName()));
             }
         }
     }
@@ -988,7 +1008,7 @@ protected:
     /// @}
 
     /// The ExtFuture<T>.
-	ExtFutureT m_ext_future;
+    ExtFutureT m_ext_future;
 
 	/// The watcher for the ExtFuture.
     ExtFutureWatcherT* m_ext_watcher;
