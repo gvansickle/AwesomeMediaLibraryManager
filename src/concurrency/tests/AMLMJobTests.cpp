@@ -506,10 +506,9 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
         dsj->deleteLater();
     }
 
-    GTEST_COUT_qDB << "Waiting for destroyed signal";
-    //amlmApp->processEvents(QEventLoop::AllEvents, 1000);
-    TC_Wait(100);
     // Wait for the (auto-)delete to happen.
+    GTEST_COUT_qDB << "Waiting for destroyed signal";
+    TC_Wait(100);
 //    M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
     EXPECT_TRUE(got_job_destroyed_signal);
 //    bool didnt_time_out = kjob_destroyed_spy.wait();

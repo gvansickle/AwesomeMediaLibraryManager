@@ -687,7 +687,12 @@ public:
 	 *
 	 * @todo Not sure if we need this or not.  .then() has an unwrapping overload.
 	 */
-//	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other);
+    template <class ExtFutureExtFutureT,
+              REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
+    inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
+    {
+        static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
+    }
 
 
     /**
