@@ -627,11 +627,6 @@ public:
         m_ext_watcher = new ExtFutureWatcherT();
 	}
 
-//    ExtFutureT& get_extfuture_ref()
-//    {
-//        return m_ext_future;
-//    }
-
     /**
      * Return a copy of the future.
      */
@@ -843,7 +838,6 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
         /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
         ///       Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start().
 //        AMLM_ASSERT_EQ(m_ext_future.state(), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
-
         /// @todo Difference here between cancel before and after start.
         /// Before: Started | Canceled, After: S|F|C.
         qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(m_ext_future);

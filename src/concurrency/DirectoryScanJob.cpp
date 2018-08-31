@@ -170,6 +170,7 @@ void DirectoryScannerAMLMJob::runFunctor()
             // We've been cancelled.
             qIno() << "CANCELLED";
             m_ext_future.reportCanceled();
+            m_ext_future.reportFinished();
             break;
         }
     }

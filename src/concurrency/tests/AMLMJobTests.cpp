@@ -31,6 +31,7 @@
 #include <QString>
 #include <QTest>
 #include <QSignalSpy>
+#include <QObject>
 
 // Ours
 #include <future/future_type_traits.hpp>
@@ -99,7 +100,7 @@ public:
         int max_loops = 10;
         while(!cancel)
         {
-            QTest::qSleep(100);
+            TC_Sleep(100);
             GTEST_COUT_qDB << "LOOP:" << loop_counter;
             loop_counter++;
             if(loop_counter > max_loops)
@@ -243,7 +244,7 @@ protected:
         for(int i = 0; i<10; i++)
         {
             GTEST_COUT_qDB << "Sleeping for 1 second\n";
-            QTest::qSleep(1000);
+            TC_Sleep(1000);
 
             GTEST_COUT_qDB << "Incementing counter\n";
             m_counter++;
@@ -426,15 +427,22 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
 
         ;});
+    connect_or_die(dsj, &QObject::destroyed, qApp, [=](QObject* obj){
+        GTEST_COUT_qDB << "GOT DESTROYED SIGNAL:" << obj;
+    });
+
+    // Dump some info.
+    dsj->dumpObjectInfo();
 
     // Start the job.
     dsj->start();
 
-    // Cancel the job after 2 secs of scanning.
-    QTest::qWait(1000);
+    // Cancel the job after 1 sec of scanning.
+    TC_Wait(1000);
 
     ASSERT_NE(dsj, nullptr);
     dsj->kill();
+    ASSERT_NE(dsj, nullptr);
 
     // Wait for the cancel to finish.
     ASSERT_TRUE(kjob_result_spy.wait());
@@ -445,8 +453,13 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
         dsj->deleteLater();
     }
 
+    GTEST_COUT_qDB << "Waiting for destroyed signal";
+    TC_Wait(100);
     // Wait for the (auto-)delete to happen.
     M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+//    bool didnt_time_out = kjob_destroyed_spy.wait();
+    GTEST_COUT_qDB << "Done Waiting for destroyed signal";
+//    EXPECT_TRUE(didnt_time_out);
 
     TC_EXIT();
 }
@@ -476,11 +489,11 @@ TEST_F(AMLMJobTests, CancelTest)
     EXPECT_TRUE(ef.isStarted()) << ef.state();
 
     // Let it run for a while.
-    QTest::qSleep(500);
+    TC_Sleep(500);
     EXPECT_EQ(j->m_counter, 0);
-    QTest::qSleep(700);
+    TC_Sleep(700);
     EXPECT_EQ(j->m_counter, 1);
-    QTest::qSleep(500);
+    TC_Sleep(500);
 
     // Should not be canceled or finished yet.
     EXPECT_FALSE(ef.isCanceled()) << ef;
@@ -539,11 +552,11 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
 
 //    j->start();
 
-//    QTest::qSleep(500);
+//    TC_Sleep(500);
 //    EXPECT_EQ(j->m_counter, 0);
-//    QTest::qSleep(700);
+//    TC_Sleep(700);
 //    EXPECT_EQ(j->m_counter, 1);
-//    QTest::qSleep(500);
+//    TC_Sleep(500);
 
     // Wait for the KJob to signal that it's finished.
     // Won't get a result() signal here because it's kill()'ed Quietly.
@@ -587,11 +600,11 @@ TEST_F(AMLMJobTests, IPJCancelBeforeStart)
 
 //    j->start();
 
-//    QTest::qSleep(500);
+//    TC_Sleep(500);
 //    EXPECT_EQ(j->m_counter, 0);
-//    QTest::qSleep(700);
+//    TC_Sleep(700);
 //    EXPECT_EQ(j->m_counter, 1);
-//    QTest::qSleep(500);
+//    TC_Sleep(500);
 
     // Wait for the KJob to signal that it's finished.
     // Won't get a result() signal here because it's kill()'ed Quietly.

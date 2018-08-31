@@ -148,6 +148,7 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
     ASSERT_TRUE(m_event_loop_object == nullptr);
     m_event_loop_object = new QObject(qApp);
     m_delete_spy = new QSignalSpy(m_event_loop_object, &QObject::destroyed);
+    ASSERT_TRUE(QThread::currentThread()->eventDispatcher() != nullptr);
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()

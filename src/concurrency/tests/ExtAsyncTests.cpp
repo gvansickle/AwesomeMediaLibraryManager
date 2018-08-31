@@ -85,7 +85,7 @@ static ExtFuture<QString> delayed_string_func()
     QFuture<QString> retval = QtConcurrent::run([](){
 		// Sleep for a second.
 		qDb() << "ENTER, SLEEPING FOR 1 SEC";
-		QTest::qSleep(1000);
+        TC_Sleep(1000);
 		qDb() << "SLEEP COMPLETE, returning HELLO";
 		return QString("HELLO");
 	});
@@ -117,10 +117,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     /// If you do, things get totally screwed up and thiw will segfault.
     QFuture<int> f = QtConcurrent::run([&]() mutable -> int {
         GTEST_COUT << "Entered callback\n";
-        QTest::qSleep(1000);
+        TC_Sleep(1000);
         counter = 1;
         GTEST_COUT << "T+1 secs\n";
-        QTest::qSleep(1000);
+        TC_Sleep(1000);
         counter = 2;
         return 5;
         ;});
@@ -128,10 +128,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     GTEST_COUT << "CALLED ::RUN" << std::endl;
 
     EXPECT_TRUE(f.isStarted());
-    QTest::qSleep(500);
-    EXPECT_TRUE(f.isRunning()); // In the first QTest::qSleep(1000);
-    QTest::qSleep(1000);
-    GTEST_COUT << "CHECKING COUNTER FOR 1" << std::endl; // In the second QTest::qSleep(1000);
+    TC_Sleep(500);
+    EXPECT_TRUE(f.isRunning()); // In the first TC_Sleep(1000);
+    TC_Sleep(1000);
+    GTEST_COUT << "CHECKING COUNTER FOR 1" << std::endl; // In the second TC_Sleep(1000);
     EXPECT_EQ(counter, 1);
 
 //    GTEST_COUT << "CANCELING" << std::endl; // Can't cancel a QtConcurrent::run() future.  Should be cancelling before counter gets to 2.
@@ -198,7 +198,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
                 GTEST_COUT_qDB << "LOOP COUNTER: " << counter;
 
                 // Pretend to do 1 second of work.
-                QTest::qSleep(1000);
+                TC_Sleep(1000);
                 counter++;
                 GTEST_COUT_qDB << "+1 secs, counter = " << counter;
             }
@@ -221,13 +221,13 @@ void QtConcurrentRunFutureStateOnCancelGuts()
 
     GTEST_COUT_qDB << "WAITING FOR 5 SECS...";
     // qWait() doesn't block the event loop, qSleep() does.
-    QTest::qWait(5000);
+    TC_Wait(5000);
 
     GTEST_COUT_qDB << "CANCELING THE FUTURE:" << ExtFutureState::state(the_future);
     the_future.cancel();
     GTEST_COUT_qDB << "CANCELED FUTURE STATE:" << ExtFutureState::state(the_future);
 
-    QTest::qSleep(1000);
+    TC_Sleep(1000);
 
     // We don't really care about the future returned from QtConcurrent::run(), but it should be finished by now.
     /// @todo Sometimes f not finished here, problem?
@@ -300,13 +300,13 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
                 {
                     // None of the jobs should complete before the future is canceled.
                     GTEST_COUT << "SLEEPING FOR 2 secs";
-                    QTest::qSleep(2000);
+                    TC_Sleep(2000);
                 }
                 else
                 {
                     // Let them all complete.
                     GTEST_COUT << "SLEEPING FOR 0.5 secs";
-                    QTest::qSleep(500);
+                    TC_Sleep(500);
                 }
 
                 if(f.isCanceled())
@@ -340,14 +340,14 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 
     GTEST_COUT << "WAITING FOR 1 SECS";// << std::endl;
     // qWait() doesn't block the event loop, qSleep() does.
-    QTest::qSleep(1000);
+    TC_Sleep(1000);
 
 
     GTEST_COUT << "CANCELING:" << ExtFutureState::state(f);
     f.cancel();
     GTEST_COUT << "CANCELED:" << ExtFutureState::state(f);
 
-//    QTest::qWait(1000);
+//    TC_Wait(1000);
 
     EXPECT_TRUE(f.isStarted());
     EXPECT_TRUE(f.isCanceled());
@@ -806,13 +806,13 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 			GTEST_COUT << "TEST: Running from main run lambda." << std::endl;
 			// Sleep for a second to make sure then() doesn't run before we get to the Q_ASSERT() after this chain.
 			GTEST_COUT << "SLEEP 1" << std::endl;
-            QTest::qSleep(1000);
+            TC_Sleep(1000);
 			extfuture.reportResult(867);
 			GTEST_COUT << "SLEEP 1" << std::endl;
-            QTest::qSleep(1000);
+            TC_Sleep(1000);
 			extfuture.reportResult(5309);
 			GTEST_COUT << "SLEEP 1" << std::endl;
-            QTest::qSleep(1000);
+            TC_Sleep(1000);
 			GTEST_COUT << "FINISHED" << std::endl;
 			extfuture.reportFinished();
 			GTEST_COUT << "TEST: Finished from main run lambda." << std::endl;
