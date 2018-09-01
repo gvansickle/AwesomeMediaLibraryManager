@@ -161,12 +161,12 @@ void CoverArtJob::runFunctor()
     if(retval.size() > 0)
     {
         qDebug() << "Found pic data, size:" << retval.size();
-        setSuccessFlag(true);
+//        setSuccessFlag(true);
     }
     else
     {
         qDebug() << "Found no pic data";
-        setSuccessFlag(false);
+//        setSuccessFlag(false);
     }
 
 M_WARNING("TODO: Getting asserts here on app close during dir scan.");

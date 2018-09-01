@@ -44,14 +44,14 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 
     /// @todo Temp, delete.
-    connect_or_die(this, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, this, [=](int begin, int end){
-        qDbo() << "Got signal:" << begin << end;
-    });
+//    connect_or_die(this, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, this, [=](int begin, int end){
+//        qDbo() << "Got signal:" << begin << end;
+//    });
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 {
-    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
+//    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
 }
 
 DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, const QUrl& dir_url,
@@ -78,7 +78,7 @@ void DirectoryScannerAMLMJob::runFunctor()
     {
         qWro() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << m_dir_url;
         qWro() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
-        setSuccessFlag(false);
+//        setSuccessFlag(false);
         return;
     }
 
@@ -122,11 +122,11 @@ void DirectoryScannerAMLMJob::runFunctor()
             // of files potentially in this directory.
             num_possible_files = num_files_found_so_far + file_info.dir().count();
 
-            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
-            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
-            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
+//            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
+//            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
+//            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
             /// NEW
-            m_ext_future.setProgressRange(0, num_possible_files);
+            m_ext_future.setProgressRange(0, num_possible_files+1);
         }
         else if(file_info.isFile())
         {
@@ -141,7 +141,7 @@ void DirectoryScannerAMLMJob::runFunctor()
 
             /// @todo
             DirScanResult dir_scan_result(file_url, file_info);
-            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
+//            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
 
             Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 
@@ -154,12 +154,13 @@ void DirectoryScannerAMLMJob::runFunctor()
             if(totalAmount(KJob::Unit::Files) <= num_files_found_so_far)
             {
                 num_possible_files = num_files_found_so_far+1;
-                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
+//                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
+                m_ext_future.setProgressRange(0, num_possible_files);
             }
 
-            setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+//            setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
             /// NEW
-            m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
+            m_ext_future.setProgressValue(num_files_found_so_far);
 
 			// Report the URL we found to the future.
 			m_ext_future.reportResult(dir_scan_result);
@@ -170,6 +171,7 @@ void DirectoryScannerAMLMJob::runFunctor()
             // We've been cancelled.
             qIno() << "CANCELLED";
             m_ext_future.reportCanceled();
+            m_ext_future.reportFinished();
             break;
         }
     }
@@ -177,16 +179,18 @@ void DirectoryScannerAMLMJob::runFunctor()
     // We've either completed our work or been cancelled.
 	// Either way, run() will handle setting the cancellation status as long as
     // we set success/fail appropriately.
-    if(!wasCancelRequested())
-    {
-        setSuccessFlag(true);
-    }
+//    if(!wasCancelRequested())
+//    {
+//        setSuccessFlag(true);
+//    }
     num_possible_files = num_files_found_so_far;
     if (!m_ext_future.isCanceled())
     {
         m_ext_future.setProgressRange(0, num_possible_files);
         m_ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
     }
+
+    m_ext_future.reportFinished();
 
     qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
 }

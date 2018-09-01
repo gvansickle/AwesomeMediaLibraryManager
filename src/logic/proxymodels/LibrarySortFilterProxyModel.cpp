@@ -17,10 +17,10 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "LibrarySortFilterProxyModel.h"
+#include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 
-#include "LibraryEntry.h"
-#include "LibraryModel.h"
+#include <logic/LibraryEntry.h>
+#include <logic/LibraryModel.h>
 
 LibrarySortFilterProxyModel::LibrarySortFilterProxyModel(QObject* parent) : QSortFilterProxyModel(parent)
 {

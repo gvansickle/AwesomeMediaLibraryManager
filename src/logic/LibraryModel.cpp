@@ -332,8 +332,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                     {
                         // Succeeded, update the model.
                         qIno() << "ASYNC LOAD COMPLETE:" << loader_kjob;
-                        auto num_results = loader_kjob->get_extfuture_ref().resultCount();
-                        qIno() << "ASYNC LOAD INFO: ExtFuture state:" << loader_kjob->get_extfuture_ref().state()
+                        auto num_results = loader_kjob->get_extfuture().resultCount();
+                        qIno() << "ASYNC LOAD INFO: ExtFuture state:" << loader_kjob->get_extfuture().state()
                                << "RESULTCOUNT:" << num_results;
 
                         if(num_results == 0)
@@ -343,7 +343,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                         }
                         else
                         {
-                            LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture_ref().get()[0];
+                            LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture().get()[0];
                             Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
                         }
                         m_pending_async_item_loads.erase(item);

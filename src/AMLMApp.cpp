@@ -105,7 +105,9 @@ void AMLMApp::Init(bool gtest_only)
 
 
     /// @todo Move this somewhere.
-    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecareCueURL"}, str, this);
+//    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
+
+    m_srtm_instance = new ScanResultsTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
 
 	/// @end Experiments
 
@@ -121,8 +123,8 @@ AMLMApp *AMLMApp::instance()
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
 {
-M_WARNING("REMOVE");
-return;
+//M_WARNING("REMOVE");
+//return;
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
     {

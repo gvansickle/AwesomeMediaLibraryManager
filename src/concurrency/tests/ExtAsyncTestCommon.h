@@ -156,6 +156,20 @@ public:
     void unregister_generator(trackable_generator_base* generator);
 };
 
+/// Divisor for ms delays/timeouts in the tests.
+constexpr long TC_MS_DIV = 10;
+
+static inline void TC_Sleep(int ms)
+{
+    QTest::qSleep(ms / TC_MS_DIV);
+}
+
+static inline void TC_Wait(int ms)
+{
+    QTest::qWait(ms / TC_MS_DIV);
+}
+
+
 /// @name Additional test helper macros.
 /// @{
 
@@ -195,6 +209,17 @@ public:
     ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
     finished(static_test_id_string);
 
+/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
+#define M_QSIGNALSPIES_SET(kjobptr) \
+    QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
+    EXPECT_TRUE(kjob_finished_spy.isValid()); \
+    QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
+    EXPECT_TRUE(kjob_result_spy.isValid()); \
+    QSignalSpy kjob_destroyed_spy(static_cast<QObject*>(kjobptr), &QObject::destroyed); \
+    EXPECT_TRUE(kjob_destroyed_spy.isValid());
+
+#define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
+    EXPECT_TRUE(kjob_destroyed_spy.wait());
 
 /// @}
 
@@ -296,7 +321,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
             // Sleep for a second.
             GTEST_COUT_qDB << "SLEEPING FOR 1 SEC";
 
-            QTest::qSleep(1000);
+            TC_Sleep(1000);
             GTEST_COUT_qDB << "SLEEP COMPLETE, sending value to future:" << current_val;
 
             reportResult(future, current_val);
@@ -326,16 +351,14 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
-        GTEST_COUT_qDB << "Qt run()";
+        GTEST_COUT_qDB << "QtConcurrent::run()";
         auto qrunfuture = QtConcurrent::run(lambda, retval);
     }
     else
     {
-        GTEST_COUT_qDB << "ExtAsync::run()";
+        GTEST_COUT_qDB << "ExtAsync::run_efarg()";
         retval = ExtAsync::run_efarg(lambda);
     }
-
-    static_assert(std::is_same_v<decltype(retval), ReturnFutureT>, "");
 
     GTEST_COUT_qDB << "RETURNING future:" << ExtFutureState::state(retval);
 

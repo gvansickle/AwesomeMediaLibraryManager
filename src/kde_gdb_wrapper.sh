@@ -5,5 +5,5 @@ notify-send "KDEV_BUILD_INST_DIR_FOR_RUN_DEBUG: ${KDEV_BUILD_INST_DIR_FOR_RUN_DE
 
 # We're invoked with this, and it seems to work.
 ### Or maybe this:
-### /home/gary/src/AwesomeMediaLibraryManager/src/kde_gdb_wrapper.sh gdb /home/gary/src/AwesomeMediaLibraryManager/src/kde_gdb_wrapper.sh gdb --interpreter=mi2 -quiet
+### AwesomeMediaLibraryManager/src/kde_gdb_wrapper.sh gdb AwesomeMediaLibraryManager/src/kde_gdb_wrapper.sh gdb --interpreter=mi2 -quiet
 gdb --interpreter=mi2

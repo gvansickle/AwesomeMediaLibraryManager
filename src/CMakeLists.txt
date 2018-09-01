@@ -115,7 +115,7 @@ set(HEADER_FILES
 	logic/LibraryEntryLoaderJob.h
 	logic/LibraryEntryMimeData.h
 	logic/LibraryModel.h
-	logic/LibrarySortFilterProxyModel.h
+	logic/proxymodels/LibrarySortFilterProxyModel.h
 	logic/Metadata.h
 	logic/MetadataAbstractBase.h
 	logic/MetadataFromCache.h
@@ -134,6 +134,7 @@ set(HEADER_FILES
 	logic/dbmodels/EntityBase.h
 	logic/dbmodels/ScanResultsTableModel.h
 	logic/dbmodels/SQLHelpers.h
+	logic/models/ScanResultsTreeModel.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h
@@ -175,7 +176,7 @@ set(SOURCE_FILES
 	logic/LibraryEntryLoaderJob.cpp
 	logic/LibraryEntryMimeData.cpp
 	logic/LibraryModel.cpp
-	logic/LibrarySortFilterProxyModel.cpp
+	logic/proxymodels/LibrarySortFilterProxyModel.cpp
 	logic/Metadata.cpp
 	logic/MetadataAbstractBase.cpp
 	logic/MetadataFromCache.cpp
@@ -193,6 +194,7 @@ set(SOURCE_FILES
 	logic/dbmodels/EnhancedAbstractTableModel.cpp
 	logic/dbmodels/ScanResultsTableModel.cpp
 	logic/dbmodels/EntityBase.cpp
+	logic/models/ScanResultsTreeModel.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
@@ -335,7 +337,7 @@ add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE d
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"	
+	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
 	PRIVATE
 	"KXMLGUI_NO_DEPRECATED=1"
 	"QT_DEPRECATED_WARNINGS=1"
@@ -436,7 +438,40 @@ set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
 #set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
 target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
-add_test(NAME ${TEST_EXE_TARGET} COMMAND ${TEST_EXE_TARGET})
+add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
+ecm_mark_as_test(${TEST_EXE_TARGET})
+
+if(FALSE)
+###
+### Qt5 QTests
+###
+#set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
+add_executable(test_qtestamlmjobtests "") #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
+target_sources(test_qtestamlmjobtests
+	PUBLIC
+	    concurrency/tests/QTestAMLMJobTests.cpp
+		#${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
+		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${amlm_settings_SRCS}
+		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+	)
+target_compile_definitions(test_qtestamlmjobtests PRIVATE
+	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
+	"QT_DEPRECATED_WARNINGS"
+	"QT_NO_KEYWORDS"
+	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"QFUTURE_TEST")
+target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
+set_target_properties(test_qtestamlmjobtests PROPERTIES
+	AUTOMOC ON
+	AUTOUIC ON)
+add_test(NAME test_qtestamlmjobtests COMMAND $<TARGET_FILE:test_qtestamlmjobtests>)
+ecm_mark_as_test(test_qtestamlmjobtests)
+###
+### END Qt5 QTests
+###
+endif()
 
 endif() # Enable test target.
 
@@ -462,8 +497,16 @@ install(FILES ${AppIcon_rcc}
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 	    DESTINATION ${KDE_INSTALL_ICONDIR}
 		COMPONENT coreapp)
-### @note New KF5 icon theme install for windows and mac
-### @note "icontheme.rcc" apparently has to be in bin/data/ (not a subdir) for it to be picked up.
+
+###
+### KF5 icon theme install for especially Windows and Mac.
+###
+### Per the docs @link https://api.kde.org/frameworks/kiconthemes/html/index.html, as long as icontheme.rcc
+### is installed "in a directory found by QStandardPaths::AppDataLocation", the KDE QPA should find it.
+### I'm not sure that actually works.  Even on Linux, it seems that "icontheme.rcc" apparently has to be in
+### ${KDE_INSTALL_BINDIR}/data/ (bin/data/), and not in any of the actual QStandardPaths::AppDataLocation dirs
+### (Linux: "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>") for it to be picked up.
+###
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
 if(TRUE)#WIN32)
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
@@ -474,11 +517,12 @@ endif()
 ### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
 ecm_install_icons(ICONS ${ICONS_SRCS}
 	DESTINATION ${KDE_INSTALL_ICONDIR}
-	THEME hicolor)
+	THEME hicolor
+	)
 ecm_install_icons(ICONS
     DESTINATION ${KDE_INSTALL_ICONDIR}
     THEME hicolor
-)
+	)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)

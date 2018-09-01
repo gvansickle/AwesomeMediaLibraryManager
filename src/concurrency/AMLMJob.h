@@ -57,7 +57,7 @@ struct AMLMJob_traits
     using type = T;
     using ExtFutureType = typename T::ExtFutureT;
 
-    ExtFutureType& get_future_ref() { return T::m_ext_future; }
+    ExtFutureType get_future() { return T::m_ext_future; }
 
 };
 
@@ -69,10 +69,17 @@ struct AMLMJob_traits
 class IExtFutureWatcher
 {
 public:
-    virtual ~IExtFutureWatcher() {}
+    virtual ~IExtFutureWatcher() = default;
 
 //Q_SIGNALS:
     virtual void SIGNAL_resultsReadyAt(int begin, int end) = 0;
+
+    // KJob signals.
+    virtual void finished(KJob *job) = 0;
+    virtual void result(KJob *job) = 0;
+
+    // QObject signals.
+    virtual void destroyed(QObject* obj) = 0;
 };
 Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
 
@@ -196,7 +203,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished, in any case. It is used to notify
     /// observers that the job is terminated and that progress can be hidden."
     /// Call emitResult(job) to emit.
-//    void finished(KJob *job);
+    void finished(KJob *job) override;
     /// "Emitted when the job is suspended."
     /// No direct way to emit this?
 //    void suspended(KJob *job);
@@ -206,7 +213,10 @@ Q_SIGNALS:
     /// "Emitted when the job is finished (except when killed with KJob::Quietly).
     /// Use error to know if the job was finished with error."
     /// Call emitResult(job) to emit.
-//    void result(KJob *job);
+    void result(KJob *job) override;
+
+    // QObject signals.
+    void destroyed(QObject* obj) override;
 
     /// @}
 
@@ -219,7 +229,7 @@ Q_SIGNALS:
     /// *** This is a private signal, it can't be emitted directly by subclasses of KJob, use emitResult() instead.
     /// In general, to be notified of a job's completion, client code should connect to result() rather than finished(), so that kill(Quietly) is indeed quiet. However if you store a list of jobs
     /// and they might get killed silently, then you must connect to this instead of result(), to avoid dangling pointers in your list."
-    // void finished (KJob *job)
+    // void finished(KJob *job);
 
     // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
     // void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
@@ -317,10 +327,6 @@ public:
     /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
 
-
-    /// Derived runFunctor() must call this before exiting.
-    void setSuccessFlag(bool success);
-
     /// @}
 
     virtual qulonglong totalSize() const;
@@ -331,16 +337,6 @@ public:
     static void dump_job_info(KJob* kjob, const QString &header = QString());
 
 public:
-
-//    template<typename FutureT>
-//    FutureT& get_extfuture_ref()
-//    {
-////        AMLMJob_traits<std::remove_reference_t<decltype(*this)>>::ExtFutureType retval = this->m_ext_future;
-//        //return &decltype(FutureT)(std::declval<>this->m_ext_future);
-////        auto& retval = AMLMJob_traits<std::remove_reference_t<decltype(*this)>>::get_future_ref();
-//        auto& retval = AMLMJob_traits<std::remove_reference_t<decltype(*this->asDerivedTypePtr())>>::get_future_ref();
-//        return retval;
-//    }
 
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
@@ -487,32 +483,6 @@ protected:
     /// @{
 
     /**
-     * Kill the KJob.
-     * Abort this job quietly.
-     * Simply kill the job, no error reporting or job deletion should be involved.
-     *
-     * @note Not a slot.
-     *
-     * @note KJob::doKill() does nothing, simply returns false.
-     *
-     * What our override here does:
-     * Tells the runFunctor() to kill itself by calling .cancel() on its ExtFuture<>, then
-     * waits for it to finish via waitForFinished().
-     *
-     * @note It does look like this should block until the job is really confirmed to be killed.
-     *       KAbstractWidgetJobTracker::slotStop() does this:
-     * @code
-     *         job->kill(KJob::EmitResult); // notify that the job has been killed
-     *         emit stopped(job);
-     * @endcode
-     *
-     * @warning this may/will be deleteLater()'ed at any time after this function returns true.
-     *
-     * @return true if job successfully killed, false otherwise.
-     */
-//    bool doKill() override;
-
-    /**
      * Not a slot.
      * @note KJob::doSuspend() simply returns false.
      */
@@ -621,22 +591,34 @@ public:
     explicit AMLMJobT(QObject* parent = nullptr)
         : BASE_CLASS(parent)
 	{
-		qDbo() << "WORKED:" << m_ext_future.state();
+        qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
         m_ext_watcher = new ExtFutureWatcherT();
 	}
 
-    ExtFutureT& get_extfuture_ref()
+    /**
+     * Return a copy of the future.
+     */
+    ExtFutureT get_extfuture()
     {
         return m_ext_future;
     }
 
+    /**
+     * Factory function for creating AMLMJobT's wrapping the passed-in ExtFuture<T>.
+     * @returns AMLMJob which is not started.
+     */
+    static std::unique_ptr<AMLMJobT> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
+    {
+        auto job = std::make_unique<AMLMJobT>(ef, parent);
+        //	qDebug() << "WORKED:" << ef;
+        return job;
+    }
+
     Q_SCRIPTABLE void start() override
     {
-        // Hook up signals and such to the ExtFutureWatcher<T>, set the ExtFuture<T>.
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
+        // Hook up signals and such to the ExtFutureWatcher<T>.
         HookUpExtFutureSignals(m_ext_watcher);
 
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
@@ -654,7 +636,7 @@ public:
         m_ext_watcher->setFuture(m_ext_future);
     }
 
-protected: // Q_SLOTS:
+protected: //Q_SLOTS:
 
     /**
      * @todo This is what happens when your framework is stuck in 199-late.
@@ -666,6 +648,12 @@ protected: // Q_SLOTS:
 //        qWro() << "Base class override called, should never happen.  ef/begin/end:" << ef << begin << end;
 ////        Q_ASSERT_X(0, __func__, "Base class override called, should never happen.");
 //    }
+
+    virtual void SLOT_extfuture_started()
+    {
+        // The watcher has started watching the future.
+        qDbo() << "GOT EXTFUTURE STARTED";
+    }
 
     virtual void SLOT_extfuture_finished()
     {
@@ -682,6 +670,32 @@ protected: // Q_SLOTS:
         m_ext_watcher->deleteLater();
     }
 
+    virtual void SLOT_extfuture_paused()
+    {
+        qDbo() << "GOT EXTFUTURE PAUSED";
+    }
+
+    virtual void SLOT_extfuture_resumed()
+    {
+        qDbo() << "GOT EXTFUTURE RESUMED";
+    }
+
+    virtual void SLOT_extfuture_progressRangeChanged(int min, int max)
+    {
+        this->setTotalAmountAndSize(this->progressUnit(), max-min);
+    }
+
+    virtual void SLOT_extfuture_progressValueChanged(int progress_value)
+    {
+        this->setProcessedAmountAndSize(this->progressUnit(), progress_value);
+//        this->emitSpeed(progress_value);
+    }
+
+    virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
+    {
+
+    }
+
 protected:
 
     /// Last-stage wrapper around the runFunctor().
@@ -691,22 +705,20 @@ protected:
     {
         /// @note We're in an arbitrary thread here probably without an event loop.
 
-        auto& ef = m_ext_future;
-
-        qDbo() << "ExtFuture<T> state:" << ef.state();
+        qDbo() << "ExtFuture<T> state:" << m_ext_future.state();
 
         // Check if we were canceled before we were started.
-        if(ef.isCanceled())
+        if(m_ext_future.isCanceled())
         {
             // We were canceled before we were started.
             // Report (STARTED | CANCELED | FINISHED) and just return.
             /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
-            ef.reportFinished();
-            AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
+            m_ext_future.reportCanceled();
+            m_ext_future.reportFinished();
+            AMLM_ASSERT_EQ(ExtFutureState::state(m_ext_future), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
-M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture_finished() to be called,"
-          "not SLOT_extfuture_canceled().  Do we need an emitResult() here.");
-
+            // Do we need an emitResult() here?
+            emitResult();
             return;
         }
     #ifdef QT_NO_EXCEPTIONS
@@ -718,19 +730,19 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
             // Start the work by calling the functor.  We should be in the Running state if we're in here.
             /// @todo But we're not Running here.  Not sure why.
     //        AMLM_ASSERT_EQ(ef.isRunning(), true);
-            qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
+            qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(m_ext_future);
             this->runFunctor();
-            qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
+            qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(m_ext_future);
         }
         catch(QException &e)
         {
             /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-            ef.reportException(e);
+            m_ext_future.reportException(e);
         }
         catch(...)
         {
             /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-            ef.reportException(QUnhandledException());
+            m_ext_future.reportException(QUnhandledException());
         }
 
         /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
@@ -744,26 +756,26 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
         /// @endcode
         /// So it seems we should be safe doing the same thing.
 
-        if(ef.isPaused())
+        if(m_ext_future.isPaused())
         {
             // ExtAsync<> is paused, so wait for it to be resumed.
             qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
-            ef.waitForResume();
+            m_ext_future.waitForResume();
         }
 
         qDbo() << "REPORTING FINISHED";
-        ef.reportFinished();
+        m_ext_future.reportFinished();
 
         // We should only have two possible states here, excl. exceptions for the moment:
         // - Started | Finished
         // - Started | Canceled | Finished if job was canceled.
-        AMLM_ASSERT_EQ(ef.isStarted(), true);
-        AMLM_ASSERT_EQ(ef.isFinished(), true);
+        AMLM_ASSERT_EQ(m_ext_future.isStarted(), true);
+        AMLM_ASSERT_EQ(m_ext_future.isFinished(), true);
 
         // Do the post-run work.
 
         // Set the three KJob error fields.
-        setKJobErrorInfo(!ef.isCanceled());
+        setKJobErrorInfo(!m_ext_future.isCanceled());
 
 //        qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
 //        if(isAutoDelete())
@@ -772,28 +784,51 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
 //            qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
 //        }
 
-        // emitResult().
-        // We use a signal/slot here since we're in an arbitrary context.
-        /// @note We rely on the ExtFutureWatcher::finished() signal for emitting this.
-//        Q_EMIT SIGNAL_internal_call_emitResult();
-
-        // Notify any possible doKill() that we really truly have stopped the async worker thread.
-//        m_run_returned.release();
+        /// @note We rely on the ExtFutureWatcher::finished() signal -> this->SLOT_extfuture_finished() to call emitResult().
     }
 
+    /// @name Virtual overrides to forward these calls to their templated counterparts.
+    /// @{
+
+    /**
+    * doKill(): Kill the KJob.
+    * Abort this job quietly.
+    * Simply kill the job, no error reporting or job deletion should be involved.
+    *
+    * @note This is not a slot.  You're looking for KJob::kill(), which is a public slot.
+    *
+    * @note KJob::doKill() does nothing, simply returns false.
+    *
+    * What our override here does:
+    * Tells the runFunctor() to kill itself by calling .cancel() on its ExtFuture<>, then
+    * waits for it to finish via waitForFinished().
+    *
+    * @note It does look like this should block until the job is really confirmed to be killed.
+    *       KAbstractWidgetJobTracker::slotStop() does this:
+    * @code
+    *         job->kill(KJob::EmitResult); // notify that the job has been killed
+    *         emit stopped(job);
+    * @endcode
+    *
+    * @warning this may/will be deleteLater()'ed at any time after this function returns true.
+    *
+    * @return true if job successfully killed, false otherwise.
+    */
     bool doKill() override { return doKillT(); }
+
     bool doSuspend() override { return doSuspendT(); }
     bool doResume() override { return doResumeT(); }
+    /// @}
 
     bool doKillT()
     {
         // KJob::doKill().
 
-        qDbo() << "START EXTASYNC DOKILL";
+        qDbo() << "START AMLMJobT::DOKILL";
 
         /**
         /// @note The calling thread has to have an event loop, and actually AFAICT should be the main app thread.
-        /// @note Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start(), which might be simpler:
+        /// @note Kdevelop::ImportProjectJob does this:
         /// @code
             bool ImportProjectJob::doKill()
             {
@@ -815,12 +850,14 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
 
-        // Tell Future and hence job to Cancel.
+        // Tell the Future and hence job to Cancel.
         m_ext_watcher->cancel();
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
-    //    setError(KilledJobError);
-        setKJobErrorInfo(false);
+        /// @todo Is it possible for us to have been deleted before this call due to the cancel() above?
+        setError(KJob::KilledJobError);
+        /// @todo This text should probably be set somehow by the underlying async job.
+        setErrorText(tr("Job killed"));
 
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
@@ -832,7 +869,6 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
         /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
         ///       Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start().
 //        AMLM_ASSERT_EQ(m_ext_future.state(), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
-
         /// @todo Difference here between cancel before and after start.
         /// Before: Started | Canceled, After: S|F|C.
         qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(m_ext_future);
@@ -866,31 +902,22 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
     }
 
     /**
-     * Call this in your derived runFunctor() function to see if you should cancel the loop.
-     * @see functorHandlePauseResumeAndCancel()
-     */
-    bool wasCancelRequested()
-    {
-        // Were we told to abort?
-        return m_ext_future.isCanceled();
-    }
-
-    /**
-     * Call this at the bottom of your runFunctor() override.
-     * Handles pause/resume internally.
+     * Call this at the bottom of your runFunctor() override.  If the call returns true,
+     * you're being canceled and must break out of the loop and return.
+     *
+     * Handles pause/resume completely internally, nothing needs to be done in the calling loop.
+     *
      * @return true if loop in runFunctor() should break due to being canceled.
      */
     bool functorHandlePauseResumeAndCancel()
     {
-        auto& ef = m_ext_future;
-
-        if (ef.isPaused())
+        if (m_ext_future.isPaused())
         {
-            ef.waitForResume();
+            m_ext_future.waitForResume();
         }
-        if (ef.isCanceled())
+        if (m_ext_future.isCanceled())
         {
-            // The job has been canceled.
+            // The job should be canceled.
             // The calling runFunctor() should break out of while() loop.
             return true;
         }
@@ -903,19 +930,28 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
     template <class WatcherType>
     void HookUpExtFutureSignals(WatcherType* watcher)
 	{
-		// Main connection we need is results.
-		// resultsReadyAt(range): There are results ready immediately at the given index range.
-//        connect_or_die(watcher, &ExtFutureWatcherT::resultsReadyAt, QApplication::instance(),
-//                       [=](int beginIndex, int endIndex) {
-//            // Directly call the overridden slot with all the info needed to get the results.
-//            /// @todo This is problematic and inefficient.
-//            SLOT_onResultsReadyAt(m_ext_future, beginIndex, endIndex);
-//            });
+        // FutureWatcher signals to this->SLOT* connections.
+        // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
+        // and result ready signals on a canceled future."
+        // This group coressponds ~1:1 with KJob functionality.
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
 
-        // Signal-to-signal connection.
-//        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &std::remove_reference_t<decltype(*this)>::SIGNAL_onResultsReadyAt);
-//        connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_onResultsReadyAt);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressValueChanged, this, &ThisType::SLOT_extfuture_progressValueChanged);
+
+        // Signal-to-signal connections.
+        // forward resultsReadyAt() signal.
         connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
+        // KJob signal forwarders.
+        connect_or_die(this, &KJob::finished, this, &ThisType::finished);
+        connect_or_die(this, &KJob::result, this, &ThisType::result);
+
+        // QObject forwarders.
+        connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
@@ -958,7 +994,9 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
                 // Some other error.
                 // KJob
                 setError(KJob::UserDefinedError);
-                setErrorText(QString("Unknown, non-Killed-Job error on AMLMJob: %1").arg(asDerivedTypePtr()->objectName()));
+                setErrorText(QString("Unknown, non-Killed-Job error on %1: %2")
+                             .arg(this->metaObject()->className())
+                             .arg(this->objectName()));
             }
         }
     }
@@ -966,7 +1004,7 @@ M_WARNING("I think this is wrong. The reportFinished() will cause SLOT_extfuture
     /// @}
 
     /// The ExtFuture<T>.
-	ExtFutureT m_ext_future;
+    ExtFutureT m_ext_future;
 
 	/// The watcher for the ExtFuture.
     ExtFutureWatcherT* m_ext_watcher;

@@ -17,41 +17,19 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SRC_CONCURRENCY_TESTS_AMLMJOBTESTS_H_
-#define SRC_CONCURRENCY_TESTS_AMLMJOBTESTS_H_
+#ifndef SCANRESULTSTREEMODEL_H
+#define SCANRESULTSTREEMODEL_H
 
-// Std C++.
-#include <map>
-#include <string>
-#include <mutex>
+#include "src/logic/models/AbstractTreeModel.h"
 
-// Qt5
-#include <QObject>
-
-
-#include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
-
-// Ours
-//#include <tests/TestHelpers.h>
-#include "ExtAsyncTestCommon.h"
-
-
-/**
- * Test Suite (ISTQB) or "Test Case" (Google) for AMLMJobTests.
- */
-class AMLMJobTests : public ExtAsyncTestsSuiteFixtureBase
+class ScanResultsTreeModel : public AbstractTreeModel
 {
-protected:
+    using BASE_CLASS = AbstractTreeModel;
 
-	// Objects declared here can be used by all tests in this Fixture.
-
+public:
+    ScanResultsTreeModel(const QStringList &headers, const QString &data,
+                         QObject *parent = nullptr);
+    ~ScanResultsTreeModel() override = default;
 };
 
-class AMLMJobTestsParameterized : public AMLMJobTests,
-        public ::testing::WithParamInterface<bool>
-{
-
-};
-
-#endif /* SRC_CONCURRENCY_TESTS_AMLMJOBTESTS_H_ */
+#endif // SCANRESULTSTREEMODEL_H

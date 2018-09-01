@@ -143,17 +143,20 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
                                 expect_all_preconditions();
                             });
 
+    ASSERT_TRUE(QThread::currentThread()->eventDispatcher() != nullptr);
+
     // Make sure an event loop is running, and set it up to be destructed.
     /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
-    ASSERT_TRUE(m_event_loop_object == nullptr);
-    m_event_loop_object = new QObject(qApp);
-    m_delete_spy = new QSignalSpy(m_event_loop_object, &QObject::destroyed);
+//    ASSERT_TRUE(m_event_loop_object == nullptr);
+//    m_event_loop_object = new QObject(qApp);
+//    m_delete_spy = new QSignalSpy(m_event_loop_object, &QObject::destroyed);
+//    ASSERT_TRUE(QThread::currentThread()->eventDispatcher() != nullptr);
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 {
-    ASSERT_FALSE(m_interstate.is_test_currently_running()) << "A test was already running";
-    EXPECT_TRUE(m_interstate.get_currently_running_test().empty()) << "A test was already running";
+    ASSERT_FALSE(m_interstate.is_test_currently_running()) << "A test was still running:" << get_currently_running_test();
+    EXPECT_TRUE(m_interstate.get_currently_running_test().empty()) << "A test was still running" << get_currently_running_test();
 }
 
 void ExtAsyncTestsSuiteFixtureBase::TearDown()
@@ -162,12 +165,13 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
 
     // Tear down the event loop.
     /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
-    m_event_loop_object->deleteLater();
-    qDb() << "Waiting for event loop...";
-    m_delete_spy->wait(1000*60);
-    delete m_delete_spy;
-    m_event_loop_object = nullptr;
-    m_delete_spy = nullptr;
+//    m_event_loop_object->deleteLater();
+    qDb() << "Waiting for event loop to be destroyed...";
+//    auto didnt_time_out = m_delete_spy->wait(1000*60);
+//    ASSERT_TRUE(didnt_time_out);
+//    delete m_delete_spy;
+//    m_event_loop_object = nullptr;
+//    m_delete_spy = nullptr;
 
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();

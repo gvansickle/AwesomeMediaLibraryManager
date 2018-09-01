@@ -91,7 +91,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 
 #if 1 /// checkIndex()-like asserts.  @link https://www.kdab.com/new-in-qt-5-11-improvements-to-the-model-view-apis-part-1/
     Q_ASSERT(index.isValid()); // index is valid.
-    Q_ASSERT(!index.parent().isValid()); // Parent is not valid.
+    //Q_ASSERT(!index.parent().isValid()); // Parent is not valid.
     // Index is from this model.
     Q_ASSERT(index.model() == this);
 #endif

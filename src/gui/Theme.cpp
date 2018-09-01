@@ -40,7 +40,7 @@
 
 /// KF5
 #if HAVE_KF501
-#include <KIconLoader>
+#include <KIconTheme>
 #include <KActionMenu>
 #endif
 
@@ -66,7 +66,20 @@ QStringList Theme::m_available_styles;
  *  - Use QKeySequence instead of KShortcut to set shortcuts in actions."
  */
 
-
+/**
+ * The Icon Theme Tragedy
+ *
+ * Notes:
+ *
+ * From @link https://api.kde.org/frameworks/kiconthemes/html/classKIconLoader.html#adeaa3967ffbbfb424aee7d335c26fe24:
+ * "The icons are stored on disk in an icon theme or in a standalone directory. The icon theme directories contain multiple sizes
+ * and/or depths for the same icon. The iconloader will load the correct one based on the icon group and the current theme. Icon
+ * themes are stored globally in share/icons, or, application specific in share/apps/$appdir/icons.
+ * The standalone directories contain just one version of an icon. The directories that are searched are: $appdir/pics and
+ * $appdir/toolbar. Icons in these directories can be loaded by using the special group "User"."
+ *
+ * No idea if that's accurate, or even where the referred-to dirs even are.
+ */
 
 
 static bool isWindows()
@@ -88,7 +101,7 @@ Theme::Theme(QWidget *parent) : QWidget(parent)
 
 bool Theme::checkForTestIcon()
 {
-    qIn() << "Icon Theme Name:" << QIcon::themeName();
+//    qIn() << "Icon Theme Name:" << QIcon::themeName();
     qIn() << "Icon Theme Search Paths:" << QIcon::themeSearchPaths();
     QString test_icon_name = "folder-open";
 
@@ -115,19 +128,6 @@ void Theme::dump_resource_tree(const QString &root)
 
 void Theme::initialize()
 {
-    // Get OS info.
-
-    ///////
-
-    /// This is not directly related with what we're trying to do here.
-    /// At startup it's empty anyway.
-    /// @see http://doc.qt.io/qt-5/qdir.html#setSearchPaths.
-//    qIn() << "Registered resource paths:";
-//    for(const auto& respath : QDir::searchPaths("icontheme"))
-//    {
-//        qIn() << respath;
-//    }
-
     auto app_dir_path = QCoreApplication::applicationDirPath();
     qIn() << "App dir path:" << app_dir_path;
 
@@ -160,6 +160,7 @@ void Theme::initialize()
     }
 #endif
 
+    LogIconThemeInfo();
 
     // Load the icon resources.
     int rccs_loaded = 0;
@@ -169,9 +170,8 @@ void Theme::initialize()
     {
         // Look for the specified file.
 
-        QString full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
-//        QString full_path;
-        if(true)
+        QString full_path;
+        if(false /** @fixme */)
         {
         	/**
         	 * @todo FIXME For finding the icons when built and installed, but not installed on system.
@@ -179,6 +179,16 @@ void Theme::initialize()
         	 */
 
             //full_path = app_dir_path + "/../share/icons/" + fname;
+            full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+        }
+        else
+        {
+            full_path = app_dir_path + "/../share/icons/" + fname;
+            if(!QFile::exists(full_path))
+            {
+                qDb() << "No file at:" << full_path;
+                full_path.clear();
+            }
         }
 
         if(full_path.isEmpty())
@@ -203,16 +213,13 @@ void Theme::initialize()
         }
     }
 
+    Q_ASSERT(rccs_loaded > 0);
+
     // Interesting stuff in here by default.
     dump_resource_tree(":/");
 
-//    Q_ASSERT(rccs_loaded > 0);
+    LogIconThemeInfo();
 
-    //    M_WARNING("XXXXXX");
-    //    Theme::check
-
-
-    //////
 
 M_WARNING("TODO");
 #if 0
@@ -321,12 +328,17 @@ M_WARNING("TODO");
 
     checkForTestIcon();
 
+    LogIconThemeInfo();
+
     QIcon::setThemeName("oxygen-icons");
 
     checkForTestIcon();
 
-    qDebug() << "Current QIcon::iconThemeName():" << QIcon::themeName();
+    LogIconThemeInfo();
+
     qDebug() << "Current QIcon::themeSearchPaths():" << QIcon::themeSearchPaths();
+
+    LogIconThemeInfo();
 
     // Find all the icon themes we have access to.
     QStringList retval = FindIconThemes();
@@ -417,6 +429,10 @@ QString Theme::getUserDefaultStyle(const char* fallback)
 
 QStringList Theme::FindIconThemes()
 {
+#if HAVE_KF501
+    // List all icon themes installed on the system, global and local.
+    QStringList retlist = KIconTheme::list();
+#else
     QStringList retlist;
 
     for(QString search_dir : QIcon::themeSearchPaths())
@@ -437,18 +453,49 @@ QStringList Theme::FindIconThemes()
             }
         }
     }
+#endif
 
     return retlist;
 }
 
 QStringList Theme::GetIconThemeNames()
 {
-	return FindIconThemes();
+    return FindIconThemes();
+}
+
+void Theme::LogIconThemeInfo()
+{
+    QString default_kicon_theme_name = KIconTheme::defaultThemeName();
+    QString current_kicon_theme_name = KIconTheme::current();
+    QString current_qicon_theme_name = QIcon::themeName();
+
+
+    // List all icon themes installed on the system, global and local.
+    QStringList all_icon_themes = KIconTheme::list();
+
+    qIn() << "All Icon Themes:";
+    for(const auto& i : all_icon_themes)
+    {
+        qIn() << "  " << i;
+    }
+
+    // Get the app's icon loader.
+    auto* kicon_loader = KIconLoader::global();
+    /// @todo Is this of any use to us?: kicon_loader->addAppDir();
+    auto current_kicon_theme = kicon_loader->theme();
+    QString cur_desc = current_kicon_theme->description();
+
+    qIn() << M_NAME_VAL(default_kicon_theme_name);
+    qIn() << M_NAME_VAL(current_kicon_theme_name) << "Desc:" << cur_desc << "Dir:" << current_kicon_theme->dir()
+          << "Example Icon Name:" << current_kicon_theme->example();
+    qIn() << M_NAME_VAL(current_qicon_theme_name);
 }
 
 bool Theme::setIconThemeName(const QString& name)
 {
     qDb() << "Trying to set icon theme name to:" << name;
+
+    LogIconThemeInfo();
 
     QIcon::setThemeName(name);
 
@@ -458,6 +505,8 @@ bool Theme::setIconThemeName(const QString& name)
     {
         qWr() << "New theme name didn't take:" << name << "!=" << current_theme_name;
     }
+
+    LogIconThemeInfo();
 
 #if 0
 	///@todo This doen't work like it should
