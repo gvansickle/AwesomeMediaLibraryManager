@@ -111,7 +111,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 AbstractTreeModelItem* DirScanResult::toTreeModelItem()
 {
     QVector<QVariant> column_data;
-    column_data.append(QVariant::fromValue(getDirProps()).toString());
+    column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
     column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
     column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
 
