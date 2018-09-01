@@ -32,6 +32,7 @@
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 
 #include <logic/models/AbstractTreeModel.h>
+#include <logic/models/ScanResultsTreeModel.h>
 
 
 /**
@@ -80,6 +81,8 @@ public:
     CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
+    ScanResultsTreeModel* scan_results_tree_model_instance() { return m_srtm_instance; };
+
     /**
      * @return true if this app is in the process of shutting down.
      */
@@ -109,6 +112,8 @@ private:
     CollectionDatabaseModel* m_cdb_model;
 
 	AbstractTreeModel* m_cdb2_model_instance;
+
+    ScanResultsTreeModel* m_srtm_instance;
 
     bool m_shutting_down {false};
     bool m_controlled_shutdown_complete {false};

@@ -191,7 +191,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
 	// New Tree model.
-	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
+//	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
+    // Even newer tree model.
+    auto tree_model = AMLMApp::instance()->scan_results_tree_model_instance();
 
     connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt,
                    tree_model,
@@ -200,20 +202,22 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         QVector<AbstractTreeModelItem*> new_items;
         for(int i=begin; i<end; i++)
         {
-            QVector<QVariant> column_data;
             DirScanResult dsr = ef.resultAt(i);
 
-            column_data.append(QVariant::fromValue(dsr.getDirProps()).toString());
-            column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
-            column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+            new_items.push_back(dsr.toTreeModelItem());
 
-            new_items.push_back(new AbstractTreeModelItem(column_data));
+//            QVector<QVariant> column_data;
+//            column_data.append(QVariant::fromValue(dsr.getDirProps()).toString());
+//            column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
+//            column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+//            new_items.push_back(new AbstractTreeModelItem(column_data));
 
             // Found a file matching the criteria.  Send it to the model.
             /// @todo Forward the signal.
             m_current_libmodel->SLOT_onIncomingFilename(dsr.getMediaExtUrl().m_url.toString());
         }
 
+//        tree_model->appendItems(new_items);
         tree_model->appendItems(new_items);
 
 		;});

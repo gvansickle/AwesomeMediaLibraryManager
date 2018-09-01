@@ -1683,7 +1683,8 @@ void MainWindow::newCollectionView()
 //    child->setMainModel(model);
 	child->setMainModel2(model);
 //    child->getTableView()->setModel(model);
-    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
+//    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
+    child->setPane2Model(AMLMApp::instance()->scan_results_tree_model_instance());
 
     mdi_child->show();
 }

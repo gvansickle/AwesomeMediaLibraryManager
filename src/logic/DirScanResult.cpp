@@ -105,7 +105,17 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_media_exturl(found_url, &found_url_finfo)
 {
-	determineDirProps(found_url_finfo);
+    determineDirProps(found_url_finfo);
+}
+
+AbstractTreeModelItem* DirScanResult::toTreeModelItem()
+{
+    QVector<QVariant> column_data;
+    column_data.append(QVariant::fromValue(getDirProps()).toString());
+    column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
+    column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+
+    return new AbstractTreeModelItem(column_data);
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)

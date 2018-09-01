@@ -32,6 +32,8 @@
 /// Ours
 #include <utils/QtHelpers.h>
 
+#include <logic/models/AbstractTreeModelItem.h>
+
 /**
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
@@ -205,6 +207,8 @@ public:
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
 //    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+
+    AbstractTreeModelItem *toTreeModelItem();
 
 protected:
 

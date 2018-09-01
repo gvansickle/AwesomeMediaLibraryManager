@@ -105,7 +105,9 @@ void AMLMApp::Init(bool gtest_only)
 
 
     /// @todo Move this somewhere.
-    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
+//    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
+
+    m_srtm_instance = new ScanResultsTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
 
 	/// @end Experiments
 
