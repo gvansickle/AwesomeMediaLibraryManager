@@ -94,7 +94,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmak
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
-#set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
+set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
 include(KDECMakeSettings NO_POLICY_SCOPE)
 
 # CMake macros.
@@ -396,6 +396,19 @@ if(FALSE)
 		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp;-Xiwyu;--mapping_file=${PROJECT_SOURCE_DIR}/utils/nomoc/nomoc.imp")
 	endif()
 endif()
+
+add_definitions(
+	-DQT_DEPRECATED_WARNINGS
+    #-DQT_DISABLE_DEPRECATED_BEFORE=0x051000
+    -DQT_NO_SIGNALS_SLOTS_KEYWORDS
+    #-DQT_NO_URL_CAST_FROM_STRING
+    #-DQT_NO_CAST_FROM_ASCII
+    #-DQT_NO_CAST_TO_ASCII
+    #-DQT_NO_CAST_FROM_BYTEARRAY
+    -DQT_STRICT_ITERATORS
+    -DQT_USE_QSTRINGBUILDER
+    -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT)
+
 
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
