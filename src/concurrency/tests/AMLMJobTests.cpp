@@ -262,7 +262,7 @@ protected:
             }
         }
 
-        setSuccessFlag(!wasCancelRequested());
+//        setSuccessFlag(!wasCancelRequested());
 
         m_ext_future.reportFinished();
 

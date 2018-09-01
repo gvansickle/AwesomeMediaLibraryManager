@@ -793,6 +793,7 @@ public:
     }
 
     /// Status reporting
+public:
 
     void setProgressRange(int minimum, int maximum)
     {

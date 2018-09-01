@@ -229,7 +229,7 @@ Q_SIGNALS:
     /// *** This is a private signal, it can't be emitted directly by subclasses of KJob, use emitResult() instead.
     /// In general, to be notified of a job's completion, client code should connect to result() rather than finished(), so that kill(Quietly) is indeed quiet. However if you store a list of jobs
     /// and they might get killed silently, then you must connect to this instead of result(), to avoid dangling pointers in your list."
-    // void finished (KJob *job)
+    // void finished(KJob *job);
 
     // void 	infoMessage (KJob *job, const QString &plain, const QString &rich=QString())
     // void 	warning (KJob *job, const QString &plain, const QString &rich=QString())
@@ -327,10 +327,6 @@ public:
     /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
     /// @{
 
-
-    /// Derived runFunctor() must call this before exiting.
-    void setSuccessFlag(bool success);
-
     /// @}
 
     virtual qulonglong totalSize() const;
@@ -341,16 +337,6 @@ public:
     static void dump_job_info(KJob* kjob, const QString &header = QString());
 
 public:
-
-//    template<typename FutureT>
-//    FutureT& get_extfuture_ref()
-//    {
-////        AMLMJob_traits<std::remove_reference_t<decltype(*this)>>::ExtFutureType retval = this->m_ext_future;
-//        //return &decltype(FutureT)(std::declval<>this->m_ext_future);
-////        auto& retval = AMLMJob_traits<std::remove_reference_t<decltype(*this)>>::get_future_ref();
-//        auto& retval = AMLMJob_traits<std::remove_reference_t<decltype(*this->asDerivedTypePtr())>>::get_future_ref();
-//        return retval;
-//    }
 
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
@@ -497,32 +483,6 @@ protected:
     /// @{
 
     /**
-     * Kill the KJob.
-     * Abort this job quietly.
-     * Simply kill the job, no error reporting or job deletion should be involved.
-     *
-     * @note Not a slot.
-     *
-     * @note KJob::doKill() does nothing, simply returns false.
-     *
-     * What our override here does:
-     * Tells the runFunctor() to kill itself by calling .cancel() on its ExtFuture<>, then
-     * waits for it to finish via waitForFinished().
-     *
-     * @note It does look like this should block until the job is really confirmed to be killed.
-     *       KAbstractWidgetJobTracker::slotStop() does this:
-     * @code
-     *         job->kill(KJob::EmitResult); // notify that the job has been killed
-     *         emit stopped(job);
-     * @endcode
-     *
-     * @warning this may/will be deleteLater()'ed at any time after this function returns true.
-     *
-     * @return true if job successfully killed, false otherwise.
-     */
-//    bool doKill() override;
-
-    /**
      * Not a slot.
      * @note KJob::doSuspend() simply returns false.
      */
@@ -646,7 +606,8 @@ public:
     }
 
     /**
-     * Factory function for creating AMLMJobT's wrapping the passed-in ExtFuture<T>
+     * Factory function for creating AMLMJobT's wrapping the passed-in ExtFuture<T>.
+     * @returns AMLMJob which is not started.
      */
     static std::unique_ptr<AMLMJobT> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
     {
@@ -719,6 +680,21 @@ protected: //Q_SLOTS:
         qDbo() << "GOT EXTFUTURE RESUMED";
     }
 
+    virtual void SLOT_extfuture_progressRangeChanged(int min, int max)
+    {
+        this->setTotalAmountAndSize(this->progressUnit(), max-min);
+    }
+
+    virtual void SLOT_extfuture_progressValueChanged(int progress_value)
+    {
+        this->setProcessedAmountAndSize(this->progressUnit(), progress_value);
+    }
+
+    virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
+    {
+
+    }
+
 protected:
 
     /// Last-stage wrapper around the runFunctor().
@@ -741,6 +717,7 @@ protected:
             AMLM_ASSERT_EQ(ExtFutureState::state(m_ext_future), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
             // Do we need an emitResult() here?
+            emitResult();
             return;
         }
     #ifdef QT_NO_EXCEPTIONS
@@ -806,16 +783,38 @@ protected:
 //            qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
 //        }
 
-        // emitResult().
-        // We use a signal/slot here since we're in an arbitrary context.
-        /// @note We rely on the ExtFutureWatcher::finished() signal for emitting this.
-//        Q_EMIT SIGNAL_internal_call_emitResult();
-
+        /// @note We rely on the ExtFutureWatcher::finished() signal -> this->SLOT_extfuture_finished() to call emitResult().
     }
 
     /// @name Virtual overrides to forward these calls to their templated counterparts.
     /// @{
+
+    /**
+    * doKill(): Kill the KJob.
+    * Abort this job quietly.
+    * Simply kill the job, no error reporting or job deletion should be involved.
+    *
+    * @note This is not a slot.  You're looking for KJob::kill(), which is a public slot.
+    *
+    * @note KJob::doKill() does nothing, simply returns false.
+    *
+    * What our override here does:
+    * Tells the runFunctor() to kill itself by calling .cancel() on its ExtFuture<>, then
+    * waits for it to finish via waitForFinished().
+    *
+    * @note It does look like this should block until the job is really confirmed to be killed.
+    *       KAbstractWidgetJobTracker::slotStop() does this:
+    * @code
+    *         job->kill(KJob::EmitResult); // notify that the job has been killed
+    *         emit stopped(job);
+    * @endcode
+    *
+    * @warning this may/will be deleteLater()'ed at any time after this function returns true.
+    *
+    * @return true if job successfully killed, false otherwise.
+    */
     bool doKill() override { return doKillT(); }
+
     bool doSuspend() override { return doSuspendT(); }
     bool doResume() override { return doResumeT(); }
     /// @}
@@ -824,11 +823,11 @@ protected:
     {
         // KJob::doKill().
 
-        qDbo() << "START EXTASYNC DOKILL";
+        qDbo() << "START AMLMJobT::DOKILL";
 
         /**
         /// @note The calling thread has to have an event loop, and actually AFAICT should be the main app thread.
-        /// @note Kdevelop::ImportProjectJob does this through a QFutureWatcher set up in start(), which might be simpler:
+        /// @note Kdevelop::ImportProjectJob does this:
         /// @code
             bool ImportProjectJob::doKill()
             {
@@ -858,8 +857,6 @@ protected:
         setError(KJob::KilledJobError);
         /// @todo This text should probably be set somehow by the underlying async job.
         setErrorText(tr("Job killed"));
-
-//        setKJobErrorInfo(false);
 
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
@@ -904,16 +901,6 @@ protected:
     }
 
     /**
-     * Call this in your derived runFunctor() function to see if you should cancel the loop.
-     * @see functorHandlePauseResumeAndCancel()
-     */
-    bool wasCancelRequested()
-    {
-        // Were we told to abort?
-        return m_ext_future.isCanceled();
-    }
-
-    /**
      * Call this at the bottom of your runFunctor() override.  If the call returns true,
      * you're being canceled and must break out of the loop and return.
      *
@@ -929,7 +916,7 @@ protected:
         }
         if (m_ext_future.isCanceled())
         {
-            // The job has been canceled.
+            // The job should be canceled.
             // The calling runFunctor() should break out of while() loop.
             return true;
         }
@@ -942,11 +929,18 @@ protected:
     template <class WatcherType>
     void HookUpExtFutureSignals(WatcherType* watcher)
 	{
+        // FutureWatcher signals to this->SLOT* connections.
+        // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
+        // and result ready signals on a canceled future."
+        // This group coressponds ~1:1 with KJob functionality.
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
+
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
+        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressValueChanged, this, &ThisType::SLOT_extfuture_progressValueChanged);
 
         // Signal-to-signal connections.
         // forward resultsReadyAt() signal.
@@ -954,6 +948,7 @@ protected:
         // KJob signal forwarders.
         connect_or_die(this, &KJob::finished, this, &ThisType::finished);
         connect_or_die(this, &KJob::result, this, &ThisType::result);
+
         // QObject forwarders.
         connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
 

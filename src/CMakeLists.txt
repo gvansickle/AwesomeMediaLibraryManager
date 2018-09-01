@@ -439,6 +439,7 @@ target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
 
+if(FALSE)
 ###
 ### Qt5 QTests
 ###
@@ -468,6 +469,7 @@ ecm_mark_as_test(test_qtestamlmjobtests)
 ###
 ### END Qt5 QTests
 ###
+endif()
 
 endif() # Enable test target.
 

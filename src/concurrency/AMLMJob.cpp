@@ -83,13 +83,13 @@ AMLMJob::~AMLMJob()
     qDbo() << "AMLMJob DELETED" << this;
 }
 
-void AMLMJob::setSuccessFlag(bool success)
-{
-    /// Called from underlying ExtAsync thread.
-M_WARNING("DOESN'T DO ANYTHING");
-    qDbo() << "SETTING SUCCESS/FAIL:" << success;
-//    m_success = success;
-}
+//void AMLMJob::setSuccessFlag(bool success)
+//{
+//    /// Called from underlying ExtAsync thread.
+//M_WARNING("DOESN'T DO ANYTHING");
+//    qDbo() << "SETTING SUCCESS/FAIL:" << success;
+////    m_success = success;
+//}
 
 qulonglong AMLMJob::totalSize() const
 {
