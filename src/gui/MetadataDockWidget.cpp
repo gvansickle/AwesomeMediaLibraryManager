@@ -41,7 +41,6 @@
 #include <logic/LibraryModel.h>
 #include <gui/MDITreeViewBase.h>
 #include <gui/Theme.h>
-#include <logic/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelChangeWatcher.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
@@ -49,6 +48,7 @@
 #include <utils/StringHelpers.h>
 
 #include <logic/CoverArtJob.h>
+#include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 
 MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt::WindowFlags flags) : QDockWidget(title, parent, flags)
 {

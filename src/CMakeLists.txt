@@ -115,7 +115,7 @@ set(HEADER_FILES
 	logic/LibraryEntryLoaderJob.h
 	logic/LibraryEntryMimeData.h
 	logic/LibraryModel.h
-	logic/LibrarySortFilterProxyModel.h
+	logic/proxymodels/LibrarySortFilterProxyModel.h
 	logic/Metadata.h
 	logic/MetadataAbstractBase.h
 	logic/MetadataFromCache.h
@@ -176,7 +176,7 @@ set(SOURCE_FILES
 	logic/LibraryEntryLoaderJob.cpp
 	logic/LibraryEntryMimeData.cpp
 	logic/LibraryModel.cpp
-	logic/LibrarySortFilterProxyModel.cpp
+	logic/proxymodels/LibrarySortFilterProxyModel.cpp
 	logic/Metadata.cpp
 	logic/MetadataAbstractBase.cpp
 	logic/MetadataFromCache.cpp

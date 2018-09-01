@@ -105,8 +105,6 @@
 
 #include "logic/LibraryEntryMimeData.h"
 
-#include "logic/LibrarySortFilterProxyModel.h"
-
 #include "utils/ConnectHelpers.h"
 #include "utils/DebugHelpers.h"
 
@@ -122,6 +120,7 @@
 
 // Asynchronous activity progress monitoring.
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+#include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 
 #include "concurrency/ExtAsync.h"
 

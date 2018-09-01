@@ -37,13 +37,13 @@
 #include <QPoint>
 #include <QKeyEvent>
 
-#include <logic/LibrarySortFilterProxyModel.h>
 #include "utils/DebugHelpers.h"
 #include "logic/LibraryEntryMimeData.h"
 #include "menus/PlaylistContextMenuViewport.h"
 #include "menus/PlaylistContextMenu.h"
 
 #include <logic/ModelUserRoles.h>
+#include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 #include <logic/proxymodels/ModelHelpers.h>
 
 MDIPlaylistView::MDIPlaylistView(QWidget* parent) : MDITreeViewBase(parent)

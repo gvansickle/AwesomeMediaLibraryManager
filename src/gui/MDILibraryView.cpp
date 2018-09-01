@@ -27,7 +27,6 @@
 #include <QContextMenuEvent>
 
 #include "ItemDelegateLength.h"
-#include <logic/LibrarySortFilterProxyModel.h>
 #include <gui/MDIPlaylistView.h>
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -39,6 +38,7 @@
 
 #include <logic/LibraryEntryMimeData.h>
 #include <logic/ModelUserRoles.h>
+#include <logic/proxymodels/LibrarySortFilterProxyModel.h>
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
