@@ -320,12 +320,13 @@ endif()
 ### KDE KF5 libs.
 ###
 # Krita has ~this warning: "don't reorder these, this is the order they depend on each other."
-set(KF5_LINK_LIBS)
+set(KF5_LINK_LIBS "")
+### @note "Config" is both a find_package() keyword as well as the KF5Config components KF5::ConfigCore and KF5::ConfigGui.
+###       We'll require KF5Config separately to avoid any ambiguity.
+find_package(KF5Config ${KF5_MIN_VERSION} REQUIRED)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
-	Config
 	WidgetsAddons
-	# Completion
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	GuiAddons
 	ConfigWidgets ## Not in Krita from this until WindowSystem.
@@ -441,7 +442,7 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 
 # Add the subdirs.
 add_subdirectory(src)
-
+add_subdirectory(resources)
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
