@@ -17,8 +17,9 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# This is the sum-total of all source files which go into building the main exe.
-set(amlm_SRCS "")
+# @file src/CMakeLists.txt
+
+
 
 
 ###
@@ -304,29 +305,37 @@ file(GLOB ICONS_SRCS "${PROJECT_SOURCE_DIR}/resources/*-preferences-desktop-soun
 ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
 
-# Qt5 Binary Resource (rcc) files.
-qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
+#### Qt5 Binary Resource (rcc) files.
+### @note MOVED TO RESOURCES DIR: qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
 # Set up the app icon for Linux, add a dep so it gets built.
 #qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
-# Qt5 non-binary Resource files.
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
-qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+## Qt5 non-binary Resource files.
+#qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
+#qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
 		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
 		)
 
+# WIN32_OR_MACOS_BUNDLE variable for add_executable().  Expands to WIN32 or MACOS_BUNDLE depending on OS
+if (APPLE)
+	set(WIN32_OR_MACOS_BUNDLE MACOSX_BUNDLE)
+elseif (WIN32)
+    set(WIN32_OR_MACOS_BUNDLE WIN32)
+endif()
+
+
 ###
 ### The main executable.
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
-add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
+add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${amlm_settings_SRCS}
@@ -410,7 +419,7 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	concurrency/tests/ExtFutureTests.h
 	concurrency/tests/AMLMJobTests.h)
 
-add_executable(${TEST_EXE_TARGET} "")
+add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} "")
 target_sources(${TEST_EXE_TARGET}
 	PUBLIC
 	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
@@ -493,10 +502,6 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
-# Default bundled icons.
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-	    DESTINATION ${KDE_INSTALL_ICONDIR}
-		COMPONENT coreapp)
 
 ###
 ### KF5 icon theme install for especially Windows and Mac.
@@ -508,21 +513,21 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 ### (Linux: "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>") for it to be picked up.
 ###
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
-if(TRUE)#WIN32)
-	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-		DESTINATION ${KDE_INSTALL_ICONDIR}
-		RENAME "icontheme.rcc"
-		COMPONENT coreapp)
-endif()
+#if(TRUE)#WIN32)
+#	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
+#		DESTINATION ${KDE_INSTALL_ICONDIR}
+#		RENAME "icontheme.rcc"
+#		COMPONENT coreapp)
+#endif()
 ### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
-ecm_install_icons(ICONS ${ICONS_SRCS}
-	DESTINATION ${KDE_INSTALL_ICONDIR}
-	THEME hicolor
-	)
-ecm_install_icons(ICONS
-    DESTINATION ${KDE_INSTALL_ICONDIR}
-    THEME hicolor
-	)
+#ecm_install_icons(ICONS ${ICONS_SRCS}
+#	DESTINATION ${KDE_INSTALL_ICONDIR}
+#	THEME hicolor
+#	)
+#ecm_install_icons(ICONS
+#    DESTINATION ${KDE_INSTALL_ICONDIR}
+#    THEME hicolor
+#	)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)

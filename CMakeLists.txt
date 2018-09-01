@@ -38,6 +38,12 @@ message(STATUS "CMake-time CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 message(STATUS "CMake-time CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 include(cmake/GetVersionInfo.cmake)
 
+# Prevent an in-root-of-src-tree build.
+# Per @link https://stackoverflow.com/questions/1208681/with-cmake-how-would-you-disable-in-source-builds, these have to
+# be prior to project().
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
 # (per https://cgold.readthedocs.io/en/latest/tutorials/project.html)
@@ -52,6 +58,11 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
         message("ERROR: ${CMAKE_SOURCE_DIR} == ${CMAKE_BINARY_DIR}")
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
+
+# Additional project info.
+set(PROJECT_AUTHOR "Gary R. Van Sickle")
+set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
@@ -187,9 +198,9 @@ include(helperfunctions)
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
-# For GoogleTest and Boost.
+# For DownloadProject, which we use for GoogleTest and Boost.
 set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
-include(ExternalProject)
+#include(ExternalProject)
 include(DownloadProject)
 
 # Right now we need all the verbosity we can get.
@@ -203,17 +214,6 @@ set(CPACK_IFW_VERBOSE YES)
 #		CONTAINER_SIZE_REQUIRED
 #		LIB_VERSION
 #		)
-
-dir_summary()
-
-# QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
-### @todo This can probably go away.
-init_os_bundle()
-
-set(PROJECT_AUTHOR "Gary R. Van Sickle")
-set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 message("******************************************************************")
 message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_COMMITS}-g${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
@@ -255,7 +255,6 @@ endif()
 print_varlist(CMAKE_INSTALL_PREFIX KDE_INSTALL_ICONDIR)
 
 
-
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")
 check_cxx_compiler_flag("-Wuninitialized" CXX_W_UNINIT)
@@ -293,28 +292,7 @@ if(UNIX)
     list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
 endif(UNIX)
 
-get_target_property(Qt5Core_location Qt5::Core LOCATION)
-message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
-message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
-message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
-message(STATUS "*   Qt5Core_FOUND: \"${Qt5Core_FOUND}\"")
-message(STATUS "*   Qt5Core_EXECUTABLE_COMPILE_FLAGS: \"${Qt5Core_EXECUTABLE_COMPILE_FLAGS}\"")
-# For access to QPA headers.
-message(STATUS "*   Qt5Core_PRIVATE_INCLUDE_DIRS: ${Qt5Core_PRIVATE_INCLUDE_DIRS}")
-message(STATUS "*   Qt5Gui_PRIVATE_INCLUDE_DIRS: ${Qt5Gui_PRIVATE_INCLUDE_DIRS}")
-if(FALSE)
-	# List plugin info.
-	message(STATUS "*  Qt5::Gui Plugins:")
-	foreach(plugin ${Qt5Gui_PLUGINS})
-	  get_target_property(_loc ${plugin} LOCATION)
-	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-	endforeach()
-	message(STATUS "*  Qt5::Widgets Plugins:")
-	foreach(plugin ${Qt5Widgets_PLUGINS})
-	  get_target_property(_loc ${plugin} LOCATION)
-	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-	endforeach()
-endif()
+print_qtinfo()
 
 ###
 ### KDE KF5 libs.
@@ -440,9 +418,14 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
-# Add the subdirs.
-add_subdirectory(src)
+###
+### Add the subdirs.
+###
+# This is the sum-total of all source files which go into building the main exe.
+set(amlm_SRCS "")
 add_subdirectory(resources)
+add_subdirectory(src)
+
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
