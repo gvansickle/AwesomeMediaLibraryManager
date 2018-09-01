@@ -141,7 +141,7 @@ void DirectoryScannerAMLMJob::runFunctor()
 
             /// @todo
             DirScanResult dir_scan_result(file_url, file_info);
-            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
+//            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
 
             Q_EMIT infoMessage(this, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 

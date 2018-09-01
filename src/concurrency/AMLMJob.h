@@ -688,6 +688,7 @@ protected: //Q_SLOTS:
     virtual void SLOT_extfuture_progressValueChanged(int progress_value)
     {
         this->setProcessedAmountAndSize(this->progressUnit(), progress_value);
+//        this->emitSpeed(progress_value);
     }
 
     virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)

@@ -134,6 +134,7 @@ set(HEADER_FILES
 	logic/dbmodels/EntityBase.h
 	logic/dbmodels/ScanResultsTableModel.h
 	logic/dbmodels/SQLHelpers.h
+	logic/models/ScanResultsTreeModel.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h
@@ -193,6 +194,7 @@ set(SOURCE_FILES
 	logic/dbmodels/EnhancedAbstractTableModel.cpp
 	logic/dbmodels/ScanResultsTableModel.cpp
 	logic/dbmodels/EntityBase.cpp
+	logic/models/ScanResultsTreeModel.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
