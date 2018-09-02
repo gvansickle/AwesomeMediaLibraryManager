@@ -305,17 +305,17 @@ file(GLOB ICONS_SRCS "${PROJECT_SOURCE_DIR}/resources/*-preferences-desktop-soun
 ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
 
-#### Qt5 Binary Resource (rcc) files.
-### @note MOVED TO RESOURCES DIR: qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
+# Qt5 Binary Resource (rcc) files.
+qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
 # Set up the app icon for Linux, add a dep so it gets built.
 #qt5_add_binary_resources(build_AppIcon_rcc ${AppIcon_qrc} DESTINATION ${AppIcon_rcc})
 
-## Qt5 non-binary Resource files.
-#qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
-#qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+# Qt5 non-binary Resource files.
+qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
+qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
@@ -498,7 +498,7 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
 		COMPONENT coreapp)
-# App Icon
+# Install the App Icon
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
@@ -513,12 +513,12 @@ install(FILES ${AppIcon_rcc}
 ### (Linux: "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>") for it to be picked up.
 ###
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
-#if(TRUE)#WIN32)
-#	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-#		DESTINATION ${KDE_INSTALL_ICONDIR}
-#		RENAME "icontheme.rcc"
-#		COMPONENT coreapp)
-#endif()
+if(TRUE)#WIN32)
+	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
+		DESTINATION ${KDE_INSTALL_ICONDIR}
+		RENAME "icontheme.rcc"
+		COMPONENT coreapp)
+endif()
 ### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
 #ecm_install_icons(ICONS ${ICONS_SRCS}
 #	DESTINATION ${KDE_INSTALL_ICONDIR}

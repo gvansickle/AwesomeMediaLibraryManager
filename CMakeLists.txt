@@ -29,7 +29,7 @@
 # - On Linux, CPACK_IFW_ROOT (cmake var) or QTIFWDIR (env var) should point to something like ~/Qt/QtIFW-3.0.1
 
 # cmake setup.
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
@@ -77,8 +77,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.10.0")
-set(KF5_MIN_VERSION "5.44.0")
-set(ECM_MIN_VERSION "5.44.0")
+set(KF5_MIN_VERSION "5.48.0")
+set(ECM_MIN_VERSION "5.48.0")
 
 ###
 ### ECM Setup ====================================================================================================
@@ -320,8 +320,33 @@ list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::Ico
 list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 
 ###### EXPERIMENT
-#find_package(Breeze REQUIRED)
+
+#find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
+set(WITH_BUNDLED_BREEZE_ICONS true)
+if(WITH_BUNDLED_BREEZE_ICONS)
+	find_file(BREEZEICONS_PATH breeze-icons.rcc 
+		HINTS
+			# ${BREEZEICONS_DIR}
+			/usr/share/icons/breeze
+			~/.icons/breeze
+		PATH_SUFFIXES
+			breeze
+		DOC
+			"Full path to the breeze-icons.rcc file"	
+			)
+    if (NOT EXISTS ${BREEZEICONS_PATH})
+        message(FATAL_ERROR "Breeze-icons is missing")
+    else()
+    	message(STATUS "Found icon theme: ${BREEZEICONS_PATH}")
+    	# Install it as our default icon theme.
+    	install(FILES ${BREEZEICONS_PATH}
+			DESTINATION ${KDE_INSTALL_ICONDIR}
+			RENAME "icontheme.rcc"
+			COMPONENT coreapp)
+    endif()
+endif()
 #list(APPEND KF5_LINK_LIBS Breeze)
+print_varlist(BREEZEICONS_PATH)
 
 
 ###
@@ -422,14 +447,17 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ### Add the subdirs.
 ###
 # This is the sum-total of all source files which go into building the main exe.
-set(amlm_SRCS "")
-add_subdirectory(resources)
+#add_library(amlm_pseudolib "")
 add_subdirectory(src)
+#include(resources/CMakeLists.txt)
+#print_varlist(amlm_ICONS amlm_SRCS)
+#ecm_add_app_icon(amlm_SRCS ICONS ${amlm_ICONS})
 
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
+
 
 
 ###
