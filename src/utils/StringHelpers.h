@@ -32,9 +32,11 @@
 // Qt5
 #include <QtGlobal>
 #include <QString>
+#include <QStringList>
 #include <QTime>
 #include <QTextCodec>
 #include <QUrl>
+#include <QDebug>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
 #define HAVE_QLOCALE_FORMATTEDDATASIZE 1
@@ -193,6 +195,17 @@ static inline bool isValidUTF8(const char* bytes)
 }
 
 /// @}
+
+template <class StreamLikeType>
+StreamLikeType log_QStringList(const QStringList& strlist, StreamLikeType out)
+{
+    QDebugStateSaver saver(out);
+    for(const QString& str : strlist)
+    {
+        out << "  " << str << endl;
+    }
+    return out;
+}
 
 /**
  * Until we can rely on Qt 5.10's QLocale::formattedDataSize().

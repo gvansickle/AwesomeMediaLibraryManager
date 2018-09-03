@@ -324,6 +324,7 @@ list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
 #find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
 set(WITH_BUNDLED_BREEZE_ICONS true)
 if(WITH_BUNDLED_BREEZE_ICONS)
+	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
 	find_file(BREEZEICONS_PATH breeze-icons.rcc 
 		HINTS
 			# ${BREEZEICONS_DIR}
@@ -337,10 +338,11 @@ if(WITH_BUNDLED_BREEZE_ICONS)
     if (NOT EXISTS ${BREEZEICONS_PATH})
         message(FATAL_ERROR "Breeze-icons is missing")
     else()
-    	message(STATUS "Found icon theme: ${BREEZEICONS_PATH}")
+    	message(STATUS "Found source default icon theme: ${BREEZEICONS_PATH}")
+    	message(STATUS "Default icon theme will be installed in: ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}")
     	# Install it as our default icon theme.
     	install(FILES ${BREEZEICONS_PATH}
-			DESTINATION ${KDE_INSTALL_ICONDIR}
+			DESTINATION ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}
 			RENAME "icontheme.rcc"
 			COMPONENT coreapp)
     endif()

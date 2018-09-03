@@ -34,7 +34,7 @@
 
 /// KF5
 #include <KAboutData>
-#include <KIconLoader>
+#include <KIconTheme>
 #include <KSharedConfig>
 #include <KConfigGroup>
 
@@ -88,27 +88,42 @@ int main(int argc, char *argv[])
 	// Log our startup environment.
 	logging.dumpEnvVars();
 
-
 	// App-wide settings.
 	// http://doc.qt.io/qt-5/qt.html#ApplicationAttribute-enum
 	// Enable high-DPI scaling in Qt on supported platforms.
 	// Makes Qt scale the main (device independent) coordinate system according to display scale factors provided by
 	// the operating system. This corresponds to setting the QT_AUTO_SCREEN​_SCALE_FACTOR environment variable to 1.
 	/// @note Must be set before Q(Gui)Application is constructed.
-	QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    AMLMApp::setAttribute(Qt::AA_EnableHighDpiScaling);
+    // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
+    /// @note Must be set before Q(Gui)Application is constructed.
+    AMLMApp::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 	/// @todo Look at:
 	///		Qt::AA_UseStyleSheetPropagationInWidgetStyles
 	///		Qt::AA_CompressHighFrequencyEvents (default is true on X11)
 
+    // QStandardPaths::AppDataLocation changes before and after QApp creation, and then again when we set these
+    // vars, if we don't set them prior to constructing the app.  This affects KIconTheme's attempt to load
+    // an "icontheme.rcc" file from one of these dirs.
+    AMLMApp::setOrganizationName("gvansickle");
+    AMLMApp::setApplicationName("AwesomeMediaLibraryManager");
+    // And KConfig wants this instead.
+    AMLMApp::setOrganizationDomain("gvansickle.github.io");
+
+
 	//
     // Create the Qt5/KF5 app.
     // @note Must be the first QObject created and the last QObject deleted.
+    // @note This should have loaded any bundled icontheme.rcc files.
 	//
+    qIn() << "START Constructing AMLMApp";
     AMLMApp app(argc, argv);
-	app.Init();
+    qIn() << "END Constructing AMLMApp";
 
-    // Use HighDPI pixmaps as long as we're supporting High DPI scaling.
-	AMLMApp::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+    // Log the startup icon theme info.
+    Theme::LogIconThemeInfo();
+
+	app.Init();
 
 	// Get our config for use later.
 	KSharedConfigPtr config = KSharedConfig::openConfig();
@@ -121,7 +136,7 @@ int main(int argc, char *argv[])
         // First-time startup.
 
 		/// @todo Not sure if we want to be this draconian.
-        app.KDEOrForceBreeze(grp);
+//        app.KDEOrForceBreeze(grp);
 	}
 
     // If we're forcing Breeze icons, force them here.
@@ -158,7 +173,6 @@ int main(int argc, char *argv[])
 	// [1] No such function, not really sure if they mean setOrganizationName(), setOrganizationDomain(), or setApplicationName().
 	//     ... looks like setOrganizationName() is empty of we don't explicitly set it below.
 	KAboutData::setApplicationData(aboutData);
-	AMLMApp::setOrganizationName("gvansickle");
 
 	// Integrate KAboutData with commandline argument handling
 	QCommandLineParser parser;

@@ -19,6 +19,10 @@
 
 #include <config.h>
 
+// Std C++
+#include <tuple>
+#include <string>
+
 /// Qt5
 #include <QIcon>
 #include <QStyle>
@@ -51,7 +55,7 @@
 #include <utils/DebugHelpers.h>
 
 
-QStringList Theme::m_available_styles;
+QStringList Theme::m_available_qstyles;
 
 /**
  * From https://community.kde.org/Frameworks/Porting_Notes#Application:
@@ -79,6 +83,34 @@ QStringList Theme::m_available_styles;
  * $appdir/toolbar. Icons in these directories can be loaded by using the special group "User"."
  *
  * No idea if that's accurate, or even where the referred-to dirs even are.
+ *
+ * Looking at the code for KIconTheme.cpp::initRCCIconTheme(), it does this from a Q_COREAPP_STARTUP_FUNCTION():
+ * - const QString iconThemeRcc = QStandardPaths::locate(QStandardPaths::AppDataLocation, QStringLiteral("icontheme.rcc"));
+ * - if not found, silent return.
+ * - if found, Calls QResource::registerResource(iconThemeRcc, iconSubdir) with:
+ * -- iconThemeRcc = path returned by locate above.
+ * -- iconSubdir == /icons/kf5_rcc_theme  << Note not ":/".
+ * - Looks for an index.theme in the file.
+ * - Two possible warnings:
+ * -- "No index.theme found in" << iconThemeRcc;
+ * -- "Invalid rcc file" << iconThemeRcc;
+ *
+ * From the Qt docs, QStandardPaths::AppDataLocation defaults:
+ * Linux:
+ * - "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>"
+ * -- It appears that $XDG_DATA_DIRS from the startup environment might also get added to this.  KDE's prefix.sh
+ *    prepends "/..../install/share" to that var, and AppDataLocation then comes back with this path added to the list:
+ *    "/..../install/share/gvansickle/AwesomeMediaLibraryManager".
+ *    Looking at @link https://github.com/RSATom/Qt/blob/master/qtbase/src/corelib/io/qstandardpaths_unix.cpp,
+ *    QStandardPaths::standardLocations() does in fact pick up that var, then appends "appendOrganizationAndApp" to every
+ *    entry.
+ * Windows:
+ * - "C:/Users/<USER>/AppData/Roaming/<APPNAME>", "C:/ProgramData/<APPNAME>", "<APPDIR>", "<APPDIR>/data", "<APPDIR>/data/<APPNAME>"
+ * -- Again it appears that appendOrganizationAndApp() will be appended to all of these.
+ * appendOrganizationAndApp() specifically appends "QCoreApplication::organizationName()/QCoreApplication::applicationName()".
+ * For this app, that's "/gvansickle/AwesomeMediaLibraryManager".
+ * If we want to augment this path for KIconLoader, we have to do so prior to the QCoreApplication constructor,
+ * since it is what runs the Q_COREAPP_STARTUP_FUNCTION()s.
  */
 
 
@@ -101,7 +133,7 @@ Theme::Theme(QWidget *parent) : QWidget(parent)
 
 bool Theme::checkForTestIcon()
 {
-//    qIn() << "Icon Theme Name:" << QIcon::themeName();
+    qIn() << "Icon Theme Name:" << QIcon::themeName();
     qIn() << "Icon Theme Search Paths:" << QIcon::themeSearchPaths();
     QString test_icon_name = "folder-open";
 
@@ -128,6 +160,8 @@ void Theme::dump_resource_tree(const QString &root)
 
 void Theme::initialize()
 {
+    qIn() << "START Initializing Theme";
+
     auto app_dir_path = QCoreApplication::applicationDirPath();
     qIn() << "App dir path:" << app_dir_path;
 
@@ -138,18 +172,13 @@ void Theme::initialize()
 	// For icons in particular, the env var "XDG_DATA_DIRS" is critical here.  prefix.sh prepends "<builddir>/<installdir>/share" to it,
 	// which appears to be enough to both add it to this list of paths, and add it to QIcon::themeSearchPaths(), where it gets
 	// the "/icons" dir appended to it (not sure what's doing that, the QPA?).
+
     qIn() << "QStandardPaths::AppDataLocation:";
     auto app_data_path = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-    for(const auto& adp : app_data_path)
-    {
-        qIn() << "  " << adp;
-    }
+    log_QStringList(app_data_path, qInfo());
 
     qIn() << "Initial Icon Theme Search Paths:";
-    for(const auto& respath : QIcon::themeSearchPaths())
-    {
-        qIn() << "  " << respath;
-    }
+    log_QStringList(QIcon::themeSearchPaths(), qInfo());
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     // QIcon::fallbackSearchPaths() Introduced in Qt5 5.11.0.
@@ -162,16 +191,23 @@ void Theme::initialize()
 
     LogIconThemeInfo();
 
-    // Load the icon resources.
+#if 0 /// @todo KIconLoader should be handling icontheme.rcc.
+    // Load the bundled icon resources.
     int rccs_loaded = 0;
-    auto rccs = {"icontheme.rcc",
-                 "icons_oxygen.rcc"};
-    for(const auto& fname : rccs)
+    // Filename/resource map root pairs
+    using string_pair = std::tuple<std::string, std::string>;
+    using string_pair_list = std::vector<string_pair>;
+    const string_pair_list rccs {
+        {"icontheme.rcc", ":/icons/breeze"}
+        /*, "icons_oxygen.rcc"*/};
+    for(const string_pair& rcc_entry : rccs)
     {
         // Look for the specified file.
+        std::string fname, map_root;
+        std::tie(fname, map_root) = rcc_entry;
 
         QString full_path;
-        if(false /** @fixme */)
+        if(true /** @fixme */)
         {
         	/**
         	 * @todo FIXME For finding the icons when built and installed, but not installed on system.
@@ -179,11 +215,11 @@ void Theme::initialize()
         	 */
 
             //full_path = app_dir_path + "/../share/icons/" + fname;
-            full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, fname);
+            full_path = QStandardPaths::locate(QStandardPaths::AppDataLocation, toqstr(fname));
         }
         else
         {
-            full_path = app_dir_path + "/../share/icons/" + fname;
+            full_path = app_dir_path + "/../share/icons/" + toqstr(fname);
             if(!QFile::exists(full_path))
             {
                 qDb() << "No file at:" << full_path;
@@ -201,7 +237,7 @@ void Theme::initialize()
 			qIn() << "Located resource file:" << fname << "found at absoulte path:" << full_path;
 		}
 
-        bool opened = QResource::registerResource(full_path);
+        bool opened = QResource::registerResource(full_path, toqstr(map_root));
         if(!opened)
         {
             qCr() << "FAILED TO OPEN RCC:" << full_path;
@@ -214,9 +250,9 @@ void Theme::initialize()
     }
 
     Q_ASSERT(rccs_loaded > 0);
-
+#endif
     // Interesting stuff in here by default.
-    dump_resource_tree(":/");
+//    dump_resource_tree(":/");
 
     LogIconThemeInfo();
 
@@ -324,19 +360,20 @@ M_WARNING("TODO");
     checkForTestIcon();
 
     /// @todo DONT HARDCODE
-    QIcon::setThemeName("oxygen");
+//    QIcon::setThemeName("oxygen");
 
-    checkForTestIcon();
+//    checkForTestIcon();
+
+//    LogIconThemeInfo();
+
+//    QIcon::setThemeName("oxygen-icons");
+
+//    checkForTestIcon();
 
     LogIconThemeInfo();
 
-    QIcon::setThemeName("oxygen-icons");
-
-    checkForTestIcon();
-
-    LogIconThemeInfo();
-
-    qDebug() << "Current QIcon::themeSearchPaths():" << QIcon::themeSearchPaths();
+    qIn() << "Current QIcon::themeSearchPaths():";
+    log_QStringList(QIcon::themeSearchPaths(), qInfo());
 
     LogIconThemeInfo();
 
@@ -345,8 +382,8 @@ M_WARNING("TODO");
     qIn() << "Discovered Icon Themes:" << retval;
 
 
-	// Get all the styles we have available.
-	m_available_styles = QStyleFactory::keys();
+    // Get all the QStyle styles we have available.
+    m_available_qstyles = QStyleFactory::keys();
 	// Get the current desktop style.
 	QString desktop_style = QApplication::style()->objectName();
 
@@ -363,13 +400,13 @@ M_WARNING("TODO");
 			qIn() << "Current desktop style \"" << desktop_style << "\" can't be used, looking for alternatives.";
 
 			// Is Breeze available?
-			if(m_available_styles.contains(QStringLiteral("breeze"), Qt::CaseInsensitive))
+            if(m_available_qstyles.contains(QStringLiteral("breeze"), Qt::CaseInsensitive))
 			{
 				// Yes, use it.
 				qIn() << "Style Breeze available, using it.";
 				AMLMSettings::setWidgetStyle(QStringLiteral("Breeze"));
 			}
-			else if(m_available_styles.contains(QStringLiteral("fusion"), Qt::CaseInsensitive))
+            else if(m_available_qstyles.contains(QStringLiteral("fusion"), Qt::CaseInsensitive))
 			{
 				// Second choice is Fusion, use that.
 				qIn() << "Style \"Fusion\" available, using it.";
@@ -383,6 +420,7 @@ M_WARNING("TODO");
 			AMLMSettings::setWidgetStyle(QStringLiteral("Default"));
 		}
 	}
+    qIn() << "END Initializing Theme";
 }
 
 QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
@@ -390,7 +428,7 @@ QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	/// Set up a "Style" menu.
 	/// Adapted from similar code in Kdenlive::MainWindow::init().
 
-	KActionMenu *stylesAction = new KActionMenu(tr("Style"), main_window);
+    KActionMenu *stylesAction = new KActionMenu(tr("Widget Style"), main_window);
 	QActionGroup *stylesGroup = new QActionGroup(stylesAction);
 
 	// Add a "Default" style action
@@ -405,9 +443,9 @@ QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	}
 
 	// Add all available styles to the menu, checking the currently selected one.
-	for(const QString &style : m_available_styles)
+    for(const QString &style : m_available_qstyles)
 	{
-		QAction *a = new QAction(style, stylesGroup);
+        QAction *a = new QAction(style, stylesGroup);
 		a->setCheckable(true);
 		a->setData(style);
 		if (AMLMSettings::widgetStyle() == style)
@@ -420,7 +458,7 @@ QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	return stylesGroup;
 }
 
-QString Theme::getUserDefaultStyle(const char* fallback)
+QString Theme::getUserDefaultQStyle(const char* fallback)
 {
 	KSharedConfigPtr kdeGlobals = KSharedConfig::openConfig(QStringLiteral("kdeglobals"), KConfig::NoGlobals);
 	KConfigGroup cg(kdeGlobals, "KDE");
@@ -463,48 +501,91 @@ QStringList Theme::GetIconThemeNames()
     return FindIconThemes();
 }
 
+QString Theme::defaultIconThemeName()
+{
+    return KIconTheme::defaultThemeName();
+}
+
+QString Theme::currentIconThemeName()
+{
+    return KIconTheme::current();
+}
+
 void Theme::LogIconThemeInfo()
 {
-    QString default_kicon_theme_name = KIconTheme::defaultThemeName();
-    QString current_kicon_theme_name = KIconTheme::current();
+    QString default_kicon_theme_name = defaultIconThemeName();
+    QString current_kicon_theme_name = currentIconThemeName();
     QString current_qicon_theme_name = QIcon::themeName();
 
+    // Get the app's global icon loader.
+    KIconLoader* kicon_loader = KIconLoader::global();
+    /// @todo Is this of any use to us?: kicon_loader->addAppDir();
+    KIconTheme* current_kicon_theme = kicon_loader->theme();
+    QString cur_desc = current_kicon_theme->description();
 
+    qIn() << M_NAME_VAL(default_kicon_theme_name);
+    qIn() << M_NAME_VAL(current_kicon_theme_name) << "Desc:" << cur_desc
+          << "Human readable name:" << current_kicon_theme->name()
+          << "Internal name:" << current_kicon_theme->internalName()
+          << "Dir:" << current_kicon_theme->dir()
+          << "Example Icon Name:" << current_kicon_theme->example();
+    qIn() << M_NAME_VAL(current_qicon_theme_name);
+
+    AMLM_WARNIF(current_qicon_theme_name != current_kicon_theme_name);
+}
+
+void Theme::LogAllIconThemes()
+{
     // List all icon themes installed on the system, global and local.
-    QStringList all_icon_themes = KIconTheme::list();
+    QStringList all_icon_themes = GetIconThemeNames();
 
     qIn() << "All Icon Themes:";
     for(const auto& i : all_icon_themes)
     {
         qIn() << "  " << i;
     }
-
-    // Get the app's icon loader.
-    auto* kicon_loader = KIconLoader::global();
-    /// @todo Is this of any use to us?: kicon_loader->addAppDir();
-    auto current_kicon_theme = kicon_loader->theme();
-    QString cur_desc = current_kicon_theme->description();
-
-    qIn() << M_NAME_VAL(default_kicon_theme_name);
-    qIn() << M_NAME_VAL(current_kicon_theme_name) << "Desc:" << cur_desc << "Dir:" << current_kicon_theme->dir()
-          << "Example Icon Name:" << current_kicon_theme->example();
-    qIn() << M_NAME_VAL(current_qicon_theme_name);
 }
 
 bool Theme::setIconThemeName(const QString& name)
 {
-    qDb() << "Trying to set icon theme name to:" << name;
+    qIn() << "Trying to set icon theme name to:" << name;
 
     LogIconThemeInfo();
 
     QIcon::setThemeName(name);
 
+    KIconTheme::reconfigure();
+
     // Did it take?
-    auto current_theme_name = QIcon::themeName();
-    if(current_theme_name != name)
+
+    // Check by QIcon name.
+    auto current_qicon_theme_name = QIcon::themeName();
+    if(current_qicon_theme_name != name)
     {
-        qWr() << "New theme name didn't take:" << name << "!=" << current_theme_name;
+        qWr() << "New theme name didn't take:" << name << "!=" << current_qicon_theme_name;
     }
+
+    // Check with KIconLoader.
+    KIconLoader* kicon_loader = KIconLoader::global();
+    KIconTheme* current_kicon_theme = kicon_loader->theme();
+    qIn() << "KIconTheme name:" << current_kicon_theme->name();
+    qIn() << "KIconTheme internal name:" << current_kicon_theme->internalName();
+    QString example_icon_name = current_kicon_theme->example();
+    qIn() << "KIconTheme example icon name:" << example_icon_name;
+    if(QIcon::hasThemeIcon(example_icon_name))
+    {
+        qIn() << "Found example icon:" << example_icon_name << ", trying to load it.";
+        QIcon example_icon = QIcon::fromTheme(example_icon_name);
+        if(example_icon.isNull())
+        {
+            qCr() << "Couldn't load example icon:" << example_icon_name;
+        }
+        else
+        {
+            qIn() << "Successfully loaded icon:" << example_icon;
+        }
+    }
+
 
     LogIconThemeInfo();
 

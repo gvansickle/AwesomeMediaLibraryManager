@@ -19,9 +19,6 @@
 
 # @file src/CMakeLists.txt
 
-
-
-
 ###
 ### The third-party packages we require.
 ###
@@ -513,7 +510,7 @@ install(FILES ${AppIcon_rcc}
 ### (Linux: "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>") for it to be picked up.
 ###
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
-if(TRUE)#WIN32)
+if(false)#WIN32)
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 		DESTINATION ${KDE_INSTALL_ICONDIR}
 		RENAME "icontheme.rcc"
