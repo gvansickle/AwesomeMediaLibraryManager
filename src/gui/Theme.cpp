@@ -582,7 +582,7 @@ bool Theme::setIconThemeName(const QString& name)
         }
         else
         {
-            qIn() << "Successfully loaded icon:" << example_icon;
+            qIn() << "Successfully loaded example icon:" << example_icon;
         }
     }
 

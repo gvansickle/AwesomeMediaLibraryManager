@@ -38,7 +38,7 @@
 #include <KSharedConfig>
 #include <KConfigGroup>
 
-#if HAVE_GTKMM01 == 1
+#if HAVE_GTKMM01
 /// GTK
 #include <gtk/gtk.h>
 #endif
