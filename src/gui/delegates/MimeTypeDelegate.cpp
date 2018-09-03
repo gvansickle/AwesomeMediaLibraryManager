@@ -22,14 +22,59 @@
  */
 #include "MimeTypeDelegate.h"
 
-MimeTypeDelegate::MimeTypeDelegate()
-{
-	// TODO Auto-generated constructor stub
+#include <QMimeType>
+#include <QPainter>
 
+#include <AMLMApp.h>
+#include <gui/Theme.h>
+#include <utils/DebugHelpers.h>
+
+MimeTypeDelegate::MimeTypeDelegate(QObject *parent) : BASE_CLASS(parent)
+{
 }
 
 MimeTypeDelegate::~MimeTypeDelegate()
 {
-	// TODO Auto-generated destructor stub
+}
+
+void MimeTypeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+    Q_ASSERT(index.isValid());
+
+    painter->save();
+
+    // Draw the background.
+    if (option.state & QStyle::State_Selected)
+    {
+            painter->fillRect(option.rect, option.palette.highlight());
+    }
+
+    // Create a copy of the incoming QStyleOptionViewItem that we can modify.
+    QStyleOptionViewItem opt = option;
+    initStyleOption(&opt, index);
+
+    // Get the mime type.
+    QMimeType mime_type = index.model()->data(index, Qt::DisplayRole).value<QMimeType>();
+
+    // Get the mime type icon and set it in the copy of the QStyleOptionViewItem.
+    opt.icon = Theme::iconFromTheme(mime_type);
+
+    qDbo() << M_NAME_VAL(option.decorationSize);
+    qDbo() << M_NAME_VAL(option.decorationPosition);
+    qDbo() << M_NAME_VAL(option.showDecorationSelected);
+
+    auto qstyle = AMLMApp::style();
+
+    // Draw the modified CE_ItemViewItem.
+    qstyle->drawControl(QStyle::CE_ItemViewItem, &opt, painter, nullptr);
+
+    painter->restore();
+}
+
+QString MimeTypeDelegate::displayText(const QVariant &value, const QLocale &) const
+{
+    QMimeType mt = value.value<QMimeType>();
+
+    return mt.name();
 }
 

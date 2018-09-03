@@ -77,7 +77,7 @@ set(gui_SOURCE_FILES
 	helpers/Gtk3DialogHelper.cpp
 	actions/StandardActions.cpp
 	Theme.cpp
-	delegates/MimeTypeDelegate.h
+	delegates/MimeTypeDelegate.cpp
 	)
 
 # Settings dialog files (in settings/).

@@ -25,16 +25,23 @@
 
 #include <QStyledItemDelegate>
 
-/*
+/**
  *
  */
 class MimeTypeDelegate: public QStyledItemDelegate
 {
 	Q_OBJECT
 
+    using BASE_CLASS = QStyledItemDelegate;
+
 public:
-	MimeTypeDelegate();
-	virtual ~MimeTypeDelegate();
+    explicit MimeTypeDelegate(QObject *parent = nullptr);
+	~MimeTypeDelegate() override;
+
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+
+    QString displayText(const QVariant &value, const QLocale &) const override;
+
 };
 
 #endif /* SRC_GUI_DELEGATES_MIMETYPEDELEGATE_H_ */

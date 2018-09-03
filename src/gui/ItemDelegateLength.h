@@ -31,7 +31,7 @@ class ItemDelegateLength : public QStyledItemDelegate
 public:
 	ItemDelegateLength(QObject *parent = Q_NULLPTR);
 
-	virtual QString displayText(const QVariant &value, const QLocale &) const override;
+    QString displayText(const QVariant &value, const QLocale &) const override;
 
 private:
 	Q_DISABLE_COPY(ItemDelegateLength)

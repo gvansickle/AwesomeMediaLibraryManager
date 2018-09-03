@@ -272,7 +272,9 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 			}
 			else if(sec_id == SectionID::FileType)
 			{
-				return item->getFileType();
+M_WARNING("TODO Probably should be refactored.");
+//				return item->getFileType();
+                return QVariant::fromValue(item->getMimeType());
 			}
 			else if(sec_id == SectionID::Filename)
 			{
