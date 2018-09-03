@@ -67,6 +67,7 @@ public:
 
 	QString getFilename() const { return m_url.fileName(); }
 	QString getFileType() const { return m_metadata ? QString::fromUtf8(m_metadata.GetFiletypeName().c_str()) : QString(); }
+    QMimeType getMimeType() const;
 
 	/// @name Serialization
 	/// @{

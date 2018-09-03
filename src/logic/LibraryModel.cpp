@@ -50,6 +50,8 @@
 #include "logic/ModelUserRoles.h"
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 
+#include <gui/Theme.h>
+
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
     qRegisterMetaType<VecOfUrls>();
@@ -227,14 +229,15 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 return m_IconUnknown;
             }
         }
-//        else if(SectionID::FileType == sectionid)
-//        {
-//            // Return an icon for the MIME type of the file containing the track.
-//            QFileIconProvider fip;
-//            auto item = getItem(index);
-//            QFileInfo finfo(item->getUrl().toLocalFile());
-//            return fip.icon(finfo);
-//        }
+        else if(SectionID::FileType == sectionid)
+        {
+            // Return an icon for the MIME type of the file containing the track.
+            auto item = getItem(index);
+            QMimeType mime = item->getMimeType();
+//            auto mime_icon_name = mime.iconName();
+            QIcon mime_icon = Theme::iconFromTheme(mime);
+            return QVariant::fromValue(mime_icon);
+        }
         else
         {
             return QVariant();

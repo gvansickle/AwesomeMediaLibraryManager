@@ -52,6 +52,8 @@ AMLMApp::~AMLMApp()
 {
     /// @todo Shut down whatever still needs shutting down.
 
+    delete m_mime_database;
+
 	// No more singleton.
 	m_the_instance = nullptr;
 
@@ -62,6 +64,8 @@ void AMLMApp::Init(bool gtest_only)
 {
 	// Register our types with Qt.
 	RegisterQtMetatypes();
+
+    m_mime_database = new QMimeDatabase();
 
 	/// @todo This is ugly, refactor this.
 	if(gtest_only)

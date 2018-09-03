@@ -27,6 +27,7 @@
 
 // KF5
 #include <KConfigGroup>
+#include <QMimeDatabase>
 
 // Ours
 #include <logic/dbmodels/CollectionDatabaseModel.h>
@@ -83,6 +84,8 @@ public:
 
     ScanResultsTreeModel* scan_results_tree_model_instance() { return m_srtm_instance; };
 
+    QMimeDatabase* mime_db() { return m_mime_database; };
+
     /**
      * @return true if this app is in the process of shutting down.
      */
@@ -114,6 +117,8 @@ private:
 	AbstractTreeModel* m_cdb2_model_instance;
 
     ScanResultsTreeModel* m_srtm_instance;
+
+    QMimeDatabase* m_mime_database;
 
     bool m_shutting_down {false};
     bool m_controlled_shutdown_complete {false};

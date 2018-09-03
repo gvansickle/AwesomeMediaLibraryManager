@@ -41,6 +41,8 @@
 #include <utils/QtHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 
+// Ours
+#include "AMLMApp.h"
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01
@@ -292,7 +294,17 @@ QUrl LibraryEntry::getM2Url() const
 	{
 		qWarning() << "Item" << m_url << "not populated, No M2Url available.";
 		return QUrl();
-	}
+    }
+}
+
+QMimeType LibraryEntry::getMimeType() const
+{
+   //QMimeDatabase mdb;
+   auto mdb = amlmApp->mime_db();
+
+   QMimeType mime = mdb->mimeTypeForUrl(m_url);
+
+   return mime;
 }
 
 
