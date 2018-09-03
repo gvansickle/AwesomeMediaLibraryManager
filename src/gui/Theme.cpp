@@ -589,53 +589,22 @@ bool Theme::setIconThemeName(const QString& name)
 
     LogIconThemeInfo();
 
-#if 0
-	///@todo This doen't work like it should
-	auto old_theme_name = QIcon::themeName();
-
-	qDebug() << "trying to set Icon Theme from" << old_theme_name << "to" << name;
-
-	QIcon::setThemeName(name);
-
-	if(!QIcon::hasThemeIcon("folder-open"))
-	{
-		qWarning() << "Unable to set theme name" << name << ", reverting to built-in icon theme" << "oxygen-icons";
-		QIcon::setThemeName("oxygen-icons");
-		return false;
-	}
-#endif
-
 	return true;
 }
 
+// Static
 QIcon Theme::iconFromTheme(const QString &icon_name)
 {
-#if 1
     return Theme::iconFromTheme(QStringList(icon_name));
-#else
-    QIcon retval;
-
-#if HAVE_KF501
-
-//    auto icon_loader = KIconLoader::global();
-//    icon_loader->loadIcon()
-
-#endif
-
-    if(QIcon::hasThemeIcon(icon_name))
-    {
-        retval = QIcon::fromTheme(icon_name);
-    }
-    else
-    {
-        // Don't have the named icon.
-        qDebug() << "Failed to find icon with name" << icon_name << "in icon them search paths.";
-    }
-
-    return retval;
-#endif
 }
 
+// Static
+QIcon iconFromTheme(const QString& icon_name, const QIcon& fallback)
+{
+    return QIcon::fromTheme(icon_name, fallback);
+}
+
+// Static
 QIcon Theme::iconFromTheme(const QStringList &icon_names)
 {
     QIcon retval;

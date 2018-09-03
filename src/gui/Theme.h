@@ -68,6 +68,7 @@ public:
     static bool setIconThemeName(const QString& name);
 
     static QIcon iconFromTheme(const QString& icon_name);
+    static QIcon iconFromTheme(const QString& icon_name, const QIcon& fallback);
     static QIcon iconFromTheme(const QStringList& icon_name);
     static QIcon iconFromTheme(const QMimeType& mime_type);
 

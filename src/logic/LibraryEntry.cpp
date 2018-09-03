@@ -299,7 +299,6 @@ QUrl LibraryEntry::getM2Url() const
 
 QMimeType LibraryEntry::getMimeType() const
 {
-   //QMimeDatabase mdb;
    auto mdb = amlmApp->mime_db();
 
    QMimeType mime = mdb->mimeTypeForUrl(m_url);

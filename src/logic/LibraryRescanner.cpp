@@ -203,14 +203,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         for(int i=begin; i<end; i++)
         {
             DirScanResult dsr = ef.resultAt(i);
-
+            // Add another entry to the tree model.
             new_items.push_back(dsr.toTreeModelItem());
-
-//            QVector<QVariant> column_data;
-//            column_data.append(QVariant::fromValue(dsr.getDirProps()).toString());
-//            column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
-//            column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
-//            new_items.push_back(new AbstractTreeModelItem(column_data));
 
             // Found a file matching the criteria.  Send it to the model.
             /// @todo Forward the signal.

@@ -234,7 +234,6 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
             // Return an icon for the MIME type of the file containing the track.
             auto item = getItem(index);
             QMimeType mime = item->getMimeType();
-//            auto mime_icon_name = mime.iconName();
             QIcon mime_icon = Theme::iconFromTheme(mime);
             return QVariant::fromValue(mime_icon);
         }
