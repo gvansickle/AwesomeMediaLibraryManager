@@ -68,7 +68,7 @@ std::shared_ptr<LibraryEntry> LibraryEntry::fromUrl(const QUrl &fileurl)
 std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
 {
     // Populate the metadata.  Assumption is that all we have before calling this is the url.
-	// returns A list of LibraryEntry's, or self if self.url was not a multi-track file.
+    // returns a list of LibraryEntry's, or this if m_url was not a multi-track file.
 
 	std::vector<std::shared_ptr<LibraryEntry>> retval;
 
@@ -101,6 +101,10 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 	except audiotools.SheetException as e:
 		logger.warning("Exception trying to read cuesheet: {}".format(e))
 #endif
+
+    // Get the MIME type.
+    auto mdb = amlmApp->mime_db();
+    m_mime_type = mdb->mimeTypeForUrl(m_url);
 
 	// Try to read the metadata of the file.
 	Metadata file_metadata = Metadata::make_metadata(m_url);
@@ -297,17 +301,6 @@ QUrl LibraryEntry::getM2Url() const
     }
 }
 
-QMimeType LibraryEntry::getMimeType() const
-{
-   auto mdb = amlmApp->mime_db();
-
-   QMimeType mime = mdb->mimeTypeForUrl(m_url);
-
-   return mime;
-}
-
-
-
 void LibraryEntry::writeToJson(QJsonObject& jo) const
 {
 	jo["m_url"] = m_url.toString();
@@ -316,6 +309,8 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 	jo["m_is_subtrack"] = m_is_subtrack;
 	jo["m_offset_secs"] = m_offset_secs.toQString();
 	jo["m_length_secs"] = m_length_secs.toQString();
+    /// @todo This is always "null".
+    jo["m_mime_type"] = QJsonValue::fromVariant(QVariant::fromValue<QMimeType>(m_mime_type));
 	if(isPopulated())
 	{
 M_WARNING("TODO: Don't write out in the has-cached-metadata case")

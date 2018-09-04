@@ -67,7 +67,7 @@ public:
 
 	QString getFilename() const { return m_url.fileName(); }
 	QString getFileType() const { return m_metadata ? QString::fromUtf8(m_metadata.GetFiletypeName().c_str()) : QString(); }
-    QMimeType getMimeType() const;
+    QMimeType getMimeType() const { return m_mime_type; };
 
 	/// @name Serialization
 	/// @{
@@ -94,6 +94,7 @@ public:
 
 protected:
 
+	// The URL to the media.
 	QUrl m_url;
 
 	// All we have is (maybe) a URL, we don't have any other info on this file yet, so all other fields are
@@ -102,6 +103,8 @@ protected:
 
 	// True if there was an error trying to open or read this URL.
 	bool m_is_error = false;
+
+	QMimeType m_mime_type;
 
 	// Flag if this is a subtrack of a single-file album rip.
 	// See https://xiph.org/flac/format.html#metadata_block_cuesheet

@@ -53,7 +53,7 @@ void MimeTypeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
     QStyleOptionViewItem opt = option;
     initStyleOption(&opt, index);
 
-    // Get the mime type.
+    // Get the mime type from the model index.
     QMimeType mime_type = index.model()->data(index, Qt::DisplayRole).value<QMimeType>();
 
     // Get the mime type icon and set it in the copy of the QStyleOptionViewItem.
