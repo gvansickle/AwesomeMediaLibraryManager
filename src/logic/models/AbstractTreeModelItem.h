@@ -62,7 +62,7 @@
 #include <utils/QtHelpers.h>
 
 /**
- * Generic item for use in TreeModel.
+ * Generic item for use in AbstractItemTreeModel.
  */
 class AbstractTreeModelItem
 {
