@@ -73,18 +73,6 @@ namespace AMLM
 		ExtUrl m_cue_url;
 	};
 
-    class ExtMIMEType : public QMimeType, public EntityBase
-	{
-		Q_GADGET
-
-	public:
-        ExtMIMEType(const QMimeType& mime_type) : QMimeType(mime_type), EntityBase() {};
-        ~ExtMIMEType() override = default;
-	private:
-//		QMimeType m_qmime_type;
-
-	};
-
 	class ISRC : public EntityBase {};
 	class Artist : public EntityBase {};
 	class Release : public EntityBase {};

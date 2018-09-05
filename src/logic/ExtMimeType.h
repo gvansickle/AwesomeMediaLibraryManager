@@ -20,6 +20,7 @@
 #ifndef EXTMIMETYPE_H
 #define EXTMIMETYPE_H
 
+#include <QObject>
 #include <QMimeDatabase>
 #include <QMimeType>
 
@@ -54,5 +55,8 @@ public:
         return in;
     }
 };
+
+Q_DECLARE_METATYPE(ExtMimeType);
+
 
 #endif // EXTMIMETYPE_H

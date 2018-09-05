@@ -309,8 +309,8 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 	jo["m_is_subtrack"] = m_is_subtrack;
 	jo["m_offset_secs"] = m_offset_secs.toQString();
 	jo["m_length_secs"] = m_length_secs.toQString();
-    M_WARNING("/// @todo This is always null.");
-    jo["m_mime_type"] = QJsonValue::fromVariant(QVariant::fromValue<QMimeType>(m_mime_type));
+M_WARNING("/// @todo This is always null.");
+//jo["m_mime_type"] << m_mime_type;
 	if(isPopulated())
 	{
 M_WARNING("TODO: Don't write out in the has-cached-metadata case")
