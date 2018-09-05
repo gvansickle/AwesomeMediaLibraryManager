@@ -32,6 +32,7 @@
 #include <utils/QtHelpers.h>
 
 // Ours
+#include "ExtMimeType.h"
 #include "logic/Metadata.h"
 #include "utils/Fraction.h"
 
@@ -104,7 +105,7 @@ protected:
 	// True if there was an error trying to open or read this URL.
 	bool m_is_error = false;
 
-	QMimeType m_mime_type;
+    ExtMimeType m_mime_type;
 
 	// Flag if this is a subtrack of a single-file album rip.
 	// See https://xiph.org/flac/format.html#metadata_block_cuesheet

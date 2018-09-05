@@ -23,6 +23,7 @@
 #include <QtGlobal>
 #include <QObject>
 #include <QUrl>
+#include <QMimeType>
 
 #include <src/logic/DirScanResult.h>
 
@@ -70,6 +71,18 @@ namespace AMLM
 
 		/// URL to a sidecar cuesheet.  May be empty if none was found.
 		ExtUrl m_cue_url;
+	};
+
+    class ExtMIMEType : public QMimeType, public EntityBase
+	{
+		Q_GADGET
+
+	public:
+        ExtMIMEType(const QMimeType& mime_type) : QMimeType(mime_type), EntityBase() {};
+        ~ExtMIMEType() override = default;
+	private:
+//		QMimeType m_qmime_type;
+
 	};
 
 	class ISRC : public EntityBase {};

@@ -309,7 +309,7 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 	jo["m_is_subtrack"] = m_is_subtrack;
 	jo["m_offset_secs"] = m_offset_secs.toQString();
 	jo["m_length_secs"] = m_length_secs.toQString();
-    /// @todo This is always "null".
+    M_WARNING("/// @todo This is always null.");
     jo["m_mime_type"] = QJsonValue::fromVariant(QVariant::fromValue<QMimeType>(m_mime_type));
 	if(isPopulated())
 	{
@@ -372,7 +372,7 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 			QString key = QString::fromStdString(entry.first);
 			QVariant temp_val = retval[key];
 //qDb() << "temp_val:" << temp_val;
-			for(auto s : entry.second)
+            for(const auto& s : entry.second)
 			{
 //qDb() << "Appending to temp_val:" << s;
 				sl.append(QString::fromStdString(s));
@@ -422,6 +422,7 @@ QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 	out << myObj.m_is_subtrack;
 	out << myObj.m_offset_secs;
 	out << myObj.m_length_secs;
+    out << myObj.m_mime_type;
 //	if(isPopulated())
 //	{
 //		M_WARNING("TODO: Don't write out in the has-cached-metadata case")

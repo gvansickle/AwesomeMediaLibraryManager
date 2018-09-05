@@ -161,6 +161,7 @@ set(HEADER_FILES
 	logic/LibraryRescannerJob.h
 	logic/proxymodels/QPersistentModelIndexVec.h
 	logic/DirScanResult.h
+	logic/ExtMimeType.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
@@ -212,6 +213,7 @@ set(SOURCE_FILES
 	logic/LibraryRescannerJob.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	logic/DirScanResult.cpp
+	logic/ExtMimeType.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	utils/QtHelpers.cpp
