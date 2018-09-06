@@ -96,7 +96,13 @@ M_WARNING("If we do this here, we need to wait for all jobs to stop.");
     qDb() << "DELETING ALL TRACKED OBJECTS";
     cancelAll();
 
-    Q_ASSERT(m_amlmjob_to_widget_map.size() == 0);
+//    while(!m_obj_cleanup_handler.isEmpty())
+//    {
+//        qDb() << "Waiting...";
+//    }
+
+#error "Yeah this asserts"
+    AMLM_ASSERT_EQ(m_amlmjob_to_widget_map.size(), 0);
 
     m_expanding_frame_widget->deleteLater();
 }
@@ -181,6 +187,8 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(unregisterJob(KJob*)));
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
     BASE_CLASS::registerJob(kjob);
+    // Add it to the object watcher.
+    m_obj_cleanup_handler.add(kjob);
 
     if(!jobWatch)
     {
@@ -266,6 +274,10 @@ void ActivityProgressStatusBarTracker::cancelAll()
 //        slotStop(kjob);
         Q_EMIT INTERNAL_SIGNAL_slotStop(kjob);
     }
+
+    // Delete all the KJobs.
+    m_obj_cleanup_handler.clear();
+
 M_WARNING("I think we need to wait for all jobs to stop here.");
     qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
 }

@@ -120,8 +120,8 @@ private:
 
     QMimeDatabase* m_mime_database;
 
-    bool m_shutting_down {false};
-    bool m_controlled_shutdown_complete {false};
+    std::atomic_bool m_shutting_down {false};
+    std::atomic_bool m_controlled_shutdown_complete {false};
 };
 
 #endif /* SRC_AMLMAPP_H_ */

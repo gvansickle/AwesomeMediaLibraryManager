@@ -156,7 +156,7 @@ void AMLMApp::SLOT_onAboutToQuit()
 
 void AMLMApp::perform_controlled_shutdown()
 {
-    // Signal to ourselves that we're in the process of shutting down.
+    // We received a signal to ourselves that we're in the process of shutting down.
     m_shutting_down = true;
 
     // Signal to the world that we're in the process of shutting down.
