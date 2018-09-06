@@ -657,7 +657,7 @@ protected: //Q_SLOTS:
 
     virtual void SLOT_extfuture_finished()
     {
-        // Job is finished.  Delete the watcher and emit the KJob result.
+        // The ExtFuture<T> and hence the Job is finished.  Delete the watcher and emit the KJob result.
         // The emitResult() call will send out a KJob::finished() signal.
         qDbo() << "GOT EXTFUTURE FINISHED";
         m_ext_watcher->deleteLater();
@@ -666,6 +666,7 @@ protected: //Q_SLOTS:
 
     virtual void SLOT_extfuture_canceled()
     {
+    	// The ExtFuture<T> was cancelled (hopefully through the AMLMJobT interface).
         qDbo() << "GOT EXTFUTURE CANCELED";
         m_ext_watcher->deleteLater();
     }
