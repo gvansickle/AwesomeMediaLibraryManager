@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/woboq/verdigris.git
+	branch = master
+	commit = 48cdea10505dc8d4fcc4472b430af507bb1017bf
+	parent = b0946fe06d1c097b9fa1d2c58772e20787c51ebd
+	cmdver = 0.3.1
