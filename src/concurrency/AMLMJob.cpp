@@ -316,7 +316,7 @@ void AMLMJob::SLOT_kjob_result(KJob *kjob)
 
 void AMLMJob::SLOT_onAboutToShutdown()
 {
-#error "I think we need 'already killed' protection here or in kill() itself"
+M_WARNING("I think we need 'already killed' reentrancy protection here or in kill() itself");
     qDbo() << "SHUTDOWN, KILLING";
     kill();
     qDbo() << "SHUTDOWN, KILLED";
