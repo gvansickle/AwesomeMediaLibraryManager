@@ -96,11 +96,6 @@ M_WARNING("If we do this here, we need to wait for all jobs to stop.");
     qDb() << "DELETING ALL TRACKED OBJECTS";
     SLOT_CancelAllKJobs();
 
-//    while(!m_obj_cleanup_handler.isEmpty())
-//    {
-//        qDb() << "Waiting...";
-//    }
-
 //#error "Yeah this asserts"
     AMLM_ASSERT_EQ(m_amlmjob_to_widget_map.size(), 0);
 #endif
@@ -278,7 +273,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
         }
         if(kjob->capabilities() & KJob::Killable)
         {
-            qWro() << "Killing KJob:" << kjob;
+            qIno() << "Killing KJob:" << kjob;
             // Synchronous call of KJob::kill().
             /// @todo Don't know if we want EmitResult here or not.
             kjob->kill(KJob::EmitResult);
