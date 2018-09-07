@@ -508,7 +508,7 @@ protected: // Methods
      */
     void INTERNAL_unregisterJob(KJob *kjob);
 
-    void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
+//    void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
 
 protected:
 

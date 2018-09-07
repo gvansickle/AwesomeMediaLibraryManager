@@ -84,11 +84,14 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
-#if 0
     // All KWidgetJobTracker does here is delete the private pImpl pointer.
     // KWidgetJobTracker::Private's destructor then just deletes the eventLoopLocker, which is only
     // non-null if the user has selected "Keep Open".
 
+    // KDevelop's RunController derivation hierarchy just does = default here, which ends up
+    // just calling ~KJobTrackerInterface().
+
+#if 0
     QMutexLocker locker(&m_tracked_job_state_mutex);
 
     /// @todo Not sure if this is right or not: M_WARNING("TODO: Probably need to not call cancellAll() in here.");
@@ -554,10 +557,10 @@ void ActivityProgressStatusBarTracker::INTERNAL_unregisterJob(KJob *kjob)
 {
     QPointer<KJob> kjob_qp(kjob);
 
-M_WARNING("KJob* could already be finished and autoDeleted here");
+M_WARNING("Could KJob* already be finished and autoDeleted here?");
     Q_CHECK_PTR(kjob_qp);
 
-    qDb() << "UNREGISTERING JOB:" << kjob_qp;
+    qIno() << "UNREGISTERING JOB:" << kjob_qp;
 
     Q_CHECK_PTR(this);
     Q_CHECK_PTR(kjob_qp);
@@ -567,38 +570,62 @@ M_WARNING("KJob* could already be finished and autoDeleted here");
     //     job->disconnect(this);
 
     // Call down to the base class first.
-    /// @todo Maybe not?
+    // A number of examples, including KDevelop, do this first like this.
     BASE_CLASS::unregisterJob(kjob_qp);
 
     Q_CHECK_PTR(kjob_qp);
 
-    qDb() << "SIGNALS DISCONNECTED:" << kjob_qp;
+    qIno() << "SIGNALS DISCONNECTED:" << kjob_qp;
 
-    /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
-    with_widget_or_skip(kjob_qp, [=](auto w){
+    // If kjob was never registered, something's broken.
+    AMLM_ASSERT_EQ(m_amlmjob_to_widget_map.keys().contains(kjob_qp), true);
+
+    // Get ptr to the widget, if any.
+    auto w = m_amlmjob_to_widget_map.value(kjob_qp, nullptr);
+
+    qDb() << "REMOVING FROM MAP:" << kjob << w;
+    if(w == nullptr)
+    {
+        qWro() << "KJob" << kjob << "was registered but has no widget.";
+        m_amlmjob_to_widget_map.remove(kjob_qp);
+    }
+    else
+    {
         // Remove the job's widget from the expanding frame.
         m_expanding_frame_widget->removeWidget(w);
         m_expanding_frame_widget->reposition();
-        removeJobAndWidgetFromMap(kjob_qp, w);
+        m_amlmjob_to_widget_map.remove(kjob_qp);
         w->deleteLater();
-        });
+    }
+
+//    /// @todo The only thing KWidgetJobTracker does differently here is remove any instances of "job" from the queue.
+//#error "This will not delete a kjob with no widget"
+//    with_widget_or_skip(kjob_qp, [=](auto w){
+//        // Remove the job's widget from the expanding frame.
+//        m_expanding_frame_widget->removeWidget(w);
+//        m_expanding_frame_widget->reposition();
+//        removeJobAndWidgetFromMap(kjob_qp, w);
+//        w->deleteLater();
+//        });
 
     Q_CHECK_PTR(kjob_qp);
+
+    Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
 
     qDb() << "JOB UNREGISTERED:" << kjob_qp;
 }
 
-void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget)
-{
-    qDb() << "REMOVING FROM MAP:" << kjob << widget;
-    if(m_amlmjob_to_widget_map.value(kjob, nullptr) == widget)
-    {
-        m_amlmjob_to_widget_map.remove(kjob);
-        /// @todo Also to-be-shown queue?
+//void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget)
+//{
+////    qDb() << "REMOVING FROM MAP:" << kjob << widget;
+////    if(m_amlmjob_to_widget_map.value(kjob, nullptr) == widget)
+////    {
+////        m_amlmjob_to_widget_map.remove(kjob);
+////        /// @todo Also to-be-shown queue?
 
-        Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
-    }
-}
+////        Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
+////    }
+//}
 
 int ActivityProgressStatusBarTracker::calculate_summary_percent()
 {
