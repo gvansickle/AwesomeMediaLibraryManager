@@ -35,7 +35,6 @@
 /// Ours
 #include <AMLMApp.h>
 #include <utils/TheSimplestThings.h>
-//#include <gui/helpers/Tips.h>
 #include "BaseActivityProgressStatusBarWidget.h"
 #include "CumulativeStatusWidget.h"
 #include <gui/MainWindow.h>
@@ -69,7 +68,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
     // Connect the cumulative status widget button's signals to slots in this class, they need to apply to all sub-jobs.
     /// @todo m_cumulative_status_widget's cancel_job button state should be enabled/disabled based on child job cancelable capabilities.
     connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::cancel_job,
-                this, &ActivityProgressStatusBarTracker::cancelAll);
+                this, &ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs);
     connect_or_die(m_cumulative_status_widget, &CumulativeStatusWidget::SIGNAL_show_hide_subjob_display,
             this, &ActivityProgressStatusBarTracker::toggleSubjobDisplay);
 
@@ -85,6 +84,7 @@ ActivityProgressStatusBarTracker::ActivityProgressStatusBarTracker(QWidget *pare
 
 ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
 {
+#if 0
     // All KWidgetJobTracker does here is delete the private pImpl pointer.
     // KWidgetJobTracker::Private's destructor then just deletes the eventLoopLocker, which is only
     // non-null if the user has selected "Keep Open".
@@ -94,16 +94,16 @@ ActivityProgressStatusBarTracker::~ActivityProgressStatusBarTracker()
     /// @todo Not sure if this is right or not: M_WARNING("TODO: Probably need to not call cancellAll() in here.");
 M_WARNING("If we do this here, we need to wait for all jobs to stop.");
     qDb() << "DELETING ALL TRACKED OBJECTS";
-    cancelAll();
+    SLOT_CancelAllKJobs();
 
 //    while(!m_obj_cleanup_handler.isEmpty())
 //    {
 //        qDb() << "Waiting...";
 //    }
 
-#error "Yeah this asserts"
+//#error "Yeah this asserts"
     AMLM_ASSERT_EQ(m_amlmjob_to_widget_map.size(), 0);
-
+#endif
     m_expanding_frame_widget->deleteLater();
 }
 
@@ -176,7 +176,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     if(!jobWatch)
     {
-        qDb() << "Job deleted while being registered";
+        qCro() << "Job deleted while being registered";
         wdgt->deleteLater();
         return;
     }
@@ -187,21 +187,21 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(unregisterJob(KJob*)));
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
     BASE_CLASS::registerJob(kjob);
-    // Add it to the object watcher.
-    m_obj_cleanup_handler.add(kjob);
 
     if(!jobWatch)
     {
-        qDb() << "Job deleted while being registered";
+        qCro() << "Job deleted while being registered";
         wdgt->deleteLater();
         return;
     }
 
     // Insert the kjob/widget pair into our master map.
     m_amlmjob_to_widget_map.insert(kjob, wdgt);
+
+    // Emit a signal that a job has been added.
     Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
 
-    qDb() << "REGISTERED JOB:" << kjob;
+//    qDb() << "REGISTERED JOB:" << kjob;
 //    dump_qobject(kjob);
 
     // KWidgetJobTracker does almost the following.
@@ -222,13 +222,16 @@ void ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed(QObject *kjob)
 {
     QMutexLocker locker(&m_tracked_job_state_mutex);
 
-    KJob* kjob_ptr = qobject_cast<KJob*>(kjob);
+    KJob* kjob_ptr = dynamic_cast<KJob*>(kjob);
 
     Q_CHECK_PTR(kjob_ptr);
 
-    qWr() << "KJOB DESTROYED:" << kjob_ptr;
-
-
+    // Check if the job was destroyed prior to being unregistered.
+    if(m_amlmjob_to_widget_map.keys().contains(kjob_ptr))
+    {
+        qWr() << "KJOB DESTROYED BEFORE BEING UNREGISTERED:" << kjob_ptr;
+        unregisterJob(kjob_ptr);
+    }
 }
 
 void ActivityProgressStatusBarTracker::SLOT_onShowProgressWidget(KJob* kjob)
@@ -255,28 +258,37 @@ M_WARNING("BUG: The kjob could be finished and deleted before we get here.");
     });
 }
 
-void ActivityProgressStatusBarTracker::cancelAll()
+void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
 {
     QMutexLocker locker(&m_tracked_job_state_mutex);
 
     qDb() << "CANCELLING ALL JOBS";
 
-    //  Get a list of all the keys in the map.
+    //  Get a copy of the list of all the keys in the map, because composite jobs will delete subjobs.
     QList<QPointer<KJob>> kjoblist = m_amlmjob_to_widget_map.keys();
 
     qDb() << "CANCELLING ALL JOBS: Num KJobs:" << m_amlmjob_to_widget_map.size() << "List size:" << kjoblist.size();
 
     for(const QPointer<KJob>& kjob : kjoblist)
     {
-        qDb() << "Cancelling job:" << kjob; // << "widget:" << it.value();
-//        job->kill();
-/// @todo M_WARNING("SEEMS WRONG");
-//        slotStop(kjob);
-        Q_EMIT INTERNAL_SIGNAL_slotStop(kjob);
+        if(!m_amlmjob_to_widget_map.keys().contains(kjob))
+        {
+            // No such KJob anymore.
+            continue;
+        }
+        if(kjob->capabilities() & KJob::Killable)
+        {
+            qWro() << "Killing KJob:" << kjob;
+            // Synchronous call of KJob::kill().
+            /// @todo Don't know if we want EmitResult here or not.
+            kjob->kill(KJob::EmitResult);
+//        Q_EMIT INTERNAL_SIGNAL_slotStop(kjob);
+        }
+        else
+        {
+            qWro() << "KJob was marked non-killable, expect a crash.";
+        }
     }
-
-    // Delete all the KJobs.
-    m_obj_cleanup_handler.clear();
 
 M_WARNING("I think we need to wait for all jobs to stop here.");
     qDb() << "CANCELLING ALL JOBS: KJobs REMAINING:" << m_amlmjob_to_widget_map.size();
@@ -532,8 +544,8 @@ void ActivityProgressStatusBarTracker::make_connections_with_newly_registered_jo
     // kjob->tracker is already done in base class: connect_or_die(kjob, &KJob::finished, this, &ActivityProgressStatusBarTracker::finished);
     connect_or_die(kjob, &KJob::finished, wdgt_type, &BaseActivityProgressStatusBarWidget::hide);
 
-//    // Connect the kjob's destroyed() signal to a handler here.
-//    connect_or_die(kjob, &QObject::destroyed, this, &ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed);
+    // Connect the kjob's destroyed() signal to a handler in this class.
+    connect_or_die(kjob, &KJob::destroyed, this, &ActivityProgressStatusBarTracker::SLOT_onKJobDestroyed);
 
     //
     // Connect the widget's signals such as "user wants to cancel" to this tracker's slotStop(KJob*) slot.
@@ -699,7 +711,7 @@ void ActivityProgressStatusBarTracker::hideSubJobs()
 void ActivityProgressStatusBarTracker::SLOT_onAboutToShutdown()
 {
     qIno() << "SHUTDOWN, TRACKING" << getNumTrackedJobs() << "JOBS, CANCELLING ALL";
-    cancelAll();
+    SLOT_CancelAllKJobs();
     qIno() << "SHUTDOWN, NOW TRACKING" << getNumTrackedJobs() << "JOBS";
 }
 

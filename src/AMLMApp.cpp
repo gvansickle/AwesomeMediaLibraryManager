@@ -144,6 +144,10 @@ return;
 
 void AMLMApp::SLOT_onAboutToQuit()
 {
+    // This slot is ~KDevelop's &Core::shutdown() slot, which is invoked by:
+    // - the QCoreApplication::aboutToQuit() signal.
+    // - Called directly by the MainWindow() destructor.
+
     qDbo() << "App about to quit, shutting down.";
 
     if(!m_shutting_down)
@@ -156,6 +160,8 @@ void AMLMApp::SLOT_onAboutToQuit()
 
 void AMLMApp::perform_controlled_shutdown()
 {
+    // This is ~Kdev's cleanup() public member function.
+
     // We received a signal to ourselves that we're in the process of shutting down.
     m_shutting_down = true;
 

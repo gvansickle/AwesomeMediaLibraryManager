@@ -171,10 +171,24 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 MainWindow::~MainWindow()
 {
+    // KDev's MainWindow does only this here:
+    /**
+     * if (memberList().count() == 1) {
+        // We're closing down...
+        Core::self()->shutdown();
+        }
+
+        delete d;
+     */
+
+#if 1
+    AMLMApp::instance()->SLOT_onAboutToQuit();
+#else
     // Shouldn't have been destroyed until now.
     Q_CHECK_PTR(instance()->m_activity_progress_tracker);
     delete instance()->m_activity_progress_tracker;
     instance()->m_activity_progress_tracker = nullptr;
+#endif
 
     m_instance = nullptr;
 }

@@ -78,6 +78,13 @@ public:
      */
     static AMLMApp* instance();
 
+    /// @name "Controllers", per KDevelop ICore terminology.
+    /// Basically just a bunch of instance()'s for singletons used by the app.
+    /// @{
+
+//    ActivityProgressStatusBarTracker == see MainWindow, this currently needs a parent widget.
+
+    /// @}
 
     CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }

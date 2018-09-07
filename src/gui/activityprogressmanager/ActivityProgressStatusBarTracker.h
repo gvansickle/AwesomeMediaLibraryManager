@@ -267,6 +267,12 @@ public Q_SLOTS:
      */
     void SLOT_onKJobDestroyed(QObject* kjob);
 
+    /**
+     * Cancel all tracked KJobs.
+     * This blocks waiting for them to report canceled.
+     */
+    void SLOT_CancelAllKJobs();
+
 protected Q_SLOTS:
 
 	///
@@ -274,12 +280,6 @@ protected Q_SLOTS:
 
     /// Slot to display the progress widget for @a kjob.
     void SLOT_onShowProgressWidget(KJob *kjob);
-
-    /**
-     * Cancel all tracked KJobs.
-     * This blocks waiting for them to report canceled.
-     */
-    void cancelAll();
 
     /**
      * Connections/signal/slots notes
@@ -521,9 +521,6 @@ protected: // Variable members
 
     /// Map of all registered sub-jobs (KJob*) to sub-job-widgets (QPointer<BaseActivityProgressStatusBarWidget>'s).
     TSActiveActivitiesMap m_amlmjob_to_widget_map;
-
-    /// This might be the best we can do for tracking KJob cancelation.
-    QObjectCleanupHandler m_obj_cleanup_handler;
 
     /// The QWidget parent of this Tracker, not necessarily it's widget.
     QPointer<QWidget> m_parent_widget {nullptr};
