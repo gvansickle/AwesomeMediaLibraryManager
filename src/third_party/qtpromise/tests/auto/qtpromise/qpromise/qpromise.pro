@@ -1,12 +1,13 @@
 TEMPLATE = subdirs
 SUBDIRS += \
-    all \
     construct \
     delay \
+    each \
     fail \
+    filter \
     finally \
+    map \
     operators \
-    resolve \
     tap \
     tapfail \
     then \
