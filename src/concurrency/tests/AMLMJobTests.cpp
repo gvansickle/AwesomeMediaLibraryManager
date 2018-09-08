@@ -567,7 +567,7 @@ TEST_P(AMLMJobTestsParameterized, CancelTestPAutoDelete)
     GTEST_COUT << "CANCELING JOB\n";
     bool kill_succeeded = j->kill(KJob::KillVerbosity::Quietly);
 
-    // j is now probably going to be deleteLater()'ed.
+	/// @todo j is now going to be deleteLater()'ed if it's autoDelete.
 
     EXPECT_TRUE(kill_succeeded) << ef.state();
     EXPECT_TRUE(ef.isCanceled()) << ef.state();
@@ -577,6 +577,11 @@ TEST_P(AMLMJobTestsParameterized, CancelTestPAutoDelete)
     // Won't get a result() signal here because it's kill()'ed Quietly.
     EXPECT_TRUE(kjob_finished_spy.wait());
     EXPECT_FALSE(kjob_result_spy.wait(500));
+
+	if(!autodelete)
+	{
+		j->deleteLater();
+	}
 
 	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
 
@@ -592,10 +597,7 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
 //    j->setAutoDelete(false);
 
-    QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    EXPECT_TRUE(kjob_finished_spy.isValid());
-    QSignalSpy kjob_result_spy(j, &KJob::result);
-    EXPECT_TRUE(kjob_result_spy.isValid());
+	M_QSIGNALSPIES_SET(j);
 
     connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
@@ -629,10 +631,12 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 0);
 
+	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, IPJCancelBeforeStart)
+TEST_F(AMLMJobTests, ImportProjectJobCancelBeforeStart)
 {
     TC_ENTER();
 
@@ -642,12 +646,9 @@ TEST_F(AMLMJobTests, IPJCancelBeforeStart)
 
 	M_QSIGNALSPIES_SET(j);
 
-    connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
+	connect_or_die(j, &KJob::finished, amlmApp, [&](KJob* kjob){
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
                 });
-
-    // No watcher to get a future from.
-//    /*ExtFuture<int>&*/ const QFuture<void>& ef = j->get_extfuture_ref();
 
 //    EXPECT_TRUE(ef.isStarted()) << state(ef);
 //    EXPECT_FALSE(ef.isRunning()) << state(ef);

@@ -228,7 +228,7 @@ static inline void TC_Wait(int ms)
 #define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
 	{ \
 		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000); \
-		EXPECT_TRUE(got_job_destroyed_signal); \
+		EXPECT_TRUE(got_job_destroyed_signal.load()); \
 		EXPECT_TRUE(didnt_timeout); \
 	/* EXPECT_TRUE(kjob_destroyed_spy.wait()); */ \
 	}
