@@ -138,6 +138,7 @@ protected:
 
     /**
      * Called from the SLOT_onAboutToQuit() slot to handle the shutdown of app subcomponents.
+     * This is ~Kdev's Core::cleanup() public member function.
      */
     void perform_controlled_shutdown();
 

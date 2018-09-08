@@ -291,7 +291,7 @@ TEST_F(ExtFutureTest, Results)
  * Test "streaming" tap().
  * @todo Currently crashes.
  */
-TEST_F(ExtFutureTest, DISABLED_ExtFutureStreamingTap)
+TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {
     TC_ENTER();
 
@@ -361,13 +361,13 @@ M_WARNING("TODO: This is still spinning when the test exits.")
 TEST_F(ExtFutureTest, StaticAsserts)
 {
 
-    static_assert(std::is_default_constructible<QString>::value, "");
+	static_assert(std::is_default_constructible<QString>::value);
 
     // From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
     // "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
-    static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >, "");
+	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >);
     int v;
-    static_assert(std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >, "");
+	static_assert(std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
     /// @todo
 //    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >, "");
 

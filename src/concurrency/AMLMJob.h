@@ -578,6 +578,9 @@ private:
     KJob::Unit m_progress_unit { KJob::Unit::Bytes };
 };
 
+/**
+ * Class template for wrapping ExtAsync jobs returning an ExtFuture<T>.
+ */
 template <class ExtFutureT>
 class AMLMJobT : public AMLMJob
 {

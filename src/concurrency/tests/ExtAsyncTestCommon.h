@@ -209,17 +209,30 @@ static inline void TC_Wait(int ms)
     ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
     finished(static_test_id_string);
 
-/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
+/// @name Macros for making sure a KJob emits the expected signals and gets destroyed before the TEST_F() returns.
+/// @{
 #define M_QSIGNALSPIES_SET(kjobptr) \
     QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
     EXPECT_TRUE(kjob_finished_spy.isValid()); \
     QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
     EXPECT_TRUE(kjob_result_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy(static_cast<QObject*>(kjobptr), &QObject::destroyed); \
-    EXPECT_TRUE(kjob_destroyed_spy.isValid());
+	/*QSignalSpy kjob_destroyed_spy(static_cast<QObject*>(kjobptr), &QObject::destroyed);*/ \
+	/*EXPECT_TRUE(kjob_destroyed_spy.isValid());*/ \
+	/* Workaround for what otherwise should be doable with QSignalSpy() above, but isn't for some reason. */ \
+	std::atomic_bool got_job_destroyed_signal {false}; \
+	connect_or_die(kjobptr, &QObject::destroyed, amlmApp, [&](QObject* obj){ \
+		GTEST_COUT_qDB << "GOT DESTROYED SIGNAL:" << obj; \
+		got_job_destroyed_signal = true; \
+	});
 
 #define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
-    EXPECT_TRUE(kjob_destroyed_spy.wait());
+	{ \
+		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000); \
+		EXPECT_TRUE(got_job_destroyed_signal); \
+		EXPECT_TRUE(didnt_timeout); \
+	/* EXPECT_TRUE(kjob_destroyed_spy.wait()); */ \
+	}
+/// @}
 
 /// @}
 
