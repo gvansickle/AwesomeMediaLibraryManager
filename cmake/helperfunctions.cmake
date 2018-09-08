@@ -33,6 +33,9 @@ function(print_compilers_and_params)
     endforeach()
 endfunction()
 
+# @note cmake 3.12 has this functionality in a one-liner:
+# list(TRANSFORM ${FILES_TO_TRANSLATE} PREPEND ${CMAKE_CURRENT_SOURCE_DIR})
+# @see https://cmake.org/cmake/help/v3.12/command/list.html#transform
 function(PREPEND_TO_EACH outvar prefix)
 #	message(STATUS "PREPEND_TO_EACH: OUTVAR: ${outvar} PREFIX: ${prefix} ARGC: ${ARGC} ARGN: ${ARGN}")
 	set(listvar "")

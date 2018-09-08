@@ -9,6 +9,6 @@
 #      set exec-wrapper '%{CurrentProject:Path}/gdb_wrap.sh'
 
 pwd
-source ../prefix.sh
+source prefix.sh
 
 exec "$@"
