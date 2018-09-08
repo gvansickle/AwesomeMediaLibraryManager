@@ -20,6 +20,9 @@
 function(print_varlist)
 	foreach(element ${ARGN})
 		#cmake_print_variables(element)
+		### @todo This mostly works, except for vars like e.g. KDE_INSTALL_TARGETS_DEFAULT_ARGS,
+		### which are printed with all spaces and underscores(?yeah) replaced with ";".
+		### @see https://gitlab.kitware.com/cmake/community/wikis/FAQ#why-do-i-have-unwanted-semicolons-in-my-compiler-flags
 		message(STATUS "${element}: \'${${element}}\'")
 	endforeach()
 endfunction()

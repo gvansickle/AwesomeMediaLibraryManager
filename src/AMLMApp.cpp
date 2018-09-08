@@ -125,6 +125,11 @@ AMLMApp *AMLMApp::instance()
     return m_the_instance;
 }
 
+bool AMLMApp::shuttingDown() const
+{
+
+}
+
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
 {
 M_WARNING("REMOVE");
@@ -160,7 +165,7 @@ void AMLMApp::SLOT_onAboutToQuit()
 
 void AMLMApp::perform_controlled_shutdown()
 {
-    // This is ~Kdev's cleanup() public member function.
+    // This is ~Kdev's Core::cleanup() public member function.
 
     // We received a signal to ourselves that we're in the process of shutting down.
     m_shutting_down = true;
