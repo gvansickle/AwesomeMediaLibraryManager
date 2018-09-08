@@ -501,7 +501,27 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
-
+		
+# Make the installed app debuggable.
+# Add a .gdbinit file and support files to the install directory.
+install(PROGRAMS gdb_wrap.sh
+	DESTINATION
+	    ${KDE_INSTALL_BINDIR}
+	CONFIGURATIONS
+		Debug
+	COMPONENT
+		coreapp
+		)
+install(PROGRAMS  gdbinit.in
+	RENAME
+		 .gdbinit
+	DESTINATION
+	    ${KDE_INSTALL_BINDIR}
+	CONFIGURATIONS
+		Debug
+	COMPONENT
+		coreapp
+		)
 ###
 ### KF5 icon theme install for especially Windows and Mac.
 ###

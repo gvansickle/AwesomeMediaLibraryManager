@@ -446,16 +446,6 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
-# Add a .gdbinit file and support files to the install directory.
-install(PROGRAMS ${PROJECT_SOURCE_DIR}/gdb_wrap.sh ${PROJECT_SOURCE_DIR}/src/.gdbinit
-	DESTINATION
-	    ${KDE_INSTALL_BINDIR}
-	CONFIGURATIONS
-		Debug
-	COMPONENT
-		coreapp
-		)
-
 
 ###
 ### Add the subdirs.
