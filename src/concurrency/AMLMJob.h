@@ -589,7 +589,6 @@ class AMLMJobT : public AMLMJob
 public:
 
     using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
-    using ThisType = AMLMJobT<ExtFutureT>;
 
     explicit AMLMJobT(QObject* parent = nullptr)
         : BASE_CLASS(parent)
@@ -598,6 +597,8 @@ public:
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
         m_ext_watcher = new ExtFutureWatcherT();
+		// Create a new 1 sec speed update QTimer.
+		m_speed_timer = QSharedPointer<QTimer>::create(this);
 	}
 
     /**
@@ -623,6 +624,11 @@ public:
     {
         // Hook up signals and such to the ExtFutureWatcher<T>.
         HookUpExtFutureSignals(m_ext_watcher);
+
+		// Start the speed calculation timer.
+		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
+		m_speed_timer->setInterval(1000);
+		m_speed_timer->start();
 
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
         // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -689,16 +695,29 @@ protected: //Q_SLOTS:
         this->setTotalAmountAndSize(this->progressUnit(), max-min);
     }
 
+	virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
+	{
+
+	}
+
     virtual void SLOT_extfuture_progressValueChanged(int progress_value)
     {
         this->setProcessedAmountAndSize(this->progressUnit(), progress_value);
 //        this->emitSpeed(progress_value);
     }
 
-    virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
-    {
-
-    }
+	/**
+	 * Calculate the job's speed in bytes per sec.
+	 */
+	virtual void SLOT_UpdateSpeed()
+	{
+		auto current_processed_size = this->processedSize();
+		auto progress_units_processed_in_last_second = current_processed_size - m_speed_last_processed_size;
+		m_speed = progress_units_processed_in_last_second;
+		m_speed_last_processed_size = current_processed_size;
+		qDbo() << M_NAME_VAL(current_processed_size);
+		this->emitSpeed(m_speed);
+	}
 
 protected:
 
@@ -934,17 +953,21 @@ protected:
     template <class WatcherType>
     void HookUpExtFutureSignals(WatcherType* watcher)
 	{
+		using ThisType = std::remove_reference_t<decltype(*this)>;
+
         // FutureWatcher signals to this->SLOT* connections.
         // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
         // and result ready signals on a canceled future."
-        // This group coressponds ~1:1 with KJob functionality.
+        // This group corresponds ~1:1 with KJob functionality.
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
 
+		// FutureWatcher progress signals -> this slots.
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
+		connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressTextChanged, this, &ThisType::SLOT_extfuture_progressTextChanged);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressValueChanged, this, &ThisType::SLOT_extfuture_progressValueChanged);
 
         // Signal-to-signal connections.
@@ -956,6 +979,9 @@ protected:
 
         // QObject forwarders.
         connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
+
+		// Speed update timer.
+		connect_or_die(m_speed_timer.data(), &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
@@ -1005,13 +1031,19 @@ protected:
         }
     }
 
-    /// @}
+
+	/// @} /// END KJob-related support functions.
 
     /// The ExtFuture<T>.
     ExtFutureT m_ext_future;
 
 	/// The watcher for the ExtFuture.
     ExtFutureWatcherT* m_ext_watcher;
+
+	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.
+	int64_t m_speed {0};
+	QSharedPointer<QTimer> m_speed_timer { nullptr };
+	qulonglong m_speed_last_processed_size {0};
 
 	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
 
