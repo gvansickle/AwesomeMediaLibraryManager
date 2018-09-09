@@ -589,7 +589,7 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 		}
 
         // If we know the total size, we can calculate time remaining.
-        if (m_is_total_size_known)
+		if (m_is_total_size_known)
 		{
             const qulonglong msecs_remaining = 1000 * (totalSize - processedSize) / value;
 
