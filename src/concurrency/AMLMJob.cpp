@@ -314,7 +314,7 @@ M_WARNING("I think we need 'already killed' reentrancy protection here or in kil
 /// @todo If left to run, loading a library leaves DirectoryScannerAMLMJob_0 laying around for some reason,
 /// which then segfaults here on AboutToShutdown().
 //    qDbo() << "SHUTDOWN, KILLING";
-    kill();
+	this->kill();
 //    qDbo() << "SHUTDOWN, KILLED";
 }
 

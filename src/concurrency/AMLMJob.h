@@ -329,6 +329,9 @@ public:
 
     /// @}
 
+	/// Returns the currently set progress unit for this AMLMJob.
+	KJob::Unit progressUnit() const;
+
     virtual qulonglong totalSize() const;
     virtual qulonglong processedSize() const;
 
@@ -533,7 +536,6 @@ protected:
     /// Sets the Unit which will be used for percent complete and total/processedSize calculations.
     /// Defaults to KJob::Unit::Bytes.
     void setProgressUnit(KJob::Unit prog_unit);
-    KJob::Unit progressUnit() const;
 
     virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
     virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
@@ -715,7 +717,6 @@ protected: //Q_SLOTS:
 		auto progress_units_processed_in_last_second = current_processed_size - m_speed_last_processed_size;
 		m_speed = progress_units_processed_in_last_second;
 		m_speed_last_processed_size = current_processed_size;
-		qDbo() << M_NAME_VAL(current_processed_size);
 		this->emitSpeed(m_speed);
 	}
 
@@ -872,6 +873,9 @@ protected:
         {
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
+
+		// Stop the speed timer if it's running.
+		m_speed_timer->stop();
 
         // Tell the Future and hence job to Cancel.
         m_ext_watcher->cancel();
