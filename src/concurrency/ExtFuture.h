@@ -963,7 +963,7 @@ public:
      * tap() overload for "streaming" ExtFutures.
      * Callback takes a reference to this, a begin index, and an end index:
      * @code
-	 *      void TapCallback(ExtFuture<T> ef, int begin, int end)
+	 *      void TapCallback(ExtFuture<T>& ef, int begin, int end)
      * @endcode
      */
     template<typename TapCallbackType,
@@ -972,8 +972,10 @@ public:
     {
 //        EnsureFWInstantiated();
 
-        ExtFuture<T>* ef_copy = new ExtFuture<T>;
+//        ExtFuture<T>* ef_copy = new ExtFuture<T>;
+		ExtFuture<T> ef_copy(*this);
 
+		// Create a new FutureWatcher<T>
 M_WARNING("THIS qApp as context is probably wrong.");
 		auto* watcher = new_self_destruct_futurewatcher(qApp);
 
@@ -984,14 +986,15 @@ M_WARNING("THIS qApp as context is probably wrong.");
             ;});
         connect_or_die(watcher, &QFutureWatcher<T>::finished, context, [=]() mutable {
             qDb() << "FUTURE FINISHED:" << *this;
-            *ef_copy = *this;
-            Q_ASSERT(ef_copy->isFinished());
-            qDb() << "FUTURE REALLY FINISHED" << *ef_copy;
+			/// @todo The idea here is to make sure any .then() after this .tap() gets called second.
+//            *ef_copy = *this;
+//            Q_ASSERT(ef_copy->isFinished());
+//            qDb() << "FUTURE REALLY FINISHED" << *ef_copy;
         });
 
         watcher->setFuture(*this);
 
-        return *ef_copy;
+		return ef_copy;
     }
 
     /**
@@ -1100,11 +1103,11 @@ protected:
         QFutureWatcher<T>* retval = new QFutureWatcher<T>(parent);
 
         connect_or_die(retval, &QFutureWatcherBase::finished, retval, [=](){
-            qDb() << "FINISHED";
+//            qDb() << "FINISHED";
             retval->deleteLater();
         });
         connect_or_die(retval, &QFutureWatcherBase::canceled, retval, [=](){
-            qDb() << "CANCELED";
+//            qDb() << "CANCELED";
             retval->deleteLater();
             ;});
 

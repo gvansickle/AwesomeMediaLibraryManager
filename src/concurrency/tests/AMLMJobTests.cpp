@@ -592,13 +592,13 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
 //    RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
-//    j->setAutoDelete(false);
+	j->setAutoDelete(true);
 
 	M_QSIGNALSPIES_SET(j);
 
-	connect_or_die(j, &KJob::finished, amlmApp, [&](KJob* kjob){
-		qDb() << "GOT SIGNAL FINISHED:" << &kjob;
-                });
+//	connect_or_die(j, &KJob::finished, amlmApp, [&](KJob* kjob){
+//		qDb() << "GOT SIGNAL FINISHED:" << &kjob;
+//                });
 
     ExtFuture<int> ef = j->get_extfuture();
 
@@ -606,14 +606,16 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
 //    EXPECT_FALSE(ef.isRunning()) << ef.state();
 
     // Job hasn't started yet (we never called start()), kill it.
+	GTEST_COUT_qDB << "CANCELING JOB";
     bool kill_succeeded = j->kill();
+	GTEST_COUT_qDB << "kill() returned";
 
     // j is now probably going to be deleteLater()'ed.
 
-    EXPECT_TRUE(kill_succeeded) << ef;
+	EXPECT_TRUE(kill_succeeded);// << ef;
     /// @note No notification to the Future since no watcher has been set up yet.
 //    EXPECT_TRUE(ef.isCanceled()) << ef;
-    EXPECT_EQ(j->error(), KJob::KilledJobError);
+//    EXPECT_EQ(j->error(), KJob::KilledJobError);
 
 //    j->start();
 
@@ -628,7 +630,13 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 0);
 
-	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+//	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+	{
+		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000);
+		EXPECT_TRUE(got_job_destroyed_signal.load());
+		EXPECT_TRUE(didnt_timeout);
+
+	}
 
     TC_EXIT();
 }
