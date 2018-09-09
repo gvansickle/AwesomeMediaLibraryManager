@@ -48,7 +48,6 @@ AMLM_QREG_CALLBACK([](){
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
     setObjectName(uniqueQObjectName());
-//    setUniqueId();
 
     qDbo() << M_NAME_VAL(this);
 
@@ -83,14 +82,6 @@ AMLMJob::~AMLMJob()
     // Doesn't cancel the job.
 //    qDbo() << "AMLMJob DELETED" << this;
 }
-
-//void AMLMJob::setSuccessFlag(bool success)
-//{
-//    /// Called from underlying ExtAsync thread.
-//M_WARNING("DOESN'T DO ANYTHING");
-//    qDbo() << "SETTING SUCCESS/FAIL:" << success;
-////    m_success = success;
-//}
 
 qulonglong AMLMJob::totalSize() const
 {
@@ -322,9 +313,9 @@ void AMLMJob::SLOT_onAboutToShutdown()
 M_WARNING("I think we need 'already killed' reentrancy protection here or in kill() itself");
 /// @todo If left to run, loading a library leaves DirectoryScannerAMLMJob_0 laying around for some reason,
 /// which then segfaults here on AboutToShutdown().
-    qDbo() << "SHUTDOWN, KILLING";
+//    qDbo() << "SHUTDOWN, KILLING";
     kill();
-    qDbo() << "SHUTDOWN, KILLED";
+//    qDbo() << "SHUTDOWN, KILLED";
 }
 
 

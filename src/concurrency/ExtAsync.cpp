@@ -23,6 +23,7 @@
 
 #include "ExtAsync.h"
 
+#include "ExtAsync_traits.h"
 #include <utils/DebugHelpers.h>
 
 

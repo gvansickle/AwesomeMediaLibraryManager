@@ -675,9 +675,9 @@ public:
 	ExtFuture(const ExtFuture<T>& other) = default;
 
     /// Copy construct from QFuture.
-    ExtFuture(QFuture<T>& f) : BASE_CLASS(f) {}
+	ExtFuture(QFuture<T>& f) : BASE_CLASS(f) {}
     /// Move construct from QFuture.
-    ExtFuture(QFuture<T>&& f) : BASE_CLASS(f) {}
+	ExtFuture(QFuture<T>&& f) : BASE_CLASS(std::forward<QFuture<T>>(f)) {}
 
     explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
         : BASE_CLASS::d(*p) {}
@@ -963,18 +963,19 @@ public:
      * tap() overload for "streaming" ExtFutures.
      * Callback takes a reference to this, a begin index, and an end index:
      * @code
-     *      void TapCallback(ExtFuture<T>& ef, int begin, int end)
+	 *      void TapCallback(ExtFuture<T> ef, int begin, int end)
      * @endcode
      */
     template<typename TapCallbackType,
-             REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&, int, int>)>
+			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&, int, int>)>
     ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
     {
 //        EnsureFWInstantiated();
 
         ExtFuture<T>* ef_copy = new ExtFuture<T>;
 
-        auto* watcher = new_self_destruct_futurewatcher(context);
+M_WARNING("THIS qApp as context is probably wrong.");
+		auto* watcher = new_self_destruct_futurewatcher(qApp);
 
         connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt,
                        context, [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) mutable {
@@ -1263,6 +1264,12 @@ ExtFutureState::State ExtFuture<T>::state() const
     ///	    {
     ///		    return d->state.load() & state;
     ///	    }
+	///
+	/// Also, QFutureInterface<T>::reportResult() does this:
+	///     QMutexLocker locker(mutex());
+	///     if (this->queryState(Canceled) || this->queryState(Finished)) {
+	///        return;
+	///     }
 
     const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
         {QFutureInterfaceBase::NoState, "NoState"},

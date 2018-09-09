@@ -284,15 +284,15 @@ static inline void name_qthread()
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
 	 *
-	 * @param function
+	 * @param function  An invocable with the signature "R function(void)".
 	 * @return
 	 */
-	template <typename F, typename R = ct::return_type_t<F>>
-		std::enable_if_t<!std::is_member_function_pointer_v<F>
-			&& !ct::has_void_return_v<F>
-        && ct::is_invocable_r_v<R, F, void>
-		, ExtFuture<R>>
-	run(F&& function)
+	template <typename F, typename R = ct::return_type_t<F>,
+		REQUIRES(!isExtFuture_v<R> // Return type is not ExtFuture<>
+			&& !ct::has_void_return_v<F> // Return type is not void.
+		&& ct::is_invocable_r_v<R, F, void> // F has signature R F(void).
+			  )>
+	ExtFuture<R> run(F&& function)
 	{
 		/// @note Used.
 		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(F&& function):" << __PRETTY_FUNCTION__;

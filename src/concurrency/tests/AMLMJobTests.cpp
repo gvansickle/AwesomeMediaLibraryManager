@@ -517,12 +517,9 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
 	/// to give the deleteLater() event-loop cycles to happen.  QSignalSpy() is broken
 	/// in this case for some reason, don't have the link handy.
 	GTEST_COUT_qDB << "Waiting for destroyed signal...";
-    TC_Wait(100);
+//    TC_Wait(100);
 	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
-//    EXPECT_TRUE(got_job_destroyed_signal);
-//    bool didnt_time_out = kjob_destroyed_spy.wait();
 	GTEST_COUT_qDB << "Done Waiting for destroyed signal.";
-//    EXPECT_TRUE(didnt_time_out);
 
     TC_EXIT();
 }
@@ -592,15 +589,15 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
 {
     TC_ENTER();
 
-    RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
+//    RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
 //    j->setAutoDelete(false);
 
 	M_QSIGNALSPIES_SET(j);
 
-    connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
-        qDb() << "GOT SIGNAL FINISHED:" << kjob;
+	connect_or_die(j, &KJob::finished, amlmApp, [&](KJob* kjob){
+		qDb() << "GOT SIGNAL FINISHED:" << &kjob;
                 });
 
     ExtFuture<int> ef = j->get_extfuture();

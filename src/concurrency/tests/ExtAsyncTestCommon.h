@@ -331,6 +331,9 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         SCOPED_TRACE("In async_int_generator callback");
         for(int i=0; i<num_iterations; i++)
         {
+			/// @todo Not sure if we want this to work or not.
+			EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
+
             // Sleep for a second.
             GTEST_COUT_qDB << "SLEEPING FOR 1 SEC";
 
@@ -346,7 +349,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         fixture->unregister_generator(tgb);
         delete tgb;
 
-        reportFinished(future);
+		reportFinished(future);
     };
 
     ReturnFutureT retval;

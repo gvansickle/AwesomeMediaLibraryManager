@@ -314,7 +314,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.")
-    ef.tap(QCoreApplication::instance(), [&](eftype& ef, int begin, int end) {
+	ef.tap(qApp, [&](eftype ef, int begin, int end) {
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
