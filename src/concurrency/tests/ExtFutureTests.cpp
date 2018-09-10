@@ -291,7 +291,7 @@ TEST_F(ExtFutureTest, Results)
  * Test "streaming" tap().
  * @todo Currently crashes.
  */
-TEST_F(ExtFutureTest, DISABLED_ExtFutureStreamingTap)
+TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {
     TC_ENTER();
 
@@ -314,7 +314,7 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureStreamingTap)
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.")
-	ef.tap(qApp, [&](eftype& ef, int begin, int end) {
+	auto f2 = ef.tap(qApp, [&](eftype& ef, int begin, int end) {
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
@@ -322,13 +322,13 @@ M_WARNING("TODO: This is still spinning when the test exits.")
             async_results_from_tap.push_back(ef.resultAt(i));
             num_tap_completions++;
         }
-    });
+	});
 
-    GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << ef;
+	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << f2;
 
-    ef.wait();
+	f2.wait();
 
-    GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << ef;
+	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << f2;
     async_results_from_get = ef.results();
 
     EXPECT_TRUE(ef.isFinished());

@@ -629,6 +629,8 @@ public:
 	 * @note Regarding the initial state: From a comment in QtCreator's runextensions.h::AsyncJob constructor:
 	 * "we need to report it as started even though it isn't yet, because someone might
 	 * call waitForFinished on the future, which does _not_ block if the future is not started"
+	 * QFuture<T>() defaults to Started | Canceled | Finished.  Not sure we want that, or why that is.
+
 	 * That code also does this:
 	 *
 	 * 		m_future_interface.setRunnable(this);
@@ -660,14 +662,12 @@ public:
      * @endcode
 	 *
      * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
-     *        if it isn't both started and running.
+	 *        if it isn't both Started and Running.
 	 */
     explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
                                                                                               | QFutureInterfaceBase::State::Running))
-        : QFuture<T>(new QFutureInterface<T>(initialState))
+		: QFuture<T>(new QFutureInterface<T>(initialState))
     {
-        //qDb() << "Passed state:" << initialState << "ExtFuture state:" << state();
-//        AMLM_ASSERT_EQ(initialState, QFutureInterfaceBase::State::Started);
 	}
 
     /// Default copy constructor.
@@ -965,6 +965,8 @@ public:
      * @code
 	 *      void TapCallback(ExtFuture<T>& ef, int begin, int end)
      * @endcode
+	 *
+	 * @returns An ExtFuture<T> which is made ready when this is completed.
      */
     template<typename TapCallbackType,
 			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&, int, int>)>
@@ -973,7 +975,7 @@ public:
 //        EnsureFWInstantiated();
 
 //        ExtFuture<T>* ef_copy = new ExtFuture<T>;
-		ExtFuture<T> ef_copy(*this);
+		ExtFuture<T> ef_copy;
 
 		// Create a new FutureWatcher<T>
 M_WARNING("THIS qApp as context is probably wrong.");
@@ -986,11 +988,16 @@ M_WARNING("THIS qApp as context is probably wrong.");
             ;});
         connect_or_die(watcher, &QFutureWatcher<T>::finished, context, [=]() mutable {
             qDb() << "FUTURE FINISHED:" << *this;
-			/// @todo The idea here is to make sure any .then() after this .tap() gets called second.
-//            *ef_copy = *this;
-//            Q_ASSERT(ef_copy->isFinished());
-//            qDb() << "FUTURE REALLY FINISHED" << *ef_copy;
-        });
+			// The idea here is to make sure any .then() after this .tap() gets called second.
+			ef_copy = *this;
+			Q_ASSERT(ef_copy.isFinished());
+		});
+		connect_or_die(watcher, &QFutureWatcher<T>::canceled, context, [=]() mutable {
+			qDb() << "FUTURE CANCELED:" << *this;
+			// The idea here is to make sure any .then() after this .tap() gets called second.
+			ef_copy = *this;
+			Q_ASSERT(ef_copy.isCanceled());
+		});
 
         watcher->setFuture(*this);
 

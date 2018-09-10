@@ -34,3 +34,4 @@ static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
 static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
 static_assert(!NestedExtFuture<ExtFuture<int>>, "");
 static_assert(!IsExtFuture<int>, "");
+
