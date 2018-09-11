@@ -932,7 +932,7 @@ public:
 	 */
     template <typename TapCallbackType, typename R = ct::return_type_t<TapCallbackType>,
               REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
-    ExtFuture<T>& tap(QObject* context, TapCallbackType&& tap_callback)
+    ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
 	{
 		static_assert(function_return_type_is_v<decltype(tap_callback), void>);
 
@@ -950,7 +950,7 @@ public:
      */
     template <typename TapCallbackType,
               REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
-    ExtFuture<T>& tap(TapCallbackType&& tap_callback)
+    ExtFuture<T> tap(TapCallbackType&& tap_callback)
 	{
         qIn() << "ENTER ExtFuture<T>& tap(F&& tap_callback)";
         auto retval = tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
@@ -978,7 +978,6 @@ public:
 		ExtFuture<T> ef_copy;
 
 		// Create a new FutureWatcher<T>
-M_WARNING("THIS qApp as context is probably wrong.");
 		auto* watcher = new_self_destruct_futurewatcher(context);
 
         connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt,
@@ -1004,8 +1003,8 @@ M_WARNING("THIS qApp as context is probably wrong.");
 		});
 
         watcher->setFuture(*this);
-/// @todo DOES THIS NEED TO BE A REF?
-		return ef_copy;
+
+        return ef_copy;
     }
 
     /**
