@@ -289,7 +289,7 @@ TEST_F(ExtFutureTest, Results)
  * Test "streaming" tap().
  * @todo Currently crashes.
  */
-TEST_F(ExtFutureTest, DISABLED_ExtFutureStreamingTap)
+TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {
     TC_ENTER();
 
@@ -311,7 +311,7 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureStreamingTap)
     GTEST_COUT_qDB << "Attaching tap and get()";
 
 //    async_results_from_get =
-M_WARNING("TODO: This is still spinning when the test exits.")
+M_WARNING("TODO: This is still spinning when the test exits.");
 	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](eftype& ef, int begin, int end) mutable {
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)

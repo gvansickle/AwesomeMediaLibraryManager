@@ -972,6 +972,7 @@ public:
 			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&, int, int>)>
     ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
     {
+#if 0
 //        EnsureFWInstantiated();
 
 //        ExtFuture<T>* ef_copy = new ExtFuture<T>;
@@ -1005,6 +1006,8 @@ public:
         watcher->setFuture(*this);
 
         return ef_copy;
+#endif
+        return StreamingTapHelper(context, std::forward<TapCallbackType>(tap_callback));
     }
 
     /**
@@ -1108,22 +1111,22 @@ protected:
 		}
 	}
 
-    QFutureWatcher<T>* new_self_destruct_futurewatcher(QObject* parent = nullptr)
-    {
-        QFutureWatcher<T>* retval = new QFutureWatcher<T>(parent);
-
-        connect_or_die(retval, &QFutureWatcherBase::finished, retval, [=](){
-//            qDb() << "FINISHED";
-            retval->deleteLater();
-        });
-        connect_or_die(retval, &QFutureWatcherBase::canceled, retval, [=](){
-//            qDb() << "CANCELED";
-            retval->deleteLater();
-            ;});
-		connect_destroyed_debug(retval);
-
-        return retval;
-    }
+//    QFutureWatcher<T>* new_self_destruct_futurewatcher(QObject* parent = nullptr)
+//    {
+//        QFutureWatcher<T>* retval = new QFutureWatcher<T>(parent);
+//
+//        connect_or_die(retval, &QFutureWatcherBase::finished, retval, [=](){
+////            qDb() << "FINISHED";
+//            retval->deleteLater();
+//        });
+//        connect_or_die(retval, &QFutureWatcherBase::canceled, retval, [=](){
+////            qDb() << "CANCELED";
+//            retval->deleteLater();
+//            ;});
+//		connect_destroyed_debug(retval);
+//
+//        return retval;
+//    }
 
 	/**
 	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
@@ -1188,12 +1191,15 @@ protected:
 	 * @param tap_callback   callable with signature void(*)(T)
 	 * @return
 	 */
-	template <typename F>
-		std::enable_if_t<ct::is_invocable_r_v<void, F, T>, ExtFuture<T>&>
-	TapHelper(QObject *guard_qobject, F&& tap_callback)
+	template <typename F,
+		REQUIRES(ct::is_invocable_r_v<void, F, T>)
+		>
+	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
+
+
 		auto watcher = new QFutureWatcher<T>();
-        connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		connect_or_die(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
 				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
 //					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
@@ -1203,6 +1209,34 @@ protected:
 			});
         watcher->setFuture(*this);
 		return *this;
+	}
+
+	/**
+	 * TapHelper which calls tap_callback whenever there's a new result ready.
+	 * @param guard_qobject
+	 * @param tap_callback   callable with signature void(*)(T)
+	 * @return
+	 */
+	template <typename F,
+		REQUIRES(ct::is_invocable_r_v<void, F, ExtFuture<T>&, int, int>)
+		>
+	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, F&& tap_callback)
+	{
+		ExtFuture<T> ef_copy;
+
+		auto watcher = new QFutureWatcher<T>();
+		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, [=]() mutable {
+			ef_copy = *this;
+			watcher->deleteLater();});
+		connect_or_die(watcher, &QFutureWatcherBase::resultsReadyAt, guard_qobject,
+				[=, tap_cb = std::decay_t<F>(tap_callback)](int begin, int end) mutable {
+//					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
+//						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
+					// Call the tap callback with the incoming result value.
+					tap_cb(*this, begin, end);
+			});
+        watcher->setFuture(*this);
+		return ef_copy;
 	}
 
 	template <typename Function>
