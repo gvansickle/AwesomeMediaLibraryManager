@@ -1227,6 +1227,7 @@ protected:
 		auto watcher = new QFutureWatcher<T>();
 		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, [=]() mutable {
 			ef_copy = *this;
+			ef_copy.reportFinished();
 			watcher->deleteLater();});
 		connect_or_die(watcher, &QFutureWatcherBase::resultsReadyAt, guard_qobject,
 				[=, tap_cb = std::decay_t<F>(tap_callback)](int begin, int end) mutable {
