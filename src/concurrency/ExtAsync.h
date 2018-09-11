@@ -361,10 +361,6 @@ static inline void name_qthread()
 
 };
 
-/// @todo Move this include.
-//#include "ExtAsyncTask.h"
-
-
 
 
 /**

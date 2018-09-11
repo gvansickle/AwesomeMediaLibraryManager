@@ -351,7 +351,7 @@ target_compile_definitions(${PROJECT_NAME}
 	"QT_DEPRECATED_WARNINGS=1"
 	"QT_NO_KEYWORDS=1"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"QFUTURE_TEST")
+	)
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
@@ -432,7 +432,7 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"QFUTURE_TEST")
+	)
 target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -468,7 +468,7 @@ target_compile_definitions(test_qtestamlmjobtests PRIVATE
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"QFUTURE_TEST")
+	)
 target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 set_target_properties(test_qtestamlmjobtests PROPERTIES

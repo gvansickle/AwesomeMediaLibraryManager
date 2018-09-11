@@ -934,7 +934,7 @@ public:
               REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
     ExtFuture<T>& tap(QObject* context, TapCallbackType&& tap_callback)
 	{
-		static_assert(function_return_type_is_v<decltype(tap_callback), void>, "");
+		static_assert(function_return_type_is_v<decltype(tap_callback), void>);
 
         return TapHelper(context, std::forward<TapCallbackType>(tap_callback)); // *m_tap_function);
 	}
@@ -979,7 +979,7 @@ public:
 
 		// Create a new FutureWatcher<T>
 M_WARNING("THIS qApp as context is probably wrong.");
-		auto* watcher = new_self_destruct_futurewatcher(qApp);
+		auto* watcher = new_self_destruct_futurewatcher(context);
 
         connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt,
                        context, [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) mutable {
@@ -990,17 +990,21 @@ M_WARNING("THIS qApp as context is probably wrong.");
             qDb() << "FUTURE FINISHED:" << *this;
 			// The idea here is to make sure any .then() after this .tap() gets called second.
 			ef_copy = *this;
+			ef_copy.reportFinished();
+			qDb() << "FUTURE FINISHED COPY:" << ef_copy;
 			Q_ASSERT(ef_copy.isFinished());
 		});
 		connect_or_die(watcher, &QFutureWatcher<T>::canceled, context, [=]() mutable {
 			qDb() << "FUTURE CANCELED:" << *this;
 			// The idea here is to make sure any .then() after this .tap() gets called second.
 			ef_copy = *this;
+			ef_copy.reportCanceled();
+			qDb() << "FUTURE CANCELED COPY:" << ef_copy;
 			Q_ASSERT(ef_copy.isCanceled());
 		});
 
         watcher->setFuture(*this);
-
+/// @todo DOES THIS NEED TO BE A REF?
 		return ef_copy;
     }
 
@@ -1117,6 +1121,7 @@ protected:
 //            qDb() << "CANCELED";
             retval->deleteLater();
             ;});
+		connect_destroyed_debug(retval);
 
         return retval;
     }
@@ -1190,7 +1195,7 @@ protected:
 	{
 		auto watcher = new QFutureWatcher<T>();
         connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
-		QObject::connect(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
+		connect_or_die(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
 				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
 //					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
 //						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();

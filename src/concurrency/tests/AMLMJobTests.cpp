@@ -155,7 +155,7 @@ void ImportProjectJob::start()
     // Starting QtConcurrent::run().
     QFuture<void> f = QtConcurrent::run(d, &ImportProjectJobPrivate::import, nullptr /*d->m_folder*/);
     /// @note State appears to be Running|Started here.
-    GTEST_COUT_qDB << "Running import job, returned future state:" << state(f);
+//    GTEST_COUT_qDB << "Running import job, returned future state:" << state(f);
     d->m_watcher->setFuture(f);
 }
 
