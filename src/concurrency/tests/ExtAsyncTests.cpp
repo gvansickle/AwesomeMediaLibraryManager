@@ -108,6 +108,7 @@ static ExtFuture<QString> delayed_string_func()
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 {
     SCOPED_TRACE("A");
+	TC_ENTER();
 
     std::atomic_int counter {0};
 
@@ -156,6 +157,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     EXPECT_TRUE(f.isFinished());
     GTEST_COUT << "RETURNING" << std::endl;
 
+	TC_EXIT();
 }
 
 

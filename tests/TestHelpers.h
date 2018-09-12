@@ -163,7 +163,7 @@ enum class GenericState
 #define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
 #define AMLMTEST_EXPECT_FALSE(arg) EXPECT_FALSE(arg)
 #define AMLMTEST_ASSERT_TRUE(arg) ASSERT_TRUE(arg)
-#define AMLMTEST_ASSERT_FALSE(arg) ASSERT_FALSE(!(arg))
+#define AMLMTEST_ASSERT_FALSE(arg) ASSERT_FALSE(arg)
 #define AMLMTEST_EXPECT_EQ(arg1, arg2) EXPECT_EQ(arg1, arg2)
 #define AMLMTEST_ASSERT_EQ(arg1, arg2) ASSERT_EQ(arg1, arg2)
 #define AMLMTEST_ASSERT_NE(arg1, arg2) ASSERT_NE(arg1, arg2)

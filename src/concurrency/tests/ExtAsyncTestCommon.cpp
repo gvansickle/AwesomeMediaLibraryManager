@@ -175,14 +175,15 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
 //    m_event_loop_object = nullptr;
 //    m_delete_spy = nullptr;
 
-#ifdef TEST_FWK_IS_GTEST
+#if defined(TEST_FWK_IS_GTEST)
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
     GTEST_COUT << "TearDown() for test_id: " << test_id << std::endl;
-#endif
+
 	AMLMTEST_EXPECT_NO_FATAL_FAILURE({
                                 expect_all_postconditions();
                             });
+#endif
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()

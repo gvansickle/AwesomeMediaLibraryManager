@@ -176,6 +176,8 @@ public:
 
     void unregister_generator(trackable_generator_base* generator);
 
+#if defined(TEST_FWK_IS_QTEST) // !TEST_FWK_IS_GTEST
+
 	/// QTest framework slots.
 private Q_SLOTS:
 
@@ -201,6 +203,8 @@ private Q_SLOTS:
 	void cleanupTestCase()
 	{ qDebug("alled after the last test function was executed."); }
 	/// @}
+#endif
+
 };
 
 
@@ -238,9 +242,9 @@ private Q_SLOTS:
     TC_DONE_WITH_STACK(); \
     test_func_exited = true; \
     test_func_stack_is_gone = true; \
-    ASSERT_TRUE(test_func_called); \
-    ASSERT_TRUE(test_func_exited); \
-    ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
+	AMLMTEST_ASSERT_TRUE(test_func_called); \
+	AMLMTEST_ASSERT_TRUE(test_func_exited); \
+	AMLMTEST_ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
     finished(static_test_id_string);
 
 /// @name Macros for making sure a KJob emits the expected signals and gets destroyed before the TEST_F() returns.
@@ -346,7 +350,6 @@ void reportResult(FutureT& f, ResultType t)
 
 /// @}
 
-#ifdef TEST_FWK_IS_GTEST
 /**
  * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
  * QTest::qSleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
@@ -363,11 +366,11 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     auto lambda = [=](ReturnFutureT future) {
         int current_val = start_val;
-        SCOPED_TRACE("In async_int_generator callback");
+        AMLMTEST_SCOPED_TRACE("In async_int_generator callback");
         for(int i=0; i<num_iterations; i++)
         {
 			/// @todo Not sure if we want this to work or not.
-			EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
+        	AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
 
             // Sleep for a second.
             GTEST_COUT_qDB << "SLEEPING FOR 1 SEC";
@@ -397,8 +400,8 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     GTEST_COUT_qDB << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
-    EXPECT_TRUE(retval.isStarted());
-    EXPECT_FALSE(retval.isFinished());
+    AMLMTEST_EXPECT_TRUE(retval.isStarted());
+    AMLMTEST_EXPECT_FALSE(retval.isFinished());
 
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
@@ -428,8 +431,6 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     return retval;
 }
-#endif // TEST_FWK_IS_GTEST
-
 
 
 #endif // EXTASYNCTESTCOMMON_H
