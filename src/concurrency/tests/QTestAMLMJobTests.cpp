@@ -29,42 +29,9 @@
 
 ///////
 
-//#define AMLMTEST_COUT qDb()
 
-//#define AMLMTEST_EXPECT_TRUE(arg) QVERIFY(arg)
-//#define AMLMTEST_EXPECT_FALSE(arg) QVERIFY(!(arg))
-//#define AMLMTEST_ASSERT_TRUE(arg) QVERIFY(arg)
-//#define AMLMTEST_ASSERT_FALSE(arg) QVERIFY(!(arg))
-//#define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
-//#define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
-//#define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
 
-/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
-#define M_QSIGNALSPIES_SET(kjobptr) \
-    QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
-    AMLMTEST_EXPECT_TRUE(kjob_finished_spy.isValid()); \
-    QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
-    AMLMTEST_EXPECT_TRUE(kjob_result_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy(kjobptr, SIGNAL(destroyed(QObject*))); \
-    AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy2(kjobptr, SIGNAL(destroyed())); \
-    AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy2.isValid());
 
-#define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
-    AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.wait() || kjob_destroyed_spy2.wait());
-
-/// Divisor for ms delays/timeouts in the tests.
-//constexpr long TC_MS_DIV = 10;
-
-//static inline void TC_Sleep(int ms)
-//{
-//    QTest::qSleep(ms / TC_MS_DIV);
-//}
-
-//static inline void TC_Wait(int ms)
-//{
-//    QTest::qWait(ms / TC_MS_DIV);
-//}
 
 /**
  * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
@@ -192,14 +159,16 @@ void tst_QString::DirScanCancelTestPAutodelete_data()
 {
     QTest::addColumn<bool>("autodelete");
 
+	QTest::newRow("KJob is not autodelete") << false;
     QTest::newRow("KJob is autodelete") << true;
-    QTest::newRow("KJob is not autodelete") << false;
 }
 
 //TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
 void tst_QString::DirScanCancelTestPAutodelete()
 {
 //	TC_ENTER();
+
+	QSKIP("");
 
     QFETCH(bool, autodelete);
 //    bool autodelete = GetParam();

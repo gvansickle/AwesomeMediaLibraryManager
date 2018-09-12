@@ -29,7 +29,7 @@
 #include <QString>
 
 // Google Test
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
 
 // Ours
@@ -39,8 +39,8 @@
 // Determine if we're being used in a QTest or Google Test build.
 #if defined(TEST_FWK_IS_GTEST)
 #warning "GTEST"
-#elif defined(TEST_FWK_IS_CTEST)
-#warning "CTEST"
+#elif defined(TEST_FWK_IS_QTEST)
+#warning "QTEST"
 #else
 #error "No test framework defined"
 #endif
@@ -66,6 +66,18 @@ inline void PrintTo(const ExtFuture<T> &ef, ::std::ostream *os)
 
 QT_END_NAMESPACE
 
+/// Divisor for ms delays/timeouts in the tests.
+constexpr long TC_MS_DIV = 10;
+
+static inline void TC_Sleep(int ms)
+{
+    QTest::qSleep(ms / TC_MS_DIV);
+}
+
+static inline void TC_Wait(int ms)
+{
+    QTest::qWait(ms / TC_MS_DIV);
+}
 
 /// Quick and dirty way to add information to the test log.
 #define GTEST_COUT_ORIGINAL std::cout << "[          ] [ INFO ] "
@@ -114,14 +126,46 @@ enum class GenericState
 
 ///
 
-#define AMLMTEST_COUT qDbo()
+#if defined(TEST_FWK_IS_QTEST)
+
+// QTest framework.
+
+#define SCOPED_TRACE(str) /* nothing */
+
+#define AMLMTEST_COUT qDb()
 
 #define AMLMTEST_EXPECT_TRUE(arg) QVERIFY(arg)
+#define AMLMTEST_EXPECT_FALSE(arg) QVERIFY(!(arg))
 #define AMLMTEST_ASSERT_TRUE(arg) QVERIFY(arg)
+#define AMLMTEST_ASSERT_FALSE(arg) QVERIFY(!(arg))
 #define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
 #define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
 #define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
 
+
+/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
+#define M_QSIGNALSPIES_SET(kjobptr) \
+	QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
+	AMLMTEST_EXPECT_TRUE(kjob_finished_spy.isValid()); \
+	QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
+	AMLMTEST_EXPECT_TRUE(kjob_result_spy.isValid()); \
+	QSignalSpy kjob_destroyed_spy(kjobptr, SIGNAL(destroyed(QObject*))); \
+	AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.isValid()); \
+	QSignalSpy kjob_destroyed_spy2(kjobptr, SIGNAL(destroyed())); \
+	AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy2.isValid());
+
+#define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
+	AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.wait() || kjob_destroyed_spy2.wait());
+
+#elif defined(TEST_FWK_IS_GTEST)
+#warning "GTEST"
+
+#define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
+
+
+#else
+#warning "TODO: IF NEITHER"
+#endif
 
 #endif /* TESTS_TESTHELPERS_H_ */
 

@@ -29,26 +29,19 @@
 #include <QSignalSpy>
 #include <QTest>
 
+#include <tests/TestHelpers.h>
+
 #ifdef TEST_FWK_IS_GTEST
-// Google Test
+// Google Test Framework
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
 
-#define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
+#elif defined(TEST_FWK_IS_QTEST)
+
+#warning "QTest"
 
 #else
-#define SCOPED_TRACE(str) /* nothing */
-
-#define AMLMTEST_COUT qDb()
-
-#define AMLMTEST_EXPECT_TRUE(arg) QVERIFY(arg)
-#define AMLMTEST_EXPECT_FALSE(arg) QVERIFY(!(arg))
-#define AMLMTEST_ASSERT_TRUE(arg) QVERIFY(arg)
-#define AMLMTEST_ASSERT_FALSE(arg) QVERIFY(!(arg))
-#define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
-#define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
-#define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
-
+#error "No test framework defined"
 #endif // TEST_FWK_IS_GTEST
 
 // Ours
@@ -178,19 +171,6 @@ public:
 
 #endif // TEST_FWK_IS_GTEST
 
-/// Divisor for ms delays/timeouts in the tests.
-constexpr long TC_MS_DIV = 10;
-
-static inline void TC_Sleep(int ms)
-{
-    QTest::qSleep(ms / TC_MS_DIV);
-}
-
-static inline void TC_Wait(int ms)
-{
-    QTest::qWait(ms / TC_MS_DIV);
-}
-
 
 /// @name Additional test helper macros.
 /// @{
@@ -235,14 +215,14 @@ static inline void TC_Wait(int ms)
 /// @{
 #define M_QSIGNALSPIES_SET(kjobptr) \
     QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
-    EXPECT_TRUE(kjob_finished_spy.isValid()); \
+	AMLMTEST_EXPECT_TRUE(kjob_finished_spy.isValid()); \
     QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
-    EXPECT_TRUE(kjob_result_spy.isValid()); \
+	AMLMTEST_EXPECT_TRUE(kjob_result_spy.isValid()); \
 	/*QSignalSpy kjob_destroyed_spy(static_cast<QObject*>(kjobptr), &QObject::destroyed);*/ \
 	/*EXPECT_TRUE(kjob_destroyed_spy.isValid());*/ \
 	/* Workaround for what otherwise should be doable with QSignalSpy() above, but isn't for some reason. */ \
 	std::atomic_bool got_job_destroyed_signal {false}; \
-	connect_or_die(kjobptr, &QObject::destroyed, amlmApp, [&](QObject* obj){ \
+	connect_or_die(kjobptr, &QObject::destroyed, qApp, [&](QObject* obj){ \
 		GTEST_COUT_qDB << "GOT DESTROYED SIGNAL:" << &obj; \
 		got_job_destroyed_signal = true; \
 	});
@@ -250,8 +230,8 @@ static inline void TC_Wait(int ms)
 #define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
 	{ \
 		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000); \
-		EXPECT_TRUE(got_job_destroyed_signal.load()); \
-		EXPECT_TRUE(didnt_timeout); \
+		AMLMTEST_EXPECT_TRUE(got_job_destroyed_signal.load()); \
+		AMLMTEST_EXPECT_TRUE(didnt_timeout); \
 	/* EXPECT_TRUE(kjob_destroyed_spy.wait()); */ \
 	}
 /// @}
