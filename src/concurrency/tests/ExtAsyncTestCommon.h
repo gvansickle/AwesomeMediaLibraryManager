@@ -29,9 +29,27 @@
 #include <QSignalSpy>
 #include <QTest>
 
+#ifdef TEST_FWK_IS_GTEST
 // Google Test
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
+
+#define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
+
+#else
+#define SCOPED_TRACE(str) /* nothing */
+
+#define AMLMTEST_COUT qDb()
+
+#define AMLMTEST_EXPECT_TRUE(arg) QVERIFY(arg)
+#define AMLMTEST_EXPECT_FALSE(arg) QVERIFY(!(arg))
+#define AMLMTEST_ASSERT_TRUE(arg) QVERIFY(arg)
+#define AMLMTEST_ASSERT_FALSE(arg) QVERIFY(!(arg))
+#define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
+#define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
+#define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
+
+#endif // TEST_FWK_IS_GTEST
 
 // Ours
 //#include <tests/TestHelpers.h>
@@ -98,6 +116,8 @@ protected:
     /// @}
 };
 
+
+#ifdef TEST_FWK_IS_GTEST
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  * @link https://github.com/google/googletest/blob/master/googletest/docs/faq.md#can-i-derive-a-test-fixture-from-another
@@ -155,6 +175,8 @@ public:
 
     void unregister_generator(trackable_generator_base* generator);
 };
+
+#endif // TEST_FWK_IS_GTEST
 
 /// Divisor for ms delays/timeouts in the tests.
 constexpr long TC_MS_DIV = 10;
@@ -292,7 +314,7 @@ void reportFinished(ExtFuture<T>& f)
 
     f.reportFinished();
 
-    EXPECT_TRUE(f.isFinished());
+	AMLMTEST_EXPECT_TRUE(f.isFinished());
 }
 
 template <typename FutureT, class ResultType>
@@ -312,6 +334,7 @@ void reportResult(FutureT& f, ResultType t)
 
 /// @}
 
+#ifdef TEST_FWK_IS_GTEST
 /**
  * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
  * QTest::qSleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
@@ -393,6 +416,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     return retval;
 }
+#endif // TEST_FWK_IS_GTEST
 
 
 

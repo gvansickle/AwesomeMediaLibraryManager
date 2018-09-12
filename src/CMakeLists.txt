@@ -432,6 +432,7 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"TEST_FWK_IS_GTEST=1"
 	)
 target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
@@ -449,7 +450,7 @@ target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
 
-if(FALSE)
+if(TRUE)
 ###
 ### Qt5 QTests
 ###
@@ -468,6 +469,7 @@ target_compile_definitions(test_qtestamlmjobtests PRIVATE
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+	"TEST_FWK_IS_QTEST=1"
 	)
 target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS})

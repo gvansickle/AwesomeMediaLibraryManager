@@ -54,6 +54,13 @@
 // TESTS
 //
 
+//TEST_F(ExtFutureTest, NestedQTestWrapper)
+//{
+//	// Trying out https://stackoverflow.com/questions/39032462/can-i-check-the-gtest-filter-from-inside-a-non-gtest-test
+////	tst_QString test;
+////	ASSERT_NE(QTEST_FAILED, QTest::exec(&test, 0, 0));
+//}
+
 TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
     TC_ENTER();

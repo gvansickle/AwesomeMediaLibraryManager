@@ -19,7 +19,7 @@
 
 /**
  * @file
- * An extended QFutureInterface<T> class.
+ * An extended QFuture<T> class.
  */
 
 #ifndef UTILS_CONCURRENCY_EXTFUTURE_H_
@@ -872,10 +872,10 @@ public:
 	 *
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
-	template <typename F, typename R = ct::return_type_t<F> >
-	auto then(QObject* context, F&& then_callback)
-		-> std::enable_if_t<!std::is_same_v<R, void> && !IsExtFuture<R>,
-		ExtFuture<R>>
+	template <typename F, typename R = ct::return_type_t<F>,
+			  REQUIRES(!std::is_same_v<R, void> && !IsExtFuture<R>)
+			  >
+	ExtFuture<R> then(QObject* context, F&& then_callback)
 	{
 		static_assert(!std::is_same_v<R, void> && !IsExtFuture<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
 		return ThenHelper(context, std::forward<F>(then_callback), *this);

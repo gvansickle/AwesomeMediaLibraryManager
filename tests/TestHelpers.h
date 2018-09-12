@@ -25,6 +25,7 @@
 
 // Qt5
 #include <Qt>
+#include <QTest>
 #include <QString>
 
 // Google Test
@@ -33,6 +34,16 @@
 
 // Ours
 #include <src/concurrency/ExtFuture.h>
+
+
+// Determine if we're being used in a QTest or Google Test build.
+#if defined(TEST_FWK_IS_GTEST)
+#warning "GTEST"
+#elif defined(TEST_FWK_IS_CTEST)
+#warning "CTEST"
+#else
+#error "No test framework defined"
+#endif
 
 
 QT_BEGIN_NAMESPACE
@@ -100,6 +111,17 @@ enum class GenericState
     STARTED,
     FINISHED
 };
+
+///
+
+#define AMLMTEST_COUT qDbo()
+
+#define AMLMTEST_EXPECT_TRUE(arg) QVERIFY(arg)
+#define AMLMTEST_ASSERT_TRUE(arg) QVERIFY(arg)
+#define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
+#define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
+#define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
+
 
 #endif /* TESTS_TESTHELPERS_H_ */
 
