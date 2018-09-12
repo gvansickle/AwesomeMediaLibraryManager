@@ -32,7 +32,7 @@ trackable_generator_base::trackable_generator_base(ExtAsyncTestsSuiteFixtureBase
 
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 {
-    SCOPED_TRACE("In delayed_string_func_1");
+	AMLMTEST_SCOPED_TRACE("In delayed_string_func_1");
 
     auto tgb = new trackable_generator_base(fixture);
     fixture->register_generator(tgb);
@@ -49,8 +49,9 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
         return QString("delayed_string_func_1() output");
     });
 
-    EXPECT_TRUE(retval.isStarted());
-    EXPECT_FALSE(retval.isFinished());
+	// QVERIFY() does a "return;", so we can't use it in a function returning a value.
+	Q_ASSERT(retval.isStarted());
+	Q_ASSERT(!retval.isFinished());
 
     GTEST_COUT_qDB << "delayed_string_func_1() returning future:" << retval.state();
 
@@ -69,7 +70,7 @@ std::string InterState::get_currently_running_test() const
 void InterState::starting(std::string func)
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    ASSERT_TRUE(m_currently_running_test.empty());
+	AMLMTEST_ASSERT_TRUE(m_currently_running_test.empty());
     m_currently_running_test = func;
 }
 
@@ -77,8 +78,8 @@ void InterState::finished(std::string func)
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
 //    m_finished_set.insert(func);
-    ASSERT_STREQ(m_currently_running_test.c_str(), func.c_str());
-    ASSERT_FALSE(m_currently_running_test.empty());
+	AMLMTEST_ASSERT_STREQ(m_currently_running_test.c_str(), func.c_str());
+	AMLMTEST_ASSERT_FALSE(m_currently_running_test.empty());
     m_currently_running_test.clear();
 }
 
@@ -91,7 +92,7 @@ bool InterState::is_test_currently_running() const
 void InterState::register_generator(trackable_generator_base *generator)
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    SCOPED_TRACE("register_generator");
+	AMLMTEST_SCOPED_TRACE("register_generator");
     GTEST_COUT_qDB << "REGISTERING GENERATOR:" << generator->get_generator_id();
     m_generator_stack.push_back(generator);
 }
@@ -99,7 +100,7 @@ void InterState::register_generator(trackable_generator_base *generator)
 void InterState::unregister_generator(trackable_generator_base *generator)
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
-    SCOPED_TRACE("unregister_generator");
+	AMLMTEST_SCOPED_TRACE("unregister_generator");
     GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
 
     // Only makes sense if a test case is running.
@@ -107,7 +108,7 @@ void InterState::unregister_generator(trackable_generator_base *generator)
 
     // Get the topmost generator.
     auto tgen = m_generator_stack.back();
-    EXPECT_STREQ(tgen->get_generator_id().c_str(), generator->get_generator_id().c_str()) << "Unregistering incorrect generator: Top: " << tgen->get_generator_id() << ", Unreg: " << generator->get_generator_id();
+	AMLMTEST_EXPECT_STREQ(tgen->get_generator_id().c_str(), generator->get_generator_id().c_str()); // << "Unregistering incorrect generator: Top: " << tgen->get_generator_id() << ", Unreg: " << generator->get_generator_id();
     m_generator_stack.pop_back();
 }
 
@@ -136,14 +137,15 @@ InterState ExtAsyncTestsSuiteFixtureBase::m_interstate;
 
 void ExtAsyncTestsSuiteFixtureBase::SetUp()
 {
-    SCOPED_TRACE("In SetUp()");
+	AMLMTEST_SCOPED_TRACE("In SetUp()");
+#ifdef TEST_FWK_IS_GTEST
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     GTEST_COUT << "SetUp() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
-    EXPECT_NO_FATAL_FAILURE({
+	AMLMTEST_EXPECT_NO_FATAL_FAILURE({
                                 expect_all_preconditions();
                             });
-
-    ASSERT_TRUE(QThread::currentThread()->eventDispatcher() != nullptr);
+#endif
+	AMLMTEST_ASSERT_TRUE(QThread::currentThread()->eventDispatcher() != nullptr);
 
     // Make sure an event loop is running, and set it up to be destructed.
     /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
@@ -155,35 +157,37 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 {
-    ASSERT_FALSE(m_interstate.is_test_currently_running()) << "A test was still running:" << get_currently_running_test();
-    EXPECT_TRUE(m_interstate.get_currently_running_test().empty()) << "A test was still running" << get_currently_running_test();
+	AMLMTEST_ASSERT_FALSE(m_interstate.is_test_currently_running()); // << "A test was still running:" << get_currently_running_test();
+	AMLMTEST_EXPECT_TRUE(m_interstate.get_currently_running_test().empty()); // << "A test was still running" << get_currently_running_test();
 }
 
 void ExtAsyncTestsSuiteFixtureBase::TearDown()
 {
-    SCOPED_TRACE("In TearDown()");
+	AMLMTEST_SCOPED_TRACE("In TearDown()");
 
     // Tear down the event loop.
     /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
 //    m_event_loop_object->deleteLater();
-    qDb() << "Waiting for event loop to be destroyed...";
+	AMLMTEST_COUT << "Waiting for event loop to be destroyed...";
 //    auto didnt_time_out = m_delete_spy->wait(1000*60);
 //    ASSERT_TRUE(didnt_time_out);
 //    delete m_delete_spy;
 //    m_event_loop_object = nullptr;
 //    m_delete_spy = nullptr;
 
+#ifdef TEST_FWK_IS_GTEST
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
     GTEST_COUT << "TearDown() for test_id: " << test_id << std::endl;
-    EXPECT_NO_FATAL_FAILURE({
+#endif
+	AMLMTEST_EXPECT_NO_FATAL_FAILURE({
                                 expect_all_postconditions();
                             });
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()
 {
-    EXPECT_TRUE(m_interstate.check_generators()) << "Generators not cleaned up";
+	AMLMTEST_EXPECT_TRUE(m_interstate.check_generators()); // << "Generators not cleaned up";
 }
 
 std::string ExtAsyncTestsSuiteFixtureBase::get_currently_running_test()
@@ -208,21 +212,25 @@ bool ExtAsyncTestsSuiteFixtureBase::check_generators()
 
 std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string_from_fixture()
 {
+#ifdef TEST_FWK_IS_GTEST
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
     auto test_id = testinfo->test_case_name() + std::string("_") + testinfo->name();
+#else
+	auto test_id = "TODO";
+#endif
     return test_id;
 }
 
 void ExtAsyncTestsSuiteFixtureBase::register_generator(trackable_generator_base *generator)
 {
-    ASSERT_TRUE(m_interstate.is_test_currently_running()) << "No test was running";
+	AMLMTEST_ASSERT_TRUE(m_interstate.is_test_currently_running()); // << "No test was running";
     m_interstate.register_generator(generator);
 
 }
 
 void ExtAsyncTestsSuiteFixtureBase::unregister_generator(trackable_generator_base *generator)
 {
-    ASSERT_TRUE(m_interstate.is_test_currently_running()) << "No test was running";
+	AMLMTEST_ASSERT_TRUE(m_interstate.is_test_currently_running()); // << "No test was running";
     m_interstate.unregister_generator(generator);
 }
 

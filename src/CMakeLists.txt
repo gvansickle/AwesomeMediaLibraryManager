@@ -457,8 +457,10 @@ if(TRUE)
 #set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
 add_executable(test_qtestamlmjobtests "") #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
 target_sources(test_qtestamlmjobtests
-	PUBLIC
+	PRIVATE
 	    concurrency/tests/QTestAMLMJobTests.cpp
+	    concurrency/tests/ExtAsyncTestCommon.cpp
+	    concurrency/tests/ExtAsyncTestCommon.h
 		#${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
 		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${amlm_settings_SRCS}

@@ -26,13 +26,6 @@
 
 #include <concurrency/DirectoryScanJob.h>
 
-
-///////
-
-
-
-
-
 /**
  * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
  * QTest::qSleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
@@ -118,7 +111,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncT
 //////////
 
 
-class tst_QString: public QObject
+class tst_QString: public ExtAsyncTestsSuiteFixtureBase //public QObject
 {
     Q_OBJECT
 
@@ -246,7 +239,7 @@ void tst_QString::DirScanCancelTestPAutodelete()
 //TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 void tst_QString::ExtFutureStreamingTap()
 {
-//	TC_ENTER();
+	TC_ENTER();
 
 	static std::atomic_int num_tap_completions {0};
 

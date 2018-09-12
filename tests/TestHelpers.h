@@ -38,11 +38,15 @@
 
 // Determine if we're being used in a QTest or Google Test build.
 #if defined(TEST_FWK_IS_GTEST)
-#warning "GTEST"
+	M_WARNING("Building for Google Test framework");
 #elif defined(TEST_FWK_IS_QTEST)
-#warning "QTEST"
+	M_WARNING("Building for QTest framework");
 #else
 #error "No test framework defined"
+#endif
+
+#if defined(TEST_FWK_IS_QTEST) && defined(TEST_FWK_IS_GTEST)
+#error "BOTH TEST FRAMEWORKS DEFINED"
 #endif
 
 
@@ -130,9 +134,11 @@ enum class GenericState
 
 // QTest framework.
 
-#define SCOPED_TRACE(str) /* nothing */
+#define AMLMTEST_SCOPED_TRACE(str) /* nothing */
 
 #define AMLMTEST_COUT qDb()
+
+/// @todo QVERIFY() does a "return;", so we can't use it in a function returning a value.
 
 #define AMLMTEST_EXPECT_TRUE(arg) QVERIFY(arg)
 #define AMLMTEST_EXPECT_FALSE(arg) QVERIFY(!(arg))
@@ -141,30 +147,33 @@ enum class GenericState
 #define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
 #define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
 #define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
+#define AMLMTEST_ASSERT_STREQ(actual, expected) QCOMPARE(actual, expected)
+#define AMLMTEST_EXPECT_STREQ(actual, expected) QCOMPARE(actual, expected)
 
-
-/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
-#define M_QSIGNALSPIES_SET(kjobptr) \
-	QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
-	AMLMTEST_EXPECT_TRUE(kjob_finished_spy.isValid()); \
-	QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
-	AMLMTEST_EXPECT_TRUE(kjob_result_spy.isValid()); \
-	QSignalSpy kjob_destroyed_spy(kjobptr, SIGNAL(destroyed(QObject*))); \
-	AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.isValid()); \
-	QSignalSpy kjob_destroyed_spy2(kjobptr, SIGNAL(destroyed())); \
-	AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy2.isValid());
-
-#define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
-	AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.wait() || kjob_destroyed_spy2.wait());
+#define AMLMTEST_EXPECT_NO_FATAL_FAILURE(...) __VA_ARGS__
 
 #elif defined(TEST_FWK_IS_GTEST)
-#warning "GTEST"
+
+// Google Test Framework
+
+#define AMLMTEST_SCOPED_TRACE(str) SCOPED_TRACE(str)
+
+#define AMLMTEST_COUT qDb()
 
 #define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
+#define AMLMTEST_EXPECT_FALSE(arg) EXPECT_FALSE(arg)
+#define AMLMTEST_ASSERT_TRUE(arg) ASSERT_TRUE(arg)
+#define AMLMTEST_ASSERT_FALSE(arg) ASSERT_FALSE(!(arg))
+#define AMLMTEST_EXPECT_EQ(arg1, arg2) EXPECT_EQ(arg1, arg2)
+#define AMLMTEST_ASSERT_EQ(arg1, arg2) ASSERT_EQ(arg1, arg2)
+#define AMLMTEST_ASSERT_NE(arg1, arg2) ASSERT_NE(arg1, arg2)
+#define AMLMTEST_ASSERT_STREQ(actual, expected) ASSERT_STREQ(actual, expected)
+#define AMLMTEST_EXPECT_STREQ(actual, expected) EXPECT_STREQ(actual, expected)
 
+#define AMLMTEST_EXPECT_NO_FATAL_FAILURE(...) EXPECT_NO_FATAL_FAILURE(__VA_ARGS__)
 
 #else
-#warning "TODO: IF NEITHER"
+#error "NO TEST FRAMEWORK"
 #endif
 
 #endif /* TESTS_TESTHELPERS_H_ */

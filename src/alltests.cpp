@@ -71,6 +71,8 @@ class ThrowListener : public testing::EmptyTestEventListener
 };
 
 ///
+/// main() for Google Test Framework tests.
+///
 /// @note main() mods to support Qt5 threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
 ///
 int main(int argc, char *argv[])

@@ -32,14 +32,13 @@
 #include <tests/TestHelpers.h>
 
 #ifdef TEST_FWK_IS_GTEST
+	M_WARNING("Building for Google Test framework");
 // Google Test Framework
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
 
 #elif defined(TEST_FWK_IS_QTEST)
-
-#warning "QTest"
-
+	M_WARNING("Building for QTest framework");
 #else
 #error "No test framework defined"
 #endif // TEST_FWK_IS_GTEST
@@ -111,19 +110,28 @@ protected:
 
 
 #ifdef TEST_FWK_IS_GTEST
+using AMLMTEST_BASE_CLASS = ::testing::Test;
+#define AMLMTEST_BASE_CLASS_VIRT /**/
+#define AMLMTEST_BASE_CLASS_OVERRIDE override
+#elif defined(TEST_FWK_IS_QTEST) // !TEST_FWK_IS_GTEST
+using AMLMTEST_BASE_CLASS = QObject;
+#define AMLMTEST_BASE_CLASS_VIRT virtual
+#define AMLMTEST_BASE_CLASS_OVERRIDE /**/
+#endif
+
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  * @link https://github.com/google/googletest/blob/master/googletest/docs/faq.md#can-i-derive-a-test-fixture-from-another
  */
-class ExtAsyncTestsSuiteFixtureBase : public ::testing::Test
+class ExtAsyncTestsSuiteFixtureBase : public AMLMTEST_BASE_CLASS //::testing::Test
 {
 
 protected:
 
-    void SetUp() override;
+	AMLMTEST_BASE_CLASS_VIRT void SetUp() AMLMTEST_BASE_CLASS_OVERRIDE;
     virtual void expect_all_preconditions();
 
-    void TearDown() override;
+	AMLMTEST_BASE_CLASS_VIRT void TearDown() AMLMTEST_BASE_CLASS_OVERRIDE;
     virtual void expect_all_postconditions();
 
     // Objects declared here can be used by all tests in this Fixture.  However,
@@ -167,9 +175,33 @@ public:
     void register_generator(trackable_generator_base* generator);
 
     void unregister_generator(trackable_generator_base* generator);
-};
 
-#endif // TEST_FWK_IS_GTEST
+	/// QTest framework slots.
+private Q_SLOTS:
+
+	/// @name QTest framework slots.
+	/// @{
+	void initTestCase()
+	{ qDebug("called before everything else"); }
+
+	/// Gtest equiv == protected SetUp();
+	void init()
+	{
+		qDebug("called before each test function is executed");
+		SetUp();
+	}
+
+	/// GTest equiv == protected TearDown();
+	void cleanup()
+	{
+		qDebug("called after every test function");
+		TearDown();
+	}
+
+	void cleanupTestCase()
+	{ qDebug("alled after the last test function was executed."); }
+	/// @}
+};
 
 
 /// @name Additional test helper macros.
@@ -189,10 +221,10 @@ public:
 
 
 #define TC_EXPECT_THIS_TC() \
-    EXPECT_EQ(get_currently_running_test(), static_test_id_string);
+	AMLMTEST_EXPECT_EQ(get_currently_running_test(), static_test_id_string);
 
 #define TC_EXPECT_NOT_EXIT() \
-    EXPECT_TRUE(test_func_called) << static_test_id_string; \
+	AMLMTEST_EXPECT_TRUE(test_func_called) << static_test_id_string; \
     EXPECT_FALSE(test_func_exited) << static_test_id_string;
 
 #define TC_EXPECT_STACK() \
@@ -258,7 +290,7 @@ QFuture<T> make_finished_QFuture(const T &val)
 template <typename T>
 QFuture<T> make_startedNotCanceled_QFuture()
 {
-    SCOPED_TRACE("");
+	AMLMTEST_SCOPED_TRACE("");
     QFutureInterface<T> fi;
     fi.reportStarted();
     EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
@@ -271,7 +303,7 @@ QFuture<T> make_startedNotCanceled_QFuture()
 template<class FutureT, class T>
 FutureT make_default_future()
 {
-    SCOPED_TRACE("make_default_future");
+	AMLMTEST_SCOPED_TRACE("make_default_future");
     QFutureInterface<T> fi;
     fi.reportStarted();
     EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
@@ -281,7 +313,7 @@ FutureT make_default_future()
 template <typename T>
 void reportFinished(QFuture<T>& f)
 {
-    SCOPED_TRACE("reportFinished(QFuture<T>& f)");
+	AMLMTEST_SCOPED_TRACE("reportFinished(QFuture<T>& f)");
     f.d.reportFinished();
     // May have been already canceled by the caller.
     EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
@@ -290,7 +322,7 @@ void reportFinished(QFuture<T>& f)
 template <typename T>
 void reportFinished(ExtFuture<T>& f)
 {
-    SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
+	AMLMTEST_SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
 
     f.reportFinished();
 
@@ -300,7 +332,7 @@ void reportFinished(ExtFuture<T>& f)
 template <typename FutureT, class ResultType>
 void reportResult(FutureT& f, ResultType t)
 {
-    SCOPED_TRACE("reportResult");
+	AMLMTEST_SCOPED_TRACE("reportResult");
 
     if constexpr (isExtFuture_v<FutureT>)
     {
@@ -324,7 +356,7 @@ void reportResult(FutureT& f, ResultType t)
 template<class ReturnFutureT>
 ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase *fixture)
 {
-    SCOPED_TRACE("In async_int_generator");
+	AMLMTEST_SCOPED_TRACE("In async_int_generator");
 
     auto tgb = new trackable_generator_base(fixture);
     fixture->register_generator(tgb);
