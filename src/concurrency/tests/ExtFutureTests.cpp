@@ -446,11 +446,12 @@ M_WARNING("First reports Started|Finished, second reports Running|Started");
 //	the_tap_finished_watcher.setFuture(tap_finished_future);
 
 	AMLMTEST_COUT << "STARTING WAIT ON the_future results" << ExtFutureState::state(the_future); // << ExtFutureState::state(tap_finished_future);
-//	QTest::qWait(1000);
+	QTest::qWait(1000);
 	QList<int> the_results = the_future.results();
 	AMLMTEST_COUT << "WAIT ON the_future DONE" << ExtFutureState::state(the_future); // << ExtFutureState::state(tap_finished_future);
 
 	AMLMTEST_ASSERT_EQ(the_results.at(0), 8675309);
+	AMLMTEST_ASSERT_EQ(the_results.at(1), 8675310);
 
 //	{
 //		AMLMTEST_COUT << "STARTING WAIT ON tap_finished_future:" << ExtFutureState::state(tap_finished_future);

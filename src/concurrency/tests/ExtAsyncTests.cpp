@@ -115,7 +115,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
     GTEST_COUT << "CALLING ::RUN" << std::endl;
 
     /// @note When Qt says the returned QFuture can't be canceled, they mean it.
-    /// If you do, things get totally screwed up and thiw will segfault.
+	/// If you do, things get totally screwed up and this will segfault.
     QFuture<int> f = QtConcurrent::run([&]() mutable -> int {
         GTEST_COUT << "Entered callback\n";
         TC_Sleep(1000);
@@ -126,21 +126,26 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
         return 5;
         ;});
 
-    GTEST_COUT << "CALLED ::RUN" << std::endl;
+	/// @note QFuture<> f's state here is Running|Started.  EXPECT is here to see if Running is always the case,
+	/// I don't think it necessarily is.
+	EXPECT_TRUE(f.isRunning());
+	AMLMTEST_COUT << "CALLED ::RUN, FUTURE STATE:" << ExtFutureState::state(f);
 
     EXPECT_TRUE(f.isStarted());
     TC_Sleep(500);
     EXPECT_TRUE(f.isRunning()); // In the first TC_Sleep(1000);
     TC_Sleep(1000);
-    GTEST_COUT << "CHECKING COUNTER FOR 1" << std::endl; // In the second TC_Sleep(1000);
+	AMLMTEST_COUT << "CHECKING COUNTER FOR 1";// << std::endl; // In the second TC_Sleep(1000);
     EXPECT_EQ(counter, 1);
 
 //    GTEST_COUT << "CANCELING" << std::endl; // Can't cancel a QtConcurrent::run() future.  Should be cancelling before counter gets to 2.
 //    f.cancel();
 //    EXPECT_TRUE(f.isCanceled()) << "QFuture wasn't canceled";
-    GTEST_COUT << "WAITING FOR FINISHED" << std::endl;
+	AMLMTEST_COUT << "WAITING FOR FINISHED";
     f.waitForFinished();
-    GTEST_COUT << "QFUTURE FINISHED" << std::endl;
+	/// @note This QFuture<>, which was returned by QtConcurrent::run(), is Started|Finished here.
+	/// So, that's the natural state of a successfully finished QFuture<>.
+	AMLMTEST_COUT << "QFUTURE FINISHED, state:" << ExtFutureState::state(f);
     EXPECT_FALSE(f.isCanceled());
     EXPECT_TRUE(f.isFinished());
 
@@ -160,6 +165,39 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 	TC_EXIT();
 }
 
+TEST_F(ExtAsyncTestsSuiteFixture, QFutureSanityGetFinishedWhenAlreadyCanceled)
+{
+	TC_ENTER();
+
+	std::atomic_int finished_counter {0};
+
+	QFuture<int> f = make_finished_QFuture(5);
+
+	AMLMTEST_EXPECT_TRUE(f.isStarted()) << state(f);
+	AMLMTEST_EXPECT_TRUE(f.isFinished());
+	AMLMTEST_EXPECT_FALSE(f.isCanceled());
+
+	// Hook up a watcher and make sure we get the finished signal.
+	QFutureWatcher<int> fw(qApp);
+
+	connect_or_die(&fw, &QFutureWatcher<int>::finished, qApp, [&](){
+		qDb() << "Got Finished signal";
+		finished_counter++;
+	});
+
+	// Now we set the future, and we should immediately get the finsihed signal.
+	fw.setFuture(f);
+
+	// Spin the event loop for a bit to allow the signal to actually propagate.
+	TC_Wait(1000);
+
+	AMLMTEST_ASSERT_EQ(finished_counter, 1);
+
+	// Block on the future.  Should be finished, so shouldn't block.
+	f.waitForFinished();
+
+	TC_EXIT();
+}
 
 
 template <typename FutureTypeT>

@@ -278,14 +278,19 @@ private Q_SLOTS:
 /// @{
 
 /**
- * Helper to which returns a finished QFuture<T>.
+ * Helper to which returns a finished (Started|Finished) QFuture<T>.
  */
 template <typename T>
 QFuture<T> make_finished_QFuture(const T &val)
 {
-   QFutureInterface<T> fi;
-   fi.reportFinished(&val);
-   return QFuture<T>(&fi);
+	/// @note QFuture<>'s returned by QtConcurrent::run() are Started|Finished when the
+	/// future is finished.
+	/// So, that seems to be the natural state of a successfully finished QFuture<>,
+	/// and we copy that here.
+	QFutureInterface<T> fi;
+	fi.reportStarted();
+	fi.reportFinished(&val);
+	return QFuture<T>(&fi);
 }
 
 /**
