@@ -384,10 +384,11 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
         // We're done.
         GTEST_COUT_qDB << "REPORTING FINISHED";
+		reportFinished(future);
+
         fixture->unregister_generator(tgb);
         delete tgb;
 
-		reportFinished(future);
     };
 
     ReturnFutureT retval;
@@ -401,6 +402,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     GTEST_COUT_qDB << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
     AMLMTEST_EXPECT_TRUE(retval.isStarted());
+	AMLMTEST_EXPECT_FALSE(retval.isCanceled());
     AMLMTEST_EXPECT_FALSE(retval.isFinished());
 
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
@@ -416,7 +418,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     GTEST_COUT_qDB << "RETURNING future:" << ExtFutureState::state(retval);
 
-    EXPECT_TRUE(retval.isStarted());
+	AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
 //    {
 //        // QFuture starts out Start|Canceled|Finished.

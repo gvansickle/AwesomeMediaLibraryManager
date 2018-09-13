@@ -969,7 +969,7 @@ public:
 	 * @returns An ExtFuture<T> which is made ready when this is completed.
      */
     template<typename TapCallbackType,
-			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&, int, int>)>
+			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>, int, int>)>
     ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
     {
 #if 0
@@ -1016,8 +1016,8 @@ public:
      * @note Unlike other .tap()s, the callback is called immediately, not when the ExtFuture has finished.
      */
     template<typename TapCallbackType,
-             REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&>)>
-    ExtFuture<T>& test_tap(TapCallbackType&& tap_callback)
+			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&>)>
+	ExtFuture<T> test_tap(TapCallbackType&& tap_callback)
     {
         tap_callback(*this);
         return *this;
@@ -1029,7 +1029,7 @@ public:
 	 *
 	 * @return Reference to this.
 	 */
-	ExtFuture<T>& tap()
+	ExtFuture<T> tap()
 	{
 		return *this;
 	}
@@ -1224,12 +1224,17 @@ protected:
 	{
 		ExtFuture<T> ef_copy;
 
-		auto watcher = new QFutureWatcher<T>();
-		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, [=]() mutable {
+		using WatcherType = QFutureWatcher<T>;
+		using WatcherTypeBase = QFutureWatcherBase;
+
+		auto watcher = new WatcherType();
+		connect_or_die(watcher, &WatcherTypeBase::finished, watcher, [=]() mutable {
+			qDb() << "FINISHED";
 			ef_copy = *this;
 			ef_copy.reportFinished();
-			watcher->deleteLater();});
-		connect_or_die(watcher, &QFutureWatcherBase::resultsReadyAt, guard_qobject,
+			watcher->deleteLater();
+		});
+		connect_or_die(watcher, &WatcherTypeBase::resultsReadyAt, guard_qobject,
 				[=, tap_cb = std::decay_t<F>(tap_callback)](int begin, int end) mutable {
 //					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
 //						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();

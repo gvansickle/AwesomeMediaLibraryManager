@@ -292,6 +292,154 @@ TEST_F(ExtFutureTest, Results)
     TC_EXIT();
 }
 
+
+template <class FutureType, class TestFixtureType>
+QList<int> streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
+{
+	AMLMTEST_SCOPED_TRACE("IN STT");
+
+	static std::atomic_int num_tap_completions {0};
+	QList<int> async_results_from_tap, async_results_from_get;
+
+
+	FutureType ef = async_int_generator<FutureType>(startval, iterations, fixture);
+
+	GTEST_COUT_qDB << "Starting ef state:" << ExtFutureState::state(ef);
+	EXPECT_TRUE(ef.isStarted());
+	EXPECT_FALSE(ef.isCanceled());
+	EXPECT_FALSE(ef.isFinished());
+
+	QList<int> expected_results {1,2,3,4,5,6};
+
+
+	GTEST_COUT_qDB << "Attaching tap and get()";
+
+//    async_results_from_get =
+M_WARNING("TODO: This is still spinning when the test exits.");
+	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](FutureType ef, int begin, int end) mutable {
+			GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
+		for(int i = begin; i<end; i++)
+		{
+			GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
+			async_results_from_tap.push_back(ef.resultAt(i));
+			num_tap_completions++;
+		}
+	});
+
+	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << f2;
+
+	f2.wait();
+
+	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << f2;
+	async_results_from_get = ef.results();
+
+	EXPECT_TRUE(ef.isFinished());
+	EXPECT_EQ(num_tap_completions, 6);
+
+	// .get() above should block.
+	EXPECT_TRUE(ef.isFinished());
+
+	// This shouldn't do anything, should already be finished.
+	ef.waitForFinished();
+
+	GTEST_COUT_qDB << "Post .tap().get(), extfuture:" << ExtFutureState::state(ef);
+
+	EXPECT_TRUE(ef.isStarted());
+	EXPECT_FALSE(ef.isCanceled());
+	EXPECT_TRUE(ef.isFinished());
+
+	EXPECT_EQ(async_results_from_get.size(), 6);
+	EXPECT_EQ(async_results_from_get, expected_results);
+	EXPECT_EQ(async_results_from_tap.size(), 6);
+	EXPECT_EQ(async_results_from_tap, expected_results);
+
+	EXPECT_TRUE(ef.isFinished());
+}
+
+/**
+ * Test1 "streaming" tap().
+ * @todo Currently crashes.
+ */
+TEST_F(ExtFutureTest, ExtFutureStreamingTap1)
+{
+	TC_ENTER();
+
+	streaming_tap_test<ExtFuture<int>>(1, 6, this);
+
+	TC_EXIT();
+}
+
+TEST_F(ExtFutureTest, QFutureBasicStreamingTap)
+{
+	TC_ENTER();
+
+	QFuture<int> the_future = make_default_future<QFuture<int>, int>();
+	QFuture<int> tap_finished_future = make_default_future<QFuture<int>, int>();
+	QFutureWatcher<int> the_watcher(qApp);
+//	QFutureSynchronizer tap_future_sync(tap_finished_future);
+	QFutureWatcher<int> the_tap_finished_watcher(qApp);
+
+	auto dontcare_f2 = QtConcurrent::run([=](QFutureInterface<int>& future_iface){
+		AMLMTEST_COUT << "Reporting started, was:" << ExtFutureState::state(future_iface);
+		future_iface.reportStarted();
+		AMLMTEST_COUT << "Reported starting, is:" << ExtFutureState::state(future_iface);
+		AMLMTEST_COUT << "Waiting...";
+		TC_Sleep(1000);
+		AMLMTEST_COUT << "Waiting done, sending value to future...";
+		future_iface.reportResult(8675309);
+		future_iface.reportFinished();
+		;}, std::ref(the_future.d));
+
+	/// Tap
+	connect_or_die(&the_watcher, &QFutureWatcher<int>::resultsReadyAt, qApp, [=, &the_watcher](int begin, int end) mutable {
+		// The tap.
+		qDb() << "Tap Results:" << begin << end;
+		for(auto i = begin; i < end; ++i)
+		{
+			qDb() << "Result" << i << ":" << the_watcher.future().resultAt(i);
+		}
+		;});
+	connect_or_die(&the_watcher, &QFutureWatcher<int>::finished, qApp, [=, &the_watcher]() mutable {
+		qDb() << "tap finished";
+		tap_finished_future = the_watcher.future();
+		tap_finished_future.d.reportFinished();
+		run_in_event_loop(qApp, [=](){ tap_finished_future.d.reportFinished(); return 2; });
+		;});
+	the_watcher.setFuture(the_future);
+
+	connect_or_die(&the_tap_finished_watcher, &QFutureWatcher<int>::finished, qApp, [=](){
+		qDb() << "tap watcher finished";
+		;});
+	the_tap_finished_watcher.setFuture(tap_finished_future);
+
+	AMLMTEST_COUT << "STARTING WAIT ON the_future" << ExtFutureState::state(the_future) << ExtFutureState::state(tap_finished_future);
+	int the_result = the_future.result();
+	AMLMTEST_COUT << "WAIT ON the_future DONE" << ExtFutureState::state(the_future) << ExtFutureState::state(tap_finished_future);
+
+	AMLMTEST_ASSERT_EQ(the_result, 8675309);
+
+	{
+		AMLMTEST_COUT << "STARTING WAIT ON tap_finished_future:" << ExtFutureState::state(tap_finished_future);
+//		the_tap_finished_watcher.waitForFinished();
+		QEventLoop loop(qApp);
+		connect_or_die(&the_tap_finished_watcher, &QFutureWatcherBase::finished, &loop, &QEventLoop::quit);
+//		AMLMTEST_ASSERT_FALSE(tap_future_sync.cancelOnWait());
+//		tap_future_sync.waitForFinished();
+//		bool didnt_time_out = QTest::qWaitFor([&](){return tap_finished_future.isFinished();}, 5000);
+		loop.exec();
+		AMLMTEST_COUT << "WAIT ON tap_finished_future DONE" << ExtFutureState::state(tap_finished_future);
+//		AMLMTEST_ASSERT_TRUE(didnt_time_out);
+	}
+
+
+//	the_future.waitForFinished();
+
+	AMLMTEST_ASSERT_TRUE(the_future.isFinished());
+	AMLMTEST_ASSERT_TRUE(tap_finished_future.isFinished());
+
+	TC_EXIT();
+}
+
 /**
  * Test "streaming" tap().
  * @todo Currently crashes.
@@ -300,26 +448,32 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {
     TC_ENTER();
 
-    static std::atomic_int num_tap_completions {0};
+	using eftype = ExtFuture<int>;
 
-    using eftype = ExtFuture<int>;
+    static std::atomic_int num_tap_completions {0};
+	QList<int> async_results_from_tap, async_results_from_get;
+
 
     QList<int> expected_results {1,2,3,4,5,6};
     eftype ef = async_int_generator<eftype>(1, 6, this);
 
     GTEST_COUT_qDB << "Starting ef state:" << ef.state();
-
     ASSERT_TRUE(ef.isStarted());
     ASSERT_FALSE(ef.isCanceled());
     ASSERT_FALSE(ef.isFinished());
 
-    QList<int> async_results_from_tap, async_results_from_get;
+//	ExtFutureWatcher<int> efw(nullptr, nullptr);
+//	efw.then([=](){
+//		qDb() << "GOT EFW THEN() CALLBACK / future finished:" << ef.state();
+//	});
+//	efw.setFuture(ef);
+
 
     GTEST_COUT_qDB << "Attaching tap and get()";
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.");
-	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](eftype& ef, int begin, int end) mutable {
+	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](eftype ef, int begin, int end) mutable {
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
@@ -329,9 +483,16 @@ M_WARNING("TODO: This is still spinning when the test exits.");
         }
 	});
 
+//	ExtFutureWatcher<int> f2w(nullptr, nullptr);
+//	f2w.then([=](){
+//		qDb() << "GOT F2W THEN() CALLBACK / future finished:" << f2.state();
+//	});
+//	f2w.setFuture(f2);
+
+
 	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << f2;
 
-	f2.waitForFinished();
+	f2.wait();
 
 	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << f2;
     async_results_from_get = ef.results();

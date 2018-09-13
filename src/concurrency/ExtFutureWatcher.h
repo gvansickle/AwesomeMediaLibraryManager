@@ -181,7 +181,7 @@ public:
 	template <typename F>
 	ExtFutureWatcher<T>& then(QObject* context, F&& func)
 	{
-		QObject::connect(this, &ExtFutureWatcher<T>::finished, context, [=](){
+		connect_or_die(this, &ExtFutureWatcher<T>::finished, context, [=](){
 			func();
 		});
 		return *this;

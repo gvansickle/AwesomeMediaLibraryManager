@@ -222,24 +222,25 @@ static inline void name_qthread()
     template<class CallbackType,
              class ExtFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
              class T = isExtFuture_t<ExtFutureT>,
-             REQUIRES(isExtFuture_v<ExtFutureT>)
+			 REQUIRES(isExtFuture_v<ExtFutureT>
+			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT&>)
              >
-    auto run_efarg(CallbackType&& callback) -> ExtFuture<T>
+	ExtFuture<T> run_efarg(CallbackType&& callback)
     {
         using argst = ct::args_t<CallbackType>;
         using arg0t = std::tuple_element_t<0, argst>;
         using ExtFutureR = std::remove_reference_t<arg0t>;
-        static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
+		static_assert(std::is_same_v<ExtFutureT, ExtFutureR>);
 
         ExtFutureR retval;
-        qDb() << "FUTURE:" << retval.state();
+		qDb() << "FUTURE:" << retval;
 
         // retval is passed by copy here.
 //        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
         QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
-            qDb() << "FUTURE:" << ef.state();
+//            qDb() << "FUTURE:" << ef.state();
             callback_fn(ef);
-            qDb() << "POST CALLBACK FUTURE:" << ef.state();
+//            qDb() << "POST CALLBACK FUTURE:" << ef.state();
         }, std::forward<ExtFutureR>(retval));
 
 //        QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
@@ -250,36 +251,36 @@ static inline void name_qthread()
         return retval;
     }
 
-    template<class CallbackType,
-             class QFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
-             REQUIRES(!isExtFuture_v<QFutureT> && std::is_convertible_v<QFutureT, QFuture<void>>)
-             >
-    auto run_efarg(CallbackType&& callback) -> QFutureT
-    {
-        using argst = ct::args_t<CallbackType>;
-        using arg0t = std::tuple_element_t<0, argst>;
-        using ExtFutureR = std::remove_reference_t<arg0t>;
-//        static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
+//    template<class CallbackType,
+//             class QFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
+//             REQUIRES(!isExtFuture_v<QFutureT> && std::is_convertible_v<QFutureT, QFuture<void>>)
+//             >
+//    auto run_efarg(CallbackType&& callback) -> QFutureT
+//    {
+//        using argst = ct::args_t<CallbackType>;
+//        using arg0t = std::tuple_element_t<0, argst>;
+//        using ExtFutureR = std::remove_reference_t<arg0t>;
+////        static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
 
-        ExtFutureR retval;
-        using QFIT_type = decltype(retval.d);
-        QFIT_type fi;
-        fi.reportStarted();
-//        EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
-        retval = QFutureT(&fi);
+//        ExtFutureR retval;
+//        using QFIT_type = decltype(retval.d);
+//        QFIT_type fi;
+//        fi.reportStarted();
+////        EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
+//        retval = QFutureT(&fi);
 
-        qDb() << "FUTURE:" << ExtFutureState::state(retval);
+//        qDb() << "FUTURE:" << ExtFutureState::state(retval);
 
-        // retval is passed by copy here.
-//        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
-        QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
-            qDb() << "FUTURE:" << ExtFutureState::state(ef);
-            callback_fn(ef);
-            qDb() << "POST CALLBACK FUTURE:" << ExtFutureState::state(ef);
-        }, std::forward<ExtFutureR>(retval));
+//        // retval is passed by copy here.
+////        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
+//        QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
+//            qDb() << "FUTURE:" << ExtFutureState::state(ef);
+//            callback_fn(ef);
+//            qDb() << "POST CALLBACK FUTURE:" << ExtFutureState::state(ef);
+//        }, std::forward<ExtFutureR>(retval));
 
-        return retval;
-    }
+//        return retval;
+//    }
 
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
@@ -361,8 +362,6 @@ static inline void name_qthread()
 
 };
 
-
-
 /**
  * Run a functor on another thread.
  * Works by posting a message to @a obj's thread's event loop, and running the functor in the event's destructor.
@@ -409,7 +408,16 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }
 
-#include "ExtFutureWatcher.h"
+/// Above is pre-Qt5.10.  These should be used from Qt5.10+.
 
+template <class CallableType, class ReturnType = ct::return_type_t<CallableType>>
+static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
+{
+	ReturnType return_value;
+	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
+	// Die if the function couldn't be invoked.
+	Q_ASSERT(retval == true);
+	return return_value;
+}
 
 #endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */

@@ -251,6 +251,10 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
+	
+	# From Qt Creator
+	#concurrency/runextensions.cpp
+	#concurrency/runextensions.h
 	)
 
 set(SOURCE_FILES_LOGIC_MODELS
