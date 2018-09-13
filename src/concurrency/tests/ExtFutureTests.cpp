@@ -45,6 +45,8 @@
 #include "../ExtAsync.h"
 
 #include "../ExtFuture.h"
+#include <concurrency/ReportingRunner.h>
+
 
 /// Types for gtest's "Typed Test" support.
 //using FutureTypes = ::testing::Types<ExtFuture<int>, QFuture<int>>;
@@ -365,6 +367,113 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap1)
 	TC_ENTER();
 
 	streaming_tap_test<ExtFuture<int>>(1, 6, this);
+
+	TC_EXIT();
+}
+
+class TestReportingRunner : public ControllableTask<int>
+{
+public:
+	~TestReportingRunner() override = default;
+
+	void run(QFutureInterface<int>& fi) override
+	{
+		AMLMTEST_SCOPED_TRACE("In TestReportingRunner::run()");
+
+		QFutureInterface<int>& future_iface = fi;
+		AMLMTEST_COUT << "Reporting started, was:" << ExtFutureState::state(future_iface);
+//		future_iface.reportStarted();
+//		AMLMTEST_COUT << "Reported started, is:" << ExtFutureState::state(future_iface);
+		AMLMTEST_COUT << "Waiting...";
+		QTest::qSleep(1000);
+		AMLMTEST_COUT << "Waiting done, sending value 1 to future...";
+		future_iface.reportResult(8675309);
+		AMLMTEST_COUT << "Waiting...";
+		QTest::qSleep(1000);
+		AMLMTEST_COUT << "Waiting done, sending value 2 to future...";
+		future_iface.reportResult(8675310);
+		AMLMTEST_COUT << "run() finished, returning.";
+//		future_iface.reportFinished();
+//		AMLMTEST_COUT << "Reported finished, is:" << ExtFutureState::state(future_iface);
+	}
+};
+
+TEST_F(ExtFutureTest, ReportingRunnerBasicStreamingTap)
+{
+	TC_ENTER();
+
+	QFuture<int> the_future = make_default_future<QFuture<int>, int>();
+//	QFuture<int> tap_finished_future = make_default_future<QFuture<int>, int>();
+	QFutureWatcher<int> the_watcher(qApp);
+//	QFutureSynchronizer tap_future_sync(tap_finished_future);
+//	QFutureWatcher<int> the_tap_finished_watcher(qApp);
+
+	AMLMTEST_EXPECT_FALSE(the_future.isCanceled());
+//	AMLMTEST_EXPECT_FALSE(tap_finished_future.isCanceled());
+
+	TestReportingRunner* async_task = new TestReportingRunner();
+
+	AMLMTEST_COUT << "START running async_task.";
+	the_future = ReportingRunner::run(async_task);
+	AMLMTEST_COUT << "STARTED running async_task, the_future state:" << ExtFutureState::state(the_future);
+
+	/// Tap control/results watcher.
+	connect_or_die(&the_watcher, &QFutureWatcher<int>::resultsReadyAt, qApp, [=, &the_watcher](int begin, int end) mutable {
+		// The tap.
+		qDb() << "RECEIVED Tap Results:" << begin << end;
+		for(auto i = begin; i < end; ++i)
+		{
+			qDb() << "Result" << i << ":" << the_watcher.future().resultAt(i);
+		}
+		;});
+	/// Tap finished watcher.
+	connect_or_die(&the_watcher, &QFutureWatcher<int>::finished, qApp, [=, &the_watcher/*, &the_tap_finished_watcher*/]() mutable {
+		qDb() << "tap reported finished";
+//		tap_finished_future = the_watcher.future();
+//		tap_finished_future.d.reportFinished();
+M_WARNING("First reports Started|Finished, second reports Running|Started");
+//		qDb() << "Post-tap reported finished:" << ExtFutureState::state(tap_finished_future);
+//		qDb() << "Post-tap reported finished:" << ExtFutureState::state(tap_finished_future.d);
+//		QTest::qSleep(1000);
+//		qDb() << "Post-tap reported finished:" << ExtFutureState::state(the_tap_finished_watcher.future());
+//		run_in_event_loop(qApp, [=](){ tap_finished_future.d.reportFinished(); return 2; });
+		;});
+	the_watcher.setFuture(the_future);
+
+//	connect_or_die(&the_tap_finished_watcher, &QFutureWatcher<int>::finished, qApp, [=](){
+//		qDb() << "tap finished watcher finished";
+//		;});
+//	the_tap_finished_watcher.setFuture(tap_finished_future);
+
+	AMLMTEST_COUT << "STARTING WAIT ON the_future results" << ExtFutureState::state(the_future); // << ExtFutureState::state(tap_finished_future);
+//	QTest::qWait(1000);
+	QList<int> the_results = the_future.results();
+	AMLMTEST_COUT << "WAIT ON the_future DONE" << ExtFutureState::state(the_future); // << ExtFutureState::state(tap_finished_future);
+
+	AMLMTEST_ASSERT_EQ(the_results.at(0), 8675309);
+
+//	{
+//		AMLMTEST_COUT << "STARTING WAIT ON tap_finished_future:" << ExtFutureState::state(tap_finished_future);
+//		QTest::qWait(1000);
+
+//		the_tap_finished_watcher.waitForFinished();
+//		QEventLoop loop(qApp);
+//		connect_or_die(&the_tap_finished_watcher, &QFutureWatcherBase::finished, &loop, &QEventLoop::quit);
+//		AMLMTEST_ASSERT_FALSE(tap_future_sync.cancelOnWait());
+//		tap_future_sync.waitForFinished();
+//		bool didnt_time_out = QTest::qWaitFor([&](){return tap_finished_future.isFinished();}, 5000);
+//		loop.exec();
+//		AMLMTEST_COUT << "WAIT ON tap_finished_future DONE" << ExtFutureState::state(tap_finished_future);
+//		AMLMTEST_ASSERT_TRUE(didnt_time_out);
+//	}
+
+
+//	the_future.waitForFinished();
+
+	AMLMTEST_ASSERT_TRUE(the_future.isFinished());
+//	AMLMTEST_ASSERT_TRUE(tap_finished_future.isFinished());
+
+	AMLMTEST_COUT << "EXITING";
 
 	TC_EXIT();
 }

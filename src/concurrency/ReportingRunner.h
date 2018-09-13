@@ -77,7 +77,11 @@ class RunControllableTask : public QFutureInterface<T> , public QRunnable
 {
 public:
     explicit RunControllableTask(ControllableTask<T>* tsk) : m_task(tsk) { }
-    virtual ~RunControllableTask() { delete m_task; }
+    virtual ~RunControllableTask()
+    {
+    	qDb() << "DELETING TASK";
+    	delete m_task;
+    }
 
 	/**
 	 * The start() functions are analogous to those in Qt5's RunFunctionTaskBase<>.

@@ -25,6 +25,7 @@
 #include "ExtAsyncTestCommon.h"
 
 #include <concurrency/DirectoryScanJob.h>
+#include <concurrency/ReportingRunner.h>
 
 /**
  * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
