@@ -345,9 +345,24 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 				while(true)
 				{
 					AMLMTEST_COUT << "TAP: Waiting for next result";
+					/**
+					 * Semantics of waitForNextResult():
+					 * - acq the QFI mutex.
+					 * - QFutureInterfaceBasePrivate::internal_waitForNextResult()
+					 * -- if(results exist) return true;
+					 * -- while(Running && no results)
+					 *      waitCondition.wait(&m_mutex) /// [1]
+					 * -- return !(Canceled && result exists)
+					 *
+					 * [1] Not completely sure what signals the condition var here.  Looks like any report*()'s or cancel():
+					 *   - QFIBase::cancel() does: d->waitCondition.wakeAll();
+					 *   - QFIBase::reportFinished() does: switch_from_to(d->state, Running, Finished); d->waitCondition.wakeAll();
+					 *   - ^^ so looks like RUNNING | FINISHED is not a valid state.
+					 */
 					ef.d.waitForNextResult();
 					if(ef.isFinished() || ef.isCanceled())
 					{
+M_WARNING("TODO: Could be finished with pending results");
 						AMLMTEST_COUT << "TAP: breaking out of loop";
 						break;
 					}
