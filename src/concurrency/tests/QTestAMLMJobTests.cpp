@@ -55,7 +55,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncT
             TC_Sleep(1000);
             AMLMTEST_COUT << "SLEEP COMPLETE, sending value to future:" << current_val;
 
-            reportResult(future, current_val);
+			reportResult(&future, current_val);
             current_val++;
         }
 
@@ -64,7 +64,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncT
 //        fixture->unregister_generator(tgb);
 //        delete tgb;
 
-		reportFinished(future);
+		reportFinished(&future);
     };
 
     ReturnFutureT retval;

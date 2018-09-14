@@ -675,12 +675,12 @@ public:
 	ExtFuture(const ExtFuture<T>& other) = default;
 
     /// Copy construct from QFuture.
-	ExtFuture(QFuture<T>& f) : BASE_CLASS(f) {}
+	ExtFuture(const QFuture<T>& f) : BASE_CLASS(f) {}
     /// Move construct from QFuture.
-	ExtFuture(QFuture<T>&& f) : BASE_CLASS(std::forward<QFuture<T>>(f)) {}
+//	ExtFuture(QFuture<T>&& f) : BASE_CLASS(std::forward<QFuture<T>>(f)) {}
 
     explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
-        : BASE_CLASS::d(*p) {}
+		: BASE_CLASS(p) {}
 
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.

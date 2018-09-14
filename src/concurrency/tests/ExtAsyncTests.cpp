@@ -248,7 +248,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
 
             /// @note For both QFuture<> and ExtFuture<>, we need to finish the future ourselves in this case.
             ///       Not sure if the waitForFinished() should be here or rely on caller to do it.
-            reportFinished(the_passed_future);
+			reportFinished(&the_passed_future);
             the_passed_future.waitForFinished();
 
          GTEST_COUT_qDB << "Exiting callback, passed future state:" << ExtFutureState::state(the_passed_future);

@@ -323,36 +323,39 @@ FutureT make_default_future()
 }
 
 template <typename T>
-void reportFinished(QFuture<T>& f)
+void reportFinished(QFuture<T>* f)
 {
 	AMLMTEST_SCOPED_TRACE("reportFinished(QFuture<T>& f)");
-    f.d.reportFinished();
+	AMLMTEST_COUT << "REPORTING FINISHED";
+	f->d.reportFinished();
     // May have been already canceled by the caller.
-    EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
+	EXPECT_TRUE((ExtFutureState::state(*f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
 }
 
 template <typename T>
-void reportFinished(ExtFuture<T>& f)
+void reportFinished(ExtFuture<T>* f)
 {
 	AMLMTEST_SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
 
-    f.reportFinished();
+	AMLMTEST_COUT << "REPORTING FINISHED";
+	f->reportFinished();
 
-	AMLMTEST_EXPECT_TRUE(f.isFinished());
+	AMLMTEST_EXPECT_TRUE(f->isFinished());
 }
 
 template <typename FutureT, class ResultType>
-void reportResult(FutureT& f, ResultType t)
+void reportResult(FutureT* f, ResultType t)
 {
 	AMLMTEST_SCOPED_TRACE("reportResult");
-
     if constexpr (isExtFuture_v<FutureT>)
     {
-        f.reportResult(t);
+		AMLMTEST_COUT << "REPORTING RESULT ExtFuture";
+		f->reportResult(t);
     }
     else
     {
-        f.d.reportResult(t);
+		AMLMTEST_COUT << "REPORTING RESULT QFuture";
+		f->d.reportResult(t);
     }
 }
 
@@ -386,13 +389,13 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
             TC_Sleep(1000);
             GTEST_COUT_qDB << "SLEEP COMPLETE, sending value to future:" << current_val;
 
-            reportResult(future, current_val);
+			reportResult(&future, current_val);
             current_val++;
         }
 
         // We're done.
         GTEST_COUT_qDB << "REPORTING FINISHED";
-		reportFinished(future);
+		reportFinished(&future);
 
         fixture->unregister_generator(tgb);
         delete tgb;

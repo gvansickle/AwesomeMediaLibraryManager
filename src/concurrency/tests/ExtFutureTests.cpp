@@ -296,14 +296,14 @@ TYPED_TEST(ExtFutureTypedTestFixture, ResultsTest)
 }
 
 template <class FutureType, class TestFixtureType>
-QList<int> streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
+void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 {
 	AMLMTEST_SCOPED_TRACE("IN STT");
 
 	static std::atomic_int num_tap_completions {0};
 	QList<int> async_results_from_tap, async_results_from_get;
 
-
+	// Start the async generator.
 	FutureType ef = async_int_generator<FutureType>(startval, iterations, fixture);
 
 	GTEST_COUT_qDB << "Starting ef state:" << ExtFutureState::state(ef);
@@ -316,7 +316,10 @@ QList<int> streaming_tap_test(int startval, int iterations, TestFixtureType* fix
 
 	GTEST_COUT_qDB << "Attaching tap and get()";
 
-	FutureType f2;
+	FutureType f2 = make_default_future<FutureType, int>();
+	EXPECT_TRUE(f2.isStarted());
+	EXPECT_FALSE(f2.isCanceled());
+	EXPECT_FALSE(f2.isFinished());
 
 	if constexpr (!std::is_same_v<QFuture<int>, FutureType>)
 	{
@@ -333,24 +336,33 @@ QList<int> streaming_tap_test(int startval, int iterations, TestFixtureType* fix
 	}
 	else
 	{
-		QtConcurrent::run([=](FutureType* ef, FutureType* f2){
-			f2->d.reportResults(ef->results().toVector());
-			f2->d.reportFinished();
+		QtConcurrent::run([=, &async_results_from_tap](FutureType ef, FutureType f2){
+			AMLMTEST_COUT << "START TAP RUN(), ef:" << state(ef) << "f2:" << state(f2);
+			f2.d.reportResults(ef.results().toVector());
+			async_results_from_tap.append(ef.results());
+			num_tap_completions += ef.resultCount();
+			AMLMTEST_ASSERT_TRUE(ef.isFinished());
+
+			f2.d.reportFinished();
+			AMLMTEST_COUT << "EXIT TAP RUN(), ef:" << state(ef) << "resultCount:" << ef.resultCount()
+						  << "f2:" << state(f2) << "resultCount:" << f2.resultCount();
 			},
-		&ef, &f2);
+		ef, f2);
 	}
-	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << state(f2);
+	GTEST_COUT_qDB << "BEFORE WAITING FOR results()" << state(f2);
 
-	f2.results();
+	async_results_from_get = f2.results();
 
-	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << state(f2);
-	async_results_from_get = ef.results();
+	GTEST_COUT_qDB << "AFTER WAITING FOR results()" << state(f2);
 
-	EXPECT_TRUE(ef.isFinished());
-	EXPECT_EQ(num_tap_completions, 6);
+	// .results() above should block.
+	AMLMTEST_EXPECT_TRUE(f2.isFinished());
+	// If f2 is finished, ef must have finished.
+	AMLMTEST_EXPECT_TRUE(ef.isFinished());
 
-	// .get() above should block.
-	EXPECT_TRUE(ef.isFinished());
+	AMLMTEST_EXPECT_EQ(async_results_from_get.size(), 6);
+
+	AMLMTEST_EXPECT_EQ(num_tap_completions, 6);
 
 	// This shouldn't do anything, should already be finished.
 	ef.waitForFinished();
@@ -367,8 +379,6 @@ QList<int> streaming_tap_test(int startval, int iterations, TestFixtureType* fix
 	EXPECT_EQ(async_results_from_tap, expected_results);
 
 	EXPECT_TRUE(ef.isFinished());
-
-	return f2.results();
 }
 
 /**
@@ -492,7 +502,7 @@ M_WARNING("First reports Started|Finished, second reports Running|Started");
 	TC_EXIT();
 }
 
-TEST_F(ExtFutureTest, QFutureBasicStreamingTap)
+TEST_F(ExtFutureTest, DISABLED_QFutureBasicStreamingTap)
 {
 	TC_ENTER();
 
