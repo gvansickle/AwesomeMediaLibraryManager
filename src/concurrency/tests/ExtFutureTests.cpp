@@ -49,8 +49,8 @@
 
 
 /// Types for gtest's "Typed Test" support.
-//using FutureTypes = ::testing::Types<ExtFuture<int>, QFuture<int>>;
-//TYPED_TEST_CASE(ExtFutureTest, FutureTypes);
+using FutureIntTypes = ::testing::Types<QFuture<int>, ExtFuture<int>>;
+TYPED_TEST_CASE(ExtFutureTypedTestFixture, FutureIntTypes);
 
 //
 // TESTS
@@ -67,9 +67,17 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
     TC_ENTER();
 
+	AMLMTEST_SCOPED_TRACE("");
+
     /// @note Important safety tip: nL and nLL are different sizes on Windows vs. Linux.
     /// <cstdint> to the rescue.
     ExtFuture<int64_t> ef = make_ready_future(INT64_C(25));
+
+	// Make sure it's really ready.
+	AMLMTEST_COUT << "ExtFuture state:" << state(ef);
+	AMLMTEST_EXPECT_TRUE(ef.isStarted());
+	AMLMTEST_EXPECT_TRUE(ef.isFinished());
+	AMLMTEST_EXPECT_FALSE(ef.isCanceled());
 
     QList<int64_t> results = ef.get();
 
@@ -78,7 +86,6 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
     EXPECT_EQ(results.size(), 1);
     EXPECT_EQ(results[0], 25L);
 
-    TC_DONE_WITH_STACK();
     TC_EXIT();
 }
 
@@ -148,6 +155,21 @@ TEST_F(ExtFutureTest, CopyAssignTests)
     TC_EXIT();
 }
 
+//TYPED_TEST(ExtFutureTypedTestFixture, CopyAssignP)
+//{
+//	/// @link https://github.com/google/googletest/blob/master/googletest/docs/advanced.md#typed-tests
+//    SCOPED_TRACE("CopyAssignP");
+
+//    TC_ENTER();
+
+//	//TypeParam f = this->value_;
+//	using FutureTypeT = TypeParam;
+
+//	FutureTypeT =
+
+//	TC_EXIT();
+//}
+
 /**
  * Test basic cancel properties.
  */
@@ -180,7 +202,6 @@ TEST_F(ExtFutureTest, ExtFutureBasicCancel)
 
     qDb() << "Cancelled and finished extfuture:" << f;
 
-    TC_DONE_WITH_STACK();
     TC_EXIT();
 }
 
@@ -260,40 +281,19 @@ QList<int> results_test(int startval, int iterations, TestFixtureType* fixture)
     return retval;
 }
 
-/**
- * Test QFuture results().
- */
-TEST_F(ExtFutureTest, QFutureResults)
+TYPED_TEST(ExtFutureTypedTestFixture, ResultsTest)
 {
-    SCOPED_TRACE("QFutureResults");
+	AMLMTEST_SCOPED_TRACE("Results");
 
-    TC_ENTER();
+	TC_ENTER();
 
-    QList<int> expected_results {2,3,4,5,6};
-    QList<int> results = results_test<QFuture<int>>(2, 5, this);
+	QList<int> expected_results {2,3,4,5,6};
+	QList<int> results = results_test<TypeParam>(2, 5, this);
 
-    EXPECT_EQ(results, expected_results);
+	EXPECT_EQ(results, expected_results);
 
-    TC_EXIT();
+	TC_EXIT();
 }
-
-/**
- * Test ExtFuture<> results().
- */
-TEST_F(ExtFutureTest, Results)
-{
-    SCOPED_TRACE("Results");
-
-    TC_ENTER();
-
-    QList<int> expected_results {2,3,4,5,6};
-    QList<int> results = results_test<ExtFuture<int>>(2, 5, this);
-
-    EXPECT_EQ(results, expected_results);
-
-    TC_EXIT();
-}
-
 
 template <class FutureType, class TestFixtureType>
 QList<int> streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
@@ -316,23 +316,34 @@ QList<int> streaming_tap_test(int startval, int iterations, TestFixtureType* fix
 
 	GTEST_COUT_qDB << "Attaching tap and get()";
 
-//    async_results_from_get =
-M_WARNING("TODO: This is still spinning when the test exits.");
-	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](FutureType ef, int begin, int end) mutable {
+	FutureType f2;
+
+	if constexpr (!std::is_same_v<QFuture<int>, FutureType>)
+	{
+		M_WARNING("TODO: This is still spinning when the test exits.");
+		f2 = ef.tap(qApp, [=, &async_results_from_tap](FutureType ef, int begin, int end) mutable {
 			GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
-		for(int i = begin; i<end; i++)
-		{
-			GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
-			async_results_from_tap.push_back(ef.resultAt(i));
-			num_tap_completions++;
-		}
-	});
+			for(int i = begin; i<end; i++)
+			{
+				GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
+				async_results_from_tap.push_back(ef.resultAt(i));
+				num_tap_completions++;
+			}
+		});
+	}
+	else
+	{
+		QtConcurrent::run([=](FutureType* ef, FutureType* f2){
+			f2->d.reportResults(ef->results().toVector());
+			f2->d.reportFinished();
+			},
+		&ef, &f2);
+	}
+	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << state(f2);
 
-	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << f2;
+	f2.results();
 
-	f2.wait();
-
-	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << f2;
+	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << state(f2);
 	async_results_from_get = ef.results();
 
 	EXPECT_TRUE(ef.isFinished());
@@ -356,17 +367,19 @@ M_WARNING("TODO: This is still spinning when the test exits.");
 	EXPECT_EQ(async_results_from_tap, expected_results);
 
 	EXPECT_TRUE(ef.isFinished());
+
+	return f2.results();
 }
 
 /**
  * Test1 "streaming" tap().
  * @todo Currently crashes.
  */
-TEST_F(ExtFutureTest, ExtFutureStreamingTap1)
+TYPED_TEST(ExtFutureTypedTestFixture, PFutureStreamingTap)
 {
 	TC_ENTER();
 
-	streaming_tap_test<ExtFuture<int>>(1, 6, this);
+	streaming_tap_test<TypeParam>(1, 6, this);
 
 	TC_EXIT();
 }
@@ -661,7 +674,7 @@ TEST_F(ExtFutureTest, StaticAsserts)
     // "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
 	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >);
     int v;
-	static_assert(std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
+	static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
     /// @todo
 //    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >, "");
 

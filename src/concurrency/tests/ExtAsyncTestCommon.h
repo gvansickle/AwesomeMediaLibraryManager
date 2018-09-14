@@ -216,7 +216,7 @@ private Q_SLOTS:
 #define TC_ENTER() \
     /* The name of this test as a static std::string. */ \
     static const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
-    starting(static_test_id_string); \
+	this->starting(static_test_id_string); \
     static std::atomic_bool test_func_called {true}; \
     static std::atomic_bool test_func_exited {false}; \
     static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
@@ -225,7 +225,7 @@ private Q_SLOTS:
 
 
 #define TC_EXPECT_THIS_TC() \
-	AMLMTEST_EXPECT_EQ(get_currently_running_test(), static_test_id_string);
+	AMLMTEST_EXPECT_EQ(this->get_currently_running_test(), static_test_id_string);
 
 #define TC_EXPECT_NOT_EXIT() \
 	AMLMTEST_EXPECT_TRUE(test_func_called) << static_test_id_string; \
@@ -245,7 +245,7 @@ private Q_SLOTS:
 	AMLMTEST_ASSERT_TRUE(test_func_called); \
 	AMLMTEST_ASSERT_TRUE(test_func_exited); \
 	AMLMTEST_ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
-    finished(static_test_id_string);
+	this->finished(static_test_id_string);
 
 /// @name Macros for making sure a KJob emits the expected signals and gets destroyed before the TEST_F() returns.
 /// @{
@@ -287,6 +287,9 @@ QFuture<T> make_finished_QFuture(const T &val)
 	/// future is finished.
 	/// So, that seems to be the natural state of a successfully finished QFuture<>,
 	/// and we copy that here.
+
+	AMLMTEST_SCOPED_TRACE("make_finished_QFuture");
+
 	QFutureInterface<T> fi;
 	fi.reportStarted();
 	fi.reportFinished(&val);

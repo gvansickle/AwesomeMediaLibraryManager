@@ -928,7 +928,7 @@ void dummy(void)
 	// "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
 	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >, "");
 	int v;
-	static_assert(std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >, "");
+	static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >, "");
 	/// @todo
 //	static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<void> >, "");
 

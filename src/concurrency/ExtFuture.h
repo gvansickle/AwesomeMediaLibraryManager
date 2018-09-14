@@ -1389,10 +1389,17 @@ namespace ExtAsync
  * @param value
  * @return
  */
-template <int = 0, int..., class T, REQUIRES(!IsExtFuture<T>)>
-ExtFuture<deduced_type_t<T>> make_ready_future(T&& value)
+template<typename T,
+		 REQUIRES(!isExtFuture_v<T>)>
+ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 {
-    return ExtAsync::detail::make_ready_future(std::forward<T>(value));
+	ExtFuture<T> extfuture;
+
+	extfuture.reportStarted();
+	extfuture.reportResult(std::forward<T>(value));
+	extfuture.reportFinished();
+
+	return extfuture;
 }
 
 template <int = 0, int..., class T = void>
