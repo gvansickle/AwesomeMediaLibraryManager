@@ -321,7 +321,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	EXPECT_FALSE(f2.isCanceled());
 	EXPECT_FALSE(f2.isFinished());
 
-	if constexpr (!std::is_same_v<QFuture<int>, FutureType>)
+	if constexpr (false)//!std::is_same_v<QFuture<int>, FutureType>)
 	{
 		M_WARNING("TODO: This is still spinning when the test exits.");
 		f2 = ef.tap(qApp, [=, &async_results_from_tap](FutureType ef, int begin, int end) mutable {
@@ -338,9 +338,66 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	{
 		QtConcurrent::run([=, &async_results_from_tap](FutureType ef, FutureType f2){
 			AMLMTEST_COUT << "START TAP RUN(), ef:" << state(ef) << "f2:" << state(f2);
-			f2.d.reportResults(ef.results().toVector());
-			async_results_from_tap.append(ef.results());
-			num_tap_completions += ef.resultCount();
+
+			if(true /* Roll our own */)
+			{
+				int i = 0;
+				while(true)
+				{
+					AMLMTEST_COUT << "TAP: Waiting for next result";
+					ef.d.waitForNextResult();
+					if(ef.isFinished() || ef.isCanceled())
+					{
+						AMLMTEST_COUT << "TAP: breaking out of loop";
+						break;
+					}
+					AMLMTEST_COUT << "TAP: Next result available";
+					int the_next_val = ef.resultAt(i);
+					f2.d.reportResult(the_next_val);
+					async_results_from_tap.append(the_next_val);
+					num_tap_completions++;
+					i++;
+				}
+			}
+			else if(false /* Use Java-like iterator */)
+			{
+				AMLMTEST_COUT << "Starting Java-like iterator";
+
+				QFutureIterator<int> fit(ef);
+
+				AMLMTEST_COUT << "Created Java-like iterator";
+
+				while(fit.hasNext())
+				{
+					int the_next_val = fit.next();
+					AMLMTEST_COUT << "GOT RESULT:" << the_next_val;
+					//reportResult(&f2, *cit);
+					f2.d.reportResult(the_next_val);
+					async_results_from_tap.append(the_next_val);
+					num_tap_completions++;
+				}
+			}
+			else if(false /* Use STL iterators */)
+			{
+				auto cit = ef.constBegin();
+				while(cit != ef.constEnd())
+				{
+					AMLMTEST_COUT << "GOT RESULT:" << *cit;
+					//reportResult(&f2, *cit);
+					f2.d.reportResult(*cit);
+					async_results_from_tap.append(*cit);
+					num_tap_completions++;
+
+					++cit;
+				}
+			}
+			else // All at once
+			{
+				f2.d.reportResults(ef.results().toVector());
+				async_results_from_tap.append(ef.results());
+				num_tap_completions += ef.resultCount();
+			}
+
 			AMLMTEST_ASSERT_TRUE(ef.isFinished());
 
 			f2.d.reportFinished();
