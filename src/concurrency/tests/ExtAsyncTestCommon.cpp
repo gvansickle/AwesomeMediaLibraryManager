@@ -104,7 +104,7 @@ void InterState::unregister_generator(trackable_generator_base *generator)
     GTEST_COUT_qDB << "UNREGISTERING GENERATOR:" << generator->get_generator_id();
 
     // Only makes sense if a test case is running.
-//    EXPECT_EQ(m_currently_running_test.empty()) << "No test case running when trying to unregister generator";
+	AMLMTEST_ASSERT_FALSE(m_currently_running_test.empty());// << "No test case running when trying to unregister generator";
 
     // Get the topmost generator.
     auto tgen = m_generator_stack.back();

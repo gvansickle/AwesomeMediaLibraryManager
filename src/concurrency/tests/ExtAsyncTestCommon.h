@@ -79,6 +79,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase* fixture);
  * Helper class for maintaining state across Google Test fixture invocations.
  * Each TEST_F() gets its own complete copy of the ::testing::Test class,
  * so we need something static to maintain statistics, sanity checks, etc.
+ * Public interfaces to this class are all threadsafe.
  */
 class InterState
 {
