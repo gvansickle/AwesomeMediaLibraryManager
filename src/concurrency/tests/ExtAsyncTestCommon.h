@@ -74,6 +74,12 @@ protected:
  */
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase* fixture);
 
+struct TestHandle
+{
+	std::string m_test_id_string {};
+
+	bool empty() const { return m_test_id_string.empty(); };
+};
 
 /**
  * Helper class for maintaining state across Google Test fixture invocations.
@@ -84,6 +90,12 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase* fixture);
 class InterState
 {
 public:
+	InterState()
+	{
+		AMLMTEST_COUT << "InterState singleton constructed";
+		Q_ASSERT_X(m_current_test_handle.empty(), "constructor", m_current_test_handle.m_test_id_string.c_str());
+	};
+	virtual ~InterState() { AMLMTEST_COUT << "InterState singleton destructed"; };
 
     void starting(std::string func);
 
@@ -92,6 +104,9 @@ public:
     std::string get_currently_running_test() const;
 
     bool is_test_currently_running() const;
+
+	TestHandle register_current_test(ExtAsyncTestsSuiteFixtureBase* fixture);
+	void unregister_current_test(TestHandle test_handle, ExtAsyncTestsSuiteFixtureBase* fixture);
 
     void register_generator(trackable_generator_base* generator);
 
@@ -106,8 +121,10 @@ protected:
     mutable std::mutex m_fixture_state_mutex;
     std::string m_currently_running_test;
     std::deque<trackable_generator_base*> m_generator_stack;
+	TestHandle m_current_test_handle {};
     /// @}
 };
+
 
 
 #ifdef TEST_FWK_IS_GTEST
@@ -172,6 +189,8 @@ public:
      * @note Deliberately not threadsafe.  Only call this in the TC_ENTER() and TC_EXIT() macros.
      */
     std::string get_test_id_string_from_fixture();
+
+	TestHandle get_test_handle_from_fixture();
 
     void register_generator(trackable_generator_base* generator);
 
