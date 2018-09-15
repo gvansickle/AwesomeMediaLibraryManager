@@ -300,7 +300,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 {
 	AMLMTEST_SCOPED_TRACE("IN STT");
 
-	static std::atomic_int num_tap_completions {0};
+	std::atomic_int num_tap_completions {0};
 	QList<int> async_results_from_tap, async_results_from_get;
 
 	// Start the async generator.
@@ -336,7 +336,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	}
 	else
 	{
-		QtConcurrent::run([=, &async_results_from_tap](FutureType ef, FutureType f2){
+		QtConcurrent::run([=, &async_results_from_tap, &num_tap_completions](FutureType ef, FutureType f2){
 			AMLMTEST_COUT << "START TAP RUN(), ef:" << state(ef) << "f2:" << state(f2);
 
 			if(true /* Roll our own */)
@@ -354,24 +354,28 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 					 * -- if(results exist) return true;
 					 * -- while(Running && no results)
 					 *      waitCondition.wait(&m_mutex) /// [1]
-					 * -- return !(Canceled) && result exists
+					 * -- return !(Canceled) && result exists /// [2]
 					 *
 					 * [1] Not completely sure what signals the condition var here.  Looks like any report*()'s or cancel():
 					 *   - QFIBase::cancel() does: d->waitCondition.wakeAll();
 					 *   - QFIBase::reportFinished() does: switch_from_to(d->state, Running, Finished); d->waitCondition.wakeAll();
 					 *   - ^^ so looks like RUNNING | FINISHED is not a valid state.
+					 * So also it looks like any transition out of Running can result in getting to [2] with
+					 * no results, and hence reporting false.  Finished and Exceptions come to mind.
 					 */
 
-					bool wait_wasnt_canceled = ef.d.waitForNextResult();
+					bool have_results = ef.d.waitForNextResult();
+
+					EXPECT_TRUE(have_results || !ef.isRunning());
 
 					// If it was canceled, we may not have any results to look at.
 					current_result_count = ef.resultCount();
 					if(current_result_count <= last_result_count)
 					{
 						qWr() << "NO NEW RESULTS:" << current_result_count << last_result_count;
-						if(!wait_wasnt_canceled)
+						if(!have_results)
 						{
-							qIn() << "WAIT WAS CANCELED, breaking";
+							qIn() << "WAIT REPORTED NO RESULTS, breaking";
 							break;
 						}
 					}
@@ -382,7 +386,11 @@ M_WARNING("TODO: Could be finished with pending results");
 						AMLMTEST_COUT << "TAP: breaking out of loop";
 						break;
 					}
-					AMLMTEST_COUT << "TAP: Next result available";
+					AMLMTEST_COUT << "TAP: Next result available at i=" << i;
+
+					// Make sure we don't somehow get here too many times.
+					EXPECT_LT(i, 6);
+
 					int the_next_val = ef.resultAt(i);
 					f2.d.reportResult(the_next_val);
 					async_results_from_tap.append(the_next_val);
@@ -443,14 +451,10 @@ M_WARNING("TODO: Could be finished with pending results");
 
 	GTEST_COUT_qDB << "AFTER WAITING FOR results()" << state(f2);
 
-	// .results() above should block.
+	// .results() above should block until f2 is finished.
 	AMLMTEST_EXPECT_TRUE(f2.isFinished());
 	// If f2 is finished, ef must have finished.
 	AMLMTEST_EXPECT_TRUE(ef.isFinished());
-
-	AMLMTEST_EXPECT_EQ(async_results_from_get.size(), 6);
-
-	AMLMTEST_EXPECT_EQ(num_tap_completions, 6);
 
 	// This shouldn't do anything, should already be finished.
 	ef.waitForFinished();
@@ -461,10 +465,12 @@ M_WARNING("TODO: Could be finished with pending results");
 	EXPECT_FALSE(ef.isCanceled());
 	EXPECT_TRUE(ef.isFinished());
 
+	// Check the results we got.
 	EXPECT_EQ(async_results_from_get.size(), 6);
 	EXPECT_EQ(async_results_from_get, expected_results);
 	EXPECT_EQ(async_results_from_tap.size(), 6);
 	EXPECT_EQ(async_results_from_tap, expected_results);
+	AMLMTEST_EXPECT_EQ(num_tap_completions, 6);
 
 	EXPECT_TRUE(ef.isFinished());
 }
