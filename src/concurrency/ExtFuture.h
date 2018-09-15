@@ -38,6 +38,7 @@
 #include <future/Unit.hpp>
 
 // Qt5
+#include <QtConcurrent>
 #include <QFuture>
 #include <QFutureInterface>
 
@@ -714,16 +715,15 @@ public:
 
 	/**
 	 * Virtual destructor.
-	 * @note QFutureInterface<> is derived from QFutureInterfaceBase, which has a virtual destructor.
+	 *
+	 * @todo We're now deriving from QFuture<T>, which doesn't have a virtual destructor, so I'm not sure
+	 * how correct this is or if it even makes any sense.
+	 *
+	 * @note We used to derive from QFutureInterface<>:
+	 * QFutureInterface<> is derived from QFutureInterfaceBase, which has a virtual destructor.
 	 * QFutureInterface<>'s destructor isn't marked either virtual or override.  By the
 	 * rules of C++, QFutureInterface<>'s destructor is in fact virtual ("once virtual always virtual"),
 	 * so we're good.  Marking this override to avoid further confusion.
-     *
-     * @note Since we're based on QFutureInterface<T> <- QFutureInterfaceBase, it handles the underlying
-     * refcounting for us.  So we may be getting destroyed after we've been copied, which is ok.
-     *
-     * @todo Find a way to assert if we're still running/not finished and haven't been copied.
-     * This would indicate a dangling future.
 	 */
     ~ExtFuture() override = default;
 
@@ -1196,8 +1196,6 @@ protected:
 		>
 	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
-
-
 		auto watcher = new QFutureWatcher<T>();
 		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		connect_or_die(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
@@ -1224,24 +1222,70 @@ protected:
 	{
 		ExtFuture<T> ef_copy;
 
-		using WatcherType = QFutureWatcher<T>;
-		using WatcherTypeBase = QFutureWatcherBase;
+		QtConcurrent::run([=](ExtFuture<T> ef, ExtFuture<T> f2) {
+			qDb() << "TAP: START TAP RUN(), ef:" << ef.state() << "f2:" << f2.state();
 
-		auto watcher = new WatcherType();
-		connect_or_die(watcher, &WatcherTypeBase::finished, watcher, [=]() mutable {
-			qDb() << "FINISHED";
-			ef_copy = *this;
-			ef_copy.reportFinished();
-			watcher->deleteLater();
-		});
-		connect_or_die(watcher, &WatcherTypeBase::resultsReadyAt, guard_qobject,
-				[=, tap_cb = std::decay_t<F>(tap_callback)](int begin, int end) mutable {
-//					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
-//						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
-					// Call the tap callback with the incoming result value.
-					tap_cb(*this, begin, end);
-			});
-        watcher->setFuture(*this);
+			int i = 0;
+
+			while(true)
+			{
+				qDb() << "TAP: Waiting for next result";
+				/**
+				  * QFutureInterfaceBase::waitForResult(int resultIndex)
+				  * - if exception, rethrow.
+				  * - if !running, return.
+				  * - stealAndRunRunnable()
+				  * - lock mutex.
+				  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
+				  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
+				  *     d->waitCondition.wait(&d->m_mutex);
+				  *   d->m_exceptionStore.throwPossibleException();
+				  */
+				ef.d.waitForResult(i);
+
+				// Check if the wait failed to result in any results.
+				int result_count = ef.resultCount();
+				if(result_count <= i)
+				{
+					// No new results, must have finshed etc.
+					qDb() << "NO NEW RESULTS, BREAKING, ef:" << ef.state();
+					break;
+				}
+
+				// Copy over the new results
+				for(; i < result_count; ++i)
+				{
+					qDb() << "TAP: Next result available at i = " << i;
+
+					T the_next_val = ef.resultAt(i);
+					f2.d.reportResult(the_next_val);
+				}
+			}
+
+			qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << ef.state();
+
+			// Check final state.  We know it's at least Finished.
+			/// @todo Could we be Finished here with pending results?
+			/// Don't care as much on non-Finished cases.
+			if(ef.isCanceled())
+			{
+				qDb() << "TAP: ef cancelled:" << ef.state();
+				/// @todo PROPAGATE
+			}
+			else if(ef.isFinished())
+			{
+				qDb() << "TAP: ef finished:" << ef.state();
+				/// @todo PROPAGATE
+			}
+			else
+			{
+				/// @todo Exceptions.
+				qDb() << "NOT FINISHED OR CANCELED:" << ef.state();
+			}
+		},
+		*this,
+		ef_copy);
+
 		return ef_copy;
 	}
 

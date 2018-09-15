@@ -342,49 +342,44 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 			{
 				int i = 0;
 
-//				while(!ef.isFinished())
-//				{
-//					AMLMTEST_COUT << "TAP: !Finished, entering loop";
+				while(true)
+				{
+					AMLMTEST_COUT << "TAP: Waiting for next result";
+					/**
+					  * QFutureInterfaceBase::waitForResult(int resultIndex)
+					  * - if exception, rethrow.
+					  * - if !running, return.
+					  * - stealAndRunRunnable()
+					  * - lock mutex.
+					  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
+					  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
+					  *     d->waitCondition.wait(&d->m_mutex);
+					  *   d->m_exceptionStore.throwPossibleException();
+					  */
+					ef.d.waitForResult(i);
 
-					while(true)
+					// Check if the wait failed to result in any results.
+					int result_count = ef.resultCount();
+					if(result_count <= i)
 					{
-						AMLMTEST_COUT << "TAP: Waiting for next result";
-						/**
-						  * QFutureInterfaceBase::waitForResult(int resultIndex)
-						  * - if exception, rethrow.
-						  * - if !running, return.
-						  * - stealAndRunRunnable()
-						  * - lock mutex.
-						  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
-						  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
-						  *     d->waitCondition.wait(&d->m_mutex);
-						  *   d->m_exceptionStore.throwPossibleException();
-						  */
-						ef.d.waitForResult(i);
+						// No new results, must have finshed etc.
+						AMLMTEST_COUT << "NO NEW RESULTS, BREAKING, ef:" << state(ef);
+						break;
+					}
 
-						// Check if the wait failed to result in any results.
-						int result_count = ef.resultCount();
-						if(result_count <= i)
-						{
-							// No new results, must have finshed etc.
-							AMLMTEST_COUT << "NO NEW RESULTS, BREAKING, ef:" << state(ef);
-							break;
-						}
+					// Copy over the new results
+					for(; i < result_count; ++i)
+					{
+						AMLMTEST_COUT << "TAP: Next result available at i = " << i;
 
-						// Copy over the new results
-						for(; i < result_count; ++i)
-						{
-							AMLMTEST_COUT << "TAP: Next result available at i = " << i;
+						int the_next_val = ef.resultAt(i);
+						async_results_from_tap.append(the_next_val);
+						f2.d.reportResult(the_next_val);
+						num_tap_completions++;
 
-							int the_next_val = ef.resultAt(i);
-							async_results_from_tap.append(the_next_val);
-							f2.d.reportResult(the_next_val);
-							num_tap_completions++;
-
-							// Make sure we don't somehow get here too many times.
-							AMLMTEST_EXPECT_LT(i, iterations);
-						}
-//					}
+						// Make sure we don't somehow get here too many times.
+						AMLMTEST_EXPECT_LT(i, iterations);
+					}
 				}
 
 				AMLMTEST_COUT << "LEFT WHILE(!Finished) LOOP, ef state:" << state(ef);
@@ -404,94 +399,8 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 				}
 				else
 				{
+					/// @todo Exceptions.
 					AMLMTEST_COUT << "NOT FINISHED OR CANCELED:" << state(ef);
-				}
-			}
-			else if(false /* Roll our own */)
-			{
-				int i = 0;
-				int last_result_count = 0;
-				int current_result_count = 0;
-				while(!ef.isFinished())
-				{
-					AMLMTEST_COUT << "TAP: Waiting for next result";
-					/**
-					 * Semantics of waitForNextResult():
-					 * - acq the QFI mutex.
-					 * - QFutureInterfaceBasePrivate::internal_waitForNextResult()
-					 * -- if(results exist) return true;
-					 * -- while(Running && no results)
-					 *      waitCondition.wait(&m_mutex) /// [1]
-					 * -- return !(Canceled) && result exists /// [2]
-					 *
-					 * [1] Not completely sure what signals the condition var here.  Looks like any report*()'s or cancel():
-					 *   - QFIBase::cancel() does: d->waitCondition.wakeAll();
-					 *   - QFIBase::reportFinished() does: switch_from_to(d->state, Running, Finished); d->waitCondition.wakeAll();
-					 *   - ^^ so looks like RUNNING | FINISHED is not a valid state.
-					 * So also it looks like any transition out of Running can result in getting to [2] with
-					 * no results, and hence reporting false.  Finished and Exceptions come to mind.
-					 */
-
-					int result_at = ef.resultAt(i);
-					bool have_results = true;
-
-//					bool have_results = ef.d.waitForNextResult();
-
-					AMLMTEST_COUT << M_NAME_VAL(have_results);
-					AMLMTEST_COUT << "ef state:" << state(ef);
-
-					current_result_count = ef.resultCount();
-
-					AMLMTEST_COUT << "ef resultCount:" << current_result_count;
-
-
-					// When we get here, we should either have some results to look at,
-					// or should not be running anymore.
-					/// @todo If we get here too quickly, could we be Started but not Running yet?
-					AMLMTEST_EXPECT_TRUE(have_results || !ef.isRunning());
-
-					if(have_results)
-					{
-						// We have some results to look at.
-
-						// If it was canceled, we may not have any results to look at.
-//						current_result_count = ef.resultCount();
-//						AMLMTEST_EXPECT_GT(current_result_count, last_result_count) << ExtFutureState::state(ef);
-//						if(current_result_count <= last_result_count)
-//						{
-//							qWr() << "NO NEW RESULTS:" << current_result_count << last_result_count << ef;
-//						}
-//						last_result_count = current_result_count;
-
-						AMLMTEST_COUT << "TAP: Next result available at i =" << i;
-
-						// Make sure we don't somehow get here too many times.
-						EXPECT_LT(i, iterations);
-
-						int the_next_val = ef.resultAt(i);
-						f2.d.reportResult(the_next_val);
-						async_results_from_tap.append(the_next_val);
-						num_tap_completions++;
-						i++;
-					}
-					else
-					{
-						AMLMTEST_COUT << "WAIT REPORTED FALSE, ef:" << state(ef);
-
-						// No results, waitForNextResult() returned for some other reason.
-						if(ef.isFinished() || ef.isCanceled())
-						{
-							/// @todo Could we be Finished here with pending results?
-							/// Don't care as much on non-Finished cases.
-							AMLMTEST_COUT << "TAP: breaking out of loop";
-							break;
-						}
-						else
-						{
-							AMLMTEST_ASSERT_EQ(1,2) << "NOT FINISHED OR CANCELED:" << state(ef);
-							break;
-						}
-					}
 				}
 			}
 			else if(false /* Use Java-like iterator */)
