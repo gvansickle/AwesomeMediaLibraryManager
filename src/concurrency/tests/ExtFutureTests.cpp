@@ -342,9 +342,9 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 			{
 				int i = 0;
 
-				while(!ef.isFinished())
-				{
-					AMLMTEST_COUT << "TAP: !Finished, entering loop";
+//				while(!ef.isFinished())
+//				{
+//					AMLMTEST_COUT << "TAP: !Finished, entering loop";
 
 					while(true)
 					{
@@ -360,7 +360,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 						  *     d->waitCondition.wait(&d->m_mutex);
 						  *   d->m_exceptionStore.throwPossibleException();
 						  */
-						ef.d.waitForResult(-1);
+						ef.d.waitForResult(i);
 
 						// Check if the wait failed to result in any results.
 						int result_count = ef.resultCount();
@@ -384,7 +384,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 							// Make sure we don't somehow get here too many times.
 							AMLMTEST_EXPECT_LT(i, iterations);
 						}
-					}
+//					}
 				}
 
 				AMLMTEST_COUT << "LEFT WHILE(!Finished) LOOP, ef state:" << state(ef);
@@ -395,6 +395,11 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 				if(ef.isCanceled())
 				{
 					AMLMTEST_COUT << "TAP: ef cancelled:" << state(ef);
+					/// @todo PROPAGATE
+				}
+				else if(ef.isFinished())
+				{
+					AMLMTEST_COUT << "TAP: ef finished:" << state(ef);
 					/// @todo PROPAGATE
 				}
 				else
