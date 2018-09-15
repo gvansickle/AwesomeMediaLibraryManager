@@ -131,6 +131,9 @@ public:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::State)
 
+/**
+ * Convenience toString() conversion.
+ */
 inline static QString toString(ExtFutureState::State states)
 {
     QString str;

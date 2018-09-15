@@ -45,7 +45,6 @@
 #include "../ExtAsync.h"
 
 #include "../ExtFuture.h"
-#include <concurrency/ReportingRunner.h>
 
 
 /// Types for gtest's "Typed Test" support.
@@ -298,7 +297,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, ResultsTest)
 template <class FutureType, class TestFixtureType>
 void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 {
-	AMLMTEST_SCOPED_TRACE("IN STT");
+	AMLMTEST_SCOPED_TRACE("IN streaming_tap_test");
 
 	std::atomic_int num_tap_completions {0};
 	QList<int> async_results_from_tap, async_results_from_get;
@@ -337,14 +336,78 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	else
 	{
 		QtConcurrent::run([=, &async_results_from_tap, &num_tap_completions](FutureType ef, FutureType f2){
-			AMLMTEST_COUT << "START TAP RUN(), ef:" << state(ef) << "f2:" << state(f2);
+			AMLMTEST_COUT << "TAP: START TAP RUN(), ef:" << state(ef) << "f2:" << state(f2);
 
 			if(true /* Roll our own */)
 			{
 				int i = 0;
+
+				while(!ef.isFinished())
+				{
+					AMLMTEST_COUT << "TAP: !Finished, entering loop";
+
+					while(true)
+					{
+						AMLMTEST_COUT << "TAP: Waiting for next result";
+						/**
+						  * QFutureInterfaceBase::waitForResult(int resultIndex)
+						  * - if exception, rethrow.
+						  * - if !running, return.
+						  * - stealAndRunRunnable()
+						  * - lock mutex.
+						  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
+						  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
+						  *     d->waitCondition.wait(&d->m_mutex);
+						  *   d->m_exceptionStore.throwPossibleException();
+						  */
+						ef.d.waitForResult(-1);
+
+						// Check if the wait failed to result in any results.
+						int result_count = ef.resultCount();
+						if(result_count <= i)
+						{
+							// No new results, must have finshed etc.
+							AMLMTEST_COUT << "NO NEW RESULTS, BREAKING, ef:" << state(ef);
+							break;
+						}
+
+						// Copy over the new results
+						for(; i < result_count; ++i)
+						{
+							AMLMTEST_COUT << "TAP: Next result available at i = " << i;
+
+							int the_next_val = ef.resultAt(i);
+							async_results_from_tap.append(the_next_val);
+							f2.d.reportResult(the_next_val);
+							num_tap_completions++;
+
+							// Make sure we don't somehow get here too many times.
+							AMLMTEST_EXPECT_LT(i, iterations);
+						}
+					}
+				}
+
+				AMLMTEST_COUT << "LEFT WHILE(!Finished) LOOP, ef state:" << state(ef);
+
+				// Check final state.  We know it's at least Finished.
+				/// @todo Could we be Finished here with pending results?
+				/// Don't care as much on non-Finished cases.
+				if(ef.isCanceled())
+				{
+					AMLMTEST_COUT << "TAP: ef cancelled:" << state(ef);
+					/// @todo PROPAGATE
+				}
+				else
+				{
+					AMLMTEST_COUT << "NOT FINISHED OR CANCELED:" << state(ef);
+				}
+			}
+			else if(false /* Roll our own */)
+			{
+				int i = 0;
 				int last_result_count = 0;
 				int current_result_count = 0;
-				while(true)
+				while(!ef.isFinished())
 				{
 					AMLMTEST_COUT << "TAP: Waiting for next result";
 					/**
@@ -364,38 +427,66 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 					 * no results, and hence reporting false.  Finished and Exceptions come to mind.
 					 */
 
-					bool have_results = ef.d.waitForNextResult();
+					int result_at = ef.resultAt(i);
+					bool have_results = true;
 
-					EXPECT_TRUE(have_results || !ef.isRunning());
+//					bool have_results = ef.d.waitForNextResult();
 
-					// If it was canceled, we may not have any results to look at.
+					AMLMTEST_COUT << M_NAME_VAL(have_results);
+					AMLMTEST_COUT << "ef state:" << state(ef);
+
 					current_result_count = ef.resultCount();
-					if(current_result_count <= last_result_count)
+
+					AMLMTEST_COUT << "ef resultCount:" << current_result_count;
+
+
+					// When we get here, we should either have some results to look at,
+					// or should not be running anymore.
+					/// @todo If we get here too quickly, could we be Started but not Running yet?
+					AMLMTEST_EXPECT_TRUE(have_results || !ef.isRunning());
+
+					if(have_results)
 					{
-						qWr() << "NO NEW RESULTS:" << current_result_count << last_result_count;
-						if(!have_results)
+						// We have some results to look at.
+
+						// If it was canceled, we may not have any results to look at.
+//						current_result_count = ef.resultCount();
+//						AMLMTEST_EXPECT_GT(current_result_count, last_result_count) << ExtFutureState::state(ef);
+//						if(current_result_count <= last_result_count)
+//						{
+//							qWr() << "NO NEW RESULTS:" << current_result_count << last_result_count << ef;
+//						}
+//						last_result_count = current_result_count;
+
+						AMLMTEST_COUT << "TAP: Next result available at i =" << i;
+
+						// Make sure we don't somehow get here too many times.
+						EXPECT_LT(i, iterations);
+
+						int the_next_val = ef.resultAt(i);
+						f2.d.reportResult(the_next_val);
+						async_results_from_tap.append(the_next_val);
+						num_tap_completions++;
+						i++;
+					}
+					else
+					{
+						AMLMTEST_COUT << "WAIT REPORTED FALSE, ef:" << state(ef);
+
+						// No results, waitForNextResult() returned for some other reason.
+						if(ef.isFinished() || ef.isCanceled())
 						{
-							qIn() << "WAIT REPORTED NO RESULTS, breaking";
+							/// @todo Could we be Finished here with pending results?
+							/// Don't care as much on non-Finished cases.
+							AMLMTEST_COUT << "TAP: breaking out of loop";
+							break;
+						}
+						else
+						{
+							AMLMTEST_ASSERT_EQ(1,2) << "NOT FINISHED OR CANCELED:" << state(ef);
 							break;
 						}
 					}
-
-					if(ef.isFinished() || ef.isCanceled())
-					{
-M_WARNING("TODO: Could be finished with pending results");
-						AMLMTEST_COUT << "TAP: breaking out of loop";
-						break;
-					}
-					AMLMTEST_COUT << "TAP: Next result available at i=" << i;
-
-					// Make sure we don't somehow get here too many times.
-					EXPECT_LT(i, 6);
-
-					int the_next_val = ef.resultAt(i);
-					f2.d.reportResult(the_next_val);
-					async_results_from_tap.append(the_next_val);
-					num_tap_completions++;
-					i++;
 				}
 			}
 			else if(false /* Use Java-like iterator */)
@@ -408,8 +499,9 @@ M_WARNING("TODO: Could be finished with pending results");
 
 				while(fit.hasNext())
 				{
+					AMLMTEST_COUT << "TAP: GOT hasNext:" << state(ef);
 					int the_next_val = fit.next();
-					AMLMTEST_COUT << "GOT RESULT:" << the_next_val;
+					AMLMTEST_COUT << "TAP: GOT RESULT:" << the_next_val;
 					//reportResult(&f2, *cit);
 					f2.d.reportResult(the_next_val);
 					async_results_from_tap.append(the_next_val);
@@ -432,8 +524,14 @@ M_WARNING("TODO: Could be finished with pending results");
 			}
 			else // All at once
 			{
-				f2.d.reportResults(ef.results().toVector());
-				async_results_from_tap.append(ef.results());
+				/// @note This is passing 40/40 with both QFuture<> and ExtFuture<>,
+				/// but f2 doesn't get intermediate results.
+				AMLMTEST_COUT << "TAP: PENDING ON ALL RESULTS";
+				QVector<int> results = ef.results().toVector();
+				AMLMTEST_COUT << "TAP: GOT RESULTS:" << results;
+				AMLMTEST_ASSERT_EQ(results.size(), iterations);
+				f2.d.reportResults(results); //ef.results().toVector());
+				async_results_from_tap.append(results.toList()); //ef.results());
 				num_tap_completions += ef.resultCount();
 			}
 
@@ -485,113 +583,11 @@ TYPED_TEST(ExtFutureTypedTestFixture, PFutureStreamingTap)
 
 	streaming_tap_test<TypeParam>(1, 6, this);
 
-	TC_EXIT();
-}
-
-class TestReportingRunner : public ControllableTask<int>
-{
-public:
-	~TestReportingRunner() override = default;
-
-	void run(QFutureInterface<int>& fi) override
+	if (::testing::Test::HasFatalFailure())
 	{
-		AMLMTEST_SCOPED_TRACE("In TestReportingRunner::run()");
-
-		QFutureInterface<int>& future_iface = fi;
-		AMLMTEST_COUT << "Reporting started, was:" << ExtFutureState::state(future_iface);
-//		future_iface.reportStarted();
-//		AMLMTEST_COUT << "Reported started, is:" << ExtFutureState::state(future_iface);
-		AMLMTEST_COUT << "Waiting...";
-		QTest::qSleep(1000);
-		AMLMTEST_COUT << "Waiting done, sending value 1 to future...";
-		future_iface.reportResult(8675309);
-		AMLMTEST_COUT << "Waiting...";
-		QTest::qSleep(1000);
-		AMLMTEST_COUT << "Waiting done, sending value 2 to future...";
-		future_iface.reportResult(8675310);
-		AMLMTEST_COUT << "run() finished, returning.";
-//		future_iface.reportFinished();
-//		AMLMTEST_COUT << "Reported finished, is:" << ExtFutureState::state(future_iface);
+		AMLMTEST_COUT << "HIT HasFatalFailure";
+		return;
 	}
-};
-
-TEST_F(ExtFutureTest, ReportingRunnerBasicStreamingTap)
-{
-	TC_ENTER();
-
-	QFuture<int> the_future = make_default_future<QFuture<int>, int>();
-//	QFuture<int> tap_finished_future = make_default_future<QFuture<int>, int>();
-	QFutureWatcher<int> the_watcher(qApp);
-//	QFutureSynchronizer tap_future_sync(tap_finished_future);
-//	QFutureWatcher<int> the_tap_finished_watcher(qApp);
-
-	AMLMTEST_EXPECT_FALSE(the_future.isCanceled());
-//	AMLMTEST_EXPECT_FALSE(tap_finished_future.isCanceled());
-
-	TestReportingRunner* async_task = new TestReportingRunner();
-
-	AMLMTEST_COUT << "START running async_task.";
-	the_future = ReportingRunner::run(async_task);
-	AMLMTEST_COUT << "STARTED running async_task, the_future state:" << ExtFutureState::state(the_future);
-
-	/// Tap control/results watcher.
-	connect_or_die(&the_watcher, &QFutureWatcher<int>::resultsReadyAt, qApp, [=, &the_watcher](int begin, int end) mutable {
-		// The tap.
-		qDb() << "RECEIVED Tap Results:" << begin << end;
-		for(auto i = begin; i < end; ++i)
-		{
-			qDb() << "Result" << i << ":" << the_watcher.future().resultAt(i);
-		}
-		;});
-	/// Tap finished watcher.
-	connect_or_die(&the_watcher, &QFutureWatcher<int>::finished, qApp, [=, &the_watcher/*, &the_tap_finished_watcher*/]() mutable {
-		qDb() << "tap reported finished";
-//		tap_finished_future = the_watcher.future();
-//		tap_finished_future.d.reportFinished();
-M_WARNING("First reports Started|Finished, second reports Running|Started");
-//		qDb() << "Post-tap reported finished:" << ExtFutureState::state(tap_finished_future);
-//		qDb() << "Post-tap reported finished:" << ExtFutureState::state(tap_finished_future.d);
-//		QTest::qSleep(1000);
-//		qDb() << "Post-tap reported finished:" << ExtFutureState::state(the_tap_finished_watcher.future());
-//		run_in_event_loop(qApp, [=](){ tap_finished_future.d.reportFinished(); return 2; });
-		;});
-	the_watcher.setFuture(the_future);
-
-//	connect_or_die(&the_tap_finished_watcher, &QFutureWatcher<int>::finished, qApp, [=](){
-//		qDb() << "tap finished watcher finished";
-//		;});
-//	the_tap_finished_watcher.setFuture(tap_finished_future);
-
-	AMLMTEST_COUT << "STARTING WAIT ON the_future results" << ExtFutureState::state(the_future); // << ExtFutureState::state(tap_finished_future);
-	QTest::qWait(1000);
-	QList<int> the_results = the_future.results();
-	AMLMTEST_COUT << "WAIT ON the_future DONE" << ExtFutureState::state(the_future); // << ExtFutureState::state(tap_finished_future);
-
-	AMLMTEST_ASSERT_EQ(the_results.at(0), 8675309);
-	AMLMTEST_ASSERT_EQ(the_results.at(1), 8675310);
-
-//	{
-//		AMLMTEST_COUT << "STARTING WAIT ON tap_finished_future:" << ExtFutureState::state(tap_finished_future);
-//		QTest::qWait(1000);
-
-//		the_tap_finished_watcher.waitForFinished();
-//		QEventLoop loop(qApp);
-//		connect_or_die(&the_tap_finished_watcher, &QFutureWatcherBase::finished, &loop, &QEventLoop::quit);
-//		AMLMTEST_ASSERT_FALSE(tap_future_sync.cancelOnWait());
-//		tap_future_sync.waitForFinished();
-//		bool didnt_time_out = QTest::qWaitFor([&](){return tap_finished_future.isFinished();}, 5000);
-//		loop.exec();
-//		AMLMTEST_COUT << "WAIT ON tap_finished_future DONE" << ExtFutureState::state(tap_finished_future);
-//		AMLMTEST_ASSERT_TRUE(didnt_time_out);
-//	}
-
-
-//	the_future.waitForFinished();
-
-	AMLMTEST_ASSERT_TRUE(the_future.isFinished());
-//	AMLMTEST_ASSERT_TRUE(tap_finished_future.isFinished());
-
-	AMLMTEST_COUT << "EXITING";
 
 	TC_EXIT();
 }

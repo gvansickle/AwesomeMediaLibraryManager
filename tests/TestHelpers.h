@@ -68,6 +68,26 @@ inline void PrintTo(const ExtFuture<T> &ef, ::std::ostream *os)
     PrintTo(str, os);
 }
 
+/// To let Google Test print QFutures.
+template <class T>
+inline void PrintTo(const QFuture<T> &qf, ::std::ostream *os)
+{
+	QString str;
+	QDebug dbg(&str);
+	dbg << toString(ExtFutureState::state(qf));
+	PrintTo(str, os);
+}
+
+/// To let Google Test print ExtFutureStates.
+template <class T>
+inline void PrintTo(const ExtFutureState::State &efs, ::std::ostream *os)
+{
+	QString str;
+	QDebug dbg(&str);
+	dbg << toString(efs);
+	PrintTo(str, os);
+}
+
 QT_END_NAMESPACE
 
 /// Divisor for ms delays/timeouts in the tests.
@@ -147,6 +167,10 @@ enum class GenericState
 #define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
 #define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
 #define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
+#define AMLMTEST_ASSERT_GT(arg1, arg2) ???ASSERT_GT(arg1, arg2)
+#define AMLMTEST_ASSERT_GE(arg1, arg2) ??ASSERT_GE(arg1, arg2)
+#define AMLMTEST_ASSERT_LT(arg1, arg2) ??ASSERT_LT(arg1, arg2)
+#define AMLMTEST_ASSERT_LE(arg1, arg2) ??ASSERT_LE(arg1, arg2)
 #define AMLMTEST_ASSERT_STREQ(actual, expected) QCOMPARE(actual, expected)
 #define AMLMTEST_EXPECT_STREQ(actual, expected) QCOMPARE(actual, expected)
 
@@ -167,6 +191,10 @@ enum class GenericState
 #define AMLMTEST_EXPECT_EQ(arg1, arg2) EXPECT_EQ(arg1, arg2)
 #define AMLMTEST_ASSERT_EQ(arg1, arg2) ASSERT_EQ(arg1, arg2)
 #define AMLMTEST_ASSERT_NE(arg1, arg2) ASSERT_NE(arg1, arg2)
+#define AMLMTEST_EXPECT_GT(arg1, arg2) EXPECT_GT(arg1, arg2)
+#define AMLMTEST_EXPECT_GE(arg1, arg2) EXPECT_GE(arg1, arg2)
+#define AMLMTEST_EXPECT_LT(arg1, arg2) EXPECT_LT(arg1, arg2)
+#define AMLMTEST_EXPECT_LE(arg1, arg2) EXPECT_LE(arg1, arg2)
 #define AMLMTEST_ASSERT_STREQ(actual, expected) ASSERT_STREQ(actual, expected)
 #define AMLMTEST_EXPECT_STREQ(actual, expected) EXPECT_STREQ(actual, expected)
 
