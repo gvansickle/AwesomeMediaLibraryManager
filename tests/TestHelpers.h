@@ -199,6 +199,7 @@ enum class GenericState
 #define AMLMTEST_EXPECT_STREQ(actual, expected) EXPECT_STREQ(actual, expected)
 
 #define AMLMTEST_EXPECT_NO_FATAL_FAILURE(...) EXPECT_NO_FATAL_FAILURE(__VA_ARGS__)
+#define AMLMTEST_ASSERT_NO_FATAL_FAILURE(...) ASSERT_NO_FATAL_FAILURE(__VA_ARGS__)
 
 #else
 #error "NO TEST FRAMEWORK"

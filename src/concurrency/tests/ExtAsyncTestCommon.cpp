@@ -158,7 +158,7 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
 void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 {
 	AMLMTEST_ASSERT_FALSE(m_interstate.is_test_currently_running()); // << "A test was still running:" << get_currently_running_test();
-	AMLMTEST_EXPECT_TRUE(m_interstate.get_currently_running_test().empty()); // << "A test was still running" << get_currently_running_test();
+	AMLMTEST_ASSERT_TRUE(m_interstate.get_currently_running_test().empty()); // << "A test was still running" << get_currently_running_test();
 }
 
 void ExtAsyncTestsSuiteFixtureBase::TearDown()

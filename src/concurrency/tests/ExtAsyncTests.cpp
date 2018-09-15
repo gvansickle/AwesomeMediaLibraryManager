@@ -282,20 +282,31 @@ void QtConcurrentRunFutureStateOnCancelGuts()
 
 	AMLMTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(the_future);
 
-    EXPECT_TRUE(the_future.isStarted());
-    EXPECT_TRUE(the_future.isCanceled());
-    EXPECT_FALSE(the_future.isRunning());
-    EXPECT_TRUE(the_future.isFinished());
+	AMLMTEST_ASSERT_TRUE(the_future.isStarted());
+	AMLMTEST_ASSERT_TRUE(the_future.isCanceled());
+	AMLMTEST_ASSERT_FALSE(the_future.isRunning());
+	AMLMTEST_ASSERT_TRUE(the_future.isFinished());
 }
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunQFutureStateOnCancel)
 {
-    QtConcurrentRunFutureStateOnCancelGuts<QFuture<int>>();
+	TC_ENTER();
+
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
+		QtConcurrentRunFutureStateOnCancelGuts<QFuture<int>>();
+									 });
+	TC_EXIT();
 }
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunExtFutureStateOnCancel)
 {
-    QtConcurrentRunFutureStateOnCancelGuts<ExtFuture<int>>();
+	TC_ENTER();
+
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
+		QtConcurrentRunFutureStateOnCancelGuts<ExtFuture<int>>();
+									 });
+
+	TC_EXIT();
 }
 
 template <typename FutureTypeT>
@@ -393,21 +404,21 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 
     if(dont_let_jobs_complete)
     {
-        EXPECT_EQ(f.resultCount(), 0);
+		AMLMTEST_EXPECT_EQ(f.resultCount(), 0);
     }
     else
     {
-        EXPECT_EQ(f.resultCount(), 10);
+		AMLMTEST_EXPECT_EQ(f.resultCount(), 10);
     }
 
     /// @todo THIS IS WRONG, waitForFinished() followed by .result() segfaults.
 //    AMLMTEST_COUT << "POST-wait RESULT:" << f.result();
 	AMLMTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(f);
 
-	ASSERT_TRUE(f.isStarted());
-	ASSERT_TRUE(f.isCanceled());
-	ASSERT_TRUE(f.isFinished());
-	ASSERT_FALSE(f.isRunning());
+	AMLMTEST_ASSERT_TRUE(f.isStarted());
+	AMLMTEST_ASSERT_TRUE(f.isCanceled());
+	AMLMTEST_ASSERT_TRUE(f.isFinished());
+	AMLMTEST_ASSERT_FALSE(f.isRunning());
 
 }
 
@@ -415,7 +426,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelNoComple
 {
     TC_ENTER();
 
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
     QtConcurrentMappedFutureStateOnCancel<QFuture<int>>(true);
+									 });
 
     TC_EXIT();
 }
@@ -424,7 +437,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelNoComp
 {
     TC_ENTER();
 
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
     QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(true);
+									 });
 
     TC_EXIT();
 }
@@ -433,7 +448,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelAllCompl
 {
     TC_ENTER();
 
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
     QtConcurrentMappedFutureStateOnCancel<QFuture<int>>(false);
+									 });
 
     TC_EXIT();
 }
@@ -442,7 +459,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelAllCom
 {
     TC_ENTER();
 
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
     QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(false);
+									 });
 
     TC_EXIT();
 }
