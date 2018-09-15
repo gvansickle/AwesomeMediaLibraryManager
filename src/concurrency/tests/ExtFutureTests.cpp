@@ -506,98 +506,9 @@ TYPED_TEST(ExtFutureTypedTestFixture, PFutureStreamingTap)
 	TC_EXIT();
 }
 
-TEST_F(ExtFutureTest, DISABLED_QFutureBasicStreamingTap)
-{
-	TC_ENTER();
-
-	QFuture<int> the_future = make_default_future<QFuture<int>, int>();
-	QFuture<int> tap_finished_future = make_default_future<QFuture<int>, int>();
-	QFutureWatcher<int> the_watcher(qApp);
-//	QFutureSynchronizer tap_future_sync(tap_finished_future);
-	QFutureWatcher<int> the_tap_finished_watcher(qApp);
-
-	AMLMTEST_EXPECT_FALSE(the_future.isCanceled());
-	AMLMTEST_EXPECT_FALSE(tap_finished_future.isCanceled());
-
-	auto dontcare_f2 = QtConcurrent::run([=](/*std::reference_wrapper<QFutureInterface<int>>*/QFutureInterface<int>* future_iface_ref) mutable {
-		QFutureInterface<int>& future_iface = *future_iface_ref;
-		AMLMTEST_COUT << "Reporting started, was:" << ExtFutureState::state(future_iface);
-		future_iface.reportStarted();
-		AMLMTEST_COUT << "Reported started, is:" << ExtFutureState::state(future_iface);
-		AMLMTEST_COUT << "Waiting...";
-		TC_Sleep(1000);
-		AMLMTEST_COUT << "Waiting done, sending value 1 to future...";
-		future_iface.reportResult(8675309);
-		AMLMTEST_COUT << "Waiting...";
-		TC_Sleep(1000);
-		AMLMTEST_COUT << "Waiting done, sending value 2 to future...";
-		future_iface.reportResult(8675310);
-		AMLMTEST_COUT << "Reporting finished";
-		future_iface.reportFinished();
-		AMLMTEST_COUT << "Reported finished, is:" << ExtFutureState::state(future_iface);
-		;}, &(the_future.d));//std::ref(the_future.d));
-
-	/// Tap
-	connect_or_die(&the_watcher, &QFutureWatcher<int>::resultsReadyAt, qApp, [=, &the_watcher](int begin, int end) mutable {
-		// The tap.
-		qDb() << "Tap Results:" << begin << end;
-		for(auto i = begin; i < end; ++i)
-		{
-			qDb() << "Result" << i << ":" << the_watcher.future().resultAt(i);
-		}
-		;});
-	connect_or_die(&the_watcher, &QFutureWatcher<int>::finished, qApp, [=, &the_watcher, &the_tap_finished_watcher]() mutable {
-		qDb() << "tap reported finished";
-		tap_finished_future = the_watcher.future();
-		tap_finished_future.d.reportFinished();
-M_WARNING("First reports Started|Finished, second reports Running|Started");
-		qDb() << "Post-tap reported finished:" << ExtFutureState::state(tap_finished_future);
-		qDb() << "Post-tap reported finished:" << ExtFutureState::state(tap_finished_future.d);
-		QTest::qSleep(1000);
-		qDb() << "Post-tap reported finished:" << ExtFutureState::state(the_tap_finished_watcher.future());
-//		run_in_event_loop(qApp, [=](){ tap_finished_future.d.reportFinished(); return 2; });
-		;});
-	the_watcher.setFuture(the_future);
-
-	connect_or_die(&the_tap_finished_watcher, &QFutureWatcher<int>::finished, qApp, [=](){
-		qDb() << "tap finished watcher finished";
-		;});
-	the_tap_finished_watcher.setFuture(tap_finished_future);
-
-	AMLMTEST_COUT << "STARTING WAIT ON the_future" << ExtFutureState::state(the_future) << ExtFutureState::state(tap_finished_future);
-//	QTest::qWait(1000);
-	int the_result = the_watcher.result();
-	AMLMTEST_COUT << "WAIT ON the_future DONE" << ExtFutureState::state(the_future) << ExtFutureState::state(tap_finished_future);
-
-	AMLMTEST_ASSERT_EQ(the_result, 8675309);
-
-//	{
-		AMLMTEST_COUT << "STARTING WAIT ON tap_finished_future:" << ExtFutureState::state(tap_finished_future);
-//		QTest::qWait(1000);
-
-//		the_tap_finished_watcher.waitForFinished();
-		QEventLoop loop(qApp);
-		connect_or_die(&the_tap_finished_watcher, &QFutureWatcherBase::finished, &loop, &QEventLoop::quit);
-//		AMLMTEST_ASSERT_FALSE(tap_future_sync.cancelOnWait());
-//		tap_future_sync.waitForFinished();
-		bool didnt_time_out = QTest::qWaitFor([&](){return tap_finished_future.isFinished();}, 5000);
-		loop.exec();
-		AMLMTEST_COUT << "WAIT ON tap_finished_future DONE" << ExtFutureState::state(tap_finished_future);
-		AMLMTEST_ASSERT_TRUE(didnt_time_out);
-//	}
-
-
-//	the_future.waitForFinished();
-
-	AMLMTEST_ASSERT_TRUE(the_future.isFinished());
-	AMLMTEST_ASSERT_TRUE(tap_finished_future.isFinished());
-
-	TC_EXIT();
-}
 
 /**
- * Test "streaming" tap().
- * @todo Currently crashes.
+ * Test streaming tap().
  */
 TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {

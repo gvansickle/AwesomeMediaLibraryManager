@@ -215,12 +215,12 @@ private Q_SLOTS:
 
 #define TC_ENTER() \
     /* The name of this test as a static std::string. */ \
-    static const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
+	const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
 	this->starting(static_test_id_string); \
-    static std::atomic_bool test_func_called {true}; \
-    static std::atomic_bool test_func_exited {false}; \
-    static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
-    static std::atomic_bool test_func_stack_is_gone {false}; \
+	std::atomic_bool test_func_called {true}; \
+	std::atomic_bool test_func_exited {false}; \
+	std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
+	std::atomic_bool test_func_stack_is_gone {false}; \
     TC_EXPECT_THIS_TC();
 
 
