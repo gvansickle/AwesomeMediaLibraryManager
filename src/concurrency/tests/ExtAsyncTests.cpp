@@ -306,7 +306,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 
     QVector<int> dummy_vector{0,1,2,3,4,5,6,7,8,9};
 
-	AMLMTEST_COUT << "CALLING QTC::mapped()";//;
+	AMLMTEST_COUT << "CALLING QTC::mapped()";
 
     /**
      * Per docs:
@@ -322,7 +322,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 		f = make_startedNotCanceled_QFuture<int>();
     }
 
-    std::function<int(const int&)> lambda = [&](const int& the_passed_value) -> int {
+	std::function<int(const int&)> lambda = [&](const int& the_passed_value) -> int {
 		AMLMTEST_COUT << "Entered callback, passed value:" << the_passed_value;
 
 		AMLMTEST_COUT << "FUTURE:" << ExtFutureState::state(f);
@@ -404,10 +404,10 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 //    AMLMTEST_COUT << "POST-wait RESULT:" << f.result();
 	AMLMTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(f);
 
-    EXPECT_TRUE(f.isStarted());
-    EXPECT_TRUE(f.isCanceled());
-    EXPECT_TRUE(f.isFinished());
-    EXPECT_FALSE(f.isRunning());
+	ASSERT_TRUE(f.isStarted());
+	ASSERT_TRUE(f.isCanceled());
+	ASSERT_TRUE(f.isFinished());
+	ASSERT_FALSE(f.isRunning());
 
 }
 
