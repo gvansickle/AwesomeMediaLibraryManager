@@ -261,7 +261,7 @@ void tst_QString::ExtFutureStreamingTap()
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.");
-	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](eftype ef, int begin, int end) mutable {
+	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](eftype ef, int begin, int end)  {
 			AMLMTEST_COUT << "IN TAP, begin:" << begin << ", end:" << end;
 		for(int i = begin; i<end; i++)
 		{

@@ -599,13 +599,13 @@ M_WARNING("First reports Started|Finished, second reports Running|Started");
  * Test "streaming" tap().
  * @todo Currently crashes.
  */
-TEST_F(ExtFutureTest, DISABLED_ExtFutureStreamingTap)
+TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 {
     TC_ENTER();
 
 	using eftype = ExtFuture<int>;
 
-    static std::atomic_int num_tap_completions {0};
+	std::atomic_int num_tap_completions {0};
 	QList<int> async_results_from_tap, async_results_from_get;
 
 
@@ -628,7 +628,7 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureStreamingTap)
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.");
-	auto f2 = ef.tap(qApp, [=, &async_results_from_tap](eftype ef, int begin, int end) mutable {
+	auto f2 = ef.tap(qApp, [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end)  {
             GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
@@ -637,6 +637,10 @@ M_WARNING("TODO: This is still spinning when the test exits.");
             num_tap_completions++;
         }
 	});
+
+	AMLMTEST_EXPECT_TRUE(f2.isStarted());
+	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
+	AMLMTEST_EXPECT_FALSE(f2.isFinished());
 
 //	ExtFutureWatcher<int> f2w(nullptr, nullptr);
 //	f2w.then([=](){
@@ -647,10 +651,9 @@ M_WARNING("TODO: This is still spinning when the test exits.");
 
 	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << f2;
 
-	f2.wait();
+	async_results_from_get = f2.results();
 
 	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << f2;
-    async_results_from_get = ef.results();
 
     EXPECT_TRUE(ef.isFinished());
     EXPECT_EQ(num_tap_completions, 6);

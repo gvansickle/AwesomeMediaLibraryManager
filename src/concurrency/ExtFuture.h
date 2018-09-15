@@ -960,10 +960,10 @@ public:
 	}
 
     /**
-     * tap() overload for "streaming" ExtFutures.
+	 * tap() overload for "streaming" taps.
      * Callback takes a reference to this, a begin index, and an end index:
      * @code
-	 *      void TapCallback(ExtFuture<T>& ef, int begin, int end)
+	 *      void TapCallback(ExtFuture<T> ef, int begin, int end)
      * @endcode
 	 *
 	 * @returns An ExtFuture<T> which is made ready when this is completed.
@@ -1216,7 +1216,7 @@ protected:
 	 * @return
 	 */
 	template <typename F,
-		REQUIRES(ct::is_invocable_r_v<void, F, ExtFuture<T>&, int, int>)
+		REQUIRES(ct::is_invocable_r_v<void, F, ExtFuture<T>, int, int>)
 		>
 	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
@@ -1252,6 +1252,9 @@ protected:
 					break;
 				}
 
+				// Call the tap callback.
+				tap_callback(ef, i, result_count);
+
 				// Copy over the new results
 				for(; i < result_count; ++i)
 				{
@@ -1270,18 +1273,19 @@ protected:
 			if(ef.isCanceled())
 			{
 				qDb() << "TAP: ef cancelled:" << ef.state();
-				/// @todo PROPAGATE
+				f2.reportCanceled();
 			}
 			else if(ef.isFinished())
 			{
 				qDb() << "TAP: ef finished:" << ef.state();
-				/// @todo PROPAGATE
+				f2.reportFinished();
 			}
 			else
 			{
 				/// @todo Exceptions.
 				qDb() << "NOT FINISHED OR CANCELED:" << ef.state();
-			}
+				Q_ASSERT(0);
+			}		
 		},
 		*this,
 		ef_copy);
