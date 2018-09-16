@@ -283,10 +283,10 @@ std::string ExtAsyncTestsSuiteFixtureBase::get_test_id_string_from_fixture()
 	return test_id;
 }
 
-TestHandle ExtAsyncTestsSuiteFixtureBase::get_test_handle_from_fixture()
-{
+//TestHandle ExtAsyncTestsSuiteFixtureBase::get_test_handle_from_fixture()
+//{
 
-}
+//}
 
 void ExtAsyncTestsSuiteFixtureBase::register_generator(trackable_generator_base *generator)
 {

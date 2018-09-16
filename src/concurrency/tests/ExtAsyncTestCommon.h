@@ -200,7 +200,7 @@ public:
      */
     std::string get_test_id_string_from_fixture();
 
-	TestHandle get_test_handle_from_fixture();
+//	TestHandle get_test_handle_from_fixture();
 
     void register_generator(trackable_generator_base* generator);
 

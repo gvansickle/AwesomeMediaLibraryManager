@@ -17,13 +17,13 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SRC_CONCURRENCY_EXTFUTURE_H
+#define SRC_CONCURRENCY_EXTFUTURE_H
+
 /**
  * @file
  * An extended QFuture<T> class.
  */
-
-#ifndef UTILS_CONCURRENCY_EXTFUTURE_H_
-#define UTILS_CONCURRENCY_EXTFUTURE_H_
 
 // Std C++
 #include <memory>
@@ -167,12 +167,15 @@ public:
 
 	/// Move constructor
 	/// @note Qt5's QFuture doesn't have this.
-	ExtFuture(ExtFuture<T>&& other) : QFuture<T>(other) {};
+	ExtFuture(ExtFuture<T>&& other) noexcept : QFuture<T>(other) {};
 
     /// Copy construct from QFuture.
 	ExtFuture(const QFuture<T>& f) : BASE_CLASS(f) {}
     /// Move construct from QFuture.
-	ExtFuture(QFuture<T>&& f) : BASE_CLASS(f) {};// = delete;
+	ExtFuture(QFuture<T>&& f) noexcept : BASE_CLASS(f) {};// = delete;
+	/// Copy construct from QFuture<void>.
+	/// @todo
+	ExtFuture(const QFuture<void>& f) : BASE_CLASS(f) {}
 
     explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
 		: BASE_CLASS(p) {}
@@ -377,8 +380,8 @@ public:
 			  >
 	ExtFuture<R> then(QObject* context, F&& then_callback)
 	{
-		static_assert(!std::is_same_v<R, void> && !IsExtFuture<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
-		return ThenHelper(context, std::forward<F>(then_callback), *this);
+		static_assert(is_non_void_non_ExtFuture_v<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
+		return this->ThenHelper(context, std::forward<F>(then_callback), *this);
 	}
 
 	/**
@@ -403,7 +406,7 @@ public:
 	ExtFuture<R> then( F&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
-		return then(QApplication::instance(), std::forward<F>(then_callback));
+		return this->then(QApplication::instance(), std::forward<F>(then_callback));
 	}
 
 	/// @} // END .then() overloads.
@@ -610,6 +613,20 @@ protected:
 //    }
 
 	/**
+	 * Simple wrapper allowing us to call this->d.waitForResult(i) without
+	 * directly touching the not-really-public QFutureInterfaceBase instance d.
+	 *
+	 * Used by StreamingTapHelper.
+	 *
+	 * @param resultIndex
+	 */
+	void waitForResult(int resultIndex)
+	{
+		this->d.waitForResult(resultIndex);
+	}
+
+
+	/**
 	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
 	 */
 	template <typename F, typename... Args, typename R = std::result_of_t<F&&(Args...)>>
@@ -677,6 +694,13 @@ protected:
 		>
 	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
+		return StreamingTapHelper(guard_qobject, [=, tap_cb = std::decay_t<F>(tap_callback)](ExtFuture<T> f, int begin, int end) {
+			for(auto i = begin; i < end; ++i)
+			{
+				tap_cb(f.resultAt(i));
+			}
+		});
+#if 0
 		auto watcher = new QFutureWatcher<T>();
 		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		connect_or_die(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
@@ -688,22 +712,24 @@ protected:
 			});
         watcher->setFuture(*this);
 		return *this;
+#endif
 	}
 
 	/**
-	 * TapHelper which calls tap_callback whenever there's a new result ready.
-	 * @param guard_qobject
-	 * @param tap_callback   callable with signature void(*)(T)
+	 * Helper for streaming taps.  Calls streaming_tap_callback with (ExtFuture<T>, begin_index, end_index) whenever
+	 * the future has new results ready.
+	 * @param guard_qobject  @todo Currently unused.
+	 * @param streaming_tap_callback   callable with signature void(*)(ExtFuture<T>, int, int)
 	 * @return
 	 */
 	template <typename F,
 		REQUIRES(ct::is_invocable_r_v<void, F, ExtFuture<T>, int, int>)
 		>
-	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, F&& tap_callback)
+	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, F&& streaming_tap_callback)
 	{
 		ExtFuture<T> ef_copy;
 
-		QtConcurrent::run([=](ExtFuture<T> ef, ExtFuture<T> f2) {
+		QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<F>(streaming_tap_callback)](ExtFuture<T> ef, ExtFuture<T> f2) {
 			qDb() << "TAP: START TAP RUN(), ef:" << ef.state() << "f2:" << f2.state();
 
 			int i = 0;
@@ -722,7 +748,7 @@ protected:
 				  *     d->waitCondition.wait(&d->m_mutex);
 				  *   d->m_exceptionStore.throwPossibleException();
 				  */
-				ef.d.waitForResult(i);
+				ef.waitForResult(i);
 
 				// Check if the wait failed to result in any results.
 				int result_count = ef.resultCount();
@@ -734,7 +760,7 @@ protected:
 				}
 
 				// Call the tap callback.
-				tap_callback(ef, i, result_count);
+				streaming_tap_callback_copy(ef, i, result_count);
 
 				// Copy over the new results
 				for(; i < result_count; ++i)
@@ -827,6 +853,14 @@ void ExtFuture<T>::wait()
     }
 }
 
+/**
+ * Convert any ExtFuture<T> to a QFuture<void>.
+ */
+template <typename T>
+QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
+{
+	return QFuture<void>(future.d);
+}
 
 template<typename T>
 ExtFutureState::State ExtFuture<T>::state() const
@@ -960,5 +994,5 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
     return outstream;
 }
 
-#endif /* UTILS_CONCURRENCY_EXTFUTURE_H_ */
+#endif /* SRC_CONCURRENCY_EXTFUTURE_H_ */
 

@@ -315,7 +315,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentRunExtFutureStateOnCancel)
 template <typename FutureTypeT>
 void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 {
-    SCOPED_TRACE("");
+	AMLMTEST_SCOPED_TRACE("IN QtConcurrentMappedFutureStateOnCancel template function");
     std::atomic_int counter{0};
 
     QVector<int> dummy_vector{0,1,2,3,4,5,6,7,8,9};
@@ -697,7 +697,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
         .then([&](ExtFuture<int> extfuture) -> int {
             TC_EXPECT_THIS_TC();
 
-			EXPECT_EQ(tap_complete, true);
+			EXPECT_TRUE(tap_complete);
 
 			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(extfuture.isRunning());
@@ -927,7 +927,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRunFreefunc)
 }
 
 /// Static checks
-void dummy(void)
+TEST_F(ExtAsyncTestsSuiteFixture, StaticChecks)
 {
 
 	static_assert(std::is_default_constructible<QString>::value, "");
