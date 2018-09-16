@@ -35,17 +35,22 @@
 	M_WARNING("Building for Google Test framework");
 // Google Test Framework
 #include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
+
+#include <tests/TestLifecycleManager.h>
 
 #elif defined(TEST_FWK_IS_QTEST)
 	M_WARNING("Building for QTest framework");
 #else
 #error "No test framework defined"
 #endif // TEST_FWK_IS_GTEST
+#if defined(TEST_FWK_IS_QTEST) && defined(TEST_FWK_IS_GTEST)
+#error "BOTH TEST FRAMEWORKS DEFINED"
+#endif
+
 
 // Ours
 //#include <tests/TestHelpers.h>
-#include <tests/TestLifecycleManager.h>
 #include "../ExtFuture.h"
 #include "../ExtAsync.h"
 #include "../ExtAsync_traits.h"

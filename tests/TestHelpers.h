@@ -43,7 +43,6 @@
 #else
 #error "No test framework defined"
 #endif
-
 #if defined(TEST_FWK_IS_QTEST) && defined(TEST_FWK_IS_GTEST)
 #error "BOTH TEST FRAMEWORKS DEFINED"
 #endif

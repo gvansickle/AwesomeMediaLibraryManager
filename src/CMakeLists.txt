@@ -392,7 +392,9 @@ include(CTest)
 # Therefore, this command should be in the source directory root."
 enable_testing()
 
+###
 ### Google Test
+###
 find_package(Threads REQUIRED)
 download_project(PROJ                googletest
                  GIT_REPOSITORY      https://github.com/google/googletest.git
@@ -402,12 +404,19 @@ download_project(PROJ                googletest
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# Add googletest directly to our build. This adds
+# the following targets: gtest, gtest_main, gmock
+# and gmock_main.
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 	EXCLUDE_FROM_ALL)
+# Now we should be able to link our targets against gtest, gmock, etc. as appropriate
 message(STATUS "GOOGLETEST-------------------------------")
 print_varlist(googletest_SOURCE_DIR googletest_BINARY_DIR)
 message(STATUS "GOOGLETEST-------------------------------")
 
+###
+### The "alltests" Google Test-based test exe.
+###
 set(TEST_EXE_TARGET alltests)
 set(AMLM_SOURCE_FILES_TEST "")
 set(AMLM_HEADER_FILES_TEST "")
@@ -450,11 +459,14 @@ set_target_properties(${TEST_EXE_TARGET} PROPERTIES
 	AUTOMOC ON
 	AUTOUIC ON)
 # We don't want AUTOMOC etc. applied to googletest.
-set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY SKIP_AUTOGEN ON)
+set_property(DIRECTORY ${googletest_SOURCE_DIR}
+	PROPERTY SKIP_AUTOGEN ON
+	EXCLUDE_FROM_ALL)
 set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
-#set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main tests_subdir)
+set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock tests_subdir)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
