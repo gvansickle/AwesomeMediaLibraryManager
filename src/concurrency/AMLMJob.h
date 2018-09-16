@@ -838,10 +838,10 @@ protected:
     *
     * @return true if job successfully killed, false otherwise.
     */
-    bool doKill() override { return doKillT(); }
+    bool doKill() override { return this->doKillT(); }
 
-    bool doSuspend() override { return doSuspendT(); }
-    bool doResume() override { return doResumeT(); }
+    bool doSuspend() override { return this->doSuspendT(); }
+    bool doResume() override { return this->doResumeT(); }
     /// @}
 
     bool doKillT()

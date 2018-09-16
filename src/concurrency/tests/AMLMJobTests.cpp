@@ -630,13 +630,13 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 0);
 
-//	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
-	{
-		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000);
-		EXPECT_TRUE(got_job_destroyed_signal.load());
-		EXPECT_TRUE(didnt_timeout);
+	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+//	{
+//		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000);
+//		EXPECT_TRUE(got_job_destroyed_signal.load());
+//		EXPECT_TRUE(didnt_timeout);
 
-	}
+//	}
 
     TC_EXIT();
 }
