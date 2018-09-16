@@ -142,9 +142,9 @@ void CopyAssign()
 
 TEST_F(ExtFutureTest, CopyAssignTests)
 {
-    SCOPED_TRACE("CopyAssignTests");
+	SCOPED_TRACE("CopyAssignTests");
 
-    TC_ENTER();
+	TC_ENTER();
 
     CopyAssign<QFuture>();
 

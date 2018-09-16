@@ -20,6 +20,8 @@
 #ifndef TESTS_TESTHELPERS_H_
 #define TESTS_TESTHELPERS_H_
 
+#include <config.h>
+
 // Std C++
 #include <sstream>
 
@@ -28,17 +30,14 @@
 #include <QTest>
 #include <QString>
 
-// Google Test
-//#include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
-
-// Ours
-#include <src/concurrency/ExtFuture.h>
-
-
 // Determine if we're being used in a QTest or Google Test build.
+#include <utils/DebugHelpers.h>
 #if defined(TEST_FWK_IS_GTEST)
 	M_WARNING("Building for Google Test framework");
+	// Include Google Test / Mock headers
+	#include <gtest/gtest.h>
+	#include <gmock/gmock.h>
+
 #elif defined(TEST_FWK_IS_QTEST)
 	M_WARNING("Building for QTest framework");
 #else
@@ -48,6 +47,9 @@
 #if defined(TEST_FWK_IS_QTEST) && defined(TEST_FWK_IS_GTEST)
 #error "BOTH TEST FRAMEWORKS DEFINED"
 #endif
+
+// Ours
+#include <src/concurrency/ExtFuture.h>
 
 
 QT_BEGIN_NAMESPACE

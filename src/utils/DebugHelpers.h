@@ -247,11 +247,13 @@ struct print_constexpr_in_compilation_warning
 #define STATIC_PRINT_CONSTEXPR_VAL(constant) char(print_constexpr_in_compilation_warning<constant>())
 /// @}
 
-/// @name Preprocessor helpers for M_WARNING().
+/// @name Preprocessor helpers for string expansion etc.
+/// Used in M_WARNING() and elsewhere.
 /// @{
 #define STRINGISE_IMPL(x) #x
 #define STRINGISE(x) STRINGISE_IMPL(x)
 #define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) "): "
+#define DEFER(M, ...) M(__VA_ARGS__)
 /// @}
 
 #define M_NAME_VAL(id) STRINGISE_IMPL(id) ":" << id
@@ -268,16 +270,17 @@ struct print_constexpr_in_compilation_warning
 
 
 /**
- * Portable compile-time warning message.
+ * Portable compile-time message and warning output.
  * Use: M_WARNING("My message")
  */
 #if defined(_MSC_VER)
 #   define M_WARNING(exp) __pragma(message(FILE_LINE_LINK "warning C2660: " exp))
 #elif defined(__clang__)
-#   define DEFER(M, ...) M(__VA_ARGS__)
+#   define M_MESSAGE(msg) M_WARNING(msg) //_Pragma(STRINGIZE_IMPL(message(msg " at line " DEFER(STRINGISE_IMPL,__LINE__))))
 #   define M_WARNING(X) _Pragma(STRINGISE_IMPL(GCC warning(X " at line " DEFER(STRINGISE_IMPL, __LINE__))))
 #elif defined(__GNUC__) || defined(__GNUCXX__)
 #	define DO_PRAGMA(x) _Pragma(#x)
+#   define M_MESSAGE(msg) _Pragma(STRINGIZE_IMPL(GCC message(msg " at line " DEFER(STR,__LINE__))))
 #   define M_WARNING(exp) DO_PRAGMA(message FILE_LINE_LINK "warning: " exp)
 #endif
 

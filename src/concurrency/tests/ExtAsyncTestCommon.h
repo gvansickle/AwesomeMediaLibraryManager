@@ -45,6 +45,7 @@
 
 // Ours
 //#include <tests/TestHelpers.h>
+#include <tests/TestLifecycleManager.h>
 #include "../ExtFuture.h"
 #include "../ExtAsync.h"
 #include "../ExtAsync_traits.h"
@@ -145,7 +146,7 @@ using AMLMTEST_BASE_CLASS = QObject;
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  * @link https://github.com/google/googletest/blob/master/googletest/docs/faq.md#can-i-derive-a-test-fixture-from-another
  */
-class ExtAsyncTestsSuiteFixtureBase : public AMLMTEST_BASE_CLASS //::testing::Test
+class ExtAsyncTestsSuiteFixtureBase : public AMLMTEST_BASE_CLASS // ::testing::Test or QObject
 {
 
 protected:
@@ -237,7 +238,16 @@ private Q_SLOTS:
 
 #define GTEST_COUT_qDB qDb()
 
+#ifndef TEST_FWK_IS_QTEST
 #define TC_ENTER() \
+	/* The Google Mock-based TestLifecycleManager instance for this test. */ \
+	TestLifecycleManager tlm; \
+	EXPECT_CALL(tlm, MTC_ENTER()) \
+			.Times(1); \
+	EXPECT_CALL(tlm, MTC_EXIT()) \
+			.Times(1); \
+	\
+	tlm.MTC_ENTER(); \
     /* The name of this test as a static std::string. */ \
 	const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
 	this->starting(static_test_id_string); \
@@ -246,7 +256,17 @@ private Q_SLOTS:
 	std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
 	std::atomic_bool test_func_stack_is_gone {false}; \
     TC_EXPECT_THIS_TC();
-
+#else // !TEST_FWK_IS_QTEST
+#define TC_ENTER() \
+	/* The name of this test as a static std::string. */ \
+	const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
+	this->starting(static_test_id_string); \
+	std::atomic_bool test_func_called {true}; \
+	std::atomic_bool test_func_exited {false}; \
+	std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
+	std::atomic_bool test_func_stack_is_gone {false}; \
+	TC_EXPECT_THIS_TC();
+#endif // TEST_FWK_IS_QTEST
 
 #define TC_EXPECT_THIS_TC() \
 	AMLMTEST_EXPECT_EQ(this->get_currently_running_test(), static_test_id_string);
@@ -269,7 +289,8 @@ private Q_SLOTS:
 	AMLMTEST_ASSERT_TRUE(test_func_called); \
 	AMLMTEST_ASSERT_TRUE(test_func_exited); \
 	AMLMTEST_ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
-	this->finished(static_test_id_string);
+	this->finished(static_test_id_string); \
+	tlm.MTC_EXIT();
 
 /// @name Macros for making sure a KJob emits the expected signals and gets destroyed before the TEST_F() returns.
 /// @{

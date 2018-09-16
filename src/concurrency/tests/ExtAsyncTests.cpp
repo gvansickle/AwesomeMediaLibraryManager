@@ -36,14 +36,19 @@
 
 // Google Test
 #include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 
 // Ours
 #include <tests/TestHelpers.h>
 #include "ExtAsyncTestCommon.h"
 
+// Mocks
+#include <tests/TestLifecycleManager.h>
+
+
 // Classes Under Test.
 #include "../ExtAsync.h"
+
 
 
 ///
@@ -433,7 +438,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelNoComple
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedExtFutureStateOnCancelNoCompletions)
 {
-    TC_ENTER();
+	TC_ENTER();
 
 	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
     QtConcurrentMappedFutureStateOnCancel<ExtFuture<int>>(true);

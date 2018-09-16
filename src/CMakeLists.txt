@@ -404,18 +404,23 @@ download_project(PROJ                googletest
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 	EXCLUDE_FROM_ALL)
+message(STATUS "GOOGLETEST-------------------------------")
+print_varlist(googletest_SOURCE_DIR googletest_BINARY_DIR)
+message(STATUS "GOOGLETEST-------------------------------")
 
 set(TEST_EXE_TARGET alltests)
 set(AMLM_SOURCE_FILES_TEST "")
 set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
+#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.cpp
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
 	concurrency/tests/ExtAsyncTestCommon.cpp
 	concurrency/tests/ExtFutureTests.cpp
 	concurrency/tests/AMLMJobTests.cpp)
 list(APPEND AMLM_HEADER_FILES_TEST
-	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+#	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
 	concurrency/tests/ExtAsyncTestCommon.h
@@ -447,9 +452,9 @@ set_target_properties(${TEST_EXE_TARGET} PROPERTIES
 # We don't want AUTOMOC etc. applied to googletest.
 set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
-#set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
 #set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main tests_subdir)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})

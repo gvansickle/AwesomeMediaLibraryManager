@@ -253,6 +253,10 @@ static inline QString formattedDuration(qint64 msecs, int precision = 3)
         duration_fmt = Qt::ISODate;
         chars_to_clip_from_end = 0;
     }
+	else
+	{
+		Q_ASSERT_X(0, __PRETTY_FUNCTION__, "duration_fmt used uninitialized");
+	}
     QString secs_str = t.addMSecs(msecs).toString(duration_fmt);
     Q_ASSERT(secs_str.size() > 0);
     secs_str.resize(secs_str.size()-chars_to_clip_from_end);
