@@ -69,14 +69,14 @@ struct isExtFuture2<ExtFuture<T>> : std::true_type
 
 
 template <typename T>
-constexpr bool isExtFuture_v = isExtFuture<T>::value;
+constexpr bool is_ExtFuture_v = isExtFuture<T>::value;
 
 template <typename T>
 using isExtFuture_t = typename isExtFuture<T>::inner_t;
 
 /// Our "ExtFuture" concepts.
 template <class T>
-constexpr bool IsExtFuture = require<concepts::Class<T>, isExtFuture_v<T>>;
+constexpr bool IsExtFuture = require<concepts::Class<T>, is_ExtFuture_v<T>>;
 
 template <class T>
 constexpr bool NonNestedExtFuture = require<
@@ -89,6 +89,9 @@ constexpr bool NestedExtFuture = require<
 		IsExtFuture<T>,
 		IsExtFuture<isExtFuture_t<T>>
 	>;
+
+template <class T>
+constexpr bool is_non_void_non_ExtFuture_v = require<!std::is_void_v<T> && !is_ExtFuture_v<T>>;
 
 
 template <class F, class T>

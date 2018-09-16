@@ -127,7 +127,7 @@ AMLMApp *AMLMApp::instance()
 
 bool AMLMApp::shuttingDown() const
 {
-
+	return true;
 }
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)

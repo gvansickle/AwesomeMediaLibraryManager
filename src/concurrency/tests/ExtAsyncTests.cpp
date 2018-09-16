@@ -574,7 +574,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
 
-	future
+	auto last_future = future
 	.then([&](ExtFuture<QString> extfuture) -> int {
 
 		TC_EXPECT_NOT_EXIT();
@@ -622,8 +622,11 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 		TC_DONE_WITH_STACK();
 
 		return 3.1415;
-	}).wait();
+	});//.wait();
 
+	last_future.wait();
+
+	AMLMTEST_ASSERT_TRUE(last_future.isFinished());
 	ASSERT_TRUE(future.isFinished());
 
 	qDb() << "STARING WAIT";
@@ -634,6 +637,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 	ASSERT_TRUE(ran1);
 	ASSERT_TRUE(ran2);
 	ASSERT_TRUE(ran3);
+
+	AMLMTEST_ASSERT_TRUE(future.isFinished());
 
 	TC_EXIT();
 }
@@ -775,7 +780,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 
 	AMLMTEST_COUT << "Future created";
 
-    future.test_tap([&](FutureType& ef){
+	future.test_tap([&](FutureType ef){
         SCOPED_TRACE("");
         TC_EXPECT_THIS_TC();
         ExtAsync::name_qthread();
@@ -837,8 +842,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 
 	std::atomic_int tap_call_counter {0};
 
-    ExtFuture<int> future = ExtAsync::run_efarg([&](ExtFuture<int>& extfuture) {
-            SCOPED_TRACE("");
+	ExtFuture<int> future = ExtAsync::run_efarg([&](ExtFuture<int> extfuture) {
+			SCOPED_TRACE("Main callback");
 
 			TC_EXPECT_NOT_EXIT();
 			TC_EXPECT_STACK();
@@ -859,7 +864,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 			AMLMTEST_COUT << "TEST: Finished from main run lambda.";
 		})
 	.tap([&](int value){
-        SCOPED_TRACE("");
+		SCOPED_TRACE("value tap");
 		TC_EXPECT_NOT_EXIT();
 		TC_EXPECT_STACK();
         TC_EXPECT_THIS_TC();

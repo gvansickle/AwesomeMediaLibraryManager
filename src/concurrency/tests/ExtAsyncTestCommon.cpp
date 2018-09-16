@@ -37,10 +37,10 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
     auto tgb = new trackable_generator_base(fixture);
     fixture->register_generator(tgb);
 
-    ExtFuture<QString> retval = QtConcurrent::run([&]() -> QString {
+	ExtFuture<QString> retval = QtConcurrent::run([=]() -> QString {
         // Sleep for a second.
         qDb() << "ENTER, SLEEPING FOR 1 SEC";
-        QTest::qSleep(1000);
+		TC_Sleep(1000);
         qDb() << "SLEEP COMPLETE";
 
         fixture->unregister_generator(tgb);
@@ -87,6 +87,24 @@ bool InterState::is_test_currently_running() const
 {
     std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
 	return !m_currently_running_test.empty();
+}
+
+void InterState::start_SetUp(ExtAsyncTestsSuiteFixtureBase* fixture)
+{
+	std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+
+	// Should always only get here after the last TearDown() has finished.
+	AMLMTEST_ASSERT_EQ(m_setup_called_but_not_teardown, false);
+	m_setup_called_but_not_teardown = true;
+}
+
+void InterState::start_TearDown(ExtAsyncTestsSuiteFixtureBase* fixture)
+{
+	std::lock_guard<std::mutex> lock(m_fixture_state_mutex);
+
+	// Should always only get here after the last SetUp() has started.
+	AMLMTEST_ASSERT_EQ(m_setup_called_but_not_teardown, true);
+	m_setup_called_but_not_teardown = false;
 }
 
 TestHandle InterState::register_current_test(ExtAsyncTestsSuiteFixtureBase* fixture)
@@ -171,6 +189,10 @@ void ExtAsyncTestsSuiteFixtureBase::SetUp()
 	AMLMTEST_SCOPED_TRACE("In SetUp()");
 
 #ifdef TEST_FWK_IS_GTEST
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
+										 m_interstate.start_SetUp(this);
+									 });
+
     auto testinfo = ::testing::UnitTest::GetInstance()->current_test_info();
 
 	GTEST_COUT << "SetUp() for test: " << testinfo->name() << ", test case: " << testinfo->test_case_name() << std::endl;
@@ -218,6 +240,7 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
 										 TestHandle dummy {"dummy"};
 										 m_interstate.unregister_current_test(dummy, this);
                                 expect_all_postconditions();
+										 m_interstate.start_TearDown(this);
                             });
 #endif
 }

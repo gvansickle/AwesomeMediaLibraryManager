@@ -216,32 +216,36 @@ static inline void name_qthread()
 
 	/**
      * Asynchronously run a free function of the form:
-	 * 	void Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
+	 * @code
+	 * 	void Function(ExtFuture<T> future, Type1 arg1, Type2 arg2, [etc..]);
+	 * @endcode
      * Creates and returns an ExtFuture<T>.
+	 *
+	 * @todo More params.
 	 */
-    template<class CallbackType,
-             class ExtFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
-             class T = isExtFuture_t<ExtFutureT>,
-			 REQUIRES(isExtFuture_v<ExtFutureT>
-			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT&>)
+	template<class CallbackType,
+			 class ExtFutureT = std::tuple_element_t<0, ct::args_t<CallbackType>>,
+			 class T = typename isExtFuture<ExtFutureT>::inner_t,
+			 REQUIRES(is_ExtFuture_v<ExtFutureT>
+			 && ct::is_invocable_r_v<void, CallbackType, ExtFutureT>)
              >
 	ExtFuture<T> run_efarg(CallbackType&& callback)
     {
-        using argst = ct::args_t<CallbackType>;
-        using arg0t = std::tuple_element_t<0, argst>;
-        using ExtFutureR = std::remove_reference_t<arg0t>;
+		using argst = ct::args_t<CallbackType>;
+		using arg0t = std::tuple_element_t<0, argst>;
+		using ExtFutureR = std::remove_reference_t<arg0t>;
 		static_assert(std::is_same_v<ExtFutureT, ExtFutureR>);
 
-        ExtFutureR retval;
+		ExtFutureT retval;
 		qDb() << "FUTURE:" << retval;
 
         // retval is passed by copy here.
 //        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
-        QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
+		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef){
 //            qDb() << "FUTURE:" << ef.state();
-            callback_fn(ef);
+			std::invoke(std::move(callback_fn), ef);
 //            qDb() << "POST CALLBACK FUTURE:" << ef.state();
-        }, std::forward<ExtFutureR>(retval));
+		}, std::forward<ExtFutureT>(retval));
 
 //        QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
 //            return fn(extfuture, std::move(args)...);
@@ -253,7 +257,7 @@ static inline void name_qthread()
 
 //    template<class CallbackType,
 //             class QFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
-//             REQUIRES(!isExtFuture_v<QFutureT> && std::is_convertible_v<QFutureT, QFuture<void>>)
+//             REQUIRES(!is_ExtFuture_v<QFutureT> && std::is_convertible_v<QFutureT, QFuture<void>>)
 //             >
 //    auto run_efarg(CallbackType&& callback) -> QFutureT
 //    {
@@ -289,7 +293,7 @@ static inline void name_qthread()
 	 * @return
 	 */
 	template <typename F, typename R = ct::return_type_t<F>,
-		REQUIRES(!isExtFuture_v<R> // Return type is not ExtFuture<>
+		REQUIRES(!is_ExtFuture_v<R> // Return type is not ExtFuture<>
 			&& !ct::has_void_return_v<F> // Return type is not void.
 		&& ct::is_invocable_r_v<R, F, void> // F has signature R F(void).
 			  )>
@@ -324,12 +328,12 @@ static inline void name_qthread()
      * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise,
      * and returning non-void/non-ExtFuture<>.
      *
-     * @param function
+	 * @param function  Callable, R function(Arg)
      * @return
      */
     template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, class Arg,
         REQUIRES(!std::is_member_function_pointer_v<CallbackType>
-              && !isExtFuture_v<R> && !std::is_same_v<R, void>
+			  && is_non_void_non_ExtFuture_v<R>
             && ct::is_invocable_r_v<R, CallbackType, Arg>)
         >
     ExtFuture<R> run_1param(CallbackType&& function, Arg args)

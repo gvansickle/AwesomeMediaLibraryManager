@@ -160,50 +160,44 @@ public:
 	 */
     explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
                                                                                               | QFutureInterfaceBase::State::Running))
-		: QFuture<T>(new QFutureInterface<T>(initialState))
-    {
-	}
+		: QFuture<T>(new QFutureInterface<T>(initialState)) {}
 
-    /// Default copy constructor.
-    /// @note Do we need a non-default copy constructor?
-	ExtFuture(const ExtFuture<T>& other) = default;
+	/// Copy constructor.
+	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(other) {}
+
+	/// Move constructor
+	/// @note Qt5's QFuture doesn't have this.
+	ExtFuture(ExtFuture<T>&& other) : QFuture<T>(other) {};
 
     /// Copy construct from QFuture.
 	ExtFuture(const QFuture<T>& f) : BASE_CLASS(f) {}
     /// Move construct from QFuture.
-//	ExtFuture(QFuture<T>&& f) : BASE_CLASS(std::forward<QFuture<T>>(f)) {}
+	ExtFuture(QFuture<T>&& f) : BASE_CLASS(f) {};// = delete;
 
     explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
 		: BASE_CLASS(p) {}
-
-	/**
-	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
-	 * @note Honeypot for catching nested ExtFuture<>s and asserting at compile time.
-	 * @todo Not sure if we need this or not.
-	 */
-    template <class ExtFutureExtFutureT,
-              REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
-    inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
-    {
-        static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
-    }
-
 
     /**
      * ExtFuture<T> constructor from const QFutureInterface<T>&.
      * We need this mostly to fill in for QFutureInterface<T>::future(), which
      * generates a QFuture<T>.
      */
-    explicit ExtFuture(const QFutureInterface<T>& other) : QFutureInterface<T>(other)
-	{
-        //qDb() << "future state:" << *this;
-//        Q_ASSERT(this->state() == other.state());
-	}
+//    explicit ExtFuture(const QFutureInterface<T>& other) : QFutureInterface<T>(other)
+//	{
+//        //qDb() << "future state:" << *this;
+////        Q_ASSERT(this->state() == other.state());
+//	}
 
-    explicit ExtFuture(QFuture<T> other_future) : QFutureInterface<T>(other_future.d)
+	/**
+	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
+	 * @note Honeypot for catching nested ExtFuture<>s and asserting at compile time.
+	 * @todo Not sure if we need this or not.
+	 */
+	template <class ExtFutureExtFutureT,
+			  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
+	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
 	{
-        //qDb() << "future state:" << *this;
-//        Q_ASSERT(this->state() == other_future.d.state());
+		static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
 	}
 
 	/**
@@ -223,8 +217,19 @@ public:
     /// @name Copy and Move Assignment operators.
 	/// @{
 
-    ExtFuture<T>& operator=(const ExtFuture<T>& other) = default;
-//    ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept = default;
+	/// Copy assignment.
+	ExtFuture<T>& operator=(const ExtFuture<T>& other)
+	{
+		this->BASE_CLASS::operator=(other);
+		return *this;
+	}
+
+	/// Move assignment.
+	ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept
+	{
+		this->BASE_CLASS::operator=(other);
+		return *this;
+	}
 
 	/// @}
 
@@ -367,7 +372,8 @@ public:
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
 	template <typename F, typename R = ct::return_type_t<F>,
-			  REQUIRES(!std::is_same_v<R, void> && !IsExtFuture<R>)
+			  REQUIRES(is_non_void_non_ExtFuture_v<R>
+			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)
 			  >
 	ExtFuture<R> then(QObject* context, F&& then_callback)
 	{
@@ -392,23 +398,13 @@ public:
 	 * @returns ExtFuture<R>
 	 */
     template <class F, class R = ct::return_type_t<F>,
-            REQUIRES(!IsExtFuture<R> && !std::is_same_v<R, void>)>
+			REQUIRES(is_non_void_non_ExtFuture_v<R>
+			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
 	ExtFuture<R> then( F&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
 		return then(QApplication::instance(), std::forward<F>(then_callback));
 	}
-
-//    template <class ThenCallbackType, class R = ct::return_type_t<ThenCallbackType>,
-//              REQUIRES(isExtFuture_v<R> && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
-//    ExtFuture<R> then(ThenCallbackType&& then_callback)
-//    {
-//        QList<R> retval_contents;
-
-//        return then([&](ExtFuture<T> ef){
-//            retval_contents = ef.results();
-//            }).;
-//    }
 
 	/// @} // END .then() overloads.
 
@@ -422,7 +418,7 @@ public:
 	 *
      * @param tap_callback  Callback with the signature void()(T).
 	 *
-	 * @return  A reference to *this, i.e. ExtFuture<T>&.
+	 * @return ExtFuture<T>
 	 */
     template <typename TapCallbackType, typename R = ct::return_type_t<TapCallbackType>,
               REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
@@ -430,7 +426,7 @@ public:
 	{
 		static_assert(function_return_type_is_v<decltype(tap_callback), void>);
 
-        return TapHelper(context, std::forward<TapCallbackType>(tap_callback)); // *m_tap_function);
+		return this->TapHelper(context, std::forward<TapCallbackType>(tap_callback));
 	}
 
     /**
@@ -440,15 +436,15 @@ public:
      *
      * @param tap_callback  Callback with the signature void()(T).
      *
-     * @return  A reference to *this, i.e. ExtFuture<T>&.
+	 * @return ExtFuture<T>
      */
     template <typename TapCallbackType,
               REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
     ExtFuture<T> tap(TapCallbackType&& tap_callback)
 	{
-        qIn() << "ENTER ExtFuture<T>& tap(F&& tap_callback)";
-        auto retval = tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
-        qIn() << "EXIT ExtFuture<T>& tap(F&& tap_callback)";
+		qIn() << "ENTER ExtFuture<T> tap(F&& tap_callback)";
+		auto retval = this->tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
+		qIn() << "EXIT ExtFuture<T> tap(F&& tap_callback)";
 
 		return *this;
 	}
@@ -462,9 +458,9 @@ public:
 	 *
 	 * @returns An ExtFuture<T> which is made ready when this is completed.
      */
-    template<typename TapCallbackType,
-			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>, int, int>)>
-    ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
+	template<typename StreamingTapCallbackType,
+			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
+	ExtFuture<T> tap(QObject* context, StreamingTapCallbackType&& tap_callback)
     {
 #if 0
 //        EnsureFWInstantiated();
@@ -501,8 +497,15 @@ public:
 
         return ef_copy;
 #endif
-        return StreamingTapHelper(context, std::forward<TapCallbackType>(tap_callback));
+		return this->StreamingTapHelper(context, std::forward<StreamingTapCallbackType>(tap_callback));
     }
+
+	template<typename StreamingTapCallbackType,
+			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
+	ExtFuture<T> tap(StreamingTapCallbackType&& tap_callback)
+	{
+		return this->tap(qApp, std::forward<StreamingTapCallbackType>(tap_callback));
+	}
 
     /**
      * A .tap() variant intended solely for testing.  Allows the callback to set the future's objectName,
@@ -510,16 +513,16 @@ public:
      * @note Unlike other .tap()s, the callback is called immediately, not when the ExtFuture has finished.
      */
     template<typename TapCallbackType,
-			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>&>)>
+			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>>)>
 	ExtFuture<T> test_tap(TapCallbackType&& tap_callback)
     {
-        tap_callback(*this);
+		tap_callback(*this);
         return *this;
     }
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.
-	 * Basically a no-op, simply returns a reference to *this.
+	 * Basically a no-op, simply returns a copy of *this.
 	 *
 	 * @return Reference to this.
 	 */
@@ -535,9 +538,7 @@ public:
 	 * of success or failure.
 	 * Useful for RAII-like cleanup, etc.
 	 *
-	 * @note This is sort of a cross between .then() and .tap().  It should return a copy of this,
-	 * not a reference to this like .tap() does (shouldn't it?), but the callback should be called when this is finished,
-	 * and before the returned ExtFuture<> is finished.
+	 * @note This is sort of a cross between .then() and .tap().
 	 *
 	 * @param finally_callback
 	 * @return
@@ -577,33 +578,19 @@ public:
 	 */
     ExtFutureState::State state() const;
 
-	/// @name Operators
-	/// @{
-
-	/**
-	 * Returns true if @a other is a copy of this ExtFuture, else returns false.
-	 * @param other
-	 * @return
-	 */
-//	bool operator==(const ExtFuture<T>& other) const;
-
-//	bool operator==(const QFuture<T>& other) const { return this->future() == other; }
-
-	/// @} // END Operators
-
     template <class FutureType>
 	static ExtFutureState::State state(const FutureType& future);
 
 protected:
 
-	void EnsureFWInstantiated()
-	{
-		if(!m_extfuture_watcher)
-		{
-			m_extfuture_watcher = new ExtFutureWatcher<T>();
-            m_extfuture_watcher->setFuture(*this);
-		}
-	}
+//	void EnsureFWInstantiated()
+//	{
+//		if(!m_extfuture_watcher)
+//		{
+//			m_extfuture_watcher = new ExtFutureWatcher<T>();
+//            m_extfuture_watcher->setFuture(*this);
+//		}
+//	}
 
 //    QFutureWatcher<T>* new_self_destruct_futurewatcher(QObject* parent = nullptr)
 //    {
@@ -803,7 +790,7 @@ protected:
 	}
 
 
-    ExtFutureWatcher<T>* m_extfuture_watcher {nullptr};
+//    ExtFutureWatcher<T>* m_extfuture_watcher {nullptr};
 };
 
 template<typename T>
@@ -931,7 +918,7 @@ namespace ExtAsync
  * @return
  */
 template<typename T,
-		 REQUIRES(!isExtFuture_v<T>)>
+		 REQUIRES(!is_ExtFuture_v<T>)>
 ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 {
 	ExtFuture<T> extfuture;
