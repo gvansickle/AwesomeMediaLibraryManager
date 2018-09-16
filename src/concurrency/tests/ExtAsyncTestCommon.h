@@ -440,7 +440,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 //	AMLMTEST_EXPECT_FALSE(retval.isCanceled());
 //    AMLMTEST_EXPECT_FALSE(retval.isFinished());
 
-	if constexpr (true)//std::is_same_v<ReturnFutureT, QFuture<int>>)
+	if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
         GTEST_COUT_qDB << "QtConcurrent::run()";
         auto qrunfuture = QtConcurrent::run(lambda, retval);
