@@ -385,7 +385,6 @@ public:
 			  >
 	ExtFuture<R> then(QObject* context, F&& then_callback)
 	{
-		static_assert(is_non_void_non_ExtFuture_v<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
 		return this->ThenHelper(context, std::forward<F>(then_callback));
 	}
 
@@ -428,12 +427,10 @@ public:
 	 *
 	 * @return ExtFuture<T>
 	 */
-    template <typename TapCallbackType, typename R = ct::return_type_t<TapCallbackType>,
+	template <typename TapCallbackType,
               REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
     ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
 	{
-		static_assert(function_return_type_is_v<decltype(tap_callback), void>);
-
 		return this->TapHelper(context, std::forward<TapCallbackType>(tap_callback));
 	}
 
@@ -639,20 +636,23 @@ protected:
 		ExtFuture<R> retfuture;
 
 		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> thisfuture, ExtFuture<R> ret_future) {
+
 			qDb() << "THEN: START THEN RUN(), thisfuture:" << thisfuture.state() << "ret_future:" << ret_future.state();
 
-			qDb() << "THEN: Waiting for this to finish";
-
 			// Wait for this to finish.
+			qDb() << "THEN: Waiting for this to finish";
 			thisfuture.waitForFinished();
+			qDb() << "THEN: this finished";
 
 			// Call the then callback.
-//			QVector<R> retval;
+			// We should never end up calling then_callback_copy with a non-finished future.
 			R retval = then_callback_copy(thisfuture);
 
-			qDb() << "THEN: then_callback CALLED, reporting FINISHED with retval."; //, retval:" << retval;
+			qDb() << "THEN: then_callback CALLED and RETURNED, reporting FINISHED on ret_future with retval."; //, retval:" << retval;
 
 			ret_future.reportFinished(&retval);
+
+			Q_ASSERT(ret_future.isFinished());
 
 			// Check final state.  We know it's at least Finished.
 			/// @todo Could we be Finished here with pending results?
@@ -704,7 +704,7 @@ protected:
 		return *retval;
 #endif
 	}
-
+#if 0
 	/**
 	 * FinallyHelper which takes a callback which returns an ExtFuture<>.
 	 */
@@ -730,6 +730,7 @@ protected:
 		watcher->setFuture(this->future());
 		return *retval;
 	}
+#endif
 
 	/**
 	 * TapHelper which calls tap_callback whenever there's a new result ready.
@@ -743,6 +744,8 @@ protected:
 	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
 		return StreamingTapHelper(guard_qobject, [=, tap_cb = std::decay_t<F>(tap_callback)](ExtFuture<T> f, int begin, int end) {
+			Q_ASSERT(f.isStarted());
+			Q_ASSERT(!f.isFinished());
 			for(auto i = begin; i < end; ++i)
 			{
 				tap_cb(f.resultAt(i));
@@ -810,13 +813,13 @@ protected:
 				// Call the tap callback.
 				streaming_tap_callback_copy(ef, i, result_count);
 
-				// Copy over the new results
+				// Copy the new results to the returned future.
 				for(; i < result_count; ++i)
 				{
 					qDb() << "TAP: Next result available at i = " << i;
 
 					T the_next_val = ef.resultAt(i);
-					f2.d.reportResult(the_next_val);
+					f2.reportResult(the_next_val);
 				}
 			}
 
@@ -848,6 +851,7 @@ protected:
 		return ef_copy;
 	}
 
+#if 0
 	template <typename Function>
 	ExtFuture<T>& TapProgressHelper(QObject *guard_qobject, Function f)
 	{
@@ -862,7 +866,7 @@ protected:
 		qDb() << "EXIT";
 		return *this;
 	}
-
+#endif
 
 //    ExtFutureWatcher<T>* m_extfuture_watcher {nullptr};
 };

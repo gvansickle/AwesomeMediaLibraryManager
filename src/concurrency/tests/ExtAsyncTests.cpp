@@ -664,7 +664,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 	ASSERT_FALSE(future.isFinished());
 
 	// Separated .then() connect.
-	future.tap([&](int future_value) {
+	auto then_future = future.tap([&](int future_value) {
 		AMLMTEST_SCOPED_TRACE("In first tap");
 		TC_EXPECT_NOT_EXIT();
 		TC_EXPECT_STACK();
@@ -700,17 +700,17 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
             TC_EXPECT_THIS_TC();
 
 			EXPECT_TRUE(tap_complete);
+			AMLMTEST_EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 
-			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(extfuture.isRunning());
 
 			qWr() << "IN THEN:" << extfuture;
 			return 1;
-		;})
-//		.wait();
+		;});
+		then_future.wait();
 //M_WARNING("THE ABOVE .wait() doesn't wait");
-#if 1
-		.finally([&](void) -> void {
+#if 0
+		.finally([&]() -> void {
 			AMLMTEST_SCOPED_TRACE("In finally");
 
             TC_EXPECT_THIS_TC();
@@ -725,6 +725,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isRunning());
 	ASSERT_TRUE(future.isFinished());
+
+	ASSERT_TRUE(then_future.isStarted());
+	ASSERT_TRUE(then_future.isFinished());
 
 	TC_EXIT();
 }

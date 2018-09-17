@@ -328,20 +328,23 @@ static inline void name_qthread()
      * Asynchronously run a free function taking no params we care about here, arbitrary params otherwise,
      * and returning non-void/non-ExtFuture<>.
      *
+	 * @warning This is really no better than using QtConcurrent::run() in that the returned future
+	 *          isn't cancelable.  Provided mainly for completeness.
+	 *
 	 * @param function  Callable, R function(Arg)
      * @return
      */
-    template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, class Arg,
+	template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, typename... Args,
         REQUIRES(!std::is_member_function_pointer_v<CallbackType>
 			  && is_non_void_non_ExtFuture_v<R>
-            && ct::is_invocable_r_v<R, CallbackType, Arg>)
+			&& ct::is_invocable_r_v<R, CallbackType, Args&&...>)
         >
-    ExtFuture<R> run_1param(CallbackType&& function, Arg args)
+	ExtFuture<R> run_1param(CallbackType&& function, Args&&... args)
     {
         /// @note Used.
         qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(F&& function):" << __PRETTY_FUNCTION__;
 
-//        ExtFuture<R> retfuture;
+		ExtFuture<R> retfuture;
 
         /*
          * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
@@ -351,17 +354,17 @@ static inline void name_qthread()
          *      unless we decay off the reference-ness.
          */
 
-        return QtConcurrent::run([fn=std::decay_t<CallbackType>(function)](const Arg args) {
+		 retfuture = QtConcurrent::run([fn=std::decay_t<CallbackType>(function)](auto... copied_args_from_run) {
             R retval;
             // Call the function the user originally passed in.
-            retval = fn(args);
+			retval = std::invoke(fn, copied_args_from_run...);//std::forward<Args&&>(args)...);
             // Report our single result.
 //            retfuture.reportResult(retval);
 //            retfuture.reportFinished();
             return retval;
-            }, std::forward<Arg>(args));
+			}, std::forward<Args>(args)...);
 
-//        return retfuture;
+		return retfuture;
     }
 
 };
