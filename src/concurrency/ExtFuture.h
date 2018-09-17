@@ -527,7 +527,7 @@ public:
 			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>>)>
 	ExtFuture<T> test_tap(TapCallbackType&& tap_callback)
     {
-		tap_callback(*this);
+		std::invoke(tap_callback, *this);
         return *this;
     }
 
@@ -751,7 +751,9 @@ protected:
 	{
 		return StreamingTapHelper(guard_qobject, [=, tap_cb = std::decay_t<F>(tap_callback)](ExtFuture<T> f, int begin, int end) {
 			Q_ASSERT(f.isStarted());
-			Q_ASSERT(!f.isFinished());
+//#error isfinished
+
+//			Q_ASSERT(!f.isFinished());
 			for(auto i = begin; i < end; ++i)
 			{
 				tap_cb(f.resultAt(i));
@@ -818,6 +820,7 @@ protected:
 
 				// Call the tap callback.
 //				streaming_tap_callback_copy(ef, i, result_count);
+				qDb() << "CALLING TAP CALLBACK, ef:" << ef.state();
 				std::invoke(streaming_tap_callback_copy, ef, i, result_count);
 
 				// Copy the new results to the returned future.

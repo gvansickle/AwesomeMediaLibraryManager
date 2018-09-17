@@ -31,6 +31,8 @@ public:
 
 	virtual void MTC_ENTER() = 0;
 	virtual void MTC_EXIT() = 0;
+
+	virtual int Checkpoint(int i) = 0;
 };
 
 
@@ -42,6 +44,8 @@ public:
 
 	MOCK_METHOD0(MTC_ENTER, void());
 	MOCK_METHOD0(MTC_EXIT, void());
+	MOCK_METHOD1(Checkpoint, int(int));
+
 };
 
 #endif // TESTLIFECYCLEMANAGER_H

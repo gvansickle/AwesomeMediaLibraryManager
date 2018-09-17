@@ -770,53 +770,85 @@ TEST_F(ExtAsyncTestsSuiteFixture, TestMakeReadyFutures)
 ////	ExtFuture<QString> unwrapped_future = future.unwrap();
 //}
 
+/// @todo EXPERIMENTAL
+// Specialize an action that synchronizes with the calling thread.
+// @link https://stackoverflow.com/questions/10767131/expecting-googlemock-calls-from-another-thread
+ACTION_P2(ReturnFromAsyncCall, RetVal, SemDone)
+{
+	SemDone->release();
+	return RetVal;
+}
+
 TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 {
 	TC_ENTER();
 
-    SCOPED_TRACE("");
+	QSemaphore semDone;
+	using ::testing::Sequence;
+	using ::testing::Return;
+	using ::testing::ReturnArg;
+	Sequence s_outer, s_inner;
 
-	std::atomic_bool ran_tap {false};
-	std::atomic_bool ran_then {false};
+	ON_CALL(tlm, Checkpoint(::testing::_))
+			.WillByDefault(ReturnArg<0>());
+	EXPECT_CALL(tlm, Checkpoint(1))
+			.InSequence(s_outer)
+			.WillOnce(Return(1));
+	EXPECT_CALL(tlm, Checkpoint(2))
+			.InSequence(s_outer, s_inner)
+			.WillOnce(ReturnFromAsyncCall(2, &semDone));
+	EXPECT_CALL(tlm, Checkpoint(3))
+			.InSequence(s_inner)
+			.WillOnce(ReturnFromAsyncCall(3, &semDone));
+
+
+	SCOPED_TRACE("TapThenOneResult");
+
+	bool ran_tap {false};
+	bool ran_then {false};
 
     using FutureType = ExtFuture<QString>;
 
-    QString wait_result;
 	AMLMTEST_COUT << "STARTING FUTURE";
+	tlm.Checkpoint(1);
     ExtFuture<QString> future = ExtAsync::run_1param(delayed_string_func_1, this);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
 
-	AMLMTEST_COUT << "Future created";
+	AMLMTEST_COUT << "Future created:" << future;
 
-	future.test_tap([&](FutureType ef){
-		SCOPED_TRACE("in test tap");
+	future/*.test_tap([=, &ran_tap](FutureType ef){
+		SCOPED_TRACE("in test_tap");
         TC_EXPECT_THIS_TC();
         ExtAsync::name_qthread();
         qDb() << "Future: " << &ef;
-        })
-        .tap([&](QString result){
+		})*/
+		.tap([=, &ran_tap, &ran_then, &tlm](QString result){
 			SCOPED_TRACE("In tap");
-            ExtAsync::name_qthread();
-			TC_EXPECT_NOT_EXIT();
-			TC_EXPECT_STACK();
+#warning "Called multiple times"
+			tlm.Checkpoint(2);
+//            ExtAsync::name_qthread();
+//			TC_EXPECT_NOT_EXIT();
+//			TC_EXPECT_STACK();
             TC_EXPECT_THIS_TC();
 
 			AMLMTEST_COUT << "in tap(), result:" << tostdstr(result);
 			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
 			ran_tap = true;
 			EXPECT_FALSE(ran_then);
+			tlm.Checkpoint(3);
 		;})
-		.then([&](ExtFuture<QString> extfuture) {
+		.then([=, &ran_tap, &ran_then, &tlm](ExtFuture<QString> extfuture) {
 			SCOPED_TRACE("In then");
-            ExtAsync::name_qthread();
-			TC_EXPECT_NOT_EXIT();
-			TC_EXPECT_STACK();
+//            ExtAsync::name_qthread();
+//			TC_EXPECT_NOT_EXIT();
+//			TC_EXPECT_STACK();
             TC_EXPECT_THIS_TC();
 
-            EXPECT_TRUE(ran_tap);
+			EXPECT_THAT(ran_tap, ::testing::Eq(true));
 
+			EXPECT_TRUE(extfuture.isStarted());
 			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(extfuture.isRunning());
 
@@ -824,7 +856,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			EXPECT_EQ(extfuture.qtget_first(), QString("delayed_string_func_1() output"));
 			EXPECT_FALSE(ran_then);
 			ran_then = true;
-			TC_DONE_WITH_STACK();
+//			TC_DONE_WITH_STACK();
 			return QString("Then Called");
     })/*.test_tap([&](auto ef){
 		AMLMTEST_COUT << "IN TEST_TAP";
