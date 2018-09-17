@@ -453,11 +453,9 @@ public:
               REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
     ExtFuture<T> tap(TapCallbackType&& tap_callback)
 	{
-		qIn() << "ENTER ExtFuture<T> tap(F&& tap_callback)";
 		auto retval = this->tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
-		qIn() << "EXIT ExtFuture<T> tap(F&& tap_callback)";
 
-		return *this;
+		return retval;
 	}
 
     /**

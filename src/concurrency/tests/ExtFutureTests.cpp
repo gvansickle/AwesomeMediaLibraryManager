@@ -506,6 +506,70 @@ TYPED_TEST(ExtFutureTypedTestFixture, PFutureStreamingTap)
 	TC_EXIT();
 }
 
+TEST_F(ExtFutureTest, ExtFutureSingleThen)
+{
+	TC_ENTER();
+
+	using eftype = ExtFuture<int>;
+
+	std::atomic_int num_then_completions {0};
+	QList<int> async_results_from_then, async_results_from_get;
+
+
+	QList<int> expected_results {1,2,3,4,5,6};
+	eftype ef = async_int_generator<eftype>(1, 6, this);
+
+	GTEST_COUT_qDB << "Starting ef state:" << ef.state();
+	ASSERT_TRUE(ef.isStarted());
+	ASSERT_FALSE(ef.isCanceled());
+	ASSERT_FALSE(ef.isFinished());
+
+	AMLMTEST_COUT << "Attaching then()";
+
+	auto f2 = ef.then([=, &async_results_from_then, &num_then_completions](eftype ef) -> int  {
+			AMLMTEST_COUT << "IN THEN, future:" << ef.state() << ef.resultCount();
+			AMLMTEST_EXPECT_TRUE(ef.isFinished());
+			async_results_from_then = ef.get();
+			num_then_completions++;
+			return 5;
+	});
+
+	AMLMTEST_EXPECT_TRUE(f2.isStarted());
+	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
+	AMLMTEST_EXPECT_FALSE(f2.isFinished());
+
+	GTEST_COUT_qDB << "BEFORE WAITING FOR THEN()" << f2;
+
+	// Block.
+	async_results_from_get = f2.results();
+
+	GTEST_COUT_qDB << "AFTER WAITING FOR THEN()" << f2;
+
+	EXPECT_TRUE(ef.isFinished());
+	EXPECT_EQ(num_then_completions, 1);
+
+	// .get() above should block.
+	EXPECT_TRUE(ef.isFinished());
+
+	// This shouldn't do anything, should already be finished.
+	ef.waitForFinished();
+
+	GTEST_COUT_qDB << "Post .tap().get(), extfuture:" << ef.state();
+
+	EXPECT_TRUE(ef.isStarted());
+	EXPECT_FALSE(ef.isCanceled());
+	EXPECT_TRUE(ef.isFinished());
+
+	EXPECT_EQ(async_results_from_get.size(), 1);
+	EXPECT_EQ(async_results_from_get[0], 5);
+	EXPECT_EQ(async_results_from_then.size(), 6);
+	EXPECT_EQ(async_results_from_then, expected_results);
+
+	ASSERT_TRUE(ef.isFinished());
+
+	TC_EXIT();
+}
+
 
 /**
  * Test streaming tap().
@@ -528,13 +592,6 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
     ASSERT_FALSE(ef.isCanceled());
     ASSERT_FALSE(ef.isFinished());
 
-//	ExtFutureWatcher<int> efw(nullptr, nullptr);
-//	efw.then([=](){
-//		qDb() << "GOT EFW THEN() CALLBACK / future finished:" << ef.state();
-//	});
-//	efw.setFuture(ef);
-
-
     GTEST_COUT_qDB << "Attaching tap and get()";
 
 //    async_results_from_get =
@@ -552,13 +609,6 @@ M_WARNING("TODO: This is still spinning when the test exits.");
 	AMLMTEST_EXPECT_TRUE(f2.isStarted());
 	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
 	AMLMTEST_EXPECT_FALSE(f2.isFinished());
-
-//	ExtFutureWatcher<int> f2w(nullptr, nullptr);
-//	f2w.then([=](){
-//		qDb() << "GOT F2W THEN() CALLBACK / future finished:" << f2.state();
-//	});
-//	f2w.setFuture(f2);
-
 
 	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << f2;
 
