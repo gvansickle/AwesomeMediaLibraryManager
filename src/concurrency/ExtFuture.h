@@ -234,6 +234,12 @@ public:
 		return *this;
 	}
 
+	/// Copy assignment from QFuture<T>.
+	ExtFuture<T>& operator=(const QFuture<T>& other)
+	{
+		this->BASE_CLASS::operator=(other);
+		return *this;
+	}
 	/// @}
 
 	/// @name Comparison operators.
@@ -811,7 +817,8 @@ protected:
 				}
 
 				// Call the tap callback.
-				streaming_tap_callback_copy(ef, i, result_count);
+//				streaming_tap_callback_copy(ef, i, result_count);
+				std::invoke(streaming_tap_callback_copy, ef, i, result_count);
 
 				// Copy the new results to the returned future.
 				for(; i < result_count; ++i)

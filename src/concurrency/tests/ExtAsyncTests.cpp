@@ -782,7 +782,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
     using FutureType = ExtFuture<QString>;
 
     QString wait_result;
-	AMLMTEST_COUT << "STARTING FUTURE\n";
+	AMLMTEST_COUT << "STARTING FUTURE";
     ExtFuture<QString> future = ExtAsync::run_1param(delayed_string_func_1, this);
 
 	ASSERT_TRUE(future.isStarted());
@@ -791,13 +791,13 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 	AMLMTEST_COUT << "Future created";
 
 	future.test_tap([&](FutureType ef){
-        SCOPED_TRACE("");
+		SCOPED_TRACE("in test tap");
         TC_EXPECT_THIS_TC();
         ExtAsync::name_qthread();
         qDb() << "Future: " << &ef;
         })
         .tap([&](QString result){
-            SCOPED_TRACE("");
+			SCOPED_TRACE("In tap");
             ExtAsync::name_qthread();
 			TC_EXPECT_NOT_EXIT();
 			TC_EXPECT_STACK();
@@ -809,7 +809,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			EXPECT_FALSE(ran_then);
 		;})
 		.then([&](ExtFuture<QString> extfuture) {
-            SCOPED_TRACE("");
+			SCOPED_TRACE("In then");
             ExtAsync::name_qthread();
 			TC_EXPECT_NOT_EXIT();
 			TC_EXPECT_STACK();
@@ -842,6 +842,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 
     EXPECT_TRUE(ran_tap);
     EXPECT_TRUE(ran_then);
+	Q_ASSERT(ran_then);
 
 	TC_EXIT();
 }

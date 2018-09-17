@@ -32,6 +32,12 @@ trackable_generator_base::trackable_generator_base(ExtAsyncTestsSuiteFixtureBase
     m_belongs_to_test_case_id = fixture->get_test_id_string_from_fixture();
 }
 
+/**
+ * @note This does not have to be wrapped in an async run() function, it handles that itself.
+ * It blocks and then returns the string.
+ * @param fixture
+ * @return
+ */
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 {
 	AMLMTEST_SCOPED_TRACE("In delayed_string_func_1");
