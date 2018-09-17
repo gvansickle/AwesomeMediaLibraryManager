@@ -262,6 +262,11 @@ public:
         this->d.reportResults(results, beginIndex, count);
     }
 
+	/**
+	 * If result is != nullptr, calls to reportResult() and adds a copy of the result.
+	 * Unconditionally reports finished.
+	 * @param result
+	 */
     inline void reportFinished(const T *result = nullptr)
     {
         this->d.reportFinished(result);
@@ -642,12 +647,12 @@ protected:
 			thisfuture.waitForFinished();
 
 			// Call the then callback.
-			QVector<R> retval;
-			retval.push_back(then_callback_copy(thisfuture));
+//			QVector<R> retval;
+			R retval = then_callback_copy(thisfuture);
 
-			qDb() << "then_callback CALLED"; //, retval:" << retval;
+			qDb() << "THEN: then_callback CALLED, reporting FINISHED with retval."; //, retval:" << retval;
 
-			ret_future.reportResults(retval);
+			ret_future.reportFinished(&retval);
 
 			// Check final state.  We know it's at least Finished.
 			/// @todo Could we be Finished here with pending results?

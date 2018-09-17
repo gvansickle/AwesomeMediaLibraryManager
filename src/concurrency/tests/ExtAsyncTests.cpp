@@ -475,7 +475,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 {
 	TC_ENTER();
 
-	SCOPED_TRACE("START");
+	AMLMTEST_SCOPED_TRACE("START");
 
 	std::atomic_bool ran1 {false};
 	std::atomic_bool ran2 {false};
@@ -489,7 +489,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 
 	future
     .then([&](ExtFuture<QString> extfuture) -> QString {
-
+		AMLMTEST_SCOPED_TRACE("First then");
 		TC_EXPECT_NOT_EXIT();
         TC_EXPECT_THIS_TC();
 
@@ -509,7 +509,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		return QString("Then1 OUTPUT");
 	})
     .then([&](ExtFuture<QString> extfuture) -> QString {
-
+		AMLMTEST_SCOPED_TRACE("Second then");
 		TC_EXPECT_NOT_EXIT();
         TC_EXPECT_THIS_TC();
 
@@ -527,7 +527,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		return QString("Then2 OUTPUT");
 	})
     .then([&](ExtFuture<QString> extfuture) -> QString {
-
+		AMLMTEST_SCOPED_TRACE("Third then");
 		TC_EXPECT_NOT_EXIT();
         TC_EXPECT_THIS_TC();
 
@@ -542,7 +542,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		ran3 = true;
 		TC_DONE_WITH_STACK();
 		return QString("Then3 OUTPUT");
-    }).wait();
+	}).wait();
 
     ASSERT_TRUE(future.isFinished());
 
