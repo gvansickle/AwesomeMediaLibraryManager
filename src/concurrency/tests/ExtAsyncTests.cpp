@@ -665,7 +665,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 
 	// Separated .then() connect.
 	future.tap([&](int future_value) {
-
+		AMLMTEST_SCOPED_TRACE("In first tap");
 		TC_EXPECT_NOT_EXIT();
 		TC_EXPECT_STACK();
         TC_EXPECT_THIS_TC();
@@ -695,6 +695,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 		}
         })
         .then([&](ExtFuture<int> extfuture) -> int {
+			AMLMTEST_SCOPED_TRACE("In then");
+
             TC_EXPECT_THIS_TC();
 
 			EXPECT_TRUE(tap_complete);
@@ -708,7 +710,9 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureExtAsyncRunMultiResultTest)
 //		.wait();
 //M_WARNING("THE ABOVE .wait() doesn't wait");
 #if 1
-		.finally([&]() {
+		.finally([&](void) -> void {
+			AMLMTEST_SCOPED_TRACE("In finally");
+
             TC_EXPECT_THIS_TC();
 			TC_EXPECT_NOT_EXIT();
 

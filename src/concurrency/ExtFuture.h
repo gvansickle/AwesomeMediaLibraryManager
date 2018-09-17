@@ -381,7 +381,7 @@ public:
 	ExtFuture<R> then(QObject* context, F&& then_callback)
 	{
 		static_assert(is_non_void_non_ExtFuture_v<R>, "Wrong overload deduced, then_callback returns ExtFuture<> or void");
-		return this->ThenHelper(context, std::forward<F>(then_callback), *this);
+		return this->ThenHelper(context, std::forward<F>(then_callback));
 	}
 
 	/**
@@ -546,22 +546,18 @@ public:
 	 * @param finally_callback
 	 * @return
 	 */
-	template <class F>
-	ExtFuture<T> finally(F&& finally_callback)
+	template <class FinallyCallbackType,
+			  REQUIRES(std::is_invocable_v<FinallyCallbackType>)>
+	ExtFuture<Unit> finally(FinallyCallbackType&& finally_callback)
 	{
-		// - Create a wrapper lambda for the actual finally callback which takes a reference to this.
-		// - Pass the wrapper to .then().
-		// -
-        auto retval = this->then([func = std::forward<F>(finally_callback)](ExtFuture<T> thiz) mutable {
+		ExtFuture<Unit> retval = this->then([=, finally_callback_copy = std::decay_t<FinallyCallbackType>(finally_callback)](ExtFuture<T> this_future) -> Unit {
+			this_future.waitForFinished();
+
 			// Call the finally_callback.
-			std::move(func)();
+			finally_callback_copy();
 
-			// This is Qt5 for .get().  Qt's futures always contain a QList of T's, not just a single result.
-/// @todo "TODO: should return .results()"
-            return thiz.qtget_first();
-//            return thiz;
+			return unit;
 			});
-
 		return retval;
 	}
 
@@ -629,9 +625,55 @@ protected:
 	/**
 	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
 	 */
-	template <typename F, typename... Args, typename R = std::result_of_t<F&&(Args...)>>
-	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback, Args&&... args)
+	template <typename F,
+			  typename R = std::result_of_t<F&&(ExtFuture<T>)>,
+			  REQUIRES(is_non_void_non_ExtFuture_v<R>
+			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
+	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback)
 	{
+		ExtFuture<R> retfuture;
+
+		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> thisfuture, ExtFuture<R> ret_future) {
+			qDb() << "THEN: START THEN RUN(), thisfuture:" << thisfuture.state() << "ret_future:" << ret_future.state();
+
+			qDb() << "THEN: Waiting for this to finish";
+
+			// Wait for this to finish.
+			thisfuture.waitForFinished();
+
+			// Call the then callback.
+			QVector<R> retval;
+			retval.push_back(then_callback_copy(thisfuture));
+
+			qDb() << "then_callback CALLED"; //, retval:" << retval;
+
+			ret_future.reportResults(retval);
+
+			// Check final state.  We know it's at least Finished.
+			/// @todo Could we be Finished here with pending results?
+			/// Don't care as much on non-Finished cases.
+//			if(thisfuture.isCanceled())
+//			{
+//				qDb() << "TAP: ef cancelled:" << thisfuture.state();
+//				ret_future.reportCanceled();
+//			}
+//			else if(thisfuture.isFinished())
+//			{
+//				qDb() << "TAP: ef finished:" << thisfuture.state();
+//				ret_future.reportFinished();
+//			}
+//			else
+//			{
+//				/// @todo Exceptions.
+//				qDb() << "NOT FINISHED OR CANCELED:" << thisfuture.state();
+//				Q_ASSERT(0);
+//			}
+		},
+		*this,
+		retfuture);
+
+		return retfuture;
+#if 0
 //		qDb() << "ENTER";
 
 		static_assert(sizeof...(Args) <= 1, "Too many args");
@@ -640,7 +682,7 @@ protected:
 
 		auto retval = new ExtFuture<R>();
 
-        QObject::connect(watcher, &QFutureWatcherBase::finished, watcher,
+		/*QObject::*/connect_or_die(watcher, &QFutureWatcherBase::finished, watcher,
 						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable -> void {
 			// Call the then() callback function.
 //			qDb() << "THEN WRAPPER CALLED";
@@ -655,6 +697,7 @@ protected:
         watcher->setFuture(*this);
 //		qDb() << "RETURNING:" << *retval;
 		return *retval;
+#endif
 	}
 
 	/**
