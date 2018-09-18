@@ -100,7 +100,7 @@ class ExtFuture;
  * and multiple inheritance.
  */
 template <typename T>
-class ExtFuture : public QFuture<T>, public UniqueIDMixin<ExtFuture<T>>
+class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 {
     using BASE_CLASS = QFuture<T>;
 
@@ -158,8 +158,9 @@ public:
      * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
 	 *        if it isn't both Started and Running.
 	 */
-    explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
-                                                                                              | QFutureInterfaceBase::State::Running))
+//	ExtFuture() : QFuture<T>() {}
+	ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
+																							  | QFutureInterfaceBase::State::Running))
 		: QFuture<T>(new QFutureInterface<T>(initialState)) {}
 
 	/// Copy constructor.
@@ -167,12 +168,12 @@ public:
 
 	/// Move constructor
 	/// @note Qt5's QFuture doesn't have this.
-	ExtFuture(ExtFuture<T>&& other) noexcept = delete;// : QFuture<T>(other) {};
+//	ExtFuture(ExtFuture<T>&& other) noexcept = delete;// : QFuture<T>(other) {};
 
 	/// Converting constructor from QFuture<T>.
 	ExtFuture(const QFuture<T>& f) : ExtFuture(&(f.d)) {}
     /// Move construct from QFuture.
-	ExtFuture(QFuture<T>&& f) noexcept = delete;// : BASE_CLASS(f) {};// = delete;
+//	ExtFuture(QFuture<T>&& f) noexcept = delete;// : BASE_CLASS(f) {};// = delete;
 
 	/// Copy construct from QFuture<void>.
 	/// @todo I think this doesn't work.
@@ -205,7 +206,7 @@ public:
 	 * rules of C++, QFutureInterface<>'s destructor is in fact virtual ("once virtual always virtual"),
 	 * so we're good.  Marking this override to avoid further confusion.
 	 */
-    ~ExtFuture() override = default;
+	~ExtFuture() = default;
 
     /// @name Copy and Move Assignment operators.
 	/// @{
@@ -221,7 +222,7 @@ public:
 	}
 
 	/// Move assignment.
-	ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept = delete;
+//	ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept = delete;
 //	{
 //		this->BASE_CLASS::operator=(other);
 //		return *this;
@@ -239,10 +240,10 @@ public:
 	/**
 	 * Conversion operator to QFuture<T>.
 	 */
-	operator QFuture<T>() const
-	{
-		return QFuture<T>(&QFuture<T>::d);
-	}
+//	operator QFuture<T>() const
+//	{
+//		return QFuture<T>(&QFuture<T>::d);
+//	}
 
 	/// @name Comparison operators.
 	/// @{
@@ -679,7 +680,7 @@ protected:
 //				Q_ASSERT(0);
 //			}
 		},
-		std::remove_reference(*this),
+		*this,
 		retfuture);
 
 		return retfuture;

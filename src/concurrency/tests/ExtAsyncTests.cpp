@@ -574,7 +574,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
 
-	ExtFuture<QString> last_future = future
+	ExtFuture<double> last_future = future
 	.then([&](ExtFuture<QString> extfuture) -> int {
 
 		TC_EXPECT_NOT_EXIT();
