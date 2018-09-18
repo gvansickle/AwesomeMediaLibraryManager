@@ -316,8 +316,8 @@ private Q_SLOTS:
 #define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
 	{ \
 		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000); \
-		AMLMTEST_EXPECT_TRUE(got_job_destroyed_signal.load()); \
-		AMLMTEST_EXPECT_TRUE(didnt_timeout); \
+		AMLMTEST_ASSERT_TRUE(got_job_destroyed_signal.load()); \
+		AMLMTEST_ASSERT_TRUE(didnt_timeout); \
 	/* EXPECT_TRUE(kjob_destroyed_spy.wait()); */ \
 	}
 /// @}

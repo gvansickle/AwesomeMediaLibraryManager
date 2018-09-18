@@ -495,7 +495,9 @@ TYPED_TEST(ExtFutureTypedTestFixture, PFutureStreamingTap)
 {
 	TC_ENTER();
 
-	streaming_tap_test<TypeParam>(1, 6, this);
+	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
+										 streaming_tap_test<TypeParam>(1, 6, this);
+									 });
 
 	if (::testing::Test::HasFatalFailure())
 	{

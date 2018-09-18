@@ -121,19 +121,20 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 
     /// @note When Qt says the returned QFuture can't be canceled, they mean it.
 	/// If you do, things get totally screwed up and this will segfault.
-    QFuture<int> f = QtConcurrent::run([&]() mutable -> int {
-		AMLMTEST_COUT << "Entered callback\n";
+	QFuture<int> f = QtConcurrent::run([&]() -> int {
+		AMLMTEST_COUT << "Entered callback";
         TC_Sleep(1000);
         counter = 1;
-		AMLMTEST_COUT << "T+1 secs\n";
+		AMLMTEST_COUT << "T+1 secs";
         TC_Sleep(1000);
         counter = 2;
         return 5;
         ;});
 
+	EXPECT_TRUE(f.isStarted());
 	/// @note QFuture<> f's state here is Running|Started.  EXPECT is here to see if Running is always the case,
 	/// I don't think it necessarily is.
-	EXPECT_TRUE(f.isRunning());
+//	EXPECT_TRUE(f.isRunning()) << "QtConcurrent::run() doesn't always return a Running future.";
 	AMLMTEST_COUT << "CALLED ::RUN, FUTURE STATE:" << ExtFutureState::state(f);
 
     EXPECT_TRUE(f.isStarted());
@@ -143,9 +144,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 	AMLMTEST_COUT << "CHECKING COUNTER FOR 1";//; // In the second TC_Sleep(1000);
     EXPECT_EQ(counter, 1);
 
-//    AMLMTEST_COUT << "CANCELING"; // Can't cancel a QtConcurrent::run() future.  Should be cancelling before counter gets to 2.
-//    f.cancel();
-//    EXPECT_TRUE(f.isCanceled()) << "QFuture wasn't canceled";
 	AMLMTEST_COUT << "WAITING FOR FINISHED";
     f.waitForFinished();
 	/// @note This QFuture<>, which was returned by QtConcurrent::run(), is Started|Finished here.
@@ -414,8 +412,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 		AMLMTEST_EXPECT_EQ(f.resultCount(), 10);
     }
 
-    /// @todo THIS IS WRONG, waitForFinished() followed by .result() segfaults.
-//    AMLMTEST_COUT << "POST-wait RESULT:" << f.result();
+//	AMLMTEST_COUT << "POST-wait RESULT:" << f.result();
 	AMLMTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(f);
 
 	AMLMTEST_ASSERT_TRUE(f.isStarted());
@@ -786,17 +783,17 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 {
 	TC_ENTER();
 
-	QSemaphore semDone;
-	using ::testing::Sequence;
-	using ::testing::Return;
-	using ::testing::ReturnArg;
-	Sequence s_outer, s_inner;
+//	QSemaphore semDone;
+//	using ::testing::Sequence;
+//	using ::testing::Return;
+//	using ::testing::ReturnArg;
+//	Sequence s_outer, s_inner;
 
-	ON_CALL(tlm, Checkpoint(::testing::_))
-			.WillByDefault(ReturnArg<0>());
-	EXPECT_CALL(tlm, Checkpoint(1))
-			.InSequence(s_outer)
-			.WillOnce(Return(1));
+//	ON_CALL(tlm, Checkpoint(::testing::_))
+//			.WillByDefault(ReturnArg<0>());
+//	EXPECT_CALL(tlm, Checkpoint(1))
+//			.InSequence(s_outer)
+//			.WillOnce(Return(1));
 //	EXPECT_CALL(tlm, Checkpoint(2))
 //			.InSequence(s_outer, s_inner)
 //			.WillOnce(ReturnFromAsyncCall(2, &semDone));
