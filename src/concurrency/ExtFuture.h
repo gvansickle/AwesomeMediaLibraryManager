@@ -163,38 +163,28 @@ public:
 		: QFuture<T>(new QFutureInterface<T>(initialState)) {}
 
 	/// Copy constructor.
-	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(other) {}
+	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)) {}
 
 	/// Move constructor
 	/// @note Qt5's QFuture doesn't have this.
-	ExtFuture(ExtFuture<T>&& other) noexcept : QFuture<T>(other) {};
+	ExtFuture(ExtFuture<T>&& other) noexcept = delete;// : QFuture<T>(other) {};
 
-    /// Copy construct from QFuture.
-	ExtFuture(const QFuture<T>& f) : BASE_CLASS(f) {}
+	/// Converting constructor from QFuture<T>.
+	ExtFuture(const QFuture<T>& f) : ExtFuture(&(f.d)) {}
     /// Move construct from QFuture.
-	ExtFuture(QFuture<T>&& f) noexcept : BASE_CLASS(f) {};// = delete;
+	ExtFuture(QFuture<T>&& f) noexcept = delete;// : BASE_CLASS(f) {};// = delete;
+
 	/// Copy construct from QFuture<void>.
-	/// @todo
+	/// @todo I think this doesn't work.
 	ExtFuture(const QFuture<void>& f) : BASE_CLASS(f) {}
 
     explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
 		: BASE_CLASS(p) {}
 
-    /**
-     * ExtFuture<T> constructor from const QFutureInterface<T>&.
-     * We need this mostly to fill in for QFutureInterface<T>::future(), which
-     * generates a QFuture<T>.
-     */
-//    explicit ExtFuture(const QFutureInterface<T>& other) : QFutureInterface<T>(other)
-//	{
-//        //qDb() << "future state:" << *this;
-////        Q_ASSERT(this->state() == other.state());
-//	}
-
 	/**
-	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
+	 * @todo Unwrapping constructor, ala std::experimental::future::future, boost::future.
 	 * @note Honeypot for catching nested ExtFuture<>s and asserting at compile time.
-	 * @todo Not sure if we need this or not.
+	 * Not sure if we really need this or not.
 	 */
 	template <class ExtFutureExtFutureT,
 			  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
@@ -223,24 +213,36 @@ public:
 	/// Copy assignment.
 	ExtFuture<T>& operator=(const ExtFuture<T>& other)
 	{
-		this->BASE_CLASS::operator=(other);
+		if(this != &other)
+		{
+			this->BASE_CLASS::operator=(other);
+		}
 		return *this;
 	}
 
 	/// Move assignment.
-	ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept
+	ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept = delete;
+//	{
+//		this->BASE_CLASS::operator=(other);
+//		return *this;
+//	}
+
+	/// Copy assignment from QFuture<T>.
+	ExtFuture<T>& operator=(const BASE_CLASS& other)
 	{
 		this->BASE_CLASS::operator=(other);
 		return *this;
 	}
 
-	/// Copy assignment from QFuture<T>.
-	ExtFuture<T>& operator=(const QFuture<T>& other)
-	{
-		this->BASE_CLASS::operator=(other);
-		return *this;
-	}
 	/// @}
+
+	/**
+	 * Conversion operator to QFuture<T>.
+	 */
+	operator QFuture<T>() const
+	{
+		return QFuture<T>(&QFuture<T>::d);
+	}
 
 	/// @name Comparison operators.
 	/// @{
@@ -349,7 +351,6 @@ public:
         qDb() << "IN GET, " << *this;
         auto retval = this->results();
         qDb() << "LEAVING GET, " << *this;
-//		return this->future().results();
         return retval;
     }
 
@@ -537,7 +538,7 @@ public:
 	 */
 	ExtFuture<T> tap()
 	{
-		return *this;
+		return std::decay_t<ExtFuture<T>>(*this);
 	}
 
     /// @} // END .tap() overloads.
@@ -650,7 +651,7 @@ protected:
 
 			// Call the then callback.
 			// We should never end up calling then_callback_copy with a non-finished future.
-			R retval = then_callback_copy(thisfuture);
+			R retval = std::invoke(then_callback_copy, thisfuture);
 
 			qDb() << "THEN: then_callback CALLED and RETURNED, reporting FINISHED on ret_future with retval."; //, retval:" << retval;
 
@@ -678,7 +679,7 @@ protected:
 //				Q_ASSERT(0);
 //			}
 		},
-		*this,
+		std::remove_reference(*this),
 		retfuture);
 
 		return retfuture;
@@ -754,7 +755,7 @@ protected:
 //			Q_ASSERT(!f.isFinished());
 			for(auto i = begin; i < end; ++i)
 			{
-				tap_cb(f.resultAt(i));
+				std::invoke(tap_cb, f.resultAt(i));
 			}
 		});
 #if 0
@@ -875,8 +876,6 @@ protected:
 		return *this;
 	}
 #endif
-
-//    ExtFutureWatcher<T>* m_extfuture_watcher {nullptr};
 };
 
 template<typename T>
