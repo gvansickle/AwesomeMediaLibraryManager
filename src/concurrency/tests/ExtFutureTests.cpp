@@ -649,13 +649,4 @@ TEST_F(ExtFutureTest, StaticAsserts)
 {
 
 	static_assert(std::is_default_constructible<QString>::value);
-
-    // From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
-    // "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
-	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >);
-    int v;
-	static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
-    /// @todo
-//    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >, "");
-
 }

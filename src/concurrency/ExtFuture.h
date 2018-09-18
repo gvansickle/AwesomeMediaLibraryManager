@@ -539,7 +539,7 @@ public:
 	 */
 	ExtFuture<T> tap()
 	{
-		return std::decay_t<ExtFuture<T>>(*this);
+		return *this;
 	}
 
     /// @} // END .tap() overloads.
@@ -890,10 +890,6 @@ static ExtFutureState::State state(const ExtFuture<T>& ef)
 {
     return ef.state();
 }
-
-//Q_DECLARE_METATYPE(ExtFuture);
-//Q_DECLARE_METATYPE_TEMPLATE_1ARG(ExtFuture)
-
 
 template<typename T>
 T ExtFuture<T>::qtget_first()

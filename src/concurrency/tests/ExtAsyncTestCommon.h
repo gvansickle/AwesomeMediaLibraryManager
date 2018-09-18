@@ -182,6 +182,8 @@ protected:
     QObject* m_event_loop_object {nullptr};
     QSignalSpy* m_delete_spy {nullptr};
 
+	static std::mutex s_startup_teardown_mutex;
+
 public:
 
     /// Per-"test-case" (test fixture) set-up.

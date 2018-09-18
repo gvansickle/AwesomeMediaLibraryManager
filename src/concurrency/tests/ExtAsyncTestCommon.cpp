@@ -192,9 +192,13 @@ bool InterState::check_generators()
 
 InterState ExtAsyncTestsSuiteFixtureBase::m_interstate;
 
+std::mutex ExtAsyncTestsSuiteFixtureBase::s_startup_teardown_mutex;
+
 void ExtAsyncTestsSuiteFixtureBase::SetUp()
 {
 	AMLMTEST_SCOPED_TRACE("In SetUp()");
+
+	s_startup_teardown_mutex.lock();
 
 #ifdef TEST_FWK_IS_GTEST
 	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
@@ -229,6 +233,8 @@ void ExtAsyncTestsSuiteFixtureBase::expect_all_preconditions()
 void ExtAsyncTestsSuiteFixtureBase::TearDown()
 {
 	AMLMTEST_SCOPED_TRACE("In TearDown()");
+
+	s_startup_teardown_mutex.unlock();
 
     // Tear down the event loop.
     /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
