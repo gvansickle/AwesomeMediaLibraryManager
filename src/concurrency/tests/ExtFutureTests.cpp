@@ -204,6 +204,100 @@ TEST_F(ExtFutureTest, ExtFutureBasicCancel)
     TC_EXIT();
 }
 
+TEST_F(ExtFutureTest, ExtFutureBasicException)
+{
+	TC_ENTER();
+
+	bool caught_exception = false;
+
+	ExtFuture<int> main_future;
+
+
+		main_future = ExtAsync::run([=](int) -> int {
+			TC_Sleep(1000);
+			AMLMTEST_COUT << "Throwing exception from other thread";
+			throw QException();
+			return 25;
+			}, 5);
+	try
+	{
+		// Should propagate here.
+		main_future.waitForFinished();
+
+	}
+	catch(QException& e)
+	{
+		AMLMTEST_COUT << "Caught exception";
+		caught_exception = true;
+	}
+
+
+	AMLMTEST_ASSERT_TRUE(main_future.isFinished());
+	AMLMTEST_ASSERT_TRUE(main_future.isStarted());
+	AMLMTEST_ASSERT_TRUE(main_future.isCanceled());
+
+	AMLMTEST_ASSERT_TRUE(caught_exception);
+
+	TC_EXIT();
+}
+
+/// @todo Don't have the infrastructure for this to work yet.
+TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
+{
+	TC_ENTER();
+
+	QFutureSynchronizer<void> synchronizer;
+
+	ExtFuture<int> main_future = async_int_generator<ExtFuture<int>>(1, 6, this);
+
+	ExtFuture<int> then_future = main_future.then([&](ExtFuture<int> in_future) {
+//			if(in_future.isCanceled())
+//			{
+//				//???
+//			}
+			// Return the count of items from the future.
+			return in_future.resultCount();
+			;});
+
+	ASSERT_TRUE(main_future.isStarted());
+	ASSERT_FALSE(main_future.isCanceled());
+	ASSERT_FALSE(main_future.isFinished());
+
+
+	AMLMTEST_COUT << "Started main_future:" << main_future.state();
+	AMLMTEST_COUT << "Starting then_future:" << then_future.state();
+
+	synchronizer.addFuture(main_future);
+	synchronizer.addFuture(then_future);
+
+	then_future.cancel();
+
+	AMLMTEST_COUT << "Cancelled then_future:" << then_future;
+
+	ASSERT_TRUE(then_future.isStarted());
+	ASSERT_TRUE(then_future.isCanceled());
+
+	// Wait a bit for the cancel to propagate.
+	TC_Sleep(1000);
+
+	// Canceling alone won't finish the main_future.
+	ASSERT_FALSE(main_future.isFinished());
+
+	ASSERT_TRUE(main_future.isStarted());
+	ASSERT_TRUE(main_future.isCanceled());
+	ASSERT_TRUE(main_future.isFinished());
+
+	main_future.waitForFinished();
+
+	ASSERT_TRUE(main_future.isFinished());
+
+	qDb() << "Cancelled and finished extfuture:" << main_future;
+
+	synchronizer.waitForFinished();
+
+	TC_EXIT();
+}
+
 
 /**
  * Cancel the Promise side, see if the Future side detects it.

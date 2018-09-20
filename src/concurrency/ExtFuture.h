@@ -1020,10 +1020,18 @@ ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 	return extfuture;
 }
 
-template <int = 0, int..., class T = void>
-ExtFuture<deduced_type_t<T>> make_exceptional_future(const QException &exception)
+template <class T, class E,
+		  REQUIRES(!is_ExtFuture_v<T>
+		  && std::is_base_of_v<QException, E>)>
+ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 {
-	return ExtAsync::detail::make_exceptional_future(std::forward<T>(exception));
+	ExtFuture<T> extfuture;
+
+	extfuture.reportStarted();
+	extfuture.reportException(exception);
+	extfuture.reportFinished();
+
+	return extfuture;
 }
 
 /**

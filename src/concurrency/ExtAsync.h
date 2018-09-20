@@ -119,14 +119,6 @@ static inline void name_qthread()
     QThread::currentThread()->setObjectName(QString("%1_").arg(id) + QThread::currentThread()->objectName() );
 };
 
-//	template <typename T>
-//	static ExtFuture<T> run(ExtAsyncTask<T>* task)
-//	{
-//		qWr() << "EXTASYNC::RUN: IN ExtFuture<T> run(ExtAsyncTask<T>* task):" << __PRETTY_FUNCTION__;
-
-//		return (new ExtAsyncTaskRunner<T>(task))->start();
-//	}
-
     /**
      * Helper struct for creating SFINAE-friendly function overloads-of-last-resort.
      *
@@ -149,17 +141,21 @@ static inline void name_qthread()
 //    void run(TemplateOverloadResolutionFailed, ...) = delete;
 
 	/**
-	 * ExtAsync::run() overload for member functions taking an ExtFuture<T>& as the first non-this param.
+	 * ExtAsync::run() overload for member functions taking an ExtFuture<T> as the first non-this param.
 	 * E.g.:
-	 * 		void Class::Function(ExtFuture<T>& future, Type1 arg1, Type2 arg2, [etc..]);
+	 * 		void Class::Function(ExtFuture<T> future, Type1 arg1, Type2 arg2, [etc..]);
 	 *
 	 * @returns The ExtFuture<T> passed to @a function.
 	 */
-	template <typename This, typename F, typename... Args,
-        std::enable_if_t<ct::has_void_return_v<F> && (arity_v<F> == 2), int> = 0>
-//        std::enable_if_t<ct::is_invocable_r_v<void, F&&, Args...>, int> = 0>
-	auto
-	run(This* thiz, F&& function, Args&&... args)
+	template <typename This, typename F,
+			  class ExtFutureR, // = typename function_traits<F&&>::template arg_t<1>,//std::tuple_element_t<1, ct::args_t<F>>,
+			  typename... Args,
+//			  class R = std::remove_reference_t<std::tuple_element_t<1, ct::args_t<F>>>,
+		REQUIRES(std::is_class_v<This>
+			  && ct::has_void_return_v<F>
+			  && ct::is_invocable_r_v<void, F, This*, Args...>) //(arity_v<F> == 2))
+			  >
+	ExtFutureR run(This* thiz, F&& function, Args&&... args)
 	{
         /// @todo TEMP this currently limits the callback to look like C::F(ExtFuture<>&).
         static_assert(sizeof...(Args) <= 1, "Too many extra args given to run() call");
@@ -172,10 +168,10 @@ static inline void name_qthread()
         // Get a std::tuple<> containing the types of all args of F.
 		using argst = ct::args_t<F>;
         /// @todo TEMP debug restriction
-//        static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
+		static_assert(std::tuple_size_v<argst> != 1, "Callback function takes more or less than 1 parameter");
         // Extract the type of the first non-this arg of function, which should be an ExtFuture<?>&.
         using arg1t = std::tuple_element_t<1, argst>;
-		using ExtFutureR = std::remove_reference_t<arg1t>;
+//		using ExtFutureR = std::remove_reference_t<arg1t>;
 
 		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(This* thiz, F&& function, Args&&... args):" << __PRETTY_FUNCTION__;
 
@@ -193,22 +189,23 @@ static inline void name_qthread()
     /**
      * ExtAsync::run() overload for member functions of classes derived from AMLMJob taking zero params.
      * E.g.:
-     * 		void Class::Function();
+	 * 		void AMLMJobTDerivedClass::Function();
      *
-     * @returns An ExtFuture<>, probably of Unit type.
+	 * @returns An ExtFuture<>.
      */
-    template <typename This, typename F,
-        REQUIRES(std::is_class_v<This> && ct::is_invocable_r_v<void, F, This*>)>
-    auto
-    run(This* thiz, F&& function) -> decltype(std::declval<This*>()->get_extfuture())
+	template <typename This, typename F = void (This::*)(),
+		REQUIRES(std::is_class_v<This>
+//			  && std::is_member_function_pointer_v<&This::F>
+			  && ct::is_invocable_r_v<void, F, This*>)>
+	typename This::ExtFutureType run(This* thiz, F function)
     {
         constexpr auto calback_arg_num = arity_v<F>;
-//        STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
+//		STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
         static_assert(calback_arg_num == 1, "Callback function takes more or less than 1 parameter");
 
         qIn() << "EXTASYNC::RUN: IN :" << __PRETTY_FUNCTION__;
 
-        QtConcurrent::run(thiz, std::forward<F>(std::decay_t<F>(function)));
+		QtConcurrent::run(thiz, function); //std::forward<F>(std::decay_t<F>(function)));
         qIn() << "AFTER QtConcurrent::run(), thiz:" << thiz << "ExtFuture state:" << ExtFutureState::state(thiz->get_extfuture());
 
         return thiz->get_extfuture();
@@ -240,17 +237,9 @@ static inline void name_qthread()
 		qDb() << "FUTURE:" << retval;
 
         // retval is passed by copy here.
-//        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
-		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef){
-//            qDb() << "FUTURE:" << ef.state();
+		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef) {
 			std::invoke(std::move(callback_fn), ef);
-//            qDb() << "POST CALLBACK FUTURE:" << ef.state();
 		}, std::forward<ExtFutureT>(retval));
-
-//        QtConcurrent::run([fn=std::decay_t<F>(function)](RetType extfuture, Args... args) mutable {
-//            return fn(extfuture, std::move(args)...);
-//        }, std::forward<RetType>(report_and_control), std::forward<Args>(args)...);
-
 
         return retval;
     }
@@ -292,16 +281,12 @@ static inline void name_qthread()
 	 * @param function  An invocable with the signature "R function(void)".
 	 * @return
 	 */
-	template <typename F, typename R = ct::return_type_t<F>,
-		REQUIRES(!is_ExtFuture_v<R> // Return type is not ExtFuture<>
-			&& !ct::has_void_return_v<F> // Return type is not void.
-		&& ct::is_invocable_r_v<R, F, void> // F has signature R F(void).
+	template <typename CallableType, typename R = std::invoke_result_t<CallableType>,
+		REQUIRES(is_non_void_non_ExtFuture_v<R> // Return type is not void or ExtFuture<>
+			  && ct::is_invocable_r_v<R, CallableType> // F has signature R F(void).
 			  )>
-	ExtFuture<R> run(F&& function)
+	ExtFuture<R> run(CallableType&& function)
 	{
-		/// @note Used.
-		qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(F&& function):" << __PRETTY_FUNCTION__;
-
 		ExtFuture<R> retfuture;
 
 		/*
@@ -312,10 +297,10 @@ static inline void name_qthread()
 		 *      unless we decay off the reference-ness.
 		 */
 
-	    QtConcurrent::run([fn=std::decay_t<F>(function)](ExtFuture<R> retfuture) mutable -> void {
+		QtConcurrent::run([fn=std::decay_t<CallableType>(function)](ExtFuture<R> retfuture) -> void {
 	    	R retval;
 	    	// Call the function the user originally passed in.
-	    	retval = fn();
+			retval = std::invoke(fn);
 	    	// Report our single result.
 	    	retfuture.reportResult(retval);
 	    	retfuture.reportFinished();
@@ -337,32 +322,39 @@ static inline void name_qthread()
 	template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, typename... Args,
         REQUIRES(!std::is_member_function_pointer_v<CallbackType>
 			  && is_non_void_non_ExtFuture_v<R>
+			&& (arity_v<CallbackType> > 0)
 			&& ct::is_invocable_r_v<R, CallbackType, Args&&...>)
         >
-	ExtFuture<R> run_1param(CallbackType&& function, Args&&... args)
+	ExtFuture<R> run(CallbackType&& function, Args&&... args)
     {
-        /// @note Used.
-        qWr() << "EXTASYNC::RUN: IN ExtFuture<R> run(F&& function):" << __PRETTY_FUNCTION__;
-
 		ExtFuture<R> retfuture;
 
-        /*
-         * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
-         *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
-         *      in the inner lambda.
-         *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
-         *      unless we decay off the reference-ness.
-         */
+		try
+		{
 
-		 retfuture = QtConcurrent::run([fn=std::decay_t<CallbackType>(function)](auto... copied_args_from_run) {
-            R retval;
-            // Call the function the user originally passed in.
-			retval = std::invoke(fn, copied_args_from_run...);//std::forward<Args&&>(args)...);
-            // Report our single result.
-//            retfuture.reportResult(retval);
-//            retfuture.reportFinished();
-            return retval;
-			}, std::forward<Args>(args)...);
+			/*
+			 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
+			 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
+			 *      in the inner lambda.
+			 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
+			 *      unless we decay off the reference-ness.
+			 */
+			 retfuture = QtConcurrent::run([fn=std::decay_t<CallbackType>(function)](auto... copied_args_from_run) {
+				R retval;
+				// Call the function the user originally passed in.
+				retval = std::invoke(fn, copied_args_from_run...);//std::forward<Args&&>(args)...);
+				// Report our single result.
+	//            retfuture.reportResult(retval);
+	//            retfuture.reportFinished();
+				return retval;
+				}, std::forward<Args>(args)...);
+		}
+		catch(QException& e)
+		{
+			// Rethrow.
+			qDb() << "RETHROWING EXCEPTION";
+			throw;
+		}
 
 		return retfuture;
     }

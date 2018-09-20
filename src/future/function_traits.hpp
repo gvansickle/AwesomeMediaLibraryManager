@@ -52,6 +52,7 @@ namespace ct = boost::callable_traits;
 template<class T>
 struct function_traits
 {
+	// Note that ct::args_t will return "std::tuple<>" (i.e. 0-length tuple) for a free function taking void: "void(*)()"
 	static constexpr std::size_t arity_v = std::tuple_size<ct::args_t<T>>::value;
 
 	using return_type_t = ct::return_type_t<T>;
@@ -71,9 +72,17 @@ struct function_traits
 
 //    template <class Tuple>
 //    using sfinae_tuple = decltype(std::tuple_cat(std::declval<Tuple>, std::tuple<void>()));
+	template <std::size_t i>
+	struct argtype
+	{
+		using type = std::enable_if_t<arity_v >= i, typename std::tuple_element_t<i, ct::args_t<T>>>;
+	};
 
-    template <std::size_t i>
-    using arg_t = typename std::tuple_element_t<i, ct::args_t<T>>;
+//    template <std::size_t i>
+//	using arg_t = std::enable_if_t<arity_v >= i, typename std::tuple_element_t<i, ct::args_t<T>>>;
+
+	template <std::size_t i>
+	using arg_t = typename argtype<i>::type;
 
     /// For checking if the type of arg N is T.
     template <std::size_t i, class Expected>
@@ -97,9 +106,9 @@ using function_return_type_t = typename function_traits<F>::return_type_t;
 template <typename F, typename R>
 static constexpr bool function_return_type_is_v = std::is_same_v<function_return_type_t<F>, R>;
 
-/// Helper for providing argtype_t<F, N>.
+/// SFINAE-safe Helper for providing argtype_t<F, N>.
 template <class F, std::size_t i>
-using argtype_t = typename std::tuple_element_t<i, ct::args_t<F>>;
+using argtype_t = std::enable_if_t<function_traits<F>::arity_v >= i, std::tuple_element_t<i, ct::args_t<F>>>;
 
 /// For checking if the type of arg N is T.
 template <class F, std::size_t i, class Expected>

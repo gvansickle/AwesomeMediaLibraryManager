@@ -569,7 +569,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 	bool ran2 = false;
 	bool ran3 = false;
 
-    ExtFuture<QString> future = ExtAsync::run_1param(delayed_string_func_1, this);
+	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
@@ -811,7 +811,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 
 	AMLMTEST_COUT << "STARTING FUTURE";
 	tlm.Checkpoint(1);
-    ExtFuture<QString> future = ExtAsync::run_1param(delayed_string_func_1, this);
+	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());

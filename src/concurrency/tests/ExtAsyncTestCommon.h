@@ -245,7 +245,7 @@ private Q_SLOTS:
 
 #define GTEST_COUT_qDB qDb()
 
-#ifndef TEST_FWK_IS_QTEST
+#ifdef TEST_FWK_IS_GTEST
 #define TC_ENTER() \
 	/* The Google Mock-based TestLifecycleManager instance for this test. */ \
 	TestLifecycleManager tlm; \
@@ -263,7 +263,7 @@ private Q_SLOTS:
 	std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
 	std::atomic_bool test_func_stack_is_gone {false}; \
     TC_EXPECT_THIS_TC();
-#else // !TEST_FWK_IS_QTEST
+#else // !TEST_FWK_IS_GTEST
 #define TC_ENTER() \
 	/* The name of this test as a static std::string. */ \
 	const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
@@ -354,7 +354,7 @@ QFuture<T> make_finished_QFuture(const T &val)
 template <typename T>
 QFuture<T> make_startedNotCanceled_QFuture()
 {
-	AMLMTEST_SCOPED_TRACE("");
+	AMLMTEST_SCOPED_TRACE("make_startedNotCanceled_QFuture");
     QFutureInterface<T> fi;
     fi.reportStarted();
     EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
@@ -389,7 +389,6 @@ void reportFinished(ExtFuture<T>* f)
 {
 	AMLMTEST_SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
 
-	AMLMTEST_COUT << "REPORTING FINISHED";
 	f->reportFinished();
 
 	AMLMTEST_EXPECT_TRUE(f->isFinished());
@@ -401,12 +400,10 @@ void reportResult(FutureT* f, ResultType t)
 	AMLMTEST_SCOPED_TRACE("reportResult");
 	if constexpr (is_ExtFuture_v<FutureT>)
     {
-		AMLMTEST_COUT << "REPORTING RESULT ExtFuture";
 		f->reportResult(t);
     }
     else
     {
-		AMLMTEST_COUT << "REPORTING RESULT QFuture";
 		f->d.reportResult(t);
     }
 }

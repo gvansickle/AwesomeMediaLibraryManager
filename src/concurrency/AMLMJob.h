@@ -163,7 +163,7 @@ Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>, public IExtFutureWatcher
+class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
@@ -589,7 +589,7 @@ class AMLMJobT : public AMLMJob
 	using BASE_CLASS = AMLMJob;
 
 public:
-
+	using ExtFutureType = ExtFutureT;
     using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
 
     explicit AMLMJobT(QObject* parent = nullptr)
