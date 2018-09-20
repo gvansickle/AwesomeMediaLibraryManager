@@ -395,20 +395,6 @@ public:
         });
     }
 
-	/**
-	 * .tap(ctx, continuation) -> void
-	 *
-	 * @tparam continuation  Invocable taking an ExtFuture<T> of that used by the derived type.
-	 * @returns @todo Should be another ExtFuture.
-	 */
-//	template <typename ContextType, typename FuncType,
-//			  REQUIRES(std::is_base_of_v<QObject, ContextType> &&
-//			  ct::is_invocable_r_v<void, FuncType, std::result_of_t<this->get_extfuture_ref()>>)>
-//	void tap(const ContextType *ctx, Func&& f)
-//	{
-
-//	}
-
     /// @}
 
 

@@ -53,8 +53,6 @@ public:
     /// Nothing to start, this is more of a placeholder. Or maybe?????
     Q_SCRIPTABLE void start() override {}
 
-    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
-
 protected:
 
     CumulativeAMLMJob* asDerivedTypePtr() override { return this; }

@@ -68,9 +68,6 @@ AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 AMLMJob::~AMLMJob()
 {
     // The ExtAsync job should not be running here.
-    /// @todo Except we can't check it here, since get_extfuture_ref()is pure virtual,
-    /// and the derived class' destructor will have already been called.
-//    Q_ASSERT(this->get_extfuture_ref().isRunning() == false);
 
     // The KJob should have finished/been killed before we get deleted.
 //    Q_ASSERT(isFinished());
@@ -199,100 +196,6 @@ qulonglong AMLMJob::processedSize() const
 ///    reportResult(result);
 /// QFutureInterfaceBase::reportFinished();
 /// @endcode
-
-//void AMLMJob::run()
-//{
-//    /// @note We're in an arbitrary thread here probably without an event loop.
-
-//    /// @note void QThreadPoolThread::run() has a similar construct, and wraps this whole thing in:
-//    /// QMutexLocker locker(&manager->mutex);
-
-//    m_run_was_started.release();
-
-//    auto& ef = asDerivedTypePtr()->get_extfuture_ref();
-
-//    qDbo() << "ExtFuture<> state:" << ef.state();
-//    if(ef.isCanceled())
-//    {
-//        // We were canceled before we were started.
-//        /// @note Canceling alone won't finish the extfuture, so we finish it manually here.
-//        // Report (STARTED | CANCELED | FINISHED)
-//        ef.reportFinished();
-//        AMLM_ASSERT_EQ(ExtFutureState::state(ef), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
-
-//        m_run_returned.release();
-//        return;
-//    }
-//#ifdef QT_NO_EXCEPTIONS
-//#error "WE NEED EXCEPTIONS"
-//#else
-//    try
-//    {
-//#endif
-//        // Start the work by calling the functor.  We should be in the Running state if we're in here.
-//        /// @todo But we're not Running here.  Not sure why.
-////        AMLM_ASSERT_EQ(ef.isRunning(), true);
-//        qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(ef);
-//        asDerivedTypePtr()->runFunctor();
-//        qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(ef);
-//    }
-//    catch(QException &e)
-//    {
-//        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-//        ef.reportException(e);
-//    }
-//    catch(...)
-//    {
-//        /// @note RunFunctionTask has QFutureInterface<T>::reportException(e); here.
-//        ef.reportException(QUnhandledException());
-//    }
-
-//    /// @note Ok, runFunctor() has either completed successfully, been canceled, or thrown an exception, so what do we do here?
-//    /// QtCreator::runextensions.h::AsyncJob::run() calls runHelper(), which then does this here:
-//    /// @code
-//    /// // invalidates data, which is moved into the call
-//    /// runAsyncImpl(futureInterface, std::move(std::get<index>(data))...); // GRVS: The runFunctor() above.
-//    /// if (futureInterface.isPaused())
-//    ///         futureInterface.waitForResume();
-//    /// futureInterface.reportFinished();
-//    /// @endcode
-//    /// So it seems we should be safe doing the same thing.
-
-//    if(ef.isPaused())
-//    {
-//        // ExtAsync<> is paused, so wait for it to be resumed.
-//        qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
-//        ef.waitForResume();
-//    }
-
-//    qDbo() << "REPORTING FINISHED";
-//    ef.reportFinished();
-
-//    // We should only have two possible states here, excl. exceptions for the moment:
-//    // - Started | Finished
-//    // - Started | Canceled | Finished if job was canceled.
-//    AMLM_ASSERT_EQ(ef.isStarted(), true);
-//    AMLM_ASSERT_EQ(ef.isFinished(), true);
-
-//    // Do the post-run work.
-
-//    // Set the three KJob error fields.
-//    setKJobErrorInfo(!ef.isCanceled());
-
-//    qDbo() << "Calling emitResult():" << "isAutoDelete?:" << isAutoDelete();
-//    if(isAutoDelete())
-//    {
-//        // emitResult() may result in a this->deleteLater(), via finishJob().
-//        qWro() << "emitResult() may have resulted in a this->deleteLater(), via finishJob().";
-//    }
-
-//    // emitResult().
-//    // We use a signal/slot here since we're in an arbitrary context.
-//    Q_EMIT SIGNAL_internal_call_emitResult();
-
-//    // Notify any possible doKill() that we really truly have stopped the async worker thread.
-//    m_run_returned.release();
-//}
 
 
 void AMLMJob::SLOT_kjob_finished(KJob *kjob)

@@ -269,7 +269,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
 
     for(const QPointer<KJob>& kjob : kjoblist)
     {
-        if(!m_amlmjob_to_widget_map.keys().contains(kjob))
+		if(kjob == nullptr || !m_amlmjob_to_widget_map.keys().contains(kjob))
         {
             // No such KJob anymore.
             continue;
@@ -284,7 +284,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
         }
         else
         {
-            qWro() << "KJob was marked non-killable, expect a crash.";
+			qCro() << "KJob was marked non-killable, expect a crash.";
         }
     }
 
@@ -331,10 +331,9 @@ void ActivityProgressStatusBarTracker::infoMessage(KJob *job, const QString &pla
 
 void ActivityProgressStatusBarTracker::warning(KJob *job, const QString &plain, const QString &rich)
 {
-    with_widget_or_skip(job, [=](auto w){
-        w->warning(job, rich.isEmpty() ? plain : rich);
-    });
-
+//    with_widget_or_skip(job, [=](auto w){
+//        w->warning(job, rich.isEmpty() ? plain : rich);
+//    });
 }
 
 void ActivityProgressStatusBarTracker::totalAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
@@ -429,9 +428,9 @@ void ActivityProgressStatusBarTracker::speed(KJob *job, unsigned long value)
 
 void ActivityProgressStatusBarTracker::slotClean(KJob *job)
 {
-    with_widget_or_skip(job, [=](auto w){
-        qDb() << "KJobTrk: slotClean" << job;
-    });
+//    with_widget_or_skip(job, [=](auto w){
+//        qDb() << "KJobTrk: slotClean" << job;
+//    });
 }
 
 /**
@@ -594,6 +593,7 @@ M_WARNING("Could KJob* already be finished and autoDeleted here?");
         // Remove the job's widget from the expanding frame.
         m_expanding_frame_widget->removeWidget(w);
         m_expanding_frame_widget->reposition();
+		// Remove this job from the map, which will remove its widget.
         m_amlmjob_to_widget_map.remove(kjob_qp);
         w->deleteLater();
     }
@@ -614,18 +614,6 @@ M_WARNING("Could KJob* already be finished and autoDeleted here?");
 
     qDb() << "JOB UNREGISTERED:" << kjob_qp;
 }
-
-//void ActivityProgressStatusBarTracker::removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget)
-//{
-////    qDb() << "REMOVING FROM MAP:" << kjob << widget;
-////    if(m_amlmjob_to_widget_map.value(kjob, nullptr) == widget)
-////    {
-////        m_amlmjob_to_widget_map.remove(kjob);
-////        /// @todo Also to-be-shown queue?
-
-////        Q_EMIT number_of_jobs_changed(m_amlmjob_to_widget_map.size());
-////    }
-//}
 
 int ActivityProgressStatusBarTracker::calculate_summary_percent()
 {
@@ -653,11 +641,6 @@ int ActivityProgressStatusBarTracker::calculate_summary_percent()
 
     return retval;
 }
-
-//void ActivityProgressStatusBarTracker::connectWidgetSlots(QWidget *widget)
-//{
-//    connect_or_die();
-//}
 
 #if 0
 void ActivityProgressStatusBarTracker::setStopOnClose(KJob *kjob, bool stopOnClose)
