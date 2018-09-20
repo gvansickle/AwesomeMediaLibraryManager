@@ -640,7 +640,9 @@ public:
         // "Note that this neither waits nor cancels the asynchronous computation."
 
         // Run.
-		ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
+		ExtFutureT future = ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
+
+		m_ext_future = future;
 
         // All connections have already been made, so set the watched future.
         // "To avoid a race condition, it is important to call this function after doing the connections."

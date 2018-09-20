@@ -259,7 +259,7 @@ bool BaseActivityProgressStatusBarWidget::event(QEvent *event)
 
         return true;
     }
-    return QWidget::event(event);
+	return BASE_CLASS::event(event);
 }
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)

@@ -311,7 +311,10 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 	jo["m_length_secs"] = m_length_secs.toQString();
 
 M_WARNING("/// @todo This is always null.");
-//jo["m_mime_type"] << m_mime_type;
+	QString str;
+	QTextStream ts(&str);
+	ts << m_mime_type;
+	jo["m_mime_type"] = *ts.string();
 
 	if(isPopulated())
 	{
@@ -328,6 +331,10 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 	m_is_subtrack = jo["m_is_subtrack"].toBool(false);
 	m_offset_secs = Fraction(jo["m_offset_secs"].toString("0/1"));
 	m_length_secs = Fraction(jo["m_length_secs"].toString("0/1"));
+	QString str;
+	QTextStream ts(&str);
+	str = jo["m_mime_type"].toString();
+	ts >> m_mime_type;
 	// Metadata might not have been written.
 	//metadata_jval: QJsonValue = jo.value("metadata")
 	QJsonObject metadata_jval = jo["metadata"].toObject();

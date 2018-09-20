@@ -331,7 +331,6 @@ static inline void name_qthread()
 
 		try
 		{
-
 			/*
 			 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
 			 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
