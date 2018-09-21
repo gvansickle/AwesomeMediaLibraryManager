@@ -55,7 +55,7 @@ public:
 
 protected:
 
-    CumulativeAMLMJob* asDerivedTypePtr() override { return this; }
+//    CumulativeAMLMJob* asDerivedTypePtr() override { return this; }
 
     void runFunctor() override {}
 

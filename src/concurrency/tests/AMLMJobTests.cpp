@@ -235,7 +235,7 @@ public:
         return retval;
     }
 
-    TestAMLMJob1* asDerivedTypePtr() override { return this; }
+//    TestAMLMJob1* asDerivedTypePtr() override { return this; }
 
     std::atomic_int m_counter {0};
 

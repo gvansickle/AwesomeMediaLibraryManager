@@ -85,9 +85,13 @@ public:
 											   QDirIterator::IteratorFlags flags);
 
 
-protected:
+	static void DirScanFunction(ExtFuture<DirScanResult> ext_future,
+			const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
+			const QStringList &name_filters,
+			QDir::Filters dir_filters = QDir::NoFilter,
+			QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
-    DirectoryScannerAMLMJob* asDerivedTypePtr() override { return this; }
+protected:
 
     void runFunctor() override;
 

@@ -67,8 +67,148 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
     return retval;
 }
 
+void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_future,
+		const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
+		const QStringList &name_filters,
+		QDir::Filters dir_filters,
+		QDirIterator::IteratorFlags iterator_flags)
+{
+
+	if(!dir_url.isLocalFile())
+	{
+		throw QException();//, "NOT IMPLEMENTED", "dir_url is not a local file");
+	}
+
+	// Create the QDirIterator.
+	QDirIterator dir_iterator(dir_url.toLocalFile(), name_filters, dir_filters, iterator_flags);
+
+	// Check for errors.
+	QFileInfo file_info(dir_url.toLocalFile());
+	if(!(file_info.exists() && file_info.isReadable() && file_info.isDir()))
+	{
+		qWr() << "UNABLE TO READ TOP-LEVEL DIRECTORY:" << dir_url;
+		qWr() << file_info << file_info.exists() << file_info.isReadable() << file_info.isDir();
+		/// @todo Need to report something here.  Or maybe throw?
+		Q_UNIMPLEMENTED();
+//        setSuccessFlag(false);
+		return;
+	}
+
+	// Count progress in terms of files found.
+	/// @todo
+//    setProgressUnit(KJob::Unit::Files);
+
+	int num_files_found_so_far = 0;
+	int num_discovered_dirs = 0;
+	uint num_possible_files = 0;
+
+	QString status_text = QObject::tr("Scanning for music files");
+
+//    Q_EMIT description(this, status_text,
+//                                QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
+//                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+
+	ext_future.setProgressRange(0, 0);
+	ext_future.setProgressValueAndText(0, status_text);
+
+	// Iterate through the directory tree.
+	while(dir_iterator.hasNext())
+	{
+		// Go to the next entry and return the path to it.
+		QString entry_path = dir_iterator.next();
+		// Get the QFileInfo for this entry.
+		QFileInfo file_info = dir_iterator.fileInfo();
+
+		// First check that we have a valid file or dir: Currently exists and is readable by current user.
+		if(!(file_info.exists() && file_info.isReadable()))
+		{
+			qWr() << "UNREADABLE FILE:" << file_info.absoluteFilePath();
+			/// @todo Collect errors
+		}
+		else if(file_info.isDir())
+		{
+			QDir dir = file_info.absoluteDir();
+			num_discovered_dirs++;
+
+			// Update the max range to be the number of files we know we've found so far plus the number
+			// of files potentially in this directory.
+			num_possible_files = num_files_found_so_far + file_info.dir().count();
+
+//            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
+//            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
+//            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
+			/// NEW
+			ext_future.setProgressRange(0, num_possible_files+1);
+		}
+		else if(file_info.isFile())
+		{
+			// It's a file.
+			num_files_found_so_far++;
+
+			// How big is it?
+//            auto file_size = file_info.size();
+//            total_discovered_file_size_bytes += file_size;
+
+			QUrl file_url = QUrl::fromLocalFile(entry_path);
+
+			/// @todo
+			DirScanResult dir_scan_result(file_url, file_info);
+//            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
+
+			/// @todo
+//			ext_future.emitInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
+
+			// Update progress.
+			/// @note Bytes is being used for "Size" == progress by the system.
+			/// No real need to accumulate that here anyway.
+			/// Well, really there is, we could report this as summary info.  Ah well, for tomorrow.
+			/// @todo XXXXXXXXXXXXXXXXXXXXXXXXX
+//            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
+//            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+//            if(totalAmount(KJob::Unit::Files) <= num_files_found_so_far)
+//            {
+//                num_possible_files = num_files_found_so_far+1;
+////                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
+//                ext_future.setProgressRange(0, num_possible_files);
+//            }
+
+//            setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+			/// NEW
+			ext_future.setProgressValue(num_files_found_so_far);
+
+			// Report the URL we found to the future.
+			ext_future.reportResult(dir_scan_result);
+		}
+
+		// Have we been canceled?
+		if(ext_future.HandlePauseResumeShouldICancel())
+		{
+			// We've been cancelled.
+			qIn() << "CANCELLED";
+			ext_future.reportCanceled();
+			break;
+		}
+	}
+
+	// We've either completed our work or been cancelled.
+	num_possible_files = num_files_found_so_far;
+	if (!ext_future.isCanceled())
+	{
+		ext_future.setProgressRange(0, num_possible_files);
+		ext_future.setProgressValueAndText(num_files_found_so_far, status_text);
+	}
+
+	ext_future.reportFinished();
+
+	qDb() << "RETURNING, ExtFuture:" << ext_future; ///< STARTED only, last output of pool thread
+}
+
 void DirectoryScannerAMLMJob::runFunctor()
 {
+#if 1
+	DirScanFunction(m_ext_future,
+				m_dir_url, m_name_filters, m_dir_filters, m_iterator_flags);
+#else
     // Create the QDirIterator.
     QDirIterator m_dir_iterator(m_dir_url.toLocalFile(), m_name_filters, m_dir_filters, m_iterator_flags);
 
@@ -193,5 +333,6 @@ void DirectoryScannerAMLMJob::runFunctor()
     m_ext_future.reportFinished();
 
     qDbo() << "RETURNING, ExtFuture:" << m_ext_future; ///< STARTED only, last output of pool thread
+#endif
 }
 

@@ -357,7 +357,7 @@ public:
 
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
-        connect(this, &KJob::result, ctx, [=](KJob* kjob){
+		connect_or_die(this, &KJob::result, ctx, [=](KJob* kjob){
 
 //            qDbo() << "IN THEN CALLBACK, KJob:" << kjob;
 
@@ -456,7 +456,7 @@ protected:
     /// @name ExtAsync job support functions / function templates.
     /// @{
 
-    virtual AMLMJob* asDerivedTypePtr() = 0;
+//    virtual AMLMJob* asDerivedTypePtr() = 0;
 
     /**
      * The function which is run by ExtAsync::run() to do the work.
@@ -1038,7 +1038,7 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 	QSharedPointer<QTimer> m_speed_timer { nullptr };
 	qulonglong m_speed_last_processed_size {0};
 
-	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
+//	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
 
 };
 

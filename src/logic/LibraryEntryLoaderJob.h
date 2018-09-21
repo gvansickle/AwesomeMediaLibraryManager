@@ -118,7 +118,7 @@ public:
 
 protected:
 
-    LibraryEntryLoaderJob* asDerivedTypePtr() override { return this; }
+//    LibraryEntryLoaderJob* asDerivedTypePtr() override { return this; }
 
     void runFunctor() override;
 

@@ -254,6 +254,35 @@ public:
     /// @name Reporting interface
     /// @{
 
+	/**
+	 * Cancel/Pause/Resume helper function for while(1) loops reporting/controlled by this ExtFuture<T>.
+	 *
+	 * Call this at the bottom of your while(1) loop.  If the call returns true,
+	 * you're being canceled and must break out of the loop, report canceled, and return.
+	 *
+	 * Handles pause/resume completely internally, nothing more needs to be done in the calling loop.
+	 *
+	 * @return true if loop in runFunctor() should break due to being canceled.
+	 * @return
+	 */
+	bool HandlePauseResumeShouldICancel()
+	{
+		if (this->isPaused())
+		{
+			this->waitForResume();
+		}
+		if (this->isCanceled())
+		{
+			// The job should be canceled.
+			// The calling runFunctor() should break out of while() loop.
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
     /// From QFutureInterface<T>
 
     inline void reportResult(const T* result, int index = -1)

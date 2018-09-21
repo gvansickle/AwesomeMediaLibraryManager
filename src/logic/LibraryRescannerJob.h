@@ -75,7 +75,7 @@ public Q_SLOTS:
 
 protected:
 
-    LibraryRescannerJob* asDerivedTypePtr() override { return this; }
+//    LibraryRescannerJob* asDerivedTypePtr() override { return this; }
 
     void runFunctor() override;
 
