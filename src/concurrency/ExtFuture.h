@@ -51,6 +51,7 @@
 
 #include "ExtFutureState.h"
 #include "ExtFutureWatcher.h"
+#include "ExtFutureProgressInfo.h"
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
@@ -363,7 +364,8 @@ public:
         this->d.waitForResume();
     }
 
-    /// Status reporting
+	/// @name Status reporting interface.
+	/// Call these only from your ExtAsync::run() callback.
 public:
 
     void setProgressRange(int minimum, int maximum)
@@ -405,27 +407,34 @@ public:
 	void reportDescription(const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(),
 						   const QPair< QString, QString > &field2=QPair< QString, QString >())
 	{
-		//		ExtFutureProgressInfo pi;
-		QString pi;
+		ExtFutureProgressInfo pi;
 
-		pi = QString("DESCMSG: %1, %2").arg(title).arg(field1.first).arg(field1.second).arg(field2.first).arg(field2.second);
+		pi.fromKJobDescription(title, field1, field2);
 
-		/// @todo There's a race here, both progressValue() and setProgressValueAndText()
-		/// individulaly acquire/release the QFIB mutex.
-		auto current_progress_val = this->d.progressValue();
-
-		this->d.setProgressValueAndText(current_progress_val+1, pi);
-
-		this->d.setProgressValue(current_progress_val);
+		INTERNAL_reportKJobProgressInfo(pi);
 	}
 
 	void reportInfoMessage(const QString &plain, const QString &rich=QString())
 	{
-//		ExtFutureProgressInfo pi;
-		QString pi;
+		ExtFutureProgressInfo pi;
 
-		pi = QString("INFOMSG: %1, %2").arg(plain).arg(rich);
+		pi.fromKJobInfoMessage(plain, rich);
 
+		INTERNAL_reportKJobProgressInfo(pi);
+	}
+
+	void reportWarning(const QString &plain, const QString &rich=QString())
+	{
+		ExtFutureProgressInfo pi;
+
+		pi.fromKJobWarning(plain, rich);
+
+		INTERNAL_reportKJobProgressInfo(pi);
+	}
+
+private:
+	void INTERNAL_reportKJobProgressInfo(const ExtFutureProgressInfo& pi)
+	{
 		/// @todo There's a race here, both progressValue() and setProgressValueAndText()
 		/// individulaly acquire/release the QFIB mutex.
 		auto current_progress_val = this->d.progressValue();
@@ -434,6 +443,7 @@ public:
 
 		this->d.setProgressValue(current_progress_val);
 	}
+public:
 
 	/// @}
 

@@ -24,6 +24,9 @@
 
 #include <QObject>
 #include <QString>
+#include <QPair>
+
+class KJob;
 
 /**
  * Class which tries to serialize KJob-like progress info into a QString while still maintaining
@@ -34,13 +37,37 @@ class ExtFutureProgressInfo : public QString
 {
 	/// @note QString derives from nothing, isn't a Q_OBJECT, and does not have any virtual members.
 
+	Q_GADGET
+
 public:
 
 	ExtFutureProgressInfo() : QString() {};
+	ExtFutureProgressInfo(const QString& s) : QString(s) {}
 	~ExtFutureProgressInfo() = default;
 
-	QString toQString() const;
-	bool fromQString(const QString& str);
+//	ExtFutureProgressInfo& operator=(const QString& s) = default;
+
+	/**
+	 * The type of info encoded in the string.
+	 */
+	enum EncodedType
+	{
+		UNKNOWN = 0,
+		DESC = 1,
+		INFO = 2,
+		WARN = 3
+	};
+	Q_ENUM(EncodedType)
+
+	void fromKJobDescription(const QString &title,
+							 const QPair< QString, QString > &field1=QPair< QString, QString >(),
+							 const QPair< QString, QString > &field2=QPair< QString, QString >());
+
+	void fromKJobInfoMessage(const QString &plain, const QString &rich=QString());
+
+	void fromKJobWarning(const QString &plain, const QString &rich=QString());
+
+	QPair<ExtFutureProgressInfo::EncodedType, QStringList> fromQString(const QString& str);
 
 };
 Q_DECLARE_METATYPE(ExtFutureProgressInfo);

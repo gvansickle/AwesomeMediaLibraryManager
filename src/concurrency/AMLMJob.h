@@ -690,8 +690,30 @@ protected: //Q_SLOTS:
 	 */
 	virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
 	{
-		qDbo() << "TEXT:" << progress_text;
-#error "TODO"
+		ExtFutureProgressInfo pi;
+
+		QPair<ExtFutureProgressInfo::EncodedType, QStringList> pi_info = pi.fromQString(progress_text);
+
+		QStringList strl = pi_info.second;
+
+		switch(pi_info.first)
+		{
+		case ExtFutureProgressInfo::EncodedType::DESC:
+			AMLM_ASSERT_EQ(strl.size(), 5);
+			Q_EMIT this->description(this, strl[0], QPair(strl[1], strl[2]), QPair(strl[3], strl[4]));
+			break;
+		case ExtFutureProgressInfo::EncodedType::INFO:
+			break;
+		case ExtFutureProgressInfo::EncodedType::WARN:
+			break;
+		case ExtFutureProgressInfo::EncodedType::UNKNOWN:
+			/// @todo What should we do with this text?
+			qDb() << "UNKNOWN progress text" << progress_text;
+			break;
+		default:
+			Q_ASSERT(0);
+			break;
+		}
 	}
 
     virtual void SLOT_extfuture_progressValueChanged(int progress_value)

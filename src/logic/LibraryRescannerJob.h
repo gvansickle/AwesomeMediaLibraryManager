@@ -75,8 +75,6 @@ public Q_SLOTS:
 
 protected:
 
-//    LibraryRescannerJob* asDerivedTypePtr() override { return this; }
-
     void runFunctor() override;
 
     /// The map function for rescanning the library to reload metadata from the files.
