@@ -401,7 +401,11 @@ public:
 
 	void setProgressUnit(/*KJob::Unit*/ int prog_unit)
 	{
-//		m_progress_unit = prog_unit;
+		ExtFutureProgressInfo pi;
+
+		pi.fromSetProgressUnit(prog_unit);
+
+		INTERNAL_reportKJobProgressInfo(pi);
 	}
 
 	void reportDescription(const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(),
@@ -720,23 +724,6 @@ protected:
 //            m_extfuture_watcher->setFuture(*this);
 //		}
 //	}
-
-//    QFutureWatcher<T>* new_self_destruct_futurewatcher(QObject* parent = nullptr)
-//    {
-//        QFutureWatcher<T>* retval = new QFutureWatcher<T>(parent);
-//
-//        connect_or_die(retval, &QFutureWatcherBase::finished, retval, [=](){
-////            qDb() << "FINISHED";
-//            retval->deleteLater();
-//        });
-//        connect_or_die(retval, &QFutureWatcherBase::canceled, retval, [=](){
-////            qDb() << "CANCELED";
-//            retval->deleteLater();
-//            ;});
-//		connect_destroyed_debug(retval);
-//
-//        return retval;
-//    }
 
 	/**
 	 * Simple wrapper allowing us to call this->d.waitForResult(i) without

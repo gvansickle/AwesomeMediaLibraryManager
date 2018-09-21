@@ -55,10 +55,13 @@ public:
 		UNKNOWN = 0,
 		DESC = 1,
 		INFO = 2,
-		WARN = 3
+		WARN = 3,
+		SET_PROGRESS_UNIT = 4
 	};
 	Q_ENUM(EncodedType)
 
+	/// @name Textual progress info
+	/// @{
 	void fromKJobDescription(const QString &title,
 							 const QPair< QString, QString > &field1=QPair< QString, QString >(),
 							 const QPair< QString, QString > &field2=QPair< QString, QString >());
@@ -66,6 +69,9 @@ public:
 	void fromKJobInfoMessage(const QString &plain, const QString &rich=QString());
 
 	void fromKJobWarning(const QString &plain, const QString &rich=QString());
+	/// @}
+
+	void fromSetProgressUnit(int kob_progress_unit);
 
 	QPair<ExtFutureProgressInfo::EncodedType, QStringList> fromQString(const QString& str);
 

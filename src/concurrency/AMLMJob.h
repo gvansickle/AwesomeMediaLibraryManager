@@ -713,6 +713,14 @@ protected: //Q_SLOTS:
 			AMLM_ASSERT_EQ(strl.size(), 2);
 			Q_EMIT this->warning(this, strl[0], strl[1]);
 			break;
+		case ExtFutureProgressInfo::EncodedType::SET_PROGRESS_UNIT:
+		{
+			AMLM_ASSERT_EQ(strl.size(), 1);
+			int prog_unit = strl[0].toInt();
+			// This isn't a slot.
+			this->setProgressUnit(prog_unit);
+		}
+			break;
 		case ExtFutureProgressInfo::EncodedType::UNKNOWN:
 			/// @todo What should we do with this text?
 			qWr() << "UNKNOWN progress text" << progress_text;

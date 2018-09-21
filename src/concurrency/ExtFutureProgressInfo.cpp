@@ -115,6 +115,19 @@ void ExtFutureProgressInfo::fromKJobWarning(const QString& plain, const QString&
 	*this = str;
 }
 
+void ExtFutureProgressInfo::fromSetProgressUnit(int kob_progress_unit)
+{
+	QStringList strlist;
+
+	strlist << QString("%1").arg(kob_progress_unit);
+	strlist = escape(strlist, f_split_str);
+	auto str = strlist.join(f_split_str);
+	// Prepend the unescaped type to the string.
+	str.prepend(toqstr(EncodedType::SET_PROGRESS_UNIT) + ":");
+
+	*this = str;
+}
+
 QPair<ExtFutureProgressInfo::EncodedType, QStringList> ExtFutureProgressInfo::fromQString(const QString& str)
 {
 	QPair<EncodedType, QStringList> retval;
