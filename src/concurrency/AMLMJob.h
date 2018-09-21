@@ -22,6 +22,9 @@
 
 #include <config.h>
 
+// Std C++
+#include <deque>
+
 // Qt5
 #include <QObject>
 #include <QPointer>
@@ -652,7 +655,7 @@ protected: //Q_SLOTS:
     {
         // The ExtFuture<T> and hence the Job is finished.  Delete the watcher and emit the KJob result.
         // The emitResult() call will send out a KJob::finished() signal.
-        qDbo() << "GOT EXTFUTURE FINISHED";
+		qDbo() << "GOT EXTFUTURE FINISHED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
         emitResult();
     }
@@ -660,7 +663,7 @@ protected: //Q_SLOTS:
     virtual void SLOT_extfuture_canceled()
     {
     	// The ExtFuture<T> was cancelled (hopefully through the AMLMJobT interface).
-        qDbo() << "GOT EXTFUTURE CANCELED";
+		qDbo() << "GOT EXTFUTURE CANCELED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
     }
 
@@ -703,12 +706,16 @@ protected: //Q_SLOTS:
 			Q_EMIT this->description(this, strl[0], QPair(strl[1], strl[2]), QPair(strl[3], strl[4]));
 			break;
 		case ExtFutureProgressInfo::EncodedType::INFO:
+			AMLM_ASSERT_EQ(strl.size(), 2);
+			Q_EMIT this->infoMessage(this, strl[0], strl[1]);
 			break;
 		case ExtFutureProgressInfo::EncodedType::WARN:
+			AMLM_ASSERT_EQ(strl.size(), 2);
+			Q_EMIT this->warning(this, strl[0], strl[1]);
 			break;
 		case ExtFutureProgressInfo::EncodedType::UNKNOWN:
 			/// @todo What should we do with this text?
-			qDb() << "UNKNOWN progress text" << progress_text;
+			qWr() << "UNKNOWN progress text" << progress_text;
 			break;
 		default:
 			Q_ASSERT(0);
@@ -1063,6 +1070,7 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 	int64_t m_speed {0};
 	QSharedPointer<QTimer> m_speed_timer { nullptr };
 	qulonglong m_speed_last_processed_size {0};
+	std::deque<int64_t> m_speed_history;
 
 };
 

@@ -67,7 +67,7 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
     return retval;
 }
 
-void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
+void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
 		const QStringList &name_filters,
 		QDir::Filters dir_filters,
@@ -95,10 +95,11 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 	}
 
 	// Count progress in terms of files found.
-	if(amlmJob != nullptr)
-	{
-		amlmJob->setProgressUnit(KJob::Unit::Files);
-	}
+	/// @todo
+//	if(amlmJob != nullptr)
+//	{
+//		amlmJob->setProgressUnit(KJob::Unit::Files);
+//	}
 
 	int num_files_found_so_far = 0;
 	int num_discovered_dirs = 0;
@@ -106,12 +107,6 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 
 	QString status_text = QObject::tr("Scanning for music files");
 
-//	if(amlmJob != nullptr)
-//	{
-//		Q_EMIT amlmJob->description(amlmJob, status_text,
-//								QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
-//								QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
-//	}
 	ext_future.reportDescription(status_text,
 								 QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
 								 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
@@ -164,10 +159,6 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 //            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
 
 			ext_future.reportInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
-//			if(amlmJob != nullptr)
-//			{
-//				Q_EMIT amlmJob->infoMessage(amlmJob, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
-//			}
 
 			// Update progress.
 			/// @note Bytes is being used for "Size" == progress by the system.
@@ -176,14 +167,15 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 			/// @todo XXXXXXXXXXXXXXXXXXXXXXXXX
 //			amlmJob->setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
 //			setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
-			if(amlmJob->totalAmount(KJob::Unit::Files) <= num_files_found_so_far)
+			if(num_possible_files <= num_files_found_so_far)
 			{
+				// Keep progress range at least one more than the number of files we've found.
 				num_possible_files = num_files_found_so_far+1;
 //                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
 				ext_future.setProgressRange(0, num_possible_files);
 			}
 
-			amlmJob->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+//			amlmJob->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
 			/// NEW
 			ext_future.setProgressValue(num_files_found_so_far);
 
