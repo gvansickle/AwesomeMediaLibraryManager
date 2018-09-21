@@ -276,27 +276,30 @@ bool AMLMJob::doKill()
 }
 #endif
 
-void AMLMJob::setProcessedAmountAndSize(KJob::Unit unit, qulonglong amount)
+void AMLMJob::setProcessedAmountAndSize(/*KJob::Unit*/int unit, qulonglong amount)
 {
-    if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
+	KJob::Unit kjob_unit;
+	kjob_unit = static_cast<KJob::Unit>(unit);
+
+	if(m_progress_unit != KJob::Unit::Bytes && kjob_unit == m_progress_unit)
     {
         // Unit wasn't the progress unit, so also set Bytes so we get percent complete support.
         setProcessedAmount(KJob::Unit::Bytes, amount);
     }
-    setProcessedAmount(unit, amount);
+	setProcessedAmount(kjob_unit, amount);
 }
 
-void AMLMJob::setTotalAmountAndSize(KJob::Unit unit, qulonglong amount)
+void AMLMJob::setTotalAmountAndSize(/*KJob::Unit*/int unit, qulonglong amount)
 {
     if(m_progress_unit != KJob::Unit::Bytes && unit == m_progress_unit)
     {
         // Unit wasn't the progress unit, so also set Bytes so we get percent complete support.
         setTotalAmount(KJob::Unit::Bytes, amount);
     }
-    setTotalAmount(unit, amount);
+	setTotalAmount(KJob::Unit(unit), amount);
 }
 
-void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
+void AMLMJob::setProgressUnit(int prog_unit)
 {
 #ifdef THIS_IS_EVER_NOT_BROKEN
     /// @todo This "KJobPrivate" crap is crap.
@@ -311,7 +314,7 @@ void AMLMJob::setProgressUnit(KJob::Unit prog_unit)
 	}
     qDbo() << methods;
 #endif
-    m_progress_unit = prog_unit;
+	m_progress_unit = static_cast<KJob::Unit>(prog_unit);
 }
 
 KJob::Unit AMLMJob::progressUnit() const

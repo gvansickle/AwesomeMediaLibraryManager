@@ -67,7 +67,7 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
     return retval;
 }
 
-void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_future,
+void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
 		const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
 		const QStringList &name_filters,
 		QDir::Filters dir_filters,
@@ -95,8 +95,10 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 	}
 
 	// Count progress in terms of files found.
-	/// @todo
-//    setProgressUnit(KJob::Unit::Files);
+	if(amlmJob != nullptr)
+	{
+		amlmJob->setProgressUnit(KJob::Unit::Files);
+	}
 
 	int num_files_found_so_far = 0;
 	int num_discovered_dirs = 0;
@@ -104,9 +106,15 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 
 	QString status_text = QObject::tr("Scanning for music files");
 
-//    Q_EMIT description(this, status_text,
-//                                QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
-//                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+//	if(amlmJob != nullptr)
+//	{
+//		Q_EMIT amlmJob->description(amlmJob, status_text,
+//								QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
+//								QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+//	}
+	ext_future.reportDescription(status_text,
+								 QPair<QString,QString>(QObject::tr("Root URL"), dir_url.toString()),
+								 QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
 	ext_future.setProgressRange(0, 0);
 	ext_future.setProgressValueAndText(0, status_text);
@@ -155,24 +163,27 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 			DirScanResult dir_scan_result(file_url, file_info);
 //            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
 
-			/// @todo
-//			ext_future.emitInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
+			ext_future.reportInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
+//			if(amlmJob != nullptr)
+//			{
+//				Q_EMIT amlmJob->infoMessage(amlmJob, QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
+//			}
 
 			// Update progress.
 			/// @note Bytes is being used for "Size" == progress by the system.
 			/// No real need to accumulate that here anyway.
 			/// Well, really there is, we could report this as summary info.  Ah well, for tomorrow.
 			/// @todo XXXXXXXXXXXXXXXXXXXXXXXXX
-//            setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
-//            setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
-//            if(totalAmount(KJob::Unit::Files) <= num_files_found_so_far)
-//            {
-//                num_possible_files = num_files_found_so_far+1;
-////                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
-//                ext_future.setProgressRange(0, num_possible_files);
-//            }
+//			amlmJob->setTotalAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes+1);
+//			setProcessedAmountAndSize(KJob::Unit::Bytes, total_discovered_file_size_bytes);
+			if(amlmJob->totalAmount(KJob::Unit::Files) <= num_files_found_so_far)
+			{
+				num_possible_files = num_files_found_so_far+1;
+//                setTotalAmountAndSize(KJob::Unit::Files, num_possible_files);
+				ext_future.setProgressRange(0, num_possible_files);
+			}
 
-//            setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
+			amlmJob->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
 			/// NEW
 			ext_future.setProgressValue(num_files_found_so_far);
 
@@ -206,7 +217,7 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 void DirectoryScannerAMLMJob::runFunctor()
 {
 #if 1
-	DirScanFunction(m_ext_future,
+	DirScanFunction(m_ext_future, this,
 				m_dir_url, m_name_filters, m_dir_filters, m_iterator_flags);
 #else
     // Create the QDirIterator.

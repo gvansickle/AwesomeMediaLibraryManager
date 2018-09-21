@@ -37,6 +37,7 @@
 #include <QTextCodec>
 #include <QUrl>
 #include <QDebug>
+#include <QMetaEnum>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
 #define HAVE_QLOCALE_FORMATTEDDATASIZE 1
@@ -195,6 +196,22 @@ static inline bool isValidUTF8(const char* bytes)
 }
 
 /// @}
+
+/**
+ * And the one thing you might want to use Qt's QMetaWhatever infrastructure for, implicitly or explicitly converting
+ * a Q_ENUM() to a string, you can't do directly.  So this.  The.  Simplest.  Things.
+ *
+ * @note Yet, you can stream to QDebug and that works out of the box.
+ *
+ * @param value  Any Q_ENUM().
+ * @return A QString representing that Q_ENUM.
+ */
+template<typename QEnumType>
+QString toqstr (const QEnumType value)
+{
+  return QString(QMetaEnum::fromType<QEnumType>().valueToKey(value));
+}
+
 
 template <class StreamLikeType>
 StreamLikeType log_QStringList(const QStringList& strlist, StreamLikeType out)

@@ -163,11 +163,12 @@ Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public IExtFutureWatcher/*, public IExtFutureExtendedStatusReporting*/, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
-    Q_INTERFACES(IExtFutureWatcher)
+	Q_INTERFACES(IExtFutureWatcher)
+//	Q_INTERFACES(IExtFutureExtendedStatusReporting)
 
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
@@ -323,9 +324,18 @@ public:
     /// @}
 
 public:
-    /// @name New public interfaces FBO derived classes.
-    /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
+	/// @name New public interfaces FBO derived classes and ExtFuture<T>s wrapped in an AMLMJobT<T>.
+	/// Need to be public so they can be accessed from the this pointer passed to run() or the async
+	/// function connected to the returned ExtFuture<T>.
+	/// @warning Do not use these from client code.
     /// @{
+
+	/// Give derived classes write access to progressUnit.
+	/// Sets the Unit which will be used for percent complete and total/processedSize calculations.
+	/// Defaults to KJob::Unit::Bytes.
+	void setProgressUnit(int prog_unit) /*override*/;
+	void setProcessedAmountAndSize(int unit, qulonglong amount) /*override*/;
+	void setTotalAmountAndSize(int unit, qulonglong amount) /*override*/;
 
     /// @}
 
@@ -456,8 +466,6 @@ protected:
     /// @name ExtAsync job support functions / function templates.
     /// @{
 
-//    virtual AMLMJob* asDerivedTypePtr() = 0;
-
     /**
      * The function which is run by ExtAsync::run() to do the work.
      * Must be overridden in derived classes.
@@ -513,20 +521,6 @@ protected:
 //    void emitSpeed(unsigned long speed);
 
     /// @} /// END Override of KJob protected functions.
-
-    /// @name New protected methods
-    /// @{
-
-    /// @warning For use only by KJob
-    /// Give derived classes write access to progressUnit.
-    /// Sets the Unit which will be used for percent complete and total/processedSize calculations.
-    /// Defaults to KJob::Unit::Bytes.
-    void setProgressUnit(KJob::Unit prog_unit);
-
-    virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
-    virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
-
-    /// @}
 
 protected Q_SLOTS:
 
@@ -685,9 +679,19 @@ protected: //Q_SLOTS:
         this->setTotalAmountAndSize(this->progressUnit(), max-min);
     }
 
+	/**
+	 * This slot is "overloaded" in an attempt to match KJob-style progress reporting to
+	 * QFuture's more limited progress interface.  In short, progress_text will come in here as one of at least:
+	 * - An encoded representation of KJob's:
+	 * -- "description()" signal text
+	 * -- "infoMessage()" signal text
+	 * -- "warning()" signal text.
+	 * -- And probably more (e.g. KJob's multi-unit progress info).
+	 */
 	virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
 	{
-
+		qDbo() << "TEXT:" << progress_text;
+#error "TODO"
 	}
 
     virtual void SLOT_extfuture_progressValueChanged(int progress_value)
@@ -871,9 +875,9 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
         /// @todo Is it possible for us to have been deleted before this call due to the cancel() above?
-        setError(KJob::KilledJobError);
+		this->setError(KJob::KilledJobError);
         /// @todo This text should probably be set somehow by the underlying async job.
-        setErrorText(tr("Job killed"));
+		this->setErrorText(tr("Job killed"));
 
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
@@ -1037,8 +1041,6 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 	int64_t m_speed {0};
 	QSharedPointer<QTimer> m_speed_timer { nullptr };
 	qulonglong m_speed_last_processed_size {0};
-
-//	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
 
 };
 

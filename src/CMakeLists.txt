@@ -232,6 +232,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtendedDeferred.h
 	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
+	concurrency/ExtFutureProgressInfo.h
 	concurrency/ExtFutureWatcher.h
 	concurrency/ExtAsync_traits.h
 	concurrency/impl/ExtFuture_impl.hpp
@@ -245,6 +246,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
+	concurrency/ExtFutureProgressInfo.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
 	concurrency/ReportingRunner.cpp

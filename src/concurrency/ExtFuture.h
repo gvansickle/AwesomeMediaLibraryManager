@@ -61,6 +61,32 @@ class ExtFuture;
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
 
+/**
+ * Interface for extended status reporting through ExtFutures.
+ * Unbelieveable PITA.
+ * https://stackoverflow.com/questions/39186348/connection-of-pure-virtual-signal-of-interface-class?rq=1
+ * https://stackoverflow.com/questions/17943496/declare-abstract-signal-in-interface-class?noredirect=1&lq=1
+ */
+//class IExtFutureExtendedStatusReporting
+//{
+//public:
+//	virtual ~IExtFutureExtendedStatusReporting() = default;
+
+////Q_SIGNALS:
+////	virtual void SIGNAL_resultsReadyAt(int begin, int end) = 0;
+
+//	// KJob-inspired status signals.
+//	virtual void setProgressUnit(int prog_unit) = 0;
+//	virtual void setProcessedAmountAndSize(int unit, qulonglong amount) = 0;
+//	virtual void setTotalAmountAndSize(int unit, qulonglong amount) = 0;
+
+
+//	// QObject signals.
+////	virtual void destroyed(QObject* obj) = 0;
+//};
+//Q_DECLARE_INTERFACE(IExtFutureExtendedStatusReporting, "IExtFutureExtendedStatusReporting")
+
+
 
 /**
  * A std::shared_future<>-like class implemented on top of Qt5's QFutureInterface<T> class and other facilities.
@@ -353,6 +379,63 @@ public:
     {
         this->d.setProgressValueAndText(progressValue, progressText);
     }
+
+	/// @name KJob-inspired status/information reporting interfaces.
+	/// Note that these ultimately need to be squeezed through QFutureInterface's progress reporting
+	/// mechanism so we can make use of it's progress throttling/anti-flooding mechanism.
+	/// The QFutureInterface progress reporting iface is unfortunately pretty limited:  For text,
+	/// there's a single entrypoint:
+	/// @code
+	///     void setProgressValueAndText(int progressValue, const QString &progressText);
+	/// @endcode
+	/// And complicating factors, this function early-outs on the following conditions:
+	/// @code
+	///     if (d->m_progressValue >= progressValue)
+	///         return;
+	///     if (d->state.load() & (Canceled|Finished))
+	///         return;
+	/// @endcode
+	/// @{
+
+	void setProgressUnit(/*KJob::Unit*/ int prog_unit)
+	{
+//		m_progress_unit = prog_unit;
+	}
+
+	void reportDescription(const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(),
+						   const QPair< QString, QString > &field2=QPair< QString, QString >())
+	{
+		//		ExtFutureProgressInfo pi;
+		QString pi;
+
+		pi = QString("DESCMSG: %1, %2").arg(title).arg(field1.first).arg(field1.second).arg(field2.first).arg(field2.second);
+
+		/// @todo There's a race here, both progressValue() and setProgressValueAndText()
+		/// individulaly acquire/release the QFIB mutex.
+		auto current_progress_val = this->d.progressValue();
+
+		this->d.setProgressValueAndText(current_progress_val+1, pi);
+
+		this->d.setProgressValue(current_progress_val);
+	}
+
+	void reportInfoMessage(const QString &plain, const QString &rich=QString())
+	{
+//		ExtFutureProgressInfo pi;
+		QString pi;
+
+		pi = QString("INFOMSG: %1, %2").arg(plain).arg(rich);
+
+		/// @todo There's a race here, both progressValue() and setProgressValueAndText()
+		/// individulaly acquire/release the QFIB mutex.
+		auto current_progress_val = this->d.progressValue();
+
+		this->d.setProgressValueAndText(current_progress_val+1, pi);
+
+		this->d.setProgressValue(current_progress_val);
+	}
+
+	/// @}
 
     /// @}
 
@@ -780,8 +863,6 @@ protected:
 	{
 		return StreamingTapHelper(guard_qobject, [=, tap_cb = std::decay_t<F>(tap_callback)](ExtFuture<T> f, int begin, int end) {
 			Q_ASSERT(f.isStarted());
-//#error isfinished
-
 //			Q_ASSERT(!f.isFinished());
 			for(auto i = begin; i < end; ++i)
 			{
@@ -906,6 +987,13 @@ protected:
 		return *this;
 	}
 #endif
+
+	/// @name Additional member variables on top of what QFuture<T> has.
+	/// These will cause us to need to worry about slicing, additional copy construction/assignment work
+	/// which needs to be synchronized somehow, etc etc.
+	/// @{
+//	int m_progress_unit;
+	/// @}
 };
 
 template<typename T>
@@ -987,6 +1075,7 @@ ExtFutureState::State ExtFuture<T>::state() const
     return current_state;
 }
 
+#if 0
 namespace ExtAsync
 {
     namespace detail
@@ -1017,6 +1106,7 @@ namespace ExtAsync
 
     }
 }
+#endif
 
 /**
  * Creates a completed future containing the value @a value.

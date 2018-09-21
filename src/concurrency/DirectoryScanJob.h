@@ -85,7 +85,7 @@ public:
 											   QDirIterator::IteratorFlags flags);
 
 
-	static void DirScanFunction(ExtFuture<DirScanResult> ext_future,
+	static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
 			const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
 			const QStringList &name_filters,
 			QDir::Filters dir_filters = QDir::NoFilter,
