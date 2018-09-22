@@ -409,7 +409,7 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
    QCoreApplication::postEvent(obj, new Event(obj, method));
 }
 
-/// Above is pre-Qt5.10.  These should be used from Qt5.10+.
+/// Above is pre-Qt5.10.  The below should be used from Qt5.10+.
 
 template <class CallableType, class ReturnType = ct::return_type_t<CallableType>>
 static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)

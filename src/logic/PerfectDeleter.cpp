@@ -61,12 +61,29 @@ void PerfectDeleter::cancel_and_wait_for_all()
 		i.cancel();
 	}
 
+	// Cancel all registered AMLMJobs.
+	for(AMLMJob* i : m_watched_AMLMJobs)
+	{
+		if(i != nullptr)
+		{
+			// Killing them softly is probably the right way to go here.
+			i->kill(KJob::KillVerbosity::Quietly);
+		}
+	}
+
 	// Wait for the QFutures to finish.
 	/// @todo Need to keep event loop running here?
 	for(QFuture<void>& i : m_watched_qfutures)
 	{
 		i.waitForFinished();
 	}
+
+	// Wait for the AMLMJobs to finish.
+	/// @todo Probably need to keep event loop running here.
+//	for(QFuture<void>& i : m_watched_qfutures)
+//	{
+//		i.waitForFinished();
+//	}
 }
 
 void PerfectDeleter::addQFuture(QFuture<void> f)
