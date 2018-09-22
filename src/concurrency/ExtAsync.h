@@ -332,6 +332,19 @@ static inline void name_qthread()
     {
 		ExtFuture<R> retfuture;
 
+		/**
+		 * @todo Exception handling.
+		 * This is the basic pattern.  Note the use of reportException():
+		 * 		this->m_task->run(*this);
+				#ifndef QT_NO_EXCEPTIONS
+					} catch (QException &e) {
+						QFutureInterface<T>::reportException(e);
+					} catch (...) {
+						QFutureInterface<T>::reportException(QUnhandledException());
+					}
+				#endif
+		 */
+
 		try
 		{
 			/*

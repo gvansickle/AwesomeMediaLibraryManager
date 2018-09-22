@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if 0
 #ifndef AWESOMEMEDIALIBRARYMANAGER_REPORTINGRUNNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_REPORTINGRUNNER_H
 
@@ -185,3 +185,5 @@ public:
 };
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REPORTINGRUNNER_H
+#endif
+

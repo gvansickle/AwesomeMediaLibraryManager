@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#if 0
 #include "AsyncDirScanner.h"
 
 #include <QString>
@@ -98,4 +98,4 @@ void AsyncDirScanner::run(QFutureInterface<QString>& report_and_control)
 	}
 }
 
-
+#endif

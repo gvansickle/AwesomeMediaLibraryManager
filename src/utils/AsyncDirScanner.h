@@ -17,6 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if 0
+
 #ifndef AWESOMEMEDIALIBRARYMANAGER_ASYNCDIRSCANNER_H
 #define AWESOMEMEDIALIBRARYMANAGER_ASYNCDIRSCANNER_H
 
@@ -59,3 +61,4 @@ private:
 
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_ASYNCDIRSCANNER_H
+#endif

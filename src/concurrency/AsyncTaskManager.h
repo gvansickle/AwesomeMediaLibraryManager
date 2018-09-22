@@ -84,18 +84,18 @@ public:
 		QObject::connect(this, &QFutureWatcher<T>::finished, m_finished_function);
     }
 
-	/// @todo Attempt to be more std::experimental.  Incomplete and broken.
-	template<typename F>
-	QFuture<typename std::result_of<F(QFuture<T>&)>::type>
-		then(F&& func)
-	{
-		return ReportingRunner::run([](QFuture<T>&& fut, F&& func) {
-			fut.waitForFinished();
-			return std::forward<F>(func)(fut);
-		},
-		this, std::forward<F>(func)
-		);
-	}
+//	/// @todo Attempt to be more std::experimental.  Incomplete and broken.
+//	template<typename F>
+//	QFuture<typename std::result_of<F(QFuture<T>&)>::type>
+//		then(F&& func)
+//	{
+//		return ExtAsync::run([](QFuture<T>&& fut, F&& func) {
+//			fut.waitForFinished();
+//			return std::forward<F>(func)(fut);
+//		},
+//		this, std::forward<F>(func)
+//		);
+//	}
 
 	futureww<T>& tap(std::function<void(QFutureInterface<T>&)> tap_function)
 	{

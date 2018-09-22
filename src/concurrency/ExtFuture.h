@@ -784,6 +784,20 @@ protected:
 			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback)
 	{
+
+		/**
+		 * @todo Exception handling.
+		 * This is the basic pattern.  Note the use of reportException():
+		 * 		this->m_task->run(*this);
+				#ifndef QT_NO_EXCEPTIONS
+					} catch (QException &e) {
+						QFutureInterface<T>::reportException(e);
+					} catch (...) {
+						QFutureInterface<T>::reportException(QUnhandledException());
+					}
+				#endif
+		 */
+
 		ExtFuture<R> retfuture;
 
 		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> thisfuture, ExtFuture<R> ret_future) {
@@ -799,7 +813,7 @@ protected:
 			}
 			catch(ExtAsyncCancelException& e)
 			{
-#warning "This will throw to the wrong future (the QtConcurrent::run() retval."
+#warning "This will throw to the wrong future (the QtConcurrent::run() retval, see above."
 				throw;
 			}
 
