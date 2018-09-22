@@ -403,6 +403,7 @@ public:
 	/// @endcode
 	/// @{
 
+	/// @todo
 	void setProgressUnit(/*KJob::Unit*/ int prog_unit)
 	{
 //		ExtFutureProgressInfo pi;
@@ -414,6 +415,7 @@ public:
 		m_progress_unit = prog_unit;
 	}
 
+	/// @todo
 	void setProcessedAmount(/*KJob::Unit*/ int unit, qulonglong amount);
 	void setTotalAmount(/*KJob::Unit*/ int unit, qulonglong amount);
 
