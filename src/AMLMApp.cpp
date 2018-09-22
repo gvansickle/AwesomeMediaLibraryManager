@@ -174,6 +174,11 @@ void AMLMApp::perform_controlled_shutdown()
     m_shutting_down = true;
 
     // Signal to the world that we're in the process of shutting down.
+	// This is triggered from the Qt5 aboutToQuit() signal:
+	// @note From the aboutToQuit() docs:
+	// "Emitted when the application is about to quit the main event loop."
+	// "Note that no user interaction is possible in this state"
+	/// @todo ... should we even be emitting it here?
     Q_EMIT aboutToShutdown();
 
     if(!m_controlled_shutdown_complete)

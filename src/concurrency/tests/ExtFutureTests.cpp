@@ -172,21 +172,39 @@ TEST_F(ExtFutureTest, CopyAssignTests)
 /**
  * Test basic cancel properties.
  */
-TEST_F(ExtFutureTest, ExtFutureBasicCancel)
+TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
 {
     TC_ENTER();
 
-    ExtFuture<Unit> f;
+	/**
+	 * @note QFuture<> behavior.
+	 * The QFuture coming out of ::run() here is (Running|Started).
+	 * A default construced QFuture is (Started|Canceled|Finished)
+	 * I assume "Running" might not always be the case, depending on available threads.
+	 */
+	TypeParam f = QtConcurrent::run([=]() -> int {
+		// Do nothing for 1000 ms.
+		TC_Sleep(1000);
+		// Return an int and we're done.
+		return 5;
+	});
 
-    qDb() << "Starting extfuture:" << f;
+	AMLMTEST_COUT << "Initial future state:" << state(f);
 
     ASSERT_TRUE(f.isStarted());
-    ASSERT_FALSE(f.isCanceled());
-    ASSERT_FALSE(f.isFinished());
+	ASSERT_TRUE(f.isRunning());
+	ASSERT_FALSE(f.isCanceled());
+	ASSERT_FALSE(f.isFinished());
 
     f.cancel();
 
-    qDb() << "Cancelled extfuture:" << f;
+	/**
+	 * @note QFuture<> behavior.
+	 * The QFuture after this cancel() is (Running|Started|Canceled).
+	 * A default construced QFuture is (Started|Canceled|Finished)
+	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
+	 */
+	AMLMTEST_COUT << "Cancelled future state:" << state(f);
 
     ASSERT_TRUE(f.isStarted());
     ASSERT_TRUE(f.isCanceled());
@@ -194,23 +212,23 @@ TEST_F(ExtFutureTest, ExtFutureBasicCancel)
     // Canceling alone won't finish the extfuture.
     ASSERT_FALSE(f.isFinished());
 
-    f.reportFinished();
+//    f.reportFinished();
     f.waitForFinished();
 
     ASSERT_TRUE(f.isFinished());
 
-    qDb() << "Cancelled and finished extfuture:" << f;
+	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(f);
 
     TC_EXIT();
 }
 
-TEST_F(ExtFutureTest, ExtFutureBasicException)
+TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 {
 	TC_ENTER();
 
 	bool caught_exception = false;
 
-	ExtFuture<int> main_future;
+	TypeParam main_future;
 
 	main_future = ExtAsync::run([=](int) -> int {
 		TC_Sleep(1000);
@@ -221,7 +239,7 @@ TEST_F(ExtFutureTest, ExtFutureBasicException)
 
 	try
 	{
-		// Should propagate here.
+		// Exception should propagate here.
 		main_future.waitForFinished();
 
 	}
@@ -242,7 +260,7 @@ TEST_F(ExtFutureTest, ExtFutureBasicException)
 }
 
 /// @todo Don't have the infrastructure for this to work yet.
-TEST_F(ExtFutureTest, ExtFutureThenCancel)
+TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 {
 	TC_ENTER();
 

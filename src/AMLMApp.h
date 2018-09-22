@@ -60,7 +60,6 @@ Q_SIGNALS:
      * "Note that no user interaction is possible in this state"
      */
     // void QCoreApplication::aboutToQuit()
-    //
 
     /// @}
 

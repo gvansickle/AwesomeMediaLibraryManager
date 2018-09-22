@@ -939,7 +939,7 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
         if(isAutoDelete())
         {
             /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
-            qWro() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
+            qWr() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
         }
         return true;
     }
