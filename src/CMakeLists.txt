@@ -142,7 +142,6 @@ set(HEADER_FILES
 	utils/MapConverter.h
 	utils/StringHelpers.h
 	logic/LibraryRescanner.h
-	utils/AsyncDirScanner.h
 	utils/RegisterQtMetatypes.h
 	utils/UniqueIDMixin.h
 	utils/QtCastHelpers.h
@@ -198,7 +197,6 @@ set(SOURCE_FILES
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
 	logic/LibraryRescanner.cpp
-	utils/AsyncDirScanner.cpp
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
 	logic/CueSheetParser.cpp
@@ -226,7 +224,6 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
 # Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
-	concurrency/ReportingRunner.h
 	concurrency/AsyncTaskManager.h
 	concurrency/ExtendedDeferred.h
 	concurrency/ExtFutureState.h
@@ -249,7 +246,6 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtFutureProgressInfo.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
-	concurrency/ReportingRunner.cpp
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp

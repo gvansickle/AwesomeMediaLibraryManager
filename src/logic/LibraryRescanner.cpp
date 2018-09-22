@@ -43,9 +43,7 @@
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
-#include "utils/AsyncDirScanner.h"
 #include <concurrency/ExtAsync.h>
-#include <concurrency/ReportingRunner.h>
 #include <concurrency/AsyncTaskManager.h>
 #include <concurrency/DirectoryScanJob.h>
 

@@ -20,9 +20,6 @@
 #ifndef UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 #define UTILS_CONCURRENCY_ASYNCTASKMANAGER_H_
 
-/// @todo Experimental
-#include "ReportingRunner.h"
-
 #include <QtConcurrent>
 #include <QObject>
 #include <QVector>
