@@ -299,7 +299,7 @@ print_qtinfo()
 ### KDE KF5 libs.
 ###
 # Krita has ~this warning: "don't reorder these, this is the order they depend on each other."
-set(KF5_LINK_LIBS "")
+set(KF5_LINK_LIB_TARGETS "")
 ### @note "Config" is both a find_package() keyword as well as the KF5Config components KF5::ConfigCore and KF5::ConfigGui.
 ###       We'll require KF5Config separately to avoid any ambiguity.
 find_package(KF5Config ${KF5_MIN_VERSION} REQUIRED)
@@ -315,10 +315,10 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	WindowSystem
 )
 set(HAVE_KF501 ${KF5_FOUND})
-list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
-list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
-list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
 
 ###### EXPERIMENT
 
@@ -348,7 +348,7 @@ if(WITH_BUNDLED_BREEZE_ICONS)
 			COMPONENT coreapp)
     endif()
 endif()
-#list(APPEND KF5_LINK_LIBS Breeze)
+#list(APPEND KF5_LINK_LIB_TARGETS Breeze)
 print_varlist(BREEZEICONS_PATH)
 
 

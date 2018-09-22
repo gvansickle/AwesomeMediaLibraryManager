@@ -20,8 +20,27 @@
 #ifndef PERFECTDELETER_H
 #define PERFECTDELETER_H
 
+// Std C++
+#include <deque>
+#include <mutex>
+
+// Qt5
+#include <QFuture>
+
+// KF5
+#include <KJob>
+
+// Ours
+#include <src/concurrency/AMLMJob.h>
+
+struct Deletable
+{
+//	template <class T, class Canceler, class Waiter>
+	QVariant m_to_be_deleted;
+};
+
 /**
- * @todo write docs
+ * Class for managing the lifecycle of various deferred-delete objects.
  */
 class PerfectDeleter
 {
@@ -35,6 +54,31 @@ public:
      * Destructor
      */
     ~PerfectDeleter();
+
+    static PerfectDeleter* instance();
+    static void destroy();
+
+	void cancel_and_wait_for_all();
+
+    void addQFuture(QFuture<void> f);
+
+    void addKJob(KJob* kjob);
+
+    void addAMLMJob(AMLMJob* amlmjob);
+
+private:
+
+    static PerfectDeleter* s_instance;
+
+    std::mutex m_mutex;
+
+    std::deque<QFuture<void>> m_watched_qfutures;
+
+    std::deque<QPointer<KJob>> m_watched_KJobs;
+    std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
+
+    /// Private member functions.
+
 
 };
 

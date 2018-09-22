@@ -33,6 +33,7 @@
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
 #include <logic/dbmodels/CollectionDatabaseModel.h>
+#include <logic/PerfectDeleter.h>
 #include <utils/RegisterQtMetatypes.h>
 
 
@@ -51,6 +52,8 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 AMLMApp::~AMLMApp()
 {
     /// @todo Shut down whatever still needs shutting down.
+
+	PerfectDeleter::destroy();
 
     delete m_mime_database;
 
@@ -132,7 +135,7 @@ bool AMLMApp::shuttingDown() const
 
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
 {
-M_WARNING("REMOVE");
+M_WARNING("TODO: Do something with this Breeze forcing.");
 return;
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
@@ -175,7 +178,9 @@ void AMLMApp::perform_controlled_shutdown()
 
     if(!m_controlled_shutdown_complete)
     {
-        /// @todo Do whatever shutdown we need to here.
+		// Do whatever shutdown tasks we need to in here.
+
+		PerfectDeleter::instance()->cancel_and_wait_for_all();
     }
 
     m_controlled_shutdown_complete = true;
