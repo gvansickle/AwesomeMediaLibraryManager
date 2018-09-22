@@ -140,7 +140,6 @@ set(HEADER_FILES
 	utils/in.h
 	utils/MapConverter.h
 	utils/StringHelpers.h
-	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
 	utils/AsyncDirScanner.h
 	utils/RegisterQtMetatypes.h
@@ -197,7 +196,6 @@ set(SOURCE_FILES
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
-	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
 	utils/AsyncDirScanner.cpp
 	utils/RegisterQtMetatypes.cpp
@@ -243,6 +241,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/DirectoryScanJob.h
 	concurrency/ThreadsafeMap.h
 	concurrency/DebugSequence.h
+	concurrency/WorkerThreadBase.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
@@ -253,10 +252,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
-	
-	# From Qt Creator
-	#concurrency/runextensions.cpp
-	#concurrency/runextensions.h
+	concurrency/WorkerThreadBase.cpp
 	)
 
 set(SOURCE_FILES_LOGIC_MODELS
