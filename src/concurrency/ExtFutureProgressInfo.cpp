@@ -27,14 +27,6 @@
 #include <utils/StringHelpers.h>
 #include <utils/DebugHelpers.h>
 
-//static QStringList replaceInStrings(const QStringList &strlist, const QString& char_to_escape, const QString& escaped_str)
-//{
-//	auto retval = strlist;
-
-//	retval.replaceInStrings(char_to_escape, escaped_str);
-
-//	return retval;
-//}
 
 const QString f_split_str = QStringLiteral(R"(^)");
 

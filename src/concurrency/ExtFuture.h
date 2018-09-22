@@ -129,7 +129,7 @@ class ExtFuture;
 template <typename T>
 class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 {
-    using BASE_CLASS = QFuture<T>;
+	using BASE_CLASS = QFuture<T>;
 
 	static_assert(!std::is_void<T>::value, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
 
@@ -156,20 +156,20 @@ public:
 	 *
 	 * 		m_future_interface.setRunnable(this);
 	 *
-     * Not sure if we need to do that here or not, we don't have a QRunnable to give it.
+	 * Not sure if we need to do that here or not, we don't have a QRunnable to give it.
 	 *
 	 * This is the code we're fighting:
 	 *
-     * @code
+	 * @code
 	 * void QFutureInterfaceBase::waitForFinished()
 		{
 			QMutexLocker lock(&d->m_mutex);
 			const bool alreadyFinished = !isRunning();
 			lock.unlock();
 
-            if (!alreadyFinished)
-            {
-                /// GRVS: Not finished, so start running it?
+			if (!alreadyFinished)
+			{
+				/// GRVS: Not finished, so start running it?
 				d->pool()->d_func()->stealAndRunRunnable(d->runnable);
 
 				lock.relock();
@@ -180,18 +180,22 @@ public:
 
 			d->m_exceptionStore.throwPossibleException();
 		}
-     * @endcode
+	 * @endcode
 	 *
-     * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
+	 * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
 	 *        if it isn't both Started and Running.
 	 */
 //	ExtFuture() : QFuture<T>() {}
 	ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
 																							  | QFutureInterfaceBase::State::Running))
-		: QFuture<T>(new QFutureInterface<T>(initialState)) {}
+		: QFuture<T>(new QFutureInterface<T>(initialState)),
+		  m_progress_unit(0 /*KJob::Unit::Bytes*/)
+	{}
 
 	/// Copy constructor.
-	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)) {}
+	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)),
+			m_progress_unit(other.m_progress_unit)
+	{}
 
 	/// Move constructor
 	/// @note Qt5's QFuture doesn't have this.
@@ -199,14 +203,14 @@ public:
 
 	/// Converting constructor from QFuture<T>.
 	ExtFuture(const QFuture<T>& f) : ExtFuture(&(f.d)) {}
-    /// Move construct from QFuture.
+	/// Move construct from QFuture.
 //	ExtFuture(QFuture<T>&& f) noexcept = delete;// : BASE_CLASS(f) {};// = delete;
 
 	/// Copy construct from QFuture<void>.
 	/// @todo I think this doesn't work.
 	ExtFuture(const QFuture<void>& f) : BASE_CLASS(f) {}
 
-    explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
+	explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
 		: BASE_CLASS(p) {}
 
 	/**
@@ -235,7 +239,7 @@ public:
 	 */
 	~ExtFuture() = default;
 
-    /// @name Copy and Move Assignment operators.
+	/// @name Copy and Move Assignment operators.
 	/// @{
 
 	/// Copy assignment.
@@ -278,8 +282,8 @@ public:
 	bool operator!=(const ExtFuture &other) const { return this->BASE_CLASS::operator!=(other); }
 	/// @}
 
-    /// @name Reporting interface
-    /// @{
+	/// @name Reporting interface
+	/// @{
 
 	/**
 	 * Cancel/Pause/Resume helper function for while(1) loops reporting/controlled by this ExtFuture<T>.
@@ -310,77 +314,77 @@ public:
 		}
 	}
 
-    /// From QFutureInterface<T>
+	/// From QFutureInterface<T>
 
-    inline void reportResult(const T* result, int index = -1)
-    {
-        this->d.reportResult(result, index);
-    }
+	inline void reportResult(const T* result, int index = -1)
+	{
+		this->d.reportResult(result, index);
+	}
 
-    inline void reportResult(const T& result, int index = -1)
-    {
-        this->d.reportResult(result, index);
-    }
+	inline void reportResult(const T& result, int index = -1)
+	{
+		this->d.reportResult(result, index);
+	}
 
-    inline void reportResults(const QVector<T> &results, int beginIndex = -1, int count = -1)
-    {
-        this->d.reportResults(results, beginIndex, count);
-    }
+	inline void reportResults(const QVector<T> &results, int beginIndex = -1, int count = -1)
+	{
+		this->d.reportResults(results, beginIndex, count);
+	}
 
 	/**
 	 * If result is != nullptr, calls to reportResult() and adds a copy of the result.
 	 * Unconditionally reports finished.
 	 * @param result
 	 */
-    inline void reportFinished(const T *result = nullptr)
-    {
-        this->d.reportFinished(result);
-    }
+	inline void reportFinished(const T *result = nullptr)
+	{
+		this->d.reportFinished(result);
+	}
 
-    /// From QFutureInterfaceBase
+	/// From QFutureInterfaceBase
 
-    void reportStarted()
-    {
-        this->d.reportStarted();
-    }
+	void reportStarted()
+	{
+		this->d.reportStarted();
+	}
 
-    void reportCanceled()
-    {
-        this->d.reportCanceled();
-    }
+	void reportCanceled()
+	{
+		this->d.reportCanceled();
+	}
 
-    void reportException(const QException &e)
-    {
-        this->d.reportException(e);
-    }
+	void reportException(const QException &e)
+	{
+		this->d.reportException(e);
+	}
 
-    void reportResultsReady(int beginIndex, int endIndex)
-    {
-        this->d.reportResultsReady(beginIndex, endIndex);
-    }
+	void reportResultsReady(int beginIndex, int endIndex)
+	{
+		this->d.reportResultsReady(beginIndex, endIndex);
+	}
 
-    void waitForResume()
-    {
-        this->d.waitForResume();
-    }
+	void waitForResume()
+	{
+		this->d.waitForResume();
+	}
 
 	/// @name Status reporting interface.
 	/// Call these only from your ExtAsync::run() callback.
 public:
 
-    void setProgressRange(int minimum, int maximum)
-    {
-        this->d.setProgressRange(minimum, maximum);
-    }
-    void setProgressValue(int progressValue)
-    {
-        this->d.setProgressValue(progressValue);
-    }
+	void setProgressRange(int minimum, int maximum)
+	{
+		this->d.setProgressRange(minimum, maximum);
+	}
+	void setProgressValue(int progressValue)
+	{
+		this->d.setProgressValue(progressValue);
+	}
 
-    void setProgressValueAndText(int progressValue, const QString &progressText)
-    {
-        this->d.setProgressValueAndText(progressValue, progressText);
-    }
+	void setProgressValueAndText(int progressValue, const QString &progressText)
+	{
+		this->d.setProgressValueAndText(progressValue, progressText);
+	}
 
 	/// @name KJob-inspired status/information reporting interfaces.
 	/// Note that these ultimately need to be squeezed through QFutureInterface's progress reporting
@@ -401,12 +405,17 @@ public:
 
 	void setProgressUnit(/*KJob::Unit*/ int prog_unit)
 	{
-		ExtFutureProgressInfo pi;
+//		ExtFutureProgressInfo pi;
 
-		pi.fromSetProgressUnit(prog_unit);
+//		pi.fromSetProgressUnit(prog_unit);
 
-		INTERNAL_reportKJobProgressInfo(pi);
+//		INTERNAL_reportKJobProgressInfo(pi);
+//		static_assert(sizeof(int) == 4);
+		m_progress_unit = prog_unit;
 	}
+
+	void setProcessedAmount(/*KJob::Unit*/ int unit, qulonglong amount);
+	void setTotalAmount(/*KJob::Unit*/ int unit, qulonglong amount);
 
 	void reportDescription(const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(),
 						   const QPair< QString, QString > &field2=QPair< QString, QString >())
@@ -437,6 +446,7 @@ public:
 	}
 
 private:
+
 	void INTERNAL_reportKJobProgressInfo(const ExtFutureProgressInfo& pi)
 	{
 		/// @todo There's a race here, both progressValue() and setProgressValueAndText()
@@ -447,14 +457,33 @@ private:
 
 		this->d.setProgressValue(current_progress_val);
 	}
+
+	/**
+	 * An attempt to squeeze KJob progress info through QFuture{Watcher}'s interface.
+	 * This is a bit of a mess.  We have two QFuture<T>/QFutureInterfaceBase channels for ints:
+	 * - QFutureInterfaceBase::setProgressRange(int minimum, int maximum), which does this:
+	 * 	QMutexLocker locker(&d->m_mutex);
+	 * 	d->m_progressMinimum = minimum;
+	 * 	d->m_progressMaximum = maximum;
+	 * 	d->sendCallOut(QFutureCallOutEvent(QFutureCallOutEvent::ProgressRange, minimum, maximum));
+	 * - void QFutureInterfaceBase::setProgressValue(int progressValue), which does more:
+	 * @code
+	 * @endcode
+	 *
+	 */
+	void INTERNAL_reportKJobProgressNumericalInfo(const ExtFutureProgressInfo& pi)
+	{
+
+	}
+
 public:
 
 	/// @}
 
-    /// @}
+	/// @}
 
 	/**
-     * Waits until the ExtFuture is finished, and returns the first result.
+	 * Waits until the ExtFuture is finished, and returns the first result.
 	 * Essentially the same semantics as std::future::get().
 	 *
 	 * @note Calls .wait() then returns this->future().result().  This keeps Qt's event loops running.
@@ -463,27 +492,27 @@ public:
 	 *
 	 * @return The result value of this ExtFuture.
 	 */
-    T qtget_first();
+	T qtget_first();
 
-    /**
-     * Waits until the ExtFuture<T> is finished, and returns the resulting QList<T>.
-     * Essentially the same semantics as std::future::get(); shared_future::get() always returns a reference instead.
-     *
-     * @note Directly calls this->results().  This blocks any event loop in this thread.
-     *
-     * @return The results value of this ExtFuture.
-     */
-    QList<T> get() const
-    {
-        qDb() << "IN GET, " << *this;
-        auto retval = this->results();
-        qDb() << "LEAVING GET, " << *this;
-        return retval;
-    }
+	/**
+	 * Waits until the ExtFuture<T> is finished, and returns the resulting QList<T>.
+	 * Essentially the same semantics as std::future::get(); shared_future::get() always returns a reference instead.
+	 *
+	 * @note Directly calls this->results().  This blocks any event loop in this thread.
+	 *
+	 * @return The results value of this ExtFuture.
+	 */
+	QList<T> get() const
+	{
+		qDb() << "IN GET, " << *this;
+		auto retval = this->results();
+		qDb() << "LEAVING GET, " << *this;
+		return retval;
+	}
 
-    /**
-     * QFuture<T> has result(), results(), resultAt(), and isResultReadyAt().
-     */
+	/**
+	 * QFuture<T> has result(), results(), resultAt(), and isResultReadyAt().
+	 */
 
 	/// @name .then() overloads.
 	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like
@@ -526,7 +555,7 @@ public:
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback,
 	 * of signature:
 	 * 	@code
-     * 		R then_callback(ExtFuture<T>)
+	 * 		R then_callback(ExtFuture<T>)
 	 * 	@endcode
 	 * where R != [void, ExtFuture<>]
 	 *
@@ -538,7 +567,7 @@ public:
 	 * @param then_callback
 	 * @returns ExtFuture<R>
 	 */
-    template <class F, class R = ct::return_type_t<F>,
+	template <class F, class R = ct::return_type_t<F>,
 			REQUIRES(is_non_void_non_ExtFuture_v<R>
 			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
 	ExtFuture<R> then( F&& then_callback )
@@ -555,50 +584,50 @@ public:
 	/**
 	 * Attaches a "tap" callback to this ExtFuture.
 	 *
-     * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
+	 * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
 	 *
-     * @param tap_callback  Callback with the signature void()(T).
+	 * @param tap_callback  Callback with the signature void()(T).
 	 *
 	 * @return ExtFuture<T>
 	 */
 	template <typename TapCallbackType,
-              REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
-    ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
+			  REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
+	ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
 	{
 		return this->TapHelper(context, std::forward<TapCallbackType>(tap_callback));
 	}
 
-    /**
-     * Attaches a "tap" callback to this ExtFuture.
-     *
-     * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
-     *
-     * @param tap_callback  Callback with the signature void()(T).
-     *
+	/**
+	 * Attaches a "tap" callback to this ExtFuture.
+	 *
+	 * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
+	 *
+	 * @param tap_callback  Callback with the signature void()(T).
+	 *
 	 * @return ExtFuture<T>
-     */
-    template <typename TapCallbackType,
-              REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
-    ExtFuture<T> tap(TapCallbackType&& tap_callback)
+	 */
+	template <typename TapCallbackType,
+			  REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
+	ExtFuture<T> tap(TapCallbackType&& tap_callback)
 	{
 		auto retval = this->tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
 
 		return retval;
 	}
 
-    /**
+	/**
 	 * tap() overload for "streaming" taps.
-     * Callback takes a reference to this, a begin index, and an end index:
-     * @code
+	 * Callback takes a reference to this, a begin index, and an end index:
+	 * @code
 	 *      void TapCallback(ExtFuture<T> ef, int begin, int end)
-     * @endcode
+	 * @endcode
 	 *
 	 * @returns An ExtFuture<T> which is made ready when this is completed.
-     */
+	 */
 	template<typename StreamingTapCallbackType,
 			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> tap(QObject* context, StreamingTapCallbackType&& tap_callback)
-    {
+	{
 #if 0
 //        EnsureFWInstantiated();
 
@@ -608,13 +637,13 @@ public:
 		// Create a new FutureWatcher<T>
 		auto* watcher = new_self_destruct_futurewatcher(context);
 
-        connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt,
-                       context, [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) mutable {
-            qDb() << "IN TAP CALLBACK, begin:" << begin << ", end:" << end;
-            tap_cb(*this, begin, end);
-            ;});
-        connect_or_die(watcher, &QFutureWatcher<T>::finished, context, [=]() mutable {
-            qDb() << "FUTURE FINISHED:" << *this;
+		connect_or_die(watcher, &QFutureWatcher<T>::resultsReadyAt,
+					   context, [=, tap_cb = std::decay_t<TapCallbackType>(tap_callback)](int begin, int end) mutable {
+			qDb() << "IN TAP CALLBACK, begin:" << begin << ", end:" << end;
+			tap_cb(*this, begin, end);
+			;});
+		connect_or_die(watcher, &QFutureWatcher<T>::finished, context, [=]() mutable {
+			qDb() << "FUTURE FINISHED:" << *this;
 			// The idea here is to make sure any .then() after this .tap() gets called second.
 			ef_copy = *this;
 			ef_copy.reportFinished();
@@ -630,12 +659,12 @@ public:
 			Q_ASSERT(ef_copy.isCanceled());
 		});
 
-        watcher->setFuture(*this);
+		watcher->setFuture(*this);
 
-        return ef_copy;
+		return ef_copy;
 #endif
 		return this->StreamingTapHelper(context, std::forward<StreamingTapCallbackType>(tap_callback));
-    }
+	}
 
 	template<typename StreamingTapCallbackType,
 			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
@@ -644,18 +673,18 @@ public:
 		return this->tap(qApp, std::forward<StreamingTapCallbackType>(tap_callback));
 	}
 
-    /**
-     * A .tap() variant intended solely for testing.  Allows the callback to set the future's objectName,
-     * perhaps register it with a watcher, etc.
-     * @note Unlike other .tap()s, the callback is called immediately, not when the ExtFuture has finished.
-     */
-    template<typename TapCallbackType,
+	/**
+	 * A .tap() variant intended solely for testing.  Allows the callback to set the future's objectName,
+	 * perhaps register it with a watcher, etc.
+	 * @note Unlike other .tap()s, the callback is called immediately, not when the ExtFuture has finished.
+	 */
+	template<typename TapCallbackType,
 			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>>)>
 	ExtFuture<T> test_tap(TapCallbackType&& tap_callback)
-    {
+	{
 		std::invoke(tap_callback, *this);
-        return *this;
-    }
+		return *this;
+	}
 
 	/**
 	 * Degenerate .tap() case where no callback is specified.
@@ -668,7 +697,7 @@ public:
 		return *this;
 	}
 
-    /// @} // END .tap() overloads.
+	/// @} // END .tap() overloads.
 
 	/**
 	 * Registers a callback of type void(void) which is always called when this is finished, regardless
@@ -702,16 +731,16 @@ public:
 	 * Effectively the same semantics as std::future::wait(), but with Qt's-event-loop pumping, so it only
 	 * semi-blocks the thread.
 	 */
-    void wait();
+	void wait();
 
 	/**
-     * Get this' current state as a ExtFutureState::State.
+	 * Get this' current state as a ExtFutureState::State.
 	 *
-     * @return A QFlags<>-derived type describing the current state of the ExtFuture.
+	 * @return A QFlags<>-derived type describing the current state of the ExtFuture.
 	 */
-    ExtFutureState::State state() const;
+	ExtFutureState::State state() const;
 
-    template <class FutureType>
+	template <class FutureType>
 	static ExtFutureState::State state(const FutureType& future);
 
 protected:
@@ -814,7 +843,7 @@ protected:
 			watcher->deleteLater();
 		});
 		// Start watching this ExtFuture.
-        watcher->setFuture(*this);
+		watcher->setFuture(*this);
 //		qDb() << "RETURNING:" << *retval;
 		return *retval;
 #endif
@@ -828,7 +857,7 @@ protected:
 	{
 		static_assert(std::tuple_size_v<ct::args_t<F>> == 0, "Too many args");
 
-        auto watcher = new QFutureWatcher<T>();
+		auto watcher = new QFutureWatcher<T>();
 /// M_WARNING("TODO: LEAKS THIS ExtFuture<>");
 		auto retval = new ExtFuture<R>();
 		qDb() << "NEW EXTFUTURE:" << *retval;
@@ -841,7 +870,7 @@ protected:
 			qDb() << "RETVAL STATUS:" << *retval;
 			watcher->deleteLater();
 		});
-        QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "FinallyHelper ExtFutureWatcher DESTROYED";});
+		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "FinallyHelper ExtFutureWatcher DESTROYED";});
 		watcher->setFuture(this->future());
 		return *retval;
 	}
@@ -876,7 +905,7 @@ protected:
 					// Call the tap callback with the incoming result value.
 					tap_cb(watcher->future().resultAt(index));
 			});
-        watcher->setFuture(*this);
+		watcher->setFuture(*this);
 		return *this;
 #endif
 	}
@@ -960,7 +989,7 @@ protected:
 				/// @todo Exceptions.
 				qDb() << "NOT FINISHED OR CANCELED:" << ef.state();
 				Q_ASSERT(0);
-			}		
+			}
 		},
 		*this,
 		ef_copy);
@@ -974,7 +1003,7 @@ protected:
 	{
 		qDb() << "ENTER";
 		auto watcher = new ExtFutureWatcher<T>();
-        connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
+		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
 		watcher->onProgressChange([f, watcher](int min, int val, int max, QString text){
 			f({min, val, max, text});
 			;});
@@ -989,38 +1018,40 @@ protected:
 	/// These will cause us to need to worry about slicing, additional copy construction/assignment work
 	/// which needs to be synchronized somehow, etc etc.
 	/// @{
-//	int m_progress_unit;
+
+	int m_progress_unit { 0 /* == KJob::Unit::Bytes*/};
+
 	/// @}
 };
 
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
 {
-    return ExtFutureState::state(qfuture_derived.d);
+	return ExtFutureState::state(qfuture_derived.d);
 }
 
 template<typename T>
 static ExtFutureState::State state(const ExtFuture<T>& ef)
 {
-    return ef.state();
+	return ef.state();
 }
 
 template<typename T>
 T ExtFuture<T>::qtget_first()
 {
-    wait();
-    return this->result();
+	wait();
+	return this->result();
 }
 
 template<typename T>
 void ExtFuture<T>::wait()
 {
-    while (!this->isFinished())
-    {
-        // Pump the event loop.
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    }
+	while (!this->isFinished())
+	{
+		// Pump the event loop.
+		QCoreApplication::processEvents(QEventLoop::AllEvents);
+		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+	}
 }
 
 /**
@@ -1035,21 +1066,21 @@ QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
 template<typename T>
 ExtFutureState::State ExtFuture<T>::state() const
 {
-    // State from QFutureInterfaceBase.
-    /// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
-    ///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
-    ///			#ifndef QFUTURE_TEST
-    ///			private:
-    ///			#endif
-    ///				QFutureInterfaceBasePrivate *d;
-    /// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
-    /// actually a QAtomicInt, so we're not thread-safe here.
-    /// This is the queryState() code from qfutureinterface.cpp:
-    ///
-    ///     bool QFutureInterfaceBase::queryState(State state) const
-    ///	    {
-    ///		    return d->state.load() & state;
-    ///	    }
+	// State from QFutureInterfaceBase.
+	/// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
+	///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
+	///			#ifndef QFUTURE_TEST
+	///			private:
+	///			#endif
+	///				QFutureInterfaceBasePrivate *d;
+	/// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
+	/// actually a QAtomicInt, so we're not thread-safe here.
+	/// This is the queryState() code from qfutureinterface.cpp:
+	///
+	///     bool QFutureInterfaceBase::queryState(State state) const
+	///	    {
+	///		    return d->state.load() & state;
+	///	    }
 	///
 	/// Also, QFutureInterface<T>::reportResult() does this:
 	///     QMutexLocker locker(mutex());
@@ -1057,51 +1088,51 @@ ExtFutureState::State ExtFuture<T>::state() const
 	///        return;
 	///     }
 
-    const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
-        {QFutureInterfaceBase::NoState, "NoState"},
-        {QFutureInterfaceBase::Running, "Running"},
-        {QFutureInterfaceBase::Started,  "Started"},
-        {QFutureInterfaceBase::Finished,  "Finished"},
-        {QFutureInterfaceBase::Canceled,  "Canceled"},
-        {QFutureInterfaceBase::Paused,   "Paused"},
-        {QFutureInterfaceBase::Throttled, "Throttled"}
-    };
+	const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+		{QFutureInterfaceBase::NoState, "NoState"},
+		{QFutureInterfaceBase::Running, "Running"},
+		{QFutureInterfaceBase::Started,  "Started"},
+		{QFutureInterfaceBase::Finished,  "Finished"},
+		{QFutureInterfaceBase::Canceled,  "Canceled"},
+		{QFutureInterfaceBase::Paused,   "Paused"},
+		{QFutureInterfaceBase::Throttled, "Throttled"}
+	};
 
-    ExtFutureState::State current_state = ExtFutureState::state(*this);
+	ExtFutureState::State current_state = ExtFutureState::state(*this);
 
-    return current_state;
+	return current_state;
 }
 
 #if 0
 namespace ExtAsync
 {
-    namespace detail
-    {
-        template<typename T>
-        ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
-        {
-            ExtFuture<T> extfuture;
+	namespace detail
+	{
+		template<typename T>
+		ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
+		{
+			ExtFuture<T> extfuture;
 
-            extfuture.reportStarted();
-            extfuture.reportResult(std::forward<T>(value));
-            extfuture.reportFinished();
+			extfuture.reportStarted();
+			extfuture.reportResult(std::forward<T>(value));
+			extfuture.reportFinished();
 
-            return extfuture;
-        }
+			return extfuture;
+		}
 
-        template <typename T, typename R = typename std::decay_t<T>>
-        ExtFuture<R> make_exceptional_future(const QException& exception)
-        {
-            ExtFuture<R> extfuture;
+		template <typename T, typename R = typename std::decay_t<T>>
+		ExtFuture<R> make_exceptional_future(const QException& exception)
+		{
+			ExtFuture<R> extfuture;
 
-            extfuture.reportStarted();
-            extfuture.reportException(exception);
-            extfuture.reportFinished();
+			extfuture.reportStarted();
+			extfuture.reportException(exception);
+			extfuture.reportFinished();
 
-            return extfuture;
-        }
+			return extfuture;
+		}
 
-    }
+	}
 }
 #endif
 
@@ -1156,11 +1187,11 @@ ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 template <typename T>
 QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 {
-    QDebugStateSaver saver(dbg);
+	QDebugStateSaver saver(dbg);
 
-    dbg << "ExtFuture<T>( state=" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
+	dbg << "ExtFuture<T>( state=" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
 
-    return dbg;
+	return dbg;
 }
 
 /**
@@ -1169,9 +1200,9 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
-    outstream << "ExtFuture<T>( state=" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << qUtf8Printable(toString(extfuture.state())) << ")";
+	outstream << "ExtFuture<T>( state=" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << qUtf8Printable(toString(extfuture.state())) << ")";
 
-    return outstream;
+	return outstream;
 }
 
 #endif /* SRC_CONCURRENCY_EXTFUTURE_H_ */
