@@ -212,13 +212,13 @@ TEST_F(ExtFutureTest, ExtFutureBasicException)
 
 	ExtFuture<int> main_future;
 
+	main_future = ExtAsync::run([=](int) -> int {
+		TC_Sleep(1000);
+		AMLMTEST_COUT << "Throwing exception from other thread";
+		throw QException();
+		return 25;
+	}, 5);
 
-		main_future = ExtAsync::run([=](int) -> int {
-			TC_Sleep(1000);
-			AMLMTEST_COUT << "Throwing exception from other thread";
-			throw QException();
-			return 25;
-			}, 5);
 	try
 	{
 		// Should propagate here.
@@ -242,7 +242,7 @@ TEST_F(ExtFutureTest, ExtFutureBasicException)
 }
 
 /// @todo Don't have the infrastructure for this to work yet.
-TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
+TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();
 
@@ -255,6 +255,10 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 //			{
 //				//???
 //			}
+
+			/// @experimental
+			throw ExtAsyncCancelException();
+
 			// Return the count of items from the future.
 			return in_future.resultCount();
 			;});
@@ -270,12 +274,14 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 	synchronizer.addFuture(main_future);
 	synchronizer.addFuture(then_future);
 
+	// Cancel the future returned by then().
 	then_future.cancel();
 
 	AMLMTEST_COUT << "Cancelled then_future:" << then_future;
 
 	ASSERT_TRUE(then_future.isStarted());
 	ASSERT_TRUE(then_future.isCanceled());
+//	ASSERT_TRUE(then_future.isFinished());
 
 	// Wait a bit for the cancel to propagate.
 	TC_Sleep(1000);

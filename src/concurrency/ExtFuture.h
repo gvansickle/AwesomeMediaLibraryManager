@@ -59,6 +59,11 @@ namespace ExtAsync { namespace detail {} }
 template <class T>
 class ExtFuture;
 
+class ExtAsyncCancelException : public QException
+{
+
+};
+
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
 
@@ -785,10 +790,25 @@ protected:
 
 			qDb() << "THEN: START THEN RUN(), thisfuture:" << thisfuture.state() << "ret_future:" << ret_future.state();
 
-			// Wait for this to finish.
-			qDb() << "THEN: Waiting for this to finish";
-			thisfuture.waitForFinished();
-			qDb() << "THEN: this finished";
+			try
+			{
+				// Wait for this to finish.
+				qDb() << "THEN: Waiting for upstream to finish";
+				thisfuture.waitForFinished();
+				qDb() << "THEN: upstream finished";
+			}
+			catch(ExtAsyncCancelException& e)
+			{
+#warning "This will throw to the wrong future (the QtConcurrent::run() retval."
+				throw;
+			}
+
+			if(thisfuture.isCanceled())
+			{
+				// Propagate the cancel to the returned future.
+#warning "OR SHOULD THIS BE THE OTHER WAY AROUND?"
+				ret_future.cancel();
+			}
 
 			// Call the then callback.
 			// We should never end up calling then_callback_copy with a non-finished future.

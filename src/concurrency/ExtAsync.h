@@ -119,6 +119,8 @@ static inline void name_qthread()
     QThread::currentThread()->setObjectName(QString("%1_").arg(id) + QThread::currentThread()->objectName() );
 };
 
+
+
     /**
      * Helper struct for creating SFINAE-friendly function overloads-of-last-resort.
      *
@@ -223,10 +225,11 @@ static inline void name_qthread()
 	template<class CallbackType,
 			 class ExtFutureT = std::tuple_element_t<0, ct::args_t<CallbackType>>,
 			 class T = typename isExtFuture<ExtFutureT>::inner_t,
+			 class... Args,
 			 REQUIRES(is_ExtFuture_v<ExtFutureT>
-			 && ct::is_invocable_r_v<void, CallbackType, ExtFutureT>)
+			 && ct::is_invocable_r_v<void, CallbackType, ExtFutureT, Args&&...>)
              >
-	ExtFuture<T> run_efarg(CallbackType&& callback)
+	ExtFuture<T> run_efarg(CallbackType&& callback, Args&&... args)
     {
 		using argst = ct::args_t<CallbackType>;
 		using arg0t = std::tuple_element_t<0, argst>;
@@ -237,9 +240,9 @@ static inline void name_qthread()
 		qDb() << "FUTURE:" << retval;
 
         // retval is passed by copy here.
-		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef) {
-			std::invoke(std::move(callback_fn), ef);
-		}, std::forward<ExtFutureT>(retval));
+		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef, auto... args) {
+			std::invoke(callback_fn, ef, args...);
+		}, std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
 
         return retval;
     }

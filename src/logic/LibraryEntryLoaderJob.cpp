@@ -95,6 +95,91 @@ LibraryEntryLoaderJob::~LibraryEntryLoaderJob()
 
 }
 
+void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext_future,
+									  QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
+{
+	qDb() << "START LibraryEntryLoaderJob RUNFUNCTOR" << pmi << libentry;
+
+	LibraryEntryLoaderJobResult retval(pmi, libentry);
+
+    Q_ASSERT(retval.isValid());
+
+    // Make sure the index is still valid.  The model may have been destroyed since the message was sent.
+	if(!pmi.isValid())
+    {
+		qWr() << "INVALID QPersistentModelIndex:" << pmi << ", ABORTING LOAD";
+		/// @todo
+//        setError(InvalidQPersistentModelIndex);
+        return;
+    }
+    // Make sure the LibraryEntry hasn't been deleted.  It shouldn't have been since we hold a shared_ptr<> to it.
+	Q_ASSERT(libentry);
+
+    // Make sure the LibraryEntry has a valid QUrl.  It should, but ATM we're getting here with empty URLs.
+//    AMLM_ASSERT_EQ(m_libentry->getUrl().isValid(), true);
+	if(!libentry->getUrl().isValid())
+    {
+		qWr() << "INVALID URL";
+		/// @todo
+//        setError(InvalidLibraryEntryURL);
+        return;
+    }
+
+	if(!libentry->isPopulated())
+    {
+        // Item's metadata has not been looked at.  We may have multiple tracks.
+
+		qIn() << "LOADING ITEM:" << libentry;
+		auto vec_items = libentry->populate();
+        for (const auto& i : vec_items)
+        {
+            if (!i->isPopulated())
+            {
+				qCr() << "NOT POPULATED" << i.get();
+            }
+            retval.push_back(i);
+
+			qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
+
+        }
+    }
+	else if (libentry->isPopulated() && libentry->isSubtrack())
+    {
+		qCr() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << libentry->getUrl();
+        Q_ASSERT(0);
+    }
+    else
+    {
+        // Item needs to be refreshed.
+
+        //qDebug() << "Re-reading metatdata for item" << item->getUrl();
+		std::shared_ptr<LibraryEntry> new_entry = libentry->refresh_metadata();
+
+        if(!new_entry)
+        {
+            // Couldn't load the metadata from the file.
+            // Only option here is to return the old item, which should now be marked with an error.
+			qCr() << "Couldn't load metadata for file" << libentry->getUrl();
+//            retval.m_original_pindexes.push_back(m_pmi);
+			retval.m_new_libentries.push_back(libentry);
+            retval.m_num_tracks_found = 1;
+        }
+        else
+        {
+            // Repackage it and return.
+//            retval.m_original_pindexes.push_back(m_pmi);
+            retval.m_new_libentries.push_back(new_entry);
+            retval.m_num_tracks_found = 1;
+        }
+    }
+
+    Q_ASSERT(retval.isValid());
+
+    Q_ASSERT(retval.m_num_tracks_found > 0);
+
+	ext_future.reportResult(retval);
+}
+
 void LibraryEntryLoaderJob::runFunctor()
 {
     qDbo() << "START LibraryEntryLoaderJob RUNFUNCTOR" << m_pmi << m_libentry;

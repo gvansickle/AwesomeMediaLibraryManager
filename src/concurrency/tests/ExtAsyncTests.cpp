@@ -277,7 +277,6 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     EXPECT_TRUE(the_future.isStarted());
     EXPECT_TRUE(the_future.isCanceled());
 
-    /// @todo This is never finished.
     the_future.waitForFinished();
 //    the_future.result();
 

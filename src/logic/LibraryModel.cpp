@@ -317,6 +317,19 @@ M_WARNING("TODO Probably should be refactored.");
                 // Start an async job to read the data for this entry.
 
                 qDb() << "STARTING ASYNC LOAD";
+#if 0
+				auto future_entry = ExtAsync::run_efarg(&LibraryEntryLoaderJob::LoadEntry, QPersistentModelIndex(index), item);
+				future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result){
+					LibraryEntryLoaderJobResult new_vals = result.result();
+					run_in_event_loop(qApp, [&](){
+						Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
+						m_pending_async_item_loads.erase(item);
+						return true;});
+					return true;
+					;}
+							);
+				m_pending_async_item_loads[item];
+#else
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
                 m_pending_async_item_loads[item] = load_entry_job;
                 load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
@@ -354,6 +367,7 @@ M_WARNING("TODO Probably should be refactored.");
                     }
                 });
                 load_entry_job->start();
+#endif
             }
 
             ////////////////
