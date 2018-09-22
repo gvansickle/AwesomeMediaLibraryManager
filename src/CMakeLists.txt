@@ -102,6 +102,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
 		verdigris_target
+		logic_subdir
 		)
 
 
@@ -263,6 +264,7 @@ set(SOURCE_FILES_LOGIC_MODELS
 	)
 
 add_subdirectory(gui)
+add_subdirectory(logic)
 #message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
 #

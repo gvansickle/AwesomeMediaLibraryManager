@@ -908,7 +908,8 @@ protected:
 
         // Tell the Future and hence job to Cancel.
 M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'");
-        m_ext_watcher->cancel();
+//        m_ext_watcher->cancel();
+		m_ext_future.cancel();
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
         /// @todo Is it possible for us to have been deleted before this call due to the cancel() above?
@@ -920,7 +921,8 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
 #else
         // Wait for the runFunctor() to report Finished.
-        m_ext_watcher->waitForFinished();
+		m_ext_watcher->waitForFinished();
+//		m_ext_future.waitForFinished();
 
         // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
         /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
@@ -1012,7 +1014,8 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
         connect_or_die(this, &KJob::result, this, &ThisType::result);
 
         // QObject forwarders.
-        connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
+		/// @note Does this actually make sense?
+		connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
 
 		// Speed update timer.
 		connect_or_die(m_speed_timer.data(), &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);
@@ -1082,11 +1085,11 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 
 };
 
-//template<class ExtFutureT>
-//inline static auto* make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
-//{
-//	auto job = new AMLMJobT(ef, parent);
-//	qDebug() << "WORKED:" << ef;
-//}
+template<class ExtFutureT>
+inline static auto* make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
+{
+	auto job = new AMLMJobT<ExtFutureT>(ef, parent);
+	qDebug() << "WORKED:" << ef;
+}
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */
