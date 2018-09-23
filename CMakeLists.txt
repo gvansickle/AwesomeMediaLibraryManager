@@ -28,6 +28,7 @@
 # @note For QtIFW installer:
 # - On Linux, CPACK_IFW_ROOT (cmake var) or QTIFWDIR (env var) should point to something like ~/Qt/QtIFW-3.0.1
 
+
 # cmake setup.
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
