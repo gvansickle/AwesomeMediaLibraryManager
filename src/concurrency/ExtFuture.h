@@ -853,12 +853,12 @@ protected:
 
 			// Ok, thisfuture is finished.
 			// Is it really canceled?
-			if(thisfuture.isCanceled())
-			{
-				// Propagate the cancel to the returned future.
-				/// @todo Or should this throw a cancellation exception?
-				ret_future.cancel();
-			}
+//			if(thisfuture.isCanceled())
+//			{
+//				// Propagate the cancel to the returned future.
+//				/// @todo Or should this throw a cancellation exception?
+//				ret_future.cancel();
+//			}
 
 			// Call the then callback.
 			// We should never end up calling then_callback_copy with a non-finished future.
@@ -994,17 +994,19 @@ protected:
 		>
 	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, F&& streaming_tap_callback)
 	{
-		ExtFuture<T> ef_copy;
+		ExtFuture<T> ret_future;
 
-		QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<F>(streaming_tap_callback)](ExtFuture<T> ef, ExtFuture<T> f2) {
-			qDb() << "TAP: START TAP RUN(), ef:" << ef.state() << "f2:" << f2.state();
+		try
+		{
+			QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<F>(streaming_tap_callback)](ExtFuture<T> ef, ExtFuture<T> f2) {
+				qDb() << "TAP: START TAP RUN(), ef:" << ef.state() << "f2:" << f2.state();
 
-			int i = 0;
+				int i = 0;
 
-			while(true)
-			{
-				qDb() << "TAP: Waiting for next result";
-				/**
+				while(true)
+				{
+					qDb() << "TAP: Waiting for next result";
+					/**
 				  * QFutureInterfaceBase::waitForResult(int resultIndex)
 				  * - if exception, rethrow.
 				  * - if !running, return.
@@ -1015,58 +1017,80 @@ protected:
 				  *     d->waitCondition.wait(&d->m_mutex);
 				  *   d->m_exceptionStore.throwPossibleException();
 				  */
-				ef.waitForResult(i);
+					ef.waitForResult(i);
 
-				// Check if the wait failed to result in any results.
-				int result_count = ef.resultCount();
-				if(result_count <= i)
-				{
-					// No new results, must have finshed etc.
-					qDb() << "NO NEW RESULTS, BREAKING, ef:" << ef.state();
-					break;
+					// Check if the wait failed to result in any results.
+					int result_count = ef.resultCount();
+					if(result_count <= i)
+					{
+						// No new results, must have finshed etc.
+						qDb() << "NO NEW RESULTS, BREAKING, ef:" << ef.state();
+						break;
+					}
+
+					// Call the tap callback.
+					//				streaming_tap_callback_copy(ef, i, result_count);
+					qDb() << "CALLING TAP CALLBACK, ef:" << ef.state();
+					std::invoke(streaming_tap_callback_copy, ef, i, result_count);
+
+					// Copy the new results to the returned future.
+					for(; i < result_count; ++i)
+					{
+						qDb() << "TAP: Next result available at i = " << i;
+
+						T the_next_val = ef.resultAt(i);
+						f2.reportResult(the_next_val);
+					}
 				}
 
-				// Call the tap callback.
-//				streaming_tap_callback_copy(ef, i, result_count);
-				qDb() << "CALLING TAP CALLBACK, ef:" << ef.state();
-				std::invoke(streaming_tap_callback_copy, ef, i, result_count);
+				qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << ef.state();
 
-				// Copy the new results to the returned future.
-				for(; i < result_count; ++i)
+				// Check final state.  We know it's at least Finished.
+				/// @todo Could we be Finished here with pending results?
+				/// Don't care as much on non-Finished cases.
+				if(ef.isCanceled())
 				{
-					qDb() << "TAP: Next result available at i = " << i;
-
-					T the_next_val = ef.resultAt(i);
-					f2.reportResult(the_next_val);
+					qDb() << "TAP: ef cancelled:" << ef.state();
+					f2.reportCanceled();
 				}
-			}
+				else if(ef.isFinished())
+				{
+					qDb() << "TAP: ef finished:" << ef.state();
+					f2.reportFinished();
+				}
+				else
+				{
+					/// @todo Exceptions.
+					qDb() << "NOT FINISHED OR CANCELED:" << ef.state();
+					Q_ASSERT(0);
+				}
+			},
+			*this,
+			ret_future);
+		}
+		catch(ExtAsyncCancelException& e)
+		{
+			/**
+			 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+			 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+			 *  state of the returned future object."
+			 */
+			ret_future.reportException(e);
+			// I think we don't want to rethrow like this here.  This will throw to the wrong future
+			// (the QtConcurrent::run() retval, see above.
+			//throw;
+		}
+		catch(QException& e)
+		{
+			ret_future.reportException(e);
+		}
+		catch (...)
+		{
+			ret_future.reportException(QUnhandledException());
+		}
 
-			qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << ef.state();
-
-			// Check final state.  We know it's at least Finished.
-			/// @todo Could we be Finished here with pending results?
-			/// Don't care as much on non-Finished cases.
-			if(ef.isCanceled())
-			{
-				qDb() << "TAP: ef cancelled:" << ef.state();
-				f2.reportCanceled();
-			}
-			else if(ef.isFinished())
-			{
-				qDb() << "TAP: ef finished:" << ef.state();
-				f2.reportFinished();
-			}
-			else
-			{
-				/// @todo Exceptions.
-				qDb() << "NOT FINISHED OR CANCELED:" << ef.state();
-				Q_ASSERT(0);
-			}
-		},
-		*this,
-		ef_copy);
-
-		return ef_copy;
+		return ret_future;
 	}
 
 #if 0

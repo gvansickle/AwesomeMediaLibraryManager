@@ -248,36 +248,6 @@ static inline void name_qthread()
         return retval;
     }
 
-//    template<class CallbackType,
-//             class QFutureT = std::remove_reference_t<std::tuple_element_t<0, ct::args_t<CallbackType>>>,
-//             REQUIRES(!is_ExtFuture_v<QFutureT> && std::is_convertible_v<QFutureT, QFuture<void>>)
-//             >
-//    auto run_efarg(CallbackType&& callback) -> QFutureT
-//    {
-//        using argst = ct::args_t<CallbackType>;
-//        using arg0t = std::tuple_element_t<0, argst>;
-//        using ExtFutureR = std::remove_reference_t<arg0t>;
-////        static_assert(std::is_same_v<ExtFutureT, ExtFutureR>, "");
-
-//        ExtFutureR retval;
-//        using QFIT_type = decltype(retval.d);
-//        QFIT_type fi;
-//        fi.reportStarted();
-////        EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
-//        retval = QFutureT(&fi);
-
-//        qDb() << "FUTURE:" << ExtFutureState::state(retval);
-
-//        // retval is passed by copy here.
-////        QtConcurrent::run(std::forward<CallbackType>(std::decay_t<CallbackType>(callback)), retval);
-//        QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureR ef){
-//            qDb() << "FUTURE:" << ExtFutureState::state(ef);
-//            callback_fn(ef);
-//            qDb() << "POST CALLBACK FUTURE:" << ExtFutureState::state(ef);
-//        }, std::forward<ExtFutureR>(retval));
-
-//        return retval;
-//    }
 
 	/**
 	 * Asynchronously run a free function taking no params and returning non-void/non-ExtFuture<>.
@@ -303,11 +273,36 @@ static inline void name_qthread()
 
 		QtConcurrent::run([fn=std::decay_t<CallableType>(function)](ExtFuture<R> retfuture) -> void {
 	    	R retval;
-	    	// Call the function the user originally passed in.
-			retval = std::invoke(fn);
-	    	// Report our single result.
-	    	retfuture.reportResult(retval);
-	    	retfuture.reportFinished();
+
+			try
+			{
+				// Call the function the user originally passed in.
+				retval = std::invoke(fn);
+				// Report our single result.
+				retfuture.reportResult(retval);
+				retfuture.reportFinished();
+			}
+			catch(ExtAsyncCancelException& e)
+			{
+				/**
+				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+				 *  state of the returned future object."
+				 */
+				retfuture.reportException(e);
+				// I think we don't want to rethrow like this here.  This will throw to the wrong future
+				// (the QtConcurrent::run() retval, see above.
+				//throw;
+			}
+			catch(QException& e)
+			{
+				retfuture.reportException(e);
+			}
+			catch (...)
+			{
+				retfuture.reportException(QUnhandledException());
+			}
 	    	;}, std::forward<ExtFuture<R>>(retfuture));
 
 	    return retfuture;
@@ -374,11 +369,26 @@ static inline void name_qthread()
 				return retval;
 				}, std::forward<Args>(args)...);
 		}
+		catch(ExtAsyncCancelException& e)
+		{
+			/**
+			 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+			 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+			 *  state of the returned future object."
+			 */
+			retfuture.reportException(e);
+			// I think we don't want to rethrow like this here.  This will throw to the wrong future
+			// (the QtConcurrent::run() retval, see above.
+			//throw;
+		}
 		catch(QException& e)
 		{
-			// Rethrow.
-			qDb() << "RETHROWING EXCEPTION";
-			throw;
+			retfuture.reportException(e);
+		}
+		catch (...)
+		{
+			retfuture.reportException(QUnhandledException());
 		}
 
 		return retfuture;

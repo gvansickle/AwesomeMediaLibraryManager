@@ -261,7 +261,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 }
 
 /// @todo Don't have the infrastructure for this to work yet.
-TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
+TEST_F(ExtFutureTest, /*DISABLED_*/ExtFutureThenCancel)
 {
 	TC_ENTER();
 
@@ -306,8 +306,8 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 	ASSERT_FALSE(main_future.isFinished());
 
 	ASSERT_TRUE(main_future.isStarted());
-	ASSERT_TRUE(main_future.isCanceled());
-	ASSERT_TRUE(main_future.isFinished());
+	ASSERT_TRUE(main_future.isCanceled()) << main_future;
+	ASSERT_TRUE(main_future.isFinished()) << main_future;
 
 	main_future.waitForFinished();
 

@@ -472,7 +472,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     }
     else
     {
-        GTEST_COUT_qDB << "ExtAsync::run_efarg()";
+		GTEST_COUT_qDB << "ExtAsync::run()";
 		retval = ExtAsync::run(lambda);
     }
 
