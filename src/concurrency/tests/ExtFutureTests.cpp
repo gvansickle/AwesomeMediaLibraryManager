@@ -151,7 +151,6 @@ TEST_F(ExtFutureTest, CopyAssignTests)
 
     CopyAssign<ExtFuture>();
 
-    TC_DONE_WITH_STACK();
     TC_EXIT();
 }
 
@@ -197,11 +196,13 @@ TEST_F(ExtFutureTest, UnwrappingConstructor)
 /**
  * Test basic cancel properties.
  */
-TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
+TEST_F(ExtFutureTest, CancelBasic)
 {
     TC_ENTER();
 
 	QFutureSynchronizer<void> synchronizer;
+
+	using TypeParam = ExtFuture<int>;
 
 	/**
 	 * @note QFuture<> behavior.
@@ -209,19 +210,29 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on available threads.
 	 */
-	TypeParam f = ExtAsync::run([=](int dummy) -> int {
-		// Do nothing for 1000 ms.
-		TC_Sleep(1000);
-		// Return an int and we're done.
-		return 5;
-	}, 0);
+	TypeParam f = ExtAsync::run([=](TypeParam rc_future) -> void {
+
+		for(int i = 0; i<5; ++i)
+		{
+			// Do nothing for 1000 ms.
+			TC_Sleep(1000);
+
+			rc_future.reportResult(i);
+
+			if(rc_future.HandlePauseResumeShouldICancel())
+			{
+				break;
+			}
+		}
+		rc_future.reportFinished();
+	});
 
 	AMLMTEST_COUT << "Initial future state:" << state(f);
 
-    ASSERT_TRUE(f.isStarted());
-	ASSERT_TRUE(f.isRunning());
-	ASSERT_FALSE(f.isCanceled());
-	ASSERT_FALSE(f.isFinished());
+	EXPECT_TRUE(f.isStarted());
+	EXPECT_TRUE(f.isRunning());
+	EXPECT_FALSE(f.isCanceled());
+	EXPECT_FALSE(f.isFinished());
 
 	// ~immediately cancel the future.
     f.cancel();
@@ -234,8 +245,8 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
 	 */
 	AMLMTEST_COUT << "Cancelled future state:" << state(f);
 
-    ASSERT_TRUE(f.isStarted());
-    ASSERT_TRUE(f.isCanceled());
+	EXPECT_TRUE(f.isStarted());
+	EXPECT_TRUE(f.isCanceled());
 
     // Canceling alone won't finish the extfuture.
 	/// @todo This is not coming back canceled.
@@ -243,7 +254,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
 
     f.waitForFinished();
 
-    ASSERT_TRUE(f.isFinished());
+	EXPECT_TRUE(f.isFinished());
 
 	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(f);
 

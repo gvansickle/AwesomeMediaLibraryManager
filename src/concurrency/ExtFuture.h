@@ -806,6 +806,8 @@ protected:
 
 	/**
 	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
+	 * If context == nullptr, then_callback will be run in an arbitrary thread.
+	 * If context points to a QObject, then_callback will be run in its event loop.
 	 */
 	template <typename F,
 			  typename R = std::invoke_result_t<F, ExtFuture<T>>,
@@ -813,6 +815,13 @@ protected:
 			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback)
 	{
+		if(context != nullptr)
+		{
+			// Make sure context has an event loop.
+			QThread* ctx_thread = context->thread();
+			Q_ASSERT(ctx_thread != nullptr);
+			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
+		}
 
 		/**
 		 * @todo Exception handling.
@@ -894,7 +903,16 @@ protected:
 
 			// Call the then callback.
 			// We should never end up calling then_callback_copy with a non-finished future.
-			R retval = std::invoke(then_callback_copy, thisfuture);
+			// We call it either directly (no context), or via an event sent to the context object's event loop.
+			R retval;
+			if constexpr (true)//context == nullptr)
+			{
+				retval = std::invoke(then_callback_copy, thisfuture);
+			}
+			else
+			{
+				retval = run_in_event_loop(context, then_callback_copy);
+			}
 
 			qDb() << "THEN: then_callback CALLED and RETURNED, reporting FINISHED on ret_future with retval."; //, retval:" << retval;
 

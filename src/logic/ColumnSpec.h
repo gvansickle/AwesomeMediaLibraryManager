@@ -38,7 +38,7 @@ public:
 		Artist,
 		Album,
 		Length,
-		FileType,
+		MIMEType,
 		Filename,
 		PLAYLIST_1
 	};

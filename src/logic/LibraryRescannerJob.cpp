@@ -105,7 +105,7 @@ void LibraryRescannerJob::runFunctor()
 
         setProcessedAmountAndSize(KJob::Unit::Files, num_items);
 
-        if(functorHandlePauseResumeAndCancel())
+		if(m_ext_future.HandlePauseResumeShouldICancel())
         {
             // We've been cancelled.
             qIno() << "CANCELLED";

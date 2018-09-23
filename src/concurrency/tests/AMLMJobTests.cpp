@@ -235,8 +235,6 @@ public:
         return retval;
     }
 
-//    TestAMLMJob1* asDerivedTypePtr() override { return this; }
-
     std::atomic_int m_counter {0};
 
 protected:
@@ -257,7 +255,7 @@ protected:
 			AMLMTEST_COUT << "Reporting counter result\n";
             m_ext_future.reportResult(m_counter);
 
-            if(functorHandlePauseResumeAndCancel())
+			if(m_ext_future.HandlePauseResumeShouldICancel())
             {
                 // We've been cancelled.
                 qIno() << "CANCELLED";

@@ -78,7 +78,7 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 	m_columnSpecs.push_back({SectionID::Artist, "Artist", QStringList({"track_performer", "track_artist", "album_artist"})});
 	m_columnSpecs.push_back({SectionID::Album, "Album", QStringList("album_name")});
 	m_columnSpecs.push_back({SectionID::Length, "Length", {"length"}, true});
-	m_columnSpecs.push_back({SectionID::FileType, "Type", {"filetype"}, true});
+	m_columnSpecs.push_back({SectionID::MIMEType, "Type", {"filetype"}, true});
 	m_columnSpecs.push_back({SectionID::Filename, "Filename", {"filename"}});
 
 	// Pre-fabbed Icons
@@ -229,7 +229,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 return m_IconUnknown;
             }
         }
-        else if(SectionID::FileType == sectionid)
+        else if(SectionID::MIMEType == sectionid)
         {
             // Return an icon for the MIME type of the file containing the track.
             auto item = getItem(index);
@@ -270,7 +270,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 				// Return Fraction as a string.
 				return QVariant::fromValue(item->get_length_secs());
 			}
-			else if(sec_id == SectionID::FileType)
+			else if(sec_id == SectionID::MIMEType)
 			{
 M_WARNING("TODO Probably should be refactored.");
 //				return item->getFileType();
@@ -318,17 +318,19 @@ M_WARNING("TODO Probably should be refactored.");
 
                 qDb() << "STARTING ASYNC LOAD";
 #if 0
-				auto future_entry = ExtAsync::run_efarg(&LibraryEntryLoaderJob::LoadEntry, QPersistentModelIndex(index), item);
+				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
+				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, QPersistentModelIndex(index), item);
 				future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result){
 					LibraryEntryLoaderJobResult new_vals = result.result();
 					run_in_event_loop(qApp, [&](){
+						AMLM_ASSERT_IN_GUITHREAD();
 						Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
-						m_pending_async_item_loads.erase(item);
+//						m_pending_async_item_loads.erase(item);
 						return true;});
 					return true;
 					;}
 							);
-				m_pending_async_item_loads[item];
+//				m_pending_async_item_loads[item];
 #else
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
                 m_pending_async_item_loads[item] = load_entry_job;

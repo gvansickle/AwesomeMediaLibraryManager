@@ -217,7 +217,7 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 	setItemDelegateForColumn(len_col, m_length_delegate);
 
 	// Mime type column.
-    auto mimetype_col = m_underlying_model->getColFromSection(SectionID::FileType);
+    auto mimetype_col = m_underlying_model->getColFromSection(SectionID::MIMEType);
 	setItemDelegateForColumn(mimetype_col, m_mimetype_delegate);
 
 	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.

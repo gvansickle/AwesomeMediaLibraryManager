@@ -968,23 +968,23 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
      *
      * @return true if loop in runFunctor() should break due to being canceled.
      */
-    bool functorHandlePauseResumeAndCancel()
-    {
-        if (m_ext_future.isPaused())
-        {
-            m_ext_future.waitForResume();
-        }
-        if (m_ext_future.isCanceled())
-        {
-            // The job should be canceled.
-            // The calling runFunctor() should break out of while() loop.
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+//    bool functorHandlePauseResumeAndCancel()
+//    {
+//        if (m_ext_future.isPaused())
+//        {
+//            m_ext_future.waitForResume();
+//        }
+//        if (m_ext_future.isCanceled())
+//        {
+//            // The job should be canceled.
+//            // The calling runFunctor() should break out of while() loop.
+//            return true;
+//        }
+//        else
+//        {
+//            return false;
+//        }
+//    }
 
     template <class WatcherType>
     void HookUpExtFutureSignals(WatcherType* watcher)
@@ -995,16 +995,16 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
         // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
         // and result ready signals on a canceled future."
         // This group corresponds ~1:1 with KJob functionality.
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
+		connect_or_die(watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
+		connect_or_die(watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
+		connect_or_die(watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
+		connect_or_die(watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
+		connect_or_die(watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
 
 		// FutureWatcher progress signals -> this slots.
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
-		connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressTextChanged, this, &ThisType::SLOT_extfuture_progressTextChanged);
-        connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressValueChanged, this, &ThisType::SLOT_extfuture_progressValueChanged);
+		connect_or_die(watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
+		connect_or_die(watcher, &ExtFutureWatcherT::progressTextChanged, this, &ThisType::SLOT_extfuture_progressTextChanged);
+		connect_or_die(watcher, &ExtFutureWatcherT::progressValueChanged, this, &ThisType::SLOT_extfuture_progressValueChanged);
 
         // Signal-to-signal connections.
         // forward resultsReadyAt() signal.
