@@ -511,9 +511,7 @@ public:
 	 */
 	QList<T> get() const
 	{
-		qDb() << "IN GET, " << *this;
 		auto retval = this->results();
-		qDb() << "LEAVING GET, " << *this;
 		return retval;
 	}
 
@@ -819,7 +817,7 @@ protected:
 
 		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> thisfuture, ExtFuture<R> ret_future) {
 
-			qDb() << "THEN: START THEN RUN(), thisfuture:" << thisfuture.state() << "ret_future:" << ret_future.state();
+			qDb() << "PRE-THEN: START THEN RUN(), thisfuture:" << thisfuture.state() << "ret_future:" << ret_future.state();
 
 			try
 			{
@@ -837,6 +835,7 @@ protected:
 				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
 				 *  state of the returned future object."
 				 */
+				qDb() << "PRE-THEN: upstream threw Cancel" << ExtFutureState::state(thisfuture);
 				ret_future.reportException(e);
 				// I think we don't want to rethrow like this here.  This will throw to the wrong future
 				// (the QtConcurrent::run() retval, see above.
@@ -844,10 +843,12 @@ protected:
 			}
 			catch(QException& e)
 			{
+				qDb() << "PRE-THEN: upstream threw QException" << ExtFutureState::state(thisfuture);
 				ret_future.reportException(e);
 			}
 			catch (...)
 			{
+				qDb() << "PRE-THEN: upstream threw unknown" << ExtFutureState::state(thisfuture);
 				ret_future.reportException(QUnhandledException());
 			}
 
@@ -998,8 +999,8 @@ protected:
 
 		try
 		{
-			QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<F>(streaming_tap_callback)](ExtFuture<T> ef, ExtFuture<T> f2) {
-				qDb() << "TAP: START TAP RUN(), ef:" << ef.state() << "f2:" << f2.state();
+			QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<F>(streaming_tap_callback)](ExtFuture<T> this_future, ExtFuture<T> f2) {
+				qDb() << "TAP: START TAP RUN(), this_future:" << this_future.state() << "f2:" << f2.state();
 
 				int i = 0;
 
@@ -1007,61 +1008,61 @@ protected:
 				{
 					qDb() << "TAP: Waiting for next result";
 					/**
-				  * QFutureInterfaceBase::waitForResult(int resultIndex)
-				  * - if exception, rethrow.
-				  * - if !running, return.
-				  * - stealAndRunRunnable()
-				  * - lock mutex.
-				  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
-				  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
-				  *     d->waitCondition.wait(&d->m_mutex);
-				  *   d->m_exceptionStore.throwPossibleException();
-				  */
-					ef.waitForResult(i);
+					  * QFutureInterfaceBase::waitForResult(int resultIndex)
+					  * - if exception, rethrow.
+					  * - if !running, return.
+					  * - stealAndRunRunnable()
+					  * - lock mutex.
+					  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
+					  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
+					  *     d->waitCondition.wait(&d->m_mutex);
+					  *   d->m_exceptionStore.throwPossibleException();
+					  */
+					this_future.waitForResult(i);
 
 					// Check if the wait failed to result in any results.
-					int result_count = ef.resultCount();
+					int result_count = this_future.resultCount();
 					if(result_count <= i)
 					{
 						// No new results, must have finshed etc.
-						qDb() << "NO NEW RESULTS, BREAKING, ef:" << ef.state();
+						qDb() << "NO NEW RESULTS, BREAKING, this_future:" << this_future.state();
 						break;
 					}
 
 					// Call the tap callback.
 					//				streaming_tap_callback_copy(ef, i, result_count);
-					qDb() << "CALLING TAP CALLBACK, ef:" << ef.state();
-					std::invoke(streaming_tap_callback_copy, ef, i, result_count);
+					qDb() << "CALLING TAP CALLBACK, this_future:" << this_future.state();
+					std::invoke(streaming_tap_callback_copy, this_future, i, result_count);
 
 					// Copy the new results to the returned future.
 					for(; i < result_count; ++i)
 					{
 						qDb() << "TAP: Next result available at i = " << i;
 
-						T the_next_val = ef.resultAt(i);
+						T the_next_val = this_future.resultAt(i);
 						f2.reportResult(the_next_val);
 					}
 				}
 
-				qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << ef.state();
+				qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << this_future.state();
 
 				// Check final state.  We know it's at least Finished.
 				/// @todo Could we be Finished here with pending results?
 				/// Don't care as much on non-Finished cases.
-				if(ef.isCanceled())
+				if(this_future.isCanceled())
 				{
-					qDb() << "TAP: ef cancelled:" << ef.state();
+					qDb() << "TAP: this_future cancelled:" << this_future.state();
 					f2.reportCanceled();
 				}
-				else if(ef.isFinished())
+				else if(this_future.isFinished())
 				{
-					qDb() << "TAP: ef finished:" << ef.state();
+					qDb() << "TAP: ef finished:" << this_future.state();
 					f2.reportFinished();
 				}
 				else
 				{
 					/// @todo Exceptions.
-					qDb() << "NOT FINISHED OR CANCELED:" << ef.state();
+					qDb() << "NOT FINISHED OR CANCELED:" << this_future.state();
 					Q_ASSERT(0);
 				}
 			},
@@ -1198,39 +1199,6 @@ ExtFutureState::State ExtFuture<T>::state() const
 
 	return current_state;
 }
-
-#if 0
-namespace ExtAsync
-{
-	namespace detail
-	{
-		template<typename T>
-		ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
-		{
-			ExtFuture<T> extfuture;
-
-			extfuture.reportStarted();
-			extfuture.reportResult(std::forward<T>(value));
-			extfuture.reportFinished();
-
-			return extfuture;
-		}
-
-		template <typename T, typename R = typename std::decay_t<T>>
-		ExtFuture<R> make_exceptional_future(const QException& exception)
-		{
-			ExtFuture<R> extfuture;
-
-			extfuture.reportStarted();
-			extfuture.reportException(exception);
-			extfuture.reportFinished();
-
-			return extfuture;
-		}
-
-	}
-}
-#endif
 
 /**
  * Creates a completed future containing the value @a value.

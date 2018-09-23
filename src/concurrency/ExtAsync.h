@@ -73,6 +73,7 @@ template <typename T> class ExtFuture;
  */
 namespace ExtAsync
 {
+#if 0
 	namespace detail
 	{
 		template <class T, class = void>
@@ -110,6 +111,7 @@ namespace ExtAsync
 		};
 
 	} // END namespace detail
+#endif
 
 static std::atomic_int64_t s_qthread_id {0};
 

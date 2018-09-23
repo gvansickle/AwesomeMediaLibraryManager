@@ -176,6 +176,8 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
 {
     TC_ENTER();
 
+	QFutureSynchronizer<void> synchronizer;
+
 	/**
 	 * @note QFuture<> behavior.
 	 * The QFuture coming out of ::run() here is (Running|Started).
@@ -219,6 +221,10 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
     ASSERT_TRUE(f.isFinished());
 
 	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(f);
+
+	synchronizer.addFuture(f);
+	synchronizer.setCancelOnWait(true);
+	synchronizer.waitForFinished();
 
     TC_EXIT();
 }
