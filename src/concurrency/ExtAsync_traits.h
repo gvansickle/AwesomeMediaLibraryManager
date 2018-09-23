@@ -91,6 +91,9 @@ constexpr bool NestedExtFuture = require<
 	>;
 
 template <class T>
+constexpr bool is_nested_ExtFuture_v = NestedExtFuture<T>;
+
+template <class T>
 constexpr bool is_non_void_non_ExtFuture_v = require<!std::is_void_v<T> && !is_ExtFuture_v<T>>;
 
 

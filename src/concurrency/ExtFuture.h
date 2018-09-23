@@ -212,23 +212,54 @@ public:
 //	ExtFuture(QFuture<T>&& f) noexcept = delete;// : BASE_CLASS(f) {};// = delete;
 
 	/// Copy construct from QFuture<void>.
-	/// @todo I think this doesn't work.
-	ExtFuture(const QFuture<void>& f) : BASE_CLASS(f) {}
+	/// @todo Something's broken here, this doesn't actually compile.
+//	ExtFuture(const QFuture<void>& f) : ExtFuture<Unit>(f) {};
 
 	explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
 		: BASE_CLASS(p) {}
 
 	/**
-	 * @todo Unwrapping constructor, ala std::experimental::future::future, boost::future.
+	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
 	 * @note Honeypot for catching nested ExtFuture<>s and asserting at compile time.
 	 * Not sure if we really need this or not.
 	 */
+#define REAL_ONE_DOESNT_WORK
+#ifdef REAL_ONE_DOESNT_WORK
 	template <class ExtFutureExtFutureT,
 			  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
 	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
 	{
 		static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
 	}
+#else
+	template <class ExtFutureExtFutureT,
+			  REQUIRES(is_nested_ExtFuture_v<ExtFutureExtFutureT>)>
+	ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
+	{
+		/// @note Going by the description here @link https://en.cppreference.com/w/cpp/experimental/shared_future/shared_future
+		/// "becomes ready when one of the following happens:
+		/// - other and other.get() are both ready.
+		///     The value or exception from other.get() is stored in the shared state associated with the resulting shared_future object.
+		/// - other is ready, but other.get() is invalid. An exception of type std::future_error with an error condition of
+		///     std::future_errc::broken_promise is stored in the shared state associated with the resulting shared_future object.
+		/// "
+
+		try
+		{
+			// This will either become ready or throw.
+			QList<T> results = other.get();
+			// Didn't throw, we've reached the first bullet.
+			this->reportResults(results.toVector());
+			this->reportFinished();
+		}
+		catch (...)
+		{
+			// Inner ExtFuture threw, we've reached the second bullet.  Rethrow.
+			throw;
+		}
+
+	}
+#endif
 
 	/**
 	 * Virtual destructor.
@@ -1121,6 +1152,9 @@ protected:
 	/// @}
 };
 
+//template <class T>
+//ExtFuture<T>::ExtFuture(const QFuture<void>& f) : ExtFuture<T>::BASE_CLASS(f) {}
+
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
 {
@@ -1268,6 +1302,11 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 
 	return outstream;
 }
+
+/// @name Explicit instantiations to try to get compile times down.
+/// @{
+extern template class ExtFuture<int>;
+/// @}
 
 #endif /* SRC_CONCURRENCY_EXTFUTURE_H_ */
 

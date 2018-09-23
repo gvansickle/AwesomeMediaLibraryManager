@@ -45,6 +45,7 @@
 #include "../ExtAsync.h"
 
 #include "../ExtFuture.h"
+//extern template class ExtFuture<int>;
 
 
 /// Types for gtest's "Typed Test" support.
@@ -153,6 +154,30 @@ TEST_F(ExtFutureTest, CopyAssignTests)
     TC_DONE_WITH_STACK();
     TC_EXIT();
 }
+
+#if 0
+TEST_F(ExtFutureTest, UnwrappingConstructor)
+{
+	SCOPED_TRACE("UnwrappingConstructor");
+
+	TC_ENTER();
+
+	ExtFuture<int> f1;
+	ExtFuture<ExtFuture<int>> f2(f1);
+
+	f1.reportResult(29)
+	f1.reportFinished();
+
+	int val = f2.get();
+
+	QFutureSynchronizer<void> synchronizer;
+	synchronizer.addFuture(f2);
+	synchronizer.addFuture(f1);
+	synchronizer.waitForFinished();
+
+	TC_EXIT();
+}
+#endif
 
 //TYPED_TEST(ExtFutureTypedTestFixture, CopyAssignP)
 //{

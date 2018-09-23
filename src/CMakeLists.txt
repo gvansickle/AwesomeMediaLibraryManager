@@ -243,6 +243,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
+	concurrency/ExtFuture.cpp
 	concurrency/ExtFutureProgressInfo.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
