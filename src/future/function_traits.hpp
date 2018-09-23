@@ -33,7 +33,7 @@
 // Include some type_traits from the future (i.e. C++17+).
 #include "future_type_traits.hpp"
 
-
+// Boost Callable Traits.
 /// This is me giving up on trying to reinvent the function_traits wheel.
 #include <boost/callable_traits.hpp>
 
@@ -53,9 +53,9 @@ template<class T>
 struct function_traits
 {
 	// Note that ct::args_t will return "std::tuple<>" (i.e. 0-length tuple) for a free function taking void: "void(*)()"
-	static constexpr std::size_t arity_v = std::tuple_size<ct::args_t<T>>::value;
+	static constexpr std::size_t arity_v = std::tuple_size_v<ct::args_t<T>>;
 
-	using return_type_t = ct::return_type_t<T>;
+//	using return_type_t = ct::return_type_t<T>;
 
     /// Helpers for providing arg_t<N> vs. arg<N>::type.
     template<class... Types>
@@ -89,8 +89,8 @@ struct function_traits
     static constexpr bool argtype_is_v = std::is_same_v<arg_t<i>, Expected>;
 
     /// For checking if the return type is T.
-    template <typename Expected>
-    static constexpr bool return_type_is_v = std::is_same_v<return_type_t, Expected>;
+//    template <typename Expected>
+//    static constexpr bool return_type_is_v = std::is_same_v<return_type_t, Expected>;
 
 };
 
@@ -109,6 +109,8 @@ static constexpr bool function_return_type_is_v = std::is_same_v<function_return
 /// SFINAE-safe Helper for providing argtype_t<F, N>.
 template <class F, std::size_t i>
 using argtype_t = std::enable_if_t<function_traits<F>::arity_v >= i, std::tuple_element_t<i, ct::args_t<F>>>;
+//using argtype_t = typename function_traits<F>::template arg_t<i>;
+//using argtype_t = typename function_traits<F&&>::arg_t<i>;
 
 /// For checking if the type of arg N is T.
 template <class F, std::size_t i, class Expected>

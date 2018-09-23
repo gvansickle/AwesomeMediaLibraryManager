@@ -69,7 +69,7 @@ class ExtAsyncCancelException : public QException
 
 /**
  * Interface for extended status reporting through ExtFutures.
- * Unbelieveable PITA.
+ * Unbelievable PITA.
  * https://stackoverflow.com/questions/39186348/connection-of-pure-virtual-signal-of-interface-class?rq=1
  * https://stackoverflow.com/questions/17943496/declare-abstract-signal-in-interface-class?noredirect=1&lq=1
  */
@@ -779,7 +779,7 @@ protected:
 	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
 	 */
 	template <typename F,
-			  typename R = std::result_of_t<F&&(ExtFuture<T>)>,
+			  typename R = std::invoke_result_t<F, ExtFuture<T>>,
 			  REQUIRES(is_non_void_non_ExtFuture_v<R>
 			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
 	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback)
@@ -787,15 +787,32 @@ protected:
 
 		/**
 		 * @todo Exception handling.
-		 * This is the basic pattern.  Note the use of reportException():
+		 * This is the basic pattern used in the RunFunctionTaskBase<> and RunFunctionTask<> class templates from Qt5's internals.
+		 *  Note the use of reportException():
+		 * run()
+		 * {
+		 * 	if (this->isCanceled())
+    		{
+        		// We've been cancelled before we started, just report finished.
+        		/// @note It seems like we also should be calling reportCancelled(),
+        		/// but neither of Qt5's RunFunctionTask<T> nor Qt Creator's AsyncJob<> (derived only from QRunnable)
+        		/// do so.
+        		this->reportFinished();
+        		return;
+    		}
+
+    		try
+    		{
 		 * 		this->m_task->run(*this);
-				#ifndef QT_NO_EXCEPTIONS
-					} catch (QException &e) {
-						QFutureInterface<T>::reportException(e);
-					} catch (...) {
-						QFutureInterface<T>::reportException(QUnhandledException());
-					}
-				#endif
+			} catch (QException &e) {
+				QFutureInterface<T>::reportException(e);
+			} catch (...) {
+				QFutureInterface<T>::reportException(QUnhandledException());
+			}
+
+			this->reportResult(result);
+    		this->reportFinished();
+    		}
 		 */
 
 		ExtFuture<R> retfuture;
@@ -806,21 +823,40 @@ protected:
 
 			try
 			{
-				// Wait for this to finish.
+				// Wait for this future to finish.
+				// This could throw a propagated exceptions from upstream.
 				qDb() << "THEN: Waiting for upstream to finish";
 				thisfuture.waitForFinished();
 				qDb() << "THEN: upstream finished";
 			}
 			catch(ExtAsyncCancelException& e)
 			{
-#warning "This will throw to the wrong future (the QtConcurrent::run() retval, see above."
-				throw;
+				/**
+				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+				 *  state of the returned future object."
+				 */
+				ret_future.reportException(e);
+				// I think we don't want to rethrow like this here.  This will throw to the wrong future
+				// (the QtConcurrent::run() retval, see above.
+				//throw;
+			}
+			catch(QException& e)
+			{
+				ret_future.reportException(e);
+			}
+			catch (...)
+			{
+				ret_future.reportException(QUnhandledException());
 			}
 
+			// Ok, thisfuture is finished.
+			// Is it really canceled?
 			if(thisfuture.isCanceled())
 			{
 				// Propagate the cancel to the returned future.
-#warning "OR SHOULD THIS BE THE OTHER WAY AROUND?"
+				/// @todo Or should this throw a cancellation exception?
 				ret_future.cancel();
 			}
 

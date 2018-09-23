@@ -183,7 +183,8 @@ static inline void name_qthread()
 		// against the ExFuture<> (and/or the underlying QFutureInterface<>) will block.
 		ExtFutureR report_and_control;
 
-        QtConcurrent::run(std::forward<This*>(thiz), std::forward<F>(std::decay_t<F>(function)), report_and_control, std::forward<Args>(args)...);
+		QtConcurrent::run(std::forward<This*>(thiz), std::forward<F>(std::decay_t<F>(function)),
+						  report_and_control, std::forward<Args>(args)...);
 
 		return report_and_control;
 	}
@@ -199,7 +200,7 @@ static inline void name_qthread()
 		REQUIRES(std::is_class_v<This>
 //			  && std::is_member_function_pointer_v<&This::F>
 			  && ct::is_invocable_r_v<void, F, This*>)>
-	typename This::ExtFutureType run(This* thiz, F function)
+	typename This::ExtFutureType run_class_noarg(This* thiz, F function)
     {
         constexpr auto calback_arg_num = arity_v<F>;
 //		STATIC_PRINT_CONSTEXPR_VAL(calback_arg_num);
@@ -223,13 +224,13 @@ static inline void name_qthread()
 	 * @todo More params.
 	 */
 	template<class CallbackType,
-			 class ExtFutureT = std::tuple_element_t<0, ct::args_t<CallbackType>>,
+			 class ExtFutureT = argtype_t<CallbackType, 0>, //std::tuple_element_t<0, ct::args_t<CallbackType>>,
 			 class T = typename isExtFuture<ExtFutureT>::inner_t,
 			 class... Args,
 			 REQUIRES(is_ExtFuture_v<ExtFutureT>
 			 && ct::is_invocable_r_v<void, CallbackType, ExtFutureT, Args&&...>)
              >
-	ExtFuture<T> run_efarg(CallbackType&& callback, Args&&... args)
+	ExtFuture<T> run(CallbackType&& callback, Args&&... args)
     {
 		using argst = ct::args_t<CallbackType>;
 		using arg0t = std::tuple_element_t<0, argst>;
@@ -284,9 +285,9 @@ static inline void name_qthread()
 	 * @param function  An invocable with the signature "R function(void)".
 	 * @return
 	 */
-	template <typename CallableType, typename R = std::invoke_result_t<CallableType>,
+	template <typename CallableType, typename R = std::invoke_result_t<CallableType, void>,
 		REQUIRES(is_non_void_non_ExtFuture_v<R> // Return type is not void or ExtFuture<>
-			  && ct::is_invocable_r_v<R, CallableType> // F has signature R F(void).
+			  && ct::is_invocable_r_v<R, CallableType, void> // F has signature R F(void).
 			  )>
 	ExtFuture<R> run(CallableType&& function)
 	{
@@ -324,6 +325,7 @@ static inline void name_qthread()
      */
 	template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, typename... Args,
         REQUIRES(!std::is_member_function_pointer_v<CallbackType>
+			  && (sizeof...(Args) > 0)
 			  && is_non_void_non_ExtFuture_v<R>
 			&& (arity_v<CallbackType> > 0)
 			&& ct::is_invocable_r_v<R, CallbackType, Args&&...>)
@@ -343,6 +345,14 @@ static inline void name_qthread()
 						QFutureInterface<T>::reportException(QUnhandledException());
 					}
 				#endif
+		 *
+		 * Per QException docs: @link http://doc.qt.io/qt-5/qexception.html
+		 * "When using QFuture, transferred exceptions will be thrown when calling the following functions:
+    			QFuture::waitForFinished()
+    			QFuture::result()
+    			QFuture::resultAt()
+    			QFuture::results()
+		 * "
 		 */
 
 		try

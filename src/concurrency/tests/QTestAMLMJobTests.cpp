@@ -87,7 +87,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncT
     else
     {
     	AMLMTEST_COUT << "ExtAsync::run_efarg()";
-		retval = ExtAsync::run_efarg(std::move(lambda));
+		retval = ExtAsync::run(std::move(lambda));
     }
 
     AMLMTEST_COUT << "RETURNING future:" << ExtFutureState::state(retval);

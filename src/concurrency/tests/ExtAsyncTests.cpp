@@ -884,7 +884,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 
 	std::atomic_int tap_call_counter {0};
 
-	ExtFuture<int> future = ExtAsync::run_efarg([&](ExtFuture<int> extfuture) {
+	ExtFuture<int> future = ExtAsync::run([&](ExtFuture<int> extfuture) {
 			SCOPED_TRACE("Main callback");
 
 			TC_EXPECT_NOT_EXIT();

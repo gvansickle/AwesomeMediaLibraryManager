@@ -182,12 +182,12 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on available threads.
 	 */
-	TypeParam f = QtConcurrent::run([=]() -> int {
+	TypeParam f = ExtAsync::run([=](int dummy) -> int {
 		// Do nothing for 1000 ms.
 		TC_Sleep(1000);
 		// Return an int and we're done.
 		return 5;
-	});
+	}, 0);
 
 	AMLMTEST_COUT << "Initial future state:" << state(f);
 
@@ -196,6 +196,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
 	ASSERT_FALSE(f.isCanceled());
 	ASSERT_FALSE(f.isFinished());
 
+	// ~immediately cancel the future.
     f.cancel();
 
 	/**
@@ -210,9 +211,9 @@ TYPED_TEST(ExtFutureTypedTestFixture, PCancelBasic)
     ASSERT_TRUE(f.isCanceled());
 
     // Canceling alone won't finish the extfuture.
-    ASSERT_FALSE(f.isFinished());
+	/// @todo This is not coming back canceled.
+	ASSERT_FALSE(f.isFinished()) << state(f);
 
-//    f.reportFinished();
     f.waitForFinished();
 
     ASSERT_TRUE(f.isFinished());
@@ -275,27 +276,24 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 //			}
 
 			/// @experimental
+			AMLMTEST_COUT << "Throwing Cancel exception";
 			throw ExtAsyncCancelException();
 
 			// Return the count of items from the future.
 			return in_future.resultCount();
 			;});
 
+	AMLMTEST_COUT << "Started main_future:" << main_future.state();
 	ASSERT_TRUE(main_future.isStarted());
 	ASSERT_FALSE(main_future.isCanceled());
 	ASSERT_FALSE(main_future.isFinished());
 
-
-	AMLMTEST_COUT << "Started main_future:" << main_future.state();
 	AMLMTEST_COUT << "Starting then_future:" << then_future.state();
-
-	synchronizer.addFuture(main_future);
-	synchronizer.addFuture(then_future);
 
 	// Cancel the future returned by then().
 	then_future.cancel();
 
-	AMLMTEST_COUT << "Cancelled then_future:" << then_future;
+	AMLMTEST_COUT << "Canceled then_future:" << then_future;
 
 	ASSERT_TRUE(then_future.isStarted());
 	ASSERT_TRUE(then_future.isCanceled());
@@ -315,8 +313,10 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 
 	ASSERT_TRUE(main_future.isFinished());
 
-	qDb() << "Cancelled and finished extfuture:" << main_future;
+	qDb() << "Canceled and finished extfuture:" << main_future;
 
+	synchronizer.addFuture(main_future);
+	synchronizer.addFuture(then_future);
 	synchronizer.waitForFinished();
 
 	TC_EXIT();

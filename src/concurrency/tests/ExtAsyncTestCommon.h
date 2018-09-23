@@ -473,7 +473,7 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     else
     {
         GTEST_COUT_qDB << "ExtAsync::run_efarg()";
-        retval = ExtAsync::run_efarg(lambda);
+		retval = ExtAsync::run(lambda);
     }
 
     GTEST_COUT_qDB << "RETURNING future:" << ExtFutureState::state(retval);

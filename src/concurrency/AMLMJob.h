@@ -623,7 +623,7 @@ public:
         // "Note that this neither waits nor cancels the asynchronous computation."
 
         // Run.
-		ExtFutureT future = ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
+		ExtFutureT future = ExtAsync::run_class_noarg(this, &std::remove_reference_t<decltype(*this)>::run /*&AMLMJobT::run*/);
 
 		m_ext_future = future;
 
