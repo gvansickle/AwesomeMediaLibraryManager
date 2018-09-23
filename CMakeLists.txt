@@ -323,14 +323,24 @@ list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
 ###### EXPERIMENT
 
 #find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
+### @todo Need to find a better way than hardcoding the path to the rcc file here.
 set(WITH_BUNDLED_BREEZE_ICONS true)
+if(WIN32)
+	set(BREEZEICONS_DIR
+		# Craft has a couple of breeze-icons.rcc's, plus an icontheme.rcc in CraftRoot/bin/data/.
+		C:/CraftRoot/bin/data/icons/breeze
+	) 
+else()
+	set(BREEZEICONS_DIR
+		/usr/share/icons/breeze
+		~/.icons/breeze
+	)
+endif()
 if(WITH_BUNDLED_BREEZE_ICONS)
 	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
 	find_file(BREEZEICONS_PATH breeze-icons.rcc 
 		HINTS
-			# ${BREEZEICONS_DIR}
-			/usr/share/icons/breeze
-			~/.icons/breeze
+			${BREEZEICONS_DIR}
 		PATH_SUFFIXES
 			breeze
 		DOC
@@ -396,6 +406,7 @@ download_project(PROJ                boost_callable_traits
 	${UPDATE_DISCONNECTED_IF_AVAILABLE}
 	)
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR} EXCLUDE_FROM_ALL)
+print_varlist(boost_callable_traits_SOURCE_DIR boost_callable_traits_BINARY_DIR)
 
 # Use include-what-you-use.
 if(FALSE)
@@ -434,6 +445,7 @@ set(IDENTIFIER "io.github.gvansickle")
 # So the source in src can find the "resources/" dir.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
+	${boost_callable_traits_SOURCE_DIR}/include
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 

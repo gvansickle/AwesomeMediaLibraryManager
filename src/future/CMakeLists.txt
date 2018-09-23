@@ -43,4 +43,8 @@ target_sources(amlm_src_future
 	${SOURCE_FILES_SRC_FUTURE}
 	)
 target_link_libraries(amlm_src_future PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
-target_include_directories(amlm_src_future PUBLIC "${CMAKE_CURRENT_LIST_DIR}")
+target_include_directories(amlm_src_future
+	PUBLIC
+	    "${CMAKE_CURRENT_LIST_DIR}"
+		${boost_callable_traits_SOURCE_DIR}
+		${boost_callable_traits_BINARY_DIR})

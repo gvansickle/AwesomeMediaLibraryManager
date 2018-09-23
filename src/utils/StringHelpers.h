@@ -79,6 +79,17 @@ enum /*QLocale::*/DataSizeFormats
 // TagLib
 #include <tag.h>
 
+// Ours
+//#include <utils/DebugHelpers.h> // For MSVC __PRETTY_FUNCTION__
+/**
+ * Portable __PRETTY_FUNCTION__.
+ * @see @link https://msdn.microsoft.com/library/b0084kay.aspx
+ */
+#if defined(_MSC_VER)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#else
+/* Nothing, gcc and clang's __PRETTY_FUNCTION__ are synonymous with __FUNCSIG__ */
+#endif
 
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
