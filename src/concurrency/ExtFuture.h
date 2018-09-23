@@ -1306,6 +1306,10 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 /// @name Explicit instantiations to try to get compile times down.
 /// @{
 extern template class ExtFuture<int>;
+extern template class ExtFuture<long>;
+extern template class ExtFuture<Unit>;
+extern template class ExtFuture<QString>;
+extern template class ExtFuture<QByteArray>;
 /// @}
 
 #endif /* SRC_CONCURRENCY_EXTFUTURE_H_ */

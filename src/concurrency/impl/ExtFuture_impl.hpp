@@ -144,8 +144,5 @@ namespace ExtAsync
 	}
 }
 #endif
-// Declare explicit instantiations of some common ExtFuture types.
-//extern template class ExtFuture<Unit>;
-//extern template class ExtFuture<QString>;
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_ */

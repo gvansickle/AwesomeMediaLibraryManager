@@ -26,3 +26,7 @@
 
 /// @name Explicit instantiations to try to get compile times down.
 template class ExtFuture<int>;
+template class ExtFuture<long>;
+template class ExtFuture<Unit>;
+template class ExtFuture<QString>;
+template class ExtFuture<QByteArray>;
