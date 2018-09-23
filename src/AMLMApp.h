@@ -27,6 +27,7 @@
 
 // KF5
 #include <KConfigGroup>
+#include <QMimeDatabase>
 
 // Ours
 #include <logic/dbmodels/CollectionDatabaseModel.h>
@@ -50,6 +51,18 @@ class AMLMApp: public QApplication
     using BASE_CLASS = QApplication;
 
 Q_SIGNALS:
+
+    /// @name Inherited signals
+    /// @{
+
+    /**
+     * "Emitted when the application is about to quit the main event loop."
+     * "Note that no user interaction is possible in this state"
+     */
+    // void QCoreApplication::aboutToQuit()
+
+    /// @}
+
     /// Emitted upon reception of aboutToQuit() signal.
     /// Per @link http://doc.qt.io/qt-5/qcoreapplication.html#exec:
     /// "We recommend that you connect clean-up code to the aboutToQuit() signal, instead of putting it
@@ -77,11 +90,21 @@ public:
      */
     static AMLMApp* instance();
 
+    /// @name "Controllers", per KDevelop ICore terminology.
+    /// Basically just a bunch of instance()'s for singletons used by the app.
+    /// @{
+
+//    ActivityProgressStatusBarTracker == see MainWindow, this currently needs a parent widget.
+
 
     CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
     ScanResultsTreeModel* scan_results_tree_model_instance() { return m_srtm_instance; };
+
+    QMimeDatabase* mime_db() { return m_mime_database; };
+
+    /// @}
 
     /**
      * @return true if this app is in the process of shutting down.
@@ -91,6 +114,20 @@ public:
     void KDEOrForceBreeze(KConfigGroup group);
 
 public Q_SLOTS:
+
+    /// @name Inherited slots
+    /// @{
+
+    /**
+     * "Tells the application to exit with return code 0 (success). Equivalent to calling QCoreApplication::exit(0)."
+     * "always connect signals to this slot using a QueuedConnection. If a signal connected (non-queued) to this slot
+     * is emitted before control enters the main event loop (such as before "int main" calls exec()), the slot has no
+     * effect and the application never exits."
+     */
+    // void QCoreApplication::quit()
+
+    /// @}
+
     /**
      * Connected to this app's aboutToQuit() signal.
      */
@@ -100,6 +137,7 @@ protected:
 
     /**
      * Called from the SLOT_onAboutToQuit() slot to handle the shutdown of app subcomponents.
+     * This is ~Kdev's Core::cleanup() public member function.
      */
     void perform_controlled_shutdown();
 
@@ -115,8 +153,10 @@ private:
 
     ScanResultsTreeModel* m_srtm_instance;
 
-    bool m_shutting_down {false};
-    bool m_controlled_shutdown_complete {false};
+    QMimeDatabase* m_mime_database;
+
+    std::atomic_bool m_shutting_down {false};
+    std::atomic_bool m_controlled_shutdown_complete {false};
 };
 
 #endif /* SRC_AMLMAPP_H_ */

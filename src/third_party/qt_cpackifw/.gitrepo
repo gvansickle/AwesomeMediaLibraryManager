@@ -7,5 +7,5 @@
 	remote = https://github.com/skypjack/qt_cpackifw.git
 	branch = master
 	commit = 8156c43c2891eca61f08f228b0d4cc391bc77af0
-	parent = 996efe30815907406cac71e0a53bca804ed14140
+	parent = 6de47437ca58131a8a3ffa885e9fa7abce0adf65
 	cmdver = 0.3.1

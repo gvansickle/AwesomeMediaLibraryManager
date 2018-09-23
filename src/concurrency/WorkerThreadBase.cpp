@@ -17,8 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "WorkerThreadBase.h"
-
+#include <concurrency/WorkerThreadBase.h>
 #include <QDebug>
 
 WorkerThreadBase::WorkerThreadBase(QObject *parent) : QObject(parent)

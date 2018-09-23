@@ -22,51 +22,96 @@
 
 #include <QString>
 
-//#include "ExtAsyncTestCommon.h"
+#include "ExtAsyncTestCommon.h"
 
 #include <concurrency/DirectoryScanJob.h>
 
-///////
-
-#define AMLMTEST_COUT qDbo()
-
-#define AMLMTEST_EXPECT_TRUE(arg) QVERIFY(arg)
-#define AMLMTEST_ASSERT_TRUE(arg) QVERIFY(arg)
-#define AMLMTEST_EXPECT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
-#define AMLMTEST_ASSERT_EQ(arg1, arg2) QCOMPARE(arg1, arg2)
-#define AMLMTEST_ASSERT_NE(arg1, arg2) QVERIFY((arg1) != (arg2))
-
-/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
-#define M_QSIGNALSPIES_SET(kjobptr) \
-    QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
-    AMLMTEST_EXPECT_TRUE(kjob_finished_spy.isValid()); \
-    QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
-    AMLMTEST_EXPECT_TRUE(kjob_result_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy(kjobptr, SIGNAL(destroyed(QObject*))); \
-    AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy2(kjobptr, SIGNAL(destroyed())); \
-    AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy2.isValid());
-
-#define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
-    AMLMTEST_EXPECT_TRUE(kjob_destroyed_spy.wait() || kjob_destroyed_spy2.wait());
-
-/// Divisor for ms delays/timeouts in the tests.
-constexpr long TC_MS_DIV = 10;
-
-static inline void TC_Sleep(int ms)
+/**
+ * From a lambda passed to ExtAsync::run(), iterates @a num_iteration times,
+ * QTest::qSleep()ing for 1 sec, then returns the the next value in the sequence to the returned ExtFuture<>.
+ *
+ * @todo Doesn't handle cancellation or progress reporting.
+ */
+template<class ReturnFutureT>
+ReturnFutureT async_int_generator(int start_val, int num_iterations/*, ExtAsyncTestsSuiteFixtureBase *fixture*/)
 {
-    QTest::qSleep(ms / TC_MS_DIV);
-}
+//    SCOPED_TRACE("In async_int_generator");
 
-static inline void TC_Wait(int ms)
-{
-    QTest::qWait(ms / TC_MS_DIV);
+//    auto tgb = new trackable_generator_base(fixture);
+//    fixture->register_generator(tgb);
+
+	auto lambda = [=](ReturnFutureT future) -> void {
+        int current_val = start_val;
+//        SCOPED_TRACE("In async_int_generator callback");
+        for(int i=0; i<num_iterations; i++)
+        {
+			/// @todo Not sure if we want this to work or not.
+			AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
+
+            // Sleep for a second.
+			AMLMTEST_COUT << "SLEEPING FOR 1 SEC";
+
+            TC_Sleep(1000);
+            AMLMTEST_COUT << "SLEEP COMPLETE, sending value to future:" << current_val;
+
+			reportResult(&future, current_val);
+            current_val++;
+        }
+
+        // We're done.
+        AMLMTEST_COUT << "REPORTING FINISHED";
+//        fixture->unregister_generator(tgb);
+//        delete tgb;
+
+		reportFinished(&future);
+    };
+
+    ReturnFutureT retval;
+    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+    {
+        // QFuture() creates an empty, cancelled future (Start|Canceled|Finished).
+    	AMLMTEST_COUT << "QFuture<>, clearing state";
+        retval = make_startedNotCanceled_QFuture<int>();
+    }
+
+    AMLMTEST_COUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
+
+//	AMLMTEST_EXPECT_TRUE(retval.isStarted());
+//	AMLMTEST_EXPECT_FALSE(retval.isFinished());
+
+    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+    {
+    	AMLMTEST_COUT << "QtConcurrent::run()";
+        auto qrunfuture = QtConcurrent::run(lambda, retval);
+    }
+    else
+    {
+    	AMLMTEST_COUT << "ExtAsync::run_efarg()";
+		retval = ExtAsync::run(std::move(lambda));
+    }
+
+    AMLMTEST_COUT << "RETURNING future:" << ExtFutureState::state(retval);
+
+//    AMLMTEST_EXPECT_TRUE(retval.isStarted());
+//    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+//    {
+//        // QFuture starts out Start|Canceled|Finished.
+//        EXPECT_TRUE(retval.isCanceled());
+//        EXPECT_TRUE(retval.isFinished());
+//    }
+//    else
+//    {
+//        EXPECT_FALSE(retval.isCanceled());
+//        EXPECT_FALSE(retval.isFinished());
+//    }
+
+    return retval;
 }
 
 //////////
 
 
-class tst_QString: public QObject
+class tst_QString: public ExtAsyncTestsSuiteFixtureBase //public QObject
 {
     Q_OBJECT
 
@@ -92,6 +137,8 @@ private Q_SLOTS:
     void DirScanCancelTestPAutodelete_data();
     void DirScanCancelTestPAutodelete();
 
+	void ExtFutureStreamingTap();
+
     /// @}
 };
 
@@ -105,14 +152,16 @@ void tst_QString::DirScanCancelTestPAutodelete_data()
 {
     QTest::addColumn<bool>("autodelete");
 
+	QTest::newRow("KJob is not autodelete") << false;
     QTest::newRow("KJob is autodelete") << true;
-    QTest::newRow("KJob is not autodelete") << false;
 }
 
 //TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
 void tst_QString::DirScanCancelTestPAutodelete()
 {
 //	TC_ENTER();
+
+	QSKIP("");
 
     QFETCH(bool, autodelete);
 //    bool autodelete = GetParam();
@@ -181,6 +230,76 @@ void tst_QString::DirScanCancelTestPAutodelete()
 //    EXPECT_TRUE(didnt_time_out);
 
 //    TC_EXIT();
+}
+
+/**
+ * Test "streaming" tap().
+ * @todo Currently crashes.
+ */
+//TEST_F(ExtFutureTest, ExtFutureStreamingTap)
+void tst_QString::ExtFutureStreamingTap()
+{
+	TC_ENTER();
+
+	static std::atomic_int num_tap_completions {0};
+
+	QList<int> expected_results {1,2,3,4,5,6};
+	ExtFuture<int> ef = async_int_generator<ExtFuture<int>>(1, 6, nullptr/*, this*/);
+
+	AMLMTEST_COUT << "Starting ef state:" << ef.state();
+
+	AMLMTEST_ASSERT_TRUE(ef.isStarted());
+	AMLMTEST_ASSERT_FALSE(ef.isCanceled());
+	AMLMTEST_ASSERT_FALSE(ef.isFinished());
+
+	QList<int> async_results_from_tap, async_results_from_get;
+
+	AMLMTEST_COUT << "Attaching tap and get()";
+M_WARNING("TODO");
+//ExtFuture<int> f2;
+#if 1
+//    async_results_from_get =
+M_WARNING("TODO: This is still spinning when the test exits.");
+	auto f2 = ef.tap(qApp->instance(), [=, &async_results_from_tap](ExtFuture<int> ef, int begin, int end)  {
+			AMLMTEST_COUT << "IN TAP, begin:" << begin << ", end:" << end;
+		for(int i = begin; i<end; i++)
+		{
+			AMLMTEST_COUT << "Pushing" << ef.resultAt(i) << "to tap list.";
+			async_results_from_tap.push_back(ef.resultAt(i));
+			num_tap_completions++;
+		}
+	});
+#endif
+	AMLMTEST_COUT << "BEFORE WAITING FOR GET()" << f2;
+
+	f2.waitForFinished();
+
+	AMLMTEST_COUT << "AFTER WAITING FOR GET()" << f2;
+	async_results_from_get = ef.results();
+
+	AMLMTEST_EXPECT_TRUE(ef.isFinished());
+	AMLMTEST_EXPECT_EQ(num_tap_completions, 6);
+
+	// .get() above should block.
+	AMLMTEST_EXPECT_TRUE(ef.isFinished());
+
+	// This shouldn't do anything, should already be finished.
+	ef.waitForFinished();
+
+	AMLMTEST_COUT << "Post .tap().get(), extfuture:" << ef.state();
+
+	AMLMTEST_EXPECT_TRUE(ef.isStarted());
+	AMLMTEST_EXPECT_FALSE(ef.isCanceled());
+	AMLMTEST_EXPECT_TRUE(ef.isFinished());
+
+	AMLMTEST_EXPECT_EQ(async_results_from_get.size(), 6);
+	AMLMTEST_EXPECT_EQ(async_results_from_get, expected_results);
+	AMLMTEST_EXPECT_EQ(async_results_from_tap.size(), 6);
+	AMLMTEST_EXPECT_EQ(async_results_from_tap, expected_results);
+
+	AMLMTEST_ASSERT_TRUE(ef.isFinished());
+
+//	TC_EXIT();
 }
 
 QTEST_MAIN(tst_QString)

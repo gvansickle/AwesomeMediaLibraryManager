@@ -233,7 +233,7 @@ private Q_SLOTS:
     /// @{
     void changeStyle(const QString& styleName);
     void changeIconTheme(const QString& iconThemeName);
-    void onChangeStyle(QAction* action);
+    void SLOT_onChangeQStyle(QAction* action);
 	/// @}
 
     /**

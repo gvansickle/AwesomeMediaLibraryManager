@@ -33,6 +33,7 @@
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
 #include <logic/dbmodels/CollectionDatabaseModel.h>
+#include <logic/PerfectDeleter.h>
 #include <utils/RegisterQtMetatypes.h>
 
 
@@ -52,6 +53,10 @@ AMLMApp::~AMLMApp()
 {
     /// @todo Shut down whatever still needs shutting down.
 
+	PerfectDeleter::destroy();
+
+    delete m_mime_database;
+
 	// No more singleton.
 	m_the_instance = nullptr;
 
@@ -62,6 +67,8 @@ void AMLMApp::Init(bool gtest_only)
 {
 	// Register our types with Qt.
 	RegisterQtMetatypes();
+
+    m_mime_database = new QMimeDatabase();
 
 	/// @todo This is ugly, refactor this.
 	if(gtest_only)
@@ -121,10 +128,15 @@ AMLMApp *AMLMApp::instance()
     return m_the_instance;
 }
 
+bool AMLMApp::shuttingDown() const
+{
+	return true;
+}
+
 void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
 {
-//M_WARNING("REMOVE");
-//return;
+M_WARNING("TODO: Do something with this Breeze forcing.");
+return;
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     if (env.contains(QStringLiteral("XDG_CURRENT_DESKTOP")) && env.value(QStringLiteral("XDG_CURRENT_DESKTOP")).toLower() == QLatin1String("kde"))
     {
@@ -140,6 +152,10 @@ void AMLMApp::KDEOrForceBreeze(KConfigGroup group)
 
 void AMLMApp::SLOT_onAboutToQuit()
 {
+    // This slot is ~KDevelop's &Core::shutdown() slot, which is invoked by:
+    // - the QCoreApplication::aboutToQuit() signal.
+    // - Called directly by the MainWindow() destructor.
+
     qDbo() << "App about to quit, shutting down.";
 
     if(!m_shutting_down)
@@ -152,15 +168,24 @@ void AMLMApp::SLOT_onAboutToQuit()
 
 void AMLMApp::perform_controlled_shutdown()
 {
-    // Signal to ourselves that we're in the process of shutting down.
+    // This is ~Kdev's Core::cleanup() public member function.
+
+    // We received a signal to ourselves that we're in the process of shutting down.
     m_shutting_down = true;
 
     // Signal to the world that we're in the process of shutting down.
+	// This is triggered from the Qt5 aboutToQuit() signal:
+	// @note From the aboutToQuit() docs:
+	// "Emitted when the application is about to quit the main event loop."
+	// "Note that no user interaction is possible in this state"
+	/// @todo ... should we even be emitting it here?
     Q_EMIT aboutToShutdown();
 
     if(!m_controlled_shutdown_complete)
     {
-        /// @todo Do whatever shutdown we need to here.
+		// Do whatever shutdown tasks we need to in here.
+
+		PerfectDeleter::instance()->cancel_and_wait_for_all();
     }
 
     m_controlled_shutdown_complete = true;

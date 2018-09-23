@@ -29,9 +29,25 @@
 #include <QSignalSpy>
 #include <QTest>
 
-// Google Test
+#include <tests/TestHelpers.h>
+
+#ifdef TEST_FWK_IS_GTEST
+	M_WARNING("Building for Google Test framework");
+// Google Test Framework
 #include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
+
+#include <tests/TestLifecycleManager.h>
+
+#elif defined(TEST_FWK_IS_QTEST)
+	M_WARNING("Building for QTest framework");
+#else
+#error "No test framework defined"
+#endif // TEST_FWK_IS_GTEST
+#if defined(TEST_FWK_IS_QTEST) && defined(TEST_FWK_IS_GTEST)
+#error "BOTH TEST FRAMEWORKS DEFINED"
+#endif
+
 
 // Ours
 //#include <tests/TestHelpers.h>
@@ -64,15 +80,28 @@ protected:
  */
 QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase* fixture);
 
+struct TestHandle
+{
+	std::string m_test_id_string {};
+
+	bool empty() const { return m_test_id_string.empty(); };
+};
 
 /**
  * Helper class for maintaining state across Google Test fixture invocations.
  * Each TEST_F() gets its own complete copy of the ::testing::Test class,
  * so we need something static to maintain statistics, sanity checks, etc.
+ * Public interfaces to this class are all threadsafe.
  */
 class InterState
 {
 public:
+	InterState()
+	{
+		AMLMTEST_COUT << "InterState singleton constructed";
+		Q_ASSERT_X(m_current_test_handle.empty(), "constructor", m_current_test_handle.m_test_id_string.c_str());
+	};
+	virtual ~InterState() { AMLMTEST_COUT << "InterState singleton destructed"; };
 
     void starting(std::string func);
 
@@ -81,6 +110,12 @@ public:
     std::string get_currently_running_test() const;
 
     bool is_test_currently_running() const;
+
+    void start_SetUp(ExtAsyncTestsSuiteFixtureBase* fixture);
+    void start_TearDown(ExtAsyncTestsSuiteFixtureBase* fixture);
+
+	TestHandle register_current_test(ExtAsyncTestsSuiteFixtureBase* fixture);
+	void unregister_current_test(TestHandle test_handle, ExtAsyncTestsSuiteFixtureBase* fixture);
 
     void register_generator(trackable_generator_base* generator);
 
@@ -95,22 +130,36 @@ protected:
     mutable std::mutex m_fixture_state_mutex;
     std::string m_currently_running_test;
     std::deque<trackable_generator_base*> m_generator_stack;
+	TestHandle m_current_test_handle {};
+	std::atomic_bool m_setup_called_but_not_teardown {false};
     /// @}
 };
+
+
+
+#ifdef TEST_FWK_IS_GTEST
+using AMLMTEST_BASE_CLASS = ::testing::Test;
+#define AMLMTEST_BASE_CLASS_VIRT /**/
+#define AMLMTEST_BASE_CLASS_OVERRIDE override
+#elif defined(TEST_FWK_IS_QTEST) // !TEST_FWK_IS_GTEST
+using AMLMTEST_BASE_CLASS = QObject;
+#define AMLMTEST_BASE_CLASS_VIRT virtual
+#define AMLMTEST_BASE_CLASS_OVERRIDE /**/
+#endif
 
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  * @link https://github.com/google/googletest/blob/master/googletest/docs/faq.md#can-i-derive-a-test-fixture-from-another
  */
-class ExtAsyncTestsSuiteFixtureBase : public ::testing::Test
+class ExtAsyncTestsSuiteFixtureBase : public AMLMTEST_BASE_CLASS // ::testing::Test or QObject
 {
 
 protected:
 
-    void SetUp() override;
+	AMLMTEST_BASE_CLASS_VIRT void SetUp() AMLMTEST_BASE_CLASS_OVERRIDE;
     virtual void expect_all_preconditions();
 
-    void TearDown() override;
+	AMLMTEST_BASE_CLASS_VIRT void TearDown() AMLMTEST_BASE_CLASS_OVERRIDE;
     virtual void expect_all_postconditions();
 
     // Objects declared here can be used by all tests in this Fixture.  However,
@@ -133,6 +182,8 @@ protected:
     QObject* m_event_loop_object {nullptr};
     QSignalSpy* m_delete_spy {nullptr};
 
+	static std::mutex s_startup_teardown_mutex;
+
 public:
 
     /// Per-"test-case" (test fixture) set-up.
@@ -151,23 +202,42 @@ public:
      */
     std::string get_test_id_string_from_fixture();
 
+//	TestHandle get_test_handle_from_fixture();
+
     void register_generator(trackable_generator_base* generator);
 
     void unregister_generator(trackable_generator_base* generator);
+
+#if defined(TEST_FWK_IS_QTEST) // !TEST_FWK_IS_GTEST
+
+	/// QTest framework slots.
+private Q_SLOTS:
+
+	/// @name QTest framework slots.
+	/// @{
+	void initTestCase()
+	{ qDebug("called before everything else"); }
+
+	/// Gtest equiv == protected SetUp();
+	void init()
+	{
+		qDebug("called before each test function is executed");
+		SetUp();
+	}
+
+	/// GTest equiv == protected TearDown();
+	void cleanup()
+	{
+		qDebug("called after every test function");
+		TearDown();
+	}
+
+	void cleanupTestCase()
+	{ qDebug("alled after the last test function was executed."); }
+	/// @}
+#endif
+
 };
-
-/// Divisor for ms delays/timeouts in the tests.
-constexpr long TC_MS_DIV = 10;
-
-static inline void TC_Sleep(int ms)
-{
-    QTest::qSleep(ms / TC_MS_DIV);
-}
-
-static inline void TC_Wait(int ms)
-{
-    QTest::qWait(ms / TC_MS_DIV);
-}
 
 
 /// @name Additional test helper macros.
@@ -175,22 +245,41 @@ static inline void TC_Wait(int ms)
 
 #define GTEST_COUT_qDB qDb()
 
+#ifdef TEST_FWK_IS_GTEST
 #define TC_ENTER() \
+	/* The Google Mock-based TestLifecycleManager instance for this test. */ \
+	TestLifecycleManager tlm; \
+	EXPECT_CALL(tlm, MTC_ENTER()) \
+			.Times(1); \
+	EXPECT_CALL(tlm, MTC_EXIT()) \
+			.Times(1); \
+	\
+	tlm.MTC_ENTER(); \
     /* The name of this test as a static std::string. */ \
-    static const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
-    starting(static_test_id_string); \
-    static std::atomic_bool test_func_called {true}; \
-    static std::atomic_bool test_func_exited {false}; \
-    static std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
-    static std::atomic_bool test_func_stack_is_gone {false}; \
+	const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
+	this->starting(static_test_id_string); \
+	std::atomic_bool test_func_called {true}; \
+	std::atomic_bool test_func_exited {false}; \
+	std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
+	std::atomic_bool test_func_stack_is_gone {false}; \
     TC_EXPECT_THIS_TC();
-
+#else // !TEST_FWK_IS_GTEST
+#define TC_ENTER() \
+	/* The name of this test as a static std::string. */ \
+	const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \
+	this->starting(static_test_id_string); \
+	std::atomic_bool test_func_called {true}; \
+	std::atomic_bool test_func_exited {false}; \
+	std::atomic_bool test_func_no_longer_need_stack_ctx {false}; \
+	std::atomic_bool test_func_stack_is_gone {false}; \
+	TC_EXPECT_THIS_TC();
+#endif // TEST_FWK_IS_QTEST
 
 #define TC_EXPECT_THIS_TC() \
-    EXPECT_EQ(get_currently_running_test(), static_test_id_string);
+	AMLMTEST_EXPECT_EQ(this->get_currently_running_test(), static_test_id_string);
 
 #define TC_EXPECT_NOT_EXIT() \
-    EXPECT_TRUE(test_func_called) << static_test_id_string; \
+	AMLMTEST_EXPECT_TRUE(test_func_called) << static_test_id_string; \
     EXPECT_FALSE(test_func_exited) << static_test_id_string;
 
 #define TC_EXPECT_STACK() \
@@ -204,22 +293,36 @@ static inline void TC_Wait(int ms)
     TC_DONE_WITH_STACK(); \
     test_func_exited = true; \
     test_func_stack_is_gone = true; \
-    ASSERT_TRUE(test_func_called); \
-    ASSERT_TRUE(test_func_exited); \
-    ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
-    finished(static_test_id_string);
+	AMLMTEST_ASSERT_TRUE(test_func_called); \
+	AMLMTEST_ASSERT_TRUE(test_func_exited); \
+	AMLMTEST_ASSERT_TRUE(test_func_no_longer_need_stack_ctx);\
+	this->finished(static_test_id_string); \
+	tlm.MTC_EXIT();
 
-/// Macros for making sure a KJob gets destroyed before the TEST_F() returns.
+/// @name Macros for making sure a KJob emits the expected signals and gets destroyed before the TEST_F() returns.
+/// @{
 #define M_QSIGNALSPIES_SET(kjobptr) \
     QSignalSpy kjob_finished_spy(kjobptr, &KJob::finished); \
-    EXPECT_TRUE(kjob_finished_spy.isValid()); \
+	AMLMTEST_EXPECT_TRUE(kjob_finished_spy.isValid()); \
     QSignalSpy kjob_result_spy(kjobptr, &KJob::result); \
-    EXPECT_TRUE(kjob_result_spy.isValid()); \
-    QSignalSpy kjob_destroyed_spy(static_cast<QObject*>(kjobptr), &QObject::destroyed); \
-    EXPECT_TRUE(kjob_destroyed_spy.isValid());
+	AMLMTEST_EXPECT_TRUE(kjob_result_spy.isValid()); \
+	/*QSignalSpy kjob_destroyed_spy(static_cast<QObject*>(kjobptr), &QObject::destroyed);*/ \
+	/*EXPECT_TRUE(kjob_destroyed_spy.isValid());*/ \
+	/* Workaround for what otherwise should be doable with QSignalSpy() above, but isn't for some reason. */ \
+	std::atomic_bool got_job_destroyed_signal {false}; \
+	connect_or_die(kjobptr, &QObject::destroyed, qApp, [&](QObject* obj){ \
+		GTEST_COUT_qDB << "GOT DESTROYED SIGNAL:" << &obj; \
+		got_job_destroyed_signal = true; \
+	});
 
 #define M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT() \
-    EXPECT_TRUE(kjob_destroyed_spy.wait());
+	{ \
+		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000); \
+		AMLMTEST_ASSERT_TRUE(got_job_destroyed_signal.load()); \
+		AMLMTEST_ASSERT_TRUE(didnt_timeout); \
+	/* EXPECT_TRUE(kjob_destroyed_spy.wait()); */ \
+	}
+/// @}
 
 /// @}
 
@@ -227,14 +330,22 @@ static inline void TC_Wait(int ms)
 /// @{
 
 /**
- * Helper to which returns a finished QFuture<T>.
+ * Helper to which returns a finished (Started|Finished) QFuture<T>.
  */
 template <typename T>
 QFuture<T> make_finished_QFuture(const T &val)
 {
-   QFutureInterface<T> fi;
-   fi.reportFinished(&val);
-   return QFuture<T>(&fi);
+	/// @note QFuture<>'s returned by QtConcurrent::run() are Started|Finished when the
+	/// future is finished.
+	/// So, that seems to be the natural state of a successfully finished QFuture<>,
+	/// and we copy that here.
+
+	AMLMTEST_SCOPED_TRACE("make_finished_QFuture");
+
+	QFutureInterface<T> fi;
+	fi.reportStarted();
+	fi.reportFinished(&val);
+	return QFuture<T>(&fi);
 }
 
 /**
@@ -243,7 +354,7 @@ QFuture<T> make_finished_QFuture(const T &val)
 template <typename T>
 QFuture<T> make_startedNotCanceled_QFuture()
 {
-    SCOPED_TRACE("");
+	AMLMTEST_SCOPED_TRACE("make_startedNotCanceled_QFuture");
     QFutureInterface<T> fi;
     fi.reportStarted();
     EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
@@ -256,7 +367,7 @@ QFuture<T> make_startedNotCanceled_QFuture()
 template<class FutureT, class T>
 FutureT make_default_future()
 {
-    SCOPED_TRACE("make_default_future");
+	AMLMTEST_SCOPED_TRACE("make_default_future");
     QFutureInterface<T> fi;
     fi.reportStarted();
     EXPECT_EQ(ExtFutureState::state(fi), ExtFutureState::Started | ExtFutureState::Running);
@@ -264,36 +375,36 @@ FutureT make_default_future()
 }
 
 template <typename T>
-void reportFinished(QFuture<T>& f)
+void reportFinished(QFuture<T>* f)
 {
-    SCOPED_TRACE("reportFinished(QFuture<T>& f)");
-    f.d.reportFinished();
+	AMLMTEST_SCOPED_TRACE("reportFinished(QFuture<T>& f)");
+	AMLMTEST_COUT << "REPORTING FINISHED";
+	f->d.reportFinished();
     // May have been already canceled by the caller.
-    EXPECT_TRUE((ExtFutureState::state(f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
+	EXPECT_TRUE((ExtFutureState::state(*f) & ~ExtFutureState::Canceled) & (ExtFutureState::Started | ExtFutureState::Finished));
 }
 
 template <typename T>
-void reportFinished(ExtFuture<T>& f)
+void reportFinished(ExtFuture<T>* f)
 {
-    SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
+	AMLMTEST_SCOPED_TRACE("reportFinished(ExtFuture<T>& f)");
 
-    f.reportFinished();
+	f->reportFinished();
 
-    EXPECT_TRUE(f.isFinished());
+	AMLMTEST_EXPECT_TRUE(f->isFinished());
 }
 
 template <typename FutureT, class ResultType>
-void reportResult(FutureT& f, ResultType t)
+void reportResult(FutureT* f, ResultType t)
 {
-    SCOPED_TRACE("reportResult");
-
-    if constexpr (isExtFuture_v<FutureT>)
+	AMLMTEST_SCOPED_TRACE("reportResult");
+	if constexpr (is_ExtFuture_v<FutureT>)
     {
-        f.reportResult(t);
+		f->reportResult(t);
     }
     else
     {
-        f.d.reportResult(t);
+		f->d.reportResult(t);
     }
 }
 
@@ -308,32 +419,36 @@ void reportResult(FutureT& f, ResultType t)
 template<class ReturnFutureT>
 ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTestsSuiteFixtureBase *fixture)
 {
-    SCOPED_TRACE("In async_int_generator");
+	AMLMTEST_SCOPED_TRACE("In async_int_generator");
 
     auto tgb = new trackable_generator_base(fixture);
     fixture->register_generator(tgb);
 
     auto lambda = [=](ReturnFutureT future) {
         int current_val = start_val;
-        SCOPED_TRACE("In async_int_generator callback");
+        AMLMTEST_SCOPED_TRACE("In async_int_generator callback");
         for(int i=0; i<num_iterations; i++)
         {
+			/// @todo Not sure if we want this to work or not.
+        	AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
+
             // Sleep for a second.
             GTEST_COUT_qDB << "SLEEPING FOR 1 SEC";
 
             TC_Sleep(1000);
             GTEST_COUT_qDB << "SLEEP COMPLETE, sending value to future:" << current_val;
 
-            reportResult(future, current_val);
+			reportResult(&future, current_val);
             current_val++;
         }
 
         // We're done.
         GTEST_COUT_qDB << "REPORTING FINISHED";
+		reportFinished(&future);
+
         fixture->unregister_generator(tgb);
         delete tgb;
 
-        reportFinished(future);
     };
 
     ReturnFutureT retval;
@@ -346,23 +461,24 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     GTEST_COUT_qDB << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
-    EXPECT_TRUE(retval.isStarted());
-    EXPECT_FALSE(retval.isFinished());
+//    AMLMTEST_EXPECT_TRUE(retval.isStarted());
+//	AMLMTEST_EXPECT_FALSE(retval.isCanceled());
+//    AMLMTEST_EXPECT_FALSE(retval.isFinished());
 
-    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
+	if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
         GTEST_COUT_qDB << "QtConcurrent::run()";
         auto qrunfuture = QtConcurrent::run(lambda, retval);
     }
     else
     {
-        GTEST_COUT_qDB << "ExtAsync::run_efarg()";
-        retval = ExtAsync::run_efarg(lambda);
+		GTEST_COUT_qDB << "ExtAsync::run()";
+		retval = ExtAsync::run(lambda);
     }
 
     GTEST_COUT_qDB << "RETURNING future:" << ExtFutureState::state(retval);
 
-    EXPECT_TRUE(retval.isStarted());
+//	AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
 //    {
 //        // QFuture starts out Start|Canceled|Finished.
@@ -377,7 +493,6 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
     return retval;
 }
-
 
 
 #endif // EXTASYNCTESTCOMMON_H

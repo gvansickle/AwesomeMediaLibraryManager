@@ -194,7 +194,7 @@ public:
 public Q_SLOTS:
 
     /**
-     * Register a KJob, AMLMJob, KIO::Job, or any other derived job with this tracker.
+     * Register a KJob, AMLMJob, KIO::Job, or any other job derived from KJob with this tracker.
      *
      * Connects the signals from the passed KJob* to slots in this class of the same name.
      *
@@ -267,6 +267,12 @@ public Q_SLOTS:
      */
     void SLOT_onKJobDestroyed(QObject* kjob);
 
+    /**
+     * Cancel all tracked KJobs.
+     * This blocks waiting for them to report canceled.
+     */
+    void SLOT_CancelAllKJobs();
+
 protected Q_SLOTS:
 
 	///
@@ -274,9 +280,6 @@ protected Q_SLOTS:
 
     /// Slot to display the progress widget for @a kjob.
     void SLOT_onShowProgressWidget(KJob *kjob);
-
-    /// Cancel all tracked KJobs.
-    void cancelAll();
 
     /**
      * Connections/signal/slots notes
@@ -505,7 +508,7 @@ protected: // Methods
      */
     void INTERNAL_unregisterJob(KJob *kjob);
 
-    void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
+//    void removeJobAndWidgetFromMap(KJob* kjob, QWidget *widget);
 
 protected:
 

@@ -47,6 +47,8 @@ public:
         QMutexLocker locker(&m_map_mutex);
         m_kjob_to_widget_map.insert(key, value);
     }
+
+    /// Remove key from the map.
     int remove(const Key &key)
     {
         QMutexLocker locker(&m_map_mutex);

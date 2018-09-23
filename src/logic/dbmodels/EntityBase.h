@@ -23,6 +23,7 @@
 #include <QtGlobal>
 #include <QObject>
 #include <QUrl>
+#include <QMimeType>
 
 #include <src/logic/DirScanResult.h>
 

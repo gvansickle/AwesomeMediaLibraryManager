@@ -40,6 +40,7 @@ class Theme : public QWidget
 
 public:
     explicit Theme(QWidget *parent = nullptr);
+    ~Theme() = default;
 
     static void initialize();
 
@@ -48,20 +49,26 @@ public:
 	 */
     static QActionGroup *getWidgetStylesActionGroup(MainWindow *main_window);
 
-	static QString getUserDefaultStyle(const char* fallback = nullptr);
+    static QString getUserDefaultQStyle(const char* fallback = nullptr);
 
     /// @name Icon Theme interface.
     /// @{
     static QStringList GetIconThemeNames();
+
+    static QString defaultIconThemeName();
+    static QString currentIconThemeName();
 
     /**
      * Query KIconTheme etc. and get the current info on icon themes.
      */
     static void LogIconThemeInfo();
 
+    static void LogAllIconThemes();
+
     static bool setIconThemeName(const QString& name);
 
     static QIcon iconFromTheme(const QString& icon_name);
+    static QIcon iconFromTheme(const QString& icon_name, const QIcon& fallback);
     static QIcon iconFromTheme(const QStringList& icon_name);
     static QIcon iconFromTheme(const QMimeType& mime_type);
 
@@ -97,7 +104,7 @@ private:
 
     static QStringList FindIconThemes();
 
-	static QStringList m_available_styles;
+    static QStringList m_available_qstyles;
 };
 
 #endif // THEME_H

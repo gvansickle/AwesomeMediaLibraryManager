@@ -20,7 +20,7 @@
 #ifndef SCANRESULTSTREEMODEL_H
 #define SCANRESULTSTREEMODEL_H
 
-#include "src/logic/models/AbstractTreeModel.h"
+#include "AbstractTreeModel.h"
 
 class ScanResultsTreeModel : public AbstractTreeModel
 {

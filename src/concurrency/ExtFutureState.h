@@ -72,7 +72,7 @@ public:
     /**
      * Return the combined state flags of a class ultimately derived from QFutureInterfaceBase.
      */
-    template<typename T, REQUIRES(!isExtFuture_v<T>)>
+	template<typename T, REQUIRES(!is_ExtFuture_v<T>)>
     static ExtFutureState::State state(const T& qfuture_int_base_derived)
     {
         QMutexLocker lock(qfuture_int_base_derived.mutex());
@@ -131,6 +131,9 @@ public:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::State)
 
+/**
+ * Convenience toString() conversion.
+ */
 inline static QString toString(ExtFutureState::State states)
 {
     QString str;

@@ -22,6 +22,9 @@
 
 #include <config.h>
 
+// Std C++
+#include <deque>
+
 // Qt5
 #include <QObject>
 #include <QPointer>
@@ -39,7 +42,7 @@
 // Ours
 #include <src/future/function_traits.hpp>
 #include <src/future/static_if.hpp>
-#include "utils/UniqueIDMixin.h"
+#include <src/utils/UniqueIDMixin.h>
 #include "utils/ConnectHelpers.h"
 #include "concurrency/ExtAsync.h"
 
@@ -163,11 +166,12 @@ Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public UniqueIDMixin<AMLMJob>, public IExtFutureWatcher
+class AMLMJob: public KJob, public IExtFutureWatcher/*, public IExtFutureExtendedStatusReporting*/, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
-    Q_INTERFACES(IExtFutureWatcher)
+	Q_INTERFACES(IExtFutureWatcher)
+//	Q_INTERFACES(IExtFutureExtendedStatusReporting)
 
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
@@ -323,11 +327,23 @@ public:
     /// @}
 
 public:
-    /// @name New public interfaces FBO derived classes.
-    /// Need to be public so they can be accessed from the self pointer passed to run(), which may or may not be this.
+	/// @name New public interfaces FBO derived classes and ExtFuture<T>s wrapped in an AMLMJobT<T>.
+	/// Need to be public so they can be accessed from the this pointer passed to run() or the async
+	/// function connected to the returned ExtFuture<T>.
+	/// @warning Do not use these from client code.
     /// @{
 
+	/// Give derived classes write access to progressUnit.
+	/// Sets the Unit which will be used for percent complete and total/processedSize calculations.
+	/// Defaults to KJob::Unit::Bytes.
+	void setProgressUnit(int prog_unit) /*override*/;
+	void setProcessedAmountAndSize(int unit, qulonglong amount) /*override*/;
+	void setTotalAmountAndSize(int unit, qulonglong amount) /*override*/;
+
     /// @}
+
+	/// Returns the currently set progress unit for this AMLMJob.
+	KJob::Unit progressUnit() const;
 
     virtual qulonglong totalSize() const;
     virtual qulonglong processedSize() const;
@@ -354,7 +370,7 @@ public:
 
         // result(KJob*) signal:
         // "Emitted when the job is finished (except when killed with KJob::Quietly)."
-        connect(this, &KJob::result, ctx, [=](KJob* kjob){
+		connect_or_die(this, &KJob::result, ctx, [=](KJob* kjob){
 
 //            qDbo() << "IN THEN CALLBACK, KJob:" << kjob;
 
@@ -391,20 +407,6 @@ public:
             }
         });
     }
-
-	/**
-	 * .tap(ctx, continuation) -> void
-	 *
-	 * @tparam continuation  Invocable taking an ExtFuture<T> of that used by the derived type.
-	 * @returns @todo Should be another ExtFuture.
-	 */
-//	template <typename ContextType, typename FuncType,
-//			  REQUIRES(std::is_base_of_v<QObject, ContextType> &&
-//			  ct::is_invocable_r_v<void, FuncType, std::result_of_t<this->get_extfuture_ref()>>)>
-//	void tap(const ContextType *ctx, Func&& f)
-//	{
-
-//	}
 
     /// @}
 
@@ -467,8 +469,6 @@ protected:
     /// @name ExtAsync job support functions / function templates.
     /// @{
 
-    virtual AMLMJob* asDerivedTypePtr() = 0;
-
     /**
      * The function which is run by ExtAsync::run() to do the work.
      * Must be overridden in derived classes.
@@ -525,21 +525,6 @@ protected:
 
     /// @} /// END Override of KJob protected functions.
 
-    /// @name New protected methods
-    /// @{
-
-    /// @warning For use only by KJob
-    /// Give derived classes write access to progressUnit.
-    /// Sets the Unit which will be used for percent complete and total/processedSize calculations.
-    /// Defaults to KJob::Unit::Bytes.
-    void setProgressUnit(KJob::Unit prog_unit);
-    KJob::Unit progressUnit() const;
-
-    virtual void setProcessedAmountAndSize(Unit unit, qulonglong amount);
-    virtual void setTotalAmountAndSize(Unit unit, qulonglong amount);
-
-    /// @}
-
 protected Q_SLOTS:
 
     /// @name Internal slots
@@ -578,15 +563,17 @@ private:
     KJob::Unit m_progress_unit { KJob::Unit::Bytes };
 };
 
+/**
+ * Class template for wrapping ExtAsync jobs returning an ExtFuture<T>.
+ */
 template <class ExtFutureT>
 class AMLMJobT : public AMLMJob
 {
 	using BASE_CLASS = AMLMJob;
 
 public:
-
+	using ExtFutureType = ExtFutureT;
     using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
-    using ThisType = AMLMJobT<ExtFutureT>;
 
     explicit AMLMJobT(QObject* parent = nullptr)
         : BASE_CLASS(parent)
@@ -595,6 +582,8 @@ public:
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
         m_ext_watcher = new ExtFutureWatcherT();
+		// Create a new 1 sec speed update QTimer.
+		m_speed_timer = QSharedPointer<QTimer>::create(this);
 	}
 
     /**
@@ -621,6 +610,11 @@ public:
         // Hook up signals and such to the ExtFutureWatcher<T>.
         HookUpExtFutureSignals(m_ext_watcher);
 
+		// Start the speed calculation timer.
+		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
+		m_speed_timer->setInterval(1000);
+		m_speed_timer->start();
+
         // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
         // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
         // role is handled by the ExtFuture<> m_ext_future and m_ext_watcher.
@@ -629,7 +623,9 @@ public:
         // "Note that this neither waits nor cancels the asynchronous computation."
 
         // Run.
-        ExtAsync::run(this, &std::remove_reference_t<decltype(*this)>::run);
+		ExtFutureT future = ExtAsync::run_class_noarg(this, &std::remove_reference_t<decltype(*this)>::run /*&AMLMJobT::run*/);
+
+		m_ext_future = future;
 
         // All connections have already been made, so set the watched future.
         // "To avoid a race condition, it is important to call this function after doing the connections."
@@ -657,16 +653,17 @@ protected: //Q_SLOTS:
 
     virtual void SLOT_extfuture_finished()
     {
-        // Job is finished.  Delete the watcher and emit the KJob result.
+        // The ExtFuture<T> and hence the Job is finished.  Delete the watcher and emit the KJob result.
         // The emitResult() call will send out a KJob::finished() signal.
-        qDbo() << "GOT EXTFUTURE FINISHED";
+		qDbo() << "GOT EXTFUTURE FINISHED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
         emitResult();
     }
 
     virtual void SLOT_extfuture_canceled()
     {
-        qDbo() << "GOT EXTFUTURE CANCELED";
+    	// The ExtFuture<T> was cancelled (hopefully through the AMLMJobT interface).
+		qDbo() << "GOT EXTFUTURE CANCELED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
     }
 
@@ -685,16 +682,72 @@ protected: //Q_SLOTS:
         this->setTotalAmountAndSize(this->progressUnit(), max-min);
     }
 
+	/**
+	 * This slot is "overloaded" in an attempt to match KJob-style progress reporting to
+	 * QFuture's more limited progress interface.  In short, progress_text will come in here as one of at least:
+	 * - An encoded representation of KJob's:
+	 * -- "description()" signal text
+	 * -- "infoMessage()" signal text
+	 * -- "warning()" signal text.
+	 * -- And probably more (e.g. KJob's multi-unit progress info).
+	 */
+	virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
+	{
+		ExtFutureProgressInfo pi;
+
+		QPair<ExtFutureProgressInfo::EncodedType, QStringList> pi_info = pi.fromQString(progress_text);
+
+		QStringList strl = pi_info.second;
+
+		switch(pi_info.first)
+		{
+		case ExtFutureProgressInfo::EncodedType::DESC:
+			AMLM_ASSERT_EQ(strl.size(), 5);
+			Q_EMIT this->description(this, strl[0], QPair(strl[1], strl[2]), QPair(strl[3], strl[4]));
+			break;
+		case ExtFutureProgressInfo::EncodedType::INFO:
+			AMLM_ASSERT_EQ(strl.size(), 2);
+			Q_EMIT this->infoMessage(this, strl[0], strl[1]);
+			break;
+		case ExtFutureProgressInfo::EncodedType::WARN:
+			AMLM_ASSERT_EQ(strl.size(), 2);
+			Q_EMIT this->warning(this, strl[0], strl[1]);
+			break;
+		case ExtFutureProgressInfo::EncodedType::SET_PROGRESS_UNIT:
+		{
+			AMLM_ASSERT_EQ(strl.size(), 1);
+			int prog_unit = strl[0].toInt();
+			// This isn't a slot.
+			this->setProgressUnit(prog_unit);
+		}
+			break;
+		case ExtFutureProgressInfo::EncodedType::UNKNOWN:
+			/// @todo What should we do with this text?
+			qWr() << "UNKNOWN progress text" << progress_text;
+			break;
+		default:
+			Q_ASSERT(0);
+			break;
+		}
+	}
+
     virtual void SLOT_extfuture_progressValueChanged(int progress_value)
     {
         this->setProcessedAmountAndSize(this->progressUnit(), progress_value);
 //        this->emitSpeed(progress_value);
     }
 
-    virtual void SLOT_extfuture_progressTextChanged(const QString& progress_text)
-    {
-
-    }
+	/**
+	 * Calculate the job's speed in bytes per sec.
+	 */
+	virtual void SLOT_UpdateSpeed()
+	{
+		auto current_processed_size = this->processedSize();
+		auto progress_units_processed_in_last_second = current_processed_size - m_speed_last_processed_size;
+		m_speed = progress_units_processed_in_last_second;
+		m_speed_last_processed_size = current_processed_size;
+		this->emitSpeed(m_speed);
+	}
 
 protected:
 
@@ -814,10 +867,10 @@ protected:
     *
     * @return true if job successfully killed, false otherwise.
     */
-    bool doKill() override { return doKillT(); }
+    bool doKill() override { return this->doKillT(); }
 
-    bool doSuspend() override { return doSuspendT(); }
-    bool doResume() override { return doResumeT(); }
+    bool doSuspend() override { return this->doSuspendT(); }
+    bool doResume() override { return this->doResumeT(); }
     /// @}
 
     bool doKillT()
@@ -850,20 +903,26 @@ protected:
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }
 
+		// Stop the speed timer if it's running.
+		m_speed_timer->stop();
+
         // Tell the Future and hence job to Cancel.
-        m_ext_watcher->cancel();
+M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'");
+//        m_ext_watcher->cancel();
+		m_ext_future.cancel();
 
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
         /// @todo Is it possible for us to have been deleted before this call due to the cancel() above?
-        setError(KJob::KilledJobError);
+		this->setError(KJob::KilledJobError);
         /// @todo This text should probably be set somehow by the underlying async job.
-        setErrorText(tr("Job killed"));
+		this->setErrorText(tr("Job killed"));
 
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
 #else
         // Wait for the runFunctor() to report Finished.
-        m_ext_watcher->waitForFinished();
+		m_ext_watcher->waitForFinished();
+//		m_ext_future.waitForFinished();
 
         // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
         /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
@@ -880,7 +939,7 @@ protected:
         if(isAutoDelete())
         {
             /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
-            qWro() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
+            qWr() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
         }
         return true;
     }
@@ -930,17 +989,21 @@ protected:
     template <class WatcherType>
     void HookUpExtFutureSignals(WatcherType* watcher)
 	{
+		using ThisType = std::remove_reference_t<decltype(*this)>;
+
         // FutureWatcher signals to this->SLOT* connections.
         // Regarding canceled QFuture<>s: "Any QFutureWatcher object that is watching this future will not deliver progress
         // and result ready signals on a canceled future."
-        // This group coressponds ~1:1 with KJob functionality.
+        // This group corresponds ~1:1 with KJob functionality.
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::started, this, &ThisType::SLOT_extfuture_started);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::finished, this, &ThisType::SLOT_extfuture_finished);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::canceled, this, &ThisType::SLOT_extfuture_canceled);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::paused, this, &ThisType::SLOT_extfuture_paused);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::resumed, this, &ThisType::SLOT_extfuture_resumed);
 
+		// FutureWatcher progress signals -> this slots.
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressRangeChanged, this, &ThisType::SLOT_extfuture_progressRangeChanged);
+		connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressTextChanged, this, &ThisType::SLOT_extfuture_progressTextChanged);
         connect_or_die(m_ext_watcher, &ExtFutureWatcherT::progressValueChanged, this, &ThisType::SLOT_extfuture_progressValueChanged);
 
         // Signal-to-signal connections.
@@ -951,7 +1014,11 @@ protected:
         connect_or_die(this, &KJob::result, this, &ThisType::result);
 
         // QObject forwarders.
-        connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
+		/// @note Does this actually make sense?
+		connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
+
+		// Speed update timer.
+		connect_or_die(m_speed_timer.data(), &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);
 
 		/// @todo EXP: Throttling.
 //		m_ext_watcher.setPendingResultsLimit(2);
@@ -1001,7 +1068,8 @@ protected:
         }
     }
 
-    /// @}
+
+	/// @} /// END KJob-related support functions.
 
     /// The ExtFuture<T>.
     ExtFutureT m_ext_future;
@@ -1009,15 +1077,19 @@ protected:
 	/// The watcher for the ExtFuture.
     ExtFutureWatcherT* m_ext_watcher;
 
-	AMLMJobT<ExtFutureT>* asDerivedTypePtr() override { return this; }
+	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.
+	int64_t m_speed {0};
+	QSharedPointer<QTimer> m_speed_timer { nullptr };
+	qulonglong m_speed_last_processed_size {0};
+	std::deque<int64_t> m_speed_history;
 
 };
 
-//template<class ExtFutureT>
-//inline static auto* make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
-//{
-//	auto job = new AMLMJobT(ef, parent);
-//	qDebug() << "WORKED:" << ef;
-//}
+template<class ExtFutureT>
+inline static auto* make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
+{
+	auto job = new AMLMJobT<ExtFutureT>(ef, parent);
+	qDebug() << "WORKED:" << ef;
+}
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */

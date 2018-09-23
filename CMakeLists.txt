@@ -29,7 +29,7 @@
 # - On Linux, CPACK_IFW_ROOT (cmake var) or QTIFWDIR (env var) should point to something like ~/Qt/QtIFW-3.0.1
 
 # cmake setup.
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
@@ -37,6 +37,12 @@ message(STATUS "CMake-time PATH: $ENV{PATH}")
 message(STATUS "CMake-time CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 message(STATUS "CMake-time CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 include(cmake/GetVersionInfo.cmake)
+
+# Prevent an in-root-of-src-tree build.
+# Per @link https://stackoverflow.com/questions/1208681/with-cmake-how-would-you-disable-in-source-builds, these have to
+# be prior to project().
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
@@ -53,6 +59,11 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
 	message(FATAL_ERROR "Prevented in-root-of-tree build. Please create a build directory outside of the source code root directory and call cmake from there. Thank you.")
 endif()
 
+# Additional project info.
+set(PROJECT_AUTHOR "Gary R. Van Sickle")
+set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
 
@@ -66,8 +77,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
 set(QT_MIN_VERSION "5.10.0")
-set(KF5_MIN_VERSION "5.44.0")
-set(ECM_MIN_VERSION "5.44.0")
+set(KF5_MIN_VERSION "5.48.0")
+set(ECM_MIN_VERSION "5.48.0")
 
 ###
 ### ECM Setup ====================================================================================================
@@ -94,7 +105,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmak
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
-#set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
+set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
 include(KDECMakeSettings NO_POLICY_SCOPE)
 
 # CMake macros.
@@ -116,6 +127,7 @@ include(ECMMarkAsTest)
 # The sanitizers "address", "memory" and "thread" are mutually exclusive. You cannot enable two of them in the same build.
 # "leak" requires the "address" sanitizer.
 ### @note KDECompileFlags includes include(ECMEnableSanitizers).
+#set(ECM_ENABLE_SANITIZERS "leak;address")
 include(ECMEnableSanitizers)
 
 # KDE macros.
@@ -160,7 +172,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments CONFIG DEBUG)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer CONFIG DEBUG)
+	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree CONFIG DEBUG)
 endif()
 if(WIN32)
 #ucm_add_flags(/showIncludes)
@@ -187,14 +199,14 @@ include(helperfunctions)
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
 include(InstallRequiredSystemLibraries)
-# For GoogleTest and Boost.
+# For DownloadProject, which we use for GoogleTest and Boost.
 set(UPDATE_DISCONNECTED_IF_AVAILABLE "UPDATE_DISCONNECTED FALSE")
-include(ExternalProject)
+#include(ExternalProject)
 include(DownloadProject)
 
 # Right now we need all the verbosity we can get.
 set(CMAKE_VERBOSE_MAKEFILE  YES)
-set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
+#set_property(GLOBAL PROPERTY GLOBAL_DEPENDS_DEBUG_MODE 1)
 set(CPACK_IFW_VERBOSE YES)
 #set(CMAKE_DEBUG_TARGET_PROPERTIES
 #	    INCLUDE_DIRECTORIES
@@ -203,17 +215,6 @@ set(CPACK_IFW_VERBOSE YES)
 #		CONTAINER_SIZE_REQUIRED
 #		LIB_VERSION
 #		)
-
-dir_summary()
-
-# QtCommon/init_os_bundle: Set OS_BUNDLE to WIN32, MACOSX_BUNDLE, or empty, depending on platform.
-### @todo This can probably go away.
-init_os_bundle()
-
-set(PROJECT_AUTHOR "Gary R. Van Sickle")
-set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 message("******************************************************************")
 message("* ${PROJECT_NAME} version ${PROJECT_VERSION}-${GVI_VERSION_COMMITS}-g${GVI_VERSION_HASH}${GVI_VERSION_DIRTY_POSTFIX} (${CMAKE_BUILD_TYPE})")
@@ -255,7 +256,6 @@ endif()
 print_varlist(CMAKE_INSTALL_PREFIX KDE_INSTALL_ICONDIR)
 
 
-
 # Compiler flag support checks.
 set(EXTRA_CXX_COMPILE_FLAGS "")
 check_cxx_compiler_flag("-Wuninitialized" CXX_W_UNINIT)
@@ -293,39 +293,19 @@ if(UNIX)
     list(APPEND QT5_LINK_LIB_TARGETS Qt5::X11Extras)
 endif(UNIX)
 
-get_target_property(Qt5Core_location Qt5::Core LOCATION)
-message(STATUS "* Found Qt version ${Qt5_VERSION} at ${Qt5Core_location}")
-message(STATUS "*   Qt5_VERSION: ${Qt5_VERSION}")
-message(STATUS "*   Qt5_DIR: ${Qt5_DIR}")
-message(STATUS "*   Qt5Core_FOUND: \"${Qt5Core_FOUND}\"")
-message(STATUS "*   Qt5Core_EXECUTABLE_COMPILE_FLAGS: \"${Qt5Core_EXECUTABLE_COMPILE_FLAGS}\"")
-# For access to QPA headers.
-message(STATUS "*   Qt5Core_PRIVATE_INCLUDE_DIRS: ${Qt5Core_PRIVATE_INCLUDE_DIRS}")
-message(STATUS "*   Qt5Gui_PRIVATE_INCLUDE_DIRS: ${Qt5Gui_PRIVATE_INCLUDE_DIRS}")
-if(FALSE)
-	# List plugin info.
-	message(STATUS "*  Qt5::Gui Plugins:")
-	foreach(plugin ${Qt5Gui_PLUGINS})
-	  get_target_property(_loc ${plugin} LOCATION)
-	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-	endforeach()
-	message(STATUS "*  Qt5::Widgets Plugins:")
-	foreach(plugin ${Qt5Widgets_PLUGINS})
-	  get_target_property(_loc ${plugin} LOCATION)
-	  message(STATUS "*    Plugin ${plugin} is at location ${_loc}")
-	endforeach()
-endif()
+print_qtinfo()
 
 ###
 ### KDE KF5 libs.
 ###
 # Krita has ~this warning: "don't reorder these, this is the order they depend on each other."
-set(KF5_LINK_LIBS)
+set(KF5_LINK_LIB_TARGETS "")
+### @note "Config" is both a find_package() keyword as well as the KF5Config components KF5::ConfigCore and KF5::ConfigGui.
+###       We'll require KF5Config separately to avoid any ambiguity.
+find_package(KF5Config ${KF5_MIN_VERSION} REQUIRED)
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	Archive ### @todo TRYING THIS IN CASE IconThemes needs it to work properly, otherwise REMOVE
-	Config
 	WidgetsAddons
-	# Completion
 	CoreAddons ## USE_KF5_COREADDONS, git clone git://anongit.kde.org/kcoreaddons.git
 	GuiAddons
 	ConfigWidgets ## Not in Krita from this until WindowSystem.
@@ -335,14 +315,41 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	WindowSystem
 )
 set(HAVE_KF501 ${KF5_FOUND})
-list(APPEND KF5_LINK_LIBS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
-list(APPEND KF5_LINK_LIBS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-list(APPEND KF5_LINK_LIBS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
-list(APPEND KF5_LINK_LIBS KF5::WindowSystem)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
 
 ###### EXPERIMENT
-#find_package(Breeze REQUIRED)
-#list(APPEND KF5_LINK_LIBS Breeze)
+
+#find_package(BreezeIcons REQUIRED) # Doesn't exist yet.
+set(WITH_BUNDLED_BREEZE_ICONS true)
+if(WITH_BUNDLED_BREEZE_ICONS)
+	set(AMLM_INSTALL_BUNDLED_ICON_THEME_DIR "${KDE_INSTALL_FULL_DATAROOTDIR}/gvansickle/AwesomeMediaLibraryManager")
+	find_file(BREEZEICONS_PATH breeze-icons.rcc 
+		HINTS
+			# ${BREEZEICONS_DIR}
+			/usr/share/icons/breeze
+			~/.icons/breeze
+		PATH_SUFFIXES
+			breeze
+		DOC
+			"Full path to the breeze-icons.rcc file"	
+			)
+    if (NOT EXISTS ${BREEZEICONS_PATH})
+        message(FATAL_ERROR "Breeze-icons is missing")
+    else()
+    	message(STATUS "Found source default icon theme: ${BREEZEICONS_PATH}")
+    	message(STATUS "Default icon theme will be installed in: ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}")
+    	# Install it as our default icon theme.
+    	install(FILES ${BREEZEICONS_PATH}
+			DESTINATION ${AMLM_INSTALL_BUNDLED_ICON_THEME_DIR}
+			RENAME "icontheme.rcc"
+			COMPONENT coreapp)
+    endif()
+endif()
+#list(APPEND KF5_LINK_LIB_TARGETS Breeze)
+print_varlist(BREEZEICONS_PATH)
 
 
 ###
@@ -397,6 +404,19 @@ if(FALSE)
 	endif()
 endif()
 
+add_definitions(
+	-DQT_DEPRECATED_WARNINGS
+    #-DQT_DISABLE_DEPRECATED_BEFORE=0x051000
+    -DQT_NO_SIGNALS_SLOTS_KEYWORDS
+    #-DQT_NO_URL_CAST_FROM_STRING
+    #-DQT_NO_CAST_FROM_ASCII
+    #-DQT_NO_CAST_TO_ASCII
+    #-DQT_NO_CAST_FROM_BYTEARRAY
+    -DQT_STRICT_ITERATORS
+    -DQT_USE_QSTRINGBUILDER
+    -DQT_NO_NARROWING_CONVERSIONS_IN_CONNECT)
+
+
 # Set PROJECT_VERSION_PATCH and PROJECT_VERSION_TWEAK to 0 if not present, needed by add_project_meta
 fix_project_version()
 
@@ -426,13 +446,23 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
 	ESCAPE_QUOTES)
 
-# Add the subdirs.
+
+###
+### Add the subdirs.
+###
+# This is the sum-total of all source files which go into building the main exe.
+#add_library(amlm_pseudolib "")
 add_subdirectory(src)
+add_subdirectory(tests)
+#include(resources/CMakeLists.txt)
+#print_varlist(amlm_ICONS amlm_SRCS)
+#ecm_add_app_icon(amlm_SRCS ICONS ${amlm_ICONS})
 
 
 # This function sets up the variable META_FILES_TO_INCLUDE to the extra files
 # needed for a windows build (essentially just the configured .rc file).
 add_project_meta(META_FILES_TO_INCLUDE)
+
 
 
 ###

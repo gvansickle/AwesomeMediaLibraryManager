@@ -50,6 +50,8 @@ Q_SIGNALS:
 public:
     explicit CollectionDockWidget(const QString &title, QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
 
+    ~CollectionDockWidget() override = default;
+
 	void setModel(QPointer<QStandardItemModel> model);
 
 	void addActionExperimental(QAction* act);

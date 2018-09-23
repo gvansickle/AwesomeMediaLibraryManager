@@ -20,16 +20,21 @@
 #ifndef MDILIBRARYVIEW_H
 #define MDILIBRARYVIEW_H
 
+// Std C++
+#include <memory>
+#include <functional>
+
+// Qt5
+#include <QUrl>
+
+// Ours
 #include "MDITreeViewBase.h"
 #include "logic/LibraryModel.h" // Needed for covariant return type.
 #include "utils/DebugHelpers.h"
 
-#include <QUrl>
-
-#include <memory>
-#include <functional>
-
 class ItemDelegateLength;
+class MimeTypeDelegate;
+
 class LibrarySortFilterProxyModel;
 class MDIPlaylistView;
 class LibraryEntry;
@@ -92,7 +97,9 @@ protected:
 	QPointer<LibraryModel> m_underlying_model;
 
 	LibrarySortFilterProxyModel* m_sortfilter_model;
+
 	ItemDelegateLength* m_length_delegate;
+	MimeTypeDelegate* m_mimetype_delegate;
 
 	///
 	/// Pure virtual function overrides.

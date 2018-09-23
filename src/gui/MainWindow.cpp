@@ -171,10 +171,24 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 MainWindow::~MainWindow()
 {
+    // KDev's MainWindow does only this here:
+    /**
+     * if (memberList().count() == 1) {
+        // We're closing down...
+        Core::self()->shutdown();
+        }
+
+        delete d;
+     */
+
+#if 1
+    AMLMApp::instance()->SLOT_onAboutToQuit();
+#else
     // Shouldn't have been destroyed until now.
     Q_CHECK_PTR(instance()->m_activity_progress_tracker);
     delete instance()->m_activity_progress_tracker;
     instance()->m_activity_progress_tracker = nullptr;
+#endif
 
     m_instance = nullptr;
 }
@@ -660,7 +674,7 @@ void MainWindow::createActionsSettings(KActionCollection *ac)
 
 	// Styles KActionMenu menu.
 	addAction(QStringLiteral("styles_menu"), m_act_styles_kaction_menu);
-	connect(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::onChangeStyle);
+    connect_or_die(m_actgroup_styles, &QActionGroup::triggered, this, &MainWindow::SLOT_onChangeQStyle);
 
 	// Show/hide menu bar.
 	m_act_ktog_show_menu_bar = KStandardAction::showMenubar(this, &MainWindow::onShowMenuBar, ac);
@@ -2003,14 +2017,14 @@ void MainWindow::changeIconTheme(const QString& iconThemeName)
 
     Theme::setIconThemeName(iconThemeName);
 
-    for(auto& w : qApp->allWidgets())
+    for(auto& w : amlmApp->allWidgets())
 	{
 		QEvent style_changed_event(QEvent::StyleChange);
 		QCoreApplication::sendEvent(w, &style_changed_event);
 	}
 }
 
-void MainWindow::onChangeStyle(QAction *action)
+void MainWindow::SLOT_onChangeQStyle(QAction *action)
 {
 	// Get the name of the style to change to.
 	QString style = action->data().toString();
@@ -2029,7 +2043,7 @@ void MainWindow::doChangeStyle()
 	QString newStyle = AMLMSettings::widgetStyle();
 	if (newStyle.isEmpty() || newStyle == QStringLiteral("Default"))
 	{
-		newStyle = Theme::getUserDefaultStyle("Breeze");
+        newStyle = Theme::getUserDefaultQStyle("Breeze");
 	}
 	QApplication::setStyle(QStyleFactory::create(newStyle));
 

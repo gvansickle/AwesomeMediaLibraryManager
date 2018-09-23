@@ -48,6 +48,9 @@
 class ProjectFolderItem;
 class IProjectFileManager;
 
+/**
+ * Test KJob-derived class.
+ */
 class ImportProjectJob: public KJob
 {
     Q_OBJECT
@@ -59,7 +62,9 @@ public:
     void start() override;
     bool doKill() override;
 
-public: // Added for test development.
+public:
+	// Added for test development.
+	/// @note Currently unused.
     const QFuture<void> get_extfuture() const;
 
 private Q_SLOTS:
@@ -101,11 +106,11 @@ public:
         while(!cancel)
         {
             TC_Sleep(100);
-            GTEST_COUT_qDB << "LOOP:" << loop_counter;
+			AMLMTEST_COUT << "LOOP:" << loop_counter;
             loop_counter++;
             if(loop_counter > max_loops)
             {
-                GTEST_COUT_qDB << "EXITING LOOP";
+				AMLMTEST_COUT << "EXITING LOOP";
                 break;
             }
         }
@@ -150,7 +155,7 @@ void ImportProjectJob::start()
     // Starting QtConcurrent::run().
     QFuture<void> f = QtConcurrent::run(d, &ImportProjectJobPrivate::import, nullptr /*d->m_folder*/);
     /// @note State appears to be Running|Started here.
-    GTEST_COUT_qDB << "Running import job, returned future state:" << state(f);
+//    AMLMTEST_COUT << "Running import job, returned future state:" << state(f);
     d->m_watcher->setFuture(f);
 }
 
@@ -230,7 +235,7 @@ public:
         return retval;
     }
 
-    TestAMLMJob1* asDerivedTypePtr() override { return this; }
+//    TestAMLMJob1* asDerivedTypePtr() override { return this; }
 
     std::atomic_int m_counter {0};
 
@@ -243,13 +248,13 @@ protected:
         // Do some work...
         for(int i = 0; i<10; i++)
         {
-            GTEST_COUT_qDB << "Sleeping for 1 second\n";
+			AMLMTEST_COUT << "Sleeping for 1 second\n";
             TC_Sleep(1000);
 
-            GTEST_COUT_qDB << "Incementing counter\n";
+			AMLMTEST_COUT << "Incementing counter\n";
             m_counter++;
 
-            GTEST_COUT_qDB << "Reporting counter result\n";
+			AMLMTEST_COUT << "Reporting counter result\n";
             m_ext_future.reportResult(m_counter);
 
             if(functorHandlePauseResumeAndCancel())
@@ -266,7 +271,7 @@ protected:
 
         m_ext_future.reportFinished();
 
-        GTEST_COUT_qDB << "Returning, m_ext_future:" << m_ext_future;
+		AMLMTEST_COUT << "Returning, m_ext_future:" << m_ext_future;
     }
 };
 
@@ -287,31 +292,38 @@ TEST_F(AMLMJobTests, ThisShouldPass)
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, IPJSynchronousExec)
+TEST_P(AMLMJobTestsParameterized, ImportProjectJobSyncExecPAutoDelete)
 {
     TC_ENTER();
 
+	//    QFETCH(bool, autodelete);
+	bool autodelete = GetParam();
+	AMLMTEST_COUT << "Autodelete?:" << autodelete;
+
     auto j = new ImportProjectJob(nullptr, nullptr);
+	j->setAutoDelete(autodelete);
 
-    QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    EXPECT_TRUE(kjob_finished_spy.isValid());
-    QSignalSpy kjob_result_spy(j, &KJob::result);
-    EXPECT_TRUE(kjob_result_spy.isValid());
-    QSignalSpy kjob_destroyed_spy(j, &QObject::destroyed);
+	M_QSIGNALSPIES_SET(j);
 
+	// Run the job, should block.
     bool status = j->exec();
-
-    // j has probably deleted itself here.
 
     EXPECT_EQ(status, true);
 
-    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
-    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+	AMLMTEST_COUT << "FINISHED CT:" << kjob_finished_spy.count();
+	AMLMTEST_COUT << "RESULT CT:" << kjob_result_spy.count();
 
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
 
-    EXPECT_TRUE(kjob_destroyed_spy.wait());
+	if(!autodelete)
+	{
+		// Not autodelete.
+		j->deleteLater();
+	}
+
+	// Wait for the delete to happen.
+	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
 
     TC_EXIT();
 }
@@ -323,7 +335,7 @@ TEST_P(AMLMJobTestsParameterized, SynchronousExecTestAMLMJob1PAutoDelete)
     //    QFETCH(bool, autodelete);
     bool autodelete = GetParam();
 
-    GTEST_COUT_qDB << "Autodelete?:" << autodelete;
+	AMLMTEST_COUT << "Autodelete?:" << autodelete;
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
     j->setAutoDelete(autodelete);
@@ -334,8 +346,8 @@ TEST_P(AMLMJobTestsParameterized, SynchronousExecTestAMLMJob1PAutoDelete)
 
     EXPECT_EQ(status, true);
 
-    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
-    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+	AMLMTEST_COUT << "FINISHED CT:" << kjob_finished_spy.count();
+	AMLMTEST_COUT << "RESULT CT:" << kjob_result_spy.count();
 
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
@@ -359,7 +371,7 @@ TEST_P(AMLMJobTestsParameterized, AsynchronousExecTestAMLMJob1PAutoDelete)
     //    QFETCH(bool, autodelete);
     bool autodelete = GetParam();
 
-    GTEST_COUT_qDB << "Autodelete?:" << autodelete;
+	AMLMTEST_COUT << "Autodelete?:" << autodelete;
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(amlmApp);
     j->setAutoDelete(autodelete);
@@ -373,10 +385,8 @@ TEST_P(AMLMJobTestsParameterized, AsynchronousExecTestAMLMJob1PAutoDelete)
     EXPECT_TRUE(kjob_finished_spy.wait());
 //    EXPECT_TRUE(kjob_result_spy.wait());
 
-//    EXPECT_EQ(status, true);
-
-    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
-    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+	AMLMTEST_COUT << "FINISHED CT:" << kjob_finished_spy.count();
+	AMLMTEST_COUT << "RESULT CT:" << kjob_result_spy.count();
 
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
@@ -397,25 +407,21 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest)
 {
     TC_ENTER();
 
-    QObject* ctx = new QObject(qApp);
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(qApp);
     j->setAutoDelete(false);
 
-    QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    EXPECT_TRUE(kjob_finished_spy.isValid());
-    QSignalSpy kjob_result_spy(j, &KJob::result);
-    EXPECT_TRUE(kjob_result_spy.isValid());
+	M_QSIGNALSPIES_SET(j);
 
-    j->then(ctx, [=](TestAMLMJob1* j_kjob) -> void {
+	j->then(qApp, [=](TestAMLMJob1* j_kjob) -> void {
         if(j->error())
         {
             // Error.
-            GTEST_COUT << "ASYNC JOB FAILED:\r\n"; // << j_kjob->error() << ":" << j_kjob->errorText() << ":" << j_kjob->errorString();
+			AMLMTEST_COUT << "ASYNC JOB FAILED:\r\n"; // << j_kjob->error() << ":" << j_kjob->errorText() << ":" << j_kjob->errorString();
         }
         else
         {
-            // Succeeded, update the model.
-            GTEST_COUT << "ASYNC JOB COMPLETE:\r\n";// << j_kjob;
+			// Succeeded, get the data.
+			AMLMTEST_COUT << "ASYNC JOB COMPLETE:\r\n";// << j_kjob;
             int new_val = j_kjob->get_extfuture().qtget_first();
         }
     });
@@ -429,7 +435,7 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest)
 //    }
     j->get_extfuture().waitForFinished();
 
-    GTEST_COUT << "JOB EXTFUTURE:" << j->get_extfuture().state() << "\n";
+	AMLMTEST_COUT << "JOB EXTFUTURE:" << j->get_extfuture().state() << "\n";
     QList<int> extf_int = j->get_extfuture().get();
 
     EXPECT_EQ(extf_int.size(), 10);
@@ -441,8 +447,6 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest)
 TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
 {
     TC_ENTER();
-
-    std::atomic_bool got_job_destroyed_signal {false};
 
 //    QFETCH(bool, autodelete);
     bool autodelete = GetParam();
@@ -459,24 +463,20 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
     ASSERT_TRUE(dsj->isAutoDelete());
 
     // Set autodelete or not.
-    GTEST_COUT_qDB << "Setting Autodelete to:" << autodelete;
+	AMLMTEST_COUT << "Setting Autodelete to:" << autodelete;
     dsj->setAutoDelete(autodelete);
 
     // Connect signals and slots.
     connect_or_die(dsj, &DirectoryScannerAMLMJob::finished, qApp, [=](KJob* kjob){
-        GTEST_COUT_qDB << "GOT FINISHED";
+		AMLMTEST_COUT << "GOT FINISHED";
         EXPECT_EQ(kjob, dsj);
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
         ;});
     connect_or_die(dsj, &DirectoryScannerAMLMJob::result, qApp, [=](KJob* kjob){
-        GTEST_COUT_qDB << "GOT RESULT";
+		AMLMTEST_COUT << "GOT RESULT";
         EXPECT_EQ(kjob, dsj);
         EXPECT_EQ(kjob->error(), KJob::KilledJobError);
         ;});
-    connect_or_die(dsj, &QObject::destroyed, qApp, [&](QObject* obj){
-        GTEST_COUT_qDB << "GOT DESTROYED SIGNAL:" << obj;
-        got_job_destroyed_signal = true;
-    });
 
     // Dump some info.
     dsj->dumpObjectInfo();
@@ -495,8 +495,8 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
     // We make sure it was a cancel in the result handler above.
     EXPECT_TRUE(kjob_finished_spy.wait());
 
-    GTEST_COUT_qDB << "FINISHED CT:" << kjob_finished_spy.count();
-    GTEST_COUT_qDB << "RESULT CT:" << kjob_result_spy.count();
+	AMLMTEST_COUT << "FINISHED CT:" << kjob_finished_spy.count();
+	AMLMTEST_COUT << "RESULT CT:" << kjob_result_spy.count();
 
 //    EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 1);
@@ -507,28 +507,29 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
     }
 
     // Wait for the (auto-)delete to happen.
-    GTEST_COUT_qDB << "Waiting for destroyed signal";
-    TC_Wait(100);
-//    M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
-    EXPECT_TRUE(got_job_destroyed_signal);
-//    bool didnt_time_out = kjob_destroyed_spy.wait();
-    GTEST_COUT_qDB << "Done Waiting for destroyed signal";
-//    EXPECT_TRUE(didnt_time_out);
+	/// @note We have to pump the event loop (with TC_Wait() here) for a little while
+	/// to give the deleteLater() event-loop cycles to happen.  QSignalSpy() is broken
+	/// in this case for some reason, don't have the link handy.
+	AMLMTEST_COUT << "Waiting for destroyed signal...";
+//    TC_Wait(100);
+	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+	AMLMTEST_COUT << "Done Waiting for destroyed signal.";
 
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, CancelTest)
+TEST_P(AMLMJobTestsParameterized, CancelTestPAutoDelete)
 {
     TC_ENTER();
 
-    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
-    j->setAutoDelete(false);
+	//    QFETCH(bool, autodelete);
+	bool autodelete = GetParam();
 
-    QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    EXPECT_TRUE(kjob_finished_spy.isValid());
-    QSignalSpy kjob_result_spy(j, &KJob::result);
-    EXPECT_TRUE(kjob_result_spy.isValid());
+    TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
+
+	M_QSIGNALSPIES_SET(j);
+
+	j->setAutoDelete(autodelete);
 
     connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
@@ -537,7 +538,7 @@ TEST_F(AMLMJobTests, CancelTest)
     ExtFuture<int> ef = j->get_extfuture();
 
     // Start the job.
-    GTEST_COUT << "START\n";
+	AMLMTEST_COUT << "START\n";
     j->start();
 
     EXPECT_TRUE(ef.isStarted()) << ef.state();
@@ -554,10 +555,10 @@ TEST_F(AMLMJobTests, CancelTest)
     EXPECT_FALSE(ef.isFinished()) << ef;
 
     // Cancel the running job.
-    GTEST_COUT << "CANCELING JOB\n";
+	AMLMTEST_COUT << "CANCELING JOB\n";
     bool kill_succeeded = j->kill(KJob::KillVerbosity::Quietly);
 
-    // j is now probably going to be deleteLater()'ed.
+	/// @todo j is now going to be deleteLater()'ed if it's autoDelete.
 
     EXPECT_TRUE(kill_succeeded) << ef.state();
     EXPECT_TRUE(ef.isCanceled()) << ef.state();
@@ -568,6 +569,13 @@ TEST_F(AMLMJobTests, CancelTest)
     EXPECT_TRUE(kjob_finished_spy.wait());
     EXPECT_FALSE(kjob_result_spy.wait(500));
 
+	if(!autodelete)
+	{
+		j->deleteLater();
+	}
+
+	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+
     TC_EXIT();
 }
 
@@ -575,19 +583,16 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
 {
     TC_ENTER();
 
-    RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
+//    RecordProperty("amlmtestproperty", "Test of the RecordProperty() system");
 
     TestAMLMJob1Ptr j = TestAMLMJob1::make_job(nullptr);
-//    j->setAutoDelete(false);
+	j->setAutoDelete(true);
 
-    QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    EXPECT_TRUE(kjob_finished_spy.isValid());
-    QSignalSpy kjob_result_spy(j, &KJob::result);
-    EXPECT_TRUE(kjob_result_spy.isValid());
+	M_QSIGNALSPIES_SET(j);
 
-    connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
-        qDb() << "GOT SIGNAL FINISHED:" << kjob;
-                });
+//	connect_or_die(j, &KJob::finished, amlmApp, [&](KJob* kjob){
+//		qDb() << "GOT SIGNAL FINISHED:" << &kjob;
+//                });
 
     ExtFuture<int> ef = j->get_extfuture();
 
@@ -595,14 +600,16 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
 //    EXPECT_FALSE(ef.isRunning()) << ef.state();
 
     // Job hasn't started yet (we never called start()), kill it.
+	AMLMTEST_COUT << "CANCELING JOB";
     bool kill_succeeded = j->kill();
+	AMLMTEST_COUT << "kill() returned";
 
     // j is now probably going to be deleteLater()'ed.
 
-    EXPECT_TRUE(kill_succeeded) << ef;
+	EXPECT_TRUE(kill_succeeded);// << ef;
     /// @note No notification to the Future since no watcher has been set up yet.
 //    EXPECT_TRUE(ef.isCanceled()) << ef;
-    EXPECT_EQ(j->error(), KJob::KilledJobError);
+//    EXPECT_EQ(j->error(), KJob::KilledJobError);
 
 //    j->start();
 
@@ -617,10 +624,18 @@ TEST_F(AMLMJobTests, CancelBeforeStart)
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 0);
 
+	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
+//	{
+//		auto didnt_timeout = QTest::qWaitFor([&]() { return got_job_destroyed_signal.load(); }, 5000);
+//		EXPECT_TRUE(got_job_destroyed_signal.load());
+//		EXPECT_TRUE(didnt_timeout);
+
+//	}
+
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, IPJCancelBeforeStart)
+TEST_F(AMLMJobTests, ImportProjectJobCancelBeforeStart)
 {
     TC_ENTER();
 
@@ -628,17 +643,11 @@ TEST_F(AMLMJobTests, IPJCancelBeforeStart)
 
 //    j->setAutoDelete(false);
 
-    QSignalSpy kjob_finished_spy(j, &KJob::finished);
-    EXPECT_TRUE(kjob_finished_spy.isValid());
-    QSignalSpy kjob_result_spy(j, &KJob::result);
-    EXPECT_TRUE(kjob_result_spy.isValid());
-//    QSignalSpy kjob_destroyed_spy(j, &QObject::destroyed);
-    connect_or_die(j, &KJob::finished, qApp, [&](KJob* kjob){
+	M_QSIGNALSPIES_SET(j);
+
+	connect_or_die(j, &KJob::finished, amlmApp, [&](KJob* kjob){
         qDb() << "GOT SIGNAL FINISHED:" << kjob;
                 });
-
-    // No watcher to get a future from.
-//    /*ExtFuture<int>&*/ const QFuture<void>& ef = j->get_extfuture_ref();
 
 //    EXPECT_TRUE(ef.isStarted()) << state(ef);
 //    EXPECT_FALSE(ef.isRunning()) << state(ef);
@@ -664,6 +673,8 @@ TEST_F(AMLMJobTests, IPJCancelBeforeStart)
     // Won't get a result() signal here because it's kill()'ed Quietly.
     EXPECT_EQ(kjob_finished_spy.count(), 1);
     EXPECT_EQ(kjob_result_spy.count(), 0);
+
+	M_QSIGNALSPIES_EXPECT_IF_DESTROY_TIMEOUT();
 
     TC_EXIT();
 }
