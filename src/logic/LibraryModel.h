@@ -32,6 +32,8 @@
 
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 
+#include <concurrency/ThreadsafeMap.h>
+
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
@@ -253,7 +255,8 @@ private:
 	/// Icons for various entry states.
 	QVariant m_IconError, m_IconOk, m_IconUnknown;
 
-    mutable std::map<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
+//    mutable std::map<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
+	mutable ThreadsafeMap<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
 };
 
 Q_DECLARE_METATYPE(LibraryModel*)

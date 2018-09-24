@@ -59,9 +59,9 @@ void MimeTypeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
     // Get the mime type icon and set it in the copy of the QStyleOptionViewItem.
     opt.icon = Theme::iconFromTheme(mime_type);
 
-    qDbo() << M_NAME_VAL(option.decorationSize);
-    qDbo() << M_NAME_VAL(option.decorationPosition);
-    qDbo() << M_NAME_VAL(option.showDecorationSelected);
+//    qDbo() << M_NAME_VAL(option.decorationSize);
+//    qDbo() << M_NAME_VAL(option.decorationPosition);
+//    qDbo() << M_NAME_VAL(option.showDecorationSelected);
 
     auto qstyle = AMLMApp::style();
 

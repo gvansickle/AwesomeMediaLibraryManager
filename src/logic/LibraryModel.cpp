@@ -306,8 +306,9 @@ M_WARNING("TODO Probably should be refactored.");
         else
 		{
 			// Entry hasn't been populated yet.
-            auto pending_asyn_req = m_pending_async_item_loads.find(item);
-            if(pending_asyn_req != m_pending_async_item_loads.cend())
+//            auto pending_asyn_req = m_pending_async_item_loads.find(item);
+//            if(pending_asyn_req != m_pending_async_item_loads.cend())
+			if(m_pending_async_item_loads.contains(item))
             {
                 // Already an outstanding request.
                 qDbo() << "Async load already pending for item:" << item;
@@ -319,21 +320,22 @@ M_WARNING("TODO Probably should be refactored.");
                 qDb() << "STARTING ASYNC LOAD";
 #if 0
 				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
-				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, QPersistentModelIndex(index), item);
-				future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result){
+				LibraryEntryLoaderJob* dummy = nullptr;
+				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
+				m_pending_async_item_loads.insert(item, dummy);
+				future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result) {
 					LibraryEntryLoaderJobResult new_vals = result.result();
 					run_in_event_loop(qApp, [&](){
 						AMLM_ASSERT_IN_GUITHREAD();
 						Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
-//						m_pending_async_item_loads.erase(item);
+						m_pending_async_item_loads.remove(item);
 						return true;});
 					return true;
 					;}
-							);
-//				m_pending_async_item_loads[item];
+				);
 #else
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
-                m_pending_async_item_loads[item] = load_entry_job;
+				m_pending_async_item_loads.insert(item, load_entry_job);
                 load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
                 	AMLM_ASSERT_IN_GUITHREAD();
                     if(loader_kjob->error())
@@ -365,7 +367,7 @@ M_WARNING("TODO Probably should be refactored.");
                             LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture().get()[0];
                             Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
                         }
-                        m_pending_async_item_loads.erase(item);
+						m_pending_async_item_loads.remove(item);
                     }
                 });
                 load_entry_job->start();
