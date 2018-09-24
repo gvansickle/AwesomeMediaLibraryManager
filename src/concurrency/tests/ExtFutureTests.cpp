@@ -67,7 +67,7 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
     TC_ENTER();
 
-	AMLMTEST_SCOPED_TRACE("");
+	AMLMTEST_SCOPED_TRACE("In ReadyFutureCompletion");
 
     /// @note Important safety tip: nL and nLL are different sizes on Windows vs. Linux.
     /// <cstdint> to the rescue.

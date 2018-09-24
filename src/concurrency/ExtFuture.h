@@ -68,33 +68,6 @@ class ExtAsyncCancelException : public QException
 #include "ExtAsync_traits.h"
 
 /**
- * Interface for extended status reporting through ExtFutures.
- * Unbelievable PITA.
- * https://stackoverflow.com/questions/39186348/connection-of-pure-virtual-signal-of-interface-class?rq=1
- * https://stackoverflow.com/questions/17943496/declare-abstract-signal-in-interface-class?noredirect=1&lq=1
- */
-//class IExtFutureExtendedStatusReporting
-//{
-//public:
-//	virtual ~IExtFutureExtendedStatusReporting() = default;
-
-////Q_SIGNALS:
-////	virtual void SIGNAL_resultsReadyAt(int begin, int end) = 0;
-
-//	// KJob-inspired status signals.
-//	virtual void setProgressUnit(int prog_unit) = 0;
-//	virtual void setProcessedAmountAndSize(int unit, qulonglong amount) = 0;
-//	virtual void setTotalAmountAndSize(int unit, qulonglong amount) = 0;
-
-
-//	// QObject signals.
-////	virtual void destroyed(QObject* obj) = 0;
-//};
-//Q_DECLARE_INTERFACE(IExtFutureExtendedStatusReporting, "IExtFutureExtendedStatusReporting")
-
-
-
-/**
  * A std::shared_future<>-like class implemented on top of Qt5's QFutureInterface<T> class and other facilities.
  *
  * Actually more like a combined promise and future.
@@ -190,13 +163,15 @@ public:
 	 * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
 	 *        if it isn't both Started and Running.
 	 */
-//	ExtFuture() : QFuture<T>() {}
+#if 0
+	ExtFuture() : QFuture<T>() {}
+#else
 	ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
 																							  | QFutureInterfaceBase::State::Running))
 		: QFuture<T>(new QFutureInterface<T>(initialState)),
 		  m_progress_unit(0 /*KJob::Unit::Bytes*/)
 	{}
-
+#endif
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)),
 			m_progress_unit(other.m_progress_unit)
@@ -284,6 +259,7 @@ public:
 		if(this != &other)
 		{
 			this->BASE_CLASS::operator=(other);
+			this->m_progress_unit = other.m_progress_unit;
 		}
 		return *this;
 	}
@@ -381,6 +357,13 @@ public:
 
 	void reportStarted()
 	{
+		/**
+		 * RunFunctionTaskBase does this on start() (this derived from QFutureInterface<T>):
+		 * this->reportStarted();
+         * QFuture<T> theFuture = this->future();
+         * pool->start(this, //m_priority// 0);
+         * return theFuture;
+		 */
 		this->d.reportStarted();
 	}
 
@@ -389,6 +372,10 @@ public:
 		this->d.reportCanceled();
 	}
 
+	/**
+	 * @note Does nothing if state is Canceled|Finished.
+	 * @param e
+	 */
 	void reportException(const QException &e)
 	{
 		this->d.reportException(e);
