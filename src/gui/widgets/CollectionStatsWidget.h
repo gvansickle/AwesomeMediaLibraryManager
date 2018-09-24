@@ -55,6 +55,9 @@ protected:
     QPointer<LibraryModel> m_sources_model;
 
     ModelChangeWatcher* m_sources_model_watcher { nullptr };
+
+    QSortFilterProxyModel* m_summary_model { nullptr };
+
 };
 
 #endif // COLLECTIONSTATSWIDGET_H

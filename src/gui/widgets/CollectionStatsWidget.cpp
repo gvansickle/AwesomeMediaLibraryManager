@@ -35,6 +35,7 @@ CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
     m_widget_text->setReadOnly(true);
     m_widget_text->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_sources_model_watcher = new ModelChangeWatcher(this);
+    m_summary_model = new QSortFilterProxyModel(this);
 
 	layout->addWidget(m_widget_text);
 	setLayout(layout);
@@ -54,6 +55,7 @@ void CollectionStatsWidget::setModel(QPointer<LibraryModel> model)
 {
     m_sources_model = model;
     m_sources_model_watcher->setModelToWatch(m_sources_model);
+    m_summary_model->setSourceModel(model);
 }
 
 void CollectionStatsWidget::SLOT_modelChanged()
