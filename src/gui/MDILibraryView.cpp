@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gui/delegates/ItemDelegateLength.h>
 #include "MDILibraryView.h"
 
 // Qt5
@@ -28,7 +29,6 @@
 #include <QContextMenuEvent>
 
 // Ours
-#include "ItemDelegateLength.h"
 #include <gui/MDIPlaylistView.h>
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>

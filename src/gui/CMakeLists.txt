@@ -23,7 +23,6 @@ set(gui_HEADER_FILES
 	CollectionDockWidget.h
 	Experimental.h
 	FilterWidget.h
-	ItemDelegateLength.h
 	MainWindow.h
 	MDIArea.h
 	MDILibraryView.h
@@ -45,6 +44,7 @@ set(gui_HEADER_FILES
 	actions/ActionHelpers.h
 	actions/StandardActions.h
 	Theme.h
+	delegates/ItemDelegateLength.h
 	delegates/MimeTypeDelegate.h
 	)
 
@@ -54,7 +54,6 @@ set(gui_SOURCE_FILES
 	CollectionDockWidget.cpp
 	Experimental.cpp
 	FilterWidget.cpp
-	ItemDelegateLength.cpp
 	MainWindow.cpp
 	MDIArea.cpp
 	MDILibraryView.cpp
@@ -77,6 +76,7 @@ set(gui_SOURCE_FILES
 	helpers/Gtk3DialogHelper.cpp
 	actions/StandardActions.cpp
 	Theme.cpp
+	delegates/ItemDelegateLength.cpp
 	delegates/MimeTypeDelegate.cpp
 	)
 
