@@ -17,12 +17,12 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_library(logic_subdir STATIC
+add_library(models_subdir STATIC
 	EXCLUDE_FROM_ALL
-	PerfectDeleter.cpp
-	PerfectDeleter.h
+	AbstractModelRelation.h
+	AbstractModelRelation.cpp
 	)
-target_link_libraries(logic_subdir
+target_link_libraries(models_subdir
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -31,12 +31,8 @@ target_link_libraries(logic_subdir
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 )
-target_include_directories(logic_subdir
+target_include_directories(models_subdir
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
 	)
-
-add_subdirectory(models EXCLUDE_FROM_ALL)
-
-	
