@@ -67,9 +67,12 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 void Logging::SetFilterRules()
 {
 	// Allow us to see qDebug() messages, except for mouse movement.
-	QLoggingCategory::setFilterRules("*.debug=true\n"
-									 "qt.qpa.input*.debug=false\n"
-									 "qt.*=false\n");
+	QLoggingCategory::setFilterRules(
+			"*.debug=true\n"
+			"qt.qpa.input*.debug=false\n"
+			"qt.*=false\n"
+			"qt.core.qabstractitemmodel.checkindex=true\n"
+			);
 }
 
 void Logging::InstallMessageHandler()
