@@ -21,6 +21,8 @@ add_library(models_subdir STATIC
 	EXCLUDE_FROM_ALL
 	AbstractModelRelation.h
 	AbstractModelRelation.cpp
+	ScanResultsTreeModelItem.h
+	ScanResultsTreeModelItem.cpp
 	)
 target_link_libraries(models_subdir
 	PUBLIC
