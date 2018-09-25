@@ -98,7 +98,7 @@ LibraryEntryLoaderJob::~LibraryEntryLoaderJob()
 void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext_future, LibraryEntryLoaderJob* kjob,
 									  QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
-	qDb() << "START LibraryEntryLoaderJob RUNFUNCTOR" << pmi << libentry;
+	qDb() << "START LibraryEntryLoaderJob LoadEntry" << pmi << libentry;
 
 	LibraryEntryLoaderJobResult retval(pmi, libentry);
 

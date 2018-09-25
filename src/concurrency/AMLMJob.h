@@ -166,7 +166,7 @@ Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public IExtFutureWatcher/*, public IExtFutureExtendedStatusReporting*/, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
@@ -936,7 +936,7 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
         // Try to detect that we've survived at least to this point.
         Q_ASSERT(!m_i_was_deleted);
 
-        if(isAutoDelete())
+		if(this->isAutoDelete())
         {
             /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
             qWr() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";

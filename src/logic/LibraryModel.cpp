@@ -320,7 +320,7 @@ M_WARNING("TODO Probably should be refactored.");
                 // Start an async job to read the data for this entry.
 
                 qDb() << "STARTING ASYNC LOAD";
-#if 0
+#if 1
 				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
 				LibraryEntryLoaderJob* dummy = nullptr;
 				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);

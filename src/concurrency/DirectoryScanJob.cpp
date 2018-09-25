@@ -95,7 +95,6 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 	}
 
 	// Count progress in terms of files found.
-	/// @todo This kills the description below.
 	ext_future.setProgressUnit(KJob::Unit::Files);
 
 
@@ -138,7 +137,6 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 //            setTotalAmountAndSize(KJob::Unit::Directories, num_discovered_dirs+1);
 //            setProcessedAmountAndSize(KJob::Unit::Directories, num_discovered_dirs);
 //            setTotalAmountAndSize(KJob::Unit::Files, num_possible_files+1);
-			/// NEW
 			ext_future.setProgressRange(0, num_possible_files+1);
 		}
 		else if(file_info.isFile())
