@@ -210,6 +210,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         }
 
 //        tree_model->appendItems(new_items);
+
+        // Append entries to the ScanResultsTreemodel.
         tree_model->appendItems(new_items);
 
 		;});

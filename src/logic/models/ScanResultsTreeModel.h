@@ -22,14 +22,25 @@
 
 #include "AbstractTreeModel.h"
 
+#include <QUrl>
+
 class ScanResultsTreeModel : public AbstractTreeModel
 {
     using BASE_CLASS = AbstractTreeModel;
+
+	Q_OBJECT
 
 public:
     ScanResultsTreeModel(const QStringList &headers, const QString &data,
                          QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
+
+	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
+	virtual bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
+
+protected:
+
+    QUrl m_base_directory;
 };
 
 #endif // SCANRESULTSTREEMODEL_H

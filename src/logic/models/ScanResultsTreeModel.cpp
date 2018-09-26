@@ -23,3 +23,8 @@ ScanResultsTreeModel::ScanResultsTreeModel(const QStringList &headers, const QSt
 {
 
 }
+
+bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex& parent)
+{
+	return BASE_CLASS::appendItems(new_items, parent);
+}
