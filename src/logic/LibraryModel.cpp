@@ -308,30 +308,37 @@ M_WARNING("TODO Probably should be refactored.");
         else
 		{
 			// Entry hasn't been populated yet.
+			// Get a QPMI so we can keep track of outstanding requests for it.
+			// We track by rows, so we want the index of column 0.
+			QPersistentModelIndex qpmi (index.siblingAtColumn(0));
+			Q_ASSERT(qpmi.isValid());
 //            auto pending_asyn_req = m_pending_async_item_loads.find(item);
 //            if(pending_asyn_req != m_pending_async_item_loads.cend())
-			if(m_pending_async_item_loads.contains(item))
+			if(m_pending_async_item_loads.contains(qpmi))
             {
-                // Already an outstanding request.
-                qDbo() << "Async load already pending for item:" << item;
+				// There's already an outstanding request, nothing to do but wait.
+				qDbo() << "Async load already pending for item:" << qpmi;
             }
-			else// if(0)
+			else
             {
                 // Start an async job to read the data for this entry.
 
-                qDb() << "STARTING ASYNC LOAD";
+				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
 #if 1
 				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
 				LibraryEntryLoaderJob* dummy = nullptr;
+				// Register that we're doing this, so another async load for this same item doesn't get triggered.
+				m_pending_async_item_loads.insert(qpmi, true);
 				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
-				m_pending_async_item_loads.insert(item, dummy);
-				future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result) {
-					LibraryEntryLoaderJobResult new_vals = result.result();
-					run_in_event_loop(qApp, [&](){
+				future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
+					Q_ASSERT(result_future.isFinished());
+//					qDbo() << "IN THEN CALLBACK:" << result_future;
+					LibraryEntryLoaderJobResult new_vals = result_future.result();
+					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
+					run_in_event_loop(qApp, [=]() -> void {
 						AMLM_ASSERT_IN_GUITHREAD();
-						Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
-						m_pending_async_item_loads.remove(item);
-						return true;});
+						m_pending_async_item_loads.remove(qpmi);
+						});
 					return true;
 					;}
 				);

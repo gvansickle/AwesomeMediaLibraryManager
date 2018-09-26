@@ -596,7 +596,7 @@ public:
 	ExtFuture<R> then( F&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
-		return this->then(QApplication::instance(), std::forward<F>(then_callback));
+		return this->then(/*QApplication::instance()*/nullptr, std::forward<F>(then_callback));
 	}
 
 	/// @} // END .then() overloads.
@@ -850,7 +850,8 @@ protected:
 			{
 				// Wait for this future to finish.
 				// This could throw a propagated exceptions from upstream.
-				qDb() << "THEN: Waiting for upstream to finish";
+				qDb() << "THEN: Waiting for upstream" << thisfuture <<  "to finish";
+M_WARNING("NEVER FINISHING");
 				thisfuture.waitForFinished();
 				qDb() << "THEN: upstream finished";
 			}
@@ -898,6 +899,7 @@ protected:
 			}
 			else
 			{
+				qWr() << "RUNNING IN EVENT LOOP";
 				retval = run_in_event_loop(context, then_callback_copy);
 			}
 

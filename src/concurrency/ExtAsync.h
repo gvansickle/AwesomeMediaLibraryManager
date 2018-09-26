@@ -446,14 +446,24 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
 
 /// Above is pre-Qt5.10.  The below should be used from Qt5.10+.
 
-template <class CallableType, class ReturnType = ct::return_type_t<CallableType>>
-static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
+template <class CallableType,
+		  REQUIRES(std::is_invocable_r_v<void, CallableType>)>
+static void run_in_event_loop(QObject* context, CallableType&& callable)
 {
-	ReturnType return_value;
-	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
+	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable));
 	// Die if the function couldn't be invoked.
 	Q_ASSERT(retval == true);
-	return return_value;
 }
+
+//template <class CallableType, class ReturnType = std::invoke_result_t<CallableType>,
+//		  REQUIRES(std::is_invocable_r_v<ReturnType, CallableType>)>
+//static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
+//{
+//	ReturnType return_value;
+//	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
+//	// Die if the function couldn't be invoked.
+//	Q_ASSERT(retval == true);
+//	return return_value;
+//}
 
 #endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */

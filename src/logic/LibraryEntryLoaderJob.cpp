@@ -178,6 +178,7 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
     Q_ASSERT(retval.m_num_tracks_found > 0);
 
 	ext_future.reportResult(retval);
+	ext_future.reportFinished();
 }
 
 void LibraryEntryLoaderJob::runFunctor()

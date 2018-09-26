@@ -255,8 +255,9 @@ private:
 	/// Icons for various entry states.
 	QVariant m_IconError, m_IconOk, m_IconUnknown;
 
+	/// @name Data structures for managing the data loading process.
 //    mutable std::map<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
-	mutable ThreadsafeMap<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
+	mutable ThreadsafeMap<QPersistentModelIndex, bool> m_pending_async_item_loads;
 };
 
 Q_DECLARE_METATYPE(LibraryModel*)
