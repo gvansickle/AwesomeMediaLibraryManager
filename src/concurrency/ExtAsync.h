@@ -25,6 +25,8 @@
  * Qt5 analogs to std::async().
  */
 
+#pragma once
+
 #include <config.h>
 
 // Std C++

@@ -303,7 +303,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 }
 
 /// @todo Don't have the infrastructure for this to work yet.
-TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
+TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();
 
@@ -311,15 +311,17 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 
 	ExtFuture<int> main_future = async_int_generator<ExtFuture<int>>(1, 6, this);
 
-	ExtFuture<int> then_future = main_future.then([&](ExtFuture<int> in_future) {
-//			if(in_future.isCanceled())
-//			{
-//				//???
-//			}
-
+	ExtFuture<int> then_future = main_future.then([=](ExtFuture<int> in_future) {
+			if(in_future.isCanceled())
+			{
+				qDb() << "THEN: CANCELED, throwing";
+				throw ExtAsyncCancelException();
+			}
+		// Should be canceled before we get here.
+		AMLMTEST_EXPECT_FALSE(true);
 			/// @experimental
-			AMLMTEST_COUT << "Throwing Cancel exception";
-			throw ExtAsyncCancelException();
+//			AMLMTEST_COUT << "Throwing Cancel exception";
+//			throw ExtAsyncCancelException();
 
 			// Return the count of items from the future.
 			return in_future.resultCount();
@@ -333,9 +335,11 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenCancel)
 	AMLMTEST_COUT << "Starting then_future:" << then_future.state();
 
 	// Cancel the future returned by then().
+	TC_Sleep(1000);
+	AMLMTEST_COUT << "Canceling then_future:" << then_future;
 	then_future.cancel();
 
-	AMLMTEST_COUT << "Canceled then_future:" << then_future;
+	AMLMTEST_COUT << "Canceled then_future:" << then_future; ///< (Running|Started|Canceled)
 
 	ASSERT_TRUE(then_future.isStarted());
 	ASSERT_TRUE(then_future.isCanceled());

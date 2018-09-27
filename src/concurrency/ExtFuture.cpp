@@ -25,8 +25,11 @@
 #include "ExtFuture.h"
 
 /// @name Explicit instantiations to try to get compile times down.
+template class ExtFuture<Unit>;
+template class ExtFuture<bool>;
 template class ExtFuture<int>;
 template class ExtFuture<long>;
-template class ExtFuture<Unit>;
+template class ExtFuture<std::string>;
+template class ExtFuture<double>;
 template class ExtFuture<QString>;
 template class ExtFuture<QByteArray>;

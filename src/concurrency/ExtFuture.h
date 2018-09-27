@@ -25,6 +25,8 @@
  * An extended QFuture<T> class.
  */
 
+#pragma once
+
 // Std C++
 #include <memory>
 #include <type_traits>
@@ -34,7 +36,7 @@
 #include <future/future_type_traits.hpp>
 #include <future/function_traits.hpp>
 #include <future/cpp14_concepts.hpp>
-#include <future/deduced_type.hpp>
+//#include <future/deduced_type.hpp>
 #include <future/Unit.hpp>
 
 // Qt5
@@ -168,9 +170,7 @@ public:
 #else
 	ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
 																							  | QFutureInterfaceBase::State::Running))
-		: QFuture<T>(new QFutureInterface<T>(initialState)),
-		  m_progress_unit(0 /*KJob::Unit::Bytes*/)
-	{}
+		: QFuture<T>(new QFutureInterface<T>(initialState))	{}
 #endif
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)),
@@ -204,6 +204,7 @@ public:
 			  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
 	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
 	{
+		Q_UNUSED(other);
 		static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
 	}
 #else
@@ -565,14 +566,14 @@ public:
 	 *
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
-	template <typename F, typename R = ct::return_type_t<F>,
-			  REQUIRES(is_non_void_non_ExtFuture_v<R>
-			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)
-			  >
-	ExtFuture<R> then(QObject* context, F&& then_callback)
-	{
-		return this->ThenHelper(context, std::forward<F>(then_callback));
-	}
+//	template <typename F, typename R = ct::return_type_t<F>,
+//			  REQUIRES(is_non_void_non_ExtFuture_v<R>
+//			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)
+//			  >
+//	ExtFuture<R> then(QObject* context, F&& then_callback)
+//	{
+//		return this->ThenHelper(context, std::forward<F>(then_callback));
+//	}
 
 	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback,
@@ -590,7 +591,7 @@ public:
 	 * @param then_callback
 	 * @returns ExtFuture<R>
 	 */
-	template <class F, class R = ct::return_type_t<F>,
+	template <class F, class R = Unit::LiftT<ct::return_type_t<F>>,
 			REQUIRES(is_non_void_non_ExtFuture_v<R>
 			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
 	ExtFuture<R> then( F&& then_callback )
@@ -792,19 +793,20 @@ protected:
 
 
 	/**
-	 * ThenHelper which takes a then_callback which returns a non-ExtFuture<> result.
+	 * The then() implementation.
+	 * Takes a context object and a then_callback which returns a non-void-non-ExtFuture<> result.
 	 * If context == nullptr, then_callback will be run in an arbitrary thread.
 	 * If context points to a QObject, then_callback will be run in its event loop.
 	 */
 	template <typename F,
-			  typename R = std::invoke_result_t<F, ExtFuture<T>>,
+			  typename R = Unit::LiftT<std::invoke_result_t<F, ExtFuture<T>>>,
 			  REQUIRES(is_non_void_non_ExtFuture_v<R>
 			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
-	ExtFuture<R> ThenHelper(QObject* context, F&& then_callback)
+	ExtFuture<R> then(QObject* context, F&& then_callback)
 	{
 		if(context != nullptr)
 		{
-			// Make sure context has an event loop.
+			// If non-null, make sure context has an event loop.
 			QThread* ctx_thread = context->thread();
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
@@ -841,6 +843,8 @@ protected:
 		 */
 
 		ExtFuture<R> retfuture;
+
+		ThrowDownstreamCancelsUpstream(retfuture, *this);
 
 		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> thisfuture, ExtFuture<R> ret_future) {
 
@@ -1149,6 +1153,60 @@ M_WARNING("NEVER FINISHING");
 	}
 #endif
 
+	template <class ExtFutureR>
+	void ThrowDownstreamCancelsUpstream(ExtFutureR ret_future, ExtFuture<T> this_future)
+	{
+		using R = ExtFuture_inner_t<ExtFutureR>;
+		using WatcherType = QFutureWatcher<R>;
+		auto* the_watcher = new WatcherType();
+
+qDb() << "START ThrowDownstreamCancelsUpstream";
+
+		QObject::connect/*_or_die*/(the_watcher, &WatcherType::finished, [=]() mutable {
+			try
+			{
+				if(the_watcher->isCanceled())
+				{
+					// Note that it appears we must use a watcher here since we have no other obvious means
+					// by which to detect the cancellation of the downstream future, other than maybe calling
+					// another ExtAsync::run() with a specialized callback.  Maybe for another day.
+
+					// Per Simon Brunel, @link https://www.qpm.io/packages/com.github.simonbrunel.qtpromise/index.html
+					// "A QFuture is canceled if cancel() has been explicitly called OR if an
+					// exception has been thrown from the associated thread. Trying to call
+					// result() in the first case causes a "read access violation", [GRVS: is this still true?] so let's
+					// rethrown potential exceptions using waitForFinished() and thus detect
+					// if the future has been canceled by the user or an exception."
+qDb() << "Trying wait...";
+					the_watcher->waitForFinished();
+qDb() << "Finished waiting...";
+					// If we fall through here, we didn't automatically rethrow, so downstream must have
+					// had .cancel() called on it.  Throw a cancel exception upstream.
+					throw ExtAsyncCancelException();
+				}
+				else
+				{
+qDb() << "Not canceled...";
+					// Finished, not canceled.
+					/// @todo Do we even need to do anything in this case?
+				}
+
+			}
+			catch(...)
+			{
+				// reportException() here?
+				qCr() << "Rethrowing exception from" << ret_future << "to" << this_future;
+				throw;
+			}
+
+			the_watcher->deleteLater();
+
+			;});
+
+		the_watcher->setFuture(ret_future);
+qDb() << "END ThrowDownstreamCancelsUpstream";
+	}
+
 	/// @name Additional member variables on top of what QFuture<T> has.
 	/// These will cause us to need to worry about slicing, additional copy construction/assignment work
 	/// which needs to be synchronized somehow, etc etc.
@@ -1312,9 +1370,12 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 
 /// @name Explicit instantiations to try to get compile times down.
 /// @{
+extern template class ExtFuture<Unit>;
+extern template class ExtFuture<bool>;
 extern template class ExtFuture<int>;
 extern template class ExtFuture<long>;
-extern template class ExtFuture<Unit>;
+extern template class ExtFuture<std::string>;
+extern template class ExtFuture<double>;
 extern template class ExtFuture<QString>;
 extern template class ExtFuture<QByteArray>;
 /// @}
