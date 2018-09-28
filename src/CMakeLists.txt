@@ -26,6 +26,9 @@
 set(HEADER_FILES_THIRD_PARTY "")
 set(SOURCE_FILES_THIRD_PARTY "")
 
+# The continuable library.
+add_subdirectory(third_party/continuable)
+
 set(AMLM_LIBCUE_TARGET "")
 set(AMLM_TAGLIB_TARGET "")
 
@@ -100,6 +103,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
+		continuable
 		callable_traits
 		verdigris_target
 		logic_subdir
