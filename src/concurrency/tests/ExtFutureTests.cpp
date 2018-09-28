@@ -24,6 +24,7 @@
 #include <atomic>
 #include <functional>
 #include <cstdint>
+#include <string>
 
 // Future Std C++
 #include <future/future_type_traits.hpp>
@@ -36,17 +37,17 @@
 
 // Google Test
 #include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 
 // Ours
 #include <tests/TestHelpers.h>
 #include "ExtAsyncTestCommon.h"
+#include <tests/IResultsSequenceMock.h>
 
 #include "../ExtAsync.h"
-
 #include "../ExtFuture.h"
-//extern template class ExtFuture<int>;
 
+#include <continuable/continuable.hpp>
 
 /// Types for gtest's "Typed Test" support.
 using FutureIntTypes = ::testing::Types<QFuture<int>, ExtFuture<int>>;
@@ -55,6 +56,33 @@ TYPED_TEST_CASE(ExtFutureTypedTestFixture, FutureIntTypes);
 //
 // TESTS
 //
+auto http_request(std::string url) {
+  return cti::make_continuable<std::string>(
+	[url = std::move(url)](auto&& promise) {
+	  // Resolve the promise upon completion of the task.
+	  promise.set_value("<html> ... </html>");
+
+	  // Or promise.set_exception(...);
+	});
+}
+
+TEST_F(ExtFutureTest, ContinuableBasic)
+{
+	TC_ENTER();
+
+	http_request("github.com")
+	  .then([=] (std::string result) {
+		// Do something...
+		  AMLMTEST_COUT << "IN CONTINUABLE THEN:" << result;
+	  })
+			.then([=](){
+		AMLMTEST_COUT << "Sleeping";
+		TC_Sleep(1000);
+		AMLMTEST_COUT << "Not Sleeping";
+	});
+
+	TC_EXIT();
+}
 
 //TEST_F(ExtFutureTest, NestedQTestWrapper)
 //{
@@ -733,6 +761,124 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	EXPECT_EQ(async_results_from_then, expected_results);
 
 	ASSERT_TRUE(ef.isFinished());
+
+	TC_EXIT();
+}
+
+/// @todo EXPERIMENTAL
+// Specialize an action that synchronizes with the calling thread.
+// @link https://stackoverflow.com/questions/10767131/expecting-googlemock-calls-from-another-thread
+ACTION_P2(ReturnFromAsyncCall, RetVal, SemDone)
+{
+	SemDone->release();
+	return RetVal;
+}
+
+TEST_F(ExtFutureTest, ThenChain)
+{
+	TC_ENTER();
+
+	SCOPED_TRACE("ThenChain");
+
+	ResultsSequenceMock rsm;
+	QSemaphore semDone(0);
+
+	using ::testing::InSequence;
+	using ::testing::Return;
+	using ::testing::Eq;
+	using ::testing::ReturnArg;
+	using ::testing::_;
+//	Sequence s_outer, s_inner;
+
+	ON_CALL(rsm, ReportResult(_))
+			.WillByDefault(ReturnArg<0>());
+	{
+		InSequence s;
+
+		EXPECT_CALL(rsm, ReportResult(0))
+			.WillOnce(ReturnFromAsyncCall(0, &semDone));
+		EXPECT_CALL(rsm, ReportResult(1))
+			.WillOnce(ReturnFromAsyncCall(1, &semDone));
+		EXPECT_CALL(rsm, ReportResult(2))
+			.WillOnce(ReturnFromAsyncCall(2, &semDone));
+//			.With(Eq(2))
+//			.WillOnce(ReturnFromAsyncCall(2, &semDone))
+//			.RetiresOnSaturation();
+//	EXPECT_CALL(tlm, Checkpoint(2))
+//			.InSequence(s_outer, s_inner)
+//			.WillOnce(ReturnFromAsyncCall(2, &semDone));
+//	EXPECT_CALL(tlm, Checkpoint(3))
+//			.InSequence(s_inner)
+//			.WillOnce(ReturnFromAsyncCall(3, &semDone));
+	}
+
+
+//	bool ran_tap {false};
+//	bool ran_then {false};
+
+	using FutureType = ExtFuture<QString>;
+
+	AMLMTEST_COUT << "STARTING FUTURE";
+	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
+
+	ASSERT_TRUE(future.isStarted());
+	ASSERT_FALSE(future.isFinished());
+
+	AMLMTEST_COUT << "Future created:" << future;
+
+	rsm.ReportResult(0);
+
+	future.then([&rsm](FutureType in_future){
+			SCOPED_TRACE("In then 1");
+
+//			TC_EXPECT_THIS_TC();
+
+//			AMLMTEST_COUT << "in tap(), result:" << tostdstr(result);
+//			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
+//			ran_tap = true;
+//			EXPECT_FALSE(ran_then);
+			rsm.ReportResult(1);
+			return 1;
+		;})
+		.then([=, &rsm/*, &ran_tap, &ran_then*/](ExtFuture<int> in_future) {
+			SCOPED_TRACE("In then 2");
+
+			TC_EXPECT_THIS_TC();
+
+//			EXPECT_THAT(ran_tap, Eq(true));
+
+			EXPECT_TRUE(in_future.isStarted());
+			EXPECT_TRUE(in_future.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
+			EXPECT_FALSE(in_future.isRunning());
+
+//			AMLMTEST_COUT << "in then(), extfuture:" << tostdstr(extfuture.qtget_first());
+//			EXPECT_EQ(in_future.qtget_first(), QString("delayed_string_func_1() output"));
+//			EXPECT_FALSE(ran_then);
+//			ran_then = true;
+
+			rsm.ReportResult(2);
+
+			return QString("Then Called");
+	})/*.test_tap([&](auto ef){
+		AMLMTEST_COUT << "IN TEST_TAP";
+		wait_result = ef.result();
+		EXPECT_TRUE(wait_result[0] == QString("Then Called"));
+	})*/.wait();
+
+//    AMLMTEST_COUT << "after wait(): " << future.state().toString();
+//    ASSERT_EQ(wait_result, QString("Then Called"));
+
+//    future.wait();
+	EXPECT_TRUE(future.isStarted());
+	EXPECT_FALSE(future.isRunning());
+	EXPECT_TRUE(future.isFinished());
+
+//	EXPECT_TRUE(ran_tap);
+//	EXPECT_TRUE(ran_then);
+//	Q_ASSERT(ran_then);
+
+	bool acquired = semDone.tryAcquire(1, 1000);
+	EXPECT_TRUE(acquired);
 
 	TC_EXIT();
 }

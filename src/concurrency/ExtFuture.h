@@ -1157,26 +1157,26 @@ M_WARNING("NEVER FINISHING");
 	/**
 	 * Wait for either of the in or out futures to finish or throw.
 	 */
-	template <class ExtFutureR>
-	void wait_for_either(ExtFutureT in_fut, ExtFutureT out_fut)
-	{
-		// There's probably a much better way to do this, but....
+//	template <class ExtFutureR>
+//	void wait_for_either(ExtFutureT in_fut, ExtFutureT out_fut)
+//	{
+//		// There's probably a much better way to do this, but....
 
-		for(const auto& f : futures)
-		{
-			if(f.isFinished())
-			{
-				// Finished, add it to the finshed bin.
-				finished_futures.push_back(f);
-			}
-		}
+//		for(const auto& f : futures)
+//		{
+//			if(f.isFinished())
+//			{
+//				// Finished, add it to the finshed bin.
+//				finished_futures.push_back(f);
+//			}
+//		}
 
-		// Did we get any?
-		if(!finished_futures.empty())
-		{
-			return;
-		}
-	}
+//		// Did we get any?
+//		if(!finished_futures.empty())
+//		{
+//			return;
+//		}
+//	}
 
 	template <class ExtFutureR>
 	void ThrowDownstreamCancelsUpstream(ExtFutureR ret_future, ExtFuture<T> this_future)
@@ -1186,44 +1186,44 @@ M_WARNING("NEVER FINISHING");
 qDb() << "START ThrowDownstreamCancelsUpstream";
 
 		QFutureSynchronizer fut_sync(this_future);
-
-			try
+#warning "THIS IS BROKEN RIGHT NOW"
+		try
+		{
+			if(ret_future.isCanceled())
 			{
-				if(the_watcher->isCanceled())
-				{
-					// Note that it appears we must use a watcher here since we have no other obvious means
-					// by which to detect the cancellation of the downstream future, other than maybe calling
-					// another ExtAsync::run() with a specialized callback.  Maybe for another day.
+				// Note that it appears we must use a watcher here since we have no other obvious means
+				// by which to detect the cancellation of the downstream future, other than maybe calling
+				// another ExtAsync::run() with a specialized callback.  Maybe for another day.
 
-					// Per Simon Brunel, @link https://www.qpm.io/packages/com.github.simonbrunel.qtpromise/index.html
-					// "A QFuture is canceled if cancel() has been explicitly called OR if an
-					// exception has been thrown from the associated thread. Trying to call
-					// result() in the first case causes a "read access violation", [GRVS: is this still true?] so let's
-					// rethrown potential exceptions using waitForFinished() and thus detect
-					// if the future has been canceled by the user or an exception."
+				// Per Simon Brunel, @link https://www.qpm.io/packages/com.github.simonbrunel.qtpromise/index.html
+				// "A QFuture is canceled if cancel() has been explicitly called OR if an
+				// exception has been thrown from the associated thread. Trying to call
+				// result() in the first case causes a "read access violation", [GRVS: is this still true?] so let's
+				// rethrown potential exceptions using waitForFinished() and thus detect
+				// if the future has been canceled by the user or an exception."
 qDb() << "Trying wait...";
-					this->waitForFinished();
+				this->waitForFinished();
 qDb() << "Finished waiting...";
-					// If we fall through here, we didn't automatically rethrow, so downstream must have
-					// had .cancel() called on it.  Throw a cancel exception upstream.
-					throw ExtAsyncCancelException();
-				}
-				else
-				{
-qDb() << "Not canceled...";
-					// Finished, not canceled.
-					/// @todo Do we even need to do anything in this case?
-				}
-
+				// If we fall through here, we didn't automatically rethrow, so downstream must have
+				// had .cancel() called on it.  Throw a cancel exception upstream.
+				throw ExtAsyncCancelException();
 			}
-			catch(...)
+			else
 			{
-				// reportException() here?
-				qCr() << "Rethrowing exception from" << ret_future << "to" << this_future;
-				throw;
+qDb() << "Not canceled...";
+				// Finished, not canceled.
+				/// @todo Do we even need to do anything in this case?
 			}
 
-			;});
+		}
+		catch(...)
+		{
+			// reportException() here?
+			qCr() << "Rethrowing exception from" << ret_future << "to" << this_future;
+			throw;
+		}
+
+		//);
 qDb() << "END ThrowDownstreamCancelsUpstream";
 	}
 

@@ -26,11 +26,11 @@
 set(HEADER_FILES_THIRD_PARTY "")
 set(SOURCE_FILES_THIRD_PARTY "")
 
-# The continuable library.
-add_subdirectory(third_party/continuable)
-
 set(AMLM_LIBCUE_TARGET "")
 set(AMLM_TAGLIB_TARGET "")
+
+add_subdirectory(third_party)
+
 
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
@@ -58,9 +58,9 @@ endif()
 
 if(USE_BUNDLED_LIBCUE)
 	# Use the in-tree copy of libcue.
-	add_subdirectory("third_party"
-		EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
-		)
+#	add_subdirectory("third_party"
+#		EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
+#		)
 
 	set(AMLM_LIBCUE_TARGET "libcue")
 
@@ -103,7 +103,6 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
-		continuable
 		callable_traits
 		verdigris_target
 		logic_subdir

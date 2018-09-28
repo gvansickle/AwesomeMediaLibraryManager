@@ -94,7 +94,8 @@ find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a fe
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
 # Add dirs where we keep support *.cmake's, ucm, ECM, etc.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
+	${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
 
 ###
 ### ECM Macros
@@ -447,6 +448,8 @@ set(IDENTIFIER "io.github.gvansickle")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 	${boost_callable_traits_SOURCE_DIR}/include
+	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
+	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
