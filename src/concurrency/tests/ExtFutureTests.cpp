@@ -337,7 +337,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	// Cancel the future returned by then().
 	TC_Sleep(1000);
 	AMLMTEST_COUT << "Canceling then_future:" << then_future;
-	then_future.cancel();
+//	then_future.cancel();
+	then_future.reportCanceled();
 
 	AMLMTEST_COUT << "Canceled then_future:" << then_future; ///< (Running|Started|Canceled)
 
