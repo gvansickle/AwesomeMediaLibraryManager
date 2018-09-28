@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/Naios/continuable.git
+	branch = master
+	commit = 9247e7b85ffbc35eabcd5502a3da6acf0d5261ba
+	parent = 3e3c20632c741771a48a1dac8921582b0686bf2a
+	cmdver = 0.3.1
