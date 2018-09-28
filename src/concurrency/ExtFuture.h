@@ -842,21 +842,22 @@ protected:
     		}
 		 */
 
+		// The future we'll return.
 		ExtFuture<R> retfuture;
 
-		ThrowDownstreamCancelsUpstream(retfuture, *this);
+		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) {
 
-		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> thisfuture, ExtFuture<R> ret_future) {
+			qDb() << "PRE-THEN: START THEN RUN(), thisfuture:" << this_future.state() << "ret_future:" << ret_future.state();
 
-			qDb() << "PRE-THEN: START THEN RUN(), thisfuture:" << thisfuture.state() << "ret_future:" << ret_future.state();
+			ThrowDownstreamCancelsUpstream(ret_future, this_future);
 
 			try
 			{
 				// Wait for this future to finish.
 				// This could throw a propagated exceptions from upstream.
-				qDb() << "THEN: Waiting for upstream" << thisfuture <<  "to finish";
+				qDb() << "THEN: Waiting for upstream" << this_future <<  "to finish";
 M_WARNING("NEVER FINISHING");
-				thisfuture.waitForFinished();
+				this_future.waitForFinished();
 				qDb() << "THEN: upstream finished";
 			}
 			catch(ExtAsyncCancelException& e)
@@ -867,7 +868,7 @@ M_WARNING("NEVER FINISHING");
 				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
 				 *  state of the returned future object."
 				 */
-				qDb() << "PRE-THEN: upstream threw Cancel" << ExtFutureState::state(thisfuture);
+				qDb() << "PRE-THEN: upstream threw Cancel" << ExtFutureState::state(this_future);
 				ret_future.reportException(e);
 				// I think we don't want to rethrow like this here.  This will throw to the wrong future
 				// (the QtConcurrent::run() retval, see above.
@@ -875,12 +876,12 @@ M_WARNING("NEVER FINISHING");
 			}
 			catch(QException& e)
 			{
-				qDb() << "PRE-THEN: upstream threw QException" << ExtFutureState::state(thisfuture);
+				qDb() << "PRE-THEN: upstream threw QException" << ExtFutureState::state(this_future);
 				ret_future.reportException(e);
 			}
 			catch (...)
 			{
-				qDb() << "PRE-THEN: upstream threw unknown" << ExtFutureState::state(thisfuture);
+				qDb() << "PRE-THEN: upstream threw unknown" << ExtFutureState::state(this_future);
 				ret_future.reportException(QUnhandledException());
 			}
 
@@ -899,7 +900,7 @@ M_WARNING("NEVER FINISHING");
 			R retval;
 			if constexpr (true)//context == nullptr)
 			{
-				retval = std::invoke(then_callback_copy, thisfuture);
+				retval = std::invoke(then_callback_copy, this_future);
 			}
 			else
 			{
@@ -1153,16 +1154,39 @@ M_WARNING("NEVER FINISHING");
 	}
 #endif
 
+	/**
+	 * Wait for either of the in or out futures to finish or throw.
+	 */
+	template <class ExtFutureR>
+	void wait_for_either(ExtFutureT in_fut, ExtFutureT out_fut)
+	{
+		// There's probably a much better way to do this, but....
+
+		for(const auto& f : futures)
+		{
+			if(f.isFinished())
+			{
+				// Finished, add it to the finshed bin.
+				finished_futures.push_back(f);
+			}
+		}
+
+		// Did we get any?
+		if(!finished_futures.empty())
+		{
+			return;
+		}
+	}
+
 	template <class ExtFutureR>
 	void ThrowDownstreamCancelsUpstream(ExtFutureR ret_future, ExtFuture<T> this_future)
 	{
 		using R = ExtFuture_inner_t<ExtFutureR>;
-		using WatcherType = QFutureWatcher<R>;
-		auto* the_watcher = new WatcherType();
 
 qDb() << "START ThrowDownstreamCancelsUpstream";
 
-		QObject::connect/*_or_die*/(the_watcher, &WatcherType::finished, [=]() mutable {
+		QFutureSynchronizer fut_sync(this_future);
+
 			try
 			{
 				if(the_watcher->isCanceled())
@@ -1178,7 +1202,7 @@ qDb() << "START ThrowDownstreamCancelsUpstream";
 					// rethrown potential exceptions using waitForFinished() and thus detect
 					// if the future has been canceled by the user or an exception."
 qDb() << "Trying wait...";
-					the_watcher->waitForFinished();
+					this->waitForFinished();
 qDb() << "Finished waiting...";
 					// If we fall through here, we didn't automatically rethrow, so downstream must have
 					// had .cancel() called on it.  Throw a cancel exception upstream.
@@ -1199,11 +1223,7 @@ qDb() << "Not canceled...";
 				throw;
 			}
 
-			the_watcher->deleteLater();
-
 			;});
-
-		the_watcher->setFuture(ret_future);
 qDb() << "END ThrowDownstreamCancelsUpstream";
 	}
 

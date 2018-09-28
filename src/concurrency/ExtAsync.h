@@ -468,4 +468,11 @@ static void run_in_event_loop(QObject* context, CallableType&& callable)
 //	return return_value;
 //}
 
+namespace ExtAsync
+{
+
+//.....
+
+} // Namespace ExtAsync.
+
 #endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */
