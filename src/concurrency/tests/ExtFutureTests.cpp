@@ -320,10 +320,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 		caught_exception = true;
 	}
 
-
-	AMLMTEST_ASSERT_TRUE(main_future.isFinished());
-	AMLMTEST_ASSERT_TRUE(main_future.isStarted());
-	AMLMTEST_ASSERT_TRUE(main_future.isCanceled());
+	AMLMTEST_EXPECT_FUTURE_POST_EXCEPTION(main_future);
 
 	AMLMTEST_ASSERT_TRUE(caught_exception);
 
@@ -356,23 +353,21 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 			;});
 
 	AMLMTEST_COUT << "Started main_future:" << main_future.state();
-	ASSERT_TRUE(main_future.isStarted());
-	ASSERT_FALSE(main_future.isCanceled());
-	ASSERT_FALSE(main_future.isFinished());
+	AMLMTEST_EXPECT_FUTURE_STARTED(main_future);
+	AMLMTEST_COUT << "Started then_future:" << then_future.state();
+	AMLMTEST_EXPECT_FUTURE_STARTED(then_future);
 
-	AMLMTEST_COUT << "Starting then_future:" << then_future.state();
-
-	// Cancel the future returned by then().
+	// Wait a bit, then cancel the future returned by then().
 	TC_Sleep(1000);
-	AMLMTEST_COUT << "Canceling then_future:" << then_future;
-//	then_future.cancel();
-	then_future.reportCanceled();
 
-	AMLMTEST_COUT << "Canceled then_future:" << then_future; ///< (Running|Started|Canceled)
+	AMLMTEST_COUT << "PRE: Canceling then_future:" << then_future; ///< (Running|Started)
+	AMLMTEST_EXPECT_FUTURE_STARTED(then_future); // One last check after the delay.
+	then_future.cancel();
+//	then_future.reportCanceled();
 
-	ASSERT_TRUE(then_future.isStarted());
-	ASSERT_TRUE(then_future.isCanceled());
-//	ASSERT_TRUE(then_future.isFinished());
+	AMLMTEST_COUT << "POST: Canceled then_future:" << then_future; ///< (Running|Started|Canceled)
+
+	AMLMTEST_EXPECT_FUTURE_POST_CANCEL(then_future);
 
 	// Wait a bit for the cancel to propagate.
 	TC_Sleep(1000);
@@ -765,15 +760,6 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	TC_EXIT();
 }
 
-/// @todo EXPERIMENTAL
-// Specialize an action that synchronizes with the calling thread.
-// @link https://stackoverflow.com/questions/10767131/expecting-googlemock-calls-from-another-thread
-ACTION_P2(ReturnFromAsyncCall, RetVal, SemDone)
-{
-	SemDone->release();
-	return RetVal;
-}
-
 TEST_F(ExtFutureTest, ThenChain)
 {
 	TC_ENTER();
@@ -788,7 +774,6 @@ TEST_F(ExtFutureTest, ThenChain)
 	using ::testing::Eq;
 	using ::testing::ReturnArg;
 	using ::testing::_;
-//	Sequence s_outer, s_inner;
 
 	ON_CALL(rsm, ReportResult(_))
 			.WillByDefault(ReturnArg<0>());
@@ -801,20 +786,9 @@ TEST_F(ExtFutureTest, ThenChain)
 			.WillOnce(ReturnFromAsyncCall(1, &semDone));
 		EXPECT_CALL(rsm, ReportResult(2))
 			.WillOnce(ReturnFromAsyncCall(2, &semDone));
-//			.With(Eq(2))
-//			.WillOnce(ReturnFromAsyncCall(2, &semDone))
-//			.RetiresOnSaturation();
-//	EXPECT_CALL(tlm, Checkpoint(2))
-//			.InSequence(s_outer, s_inner)
-//			.WillOnce(ReturnFromAsyncCall(2, &semDone));
-//	EXPECT_CALL(tlm, Checkpoint(3))
-//			.InSequence(s_inner)
-//			.WillOnce(ReturnFromAsyncCall(3, &semDone));
+		EXPECT_CALL(rsm, ReportResult(5))
+			.WillOnce(ReturnFromAsyncCall(5, &semDone));
 	}
-
-
-//	bool ran_tap {false};
-//	bool ran_then {false};
 
 	using FutureType = ExtFuture<QString>;
 
@@ -831,19 +805,11 @@ TEST_F(ExtFutureTest, ThenChain)
 	future.then([&rsm](FutureType in_future){
 			SCOPED_TRACE("In then 1");
 
-//			TC_EXPECT_THIS_TC();
-
-//			AMLMTEST_COUT << "in tap(), result:" << tostdstr(result);
-//			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
-//			ran_tap = true;
-//			EXPECT_FALSE(ran_then);
 			rsm.ReportResult(1);
 			return 1;
 		;})
-		.then([=, &rsm/*, &ran_tap, &ran_then*/](ExtFuture<int> in_future) {
+		.then([=, &rsm](ExtFuture<int> in_future) {
 			SCOPED_TRACE("In then 2");
-
-			TC_EXPECT_THIS_TC();
 
 //			EXPECT_THAT(ran_tap, Eq(true));
 
@@ -868,10 +834,12 @@ TEST_F(ExtFutureTest, ThenChain)
 //    AMLMTEST_COUT << "after wait(): " << future.state().toString();
 //    ASSERT_EQ(wait_result, QString("Then Called"));
 
-//    future.wait();
+	future.wait();
 	EXPECT_TRUE(future.isStarted());
 	EXPECT_FALSE(future.isRunning());
 	EXPECT_TRUE(future.isFinished());
+
+	rsm.ReportResult(5);
 
 //	EXPECT_TRUE(ran_tap);
 //	EXPECT_TRUE(ran_then);

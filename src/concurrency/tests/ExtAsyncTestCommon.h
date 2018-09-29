@@ -239,9 +239,50 @@ private Q_SLOTS:
 
 };
 
+#ifdef TEST_FWK_IS_GTEST
+// Specialize an action that synchronizes with the calling thread.
+// @link https://stackoverflow.com/questions/10767131/expecting-googlemock-calls-from-another-thread
+ACTION_P2(ReturnFromAsyncCall, RetVal, SemDone)
+{
+	SemDone->release();
+	return RetVal;
+}
 
-/// @name Additional test helper macros.
+#define TC_EXPECT_SEMDONE(sem) \
+do {\
+	bool acquired = (sem).tryAcquire(1, 1000);\
+	EXPECT_TRUE(acquired);\
+} while(0)
+#else
+#define TC_EXPECT_SEMDONE(sem) /* No gtest... nothing? */
+#endif
+
+
+/// @name Additional ExtAsync-specific test helper macros.
 /// @{
+
+/// Future state is at least Started, not finished or canceled.
+#define AMLMTEST_EXPECT_FUTURE_STARTED(future) \
+	AMLMTEST_EXPECT_TRUE(future.isStarted());\
+	AMLMTEST_EXPECT_FALSE(future.isCanceled());\
+	AMLMTEST_EXPECT_FALSE(future.isFinished());
+
+
+/// Future state is (Started|Finished)
+#define AMLMTEST_EXPECT_FUTURE_FINISHED(future) \
+		AMLMTEST_EXPECT_TRUE(ExtFutureState::state(future) == (ExtFutureState::Started | ExtFutureState::Finished))
+
+/// After .cancel() is called on future.
+/// Seems like we get Canceled but not Finished here.
+#define AMLMTEST_EXPECT_FUTURE_POST_CANCEL(future) \
+	/*AMLMTEST_ASSERT_TRUE(future.isFinished());*/\
+	AMLMTEST_ASSERT_TRUE(future.isStarted());\
+	AMLMTEST_ASSERT_TRUE(future.isCanceled());
+
+#define AMLMTEST_EXPECT_FUTURE_POST_EXCEPTION(future) \
+	AMLMTEST_ASSERT_TRUE(future.isFinished());\
+	AMLMTEST_ASSERT_TRUE(future.isStarted());\
+	AMLMTEST_ASSERT_TRUE(future.isCanceled());
 
 #define GTEST_COUT_qDB qDb()
 
@@ -249,11 +290,12 @@ private Q_SLOTS:
 #define TC_ENTER() \
 	/* The Google Mock-based TestLifecycleManager instance for this test. */ \
 	TestLifecycleManager tlm; \
-	EXPECT_CALL(tlm, MTC_ENTER()) \
+	{ ::testing::InSequence s; \
+		EXPECT_CALL(tlm, MTC_ENTER()) \
 			.Times(1); \
-	EXPECT_CALL(tlm, MTC_EXIT()) \
+			EXPECT_CALL(tlm, MTC_EXIT()) \
 			.Times(1); \
-	\
+	}\
 	tlm.MTC_ENTER(); \
     /* The name of this test as a static std::string. */ \
 	const std::string static_test_id_string {this->get_test_id_string_from_fixture()}; \

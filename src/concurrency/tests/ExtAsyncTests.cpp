@@ -41,6 +41,7 @@
 // Ours
 #include <tests/TestHelpers.h>
 #include "ExtAsyncTestCommon.h"
+#include <tests/IResultsSequenceMock.h>
 
 // Mocks
 #include <tests/TestLifecycleManager.h>
@@ -769,39 +770,40 @@ TEST_F(ExtAsyncTestsSuiteFixture, TestMakeReadyFutures)
 ////	ExtFuture<QString> unwrapped_future = future.unwrap();
 //}
 
-/// @todo EXPERIMENTAL
-// Specialize an action that synchronizes with the calling thread.
-// @link https://stackoverflow.com/questions/10767131/expecting-googlemock-calls-from-another-thread
-ACTION_P2(ReturnFromAsyncCall, RetVal, SemDone)
-{
-	SemDone->release();
-	return RetVal;
-}
+using ::testing::InSequence;
+using ::testing::Return;
+using ::testing::ReturnArg;
+using ::testing::_;
+using ::testing::Eq;
 
 TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 {
 	TC_ENTER();
 
-//	QSemaphore semDone;
-//	using ::testing::Sequence;
-//	using ::testing::Return;
-//	using ::testing::ReturnArg;
-//	Sequence s_outer, s_inner;
+	ResultsSequenceMock rsm;
+	QSemaphore semDone(0);
 
-//	ON_CALL(tlm, Checkpoint(::testing::_))
-//			.WillByDefault(ReturnArg<0>());
-//	EXPECT_CALL(tlm, Checkpoint(1))
-//			.InSequence(s_outer)
-//			.WillOnce(Return(1));
-//	EXPECT_CALL(tlm, Checkpoint(2))
-//			.InSequence(s_outer, s_inner)
-//			.WillOnce(ReturnFromAsyncCall(2, &semDone));
-//	EXPECT_CALL(tlm, Checkpoint(3))
-//			.InSequence(s_inner)
-//			.WillOnce(ReturnFromAsyncCall(3, &semDone));
+	// default behavior of ReportResult.
+	ON_CALL(rsm, ReportResult(_))
+			.WillByDefault(ReturnArg<0>());
+	{
+		InSequence s;
 
+		EXPECT_CALL(rsm, ReportResult(0))
+			.WillOnce(ReturnFromAsyncCall(0, &semDone));
+		EXPECT_CALL(rsm, ReportResult(1))
+			.WillOnce(ReturnFromAsyncCall(1, &semDone));
+		EXPECT_CALL(rsm, ReportResult(2))
+			.WillRepeatedly(ReturnFromAsyncCall(2, &semDone));
+		EXPECT_CALL(rsm, ReportResult(3))
+			.WillOnce(ReturnFromAsyncCall(3, &semDone));
+		EXPECT_CALL(rsm, ReportResult(5))
+			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+	}
 
 	SCOPED_TRACE("TapThenOneResult");
+
+	rsm.ReportResult(0);
 
 	bool ran_tap {false};
 	bool ran_then {false};
@@ -809,41 +811,32 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
     using FutureType = ExtFuture<QString>;
 
 	AMLMTEST_COUT << "STARTING FUTURE";
-	tlm.Checkpoint(1);
+
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
+
+	rsm.ReportResult(1);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
 
 	AMLMTEST_COUT << "Future created:" << future;
 
-	future/*.test_tap([=, &ran_tap](FutureType ef){
-		SCOPED_TRACE("in test_tap");
-        TC_EXPECT_THIS_TC();
-        ExtAsync::name_qthread();
-        qDb() << "Future: " << &ef;
-		})*/
-		.tap([=, &ran_tap, &ran_then, &tlm](QString result){
+	future
+		.tap([&](QString result){
 			SCOPED_TRACE("In tap");
-#warning "Called multiple times"
-//			tlm.Checkpoint(2);
-//            ExtAsync::name_qthread();
-//			TC_EXPECT_NOT_EXIT();
-//			TC_EXPECT_STACK();
-            TC_EXPECT_THIS_TC();
+
+			// Called multiple times.
+			rsm.ReportResult(2);
 
 			AMLMTEST_COUT << "in tap(), result:" << tostdstr(result);
 			EXPECT_EQ(result, QString("delayed_string_func_1() output"));
 			ran_tap = true;
 			EXPECT_FALSE(ran_then);
-//			tlm.Checkpoint(3);
 		;})
-		.then([=, &ran_tap, &ran_then, &tlm](ExtFuture<QString> extfuture) {
+		.then([&](ExtFuture<QString> extfuture) {
 			SCOPED_TRACE("In then");
-//            ExtAsync::name_qthread();
-//			TC_EXPECT_NOT_EXIT();
-//			TC_EXPECT_STACK();
-            TC_EXPECT_THIS_TC();
+
+			rsm.ReportResult(3);
 
 			EXPECT_THAT(ran_tap, ::testing::Eq(true));
 
@@ -855,7 +848,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			EXPECT_EQ(extfuture.qtget_first(), QString("delayed_string_func_1() output"));
 			EXPECT_FALSE(ran_then);
 			ran_then = true;
-//			TC_DONE_WITH_STACK();
 			return QString("Then Called");
     })/*.test_tap([&](auto ef){
 		AMLMTEST_COUT << "IN TEST_TAP";
@@ -867,13 +859,15 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 //    ASSERT_EQ(wait_result, QString("Then Called"));
 
 //    future.wait();
-    EXPECT_TRUE(future.isStarted());
-    EXPECT_FALSE(future.isRunning());
-    EXPECT_TRUE(future.isFinished());
+	AMLMTEST_EXPECT_FUTURE_FINISHED(future);
+
+	rsm.ReportResult(5);
 
     EXPECT_TRUE(ran_tap);
     EXPECT_TRUE(ran_then);
 	Q_ASSERT(ran_then);
+
+	TC_EXPECT_SEMDONE(semDone);
 
 	TC_EXIT();
 }
