@@ -368,13 +368,17 @@ public:
 		this->d.reportStarted();
 	}
 
+	/**
+	 * Simply calls cancel().
+	 * QFutureInterfaceBase::cancel() in turn can only be called once, returns immediately after the first cancel.
+	 */
 	void reportCanceled()
 	{
 		this->d.reportCanceled();
 	}
 
 	/**
-	 * @note Does nothing if state is Canceled|Finished.
+	 * @note Does nothing if this future's state is (Canceled|Finished).
 	 * @param e
 	 */
 	void reportException(const QException &e)
@@ -849,45 +853,46 @@ protected:
 
 			qDb() << "PRE-THEN: START THEN RUN(), thisfuture:" << this_future.state() << "ret_future:" << ret_future.state();
 
-			ThrowDownstreamCancelsUpstream(ret_future, this_future);
+			qDb() << "THREAD ID:" << QThread::currentThreadId();
+			PropagateDownstreamCancelsUpstream(ret_future, this_future);
 
-			try
-			{
+//			try
+//			{
 				// Wait for this future to finish.
 				// This could throw a propagated exceptions from upstream.
 				qDb() << "THEN: Waiting for upstream" << this_future <<  "to finish";
 M_WARNING("NEVER FINISHING");
 				this_future.waitForFinished();
 				qDb() << "THEN: upstream finished";
-			}
-			catch(ExtAsyncCancelException& e)
-			{
-				/**
-				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
-				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
-				 *  state of the returned future object."
-				 */
-				qDb() << "PRE-THEN: upstream threw Cancel" << ExtFutureState::state(this_future);
-				ret_future.reportException(e);
-				// I think we don't want to rethrow like this here.  This will throw to the wrong future
-				// (the QtConcurrent::run() retval, see above.
-				//throw;
-			}
-			catch(QException& e)
-			{
-				qDb() << "PRE-THEN: upstream threw QException" << ExtFutureState::state(this_future);
-				ret_future.reportException(e);
-			}
-			catch (...)
-			{
-				qDb() << "PRE-THEN: upstream threw unknown" << ExtFutureState::state(this_future);
-				ret_future.reportException(QUnhandledException());
-			}
+//			}
+//			catch(ExtAsyncCancelException& e)
+//			{
+//				/**
+//				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+//				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+//				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+//				 *  state of the returned future object."
+//				 */
+//				qDb() << "PRE-THEN: upstream threw Cancel" << ExtFutureState::state(this_future);
+//				ret_future.reportException(e);
+//				// I think we don't want to rethrow like this here.  This will throw to the wrong future
+//				// (the QtConcurrent::run() retval, see above.
+//				//throw;
+//			}
+//			catch(QException& e)
+//			{
+//				qDb() << "PRE-THEN: upstream threw QException" << ExtFutureState::state(this_future);
+//				ret_future.reportException(e);
+//			}
+//			catch (...)
+//			{
+//				qDb() << "PRE-THEN: upstream threw unknown" << ExtFutureState::state(this_future);
+//				ret_future.reportException(QUnhandledException());
+//			}
 
 			// Ok, thisfuture is finished.
 			// Is it really canceled?
-//			if(thisfuture.isCanceled())
+//			if(this_future.isCanceled())
 //			{
 //				// Propagate the cancel to the returned future.
 //				/// @todo Or should this throw a cancellation exception?
@@ -1179,14 +1184,47 @@ M_WARNING("NEVER FINISHING");
 //	}
 
 	template <class ExtFutureR>
-	void ThrowDownstreamCancelsUpstream(ExtFutureR ret_future, ExtFuture<T> this_future)
+	static void PropagateDownstreamCancelsUpstream(ExtFutureR ret_future, ExtFuture<T> this_future)
 	{
 		using R = ExtFuture_inner_t<ExtFutureR>;
 
-qDb() << "START ThrowDownstreamCancelsUpstream";
+		qDb() << "START ThrowDownstreamCancelsUpstream with downstream:" << ret_future << "upstream:" << this_future;
 
-		QFutureSynchronizer fut_sync(this_future);
-#warning "THIS IS BROKEN RIGHT NOW"
+		// Ok, our job is to catch any cancel exceptions from the downstream ret_future
+		// and rethrow them upstream to this_future.
+
+		QtConcurrent::run([=]() mutable {
+//			try
+//			{
+				// Wait for cancel or finish on downstream.
+				qDb() << "IN TRY: WAITING FOR DOWNSTREAM FINISH/CANCEL, THREAD ID:" << QThread::currentThreadId();
+				ret_future.waitForFinished();
+				qDb() << "IN TRY: DOWNSTREAM FINISHED";
+//			}
+//			catch(ExtAsyncCancelException& e)
+//			{
+//				qDb() << "CAUGHT CANCEL EXCEPTION:";// << state(ret_future) << state(this_future);
+//				throw;
+//			}
+//			catch(...)
+//			{
+//				qDb() << "CAUGHT NON-CANCEL EXCEPTION:";// << state(ret_future) << state(this_future);
+//				throw;
+//			}
+
+				if(ret_future.isCanceled())
+				{
+					qDb() << "CAUGHT ISCANCELED:" << ret_future.state() << this_future.state();
+					this_future.reportCanceled();
+				}
+				else
+				{
+					// Was a regular finish, ignore it.
+					qDb() << "IGNORING REGULAR FINISH:";// << state(ret_future) << state(this_future);
+				}
+
+			;});
+#if 0
 		try
 		{
 			if(ret_future.isCanceled())
@@ -1222,8 +1260,8 @@ qDb() << "Not canceled...";
 			qCr() << "Rethrowing exception from" << ret_future << "to" << this_future;
 			throw;
 		}
+#endif
 
-		//);
 qDb() << "END ThrowDownstreamCancelsUpstream";
 	}
 

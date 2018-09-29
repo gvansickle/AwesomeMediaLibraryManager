@@ -337,13 +337,13 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	ExtFuture<int> main_future = async_int_generator<ExtFuture<int>>(1, 6, this);
 
 	ExtFuture<int> then_future = main_future.then([=](ExtFuture<int> in_future) {
-			if(in_future.isCanceled())
-			{
-				qDb() << "THEN: CANCELED, throwing";
-				throw ExtAsyncCancelException();
-			}
+//			if(in_future.isCanceled())
+//			{
+//				qDb() << "THEN: CANCELED, throwing";
+//				throw ExtAsyncCancelException();
+//			}
 		// Should be canceled before we get here.
-		AMLMTEST_EXPECT_FALSE(true);
+//		AMLMTEST_EXPECT_FALSE(true);
 			/// @experimental
 //			AMLMTEST_COUT << "Throwing Cancel exception";
 //			throw ExtAsyncCancelException();
@@ -370,14 +370,14 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	AMLMTEST_EXPECT_FUTURE_POST_CANCEL(then_future);
 
 	// Wait a bit for the cancel to propagate.
-	TC_Sleep(1000);
+	TC_Sleep(10000);
 
-	// Canceling alone won't finish the main_future.
+	/// @note Canceling alone does not finish the main_future.
 	ASSERT_FALSE(main_future.isFinished());
 
 	ASSERT_TRUE(main_future.isStarted());
 	ASSERT_TRUE(main_future.isCanceled()) << main_future;
-	ASSERT_TRUE(main_future.isFinished()) << main_future;
+//	ASSERT_TRUE(main_future.isFinished()) << main_future;
 
 	main_future.waitForFinished();
 
