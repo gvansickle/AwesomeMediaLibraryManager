@@ -47,7 +47,7 @@ static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFutur
 /// @todo
 //    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >, "");
 static_assert(!std::is_same_v<QFuture<long>, ExtFuture<long>>);
-static_assert(std::is_convertible_v<QFuture<long>, ExtFuture<long>>);
+//static_assert(std::is_convertible_v<QFuture<long>, ExtFuture<long>>);
 static_assert(std::is_convertible_v<ExtFuture<long>, QFuture<long>>);
 
 static_assert(std::is_copy_constructible_v<ExtFuture<long>>);

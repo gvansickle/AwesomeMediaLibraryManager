@@ -327,23 +327,166 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 	TC_EXIT();
 }
 
+//////////////////
+/// So dumb.
+//////////////////
+template <class CallableType, class R = int>
+ExtFuture<R> run_again(CallableType&& function)
+{
+	ExtFuture<R> retfuture;
+
+	/*
+	 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
+	 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
+	 *      in the inner lambda.
+	 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
+	 *      unless we decay off the reference-ness.
+	 */
+
+	QtConcurrent::run([fn=std::decay_t<CallableType>(function)](ExtFuture<R> retfuture) -> void {
+		R retval;
+
+		try
+		{
+			// Call the function the user originally passed in.
+			retval = std::invoke(fn, retfuture);
+			// Report our single result.
+			retfuture.reportResult(retval);
+			retfuture.reportFinished();
+		}
+		catch(ExtAsyncCancelException& e)
+		{
+			/**
+			 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+			 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+			 *  state of the returned future object."
+			 */
+			retfuture.reportException(e);
+			// I think we don't want to rethrow like this here.  This will throw to the wrong future
+			// (the QtConcurrent::run() retval, see above.
+			//throw;
+		}
+		catch(QException& e)
+		{
+			retfuture.reportException(e);
+		}
+		catch (...)
+		{
+			retfuture.reportException(QUnhandledException());
+		}
+		;}, retfuture);
+
+	return retfuture;
+}
+
+TEST_F(ExtFutureTest, ExtFutureThenThrow)
+{
+	TC_ENTER();
+
+	ExtFuture<int> up = run_again([&](ExtFuture<int> upcopy) -> int {
+//			AMLMTEST_EXPECT_EQ(up, upcopy);
+			for(int i = 0; i < 10; i++)
+			{
+				TCOUT << "START Sleep:" << i;
+				TC_Sleep(1000);
+				TCOUT << "STOP Sleep:" << i;
+
+				TCOUT << "upcopy state:" << upcopy.state();
+
+				if (upcopy.isCanceled())
+				{
+					// The job should be canceled.
+					// The calling runFunctor() should break out of while() loop.
+					break;
+				}
+//				if(upcopy.HandlePauseResumeShouldICancel())
+//				{
+//						break;
+//				}
+			}
+
+			return 1;
+});
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(up);
+
+	// Pause so we're not immediately finished.
+//	up.setPaused(true);
+//	AMLMTEST_COUT << "UP PAUSED" << up.state();
+
+	ExtFuture<int> down = up.then([&](ExtFuture<int> upcopy) {
+		AMLMTEST_EXPECT_EQ(upcopy, up);
+		TCOUT << "In up.then(), upcopy:" << upcopy.state();
+//			EXPECT_TRUE(false) << "Should never get here";
+			try
+			{
+				auto results = upcopy.get();
+			}
+			catch(...)
+			{
+				TCOUT << "CAUGHT EXCEPTION";
+			}
+			return 5;
+			;});
+
+	AMLMTEST_EXPECT_FALSE(down.isCanceled());
+
+	// Check again, up should still not be finished or canceled.
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(up);
+
+	AMLMTEST_COUT << "DOWN THROWING CANCEL PRE:" << down.state();
+	down.reportException(ExtAsyncCancelException());
+	AMLMTEST_COUT << "DOWN THROWING CANCEL POST:" << down.state();
+
+	try
+	{
+		AMLMTEST_COUT << "UP WAITING FOR EXCEPTION:" << up.state();
+		up.waitForFinished();
+		AMLMTEST_COUT << "UP FINISHED" << up.state();
+	}
+	catch (ExtAsyncCancelException& e) {
+		AMLMTEST_COUT << "UP CAUGHT CANCEL" << up.state() << e.what();
+	}
+
+	TC_Sleep(1000);
+
+
+	EXPECT_TRUE(down.isCanceled());
+	EXPECT_TRUE(up.isCanceled()) << up;
+
+	TC_EXIT();
+}
+
 /// @todo Don't have the infrastructure for this to work yet.
 TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();
 
+	ExtFuture<int> up;
+	EXPECT_FALSE(up.isCanceled());
+	ExtFuture<int> down = up.then([](ExtFuture<int> upcopy){
+			return 5;
+			;});
+	EXPECT_FALSE(down.isCanceled());
+
+	down.cancel();
+	TC_Sleep(1000);
+	EXPECT_TRUE(down.isCanceled());
+	EXPECT_TRUE(up.isCanceled()) << up;
+
 	QFutureSynchronizer<void> synchronizer;
 
 	ExtFuture<int> main_future = async_int_generator<ExtFuture<int>>(1, 6, this);
 
-	ExtFuture<int> then_future = main_future.then([=](ExtFuture<int> in_future) {
+	ExtFuture<int> then_future = main_future.then([&](ExtFuture<int> in_future) {
+			AMLMTEST_EXPECT_EQ(in_future, main_future);
 //			if(in_future.isCanceled())
 //			{
 //				qDb() << "THEN: CANCELED, throwing";
 //				throw ExtAsyncCancelException();
 //			}
 		// Should be canceled before we get here.
-//		AMLMTEST_EXPECT_FALSE(true);
+		AMLMTEST_EXPECT_FALSE(true);
 			/// @experimental
 //			AMLMTEST_COUT << "Throwing Cancel exception";
 //			throw ExtAsyncCancelException();
@@ -353,15 +496,15 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 			;});
 
 	AMLMTEST_COUT << "Started main_future:" << main_future.state();
-	AMLMTEST_EXPECT_FUTURE_STARTED(main_future);
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(main_future);
 	AMLMTEST_COUT << "Started then_future:" << then_future.state();
-	AMLMTEST_EXPECT_FUTURE_STARTED(then_future);
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(then_future);
 
 	// Wait a bit, then cancel the future returned by then().
 	TC_Sleep(1000);
 
 	AMLMTEST_COUT << "PRE: Canceling then_future:" << then_future; ///< (Running|Started)
-	AMLMTEST_EXPECT_FUTURE_STARTED(then_future); // One last check after the delay.
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(then_future); // One last check after the delay.
 	then_future.cancel();
 //	then_future.reportCanceled();
 
@@ -370,7 +513,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	AMLMTEST_EXPECT_FUTURE_POST_CANCEL(then_future);
 
 	// Wait a bit for the cancel to propagate.
-	TC_Sleep(10000);
+	AMLMTEST_COUT << "START WAITING FOR PROPAGATION";
+	TC_Wait(2000);
+	AMLMTEST_COUT << "END WAITING FOR PROPAGATION";
 
 	/// @note Canceling alone does not finish the main_future.
 	ASSERT_FALSE(main_future.isFinished());

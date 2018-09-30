@@ -56,7 +56,7 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 
         return QString("delayed_string_func_1() output");
     });
-	ExtFuture<QString> retval = qretval;
+	ExtFuture<QString> retval = ExtFuture<QString>(qretval);
 	// QVERIFY() does a "return;", so we can't use it in a function returning a value.
 	Q_ASSERT(retval.isStarted());
 	Q_ASSERT(!retval.isFinished());

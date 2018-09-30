@@ -184,6 +184,7 @@ enum class GenericState
 #define AMLMTEST_SCOPED_TRACE(str) SCOPED_TRACE(str)
 
 #define AMLMTEST_COUT qDb()
+#define TCOUT AMLMTEST_COUT
 
 #define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
 #define AMLMTEST_EXPECT_FALSE(arg) EXPECT_FALSE(arg)

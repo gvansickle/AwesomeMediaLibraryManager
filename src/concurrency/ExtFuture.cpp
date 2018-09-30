@@ -19,7 +19,16 @@
 
 /**
  * @file ExtFuture.cpp
+ *
+ * Notes:
+ *
+ * - QFuture<> lost a lot of special member functions on this commit:
+ * @link https://git.qt.io/consulting-usa/qtbase-xcb-rendering/commit/9c016cefe9a81de3b01019cb1eb1363b05e3b448
+ * That's why there's no real copy constructor etc. defined - it now relies on the compiler-generated
+ * (but not = default, those fail) ones.
+ *
  */
+
 
 #include <QFuture>
 #include "ExtFuture.h"

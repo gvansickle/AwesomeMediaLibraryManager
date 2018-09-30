@@ -262,7 +262,7 @@ do {\
 /// @{
 
 /// Future state is at least Started, not finished or canceled.
-#define AMLMTEST_EXPECT_FUTURE_STARTED(future) \
+#define AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(future) \
 	AMLMTEST_EXPECT_TRUE(future.isStarted());\
 	AMLMTEST_EXPECT_FALSE(future.isCanceled());\
 	AMLMTEST_EXPECT_FALSE(future.isFinished());
