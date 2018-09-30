@@ -23,6 +23,10 @@
 #ifndef SRC_CONCURRENCY_EXTASYNCEXCEPTIONS_H_
 #define SRC_CONCURRENCY_EXTASYNCEXCEPTIONS_H_
 
+#include <config.h>
+
+#include <QException>
+
 /*
  *
  */

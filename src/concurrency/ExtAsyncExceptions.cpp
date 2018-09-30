@@ -20,16 +20,8 @@
 /**
  * @file ExtAsyncExceptions.cpp
  */
-#include <concurrency/ExtAsyncExceptions.h>
 
-ExtAsyncExceptions::ExtAsyncExceptions()
-{
-	// TODO Auto-generated constructor stub
+#include "ExtAsyncExceptions.h"
 
-}
 
-ExtAsyncExceptions::~ExtAsyncExceptions()
-{
-	// TODO Auto-generated destructor stub
-}
 

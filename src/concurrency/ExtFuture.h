@@ -25,8 +25,6 @@
  * An extended QFuture<T> class.
  */
 
-#pragma once
-
 // Std C++
 #include <memory>
 #include <type_traits>
@@ -59,7 +57,6 @@
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
 
-#include "impl/ExtAsync_impl.h"
 
 template <class T>
 class ExtFuture;
@@ -683,7 +680,8 @@ public:
 		// The future we'll return.
 //		ExtFuture<R> retfuture;
 
-		ExtFuture<R> retfuture = run_again([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) -> R {
+		ExtFuture<R> retfuture = run_again(
+			[=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) -> R {
 //			spinWaitForFinishedOrCanceled();
 			R retval = std::invoke(then_callback_copy, this_future);
 			ret_future.reportResult(retval);

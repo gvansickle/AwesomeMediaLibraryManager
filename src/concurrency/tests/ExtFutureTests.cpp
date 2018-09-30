@@ -45,11 +45,12 @@
 #include <tests/IResultsSequenceMock.h>
 
 #include "../ExtAsync.h"
+#include "../ExtFuture.h"
 #warning "TEMP"
 #include "../impl/ExtAsync_impl.h"
 #include "../ExtFuture.h"
 
-#include <continuable/continuable.hpp>
+//#include <continuable/continuable.hpp>
 
 /// Types for gtest's "Typed Test" support.
 using FutureIntTypes = ::testing::Types<QFuture<int>, ExtFuture<int>>;
@@ -58,6 +59,7 @@ TYPED_TEST_CASE(ExtFutureTypedTestFixture, FutureIntTypes);
 //
 // TESTS
 //
+#if 0 /// Continuable
 auto http_request(std::string url) {
   return cti::make_continuable<std::string>(
 	[url = std::move(url)](auto&& promise) {
@@ -73,9 +75,10 @@ TEST_F(ExtFutureTest, ContinuableBasic)
 	TC_ENTER();
 
 	http_request("github.com")
-	  .then([=] (std::string result) {
+	  .then([=] (std::string result) -> int {
 		// Do something...
 		  AMLMTEST_COUT << "IN CONTINUABLE THEN:" << result;
+		  return 1;
 	  })
 			.then([=](){
 		AMLMTEST_COUT << "Sleeping";
@@ -85,6 +88,7 @@ TEST_F(ExtFutureTest, ContinuableBasic)
 
 	TC_EXIT();
 }
+#endif
 
 //TEST_F(ExtFutureTest, NestedQTestWrapper)
 //{

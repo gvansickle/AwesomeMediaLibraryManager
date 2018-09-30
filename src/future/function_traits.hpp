@@ -25,6 +25,10 @@
 #ifndef UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_
 #define UTILS_CONCURRENCY_FUNCTION_TRAITS_HPP_
 
+#pragma once
+
+#include <config.h>
+
 // Stc C++.
 #include <cstddef>
 #include <type_traits>

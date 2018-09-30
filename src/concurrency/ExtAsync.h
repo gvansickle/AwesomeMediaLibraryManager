@@ -52,8 +52,8 @@
 #include "utils/DebugHelpers.h"
 
 template <typename T> class ExtFuture;
-//template <typename T> class ExtAsyncTask;
-//template <typename T> class ExtAsyncTaskRunner;
+
+#include "impl/ExtAsync_impl.h"
 
 #include "ExtAsyncTask.h"
 
