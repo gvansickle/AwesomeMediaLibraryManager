@@ -690,9 +690,11 @@ public:
 		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) {
 
 			Q_ASSERT(this_future == *this);
+			Q_ASSERT(this_future != ret_future);
 
 			if(this_future.isCanceled())
 			{
+				Q_ASSERT(0);
 				ret_future.reportException(ExtAsyncCancelException());
 				return;
 			}
@@ -758,6 +760,8 @@ public:
 			}
 
 			qDb() << "THEN: then_callback CALLED and RETURNED. reporting FINISHED on ret_future with retval."; //, retval:" << retval;
+
+			this_future.reportFinished();
 
 			ret_future.reportFinished(&retval);
 
@@ -1211,11 +1215,12 @@ protected:
 
 			qDb() << "Finished waiting, ret_future:" << ret_future.state();
 
-			// This .result() call will rethrow any exception stored in the future.
-			if(ret_future.result())
-			{
-				qDb() << "DIDNT THROW";
-			}
+			// This .waitForFinished() call will rethrow any exception stored in the future.
+			// We're already finished/canceled above, so this doesn't block.
+			ret_future.waitForFinished();
+
+			qDb() << "DIDNT THROW";
+
 
 
 #if 0
@@ -1262,6 +1267,7 @@ qDb() << "FUTURE WAS FINSIHED BUT NOT CANCELED";
 		{
 			qCr() << "Rethrowing unknown exception from" << ret_future << "to" << this_future;
 			ret_future.reportException(QUnhandledException());
+			/// @todo This is wrong.
 //			throw;
 		}
 		}, ret_future, this_future);

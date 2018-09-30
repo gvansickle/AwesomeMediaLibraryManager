@@ -349,10 +349,11 @@ ExtFuture<R> run_again(CallableType&& function)
 		try
 		{
 			// Call the function the user originally passed in.
+			qDb() << "RUNNING";
 			retval = std::invoke(fn, retfuture);
+			qDb() << "RUNNING END";
 			// Report our single result.
 			retfuture.reportResult(retval);
-			retfuture.reportFinished();
 		}
 		catch(ExtAsyncCancelException& e)
 		{
@@ -362,6 +363,7 @@ ExtFuture<R> run_again(CallableType&& function)
 			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
 			 *  state of the returned future object."
 			 */
+			qDb() << "Rethrowing exception";
 			retfuture.reportException(e);
 			// I think we don't want to rethrow like this here.  This will throw to the wrong future
 			// (the QtConcurrent::run() retval, see above.
@@ -369,13 +371,19 @@ ExtFuture<R> run_again(CallableType&& function)
 		}
 		catch(QException& e)
 		{
+			qDb() << "Rethrowing exception";
 			retfuture.reportException(e);
 		}
 		catch (...)
 		{
+			qDb() << "Rethrowing exception";
 			retfuture.reportException(QUnhandledException());
 		}
-		;}, retfuture);
+
+		qDb() << "REPORTING FINISHED";
+		retfuture.reportFinished();
+
+		}, retfuture);
 
 	return retfuture;
 }
@@ -388,9 +396,9 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 //			AMLMTEST_EXPECT_EQ(up, upcopy);
 			for(int i = 0; i < 10; i++)
 			{
-				TCOUT << "START Sleep:" << i;
+				TCOUT << "START Sleep:" << i << upcopy.state();
 				TC_Sleep(1000);
-				TCOUT << "STOP Sleep:" << i;
+				TCOUT << "STOP Sleep:" << i << upcopy.state();
 
 				TCOUT << "upcopy state:" << upcopy.state();
 
@@ -435,6 +443,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(up);
 
 	AMLMTEST_COUT << "DOWN THROWING CANCEL PRE:" << down.state();
+	AMLMTEST_EXPECT_FALSE(down.isFinished() || down.isCanceled());
 	down.reportException(ExtAsyncCancelException());
 	AMLMTEST_COUT << "DOWN THROWING CANCEL POST:" << down.state();
 
