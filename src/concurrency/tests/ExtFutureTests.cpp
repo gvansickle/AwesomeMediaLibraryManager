@@ -45,6 +45,8 @@
 #include <tests/IResultsSequenceMock.h>
 
 #include "../ExtAsync.h"
+#warning "TEMP"
+#include "../impl/ExtAsync_impl.h"
 #include "../ExtFuture.h"
 
 #include <continuable/continuable.hpp>
@@ -327,73 +329,55 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 	TC_EXIT();
 }
 
-//////////////////
-/// So dumb.
-//////////////////
-template <class CallableType, class R = int>
-ExtFuture<R> run_again(CallableType&& function)
-{
-	ExtFuture<R> retfuture;
 
-	/*
-	 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
-	 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
-	 *      in the inner lambda.
-	 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
-	 *      unless we decay off the reference-ness.
-	 */
-
-	QtConcurrent::run([fn=std::decay_t<CallableType>(function)](ExtFuture<R> retfuture) -> void {
-		R retval;
-
-		try
-		{
-			// Call the function the user originally passed in.
-			qDb() << "RUNNING";
-			retval = std::invoke(fn, retfuture);
-			qDb() << "RUNNING END";
-			// Report our single result.
-			retfuture.reportResult(retval);
-		}
-		catch(ExtAsyncCancelException& e)
-		{
-			/**
-			 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-			 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
-			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
-			 *  state of the returned future object."
-			 */
-			qDb() << "Rethrowing exception";
-			retfuture.reportException(e);
-			// I think we don't want to rethrow like this here.  This will throw to the wrong future
-			// (the QtConcurrent::run() retval, see above.
-			//throw;
-		}
-		catch(QException& e)
-		{
-			qDb() << "Rethrowing exception";
-			retfuture.reportException(e);
-		}
-		catch (...)
-		{
-			qDb() << "Rethrowing exception";
-			retfuture.reportException(QUnhandledException());
-		}
-
-		qDb() << "REPORTING FINISHED";
-		retfuture.reportFinished();
-
-		}, retfuture);
-
-	return retfuture;
-}
 
 TEST_F(ExtFutureTest, ExtFutureThenThrow)
 {
 	TC_ENTER();
 
-	ExtFuture<int> up = run_again([&](ExtFuture<int> upcopy) -> int {
-//			AMLMTEST_EXPECT_EQ(up, upcopy);
+	SCOPED_TRACE("ExtFutureThenThrow");
+
+	ResultsSequenceMock rsm;
+	enum
+	{
+		MSTART = 0,
+		MEND = 1,
+		T1STARTCB = 2,
+	};
+	QSemaphore semDone(0);
+
+	using ::testing::InSequence;
+	using ::testing::Return;
+	using ::testing::Eq;
+	using ::testing::ReturnArg;
+	using ::testing::_;
+
+	ON_CALL(rsm, ReportResult(_))
+			.WillByDefault(ReturnArg<0>());
+	{
+		InSequence s;
+
+		EXPECT_CALL(rsm, ReportResult(MSTART))
+			.WillOnce(ReturnFromAsyncCall(MSTART, &semDone));
+		EXPECT_CALL(rsm, ReportResult(T1STARTCB))
+			.WillOnce(ReturnFromAsyncCall(T1STARTCB, &semDone));
+		EXPECT_CALL(rsm, ReportResult(MEND))
+			.WillOnce(ReturnFromAsyncCall(MEND, &semDone));
+//		EXPECT_CALL(rsm, ReportResult(5))
+//			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+	}
+
+	// So we can assert we're getting the same ExtFuture when we enter the run() callback.
+	ExtFuture<int> up;
+
+	rsm.ReportResult(MSTART);
+
+	up = run_again([=, &up, &rsm](ExtFuture<int> upcopy) -> int {
+
+		rsm.ReportResult(T1STARTCB);
+
+		AMLMTEST_EXPECT_EQ(upcopy, up);
+
 			for(int i = 0; i < 10; i++)
 			{
 				TCOUT << "START Sleep:" << i << upcopy.state();
@@ -402,17 +386,20 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 				TCOUT << "upcopy state:" << upcopy.state();
 
-				if (upcopy.isCanceled())
+//				if (upcopy.isCanceled())
+//				{
+//					// The job should be canceled.
+//					// The calling runFunctor() should break out of while() loop.
+//					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
+//					break;
+//				}
+				if(upcopy.HandlePauseResumeShouldICancel())
 				{
-					// The job should be canceled.
-					// The calling runFunctor() should break out of while() loop.
+					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
 					break;
 				}
-//				if(upcopy.HandlePauseResumeShouldICancel())
-//				{
-//						break;
-//				}
 			}
+			TCOUT << "RETURNING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
 
 			return 1;
 });
@@ -424,7 +411,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	ExtFuture<int> down = up.then([&](ExtFuture<int> upcopy) {
 		AMLMTEST_EXPECT_EQ(upcopy, up);
-		TCOUT << "In up.then(), upcopy:" << upcopy.state();
+		TCOUT << "START up.then(), upcopy:" << upcopy.state();
 //			EXPECT_TRUE(false) << "Should never get here";
 			try
 			{
@@ -462,6 +449,8 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	EXPECT_TRUE(down.isCanceled());
 	EXPECT_TRUE(up.isCanceled()) << up;
+
+	rsm.ReportResult(MEND);
 
 	TC_EXIT();
 }

@@ -58,6 +58,8 @@
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
 
+#include "impl/ExtAsync_impl.h"
+
 template <class T>
 class ExtFuture;
 
@@ -685,8 +687,16 @@ public:
 		 */
 
 		// The future we'll return.
-		ExtFuture<R> retfuture;
+//		ExtFuture<R> retfuture;
 
+		ExtFuture<R> retfuture = run_again([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) -> R {
+//			spinWaitForFinishedOrCanceled();
+			R retval = std::invoke(then_callback_copy, this_future);
+			ret_future.reportResult(retval);
+			return retval;
+			;}, *this, retfuture);
+
+#if 0
 		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) {
 
 			Q_ASSERT(this_future == *this);
@@ -695,7 +705,8 @@ public:
 			if(this_future.isCanceled())
 			{
 				Q_ASSERT(0);
-				ret_future.reportException(ExtAsyncCancelException());
+				this_future.reportException(ExtAsyncCancelException());
+				this_future.reportFinished();
 				return;
 			}
 
@@ -729,7 +740,7 @@ public:
 			}
 
 			// ret_future shouldn't be possibly canceled yet.
-			Q_ASSERT(ret_future.isCanceled());
+//			Q_ASSERT(ret_future.isCanceled());
 
 			// Call the then callback.
 			// We should never end up calling then_callback_copy with a non-finished future.
@@ -790,32 +801,8 @@ public:
 		*this,
 		retfuture);
 
-		return retfuture;
-#if 0
-//		qDb() << "ENTER";
-
-		static_assert(sizeof...(Args) <= 1, "Too many args");
-
-		auto watcher = new QFutureWatcher<T>();
-
-		auto retval = new ExtFuture<R>();
-
-		/*QObject::*/connect_or_die(watcher, &QFutureWatcherBase::finished, watcher,
-						 [then_cb = std::decay_t<F>(then_callback), retval, args..., watcher]() mutable -> void {
-			// Call the then() callback function.
-//			qDb() << "THEN WRAPPER CALLED";
-			// f() takes void, val, or ExtFuture<T>.
-			// f() returns void, a type R, or an ExtFuture<R>
-			retval->reportResult(then_cb(std::move(args)...));
-			retval->reportFinished();
-//			qDb() << "RETVAL STATUS:" << *retval;
-			watcher->deleteLater();
-		});
-		// Start watching this ExtFuture.
-		watcher->setFuture(*this);
-//		qDb() << "RETURNING:" << *retval;
-		return *retval;
 #endif
+		return retfuture;
 	}
 
 	/**
@@ -1191,10 +1178,17 @@ protected:
 	}
 #endif
 
-	template <class ExtFutureR>
-	static void PropagateDownstreamCancelsUpstream(ExtFutureR ret_future, ExtFuture<T> this_future)
+	/**
+	 * Catches any cancels (exception or otherwise) from the downstream ret_future (or rather a copy thereof)
+	 * and rethrows them upstream (as an ExtAsyncCancelException) to this_future (again, a copy).
+	 * Helper for .then().
+	 * @param ret_future
+	 * @param this_future
+	 */
+	template <class R>
+	static void PropagateDownstreamCancelsUpstream(ExtFuture<R> ret_future, ExtFuture<T> this_future)
 	{
-		using R = ExtFuture_inner_t<ExtFutureR>;
+//		using R = ExtFuture_inner_t<ExtFutureR>;
 
 		// Some sanity checks.
 		Q_ASSERT(ret_future != this_future);
@@ -1205,7 +1199,7 @@ protected:
 		// and rethrow them upstream to this_future (again, a copy).
 		// All without the necessary public or protected member access we really should be using to do this.
 
-		QtConcurrent::run([=](ExtFutureR ret_future, ExtFuture<T> this_future) {
+		QtConcurrent::run([=](ExtFuture<R> ret_future, ExtFuture<T> this_future) {
 		try
 		{
 			qDb() << "Trying wait, ret_future:" << ret_future.state();
@@ -1267,8 +1261,6 @@ qDb() << "FUTURE WAS FINSIHED BUT NOT CANCELED";
 		{
 			qCr() << "Rethrowing unknown exception from" << ret_future << "to" << this_future;
 			ret_future.reportException(QUnhandledException());
-			/// @todo This is wrong.
-//			throw;
 		}
 		}, ret_future, this_future);
 
