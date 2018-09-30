@@ -238,6 +238,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/impl/ExtAsync_impl.h
 	concurrency/impl/ExtFuture_impl.hpp
 	concurrency/ExtAsync.h
+	concurrency/ExtAsyncExceptions.h
 	concurrency/ExtAsyncTask.h
 	concurrency/AMLMJob.h
 	concurrency/AMLMCompositeJob.h
@@ -248,6 +249,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync.cpp
+	concurrency/ExtAsyncExceptions.cpp
 	concurrency/ExtFuture.cpp
 	concurrency/ExtFutureProgressInfo.cpp
 	concurrency/AMLMJob.cpp

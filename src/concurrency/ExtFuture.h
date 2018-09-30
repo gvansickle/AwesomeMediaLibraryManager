@@ -54,6 +54,7 @@
 #include "ExtFutureState.h"
 #include "ExtFutureWatcher.h"
 #include "ExtFutureProgressInfo.h"
+#include "ExtAsyncExceptions.h"
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync { namespace detail {} }
@@ -62,13 +63,6 @@ namespace ExtAsync { namespace detail {} }
 
 template <class T>
 class ExtFuture;
-
-class ExtAsyncCancelException : public QException
-{
-public:
-    void raise() const override { throw *this; }
-    ExtAsyncCancelException *clone() const override { return new ExtAsyncCancelException(*this); }
-};
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
