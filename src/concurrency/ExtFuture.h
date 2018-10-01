@@ -42,6 +42,7 @@
 #include <QFuture>
 #include <QFutureInterface>
 #include <QThread>
+#include <QPair>
 
 // Ours
 #include <utils/QtHelpers.h>

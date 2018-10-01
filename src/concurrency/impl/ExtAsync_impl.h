@@ -54,12 +54,13 @@ namespace ExtAsync
 	{
 
 	template<class... Args,
-			 class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>
-	//		 class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>
-	//		 REQUIRES(is_ExtFuture_v<ExtFutureT>
-	//		 && ct::is_invocable_r_v<R, CallbackType, ExtFutureT, Args...>)
+//			 class R = Unit::LiftT<std::result_of_t<CallbackType>>
+			 class ExtFutureT = argtype_t<CallbackType, 0>,
+			 class R = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>,
+			 REQUIRES(is_ExtFuture_v<ExtFutureT>
+			 && ct::is_invocable_r_v<R, CallbackType, ExtFutureT, Args...>)
 			 >
-	static auto run_again(CallbackType&& callback, Args&&... args) -> ExtFuture<R>
+	static auto run_again(CallbackType callback, Args... args) -> ExtFuture<R>
 	{
 		static_assert(!std::is_same_v<R, void>, "Should never get here with retval == void");
 
@@ -70,7 +71,7 @@ namespace ExtAsync
 		// This exists solely so we can assert that the ExtFuture passed into the callback is correct.
 		ExtFutureR check_retfuture = retfuture;
 
-	//	static_assert(sizeof...(args) != 0);
+//		static_assert(sizeof...(args) != 0);
 
 
 		/*
@@ -83,12 +84,12 @@ namespace ExtAsync
 
 
 		auto lambda = [=, callback_copy=std::decay_t<CallbackType>(callback),
-					check_retfuture=retfuture, retfuture_copy=retfuture]
-					(Args&&... args) mutable -> void
+					check_retfuture=retfuture]
+					(ExtFuture<R> retfuture_copy, auto... copied_args_from_run) mutable -> void
 		{
 			R retval;
 
-			static_assert(sizeof...(args) != 0);
+//			static_assert(sizeof...(copied_args_from_run) != 0);
 			static_assert(!std::is_same_v<R, void>, "Should never get here with retval == void");
 
 			Q_ASSERT(check_retfuture == retfuture_copy);
@@ -97,16 +98,16 @@ namespace ExtAsync
 			{
 				// Call the function the user originally passed in.
 	//			qDb() << "RUNNING";
-				if constexpr(sizeof...(args) != 0)
-				{
-					retval = std::invoke(callback_copy, args...);
-				}
-				else
-				{
-	//				M_PRINT_TYPEOF_VAR_IN_ERROR(retval);
-					static_assert(std::is_same_v<R, std::invoke_result_t<CallbackType, void>>);
-					retval = std::invoke(callback_copy);
-				}
+//				if constexpr(sizeof...(copied_args_from_run) != 0)
+//				{
+					retval = std::invoke(callback_copy, retfuture_copy, copied_args_from_run...);
+//				}
+//				else
+//				{
+//					M_PRINT_TYPEOF_VAR_IN_ERROR(retval);
+//					static_assert(std::is_same_v<R, std::invoke_result_t<CallbackType, void>>);
+//					retval = std::invoke(callback_copy);
+//				}
 	//			qDb() << "RUNNING END";
 				// Report our single result.
 				retfuture_copy.reportResult(retval);
@@ -141,10 +142,10 @@ namespace ExtAsync
 
 			};
 
-	//	QtConcurrent::run(lambda, std::decay_t<Args>(args)...);
-		QtConcurrent::run([](int, int, int) -> bool {
-			return true;
-		}, 1, 2 ,3);
+		QtConcurrent::run(lambda, retfuture, std::forward<Args>(args)...);
+//		QtConcurrent::run([](int, int, int) -> bool {
+//			return true;
+//		}, 1, 2 ,3);
 
 		return retfuture;
 	}
@@ -160,12 +161,14 @@ ExtFuture<R> run_again(CallbackType&& callback, T t, U u)
 }
 
 template <class CallbackType,
+//		  class R = Unit::LiftT<ct::return_type_t<CallbackType>>
 		class R = Unit::LiftT<ct::return_type_t<CallbackType>>
 //		class R = Unit::LiftT<std::invoke_result_t<CallbackType>>
 >
 ExtFuture<R> run_again(CallbackType&& callback)
 {
-	return ExtFuture<R>(); //ExtAsync::detail_struct::run_again(callback, unit);
+//	return ExtFuture<R>();
+	return ExtAsync::detail_struct<CallbackType>::run_again(callback);
 }
 
 #endif /* SRC_CONCURRENCY_IMPL_EXTASYNC_IMPL_H_ */
