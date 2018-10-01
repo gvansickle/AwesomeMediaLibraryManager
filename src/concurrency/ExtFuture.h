@@ -58,8 +58,8 @@
 namespace ExtAsync { namespace detail {} }
 
 
-template <class T>
-class ExtFuture;
+//template <class T>
+//class ExtFuture;
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
@@ -101,6 +101,7 @@ class ExtFuture;
  * from QFutureInterfaceBase.  Specifically, nothing inherits from QObject, so we're pretty free to use templating
  * and multiple inheritance.
  */
+static_assert(std::is_class_v<QFuture<int>>);
 template <typename T>
 class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 {
@@ -116,8 +117,9 @@ public:
 
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
+	using inner_t = T;
 	using is_ExtFuture = std::true_type;
-	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
+//	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
 
 	/**
 	 * Default constructor.
@@ -197,47 +199,12 @@ public:
 
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
-	 * @note Honeypot for catching nested ExtFuture<>s and asserting at compile time.
+	 * @note Unimplemented, honeypot for catching nested ExtFuture<>s and asserting at compile time.
 	 * Not sure if we really need this or not.
 	 */
-#define REAL_ONE_DOESNT_WORK
-#ifdef REAL_ONE_DOESNT_WORK
 	template <class ExtFutureExtFutureT,
 			  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
-	inline explicit ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
-	{
-		Q_UNUSED(other);
-		static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
-	}
-#else
-	template <class ExtFutureExtFutureT,
-			  REQUIRES(is_nested_ExtFuture_v<ExtFutureExtFutureT>)>
-	ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
-	{
-		/// @note Going by the description here @link https://en.cppreference.com/w/cpp/experimental/shared_future/shared_future
-		/// "becomes ready when one of the following happens:
-		/// - other and other.get() are both ready.
-		///     The value or exception from other.get() is stored in the shared state associated with the resulting shared_future object.
-		/// - other is ready, but other.get() is invalid. An exception of type std::future_error with an error condition of
-		///     std::future_errc::broken_promise is stored in the shared state associated with the resulting shared_future object.
-		/// "
-
-		try
-		{
-			// This will either become ready or throw.
-			QList<T> results = other.get();
-			// Didn't throw, we've reached the first bullet.
-			this->reportResults(results.toVector());
-			this->reportFinished();
-		}
-		catch (...)
-		{
-			// Inner ExtFuture threw, we've reached the second bullet.  Rethrow.
-			throw;
-		}
-
-	}
-#endif
+	explicit ExtFuture(ExtFuture<ExtFuture<T>>&& other);
 
 	/**
 	 * Destructor.
@@ -257,15 +224,7 @@ public:
 	/// @{
 
 	/// Copy assignment.
-	ExtFuture<T>& operator=(const ExtFuture<T>& other)
-	{
-		if(this != &other)
-		{
-			this->BASE_CLASS::operator=(other);
-			this->m_progress_unit = other.m_progress_unit;
-		}
-		return *this;
-	}
+	ExtFuture<T>& operator=(const ExtFuture<T>& other);
 
 	/// Move assignment.
 	/// @note Neither implemented, deleted, or = default'ed.  Due to the vargaries of C++
@@ -274,16 +233,12 @@ public:
 //	ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept ...;
 
 	/// Copy assignment from QFuture<T>.
-	ExtFuture<T>& operator=(const BASE_CLASS& other)
-	{
-		this->BASE_CLASS::operator=(other);
-		return *this;
-	}
+	ExtFuture<T>& operator=(const BASE_CLASS& other);
 
 	/// @}
 
 	/**
-	 * Conversion operator to QFuture<T>.
+	 * Conversion operator to QFuture<void>.
 	 */
 //	operator QFuture<T>() const
 //	{
@@ -633,11 +588,11 @@ public:
 	 * If context == nullptr, then_callback will be run in an arbitrary thread.
 	 * If context points to a QObject, then_callback will be run in its event loop.
 	 */
-	template <typename F,
-			  typename R = Unit::LiftT<std::invoke_result_t<F, ExtFuture<T>>>,
-			  REQUIRES(is_non_void_non_ExtFuture_v<R>
-			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
-	ExtFuture<R> then(QObject* context, F&& then_callback)
+	template <typename ThenCallbackType,
+			  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
+			  REQUIRES(!is_ExtFuture_v<R>
+			  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback)
 	{
 		if(context != nullptr)
 		{
@@ -678,10 +633,10 @@ public:
 		 */
 
 		// The future we'll return.
-//		ExtFuture<R> retfuture;
+		ExtFuture<R> retfuture;
 
-		ExtFuture<R> retfuture = run_again(
-			[=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) -> R {
+		retfuture = run_again(
+			[=, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) -> R {
 //			spinWaitForFinishedOrCanceled();
 			R retval = std::invoke(then_callback_copy, this_future);
 			ret_future.reportResult(retval);
@@ -813,13 +768,13 @@ public:
 	 * @param then_callback
 	 * @returns ExtFuture<R>
 	 */
-	template <class F, class R = Unit::LiftT<ct::return_type_t<F>>,
+	template <class ThenCallbackType, class R = Unit::LiftT<ct::return_type_t<ThenCallbackType>>,
 			REQUIRES(is_non_void_non_ExtFuture_v<R>
-			  && ct::is_invocable_r_v<R, F, ExtFuture<T>>)>
-	ExtFuture<R> then( F&& then_callback )
+			  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+	ExtFuture<R> then( ThenCallbackType&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
-		return this->then(/*QApplication::instance()*/nullptr, std::forward<F>(then_callback));
+		return this->then(/*QApplication::instance()*/nullptr, std::forward<ThenCallbackType>(then_callback));
 	}
 
 	/// @} // END .then() overloads.
@@ -1269,6 +1224,8 @@ qDb() << "END ThrowDownstreamCancelsUpstream";
 	/// @}
 };
 
+/// @name START ExtFuture member implementation
+
 //template <class T>
 //ExtFuture<T>::ExtFuture(const QFuture<void>& f) : ExtFuture<T>::BASE_CLASS(f) {}
 
@@ -1282,6 +1239,24 @@ template<typename T>
 static ExtFutureState::State state(const ExtFuture<T>& ef)
 {
 	return ef.state();
+}
+
+template<typename T>
+ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture<T>& other)
+{
+	if(this != &other)
+	{
+		this->BASE_CLASS::operator=(other);
+		this->m_progress_unit = other.m_progress_unit;
+	}
+	return *this;
+}
+
+template<typename T>
+ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
+{
+	this->BASE_CLASS::operator=(other);
+	return *this;
 }
 
 template<typename T>
@@ -1301,6 +1276,8 @@ void ExtFuture<T>::wait()
 		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 	}
 }
+
+/// END ExtFuture member implementation
 
 /**
  * Convert any ExtFuture<T> to a QFuture<void>.

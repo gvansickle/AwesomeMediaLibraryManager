@@ -22,28 +22,51 @@
 
 #if 0
 #include <config.h>
-
 #include "../ExtFutureState.h"
 #endif
 
-#if 0
-/**
- * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
- * Implementation based on Facebook's "folly" library's Future (Apache 2.0)
- */
-template <typename T>
-template <typename F>
-std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
-ExtFuture<T>::unwrap()
-{
-	// Type of the inner ExtFuture<T>.
-	using InternalExtFutureType = ExtFuture<typename isExtFuture<T>::inner_t>;
+#include "../ExtAsync_traits.h"
 
-	InternalExtFutureType internal_extfuture;
-	return this->then([=](InternalExtFutureType internal_extfuture) -> InternalExtFutureType {
-		return internal_extfuture;
-		});
+#if 1
+#define REAL_ONE_DOESNT_WORK
+#ifdef REAL_ONE_DOESNT_WORK
+template <class T>
+template <class ExtFutureExtFutureT,
+		  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
+explicit ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
+{
+	Q_UNUSED(other);
+	static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
 }
+#else
+	template <class ExtFutureExtFutureT,
+			  REQUIRES(is_nested_ExtFuture_v<ExtFutureExtFutureT>)>
+	ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
+	{
+		/// @note Going by the description here @link https://en.cppreference.com/w/cpp/experimental/shared_future/shared_future
+		/// "becomes ready when one of the following happens:
+		/// - other and other.get() are both ready.
+		///     The value or exception from other.get() is stored in the shared state associated with the resulting shared_future object.
+		/// - other is ready, but other.get() is invalid. An exception of type std::future_error with an error condition of
+		///     std::future_errc::broken_promise is stored in the shared state associated with the resulting shared_future object.
+		/// "
+
+		try
+		{
+			// This will either become ready or throw.
+			QList<T> results = other.get();
+			// Didn't throw, we've reached the first bullet.
+			this->reportResults(results.toVector());
+			this->reportFinished();
+		}
+		catch (...)
+		{
+			// Inner ExtFuture threw, we've reached the second bullet.  Rethrow.
+			throw;
+		}
+
+	}
+#endif
 #endif
 
 #if 0

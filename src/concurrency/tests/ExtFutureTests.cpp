@@ -406,7 +406,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 			TCOUT << "RETURNING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
 
 			return 1;
-});
+	});
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(up);
 
 	// Pause so we're not immediately finished.

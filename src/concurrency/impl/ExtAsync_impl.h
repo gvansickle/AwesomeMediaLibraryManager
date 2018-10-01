@@ -47,108 +47,125 @@
 template <class T>
 class ExtFuture;
 
-template<class CallbackType,
-		 class... Args,
-		 class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>
-//		 REQUIRES(is_ExtFuture_v<ExtFutureT>
-//		 && ct::is_invocable_r_v<R, CallbackType, ExtFutureT, Args...>)
-		 >
-ExtFuture<R> run_again(CallbackType&& callback, Args&&... args)
+namespace ExtAsync
 {
-	static_assert(!std::is_same_v<R, void>, "Should never get here with retval == void");
-
-	using ExtFutureR = ExtFuture<R>;
-
-	ExtFutureR retfuture;
-
-	// This exists solely so we can assert that the ExtFuture passed into the callback is correct.
-	ExtFutureR check_retfuture = retfuture;
-
-//	static_assert(sizeof...(args) != 0);
-
-
-	/*
-	 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
-	 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
-	 *      in the inner lambda.
-	 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
-	 *      unless we decay off the reference-ness.
-	 */
-
-
-	auto lambda = [=, callback_copy=std::decay_t<CallbackType>(callback),
-				check_retfuture=retfuture, retfuture_copy=retfuture]
-				(Args&&... args) mutable -> void
+	template <class CallbackType>
+	struct detail_struct
 	{
-		R retval;
 
-		static_assert(sizeof...(args) != 0);
+	template<class... Args,
+			 class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>
+	//		 class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>
+	//		 REQUIRES(is_ExtFuture_v<ExtFutureT>
+	//		 && ct::is_invocable_r_v<R, CallbackType, ExtFutureT, Args...>)
+			 >
+	static auto run_again(CallbackType&& callback, Args&&... args) -> ExtFuture<R>
+	{
 		static_assert(!std::is_same_v<R, void>, "Should never get here with retval == void");
 
-		Q_ASSERT(check_retfuture == retfuture_copy);
+		using ExtFutureR = ExtFuture<R>;
 
-		try
+		ExtFutureR retfuture;
+
+		// This exists solely so we can assert that the ExtFuture passed into the callback is correct.
+		ExtFutureR check_retfuture = retfuture;
+
+	//	static_assert(sizeof...(args) != 0);
+
+
+		/*
+		 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
+		 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
+		 *      in the inner lambda.
+		 *      Bottom line is that the variable "function" can't be captured by a lambda (or apparently stored at all)
+		 *      unless we decay off the reference-ness.
+		 */
+
+
+		auto lambda = [=, callback_copy=std::decay_t<CallbackType>(callback),
+					check_retfuture=retfuture, retfuture_copy=retfuture]
+					(Args&&... args) mutable -> void
 		{
-			// Call the function the user originally passed in.
-//			qDb() << "RUNNING";
-			if constexpr(sizeof...(args) != 0)
+			R retval;
+
+			static_assert(sizeof...(args) != 0);
+			static_assert(!std::is_same_v<R, void>, "Should never get here with retval == void");
+
+			Q_ASSERT(check_retfuture == retfuture_copy);
+
+			try
 			{
-				retval = std::invoke(callback_copy, args...);
+				// Call the function the user originally passed in.
+	//			qDb() << "RUNNING";
+				if constexpr(sizeof...(args) != 0)
+				{
+					retval = std::invoke(callback_copy, args...);
+				}
+				else
+				{
+	//				M_PRINT_TYPEOF_VAR_IN_ERROR(retval);
+					static_assert(std::is_same_v<R, std::invoke_result_t<CallbackType, void>>);
+					retval = std::invoke(callback_copy);
+				}
+	//			qDb() << "RUNNING END";
+				// Report our single result.
+				retfuture_copy.reportResult(retval);
 			}
-			else
+			catch(ExtAsyncCancelException& e)
 			{
-						M_PRINT_TYPEOF_VAR_IN_ERROR(retval);
-				static_assert(std::is_same_v<R, std::invoke_result_t<CallbackType, void>>);
-				retval = std::invoke(callback_copy);
+				/**
+				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+				 *  state of the returned future object."
+				 */
+	//			qDb() << "Rethrowing exception";
+				retfuture_copy.reportException(e);
+				// I think we don't want to rethrow like this here.  This will throw to the wrong future
+				// (the QtConcurrent::run() retval, see above.
+				//throw;
 			}
-//			qDb() << "RUNNING END";
-			// Report our single result.
-			retfuture_copy.reportResult(retval);
-		}
-		catch(ExtAsyncCancelException& e)
-		{
-			/**
-			 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-			 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
-			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
-			 *  state of the returned future object."
-			 */
-//			qDb() << "Rethrowing exception";
-			retfuture_copy.reportException(e);
-			// I think we don't want to rethrow like this here.  This will throw to the wrong future
-			// (the QtConcurrent::run() retval, see above.
-			//throw;
-		}
-		catch(QException& e)
-		{
-//			qDb() << "Rethrowing exception";
-			retfuture_copy.reportException(e);
-		}
-		catch (...)
-		{
-//			qDb() << "Rethrowing exception";
-			retfuture_copy.reportException(QUnhandledException());
-		}
+			catch(QException& e)
+			{
+	//			qDb() << "Rethrowing exception";
+				retfuture_copy.reportException(e);
+			}
+			catch (...)
+			{
+	//			qDb() << "Rethrowing exception";
+				retfuture_copy.reportException(QUnhandledException());
+			}
 
-//		qDb() << "REPORTING FINISHED";
-		retfuture_copy.reportFinished();
+	//		qDb() << "REPORTING FINISHED";
+			retfuture_copy.reportFinished();
 
-		};
+			};
 
-//	QtConcurrent::run(lambda, std::decay_t<Args>(args)...);
-	QtConcurrent::run([](int, int, int) -> bool {
-		return true;
-	}, 1, 2 ,3);
+	//	QtConcurrent::run(lambda, std::decay_t<Args>(args)...);
+		QtConcurrent::run([](int, int, int) -> bool {
+			return true;
+		}, 1, 2 ,3);
 
-	return retfuture;
+		return retfuture;
+	}
+
+	}; // END struct detail
+} // END namespace ExtAsync
+
+template <class CallbackType,
+		class T, class U, class R = Unit::LiftT<ct::return_type_t<CallbackType>>>
+ExtFuture<R> run_again(CallbackType&& callback, T t, U u)
+{
+	return ExtFuture<R>(); //ExtAsync::detail_struct::run_again(callback, unit);
 }
 
 template <class CallbackType,
-		class R = ct::return_type_t<CallbackType>>
-		//, class R = Unit::LiftT<std::invoke_result_t<CallbackType>>>
+		class R = Unit::LiftT<ct::return_type_t<CallbackType>>
+//		class R = Unit::LiftT<std::invoke_result_t<CallbackType>>
+>
 ExtFuture<R> run_again(CallbackType&& callback)
 {
-	return ExtFuture<int>();//run_again(std::decay_t(callback), unit);
+	return ExtFuture<R>(); //ExtAsync::detail_struct::run_again(callback, unit);
 }
 
 #endif /* SRC_CONCURRENCY_IMPL_EXTASYNC_IMPL_H_ */
