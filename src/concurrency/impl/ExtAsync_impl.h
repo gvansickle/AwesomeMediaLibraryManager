@@ -143,9 +143,6 @@ namespace ExtAsync
 			};
 
 		QtConcurrent::run(lambda, retfuture, std::forward<Args>(args)...);
-//		QtConcurrent::run([](int, int, int) -> bool {
-//			return true;
-//		}, 1, 2 ,3);
 
 		return retfuture;
 	}
@@ -154,10 +151,13 @@ namespace ExtAsync
 } // END namespace ExtAsync
 
 template <class CallbackType,
-		class T, class U, class R = Unit::LiftT<ct::return_type_t<CallbackType>>>
+		class T, class U,
+		  class R = Unit::LiftT<ct::return_type_t<CallbackType>>
+//		  REQUIRES(ct::is_invocable_r_v<R, CallbackType>)
+		  >
 ExtFuture<R> run_again(CallbackType&& callback, T t, U u)
 {
-	return ExtFuture<R>(); //ExtAsync::detail_struct::run_again(callback, unit);
+	return ExtAsync::detail_struct<CallbackType>::run_again(callback, t, u);
 }
 
 template <class CallbackType,
@@ -167,7 +167,6 @@ template <class CallbackType,
 >
 ExtFuture<R> run_again(CallbackType&& callback)
 {
-//	return ExtFuture<R>();
 	return ExtAsync::detail_struct<CallbackType>::run_again(callback);
 }
 
