@@ -19,6 +19,7 @@
 
 #ifndef SRC_CONCURRENCY_EXTFUTURE_H
 #define SRC_CONCURRENCY_EXTFUTURE_H
+#define EXTFUTURE_H_HAS_BEEN_INCLUDED
 
 /**
  * @file
@@ -204,7 +205,11 @@ public:
 	 */
 	template <class ExtFutureExtFutureT,
 			  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
-	explicit ExtFuture(ExtFuture<ExtFuture<T>>&& other);
+	explicit ExtFuture(ExtFuture<ExtFuture<T>>&& other)
+	{
+		Q_UNUSED(other);
+		static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
+	}
 
 	/**
 	 * Destructor.
@@ -284,23 +289,7 @@ public:
 	 * @return true if loop in runFunctor() should break due to being canceled.
 	 * @return
 	 */
-	bool HandlePauseResumeShouldICancel()
-	{
-		if (this->isPaused())
-		{
-			this->waitForResume();
-		}
-		if (this->isCanceled())
-		{
-			// The job should be canceled.
-			// The calling runFunctor() should break out of while() loop.
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
+	bool HandlePauseResumeShouldICancel();
 
 	/// From QFutureInterface<T>
 
@@ -1226,6 +1215,10 @@ qDb() << "END ThrowDownstreamCancelsUpstream";
 
 /// @name START ExtFuture member implementation
 
+#ifndef EXTFUTURE_IMPL_HAS_BEEN_INCLUDED
+#include "impl/ExtFuture_impl.hpp"
+#endif
+
 //template <class T>
 //ExtFuture<T>::ExtFuture(const QFuture<void>& f) : ExtFuture<T>::BASE_CLASS(f) {}
 
@@ -1239,42 +1232,6 @@ template<typename T>
 static ExtFutureState::State state(const ExtFuture<T>& ef)
 {
 	return ef.state();
-}
-
-template<typename T>
-ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture<T>& other)
-{
-	if(this != &other)
-	{
-		this->BASE_CLASS::operator=(other);
-		this->m_progress_unit = other.m_progress_unit;
-	}
-	return *this;
-}
-
-template<typename T>
-ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
-{
-	this->BASE_CLASS::operator=(other);
-	return *this;
-}
-
-template<typename T>
-T ExtFuture<T>::qtget_first()
-{
-	wait();
-	return this->result();
-}
-
-template<typename T>
-void ExtFuture<T>::wait()
-{
-	while (!this->isFinished())
-	{
-		// Pump the event loop.
-		QCoreApplication::processEvents(QEventLoop::AllEvents);
-		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-	}
 }
 
 /// END ExtFuture member implementation

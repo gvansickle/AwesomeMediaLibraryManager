@@ -42,3 +42,5 @@ template class ExtFuture<std::string>;
 template class ExtFuture<double>;
 template class ExtFuture<QString>;
 template class ExtFuture<QByteArray>;
+
+

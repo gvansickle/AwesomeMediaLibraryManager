@@ -19,26 +19,34 @@
 
 #ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
+#define EXTFUTURE_IMPL_HAS_BEEN_INCLUDED
 
-#if 0
-#include <config.h>
-#include "../ExtFutureState.h"
+#ifndef EXTFUTURE_H_HAS_BEEN_INCLUDED
+#include "../ExtFuture.h"
+//#include "../ExtAsync_traits.h"
 #endif
 
-#include "../ExtAsync_traits.h"
+template <class T>
+class ExtFuture;
 
-#if 1
+//#if 0
+//#include <config.h>
+//#include "../ExtFutureState.h"
+//#endif
+
+
+#if 0 // templates.....
 #define REAL_ONE_DOESNT_WORK
 #ifdef REAL_ONE_DOESNT_WORK
-template <class T>
+template <typename T>
 template <class ExtFutureExtFutureT,
 		  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
-explicit ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
+ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T>>&& other)
 {
 	Q_UNUSED(other);
 	static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
 }
-#else
+#elif 0 // !REAL_ONE_DOESNT_WORK
 	template <class ExtFutureExtFutureT,
 			  REQUIRES(is_nested_ExtFuture_v<ExtFutureExtFutureT>)>
 	ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
@@ -66,29 +74,68 @@ explicit ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
 		}
 
 	}
-#endif
-#endif
+#endif // REAL_ONE_DOESNT_WORK
+#endif // 0, disable the whole works.
 
-#if 0
+template<typename T>
+inline ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture<T>& other)
+{
+	if(this != &other)
+	{
+		this->BASE_CLASS::operator=(other);
+		this->m_progress_unit = other.m_progress_unit;
+	}
+	return *this;
+}
+
+template<typename T>
+ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
+{
+	if(this != &other)
+	{
+		this->BASE_CLASS::operator=(other);
+	}
+	return *this;
+}
+
+template<typename T>
+bool ExtFuture<T>::HandlePauseResumeShouldICancel()
+{
+	if (this->isPaused())
+	{
+		this->waitForResume();
+	}
+	if (this->isCanceled())
+	{
+		// The job should be canceled.
+		// The calling runFunctor() should break out of while() loop.
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 template<typename T>
 T ExtFuture<T>::qtget_first()
 {
-M_WARNING("segfaulting.");
 	wait();
-	return this->future().result();
+	return this->result();
 }
-
 
 template<typename T>
 void ExtFuture<T>::wait()
 {
-    while (!this->isFinished())
-    {
-    	// Pump the event loop.
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    }
+	while (!this->isFinished())
+	{
+		// Pump the event loop.
+		QCoreApplication::processEvents(QEventLoop::AllEvents);
+		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+	}
 }
+
+#if 0
 
 template<typename T>
 ExtFutureState::States ExtFuture<T>::state() const
