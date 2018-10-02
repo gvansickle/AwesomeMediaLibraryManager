@@ -19,7 +19,6 @@
 
 #ifndef SRC_CONCURRENCY_EXTFUTURE_H
 #define SRC_CONCURRENCY_EXTFUTURE_H
-#define EXTFUTURE_H_HAS_BEEN_INCLUDED
 
 /**
  * @file
@@ -60,8 +59,8 @@
 namespace ExtAsync { namespace detail {} }
 
 
-//template <class T>
-//class ExtFuture;
+template <class T>
+class ExtFuture;
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
@@ -290,7 +289,24 @@ public:
 	 * @return true if loop in runFunctor() should break due to being canceled.
 	 * @return
 	 */
-	bool HandlePauseResumeShouldICancel();
+	bool HandlePauseResumeShouldICancel()
+	{
+		if (this->isPaused())
+		{
+			this->waitForResume();
+		}
+		if (this->isCanceled())
+		{
+			// The job should be canceled.
+			// The calling runFunctor() should break out of while() loop.
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 
 	/// From QFutureInterface<T>
 
@@ -550,6 +566,47 @@ public:
 	}
 
 	/**
+	 * Attach downstream_future to this such that any cancel or exception thrown by downstream_future
+	 * cancels this future.
+	 *
+	 * @param downstream_future
+	 */
+	template <class U>
+	void AddDownstreamCancelFuture(ExtFuture<U> downstream_future)
+	{
+		QtConcurrent::run([=]() mutable {
+			try
+			{
+				// Will block, throw if an exception is reported to it.
+				qDb() << "Waiting on downstream finish";
+				spinWaitForFinishedOrCanceled(downstream_future);
+				downstream_future.waitForFinished();
+			}
+			catch(ExtAsyncCancelException& e)
+			{
+				qDb() << "Rethrowing ExtAsyncCancelException";
+				this->reportException(e);
+			}
+			catch(QException& e)
+			{
+				qDb() << "Rethrowing QException";
+				this->reportException(e);
+			}
+			catch(...)
+			{
+				this->reportException(QUnhandledException());
+			};
+
+			// Else wait completed.  Was it a cancel?
+			if(downstream_future.isCanceled())
+			{
+				qDb() << "WAS A CANCEL CALL, CONVERTING TO EXCEPTION";
+				this->reportException(ExtAsyncCancelException());
+			}
+		});
+	}
+
+	/**
 	 * std::experimental::future-like .then() which attaches a continuation function @a then_callback to @a this,
 	 * where then_callback's signature is:
 	 * 	@code
@@ -625,120 +682,66 @@ public:
 		// The future we'll return.
 		ExtFuture<R> retfuture;
 
-		retfuture = run_again(
-			[=, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) -> R {
-//			spinWaitForFinishedOrCanceled();
-			R retval = std::invoke(then_callback_copy, this_future);
-			ret_future.reportResult(retval);
-			return retval;
-			;}, *this, retfuture);
+		QtConcurrent::run(
+			[=,	&retfuture, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
+					(ExtFuture<T> this_copy, ExtFuture<R> ret_future) {
 
-#if 0
-		QtConcurrent::run([=, then_callback_copy = std::decay_t<F>(then_callback)](ExtFuture<T> this_future, ExtFuture<R> ret_future) {
-
-			Q_ASSERT(this_future == *this);
-			Q_ASSERT(this_future != ret_future);
-
-			if(this_future.isCanceled())
-			{
-				Q_ASSERT(0);
-				this_future.reportException(ExtAsyncCancelException());
-				this_future.reportFinished();
-				return;
-			}
-
-//			Q_ASSERT(this_future.isCanceled());
-//			Q_ASSERT(ret_future.isCanceled());
-
-			qDb() << "PRE-THEN: START THEN RUN(), thisfuture:" << this_future.state() << "ret_future:" << ret_future.state();
-
-			PropagateDownstreamCancelsUpstream(ret_future, *this);
-
-			// Wait for this_future (the upstream) to finish.
-			// We should never end up calling then_callback_copy with a non-finished future; this is the code
-			// which will guarantee that.
-			// This could throw a propagated exception from upstream.
-			// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't use
-			// this_future.waitForFinished(); here because it will return immediately if the thread hasn't
-			// "really" started (i.e. if isRunning() == false).
-			qDb() << "PRE-THEN: Waiting for upstream future" << M_NAME_VAL(this_future) <<  "to finish/cancel";
-//			this_future.waitForFinished();
-			spinWaitForFinishedOrCanceled(this_future);
-			qDb() << "PRE-THEN: upstream finished/canceled:" << M_NAME_VAL(this_future);
-
-			// Ok, thisfuture is finished.
-			// Is it really canceled?
-			if(this_future.isCanceled())
-			{
-				// It was canceled.
-				qWr() << "PRE-THEN: CANCELLED";
-				/// @todo Propagate downstream? Or should this throw a cancellation exception?
-				//	ret_future.cancel();
-			}
-
-			// ret_future shouldn't be possibly canceled yet.
-//			Q_ASSERT(ret_future.isCanceled());
-
-			// Call the then callback.
-			// We should never end up calling then_callback_copy with a non-finished future.
-			// We call it either directly (no context), or via an event sent to the context object's event loop.
-			R retval;
+			Q_ASSERT(retfuture == ret_future);
+			Q_ASSERT(*this == this_copy);
+			Q_ASSERT(ret_future != this_copy);
 
 			try
 			{
-				if constexpr (true)//context == nullptr)
-				{
-					retval = std::invoke(then_callback_copy, this_future);
-				}
-				else
-				{
-					qWr() << "RUNNING IN EVENT LOOP";
-					retval = run_in_event_loop(context, then_callback_copy);
-				}
+				qDb() << "In Then callback Try:" << this_copy;
+				// We should never end up calling then_callback_copy with a non-finished future; this is the code
+				// which will guarantee that.
+				// This could throw a propagated exception from upstream.
+				// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't use
+				// this_future.waitForFinished(); here because it will return immediately if the thread hasn't
+				// "really" started (i.e. if isRunning() == false).
+				spinWaitForFinishedOrCanceled(this_copy);
+				// Will block, throw if an exception is reported to it.
+				this_copy.waitForFinished();
+
+				qDb() << "Leaving Then callback Try:" << this_copy;
 			}
-			catch (QException &e)
+			catch(ExtAsyncCancelException& e)
 			{
-				qWr() << "CAUGHT EXCEPTION IN then_callback_copy, reporting it to this";
-				this_future.reportException(e);
+				qDb() << "Rethrowing ExtAsyncCancelException downstream";
+				ret_future.reportException(e);
 			}
-			catch (...)
+			catch(QException& e)
 			{
-				qWr() << "CAUGHT UNKNOWN EXCEPTION IN then_callback_copy, reporting it to this";
-				this_future.reportException(QUnhandledException());
+				qDb() << "Rethrowing QException downstream";
+				ret_future.reportException(e);
+			}
+			catch(...)
+			{
+				qDb() << "Rethrowing QUnhandledException downstream";
+				ret_future.reportException(QUnhandledException());
+			};
+
+			// Wait completed and didn't throw.  Was it a cancel?
+			qDb() << "THENCB: WAITFINISHED:" << this_copy.state();
+			if(this_copy.isCanceled())
+			{
+				qDb() << "WAS A CANCEL, throwing ExtAsyncCancelException downstream";
+				ret_future.reportException(ExtAsyncCancelException());
+			}
+			else
+			{
+				// Wait just finished, call the then callback.
+				R retval = std::invoke(then_callback_copy, this_copy);
+				ret_future.reportResult(retval);
 			}
 
-			qDb() << "THEN: then_callback CALLED and RETURNED. reporting FINISHED on ret_future with retval."; //, retval:" << retval;
+			ret_future.reportFinished();
 
-			this_future.reportFinished();
+			}, *this, retfuture);
 
-			ret_future.reportFinished(&retval);
+		qDb() << "ADDING CANCELLER TO RETFUTURE:" << retfuture;
+		this->AddDownstreamCancelFuture(retfuture);
 
-			Q_ASSERT(ret_future.isFinished());
-
-			// Check final state.  We know it's at least Finished.
-			/// @todo Could we be Finished here with pending results?
-			/// Don't care as much on non-Finished cases.
-//			if(thisfuture.isCanceled())
-//			{
-//				qDb() << "TAP: ef cancelled:" << thisfuture.state();
-//				ret_future.reportCanceled();
-//			}
-//			else if(thisfuture.isFinished())
-//			{
-//				qDb() << "TAP: ef finished:" << thisfuture.state();
-//				ret_future.reportFinished();
-//			}
-//			else
-//			{
-//				/// @todo Exceptions.
-//				qDb() << "NOT FINISHED OR CANCELED:" << thisfuture.state();
-//				Q_ASSERT(0);
-//			}
-		},
-		*this,
-		retfuture);
-
-#endif
 		return retfuture;
 	}
 
@@ -1216,9 +1219,7 @@ qDb() << "END ThrowDownstreamCancelsUpstream";
 
 /// @name START ExtFuture member implementation
 
-#ifndef EXTFUTURE_IMPL_HAS_BEEN_INCLUDED
 #include "impl/ExtFuture_impl.hpp"
-#endif
 
 //template <class T>
 //ExtFuture<T>::ExtFuture(const QFuture<void>& f) : ExtFuture<T>::BASE_CLASS(f) {}

@@ -19,12 +19,11 @@
 
 #ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
-#define EXTFUTURE_IMPL_HAS_BEEN_INCLUDED
 
-#ifndef EXTFUTURE_H_HAS_BEEN_INCLUDED
-#include "../ExtFuture.h"
-//#include "../ExtAsync_traits.h"
-#endif
+//#ifndef EXTFUTURE_H_HAS_BEEN_INCLUDED
+//#include "../ExtFuture.h"
+////#include "../ExtAsync_traits.h"
+//#endif
 
 template <class T>
 class ExtFuture;
@@ -96,25 +95,6 @@ ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
 		this->BASE_CLASS::operator=(other);
 	}
 	return *this;
-}
-
-template<typename T>
-bool ExtFuture<T>::HandlePauseResumeShouldICancel()
-{
-	if (this->isPaused())
-	{
-		this->waitForResume();
-	}
-	if (this->isCanceled())
-	{
-		// The job should be canceled.
-		// The calling runFunctor() should break out of while() loop.
-		return true;
-	}
-	else
-	{
-		return false;
-	}
 }
 
 template<typename T>

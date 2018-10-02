@@ -150,15 +150,15 @@ namespace ExtAsync
 	}; // END struct detail
 } // END namespace ExtAsync
 
-template <class CallbackType,
-		class T, class U,
-		  class R = Unit::LiftT<ct::return_type_t<CallbackType>>
-//		  REQUIRES(ct::is_invocable_r_v<R, CallbackType>)
-		  >
-ExtFuture<R> run_again(CallbackType&& callback, T t, U u)
-{
-	return ExtAsync::detail_struct<CallbackType>::run_again(callback, t, u);
-}
+//template <class CallbackType,
+//		class T, class U,
+//		  class R = Unit::LiftT<ct::return_type_t<CallbackType>>
+////		  REQUIRES(ct::is_invocable_r_v<R, CallbackType>)
+//		  >
+//ExtFuture<R> run_again(CallbackType&& callback, T t, U u)
+//{
+//	return ExtAsync::detail_struct<CallbackType>::run_again(callback, t, u);
+//}
 
 template <class CallbackType,
 //		  class R = Unit::LiftT<ct::return_type_t<CallbackType>>
