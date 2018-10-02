@@ -500,7 +500,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	ExtFuture<int> run_down;
 	QtConcurrent::run([=, &rsm, &run_down](ExtFuture<int> run_down_copy) {
-		TCOUT << "IN RUN CALLBACK, up_copy:" << run_down_copy;
+		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
 		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
 
 		rsm.ReportResult(T1STARTCB);

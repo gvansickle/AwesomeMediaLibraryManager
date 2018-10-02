@@ -367,10 +367,14 @@ public:
 	 */
 	void reportException(const QException &e)
 	{
-		Q_ASSERT(!this->isCanceled());
-		Q_ASSERT(!this->isFinished());
-		AMLM_WARNIF(!this->isCanceled());
-		AMLM_WARNIF(!this->isFinished());
+//		Q_ASSERT(!this->isCanceled());
+//		Q_ASSERT(!this->isFinished());
+//		AMLM_WARNIF(!this->isCanceled());
+//		AMLM_WARNIF(!this->isFinished());
+		if(this->isCanceled() || this->isFinished())
+		{
+			qWr() << "FUTURE ALREADY FINISHED/CANCELED, EXCEPTION WILL BE IGNORED";
+		}
 		this->d.reportException(e);
 	}
 
