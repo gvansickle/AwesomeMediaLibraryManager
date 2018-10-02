@@ -578,9 +578,35 @@ public:
 			try
 			{
 				// Will block, throw if an exception is reported to it.
-				qDb() << "Waiting on downstream finish";
+				qDb() << "Spinwait on downstream finish:" << downstream_future;
 				spinWaitForFinishedOrCanceled(downstream_future);
-				downstream_future.waitForFinished();
+
+				// downstream_future == (Running|Started|Canceled) here.  waitForFinished()
+				// will try to steal and run runnable, so we'll use result() instead.
+				/// @todo This is even more heavyweight, maybe try to flip the "Running" state?
+				/// Another possibility is waitForResult(int), it throws immediately, then might do a bunch
+				/// of other stuff including work stealing.
+				qDb() << "Spinwait complete, downstream_future.waitForFinished()...:" << downstream_future;
+
+				try /// @note This try/catch is just so we can observe the throw for debug.
+				{
+//					downstream_future.waitForFinished();
+					downstream_future.result();
+				}
+				catch(...)
+				{
+					qDb() << "downstream_future.waitForFinished() threw:" << downstream_future;
+					throw;
+				}
+
+				qDb() << "waitForFinished() complete, did not throw:" << downstream_future;
+
+				// Didn't throw, could have been .cancel()ed, which doesn't directly throw.
+				if(downstream_future.isCanceled())
+				{
+					qDb() << "downstream_future CANCELED BY .cancel() CALL, CONVERTING TO EXCEPTION";
+					this->reportException(ExtAsyncCancelException());
+				}
 			}
 			catch(ExtAsyncCancelException& e)
 			{
@@ -594,16 +620,15 @@ public:
 			}
 			catch(...)
 			{
+				qDb() << "Rethrowing unknown exception";
 				this->reportException(QUnhandledException());
 			};
 
-			// Else wait completed.  Was it a cancel?
-			if(downstream_future.isCanceled())
-			{
-				qDb() << "WAS A CANCEL CALL, CONVERTING TO EXCEPTION";
-				this->reportException(ExtAsyncCancelException());
-			}
-		});
+			// downstream_future is completed one way or another, and above has already handled
+			// and reported any exceptions upstream to this.  Or downstream_future has finished.
+			// If we get here, there's really nothing for us to do.
+			qDb() << "downstream_future finished not canceled:" << downstream_future;
+			});
 	}
 
 	/**
@@ -630,10 +655,40 @@ public:
 	 * @return A new future for containing the return value of @a continuation_function.
 	 */
 	/**
+	 * @todo Exception handling.
+	 * This is the basic pattern used in the RunFunctionTaskBase<> and RunFunctionTask<> class templates from Qt5's internals.
+	 *  Note the use of reportException():
+	 * run()
+	 * {
+	 * 	if (this->isCanceled())
+		{
+			// We've been cancelled before we started, just report finished.
+			/// @note It seems like we also should be calling reportCancelled(),
+			/// but neither of Qt5's RunFunctionTask<T> nor Qt Creator's AsyncJob<> (derived only from QRunnable)
+			/// do so.
+			this->reportFinished();
+			return;
+		}
+
+		try
+		{
+	 * 		this->m_task->run(*this);
+		} catch (QException &e) {
+			QFutureInterface<T>::reportException(e);
+		} catch (...) {
+			QFutureInterface<T>::reportException(QUnhandledException());
+		}
+
+		this->reportResult(result);
+		this->reportFinished();
+		}
+	 */
+	/**
 	 * The then() implementation.
 	 * Takes a context object and a then_callback which returns a non-void-non-ExtFuture<> result.
 	 * If context == nullptr, then_callback will be run in an arbitrary thread.
 	 * If context points to a QObject, then_callback will be run in its event loop.
+	 *
 	 */
 	template <typename ThenCallbackType,
 			  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
@@ -649,61 +704,31 @@ public:
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
 		}
 
-		/**
-		 * @todo Exception handling.
-		 * This is the basic pattern used in the RunFunctionTaskBase<> and RunFunctionTask<> class templates from Qt5's internals.
-		 *  Note the use of reportException():
-		 * run()
-		 * {
-		 * 	if (this->isCanceled())
-			{
-				// We've been cancelled before we started, just report finished.
-				/// @note It seems like we also should be calling reportCancelled(),
-				/// but neither of Qt5's RunFunctionTask<T> nor Qt Creator's AsyncJob<> (derived only from QRunnable)
-				/// do so.
-				this->reportFinished();
-				return;
-			}
-
-			try
-			{
-		 * 		this->m_task->run(*this);
-			} catch (QException &e) {
-				QFutureInterface<T>::reportException(e);
-			} catch (...) {
-				QFutureInterface<T>::reportException(QUnhandledException());
-			}
-
-			this->reportResult(result);
-			this->reportFinished();
-			}
-		 */
-
 		// The future we'll return.
 		ExtFuture<R> retfuture;
 
 		QtConcurrent::run(
 			[=,	&retfuture, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
-					(ExtFuture<T> this_copy, ExtFuture<R> ret_future) {
+					(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future) {
 
 			Q_ASSERT(retfuture == ret_future);
-			Q_ASSERT(*this == this_copy);
-			Q_ASSERT(ret_future != this_copy);
+			Q_ASSERT(*this == this_future_copy);
+			Q_ASSERT(ret_future != this_future_copy);
 
 			try
 			{
-				qDb() << "In Then callback Try:" << this_copy;
+				qDb() << "In Then callback Try:" << this_future_copy;
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
 				// This could throw a propagated exception from upstream.
 				// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't use
 				// this_future.waitForFinished(); here because it will return immediately if the thread hasn't
 				// "really" started (i.e. if isRunning() == false).
-				spinWaitForFinishedOrCanceled(this_copy);
+				spinWaitForFinishedOrCanceled(this_future_copy);
 				// Will block, throw if an exception is reported to it.
-				this_copy.waitForFinished();
+				this_future_copy.waitForFinished();
 
-				qDb() << "Leaving Then callback Try:" << this_copy;
+				qDb() << "Leaving Then callback Try:" << this_future_copy;
 			}
 			catch(ExtAsyncCancelException& e)
 			{
@@ -722,8 +747,8 @@ public:
 			};
 
 			// Wait completed and didn't throw.  Was it a cancel?
-			qDb() << "THENCB: WAITFINISHED:" << this_copy.state();
-			if(this_copy.isCanceled())
+			qDb() << "THENCB: WAITFINISHED:" << this_future_copy.state();
+			if(this_future_copy.isCanceled())
 			{
 				qDb() << "WAS A CANCEL, throwing ExtAsyncCancelException downstream";
 				ret_future.reportException(ExtAsyncCancelException());
@@ -731,7 +756,8 @@ public:
 			else
 			{
 				// Wait just finished, call the then callback.
-				R retval = std::invoke(then_callback_copy, this_copy);
+				/// @todo then_callback_copy could also throw here.
+				R retval = std::invoke(then_callback_copy, this_future_copy);
 				ret_future.reportResult(retval);
 			}
 
@@ -739,8 +765,9 @@ public:
 
 			}, *this, retfuture);
 
-		qDb() << "ADDING CANCELLER TO RETFUTURE:" << retfuture;
+		qDb() << "ADDING DOWNSTREAM CANCELLER with RETFUTURE:" << retfuture;
 		this->AddDownstreamCancelFuture(retfuture);
+		qDb() << "ADDED DOWNSTREAM CANCELLER with RETFUTURE:" << retfuture;
 
 		return retfuture;
 	}
