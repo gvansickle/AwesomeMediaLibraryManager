@@ -47,8 +47,7 @@
 #include "../ExtAsync.h"
 #include "../ExtFuture.h"
 #warning "TEMP"
-#include "../impl/ExtAsync_impl.h"
-#include "../ExtFuture.h"
+//#include "../impl/ExtAsync_impl.h"
 
 //#include <continuable/continuable.hpp>
 
@@ -464,77 +463,148 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();
 
-	ExtFuture<int> up;
-	EXPECT_FALSE(up.isCanceled());
-	ExtFuture<int> down = up.then([](ExtFuture<int> upcopy){
+	ResultsSequenceMock rsm;
+	enum
+	{
+		MSTART = 0,
+		MEND = 1,
+		T1STARTCB = 2,
+		T1ENDCB = 3,
+	};
+	QSemaphore semDone(0);
+
+	using ::testing::InSequence;
+	using ::testing::Return;
+	using ::testing::Eq;
+	using ::testing::ReturnArg;
+	using ::testing::_;
+
+	ON_CALL(rsm, ReportResult(_))
+			.WillByDefault(ReturnArg<0>());
+	{
+		InSequence s;
+
+		EXPECT_CALL(rsm, ReportResult(MSTART))
+			.WillOnce(ReturnFromAsyncCall(MSTART, &semDone));
+		EXPECT_CALL(rsm, ReportResult(T1STARTCB))
+			.WillOnce(ReturnFromAsyncCall(T1STARTCB, &semDone));
+		EXPECT_CALL(rsm, ReportResult(T1ENDCB))
+			.WillOnce(ReturnFromAsyncCall(T1ENDCB, &semDone));
+		EXPECT_CALL(rsm, ReportResult(MEND))
+			.WillOnce(ReturnFromAsyncCall(MEND, &semDone));
+//		EXPECT_CALL(rsm, ReportResult(5))
+//			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+	}
+
+	rsm.ReportResult(MSTART);
+
+	ExtFuture<int> run_down;
+	QtConcurrent::run([=, &rsm, &run_down](ExtFuture<int> run_down_copy) {
+		TCOUT << "IN RUN CALLBACK, up_copy:" << run_down_copy;
+		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
+
+		rsm.ReportResult(T1STARTCB);
+		while(true)
+		{
+			run_down_copy.reportStarted();
+			// Wait a sec before doing anything.
+			TC_Sleep(1000);
+			run_down_copy.reportResult(5);
+			if(run_down_copy.HandlePauseResumeShouldICancel())
+			{
+				break;
+			}
+		}
+		run_down_copy.reportFinished();
+		rsm.ReportResult(T1ENDCB);
+	}, run_down);
+
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
+
+	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
+	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
+			// Immediately return.
+		AMLMTEST_EXPECT_EQ(upcopy, run_down);
+		TCOUT << "THEN RETURNING";
 			return 5;
 			;});
 	EXPECT_FALSE(down.isCanceled());
 
-	down.cancel();
-	TC_Sleep(1000);
-	EXPECT_TRUE(down.isCanceled());
-	EXPECT_TRUE(up.isCanceled()) << up;
+	// Wait a few ticks.
+	TC_Sleep(500);
 
-	QFutureSynchronizer<void> synchronizer;
+	// Cancel the downstream future.
+	TCOUT << "CANCELING DOWNSTREAM" << down;
+	down.reportException(ExtAsyncCancelException());
+	TCOUT << "CANCELED DOWNSTREAM" << down;
 
-	ExtFuture<int> main_future = async_int_generator<ExtFuture<int>>(1, 6, this);
-
-	ExtFuture<int> then_future = main_future.then([&](ExtFuture<int> in_future) {
-			AMLMTEST_EXPECT_EQ(in_future, main_future);
-//			if(in_future.isCanceled())
-//			{
-//				qDb() << "THEN: CANCELED, throwing";
-//				throw ExtAsyncCancelException();
-//			}
-		// Should be canceled before we get here.
-		AMLMTEST_EXPECT_FALSE(true);
-			/// @experimental
-//			AMLMTEST_COUT << "Throwing Cancel exception";
-//			throw ExtAsyncCancelException();
-
-			// Return the count of items from the future.
-			return in_future.resultCount();
-			;});
-
-	AMLMTEST_COUT << "Started main_future:" << main_future.state();
-	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(main_future);
-	AMLMTEST_COUT << "Started then_future:" << then_future.state();
-	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(then_future);
-
-	// Wait a bit, then cancel the future returned by then().
-	TC_Sleep(1000);
-
-	AMLMTEST_COUT << "PRE: Canceling then_future:" << then_future; ///< (Running|Started)
-	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(then_future); // One last check after the delay.
-	then_future.cancel();
-//	then_future.reportCanceled();
-
-	AMLMTEST_COUT << "POST: Canceled then_future:" << then_future; ///< (Running|Started|Canceled)
-
-	AMLMTEST_EXPECT_FUTURE_POST_CANCEL(then_future);
-
-	// Wait a bit for the cancel to propagate.
-	AMLMTEST_COUT << "START WAITING FOR PROPAGATION";
+	TCOUT << "WAITING TO PROPAGATE";
 	TC_Wait(2000);
-	AMLMTEST_COUT << "END WAITING FOR PROPAGATION";
 
-	/// @note Canceling alone does not finish the main_future.
-	ASSERT_FALSE(main_future.isFinished());
+	EXPECT_TRUE(down.isCanceled());
+	EXPECT_TRUE(run_down.isCanceled()) << run_down;
 
-	ASSERT_TRUE(main_future.isStarted());
-	ASSERT_TRUE(main_future.isCanceled()) << main_future;
-//	ASSERT_TRUE(main_future.isFinished()) << main_future;
+	rsm.ReportResult(MEND);
 
-	main_future.waitForFinished();
+//	QFutureSynchronizer<void> synchronizer;
 
-	ASSERT_TRUE(main_future.isFinished());
+//	ExtFuture<int> main_future = async_int_generator<ExtFuture<int>>(1, 6, this);
 
-	qDb() << "Canceled and finished extfuture:" << main_future;
+//	ExtFuture<int> then_future = main_future.then([&](ExtFuture<int> in_future) {
+//			AMLMTEST_EXPECT_EQ(in_future, main_future);
+////			if(in_future.isCanceled())
+////			{
+////				qDb() << "THEN: CANCELED, throwing";
+////				throw ExtAsyncCancelException();
+////			}
+//		// Should be canceled before we get here.
+//		AMLMTEST_EXPECT_FALSE(true);
+//			/// @experimental
+////			AMLMTEST_COUT << "Throwing Cancel exception";
+////			throw ExtAsyncCancelException();
 
-	synchronizer.addFuture(main_future);
-	synchronizer.addFuture(then_future);
-	synchronizer.waitForFinished();
+//			// Return the count of items from the future.
+//			return in_future.resultCount();
+//			;});
+
+//	AMLMTEST_COUT << "Started main_future:" << main_future.state();
+//	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(main_future);
+//	AMLMTEST_COUT << "Started then_future:" << then_future.state();
+//	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(then_future);
+
+//	// Wait a bit, then cancel the future returned by then().
+//	TC_Sleep(1000);
+
+//	AMLMTEST_COUT << "PRE: Canceling then_future:" << then_future; ///< (Running|Started)
+//	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(then_future); // One last check after the delay.
+//	then_future.cancel();
+////	then_future.reportCanceled();
+
+//	AMLMTEST_COUT << "POST: Canceled then_future:" << then_future; ///< (Running|Started|Canceled)
+
+//	AMLMTEST_EXPECT_FUTURE_POST_CANCEL(then_future);
+
+//	// Wait a bit for the cancel to propagate.
+//	AMLMTEST_COUT << "START WAITING FOR PROPAGATION";
+//	TC_Wait(2000);
+//	AMLMTEST_COUT << "END WAITING FOR PROPAGATION";
+
+//	/// @note Canceling alone does not finish the main_future.
+//	ASSERT_FALSE(main_future.isFinished());
+
+//	ASSERT_TRUE(main_future.isStarted());
+//	ASSERT_TRUE(main_future.isCanceled()) << main_future;
+////	ASSERT_TRUE(main_future.isFinished()) << main_future;
+
+//	main_future.waitForFinished();
+
+//	ASSERT_TRUE(main_future.isFinished());
+
+//	qDb() << "Canceled and finished extfuture:" << main_future;
+
+//	synchronizer.addFuture(main_future);
+//	synchronizer.addFuture(then_future);
+//	synchronizer.waitForFinished();
 
 	TC_EXIT();
 }
@@ -560,7 +630,6 @@ TEST_F(ExtFutureTest, ExtFutureCancelPromise)
     result.waitForFinished();
     ASSERT_TRUE(f.isCanceled());
 
-    TC_DONE_WITH_STACK();
     TC_EXIT();
 }
 
@@ -588,7 +657,6 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
 
     promise_side.reportFinished();
 
-    TC_DONE_WITH_STACK();
     TC_EXIT();
 }
 
