@@ -343,9 +343,9 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	ResultsSequenceMock rsm;
 	enum
 	{
-		MSTART = 0,
-		MEND = 1,
-		T1STARTCB = 2,
+		MSTART,
+		MEND,
+		T1STARTCB,
 	};
 	QSemaphore semDone(0);
 
@@ -389,13 +389,6 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 				TCOUT << "upcopy state:" << upcopy.state();
 
-//				if (upcopy.isCanceled())
-//				{
-//					// The job should be canceled.
-//					// The calling runFunctor() should break out of while() loop.
-//					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
-//					break;
-//				}
 				if(upcopy.HandlePauseResumeShouldICancel())
 				{
 					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
@@ -407,10 +400,6 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 			return 1;
 	});
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(up);
-
-	// Pause so we're not immediately finished.
-//	up.setPaused(true);
-//	AMLMTEST_COUT << "UP PAUSED" << up.state();
 
 	ExtFuture<int> down = up.then([&](ExtFuture<int> upcopy) {
 		AMLMTEST_EXPECT_EQ(upcopy, up);

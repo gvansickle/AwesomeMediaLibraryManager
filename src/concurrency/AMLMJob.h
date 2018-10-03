@@ -171,7 +171,6 @@ class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJ
 
     Q_OBJECT
 	Q_INTERFACES(IExtFutureWatcher)
-//	Q_INTERFACES(IExtFutureExtendedStatusReporting)
 
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
@@ -220,7 +219,7 @@ Q_SIGNALS:
     void result(KJob *job) override;
 
     // QObject signals.
-    void destroyed(QObject* obj) override;
+	void destroyed(QObject* obj) override;
 
     /// @}
 
@@ -758,7 +757,7 @@ protected:
     {
         /// @note We're in an arbitrary thread here probably without an event loop.
 
-        qDbo() << "ExtFuture<T> state:" << m_ext_future.state();
+		qDb() << "ExtFuture<T> state:" << m_ext_future.state();
 
         // Check if we were canceled before we were started.
         if(m_ext_future.isCanceled())
@@ -770,7 +769,7 @@ protected:
             m_ext_future.reportFinished();
             AMLM_ASSERT_EQ(ExtFutureState::state(m_ext_future), (ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished));
 
-            // Do we need an emitResult() here?
+			/// @todo Do we really need an emitResult() here?
             emitResult();
             return;
         }
@@ -783,9 +782,9 @@ protected:
             // Start the work by calling the functor.  We should be in the Running state if we're in here.
             /// @todo But we're not Running here.  Not sure why.
     //        AMLM_ASSERT_EQ(ef.isRunning(), true);
-            qDbo() << "Pre-functor ExtFutureState:" << ExtFutureState::state(m_ext_future);
+//            qDb() << "Pre-functor ExtFutureState:" << ExtFutureState::state(m_ext_future);
             this->runFunctor();
-            qDbo() << "Functor complete, ExtFutureState:" << ExtFutureState::state(m_ext_future);
+//            qDb() << "Functor complete, ExtFutureState:" << ExtFutureState::state(m_ext_future);
         }
         catch(QException &e)
         {
@@ -812,11 +811,11 @@ protected:
         if(m_ext_future.isPaused())
         {
             // ExtAsync<> is paused, so wait for it to be resumed.
-            qWro() << "ExtAsync<> is paused, waiting for it to be resumed....";
+			qWr() << "ExtAsync<> is paused, waiting for it to be resumed....";
             m_ext_future.waitForResume();
         }
 
-        qDbo() << "REPORTING FINISHED";
+		qDb() << "REPORTING FINISHED";
         m_ext_future.reportFinished();
 
         // We should only have two possible states here, excl. exceptions for the moment:

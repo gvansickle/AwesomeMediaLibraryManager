@@ -20,6 +20,8 @@
 #ifndef EXTASYNCTESTCOMMON_H
 #define EXTASYNCTESTCOMMON_H
 
+#include <config.h>
+
 // Std C++
 #include <memory>
 #include <string>
@@ -32,7 +34,7 @@
 #include <tests/TestHelpers.h>
 
 #ifdef TEST_FWK_IS_GTEST
-	M_WARNING("Building for Google Test framework");
+//	M_WARNING("Building for Google Test framework");
 // Google Test Framework
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,7 +42,7 @@
 #include <tests/TestLifecycleManager.h>
 
 #elif defined(TEST_FWK_IS_QTEST)
-	M_WARNING("Building for QTest framework");
+//	M_WARNING("Building for QTest framework");
 #else
 #error "No test framework defined"
 #endif // TEST_FWK_IS_GTEST

@@ -367,10 +367,6 @@ public:
 	 */
 	void reportException(const QException &e)
 	{
-//		Q_ASSERT(!this->isCanceled());
-//		Q_ASSERT(!this->isFinished());
-//		AMLM_WARNIF(!this->isCanceled());
-//		AMLM_WARNIF(!this->isFinished());
 		if(this->isCanceled() || this->isFinished())
 		{
 			qWr() << "FUTURE ALREADY FINISHED/CANCELED, EXCEPTION WILL BE IGNORED";
@@ -703,6 +699,7 @@ public:
 		if(context != nullptr)
 		{
 			// If non-null, make sure context has an event loop.
+			/// @todo Use context.
 			QThread* ctx_thread = context->thread();
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
@@ -1248,7 +1245,9 @@ qDb() << "END ThrowDownstreamCancelsUpstream";
 	/// @}
 };
 
+
 /// @name START ExtFuture member implementation
+/// @{
 
 #include "impl/ExtFuture_impl.hpp"
 
@@ -1267,7 +1266,7 @@ static ExtFutureState::State state(const ExtFuture<T>& ef)
 	return ef.state();
 }
 
-/// END ExtFuture member implementation
+/// @} END ExtFuture member implementation
 
 /**
  * Convert any ExtFuture<T> to a QFuture<void>.

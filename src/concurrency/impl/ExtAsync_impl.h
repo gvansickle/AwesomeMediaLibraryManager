@@ -44,8 +44,8 @@
 #include "../ExtAsync_traits.h"
 #include "../ExtAsyncExceptions.h"
 
-template <class T>
-class ExtFuture;
+//template <class T>
+//class ExtFuture;
 
 namespace ExtAsync
 {
@@ -54,7 +54,6 @@ namespace ExtAsync
 	{
 
 	template<class... Args,
-//			 class R = Unit::LiftT<std::result_of_t<CallbackType>>
 			 class ExtFutureT = argtype_t<CallbackType, 0>,
 			 class R = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>,
 			 REQUIRES(is_ExtFuture_v<ExtFutureT>
@@ -97,18 +96,8 @@ namespace ExtAsync
 			try
 			{
 				// Call the function the user originally passed in.
-	//			qDb() << "RUNNING";
-//				if constexpr(sizeof...(copied_args_from_run) != 0)
-//				{
-					retval = std::invoke(callback_copy, retfuture_copy, copied_args_from_run...);
-//				}
-//				else
-//				{
-//					M_PRINT_TYPEOF_VAR_IN_ERROR(retval);
-//					static_assert(std::is_same_v<R, std::invoke_result_t<CallbackType, void>>);
-//					retval = std::invoke(callback_copy);
-//				}
-	//			qDb() << "RUNNING END";
+				retval = std::invoke(callback_copy, retfuture_copy, copied_args_from_run...);
+
 				// Report our single result.
 				retfuture_copy.reportResult(retval);
 			}
@@ -122,9 +111,6 @@ namespace ExtAsync
 				 */
 	//			qDb() << "Rethrowing exception";
 				retfuture_copy.reportException(e);
-				// I think we don't want to rethrow like this here.  This will throw to the wrong future
-				// (the QtConcurrent::run() retval, see above.
-				//throw;
 			}
 			catch(QException& e)
 			{

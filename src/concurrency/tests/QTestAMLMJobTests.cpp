@@ -259,7 +259,6 @@ M_WARNING("TODO");
 //ExtFuture<int> f2;
 #if 1
 //    async_results_from_get =
-M_WARNING("TODO: This is still spinning when the test exits.");
 	auto f2 = ef.tap(qApp->instance(), [=, &async_results_from_tap](ExtFuture<int> ef, int begin, int end)  {
 			AMLMTEST_COUT << "IN TAP, begin:" << begin << ", end:" << end;
 		for(int i = begin; i<end; i++)

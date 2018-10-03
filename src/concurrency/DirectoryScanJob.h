@@ -62,7 +62,7 @@ Q_SIGNALS:
      * whoever may be listening.
      */
 //    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
-    void SIGNAL_resultsReadyAt(int begin, int end) override;
+	void SIGNAL_resultsReadyAt(int begin, int end);
 
 protected:
     explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
