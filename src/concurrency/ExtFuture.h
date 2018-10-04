@@ -566,7 +566,7 @@ public:
 	}
 
 	/**
-	 * Attach downstream_future to this such that any cancel or exception thrown by downstream_future
+	 * Attach downstream_future to this ExtFuture such that any cancel or exception thrown by downstream_future
 	 * cancels this future.
 	 *
 	 * @param downstream_future
@@ -710,10 +710,11 @@ public:
 		ExtFuture<R> retfuture;
 
 		QtConcurrent::run(
-			[=,	&retfuture, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
+			[=,	then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
 					(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future) {
 
-			Q_ASSERT(retfuture == ret_future);
+			// retfuture will likely be gone by the time we get in here.
+//			Q_ASSERT(retfuture == ret_future);
 			Q_ASSERT(*this == this_future_copy);
 			Q_ASSERT(ret_future != this_future_copy);
 
@@ -727,7 +728,9 @@ public:
 				// this_future.waitForFinished(); here because it will return immediately if the thread hasn't
 				// "really" started (i.e. if isRunning() == false).
 				spinWaitForFinishedOrCanceled(this_future_copy);
-				// Will block, throw if an exception is reported to it.
+
+				// Ok, so now we're finished and/or canceled.
+				// This call will block, or throw if an exception is reported to this_future_copy.
 				this_future_copy.waitForFinished();
 
 				qDb() << "Leaving Then callback Try:" << this_future_copy;
@@ -748,17 +751,29 @@ public:
 				ret_future.reportException(QUnhandledException());
 			};
 
-			// Wait completed and didn't throw.  Was it a cancel?
+			// Wait on this_future_copy finished, and may have thrown above and been caught.
 			qDb() << "THENCB: WAITFINISHED:" << this_future_copy.state();
+			// Could have been a normal finish or a cancel.
+			// Was it a cancel?
 			if(this_future_copy.isCanceled())
 			{
-				qDb() << "WAS A CANCEL, throwing ExtAsyncCancelException downstream";
+				qDb() << "THENCB: WAS A CANCEL, throwing ExtAsyncCancelException downstream:" << this_future_copy;
 				ret_future.reportException(ExtAsyncCancelException());
+
+				if(true) /// @todo Should make this optional via a runtime param.
+				{
+					// Call the callback with the canceled/exception-laden future.
+					// This is for notification purposes.  The callback will have to check the state
+					// of the future prior to doing anything.
+					R retval = std::invoke(then_callback_copy, this_future_copy);
+					/// @todo ???: ret_future.reportResult(retval);
+				}
 			}
 			else
 			{
-				// Wait just finished, call the then callback.
+				// Wait finished normally, call the then callback.
 				/// @todo then_callback_copy could also throw here.
+				qDb() << "THENCB: WAS A NORMAL FINISH, CALLING THEN CALLBACK WITH FUTURE:" << this_future_copy;
 				R retval = std::invoke(then_callback_copy, this_future_copy);
 				ret_future.reportResult(retval);
 			}

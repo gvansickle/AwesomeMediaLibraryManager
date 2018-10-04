@@ -540,6 +540,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		MSTART,
 		MEND,
 		J1STARTCB,
+		J1CANCELED,
 		J1ENDCB,
 		T1STARTCB,
 		T1ENDCB,
@@ -558,6 +559,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 		TC_RSM_EXPECT_CALL(rsm, MSTART);
 		TC_RSM_EXPECT_CALL(rsm, J1STARTCB);
+		TC_RSM_EXPECT_CALL(rsm, J1CANCELED);
 		TC_RSM_EXPECT_CALL(rsm, J1ENDCB);
 //		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
 //		TC_RSM_EXPECT_CALL(rsm, T1ENDCB);
@@ -581,6 +583,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 			run_down_copy.reportResult(5);
 			if(run_down_copy.HandlePauseResumeShouldICancel())
 			{
+				rsm.ReportResult(J1CANCELED);
 				break;
 			}
 		}
@@ -593,33 +596,47 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
 	// Then 1
 	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
-//		rsm.ReportResult(T1STARTCB);
-			// Immediately return.
+
+//		ADD_FAILURE() << "We should never get in here on a cancelation.";
+		// Immediately return.
 		AMLMTEST_EXPECT_EQ(upcopy, run_down);
-		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() || upcopy.isCanceled());
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
+		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 		TCOUT << "THEN1 RETURNING, future state:" << upcopy;
-//		rsm.ReportResult(T1ENDCB);
-			return 5;
-			;});
+		return 5;
+	});
 	EXPECT_FALSE(down.isCanceled());
 
 	// Then 2
 	ExtFuture<int> down2 = down.then([=, &rsm, &down](ExtFuture<int> upcopy){
+
+		try
+		{
+			auto results_from_upstream = upcopy.results();
+			ADD_FAILURE() << "We should never get in here on a cancelation.";
+		}
+		catch(...)
+		{
+//			SUCCESS() << "CAUGHT EXCEPTION FROM upcopy";
+		}
+
+
 			// Immediately return.
 		AMLMTEST_EXPECT_EQ(upcopy, down);
-		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() || upcopy.isCanceled());
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
+		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
-			return 6;
-			;});
+		return 6;
+	});
 
 	// Wait a few ticks.
 	TC_Sleep(1000);
 
 	// Cancel the downstream future.
-	TCOUT << "CANCELING DOWNSTREAM" << down2;
+	TCOUT << "CANCELING TAIL:" << down2;
 //	down2.cancel();
 	down2.reportException(ExtAsyncCancelException());
-	TCOUT << "CANCELED DOWNSTREAM" << down2;
+	TCOUT << "CANCELED TAIL:" << down2;
 
 	TCOUT << "WAITING TO PROPAGATE";
 	TC_Wait(2000);
