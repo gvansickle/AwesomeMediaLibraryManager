@@ -578,8 +578,9 @@ public:
 			try
 			{
 				// Will block, throw if an exception is reported to it.
-				qDb() << "Spinwait on downstream finish:" << downstream_future;
+				qDb() << "Spinwaiting on downstream_future to finish:" << downstream_future;
 				spinWaitForFinishedOrCanceled(downstream_future);
+				Q_ASSERT(downstream_future.isCanceled() || downstream_future.isFinished());
 
 				// downstream_future == (Running|Started|Canceled) here.  waitForFinished()
 				// will try to steal and run runnable, so we'll use result() instead.
@@ -794,7 +795,7 @@ public:
 			  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then( ThenCallbackType&& then_callback )
 	{
-		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of F.
+		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
 		return this->then(/*QApplication::instance()*/nullptr, std::forward<ThenCallbackType>(then_callback));
 	}
 

@@ -534,15 +534,16 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 {
 	TC_ENTER();
 
-	ResultsSequenceMock rsm;
+	TC_START_RSM(rsm);
 	enum
 	{
 		MSTART,
 		MEND,
+		J1STARTCB,
+		J1ENDCB,
 		T1STARTCB,
 		T1ENDCB,
 	};
-	QSemaphore semDone(0);
 
 	using ::testing::InSequence;
 	using ::testing::Return;
@@ -555,26 +556,23 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	{
 		InSequence s;
 
-		EXPECT_CALL(rsm, ReportResult(MSTART))
-			.WillOnce(ReturnFromAsyncCall(MSTART, &semDone));
-		EXPECT_CALL(rsm, ReportResult(T1STARTCB))
-			.WillOnce(ReturnFromAsyncCall(T1STARTCB, &semDone));
-		EXPECT_CALL(rsm, ReportResult(T1ENDCB))
-			.WillOnce(ReturnFromAsyncCall(T1ENDCB, &semDone));
-		EXPECT_CALL(rsm, ReportResult(MEND))
-			.WillOnce(ReturnFromAsyncCall(MEND, &semDone));
-//		EXPECT_CALL(rsm, ReportResult(5))
-//			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+		TC_RSM_EXPECT_CALL(rsm, MSTART);
+		TC_RSM_EXPECT_CALL(rsm, J1STARTCB);
+		TC_RSM_EXPECT_CALL(rsm, J1ENDCB);
+//		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
+//		TC_RSM_EXPECT_CALL(rsm, T1ENDCB);
+		TC_RSM_EXPECT_CALL(rsm, MEND);
 	}
 
 	rsm.ReportResult(MSTART);
 
+	// The async task.  Spins forever, reporting "5" to run_down until canceled.
 	ExtFuture<int> run_down;
 	QtConcurrent::run([=, &rsm, &run_down](ExtFuture<int> run_down_copy) {
 		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
 		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
 
-		rsm.ReportResult(T1STARTCB);
+		rsm.ReportResult(J1STARTCB);
 		while(true)
 		{
 			run_down_copy.reportStarted();
@@ -587,7 +585,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 			}
 		}
 		run_down_copy.reportFinished();
-		rsm.ReportResult(T1ENDCB);
+		rsm.ReportResult(J1ENDCB);
 	}, run_down);
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
@@ -595,37 +593,44 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
 	// Then 1
 	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
+//		rsm.ReportResult(T1STARTCB);
 			// Immediately return.
 		AMLMTEST_EXPECT_EQ(upcopy, run_down);
-		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() | upcopy.isCanceled());
-		TCOUT << "THEN RETURNING";
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() || upcopy.isCanceled());
+		TCOUT << "THEN1 RETURNING, future state:" << upcopy;
+//		rsm.ReportResult(T1ENDCB);
 			return 5;
 			;});
 	EXPECT_FALSE(down.isCanceled());
 
 	// Then 2
-	ExtFuture<int> down2 = down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
+	ExtFuture<int> down2 = down.then([=, &rsm, &down](ExtFuture<int> upcopy){
 			// Immediately return.
-		AMLMTEST_EXPECT_EQ(upcopy, run_down);
-		TCOUT << "THEN RETURNING";
-			return 5;
+		AMLMTEST_EXPECT_EQ(upcopy, down);
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() || upcopy.isCanceled());
+		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
+			return 6;
 			;});
 
 	// Wait a few ticks.
-	TC_Sleep(500);
+	TC_Sleep(1000);
 
 	// Cancel the downstream future.
-	TCOUT << "CANCELING DOWNSTREAM" << down;
-	down.reportException(ExtAsyncCancelException());
-	TCOUT << "CANCELED DOWNSTREAM" << down;
+	TCOUT << "CANCELING DOWNSTREAM" << down2;
+//	down2.cancel();
+	down2.reportException(ExtAsyncCancelException());
+	TCOUT << "CANCELED DOWNSTREAM" << down2;
 
 	TCOUT << "WAITING TO PROPAGATE";
 	TC_Wait(2000);
 
 	EXPECT_TRUE(down.isCanceled());
+	EXPECT_TRUE(down2.isCanceled());
 	EXPECT_TRUE(run_down.isCanceled()) << run_down;
 
 	rsm.ReportResult(MEND);
+
+	TC_END_RSM(rsm);
 
 	TC_EXIT();
 }
