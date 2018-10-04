@@ -31,6 +31,7 @@
 #include <QSignalSpy>
 #include <QTest>
 
+// Ours, but with GTest/QTest in the middle.
 #include <tests/TestHelpers.h>
 
 #ifdef TEST_FWK_IS_GTEST
@@ -52,7 +53,6 @@
 
 
 // Ours
-//#include <tests/TestHelpers.h>
 #include "../ExtFuture.h"
 #include "../ExtAsync.h"
 #include "../ExtAsync_traits.h"
@@ -241,23 +241,23 @@ private Q_SLOTS:
 
 };
 
-#ifdef TEST_FWK_IS_GTEST
-// Specialize an action that synchronizes with the calling thread.
-// @link https://stackoverflow.com/questions/10767131/expecting-googlemock-calls-from-another-thread
-ACTION_P2(ReturnFromAsyncCall, RetVal, SemDone)
-{
-	SemDone->release();
-	return RetVal;
-}
+//#ifdef TEST_FWK_IS_GTEST
+////// Specialize an action that synchronizes with the calling thread.
+////// @link https://stackoverflow.com/questions/10767131/expecting-googlemock-calls-from-another-thread
+////ACTION_P2(ReturnFromAsyncCall, RetVal, SemDone)
+////{
+////	SemDone->release();
+////	return RetVal;
+////}
 
-#define TC_EXPECT_SEMDONE(sem) \
-do {\
-	bool acquired = (sem).tryAcquire(1, 1000);\
-	EXPECT_TRUE(acquired);\
-} while(0)
-#else
-#define TC_EXPECT_SEMDONE(sem) /* No gtest... nothing? */
-#endif
+//#define TC_END_RSM(sem) \
+//do {\
+//	bool acquired = (sem).tryAcquire(1, 1000);\
+//	EXPECT_TRUE(acquired);\
+//} while(0)
+//#else
+//#define TC_END_RSM(sem) /* No gtest... nothing? */
+//#endif
 
 
 /// @name Additional ExtAsync-specific test helper macros.

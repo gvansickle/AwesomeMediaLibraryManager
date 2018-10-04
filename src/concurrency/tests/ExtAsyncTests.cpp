@@ -783,8 +783,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 {
 	TC_ENTER();
 
-	ResultsSequenceMock rsm;
-	QSemaphore semDone(0);
+	TC_START_RSM(rsm);
 
 	// default behavior of ReportResult.
 	ON_CALL(rsm, ReportResult(_))
@@ -792,16 +791,21 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 	{
 		InSequence s;
 
-		EXPECT_CALL(rsm, ReportResult(0))
-			.WillOnce(ReturnFromAsyncCall(0, &semDone));
-		EXPECT_CALL(rsm, ReportResult(1))
-			.WillOnce(ReturnFromAsyncCall(1, &semDone));
+		TC_RSM_EXPECT_CALL(rsm, 0);
+		TC_RSM_EXPECT_CALL(rsm, 1);
+//		EXPECT_CALL(rsm, ReportResult(0))
+//			.WillOnce(ReturnFromAsyncCall(0, &semDone));
+//		EXPECT_CALL(rsm, ReportResult(1))
+//			.WillOnce(ReturnFromAsyncCall(1, &semDone));
 		EXPECT_CALL(rsm, ReportResult(2))
-			.WillRepeatedly(ReturnFromAsyncCall(2, &semDone));
-		EXPECT_CALL(rsm, ReportResult(3))
-			.WillOnce(ReturnFromAsyncCall(3, &semDone));
-		EXPECT_CALL(rsm, ReportResult(5))
-			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+			.WillRepeatedly(ReturnFromAsyncCall(2, &rsm_sem_done));
+		TC_RSM_EXPECT_CALL(rsm, 3);
+		TC_RSM_EXPECT_CALL(rsm, 5);
+
+//		EXPECT_CALL(rsm, ReportResult(3))
+//			.WillOnce(ReturnFromAsyncCall(3, &semDone));
+//		EXPECT_CALL(rsm, ReportResult(5))
+//			.WillOnce(ReturnFromAsyncCall(5, &semDone));
 	}
 
 	SCOPED_TRACE("TapThenOneResult");
@@ -870,7 +874,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
     EXPECT_TRUE(ran_then);
 	Q_ASSERT(ran_then);
 
-	TC_EXPECT_SEMDONE(semDone);
+	TC_END_RSM(rsm);
 
 	TC_EXIT();
 }

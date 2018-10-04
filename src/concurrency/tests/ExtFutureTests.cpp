@@ -340,14 +340,13 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	SCOPED_TRACE("ExtFutureThenThrow");
 
-	ResultsSequenceMock rsm;
+	TC_START_RSM(rsm);
 	enum
 	{
 		MSTART,
 		MEND,
 		T1STARTCB,
 	};
-	QSemaphore semDone(0);
 
 	using ::testing::InSequence;
 	using ::testing::Return;
@@ -360,14 +359,9 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	{
 		InSequence s;
 
-		EXPECT_CALL(rsm, ReportResult(MSTART))
-			.WillOnce(ReturnFromAsyncCall(MSTART, &semDone));
-		EXPECT_CALL(rsm, ReportResult(T1STARTCB))
-			.WillOnce(ReturnFromAsyncCall(T1STARTCB, &semDone));
-		EXPECT_CALL(rsm, ReportResult(MEND))
-			.WillOnce(ReturnFromAsyncCall(MEND, &semDone));
-//		EXPECT_CALL(rsm, ReportResult(5))
-//			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+		TC_RSM_EXPECT_CALL(rsm, MSTART);
+		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
+		TC_RSM_EXPECT_CALL(rsm, MEND);
 	}
 
 	// So we can assert we're getting the same ExtFuture when we enter the run() callback.
@@ -444,6 +438,8 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	rsm.ReportResult(MEND);
 
+	TC_END_RSM(rsm);
+
 	TC_EXIT();
 }
 
@@ -451,15 +447,14 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();
 
-	ResultsSequenceMock rsm;
+	TC_START_RSM(rsm);
 	enum
 	{
-		MSTART = 0,
-		MEND = 1,
-		T1STARTCB = 2,
-		T1ENDCB = 3,
+		MSTART,
+		MEND,
+		T1STARTCB,
+		T1ENDCB,
 	};
-	QSemaphore semDone(0);
 
 	using ::testing::InSequence;
 	using ::testing::Return;
@@ -471,17 +466,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 			.WillByDefault(ReturnArg<0>());
 	{
 		InSequence s;
-
-		EXPECT_CALL(rsm, ReportResult(MSTART))
-			.WillOnce(ReturnFromAsyncCall(MSTART, &semDone));
-		EXPECT_CALL(rsm, ReportResult(T1STARTCB))
-			.WillOnce(ReturnFromAsyncCall(T1STARTCB, &semDone));
-		EXPECT_CALL(rsm, ReportResult(T1ENDCB))
-			.WillOnce(ReturnFromAsyncCall(T1ENDCB, &semDone));
-		EXPECT_CALL(rsm, ReportResult(MEND))
-			.WillOnce(ReturnFromAsyncCall(MEND, &semDone));
-//		EXPECT_CALL(rsm, ReportResult(5))
-//			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+		TC_RSM_EXPECT_CALL(rsm, MSTART);
+		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
+		TC_RSM_EXPECT_CALL(rsm, T1ENDCB);
+		TC_RSM_EXPECT_CALL(rsm, MEND);
 	}
 
 	rsm.ReportResult(MSTART);
@@ -537,6 +525,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	rsm.ReportResult(MEND);
 
+	TC_END_RSM(rsm);
+
 	TC_EXIT();
 }
 
@@ -547,10 +537,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	ResultsSequenceMock rsm;
 	enum
 	{
-		MSTART = 0,
-		MEND = 1,
-		T1STARTCB = 2,
-		T1ENDCB = 3,
+		MSTART,
+		MEND,
+		T1STARTCB,
+		T1ENDCB,
 	};
 	QSemaphore semDone(0);
 

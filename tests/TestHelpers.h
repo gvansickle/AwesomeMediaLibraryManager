@@ -91,7 +91,7 @@ inline void PrintTo(const ExtFutureState::State &efs, ::std::ostream *os)
 
 QT_END_NAMESPACE
 
-/// Divisor for ms delays/timeouts in the tests.
+/// Globa divisor for ms delays/timeouts in the tests.
 constexpr long TC_MS_DIV = 10;
 
 static inline void TC_Sleep(int ms)
@@ -137,8 +137,6 @@ static inline void TC_Wait(int ms)
 //        PRINTF("%s", str().c_str());
 //    }
 //};
-
-//#define TEST_COUT  TestCout()
 
 /// @}
 
