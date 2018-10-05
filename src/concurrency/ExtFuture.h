@@ -574,62 +574,67 @@ public:
 	template <class U>
 	void AddDownstreamCancelFuture(ExtFuture<U> downstream_future)
 	{
-		QtConcurrent::run([=]() mutable {
+		QtConcurrent::run([](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) {
+
+			// Here:
+			// - downstream_future may be in any state.
+			// - this may already be deleted.
+
 			try
 			{
 				// Will block, throw if an exception is reported to it.
-				qDb() << "Spinwaiting on downstream_future to finish:" << downstream_future;
-				spinWaitForFinishedOrCanceled(downstream_future);
-				Q_ASSERT(downstream_future.isCanceled() || downstream_future.isFinished());
+				qDb() << "Spinwaiting on downstream_future to finish:" << downstream_future_copy;
+				spinWaitForFinishedOrCanceled(downstream_future_copy);
+				Q_ASSERT(downstream_future_copy.isCanceled() || downstream_future_copy.isFinished());
 
 				// downstream_future == (Running|Started|Canceled) here.  waitForFinished()
 				// will try to steal and run runnable, so we'll use result() instead.
 				/// @todo This is even more heavyweight, maybe try to flip the "Running" state?
 				/// Another possibility is waitForResult(int), it throws immediately, then might do a bunch
 				/// of other stuff including work stealing.
-				qDb() << "Spinwait complete, downstream_future.waitForFinished()...:" << downstream_future;
+				qDb() << "Spinwait complete, downstream_future.waitForFinished()...:" << downstream_future_copy;
 
 				try /// @note This try/catch is just so we can observe the throw for debug.
 				{
 //					downstream_future.waitForFinished();
-					downstream_future.result();
+					downstream_future_copy.result();
 				}
 				catch(...)
 				{
-					qDb() << "downstream_future.waitForFinished() threw:" << downstream_future;
+					qDb() << "downstream_future.waitForFinished() threw:" << downstream_future_copy;
 					throw;
 				}
 
-				qDb() << "waitForFinished() complete, did not throw:" << downstream_future;
+				qDb() << "waitForFinished() complete, did not throw:" << downstream_future_copy;
 
 				// Didn't throw, could have been .cancel()ed, which doesn't directly throw.
-				if(downstream_future.isCanceled())
+				if(downstream_future_copy.isCanceled())
 				{
 					qDb() << "downstream_future CANCELED BY .cancel() CALL, CONVERTING TO EXCEPTION";
-					this->reportException(ExtAsyncCancelException());
+					this_future_copy.reportException(ExtAsyncCancelException());
 				}
 			}
 			catch(ExtAsyncCancelException& e)
 			{
 				qDb() << "Rethrowing ExtAsyncCancelException";
-				this->reportException(e);
+				this_future_copy.reportException(e);
 			}
 			catch(QException& e)
 			{
 				qDb() << "Rethrowing QException";
-				this->reportException(e);
+				this_future_copy.reportException(e);
 			}
 			catch(...)
 			{
 				qDb() << "Rethrowing unknown exception";
-				this->reportException(QUnhandledException());
+				this_future_copy.reportException(QUnhandledException());
 			};
 
 			// downstream_future is completed one way or another, and above has already handled
 			// and reported any exceptions upstream to this.  Or downstream_future has finished.
 			// If we get here, there's really nothing for us to do.
-			qDb() << "downstream_future finished not canceled:" << downstream_future;
-			});
+			qDb() << "downstream_future finished not canceled:" << downstream_future_copy;
+			}, *this, downstream_future);
 	}
 
 	/**
@@ -775,7 +780,7 @@ public:
 				qDb() << "THENCB: WAS A CANCEL, throwing ExtAsyncCancelException downstream:" << this_future_copy;
 				ret_future.reportException(ExtAsyncCancelException());
 
-				if(true) /// @todo Should make this optional via a runtime param.
+				if(true) /// @todo Should make this optional via a runtime param?
 				{
 					// Call the callback with the canceled/exception-laden future.
 					// This is for notification purposes.  The callback will have to check the state
