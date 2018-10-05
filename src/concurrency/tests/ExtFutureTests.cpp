@@ -443,6 +443,71 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	TC_EXIT();
 }
 
+TEST_F(ExtFutureTest, ThenFutureDeleted)
+{
+	TC_ENTER();
+
+	TC_START_RSM(rsm);
+	enum
+	{
+		MSTART,
+		MEND,
+		T1STARTCB,
+		T1ENDCB,
+	};
+
+	using ::testing::InSequence;
+	using ::testing::Return;
+	using ::testing::Eq;
+	using ::testing::ReturnArg;
+	using ::testing::_;
+
+	ON_CALL(rsm, ReportResult(_))
+			.WillByDefault(ReturnArg<0>());
+	{
+		InSequence s;
+		TC_RSM_EXPECT_CALL(rsm, MSTART);
+//		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
+//		TC_RSM_EXPECT_CALL(rsm, T1ENDCB);
+		TC_RSM_EXPECT_CALL(rsm, MEND);
+	}
+
+	rsm.ReportResult(MSTART);
+
+	std::atomic_bool got_into_then {false};
+
+	// Create a new future.
+	ExtFuture<int>* promise = new ExtFuture<int>();
+
+//	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(*promise);
+
+//	AMLMTEST_EXPECT_FALSE(promise.isCanceled()) << promise;
+
+	// Attach a .then() to it.
+	promise->then([&got_into_then](ExtFuture<int> upcopy){
+		got_into_then = true;
+		ADD_FAILURE() << "I THINK WE SHOULDNT GET IN HERE ON DELETE OF UPSTREAM... maybe";
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() | upcopy.isCanceled());
+		// Immediately return.
+		return 5;
+	});
+
+	// Now delete the promise out from under the then().
+	delete promise;
+
+	// Sleep/Wait a few ticks for something bad to happen.
+	TC_Sleep(500);
+	TC_Wait(2000);
+
+	AMLMTEST_EXPECT_FALSE(got_into_then);
+
+	rsm.ReportResult(MEND);
+
+	TC_END_RSM(rsm);
+
+	TC_EXIT();
+}
+
 TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();
@@ -575,33 +640,45 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
 
 		rsm.ReportResult(J1STARTCB);
+
+		// Report started.
+		run_down_copy.reportStarted();
+
 		while(true)
 		{
-			run_down_copy.reportStarted();
-			// Wait a sec before doing anything.
+			// Wait one second before doing anything.
 			TC_Sleep(1000);
+			// Report a result to downstream.
 			run_down_copy.reportResult(5);
+			// Handle canceling.
 			if(run_down_copy.HandlePauseResumeShouldICancel())
 			{
 				rsm.ReportResult(J1CANCELED);
 				break;
 			}
 		}
-		run_down_copy.reportFinished();
+
+		// We've been canceled, but not finished.
+		AMLMTEST_ASSERT_TRUE(run_down_copy.isCanceled());
+		AMLMTEST_ASSERT_FALSE(run_down_copy.isFinished());
 		rsm.ReportResult(J1ENDCB);
+		run_down_copy.reportFinished();
 	}, run_down);
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
-
 	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
+
 	// Then 1
 	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
 
-//		ADD_FAILURE() << "We should never get in here on a cancelation.";
-		// Immediately return.
 		AMLMTEST_EXPECT_EQ(upcopy, run_down);
 		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
 		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
+
+		// No try.  This should throw to down.
+		auto results_from_upstream = upcopy.results();
+		ADD_FAILURE() << "We should never get in here on a cancelation.";
+		// Immediately return.
 		TCOUT << "THEN1 RETURNING, future state:" << upcopy;
 		return 5;
 	});
@@ -612,22 +689,30 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 		try
 		{
+//			AMLMTEST_EXPECT_FALSE(upcopy);
 			auto results_from_upstream = upcopy.results();
 			ADD_FAILURE() << "We should never get in here on a cancelation.";
 		}
+		catch(ExtAsyncCancelException& e)
+		{
+			TCOUT << "CAUGHT ExtAsyncCancelException from upcopy";
+			throw;
+		}
 		catch(...)
 		{
-//			SUCCESS() << "CAUGHT EXCEPTION FROM upcopy";
+			TCOUT << "CAUGHT EXCEPTION FROM upcopy";
+			throw;
 		}
 
-
-			// Immediately return.
 		AMLMTEST_EXPECT_EQ(upcopy, down);
 		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
 		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
 		return 6;
 	});
+	EXPECT_FALSE(down2.isCanceled());
+
+	// Ok, both then()'s attached, less than a second before the promise sends its first result.
 
 	// Wait a few ticks.
 	TC_Sleep(1000);
@@ -639,10 +724,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	TCOUT << "CANCELED TAIL:" << down2;
 
 	TCOUT << "WAITING TO PROPAGATE";
-	TC_Wait(2000);
+	TC_Sleep(2000);
 
-	EXPECT_TRUE(down.isCanceled());
-	EXPECT_TRUE(down2.isCanceled());
+	EXPECT_TRUE(down2.isCanceled()) << down2;
+	EXPECT_TRUE(down.isCanceled()) << down;
 	EXPECT_TRUE(run_down.isCanceled()) << run_down;
 
 	rsm.ReportResult(MEND);
@@ -1022,10 +1107,9 @@ TEST_F(ExtFutureTest, ThenChain)
 {
 	TC_ENTER();
 
-	SCOPED_TRACE("ThenChain");
+	TC_START_RSM(rsm);
 
-	ResultsSequenceMock rsm;
-	QSemaphore semDone(0);
+	SCOPED_TRACE("ThenChain");
 
 	using ::testing::InSequence;
 	using ::testing::Return;
@@ -1035,17 +1119,20 @@ TEST_F(ExtFutureTest, ThenChain)
 
 	ON_CALL(rsm, ReportResult(_))
 			.WillByDefault(ReturnArg<0>());
+	enum
+	{
+		MSTART,
+		MEND,
+		T1ENTERED,
+		T2ENTERED
+	};
 	{
 		InSequence s;
 
-		EXPECT_CALL(rsm, ReportResult(0))
-			.WillOnce(ReturnFromAsyncCall(0, &semDone));
-		EXPECT_CALL(rsm, ReportResult(1))
-			.WillOnce(ReturnFromAsyncCall(1, &semDone));
-		EXPECT_CALL(rsm, ReportResult(2))
-			.WillOnce(ReturnFromAsyncCall(2, &semDone));
-		EXPECT_CALL(rsm, ReportResult(5))
-			.WillOnce(ReturnFromAsyncCall(5, &semDone));
+		TC_RSM_EXPECT_CALL(rsm, MSTART);
+		TC_RSM_EXPECT_CALL(rsm, T1ENTERED);
+		TC_RSM_EXPECT_CALL(rsm, T2ENTERED);
+		TC_RSM_EXPECT_CALL(rsm, MEND);
 	}
 
 	using FutureType = ExtFuture<QString>;
@@ -1058,12 +1145,12 @@ TEST_F(ExtFutureTest, ThenChain)
 
 	AMLMTEST_COUT << "Future created:" << future;
 
-	rsm.ReportResult(0);
+	rsm.ReportResult(MSTART);
 
 	future.then([&rsm](FutureType in_future){
 			SCOPED_TRACE("In then 1");
 
-			rsm.ReportResult(1);
+			rsm.ReportResult(T1ENTERED);
 			return 1;
 		;})
 		.then([=, &rsm](ExtFuture<int> in_future) {
@@ -1080,7 +1167,7 @@ TEST_F(ExtFutureTest, ThenChain)
 //			EXPECT_FALSE(ran_then);
 //			ran_then = true;
 
-			rsm.ReportResult(2);
+			rsm.ReportResult(T2ENTERED);
 
 			return QString("Then Called");
 	})/*.test_tap([&](auto ef){
@@ -1097,14 +1184,13 @@ TEST_F(ExtFutureTest, ThenChain)
 	EXPECT_FALSE(future.isRunning());
 	EXPECT_TRUE(future.isFinished());
 
-	rsm.ReportResult(5);
+	rsm.ReportResult(MEND);
 
 //	EXPECT_TRUE(ran_tap);
 //	EXPECT_TRUE(ran_then);
 //	Q_ASSERT(ran_then);
 
-	bool acquired = semDone.tryAcquire(1, 1000);
-	EXPECT_TRUE(acquired);
+	TC_END_RSM(rsm);
 
 	TC_EXIT();
 }

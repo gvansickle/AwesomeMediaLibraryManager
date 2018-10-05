@@ -713,6 +713,21 @@ public:
 			[=,	then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
 					(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future) {
 
+			// Ok, we're now running in the thread which will call then_callback_copy, passing it this_future_copy.
+			// At this point:
+			// - The outer then() call may have already returned.
+			// -- Hence retfuture, context may be gone off the stack.
+			// - this_future_copy may or may not be finshed, canceled, or canceled with exception.
+			// - Will this maybe be destructed already?  I think it could be:
+			///
+			/// @code
+			/// {
+			///     ExtFuture<T> f;
+			///     f->then(...);
+			///     delete extfuture;
+			/// @endcode
+			///
+
 			// retfuture will likely be gone by the time we get in here.
 //			Q_ASSERT(retfuture == ret_future);
 			Q_ASSERT(*this == this_future_copy);
