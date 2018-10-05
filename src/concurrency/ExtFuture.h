@@ -738,6 +738,10 @@ public:
 			Q_ASSERT(*this == this_future_copy);
 			Q_ASSERT(ret_future != this_future_copy);
 
+			qDb() << "ADDING DOWNSTREAM CANCELLER with RETFUTURE:" << ret_future;
+			this_future_copy.AddDownstreamCancelFuture(ret_future);
+			qDb() << "ADDED DOWNSTREAM CANCELLER with RETFUTURE:" << ret_future;
+
 			try
 			{
 				qDb() << "In Then callback Try:" << this_future_copy;
@@ -801,10 +805,6 @@ public:
 			ret_future.reportFinished();
 
 			}, *this, retfuture);
-
-		qDb() << "ADDING DOWNSTREAM CANCELLER with RETFUTURE:" << retfuture;
-		this->AddDownstreamCancelFuture(retfuture);
-		qDb() << "ADDED DOWNSTREAM CANCELLER with RETFUTURE:" << retfuture;
 
 		return retfuture;
 	}

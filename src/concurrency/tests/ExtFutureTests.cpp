@@ -518,6 +518,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 		MSTART,
 		MEND,
 		T1STARTCB,
+		J1CANCELED,
 		T1ENDCB,
 	};
 
@@ -533,6 +534,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 		InSequence s;
 		TC_RSM_EXPECT_CALL(rsm, MSTART);
 		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
+		TC_RSM_EXPECT_CALL(rsm, J1CANCELED);
 		TC_RSM_EXPECT_CALL(rsm, T1ENDCB);
 		TC_RSM_EXPECT_CALL(rsm, MEND);
 	}
@@ -544,20 +546,21 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
 		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
 
+		run_down_copy.reportStarted();
 		rsm.ReportResult(T1STARTCB);
 		while(true)
 		{
-			run_down_copy.reportStarted();
 			// Wait a sec before doing anything.
 			TC_Sleep(1000);
 			run_down_copy.reportResult(5);
 			if(run_down_copy.HandlePauseResumeShouldICancel())
 			{
+				rsm.ReportResult(J1CANCELED);
 				break;
 			}
 		}
-		run_down_copy.reportFinished();
 		rsm.ReportResult(T1ENDCB);
+		run_down_copy.reportFinished();
 	}, run_down);
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
@@ -599,6 +602,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 {
 	TC_ENTER();
 
+	auto tp = QThreadPool::globalInstance();
+
 	TC_START_RSM(rsm);
 	enum
 	{
@@ -632,6 +637,11 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	}
 
 	rsm.ReportResult(MSTART);
+
+	// Log the number of free threads in the thread pool.
+	TCOUT << M_NAME_VAL(QThreadPool::globalInstance()->maxThreadCount());
+	TCOUT << M_NAME_VAL(QThreadPool::globalInstance()->activeThreadCount());
+	TCOUT << M_NAME_VAL(QThreadPool::globalInstance()->maxThreadCount() - QThreadPool::globalInstance()->activeThreadCount());
 
 	// The async task.  Spins forever, reporting "5" to run_down until canceled.
 	ExtFuture<int> run_down;
@@ -687,6 +697,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	// Then 2
 	ExtFuture<int> down2 = down.then([=, &rsm, &down](ExtFuture<int> upcopy){
 
+		AMLMTEST_EXPECT_EQ(upcopy, down);
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
+		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
+
 		try
 		{
 //			AMLMTEST_EXPECT_FALSE(upcopy);
@@ -704,9 +718,6 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 			throw;
 		}
 
-		AMLMTEST_EXPECT_EQ(upcopy, down);
-		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
-		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
 		return 6;
 	});
@@ -733,6 +744,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	rsm.ReportResult(MEND);
 
 	TC_END_RSM(rsm);
+
+//	bool all_threads_removed = tp->waitForDone();
+//	EXPECT_TRUE(all_threads_removed);
 
 	TC_EXIT();
 }
