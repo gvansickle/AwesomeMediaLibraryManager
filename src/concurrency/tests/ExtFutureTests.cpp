@@ -636,6 +636,14 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		TC_RSM_EXPECT_CALL(rsm, MEND);
 	}
 
+	std::atomic_bool ran_run_callback {false};
+	std::atomic_bool ran_then1_callback {false};
+	std::atomic_bool ran_then2_callback {false};
+
+	///
+	/// Setup done, test starts here.
+	///
+
 	rsm.ReportResult(MSTART);
 
 	// Log the number of free threads in the thread pool.
@@ -645,7 +653,13 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	// The async task.  Spins forever, reporting "5" to run_down until canceled.
 	ExtFuture<int> run_down;
-	QtConcurrent::run([=, &rsm, &run_down](ExtFuture<int> run_down_copy) {
+	QtConcurrent::run([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &run_down](ExtFuture<int> run_down_copy) {
+		AMLMTEST_EXPECT_FALSE(ran_run_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+		ran_run_callback = true;
+
+
 		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
 		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
 
@@ -679,7 +693,12 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
 
 	// Then 1
-	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
+	ExtFuture<int> down = run_down.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &run_down]
+										(ExtFuture<int> upcopy) -> int{
+		AMLMTEST_EXPECT_TRUE(ran_run_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+		ran_then1_callback = true;
 
 		AMLMTEST_EXPECT_EQ(upcopy, run_down);
 //		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
@@ -695,7 +714,12 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	EXPECT_FALSE(down.isCanceled());
 
 	// Then 2
-	ExtFuture<int> down2 = down.then([=, &rsm, &down](ExtFuture<int> upcopy){
+	ExtFuture<int> down2 = down.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &down]
+									 (ExtFuture<int> upcopy) -> int {
+		AMLMTEST_EXPECT_TRUE(ran_run_callback);
+		AMLMTEST_EXPECT_TRUE(ran_then1_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+		ran_then2_callback = true;
 
 		AMLMTEST_EXPECT_EQ(upcopy, down);
 //		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
@@ -721,7 +745,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
 		return 6;
 	});
-	EXPECT_FALSE(down2.isCanceled());
+	AMLMTEST_EXPECT_FALSE(down2.isCanceled());
 
 	// Ok, both then()'s attached, less than a second before the promise sends its first result.
 
@@ -738,15 +762,23 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	TC_Sleep(2000);
 	TCOUT << "SHOULD HAVE PROPAGATED";
 
-	EXPECT_TRUE(down2.isCanceled()) << down2;
-	EXPECT_TRUE(down.isCanceled()) << down;
-	EXPECT_TRUE(run_down.isCanceled()) << run_down;
+	AMLMTEST_EXPECT_TRUE(down2.isCanceled());// << down2;
+	AMLMTEST_EXPECT_TRUE(down.isCanceled());// << down;
+	AMLMTEST_EXPECT_TRUE(run_down.isCanceled());// << run_down;
 
-	QFutureSynchronizer<int> fs;
-	fs.addFuture(run_down);
-	fs.addFuture(down2);
-	fs.addFuture(down);
-	fs.waitForFinished();
+//	try
+//	{
+//		QFutureSynchronizer<int> fs;
+//		fs.addFuture(run_down);
+//		fs.addFuture(down2);
+//		fs.addFuture(down);
+//		fs.waitForFinished();
+//	}
+//	catch(...)
+//	{
+//		TCOUT << "QFutureSync threw";
+//	}
+
 
 	rsm.ReportResult(MEND);
 

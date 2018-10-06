@@ -119,7 +119,7 @@ public:
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
 	using inner_t = T;
-	using is_ExtFuture = std::true_type;
+//	using is_ExtFuture = std::true_type;
 //	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
 
 	/**
@@ -293,7 +293,16 @@ public:
 	{
 		if (this->isPaused())
 		{
-			this->waitForResume();
+			/// @todo This can throw.
+			try
+			{
+				this->waitForResume();
+			}
+			catch(...)
+			{
+				qDb() << "waitForResume threw";
+				Q_ASSERT(0);
+			}
 		}
 		if (this->isCanceled())
 		{
