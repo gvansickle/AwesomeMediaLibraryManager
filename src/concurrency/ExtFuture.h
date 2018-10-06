@@ -614,7 +614,7 @@ public:
 
 			try
 			{
-				// Will block, throw if an exception is reported to it.
+				// Will block (busy-wait with yield), throw if an exception is reported to it.
 				qDb() << "Spinwaiting on this_future_copy or downstream_future_copy to finish or cancel:"
 					  << this_future_copy << downstream_future_copy;
 				do
@@ -632,7 +632,6 @@ public:
 					{
 						// Finished, but not canceled.
 						/// @todo Is that a valid state here?
-						/// @todo BROKEN: We do get here at a low rate on a library initial scan.
 						qWr() << "downstream FINISHED?:" << downstream_future_copy;
 						Q_ASSERT(0);
 					}
@@ -654,7 +653,7 @@ public:
 				}
 				while(true);
 
-				// downstream_future == (Running|Started|Canceled) here.  waitForFinished()
+				// downstream_future == (Running|Started|Canceled) here.
 				Q_ASSERT(downstream_future_copy.isCanceled());
 				Q_ASSERT(downstream_future_copy.isStarted());
 				Q_ASSERT(downstream_future_copy.isRunning());
@@ -665,6 +664,7 @@ public:
 				/// of other stuff including work stealing.
 				qDb() << "Spinwait complete, downstream_future_copy.result()...:" << downstream_future_copy;
 
+				std::exception_ptr eptr; // For rethrowing.
 				try /// @note This try/catch is just so we can observe the throw for debug.
 				{
 //					downstream_future_copy.waitForFinished();
@@ -672,9 +672,16 @@ public:
 				}
 				catch(...)
 				{
-					qDb() << "downstream_future_copy.result() threw, rethrowing:" << downstream_future_copy;
-					// Throw out to the actual handler.
-					throw;
+					qDb() << "downstream_future_copy.result() threw, rethrowing. downstream_future_copy:" << downstream_future_copy;
+
+					// Whatever the exception was, rethrow it out to the outer handler.
+					// Capture the exception.
+					eptr = std::current_exception();
+				}
+				if(eptr)
+				{
+					qDb() << "rethrowing.";
+					std::rethrow_exception(eptr);
 				}
 
 				qDb() << "waitForFinished() complete, did not throw:" << downstream_future_copy;

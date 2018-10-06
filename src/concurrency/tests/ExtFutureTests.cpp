@@ -762,9 +762,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	TC_Sleep(2000);
 	TCOUT << "SHOULD HAVE PROPAGATED";
 
-	AMLMTEST_EXPECT_TRUE(down2.isCanceled());// << down2;
-	AMLMTEST_EXPECT_TRUE(down.isCanceled());// << down;
-	AMLMTEST_EXPECT_TRUE(run_down.isCanceled());// << run_down;
+	AMLMTEST_EXPECT_TRUE(down2.isCanceled()) << down2;
+	AMLMTEST_EXPECT_TRUE(down.isCanceled()) << down;
+	AMLMTEST_EXPECT_TRUE(run_down.isCanceled()) << run_down;
 
 //	try
 //	{
