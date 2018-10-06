@@ -337,19 +337,10 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 			TC_Sleep(500);
 		}
 
-//		AMLMTEST_COUT << "PROCESSING VALUE: " << the_passed_value;
-
 		// In the run counter.
 		map_callback_run_counter++;
 
 		AMLMTEST_EXPECT_LE(map_callback_run_counter, dummy_vector.size());
-//		AMLMTEST_COUT << "+1 secs, counter = " << map_callback_run_counter;
-//		if(map_callback_run_counter == 10)
-//		{
-//			AMLMTEST_COUT << "FAIL counter = " << map_callback_run_counter;
-//		}
-
-//		AMLMTEST_COUT << "Exiting callback";
 
 		return the_passed_value + 1;
 	};
@@ -414,7 +405,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	TCOUT << "STATE AFTER TC_WAIT:" << ExtFutureState::state(f);
 	if(dont_let_jobs_complete)
 	{
-		/// @note We're still running in here, which seems odd.
+		/// @note 2 sec case.  We should not be finished here, but:
 		/// @note Something's wrong here. If we expect isRunning, we get Finished, if we expect isFinished, we get Running.
 		/// Both is{Finished,Running}() just query the QIFB state.
 		/// If we expect either, it seems like things work fine.  W. T. H.
@@ -423,6 +414,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	}
 	else
 	{
+		/// @note 0.5 sec case,
 		TCOUT << state(f);
 		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled());// << state(f);
 	}
@@ -430,8 +422,8 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	TCOUT << "CALLING waitForFinished():" << ExtFutureState::state(f);
     f.waitForFinished();
 	TCOUT << "RETURNED FROM waitForFinished():" << ExtFutureState::state(f);
-	// Always should be finished here.
-	AMLMTEST_EXPECT_TRUE(f.isFinished());
+	/// @note QFuture is always (Started|Finished|Canceled) here.
+	AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled() && !f.isRunning());
 
 	// They should either all complete or none should.
     if(dont_let_jobs_complete)
@@ -445,12 +437,6 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 
 //	AMLMTEST_COUT << "POST-wait RESULT:" << f.result();
 	AMLMTEST_COUT << "FUTURE IS FINISHED:" << ExtFutureState::state(f);
-
-	AMLMTEST_ASSERT_TRUE(f.isStarted());
-	AMLMTEST_ASSERT_TRUE(f.isCanceled());
-	AMLMTEST_ASSERT_TRUE(f.isFinished());
-	AMLMTEST_ASSERT_FALSE(f.isRunning());
-
 }
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentMappedQFutureStateOnCancelNoCompletions)
