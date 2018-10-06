@@ -632,6 +632,7 @@ public:
 					{
 						// Finished, but not canceled.
 						/// @todo Is that a valid state here?
+						/// @todo BROKEN: We do get here at a low rate on a library initial scan.
 						qWr() << "downstream FINISHED?:" << downstream_future_copy;
 						Q_ASSERT(0);
 					}
