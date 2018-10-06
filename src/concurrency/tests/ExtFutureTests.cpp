@@ -742,15 +742,15 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	EXPECT_TRUE(down.isCanceled()) << down;
 	EXPECT_TRUE(run_down.isCanceled()) << run_down;
 
-	rsm.ReportResult(MEND);
-
-	TC_END_RSM(rsm);
-
 	QFutureSynchronizer<int> fs;
 	fs.addFuture(run_down);
 	fs.addFuture(down2);
 	fs.addFuture(down);
 	fs.waitForFinished();
+
+	rsm.ReportResult(MEND);
+
+	TC_END_RSM(rsm);
 
 	TC_EXIT();
 }

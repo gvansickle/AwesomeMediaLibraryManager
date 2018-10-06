@@ -80,14 +80,14 @@ inline void PrintTo(const QFuture<T> &qf, ::std::ostream *os)
 }
 
 /// To let Google Test print ExtFutureStates.
-template <class T>
-inline void PrintTo(const ExtFutureState::State &efs, ::std::ostream *os)
-{
-	QString str;
-	QDebug dbg(&str);
-	dbg << toString(efs);
-	PrintTo(str, os);
-}
+//template <class T>
+//inline void PrintTo(const ExtFutureState::State &efs, ::std::ostream *os)
+//{
+//	QString str;
+//	QDebug dbg(&str);
+//	dbg << toString(efs);
+//	PrintTo(str, os);
+//}
 
 QT_END_NAMESPACE
 

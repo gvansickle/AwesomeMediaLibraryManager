@@ -218,7 +218,7 @@ static inline bool isValidUTF8(const char* bytes)
  * @return A QString representing that Q_ENUM.
  */
 template<typename QEnumType>
-QString toqstr (const QEnumType value)
+QString toqstr(const QEnumType value)
 {
   return QString(QMetaEnum::fromType<QEnumType>().valueToKey(value));
 }

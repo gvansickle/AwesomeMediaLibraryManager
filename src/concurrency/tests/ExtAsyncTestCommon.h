@@ -57,6 +57,17 @@
 #include "../ExtAsync.h"
 #include "../ExtAsync_traits.h"
 
+QT_BEGIN_NAMESPACE
+
+/// To let Google Test print ExtFutureState's.
+template <class T>
+inline void PrintTo(const ExtFutureState::State& state, ::std::ostream *os)
+{
+	QString str = toqstr<ExtFutureState::State>(state);
+	PrintTo(str, os);
+}
+
+QT_END_NAMESPACE
 
 class ExtAsyncTestsSuiteFixtureBase;
 

@@ -32,6 +32,7 @@
 
 // Ours
 #include <utils/QtHelpers.h>
+#include <utils/StringHelpers.h>
 #include "ExtAsync_traits.h"
 
 class ExtFutureState
@@ -132,15 +133,26 @@ public:
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::State)
 
 /**
+ * std::ostream stream operator (for gtest etc.).
+ */
+template <typename T>
+std::ostream& operator<<(std::ostream& outstream, const ExtFutureState::State &s)
+{
+	outstream << toqstr(s).toStdString();
+
+	return outstream;
+}
+
+/**
  * Convenience toString() conversion.
  */
-inline static QString toString(ExtFutureState::State states)
-{
-    QString str;
-    QDebug dbg(&str);
-    dbg << states;
-    return str;
-}
+//inline static QString toString(ExtFutureState::State states)
+//{
+//    QString str;
+//    QDebug dbg(&str);
+//    dbg << states;
+//    return str;
+//}
 
 /**
  * QDebug stream operator for QFutureInterface<T>'s.

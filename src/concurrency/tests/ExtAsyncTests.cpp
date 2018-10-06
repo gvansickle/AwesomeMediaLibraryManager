@@ -328,22 +328,25 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
      * Since a QFuture<> starts out canceled, we will get into the callback with the future (Started | Canceled).
      */
 
-    FutureTypeT f;
-    if constexpr (std::is_same_v<FutureTypeT, QFuture<int>>)
-    {
-		f = make_startedNotCanceled_QFuture<int>();
-    }
+//	FutureTypeT f;
+//	if constexpr (std::is_same_v<FutureTypeT, QFuture<int>>)
+//	{
+//		f = make_startedNotCanceled_QFuture<int>();
+//	}
 
 	std::function<int(const int&)> lambda = [&](const int& the_passed_value) -> int {
+
+		AMLMTEST_SCOPED_TRACE("IN LAMBDA");
+
 		AMLMTEST_COUT << "Entered callback, passed value:" << the_passed_value;
 
-		AMLMTEST_COUT << "FUTURE:" << ExtFutureState::state(f);
-        EXPECT_TRUE(f.isStarted());
-        EXPECT_TRUE(f.isRunning());
-        EXPECT_FALSE(f.isCanceled());
-        EXPECT_FALSE(f.isFinished());
+//		AMLMTEST_COUT << "FUTURE:" << ExtFutureState::state(f);
+//		EXPECT_TRUE(f.isStarted());
+//		EXPECT_TRUE(f.isRunning());
+//		EXPECT_FALSE(f.isCanceled());
+//		EXPECT_FALSE(f.isFinished());
 
-            if(!f.isCanceled())
+			if(true)//!f.isCanceled())
             {
                 if(dont_let_jobs_complete)
                 {
@@ -358,7 +361,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
                     TC_Sleep(500);
                 }
 
-                if(f.isCanceled())
+				if(false)//f.isCanceled())
                 {
 					AMLMTEST_COUT << "CANCELLED";
                     return 0;
@@ -379,38 +382,65 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
          };
 
 	AMLMTEST_COUT << "Calling QtConcurrent::mapped()";
-    f = QtConcurrent::mapped(dummy_vector, lambda);
+	FutureTypeT f = static_cast<FutureTypeT>(QtConcurrent::mapped(dummy_vector, lambda));
 
-	// f == (Running|Started)
+	// f state: QFuture == (Running|Started)
 	AMLMTEST_COUT << "Passed the QtConcurrent::mapped() call, got the future:" << ExtFutureState::state(f);
 
 	AMLMTEST_EXPECT_TRUE(f.isStarted());
 	AMLMTEST_EXPECT_FALSE(f.isFinished());
 	AMLMTEST_EXPECT_TRUE(f.isRunning()) << "State is:" << state(f);
 
-	AMLMTEST_COUT << "WAITING FOR 1 SECS";//;
+	AMLMTEST_COUT << "SLEEPING FOR 1 SECS";//;
     // qWait() doesn't block the event loop, qSleep() does.
     TC_Sleep(1000);
 
-	// (Running|Started)
-	AMLMTEST_COUT << "CANCELING:" << ExtFutureState::state(f);
-    f.cancel();
-	// (Running|Started|Canceled)
-	TCOUT << "CANCELED:" << ExtFutureState::state(f);
+	// f state: QFuture == if(dont_let_jobs_complete):(Running|Started)==still running
+	//                     else: (Started|Finished) == finished.
+	TCOUT << "CANCELING:" << ExtFutureState::state(f);
+	if(dont_let_jobs_complete)
+	{
+		AMLMTEST_EXPECT_TRUE(f.isRunning() && f.isStarted()) << state(f);
+	}
+	else
+	{
+		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted()) << state(f);
+		TCOUT << "WARNING: Canceling already-finished future";
+	}
 
-	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED.
-	AMLMTEST_EXPECT_TRUE(f.isStarted());
-	AMLMTEST_EXPECT_TRUE(f.isCanceled());
-	AMLMTEST_EXPECT_FALSE(f.isFinished());
+	f.cancel();
+	// f state: QFuture == Just adds the Cancel flag.  cancel() code brings it out of Paused if it was paused.
+	//          dont_let...: (Running|Started|Canceled)
+	//          else:        (Started|Finished|Canceled)
+	/// @note Expect Running to sometimes be cleared.
+	/// @note CANCELED QFUTURES ARE NOT NECESSARILY FINISHED.
+	TCOUT << "CANCELED:" << ExtFutureState::state(f);
+	if(dont_let_jobs_complete)
+	{
+		AMLMTEST_EXPECT_TRUE(f.isRunning() && f.isStarted() && f.isCanceled()) << state(f);
+	}
+	else
+	{
+		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled()) << state(f);
+	}
 
 	TC_Wait(1000);
 
-	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED, but if you wait a while they will be.
-	TCOUT << "STILL CANCELED:" << ExtFutureState::state(f);
-	AMLMTEST_EXPECT_TRUE(f.isStarted());
-	AMLMTEST_EXPECT_TRUE(f.isCanceled());
-//	AMLMTEST_EXPECT_FALSE(f.isFinished());
+	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED, but if you wait a while they will be?
+	TCOUT << "STATE AFTER TC_WAIT:" << ExtFutureState::state(f);
+	if(dont_let_jobs_complete)
+	{
+		/// @note We're still running in here, which seems odd.
+		TCOUT << state(f);
+		AMLMTEST_EXPECT_TRUE(f.isRunning() && f.isStarted() && f.isCanceled());// << qUtf8Printable(toqstr(state(f)));
+	}
+	else
+	{
+		TCOUT << state(f);
+		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled());// << state(f);
+	}
 
+	TCOUT << "CALLING waitForFinished():" << ExtFutureState::state(f);
     f.waitForFinished();
 
     if(dont_let_jobs_complete)
