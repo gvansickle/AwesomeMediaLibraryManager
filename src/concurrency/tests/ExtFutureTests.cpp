@@ -568,7 +568,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
 	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
 
-		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() | upcopy.isCanceled());
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() || upcopy.isCanceled());
 		// Immediately return.
 
 		AMLMTEST_EXPECT_EQ(upcopy, run_down);
@@ -686,8 +686,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 
 		// No try.  This should throw to down.
-		auto results_from_upstream = upcopy.results();
-		ADD_FAILURE() << "We should never get in here on a cancelation.";
+//		auto results_from_upstream = upcopy.results();
+//		ADD_FAILURE() << "We should never get in here on a cancelation.";
 		// Immediately return.
 		TCOUT << "THEN1 RETURNING, future state:" << upcopy;
 		return 5;
@@ -701,22 +701,22 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
 		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 
-		try
-		{
-//			AMLMTEST_EXPECT_FALSE(upcopy);
-			auto results_from_upstream = upcopy.results();
-			ADD_FAILURE() << "We should never get in here on a cancelation.";
-		}
-		catch(ExtAsyncCancelException& e)
-		{
-			TCOUT << "CAUGHT ExtAsyncCancelException from upcopy";
-			throw;
-		}
-		catch(...)
-		{
-			TCOUT << "CAUGHT EXCEPTION FROM upcopy";
-			throw;
-		}
+//		try
+//		{
+////			AMLMTEST_EXPECT_FALSE(upcopy);
+//			auto results_from_upstream = upcopy.results();
+//			ADD_FAILURE() << "We should never get in here on a cancelation.";
+//		}
+//		catch(ExtAsyncCancelException& e)
+//		{
+//			TCOUT << "THEN2: CAUGHT ExtAsyncCancelException from upcopy";
+//			throw;
+//		}
+//		catch(...)
+//		{
+//			TCOUT << "THEN2: CAUGHT EXCEPTION FROM upcopy";
+//			throw;
+//		}
 
 		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
 		return 6;
@@ -736,6 +736,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	TCOUT << "WAITING TO PROPAGATE";
 	TC_Sleep(2000);
+	TCOUT << "SHOULD HAVE PROPAGATED";
 
 	EXPECT_TRUE(down2.isCanceled()) << down2;
 	EXPECT_TRUE(down.isCanceled()) << down;
@@ -745,8 +746,11 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	TC_END_RSM(rsm);
 
-//	bool all_threads_removed = tp->waitForDone();
-//	EXPECT_TRUE(all_threads_removed);
+	QFutureSynchronizer<int> fs;
+	fs.addFuture(run_down);
+	fs.addFuture(down2);
+	fs.addFuture(down);
+	fs.waitForFinished();
 
 	TC_EXIT();
 }

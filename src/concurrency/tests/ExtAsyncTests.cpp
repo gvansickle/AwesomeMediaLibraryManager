@@ -318,7 +318,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 
     QVector<int> dummy_vector{0,1,2,3,4,5,6,7,8,9};
 
-	AMLMTEST_COUT << "CALLING QTC::mapped()";
+	TCOUT << "CALLING QTC::mapped()";
 
     /**
      * Per docs:
@@ -396,12 +396,20 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	AMLMTEST_COUT << "CANCELING:" << ExtFutureState::state(f);
     f.cancel();
 	// (Running|Started|Canceled)
-	AMLMTEST_COUT << "CANCELED:" << ExtFutureState::state(f);
+	TCOUT << "CANCELED:" << ExtFutureState::state(f);
 
-//    TC_Wait(1000);
-
+	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED.
 	AMLMTEST_EXPECT_TRUE(f.isStarted());
 	AMLMTEST_EXPECT_TRUE(f.isCanceled());
+	AMLMTEST_EXPECT_FALSE(f.isFinished());
+
+	TC_Wait(1000);
+
+	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED, but if you wait a while they will be.
+	TCOUT << "STILL CANCELED:" << ExtFutureState::state(f);
+	AMLMTEST_EXPECT_TRUE(f.isStarted());
+	AMLMTEST_EXPECT_TRUE(f.isCanceled());
+//	AMLMTEST_EXPECT_FALSE(f.isFinished());
 
     f.waitForFinished();
 

@@ -25,16 +25,40 @@
 
 #include <config.h>
 
+// Std C++
+#include <exception>
+#include <iostream>
+
+// Qt5
 #include <QException>
 
-/*
- *
+/**
+ * @link https://www.boost.org/doc/libs/1_68_0/libs/exception/doc/using_virtual_inheritance_in_exception_types.html
+ * "Exception types should use virtual inheritance when deriving from other exception types. [...]
+ * Using virtual inheritance prevents ambiguity problems in the exception handler"
+ * Except QException just public derives from std::exception, and std::exception
  */
 class ExtAsyncCancelException : public QException
 {
 public:
+//	ExtAsyncCancelException() : {  }
     void raise() const override { throw *this; }
     ExtAsyncCancelException *clone() const override { return new ExtAsyncCancelException(*this); }
 };
+
+inline void print_exception(const std::exception& e, int level =  0)
+{
+	std::cerr << std::string(level, ' ') << "exception: " << e.what() << '\n';
+	try
+	{
+		std::rethrow_if_nested(e);
+	}
+	catch(const std::exception& e)
+	{
+		print_exception(e, level+1);
+	}
+	catch(...)
+	{}
+}
 
 #endif /* SRC_CONCURRENCY_EXTASYNCEXCEPTIONS_H_ */
