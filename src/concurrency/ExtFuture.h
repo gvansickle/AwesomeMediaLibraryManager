@@ -580,7 +580,9 @@ public:
 	template <class U>
 	static void spinWaitForFinishedOrCanceled(const ExtFuture<U>& future)
 	{
-		while(!future.isCanceled() && !future.isFinished())
+		constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
+
+		while(!future.d.queryState(canceled_or_finished))
 		{
 			QThread::yieldCurrentThread();
 		}
@@ -589,16 +591,25 @@ public:
 	template <class U>
 	static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
 	{
-		while(!this_future.isCanceled() && !this_future.isFinished()
-			  && !downstream_future.isCanceled() && !downstream_future.isFinished())
+		/// queryState() does this:
+		/// bool QFutureInterfaceBase::queryState(State state) const
+		/// {
+		///    return d->state.load() & state;
+		/// }
+		/// So this:
+		///     this_future.d.queryState(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished)
+		/// Should return true if either bit is set.
+		constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
+		while(!this_future.d.queryState(canceled_or_finished)
+			  && !downstream_future.d.queryState(canceled_or_finished))
 		{
 			QThread::yieldCurrentThread();
 		}
 	}
 
 	/**
-	 * Attach downstream_future to this ExtFuture such that any cancel or exception thrown by downstream_future
-	 * cancels this future.
+	 * Attach downstream_future to this_future (a copy of this ExtFuture) such that any cancel or exception thrown by
+	 * downstream_future cancels this_future.
 	 *
 	 * @param downstream_future
 	 */
