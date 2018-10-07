@@ -432,7 +432,9 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 	concurrency/tests/ExtAsyncTests.cpp
 	concurrency/tests/ExtAsyncTestCommon.cpp
 	concurrency/tests/ExtFutureTests.cpp
-	concurrency/tests/AMLMJobTests.cpp)
+	concurrency/tests/AMLMJobTests.cpp
+	concurrency/tests/QtPromiseTests.cpp
+	)
 list(APPEND AMLM_HEADER_FILES_TEST
 #	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
 #	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.h
@@ -440,7 +442,9 @@ list(APPEND AMLM_HEADER_FILES_TEST
 	concurrency/tests/ExtAsyncTests.h
 	concurrency/tests/ExtAsyncTestCommon.h
 	concurrency/tests/ExtFutureTests.h
-	concurrency/tests/AMLMJobTests.h)
+	concurrency/tests/AMLMJobTests.h
+	concurrency/tests/QtPromiseTests.cpp
+	)
 
 add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} "")
 target_sources(${TEST_EXE_TARGET}
