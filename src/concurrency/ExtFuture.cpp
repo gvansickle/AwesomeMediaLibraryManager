@@ -35,9 +35,12 @@
  *
  */
 
-
-#include <QFuture>
+// Associated header.
 #include "ExtFuture.h"
+
+// Qt5
+#include <QFuture>
+
 
 /// @name Explicit instantiations to try to get compile times down.
 template class ExtFuture<Unit>;

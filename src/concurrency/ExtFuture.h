@@ -67,8 +67,9 @@ class ExtFuture;
 
 #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
 
-template <class T, class U>
-static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future);
+///template <class T, class U>
+///static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future);
+#include "impl/ExtFutureImplHelpers.h"
 
 /**
  * A std::shared_future<>-like class implemented on top of Qt5's QFutureInterface<T> class and other facilities.
