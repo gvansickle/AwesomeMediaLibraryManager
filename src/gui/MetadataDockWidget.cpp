@@ -194,7 +194,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			{"Pre-gap offset", libentry->get_pre_gap_offset_secs().toQString()},
 			{"Length", libentry->get_length_secs().toQString()}
 		};
-		for(auto p: list)
+		for(auto& p: list)
 		{
             m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
 		}
@@ -203,8 +203,8 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		for(auto entry = pimeta.begin(); entry != pimeta.end(); ++entry)
 		{
 			QString key = entry->first;
-			QStringList value = entry->second.value<QStringList>();
-			if(value.size() > 0)
+			QStringList value = entry->second.toStringList();
+			if(value.empty())
 			{
                 m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
 			}
@@ -295,7 +295,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap)
 {
-	for(auto e : tagmap)
+	for(auto& e : tagmap)
 	{
 		QString key = toqstr(e.first);
         // Filter out keys we don't want to see in the Metadata display.
@@ -306,7 +306,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
         {
             continue;
         }
-		for(auto f : e.second)
+		for(const auto& f : e.second)
 		{
 			QString value = toqstr(f);
 			auto child = new QTreeWidgetItem({key, value});
