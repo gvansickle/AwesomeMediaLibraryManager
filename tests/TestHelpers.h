@@ -150,6 +150,7 @@ enum class GenericState
 #define AMLMTEST_SCOPED_TRACE(str) /* nothing */
 
 #define AMLMTEST_COUT qDb()
+#define TCOUT qDb()
 
 /// @todo QVERIFY() does a "return;", so we can't use it in a function returning a value.
 

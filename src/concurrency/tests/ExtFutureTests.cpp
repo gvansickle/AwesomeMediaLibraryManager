@@ -544,7 +544,6 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
 		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
 
-		run_down_copy.reportStarted();
 		rsm.ReportResult(T1STARTCB);
 		while(true)
 		{
@@ -553,6 +552,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 			run_down_copy.reportResult(5);
 			if(run_down_copy.HandlePauseResumeShouldICancel())
 			{
+				run_down_copy.reportCanceled();
 				rsm.ReportResult(J1CANCELED);
 				break;
 			}
@@ -657,14 +657,13 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
 		ran_run_callback = true;
 
-
-		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
+		// If we're not (Running|Started) here, something's wildly wrong.
+		AMLMTEST_EXPECT_TRUE(run_down_copy.isStarted());
+		AMLMTEST_EXPECT_TRUE(run_down_copy.isRunning());
+//		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
 		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
 
 		rsm.ReportResult(J1STARTCB);
-
-		// Report started.
-		run_down_copy.reportStarted();
 
 		while(true)
 		{
@@ -675,6 +674,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 			// Handle canceling.
 			if(run_down_copy.HandlePauseResumeShouldICancel())
 			{
+				run_down_copy.reportCanceled();
 				rsm.ReportResult(J1CANCELED);
 				break;
 			}

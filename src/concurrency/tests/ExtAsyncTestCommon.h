@@ -357,7 +357,7 @@ private Q_SLOTS:
 	/* Workaround for what otherwise should be doable with QSignalSpy() above, but isn't for some reason. */ \
 	std::atomic_bool got_job_destroyed_signal {false}; \
 	connect_or_die(kjobptr, &QObject::destroyed, qApp, [&](QObject* obj){ \
-		GTEST_COUT_qDB << "GOT DESTROYED SIGNAL:" << &obj; \
+		TCOUT << "GOT DESTROYED SIGNAL:" << &obj; \
 		got_job_destroyed_signal = true; \
 	});
 

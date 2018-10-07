@@ -307,13 +307,13 @@ public:
 			catch(...)
 			{
 				/// @todo
-				Q_ASSERT_X(0, "catch","waitForResume threw");
+				Q_ASSERT_X(0, "catch", "waitForResume threw");
 			}
 		}
 		if (this->isCanceled())
 		{
 			// The job should be canceled.
-			// The calling runFunctor() should break out of while() loop.
+			// The calling Functor should break out of its while() loop.
 			return true;
 		}
 		else
@@ -706,15 +706,18 @@ public:
 			// Ok, we're now running in the thread which will call then_callback_copy(this_future_copy).
 			// At this point:
 			// - The outer then() call may have already returned.
-			// -- Hence retfuture, context may be gone off the stack.
-			// - this_future_copy may or may not be finshed, canceled, or canceled with exception.
+			// -- Hence returned_future, context may be gone off the stack.
 			// - this may be destructed and deleted already.
+			// - this_future_copy may or may not be finished, canceled, or canceled with exception.
+			// - returned_future_copy may be finished, canceled, or canceled with exception.
+			//   Would be something like this:
+			//     f = ef.then(...haven't got inside here yet...);
+			//     f.cancel().
 
 			Q_ASSERT(returned_future_copy != this_future_copy);
 
-//			qDb() << "ADDING DOWNSTREAM CANCELLER with RETFUTURE:" << returned_future_copy.state();
+			// Add the downstream cancel propagator first.
 			AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
-//			qDb() << "ADDED DOWNSTREAM CANCELLER with RETFUTURE:" << returned_future_copy.state();
 
 			try
 			{
@@ -723,15 +726,17 @@ public:
 				// which will guarantee that.
 				// This could throw a propagated exception from upstream.
 				// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't use
-				// this_future.waitForFinished(); here because it will return immediately if the thread hasn't
+				// this_future_copy.waitForFinished(); here because it will return immediately if the thread hasn't
 				// "really" started (i.e. if isRunning() == false).
 				spinWaitForFinishedOrCanceled(this_future_copy);
+
+				Q_ASSERT(this_future_copy.isFinished() || this_future_copy.isCanceled());
 
 				// Ok, so now we're finished and/or canceled.
 				// This call will block, or throw if an exception is reported to this_future_copy.
 				this_future_copy.waitForFinished();
 
-				qDb() << "Leaving Then callback Try, waitForFinished() finished:" << this_future_copy.state();
+//				qDb() << "Leaving Then callback Try, waitForFinished() finished:" << this_future_copy.state();
 				Q_ASSERT(this_future_copy.isFinished() || this_future_copy.isCanceled());
 			}
 			catch(ExtAsyncCancelException& e)
@@ -745,12 +750,12 @@ public:
 			}
 			catch(QException& e)
 			{
-				qDb() << "Rethrowing QException downstream";
+//				qDb() << "Rethrowing QException downstream";
 				returned_future_copy.reportException(e);
 			}
 			catch(...)
 			{
-				qDb() << "Rethrowing QUnhandledException downstream";
+//				qDb() << "Rethrowing QUnhandledException downstream";
 				returned_future_copy.reportException(QUnhandledException());
 			};
 
@@ -765,13 +770,13 @@ public:
 			// Should we call the then_callback?
 			if(this_future_copy.isFinished() || (call_on_cancel && this_future_copy.isCanceled()))
 			{
-				qDb() << "THEN: CALLING CALLBACK, this_future_copy:" << this_future_copy;
+//				qDb() << "THEN: CALLING CALLBACK, this_future_copy:" << this_future_copy;
 
 				try
 				{
 					// Call the callback with the results- or canceled/exception-laden this_future_copy.
 					// Could throw, hence we're in a try.
-					qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
+//					qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
 					R retval = std::invoke(then_callback_copy, this_future_copy);
 					// Didn't throw, report the result.
 					returned_future_copy.reportResult(retval);
@@ -790,8 +795,12 @@ public:
 			{
 				// Something went wrong, we got here after .waitForFinished() returned or threw, but
 				// the this_future_status isn't Finished or Canceled.
-
 				Q_ASSERT(0);
+			}
+			else
+			{
+				// Not Finished, have to be Canceled.
+				Q_ASSERT(this_future_copy.isCanceled());
 			}
 
 			returned_future_copy.reportFinished();
