@@ -17,6 +17,8 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# @file src/gui/CMakeLists.txt
+
 # gui header files
 set(gui_HEADER_FILES
 	AboutBox.h

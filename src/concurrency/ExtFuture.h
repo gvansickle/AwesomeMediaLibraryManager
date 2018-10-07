@@ -678,7 +678,7 @@ public:
 	 * So we need to wrap the call to then_callback with a try/catch, and send any exceptions we catch
 	 * to the returned future.
 	 *
-	 * @param dont_call_on_cancel  If true, don't call the callback on a downstream cancel.
+	 * @param call_on_cancel  If false, don't call the callback on a downstream cancel.
 	 */
 	template <typename ThenCallbackType,
 			  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
@@ -689,10 +689,12 @@ public:
 		if(context != nullptr)
 		{
 			// If non-null, make sure context has an event loop.
-			/// @todo Use context.
 			QThread* ctx_thread = context->thread();
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
+
+			/// @todo UNIMPLEMENTED Use context.
+			Q_ASSERT(0);
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
@@ -716,7 +718,7 @@ public:
 			Q_ASSERT(returned_future_copy != this_future_copy);
 
 			// Add the downstream cancel propagator first.
-			AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+//			AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
 
 			try
 			{
@@ -807,6 +809,16 @@ public:
 			}, *this, returned_future);
 
 		return returned_future;
+	}
+
+	template <typename ThenCallbackType,
+				  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
+				  REQUIRES(!is_ExtFuture_v<R>
+				  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback)
+	{
+		// Forward to the master callback, don't call the then_callback on a cancel.
+		return this->then(context, false, std::forward<ThenCallbackType>(then_callback));
 	}
 
 	/**

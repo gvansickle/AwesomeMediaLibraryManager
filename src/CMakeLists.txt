@@ -281,8 +281,12 @@ add_subdirectory(logic)
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
 # The Future
+if(false) # The "pull the sources in directly" method from I forget where.
 add_library(amlm_src_future EXCLUDE_FROM_ALL "")
 include(future/CMakeLists.txt)
+else()
+add_subdirectory(future)
+endif()
 
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})

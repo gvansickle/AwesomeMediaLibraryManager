@@ -140,7 +140,6 @@ TEST_F(ExtFutureTest, FutureSingleThread)
 //    EXPECT_EQ(ef.get()[1], 2);
     EXPECT_EQ(ef.resultAt(1), 2);
 
-    TC_DONE_WITH_STACK();
     TC_EXIT();
 }
 
