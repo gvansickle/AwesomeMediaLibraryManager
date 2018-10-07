@@ -237,6 +237,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsync_traits.h
 	concurrency/impl/ExtAsync_impl.h
 	concurrency/impl/ExtFuture_impl.hpp
+	concurrency/impl/ExtFutureImplHelpers.h
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncExceptions.h
 	concurrency/ExtAsyncTask.h
@@ -248,6 +249,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/WorkerThreadBase.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
+	concurrency/impl/ExtFutureImplHelpers.cpp
 	concurrency/ExtAsync.cpp
 	concurrency/ExtAsyncExceptions.cpp
 	concurrency/ExtFuture.cpp

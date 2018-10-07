@@ -298,6 +298,26 @@ ExtFutureState::State ExtFuture<T>::state() const
 	return current_state;
 }
 
+/**
+ * A helper .waitForFinished() replacement which ignores isRunning() and only returns based on
+ * isCanceled() || isFinished().
+ * .waitForFinished() first looks at the isRunning() state and treats it like an already-finished state:
+ * @code
+ * 	void QFutureInterfaceBase::waitForFinished()
+	{
+		QMutexLocker lock(&d->m_mutex);
+		const bool alreadyFinished = !isRunning();
+		lock.unlock();
+
+		if (!alreadyFinished) {
+			d->pool()->d_func()->stealAndRunRunnable(d->runnable);
+		[...]
+ * @endcode
+ * You can see that in this case, it will actually "steal the runnable" and run it.
+ * Sometimes this is not what we need, e.g. the race between a call to Whatever::run() and the returned
+ * future actually getting into the Running state.
+ * Busy-waits like this are of course gross, there's probably a better way to do this.
+ */
 template <class T, class U>
 static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
 {
@@ -326,21 +346,21 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
 template <class T, class U>
 static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future)
 {
-	QtConcurrent::run([](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) {
+	QtConcurrent::run([](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) -> void {
 
 		// When control flow gets here:
-		// - this_future_copy may be in any state.
+		// - this_future_copy may be in any state.  In particular, it may have been canceled or never started.
 		// - downstream_future_copy may be in any state.  In particular, it may have been canceled or never started.
-		// - this may already be deleted.
 
 		try
 		{
-			qDb() << "Spinwaiting on this_future_copy or downstream_future_copy to finish or cancel:"
-				  << this_future_copy << downstream_future_copy;
+			// Spin-wait on this_future_copy or downstream_future_copy to Finish or Cancel
 			do
 			{
 				// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
 				spinWaitForFinishedOrCanceled(this_future_copy, downstream_future_copy);
+
+				/// Spinwait is over, now we have four combinations to dispatch on.
 
 				// Spinwait is over, was downstream canceled?
 				if(downstream_future_copy.isCanceled())
@@ -361,8 +381,9 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 				// Was this_future canceled?
 				if(this_future_copy.isCanceled())
 				{
-					/// @todo Upstream finished and canceled.
-					Q_ASSERT("THIS FINISHED AND CANCELED");
+					/// @todo Upstream canceled.
+					qWr() << "this_future_copy CANCELED:" << this_future_copy.state();
+					return;
 				}
 
 				// Did this_future_copy Finish first?
@@ -372,6 +393,8 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 					qDb() << "THIS_FUTURE FINISHED NOT CANCELED, CANCELER THREAD RETURNING";
 					return;
 				}
+
+				/// @note We never should get here.
 			}
 			while(true);
 

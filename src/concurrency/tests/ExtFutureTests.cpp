@@ -46,8 +46,6 @@
 
 #include "../ExtAsync.h"
 #include "../ExtFuture.h"
-#warning "TEMP"
-//#include "../impl/ExtAsync_impl.h"
 
 //#include <continuable/continuable.hpp>
 
@@ -701,8 +699,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		ran_then1_callback = true;
 
 		AMLMTEST_EXPECT_EQ(upcopy, run_down);
-//		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
-//		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
+
+		// Should always be finished if we get in here.
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
+		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 
 		// No try.  This should throw to down.
 //		auto results_from_upstream = upcopy.results();
@@ -722,8 +722,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		ran_then2_callback = true;
 
 		AMLMTEST_EXPECT_EQ(upcopy, down);
-//		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
-//		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
+
+		// Should always be finished if we get in here.
+		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
+		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
 
 //		try
 //		{
@@ -765,6 +767,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	AMLMTEST_EXPECT_TRUE(down2.isCanceled()) << down2;
 	AMLMTEST_EXPECT_TRUE(down.isCanceled()) << down;
 	AMLMTEST_EXPECT_TRUE(run_down.isCanceled()) << run_down;
+
+	AMLMTEST_EXPECT_TRUE(ran_run_callback);
+	AMLMTEST_EXPECT_TRUE(ran_then1_callback);
+	AMLMTEST_EXPECT_TRUE(ran_then2_callback);
 
 //	try
 //	{
