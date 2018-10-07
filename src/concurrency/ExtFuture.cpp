@@ -27,6 +27,12 @@
  * That's why there's no real copy constructor etc. defined - it now relies on the compiler-generated
  * (but not = default, those fail) ones.
  *
+ * - The QMutex
+ * There's a QMutex which lives in the QFutureInterfaceBasePrivate d instance of the QFutureInterfaceBase.
+ * It's private, but a pointer to it is avalable via "QMutex *QFutureInterfaceBase::mutex() const".
+ * Most of the public QFuture{Interface} interfaces lock this mutex, with the notable exception of the isFinished()/isCanceled()/etc.
+ * state query functions, which simply query the bits in an atomic variable.
+ *
  */
 
 

@@ -379,7 +379,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	else
 	{
 		/// @note 0.5 sec case, we should not still be Running here, and should be Finished.
-		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && !f.isRunning()) << state(f);
+		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && !f.isRunning()) << f;
 		TCOUT << "WARNING: Canceling already-finished future";
 	}
 
@@ -399,23 +399,29 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled()) << state(f);
 	}
 
-	TC_Wait(1000);
+	TCOUT << "WAITING FOR 1 SECS";
+//	TC_Wait(1000);
+	TC_Sleep(1000);
+	TCOUT << "WAIT FOR 1 SECS COMPLETE";
 
 	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED, but if you wait a while they will be?
 	TCOUT << "STATE AFTER TC_WAIT:" << ExtFutureState::state(f);
+
+	/// @wth Google test is completing here with an "OK" result.  ???
+
 	if(dont_let_jobs_complete)
 	{
 		/// @note 2 sec case.  We should not be finished here, but:
 		/// @note Something's wrong here. If we expect isRunning, we get Finished, if we expect isFinished, we get Running.
 		/// Both is{Finished,Running}() just query the QIFB state.
 		/// If we expect either, it seems like things work fine.  W. T. H.
-		TCOUT << state(f);
+		TCOUT << ExtFutureState::state(f);
 		AMLMTEST_EXPECT_TRUE((f.isRunning() || f.isFinished()) && f.isStarted() && f.isCanceled()) << qUtf8Printable(toqstr(state(f)));
 	}
 	else
 	{
 		/// @note 0.5 sec case,
-		TCOUT << state(f);
+		TCOUT << ExtFutureState::state(f);
 		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled());// << state(f);
 	}
 

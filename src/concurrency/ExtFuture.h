@@ -346,6 +346,11 @@ public:
 
 	/// From QFutureInterfaceBase
 
+	/**
+	 * Acquires mutex.
+	 * Returns immediately having taken no action if (state & (Started|Canceled|Finished)) == true.
+	 * Else sets state = Started | Running, sends Started callout.
+	 */
 	void reportStarted()
 	{
 		/**
@@ -355,6 +360,10 @@ public:
          * pool->start(this, //m_priority// 0);
          * return theFuture;
 		 */
+		if(this->d.queryState(QFutureInterfaceBase::State(QFutureInterfaceBase::Started|QFutureInterfaceBase::Canceled|QFutureInterfaceBase::Finished)))
+		{
+			qWr() << "reportStarted() will be ignored, state:" << this->state();
+		}
 		this->d.reportStarted();
 	}
 
@@ -394,6 +403,9 @@ public:
 		this->d.reportException(e);
 	}
 
+	/**
+	 * Returns immediately if indices are equal or state is Canceled|Finished.
+	 */
 	void reportResultsReady(int beginIndex, int endIndex)
 	{
 		this->d.reportResultsReady(beginIndex, endIndex);
@@ -625,11 +637,11 @@ public:
 
 			try
 			{
-				// Will block (busy-wait with yield), throw if an exception is reported to it.
 				qDb() << "Spinwaiting on this_future_copy or downstream_future_copy to finish or cancel:"
 					  << this_future_copy << downstream_future_copy;
 				do
 				{
+					// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
 					spinWaitForFinishedOrCanceled(this_future_copy, downstream_future_copy);
 
 					// Spinwait is over, was downstream canceled?

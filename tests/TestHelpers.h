@@ -149,9 +149,7 @@ enum class GenericState
 
 ///
 
-#if defined(TEST_FWK_IS_QTEST)
-
-// QTest framework.
+#if defined(TEST_FWK_IS_QTEST) /// QTest framework.
 
 #define AMLMTEST_SCOPED_TRACE(str) /* nothing */
 
@@ -175,14 +173,12 @@ enum class GenericState
 
 #define AMLMTEST_EXPECT_NO_FATAL_FAILURE(...) __VA_ARGS__
 
-#elif defined(TEST_FWK_IS_GTEST)
-
-// Google Test Framework
+#elif defined(TEST_FWK_IS_GTEST) /// Google Test Framework
 
 #define AMLMTEST_SCOPED_TRACE(str) SCOPED_TRACE(str)
 
 #define AMLMTEST_COUT qDb()
-#define TCOUT AMLMTEST_COUT
+#define TCOUT qDb()
 
 #define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
 #define AMLMTEST_EXPECT_FALSE(arg) EXPECT_FALSE(arg)
@@ -201,6 +197,8 @@ enum class GenericState
 #define AMLMTEST_EXPECT_NO_FATAL_FAILURE(...) EXPECT_NO_FATAL_FAILURE(__VA_ARGS__)
 #define AMLMTEST_ASSERT_NO_FATAL_FAILURE(...) ASSERT_NO_FATAL_FAILURE(__VA_ARGS__)
 
+#elif defined(TEST_FWK_IS_QTEST) && defined(TEST_FWK_IS_GTEST)
+#error "BOTH TEST FRAMEWORKS"
 #else
 #error "NO TEST FRAMEWORK"
 #endif
