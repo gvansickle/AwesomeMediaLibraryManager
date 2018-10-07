@@ -96,10 +96,10 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 				}
 				if(downstream_future_copy.isFinished())
 				{
-					// Downstream Finished, but not canceled.
+					// Downstream is already Finished, but not canceled.
 					/// @todo Is that a valid state here?
 					qWr() << "downstream FINISHED?:" << downstream_future_copy;
-					break;
+					return;
 //						Q_ASSERT(0);
 				}
 
@@ -123,10 +123,10 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 			}
 			while(true);
 
-			// downstream_future == (Running|Started|Canceled) here.
-			Q_ASSERT(downstream_future_copy.isCanceled());
-			Q_ASSERT(downstream_future_copy.isStarted());
-			Q_ASSERT(downstream_future_copy.isRunning());
+			// downstream_future_copy usually == (Running|Started|Canceled) here, but may be in any state.
+//			Q_ASSERT(downstream_future_copy.isCanceled());
+//			Q_ASSERT(downstream_future_copy.isStarted());
+//			Q_ASSERT(downstream_future_copy.isRunning());
 
 			// .waitForFinished() will try to steal and run runnable, so we'll use result() instead.
 			/// @todo This is even more heavyweight, maybe try to flip the "Running" state?
