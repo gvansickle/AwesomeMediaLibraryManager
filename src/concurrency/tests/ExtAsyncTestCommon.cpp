@@ -192,13 +192,14 @@ bool InterState::check_generators()
 
 InterState ExtAsyncTestsSuiteFixtureBase::m_interstate;
 
-std::mutex ExtAsyncTestsSuiteFixtureBase::s_startup_teardown_mutex;
+std::mutex ExtAsyncTestsSuiteFixtureBase::s_setup_teardown_mutex;
 
 void ExtAsyncTestsSuiteFixtureBase::SetUp()
 {
 	AMLMTEST_SCOPED_TRACE("In SetUp()");
 
-	s_startup_teardown_mutex.lock();
+	// Lock the static SetUp/TearDown mutex to lock out all other tests while this one is running.
+	s_setup_teardown_mutex.lock();
 
 #ifdef TEST_FWK_IS_GTEST
 	AMLMTEST_ASSERT_NO_FATAL_FAILURE({
@@ -234,12 +235,10 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
 {
 	AMLMTEST_SCOPED_TRACE("In TearDown()");
 
-	s_startup_teardown_mutex.unlock();
-
     // Tear down the event loop.
     /// @see @link https://stackoverflow.com/a/33829950 for what this is trying to do here.
 //    m_event_loop_object->deleteLater();
-	AMLMTEST_COUT << "Waiting for event loop to be destroyed...";
+//	AMLMTEST_COUT << "Waiting for event loop to be destroyed...";
 //    auto didnt_time_out = m_delete_spy->wait(1000*60);
 //    ASSERT_TRUE(didnt_time_out);
 //    delete m_delete_spy;
@@ -257,6 +256,8 @@ void ExtAsyncTestsSuiteFixtureBase::TearDown()
 										 m_interstate.start_TearDown(this);
                             });
 #endif
+
+	s_setup_teardown_mutex.unlock();
 }
 
 void ExtAsyncTestsSuiteFixtureBase::expect_all_postconditions()

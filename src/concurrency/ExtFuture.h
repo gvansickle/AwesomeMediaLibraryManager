@@ -653,10 +653,11 @@ public:
 					}
 					if(downstream_future_copy.isFinished())
 					{
-						// Finished, but not canceled.
+						// Downstream Finished, but not canceled.
 						/// @todo Is that a valid state here?
 						qWr() << "downstream FINISHED?:" << downstream_future_copy;
-						Q_ASSERT(0);
+						break;
+//						Q_ASSERT(0);
 					}
 
 					// Was this_future canceled?
@@ -1085,6 +1086,11 @@ public:
 	 */
 	ExtFutureState::State state() const;
 
+	/**
+	 * Static function to get any future's current state as a ExtFutureState::State.
+	 *
+	 * @return A QFlags<>-derived type describing the current state of the ExtFuture.
+	 */
 	template <class FutureType>
 	static ExtFutureState::State state(const FutureType& future);
 
@@ -1346,46 +1352,6 @@ QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
 	return QFuture<void>(future.d);
 }
 
-template<typename T>
-ExtFutureState::State ExtFuture<T>::state() const
-{
-	// State from QFutureInterfaceBase.
-	/// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
-	///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
-	///			#ifndef QFUTURE_TEST
-	///			private:
-	///			#endif
-	///				QFutureInterfaceBasePrivate *d;
-	/// So we pretty much have to use this queryState() loop here, which is unfortunate since state is
-	/// actually a QAtomicInt, so we're not thread-safe here.
-	/// This is the queryState() code from qfutureinterface.cpp:
-	///
-	///     bool QFutureInterfaceBase::queryState(State state) const
-	///	    {
-	///		    return d->state.load() & state;
-	///	    }
-	///
-	/// Also, QFutureInterface<T>::reportResult() does this:
-	///     QMutexLocker locker(mutex());
-	///     if (this->queryState(Canceled) || this->queryState(Finished)) {
-	///        return;
-	///     }
-
-	const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
-		{QFutureInterfaceBase::NoState, "NoState"},
-		{QFutureInterfaceBase::Running, "Running"},
-		{QFutureInterfaceBase::Started,  "Started"},
-		{QFutureInterfaceBase::Finished,  "Finished"},
-		{QFutureInterfaceBase::Canceled,  "Canceled"},
-		{QFutureInterfaceBase::Paused,   "Paused"},
-		{QFutureInterfaceBase::Throttled, "Throttled"}
-	};
-
-	ExtFutureState::State current_state = ExtFutureState::state(*this);
-
-	return current_state;
-}
-
 /**
  * Creates a completed future containing the value @a value.
  *
@@ -1451,14 +1417,14 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 {
 	QDebugStateSaver saver(dbg);
 
-	// .resultCount() does not appear to cause a stored exception to be thrown.  It does acquire the mutex.
+	// .resultCount() does not cause a stored exception to be thrown.  It does acquire the mutex.
 	dbg << "ExtFuture<T>( state:" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
 
 	return dbg;
 }
 
 /**
- * std::ostream stream operator (for gtest).
+ * std::ostream stream operator.
  */
 template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)

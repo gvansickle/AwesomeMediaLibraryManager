@@ -57,17 +57,6 @@
 #include "../ExtAsync.h"
 #include "../ExtAsync_traits.h"
 
-QT_BEGIN_NAMESPACE
-
-/// To let Google Test print ExtFutureState's.
-template <class T>
-inline void PrintTo(const ExtFutureState::State& state, ::std::ostream *os)
-{
-	QString str = toqstr<ExtFutureState::State>(state);
-	PrintTo(str, os);
-}
-
-QT_END_NAMESPACE
 
 class ExtAsyncTestsSuiteFixtureBase;
 
@@ -179,9 +168,6 @@ protected:
     // "googletest does not reuse the same test fixture for multiple tests. Any changes one test makes to the fixture do not affect other tests."
     // @link https://github.com/google/googletest/blob/master/googletest/docs/primer.md
 
-    /// Static object for tracking state across TEST_F()'s.
-    static InterState m_interstate;
-
     std::string get_currently_running_test();
 
     void starting(std::string func);
@@ -195,7 +181,12 @@ protected:
     QObject* m_event_loop_object {nullptr};
     QSignalSpy* m_delete_spy {nullptr};
 
-	static std::mutex s_startup_teardown_mutex;
+	/// Mutex covering the entire CFG between StartUp() and TearDown().
+	/// Another attempt to make sure the individual tests are serialized.
+	static std::mutex s_setup_teardown_mutex;
+
+	/// Static object for tracking state across TEST_F()'s.
+	static InterState m_interstate;
 
 public:
 

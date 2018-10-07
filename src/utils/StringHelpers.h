@@ -91,6 +91,8 @@ enum /*QLocale::*/DataSizeFormats
 /* Nothing, gcc and clang's __PRETTY_FUNCTION__ are synonymous with __FUNCSIG__ */
 #endif
 
+#include <src/future/cpp14_concepts.hpp>
+
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
 /// There are only two assumptions made here:
@@ -211,6 +213,7 @@ static inline bool isValidUTF8(const char* bytes)
 /**
  * And the one thing you might want to use Qt's QMetaWhatever infrastructure for, implicitly or explicitly converting
  * a Q_ENUM() to a string, you can't do directly.  So this.  The.  Simplest.  Things.
+ * And Q_FLAG()s?  Yep, need to handle them separately.
  *
  * @note Yet, you can stream to QDebug and that works out of the box.
  *
@@ -220,7 +223,17 @@ static inline bool isValidUTF8(const char* bytes)
 template<typename QEnumType>
 QString toqstr(const QEnumType value)
 {
-  return QString(QMetaEnum::fromType<QEnumType>().valueToKey(value));
+	QMetaEnum me = QMetaEnum::fromType<QEnumType>();
+	if(QMetaEnum::fromType<QEnumType>().isFlag())
+	{
+		// It's a Q_FLAG().
+		return QString(me.valueToKeys(value));
+	}
+	else
+	{
+		// It's a Q_ENUM().
+		return QString(me.valueToKey(value));
+	}
 }
 
 

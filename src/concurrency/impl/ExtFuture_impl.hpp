@@ -115,12 +115,10 @@ void ExtFuture<T>::wait()
 	}
 }
 
-#if 0
-
 template<typename T>
-ExtFutureState::States ExtFuture<T>::state() const
+ExtFutureState::State ExtFuture<T>::state() const
 {
-	// States from QFutureInterfaceBase.
+	// State from QFutureInterfaceBase.
 	/// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
 	///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
 	///			#ifndef QFUTURE_TEST
@@ -135,8 +133,14 @@ ExtFutureState::States ExtFuture<T>::state() const
 	///	    {
 	///		    return d->state.load() & state;
 	///	    }
+	///
+	/// Also, QFutureInterface<T>::reportResult() does this:
+	///     QMutexLocker locker(mutex());
+	///     if (this->queryState(Canceled) || this->queryState(Finished)) {
+	///        return;
+	///     }
 
-    const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+	const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
 		{QFutureInterfaceBase::NoState, "NoState"},
 		{QFutureInterfaceBase::Running, "Running"},
 		{QFutureInterfaceBase::Started,  "Started"},
@@ -146,12 +150,12 @@ ExtFutureState::States ExtFuture<T>::state() const
 		{QFutureInterfaceBase::Throttled, "Throttled"}
 	};
 
-    ExtFutureState::States current_state = ExtFutureState::state(*this);
+	ExtFutureState::State current_state = ExtFutureState::state(*this);
 
-    return current_state;
+	return current_state;
 }
 
-
+#if 0
 namespace ExtAsync
 {
 	namespace detail

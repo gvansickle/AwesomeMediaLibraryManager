@@ -1320,6 +1320,26 @@ M_WARNING("TODO: This is still spinning when the test exits.");
 /// Static checks
 TEST_F(ExtFutureTest, StaticAsserts)
 {
+	TC_ENTER();
+
+	ExtFuture<int> f;
+	TCOUT << "ExtFuture<int>:" << f;
+	TCOUT << "ExtFuture<int>.state() 1:" << f.state();
+	TCOUT << "ExtFuture<int>.state() 2:" << ExtFutureState::Started;
+	TCOUT << "ExtFuture<int>.state() 3:" << toqstr<ExtFutureState::State>(f.state());
+
+	QString str;
+	QDebug dbg(&str);
+//	dbg << toString(ExtFutureState::state(f));
+	dbg << f.state();
+//	PrintTo(str, os);
+	TCOUT << "qDb():" << str;
+
+	std::cout << "std::cout: " << f.state() << std::endl;
+	std::cout << "std::cout: " << f << std::endl;
 
 	static_assert(std::is_default_constructible<QString>::value);
+
+	TC_EXIT();
+
 }

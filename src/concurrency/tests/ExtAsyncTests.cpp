@@ -314,6 +314,7 @@ template <typename FutureTypeT>
 void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 {
 	AMLMTEST_SCOPED_TRACE("IN QtConcurrentMappedFutureStateOnCancel template function");
+
 	std::atomic_int map_callback_run_counter {0};
 
     QVector<int> dummy_vector{0,1,2,3,4,5,6,7,8,9};
@@ -392,11 +393,11 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	TCOUT << "CANCELED:" << ExtFutureState::state(f);
 	if(dont_let_jobs_complete)
 	{
-		AMLMTEST_EXPECT_TRUE(f.isRunning() && f.isStarted() && f.isCanceled()) << state(f);
+		AMLMTEST_EXPECT_TRUE(f.isRunning() && f.isStarted() && f.isCanceled()) << ExtFutureState::state(f);
 	}
 	else
 	{
-		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled()) << state(f);
+		AMLMTEST_EXPECT_TRUE(f.isFinished() && f.isStarted() && f.isCanceled()) << ExtFutureState::state(f);
 	}
 
 	TCOUT << "WAITING FOR 1 SECS";
@@ -404,10 +405,12 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	TC_Sleep(1000);
 	TCOUT << "WAIT FOR 1 SECS COMPLETE";
 
+	/// @wth Google test is completing here with an "OK" result.  ???
+
+
 	/// @note CANCELED QFUTURES ARE NOT IMMEDIATELY FINISHED, but if you wait a while they will be?
 	TCOUT << "STATE AFTER TC_WAIT:" << ExtFutureState::state(f);
 
-	/// @wth Google test is completing here with an "OK" result.  ???
 
 	if(dont_let_jobs_complete)
 	{
