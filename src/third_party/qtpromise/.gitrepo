@@ -6,6 +6,6 @@
 [subrepo]
 	remote = https://github.com/simonbrunel/qtpromise.git
 	branch = master
-	commit = 051fed5fbc881323bdf87712538c6fc7cf6a4160
-	parent = f394836aed601604d7b0557fb5abaf37efaad3e0
+	commit = 16229fc2c9bf217582ab468090c9384ef1b3de7c
+	parent = 4100c146517d14a41058d2df90b7142be7f56c38
 	cmdver = 0.3.1
