@@ -685,7 +685,6 @@ public:
 			  REQUIRES(!is_ExtFuture_v<R>
 			  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
-#if 1
 	{
 		if(context != nullptr)
 		{
@@ -809,7 +808,7 @@ public:
 
 		return returned_future;
 	}
-#endif
+
 	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback,
 	 * of signature:
