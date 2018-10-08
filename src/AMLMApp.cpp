@@ -47,6 +47,9 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
     m_the_instance = this;
 
     setObjectName("TheAMLMApp");
+
+    // Create a PerfectDeleter.
+    PerfectDeleter(this);
 }
 
 AMLMApp::~AMLMApp()
@@ -185,6 +188,7 @@ void AMLMApp::perform_controlled_shutdown()
     {
 		// Do whatever shutdown tasks we need to in here.
 
+		// Cancel all asynchronous activities and wait for them to complete.
 		PerfectDeleter::instance()->cancel_and_wait_for_all();
     }
 

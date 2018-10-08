@@ -49,6 +49,7 @@
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
 #include <logic/dbmodels/CollectionDatabaseModel.h>
+#include <logic/PerfectDeleter.h>
 
 #include <gui/Theme.h>
 
@@ -325,7 +326,9 @@ M_WARNING("TODO Probably should be refactored.");
 
 				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
 #if 1
+				// Doing this without an AMLMJobT.
 				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
+				PerfectDeleter::instance()->addQFuture(future_entry);
 				LibraryEntryLoaderJob* dummy = nullptr;
 				// Register that we're doing this, so another async load for this same item doesn't get triggered.
 				m_pending_async_item_loads.insert(qpmi, true);

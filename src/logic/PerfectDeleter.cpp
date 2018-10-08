@@ -28,6 +28,8 @@ PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {
 	// Set the singleton ptr.
 	s_instance = this;
+
+	m_future_synchronizer.setCancelOnWait(true);
 }
 
 PerfectDeleter::~PerfectDeleter()
@@ -55,12 +57,6 @@ void PerfectDeleter::cancel_and_wait_for_all()
 {
 	std::lock_guard lock(m_mutex);
 
-	// Cancel all the QFutures.
-	for(QFuture<void>& i : m_watched_qfutures)
-	{
-		i.cancel();
-	}
-
 	// Cancel all registered AMLMJobs.
 	for(AMLMJob* i : m_watched_AMLMJobs)
 	{
@@ -73,10 +69,7 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 	// Wait for the QFutures to finish.
 	/// @todo Need to keep event loop running here?
-	for(QFuture<void>& i : m_watched_qfutures)
-	{
-		i.waitForFinished();
-	}
+	m_future_synchronizer.waitForFinished();
 
 	// Wait for the AMLMJobs to finish.
 	/// @todo Probably need to keep event loop running here.
@@ -88,14 +81,15 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 void PerfectDeleter::addQFuture(QFuture<void> f)
 {
-	std::lock_guard lock(m_mutex);
+	Q_ASSERT(this == s_instance);
+	qDb() << "Adding QFuture";
+//	std::lock_guard lock(m_mutex);
+	qDb() << "Locked";
 
-	// Connect a QFutureWatcher signal/slot to remove the QFuture<> if it gets deleted.
-//	connect_or_die(f, &QFuture<void>::destroyed, this, [=](){
-//		qDb() << "QFuture destroyed";
-//	});
+	m_future_synchronizer.addFuture(f);
+	qDb() << "Added QFuture";
 
-	m_watched_qfutures.push_back(f);
+	/// @todo Do we need to periodically purge completed futures?
 }
 
 void PerfectDeleter::addKJob(KJob* kjob)
@@ -121,4 +115,15 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 				m_watched_AMLMJobs.end());
 	});
 	m_watched_AMLMJobs.push_back(amlmjob);
+}
+
+std::vector<std::tuple<QString, long> > PerfectDeleter::stats() const
+{
+	std::lock_guard lock(m_mutex);
+
+	// QFutureSynchronizer<> stats.
+	int num_futures = m_future_synchronizer.futures().size();
+
+	return {{tr("Watched QFuture<void>s"), num_futures}};
+
 }

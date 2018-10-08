@@ -251,10 +251,10 @@ public:
 	/**
 	 * Conversion operator to QFuture<void>.
 	 */
-//	operator QFuture<T>() const
-//	{
-//		return QFuture<T>(&QFuture<T>::d);
-//	}
+	operator QFuture<void>() const
+	{
+		return QFuture<void>(this->d);
+	}
 
 	/// @name Comparison operators.
 	/// @{

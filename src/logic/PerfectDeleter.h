@@ -26,7 +26,9 @@
 
 // Qt5
 #include <QObject>
+#include <QStringList>
 #include <QFuture>
+#include <QFutureSynchronizer>
 
 // KF5
 #include <KJob>
@@ -54,7 +56,7 @@ public:
     /**
      * Destructor
      */
-    ~PerfectDeleter();
+	~PerfectDeleter() override;
 
 	/// Returns a pointer to the singleton.
     static PerfectDeleter* instance();
@@ -65,11 +67,13 @@ public:
 	/**
 	 * For adding QFuture<void>'s to be canceled/waited on.
 	 */
-    void addQFuture(QFuture<void> f);
+	void addQFuture(QFuture<void> f);
 
     void addKJob(KJob* kjob);
 
     void addAMLMJob(AMLMJob* amlmjob);
+
+	std::vector<std::tuple<QString, long>> stats() const;
 
 private:
 
@@ -77,9 +81,10 @@ private:
     static PerfectDeleter* s_instance;
 
 	// Mutex for synchronizing state, e.g. watch lists below.
-    std::mutex m_mutex;
+	mutable std::mutex m_mutex;
 
-    std::deque<QFuture<void>> m_watched_qfutures;
+	// QFutureSynchronizer<void> for watching/canceling all QFuture<>s
+	QFutureSynchronizer<void> m_future_synchronizer;
 
     std::deque<QPointer<KJob>> m_watched_KJobs;
     std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
