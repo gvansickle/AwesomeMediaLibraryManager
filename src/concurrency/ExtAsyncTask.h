@@ -20,6 +20,8 @@
 #ifndef UTILS_CONCURRENCY_EXTASYNCTASK_H_
 #define UTILS_CONCURRENCY_EXTASYNCTASK_H_
 
+#if 0
+
 #include <config.h>
 
 #include "ExtFuture.h"
@@ -195,5 +197,7 @@ void ExtAsyncTaskRunner<T>::run()
         this->reportFinished();
 //    }
 }
+
+#endif // #if 0
 
 #endif /* UTILS_CONCURRENCY_EXTASYNCTASK_H_ */

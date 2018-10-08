@@ -56,7 +56,8 @@
 
 CoverArtJob::CoverArtJob(QObject* parent, const QUrl &url) : BASE_CLASS(parent), m_audio_file_url(url)
 {
-
+	// Set our capabilities.
+	setCapabilities(KJob::Capability::Killable);
 }
 
 CoverArtJob::~CoverArtJob()
@@ -67,9 +68,7 @@ CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
 {
     auto retval = new CoverArtJob(parent, url);
 
-    /// @todo Hook things up in here.
-
-    return retval;
+	return retval;
 }
 
 ///

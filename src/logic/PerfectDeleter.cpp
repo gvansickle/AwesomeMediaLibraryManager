@@ -24,7 +24,7 @@
 
 PerfectDeleter* PerfectDeleter::s_instance { nullptr };
 
-PerfectDeleter::PerfectDeleter()
+PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {
 	// Set the singleton ptr.
 	s_instance = this;
@@ -37,7 +37,7 @@ PerfectDeleter::~PerfectDeleter()
 
 PerfectDeleter* PerfectDeleter::instance()
 {
-	return (s_instance != nullptr ) ? s_instance : new PerfectDeleter();
+	return (s_instance != nullptr ) ? s_instance : new PerfectDeleter(qApp);
 }
 
 void PerfectDeleter::destroy()
@@ -90,7 +90,7 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 {
 	std::lock_guard lock(m_mutex);
 
-	// Connect a signal/slot to remove the QFuture<> if it gets deleted.
+	// Connect a QFutureWatcher signal/slot to remove the QFuture<> if it gets deleted.
 //	connect_or_die(f, &QFuture<void>::destroyed, this, [=](){
 //		qDb() << "QFuture destroyed";
 //	});

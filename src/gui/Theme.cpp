@@ -616,13 +616,13 @@ QIcon Theme::iconFromTheme(const QStringList &icon_names)
         if(!retval.isNull())
         {
             // Found one.
-            qDb() << "Returning theme icon:" << name;
+//            qDb() << "Returning theme icon:" << name;
             return retval;
         }
     }
 
     // Couldn't find it.
-    qDb() << "Failed to find icon with any of the names" << icon_names << "in icon theme search paths.";
+    qWr() << "Failed to find icon with any of the names" << icon_names << "in icon theme search paths.";
 
     return retval;
 }

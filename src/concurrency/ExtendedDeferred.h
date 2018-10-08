@@ -19,7 +19,7 @@
 
 #ifndef UTILS_CONCURRENCY_EXTENDEDDEFERRED_H_
 #define UTILS_CONCURRENCY_EXTENDEDDEFERRED_H_
-
+#if 0
 #include "asyncfuture.h"
 
 template <typename WatcherType>
@@ -263,5 +263,6 @@ auto extended_deferred() -> ExtendedDeferred<T>
 	return ExtendedDeferred<T>();
 }
 
+#endif // #if 0
 
 #endif /* UTILS_CONCURRENCY_EXTENDEDDEFERRED_H_ */

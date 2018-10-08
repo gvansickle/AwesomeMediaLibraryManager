@@ -25,6 +25,7 @@
 #include <mutex>
 
 // Qt5
+#include <QObject>
 #include <QFuture>
 
 // KF5
@@ -42,24 +43,28 @@ struct Deletable
 /**
  * Class for managing the lifecycle of various deferred-delete objects.
  */
-class PerfectDeleter
+class PerfectDeleter : public QObject
 {
 public:
     /**
      * Default constructor
      */
-    PerfectDeleter();
+	explicit PerfectDeleter(QObject* parent);
 
     /**
      * Destructor
      */
     ~PerfectDeleter();
 
+	/// Returns a pointer to the singleton.
     static PerfectDeleter* instance();
     static void destroy();
 
 	void cancel_and_wait_for_all();
 
+	/**
+	 * For adding QFuture<void>'s to be canceled/waited on.
+	 */
     void addQFuture(QFuture<void> f);
 
     void addKJob(KJob* kjob);
@@ -68,8 +73,10 @@ public:
 
 private:
 
+	/// The singleton.
     static PerfectDeleter* s_instance;
 
+	// Mutex for synchronizing state, e.g. watch lists below.
     std::mutex m_mutex;
 
     std::deque<QFuture<void>> m_watched_qfutures;
