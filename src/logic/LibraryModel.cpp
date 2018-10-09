@@ -314,8 +314,6 @@ M_WARNING("TODO Probably should be refactored.");
 			// We track by rows, so we want the index of column 0.
 			QPersistentModelIndex qpmi (index.siblingAtColumn(0));
 			Q_ASSERT(qpmi.isValid());
-//            auto pending_asyn_req = m_pending_async_item_loads.find(item);
-//            if(pending_asyn_req != m_pending_async_item_loads.cend())
 			if(m_pending_async_item_loads.contains(qpmi))
             {
 				// There's already an outstanding request, nothing to do but wait.
@@ -325,7 +323,7 @@ M_WARNING("TODO Probably should be refactored.");
             {
                 // Start an async job to read the data for this entry.
 
-				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
+//				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
 #if 1
 				// Doing this without an AMLMJobT.
 				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
@@ -334,7 +332,7 @@ M_WARNING("TODO Probably should be refactored.");
 				// Register that we're doing this, so another async load for this same item doesn't get triggered.
 				m_pending_async_item_loads.insert(qpmi, true);
 				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
-				future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) -> bool {
+				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) -> bool {
 					Q_ASSERT(result_future.isFinished());
 //					qDbo() << "IN THEN CALLBACK:" << result_future;
 					LibraryEntryLoaderJobResult new_vals = result_future.result();
@@ -344,8 +342,8 @@ M_WARNING("TODO Probably should be refactored.");
 						m_pending_async_item_loads.remove(qpmi);
 						});
 					return true;
-					;}
-				);
+				});
+				AMLMApp::IPerfectDeleter()->addQFuture(then_future);
 #else
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
 				m_pending_async_item_loads.insert(item, load_entry_job);
