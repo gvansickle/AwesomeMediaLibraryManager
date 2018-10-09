@@ -66,7 +66,9 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 	// Wait for the QFutures to finish.
 	/// @todo Need to keep event loop running here?
+	qIno() << "Waiting for" << m_future_synchronizer.futures().size() << " canceled QFuture<void>'s to finish...";
 	m_future_synchronizer.waitForFinished();
+	qIno() << "Wait complete.";
 
 	// Wait for the AMLMJobs to finish.
 	/// @todo Probably need to keep event loop running here.
