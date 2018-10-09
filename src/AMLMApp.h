@@ -31,9 +31,9 @@
 
 // Ours
 #include <logic/dbmodels/CollectionDatabaseModel.h>
-
 #include <logic/models/AbstractTreeModel.h>
 #include <logic/models/ScanResultsTreeModel.h>
+#include <PerfectDeleter.h>
 
 
 /**
@@ -104,6 +104,8 @@ public:
 
     QMimeDatabase* mime_db() { return m_mime_database; };
 
+	static PerfectDeleter* IPerfectDeleter() { return &(amlmApp->m_perfect_deleter); };
+
     /// @}
 
     /**
@@ -154,6 +156,8 @@ private:
     ScanResultsTreeModel* m_srtm_instance;
 
     QMimeDatabase* m_mime_database;
+
+	PerfectDeleter m_perfect_deleter;
 
     std::atomic_bool m_shutting_down {false};
     std::atomic_bool m_controlled_shutdown_complete {false};

@@ -251,9 +251,9 @@ public:
 	/**
 	 * Conversion operator to QFuture<void>.
 	 */
-	operator QFuture<void>() const
+	explicit operator QFuture<void>() const
 	{
-		return QFuture<void>(this->d);
+		return QFuture<void>(&(this->d));
 	}
 
 	/// @name Comparison operators.

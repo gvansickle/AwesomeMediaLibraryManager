@@ -40,16 +40,13 @@
 // Pointer to the singleton.
 AMLMApp *AMLMApp::m_the_instance = nullptr;
 
-AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
+AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv), m_perfect_deleter(this)
 {
     Q_ASSERT(m_the_instance == nullptr);
 
     m_the_instance = this;
 
     setObjectName("TheAMLMApp");
-
-    // Create a PerfectDeleter.
-    PerfectDeleter(this);
 }
 
 AMLMApp::~AMLMApp()
@@ -189,7 +186,7 @@ void AMLMApp::perform_controlled_shutdown()
 		// Do whatever shutdown tasks we need to in here.
 
 		// Cancel all asynchronous activities and wait for them to complete.
-		PerfectDeleter::instance()->cancel_and_wait_for_all();
+		AMLMApp::IPerfectDeleter()->cancel_and_wait_for_all();
     }
 
     m_controlled_shutdown_complete = true;

@@ -59,7 +59,7 @@ public:
 	~PerfectDeleter() override;
 
 	/// Returns a pointer to the singleton.
-    static PerfectDeleter* instance();
+//    static PerfectDeleter* instance();
     static void destroy();
 
 	void cancel_and_wait_for_all();
@@ -78,7 +78,7 @@ public:
 private:
 
 	/// The singleton.
-    static PerfectDeleter* s_instance;
+//    static PerfectDeleter* s_instance;
 
 	// Mutex for synchronizing state, e.g. watch lists below.
 	mutable std::mutex m_mutex;

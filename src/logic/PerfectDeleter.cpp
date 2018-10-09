@@ -22,13 +22,10 @@
 // Std C++
 #include <algorithm>
 
-PerfectDeleter* PerfectDeleter::s_instance { nullptr };
+//PerfectDeleter* PerfectDeleter::s_instance { nullptr };
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {
-	// Set the singleton ptr.
-	s_instance = this;
-
 	m_future_synchronizer.setCancelOnWait(true);
 }
 
@@ -37,20 +34,20 @@ PerfectDeleter::~PerfectDeleter()
 
 }
 
-PerfectDeleter* PerfectDeleter::instance()
-{
-	return (s_instance != nullptr ) ? s_instance : new PerfectDeleter(qApp);
-}
+//PerfectDeleter* PerfectDeleter::instance()
+//{
+//	return (s_instance != nullptr ) ? s_instance : new PerfectDeleter(qApp);
+//}
 
 void PerfectDeleter::destroy()
 {
 	// Delete the singleton.
 	// This is intended to be called by the owner's (app class's) destructor.
-	if(s_instance != nullptr)
-	{
-		delete s_instance;
-		s_instance = nullptr;
-	}
+//	if(s_instance != nullptr)
+//	{
+//		delete s_instance;
+//		s_instance = nullptr;
+//	}
 }
 
 void PerfectDeleter::cancel_and_wait_for_all()
@@ -81,9 +78,9 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 void PerfectDeleter::addQFuture(QFuture<void> f)
 {
-	Q_ASSERT(this == s_instance);
+//	Q_ASSERT(this == s_instance);
 	qDb() << "Adding QFuture";
-//	std::lock_guard lock(m_mutex);
+	std::lock_guard lock(m_mutex);
 	qDb() << "Locked";
 
 	m_future_synchronizer.addFuture(f);

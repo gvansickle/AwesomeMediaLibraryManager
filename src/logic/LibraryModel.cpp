@@ -37,6 +37,7 @@
 #include <QFileIconProvider>
 
 // Ours
+#include <src/AMLMApp.h>
 #include <utils/RegisterQtMetatypes.h>
 #include "LibraryRescanner.h"
 #include "LibraryRescannerJob.h"
@@ -328,7 +329,7 @@ M_WARNING("TODO Probably should be refactored.");
 #if 1
 				// Doing this without an AMLMJobT.
 				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
-				PerfectDeleter::instance()->addQFuture(future_entry);
+				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
 				LibraryEntryLoaderJob* dummy = nullptr;
 				// Register that we're doing this, so another async load for this same item doesn't get triggered.
 				m_pending_async_item_loads.insert(qpmi, true);
