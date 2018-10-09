@@ -53,8 +53,6 @@ AMLMApp::~AMLMApp()
 {
     /// @todo Shut down whatever still needs shutting down.
 
-	PerfectDeleter::destroy();
-
     delete m_mime_database;
 
 	// No more singleton.

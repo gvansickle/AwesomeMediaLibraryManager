@@ -47,6 +47,8 @@ struct Deletable
  */
 class PerfectDeleter : public QObject
 {
+	Q_OBJECT
+
 public:
     /**
      * Default constructor
@@ -57,10 +59,6 @@ public:
      * Destructor
      */
 	~PerfectDeleter() override;
-
-	/// Returns a pointer to the singleton.
-//    static PerfectDeleter* instance();
-    static void destroy();
 
 	void cancel_and_wait_for_all();
 
@@ -77,14 +75,12 @@ public:
 
 private:
 
-	/// The singleton.
-//    static PerfectDeleter* s_instance;
-
 	// Mutex for synchronizing state, e.g. watch lists below.
 	mutable std::mutex m_mutex;
 
 	// QFutureSynchronizer<void> for watching/canceling all QFuture<>s
 	QFutureSynchronizer<void> m_future_synchronizer;
+	long m_num_added_qfutures {0};
 
     std::deque<QPointer<KJob>> m_watched_KJobs;
     std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
