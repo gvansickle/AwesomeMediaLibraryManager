@@ -992,11 +992,11 @@ void MainWindow::createDockWidgets()
 	addDockWidget(Qt::LeftDockWidgetArea, m_collection_dock_widget);
 
     // Create the Collection Stats dock widget.
-//    m_collection_stats_dock_widget = new QDockWidget(tr("Collection Stats"), this);
-    m_collection_stats_widget = new CollectionStatsWidget();
-    m_collection_stats_dock_widget = m_collection_stats_widget->make_dockwidget(tr("Collection Stats"), this);
+//    m_collection_stats_widget = new CollectionStatsWidget();
+//    m_collection_stats_dock_widget = m_collection_stats_widget->make_dockwidget(tr("Collection Stats"), this);
+	 m_collection_stats_dock_widget = CollectionStatsWidget::make_dockwidget(tr("Collection Stats"), this);
     m_collection_stats_dock_widget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_collection_stats_dock_widget->setWidget(m_collection_stats_widget);
+//    m_collection_stats_dock_widget->setWidget(m_collection_stats_widget);
     addDockWidget(Qt::LeftDockWidgetArea, m_collection_stats_dock_widget);
 
     // Create the metadata dock widget.
@@ -1807,7 +1807,7 @@ void MainWindow::addChildMDIModelViewPair_Library(const MDIModelViewPair& mvpair
 			m_libmodels.push_back(libmodel);
 
             /// @todo This needs cleanup.
-            m_collection_stats_widget->setModel(libmodel);
+			dynamic_cast<CollectionStatsWidget*>(m_collection_stats_dock_widget->widget())->setModel(libmodel);
 
 			// Add the new library to the ModelViewPairs Model.
 			// The Collection Doc Widget uses this among others.

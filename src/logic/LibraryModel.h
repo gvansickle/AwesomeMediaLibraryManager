@@ -76,7 +76,7 @@ Q_SIGNALS:
     void startFileScanSignal(QUrl url);
 
     /// Status/Progress signal.
-    void statusSignal(LibState, qint64, qint64);
+//    void statusSignal(LibState, qint64, qint64);
 
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
 //    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;

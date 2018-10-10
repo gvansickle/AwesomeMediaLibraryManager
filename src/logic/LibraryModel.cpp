@@ -685,7 +685,7 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 	createCacheFile(url);
 
 	connectSignals();
-	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
+//	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
 	Q_EMIT startFileScanSignal(m_library.rootURL);
 
 	endResetModel();
@@ -1077,7 +1077,7 @@ void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
     qDbo() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
-	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
+//	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
 static QString table_row(const std::string& s1, const std::string& s2)
