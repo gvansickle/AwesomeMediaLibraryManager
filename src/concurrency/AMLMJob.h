@@ -82,7 +82,7 @@ public:
     virtual void result(KJob *job) = 0;
 
     // QObject signals.
-    virtual void destroyed(QObject* obj) = 0;
+//    virtual void destroyed(QObject* obj) = 0;
 };
 Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
 
@@ -219,7 +219,7 @@ Q_SIGNALS:
     void result(KJob *job) override;
 
     // QObject signals.
-	void destroyed(QObject* obj) override;
+//	void destroyed(QObject* obj) override;
 
     /// @}
 
@@ -551,10 +551,6 @@ private Q_SLOTS:
      * Similar to mechanism in KDevelop's ::ICore & ::ImportProjectJob.
      */
     void SLOT_onAboutToShutdown();
-
-public:
-
-    bool m_i_was_deleted = false;
 
 private:
 
@@ -919,7 +915,13 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
 #else
-        // Wait for the runFunctor() to report Finished.
+		if(this->isAutoDelete())
+		{
+			/// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
+			qWr() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
+		}
+
+		// Wait for the runFunctor() to report Finished.
 		m_ext_watcher->waitForFinished();
 //		m_ext_future.waitForFinished();
 
@@ -929,17 +931,9 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 //        AMLM_ASSERT_EQ(m_ext_future.state(), ExtFutureState::Started | ExtFutureState::Canceled | ExtFutureState::Finished);
         /// @todo Difference here between cancel before and after start.
         /// Before: Started | Canceled, After: S|F|C.
-        qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(m_ext_future);
+//        qDbo() << "POST-CANCEL FUTURE STATE:" << ExtFutureState::state(m_ext_future);
 #endif
 
-        // Try to detect that we've survived at least to this point.
-        Q_ASSERT(!m_i_was_deleted);
-
-		if(this->isAutoDelete())
-        {
-            /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
-            qWr() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
-        }
         return true;
     }
 
@@ -1014,7 +1008,7 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 
         // QObject forwarders.
 		/// @note Does this actually make sense?
-		connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
+//		connect_queued_or_die(this, &QObject::destroyed, this, &ThisType::destroyed);
 
 		// Speed update timer.
 		connect_or_die(m_speed_timer.data(), &QTimer::timeout, this, &ThisType::SLOT_UpdateSpeed);

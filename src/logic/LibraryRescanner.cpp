@@ -186,7 +186,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
-    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
+//    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
 	// New Tree model.
 //	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
@@ -256,9 +256,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     master_job_tracker->registerJob(dirtrav_job);
 	master_job_tracker->setAutoDelete(dirtrav_job, true);
     master_job_tracker->setStopOnClose(dirtrav_job, true);
-    master_job_tracker->registerJob(lib_rescan_job);
-	master_job_tracker->setAutoDelete(lib_rescan_job, true);
-    master_job_tracker->setStopOnClose(lib_rescan_job, true);
+//    master_job_tracker->registerJob(lib_rescan_job);
+//	master_job_tracker->setAutoDelete(lib_rescan_job, true);
+//    master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
     // Start the asynchronous ball rolling.
     dirtrav_job->start();

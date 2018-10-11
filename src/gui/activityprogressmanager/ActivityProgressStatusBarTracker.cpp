@@ -186,6 +186,12 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     //     QObject::connect(job, SIGNAL(finished(KJob*)), this, SLOT(finished(KJob*)));
     BASE_CLASS::registerJob(kjob);
 
+	if(auto jobptr = dynamic_cast<AMLMJob*>(kjob))
+	{
+		AMLMApp::IPerfectDeleter()->addAMLMJob(jobptr);
+	}
+	/// @todo
+
     if(!jobWatch)
     {
         qCro() << "Job deleted while being registered";

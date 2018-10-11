@@ -80,7 +80,6 @@ void CollectionStatsWidget::SLOT_modelChanged()
 #if 1 // Giving QTextDocument a whirl.
 	QTextDocument doc(this);
 
-//	doc.insertFrame();
 	Q_ASSERT(doc.rootFrame());
 	QTextCursor cursor(doc.rootFrame()->firstCursorPosition());
 	cursor.movePosition(QTextCursor::Start);
