@@ -22,7 +22,6 @@
 // Std C++
 #include <algorithm>
 
-//PerfectDeleter* PerfectDeleter::s_instance { nullptr };
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {
@@ -34,22 +33,6 @@ PerfectDeleter::~PerfectDeleter()
 
 }
 
-//PerfectDeleter* PerfectDeleter::instance()
-//{
-//	return (s_instance != nullptr ) ? s_instance : new PerfectDeleter(qApp);
-//}
-
-//void PerfectDeleter::destroy()
-//{
-//	// Delete the singleton.
-//	// This is intended to be called by the owner's (app class's) destructor.
-////	if(s_instance != nullptr)
-////	{
-////		delete s_instance;
-////		s_instance = nullptr;
-////	}
-//}
-
 void PerfectDeleter::cancel_and_wait_for_all()
 {
 	std::lock_guard lock(m_mutex);
@@ -58,7 +41,7 @@ void PerfectDeleter::cancel_and_wait_for_all()
 	for(AMLMJob* i : m_watched_AMLMJobs)
 	{
 		if(i != nullptr)
-		{
+		{			
 			// Killing them softly is probably the right way to go here.
 			i->kill(KJob::KillVerbosity::Quietly);
 		}
@@ -66,16 +49,13 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 	// Wait for the QFutures to finish.
 	/// @todo Need to keep event loop running here?
-	qIno() << "Waiting for" << m_future_synchronizer.futures().size() << " canceled QFuture<void>'s to finish...";
+	qIno() << "Waiting for" << m_future_synchronizer.futures().size() << "canceled QFuture<void>'s to finish...";
 	m_future_synchronizer.waitForFinished();
 	qIno() << "Wait complete.";
 
 	// Wait for the AMLMJobs to finish.
 	/// @todo Probably need to keep event loop running here.
-//	for(QFuture<void>& i : m_watched_qfutures)
-//	{
-//		i.waitForFinished();
-//	}
+	waitForAMLMJobsFinished(true);
 }
 
 void PerfectDeleter::addQFuture(QFuture<void> f)
@@ -86,7 +66,7 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 
 	m_future_synchronizer.addFuture(f);
 
-	if(m_num_added_qfutures%16 == 0)
+	if(m_num_added_qfutures % 16 == 0)
 	{
 		qIno() << "Total added QFutures:" << m_num_added_qfutures;
 	}
@@ -97,8 +77,9 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 void PerfectDeleter::addKJob(KJob* kjob)
 {
 	std::lock_guard lock(m_mutex);
-	// Connect a signal/slot to remove the QFuture<> if it gets deleted.
-	/*QObject::*/connect_or_die(kjob, &QObject::destroyed, [=](QObject* obj) {
+
+	// Connect a signal/slot to remove the Kjob* if it gets deleted.
+	connect_or_die(kjob, &QObject::destroyed, [=](QObject* obj) {
 		qDb() << "KJob destroyed";
 		std::lock_guard lock(m_mutex);
 		m_watched_KJobs.erase(std::remove(m_watched_KJobs.begin(), m_watched_KJobs.end(), obj),
@@ -110,12 +91,22 @@ void PerfectDeleter::addKJob(KJob* kjob)
 void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 {
 	std::lock_guard lock(m_mutex);
-	/*QObject::*/connect_or_die(amlmjob, &QObject::destroyed, [=](QObject* obj) {
+
+	// Remover lambda and connections, for when the AMLMJob is deleted out from under us.
+	// This is a bit of a mess due to this whole "let's delete ourself" thing that permeates Qt5/KF5.
+	// Need to hook into two signals which don't really give us the info we need to un-crashably remove the
+	// registered pointers from the storage here.
+
+	auto remover_lambda = [=](QObject* obj) {
 		qDb() << "AMLMJob destroyed";
 		std::lock_guard lock(m_mutex);
 		m_watched_AMLMJobs.erase(std::remove(m_watched_AMLMJobs.begin(), m_watched_AMLMJobs.end(), obj),
 				m_watched_AMLMJobs.end());
-	});
+	};
+
+	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
+	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
+
 	m_watched_AMLMJobs.push_back(amlmjob);
 }
 
@@ -128,4 +119,31 @@ std::vector<std::tuple<QString, long> > PerfectDeleter::stats() const
 
 	return {{tr("Watched QFuture<void>s"), num_futures}};
 
+}
+
+bool PerfectDeleter::waitForAMLMJobsFinished(bool spin)
+{
+	long remaining_amlmjobs = 0;
+
+	do
+	{
+		// One pass through the AMLMJob list.
+		for(AMLMJob* i : m_watched_AMLMJobs)
+		{
+			// Do nothing, the connections should take care of the deletion.
+			remaining_amlmjobs++;
+		}
+
+		qIno() << "Remaining AMLMJobs:" << remaining_amlmjobs;
+
+		if(remaining_amlmjobs > 0)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+
+	} while(spin);
 }

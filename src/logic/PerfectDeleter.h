@@ -43,7 +43,7 @@ struct Deletable
 };
 
 /**
- * Class for managing the lifecycle of various deferred-delete objects.
+ * Class for managing the lifecycle of various deferred-delete or self-deleting objects.
  */
 class PerfectDeleter : public QObject
 {
@@ -87,7 +87,7 @@ private:
 
     /// Private member functions.
 
-
+	bool waitForAMLMJobsFinished(bool spin);
 };
 
 #endif // PERFECTDELETER_H
