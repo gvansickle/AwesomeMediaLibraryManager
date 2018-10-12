@@ -78,13 +78,17 @@ void PerfectDeleter::addKJob(KJob* kjob)
 {
 	std::lock_guard lock(m_mutex);
 
+	auto remover_lambda = [=](QObject* obj) {
+			qDb() << "KJob destroyed";
+			std::lock_guard lock(m_mutex);
+			m_watched_KJobs.erase(std::remove(m_watched_KJobs.begin(), m_watched_KJobs.end(), obj),
+					m_watched_KJobs.end());
+		};
+
 	// Connect a signal/slot to remove the Kjob* if it gets deleted.
-	connect_or_die(kjob, &QObject::destroyed, [=](QObject* obj) {
-		qDb() << "KJob destroyed";
-		std::lock_guard lock(m_mutex);
-		m_watched_KJobs.erase(std::remove(m_watched_KJobs.begin(), m_watched_KJobs.end(), obj),
-				m_watched_KJobs.end());
-	});
+	connect_or_die(kjob, &QObject::destroyed, this, remover_lambda);
+	connect_or_die(kjob, &KJob::finished, this, remover_lambda);
+
 	m_watched_KJobs.push_back(kjob);
 }
 

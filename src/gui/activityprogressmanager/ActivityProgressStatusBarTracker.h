@@ -263,7 +263,7 @@ public Q_SLOTS:
     void unregisterJob(KJob *kjob) override;
 
     /**
-     * Signalled by the destroyed() signal from a registered KJob*.
+     * Signaled by the destroyed() signal from a registered KJob*.
      */
     void SLOT_onKJobDestroyed(QObject* kjob);
 

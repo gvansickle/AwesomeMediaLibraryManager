@@ -591,12 +591,11 @@ public:
 
     /**
      * Factory function for creating AMLMJobT's wrapping the passed-in ExtFuture<T>.
-     * @returns AMLMJob which is not started.
+     * @returns AMLMJobT, which is not started.
      */
     static std::unique_ptr<AMLMJobT> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
     {
         auto job = std::make_unique<AMLMJobT>(ef, parent);
-        //	qDebug() << "WORKED:" << ef;
         return job;
     }
 
@@ -922,8 +921,8 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 		}
 
 		// Wait for the runFunctor() to report Finished.
-		m_ext_watcher->waitForFinished();
-//		m_ext_future.waitForFinished();
+//		m_ext_watcher->waitForFinished();
+		m_ext_future.waitForFinished();
 
         // We should never get here before the undelying ExtAsync job is indicating canceled and finished.
         /// @note Seeing the assert below, sometimes not finished, sometimes is?  Started | Canceled always.
@@ -952,32 +951,6 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
         m_ext_future.setPaused(false);
         return true;
     }
-
-    /**
-     * Call this at the bottom of your runFunctor() override.  If the call returns true,
-     * you're being canceled and must break out of the loop and return.
-     *
-     * Handles pause/resume completely internally, nothing needs to be done in the calling loop.
-     *
-     * @return true if loop in runFunctor() should break due to being canceled.
-     */
-//    bool functorHandlePauseResumeAndCancel()
-//    {
-//        if (m_ext_future.isPaused())
-//        {
-//            m_ext_future.waitForResume();
-//        }
-//        if (m_ext_future.isCanceled())
-//        {
-//            // The job should be canceled.
-//            // The calling runFunctor() should break out of while() loop.
-//            return true;
-//        }
-//        else
-//        {
-//            return false;
-//        }
-//    }
 
     template <class WatcherType>
     void HookUpExtFutureSignals(WatcherType* watcher)
@@ -1078,11 +1051,14 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 
 };
 
+/**
+ * Create a new AMLMJobT from an ExtFuture<>.
+ */
 template<class ExtFutureT>
 inline static auto* make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
 {
 	auto job = new AMLMJobT<ExtFutureT>(ef, parent);
-	qDebug() << "WORKED:" << ef;
+	return job;
 }
 
 #endif /* SRC_CONCURRENCY_AMLMJOB_H_ */
