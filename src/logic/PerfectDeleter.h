@@ -78,9 +78,12 @@ private:
 	// Mutex for synchronizing state, e.g. watch lists below.
 	mutable std::mutex m_mutex;
 
-	// QFutureSynchronizer<void> for watching/canceling all QFuture<>s
+	/// QFutureSynchronizer<void> for watching/canceling all QFuture<>s
 	QFutureSynchronizer<void> m_future_synchronizer;
 	long m_num_added_qfutures {0};
+	/// When the number of submitted futures exceeds this value,
+	/// run a GC sweep and remove any canceled/finished futures.
+	const long m_purge_futures_count {64};
 
     std::deque<QPointer<KJob>> m_watched_KJobs;
     std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
@@ -88,6 +91,8 @@ private:
     /// Private member functions.
 
 	bool waitForAMLMJobsFinished(bool spin);
+
+	void scan_and_purge_futures();
 };
 
 #endif // PERFECTDELETER_H

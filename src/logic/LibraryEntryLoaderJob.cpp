@@ -117,8 +117,10 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
 	if(!pmi.isValid())
     {
 		qWr() << "INVALID QPersistentModelIndex:" << pmi << ", ABORTING LOAD";
-		/// @todo
-//        setError(InvalidQPersistentModelIndex);
+		if(kjob != nullptr)
+		{
+			kjob->setError(InvalidQPersistentModelIndex);
+		}
         return;
     }
     // Make sure the LibraryEntry hasn't been deleted.  It shouldn't have been since we hold a shared_ptr<> to it.
@@ -128,9 +130,11 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
 //    AMLM_ASSERT_EQ(m_libentry->getUrl().isValid(), true);
 	if(!libentry->getUrl().isValid())
     {
-		qWr() << "INVALID URL";
-		/// @todo
-//        setError(InvalidLibraryEntryURL);
+		qWr() << "INVALID URL" << libentry->getUrl();
+		if(kjob != nullptr)
+		{
+			kjob->setError(InvalidLibraryEntryURL);
+		}
         return;
     }
 
@@ -194,80 +198,5 @@ void LibraryEntryLoaderJob::runFunctor()
 {
     qDbo() << "START LibraryEntryLoaderJob RUNFUNCTOR" << m_pmi << m_libentry;
 
-    LibraryEntryLoaderJobResult retval(m_pmi, m_libentry);
-
-    Q_ASSERT(retval.isValid());
-
-    // Make sure the index is still valid.  The model may have been destroyed since the message was sent.
-    if(!m_pmi.isValid())
-    {
-        qWro() << "INVALID QPersistentModelIndex:" << m_pmi << ", ABORTING LOAD";
-        setError(InvalidQPersistentModelIndex);
-        return;
-    }
-    // Make sure the LibraryEntry hasn't been deleted.  It shouldn't have been since we hold a shared_ptr<> to it.
-    Q_ASSERT(m_libentry);
-
-    // Make sure the LibraryEntry has a valid QUrl.  It should, but ATM we're getting here with empty URLs.
-//    AMLM_ASSERT_EQ(m_libentry->getUrl().isValid(), true);
-    if(!m_libentry->getUrl().isValid())
-    {
-        qWro() << "INVALID URL";
-        setError(InvalidLibraryEntryURL);
-        return;
-    }
-
-    if(!m_libentry->isPopulated())
-    {
-        // Item's metadata has not been looked at.  We may have multiple tracks.
-
-        qIno() << "LOADING ITEM:" << m_libentry;
-        auto vec_items = m_libentry->populate();
-        for (const auto& i : vec_items)
-        {
-            if (!i->isPopulated())
-            {
-                qCro() << "NOT POPULATED" << i.get();
-            }
-            retval.push_back(i);
-
-            qDbo() << "LIBENTRY METADATA:" << i->getAllMetadata();
-
-        }
-    }
-    else if (m_libentry->isPopulated() && m_libentry->isSubtrack())
-    {
-        qCro() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << m_libentry->getUrl();
-        Q_ASSERT(0);
-    }
-    else
-    {
-        // Item needs to be refreshed.
-
-        //qDebug() << "Re-reading metatdata for item" << item->getUrl();
-        std::shared_ptr<LibraryEntry> new_entry = m_libentry->refresh_metadata();
-
-        if(!new_entry)
-        {
-            // Couldn't load the metadata from the file.
-            // Only option here is to return the old item, which should now be marked with an error.
-            qCro() << "Couldn't load metadata for file" << m_libentry->getUrl();
-//            retval.m_original_pindexes.push_back(m_pmi);
-            retval.m_new_libentries.push_back(m_libentry);
-            retval.m_num_tracks_found = 1;
-        }
-        else
-        {
-            // Repackage it and return.
-//            retval.m_original_pindexes.push_back(m_pmi);
-            retval.m_new_libentries.push_back(new_entry);
-            retval.m_num_tracks_found = 1;
-        }
-    }
-
-    Q_ASSERT(retval.isValid());
-
-    Q_ASSERT(retval.m_num_tracks_found > 0);
-
-    m_ext_future.reportResult(retval);
+    this->LoadEntry(m_ext_future, this, m_pmi, m_libentry);
 }

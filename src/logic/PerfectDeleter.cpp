@@ -71,7 +71,13 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 		qIno() << "Total added QFutures:" << m_num_added_qfutures;
 	}
 
-	/// @todo Do we need to periodically purge completed futures?
+	// Periodically purge completed futures.
+	if(m_num_added_qfutures > m_purge_futures_count)
+	{
+		scan_and_purge_futures();
+		/// @todo m_num_added_qfutures should be reset.
+		m_num_added_qfutures = 0;
+	}
 }
 
 void PerfectDeleter::addKJob(KJob* kjob)
@@ -150,4 +156,28 @@ bool PerfectDeleter::waitForAMLMJobsFinished(bool spin)
 		}
 
 	} while(spin);
+}
+
+void PerfectDeleter::scan_and_purge_futures()
+{
+	/// @note Requires m_mutex to already be held.
+
+	QList<QFuture<void>> futures = m_future_synchronizer.futures();
+
+	QList<QFuture<void>> unfinished_futures =
+			QtConcurrent::blockingFiltered(futures, [](const QFuture<void>& f) -> bool {
+		// Keep by returning true.
+				return (!f.isCanceled() || !f.isFinished());
+			});
+	m_future_synchronizer.clearFutures();
+	for(QFuture<void>& f : unfinished_futures)
+	{
+		m_future_synchronizer.addFuture(f);
+	}
+
+	auto num_removed_futures = unfinished_futures.size();
+	auto num_remaining_futures = futures.size() - unfinished_futures.size();
+
+	qIno() << "Purged" << num_removed_futures << "canceled/finished futures, " << num_remaining_futures << "remaining";
+
 }

@@ -29,7 +29,7 @@
 #include <logic/DirScanResult.h>
 #include <concurrency/ExtAsync.h>
 
-DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
+DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl& dir_url,
                                    const QStringList &nameFilters,
                                    QDir::Filters filters,
                                    QDirIterator::IteratorFlags flags)
@@ -42,11 +42,6 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, QUrl dir_url,
 
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
-
-    /// @todo Temp, delete.
-//    connect_or_die(this, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt, this, [=](int begin, int end){
-//        qDbo() << "Got signal:" << begin << end;
-//    });
 }
 
 DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
@@ -63,7 +58,6 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
                                               nameFilters,
                                               filters,
                                               flags);
-
     return retval;
 }
 
