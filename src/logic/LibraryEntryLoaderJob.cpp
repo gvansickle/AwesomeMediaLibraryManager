@@ -75,7 +75,16 @@ LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QObject *parent, QPersi
 
 LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
-    return make_job(AMLMApp::instance(), pmi, libentry);
+	return make_job(AMLMApp::instance(), pmi, libentry);
+}
+
+ExtFuture<LibraryEntryLoaderJobResult> LibraryEntryLoaderJob::make_task(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
+{
+	ExtFuture<LibraryEntryLoaderJobResult> ret_future;
+
+	QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, ret_future, nullptr, pmi, libentry);
+
+	return ret_future;
 }
 
 LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
@@ -98,7 +107,7 @@ LibraryEntryLoaderJob::~LibraryEntryLoaderJob()
 void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext_future, LibraryEntryLoaderJob* kjob,
 									  QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
-	qDb() << "START LibraryEntryLoaderJob LoadEntry" << pmi << libentry;
+//	qDb() << "START LibraryEntryLoaderJob LoadEntry" << pmi << libentry;
 
 	LibraryEntryLoaderJobResult retval(pmi, libentry);
 
@@ -129,7 +138,7 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
     {
         // Item's metadata has not been looked at.  We may have multiple tracks.
 
-		qIn() << "LOADING ITEM:" << libentry;
+//		qIn() << "LOADING ITEM:" << libentry;
 		auto vec_items = libentry->populate();
         for (const auto& i : vec_items)
         {
@@ -139,7 +148,7 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
             }
             retval.push_back(i);
 
-			qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
+//			qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
 
         }
     }

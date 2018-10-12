@@ -331,7 +331,8 @@ M_WARNING("TODO Probably should be refactored.");
 				LibraryEntryLoaderJob* dummy = nullptr;
 				// Register that we're doing this, so another async load for this same item doesn't get triggered.
 				m_pending_async_item_loads.insert(qpmi, true);
-				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
+//				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
+				future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
 				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) -> bool {
 					Q_ASSERT(result_future.isFinished());
 //					qDbo() << "IN THEN CALLBACK:" << result_future;

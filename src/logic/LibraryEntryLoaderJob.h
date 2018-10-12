@@ -57,17 +57,20 @@ public:
     }
 
 //protected:
-    QPersistentModelIndex m_original_pindex;
-    std::shared_ptr<LibraryEntry> m_original_libentry;
 
-    QVector<std::shared_ptr<LibraryEntry>> m_new_libentries;
-    int m_num_tracks_found {0};
-
+    // Append a new LibraryEntry.
     void push_back(std::shared_ptr<LibraryEntry> le)
     {
         m_new_libentries.push_back(le);
         m_num_tracks_found++;
     }
+
+    // The original QPMI and LibraryEntry we were called with.
+    QPersistentModelIndex m_original_pindex;
+    std::shared_ptr<LibraryEntry> m_original_libentry;
+
+    QVector<std::shared_ptr<LibraryEntry>> m_new_libentries;
+    int m_num_tracks_found {0};
 
 //    QTH_FRIEND_QDEBUG_OP(LibraryEntryLoaderJobResult);
 //    QTH_FRIEND_QDATASTREAM_OPS(LibraryEntryLoaderJobResult);
@@ -116,6 +119,10 @@ public:
     /// Overload which makes the AMLMApp singleton the parent.
     static LibraryEntryLoaderJobPtr make_job(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
+	/// No AMLMJob, just an ExtFuture<>.
+	static ExtFuture<LibraryEntryLoaderJobResult> make_task(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
+
+	/// Loads the data for the given entry and sends it out via ext_future.
 	static void LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext_future, LibraryEntryLoaderJob* kjob,
 						  QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry);
 
