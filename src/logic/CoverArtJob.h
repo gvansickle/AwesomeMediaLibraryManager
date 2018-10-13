@@ -63,6 +63,11 @@ public:
 
     static CoverArtJobPtr make_job(QObject *parent, const QUrl& url);
 
+	/// No AMLMJob, just an ExtFuture<>.
+	static ExtFuture<QByteArray> make_task(QObject *parent, const QUrl& url);
+
+	static void LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr kjob, const QUrl& url);
+
     QByteArray m_byte_array;
 
 protected:

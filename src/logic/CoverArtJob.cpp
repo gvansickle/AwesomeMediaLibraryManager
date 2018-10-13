@@ -71,6 +71,15 @@ CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
 	return retval;
 }
 
+ExtFuture<QByteArray> CoverArtJob::make_task(QObject* parent, const QUrl& url)
+{
+	ExtFuture<QByteArray> ret_future;
+
+	QtConcurrent::run(&CoverArtJob::LoadCoverArt, ret_future, nullptr, url);
+
+	return ret_future;
+}
+
 ///
 /// Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const and company.
 ///
@@ -81,7 +90,7 @@ static QByteArray getCoverArtBytes_ID3(TagLib::ID3v2::Tag* tag)
     if (!frameList.isEmpty())
     {
         qDebug() << "Found" << frameList.size() << "embedded pictures.";
-        const auto* frame = (TagLib::ID3v2::AttachedPictureFrame*)frameList.front();
+		const auto* frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame*>(frameList.front());
         return QByteArray(frame->picture().data(), frame->picture().size());
     }
 
@@ -120,8 +129,74 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
     return QByteArray();
 }
 
+void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr kjob, const QUrl& url)
+{
+	// Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
+
+	// The byte array containing the cover art.
+	QByteArray retval;
+
+	// Open the file ref.
+	QString url_as_local = url.toLocalFile();
+
+	TagLib::FileRef fr {openFileRef(url_as_local)};
+	if(fr.isNull())
+	{
+		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
+		/// @todo Should throw
+		ext_future.cancel();
+		if(kjob != nullptr)
+		{
+			Q_EMIT kjob->SIGNAL_ImageBytes(retval);
+		}
+		return;
+	}
+
+	// Downcast it to whatever type it really is.
+	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
+	{
+		if (file->ID3v2Tag() != nullptr)
+		{
+			retval = getCoverArtBytes_ID3(file->ID3v2Tag());
+		}
+		if (retval.isEmpty() && file->APETag())
+		{
+			retval = getCoverArtBytes_APE(file->APETag());
+		}
+	}
+	else if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
+	{
+		retval = getCoverArtBytes_FLAC(file);
+		if (retval.isEmpty() && file->ID3v2Tag())
+		{
+			retval = getCoverArtBytes_ID3(file->ID3v2Tag());
+		}
+	}
+
+	if(retval.size() > 0)
+	{
+		qDebug() << "Found pic data, size:" << retval.size();
+//        setSuccessFlag(true);
+	}
+	else
+	{
+		qDebug() << "Found no pic data";
+//        setSuccessFlag(false);
+	}
+
+	ext_future.reportResult(retval);
+	ext_future.reportFinished();
+	M_WARNING("TODO: Getting asserts here on app close during dir scan.");
+	if(kjob != nullptr)
+	{
+		Q_EMIT kjob->SIGNAL_ImageBytes(retval);
+	}
+}
+
 void CoverArtJob::runFunctor()
 {
+	this->LoadCoverArt(m_ext_future, this, m_audio_file_url);
+#if 0
     // Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
 
     QByteArray& retval = m_byte_array;
@@ -170,5 +245,6 @@ void CoverArtJob::runFunctor()
 
 M_WARNING("TODO: Getting asserts here on app close during dir scan.");
     Q_EMIT SIGNAL_ImageBytes(retval);
+#endif
 }
 

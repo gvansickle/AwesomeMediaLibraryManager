@@ -19,10 +19,10 @@
 
 #include "MetadataDockWidget.h"
 
-/// Std C++
+// Std C++
 #include <functional>
 
-/// Qt5
+// Qt5
 #include <QItemSelection>
 #include <QTreeView>
 #include <QTreeWidget>
@@ -32,8 +32,8 @@
 #include <QLineEdit>
 #include <QSplitter>
 
-/// Ours
-
+// Ours
+#include <AMLMApp.h>
 #include "widgets/PixmapLabel.h"
 #include "logic/ModelUserRoles.h"
 #include <logic/MetadataAbstractBase.h>
@@ -236,7 +236,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
 			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 		}
-#else // THE NEW ASYNCHRONOUS WAY
+#elif 0 //THE NEW ASYNCHRONOUS WAY
         auto coverartjob = CoverArtJob::make_job(this, libentry->getUrl());
         coverartjob->then(this, [=](CoverArtJob* kjob) {
             if(kjob->error() || kjob->m_byte_array.size() == 0)
@@ -284,6 +284,56 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
             }
         });
         coverartjob->start();
+#elif 1 // THE EVEN NEWER ASYNC WAY
+		ExtFuture<QByteArray> coverartjob = CoverArtJob::make_task(this, libentry->getUrl());
+		AMLMApp::IPerfectDeleter()->addQFuture(coverartjob);
+		coverartjob.then([=](ExtFuture<QByteArray> future) -> bool {
+			QByteArray retval = future.result();
+			if(future.isCanceled() || retval.size() == 0)
+			{
+				// Error.  Load the "No image available" icon.
+//				qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+				// Report error via uiDelegate()
+				/// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
+				/// every time there's an error.
+//                auto uidelegate = kjob->uiDelegate();
+//                Q_CHECK_PTR(uidelegate);
+//                uidelegate->showErrorMessage();
+				QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+				m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+			}
+			else
+			{
+				// Succeeded, pick up the image.
+
+				auto& cover_image_bytes = retval;
+
+				if(cover_image_bytes.size() != 0)
+				{
+					qDebug("Cover image found"); ///@todo << cover_image.mime_type;
+					QImage image;
+					if(image.loadFromData(cover_image_bytes) == true)
+					{
+						///qDebug() << "Image:" << image;
+						m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+						//m_cover_image_label.adjustSize()
+					}
+					else
+					{
+						qWarning() << "Error attempting to load image.";
+						QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+						m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+					}
+				}
+				else
+				{
+					// No image available.
+					QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+					m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+				}
+			}
+			return true;
+		});
 #endif
 	}
 	else
