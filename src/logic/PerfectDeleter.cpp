@@ -62,21 +62,24 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 {
 	std::lock_guard lock(m_mutex);
 
-	m_num_added_qfutures++;
+	m_num_qfutures_added_since_last_purge++;
+	m_total_num_added_qfutures++;
 
 	m_future_synchronizer.addFuture(f);
 
-	if(m_num_added_qfutures % 16 == 0)
+	if(m_total_num_added_qfutures % 16 == 0)
 	{
-		qIno() << "Total added QFutures:" << m_num_added_qfutures;
+		qIno() << "Total added QFutures:" << m_total_num_added_qfutures;
+		qIno() << "Total unfinished QFutures:" << m_future_synchronizer.futures().size();
+		qIno() << "Number of QFutures added since last purge:" << m_num_qfutures_added_since_last_purge;
 	}
 
 	// Periodically purge completed futures.
-	if(m_num_added_qfutures > m_purge_futures_count)
+	if(m_num_qfutures_added_since_last_purge > m_purge_futures_count)
 	{
+		qIno() << "Purging QFutures...";
 		scan_and_purge_futures();
-		/// @todo m_num_added_qfutures should be reset.
-		m_num_added_qfutures = 0;
+		m_num_qfutures_added_since_last_purge = 0;
 	}
 }
 
@@ -163,21 +166,28 @@ void PerfectDeleter::scan_and_purge_futures()
 	/// @note Requires m_mutex to already be held.
 
 	QList<QFuture<void>> futures = m_future_synchronizer.futures();
+	auto num_starting_qfutures = futures.size();
 
 	QList<QFuture<void>> unfinished_futures =
 			QtConcurrent::blockingFiltered(futures, [](const QFuture<void>& f) -> bool {
 		// Keep by returning true.
-				return (!f.isCanceled() || !f.isFinished());
+				return (!(f.isCanceled() || f.isFinished()));
 			});
+
+	qDb() << "Clearing futures:" << m_future_synchronizer.futures().size();
 	m_future_synchronizer.clearFutures();
+	qDb() << "Cleared futures:" << m_future_synchronizer.futures().size();
+
+	// Add back the unfinished futures.
 	for(QFuture<void>& f : unfinished_futures)
 	{
 		m_future_synchronizer.addFuture(f);
 	}
 
-	auto num_removed_futures = unfinished_futures.size();
-	auto num_remaining_futures = futures.size() - unfinished_futures.size();
+	auto num_removed_futures = num_starting_qfutures - m_future_synchronizer.futures().size();
+	auto num_remaining_futures = m_future_synchronizer.futures().size();
 
-	qIno() << "Purged" << num_removed_futures << "canceled/finished futures, " << num_remaining_futures << "remaining";
+	qIno() << "Purged" << num_removed_futures << "canceled/finished futures, "
+		   << num_remaining_futures << "==" << m_future_synchronizer.futures().size() << "remaining";
 
 }

@@ -80,7 +80,8 @@ private:
 
 	/// QFutureSynchronizer<void> for watching/canceling all QFuture<>s
 	QFutureSynchronizer<void> m_future_synchronizer;
-	long m_num_added_qfutures {0};
+	long m_total_num_added_qfutures {0};
+	long m_num_qfutures_added_since_last_purge {0};
 	/// When the number of submitted futures exceeds this value,
 	/// run a GC sweep and remove any canceled/finished futures.
 	const long m_purge_futures_count {64};
