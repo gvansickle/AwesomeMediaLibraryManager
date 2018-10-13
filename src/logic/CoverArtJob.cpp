@@ -184,8 +184,8 @@ void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr 
 //        setSuccessFlag(false);
 	}
 
-	ext_future.reportResult(retval);
-	ext_future.reportFinished();
+//	ext_future.reportResult(retval);
+	ext_future.reportFinished(&retval);
 	M_WARNING("TODO: Getting asserts here on app close during dir scan.");
 	if(kjob != nullptr)
 	{
