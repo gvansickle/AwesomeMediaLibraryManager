@@ -448,6 +448,9 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
 
 /// Above is pre-Qt5.10.  The below should be used from Qt5.10+.
 
+/**
+ * For callables with the signature "void Callback(void)".
+ */
 template <class CallableType,
 		  REQUIRES(std::is_invocable_r_v<void, CallableType>)>
 static void run_in_event_loop(QObject* context, CallableType&& callable)
@@ -457,16 +460,20 @@ static void run_in_event_loop(QObject* context, CallableType&& callable)
 	Q_ASSERT(retval == true);
 }
 
-//template <class CallableType, class ReturnType = std::invoke_result_t<CallableType>,
-//		  REQUIRES(std::is_invocable_r_v<ReturnType, CallableType>)>
-//static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
-//{
-//	ReturnType return_value;
-//	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
-//	// Die if the function couldn't be invoked.
-//	Q_ASSERT(retval == true);
-//	return return_value;
-//}
+/**
+ * For callables with the signature "ReturnType Callback(void)", where ReturnType != void or ExtFuture.
+ */
+template <class CallableType, class ReturnType = std::invoke_result_t<CallableType>,
+		  REQUIRES(is_non_void_non_ExtFuture_v<ReturnType>
+		  && std::is_invocable_r_v<ReturnType, CallableType>)>
+static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
+{
+	ReturnType return_value;
+	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
+	// Die if the function couldn't be invoked.
+	Q_ASSERT(retval == true);
+	return return_value;
+}
 
 namespace ExtAsync
 {

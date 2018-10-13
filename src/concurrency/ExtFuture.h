@@ -683,7 +683,7 @@ public:
 	template <typename ThenCallbackType,
 			  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 			  REQUIRES(!is_ExtFuture_v<R>
-			  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
 	{
 		if(context != nullptr)
@@ -778,7 +778,17 @@ public:
 					// Call the callback with the results- or canceled/exception-laden this_future_copy.
 					// Could throw, hence we're in a try.
 //					qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
-					R retval = std::invoke(then_callback_copy, this_future_copy);
+					R retval;
+					if constexpr(std::is_same_v<R,Unit>)
+					{
+						// then_callback_copy returns void, return a Unit separately.
+						std::invoke(then_callback_copy, this_future_copy);
+						retval = unit;
+					}
+					else
+					{
+						retval = std::invoke(then_callback_copy, this_future_copy);
+					}
 					// Didn't throw, report the result.
 					returned_future_copy.reportResult(retval);
 				}
@@ -814,7 +824,7 @@ public:
 	template <typename ThenCallbackType,
 				  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 				  REQUIRES(!is_ExtFuture_v<R>
-				  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+				  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback)
 	{
 		// Forward to the master callback, don't call the then_callback on a cancel.
@@ -839,7 +849,7 @@ public:
 	 */
 	template <class ThenCallbackType, class R = Unit::LiftT<ct::return_type_t<ThenCallbackType>>,
 			REQUIRES(is_non_void_non_ExtFuture_v<R>
-			  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then( ThenCallbackType&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.

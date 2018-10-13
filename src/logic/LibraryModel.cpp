@@ -327,13 +327,12 @@ M_WARNING("TODO Probably should be refactored.");
 #if 1
 				// Doing this without an AMLMJobT.
 				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
-				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
 				LibraryEntryLoaderJob* dummy = nullptr;
 				// Register that we're doing this, so another async load for this same item doesn't get triggered.
 				m_pending_async_item_loads.insert(qpmi, true);
 //				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
 				future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
-				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) -> bool {
+				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) -> void {
 					Q_ASSERT(result_future.isFinished());
 //					qDbo() << "IN THEN CALLBACK:" << result_future;
 					LibraryEntryLoaderJobResult new_vals = result_future.result();
@@ -342,8 +341,9 @@ M_WARNING("TODO Probably should be refactored.");
 						AMLM_ASSERT_IN_GUITHREAD();
 						m_pending_async_item_loads.remove(qpmi);
 						});
-					return true;
+//					return true;
 				});
+				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
 				AMLMApp::IPerfectDeleter()->addQFuture(then_future);
 #else
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);

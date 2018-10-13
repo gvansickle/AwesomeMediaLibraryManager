@@ -68,8 +68,6 @@ public:
 
 	static void LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr kjob, const QUrl& url);
 
-    QByteArray m_byte_array;
-
 protected:
 
     void runFunctor() override;
