@@ -210,7 +210,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			}
 		}
 
-		// Display the cover image.
+		// Load and Display the cover image.
 #if THE_OLD_SYCHRONOUS_WAY
 		auto cover_image_bytes = libentry->getCoverImageBytes();
 		if(cover_image_bytes.size() != 0)
@@ -293,12 +293,6 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			{
 				// Error.  Load the "No image available" icon.
 //				qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-				// Report error via uiDelegate()
-				/// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
-				/// every time there's an error.
-//                auto uidelegate = kjob->uiDelegate();
-//                Q_CHECK_PTR(uidelegate);
-//                uidelegate->showErrorMessage();
 				QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
 				m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 			}

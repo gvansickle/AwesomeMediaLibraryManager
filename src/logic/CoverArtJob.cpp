@@ -143,8 +143,10 @@ void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr 
 	if(fr.isNull())
 	{
 		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
-		/// @todo Should throw
+
+		/// @todo Should maybe throw?
 		ext_future.cancel();
+
 		if(kjob != nullptr)
 		{
 			Q_EMIT kjob->SIGNAL_ImageBytes(retval);
@@ -184,9 +186,9 @@ void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr 
 //        setSuccessFlag(false);
 	}
 
-//	ext_future.reportResult(retval);
 	ext_future.reportFinished(&retval);
-	M_WARNING("TODO: Getting asserts here on app close during dir scan.");
+
+M_WARNING("TODO: Getting asserts here on app close during dir scan.");
 	if(kjob != nullptr)
 	{
 		Q_EMIT kjob->SIGNAL_ImageBytes(retval);
@@ -196,55 +198,5 @@ void CoverArtJob::LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr 
 void CoverArtJob::runFunctor()
 {
 	this->LoadCoverArt(m_ext_future, this, m_audio_file_url);
-#if 0
-    // Mostly copy/paste from QByteArray MetadataTaglib::getCoverArtBytes() const
-
-    QByteArray& retval = m_byte_array;
-
-    // Open the file ref.
-    QString url_as_local = m_audio_file_url.toLocalFile();
-
-    TagLib::FileRef fr {openFileRef(url_as_local)};
-    if(fr.isNull())
-    {
-        qWarning() << "Unable to open file" << url_as_local << "with TagLib";
-        Q_EMIT SIGNAL_ImageBytes(retval);
-    }
-
-    // Downcast it to whatever type it really is.
-    if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
-    {
-        if (file->ID3v2Tag())
-        {
-            retval = getCoverArtBytes_ID3(file->ID3v2Tag());
-        }
-        if (retval.isEmpty() && file->APETag())
-        {
-            retval = getCoverArtBytes_APE(file->APETag());
-        }
-    }
-    else if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
-    {
-        retval = getCoverArtBytes_FLAC(file);
-        if (retval.isEmpty() && file->ID3v2Tag())
-        {
-            retval = getCoverArtBytes_ID3(file->ID3v2Tag());
-        }
-    }
-
-    if(retval.size() > 0)
-    {
-        qDebug() << "Found pic data, size:" << retval.size();
-//        setSuccessFlag(true);
-    }
-    else
-    {
-        qDebug() << "Found no pic data";
-//        setSuccessFlag(false);
-    }
-
-M_WARNING("TODO: Getting asserts here on app close during dir scan.");
-    Q_EMIT SIGNAL_ImageBytes(retval);
-#endif
 }
 

@@ -38,10 +38,22 @@ void PerfectDeleter::cancel_and_wait_for_all()
 	std::lock_guard lock(m_mutex);
 
 	// Cancel all registered AMLMJobs.
+	qIno() << "Killing" << m_watched_AMLMJobs.size() << "AMLMJobs";
 	for(AMLMJob* i : m_watched_AMLMJobs)
 	{
 		if(i != nullptr)
 		{			
+			// Killing them softly is probably the right way to go here.
+			i->kill(KJob::KillVerbosity::Quietly);
+		}
+	}
+
+	// Cancel all registered KJobs.
+	qIno() << "Killing" << m_watched_KJobs.size() << "KJobs";
+	for(KJob* i : m_watched_KJobs)
+	{
+		if(i != nullptr)
+		{
 			// Killing them softly is probably the right way to go here.
 			i->kill(KJob::KillVerbosity::Quietly);
 		}
