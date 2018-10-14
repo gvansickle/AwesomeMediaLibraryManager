@@ -74,8 +74,22 @@ public:
 
 
     QVariant data(const QModelIndex &index, int role) const override;
+
+    /// Header data interface
+    /// @{
+
+    /**
+     * Get the header data corresponding to the given section number, orientation, and role.
+     */
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const override;
+
+    /**
+     * Set the header data corresponding to the given section number, orientation, and role.
+     */
+    bool setHeaderData(int section, Qt::Orientation orientation,
+                         const QVariant &value, int role = Qt::EditRole) override;
+    /// @}
 
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
@@ -87,8 +101,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override;
-    bool setHeaderData(int section, Qt::Orientation orientation,
-                       const QVariant &value, int role = Qt::EditRole) override;
+
 
     bool insertColumns(int position, int columns,
                        const QModelIndex &parent = QModelIndex()) override;

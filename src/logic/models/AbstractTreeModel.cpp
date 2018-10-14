@@ -282,6 +282,7 @@ bool AbstractTreeModel::setHeaderData(int section, Qt::Orientation orientation,
 
     if (result)
 	{
+    	// Docs: "If you are changing the number of columns or rows you do not need to emit this signal, but use the begin/end functions."
 		Q_EMIT headerDataChanged(orientation, section, section);
 	}
 
