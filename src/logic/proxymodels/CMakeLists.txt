@@ -19,8 +19,7 @@
 
 # @file src/logic/proxymodels/CMakeLists.txt
 
-add_library(proxymodels_subdir STATIC
-	EXCLUDE_FROM_ALL
+set(proxymodels_subdir_SOURCES
 	SelectionFilterProxyModel.h
 	SelectionFilterProxyModel.cpp
 	ModelHelpers.h
@@ -30,6 +29,14 @@ add_library(proxymodels_subdir STATIC
 	ModelChangeWatcher.h
 	QPersistentModelIndexVec.h
 	QPersistentModelIndexVec.cpp
+	)
+prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
+
+
+
+target_sources(proxymodels_subdir
+	PUBLIC
+		${proxymodels_subdir_SOURCES}
 	)
 
 target_link_libraries(proxymodels_subdir

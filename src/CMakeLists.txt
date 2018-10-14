@@ -125,7 +125,6 @@ set(HEADER_FILES
 	logic/LibraryEntryLoaderJob.h
 	logic/LibraryEntryMimeData.h
 	logic/LibraryModel.h
-	logic/proxymodels/LibrarySortFilterProxyModel.h
 	logic/Metadata.h
 	logic/MetadataAbstractBase.h
 	logic/MetadataFromCache.h
@@ -166,7 +165,6 @@ set(HEADER_FILES
 	logic/ColumnSpec.h
 	logic/LibraryRescannerMapItem.h
 	logic/LibraryRescannerJob.h
-	logic/proxymodels/QPersistentModelIndexVec.h
 	logic/DirScanResult.h
 	logic/ExtMimeType.h
 	utils/Logging.h
@@ -182,7 +180,6 @@ set(SOURCE_FILES
 	logic/LibraryEntryLoaderJob.cpp
 	logic/LibraryEntryMimeData.cpp
 	logic/LibraryModel.cpp
-	logic/proxymodels/LibrarySortFilterProxyModel.cpp
 	logic/Metadata.cpp
 	logic/MetadataAbstractBase.cpp
 	logic/MetadataFromCache.cpp
@@ -200,7 +197,6 @@ set(SOURCE_FILES
 	logic/dbmodels/EnhancedAbstractTableModel.cpp
 	logic/dbmodels/ScanResultsTableModel.cpp
 	logic/dbmodels/EntityBase.cpp
-	logic/models/ScanResultsTreeModel.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
@@ -211,12 +207,9 @@ set(SOURCE_FILES
 	logic/CueSheet.cpp
 	logic/CoverArtJob.cpp
 	logic/ModelUserRoles.cpp
-	logic/proxymodels/SelectionFilterProxyModel.cpp
-	logic/proxymodels/ModelChangeWatcher.cpp
 	logic/ColumnSpec.cpp
 	logic/LibraryRescannerMapItem.cpp
 	logic/LibraryRescannerJob.cpp
-	logic/proxymodels/QPersistentModelIndexVec.cpp
 	logic/DirScanResult.cpp
 	logic/ExtMimeType.cpp
 	utils/Logging.cpp
@@ -266,15 +259,14 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/WorkerThreadBase.cpp
 	)
 
-set(SOURCE_FILES_LOGIC_MODELS
-	logic/models/AbstractTreeModelItem.h
-	logic/models/AbstractTreeModelItem.cpp
-	logic/models/AbstractTreeModel.h
-	logic/models/AbstractTreeModel.cpp
-	)
+#add_subdir_lib(models "logic/models")
 
 add_subdirectory(gui)
-add_subdirectory(logic)
+
+#add_subdir_lib(models_subdir "logic/models")
+#add_subdir_lib(dbmodels_subdir "logic/dbmodels")
+#add_subdir_lib(proxymodels_subdir "logic/proxymodels")
+add_subdir_lib(logic_subdir "logic")
 #message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
 #
@@ -285,7 +277,7 @@ add_subdirectory(logic)
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
 # The Future
-add_subdir_lib(future_subdir "./future")
+add_subdir_lib(future_subdir "future")
 #add_library(future_subdir STATIC EXCLUDE_FROM_ALL "")
 #include(future/CMakeLists.txt)
 
@@ -293,8 +285,8 @@ add_subdir_lib(future_subdir "./future")
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 	future_subdir
 	logic_subdir
-	models_subdir
-	dbmodels_subdir
+	#models_subdir
+	#dbmodels_subdir
 )
 
 # Concurrency

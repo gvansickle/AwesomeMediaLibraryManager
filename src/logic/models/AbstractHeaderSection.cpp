@@ -20,7 +20,7 @@
 /**
  * @file AbstractHeaderSection.cpp
  */
-#include <AbstractHeaderSection.h>
+#include "AbstractHeaderSection.h"
 
 #include <src/utils/DebugHelpers.h>
 

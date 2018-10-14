@@ -451,6 +451,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${boost_callable_traits_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
+	### @todo REMOVE
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 

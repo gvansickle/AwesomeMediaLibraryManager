@@ -19,10 +19,23 @@
 
 # @file src/logic/CMakeLists.txt
 
-add_library(logic_subdir STATIC
-	EXCLUDE_FROM_ALL
+#add_subdirectory(models EXCLUDE_FROM_ALL)
+#add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
+#add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
+
+add_subdir_lib(models_subdir "${CMAKE_CURRENT_LIST_DIR}/models")
+add_subdir_lib(dbmodels_subdir "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
+add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
+
+set(logic_subdir_SOURCES
 	PerfectDeleter.cpp
 	PerfectDeleter.h
+	)
+prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
+
+target_sources(logic_subdir
+	PUBLIC
+		${logic_subdir_SOURCES}
 	)
 target_link_libraries(logic_subdir
 	PUBLIC
@@ -42,7 +55,5 @@ target_include_directories(logic_subdir
 		${PROJECT_BINARY_DIR}/src
 	)
 
-add_subdirectory(models EXCLUDE_FROM_ALL)
-add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
-add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
+
 

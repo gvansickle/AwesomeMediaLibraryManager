@@ -19,15 +19,27 @@
 
 # @file src/logic/models/CMakeLists.txt
 
-add_library(models_subdir STATIC
-	EXCLUDE_FROM_ALL
+set(SOURCE_FILES_SRC_LOGIC_MODELS
 	AbstractHeaderSection.h
 	AbstractHeaderSection.cpp
 	AbstractModelRelation.h
 	AbstractModelRelation.cpp
+	AbstractTreeModel.h
+	AbstractTreeModel.cpp
+	AbstractTreeModelItem.h
+	AbstractTreeModelItem.cpp
+	ScanResultsTreeModel.h
+	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.h
 	ScanResultsTreeModelItem.cpp
 	)
+prepend_to_each(SOURCE_FILES_SRC_LOGIC_MODELS "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_LOGIC_MODELS})
+
+target_sources(models_subdir
+	PUBLIC
+		${SOURCE_FILES_SRC_LOGIC_MODELS}
+	)
+
 target_link_libraries(models_subdir
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
