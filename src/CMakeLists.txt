@@ -136,14 +136,6 @@ set(HEADER_FILES
 	logic/PlaylistSortFilterProxyModel.h
 	logic/SupportedMimeTypes.h
 	logic/TrackMetadata.h
-	logic/dbmodels/CollectionDatabaseModel.h
-	logic/dbmodels/DBConnectionManager.h
-	logic/dbmodels/EnhancedAbstractListModel.h
-	logic/dbmodels/EnhancedAbstractTableModel.h
-	logic/dbmodels/EntityBase.h
-	logic/dbmodels/ScanResultsTableModel.h
-	logic/dbmodels/SQLHelpers.h
-	logic/models/ScanResultsTreeModel.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h
@@ -191,12 +183,6 @@ set(SOURCE_FILES
 	logic/PlaylistSortFilterProxyModel.cpp
 	logic/SupportedMimeTypes.cpp
 	logic/TrackMetadata.cpp
-	logic/dbmodels/CollectionDatabaseModel.cpp
-	logic/dbmodels/DBConnectionManager.cpp
-	logic/dbmodels/EnhancedAbstractListModel.cpp
-	logic/dbmodels/EnhancedAbstractTableModel.cpp
-	logic/dbmodels/ScanResultsTableModel.cpp
-	logic/dbmodels/EntityBase.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
@@ -259,15 +245,13 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/WorkerThreadBase.cpp
 	)
 
-#add_subdir_lib(models "logic/models")
-
+#
+# Subdir targets.
+#
 add_subdirectory(gui)
-
-#add_subdir_lib(models_subdir "logic/models")
-#add_subdir_lib(dbmodels_subdir "logic/dbmodels")
-#add_subdir_lib(proxymodels_subdir "logic/proxymodels")
 add_subdir_lib(logic_subdir "logic")
-#message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
+add_subdir_lib(future_subdir "future")
+
 
 #
 # Append all the SOURCE_* subsets.
@@ -276,17 +260,10 @@ add_subdir_lib(logic_subdir "logic")
 # *.ui files.
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
-# The Future
-add_subdir_lib(future_subdir "future")
-#add_library(future_subdir STATIC EXCLUDE_FROM_ALL "")
-#include(future/CMakeLists.txt)
-
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 	future_subdir
 	logic_subdir
-	#models_subdir
-	#dbmodels_subdir
 )
 
 # Concurrency

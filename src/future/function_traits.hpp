@@ -59,7 +59,7 @@ struct function_traits
 	// Note that ct::args_t will return "std::tuple<>" (i.e. 0-length tuple) for a free function taking void: "void(*)()"
 	static constexpr std::size_t arity_v = std::tuple_size_v<ct::args_t<T>>;
 
-//	using return_type_t = ct::return_type_t<T>;
+	using return_type_t = ct::return_type_t<T>;
 
     /// Helpers for providing arg_t<N> vs. arg<N>::type.
     template<class... Types>
@@ -93,8 +93,8 @@ struct function_traits
     static constexpr bool argtype_is_v = std::is_same_v<arg_t<i>, Expected>;
 
     /// For checking if the return type is T.
-//    template <typename Expected>
-//    static constexpr bool return_type_is_v = std::is_same_v<return_type_t, Expected>;
+	template <typename Expected>
+	static constexpr bool return_type_is_v = std::is_same_v<return_type_t, Expected>;
 
 };
 

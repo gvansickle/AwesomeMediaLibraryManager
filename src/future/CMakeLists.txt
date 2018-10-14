@@ -38,7 +38,6 @@ prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FI
 target_sources(future_subdir
 	PUBLIC
 		${HEADER_FILES_SRC_FUTURE}
-	PRIVATE
 		${SOURCE_FILES_SRC_FUTURE}
 	)
 target_link_libraries(future_subdir PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
@@ -55,7 +54,7 @@ target_include_directories(future_subdir
 #		${CMAKE_CURRENT_SOURCE_DIR}/src
 		)
 
-MESSAGE(STATUS "\${CMAKE_CURRENT_LIST_DIR}/..: ${CMAKE_CURRENT_LIST_DIR}/..")
+#MESSAGE(STATUS "\${CMAKE_CURRENT_LIST_DIR}/..: ${CMAKE_CURRENT_LIST_DIR}/..")
 		
 set_target_properties(future_subdir
     PROPERTIES

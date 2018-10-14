@@ -466,12 +466,13 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 
 
 ###
-### Add the subdirs.
+### Add the project subdirs.
 ###
 # This is the sum-total of all source files which go into building the main exe.
-#add_library(amlm_pseudolib "")
+#add_subdir_lib()
 add_subdirectory(src)
 add_subdirectory(tests)
+
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
 #ecm_add_app_icon(amlm_SRCS ICONS ${amlm_ICONS})

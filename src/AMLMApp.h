@@ -33,7 +33,7 @@
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/models/AbstractTreeModel.h>
 #include <logic/models/ScanResultsTreeModel.h>
-#include <PerfectDeleter.h>
+#include <logic/PerfectDeleter.h>
 
 
 /**
