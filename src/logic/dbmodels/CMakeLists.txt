@@ -40,9 +40,7 @@ prepend_to_each(dbmodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${dbmodels_
 
 target_sources(dbmodels_subdir
 	PUBLIC
-		${HEADER_FILES_SRC_FUTURE}
-	PRIVATE
-		${SOURCE_FILES_SRC_FUTURE}
+		${dbmodels_subdir_SOURCES}
 	)
 target_link_libraries(dbmodels_subdir PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
 target_include_directories(dbmodels_subdir

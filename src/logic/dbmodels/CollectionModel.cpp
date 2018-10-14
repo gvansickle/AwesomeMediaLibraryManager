@@ -20,7 +20,7 @@
 /**
  * @file CollectionModel.cpp
  */
-#include <dbmodels/CollectionModel.h>
+#include "CollectionModel.h"
 
 CollectionModel::CollectionModel()
 {
