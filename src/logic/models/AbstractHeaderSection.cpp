@@ -22,6 +22,8 @@
  */
 #include <AbstractHeaderSection.h>
 
+#include <utils/DebugHelpers.h>
+
 AbstractHeaderSection::AbstractHeaderSection()
 {
 	// TODO Auto-generated constructor stub
@@ -33,3 +35,35 @@ AbstractHeaderSection::~AbstractHeaderSection()
 	// TODO Auto-generated destructor stub
 }
 
+
+///
+/// BasicHeaderSection implementation.
+///
+
+QVariant BasicHeaderSection::headerData(int section, Qt::Orientation orientation, int role)
+{
+	if((section == m_section) && (orientation == m_orientation))
+	{
+		// Section/orientation is right, see if we have any role data to return.
+		auto retval_it = m_role_to_value_map.find(role);
+		if(retval_it == m_role_to_value_map.end())
+		{
+			return QVariant();
+		}
+		return retval_it->second;
+	}
+	else
+	{
+		qCr() << "Invalid section or orientation";
+	    return QVariant();
+	}
+}
+
+bool BasicHeaderSection::setHeaderData(int section, Qt::Orientation orientation, const QVariant& value, int role)
+{
+	m_section = section;
+	m_orientation = orientation;
+	auto retval = m_role_to_value_map.insert_or_assign(role, value);
+
+	return (retval.first != m_role_to_value_map.end());
+}

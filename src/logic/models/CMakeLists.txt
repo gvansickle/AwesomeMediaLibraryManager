@@ -19,6 +19,8 @@
 
 add_library(models_subdir STATIC
 	EXCLUDE_FROM_ALL
+	AbstractHeaderSection.h
+	AbstractHeaderSection.cpp
 	AbstractModelRelation.h
 	AbstractModelRelation.cpp
 	ScanResultsTreeModelItem.h
