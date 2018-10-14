@@ -285,47 +285,61 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
         });
         coverartjob->start();
 #elif 1 // THE EVEN NEWER ASYNC WAY
+		qDb() << "CoverArtCallback: make_task.";
 		ExtFuture<QByteArray> coverartjob = CoverArtJob::make_task(this, libentry->getUrl());
+		qDb() << "CoverArtCallback: Adding to perfect deleter.";
 		AMLMApp::IPerfectDeleter()->addQFuture(coverartjob);
+		qDb() << "CoverArtCallback: Adding .then()..";
 		coverartjob.then([=](ExtFuture<QByteArray> future) -> bool {
-			QByteArray retval = future.result();
-			if(future.isCanceled() || retval.size() == 0)
-			{
-				// Error.  Load the "No image available" icon.
-//				qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-				QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-				m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-			}
-			else
-			{
-				// Succeeded, pick up the image.
 
-				auto& cover_image_bytes = retval;
+			/// @note Anything QPixmap needs to be in run the GUI thread.
+			/// @todo I'm not clear on why we need to explicitly capture a copy of future...
+			/// Oh wait, probably lambda isn't mutable.
+			run_in_event_loop(this, [=, future_copy=future](){
 
-				if(cover_image_bytes.size() != 0)
+				AMLM_ASSERT_IN_GUITHREAD();
+
+				QByteArray retval = future_copy.result();
+
+				if(future.isCanceled() || retval.size() == 0)
 				{
-					qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-					QImage image;
-					if(image.loadFromData(cover_image_bytes) == true)
-					{
-						///qDebug() << "Image:" << image;
-						m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-						//m_cover_image_label.adjustSize()
-					}
-					else
-					{
-						qWarning() << "Error attempting to load image.";
-						QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-						m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-					}
-				}
-				else
-				{
-					// No image available.
+					// Error.  Load the "No image available" icon.
+	//				qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
 					QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
 					m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 				}
-			}
+				else
+				{
+					// Succeeded, pick up the image.
+
+					auto& cover_image_bytes = retval;
+
+					if(cover_image_bytes.size() != 0)
+					{
+						qDebug("Cover image found"); ///@todo << cover_image.mime_type;
+						QImage image;
+						if(image.loadFromData(cover_image_bytes) == true)
+						{
+							///qDebug() << "Image:" << image;
+							m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+							//m_cover_image_label.adjustSize()
+						}
+						else
+						{
+							qWarning() << "Error attempting to load image.";
+							QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+							m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+						}
+					}
+					else
+					{
+						// No image available.
+						QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+						m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+					}
+				};
+			});
+
 			return true;
 		});
 #endif

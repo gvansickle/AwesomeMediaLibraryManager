@@ -332,16 +332,17 @@ M_WARNING("TODO Probably should be refactored.");
 				m_pending_async_item_loads.insert(qpmi, true);
 //				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
 				future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
-				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) -> void {
+				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
 					Q_ASSERT(result_future.isFinished());
 //					qDbo() << "IN THEN CALLBACK:" << result_future;
 					LibraryEntryLoaderJobResult new_vals = result_future.result();
 					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
-					run_in_event_loop(qApp, [=]() -> void {
+					run_in_event_loop(qApp, [=]() -> bool {
 						AMLM_ASSERT_IN_GUITHREAD();
 						m_pending_async_item_loads.remove(qpmi);
+						return true;
 						});
-//					return true;
+//					return unit;
 				});
 				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
 				AMLMApp::IPerfectDeleter()->addQFuture(then_future);

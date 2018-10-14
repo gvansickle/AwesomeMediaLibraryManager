@@ -22,7 +22,7 @@
 //#include <nomocimpl.h>
 
 #include <QIcon>
-#include <QPixmap>
+//#include <QPixmap>
 #include <QImage>
 #include <QMenu>
 #include <QAction>

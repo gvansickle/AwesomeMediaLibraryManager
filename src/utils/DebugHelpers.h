@@ -33,6 +33,7 @@
 #include <QDebug>
 #include <QThread>
 #include <QModelIndex>
+#include <QCoreApplication> //< For AMLM_ASSERT_IN_GUITHREAD().
 
 // Ours
 #include "StringHelpers.h"
@@ -97,7 +98,9 @@ void throwif(bool condition, Args... args)
 	}
 }
 
-#define AMLM_ASSERT_IN_GUITHREAD() do { Q_ASSERT(QThread::currentThread() == QCoreApplication::instance()->thread()); } while(0)
+#define AMLM_ASSERT_IN_GUITHREAD() do {\
+	Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread(), __PRETTY_FUNCTION__, "Not in GUI thread.");\
+	} while(0)
 
 /// From -> To
 //#define AMLM_ASSERT_PTR_IS_CONVERTIBLE(a, b) if(dynamic_cast<std::remove_pointer_t<decltype(b)>>(a) == 0) \

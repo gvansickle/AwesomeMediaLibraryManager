@@ -686,6 +686,9 @@ public:
 			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
 	{
+//		QFutureWatcher* fw {nullptr};
+		static_assert (!std::is_same_v<R, void>, "Callback return value should never be void");
+
 		if(context != nullptr)
 		{
 			// If non-null, make sure context has an event loop.
@@ -693,8 +696,8 @@ public:
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
 
-			/// @todo UNIMPLEMENTED Use context.
-			Q_ASSERT(0);
+			// Create a QFutureWatcher to marshal the results to the context.
+//			fw = new QFutureWatcher(context);
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
@@ -771,7 +774,7 @@ public:
 			// Should we call the then_callback?
 			if(this_future_copy.isFinished() || (call_on_cancel && this_future_copy.isCanceled()))
 			{
-//				qDb() << "THEN: CALLING CALLBACK, this_future_copy:" << this_future_copy;
+				qDb() << "THEN: CALLING CALLBACK, this_future_copy:" << this_future_copy;
 
 				try
 				{
@@ -779,15 +782,28 @@ public:
 					// Could throw, hence we're in a try.
 //					qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
 					R retval;
-					if constexpr(std::is_same_v<R,Unit>)
+
+//					if(context != nullptr)
+//					{
+//						// Call the callback in the context's event loop.
+//						retval = run_in_event_loop(context, then_callback_copy);
+//					}
+//					else
 					{
-						// then_callback_copy returns void, return a Unit separately.
-						std::invoke(then_callback_copy, this_future_copy);
-						retval = unit;
-					}
-					else
-					{
-						retval = std::invoke(then_callback_copy, this_future_copy);
+						if constexpr(std::is_same_v<R,Unit>)
+						{
+							// then_callback_copy returns void, return a Unit separately.
+							qDb() << "INVOKING ret type == Unit";
+							std::invoke(then_callback_copy, this_future_copy);
+							retval = unit;
+						}
+						else
+						{
+							// then_callback_copy returns non-void, return the callback's return value.
+							qDb() << "INVOKING ret type != Unit";
+							retval = std::invoke(then_callback_copy, this_future_copy);
+						}
+						qDb() << "INVOKED";
 					}
 					// Didn't throw, report the result.
 					returned_future_copy.reportResult(retval);
@@ -806,7 +822,7 @@ public:
 			{
 				// Something went wrong, we got here after .waitForFinished() returned or threw, but
 				// the this_future_status isn't Finished or Canceled.
-				Q_ASSERT(0);
+				Q_ASSERT_X(0, __PRETTY_FUNCTION__, ".waitForFinished() returned or threw, but this_future_status isn't Finished or Canceled");
 			}
 			else
 			{
@@ -853,7 +869,7 @@ public:
 	ExtFuture<R> then( ThenCallbackType&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
-		return this->then(/*QApplication::instance()*/nullptr, false, std::forward<ThenCallbackType>(then_callback));
+		return this->then(nullptr /*QApplication::instance()*/, false, std::forward<ThenCallbackType>(then_callback));
 	}
 
 	/// @} // END .then() overloads.

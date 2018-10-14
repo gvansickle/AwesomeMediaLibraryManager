@@ -38,6 +38,7 @@
 #include <future/future_type_traits.hpp>
 #include <future/cpp14_concepts.hpp>
 #include <future/function_traits.hpp>
+#include <future/Unit.hpp>
 
 // Qt5
 #include <QEvent>
@@ -461,19 +462,34 @@ static void run_in_event_loop(QObject* context, CallableType&& callable)
 }
 
 /**
- * For callables with the signature "ReturnType Callback(void)", where ReturnType != void or ExtFuture.
+ * For callables with the signature "ReturnType Callback(void)", where ReturnType != ExtFuture.
  */
-template <class CallableType, class ReturnType = std::invoke_result_t<CallableType>,
-		  REQUIRES(is_non_void_non_ExtFuture_v<ReturnType>
-		  && std::is_invocable_r_v<ReturnType, CallableType>)>
-static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
-{
-	ReturnType return_value;
-	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
-	// Die if the function couldn't be invoked.
-	Q_ASSERT(retval == true);
-	return return_value;
-}
+//template <class CallableType, class ReturnType = Unit::LiftT<std::invoke_result_t<CallableType>>,
+//		  REQUIRES(is_non_void_non_ExtFuture_v<ReturnType>
+//		  && std::is_invocable_r_v<Unit::DropT<ReturnType>, CallableType>)>
+//static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
+//{
+//	ReturnType return_value;
+//	bool retval;
+//	if constexpr(std::is_same_v<ReturnType, void>)
+//	{
+//		static_assert(std::is_same_v<ReturnType, void>, "Bad return type");
+//		// callable returns void.
+//		retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable));
+//		return_value = unit;
+//	}
+//	else
+//	{
+//		// callable returns a non-void.
+//		retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
+//		/// @todo We're getting "QMetaObject::invokeMethod: Unable to invoke methods with return values in queued connections" here.
+//		Q_ASSERT_X(retval == true, __PRETTY_FUNCTION__, "invokeMethod() failed");
+//	}
+//	// Die if the function couldn't be invoked.
+//	/// @todo We're getting "QMetaObject::invokeMethod: Unable to invoke methods with return values in queued connections" here.
+//	Q_ASSERT(retval == true);
+//	return return_value;
+//}
 
 namespace ExtAsync
 {
