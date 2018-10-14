@@ -721,7 +721,7 @@ public:
 			Q_ASSERT(returned_future_copy != this_future_copy);
 
 			// Add the downstream cancel propagator first.
-//			AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+			AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
 
 			try
 			{

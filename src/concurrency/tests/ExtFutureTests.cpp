@@ -331,7 +331,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 
 
 
-TEST_F(ExtFutureTest, ExtFutureThenThrow)
+TEST_F(ExtFutureTest, DISABLED_ExtFutureThenThrow)
 {
 	TC_ENTER();
 
