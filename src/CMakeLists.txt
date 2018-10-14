@@ -88,11 +88,11 @@ target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/
 ###
 ### Intel TBB
 ###
-download_project(PROJ                tbb_wjakob
-                 GIT_REPOSITORY      https://github.com/wjakob/tbb.git
-                 GIT_TAG             master
-                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-)
+#download_project(PROJ                tbb_wjakob
+#                 GIT_REPOSITORY      https://github.com/wjakob/tbb.git
+#                 GIT_TAG             master
+#                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
+#)
 
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
@@ -115,7 +115,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		verdigris_target
 		logic_subdir
 		models_subdir
-		tbb_wjakob
+		#tbb_wjakob
 		)
 
 

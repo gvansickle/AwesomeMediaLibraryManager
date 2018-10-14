@@ -110,7 +110,7 @@ class ExtFuture;
  */
 static_assert(std::is_class_v<QFuture<int>>);
 template <typename T>
-class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
+class ExtFuture : public QFuture<T>
 {
 	using BASE_CLASS = QFuture<T>;
 
@@ -177,8 +177,8 @@ public:
 		: QFuture<T>(new QFutureInterface<T>(initialState))	{}
 #endif
 	/// Copy constructor.
-	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)),
-			m_progress_unit(other.m_progress_unit)
+	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d))
+//			m_progress_unit(other.m_progress_unit)
 	{}
 
 	/// Move constructor
@@ -460,13 +460,7 @@ public:
 	/// @todo
 	void setProgressUnit(/*KJob::Unit*/ int prog_unit)
 	{
-//		ExtFutureProgressInfo pi;
-
-//		pi.fromSetProgressUnit(prog_unit);
-
-//		INTERNAL_reportKJobProgressInfo(pi);
-//		static_assert(sizeof(int) == 4);
-		m_progress_unit = prog_unit;
+//		m_progress_unit = prog_unit;
 	}
 
 	/// @todo
@@ -1230,7 +1224,7 @@ protected:
 	/// which needs to be synchronized somehow, etc etc.
 	/// @{
 
-	int m_progress_unit { 0 /* == KJob::Unit::Bytes*/};
+//	int m_progress_unit { 0 /* == KJob::Unit::Bytes*/};
 
 	/// @}
 };
@@ -1243,9 +1237,6 @@ protected:
 /// @{
 
 #include "impl/ExtFuture_impl.hpp"
-
-//template <class T>
-//ExtFuture<T>::ExtFuture(const QFuture<void>& f) : ExtFuture<T>::BASE_CLASS(f) {}
 
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
