@@ -77,7 +77,7 @@ enum /*QLocale::*/DataSizeFormats
 #endif
 
 // TagLib
-#include <tag.h>
+#include <taglib/tag.h>
 
 // Ours
 //#include <utils/DebugHelpers.h> // For MSVC __PRETTY_FUNCTION__

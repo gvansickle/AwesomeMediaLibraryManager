@@ -32,8 +32,8 @@
 #include <QSqlRelationalTableModel>
 
 // Ours.
-#include <logic/DirScanResult.h>
-#include <logic/dbmodels/ScanResultsTableModel.h>
+#include <src/logic/DirScanResult.h>
+#include <src/logic/dbmodels/ScanResultsTableModel.h>
 
 /*
  *

@@ -30,9 +30,9 @@
 #include <QDebug>
 
 /// Ours
-#include <utils/QtHelpers.h>
+#include <src/utils/QtHelpers.h>
 
-#include <logic/models/AbstractTreeModelItem.h>
+#include <src/logic/models/AbstractTreeModelItem.h>
 
 /**
  * An extended URL class.

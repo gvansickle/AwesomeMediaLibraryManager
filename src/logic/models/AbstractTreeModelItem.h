@@ -59,7 +59,7 @@
 #include <QVariant>
 #include <QVector>
 
-#include <utils/QtHelpers.h>
+#include <src/utils/QtHelpers.h>
 
 /**
  * Generic item for use in AbstractItemTreeModel.

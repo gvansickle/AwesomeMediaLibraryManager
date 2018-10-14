@@ -29,12 +29,12 @@
 #include <QUrl>
 
 // Qt5 Helpers
-#include <utils/QtHelpers.h>
+#include <src/utils/QtHelpers.h>
 
 // Ours
 #include "ExtMimeType.h"
-#include "logic/Metadata.h"
-#include "utils/Fraction.h"
+#include "Metadata.h"
+#include "src/utils/Fraction.h"
 
 
 class LibraryEntry

@@ -30,31 +30,36 @@ set(HEADER_FILES_SRC_FUTURE
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
 	)
-#set(UI_FILES_SRC_FUTURE
-#	PARENT_SCOPE
-#	)
 
-if(false) # Not sure this is worth the effort and confusion.
-	# Prepend directory.
-	prepend_to_each(HEADER_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_FUTURE})
-	prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_FUTURE})
-	# prepend_to_each(UI_FILES_GUI_ACTIVITYPROGRESSMANAGER "gui/" ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-else()
-	add_library(amlm_src_future STATIC EXCLUDE_FROM_ALL "")
-endif()
+prepend_to_each(HEADER_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_FUTURE})
+prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_FUTURE})
+MESSAGE(STATUS "HEADER_FILES_SRC_FUTURE: ${HEADER_FILES_SRC_FUTURE}")
+#add_library(future_subdir STATIC EXCLUDE_FROM_ALL "")
 
-target_sources(amlm_src_future
+target_sources(future_subdir
 	PUBLIC
-	${HEADER_FILES_SRC_FUTURE}
-	${SOURCE_FILES_SRC_FUTURE}
+		${HEADER_FILES_SRC_FUTURE}
+		${SOURCE_FILES_SRC_FUTURE}
 	)
-target_link_libraries(amlm_src_future PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
-target_include_directories(amlm_src_future
+target_link_libraries(future_subdir PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
+target_include_directories(future_subdir
+#	INTERFACE
+#		${CMAKE_CURRENT_SOURCE_DIR}/.. # To allow <future/whatever.h>
 	PUBLIC
-	    "${CMAKE_CURRENT_LIST_DIR}"
+#		${CMAKE_CURRENT_SOURCE_DIR}/.. # To allow <future/whatever.h>
+		${CMAKE_CURRENT_LIST_DIR}
+	    ${CMAKE_CURRENT_LIST_DIR}/.. # To allow <future/whatever.h>
 		${boost_callable_traits_SOURCE_DIR}
-		${boost_callable_traits_BINARY_DIR})
-set_target_properties(amlm_src_future
+		${boost_callable_traits_BINARY_DIR}
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+#	PRIVATE
+#		${CMAKE_CURRENT_SOURCE_DIR}/src
+		)
+
+MESSAGE(STATUS "\${CMAKE_CURRENT_LIST_DIR}/..: ${CMAKE_CURRENT_LIST_DIR}/..")
+		
+set_target_properties(future_subdir
     PROPERTIES
     AUTOMOC ON
     AUTORCC OFF

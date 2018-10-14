@@ -17,9 +17,12 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# @file src/logic/proxymodels/CMakeLists.txt
+
 add_library(proxymodels_subdir STATIC
 	EXCLUDE_FROM_ALL
 	SelectionFilterProxyModel.h
+	SelectionFilterProxyModel.cpp
 	ModelHelpers.h
 	LibrarySortFilterProxyModel.h
 	LibrarySortFilterProxyModel.cpp
@@ -27,17 +30,16 @@ add_library(proxymodels_subdir STATIC
 	ModelChangeWatcher.h
 	QPersistentModelIndexVec.h
 	QPersistentModelIndexVec.cpp
-	SelectionFilterProxyModel.cpp
 	)
-	
+
 target_link_libraries(proxymodels_subdir
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-		${AMLM_TAGLIB_TARGET}
-		${AMLM_LIBCUE_TARGET}
+#		${AMLM_TAGLIB_TARGET}
+#		${AMLM_LIBCUE_TARGET}
 )
 target_include_directories(proxymodels_subdir
 	PUBLIC

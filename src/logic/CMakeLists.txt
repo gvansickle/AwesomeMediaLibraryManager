@@ -17,6 +17,8 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# @file src/logic/CMakeLists.txt
+
 add_library(logic_subdir STATIC
 	EXCLUDE_FROM_ALL
 	PerfectDeleter.cpp
@@ -30,6 +32,9 @@ target_link_libraries(logic_subdir
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
+		dbmodels_subdir
+		models_subdir
+		proxymodels_subdir
 )
 target_include_directories(logic_subdir
 	PUBLIC
@@ -41,4 +46,3 @@ add_subdirectory(models EXCLUDE_FROM_ALL)
 add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
 add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
 
-	

@@ -25,14 +25,14 @@
 #include <set>
 #include <memory>
 
-#include "utils/Fraction.h"
+#include <src/utils/Fraction.h>
 
 #include "TrackMetadata.h"
 
 // Taglib
-#include <tag.h>
-#include <fileref.h>
-#include <tpropertymap.h>
+#include <taglib/tag.h>
+#include <taglib/fileref.h>
+#include <taglib/tpropertymap.h>
 
 enum class AudioFileType
 {

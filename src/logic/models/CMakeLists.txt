@@ -17,6 +17,8 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# @file src/logic/models/CMakeLists.txt
+
 add_library(models_subdir STATIC
 	EXCLUDE_FROM_ALL
 	AbstractHeaderSection.h
@@ -32,8 +34,8 @@ target_link_libraries(models_subdir
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-		${AMLM_TAGLIB_TARGET}
-		${AMLM_LIBCUE_TARGET}
+#		${AMLM_TAGLIB_TARGET}
+#		${AMLM_LIBCUE_TARGET}
 )
 target_include_directories(models_subdir
 	PUBLIC

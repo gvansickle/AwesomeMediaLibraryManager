@@ -102,8 +102,8 @@ set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 ### @todo Do we need this? Target to get the deps on generated files right.
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
-# Collect all the project-common external link library targets into a single variable.
-set(INTERNAL_LINK_LIB_TARGETS amlm_src_future)
+
+
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
@@ -113,8 +113,6 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
 		verdigris_target
-		logic_subdir
-		models_subdir
 		#tbb_wjakob
 		)
 
@@ -165,9 +163,6 @@ set(HEADER_FILES
 	logic/TagLibHelpers.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
 	logic/ModelUserRoles.h
-	logic/proxymodels/ModelHelpers.h
-	logic/proxymodels/SelectionFilterProxyModel.h
-	logic/proxymodels/ModelChangeWatcher.h
 	logic/ColumnSpec.h
 	logic/LibraryRescannerMapItem.h
 	logic/LibraryRescannerJob.h
@@ -290,12 +285,17 @@ add_subdirectory(logic)
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
 # The Future
-if(false) # The "pull the sources in directly" method from I forget where.
-add_library(amlm_src_future EXCLUDE_FROM_ALL "")
-include(future/CMakeLists.txt)
-else()
-add_subdirectory(future)
-endif()
+add_subdir_lib(future_subdir "./future")
+#add_library(future_subdir STATIC EXCLUDE_FROM_ALL "")
+#include(future/CMakeLists.txt)
+
+# Collect all the project-common internal and external link library targets into a single variable.
+set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
+	future_subdir
+	logic_subdir
+	models_subdir
+	dbmodels_subdir
+)
 
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
@@ -318,7 +318,6 @@ prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a rea
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 	${amlm_gui_SRCS} ### @todo Make this a real target.
 	${amlm_gui_widget_SRCS} ### @todo
-#	${amlm_src_future_SRCS}
 	)
 
 # Sets the icon on Windows and OSX.
@@ -342,6 +341,7 @@ qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
 		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
+		${PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS}
 		)
 
 # WIN32_OR_MACOS_BUNDLE variable for add_executable().  Expands to WIN32 or MACOS_BUNDLE depending on OS
@@ -357,6 +357,8 @@ endif()
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
+message(STATUS "amlm_SRCS ${amlm_SRCS}")
+message(STATUS "amlm_settings_SRCS ${amlm_settings_SRCS}")
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
@@ -368,15 +370,19 @@ add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
-	PRIVATE
-	"KXMLGUI_NO_DEPRECATED=1"
-	"QT_DEPRECATED_WARNINGS=1"
-	"QT_NO_KEYWORDS=1"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+		"QT_SHAREDPOINTER_TRACK_POINTERS=1"
+		"KXMLGUI_NO_DEPRECATED=1"
+		"QT_DEPRECATED_WARNINGS=1"
+		"QT_NO_KEYWORDS=1"
+		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
-target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
+target_include_directories(${PROJECT_NAME} 
+	PUBLIC 
+		"utils/nomoc"
+		${INCLUDE_DIR_VERDIGRIS}
+		${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
+		)
+target_compile_options(${PROJECT_NAME} PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}
