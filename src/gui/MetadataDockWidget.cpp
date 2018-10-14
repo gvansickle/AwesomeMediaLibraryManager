@@ -292,6 +292,28 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		qDb() << "CoverArtCallback: Adding .then()..";
 		coverartjob.then([=](ExtFuture<QByteArray> future) -> bool {
 
+			// Do as much as we can in an arbitrary non-GUI context.
+
+			QByteArray cover_image_bytes = future.result();
+			QImage image;
+
+			if(!future.isCanceled() && cover_image_bytes.size() > 0)
+			{
+				// Pic data load succeeded, see if we can get a valid QImage out of it.
+				// QImage is safe to use in a non-GUI-thread context.
+
+				if(image.loadFromData(cover_image_bytes) == true)
+				{
+					// It was a valid image.
+//					m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+				}
+				else
+				{
+					qWr() << "Error attempting to load image.";
+					/// @todo Set error state on the QURL.
+				}
+			}
+
 			/// @note Anything QPixmap needs to be in run the GUI thread.
 			/// @todo I'm not clear on why we need to explicitly capture a copy of future...
 			/// Oh wait, probably lambda isn't mutable.
@@ -299,9 +321,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 				AMLM_ASSERT_IN_GUITHREAD();
 
-				QByteArray retval = future_copy.result();
-
-				if(future.isCanceled() || retval.size() == 0)
+				if(image.isNull())
 				{
 					// Error.  Load the "No image available" icon.
 	//				qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
@@ -310,26 +330,14 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 				}
 				else
 				{
-					// Succeeded, pick up the image.
-
-					auto& cover_image_bytes = retval;
+					// Succeeded, convert QImage to QPixmap.
 
 					if(cover_image_bytes.size() != 0)
 					{
-						qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-						QImage image;
-						if(image.loadFromData(cover_image_bytes) == true)
-						{
-							///qDebug() << "Image:" << image;
-							m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-							//m_cover_image_label.adjustSize()
-						}
-						else
-						{
-							qWarning() << "Error attempting to load image.";
-							QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-							m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-						}
+						qDb() << "Valid cover image found"; ///@todo << cover_image.mime_type;
+						m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+						//m_cover_image_label.adjustSize()
+						/// @todo Probably need to handle setPixmap() error.
 					}
 					else
 					{
