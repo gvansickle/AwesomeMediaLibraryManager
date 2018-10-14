@@ -38,5 +38,7 @@ target_include_directories(logic_subdir
 	)
 
 add_subdirectory(models EXCLUDE_FROM_ALL)
+add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
+add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
 
 	

@@ -81,7 +81,7 @@ protected:
 	Qt::Orientation m_orientation {Qt::Horizontal};
 
 	/**
-	 * Mapping from role to value.
+	 * Mapping from roles to values.
 	 */
 	std::map</*Qt::ItemDataRole*/int, QVariant> m_role_to_value_map;
 };

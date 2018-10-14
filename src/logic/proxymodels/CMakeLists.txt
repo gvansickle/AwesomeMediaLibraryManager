@@ -17,16 +17,20 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_library(models_subdir STATIC
+add_library(proxymodels_subdir STATIC
 	EXCLUDE_FROM_ALL
-	AbstractHeaderSection.h
-	AbstractHeaderSection.cpp
-	AbstractModelRelation.h
-	AbstractModelRelation.cpp
-	ScanResultsTreeModelItem.h
-	ScanResultsTreeModelItem.cpp
+	SelectionFilterProxyModel.h
+	ModelHelpers.h
+	LibrarySortFilterProxyModel.h
+	LibrarySortFilterProxyModel.cpp
+	ModelChangeWatcher.cpp
+	ModelChangeWatcher.h
+	QPersistentModelIndexVec.h
+	QPersistentModelIndexVec.cpp
+	SelectionFilterProxyModel.cpp
 	)
-target_link_libraries(models_subdir
+	
+target_link_libraries(proxymodels_subdir
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -35,7 +39,7 @@ target_link_libraries(models_subdir
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 )
-target_include_directories(models_subdir
+target_include_directories(proxymodels_subdir
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
