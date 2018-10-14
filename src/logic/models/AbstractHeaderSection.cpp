@@ -40,6 +40,12 @@ AbstractHeaderSection::~AbstractHeaderSection()
 /// BasicHeaderSection implementation.
 ///
 
+BasicHeaderSection::BasicHeaderSection(int section, Qt::Orientation orientation, const QVariant& value, int role)
+	: m_section(section), m_orientation(orientation)
+{
+	m_role_to_value_map.insert_or_assign(role, value);
+}
+
 QVariant BasicHeaderSection::headerData(int section, Qt::Orientation orientation, int role)
 {
 	if((section == m_section) && (orientation == m_orientation))
