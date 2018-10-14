@@ -286,7 +286,14 @@ bool AbstractTreeModel::setHeaderData(int section, Qt::Orientation orientation,
 		Q_EMIT headerDataChanged(orientation, section, section);
 	}
 
-    return result;
+	return result;
+}
+
+bool AbstractTreeModel::setHeaderData(const AbstractHeaderSection& header_section)
+{
+//	this->setHeaderData(header_section.section(),
+//			header_section.orientation(), header_section[role], role);
+//	for()
 }
 
 void AbstractTreeModel::setupModelData(const QStringList &lines, AbstractTreeModelItem *parent)

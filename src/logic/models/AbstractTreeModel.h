@@ -61,7 +61,7 @@
 #include <QVariant>
 
 class AbstractTreeModelItem;
-
+class AbstractHeaderSection;
 
 class AbstractTreeModel : public QAbstractItemModel
 {
@@ -89,6 +89,9 @@ public:
      */
     bool setHeaderData(int section, Qt::Orientation orientation,
                          const QVariant &value, int role = Qt::EditRole) override;
+
+    /// Overload taking an AbstractHeaderSection.
+    virtual bool setHeaderData(const AbstractHeaderSection& header_section);
     /// @}
 
     QModelIndex index(int row, int column,

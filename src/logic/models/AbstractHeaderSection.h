@@ -46,6 +46,11 @@ public:
 	 */
 	virtual bool setHeaderData(int section, Qt::Orientation orientation,
 						 const QVariant &value, int role = Qt::EditRole) = 0;
+
+	virtual QVariant lookup_role(int role) const = 0;
+
+	virtual int section() = 0;
+	virtual Qt::Orientation orientation() = 0;
 };
 
 /**
@@ -63,6 +68,11 @@ public:
 
 	bool setHeaderData(int section, Qt::Orientation orientation,
 							 const QVariant &value, int role = Qt::EditRole) override;
+
+	QVariant lookup_role(int role) const override;
+
+	int section() override { return m_section; };
+	Qt::Orientation orientation() override { return m_orientation; };
 
 protected:
 

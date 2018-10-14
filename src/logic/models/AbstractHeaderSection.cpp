@@ -51,12 +51,7 @@ QVariant BasicHeaderSection::headerData(int section, Qt::Orientation orientation
 	if((section == m_section) && (orientation == m_orientation))
 	{
 		// Section/orientation is right, see if we have any role data to return.
-		auto retval_it = m_role_to_value_map.find(role);
-		if(retval_it == m_role_to_value_map.end())
-		{
-			return QVariant();
-		}
-		return retval_it->second;
+		return lookup_role(role);
 	}
 	else
 	{
@@ -72,4 +67,14 @@ bool BasicHeaderSection::setHeaderData(int section, Qt::Orientation orientation,
 	auto retval = m_role_to_value_map.insert_or_assign(role, value);
 
 	return (retval.first != m_role_to_value_map.end());
+}
+
+QVariant BasicHeaderSection::lookup_role(int role) const
+{
+	auto retval_it = m_role_to_value_map.find(role);
+	if(retval_it == m_role_to_value_map.end())
+	{
+		return QVariant();
+	}
+	return retval_it->second;
 }
