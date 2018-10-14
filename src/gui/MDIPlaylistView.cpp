@@ -17,14 +17,13 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gui/delegates/ItemDelegateLength.h>
 #include "MDIPlaylistView.h"
 
 
 #include <gui/menus/DropMenu.h>
 
 #include "DragDropTreeViewStyleProxy.h"
-#include "ItemDelegateLength.h"
-
 #include <QApplication>
 #include <QMediaPlaylist>
 #include <QHeaderView>

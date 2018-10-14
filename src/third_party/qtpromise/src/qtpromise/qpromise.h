@@ -3,7 +3,9 @@
 
 // QtPromise
 #include "qpromise_p.h"
+#include "qpromiseerror.h"
 #include "qpromiseglobal.h"
+#include "qpromiseresolver.h"
 
 // Qt
 #include <QExplicitlySharedDataPointer>
@@ -73,11 +75,10 @@ public: // STATIC
     inline static QPromise<T> reject(E&& error);
 
 protected:
-    friend struct QtPromisePrivate::PromiseFulfill<QPromise<T> >;
-    friend class QPromiseResolve<T>;
-    friend class QPromiseReject<T>;
+    friend struct QtPromisePrivate::PromiseFulfill<QPromise<T>>;
+    friend class QtPromisePrivate::PromiseResolver<T>;
 
-    QExplicitlySharedDataPointer<QtPromisePrivate::PromiseData<T> > m_d;
+    QExplicitlySharedDataPointer<QtPromisePrivate::PromiseData<T>> m_d;
 };
 
 template <typename T>
@@ -87,9 +88,19 @@ public:
     template <typename F>
     QPromise(F&& resolver): QPromiseBase<T>(std::forward<F>(resolver)) { }
 
+    template <typename Functor>
+    inline QPromise<T> each(Functor fn);
+
+    template <typename Functor>
+    inline QPromise<T> filter(Functor fn);
+
+    template <typename Functor>
+    inline typename QtPromisePrivate::PromiseMapper<T, Functor>::PromiseType
+    map(Functor fn);
+
 public: // STATIC
     template <template <typename, typename...> class Sequence = QVector, typename ...Args>
-    inline static QPromise<QVector<T> > all(const Sequence<QPromise<T>, Args...>& promises);
+    inline static QPromise<QVector<T>> all(const Sequence<QPromise<T>, Args...>& promises);
 
     inline static QPromise<T> resolve(const T& value);
     inline static QPromise<T> resolve(T&& value);

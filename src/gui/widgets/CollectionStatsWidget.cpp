@@ -24,17 +24,26 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
+#if 1
+#include <QTextDocument>
+#include <QTextTable>
+#include <QTextCursor>
+#include <QTextFrame>
+#endif
+
 CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
 {
     setObjectName("CollectionStatsWidget");
 
+	// QDockWidget Docs: "If the dock widget is visible when widget is added, you must show() it explicitly.
+	// Note that you must add the layout of the widget before you call this function; if not, the widget will not be visible."
 	auto layout = new QVBoxLayout();
 
-//    m_widget_text = new QLabel(tr("Hello"), this);
 	m_widget_text = new QTextEdit(tr("STATS GO HERE"), this);
     m_widget_text->setReadOnly(true);
     m_widget_text->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_sources_model_watcher = new ModelChangeWatcher(this);
+    m_summary_model = new QSortFilterProxyModel(this);
 
 	layout->addWidget(m_widget_text);
 	setLayout(layout);
@@ -42,11 +51,14 @@ CollectionStatsWidget::CollectionStatsWidget(QWidget *parent) : QWidget(parent)
     connect(m_sources_model_watcher, &ModelChangeWatcher::modelHasRows, this, &std::decay_t<decltype(*this)>::SLOT_modelChanged);
 }
 
+// Static
 QDockWidget *CollectionStatsWidget::make_dockwidget(const QString &title, QWidget *parent)
 {
     auto retval = new QDockWidget(tr("Collection Stats"), parent);
-    retval->setObjectName("DockWidget" + objectName());
-    retval->setWidget(this);
+	auto collection_stats_widget = new CollectionStatsWidget();
+	retval->setWidget(collection_stats_widget);
+	retval->setObjectName("DockWidget" + collection_stats_widget->objectName());
+	retval->setWidget(collection_stats_widget);
     return retval;
 }
 
@@ -54,13 +66,37 @@ void CollectionStatsWidget::setModel(QPointer<LibraryModel> model)
 {
     m_sources_model = model;
     m_sources_model_watcher->setModelToWatch(m_sources_model);
+    m_summary_model->setSourceModel(model);
 }
+
+#define M_DESC_ARG(strlit, value) QString("<h4>" strlit ":</h4> %1").arg(value)
 
 void CollectionStatsWidget::SLOT_modelChanged()
 {
-    // Model changed, update stats.
-    auto num_tracks = m_sources_model->rowCount();
+	// Model changed, update stats.
+	auto num_files = m_sources_model->rowCount();
+	auto num_tracks = m_sources_model->rowCount();
+
+#if 1 // Giving QTextDocument a whirl.
+	QTextDocument doc(this);
+
+	Q_ASSERT(doc.rootFrame());
+	QTextCursor cursor(doc.rootFrame()->firstCursorPosition());
+	cursor.movePosition(QTextCursor::Start);
+
+	cursor.insertText("Collection Stats");
+	QTextTable *table = cursor.insertTable(2, 2);
+	table->cellAt(0,0).firstCursorPosition().insertText("Number of files:");
+	table->cellAt(0,1).firstCursorPosition().insertText(QString("%1").arg(num_files));
+	table->cellAt(1,0).firstCursorPosition().insertText("Number of tracks:");
+	table->cellAt(1,1).firstCursorPosition().insertText(QString("%1").arg(num_tracks));
+
+	m_widget_text->setText(doc.toHtml());
+
+#else
     QString new_txt = "<h3>Collection Stats</h3>";
     new_txt += QString("Number of tracks: %1").arg(num_tracks);
+	new_txt += M_DESC_ARG("Number of files", num_files);
     m_widget_text->setText(new_txt);
+#endif
 }

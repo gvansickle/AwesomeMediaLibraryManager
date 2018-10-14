@@ -38,7 +38,10 @@ class CollectionStatsWidget : public QWidget
 public:
     explicit CollectionStatsWidget(QWidget *parent = nullptr);
 
-    QDockWidget* make_dockwidget(const QString &title, QWidget *parent = nullptr);
+	/**
+	 * Create a QDockWidget containing a new CollectionStatsWidget.
+	 */
+	static QDockWidget* make_dockwidget(const QString &title, QWidget *parent = nullptr);
 
     void setModel(QPointer<LibraryModel> model);
 
@@ -50,11 +53,13 @@ public Q_SLOTS:
 
 protected:
 
-//    QLabel* m_widget_text;
     QTextEdit* m_widget_text;
     QPointer<LibraryModel> m_sources_model;
 
     ModelChangeWatcher* m_sources_model_watcher { nullptr };
+
+    QSortFilterProxyModel* m_summary_model { nullptr };
+
 };
 
 #endif // COLLECTIONSTATSWIDGET_H

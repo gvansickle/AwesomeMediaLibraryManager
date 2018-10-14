@@ -32,7 +32,13 @@ endif()
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
-include(GNUInstallDirs)
+#include(GNUInstallDirs)
+
+# The continuable library.
+# Cannot make this work, so we'll just include the two header dirs.
+#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_MODULE_PATH})
+#add_subdirectory(function2)
+#add_subdirectory(continuable)
 
 set(LIBCUE_SRC_DIR libcue)
 

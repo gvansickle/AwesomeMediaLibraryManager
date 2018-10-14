@@ -39,20 +39,30 @@
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
  */
-//template <class FutureTypeT>
 class ExtFutureTest : public ExtAsyncTestsSuiteFixtureBase
 {
 	using BASE_CLASS = ExtAsyncTestsSuiteFixtureBase;
 
 public:
 
-//    using FutureType = FutureTypeT;
-//    static FutureTypeT shared_;
-//    FutureTypeT value_;
 
 protected:
 
 };
 
+template <class FutureTypeT>
+class ExtFutureTypedTestFixture : public ExtFutureTest
+{
+	using BASE_CLASS = ExtFutureTest;
+
+public:
+
+    using List = std::list<FutureTypeT>;
+    static FutureTypeT shared_;
+    FutureTypeT value_;
+
+protected:
+
+};
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTFUTURETEST_H

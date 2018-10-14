@@ -35,7 +35,7 @@
 
 // Google Test
 #include <gtest/gtest.h>
-//#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 
 // Make sure we've compiled correctly.
 #if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
@@ -70,6 +70,24 @@ class ThrowListener : public testing::EmptyTestEventListener
   }
 };
 
+int google_test_main(int argc, char *argv[])
+{
+//	::testing::InitGoogleTest(&argc, argv);
+	::testing::InitGoogleMock(&argc, argv);
+
+	// Create a new environment object and register it with gtest.
+	// Don't delete it, gtest takes ownership.
+	::testing::AddGlobalTestEnvironment(new StartAndFinish());
+
+	// Add the exception listener as the last listener.
+	testing::UnitTest::GetInstance()->listeners().Append(new ThrowListener);
+
+	auto retval = RUN_ALL_TESTS();
+	return retval;
+}
+
+///
+/// main() for Google Test Framework tests.
 ///
 /// @note main() mods to support Qt5 threading etc. testing per Stack Overflow: https://stackoverflow.com/a/33829950
 ///
@@ -109,21 +127,26 @@ int main(int argc, char *argv[])
 	// Register types with Qt.
 	RegisterQtMetatypes();
 
-	::testing::InitGoogleTest(&argc, argv);
-
-	// Create a new environment object and register it with gtest.
-	// Don't delete it, gtest takes ownership.
-	::testing::AddGlobalTestEnvironment(new StartAndFinish());
-
-	// Add the exception listener as the last listener.
-	testing::UnitTest::GetInstance()->listeners().Append(new ThrowListener);
-
-	auto retval = RUN_ALL_TESTS();
-
 	// Timer-based exit from app.exec().
-	QTimer exitTimer;
-	QObject::connect(&exitTimer, &QTimer::timeout, &app, QCoreApplication::quit);
-	exitTimer.start();
+//	QTimer exitTimer;
+//	QObject::connect(&exitTimer, &QTimer::timeout, &app, QCoreApplication::quit);
+//	exitTimer.start();
+
+	// Start the Google Test from a timer expiration, so we know that we have a
+	// legitimate event loop running.
+	int retval = 0;
+	QTimer::singleShot(0, [&retval, &argc, &argv, &app](){
+		retval = google_test_main(argc, argv);
+		qDb() << "google_test_main() returned:" << retval;
+
+		// Now send a signal to the app to exit.
+		QTimer::singleShot(0, &app, [&app, &retval](){
+			qDb() << "EXIT TIMER FIRED, CALLING app.exit()";
+			app.exit(retval);
+		});
+		qDb() << "exit() timer created, should exit soon";
+	});
+
 	app.exec();
 
 	return retval;

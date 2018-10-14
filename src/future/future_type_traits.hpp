@@ -20,8 +20,12 @@
 #ifndef UTILS_CONCURRENCY_FUTURE_TYPE_TRAITS_HPP_
 #define UTILS_CONCURRENCY_FUTURE_TYPE_TRAITS_HPP_
 
+#include <config.h>
+
+// Std C++
 #include <type_traits>
 #include <tuple>
+#include <functional> // For std::invoke<>().
 
 /// Backfill for C++17 std::void_t.
 #if !defined(__cpp_lib_void_t) || (__cpp_lib_void_t < 201411)
@@ -246,5 +250,22 @@ void show_deduced_type(T&& )
 
     deduced_type<T>::show;
 }
+
+/**
+ * The mysterious DECAY_COPY template referred to in e.g. std::experimental::shared_future::then() descriptions.
+ * @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+ * @link https://www.boost.org/doc/libs/1_68_0/doc/html/thread/synchronization.html#thread.synchronization.futures.reference.decay_copy
+ */
+template <class T>
+std::decay_t<T> DECAY_COPY(T&& v)
+{
+    return std::forward<T>(v);
+}
+
+
+/**
+ * The less mysterious INVOKE, which is actually std::invoke in C++17.
+ */
+#define INVOKE std::invoke
 
 #endif /* UTILS_CONCURRENCY_FUTURE_TYPE_TRAITS_HPP_ */

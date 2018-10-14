@@ -20,16 +20,27 @@
 #ifndef SCANRESULTSTREEMODEL_H
 #define SCANRESULTSTREEMODEL_H
 
-#include "src/logic/models/AbstractTreeModel.h"
+#include "AbstractTreeModel.h"
+
+#include <QUrl>
 
 class ScanResultsTreeModel : public AbstractTreeModel
 {
     using BASE_CLASS = AbstractTreeModel;
 
+	Q_OBJECT
+
 public:
     ScanResultsTreeModel(const QStringList &headers, const QString &data,
                          QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
+
+	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
+	 bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
+
+protected:
+
+    QUrl m_base_directory;
 };
 
 #endif // SCANRESULTSTREEMODEL_H

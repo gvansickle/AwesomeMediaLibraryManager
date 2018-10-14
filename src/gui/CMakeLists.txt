@@ -17,13 +17,14 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# @file src/gui/CMakeLists.txt
+
 # gui header files
 set(gui_HEADER_FILES
 	AboutBox.h
 	CollectionDockWidget.h
 	Experimental.h
 	FilterWidget.h
-	ItemDelegateLength.h
 	MainWindow.h
 	MDIArea.h
 	MDILibraryView.h
@@ -45,6 +46,8 @@ set(gui_HEADER_FILES
 	actions/ActionHelpers.h
 	actions/StandardActions.h
 	Theme.h
+	delegates/ItemDelegateLength.h
+	delegates/MimeTypeDelegate.h
 	)
 
 # gui source files
@@ -53,7 +56,6 @@ set(gui_SOURCE_FILES
 	CollectionDockWidget.cpp
 	Experimental.cpp
 	FilterWidget.cpp
-	ItemDelegateLength.cpp
 	MainWindow.cpp
 	MDIArea.cpp
 	MDILibraryView.cpp
@@ -76,6 +78,8 @@ set(gui_SOURCE_FILES
 	helpers/Gtk3DialogHelper.cpp
 	actions/StandardActions.cpp
 	Theme.cpp
+	delegates/ItemDelegateLength.cpp
+	delegates/MimeTypeDelegate.cpp
 	)
 
 # Settings dialog files (in settings/).

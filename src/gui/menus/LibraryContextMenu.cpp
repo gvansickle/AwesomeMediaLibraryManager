@@ -152,7 +152,7 @@ QStringList LibraryContextMenu::getSongsAsTooltips(const QPersistentModelIndexVe
 
 	QStringList retval;
 
-	for(auto i : row_indexes)
+	for(const auto& i : row_indexes)
 	{
 		auto title_index = i.sibling(i.row(), title_col);
 		auto artist_index = i.sibling(i.row(), artist_col);

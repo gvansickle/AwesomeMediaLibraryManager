@@ -50,7 +50,7 @@ public:
 
 protected:
 
-	virtual QVariant getData(int row, int col, int role = Qt::DisplayRole) const;
+	QVariant getData(int row, int col, int role = Qt::DisplayRole) const override;
 
 	using rowtype = QVariantList;
 	QVector<rowtype> m_scan_results;

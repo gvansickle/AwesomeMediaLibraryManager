@@ -259,7 +259,7 @@ bool BaseActivityProgressStatusBarWidget::event(QEvent *event)
 
         return true;
     }
-    return QWidget::event(event);
+	return BASE_CLASS::event(event);
 }
 
 void BaseActivityProgressStatusBarWidget::closeEvent(QCloseEvent *event)
@@ -366,6 +366,14 @@ void BaseActivityProgressStatusBarWidget::totalAmount(KJob *kjob, KJob::Unit uni
 void BaseActivityProgressStatusBarWidget::processedAmount(KJob *kjob, KJob::Unit unit, qulonglong amount)
 {
     Q_CHECK_PTR(kjob);
+
+	// Is kjob really an AMLMJob?
+	auto progress_unit = KJob::Unit::Bytes;
+	auto amlm_ptr = dynamic_cast<AMLMJob*>(kjob);
+	if(amlm_ptr != nullptr)
+	{
+		progress_unit = amlm_ptr->progressUnit();
+	}
 
     /// @todo These are taking the place of KWidgetJobTracker::Private::ProgressWidget's member vars of the same names,
     /// which are kept up to date by the logic in these functions.  Unclear if this is correct, better, or worse.
@@ -545,6 +553,7 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
 	{
         qulonglong totalSize;
         qulonglong processedSize;
+		auto progress_unit = KJob::Bytes;
         auto amlm_ptr = dynamic_cast<AMLMJob*>(kjob);
         if(amlm_ptr == nullptr)
         {
@@ -556,28 +565,43 @@ void BaseActivityProgressStatusBarWidget::speed(KJob *kjob, unsigned long value)
         {
             totalSize = amlm_ptr->totalSize();
             processedSize = amlm_ptr->processedSize();
+			progress_unit = amlm_ptr->progressUnit();
         }
 
         /// @todo "TODO Allow user to specify QLocale::DataSizeIecFormat/DataSizeTraditionalFormat/DataSizeSIFormat");
         /// @link http://doc.qt.io/qt-5/qlocale.html#DataSizeFormat-enum
         DataSizeFormats fmt = DataSizeFormats::DataSizeTraditionalFormat;
 
-        const QString speedStr = formattedDataSize(value, 1, fmt);
+		QString speedStr;
+		switch(progress_unit)
+		{
+		case KJob::Bytes:
+		default:
+			// Progress unit is bytes.
+			speedStr = formattedDataSize(value, 1, fmt) + "/s";
+			break;
+		case KJob::Files:
+			speedStr = QString("%1 files/s").arg(value);
+			break;
+		case KJob::Directories:
+			speedStr = QString("%1 dirs/s").arg(value);
+			break;
+		}
 
         // If we know the total size, we can calculate time remaining.
-        if (m_is_total_size_known)
+		if (m_is_total_size_known)
 		{
             const qulonglong msecs_remaining = 1000 * (totalSize - processedSize) / value;
 
 			//~ singular %1/s (%2 remaining)
 			//~ plural %1/s (%2 remaining)
-            m_speed_label->setText(tr("%1/s (%2 remaining)", "", /*singular/plural=*/msecs_remaining)
+			m_speed_label->setText(tr("%1 (%2 remaining)", "", /*singular/plural=*/msecs_remaining)
                                    .arg(speedStr).arg(formattedDuration(msecs_remaining, 0)));
 		}
 		else
 		{
 			// total size is not known
-            m_speed_label->setText(tr("%1/s", "speed in bytes per second").arg(speedStr));
+			m_speed_label->setText(tr("%1", "speed in progress units per second").arg(speedStr));
 		}
 	}
 

@@ -20,57 +20,237 @@
 #ifndef UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 #define UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_
 
-#if 0
-#include <config.h>
+template <class T>
+class ExtFuture;
 
-#include "../ExtFutureState.h"
-#endif
-
-#if 0
-/**
- * For unwrapping an ExtFuture<ExtFuture<T>> to a ExtFuture<T>.
- * Implementation based on Facebook's "folly" library's Future (Apache 2.0)
- */
+#if 0 // templates.....
+#define REAL_ONE_DOESNT_WORK
+#ifdef REAL_ONE_DOESNT_WORK
 template <typename T>
-template <typename F>
-std::enable_if_t<isExtFuture_v<F>, ExtFuture<typename isExtFuture<T>::inner_t>>
-ExtFuture<T>::unwrap()
+template <class ExtFutureExtFutureT,
+		  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
+ExtFuture<T>::ExtFuture(ExtFuture<ExtFuture<T>>&& other)
 {
-	// Type of the inner ExtFuture<T>.
-	using InternalExtFutureType = ExtFuture<typename isExtFuture<T>::inner_t>;
-
-	InternalExtFutureType internal_extfuture;
-	return this->then([=](InternalExtFutureType internal_extfuture) -> InternalExtFutureType {
-		return internal_extfuture;
-		});
+	Q_UNUSED(other);
+	static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
 }
-#endif
+#elif 0 // !REAL_ONE_DOESNT_WORK
+	template <class ExtFutureExtFutureT,
+			  REQUIRES(is_nested_ExtFuture_v<ExtFutureExtFutureT>)>
+	ExtFuture(ExtFuture<ExtFuture<T>>&&	other)
+	{
+		/// @note Going by the description here @link https://en.cppreference.com/w/cpp/experimental/shared_future/shared_future
+		/// "becomes ready when one of the following happens:
+		/// - other and other.get() are both ready.
+		///     The value or exception from other.get() is stored in the shared state associated with the resulting shared_future object.
+		/// - other is ready, but other.get() is invalid. An exception of type std::future_error with an error condition of
+		///     std::future_errc::broken_promise is stored in the shared state associated with the resulting shared_future object.
+		/// "
 
-#if 0
+		try
+		{
+			// This will either become ready or throw.
+			QList<T> results = other.get();
+			// Didn't throw, we've reached the first bullet.
+			this->reportResults(results.toVector());
+			this->reportFinished();
+		}
+		catch (...)
+		{
+			// Inner ExtFuture threw, we've reached the second bullet.  Rethrow.
+			throw;
+		}
+
+	}
+#endif // REAL_ONE_DOESNT_WORK
+#endif // 0, disable the whole works.
+
+template<typename T>
+inline ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture<T>& other)
+{
+	if(this != &other)
+	{
+		this->BASE_CLASS::operator=(other);
+		this->m_progress_unit = other.m_progress_unit;
+	}
+	return *this;
+}
+
+template<typename T>
+ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
+{
+	if(this != &other)
+	{
+		this->BASE_CLASS::operator=(other);
+	}
+	return *this;
+}
+
 template<typename T>
 T ExtFuture<T>::qtget_first()
 {
-M_WARNING("segfaulting.");
 	wait();
-	return this->future().result();
+	return this->result();
 }
 
+#if 0
+/**
+ * The root then() implementation.
+ * Takes a context QObject and a then_callback where then_callback's signature is:
+ * 	@code
+ * 		then_callback(ExtFuture<T>) -> R
+ * 	@endcode
+ * where R is a non-ExtFuture<> return value.
+ * If context == nullptr, then_callback will be run in an arbitrary thread.
+ * If context points to a QObject, then_callback will be run in its event loop.
+ *
+ * Canceling
+ * The returned future can be canceled, and the cancelation will propagate upstream (i.e. to this).
+ *
+ * Exceptions from callback
+ * Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
+ * "Any exception propagated from the execution of the continuation is stored as the exceptional result
+ * in the shared state of the returned future object."
+ * So we need to wrap the call to then_callback with a try/catch, and send any exceptions we catch
+ * to the returned future.
+ *
+ * @param dont_call_on_cancel  If true, don't call the callback on a downstream cancel.
+ */
+template <typename T>
+template <typename ThenCallbackType,
+		  typename R,
+		  REQUIRES(!is_ExtFuture_v<R>
+		  && ct::is_invocable_r_v<R, ThenCallbackType, ExtFuture<T>>)>
+ExtFuture<R> ExtFuture<T>::then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
+{
+	if(context != nullptr)
+	{
+		// If non-null, make sure context has an event loop.
+		/// @todo Use context.
+		QThread* ctx_thread = context->thread();
+		Q_ASSERT(ctx_thread != nullptr);
+		Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
+	}
+
+	// The future we'll immediately return.  We copy this into the then_callback ::run() context.
+	ExtFuture<R> returned_future;
+
+	QtConcurrent::run(
+		[=, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
+				(ExtFuture<T> this_future_copy, ExtFuture<R> returned_future_copy) {
+
+		// Ok, we're now running in the thread which will call then_callback_copy(this_future_copy).
+		// At this point:
+		// - The outer then() call may have already returned.
+		// -- Hence retfuture, context may be gone off the stack.
+		// - this_future_copy may or may not be finshed, canceled, or canceled with exception.
+		// - this may be destructed and deleted already.
+
+		Q_ASSERT(returned_future_copy != this_future_copy);
+
+		qDb() << "ADDING DOWNSTREAM CANCELLER with RETFUTURE:" << returned_future_copy.state();
+		AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+		qDb() << "ADDED DOWNSTREAM CANCELLER with RETFUTURE:" << returned_future_copy.state();
+
+		try
+		{
+			qDb() << "In .then() outer callback try block. this_future_copy:" << this_future_copy;
+			// We should never end up calling then_callback_copy with a non-finished future; this is the code
+			// which will guarantee that.
+			// This could throw a propagated exception from upstream.
+			// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't use
+			// this_future.waitForFinished(); here because it will return immediately if the thread hasn't
+			// "really" started (i.e. if isRunning() == false).
+			spinWaitForFinishedOrCanceled(this_future_copy);
+
+			// Ok, so now we're finished and/or canceled.
+			// This call will block, or throw if an exception is reported to this_future_copy.
+			this_future_copy.waitForFinished();
+
+			qDb() << "Leaving Then callback Try, waitForFinished() finished:" << this_future_copy.state();
+			Q_ASSERT(this_future_copy.isFinished() || this_future_copy.isCanceled());
+		}
+		catch(ExtAsyncCancelException& e)
+		{
+			// this_future_copy (upstream) threw a cancel exception.
+			/// @todo So... do we .cancel() or .reportException() here?
+			/// Or has the AddDownstreamCancelFuture() already handled this?
+//				qDb() << "Rethrowing ExtAsyncCancelException downstream";
+//				ret_future.reportException(e);
+			returned_future_copy.cancel();
+		}
+		catch(QException& e)
+		{
+			qDb() << "Rethrowing QException downstream";
+			returned_future_copy.reportException(e);
+		}
+		catch(...)
+		{
+			qDb() << "Rethrowing QUnhandledException downstream";
+			returned_future_copy.reportException(QUnhandledException());
+		};
+
+		//
+		// The waitForFinished() on this_future_copy either returned, or may have thrown above and been caught.
+		//
+
+		qDb() << "THENCB: WAITFINISHED:" << this_future_copy.state();
+		// Could have been a normal finish or a cancel.
+
+		// Should we call the then_callback?
+		if(this_future_copy.isFinished() || (call_on_cancel && this_future_copy.isCanceled()))
+		{
+			qDb() << "THEN: CALLING CALLBACK, this_future_copy:" << this_future_copy;
+
+			try
+			{
+				// Call the callback with the results- or canceled/exception-laden this_future_copy.
+				// Could throw, hence we're in a try.
+				qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
+				R retval = std::invoke(then_callback_copy, this_future_copy);
+				// Didn't throw, report the result.
+				returned_future_copy.reportResult(retval);
+			}
+			catch(QException& e)
+			{
+				returned_future_copy.reportException(e);
+			}
+			catch(...)
+			{
+
+			}
+		}
+		else if (call_on_cancel || !(this_future_copy.isFinished() || this_future_copy.isCanceled()))
+		{
+			// Something went wrong, we got here after .waitForFinished() returned or threw, but
+			// the this_future_status isn't Finsihed or Canceled.
+
+			Q_ASSERT(0);
+		}
+
+		returned_future_copy.reportFinished();
+
+		}, *this, returned_future);
+
+	return returned_future;
+}
+#endif
 
 template<typename T>
 void ExtFuture<T>::wait()
 {
-    while (!this->isFinished())
-    {
-    	// Pump the event loop.
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    }
+	while (!this->isFinished())
+	{
+		// Pump the event loop.
+		QCoreApplication::processEvents(QEventLoop::AllEvents);
+		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+	}
 }
 
 template<typename T>
-ExtFutureState::States ExtFuture<T>::state() const
+ExtFutureState::State ExtFuture<T>::state() const
 {
-	// States from QFutureInterfaceBase.
+	// State from QFutureInterfaceBase.
 	/// @note The actual state variable is a public member of QFutureInterfaceBasePrivate (in qfutureinterface_p.h),
 	///       but an instance of that class is a private member of QFutureInterfaceBase, i.e.:
 	///			#ifndef QFUTURE_TEST
@@ -85,8 +265,14 @@ ExtFutureState::States ExtFuture<T>::state() const
 	///	    {
 	///		    return d->state.load() & state;
 	///	    }
+	///
+	/// Also, QFutureInterface<T>::reportResult() does this:
+	///     QMutexLocker locker(mutex());
+	///     if (this->queryState(Canceled) || this->queryState(Finished)) {
+	///        return;
+	///     }
 
-    const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
+	const std::vector<std::pair<QFutureInterfaceBase::State, const char*>> list = {
 		{QFutureInterfaceBase::NoState, "NoState"},
 		{QFutureInterfaceBase::Running, "Running"},
 		{QFutureInterfaceBase::Started,  "Started"},
@@ -96,56 +282,11 @@ ExtFutureState::States ExtFuture<T>::state() const
 		{QFutureInterfaceBase::Throttled, "Throttled"}
 	};
 
-    ExtFutureState::States current_state = ExtFutureState::state(*this);
+	ExtFutureState::State current_state = ExtFutureState::state(*this);
 
-    return current_state;
+	return current_state;
 }
 
-
-namespace ExtAsync
-{
-	namespace detail
-	{
-		template<typename T>
-		ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
-		{
-			ExtFuture<T> extfuture;
-
-			extfuture.reportStarted();
-			extfuture.reportResult(std::forward<T>(value));
-			extfuture.reportFinished();
-
-			return extfuture;
-		}
-
-		/// @todo
-//		inline ExtFuture<void> make_ready_future()
-//		{
-//			ExtFuture<void> extfuture;
-//
-//			extfuture.reportStarted();
-//			extfuture.reportFinished();
-//
-//			return extfuture;
-//		}
-
-		template <typename T, typename R = typename std::decay_t<T>>
-		ExtFuture<R> make_exceptional_future(const QException& exception)
-		{
-			ExtFuture<R> extfuture;
-
-			extfuture.reportStarted();
-			extfuture.reportException(exception);
-			extfuture.reportFinished();
-
-		    return extfuture;
-		}
-
-	}
-}
-#endif
-// Declare explicit instantiations of some common ExtFuture types.
-//extern template class ExtFuture<Unit>;
-//extern template class ExtFuture<QString>;
+#include "ExtFutureImplHelpers.h"
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTFUTURE_IMPL_HPP_ */

@@ -63,13 +63,12 @@ public:
 
     static CoverArtJobPtr make_job(QObject *parent, const QUrl& url);
 
-    QByteArray m_byte_array;
+	/// No AMLMJob, just an ExtFuture<>.
+	static ExtFuture<QByteArray> make_task(QObject *parent, const QUrl& url);
 
-//    ExtFutureType& get_extfuture_ref() { return m_ext_future; }
+	static void LoadCoverArt(ExtFuture<QByteArray> ext_future, CoverArtJobPtr kjob, const QUrl& url);
 
 protected:
-
-    CoverArtJob* asDerivedTypePtr() override { return this; }
 
     void runFunctor() override;
 

@@ -23,6 +23,7 @@
 #include <QtGlobal>
 #include <QObject>
 #include <QUrl>
+#include <QMimeType>
 
 #include <src/logic/DirScanResult.h>
 
@@ -72,7 +73,30 @@ namespace AMLM
 		ExtUrl m_cue_url;
 	};
 
-	class ISRC : public EntityBase {};
+	/**
+	 * International Standard Recording Code
+	 * From @link https://en.wikipedia.org/wiki/International_Standard_Recording_Code
+	 * "An ISRC identifies a particular recording, not the work (composition and lyrical content) itself. Therefore,
+	 *  different recordings, edits, and remixes of the same work should each have their own ISRC. Works are identified
+	 *  by ISWC. Recordings remastered without significant audio-quality changes should retain their existing ISRC,
+	 *  but the threshold is left to the discretion of the record company."
+	 */
+	class ISRC : public EntityBase
+	{
+		// ISRC codes are always 12 characters long
+		// CC-XXX-YY-NNNNN
+		// CC = Country code
+		// XXX = CC-specific issuer
+		// YY = Last two digits of the year the ISRC was assigned to the recording ("Reference Year")
+		// NNNNN = 5-digit number identifying the particular sound or video recording, unique with the scope of YY.
+	public:
+		ISRC() = default;
+		ISRC(std::string isrc) : m_isrc(isrc) {};
+
+	private:
+		std::string m_isrc {12};
+	};
+
 	class Artist : public EntityBase {};
 	class Release : public EntityBase {};
 	class ReleaseGroup : public EntityBase {};

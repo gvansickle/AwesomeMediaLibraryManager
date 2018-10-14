@@ -19,10 +19,10 @@
 
 #include "MetadataDockWidget.h"
 
-/// Std C++
+// Std C++
 #include <functional>
 
-/// Qt5
+// Qt5
 #include <QItemSelection>
 #include <QTreeView>
 #include <QTreeWidget>
@@ -32,8 +32,8 @@
 #include <QLineEdit>
 #include <QSplitter>
 
-/// Ours
-
+// Ours
+#include <AMLMApp.h>
 #include "widgets/PixmapLabel.h"
 #include "logic/ModelUserRoles.h"
 #include <logic/MetadataAbstractBase.h>
@@ -194,7 +194,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			{"Pre-gap offset", libentry->get_pre_gap_offset_secs().toQString()},
 			{"Length", libentry->get_length_secs().toQString()}
 		};
-		for(auto p: list)
+		for(auto& p: list)
 		{
             m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
 		}
@@ -203,14 +203,14 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		for(auto entry = pimeta.begin(); entry != pimeta.end(); ++entry)
 		{
 			QString key = entry->first;
-			QStringList value = entry->second.value<QStringList>();
-			if(value.size() > 0)
+			QStringList value = entry->second.toStringList();
+			if(value.empty())
 			{
                 m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
 			}
 		}
 
-		// Display the cover image.
+		// Load and Display the cover image.
 #if THE_OLD_SYCHRONOUS_WAY
 		auto cover_image_bytes = libentry->getCoverImageBytes();
 		if(cover_image_bytes.size() != 0)
@@ -236,7 +236,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
 			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
 		}
-#else // THE NEW ASYNCHRONOUS WAY
+#elif 0 //THE NEW ASYNCHRONOUS WAY
         auto coverartjob = CoverArtJob::make_job(this, libentry->getUrl());
         coverartjob->then(this, [=](CoverArtJob* kjob) {
             if(kjob->error() || kjob->m_byte_array.size() == 0)
@@ -284,6 +284,72 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
             }
         });
         coverartjob->start();
+#elif 1 // THE EVEN NEWER ASYNC WAY
+		qDb() << "CoverArtCallback: make_task.";
+		ExtFuture<QByteArray> coverartjob = CoverArtJob::make_task(this, libentry->getUrl());
+		qDb() << "CoverArtCallback: Adding to perfect deleter.";
+		AMLMApp::IPerfectDeleter()->addQFuture(coverartjob);
+		qDb() << "CoverArtCallback: Adding .then()..";
+		coverartjob.then([=](ExtFuture<QByteArray> future) -> bool {
+
+			// Do as much as we can in an arbitrary non-GUI context.
+
+			QByteArray cover_image_bytes = future.result();
+			QImage image;
+
+			if(!future.isCanceled() && cover_image_bytes.size() > 0)
+			{
+				// Pic data load succeeded, see if we can get a valid QImage out of it.
+				// QImage is safe to use in a non-GUI-thread context.
+
+				if(image.loadFromData(cover_image_bytes) == true)
+				{
+					// It was a valid image.
+//					m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+				}
+				else
+				{
+					qWr() << "Error attempting to load image.";
+					/// @todo Set error state on the QURL.
+				}
+			}
+
+			/// @note Anything QPixmap needs to be in run the GUI thread.
+			/// @todo I'm not clear on why we need to explicitly capture a copy of future...
+			/// Oh wait, probably lambda isn't mutable.
+			run_in_event_loop(this, [=, future_copy=future](){
+
+				AMLM_ASSERT_IN_GUITHREAD();
+
+				if(image.isNull())
+				{
+					// Error.  Load the "No image available" icon.
+	//				qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+					QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+					m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+				}
+				else
+				{
+					// Succeeded, convert QImage to QPixmap.
+
+					if(cover_image_bytes.size() != 0)
+					{
+						qDb() << "Valid cover image found"; ///@todo << cover_image.mime_type;
+						m_cover_image_label->setPixmap(QPixmap::fromImage(image));
+						//m_cover_image_label.adjustSize()
+						/// @todo Probably need to handle setPixmap() error.
+					}
+					else
+					{
+						// No image available.
+						QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
+						m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
+					}
+				};
+			});
+
+			return true;
+		});
 #endif
 	}
 	else
@@ -295,7 +361,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap)
 {
-	for(auto e : tagmap)
+	for(auto& e : tagmap)
 	{
 		QString key = toqstr(e.first);
         // Filter out keys we don't want to see in the Metadata display.
@@ -306,7 +372,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
         {
             continue;
         }
-		for(auto f : e.second)
+		for(const auto& f : e.second)
 		{
 			QString value = toqstr(f);
 			auto child = new QTreeWidgetItem({key, value});

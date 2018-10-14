@@ -26,3 +26,4 @@ moc*.h
 AMLM.srctrlbm
 AMLM.srctrldb
 AMLM.srctrlprj
+/Debug/

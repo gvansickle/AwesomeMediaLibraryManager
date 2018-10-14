@@ -19,8 +19,20 @@
 
 #include "PixmapLabel.h"
 
+#include <utils/DebugHelpers.h>
+
 PixmapLabel::PixmapLabel(QWidget* parent, Qt::WindowFlags flags) : QLabel(parent, flags)
 {
+	/**
+	 * More evidence that it's not really the 21st century.  From @link https://www.ics.com/designpatterns/solutions/threads.html:
+	 * "Do not access the GUI (this includes any QWidget-derived class, QPixmap, and other graphics-card specific classes) from any thread other than the main thread.
+	 * This includes read access like querying the text entered into a QLineEdit.
+	 * For processing images in other threads, use QImage instead of QPixmap."
+	 * Official docs say the same thing.
+	 * So we'll assert if we're not in the GUI thread.
+	 */
+	AMLM_ASSERT_IN_GUITHREAD();
+
 	setScaledContents(true);
 	setFrameStyle((QFrame::Panel | QFrame::Sunken));
 	setAlignment(Qt::AlignCenter);
@@ -28,6 +40,8 @@ PixmapLabel::PixmapLabel(QWidget* parent, Qt::WindowFlags flags) : QLabel(parent
 
 void PixmapLabel::setPixmap(const QPixmap& pixmap)
 {
+	AMLM_ASSERT_IN_GUITHREAD();
+
 	m_pixmap_w = pixmap.width();
 	m_pixmap_h = pixmap.height();
 
@@ -37,16 +51,22 @@ void PixmapLabel::setPixmap(const QPixmap& pixmap)
 
 QSize PixmapLabel::minimumSizeHint() const
 {
+	AMLM_ASSERT_IN_GUITHREAD();
+
 	return QSize(0,0);
 }
 
 bool PixmapLabel::hasHeightForWidth() const
 {
+	AMLM_ASSERT_IN_GUITHREAD();
+
 	return pixmap() != nullptr;
 }
 
 int PixmapLabel::heightForWidth(int) const
 {
+	AMLM_ASSERT_IN_GUITHREAD();
+
 	if(pixmap() != nullptr && pixmap()->width() > 0)
 	{
 		return int(width() * pixmap()->height() / pixmap()->width());
@@ -59,12 +79,16 @@ int PixmapLabel::heightForWidth(int) const
 
 void PixmapLabel::resizeEvent(QResizeEvent* event)
 {
+	AMLM_ASSERT_IN_GUITHREAD();
+
 	updateMargins();
 	QLabel::resizeEvent(event);
 }
 
 void PixmapLabel::updateMargins()
 {
+	AMLM_ASSERT_IN_GUITHREAD();
+
 	if(m_pixmap_w <= 0 || m_pixmap_h <= 0)
 	{
 		return;

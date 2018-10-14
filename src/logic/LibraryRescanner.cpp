@@ -43,9 +43,7 @@
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
-#include "utils/AsyncDirScanner.h"
 #include <concurrency/ExtAsync.h>
-#include <concurrency/ReportingRunner.h>
 #include <concurrency/AsyncTaskManager.h>
 #include <concurrency/DirectoryScanJob.h>
 
@@ -188,7 +186,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
-    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
+//    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
 	// New Tree model.
 //	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
@@ -203,14 +201,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         for(int i=begin; i<end; i++)
         {
             DirScanResult dsr = ef.resultAt(i);
-
+            // Add another entry to the tree model.
             new_items.push_back(dsr.toTreeModelItem());
-
-//            QVector<QVariant> column_data;
-//            column_data.append(QVariant::fromValue(dsr.getDirProps()).toString());
-//            column_data.append(QVariant::fromValue(dsr.getMediaExtUrl().m_url.toDisplayString()));
-//            column_data.append(QVariant::fromValue(dsr.getSidecarCuesheetExtUrl().m_url.toDisplayString()));
-//            new_items.push_back(new AbstractTreeModelItem(column_data));
 
             // Found a file matching the criteria.  Send it to the model.
             /// @todo Forward the signal.
@@ -218,6 +210,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
         }
 
 //        tree_model->appendItems(new_items);
+
+        // Append entries to the ScanResultsTreemodel.
         tree_model->appendItems(new_items);
 
 		;});
@@ -260,11 +254,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     });
 
     master_job_tracker->registerJob(dirtrav_job);
-    master_job_tracker->setAutoDelete(dirtrav_job, false);
+	master_job_tracker->setAutoDelete(dirtrav_job, true);
     master_job_tracker->setStopOnClose(dirtrav_job, true);
-    master_job_tracker->registerJob(lib_rescan_job);
-    master_job_tracker->setAutoDelete(lib_rescan_job, false);
-    master_job_tracker->setStopOnClose(lib_rescan_job, true);
+//    master_job_tracker->registerJob(lib_rescan_job);
+//	master_job_tracker->setAutoDelete(lib_rescan_job, true);
+//    master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
     // Start the asynchronous ball rolling.
     dirtrav_job->start();

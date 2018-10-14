@@ -44,7 +44,7 @@ QAction* ActionBundle::addSection(const QIcon& icon, const QString& text)
 
 void ActionBundle::appendToMenu(QMenu* menu, bool elide_separators)
 {
-	for(auto action : actions())
+	for(const auto& action : actions())
 	{
 		if(!elide_separators || action->isSeparator() == false)
 		{
@@ -70,7 +70,7 @@ void ActionBundle::prependToMenu(QMenu* menu, bool elide_separators)
 
 void ActionBundle::appendToToolBar(QToolBar* toolbar, bool elide_separators)
 {
-	for(auto action : actions())
+	for(const auto& action : actions())
 	{
 		if(!elide_separators || action->isSeparator() == false)
 		{

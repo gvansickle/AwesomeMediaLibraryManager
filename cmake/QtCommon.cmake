@@ -53,14 +53,6 @@ macro(add_project_meta FILES_TO_INCLUDE)
     endif()
 endmacro()
 
-macro(init_os_bundle)
-    if (APPLE)
-        set(OS_BUNDLE MACOSX_BUNDLE)
-    elseif (WIN32)
-        set(OS_BUNDLE WIN32)
-    endif()
-endmacro()
-
 macro(fix_win_compiler)
     if (MSVC)
         set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -70,6 +62,4 @@ macro(fix_win_compiler)
     endif()
 endmacro()
 
-#init_os_bundle()
-#init_qt()
-#fix_win_compiler()
+

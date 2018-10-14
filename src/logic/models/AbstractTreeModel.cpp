@@ -73,7 +73,7 @@ AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &
 	}
 
 	m_root_item = new AbstractTreeModelItem(rootData);
-    setupModelData(data.split(QString("\n")), m_root_item);
+//    setupModelData(data.split(QString("\n")), m_root_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -88,13 +88,7 @@ int AbstractTreeModel::columnCount(const QModelIndex & /* parent */) const
 
 QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 {
-
-#if 1 /// checkIndex()-like asserts.  @link https://www.kdab.com/new-in-qt-5-11-improvements-to-the-model-view-apis-part-1/
-    Q_ASSERT(index.isValid()); // index is valid.
-    //Q_ASSERT(!index.parent().isValid()); // Parent is not valid.
-    // Index is from this model.
-    Q_ASSERT(index.model() == this);
-#endif
+	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
 
 	if (!index.isValid())
 	{

@@ -17,9 +17,7 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# This is the sum-total of all source files which go into building the main exe.
-set(amlm_SRCS "")
-
+# @file src/CMakeLists.txt
 
 ###
 ### The third-party packages we require.
@@ -30,6 +28,9 @@ set(SOURCE_FILES_THIRD_PARTY "")
 
 set(AMLM_LIBCUE_TARGET "")
 set(AMLM_TAGLIB_TARGET "")
+
+add_subdirectory(third_party)
+
 
 # Use the bundled version of libcue due to this issue: https://github.com/lipnitsk/libcue/commit/e60b7b01a40009c7c71c5e154a328881a6e9ae46
 set(USE_BUNDLED_LIBCUE TRUE)
@@ -57,9 +58,9 @@ endif()
 
 if(USE_BUNDLED_LIBCUE)
 	# Use the in-tree copy of libcue.
-	add_subdirectory("third_party"
-		EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
-		)
+#	add_subdirectory("third_party"
+#		EXCLUDE_FROM_ALL  # Don't tie this lib directly to the ALL target.
+#		)
 
 	set(AMLM_LIBCUE_TARGET "libcue")
 
@@ -97,13 +98,15 @@ set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 set(INTERNAL_LINK_LIB_TARGETS amlm_src_future)
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${QT5_LINK_LIB_TARGETS}
-		${KF5_LINK_LIBS}
+		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
 		verdigris_target
+		logic_subdir
+		models_subdir
 		)
 
 
@@ -142,9 +145,7 @@ set(HEADER_FILES
 	utils/in.h
 	utils/MapConverter.h
 	utils/StringHelpers.h
-	utils/WorkerThreadBase.h
 	logic/LibraryRescanner.h
-	utils/AsyncDirScanner.h
 	utils/RegisterQtMetatypes.h
 	utils/UniqueIDMixin.h
 	utils/QtCastHelpers.h
@@ -163,6 +164,7 @@ set(HEADER_FILES
 	logic/LibraryRescannerJob.h
 	logic/proxymodels/QPersistentModelIndexVec.h
 	logic/DirScanResult.h
+	logic/ExtMimeType.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
@@ -198,9 +200,7 @@ set(SOURCE_FILES
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
-	utils/WorkerThreadBase.cpp
 	logic/LibraryRescanner.cpp
-	utils/AsyncDirScanner.cpp
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
 	logic/CueSheetParser.cpp
@@ -214,6 +214,7 @@ set(SOURCE_FILES
 	logic/LibraryRescannerJob.cpp
 	logic/proxymodels/QPersistentModelIndexVec.cpp
 	logic/DirScanResult.cpp
+	logic/ExtMimeType.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	utils/QtHelpers.cpp
@@ -227,30 +228,38 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
 # Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
-	concurrency/ReportingRunner.h
 	concurrency/AsyncTaskManager.h
 	concurrency/ExtendedDeferred.h
 	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
+	concurrency/ExtFutureProgressInfo.h
 	concurrency/ExtFutureWatcher.h
 	concurrency/ExtAsync_traits.h
+	concurrency/impl/ExtAsync_impl.h
 	concurrency/impl/ExtFuture_impl.hpp
+	concurrency/impl/ExtFutureImplHelpers.h
 	concurrency/ExtAsync.h
+	concurrency/ExtAsyncExceptions.h
 	concurrency/ExtAsyncTask.h
 	concurrency/AMLMJob.h
 	concurrency/AMLMCompositeJob.h
 	concurrency/DirectoryScanJob.h
 	concurrency/ThreadsafeMap.h
 	concurrency/DebugSequence.h
+	concurrency/WorkerThreadBase.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
+	concurrency/impl/ExtFutureImplHelpers.cpp
 	concurrency/ExtAsync.cpp
+	concurrency/ExtAsyncExceptions.cpp
+	concurrency/ExtFuture.cpp
+	concurrency/ExtFutureProgressInfo.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
-	concurrency/ReportingRunner.cpp
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
+	concurrency/WorkerThreadBase.cpp
 	)
 
 set(SOURCE_FILES_LOGIC_MODELS
@@ -261,6 +270,7 @@ set(SOURCE_FILES_LOGIC_MODELS
 	)
 
 add_subdirectory(gui)
+add_subdirectory(logic)
 #message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
 
 #
@@ -271,8 +281,12 @@ add_subdirectory(gui)
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
 # The Future
+if(false) # The "pull the sources in directly" method from I forget where.
 add_library(amlm_src_future EXCLUDE_FROM_ALL "")
 include(future/CMakeLists.txt)
+else()
+add_subdirectory(future)
+endif()
 
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
@@ -321,12 +335,20 @@ set(PROJECT_COMMON_LINK_LIBS
 		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
 		)
 
+# WIN32_OR_MACOS_BUNDLE variable for add_executable().  Expands to WIN32 or MACOS_BUNDLE depending on OS
+if (APPLE)
+	set(WIN32_OR_MACOS_BUNDLE MACOSX_BUNDLE)
+elseif (WIN32)
+    set(WIN32_OR_MACOS_BUNDLE WIN32)
+endif()
+
+
 ###
 ### The main executable.
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
-add_executable(${PROJECT_NAME} ${OS_BUNDLE} # Expands to WIN32 or MACOS_BUNDLE depending on OS
+add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${amlm_settings_SRCS}
@@ -343,7 +365,7 @@ target_compile_definitions(${PROJECT_NAME}
 	"QT_DEPRECATED_WARNINGS=1"
 	"QT_NO_KEYWORDS=1"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"QFUTURE_TEST")
+	)
 target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
@@ -380,7 +402,9 @@ include(CTest)
 # Therefore, this command should be in the source directory root."
 enable_testing()
 
+###
 ### Google Test
+###
 find_package(Threads REQUIRED)
 download_project(PROJ                googletest
                  GIT_REPOSITORY      https://github.com/google/googletest.git
@@ -390,29 +414,45 @@ download_project(PROJ                googletest
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# Add googletest directly to our build. This adds
+# the following targets: gtest, gtest_main, gmock
+# and gmock_main.
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
 	EXCLUDE_FROM_ALL)
+# Now we should be able to link our targets against gtest, gmock, etc. as appropriate
+message(STATUS "GOOGLETEST-------------------------------")
+print_varlist(googletest_SOURCE_DIR googletest_BINARY_DIR)
+message(STATUS "GOOGLETEST-------------------------------")
 
+###
+### The "alltests" Google Test-based test exe.
+###
 set(TEST_EXE_TARGET alltests)
 set(AMLM_SOURCE_FILES_TEST "")
 set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
+#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.cpp
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
 	concurrency/tests/ExtAsyncTestCommon.cpp
 	concurrency/tests/ExtFutureTests.cpp
-	concurrency/tests/AMLMJobTests.cpp)
+	concurrency/tests/AMLMJobTests.cpp
+	concurrency/tests/QtPromiseTests.cpp
+	)
 list(APPEND AMLM_HEADER_FILES_TEST
-	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+#	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
+#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
 	concurrency/tests/ExtAsyncTestCommon.h
 	concurrency/tests/ExtFutureTests.h
-	concurrency/tests/AMLMJobTests.h)
+	concurrency/tests/AMLMJobTests.h
+	concurrency/tests/QtPromiseTests.cpp
+	)
 
-add_executable(${TEST_EXE_TARGET} "")
+add_executable(${TEST_EXE_TARGET} ${WIN32_OR_MACOS_BUNDLE} "")
 target_sources(${TEST_EXE_TARGET}
-	PUBLIC
+	PRIVATE
 	    alltests.cpp ${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
 		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${amlm_settings_SRCS}
@@ -424,7 +464,8 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"QFUTURE_TEST")
+	"TEST_FWK_IS_GTEST=1"
+	)
 target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -432,24 +473,29 @@ set_target_properties(${TEST_EXE_TARGET} PROPERTIES
 	AUTOMOC ON
 	AUTOUIC ON)
 # We don't want AUTOMOC etc. applied to googletest.
-set_property(DIRECTORY ${googletest_SOURCE_DIR} PROPERTY SKIP_AUTOGEN ON)
+set_property(DIRECTORY ${googletest_SOURCE_DIR}
+	PROPERTY SKIP_AUTOGEN ON
+	EXCLUDE_FROM_ALL)
 set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
-#set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
-#set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock_main)
+set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock tests_subdir)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
 
-if(FALSE)
+if(TRUE)
 ###
 ### Qt5 QTests
 ###
 #set(test_qtestamlmjobtests_SRCS concurrency/tests/QTestAMLMJobTests.cpp)
 add_executable(test_qtestamlmjobtests "") #${test_qtestamlmjobtests_SRCS} ${} ${amlm_settings_SRCS})
 target_sources(test_qtestamlmjobtests
-	PUBLIC
+	PRIVATE
 	    concurrency/tests/QTestAMLMJobTests.cpp
+	    concurrency/tests/ExtAsyncTestCommon.cpp
+	    concurrency/tests/ExtAsyncTestCommon.h
 		#${AMLM_SOURCE_FILES_TEST} ${AMLM_HEADER_FILES_TEST}
 		${amlm_SRCS} ### @todo ${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${amlm_settings_SRCS}
@@ -460,7 +506,8 @@ target_compile_definitions(test_qtestamlmjobtests PRIVATE
 	"QT_DEPRECATED_WARNINGS"
 	"QT_NO_KEYWORDS"
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
-	"QFUTURE_TEST")
+	"TEST_FWK_IS_QTEST=1"
+	)
 target_include_directories(test_qtestamlmjobtests PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
 target_link_libraries(test_qtestamlmjobtests Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 set_target_properties(test_qtestamlmjobtests PROPERTIES
@@ -489,15 +536,31 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 				#LIBRARY DESTINATION .
 				#ARCHIVE DESTINATION .
 		COMPONENT coreapp)
-# App Icon
+# Install the App Icon
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
-# Default bundled icons.
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
-	    DESTINATION ${KDE_INSTALL_ICONDIR}
-		COMPONENT coreapp)
-
+		
+# Make the installed app debuggable.
+# Add a .gdbinit file and support files to the install directory.
+install(PROGRAMS gdb_wrap.sh
+	DESTINATION
+	    ${KDE_INSTALL_BINDIR}
+	CONFIGURATIONS
+		Debug
+	COMPONENT
+		coreapp
+		)
+install(PROGRAMS  gdbinit.in
+	RENAME
+		 .gdbinit
+	DESTINATION
+	    ${KDE_INSTALL_BINDIR}
+	CONFIGURATIONS
+		Debug
+	COMPONENT
+		coreapp
+		)
 ###
 ### KF5 icon theme install for especially Windows and Mac.
 ###
@@ -508,21 +571,21 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 ### (Linux: "~/.local/share/<APPNAME>", "/usr/local/share/<APPNAME>", "/usr/share/<APPNAME>") for it to be picked up.
 ###
 ### @link https://blogs.kde.org/2016/06/16/icon-theme-deployment-windows-mac-os-and-mobile-platforms
-if(TRUE)#WIN32)
+if(false)#WIN32)
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/icons_oxygen.rcc
 		DESTINATION ${KDE_INSTALL_ICONDIR}
 		RENAME "icontheme.rcc"
 		COMPONENT coreapp)
 endif()
 ### @test TRYING EVERYTHING TO TRY TO GET THE DAMN ICONS TO WORK AGAIN.
-ecm_install_icons(ICONS ${ICONS_SRCS}
-	DESTINATION ${KDE_INSTALL_ICONDIR}
-	THEME hicolor
-	)
-ecm_install_icons(ICONS
-    DESTINATION ${KDE_INSTALL_ICONDIR}
-    THEME hicolor
-	)
+#ecm_install_icons(ICONS ${ICONS_SRCS}
+#	DESTINATION ${KDE_INSTALL_ICONDIR}
+#	THEME hicolor
+#	)
+#ecm_install_icons(ICONS
+#    DESTINATION ${KDE_INSTALL_ICONDIR}
+#    THEME hicolor
+#	)
 # Desktop file.
 install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)

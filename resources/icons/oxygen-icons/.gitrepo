@@ -7,5 +7,5 @@
 	remote = https://github.com/KDE/oxygen-icons.git
 	branch = master
 	commit = bff159d338fe08be09146a5ee17b9b6efa8a2c8d
-	parent = be9ebe899dc87fbdf049f242a2eea77e4f76cab3
+	parent = 20619d62012c50c27cf3b197de506d96737da68a
 	cmdver = 0.3.1

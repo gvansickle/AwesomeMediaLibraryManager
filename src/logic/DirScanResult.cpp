@@ -115,7 +115,16 @@ AbstractTreeModelItem* DirScanResult::toTreeModelItem()
     column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
     column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
 
-    return new AbstractTreeModelItem(column_data);
+    auto new_item = new AbstractTreeModelItem(column_data);
+
+    QVector<AbstractTreeModelItem *> child_items;
+    AbstractTreeModelItem* child_item = new AbstractTreeModelItem({"One", "Two", "Three"}, new_item);
+
+    child_items.push_back(child_item);
+
+    new_item->appendChildren(child_items);
+
+    return new_item;
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)

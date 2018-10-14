@@ -32,9 +32,12 @@
 // Qt5
 #include <QtGlobal>
 #include <QString>
+#include <QStringList>
 #include <QTime>
 #include <QTextCodec>
 #include <QUrl>
+#include <QDebug>
+#include <QMetaEnum>
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0))
 #define HAVE_QLOCALE_FORMATTEDDATASIZE 1
@@ -76,6 +79,19 @@ enum /*QLocale::*/DataSizeFormats
 // TagLib
 #include <tag.h>
 
+// Ours
+//#include <utils/DebugHelpers.h> // For MSVC __PRETTY_FUNCTION__
+/**
+ * Portable __PRETTY_FUNCTION__.
+ * @see @link https://msdn.microsoft.com/library/b0084kay.aspx
+ */
+#if defined(_MSC_VER)
+#define __PRETTY_FUNCTION__ __FUNCSIG__
+#else
+/* Nothing, gcc and clang's __PRETTY_FUNCTION__ are synonymous with __FUNCSIG__ */
+#endif
+
+#include <src/future/cpp14_concepts.hpp>
 
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
@@ -195,6 +211,44 @@ static inline bool isValidUTF8(const char* bytes)
 /// @}
 
 /**
+ * And the one thing you might want to use Qt's QMetaWhatever infrastructure for, implicitly or explicitly converting
+ * a Q_ENUM() to a string, you can't do directly.  So this.  The.  Simplest.  Things.
+ * And Q_FLAG()s?  Yep, need to handle them separately.
+ *
+ * @note Yet, you can stream to QDebug and that works out of the box.
+ *
+ * @param value  Any Q_ENUM().
+ * @return A QString representing that Q_ENUM.
+ */
+template<typename QEnumType>
+QString toqstr(const QEnumType value)
+{
+	QMetaEnum me = QMetaEnum::fromType<QEnumType>();
+	if(QMetaEnum::fromType<QEnumType>().isFlag())
+	{
+		// It's a Q_FLAG().
+		return QString(me.valueToKeys(value));
+	}
+	else
+	{
+		// It's a Q_ENUM().
+		return QString(me.valueToKey(value));
+	}
+}
+
+
+template <class StreamLikeType>
+StreamLikeType log_QStringList(const QStringList& strlist, StreamLikeType out)
+{
+    QDebugStateSaver saver(out);
+    for(const QString& str : strlist)
+    {
+        out << "  " << str << endl;
+    }
+    return out;
+}
+
+/**
  * Until we can rely on Qt 5.10's QLocale::formattedDataSize().
  */
 static inline QString formattedDataSize(qint64 bytes, int precision = 2, DataSizeFormats format = DataSizeFormats::DataSizeIecFormat)
@@ -240,6 +294,10 @@ static inline QString formattedDuration(qint64 msecs, int precision = 3)
         duration_fmt = Qt::ISODate;
         chars_to_clip_from_end = 0;
     }
+	else
+	{
+		Q_ASSERT_X(0, __PRETTY_FUNCTION__, "duration_fmt used uninitialized");
+	}
     QString secs_str = t.addMSecs(msecs).toString(duration_fmt);
     Q_ASSERT(secs_str.size() > 0);
     secs_str.resize(secs_str.size()-chars_to_clip_from_end);

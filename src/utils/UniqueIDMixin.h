@@ -29,8 +29,8 @@
 #include <QString>
 
 /// Ours
-#include <utils/crtp.h>
-#include <utils/DebugHelpers.h>
+#include <src/utils/crtp.h>
+#include <src/utils/DebugHelpers.h>
 
 template <typename T>
 class UniqueIDMixin : crtp<T, UniqueIDMixin>

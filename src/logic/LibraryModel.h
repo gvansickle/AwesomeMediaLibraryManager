@@ -32,6 +32,8 @@
 
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 
+#include <concurrency/ThreadsafeMap.h>
+
 #include "ColumnSpec.h"
 #include "Library.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
@@ -74,11 +76,11 @@ Q_SIGNALS:
     void startFileScanSignal(QUrl url);
 
     /// Status/Progress signal.
-    void statusSignal(LibState, qint64, qint64);
+//    void statusSignal(LibState, qint64, qint64);
 
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
 //    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
-    void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results) const;
+	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results) const;
 
 public:
 	explicit LibraryModel(QObject *parent = nullptr);
@@ -253,7 +255,9 @@ private:
 	/// Icons for various entry states.
 	QVariant m_IconError, m_IconOk, m_IconUnknown;
 
-    mutable std::map<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
+	/// @name Data structures for managing the data loading process.
+//    mutable std::map<std::shared_ptr<LibraryEntry>, LibraryEntryLoaderJobPtr> m_pending_async_item_loads;
+	mutable ThreadsafeMap<QPersistentModelIndex, bool> m_pending_async_item_loads;
 };
 
 Q_DECLARE_METATYPE(LibraryModel*)

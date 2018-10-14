@@ -41,6 +41,8 @@
 #include <utils/QtHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
 
+// Ours
+#include "AMLMApp.h"
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01
@@ -66,7 +68,7 @@ std::shared_ptr<LibraryEntry> LibraryEntry::fromUrl(const QUrl &fileurl)
 std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
 {
     // Populate the metadata.  Assumption is that all we have before calling this is the url.
-	// returns A list of LibraryEntry's, or self if self.url was not a multi-track file.
+    // returns a list of LibraryEntry's, or this if m_url was not a multi-track file.
 
 	std::vector<std::shared_ptr<LibraryEntry>> retval;
 
@@ -99,6 +101,10 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 	except audiotools.SheetException as e:
 		logger.warning("Exception trying to read cuesheet: {}".format(e))
 #endif
+
+    // Get the MIME type.
+    auto mdb = amlmApp->mime_db();
+    m_mime_type = mdb->mimeTypeForUrl(m_url);
 
 	// Try to read the metadata of the file.
 	Metadata file_metadata = Metadata::make_metadata(m_url);
@@ -292,10 +298,8 @@ QUrl LibraryEntry::getM2Url() const
 	{
 		qWarning() << "Item" << m_url << "not populated, No M2Url available.";
 		return QUrl();
-	}
+    }
 }
-
-
 
 void LibraryEntry::writeToJson(QJsonObject& jo) const
 {
@@ -305,6 +309,13 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 	jo["m_is_subtrack"] = m_is_subtrack;
 	jo["m_offset_secs"] = m_offset_secs.toQString();
 	jo["m_length_secs"] = m_length_secs.toQString();
+
+M_WARNING("/// @todo This is always null.");
+	QString str;
+	QTextStream ts(&str);
+	ts << m_mime_type;
+	jo["m_mime_type"] = *ts.string();
+
 	if(isPopulated())
 	{
 M_WARNING("TODO: Don't write out in the has-cached-metadata case")
@@ -320,6 +331,10 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 	m_is_subtrack = jo["m_is_subtrack"].toBool(false);
 	m_offset_secs = Fraction(jo["m_offset_secs"].toString("0/1"));
 	m_length_secs = Fraction(jo["m_length_secs"].toString("0/1"));
+	QString str;
+	QTextStream ts(&str);
+	str = jo["m_mime_type"].toString();
+	ts >> m_mime_type;
 	// Metadata might not have been written.
 	//metadata_jval: QJsonValue = jo.value("metadata")
 	QJsonObject metadata_jval = jo["metadata"].toObject();
@@ -366,7 +381,7 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 			QString key = QString::fromStdString(entry.first);
 			QVariant temp_val = retval[key];
 //qDb() << "temp_val:" << temp_val;
-			for(auto s : entry.second)
+            for(const auto& s : entry.second)
 			{
 //qDb() << "Appending to temp_val:" << s;
 				sl.append(QString::fromStdString(s));
@@ -416,6 +431,7 @@ QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 	out << myObj.m_is_subtrack;
 	out << myObj.m_offset_secs;
 	out << myObj.m_length_secs;
+    out << myObj.m_mime_type;
 //	if(isPopulated())
 //	{
 //		M_WARNING("TODO: Don't write out in the has-cached-metadata case")

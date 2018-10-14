@@ -17,8 +17,10 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gui/delegates/ItemDelegateLength.h>
 #include "MDILibraryView.h"
 
+// Qt5
 #include <QMdiArea>
 #include <QMdiSubWindow>
 #include <QHeaderView>
@@ -26,7 +28,7 @@
 #include <QToolTip>
 #include <QContextMenuEvent>
 
-#include "ItemDelegateLength.h"
+// Ours
 #include <gui/MDIPlaylistView.h>
 #include <logic/LibraryModel.h>
 #include <logic/PlaylistModel.h>
@@ -36,6 +38,7 @@
 #include "gui/NetworkAwareFileDialog.h"
 #include "logic/proxymodels/QPersistentModelIndexVec.h"
 
+#include <gui/delegates/MimeTypeDelegate.h>
 #include <logic/LibraryEntryMimeData.h>
 #include <logic/ModelUserRoles.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
@@ -57,6 +60,7 @@ MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 
 	// Delegates.
 	m_length_delegate = new ItemDelegateLength(this);
+    m_mimetype_delegate = new MimeTypeDelegate(this);
 
 	// Configure selection.
 	setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -202,10 +206,19 @@ void MDILibraryView::setModel(QAbstractItemModel* model)
 			header()->setSectionResizeMode(c, QHeaderView::ResizeToContents);
 		}
 	}
+
+	//
+	// Set up delegates.
+	//
+
 	// Find the "Length" column.
 	auto len_col = m_underlying_model->getColFromSection(SectionID::Length);
 	// Set the delegate on it.
 	setItemDelegateForColumn(len_col, m_length_delegate);
+
+	// Mime type column.
+    auto mimetype_col = m_underlying_model->getColFromSection(SectionID::MIMEType);
+	setItemDelegateForColumn(mimetype_col, m_mimetype_delegate);
 
 	/// @note By default, QHeaderView::ResizeToContents causes the View to query every property of every item in the model.
 	/// By setting setResizeContentsPrecision() to 0, it only looks at the visible area when calculating row widths.

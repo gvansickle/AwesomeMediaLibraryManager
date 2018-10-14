@@ -32,6 +32,7 @@
 
 // Ours
 #include <utils/QtHelpers.h>
+#include <utils/StringHelpers.h>
 #include "ExtAsync_traits.h"
 
 class ExtFutureState
@@ -55,25 +56,11 @@ public:
     // Exposes the enum to the Meta-Object System.
     Q_FLAG(State)
 
-//    enum State
-//    {
-//        NoState = QFutureInterfaceBase::NoState,
-//        Running = QFutureInterfaceBase::Running,
-//        Started = QFutureInterfaceBase::Started,
-//        Finished = QFutureInterfaceBase::Finished,
-//        Canceled = QFutureInterfaceBase::Canceled,
-//        Paused = QFutureInterfaceBase::Paused,
-//        Throttled = QFutureInterfaceBase::Throttled
-//    };
-//    Q_DECLARE_FLAGS(States, State)
-//    // Exposes the enum to the Meta-Object System.
-//    Q_FLAG(States)
-
     /**
      * Return the combined state flags of a class ultimately derived from QFutureInterfaceBase.
      */
-    template<typename T, REQUIRES(!isExtFuture_v<T>)>
-    static ExtFutureState::State state(const T& qfuture_int_base_derived)
+	template<typename T, REQUIRES(!is_ExtFuture_v<T>)>
+    static State state(const T& qfuture_int_base_derived)
     {
         QMutexLocker lock(qfuture_int_base_derived.mutex());
         // States from QFutureInterfaceBase.
@@ -123,20 +110,36 @@ public:
      * Return the combined state flags of a class ultimately derived from QFuture<T>.
      */
     template<typename T>
-    static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
+	static State state(const QFuture<T>& qfuture_derived)
     {
         return state(qfuture_derived.d);
     }
+
+//	/// Free inline friend streaming operator to QDebug.
+//	friend QDebug operator<<(QDebug dbg, const ExtFutureState::State& state)
+//	{
+//	    QDebugStateSaver saver(dbg);
+//
+//		dbg << toqstr<ExtFutureState::State>(state);
+//
+//	    return dbg;
+//	}
+
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtFutureState::State)
 
-inline static QString toString(ExtFutureState::State states)
+/// Free streaming operator to let Google Test print ExtFutureState's in text format.
+static std::ostream& operator<<(std::ostream& os, const ExtFutureState::State& state)
 {
-    QString str;
-    QDebug dbg(&str);
-    dbg << states;
-    return str;
+	return os << "(" << toqstr(state).toStdString() << ")";
+
+	// Or if we want to get the same output that qDebug() would get, we could use something like this:
+//	QString str;
+//	QDebug dbg(&str);
+//	dbg << state;
+//	TCOUT << "qDb():" << str;
+
 }
 
 /**

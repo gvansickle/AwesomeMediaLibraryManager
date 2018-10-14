@@ -107,7 +107,7 @@ private:
 
 	ExtFuture<QString> m_dirtrav_future;
 
-    futureww<MetadataReturnVal> m_futureww;
+//    futureww<MetadataReturnVal> m_futureww;
 };
 
 

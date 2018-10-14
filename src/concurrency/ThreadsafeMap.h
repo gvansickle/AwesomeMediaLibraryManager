@@ -42,11 +42,14 @@ public:
         QMutexLocker locker(&m_map_mutex);
         return m_kjob_to_widget_map.value(key, defaultValue);
     }
+
     void insert(const Key &key, const T &value)
     {
         QMutexLocker locker(&m_map_mutex);
         m_kjob_to_widget_map.insert(key, value);
     }
+
+    /// Remove key from the map.
     int remove(const Key &key)
     {
         QMutexLocker locker(&m_map_mutex);
@@ -70,6 +73,12 @@ public:
         return m_kjob_to_widget_map.size();
     }
 
+
+	bool contains(const Key& key)
+	{
+		QMutexLocker locker(&m_map_mutex);
+		return m_kjob_to_widget_map.contains(key);
+	}
 
     template<typename Lambda>
     void for_each_key_value_pair(Lambda the_lambda) const

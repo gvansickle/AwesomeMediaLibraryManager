@@ -62,10 +62,10 @@ Q_SIGNALS:
      * whoever may be listening.
      */
 //    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
-    void SIGNAL_resultsReadyAt(int begin, int end) override;
+	void SIGNAL_resultsReadyAt(int begin, int end) override;
 
 protected:
-    explicit DirectoryScannerAMLMJob(QObject* parent, QUrl dir_url,
+	explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl& dir_url,
             const QStringList &nameFilters,
             QDir::Filters filters = QDir::NoFilter,
             QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
@@ -84,10 +84,23 @@ public:
 											   QDir::Filters filters,
 											   QDirIterator::IteratorFlags flags);
 
+	/**
+	 * Function which does the actual directory scanning.
+	 *
+	 * @param ext_future  The in/out/control ExtFuture.
+	 * @param amlmJob     The associated AMLMJob, if any.
+	 * @param dir_url     The URL pointing at the directory to recursively scan.
+	 * @param name_filters
+	 * @param dir_filters
+	 * @param iterator_flags
+	 */
+	static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
+			const QUrl& dir_url,
+			const QStringList &name_filters,
+			QDir::Filters dir_filters = QDir::NoFilter,
+			QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
 protected:
-
-    DirectoryScannerAMLMJob* asDerivedTypePtr() override { return this; }
 
     void runFunctor() override;
 

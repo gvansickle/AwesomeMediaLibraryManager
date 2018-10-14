@@ -4,8 +4,8 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = https://github.com/lipnitsk/libcue.git
+	remote = https://github.com/lipnitsk/libcue
 	branch = master
-	commit = bbce26703f9ad34f3578a2ca988192675d0bd289
-	parent = 7424ac94cbbcebf6a45b4cbc84791f313dd3f799
+	commit = f6a11cbfd6029abb9cbc50264d2b747d3f9e427f
+	parent = 209949479004518c4014bf560251658859b1d97a
 	cmdver = 0.3.1

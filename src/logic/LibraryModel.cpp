@@ -37,6 +37,7 @@
 #include <QFileIconProvider>
 
 // Ours
+#include <src/AMLMApp.h>
 #include <utils/RegisterQtMetatypes.h>
 #include "LibraryRescanner.h"
 #include "LibraryRescannerJob.h"
@@ -49,6 +50,9 @@
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
 #include "logic/ModelUserRoles.h"
 #include <logic/dbmodels/CollectionDatabaseModel.h>
+#include <logic/PerfectDeleter.h>
+
+#include <gui/Theme.h>
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
@@ -76,7 +80,7 @@ LibraryModel::LibraryModel(QObject *parent) : QAbstractItemModel(parent)
 	m_columnSpecs.push_back({SectionID::Artist, "Artist", QStringList({"track_performer", "track_artist", "album_artist"})});
 	m_columnSpecs.push_back({SectionID::Album, "Album", QStringList("album_name")});
 	m_columnSpecs.push_back({SectionID::Length, "Length", {"length"}, true});
-	m_columnSpecs.push_back({SectionID::FileType, "Type", {"filetype"}, true});
+	m_columnSpecs.push_back({SectionID::MIMEType, "Type", {"filetype"}, true});
 	m_columnSpecs.push_back({SectionID::Filename, "Filename", {"filename"}});
 
 	// Pre-fabbed Icons
@@ -177,6 +181,8 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 //	Qt::ItemDataRole id_role = Qt::ItemDataRole(role);
 //	qDebug() << "index:" << index.isValid() << index.row() << index.column() << "role:" << id_role;
 
+	Q_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+
     // Handle invalid indexes.
 	if(!index.isValid())
 	{
@@ -227,14 +233,14 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                 return m_IconUnknown;
             }
         }
-//        else if(SectionID::FileType == sectionid)
-//        {
-//            // Return an icon for the MIME type of the file containing the track.
-//            QFileIconProvider fip;
-//            auto item = getItem(index);
-//            QFileInfo finfo(item->getUrl().toLocalFile());
-//            return fip.icon(finfo);
-//        }
+        else if(SectionID::MIMEType == sectionid)
+        {
+            // Return an icon for the MIME type of the file containing the track.
+            auto item = getItem(index);
+            QMimeType mime = item->getMimeType();
+            QIcon mime_icon = Theme::iconFromTheme(mime);
+            return QVariant::fromValue(mime_icon);
+        }
         else
         {
             return QVariant();
@@ -268,9 +274,11 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 				// Return Fraction as a string.
 				return QVariant::fromValue(item->get_length_secs());
 			}
-			else if(sec_id == SectionID::FileType)
+			else if(sec_id == SectionID::MIMEType)
 			{
-				return item->getFileType();
+M_WARNING("TODO Probably should be refactored.");
+//				return item->getFileType();
+                return QVariant::fromValue(item->getMimeType());
 			}
 			else if(sec_id == SectionID::Filename)
 			{
@@ -302,19 +310,45 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
         else
 		{
 			// Entry hasn't been populated yet.
-            auto pending_asyn_req = m_pending_async_item_loads.find(item);
-            if(pending_asyn_req != m_pending_async_item_loads.cend())
+			// Get a QPMI so we can keep track of outstanding requests for it.
+			// We track by rows, so we want the index of column 0.
+			QPersistentModelIndex qpmi (index.siblingAtColumn(0));
+			Q_ASSERT(qpmi.isValid());
+			if(m_pending_async_item_loads.contains(qpmi))
             {
-                // Already an outstanding request.
-                qDbo() << "Async load already pending for item:" << item;
+				// There's already an outstanding request, nothing to do but wait.
+				qDbo() << "Async load already pending for item:" << qpmi;
             }
-			else// if(0)
+			else
             {
                 // Start an async job to read the data for this entry.
 
-                qDb() << "STARTING ASYNC LOAD";
+//				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
+#if 1
+				// Doing this without an AMLMJobT.
+				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
+				LibraryEntryLoaderJob* dummy = nullptr;
+				// Register that we're doing this, so another async load for this same item doesn't get triggered.
+				m_pending_async_item_loads.insert(qpmi, true);
+//				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
+				future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
+				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
+					Q_ASSERT(result_future.isFinished());
+//					qDbo() << "IN THEN CALLBACK:" << result_future;
+					LibraryEntryLoaderJobResult new_vals = result_future.result();
+					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
+					run_in_event_loop(qApp, [=]() -> bool {
+						AMLM_ASSERT_IN_GUITHREAD();
+						m_pending_async_item_loads.remove(qpmi);
+						return true;
+						});
+//					return unit;
+				});
+				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
+				AMLMApp::IPerfectDeleter()->addQFuture(then_future);
+#else
                 auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
-                m_pending_async_item_loads[item] = load_entry_job;
+				m_pending_async_item_loads.insert(item, load_entry_job);
                 load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
                 	AMLM_ASSERT_IN_GUITHREAD();
                     if(loader_kjob->error())
@@ -346,10 +380,11 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
                             LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture().get()[0];
                             Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
                         }
-                        m_pending_async_item_loads.erase(item);
+						m_pending_async_item_loads.remove(item);
                     }
                 });
                 load_entry_job->start();
+#endif
             }
 
             ////////////////
@@ -652,7 +687,7 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 	createCacheFile(url);
 
 	connectSignals();
-	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
+//	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
 	Q_EMIT startFileScanSignal(m_library.rootURL);
 
 	endResetModel();
@@ -1044,7 +1079,7 @@ void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
     qDbo() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
-	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
+//	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
 static QString table_row(const std::string& s1, const std::string& s2)
