@@ -101,6 +101,7 @@ public:
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
     ScanResultsTreeModel* scan_results_tree_model_instance() { return m_srtm_instance; };
+    static ScanResultsTreeModel* IScanResultsTreeModel() { return amlmApp->m_srtm_instance; };
 
     QMimeDatabase* mime_db() { return m_mime_database; };
 

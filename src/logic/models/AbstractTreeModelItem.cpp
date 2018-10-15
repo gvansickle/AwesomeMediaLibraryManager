@@ -72,7 +72,7 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 	qDeleteAll(m_child_items);
 }
 
-// Debug streaming.
+/// Debug streaming implementation.
 #define DATASTREAM_FIELDS(X) \
     X(m_parent_item) X(m_item_data) X(m_child_items)
 
@@ -84,6 +84,8 @@ QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
 
 AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
 {
+	// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
+	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
 	return m_child_items.value(number);
 }
 

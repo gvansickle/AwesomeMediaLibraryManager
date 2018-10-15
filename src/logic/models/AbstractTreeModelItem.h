@@ -70,6 +70,9 @@ public:
 	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
     virtual ~AbstractTreeModelItem();
 
+    /// Return a pointer to the number'th child of this item.
+    /// @returns Pointer to a default constructed AbstractTreeModelItem, which is not added to the QVector.
+	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
 	AbstractTreeModelItem *child(int number);
 
     /// The number of children this item has.
@@ -93,6 +96,7 @@ public:
 
     bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
 
+    // Debug stream op free func friender.
     QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)
 
 protected:
@@ -113,6 +117,7 @@ private:
 	AbstractTreeModelItem *m_parent_item;
 };
 
+// Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
 
 #endif // ABSTRACTTREEMODELITEM_H

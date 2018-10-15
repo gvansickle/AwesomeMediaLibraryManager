@@ -188,14 +188,51 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 //    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
-	// New Tree model.
-//	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
     // Even newer tree model.
-    auto tree_model = AMLMApp::instance()->scan_results_tree_model_instance();
+    auto tree_model = AMLMApp::instance()->IScanResultsTreeModel();
 
+	ExtFuture<DirScanResult> tail_future
+		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end){
+		QVector<AbstractTreeModelItem*> new_items;
+		int original_end = end;
+		for(int i=begin; i<end; i++)
+		{
+			DirScanResult dsr = tap_future.resultAt(i);
+			// Add another entry to the vector we'll send to the model.
+			new_items.push_back(dsr.toTreeModelItem());
+
+			if(i >= end)
+			{
+				// We're about to leave the loop.  Check if we have more ready results now than was originally reported.
+				if(tap_future.isResultReadyAt(end+1) || tap_future.resultCount() > (end+1))
+				{
+					// There are more results now than originally reported.
+					qIno() << "##### MORE RESULTS:" << M_NAME_VAL(original_end) << M_NAME_VAL(end) << M_NAME_VAL(tap_future.resultCount());
+					end = end+1;
+				}
+			}
+
+			if(tap_future.HandlePauseResumeShouldICancel())
+			{
+				break;
+			}
+		}
+
+		// Got all the ready results, send them to the model.
+		// We have to do this from the GUI thread unfortunately.
+		qIno() << "Sending" << (end+1)-begin << new_items.size() << "scan results to model";
+		run_in_event_loop(this, [=, &tree_model](){
+	        // Append entries to the ScanResultsTreemodel.
+	        tree_model->appendItems(new_items);
+			;});
+
+	});
+
+    // Connect to the tree_model.
     connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt,
                    tree_model,
                    [=](/*const auto& ef,*/ int begin, int end) {
+    	/// @note We're in the GUI thread here.  We should see if we can move any of this to a non-GUI thread.
         auto ef = dirtrav_job->get_extfuture();
         QVector<AbstractTreeModelItem*> new_items;
         for(int i=begin; i<end; i++)
@@ -209,10 +246,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             m_current_libmodel->SLOT_onIncomingFilename(dsr.getMediaExtUrl().m_url.toString());
         }
 
-//        tree_model->appendItems(new_items);
-
         // Append entries to the ScanResultsTreemodel.
-        tree_model->appendItems(new_items);
+//        tree_model->appendItems(new_items);
 
 		;});
 
