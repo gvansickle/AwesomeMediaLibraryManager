@@ -220,37 +220,24 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 		// Got all the ready results, send them to the model.
 		// We have to do this from the GUI thread unfortunately.
-		qIno() << "Sending" << (end+1)-begin << new_items.size() << "scan results to model";
+		qIno() << "Sending" << new_items.size() << "scan results to model";
 		run_in_event_loop(this, [=, &tree_model](){
-	        // Append entries to the ScanResultsTreemodel.
+
+			// Append entries to the ScanResultsTreemodel.
 	        tree_model->appendItems(new_items);
-			;});
+
+	        /// @todo Obsoleting... very... slowly.
+	        for(const auto& entry : new_items)
+	        {
+				// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
+				Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(entry->data(1).toString());
+	        }
+		});
 
 	});
 
-    // Connect to the tree_model.
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt,
-                   tree_model,
-                   [=](/*const auto& ef,*/ int begin, int end) {
-    	/// @note We're in the GUI thread here.  We should see if we can move any of this to a non-GUI thread.
-        auto ef = dirtrav_job->get_extfuture();
-        QVector<AbstractTreeModelItem*> new_items;
-        for(int i=begin; i<end; i++)
-        {
-            DirScanResult dsr = ef.resultAt(i);
-            // Add another entry to the tree model.
-            new_items.push_back(dsr.toTreeModelItem());
-
-            // Found a file matching the criteria.  Send it to the model.
-            /// @todo Forward the signal.
-            m_current_libmodel->SLOT_onIncomingFilename(dsr.getMediaExtUrl().m_url.toString());
-        }
-
-        // Append entries to the ScanResultsTreemodel.
-//        tree_model->appendItems(new_items);
-
-		;});
-
+	// Make sure the above job gets canceled and deleted.
+	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
     dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
