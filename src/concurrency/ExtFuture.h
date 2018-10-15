@@ -1098,17 +1098,18 @@ protected:
 	 * @param streaming_tap_callback   callable with signature void(*)(ExtFuture<T>, int, int)
 	 * @return
 	 */
-	template <typename F,
-		REQUIRES(ct::is_invocable_r_v<void, F, ExtFuture<T>, int, int>)
+	template <typename StreamingTapCallbackType,
+		REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)
 		>
-	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, F&& streaming_tap_callback)
+	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, StreamingTapCallbackType&& streaming_tap_callback)
 	{
 		ExtFuture<T> ret_future;
 
 		try
 		{
-			QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<F>(streaming_tap_callback)](ExtFuture<T> this_future, ExtFuture<T> f2) {
-				qDb() << "TAP: START TAP RUN(), this_future:" << this_future.state() << "f2:" << f2.state();
+			QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<StreamingTapCallbackType>(streaming_tap_callback)]
+							  (ExtFuture<T> this_future_copy, ExtFuture<T> ret_future_copy) {
+				qDb() << "TAP: START TAP RUN(), this_future:" << this_future_copy.state() << "ret_future_copy:" << ret_future_copy.state();
 
 				int i = 0;
 
@@ -1126,51 +1127,51 @@ protected:
 					  *     d->waitCondition.wait(&d->m_mutex);
 					  *   d->m_exceptionStore.throwPossibleException();
 					  */
-					this_future.waitForResult(i);
+					this_future_copy.waitForResult(i);
 
 					// Check if the wait failed to result in any results.
-					int result_count = this_future.resultCount();
+					int result_count = this_future_copy.resultCount();
 					if(result_count <= i)
 					{
 						// No new results, must have finshed etc.
-						qDb() << "NO NEW RESULTS, BREAKING, this_future:" << this_future.state();
+						qDb() << "NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
 						break;
 					}
 
 					// Call the tap callback.
 					//				streaming_tap_callback_copy(ef, i, result_count);
-					qDb() << "CALLING TAP CALLBACK, this_future:" << this_future.state();
-					std::invoke(streaming_tap_callback_copy, this_future, i, result_count);
+					qDb() << "CALLING TAP CALLBACK, this_future:" << this_future_copy.state();
+					std::invoke(streaming_tap_callback_copy, this_future_copy, i, result_count);
 
 					// Copy the new results to the returned future.
 					for(; i < result_count; ++i)
 					{
 						qDb() << "TAP: Next result available at i = " << i;
 
-						T the_next_val = this_future.resultAt(i);
-						f2.reportResult(the_next_val);
+						T the_next_val = this_future_copy.resultAt(i);
+						ret_future_copy.reportResult(the_next_val);
 					}
 				}
 
-				qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << this_future.state();
+				qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << this_future_copy.state();
 
 				// Check final state.  We know it's at least Finished.
 				/// @todo Could we be Finished here with pending results?
 				/// Don't care as much on non-Finished cases.
-				if(this_future.isCanceled())
+				if(this_future_copy.isCanceled())
 				{
-					qDb() << "TAP: this_future cancelled:" << this_future.state();
-					f2.reportCanceled();
+					qDb() << "TAP: this_future cancelled:" << this_future_copy.state();
+					ret_future_copy.reportCanceled();
 				}
-				else if(this_future.isFinished())
+				else if(this_future_copy.isFinished())
 				{
-					qDb() << "TAP: ef finished:" << this_future.state();
-					f2.reportFinished();
+					qDb() << "TAP: ef finished:" << this_future_copy.state();
+					ret_future_copy.reportFinished();
 				}
 				else
 				{
 					/// @todo Exceptions.
-					qDb() << "NOT FINISHED OR CANCELED:" << this_future.state();
+					qDb() << "NOT FINISHED OR CANCELED:" << this_future_copy.state();
 					Q_ASSERT(0);
 				}
 			},
@@ -1186,9 +1187,6 @@ protected:
 			 *  state of the returned future object."
 			 */
 			ret_future.reportException(e);
-			// I think we don't want to rethrow like this here.  This will throw to the wrong future
-			// (the QtConcurrent::run() retval, see above.
-			//throw;
 		}
 		catch(QException& e)
 		{

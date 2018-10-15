@@ -214,7 +214,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 			if(tap_future.HandlePauseResumeShouldICancel())
 			{
-				break;
+				tap_future.reportCanceled();
+				return;
 			}
 		}
 
