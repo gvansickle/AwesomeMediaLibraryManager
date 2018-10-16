@@ -69,17 +69,20 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
  * @param downstream_future
  */
 template <class T, class U>
-static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future)
+static QFuture<int> AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future)
 {
-	QtConcurrent::run([](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) -> void {
+	return QtConcurrent::run([=](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) -> int {
 
 		// When control flow gets here:
 		// - this_future_copy may be in any state.  In particular, it may have been canceled or never started.
 		// - downstream_future_copy may be in any state.  In particular, it may have been canceled or never started.
 
+		Q_ASSERT(this_future_copy.isStarted());
+		Q_ASSERT(downstream_future_copy.isStarted());
+
 		try
 		{
-			// Spin-wait on this_future_copy or downstream_future_copy to Finish or Cancel
+			// Give downstream_future_copy.isCanceled() somewhere to break to.
 			do
 			{
 				// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
@@ -99,8 +102,7 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 					// Downstream is already Finished, but not canceled.
 					/// @todo Is that a valid state here?
 					qWr() << "downstream FINISHED?:" << downstream_future_copy;
-					return;
-//						Q_ASSERT(0);
+					return 1;
 				}
 
 				// Was this_future canceled?
@@ -108,7 +110,7 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 				{
 					/// @todo Upstream canceled.
 					qWr() << "this_future_copy CANCELED:" << this_future_copy.state();
-					return;
+					return 2;
 				}
 
 				// Did this_future_copy Finish first?
@@ -116,10 +118,11 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 				{
 					// Normal finish, no cancel or exception to propagate.
 					qDb() << "THIS_FUTURE FINISHED NOT CANCELED, CANCELER THREAD RETURNING";
-					return;
+					return 3;
 				}
 
 				/// @note We never should get here.
+				Q_ASSERT(0);
 			}
 			while(true);
 
@@ -148,12 +151,15 @@ static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> dow
 				// Capture the exception.
 				eptr = std::current_exception();
 			}
+
+			// Do we need to rethrow?
 			if(eptr)
 			{
-				qDb() << "rethrowing.";
+				qDb() << "rethrowing to outer try.";
 				std::rethrow_exception(eptr);
 			}
 
+			// Else we didn't rethrow.
 			qDb() << "waitForFinished() complete, did not throw:" << downstream_future_copy;
 
 			// Didn't throw, could have been .cancel()ed, which doesn't directly throw.

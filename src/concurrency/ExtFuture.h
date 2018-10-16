@@ -715,10 +715,11 @@ public:
 			Q_ASSERT(returned_future_copy != this_future_copy);
 
 			// Add the downstream cancel propagator first.
-			AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
 
 			try
 			{
+				Q_ASSERT(dscancel_future.isStarted());
 //				qDb() << "In .then() outer callback try block. this_future_copy:" << this_future_copy;
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
@@ -947,10 +948,10 @@ public:
 	 *
 	 * @return Reference to this.
 	 */
-	ExtFuture<T> tap()
-	{
-		return *this;
-	}
+//	ExtFuture<T> tap()
+//	{
+//		return *this;
+//	}
 
 	/// @} // END .tap() overloads.
 
@@ -1076,19 +1077,6 @@ protected:
 				std::invoke(tap_cb, f.resultAt(i));
 			}
 		});
-#if 0
-		auto watcher = new QFutureWatcher<T>();
-		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
-		connect_or_die(watcher, &QFutureWatcherBase::resultReadyAt, guard_qobject,
-				[tap_cb = std::decay_t<F>(tap_callback), watcher](int index) mutable {
-//					qDb() << "TAP WRAPPER CALLED, ExtFuture state S/R/F:"
-//						  << watcher->isStarted() << watcher->isRunning() << watcher->isFinished();
-					// Call the tap callback with the incoming result value.
-					tap_cb(watcher->future().resultAt(index));
-			});
-		watcher->setFuture(*this);
-		return *this;
-#endif
 	}
 
 	/**
@@ -1103,13 +1091,19 @@ protected:
 		>
 	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, StreamingTapCallbackType&& streaming_tap_callback)
 	{
+		// The future we'll pass to the asunc task and return.
 		ExtFuture<T> ret_future;
 
 		try
 		{
 			QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<StreamingTapCallbackType>(streaming_tap_callback)]
 							  (ExtFuture<T> this_future_copy, ExtFuture<T> ret_future_copy) {
-				qDb() << "TAP: START TAP RUN(), this_future:" << this_future_copy.state() << "ret_future_copy:" << ret_future_copy.state();
+				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy.state() << "ret_future_copy:" << ret_future_copy.state();
+
+				Q_ASSERT(ret_future_copy != this_future_copy);
+
+				// Add the downstream cancel propagator first.
+				AddDownstreamCancelFuture(this_future_copy, ret_future_copy);
 
 				int i = 0;
 
@@ -1226,6 +1220,31 @@ protected:
 
 	/// @}
 };
+
+
+/// @name Free functions
+/// @{
+
+namespace ExtAsync
+{
+
+template < class Sequence >
+struct when_any_result {
+	std::size_t index;
+	Sequence futures;
+};
+
+template < class... Futures >
+auto when_any(Futures&&... futures)
+	-> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>
+{
+
+}
+
+} /// END namespace
+
+/// @}
+
 
 #endif // #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
 

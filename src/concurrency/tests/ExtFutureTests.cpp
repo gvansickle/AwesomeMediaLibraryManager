@@ -556,14 +556,29 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 				break;
 			}
 		}
-		rsm.ReportResult(T1ENDCB);
 		run_down_copy.reportFinished();
+		rsm.ReportResult(T1ENDCB);
 	}, run_down);
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
 
 	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
 	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
+		std::exception_ptr eptr; // For rethrowing.
+		try
+		{
+			auto incoming = upcopy.get();
+		}
+		catch(...)
+		{
+			eptr = std::current_exception();
+		}
+		// Do we need to rethrow?
+		if(eptr)
+		{
+			qDb() << "rethrowing.";
+			std::rethrow_exception(eptr);
+		}
 
 		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() || upcopy.isCanceled());
 		// Immediately return.
@@ -583,7 +598,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	TCOUT << "CANCELED DOWNSTREAM" << down;
 
 	TCOUT << "WAITING TO PROPAGATE";
-	TC_Wait(2000);
+	TC_Sleep(2000);
 
 	EXPECT_TRUE(down.isCanceled());
 	EXPECT_TRUE(run_down.isCanceled()) << run_down;
@@ -593,6 +608,13 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 	TC_END_RSM(rsm);
 
 	TC_EXIT();
+}
+
+inline static void LogThreadPoolInfo(QThreadPool* tp)
+{
+	TCOUT << "Max thread count:" << tp->maxThreadCount();
+	TCOUT << "Active thread count:" << tp->activeThreadCount();
+	TCOUT << "Free thread count:" << tp->maxThreadCount() - tp->activeThreadCount();
 }
 
 TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
@@ -644,9 +666,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	rsm.ReportResult(MSTART);
 
 	// Log the number of free threads in the thread pool.
-	TCOUT << M_NAME_VAL(QThreadPool::globalInstance()->maxThreadCount());
-	TCOUT << M_NAME_VAL(QThreadPool::globalInstance()->activeThreadCount());
-	TCOUT << M_NAME_VAL(QThreadPool::globalInstance()->maxThreadCount() - QThreadPool::globalInstance()->activeThreadCount());
+	LogThreadPoolInfo(tp);
 
 	// The async task.  Spins forever, reporting "5" to run_down until canceled.
 	ExtFuture<int> run_down;
@@ -680,7 +700,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		}
 
 		// We've been canceled, but not finished.
-//		AMLMTEST_ASSERT_TRUE(run_down_copy.isCanceled());
+		AMLMTEST_ASSERT_TRUE(run_down_copy.isCanceled());
 //		AMLMTEST_ASSERT_FALSE(run_down_copy.isFinished());
 		rsm.ReportResult(J1ENDCB);
 		run_down_copy.reportFinished();
@@ -692,16 +712,32 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	// Then 1
 	ExtFuture<int> down = run_down.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &run_down]
 										(ExtFuture<int> upcopy) -> int{
+		AMLMTEST_EXPECT_EQ(upcopy, run_down);
 		AMLMTEST_EXPECT_TRUE(ran_run_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
 		ran_then1_callback = true;
 
-		AMLMTEST_EXPECT_EQ(upcopy, run_down);
-
 		// Should always be finished if we get in here.
 		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
 		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
+
+		std::exception_ptr eptr; // For rethrowing.
+		try
+		{
+			QList<int> incoming = upcopy.get();
+		}
+		catch(...)
+		{
+			TCOUT << "THEN1 RETHROWING, future state:" << upcopy;
+			eptr = std::current_exception();
+		}
+		// Do we need to rethrow?
+		if(eptr)
+		{
+			qDb() << "rethrowing.";
+			std::rethrow_exception(eptr);
+		}
 
 		// No try.  This should throw to down.
 //		auto results_from_upstream = upcopy.results();
@@ -715,33 +751,31 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	// Then 2
 	ExtFuture<int> down2 = down.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &down]
 									 (ExtFuture<int> upcopy) -> int {
+		AMLMTEST_EXPECT_EQ(upcopy, down);
 		AMLMTEST_EXPECT_TRUE(ran_run_callback);
 		AMLMTEST_EXPECT_TRUE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
-		ran_then2_callback = true;
-
-		AMLMTEST_EXPECT_EQ(upcopy, down);
-
 		// Should always be finished if we get in here.
 		AMLMTEST_EXPECT_TRUE(upcopy.isFinished());
 		AMLMTEST_EXPECT_TRUE(upcopy.isCanceled());
+		ran_then2_callback = true;
 
-//		try
-//		{
-////			AMLMTEST_EXPECT_FALSE(upcopy);
-//			auto results_from_upstream = upcopy.results();
-//			ADD_FAILURE() << "We should never get in here on a cancelation.";
-//		}
-//		catch(ExtAsyncCancelException& e)
-//		{
-//			TCOUT << "THEN2: CAUGHT ExtAsyncCancelException from upcopy";
-//			throw;
-//		}
-//		catch(...)
-//		{
-//			TCOUT << "THEN2: CAUGHT EXCEPTION FROM upcopy";
-//			throw;
-//		}
+		std::exception_ptr eptr; // For rethrowing.
+		try
+		{
+			QList<int> incoming = upcopy.get();
+		}
+		catch(...)
+		{
+			TCOUT << "THEN2 RETHROWING, future state:" << upcopy;
+			eptr = std::current_exception();
+		}
+		// Do we need to rethrow?
+		if(eptr)
+		{
+			qDb() << "rethrowing.";
+			std::rethrow_exception(eptr);
+		}
 
 		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
 		return 6;
