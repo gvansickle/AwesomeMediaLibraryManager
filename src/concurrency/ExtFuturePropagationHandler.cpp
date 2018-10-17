@@ -18,75 +18,15 @@
  */
 
 /**
- * @file ExtFuture.cpp
- *
- * Notes:
- *
- * - QFuture<> lost a lot of special member functions on this commit:
- * @link https://git.qt.io/consulting-usa/qtbase-xcb-rendering/commit/9c016cefe9a81de3b01019cb1eb1363b05e3b448
- * That's why there's no real copy constructor etc. defined - it now relies on the compiler-generated
- * (but not = default, those fail) ones.
- *
- * - The QMutex
- * There's a QMutex which lives in the QFutureInterfaceBasePrivate d instance of the QFutureInterfaceBase.
- * It's private, but a pointer to it is avalable via "QMutex *QFutureInterfaceBase::mutex() const".
- * Most of the public QFuture{Interface} interfaces lock this mutex, with the notable exception of the isFinished()/isCanceled()/etc.
- * state query functions, which simply query the bits in an atomic variable.
- *
+ * @file ExtFuturePropagationHandler.cpp
  */
-
-// Associated header.
-#include "ExtFuture.h"
+#include "ExtFuturePropagationHandler.h"
 
 // Std C++
 #include <shared_mutex>
-#include <map>
-#include <algorithm>
-
-// Qt5
-#include <QFuture>
-#include <QThread>
 
 namespace ExtAsync
 {
-#if 0
-/**
- * Monitors ExtFuture<>s for cancelation and propagates it up the .then() chain.
- *
- * @note Yeah I know, should be a better way to handle this.  There isn't.
- */
-class ExtFuturePropagationHandler
-{
-public:
-	ExtFuturePropagationHandler();
-	~ExtFuturePropagationHandler();
-
-	/**
-	 * Register for a cancel propagation from downstream to upstream.
-	 * @param downstream
-	 * @param upstream
-	 */
-	void register_cancel_prop_down_to_up(ExtFuture<bool> downstream, ExtFuture<bool> upstream);
-
-
-protected:
-
-	void patrol_for_cancels();
-
-	void cancel_all();
-
-	void wait_for_finished_or_canceled();
-
-	// Shared mutex because we're highly reader-writer.
-	std::shared_mutex m_shared_mutex;
-
-	using map_type = std::multimap<ExtFuture<bool>, ExtFuture<bool>>;
-	map_type m_down_to_up_cancel_map;
-	using map_pair_type = decltype(m_down_to_up_cancel_map)::value_type;
-
-	QThread* m_patrol_thread {nullptr};
-
-};
 
 ExtFuturePropagationHandler::ExtFuturePropagationHandler()
 {
@@ -190,17 +130,5 @@ void ExtFuturePropagationHandler::wait_for_finished_or_canceled()
 {
 
 }
-#endif
-}
 
-/// @name Explicit instantiations to try to get compile times down.
-template class ExtFuture<Unit>;
-template class ExtFuture<bool>;
-template class ExtFuture<int>;
-template class ExtFuture<long>;
-template class ExtFuture<std::string>;
-template class ExtFuture<double>;
-template class ExtFuture<QString>;
-template class ExtFuture<QByteArray>;
-
-
+} /* namespace ExtAsync */

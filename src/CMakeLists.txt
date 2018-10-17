@@ -216,6 +216,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
 	concurrency/ExtFutureProgressInfo.h
+	concurrency/ExtFuturePropagationHandler.h
 	concurrency/ExtFutureWatcher.h
 	concurrency/ExtAsync_traits.h
 	concurrency/impl/ExtAsync_impl.h
@@ -237,6 +238,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsyncExceptions.cpp
 	concurrency/ExtFuture.cpp
 	concurrency/ExtFutureProgressInfo.cpp
+	concurrency/ExtFuturePropagationHandler.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
 	concurrency/DirectoryScanJob.cpp
