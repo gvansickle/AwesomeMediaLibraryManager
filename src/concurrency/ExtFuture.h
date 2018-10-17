@@ -307,7 +307,7 @@ public:
 			catch(...)
 			{
 				/// @todo
-				Q_ASSERT_X(0, "catch", "waitForResume threw");
+				Q_ASSERT_X(0, "catch", ".waitForResume() in pause threw");
 			}
 		}
 		if (this->isCanceled())
@@ -341,7 +341,7 @@ public:
 	}
 
 	/**
-	 * If result is != nullptr, calls to reportResult() and adds a copy of the result.
+	 * If result is != nullptr, calls reportResult() and adds a copy of the result.
 	 * Unconditionally reports finished.
 	 * @param result
 	 */
