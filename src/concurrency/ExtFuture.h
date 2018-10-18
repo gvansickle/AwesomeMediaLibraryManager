@@ -56,11 +56,16 @@
 #include "ExtAsyncExceptions.h"
 
 // Forward declare the ExtAsync namespace
-namespace ExtAsync { namespace detail {} }
+namespace ExtAsync
+{
+namespace detail {}
+	class ExtFuturePropagationHandler;
+}
 
 
 template <class T>
 class ExtFuture;
+
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
@@ -280,6 +285,9 @@ public:
 	bool operator!=(const QFuture<U> &other) const { return this->BASE_CLASS::operator!=(other); }
 
 	/// @}
+
+	static void InitStaticExtFutureState();
+
 
 	/// @name Reporting interface
 	/// @{
@@ -680,7 +688,6 @@ public:
 			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
 	{
-//		QFutureWatcher* fw {nullptr};
 		static_assert (!std::is_same_v<R, void>, "Callback return value should never be void");
 
 		if(context != nullptr)
@@ -689,9 +696,6 @@ public:
 			QThread* ctx_thread = context->thread();
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
-
-			// Create a QFutureWatcher to marshal the results to the context.
-//			fw = new QFutureWatcher(context);
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
@@ -713,13 +717,15 @@ public:
 			//     f.cancel().
 
 			Q_ASSERT(returned_future_copy != this_future_copy);
+			Q_CHECK_PTR(s_the_cancel_prop_handler);
 
 			// Add the downstream cancel propagator first.
-			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+//			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+			s_the_cancel_prop_handler->register_cancel_prop_down_to_up(returned_future_copy, this_future_copy);
 
 			try
 			{
-				Q_ASSERT(dscancel_future.isStarted());
+//				Q_ASSERT(dscancel_future.isStarted());
 //				qDb() << "In .then() outer callback try block. this_future_copy:" << this_future_copy;
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
@@ -1219,6 +1225,9 @@ protected:
 //	int m_progress_unit { 0 /* == KJob::Unit::Bytes*/};
 
 	/// @}
+
+	static std::unique_ptr<ExtAsync::ExtFuturePropagationHandler> s_the_cancel_prop_handler;
+
 };
 
 
@@ -1254,6 +1263,7 @@ auto when_any(Futures&&... futures)
 /// @{
 
 #include "impl/ExtFuture_impl.hpp"
+#include "ExtFuturePropagationHandler.h"
 
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)

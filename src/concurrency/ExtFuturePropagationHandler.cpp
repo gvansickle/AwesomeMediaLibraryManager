@@ -28,6 +28,9 @@
 // Qt5
 #include <QThread>
 
+// Ours
+#include "ExtFuture.h"
+
 namespace ExtAsync
 {
 
@@ -50,13 +53,13 @@ std::unique_ptr<ExtFuturePropagationHandler> ExtFuturePropagationHandler::make_h
 	return std::make_unique<ExtFuturePropagationHandler>();
 }
 
-void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(ExtFuture<bool> downstream, ExtFuture<bool> upstream)
+void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(QFuture<void> downstream, QFuture<void> upstream)
 {
 	std::unique_lock write_locker(m_shared_mutex);
 
 	if(m_cancel_incoming_futures)
 	{
-		qWr() << "SHUTTING DOWN, CANCELING INCOMING FUTURES:" << downstream << upstream;
+		qWr() << "SHUTTING DOWN, CANCELING INCOMING FUTURES:";// << downstream << upstream;
 		downstream.cancel();
 		upstream.cancel();
 		return;
@@ -112,7 +115,7 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 
 			// This is read-only, and won't invalidate any iterators.
 
-			std::multimap<ExtFuture<bool>, ExtFuture<bool>> canceled_ExtFuture_map;
+			std::multimap<QFuture<void> , QFuture<void> > canceled_ExtFuture_map;
 
 			{
 				std::shared_lock read_locker(m_shared_mutex);
@@ -179,7 +182,7 @@ void ExtFuturePropagationHandler::wait_for_finished_or_canceled()
 					)
 			{
 				// Both canceled, erase them.
-				qIn() << "erasing future pair:" << val.first << val.second;
+				qIn() << "erasing future pair:";// << val.first << val.second;
 				it = m_down_to_up_cancel_map.erase(it);
 			}
 		}

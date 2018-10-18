@@ -44,6 +44,7 @@
 #include <src/future/static_if.hpp>
 #include <src/utils/UniqueIDMixin.h>
 #include "utils/ConnectHelpers.h"
+#include "concurrency/ExtFutureProgressInfo.h"
 #include "concurrency/ExtAsync.h"
 
 

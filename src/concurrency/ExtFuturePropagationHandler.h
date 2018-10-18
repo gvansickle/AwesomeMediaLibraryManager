@@ -29,10 +29,11 @@
 #include <atomic>
 
 // Qt5
+#include <QFuture>
 class QThread;
 
 // Ours
-#include "ExtFuture.h"
+//#include "ExtFuture.h"
 
 namespace ExtAsync
 {
@@ -55,7 +56,7 @@ public:
 	 * @param downstream
 	 * @param upstream
 	 */
-	void register_cancel_prop_down_to_up(ExtFuture<bool> downstream, ExtFuture<bool> upstream);
+	void register_cancel_prop_down_to_up(QFuture<void> downstream, QFuture<void> upstream);
 
 	/**
 	 * Call this just prior to deleting this object.
@@ -86,7 +87,7 @@ protected:
 	 */
 	std::atomic_bool m_cancel_incoming_futures {false};
 
-	using map_type = std::multimap<ExtFuture<bool>, ExtFuture<bool>>;
+	using map_type = std::multimap<QFuture<void>, QFuture<void>>;
 	map_type m_down_to_up_cancel_map;
 	using map_pair_type = decltype(m_down_to_up_cancel_map)::value_type;
 	using nonconst_key_map_value_type = std::pair<map_type::key_type, map_type::mapped_type>;

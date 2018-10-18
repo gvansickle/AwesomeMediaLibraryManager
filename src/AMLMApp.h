@@ -107,6 +107,8 @@ public:
 
 	static PerfectDeleter* IPerfectDeleter() { return &(amlmApp->m_perfect_deleter); };
 
+//	static ExtFuturePropagationHandler* IExtFuturePropagationHandler() { return &(amlmApp->m_future_cancel_prop_handler); };
+
     /// @}
 
     /**
@@ -159,6 +161,7 @@ private:
     QMimeDatabase* m_mime_database;
 
 	PerfectDeleter m_perfect_deleter;
+//	ExtFuturePropagationHandler m_future_cancel_prop_handler;
 
     std::atomic_bool m_shutting_down {false};
     std::atomic_bool m_controlled_shutdown_complete {false};
