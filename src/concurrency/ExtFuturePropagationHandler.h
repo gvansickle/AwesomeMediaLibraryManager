@@ -26,6 +26,10 @@
 // Std C++
 #include <shared_mutex>
 #include <map>
+#include <atomic>
+
+// Qt5
+class QThread;
 
 // Ours
 #include "ExtFuture.h"
@@ -42,20 +46,34 @@ class ExtFuturePropagationHandler
 {
 public:
 	ExtFuturePropagationHandler();
-	~ExtFuturePropagationHandler();
+	virtual ~ExtFuturePropagationHandler();
+
+	static std::unique_ptr<ExtFuturePropagationHandler> make_handler();
 
 	/**
-	 * Register for a cancel propagation from downstream to upstream.
+	 * Register for a cancel propagation from downstream to upstream.  Threadsafe.
 	 * @param downstream
 	 * @param upstream
 	 */
 	void register_cancel_prop_down_to_up(ExtFuture<bool> downstream, ExtFuture<bool> upstream);
 
+	/**
+	 * Call this just prior to deleting this object.
+	 * @return
+	 */
+	bool cancel_all_and_wait();
 
 protected:
 
+	/**
+	 * The thread function which loops looking for futures registered to this object
+	 * which are canceled, and propagates the .cancel() signal.
+	 */
 	void patrol_for_cancels();
 
+	/**
+	 * Cancels all registered futures.  Does not wait, caller must acquire the mutex.
+	 */
 	void cancel_all();
 
 	void wait_for_finished_or_canceled();
@@ -63,9 +81,15 @@ protected:
 	// Shared mutex because we're highly reader-writer.
 	std::shared_mutex m_shared_mutex;
 
+	/**
+	 * When we're being destroyed, we can't accept any new futures to watch, so immediately cancel them.
+	 */
+	std::atomic_bool m_cancel_incoming_futures {false};
+
 	using map_type = std::multimap<ExtFuture<bool>, ExtFuture<bool>>;
 	map_type m_down_to_up_cancel_map;
 	using map_pair_type = decltype(m_down_to_up_cancel_map)::value_type;
+	using nonconst_key_map_value_type = std::pair<map_type::key_type, map_type::mapped_type>;
 
 	QThread* m_patrol_thread {nullptr};
 
