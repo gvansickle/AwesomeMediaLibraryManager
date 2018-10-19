@@ -394,8 +394,12 @@ public:
 	}
 
 	/**
-	 * Simply calls cancel().
-	 * QFutureInterfaceBase::cancel() in turn can only be called once, returns immediately after the first cancel.
+	 * Simply calls QFutureInterfaceBase::reportCanceled(), which just calls cancel().
+	 * QFutureInterfaceBase::cancel() in turn:
+	 * - Locks m_mutex
+	 * - if state is Canceled already, return, having done nothing.
+	 * - else switch state out of Paused and into Canceled.
+	 * - Send QFutureCallOutEvent::Canceled.
 	 */
 	void reportCanceled()
 	{

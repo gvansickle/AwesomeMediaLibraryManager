@@ -144,9 +144,9 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 		// Cancel propagation and delete loops.
 		{
 			// Thread-safe step 1: Look for any canceled ExtFuture<>s and copy them to a local map.
-
 			// This is read-only, and won't invalidate any iterators.
 
+			// The local map.
 			map_type canceled_ExtFuture_map;
 
 			{
@@ -159,6 +159,13 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 						// Found a canceled key, add the entry to the local map.
 						canceled_ExtFuture_map.push_back(it);
 					}
+				}
+
+				// Did we find any?
+				if(canceled_ExtFuture_map.empty())
+				{
+					// No, go back to waiting.
+					continue;
 				}
 			}
 
