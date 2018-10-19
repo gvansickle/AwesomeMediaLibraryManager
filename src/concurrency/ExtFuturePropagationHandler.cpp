@@ -81,6 +81,7 @@ void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType dow
 
 	// Add the two futures to the map.
 	m_down_to_up_cancel_map.push_back({downstream, upstream});
+	qIn() << "Registered future pair:" << state(downstream) << state(upstream);
 }
 
 bool ExtFuturePropagationHandler::cancel_all_and_wait()

@@ -35,7 +35,7 @@
 class QThread;
 
 // Ours
-//#include "ExtFuture.h"
+#include "ExtFuture.h"
 
 namespace ExtAsync
 {
@@ -59,7 +59,7 @@ public:
 
 	static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 
-	using FutureType = QFuture<void>;
+	using FutureType = ExtFuture<Unit>;
 
 	/**
 	 * Register for a cancel propagation from downstream to upstream.  Threadsafe.
@@ -97,8 +97,6 @@ protected:
 	 */
 	std::atomic_bool m_cancel_incoming_futures {false};
 
-//	using map_type = std::multimap<QFuture<void>, QFuture<void>>;
-//	using map_type = std::unordered_multimap<QFuture<void>, QFuture<void>>;
 	// Not really a map.  Not really even close to a map.
 	using map_type = std::deque<std::tuple<FutureType, FutureType>>;
 
@@ -109,25 +107,6 @@ protected:
 	QThread* m_patrol_thread {nullptr};
 
 };
-
-/**
- * Monitors ExtFuture<>s for cancelation and propagates it up the .then() chain.
- */
-//static std::shared_ptr<ExtFuturePropagationHandler> s_the_cancel_prop_handler;// {nullptr};
-
-
-//static void InitStaticExtFutureState()
-//{
-//	ExtAsync::s_the_cancel_prop_handler = ExtAsync::ExtFuturePropagationHandler::make_handler();
-//}
-
-//static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler()
-//{
-//	Q_ASSERT_X(static_cast<bool>(ExtAsync::s_the_cancel_prop_handler) == true, __PRETTY_FUNCTION__,
-//			   "Global ExtFuturePropagationHandler not initialized.");
-//	return ExtAsync::s_the_cancel_prop_handler;
-//}
-
 
 } /* namespace ExtAsync */
 

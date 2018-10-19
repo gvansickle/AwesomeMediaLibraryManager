@@ -66,6 +66,7 @@ namespace detail {}
 template <class T>
 class ExtFuture;
 
+class Unit;
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
@@ -259,6 +260,14 @@ public:
 	explicit operator QFuture<void>() const
 	{
 		return QFuture<void>(&(this->d));
+	}
+
+	/**
+	 * Conversion operator to ExtFuture<Unit>.
+	 */
+	explicit operator ExtFuture<Unit>() const
+	{
+		return ExtFuture<Unit>(&(this->d));
 	}
 
 	/// @name Comparison operators.
@@ -725,7 +734,8 @@ public:
 
 			// Add the downstream cancel propagator first.
 //			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
-			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->register_cancel_prop_down_to_up(returned_future_copy, this_future_copy);
+			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()
+					->register_cancel_prop_down_to_up(ExtFuture<Unit>(returned_future_copy), ExtFuture<Unit>(this_future_copy));
 
 			try
 			{
@@ -1113,7 +1123,8 @@ protected:
 				Q_ASSERT(ret_future_copy != this_future_copy);
 
 				// Add the downstream cancel propagator first.
-				AddDownstreamCancelFuture(this_future_copy, ret_future_copy);
+//				AddDownstreamCancelFuture(this_future_copy, ret_future_copy);
+				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->register_cancel_prop_down_to_up(ExtFuture<Unit>(this_future_copy), ExtFuture<Unit>(ret_future_copy));
 
 				int i = 0;
 
@@ -1269,6 +1280,7 @@ auto when_any(Futures&&... futures)
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
 {
+	/// @note .d is in fact private for QFuture<void>s.
 	return ExtFutureState::state(qfuture_derived.d);
 }
 
@@ -1287,6 +1299,15 @@ template <typename T>
 QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
 {
 	return QFuture<void>(future.d);
+}
+
+/**
+ * Convert any ExtFuture<T> to a QFuture<void>.
+ */
+template <typename T>
+ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
+{
+	return ExtFuture<Unit>(future.d);
 }
 
 /**

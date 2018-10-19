@@ -668,9 +668,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	// Log the number of free threads in the thread pool.
 	LogThreadPoolInfo(tp);
 
-	// The async task.  Spins forever, reporting "5" to run_down until canceled.
-	ExtFuture<int> run_down;
-	QtConcurrent::run([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &run_down](ExtFuture<int> run_down_copy) {
+	// The async generator task.  Spins forever, reporting "5" to run_down until canceled.
+	ExtFuture<int> generator_task_future;
+	QtConcurrent::run([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future](ExtFuture<int> run_down_copy) {
 		AMLMTEST_EXPECT_FALSE(ran_run_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
@@ -680,7 +680,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_TRUE(run_down_copy.isStarted());
 		AMLMTEST_EXPECT_TRUE(run_down_copy.isRunning());
 //		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
-		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
+		AMLMTEST_EXPECT_EQ(generator_task_future, run_down_copy);
 
 		rsm.ReportResult(J1STARTCB);
 
@@ -704,15 +704,15 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 //		AMLMTEST_ASSERT_FALSE(run_down_copy.isFinished());
 		rsm.ReportResult(J1ENDCB);
 		run_down_copy.reportFinished();
-	}, run_down);
+	}, generator_task_future);
 
-	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
-	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(generator_task_future);
+	AMLMTEST_EXPECT_FALSE(generator_task_future.isCanceled()) << generator_task_future;
 
 	// Then 1
-	ExtFuture<int> down = run_down.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &run_down]
+	ExtFuture<int> downstream_then1 = generator_task_future.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 										(ExtFuture<int> upcopy) -> int{
-		AMLMTEST_EXPECT_EQ(upcopy, run_down);
+		AMLMTEST_EXPECT_EQ(upcopy, generator_task_future);
 		AMLMTEST_EXPECT_TRUE(ran_run_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
@@ -746,12 +746,12 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		TCOUT << "THEN1 RETURNING, future state:" << upcopy;
 		return 5;
 	});
-	EXPECT_FALSE(down.isCanceled());
+	EXPECT_FALSE(downstream_then1.isCanceled());
 
 	// Then 2
-	ExtFuture<int> down2 = down.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &down]
+	ExtFuture<int> downstream_then2 = downstream_then1.then([=, &ran_run_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &downstream_then1]
 									 (ExtFuture<int> upcopy) -> int {
-		AMLMTEST_EXPECT_EQ(upcopy, down);
+		AMLMTEST_EXPECT_EQ(upcopy, downstream_then1);
 		AMLMTEST_EXPECT_TRUE(ran_run_callback);
 		AMLMTEST_EXPECT_TRUE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
@@ -780,7 +780,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		TCOUT << "THEN2 RETURNING, future state:" << upcopy;
 		return 6;
 	});
-	AMLMTEST_EXPECT_FALSE(down2.isCanceled());
+	AMLMTEST_EXPECT_FALSE(downstream_then2.isCanceled());
 
 	// Ok, both then()'s attached, less than a second before the promise sends its first result.
 
@@ -788,18 +788,18 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	TC_Sleep(1000);
 
 	// Cancel the downstream future.
-	TCOUT << "CANCELING TAIL:" << down2;
+	TCOUT << "CANCELING TAIL:" << downstream_then2;
 //	down2.cancel();
-	down2.reportException(ExtAsyncCancelException());
-	TCOUT << "CANCELED TAIL:" << down2;
+	downstream_then2.reportException(ExtAsyncCancelException());
+	TCOUT << "CANCELED TAIL:" << downstream_then2;
 
 	TCOUT << "WAITING TO PROPAGATE";
 	TC_Sleep(2000);
 	TCOUT << "SHOULD HAVE PROPAGATED";
 
-	AMLMTEST_EXPECT_TRUE(down2.isCanceled()) << down2;
-	AMLMTEST_EXPECT_TRUE(down.isCanceled()) << down;
-	AMLMTEST_EXPECT_TRUE(run_down.isCanceled()) << run_down;
+	AMLMTEST_EXPECT_TRUE(downstream_then2.isCanceled()) << downstream_then2;
+	AMLMTEST_EXPECT_TRUE(downstream_then1.isCanceled()) << downstream_then1;
+	AMLMTEST_EXPECT_TRUE(generator_task_future.isCanceled()) << generator_task_future;
 
 	AMLMTEST_EXPECT_TRUE(ran_run_callback);
 	AMLMTEST_EXPECT_TRUE(ran_then1_callback);
