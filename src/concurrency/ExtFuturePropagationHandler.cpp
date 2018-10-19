@@ -85,6 +85,18 @@ void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType dow
 	qIn() << "Registered future pair, now have" << m_down_to_up_cancel_map.size() << "pairs registered.";
 }
 
+void ExtFuturePropagationHandler::unregister_cancel_prop_down_to_up(ExtFuturePropagationHandler::FutureType downstream, ExtFuturePropagationHandler::FutureType upstream)
+{
+	std::unique_lock write_locker(m_shared_mutex);
+
+	// Remove all instances of the pair.
+	auto erase_me = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
+								   [=](auto& val){ return val == std::make_tuple(downstream, upstream); });
+	// ...and finally erase them all.
+	m_down_to_up_cancel_map.erase(erase_me);
+
+}
+
 bool ExtFuturePropagationHandler::cancel_all_and_wait()
 {
 	std::unique_lock write_locker(m_shared_mutex);
@@ -194,6 +206,15 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 					// ...and finally erase them all.
 					m_down_to_up_cancel_map.erase(erase_me);
 				}
+
+				// Remove any entries with Finished but not Canceled keys.
+				// Nothing to propagate for us in this case, and we no longer need to watch The Future(tm).
+				auto erase_me_too = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
+														  [=](auto& val){ return std::get<0>(val).isFinished();
+								});
+				m_down_to_up_cancel_map.erase(erase_me_too, m_down_to_up_cancel_map.end());
+
+				qIn() << "Remaining future pairs:" << m_down_to_up_cancel_map.size();
 			}
 
 			// Threadsafe step 4: Let the destructor do it.
@@ -230,6 +251,7 @@ void ExtFuturePropagationHandler::wait_for_finished_or_canceled()
 				// Both canceled, erase them.
 				qIn() << "erasing future pair:";// << val.first << val.second;
 				it = m_down_to_up_cancel_map.erase(it);
+				qIn() << "Futue count now:" << m_down_to_up_cancel_map.size();
 			}
 		}
 	}

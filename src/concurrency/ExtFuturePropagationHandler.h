@@ -69,6 +69,13 @@ public:
 	void register_cancel_prop_down_to_up(FutureType downstream, FutureType upstream);
 
 	/**
+	 * Unregister for a cancel propagation from downstream to upstream.  Threadsafe.
+	 * @param downstream
+	 * @param upstream
+	 */
+	void unregister_cancel_prop_down_to_up(FutureType downstream, FutureType upstream);
+
+	/**
 	 * Call this just prior to deleting this object.
 	 * @return
 	 */

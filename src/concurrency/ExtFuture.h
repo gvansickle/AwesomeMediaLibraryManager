@@ -736,7 +736,8 @@ public:
 
 			// Add the downstream cancel propagator first.
 //			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
-			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
+			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
+					register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
 
 			try
 			{
