@@ -36,7 +36,7 @@
 class QThread;
 
 // Ours
-#include "ExtFuture.h"
+//#include "ExtFuture.h"
 
 namespace ExtAsync
 {
@@ -59,7 +59,9 @@ public:
 	static void InitStaticExtFutureState();
 
 
-	using FutureType = ExtFuture<Unit>;
+//	using FutureType = ExtFuture<Unit>;
+	using FutureType = QFuture<void>;
+
 
 	/**
 	 * Register for a cancel propagation from downstream to upstream.  Threadsafe.

@@ -60,7 +60,6 @@
 namespace ExtAsync
 {
 namespace detail {}
-	class ExtFuturePropagationHandler;
 }
 
 template <class T>
@@ -1248,7 +1247,8 @@ namespace ExtAsync
 {
 
 template < class Sequence >
-struct when_any_result {
+struct when_any_result
+{
 	std::size_t index;
 	Sequence futures;
 };
@@ -1266,6 +1266,8 @@ auto when_any(Futures&&... futures)
 
 
 #endif // #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
+
+/// Definition
 
 #if !defined(TEMPL_ONLY_NEED_DECLARATION) || defined(TEMPL_ONLY_NEED_DEF)
 
@@ -1296,7 +1298,7 @@ static ExtFutureState::State state(const ExtFuture<T>& ef)
 template <typename T>
 QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
 {
-	return QFuture<void>(future.d);
+	return QFuture<void>(&(future.d));
 }
 
 /**
@@ -1305,7 +1307,7 @@ QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
 template <typename T>
 ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
 {
-	return ExtFuture<Unit>(future.d);
+	return ExtFuture<Unit>();//(future.d);
 }
 
 /**
@@ -1386,7 +1388,7 @@ template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
 	// .resultCount() does not appear to cause a stored exception to be thrown.  It does acquire the mutex.
-	outstream << "ExtFuture<T>( state=" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
+	outstream << "ExtFuture<T>( state: " << extfuture.state() << ", resultCount(): " << extfuture.resultCount() << ")";
 
 	return outstream;
 }

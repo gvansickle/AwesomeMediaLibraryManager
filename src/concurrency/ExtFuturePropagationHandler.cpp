@@ -81,7 +81,8 @@ void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType dow
 
 	// Add the two futures to the map.
 	m_down_to_up_cancel_map.push_back({downstream, upstream});
-	qIn() << "Registered future pair:" << state(downstream) << state(upstream);
+	// << state(downstream) << state(upstream);
+	qIn() << "Registered future pair, now have" << m_down_to_up_cancel_map.size() << "pairs registered.";
 }
 
 bool ExtFuturePropagationHandler::cancel_all_and_wait()
@@ -105,6 +106,10 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 	// Again, yes, I know, there should be a better way to handle this.  There simply isn't.
 	// Well, actually there is, but step 1 is to get this functionality to work.
 
+	qIn() << "Starting patrol";
+
+	std::atomic_bool logged_yield_msg {false};
+
 	while(true)
 	{
 		// Thread-safe step 0: Wait for the possibility of anything to do.
@@ -115,12 +120,24 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			if(m_cancel_incoming_futures)
 			{
 				// We're being canceled.  Break out of this loop.
+				qIn() << "Canceling...";
 				return;
 			}
 			if(m_down_to_up_cancel_map.empty())
 			{
+				if(!logged_yield_msg)
+				{
+					qIn() << "Nothing to propagate, yielding...";
+					logged_yield_msg = true;
+				}
 				// Nothing to propagate, yield and loop until there is.
 				QThread::yieldCurrentThread();
+			}
+			else
+			{
+				// There's an entry, we need to look at it.
+				logged_yield_msg = false;
+				break;
 			}
 		}
 
