@@ -54,6 +54,7 @@
 #include "ExtFutureWatcher.h"
 #include "ExtFutureProgressInfo.h"
 #include "ExtAsyncExceptions.h"
+#include "ExtFuturePropagationHandler.h"
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync
@@ -61,7 +62,6 @@ namespace ExtAsync
 namespace detail {}
 	class ExtFuturePropagationHandler;
 }
-
 
 template <class T>
 class ExtFuture;
@@ -286,7 +286,12 @@ public:
 
 	/// @}
 
+	/**
+	 * @name Static members for the global cancel propagation handler.
+	 */
 	static void InitStaticExtFutureState();
+	static std::shared_ptr<ExtAsync::ExtFuturePropagationHandler> IExtFuturePropagationHandler();
+
 
 
 	/// @name Reporting interface
@@ -717,11 +722,10 @@ public:
 			//     f.cancel().
 
 			Q_ASSERT(returned_future_copy != this_future_copy);
-			Q_CHECK_PTR(s_the_cancel_prop_handler);
 
 			// Add the downstream cancel propagator first.
 //			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
-			s_the_cancel_prop_handler->register_cancel_prop_down_to_up(returned_future_copy, this_future_copy);
+			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->register_cancel_prop_down_to_up(returned_future_copy, this_future_copy);
 
 			try
 			{
@@ -1225,9 +1229,6 @@ protected:
 //	int m_progress_unit { 0 /* == KJob::Unit::Bytes*/};
 
 	/// @}
-
-	static std::unique_ptr<ExtAsync::ExtFuturePropagationHandler> s_the_cancel_prop_handler;
-
 };
 
 

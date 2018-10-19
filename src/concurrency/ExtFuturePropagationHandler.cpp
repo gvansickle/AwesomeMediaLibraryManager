@@ -34,6 +34,20 @@
 namespace ExtAsync
 {
 
+static std::shared_ptr<ExtFuturePropagationHandler> s_the_cancel_prop_handler {nullptr};
+
+void ExtFuturePropagationHandler::InitStaticExtFutureState()
+{
+	ExtAsync::s_the_cancel_prop_handler = ExtAsync::ExtFuturePropagationHandler::make_handler();
+}
+
+std::shared_ptr<ExtFuturePropagationHandler> ExtFuturePropagationHandler::IExtFuturePropagationHandler()
+{
+	Q_ASSERT_X(static_cast<bool>(ExtAsync::s_the_cancel_prop_handler) == true, __PRETTY_FUNCTION__,
+			   "Global ExtFuturePropagationHandler not initialized.");
+	return ExtAsync::s_the_cancel_prop_handler;
+}
+
 ExtFuturePropagationHandler::ExtFuturePropagationHandler()
 {
 	m_patrol_thread = QThread::create(&ExtFuturePropagationHandler::patrol_for_cancels, this);
@@ -53,7 +67,7 @@ std::unique_ptr<ExtFuturePropagationHandler> ExtFuturePropagationHandler::make_h
 	return std::make_unique<ExtFuturePropagationHandler>();
 }
 
-void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(QFuture<void> downstream, QFuture<void> upstream)
+void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType downstream, FutureType upstream)
 {
 	std::unique_lock write_locker(m_shared_mutex);
 
@@ -66,7 +80,7 @@ void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(QFuture<void> 
 	}
 
 	// Add the two futures to the map.
-	m_down_to_up_cancel_map.insert({downstream, upstream});
+	m_down_to_up_cancel_map.push_back({downstream, upstream});
 }
 
 bool ExtFuturePropagationHandler::cancel_all_and_wait()
@@ -115,17 +129,17 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 
 			// This is read-only, and won't invalidate any iterators.
 
-			std::multimap<QFuture<void> , QFuture<void> > canceled_ExtFuture_map;
+			map_type canceled_ExtFuture_map;
 
 			{
 				std::shared_lock read_locker(m_shared_mutex);
 
 				for(auto it : m_down_to_up_cancel_map)
 				{
-					if(it.first.isCanceled())
+					if(std::get<0>(it).isCanceled())
 					{
 						// Found a canceled key, add the entry to the local map.
-						canceled_ExtFuture_map.insert(it);
+						canceled_ExtFuture_map.push_back(it);
 					}
 				}
 			}
@@ -136,7 +150,7 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			qDb() << "Propagating cancels from" << canceled_ExtFuture_map.size() << "ExtFuture<>s.";
 			std::for_each(canceled_ExtFuture_map.begin(), canceled_ExtFuture_map.end(),
 						  [](map_pair_type p){
-				p.second.cancel();
+				std::get<1>(p).cancel();
 			});
 
 			// Threadsafe step 3: Remove The Future(tm).
@@ -144,9 +158,15 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			{
 				std::unique_lock write_locker(m_shared_mutex);
 				qDb() << "Deleting" << canceled_ExtFuture_map.size() << "canceled ExtFuture<>s.";
+
+				// For each pair we want to delete...
 				for(auto it = canceled_ExtFuture_map.cbegin(); it != canceled_ExtFuture_map.cend(); ++it)
 				{
-					m_down_to_up_cancel_map.erase(it->first);
+					// ... remove all instances of it...
+					auto erase_me = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
+								   [=](auto& val){ return val == *it;});
+					// ...and finally erase them all.
+					m_down_to_up_cancel_map.erase(erase_me);
 				}
 			}
 
@@ -163,8 +183,8 @@ void ExtFuturePropagationHandler::cancel_all()
 	for(map_pair_type& val : m_down_to_up_cancel_map)
 	{
 		// Cancel everything we see, key and value.
-		const_cast<map_type::key_type&>(val.first).cancel();
-		val.second.cancel();
+		std::get<0>(val).cancel();
+		std::get<1>(val).cancel();
 	}
 }
 
@@ -177,8 +197,8 @@ void ExtFuturePropagationHandler::wait_for_finished_or_canceled()
 			auto val = *it;
 			// Erase everything that has a canceled or finished key and value.
 			/// @todo timeout/error handling
-			if((val.first.isFinished() || val.first.isCanceled())
-					&& (val.second.isFinished() ||(val.second.isCanceled()))
+			if((std::get<0>(val).isFinished() || std::get<0>(val).isCanceled())
+					&& (std::get<1>(val).isFinished() ||(std::get<1>(val).isCanceled()))
 					)
 			{
 				// Both canceled, erase them.

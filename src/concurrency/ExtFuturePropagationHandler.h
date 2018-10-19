@@ -26,6 +26,8 @@
 // Std C++
 #include <shared_mutex>
 #include <map>
+#include <unordered_map>
+#include <deque>
 #include <atomic>
 
 // Qt5
@@ -51,12 +53,20 @@ public:
 
 	static std::unique_ptr<ExtFuturePropagationHandler> make_handler();
 
+	static std::shared_ptr<ExtFuturePropagationHandler> s_the_cancel_prop_handler;
+
+	static void InitStaticExtFutureState();
+
+	static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler();
+
+	using FutureType = QFuture<void>;
+
 	/**
 	 * Register for a cancel propagation from downstream to upstream.  Threadsafe.
 	 * @param downstream
 	 * @param upstream
 	 */
-	void register_cancel_prop_down_to_up(QFuture<void> downstream, QFuture<void> upstream);
+	void register_cancel_prop_down_to_up(FutureType downstream, FutureType upstream);
 
 	/**
 	 * Call this just prior to deleting this object.
@@ -87,14 +97,36 @@ protected:
 	 */
 	std::atomic_bool m_cancel_incoming_futures {false};
 
-	using map_type = std::multimap<QFuture<void>, QFuture<void>>;
+//	using map_type = std::multimap<QFuture<void>, QFuture<void>>;
+//	using map_type = std::unordered_multimap<QFuture<void>, QFuture<void>>;
+	// Not really a map.  Not really even close to a map.
+	using map_type = std::deque<std::tuple<FutureType, FutureType>>;
+
 	map_type m_down_to_up_cancel_map;
 	using map_pair_type = decltype(m_down_to_up_cancel_map)::value_type;
-	using nonconst_key_map_value_type = std::pair<map_type::key_type, map_type::mapped_type>;
+	using nonconst_key_map_value_type = std::pair<FutureType, FutureType>;
 
 	QThread* m_patrol_thread {nullptr};
 
 };
+
+/**
+ * Monitors ExtFuture<>s for cancelation and propagates it up the .then() chain.
+ */
+//static std::shared_ptr<ExtFuturePropagationHandler> s_the_cancel_prop_handler;// {nullptr};
+
+
+//static void InitStaticExtFutureState()
+//{
+//	ExtAsync::s_the_cancel_prop_handler = ExtAsync::ExtFuturePropagationHandler::make_handler();
+//}
+
+//static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler()
+//{
+//	Q_ASSERT_X(static_cast<bool>(ExtAsync::s_the_cancel_prop_handler) == true, __PRETTY_FUNCTION__,
+//			   "Global ExtFuturePropagationHandler not initialized.");
+//	return ExtAsync::s_the_cancel_prop_handler;
+//}
 
 
 } /* namespace ExtAsync */

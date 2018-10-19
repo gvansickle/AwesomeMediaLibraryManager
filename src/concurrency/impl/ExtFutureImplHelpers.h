@@ -189,6 +189,9 @@ static QFuture<int> AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFutur
 		// and reported any exceptions upstream to this.  Or downstream_future has finished.
 		// If we get here, there's really nothing for us to do.
 		qDb() << "downstream_future_copy finished or canceled:" << downstream_future_copy;
+
+		return 0;
+
 		}, this_future, downstream_future);
 }
 

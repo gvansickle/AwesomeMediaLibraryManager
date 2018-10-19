@@ -116,15 +116,13 @@ namespace ExtAsync
 	} // END namespace detail
 #endif
 
-static std::atomic_int64_t s_qthread_id {0};
+	static std::atomic_int64_t s_qthread_id {0};
 
-static inline void name_qthread()
-{
-    int64_t id = ++s_qthread_id;
-    QThread::currentThread()->setObjectName(QString("%1_").arg(id) + QThread::currentThread()->objectName() );
-};
-
-
+	static inline void name_qthread()
+	{
+		int64_t id = ++s_qthread_id;
+		QThread::currentThread()->setObjectName(QString("%1_").arg(id) + QThread::currentThread()->objectName() );
+	};
 
     /**
      * Helper struct for creating SFINAE-friendly function overloads-of-last-resort.

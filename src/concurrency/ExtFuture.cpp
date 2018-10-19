@@ -50,21 +50,28 @@
 // Ours
 #include "ExtFuturePropagationHandler.h"
 
-namespace ExtAsync
-{
+//namespace ExtAsync
+//{
 
-/**
- * Monitors ExtFuture<>s for cancelation and propagates it up the .then() chain.
- */
-static std::unique_ptr<ExtAsync::ExtFuturePropagationHandler> s_the_cancel_prop_handler {nullptr};
+///**
+// * Monitors ExtFuture<>s for cancelation and propagates it up the .then() chain.
+// */
+//static std::shared_ptr<ExtFuturePropagationHandler> s_the_cancel_prop_handler;// {nullptr};
 
-};
+//};
 
-template<typename T>
-void ExtFuture<T>::InitStaticExtFutureState()
-{
-	s_the_cancel_prop_handler = ExtAsync::ExtFuturePropagationHandler::make_handler();
-}
+//template<typename T>
+//void ExtFuture<T>::InitStaticExtFutureState()
+//{
+//	ExtAsync::s_the_cancel_prop_handler = ExtAsync::ExtFuturePropagationHandler::make_handler();
+//}
+
+//template<typename T>
+//std::shared_ptr<ExtAsync::ExtFuturePropagationHandler> ExtFuture<T>::IExtFuturePropagationHandler()
+//{
+//	Q_ASSERT(static_cast<bool>(ExtAsync::s_the_cancel_prop_handler) == true);
+//	return ExtAsync::s_the_cancel_prop_handler;
+//}
 
 /// @name Explicit instantiations to try to get compile times down.
 template class ExtFuture<Unit>;
