@@ -66,8 +66,6 @@ namespace detail {}
 template <class T>
 class ExtFuture;
 
-class Unit;
-
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
 
@@ -267,7 +265,8 @@ public:
 	 */
 	explicit operator ExtFuture<Unit>() const
 	{
-		return ExtFuture<Unit>(&(this->d));
+//		return ExtFuture<Unit>(&(this->d));
+		return qToUnitExtFuture(*this);
 	}
 
 	/// @name Comparison operators.
@@ -734,8 +733,7 @@ public:
 
 			// Add the downstream cancel propagator first.
 //			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
-			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()
-					->register_cancel_prop_down_to_up(ExtFuture<Unit>(returned_future_copy), ExtFuture<Unit>(this_future_copy));
+			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
 
 			try
 			{

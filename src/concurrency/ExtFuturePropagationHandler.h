@@ -25,8 +25,9 @@
 
 // Std C++
 #include <shared_mutex>
-#include <map>
-#include <unordered_map>
+#include <memory>
+//#include <map>
+//#include <unordered_map>
 #include <deque>
 #include <atomic>
 
@@ -57,7 +58,6 @@ public:
 
 	static void InitStaticExtFutureState();
 
-	static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 
 	using FutureType = ExtFuture<Unit>;
 
@@ -89,7 +89,7 @@ protected:
 
 	void wait_for_finished_or_canceled();
 
-	// Shared mutex because we're highly reader-writer.
+	/// Shared mutex because we're highly reader-writer.
 	std::shared_mutex m_shared_mutex;
 
 	/**
@@ -105,6 +105,9 @@ protected:
 	using nonconst_key_map_value_type = std::pair<FutureType, FutureType>;
 
 	QThread* m_patrol_thread {nullptr};
+
+public:
+	static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 
 };
 
