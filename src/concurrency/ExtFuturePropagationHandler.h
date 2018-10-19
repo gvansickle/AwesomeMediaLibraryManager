@@ -26,8 +26,6 @@
 // Std C++
 #include <shared_mutex>
 #include <memory>
-//#include <map>
-//#include <unordered_map>
 #include <deque>
 #include <atomic>
 
@@ -109,6 +107,7 @@ protected:
 	QThread* m_patrol_thread {nullptr};
 
 public:
+	/// Return a pointer to the singleton.
 	static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 
 };

@@ -120,14 +120,14 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			if(m_cancel_incoming_futures)
 			{
 				// We're being canceled.  Break out of this loop.
-				qIn() << "Canceling...";
+				qIn() << "ExtFuturePropagationHandler being canceled...";
 				return;
 			}
 			if(m_down_to_up_cancel_map.empty())
 			{
 				if(!logged_yield_msg)
 				{
-					qIn() << "Nothing to propagate, yielding...";
+					qIn() << "No entries, nothing to propagate, yielding...";
 					logged_yield_msg = true;
 				}
 				// Nothing to propagate, yield and loop until there is.
@@ -157,6 +157,7 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 					if(std::get<0>(it).isCanceled())
 					{
 						// Found a canceled key, add the entry to the local map.
+						qIn() << "Propagating cancel from" << &std::get<0>(it) << "to" << &std::get<1>(it);
 						canceled_ExtFuture_map.push_back(it);
 					}
 				}

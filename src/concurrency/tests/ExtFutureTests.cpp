@@ -702,7 +702,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 		// We've been canceled, but not finished.
 		AMLMTEST_ASSERT_TRUE(generator_task_future_copy.isCanceled());
-//		AMLMTEST_ASSERT_FALSE(run_down_copy.isFinished());
+		AMLMTEST_ASSERT_FALSE(generator_task_future_copy.isFinished());
 		generator_task_future_copy.reportFinished();
 		rsm.ReportResult(J1ENDCB);
 	}, generator_task_future);
