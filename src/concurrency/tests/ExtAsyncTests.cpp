@@ -975,13 +975,14 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenMultipleResults)
 
 ///// ExtAsync<>::run() tests.
 
-TEST_F(ExtAsyncTestsSuiteFixture, DISABLED_ExtAsyncRunFreefunc)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRunFreefunc)
 {
     TC_ENTER();
 /// @todo Pretty broken if we have to directly use QtConcurrent::run().
-	ExtFuture<int> extfuture = static_cast<ExtFuture<int>>(/*ExtAsync*/QtConcurrent::run([=](){ return 4;}));
+//	ExtFuture<int> extfuture = static_cast<ExtFuture<int>>(/*ExtAsync*/QtConcurrent::run([=](){ return 4;}));
+	ExtFuture<int> extfuture = ExtAsync::run_again([=](ExtFuture<int> f) -> int { int val = 4; f.reportFinished(&val); return val; });
 
-    QList<int> retval = extfuture.get();
+	QList<int> retval = extfuture.get();
 
     ASSERT_EQ(retval.size(), 1);
     ASSERT_EQ(retval[0], 4);

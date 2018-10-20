@@ -693,12 +693,12 @@ public:
 	 *                        If false, don't call the callback, but handle cancellation internally.
 	 */
 	template <typename ThenCallbackType,
-			  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
-			  REQUIRES(!is_ExtFuture_v<R>
-			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
+			  typename LiftedR = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
+			  REQUIRES(!is_ExtFuture_v<LiftedR>
+			  && ct::is_invocable_r_v<Unit::DropT<LiftedR>, ThenCallbackType, ExtFuture<T>>)>
+	ExtFuture<LiftedR> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
 	{
-		static_assert (!std::is_same_v<R, void>, "Callback return value should never be void");
+		static_assert (!std::is_same_v<LiftedR, void>, "Callback return value should never be void");
 
 		if(context != nullptr)
 		{
@@ -709,12 +709,12 @@ public:
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
-		ExtFuture<R> returned_future;
+		ExtFuture<LiftedR> returned_future;
 
 		QtConcurrent::run(
 //		returned_future = ExtAsync::run_again(
 			[=, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
-					(ExtFuture<T> this_future_copy, ExtFuture<R> returned_future_copy) {
+					(ExtFuture<T> this_future_copy, ExtFuture<LiftedR> returned_future_copy) {
 
 			// Ok, we're now running in the thread which will call then_callback_copy(this_future_copy).
 			// At this point:
@@ -797,7 +797,7 @@ public:
 					// Call the callback with the results- or canceled/exception-laden this_future_copy.
 					// Could throw, hence we're in a try.
 //					qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
-					R retval;
+					LiftedR retval;
 
 //					if(context != nullptr)
 //					{
@@ -806,7 +806,7 @@ public:
 //					}
 //					else
 					{
-						if constexpr(std::is_same_v<R,Unit>)
+						if constexpr(std::is_same_v<LiftedR,Unit>)
 						{
 							// then_callback_copy returns void, return a Unit separately.
 							qDb() << "INVOKING ret type == Unit";
