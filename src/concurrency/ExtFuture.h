@@ -749,7 +749,15 @@ public:
 				// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't use
 				// this_future_copy.waitForFinished(); here because it will return immediately if the thread hasn't
 				// "really" started (i.e. if isRunning() == false).
-				spinWaitForFinishedOrCanceled(this_future_copy);
+				if(this_future_copy.isRunning())
+				{
+					this_future_copy.waitForFinished();
+				}
+				else
+				{
+					qWr() << "SPINWAIT";
+					spinWaitForFinishedOrCanceled(this_future_copy);
+				}
 
 				Q_ASSERT(this_future_copy.isFinished() || this_future_copy.isCanceled());
 
@@ -1258,12 +1266,12 @@ struct when_any_result
 	Sequence futures;
 };
 
-template < class... Futures >
-auto when_any(Futures&&... futures)
-	-> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>
-{
-
-}
+//template < class... Futures >
+//auto when_any(Futures&&... futures)
+//	-> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>
+//{
+//
+//}
 
 } /// END namespace
 

@@ -420,6 +420,18 @@ FutureT make_default_future()
     return FutureT(&fi);
 }
 
+template <class T>
+auto qfiface(QFuture<T>& f)
+{
+	return f.d;
+}
+
+template <class T>
+auto qfiface(ExtFuture<T>& f)
+{
+	return f;
+}
+
 template <typename T>
 void reportFinished(QFuture<T>* f)
 {
@@ -438,6 +450,16 @@ void reportFinished(ExtFuture<T>* f)
 	f->reportFinished();
 
 	AMLMTEST_EXPECT_TRUE(f->isFinished());
+}
+
+template <typename T>
+void reportCanceled(QFuture<T>* f)
+{
+	AMLMTEST_SCOPED_TRACE("reportCanceled(ExtFuture<T>& f)");
+
+	f->d.reportCanceled();
+
+	AMLMTEST_EXPECT_TRUE(f->isCanceled());
 }
 
 template <typename FutureT, class ResultType>
