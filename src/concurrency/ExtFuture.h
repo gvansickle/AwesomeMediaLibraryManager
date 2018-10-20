@@ -408,28 +408,18 @@ public:
 
 	/**
 	 * .reportException():
+	 * - Locks mutex.
+	 * - Does nothing and returns if this future's state is (Canceled|Finished).
 	 * - Stores exception in the shared state,
 	 * - Switches state to Canceled.
 	 * - Sends Canceled callout.
-	 * @note Does nothing if this future's state is (Canceled|Finished).
-	 *
-	 * QFutureInterfaceBase::cancel():
-	 * - Locks the future's mutex.
-	 * - returns if (state & Canceled)
-	 * - else switches out of Paused and into Canceled
-	 * - Wakes all on two wc's.
-	 * - sends the Canceled callout.
-	 *
-	 * @param e
 	 */
 	void reportException(const QException &e)
 	{
-		this->d.mutex()->lock();
-		if(this->isCanceled() || this->isFinished())
+		if(this->d.queryState(QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled|QFutureInterfaceBase::Finished)))
 		{
-			qWr() << "FUTURE ALREADY FINISHED/CANCELED, EXCEPTION WILL BE IGNORED";
+			qWr() << "FUTURE ALREADY FINISHED OR CANCELED, EXCEPTION WILL BE IGNORED";
 		}
-		this->d.mutex()->unlock();
 		this->d.reportException(e);
 	}
 
@@ -689,14 +679,18 @@ public:
 	 * Canceling
 	 * The returned future can be canceled, and the cancelation will propagate upstream (i.e. to this).
 	 *
-	 * Exceptions from callback
-	 * Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
-	 * "Any exception propagated from the execution of the continuation is stored as the exceptional result
-	 * in the shared state of the returned future object."
+	 * @note Exceptions from callback
+	 *
+	 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+	 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+	 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+	 *  state of the returned future object."
+	 *
 	 * So we need to wrap the call to then_callback with a try/catch, and send any exceptions we catch
 	 * to the returned future.
 	 *
-	 * @param call_on_cancel  If false, don't call the callback on a downstream cancel.
+	 * @param call_on_cancel  If true, call the callback if the returned future is canceled.
+	 *                        If false, don't call the callback, but handle cancellation internally.
 	 */
 	template <typename ThenCallbackType,
 			  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
@@ -734,18 +728,15 @@ public:
 
 			Q_ASSERT(returned_future_copy != this_future_copy);
 
-			// Add the downstream cancel propagator first.
-//			auto dscancel_future = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
-			ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
-					register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
-
 			try
 			{
-//				Q_ASSERT(dscancel_future.isStarted());
-//				qDb() << "In .then() outer callback try block. this_future_copy:" << this_future_copy;
+				// Add the downstream to upstream cancel propagator before doing anything else.
+				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
+						register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
+
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
-				// This could throw a propagated exception from upstream.
+				// This could throw a propagated exception from upstream (this_future_copy).
 				// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't use
 				// this_future_copy.waitForFinished(); here because it will return immediately if the thread hasn't
 				// "really" started (i.e. if isRunning() == false).
@@ -761,11 +752,10 @@ public:
 
 				Q_ASSERT(this_future_copy.isFinished() || this_future_copy.isCanceled());
 
-				// Ok, so now we're finished and/or canceled.
+				// Ok, so now we're definitely finished and/or canceled.
 				// This call will block, or throw if an exception is reported to this_future_copy.
 				this_future_copy.waitForFinished();
 
-//				qDb() << "Leaving Then callback Try, waitForFinished() finished:" << this_future_copy.state();
 				Q_ASSERT(this_future_copy.isFinished() || this_future_copy.isCanceled());
 			}
 			catch(ExtAsyncCancelException& e)
@@ -857,7 +847,7 @@ public:
 
 			returned_future_copy.reportFinished();
 
-			}, *this, returned_future);
+			}, *this, returned_future); //< Note copy by value of the two futures into the ::run().
 
 		return returned_future;
 	}

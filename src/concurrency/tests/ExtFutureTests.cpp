@@ -448,11 +448,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 			for(int i = 0; i < 10; i++)
 			{
-//				TCOUT << "START Sleep:" << i << root_async_operation_future_copy.state();
 				TC_Sleep(1000);
-//				TCOUT << "STOP Sleep:" << i << root_async_operation_future_copy.state();
-
-//				TCOUT << "upcopy state:" << root_async_operation_future_copy.state();
 
 				if(root_async_operation_future_copy.HandlePauseResumeShouldICancel())
 				{
@@ -460,7 +456,6 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 					break;
 				}
 			}
-//			TCOUT << "RETURNING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy.state();
 
 			return 1;
 	});

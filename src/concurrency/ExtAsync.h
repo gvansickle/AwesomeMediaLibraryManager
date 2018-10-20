@@ -90,6 +90,31 @@ template <class CallbackType>
 		{
 			static_assert(!std::is_same_v<R, void>, "Should never get here with retval == void");
 
+			/**
+			 * @note Exception handling.
+			 * This is the basic pattern used in multiple ::run()-likes in Qt5.  Note the use of
+			 * reportException() on this, which is in these cases the same as the returned future.
+			 * We're doing Qt5 one better here, so we'll have to propagate to the control/return future
+			 * passed to the callback.
+			 * @code
+			 *      try {
+			 * 		this->m_task->run(*this);
+						} catch (QException &e) {
+							QFutureInterface<T>::reportException(e);
+						} catch (...) {
+							QFutureInterface<T>::reportException(QUnhandledException());
+						}
+			 * @endcode
+			 *
+			 * Per QException docs: @link http://doc.qt.io/qt-5/qexception.html
+			 * "When using QFuture, transferred exceptions will be thrown when calling the following functions:
+	    			QFuture::waitForFinished()
+	    			QFuture::result()
+	    			QFuture::resultAt()
+	    			QFuture::results()
+			 * "
+			 */
+
 			using ExtFutureR = ExtFuture<R>;
 
 			ExtFutureR retfuture;
@@ -130,23 +155,14 @@ template <class CallbackType>
 				}
 				catch(ExtAsyncCancelException& e)
 				{
-					/**
-				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
-				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
-				 *  state of the returned future object."
-				 */
-					//			qDb() << "Rethrowing exception";
 					retfuture_copy.reportException(e);
 				}
 				catch(QException& e)
 				{
-					//			qDb() << "Rethrowing exception";
 					retfuture_copy.reportException(e);
 				}
 				catch (...)
 				{
-					//			qDb() << "Rethrowing exception";
 					retfuture_copy.reportException(QUnhandledException());
 				}
 
@@ -155,10 +171,13 @@ template <class CallbackType>
 
 			};
 
+			// Run the callback, wrapped in the lambda above, concurrently.
+			// We're ignoring the QFuture<> returned by ::run() here, since retfuture is
+			// handling that job for us, better.
 			QtConcurrent::run(lambda, retfuture, std::forward<Args>(args)...);
 
 			return retfuture;
-		}
+		} // END detail_struct::run_again()
 	}; // END struct detail_struct
 
 #if 0
@@ -445,13 +464,11 @@ template <class CallbackType>
 		 * @todo Exception handling.
 		 * This is the basic pattern.  Note the use of reportException():
 		 * 		this->m_task->run(*this);
-				#ifndef QT_NO_EXCEPTIONS
 					} catch (QException &e) {
 						QFutureInterface<T>::reportException(e);
 					} catch (...) {
 						QFutureInterface<T>::reportException(QUnhandledException());
 					}
-				#endif
 		 *
 		 * Per QException docs: @link http://doc.qt.io/qt-5/qexception.html
 		 * "When using QFuture, transferred exceptions will be thrown when calling the following functions:
