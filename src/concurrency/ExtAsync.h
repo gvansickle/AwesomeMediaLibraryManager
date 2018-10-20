@@ -80,10 +80,24 @@ template <class CallbackType>
 	struct detail_struct
 	{
 
+		/**
+		 *
+		 * @param callback  Callback function which will be run in the thread pool.
+		 * 					Must have this form:
+		 * 					@code
+		 * 						R callback(ExtFutureT, args...)
+		 * 					@endcode
+		 * 					Where:
+		 * 						ExtFutureT == the extracted first arg of callback, must be a non-nested ExtFuture.
+		 * 						R == Unit::LiftT<> of return value of callback.  I.e. void == Unit, all other types the same.
+		 * @param args      Optional additional arguments to pass to callback after the ExtFutureT.
+		 * @return
+		 */
 		template<class... Args,
 				 class ExtFutureT = argtype_t<CallbackType, 0>,
 				 class R = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>,
 				 REQUIRES(is_ExtFuture_v<ExtFutureT>
+					&& NonNestedExtFuture<ExtFutureT>
 				 && ct::is_invocable_r_v<R, CallbackType, ExtFutureT, Args...>)
 				 >
 		static auto run_again(CallbackType callback, Args... args) -> ExtFuture<R>
@@ -141,7 +155,7 @@ template <class CallbackType>
 				R retval;
 
 				//			static_assert(sizeof...(copied_args_from_run) != 0);
-				static_assert(!std::is_same_v<R, void>, "Should never get here with retval == void");
+				static_assert(!std::is_same_v<R, void>, "Should never get here with decltype(retval) == void");
 
 				Q_ASSERT(check_retfuture == retfuture_copy);
 

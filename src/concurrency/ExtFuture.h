@@ -712,6 +712,7 @@ public:
 		ExtFuture<R> returned_future;
 
 		QtConcurrent::run(
+//		returned_future = ExtAsync::run_again(
 			[=, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
 					(ExtFuture<T> this_future_copy, ExtFuture<R> returned_future_copy) {
 
@@ -847,7 +848,9 @@ public:
 
 			returned_future_copy.reportFinished();
 
-			}, *this, returned_future); //< Note copy by value of the two futures into the ::run().
+			},
+			*this,
+			returned_future); //< Note copy by value of the two futures into the ::run().
 
 		return returned_future;
 	}

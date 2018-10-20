@@ -471,7 +471,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 			}
 			catch(...)
 			{
-			Q_ASSERT_X(0, __func__, "NEED TO RETHROW");
+			Q_ASSERT_X(0, "root_async_operation_future.then", "NEED TO RETHROW");
 				TCOUT << "CAUGHT EXCEPTION";
 			}
 			return 5;
@@ -741,8 +741,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	// The async generator task.  Spins forever, reporting "5" to run_down until canceled.
 	ExtFuture<int> generator_task_future;
-	QtConcurrent::run([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
-					  (ExtFuture<int> generator_task_future_copy) {
+//	QtConcurrent::run(
+	generator_task_future = ExtAsync::run_again(
+				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
+					  (ExtFuture<int> generator_task_future_copy) -> int {
 		AMLMTEST_EXPECT_FALSE(ran_generator_task_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
@@ -772,11 +774,14 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		}
 
 		// We've been canceled, but not finished.
-		AMLMTEST_ASSERT_TRUE(generator_task_future_copy.isCanceled());
-		AMLMTEST_ASSERT_FALSE(generator_task_future_copy.isFinished());
+		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isCanceled());
+		AMLMTEST_EXPECT_FALSE(generator_task_future_copy.isFinished());
 		generator_task_future_copy.reportFinished();
 		rsm.ReportResult(J1ENDCB);
-	}, generator_task_future);
+		return 1;
+	}
+//	, generator_task_future
+	);
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(generator_task_future);
 	AMLMTEST_EXPECT_FALSE(generator_task_future.isCanceled()) << generator_task_future;
@@ -857,6 +862,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	AMLMTEST_EXPECT_FALSE(downstream_then2.isCanceled());
 
 	// Ok, both then()'s attached, less than a second before the promise sends its first result.
+
+	// Check the number of free threads in the thread pool again.
+	LogThreadPoolInfo(tp);
 
 	// Wait a few ticks.
 	TC_Sleep(1000);

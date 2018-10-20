@@ -268,7 +268,7 @@ void ExtFuturePropagationHandler::wait_for_finished_or_canceled()
 				// Both canceled, erase them.
 				qIn() << "erasing future pair:";// << val.first << val.second;
 				it = m_down_to_up_cancel_map.erase(it);
-				qIn() << "Futue count now:" << m_down_to_up_cancel_map.size();
+				qIn() << "Future count now:" << m_down_to_up_cancel_map.size();
 			}
 		}
 	}
