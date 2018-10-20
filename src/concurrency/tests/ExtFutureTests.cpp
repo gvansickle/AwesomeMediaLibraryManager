@@ -396,8 +396,12 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 }
 
 
-
-TEST_F(ExtFutureTest, DISABLED_ExtFutureThenThrow)
+/**
+ * Start an ExtAsync::run() operation, attach a then(), and before it completes, report
+ * an ExtAsyncCancelException() to the future returned from the then().
+ * Make sure the exception propagates to the run().
+ */
+TEST_F(ExtFutureTest, ExtFutureThenThrow)
 {
 	TC_ENTER();
 
@@ -428,39 +432,43 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenThrow)
 	}
 
 	// So we can assert we're getting the same ExtFuture when we enter the run() callback.
-	ExtFuture<int> up;
+	ExtFuture<int> root_async_operation_future;
 
 	rsm.ReportResult(MSTART);
 
-	up = run_again([=, &up, &rsm](ExtFuture<int> upcopy) -> int {
+	// Create and start the async operation.
+	root_async_operation_future = ExtAsync::run_again([=, &root_async_operation_future, &rsm]
+													  (ExtFuture<int> root_async_operation_future_copy) -> int {
+
+		SCOPED_TRACE("ExtAsync::run()");
+
+		AMLMTEST_EXPECT_EQ(root_async_operation_future_copy, root_async_operation_future);
 
 		rsm.ReportResult(T1STARTCB);
 
-		AMLMTEST_EXPECT_EQ(upcopy, up);
-
 			for(int i = 0; i < 10; i++)
 			{
-				TCOUT << "START Sleep:" << i << upcopy.state();
+//				TCOUT << "START Sleep:" << i << root_async_operation_future_copy.state();
 				TC_Sleep(1000);
-				TCOUT << "STOP Sleep:" << i << upcopy.state();
+//				TCOUT << "STOP Sleep:" << i << root_async_operation_future_copy.state();
 
-				TCOUT << "upcopy state:" << upcopy.state();
+//				TCOUT << "upcopy state:" << root_async_operation_future_copy.state();
 
-				if(upcopy.HandlePauseResumeShouldICancel())
+				if(root_async_operation_future_copy.HandlePauseResumeShouldICancel())
 				{
-					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
+//					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy.state();
 					break;
 				}
 			}
-			TCOUT << "RETURNING FROM RUN() CALLBACK, upcopy state:" << upcopy.state();
+//			TCOUT << "RETURNING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy.state();
 
 			return 1;
 	});
-	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(up);
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
 
-	ExtFuture<int> down = up.then([&](ExtFuture<int> upcopy) {
-		AMLMTEST_EXPECT_EQ(upcopy, up);
-		TCOUT << "START up.then(), upcopy:" << upcopy.state();
+	ExtFuture<int> final_downstream_future = root_async_operation_future.then([&](ExtFuture<int> upcopy) {
+		AMLMTEST_EXPECT_EQ(upcopy, root_async_operation_future);
+		TCOUT << "START root_async_operation_future.then(), upcopy:" << upcopy.state();
 //			EXPECT_TRUE(false) << "Should never get here";
 			try
 			{
@@ -468,36 +476,38 @@ TEST_F(ExtFutureTest, DISABLED_ExtFutureThenThrow)
 			}
 			catch(...)
 			{
+			Q_ASSERT_X(0, __func__, "NEED TO RETHROW");
 				TCOUT << "CAUGHT EXCEPTION";
 			}
 			return 5;
 			;});
 
-	AMLMTEST_EXPECT_FALSE(down.isCanceled());
+	AMLMTEST_EXPECT_FALSE(final_downstream_future.isCanceled());
 
 	// Check again, up should still not be finished or canceled.
-	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(up);
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
 
-	AMLMTEST_COUT << "DOWN THROWING CANCEL PRE:" << down.state();
-	AMLMTEST_EXPECT_FALSE(down.isFinished() || down.isCanceled());
-	down.reportException(ExtAsyncCancelException());
-	AMLMTEST_COUT << "DOWN THROWING CANCEL POST:" << down.state();
+	// Report an ExtAsyncCancelException() to the final future.
+	AMLMTEST_EXPECT_FALSE(final_downstream_future.isFinished() || final_downstream_future.isCanceled()) << final_downstream_future.state();
+	final_downstream_future.reportException(ExtAsyncCancelException());
+
+//	AMLMTEST_COUT << "DOWN THROWING CANCEL POST:" << final_downstream_future.state();
 
 	try
 	{
-		AMLMTEST_COUT << "UP WAITING FOR EXCEPTION:" << up.state();
-		up.waitForFinished();
-		AMLMTEST_COUT << "UP FINISHED" << up.state();
+		AMLMTEST_COUT << "UP WAITING FOR EXCEPTION:" << root_async_operation_future.state();
+		root_async_operation_future.waitForFinished();
+		AMLMTEST_COUT << "UP FINISHED" << root_async_operation_future.state();
 	}
 	catch (ExtAsyncCancelException& e) {
-		AMLMTEST_COUT << "UP CAUGHT CANCEL" << up.state() << e.what();
+		AMLMTEST_COUT << "UP CAUGHT CANCEL" << root_async_operation_future.state() << e.what();
 	}
 
 	TC_Sleep(1000);
 
 
-	EXPECT_TRUE(down.isCanceled());
-	EXPECT_TRUE(up.isCanceled()) << up;
+	EXPECT_TRUE(final_downstream_future.isCanceled());
+	EXPECT_TRUE(root_async_operation_future.isCanceled()) << root_async_operation_future;
 
 	rsm.ReportResult(MEND);
 

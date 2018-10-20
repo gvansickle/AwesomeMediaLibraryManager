@@ -1358,15 +1358,15 @@ ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 template <class T, class E,
 		  REQUIRES(!is_ExtFuture_v<T>
 		  && std::is_base_of_v<QException, E>)>
-ExtFuture</*typename std::decay_t<*/T> make_exceptional_future(const E & exception)
+ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 {
-	ExtFuture<T> extfuture;
+	QFutureInterface<T> qfi;
 
-	extfuture.reportStarted();
-	extfuture.reportException(exception);
-	extfuture.reportFinished();
+	qfi.reportStarted();
+	qfi.reportException(exception);
+	qfi.reportFinished();
 
-	return extfuture;
+	return ExtFuture<T>(&qfi);
 }
 
 /**

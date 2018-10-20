@@ -394,6 +394,15 @@ list(APPEND GTK_LINK_LIB_TARGETS ${XCB_TARGETS})
 print_varlist(XCB_TARGETS GTK_LINK_LIB_TARGETS)
 endif(UNIX)
 
+
+#
+# Intel's TBB.
+#
+### This pulls the code down from github.
+#include(/usr/lib64/cmake/tbb/TBBGet.cmake)
+#tbb_get(TBB_ROOT tbb_root CONFIG_DIR TBB_DIR)
+#find_package(TBB REQUIRED tbb)
+
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
 #
