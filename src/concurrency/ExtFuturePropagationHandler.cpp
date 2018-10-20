@@ -153,9 +153,27 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			}
 		}
 
+		{
+			std::unique_lock write_locker(m_shared_mutex);
+
+			// Remove any entries with Finished but not Canceled keys.
+			// Nothing to propagate for us in this case, and we no longer need to watch The Future(tm).
+			auto erase_me_too = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
+											   [=](auto& val){
+				return std::get<0>(val).isFinished() && !std::get<0>(val).isCanceled();
+			});
+			if((m_down_to_up_cancel_map.end() - erase_me_too) > 0)
+			{
+				qIn() << "ERASING" << (m_down_to_up_cancel_map.end() - erase_me_too) << " FINISHED NOT CANCELED PAIRS";
+				m_down_to_up_cancel_map.erase(erase_me_too, m_down_to_up_cancel_map.end());
+				qIn() << "Remaining future pairs:" << m_down_to_up_cancel_map.size();
+			}
+		}
+
+
 		// Cancel propagation and delete loops.
 		{
-			// Thread-safe step 1: Look for any canceled ExtFuture<>s and copy them to a local map.
+			// Thread-safe step 1: Look for any Canceled or Finished ExtFuture<>s and copy them to a local map.
 			// This is read-only, and won't invalidate any iterators.
 
 			// The local map.
@@ -164,12 +182,12 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			{
 				std::shared_lock read_locker(m_shared_mutex);
 
-				for(auto it : m_down_to_up_cancel_map)
+				for(const auto& it : m_down_to_up_cancel_map)
 				{
-					if(std::get<0>(it).isCanceled())
+					if(std::get<0>(it).isCanceled() || std::get<0>(it).isFinished())
 					{
 						// Found a canceled key, add the entry to the local map.
-						qIn() << "Propagating cancel from" << &std::get<0>(it) << "to" << &std::get<1>(it);
+						qIn() << "Propagating Cancel/Finished from" << &std::get<0>(it) << "to" << &std::get<1>(it);
 						canceled_ExtFuture_map.push_back(it);
 					}
 				}
@@ -206,15 +224,6 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 					// ...and finally erase them all.
 					m_down_to_up_cancel_map.erase(erase_me);
 				}
-
-				// Remove any entries with Finished but not Canceled keys.
-				// Nothing to propagate for us in this case, and we no longer need to watch The Future(tm).
-				auto erase_me_too = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
-														  [=](auto& val){ return std::get<0>(val).isFinished();
-								});
-				m_down_to_up_cancel_map.erase(erase_me_too, m_down_to_up_cancel_map.end());
-
-				qIn() << "Remaining future pairs:" << m_down_to_up_cancel_map.size();
 			}
 
 			// Threadsafe step 4: Let the destructor do it.

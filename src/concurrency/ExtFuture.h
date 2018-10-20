@@ -774,8 +774,8 @@ public:
 				/// @todo So... do we .cancel() or .reportException() here?
 				/// Or has the AddDownstreamCancelFuture() already handled this?
 //				qDb() << "Rethrowing ExtAsyncCancelException downstream";
-//				ret_future.reportException(e);
-				returned_future_copy.cancel();
+				returned_future_copy.reportException(e);
+//				returned_future_copy.cancel();
 			}
 			catch(QException& e)
 			{
