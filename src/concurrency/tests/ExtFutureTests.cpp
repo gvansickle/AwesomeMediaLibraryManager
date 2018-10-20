@@ -745,6 +745,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	generator_task_future = ExtAsync::run_again(
 				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 					  (ExtFuture<int> generator_task_future_copy) -> int {
+		// Check the atomics.
 		AMLMTEST_EXPECT_FALSE(ran_generator_task_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
@@ -790,6 +791,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	ExtFuture<int> downstream_then1 = generator_task_future.then([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 										(ExtFuture<int> upstream_future_copy) -> int{
 		AMLMTEST_EXPECT_EQ(upstream_future_copy, generator_task_future);
+		// Check the atomics.
 		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
@@ -830,9 +832,11 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	ExtFuture<int> downstream_then2 = downstream_then1.then([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &downstream_then1]
 									 (ExtFuture<int> upstream_future_copy) -> int {
 		AMLMTEST_EXPECT_EQ(upstream_future_copy, downstream_then1);
+		// Check the atomics.
 		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
 		AMLMTEST_EXPECT_TRUE(ran_then1_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+
 		// Should always be finished if we get in here.
 		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isFinished());
 		// For this test, we should also be canceled.

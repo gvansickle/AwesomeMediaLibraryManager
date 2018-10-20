@@ -134,12 +134,6 @@ template <class CallbackType>
 
 			ExtFutureR retfuture;
 
-			// This exists solely so we can assert that the ExtFuture passed into the callback is correct.
-			ExtFutureR check_retfuture = retfuture;
-
-			//		static_assert(sizeof...(args) != 0);
-
-
 			/*
 			 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
 			 *      As usual, C++ language issues need to be worked around, this time when trying to capture @a function
@@ -158,16 +152,18 @@ template <class CallbackType>
 				//			static_assert(sizeof...(copied_args_from_run) != 0);
 				static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with decltype(retval) == void");
 
-				Q_ASSERT(check_retfuture == retfuture_copy);
 
 				try
 				{
+					Q_ASSERT(check_retfuture == retfuture_copy);
+
 					// Call the function the user originally passed in.
 					retval = std::invoke(callback_copy, retfuture_copy, copied_args_from_run...);
 
 					// Report our single result.
 					retfuture_copy.reportResult(retval);
 				}
+				// Send any exceptions down to the returned future.
 				catch(ExtAsyncCancelException& e)
 				{
 					retfuture_copy.reportException(e);
@@ -196,27 +192,28 @@ template <class CallbackType>
 
 #if 0
 		/**
-		 * ExtAsync::run() helper.
+		 * ExtAsync::run() helper for ExtFuture<>::then().
 		 *
 		 * @param callback  Callback function which will be run in the thread pool.
 		 * 					Must have this form:
 		 * 					@code
-		 * 						R callback(args...)
+		 * 						R callback(ExtFutureThis, ExtFutureReturn, args...)
 		 * 					@endcode
 		 * 					Where:
-		 * 						ExtFutureT == the extracted first arg of callback, must be a non-nested ExtFuture.
+		 * 						ExtFutureThis == the extracted first arg of callback, must be a non-nested ExtFuture.
+		 * 						ExtFutureReturn == the extracted second arg of callback, must be a non-nested ExtFuture.
 		 * 						R == Unit::LiftT<> of return value of callback.  I.e. void == Unit, all other types the same.
 		 * @param args      Optional additional arguments to pass to callback after the ExtFutureT.
 		 * @return
 		 */
 		template<class... Args,
 				 class ExtFutureT = argtype_t<CallbackType, 0>,
-				 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>,
-				 REQUIRES(is_ExtFuture_v<ExtFutureT>
-					&& NonNestedExtFuture<ExtFutureT>
-				 && ct::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, Args...>)
+				 class ExtFutureR = argtype_t<CallbackType, 1>,
+				 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, ExtFutureR, Args...>>,
+				 REQUIRES(NonNestedExtFuture<ExtFutureT> && NonNestedExtFuture<ExtFutureR>
+				 && std::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, ExtFutureR, Args...>)
 				 >
-		static auto run_with_only_given_params(CallbackType callback, Args... args) -> ExtFuture<LiftedR>
+		static auto run_for_then(CallbackType callback, ExtFutureT&& thisfuture, ExtFutureR&& retfuture, Args... args) -> ExtFutureR
 		{
 			static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with LiftedR == void");
 
@@ -244,16 +241,6 @@ template <class CallbackType>
 					QFuture::results()
 			 * "
 			 */
-
-			using ExtFutureR = ExtFuture<LiftedR>;
-
-			ExtFutureR retfuture;
-
-			// This exists solely so we can assert that the ExtFuture passed into the callback is correct.
-			ExtFutureR check_retfuture = retfuture;
-
-			//		static_assert(sizeof...(args) != 0);
-
 
 			/*
 			 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
@@ -304,12 +291,31 @@ template <class CallbackType>
 			// Run the callback, wrapped in the lambda above, concurrently.
 			// We're ignoring the QFuture<> returned by ::run() here, since retfuture is
 			// handling that job for us, better.
-			QtConcurrent::run(lambda, std::forward<Args>(args)...);
+			QtConcurrent::run(lambda, thisfuture, retfuture, std::forward<Args>(args)...);
 
 			return retfuture;
 		} // END detail_struct::run_with_only_given_params()
 #endif
 	}; // END struct detail_struct
+
+	/**
+	 * Modified run forwarder for use by ExtFuture<>.then().
+	 */
+	template<class CallbackType, class... Args,
+			 class ExtFutureT = argtype_t<CallbackType, 0>,
+			 class ExtFutureR = argtype_t<CallbackType, 1>,
+			 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, ExtFutureR, Args...>>,
+			 REQUIRES(NonNestedExtFuture<ExtFutureT> && NonNestedExtFuture<ExtFutureR>
+			 && std::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, ExtFutureR, Args...>)
+			 >
+	ExtFutureR run_for_then(CallbackType&& callback, ExtFutureT&& thisfuture, ExtFutureR&& retfuture, Args&&... args)
+	{
+		return ExtAsync::detail_struct<CallbackType>::run_for_then(
+				std::forward<CallbackType>(callback),
+				std::forward<ExtFutureT>(thisfuture),
+				std::forward<ExtFutureR>(retfuture),
+				std::forward<Args>(args)...);
+	}
 
 #if 0
 	namespace detail
@@ -507,12 +513,14 @@ template <class CallbackType>
 			  class ExtFutureT = argtype_t<CallbackType, 0>,
 			  class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args&&...>>,
 			  REQUIRES(is_ExtFuture_v<ExtFutureT>
+			  && NonNestedExtFuture<ExtFutureT>
 			  && std::is_invocable_r_v<Unit::DropT<LiftedR>, CallbackType, ExtFutureT, Args&&...>)
 	>
 	ExtFuture<LiftedR> run_again(CallbackType&& callback, Args&&... args)
 	{
 		return ExtAsync::detail_struct<CallbackType>::run_again(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
 	}
+
 
 #if 0
 	/**
