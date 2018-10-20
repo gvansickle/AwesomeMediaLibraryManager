@@ -1234,7 +1234,7 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	GTEST_COUT_qDB << "Post .tap().get(), extfuture:" << ef.state();
 
 	EXPECT_TRUE(ef.isStarted());
-	EXPECT_FALSE(ef.isCanceled());
+	EXPECT_FALSE(ef.isCanceled()) << ef.state();
 	EXPECT_TRUE(ef.isFinished());
 
 	EXPECT_EQ(async_results_from_get.size(), 1);

@@ -206,7 +206,10 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			qDb() << "Propagating cancels from" << canceled_ExtFuture_map.size() << "ExtFuture<>s.";
 			std::for_each(canceled_ExtFuture_map.begin(), canceled_ExtFuture_map.end(),
 						  [](map_pair_type p){
-				std::get<1>(p).cancel();
+				if(std::get<0>(p).isCanceled())
+				{
+					std::get<1>(p).cancel();
+				}
 			});
 
 			// Threadsafe step 3: Remove The Future(tm).

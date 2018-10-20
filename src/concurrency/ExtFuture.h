@@ -262,11 +262,11 @@ public:
 	/**
 	 * Conversion operator to ExtFuture<Unit>.
 	 */
-	explicit operator ExtFuture<Unit>() const
-	{
+//	explicit operator ExtFuture<Unit>() const
+//	{
 //		return ExtFuture<Unit>(&(this->d));
-		return qToUnitExtFuture(*this);
-	}
+////		return qToUnitExtFuture(*this);
+//	}
 
 	/// @name Comparison operators.
 	/// @{
@@ -1134,7 +1134,8 @@ protected:
 
 				// Add the downstream cancel propagator first.
 //				AddDownstreamCancelFuture(this_future_copy, ret_future_copy);
-				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->register_cancel_prop_down_to_up(ExtFuture<Unit>(this_future_copy), ExtFuture<Unit>(ret_future_copy));
+				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
+						register_cancel_prop_down_to_up(QFuture<void>(this_future_copy), QFuture<void>(ret_future_copy));
 
 				int i = 0;
 
@@ -1320,7 +1321,7 @@ QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
 template <typename T>
 ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
 {
-	return ExtFuture<Unit>();//(future.d);
+	return ExtFuture<Unit>(future.d);
 }
 
 /**
