@@ -58,7 +58,7 @@ ExtFuturePropagationHandler::ExtFuturePropagationHandler()
 ExtFuturePropagationHandler::~ExtFuturePropagationHandler()
 {
 	// @todo This should never have anything to cancel.
-	cancel_all_and_wait();
+	cancel_all_and_wait(true);
 }
 
 // Static
@@ -97,11 +97,16 @@ void ExtFuturePropagationHandler::unregister_cancel_prop_down_to_up(ExtFuturePro
 
 }
 
-bool ExtFuturePropagationHandler::cancel_all_and_wait()
+bool ExtFuturePropagationHandler::cancel_all_and_wait(bool warn_calling_from_destructor)
 {
 	std::unique_lock write_locker(m_shared_mutex);
 
 	m_cancel_incoming_futures = true;
+
+	if(warn_calling_from_destructor && !m_down_to_up_cancel_map.empty())
+	{
+		qWr() << "CALLED FROM DESTRUCTOR WITH NON-EMPTY FUTURE LIST:"  << m_down_to_up_cancel_map.size() << "future pairs....";
+	}
 
 	while(!m_down_to_up_cancel_map.empty())
 	{

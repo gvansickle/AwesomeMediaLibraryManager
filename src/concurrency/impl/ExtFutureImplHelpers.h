@@ -62,6 +62,7 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
 	}
 }
 
+#if 0
 /**
  * Attach downstream_future to this_future (a copy of this ExtFuture) such that any cancel or exception thrown by
  * downstream_future cancels this_future.
@@ -194,5 +195,6 @@ static QFuture<int> AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFutur
 
 		}, this_future, downstream_future);
 }
+#endif
 
 #endif // EXTFUTUREIMPLHELPERS_H

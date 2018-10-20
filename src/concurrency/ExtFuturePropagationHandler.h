@@ -79,7 +79,7 @@ public:
 	 * Call this just prior to deleting this object.
 	 * @return
 	 */
-	bool cancel_all_and_wait();
+	bool cancel_all_and_wait(bool warn_calling_from_destructor = false);
 
 protected:
 
