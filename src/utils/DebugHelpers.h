@@ -86,6 +86,25 @@ inline static QDebug& operator<<(QDebug& d, const std::string& s)
 			}\
 		} while(0)
 
+#define AMLM_ASSERT_LT(a, b) \
+		do { auto la = (a); auto lb = (b); \
+			if(!(la < lb)) \
+			{\
+				qCr() << "ASSERTION FAILED: " #a " = " << la << " < " #b " =" << lb; \
+				Q_ASSERT(la < lb); \
+				Q_ASSERT_X(0, "AMLM_ASSERT_LT", "MACRO BROKEN, DISAGREES WITH Q_ASSERT"); \
+			}\
+		} while(0)
+
+#define AMLM_ASSERT_LE(a, b) \
+		do { auto la = (a); auto lb = (b); \
+			if(!(la <= lb)) \
+			{\
+				qCr() << "ASSERTION FAILED: " #a " = " << la << " <= " #b " =" << lb; \
+				Q_ASSERT(la <= lb); \
+				Q_ASSERT_X(0, "AMLM_ASSERT_LE", "MACRO BROKEN, DISAGREES WITH Q_ASSERT"); \
+			}\
+		} while(0)
 /// @}
 
 /// Throw if condition is true.

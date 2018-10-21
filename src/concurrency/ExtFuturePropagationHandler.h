@@ -31,6 +31,7 @@
 
 // Qt5
 #include <QFuture>
+#include <QSemaphore>
 class QThread;
 
 // Ours
@@ -98,6 +99,9 @@ protected:
 
 	/// Shared mutex because we're highly reader-writer.
 	std::shared_mutex m_shared_mutex;
+
+	/// Semaphore for our patrol wait.
+	QSemaphore m_num_pairs_to_patrol {0};
 
 	/**
 	 * When we're being destroyed, we can't accept any new futures to watch, so immediately cancel them.

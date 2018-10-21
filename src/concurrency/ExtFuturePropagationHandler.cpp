@@ -27,6 +27,7 @@
 
 // Qt5
 #include <QThread>
+#include <QSemaphore>
 
 // Ours
 #include "ExtFuture.h"
@@ -82,7 +83,9 @@ void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType dow
 	// Add the two futures to the map.
 	m_down_to_up_cancel_map.push_back({downstream, upstream});
 	// << state(downstream) << state(upstream);
+	m_num_pairs_to_patrol.release();
 	qIn() << "Registered future pair, now have" << m_down_to_up_cancel_map.size() << "pairs registered.";
+//	AMLM_ASSERT_EQ(m_num_pairs_to_patrol.available(), m_down_to_up_cancel_map.size());
 }
 
 void ExtFuturePropagationHandler::unregister_cancel_prop_down_to_up(ExtFuturePropagationHandler::FutureType downstream, ExtFuturePropagationHandler::FutureType upstream)
@@ -93,8 +96,10 @@ void ExtFuturePropagationHandler::unregister_cancel_prop_down_to_up(ExtFuturePro
 	auto erase_me = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
 								   [=](auto& val){ return val == std::make_tuple(downstream, upstream); });
 	// ...and finally erase them all.
+	auto num_to_erase = std::distance(erase_me, m_down_to_up_cancel_map.end());
 	m_down_to_up_cancel_map.erase(erase_me);
-
+	bool success = m_num_pairs_to_patrol.tryAcquire(num_to_erase);
+	Q_ASSERT(success);
 }
 
 bool ExtFuturePropagationHandler::cancel_all_and_wait(bool warn_calling_from_destructor)
@@ -130,47 +135,54 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 	while(true)
 	{
 		// Thread-safe step 0: Wait for the possibility of anything to do.
-		// Yeah yeah, bad, I know.  I'll fix it.
-		while(true)
+
+		/// @todo Do we need a lock here?
+		m_num_pairs_to_patrol.acquire();
 		{
-			std::shared_lock read_locker(m_shared_mutex);
+			std::unique_lock write_locker(m_shared_mutex);
 			if(m_cancel_incoming_futures)
 			{
 				// We're being canceled.  Break out of this loop.
 				qIn() << "ExtFuturePropagationHandler being canceled...";
+				m_num_pairs_to_patrol.release();
 				return;
-			}
-			if(m_down_to_up_cancel_map.empty())
-			{
-				if(!logged_yield_msg)
-				{
-					qIn() << "No entries, nothing to propagate, yielding...";
-					logged_yield_msg = true;
-				}
-				// Nothing to propagate, yield and loop until there is.
-				QThread::yieldCurrentThread();
 			}
 			else
 			{
-				// There's an entry, we need to look at it.
-				logged_yield_msg = false;
-				break;
+				if(m_down_to_up_cancel_map.empty())
+				{
+					if(!logged_yield_msg)
+					{
+						qWr() << "No entries, nothing to propagate, yielding...";
+						logged_yield_msg = true;
+					}
+					// Nothing to propagate, yield and loop until there is.
+//					QThread::yieldCurrentThread();
+					continue;
+				}
+				else
+				{
+					// There's an entry, we need to look at it.
+					logged_yield_msg = false;
+				}
 			}
 		}
 
 		{
-			std::unique_lock write_locker(m_shared_mutex);
+//			std::unique_lock write_locker(m_shared_mutex);
 
 			// Remove any entries with Finished but not Canceled keys.
-			// Nothing to propagate for us in this case, and we no longer need to watch The Future(tm).
+			// Nothing for us to propagate in this case, and we no longer need to watch The Future(tm).
 			auto erase_me_too = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
 											   [=](auto& val){
 				return std::get<0>(val).isFinished() && !std::get<0>(val).isCanceled();
 			});
 			if((m_down_to_up_cancel_map.end() - erase_me_too) > 0)
 			{
-				qIn() << "ERASING" << (m_down_to_up_cancel_map.end() - erase_me_too) << " FINISHED NOT CANCELED PAIRS";
+				auto num_erased = std::distance(erase_me_too, m_down_to_up_cancel_map.end());
+				qIn() << "ERASING" << num_erased << " FINISHED NOT CANCELED PAIRS";
 				m_down_to_up_cancel_map.erase(erase_me_too, m_down_to_up_cancel_map.end());
+				m_num_pairs_to_patrol.release(num_erased);
 				qIn() << "Remaining future pairs:" << m_down_to_up_cancel_map.size();
 			}
 		}
@@ -185,7 +197,7 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			map_type canceled_ExtFuture_map;
 
 			{
-				std::shared_lock read_locker(m_shared_mutex);
+//				std::shared_lock read_locker(m_shared_mutex);
 
 				for(const auto& it : m_down_to_up_cancel_map)
 				{
@@ -220,7 +232,7 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			// Threadsafe step 3: Remove The Future(tm).
 			// Delete the keys which we just propagated the cancels from.
 			{
-				std::unique_lock write_locker(m_shared_mutex);
+//				std::unique_lock write_locker(m_shared_mutex);
 				qDb() << "Deleting" << canceled_ExtFuture_map.size() << "canceled ExtFuture<>s.";
 
 				// For each pair we want to delete...
@@ -229,6 +241,8 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 					// ... remove all instances of it...
 					auto erase_me = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
 								   [=](auto& val){ return val == *it;});
+					auto num_erased = std::distance(erase_me, m_down_to_up_cancel_map.end());
+					m_num_pairs_to_patrol.release(num_erased);
 					// ...and finally erase them all.
 					m_down_to_up_cancel_map.erase(erase_me);
 				}
