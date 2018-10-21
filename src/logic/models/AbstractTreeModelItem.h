@@ -107,7 +107,7 @@ public:
 	 * Override this in derived classes to do the right thing.
 	 * @returns true
 	 */
-	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const { return false; }; // @todo Should be pure virtual
+	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const = 0;
 
 
     // Debug stream op free func friender.
@@ -119,8 +119,8 @@ protected:
     /// Primarily for use in appendChildren().
     virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
-	/// Factory function for default-constructed nodes.
-	static AbstractTreeModelItem* make_default_node(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
+	/// Factory function for creating default-constructed nodes.
+	AbstractTreeModelItem* make_default_node(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
 
 
 private:

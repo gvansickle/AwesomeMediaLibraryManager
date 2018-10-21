@@ -23,6 +23,17 @@
 ScanResultsTreeModel::ScanResultsTreeModel(const QStringList &headers, const QString &data, QObject *parent)
     : BASE_CLASS(headers, data, parent)
 {
+	/// @todo Move all this out of the constructor?
+	QVector<QVariant> rootData;
+	for(const QString& header : headers)
+	{
+		rootData << header;
+	}
+
+//	m_root_item = new AbstractTreeModelItem(rootData);
+	/// @todo virtual function in constructor.
+	m_root_item = make_root_node(rootData);
+
 	// Populate the parse factory functions with the first-layer node type names we know about.
 	m_parse_factory_functions.emplace_back(&ScanResultsTreeModelItem::parse);
 }
@@ -32,7 +43,7 @@ bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items
 	return BASE_CLASS::appendItems(new_items, parent);
 }
 
-AbstractTreeModelItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
+ScanResultsTreeModelItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
 {
 	return new ScanResultsTreeModelItem(rootData);
 }

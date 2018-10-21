@@ -31,6 +31,9 @@
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
+// Ours
+#include "models/ScanResultsTreeModel.h"
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl, DirScanResult, FileModificationInfo";
@@ -115,10 +118,11 @@ AbstractTreeModelItem* DirScanResult::toTreeModelItem()
     column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
     column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
 
-    auto new_item = new AbstractTreeModelItem(column_data);
+	auto new_item = new ScanResultsTreeModelItem(column_data);
+//	auto new_item = make_default_node(column_data);
 
     QVector<AbstractTreeModelItem *> child_items;
-    AbstractTreeModelItem* child_item = new AbstractTreeModelItem({"One", "Two", "Three"}, new_item);
+	AbstractTreeModelItem* child_item = new ScanResultsTreeModelItem({"One", "Two", "Three"}, new_item);
 
     child_items.push_back(child_item);
 

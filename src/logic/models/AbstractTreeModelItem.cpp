@@ -132,7 +132,8 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 	for (int row = 0; row < count; ++row)
 	{
         QVector<QVariant> data(columns);
-		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
+//		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
+		AbstractTreeModelItem *item = make_default_node(data, this);
 		m_child_items.insert(position, item);
     }
 
