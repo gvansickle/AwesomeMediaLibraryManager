@@ -741,7 +741,6 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	// The async generator task.  Spins forever, reporting "5" to run_down until canceled.
 	ExtFuture<int> generator_task_future;
-//	QtConcurrent::run(
 	generator_task_future = ExtAsync::run_again(
 				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 					  (ExtFuture<int> generator_task_future_copy) -> int {
@@ -781,7 +780,6 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		rsm.ReportResult(J1ENDCB);
 		return 1;
 	}
-//	, generator_task_future
 	);
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(generator_task_future);
@@ -805,7 +803,10 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		std::exception_ptr eptr; // For rethrowing.
 		try
 		{
+			TCOUT << "THEN1 GETTING, future state:" << upstream_future_copy;
 			QList<int> incoming = upstream_future_copy.get();
+
+//			if(upstream_future_copy.isCanceled())
 		}
 		catch(...)
 		{
@@ -846,6 +847,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		std::exception_ptr eptr; // For rethrowing.
 		try
 		{
+			TCOUT << "THEN2 GETTING, future state:" << upstream_future_copy;
 			QList<int> incoming = upstream_future_copy.get();
 		}
 		catch(...)
