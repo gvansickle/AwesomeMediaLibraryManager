@@ -37,6 +37,7 @@
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
 #include <logic/models/AbstractTreeModelItem.h>
+#include <logic/models/AbstractTreeModelWriter.h>
 #include <utils/DebugHelpers.h>
 
 /// Ours, Qt5/KF5-related
@@ -222,10 +223,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		// Got all the ready results, send them to the model.
 		// We have to do this from the GUI thread unfortunately.
 		qIno() << "Sending" << new_items.size() << "scan results to model";
-		run_in_event_loop(this, [=, &tree_model](){
+		run_in_event_loop(this, [=, tree_model_ptr=tree_model](){
 
 			// Append entries to the ScanResultsTreemodel.
-	        tree_model->appendItems(new_items);
+			tree_model_ptr->appendItems(new_items);
 
 	        /// @todo Obsoleting... very... slowly.
 	        for(const auto& entry : new_items)
@@ -255,6 +256,22 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             qIn() << "DIRTRAV SUCCEEDED";
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+
+/// @todo EXPERIMENTAL
+			QString filename = QDir::homePath() + "/DeleteMe.xml";
+			qIno() << "Writing model to XML file:" << filename;
+			QFile outfile(filename);
+			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
+			if(!status)
+			{
+				qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
+			}
+			else
+			{
+				AbstractTreeModelWriter tmw(tree_model);
+				tmw.write_to_iodevice(&outfile);
+			}
+
 #if 0
             // Directory traversal complete, start rescan.
 

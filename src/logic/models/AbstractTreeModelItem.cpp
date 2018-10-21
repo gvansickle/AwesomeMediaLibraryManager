@@ -57,6 +57,7 @@
 
 // Qt5
 #include <QStringList>
+#include <QXmlStreamWriter>
 
 // Ours
 #include <utils/DebugHelpers.h>
@@ -88,6 +89,12 @@ AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
 	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
 	return m_child_items.value(number);
 }
+
+const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
+{
+	return m_child_items.value(number);
+}
+
 
 int AbstractTreeModelItem::childCount() const
 {
@@ -210,12 +217,44 @@ bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem *> new_
     for(auto* child : new_children)
     {
         child->setParentItem(this);
-        qDb() << "APPENDING TO ITEM:" << this;
-        qDb() << "       CHILD ITEM:" << *child;
+//        qDb() << "APPENDING TO ITEM:" << this;
+//        qDb() << "       CHILD ITEM:" << *child;
         m_child_items.push_back(child);
     }
 
-    return true;
+	return true;
+}
+
+bool AbstractTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) const
+{
+	// Convenience ref.
+	auto& xml = *writer;
+
+	/// @todo Check if we're the root item?
+
+	// Write out this item.
+	//item->data();
+	QString item_tag_name = "abstracttreemodelitem";
+	xml.writeStartElement(item_tag_name);
+	xml.writeAttribute("childNumber", QString("%1").arg(childNumber()));
+	/// @todo Again this should be fobbed off on the derived model/item somehow.  I think.
+	for(int col = 0; col < columnCount(); ++col)
+	{
+		/// @todo Get header element info.
+//		xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
+		xml.writeTextElement("column_data", data(col).toString());
+	}
+
+	// Write out all children.
+	for(int i = 0; i < childCount(); ++i)
+	{
+		// Hold on tight, we're going recursive!
+		child(i)->writeItemAndChildren(writer);
+	}
+	xml.writeEndElement();
+
+	/// @todo Default to something else if not overridden?
+	return true;
 }
 
 void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)

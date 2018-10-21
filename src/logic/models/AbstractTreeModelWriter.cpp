@@ -20,16 +20,88 @@
 /**
  * @file AbstractTreeModelWriter.cpp
  */
+
 #include "AbstractTreeModelWriter.h"
 
-AbstractTreeModelWriter::AbstractTreeModelWriter(const AbstractTreeModel* model)
+// Ours
+#include "AbstractTreeModel.h"
+#include "AbstractTreeModelItem.h"
+
+// Qt5
+
+
+
+static inline QString yesValue() { return QStringLiteral("yes"); }
+static inline QString noValue() { return QStringLiteral("no"); }
+static inline QString titleElement() { return QStringLiteral("title"); }
+
+AbstractTreeModelWriter::AbstractTreeModelWriter(const AbstractTreeModel* model) : m_tree_model(model)
 {
-
-
+	m_xml_stream_writer.setAutoFormatting(true);
 }
 
 AbstractTreeModelWriter::~AbstractTreeModelWriter()
 {
 
+}
+
+bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
+{
+	// Convenience ref.
+	auto& xml = m_xml_stream_writer;
+
+	m_xml_stream_writer.setDevice(device);
+
+	m_xml_stream_writer.writeStartDocument();
+
+#if 1
+	/// @todo No DTD for the moment.
+//	m_xml_stream_writer.writeDTD("NONE");
+
+	/// @todo Probably get from derived model class?
+	xml.writeStartElement("abstracttreemodel");
+	xml.writeAttribute(versionAttribute(), QStringLiteral("0.1"));
+
+	m_tree_model->writeItemAndChildren(&xml, nullptr);
+
+#else
+
+	// Write out the top-level items.
+	for(long i = 0; i < m_tree_model->rowCount(); ++i)
+	{
+		QModelIndex qmi = m_tree_model->index(i, 0);
+		write_item(m_tree_model->getItem(qmi));
+	}
+#endif
+
+	m_xml_stream_writer.writeEndDocument();
+
+	return true;
+}
+
+void AbstractTreeModelWriter::write_item(const AbstractTreeModelItem* item)
+{
+	// Convenience ref.
+	auto& xml = m_xml_stream_writer;
+
+	//item->data();
+	QString item_tag_name = "abstracttreemodelitem";
+
+	xml.writeStartElement(item_tag_name);
+	xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
+	// Write out this item.
+	/// @todo Again this should be fobbed off on the derived model/item somehow.  I think.
+	for(int col = 0; col < item->columnCount(); ++col)
+	{
+		xml.writeTextElement(titleElement(), item->data(col).toString());
+	}
+
+	// Write out all children.
+	for(int i = 0; i < item->childCount(); ++i)
+	{
+		// Hold on tight, we're going recursive!
+		write_item(item->child(i));
+	}
+	xml.writeEndElement();
 }
 

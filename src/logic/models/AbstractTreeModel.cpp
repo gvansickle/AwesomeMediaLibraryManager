@@ -128,6 +128,11 @@ AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) cons
 	return m_root_item;
 }
 
+void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
+{
+	m_root_item->writeItemAndChildren(writer);
+}
+
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
                                int role) const
 {
@@ -291,9 +296,11 @@ bool AbstractTreeModel::setHeaderData(int section, Qt::Orientation orientation,
 
 bool AbstractTreeModel::setHeaderData(const AbstractHeaderSection& header_section)
 {
+	Q_ASSERT(0);
 //	this->setHeaderData(header_section.section(),
 //			header_section.orientation(), header_section[role], role);
 //	for()
+	return true;
 }
 
 void AbstractTreeModel::setupModelData(const QStringList &lines, AbstractTreeModelItem *parent)

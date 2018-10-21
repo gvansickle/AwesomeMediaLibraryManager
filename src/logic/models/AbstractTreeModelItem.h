@@ -55,10 +55,13 @@
 #ifndef ABSTRACTTREEMODELITEM_H
 #define ABSTRACTTREEMODELITEM_H
 
+// Qt5
 #include <QList>
 #include <QVariant>
 #include <QVector>
+class QXmlStreamWriter;
 
+// Ours
 #include <src/utils/QtHelpers.h>
 
 /**
@@ -74,6 +77,9 @@ public:
     /// @returns Pointer to a default constructed AbstractTreeModelItem, which is not added to the QVector.
 	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
 	AbstractTreeModelItem *child(int number);
+
+	/// Const version.
+	const AbstractTreeModelItem *child(int number) const;
 
     /// The number of children this item has.
     int childCount() const;
@@ -95,6 +101,13 @@ public:
     bool setData(int column, const QVariant &value);
 
     bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
+
+	/**
+	 * Write this item and any children to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 * @returns true
+	 */
+	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const;
 
     // Debug stream op free func friender.
     QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)

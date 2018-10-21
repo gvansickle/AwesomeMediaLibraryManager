@@ -56,12 +56,16 @@
 #ifndef ABSTRACTTREEMODEL_H
 #define ABSTRACTTREEMODEL_H
 
+// Qt5
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+class QXmlStreamWriter;
 
+// Ours
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
+
 
 class AbstractTreeModel : public QAbstractItemModel
 {
@@ -121,11 +125,18 @@ public:
     /// Append a vector of AbstractTreeModelItem's as children of @p parent.
     virtual bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
 
+	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
+
+	/**
+	 * Write the given item to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 */
+	virtual void writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
+
     /// @}
 
 private:
 	void setupModelData(const QStringList &lines, AbstractTreeModelItem *parent);
-	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
 
 	AbstractTreeModelItem *m_root_item;
 };
