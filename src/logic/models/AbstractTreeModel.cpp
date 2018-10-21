@@ -68,7 +68,7 @@
 
 
 AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &data, QObject *parent)
-    : QAbstractItemModel(parent)
+	: QAbstractItemModel(parent)
 {
 	/// @todo Move all this out of the constructor?
     QVector<QVariant> rootData;
@@ -77,7 +77,9 @@ AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &
         rootData << header;
 	}
 
-	m_root_item = new AbstractTreeModelItem(rootData);
+//	m_root_item = new AbstractTreeModelItem(rootData);
+	/// @todo virtual function in constructor.
+	m_root_item = AbstractTreeModel()->make_root_node(rootData);
 }
 
 AbstractTreeModel::~AbstractTreeModel()

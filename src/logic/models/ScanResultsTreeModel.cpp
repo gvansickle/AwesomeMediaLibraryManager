@@ -31,3 +31,8 @@ bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items
 {
 	return BASE_CLASS::appendItems(new_items, parent);
 }
+
+AbstractTreeModelItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
+{
+	return new ScanResultsTreeModelItem(rootData);
+}

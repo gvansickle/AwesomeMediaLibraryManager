@@ -226,38 +226,6 @@ bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem *> new_
 	return true;
 }
 
-bool AbstractTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) const
-{
-	// Convenience ref.
-	auto& xml = *writer;
-
-	/// @todo Check if we're the root item?
-
-	// Write out this item.
-	//item->data();
-	QString item_tag_name = "abstracttreemodelitem";
-	xml.writeStartElement(item_tag_name);
-	xml.writeAttribute("childNumber", QString("%1").arg(childNumber()));
-	/// @todo Again this should be fobbed off on the derived model/item somehow.  I think.
-	for(int col = 0; col < columnCount(); ++col)
-	{
-		/// @todo Get header element info.
-//		xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
-		xml.writeTextElement("column_data", data(col).toString());
-	}
-
-	// Write out all children.
-	for(int i = 0; i < childCount(); ++i)
-	{
-		// Hold on tight, we're going recursive!
-		child(i)->writeItemAndChildren(writer);
-	}
-	xml.writeEndElement();
-
-	/// @todo Default to something else if not overridden?
-	return true;
-}
-
 void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 {
     AMLM_WARNIF(m_parent_item != nullptr);
@@ -265,8 +233,9 @@ void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 	m_parent_item = parent_item;
 }
 
-void AbstractTreeModelItem::writeItem(QXmlStreamWriter* p_xml) const
+AbstractTreeModelItem* AbstractTreeModelItem::make_default_node(const QVector<QVariant>& data, AbstractTreeModelItem* parent)
 {
-
+	return make_default_node(data, parent);
 }
+
 

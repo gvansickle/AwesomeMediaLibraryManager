@@ -107,13 +107,8 @@ public:
 	 * Override this in derived classes to do the right thing.
 	 * @returns true
 	 */
-	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const;
-	/// @name Extended
-	/// @{
+	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const { return false; }; // @todo Should be pure virtual
 
-	virtual void writeItem(QXmlStreamWriter* p_xml) const;
-
-	/// @}
 
     // Debug stream op free func friender.
     QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)
@@ -123,6 +118,10 @@ protected:
     /// Sets this item's parent item to parent_item.
     /// Primarily for use in appendChildren().
     virtual void setParentItem(AbstractTreeModelItem* parent_item);
+
+	/// Factory function for default-constructed nodes.
+	static AbstractTreeModelItem* make_default_node(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
+
 
 private:
 

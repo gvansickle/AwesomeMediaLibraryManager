@@ -42,6 +42,8 @@ protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
+	/// Create a new root node.
+	AbstractTreeModelItem* make_root_node(QVector<QVariant> rootData) override;
 
     QUrl m_base_directory;
 

@@ -23,8 +23,11 @@
 
 #include "ScanResultsTreeModelItem.h"
 
+// Qt5
 #include <QXmlStreamReader>
 
+// Ours
+#include <utils/DebugHelpers.h>
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
 	: AbstractTreeModelItem(x, parent)
@@ -43,6 +46,7 @@ ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp
 
 	if(xml.name() != "srtmitem")
 	{
+		// Not fur us.
 		return nullptr;
 	}
 	else
@@ -52,8 +56,18 @@ ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp
 
 		while(xml.readNextStartElement())
 		{
-			if(xml.name() == "")
+			// Read the columns.
+			if(xml.name() == "column_data")
+			{
+				qDb() << "### column_data:" << xml.readElementText();
+			}
+			else
+			{
+				xml.skipCurrentElement();
+			}
 		}
+
+		return this_node;
 	}
 }
 
@@ -88,5 +102,21 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 
 	/// @todo Default to something else if not overridden?
 	return true;
+}
+
+ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
+{
+	ScanResultsTreeModelItem* child_item;
+
+	if(parent)
+	{
+		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
+	}
+	else
+	{
+		child_item = new ScanResultsTreeModelItem();
+	}
+
+	return child_item;
 }
 

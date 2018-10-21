@@ -73,7 +73,8 @@ class AbstractTreeModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
-	AbstractTreeModel(const QStringList &headers, const QString &data,
+	AbstractTreeModel() {};
+	explicit AbstractTreeModel(const QStringList &headers, const QString &data,
 			  QObject *parent = nullptr);
 	~AbstractTreeModel() override;
 
@@ -147,6 +148,9 @@ protected:
 
 	/// @name Extended protected model interface.
 	/// @{
+
+	/// Create a new root node.
+	virtual AbstractTreeModelItem* make_root_node(QVector<QVariant> rootData) = 0;
 
 	/**
 	 * Write the given item to the given QXmlStreamWriter.
