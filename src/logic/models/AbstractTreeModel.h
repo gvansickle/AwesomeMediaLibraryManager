@@ -61,6 +61,7 @@
 #include <QModelIndex>
 #include <QVariant>
 class QXmlStreamWriter;
+class QXmlStreamReader;
 
 // Ours
 class AbstractTreeModelItem;
@@ -119,7 +120,7 @@ public:
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
 
-    /// @name Extended model interface.
+	/// @name Extended public model interface.
     /// @{
 
     /// Append a vector of AbstractTreeModelItem's as children of @p parent.
@@ -128,10 +129,33 @@ public:
 	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
 
 	/**
+	 * Write the entire model to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 */
+	virtual void writeModel(QXmlStreamWriter* writer) const;
+
+	/**
+	 * Read the entire model from the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 */
+	virtual bool readModel(QXmlStreamReader* writer) const;
+
+	/// @}
+
+protected:
+
+	/// @name Extended protected model interface.
+	/// @{
+
+	/**
 	 * Write the given item to the given QXmlStreamWriter.
 	 * Override this in derived classes to do the right thing.
 	 */
 	virtual void writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
+
+	virtual void readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
+
+	friend class AbstractTreeModelWriter;
 
     /// @}
 

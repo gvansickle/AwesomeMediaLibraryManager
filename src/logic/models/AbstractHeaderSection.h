@@ -32,6 +32,16 @@
 class AbstractHeaderSection
 {
 public:
+
+	enum HeaderItemDataRole
+	{
+		XmlTagName = Qt::UserRole+1, ///< string
+		XmlAttributes, ///< QXmlStreamAttributes, ~QVector of QString pairs.
+		/// In derived classes, start any new ItemDataRoles at this value.
+		NextHeaderItemDataRole
+	};
+
+public:
 	AbstractHeaderSection();
 	virtual ~AbstractHeaderSection();
 

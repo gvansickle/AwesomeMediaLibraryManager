@@ -128,9 +128,25 @@ AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) cons
 	return m_root_item;
 }
 
+void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
+{
+#warning "TODO"
+}
+
+bool AbstractTreeModel::readModel(QXmlStreamReader* writer) const
+{
+#warning "TODO"
+	return true;
+}
+
 void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
 {
 	m_root_item->writeItemAndChildren(writer);
+}
+
+void AbstractTreeModel::readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
+{
+
 }
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
