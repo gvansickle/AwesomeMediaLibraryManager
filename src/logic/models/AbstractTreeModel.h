@@ -137,8 +137,9 @@ public:
 	/**
 	 * Read the entire model from the given QXmlStreamWriter.
 	 * Override this in derived classes to do the right thing.
+	 * @returns false if model could not be read from reader.
 	 */
-	virtual bool readModel(QXmlStreamReader* writer) const;
+	virtual bool readModel(QXmlStreamReader* reader);
 
 	/// @}
 
@@ -153,9 +154,18 @@ protected:
 	 */
 	virtual void writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
 
-	virtual void readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
+	virtual void readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item);
+
+	virtual QString getXmlStreamName() const = 0;
+	virtual QString getXmlStreamVersion() const = 0;
 
 	friend class AbstractTreeModelWriter;
+	friend class AbstractTreeModelReader;
+
+	/// Recursive descent parser factory functions.
+	/// At least for the first level of descent.
+	/// Functions take XML stream reader and parent model node, return new node if parsing was successful.
+	std::vector<std::function<AbstractTreeModelItem*(QXmlStreamReader*, AbstractTreeModelItem*)>> m_parse_factory_functions;
 
     /// @}
 

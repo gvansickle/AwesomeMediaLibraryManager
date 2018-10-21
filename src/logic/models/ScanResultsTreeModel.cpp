@@ -18,10 +18,13 @@
  */
 #include "ScanResultsTreeModel.h"
 
+#include "ScanResultsTreeModelItem.h"
+
 ScanResultsTreeModel::ScanResultsTreeModel(const QStringList &headers, const QString &data, QObject *parent)
     : BASE_CLASS(headers, data, parent)
 {
-
+	// Populate the parse factory functions with the first-layer node type names we know about.
+	m_parse_factory_functions.emplace_back(&ScanResultsTreeModelItem::parse);
 }
 
 bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex& parent)

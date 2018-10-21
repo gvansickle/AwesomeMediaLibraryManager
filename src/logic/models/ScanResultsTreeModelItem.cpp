@@ -23,16 +23,70 @@
 
 #include "ScanResultsTreeModelItem.h"
 
+#include <QXmlStreamReader>
+
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
 	: AbstractTreeModelItem(x, parent)
 {
-	// TODO Auto-generated constructor stub
 
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 {
 	// TODO Auto-generated destructor stub
+}
+
+ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent)
+{
+	auto& xml = *xmlp;
+
+	if(xml.name() != "srtmitem")
+	{
+		return nullptr;
+	}
+	else
+	{
+		// Read in this and all children.
+		auto* this_node = createChildItem(parent);
+
+		while(xml.readNextStartElement())
+		{
+			if(xml.name() == "")
+		}
+	}
+}
+
+bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) const
+{
+	// Convenience ref.
+	auto& xml = *writer;
+
+	/// @todo Check if we're the root item?
+
+	// Write out this item.
+
+	QString item_tag_name = "srtmitem";
+	xml.writeStartElement(item_tag_name);
+	xml.writeAttribute("childNumber", QString("%1").arg(childNumber()));
+
+	// Write the columns of data.
+	for(int col = 0; col < columnCount(); ++col)
+	{
+		/// @todo Get header element info.
+//		xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
+		xml.writeTextElement("column_data", data(col).toString());
+	}
+
+	// Write out all children.
+	for(int i = 0; i < childCount(); ++i)
+	{
+		// Hold on tight, we're going recursive!
+		child(i)->writeItemAndChildren(writer);
+	}
+	xml.writeEndElement();
+
+	/// @todo Default to something else if not overridden?
+	return true;
 }
 

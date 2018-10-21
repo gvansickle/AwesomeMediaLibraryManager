@@ -24,6 +24,10 @@
 #define SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_
 
 #include "AbstractTreeModelItem.h"
+
+// Qt5
+class QXmlStreamReader;
+
 /*
  *
  */
@@ -32,6 +36,23 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem
 public:
 	explicit ScanResultsTreeModelItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
 	 ~ScanResultsTreeModelItem() override;
+
+	/**
+	 * Parses a new ScanResultsTreeModelItem* out of the passed XML stream.
+	 * Returns nullptr if the next parse factory function should be tried.
+	 * @param xml
+	 * @return
+	 */
+	static ScanResultsTreeModelItem* parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent);
+
+	/**
+	 * Write this item and any children to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 * @returns true
+	 */
+	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
+
+
 };
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

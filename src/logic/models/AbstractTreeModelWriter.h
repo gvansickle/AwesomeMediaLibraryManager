@@ -42,10 +42,6 @@ public:
 	explicit AbstractTreeModelWriter(const AbstractTreeModel* model);
 	virtual ~AbstractTreeModelWriter();
 
-	static inline QString versionAttribute() { return QStringLiteral("version"); }
-	static inline QString hrefAttribute() { return QStringLiteral("href"); }
-	static inline QString foldedAttribute() { return QStringLiteral("folded"); }
-
 	bool write_to_iodevice(QIODevice* device);
 
 private:

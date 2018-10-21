@@ -108,6 +108,12 @@ public:
 	 * @returns true
 	 */
 	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const;
+	/// @name Extended
+	/// @{
+
+	virtual void writeItem(QXmlStreamWriter* p_xml) const;
+
+	/// @}
 
     // Debug stream op free func friender.
     QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)

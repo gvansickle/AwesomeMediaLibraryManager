@@ -55,17 +55,22 @@
 // This class's header.
 #include "AbstractTreeModel.h"
 
+// Std C++
+#include <functional>
+
 // Qt5
 #include <QtWidgets>
 
 // Ours
 #include "AbstractTreeModelItem.h"
+#include <utils/DebugHelpers.h>
 
 
 
 AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &data, QObject *parent)
     : QAbstractItemModel(parent)
 {
+	/// @todo Move all this out of the constructor?
     QVector<QVariant> rootData;
 	for(const QString& header : headers)
 	{
@@ -73,7 +78,6 @@ AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &
 	}
 
 	m_root_item = new AbstractTreeModelItem(rootData);
-//    setupModelData(data.split(QString("\n")), m_root_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -133,10 +137,41 @@ void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
 #warning "TODO"
 }
 
-bool AbstractTreeModel::readModel(QXmlStreamReader* writer) const
+bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
 {
-#warning "TODO"
-	return true;
+	auto& xml = *reader;
+
+	// Check that we're reading an XML file with the right format.
+	if(xml.name() == getXmlStreamName()
+			&& xml.attributes().value("version") == getXmlStreamVersion())
+	{
+		// Start the recursive descent.
+		// Whatever we find here should be the m_root_node.
+		AbstractTreeModelItem* parent_item = nullptr;
+		while(xml.readNextStartElement())
+		{
+			for(const auto& parse_func : m_parse_factory_functions)
+			{
+				AbstractTreeModelItem* new_item = parse_func(&xml, parent_item);
+				if(new_item != nullptr)
+				{
+					// Parsed it.
+				}
+				else
+				{
+					// Not sure what that was.
+					qIn() << "Skipping unknown element:" << xml.name();
+					xml.skipCurrentElement();
+				}
+			}
+		}
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
@@ -144,7 +179,7 @@ void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractT
 	m_root_item->writeItemAndChildren(writer);
 }
 
-void AbstractTreeModel::readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
+void AbstractTreeModel::readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item)
 {
 
 }

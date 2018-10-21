@@ -23,12 +23,12 @@
 
 #include "AbstractTreeModelWriter.h"
 
+// Qt5
+
 // Ours
 #include "AbstractTreeModel.h"
 #include "AbstractTreeModelItem.h"
-
-// Qt5
-
+#include "AbstractTreeModelReader.h"
 
 
 static inline QString yesValue() { return QStringLiteral("yes"); }
@@ -59,8 +59,8 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 //	m_xml_stream_writer.writeDTD("NONE");
 
 	/// @todo Probably get from derived model class?
-	xml.writeStartElement("abstracttreemodel");
-	xml.writeAttribute(versionAttribute(), QStringLiteral("0.1"));
+	xml.writeStartElement(m_tree_model->getXmlStreamName());
+	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 
 	m_tree_model->writeItemAndChildren(&xml, nullptr);
 

@@ -36,11 +36,15 @@ public:
     ~ScanResultsTreeModel() override = default;
 
 	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
-	 bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
+	bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
 
 protected:
+	QString getXmlStreamName() const override { return "AMLMScanResults"; };
+	QString getXmlStreamVersion() const override { return "0.1"; };
+
 
     QUrl m_base_directory;
+
 };
 
 #endif // SCANRESULTSTREEMODEL_H

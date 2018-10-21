@@ -58,6 +58,7 @@
 // Qt5
 #include <QStringList>
 #include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 // Ours
 #include <utils/DebugHelpers.h>
@@ -261,6 +262,11 @@ void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 {
     AMLM_WARNIF(m_parent_item != nullptr);
 
-    m_parent_item = parent_item;
+	m_parent_item = parent_item;
+}
+
+void AbstractTreeModelItem::writeItem(QXmlStreamWriter* p_xml) const
+{
+
 }
 

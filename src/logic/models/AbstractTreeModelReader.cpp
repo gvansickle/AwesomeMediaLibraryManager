@@ -20,16 +20,57 @@
 /**
  * @file AbstractTreeModelReader.cpp
  */
-#include <logic/models/AbstractTreeModelReader.h>
 
-AbstractTreeModelReader::AbstractTreeModelReader()
+#include "AbstractTreeModelReader.h"
+
+// Qt5
+
+// Ours
+#include "AbstractTreeModel.h"
+#include "AbstractTreeModelItem.h"
+#include <utils/DebugHelpers.h>
+
+AbstractTreeModelReader::AbstractTreeModelReader(AbstractTreeModel* model) : m_model(model)
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 AbstractTreeModelReader::~AbstractTreeModelReader()
 {
-	// TODO Auto-generated destructor stub
 }
+
+bool AbstractTreeModelReader::read(QIODevice* device)
+{
+	auto& xml = m_xml_stream_reader;
+	auto& model = m_model;
+
+	xml.setDevice(device);
+
+	// Get the first start element.
+	if(xml.readNextStartElement())
+	{
+		// Check that we're reading an XML file with the right format.
+		if(model->readModel(&xml))
+		{
+			// model read successfully.
+			qIn() << "Read model successfully";
+		}
+		else
+		{
+			xml.raiseError(QObject::tr("Bad XML name or version elements."));
+		}
+	}
+	return !xml.error();
+}
+
+QString AbstractTreeModelReader::errorString() const
+{
+	auto& xml = m_xml_stream_reader;
+
+	return QObject::tr("%1\nLine %2, column %3")
+				.arg(xml.errorString())
+				.arg(xml.lineNumber())
+				.arg(xml.columnNumber());
+}
+
+
 

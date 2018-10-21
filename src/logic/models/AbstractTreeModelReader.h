@@ -23,14 +23,36 @@
 #ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELREADER_H_
 #define SRC_LOGIC_MODELS_ABSTRACTTREEMODELREADER_H_
 
+// Qt5
+class QIODevice;
+#include <QXmlStreamReader>
+
+// Ours
+class AbstractTreeModel;
+class AbstractTreeModelItem;
+
+
+
 /*
  *
  */
 class AbstractTreeModelReader
 {
 public:
-	AbstractTreeModelReader();
+	explicit AbstractTreeModelReader(AbstractTreeModel* model);
 	virtual ~AbstractTreeModelReader();
+
+	bool read(QIODevice *device);
+
+	QString errorString() const;
+
+	static inline QString versionAttribute() { return QStringLiteral("version"); }
+	static inline QString hrefAttribute() { return QStringLiteral("href"); }
+	static inline QString foldedAttribute() { return QStringLiteral("folded"); }
+
+private:
+	QXmlStreamReader m_xml_stream_reader;
+	AbstractTreeModel *m_model;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELREADER_H_ */
