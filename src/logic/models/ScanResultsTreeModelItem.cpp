@@ -28,6 +28,17 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
+#include <logic/DirScanResult.h>
+
+
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem* parent)
+	: AbstractTreeModelItem(parent)
+{
+	m_dsr = *dsr;
+//	dsr->getDirProps();
+//	dsr->getMediaExtUrl();
+//	dsr->getSidecarCuesheetExtUrl();
+}
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
 	: AbstractTreeModelItem(x, parent)
@@ -80,17 +91,18 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 
 	// Write out this item.
 
-	QString item_tag_name = "srtmitem";
-	xml.writeStartElement(item_tag_name);
+	xml.writeStartElement(m_item_tag_name);
 	xml.writeAttribute("childNumber", QString("%1").arg(childNumber()));
 
+	xml.writeAttribute("href", m_dsr.getMediaExtUrl());
+
 	// Write the columns of data.
-	for(int col = 0; col < columnCount(); ++col)
-	{
-		/// @todo Get header element info.
-//		xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
-		xml.writeTextElement("column_data", data(col).toString());
-	}
+//	for(int col = 0; col < columnCount(); ++col)
+//	{
+//		/// @todo Get header element info.
+////		xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
+//		xml.writeTextElement("column_data", data(col).toString());
+//	}
 
 	// Write out all children.
 	for(int i = 0; i < childCount(); ++i)

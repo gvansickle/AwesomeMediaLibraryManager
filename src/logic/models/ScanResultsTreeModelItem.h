@@ -26,7 +26,11 @@
 #include "AbstractTreeModelItem.h"
 
 // Qt5
+#include <QStringLiteral>
 class QXmlStreamReader;
+
+// Ours
+#include "../DirScanResult.h"
 
 /*
  *
@@ -34,6 +38,7 @@ class QXmlStreamReader;
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 public:
+	explicit ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem *parent = nullptr);
 	explicit ScanResultsTreeModelItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
 	 ~ScanResultsTreeModelItem() override;
 
@@ -53,6 +58,11 @@ public:
 	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
 
 	static ScanResultsTreeModelItem* createChildItem(AbstractTreeModelItem* parent);
+
+protected:
+
+	QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
+	DirScanResult m_dsr;
 
 };
 

@@ -39,7 +39,9 @@ public:
                          QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
 
-	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
+	/**
+	 * Append a vector of AbstractTreeModelItem's as children of @p parent.
+	 */
 	bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
 
 protected:

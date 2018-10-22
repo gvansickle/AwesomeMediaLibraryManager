@@ -63,9 +63,14 @@
 // Ours
 #include <utils/DebugHelpers.h>
 
-AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent)
+AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent)
 {
 	m_parent_item = parent;
+}
+
+AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent)
+	: AbstractTreeModelItem(parent)
+{
 	m_item_data = data;
 }
 

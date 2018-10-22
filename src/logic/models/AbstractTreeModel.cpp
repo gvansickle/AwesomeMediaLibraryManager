@@ -188,7 +188,7 @@ void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractT
 
 void AbstractTreeModel::readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item)
 {
-
+#warning "TODO"
 }
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,

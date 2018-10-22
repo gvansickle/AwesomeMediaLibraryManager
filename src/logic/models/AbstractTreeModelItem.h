@@ -70,6 +70,7 @@ class QXmlStreamWriter;
 class AbstractTreeModelItem
 {
 public:
+	explicit AbstractTreeModelItem(AbstractTreeModelItem *parent = nullptr);
 	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
     virtual ~AbstractTreeModelItem();
 
@@ -120,6 +121,7 @@ protected:
     virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
 	/// Factory function for creating default-constructed nodes.
+	/// Used by insertChildren().
 	AbstractTreeModelItem* make_default_node(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
 
 
