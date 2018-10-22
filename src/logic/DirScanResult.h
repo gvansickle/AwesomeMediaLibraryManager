@@ -104,6 +104,7 @@ static inline QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& 
 {
 	out.writeStartElement("exturl");
 	out.writeAttribute("href", exturl.m_url.toString());
+	out.writeTextElement("title", "Media URL");
 	out.writeEndElement();
 	return out;
 }
