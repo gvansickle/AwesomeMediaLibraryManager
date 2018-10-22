@@ -28,6 +28,7 @@
 #include <QDateTime>
 #include <QDataStream>
 #include <QDebug>
+#include <QXmlStreamWriter>
 
 /// Ours
 #include <src/utils/QtHelpers.h>
@@ -99,7 +100,13 @@ protected:
 Q_DECLARE_METATYPE(ExtUrl);
 QTH_DECLARE_QDEBUG_OP(ExtUrl);
 //QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
-
+static inline QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
+{
+	out.writeStartElement("exturl");
+	out.writeAttribute("href", exturl.m_url.toString());
+	out.writeEndElement();
+	return out;
+}
 
 class FileModificationInfo
 {
