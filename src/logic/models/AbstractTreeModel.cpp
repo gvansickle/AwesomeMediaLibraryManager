@@ -141,7 +141,8 @@ AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) cons
 
 void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
 {
-#warning "TODO"
+#warning "TODO WRITE MODEL METADATA"
+	writeItemAndChildren(writer, m_root_item);
 }
 
 bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
