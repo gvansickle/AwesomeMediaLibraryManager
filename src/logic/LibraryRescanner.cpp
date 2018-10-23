@@ -241,7 +241,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	// Make sure the above job gets canceled and deleted.
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
-    dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
+	dirtrav_job->then(this, [=, tree_model_ptr=tree_model](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -268,7 +268,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			}
 			else
 			{
-				AbstractTreeModelWriter tmw(tree_model);
+				AbstractTreeModelWriter tmw(tree_model_ptr);
 				tmw.write_to_iodevice(&outfile);
 			}
 

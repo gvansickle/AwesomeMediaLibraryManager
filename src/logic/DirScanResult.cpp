@@ -36,9 +36,7 @@
 
 
 AMLM_QREG_CALLBACK([](){
-	qIn() << "Registering ExtUrl, DirScanResult, FileModificationInfo";
-//	qRegisterMetaType<ExtUrl>();
-//	qRegisterMetaTypeStreamOperators<ExtUrl>();
+	qIn() << "Registering DirScanResult, FileModificationInfo";
 	qRegisterMetaType<DirScanResult>();
     qRegisterMetaType<FileModificationInfo>();
 });

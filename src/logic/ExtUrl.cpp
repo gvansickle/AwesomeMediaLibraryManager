@@ -27,6 +27,18 @@
 #include <QFileInfo>
 #include <QXmlStreamWriter>
 
+// Ours, Qt5 Support
+#include <utils/RegisterQtMetatypes.h>
+
+// Ours
+#include <utils/DebugHelpers.h>
+
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering ExtUrl";
+	qRegisterMetaType<ExtUrl>();
+	qRegisterMetaTypeStreamOperators<ExtUrl>("ExtUrl");
+});
+
 
 ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 {
@@ -94,7 +106,7 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 {
 	out.writeStartElement("exturl");
 	out.writeAttribute("href", exturl.m_url.toString());
-//	out.writeTextElement("title", "Media URL");
+	out.writeTextElement("title", "Media URL");
 	out.writeEndElement();
 	return out;
 }

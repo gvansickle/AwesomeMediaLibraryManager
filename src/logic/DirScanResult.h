@@ -89,7 +89,7 @@ class DirScanResult
 	Q_GADGET
 
 public:
-    /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
+	/// @name Public default and copy constructors and destructor for Q_DECLARE_METATYPE().
 	/// @{
     DirScanResult() = default;
     DirScanResult(const DirScanResult& other) = default;
