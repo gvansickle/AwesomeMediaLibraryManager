@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QUrl>
 #include <QFileInfo>
 #include <QDateTime>
@@ -30,84 +30,11 @@
 #include <QDebug>
 #include <QXmlStreamWriter>
 
-/// Ours
+// Ours
 #include <src/utils/QtHelpers.h>
-
+#include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
 
-/**
- * An extended URL class.
- * Extensions are data used to detect if the referenced item has changed.
- */
-class ExtUrl
-{
-	Q_GADGET
-
-public:
-	ExtUrl() = default;
-	ExtUrl(const ExtUrl& other) = default;
-	~ExtUrl() = default;
-
-    /**
-     * Construct an ExtUrl from a QUrl and QFileInfo.
-     * Use case is e.g. results of a directory scan, where we'd have QFileInfo available.
-     */
-	explicit ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo = nullptr);
-
-	/// User-defined conversion to QUrl.
-	explicit operator QUrl() const { return m_url; }
-
-	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
-
-
-    /// ExtUrl Status enum.
-    enum Status
-    {
-        Exists = 0x01,
-        Accessible = 0x02,
-        IsStale = 0x04
-    };
-    Q_DECLARE_FLAGS(Statuses, Status)
-    Q_FLAG(Statuses)
-
-    /**
-     * Check the status of the URL, if it is accessible, if it's stale, etc.
-     */
-    Status getStatus();
-
-    /// @name Data members.
-    /// @{
-
-	/// The QUrl.
-	QUrl m_url;
-	/// File size, or 0 if couldn't be determined.
-	qint64 m_size {0};
-	/// Last modified time.  Invalid if can't be determined(?).
-	QDateTime m_last_modified_timestamp;
-	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
-	QDateTime m_metadata_last_modified_timestamp;
-
-    /// @}
-
-//	bool isValid() { return m_url.isValid(); }
-
-protected:
-
-	void LoadModInfo();
-
-};
-
-Q_DECLARE_METATYPE(ExtUrl);
-QTH_DECLARE_QDEBUG_OP(ExtUrl);
-//QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
-static inline QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
-{
-	out.writeStartElement("exturl");
-	out.writeAttribute("href", exturl.m_url.toString());
-	out.writeTextElement("title", "Media URL");
-	out.writeEndElement();
-	return out;
-}
 
 class FileModificationInfo
 {
@@ -215,6 +142,8 @@ public:
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
 //    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+	/// QXmlStream{Read,Write} operators.
+	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
 
     AbstractTreeModelItem *toTreeModelItem();
 
@@ -245,5 +174,6 @@ Q_DECLARE_METATYPE(DirScanResult);
 Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirProps);
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
 //QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
+QTH_DECLARE_QXMLSTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

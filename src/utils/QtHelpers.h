@@ -74,10 +74,22 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
 #define IMPL_QTH_DECLARE_QDEBUG_OP(friend_placeholder, classname) \
 	friend_placeholder QDebug operator<<(QDebug out, const classname & obj);
 
-#define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
-    friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \
-    friend_placeholder QDataStream &operator>>(QDataStream &in, classname & myObj);
+//#define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
+//    friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \
+//    friend_placeholder QDataStream &operator>>(QDataStream &in, classname & myObj);
 
+//template <class StreamTypePlusRef, class TheClass>
+
+
+#define IMPL_QTH_DECLARE_STREAM_OPS(friend_placeholder, outstream_class_plus_ref, instream_class_plus_ref, classname) \
+	friend_placeholder outstream_class_plus_ref operator<<(outstream_class_plus_ref out, const classname & myObj); \
+	friend_placeholder instream_class_plus_ref operator>>(instream_class_plus_ref in, classname & myObj);
+
+#define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
+	IMPL_QTH_DECLARE_STREAM_OPS(friend_placeholder, QDataStream&, QDataStream&, classname)
+
+#define IMPL_QTH_DECLARE_QXMLSTREAM_OPS(friend_placeholder, classname) \
+	IMPL_QTH_DECLARE_STREAM_OPS(friend_placeholder, QXmlStreamWriter&, QXmlStreamReader&, classname)
 
 /**
  * QDebug "friender".
@@ -105,8 +117,16 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
 #define QTH_DECLARE_QDATASTREAM_OPS(classname) \
 	IMPL_QTH_DECLARE_QDATASTREAM_OPS(/**/, classname)
 
+/// @name QXmlStream{Reader,Writer} declarations.
+/// @{
 
+#define QTH_FRIEND_QXMLSTREAM_OPS(classname) \
+	IMPL_QTH_DECLARE_QXMLSTREAM_OPS(friend, classname)
 
+#define QTH_DECLARE_QXMLSTREAM_OPS(classname) \
+	IMPL_QTH_DECLARE_QXMLSTREAM_OPS(/**/, classname)
+
+/// @}
 
 
 #endif /* SRC_UTILS_QTHELPERS_H_ */

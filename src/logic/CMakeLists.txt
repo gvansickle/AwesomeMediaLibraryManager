@@ -28,6 +28,8 @@ add_subdir_lib(dbmodels_subdir "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
 add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
 
 set(logic_subdir_SOURCES
+	ExtUrl.cpp
+	ExtUrl.h
 	PerfectDeleter.cpp
 	PerfectDeleter.h
 	)

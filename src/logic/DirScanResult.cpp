@@ -37,73 +37,14 @@
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl, DirScanResult, FileModificationInfo";
-	qRegisterMetaType<ExtUrl>();
-	qRegisterMetaTypeStreamOperators<ExtUrl>();
-    qRegisterMetaType<DirScanResult>();
+//	qRegisterMetaType<ExtUrl>();
+//	qRegisterMetaTypeStreamOperators<ExtUrl>();
+	qRegisterMetaType<DirScanResult>();
     qRegisterMetaType<FileModificationInfo>();
 });
 
 
-ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
-{
-	if(qurl_finfo != nullptr)
-	{
-		m_size = qurl_finfo->size();
-		m_last_modified_timestamp = qurl_finfo->lastModified();
-		m_metadata_last_modified_timestamp = qurl_finfo->metadataChangeTime();
-	}
-	else
-	{
-		LoadModInfo();
-	}
-}
 
-void ExtUrl::LoadModInfo()
-{
-	Q_ASSERT(m_url.isValid());
-
-	// Is this a local file?
-	if(m_url.isLocalFile())
-	{
-		// Yes, we can get the mod info fairly cheaply.
-		QFileInfo fi(m_url.toLocalFile());
-		if(fi.exists())
-		{
-			// File exists.
-			m_size = fi.size();
-			m_last_modified_timestamp = fi.lastModified();
-			m_metadata_last_modified_timestamp = fi.metadataChangeTime();
-		}
-	}
-}
-
-#define DATASTREAM_FIELDS(X) \
-	X(m_url) X(m_size) X(m_last_modified_timestamp) X(m_metadata_last_modified_timestamp)
-
-QDebug operator<<(QDebug dbg, const ExtUrl& obj)
-{
-#define X(field) << obj.field
-	dbg DATASTREAM_FIELDS(X);
-#undef X
-	return dbg;
-}
-
-QDataStream &operator<<(QDataStream &out, const ExtUrl& myObj)
-{
-#define X(field) << myObj.field
-	out DATASTREAM_FIELDS(X);
-#undef X
-	return out;
-}
-
-QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
-{
-#define X(field) >> myObj.field
-	return in DATASTREAM_FIELDS(X);
-#undef X
-}
-
-#undef DATASTREAM_FIELDS
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_media_exturl(found_url, &found_url_finfo)
@@ -211,6 +152,23 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 #undef X
 }
 #endif
+
+/**
+ * QXmlStreamWriter write operator.
+ */
+QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
+{
+	out.writeStartElement("dirscanresult");
+	// Directory URL.
+	out << dsr.m_dir_exturl;
+	out << dsr.m_cue_exturl;
+	qDb() << dsr.m_dir_exturl;
+	qDb() << dsr.m_cue_exturl;
+//	out.writeAttribute("href", exturl.m_url.toString());
+//	out.writeTextElement("title", "Media URL");
+	out.writeEndElement();
+	return out;
+}
 
 #undef DATASTREAM_FIELDS
 

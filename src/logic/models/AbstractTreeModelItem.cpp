@@ -224,8 +224,6 @@ bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem *> new_
     for(auto* child : new_children)
     {
         child->setParentItem(this);
-//        qDb() << "APPENDING TO ITEM:" << this;
-//        qDb() << "       CHILD ITEM:" << *child;
         m_child_items.push_back(child);
     }
 
