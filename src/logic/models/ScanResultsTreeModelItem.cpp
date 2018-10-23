@@ -94,7 +94,7 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 	xml.writeStartElement(m_item_tag_name);
 	xml.writeAttribute("childNumber", QString("%1").arg(childNumber()));
 
-//	xml.writeAttribute("href", m_dsr.getMediaExtUrl());
+	// Write the DirScanResults.
 	xml << m_dsr;
 
 	// Write the columns of data.

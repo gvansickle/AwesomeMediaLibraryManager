@@ -52,12 +52,12 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 
 AbstractTreeModelItem* DirScanResult::toTreeModelItem()
 {
-    QVector<QVariant> column_data;
-    column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
-    column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
-    column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+//    QVector<QVariant> column_data;
+//    column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
+//    column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
+//    column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
 
-	auto new_item = new ScanResultsTreeModelItem(column_data);
+	auto new_item = new ScanResultsTreeModelItem(this);
 //	auto new_item = make_default_node(column_data);
 
     QVector<AbstractTreeModelItem *> child_items;
