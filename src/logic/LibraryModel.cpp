@@ -692,7 +692,7 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 
 	connectSignals();
 //	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
-	Q_EMIT startFileScanSignal(m_library.rootURL);
+	Q_EMIT startFileScanSignal(m_library.m_root_url);
 
 	endResetModel();
 }

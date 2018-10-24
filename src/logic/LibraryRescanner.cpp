@@ -27,6 +27,8 @@
 
 /// Qt5
 #include <QThread>
+#include <QXmlFormatter>
+#include <QXmlQuery>
 #include <QtConcurrent>
 
 /// KF5
@@ -268,9 +270,40 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			}
 			else
 			{
+#if 0
 				AbstractTreeModelWriter tmw(tree_model_ptr);
 				tmw.write_to_iodevice(&outfile);
+#else
+				// Write
+				{
+					QXmlQuery query;
+					int test_var_1 = 4;
+					QString message = "Hello World!";
+					query.bindVariable("message", QVariant(message));
+					query.bindVariable("test_var_1", QVariant(test_var_1));
+					query.setQuery(
+								"<results>"
+								"<message>{$message}</message>"
+								"<m2>{$test_var_1}</m2>"
+								"</results>"
+								);
+					Q_ASSERT(query.isValid());
+
+					QXmlFormatter formatter(query, &outfile);
+					formatter.setIndentationDepth(2);
+					if(!query.evaluateTo(&formatter))
+					{
+						Q_ASSERT(0);
+					}
+				}
+				// Read
+				{
+
+				}
+#endif
 			}
+/// @todo EXPERIMENTAL
+
 
 #if 0
             // Directory traversal complete, start rescan.

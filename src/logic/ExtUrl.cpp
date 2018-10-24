@@ -26,6 +26,7 @@
 // Qt5
 #include <QFileInfo>
 #include <QXmlStreamWriter>
+#include <QtXmlPatterns>
 
 // Ours, Qt5 Support
 #include <utils/RegisterQtMetatypes.h>
@@ -104,9 +105,14 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
  */
 QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 {
+	// Tag name
 	out.writeStartElement("exturl");
+	// The URL.
 	out.writeAttribute("href", exturl.m_url.toString());
-	out.writeTextElement("title", "Media URL");
+	// Size of the file if known.
+	out.writeAttribute("file_size", QString("%1").arg(exturl.m_size));
+//	out.writeTextElement("title", "Media URL");
+	out.writeAttribute("time", exturl.m_last_modified_timestamp.toString());
 	out.writeEndElement();
 	return out;
 }

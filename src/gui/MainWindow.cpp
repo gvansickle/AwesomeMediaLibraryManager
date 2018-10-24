@@ -1568,9 +1568,21 @@ void MainWindow::openFileLibrary(const QUrl& filename)
 void MainWindow::onRescanLibrary()
 {
 	// Start a rescan on all models.
+M_WARNING("HACKISH, MAKE THIS BETTER");
+/// @todo So really what we're doing is removing any libraries and re-opening them.
+
+QVector<QUrl> lib_root_urls;
+
 	for(auto l : m_libmodels)
 	{
-		l->startRescan();
+//		l->startRescan();
+		lib_root_urls << l->getLibRootDir();
+		onRemoveDirFromLibrary(l);
+	}
+
+	for(auto url : lib_root_urls)
+	{
+		openFileLibrary(url);
 	}
 }
 
