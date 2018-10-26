@@ -29,7 +29,9 @@
 #include <QThread>
 #include <QXmlFormatter>
 #include <QXmlQuery>
+#include <QVariant>
 #include <QtConcurrent>
+#include <QXmlResultItems>
 
 /// KF5
 #include <KJobUiDelegate>
@@ -263,28 +265,36 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			QString filename = QDir::homePath() + "/DeleteMe.xml";
 			qIno() << "Writing model to XML file:" << filename;
 			QFile outfile(filename);
-			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
+			auto status = outfile.open(QFile::ReadWrite | QFile::Text);
 			if(!status)
 			{
 				qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
 			}
 			else
 			{
-#if 0
+#if 1
 				AbstractTreeModelWriter tmw(tree_model_ptr);
 				tmw.write_to_iodevice(&outfile);
 #else
-				// Write
+				//
+				if(0)
 				{
+					QXmlQuery query_inner;
+					QString inner_obj = "Some string";
+					query_inner.bindVariable("inner_obj", QVariant(inner_obj));
+					query_inner.setQuery("<p>{$inner_obj}</p>");
+
 					QXmlQuery query;
 					int test_var_1 = 4;
 					QString message = "Hello World!";
 					query.bindVariable("message", QVariant(message));
 					query.bindVariable("test_var_1", QVariant(test_var_1));
+					query.bindVariable("inner_var", query_inner);
 					query.setQuery(
 								"<results>"
 								"<message>{$message}</message>"
 								"<m2>{$test_var_1}</m2>"
+					"<i1>{$inner_var}</i1>"
 								"</results>"
 								);
 					Q_ASSERT(query.isValid());
@@ -296,9 +306,51 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 						Q_ASSERT(0);
 					}
 				}
-				// Read
+				//
 				{
+					QXmlQuery query;
 
+//					QXmlResultItems query_list;
+					QStringList query_list;
+
+//					// Write out the top-level items.
+//					for(long i = 0; i < tree_model_ptr->rowCount(); ++i)
+//					{
+//						//QModelIndex qmi = tree_model_ptr->index(i, 0);
+//						//QXmlQuery child = dynamic_cast<ScanResultsTreeModelItem*>(tree_model_ptr->getItem(qmi))->write();
+//						QString child = "<a>test</a>";
+////						query_list.push_back(QVariant::fromValue<QXmlQuery>("<child/>"));
+//					}
+
+					QStringList qvl;
+					qvl << QString("<test1/>") << QString("<test2/>");
+					query.bindVariable("fileName", &outfile);
+					query.bindVariable("child_list", QVariant("a, b, c"));
+//					query.setFocus(&outfile);
+//					query.setQuery(QUrl("file:///home/gary/src/AwesomeMediaLibraryManager/myquery.xq"));
+					query.setQuery(
+//								"xquery version \"1.0\";\n"
+								QString(
+									"<cookbook xmlns=\"http://cookbook/namespace\">\n"
+								"let $items := ($child_list)\n" //('orange', <apple/>, <fruit type=\"juicy\"/>, <vehicle type=\"car\">sentro</vehicle>, 1,2,3,'a','b',\"abc\")\n"
+								"return\n"
+								"<p>\n"
+										"{\n"
+										" for $item in $items\n"
+										"return <item>{$item}</item>\n"
+										"}\n"
+										"</p>\n"
+									"<cookbook/>")
+								);
+
+					Q_ASSERT(query.isValid());
+
+					QXmlFormatter formatter(query, &outfile);
+					formatter.setIndentationDepth(2);
+					if(!query.evaluateTo(&formatter))
+					{
+						Q_ASSERT(0);
+					}
 				}
 #endif
 			}

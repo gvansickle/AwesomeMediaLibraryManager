@@ -55,6 +55,34 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	}
 }
 
+QXmlQuery ExtUrl::write() const
+{
+	QXmlQuery query;
+
+	query.bindVariable("href", QVariant(m_url));
+//	query.bindVariable("test_var_1", QVariant(test_var_1));
+//	query.bindVariable("inner_var", query_inner);
+	query.setQuery(
+				"<exturl>"
+				"<href>{$href}</href>"
+				"</exturl>"
+				);
+	Q_ASSERT(query.isValid());
+
+	return query;
+
+//	// Tag name
+//	out.writeStartElement("exturl");
+//	// The URL.
+//	out.writeAttribute("href", exturl.m_url.toString());
+//	// Size of the file if known.
+//	out.writeAttribute("file_size", QString("%1").arg(exturl.m_size));
+////	out.writeTextElement("title", "Media URL");
+//	out.writeAttribute("time", exturl.m_last_modified_timestamp.toString());
+//	out.writeEndElement();
+//	return out;
+}
+
 void ExtUrl::LoadModInfo()
 {
 	Q_ASSERT(m_url.isValid());

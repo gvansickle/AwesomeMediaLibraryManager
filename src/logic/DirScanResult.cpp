@@ -47,7 +47,20 @@ AMLM_QREG_CALLBACK([](){
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_media_exturl(found_url, &found_url_finfo)
 {
-    determineDirProps(found_url_finfo);
+	determineDirProps(found_url_finfo);
+}
+
+QXmlQuery DirScanResult::write() const
+{
+	QXmlQuery query;
+
+	query.bindVariable("dir_url", m_dir_exturl.write());
+	query.setQuery(
+				"<dir_url>{$dir_url}</dir_url>"
+				);
+	Q_ASSERT(query.isValid());
+
+	return query;
 }
 
 AbstractTreeModelItem* DirScanResult::toTreeModelItem()
@@ -158,10 +171,11 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 {
 	out.writeStartElement("dirscanresult");
 	// Directory URL.
-	out << dsr.m_dir_exturl;
-	out << dsr.m_cue_exturl;
-	qDb() << dsr.m_dir_exturl;
-	qDb() << dsr.m_cue_exturl;
+
+//	out << dsr.m_dir_exturl;
+//	out << dsr.m_cue_exturl;
+//	qDb() << dsr.m_dir_exturl;
+//	qDb() << dsr.m_cue_exturl;
 //	out.writeAttribute("href", exturl.m_url.toString());
 //	out.writeTextElement("title", "Media URL");
 	out.writeEndElement();

@@ -29,6 +29,7 @@
 #include <QDataStream>
 #include <QDebug>
 #include <QXmlStreamWriter>
+#include <QXmlQuery>
 
 // Ours
 #include <src/utils/QtHelpers.h>
@@ -144,6 +145,8 @@ public:
 //    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 	/// QXmlStream{Read,Write} operators.
 	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
+
+	QXmlQuery write() const;
 
     AbstractTreeModelItem *toTreeModelItem();
 

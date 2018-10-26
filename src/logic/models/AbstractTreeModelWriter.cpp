@@ -56,7 +56,7 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 
 #if 1
 	/// @todo No DTD for the moment.
-//	m_xml_stream_writer.writeDTD("NONE");
+	xml.writeDTD(QStringLiteral("<!DOCTYPE xbel>"));
 
 	/// @todo Probably get from derived model class?
 	xml.writeStartElement(m_tree_model->getXmlStreamName());
@@ -64,13 +64,20 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 
 	m_tree_model->writeItemAndChildren(&xml, nullptr);
 
-#else
+#elif 0
 
 	// Write out the top-level items.
 	for(long i = 0; i < m_tree_model->rowCount(); ++i)
 	{
 		QModelIndex qmi = m_tree_model->index(i, 0);
 		write_item(m_tree_model->getItem(qmi));
+	}
+#elif 0
+	// Write out the top-level items.
+	for(long i = 0; i < m_tree_model->rowCount(); ++i)
+	{
+		QModelIndex qmi = m_tree_model->index(i, 0);
+		QXmlQuery = write(m_tree_model->getItem(qmi));
 	}
 #endif
 

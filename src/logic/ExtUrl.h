@@ -27,6 +27,7 @@
 #include <QtCore>
 #include <QUrl>
 #include <QDateTime>
+#include <QXmlQuery>
 class QFileInfo;
 
 // Ours
@@ -90,6 +91,8 @@ public:
 
 	/// QXmlStream{Read,Write} operators.
 	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
+
+	QXmlQuery write() const;
 
 protected:
 
