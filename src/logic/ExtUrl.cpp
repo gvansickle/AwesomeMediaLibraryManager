@@ -138,7 +138,7 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 {
 #if 1
 	XmlElement* e = new XmlElement(out, "exturl",
-								   XmlAttributeList({QXmlStreamAttribute("href", exturl.m_url.toString()), QXmlStreamAttribute("file_size", QString("%1").arg(exturl.m_size))}));
+								   XmlAttributeList({/*QXmlStreamAttribute(*/{"href", exturl.m_url.toString()}, {"file_size", QString("%1").arg(exturl.m_size)} }));
 	delete e;
 #elif
 	// Tag name

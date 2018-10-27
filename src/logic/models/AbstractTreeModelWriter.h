@@ -57,26 +57,30 @@ private:
 
 class XmlAttribute : public QXmlStreamAttribute
 {
+//public:
+//	XmlAttribute(std::initializer_list<QString> initlist) : QXmlStreamAttribute()
+//	{
 
+//	}
 };
 
 class XmlAttributeList : public QXmlStreamAttributes
 {
 public:
-	XmlAttributeList(std::initializer_list/*QVector*/<QXmlStreamAttribute> initlist) : QXmlStreamAttributes()
+	XmlAttributeList(std::initializer_list<QXmlStreamAttribute> initlist) : QXmlStreamAttributes()
 	{
 		this->append(initlist);
 	}
 
-	XmlAttributeList(std::initializer_list<XmlAttribute> initlist) : QXmlStreamAttributes()
-	{
-		for(auto e : initlist)
-		{
-			append(e);
-		}
-//		initlist.begin(), initlist.end());
-//		std::copy(initlist.begin(), initlist.end(), this-> ->append(initlist));
-	}
+//	XmlAttributeList(std::initializer_list<XmlAttribute> initlist) : QXmlStreamAttributes()
+//	{
+//		for(auto e : initlist)
+//		{
+//			append(e);
+//		}
+////		initlist.begin(), initlist.end());
+////		std::copy(initlist.begin(), initlist.end(), this-> ->append(initlist));
+//	}
 };
 
 /**
