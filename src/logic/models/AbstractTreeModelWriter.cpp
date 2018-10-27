@@ -24,6 +24,7 @@
 #include "AbstractTreeModelWriter.h"
 
 // Qt5
+#include <QDateTime>
 
 // Ours
 #include "AbstractTreeModel.h"
@@ -54,7 +55,7 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 
 	xml.writeStartDocument();
 
-	/// @todo Start of xspf-specific stuff.
+	/// @todo Move out of this class. Start of xspf-specific stuff.
 	// <playlist version="1" xmlns="http://xspf.org/ns/0/">
 //	xml.writeStartElement("http://xspf.org/ns/0/", "playlist");
 	xml.writeStartElement("playlist");
@@ -65,21 +66,24 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 
 	// No DTD for xspf.
 
-	/// @todo Add Playlist metadata here.
+	/// @todo Playlist metadata here.  Needs to be moved out of this class.
 	/// http://www.xspf.org/xspf-v1.html#rfc.section.2.3.1
 	/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
+	xml.writeTextElement("title", "XSPF playlist title goes HERE");
+
 	/// <creator> "Human-readable name of the entity (author, authors, group, company, etc) that authored the playlist. xspf:playlist elements MAY contain exactly one."
+	xml.writeTextElement("creator", "XSPF playlist CREATOR GOES HERE");
+
 	/// ...
 	/// <date>	"Creation date (not last-modified date) of the playlist, formatted as a XML schema dateTime. xspf:playlist elements MAY contain exactly one.
 	///	A sample date is "2005-01-08T17:10:47-05:00".
+	xml.writeTextElement("date", QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
 #if 1
 
-
-
 	/// @todo Probably get from derived model class?
-	xml.writeStartElement(m_tree_model->getXmlStreamName());
-	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
+//	xml.writeStartElement(m_tree_model->getXmlStreamName());
+//	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 
 	m_tree_model->writeItemAndChildren(&xml, nullptr);
 
@@ -100,7 +104,7 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 	}
 #endif
 
-	m_xml_stream_writer.writeEndDocument();
+	xml.writeEndDocument();
 
 	return true;
 }

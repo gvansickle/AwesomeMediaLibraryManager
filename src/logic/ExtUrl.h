@@ -23,6 +23,9 @@
 #ifndef SRC_LOGIC_EXTURL_H_
 #define SRC_LOGIC_EXTURL_H_
 
+// Std C++
+#include <memory> // for std::unique_ptr<>.
+
 // Qt5
 #include <QtCore>
 #include <QUrl>
@@ -32,6 +35,8 @@ class QFileInfo;
 
 // Ours
 #include <utils/QtHelpers.h>
+#include "xml/XmlObjects.h"
+#include <logic/models/AbstractTreeModelWriter.h>
 
 /**
  * An extended URL class.
@@ -93,6 +98,9 @@ public:
 	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 
 	QXmlQuery write() const;
+
+	void write(QXmlStreamWriter& xml) const;
+	std::unique_ptr<XmlElement> toXml() const;
 
 protected:
 

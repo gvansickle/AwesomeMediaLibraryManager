@@ -33,6 +33,7 @@
 
 // Ours
 #include "models/AbstractTreeModelWriter.h"
+#include "xml/XmlObjects.h"
 #include <utils/DebugHelpers.h>
 
 AMLM_QREG_CALLBACK([](){
@@ -81,7 +82,31 @@ QXmlQuery ExtUrl::write() const
 ////	out.writeTextElement("title", "Media URL");
 //	out.writeAttribute("time", exturl.m_last_modified_timestamp.toString());
 //	out.writeEndElement();
-//	return out;
+	//	return out;
+}
+
+void ExtUrl::write(QXmlStreamWriter& xml) const
+{
+	XmlElement e("exturl",
+				   XmlAttributeList(
+	{
+						 {"id", "idtest"},
+						 {"href", m_url.toString()},
+						 {"file_size", QString("%1").arg(m_size)}
+					 }));
+}
+
+std::unique_ptr<XmlElement> ExtUrl::toXml() const
+{
+	auto retval = std::make_unique<XmlElement>(
+												   "exturl", // tag name
+												   XmlAttributeList({         // Attributes.
+													   {"href", m_url.toString()},
+													   {"file_size", QString("%1").arg(m_size)}
+												   })
+												   // Inner scope.
+											   );
+	return retval;
 }
 
 void ExtUrl::LoadModInfo()
@@ -137,9 +162,15 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
 QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 {
 #if 1
-	XmlElement* e = new XmlElement(out, "exturl",
-								   XmlAttributeList({/*QXmlStreamAttribute(*/{"href", exturl.m_url.toString()}, {"file_size", QString("%1").arg(exturl.m_size)} }));
-	delete e;
+	XmlElement e("exturl",
+				   XmlAttributeList(
+	{
+						 {"id", "fromstreamop"},
+						 {"href", exturl.m_url.toString()},
+						 {"file_size", QString("%1").arg(exturl.m_size)}
+					 }));
+	e.set_out(&out);
+
 #elif
 	// Tag name
 	out.writeStartElement("exturl");

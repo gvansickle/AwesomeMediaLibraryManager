@@ -176,10 +176,23 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 	// Directory URL.
 
 	{
-		XmlElement e(out, "dirscanresult");//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
+		XmlElement e("dirscanresult",
+					 [=](auto* xml){
+			// Append attributes to the outer element.
+			xml->writeAttribute("id", "inner");
+
+			// Write all the child elements.
+			auto dir_url = dsr.m_dir_exturl.toXml();
+			dir_url->setId("dir_exturl");
+			dir_url->set_out(xml);
+			auto cue_url = dsr.m_cue_exturl.toXml();
+			cue_url->set_out(xml);
+			cue_url->setId("cuesheet_url");
+			;});//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
+		e.set_out(&out);
 //		XmlElement dir_url(out, "m_dir_exturl", dsr.m_dir_exturl.m_url);
-		out << dsr.m_dir_exturl;
-		out << dsr.m_cue_exturl;
+//		out << dsr.m_dir_exturl;
+//		out << dsr.m_cue_exturl;
 	}
 
 //	out << dsr.m_dir_exturl;

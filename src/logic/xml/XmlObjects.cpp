@@ -18,46 +18,8 @@
  */
 
 /**
- * @file AbstractTreeModelWriter.h
+ * @file XmlObjects.cpp
  */
-#ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELWRITER_H_
-#define SRC_LOGIC_MODELS_ABSTRACTTREEMODELWRITER_H_
-
-// Std C++
+#include "XmlObjects.h"
 
 
-// Qt5
-#include <QXmlStreamWriter>
-class QIODevice;
-
-// Ours
-//#include "AbstractTreeModel.h"
-//#include "AbstractTreeModelItem.h"
-class AbstractTreeModel;
-class AbstractTreeModelItem;
-
-/**
- *
- */
-class AbstractTreeModelWriter
-{
-public:
-	explicit AbstractTreeModelWriter(const AbstractTreeModel* model);
-	virtual ~AbstractTreeModelWriter();
-
-	bool write_to_iodevice(QIODevice* device);
-
-private:
-
-	void write_item(const AbstractTreeModelItem* item);
-
-	QXmlStreamWriter m_xml_stream_writer;
-
-	/// @todo This should be a shared pointer, or we shouldn't store it.
-	const AbstractTreeModel* m_tree_model;
-};
-
-
-
-
-#endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELWRITER_H_ */
