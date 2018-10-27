@@ -262,10 +262,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
 /// @todo EXPERIMENTAL
-			QString filename = QDir::homePath() + "/DeleteMe.xml";
+			QString filename = QDir::homePath() + "/DeleteMe.xspf";
 			qIno() << "Writing model to XML file:" << filename;
 			QFile outfile(filename);
-			auto status = outfile.open(QFile::ReadWrite | QFile::Text);
+			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
 			if(!status)
 			{
 				qCro() << "########## COULDN'T WRITE TO FILE:" << filename;

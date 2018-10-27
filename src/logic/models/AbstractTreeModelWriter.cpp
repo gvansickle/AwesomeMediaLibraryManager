@@ -52,11 +52,30 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 
 	m_xml_stream_writer.setDevice(device);
 
-	m_xml_stream_writer.writeStartDocument();
+	xml.writeStartDocument();
+
+	/// @todo Start of xspf-specific stuff.
+	// <playlist version="1" xmlns="http://xspf.org/ns/0/">
+//	xml.writeStartElement("http://xspf.org/ns/0/", "playlist");
+	xml.writeStartElement("playlist");
+	xml.writeDefaultNamespace("http://xspf.org/ns/0/");
+	xml.writeAttribute("version", "1");
+	xml.writeNamespace("http://amlm/ns/0/", "amlm"); // Our extension namespace.
+	xml.writeAttribute("version", "1");
+
+	// No DTD for xspf.
+
+	/// @todo Add Playlist metadata here.
+	/// http://www.xspf.org/xspf-v1.html#rfc.section.2.3.1
+	/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
+	/// <creator> "Human-readable name of the entity (author, authors, group, company, etc) that authored the playlist. xspf:playlist elements MAY contain exactly one."
+	/// ...
+	/// <date>	"Creation date (not last-modified date) of the playlist, formatted as a XML schema dateTime. xspf:playlist elements MAY contain exactly one.
+	///	A sample date is "2005-01-08T17:10:47-05:00".
 
 #if 1
-	/// @todo No DTD for the moment.
-	xml.writeDTD(QStringLiteral("<!DOCTYPE xbel>"));
+
+
 
 	/// @todo Probably get from derived model class?
 	xml.writeStartElement(m_tree_model->getXmlStreamName());

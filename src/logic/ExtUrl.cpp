@@ -32,6 +32,7 @@
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
+#include "models/AbstractTreeModelWriter.h"
 #include <utils/DebugHelpers.h>
 
 AMLM_QREG_CALLBACK([](){
@@ -128,11 +129,18 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
 #undef X
 }
 
+
+
 /**
  * QXmlStreamWriter write operator.
  */
 QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 {
+#if 1
+	XmlElement* e = new XmlElement(out, "exturl",
+								   XmlAttributeList({QXmlStreamAttribute("href", exturl.m_url.toString()), QXmlStreamAttribute("file_size", QString("%1").arg(exturl.m_size))}));
+	delete e;
+#elif
 	// Tag name
 	out.writeStartElement("exturl");
 	// The URL.
@@ -142,6 +150,7 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 //	out.writeTextElement("title", "Media URL");
 	out.writeAttribute("time", exturl.m_last_modified_timestamp.toString());
 	out.writeEndElement();
+#endif
 	return out;
 }
 

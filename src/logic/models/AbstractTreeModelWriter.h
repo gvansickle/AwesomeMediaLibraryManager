@@ -54,4 +54,40 @@ private:
 	const AbstractTreeModel* m_tree_model;
 };
 
+
+
+class XmlAttributeList : public QXmlStreamAttributes
+{
+public:
+	XmlAttributeList(/*std::initializer_list*/QVector<QXmlStreamAttribute> initlist) : QXmlStreamAttributes()
+	{
+		this->append(initlist);
+	}
+};
+
+/**
+ * RAII/convenience class for XML elements.
+ */
+class XmlElement
+{
+public:
+	// No attributes.
+	explicit XmlElement(QXmlStreamWriter& out, QString tagname) : m_out(out), m_tagname(tagname)
+	{
+		// Tag name
+		out.writeStartElement(m_tagname);
+	};
+	explicit XmlElement(QXmlStreamWriter& out, QString tagname, QXmlStreamAttributes attrs)
+		: m_out(out), m_tagname(tagname), m_attributes(attrs)
+	{
+		out.writeStartElement(m_tagname);
+		out.writeAttributes(m_attributes);
+	};
+	virtual ~XmlElement() { m_out.writeEndElement(); };
+protected:
+	QXmlStreamWriter& m_out;
+	QString m_tagname;
+	QXmlStreamAttributes m_attributes;
+};
+
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELWRITER_H_ */
