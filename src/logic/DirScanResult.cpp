@@ -34,6 +34,8 @@
 // Ours
 #include "models/ScanResultsTreeModel.h"
 
+#include <logic/models/AbstractTreeModelWriter.h>
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult, FileModificationInfo";
@@ -169,8 +171,16 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
  */
 QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 {
-	out.writeStartElement("dirscanresult");
+
+//	out.writeStartElement("dirscanresult");
 	// Directory URL.
+
+	{
+		XmlElement e(out, "dirscanresult");//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
+//		XmlElement dir_url(out, "m_dir_exturl", dsr.m_dir_exturl.m_url);
+		out << dsr.m_dir_exturl;
+		out << dsr.m_cue_exturl;
+	}
 
 //	out << dsr.m_dir_exturl;
 //	out << dsr.m_cue_exturl;
@@ -178,7 +188,8 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 //	qDb() << dsr.m_cue_exturl;
 //	out.writeAttribute("href", exturl.m_url.toString());
 //	out.writeTextElement("title", "Media URL");
-	out.writeEndElement();
+//	out.writeEndElement();
+	//delete e;
 	return out;
 }
 
