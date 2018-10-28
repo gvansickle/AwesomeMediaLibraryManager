@@ -216,7 +216,7 @@ void Experimental::DoExperiment()
 
 void Experimental::onDirEntries(KIO::Job *job, const KIO::UDSEntryList &list)
 {
-    for(auto e : list)
+	for(auto& e : list)
     {
         qInfo() << "GOT ENTRY:" << e.stringValue( KIO::UDSEntry::UDS_NAME );
     }

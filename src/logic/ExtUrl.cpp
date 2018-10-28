@@ -66,20 +66,6 @@ void ExtUrl::write(QXmlStreamWriter& xml) const
 
 XmlElement ExtUrl::toXml() const
 {
-#if 0
-	XmlElement retval("exturl", // tag name
-					  XmlAttributeList({         // Attributes.
-												 {"href", m_url.toString()},
-												 {"file_size", m_size},
-												 {"creation_timestamp", m_creation_timestamp},
-												 {"last_modified_timestamp", m_last_modified_timestamp},
-												 {"metadata_last_modified_timestamp", m_metadata_last_modified_timestamp}
-									   }),
-					  // Inner scope.
-					  [=](XmlElement* e, QXmlStreamWriter* xml){
-		;}
-					  );
-#elif 1
 	// Mostly elements format.
 	XmlElementList el = {
 		XmlElement("href", m_url),
@@ -90,29 +76,13 @@ XmlElement("ts_metadata_last_modified", m_metadata_last_modified_timestamp)
 };
 
 	XmlElement retval("exturl",
-	XmlAttributeList(), XmlValue(), el,
-//	XmlElementList({
-//						  {"href", m_url},
-//	 {"file_size", m_size},
-//	 {"ts_creation", m_creation_timestamp},
-//	 {"ts_last_modified", m_last_modified_timestamp},
-//	 {"ts_metadata_last_modified", m_metadata_last_modified_timestamp}
-//}),
+					  XmlAttributeList(),
+					  XmlValue(),
+					  el,
 					  [=](XmlElement* e, QXmlStreamWriter* xml){
 		qDb() << "callback";
-//		XmlElement href("href", m_url);
-//		XmlElement size("file_size", m_size);
-//		XmlElement timestamp_creation("ts_creation", m_creation_timestamp);
-//		XmlElement timestamp_last_modified("ts_last_modified", m_last_modified_timestamp);
-//		XmlElement metadata_last_modified_timestamp("ts_metadata_last_modified", m_metadata_last_modified_timestamp);
-//		href.write(xml);
-//		size.write(xml);
-//		timestamp_creation.write(xml);
-//		timestamp_last_modified.write(xml);
-//		metadata_last_modified_timestamp.write(xml);
-
 	});
-#endif
+
 	return retval;
 }
 
@@ -169,21 +139,9 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
  */
 QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 {
-#if 1
 	auto e = exturl.toXml();
 	e.write(&out);
 
-#elif
-	// Tag name
-	out.writeStartElement("exturl");
-	// The URL.
-	out.writeAttribute("href", exturl.m_url.toString());
-	// Size of the file if known.
-	out.writeAttribute("file_size", QString("%1").arg(exturl.m_size));
-//	out.writeTextElement("title", "Media URL");
-	out.writeAttribute("time", exturl.m_last_modified_timestamp.toString());
-	out.writeEndElement();
-#endif
 	return out;
 }
 

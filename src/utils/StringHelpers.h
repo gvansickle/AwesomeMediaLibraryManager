@@ -218,8 +218,8 @@ static inline bool isValidUTF8(const char* bytes)
  *
  * @note Yet, you can stream to QDebug and that works out of the box.
  *
- * @param value  Any Q_ENUM().
- * @return A QString representing that Q_ENUM.
+ * @param value  Any Q_ENUM() or Q_FLAG().
+ * @return A QString representing that Q_ENUM/Q_FLAG.
  */
 template<typename QEnumType>
 QString toqstr(const QEnumType value)

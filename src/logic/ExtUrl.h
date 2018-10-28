@@ -38,6 +38,42 @@ class QFileInfo;
 #include "xml/XmlObjects.h"
 #include <logic/models/AbstractTreeModelWriter.h>
 
+#if 0
+class FileModificationInfo
+{
+    Q_GADGET
+
+public:
+    /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
+    /// @{
+    FileModificationInfo() = default;
+    FileModificationInfo(const FileModificationInfo& fmodinfo) = default;
+    ~FileModificationInfo() = default;
+    /// @}
+
+    explicit FileModificationInfo(const QFileInfo &fmodinfo)
+        : m_size(fmodinfo.size()),
+          m_last_modified_timestamp(fmodinfo.lastModified()),
+          m_metadata_last_modified_timestamp(fmodinfo.metadataChangeTime()) {}
+
+    /// File size, or 0 if couldn't be determined.
+    qint64 m_size {0};
+    /// Last modified time.  Invalid if can't be determined(?).
+    QDateTime m_last_modified_timestamp;
+    /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
+    QDateTime m_metadata_last_modified_timestamp;
+
+//    QTH_FRIEND_QDEBUG_OP(FileModificationInfo);
+    friend QDebug operator<<(QDebug dbg, const FileModificationInfo& obj)
+    {
+        return dbg << obj.m_size << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
+    }
+};
+
+Q_DECLARE_METATYPE(FileModificationInfo);
+//QTH_DECLARE_QDATASTREAM_OPS(FileModificationInfo);
+#endif
+
 /**
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
@@ -60,6 +96,7 @@ public:
 	/// User-defined conversion to QUrl.
 	explicit operator QUrl() const { return m_url; }
 
+	/// Assignment from QUrl.
 	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
 
 
@@ -83,17 +120,25 @@ public:
 
 	/// The QUrl.
 	QUrl m_url;
+
+	/// @name Info mainly for determining if the file was modified since we last looked at it.
+	/// @{
+
 	/// File size, or 0 if couldn't be determined.
 	qint64 m_size {0};
+
 	/// Creation time.
 	/// Needed for XSPF etc.
 	QDateTime m_creation_timestamp;
+
 	/// Last modified time.  Invalid if can't be determined(?).
 	QDateTime m_last_modified_timestamp;
+
 	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
 	QDateTime m_metadata_last_modified_timestamp;
+	/// @}
 
-    /// @}
+	/// @}
 
 //	bool isValid() { return m_url.isValid(); }
 

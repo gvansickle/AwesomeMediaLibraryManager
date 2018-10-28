@@ -40,10 +40,8 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult, FileModificationInfo";
 	qRegisterMetaType<DirScanResult>();
-    qRegisterMetaType<FileModificationInfo>();
+//    qRegisterMetaType<FileModificationInfo>();
 });
-
-
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
@@ -81,9 +79,11 @@ XmlElement DirScanResult::toXml() const
 	/*XmlAttributeList(*/{{"id", id}}/*)*/, // Attribute list
 	XmlValue(), // value
 	// Child XmlElements.
-	{m_dir_exturl.toXml().setId("exturl_dir"),
-	 m_media_exturl.toXml().setId("exturl_media"),
-	 m_cue_exturl.toXml().setId("exturl_cuesheet")},
+	{
+		XmlElement("flags_dirprops", toqstr(m_dir_props)),
+		 m_dir_exturl.toXml().setId("exturl_dir"),
+		m_media_exturl.toXml().setId("exturl_media"),
+		m_cue_exturl.toXml().setId("exturl_cuesheet")},
 				 [=](auto* e, auto* xml){
 		;}
 	);
@@ -109,7 +109,7 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 
     // Is there a sidecar cue sheet?
 
-    // Create the *.cue URL.
+	// Create the URL the *.cue file would have.
 	ExtUrl possible_cue_url;
 	possible_cue_url = QUrl(m_media_exturl);
 	QString cue_url_as_str = possible_cue_url.m_url.toString();

@@ -36,50 +36,6 @@
 #include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
 
-
-class FileModificationInfo
-{
-//    Q_GADGET
-
-public:
-    /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
-    /// @{
-    FileModificationInfo() = default;
-    FileModificationInfo(const FileModificationInfo& fmodinfo) = default;
-    ~FileModificationInfo() = default;
-    /// @}
-
-    explicit FileModificationInfo(const QFileInfo &fmodinfo)
-        : m_size(fmodinfo.size()),
-          m_last_modified_timestamp(fmodinfo.lastModified()),
-          m_metadata_last_modified_timestamp(fmodinfo.metadataChangeTime()) {}
-
-    /// File size, or 0 if couldn't be determined.
-    qint64 m_size {0};
-    /// Last modified time.  Invalid if can't be determined(?).
-    QDateTime m_last_modified_timestamp;
-    /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
-    QDateTime m_metadata_last_modified_timestamp;
-
-//    QTH_FRIEND_QDEBUG_OP(FileModificationInfo);
-    friend QDebug operator<<(QDebug dbg, const FileModificationInfo& obj)
-    {
-        return dbg << obj.m_size << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
-    }
-
-//    friend QDataStream &operator<<(QDataStream &out, const FileModificationInfo & myObj)
-//    {
-//        return out << myObj.m_size << myObj.m_last_modified_timestamp << myObj.m_metadata_last_modified_timestamp;
-//    }
-//    friend QDataStream &operator>>(QDataStream &in, FileModificationInfo & myObj)
-//    {
-//        return in >> myObj.m_size >> myObj.m_last_modified_timestamp >> myObj.m_metadata_last_modified_timestamp;
-//    }
-};
-
-Q_DECLARE_METATYPE(FileModificationInfo);
-//QTH_DECLARE_QDATASTREAM_OPS(FileModificationInfo);
-
 class CollectionMedium;
 
 /**
@@ -156,6 +112,8 @@ protected:
 
 	QVector<ExtUrl> otherMediaFilesInDir(const QFileInfo& finfo);
 
+	// Member vars.
+
 	/// Absolute URL to the directory.
 	ExtUrl m_dir_exturl;
 
@@ -163,14 +121,10 @@ protected:
 
     /// The media URL which was found.
 	ExtUrl m_media_exturl;
-    /// Info for detecting changes
-//    FileModificationInfo m_found_url_modinfo;
 
     /// URL to a sidecar cuesheet.  May be empty if none was found.
 	ExtUrl m_cue_exturl;
 
-    /// Info for detecting changes
-//    FileModificationInfo m_cue_url_modinfo;
 };
 
 Q_DECLARE_METATYPE(DirScanResult);
