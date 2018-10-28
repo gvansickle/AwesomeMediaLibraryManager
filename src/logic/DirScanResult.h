@@ -148,6 +148,8 @@ public:
 
     AbstractTreeModelItem *toTreeModelItem();
 
+	XmlElement toXml() const;
+
 protected:
 
 	void determineDirProps(const QFileInfo& finfo);

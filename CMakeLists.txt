@@ -167,7 +167,7 @@ include(ECMEnableSanitizers)
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 if(UNIX)
-ucm_add_flags(-fmessage-length=0 -pthread)
+ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -Wmaybe-uninitialized -Werror=maybe-uninitialized)
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")

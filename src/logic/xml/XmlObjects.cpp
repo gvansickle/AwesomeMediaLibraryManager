@@ -22,7 +22,8 @@
  */
 #include "XmlObjects.h"
 
-
+// Ours
+#include <utils/DebugHelpers.h>
 
 //void XmlElement::append(std::unique_ptr<XmlElement> child)
 //{
@@ -63,10 +64,11 @@ void XmlElement::write(QXmlStreamWriter* out) const
 	}
 
 	// Write out any child elements.
-//	for(const auto& e : m_child_elements)
-//	{
-//		e->write(out);
-//	}
+	for(auto it = m_child_elements.cbegin(); it != m_child_elements.cend(); ++it)
+	{
+		qDb() << "Writing child element";
+		it->write(&m_out);
+	}
 
 	// End element.
 	m_out.writeEndElement();

@@ -39,9 +39,20 @@ class XmlValue : public QString
 {
 public:
 	XmlValue() = default;
+	XmlValue(const QString& qstr) : QString(qstr) {};
 	XmlValue(const QDateTime& dt) : QString(dt.toString(Qt::ISODate)) {};
 	XmlValue(const QUrl& qurl) : QString(qurl.toString()) {};
 	XmlValue(long long value) : QString(QString("%1").arg(value)) {};
+
+//	template <class UnhandledType>
+//	XmlValue(UnhandledType t)
+//	{
+//		static_assert(0, "XmlValue doesn't support this type.");
+//	}
+
+	~XmlValue() = default;
+
+
 };
 
 class XmlAttribute : public QXmlStreamAttribute
@@ -134,13 +145,13 @@ public:
 	using InnerScopeType = std::function<void(XmlElement*, QXmlStreamWriter*)>;
 
 	/// No attributes, no value.
-	explicit XmlElement(const QString& tagname, InnerScopeType inner_scope = InnerScopeType(nullptr))
+	explicit XmlElement(const QString& tagname, InnerScopeType inner_scope)
 		: m_tagname(tagname), m_inner_scope(inner_scope)
 	{ };
 
 	/// With attributes, no value.
 	explicit XmlElement(const QString& tagname, XmlAttributeList attrs,
-						InnerScopeType inner_scope = InnerScopeType(nullptr))
+						InnerScopeType inner_scope)
 		: m_tagname(tagname), m_attributes(attrs), m_inner_scope(inner_scope)
 	{ };
 
@@ -154,13 +165,18 @@ public:
 	/// With attributes and value.
 	explicit XmlElement(const QString& tagname, XmlAttributeList attrs,
 						XmlValue value,
-						InnerScopeType inner_scope = InnerScopeType(nullptr))
+						InnerScopeType inner_scope)
 		: m_tagname(tagname), m_attributes(attrs), m_value(value), m_inner_scope(inner_scope)
 	{ };
 
 	/// No attributes, but value.
-	explicit XmlElement(const QString& tagname, XmlValue value, InnerScopeType inner_scope = InnerScopeType(nullptr))
-		: XmlElement(tagname, {}, value, inner_scope)
+	explicit XmlElement(const QString& tagname, XmlValue value, InnerScopeType inner_scope)
+		: XmlElement(tagname, XmlAttributeList(), value, inner_scope)
+	{ };
+
+	/// No attributes, no scope, but value.
+	explicit XmlElement(const QString& tagname, XmlValue value)
+		: XmlElement(tagname, XmlAttributeList(), value, InnerScopeType(nullptr))
 	{ };
 
 	/**
@@ -175,16 +191,17 @@ public:
 	/**
 	 * Specific function for setting the "id" attribute from outside this element's creator.
 	 */
-	void setId(const QString& idstr)
+	XmlElement setId(const QString& idstr)
 	{
 		m_id = XmlAttribute("id", idstr);
+		return *this;
 	}
 
 	/// Overload for taking a uint64_t vs. a string.
-	void setId(std::uint64_t idnum)
+	XmlElement setId(std::uint64_t idnum)
 	{
 		QString idstr = QString("%1").arg(idnum);
-		setId(idstr);
+		return setId(idstr);
 	}
 
 	// Add a child element to this element.
@@ -206,9 +223,10 @@ public:
 		}
 		else
 		{
-			Q_ASSERT(m_out_ptr != nullptr);
+			/// @todo Experimental, not writing on destruction.
+//			Q_ASSERT(m_out_ptr != nullptr);
 
-			write(m_out_ptr);
+//			write(m_out_ptr);
 		}
 	};
 

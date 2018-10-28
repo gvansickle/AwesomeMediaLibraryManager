@@ -154,7 +154,8 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 	xml.writeAttribute("childNumber", QString("%1").arg(childNumber()));
 
 	// Write the DirScanResults.
-	xml << m_dsr;
+	auto dsr = m_dsr.toXml();
+	dsr.write(&xml);
 
 	// Write the columns of data.
 //	for(int col = 0; col < columnCount(); ++col)

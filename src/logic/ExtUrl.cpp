@@ -81,15 +81,25 @@ XmlElement ExtUrl::toXml() const
 					  );
 #elif 1
 	// Mostly elements format.
+	XmlElementList el = {
+		XmlElement("href", m_url),
+XmlElement("file_size", m_size),
+XmlElement("ts_creation", m_creation_timestamp),
+XmlElement("ts_last_modified", m_last_modified_timestamp),
+XmlElement("ts_metadata_last_modified", m_metadata_last_modified_timestamp)
+};
+
 	XmlElement retval("exturl",
-	{}, {},
-	{XmlElement{"href", m_url},
-	 XmlElement{"file_size", m_size},
-	 XmlElement{"ts_creation", m_creation_timestamp},
-	 XmlElement{"ts_last_modified", m_last_modified_timestamp},
-	 XmlElement{"ts_metadata_last_modified", m_metadata_last_modified_timestamp}
-					  },
+	XmlAttributeList(), XmlValue(), el,
+//	XmlElementList({
+//						  {"href", m_url},
+//	 {"file_size", m_size},
+//	 {"ts_creation", m_creation_timestamp},
+//	 {"ts_last_modified", m_last_modified_timestamp},
+//	 {"ts_metadata_last_modified", m_metadata_last_modified_timestamp}
+//}),
 					  [=](XmlElement* e, QXmlStreamWriter* xml){
+		qDb() << "callback";
 //		XmlElement href("href", m_url);
 //		XmlElement size("file_size", m_size);
 //		XmlElement timestamp_creation("ts_creation", m_creation_timestamp);

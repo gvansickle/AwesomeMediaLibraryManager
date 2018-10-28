@@ -69,7 +69,26 @@ AbstractTreeModelItem* DirScanResult::toTreeModelItem()
 
     new_item->appendChildren(child_items);
 
-    return new_item;
+	return new_item;
+}
+
+XmlElement DirScanResult::toXml() const
+{
+	/// @todo
+	int id = qrand();
+
+	XmlElement retval("dirscanresult",
+	/*XmlAttributeList(*/{{"id", id}}/*)*/, // Attribute list
+	XmlValue(), // value
+	// Child XmlElements.
+	{m_dir_exturl.toXml().setId("exturl_dir"),
+	 m_media_exturl.toXml().setId("exturl_media"),
+	 m_cue_exturl.toXml().setId("exturl_cuesheet")},
+				 [=](auto* e, auto* xml){
+		;}
+	);
+
+	return retval;
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
@@ -162,37 +181,45 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 //	out.writeStartElement("dirscanresult");
 	// Directory URL.
 
-	{
-		XmlElement e("dirscanresult",
-					 [=](auto* e, auto* xml){
-			// Append attributes to the outer element.
-			e->setId(1);
+	auto e = dsr.toXml();
 
-			// Write all the child elements.
-			auto dir_url {dsr.m_dir_exturl.toXml()};
-			auto cue_url {dsr.m_cue_exturl.toXml()};
-
-			dir_url.setId("dir_exturl");
-			cue_url.setId("cuesheet_url");
-
-			dir_url.write(xml);
-			cue_url.write(xml);
-			;});//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
-		e.set_out(&out);
-//		XmlElement dir_url(out, "m_dir_exturl", dsr.m_dir_exturl.m_url);
-//		out << dsr.m_dir_exturl;
-//		out << dsr.m_cue_exturl;
-	}
-
-//	out << dsr.m_dir_exturl;
-//	out << dsr.m_cue_exturl;
-//	qDb() << dsr.m_dir_exturl;
-//	qDb() << dsr.m_cue_exturl;
-//	out.writeAttribute("href", exturl.m_url.toString());
-//	out.writeTextElement("title", "Media URL");
-//	out.writeEndElement();
-	//delete e;
+	out << e;
 	return out;
+
+//	{
+//		XmlElement e("dirscanresult",
+//					 [=](auto* e, auto* xml){
+//			// Append attributes to the outer element.
+//			e->setId(1);
+
+//			// Append child elements.
+////			e->
+
+//			// Write all the child elements.
+//			auto dir_url {dsr.m_dir_exturl.toXml()};
+//			auto cue_url {dsr.m_cue_exturl.toXml()};
+
+//			dir_url.setId("dir_exturl");
+//			cue_url.setId("cuesheet_url");
+
+//			dir_url.write(xml);
+//			cue_url.write(xml);
+//			;});//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
+//		e.set_out(&out);
+////		XmlElement dir_url(out, "m_dir_exturl", dsr.m_dir_exturl.m_url);
+////		out << dsr.m_dir_exturl;
+////		out << dsr.m_cue_exturl;
+//	}
+
+////	out << dsr.m_dir_exturl;
+////	out << dsr.m_cue_exturl;
+////	qDb() << dsr.m_dir_exturl;
+////	qDb() << dsr.m_cue_exturl;
+////	out.writeAttribute("href", exturl.m_url.toString());
+////	out.writeTextElement("title", "Media URL");
+////	out.writeEndElement();
+//	//delete e;
+//	return out;
 }
 
 #undef DATASTREAM_FIELDS

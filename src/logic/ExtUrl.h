@@ -101,6 +101,7 @@ public:
 	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 
 	void write(QXmlStreamWriter& xml) const;
+
 	XmlElement toXml() const;
 
 protected:
