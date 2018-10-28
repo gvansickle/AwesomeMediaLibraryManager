@@ -85,6 +85,9 @@ public:
 	QUrl m_url;
 	/// File size, or 0 if couldn't be determined.
 	qint64 m_size {0};
+	/// Creation time.
+	/// Needed for XSPF etc.
+	QDateTime m_creation_timestamp;
 	/// Last modified time.  Invalid if can't be determined(?).
 	QDateTime m_last_modified_timestamp;
 	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
@@ -97,10 +100,8 @@ public:
 	/// QXmlStream{Read,Write} operators.
 	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 
-	QXmlQuery write() const;
-
 	void write(QXmlStreamWriter& xml) const;
-	std::unique_ptr<XmlElement> toXml() const;
+	XmlElement toXml() const;
 
 protected:
 

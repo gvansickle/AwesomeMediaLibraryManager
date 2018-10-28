@@ -146,8 +146,6 @@ public:
 	/// QXmlStream{Read,Write} operators.
 	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
 
-	QXmlQuery write() const;
-
     AbstractTreeModelItem *toTreeModelItem();
 
 protected:

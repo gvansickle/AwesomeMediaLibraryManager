@@ -25,40 +25,76 @@
 
 // Std C++
 #include <functional>
+#include <memory>
+#include <initializer_list>
+#include <cstdint>
 
 // Qt5
 #include <QXmlStreamWriter>
+#include <QDateTime>
+#include <QUrl>
 
+
+class XmlAttrValue : public QString
+{
+public:
+	XmlAttrValue() = default;
+	XmlAttrValue(const QDateTime& dt) : QString(dt.toString(Qt::ISODate)) {};
+	XmlAttrValue(const QUrl& qurl) : QString(qurl.toString()) {};
+	XmlAttrValue(long long value) : QString(QString("%1").arg(value)) {};
+};
 
 class XmlAttribute : public QXmlStreamAttribute
 {
-//public:
-//	XmlAttribute(std::initializer_list<QString> initlist) : QXmlStreamAttribute()
-//	{
+public:
+	XmlAttribute() = default;
+//	XmlAttribute(const QXmlStreamAttribute& other);
+	~XmlAttribute() = default;
 
+	XmlAttribute(const QString &qualifiedName, const QString &value) : QXmlStreamAttribute(qualifiedName, value)
+	{
+	}
+
+	XmlAttribute(const QString &qualifiedName, long long value) : QXmlStreamAttribute(qualifiedName, QString("%1").arg(value))
+	{
+	}
+
+	XmlAttribute(const QString &qualifiedName, XmlAttrValue value) : QXmlStreamAttribute(qualifiedName, value)
+	{
+	}
+
+	/**
+	 * Honeypot for any attribute whose value is not convertible to a QString.
+	 */
+//	template<class T>
+//	XmlAttribute(const QString &qualifiedName, const T& value)
+//	{
+//		static_assert (0, "value must be convertible to a QString");
 //	}
 };
 
 class XmlAttributeList : public QXmlStreamAttributes
 {
 public:
-	XmlAttributeList() : QXmlStreamAttributes()
-	{ };
+	XmlAttributeList() = default;
+	~XmlAttributeList() = default;
 
-	XmlAttributeList(std::initializer_list<QXmlStreamAttribute> initlist) : QXmlStreamAttributes()
-	{
-		this->append(initlist);
-	}
-
-//	XmlAttributeList(std::initializer_list<XmlAttribute> initlist) : QXmlStreamAttributes()
+//	XmlAttributeList(std::initializer_list<QXmlStreamAttribute> initlist)
 //	{
-//		for(auto e : initlist)
-//		{
-//			append(e);
-//		}
-////		initlist.begin(), initlist.end());
-////		std::copy(initlist.begin(), initlist.end(), this-> ->append(initlist));
+//		this->append(initlist);
 //	}
+
+	/**
+	 * Initializer-list constructor.
+	 * Force this to be used with the "{}" initializer notation.
+	 */
+	XmlAttributeList(std::initializer_list<XmlAttribute> initlist)
+	{
+		for(const auto& e : initlist)
+		{
+			append(e);
+		}
+	}
 };
 
 /**
@@ -70,79 +106,71 @@ public:
 
 	/// Type of the callback which will be called after the State element and any attributes are written
 	/// but before the EndElement.
-	using InnerScopeType = std::function<void(QXmlStreamWriter*)>;
-
-//	/// No attributes.
-//	explicit XmlElement(QXmlStreamWriter& out, QString tagname, InnerScopeType inner_scope = InnerScopeType(nullptr))
-//		: m_out(out), m_tagname(tagname), m_inner_scope(inner_scope)
-//	{ };
-
-//	/// With attributes.
-//	explicit XmlElement(QXmlStreamWriter& out, QString tagname, XmlAttributeList attrs,
-//						InnerScopeType inner_scope = InnerScopeType(nullptr))
-//		: m_out(out), m_tagname(tagname), m_attributes(attrs), m_inner_scope(inner_scope)
-//	{ };
+	using InnerScopeType = std::function<void(XmlElement*, QXmlStreamWriter*)>;
 
 	/// No attributes.
-	explicit XmlElement(QString tagname, InnerScopeType inner_scope = InnerScopeType(nullptr))
+	explicit XmlElement(const QString& tagname, InnerScopeType inner_scope = InnerScopeType(nullptr))
 		: m_tagname(tagname), m_inner_scope(inner_scope)
 	{ };
 
 	/// With attributes.
-	explicit XmlElement(QString tagname, XmlAttributeList attrs,
+	explicit XmlElement(const QString& tagname, XmlAttributeList attrs,
 						InnerScopeType inner_scope = InnerScopeType(nullptr))
 		: m_tagname(tagname), m_attributes(attrs), m_inner_scope(inner_scope)
 	{ };
 
+	/// With attributes.
+	explicit XmlElement(const QString& tagname, XmlAttributeList attrs,
+						XmlAttrValue value,
+						InnerScopeType inner_scope = InnerScopeType(nullptr))
+		: m_tagname(tagname), m_attributes(attrs), m_value(value), m_inner_scope(inner_scope)
+	{ };
+
+	/// No attributes.
+	explicit XmlElement(const QString& tagname, XmlAttrValue value, InnerScopeType inner_scope = InnerScopeType(nullptr))
+		: XmlElement(tagname, {}, value, inner_scope)
+	{ };
+
 	/**
-	 * Specific function for setting an "id" attribute from outside this element's creator.
+	 * Copy constructor.
 	 */
-	void setId(const QString& idstr)
-	{
-		m_attributes.append("id", idstr);
-	}
-
-	void set_out(QXmlStreamWriter* out)
-	{
-		m_out_ptr = out;
-	}
-
-	void write(QXmlStreamWriter* out)
-	{
-		m_out_ptr = out;
-
-		auto& m_out = *m_out_ptr;
-
-		// Tag name
-		m_out.writeStartElement(m_tagname);
-
-		// Attributes
-		if(!m_attributes.empty())
-		{
-			m_out.writeAttributes(m_attributes);
-		}
-
-		// Do whatever's in the inner scope lambda.
-		if(m_inner_scope)
-		{
-			m_inner_scope(&m_out);
-		}
-
-		// End element.
-		m_out.writeEndElement();
-	}
-
 	XmlElement(const XmlElement& other)
 	{
 		*this = other;
 		other.m_i_have_been_copied_from = true;
 	}
 
+	/**
+	 * Specific function for setting the "id" attribute from outside this element's creator.
+	 */
+	void setId(const QString& idstr)
+	{
+		m_id = XmlAttribute("id", idstr);
+	}
+
+	/// Overload for taking a uint64_t vs. a string.
+	void setId(std::uint64_t idnum)
+	{
+		QString idstr = QString("%1").arg(idnum);
+		setId(idstr);
+	}
+
+	// Add a child element to this element.
+//	void append(std::unique_ptr<XmlElement> child);
+
+
+	void set_out(QXmlStreamWriter* out)
+	{
+		m_out_ptr = out;
+	}
+
+	void write(QXmlStreamWriter* out) const;
+
 	virtual ~XmlElement()
 	{
-		if(m_i_have_been_copied_from)
+		if(m_i_have_been_copied_from || m_i_have_been_written)
 		{
-			// Skip the write.
+			// Skip the write-on-destruction.
 		}
 		else
 		{
@@ -154,16 +182,37 @@ public:
 
 protected:
 	mutable bool m_i_have_been_copied_from = false;
-	QXmlStreamWriter* m_out_ptr = nullptr;
+	mutable bool m_i_have_been_written = false;
+
+	mutable QXmlStreamWriter* m_out_ptr = nullptr;
+
+	/// The tagname of this element.
 	QString m_tagname;
+
+	/// The id attribute, if any.
+	XmlAttribute m_id;
+
+	/// List of all other attributes, if any.
 	XmlAttributeList m_attributes;
+
+	/// The element's singular value, if any.
+	XmlAttrValue m_value;
+
+	/// List of child elements.  Mutable because it's likely to be
+	/// added to in the InnerScopeType callback as part of write().
+//	mutable std::vector<std::unique_ptr<XmlElement>> m_child_elements;
+
+	/// The inner scopr lambda, containing:
+	/// - Additional attribute adds for this element.
+	/// - Child XmlElements.
+	/// Is passed a pointer to m_out_ptr.
 	InnerScopeType m_inner_scope;
 };
 
-//QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const XmlElement& e)
-//{
-
-//	return out;
-//}
+static inline QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const XmlElement& e)
+{
+	e.write(&out);
+	return out;
+}
 
 #endif /* SRC_LOGIC_XML_XMLOBJECTS_H_ */

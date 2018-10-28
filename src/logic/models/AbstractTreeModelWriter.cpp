@@ -30,7 +30,7 @@
 #include "AbstractTreeModel.h"
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelReader.h"
-
+#include "../xml/XmlObjects.h"
 
 static inline QString yesValue() { return QStringLiteral("yes"); }
 static inline QString noValue() { return QStringLiteral("no"); }
@@ -51,18 +51,20 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 	// Convenience ref.
 	auto& xml = m_xml_stream_writer;
 
-	m_xml_stream_writer.setDevice(device);
+	xml.setDevice(device);
 
 	xml.writeStartDocument();
 
 	/// @todo Move out of this class. Start of xspf-specific stuff.
-	// <playlist version="1" xmlns="http://xspf.org/ns/0/">
-//	xml.writeStartElement("http://xspf.org/ns/0/", "playlist");
-	xml.writeStartElement("playlist");
-	xml.writeDefaultNamespace("http://xspf.org/ns/0/");
-	xml.writeAttribute("version", "1");
-	xml.writeNamespace("http://amlm/ns/0/", "amlm"); // Our extension namespace.
-	xml.writeAttribute("version", "1");
+	XmlElement playlist("playlist", [=](XmlElement* e, QXmlStreamWriter* out){
+//		xml.writeStartElement("playlist");
+		auto& xml = *out;
+		xml.writeDefaultNamespace("http://xspf.org/ns/0/");
+		xml.writeAttribute("version", "1");
+		xml.writeNamespace("http://amlm/ns/0/", "amlm"); // Our extension namespace.
+//		xml.writeAttribute("version", "1");
+
+
 
 	// No DTD for xspf.
 
@@ -85,7 +87,7 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 //	xml.writeStartElement(m_tree_model->getXmlStreamName());
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 
-	m_tree_model->writeItemAndChildren(&xml, nullptr);
+	m_tree_model->writeItemAndChildren(out, nullptr);
 
 #elif 0
 
@@ -104,8 +106,9 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 	}
 #endif
 
-	xml.writeEndDocument();
-
+//	xml.writeEndDocument();
+	});
+	playlist.write(&xml);
 	return true;
 }
 

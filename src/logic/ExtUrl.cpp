@@ -48,6 +48,7 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	if(qurl_finfo != nullptr)
 	{
 		m_size = qurl_finfo->size();
+		m_creation_timestamp = qurl_finfo->birthTime();
 		m_last_modified_timestamp = qurl_finfo->lastModified();
 		m_metadata_last_modified_timestamp = qurl_finfo->metadataChangeTime();
 	}
@@ -57,55 +58,42 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	}
 }
 
-QXmlQuery ExtUrl::write() const
-{
-	QXmlQuery query;
-
-	query.bindVariable("href", QVariant(m_url));
-//	query.bindVariable("test_var_1", QVariant(test_var_1));
-//	query.bindVariable("inner_var", query_inner);
-	query.setQuery(
-				"<exturl>"
-				"<href>{$href}</href>"
-				"</exturl>"
-				);
-	Q_ASSERT(query.isValid());
-
-	return query;
-
-//	// Tag name
-//	out.writeStartElement("exturl");
-//	// The URL.
-//	out.writeAttribute("href", exturl.m_url.toString());
-//	// Size of the file if known.
-//	out.writeAttribute("file_size", QString("%1").arg(exturl.m_size));
-////	out.writeTextElement("title", "Media URL");
-//	out.writeAttribute("time", exturl.m_last_modified_timestamp.toString());
-//	out.writeEndElement();
-	//	return out;
-}
-
 void ExtUrl::write(QXmlStreamWriter& xml) const
 {
-	XmlElement e("exturl",
-				   XmlAttributeList(
-	{
-						 {"id", "idtest"},
-						 {"href", m_url.toString()},
-						 {"file_size", QString("%1").arg(m_size)}
-					 }));
+	auto e = toXml();
+	e.write(&xml);
 }
 
-std::unique_ptr<XmlElement> ExtUrl::toXml() const
+XmlElement ExtUrl::toXml() const
 {
-	auto retval = std::make_unique<XmlElement>(
-												   "exturl", // tag name
-												   XmlAttributeList({         // Attributes.
-													   {"href", m_url.toString()},
-													   {"file_size", QString("%1").arg(m_size)}
-												   })
-												   // Inner scope.
-											   );
+#if 0
+	XmlElement retval("exturl", // tag name
+					  XmlAttributeList({         // Attributes.
+												 {"href", m_url.toString()},
+												 {"file_size", m_size},
+												 {"creation_timestamp", m_creation_timestamp},
+												 {"last_modified_timestamp", m_last_modified_timestamp},
+												 {"metadata_last_modified_timestamp", m_metadata_last_modified_timestamp}
+									   }),
+					  // Inner scope.
+					  [=](XmlElement* e, QXmlStreamWriter* xml){
+		;}
+					  );
+#elif 1
+	// Mostly elements format.
+	XmlElement retval("exturl",
+					  [=](XmlElement* e, QXmlStreamWriter* xml){
+		XmlElement href("href", m_url);
+		XmlElement size("file_size", m_size);
+		XmlElement timestamp_creation("ts_creation", m_creation_timestamp);
+		XmlElement timestamp_last_modified("ts_last_modified", m_last_modified_timestamp);
+		href.write(xml);
+		size.write(xml);
+		timestamp_creation.write(xml);
+		timestamp_last_modified.write(xml);
+
+	});
+#endif
 	return retval;
 }
 
@@ -122,6 +110,7 @@ void ExtUrl::LoadModInfo()
 		{
 			// File exists.
 			m_size = fi.size();
+			m_creation_timestamp = fi.birthTime();
 			m_last_modified_timestamp = fi.lastModified();
 			m_metadata_last_modified_timestamp = fi.metadataChangeTime();
 		}
@@ -162,14 +151,8 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
 QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
 {
 #if 1
-	XmlElement e("exturl",
-				   XmlAttributeList(
-	{
-						 {"id", "fromstreamop"},
-						 {"href", exturl.m_url.toString()},
-						 {"file_size", QString("%1").arg(exturl.m_size)}
-					 }));
-	e.set_out(&out);
+	auto e = exturl.toXml();
+	e.write(&out);
 
 #elif
 	// Tag name

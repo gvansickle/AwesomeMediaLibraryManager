@@ -52,19 +52,6 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	determineDirProps(found_url_finfo);
 }
 
-QXmlQuery DirScanResult::write() const
-{
-	QXmlQuery query;
-
-	query.bindVariable("dir_url", m_dir_exturl.write());
-	query.setQuery(
-				"<dir_url>{$dir_url}</dir_url>"
-				);
-	Q_ASSERT(query.isValid());
-
-	return query;
-}
-
 AbstractTreeModelItem* DirScanResult::toTreeModelItem()
 {
 //    QVector<QVariant> column_data;
@@ -177,17 +164,19 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 
 	{
 		XmlElement e("dirscanresult",
-					 [=](auto* xml){
+					 [=](auto* e, auto* xml){
 			// Append attributes to the outer element.
-			xml->writeAttribute("id", "inner");
+			e->setId(1);
 
 			// Write all the child elements.
-			auto dir_url = dsr.m_dir_exturl.toXml();
-			dir_url->setId("dir_exturl");
-			dir_url->set_out(xml);
-			auto cue_url = dsr.m_cue_exturl.toXml();
-			cue_url->set_out(xml);
-			cue_url->setId("cuesheet_url");
+			auto dir_url {dsr.m_dir_exturl.toXml()};
+			auto cue_url {dsr.m_cue_exturl.toXml()};
+
+			dir_url.setId("dir_exturl");
+			cue_url.setId("cuesheet_url");
+
+			dir_url.write(xml);
+			cue_url.write(xml);
 			;});//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
 		e.set_out(&out);
 //		XmlElement dir_url(out, "m_dir_exturl", dsr.m_dir_exturl.m_url);

@@ -23,3 +23,53 @@
 #include "XmlObjects.h"
 
 
+
+//void XmlElement::append(std::unique_ptr<XmlElement> child)
+//{
+//	m_child_elements.push_back(std::move(child));
+//}
+
+void XmlElement::write(QXmlStreamWriter* out) const
+{
+	// Don't write twice.
+	Q_ASSERT(m_i_have_been_written == false);
+
+	m_out_ptr = out;
+
+	auto& m_out = *m_out_ptr;
+
+	// Tag name
+	m_out.writeStartElement(m_tagname);
+
+	// Attributes
+	if(!m_id.name().isEmpty())
+	{
+		m_out.writeAttribute(m_id);
+	}
+	if(!m_attributes.empty())
+	{
+		m_out.writeAttributes(m_attributes);
+	}
+	// The single value.
+	if(!m_value.isEmpty() && !m_value.isNull())
+	{
+		m_out.writeCharacters(m_value);
+	}
+
+	// Do whatever's in the inner scope lambda.
+	if(m_inner_scope)
+	{
+		m_inner_scope(const_cast<XmlElement*>(this), &m_out);
+	}
+
+	// Write out any child elements.
+//	for(const auto& e : m_child_elements)
+//	{
+//		e->write(out);
+//	}
+
+	// End element.
+	m_out.writeEndElement();
+
+	m_i_have_been_written = true;
+}
