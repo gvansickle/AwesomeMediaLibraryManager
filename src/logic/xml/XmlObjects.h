@@ -114,10 +114,7 @@ class XmlElementList : public QVector<XmlElement>
 {
 public:
 	XmlElementList() = default;
-	~XmlElementList()
-	{
-
-	}
+	~XmlElementList() = default;
 
 	/**
 	 * Initializer-list constructor.
@@ -130,7 +127,7 @@ public:
 	void write(QXmlStreamWriter* out) const;
 
 
-	mutable QXmlStreamWriter* m_out_ptr = nullptr;
+//	mutable QXmlStreamWriter* m_out_ptr = nullptr;
 };
 
 /**

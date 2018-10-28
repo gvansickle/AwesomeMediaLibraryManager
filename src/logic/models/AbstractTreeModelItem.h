@@ -55,6 +55,9 @@
 #ifndef ABSTRACTTREEMODELITEM_H
 #define ABSTRACTTREEMODELITEM_H
 
+// Std C++
+#include <vector>
+
 // Qt5
 #include <QList>
 #include <QVariant>
@@ -128,7 +131,7 @@ protected:
 private:
 
 	// Vector of child items.
-	QVector<AbstractTreeModelItem*> m_child_items;
+	std::vector<AbstractTreeModelItem*> m_child_items;
 
 	// Vector of items for each column.
 	QVector<QVariant> m_item_data;

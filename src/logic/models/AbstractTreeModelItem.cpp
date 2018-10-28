@@ -62,6 +62,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
+#include <utils/VectorHelpers.h>
 
 AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent)
 {
@@ -93,25 +94,28 @@ AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
 {
 	// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
 	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
-	return m_child_items.value(number);
+	return stdex::value(m_child_items, number);
 }
 
 const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
 {
-	return m_child_items.value(number);
+	return stdex::value(m_child_items, number);
 }
 
 
 int AbstractTreeModelItem::childCount() const
 {
-	return m_child_items.count();
+	return m_child_items.size();
 }
 
+/**
+ * Find our index in the parent's child list.
+ */
 int AbstractTreeModelItem::childNumber() const
 {
-	if (m_parent_item)
+	if (m_parent_item != nullptr)
 	{
-		return m_parent_item->m_child_items.indexOf(const_cast<AbstractTreeModelItem*>(this));
+		return stdex::indexOf(m_parent_item->m_child_items, this);
 	}
 
     return 0;
@@ -131,15 +135,18 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
 	if (position < 0 || position > m_child_items.size())
 	{
+		// Insertion point out of range of existing children.
         return false;
 	}
+
+	decltype(m_child_items)::iterator pos_iterator = m_child_items.begin() + position;
 
 	for (int row = 0; row < count; ++row)
 	{
         QVector<QVariant> data(columns);
 //		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
 		AbstractTreeModelItem *item = make_default_node(data, this);
-		m_child_items.insert(position, item);
+		m_child_items.insert(pos_iterator, item);
     }
 
     return true;
@@ -179,7 +186,7 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 
 	for (int row = 0; row < count; ++row)
 	{
-		delete m_child_items.takeAt(position);
+		delete stdex::takeAt(m_child_items, position);
 	}
 
     return true;

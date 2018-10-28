@@ -106,7 +106,7 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 	}
 #endif
 
-//	xml.writeEndDocument();
+	xml.writeEndDocument();
 	});
 	playlist.write(&xml);
 	return true;

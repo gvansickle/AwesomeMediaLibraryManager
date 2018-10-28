@@ -57,7 +57,7 @@ public:
 	 */
 	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
 
-	QXmlQuery write() const;
+//	QXmlQuery write() const;
 
 	static ScanResultsTreeModelItem* createChildItem(AbstractTreeModelItem* parent);
 

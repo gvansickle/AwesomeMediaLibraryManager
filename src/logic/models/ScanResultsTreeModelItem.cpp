@@ -177,6 +177,7 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 	return true;
 }
 
+#if 0
 QXmlQuery ScanResultsTreeModelItem::write() const
 {
 	QXmlQuery query;
@@ -193,6 +194,7 @@ QXmlQuery ScanResultsTreeModelItem::write() const
 
 	return query;
 }
+#endif
 
 ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
 {

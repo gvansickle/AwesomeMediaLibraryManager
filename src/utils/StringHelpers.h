@@ -201,6 +201,7 @@ static inline bool isValidUTF8(const char* bytes)
 	QTextCodec::ConverterState state;
 	QTextCodec *codec = QTextCodec::codecForName("UTF-8");
     const QString text = codec->toUnicode(bytes, std::strlen(bytes), &state);
+	Q_UNUSED(text);
 	if (state.invalidChars > 0)
 	{
 		return false;

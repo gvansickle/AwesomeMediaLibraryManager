@@ -162,6 +162,7 @@ set(HEADER_FILES
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
+	utils/VectorHelpers.h
     )
 
 # Source file list.
@@ -201,6 +202,7 @@ set(SOURCE_FILES
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	utils/QtHelpers.cpp
+	utils/VectorHelpers.cpp
 	)
 
 # NoMoc files.
