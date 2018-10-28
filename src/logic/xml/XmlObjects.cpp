@@ -73,3 +73,13 @@ void XmlElement::write(QXmlStreamWriter* out) const
 
 	m_i_have_been_written = true;
 }
+
+void XmlElementList::write(QXmlStreamWriter* out) const
+{
+	// Make sure the elements are written out in the order they were added.
+	m_out_ptr = out;
+	for(auto& i : *this)
+	{
+		i.write(out);
+	}
+}

@@ -82,15 +82,24 @@ XmlElement ExtUrl::toXml() const
 #elif 1
 	// Mostly elements format.
 	XmlElement retval("exturl",
+	{}, {},
+	{XmlElement{"href", m_url},
+	 XmlElement{"file_size", m_size},
+	 XmlElement{"ts_creation", m_creation_timestamp},
+	 XmlElement{"ts_last_modified", m_last_modified_timestamp},
+	 XmlElement{"ts_metadata_last_modified", m_metadata_last_modified_timestamp}
+					  },
 					  [=](XmlElement* e, QXmlStreamWriter* xml){
-		XmlElement href("href", m_url);
-		XmlElement size("file_size", m_size);
-		XmlElement timestamp_creation("ts_creation", m_creation_timestamp);
-		XmlElement timestamp_last_modified("ts_last_modified", m_last_modified_timestamp);
-		href.write(xml);
-		size.write(xml);
-		timestamp_creation.write(xml);
-		timestamp_last_modified.write(xml);
+//		XmlElement href("href", m_url);
+//		XmlElement size("file_size", m_size);
+//		XmlElement timestamp_creation("ts_creation", m_creation_timestamp);
+//		XmlElement timestamp_last_modified("ts_last_modified", m_last_modified_timestamp);
+//		XmlElement metadata_last_modified_timestamp("ts_metadata_last_modified", m_metadata_last_modified_timestamp);
+//		href.write(xml);
+//		size.write(xml);
+//		timestamp_creation.write(xml);
+//		timestamp_last_modified.write(xml);
+//		metadata_last_modified_timestamp.write(xml);
 
 	});
 #endif
