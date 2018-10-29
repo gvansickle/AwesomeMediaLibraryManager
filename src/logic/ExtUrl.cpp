@@ -45,17 +45,8 @@ AMLM_QREG_CALLBACK([](){
 
 ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 {
-	if(qurl_finfo != nullptr)
-	{
-		m_size = qurl_finfo->size();
-		m_creation_timestamp = qurl_finfo->birthTime();
-		m_last_modified_timestamp = qurl_finfo->lastModified();
-		m_metadata_last_modified_timestamp = qurl_finfo->metadataChangeTime();
-	}
-	else
-	{
-		LoadModInfo();
-	}
+	// Save mod info, possibly loading it from the filesystem if we don't have it in qurl_finfo.
+	LoadModInfo(qurl_finfo);
 }
 
 void ExtUrl::write(QXmlStreamWriter& xml) const
@@ -69,11 +60,12 @@ XmlElement ExtUrl::toXml() const
 	// Mostly elements format.
 	XmlElementList el = {
 		XmlElement("href", m_url),
-XmlElement("file_size", m_size),
-XmlElement("ts_creation", m_creation_timestamp),
-XmlElement("ts_last_modified", m_last_modified_timestamp),
-XmlElement("ts_metadata_last_modified", m_metadata_last_modified_timestamp)
-};
+		XmlElement("file_size", m_size),
+		XmlElement("ts_last_refresh", m_timestamp_last_refresh),
+		XmlElement("ts_creation", m_creation_timestamp),
+		XmlElement("ts_last_modified", m_last_modified_timestamp),
+		XmlElement("ts_metadata_last_modified", m_metadata_last_modified_timestamp)
+		};
 
 	XmlElement retval("exturl",
 					  XmlAttributeList(),
@@ -86,22 +78,46 @@ XmlElement("ts_metadata_last_modified", m_metadata_last_modified_timestamp)
 	return retval;
 }
 
-void ExtUrl::LoadModInfo()
+void ExtUrl::save_mod_info(const QFileInfo* qurl_finfo)
+{
+	Q_CHECK_PTR(qurl_finfo);
+
+	if(qurl_finfo != nullptr)
+	{
+		// We already have the info, save off what we want to keep.
+		m_size = qurl_finfo->size();
+		m_timestamp_last_refresh = QDateTime::currentDateTimeUtc();
+		QDateTime dt_filetime_birth = qurl_finfo->fileTime(QFileDevice::FileBirthTime);
+		QDateTime dt_finfo_birth = qurl_finfo->birthTime();
+		Q_ASSERT(dt_filetime_birth == dt_finfo_birth);
+		m_creation_timestamp = qurl_finfo->birthTime();
+		m_last_modified_timestamp = qurl_finfo->lastModified();
+		m_metadata_last_modified_timestamp = qurl_finfo->metadataChangeTime();
+	}
+}
+
+void ExtUrl::LoadModInfo(const QFileInfo* qurl_finfo)
 {
 	Q_ASSERT(m_url.isValid());
 
-	// Is this a local file?
-	if(m_url.isLocalFile())
+	if(qurl_finfo != nullptr)
 	{
-		// Yes, we can get the mod info fairly cheaply.
-		QFileInfo fi(m_url.toLocalFile());
-		if(fi.exists())
+		// We already have the info, save off what we want to keep.
+		save_mod_info(qurl_finfo);
+	}
+	else
+	{
+		// We don't have the QFileInfo, load it.
+		// Is this a local file?
+		if(m_url.isLocalFile())
 		{
-			// File exists.
-			m_size = fi.size();
-			m_creation_timestamp = fi.birthTime();
-			m_last_modified_timestamp = fi.lastModified();
-			m_metadata_last_modified_timestamp = fi.metadataChangeTime();
+			// Yes, we can get the mod info fairly cheaply.
+			QFileInfo fi(m_url.toLocalFile());
+			if(fi.exists())
+			{
+				// File exists.
+				save_mod_info(&fi);
+			}
 		}
 	}
 }
@@ -137,13 +153,13 @@ QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
 /**
  * QXmlStreamWriter write operator.
  */
-QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
-{
-	auto e = exturl.toXml();
-	e.write(&out);
+//QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
+//{
+//	auto e = exturl.toXml();
+//	e.write(&out);
 
-	return out;
-}
+//	return out;
+//}
 
 
 #undef DATASTREAM_FIELDS

@@ -32,55 +32,66 @@
 
 void XmlElement::write(QXmlStreamWriter* out) const
 {
-	// Don't write twice.
-	Q_ASSERT(m_i_have_been_written == false);
+	// Write the start element with tag name
+	out->writeStartElement(m_tagname);
 
-	m_out_ptr = out;
-
-	auto& m_out = *m_out_ptr;
-
-	// Tag name
-	m_out.writeStartElement(m_tagname);
-
-	// Attributes
+	// Attributes (id)
 	if(!m_id.name().isEmpty())
 	{
-		m_out.writeAttribute(m_id);
+		out->writeAttribute(m_id);
 	}
+	// Attributes
 	if(!m_attributes.empty())
 	{
-		m_out.writeAttributes(m_attributes);
+		out->writeAttributes(m_attributes);
 	}
 	// The single value.
 	if(!m_value.isEmpty() && !m_value.isNull())
 	{
-		m_out.writeCharacters(m_value);
+		out->writeCharacters(m_value);
 	}
 
 	// Do whatever's in the inner scope lambda.
 	if(m_inner_scope)
 	{
-		m_inner_scope(const_cast<XmlElement*>(this), &m_out);
+		m_inner_scope(const_cast<XmlElement*>(this), out);
 	}
 
 	// Write out any child elements.
 	for(auto it = m_child_elements.cbegin(); it != m_child_elements.cend(); ++it)
 	{
 		qDb() << "Writing child element";
-		it->write(&m_out);
+		it->write(out);
 	}
 
 	// End element.
-	m_out.writeEndElement();
-
-	m_i_have_been_written = true;
+	out->writeEndElement();
 }
 
 void XmlElementList::write(QXmlStreamWriter* out) const
 {
 	// Make sure the elements are written out in the order they were added.
-	for(auto& i : *this)
+	for(auto& e : *this)
 	{
-		i.write(out);
+		e.write(out);
 	}
 }
+
+
+/// This is super ridiculous.  Can't get a string of a QDateTime with the correct timezone offset.
+/// @link https://bugreports.qt.io/browse/QTBUG-26161
+/// @link https://bugreports.qt.io/browse/QTBUG-26161?focusedCommentId=227469&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-227469
+QString toISOTime(const QDateTime& dt)
+{
+//	QDateTime local_dt_copy = dt;
+//	QDateTime utc = dt.toUTC();
+//	utc.setTimeSpec(Qt::LocalTime);
+//	int utcoffset = utc.secsTo(dt);
+//	local_dt_copy.setUtcOffset(utcoffset);
+
+//	return local_dt_copy.toString(Qt::ISODate);
+	return dt.toOffsetFromUtc(dt.offsetFromUtc()).toString(Qt::ISODate);
+}
+
+XmlValue::XmlValue(const QDateTime& dt) : QString(toISOTime(dt)) {}
+

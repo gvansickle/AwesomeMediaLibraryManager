@@ -34,13 +34,16 @@
 #include <QDateTime>
 #include <QUrl>
 
+// Ours
+#include <utils/DebugHelpers.h>
+
 
 class XmlValue : public QString
 {
 public:
 	XmlValue() = default;
 	XmlValue(const QString& qstr) : QString(qstr) {};
-	XmlValue(const QDateTime& dt) : QString(dt.toString(Qt::ISODate)) {};
+	XmlValue(const QDateTime& dt);
 	XmlValue(const QUrl& qurl) : QString(qurl.toString()) {};
 	XmlValue(long long value) : QString(QString("%1").arg(value)) {};
 
@@ -60,6 +63,7 @@ class XmlAttribute : public QXmlStreamAttribute
 public:
 	XmlAttribute() = default;
 //	XmlAttribute(const QXmlStreamAttribute& other);
+	XmlAttribute(const XmlAttribute& attr) = default;
 	~XmlAttribute() = default;
 
 	XmlAttribute(const QString &qualifiedName, const QString &value) : QXmlStreamAttribute(qualifiedName, value)
@@ -88,6 +92,7 @@ class XmlAttributeList : public QXmlStreamAttributes
 {
 public:
 	XmlAttributeList() = default;
+	XmlAttributeList(const XmlAttributeList& other) = default;
 	~XmlAttributeList() = default;
 
 //	XmlAttributeList(std::initializer_list<QXmlStreamAttribute> initlist)
@@ -125,9 +130,6 @@ public:
 	}
 
 	void write(QXmlStreamWriter* out) const;
-
-
-//	mutable QXmlStreamWriter* m_out_ptr = nullptr;
 };
 
 /**
@@ -186,6 +188,11 @@ public:
 	}
 
 	/**
+	 * Destructor.
+	 */
+	virtual ~XmlElement() = default;
+
+	/**
 	 * Specific function for setting the "id" attribute from outside this element's creator.
 	 */
 	XmlElement setId(const QString& idstr)
@@ -201,37 +208,13 @@ public:
 		return setId(idstr);
 	}
 
-	// Add a child element to this element.
-//	void append(std::unique_ptr<XmlElement> child);
-
-
-	void set_out(QXmlStreamWriter* out)
-	{
-		m_out_ptr = out;
-	}
-
 	void write(QXmlStreamWriter* out) const;
-
-	virtual ~XmlElement()
-	{
-		if(m_i_have_been_copied_from || m_i_have_been_written)
-		{
-			// Skip the write-on-destruction.
-		}
-		else
-		{
-			/// @todo Experimental, not writing on destruction.
-//			Q_ASSERT(m_out_ptr != nullptr);
-
-//			write(m_out_ptr);
-		}
-	};
 
 protected:
 	mutable bool m_i_have_been_copied_from = false;
 	mutable bool m_i_have_been_written = false;
 
-	mutable QXmlStreamWriter* m_out_ptr = nullptr;
+//	mutable QXmlStreamWriter* m_out_ptr = nullptr;
 
 	/// The tagname of this element.
 	QString m_tagname;

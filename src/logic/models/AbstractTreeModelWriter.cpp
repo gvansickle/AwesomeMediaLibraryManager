@@ -57,14 +57,11 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 
 	/// @todo Move out of this class. Start of xspf-specific stuff.
 	XmlElement playlist("playlist", [=](XmlElement* e, QXmlStreamWriter* out){
-//		xml.writeStartElement("playlist");
 		auto& xml = *out;
 		xml.writeDefaultNamespace("http://xspf.org/ns/0/");
 		xml.writeAttribute("version", "1");
 		xml.writeNamespace("http://amlm/ns/0/", "amlm"); // Our extension namespace.
 //		xml.writeAttribute("version", "1");
-
-
 
 	// No DTD for xspf.
 

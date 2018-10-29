@@ -32,6 +32,7 @@ public:
 	virtual ~QtHelpers();
 };
 
+
 #if 0
 template<class StreamType, class T>
 inline static StreamType operator<<(StreamType outstream, const T& obj)

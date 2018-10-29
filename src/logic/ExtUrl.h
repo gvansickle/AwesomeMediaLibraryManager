@@ -124,6 +124,9 @@ public:
 	/// @name Info mainly for determining if the file was modified since we last looked at it.
 	/// @{
 
+	/// Last time we refreshed the modification info related to this URL.
+	QDateTime m_timestamp_last_refresh;
+
 	/// File size, or 0 if couldn't be determined.
 	qint64 m_size {0};
 
@@ -143,21 +146,28 @@ public:
 //	bool isValid() { return m_url.isValid(); }
 
 	/// QXmlStream{Read,Write} operators.
-	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
+//	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 
 	void write(QXmlStreamWriter& xml) const;
 
+	/**
+	 * Return an XmlElement representing this ExtUrl.
+	 */
 	XmlElement toXml() const;
 
 protected:
 
-	void LoadModInfo();
+	void save_mod_info(const QFileInfo* qurl_finfo);
+
+	/// Populate the modification info from qurl_finfo.
+	/// If null, load the info using m_url.
+	void LoadModInfo(const QFileInfo* qurl_finfo = nullptr);
 
 };
 
 Q_DECLARE_METATYPE(ExtUrl);
 QTH_DECLARE_QDEBUG_OP(ExtUrl);
 QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
-QTH_DECLARE_QXMLSTREAM_OPS(ExtUrl);
+//QTH_DECLARE_QXMLSTREAM_OPS(ExtUrl);
 
 #endif /* SRC_LOGIC_EXTURL_H_ */

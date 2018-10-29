@@ -38,9 +38,8 @@
 
 
 AMLM_QREG_CALLBACK([](){
-	qIn() << "Registering DirScanResult, FileModificationInfo";
+	qIn() << "Registering DirScanResult";
 	qRegisterMetaType<DirScanResult>();
-//    qRegisterMetaType<FileModificationInfo>();
 });
 
 
