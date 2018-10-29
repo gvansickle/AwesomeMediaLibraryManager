@@ -49,12 +49,6 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	LoadModInfo(qurl_finfo);
 }
 
-void ExtUrl::write(QXmlStreamWriter& xml) const
-{
-	auto e = toXml();
-	e.write(&xml);
-}
-
 XmlElement ExtUrl::toXml() const
 {
 	// Mostly elements format.
@@ -72,7 +66,7 @@ XmlElement ExtUrl::toXml() const
 					  XmlValue(),
 					  el,
 					  [=](XmlElement* e, QXmlStreamWriter* xml){
-		qDb() << "callback";
+//		qDb() << "callback";
 	});
 
 	return retval;
@@ -82,11 +76,14 @@ void ExtUrl::save_mod_info(const QFileInfo* qurl_finfo)
 {
 	Q_CHECK_PTR(qurl_finfo);
 
+	// Save the last-refresh time.
+	/// @todo This is sort of not right, it really should be passed in from the qurl_finfo creator.
+	m_timestamp_last_refresh = QDateTime::currentDateTimeUtc();
+
 	if(qurl_finfo != nullptr)
 	{
-		// We already have the info, save off what we want to keep.
+		// Should never be nullptr here.
 		m_size = qurl_finfo->size();
-		m_timestamp_last_refresh = QDateTime::currentDateTimeUtc();
 		QDateTime dt_filetime_birth = qurl_finfo->fileTime(QFileDevice::FileBirthTime);
 		QDateTime dt_finfo_birth = qurl_finfo->birthTime();
 		Q_ASSERT(dt_filetime_birth == dt_finfo_birth);

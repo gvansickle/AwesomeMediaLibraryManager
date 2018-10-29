@@ -148,8 +148,6 @@ public:
 	/// QXmlStream{Read,Write} operators.
 //	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 
-	void write(QXmlStreamWriter& xml) const;
-
 	/**
 	 * Return an XmlElement representing this ExtUrl.
 	 */

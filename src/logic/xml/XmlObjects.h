@@ -184,7 +184,6 @@ public:
 	XmlElement(const XmlElement& other)
 	{
 		*this = other;
-		other.m_i_have_been_copied_from = true;
 	}
 
 	/**
@@ -211,10 +210,6 @@ public:
 	void write(QXmlStreamWriter* out) const;
 
 protected:
-	mutable bool m_i_have_been_copied_from = false;
-	mutable bool m_i_have_been_written = false;
-
-//	mutable QXmlStreamWriter* m_out_ptr = nullptr;
 
 	/// The tagname of this element.
 	QString m_tagname;
