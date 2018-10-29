@@ -28,6 +28,8 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
 	AbstractTreeModel.cpp
 	AbstractTreeModelItem.h
 	AbstractTreeModelItem.cpp
+	AbstractTreeModelHeaderItem.h
+	AbstractTreeModelHeaderItem.cpp
 	AbstractTreeModelReader.h
 	AbstractTreeModelReader.cpp
 	AbstractTreeModelWriter.h
