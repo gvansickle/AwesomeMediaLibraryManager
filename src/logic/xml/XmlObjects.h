@@ -113,7 +113,7 @@ public:
 };
 
 class XmlElement;
-
+//class XmlElementList;
 class XmlElementList : public QVector<XmlElement>
 {
 public:
@@ -232,8 +232,6 @@ protected:
 	/// Is passed a pointer to m_out_ptr.
 	InnerScopeType m_inner_scope;
 };
-
-
 
 static inline QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const XmlElement& e)
 {

@@ -51,20 +51,21 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 
 AbstractTreeModelItem* DirScanResult::toTreeModelItem()
 {
-//    QVector<QVariant> column_data;
-//    column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
-//    column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
-//    column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+//	QVector<QVariant> column_data;
+//	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
+//	column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
+//	column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
 
 	auto new_item = new ScanResultsTreeModelItem(this);
 //	auto new_item = make_default_node(column_data);
 
-    QVector<AbstractTreeModelItem *> child_items;
-	AbstractTreeModelItem* child_item = new ScanResultsTreeModelItem({"One", "Two", "Three"}, new_item);
+#warning "EXPERIMENTAL, REMOVE"
+//    QVector<AbstractTreeModelItem *> child_items;
+//	AbstractTreeModelItem* child_item = new ScanResultsTreeModelItem({"One", "Two", "Three"}, new_item);
 
-    child_items.push_back(child_item);
+//    child_items.push_back(child_item);
 
-    new_item->appendChildren(child_items);
+//    new_item->appendChildren(child_items);
 
 	return new_item;
 }
@@ -93,18 +94,10 @@ XmlElement DirScanResult::toXml() const
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 {
     // Separate out just the directory part of the URL.
-#if 0 // DELETE THIS
-    if(false) // local file
-    {
-        QDir dir_url_qdir = found_url_finfo.dir();
-        m_dir_url = QUrl::fromLocalFile(dir_url_qdir.absolutePath());
-    }
-	else
-#endif
 	// Works for any URL.
-    {
-		m_dir_exturl = m_media_exturl.m_url.adjusted(QUrl::RemoveFilename);
-    }
+	QUrl m_dir_url = m_media_exturl.m_url.adjusted(QUrl::RemoveFilename);
+	QFileInfo fi(m_dir_url.toString());
+	m_dir_exturl = ExtUrl(m_dir_url, &fi);
 
     // Is there a sidecar cue sheet?
 
@@ -124,7 +117,7 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
         if(fi.exists())
         {
             // It's there.
-			m_cue_exturl = possible_cue_url;
+			m_cue_exturl = ExtUrl(possible_cue_url.m_url, &fi);
             m_dir_props |= HasSidecarCueSheet;
         }
     }
