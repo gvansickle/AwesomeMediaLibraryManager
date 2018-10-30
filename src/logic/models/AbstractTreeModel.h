@@ -66,6 +66,7 @@ class QXmlStreamReader;
 // Ours
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
+class AbstractTreeModelHeaderItem;
 
 
 class AbstractTreeModel : public QAbstractItemModel
@@ -150,7 +151,7 @@ protected:
 	/// @{
 
 	/// Create a new root node.
-	virtual AbstractTreeModelItem* make_root_node(QVector<QVariant> rootData) = 0;
+	virtual AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) = 0;
 //	virtual AbstractTreeModelItem* make_default_node(QVector<QVariant> rootData, AbstractTreeModelItem* parent) = 0;
 
 	/**

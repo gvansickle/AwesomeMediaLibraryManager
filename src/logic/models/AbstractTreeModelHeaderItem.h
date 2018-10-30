@@ -25,14 +25,26 @@
 
 #include "AbstractTreeModelItem.h"
 
+#include <QVector>
+#include <QVariant>
+
+#include "AbstractHeaderSection.h"
+
 /*
  *
  */
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
 {
 public:
-	AbstractTreeModelHeaderItem();
-	virtual ~AbstractTreeModelHeaderItem();
+	explicit AbstractTreeModelHeaderItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
+	 ~AbstractTreeModelHeaderItem() override;
+
+	/**
+	 * Write this item and any children to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 * @returns true
+	 */
+	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

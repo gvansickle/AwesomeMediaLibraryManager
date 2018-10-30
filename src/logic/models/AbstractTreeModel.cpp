@@ -141,12 +141,13 @@ AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) cons
 
 void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
 {
-#warning "TODO WRITE MODEL METADATA"
+	// Write out the entire tree model recursively, starting at the m_root_item.
 	writeItemAndChildren(writer, m_root_item);
 }
 
 bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
 {
+#warning "TODO"
 	auto& xml = *reader;
 
 	// Check that we're reading an XML file with the right format.
@@ -184,7 +185,8 @@ bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
 
 void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
 {
-	m_root_item->writeItemAndChildren(writer);
+	Q_ASSERT(item != nullptr);
+	item->writeItemAndChildren(writer);
 }
 
 void AbstractTreeModel::readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item)

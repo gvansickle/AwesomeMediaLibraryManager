@@ -102,7 +102,7 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractT
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
 	: AbstractTreeModelItem(x, parent)
 {
-
+#warning "Eliminate?"
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -146,14 +146,15 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 	// Convenience ref.
 	auto& xml = *writer;
 
-	/// @todo Check if we're the root item?
+	// We should never be the root item.
+	Q_ASSERT(parent() != nullptr);
 
 	// Write out this item.
-
 	xml.writeStartElement(m_item_tag_name);
-	xml.writeAttribute("childNumber", QString("%1").arg(childNumber()));
+	xml.writeAttribute("parents_child_number", QString("%1").arg(childNumber()));
+	xml.writeAttribute("parents_total_children", QString("%1").arg(parent()->childCount()));
 
-	// Write the DirScanResults.
+	// Write out the DirScanResults.
 	auto dsr = m_dsr.toXml();
 	dsr.write(&xml);
 
@@ -166,10 +167,16 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 //	}
 
 	// Write out all children.
-	for(int i = 0; i < childCount(); ++i)
+	// Note that if we were an XmlElement, this would be done for us.
+	if(childCount() > 0)
 	{
-		// Hold on tight, we're going recursive!
-		child(i)->writeItemAndChildren(writer);
+		xml.writeStartElement("srtmi_child_item_list");
+		for(int i = 0; i < childCount(); ++i)
+		{
+			// Hold on tight, we're going recursive!
+			child(i)->writeItemAndChildren(writer);
+		}
+		xml.writeEndElement();
 	}
 	xml.writeEndElement();
 

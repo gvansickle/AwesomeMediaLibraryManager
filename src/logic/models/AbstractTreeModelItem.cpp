@@ -177,6 +177,11 @@ AbstractTreeModelItem *AbstractTreeModelItem::parent()
 	return m_parent_item;
 }
 
+const AbstractTreeModelItem*AbstractTreeModelItem::parent() const
+{
+	return m_parent_item;
+}
+
 bool AbstractTreeModelItem::removeChildren(int position, int count)
 {
 	if (position < 0 || position + count > m_child_items.size())

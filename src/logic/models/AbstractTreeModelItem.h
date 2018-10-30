@@ -95,6 +95,7 @@ public:
     bool insertColumns(int position, int columns);
 
     AbstractTreeModelItem *parent();
+	const AbstractTreeModelItem *parent() const;
 
     bool removeChildren(int position, int count);
     bool removeColumns(int position, int columns);

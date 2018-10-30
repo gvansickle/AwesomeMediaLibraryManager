@@ -18,7 +18,9 @@
  */
 #include "ScanResultsTreeModel.h"
 
+// Ours
 #include "ScanResultsTreeModelItem.h"
+#include "AbstractTreeModelHeaderItem.h"
 
 ScanResultsTreeModel::ScanResultsTreeModel(const QStringList &headers, const QString &data, QObject *parent)
     : BASE_CLASS(headers, data, parent)
@@ -43,7 +45,7 @@ bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items
 	return BASE_CLASS::appendItems(new_items, parent);
 }
 
-ScanResultsTreeModelItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
+AbstractTreeModelHeaderItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
 {
-	return new ScanResultsTreeModelItem(rootData);
+	return new AbstractTreeModelHeaderItem(rootData);
 }

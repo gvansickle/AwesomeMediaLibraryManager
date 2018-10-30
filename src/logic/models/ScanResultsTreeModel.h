@@ -27,6 +27,7 @@
 
 // Ours
 #include "ScanResultsTreeModelItem.h"
+class AbstractTreeModelHeaderItem;
 
 class ScanResultsTreeModel : public AbstractTreeModel
 {
@@ -49,7 +50,7 @@ protected:
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
 	/// Create a new root node.
-	ScanResultsTreeModelItem* make_root_node(QVector<QVariant> rootData) override;
+	AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) override;
 
     QUrl m_base_directory;
 

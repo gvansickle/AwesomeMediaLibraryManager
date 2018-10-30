@@ -84,7 +84,7 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 //	xml.writeStartElement(m_tree_model->getXmlStreamName());
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 
-	m_tree_model->writeItemAndChildren(out, nullptr);
+	m_tree_model->writeModel(out);
 
 #elif 0
 

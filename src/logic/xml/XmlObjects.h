@@ -125,7 +125,7 @@ public:
 	 * Initializer-list constructor.
 	 * Force this to be used with the "{}" initializer notation.
 	 */
-	XmlElementList(std::initializer_list<XmlElement> initlist) : QVector<XmlElement>(initlist)
+	XmlElementList(std::initializer_list<XmlElement> initlist) : QVector<XmlElement>({initlist})
 	{
 	}
 

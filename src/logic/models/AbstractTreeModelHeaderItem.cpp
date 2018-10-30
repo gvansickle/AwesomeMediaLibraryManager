@@ -22,14 +22,37 @@
  */
 #include "AbstractTreeModelHeaderItem.h"
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem()
-{
-	// TODO Auto-generated constructor stub
+// Ours
+#include <logic/xml/XmlObjects.h>
 
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
+	: AbstractTreeModelItem (x, parent)
+{
+#warning "TODO This should take a list of AbsHeaderSections"
+//	m_item_data = x;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 {
-	// TODO Auto-generated destructor stub
+}
+
+bool AbstractTreeModelHeaderItem::writeItemAndChildren(QXmlStreamWriter* writer) const
+{
+	// Convenience ref.
+	auto& xml = *writer;
+
+	XmlElement e("abstract_tree_model_header", {}, {},
+	{XmlElement("test", 1)},
+				 [=](XmlElement* e, QXmlStreamWriter* xml){
+		for(int i = 0; i < childCount(); ++i)
+		{
+			const auto* child = this->child(i);
+			child->writeItemAndChildren(xml);
+		}
+	});
+
+	e.write(writer);
+#warning "TODO"
+	return false;
 }
 
