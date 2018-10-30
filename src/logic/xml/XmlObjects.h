@@ -62,7 +62,6 @@ class XmlAttribute : public QXmlStreamAttribute
 {
 public:
 	XmlAttribute() = default;
-//	XmlAttribute(const QXmlStreamAttribute& other);
 	XmlAttribute(const XmlAttribute& attr) = default;
 	~XmlAttribute() = default;
 

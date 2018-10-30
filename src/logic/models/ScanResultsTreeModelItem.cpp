@@ -166,18 +166,18 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 //		xml.writeTextElement("column_data", data(col).toString());
 //	}
 
-	// Write out all children.
-	// Note that if we were an XmlElement, this would be done for us.
-	if(childCount() > 0)
-	{
-		xml.writeStartElement("srtmi_child_item_list");
-		for(int i = 0; i < childCount(); ++i)
-		{
-			// Hold on tight, we're going recursive!
-			child(i)->writeItemAndChildren(writer);
-		}
-		xml.writeEndElement();
-	}
+//	// Write out all children.
+//	// Note that if we were an XmlElement, this would be done for us.
+//	if(childCount() > 0)
+//	{
+//		xml.writeStartElement("srtmi_child_item_list");
+//		for(int i = 0; i < childCount(); ++i)
+//		{
+//			// Hold on tight, we're going recursive!
+//			child(i)->writeItemAndChildren(writer);
+//		}
+//		xml.writeEndElement();
+//	}
 	xml.writeEndElement();
 
 	/// @todo Default to something else if not overridden?
