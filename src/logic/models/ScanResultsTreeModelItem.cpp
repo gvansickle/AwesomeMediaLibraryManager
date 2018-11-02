@@ -30,6 +30,14 @@
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
 
+/**
+ * QXmlQuery notes:
+ * http://doc.qt.io/qt-5/xmlprocessing.html#xml-id
+ * "xml:id
+ * Processing of XML files supports xml:id. This allows elements that have an attribute named xml:id to be
+ * looked up efficiently with the fn:id() function. See xml:id Version 1.0 [http://www.w3.org/TR/xml-id/] for details."
+ */
+
 //template <class T>
 //struct SerializationDescriptorWriters
 //{
