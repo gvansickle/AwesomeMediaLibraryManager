@@ -33,6 +33,7 @@
 #include <type_traits>
 #include <functional>
 #include <memory>
+#include <future>
 
 // Our Std C++ backfill
 #include <future/future_type_traits.hpp>
@@ -68,6 +69,12 @@ template <typename T> class ExtFuture;
  * - mhogomchungu's "tasks": https://github.com/mhogomchungu/tasks
  * - Simon Brunel's QtPromise: https://github.com/simonbrunel/qtpromise
  * - And many many other sources I can't even begin to remember.
+ */
+
+/**
+ * A note on QtConcurrent::run():
+ * As of Qt5.11.1, QtConcurrent::run() can pass at most 5 params to the callback function, and it appears
+ * sometimes even fewer.  This manifests as inscrutable template deduction failures.
  */
 
 /**
@@ -461,9 +468,9 @@ template <class CallbackType>
 	/**
      * Asynchronously run a free function of the form:
 	 * @code
-	 * 	void Function(ExtFuture<T> future, Type1 arg1, Type2 arg2, [etc..]);
+	 * 	void Function(ExtFuture<T> control_and_reporting_future, Type1 arg1, Type2 arg2, [etc..]);
 	 * @endcode
-     * Creates and returns an ExtFuture<T>.
+	 * Creates and returns a copy of control_and_reporting_future.
 	 *
 	 * @todo More params.
 	 */
@@ -472,7 +479,7 @@ template <class CallbackType>
 			 class T = typename isExtFuture<ExtFutureT>::inner_t,
 			 class... Args,
 			 REQUIRES(is_ExtFuture_v<ExtFutureT>
-			 && ct::is_invocable_r_v<void, CallbackType, ExtFutureT, Args&&...>)
+			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args&&...>)
              >
 	ExtFuture<T> run(CallbackType&& callback, Args&&... args)
     {
@@ -485,9 +492,11 @@ template <class CallbackType>
 		qDb() << "FUTURE:" << retval;
 
         // retval is passed by copy here.
-		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef, auto... args) {
-			std::invoke(callback_fn, ef, args...);
-		}, std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
+//		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef, auto... args) {
+//			std::invoke(callback_fn, ef, args...);
+//		}, std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
+
+		QtConcurrent::run(std::forward<CallbackType>(callback), std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
 
         return retval;
     }
@@ -684,6 +693,49 @@ template <class CallbackType>
 
 		return retfuture;
     }
+
+	////// START EXPERIMENTAL
+
+	/**
+	 * Returns a callable object which captures f.
+	 */
+	template <typename F>
+	static auto asynchronize(F f)
+	{
+		return [f](auto ... xs) {
+			return [=] () {
+				return std::async(std::launch::async, f, xs...);
+			};
+		};
+	}
+
+	/**
+	 * Returned object can be called with any number of future objects.  It then calls .get() on all futures,
+	 * applies function f to them, and returns the result.
+	 */
+	template <typename F>
+	static auto fut_unwrap(F f)
+	{
+		return [f](auto ... xs) {
+			return f(xs.get()...);
+		};
+	}
+
+	template <typename F>
+	static auto async_adapter(F f)
+	{
+		return [f](auto ... xs) {
+			return [=] () {
+				// What's going on here:
+				// - Everything in parameter pack xs is assumed to be a callable object.  They will be called without args.
+				// - fut_unwrap(f) transforms f into a function object which accepts an arbitrary number of args.
+				// - When this async finally runs f, f calls .get() on all the xs()'s.
+				return std::async(std::launch::async, fut_unwrap(f), xs()...);
+			};
+		};
+	}
+
+	////// END EXPERIMENTAL
 
 };
 

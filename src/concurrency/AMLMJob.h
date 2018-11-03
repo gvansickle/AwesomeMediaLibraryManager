@@ -739,7 +739,8 @@ protected: //Q_SLOTS:
 	{
 		auto current_processed_size = this->processedSize();
 		auto progress_units_processed_in_last_second = current_processed_size - m_speed_last_processed_size;
-		m_speed = progress_units_processed_in_last_second;
+		// A little low-pass filtering never hurt anyone.
+		m_speed = (3*m_speed/4) + (progress_units_processed_in_last_second/4);
 		m_speed_last_processed_size = current_processed_size;
 		this->emitSpeed(m_speed);
 	}

@@ -24,6 +24,8 @@
 #include <type_traits>
 #include <atomic>
 #include <functional>
+#include <chrono>
+#include <string>
 
 // Future Std C++
 #include <future/function_traits.hpp>
@@ -110,6 +112,65 @@ static ExtFuture<QString> delayed_string_func()
 //
 // TESTS
 //
+
+static std::string create(const char *s)
+{
+	using namespace std::chrono_literals;
+
+	TCOUT << "3s CREATE \"" << s << "\"\n";
+	std::this_thread::sleep_for(3ms);
+	return {s};
+}
+
+static std::string concat(const std::string &a, const std::string &b)
+{
+	using namespace std::chrono_literals;
+
+	TCOUT << "5s CONCAT "
+		  << "\"" << a << "\" "
+		  << "\"" << b << "\"\n";
+	std::this_thread::sleep_for(5ms);
+	return a + b;
+}
+
+static std::string twice(const std::string &s)
+{
+	using namespace std::chrono_literals;
+
+	TCOUT << "3s TWICE \"" << s << "\"\n";
+	std::this_thread::sleep_for(3ms);
+	return s + s;
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, AsynchronizeBasic)
+{
+	TC_ENTER();
+
+	auto pcreate (ExtAsync::asynchronize(create));
+	auto pconcat (ExtAsync::async_adapter(concat));
+	auto ptwice (ExtAsync::async_adapter(twice));
+
+	/// @note result is not a std::string here, it is a callable returning a std::future<std::string>.
+	auto result (
+				pconcat(
+					ptwice(
+						pconcat(
+							pcreate("foo "),
+							pcreate("bar "))),
+					pconcat(
+						pcreate("this "),
+						pcreate("that "))));
+	TCOUT << "Setup done. Nothing executed yet.\n";
+
+	auto retval = std::string(result().get());
+
+	TCOUT << "Calculated retval:" << retval << "\n";
+
+	const std::string expected_str {"foo bar foo bar this that "};
+	AMLMTEST_EXPECT_EQ(expected_str, retval);
+
+	TC_EXIT();
+}
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 {
