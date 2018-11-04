@@ -30,9 +30,9 @@
 #include <concurrency/ExtAsync.h>
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl& dir_url,
-                                   const QStringList &nameFilters,
-                                   QDir::Filters filters,
-                                   QDirIterator::IteratorFlags flags)
+								   const QStringList &nameFilters,
+								   const QDir::Filters filters,
+								   const QDirIterator::IteratorFlags flags)
     : BASE_CLASS(parent), m_dir_url(dir_url), m_name_filters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
     // Set our object name.
@@ -146,7 +146,7 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 
 			/// @todo
 			DirScanResult dir_scan_result(file_url, file_info);
-//            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
+//			qDb() << "DIRSCANRESULT:" << dir_scan_result;
 
 			ext_future.reportInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
 
@@ -197,23 +197,11 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 	return;
 }
 
-//void TestFunc(ExtFuture<DirScanResult> f, AMLMJob* amlmJob, const QUrl& dir_url,
-//			  const QStringList& name_filters,
-//			  QDir::Filters dir_filters
-//			  , QDirIterator::IteratorFlags iterator_flags
-//			  )
-//{
-
-//}
-
 ExtFuture<DirScanResult> DirectoryScannerAMLMJob::AsyncDirScan(AMLMJob* amlmJob, const QUrl& dir_url,
 															   const QStringList& name_filters,
 															   const QDir::Filters dir_filters,
 															   const QDirIterator::IteratorFlags iterator_flags)
 {
-//	return ExtAsync::run(&::TestFunc, amlmJob, dir_url, name_filters, dir_filters
-//						 , iterator_flags
-//						 );
 	return ExtAsync::run(&DirectoryScannerAMLMJob::DirScanFunction, amlmJob,
 						 dir_url, name_filters, dir_filters, iterator_flags);
 }

@@ -89,7 +89,7 @@ public:
     int childCount() const;
 
     int columnCount() const;
-    QVariant data(int column) const;
+	virtual QVariant data(int column) const;
 
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);

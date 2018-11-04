@@ -37,6 +37,7 @@
 #include <src/logic/models/AbstractTreeModelItem.h>
 
 class CollectionMedium;
+class ScanResultsTreeModelItem;
 
 /**
  * A single hit found during a directory scan.
@@ -89,7 +90,7 @@ public:
 
     DirProps getDirProps() const { return m_dir_props; }
 
-    /// Get the URL which points to the actual media file found.
+	/// Get the ExtUrl which points to the actual media file found.
 	const ExtUrl& getMediaExtUrl() const { return m_media_exturl; }
 
     /// URL to any sidecar cuesheet found.
@@ -98,11 +99,11 @@ public:
 	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
-//    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+//	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 	/// QXmlStream{Read,Write} operators.
 	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
 
-    AbstractTreeModelItem *toTreeModelItem();
+	ScanResultsTreeModelItem *toTreeModelItem();
 
 	XmlElement toXml() const;
 

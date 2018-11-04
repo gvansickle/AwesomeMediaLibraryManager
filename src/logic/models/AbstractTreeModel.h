@@ -80,6 +80,12 @@ public:
 	~AbstractTreeModel() override;
 
 
+	/**
+	 * Calls getItem(index), which returns index.internalPointer() which is an AbstractTreeModelItem*.
+	 * Item then returns the data for this index and role from its @a data(column) function.
+	 *
+	 * @todo role gets lost along the way, we need to put that in.
+	 */
     QVariant data(const QModelIndex &index, int role) const override;
 
     /// Header data interface

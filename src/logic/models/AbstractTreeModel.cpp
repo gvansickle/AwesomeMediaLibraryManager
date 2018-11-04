@@ -131,11 +131,12 @@ AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) cons
 	if (index.isValid())
 	{
         AbstractTreeModelItem *item = static_cast<AbstractTreeModelItem*>(index.internalPointer());
-        if (item)
+		if (item != nullptr)
 		{
             return item;
 		}
     }
+	/// @todo This might want to be an assert().
 	return m_root_item;
 }
 

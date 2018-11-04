@@ -104,7 +104,6 @@ protected:
 	mutable std::mutex m_mutex;
 	/// Condition var our main loop will wait on.
 	std::condition_variable m_cv;
-	std::condition_variable m_cv_complete;
 
 	/**
 	 * When we're being destroyed, we can't accept any new futures to watch, so immediately cancel them.

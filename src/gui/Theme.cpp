@@ -622,7 +622,7 @@ QIcon Theme::iconFromTheme(const QStringList &icon_names)
     }
 
     // Couldn't find it.
-    qWr() << "Failed to find icon with any of the names" << icon_names << "in icon theme search paths.";
+//    qWr() << "Failed to find icon with any of the names" << icon_names << "in icon theme search paths.";
 
     return retval;
 }

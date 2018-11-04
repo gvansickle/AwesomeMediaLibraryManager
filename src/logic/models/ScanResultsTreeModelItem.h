@@ -43,6 +43,13 @@ public:
 	 ~ScanResultsTreeModelItem() override;
 
 	/**
+	 * Column data override.
+	 *
+	 * @todo Add role.
+	 */
+	QVariant data(int column) const override;
+
+	/**
 	 * Parses a new ScanResultsTreeModelItem* out of the passed XML stream.
 	 * Returns nullptr if the next parse factory function should be tried.
 	 * @param xml
@@ -64,6 +71,9 @@ public:
 protected:
 
 	QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
+
+	/// The directory scan results corresponding to this entry.
+	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
 
 };

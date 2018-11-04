@@ -62,13 +62,13 @@ Q_SIGNALS:
 	 * whoever may be listening.
 	 */
 //    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
-	void SIGNAL_resultsReadyAt(int begin, int end);
+	void SIGNAL_resultsReadyAt(int begin, int end) override;
 
 protected:
 	explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl& dir_url,
 			const QStringList &nameFilters,
-			QDir::Filters filters = QDir::NoFilter,
-			QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
+			const QDir::Filters filters = QDir::NoFilter,
+			const QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
 
 public:
 
@@ -97,8 +97,8 @@ public:
 	static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
 			const QUrl& dir_url,
 			const QStringList &name_filters,
-			QDir::Filters dir_filters = QDir::NoFilter,
-			QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
+			const QDir::Filters dir_filters = QDir::NoFilter,
+			const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
 	static ExtFuture<DirScanResult> AsyncDirScan(AMLMJob* amlmJob,
 			const QUrl& dir_url,

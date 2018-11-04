@@ -80,11 +80,15 @@ LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QPersistentModelIndex p
 
 ExtFuture<LibraryEntryLoaderJobResult> LibraryEntryLoaderJob::make_task(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
+#if 1
 	ExtFuture<LibraryEntryLoaderJobResult> ret_future;
 
 	QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, ret_future, nullptr, pmi, libentry);
 
 	return ret_future;
+#else
+	return ExtAsync::run(&LibraryEntryLoaderJob::LoadEntry, nullptr, pmi, libentry);
+#endif
 }
 
 LibraryEntryLoaderJob::LibraryEntryLoaderJob(QObject *parent, QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)

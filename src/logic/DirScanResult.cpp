@@ -49,7 +49,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	determineDirProps(found_url_finfo);
 }
 
-AbstractTreeModelItem* DirScanResult::toTreeModelItem()
+ScanResultsTreeModelItem* DirScanResult::toTreeModelItem()
 {
 //	QVector<QVariant> column_data;
 //	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());

@@ -102,9 +102,19 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractT
 	: AbstractTreeModelItem(parent)
 {
 	m_dsr = *dsr;
+	qDb() << "############" << m_dsr;
+	qDb() << "############" << m_dsr.getMediaExtUrl();
 //	dsr->getDirProps();
 //	dsr->getMediaExtUrl();
 //	dsr->getSidecarCuesheetExtUrl();
+	QVector<QVariant> column_data;
+//	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
+//	column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
+//	column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
+
+//	setData(0, QVariant::fromValue<DirProps>(m_dsr.getDirProps()).toString());
+	setData(1, QVariant::fromValue(QUrl(m_dsr.getMediaExtUrl()).toDisplayString()));
+//	setData(2, column_data[2]);
 }
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
@@ -115,7 +125,26 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, Abstract
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 {
-	// TODO Auto-generated destructor stub
+}
+
+QVariant ScanResultsTreeModelItem::data(int column) const
+{
+	// Map column and @todo role to the corresponding data.
+
+	switch(column)
+	{
+	case 0:
+		return toqstr(m_dsr.getDirProps());
+	case 1:
+		return QUrl(m_dsr.getMediaExtUrl());
+	case 2:
+		return QUrl(m_dsr.getSidecarCuesheetExtUrl());
+	default:
+		qWr() << "data() request for unknown column:" << column;
+		break;
+	}
+
+	return QVariant("XXXX");
 }
 
 ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent)
