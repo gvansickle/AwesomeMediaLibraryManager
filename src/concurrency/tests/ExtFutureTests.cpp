@@ -622,13 +622,13 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 			run_down_copy.reportResult(5);
 			if(run_down_copy.HandlePauseResumeShouldICancel())
 			{
-				run_down_copy.reportCanceled();
 				rsm.ReportResult(J1CANCELED);
+				run_down_copy.reportCanceled();
 				break;
 			}
 		}
-		run_down_copy.reportFinished();
 		rsm.ReportResult(T1ENDCB);
+		run_down_copy.reportFinished();
 	}, run_down);
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
@@ -665,7 +665,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	// Cancel the downstream future.
 	TCOUT << "CANCELING DOWNSTREAM" << down;
-	down.reportException(ExtAsyncCancelException());
+//	down.reportException(ExtAsyncCancelException());
+	down.cancel();
 	TCOUT << "CANCELED DOWNSTREAM" << down;
 
 	TCOUT << "WAITING TO PROPAGATE";
