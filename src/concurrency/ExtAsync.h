@@ -84,52 +84,64 @@ template <typename T> class ExtFuture;
  */
 namespace ExtAsync
 {
+
+/**
+ * This core handles exceptions thrown by the callback through the future.
+ */
+template<class CallbackType, class... Args,
+		 class ExtFutureT = argtype_t<CallbackType, 0>//,
+////				 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, ArgTupleType>>,
+//				 REQUIRES(is_ExtFuture_v<ExtFutureT>
+//					&& NonNestedExtFuture<ExtFutureT>
+//				 && std::is_invocable_v<CallbackType, ExtFutureT, ArgTupleType>)
+		 >
+static void cancel_and_exception_handling_core(CallbackType&& callback,
+		ExtFutureT&& retfuture_copy,
+											   Args&&... args)
+{
+//			LiftedR retval;
+
+//			ExtFutureT retfuture_copy = std::get<0>(args...); // = std::get<0>(argtuple);
+
+	//			static_assert(sizeof...(copied_args_from_run) != 0);
+//			static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with decltype(retval) == void");
+
+	try
+	{
+		// Call the function the user originally passed in.
+#if 1
+		/*retval =*/ std::invoke(callback, retfuture_copy, args...);
+#else
+		/*retval =*/ std::apply(callback, /*retfuture_copy,*/ argtuple);
+#endif
+
+		/// @todo Handle return-only callbacks and Report our single result.
+//				retfuture_copy.reportResult(retval);
+	}
+	// Send any exceptions down to the returned future.
+	catch(ExtAsyncCancelException& e)
+	{
+		retfuture_copy.reportException(e);
+	}
+	catch(QException& e)
+	{
+		retfuture_copy.reportException(e);
+	}
+	catch (...)
+	{
+		retfuture_copy.reportException(QUnhandledException());
+	}
+
+	/// @todo If exception should we actually be reporting finished?
+	retfuture_copy.reportFinished();
+};
+
+
 template <class CallbackType>
 	struct detail_struct
 	{
 
-		template<class... Args,
-				 class ExtFutureT = argtype_t<CallbackType, 0>,
-				 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>,
-				 REQUIRES(is_ExtFuture_v<ExtFutureT>
-					&& NonNestedExtFuture<ExtFutureT>
-				 && std::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, Args...>)
-				 >
-		static auto cancel_and_exception_handling_core(CallbackType callback,
-													   ExtFuture<LiftedR> retfuture_copy,
-													   auto... copied_args_from_run)
-		{
-			LiftedR retval;
 
-			//			static_assert(sizeof...(copied_args_from_run) != 0);
-			static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with decltype(retval) == void");
-
-			try
-			{
-				// Call the function the user originally passed in.
-				retval = std::invoke(callback, retfuture_copy, copied_args_from_run...);
-
-				// Report our single result.
-				retfuture_copy.reportResult(retval);
-			}
-			// Send any exceptions down to the returned future.
-			catch(ExtAsyncCancelException& e)
-			{
-				retfuture_copy.reportException(e);
-			}
-			catch(QException& e)
-			{
-				retfuture_copy.reportException(e);
-			}
-			catch (...)
-			{
-				retfuture_copy.reportException(QUnhandledException());
-			}
-
-			/// @todo If exception should we actually be reporting finished?
-			retfuture_copy.reportFinished();
-
-		};
 
 		/**
 		 * QtConcurrent::run() parameter expander.
@@ -149,7 +161,7 @@ template <class CallbackType>
 
 			// Capture the future and the variadic args into a tuple we'll pass to the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
-			auto param_tpl = std::make_tuple(std::remove_reference_t<ExtFutureT>(retfuture), std::forward<Args>(args)...);
+//			auto param_tpl = std::make_tuple(std::remove_reference_t<ExtFutureT>(retfuture), std::forward<Args>(args)...);
 //			M_PRINT_TYPEOF_VAR_IN_ERROR(std::get<0>(param_tpl));
 
 			// Capture the variadic args into a tuple we'll pass to the lambda instead of passing them in the
@@ -157,13 +169,26 @@ template <class CallbackType>
 M_WARNING("TODO: ALL THE CANCEL AND EXCEPTION STUFF THAT WE NEED FACTOR OUT");
 			auto lambda = [&,
 					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
+					retfuture_copy=std::forward<ExtFutureT>(retfuture),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
 					() {
 				// Call the callback with a copy of the retfuture and the args all as elements in param_tpl_copy.
+#if 1
 				std::apply(callback_copy, argtuple);
+#else
+//				auto core_wrapper = [&,
+//						callback_copy_copy=/*std::decay_t*/std::forward<CallbackType>(callback_copy)
+//						](auto...){
+//					cancel_and_exception_handling_core(callback_copy_copy, argtuple);
+//				};
+
+//				auto core_wrapper = std::bind(cancel_and_exception_handling_core, callback_copy, std::placeholders::_1);
+
+				std::invoke(ExtAsync::cancel_and_exception_handling_core, callback_copy, retfuture_copy, std::forward<Args>(args)...);
+#endif
 			};
 
-			// Don't need to pass anything other than the param tuple.
+			// Don't need to pass anything other than the lambda.
 			QtConcurrent::run(lambda);
 
 			return retfuture;
