@@ -88,6 +88,49 @@ template <class CallbackType>
 	struct detail_struct
 	{
 
+		template<class... Args,
+				 class ExtFutureT = argtype_t<CallbackType, 0>,
+				 class LiftedR = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>,
+				 REQUIRES(is_ExtFuture_v<ExtFutureT>
+					&& NonNestedExtFuture<ExtFutureT>
+				 && std::is_invocable_r_v<LiftedR, CallbackType, ExtFutureT, Args...>)
+				 >
+		static auto cancel_and_exception_handling_core(CallbackType callback,
+													   ExtFuture<LiftedR> retfuture_copy,
+													   auto... copied_args_from_run)
+		{
+			LiftedR retval;
+
+			//			static_assert(sizeof...(copied_args_from_run) != 0);
+			static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with decltype(retval) == void");
+
+			try
+			{
+				// Call the function the user originally passed in.
+				retval = std::invoke(callback, retfuture_copy, copied_args_from_run...);
+
+				// Report our single result.
+				retfuture_copy.reportResult(retval);
+			}
+			// Send any exceptions down to the returned future.
+			catch(ExtAsyncCancelException& e)
+			{
+				retfuture_copy.reportException(e);
+			}
+			catch(QException& e)
+			{
+				retfuture_copy.reportException(e);
+			}
+			catch (...)
+			{
+				retfuture_copy.reportException(QUnhandledException());
+			}
+
+			/// @todo If exception should we actually be reporting finished?
+			retfuture_copy.reportFinished();
+
+		};
+
 		/**
 		 * QtConcurrent::run() parameter expander.
 		 * As of Qt5.11.1, QtConcurrent::run() can pass at most 5 params to the callback function, and it appears
@@ -526,7 +569,7 @@ M_WARNING("TODO: ALL THE CANCEL AND EXCEPTION STUFF THAT WE NEED FACTOR OUT");
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;
 		static_assert(std::is_same_v<ExtFutureT, ExtFutureR>);
-#if 1
+#if 0
 		ExtFutureT retval;
 		qDb() << "FUTURE:" << retval;
 

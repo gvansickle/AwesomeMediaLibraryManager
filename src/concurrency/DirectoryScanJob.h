@@ -45,39 +45,39 @@ using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
  */
 class DirectoryScannerAMLMJob : public AMLMJobT<ExtFuture<DirScanResult>>, public UniqueIDMixin<DirectoryScannerAMLMJob>
 {
-    Q_OBJECT
+	Q_OBJECT
 
 	using BASE_CLASS = AMLMJobT<ExtFuture<DirScanResult>>;
 
-    /**
-     * @note CRTP: Still need this to avoid ambiguous name resolution.
-     * @see https://stackoverflow.com/a/46916924
-     */
-    using UniqueIDMixin<DirectoryScannerAMLMJob>::uniqueQObjectName;
+	/**
+	 * @note CRTP: Still need this to avoid ambiguous name resolution.
+	 * @see https://stackoverflow.com/a/46916924
+	 */
+	using UniqueIDMixin<DirectoryScannerAMLMJob>::uniqueQObjectName;
 
 Q_SIGNALS:
 
-    /**
-     * Signal used to send the discovered directory entries to
-     * whoever may be listening.
-     */
+	/**
+	 * Signal used to send the discovered directory entries to
+	 * whoever may be listening.
+	 */
 //    void SIGNAL_resultsReadyAt(const ExtFuture<DirScanResult>& ef, int begin, int end);
 	void SIGNAL_resultsReadyAt(int begin, int end);
 
 protected:
 	explicit DirectoryScannerAMLMJob(QObject* parent, const QUrl& dir_url,
-            const QStringList &nameFilters,
-            QDir::Filters filters = QDir::NoFilter,
-            QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
+			const QStringList &nameFilters,
+			QDir::Filters filters = QDir::NoFilter,
+			QDirIterator::IteratorFlags flags = QDirIterator::NoIteratorFlags);
 
 public:
 
-    /// @name Public types
-    /// @{
-    using ExtFutureType = ExtFuture<DirScanResult>;
-    /// @}
+	/// @name Public types
+	/// @{
+	using ExtFutureType = ExtFuture<DirScanResult>;
+	/// @}
 
-    ~DirectoryScannerAMLMJob() override;
+	~DirectoryScannerAMLMJob() override;
 
 	static DirectoryScannerAMLMJobPtr make_job(QObject *parent, const QUrl& dir_url,
 											   const QStringList &nameFilters,
@@ -100,15 +100,15 @@ public:
 			QDir::Filters dir_filters = QDir::NoFilter,
 			QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
-//	static ExtFuture<DirScanResult> AsyncDirScan(AMLMJob* amlmJob,
-//			const QUrl& dir_url,
-//			const QStringList &name_filters,
-//			const QDir::Filters dir_filters = QDir::NoFilter,
-//			const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
+	static ExtFuture<DirScanResult> AsyncDirScan(AMLMJob* amlmJob,
+			const QUrl& dir_url,
+			const QStringList &name_filters,
+			const QDir::Filters dir_filters = QDir::NoFilter,
+			const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
 protected:
 
-    void runFunctor() override;
+	void runFunctor() override;
 
 protected Q_SLOT:
 
@@ -121,11 +121,11 @@ protected Q_SLOT:
 
 private:
 
-    /// The URL we'll start the traversal from.
-    QUrl m_dir_url;
-    QStringList m_name_filters;
-    QDir::Filters m_dir_filters;
-    QDirIterator::IteratorFlags m_iterator_flags;
+	/// The URL we'll start the traversal from.
+	QUrl m_dir_url;
+	QStringList m_name_filters;
+	QDir::Filters m_dir_filters;
+	QDirIterator::IteratorFlags m_iterator_flags;
 
 };
 
