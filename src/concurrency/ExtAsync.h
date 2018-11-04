@@ -566,7 +566,7 @@ template <class CallbackType>
 	>
 	ExtFuture<LiftedR> run_again(CallbackType&& callback, Args&&... args)
 	{
-#if 1
+#if 0
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
 #else
 		return ExtAsync::detail_struct<CallbackType>::run_again(std::forward<CallbackType>(callback), std::forward<Args>(args)...);

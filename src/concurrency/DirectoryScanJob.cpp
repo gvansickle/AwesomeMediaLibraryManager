@@ -197,14 +197,14 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 	return;
 }
 
-void TestFunc(ExtFuture<DirScanResult> f, AMLMJob* amlmJob, const QUrl& dir_url,
-			  const QStringList& name_filters,
-			  QDir::Filters dir_filters
-			  , QDirIterator::IteratorFlags iterator_flags
-			  )
-{
+//void TestFunc(ExtFuture<DirScanResult> f, AMLMJob* amlmJob, const QUrl& dir_url,
+//			  const QStringList& name_filters,
+//			  QDir::Filters dir_filters
+//			  , QDirIterator::IteratorFlags iterator_flags
+//			  )
+//{
 
-}
+//}
 
 //ExtFuture<DirScanResult> DirectoryScannerAMLMJob::AsyncDirScan(AMLMJob* amlmJob, const QUrl& dir_url,
 //															   const QStringList& name_filters,
@@ -221,6 +221,6 @@ void TestFunc(ExtFuture<DirScanResult> f, AMLMJob* amlmJob, const QUrl& dir_url,
 void DirectoryScannerAMLMJob::runFunctor()
 {
 	DirScanFunction(m_ext_future, this,
-				m_dir_url, m_name_filters, m_dir_filters/*, m_iterator_flags*/);
+				m_dir_url, m_name_filters, m_dir_filters, m_iterator_flags);
 }
 
