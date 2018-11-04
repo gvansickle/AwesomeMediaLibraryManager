@@ -115,13 +115,13 @@ M_WARNING("TODO: ALL THE CANCEL AND EXCEPTION STUFF THAT WE NEED FACTOR OUT");
 			auto lambda = [&,
 					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
-					(auto param_tpl_copy) {
+					(/*auto param_tpl_copy*/) {
 //				static_assert(std::is_same_v<decltype(std::get<0>(param_tpl_copy)), ExtFutureT>);
 				// Call the callback with a copy of the retfuture and the args all as elements in param_tpl_copy.
 				std::apply(callback_copy, argtuple/*param_tpl_copy*/);
 			};
 
-			QtConcurrent::run(lambda, param_tpl);
+			QtConcurrent::run(lambda/*, param_tpl*/);
 
 			return retfuture;
 		}
