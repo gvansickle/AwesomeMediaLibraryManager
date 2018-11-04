@@ -111,6 +111,7 @@ template <class CallbackType>
 
 			// Capture the variadic args into a tuple we'll pass to the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
+M_WARNING("TODO: ALL THE CANCEL AND EXCEPTION STUFF THAT WE NEED FACTOR OUT");
 			auto lambda = [&,
 					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
@@ -566,7 +567,7 @@ template <class CallbackType>
 	>
 	ExtFuture<LiftedR> run_again(CallbackType&& callback, Args&&... args)
 	{
-#if 0
+#if 1
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
 #else
 		return ExtAsync::detail_struct<CallbackType>::run_again(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
