@@ -24,10 +24,10 @@
 
 // Std C++
 #include <shared_mutex>
+#include <condition_variable>
 
 // Qt5
 #include <QThread>
-#include <QSemaphore>
 
 // Ours
 #include "ExtFuture.h"
@@ -59,7 +59,7 @@ ExtFuturePropagationHandler::ExtFuturePropagationHandler()
 ExtFuturePropagationHandler::~ExtFuturePropagationHandler()
 {
 	// @todo This should never have anything to cancel.
-	cancel_all_and_wait(true);
+	close(true);
 }
 
 // Static
@@ -70,10 +70,12 @@ std::unique_ptr<ExtFuturePropagationHandler> ExtFuturePropagationHandler::make_h
 
 void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType downstream, FutureType upstream)
 {
-	std::unique_lock write_locker(m_shared_mutex);
+	std::unique_lock write_locker(m_mutex);
 
-	if(m_cancel_incoming_futures)
+	// Are we closed for business?
+	if(m_closed)
 	{
+		// Yes, fail the registration and cancel both futures.
 		qWr() << "SHUTTING DOWN, CANCELING INCOMING FUTURES:";// << downstream << upstream;
 		downstream.cancel();
 		upstream.cancel();
@@ -83,14 +85,23 @@ void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType dow
 	// Add the two futures to the map.
 	m_down_to_up_cancel_map.push_back({downstream, upstream});
 	// << state(downstream) << state(upstream);
-	m_num_pairs_to_patrol.release();
+
 	qIn() << "Registered future pair, now have" << m_down_to_up_cancel_map.size() << "pairs registered.";
-//	AMLM_ASSERT_EQ(m_num_pairs_to_patrol.available(), m_down_to_up_cancel_map.size());
+
+	// Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
+	// by the notify, and then blocking because we still hold the mutex.
+	write_locker.unlock();
+
+	// Notify one thread waiting on the queue's condition variable that it now has something to do.
+	// Note that since we only registered one item, we only need to notify one waiting thread.  This prevents waking up
+	// all waiting threads, all but one of which will end up immediately blocking again.
+	m_cv.notify_one();
 }
 
 void ExtFuturePropagationHandler::unregister_cancel_prop_down_to_up(ExtFuturePropagationHandler::FutureType downstream, ExtFuturePropagationHandler::FutureType upstream)
 {
-	std::unique_lock write_locker(m_shared_mutex);
+	Q_ASSERT_X(0, __func__, "TODO");
+	std::unique_lock write_locker(m_mutex);
 
 	// Remove all instances of the pair.
 	auto erase_me = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
@@ -98,15 +109,15 @@ void ExtFuturePropagationHandler::unregister_cancel_prop_down_to_up(ExtFuturePro
 	// ...and finally erase them all.
 	auto num_to_erase = std::distance(erase_me, m_down_to_up_cancel_map.end());
 	m_down_to_up_cancel_map.erase(erase_me);
-	bool success = m_num_pairs_to_patrol.tryAcquire(num_to_erase);
+	bool success = true; //m_num_pairs_to_patrol.tryAcquire(num_to_erase);
 	Q_ASSERT(success);
 }
 
-bool ExtFuturePropagationHandler::cancel_all_and_wait(bool warn_calling_from_destructor)
+bool ExtFuturePropagationHandler::close(bool warn_calling_from_destructor)
 {
-	std::unique_lock write_locker(m_shared_mutex);
+	std::unique_lock write_locker(m_mutex);
 
-	m_cancel_incoming_futures = true;
+	m_closed = true;
 
 	if(warn_calling_from_destructor && !m_down_to_up_cancel_map.empty())
 	{
@@ -119,6 +130,16 @@ bool ExtFuturePropagationHandler::cancel_all_and_wait(bool warn_calling_from_des
 		cancel_all();
 		wait_for_finished_or_canceled();
 	}
+
+	// Unlock the mutex immediately prior to notify.  This prevents a waiting thread from being immediately woken up
+	// by the notify, and then blocking because we still hold the mutex.
+	write_locker.unlock();
+
+	// Notify all threads waiting on the condition variable that it's just been closed.
+	m_cv.notify_all();
+
+	/// @todo We might consider having PerfectDeleter handle this join instead.
+	m_patrol_thread->wait();
 
 	return true;
 }
@@ -134,43 +155,33 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 
 	while(true)
 	{
-		// Thread-safe step 0: Wait for the possibility of anything to do.
-		// This will block until there is.
-		m_num_pairs_to_patrol.acquire();
+		// Step 0: Wait to be signaled that we have anything to do.
+		std::unique_lock<std::mutex> cvlock(m_mutex);
+		m_cv.wait(cvlock, [this](){ return m_closed || !m_down_to_up_cancel_map.empty(); });
 
-
-		// Ok, there's something to do.  Lock until the next loop.
-		do
+		// Are we supposed to cancel?
+		if(m_closed)
 		{
-			std::unique_lock write_locker(m_shared_mutex);
-
-			if(m_cancel_incoming_futures)
+			// Yes, We're being canceled.  Break out of this loop.
+			/// @todo We probably should move final cancel prop and delete into here.
+			qIn() << "ExtFuturePropagationHandler being canceled...";
+			break;
+		}
+		// Are their no non-zero ExtFuture pairs to patrol?
+		if(m_down_to_up_cancel_map.empty())
+		{
+			if(!logged_yield_msg)
 			{
-				// Special case, We're being canceled.  Break out of this loop.
-				qIn() << "ExtFuturePropagationHandler being canceled...";
-				m_num_pairs_to_patrol.release();
-				return;
+				qWr() << "No entries, nothing to propagate, yielding...";
+				logged_yield_msg = true;
 			}
-			else
-			{
-				// One or more ExtFutures wants us to propagate their cancel.
-				if(m_down_to_up_cancel_map.empty())
-				{
-					//				if(!logged_yield_msg)
-					//				{
-					qWr() << "No entries, nothing to propagate, yielding...";
-					logged_yield_msg = true;
-					//				}
-					// Nothing to propagate, yield and loop until there is.
-					QThread::yieldCurrentThread();
-					continue;
-				}
-				else
-				{
-					// There's an entry, we need to look at it.
-					logged_yield_msg = false;
-				}
-			}
+			// Nothing to propagate or patrol, loop until there is.
+			continue;
+		}
+		else
+		{
+			// There's at least one entry to look at.
+			logged_yield_msg = false;
 
 			// Remove any entries with Finished but not Canceled keys.
 			// Nothing for us to propagate in this case, and we no longer need to watch The Future(tm).
@@ -183,10 +194,8 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 				auto num_erased = std::distance(erase_me_too, m_down_to_up_cancel_map.end());
 				qIn() << "ERASING" << num_erased << " FINISHED NOT CANCELED PAIRS";
 				m_down_to_up_cancel_map.erase(erase_me_too, m_down_to_up_cancel_map.end());
-				m_num_pairs_to_patrol.release(num_erased);
 				qIn() << "Remaining future pairs:" << m_down_to_up_cancel_map.size();
 			}
-
 
 			// Cancel propagation and delete loops.
 
@@ -209,14 +218,17 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 			// Did we find any?
 			if(canceled_ExtFuture_map.empty())
 			{
-				// No, go back to waiting.
-				qWr() << "FOUND NO CANCELED FUTURES";
+				// No, go back to spinning on the cv by notifying ourselves.
+				/// @todo This is the normal case, and yeah, it's not at all the right way to do this.
+//				qWr() << "FOUND NO CANCELED FUTURES";
+				/// @todo Pretty sure this won't work.
+				m_cv.notify_one();
 				continue;
 			}
 
 			// Step 2: Cancel The Future(tm).
 			// Propagate the cancels we found to the upstream ExtFuture.
-			// We have the copies, and the futures are threadsafe for .cancel(), so we don't even need a lock here.
+			/// @note We have the copies, and the futures are threadsafe for .cancel(), so we wouldn't even need a lock here.
 			qDb() << "Propagating cancels from" << canceled_ExtFuture_map.size() << "ExtFuture<>s.";
 			std::for_each(canceled_ExtFuture_map.begin(), canceled_ExtFuture_map.end(),
 						  [](map_pair_type p){
@@ -237,15 +249,26 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 				auto erase_me = std::remove_if(m_down_to_up_cancel_map.begin(), m_down_to_up_cancel_map.end(),
 											   [=](auto& val){ return val == *it;});
 				auto num_erased = std::distance(erase_me, m_down_to_up_cancel_map.end());
-				m_num_pairs_to_patrol.release(num_erased);
 				// ...and finally erase them all.
 				m_down_to_up_cancel_map.erase(erase_me);
 			}
 
-			// Threadsafe step 4: Let the destructor do it.
+			// Step 4: Let the destructor do it.
 			// We now don't need anything in canceled_ExtFuture_map, so we can just let it get deleted.
 			// The deletions of the contained ExtFuture<>s shouldn't need any synchronization.
-		} while(0);
+
+			// Step 5. Again?
+			if(!m_down_to_up_cancel_map.empty())
+			{
+				qIn() << "MORE TO DO, SIGNALING OURSELVES, NUM MAP ENTRIES:" << m_down_to_up_cancel_map.size();
+				m_cv.notify_all();
+			}
+			else
+			{
+				qIn() << "BACK TO WAITING";
+			}
+
+		} while(false);
 	}
 }
 

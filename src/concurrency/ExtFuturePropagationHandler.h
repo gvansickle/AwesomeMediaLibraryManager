@@ -77,10 +77,11 @@ public:
 	void unregister_cancel_prop_down_to_up(FutureType downstream, FutureType upstream);
 
 	/**
+	 * Cancels all remaining ExtFutures and waits for the patrol loop to end.
 	 * Call this just prior to deleting this object.
 	 * @return
 	 */
-	bool cancel_all_and_wait(bool warn_calling_from_destructor = false);
+	bool close(bool warn_calling_from_destructor = false);
 
 protected:
 
@@ -97,16 +98,18 @@ protected:
 
 	void wait_for_finished_or_canceled();
 
-	/// Shared mutex because we're highly reader-writer.
-	std::shared_mutex m_shared_mutex;
+	// Protected data members
 
-	/// Semaphore for our patrol wait.
-	QSemaphore m_num_pairs_to_patrol {0};
+	/// Shared mutex because we're highly reader-writer.
+	mutable std::mutex m_mutex;
+	/// Condition var our main loop will wait on.
+	std::condition_variable m_cv;
+	std::condition_variable m_cv_complete;
 
 	/**
 	 * When we're being destroyed, we can't accept any new futures to watch, so immediately cancel them.
 	 */
-	std::atomic_bool m_cancel_incoming_futures {false};
+	std::atomic_bool m_closed {false};
 
 	// Not really a map.  Not really even close to a map.
 	using map_type = std::deque<std::tuple<FutureType, FutureType>>;

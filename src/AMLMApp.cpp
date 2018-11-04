@@ -186,7 +186,7 @@ void AMLMApp::perform_controlled_shutdown()
     {
 		// Do whatever shutdown tasks we need to in here.
 
-		ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->cancel_all_and_wait();
+		ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->close();
 
 		// Cancel all asynchronous activities and wait for them to complete.
 		AMLMApp::IPerfectDeleter()->cancel_and_wait_for_all();

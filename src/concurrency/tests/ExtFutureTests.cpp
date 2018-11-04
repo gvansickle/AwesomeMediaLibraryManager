@@ -768,8 +768,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 			// Handle canceling.
 			if(generator_task_future_copy.HandlePauseResumeShouldICancel())
 			{
-				generator_task_future_copy.reportCanceled();
 				rsm.ReportResult(J1CANCELED);
+				generator_task_future_copy.reportCanceled();
 				break;
 			}
 		}
@@ -777,8 +777,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		// We've been canceled, but not finished.
 		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isCanceled());
 		AMLMTEST_EXPECT_FALSE(generator_task_future_copy.isFinished());
-		generator_task_future_copy.reportFinished();
 		rsm.ReportResult(J1ENDCB);
+		generator_task_future_copy.reportFinished();
 		return 1;
 	}
 	);
