@@ -233,11 +233,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			tree_model_ptr->appendItems(new_items);
 
 	        /// @todo Obsoleting... very... slowly.
-	        for(const auto& entry : new_items)
-	        {
-				// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
-				Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(entry->data(1).toString());
-	        }
+//	        for(const auto& entry : new_items)
+//	        {
+//				// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
+//				Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(entry->data(1).toString());
+//	        }
 		});
 
 	});

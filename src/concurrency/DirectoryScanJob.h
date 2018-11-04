@@ -100,11 +100,11 @@ public:
 			QDir::Filters dir_filters = QDir::NoFilter,
 			QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
-	static ExtFuture<DirScanResult> AsyncDirScan(AMLMJob* amlmJob,
-			const QUrl& dir_url,
-			const QStringList &name_filters,
-			QDir::Filters dir_filters = QDir::NoFilter,
-			QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
+//	static ExtFuture<DirScanResult> AsyncDirScan(AMLMJob* amlmJob,
+//			const QUrl& dir_url,
+//			const QStringList &name_filters,
+//			const QDir::Filters dir_filters = QDir::NoFilter,
+//			const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
 protected:
 

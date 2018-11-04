@@ -104,16 +104,20 @@ template <class CallbackType>
 		{
 			ExtFutureT retfuture;
 
-			// Make a tuple of all args besides the callback.
-			auto param_tpl = std::make_tuple(retfuture, std::forward<Args>(args)...);
-
-			// Capture the variadic args into the lambda instead of passing them in the
+			// Capture the future and the variadic args into a tuple we'll pass to the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
-			auto lambda = [&, callback_copy=std::decay_t<CallbackType>(callback)/*args...*/]
+			auto param_tpl = std::make_tuple(std::remove_reference_t<ExtFutureT>(retfuture), std::forward<Args>(args)...);
+//			M_PRINT_TYPEOF_VAR_IN_ERROR(std::get<0>(param_tpl));
+
+			// Capture the variadic args into a tuple we'll pass to the lambda instead of passing them in the
+			// limited QtConcurrent::run() parameter list.
+			auto lambda = [&,
+					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
+					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
 					(auto param_tpl_copy) {
-				// Unpack the parameter pack and call the callback.
-//				std::invoke(std::forward<CallbackType>(callback), retval_copy, std::forward<args>...);
-				std::apply(/*std::forward<CallbackType>(*/callback/*)*/, param_tpl_copy);
+//				static_assert(std::is_same_v<decltype(std::get<0>(param_tpl_copy)), ExtFutureT>);
+				// Call the callback with a copy of the retfuture and the args all as elements in param_tpl_copy.
+				std::apply(callback_copy, argtuple/*param_tpl_copy*/);
 			};
 
 			QtConcurrent::run(lambda, param_tpl);
@@ -521,18 +525,19 @@ template <class CallbackType>
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;
 		static_assert(std::is_same_v<ExtFutureT, ExtFutureR>);
-
-//		ExtFutureT retval;
-//		qDb() << "FUTURE:" << retval;
+#if 1
+		ExtFutureT retval;
+		qDb() << "FUTURE:" << retval;
 
         // retval is passed by copy here.
 //		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef, auto... args) {
 //			std::invoke(callback_fn, ef, args...);
 //		}, std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
-//		QtConcurrent::run(std::forward<CallbackType>(callback), std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
+		QtConcurrent::run(std::forward<CallbackType>(callback), std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
+		return retval;
+#else
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
-
-//        return retval;
+#endif
     }
 
 	/**
