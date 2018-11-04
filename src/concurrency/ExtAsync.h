@@ -169,23 +169,31 @@ template <class CallbackType>
 M_WARNING("TODO: ALL THE CANCEL AND EXCEPTION STUFF THAT WE NEED FACTOR OUT");
 			auto lambda = [&,
 					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
-					retfuture_copy=std::forward<ExtFutureT>(retfuture),
+					retfuture_copy=std::/*forward*/decay_t<ExtFutureT>(retfuture),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
-					() {
-				// Call the callback with a copy of the retfuture and the args all as elements in param_tpl_copy.
-#if 1
-				std::apply(callback_copy, argtuple);
-#else
-//				auto core_wrapper = [&,
-//						callback_copy_copy=/*std::decay_t*/std::forward<CallbackType>(callback_copy)
-//						](auto...){
-//					cancel_and_exception_handling_core(callback_copy_copy, argtuple);
-//				};
+					() mutable {
 
-//				auto core_wrapper = std::bind(cancel_and_exception_handling_core, callback_copy, std::placeholders::_1);
+				try
+				{
+					// Call the callback with a copy of the retfuture and the args all as elements in argtuple.
+					std::apply(callback_copy, argtuple);
+				}
+				// Send any exceptions downstream to the returned future.
+				catch(ExtAsyncCancelException& e)
+				{
+					retfuture_copy.reportException(e);
+				}
+				catch(QException& e)
+				{
+					retfuture_copy.reportException(e);
+				}
+				catch (...)
+				{
+					retfuture_copy.reportException(QUnhandledException());
+				}
 
-				std::invoke(ExtAsync::cancel_and_exception_handling_core, callback_copy, retfuture_copy, std::forward<Args>(args)...);
-#endif
+				/// @todo If exception should we actually be reporting finished?
+				retfuture_copy.reportFinished();
 			};
 
 			// Don't need to pass anything other than the lambda.
