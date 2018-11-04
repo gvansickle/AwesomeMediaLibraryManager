@@ -102,22 +102,23 @@ template <class CallbackType>
 				  && !is_nested_ExtFuture_v<ExtFutureT>)>
 		static ExtFutureT run_param_expander(CallbackType&& callback, Args&&... args)
 		{
-			ExtFutureT retval;
+			ExtFutureT retfuture;
 
-			auto param_tpl = std::make_tuple(retval, std::forward<Args>(args)...);
+			// Make a tuple of all args besides the callback.
+			auto param_tpl = std::make_tuple(retfuture, std::forward<Args>(args)...);
 
 			// Capture the variadic args into the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
 			auto lambda = [&, callback_copy=std::decay_t<CallbackType>(callback)/*args...*/]
-					(ExtFutureT retval_copy, auto param_tpl_copy) {
+					(auto param_tpl_copy) {
 				// Unpack the parameter pack and call the callback.
 //				std::invoke(std::forward<CallbackType>(callback), retval_copy, std::forward<args>...);
-				std::apply(std::forward<CallbackType>(callback), param_tpl_copy);
+				std::apply(/*std::forward<CallbackType>(*/callback/*)*/, param_tpl_copy);
 			};
 
-			QtConcurrent::run(lambda, retval, param_tpl);
+			QtConcurrent::run(lambda, param_tpl);
 
-			return retval;
+			return retfuture;
 		}
 
 		/**
