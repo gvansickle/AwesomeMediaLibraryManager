@@ -102,18 +102,18 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractT
 	: AbstractTreeModelItem(parent)
 {
 	m_dsr = *dsr;
-	qDb() << "############" << m_dsr;
-	qDb() << "############" << m_dsr.getMediaExtUrl();
+//	qDb() << "############" << m_dsr;
+//	qDb() << "############" << m_dsr.getMediaExtUrl();
 //	dsr->getDirProps();
 //	dsr->getMediaExtUrl();
 //	dsr->getSidecarCuesheetExtUrl();
-	QVector<QVariant> column_data;
+//	QVector<QVariant> column_data;
 //	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
 //	column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
 //	column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
 
 //	setData(0, QVariant::fromValue<DirProps>(m_dsr.getDirProps()).toString());
-	setData(1, QVariant::fromValue(QUrl(m_dsr.getMediaExtUrl()).toDisplayString()));
+//	setData(1, QVariant::fromValue(QUrl(m_dsr.getMediaExtUrl()).toDisplayString()));
 //	setData(2, column_data[2]);
 }
 
