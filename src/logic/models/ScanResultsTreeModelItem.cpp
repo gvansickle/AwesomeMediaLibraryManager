@@ -129,7 +129,7 @@ ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 
 QVariant ScanResultsTreeModelItem::data(int column) const
 {
-	// Map column and @todo role to the corresponding data.
+	/// Map column and @todo role to the corresponding data.
 
 	switch(column)
 	{

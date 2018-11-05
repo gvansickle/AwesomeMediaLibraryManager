@@ -310,7 +310,8 @@ M_WARNING("TODO Probably should be refactored.");
         else
 		{
 			// Entry hasn't been populated yet.
-        	return QVariant();
+			/// EXPERIMENTAL
+//        	return QVariant();
 
 			// Get a QPMI so we can keep track of outstanding requests for it.
 			// We track by rows, so we want the index of column 0.
@@ -325,7 +326,7 @@ M_WARNING("TODO Probably should be refactored.");
             {
                 // Start an async job to read the data for this entry.
 
-//				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
+				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
 #if 1
 				// Doing this without an AMLMJobT.
 
@@ -338,7 +339,7 @@ M_WARNING("TODO Probably should be refactored.");
 				future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
 				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
 					Q_ASSERT(result_future.isFinished());
-//					qDbo() << "IN THEN CALLBACK:" << result_future;
+					qDb() << "IN THEN CALLBACK:" << result_future;
 					LibraryEntryLoaderJobResult new_vals = result_future.result();
 					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
 					run_in_event_loop(qApp, [=]() -> bool {
