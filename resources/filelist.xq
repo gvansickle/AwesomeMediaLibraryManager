@@ -5,8 +5,8 @@
 (: The XSPF namespace. :)
 declare default element namespace "http://xspf.org/ns/0/";
 
-for $x in fn:doc('/home/gary/DeleteMe.xspf')/playlist//exturl
-where (matches($x/href, '.*flac$'))
-return <p>{$x/href}</p>
+for $x in fn:doc('/home/gary/DeleteMe.xspf')/playlist//exturl[@id="exturl_media"]
+where (matches($x/href, '.*\.flac$'))
+return <location>{data($x/href)}</location>
 
 
