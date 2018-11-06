@@ -737,6 +737,7 @@ template <class CallbackType>
 			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
 			 *  state of the returned future object."
 			 */
+			qDb() << "RETHROWING CANCEL EXCEPTION";
 			retfuture.reportException(e);
 			// I think we don't want to rethrow like this here.  This will throw to the wrong future
 			// (the QtConcurrent::run() retval, see above.

@@ -157,10 +157,11 @@ void ExtFuturePropagationHandler::patrol_for_cancels()
 	{
 		// Step 0: Wait to be signaled that we have anything to do.
 		std::unique_lock<std::mutex> cvlock(m_mutex);
-		m_cv.wait(cvlock, [this](){ return m_closed || !m_down_to_up_cancel_map.empty(); });
+		m_cv.wait(cvlock, [this](){ return m_closed || !m_down_to_up_cancel_map.empty()
+					|| QThread::currentThread()->isInterruptionRequested(); });
 
 		// Are we supposed to cancel?
-		if(m_closed)
+		if(m_closed || QThread::currentThread()->isInterruptionRequested())
 		{
 			// Yes, We're being canceled.  Break out of this loop.
 			/// @todo We probably should move final cancel prop and delete into here.

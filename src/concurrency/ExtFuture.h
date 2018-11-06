@@ -767,12 +767,12 @@ public:
 			}
 			catch(QException& e)
 			{
-//				qDb() << "Rethrowing QException downstream";
+				qDb() << "Rethrowing QException downstream";
 				returned_future_copy.reportException(e);
 			}
 			catch(...)
 			{
-//				qDb() << "Rethrowing QUnhandledException downstream";
+				qDb() << "Rethrowing QUnhandledException downstream";
 				returned_future_copy.reportException(QUnhandledException());
 			};
 
