@@ -758,6 +758,8 @@ template <class CallbackType>
 
 	/**
 	 * Returns a callable object which captures f.
+	 * Different from async_adapter() in that f is to be called with normal values,
+	 * not futures.
 	 */
 	template <typename F>
 	static auto asynchronize(F f)
@@ -770,8 +772,8 @@ template <class CallbackType>
 	}
 
 	/**
-	 * Returned object can be called with any number of future objects.  It then calls .get() on all futures,
-	 * applies function f to them, and returns the result.
+	 * Returned object can be called with any number of future objects as parameters.
+	 * It then calls .get() on all futures, applies function f to them, and returns the result.
 	 */
 	template <typename F>
 	static auto fut_unwrap(F f)
@@ -781,6 +783,9 @@ template <class CallbackType>
 		};
 	}
 
+	/**
+	 * Wraps a synchronous function, makes it wait for future arguments and returns a future result.
+	 */
 	template <typename F>
 	static auto async_adapter(F f)
 	{
