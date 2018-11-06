@@ -84,21 +84,21 @@ public:
 											   QDir::Filters filters,
 											   QDirIterator::IteratorFlags flags);
 
-	/**
-	 * Function which does the actual directory scanning.
-	 *
-	 * @param ext_future  The in/out/control ExtFuture.
-	 * @param amlmJob     The associated AMLMJob, if any.
-	 * @param dir_url     The URL pointing at the directory to recursively scan.
-	 * @param name_filters
-	 * @param dir_filters
-	 * @param iterator_flags
-	 */
-	static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
-			const QUrl& dir_url,
-			const QStringList &name_filters,
-			const QDir::Filters dir_filters = QDir::NoFilter,
-			const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
+//	/**
+//	 * Function which does the actual directory scanning.
+//	 *
+//	 * @param ext_future  The in/out/control ExtFuture.
+//	 * @param amlmJob     The associated AMLMJob, if any.
+//	 * @param dir_url     The URL pointing at the directory to recursively scan.
+//	 * @param name_filters
+//	 * @param dir_filters
+//	 * @param iterator_flags
+//	 */
+//	static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
+//			const QUrl& dir_url,
+//			const QStringList &name_filters,
+//			const QDir::Filters dir_filters = QDir::NoFilter,
+//			const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
 	static ExtFuture<DirScanResult> AsyncDirScan(AMLMJob* amlmJob,
 			const QUrl& dir_url,
@@ -130,5 +130,21 @@ private:
 };
 
 Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
+
+/**
+ * Function which does the actual directory scanning.
+ *
+ * @param ext_future  The in/out/control ExtFuture.
+ * @param amlmJob     The associated AMLMJob, if any.
+ * @param dir_url     The URL pointing at the directory to recursively scan.
+ * @param name_filters
+ * @param dir_filters
+ * @param iterator_flags
+ */
+static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
+		const QUrl& dir_url,
+		const QStringList &name_filters,
+		const QDir::Filters dir_filters = QDir::NoFilter,
+		const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
 
 #endif /* SRC_CONCURRENCY_DIRECTORYSCANJOB_H_ */
