@@ -120,7 +120,8 @@ void ExtUrl::LoadModInfo(const QFileInfo* qurl_finfo)
 }
 
 #define DATASTREAM_FIELDS(X) \
-	X(m_url) X(m_size) X(m_last_modified_timestamp) X(m_metadata_last_modified_timestamp)
+	X(m_url) X(m_timestamp_last_refresh) X(m_size) X(m_creation_timestamp) \
+	X(m_last_modified_timestamp) X(m_metadata_last_modified_timestamp)
 
 QDebug operator<<(QDebug dbg, const ExtUrl& obj)
 {
@@ -130,7 +131,7 @@ QDebug operator<<(QDebug dbg, const ExtUrl& obj)
 	return dbg;
 }
 
-QDataStream &operator<<(QDataStream &out, const ExtUrl& myObj)
+QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 {
 #define X(field) << myObj.field
 	out DATASTREAM_FIELDS(X);
@@ -138,7 +139,7 @@ QDataStream &operator<<(QDataStream &out, const ExtUrl& myObj)
 	return out;
 }
 
-QDataStream &operator>>(QDataStream &in, ExtUrl& myObj)
+QDataStream& operator>>(QDataStream& in, ExtUrl& myObj)
 {
 #define X(field) >> myObj.field
 	return in DATASTREAM_FIELDS(X);

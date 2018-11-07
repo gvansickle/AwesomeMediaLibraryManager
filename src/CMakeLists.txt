@@ -120,22 +120,6 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
-	logic/Library.h
-	logic/LibraryEntry.h
-	logic/LibraryEntryLoaderJob.h
-	logic/LibraryEntryMimeData.h
-	logic/LibraryModel.h
-	logic/Metadata.h
-	logic/MetadataAbstractBase.h
-	logic/MetadataFromCache.h
-	logic/MetadataTaglib.h
-	logic/MP2.h
-	logic/ntp.h
-	logic/PlaylistModel.h
-	logic/PlaylistModelItem.h
-	logic/PlaylistSortFilterProxyModel.h
-	logic/SupportedMimeTypes.h
-	logic/TrackMetadata.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h
@@ -143,22 +127,11 @@ set(HEADER_FILES
 	utils/in.h
 	utils/MapConverter.h
 	utils/StringHelpers.h
-	logic/LibraryRescanner.h
 	utils/RegisterQtMetatypes.h
 	utils/UniqueIDMixin.h
 	utils/QtCastHelpers.h
 	utils/TheSimplestThings.h
-	logic/CueSheetParser.h
-	logic/CueSheet.h
-	logic/CoverArtJob.h
-	logic/TagLibHelpers.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
-	logic/ModelUserRoles.h
-	logic/ColumnSpec.h
-	logic/LibraryRescannerMapItem.h
-	logic/LibraryRescannerJob.h
-	logic/DirScanResult.h
-	logic/ExtMimeType.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
@@ -168,37 +141,11 @@ set(HEADER_FILES
 # Source file list.
 set(SOURCE_FILES
 	AMLMApp.cpp
-	logic/Library.cpp
-	logic/LibraryEntry.cpp
-	logic/LibraryEntryLoaderJob.cpp
-	logic/LibraryEntryMimeData.cpp
-	logic/LibraryModel.cpp
-	logic/Metadata.cpp
-	logic/MetadataAbstractBase.cpp
-	logic/MetadataFromCache.cpp
-	logic/MetadataTaglib.cpp
-	logic/MP2.cpp
-	logic/ntp.cpp
-	logic/PlaylistModel.cpp
-	logic/PlaylistModelItem.cpp
-	logic/PlaylistSortFilterProxyModel.cpp
-	logic/SupportedMimeTypes.cpp
-	logic/TrackMetadata.cpp
 	utils/DebugBlock.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
-	logic/LibraryRescanner.cpp
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
-	logic/CueSheetParser.cpp
-	logic/CueSheet.cpp
-	logic/CoverArtJob.cpp
-	logic/ModelUserRoles.cpp
-	logic/ColumnSpec.cpp
-	logic/LibraryRescannerMapItem.cpp
-	logic/LibraryRescannerJob.cpp
-	logic/DirScanResult.cpp
-	logic/ExtMimeType.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	utils/QtHelpers.cpp

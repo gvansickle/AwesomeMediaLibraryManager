@@ -145,6 +145,8 @@ public:
 
 //	bool isValid() { return m_url.isValid(); }
 
+	QTH_FRIEND_QDATASTREAM_OPS(ExtUrl);
+
 	/// QXmlStream{Read,Write} operators.
 //	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 

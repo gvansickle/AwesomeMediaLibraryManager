@@ -29,6 +29,59 @@ add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
 add_subdir_lib(xml_subdir "${CMAKE_CURRENT_LIST_DIR}/xml")
 
 set(logic_subdir_SOURCES
+	Library.h
+	LibraryEntry.h
+	LibraryEntryLoaderJob.h
+	LibraryEntryMimeData.h
+	LibraryModel.h
+	Metadata.h
+	MetadataAbstractBase.h
+	MetadataFromCache.h
+	MetadataTaglib.h
+	MP2.h
+	ntp.h
+	PlaylistModel.h
+	PlaylistModelItem.h
+	PlaylistSortFilterProxyModel.h
+	SupportedMimeTypes.h
+	TrackMetadata.h
+	LibraryRescanner.h
+	CueSheetParser.h
+	CueSheet.h
+	CoverArtJob.h
+	TagLibHelpers.h
+	ModelUserRoles.h
+	ColumnSpec.h
+	LibraryRescannerMapItem.h
+	LibraryRescannerJob.h
+	DirScanResult.h
+	ExtMimeType.h
+	Library.cpp
+	LibraryEntry.cpp
+	LibraryEntryLoaderJob.cpp
+	LibraryEntryMimeData.cpp
+	LibraryModel.cpp
+	Metadata.cpp
+	MetadataAbstractBase.cpp
+	MetadataFromCache.cpp
+	MetadataTaglib.cpp
+	MP2.cpp
+	ntp.cpp
+	PlaylistModel.cpp
+	PlaylistModelItem.cpp
+	PlaylistSortFilterProxyModel.cpp
+	SupportedMimeTypes.cpp
+	TrackMetadata.cpp
+	CueSheetParser.cpp
+	CueSheet.cpp
+	CoverArtJob.cpp
+	ModelUserRoles.cpp
+	ColumnSpec.cpp
+	LibraryRescannerMapItem.cpp
+	LibraryRescannerJob.cpp
+	DirScanResult.cpp
+	ExtMimeType.cpp
+	LibraryRescanner.cpp
 	ExtUrl.cpp
 	ExtUrl.h
 	PerfectDeleter.cpp
