@@ -1055,7 +1055,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	// Then 1
 	ExtFuture<int> downstream_then1 = generator_task_future.then([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
-										(ExtFuture<int> upstream_future_copy) -> int{
+										(ExtFuture<int> upstream_future_copy) -> int {
 		AMLMTEST_EXPECT_EQ(upstream_future_copy, generator_task_future);
 		// Check the atomics.
 		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
@@ -1068,13 +1068,17 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		// For this test, we should also be canceled.
 		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isCanceled());
 
-		std::exception_ptr eptr; // For rethrowing.
+		std::exception_ptr eptr; // For rethrowing. /// @todo Maybe incorrect.
 		try
 		{
 			TCOUT << "THEN1 GETTING, future state:" << upstream_future_copy;
 			QList<int> incoming = upstream_future_copy.get();
+		}
+		catch(ExtAsyncCancelException& e)
+		{
+			TCOUT << "CAUGHT CANCEL EXCEPTION, PROPAGATING DOWNSTREAM";
+			throw;
 
-//			if(upstream_future_copy.isCanceled())
 		}
 		catch(...)
 		{

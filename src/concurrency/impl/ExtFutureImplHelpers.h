@@ -60,7 +60,9 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
 	while(!this_future.d.queryState(canceled_or_finished)
 		  && !downstream_future.d.queryState(canceled_or_finished))
 	{
+		s_cancel_threadpool.releaseThread();
 		QThread::yieldCurrentThread();
+		s_cancel_threadpool.reserveThread();
 	}
 }
 
@@ -72,7 +74,7 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
  * @param downstream_future
  */
 template <class T, class U>
-static QFuture<int> AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future)
+static QFuture<int> PropagateExceptionsSecondToFirst(ExtFuture<T> this_future, ExtFuture<U> downstream_future)
 {
 	return QtConcurrent::run(&s_cancel_threadpool, [=](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) -> int {
 

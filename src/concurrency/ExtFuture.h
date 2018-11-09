@@ -749,7 +749,7 @@ public:
 				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
 						register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
 #else
-				QFuture<int> adc_fut = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+				PropagateExceptionsSecondToFirst(this_future_copy, returned_future_copy);
 #endif
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
@@ -1145,7 +1145,7 @@ protected:
 				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
 										register_cancel_prop_down_to_up(QFuture<void>(this_future_copy), QFuture<void>(ret_future_copy));
 #else
-				QFuture<int> adc_fut = AddDownstreamCancelFuture(this_future_copy, ret_future_copy);
+				QFuture<int> adc_fut = PropagateExceptionsSecondToFirst(this_future_copy, ret_future_copy);
 #endif
 
 				int i = 0;
