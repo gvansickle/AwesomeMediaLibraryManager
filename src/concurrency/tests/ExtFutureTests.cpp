@@ -87,6 +87,249 @@ TEST_F(ExtFutureTest, ContinuableBasic)
 }
 #endif
 
+#if 1 /// Boost::thread
+#include <boost/thread.hpp>
+#include <boost/thread/future.hpp>
+
+int calculate_the_answer_to_life_the_universe_and_everything()
+{
+	return 42;
+}
+
+TEST_F(ExtFutureTest, BoostSanity)
+{
+	boost::packaged_task<int> pt(calculate_the_answer_to_life_the_universe_and_everything);
+
+	boost::unique_future<int> fi=pt.get_future();
+
+	boost::thread task(boost::move(pt)); // launch task on a thread
+
+	fi.wait(); // wait for it to finish
+
+	EXPECT_TRUE(fi.is_ready());
+	EXPECT_TRUE(fi.has_value());
+	EXPECT_TRUE(!fi.has_exception());
+	EXPECT_EQ(fi.get_state(), boost::future_state::ready);
+	EXPECT_EQ(fi.get(), 42);
+}
+
+#if 0 // Broken
+TEST_F(ExtFutureTest, BoostThenCancelCascade)
+{
+	TC_ENTER();
+
+//	auto tp = QThreadPool::globalInstance();
+
+	TC_START_RSM(rsm);
+	enum
+	{
+		MSTART,
+		MEND,
+		J1STARTCB,
+		J1CANCELED,
+		J1ENDCB,
+		T1STARTCB,
+		T1ENDCB,
+	};
+
+	using ::testing::InSequence;
+	using ::testing::Return;
+	using ::testing::Eq;
+	using ::testing::ReturnArg;
+	using ::testing::_;
+
+	ON_CALL(rsm, ReportResult(_))
+			.WillByDefault(ReturnArg<0>());
+	{
+		InSequence s;
+
+		TC_RSM_EXPECT_CALL(rsm, MSTART);
+		TC_RSM_EXPECT_CALL(rsm, J1STARTCB);
+		TC_RSM_EXPECT_CALL(rsm, J1CANCELED);
+		TC_RSM_EXPECT_CALL(rsm, J1ENDCB);
+//		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
+//		TC_RSM_EXPECT_CALL(rsm, T1ENDCB);
+		TC_RSM_EXPECT_CALL(rsm, MEND);
+	}
+
+	std::atomic_bool ran_generator_task_callback {false};
+	std::atomic_bool ran_then1_callback {false};
+	std::atomic_bool ran_then2_callback {false};
+
+	///
+	/// Setup done, test starts here.
+	///
+
+	rsm.ReportResult(MSTART);
+
+	// Log the number of free threads in the thread pool.
+//	LogThreadPoolInfo(tp);
+
+	// The async generator task.  Spins forever, reporting "5" to run_down until canceled.
+	boost::unique_future<int> generator_task_future;
+	generator_task_future = boost::async(
+				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
+					  (boost::unique_future<int> generator_task_future_copy) -> int {
+		// Check the atomics.
+		AMLMTEST_EXPECT_FALSE(ran_generator_task_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+		ran_generator_task_callback = true;
+
+		// If we're not (Running|Started) here, something's wildly wrong.
+//		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isStarted());
+//		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isRunning());
+//		TCOUT << "IN RUN CALLBACK, generator_task_future_copy:" << generator_task_future_copy;
+		AMLMTEST_EXPECT_EQ(generator_task_future, generator_task_future_copy);
+
+		rsm.ReportResult(J1STARTCB);
+
+		while(true)
+		{
+			// Wait one second before doing anything.
+			TC_Sleep(1000);
+			// Report a result to downstream.
+//			generator_task_future_copy.reportResult(5);
+			generator_task_future_copy.(5);
+			// Handle canceling.
+			if(generator_task_future_copy.HandlePauseResumeShouldICancel())
+			{
+				rsm.ReportResult(J1CANCELED);
+				generator_task_future_copy.reportCanceled();
+				break;
+			}
+		}
+
+		// We've been canceled, but not finished.
+		AMLMTEST_EXPECT_TRUE(generator_task_future_copy.isCanceled());
+		AMLMTEST_EXPECT_FALSE(generator_task_future_copy.isFinished());
+		rsm.ReportResult(J1ENDCB);
+		generator_task_future_copy.reportFinished();
+		return 1;
+	}
+	);
+
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(generator_task_future);
+	AMLMTEST_EXPECT_FALSE(generator_task_future.isCanceled()) << generator_task_future;
+
+	// Then 1
+	ExtFuture<int> downstream_then1 = generator_task_future.then([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
+										(ExtFuture<int> upstream_future_copy) -> int{
+		AMLMTEST_EXPECT_EQ(upstream_future_copy, generator_task_future);
+		// Check the atomics.
+		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+		ran_then1_callback = true;
+
+		// Should always be finished if we get in here.
+		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isFinished());
+		// For this test, we should also be canceled.
+		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isCanceled());
+
+		std::exception_ptr eptr; // For rethrowing.
+		try
+		{
+			TCOUT << "THEN1 GETTING, future state:" << upstream_future_copy;
+			QList<int> incoming = upstream_future_copy.get();
+
+//			if(upstream_future_copy.isCanceled())
+		}
+		catch(...)
+		{
+			TCOUT << "THEN1 RETHROWING, future state:" << upstream_future_copy;
+			eptr = std::current_exception();
+		}
+		// Do we need to rethrow?
+		if(eptr)
+		{
+			qDb() << "rethrowing.";
+			std::rethrow_exception(eptr);
+		}
+
+		// No try.  This should throw to down.
+//		auto results_from_upstream = upcopy.results();
+//		ADD_FAILURE() << "We should never get in here on a cancelation.";
+		// Immediately return.
+		TCOUT << "THEN1 RETURNING, future state:" << upstream_future_copy;
+		return 5;
+	});
+	AMLMTEST_EXPECT_FALSE(downstream_then1.isCanceled());
+
+	// Then 2
+	ExtFuture<int> downstream_then2 = downstream_then1.then([=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &downstream_then1]
+									 (ExtFuture<int> upstream_future_copy) -> int {
+		AMLMTEST_EXPECT_EQ(upstream_future_copy, downstream_then1);
+		// Check the atomics.
+		AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
+		AMLMTEST_EXPECT_TRUE(ran_then1_callback);
+		AMLMTEST_EXPECT_FALSE(ran_then2_callback);
+
+		// Should always be finished if we get in here.
+		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isFinished());
+		// For this test, we should also be canceled.
+		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isCanceled());
+		ran_then2_callback = true;
+
+		std::exception_ptr eptr; // For rethrowing.
+		try
+		{
+			TCOUT << "THEN2 GETTING, future state:" << upstream_future_copy;
+			QList<int> incoming = upstream_future_copy.get();
+		}
+		catch(...)
+		{
+			TCOUT << "THEN2 RETHROWING, future state:" << upstream_future_copy;
+			eptr = std::current_exception();
+		}
+		// Do we need to rethrow?
+		if(eptr)
+		{
+			qDb() << "rethrowing.";
+			std::rethrow_exception(eptr);
+		}
+
+		TCOUT << "THEN2 RETURNING, future state:" << upstream_future_copy;
+		return 6;
+	});
+	AMLMTEST_EXPECT_FALSE(downstream_then2.isCanceled());
+
+	// Ok, both then()'s attached, less than a second before the promise sends its first result.
+
+	// Check the number of free threads in the thread pool again.
+//	LogThreadPoolInfo(tp);
+
+	// Wait a few ticks.
+	TC_Sleep(1000);
+
+	// Cancel the downstream future.
+	TCOUT << "CANCELING TAIL downstream_then2:" << downstream_then2;
+	downstream_then2.cancel();
+//	downstream_then2.reportException(ExtAsyncCancelException());
+	TCOUT << "CANCELED TAIL downstream_then2:" << downstream_then2;
+
+	TCOUT << "WAITING FOR CANCEL TO PROPAGATE";
+	TC_Sleep(2000);
+	TCOUT << "CANCEL SHOULD HAVE PROPAGATED";
+
+//	AMLMTEST_EXPECT_TRUE(downstream_then2.isCanceled()) << downstream_then2;
+//	AMLMTEST_EXPECT_TRUE(downstream_then1.isCanceled()) << downstream_then1;
+//	AMLMTEST_EXPECT_TRUE(generator_task_future.isCanceled()) << generator_task_future;
+
+	AMLMTEST_EXPECT_TRUE(ran_generator_task_callback);
+	AMLMTEST_EXPECT_TRUE(ran_then1_callback);
+	AMLMTEST_EXPECT_TRUE(ran_then2_callback);
+
+	rsm.ReportResult(MEND);
+
+	TC_END_RSM(rsm);
+
+	TC_EXIT();
+}
+#endif // Broken
+
+#endif /// Boost::thread
+
 //TEST_F(ExtFutureTest, NestedQTestWrapper)
 //{
 //	// Trying out https://stackoverflow.com/questions/39032462/can-i-check-the-gtest-filter-from-inside-a-non-gtest-test
@@ -230,8 +473,6 @@ TEST_F(ExtFutureTest, CancelBasic)
 {
     TC_ENTER();
 
-	QFutureSynchronizer<void> synchronizer;
-
 	using TypeParam = ExtFuture<int>;
 
 	/**
@@ -266,7 +507,9 @@ TEST_F(ExtFutureTest, CancelBasic)
 	EXPECT_FALSE(f.isFinished());
 
 	// ~immediately cancel the future.
+	TCOUT << "CANCELING FUTURE";
     f.cancel();
+	TCOUT << "CANCELED FUTURE";
 
 	/**
 	 * @note QFuture<> behavior.
@@ -283,15 +526,21 @@ TEST_F(ExtFutureTest, CancelBasic)
 	/// @todo This is not coming back canceled.
 	EXPECT_FALSE(f.isFinished()) << state(f);
 
-    f.waitForFinished();
+	TCOUT << "WAITING FOR FINISHED";
+	try
+	{
+		// This will throw.
+		f.waitForFinished();
+	}
+	catch(...)
+	{
+		TCOUT << "CAUGHT UNKNOWN EXCEPTION";
+	}
+	TCOUT << "FINISHED WAITING FOR FINISHED";
 
 	EXPECT_TRUE(f.isFinished());
 
 	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(f);
-
-	synchronizer.addFuture(f);
-	synchronizer.setCancelOnWait(true);
-	synchronizer.waitForFinished();
 
     TC_EXIT();
 }
@@ -300,7 +549,6 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 {
 	TC_ENTER();
 
-	QFutureSynchronizer<void> synchronizer;
 	using TypeParam = ExtFuture<int>;
 
 	bool caught_exception = false;
@@ -348,15 +596,19 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 	/// @todo This is not coming back canceled.
 	EXPECT_FALSE(main_future.isFinished()) << state(main_future);
 
-	main_future.waitForFinished();
+	try
+	{
+		// This will throw.
+		main_future.waitForFinished();
+	}
+	catch(...)
+	{
+		TCOUT << "CAUGHT EXCEPTION FROM WAITFORFINISHED";
+	}
 
 	EXPECT_TRUE(main_future.isFinished());
 
 	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(main_future);
-
-	synchronizer.addFuture(main_future);
-	synchronizer.setCancelOnWait(true);
-	synchronizer.waitForFinished();
 
 	TC_EXIT();
 }
@@ -471,6 +723,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 			}
 			catch(...)
 			{
+			throw;
 			Q_ASSERT_X(0, "root_async_operation_future.then", "NEED TO RETHROW");
 				TCOUT << "CAUGHT EXCEPTION";
 			}
@@ -609,36 +862,44 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	rsm.ReportResult(MSTART);
 
-	ExtFuture<int> run_down;
-	QtConcurrent::run([=, &rsm, &run_down](ExtFuture<int> run_down_copy) {
-		TCOUT << "IN RUN CALLBACK, run_down_copy:" << run_down_copy;
-		AMLMTEST_EXPECT_EQ(run_down, run_down_copy);
+	ExtFuture<int> main_future;
+	QtConcurrent::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
+		TCOUT << "IN RUN CALLBACK, main_future_copy:" << main_future_copy;
+		AMLMTEST_EXPECT_EQ(main_future, main_future_copy);
 
 		rsm.ReportResult(T1STARTCB);
 		while(true)
 		{
 			// Wait a sec before doing anything.
 			TC_Sleep(1000);
-			run_down_copy.reportResult(5);
-			if(run_down_copy.HandlePauseResumeShouldICancel())
+			main_future_copy.reportResult(5);
+			if(main_future_copy.HandlePauseResumeShouldICancel())
 			{
 				rsm.ReportResult(J1CANCELED);
-				run_down_copy.reportCanceled();
+				main_future_copy.reportCanceled();
 				break;
 			}
 		}
 		rsm.ReportResult(T1ENDCB);
-		run_down_copy.reportFinished();
-	}, run_down);
+		main_future_copy.reportFinished();
+	}, main_future);
 
-	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(run_down);
+	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(main_future);
 
-	AMLMTEST_EXPECT_FALSE(run_down.isCanceled()) << run_down;
-	ExtFuture<int> down = run_down.then([=, &rsm, &run_down](ExtFuture<int> upcopy){
+	AMLMTEST_EXPECT_FALSE(main_future.isCanceled()) << main_future;
+	ExtFuture<int> down = main_future.then([=, &rsm, &main_future](ExtFuture<int> upstream_copy){
+
+		AMLMTEST_EXPECT_EQ(upstream_copy, main_future);
+
 		std::exception_ptr eptr; // For rethrowing.
 		try
 		{
-			auto incoming = upcopy.get();
+			// Should never block, might throw.
+			auto incoming = upstream_copy.get();
+		}
+		catch(ExtAsyncCancelException& e)
+		{
+			TCOUT << "CAUGHT CANCEL EXCEPTION:" << e.what();
 		}
 		catch(...)
 		{
@@ -651,10 +912,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 			std::rethrow_exception(eptr);
 		}
 
-		AMLMTEST_EXPECT_TRUE(upcopy.isFinished() || upcopy.isCanceled());
+		AMLMTEST_EXPECT_TRUE(upstream_copy.isFinished() || upstream_copy.isCanceled());
 		// Immediately return.
 
-		AMLMTEST_EXPECT_EQ(upcopy, run_down);
 		TCOUT << "THEN RETURNING";
 			return 5;
 			;});
@@ -665,15 +925,15 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	// Cancel the downstream future.
 	TCOUT << "CANCELING DOWNSTREAM" << down;
-//	down.reportException(ExtAsyncCancelException());
-	down.cancel();
+	down.reportException(ExtAsyncCancelException());
+//	down.cancel();
 	TCOUT << "CANCELED DOWNSTREAM" << down;
 
 	TCOUT << "WAITING TO PROPAGATE";
 	TC_Sleep(2000);
 
 	EXPECT_TRUE(down.isCanceled());
-	EXPECT_TRUE(run_down.isCanceled()) << run_down;
+	EXPECT_TRUE(main_future.isCanceled()) << main_future;
 
 	rsm.ReportResult(MEND);
 
@@ -878,8 +1138,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 
 	// Cancel the downstream future.
 	TCOUT << "CANCELING TAIL downstream_then2:" << downstream_then2;
-	downstream_then2.cancel();
-//	downstream_then2.reportException(ExtAsyncCancelException());
+//	downstream_then2.cancel();
+	downstream_then2.reportException(ExtAsyncCancelException());
 	TCOUT << "CANCELED TAIL downstream_then2:" << downstream_then2;
 
 	TCOUT << "WAITING FOR CANCEL TO PROPAGATE";
@@ -909,18 +1169,28 @@ TEST_F(ExtFutureTest, ExtFutureCancelPromise)
 {
     TC_ENTER();
 
-    ExtFuture<Unit> f;
-    ExtFuture<Unit> result;
+	ExtFuture<Unit> promise_side;
+	ExtFuture<Unit> future_side;
 
-    result.reportStarted();
-    f = result;
-    ASSERT_FALSE(f.isCanceled());
-    result.reportCanceled();
-    ASSERT_TRUE(f.isCanceled());
-    result.reportFinished();
-    ASSERT_TRUE(f.isCanceled());
-    result.waitForFinished();
-    ASSERT_TRUE(f.isCanceled());
+	future_side.reportStarted();
+	promise_side = future_side;
+
+	ASSERT_FALSE(promise_side.isCanceled());
+	future_side.reportCanceled();
+	ASSERT_TRUE(promise_side.isCanceled());
+
+	future_side.reportFinished();
+	ASSERT_TRUE(promise_side.isCanceled());
+
+	try
+	{
+		future_side.waitForFinished();
+	}
+	catch(...)
+	{
+		TCOUT << "CAUGHT";
+	}
+	ASSERT_TRUE(promise_side.isCanceled());
 
     TC_EXIT();
 }

@@ -113,6 +113,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
 		verdigris_target
+		Boost::thread
 		#tbb_wjakob
 		)
 
@@ -194,6 +195,13 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
 	concurrency/WorkerThreadBase.cpp
+	
+	concurrency/FunctionWrapper.cpp
+	concurrency/FunctionWrapper.h
+	concurrency/WorkStealingQueue.cpp
+	concurrency/WorkStealingQueue.h
+	concurrency/ThreadPool2.cpp
+	concurrency/ThreadPool2.h
 	)
 
 #
@@ -277,8 +285,8 @@ endif()
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
-message(STATUS "amlm_SRCS ${amlm_SRCS}")
-message(STATUS "amlm_settings_SRCS ${amlm_settings_SRCS}")
+#message(STATUS "amlm_SRCS ${amlm_SRCS}")
+#message(STATUS "amlm_settings_SRCS ${amlm_settings_SRCS}")
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}

@@ -23,6 +23,8 @@
 template <class T>
 class ExtFuture;
 
+static QThreadPool s_cancel_threadpool = QThreadPool();
+
 /**
  * A helper .waitForFinished() replacement which ignores isRunning() and only returns based on
  * isCanceled() || isFinished().
@@ -62,7 +64,7 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
 	}
 }
 
-#if 0
+#if 1
 /**
  * Attach downstream_future to this_future (a copy of this ExtFuture) such that any cancel or exception thrown by
  * downstream_future cancels this_future.
@@ -72,7 +74,7 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
 template <class T, class U>
 static QFuture<int> AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future)
 {
-	return QtConcurrent::run([=](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) -> int {
+	return QtConcurrent::run(&s_cancel_threadpool, [=](ExtFuture<T> this_future_copy, ExtFuture<U> downstream_future_copy) -> int {
 
 		// When control flow gets here:
 		// - this_future_copy may be in any state.  In particular, it may have been canceled or never started.

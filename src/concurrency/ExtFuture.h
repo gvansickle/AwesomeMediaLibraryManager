@@ -186,18 +186,18 @@ public:
 
 	/// Move constructor
 	/// @note Qt5's QFuture doesn't have this.
-	/// @note Neither implemented, deleted, or = default'ed.  Due to the vargaries of C++
+	/// @note Neither implemented, deleted, or = default'ed.  Due to the vagaries of C++
 	/// the latter actually causes the compiler to not fall back on the copy constructor when it needs
-	/// to, but if we simlpy never mention it, the compiler does the right thing.
+	/// to, but if we simply never mention it, the compiler does the right thing.
 //	ExtFuture(ExtFuture<T>&& other) noexcept ...;
 
 	/// Converting constructor from QFuture<T>.
 	explicit ExtFuture(const QFuture<T>& f) : ExtFuture(&(f.d)) {}
 
 	/// Move construct from QFuture.
-	/// @note Neither implemented, deleted, or = default'ed.  Due to the vargaries of C++
+	/// @note Neither implemented, deleted, or = default'ed.  Due to the vagaries of C++
 	/// the latter actually causes the compiler to not fall back on the copy constructor when it needs
-	/// to, but if we simlpy never mention it, the compiler does the right thing.
+	/// to, but if we simply never mention it, the compiler does the right thing.
 //	ExtFuture(QFuture<T>&& f) noexcept ...;
 
 	/// Copy construct from QFuture<void>.
@@ -241,9 +241,9 @@ public:
 	ExtFuture<T>& operator=(const ExtFuture<T>& other);
 
 	/// Move assignment.
-	/// @note Neither implemented, deleted, or = default'ed.  Due to the vargaries of C++
+	/// @note Neither implemented, deleted, or = default'ed.  Due to the vagaries of C++
 	/// the latter actually causes the compiler to not fall back on the copy constructor when it needs
-	/// to, but if we simlpy never mention it, the compiler does the right thing.
+	/// to, but if we simply never mention it, the compiler does the right thing.
 //	ExtFuture<T>& operator=(ExtFuture<T>&& other) noexcept ...;
 
 	/// Copy assignment from QFuture<T>.
@@ -296,9 +296,10 @@ public:
 	/**
 	 * @name Static members for the global cancel propagation handler.
 	 */
+	/// @{
 	static void InitStaticExtFutureState();
-	static std::shared_ptr<ExtAsync::ExtFuturePropagationHandler> IExtFuturePropagationHandler();
-
+//	static std::shared_ptr<ExtAsync::ExtFuturePropagationHandler> IExtFuturePropagationHandler();
+	/// @}
 
 
 	/// @name Reporting interface
@@ -393,6 +394,15 @@ public:
 		this->d.reportStarted();
 	}
 
+	void cancel()
+	{
+		// Convert cancel() calls into reportException()s.
+		this->reportException(ExtAsyncCancelException());
+
+		// Same as what QFuture<>::cancel does.
+		this->d.cancel();
+	}
+
 	/**
 	 * Simply calls QFutureInterfaceBase::reportCanceled(), which just calls cancel().
 	 * QFutureInterfaceBase::cancel() in turn:
@@ -403,6 +413,9 @@ public:
 	 */
 	void reportCanceled()
 	{
+		// Convert reportCanceled() calls into reportException()s.
+		this->reportException(ExtAsyncCancelException());
+
 		this->d.reportCanceled();
 	}
 
@@ -418,7 +431,7 @@ public:
 	{
 		if(this->d.queryState(QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled|QFutureInterfaceBase::Finished)))
 		{
-			qWr() << "FUTURE ALREADY FINISHED OR CANCELED, EXCEPTION WILL BE IGNORED";
+			qWr() << "FUTURE ALREADY FINISHED OR CANCELED, EXCEPTION WILL BE IGNORED:" << state();
 		}
 		this->d.reportException(e);
 	}
@@ -732,9 +745,12 @@ public:
 			try
 			{
 				// Add the downstream to upstream cancel propagator before doing anything else.
+#if EXTFUTURECANCEL_SEP_THREAD
 				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
 						register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
-
+#else
+				QFuture<int> adc_fut = AddDownstreamCancelFuture(this_future_copy, returned_future_copy);
+#endif
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
 				// This could throw a propagated exception from upstream (this_future_copy).
@@ -1113,7 +1129,7 @@ protected:
 		>
 	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, StreamingTapCallbackType&& streaming_tap_callback)
 	{
-		// The future we'll pass to the asunc task and return.
+		// The future we'll pass to the async task and return.
 		ExtFuture<T> ret_future;
 
 		try
@@ -1125,9 +1141,12 @@ protected:
 				Q_ASSERT(ret_future_copy != this_future_copy);
 
 				// Add the downstream cancel propagator first.
-//				AddDownstreamCancelFuture(this_future_copy, ret_future_copy);
+#if EXTFUTURECANCEL_SEP_THREAD
 				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
-						register_cancel_prop_down_to_up(QFuture<void>(this_future_copy), QFuture<void>(ret_future_copy));
+										register_cancel_prop_down_to_up(QFuture<void>(this_future_copy), QFuture<void>(ret_future_copy));
+#else
+				QFuture<int> adc_fut = AddDownstreamCancelFuture(this_future_copy, ret_future_copy);
+#endif
 
 				int i = 0;
 

@@ -59,16 +59,6 @@ public:
 
 	friend class CollectionMedium;
 
-    /**
-     * URLs:
-     * - Sidecar cuesheet
-     * - Sidecar album art (folder.jpg/cover.jpg)
-     * Bools:
-     * - Is result:
-     * -- Dir with only single album/disc rip
-     * -- Dir with random files
-     */
-
     enum DirProp
     {
         /// Directory contains only one album, not just e.g. a dump of mp3's.
@@ -99,7 +89,7 @@ public:
 	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
-//	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 	/// QXmlStream{Read,Write} operators.
 	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
 
@@ -131,7 +121,7 @@ protected:
 Q_DECLARE_METATYPE(DirScanResult);
 Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirProps);
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
-//QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
+QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
 QTH_DECLARE_QXMLSTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */
