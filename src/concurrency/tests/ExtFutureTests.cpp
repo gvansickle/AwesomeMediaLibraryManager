@@ -711,6 +711,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 			return 1;
 	});
+	TCOUT << "root_async_op:" << root_async_operation_future;
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
 
 	ExtFuture<int> final_downstream_future = root_async_operation_future.then([&](ExtFuture<int> upcopy) {
@@ -721,6 +722,12 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 			{
 				auto results = upcopy.get();
 			}
+			catch(ExtAsyncCancelException& e)
+	{
+			/// @todo Should we need to do this here?
+			upcopy.reportCanceled();
+			return 6;
+}
 			catch(...)
 			{
 			throw;
