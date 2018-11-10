@@ -33,6 +33,47 @@
  * Most of the public QFuture{Interface} interfaces lock this mutex, with the notable exception of the isFinished()/isCanceled()/etc.
  * state query functions, which simply query the bits in an atomic variable.
  *
+ * - Regarding the initial state
+ * From a comment in QtCreator's runextensions.h::AsyncJob constructor:
+ * "we need to report it as started even though it isn't yet, because someone might
+ * call waitForFinished on the future, which does _not_ block if the future is not started"
+ * QFuture<T>() defaults to Started | Canceled | Finished.  Not sure we want that, or why that is.
+
+ * That code also does this:
+ *
+ * 		m_future_interface.setRunnable(this);
+ *
+ * Not sure if we need to do that here or not, we don't have a QRunnable to give it.
+ *
+ * This is the code we're fighting:
+ *
+ * @code
+ * void QFutureInterfaceBase::waitForFinished()
+	{
+		QMutexLocker lock(&d->m_mutex);
+		/// GRVS: == NotInTheRunningState, i.e. we could never have started running, or be finished running.
+		const bool alreadyFinished = !isRunning();
+		lock.unlock();
+
+		if (!alreadyFinished)
+		{
+			/// GRVS: Not finished, so start running it?
+			d->pool()->d_func()->stealAndRunRunnable(d->runnable);
+
+			lock.relock();
+
+			while (isRunning())
+				d->waitCondition.wait(&d->m_mutex);
+		}
+
+		d->m_exceptionStore.throwPossibleException();
+	}
+ * @endcode
+ *
+ * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
+ *        if it isn't both Started and Running.
+ *
+ *
  */
 
 // Associated header.

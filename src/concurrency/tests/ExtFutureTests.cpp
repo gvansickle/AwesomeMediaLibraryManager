@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define QFUTURE_TEST
 #include "ExtFutureTests.h"
 
 // Std C++
@@ -34,6 +35,7 @@
 #include <QString>
 #include <QTest>
 #include <QFutureInterfaceBase> // shhh, we're not supposed to use this.  For calling .reportFinished() on QFuture<>s inside a run().
+#include <private/qfutureinterface_p.h>  // For test purposes only.
 
 // Google Test
 #include <gtest/gtest.h>
@@ -336,6 +338,141 @@ TEST_F(ExtFutureTest, BoostThenCancelCascade)
 ////	tst_QString test;
 ////	ASSERT_NE(QTEST_FAILED, QTest::exec(&test, 0, 0));
 //}
+
+///
+/// Start of qtbase-inspired tests.
+///
+
+// qtbase-inspired test helpers
+class IntResult : public QFutureInterface<int>
+{
+public:
+	ExtFuture<int> run()
+	{
+		this->reportStarted();
+		ExtFuture<int> future = ExtFuture<int>(this);
+
+		int res = 10;
+		reportFinished(&res);
+		return future;
+	}
+};
+
+int value = 10;
+
+#if 0 /// @todo
+class UnitResult : public QFutureInterfaceBase
+{
+public:
+	ExtFuture<Unit> run()
+	{
+		this->reportStarted();
+		/// @todo No EF<Unit> constructor from QFutureInterfaceBase.
+//		ExtFuture<Unit> future = ExtFuture<Unit>(this);
+		reportFinished();
+		return future;
+	}
+};
+#endif
+
+TEST_F(ExtFutureTest, DISABLED_QTBfutureInterface1)
+{
+	ExtFuture<Unit> future;
+	{
+		QFutureInterface<void> i;
+		i.reportStarted();
+		/// @todo No QFvoid->EFUnit conversion.
+//		future = i.future();
+		i.reportFinished();
+	}
+}
+
+TEST_F(ExtFutureTest, QTBfutureInterface2)
+{
+	ExtFuture<int> future;
+	{
+		QFutureInterface<int> i;
+		i.reportStarted();
+		i.reportResult(10);
+		future = i.future();
+		i.reportFinished();
+	}
+	EXPECT_EQ(future.resultAt(0), 10);
+}
+
+TEST_F(ExtFutureTest, QTBfutureInterface3)
+{
+	ExtFuture<int> intFuture;
+
+	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
+/// @todo
+//	AMLMTEST_EXPECT_TRUE(intFuture.isFinished());
+
+	IntResult result;
+
+	result.reportStarted();
+	intFuture = result.future();
+
+	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
+	AMLMTEST_EXPECT_FALSE(intFuture.isFinished());
+
+	result.reportFinished(&value);
+
+	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
+	AMLMTEST_EXPECT_TRUE(intFuture.isFinished());
+
+	int e = intFuture.result();
+
+	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
+	AMLMTEST_EXPECT_TRUE(intFuture.isFinished());
+	AMLMTEST_EXPECT_FALSE(intFuture.isCanceled());
+
+	AMLMTEST_ASSERT_EQ(e, value);
+	intFuture.waitForFinished();
+
+	IntResult intAlgo;
+	intFuture = intAlgo.run();
+	ExtFuture<int> intFuture2(intFuture);
+	AMLMTEST_ASSERT_EQ(intFuture.result(), value);
+	AMLMTEST_ASSERT_EQ(intFuture2.result(), value);
+	intFuture.waitForFinished();
+
+#if 0 /// @todo
+	UnitResult a;
+	a.run().waitForFinished();
+#endif
+}
+
+template <typename T>
+void QTBtestRefCounting()
+{
+	QFutureInterface<T> interface;
+	AMLMTEST_ASSERT_EQ(interface.d->refCount.load(), 1);
+
+	{
+		interface.reportStarted();
+
+		ExtFuture<T> f = ExtFuture<T>(interface.future());
+		AMLMTEST_ASSERT_EQ(interface.d->refCount.load(), 2);
+
+		ExtFuture<T> f2(f);
+		AMLMTEST_ASSERT_EQ(interface.d->refCount.load(), 3);
+
+		ExtFuture<T> f3;
+		f3 = f2;
+		AMLMTEST_ASSERT_EQ(interface.d->refCount.load(), 4);
+
+		interface.reportFinished(0);
+		AMLMTEST_ASSERT_EQ(interface.d->refCount.load(), 4);
+	}
+
+	AMLMTEST_ASSERT_EQ(interface.d->refCount.load(), 1);
+}
+
+TEST_F(ExtFutureTest, QTBrefcounting)
+{
+	QTBtestRefCounting<int>();
+}
 
 TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
@@ -692,7 +829,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	root_async_operation_future = ExtAsync::run_again([=, &root_async_operation_future, &rsm]
 													  (ExtFuture<int> root_async_operation_future_copy) -> int {
 
-		SCOPED_TRACE("ExtAsync::run()");
+		SCOPED_TRACE("In ExtAsync::run()");
 
 		AMLMTEST_EXPECT_EQ(root_async_operation_future_copy, root_async_operation_future);
 
@@ -715,25 +852,29 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	TCOUT << "root_async_op:" << root_async_operation_future;
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
 
-	ExtFuture<int> final_downstream_future = root_async_operation_future.then([&](ExtFuture<int> upcopy) {
+	// Set up the one and only .then().
+	ExtFuture<int> final_downstream_future = root_async_operation_future.then([&](ExtFuture<int> upcopy) -> int {
 		AMLMTEST_EXPECT_EQ(upcopy, root_async_operation_future);
-		TCOUT << "START root_async_operation_future.then(), upcopy:" << upcopy.state();
+		TCOUT << "THEN() START, root_async_operation_future.then(), upcopy:" << upcopy.state();
 //			EXPECT_TRUE(false) << "Should never get here";
 			try
 			{
+			TCOUT << "THEN() TRY";
 				auto results = upcopy.get();
 			}
 			catch(ExtAsyncCancelException& e)
 			{
 				/// @todo Should we need to do this here?
+				/// @todo This fails if upcopy is Finished + has an exception.
+			TCOUT << "THEN() CAUGHT CANCELED";
 				upcopy.reportCanceled();
 				return 6;
 			}
 			catch(...)
 			{
+				TCOUT << "CAUGHT UNKNOWN EXCEPTION";
 			throw;
 			Q_ASSERT_X(0, "root_async_operation_future.then", "NEED TO RETHROW");
-				TCOUT << "CAUGHT EXCEPTION";
 			}
 			return 5;
 			;});

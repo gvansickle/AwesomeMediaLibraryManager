@@ -27,6 +27,7 @@
 
 // Std C++
 #include <memory>
+#include <atomic>
 #include <type_traits>
 #include <functional>
 
@@ -64,6 +65,10 @@ namespace detail {}
 
 template <class T>
 class ExtFuture;
+
+/// ExtFuture ID counter.
+inline static std::atomic_uintmax_t m_last_extfuture_id_no {0};
+
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
@@ -121,6 +126,13 @@ class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
 	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
 
+//	std::atomic_uint64_t m_extfuture_id_no {0};
+
+//	void copy_extra(const auto& other)
+//	{
+//		this->m_extfuture_id_no = std::atomic_fetch_add(&m_last_extfuture_id_no);
+//	}
+
 public:
 
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
@@ -129,43 +141,9 @@ public:
 //	using is_ExtFuture = std::true_type;
 //	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
 
+
 	/**
 	 * Default constructor.
-	 *
-	 * @note Regarding the initial state: From a comment in QtCreator's runextensions.h::AsyncJob constructor:
-	 * "we need to report it as started even though it isn't yet, because someone might
-	 * call waitForFinished on the future, which does _not_ block if the future is not started"
-	 * QFuture<T>() defaults to Started | Canceled | Finished.  Not sure we want that, or why that is.
-
-	 * That code also does this:
-	 *
-	 * 		m_future_interface.setRunnable(this);
-	 *
-	 * Not sure if we need to do that here or not, we don't have a QRunnable to give it.
-	 *
-	 * This is the code we're fighting:
-	 *
-	 * @code
-	 * void QFutureInterfaceBase::waitForFinished()
-		{
-			QMutexLocker lock(&d->m_mutex);
-			const bool alreadyFinished = !isRunning();
-			lock.unlock();
-
-			if (!alreadyFinished)
-			{
-				/// GRVS: Not finished, so start running it?
-				d->pool()->d_func()->stealAndRunRunnable(d->runnable);
-
-				lock.relock();
-
-				while (isRunning())
-					d->waitCondition.wait(&d->m_mutex);
-			}
-
-			d->m_exceptionStore.throwPossibleException();
-		}
-	 * @endcode
 	 *
 	 * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
 	 *        if it isn't both Started and Running.
@@ -1308,6 +1286,7 @@ struct when_any_result
 
 #include "impl/ExtFuture_impl.hpp"
 #include "ExtFuturePropagationHandler.h"
+
 
 template <class ExtFutureT, class ContinuationType>
 auto master_then(ExtFutureT ef, ContinuationType continuation) -> ExtFuture<decltype(continuation(std::move(ef)))>
