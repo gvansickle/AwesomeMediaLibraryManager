@@ -526,8 +526,6 @@ template <class CallbackType>
 	 * 	void Function(ExtFuture<T> control_and_reporting_future, Type1 arg1, Type2 arg2, [etc..]);
 	 * @endcode
 	 * Creates and returns a copy of control_and_reporting_future.
-	 *
-	 * @todo More params.
 	 */
 	template<class CallbackType,
 			 class ExtFutureT = argtype_t<CallbackType, 0>, //std::tuple_element_t<0, ct::args_t<CallbackType>>,

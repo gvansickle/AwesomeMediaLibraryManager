@@ -705,6 +705,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 				if(root_async_operation_future_copy.HandlePauseResumeShouldICancel())
 				{
 //					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy.state();
+					root_async_operation_future_copy.cancel();
 					break;
 				}
 			}

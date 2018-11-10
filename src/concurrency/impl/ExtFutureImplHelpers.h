@@ -115,6 +115,7 @@ static QFuture<int> PropagateExceptionsSecondToFirst(ExtFuture<T> this_future, E
 				{
 					/// @todo Upstream canceled.
 					qWr() << "this_future_copy CANCELED:" << this_future_copy.state();
+					Q_ASSERT(0); // SHOULD CANCEL DOWNSTREAM.
 					return 2;
 				}
 
@@ -145,8 +146,15 @@ static QFuture<int> PropagateExceptionsSecondToFirst(ExtFuture<T> this_future, E
 			std::exception_ptr eptr; // For rethrowing.
 			try /// @note This try/catch is just so we can observe the throw for debug.
 			{
-//					downstream_future_copy.waitForFinished();
-				downstream_future_copy.result();
+				downstream_future_copy.waitForFinished();
+//				downstream_future_copy.result();
+			}
+			catch(ExtAsyncCancelException& e)
+			{
+				// downstream was canceled, propagate it as an exception to this.
+				qDb() << "Caught downstream cancel, throwing to this";
+				this_future_copy.reportException(e);
+				return 8;
 			}
 			catch(...)
 			{
@@ -174,6 +182,7 @@ static QFuture<int> PropagateExceptionsSecondToFirst(ExtFuture<T> this_future, E
 				this_future_copy.reportException(ExtAsyncCancelException());
 			}
 		}
+		/// @todo I think this is all dead code.
 		catch(ExtAsyncCancelException& e)
 		{
 			qDb() << "Rethrowing ExtAsyncCancelException";

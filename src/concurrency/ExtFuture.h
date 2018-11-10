@@ -70,8 +70,6 @@ class ExtFuture;
 
 #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
 
-///template <class T, class U>
-///static void AddDownstreamCancelFuture(ExtFuture<T> this_future, ExtFuture<U> downstream_future);
 #include "impl/ExtFutureImplHelpers.h"
 
 /**
@@ -394,13 +392,20 @@ public:
 		this->d.reportStarted();
 	}
 
+	/**
+	 * Calls this-d.cancel() (QFutureInterfaceBase::cancel()) which in turn:
+	 * - Locks m_mutex
+	 * - if state is Canceled already, return, having done nothing.
+	 * - else switch state out of Paused and into Canceled.
+	 * - Send QFutureCallOutEvent::Canceled.
+	 */
 	void cancel()
 	{
 		// Convert cancel() calls into reportException()s.
 		this->reportException(ExtAsyncCancelException());
 
 		// Same as what QFuture<>::cancel does.
-		this->d.cancel();
+//		this->d.cancel();
 	}
 
 	/**
@@ -416,11 +421,11 @@ public:
 		// Convert reportCanceled() calls into reportException()s.
 		this->reportException(ExtAsyncCancelException());
 
-		this->d.reportCanceled();
+//		this->d.reportCanceled();
 	}
 
 	/**
-	 * .reportException():
+	 * QFutureInterfaceBase::reportException():
 	 * - Locks mutex.
 	 * - Does nothing and returns if this future's state is (Canceled|Finished).
 	 * - Stores exception in the shared state,
@@ -623,7 +628,9 @@ public:
 
 		while(!future.d.queryState(canceled_or_finished))
 		{
+			s_cancel_threadpool.releaseThread();
 			QThread::yieldCurrentThread();
+			s_cancel_threadpool.reserveThread();
 		}
 	}
 
@@ -1301,6 +1308,12 @@ struct when_any_result
 
 #include "impl/ExtFuture_impl.hpp"
 #include "ExtFuturePropagationHandler.h"
+
+template <class ExtFutureT, class ContinuationType>
+auto master_then(ExtFutureT ef, ContinuationType continuation) -> ExtFuture<decltype(continuation(std::move(ef)))>
+{
+	return std::async(ExtAsync::detail::then_helper<ExtFutureT, ContinuationType, decltype(continuation(std::move(ef)))>(std::move(ef), std::move(continuation)));
+}
 
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
