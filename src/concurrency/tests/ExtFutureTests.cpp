@@ -375,6 +375,32 @@ public:
 };
 #endif
 
+TEST_F(ExtFutureTest, DISABLED_QTBfuture)
+{
+	// default constructors
+	ExtFuture<int> intFuture;
+#warning "TODO: default state isn't finished."
+//	intFuture.waitForFinished();
+	ExtFuture<QString> stringFuture;
+//	stringFuture.waitForFinished();
+	ExtFuture<Unit> voidFuture;
+//	voidFuture.waitForFinished();
+	ExtFuture<Unit> defaultVoidFuture;
+//	defaultVoidFuture.waitForFinished();
+
+	// copy constructor
+	ExtFuture<int> intFuture2(intFuture);
+	ExtFuture<Unit> voidFuture2(defaultVoidFuture);
+
+	// assigmnent operator
+	intFuture2 = ExtFuture<int>();
+	voidFuture2 = ExtFuture<Unit>();
+
+	// state
+	AMLMTEST_EXPECT_TRUE(intFuture2.isStarted());
+	AMLMTEST_EXPECT_TRUE(intFuture2.isFinished());
+}
+
 TEST_F(ExtFutureTest, DISABLED_QTBfutureInterface1)
 {
 	ExtFuture<Unit> future;
@@ -473,6 +499,69 @@ TEST_F(ExtFutureTest, QTBrefcounting)
 {
 	QTBtestRefCounting<int>();
 }
+
+TEST_F(ExtFutureTest, QTBcancel1)
+{
+	ExtFuture<Unit> f;
+	QFutureInterface<Unit> result;
+
+	result.reportStarted();
+	f = result.future();
+	AMLMTEST_ASSERT_FALSE(f.isCanceled());
+	result.reportCanceled();
+	AMLMTEST_ASSERT_TRUE(f.isCanceled());
+	result.reportFinished();
+	AMLMTEST_ASSERT_TRUE(f.isCanceled());
+	f.waitForFinished();
+	AMLMTEST_ASSERT_TRUE(f.isCanceled());
+}
+
+TEST_F(ExtFutureTest, QTBcancel2)
+{
+	// Cancel from the promise side and verify the future side is canceled.
+	QFutureInterface<Unit> result;
+
+	ExtFuture<Unit> f;
+	AMLMTEST_EXPECT_TRUE(f.isStarted());
+
+	result.reportStarted();
+	f = result.future();
+
+	AMLMTEST_EXPECT_TRUE(f.isStarted());
+
+	AMLMTEST_EXPECT_FALSE(result.isCanceled());
+	f.cancel();
+
+	AMLMTEST_EXPECT_TRUE(result.isCanceled());
+
+	result.reportFinished();
+}
+
+/// Verify that finished futures can be canceled.
+TEST_F(ExtFutureTest, QTBcancelFinishedFutures)
+{
+	QFutureInterface<Unit> result;
+
+	ExtFuture<Unit> f;
+	AMLMTEST_EXPECT_TRUE(f.isStarted());
+
+	result.reportStarted();
+	f = result.future();
+
+	AMLMTEST_EXPECT_TRUE(f.isStarted());
+
+	result.reportFinished();
+
+	f.cancel();
+
+	AMLMTEST_EXPECT_TRUE(result.isCanceled());
+	AMLMTEST_EXPECT_TRUE(f.isCanceled());
+}
+
+///
+/// @name Start of our own uninspired tests.
+///
+/// @{
 
 TEST_F(ExtFutureTest, ReadyFutureCompletion)
 {
@@ -1880,3 +1969,5 @@ TEST_F(ExtFutureTest, StaticAsserts)
 	TC_EXIT();
 
 }
+
+/// @} // END Our own uninspired tests.

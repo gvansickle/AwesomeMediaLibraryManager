@@ -1319,13 +1319,24 @@ QFuture<void> qToVoidFuture(const ExtFuture<T> &future)
 }
 
 /**
- * Convert any ExtFuture<T> to a QFuture<void>.
+ * Convert any ExtFuture<T> to an ExtFuture<Unit>.
  */
 template <typename T>
 ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
 {
 	return ExtFuture<Unit>(future.d);
 }
+
+/**
+ * Convert a QFuture<void> to an ExtFuture<Unit>.
+ */
+//template <typename T>
+//ExtFuture<Unit> qToUnitExtFuture(const QFuture<void> &future)
+//{
+//	QFuture<Unit> temp;
+//	temp = future;
+//	return ExtFuture<Unit>(future.d);
+//}
 
 /**
  * Creates a completed future containing the value @a value.
