@@ -111,7 +111,7 @@ class ExtFuture;
  */
 static_assert(std::is_class_v<QFuture<int>>);
 template <typename T>
-class ExtFuture : public QFuture<T>
+class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 {
 	using BASE_CLASS = QFuture<T>;
 
@@ -175,7 +175,7 @@ public:
 #else
 	explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
 																							  | QFutureInterfaceBase::State::Running))
-		: QFuture<T>(new QFutureInterface<T>(initialState))	{}
+		: QFuture<T>(new QFutureInterface<T>(initialState))	{ }
 #endif
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d))

@@ -704,8 +704,8 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 				if(root_async_operation_future_copy.HandlePauseResumeShouldICancel())
 				{
-//					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy.state();
-					root_async_operation_future_copy.cancel();
+					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy.state();
+					root_async_operation_future_copy.reportCanceled();
 					break;
 				}
 			}
@@ -724,11 +724,11 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 				auto results = upcopy.get();
 			}
 			catch(ExtAsyncCancelException& e)
-	{
-			/// @todo Should we need to do this here?
-			upcopy.reportCanceled();
-			return 6;
-}
+			{
+				/// @todo Should we need to do this here?
+				upcopy.reportCanceled();
+				return 6;
+			}
 			catch(...)
 			{
 			throw;

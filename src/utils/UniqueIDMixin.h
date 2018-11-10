@@ -24,13 +24,14 @@
 #include <atomic>
 #include <mutex>
 #include <unordered_set>
+#include <string>
 
 /// Qt5
 #include <QString>
 
 /// Ours
-#include <src/utils/crtp.h>
-#include <src/utils/DebugHelpers.h>
+#include "crtp.h"
+#include "DebugHelpers.h"
 
 template <typename T>
 class UniqueIDMixin : crtp<T, UniqueIDMixin>
@@ -45,33 +46,29 @@ class UniqueIDMixin : crtp<T, UniqueIDMixin>
 	/// The already-deleted map for this type.
     static std::unordered_set<uintmax_t> m_deleted_ids;
 
+	static std::string m_unique_class_id;
+
 	/// The private unique ID for the instance of the class we're mixed-in to.
 	uintmax_t m_id_num;
 
 public:
 	virtual ~UniqueIDMixin()
 	{
-        /// @todo I don't think this actually works, not sure.
-//		std::unique_lock<std::mutex> lock(m_deleted_ids_mutex);
-
-//		// Record that this ID has been deleted.
-//        auto retval = m_deleted_ids.insert(m_id_num);
-//        if(retval.second == false)
-//        {
-//            // Was already in the map.
-//            // It's already been deleted.
-//            Q_ASSERT_X(0, "", "DOUBLE DELETE");
-//        }
-//        else
-//        {
-////            qDb() << "No double delete detected:" << id();
-//        }
 	}
 
     QString uniqueQObjectName() const
     {
-        return T::staticMetaObject.className() + QString("_") + id();
+    	if constexpr (std::is_base_of_v<QObject, decltype(*this)>)
+		{
+    		return T::staticMetaObject.className() + QString("_") + id();
+		}
+    	else
+    	{
+    		// Not a QObject, no built-in class name.
+			return "SOMECLASS_" + id();
+    	}
     }
+
     QString id() const
     {
         return QString("%1").arg(m_id_num);
@@ -79,8 +76,15 @@ public:
 
     void setUniqueId()
     {
-        // Give the object a name.
-        this->underlying().setObjectName(this->underlying().uniqueQObjectName());
+		if constexpr (std::is_base_of_v<QObject, decltype(*this)>)
+		{
+			// Give the QObject a name.
+			this->underlying().setObjectName(this->underlying().uniqueQObjectName());
+		}
+		else
+		{
+			m_unique_class_id = tostdstr(this->underlying().uniqueQObjectName());
+		}
     }
 
 private:
@@ -90,8 +94,9 @@ private:
     {
         m_id_num = m_next_id_num;
         m_next_id_num++;
+//        this->underlying().setUniqueId();
     }
-    friend T;
+	friend T;
 };
 
 /// Per-type ID counter.

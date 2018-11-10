@@ -143,6 +143,7 @@ set(HEADER_FILES
 set(SOURCE_FILES
 	AMLMApp.cpp
 	utils/DebugBlock.cpp
+	utils/DebugHelpers.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
 	utils/RegisterQtMetatypes.cpp

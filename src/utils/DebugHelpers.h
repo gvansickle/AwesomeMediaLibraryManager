@@ -290,6 +290,13 @@ struct print_constexpr_in_compilation_warning
 /* Nothing, gcc and clang's __PRETTY_FUNCTION__ are synonymous with __FUNCSIG__ */
 #endif
 
+/**
+ * Portable class name function and macro.
+ * Probably could be constexpr'ed.
+ */
+std::string class_name(const char * pretty_function);
+
+#define M_CLASS_NAME() class_name( __PRETTY_FUNCTION__ )
 
 /**
  * Portable compile-time message and warning output.
