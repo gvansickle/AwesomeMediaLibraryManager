@@ -17,6 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma once
 #ifndef SRC_CONCURRENCY_EXTFUTURE_H
 #define SRC_CONCURRENCY_EXTFUTURE_H
 
@@ -689,13 +690,13 @@ public:
 	{
 		static_assert (!std::is_same_v<LiftedR, void>, "Callback return value should never be void");
 
+		Q_ASSERT(context == nullptr); // Not yet implemented.
 		if(context != nullptr)
 		{
 			// If non-null, make sure context has an event loop.
 			QThread* ctx_thread = context->thread();
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
-			Q_ASSERT(context == nullptr); // Not yet implemented.
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
@@ -734,10 +735,45 @@ public:
 				// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't just use
 				// this_future_copy.waitForFinished() here because it will return immediately if the thread hasn't
 				// "really" started (i.e. if isRunning() == false).
-				if(!this_future_copy.isRunning())
+//				if(!this_future_copy.isRunning())
 				{
 					qWr() << "SPINWAIT";
-					spinWaitForFinishedOrCanceled(this_future_copy);
+					// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
+					::spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, returned_future_copy);
+//					spinWaitForFinishedOrCanceled(this_future_copy);
+				}
+
+				/// Spinwait is over, now we have four combinations to dispatch on.
+
+				// Was downstream canceled?
+				if(returned_future_copy.isCanceled())
+				{
+					// Downstream canceled, this is why we're here.
+					qDb() << "returned_future_copy CANCELED:" << returned_future_copy;
+					// Propagate cancel to this_future_copy.
+					this_future_copy.reportCanceled();
+				}
+				else if(returned_future_copy.isFinished())
+				{
+					// Downstream is already Finished, but not canceled.
+					// Not clear that this is a valid, or even possible, state here.
+					qWr() << "returned_future_copy FINISHED?:" << returned_future_copy;
+					Q_ASSERT_X(0, __func__, "Future returned by then() is finished first, shouldn't be possible.");
+				}
+
+				// Was this_future canceled?
+				if(this_future_copy.isCanceled())
+				{
+					/// @todo Upstream canceled.
+					qWr() << "this_future_copy CANCELED:" << this_future_copy.state();
+//					Q_ASSERT(0); // SHOULD CANCEL DOWNSTREAM.
+				}
+
+				// Did this_future_copy Finish first?
+				if(this_future_copy.isFinished())
+				{
+					// Normal finish of this_future_copy, no cancel or exception to propagate.
+					qDb() << "THIS_FUTURE FINISHED NORMALLY";
 				}
 
 				// Now we're either Finished or Canceled, so we can call waitForFinished().  We now know
@@ -757,6 +793,7 @@ public:
 			{
 				qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
 				returned_future_copy.cancel();
+//				returned_future_copy.reportException(e);
 				qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 				this_future_copy.reportException(e);
 			}
@@ -1263,12 +1300,15 @@ struct when_any_result
 #include "impl/ExtFuture_impl.hpp"
 #include "ExtFuturePropagationHandler.h"
 
-
+#if 0
 template <class ExtFutureT, class ContinuationType>
-auto master_then(ExtFutureT ef, ContinuationType continuation) -> ExtFuture<decltype(continuation(std::move(ef)))>
+auto external_then(ExtFutureT ef, ContinuationType continuation) -> ExtFuture<decltype(continuation(ef.get()))>
 {
-	return std::async(ExtAsync::detail::then_helper<ExtFutureT, ContinuationType, decltype(continuation(std::move(ef)))>(std::move(ef), std::move(continuation)));
+	return ExtAsync::run_again([=](ExtFuture<> dummy){
+		continuation(ef.get());
+	});
 }
+#endif
 
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)

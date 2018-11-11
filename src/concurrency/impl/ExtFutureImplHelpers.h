@@ -66,6 +66,27 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
 	}
 }
 
+template <class T, class U>
+static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
+{
+	/// queryState() does this:
+	/// bool QFutureInterfaceBase::queryState(State state) const
+	/// {
+	///    return d->state.load() & state;
+	/// }
+	/// So this:
+	///     this_future.d.queryState(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished)
+	/// Should return true if either bit is set.
+	constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
+	while(!this_future.d.queryState(canceled_or_finished)
+		  && !downstream_future.d.queryState(canceled_or_finished))
+	{
+		tp->releaseThread();
+		QThread::yieldCurrentThread();
+		tp->reserveThread();
+	}
+}
+
 #if 1
 /**
  * Attach downstream_future to this_future (a copy of this ExtFuture) such that any cancel or exception thrown by

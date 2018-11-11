@@ -949,7 +949,8 @@ TEST_F(ExtFutureTest, CancelBasic)
 
 	// ~immediately cancel the future.
 	TCOUT << "CANCELING FUTURE";
-    f.cancel();
+//    f.cancel();
+	f.reportException(ExtAsyncCancelException());
 	TCOUT << "CANCELED FUTURE";
 
 	/**
@@ -1104,7 +1105,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 //	ExtFuture<int> root_async_operation_future = make_started_only_future<int>();
 
 	// Create and start the async operation.
-	ExtFuture<int> root_async_operation_future = ExtAsync::run_again([=/*, &root_async_operation_future, &rsm*/]
+	ExtFuture<int> root_async_operation_future = ExtAsync::run_again([=]
 													  (ExtFuture<int> root_async_operation_future_copy) -> int {
 
 		SCOPED_TRACE("In ExtAsync::run()");
@@ -1113,7 +1114,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 			for(int i = 0; i < 10; i++)
 			{
-				TCOUT << "LOOP" << i;
+				TCOUT << "LOOP" << i << "root_future_copy:" << root_async_operation_future_copy;
 				TC_Sleep(1000);
 
 				if(root_async_operation_future_copy.HandlePauseResumeShouldICancel())
@@ -1124,6 +1125,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 				}
 			}
 			TCOUT << "LEAVING ASYNC LOOP";
+			root_async_operation_future_copy.reportFinished();
 			return 1;
 	});
 	TCOUT << "INITIAL root_async_op STATE:" << root_async_operation_future;
@@ -1131,10 +1133,10 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	// Set up the one and only .then().
 	ExtFuture<int> final_downstream_future = root_async_operation_future.then([&](ExtFuture<int> upcopy) -> int {
-		AMLMTEST_EXPECT_EQ(upcopy, root_async_operation_future);
+//		AMLMTEST_EXPECT_EQ(upcopy, root_async_operation_future);
 		TCOUT << "THEN() START, root_async_operation_future.then(), upcopy:" << upcopy;
 
-			TCOUT << "THEN() CALLING .GET()";
+			TCOUT << "THEN() CALLING .GET(), upcopy:" << upcopy;
 				auto results = upcopy.get();
 
 			return 5;
@@ -1147,18 +1149,16 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
 
 	// Report an ExtAsyncCancelException() to the final future, the one returned by .then().
-	TC_Sleep(1000);
+	TC_Sleep(5000);
 	TCOUT << "CANCELING THEN(), root/final:" << root_async_operation_future << final_downstream_future;
 	AMLMTEST_EXPECT_FALSE(final_downstream_future.isFinished() || final_downstream_future.isCanceled()) << final_downstream_future.state();
-	final_downstream_future.reportException(ExtAsyncCancelException());
-//	final_downstream_future.cancel();
+//	final_downstream_future.reportException(ExtAsyncCancelException());
+	final_downstream_future.cancel();
 	TCOUT << "CANCELED THEN(), root/final" << root_async_operation_future << final_downstream_future;
-
-//	AMLMTEST_COUT << "DOWN THROWING CANCEL POST:" << final_downstream_future.state();
 
 	try
 	{
-		TCOUT << "ROOT WAITING FOR EXCEPTION:" << root_async_operation_future;
+		TCOUT << "ROOT WAITING FOR FINISH/CANCEL/EXCEPTION:" << root_async_operation_future;
 		root_async_operation_future.waitForFinished();
 		TCOUT << "ROOT WAITING FINISHED" << root_async_operation_future;
 	}
@@ -1173,13 +1173,8 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	TC_Sleep(1000);
 
-
 	EXPECT_TRUE(final_downstream_future.isCanceled());
 	EXPECT_TRUE(root_async_operation_future.isCanceled()) << root_async_operation_future;
-
-//	rsm.ReportResult(MEND);
-
-//	TC_END_RSM(rsm);
 
 	TC_EXIT();
 }
