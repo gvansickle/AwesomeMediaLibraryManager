@@ -1477,29 +1477,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		// For this test, we should also be canceled.
 		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isCanceled());
 
-		std::exception_ptr eptr; // For rethrowing. /// @todo Maybe incorrect.
-		try
-		{
-			TCOUT << "THEN1 GETTING, future state:" << upstream_future_copy;
-			QList<int> incoming = upstream_future_copy.get();
-		}
-		catch(ExtAsyncCancelException& e)
-		{
-			TCOUT << "CAUGHT CANCEL EXCEPTION, PROPAGATING DOWNSTREAM";
-			throw;
-
-		}
-		catch(...)
-		{
-			TCOUT << "THEN1 RETHROWING, future state:" << upstream_future_copy;
-			eptr = std::current_exception();
-		}
-		// Do we need to rethrow?
-		if(eptr)
-		{
-			qDb() << "rethrowing.";
-			std::rethrow_exception(eptr);
-		}
+		TCOUT << "THEN1 GETTING, future state:" << upstream_future_copy;
+		QList<int> incoming = upstream_future_copy.get();
 
 		// No try.  This should throw to down.
 //		auto results_from_upstream = upcopy.results();
@@ -1525,23 +1504,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_TRUE(upstream_future_copy.isCanceled());
 		ran_then2_callback = true;
 
-		std::exception_ptr eptr; // For rethrowing.
-		try
-		{
-			TCOUT << "THEN2 GETTING, future state:" << upstream_future_copy;
-			QList<int> incoming = upstream_future_copy.get();
-		}
-		catch(...)
-		{
-			TCOUT << "THEN2 RETHROWING, future state:" << upstream_future_copy;
-			eptr = std::current_exception();
-		}
-		// Do we need to rethrow?
-		if(eptr)
-		{
-			qDb() << "rethrowing.";
-			std::rethrow_exception(eptr);
-		}
+		TCOUT << "THEN2 GETTING, future state:" << upstream_future_copy;
+		QList<int> incoming = upstream_future_copy.get();
 
 		TCOUT << "THEN2 RETURNING, future state:" << upstream_future_copy;
 		return 6;
