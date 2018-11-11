@@ -695,7 +695,7 @@ public:
 			QThread* ctx_thread = context->thread();
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
-			Q_ASSERT(context != nullptr); // Not yet implemented.
+			Q_ASSERT(context == nullptr); // Not yet implemented.
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
