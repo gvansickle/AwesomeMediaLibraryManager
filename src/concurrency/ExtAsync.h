@@ -95,6 +95,8 @@ template <class CallbackType>
 		 * This is my almost-certainly futile attempt to Fight the Tool(tm).
 		 *
 		 * @tparam Callback  Callback function with signature "void callback(ExtFuture<T> f [, args...])".
+		 *
+		 * @returns A copy of the ExtFuture<T> passed to the callback.
 		 */
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
 				  class... Args,
@@ -102,7 +104,7 @@ template <class CallbackType>
 				  && !is_nested_ExtFuture_v<ExtFutureT>)>
 		static ExtFutureT run_param_expander(CallbackType&& callback, Args&&... args)
 		{
-			ExtFutureT retfuture;
+			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
 
 			// Capture the future and the variadic args into a tuple we'll pass to the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
@@ -120,16 +122,38 @@ template <class CallbackType>
 				// Send any exceptions downstream to the returned future.
 				catch(ExtAsyncCancelException& e)
 				{
-					qDb() << "CAUGHT CANCEL";
-					retfuture_copy.reportException(e);
+					qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
+					retfuture_copy.cancel();
+//					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
+//					retfuture_copy.reportException(e);
 				}
 				catch(QException& e)
 				{
-					retfuture_copy.reportException(e);
+					qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+					retfuture_copy.cancel();
+//					qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
+//					retfuture_copy.reportException(e);
 				}
 				catch (...)
 				{
-					retfuture_copy.reportException(QUnhandledException());
+					qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+					retfuture_copy.cancel();
+//					qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
+//					retfuture_copy.reportException(QUnhandledException());
+				}
+
+				// One last loose end.  If we get here, the returned future may have been canceled by .cancel(), which
+				// doesn't throw.  So:
+				// - In run() we have nothing to do but return.
+				// - In then() we'll have to do the same thing we do for a cancel exception.
+				if(retfuture_copy.isCanceled())
+				{
+					// if constexpr(in_a_then) { <below> };
+//					qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
+//					retfuture_copy.cancel();
+//					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
+//					retfuture_copy.reportException(e);
+					return;
 				}
 
 				/// @todo If exception should we actually be reporting finished?

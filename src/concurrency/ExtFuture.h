@@ -706,6 +706,7 @@ public:
 			QThread* ctx_thread = context->thread();
 			Q_ASSERT(ctx_thread != nullptr);
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
+			Q_ASSERT(context != nullptr); // Not yet implemented.
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
@@ -864,7 +865,7 @@ public:
 	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback)
 	{
 		// Forward to the master callback, don't call the then_callback on a cancel.
-		return this->then(context, false, std::forward<ThenCallbackType>(then_callback));
+		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
 	}
 
 	/**
@@ -889,7 +890,8 @@ public:
 	ExtFuture<R> then( ThenCallbackType&& then_callback )
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
-		return this->then(nullptr /*QApplication::instance()*/, false, std::forward<ThenCallbackType>(then_callback));
+		return this->then(nullptr /*QApplication::instance()*/, /*call_on_cancel==*/ false,
+				std::forward<ThenCallbackType>(then_callback));
 	}
 
 	/// @} // END .then() overloads.
