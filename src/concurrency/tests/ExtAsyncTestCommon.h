@@ -501,17 +501,17 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
         	AMLMTEST_EXPECT_FALSE(ExtFutureState::state(future) & ExtFutureState::Canceled);
 
             // Sleep for a second.
-            GTEST_COUT_qDB << "SLEEPING FOR 1 SEC";
+			TCOUT << "SLEEPING FOR 1 SEC";
 
             TC_Sleep(1000);
-            GTEST_COUT_qDB << "SLEEP COMPLETE, sending value to future:" << current_val;
+			TCOUT << "SLEEP COMPLETE, sending value to future:" << current_val;
 
 			reportResult(&future, current_val);
             current_val++;
         }
 
         // We're done.
-        GTEST_COUT_qDB << "REPORTING FINISHED";
+		TCOUT << "REPORTING FINISHED";
 		reportFinished(&future);
 
         fixture->unregister_generator(tgb);
@@ -523,11 +523,11 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
     if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
         // QFuture() creates an empty, cancelled future (Start|Canceled|Finished).
-        GTEST_COUT_qDB << "QFuture<>, clearing state";
+		TCOUT << "QFuture<>, clearing state";
         retval = make_startedNotCanceled_QFuture<int>();
     }
 
-    GTEST_COUT_qDB << "ReturnFuture initial state:" << ExtFutureState::state(retval);
+	TCOUT << "ReturnFuture initial state:" << ExtFutureState::state(retval);
 
 //    AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //	AMLMTEST_EXPECT_FALSE(retval.isCanceled());
@@ -535,16 +535,16 @@ ReturnFutureT async_int_generator(int start_val, int num_iterations, ExtAsyncTes
 
 	if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)
     {
-        GTEST_COUT_qDB << "QtConcurrent::run()";
+		TCOUT << "QtConcurrent::run()";
         auto qrunfuture = QtConcurrent::run(lambda, retval);
     }
     else
     {
-		GTEST_COUT_qDB << "ExtAsync::run()";
+		TCOUT << "ExtAsync::run()";
 		retval = ExtAsync::run(lambda);
     }
 
-    GTEST_COUT_qDB << "RETURNING future:" << ExtFutureState::state(retval);
+	TCOUT << "RETURNING future:" << ExtFutureState::state(retval);
 
 //	AMLMTEST_EXPECT_TRUE(retval.isStarted());
 //    if constexpr (std::is_same_v<ReturnFutureT, QFuture<int>>)

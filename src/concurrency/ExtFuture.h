@@ -1149,7 +1149,7 @@ protected:
 	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, StreamingTapCallbackType&& streaming_tap_callback)
 	{
 		// The future we'll pass to the async task and return.
-		ExtFuture<T> ret_future;
+		ExtFuture<T> ret_future = make_started_only_future<T>();
 
 		try
 		{
@@ -1164,7 +1164,7 @@ protected:
 				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
 										register_cancel_prop_down_to_up(QFuture<void>(this_future_copy), QFuture<void>(ret_future_copy));
 #else
-				QFuture<int> adc_fut = PropagateExceptionsSecondToFirst(this_future_copy, ret_future_copy);
+//				QFuture<int> adc_fut = PropagateExceptionsSecondToFirst(this_future_copy, ret_future_copy);
 #endif
 
 				int i = 0;

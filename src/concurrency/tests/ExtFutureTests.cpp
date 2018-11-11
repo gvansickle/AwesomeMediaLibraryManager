@@ -1589,8 +1589,8 @@ TEST_F(ExtFutureTest, ExtFutureCancelPromise)
 {
     TC_ENTER();
 
-	ExtFuture<Unit> promise_side;
-	ExtFuture<Unit> future_side;
+	ExtFuture<Unit> promise_side = make_started_only_future<Unit>();
+	ExtFuture<Unit> future_side = make_started_only_future<Unit>();
 
 	future_side.reportStarted();
 	promise_side = future_side;
@@ -1622,8 +1622,8 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
 {
     TC_ENTER();
 
-    ExtFuture<Unit> promise_side;
-    ExtFuture<Unit> future_side;
+	ExtFuture<Unit> promise_side = make_started_only_future<Unit>();
+	ExtFuture<Unit> future_side = make_started_only_future<Unit>();
 
     ASSERT_TRUE(future_side.isStarted());
 
@@ -2066,20 +2066,20 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
     QList<int> expected_results {1,2,3,4,5,6};
     eftype ef = async_int_generator<eftype>(1, 6, this);
 
-    GTEST_COUT_qDB << "Starting ef state:" << ef.state();
+	TCOUT << "Starting ef state:" << ef;
     ASSERT_TRUE(ef.isStarted());
     ASSERT_FALSE(ef.isCanceled());
     ASSERT_FALSE(ef.isFinished());
 
-    GTEST_COUT_qDB << "Attaching tap and get()";
+	TCOUT << "Attaching tap and get()";
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.");
 	auto f2 = ef.tap(qApp, [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end) -> void  {
-            GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
+			TCOUT << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {
-            GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
+			TCOUT << "Pushing" << ef.resultAt(i) << "to tap list.";
             async_results_from_tap.push_back(ef.resultAt(i));
             num_tap_completions++;
         }
