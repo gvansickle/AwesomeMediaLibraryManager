@@ -381,9 +381,6 @@ public:
 	 */
 	void cancel()
 	{
-		// Convert cancel() calls into reportException()s.
-//		this->reportException(ExtAsyncCancelException());
-
 		// Same as what QFuture<>::cancel does.
 		this->d.cancel();
 	}
@@ -398,9 +395,6 @@ public:
 	 */
 	void reportCanceled()
 	{
-		// Convert reportCanceled() calls into reportException()s.
-//		this->reportException(ExtAsyncCancelException());
-
 		this->d.reportCanceled();
 	}
 
@@ -737,7 +731,7 @@ public:
 				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
 						register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
 #else
-				PropagateExceptionsSecondToFirst(this_future_copy, returned_future_copy);
+//				PropagateExceptionsSecondToFirst(this_future_copy, returned_future_copy);
 #endif
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
@@ -762,26 +756,46 @@ public:
 
 				// Got here, so we didn't throw.  We might be canceled.
 			}
+			// Handle exceptions and cancellation.
+			// Exceptions propagate upwards, cancellation propagates downwards.
 			catch(ExtAsyncCancelException& e)
 			{
-				// this_future_copy (upstream) threw a cancel exception, send it downstream.
-				/// @todo So... do we .cancel() or .reportException() here?
-				returned_future_copy.reportException(e);
-//				returned_future_copy.cancel();
+				qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
+				returned_future_copy.cancel();
+				qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
+				this_future_copy.reportException(e);
 			}
 			catch(QException& e)
 			{
-				qDb() << "Rethrowing QException downstream";
-				returned_future_copy.reportException(e);
+				qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+				returned_future_copy.cancel();
+				qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
+				this_future_copy.reportException(e);
 			}
-			catch(...)
+			catch (...)
 			{
-				qDb() << "Rethrowing QUnhandledException downstream";
-				returned_future_copy.reportException(QUnhandledException());
-			};
+				qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+				returned_future_copy.cancel();
+				qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
+				this_future_copy.reportException(QUnhandledException());
+			}
+
+			// One last loose end.  If we get here, one or both of the futures may have been canceled by .cancel(), which
+			// doesn't throw.  So:
+			// - In run() we have nothing to do but return.
+			// - In then() (here) we'll have to do the same thing we do for a cancel exception.
+			if(returned_future_copy.isCanceled() || this_future_copy.isCanceled())
+			{
+				// if constexpr(in_a_then) { <below> };
+				qDb() << "CANCELED, CANCELING DOWSTREAM (RETURNED) FUTURE" << returned_future_copy;
+				returned_future_copy.cancel();
+				qDb() << "CANCELED, THROWING TO UPSTREAM (THIS) FUTURE";
+				this_future_copy.reportException(ExtAsyncCancelException());
+			}
 
 			//
-			// The this_future_copy.waitForFinished() above either returned, or may have thrown above and been caught.
+			// The this_future_copy.waitForFinished() above either returned and the futures weren't canceled,
+			// or may have thrown above and been caught.
 			//
 
 			Q_ASSERT_X(this_future_copy.isFinished(), "then outer callback", "Should be finished here.");
@@ -792,13 +806,16 @@ public:
 			// Always on Finished, maybe not if canceled.
 			if(this_future_copy.isFinished() || (call_on_cancel && this_future_copy.isCanceled()))
 			{
+				///
+				/// Ok, this_future_copy is finally finished and we can call the callback.
+				///
 				qDb() << "THEN: CALLING CALLBACK, this_future_copy:" << this_future_copy;
 
 				try
 				{
 					// Call the callback with the results- or canceled/exception-laden this_future_copy.
 					// Could throw, hence we're in a try.
-//					qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
+					qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
 					LiftedR retval;
 
 //					if(context != nullptr)
@@ -808,7 +825,7 @@ public:
 //					}
 //					else
 					{
-						if constexpr(std::is_same_v<LiftedR,Unit>)
+						if constexpr(std::is_same_v<LiftedR, Unit>)
 						{
 							// then_callback_copy returns void, return a Unit separately.
 							qDb() << "INVOKING ret type == Unit";
@@ -826,14 +843,43 @@ public:
 					// Didn't throw, report the result.
 					returned_future_copy.reportResult(retval);
 				}
+				// One more time, Handle exceptions and cancellation, this time of the callback itself.
+				// Exceptions propagate upwards, cancellation propagates downwards.
+				catch(ExtAsyncCancelException& e)
+				{
+					qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
+					returned_future_copy.cancel();
+					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
+					this_future_copy.reportException(e);
+				}
 				catch(QException& e)
 				{
-					returned_future_copy.reportException(e);
+					qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+					returned_future_copy.cancel();
+					qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
+					this_future_copy.reportException(e);
 				}
-				catch(...)
+				catch (...)
 				{
-					/// @todo
-					Q_ASSERT(0);
+					qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+					returned_future_copy.cancel();
+					qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
+					this_future_copy.reportException(QUnhandledException());
+				}
+
+				// One last loose end.  If we get here, one or both of the futures may have been canceled by .cancel(), which
+				// doesn't throw.  So:
+				// - In run() we have nothing to do but return.
+				// - In then() (here) we'll have to do the same thing we do for a cancel exception.
+				if(returned_future_copy.isCanceled() || this_future_copy.isCanceled())
+				{
+					// if constexpr(in_a_then) { <below> };
+					qDb() << "CANCELED, CANCELING DOWSTREAM (RETURNED) FUTURE" << returned_future_copy;
+					returned_future_copy.cancel();
+					qDb() << "CANCELED, THROWING TO UPSTREAM (THIS) FUTURE";
+					this_future_copy.reportException(ExtAsyncCancelException());
+					/// @todo Should we throw out of the function here?  Above?
+//					return;
 				}
 			}
 			else if (call_on_cancel || !(this_future_copy.isFinished() || this_future_copy.isCanceled()))
@@ -848,6 +894,7 @@ public:
 				Q_ASSERT(this_future_copy.isCanceled());
 			}
 
+			/// See ExtAsync, again not sure if we should finish here if canceled.
 			returned_future_copy.reportFinished();
 
 			return 1;
@@ -894,7 +941,9 @@ public:
 				std::forward<ThenCallbackType>(then_callback));
 	}
 
+	///
 	/// @} // END .then() overloads.
+	///
 
 	/// @name .tap() overloads.
 	/// @{

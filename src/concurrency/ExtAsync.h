@@ -119,7 +119,8 @@ template <class CallbackType>
 					// Call the callback with a copy of the retfuture and the args all as elements in argtuple.
 					std::apply(callback_copy, argtuple);
 				}
-				// Send any exceptions downstream to the returned future.
+				// Handle exceptions and cancellation.
+				// Exceptions propagate upwards, cancellation propagates downwards.
 				catch(ExtAsyncCancelException& e)
 				{
 					qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
