@@ -381,6 +381,8 @@ public:
 		this->d.cancel();
 	}
 
+	void waitForFinished() { this->d.waitForFinished(); }
+
 	/**
 	 * Simply calls QFutureInterfaceBase::reportCanceled(), which just calls cancel().
 	 * QFutureInterfaceBase::cancel() in turn:

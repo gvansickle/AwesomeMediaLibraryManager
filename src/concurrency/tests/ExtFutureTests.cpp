@@ -1171,7 +1171,7 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 		TCOUT << "ROOT CAUGHT UNKNOWN EXCEPTION" << root_async_operation_future;
 	}
 
-	TC_Sleep(1000);
+	TC_Sleep(2000);
 
 	EXPECT_TRUE(final_downstream_future.isCanceled());
 	EXPECT_TRUE(root_async_operation_future.isCanceled()) << root_async_operation_future;
@@ -1416,9 +1416,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	// Log the number of free threads in the thread pool.
 	LogThreadPoolInfo(tp);
 
-	// The async generator task.  Spins forever, reporting "5" to run_down until canceled.
-	ExtFuture<int> generator_task_future;
-	generator_task_future = ExtAsync::run_again(
+	// The async generator task.  Spins forever, reporting "5" to generator_task_future until canceled.
+	ExtFuture<int> generator_task_future = ExtAsync::run_again(
 				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 					  (ExtFuture<int> generator_task_future_copy) -> int {
 		// Check the atomics.
@@ -1527,7 +1526,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	TCOUT << "CANCELED TAIL downstream_then2:" << downstream_then2;
 
 	TCOUT << "WAITING FOR CANCEL TO PROPAGATE";
-	TC_Sleep(2000);
+	TC_Sleep(3000);
 	TCOUT << "CANCEL SHOULD HAVE PROPAGATED";
 
 	AMLMTEST_EXPECT_TRUE(downstream_then2.isCanceled()) << downstream_then2;
