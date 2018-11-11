@@ -70,6 +70,10 @@ std::unique_ptr<ExtFuturePropagationHandler> ExtFuturePropagationHandler::make_h
 
 void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType downstream, FutureType upstream)
 {
+	/// @todo Remove
+	qIn() << "BYPASSING";
+	return;
+
 	std::unique_lock write_locker(m_mutex);
 
 	// Are we closed for business?
@@ -100,6 +104,9 @@ void ExtFuturePropagationHandler::register_cancel_prop_down_to_up(FutureType dow
 
 void ExtFuturePropagationHandler::unregister_cancel_prop_down_to_up(ExtFuturePropagationHandler::FutureType downstream, ExtFuturePropagationHandler::FutureType upstream)
 {
+	/// @todo Remove
+	return;
+
 	Q_ASSERT_X(0, __func__, "TODO");
 	std::unique_lock write_locker(m_mutex);
 
