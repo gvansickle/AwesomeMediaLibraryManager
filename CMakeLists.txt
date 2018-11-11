@@ -398,9 +398,16 @@ endif(UNIX)
 
 #
 # Intel's TBB.
-#
-### This pulls the code down from github.
-#include(/usr/lib64/cmake/tbb/TBBGet.cmake)
+# CMake integration per @link https://github.com/01org/tbb/tree/tbb_2019/cmake
+### This method pulls the code down from github.
+# @note On my Fedora 29 box with installed binary tbb, it looks like CMake already has tbb modules at this path:
+#set(PATH_TO_TBB_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake/tbb")
+#set(TBB_ROOT "${CMAKE_CURRENT_LIST_DIR}/../tbb")
+#include(${PATH_TO_TBB_CMAKE_MODULES}/TBBGet.cmake)
+#include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+#tbb_get(TBB_ROOT tbb_root SOURCE_CODE)
+#tbb_build(TBB_ROOT ${TBB_ROOT} CONFIG_DIR TBB_DIR MAKE_ARGS tbb_cpf=1)
+#find_package(TBB REQUIRED tbb_preview)
 #tbb_get(TBB_ROOT tbb_root CONFIG_DIR TBB_DIR)
 #find_package(TBB REQUIRED tbb)
 

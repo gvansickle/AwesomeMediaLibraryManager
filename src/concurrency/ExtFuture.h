@@ -67,8 +67,7 @@ template <class T>
 class ExtFuture;
 
 /// ExtFuture ID counter.
-inline static std::atomic_uintmax_t m_last_extfuture_id_no {0};
-
+std::atomic_uint64_t get_next_id();
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
@@ -76,6 +75,9 @@ inline static std::atomic_uintmax_t m_last_extfuture_id_no {0};
 #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
 
 #include "impl/ExtFutureImplHelpers.h"
+
+template <typename T>
+ExtFuture<T> make_started_only_future();
 
 /**
  * A std::shared_future<>-like class implemented on top of Qt5's QFutureInterface<T> class and other facilities.
@@ -126,13 +128,6 @@ class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
 	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
 
-//	std::atomic_uint64_t m_extfuture_id_no {0};
-
-//	void copy_extra(const auto& other)
-//	{
-//		this->m_extfuture_id_no = std::atomic_fetch_add(&m_last_extfuture_id_no);
-//	}
-
 public:
 
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
@@ -155,12 +150,12 @@ public:
 																							  | QFutureInterfaceBase::State::Running))
 		: QFuture<T>(new QFutureInterface<T>(initialState))	{ }
 #else // Match default state of QFuture<>.
-	explicit ExtFuture() : QFuture<T>()	{ }
+	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
 #endif
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d))
 //			m_progress_unit(other.m_progress_unit)
-	{}
+	{ m_extfuture_id_no.store(other.m_extfuture_id_no); }
 
 	/// Move constructor
 	/// @note Qt5's QFuture doesn't have this.
@@ -170,7 +165,7 @@ public:
 //	ExtFuture(ExtFuture<T>&& other) noexcept ...;
 
 	/// Converting constructor from QFuture<T>.
-	explicit ExtFuture(const QFuture<T>& f) : ExtFuture(&(f.d)) {}
+	explicit ExtFuture(const QFuture<T>& f, uint64_t id = 0) : ExtFuture(&(f.d)) { m_extfuture_id_no = id; }
 
 	/// Move construct from QFuture.
 	/// @note Neither implemented, deleted, or = default'ed.  Due to the vagaries of C++
@@ -182,8 +177,8 @@ public:
 	/// @todo Something's broken here, this doesn't actually compile.
 //	ExtFuture(const QFuture<void>& f) : ExtFuture<Unit>(f) {};
 
-	explicit ExtFuture(QFutureInterface<T> *p) // ~Internal, see QFuture<>().
-		: BASE_CLASS(p) {}
+	explicit ExtFuture(QFutureInterface<T> *p, uint64_t id = 0) // ~Internal, see QFuture<>().
+		: BASE_CLASS(p) { m_extfuture_id_no = id; }
 
 	/**
 	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
@@ -704,12 +699,12 @@ public:
 		}
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
-		ExtFuture<LiftedR> returned_future;
+		ExtFuture<LiftedR> returned_future = make_started_only_future<LiftedR>();
 
 		QtConcurrent::run(
 //		returned_future = ExtAsync::run_for_then(
 			[=, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
-					(ExtFuture<T> this_future_copy, ExtFuture<LiftedR> returned_future_copy) -> int {
+					(ExtFuture<T> this_future_copy, ExtFuture<LiftedR> returned_future_copy) -> void {
 
 			// Ok, we're now running in the thread which will call then_callback_copy(this_future_copy).
 			// At this point:
@@ -896,8 +891,6 @@ public:
 
 			/// See ExtAsync, again not sure if we should finish here if canceled.
 			returned_future_copy.reportFinished();
-
-			return 1;
 			},
 			*this,
 			returned_future); //< Note copy by value of the two futures into the ::run().
@@ -1018,17 +1011,6 @@ public:
 		return *this;
 	}
 
-	/**
-	 * Degenerate .tap() case where no callback is specified.
-	 * Basically a no-op, simply returns a copy of *this.
-	 *
-	 * @return Reference to this.
-	 */
-//	ExtFuture<T> tap()
-//	{
-//		return *this;
-//	}
-
 	/// @} // END .tap() overloads.
 
 	/**
@@ -1082,15 +1064,6 @@ public:
 
 protected:
 
-//	void EnsureFWInstantiated()
-//	{
-//		if(!m_extfuture_watcher)
-//		{
-//			m_extfuture_watcher = new ExtFutureWatcher<T>();
-//            m_extfuture_watcher->setFuture(*this);
-//		}
-//	}
-
 	/**
 	 * Simple wrapper allowing us to call this->d.waitForResult(i) without
 	 * directly touching the not-really-public QFutureInterfaceBase instance d.
@@ -1104,35 +1077,6 @@ protected:
 		this->d.waitForResult(resultIndex);
 	}
 
-
-
-#if 0
-	/**
-	 * FinallyHelper which takes a callback which returns an ExtFuture<>.
-	 */
-	template <typename F, typename R = ct::return_type_t<F>>
-	ExtFuture<T> FinallyHelper(QObject* context, F&& finally_callback)
-	{
-		static_assert(std::tuple_size_v<ct::args_t<F>> == 0, "Too many args");
-
-		auto watcher = new QFutureWatcher<T>();
-/// M_WARNING("TODO: LEAKS THIS ExtFuture<>");
-		auto retval = new ExtFuture<R>();
-		qDb() << "NEW EXTFUTURE:" << *retval;
-		QObject::connect(watcher, &QFutureWatcherBase::finished, watcher, [finally_callback, retval, watcher](){
-			// Call the then() callback function.
-			qDb() << "THEN WRAPPER CALLED";
-			// finally_callback() takes void, returns void.
-			finally_callback();
-			retval->reportFinished();
-			qDb() << "RETVAL STATUS:" << *retval;
-			watcher->deleteLater();
-		});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "FinallyHelper ExtFutureWatcher DESTROYED";});
-		watcher->setFuture(this->future());
-		return *retval;
-	}
-#endif
 
 	/**
 	 * TapHelper which calls tap_callback whenever there's a new result ready.
@@ -1275,27 +1219,13 @@ protected:
 		return ret_future;
 	}
 
-#if 0
-	template <typename Function>
-	ExtFuture<T>& TapProgressHelper(QObject *guard_qobject, Function f)
-	{
-		qDb() << "ENTER";
-		auto watcher = new ExtFutureWatcher<T>();
-		connect_or_die(watcher, &QFutureWatcherBase::finished, watcher, &QObject::deleteLater);
-		watcher->onProgressChange([f, watcher](int min, int val, int max, QString text){
-			f({min, val, max, text});
-			;});
-		QObject::connect(watcher, &QFutureWatcherBase::destroyed, [](){ qWr() << "TAPPROGRESS ExtFutureWatcher DESTROYED";});
-		watcher->setFuture(*this);
-		qDb() << "EXIT";
-		return *this;
-	}
-#endif
-
 	/// @name Additional member variables on top of what QFuture<T> has.
 	/// These will cause us to need to worry about slicing, additional copy construction/assignment work
 	/// which needs to be synchronized somehow, etc etc.
 	/// @{
+
+public:
+	std::atomic_uint64_t m_extfuture_id_no {0};
 
 //	int m_progress_unit { 0 /* == KJob::Unit::Bytes*/};
 
@@ -1316,14 +1246,7 @@ struct when_any_result
 	Sequence futures;
 };
 
-//template < class... Futures >
-//auto when_any(Futures&&... futures)
-//	-> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>
-//{
-//
-//}
-
-} /// END namespace
+} /// END namespace ExtAsync
 
 /// @}
 
@@ -1419,7 +1342,7 @@ ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 	qfi.reportResult(std::forward<T>(value));
 	qfi.reportFinished();
 
-	return 	ExtFuture<T>(&qfi);
+	return 	ExtFuture<T>(&qfi, get_next_id());
 }
 
 template <class T, class E,
@@ -1433,7 +1356,7 @@ ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 	qfi.reportException(exception);
 	qfi.reportFinished();
 
-	return ExtFuture<T>(&qfi);
+	return ExtFuture<T>(&qfi, get_next_id());
 }
 
 /**
@@ -1446,7 +1369,7 @@ ExtFuture<T> make_started_only_future()
 	QFutureInterface<T> fi;
 	fi.reportStarted();
 //	Q_ASSERT(ExtFutureState::state(fi) == ExtFutureState::Started) << state(fi);
-	return ExtFuture<T>(&fi);
+	return ExtFuture<T>(&fi, get_next_id());
 }
 
 /**
@@ -1458,7 +1381,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 	QDebugStateSaver saver(dbg);
 
 	// .resultCount() does not cause a stored exception to be thrown.  It does acquire the mutex.
-	dbg << "ExtFuture<T>( state:" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
+	dbg << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << "state:" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
 
 	return dbg;
 }
@@ -1470,7 +1393,7 @@ template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
 	// .resultCount() does not appear to cause a stored exception to be thrown.  It does acquire the mutex.
-	outstream << "ExtFuture<T>( state: " << extfuture.state() << ", resultCount(): " << extfuture.resultCount() << ")";
+	outstream << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << " state: " << extfuture.state() << ", resultCount(): " << extfuture.resultCount() << ")";
 
 	return outstream;
 }

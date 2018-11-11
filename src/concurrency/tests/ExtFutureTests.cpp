@@ -1100,108 +1100,75 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 
 	SCOPED_TRACE("ExtFutureThenThrow");
 
-	TC_START_RSM(rsm);
-	enum
-	{
-		MSTART,
-		MEND,
-		T1STARTCB,
-	};
-
-	using ::testing::InSequence;
-	using ::testing::Return;
-	using ::testing::Eq;
-	using ::testing::ReturnArg;
-	using ::testing::_;
-
-	ON_CALL(rsm, ReportResult(_))
-			.WillByDefault(ReturnArg<0>());
-	{
-		InSequence s;
-
-		TC_RSM_EXPECT_CALL(rsm, MSTART);
-		TC_RSM_EXPECT_CALL(rsm, T1STARTCB);
-		TC_RSM_EXPECT_CALL(rsm, MEND);
-	}
-
 	// So we can assert we're getting the same ExtFuture when we enter the run() callback.
-	ExtFuture<int> root_async_operation_future;
-
-	rsm.ReportResult(MSTART);
+//	ExtFuture<int> root_async_operation_future = make_started_only_future<int>();
 
 	// Create and start the async operation.
-	root_async_operation_future = ExtAsync::run_again([=, &root_async_operation_future, &rsm]
+	ExtFuture<int> root_async_operation_future = ExtAsync::run_again([=/*, &root_async_operation_future, &rsm*/]
 													  (ExtFuture<int> root_async_operation_future_copy) -> int {
 
 		SCOPED_TRACE("In ExtAsync::run()");
 
-		AMLMTEST_EXPECT_EQ(root_async_operation_future_copy, root_async_operation_future);
-
-		rsm.ReportResult(T1STARTCB);
+		TCOUT << "STARTING ASYNC LOOP, root_async_operation_future_copy:" << root_async_operation_future_copy;
 
 			for(int i = 0; i < 10; i++)
 			{
+				TCOUT << "LOOP" << i;
 				TC_Sleep(1000);
 
 				if(root_async_operation_future_copy.HandlePauseResumeShouldICancel())
 				{
-					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy.state();
+					TCOUT << "CANCELING FROM RUN() CALLBACK, upcopy state:" << root_async_operation_future_copy;
 					root_async_operation_future_copy.reportCanceled();
 					break;
 				}
 			}
-
+			TCOUT << "LEAVING ASYNC LOOP";
 			return 1;
 	});
-	TCOUT << "root_async_op:" << root_async_operation_future;
+	TCOUT << "INITIAL root_async_op STATE:" << root_async_operation_future;
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
 
 	// Set up the one and only .then().
 	ExtFuture<int> final_downstream_future = root_async_operation_future.then([&](ExtFuture<int> upcopy) -> int {
 		AMLMTEST_EXPECT_EQ(upcopy, root_async_operation_future);
-		TCOUT << "THEN() START, root_async_operation_future.then(), upcopy:" << upcopy.state();
-//			EXPECT_TRUE(false) << "Should never get here";
-			try
-			{
-			TCOUT << "THEN() TRY";
+		TCOUT << "THEN() START, root_async_operation_future.then(), upcopy:" << upcopy;
+
+			TCOUT << "THEN() CALLING .GET()";
 				auto results = upcopy.get();
-			}
-			catch(ExtAsyncCancelException& e)
-			{
-				/// @todo Should we need to do this here?
-				/// @todo This fails if upcopy is Finished + has an exception.
-			TCOUT << "THEN() CAUGHT CANCELED";
-				upcopy.reportCanceled();
-				return 6;
-			}
-			catch(...)
-			{
-				TCOUT << "CAUGHT UNKNOWN EXCEPTION";
-			throw;
-			Q_ASSERT_X(0, "root_async_operation_future.then", "NEED TO RETHROW");
-			}
+
 			return 5;
 			;});
+	TCOUT << "THEN() FUTURE:" << final_downstream_future;
 
 	AMLMTEST_EXPECT_FALSE(final_downstream_future.isCanceled());
 
 	// Check again, up should still not be finished or canceled.
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(root_async_operation_future);
 
-	// Report an ExtAsyncCancelException() to the final future.
+	// Report an ExtAsyncCancelException() to the final future, the one returned by .then().
+	TC_Sleep(1000);
+	TCOUT << "CANCELING THEN(), root/final:" << root_async_operation_future << final_downstream_future;
 	AMLMTEST_EXPECT_FALSE(final_downstream_future.isFinished() || final_downstream_future.isCanceled()) << final_downstream_future.state();
 	final_downstream_future.reportException(ExtAsyncCancelException());
+//	final_downstream_future.cancel();
+	TCOUT << "CANCELED THEN(), root/final" << root_async_operation_future << final_downstream_future;
 
 //	AMLMTEST_COUT << "DOWN THROWING CANCEL POST:" << final_downstream_future.state();
 
 	try
 	{
-		AMLMTEST_COUT << "UP WAITING FOR EXCEPTION:" << root_async_operation_future.state();
+		TCOUT << "ROOT WAITING FOR EXCEPTION:" << root_async_operation_future;
 		root_async_operation_future.waitForFinished();
-		AMLMTEST_COUT << "UP FINISHED" << root_async_operation_future.state();
+		TCOUT << "ROOT WAITING FINISHED" << root_async_operation_future;
 	}
-	catch (ExtAsyncCancelException& e) {
-		AMLMTEST_COUT << "UP CAUGHT CANCEL" << root_async_operation_future.state() << e.what();
+	catch (ExtAsyncCancelException& e)
+	{
+		TCOUT << "ROOT CAUGHT CANCEL" << root_async_operation_future << e.what();
+	}
+	catch(...)
+	{
+		TCOUT << "ROOT CAUGHT UNKNOWN EXCEPTION" << root_async_operation_future;
 	}
 
 	TC_Sleep(1000);
@@ -1210,9 +1177,9 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	EXPECT_TRUE(final_downstream_future.isCanceled());
 	EXPECT_TRUE(root_async_operation_future.isCanceled()) << root_async_operation_future;
 
-	rsm.ReportResult(MEND);
+//	rsm.ReportResult(MEND);
 
-	TC_END_RSM(rsm);
+//	TC_END_RSM(rsm);
 
 	TC_EXIT();
 }
@@ -1315,7 +1282,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	rsm.ReportResult(MSTART);
 
-	ExtFuture<int> main_future;
+	ExtFuture<int> main_future = make_started_only_future<int>();
 	QtConcurrent::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
 		TCOUT << "IN RUN CALLBACK, main_future_copy:" << main_future_copy;
 		AMLMTEST_EXPECT_EQ(main_future, main_future_copy);
@@ -1378,8 +1345,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	// Cancel the downstream future.
 	TCOUT << "CANCELING DOWNSTREAM" << down;
-	down.reportException(ExtAsyncCancelException());
-//	down.cancel();
+//	down.reportException(ExtAsyncCancelException());
+	down.cancel();
 	TCOUT << "CANCELED DOWNSTREAM" << down;
 
 	TCOUT << "WAITING TO PROPAGATE";

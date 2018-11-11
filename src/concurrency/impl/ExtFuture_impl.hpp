@@ -117,6 +117,7 @@ inline ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture<T>& other)
 	if(this != &other)
 	{
 		this->BASE_CLASS::operator=(other);
+		this->m_extfuture_id_no.store(other.m_extfuture_id_no);
 //		this->m_progress_unit = other.m_progress_unit;
 	}
 	return *this;

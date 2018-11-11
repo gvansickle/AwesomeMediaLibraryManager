@@ -192,6 +192,10 @@ template <class CallbackType>
 		{
 			static_assert(!std::is_same_v<LiftedR, void>, "Should never get here with LiftedR == void");
 
+#if 1
+			return run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
+#else
+
 			/**
 			 * @note Exception handling.
 			 * This is the basic pattern used in multiple ::run()-likes in Qt5.  Note the use of
@@ -275,6 +279,7 @@ template <class CallbackType>
 			QtConcurrent::run(lambda, retfuture, std::forward<Args>(args)...);
 
 			return retfuture;
+#endif
 		} // END detail_struct::run_again()
 
 #if 0

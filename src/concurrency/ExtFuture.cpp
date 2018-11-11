@@ -147,7 +147,12 @@
 // Ours
 #include "ExtFuturePropagationHandler.h"
 
+static std::atomic_uint64_t f_future_id_ctr {2};
 
+std::atomic_uint64_t get_next_id()
+{
+	return f_future_id_ctr.fetch_add(1);
+}
 
 /// @name Explicit instantiations to try to get compile times down.
 template class ExtFuture<Unit>;
