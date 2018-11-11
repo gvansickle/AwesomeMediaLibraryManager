@@ -29,6 +29,18 @@
 #include "ExtAsync_traits.h"
 #include <utils/DebugHelpers.h>
 
+/**
+ * - Cancellation and Exceptions
+ *
+ * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+ * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+ *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+ *  state of the returned future object."
+ *
+ * Per @link https://software.intel.com/en-us/node/506075 (tbb), referring to task_group_context objects:
+ * "Exceptions propagate upwards. Cancellation propagates downwards. The opposition interplays to cleanly stop a nested
+ * computation when an exception occurs."
+ */
 
 /// ExtFuture<> Concept checks.
 static_assert(IsExtFuture<ExtFuture<int>>, "");

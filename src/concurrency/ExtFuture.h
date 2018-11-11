@@ -150,10 +150,12 @@ public:
 	 */
 #if 0
 	ExtFuture() : QFuture<T>() {}
-#else
+#elif 0
 	explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
 																							  | QFutureInterfaceBase::State::Running))
 		: QFuture<T>(new QFutureInterface<T>(initialState))	{ }
+#else // Match default state of QFuture<>.
+	explicit ExtFuture() : QFuture<T>()	{ }
 #endif
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d))
@@ -371,7 +373,7 @@ public:
 	}
 
 	/**
-	 * Calls this-d.cancel() (QFutureInterfaceBase::cancel()) which in turn:
+	 * Calls this->d.cancel() (QFutureInterfaceBase::cancel()) which in turn:
 	 * - Locks m_mutex
 	 * - if state is Canceled already, return, having done nothing.
 	 * - else switch state out of Paused and into Canceled.
@@ -380,10 +382,10 @@ public:
 	void cancel()
 	{
 		// Convert cancel() calls into reportException()s.
-		this->reportException(ExtAsyncCancelException());
+//		this->reportException(ExtAsyncCancelException());
 
 		// Same as what QFuture<>::cancel does.
-//		this->d.cancel();
+		this->d.cancel();
 	}
 
 	/**
@@ -397,9 +399,9 @@ public:
 	void reportCanceled()
 	{
 		// Convert reportCanceled() calls into reportException()s.
-		this->reportException(ExtAsyncCancelException());
+//		this->reportException(ExtAsyncCancelException());
 
-//		this->d.reportCanceled();
+		this->d.reportCanceled();
 	}
 
 	/**
@@ -1360,13 +1362,13 @@ template<typename T,
 		 REQUIRES(!is_ExtFuture_v<T>)>
 ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 {
-	ExtFuture<T> extfuture;
+	QFutureInterface<T> qfi;
 
-	extfuture.reportStarted();
-	extfuture.reportResult(std::forward<T>(value));
-	extfuture.reportFinished();
+	qfi.reportStarted();
+	qfi.reportResult(std::forward<T>(value));
+	qfi.reportFinished();
 
-	return extfuture;
+	return 	ExtFuture<T>(&qfi);
 }
 
 template <class T, class E,
@@ -1389,10 +1391,11 @@ ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 template <typename T>
 ExtFuture<T> make_started_only_future()
 {
+	// QFutureInterface<T> starts out with a state of NoState.
 	QFutureInterface<T> fi;
 	fi.reportStarted();
-	Q_ASSERT(ExtFutureState::state(fi) == ExtFutureState::Started);
-	return QFuture<T>(&fi);
+//	Q_ASSERT(ExtFutureState::state(fi) == ExtFutureState::Started) << state(fi);
+	return ExtFuture<T>(&fi);
 }
 
 /**

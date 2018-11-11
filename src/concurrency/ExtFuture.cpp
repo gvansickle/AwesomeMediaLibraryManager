@@ -70,10 +70,66 @@
 	}
  * @endcode
  *
- * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
- *        if it isn't both Started and Running.
+ * - Cancellation and Exceptions
  *
+ * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+ * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+ *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+ *  state of the returned future object."
  *
+ * Per @link https://software.intel.com/en-us/node/506075 (tbb), referring to task_group_context objects:
+ * "Exceptions propagate upwards. Cancellation propagates downwards. The opposition interplays to cleanly stop a nested
+ * computation when an exception occurs."
+ * [tree a->b->c etc.]
+ * "Suppose that the algorithm in C throws an exception and no node catches the exception. Intel TBB propagates the exception
+ *  upwards, cancelling related subtrees downwards, as follows:
+ *
+
+    Handle exception in C:
+
+        Capture exception in C.
+
+        Cancel tasks in C.
+
+        Throw exception from C to B.
+
+    Handle exception in B:
+
+        Capture exception in B.
+
+        Cancel tasks in B and, by downwards propagation, in D.
+
+        Throw an exception out of B to A.
+
+    Handle exception in A:
+
+        Capture exception in A.
+
+        Cancel tasks in A and, by downwards propagation, in E, F, and G.
+
+        Throw an exception upwards out of A.
+ *
+ *  If your code catches the exception at any level, then Intel TBB does not propagate it any further."
+ *
+ *  For us that would mean that in pre-then(), we should:
+ *  @code
+ *  try
+ *  {
+ *  	waitForFinished();
+ *  }
+ *  catch(ExtAsyncCancelException& e)
+ *  {
+ *		// Cancel returned ExtFuture<T>.
+ *		ret_future_copy.cancel();
+ *
+ *		// Throw an exception upwards, i.e. reportException() to this.
+ *		this->reportException(e);
+ *  }
+ *  @endcode
+ *
+ *  Canceling a string of .then()'s would have to start either with:
+ *  - At the outermost returned future, causing it to throw an exception, which will do as outlined above.
+ *  - At the innermost future (the root async "generator"), calling .cancel(), which will propagate down.
  */
 
 // Associated header.

@@ -375,18 +375,17 @@ public:
 };
 #endif
 
-TEST_F(ExtFutureTest, DISABLED_QTBfuture)
+TEST_F(ExtFutureTest, QTBfuture)
 {
 	// default constructors
 	ExtFuture<int> intFuture;
-#warning "TODO: default state isn't finished."
-//	intFuture.waitForFinished();
+	intFuture.waitForFinished();
 	ExtFuture<QString> stringFuture;
-//	stringFuture.waitForFinished();
+	stringFuture.waitForFinished();
 	ExtFuture<Unit> voidFuture;
-//	voidFuture.waitForFinished();
+	voidFuture.waitForFinished();
 	ExtFuture<Unit> defaultVoidFuture;
-//	defaultVoidFuture.waitForFinished();
+	defaultVoidFuture.waitForFinished();
 
 	// copy constructor
 	ExtFuture<int> intFuture2(intFuture);
@@ -401,14 +400,13 @@ TEST_F(ExtFutureTest, DISABLED_QTBfuture)
 	AMLMTEST_EXPECT_TRUE(intFuture2.isFinished());
 }
 
-TEST_F(ExtFutureTest, DISABLED_QTBfutureInterface1)
+TEST_F(ExtFutureTest, QTBfutureInterface1)
 {
 	ExtFuture<Unit> future;
 	{
-		QFutureInterface<void> i;
+		QFutureInterface<Unit> i;
 		i.reportStarted();
-		/// @todo No QFvoid->EFUnit conversion.
-//		future = i.future();
+		future = i.future();
 		i.reportFinished();
 	}
 }
@@ -558,6 +556,223 @@ TEST_F(ExtFutureTest, QTBcancelFinishedFutures)
 	AMLMTEST_EXPECT_TRUE(f.isCanceled());
 }
 
+/// Canceled future shouldn't propagate new results.
+TEST_F(ExtFutureTest, QTBnoResultsPropAfterCancel)
+{
+	QFutureInterface<int> futureInterface;
+	futureInterface.reportStarted();
+	ExtFuture<int> f = ExtFuture<int>(futureInterface.future());
+
+	int result = 0;
+	futureInterface.reportResult(&result);
+	result = 1;
+	futureInterface.reportResult(&result);
+	f.cancel();
+	result = 2;
+	futureInterface.reportResult(&result);
+	result = 3;
+	futureInterface.reportResult(&result);
+	futureInterface.reportFinished();
+	AMLMTEST_EXPECT_EQ(f.results(), QList<int>());
+}
+
+TEST_F(ExtFutureTest, QTBstatePropagation)
+{
+	ExtFuture<Unit> f1;
+	ExtFuture<Unit> f2;
+
+	AMLMTEST_EXPECT_TRUE(f1.isStarted());
+
+	QFutureInterface<Unit> result;
+	result.reportStarted();
+	f1 = result.future();
+
+	f2 = f1;
+
+	AMLMTEST_EXPECT_TRUE(f2.isStarted());
+
+	result.reportCanceled();
+
+	AMLMTEST_EXPECT_TRUE(f2.isStarted());
+	AMLMTEST_EXPECT_TRUE(f2.isCanceled());
+
+	ExtFuture<Unit> f3 = f2;
+
+	AMLMTEST_EXPECT_TRUE(f3.isStarted());
+	AMLMTEST_EXPECT_TRUE(f3.isCanceled());
+
+	result.reportFinished();
+
+	AMLMTEST_EXPECT_TRUE(f2.isStarted());
+	AMLMTEST_EXPECT_TRUE(f2.isCanceled());
+
+	AMLMTEST_EXPECT_TRUE(f3.isStarted());
+	AMLMTEST_EXPECT_TRUE(f3.isCanceled());
+}
+
+//
+// Exception-related tests.
+//
+
+ExtFuture<Unit> createExceptionFuture()
+{
+	QFutureInterface<Unit> i;
+	i.reportStarted();
+	ExtFuture<Unit> f = ExtFuture<Unit>(i.future());
+
+	QException e;
+	i.reportException(e);
+	i.reportFinished();
+	return f;
+}
+
+ExtFuture<int> createExceptionResultFuture()
+{
+	QFutureInterface<int> i;
+	i.reportStarted();
+	ExtFuture<int> f = ExtFuture<int>(i.future());
+	int r = 0;
+	i.reportResult(r);
+
+	QException e;
+	i.reportException(e);
+	i.reportFinished();
+	return f;
+}
+
+class DerivedException : public QException
+{
+public:
+	void raise() const override { throw *this; }
+	DerivedException *clone() const override { return new DerivedException(*this); }
+};
+
+ExtFuture<Unit> createDerivedExceptionFuture()
+{
+	QFutureInterface<Unit> i;
+	i.reportStarted();
+	ExtFuture<Unit> f = ExtFuture<Unit>(i.future());
+
+	DerivedException e;
+	i.reportException(e);
+	i.reportFinished();
+	return f;
+}
+
+/// Throwing from waitForFinished().
+TEST_F(ExtFutureTest, QTBexceptions1)
+{
+	ExtFuture<Unit> f = createExceptionFuture();
+	bool caught = false;
+	try
+	{
+		f.waitForFinished();
+	}
+	catch (QException &)
+	{
+		caught = true;
+	}
+	AMLMTEST_EXPECT_TRUE(caught);
+}
+
+/// Throwing from result().
+TEST_F(ExtFutureTest, QTBexceptions2)
+{
+	ExtFuture<int> f = createExceptionResultFuture();
+	bool caught = false;
+	try
+	{
+		f.result();
+	}
+	catch (QException &)
+	{
+		caught = true;
+	}
+	AMLMTEST_EXPECT_TRUE(caught);
+}
+
+/// Throwing from result() on a temporary rvalue ExtFuture.
+TEST_F(ExtFutureTest, QTBexceptions3)
+{
+	bool caught = false;
+	try
+	{
+		createExceptionResultFuture().result();
+	}
+	catch (QException &)
+	{
+		caught = true;
+	}
+	AMLMTEST_EXPECT_TRUE(caught);
+}
+
+/// Throwing from results().
+TEST_F(ExtFutureTest, QTBexceptions4)
+{
+	ExtFuture<int> f = createExceptionResultFuture();
+	bool caught = false;
+	try
+	{
+		f.results();
+	}
+	catch (QException &)
+	{
+		caught = true;
+	}
+	AMLMTEST_EXPECT_TRUE(caught);
+}
+
+/// Throwing from results() in a for loop.
+TEST_F(ExtFutureTest, QTBexceptions5)
+{
+	ExtFuture<int> f = createExceptionResultFuture();
+	bool caught = false;
+	try
+	{
+		for(int e : f.results())
+		{
+			Q_UNUSED(e);
+			AMLMTEST_EXPECT_EQ(0, 1) << "Exception not thrown from for loop";
+		}
+	}
+	catch (QException &)
+	{
+		caught = true;
+	}
+	AMLMTEST_EXPECT_TRUE(caught);
+}
+
+/// Throwing derived exceptions from waitForFinished().
+TEST_F(ExtFutureTest, QTBexceptions6)
+{
+	bool caught = false;
+	try
+	{
+		createDerivedExceptionFuture().waitForFinished();
+	}
+	catch (QException &)
+	{
+		caught = true;
+	}
+	AMLMTEST_EXPECT_TRUE(caught);
+}
+
+/// Throwing derived exceptions from waitForFinished().
+TEST_F(ExtFutureTest, QTBexceptions7)
+{
+	bool caught = false;
+	try
+	{
+		createDerivedExceptionFuture().waitForFinished();
+	}
+	catch (DerivedException &)
+	{
+		caught = true;
+	}
+	AMLMTEST_EXPECT_TRUE(caught);
+}
+
+
 ///
 /// @name Start of our own uninspired tests.
 ///
@@ -593,11 +808,11 @@ TEST_F(ExtFutureTest, FutureSingleThread)
 {
     TC_ENTER();
 
-    ExtFuture<int> ef;
+	ExtFuture<int> ef = make_started_only_future<int>();
 
-    EXPECT_EQ(ef.state(), ExtFutureState::Started | ExtFutureState::Running);
+//    EXPECT_EQ(ef.state(), ExtFutureState::Started | ExtFutureState::Running);
 
-    ef.reportResult(1);
+	ef.reportResult(1);
 
     EXPECT_EQ(ef.resultCount(), 1);
 //    EXPECT_EQ(ef.get()[0], 1);
@@ -699,15 +914,13 @@ TEST_F(ExtFutureTest, CancelBasic)
 {
     TC_ENTER();
 
-	using TypeParam = ExtFuture<int>;
-
 	/**
 	 * @note QFuture<> behavior.
 	 * The QFuture coming out of ::run() here is (Running|Started).
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on available threads.
 	 */
-	TypeParam f = ExtAsync::run([=](TypeParam rc_future) -> void {
+	ExtFuture<int> f = ExtAsync::run_again([=](ExtFuture<int> rc_future) -> int {
 
 		for(int i = 0; i<5; ++i)
 		{
@@ -723,9 +936,11 @@ TEST_F(ExtFutureTest, CancelBasic)
 			}
 		}
 		rc_future.reportFinished();
+
+		return 1;
 	});
 
-	AMLMTEST_COUT << "Initial future state:" << state(f);
+	TCOUT << "Initial future state:" << state(f);
 
 	EXPECT_TRUE(f.isStarted());
 	EXPECT_TRUE(f.isRunning());

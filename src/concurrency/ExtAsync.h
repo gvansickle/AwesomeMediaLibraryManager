@@ -558,7 +558,7 @@ template <class CallbackType>
 	/**
 	 * Asynchronously run @p callback, which must be of the form:
 	 * @code
-	 * 	R callback(ExtFuture<T>, args...)
+	 * 	R callback(ExtFuture<T>, [args...])
 	 * @endcode
 	 *	Where R may be void.
 	 *
@@ -675,7 +675,7 @@ template <class CallbackType>
 	 * @warning This is really no better than using QtConcurrent::run() in that the returned future
 	 *          isn't cancelable.  Provided mainly for completeness.
 	 *
-	 * @param function  Callable, R function(Arg)
+	 * @param function  Callable, R function(Args...)
      * @return
      */
 	template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, typename... Args,
