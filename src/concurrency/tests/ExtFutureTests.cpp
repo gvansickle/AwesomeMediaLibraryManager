@@ -1213,7 +1213,8 @@ TEST_F(ExtFutureTest, ThenFutureDeleted)
 	std::atomic_bool got_into_then {false};
 
 	// Create a new future.
-	ExtFuture<int>* promise = new ExtFuture<int>();
+//	ExtFuture<int>* promise = new make_started_only_future<int>();//ExtFuture<int>();
+	ExtFuture<int>* promise = new ExtFuture<int>(make_started_only_future<int>());
 
 //	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(*promise);
 
