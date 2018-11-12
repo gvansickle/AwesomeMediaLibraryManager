@@ -1282,8 +1282,6 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	rsm.ReportResult(MSTART);
 
-//	ExtFuture<int> main_future = make_started_only_future<int>();
-//	QtConcurrent::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
 	ExtFuture<int> main_future = ExtAsync::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
 		TCOUT << "IN RUN CALLBACK, main_future_copy:" << main_future_copy;
 		AMLMTEST_EXPECT_EQ(main_future, main_future_copy);
@@ -1293,6 +1291,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 		{
 			// Wait a sec before doing anything.
 			TC_Sleep(1000);
+			TCOUT << "::RUN() REPORTING RESULT(5)";
 			main_future_copy.reportResult(5);
 			if(main_future_copy.HandlePauseResumeShouldICancel())
 			{
@@ -1312,26 +1311,8 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 		AMLMTEST_EXPECT_EQ(upstream_copy, main_future);
 
-		std::exception_ptr eptr; // For rethrowing.
-		try
-		{
-			// Should never block, might throw.
-			auto incoming = upstream_copy.get();
-		}
-		catch(ExtAsyncCancelException& e)
-		{
-			TCOUT << "CAUGHT CANCEL EXCEPTION:" << e.what();
-		}
-		catch(...)
-		{
-			eptr = std::current_exception();
-		}
-		// Do we need to rethrow?
-		if(eptr)
-		{
-			qDb() << "rethrowing.";
-			std::rethrow_exception(eptr);
-		}
+		// Should never block, might throw.
+		auto incoming = upstream_copy.get();
 
 		AMLMTEST_EXPECT_TRUE(upstream_copy.isFinished() || upstream_copy.isCanceled());
 		// Immediately return.
