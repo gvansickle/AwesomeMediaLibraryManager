@@ -668,8 +668,9 @@ public:
 	 * If context == nullptr, then_callback will be run in an arbitrary thread.
 	 * If context points to a QObject, then_callback will be run in its event loop.
 	 *
-	 * Canceling
-	 * The returned future can be canceled, and the cancelation will propagate upstream (i.e. to this).
+	 * @note Canceling
+	 *
+	 * The returned future can be canceled, and the cancellation will propagate upstream (i.e. to this).
 	 *
 	 * @note Exceptions from callback
 	 *

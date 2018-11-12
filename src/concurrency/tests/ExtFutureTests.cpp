@@ -1282,8 +1282,9 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 
 	rsm.ReportResult(MSTART);
 
-	ExtFuture<int> main_future = make_started_only_future<int>();
-	QtConcurrent::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
+//	ExtFuture<int> main_future = make_started_only_future<int>();
+//	QtConcurrent::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
+	ExtFuture<int> main_future = ExtAsync::run([=, &rsm, &main_future](ExtFuture<int> main_future_copy) {
 		TCOUT << "IN RUN CALLBACK, main_future_copy:" << main_future_copy;
 		AMLMTEST_EXPECT_EQ(main_future, main_future_copy);
 
@@ -1302,7 +1303,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancel)
 		}
 		rsm.ReportResult(T1ENDCB);
 		main_future_copy.reportFinished();
-	}, main_future);
+	});
 
 	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(main_future);
 
@@ -2006,10 +2007,6 @@ TEST_F(ExtFutureTest, ThenChain)
 	EXPECT_TRUE(future.isFinished());
 
 	rsm.ReportResult(MEND);
-
-//	EXPECT_TRUE(ran_tap);
-//	EXPECT_TRUE(ran_then);
-//	Q_ASSERT(ran_then);
 
 	TC_END_RSM(rsm);
 

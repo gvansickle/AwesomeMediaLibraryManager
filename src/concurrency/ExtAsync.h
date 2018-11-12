@@ -655,7 +655,7 @@ template <class CallbackType>
 		REQUIRES(is_non_void_non_ExtFuture_v<R> // Return type is not void or ExtFuture<>
 			  && ct::is_invocable_r_v<R, CallableType, void> // F has signature R F(void).
 			  )>
-	ExtFuture<R> run(CallableType&& function)
+	ExtFuture<R> run_zero_params(CallableType&& function)
 	{
 		ExtFuture<R> retfuture;
 
