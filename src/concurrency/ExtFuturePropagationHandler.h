@@ -40,6 +40,7 @@ class QThread;
 namespace ExtAsync
 {
 
+#if 0
 /**
  * Monitors ExtFuture<>s for cancelation and propagates it up the .then() chain.
  *
@@ -124,6 +125,7 @@ public:
 	static std::shared_ptr<ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 
 };
+#endif
 
 } /* namespace ExtAsync */
 

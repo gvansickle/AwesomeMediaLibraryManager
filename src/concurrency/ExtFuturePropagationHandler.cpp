@@ -34,16 +34,19 @@
 
 namespace ExtAsync
 {
-
+#if 0
 static std::shared_ptr<ExtFuturePropagationHandler> s_the_cancel_prop_handler {nullptr};
 
 void ExtFuturePropagationHandler::InitStaticExtFutureState()
 {
+	Q_ASSERT(0);
 	ExtAsync::s_the_cancel_prop_handler = ExtAsync::ExtFuturePropagationHandler::make_handler();
 }
 
 std::shared_ptr<ExtFuturePropagationHandler> ExtFuturePropagationHandler::IExtFuturePropagationHandler()
 {
+	return nullptr;
+
 	Q_ASSERT_X(static_cast<bool>(ExtAsync::s_the_cancel_prop_handler) == true, __PRETTY_FUNCTION__,
 			   "Global ExtFuturePropagationHandler not initialized.");
 	return ExtAsync::s_the_cancel_prop_handler;
@@ -51,9 +54,9 @@ std::shared_ptr<ExtFuturePropagationHandler> ExtFuturePropagationHandler::IExtFu
 
 ExtFuturePropagationHandler::ExtFuturePropagationHandler()
 {
-	m_patrol_thread = QThread::create(&ExtFuturePropagationHandler::patrol_for_cancels, this);
-	Q_ASSERT(m_patrol_thread != nullptr);
-	m_patrol_thread->start();
+	m_patrol_thread = nullptr; //QThread::create(&ExtFuturePropagationHandler::patrol_for_cancels, this);
+//	Q_ASSERT(m_patrol_thread != nullptr);
+//	m_patrol_thread->start();
 }
 
 ExtFuturePropagationHandler::~ExtFuturePropagationHandler()
@@ -153,6 +156,8 @@ bool ExtFuturePropagationHandler::close(bool warn_calling_from_destructor)
 
 void ExtFuturePropagationHandler::patrol_for_cancels()
 {
+	return;
+
 	// Again, yes, I know, there should be a better way to handle this.  There simply isn't.
 	// Well, actually there is, but step 1 is to get this functionality to work.
 
@@ -311,5 +316,7 @@ void ExtFuturePropagationHandler::wait_for_finished_or_canceled()
 		}
 	}
 }
+
+#endif
 
 } /* namespace ExtAsync */

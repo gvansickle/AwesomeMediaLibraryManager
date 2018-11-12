@@ -49,7 +49,7 @@ AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv), m_perfect_del
     setObjectName("TheAMLMApp");
 
 	// Get the future cancel propagation infrastructure set up.
-	ExtAsync::ExtFuturePropagationHandler::InitStaticExtFutureState();
+//	ExtAsync::ExtFuturePropagationHandler::InitStaticExtFutureState();
 }
 
 AMLMApp::~AMLMApp()
@@ -185,9 +185,9 @@ void AMLMApp::perform_controlled_shutdown()
     if(!m_controlled_shutdown_complete)
     {
 		// Do whatever shutdown tasks we need to in here.
-
+#if 0
 		ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->close();
-
+#endif 0
 		// Cancel all asynchronous activities and wait for them to complete.
 		AMLMApp::IPerfectDeleter()->cancel_and_wait_for_all();
     }
