@@ -94,8 +94,31 @@ template <class CallbackType>
 		 * sometimes even fewer.  This manifests as inscrutable template deduction failures.
 		 * This is my almost-certainly futile attempt to Fight the Tool(tm).
 		 *
-		 * @tparam Callback  Callback function with signature "void callback(ExtFuture<T> f [, args...])".
+		 * This is ultimately where all ExtAsync::run...() calls should end up.  Since we're trying to cleave to C++ standards
+		 * as much as possible, the std::async() behavior we're trying to emulate is per @link https://en.cppreference.com/w/cpp/thread/async:
 		 *
+		 * "[this function] executes the callable object f on a new thread of execution (with all thread-locals initialized) as if
+		 * spawned by std::thread(std::forward<F>(f), std::forward<Args>(args)...), except that if the function f returns a value
+		 * or throws an exception, it is stored in the shared state accessible through the std::future that async returns
+		 * to the caller."
+		 *
+		 * We're close to that here, except:
+		 * - The callback is passed an ExtFuture<T> f as its first parameter.  All communication out is through this future.
+		 * - A copy of ExtFuture<T> f is returned by this function call.  This returned value should be used by the
+		 *   caller for obtaining results and control of the asynchronous task.
+		 * - The callback must return void.  Any return values must be passed directly to the future f via .reportResult() etc.
+		 *
+		 * @tparam ExtFutureT  The return type of the run_param_expander() call and of the ExtFuture
+		 * 						passed to the callback function as the first parameter.
+		 *
+		 * @param callback  The function to be run on a thread in the threadpool.  Must be a function with signature:
+		 *     @code
+		 *     		void callback(ExtFuture<T> f [, args...])
+		 *     @endcode
+		 *     @note The return value of the callback must be void. Any return values must be sent to @p f.
+		 *
+		 * @param args  Parameter pack of the arguments to pass to the callback.  Note that these will be passed
+		 *              in the parameter list after the ExtFuture<T> f parameter, which is passed first.
 		 * @returns A copy of the ExtFuture<T> passed to the callback.
 		 */
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
@@ -109,7 +132,8 @@ template <class CallbackType>
 			// Capture the future and the variadic args into a tuple we'll pass to the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
 			auto lambda = [&,
-					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
+//					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
+					callback_copy = DECAY_COPY(callback),
 					retfuture_copy=std::forward/*decay_t*/<ExtFutureT>(retfuture),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
 					() mutable {
