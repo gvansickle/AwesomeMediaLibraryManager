@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/sakra/cotire.git
+	branch = master
+	commit = 391bf6b7609e14f5976bd5247b68d63cbf8d4d12
+	parent = 83f4ccacb8be673b261048a18d731c09b8430d6e
+	cmdver = 0.3.1
