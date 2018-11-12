@@ -55,11 +55,11 @@ namespace function_traits_impl
 		class ft_test2_class
 		{
 		public:
-			ft_test2_class* ft_test2a_member_fn(double d) { return this; };
+			ft_test2_class* ft_test2a_member_fn(double d) { Q_UNUSED(d); return this; };
 
             void* ft_test2a_const_member_fn() const { return (void*)this; };
 
-			void ft_test2b_returns_void(void) { volatile int a; a = 2; };
+			void ft_test2b_returns_void() { volatile int a; a = 2; };
 		};
 
 		using functraits2 = function_traits<decltype(&ft_test2_class::ft_test2a_member_fn)>;

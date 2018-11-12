@@ -92,7 +92,7 @@ QSize ExpandingFrameWidget::sizeHint() const
 
 void ExpandingFrameWidget::reposition()
 {
-    if(!m_cumulative_status_bar_main_widget)
+	if(m_cumulative_status_bar_main_widget == nullptr)
     {
         return;
     }

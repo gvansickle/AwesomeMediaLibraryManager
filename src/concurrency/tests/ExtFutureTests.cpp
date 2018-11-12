@@ -920,7 +920,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on available threads.
 	 */
-	ExtFuture<int> f = ExtAsync::run([=](ExtFuture<int> rc_future) -> int {
+	ExtFuture<int> f0 = ExtAsync::run([=](ExtFuture<int> rc_future) -> void {
 
 		for(int i = 0; i<5; ++i)
 		{
@@ -937,20 +937,20 @@ TEST_F(ExtFutureTest, CancelBasic)
 		}
 		rc_future.reportFinished();
 
-		return 1;
+//		return 1;
 	});
 
-	TCOUT << "Initial future state:" << state(f);
+	TCOUT << "Initial future f0 state:" << f0;
 
-	EXPECT_TRUE(f.isStarted());
-	EXPECT_TRUE(f.isRunning());
-	EXPECT_FALSE(f.isCanceled());
-	EXPECT_FALSE(f.isFinished());
+	EXPECT_TRUE(f0.isStarted());
+	EXPECT_TRUE(f0.isRunning());
+	EXPECT_FALSE(f0.isCanceled());
+	EXPECT_FALSE(f0.isFinished());
 
 	// ~immediately cancel the future.
 	TCOUT << "CANCELING FUTURE";
-//    f.cancel();
-	f.reportException(ExtAsyncCancelException());
+//    f0.cancel();
+	f0.reportException(ExtAsyncCancelException());
 	TCOUT << "CANCELED FUTURE";
 
 	/**
@@ -959,20 +959,24 @@ TEST_F(ExtFutureTest, CancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
 	 */
-	AMLMTEST_COUT << "Cancelled future state:" << state(f);
+	AMLMTEST_COUT << "Cancelled future state:" << state(f0);
 
-	EXPECT_TRUE(f.isStarted());
-	EXPECT_TRUE(f.isCanceled());
+	EXPECT_TRUE(f0.isStarted());
+	EXPECT_TRUE(f0.isCanceled());
 
     // Canceling alone won't finish the extfuture.
 	/// @todo This is not coming back canceled.
-	EXPECT_FALSE(f.isFinished()) << state(f);
+	EXPECT_FALSE(f0.isFinished()) << state(f0);
 
-	TCOUT << "WAITING FOR FINISHED";
 	try
 	{
-		// This will throw.
-		f.waitForFinished();
+		TCOUT << "WAITING FOR FINISHED";
+		// This should throw because we reported an exception above.
+		f0.waitForFinished();
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION:" << e.what();
 	}
 	catch(...)
 	{
@@ -980,9 +984,9 @@ TEST_F(ExtFutureTest, CancelBasic)
 	}
 	TCOUT << "FINISHED WAITING FOR FINISHED";
 
-	EXPECT_TRUE(f.isFinished());
+	EXPECT_TRUE(f0.isFinished());
 
-	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(f);
+	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(f0);
 
     TC_EXIT();
 }
@@ -1419,7 +1423,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	// The async generator task.  Spins forever, reporting "5" to generator_task_future until canceled.
 	ExtFuture<int> generator_task_future = ExtAsync::run(
 				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
-					  (ExtFuture<int> generator_task_future_copy) -> int {
+					  (ExtFuture<int> generator_task_future_copy) -> void {
 		// Check the atomics.
 		AMLMTEST_EXPECT_FALSE(ran_generator_task_callback);
 		AMLMTEST_EXPECT_FALSE(ran_then1_callback);
@@ -1454,7 +1458,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 		AMLMTEST_EXPECT_FALSE(generator_task_future_copy.isFinished());
 		rsm.ReportResult(J1ENDCB);
 		generator_task_future_copy.reportFinished();
-		return 1;
+//		return 1;
 	}
 	);
 
@@ -1611,15 +1615,15 @@ QList<int> results_test(int startval, int iterations, TestFixtureType* fixture)
 {
     SCOPED_TRACE("In results_test");
 
-    GTEST_COUT_qDB << "START GENERATOR";
+	TCOUT << "START GENERATOR";
 
     FutureType f = async_int_generator<FutureType>(startval, iterations, fixture);
 //    EXPECT_TRUE(f.isStarted());
 //    EXPECT_FALSE(f.isFinished());
 
-    GTEST_COUT_qDB << "START RESULTS()" << ExtFutureState::state(f);
+	TCOUT << "START RESULTS()" << ExtFutureState::state(f);
     QList<int> retval = f.results();
-    GTEST_COUT_qDB << "END RESULTS():" << ExtFutureState::state(f);
+	TCOUT << "END RESULTS():" << ExtFutureState::state(f);
 
     // .results() should block until future is finished.
     EXPECT_TRUE(f.isStarted());
@@ -1653,7 +1657,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	// Start the async generator.
 	FutureType ef = async_int_generator<FutureType>(startval, iterations, fixture);
 
-	GTEST_COUT_qDB << "Starting ef state:" << ExtFutureState::state(ef);
+	TCOUT << "Starting ef state:" << ExtFutureState::state(ef);
 	EXPECT_TRUE(ef.isStarted());
 	EXPECT_FALSE(ef.isCanceled());
 	EXPECT_FALSE(ef.isFinished());
@@ -1661,7 +1665,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	QList<int> expected_results {1,2,3,4,5,6};
 
 
-	GTEST_COUT_qDB << "Attaching tap and get()";
+	TCOUT << "Attaching tap and get()";
 
 	FutureType f2 = make_default_future<FutureType, int>();
 	EXPECT_TRUE(f2.isStarted());
@@ -1672,10 +1676,10 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	{
 		M_WARNING("TODO: This is still spinning when the test exits.");
 		f2 = ef.tap(qApp, [=, &async_results_from_tap](FutureType ef, int begin, int end) mutable {
-			GTEST_COUT_qDB << "IN TAP, begin:" << begin << ", end:" << end;
+			TCOUT << "IN TAP, begin:" << begin << ", end:" << end;
 			for(int i = begin; i<end; i++)
 			{
-				GTEST_COUT_qDB << "Pushing" << ef.resultAt(i) << "to tap list.";
+				TCOUT << "Pushing" << ef.resultAt(i) << "to tap list.";
 				async_results_from_tap.push_back(ef.resultAt(i));
 				num_tap_completions++;
 			}
@@ -1805,11 +1809,11 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 			},
 		ef, f2);
 	}
-	GTEST_COUT_qDB << "BEFORE WAITING FOR results()" << state(f2);
+	TCOUT << "BEFORE WAITING FOR results()" << state(f2);
 
 	async_results_from_get = f2.results();
 
-	GTEST_COUT_qDB << "AFTER WAITING FOR results()" << state(f2);
+	TCOUT << "AFTER WAITING FOR results()" << state(f2);
 
 	// .results() above should block until f2 is finished.
 	AMLMTEST_EXPECT_TRUE(f2.isFinished());
@@ -1819,7 +1823,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	// This shouldn't do anything, should already be finished.
 	ef.waitForFinished();
 
-	GTEST_COUT_qDB << "Post .tap().get(), extfuture:" << ExtFutureState::state(ef);
+	TCOUT << "Post .tap().get(), extfuture:" << ExtFutureState::state(ef);
 
 	EXPECT_TRUE(ef.isStarted());
 	EXPECT_FALSE(ef.isCanceled());
@@ -1869,7 +1873,7 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	QList<int> expected_results {1,2,3,4,5,6};
 	eftype ef = async_int_generator<eftype>(1, 6, this);
 
-	GTEST_COUT_qDB << "Starting ef state:" << ef.state();
+	TCOUT << "Starting ef state:" << ef.state();
 	ASSERT_TRUE(ef.isStarted());
 	ASSERT_FALSE(ef.isCanceled());
 	ASSERT_FALSE(ef.isFinished());
@@ -1888,12 +1892,12 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
 	AMLMTEST_EXPECT_FALSE(f2.isFinished());
 
-	GTEST_COUT_qDB << "BEFORE WAITING FOR THEN()" << f2;
+	TCOUT << "BEFORE WAITING FOR THEN()" << f2;
 
 	// Block.
 	async_results_from_get = f2.results();
 
-	GTEST_COUT_qDB << "AFTER WAITING FOR THEN()" << f2;
+	TCOUT << "AFTER WAITING FOR THEN()" << f2;
 
 	EXPECT_TRUE(ef.isFinished());
 	EXPECT_EQ(num_then_completions, 1);
@@ -1904,7 +1908,7 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	// This shouldn't do anything, should already be finished.
 	ef.waitForFinished();
 
-	GTEST_COUT_qDB << "Post .tap().get(), extfuture:" << ef.state();
+	TCOUT << "Post .tap().get(), extfuture:" << ef.state();
 
 	EXPECT_TRUE(ef.isStarted());
 	EXPECT_FALSE(ef.isCanceled()) << ef.state();
@@ -2052,11 +2056,11 @@ M_WARNING("TODO: This is still spinning when the test exits.");
 	AMLMTEST_EXPECT_FALSE(f2.isCanceled());
 	AMLMTEST_EXPECT_FALSE(f2.isFinished());
 
-	GTEST_COUT_qDB << "BEFORE WAITING FOR GET()" << f2;
+	TCOUT << "BEFORE WAITING FOR GET()" << f2;
 
 	async_results_from_get = f2.results();
 
-	GTEST_COUT_qDB << "AFTER WAITING FOR GET()" << f2;
+	TCOUT << "AFTER WAITING FOR GET()" << f2;
 
     EXPECT_TRUE(ef.isFinished());
     EXPECT_EQ(num_tap_completions, 6);
@@ -2067,7 +2071,7 @@ M_WARNING("TODO: This is still spinning when the test exits.");
     // This shouldn't do anything, should already be finished.
     ef.waitForFinished();
 
-    GTEST_COUT_qDB << "Post .tap().get(), extfuture:" << ef.state();
+	TCOUT << "Post .tap().get(), extfuture:" << ef.state();
 
     EXPECT_TRUE(ef.isStarted());
     EXPECT_FALSE(ef.isCanceled());
@@ -2089,23 +2093,24 @@ TEST_F(ExtFutureTest, StaticAsserts)
 {
 	TC_ENTER();
 
-	ExtFuture<int> f;
-	TCOUT << "ExtFuture<int>:" << f;
-	TCOUT << "ExtFuture<int>.state() 1:" << f.state();
-	TCOUT << "ExtFuture<int>.state() 2:" << ExtFutureState::Started;
-	TCOUT << "ExtFuture<int>.state() 3:" << toqstr<ExtFutureState::State>(f.state());
+	/// Tests of the stream operators.
+//	ExtFuture<int> f;
+//	TCOUT << "ExtFuture<int>:" << f;
+//	TCOUT << "ExtFuture<int>.state() 1:" << f.state();
+//	TCOUT << "ExtFuture<int>.state() 2:" << ExtFutureState::Started;
+//	TCOUT << "ExtFuture<int>.state() 3:" << toqstr<ExtFutureState::State>(f.state());
 
-	QString str;
-	QDebug dbg(&str);
-//	dbg << toString(ExtFutureState::state(f));
-	dbg << f.state();
-//	PrintTo(str, os);
-	TCOUT << "qDb():" << str;
+//	QString str;
+//	QDebug dbg(&str);
+////	dbg << toString(ExtFutureState::state(f));
+//	dbg << f.state();
+////	PrintTo(str, os);
+//	TCOUT << "qDb():" << str;
 
-	std::cout << "std::cout: " << f.state() << std::endl;
-	std::cout << "std::cout: " << f << std::endl;
+//	std::cout << "std::cout: " << f.state() << std::endl;
+//	std::cout << "std::cout: " << f << std::endl;
 
-	static_assert(std::is_default_constructible<QString>::value);
+//	static_assert(std::is_default_constructible<QString>::value);
 
 	TC_EXIT();
 
