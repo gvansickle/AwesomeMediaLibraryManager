@@ -920,7 +920,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on available threads.
 	 */
-	ExtFuture<int> f = ExtAsync::run_again([=](ExtFuture<int> rc_future) -> int {
+	ExtFuture<int> f = ExtAsync::run([=](ExtFuture<int> rc_future) -> int {
 
 		for(int i = 0; i<5; ++i)
 		{
@@ -1417,7 +1417,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	LogThreadPoolInfo(tp);
 
 	// The async generator task.  Spins forever, reporting "5" to generator_task_future until canceled.
-	ExtFuture<int> generator_task_future = ExtAsync::run_again(
+	ExtFuture<int> generator_task_future = ExtAsync::run(
 				[=, &ran_generator_task_callback, &ran_then1_callback, &ran_then2_callback, &rsm, &generator_task_future]
 					  (ExtFuture<int> generator_task_future_copy) -> int {
 		// Check the atomics.

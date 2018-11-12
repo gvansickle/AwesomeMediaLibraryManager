@@ -145,7 +145,7 @@ template <class CallbackType>
 
 				// One last loose end.  If we get here, the returned future may have been canceled by .cancel(), which
 				// doesn't throw.  So:
-				// - In run() we have nothing to do but return.
+				// - In run() (here) we have nothing to do but return.
 				// - In then() we'll have to do the same thing we do for a cancel exception.
 				if(retfuture_copy.isCanceled())
 				{
@@ -154,6 +154,7 @@ template <class CallbackType>
 //					retfuture_copy.cancel();
 //					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 //					retfuture_copy.reportException(e);
+					qWr() << "NON-THROWING CANCEL, RETURNING";
 					return;
 				}
 
@@ -167,6 +168,7 @@ template <class CallbackType>
 			return retfuture;
 		}
 
+#if 0 // This run_again() is confused about return future type vs. passed-in type.
 		/**
 		 * ExtAsync::run() helper.
 		 *
@@ -281,6 +283,8 @@ template <class CallbackType>
 			return retfuture;
 #endif
 		} // END detail_struct::run_again()
+
+#endif // run_again() type confusion.
 
 #if 0
 		/**
@@ -525,6 +529,7 @@ template <class CallbackType>
 		return report_and_control;
 	}
 
+#if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
      * ExtAsync::run() overload for member functions of classes derived from AMLMJob taking zero params.
      * E.g.:
@@ -549,11 +554,12 @@ template <class CallbackType>
 
         return thiz->get_extfuture();
     }
+#endif
 
 	/**
      * Asynchronously run a free function of the form:
 	 * @code
-	 * 	void Function(ExtFuture<T> control_and_reporting_future, Type1 arg1, Type2 arg2, [etc..]);
+	 * 	void Function(ExtFuture<T> control_and_reporting_future, [Type1 arg1, Type2 arg2, etc..]);
 	 * @endcode
 	 * Creates and returns a copy of control_and_reporting_future.
 	 */
