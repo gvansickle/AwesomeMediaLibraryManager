@@ -347,6 +347,10 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     {
         the_future = make_startedNotCanceled_QFuture<int>();
     }
+	else
+	{
+		the_future = make_started_only_future<int>();
+	}
 
     ASSERT_TRUE(the_future.isStarted());
     ASSERT_FALSE(the_future.isCanceled());

@@ -1040,7 +1040,7 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 	/// @} /// END KJob-related support functions.
 
     /// The ExtFuture<T>.
-    ExtFutureT m_ext_future;
+	ExtFutureT m_ext_future { make_started_only_future<typename ExtFutureT::inner_t>() };
 
 	/// The watcher for the ExtFuture.
     ExtFutureWatcherT* m_ext_watcher;
