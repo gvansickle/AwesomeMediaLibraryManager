@@ -1512,7 +1512,7 @@ TEST_F(ExtFutureTest, ExtFutureThenCancelCascade)
 	TCOUT << "CANCELED TAIL downstream_then2:" << downstream_then2;
 
 	TCOUT << "WAITING FOR CANCEL TO PROPAGATE";
-	TC_Sleep(3000);
+	TC_Sleep(6000);
 	TCOUT << "CANCEL SHOULD HAVE PROPAGATED";
 
 	AMLMTEST_EXPECT_TRUE(downstream_then2.isCanceled()) << downstream_then2;

@@ -80,7 +80,7 @@ LibraryEntryLoaderJobPtr LibraryEntryLoaderJob::make_job(QPersistentModelIndex p
 
 ExtFuture<LibraryEntryLoaderJobResult> LibraryEntryLoaderJob::make_task(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> libentry)
 {
-#if 1
+#if 0
 	ExtFuture<LibraryEntryLoaderJobResult> ret_future;
 
 	QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, ret_future, nullptr, pmi, libentry);

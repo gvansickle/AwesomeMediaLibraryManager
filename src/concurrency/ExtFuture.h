@@ -150,7 +150,7 @@ public:
 	explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
 																							  | QFutureInterfaceBase::State::Running))
 		: QFuture<T>(new QFutureInterface<T>(initialState))	{ }
-#else // Match default state of QFuture<>.
+#else // Match default state of QFuture<T>, (Started|Finished|Canceled).
 	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
 #endif
 	/// Copy constructor.
@@ -707,7 +707,7 @@ public:
 
 		QtConcurrent::run(
 //		returned_future = ExtAsync::run_for_then(
-			[=, then_callback_copy = std::decay_t<ThenCallbackType>(then_callback)]
+			[=, then_callback_copy = /*std::decay_t<ThenCallbackType>*/DECAY_COPY(then_callback)]
 					(ExtFuture<T> this_future_copy, ExtFuture<LiftedR> returned_future_copy) -> void {
 
 			// Ok, we're now running in the thread which will call then_callback_copy(this_future_copy).
@@ -727,8 +727,8 @@ public:
 			{
 				// Add the downstream to upstream cancel propagator before doing anything else.
 #if EXTFUTURECANCEL_SEP_THREAD
-				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
-						register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
+//				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
+//						register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
 #else
 //				PropagateExceptionsSecondToFirst(this_future_copy, returned_future_copy);
 #endif
@@ -740,10 +740,11 @@ public:
 				// "really" started (i.e. if isRunning() == false).
 //				if(!this_future_copy.isRunning())
 				{
-					qWr() << "SPINWAIT";
+					qWr() << "START SPINWAIT";
 					// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
 					::spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, returned_future_copy);
 //					spinWaitForFinishedOrCanceled(this_future_copy);
+					qWr() << "END SPINWAIT";
 				}
 
 				/// Spinwait is over, now we have four combinations to dispatch on.
@@ -830,7 +831,7 @@ public:
 
 			//
 			// The this_future_copy.waitForFinished() above either returned and the futures weren't canceled,
-			// or may have thrown above and been caught.
+			// or may have thrown above and been caught and reported.
 			//
 
 			Q_ASSERT_X(this_future_copy.isFinished(), "then outer callback", "Should be finished here.");
@@ -985,11 +986,11 @@ public:
 	/// @{
 
 	/**
-	 * Attaches a "tap" callback to this ExtFuture.
+	 * Attaches a .tap() callback to this ExtFuture.
 	 *
 	 * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
 	 *
-	 * @param tap_callback  Callback with the signature void()(T).
+	 * @param tap_callback  Callback with the signature void tap_callback(T).
 	 *
 	 * @return ExtFuture<T>
 	 */
@@ -1001,7 +1002,7 @@ public:
 	}
 
 	/**
-	 * Attaches a "tap" callback to this ExtFuture.
+	 * Attaches a non-streaming tap callback to this ExtFuture.
 	 *
 	 * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
 	 *
@@ -1019,7 +1020,7 @@ public:
 	}
 
 	/**
-	 * tap() overload for "streaming" taps.
+	 * Root .tap() overload for streaming taps.
 	 * Callback takes a reference to this, a begin index, and an end index:
 	 * @code
 	 *      void TapCallback(ExtFuture<T> ef, int begin, int end)
@@ -1034,11 +1035,15 @@ public:
 		return this->StreamingTapHelper(context, std::forward<StreamingTapCallbackType>(tap_callback));
 	}
 
+	/**
+	 * .tap() overload for streaming taps.
+	 * Tap will run in the QApplication instance. @todo Not functional yet.
+	 */
 	template<typename StreamingTapCallbackType,
 			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> tap(StreamingTapCallbackType&& tap_callback)
 	{
-		return this->tap(qApp, std::forward<StreamingTapCallbackType>(tap_callback));
+		return this->tap(QApplication::instance(), std::forward<StreamingTapCallbackType>(tap_callback));
 	}
 
 	/**
@@ -1146,7 +1151,10 @@ protected:
 	 * Helper for streaming taps.  Calls streaming_tap_callback with (ExtFuture<T>, begin_index, end_index) whenever
 	 * the future has new results ready.
 	 * @param guard_qobject  @todo Currently unused.
-	 * @param streaming_tap_callback   callable with signature void(*)(ExtFuture<T>, int, int)
+	 * @param streaming_tap_callback   callable with signature:
+	 * @code
+	 *  void streaming_tap_callback(ExtFuture<T>, int, int)
+	 * @endcode
 	 * @return
 	 */
 	template <typename StreamingTapCallbackType,
@@ -1154,16 +1162,23 @@ protected:
 		>
 	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, StreamingTapCallbackType&& streaming_tap_callback)
 	{
-		// The future we'll pass to the async task and return.
-		ExtFuture<T> ret_future = make_started_only_future<T>();
+		/// @todo Use guard_qobject, should be QThreadPool* I think.
+//		Q_ASSERT(guard_qobject == nullptr);
 
-		try
-		{
-			QtConcurrent::run([=, streaming_tap_callback_copy = std::decay_t<StreamingTapCallbackType>(streaming_tap_callback)]
-							  (ExtFuture<T> this_future_copy, ExtFuture<T> ret_future_copy) {
-				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy.state() << "ret_future_copy:" << ret_future_copy.state();
+		// This is fundamentally different from the .then() case in that the callback is called
+		// with this_future in any potential state, and must be the place where the .get() calls happen,
+		// which will block.
 
-				Q_ASSERT(ret_future_copy != this_future_copy);
+		// The future we'll immediately return.  We copy this into the streaming_tap_callback's ::run() context.
+		ExtFuture<T> returned_future = make_started_only_future<T>();
+
+		// The concurrent run().
+		QtConcurrent::run([=, streaming_tap_callback_copy = /*std::decay_t<StreamingTapCallbackType>*/DECAY_COPY(streaming_tap_callback)]
+						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) {
+				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
+						<< "ret_future_copy:" << returned_future_copy;
+
+				Q_ASSERT(returned_future_copy != this_future_copy);
 
 				// Add the downstream cancel propagator first.
 #if EXTFUTURECANCEL_SEP_THREAD
@@ -1174,11 +1189,14 @@ protected:
 #endif
 
 				int i = 0;
-
-				while(true)
+				try
 				{
-					qDb() << "TAP: Waiting for next result";
-					/**
+
+					while(true)
+					{
+						qDb() << "STREAMINGTAP: Waiting for next result";
+
+						/**
 					  * QFutureInterfaceBase::waitForResult(int resultIndex)
 					  * - if exception, rethrow.
 					  * - if !running, return.
@@ -1189,77 +1207,80 @@ protected:
 					  *     d->waitCondition.wait(&d->m_mutex);
 					  *   d->m_exceptionStore.throwPossibleException();
 					  */
-					this_future_copy.waitForResult(i);
+						/// @todo This needs to wait on both this_ and returned_ futures.
+						this_future_copy.waitForResult(i);
 
-					// Check if the wait failed to result in any results.
-					int result_count = this_future_copy.resultCount();
-					if(result_count <= i)
-					{
-						// No new results, must have finshed etc.
-						qDb() << "NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
-						break;
+						// Check if the wait failed to result in any results.
+						int result_count = this_future_copy.resultCount();
+						if(result_count <= i)
+						{
+							// No new results, must have finshed etc.
+							qDb() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
+							break;
+						}
+
+						// Call the tap callback.
+						//				streaming_tap_callback_copy(ef, i, result_count);
+						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
+						std::invoke(streaming_tap_callback_copy, this_future_copy, i, result_count);
+
+						// Copy the new results to the returned future.
+						for(; i < result_count; ++i)
+						{
+							qDb() << "STREAMINGTAP: Next result available at i = " << i;
+
+							T the_next_val = this_future_copy.resultAt(i);
+							returned_future_copy.reportResult(the_next_val);
+						}
 					}
 
-					// Call the tap callback.
-					//				streaming_tap_callback_copy(ef, i, result_count);
-					qDb() << "CALLING TAP CALLBACK, this_future:" << this_future_copy.state();
-					std::invoke(streaming_tap_callback_copy, this_future_copy, i, result_count);
+					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
 
-					// Copy the new results to the returned future.
-					for(; i < result_count; ++i)
+					// Check final state.  We know it's at least Finished.
+					/// @todo Could we be Finished here with pending results?
+					/// Don't care as much on non-Finished cases.
+					if(this_future_copy.isCanceled())
 					{
-						qDb() << "TAP: Next result available at i = " << i;
-
-						T the_next_val = this_future_copy.resultAt(i);
-						ret_future_copy.reportResult(the_next_val);
+						qDb() << "TAP: this_future cancelled:" << this_future_copy.state();
+						returned_future_copy.reportCanceled();
+					}
+					else if(this_future_copy.isFinished())
+					{
+						qDb() << "TAP: ef finished:" << this_future_copy.state();
+						returned_future_copy.reportFinished();
+					}
+					else
+					{
+						/// @todo Exceptions.
+						qDb() << "NOT FINISHED OR CANCELED:" << this_future_copy.state();
+						Q_ASSERT(0);
 					}
 				}
+				catch(ExtAsyncCancelException& e)
+				{
+					/**
+					 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+					 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+					 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+					 *  state of the returned future object."
+					 */
+					returned_future_copy.reportException(e);
+				}
+				catch(QException& e)
+				{
+					returned_future_copy.reportException(e);
+				}
+				catch (...)
+				{
+					returned_future_copy.reportException(QUnhandledException());
+				}
 
-				qDb() << "LEFT WHILE(!Finished) LOOP, ef state:" << this_future_copy.state();
-
-				// Check final state.  We know it's at least Finished.
-				/// @todo Could we be Finished here with pending results?
-				/// Don't care as much on non-Finished cases.
-				if(this_future_copy.isCanceled())
-				{
-					qDb() << "TAP: this_future cancelled:" << this_future_copy.state();
-					ret_future_copy.reportCanceled();
-				}
-				else if(this_future_copy.isFinished())
-				{
-					qDb() << "TAP: ef finished:" << this_future_copy.state();
-					ret_future_copy.reportFinished();
-				}
-				else
-				{
-					/// @todo Exceptions.
-					qDb() << "NOT FINISHED OR CANCELED:" << this_future_copy.state();
-					Q_ASSERT(0);
-				}
-			},
+				return returned_future_copy;
+			}, // END lambda
 			*this,
-			ret_future);
-		}
-		catch(ExtAsyncCancelException& e)
-		{
-			/**
-			 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-			 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
-			 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
-			 *  state of the returned future object."
-			 */
-			ret_future.reportException(e);
-		}
-		catch(QException& e)
-		{
-			ret_future.reportException(e);
-		}
-		catch (...)
-		{
-			ret_future.reportException(QUnhandledException());
-		}
+			returned_future); // END ::run() call.
 
-		return ret_future;
+		return returned_future;
 	}
 
 	/// @name Additional member variables on top of what QFuture<T> has.

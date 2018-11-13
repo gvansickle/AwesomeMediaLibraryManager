@@ -340,6 +340,7 @@ M_WARNING("TODO Probably should be refactored.");
 				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
 					Q_ASSERT(result_future.isFinished());
 					qDb() << "IN THEN CALLBACK:" << result_future;
+#warning "GETTING HERE WITH RESULTCOUNT 0"
 					LibraryEntryLoaderJobResult new_vals = result_future.result();
 					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
 					run_in_event_loop(qApp, [=]() -> bool {
