@@ -76,13 +76,13 @@ TEST_F(ExtFutureTest, ContinuableBasic)
 	http_request("github.com")
 	  .then([=] (std::string result) -> int {
 		// Do something...
-		  AMLMTEST_COUT << "IN CONTINUABLE THEN:" << result;
+		  TCOUT << "IN CONTINUABLE THEN:" << result;
 		  return 1;
 	  })
 			.then([=](){
-		AMLMTEST_COUT << "Sleeping";
+		TCOUT << "Sleeping";
 		TC_Sleep(1000);
-		AMLMTEST_COUT << "Not Sleeping";
+		TCOUT << "Not Sleeping";
 	});
 
 	TC_EXIT();
@@ -789,7 +789,7 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
     ExtFuture<int64_t> ef = make_ready_future(INT64_C(25));
 
 	// Make sure it's really ready.
-	AMLMTEST_COUT << "ExtFuture state:" << state(ef);
+	TCOUT << "ExtFuture state:" << state(ef);
 	AMLMTEST_EXPECT_TRUE(ef.isStarted());
 	AMLMTEST_EXPECT_TRUE(ef.isFinished());
 	AMLMTEST_EXPECT_FALSE(ef.isCanceled());
@@ -959,7 +959,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
 	 */
-	AMLMTEST_COUT << "Cancelled future state:" << state(f0);
+	TCOUT << "Cancelled future state:" << state(f0);
 
 	EXPECT_TRUE(f0.isStarted());
 	EXPECT_TRUE(f0.isCanceled());
@@ -986,7 +986,7 @@ TEST_F(ExtFutureTest, CancelBasic)
 
 	EXPECT_TRUE(f0.isFinished());
 
-	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(f0);
+	TCOUT << "Cancelled and finished extfuture:" << state(f0);
 
     TC_EXIT();
 }
@@ -1017,7 +1017,7 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 		qfiface(rc_future).reportFinished();
 	});
 
-	AMLMTEST_COUT << "Initial future state:" << state(main_future);
+	TCOUT << "Initial future state:" << state(main_future);
 
 	EXPECT_TRUE(main_future.isStarted());
 	EXPECT_TRUE(main_future.isRunning());
@@ -1033,7 +1033,7 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
 	 */
-	AMLMTEST_COUT << "Cancelled future state:" << state(main_future);
+	TCOUT << "Cancelled future state:" << state(main_future);
 
 	EXPECT_TRUE(main_future.isStarted());
 	EXPECT_TRUE(main_future.isCanceled());
@@ -1054,7 +1054,7 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 
 	EXPECT_TRUE(main_future.isFinished());
 
-	AMLMTEST_COUT << "Cancelled and finished extfuture:" << state(main_future);
+	TCOUT << "Cancelled and finished extfuture:" << state(main_future);
 
 	TC_EXIT();
 }
@@ -1069,7 +1069,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 
 	main_future = ExtAsync::run([=](int) -> int {
 		TC_Sleep(1000);
-		AMLMTEST_COUT << "Throwing exception from other thread";
+		TCOUT << "Throwing exception from other thread";
 		throw QException();
 		return 25;
 	}, 5);
@@ -1082,7 +1082,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PExceptionBasic)
 	}
 	catch(QException& e)
 	{
-		AMLMTEST_COUT << "Caught exception";
+		TCOUT << "Caught exception";
 		caught_exception = true;
 	}
 
@@ -1670,7 +1670,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 	else
 	{
 		QtConcurrent::run([=, &async_results_from_tap, &num_tap_completions](FutureType ef, FutureType f2){
-			AMLMTEST_COUT << "TAP: START TAP RUN(), ef:" << state(ef) << "f2:" << state(f2);
+			TCOUT << "TAP: START TAP RUN(), ef:" << state(ef) << "f2:" << state(f2);
 
 			if(true /* Roll our own */)
 			{
@@ -1678,7 +1678,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 
 				while(true)
 				{
-					AMLMTEST_COUT << "TAP: Waiting for next result";
+					TCOUT << "TAP: Waiting for next result";
 					/**
 					  * QFutureInterfaceBase::waitForResult(int resultIndex)
 					  * - if exception, rethrow.
@@ -1697,14 +1697,14 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 					if(result_count <= i)
 					{
 						// No new results, must have finshed etc.
-						AMLMTEST_COUT << "NO NEW RESULTS, BREAKING, ef:" << state(ef);
+						TCOUT << "NO NEW RESULTS, BREAKING, ef:" << state(ef);
 						break;
 					}
 
 					// Copy over the new results
 					for(; i < result_count; ++i)
 					{
-						AMLMTEST_COUT << "TAP: Next result available at i = " << i;
+						TCOUT << "TAP: Next result available at i = " << i;
 
 						int the_next_val = ef.resultAt(i);
 						async_results_from_tap.append(the_next_val);
@@ -1716,40 +1716,40 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 					}
 				}
 
-				AMLMTEST_COUT << "LEFT WHILE(!Finished) LOOP, ef state:" << state(ef);
+				TCOUT << "LEFT WHILE(!Finished) LOOP, ef state:" << state(ef);
 
 				// Check final state.  We know it's at least Finished.
 				/// @todo Could we be Finished here with pending results?
 				/// Don't care as much on non-Finished cases.
 				if(ef.isCanceled())
 				{
-					AMLMTEST_COUT << "TAP: ef cancelled:" << state(ef);
+					TCOUT << "TAP: ef cancelled:" << state(ef);
 					/// @todo PROPAGATE
 				}
 				else if(ef.isFinished())
 				{
-					AMLMTEST_COUT << "TAP: ef finished:" << state(ef);
+					TCOUT << "TAP: ef finished:" << state(ef);
 					/// @todo PROPAGATE
 				}
 				else
 				{
 					/// @todo Exceptions.
-					AMLMTEST_COUT << "NOT FINISHED OR CANCELED:" << state(ef);
+					TCOUT << "NOT FINISHED OR CANCELED:" << state(ef);
 				}
 			}
 			else if(false /* Use Java-like iterator */)
 			{
-				AMLMTEST_COUT << "Starting Java-like iterator";
+				TCOUT << "Starting Java-like iterator";
 
 				QFutureIterator<int> fit(ef);
 
-				AMLMTEST_COUT << "Created Java-like iterator";
+				TCOUT << "Created Java-like iterator";
 
 				while(fit.hasNext())
 				{
-					AMLMTEST_COUT << "TAP: GOT hasNext:" << state(ef);
+					TCOUT << "TAP: GOT hasNext:" << state(ef);
 					int the_next_val = fit.next();
-					AMLMTEST_COUT << "TAP: GOT RESULT:" << the_next_val;
+					TCOUT << "TAP: GOT RESULT:" << the_next_val;
 					//reportResult(&f2, *cit);
 					f2.d.reportResult(the_next_val);
 					async_results_from_tap.append(the_next_val);
@@ -1761,7 +1761,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 				auto cit = ef.constBegin();
 				while(cit != ef.constEnd())
 				{
-					AMLMTEST_COUT << "GOT RESULT:" << *cit;
+					TCOUT << "GOT RESULT:" << *cit;
 					//reportResult(&f2, *cit);
 					f2.d.reportResult(*cit);
 					async_results_from_tap.append(*cit);
@@ -1774,9 +1774,9 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 			{
 				/// @note This is passing 40/40 with both QFuture<> and ExtFuture<>,
 				/// but f2 doesn't get intermediate results.
-				AMLMTEST_COUT << "TAP: PENDING ON ALL RESULTS";
+				TCOUT << "TAP: PENDING ON ALL RESULTS";
 				QVector<int> results = ef.results().toVector();
-				AMLMTEST_COUT << "TAP: GOT RESULTS:" << results;
+				TCOUT << "TAP: GOT RESULTS:" << results;
 				AMLMTEST_ASSERT_EQ(results.size(), iterations);
 				f2.d.reportResults(results); //ef.results().toVector());
 				async_results_from_tap.append(results.toList()); //ef.results());
@@ -1786,7 +1786,7 @@ void streaming_tap_test(int startval, int iterations, TestFixtureType* fixture)
 			AMLMTEST_ASSERT_TRUE(ef.isFinished());
 
 			f2.d.reportFinished();
-			AMLMTEST_COUT << "EXIT TAP RUN(), ef:" << state(ef) << "resultCount:" << ef.resultCount()
+			TCOUT << "EXIT TAP RUN(), ef:" << state(ef) << "resultCount:" << ef.resultCount()
 						  << "f2:" << state(f2) << "resultCount:" << f2.resultCount();
 			},
 		ef, f2);
@@ -1835,7 +1835,7 @@ TYPED_TEST(ExtFutureTypedTestFixture, PFutureStreamingTap)
 
 	if (::testing::Test::HasFatalFailure())
 	{
-		AMLMTEST_COUT << "HIT HasFatalFailure";
+		TCOUT << "HIT HasFatalFailure";
 		return;
 	}
 
@@ -1860,10 +1860,10 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 	ASSERT_FALSE(ef.isCanceled());
 	ASSERT_FALSE(ef.isFinished());
 
-	AMLMTEST_COUT << "Attaching then()";
+	TCOUT << "Attaching then()";
 
 	auto f2 = ef.then([=, &async_results_from_then, &num_then_completions](eftype ef) -> int  {
-			AMLMTEST_COUT << "IN THEN, future:" << ef.state() << ef.resultCount();
+			TCOUT << "IN THEN, future:" << ef.state() << ef.resultCount();
 			AMLMTEST_EXPECT_TRUE(ef.isFinished());
 			async_results_from_then = ef.get();
 			num_then_completions++;
@@ -1940,13 +1940,13 @@ TEST_F(ExtFutureTest, ThenChain)
 
 	using FutureType = ExtFuture<QString>;
 
-	AMLMTEST_COUT << "STARTING FUTURE";
+	TCOUT << "STARTING FUTURE";
 	ExtFuture<QString> future = ExtAsync::run(delayed_string_func_1, this);
 
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_FALSE(future.isFinished());
 
-	AMLMTEST_COUT << "Future created:" << future;
+	TCOUT << "Future created:" << future;
 
 	rsm.ReportResult(MSTART);
 
@@ -1965,7 +1965,7 @@ TEST_F(ExtFutureTest, ThenChain)
 			EXPECT_TRUE(in_future.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(in_future.isRunning());
 
-//			AMLMTEST_COUT << "in then(), extfuture:" << tostdstr(extfuture.qtget_first());
+//			TCOUT << "in then(), extfuture:" << tostdstr(extfuture.qtget_first());
 //			EXPECT_EQ(in_future.qtget_first(), QString("delayed_string_func_1() output"));
 //			EXPECT_FALSE(ran_then);
 //			ran_then = true;
@@ -1974,12 +1974,12 @@ TEST_F(ExtFutureTest, ThenChain)
 
 			return QString("Then Called");
 	})/*.test_tap([&](auto ef){
-		AMLMTEST_COUT << "IN TEST_TAP";
+		TCOUT << "IN TEST_TAP";
 		wait_result = ef.result();
 		EXPECT_TRUE(wait_result[0] == QString("Then Called"));
 	})*/.wait();
 
-//    AMLMTEST_COUT << "after wait(): " << future.state().toString();
+//    TCOUT << "after wait(): " << future.state().toString();
 //    ASSERT_EQ(wait_result, QString("Then Called"));
 
 	future.wait();
