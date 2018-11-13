@@ -93,9 +93,12 @@ set(ECM_MIN_VERSION "5.48.0")
 find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
-# Add dirs where we keep support *.cmake's, ucm, ECM, etc.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
-	${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
+# Add dirs where we keep support *.cmake's, ucm, cotire, ECM, etc.
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
+		${CMAKE_SOURCE_DIR}/cmake/cotire/CMake
+		${CMAKE_SOURCE_DIR}/cmake/ucm/cmake
+		${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
+		${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
 
 ###
 ### ECM Macros
@@ -160,6 +163,11 @@ include(ECMEnableSanitizers)
 ### END ECM Setup ====================================================================================================
 ###
 
+#
+# cotire, for build speedup.
+# @link https://github.com/sakra/cotire
+#
+include(cotire)
 
 # Set some extra debug flags early.
 # This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
