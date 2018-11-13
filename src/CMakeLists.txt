@@ -336,7 +336,6 @@ Checks: '-*,llvm-twine-local'
 if(TRUE) # Enable test target.
 
 find_package(Qt5Test REQUIRED)
-include(CTest)
 
 # @note We don't really need to do this, but will for expediency.  Per the docs:
 # "CMake will generate tests only if the enable_testing() command has been invoked.
@@ -345,6 +344,11 @@ include(CTest)
 # "Note that ctest expects to find a test file in the build directory root.
 # Therefore, this command should be in the source directory root."
 enable_testing()
+# We do not want to include CTest or CDash.  They result in hundreds of top-level targets
+# that we have no use for.  Per @link https://stackoverflow.com/questions/45169854/cmake-in-qtcreator-4-3-shows-many-automatic-targets-how-to-remove-hide-them,
+# The above enable_testing() is enough.
+#include(CTest)
+
 
 ###
 ### Google Test

@@ -73,11 +73,15 @@ CoverArtJobPtr CoverArtJob::make_job(QObject *parent, const QUrl& url)
 
 ExtFuture<QByteArray> CoverArtJob::make_task(QObject* parent, const QUrl& url)
 {
+#if 0
 	ExtFuture<QByteArray> ret_future;
 
 	QtConcurrent::run(&CoverArtJob::LoadCoverArt, ret_future, nullptr, url);
 
 	return ret_future;
+#endif
+
+	return ExtAsync::run(&CoverArtJob::LoadCoverArt, nullptr, url);
 }
 
 ///

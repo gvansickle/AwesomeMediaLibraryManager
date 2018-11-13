@@ -165,7 +165,7 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
 		qCr() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << libentry->getUrl();
         Q_ASSERT(0);
     }
-    else
+	else
     {
         // Item needs to be refreshed.
 

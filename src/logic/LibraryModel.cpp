@@ -330,17 +330,21 @@ M_WARNING("TODO Probably should be refactored.");
 #if 1
 				// Doing this without an AMLMJobT.
 
-				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
-
 				// Register that we're doing this, so another async load for this same item doesn't get triggered.
 				m_pending_async_item_loads.insert(qpmi, true);
 
 //				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
-				future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
-				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
-					Q_ASSERT(result_future.isFinished());
+				ExtFuture<LibraryEntryLoaderJobResult> future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
+				ExtFuture<Unit> then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
+					if(!result_future.isFinished() || result_future.resultCount() == 0)
+					{
+						/// @todo This is inside a then(), so Should never get here???
+						qWr() << "LIBRARYENTRYLOADERJOB RETURNED NO RESULTS:" << result_future;
+						return;
+						Q_ASSERT(0);
+					}
 					qDb() << "IN THEN CALLBACK:" << result_future;
-#warning "GETTING HERE WITH RESULTCOUNT 0"
+#warning "GETTING HERE WITH RESULTCOUNT 0 / Started/Finished"
 					LibraryEntryLoaderJobResult new_vals = result_future.result();
 					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
 					run_in_event_loop(qApp, [=]() -> bool {
