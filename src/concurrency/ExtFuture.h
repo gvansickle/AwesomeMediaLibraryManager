@@ -689,7 +689,7 @@ public:
 			  typename LiftedR = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 			  REQUIRES(!is_ExtFuture_v<LiftedR>
 			  && std::is_invocable_r_v<Unit::DropT<LiftedR>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<LiftedR> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback)
+	ExtFuture<LiftedR> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback) const /** std .then() is const */
 	{
 		static_assert (!std::is_same_v<LiftedR, void>, "Callback return value should never be void");
 
@@ -949,20 +949,23 @@ public:
 	}
 
 	/**
-	 * std::experimental::future-like .then() which takes a continuation function @a then_callback,
-	 * of signature:
+	 * std::experimental::future-like .then() which takes a continuation function @a then_callback
+	 * with the signature:
 	 * 	@code
-	 * 		R then_callback(ExtFuture<T>)
+	 * 		R then_callback(ExtFuture<T> f)
 	 * 	@endcode
-	 * where R != [void, ExtFuture<>]
+	 * where neither R or T is an ExtFuture<>.
 	 *
-	 * and returns an ExtFuture<R>.
+	 * When the shared state of *this future is ready, the then_callback continuation will be called with the
+	 * finished ExtFuture f  *this.
+	 *
+	 * If then_callback() throws an exception, it will be stored in the ExtFuture<> returned by .then().
 	 *
 	 * @tparam R a non-ExtFuture<> type.
 	 * @tparam T a non-ExtFuture<> type.
 	 *
 	 * @param then_callback
-	 * @returns ExtFuture<R>
+	 * @returns ExtFuture<R>  A future which will be made ready with the return value of then_callback.
 	 */
 	template <class ThenCallbackType, class R = Unit::LiftT<ct::return_type_t<ThenCallbackType>>,
 			REQUIRES(is_non_void_non_ExtFuture_v<R>

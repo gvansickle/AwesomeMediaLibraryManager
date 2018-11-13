@@ -79,12 +79,6 @@ inline void PrintTo(const QFuture<T> &qf, ::std::ostream *os)
 	PrintTo(str, os);
 }
 
-/// To let Google Test print ExtFutureStates.
-//inline void PrintTo(const ExtFutureState::State &efs, ::std::ostream *os)
-//{
-//	*os << efs;
-//}
-
 QT_END_NAMESPACE
 
 /// Globa divisor for ms delays/timeouts in the tests.
