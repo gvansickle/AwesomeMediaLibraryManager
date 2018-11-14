@@ -272,6 +272,26 @@ public:
 //	static std::shared_ptr<ExtAsync::ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 	/// @}
 
+	/// @name Extra informational accessors.
+	/// @{
+
+	/**
+	 * Returns true if this ExtFuture<T> is sitting on an exception.  Does not cause any potential exception
+	 * to be thrown.
+	 *
+	 * @note Does not acquire any locks.  Unclear if it should or not:
+	 * - both ExceptionStore::throwPossibleException() and ExceptionStore::setException() calls its own hasException()
+	 *   without any synchronization.
+	 * - void QFutureInterfaceBase::waitForFinished() calls throwPossibleException() with QFutureInterfaceBasePrivate's
+	 *   mutex locked.
+	 * - QFutureInterfaceBase::waitForResult() calls throwPossibleException() without locking that same mutex.
+	 */
+	bool hasException() const
+	{
+		return this->d.exceptionStore().hasException();
+	}
+
+	/// @} // END  Extra informational accessors.
 
 	/// @name Reporting interface
 	/// @{
@@ -315,7 +335,8 @@ public:
 	}
 
 
-	/// From QFutureInterface<T>
+	/// @name Results reporting interface.	From QFutureInterface<T>.
+	/// @{
 
 	inline void reportResult(const T* result, int index = -1)
 	{
@@ -331,6 +352,8 @@ public:
 	{
 		this->d.reportResults(results, beginIndex, count);
 	}
+
+	/// @} // END Results reporting interface.
 
 	/**
 	 * If result is != nullptr, calls reportResult() and adds a copy of the result.
@@ -378,6 +401,9 @@ public:
 		this->d.cancel();
 	}
 
+	/**
+	 * Blocks until this future is finished or canceled.
+	 */
 	void waitForFinished()
 	{
 		this->d.waitForFinished();
@@ -550,6 +576,8 @@ public:
 
 	/**
 	 * Waits until the ExtFuture<T> is finished, and returns the resulting QList<T>.
+	 * Will throw if this holds an exception.
+	 *
 	 * Essentially the same semantics as std::future::get(); shared_future::get() always returns a reference instead.
 	 *
 	 * @note Directly calls this->results().  This blocks any event loop in this thread.

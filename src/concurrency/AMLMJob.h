@@ -903,7 +903,7 @@ protected:
 		m_speed_timer->stop();
 
         // Tell the Future and hence job to Cancel.
-M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'");
+		/// @todo Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'.
 //        m_ext_watcher->cancel();
 		m_ext_future.cancel();
 

@@ -145,7 +145,7 @@
 #include <QThread>
 
 // Ours
-#include "ExtFuturePropagationHandler.h"
+//#include "ExtFuturePropagationHandler.h"
 
 static std::atomic_uint64_t f_future_id_ctr {2};
 
