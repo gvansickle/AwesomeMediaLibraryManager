@@ -87,7 +87,40 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 	}
 }
 
-#if 1
+/**
+ * A helper .waitForFinished() replacement which ignores isRunning() and only returns based on
+ * isCanceled() || isFinished().
+ * .waitForFinished() first looks at the isRunning() state and treats it like an already-finished state:
+ * @code
+ * 	void QFutureInterfaceBase::waitForFinished()
+	{
+		QMutexLocker lock(&d->m_mutex);
+		const bool alreadyFinished = !isRunning();
+		lock.unlock();
+
+		if (!alreadyFinished) {
+			d->pool()->d_func()->stealAndRunRunnable(d->runnable);
+		[...]
+ * @endcode
+ * You can see that in this case, it will actually "steal the runnable" and run it.
+ * Sometimes this is not what we need, e.g. the race between a call to Whatever::run() and the returned
+ * future actually getting into the Running state.
+ * Busy-waits like this are of course gross, there's probably a better way to do this.
+ */
+template <class U>
+static void spinWaitForFinishedOrCanceled(const ExtFuture<U>& future)
+{
+	constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
+
+	while(!future.d.queryState(canceled_or_finished))
+	{
+		s_cancel_threadpool.releaseThread();
+		QThread::yieldCurrentThread();
+		s_cancel_threadpool.reserveThread();
+	}
+}
+
+#if 0
 /**
  * Attach downstream_future to this_future (a copy of this ExtFuture) such that any cancel or exception thrown by
  * downstream_future cancels this_future.

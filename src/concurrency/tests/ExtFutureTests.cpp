@@ -1008,7 +1008,7 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 
 			qfiface(rc_future).reportResult(i);
 
-			if(ExtFuture<int>(rc_future).HandlePauseResumeShouldICancel())
+			if(rc_future.HandlePauseResumeShouldICancel())
 			{
 				qfiface(rc_future).reportCanceled();
 				break;
@@ -1033,7 +1033,7 @@ TEST_F(ExtFutureTest, MultiThenCancelBasic)
 	 * A default construced QFuture is (Started|Canceled|Finished)
 	 * I assume "Running" might not always be the case, depending on cancel-before-start or cancel-after-completion.
 	 */
-	TCOUT << "Cancelled future state:" << state(main_future);
+	TCOUT << "Cancelled future state:" << main_future;
 
 	EXPECT_TRUE(main_future.isStarted());
 	EXPECT_TRUE(main_future.isCanceled());

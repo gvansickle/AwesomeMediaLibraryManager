@@ -134,9 +134,6 @@ public:
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
 	using inner_t = T;
-//	using is_ExtFuture = std::true_type;
-//	static constexpr bool is_ExtFuture_v = is_ExtFuture::value;
-
 
 	/**
 	 * Default constructor.
@@ -381,7 +378,10 @@ public:
 		this->d.cancel();
 	}
 
-	void waitForFinished() { this->d.waitForFinished(); }
+	void waitForFinished()
+	{
+		this->d.waitForFinished();
+	}
 
 	/**
 	 * Simply calls QFutureInterfaceBase::reportCanceled(), which just calls cancel().
@@ -574,39 +574,6 @@ public:
 	/// @{
 
 	/**
-	 * A helper .waitForFinished() replacement which ignores isRunning() and only returns based on
-	 * isCanceled() || isFinished().
-	 * .waitForFinished() first looks at the isRunning() state and treats it like an already-finished state:
-	 * @code
-	 * 	void QFutureInterfaceBase::waitForFinished()
-		{
-			QMutexLocker lock(&d->m_mutex);
-			const bool alreadyFinished = !isRunning();
-			lock.unlock();
-
-			if (!alreadyFinished) {
-				d->pool()->d_func()->stealAndRunRunnable(d->runnable);
-			[...]
-	 * @endcode
-	 * You can see that in this case, it will actually "steal the runnable" and run it.
-	 * Sometimes this is not what we need, e.g. the race between a call to Whatever::run() and the returned
-	 * future actually getting into the Running state.
-	 * Busy-waits like this are of course gross, there's probably a better way to do this.
-	 */
-	template <class U>
-	static void spinWaitForFinishedOrCanceled(const ExtFuture<U>& future)
-	{
-		constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
-
-		while(!future.d.queryState(canceled_or_finished))
-		{
-			s_cancel_threadpool.releaseThread();
-			QThread::yieldCurrentThread();
-			s_cancel_threadpool.reserveThread();
-		}
-	}
-
-	/**
 	 * std::experimental::future-like .then() which attaches a continuation function @a then_callback to @a this,
 	 * where then_callback's signature is:
 	 * 	@code
@@ -725,13 +692,6 @@ public:
 
 			try
 			{
-				// Add the downstream to upstream cancel propagator before doing anything else.
-#if EXTFUTURECANCEL_SEP_THREAD
-//				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
-//						register_cancel_prop_down_to_up(qToVoidFuture(returned_future_copy), qToVoidFuture(this_future_copy));
-#else
-//				PropagateExceptionsSecondToFirst(this_future_copy, returned_future_copy);
-#endif
 				// We should never end up calling then_callback_copy with a non-finished future; this is the code
 				// which will guarantee that.
 				// This could throw a propagated exception from upstream (this_future_copy).
@@ -943,7 +903,7 @@ public:
 				  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 				  REQUIRES(!is_ExtFuture_v<R>
 				  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback)
+	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback) const
 	{
 		// Forward to the master callback, don't call the then_callback on a cancel.
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
@@ -971,7 +931,7 @@ public:
 	template <class ThenCallbackType, class R = Unit::LiftT<ct::return_type_t<ThenCallbackType>>,
 			REQUIRES(is_non_void_non_ExtFuture_v<R>
 			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then( ThenCallbackType&& then_callback )
+	ExtFuture<R> then( ThenCallbackType&& then_callback ) const
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
 		return this->then(nullptr /*QApplication::instance()*/, /*call_on_cancel==*/ false,
@@ -1165,9 +1125,8 @@ protected:
 		/// @todo Use guard_qobject, should be QThreadPool* I think.
 //		Q_ASSERT(guard_qobject == nullptr);
 
-		// This is fundamentally different from the .then() case in that the callback is called
-		// with this_future in any potential state, and must be the place where the .get() calls happen,
-		// which will block.
+		// This is fundamentally similar to the .then() case in that the callback has to be called
+		// with this_future in a non-blocking state.
 
 		// The future we'll immediately return.  We copy this into the streaming_tap_callback's ::run() context.
 		ExtFuture<T> returned_future = make_started_only_future<T>();
