@@ -20,29 +20,49 @@
 #ifndef SRC_UTILS_DEBUGBLOCK_H_
 #define SRC_UTILS_DEBUGBLOCK_H_
 
-/// Std C++
+#if 0 /// @todo !(No KF5 or deprecated KDE4 support)
+
+// Std C++
 #include <string>
+#include <any>
+
+/*
+class KDebug;
+// C++ doesn't let us do this.
+class KDebug::Block;
+*/
 
 /**
  * Intent here is to Bring Debugging Back(tm) to Qt5/KF5.
  * This class in particular is intended to backfill some of the functionality
  * of KDE4's KDebug::Block.
  * https://api.kde.org/4.x-api/kdelibs-apidocs/kdecore/html/classKDebug_1_1Block.html
+ *
+ * That's actually "class KDebug { class Block; }".
+ *
  */
 class DebugBlock
 {
 public:
-    explicit DebugBlock(const char* function_name);
+	explicit DebugBlock(const char* section, int area = 0);
 	virtual ~DebugBlock();
 
-protected:
+//protected:
 
-    std::string get_indent();
+//    std::string get_indent();
 
 private:
-    const char *m_function_name;
+	const char *m_section_name;
+
+	/*KDebug::Block**/ std::any m_kdebug_block;
 };
 
-#define DEBUGBLOCK() DebugBlock(__PRETTY_FUNCTION__)
+/**
+ * KDE's macro looks like this:
+ * #define KDEBUG_BLOCK KDebug::Block _kDebugBlock(Q_FUNC_INFO);
+ */
+#define DEBUG_BLOCK DebugBlock DONTUSETHISPREFIX_DebugBlock(Q_FUNC_INFO);
+
+#endif
 
 #endif /* SRC_UTILS_DEBUGBLOCK_H_ */

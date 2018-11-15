@@ -58,8 +58,8 @@ template <typename T> class ExtFuture;
 
 #include "impl/ExtAsync_impl.h"
 
-#include "ExtAsyncTask.h"
-
+// Generated
+#include "logging_cat_ExtAsync.h"
 
 /**
  * A Qt5 analog to "C++ Extensions for Concurrency, ISO/IEC TS 19571:2016" and a million other similar

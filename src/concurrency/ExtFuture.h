@@ -58,6 +58,9 @@
 #include "ExtAsyncExceptions.h"
 #include "ExtFuturePropagationHandler.h"
 
+// Generated
+#include "logging_cat_ExtFuture.h"
+
 // Forward declare the ExtAsync namespace
 namespace ExtAsync
 {
@@ -728,7 +731,7 @@ public:
 				// "really" started (i.e. if isRunning() == false).
 //				if(!this_future_copy.isRunning())
 				{
-					qWr() << "START SPINWAIT";
+					qCWarning(EXTFUTURE) << "START SPINWAIT";
 					// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
 					::spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, returned_future_copy);
 //					spinWaitForFinishedOrCanceled(this_future_copy);

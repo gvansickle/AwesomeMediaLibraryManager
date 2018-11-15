@@ -19,6 +19,24 @@
 
 #include "DebugBlock.h"
 
+#if 0 /// @todo !(No KF5 or deprecated KDE4 support)
+
+// KF5
+/// @note This header has kWarning definitions which conflict with a kWarning enumerator in gmock.
+#include <KDELibs4Support/kdebug.h>
+
+DebugBlock::DebugBlock(const char* section, int area) : m_section_name(section), m_kdebug_block(std::make_any<KDebug::Block>(section, area))
+{
+
+}
+
+DebugBlock::~DebugBlock()
+{
+
+}
+
+#elif 0
+
 static thread_local int ftl_indent_level = 0;
 static thread_local std::string ftl_indent_str = "";
 
@@ -41,3 +59,4 @@ std::string DebugBlock::get_indent()
     return ftl_indent_str;
 }
 
+#endif

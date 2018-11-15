@@ -297,7 +297,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		coverart_future.then([=](ExtFuture<QByteArray> future) -> bool {
 
 			// Do as much as we can in the arbitrary non-GUI context we're called in.
-#warning "NEED TO HANDLE FUTURE EXCEPTION"
+#warning "NEED TO FIX get() returning nothing"
 			if(future.hasException())
 			{
 

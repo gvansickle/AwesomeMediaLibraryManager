@@ -37,7 +37,7 @@
 
 // Ours
 #include "StringHelpers.h"
-
+#include "DebugBlock.h"
 
 
 /// @name General Qt5-specific debug helpers.

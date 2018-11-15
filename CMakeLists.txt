@@ -77,9 +77,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.10.0")
-set(KF5_MIN_VERSION "5.48.0")
-set(ECM_MIN_VERSION "5.48.0")
+set(QT_MIN_VERSION "5.11.0")
+set(KF5_MIN_VERSION "5.51.0")
+set(ECM_MIN_VERSION "5.51.0")
 
 ###
 ### ECM Setup ====================================================================================================
@@ -122,6 +122,7 @@ include(ECMInstallIcons)
 include(ECMAddAppIcon)
 include(ECMAddTests)
 include(ECMMarkAsTest)
+include(ECMQtDeclareLoggingCategory)
 
 # Sanitizers.
 # @note KF5:
@@ -453,7 +454,20 @@ find_package(Boost 1.66.0 REQUIRED
 include_directories( ${Boost_INCLUDE_DIR} )
 link_directories( ${Boost_LIBRARY_DIRS} )
 
-
+# Qt logging categories.
+# @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
+ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
+                                HEADER logging_cat_ExtFuture.h
+                                IDENTIFIER EXTFUTURE
+                                CATEGORY_NAME amlm.concurrency.extfuture
+                                DEFAULT_SEVERITY Debug ### <Debug|Info|Warning|Critical|Fatal>
+                                )
+ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
+                                HEADER logging_cat_ExtAsync.h
+                                IDENTIFIER EXTASYNC
+                                CATEGORY_NAME amlm.concurrency.extasync
+                                DEFAULT_SEVERITY Debug ### <Debug|Info|Warning|Critical|Fatal>
+                                )
 
 add_definitions(
 	-DQT_DEPRECATED_WARNINGS
