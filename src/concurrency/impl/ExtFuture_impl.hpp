@@ -129,6 +129,7 @@ ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
 	if(this != &other)
 	{
 		this->BASE_CLASS::operator=(other);
+		this->m_extfuture_id_no.store(0);
 	}
 	return *this;
 }

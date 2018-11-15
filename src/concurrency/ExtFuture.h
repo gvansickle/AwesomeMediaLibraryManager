@@ -166,7 +166,7 @@ public:
 //	ExtFuture(ExtFuture<T>&& other) noexcept ...;
 
 	/// Converting constructor from QFuture<T>.
-	explicit ExtFuture(const QFuture<T>& f, uint64_t id = 0) : ExtFuture(&(f.d)) { m_extfuture_id_no = id; }
+	ExtFuture(const QFuture<T>& f, uint64_t id = 0) : ExtFuture(&(f.d)) { m_extfuture_id_no = id; }
 
 	/// Move construct from QFuture.
 	/// @note Neither implemented, deleted, or = default'ed.  Due to the vagaries of C++

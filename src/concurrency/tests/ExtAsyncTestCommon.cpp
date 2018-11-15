@@ -23,6 +23,11 @@
 
 #include <tests/TestHelpers.h>
 
+#ifdef TEST_FWK_IS_GTEST
+#if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
+#error "GTEST NOT THREADSAFE"
+#endif
+#endif
 
 
 trackable_generator_base::trackable_generator_base(ExtAsyncTestsSuiteFixtureBase *fixture)

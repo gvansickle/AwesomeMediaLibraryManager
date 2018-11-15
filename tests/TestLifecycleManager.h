@@ -23,6 +23,12 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#ifdef TEST_FWK_IS_GTEST
+#if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
+#error "GTEST NOT THREADSAFE"
+#endif
+#endif
+
 class ITestLifecycleManager
 {
 public:

@@ -38,6 +38,10 @@
 	#include <gtest/gtest.h>
 	#include <gmock/gmock.h>
 
+#if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
+#error "GTEST NOT THREADSAFE"
+#endif
+
 #elif defined(TEST_FWK_IS_QTEST)
 	M_WARNING("Building for QTest framework");
 #else
