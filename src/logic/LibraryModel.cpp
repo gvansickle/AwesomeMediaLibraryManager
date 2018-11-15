@@ -310,6 +310,7 @@ M_WARNING("TODO Probably should be refactored.");
         else
 		{
 			// Entry hasn't been populated yet.
+
 			// Get a QPMI so we can keep track of outstanding requests for it.
 			// We track by rows, so we want the index of column 0.
 			QPersistentModelIndex qpmi (index.siblingAtColumn(0));
@@ -323,18 +324,21 @@ M_WARNING("TODO Probably should be refactored.");
             {
                 // Start an async job to read the data for this entry.
 
-//				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
-#if 1
-				// Doing this without an AMLMJobT.
-				ExtFuture<LibraryEntryLoaderJobResult> future_entry;
-				LibraryEntryLoaderJob* dummy = nullptr;
+				qDbo() << "STARTING ASYNC LOAD FOR ITEM:" << qpmi;
+
 				// Register that we're doing this, so another async load for this same item doesn't get triggered.
 				m_pending_async_item_loads.insert(qpmi, true);
-//				QtConcurrent::run(&LibraryEntryLoaderJob::LoadEntry, future_entry, nullptr, QPersistentModelIndex(index), item);
-				future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
-				auto then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
-					Q_ASSERT(result_future.isFinished());
-//					qDbo() << "IN THEN CALLBACK:" << result_future;
+
+				ExtFuture<LibraryEntryLoaderJobResult> future_entry = LibraryEntryLoaderJob::make_task(QPersistentModelIndex(index), item);
+				ExtFuture<Unit> then_future = future_entry.then([=](ExtFuture<LibraryEntryLoaderJobResult> result_future) {
+					if(!result_future.isFinished() || result_future.resultCount() == 0)
+					{
+						/// @todo This is inside a then(), so Should never get here???
+						qWr() << "LIBRARYENTRYLOADERJOB RETURNED NO RESULTS:" << result_future;
+						return;
+						Q_ASSERT(0);
+					}
+					qDb() << "IN THEN CALLBACK:" << result_future;
 					LibraryEntryLoaderJobResult new_vals = result_future.result();
 					Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
 					run_in_event_loop(qApp, [=]() -> bool {
@@ -342,49 +346,9 @@ M_WARNING("TODO Probably should be refactored.");
 						m_pending_async_item_loads.remove(qpmi);
 						return true;
 						});
-//					return unit;
 				});
 				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
 				AMLMApp::IPerfectDeleter()->addQFuture(then_future);
-#else
-                auto load_entry_job = LibraryEntryLoaderJob::make_job(QPersistentModelIndex(index), item);
-				m_pending_async_item_loads.insert(item, load_entry_job);
-                load_entry_job->then(this, [=](LibraryEntryLoaderJob* loader_kjob) -> void {
-                	AMLM_ASSERT_IN_GUITHREAD();
-                    if(loader_kjob->error())
-                    {
-                        // Error.
-                        qWr() << "ASYNC LibraryEntryLoaderJob FAILED:" << loader_kjob->error() << ":" << loader_kjob->errorText() << ":" << loader_kjob->errorString();
-                        // Report error via uiDelegate()
-                        /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
-                        /// every time there's an error.
-                        //                auto uidelegate = kjob->uiDelegate();
-                        //                Q_CHECK_PTR(uidelegate);
-                        //                uidelegate->showErrorMessage();
-                    }
-                    else
-                    {
-                        // Succeeded, update the model.
-                        qIno() << "ASYNC LOAD COMPLETE:" << loader_kjob;
-                        auto num_results = loader_kjob->get_extfuture().resultCount();
-                        qIno() << "ASYNC LOAD INFO: ExtFuture state:" << loader_kjob->get_extfuture().state()
-                               << "RESULTCOUNT:" << num_results;
-
-                        if(num_results == 0)
-                        {
-                            // No results.
-                            qWro() << "NO RESULTS, ERROR:" << loader_kjob->error();
-                        }
-                        else
-                        {
-                            LibraryEntryLoaderJobResult new_vals = loader_kjob->get_extfuture().get()[0];
-                            Q_EMIT SIGNAL_selfSendReadyResults(new_vals);
-                        }
-						m_pending_async_item_loads.remove(item);
-                    }
-                });
-                load_entry_job->start();
-#endif
             }
 
             ////////////////
@@ -688,7 +652,7 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 
 	connectSignals();
 //	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
-	Q_EMIT startFileScanSignal(m_library.rootURL);
+	Q_EMIT startFileScanSignal(m_library.m_root_url);
 
 	endResetModel();
 }

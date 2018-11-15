@@ -44,6 +44,7 @@
 #include <src/future/static_if.hpp>
 #include <src/utils/UniqueIDMixin.h>
 #include "utils/ConnectHelpers.h"
+#include "concurrency/ExtFutureProgressInfo.h"
 #include "concurrency/ExtAsync.h"
 
 
@@ -738,7 +739,8 @@ protected: //Q_SLOTS:
 	{
 		auto current_processed_size = this->processedSize();
 		auto progress_units_processed_in_last_second = current_processed_size - m_speed_last_processed_size;
-		m_speed = progress_units_processed_in_last_second;
+		// A little low-pass filtering never hurt anyone.
+		m_speed = (3*m_speed/4) + (progress_units_processed_in_last_second/4);
 		m_speed_last_processed_size = current_processed_size;
 		this->emitSpeed(m_speed);
 	}
@@ -901,7 +903,7 @@ protected:
 		m_speed_timer->stop();
 
         // Tell the Future and hence job to Cancel.
-M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'");
+		/// @todo Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'.
 //        m_ext_watcher->cancel();
 		m_ext_future.cancel();
 
@@ -1038,7 +1040,7 @@ M_WARNING("Valgrind says that when we get an aboutToShutdown(), this is an 'inva
 	/// @} /// END KJob-related support functions.
 
     /// The ExtFuture<T>.
-    ExtFutureT m_ext_future;
+	ExtFutureT m_ext_future { make_started_only_future<typename ExtFutureT::inner_t>() };
 
 	/// The watcher for the ExtFuture.
     ExtFutureWatcherT* m_ext_watcher;

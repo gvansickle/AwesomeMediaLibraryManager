@@ -17,10 +17,81 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-add_library(logic_subdir STATIC
-	EXCLUDE_FROM_ALL
+# @file src/logic/CMakeLists.txt
+
+#add_subdirectory(models EXCLUDE_FROM_ALL)
+#add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
+#add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
+
+add_subdir_lib(models_subdir "${CMAKE_CURRENT_LIST_DIR}/models")
+add_subdir_lib(dbmodels_subdir "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
+add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
+add_subdir_lib(xml_subdir "${CMAKE_CURRENT_LIST_DIR}/xml")
+
+set(logic_subdir_SOURCES
+	Library.h
+	LibraryEntry.h
+	LibraryEntryLoaderJob.h
+	LibraryEntryMimeData.h
+	LibraryModel.h
+	Metadata.h
+	MetadataAbstractBase.h
+	MetadataFromCache.h
+	MetadataTaglib.h
+	MP2.h
+	ntp.h
+	PlaylistModel.h
+	PlaylistModelItem.h
+	PlaylistSortFilterProxyModel.h
+	SupportedMimeTypes.h
+	TrackMetadata.h
+	LibraryRescanner.h
+	CueSheetParser.h
+	CueSheet.h
+	CoverArtJob.h
+	TagLibHelpers.h
+	ModelUserRoles.h
+	ColumnSpec.h
+	LibraryRescannerMapItem.h
+	LibraryRescannerJob.h
+	DirScanResult.h
+	ExtMimeType.h
+	Library.cpp
+	LibraryEntry.cpp
+	LibraryEntryLoaderJob.cpp
+	LibraryEntryMimeData.cpp
+	LibraryModel.cpp
+	Metadata.cpp
+	MetadataAbstractBase.cpp
+	MetadataFromCache.cpp
+	MetadataTaglib.cpp
+	MP2.cpp
+	ntp.cpp
+	PlaylistModel.cpp
+	PlaylistModelItem.cpp
+	PlaylistSortFilterProxyModel.cpp
+	SupportedMimeTypes.cpp
+	TrackMetadata.cpp
+	CueSheetParser.cpp
+	CueSheet.cpp
+	CoverArtJob.cpp
+	ModelUserRoles.cpp
+	ColumnSpec.cpp
+	LibraryRescannerMapItem.cpp
+	LibraryRescannerJob.cpp
+	DirScanResult.cpp
+	ExtMimeType.cpp
+	LibraryRescanner.cpp
+	ExtUrl.cpp
+	ExtUrl.h
 	PerfectDeleter.cpp
 	PerfectDeleter.h
+	)
+prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
+
+target_sources(logic_subdir
+	PUBLIC
+		${logic_subdir_SOURCES}
 	)
 target_link_libraries(logic_subdir
 	PUBLIC
@@ -30,6 +101,10 @@ target_link_libraries(logic_subdir
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
+		dbmodels_subdir
+		models_subdir
+		proxymodels_subdir
+		xml_subdir
 )
 target_include_directories(logic_subdir
 	PUBLIC
@@ -37,6 +112,5 @@ target_include_directories(logic_subdir
 		${PROJECT_BINARY_DIR}/src
 	)
 
-add_subdirectory(models EXCLUDE_FROM_ALL)
 
-	
+

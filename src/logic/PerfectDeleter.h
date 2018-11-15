@@ -78,7 +78,7 @@ private:
 	// Mutex for synchronizing state, e.g. watch lists below.
 	mutable std::mutex m_mutex;
 
-	/// QFutureSynchronizer<void> for watching/canceling all QFuture<>s
+	/// QFutureSynchronizer<void> for watching/canceling all QFuture<>s.
 	QFutureSynchronizer<void> m_future_synchronizer;
 	long m_total_num_added_qfutures {0};
 	long m_num_qfutures_added_since_last_purge {0};

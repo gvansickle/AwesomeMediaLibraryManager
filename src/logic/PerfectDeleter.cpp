@@ -22,6 +22,9 @@
 // Std C++
 #include <algorithm>
 
+// Ours
+#include <concurrency/ExtFuturePropagationHandler.h>
+
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {

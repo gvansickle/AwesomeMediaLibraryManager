@@ -40,7 +40,7 @@ Library::~Library()
 
 void Library::clear()
 {
-	rootURL = QUrl();
+	m_root_url = QUrl();
 	m_lib_entries.clear();
 	num_unpopulated = 0;
 	num_populated = 0;
@@ -49,13 +49,13 @@ void Library::clear()
 
 QString Library::getLibraryName() const
 {
-	if(!rootURL.isValid())
+	if(!m_root_url.isValid())
 	{
 		return "Unknown";
 	}
 	else
 	{
-		QString last_dir = rootURL.toString(QUrl::StripTrailingSlash);
+		QString last_dir = m_root_url.toString(QUrl::StripTrailingSlash);
 		QStringList last_dir_list = last_dir.split('/');
 		return last_dir_list.back();
 	}
@@ -149,7 +149,7 @@ void Library::writeToJson(QJsonObject& jo, bool no_items) const
 	// Write the Library's info.
 	jo["write_timestamp_ms"] = QDateTime::currentMSecsSinceEpoch();
 	jo["write_timestamp_utc"] = QDateTime::currentDateTimeUtc().toString();
-	jo["rootUrl"] = rootURL.toString();
+	jo["rootUrl"] = m_root_url.toString();
 	jo["num_unpopulated"] = num_unpopulated;
 	jo["num_populated"] = num_populated;
 	jo["len_lib_entries"] = (qint64)m_lib_entries.size();
@@ -171,7 +171,7 @@ void Library::writeToJson(QJsonObject& jo, bool no_items) const
 void Library::readFromJson(const QJsonObject& jo)
 {
 	clear();
-	rootURL = QUrl(jo["rootUrl"].toString());
+	m_root_url = QUrl(jo["rootUrl"].toString());
 	num_unpopulated = jo["num_unpopulated"].toInt();
 	num_populated = jo["num_populated"].toInt();
 	int len_lib_entries = jo["len_lib_entries"].toInt();

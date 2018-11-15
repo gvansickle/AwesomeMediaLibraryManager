@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <logic/proxymodels/ModelHelpers.h>
-#include <logic/proxymodels/SelectionFilterProxyModel.h>
+#include <src/logic/proxymodels/ModelHelpers.h>
+#include <src/logic/proxymodels/SelectionFilterProxyModel.h>
 #include <QDebug>
 
 

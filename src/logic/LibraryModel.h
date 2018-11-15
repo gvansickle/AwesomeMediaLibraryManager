@@ -30,9 +30,9 @@
 #include <QUrl>
 #include <QVector>
 
-#include <logic/dbmodels/CollectionDatabaseModel.h>
+#include <src/logic/dbmodels/CollectionDatabaseModel.h>
 
-#include <concurrency/ThreadsafeMap.h>
+#include <src/concurrency/ThreadsafeMap.h>
 
 #include "ColumnSpec.h"
 #include "Library.h"

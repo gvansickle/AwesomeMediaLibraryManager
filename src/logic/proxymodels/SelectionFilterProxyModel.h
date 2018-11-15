@@ -20,9 +20,11 @@
 #ifndef ENTRYTOMETADATATREEPROXYMODEL_H
 #define ENTRYTOMETADATATREEPROXYMODEL_H
 
+// Qt5
 #include <QSortFilterProxyModel>
 #include <QPersistentModelIndex>
 #include <QPointer>
+#include <QItemSelection>
 
 class QItemSelectionModel;
 

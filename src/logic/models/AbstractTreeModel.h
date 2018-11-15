@@ -56,11 +56,17 @@
 #ifndef ABSTRACTTREEMODEL_H
 #define ABSTRACTTREEMODEL_H
 
+// Qt5
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+class QXmlStreamWriter;
+class QXmlStreamReader;
 
+// Ours
 class AbstractTreeModelItem;
+class AbstractHeaderSection;
+class AbstractTreeModelHeaderItem;
 
 
 class AbstractTreeModel : public QAbstractItemModel
@@ -68,14 +74,38 @@ class AbstractTreeModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
-	AbstractTreeModel(const QStringList &headers, const QString &data,
+	explicit AbstractTreeModel(QObject *parent = nullptr);
+	explicit AbstractTreeModel(const QStringList &headers, const QString &data,
 			  QObject *parent = nullptr);
 	~AbstractTreeModel() override;
 
 
+	/**
+	 * Calls getItem(index), which returns index.internalPointer() which is an AbstractTreeModelItem*.
+	 * Item then returns the data for this index and role from its @a data(column) function.
+	 *
+	 * @todo role gets lost along the way, we need to put that in.
+	 */
     QVariant data(const QModelIndex &index, int role) const override;
+
+    /// Header data interface
+    /// @{
+
+    /**
+     * Get the header data corresponding to the given section number, orientation, and role.
+     */
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const override;
+
+    /**
+     * Set the header data corresponding to the given section number, orientation, and role.
+     */
+    bool setHeaderData(int section, Qt::Orientation orientation,
+                         const QVariant &value, int role = Qt::EditRole) override;
+
+    /// Overload taking an AbstractHeaderSection.
+    virtual bool setHeaderData(const AbstractHeaderSection& header_section);
+    /// @}
 
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
@@ -87,8 +117,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override;
-    bool setHeaderData(int section, Qt::Orientation orientation,
-                       const QVariant &value, int role = Qt::EditRole) override;
+
 
     bool insertColumns(int position, int columns,
                        const QModelIndex &parent = QModelIndex()) override;
@@ -99,19 +128,65 @@ public:
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
 
-    /// @name Extended model interface.
+	/// @name Extended public model interface.
     /// @{
 
     /// Append a vector of AbstractTreeModelItem's as children of @p parent.
     virtual bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
 
+	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
+
+	/**
+	 * Write the entire model to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 */
+	virtual void writeModel(QXmlStreamWriter* writer) const;
+
+	/**
+	 * Read the entire model from the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 * @returns false if model could not be read from reader.
+	 */
+	virtual bool readModel(QXmlStreamReader* reader);
+
+	/// @}
+
+protected:
+
+	/// @name Extended protected model interface.
+	/// @{
+
+	/// Create a new root node.
+	virtual AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) = 0;
+//	virtual AbstractTreeModelItem* make_default_node(QVector<QVariant> rootData, AbstractTreeModelItem* parent) = 0;
+
+	/**
+	 * Write the given item to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 */
+	virtual void writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
+
+	virtual void readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item);
+
+	virtual QString getXmlStreamName() const = 0;
+	virtual QString getXmlStreamVersion() const = 0;
+
+	friend class AbstractTreeModelWriter;
+	friend class AbstractTreeModelReader;
+
+	/// Recursive descent parser factory functions.
+	/// At least for the first level of descent.
+	/// Functions take XML stream reader and parent model node, return new node if parsing was successful.
+	std::vector<std::function<AbstractTreeModelItem*(QXmlStreamReader*, AbstractTreeModelItem*)>> m_parse_factory_functions;
+
     /// @}
+
+	AbstractTreeModelItem *m_root_item;
+
 
 private:
 	void setupModelData(const QStringList &lines, AbstractTreeModelItem *parent);
-	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
 
-	AbstractTreeModelItem *m_root_item;
 };
 
 

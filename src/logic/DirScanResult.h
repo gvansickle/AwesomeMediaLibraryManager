@@ -22,129 +22,22 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QUrl>
 #include <QFileInfo>
 #include <QDateTime>
 #include <QDataStream>
 #include <QDebug>
+#include <QXmlStreamWriter>
+#include <QXmlQuery>
 
-/// Ours
-#include <utils/QtHelpers.h>
-
-#include <logic/models/AbstractTreeModelItem.h>
-
-/**
- * An extended URL class.
- * Extensions are data used to detect if the referenced item has changed.
- */
-class ExtUrl
-{
-	Q_GADGET
-
-public:
-	ExtUrl() = default;
-	ExtUrl(const ExtUrl& other) = default;
-	~ExtUrl() = default;
-
-    /**
-     * Construct an ExtUrl from a QUrl and QFileInfo.
-     * Use case is e.g. results of a directory scan, where we'd have QFileInfo available.
-     */
-	explicit ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo = nullptr);
-
-	/// User-defined conversion to QUrl.
-	explicit operator QUrl() const { return m_url; }
-
-	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
-
-
-    /// ExtUrl Status enum.
-    enum Status
-    {
-        Exists = 0x01,
-        Accessible = 0x02,
-        IsStale = 0x04
-    };
-    Q_DECLARE_FLAGS(Statuses, Status)
-    Q_FLAG(Statuses)
-
-    /**
-     * Check the status of the URL, if it is accessible, if it's stale, etc.
-     */
-    Status getStatus();
-
-    /// @name Data members.
-    /// @{
-
-	/// The QUrl.
-	QUrl m_url;
-	/// File size, or 0 if couldn't be determined.
-	qint64 m_size {0};
-	/// Last modified time.  Invalid if can't be determined(?).
-	QDateTime m_last_modified_timestamp;
-	/// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
-	QDateTime m_metadata_last_modified_timestamp;
-
-    /// @}
-
-//	bool isValid() { return m_url.isValid(); }
-
-protected:
-
-	void LoadModInfo();
-
-};
-
-Q_DECLARE_METATYPE(ExtUrl);
-QTH_DECLARE_QDEBUG_OP(ExtUrl);
-//QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
-
-
-class FileModificationInfo
-{
-//    Q_GADGET
-
-public:
-    /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
-    /// @{
-    FileModificationInfo() = default;
-    FileModificationInfo(const FileModificationInfo& fmodinfo) = default;
-    ~FileModificationInfo() = default;
-    /// @}
-
-    explicit FileModificationInfo(const QFileInfo &fmodinfo)
-        : m_size(fmodinfo.size()),
-          m_last_modified_timestamp(fmodinfo.lastModified()),
-          m_metadata_last_modified_timestamp(fmodinfo.metadataChangeTime()) {}
-
-    /// File size, or 0 if couldn't be determined.
-    qint64 m_size {0};
-    /// Last modified time.  Invalid if can't be determined(?).
-    QDateTime m_last_modified_timestamp;
-    /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
-    QDateTime m_metadata_last_modified_timestamp;
-
-//    QTH_FRIEND_QDEBUG_OP(FileModificationInfo);
-    friend QDebug operator<<(QDebug dbg, const FileModificationInfo& obj)
-    {
-        return dbg << obj.m_size << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
-    }
-
-//    friend QDataStream &operator<<(QDataStream &out, const FileModificationInfo & myObj)
-//    {
-//        return out << myObj.m_size << myObj.m_last_modified_timestamp << myObj.m_metadata_last_modified_timestamp;
-//    }
-//    friend QDataStream &operator>>(QDataStream &in, FileModificationInfo & myObj)
-//    {
-//        return in >> myObj.m_size >> myObj.m_last_modified_timestamp >> myObj.m_metadata_last_modified_timestamp;
-//    }
-};
-
-Q_DECLARE_METATYPE(FileModificationInfo);
-//QTH_DECLARE_QDATASTREAM_OPS(FileModificationInfo);
+// Ours
+#include <src/utils/QtHelpers.h>
+#include "ExtUrl.h"
+#include <src/logic/models/AbstractTreeModelItem.h>
 
 class CollectionMedium;
+class ScanResultsTreeModelItem;
 
 /**
  * A single hit found during a directory scan.
@@ -154,7 +47,7 @@ class DirScanResult
 	Q_GADGET
 
 public:
-    /// @name Default and copy constructors and destructor for Q_DELCARE_METATYPE().
+	/// @name Public default and copy constructors and destructor for Q_DECLARE_METATYPE().
 	/// @{
     DirScanResult() = default;
     DirScanResult(const DirScanResult& other) = default;
@@ -165,16 +58,6 @@ public:
     DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
 
 	friend class CollectionMedium;
-
-    /**
-     * URLs:
-     * - Sidecar cuesheet
-     * - Sidecar album art (folder.jpg/cover.jpg)
-     * Bools:
-     * - Is result:
-     * -- Dir with only single album/disc rip
-     * -- Dir with random files
-     */
 
     enum DirProp
     {
@@ -197,7 +80,7 @@ public:
 
     DirProps getDirProps() const { return m_dir_props; }
 
-    /// Get the URL which points to the actual media file found.
+	/// Get the ExtUrl which points to the actual media file found.
 	const ExtUrl& getMediaExtUrl() const { return m_media_exturl; }
 
     /// URL to any sidecar cuesheet found.
@@ -206,15 +89,21 @@ public:
 	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
-//    QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+	/// QXmlStream{Read,Write} operators.
+	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
 
-    AbstractTreeModelItem *toTreeModelItem();
+	ScanResultsTreeModelItem *toTreeModelItem();
+
+	XmlElement toXml() const;
 
 protected:
 
 	void determineDirProps(const QFileInfo& finfo);
 
 	QVector<ExtUrl> otherMediaFilesInDir(const QFileInfo& finfo);
+
+	// Member vars.
 
 	/// Absolute URL to the directory.
 	ExtUrl m_dir_exturl;
@@ -223,19 +112,16 @@ protected:
 
     /// The media URL which was found.
 	ExtUrl m_media_exturl;
-    /// Info for detecting changes
-//    FileModificationInfo m_found_url_modinfo;
 
     /// URL to a sidecar cuesheet.  May be empty if none was found.
 	ExtUrl m_cue_exturl;
 
-    /// Info for detecting changes
-//    FileModificationInfo m_cue_url_modinfo;
 };
 
 Q_DECLARE_METATYPE(DirScanResult);
 Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirProps);
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
-//QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
+QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
+QTH_DECLARE_QXMLSTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

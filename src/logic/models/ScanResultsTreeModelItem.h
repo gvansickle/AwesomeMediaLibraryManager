@@ -24,14 +24,58 @@
 #define SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_
 
 #include "AbstractTreeModelItem.h"
+
+// Qt5
+#include <QStringLiteral>
+class QXmlStreamReader;
+
+// Ours
+#include "../DirScanResult.h"
+
 /*
  *
  */
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 public:
+	explicit ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem *parent = nullptr);
 	explicit ScanResultsTreeModelItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
 	 ~ScanResultsTreeModelItem() override;
+
+	/**
+	 * Column data override.
+	 *
+	 * @todo Add role.
+	 */
+	QVariant data(int column) const override;
+
+	/**
+	 * Parses a new ScanResultsTreeModelItem* out of the passed XML stream.
+	 * Returns nullptr if the next parse factory function should be tried.
+	 * @param xml
+	 * @return
+	 */
+	static ScanResultsTreeModelItem* parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent);
+
+	/**
+	 * Write this item and any children to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 * @returns true
+	 */
+	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
+
+//	QXmlQuery write() const;
+
+	static ScanResultsTreeModelItem* createChildItem(AbstractTreeModelItem* parent);
+
+protected:
+
+	QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
+
+	/// The directory scan results corresponding to this entry.
+	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
+	DirScanResult m_dsr;
+
 };
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

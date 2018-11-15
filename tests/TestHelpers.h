@@ -38,6 +38,10 @@
 	#include <gtest/gtest.h>
 	#include <gmock/gmock.h>
 
+#if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
+#error "GTEST NOT THREADSAFE"
+#endif
+
 #elif defined(TEST_FWK_IS_QTEST)
 	M_WARNING("Building for QTest framework");
 #else
@@ -78,12 +82,6 @@ inline void PrintTo(const QFuture<T> &qf, ::std::ostream *os)
 	dbg << toString(ExtFutureState::state(qf));
 	PrintTo(str, os);
 }
-
-/// To let Google Test print ExtFutureStates.
-//inline void PrintTo(const ExtFutureState::State &efs, ::std::ostream *os)
-//{
-//	*os << efs;
-//}
 
 QT_END_NAMESPACE
 

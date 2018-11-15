@@ -33,8 +33,8 @@ public:
 	virtual ~Library();
 
 	void clear();
-	void setRootUrl(const QUrl& url) { rootURL = url; }
-	QUrl getRootUrl() const { return rootURL; }
+	void setRootUrl(const QUrl& url) { m_root_url = url; }
+	QUrl getRootUrl() const { return m_root_url; }
 	QString getLibraryName() const;
 
 	void addNewEntries(std::vector<std::shared_ptr<LibraryEntry> > entries);
@@ -64,7 +64,7 @@ private:
 
 //private:
 public:
-    QUrl rootURL;
+	QUrl m_root_url;
 
 	std::vector<std::shared_ptr<LibraryEntry>> m_lib_entries;
 

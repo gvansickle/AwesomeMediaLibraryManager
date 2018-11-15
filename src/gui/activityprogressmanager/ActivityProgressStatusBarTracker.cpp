@@ -146,7 +146,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
     /// @todo This is from KUIServerJobTracker and I guess is used all over Qt-land, but there has to be a better way.
     QPointer<KJob> jobWatch = kjob;
 
-    if(!jobWatch)
+	if(jobWatch == nullptr)
     {
         qDb() << "Job deleted while being registered";
         return;

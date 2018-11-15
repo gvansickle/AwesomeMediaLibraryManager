@@ -57,13 +57,21 @@
 
 // Qt5
 #include <QStringList>
+#include <QXmlStreamWriter>
+#include <QXmlStreamReader>
 
 // Ours
 #include <utils/DebugHelpers.h>
+#include <utils/VectorHelpers.h>
 
-AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent)
+AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent)
 {
 	m_parent_item = parent;
+}
+
+AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent)
+	: AbstractTreeModelItem(parent)
+{
 	m_item_data = data;
 }
 
@@ -72,7 +80,7 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 	qDeleteAll(m_child_items);
 }
 
-// Debug streaming.
+/// Debug streaming implementation.
 #define DATASTREAM_FIELDS(X) \
     X(m_parent_item) X(m_item_data) X(m_child_items)
 
@@ -84,19 +92,30 @@ QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
 
 AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
 {
-	return m_child_items.value(number);
+	// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
+	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
+	return stdex::value(m_child_items, number);
 }
+
+const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
+{
+	return stdex::value(m_child_items, number);
+}
+
 
 int AbstractTreeModelItem::childCount() const
 {
-	return m_child_items.count();
+	return m_child_items.size();
 }
 
+/**
+ * Find our index in the parent's child list.
+ */
 int AbstractTreeModelItem::childNumber() const
 {
-	if (m_parent_item)
+	if (m_parent_item != nullptr)
 	{
-		return m_parent_item->m_child_items.indexOf(const_cast<AbstractTreeModelItem*>(this));
+		return stdex::indexOf(m_parent_item->m_child_items, this);
 	}
 
     return 0;
@@ -116,14 +135,18 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
 	if (position < 0 || position > m_child_items.size())
 	{
+		// Insertion point out of range of existing children.
         return false;
 	}
+
+	decltype(m_child_items)::iterator pos_iterator = m_child_items.begin() + position;
 
 	for (int row = 0; row < count; ++row)
 	{
         QVector<QVariant> data(columns);
-		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
-		m_child_items.insert(position, item);
+//		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
+		AbstractTreeModelItem *item = make_default_node(data, this);
+		m_child_items.insert(pos_iterator, item);
     }
 
     return true;
@@ -154,6 +177,11 @@ AbstractTreeModelItem *AbstractTreeModelItem::parent()
 	return m_parent_item;
 }
 
+const AbstractTreeModelItem*AbstractTreeModelItem::parent() const
+{
+	return m_parent_item;
+}
+
 bool AbstractTreeModelItem::removeChildren(int position, int count)
 {
 	if (position < 0 || position + count > m_child_items.size())
@@ -163,7 +191,7 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 
 	for (int row = 0; row < count; ++row)
 	{
-		delete m_child_items.takeAt(position);
+		delete stdex::takeAt(m_child_items, position);
 	}
 
     return true;
@@ -208,18 +236,22 @@ bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem *> new_
     for(auto* child : new_children)
     {
         child->setParentItem(this);
-        qDb() << "APPENDING TO ITEM:" << this;
-        qDb() << "       CHILD ITEM:" << *child;
         m_child_items.push_back(child);
     }
 
-    return true;
+	return true;
 }
 
 void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 {
     AMLM_WARNIF(m_parent_item != nullptr);
 
-    m_parent_item = parent_item;
+	m_parent_item = parent_item;
 }
+
+AbstractTreeModelItem* AbstractTreeModelItem::make_default_node(const QVector<QVariant>& data, AbstractTreeModelItem* parent)
+{
+	return make_default_node(data, parent);
+}
+
 

@@ -34,8 +34,8 @@
 #include <QVector>
 
 /// Ours
-#include <concurrency/ExtAsync.h>
-#include <concurrency/AsyncTaskManager.h> ///< For futureww
+#include <src/concurrency/ExtAsync.h>
+#include <src/concurrency/AsyncTaskManager.h> ///< For futureww
 
 #include "LibraryRescannerMapItem.h"
 

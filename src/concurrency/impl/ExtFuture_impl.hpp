@@ -23,6 +23,52 @@
 template <class T>
 class ExtFuture;
 
+namespace ExtAsync
+{
+namespace detail
+{
+
+template<typename F, typename W, typename R>
+struct then_helper
+{
+	F f;
+	W w;
+
+	then_helper(F f, W w)
+		: f(std::move(f))
+		, w(std::move(w))
+	{
+	}
+
+	then_helper(const then_helper& other)
+		: f(other.f)
+		, w(other.w)
+	{
+	}
+
+	then_helper(then_helper&& other)
+		: f(std::move(other.f))
+		, w(std::move(other.w))
+	{
+	}
+
+	then_helper& operator=(then_helper other)
+	{
+		f = std::move(other.f);
+		w = std::move(other.w);
+		return *this;
+	}
+
+	R operator()()
+	{
+		f.wait();
+		return w(std::move(f));
+	}
+};
+
+} // END detail
+} // END ExtAsync
+
 #if 0 // templates.....
 #define REAL_ONE_DOESNT_WORK
 #ifdef REAL_ONE_DOESNT_WORK
@@ -71,7 +117,8 @@ inline ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture<T>& other)
 	if(this != &other)
 	{
 		this->BASE_CLASS::operator=(other);
-		this->m_progress_unit = other.m_progress_unit;
+		this->m_extfuture_id_no.store(other.m_extfuture_id_no);
+//		this->m_progress_unit = other.m_progress_unit;
 	}
 	return *this;
 }
@@ -82,6 +129,7 @@ ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
 	if(this != &other)
 	{
 		this->BASE_CLASS::operator=(other);
+		this->m_extfuture_id_no.store(0);
 	}
 	return *this;
 }
@@ -92,6 +140,7 @@ T ExtFuture<T>::qtget_first()
 	wait();
 	return this->result();
 }
+
 
 #if 0
 /**

@@ -27,7 +27,11 @@
 
 /// Qt5
 #include <QThread>
+#include <QXmlFormatter>
+#include <QXmlQuery>
+#include <QVariant>
 #include <QtConcurrent>
+#include <QXmlResultItems>
 
 /// KF5
 #include <KJobUiDelegate>
@@ -37,6 +41,7 @@
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
 #include <logic/models/AbstractTreeModelItem.h>
+#include <logic/models/AbstractTreeModelWriter.h>
 #include <utils/DebugHelpers.h>
 
 /// Ours, Qt5/KF5-related
@@ -188,36 +193,61 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 //    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
-	// New Tree model.
-//	auto tree_model = AMLMApp::instance()->cdb2_model_instance();
     // Even newer tree model.
-    auto tree_model = AMLMApp::instance()->scan_results_tree_model_instance();
+    auto tree_model = AMLMApp::instance()->IScanResultsTreeModel();
 
-    connect_or_die(dirtrav_job, &DirectoryScannerAMLMJob::SIGNAL_resultsReadyAt,
-                   tree_model,
-                   [=](/*const auto& ef,*/ int begin, int end) {
-        auto ef = dirtrav_job->get_extfuture();
-        QVector<AbstractTreeModelItem*> new_items;
-        for(int i=begin; i<end; i++)
-        {
-            DirScanResult dsr = ef.resultAt(i);
-            // Add another entry to the tree model.
-            new_items.push_back(dsr.toTreeModelItem());
+	ExtFuture<DirScanResult> tail_future
+		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end){
+		QVector<AbstractTreeModelItem*> new_items;
+		int original_end = end;
+		for(int i=begin; i<end; i++)
+		{
+			DirScanResult dsr = tap_future.resultAt(i);
+			// Add another entry to the vector we'll send to the model.
+			new_items.push_back(dsr.toTreeModelItem());
 
-            // Found a file matching the criteria.  Send it to the model.
-            /// @todo Forward the signal.
-            m_current_libmodel->SLOT_onIncomingFilename(dsr.getMediaExtUrl().m_url.toString());
-        }
+			if(i >= end)
+			{
+				// We're about to leave the loop.  Check if we have more ready results now than was originally reported.
+				if(tap_future.isResultReadyAt(end+1) || tap_future.resultCount() > (end+1))
+				{
+					// There are more results now than originally reported.
+					qIno() << "##### MORE RESULTS:" << M_NAME_VAL(original_end) << M_NAME_VAL(end) << M_NAME_VAL(tap_future.resultCount());
+					end = end+1;
+				}
+			}
 
-//        tree_model->appendItems(new_items);
+			if(tap_future.HandlePauseResumeShouldICancel())
+			{
+				tap_future.reportCanceled();
+				return;
+			}
+		}
 
-        // Append entries to the ScanResultsTreemodel.
-        tree_model->appendItems(new_items);
+		// Got all the ready results, send them to the model.
+		// We have to do this from the GUI thread unfortunately.
+		qIno() << "Sending" << new_items.size() << "scan results to model";
+		run_in_event_loop(this, [=, tree_model_ptr=tree_model](){
 
-		;});
+			// Append entries to the ScanResultsTreemodel.
+			tree_model_ptr->appendItems(new_items);
 
+	        /// @todo Obsoleting... very... slowly.
+			for(const auto& entry : new_items)
+			{
+				// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
+				qIn() << "EMITTING:" << entry->data(1).toString();
+				Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(
+							entry->data(1).toString());
+			}
+		});
 
-    dirtrav_job->then(this, [=](DirectoryScannerAMLMJob* kjob){
+	});
+
+	// Make sure the above job gets canceled and deleted.
+	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
+
+	dirtrav_job->then(this, [=, tree_model_ptr=tree_model](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -232,6 +262,103 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             qIn() << "DIRTRAV SUCCEEDED";
             m_last_elapsed_time_dirscan = m_timer.elapsed();
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+
+/// @todo EXPERIMENTAL
+			QString filename = QDir::homePath() + "/DeleteMe.xspf";
+			qIno() << "Writing model to XML file:" << filename;
+			QFile outfile(filename);
+			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
+			if(!status)
+			{
+				qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
+			}
+			else
+			{
+#if 1
+				AbstractTreeModelWriter tmw(tree_model_ptr);
+				tmw.write_to_iodevice(&outfile);
+#else
+				//
+				if(0)
+				{
+					QXmlQuery query_inner;
+					QString inner_obj = "Some string";
+					query_inner.bindVariable("inner_obj", QVariant(inner_obj));
+					query_inner.setQuery("<p>{$inner_obj}</p>");
+
+					QXmlQuery query;
+					int test_var_1 = 4;
+					QString message = "Hello World!";
+					query.bindVariable("message", QVariant(message));
+					query.bindVariable("test_var_1", QVariant(test_var_1));
+					query.bindVariable("inner_var", query_inner);
+					query.setQuery(
+								"<results>"
+								"<message>{$message}</message>"
+								"<m2>{$test_var_1}</m2>"
+					"<i1>{$inner_var}</i1>"
+								"</results>"
+								);
+					Q_ASSERT(query.isValid());
+
+					QXmlFormatter formatter(query, &outfile);
+					formatter.setIndentationDepth(2);
+					if(!query.evaluateTo(&formatter))
+					{
+						Q_ASSERT(0);
+					}
+				}
+				//
+				{
+					QXmlQuery query;
+
+//					QXmlResultItems query_list;
+					QStringList query_list;
+
+//					// Write out the top-level items.
+//					for(long i = 0; i < tree_model_ptr->rowCount(); ++i)
+//					{
+//						//QModelIndex qmi = tree_model_ptr->index(i, 0);
+//						//QXmlQuery child = dynamic_cast<ScanResultsTreeModelItem*>(tree_model_ptr->getItem(qmi))->write();
+//						QString child = "<a>test</a>";
+////						query_list.push_back(QVariant::fromValue<QXmlQuery>("<child/>"));
+//					}
+
+					QStringList qvl;
+					qvl << QString("<test1/>") << QString("<test2/>");
+					query.bindVariable("fileName", &outfile);
+					query.bindVariable("child_list", QVariant("a, b, c"));
+//					query.setFocus(&outfile);
+//					query.setQuery(QUrl("file:///home/gary/src/AwesomeMediaLibraryManager/myquery.xq"));
+					query.setQuery(
+//								"xquery version \"1.0\";\n"
+								QString(
+									"<cookbook xmlns=\"http://cookbook/namespace\">\n"
+								"let $items := ($child_list)\n" //('orange', <apple/>, <fruit type=\"juicy\"/>, <vehicle type=\"car\">sentro</vehicle>, 1,2,3,'a','b',\"abc\")\n"
+								"return\n"
+								"<p>\n"
+										"{\n"
+										" for $item in $items\n"
+										"return <item>{$item}</item>\n"
+										"}\n"
+										"</p>\n"
+									"<cookbook/>")
+								);
+
+					Q_ASSERT(query.isValid());
+
+					QXmlFormatter formatter(query, &outfile);
+					formatter.setIndentationDepth(2);
+					if(!query.evaluateTo(&formatter))
+					{
+						Q_ASSERT(0);
+					}
+				}
+#endif
+			}
+/// @todo EXPERIMENTAL
+
+
 #if 0
             // Directory traversal complete, start rescan.
 

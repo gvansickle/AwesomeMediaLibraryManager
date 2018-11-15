@@ -131,7 +131,7 @@ void BaseActivityProgressStatusBarWidget::init(KJob* kjob, QWidget *parent)
     setTips(m_cancel_button, tr("Abort"), tr("Abort this operation"), tr("<h3>Abort Button</h3><br/>Stops the operation"));
 
     // Set button disable states/make connections/etc. based on what the job supports.
-    if(kjob)
+	if(kjob != nullptr)
     {
         m_pause_resume_button->setEnabled(kjob->capabilities() & KJob::Suspendable);
         m_cancel_button->setEnabled(kjob->capabilities() & KJob::Killable);
@@ -242,7 +242,7 @@ bool BaseActivityProgressStatusBarWidget::event(QEvent *event)
 {
     if(event->type() == QEvent::ToolTip)
     {
-        QHelpEvent* helpEvent = static_cast<QHelpEvent*>(event);
+		QHelpEvent* helpEvent = dynamic_cast<QHelpEvent*>(event);
 
         bool in_this_rect = this->rect().contains(helpEvent->pos());
         if(in_this_rect)
@@ -281,7 +281,7 @@ void BaseActivityProgressStatusBarWidget::suspended(KJob *)
     m_pause_resume_button->setChecked(true);
 }
 
-void BaseActivityProgressStatusBarWidget::resumed(KJob *)
+void BaseActivityProgressStatusBarWidget::resumed(KJob * /*unused*/)
 {
     m_pause_resume_button->setChecked(false);
 }

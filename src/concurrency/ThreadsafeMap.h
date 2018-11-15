@@ -74,7 +74,7 @@ public:
     }
 
 
-	bool contains(const Key& key)
+	bool contains(const Key& key) const
 	{
 		QMutexLocker locker(&m_map_mutex);
 		return m_kjob_to_widget_map.contains(key);

@@ -36,6 +36,22 @@ function(print_compilers_and_params)
     endforeach()
 endfunction()
 
+
+#
+# The missing CMake add_*.  Adds a subdirectory as a library target in this directory.
+# Based on @link https://crascit.com/2016/01/31/enhanced-source-file-handling-with-target_sources/
+# Target is EXCLUDE_FROM_ALL, so something has to depend on it for it to be built.
+#
+macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR)
+	if(NOT ${ARGC} EQUAL 2)
+		message(FATAL_ERROR "add_subdir_lib requires two arguments")
+	endif()
+	message(STATUS "########################## Creating library ${ARGV0} from ${ARGV1}/CMakeLists.txt with CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
+	add_library(${ARGV0} STATIC EXCLUDE_FROM_ALL "")
+	include(${ARGV1}/CMakeLists.txt)
+endmacro()
+
+
 # @note cmake 3.12 has this functionality in a one-liner:
 # list(TRANSFORM ${FILES_TO_TRANSLATE} PREPEND ${CMAKE_CURRENT_SOURCE_DIR})
 # @see https://cmake.org/cmake/help/v3.12/command/list.html#transform

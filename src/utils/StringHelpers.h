@@ -77,7 +77,7 @@ enum /*QLocale::*/DataSizeFormats
 #endif
 
 // TagLib
-#include <tag.h>
+#include <taglib/tag.h>
 
 // Ours
 //#include <utils/DebugHelpers.h> // For MSVC __PRETTY_FUNCTION__
@@ -201,6 +201,7 @@ static inline bool isValidUTF8(const char* bytes)
 	QTextCodec::ConverterState state;
 	QTextCodec *codec = QTextCodec::codecForName("UTF-8");
     const QString text = codec->toUnicode(bytes, std::strlen(bytes), &state);
+	Q_UNUSED(text);
 	if (state.invalidChars > 0)
 	{
 		return false;
@@ -217,8 +218,8 @@ static inline bool isValidUTF8(const char* bytes)
  *
  * @note Yet, you can stream to QDebug and that works out of the box.
  *
- * @param value  Any Q_ENUM().
- * @return A QString representing that Q_ENUM.
+ * @param value  Any Q_ENUM() or Q_FLAG().
+ * @return A QString representing that Q_ENUM/Q_FLAG.
  */
 template<typename QEnumType>
 QString toqstr(const QEnumType value)

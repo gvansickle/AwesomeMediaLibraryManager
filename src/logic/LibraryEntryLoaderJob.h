@@ -1,3 +1,7 @@
+#include <utility>
+
+#include <utility>
+
 /*
  * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
@@ -45,8 +49,8 @@ public:
     LibraryEntryLoaderJobResult(const LibraryEntryLoaderJobResult& other) = default;
     explicit LibraryEntryLoaderJobResult(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> le)
     {
-        m_original_pindex = pmi;
-        m_original_libentry = le;
+		m_original_pindex = std::move(pmi);
+		m_original_libentry = std::move(le);
     }
     ~LibraryEntryLoaderJobResult() = default;
 

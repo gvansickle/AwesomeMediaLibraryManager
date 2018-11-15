@@ -55,11 +55,17 @@
 #ifndef ABSTRACTTREEMODELITEM_H
 #define ABSTRACTTREEMODELITEM_H
 
+// Std C++
+#include <vector>
+
+// Qt5
 #include <QList>
 #include <QVariant>
 #include <QVector>
+class QXmlStreamWriter;
 
-#include <utils/QtHelpers.h>
+// Ours
+#include <src/utils/QtHelpers.h>
 
 /**
  * Generic item for use in AbstractItemTreeModel.
@@ -67,21 +73,29 @@
 class AbstractTreeModelItem
 {
 public:
+	explicit AbstractTreeModelItem(AbstractTreeModelItem *parent = nullptr);
 	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
     virtual ~AbstractTreeModelItem();
 
+    /// Return a pointer to the number'th child of this item.
+    /// @returns Pointer to a default constructed AbstractTreeModelItem, which is not added to the QVector.
+	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
 	AbstractTreeModelItem *child(int number);
+
+	/// Const version.
+	const AbstractTreeModelItem *child(int number) const;
 
     /// The number of children this item has.
     int childCount() const;
 
     int columnCount() const;
-    QVariant data(int column) const;
+	virtual QVariant data(int column) const;
 
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
 
     AbstractTreeModelItem *parent();
+	const AbstractTreeModelItem *parent() const;
 
     bool removeChildren(int position, int count);
     bool removeColumns(int position, int columns);
@@ -93,6 +107,15 @@ public:
 
     bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
 
+	/**
+	 * Write this item and any children to the given QXmlStreamWriter.
+	 * Override this in derived classes to do the right thing.
+	 * @returns true
+	 */
+	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const = 0;
+
+
+    // Debug stream op free func friender.
     QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)
 
 protected:
@@ -101,10 +124,15 @@ protected:
     /// Primarily for use in appendChildren().
     virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
+	/// Factory function for creating default-constructed nodes.
+	/// Used by insertChildren().
+	AbstractTreeModelItem* make_default_node(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
+
+
 private:
 
 	// Vector of child items.
-	QVector<AbstractTreeModelItem*> m_child_items;
+	std::vector<AbstractTreeModelItem*> m_child_items;
 
 	// Vector of items for each column.
 	QVector<QVariant> m_item_data;
@@ -113,6 +141,7 @@ private:
 	AbstractTreeModelItem *m_parent_item;
 };
 
+// Debug stream op free func declaration.
 QTH_DECLARE_QDEBUG_OP(AbstractTreeModelItem);
 
 #endif // ABSTRACTTREEMODELITEM_H

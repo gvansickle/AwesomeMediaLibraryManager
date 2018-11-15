@@ -55,25 +55,36 @@
 // This class's header.
 #include "AbstractTreeModel.h"
 
+// Std C++
+#include <functional>
+
 // Qt5
 #include <QtWidgets>
 
 // Ours
 #include "AbstractTreeModelItem.h"
+#include <utils/DebugHelpers.h>
 
 
+
+AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
+{
+
+}
 
 AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &data, QObject *parent)
-    : QAbstractItemModel(parent)
+	: AbstractTreeModel(parent)
 {
-    QVector<QVariant> rootData;
-	for(const QString& header : headers)
-	{
-        rootData << header;
-	}
+//	/// @todo Move all this out of the constructor?
+//    QVector<QVariant> rootData;
+//	for(const QString& header : headers)
+//	{
+//        rootData << header;
+//	}
 
-	m_root_item = new AbstractTreeModelItem(rootData);
-//    setupModelData(data.split(QString("\n")), m_root_item);
+////	m_root_item = new AbstractTreeModelItem(rootData);
+//	/// @todo virtual function in constructor.
+//	m_root_item = make_root_node(rootData);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
@@ -120,12 +131,68 @@ AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) cons
 	if (index.isValid())
 	{
         AbstractTreeModelItem *item = static_cast<AbstractTreeModelItem*>(index.internalPointer());
-        if (item)
+		if (item != nullptr)
 		{
             return item;
 		}
     }
+	/// @todo This might want to be an assert().
 	return m_root_item;
+}
+
+void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
+{
+	// Write out the entire tree model recursively, starting at the m_root_item.
+	writeItemAndChildren(writer, m_root_item);
+}
+
+bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
+{
+#warning "TODO"
+	auto& xml = *reader;
+
+	// Check that we're reading an XML file with the right format.
+	if(xml.name() == getXmlStreamName()
+			&& xml.attributes().value("version") == getXmlStreamVersion())
+	{
+		// Start the recursive descent.
+		// Whatever we find here should be the m_root_node.
+		AbstractTreeModelItem* parent_item = nullptr;
+		while(xml.readNextStartElement())
+		{
+			for(const auto& parse_func : m_parse_factory_functions)
+			{
+				AbstractTreeModelItem* new_item = parse_func(&xml, parent_item);
+				if(new_item != nullptr)
+				{
+					// Parsed it.
+				}
+				else
+				{
+					// Not sure what that was.
+					qIn() << "Skipping unknown element:" << xml.name();
+					xml.skipCurrentElement();
+				}
+			}
+		}
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
+{
+	Q_ASSERT(item != nullptr);
+	item->writeItemAndChildren(writer);
+}
+
+void AbstractTreeModel::readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item)
+{
+#warning "TODO"
 }
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
@@ -282,10 +349,20 @@ bool AbstractTreeModel::setHeaderData(int section, Qt::Orientation orientation,
 
     if (result)
 	{
+    	// Docs: "If you are changing the number of columns or rows you do not need to emit this signal, but use the begin/end functions."
 		Q_EMIT headerDataChanged(orientation, section, section);
 	}
 
-    return result;
+	return result;
+}
+
+bool AbstractTreeModel::setHeaderData(const AbstractHeaderSection& header_section)
+{
+	Q_ASSERT(0);
+//	this->setHeaderData(header_section.section(),
+//			header_section.orientation(), header_section[role], role);
+//	for()
+	return true;
 }
 
 void AbstractTreeModel::setupModelData(const QStringList &lines, AbstractTreeModelItem *parent)

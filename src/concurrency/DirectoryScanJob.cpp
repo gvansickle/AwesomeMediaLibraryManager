@@ -30,9 +30,9 @@
 #include <concurrency/ExtAsync.h>
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl& dir_url,
-                                   const QStringList &nameFilters,
-                                   QDir::Filters filters,
-                                   QDirIterator::IteratorFlags flags)
+								   const QStringList &nameFilters,
+								   const QDir::Filters filters,
+								   const QDirIterator::IteratorFlags flags)
     : BASE_CLASS(parent), m_dir_url(dir_url), m_name_filters(nameFilters), m_dir_filters(filters), m_iterator_flags(flags)
 {
     // Set our object name.
@@ -61,11 +61,11 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
     return retval;
 }
 
-void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
+void /*DirectoryScannerAMLMJob::*/DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
 		const QStringList &name_filters,
-		QDir::Filters dir_filters,
-		QDirIterator::IteratorFlags iterator_flags)
+		const QDir::Filters dir_filters,
+		const QDirIterator::IteratorFlags iterator_flags)
 {
 
 	if(!dir_url.isLocalFile())
@@ -121,7 +121,8 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 		}
 		else if(file_info.isDir())
 		{
-			QDir dir = file_info.absoluteDir();
+			/// @todo Unused, do we need this?
+			// QDir dir = file_info.absoluteDir();
 			num_discovered_dirs++;
 
 			// Update the max range to be the number of files we know we've found so far plus the number
@@ -146,9 +147,9 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 
 			/// @todo
 			DirScanResult dir_scan_result(file_url, file_info);
-//            qDbo() << "DIRSCANRESULT:" << dir_scan_result;
+//			qDb() << "DIRSCANRESULT:" << dir_scan_result;
 
-			ext_future.reportInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), tr("File: %1").arg(file_url.toString()));
+			ext_future.reportInfoMessage(QObject::tr("File: %1").arg(file_url.toString()), QObject::tr("File: %1").arg(file_url.toString()));
 
 			// Update progress.
 			/// @note Bytes is being used for "Size" == progress by the system.
@@ -194,6 +195,16 @@ void DirectoryScannerAMLMJob::DirScanFunction(ExtFuture<DirScanResult> ext_futur
 	ext_future.reportFinished();
 
 	qDb() << "RETURNING, ExtFuture:" << ext_future; ///< STARTED only, last output of pool thread
+	return;
+}
+
+ExtFuture<DirScanResult> DirectoryScannerAMLMJob::AsyncDirScan(AMLMJob* amlmJob, const QUrl& dir_url,
+															   const QStringList& name_filters,
+															   const QDir::Filters dir_filters,
+															   const QDirIterator::IteratorFlags iterator_flags)
+{
+	return ExtAsync::run(&/*DirectoryScannerAMLMJob::*/DirScanFunction, amlmJob,
+						 dir_url, name_filters, dir_filters, iterator_flags);
 }
 
 void DirectoryScannerAMLMJob::runFunctor()

@@ -85,6 +85,14 @@ set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
+###
+### Intel TBB
+###
+#download_project(PROJ                tbb_wjakob
+#                 GIT_REPOSITORY      https://github.com/wjakob/tbb.git
+#                 GIT_TAG             master
+#                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
+#)
 
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
@@ -94,8 +102,8 @@ set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 ### @todo Do we need this? Target to get the deps on generated files right.
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
-# Collect all the project-common external link library targets into a single variable.
-set(INTERNAL_LINK_LIB_TARGETS amlm_src_future)
+
+
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
@@ -105,39 +113,14 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
 		verdigris_target
-		logic_subdir
-		models_subdir
+		Boost::thread
+		#tbb_wjakob
 		)
 
 
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
-	logic/Library.h
-	logic/LibraryEntry.h
-	logic/LibraryEntryLoaderJob.h
-	logic/LibraryEntryMimeData.h
-	logic/LibraryModel.h
-	logic/proxymodels/LibrarySortFilterProxyModel.h
-	logic/Metadata.h
-	logic/MetadataAbstractBase.h
-	logic/MetadataFromCache.h
-	logic/MetadataTaglib.h
-	logic/MP2.h
-	logic/ntp.h
-	logic/PlaylistModel.h
-	logic/PlaylistModelItem.h
-	logic/PlaylistSortFilterProxyModel.h
-	logic/SupportedMimeTypes.h
-	logic/TrackMetadata.h
-	logic/dbmodels/CollectionDatabaseModel.h
-	logic/dbmodels/DBConnectionManager.h
-	logic/dbmodels/EnhancedAbstractListModel.h
-	logic/dbmodels/EnhancedAbstractTableModel.h
-	logic/dbmodels/EntityBase.h
-	logic/dbmodels/ScanResultsTableModel.h
-	logic/dbmodels/SQLHelpers.h
-	logic/models/ScanResultsTreeModel.h
 	utils/ConnectHelpers.h
 	utils/DebugBlock.h
 	utils/DebugHelpers.h
@@ -145,79 +128,30 @@ set(HEADER_FILES
 	utils/in.h
 	utils/MapConverter.h
 	utils/StringHelpers.h
-	logic/LibraryRescanner.h
 	utils/RegisterQtMetatypes.h
 	utils/UniqueIDMixin.h
 	utils/QtCastHelpers.h
 	utils/TheSimplestThings.h
-	logic/CueSheetParser.h
-	logic/CueSheet.h
-	logic/CoverArtJob.h
-	logic/TagLibHelpers.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
-	logic/ModelUserRoles.h
-	logic/proxymodels/ModelHelpers.h
-	logic/proxymodels/SelectionFilterProxyModel.h
-	logic/proxymodels/ModelChangeWatcher.h
-	logic/ColumnSpec.h
-	logic/LibraryRescannerMapItem.h
-	logic/LibraryRescannerJob.h
-	logic/proxymodels/QPersistentModelIndexVec.h
-	logic/DirScanResult.h
-	logic/ExtMimeType.h
 	utils/Logging.h
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
+	utils/VectorHelpers.h
     )
 
 # Source file list.
 set(SOURCE_FILES
 	AMLMApp.cpp
-	logic/Library.cpp
-	logic/LibraryEntry.cpp
-	logic/LibraryEntryLoaderJob.cpp
-	logic/LibraryEntryMimeData.cpp
-	logic/LibraryModel.cpp
-	logic/proxymodels/LibrarySortFilterProxyModel.cpp
-	logic/Metadata.cpp
-	logic/MetadataAbstractBase.cpp
-	logic/MetadataFromCache.cpp
-	logic/MetadataTaglib.cpp
-	logic/MP2.cpp
-	logic/ntp.cpp
-	logic/PlaylistModel.cpp
-	logic/PlaylistModelItem.cpp
-	logic/PlaylistSortFilterProxyModel.cpp
-	logic/SupportedMimeTypes.cpp
-	logic/TrackMetadata.cpp
-	logic/dbmodels/CollectionDatabaseModel.cpp
-	logic/dbmodels/DBConnectionManager.cpp
-	logic/dbmodels/EnhancedAbstractListModel.cpp
-	logic/dbmodels/EnhancedAbstractTableModel.cpp
-	logic/dbmodels/ScanResultsTableModel.cpp
-	logic/dbmodels/EntityBase.cpp
-	logic/models/ScanResultsTreeModel.cpp
 	utils/DebugBlock.cpp
+	utils/DebugHelpers.cpp
 	utils/Fraction.cpp
 	utils/MapConverter.cpp
-	logic/LibraryRescanner.cpp
 	utils/RegisterQtMetatypes.cpp
 	utils/UniqueIDMixin.h
-	logic/CueSheetParser.cpp
-	logic/CueSheet.cpp
-	logic/CoverArtJob.cpp
-	logic/ModelUserRoles.cpp
-	logic/proxymodels/SelectionFilterProxyModel.cpp
-	logic/proxymodels/ModelChangeWatcher.cpp
-	logic/ColumnSpec.cpp
-	logic/LibraryRescannerMapItem.cpp
-	logic/LibraryRescannerJob.cpp
-	logic/proxymodels/QPersistentModelIndexVec.cpp
-	logic/DirScanResult.cpp
-	logic/ExtMimeType.cpp
 	utils/Logging.cpp
 	utils/AboutDataSetup.cpp
 	utils/QtHelpers.cpp
+	utils/VectorHelpers.cpp
 	)
 
 # NoMoc files.
@@ -233,6 +167,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
 	concurrency/ExtFutureProgressInfo.h
+	concurrency/ExtFuturePropagationHandler.h
 	concurrency/ExtFutureWatcher.h
 	concurrency/ExtAsync_traits.h
 	concurrency/impl/ExtAsync_impl.h
@@ -254,24 +189,29 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ExtAsyncExceptions.cpp
 	concurrency/ExtFuture.cpp
 	concurrency/ExtFutureProgressInfo.cpp
+	concurrency/ExtFuturePropagationHandler.cpp
 	concurrency/AMLMJob.cpp
 	concurrency/AMLMCompositeJob.cpp
 	concurrency/DirectoryScanJob.cpp
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
 	concurrency/WorkerThreadBase.cpp
+	
+	concurrency/FunctionWrapper.cpp
+	concurrency/FunctionWrapper.h
+	concurrency/WorkStealingQueue.cpp
+	concurrency/WorkStealingQueue.h
+	concurrency/ThreadPool2.cpp
+	concurrency/ThreadPool2.h
 	)
 
-set(SOURCE_FILES_LOGIC_MODELS
-	logic/models/AbstractTreeModelItem.h
-	logic/models/AbstractTreeModelItem.cpp
-	logic/models/AbstractTreeModel.h
-	logic/models/AbstractTreeModel.cpp
-	)
-
+#
+# Subdir targets.
+#
 add_subdirectory(gui)
-add_subdirectory(logic)
-#message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
+add_subdir_lib(logic_subdir "logic")
+add_subdir_lib(future_subdir "future")
+
 
 #
 # Append all the SOURCE_* subsets.
@@ -280,13 +220,11 @@ add_subdirectory(logic)
 # *.ui files.
 ### @todo Remove? list(APPEND SOURCE_FILES ${SOURCE_FILES_UI})
 
-# The Future
-if(false) # The "pull the sources in directly" method from I forget where.
-add_library(amlm_src_future EXCLUDE_FROM_ALL "")
-include(future/CMakeLists.txt)
-else()
-add_subdirectory(future)
-endif()
+# Collect all the project-common internal and external link library targets into a single variable.
+set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
+	future_subdir
+	logic_subdir
+)
 
 # Concurrency
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
@@ -294,6 +232,9 @@ list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 
 # Models
 list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
+
+# QT5_LOGGING_CATEGORY_SOURCE_FILES
+list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
 
 # Append the third_party files which need to be explicitly in the SOURCE_/HEADER_FILES vars.
 list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
@@ -309,7 +250,6 @@ prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a rea
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 	${amlm_gui_SRCS} ### @todo Make this a real target.
 	${amlm_gui_widget_SRCS} ### @todo
-#	${amlm_src_future_SRCS}
 	)
 
 # Sets the icon on Windows and OSX.
@@ -333,6 +273,7 @@ qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
 		${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS}
+		${PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS}
 		)
 
 # WIN32_OR_MACOS_BUNDLE variable for add_executable().  Expands to WIN32 or MACOS_BUNDLE depending on OS
@@ -348,6 +289,8 @@ endif()
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
+#message(STATUS "amlm_SRCS ${amlm_SRCS}")
+#message(STATUS "amlm_settings_SRCS ${amlm_settings_SRCS}")
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
@@ -359,15 +302,19 @@ add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_relaxed_constexpr cxx_variable_templates)
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
-	"QT_SHAREDPOINTER_TRACK_POINTERS=1"
-	PRIVATE
-	"KXMLGUI_NO_DEPRECATED=1"
-	"QT_DEPRECATED_WARNINGS=1"
-	"QT_NO_KEYWORDS=1"
-	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
+		"QT_SHAREDPOINTER_TRACK_POINTERS=1"
+		"KXMLGUI_NO_DEPRECATED=1"
+		"QT_DEPRECATED_WARNINGS=1"
+		"QT_NO_KEYWORDS=1"
+		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
-target_include_directories(${PROJECT_NAME} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
-target_compile_options(${PROJECT_NAME} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
+target_include_directories(${PROJECT_NAME} 
+	PUBLIC 
+		"utils/nomoc"
+		${INCLUDE_DIR_VERDIGRIS}
+		${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
+		)
+target_compile_options(${PROJECT_NAME} PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}
@@ -392,7 +339,6 @@ Checks: '-*,llvm-twine-local'
 if(TRUE) # Enable test target.
 
 find_package(Qt5Test REQUIRED)
-include(CTest)
 
 # @note We don't really need to do this, but will for expediency.  Per the docs:
 # "CMake will generate tests only if the enable_testing() command has been invoked.
@@ -401,6 +347,11 @@ include(CTest)
 # "Note that ctest expects to find a test file in the build directory root.
 # Therefore, this command should be in the source directory root."
 enable_testing()
+# We do not want to include CTest or CDash.  They result in hundreds of top-level targets
+# that we have no use for.  Per @link https://stackoverflow.com/questions/45169854/cmake-in-qtcreator-4-3-shows-many-automatic-targets-how-to-remove-hide-them,
+# The above enable_testing() is enough.
+#include(CTest)
+
 
 ###
 ### Google Test

@@ -33,7 +33,7 @@
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/models/AbstractTreeModel.h>
 #include <logic/models/ScanResultsTreeModel.h>
-#include <PerfectDeleter.h>
+#include <logic/PerfectDeleter.h>
 
 
 /**
@@ -101,10 +101,13 @@ public:
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
     ScanResultsTreeModel* scan_results_tree_model_instance() { return m_srtm_instance; };
+    static ScanResultsTreeModel* IScanResultsTreeModel() { return amlmApp->m_srtm_instance; };
 
     QMimeDatabase* mime_db() { return m_mime_database; };
 
 	static PerfectDeleter* IPerfectDeleter() { return &(amlmApp->m_perfect_deleter); };
+
+//	static ExtFuturePropagationHandler* IExtFuturePropagationHandler() { return &(amlmApp->m_future_cancel_prop_handler); };
 
     /// @}
 
@@ -132,6 +135,12 @@ public Q_SLOTS:
 
     /**
      * Connected to this app's aboutToQuit() signal.
+     * From the Qt5 manual:
+     * "This signal is emitted when the application is about to quit the main event loop, e.g. when
+     * the event loop level drops to zero. This may happen either after a call to quit() from inside the application
+     * or when the user shuts down the entire desktop session.
+     * The signal is particularly useful if your application has to do some last-second cleanup.
+     * Note that no user interaction is possible in this state."
      */
     void SLOT_onAboutToQuit();
 
@@ -158,6 +167,7 @@ private:
     QMimeDatabase* m_mime_database;
 
 	PerfectDeleter m_perfect_deleter;
+//	ExtFuturePropagationHandler m_future_cancel_prop_handler;
 
     std::atomic_bool m_shutting_down {false};
     std::atomic_bool m_controlled_shutdown_complete {false};

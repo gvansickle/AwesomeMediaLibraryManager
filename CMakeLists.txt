@@ -77,9 +77,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Min versions of Qt5, KF5, KF5/ECM.
-set(QT_MIN_VERSION "5.10.0")
-set(KF5_MIN_VERSION "5.48.0")
-set(ECM_MIN_VERSION "5.48.0")
+set(QT_MIN_VERSION "5.11.0")
+set(KF5_MIN_VERSION "5.51.0")
+set(ECM_MIN_VERSION "5.51.0")
 
 ###
 ### ECM Setup ====================================================================================================
@@ -93,9 +93,12 @@ set(ECM_MIN_VERSION "5.48.0")
 find_package(PkgConfig REQUIRED) # @note I see PkgConfig just before ECM in a few KDE scripts.
 find_package(ECM ${ECM_MIN_VERSION} REQUIRED NO_MODULE)
 
-# Add dirs where we keep support *.cmake's, ucm, ECM, etc.
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_SOURCE_DIR}/cmake/ucm/cmake ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
-	${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
+# Add dirs where we keep support *.cmake's, ucm, cotire, ECM, etc.
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
+		#${CMAKE_SOURCE_DIR}/cmake/cotire/CMake
+		${CMAKE_SOURCE_DIR}/cmake/ucm/cmake
+		${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR}
+		${CMAKE_SOURCE_DIR}/src/third_party/continuable/cmake)
 
 ###
 ### ECM Macros
@@ -119,6 +122,7 @@ include(ECMInstallIcons)
 include(ECMAddAppIcon)
 include(ECMAddTests)
 include(ECMMarkAsTest)
+include(ECMQtDeclareLoggingCategory)
 
 # Sanitizers.
 # @note KF5:
@@ -160,18 +164,17 @@ include(ECMEnableSanitizers)
 ### END ECM Setup ====================================================================================================
 ###
 
-
 # Set some extra debug flags early.
 # This is stupid, but I can't for the life of me figure out a better way to set the compiler options in
 # cmake and/or Qt Creator.
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 if(UNIX)
-ucm_add_flags(-fmessage-length=0 -pthread)
+ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -Wmaybe-uninitialized -Werror=maybe-uninitialized)
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments CONFIG DEBUG)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree -fno-elide-type
@@ -285,9 +288,10 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Widgets
 	Multimedia
 	Sql
+	XmlPatterns
 	Concurrent
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Sql Qt5::Concurrent)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Sql Qt5::XmlPatterns Qt5::Concurrent)
 
 # Unix-only
 if(UNIX)
@@ -394,6 +398,22 @@ list(APPEND GTK_LINK_LIB_TARGETS ${XCB_TARGETS})
 print_varlist(XCB_TARGETS GTK_LINK_LIB_TARGETS)
 endif(UNIX)
 
+
+#
+# Intel's TBB.
+# CMake integration per @link https://github.com/01org/tbb/tree/tbb_2019/cmake
+### This method pulls the code down from github.
+# @note On my Fedora 29 box with installed binary tbb, it looks like CMake already has tbb modules at this path:
+#set(PATH_TO_TBB_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake/tbb")
+#set(TBB_ROOT "${CMAKE_CURRENT_LIST_DIR}/../tbb")
+#include(${PATH_TO_TBB_CMAKE_MODULES}/TBBGet.cmake)
+#include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+#tbb_get(TBB_ROOT tbb_root SOURCE_CODE)
+#tbb_build(TBB_ROOT ${TBB_ROOT} CONFIG_DIR TBB_DIR MAKE_ARGS tbb_cpf=1)
+#find_package(TBB REQUIRED tbb_preview)
+#tbb_get(TBB_ROOT tbb_root CONFIG_DIR TBB_DIR)
+#find_package(TBB REQUIRED tbb)
+
 #
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
 #
@@ -411,12 +431,43 @@ download_project(PROJ                boost_callable_traits
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR} EXCLUDE_FROM_ALL)
 print_varlist(boost_callable_traits_SOURCE_DIR boost_callable_traits_BINARY_DIR)
 
-# Use include-what-you-use.
-if(FALSE)
-	if(NOT WIN32)
-		set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE "iwyu;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/qt5_4.imp;-Xiwyu;--mapping_file=/usr/share/include-what-you-use/gcc.stl.headers.imp;-Xiwyu;--mapping_file=${PROJECT_SOURCE_DIR}/utils/nomoc/nomoc.imp")
-	endif()
-endif()
+# Boost
+# See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
+set(BOOST_THREAD_VERSION          4) # Latest in 1.66 as of this writing.
+set(BOOST_THREAD_PROVIDES_FUTURE ON)
+set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
+set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
+set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
+set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
+set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
+set(Boost_USE_DEBUG_LIBS         ON)
+set(Boost_USE_RELEASE_LIBS       OFF)
+#set(BOOST_ALL_DYN_LINK           OFF)
+set(Boost_USE_DEBUG_RUNTIME      ON)
+set(Boost_DEBUG  ON) # enable debug output from FindBoost.
+set(Boost_DETAILED_FAILURE_MSG ON) # add detailed information to the failure message 
+								   # even when the REQUIRED option is not given to the find_package call.
+find_package(Boost 1.66.0 REQUIRED
+	COMPONENTS
+		thread
+		system)
+include_directories( ${Boost_INCLUDE_DIR} )
+link_directories( ${Boost_LIBRARY_DIRS} )
+
+# Qt logging categories.
+# @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
+ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
+                                HEADER logging_cat_ExtFuture.h
+                                IDENTIFIER EXTFUTURE
+                                CATEGORY_NAME amlm.concurrency.extfuture
+                                DEFAULT_SEVERITY Debug ### <Debug|Info|Warning|Critical|Fatal>
+                                )
+ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
+                                HEADER logging_cat_ExtAsync.h
+                                IDENTIFIER EXTASYNC
+                                CATEGORY_NAME amlm.concurrency.extasync
+                                DEFAULT_SEVERITY Debug ### <Debug|Info|Warning|Critical|Fatal>
+                                )
 
 add_definitions(
 	-DQT_DEPRECATED_WARNINGS
@@ -451,6 +502,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${boost_callable_traits_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
+	### @todo REMOVE
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
 
@@ -465,12 +517,13 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 
 
 ###
-### Add the subdirs.
+### Add the project subdirs.
 ###
 # This is the sum-total of all source files which go into building the main exe.
-#add_library(amlm_pseudolib "")
+#add_subdir_lib()
 add_subdirectory(src)
 add_subdirectory(tests)
+
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
 #ecm_add_app_icon(amlm_SRCS ICONS ${amlm_ICONS})

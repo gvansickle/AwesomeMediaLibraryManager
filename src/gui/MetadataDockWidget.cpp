@@ -285,24 +285,32 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
         });
         coverartjob->start();
 #elif 1 // THE EVEN NEWER ASYNC WAY
-		qDb() << "CoverArtCallback: make_task.";
-		ExtFuture<QByteArray> coverartjob = CoverArtJob::make_task(this, libentry->getUrl());
-		qDb() << "CoverArtCallback: Adding to perfect deleter.";
-		AMLMApp::IPerfectDeleter()->addQFuture(coverartjob);
+
+		// Create the asynchronous Cover Art loader task.";
+		ExtFuture<QByteArray> coverart_future = CoverArtJob::make_task(this, libentry->getUrl());
+
+		//qDb() << "CoverArtCallback: Adding to perfect deleter.";
+		/// @todo Is there a race here? Should this be part of the make_, so we never see it if it gets deleted?
+		AMLMApp::IPerfectDeleter()->addQFuture(coverart_future);
+
 		qDb() << "CoverArtCallback: Adding .then()..";
-		coverartjob.then([=](ExtFuture<QByteArray> future) -> bool {
+		coverart_future.then([=](ExtFuture<QByteArray> future) -> bool {
 
-			// Do as much as we can in an arbitrary non-GUI context.
+			// Do as much as we can in the arbitrary non-GUI context we're called in.
+#warning "NEED TO FIX get() returning nothing"
+			if(future.hasException())
+			{
 
-			QByteArray cover_image_bytes = future.result();
+			}
+			QList<QByteArray> cover_image_bytes = future.get();
 			QImage image;
 
-			if(!future.isCanceled() && cover_image_bytes.size() > 0)
+			if(!future.isCanceled() && !cover_image_bytes.empty() && cover_image_bytes[0].size() > 0)
 			{
 				// Pic data load succeeded, see if we can get a valid QImage out of it.
 				// QImage is safe to use in a non-GUI-thread context.
 
-				if(image.loadFromData(cover_image_bytes) == true)
+				if(image.loadFromData(cover_image_bytes[0]) == true)
 				{
 					// It was a valid image.
 //					m_cover_image_label->setPixmap(QPixmap::fromImage(image));
