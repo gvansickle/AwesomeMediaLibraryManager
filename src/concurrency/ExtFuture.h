@@ -1205,13 +1205,13 @@ protected:
 						if(result_count <= i)
 						{
 							// No new results, must have finshed etc.
-							qDb() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
+							qWr() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
 							break;
 						}
 
 						// Call the tap callback.
 						//				streaming_tap_callback_copy(ef, i, result_count);
-						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
+//						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
 						std::invoke(streaming_tap_callback_copy, this_future_copy, i, result_count);
 
 						// Copy the new results to the returned future.
@@ -1222,7 +1222,7 @@ protected:
 							T the_next_val = this_future_copy.resultAt(i);
 							returned_future_copy.reportResult(the_next_val);
 						}
-					}
+					} // END while(true).
 
 					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
 

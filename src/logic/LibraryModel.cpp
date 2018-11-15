@@ -310,7 +310,9 @@ M_WARNING("TODO Probably should be refactored.");
         else
 		{
 			// Entry hasn't been populated yet.
-
+#if 1 //////////////////////////////////// EXPERIMENT
+			return QVariant();
+#else
 			// Get a QPMI so we can keep track of outstanding requests for it.
 			// We track by rows, so we want the index of column 0.
 			QPersistentModelIndex qpmi (index.siblingAtColumn(0));
@@ -350,7 +352,7 @@ M_WARNING("TODO Probably should be refactored.");
 				AMLMApp::IPerfectDeleter()->addQFuture(future_entry);
 				AMLMApp::IPerfectDeleter()->addQFuture(then_future);
             }
-
+#endif // EXPERIMENT
             ////////////////
 
 			if(role == Qt::DisplayRole)

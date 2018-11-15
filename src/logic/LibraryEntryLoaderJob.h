@@ -1,7 +1,3 @@
-#include <utility>
-
-#include <utility>
-
 /*
  * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
@@ -28,6 +24,7 @@
 
 // Std C++
 #include <memory>
+#include <utility>
 
 // Qt5
 #include <QObject>

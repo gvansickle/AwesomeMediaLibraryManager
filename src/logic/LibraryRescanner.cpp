@@ -196,6 +196,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     // Even newer tree model.
     auto tree_model = AMLMApp::instance()->IScanResultsTreeModel();
 
+	// Attach a streaming tap to get the results.
 	ExtFuture<DirScanResult> tail_future
 		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end){
 		QVector<AbstractTreeModelItem*> new_items;
@@ -220,7 +221,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			if(tap_future.HandlePauseResumeShouldICancel())
 			{
 				tap_future.reportCanceled();
-				return;
+				break;
 			}
 		}
 
