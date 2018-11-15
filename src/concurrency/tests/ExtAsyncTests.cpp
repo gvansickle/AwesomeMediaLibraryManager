@@ -578,7 +578,8 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 
 	try
 	{
-		mapped_results_future.waitForFinished();
+//		mapped_results_future.waitForFinished();
+		mapped_results_future.result();
 	}
 	catch(...)
 	{
