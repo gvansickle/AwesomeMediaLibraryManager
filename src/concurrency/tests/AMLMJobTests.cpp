@@ -329,7 +329,7 @@ TEST_P(AMLMJobTestsParameterized, ImportProjectJobSyncExecPAutoDelete)
     TC_EXIT();
 }
 
-TEST_P(AMLMJobTestsParameterized, SynchronousExecTestAMLMJob1PAutoDelete)
+TEST_P(AMLMJobTestsParameterized, DISABLED_SynchronousExecTestAMLMJob1PAutoDelete)
 {
     TC_ENTER();
 
@@ -368,7 +368,7 @@ TEST_P(AMLMJobTestsParameterized, SynchronousExecTestAMLMJob1PAutoDelete)
     TC_EXIT();
 }
 
-TEST_P(AMLMJobTestsParameterized, AsynchronousExecTestAMLMJob1PAutoDelete)
+TEST_P(AMLMJobTestsParameterized, DISABLED_AsynchronousExecTestAMLMJob1PAutoDelete)
 {
     TC_ENTER();
 
@@ -448,7 +448,7 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest)
 }
 
 
-TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
+TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete)
 {
     TC_ENTER();
 
@@ -522,7 +522,7 @@ TEST_P(AMLMJobTestsParameterized, DirScanCancelTestPAutodelete)
     TC_EXIT();
 }
 
-TEST_P(AMLMJobTestsParameterized, CancelTestPAutoDelete)
+TEST_P(AMLMJobTestsParameterized, DISABLED_CancelTestPAutoDelete)
 {
     TC_ENTER();
 
