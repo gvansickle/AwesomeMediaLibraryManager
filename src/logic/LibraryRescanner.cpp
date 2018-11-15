@@ -191,7 +191,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
-//    LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
+	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
     // Even newer tree model.
     auto tree_model = AMLMApp::instance()->IScanResultsTreeModel();
@@ -224,6 +224,26 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				break;
 			}
 		}
+		// Broke out of loop, check for problems.
+		if(tap_future.isCanceled())
+		{
+			// We've been canceled.
+			/// @todo Not sure if we should see that in here or not, probably not.
+			qWr() << "tap_callback saw canceled";
+			return;
+		}
+		if(tap_future.isFinished())
+		{
+			qWr() << "tap_callback saw finished";
+			if(new_items.empty())
+			{
+				qWr() << "tap_callback saw finished/empty new_items";
+			}
+			return;
+		}
+
+		// Shouldn't get here with no incoming items.
+		Q_ASSERT(!new_items.empty());
 
 		// Got all the ready results, send them to the model.
 		// We have to do this from the GUI thread unfortunately.
@@ -360,7 +380,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 /// @todo EXPERIMENTAL
 
 
-#if 0
+#if 1
             // Directory traversal complete, start rescan.
 
             QVector<VecLibRescannerMapItems> rescan_items;
@@ -384,9 +404,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     master_job_tracker->registerJob(dirtrav_job);
 	master_job_tracker->setAutoDelete(dirtrav_job, true);
     master_job_tracker->setStopOnClose(dirtrav_job, true);
-//    master_job_tracker->registerJob(lib_rescan_job);
-//	master_job_tracker->setAutoDelete(lib_rescan_job, true);
-//    master_job_tracker->setStopOnClose(lib_rescan_job, true);
+	master_job_tracker->registerJob(lib_rescan_job);
+	master_job_tracker->setAutoDelete(lib_rescan_job, true);
+	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
     // Start the asynchronous ball rolling.
     dirtrav_job->start();
