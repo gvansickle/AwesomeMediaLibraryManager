@@ -245,7 +245,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		// Shouldn't get here with no incoming items.
 		Q_ASSERT(!new_items.empty());
 
-		// Got all the ready results, send them to the model.
+		// Got all the ready results, send them to the model(s).
 		// We have to do this from the GUI thread unfortunately.
 		qIno() << "Sending" << new_items.size() << "scan results to model";
 		run_in_event_loop(this, [=, tree_model_ptr=tree_model](){
@@ -390,7 +390,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             rescan_items = m_current_libmodel->getLibRescanItems();
 
             qDb() << "rescan_items:" << rescan_items.size();
-            Q_ASSERT(rescan_items.size() > 0);
+			Q_ASSERT(!rescan_items.empty());
 
             lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
 

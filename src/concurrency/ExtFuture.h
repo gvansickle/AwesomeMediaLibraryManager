@@ -409,7 +409,15 @@ public:
 	 */
 	void waitForFinished()
 	{
+		if(this->hasException())
+		{
+			qWr() << "waitForFinished() about to throw";
+		}
 		this->d.waitForFinished();
+		if(this->hasException())
+		{
+			Q_ASSERT_X(0, "waitForFinished()", "Had an exception but didn't throw");
+		}
 	}
 
 	/**

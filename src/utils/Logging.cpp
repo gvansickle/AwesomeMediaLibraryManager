@@ -46,7 +46,9 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 
     QString debug_str;
 
-    //
+    // Custom log format string handling.
+
+    // Log thread name.
     auto cur_thread = QThread::currentThread();
     QString thread_name;
     if(cur_thread)
@@ -67,6 +69,11 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
     debug_str = qFormatLogMessage(type, context, msg);
 
     debug_str.replace(QStringLiteral("%threadname15"), thread_name);
+
+    // Log a short form of the function name.  With templates, %{function} becomes enormous.
+    // Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
+    // and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
+    debug_str.replace(QStringLiteral("%shortfunction"), QString(context.function).left(16));
 
     /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.
 #if 0 //def Q_OS_WIN
