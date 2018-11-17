@@ -85,14 +85,6 @@ set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
-###
-### Intel TBB
-###
-#download_project(PROJ                tbb_wjakob
-#                 GIT_REPOSITORY      https://github.com/wjakob/tbb.git
-#                 GIT_TAG             master
-#                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-#)
 
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
@@ -103,7 +95,9 @@ set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
 
-
+###
+### Collect all the external link lib targets into one variable. 
+###
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
@@ -259,7 +253,7 @@ ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
 
 # Qt5 Binary Resource (rcc) files.
-qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
+### @todo qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
@@ -289,13 +283,17 @@ endif()
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
-#message(STATUS "amlm_SRCS ${amlm_SRCS}")
-#message(STATUS "amlm_settings_SRCS ${amlm_settings_SRCS}")
-add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
+
+#### EXPERIMENT
+###add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
+ucm_add_target(${PROJECT_NAME} TYPE EXECUTABLE ${WIN32_OR_MACOS_BUNDLE}
+	SOURCES
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${amlm_settings_SRCS}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
+	PCH_FILE
+		"concurrency/ExtFuture.h"
 	)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 ### @todo No longer required?

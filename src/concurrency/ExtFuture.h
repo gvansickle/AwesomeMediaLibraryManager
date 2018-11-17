@@ -708,7 +708,7 @@ public:
 			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
 		}
 
-		// The future we'll immediately return.  We copy this into the then_callback ::run() context.
+		// The future we'll immediately return.  We copy this into the then_callback ::run() context below.
 		ExtFuture<LiftedR> returned_future = make_started_only_future<LiftedR>();
 
 		QtConcurrent::run(
@@ -720,14 +720,20 @@ public:
 			// At this point:
 			// - The outer then() call may have already returned.
 			// -- Hence returned_future, context may be gone off the stack.
-			// - this may be destructed and deleted already.
-			// - this_future_copy may or may not be finished, canceled, or canceled with exception.
-			// - returned_future_copy may be finished, canceled, or canceled with exception.
+			// - this may be have been destructed and deleted already.
+			// - this_future_copy may or may not be running, finished, canceled, or canceled with exception,
+			//   but should be in one of those states.
+			// - returned_future_copy state may be:
+			//    - Normal: Started, Canceled, or canceled with exception.
+			//    - Abnormal: Finished, but you'd have to be trying.
 			//   Would be something like this:
 			//     f = ef.then(...haven't got inside here yet...);
 			//     f.cancel().
 
 			Q_ASSERT(returned_future_copy != this_future_copy);
+			Q_ASSERT(this_future_copy.isRunning()
+					 || this_future_copy.isCanceled()
+					 || this_future_copy.isFinished());
 
 			try
 			{
@@ -737,6 +743,7 @@ public:
 				// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't just use
 				// this_future_copy.waitForFinished() here because it will return immediately if the thread hasn't
 				// "really" started (i.e. if isRunning() == false).
+				/// @todo Is that correct though?
 //				if(!this_future_copy.isRunning())
 				{
 					qCWarning(EXTFUTURE) << "START SPINWAIT";

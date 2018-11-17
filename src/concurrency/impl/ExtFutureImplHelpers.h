@@ -23,10 +23,8 @@
 template <class T>
 class ExtFuture;
 
-static QThreadPool s_cancel_threadpool = QThreadPool();
-
 /**
- * A helper .waitForFinished() replacement which ignores isRunning() and only returns based on
+ * A helper for ExtFuture<T>.waitForFinished() which ignores isRunning() and only returns based on
  * isCanceled() || isFinished().
  * .waitForFinished() first looks at the isRunning() state and treats it like an already-finished state:
  * @code
@@ -43,8 +41,37 @@ static QThreadPool s_cancel_threadpool = QThreadPool();
  * You can see that in this case, it will actually "steal the runnable" and run it.
  * Sometimes this is not what we need, e.g. the race between a call to Whatever::run() and the returned
  * future actually getting into the Running state.
+ * @note Or am I wrong there?
+ *
  * Busy-waits like this are of course gross, there's probably a better way to do this.
+ *
+ * @note If you have the QThreadPool you're running this function in, use this overload.  In the spin-wait, it does a releaseThread()/yield()/reserveThread() on @p tp in order
+ * to prevent the QThreadPool running out of threads and deadlocking.
  */
+template <class T, class U>
+static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
+{
+	/// queryState() does this:
+	/// bool QFutureInterfaceBase::queryState(State state) const
+	/// {
+	///    return d->state.load() & state;
+	/// }
+	/// So this:
+	///     this_future.d.queryState(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished)
+	/// Should return true if either bit is set.
+	constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
+	while(!this_future.d.queryState(canceled_or_finished)
+		  && !downstream_future.d.queryState(canceled_or_finished))
+	{
+		// Temporarily raise tp's maxThreadCount() while we yield, allowing other threads to continue.
+		tp->releaseThread();
+		QThread::yieldCurrentThread();
+		// Lower the maxThreadCount().
+		tp->reserveThread();
+	}
+}
+
+#if 0
 template <class T, class U>
 static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
 {
@@ -65,48 +92,9 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const
 		s_cancel_threadpool.reserveThread();
 	}
 }
+#endif
 
-template <class T, class U>
-static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
-{
-	/// queryState() does this:
-	/// bool QFutureInterfaceBase::queryState(State state) const
-	/// {
-	///    return d->state.load() & state;
-	/// }
-	/// So this:
-	///     this_future.d.queryState(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished)
-	/// Should return true if either bit is set.
-	constexpr auto canceled_or_finished = QFutureInterfaceBase::State(QFutureInterfaceBase::Canceled | QFutureInterfaceBase::Finished);
-	while(!this_future.d.queryState(canceled_or_finished)
-		  && !downstream_future.d.queryState(canceled_or_finished))
-	{
-		tp->releaseThread();
-		QThread::yieldCurrentThread();
-		tp->reserveThread();
-	}
-}
-
-/**
- * A helper .waitForFinished() replacement which ignores isRunning() and only returns based on
- * isCanceled() || isFinished().
- * .waitForFinished() first looks at the isRunning() state and treats it like an already-finished state:
- * @code
- * 	void QFutureInterfaceBase::waitForFinished()
-	{
-		QMutexLocker lock(&d->m_mutex);
-		const bool alreadyFinished = !isRunning();
-		lock.unlock();
-
-		if (!alreadyFinished) {
-			d->pool()->d_func()->stealAndRunRunnable(d->runnable);
-		[...]
- * @endcode
- * You can see that in this case, it will actually "steal the runnable" and run it.
- * Sometimes this is not what we need, e.g. the race between a call to Whatever::run() and the returned
- * future actually getting into the Running state.
- * Busy-waits like this are of course gross, there's probably a better way to do this.
- */
+#if 0
 template <class U>
 static void spinWaitForFinishedOrCanceled(const ExtFuture<U>& future)
 {
@@ -119,6 +107,7 @@ static void spinWaitForFinishedOrCanceled(const ExtFuture<U>& future)
 		s_cancel_threadpool.reserveThread();
 	}
 }
+#endif
 
 #if 0
 /**

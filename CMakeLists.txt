@@ -444,7 +444,7 @@ set(Boost_USE_DEBUG_LIBS         ON)
 set(Boost_USE_RELEASE_LIBS       OFF)
 #set(BOOST_ALL_DYN_LINK           OFF)
 set(Boost_USE_DEBUG_RUNTIME      ON)
-set(Boost_DEBUG  ON) # enable debug output from FindBoost.
+set(Boost_DEBUG    				OFF) # enable debug output from FindBoost.
 set(Boost_DETAILED_FAILURE_MSG ON) # add detailed information to the failure message 
 								   # even when the REQUIRED option is not given to the find_package call.
 find_package(Boost 1.66.0 REQUIRED

@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 					   "%{if-category}%{category} %{endif}"
 						"] "
 					   /*	+ logging.ClickableLinkPattern() + */
-                      /*%{function}:*/ "%shortfunction: Ln: %{line} - %{message}"
+                      /*%{function}:*/ "%shortfunction:%{line} - %{message}"
                        /* "%{if-fatal}%{backtrace}%{endif}" */);
 
 	// Logging test.

@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     							"%{if-category}%{category} %{endif}"
                               "] "
                               /*	+ logging.ClickableLinkPattern() + */
-                              "%{function}:%{line} - %{message}"
+                              "%shortfunction:%{line} - %{message}"
                               "%{if-fatal}%{backtrace}%{endif}");
 
 	//
