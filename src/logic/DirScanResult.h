@@ -35,6 +35,7 @@
 #include <src/utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
+#include "ISerializable.h"
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;
@@ -42,7 +43,7 @@ class ScanResultsTreeModelItem;
 /**
  * A single hit found during a directory scan.
  */
-class DirScanResult
+class DirScanResult : public ISerializable
 {
 	Q_GADGET
 
@@ -87,6 +88,12 @@ public:
     /// If one was found, DirProp::HasSidecarCueSheet will be set.
     /// Returned URL will not be valid if there was no sidecar cue sheet.
 	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
+
+	/// Serialization
+
+	/// @todo Can these be protected?
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
 	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);

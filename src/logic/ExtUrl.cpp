@@ -49,6 +49,32 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	LoadModInfo(qurl_finfo);
 }
 
+#define DATASTREAM_FIELDS(X) \
+	X(href, m_url) X(ts_last_refresh, m_timestamp_last_refresh) X(file_size, m_size) X(ts_creation, m_creation_timestamp) \
+	X(ts_last_modified, m_last_modified_timestamp) X(ts_metadata_last_modified, m_metadata_last_modified_timestamp)
+
+QVariant ExtUrl::toVariant() const
+{
+	QVariantMap retval;
+
+	// Add all the fields to the map.
+#define X(field_name, field) retval.insert( # field_name , field );
+	DATASTREAM_FIELDS(X)
+#undef X
+
+	return retval;
+}
+
+void ExtUrl::fromVariant(const QVariant& variant)
+{
+	QVariantMap map = variant.toMap();
+
+	// Extract all the fields from the map, cast them to their type.
+#define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
+	DATASTREAM_FIELDS(X)
+#undef X
+}
+
 XmlElement ExtUrl::toXml() const
 {
 	// Mostly elements format.
@@ -119,13 +145,9 @@ void ExtUrl::LoadModInfo(const QFileInfo* qurl_finfo)
 	}
 }
 
-#define DATASTREAM_FIELDS(X) \
-	X(m_url) X(m_timestamp_last_refresh) X(m_size) X(m_creation_timestamp) \
-	X(m_last_modified_timestamp) X(m_metadata_last_modified_timestamp)
-
 QDebug operator<<(QDebug dbg, const ExtUrl& obj)
 {
-#define X(field) << obj.field
+#define X(unused, field) << obj.field
 	dbg DATASTREAM_FIELDS(X);
 #undef X
 	return dbg;
@@ -133,7 +155,7 @@ QDebug operator<<(QDebug dbg, const ExtUrl& obj)
 
 QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 {
-#define X(field) << myObj.field
+#define X(unused, field) << myObj.field
 	out DATASTREAM_FIELDS(X);
 #undef X
 	return out;
@@ -141,7 +163,7 @@ QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 
 QDataStream& operator>>(QDataStream& in, ExtUrl& myObj)
 {
-#define X(field) >> myObj.field
+#define X(unused, field) >> myObj.field
 	return in DATASTREAM_FIELDS(X);
 #undef X
 }

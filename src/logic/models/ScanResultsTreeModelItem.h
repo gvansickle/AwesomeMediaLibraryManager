@@ -31,6 +31,7 @@ class QXmlStreamReader;
 
 // Ours
 #include "../DirScanResult.h"
+#include "../ISerializable.h"
 
 /*
  *

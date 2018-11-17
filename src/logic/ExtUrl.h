@@ -37,6 +37,7 @@ class QFileInfo;
 #include <utils/QtHelpers.h>
 #include "xml/XmlObjects.h"
 #include <logic/models/AbstractTreeModelWriter.h>
+#include "ISerializable.h"
 
 #if 0
 class FileModificationInfo
@@ -78,7 +79,7 @@ Q_DECLARE_METATYPE(FileModificationInfo);
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
  */
-class ExtUrl
+class ExtUrl : public ISerializable
 {
 	Q_GADGET
 
@@ -150,10 +151,15 @@ public:
 	/// QXmlStream{Read,Write} operators.
 //	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 
+	/// @todo Can these be protected?
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
 	/**
 	 * Return an XmlElement representing this ExtUrl.
 	 */
 	XmlElement toXml() const;
+
 
 protected:
 

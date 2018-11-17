@@ -49,6 +49,32 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	determineDirProps(found_url_finfo);
 }
 
+#define DATASTREAM_FIELDS(X) \
+	X(flags_dirprops, m_dir_props) X(exturl_dir, m_dir_exturl) X(exturl_media, m_media_exturl) X(exturl_cuesheet, m_cue_exturl)
+
+
+QVariant DirScanResult::toVariant() const
+{
+	QVariantMap retval;
+
+	// Add all the fields to the map.
+#define X(field_name, field) retval.insert( # field_name , QVariant::fromValue(field) );
+	DATASTREAM_FIELDS(X)
+#undef X
+
+	return retval;
+}
+
+void DirScanResult::fromVariant(const QVariant& variant)
+{
+	QVariantMap map = variant.toMap();
+
+	// Extract all the fields from the map, cast them to their type.
+#define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
+	DATASTREAM_FIELDS(X)
+#undef X
+}
+
 ScanResultsTreeModelItem* DirScanResult::toTreeModelItem()
 {
 //	QVector<QVariant> column_data;
@@ -69,6 +95,7 @@ ScanResultsTreeModelItem* DirScanResult::toTreeModelItem()
 
 	return new_item;
 }
+
 
 XmlElement DirScanResult::toXml() const
 {
