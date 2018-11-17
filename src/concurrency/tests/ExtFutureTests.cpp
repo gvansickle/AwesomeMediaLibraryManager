@@ -1982,7 +1982,7 @@ TEST_F(ExtFutureTest, ThenChain)
 //    TCOUT << "after wait(): " << future.state().toString();
 //    ASSERT_EQ(wait_result, QString("Then Called"));
 
-	future.wait();
+	future.waitForFinished();
 	EXPECT_TRUE(future.isStarted());
 	EXPECT_FALSE(future.isRunning());
 	EXPECT_TRUE(future.isFinished());
