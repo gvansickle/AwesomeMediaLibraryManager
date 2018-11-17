@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/xquery_files">
+        <file>filelist.xq</file>
+    </qresource>
+</RCC>

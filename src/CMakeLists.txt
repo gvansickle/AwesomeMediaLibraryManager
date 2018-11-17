@@ -253,7 +253,7 @@ ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
 
 
 # Qt5 Binary Resource (rcc) files.
-### @todo qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
+qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
@@ -283,17 +283,11 @@ endif()
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
-
-#### EXPERIMENT
-###add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
-ucm_add_target(${PROJECT_NAME} TYPE EXECUTABLE ${WIN32_OR_MACOS_BUNDLE}
-	SOURCES
+add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
 		${amlm_settings_SRCS}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
-	PCH_FILE
-		"concurrency/ExtFuture.h"
 	)
 # Compiler features FBO Verdigris (esp. on Windows/MSVC).  -D__cpp_constexpr=201304 -D__cpp_variable_templates=201304.
 ### @todo No longer required?

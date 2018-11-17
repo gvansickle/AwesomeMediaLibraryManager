@@ -27,6 +27,10 @@ set(amlm_ICONS PARENT_SCOPE
   scalable-preferences-desktop-sound.svgz
 )
 
+set(amlm_XQUERIES PARENT_SCOPE)
+set(amlm_XQUERIES PARENT_SCOPE
+	filelist.xq
+)
 
 # Qt5 Binary Resource (rcc) files.
 #qt5_add_binary_resources(icons_oxygen oxygenicons.qrc)
