@@ -87,6 +87,9 @@ set(logic_subdir_SOURCES
 	PerfectDeleter.cpp
 	PerfectDeleter.h
 	ISerializable.h
+	ISerializer.h
+	XmlSerializer.cpp
+	XmlSerializer.h
 	)
 prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
 

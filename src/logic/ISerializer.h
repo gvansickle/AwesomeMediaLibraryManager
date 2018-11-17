@@ -25,6 +25,7 @@
 
 // Qt5
 #include <QString>
+#include <QUrl>
 
 // Ours
 #include "ISerializable.h"
@@ -38,11 +39,11 @@ public:
 	virtual ~ISerializer() {}
 
 	virtual void save(const ISerializable& serializable,
-			const QString& filepath,
+			const QUrl& filepath,
 			const QString& rootName = "") = 0;
 
 	virtual void load(ISerializable& serializable,
-			const QString& filepath) = 0;
+			const QUrl& filepath) = 0;
 };
 
 
