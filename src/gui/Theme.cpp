@@ -252,7 +252,7 @@ void Theme::initialize()
     Q_ASSERT(rccs_loaded > 0);
 #endif
     // Interesting stuff in here by default.
-//    dump_resource_tree(":/");
+	dump_resource_tree(":/");
 
     LogIconThemeInfo();
 

@@ -520,9 +520,10 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ### Add the project subdirs.
 ###
 # This is the sum-total of all source files which go into building the main exe.
-#add_subdir_lib()
+add_subdir_lib(resources_subdir "resources")
 add_subdirectory(src)
 add_subdirectory(tests)
+
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)

@@ -190,7 +190,6 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
 	concurrency/WorkerThreadBase.cpp
-	
 	concurrency/FunctionWrapper.cpp
 	concurrency/FunctionWrapper.h
 	concurrency/WorkStealingQueue.cpp
@@ -218,6 +217,7 @@ add_subdir_lib(future_subdir "future")
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 	future_subdir
 	logic_subdir
+	resources_subdir
 )
 
 # Concurrency
@@ -263,6 +263,8 @@ qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenico
 # Qt5 non-binary Resource files.
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+### @todo Is this right?
+qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS

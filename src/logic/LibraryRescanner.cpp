@@ -243,7 +243,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		}
 
 		// Shouldn't get here with no incoming items.
-		Q_ASSERT(!new_items.empty());
+		Q_ASSERT_X(!new_items.empty(), "DIRTRAV CALLBACK", "NO NEW ITEMS BUT HIT TAP CALLBACK");
 
 		// Got all the ready results, send them to the model(s).
 		// We have to do this from the GUI thread unfortunately.
@@ -298,6 +298,28 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 #if 1
 				AbstractTreeModelWriter tmw(tree_model_ptr);
 				tmw.write_to_iodevice(&outfile);
+				outfile.close();
+#ifndef TRY_XQUERY_READ
+				// Now let's see if we can XQuery what we just wrote.
+				{
+				    QFile queryFile(QString(":/xquery_files/filelist.xq"));
+				    queryFile.open(QIODevice::ReadOnly);
+					QFile outfile2(QDir::homePath() + "/DeleteMe_2.xml");
+					auto status = outfile2.open(QFile::WriteOnly | QFile::Text);
+				    const QString query(QString::fromLatin1(queryFile.readAll()));
+				    QStringList xqout;
+				    QXmlQuery qxq;
+				    qxq.setQuery(query);
+					Q_ASSERT(qxq.isValid());
+
+					QXmlFormatter formatter(qxq, &outfile2);
+					formatter.setIndentationDepth(2);
+					if(!qxq.evaluateTo(&formatter))
+					{
+						Q_ASSERT(0);
+					}
+				}
+#endif
 #else
 				//
 				if(0)

@@ -63,6 +63,9 @@ M_WARNING("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CM
  */
 int main(int argc, char *argv[])
 {
+	// Make sure our compiled-in static lib resources are linked.
+	Q_INIT_RESOURCE(xquery_files);
+
 	QThread::currentThread()->setObjectName("MAIN");
 
 	// Set up top-level logging.

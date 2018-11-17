@@ -19,17 +19,24 @@
 
 # Application icons.
 ### @todo Make our own icon.
-set(amlm_ICONS PARENT_SCOPE)
-set(amlm_ICONS PARENT_SCOPE
+set(amlm_ICONS
   48-preferences-desktop-sound.png
   64-preferences-desktop-sound.png
   128-preferences-desktop-sound.png
   scalable-preferences-desktop-sound.svgz
 )
+prepend_to_each(amlm_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_ICONS})
 
-set(amlm_XQUERIES PARENT_SCOPE)
-set(amlm_XQUERIES PARENT_SCOPE
+set(amlm_XQUERIES
+	xquery_files.qrc
 	filelist.xq
+)
+prepend_to_each(amlm_XQUERIES "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_XQUERIES})
+
+target_sources(resources_subdir 
+	PUBLIC
+		${amlm_ICONS}
+		${amlm_XQUERIES}
 )
 
 # Qt5 Binary Resource (rcc) files.
