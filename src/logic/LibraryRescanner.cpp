@@ -194,8 +194,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
-    // Even newer tree model.
+    // Get a pointer to the Scan Results Tree model.
     auto tree_model = AMLMApp::instance()->IScanResultsTreeModel();
+    // Set the root URL of the scan results model.
+    /// @todo Should this really be done here, or somewhere else?
+    tree_model->setBaseDirectory(dir_url);
 
 	// Attach a streaming tap to get the results.
 	ExtFuture<DirScanResult> tail_future

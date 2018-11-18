@@ -29,6 +29,11 @@ ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
 	m_parse_factory_functions.emplace_back(&ScanResultsTreeModelItem::parse);
 }
 
+void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
+{
+	m_base_directory = base_directory;
+}
+
 
 bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex& parent)
 {

@@ -24,6 +24,7 @@
 
 // Qt5
 #include <QUrl>
+#include <QString>
 
 // Ours
 #include "ScanResultsTreeModelItem.h"
@@ -38,6 +39,12 @@ class ScanResultsTreeModel : public AbstractTreeModel
 public:
 	ScanResultsTreeModel(QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
+
+    /**
+     * Sets the base directory of the model.
+     * @todo Not sure if we should support more than one or not.
+     */
+    void setBaseDirectory(const QUrl& base_directory);
 
 	/**
 	 * Append a vector of AbstractTreeModelItem's as children of @p parent.

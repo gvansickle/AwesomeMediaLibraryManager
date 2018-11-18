@@ -1574,7 +1574,7 @@ void MainWindow::onRescanLibrary()
 M_WARNING("HACKISH, MAKE THIS BETTER");
 /// @todo So really what we're doing is removing any libraries and re-opening them.
 
-QVector<QUrl> lib_root_urls;
+	QVector<QUrl> lib_root_urls;
 
 	for(auto l : m_libmodels)
 	{
@@ -1712,7 +1712,7 @@ void MainWindow::newCollectionView()
 	child->setMainModel2(model);
 //    child->getTableView()->setModel(model);
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
-    child->setPane2Model(AMLMApp::instance()->scan_results_tree_model_instance());
+    child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel());
 
     mdi_child->show();
 }
