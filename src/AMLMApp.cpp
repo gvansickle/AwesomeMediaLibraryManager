@@ -99,29 +99,13 @@ void AMLMApp::Init(bool gtest_only)
 //	m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
 //	m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"), 1);
 
-	QString str =
-	"Getting Started				How to familiarize yourself with Qt Designer\n"
-	" Launching Designer			Running the Qt Designer application\n"
-	" The User Interface			How to interact with Qt Designer\n"
-
-	"Designing a Component			Creating a GUI for your application\n"
-	" Creating a Dialog			How to create a dialog\n"
-	" Composing the Dialog		Putting widgets into the dialog example\n"
-	" Creating a Layout			Arranging widgets on a form\n"
-	" Signal and Slot Connections		Making widget communicate with each other\n"
-			;
-
-
     /// @todo Move this somewhere.
 //    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
 
 	// Create and set up the scan results model.
-	m_srtm_instance = new ScanResultsTreeModel(str, this);
+	m_srtm_instance = new ScanResultsTreeModel(this);
+	// Create and set the root item / headers
 	QVector<QVariant> header_columns {"DirProps", "MediaURL", "SidecarCueURL"};
-//	for(const QString& header : headers)
-//	{
-//		rootData << header;
-//	}
 	m_srtm_instance->setRootItem(m_srtm_instance->make_root_node(header_columns));
 
 

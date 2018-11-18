@@ -36,8 +36,7 @@ class ScanResultsTreeModel : public AbstractTreeModel
 	using BASE_CLASS = AbstractTreeModel;
 
 public:
-	ScanResultsTreeModel(/*const QStringList &headers, */const QString &data,
-                         QObject *parent = nullptr);
+	ScanResultsTreeModel(QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
 
 	/**

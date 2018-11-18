@@ -74,21 +74,6 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 
 }
 
-AbstractTreeModel::AbstractTreeModel(/*const QStringList &headers,*/ const QString &data, QObject *parent)
-	: AbstractTreeModel(parent)
-{
-//	/// @todo Move all this out of the constructor?
-//    QVector<QVariant> rootData;
-//	for(const QString& header : headers)
-//	{
-//        rootData << header;
-//	}
-
-////	m_root_item = new AbstractTreeModelItem(rootData);
-//	/// @todo virtual function in constructor.
-//	m_root_item = make_root_node(rootData);
-}
-
 AbstractTreeModel::~AbstractTreeModel()
 {
 }

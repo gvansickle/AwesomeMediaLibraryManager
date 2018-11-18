@@ -81,8 +81,6 @@ class AbstractTreeModel : public QAbstractItemModel, public ISerializable
 
 public:
 	explicit AbstractTreeModel(QObject *parent = nullptr);
-	explicit AbstractTreeModel(/*const QStringList &headers,*/ const QString &data,
-			  QObject *parent = nullptr);
 	~AbstractTreeModel() override;
 
 
