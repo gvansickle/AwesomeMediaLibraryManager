@@ -45,7 +45,7 @@ public:
 
     using ExtFutureType = ExtFuture<Unit>;
 
-    CumulativeAMLMJob(QObject* parent);
+	explicit CumulativeAMLMJob(QObject* parent);
     ~CumulativeAMLMJob() override;
 
     static CumulativeAMLMJobPtr make_job(QObject *parent);

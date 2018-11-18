@@ -95,7 +95,7 @@ public:
 
 //    ProjectFolderItem *m_folder;
 //    IProjectFileManager *m_importer;
-    QFutureWatcher<void> *m_watcher;
+    QFutureWatcher<void> *m_watcher{};
 //    QPointer<IProject> m_project;
     bool cancel = false;
 

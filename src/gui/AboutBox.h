@@ -31,7 +31,7 @@ class AboutBox : public QDialog
 	W_OBJECT(AboutBox)
 
 public:
-    AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags &flags = 0);
+    AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags& flags = 0);
 
 	int exec() override;
 

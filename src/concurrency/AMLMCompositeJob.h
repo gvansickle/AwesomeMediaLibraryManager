@@ -41,7 +41,7 @@ class AMLMCompositeJob: public KCompositeJob
     Q_OBJECT
 
 public:
-    AMLMCompositeJob(QObject* parent);
+	explicit AMLMCompositeJob(QObject* parent);
      ~AMLMCompositeJob() override;
 
     Q_SCRIPTABLE void start() override {};
