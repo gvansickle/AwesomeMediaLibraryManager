@@ -53,6 +53,7 @@
 #include <concurrency/DirectoryScanJob.h>
 
 #include "LibraryRescannerJob.h"
+#include "XmlSerializer.h"
 
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 
@@ -299,6 +300,14 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				AbstractTreeModelWriter tmw(tree_model_ptr);
 				tmw.write_to_iodevice(&outfile);
 				outfile.close();
+
+				/// NEW Let's also try it with plenty of QVariants.
+				{
+					QString filename = QDir::homePath() + "/DeleteMeNew.xspf";
+					XmlSerializer xmlser;
+					xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(filename), "playlist");
+
+				}
 #ifndef TRY_XQUERY_READ
 				// Now let's see if we can XQuery what we just wrote.
 				{

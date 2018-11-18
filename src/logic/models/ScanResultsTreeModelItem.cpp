@@ -147,6 +147,23 @@ QVariant ScanResultsTreeModelItem::data(int column) const
 	return QVariant("XXXX");
 }
 
+
+QVariant ScanResultsTreeModelItem::toVariant() const
+{
+	QVariantMap vmap;
+
+	vmap.insert(m_item_tag_name, m_dsr.toVariant());
+
+	return vmap;
+}
+
+void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
+{
+	QVariantMap map = variant.toMap();
+	m_dsr.fromVariant(map.value(m_item_tag_name));
+}
+
+
 ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent)
 {
 	auto& xml = *xmlp;

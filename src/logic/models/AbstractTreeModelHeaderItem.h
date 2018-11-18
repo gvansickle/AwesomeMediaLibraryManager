@@ -45,6 +45,14 @@ public:
 	 * @returns true
 	 */
 	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
+
+	/// @name Serialization
+	/// @{
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
+	/// @}
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

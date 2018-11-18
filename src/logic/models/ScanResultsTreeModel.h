@@ -45,6 +45,14 @@ public:
 	 */
 	bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
 
+	/// @name Serialization
+	/// @{
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
+	/// @}
+
 protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };

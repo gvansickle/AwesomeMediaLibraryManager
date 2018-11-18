@@ -50,6 +50,13 @@ public:
 	 */
 	QVariant data(int column) const override;
 
+
+	/// @name Serialization
+	/// @{
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
 	/**
 	 * Parses a new ScanResultsTreeModelItem* out of the passed XML stream.
 	 * Returns nullptr if the next parse factory function should be tried.
@@ -66,6 +73,8 @@ public:
 	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
 
 //	QXmlQuery write() const;
+
+	/// @} // END Serialization
 
 	static ScanResultsTreeModelItem* createChildItem(AbstractTreeModelItem* parent);
 

@@ -67,15 +67,17 @@ class QXmlStreamWriter;
 // Ours
 #include <src/utils/QtHelpers.h>
 
+#include <logic/ISerializable.h>
+
 /**
  * Generic item for use in AbstractItemTreeModel.
  */
-class AbstractTreeModelItem
+class AbstractTreeModelItem : public ISerializable
 {
 public:
 	explicit AbstractTreeModelItem(AbstractTreeModelItem *parent = nullptr);
 	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
-    virtual ~AbstractTreeModelItem();
+	 ~AbstractTreeModelItem() override;
 
     /// Return a pointer to the number'th child of this item.
     /// @returns Pointer to a default constructed AbstractTreeModelItem, which is not added to the QVector.
@@ -106,6 +108,11 @@ public:
     bool setData(int column, const QVariant &value);
 
     bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
+
+	// Serialization
+    // Be sure to override these in derived classes.
+    //virtual QVariant toVariant() const = 0;
+    //virtual void fromVariant(const QVariant& variant) = 0;
 
 	/**
 	 * Write this item and any children to the given QXmlStreamWriter.

@@ -60,6 +60,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+
 class QXmlStreamWriter;
 class QXmlStreamReader;
 
@@ -67,9 +68,10 @@ class QXmlStreamReader;
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
+#include <logic/ISerializable.h>
 
 
-class AbstractTreeModel : public QAbstractItemModel
+class AbstractTreeModel : public QAbstractItemModel, public ISerializable
 {
     Q_OBJECT
 

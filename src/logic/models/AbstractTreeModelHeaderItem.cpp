@@ -56,3 +56,23 @@ bool AbstractTreeModelHeaderItem::writeItemAndChildren(QXmlStreamWriter* writer)
 	return false;
 }
 
+QVariant AbstractTreeModelHeaderItem::toVariant() const
+{
+	QVariantMap map;
+	QVariantList list;
+
+	for(int i = 0; i < childCount(); ++i)
+	{
+		const auto* child = this->child(i);
+		list.append(child->toVariant());
+	}
+
+	map.insert("abstract_tree_model_header", list);
+	return map;
+}
+
+void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
+{
+
+}
+
