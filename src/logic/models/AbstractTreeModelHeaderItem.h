@@ -23,11 +23,12 @@
 #ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 #define SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 
-#include "AbstractTreeModelItem.h"
-
+// Qt5
 #include <QVector>
 #include <QVariant>
 
+// Ours
+#include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
 
 /*

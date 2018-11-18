@@ -22,23 +22,24 @@
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
 
-ScanResultsTreeModel::ScanResultsTreeModel(const QStringList &headers, const QString &data, QObject *parent)
-    : BASE_CLASS(headers, data, parent)
+ScanResultsTreeModel::ScanResultsTreeModel(/*const QStringList &headers,*/ const QString &data, QObject *parent)
+    : BASE_CLASS(/*headers, */data, parent)
 {
 	/// @todo Move all this out of the constructor?
-	QVector<QVariant> rootData;
-	for(const QString& header : headers)
-	{
-		rootData << header;
-	}
+//	QVector<QVariant> rootData;
+//	for(const QString& header : headers)
+//	{
+//		rootData << header;
+//	}
 
 //	m_root_item = new AbstractTreeModelItem(rootData);
 	/// @todo virtual function in constructor.
-	m_root_item = make_root_node(rootData);
+//	m_root_item = make_root_node(rootData);
 
 	// Populate the parse factory functions with the first-layer node type names we know about.
 	m_parse_factory_functions.emplace_back(&ScanResultsTreeModelItem::parse);
 }
+
 
 bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex& parent)
 {
@@ -75,6 +76,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 	///	A sample date is "2005-01-08T17:10:47-05:00".
 	map.insert("date", QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
+	// Insert the invisible root item, which will recursively add all children.
+	/// @todo It also serves as the model's header, not sure that's a good overloading.
 	map.insert("root_item", m_root_item->toVariant());
 
 	return map;
@@ -82,10 +85,13 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
+	QVariantMap map = variant.toMap();
 
+	m_base_directory = map.value("base_directory").toUrl();
 }
 
 AbstractTreeModelHeaderItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
 {
 	return new AbstractTreeModelHeaderItem(rootData);
 }
+

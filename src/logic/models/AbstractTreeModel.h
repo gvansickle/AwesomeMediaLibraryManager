@@ -56,6 +56,10 @@
 #ifndef ABSTRACTTREEMODEL_H
 #define ABSTRACTTREEMODEL_H
 
+// Std C++
+#include <memory>
+
+
 // Qt5
 #include <QAbstractItemModel>
 #include <QModelIndex>
@@ -77,7 +81,7 @@ class AbstractTreeModel : public QAbstractItemModel, public ISerializable
 
 public:
 	explicit AbstractTreeModel(QObject *parent = nullptr);
-	explicit AbstractTreeModel(const QStringList &headers, const QString &data,
+	explicit AbstractTreeModel(/*const QStringList &headers,*/ const QString &data,
 			  QObject *parent = nullptr);
 	~AbstractTreeModel() override;
 
@@ -133,7 +137,11 @@ public:
 	/// @name Extended public model interface.
     /// @{
 
-    /// Append a vector of AbstractTreeModelItem's as children of @p parent.
+	/// Set the root item, which doubles as the header item.
+	virtual void setRootItem(AbstractTreeModelHeaderItem* root_header_item);
+
+
+	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
     virtual bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
 
 	AbstractTreeModelItem *getItem(const QModelIndex &index) const;
@@ -158,8 +166,7 @@ protected:
 	/// @name Extended protected model interface.
 	/// @{
 
-	/// Create a new root node.
-	virtual AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) = 0;
+	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
 //	virtual AbstractTreeModelItem* make_default_node(QVector<QVariant> rootData, AbstractTreeModelItem* parent) = 0;
 
 	/**
@@ -183,7 +190,7 @@ protected:
 
     /// @}
 
-	AbstractTreeModelItem *m_root_item;
+	AbstractTreeModelHeaderItem* m_root_item;
 
 
 private:

@@ -115,7 +115,15 @@ void AMLMApp::Init(bool gtest_only)
     /// @todo Move this somewhere.
 //    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
 
-    m_srtm_instance = new ScanResultsTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
+	// Create and set up the scan results model.
+	m_srtm_instance = new ScanResultsTreeModel(str, this);
+	QVector<QVariant> header_columns {"DirProps", "MediaURL", "SidecarCueURL"};
+//	for(const QString& header : headers)
+//	{
+//		rootData << header;
+//	}
+	m_srtm_instance->setRootItem(m_srtm_instance->make_root_node(header_columns));
+
 
 	/// @end Experiments
 

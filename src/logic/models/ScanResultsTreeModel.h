@@ -31,12 +31,12 @@ class AbstractTreeModelHeaderItem;
 
 class ScanResultsTreeModel : public AbstractTreeModel
 {
-    using BASE_CLASS = AbstractTreeModel;
-
 	Q_OBJECT
 
+	using BASE_CLASS = AbstractTreeModel;
+
 public:
-    ScanResultsTreeModel(const QStringList &headers, const QString &data,
+	ScanResultsTreeModel(/*const QStringList &headers, */const QString &data,
                          QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
 
@@ -53,12 +53,13 @@ public:
 
 	/// @}
 
+	/// Create a new root node.
+	AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) override;
+
 protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
-	/// Create a new root node.
-	AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) override;
 
     QUrl m_base_directory;
 

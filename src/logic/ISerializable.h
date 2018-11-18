@@ -28,15 +28,15 @@
 class ISerializable
 {
 public:
-	virtual ~ISerializable() {}
+	virtual ~ISerializable() = default;
 
 	/**
-	 * Override in derived classes to serialize to a QVariant or QVariantMap.
+	 * Override in derived classes to serialize to a QVariantMap or QVariantList.
 	 */
 	virtual QVariant toVariant() const = 0;
 
 	/**
-	 * Override in derived classes to serialize from a QVariant or QVariantMap.
+	 * Override in derived classes to serialize from a QVariantMap or QVariantList.
 	 */
 	virtual void fromVariant(const QVariant& variant) = 0;
 };
