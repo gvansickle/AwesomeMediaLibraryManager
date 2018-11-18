@@ -183,7 +183,8 @@ void Theme::initialize()
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     // QIcon::fallbackSearchPaths() Introduced in Qt5 5.11.0.
     qIn() << "Initial Icon Theme Fallback Search Paths:";
-    for(const auto& respath : QIcon::fallbackSearchPaths())
+	auto fsp = QIcon::fallbackSearchPaths().toStdList();
+	for(const auto& respath : fsp)
     {
         qIn() << "  " << respath;
     }
@@ -443,7 +444,7 @@ QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	}
 
 	// Add all available styles to the menu, checking the currently selected one.
-    for(const QString &style : m_available_qstyles)
+	for(const QString &style : qAsConst(m_available_qstyles))
 	{
         QAction *a = new QAction(style, stylesGroup);
 		a->setCheckable(true);

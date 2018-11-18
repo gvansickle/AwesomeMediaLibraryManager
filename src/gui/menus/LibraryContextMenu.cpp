@@ -67,7 +67,7 @@ LibraryContextMenu::LibraryContextMenu(const QString& title, const QPersistentMo
 	auto row_indexes = mapQPersistentModelIndexesToSource(selected_rows);
 	bool is_multirow = false;
 
-	if(row_indexes.size() > 0)
+	if(!row_indexes.empty())
 	{
 		qDebug() << "row_indexes size():" << row_indexes.size();
 
@@ -133,7 +133,7 @@ static void appendTableRow(QTextTable* table, QString a, QString b)
 
 QStringList LibraryContextMenu::getSongsAsTooltips(const QPersistentModelIndexVec& row_indexes)
 {
-	Q_ASSERT(row_indexes.size() > 0);
+	Q_ASSERT(!row_indexes.empty());
 
 	QTextBrowser* tb = new QTextBrowser(this);
 //	QTextDocument* td = new QTextDocument(this);

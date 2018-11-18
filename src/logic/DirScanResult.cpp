@@ -21,13 +21,13 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
 #include <QRegularExpression>
 
-/// Ours, Qt5/KF5-related
+// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
@@ -172,11 +172,11 @@ M_WARNING("TODO");
 }
 
 #define DATASTREAM_FIELDS(X) \
-	X(m_dir_exturl) X(m_dir_props) X(m_media_exturl) X(m_cue_exturl)
+	X(flags_dirprops, m_dir_props) X(exturl_dir, m_dir_exturl) X(exturl_media, m_media_exturl) X(exturl_cuesheet, m_cue_exturl)
 
 QDebug operator<<(QDebug dbg, const DirScanResult & obj)
 {
-#define X(field) << obj.field
+#define X(ignore, field) << obj.field
     dbg DATASTREAM_FIELDS(X);
 #undef X
     return dbg;

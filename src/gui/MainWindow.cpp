@@ -1159,7 +1159,10 @@ void MainWindow::updateConnections()
 bool MainWindow::maybeSaveOnClose()
 {
 	QStringList failures;
-	for(auto child : m_mdi_area->subWindowList())
+
+	auto swl = m_mdi_area->subWindowList().toStdList();
+
+	for(const auto& child : swl)
 	{
 		MDIPlaylistView* playlist_ptr= qobject_cast<MDIPlaylistView*>(child->widget());
 		if(playlist_ptr == nullptr)
@@ -1580,7 +1583,7 @@ QVector<QUrl> lib_root_urls;
 		onRemoveDirFromLibrary(l);
 	}
 
-	for(auto url : lib_root_urls)
+	for(const auto& url : qAsConst(lib_root_urls))
 	{
 		openFileLibrary(url);
 	}
@@ -1588,7 +1591,7 @@ QVector<QUrl> lib_root_urls;
 
 void MainWindow::onCancelRescan()
 {
-	for(auto l : m_libmodels)
+	for(const auto& l : m_libmodels)
 	{
 		l->cancelRescan();
 	}

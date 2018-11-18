@@ -59,7 +59,7 @@ protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };
 	QString getXmlStreamVersion() const override { return "0.1"; };
 
-
+	// The tree's base directory URL.
     QUrl m_base_directory;
 
 };

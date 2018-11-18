@@ -65,9 +65,6 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     mainWidget->setOrientation(Qt::Vertical);
 //    auto mainWidget = new QWidget(this);
 
-    // Main layout is vertical.
-    auto mainLayout = new QVBoxLayout();
-
     m_metadata_tree_view = new QTreeView(this);
     m_metadata_tree_view->setModel(m_proxy_model);
 
@@ -81,6 +78,8 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_cover_image_label->setText("IMAGE HERE");
 
 	/// @todo Make this into the real Metadata tree view.  Until then, keep it hidden.
+//	// Main layout is vertical.
+//	auto mainLayout = new QVBoxLayout();
 //	mainLayout->addWidget(m_metadata_tree_view);
 	m_metadata_tree_view->hide();
 

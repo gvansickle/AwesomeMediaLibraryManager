@@ -136,19 +136,19 @@ int main(int argc, char *argv[])
 	// Start the Google Test from a timer expiration, so we know that we have a
 	// legitimate event loop running.
 	int retval = 0;
-	QTimer::singleShot(0, [&retval, &argc, &argv, &app](){
+	QTimer::singleShot(0, &app, [&retval, &argc, &argv, &app](){
 		retval = google_test_main(argc, argv);
 		qDb() << "google_test_main() returned:" << retval;
 
 		// Now send a signal to the app to exit.
 		QTimer::singleShot(0, &app, [&app, &retval](){
 			qDb() << "EXIT TIMER FIRED, CALLING app.exit()";
-			app.exit(retval);
+			AMLMApp::exit(retval);
 		});
 		qDb() << "exit() timer created, should exit soon";
 	});
 
-	app.exec();
+	AMLMApp::exec();
 
 	return retval;
 }
