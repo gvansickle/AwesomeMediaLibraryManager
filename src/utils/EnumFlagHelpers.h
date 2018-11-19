@@ -23,8 +23,58 @@
 #ifndef SRC_UTILS_ENUMFLAGHELPERS_H_
 #define SRC_UTILS_ENUMFLAGHELPERS_H_
 
+#include <QString>
+#include <QFlags>
+#include <QMetaEnum>
 
+/**
+ * And the one thing you might want to use Qt's QMetaWhatever infrastructure for, implicitly or explicitly converting
+ * a Q_ENUM() to a string?  You can't do directly.  So this.  The.  Simplest.  Things.
+ * And Q_FLAG()s?  Yep, need to handle them separately.
+ *
+ * @note Yet, you can stream to QDebug and that works out of the box.
+ *
+ * @note It's "intentional".  No lie: @link https://bugreports.qt.io/browse/QTBUG-54210
+ *
+ * @param value  Any Q_ENUM() or Q_FLAG().
+ * @return A QString representing the valiue of the Q_ENUM/Q_FLAG.
+ */
+template<typename QEnumType>
+QString EnumFlagtoqstr(const QEnumType value)
+{
+	QMetaEnum me = QMetaEnum::fromType<QEnumType>();
+	if(QMetaEnum::fromType<QEnumType>().isFlag())
+	{
+		// It's a Q_FLAG().
+		return QString(me.valueToKeys(value));
+	}
+	else
+	{
+		// It's a Q_ENUM().
+		return QString(me.valueToKey(value));
+	}
+}
 
-
+//template<typename QFlagsType>
+//QFlagsType QFlagsFromQStr(const QString& rep)
+//{
+//	QMetaEnum me = QMetaEnum::fromType<QFlagsType>();
+//
+//	// It's a Q_FLAG().
+//	Q_ASSERT(me.isFlag());
+//
+//	return QFlagsType(me.keysToValue(rep));
+//}
+//
+//template<typename QEnumType>
+//QEnumType QEnumFromQStr(const QString& rep)
+//{
+//	QMetaEnum me = QMetaEnum::fromType<QEnumType>();
+//	if(QMetaEnum::fromType<QEnumType>().isFlag())
+//	{
+//		// It's a Q_FLAG().
+//		return QString(me.valueToKeys(value));
+//	}
+//}
 
 #endif /* SRC_UTILS_ENUMFLAGHELPERS_H_ */

@@ -33,7 +33,7 @@
 
 // Ours
 #include "models/ScanResultsTreeModel.h"
-
+#include <utils/EnumFlagHelpers.h>
 #include <logic/models/AbstractTreeModelWriter.h>
 
 
@@ -61,7 +61,8 @@ QVariant DirScanResult::toVariant() const
 //#define X(field_name, field) map.insert( # field_name , field ## .toVariant() );
 //	DATASTREAM_FIELDS(X)
 //#undef X
-	submap.insert("flags_dirprops", m_dir_props.Int()));
+//	submap.insert("flags_dirprops", QVariant::fromValue<DirProps>(m_dir_props) );
+	submap.insert("flags_dirprops", QVariant::fromValue(EnumFlagtoqstr(m_dir_props)) );
 	submap.insert("exturl_dir", m_dir_exturl.toVariant());
 	submap.insert("exturl_media", m_media_exturl.toVariant());
 	submap.insert("exturl_cuesheet", m_cue_exturl.toVariant());

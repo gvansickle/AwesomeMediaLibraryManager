@@ -74,7 +74,7 @@ public:
         /// Dir is just a bunch of MP3's.
         JBOMP3s = 0x10,
         /// Nothing is known about the dir.
-		Unknown = 0x80
+		Unknown = 0x00
     };
 	/// "The Q_DECLARE_FLAGS(Flags, Enum) macro expands to: typedef QFlags<Enum> Flags;"
 	/// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"

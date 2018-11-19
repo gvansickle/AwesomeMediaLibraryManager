@@ -131,6 +131,7 @@ set(HEADER_FILES
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
 	utils/VectorHelpers.h
+	utils/EnumFlagHelpers.h
     )
 
 # Source file list.
