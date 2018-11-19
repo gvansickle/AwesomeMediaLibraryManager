@@ -40,6 +40,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
 	qRegisterMetaType<DirScanResult>();
+	qRegisterMetaType<DirScanResult::DirPropFlags>();
 });
 
 
@@ -63,6 +64,12 @@ QVariant DirScanResult::toVariant() const
 //#undef X
 //	submap.insert("flags_dirprops", QVariant::fromValue<DirProps>(m_dir_props) );
 	submap.insert("flags_dirprops", QVariant::fromValue(EnumFlagtoqstr(m_dir_props)) );
+//	submap.insert("flags_dirprops", toString_QF<DirScanResult::DirPropFlags>(m_dir_props)) );
+//	QString result;
+//	QTextStream ts(&result);
+//	ts << m_dir_props;
+//	qDb() << "TS FLAGS:" << result;
+//	submap.insert("flags_dirprops", QVariant::fromValue(result) );
 	submap.insert("exturl_dir", m_dir_exturl.toVariant());
 	submap.insert("exturl_media", m_media_exturl.toVariant());
 	submap.insert("exturl_cuesheet", m_cue_exturl.toVariant());

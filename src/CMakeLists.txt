@@ -377,7 +377,7 @@ set(TEST_EXE_TARGET alltests)
 set(AMLM_SOURCE_FILES_TEST "")
 set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
-#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.cpp
+	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
 	concurrency/tests/ExtAsyncTestCommon.cpp
@@ -387,7 +387,7 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 	)
 list(APPEND AMLM_HEADER_FILES_TEST
 #	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
-#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.h
+	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
 	concurrency/tests/ExtAsyncTestCommon.h

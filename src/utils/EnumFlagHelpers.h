@@ -26,6 +26,7 @@
 #include <QString>
 #include <QFlags>
 #include <QMetaEnum>
+#include <QMetaType>
 
 /**
  * And the one thing you might want to use Qt's QMetaWhatever infrastructure for, implicitly or explicitly converting
@@ -37,7 +38,7 @@
  * @note It's "intentional".  No lie: @link https://bugreports.qt.io/browse/QTBUG-54210
  *
  * @param value  Any Q_ENUM() or Q_FLAG().
- * @return A QString representing the valiue of the Q_ENUM/Q_FLAG.
+ * @return A QString representing the value of the Q_ENUM/Q_FLAG.
  */
 template<typename QEnumType>
 QString EnumFlagtoqstr(const QEnumType value)
@@ -53,6 +54,22 @@ QString EnumFlagtoqstr(const QEnumType value)
 		// It's a Q_ENUM().
 		return QString(me.valueToKey(value));
 	}
+}
+
+template<typename F> // Output QFlags of registered enumerations
+inline typename std::enable_if<QtPrivate::IsQEnumHelper<F>::Value, char*>::type toString_QF(QFlags<F> f)
+{
+	const QMetaEnum me = QMetaEnum::fromType<F>();
+	return qstrdup(me.valueToKeys(int(f)).constData());
+}
+
+template <typename F> // Fallback: Output hex value
+inline typename std::enable_if<!QtPrivate::IsQEnumHelper<F>::Value, char*>::type toString_QF(QFlags<F> f)
+{
+	const size_t space = 3 + 2 * sizeof(unsigned); // 2 for 0x, two hex digits per byte, 1 for '\0'
+	char *msg = new char[space];
+	qsnprintf(msg, space, "0x%x", unsigned(f));
+	return msg;
 }
 
 //template<typename QFlagsType>

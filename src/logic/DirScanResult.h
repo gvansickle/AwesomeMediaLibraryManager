@@ -48,7 +48,7 @@ class DirScanResult : public ISerializable
 	Q_GADGET
 
 public:
-	/// @name Public default and copy constructors and destructor for Q_DECLARE_METATYPE().
+	/// @name Public default and copy constructors and destructor needed for Q_DECLARE_METATYPE().
 	/// @{
     DirScanResult() = default;
     DirScanResult(const DirScanResult& other) = default;
@@ -80,12 +80,12 @@ public:
 	/// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"
 	/// @link http://doc.qt.io/qt-5/qflags.html#flags-and-the-meta-object-system
 	/// @link http://doc.qt.io/qt-5/qflags.html#Q_DECLARE_FLAGS
-    Q_DECLARE_FLAGS(DirProps, DirProp)
+    Q_DECLARE_FLAGS(DirPropFlags, DirProp)
 	/// "This macro registers a single flags type with the meta-object system.".
 	/// @link http://doc.qt.io/qt-5/qobject.html#Q_FLAG
-    Q_FLAG(DirProps)
+    Q_FLAG(DirPropFlags)
 
-    DirProps getDirProps() const { return m_dir_props; }
+	DirPropFlags getDirProps() const { return m_dir_props; }
 
 	/// Get the ExtUrl which points to the actual media file found.
 	const ExtUrl& getMediaExtUrl() const { return m_media_exturl; }
@@ -121,7 +121,7 @@ protected:
 	/// Absolute URL to the directory.
 	ExtUrl m_dir_exturl;
 
-    DirProps m_dir_props { Unknown };
+    DirPropFlags m_dir_props { Unknown };
 
     /// The media URL which was found.
 	ExtUrl m_media_exturl;
@@ -133,7 +133,7 @@ protected:
 
 Q_DECLARE_METATYPE(DirScanResult);
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirProps);
+Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirPropFlags);
 
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
 QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
