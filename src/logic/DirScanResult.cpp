@@ -56,19 +56,18 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 QVariant DirScanResult::toVariant() const
 {
 	QVariantMap map;
-	QVariantMap exturls_map;
+	QVariantMap submap;
 	// Add all the fields to the map.
 //#define X(field_name, field) map.insert( # field_name , field ## .toVariant() );
 //	DATASTREAM_FIELDS(X)
 //#undef X
-	exturls_map.insert("flags_dirprops", toqstr(m_dir_props));
-	exturls_map.insert("exturl_dir", m_dir_exturl.toVariant());
-	exturls_map.insert("exturl_media", m_media_exturl.toVariant());
-//	 m_dir_exturl.toXml().setId("exturl_dir"),
-//	m_media_exturl.toXml().setId("exturl_media"),
+	submap.insert("flags_dirprops", m_dir_props.Int()));
+	submap.insert("exturl_dir", m_dir_exturl.toVariant());
+	submap.insert("exturl_media", m_media_exturl.toVariant());
+	submap.insert("exturl_cuesheet", m_cue_exturl.toVariant());
 //	m_cue_exturl.toXml().setId("exturl_cuesheet")},
 
-	map.insert("dirscanresult", exturls_map);
+	map.insert("dirscanresult", submap);
 
 	return map;
 }
