@@ -20,11 +20,28 @@
 /**
  * @file grvs_functional.hpp
  */
+
 #ifndef SRC_FUTURE_GRVS_FUNCTIONAL_HPP_
 #define SRC_FUTURE_GRVS_FUNCTIONAL_HPP_
 
 
-
-
+/**
+ * A general-purpose control-flow construct for calling a lambda with a pointer-like argument
+ * only if that argument is non-nullptr.
+ *
+ * If @arg ptr is not nullptr, runs lambda @arg l, passing it @arg ptr as a param.
+ * Otherwise @arg l() is not called.
+ *
+ * @param ptr
+ * @param l
+ */
+template <typename PointerType, typename Lambda>
+void with_ptr_or_skip(PointerType ptr, Lambda l)
+{
+    if(ptr)
+    {
+        l(ptr);
+    }
+}
 
 #endif /* SRC_FUTURE_GRVS_FUNCTIONAL_HPP_ */
