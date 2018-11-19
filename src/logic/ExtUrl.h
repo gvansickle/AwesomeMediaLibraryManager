@@ -101,15 +101,23 @@ public:
 	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
 
 
-    /// ExtUrl Status enum.
-    enum Status
+    /**
+     * ExtUrl Status enum.
+     */
+    enum Statuses
     {
         Exists = 0x01,
         Accessible = 0x02,
         IsStale = 0x04
     };
-    Q_DECLARE_FLAGS(Statuses, Status)
-    Q_FLAG(Statuses)
+    /// "The Q_DECLARE_FLAGS(Flags, Enum) macro expands to: typedef QFlags<Enum> Flags;"
+    /// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"
+    /// @link http://doc.qt.io/qt-5/qflags.html#flags-and-the-meta-object-system
+    /// @link http://doc.qt.io/qt-5/qflags.html#Q_DECLARE_FLAGS
+    Q_DECLARE_FLAGS(Status, Statuses)
+    /// "This macro registers a single flags type with the meta-object system.".
+    /// @link http://doc.qt.io/qt-5/qobject.html#Q_FLAG
+    Q_FLAG(Status)
 
     /**
      * Check the status of the URL, if it is accessible, if it's stale, etc.
@@ -172,7 +180,8 @@ protected:
 };
 
 Q_DECLARE_METATYPE(ExtUrl);
-Q_DECLARE_OPERATORS_FOR_FLAGS(ExtUrl::Statuses);
+/// "declares global operator|() functions for Flags"
+Q_DECLARE_OPERATORS_FOR_FLAGS(ExtUrl::Status);
 QTH_DECLARE_QDEBUG_OP(ExtUrl);
 QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
 //QTH_DECLARE_QXMLSTREAM_OPS(ExtUrl);

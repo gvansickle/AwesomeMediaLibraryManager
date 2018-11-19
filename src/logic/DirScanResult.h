@@ -74,9 +74,15 @@ public:
         /// Dir is just a bunch of MP3's.
         JBOMP3s = 0x10,
         /// Nothing is known about the dir.
-        Unknown = 0x00
+		Unknown = 0x80
     };
+	/// "The Q_DECLARE_FLAGS(Flags, Enum) macro expands to: typedef QFlags<Enum> Flags;"
+	/// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"
+	/// @link http://doc.qt.io/qt-5/qflags.html#flags-and-the-meta-object-system
+	/// @link http://doc.qt.io/qt-5/qflags.html#Q_DECLARE_FLAGS
     Q_DECLARE_FLAGS(DirProps, DirProp)
+	/// "This macro registers a single flags type with the meta-object system.".
+	/// @link http://doc.qt.io/qt-5/qobject.html#Q_FLAG
     Q_FLAG(DirProps)
 
     DirProps getDirProps() const { return m_dir_props; }
@@ -126,7 +132,9 @@ protected:
 };
 
 Q_DECLARE_METATYPE(DirScanResult);
+
 Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirProps);
+
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
 QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
 QTH_DECLARE_QXMLSTREAM_OPS(DirScanResult);

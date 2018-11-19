@@ -51,7 +51,7 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 
 #define DATASTREAM_FIELDS(X) \
 	X(href, m_url) X(ts_last_refresh, m_timestamp_last_refresh) X(file_size, m_size) X(ts_creation, m_creation_timestamp) \
-	X(ts_last_modified, m_last_modified_timestamp) X(ts_metadata_last_modified, m_metadata_last_modified_timestamp)
+	X(ts_last_modified, m_last_modified_timestamp) X(ts_last_modified_metadata, m_metadata_last_modified_timestamp)
 
 QVariant ExtUrl::toVariant() const
 {
@@ -84,7 +84,7 @@ XmlElement ExtUrl::toXml() const
 		XmlElement("ts_last_refresh", m_timestamp_last_refresh),
 		XmlElement("ts_creation", m_creation_timestamp),
 		XmlElement("ts_last_modified", m_last_modified_timestamp),
-		XmlElement("ts_metadata_last_modified", m_metadata_last_modified_timestamp)
+		XmlElement("ts_last_modified_metadata", m_metadata_last_modified_timestamp)
 		};
 
 	XmlElement retval("exturl",
