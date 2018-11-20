@@ -40,7 +40,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
 	qRegisterMetaType<DirScanResult>();
-	qRegisterMetaType<DirScanResult::DirPropFlags>();
+	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
 });
 
 
@@ -63,8 +63,8 @@ QVariant DirScanResult::toVariant() const
 //	DATASTREAM_FIELDS(X)
 //#undef X
 //	submap.insert("flags_dirprops", QVariant::fromValue<DirProps>(m_dir_props) );
-	submap.insert("flags_dirprops", QVariant::fromValue(EnumFlagtoqstr(m_dir_props)) );
-//	submap.insert("flags_dirprops", toString_QF<DirScanResult::DirPropFlags>(m_dir_props)) );
+//	submap.insert("flags_dirprops", QVariant::fromValue(EnumFlagtoqstr(m_dir_props)) );
+	submap.insert("flags_dirprops", QVariant::fromValue/*<DirScanResult::DirPropFlags>*/(m_dir_props));
 //	QString result;
 //	QTextStream ts(&result);
 //	ts << m_dir_props;

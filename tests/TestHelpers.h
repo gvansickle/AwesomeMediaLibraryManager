@@ -38,9 +38,10 @@
 	#include <gtest/gtest.h>
 	#include <gmock/gmock.h>
 
-#if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
-#error "GTEST NOT THREADSAFE"
-#endif
+	// We need a threadsafe googletest build.
+#	if !defined(GTEST_IS_THREADSAFE) || (GTEST_IS_THREADSAFE != 1)
+#		error "GTEST NOT THREADSAFE"
+#	endif
 
 #elif defined(TEST_FWK_IS_QTEST)
 	M_WARNING("Building for QTest framework");
@@ -51,9 +52,37 @@
 #error "BOTH TEST FRAMEWORKS DEFINED"
 #endif
 
+///
+/// @start The TEST_FWK_IS_GTEST/QTEST agnostic common section.
+///
+
 // Ours
 #include <src/concurrency/ExtFuture.h>
 
+
+/// Global divisor for ms delays/timeouts in the tests.
+constexpr long TC_MS_DIV = 10;
+
+static inline void TC_Sleep(int ms)
+{
+	QTest::qSleep(ms / TC_MS_DIV);
+}
+
+static inline void TC_Wait(int ms)
+{
+	QTest::qWait(ms / TC_MS_DIV);
+}
+
+
+///
+/// @end The TEST_FWK_IS_GTEST/QTEST agnostic common section.
+///
+
+
+#if defined(TEST_FWK_IS_GTEST)
+///
+/// The TEST_FWK_IS_GTEST section.
+///
 
 QT_BEGIN_NAMESPACE
 
@@ -85,54 +114,72 @@ inline void PrintTo(const QFuture<T> &qf, ::std::ostream *os)
 
 QT_END_NAMESPACE
 
-/// Globa divisor for ms delays/timeouts in the tests.
-constexpr long TC_MS_DIV = 10;
-
-static inline void TC_Sleep(int ms)
-{
-    QTest::qSleep(ms / TC_MS_DIV);
-}
-
-static inline void TC_Wait(int ms)
-{
-    QTest::qWait(ms / TC_MS_DIV);
-}
 
 /// Quick and dirty way to add information to the test log.
 #define GTEST_COUT_ORIGINAL std::cout << "[          ] [ INFO ] "
 #define GTEST_COUT GTEST_COUT_ORIGINAL
 
 /// @name Hopefully less quick-and-dirty way to add information to test output.
+/// Based on @link https://stackoverflow.com/a/45344932
 /// @{
+/// @note The link makes it look like this should all be here, but it's exposed by gtest.h.
+///       Leaving it here for reference to the color enumerators if nothing else.
 //namespace testing
 //{
-//    namespace internal
-//    {
-//    enum GTestColor {
-//        COLOR_DEFAULT,
-//        COLOR_RED,
-//        COLOR_GREEN,
-//        COLOR_YELLOW
-//    };
-
-/// @warning This is static in gtest now.
-//    extern void ColoredPrintf(GTestColor color, const char* fmt, ...);
-//    } // namespace internal
+//	namespace internal
+//	{
+////		enum GTestColor;
+////		{
+////			COLOR_DEFAULT,
+////			COLOR_RED,
+////			COLOR_GREEN,
+////			COLOR_YELLOW
+////		};
+//		extern void ColoredPrintf(GTestColor color, const char* fmt, ...);
+//	} // namespace internal
 //} // namespace testing
 
-//#define PRINTF(...)  do { testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] "); testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, __VA_ARGS__); } while(0)
+//#define PRINTF(...)  do {\
+//	testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] ");\
+//	testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, __VA_ARGS__);\
+//	} while(0)
 
-//// C++ stream interface
-//class TestCout : public std::stringstream
-//{
-//public:
-//    ~TestCout()
-//    {
-//        PRINTF("%s", str().c_str());
-//    }
-//};
+/**
+ * Class which provides a QDebug output stream to log arbitrary Qt messages to.
+ * Messages are written to a QString and then sent to the Google Test logging infrastructure for actual output.
+ * @note Do not use this class directly, use the TCOUT macro below.
+ */
+class TestCout //: public QDebug //public std::stringstream
+{
+	QString m_log_string {};
+	QDebug m_qdebug_obj;
+
+public:
+	/// Constructor.
+	TestCout() : m_qdebug_obj(&m_log_string)	{ };
+    ~TestCout()
+    {
+		testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] ");
+		testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, "%s\n", m_log_string.toStdString().c_str());
+//		PRINTF("%s\n", str().c_str());
+    }
+
+	QDebug& getQDebugRef()
+	{
+		return m_qdebug_obj;
+	}
+};
+
+/// Macro which exposes a new TestCout object to stream messages to, e.g.:
+/// @code
+///     TCOUT << "This is a test";
+/// @endcode
+#define TCOUT  TestCout().getQDebugRef()
 
 /// @}
+
+#endif /// END #if defined(TEST_FWK_IS_GTEST)
+
 
 enum class GenericState
 {
@@ -144,6 +191,10 @@ enum class GenericState
 ///
 
 #if defined(TEST_FWK_IS_QTEST) /// QTest framework.
+
+///
+/// The TEST_FWK_IS_QTEST section.
+///
 
 #define AMLMTEST_SCOPED_TRACE(str) /* nothing */
 
@@ -168,12 +219,16 @@ enum class GenericState
 
 #define AMLMTEST_EXPECT_NO_FATAL_FAILURE(...) __VA_ARGS__
 
-#elif defined(TEST_FWK_IS_GTEST) /// Google Test Framework
+#elif defined(TEST_FWK_IS_GTEST)
+
+///
+/// Google Test Framework
+///
 
 #define AMLMTEST_SCOPED_TRACE(str) SCOPED_TRACE(str)
 
-#define AMLMTEST_COUT qDb()
-#define TCOUT qDb()
+#define AMLMTEST_COUT TCOUT
+//#define TCOUT qDb()
 
 #define AMLMTEST_EXPECT_TRUE(arg) EXPECT_TRUE(arg)
 #define AMLMTEST_EXPECT_FALSE(arg) EXPECT_FALSE(arg)

@@ -23,7 +23,9 @@
 #ifndef TESTS_FLAGSANDENUMSTESTS_H_
 #define TESTS_FLAGSANDENUMSTESTS_H_
 
-//#include <gtest/gtest.h>
+// Google Test
+#include <gtest/gtest.h>
+
 #include <src/concurrency/tests/ExtAsyncTestCommon.h>
 
 /*
@@ -31,6 +33,8 @@
  */
 class FlagsAndEnumsTests : public ExtAsyncTestsSuiteFixtureBase //::testing::Test
 {
+	using BASE_CLASS = ExtAsyncTestsSuiteFixtureBase;
+
 public:
 
 protected:

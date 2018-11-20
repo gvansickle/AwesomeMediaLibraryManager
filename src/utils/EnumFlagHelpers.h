@@ -97,4 +97,36 @@ QFlagsType QFlagsFromQStr(const QString& rep, bool *ok = nullptr)
 //	}
 //}
 
+template <class FlagsType>
+class QFlagQstringConverterRegistrationHelper
+{
+public:
+	QFlagQstringConverterRegistrationHelper()
+	{
+		if(!QMetaType::hasRegisteredConverterFunction<FlagsType, QString>())
+		{
+			// Register converters between TestFlagHolder::TestFlags-to-QString for at least QVariant's benefit.
+			bool success = QMetaType::registerConverter<FlagsType, QString>([](const FlagsType& flags) -> QString {
+				return EnumFlagtoqstr(flags);
+			});
+			Q_ASSERT_X(success, __PRETTY_FUNCTION__, "FlagsType-to-QString converter registration failed");
+
+			success = QMetaType::registerConverter<QString, FlagsType>([](const QString& str) -> FlagsType {
+				return QFlagsFromQStr<FlagsType>(str);
+			});
+			Q_ASSERT_X(success, __PRETTY_FUNCTION__, "FlagsType-from-QString converter registration failed");
+		}
+	}
+};
+
+/**
+ * Register QFlags-specialization-to/from-QString converters.
+ *
+ * @params FlagsType  The full "<holder_class_name>::<QFlags_name>" name of the QFlags type.
+ * @params VarName    A name usable as a variable identifier, unique to the translation unit.
+ */
+#define AMLM_REGISTER_QFLAG_QSTRING_CONVERTERS(FlagsType, VarName) \
+	Q_GLOBAL_STATIC(QFlagQstringConverterRegistrationHelper< FlagsType >, VarName ## _QString_converters_registration_obj)
+
+
 #endif /* SRC_UTILS_ENUMFLAGHELPERS_H_ */

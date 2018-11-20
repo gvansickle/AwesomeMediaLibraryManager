@@ -141,8 +141,8 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
 	QVariant variant;
-	switch (QVariant::nameToType(
-			typeString.toStdString().c_str())) {
+	switch (QVariant::nameToType(typeString.toStdString().c_str()))
+			{
 		case QMetaType::QVariantList:
 			variant = readVariantListFromStream(xmlstream);
 			break;

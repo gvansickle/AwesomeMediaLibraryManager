@@ -20,7 +20,7 @@
 /**
  * @file FlagsAndEnumsTests.cpp
  */
-#include <FlagsAndEnumsTests.h>
+#include "FlagsAndEnumsTests.h"
 
 // Std C++
 #include <type_traits>
@@ -74,6 +74,7 @@ public:
 Q_DECLARE_METATYPE(TestFlagHolder);
 //Q_DECLARE_METATYPE(TestFlagHolder::TestFlags);
 Q_DECLARE_OPERATORS_FOR_FLAGS(TestFlagHolder::TestFlags);
+AMLM_REGISTER_QFLAG_QSTRING_CONVERTERS(TestFlagHolder::TestFlags, RegVar1)
 
 /**
  * Test QEnum class definition.
@@ -127,44 +128,11 @@ TEST_F(FlagsAndEnumsTests, FlagsToStringViaQVariant)
 		EXPECT_NE(flags_as_str, QString("Flag1|Flag4"));
 	}
 }
-
-TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantDefault)
-{
-	TestFlagHolder::TestFlags testflags_original { TestFlagHolder::Flag1 | TestFlagHolder::Flag2 };
-	TestFlagHolder::TestFlags testflags = testflags_original;
-
-	auto flags_as_qvar = QVariant::fromValue(testflags);
-
-	TestFlagHolder::TestFlags testflags_through_qvar;
-
-	testflags_through_qvar = flags_as_qvar.value<TestFlagHolder::TestFlags>();
-
-	EXPECT_EQ(testflags_through_qvar, testflags_original);
-}
-
-TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRep)
-{
-	// @link https://stackoverflow.com/questions/36532527/qflags-and-qvariant
-
-	TestFlagHolder::TestFlags testflags_original { TestFlagHolder::Flag1 | TestFlagHolder::Flag2 };
-	TestFlagHolder::TestFlags testflags = testflags_original;
-
-	auto flags_as_qvar = QVariant::fromValue(testflags);
-
-	TCOUT << "FLAGS:" << testflags;
-	TCOUT << "FLAGS AS QVAR:" << flags_as_qvar;
-	TCOUT << "FLAGS EXTRACTED FROM QVAR:" << flags_as_qvar.value<TestFlagHolder::TestFlags>();
-
-	TestFlagHolder::TestFlags testflags_through_qvar;
-
-	testflags_through_qvar = flags_as_qvar.value<TestFlagHolder::TestFlags>();
-
-	EXPECT_EQ(testflags_through_qvar, testflags_original);
-}
-
 TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredConverters)
 {
 	// @link https://stackoverflow.com/questions/36532527/qflags-and-qvariant
+
+	TCOUT << "LOGGING TEST";
 
 //	bool success = QMetaType::hasRegisteredConverterFunction<TestFlagHolder::TestFlags, QString>();
 //	EXPECT_FALSE(success);
@@ -195,6 +163,17 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredC
 	TestFlagHolder::TestFlags testflags_original { TestFlagHolder::Flag1 | TestFlagHolder::Flag2 };
 	TestFlagHolder::TestFlags testflags = testflags_original;
 
+	// To QVariant with converters but no special action at callsite.
+	QVariant flags_as_qvar_with_converters = QVariant::fromValue(testflags);
+
+	/// @note Comes out like I think we want it to: QVariant(TestFlagHolder::TestFlags, "Flag1|Flag2")
+	TCOUT << "CONVERTER REGISTERED, via QDebug operator<<:" << flags_as_qvar_with_converters;
+
+	// Comes out as "Flag1|Flag2".
+	TCOUT << "CONVERTER REGISTERED, via .toString():" << flags_as_qvar_with_converters.toString();
+
+	// Ok, let's try to round-trip from
+
 	// Convert QVariant<QFlags<>> to a QString.
 	// Comes out as "Flag1|Flag2".
 	QString flags_as_qstr = QVariant::fromValue(testflags).toString();
@@ -204,20 +183,65 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredC
 
 	// Convert the string into a variant.
 	QVariant flags_as_qvar_from_qstr = QVariant::fromValue(flags_as_qstr);
-	QVariant flags_as_qvar;
-	flags_as_qvar = QVariant::fromValue<TestFlagHolder::TestFlags>(flags_as_qstr);
+//	QVariant flags_as_qvar = QVariant::fromValue<TestFlagHolder::TestFlags>(flags_as_qstr);
 	EXPECT_TRUE(flags_as_qvar_from_qstr.canConvert<TestFlagHolder::TestFlags>());
 
 	// This looks like "QFlags<TestFlagHolder::TestFlags>(Flag1|Flag2)"
 	TCOUT << "FLAGS:" << testflags;
 	// This looks like "QVariant(QString, "Flag1|Flag2")".
 	TCOUT << "FLAGS AS QVAR:" << flags_as_qvar_from_qstr;
-	TCOUT << "FLAGS EXTRACTED FROM QVAR WITH .value<>():" << flags_as_qvar_from_qstr.value<TestFlagHolder::TestFlags>();
+	TCOUT << "FLAGS EXTRACTED FROM QVAR WITH .value<TestFlagHolder::TestFlags>():" << flags_as_qvar_from_qstr.value<TestFlagHolder::TestFlags>();
+//	TCOUT << "FLAGS EXTRACTED FROM QVAR WITH .value<>():" << flags_as_qvar_from_qstr.value();
 //	TCOUT << "FLAGS EXTRACTED FROM QVAR WITH .value<>().toString():" << flags_as_qvar.value<TestFlagHolder::TestFlags>().toString();
 
 	TestFlagHolder::TestFlags testflags_through_qvar;
 
 	testflags_through_qvar = flags_as_qvar_from_qstr.value<TestFlagHolder::TestFlags>();
+
+	EXPECT_EQ(testflags_through_qvar, testflags_original);
+}
+TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantDefault)
+{
+	TestFlagHolder::TestFlags testflags_original { TestFlagHolder::Flag1 | TestFlagHolder::Flag2 };
+	TestFlagHolder::TestFlags testflags = testflags_original;
+
+	auto flags_as_qvar = QVariant::fromValue(testflags);
+
+	TestFlagHolder::TestFlags testflags_through_qvar;
+
+	testflags_through_qvar = flags_as_qvar.value<TestFlagHolder::TestFlags>();
+
+	EXPECT_EQ(testflags_through_qvar, testflags_original);
+}
+
+TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRep)
+{
+	// @link https://stackoverflow.com/questions/36532527/qflags-and-qvariant
+
+	/// @note Appears to do nothing.
+//	qRegisterMetaTypeStreamOperators<TestFlagHolder::TestFlags>("TestFlagHolder::TestFlags");
+
+	TestFlagHolder::TestFlags testflags_original { TestFlagHolder::Flag1 | TestFlagHolder::Flag2 };
+	TestFlagHolder::TestFlags testflags = testflags_original;
+
+	QVariant flags_as_qvar = QVariant::fromValue(testflags);
+
+	// QFlags<TestFlagHolder::TestFlags>(Flag1|Flag2)
+	TCOUT << "FLAGS:" << testflags;
+
+	// Note there is nothing where the value should be.
+	// QVariant(TestFlagHolder::TestFlags, )
+	TCOUT << "FLAGS AS QVAR:" << flags_as_qvar;
+
+	// QFlags<TestFlagHolder::TestFlags>(Flag1|Flag2)
+	TCOUT << "FLAGS EXTRACTED FROM QVAR, <<:" << flags_as_qvar.value<TestFlagHolder::TestFlags>();
+
+	// integer 3
+	TCOUT << QString("FLAGS EXTRACTED FROM QVAR, arg(): %1").arg(flags_as_qvar.value<TestFlagHolder::TestFlags>());
+
+	TestFlagHolder::TestFlags testflags_through_qvar;
+
+	testflags_through_qvar = flags_as_qvar.value<TestFlagHolder::TestFlags>();
 
 	EXPECT_EQ(testflags_through_qvar, testflags_original);
 }
