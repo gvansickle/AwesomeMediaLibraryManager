@@ -28,6 +28,9 @@
 #include <QMetaEnum>
 #include <QMetaType>
 
+// Ours
+#include "StringHelpers.h"
+
 /**
  * And the one thing you might want to use Qt's QMetaWhatever infrastructure for, implicitly or explicitly converting
  * a Q_ENUM() to a string?  You can't do directly.  So this.  The.  Simplest.  Things.
@@ -72,16 +75,16 @@ inline typename std::enable_if<!QtPrivate::IsQEnumHelper<F>::Value, char*>::type
 	return msg;
 }
 
-//template<typename QFlagsType>
-//QFlagsType QFlagsFromQStr(const QString& rep)
-//{
-//	QMetaEnum me = QMetaEnum::fromType<QFlagsType>();
-//
-//	// It's a Q_FLAG().
-//	Q_ASSERT(me.isFlag());
-//
-//	return QFlagsType(me.keysToValue(rep));
-//}
+template<typename QFlagsType>
+QFlagsType QFlagsFromQStr(const QString& rep, bool *ok = nullptr)
+{
+	QMetaEnum me = QMetaEnum::fromType<QFlagsType>();
+
+	// It's a Q_FLAG().
+	Q_ASSERT(me.isFlag());
+
+	return QFlagsType(me.keysToValue(tostdstr(rep).c_str(), ok));
+}
 //
 //template<typename QEnumType>
 //QEnumType QEnumFromQStr(const QString& rep)

@@ -72,7 +72,7 @@ public:
 	Q_FLAG(TestFlags)
 };
 Q_DECLARE_METATYPE(TestFlagHolder);
-Q_DECLARE_METATYPE(TestFlagHolder::TestFlags);
+//Q_DECLARE_METATYPE(TestFlagHolder::TestFlags);
 Q_DECLARE_OPERATORS_FOR_FLAGS(TestFlagHolder::TestFlags);
 
 /**
@@ -93,7 +93,6 @@ public:
 	Q_ENUM(TestEnum)
 };
 Q_DECLARE_METATYPE(TestEnumHolder);
-//Q_DECLARE_OPERATORS_FOR_FLAGS(TestEnumHolder::TestEnums);
 
 
 //
@@ -118,7 +117,15 @@ TEST_F(FlagsAndEnumsTests, FlagsToStringViaQVariant)
 
 	QString flags_as_str = QVariant::fromValue(testflags).toString();
 
-	EXPECT_NE(flags_as_str, QString("Flag1|Flag4"));
+	// For multiple runs, can't seem to unregister converters.
+	if(QMetaType::hasRegisteredConverterFunction<TestFlagHolder::TestFlags, QString>())
+	{
+		EXPECT_EQ(flags_as_str, QString("Flag1|Flag4"));
+	}
+	else
+	{
+		EXPECT_NE(flags_as_str, QString("Flag1|Flag4"));
+	}
 }
 
 TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantDefault)
@@ -155,7 +162,7 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRep)
 	EXPECT_EQ(testflags_through_qvar, testflags_original);
 }
 
-TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredConverter)
+TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredConverters)
 {
 	// @link https://stackoverflow.com/questions/36532527/qflags-and-qvariant
 
@@ -170,23 +177,47 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredC
 //	success = QMetaType::registerConverter<TestFlagHolder::TestFlags, QString>();
 //	EXPECT_FALSE(success);
 
-	bool success = QMetaType::registerConverter<TestFlagHolder::TestFlags, QString>([](const TestFlagHolder::TestFlags& flags) -> QString {
-		return EnumFlagtoqstr(flags);
-	});
-	EXPECT_TRUE(success);
+	// For multiple test runs; can't seem to unregister converters.
+	if(!QMetaType::hasRegisteredConverterFunction<TestFlagHolder::TestFlags, QString>())
+	{
+		// Register converters between TestFlagHolder::TestFlags-to-QString for at least QVariant's benefit.
+		bool success = QMetaType::registerConverter<TestFlagHolder::TestFlags, QString>([](const TestFlagHolder::TestFlags& flags) -> QString {
+			return EnumFlagtoqstr(flags);
+		});
+		EXPECT_TRUE(success);
+
+		success = QMetaType::registerConverter<QString, TestFlagHolder::TestFlags>([](const QString& str) -> TestFlagHolder::TestFlags {
+			return QFlagsFromQStr<TestFlagHolder::TestFlags>(str);
+		});
+		EXPECT_TRUE(success);
+	}
 
 	TestFlagHolder::TestFlags testflags_original { TestFlagHolder::Flag1 | TestFlagHolder::Flag2 };
 	TestFlagHolder::TestFlags testflags = testflags_original;
 
-	auto flags_as_qvar = QVariant::fromValue(testflags);
+	// Convert QVariant<QFlags<>> to a QString.
+	// Comes out as "Flag1|Flag2".
+	QString flags_as_qstr = QVariant::fromValue(testflags).toString();
+	TCOUT << M_NAME_VAL(flags_as_qstr);
+	EXPECT_EQ(flags_as_qstr, QString("Flag1|Flag2"));
 
+
+	// Convert the string into a variant.
+	QVariant flags_as_qvar_from_qstr = QVariant::fromValue(flags_as_qstr);
+	QVariant flags_as_qvar;
+	flags_as_qvar = QVariant::fromValue<TestFlagHolder::TestFlags>(flags_as_qstr);
+	EXPECT_TRUE(flags_as_qvar_from_qstr.canConvert<TestFlagHolder::TestFlags>());
+
+	// This looks like "QFlags<TestFlagHolder::TestFlags>(Flag1|Flag2)"
 	TCOUT << "FLAGS:" << testflags;
-	TCOUT << "FLAGS AS QVAR:" << flags_as_qvar;
-	TCOUT << "FLAGS EXTRACTED FROM QVAR:" << flags_as_qvar.value<TestFlagHolder::TestFlags>();
+	// This looks like "QVariant(QString, "Flag1|Flag2")".
+	TCOUT << "FLAGS AS QVAR:" << flags_as_qvar_from_qstr;
+	TCOUT << "FLAGS EXTRACTED FROM QVAR WITH .value<>():" << flags_as_qvar_from_qstr.value<TestFlagHolder::TestFlags>();
+//	TCOUT << "FLAGS EXTRACTED FROM QVAR WITH .value<>().toString():" << flags_as_qvar.value<TestFlagHolder::TestFlags>().toString();
 
 	TestFlagHolder::TestFlags testflags_through_qvar;
 
-	testflags_through_qvar = flags_as_qvar.value<TestFlagHolder::TestFlags>();
+	testflags_through_qvar = flags_as_qvar_from_qstr.value<TestFlagHolder::TestFlags>();
 
 	EXPECT_EQ(testflags_through_qvar, testflags_original);
 }
