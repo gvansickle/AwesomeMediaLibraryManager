@@ -77,15 +77,23 @@ class AbstractTreeModelItem : public ISerializable
 public:
 	explicit AbstractTreeModelItem(AbstractTreeModelItem *parent = nullptr);
 	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
-	 ~AbstractTreeModelItem() override;
+	~AbstractTreeModelItem() override;
+
+	/**
+	 * @todo Virtual constructor returning covariant model item pointer.
+	 */
+//	virtual AbstractTreeModelItem* create() const = 0;
+	/// Virtual constructor for copy.
+//	virtual AbstractTreeModelItem* clone() const = 0;
 
     /// Return a pointer to the number'th child of this item.
-    /// @returns Pointer to a default constructed AbstractTreeModelItem, which is not added to the QVector.
-	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
-	AbstractTreeModelItem *child(int number);
+    /// @returns If @arg number is not valid, a pointer to a default constructed AbstractTreeModelItem,
+    /// 			which is not added to the QVector.
+	/// @todo That seems all kinds of wrong, should probably return a nullptr or assert or something.
+	AbstractTreeModelItem* child(int number);
 
 	/// Const version.
-	const AbstractTreeModelItem *child(int number) const;
+	const AbstractTreeModelItem* child(int number) const;
 
     /// The number of children this item has.
     int childCount() const;
@@ -131,10 +139,13 @@ protected:
     /// Primarily for use in appendChildren().
     virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
-	/// Factory function for creating default-constructed nodes.
-	/// Used by insertChildren().
-	AbstractTreeModelItem* make_default_node(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
-
+	/**
+	 * Factory function for creating default-constructed child nodes.
+	 * Used by insertChildren().  Override in derived classes.
+	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
+	 */
+	virtual AbstractTreeModelItem*
+	create_default_constructed_child_item(AbstractTreeModelItem *parent, const QVector<QVariant> &vector) = 0;
 
 private:
 

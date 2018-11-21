@@ -72,7 +72,7 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 	// Insert the invisible root item, which will recursively add all children.
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
-	map.insert("root_item", m_root_item->toVariant());
+	map.insert("tree_model_root_item", m_root_item->toVariant());
 
 	return map;
 }
@@ -95,7 +95,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	m_root_item = new AbstractTreeModelHeaderItem();
-	m_root_item->fromVariant(map.value("root_item"));
+	m_root_item->fromVariant(map.value("tree_model_root_item"));
 
 #warning @todo INCOMPLETE/error handling
 }

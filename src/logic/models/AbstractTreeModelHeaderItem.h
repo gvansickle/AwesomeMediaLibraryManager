@@ -31,7 +31,7 @@
 #include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
 
-/*
+/**
  *
  */
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
@@ -51,9 +51,15 @@ public:
 	/// @{
 
 	QVariant toVariant() const override;
+
 	void fromVariant(const QVariant& variant) override;
 
 	/// @}
+
+protected:
+
+	AbstractTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr,
+							const QVector<QVariant> &vector = QVector<QVariant>()) override;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

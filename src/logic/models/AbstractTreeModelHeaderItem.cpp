@@ -24,6 +24,8 @@
 
 // Ours
 #include <logic/xml/XmlObjects.h>
+#include "ScanResultsTreeModelItem.h"
+
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
 	: AbstractTreeModelItem (x, parent)
@@ -69,7 +71,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 
 	// Add list of child tree items to our QVariantMap.
-	map.insert("abstract_tree_model_header", list);
+	map.insert("child_node_list", list);
 
 	return map;
 }
@@ -81,11 +83,46 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-	auto child_list = map.value("abstract_tree_model_header").toList();
+	QVariantList child_list = map.value("child_node_list").toList();
 
+
+	// We'll break this into two phases:
+	/// @note Maybe not.  This node isn't in a model here yet.
+	/// Unless we can't parent the child here and it has to be appended through the model, but I think we can.
+	// 1. Deserialize the list into new, unparented ScanResultsTreeModelItems.
+	// 2. Add them as children of this model.
+	// This buys us a few things:
+	// 1. We could possibly do step 1 in a non-GUI thread.
+	// 2. We can add the children in a single batch vs. one at a time, avoiding the model/view signaling overhead.
+	// It does however burn more RAM.
+	QVector<AbstractTreeModelItem*> temp_items;
 	for(const QVariant& child : child_list)
 	{
-//		auto child_item =
+		qDb() << "READING CHILD ITEM:" << child;
+		auto child_item = create_default_constructed_child_item(this);
+		child_item->fromVariant(child);
+		// Save it off temporarily.
+		temp_items.push_back(child_item);
 	}
+
+	this->appendChildren(temp_items);
+}
+
+AbstractTreeModelItem*
+AbstractTreeModelHeaderItem::create_default_constructed_child_item(AbstractTreeModelItem *parent,
+																const QVector<QVariant> &vector)
+{
+	ScanResultsTreeModelItem* child_item;
+
+	if(parent)
+	{
+		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
+	}
+	else
+	{
+		child_item = new ScanResultsTreeModelItem();
+	}
+
+	return child_item;
 }
 

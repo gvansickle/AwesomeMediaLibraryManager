@@ -80,6 +80,15 @@ public:
 
 protected:
 
+	/**
+	 * Factory function primarily for creating default-constructed nodes.
+	 * Used by insertChildren().  Override in derived classes.
+	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
+	 */
+	ScanResultsTreeModelItem*
+	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr,
+	                                      const QVector<QVariant> &vector = QVector<QVariant>()) override;
+
 	QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
 
 	/// The directory scan results corresponding to this entry.

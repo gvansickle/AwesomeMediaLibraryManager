@@ -150,17 +150,20 @@ QVariant ScanResultsTreeModelItem::data(int column) const
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	QVariantMap vmap;
+	QVariantMap map;
 
-	vmap.insert(m_item_tag_name, m_dsr.toVariant());
+	/// @todo Will be more fields, justifying the map vs. value?
+	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
+	map.insert("dirscanresult", m_dsr.toVariant());
 
-	return vmap;
+	return map;
 }
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
-	m_dsr.fromVariant(map.value(m_item_tag_name));
+
+	m_dsr.fromVariant(map.value("dirscanresult"));
 }
 
 
@@ -258,6 +261,23 @@ QXmlQuery ScanResultsTreeModelItem::write() const
 #endif
 
 ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
+{
+	ScanResultsTreeModelItem* child_item;
+
+	if(parent)
+	{
+		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
+	}
+	else
+	{
+		child_item = new ScanResultsTreeModelItem();
+	}
+
+	return child_item;
+}
+
+ScanResultsTreeModelItem *
+ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem *parent, const QVector<QVariant> &vector)
 {
 	ScanResultsTreeModelItem* child_item;
 

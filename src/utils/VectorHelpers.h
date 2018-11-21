@@ -49,6 +49,9 @@ namespace stdex
 		}
 	};
 
+	/**
+	 * Specialization for QVector<T>.
+	 */
 	template<class T>
 	T value(QVector<T>& cont, int i)
 	{

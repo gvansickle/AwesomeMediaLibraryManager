@@ -215,7 +215,9 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 
 bool AbstractTreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
 {
-    bool success;
+	Q_CHECK_PTR(m_root_item);
+
+	bool success;
 
     beginInsertColumns(parent, position, position + columns - 1);
 	success = m_root_item->insertColumns(position, columns);
@@ -226,6 +228,8 @@ bool AbstractTreeModel::insertColumns(int position, int columns, const QModelInd
 
 bool AbstractTreeModel::insertRows(int position, int rows, const QModelIndex &parent)
 {
+	Q_CHECK_PTR(m_root_item);
+
     AbstractTreeModelItem *parentItem = getItem(parent);
     bool success;
 
