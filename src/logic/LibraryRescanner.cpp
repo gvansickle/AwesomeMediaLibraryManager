@@ -314,9 +314,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 					{
 						XmlSerializer xmlser_read;
 						auto readback_tree_model = new ScanResultsTreeModel(static_cast<QObject*>(tree_model_ptr)->parent());
+						// Load it.
 						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(filename));
 
-						qIn() << "MODEL READBACK: COLUMNS:" << readback_tree_model->columnCount()
+						qIn() << "MODEL READBACK:";
+						qIn() << "COLUMNS:" << readback_tree_model->columnCount()
 								<< "ROWS:" << readback_tree_model->rowCount();
 
 						readback_tree_model->deleteLater();

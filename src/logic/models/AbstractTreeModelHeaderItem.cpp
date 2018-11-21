@@ -76,6 +76,16 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
+	QVariantMap map = variant.toMap();
 
+	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
+	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
+	/// contains a single <dirscanresult>/QVariantMap.
+	auto child_list = map.value("abstract_tree_model_header").toList();
+
+	for(const QVariant& child : child_list)
+	{
+//		auto child_item =
+	}
 }
 
