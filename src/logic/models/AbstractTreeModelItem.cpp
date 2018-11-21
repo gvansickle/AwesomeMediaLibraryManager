@@ -64,13 +64,13 @@
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
 
-AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent)
+AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem *parent_item)
 {
-	m_parent_item = parent;
+	m_parent_item = parent_item;
 }
 
-AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent)
-	: AbstractTreeModelItem(parent)
+AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent_item)
+	: AbstractTreeModelItem(parent_item)
 {
 	m_item_data = data;
 }

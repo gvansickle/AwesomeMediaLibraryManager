@@ -37,7 +37,8 @@
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
 {
 public:
-	explicit AbstractTreeModelHeaderItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
+	explicit AbstractTreeModelHeaderItem(QVector<QVariant> x = QVector<QVariant>(),
+	                                     AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;
 
 	/**

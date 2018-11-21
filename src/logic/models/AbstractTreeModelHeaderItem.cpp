@@ -27,8 +27,8 @@
 #include "ScanResultsTreeModelItem.h"
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
-	: AbstractTreeModelItem (x, parent)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parentItem)
+	: AbstractTreeModelItem (x, parentItem)
 {
 #warning "TODO This should take a list of AbsHeaderSections"
 //	m_item_data = x;
@@ -63,6 +63,18 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	QVariantMap map;
 	QVariantList list;
 
+	// Header info.
+	/// @todo Or is some of this really model info?
+	map.insert("header_num_sections", columnCount());
+	for(int i = 0; i < columnCount(); ++i)
+	{
+		list.push_back(data(i));
+	}
+	map.insert("header_section_list", list);
+	list.clear();
+
+	map.insert("num_child_items", childCount());
+
 	// Create a QVariantList of our children.
 	for(int i = 0; i < childCount(); ++i)
 	{
@@ -79,6 +91,20 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
+
+	QVariantList header_section_list = map.value("header_section_list").toList();
+
+	auto header_num_sections = map.value("header_num_sections").toInt();
+	insertColumns(0, header_num_sections);
+
+	qDb() << "READING HEADER SECTION LIST," << header_num_sections << "COLUMNS:"  << header_section_list;
+
+	int section_index = 0;
+	for(const QVariant& e : header_section_list)
+	{
+		setData(section_index, e);
+		section_index++;
+	}
 
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
@@ -105,6 +131,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 		temp_items.push_back(child_item);
 	}
 
+	// Append the children we read in to our list.
 	this->appendChildren(temp_items);
 }
 

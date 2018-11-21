@@ -75,8 +75,14 @@ class QXmlStreamWriter;
 class AbstractTreeModelItem : public ISerializable
 {
 public:
-	explicit AbstractTreeModelItem(AbstractTreeModelItem *parent = nullptr);
-	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
+	/**
+	 *
+	 * @param parent_item  The AbstractTreeModelItem which is the "tree-wise" parent of this item.
+	 *                     @note This is completely unrelated to QObject and its parent/child memory
+	 *                     management implications; this class isn't derived from QObject.
+	 */
+	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
+	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem* parent_item = nullptr);
 	~AbstractTreeModelItem() override;
 
 	/**
@@ -156,7 +162,7 @@ private:
 	QVector<QVariant> m_item_data;
 
 	// Pointer to our parent item.
-	AbstractTreeModelItem *m_parent_item;
+	AbstractTreeModelItem *m_parent_item { nullptr };
 };
 
 // Debug stream op free func declaration.

@@ -105,6 +105,7 @@ void AMLMApp::Init(bool gtest_only)
 	// Create and set up the scan results model.
 	m_srtm_instance = new ScanResultsTreeModel(this);
 	// Create and set the root item / headers
+#warning "THIS IS GROSS, CLEAN IT UP"
 	QVector<QVariant> header_columns {"DirProps", "MediaURL", "SidecarCueURL"};
 	m_srtm_instance->setRootItem(m_srtm_instance->make_root_node(header_columns));
 
