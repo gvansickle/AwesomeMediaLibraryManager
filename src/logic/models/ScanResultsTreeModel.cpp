@@ -82,6 +82,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 
 	m_base_directory = map.value("base_directory").toUrl();
+#warning @todo INCOMPLETE
 }
 
 AbstractTreeModelHeaderItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)

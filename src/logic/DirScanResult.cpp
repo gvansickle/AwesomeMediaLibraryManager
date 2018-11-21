@@ -41,8 +41,10 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
 	qRegisterMetaType<DirScanResult>();
 	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
+	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
 
+//AMLM_REGISTER_QFLAG_QSTRING_CONVERTERS(DirScanResult::DirPropFlags, RegVar1)
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_media_exturl(found_url, &found_url_finfo)
@@ -62,18 +64,10 @@ QVariant DirScanResult::toVariant() const
 //#define X(field_name, field) map.insert( # field_name , field ## .toVariant() );
 //	DATASTREAM_FIELDS(X)
 //#undef X
-//	submap.insert("flags_dirprops", QVariant::fromValue<DirProps>(m_dir_props) );
-//	submap.insert("flags_dirprops", QVariant::fromValue(EnumFlagtoqstr(m_dir_props)) );
-	submap.insert("flags_dirprops", QVariant::fromValue/*<DirScanResult::DirPropFlags>*/(m_dir_props));
-//	QString result;
-//	QTextStream ts(&result);
-//	ts << m_dir_props;
-//	qDb() << "TS FLAGS:" << result;
-//	submap.insert("flags_dirprops", QVariant::fromValue(result) );
+	submap.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
 	submap.insert("exturl_dir", m_dir_exturl.toVariant());
 	submap.insert("exturl_media", m_media_exturl.toVariant());
 	submap.insert("exturl_cuesheet", m_cue_exturl.toVariant());
-//	m_cue_exturl.toXml().setId("exturl_cuesheet")},
 
 	map.insert("dirscanresult", submap);
 

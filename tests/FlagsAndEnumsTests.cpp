@@ -74,7 +74,9 @@ public:
 Q_DECLARE_METATYPE(TestFlagHolder);
 //Q_DECLARE_METATYPE(TestFlagHolder::TestFlags);
 Q_DECLARE_OPERATORS_FOR_FLAGS(TestFlagHolder::TestFlags);
-AMLM_REGISTER_QFLAG_QSTRING_CONVERTERS(TestFlagHolder::TestFlags, RegVar1)
+
+//static auto dummy_var_123 = [=](){ AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(); return 1; }();
+static int dummy_456 = (AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(), 1);
 
 /**
  * Test QEnum class definition.
@@ -132,8 +134,6 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredC
 {
 	// @link https://stackoverflow.com/questions/36532527/qflags-and-qvariant
 
-	TCOUT << "LOGGING TEST";
-
 //	bool success = QMetaType::hasRegisteredConverterFunction<TestFlagHolder::TestFlags, QString>();
 //	EXPECT_FALSE(success);
 
@@ -167,10 +167,10 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRepWithRegisteredC
 	QVariant flags_as_qvar_with_converters = QVariant::fromValue(testflags);
 
 	/// @note Comes out like I think we want it to: QVariant(TestFlagHolder::TestFlags, "Flag1|Flag2")
-	TCOUT << "CONVERTER REGISTERED, via QDebug operator<<:" << flags_as_qvar_with_converters;
+	TCOUT << "CONVERTERS REGISTERED, via QDebug operator<<:" << flags_as_qvar_with_converters;
 
-	// Comes out as "Flag1|Flag2".
-	TCOUT << "CONVERTER REGISTERED, via .toString():" << flags_as_qvar_with_converters.toString();
+	/// @note Comes out as "Flag1|Flag2", which is what we want for serialization.
+	TCOUT << "CONVERTERS REGISTERED, via <qvariant>.toString():" << flags_as_qvar_with_converters.toString();
 
 	// Ok, let's try to round-trip from
 

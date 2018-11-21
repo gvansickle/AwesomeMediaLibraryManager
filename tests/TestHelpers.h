@@ -139,17 +139,12 @@ QT_END_NAMESPACE
 //	} // namespace internal
 //} // namespace testing
 
-//#define PRINTF(...)  do {\
-//	testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] ");\
-//	testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, __VA_ARGS__);\
-//	} while(0)
-
 /**
  * Class which provides a QDebug output stream to log arbitrary Qt messages to.
  * Messages are written to a QString and then sent to the Google Test logging infrastructure for actual output.
  * @note Do not use this class directly, use the TCOUT macro below.
  */
-class TestCout //: public QDebug //public std::stringstream
+class TestCout
 {
 	QString m_log_string {};
 	QDebug m_qdebug_obj;
@@ -159,9 +154,9 @@ public:
 	TestCout() : m_qdebug_obj(&m_log_string)	{ };
     ~TestCout()
     {
+		// Send any message that we received to Google Test's logging innards.
 		testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] ");
 		testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, "%s\n", m_log_string.toStdString().c_str());
-//		PRINTF("%s\n", str().c_str());
     }
 
 	QDebug& getQDebugRef()

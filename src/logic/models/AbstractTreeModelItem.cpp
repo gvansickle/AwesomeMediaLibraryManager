@@ -172,12 +172,12 @@ bool AbstractTreeModelItem::insertColumns(int position, int columns)
     return true;
 }
 
-AbstractTreeModelItem *AbstractTreeModelItem::parent()
+AbstractTreeModelItem* AbstractTreeModelItem::parent()
 {
 	return m_parent_item;
 }
 
-const AbstractTreeModelItem*AbstractTreeModelItem::parent() const
+const AbstractTreeModelItem* AbstractTreeModelItem::parent() const
 {
 	return m_parent_item;
 }

@@ -97,11 +97,21 @@ QFlagsType QFlagsFromQStr(const QString& rep, bool *ok = nullptr)
 //	}
 //}
 
+/**
+ * Register QFlags-specialization-to/from-QString converters.
+ * This is required for QFlags (but not QEnums) to be able to convert to and from a string
+ * representation properly.  Arrange for an instance of this class to be run once at program startup.
+ *
+ * @note Especially important here is converting from a QVariant to a QString: Without this,
+ *       XXXXX @more explanation here, but short-form: it doesn't work. XXXX
+ *
+ * @params FlagsType  The fully-qualified "<holder_class_name>::<QFlags_name>" type of the QFlags<T> type.
+ */
 template <class FlagsType>
-class QFlagQstringConverterRegistrationHelper
+class AMLMRegisterQFlagQStringConverters
 {
 public:
-	QFlagQstringConverterRegistrationHelper()
+	AMLMRegisterQFlagQStringConverters()
 	{
 		if(!QMetaType::hasRegisteredConverterFunction<FlagsType, QString>())
 		{
@@ -118,15 +128,6 @@ public:
 		}
 	}
 };
-
-/**
- * Register QFlags-specialization-to/from-QString converters.
- *
- * @params FlagsType  The full "<holder_class_name>::<QFlags_name>" name of the QFlags type.
- * @params VarName    A name usable as a variable identifier, unique to the translation unit.
- */
-#define AMLM_REGISTER_QFLAG_QSTRING_CONVERTERS(FlagsType, VarName) \
-	Q_GLOBAL_STATIC(QFlagQstringConverterRegistrationHelper< FlagsType >, VarName ## _QString_converters_registration_obj)
 
 
 #endif /* SRC_UTILS_ENUMFLAGHELPERS_H_ */

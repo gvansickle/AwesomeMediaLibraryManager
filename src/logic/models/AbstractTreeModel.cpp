@@ -80,6 +80,7 @@ AbstractTreeModel::~AbstractTreeModel()
 
 int AbstractTreeModel::columnCount(const QModelIndex & /* parent */) const
 {
+	Q_ASSERT(m_root_item != nullptr);
 	return m_root_item->columnCount();
 }
 

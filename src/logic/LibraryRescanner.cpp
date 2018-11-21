@@ -310,6 +310,18 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 					XmlSerializer xmlser;
 					xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(filename), "playlist");
 
+					/// Let's now try to read it back.
+					{
+						XmlSerializer xmlser_read;
+						auto readback_tree_model = new ScanResultsTreeModel(static_cast<QObject*>(tree_model_ptr)->parent());
+						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(filename));
+
+						qIn() << "MODEL READBACK: COLUMNS:" << readback_tree_model->columnCount()
+								<< "ROWS:" << readback_tree_model->rowCount();
+
+						readback_tree_model->deleteLater();
+					}
+
 				}
 #ifndef TRY_XQUERY_READ
 				// Now let's see if we can XQuery what we just wrote.

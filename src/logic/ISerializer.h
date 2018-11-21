@@ -42,8 +42,7 @@ public:
 			const QUrl& filepath,
 			const QString& rootName = "") = 0;
 
-	virtual void load(ISerializable& serializable,
-			const QUrl& filepath) = 0;
+	virtual void load(ISerializable& serializable, const QUrl& filepath) = 0;
 };
 
 
