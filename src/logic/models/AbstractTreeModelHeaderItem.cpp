@@ -71,15 +71,15 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 		list.push_back(data(i));
 	}
 	map.insert("header_section_list", list);
-	list.clear();
 
 	map.insert("num_child_items", childCount());
 
 	// Create a QVariantList of our children.
+	list.clear();
 	for(int i = 0; i < childCount(); ++i)
 	{
-		const auto* child = this->child(i);
-		list.append(child->toVariant());
+		const AbstractTreeModelItem* child = this->child(i);
+		list.push_back(child->toVariant());
 	}
 
 	// Add list of child tree items to our QVariantMap.

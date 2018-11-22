@@ -45,6 +45,7 @@
 
 // Ours
 #include <tests/TestHelpers.h>
+#include <utils/DebugHelpers.h>
 
 // Mocks
 #include <tests/TestLifecycleManager.h>
@@ -52,6 +53,8 @@
 
 // Classes Under Test.
 #include <utils/EnumFlagHelpers.h>
+///// @todo Split off
+#include "../logic/ExtUrl.h"
 
 /**
  * Test flag class definition.
@@ -272,6 +275,27 @@ TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)
 	testflags_through_qvar = flags_as_qvar.value<TestEnumHolder::TestEnum>();
 
 	EXPECT_EQ(testflags_through_qvar, testflags_original);
+}
+
+////////////////////////////////////////////////////////////
+M_WARNING("TODO: Split into a serialization test.");
+
+TEST_F(FlagsAndEnumsTests, ExtUrlRoundTripThroughQVariant)
+{
+	ExtUrl before;
+
+	before.m_url = "file://a.b.com/";
+
+	QVariant during = before.toVariant();
+
+	ExtUrl after;
+	after.fromVariant(during);
+
+	TCOUT << M_NAME_VAL(before);
+	TCOUT << M_NAME_VAL(during);
+	TCOUT << M_NAME_VAL(after);
+
+//	AMLMTEST_EXPECT_EQ(before, after);
 }
 
 #include "FlagsAndEnumsTests.moc"

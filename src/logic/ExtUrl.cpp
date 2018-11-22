@@ -39,7 +39,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
 	qRegisterMetaType<ExtUrl>();
-	qRegisterMetaTypeStreamOperators<ExtUrl>("ExtUrl");
+//	qRegisterMetaTypeStreamOperators<ExtUrl>("ExtUrl");
 });
 
 
@@ -56,6 +56,7 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	X(ts_creation, m_creation_timestamp) \
 	X(ts_last_modified, m_last_modified_timestamp) \
 	X(ts_last_modified_metadata, m_metadata_last_modified_timestamp)
+
 
 QVariant ExtUrl::toVariant() const
 {
@@ -78,7 +79,7 @@ void ExtUrl::fromVariant(const QVariant& variant)
 	DATASTREAM_FIELDS(X)
 #undef X
 
-	QVariant temp_m_url = map.value("href");
+	QVariant temp_m_url = map.value("href").toString();
 	qDb() << "QVar<QUrl>:" << temp_m_url;
 
 }

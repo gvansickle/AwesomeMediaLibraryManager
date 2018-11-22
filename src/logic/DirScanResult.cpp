@@ -80,7 +80,7 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
-#if 0
+#if 1
 #define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
 	DATASTREAM_FIELDS(X)
 #undef X
