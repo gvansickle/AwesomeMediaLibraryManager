@@ -39,7 +39,7 @@
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
-	qRegisterMetaType<DirScanResult>();
+//	qRegisterMetaType<DirScanResult>();
 	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
 	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
@@ -58,10 +58,11 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	X(exturl_media, m_media_exturl) \
 	X(exturl_cuesheet, m_cue_exturl)
 
-
 QVariant DirScanResult::toVariant() const
 {
 	QVariantMap map;
+
+	qDb() << "DirScanResult TO GOT HERE";
 
 	// Add all the fields to the map.
 //#define X(field_name, field) map.insert( # field_name , field ## .toVariant() );
@@ -77,6 +78,8 @@ QVariant DirScanResult::toVariant() const
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
+#warning "Not getting here"
+	qDb() << "DirScanResult FROM GOT HERE";
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
@@ -87,6 +90,8 @@ void DirScanResult::fromVariant(const QVariant& variant)
 #else /// Exp
 	m_dir_exturl = map.value("exturl_dir").value<ExtUrl>();
 	qDb() << M_NAME_VAL(m_dir_exturl);
+
+	Q_ASSERT(m_dir_exturl.m_url.isValid());
 #endif
 }
 
@@ -177,9 +182,6 @@ Q_ASSERT(0);
 M_WARNING("TODO");
     return QVector<ExtUrl>();
 }
-
-#define DATASTREAM_FIELDS(X) \
-	X(flags_dirprops, m_dir_props) X(exturl_dir, m_dir_exturl) X(exturl_media, m_media_exturl) X(exturl_cuesheet, m_cue_exturl)
 
 QDebug operator<<(QDebug dbg, const DirScanResult & obj)
 {

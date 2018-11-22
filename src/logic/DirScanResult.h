@@ -52,11 +52,11 @@ public:
 	/// @{
     DirScanResult() = default;
     DirScanResult(const DirScanResult& other) = default;
-    virtual ~DirScanResult() = default;
+	~DirScanResult() override = default;
 	/// @}
 
     /// Constructor for public consumption.
-    DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
+	explicit DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
 
 	friend class CollectionMedium;
 
@@ -95,11 +95,14 @@ public:
     /// Returned URL will not be valid if there was no sidecar cue sheet.
 	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
 
-	/// Serialization
+	/// @name Serialization
+	/// @{
 
 	/// @todo Can these be protected?
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
+
+	/// @}
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult)
 	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);

@@ -72,10 +72,11 @@ QVariant ExtUrl::toVariant() const
 
 void ExtUrl::fromVariant(const QVariant& variant)
 {
+#warning "NEVER GETTING HERE ON READ"
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_name, field) field = map.value( # field_name ).value<std::decay_t<decltype( field )>>();
+#define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
 	DATASTREAM_FIELDS(X)
 #undef X
 

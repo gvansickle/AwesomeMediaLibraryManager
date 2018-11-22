@@ -125,7 +125,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
-		auto child_item = create_default_constructed_child_item(this);
+		auto child_item = this->create_default_constructed_child_item(this);
 		child_item->fromVariant(child);
 		// Save it off temporarily.
 		temp_items.push_back(child_item);

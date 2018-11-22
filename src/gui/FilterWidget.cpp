@@ -100,6 +100,7 @@ QRegExp::PatternSyntax FilterWidget::patternSyntax() const
 
 void FilterWidget::setPatternSyntax(QRegExp::PatternSyntax s)
 {
+#warning "MIGHT DETACH"
 	for(QAction *a : m_patternGroup->actions())
 	{
 		if (patternSyntaxFromAction(a) == s)
