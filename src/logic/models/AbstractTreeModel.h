@@ -75,7 +75,7 @@ class AbstractTreeModelHeaderItem;
 #include <logic/ISerializable.h>
 
 
-class AbstractTreeModel : public QAbstractItemModel, public ISerializable
+class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable
 {
     Q_OBJECT
 

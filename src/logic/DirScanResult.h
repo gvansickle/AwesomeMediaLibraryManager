@@ -104,10 +104,10 @@ public:
 
 	/// @}
 
-    QTH_FRIEND_QDEBUG_OP(DirScanResult)
-	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+    QTH_FRIEND_QDEBUG_OP(DirScanResult);
+//	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 	/// QXmlStream{Read,Write} operators.
-	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
+//	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
 
 	ScanResultsTreeModelItem *toTreeModelItem();
 

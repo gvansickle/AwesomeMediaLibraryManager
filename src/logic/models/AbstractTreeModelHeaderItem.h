@@ -30,6 +30,8 @@
 // Ours
 #include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
+#include "ScanResultsTreeModelItem.h"
+
 
 /**
  *
@@ -59,8 +61,7 @@ public:
 
 protected:
 
-	AbstractTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr,
-							const QVector<QVariant> &vector = QVector<QVariant>()) override;
+	ScanResultsTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

@@ -21,6 +21,8 @@
  * @file XmlSerializer.cpp
  */
 
+#include "XmlSerializer.h"
+
 // Qt5
 #include <QFile>
 #include <QVariant>
@@ -28,7 +30,7 @@
 #include <QVariantMap>
 
 // Ours
-#include "XmlSerializer.h"
+#include <utils/DebugHelpers.h>
 
 
 XmlSerializer::XmlSerializer()
@@ -88,7 +90,13 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 {
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
-	switch (variant.type())
+	int type = variant.type();
+	int usertype = variant.userType();
+	if(type != usertype)
+	{
+		qWr() << "#### TYPE != USER TYPE:" << type << usertype;
+	}
+	switch (variant.userType())//variant.type())
 	{
 		case QMetaType::QVariantList:
 			writeVariantListToStream(variant, xmlstream);
@@ -141,8 +149,9 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
 	QVariant variant;
-	switch (QVariant::nameToType(typeString.toStdString().c_str()))
-			{
+	auto metatype = QVariant::nameToType(typeString.toStdString().c_str());
+	switch (metatype)
+	{
 		case QMetaType::QVariantList:
 			variant = readVariantListFromStream(xmlstream);
 			break;
@@ -150,6 +159,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 			variant = readVariantMapFromStream(xmlstream);
 			break;
 		default:
+			qInfo() << "#### type:" << metatype;
 			variant = readVariantValueFromStream(xmlstream);
 			break;
 	}

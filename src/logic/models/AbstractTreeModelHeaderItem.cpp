@@ -28,7 +28,7 @@
 
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parentItem)
-	: AbstractTreeModelItem (x, parentItem)
+	: AbstractTreeModelItem(parentItem, x)
 {
 #warning "TODO This should take a list of AbsHeaderSections"
 //	m_item_data = x;
@@ -125,7 +125,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
-		auto child_item = this->create_default_constructed_child_item(this);
+		ScanResultsTreeModelItem* child_item = this->create_default_constructed_child_item(this);
 		child_item->fromVariant(child);
 		// Save it off temporarily.
 		temp_items.push_back(child_item);
@@ -135,20 +135,12 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	this->appendChildren(temp_items);
 }
 
-AbstractTreeModelItem*
-AbstractTreeModelHeaderItem::create_default_constructed_child_item(AbstractTreeModelItem *parent,
-																const QVector<QVariant> &vector)
+ScanResultsTreeModelItem*
+AbstractTreeModelHeaderItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)
 {
 	ScanResultsTreeModelItem* child_item;
 
-	if(parent)
-	{
-		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
-	}
-	else
-	{
-		child_item = new ScanResultsTreeModelItem();
-	}
+	child_item = new ScanResultsTreeModelItem(parent);
 
 	return child_item;
 }

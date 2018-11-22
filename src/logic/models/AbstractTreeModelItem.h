@@ -72,7 +72,7 @@ class QXmlStreamWriter;
 /**
  * Generic item for use in AbstractItemTreeModel.
  */
-class AbstractTreeModelItem : public ISerializable
+class AbstractTreeModelItem : public virtual ISerializable
 {
 public:
 	/**
@@ -81,8 +81,9 @@ public:
 	 *                     @note This is completely unrelated to QObject and its parent/child memory
 	 *                     management implications; this class isn't derived from QObject.
 	 */
-	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
-	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem* parent_item = nullptr);
+//	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
+	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr,
+			const QVector<QVariant>& data = QVector<QVariant>());
 	~AbstractTreeModelItem() override;
 
 	/**
@@ -137,7 +138,7 @@ public:
 
 
     // Debug stream op free func friender.
-    QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)
+    QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
 
@@ -151,7 +152,7 @@ protected:
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
 	virtual AbstractTreeModelItem*
-	create_default_constructed_child_item(AbstractTreeModelItem *parent, const QVector<QVariant> &vector) = 0;
+	create_default_constructed_child_item(AbstractTreeModelItem* parent) = 0;
 
 private:
 

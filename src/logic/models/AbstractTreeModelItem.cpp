@@ -64,13 +64,13 @@
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
 
-AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem *parent_item)
-{
-	m_parent_item = parent_item;
-}
+//AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem *parent_item)
+//{
+//	m_parent_item = parent_item;
+//}
 
-AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent_item)
-	: AbstractTreeModelItem(parent_item)
+AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item, const QVector<QVariant>& data)
+	: m_parent_item(parent_item)
 {
 	m_item_data = data;
 }
@@ -146,7 +146,7 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
         QVector<QVariant> data(columns);
 //		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
 		// Create a new default-constructed item.
-		AbstractTreeModelItem *item = create_default_constructed_child_item(this, data);
+		AbstractTreeModelItem *item = create_default_constructed_child_item(this);
 		m_child_items.insert(pos_iterator, item);
     }
 

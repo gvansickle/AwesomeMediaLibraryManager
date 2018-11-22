@@ -44,8 +44,6 @@ AMLM_QREG_CALLBACK([](){
 	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
 
-//AMLM_REGISTER_QFLAG_QSTRING_CONVERTERS(DirScanResult::DirPropFlags, RegVar1)
-
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_media_exturl(found_url, &found_url_finfo)
 {

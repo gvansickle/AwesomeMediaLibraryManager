@@ -118,8 +118,9 @@ ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractT
 }
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
-	: AbstractTreeModelItem(x, parent)
+	: AbstractTreeModelItem(parent, x)
 {
+	Q_ASSERT(0);
 #warning "Eliminate?"
 }
 
@@ -271,25 +272,18 @@ ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTree
 	}
 	else
 	{
-		child_item = new ScanResultsTreeModelItem();
+		child_item = new ScanResultsTreeModelItem(parent);
 	}
 
 	return child_item;
 }
 
 ScanResultsTreeModelItem *
-ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem *parent, const QVector<QVariant> &vector)
+ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)
 {
 	ScanResultsTreeModelItem* child_item;
 
-	if(parent)
-	{
-		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
-	}
-	else
-	{
-		child_item = new ScanResultsTreeModelItem();
-	}
+	child_item = new ScanResultsTreeModelItem(parent);
 
 	return child_item;
 }

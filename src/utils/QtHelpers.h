@@ -73,7 +73,7 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
  */
 
 #define IMPL_QTH_DECLARE_QDEBUG_OP(friend_placeholder, classname) \
-	friend_placeholder QDebug operator<<(QDebug out, const classname & obj);
+	friend_placeholder QDebug operator<<(QDebug out, const classname & obj)
 
 //#define IMPL_QTH_DECLARE_QDATASTREAM_OPS(friend_placeholder, classname) \
 //    friend_placeholder QDataStream &operator<<(QDataStream &out, const classname & myObj); \

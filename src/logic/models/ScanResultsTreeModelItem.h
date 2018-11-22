@@ -39,6 +39,7 @@ class QXmlStreamReader;
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 public:
+	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : AbstractTreeModelItem(parent) {};
 	explicit ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem *parent = nullptr);
 	explicit ScanResultsTreeModelItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
 	 ~ScanResultsTreeModelItem() override;
@@ -86,8 +87,7 @@ protected:
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
 	ScanResultsTreeModelItem*
-	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr,
-	                                      const QVector<QVariant> &vector = QVector<QVariant>()) override;
+	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
 
 	const QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
 
