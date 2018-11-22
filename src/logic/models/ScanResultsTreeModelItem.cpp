@@ -162,8 +162,8 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
-
-	m_dsr.fromVariant(map.value("dirscanresult"));
+	m_dsr = map.value("dirscanresult").value<DirScanResult>();
+	qDb() << "GOT HERE:" << m_dsr.getMediaExtUrl();
 }
 
 

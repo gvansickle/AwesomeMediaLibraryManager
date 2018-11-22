@@ -50,8 +50,12 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 }
 
 #define DATASTREAM_FIELDS(X) \
-	X(href, m_url) X(ts_last_refresh, m_timestamp_last_refresh) X(file_size, m_size) X(ts_creation, m_creation_timestamp) \
-	X(ts_last_modified, m_last_modified_timestamp) X(ts_last_modified_metadata, m_metadata_last_modified_timestamp)
+	X(href, m_url) \
+	X(ts_last_refresh, m_timestamp_last_refresh) \
+	X(file_size, m_size) \
+	X(ts_creation, m_creation_timestamp) \
+	X(ts_last_modified, m_last_modified_timestamp) \
+	X(ts_last_modified_metadata, m_metadata_last_modified_timestamp)
 
 QVariant ExtUrl::toVariant() const
 {
@@ -70,9 +74,13 @@ void ExtUrl::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
+#define X(field_name, field) field = map.value( # field_name ).value<std::decay_t<decltype( field )>>();
 	DATASTREAM_FIELDS(X)
 #undef X
+
+	QVariant temp_m_url = map.value("href");
+	qDb() << "QVar<QUrl>:" << temp_m_url;
+
 }
 
 XmlElement ExtUrl::toXml() const
