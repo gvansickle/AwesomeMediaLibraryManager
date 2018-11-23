@@ -240,7 +240,7 @@ TEST_F(FlagsAndEnumsTests, FlagsRoundTripThroughQVariantStringRep)
 	TCOUT << "FLAGS EXTRACTED FROM QVAR, <<:" << flags_as_qvar.value<TestFlagHolder::TestFlags>();
 
 	// integer 3
-	TCOUT << QString("FLAGS EXTRACTED FROM QVAR, arg(): %1").arg(flags_as_qvar.value<TestFlagHolder::TestFlags>());
+	TCOUT << QString("FLAGS EXTRACTED FROM QVAR WITH flags_as_qvar.value<TestFlagHolder::TestFlags>(): '%1'").arg(flags_as_qvar.value<TestFlagHolder::TestFlags>());
 
 	TestFlagHolder::TestFlags testflags_through_qvar;
 

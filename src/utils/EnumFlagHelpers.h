@@ -113,8 +113,11 @@ class AMLMRegisterQFlagQStringConverters
 public:
 	AMLMRegisterQFlagQStringConverters()
 	{
+		QMetaEnum ftme = QMetaEnum::fromType<FlagsType>();
+
 		if(!QMetaType::hasRegisteredConverterFunction<FlagsType, QString>())
 		{
+			qIn() << "Registering QMetaType::registerConverter() functions for type:" << ftme.scope() << ftme.name();
 			// Register converters between TestFlagHolder::TestFlags-to-QString for at least QVariant's benefit.
 			bool success = QMetaType::registerConverter<FlagsType, QString>([](const FlagsType& flags) -> QString {
 				return EnumFlagtoqstr(flags);
@@ -125,6 +128,10 @@ public:
 				return QFlagsFromQStr<FlagsType>(str);
 			});
 			Q_ASSERT_X(success, __PRETTY_FUNCTION__, "FlagsType-from-QString converter registration failed");
+		}
+		else
+		{
+			qWr() << "Type" << ftme.scope() << ftme.name() << "already has registered QMetaType::registerConverter() functions";
 		}
 	}
 };
