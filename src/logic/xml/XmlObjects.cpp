@@ -60,7 +60,7 @@ void XmlElement::write(QXmlStreamWriter* out) const
 	// Write out any child elements.
 	for(auto it = m_child_elements.cbegin(); it != m_child_elements.cend(); ++it)
 	{
-		qDb() << "Writing child element";
+//		qDb() << "Writing child element";
 		it->write(out);
 	}
 

@@ -163,8 +163,13 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
-#warning "THIS IS WHERE THINGS BREAK, we get here"
-	m_dsr = map.value("dirscanresult").value<DirScanResult>();
+
+#warning "THIS IS WHERE THINGS BREAK, we get here but never into DirScanResult.fromVariant()... oh, because we never call it."
+#warning "The cast should work though, right?"
+//	m_dsr = map.value("dirscanresult").value<DirScanResult>();
+	auto dsr_in_variant = map.value("dirscanresult");
+	m_dsr.fromVariant(dsr_in_variant);
+
 	qDb() << "GOT HERE:" << m_dsr.getMediaExtUrl();
 }
 

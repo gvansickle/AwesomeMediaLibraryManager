@@ -99,6 +99,10 @@ AbstractTreeModelItem* AbstractTreeModelItem::child(int number)
 
 const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
 {
+	if(number >= childCount())
+	{
+		qWr() << "### CHILD INDEX OUT OF RANGE:" << number;
+	}
 	return stdex::value(m_child_items, number);
 }
 

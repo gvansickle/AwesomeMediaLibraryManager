@@ -72,6 +72,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	}
 	map.insert("header_section_list", list);
 
+	qDb() << M_NAME_VAL(childCount());
 	map.insert("num_child_items", childCount());
 
 	// Create a QVariantList of our children.

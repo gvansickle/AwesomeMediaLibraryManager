@@ -60,16 +60,18 @@ QVariant DirScanResult::toVariant() const
 {
 	QVariantMap map;
 
-	qDb() << "DirScanResult TO GOT HERE";
+	qDb() << "GOT HERE";
 
 	// Add all the fields to the map.
 //#define X(field_name, field) map.insert( # field_name , field ## .toVariant() );
 //	DATASTREAM_FIELDS(X)
 //#undef X
+
+/// @todo DEBUG
 //	map.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
-	map.insert("exturl_dir", m_dir_exturl.toVariant());
+//	map.insert("exturl_dir", m_dir_exturl.toVariant());
 	map.insert("exturl_media", m_media_exturl.toVariant());
-	map.insert("exturl_cuesheet", m_cue_exturl.toVariant());
+//	map.insert("exturl_cuesheet", m_cue_exturl.toVariant());
 
 	return map;
 }
@@ -78,18 +80,26 @@ void DirScanResult::fromVariant(const QVariant& variant)
 {
 #warning "Not getting here"
 	qDb() << "DirScanResult FROM GOT HERE";
+
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
-#if 1
+#if TODO_NOT_BROKEN
 #define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
 	DATASTREAM_FIELDS(X)
 #undef X
-#else /// Exp
-	m_dir_exturl = map.value("exturl_dir").value<ExtUrl>();
-	qDb() << M_NAME_VAL(m_dir_exturl);
+#else
 
-	Q_ASSERT(m_dir_exturl.m_url.isValid());
+	/// @todo Something is still broken here.  This should work, but it doesn't.
+//	m_media_exturl = map.value("exturl_media").value<ExtUrl>();
+
+	auto exturl_in_variant = map.value("exturl_media");
+	m_media_exturl.fromVariant(exturl_in_variant);
+
+	qDb() << M_NAME_VAL(exturl_in_variant);
+	qDb() << M_NAME_VAL(m_media_exturl);
+
+//	Q_ASSERT(m_dir_exturl.m_url.isValid());
 #endif
 }
 
@@ -256,6 +266,5 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 //	return out;
 }
 
-#undef DATASTREAM_FIELDS
 
 

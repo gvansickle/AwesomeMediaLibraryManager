@@ -60,14 +60,20 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 
 QVariant ExtUrl::toVariant() const
 {
-	QVariantMap retval;
+	QVariantMap map;
+
+#if NOT_DEBUGGING
 
 	// Add all the fields to the map.
 #define X(field_name, field) retval.insert( # field_name , field );
 	DATASTREAM_FIELDS(X)
 #undef X
 
-	return retval;
+#else
+	map.insert("href", m_url);
+#endif
+
+	return map;
 }
 
 void ExtUrl::fromVariant(const QVariant& variant)
@@ -75,13 +81,23 @@ void ExtUrl::fromVariant(const QVariant& variant)
 #warning "NEVER GETTING HERE ON READ"
 	QVariantMap map = variant.toMap();
 
+#if NOT_DEBUGGING
+
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
 	DATASTREAM_FIELDS(X)
 #undef X
 
-	QVariant temp_m_url = map.value("href").toString();
-	qDb() << "QVar<QUrl>:" << temp_m_url;
+#else
+
+	qDb() << "HERE";
+	m_url = map.value("href").toUrl();
+	if(!m_url.isValid())
+	{
+		qWr() << "##### INVALID QVar<QUrl>:" << m_url;
+	}
+
+#endif
 
 }
 
