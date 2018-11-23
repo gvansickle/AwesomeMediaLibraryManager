@@ -73,6 +73,16 @@ private:
 
 	/// @}
 
+	void check_for_stream_error_and_skip(QXmlStreamReader& xmlstream);
+
+
+	QString errorString(QXmlStreamReader& xmlstream) const
+	{
+		return QObject::tr("%1\nLine %2, column %3")
+				.arg(xmlstream.errorString())
+				.arg(xmlstream.lineNumber())
+				.arg(xmlstream.columnNumber());
+	}
 };
 
 #endif /* SRC_LOGIC_XMLSERIALIZER_H_ */

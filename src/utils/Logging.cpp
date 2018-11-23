@@ -73,6 +73,7 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
     // Log a short form of the function name.  With templates, %{function} becomes enormous.
     // Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
     // and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
+    M_WARNING("TODO: This needs to be smarter, we mostly only get the return and linkage types");
     debug_str.replace(QStringLiteral("%shortfunction"), QString(context.function).left(16));
 
     /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.

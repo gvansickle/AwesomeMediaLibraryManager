@@ -27,6 +27,7 @@
 #include <QString>
 
 // Ours
+#include <utils/QtHelpers.h>
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModelHeaderItem;
 
@@ -57,6 +58,8 @@ public:
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 
+	QTH_FRIEND_QDATASTREAM_OPS(ScanResultsTreeModel);
+
 	/// @}
 
 	/// Create a new root node.
@@ -70,5 +73,6 @@ protected:
     QUrl m_base_directory;
 
 };
+
 
 #endif // SCANRESULTSTREEMODEL_H

@@ -307,18 +307,25 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				/// NEW Let's also try it with plenty of QVariants.
 				{
 					QString filename = QDir::homePath() + "/DeleteMeNew.xspf";
+
+					qIn() << "###### WRITING" << filename;
+
 					XmlSerializer xmlser;
 					xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(filename), "playlist");
+
+					qIn() << "###### WROTE" << filename;
 
 					/// Let's now try to read it back.
 					ScanResultsTreeModel* readback_tree_model;
 					{
+						qIn() << "###### READING BACK" << filename;
+
 						XmlSerializer xmlser_read;
 						readback_tree_model = new ScanResultsTreeModel(static_cast<QObject*>(tree_model_ptr)->parent());
 						// Load it.
 						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(filename));
 
-						qIn() << "MODEL READBACK:";
+						qIn() << "###### READBACK INFO:";
 						qIn() << "COLUMNS:" << readback_tree_model->columnCount()
 								<< "ROWS:" << readback_tree_model->rowCount();
 					}
@@ -326,8 +333,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 					/// And lets' try to reserialize it out.
 					{
 						QString filename = QDir::homePath() + "/DeleteMeNew3.xspf";
+						qIn() << "###### WRITING WHAT WE READ TO" << filename;
 						XmlSerializer xmlser;
 						xmlser.save(*readback_tree_model, QUrl::fromLocalFile(filename), "playlist");
+						qIn() << "###### WROTE" << filename;
 					}
 					readback_tree_model->deleteLater();
 

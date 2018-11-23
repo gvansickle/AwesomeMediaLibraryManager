@@ -28,20 +28,19 @@
 #include <QVariant>
 #include <QVariantList>
 #include <QVariantMap>
+#include <QDataStream>
 
 // Ours
 #include <utils/DebugHelpers.h>
 
 
-XmlSerializer::XmlSerializer()
+XmlSerializer::XmlSerializer() : ISerializer()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 XmlSerializer::~XmlSerializer()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name)
@@ -61,13 +60,15 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	QXmlStreamWriter xmlstream(&file);
 
 	xmlstream.setAutoFormatting(true);
+
 	xmlstream.writeStartDocument();
 	writeVariantToStream(root_name, serializable.toVariant(), xmlstream);
 	xmlstream.writeEndDocument();
+
 	file.close();
 }
 
-void XmlSerializer::load(ISerializable &serializable, const QUrl &file_url)
+void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 {
 	QString load_file_path = file_url.toLocalFile();
 	if(load_file_path.isEmpty())
@@ -80,23 +81,63 @@ void XmlSerializer::load(ISerializable &serializable, const QUrl &file_url)
 	QXmlStreamReader stream(&file);
 
 	// Read the first element in the file.
-	stream.readNextStartElement();
+	if(!stream.readNextStartElement())
+	{
+		// Something went wrong.
+		stream.raiseError("Reading first start element failed.");
 
-	// Stream it all in.
-	serializable.fromVariant(readVariantFromStream(stream));
+		/// @todo Move
+		qWr() << errorString(stream);
+	}
+	else
+	{
+		// Stream it all in.
+		serializable.fromVariant(readVariantFromStream(stream));
+	}
 }
 
 void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
-	int type = variant.type();
-	int usertype = variant.userType();
+
+	/**
+	 * @note Uhhhhhh..... QMetaType sometimes != QVariant.type().
+	 *
+	 * This looks like a complete fiasco.  Seriously, from the Qt 5.11.1 docs:
+	 *
+	 * @link http://doc.qt.io/qt-5/qvariant.html#type
+	 * "QVariant::Type QVariant::type() const
+	 *    Although this function is declared as returning QVariant::Type, the return value should be
+	 * interpreted as QMetaType::Type. [...]
+	 * Note that return values in the ranges QVariant::Char through QVariant::RegExp and QVariant::Font
+	 * through QVariant::Transform correspond to the values in the ranges QMetaType::QChar through QMetaType::QRegExp
+	 * and QMetaType::QFont through QMetaType::QQuaternion. [...huh?] Pay particular attention when working
+	 * with char and QChar variants. [...whu...?] Also note that the types void*, long, short, unsigned long,
+	 * unsigned short, unsigned char, float, QObject*, and QWidget* are represented in QMetaType::Type but not
+	 * in QVariant::Type, and they can be returned by this function. [...???] However, they are considered to
+	 * be user defined types when tested against QVariant::Type. [$*&^$%*#@@#!???]".
+	 *
+	 * ...oh, ok, a partial explanation:
+	 * From qvariant.h:495:
+	 * "// QVariant::Type is marked as \obsolete, but we don't want to
+    // provide a constructor from its intended replacement,
+    // QMetaType::Type, instead, because the idea behind these
+    // constructors is flawed in the first place. But we also don't
+    // want QVariant(QMetaType::String) to compile and falsely be an
+    // int variant, so delete this constructor:
+    QVariant(QMetaType::Type) Q_DECL_EQ_DELETE;"
+	 */
+
+	int type = variant.type(); // AFAICT this is just wrong.
+	int usertype = variant.userType(); // This matches variant.typeName()
+
 	if(type != usertype)
 	{
-		qWr() << "#### TYPE != USER TYPE:" << type << usertype;
+//		qWr() << "#### TYPE != USERTYPE: variant.typeName():" << variant.typeName() << "As ints:" << type << "!=" << usertype << ":"
+//				<< QVariant::typeToName(type) << QVariant::typeToName(usertype);
 	}
-	switch (variant.userType())//variant.type())
+	switch (usertype)//variant.type())
 	{
 		case QMetaType::QVariantList:
 			writeVariantListToStream(variant, xmlstream);
@@ -109,6 +150,16 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 			break;
 	}
 	xmlstream.writeEndElement();
+}
+
+
+void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
+{
+	Q_ASSERT(variant.isValid());
+
+	QString str = variant.toString();
+
+	xmlstream.writeCharacters(str);
 }
 
 
@@ -139,15 +190,11 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 }
 
 
-void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
-{
-	xmlstream.writeCharacters(variant.toString());
-}
-
 QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
+
 	QVariant variant;
 	auto metatype = QVariant::nameToType(typeString.toStdString().c_str());
 	switch (metatype)
@@ -158,11 +205,43 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 		case QMetaType::QVariantMap:
 			variant = readVariantMapFromStream(xmlstream);
 			break;
+//		case QMetaType::QUrl:
+//		{
+//			qInfo() << "#### Trying to read type:" << metatype;
+//			QByteArray ba;
+//			QDataStream ds(&ba, QIODevice::ReadWrite);
+//			ds << xmlstream.readElementText();
+//
+//			variant.fromValue(ds) = ds;
+//			qIn() << "### ds:" << ds;
+//			break;
+//		}
 		default:
-			qInfo() << "#### type:" << metatype;
+//			qInfo() << "#### Trying to read type:" << metatype;
 			variant = readVariantValueFromStream(xmlstream);
 			break;
 	}
+
+	if(!variant.isValid())
+	{
+		// Whatever we read, it didn't make it to a QVariant successfully.
+		xmlstream.raiseError("Invalid QVariant conversion.");
+		qWr() << errorString(xmlstream);
+
+		// Try to keep going.
+		/// @todo Not sure what we need to do here.
+	}
+
+	if(!xmlstream.isEndElement())
+	{
+		// Not at an end element, parsing went wrong somehow.
+		xmlstream.raiseError("Reading xml stream failed, skipping to next start element.");
+		qWr() << errorString(xmlstream);
+
+		// Try to keep going, skip to the next sibling element.
+		xmlstream.skipCurrentElement();
+	}
+
 	return variant;
 }
 
@@ -170,10 +249,31 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
+
+	// Slurps up all contents of this element until the EndElement, including all child element text.
+	/// @note I know, not cool with all the RAM wasteage.
 	QString dataString = xmlstream.readElementText();
+
+//	qIn() << "Type:" << typeString << ", Data:" << dataString;
+
 	QVariant variant(dataString);
-	variant.convert(QVariant::nameToType(
-			typeString.toStdString().c_str()));
+
+	if(!variant.isValid())
+	{
+		Q_ASSERT(0);
+	}
+
+	// Cast to type named in typeString.
+	// If this fails, status will be false, but variant will be changed to the requested type
+	// will be null/cleared byt valid.
+	bool status = variant.convert(QVariant::nameToType(typeString.toStdString().c_str()));
+
+	if(!status)
+	{
+		qWr() << QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(dataString, typeString);
+		qWr() << "isValid():" << variant.isValid();
+	}
+
 	return variant;
 }
 
@@ -182,8 +282,15 @@ QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
 	QVariantList list;
 	while(xmlstream.readNextStartElement())
 	{
-		list.append(readVariantFromStream(xmlstream));
+		QVariant next_list_element = readVariantFromStream(xmlstream);
+
+		check_for_stream_error_and_skip(xmlstream);
+
+		list.append(next_list_element);
 	}
+
+	check_for_stream_error_and_skip(xmlstream);
+
 	return list;
 }
 
@@ -192,8 +299,12 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 	QVariantMap map;
 	while(xmlstream.readNextStartElement())
 	{
-		map.insert(xmlstream.name().toString(),
-		           readVariantFromStream(xmlstream));
+		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
 	}
 	return map;
+}
+
+void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
+{
+
 }

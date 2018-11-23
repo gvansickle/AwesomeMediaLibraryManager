@@ -77,10 +77,10 @@ int main(int argc, char *argv[])
                        "%threadname15 "
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
                        "%{if-fatal}FATAL%{endif}"
-					   "%{if-category}%{category} %{endif}"
+					   "%{if-category} %{category} %{endif}"
 						"] "
 					   /*	+ logging.ClickableLinkPattern() + */
-                      /*%{function}:*/ "%shortfunction:%{line} - %{message}"
+                       "%{function}:" /*"%shortfunction:"*/ "%{line} - %{message}"
                        /* "%{if-fatal}%{backtrace}%{endif}" */);
 
 	// Logging test.
