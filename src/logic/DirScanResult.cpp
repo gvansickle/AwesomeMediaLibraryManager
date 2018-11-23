@@ -113,9 +113,6 @@ QVariant DirScanResult::toVariant() const
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-#warning "Not getting here"
-	qDb() << "DirScanResult FROM GOT HERE";
-
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
@@ -140,7 +137,6 @@ void DirScanResult::fromVariant(const QVariant& variant)
 //	qDb() << M_NAME_VAL(exturl_in_variant);
 //	qDb() << M_NAME_VAL(m_media_exturl);
 
-//	Q_ASSERT(m_dir_exturl.m_url.isValid());
 #endif
 }
 

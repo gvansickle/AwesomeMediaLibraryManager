@@ -62,10 +62,10 @@ QVariant ExtUrl::toVariant() const
 {
 	QVariantMap map;
 
-#if NOT_DEBUGGING
+#if 1
 
 	// Add all the fields to the map.
-#define X(field_name, field) retval.insert( # field_name , field );
+#define X(field_name, field) map.insert( # field_name , field );
 	DATASTREAM_FIELDS(X)
 #undef X
 
@@ -78,10 +78,9 @@ QVariant ExtUrl::toVariant() const
 
 void ExtUrl::fromVariant(const QVariant& variant)
 {
-#warning "NEVER GETTING HERE ON READ"
 	QVariantMap map = variant.toMap();
 
-#if NOT_DEBUGGING
+#if 1
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
