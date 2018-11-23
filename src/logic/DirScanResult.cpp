@@ -56,22 +56,57 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	X(exturl_media, m_media_exturl) \
 	X(exturl_cuesheet, m_cue_exturl)
 
+/**
+ * Variant map insert adapter for FieldType's which have an .toVariant() member function.
+ * @tparam MapType
+ * @tparam FieldTagType
+ * @tparam FieldType
+ * @param map
+ * @param field_tag
+ * @param field_val
+ * @return
+ */
+//template <class MapType, class FieldTagType = const char*, class FieldType,
+//        REQUIRES(std::is_invocable_v<std::declval<FieldType>.toVariant>)>
+//void varmap_insert(MapType& map, FieldTagType field_tag, FieldType field_val) //-> std::enable_if_t(&FieldType::toVariant)
+//{
+//	map.insert(field_tag, field_val.toVariant());
+//}
+
+/**
+ * For Qt5 Q_FLAG()s.
+ * @tparam MapType
+ * @tparam FieldTagType
+ * @tparam FieldType
+ * @param map
+ * @param field_tag
+ * @param field_val
+ * @return
+ */
+//template <class MapType, class FieldTagType = const char*, class FieldType>
+//void varmap_insert(MapType& map, FieldTagType field_tag, FieldType field_val) //-> decltype(&FieldType::testFlag)
+//{
+//	QVariant temp_var = QVariant::fromValue(field_val);
+//	map.insert(field_tag, temp_var);
+//}
+
 QVariant DirScanResult::toVariant() const
 {
 	QVariantMap map;
 
 	qDb() << "GOT HERE";
-
+#if 0
 	// Add all the fields to the map.
-//#define X(field_name, field) map.insert( # field_name , field ## .toVariant() );
-//	DATASTREAM_FIELDS(X)
-//#undef X
-
+#define X(field_name, field) varmap_insert(map, # field_name, field); //map.insert( # field_name , field.toVariant() );
+	DATASTREAM_FIELDS(X)
+#undef X
+#else
 /// @todo DEBUG
-//	map.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
-//	map.insert("exturl_dir", m_dir_exturl.toVariant());
+	map.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
+	map.insert("exturl_dir", m_dir_exturl.toVariant());
 	map.insert("exturl_media", m_media_exturl.toVariant());
-//	map.insert("exturl_cuesheet", m_cue_exturl.toVariant());
+	map.insert("exturl_cuesheet", m_cue_exturl.toVariant());
+#endif
 
 	return map;
 }
@@ -84,13 +119,15 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
-#if TODO_NOT_BROKEN
-#define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
+#if 0
+#define X(field_name, field) { auto field_in_variant = map.value( # field_name );\
+                                field.fromVariant(field_in_variant); \
+							}
 	DATASTREAM_FIELDS(X)
 #undef X
 #else
 
-	/// @todo Something is still broken here.  This should work, but it doesn't.
+	/// @todo Something is still broken here.  This should work, but it doesn't:
 //	m_media_exturl = map.value("exturl_media").value<ExtUrl>();
 
 	auto exturl_in_variant = map.value("exturl_media");

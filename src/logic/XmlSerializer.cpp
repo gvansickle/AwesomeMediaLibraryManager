@@ -282,6 +282,8 @@ QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
 	QVariantList list;
 	while(xmlstream.readNextStartElement())
 	{
+		// We should have just read in an "<item>".
+		Q_ASSERT(xmlstream.text() == );
 		QVariant next_list_element = readVariantFromStream(xmlstream);
 
 		check_for_stream_error_and_skip(xmlstream);
