@@ -102,7 +102,7 @@ QVariant DirScanResult::toVariant() const
 #undef X
 #else
 /// @todo DEBUG
-	map.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
+//	map.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
 	map.insert("exturl_dir", m_dir_exturl.toVariant());
 	map.insert("exturl_media", m_media_exturl.toVariant());
 	map.insert("exturl_cuesheet", m_cue_exturl.toVariant());
@@ -132,9 +132,13 @@ void DirScanResult::fromVariant(const QVariant& variant)
 
 	auto exturl_in_variant = map.value("exturl_media");
 	m_media_exturl.fromVariant(exturl_in_variant);
+	exturl_in_variant = map.value("exturl_dir");
+	m_dir_exturl.fromVariant(exturl_in_variant);
+	exturl_in_variant = map.value("exturl_cuesheet");
+	m_cue_exturl.fromVariant(exturl_in_variant);
 
-	qDb() << M_NAME_VAL(exturl_in_variant);
-	qDb() << M_NAME_VAL(m_media_exturl);
+//	qDb() << M_NAME_VAL(exturl_in_variant);
+//	qDb() << M_NAME_VAL(m_media_exturl);
 
 //	Q_ASSERT(m_dir_exturl.m_url.isValid());
 #endif
