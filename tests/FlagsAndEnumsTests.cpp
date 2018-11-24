@@ -55,6 +55,7 @@
 #include <utils/EnumFlagHelpers.h>
 ///// @todo Split off
 #include "../logic/ExtUrl.h"
+#include "../logic/xml/ExtEnum.h"
 
 /**
  * Test flag class definition.
@@ -316,6 +317,17 @@ TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
 	TCOUT << M_NAME_VAL(after);
 
 	AMLMTEST_EXPECT_EQ(before, after);
+}
+
+DECL_EXTENUM(MyTestExtEnum);
+constexpr MyTestExtEnum MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2);
+
+TEST_F(FlagsAndEnumsTests, ExtEnumSanity)
+{
+	TCOUT << MyEnumerator1.c_str();
+	TCOUT << MyEnumerator1.toInt();
+	TCOUT << MyE3.c_str();
+	TCOUT << MyE4.c_str();
 }
 
 #include "FlagsAndEnumsTests.moc"

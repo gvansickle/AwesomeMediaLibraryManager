@@ -72,6 +72,7 @@ public:
 	{
 		return m_string;
 	}
+	constexpr const char* c_str() const { return m_string; };
 
 	constexpr bool operator==(const char * cstr) const
 	{
@@ -100,13 +101,13 @@ struct ExtEnumerator
 	constexpr ExtEnumerator(const char(&string)[N], uint64_t value, uint64_t sort_index)
 				: m_sort_index(sort_index), m_string(string), m_value(value) {};
 
-	constexpr ExtEnumerator(uint64_t value, uint64_t sort_index) : ExtEnumerator(__func__, value, sort_index) {};
+	constexpr ExtEnumerator(uint64_t value, uint64_t sort_index) : ExtEnumerator("##### TODO #####", value, sort_index) {};
 //			: m_sort_index(sort_index), m_value(value) //, m_string(std::string_view(__func__))
 //			 m_string(__func__/*"xxxx"*/) {};
 //			{ m_string = const_string(__func__); };
 
 
-	constexpr const_string toString() const { return m_string; };
+	constexpr const char* c_str() const { return m_string.c_str(); };
 	constexpr uint64_t toInt() const { return m_value; };
 
 	constexpr bool operator==(const ExtEnumerator& other) const { return m_value == other.m_value; };
@@ -123,7 +124,14 @@ struct ExtEnumerator
 	const_string m_string;
 };
 
-#define EXTENUM(extenum_name) struct extenum_name : public ExtEnumerator {};
+#define DECL_EXTENUM(extenum_name) \
+	struct extenum_name : public ExtEnumerator \
+	{\
+		constexpr extenum_name (uint64_t value, uint64_t sort_index) : ExtEnumerator(value, sort_index) {};\
+		template<std::size_t N> \
+		constexpr extenum_name(const char(&string)[N], uint64_t value, uint64_t sort_index) \
+			: ExtEnumerator(string, value, sort_index) { }; \
+	}
 //#define EXTENUMERATOR(extenumerator_name)
 
 #if 0
