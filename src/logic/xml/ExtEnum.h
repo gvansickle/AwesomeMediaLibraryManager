@@ -23,6 +23,7 @@
 #include <initializer_list>
 #include <string>
 #include <string_view>
+#include <cstring>
 
 /**
  * A way-improved enum that's been too long in coming to C++.
@@ -65,6 +66,8 @@ public:
 	template<std::size_t N>
 	constexpr const_string(const char(&string)[N]) : m_string(string), m_size(N-1) {}
 
+	constexpr const_string(const char* pString) : m_string {pString}, m_size { std::strlen(pString) } {};
+
 	/// Return the length of the string.
 	constexpr std::size_t size() const { return m_size; }
 
@@ -106,6 +109,8 @@ struct ExtEnumerator
 //			 m_string(__func__/*"xxxx"*/) {};
 //			{ m_string = const_string(__func__); };
 
+	constexpr ExtEnumerator(const char* string, uint64_t value, uint64_t sort_index)
+			: m_sort_index(sort_index), m_string(string), m_value(value) { };
 
 	constexpr const char* c_str() const { return m_string.c_str(); };
 	constexpr uint64_t toInt() const { return m_value; };
@@ -127,10 +132,12 @@ struct ExtEnumerator
 #define DECL_EXTENUM(extenum_name) \
 	struct extenum_name : public ExtEnumerator \
 	{\
-		constexpr extenum_name (uint64_t value, uint64_t sort_index) : ExtEnumerator(value, sort_index) {};\
+		/*constexpr extenum_name (uint64_t value, uint64_t sort_index) : ExtEnumerator(value, sort_index) {};*/\
 		template<std::size_t N> \
 		constexpr extenum_name(const char(&string)[N], uint64_t value, uint64_t sort_index) \
 			: ExtEnumerator(string, value, sort_index) { }; \
+		constexpr extenum_name(uint64_t value, uint64_t sort_index)  \
+			: ExtEnumerator( # extenum_name , value, sort_index) { }; \
 	}
 //#define EXTENUMERATOR(extenumerator_name)
 
