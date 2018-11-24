@@ -26,6 +26,8 @@
 
 /**
  * A streamable QMimeType.
+ *
+ * @note QMimeType does not have a virtual destructor, so maybe we really should be doing this differently.
  */
 class ExtMimeType : public QMimeType
 {

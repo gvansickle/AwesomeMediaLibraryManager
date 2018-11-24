@@ -62,17 +62,10 @@ QVariant ExtUrl::toVariant() const
 {
 	QVariantMap map;
 
-#if 1
-
 	// Add all the fields to the map.
 #define X(field_name, field) map.insert( # field_name , field );
 	DATASTREAM_FIELDS(X)
 #undef X
-
-#else
-	map.insert("href", m_url);
-#endif
-
 	return map;
 }
 
@@ -80,24 +73,10 @@ void ExtUrl::fromVariant(const QVariant& variant)
 {
 	QVariantMap map = variant.toMap();
 
-#if 1
-
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
 	DATASTREAM_FIELDS(X)
 #undef X
-
-#else
-
-	qDb() << "HERE";
-	m_url = map.value("href").toUrl();
-	if(!m_url.isValid())
-	{
-		qWr() << "##### INVALID QVar<QUrl>:" << m_url;
-	}
-
-#endif
-
 }
 
 XmlElement ExtUrl::toXml() const
