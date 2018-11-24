@@ -174,7 +174,8 @@ ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -Wmaybe-uninitiali
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames -gstatement-frontiers)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
+	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree -fno-elide-type

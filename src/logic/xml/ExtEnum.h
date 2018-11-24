@@ -1,0 +1,160 @@
+/*
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ *
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#ifndef AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
+#define AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
+
+#include <initializer_list>
+#include <string>
+#include <string_view>
+
+/**
+ * A way-improved enum that's been too long in coming to C++.
+ * @note Tell me I'm wrong. ;-)
+ *
+ * - Typesafe.
+ * - Representations:
+ * -- integer
+ * -- string
+ * -- ...other?
+ * - Sort order can be separated from any of the representations.
+ * - Hashable
+ * - enum-like representation, i.e. "DerivedExtEnum val = TypeSafeEnumerator1;
+ */
+struct ExtEnum
+{
+	struct ExtEnumBase;
+	struct ExtEnumHelper;
+
+	constexpr ExtEnum() {};
+//	ExtEnum(std::initializer_list<ExtEnumHelper> init_list) {};
+
+};
+
+struct ExtEnumHelper
+{
+//	ExtEnumHelper(auto name) {};
+};
+
+/**
+ * Minimal constexpr compile-time string class.
+ */
+class const_string
+{
+private:
+	const char* const m_string;
+	const std::size_t m_size;
+
+public:
+	template<std::size_t N>
+	constexpr const_string(const char(&string)[N]) : m_string(string), m_size(N-1) {}
+
+	/// Return the length of the string.
+	constexpr std::size_t size() const { return m_size; }
+
+	constexpr const char* operator*() const
+	{
+		return m_string;
+	}
+
+	constexpr bool operator==(const char * cstr) const
+	{
+		for(int i=0; i<m_size; ++i)
+		{
+			if(cstr[i] == '\0')
+			{
+				// Other string ended before we did.  Not equal.
+				return false;
+			}
+			if(cstr[i] != m_string[i])
+			{
+				// chars at position i not equal.
+				return false;
+			}
+		}
+
+		// All chars matched, equal.
+		return true;
+	};
+};
+
+struct ExtEnumerator
+{
+	template<std::size_t N>
+	constexpr ExtEnumerator(const char(&string)[N], uint64_t value, uint64_t sort_index)
+				: m_sort_index(sort_index), m_string(string), m_value(value) {};
+
+	constexpr ExtEnumerator(uint64_t value, uint64_t sort_index) : ExtEnumerator(__func__, value, sort_index) {};
+//			: m_sort_index(sort_index), m_value(value) //, m_string(std::string_view(__func__))
+//			 m_string(__func__/*"xxxx"*/) {};
+//			{ m_string = const_string(__func__); };
+
+
+	constexpr const_string toString() const { return m_string; };
+	constexpr uint64_t toInt() const { return m_value; };
+
+	constexpr bool operator==(const ExtEnumerator& other) const { return m_value == other.m_value; };
+
+	// A value used to sort instances of derived types.
+	// For use by containers such as map if you want the ExtEnums ordered
+	// differently than by their value or string.
+	const uint64_t m_sort_index;
+
+	// The integer value.
+	const uint64_t m_value;
+
+	// String representation of the ExtEnumerator instance.
+	const_string m_string;
+};
+
+#define EXTENUM(extenum_name) struct extenum_name : public ExtEnumerator {};
+//#define EXTENUMERATOR(extenumerator_name)
+
+#if 0
+
+/// Bitwise-or operator for FileCreationFlag.
+/// @note Yeah, I didn't realize this was necessary for non-class enums in C++ either.  I've been writing too much C....
+constexpr inline FileCreationFlag operator|(FileCreationFlag a, FileCreationFlag b)
+{
+	return static_cast<FileCreationFlag>(static_cast<std::underlying_type<FileCreationFlag>::type>(a)
+	                                     | static_cast<std::underlying_type<FileCreationFlag>::type>(b));
+}
+
+inline std::ostream& operator<<(std::ostream& out, const FileType value){
+	const char* s = 0;
+#define M_ENUM_CASE(p) case(p): s = #p; break;
+	switch(value){
+		M_ENUM_CASE(FT_UNINITIALIZED);
+		M_ENUM_CASE(FT_UNKNOWN);
+		M_ENUM_CASE(FT_REG);
+		M_ENUM_CASE(FT_DIR);
+		M_ENUM_CASE(FT_SYMLINK);
+		M_ENUM_CASE(FT_STAT_FAILED);
+	}
+#undef M_ENUM_CASE
+
+	return out << s;
+}
+
+
+#endif // 0
+
+
+
+#endif //AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
