@@ -66,7 +66,7 @@ public:
 	template<std::size_t N>
 	constexpr const_string(const char(&string)[N]) : m_string(string), m_size(N-1) {}
 
-	constexpr const_string(const char* pString) : m_string {pString}, m_size { std::strlen(pString) } {};
+	constexpr const_string(const char* const pString) : m_string {pString}, m_size { std::strlen(pString) } {};
 
 	/// Return the length of the string.
 	constexpr std::size_t size() const { return m_size; }
@@ -101,9 +101,9 @@ public:
 template <class DerivedClass>
 struct ExtEnumerator
 {
-	template<std::size_t N>
-	constexpr ExtEnumerator(const char(&string)[N], uint64_t value, uint64_t sort_index)
-				: m_sort_index(sort_index), m_string(string), m_value(value) {};
+//	template<std::size_t N>
+//	constexpr ExtEnumerator(const char(&string)[N], uint64_t value, uint64_t sort_index)
+//				: m_sort_index(sort_index), m_string(string), m_value(value) {};
 
 	constexpr ExtEnumerator(uint64_t value, uint64_t sort_index) : ExtEnumerator("##### TODO #####", value, sort_index) {};
 //			: m_sort_index(sort_index), m_value(value) //, m_string(std::string_view(__func__))
@@ -113,10 +113,10 @@ struct ExtEnumerator
 	constexpr ExtEnumerator(const char* string, uint64_t value, uint64_t sort_index)
 			: m_sort_index(sort_index), m_string(string), m_value(value) { m_funcname = __func__; };
 
-	/*constexpr*/ const char* c_str() const = 0;
+	/*constexpr*/ const char* c_str() const
 	{
-//		return m_string.c_str();
-		return m_funcname;
+		return m_string.c_str();
+//		return m_funcname;
 	};
 	constexpr uint64_t toInt() const { return m_value; };
 
@@ -146,7 +146,7 @@ struct ExtEnumerator
 	const char* m_funcname {nullptr};
 };
 
-#define EXPAND_EXTENUM_VARARGS(...)
+#define EXPAND_EXTENUM_VARARGS(...) /* Expand declarations */ __VA_ARGS__
 
 #define DECL_EXTENUM(extenum_name, ...) \
 	struct extenum_name : public ExtEnumerator<extenum_name> \
@@ -157,9 +157,10 @@ struct ExtEnumerator
 		constexpr extenum_name(const char(&string)[N], uint64_t value, uint64_t sort_index) \
 			: ExtEnumerator(string, value, sort_index) { }; \
 		constexpr extenum_name(uint64_t value, uint64_t sort_index)  \
-			: ExtEnumerator( # extenum_name , value, sort_index) { }; \
-	} \
-	EXPAND_EXTENUM_VARARGS(__VA_ARGS__)
+			: ExtEnumerator( "" , value, sort_index) { }; \
+	}; \
+	/*inline static constexpr extenum_name g_ ## extenum_name;*/ \
+	static inline constexpr extenum_name EXPAND_EXTENUM_VARARGS(__VA_ARGS__)
 
 
 //#define EXTENUMERATOR(extenumerator_name)

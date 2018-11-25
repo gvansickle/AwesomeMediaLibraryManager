@@ -319,8 +319,10 @@ TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
 	AMLMTEST_EXPECT_EQ(before, after);
 }
 
-DECL_EXTENUM(MyTestExtEnum);
-constexpr MyTestExtEnum MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2);
+//DECL_EXTENUM(MyTestExtEnum);
+DECL_EXTENUM(MyTestExtEnum, MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2));
+
+//constexpr MyTestExtEnum MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2);
 
 TEST_F(FlagsAndEnumsTests, ExtEnumSanity)
 {
