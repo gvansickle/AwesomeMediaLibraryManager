@@ -25,7 +25,7 @@
 DECL_EXTENUM(MyEvenBetterEnum);
 //struct MyEvenBetterEnum : public ExtEnumerator {};
 
-constexpr ExtEnumerator MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2);
+inline constexpr MyEvenBetterEnum MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2);
 
 //struct MyEvenBetterEnum : public ExtEnum
 //{
@@ -35,7 +35,7 @@ constexpr ExtEnumerator MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0
 //	MyE4 = 2678
 //};
 
-static_assert(MyEnumerator1.m_value == 0, "");
+static_assert(MyEnumerator1 == 0, "");
 static_assert(MyEnumerator2.toInt() == 1, "");
-static_assert(MyE3.c_str() == "MyE3", "");
+//static_assert(MyE3.c_str() == "MyE3", "");
 //static_assert(MyE4.toString() == "MyE4", "");

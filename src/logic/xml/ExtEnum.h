@@ -98,6 +98,7 @@ public:
 	};
 };
 
+template <class DerivedClass>
 struct ExtEnumerator
 {
 	template<std::size_t N>
@@ -110,12 +111,26 @@ struct ExtEnumerator
 //			{ m_string = const_string(__func__); };
 
 	constexpr ExtEnumerator(const char* string, uint64_t value, uint64_t sort_index)
-			: m_sort_index(sort_index), m_string(string), m_value(value) { };
+			: m_sort_index(sort_index), m_string(string), m_value(value) { m_funcname = __func__; };
 
-	constexpr const char* c_str() const { return m_string.c_str(); };
+	/*constexpr*/ const char* c_str() const = 0;
+	{
+//		return m_string.c_str();
+		return m_funcname;
+	};
 	constexpr uint64_t toInt() const { return m_value; };
 
+	// Equality Compare to other ExtEnumerators.
 	constexpr bool operator==(const ExtEnumerator& other) const { return m_value == other.m_value; };
+
+	// Equality Compare to integer.
+	constexpr bool operator==(uint64_t rhs) const { return m_value == rhs; };
+
+//	template <class DerivedType>
+//	constexpr bool operator==(const DerivedType& lhs, const DerivedType& rhs)
+//	{
+//		if(lhs.)
+//	}
 
 	// A value used to sort instances of derived types.
 	// For use by containers such as map if you want the ExtEnums ordered
@@ -127,18 +142,26 @@ struct ExtEnumerator
 
 	// String representation of the ExtEnumerator instance.
 	const_string m_string;
+
+	const char* m_funcname {nullptr};
 };
 
-#define DECL_EXTENUM(extenum_name) \
-	struct extenum_name : public ExtEnumerator \
+#define EXPAND_EXTENUM_VARARGS(...)
+
+#define DECL_EXTENUM(extenum_name, ...) \
+	struct extenum_name : public ExtEnumerator<extenum_name> \
 	{\
+		/*std:: ## extenum_name*/  \
 		/*constexpr extenum_name (uint64_t value, uint64_t sort_index) : ExtEnumerator(value, sort_index) {};*/\
 		template<std::size_t N> \
 		constexpr extenum_name(const char(&string)[N], uint64_t value, uint64_t sort_index) \
 			: ExtEnumerator(string, value, sort_index) { }; \
 		constexpr extenum_name(uint64_t value, uint64_t sort_index)  \
 			: ExtEnumerator( # extenum_name , value, sort_index) { }; \
-	}
+	} \
+	EXPAND_EXTENUM_VARARGS(__VA_ARGS__)
+
+
 //#define EXTENUMERATOR(extenumerator_name)
 
 #if 0
