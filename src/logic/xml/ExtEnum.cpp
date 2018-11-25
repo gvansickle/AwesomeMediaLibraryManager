@@ -22,8 +22,9 @@
 
 ///// @temp Testing
 
-DECL_EXTENUM(MyEvenBetterEnum, MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2));
+//DECL_EXTENUM(MyEvenBetterEnum, MyEnumerator1{"name", 0, 0}, MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2), MyOtherE3(0x01, 3));
 //struct MyEvenBetterEnum : public ExtEnumerator {};
+DECL_EXTENUM(MyEvenBetterEnum2, MyE3, 0); //, ({"MyE3", 0x01, 3}));//, MyE4(987, 2), MyOtherE3(0x01, 3));
 
 //inline constexpr MyEvenBetterEnum MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2);
 
@@ -35,7 +36,10 @@ DECL_EXTENUM(MyEvenBetterEnum, MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("M
 //	MyE4 = 2678
 //};
 
-static_assert(MyEnumerator1 == 0);
-static_assert(MyEnumerator2.toInt() == 1);
+//static_assert(MyEnumerator1 == 0);
+//static_assert(MyEnumerator2.toInt() == 1);
+//static_assert(MyE3 != 1);
+//static_assert(MyE3 == 1);
+//static_assert(MyE3 == MyOtherE3);
 //static_assert(MyE3.c_str() == "MyE3", "");
 //static_assert(MyE4.toString() == "MyE4", "");

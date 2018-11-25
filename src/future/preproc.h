@@ -20,6 +20,8 @@
 #ifndef SRC_FUTURE_PREPROC_H_
 #define SRC_FUTURE_PREPROC_H_
 
+#include <cstddef>
+
 namespace detail
 {
 	template<typename ...Args>

@@ -25,6 +25,9 @@
 #include <string_view>
 #include <cstring>
 
+#include <boost/preprocessor.hpp>
+//#include <boost/preprocessor/variadic/elem.hpp>
+
 /**
  * A way-improved enum that's been too long in coming to C++.
  * @note Tell me I'm wrong. ;-)
@@ -48,10 +51,28 @@ struct ExtEnum
 
 };
 
-struct ExtEnumHelper
-{
+/**
+ * We need this helper struct to give us something to forward declare.
+ */
+//struct ExtEnumHelper
+//{
 //	ExtEnumHelper(auto name) {};
+//};
+
+// Testing.
+struct A {  };
+struct B : public A
+{
+	int m_val;
+
+	static inline constexpr B AMEMA {1};
+	static constexpr B AMEMB {1};
 };
+
+void func()
+{
+//	auto enumval = B::AMEMA;
+}
 
 /**
  * Minimal constexpr compile-time string class.
@@ -98,7 +119,7 @@ public:
 	};
 };
 
-template <class DerivedClass>
+//template <class DerivedClass>
 struct ExtEnumerator
 {
 //	template<std::size_t N>
@@ -146,22 +167,45 @@ struct ExtEnumerator
 	const char* m_funcname {nullptr};
 };
 
+#define M_PRED_IS_EVEN(_, num) BOOST_PP_NOT(BOOST_PP_MOD(d, num, 2))
+//#define M_PRED_IS_EVEN(s, data, element)
+
+#define M_EXTENUM_FWD_DECL_ENUMERATOR(r, data, i, elem) BOOST_PP_CAT(data, BOOST_PP_CAT(elem, i))
+#define M_EXTENUM_DEFINE_ENUMERATOR(r, data, i, elem)  data elem; //BOOST_PP_CAT(data, BOOST_PP_CAT(elem, i))
+
 #define EXPAND_EXTENUM_VARARGS(...) /* Expand declarations */ __VA_ARGS__
 
 #define DECL_EXTENUM(extenum_name, ...) \
-	struct extenum_name : public ExtEnumerator<extenum_name> \
+	struct extenum_name : public ExtEnumerator \
 	{\
-		/*std:: ## extenum_name*/  \
 		/*constexpr extenum_name (uint64_t value, uint64_t sort_index) : ExtEnumerator(value, sort_index) {};*/\
 		template<std::size_t N> \
 		constexpr extenum_name(const char(&string)[N], uint64_t value, uint64_t sort_index) \
 			: ExtEnumerator(string, value, sort_index) { }; \
 		constexpr extenum_name(uint64_t value, uint64_t sort_index)  \
 			: ExtEnumerator( "" , value, sort_index) { }; \
-	}; \
-	/*inline static constexpr extenum_name g_ ## extenum_name;*/ \
-	static inline constexpr extenum_name EXPAND_EXTENUM_VARARGS(__VA_ARGS__)
+		\
+		using extenum_name_ref = extenum_name&;\
+		BOOST_PP_SEQ_FOR_EACH_I( M_EXTENUM_DEFINE_ENUMERATOR, inline constexpr extenum_name_ref, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__) );\
+		 \
+	};
 
+// extenum_name, /* The data passed to each invocation of M_EXTENUM_FWD_DECL_ENUMERATOR() */ \
+///*BOOST_PP_SEQ_FILTER( M_PRED_IS_EVEN, nil, */BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__) )\
+
+
+	/*static inline constexpr extenum_name EXPAND_EXTENUM_VARARGS(__VA_ARGS__);*/
+
+	/* Seq == ()()() */
+//BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)
+//#define X(x) x
+//#define MACRO(p, x) X p x )
+//
+//auto x = MACRO(BOOST_PP_LPAREN(), abc) // expands to abc
+//
+//#define Y(x)
+//
+//MACRO((10) Y BOOST_PP_LPAREN(), result) // expands to 10
 
 //#define EXTENUMERATOR(extenumerator_name)
 
