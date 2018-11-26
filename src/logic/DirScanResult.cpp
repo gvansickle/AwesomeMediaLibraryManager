@@ -45,7 +45,7 @@ AMLM_QREG_CALLBACK([](){
 });
 
 
-BETTER_ENUM(XMLTag_DirScanResult, int, Red, Green, Blue)
+
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)

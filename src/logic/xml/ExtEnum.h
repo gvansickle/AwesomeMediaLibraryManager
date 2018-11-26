@@ -31,7 +31,8 @@
 /**
  * A way-improved enum that's been too long in coming to C++.
  * @note Tell me I'm wrong. ;-)
- *
+ * @note Also, Better Enums doesn't work with Q_DECLARE_METATYPE, but is otherwise awesome.
+ *          @link http://aantron.github.io/better-enums/index.html
  * - Typesafe.
  * - Representations:
  * -- integer
@@ -41,46 +42,21 @@
  * - Hashable
  * - enum-like representation, i.e. "DerivedExtEnum val = TypeSafeEnumerator1;
  */
-/// @note Giving up for the moment and using Better Enums: @link https://github.com/aantron/better-enums
-// Better Enums.
-#ifndef BETTER_ENUMS_CONSTEXPR_TO_STRING
-#define BETTER_ENUMS_CONSTEXPR_TO_STRING
-#endif
-#include <src/third_party/better_enums/enum.h>
+
+template <class T>
+class ExtEnumBase
+{
+	/// Type we'll use to map from key values (the value of the enumerator).
+	using keyvalue_to_keyindex_map_type = std::map<int,typename T>;
+
+	template<class T, class QEnumToXFuncType>
+	auto make_map(QEnumToXFuncType mapper)
+	{
+		static
+	}
+}
 
 #if 0
-struct ExtEnum
-{
-	struct ExtEnumBase;
-	struct ExtEnumHelper;
-
-	constexpr ExtEnum() {};
-//	ExtEnum(std::initializer_list<ExtEnumHelper> init_list) {};
-
-};
-
-/**
- * We need this helper struct to give us something to forward declare.
- */
-//struct ExtEnumHelper
-//{
-//	ExtEnumHelper(auto name) {};
-//};
-
-// Testing.
-struct A {  };
-struct B : public A
-{
-	int m_val;
-
-	static inline constexpr B AMEMA {1};
-	static inline constexpr B AMEMB {1};
-};
-
-void func()
-{
-//	auto enumval = B::AMEMA;
-}
 
 /**
  * Minimal constexpr compile-time string class.

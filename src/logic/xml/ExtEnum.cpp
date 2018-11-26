@@ -21,7 +21,6 @@
 
 #include "ExtEnum.h"
 
-BETTER_ENUM(Test, int, ALPHA, BETA = 5, GAMMA = 9)
 
 #if 0
 ///// @temp Testing

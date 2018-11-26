@@ -59,22 +59,6 @@ QString EnumFlagtoqstr(const QEnumType value)
 	}
 }
 
-template<typename F> // Output QFlags of registered enumerations
-inline typename std::enable_if<QtPrivate::IsQEnumHelper<F>::Value, char*>::type toString_QF(QFlags<F> f)
-{
-	const QMetaEnum me = QMetaEnum::fromType<F>();
-	return qstrdup(me.valueToKeys(int(f)).constData());
-}
-
-template <typename F> // Fallback: Output hex value
-inline typename std::enable_if<!QtPrivate::IsQEnumHelper<F>::Value, char*>::type toString_QF(QFlags<F> f)
-{
-	const size_t space = 3 + 2 * sizeof(unsigned); // 2 for 0x, two hex digits per byte, 1 for '\0'
-	char *msg = new char[space];
-	qsnprintf(msg, space, "0x%x", unsigned(f));
-	return msg;
-}
-
 template<typename QFlagsType>
 QFlagsType QFlagsFromQStr(const QString& rep, bool *ok = nullptr)
 {
@@ -85,6 +69,8 @@ QFlagsType QFlagsFromQStr(const QString& rep, bool *ok = nullptr)
 
 	return QFlagsType(me.keysToValue(tostdstr(rep).c_str(), ok));
 }
+
+
 //
 //template<typename QEnumType>
 //QEnumType QEnumFromQStr(const QString& rep)
