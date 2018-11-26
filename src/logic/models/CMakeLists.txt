@@ -20,29 +20,36 @@
 # @file src/logic/models/CMakeLists.txt
 
 set(SOURCE_FILES_SRC_LOGIC_MODELS
-	AbstractHeaderSection.h
 	AbstractHeaderSection.cpp
-	AbstractModelRelation.h
 	AbstractModelRelation.cpp
-	AbstractTreeModel.h
 	AbstractTreeModel.cpp
-	AbstractTreeModelItem.h
 	AbstractTreeModelItem.cpp
-	AbstractTreeModelHeaderItem.h
 	AbstractTreeModelHeaderItem.cpp
-	AbstractTreeModelReader.h
 	AbstractTreeModelReader.cpp
-	AbstractTreeModelWriter.h
 	AbstractTreeModelWriter.cpp
-	ScanResultsTreeModel.h
 	ScanResultsTreeModel.cpp
-	ScanResultsTreeModelItem.h
 	ScanResultsTreeModelItem.cpp
+	ScanResultsTreeModelXMLTags.cpp
 	)
+set(HEADER_FILES_SRC_LOGIC_MODELS
+		AbstractHeaderSection.h
+		AbstractModelRelation.h
+		AbstractTreeModel.h
+		AbstractTreeModelItem.h
+		AbstractTreeModelHeaderItem.h
+		AbstractTreeModelReader.h
+		AbstractTreeModelWriter.h
+		ScanResultsTreeModel.h
+		ScanResultsTreeModelItem.h
+		ScanResultsTreeModelXMLTags.h
+		)
 prepend_to_each(SOURCE_FILES_SRC_LOGIC_MODELS "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_LOGIC_MODELS})
+prepend_to_each(HEADER_FILES_SRC_LOGIC_MODELS "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_LOGIC_MODELS})
 
 target_sources(models_subdir
 	PUBLIC
+		${HEADER_FILES_SRC_LOGIC_MODELS}
+	PRIVATE
 		${SOURCE_FILES_SRC_LOGIC_MODELS}
 	)
 

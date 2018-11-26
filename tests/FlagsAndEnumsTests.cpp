@@ -367,4 +367,27 @@ TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 	}
 }
 
+#include <map>
+struct QEnumMap
+{
+	std::map<TestEnumHolder::TestEnum, std::string> m_the_map;
+};
+
+
+TEST_F(FlagsAndEnumsTests, QEnumMapping)
+{
+	std::map<TestEnumHolder::TestEnum, std::string> the_map
+		{
+		{TestEnumHolder::Enum1, "one"},
+		{TestEnumHolder::Enum2, "two"}
+		  };
+
+	auto mapitem_1 = the_map[TestEnumHolder::Enum1];
+	auto mapitem_2 = the_map[TestEnumHolder::Enum2];
+	TCOUT << mapitem_1;
+
+	EXPECT_EQ(mapitem_1, "one");
+	EXPECT_EQ(mapitem_2, "two");
+}
+
 #include "FlagsAndEnumsTests.moc"

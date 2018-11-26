@@ -25,9 +25,6 @@
 #include <string_view>
 #include <cstring>
 
-//#include <boost/preprocessor.hpp>
-//#include <boost/preprocessor/variadic/elem.hpp>
-
 /**
  * A way-improved enum that's been too long in coming to C++.
  * @note Tell me I'm wrong. ;-)
@@ -47,14 +44,14 @@ template <class T>
 class ExtEnumBase
 {
 	/// Type we'll use to map from key values (the value of the enumerator).
-	using keyvalue_to_keyindex_map_type = std::map<int, typename T>;
+//	using keyvalue_to_keyindex_map_type = std::map<int, typename T>;
 
-	template<class T, class QEnumToXFuncType>
-	auto make_map(QEnumToXFuncType mapper)
-	{
-		static
-	}
-}
+//	template<class T, class QEnumToXFuncType>
+//	auto make_map(QEnumToXFuncType mapper)
+//	{
+//		static
+//	}
+};
 
 #if 0
 

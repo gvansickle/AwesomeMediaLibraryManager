@@ -46,8 +46,6 @@ AMLM_QREG_CALLBACK([](){
 
 
 
-
-
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_media_exturl(found_url, &found_url_finfo)
 {
