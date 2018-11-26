@@ -19,9 +19,28 @@
 
 #include "ScanResultsTreeModelXMLTags.h"
 
-std::map<DSRTag::TagName, std::string> DSRTag::m_dsrtag_to_string
+const ExtEnumToStringMap<ExtUrlTag::TagName> ExtUrlTag::m_exturltag_to_string
 {
-		{DSRTag::EXTURL_DIR, "exturl_dir"},
-		{DSRTag::EXTURL_MEDIA, "exturl_media"},
-		{DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}
+	{ ExtUrlTag::HREF, "exturl_dir"},
+	{ ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
+	{ ExtUrlTag::SIZE_FILE, "size_file"},
+	{ ExtUrlTag::TS_CREATION, "ts_creation"},
+	{ ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
+	{ ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
+};
+
+const ExtEnumToStringMap<DSRTag::TagName> DSRTag::m_dsrtag_to_string
+{
+	{DSRTag::EXTURL_DIR, "exturl_dir"},
+	{DSRTag::EXTURL_MEDIA, "exturl_media"},
+	{DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}
+};
+
+const ExtEnumToStringMap<SRTMTag::TagName> SRTMTag::m_srtmtag_to_string
+{
+	{SRTMTag::BASE_DIRECTORY, "base_directory"},
+	{SRTMTag::TITLE, "title"},
+	{SRTMTag::CREATOR, "creator"},
+	{SRTMTag::DATE, "date"},
+	{SRTMTag::ROOT_ITEM, "tree_model_root_item"}
 };

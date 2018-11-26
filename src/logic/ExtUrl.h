@@ -39,6 +39,7 @@ class QFileInfo;
 #include <logic/models/AbstractTreeModelWriter.h>
 #include "ISerializable.h"
 
+
 #if 0
 class FileModificationInfo
 {

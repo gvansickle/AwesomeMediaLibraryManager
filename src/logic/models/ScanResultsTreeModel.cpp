@@ -21,6 +21,7 @@
 // Ours
 #include "ScanResultsTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
+#include "ScanResultsTreeModelXMLTags.h"
 
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
@@ -45,7 +46,9 @@ QVariant ScanResultsTreeModel::toVariant() const
 	QVariantMap map;
 
 	// The one piece of data we really need here, non-xspf.
-	map.insert("base_directory", m_base_directory);
+//	map.insert("base_directory", m_base_directory);
+	auto name = ExtUrlTag::at(ExtUrlTag::TagName::HREF);
+	map.insert(name, m_base_directory);
 
 	/// @todo Start of xspf-specific stuff.
 //		XmlElement playlist("playlist", [=](XmlElement* e, QXmlStreamWriter* out){

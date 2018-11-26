@@ -33,8 +33,11 @@
 
 // Ours
 #include "models/AbstractTreeModelWriter.h"
+#include <logic/models/ScanResultsTreeModelXMLTags.h>
 #include "xml/XmlObjects.h"
 #include <utils/DebugHelpers.h>
+
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
@@ -63,7 +66,7 @@ QVariant ExtUrl::toVariant() const
 	QVariantMap map;
 
 	// Add all the fields to the map.
-#define X(field_name, field) map.insert( # field_name , field );
+#define X(field_enum_name, field) map.insert( /*ExtUrlTag[*/ # field_enum_name /*]*/ , field );
 	DATASTREAM_FIELDS(X)
 #undef X
 	return map;
