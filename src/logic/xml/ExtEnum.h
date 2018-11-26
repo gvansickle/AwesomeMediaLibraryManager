@@ -47,7 +47,7 @@ template <class T>
 class ExtEnumBase
 {
 	/// Type we'll use to map from key values (the value of the enumerator).
-	using keyvalue_to_keyindex_map_type = std::map<int,typename T>;
+	using keyvalue_to_keyindex_map_type = std::map<int, typename T>;
 
 	template<class T, class QEnumToXFuncType>
 	auto make_map(QEnumToXFuncType mapper)
