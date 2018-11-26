@@ -17,10 +17,19 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
 #include "ExtEnum.h"
 
+BETTER_ENUM(Test, int, ALPHA, BETA = 5, GAMMA = 9)
 
+#if 0
 ///// @temp Testing
+
+struct ExtEnum2
+{
+	ExtEnum2 EA, EB;
+};
 
 //DECL_EXTENUM(MyEvenBetterEnum, MyEnumerator1{"name", 0, 0}, MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2), MyOtherE3(0x01, 3));
 //struct MyEvenBetterEnum : public ExtEnumerator {};
@@ -43,3 +52,5 @@ DECL_EXTENUM(MyEvenBetterEnum2, MyE3, 0); //, ({"MyE3", 0x01, 3}));//, MyE4(987,
 //static_assert(MyE3 == MyOtherE3);
 //static_assert(MyE3.c_str() == "MyE3", "");
 //static_assert(MyE4.toString() == "MyE4", "");
+
+#endif

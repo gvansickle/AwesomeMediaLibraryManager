@@ -35,7 +35,7 @@
 #include "models/ScanResultsTreeModel.h"
 #include <utils/EnumFlagHelpers.h>
 #include <logic/models/AbstractTreeModelWriter.h>
-
+#include <logic/xml/ExtEnum.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
@@ -43,6 +43,10 @@ AMLM_QREG_CALLBACK([](){
 	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
 	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
+
+
+BETTER_ENUM(XMLTag_DirScanResult, int, Red, Green, Blue)
+
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
 	: m_media_exturl(found_url, &found_url_finfo)

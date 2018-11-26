@@ -38,6 +38,7 @@
 #include <utils/DebugHelpers.h>
 
 
+
 class XmlValue : public QString
 {
 public:

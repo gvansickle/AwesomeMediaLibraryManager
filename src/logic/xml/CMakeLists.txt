@@ -49,4 +49,6 @@ target_include_directories(xml_subdir
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
+		${PROJECT_SOURCE_DIR}/src/third_party/better_enums
 	)

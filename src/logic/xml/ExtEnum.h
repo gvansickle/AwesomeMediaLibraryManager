@@ -25,7 +25,7 @@
 #include <string_view>
 #include <cstring>
 
-#include <boost/preprocessor.hpp>
+//#include <boost/preprocessor.hpp>
 //#include <boost/preprocessor/variadic/elem.hpp>
 
 /**
@@ -41,6 +41,14 @@
  * - Hashable
  * - enum-like representation, i.e. "DerivedExtEnum val = TypeSafeEnumerator1;
  */
+/// @note Giving up for the moment and using Better Enums: @link https://github.com/aantron/better-enums
+// Better Enums.
+#ifndef BETTER_ENUMS_CONSTEXPR_TO_STRING
+#define BETTER_ENUMS_CONSTEXPR_TO_STRING
+#endif
+#include <src/third_party/better_enums/enum.h>
+
+#if 0
 struct ExtEnum
 {
 	struct ExtEnumBase;
@@ -66,7 +74,7 @@ struct B : public A
 	int m_val;
 
 	static inline constexpr B AMEMA {1};
-	static constexpr B AMEMB {1};
+	static inline constexpr B AMEMB {1};
 };
 
 void func()
@@ -234,7 +242,7 @@ inline std::ostream& operator<<(std::ostream& out, const FileType value){
 
 	return out << s;
 }
-
+#endif
 
 #endif // 0
 

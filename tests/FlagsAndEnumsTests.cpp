@@ -95,7 +95,9 @@ public:
 		Enum0 = 0x00,
 		Enum1 = 0x01,
 		Enum2 = 0x02,
-		Enum3 = 0x03
+		Enum3 = 0x03,
+		Enum9 = 0x09,
+		Enum8 = 0x08
 	};
 	Q_ENUM(TestEnum)
 };
@@ -320,16 +322,65 @@ TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
 }
 
 //DECL_EXTENUM(MyTestExtEnum);
-DECL_EXTENUM(MyTestExtEnum, MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2));
 
 //constexpr MyTestExtEnum MyEnumerator1(0, 0), MyEnumerator2(1, 1), MyE3("MyE3", 0x01, 3), MyE4(987, 2);
+BETTER_ENUM(MyTestExtEnum, int,  MyEnumerator1, MyEnumerator2, MyE3 = 123, MyE4 = 456);
+// Doesn't compile: Q_DECLARE_METATYPE(MyTestExtEnum);
+
 
 TEST_F(FlagsAndEnumsTests, ExtEnumSanity)
 {
-	TCOUT << MyEnumerator1.c_str();
-	TCOUT << MyEnumerator1.toInt();
-	TCOUT << MyE3.c_str();
-	TCOUT << MyE4.c_str();
+	TCOUT << (+MyTestExtEnum::MyEnumerator1)._to_string();
+	TCOUT << (+MyTestExtEnum::MyE3)._to_string();
+	TCOUT << MyTestExtEnum::MyE3;
+	TCOUT << MyTestExtEnum::MyE4;
+
+	EXPECT_EQ(MyTestExtEnum::MyE3, 123);
+	EXPECT_EQ(MyTestExtEnum::MyE4, 456);
+}
+
+TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
+{
+	TestEnumHolder::TestEnum the_enum;
+
+	// Get the enum metatype.
+	auto emt = QMetaEnum::fromType<TestEnumHolder::TestEnum>();
+
+	TCOUT << "QMetaEnum:" << emt.scope() << "::" << emt.name();
+
+	auto num_keys = emt.keyCount();
+
+	for(int key_index = 0; key_index < num_keys; ++key_index)
+	{
+		const char* key_str = emt.key(key_index);
+		int key_value = emt.value(key_index);
+		TCOUT << "Key index:" << key_index << "Identifier:" << key_str << "Value:" << key_value;
+
+		if(key_index < 4)
+		{
+			EXPECT_EQ(key_value, key_index);
+		}
+		else
+		{
+			switch(key_index)
+			{
+			case 4:
+				EXPECT_EQ(key_value, 9);
+				break;
+			case 5:
+				EXPECT_EQ(key_value, 8);
+				break;
+			}
+		}
+	}
+
+//	MyTestExtEnum after = during.value<MyTestExtEnum>();
+
+//	TCOUT << M_NAME_VAL(before);
+//	TCOUT << M_NAME_VAL(during);
+//	TCOUT << M_NAME_VAL(after);
+//
+//	AMLMTEST_EXPECT_EQ(before, after);
 }
 
 #include "FlagsAndEnumsTests.moc"

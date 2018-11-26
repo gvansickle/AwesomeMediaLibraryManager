@@ -412,7 +412,12 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"TEST_FWK_IS_GTEST=1"
 	)
-target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_include_directories(${TEST_EXE_TARGET} PRIVATE
+	"utils/nomoc"
+	${INCLUDE_DIR_VERDIGRIS}
+	# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
+	${PROJECT_SOURCE_DIR}/src/third_party/better_enums
+	)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${TEST_EXE_TARGET} PROPERTIES
