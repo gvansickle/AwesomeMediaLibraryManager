@@ -19,15 +19,15 @@
 
 #include "ScanResultsTreeModelXMLTags.h"
 
-const ExtEnumToStringMap<ExtUrlTag::TagName> ExtUrlTag::m_exturltag_to_string
-{
-	{ ExtUrlTag::HREF, "exturl_dir"},
-	{ ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
-	{ ExtUrlTag::SIZE_FILE, "size_file"},
-	{ ExtUrlTag::TS_CREATION, "ts_creation"},
-	{ ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
-	{ ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
-};
+//const ExtEnumToStringMap<ExtUrlTag::TagName> ExtUrlTag::m_exturltag_to_string
+//{
+//	{ ExtUrlTag::HREF, "exturl_dir"},
+//	{ ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
+//	{ ExtUrlTag::SIZE_FILE, "size_file"},
+//	{ ExtUrlTag::TS_CREATION, "ts_creation"},
+//	{ ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
+//	{ ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
+//};
 
 //const ExtEnumToStringMap<DSRTag::TagName> DSRTag::m_dsrtag_to_string
 //{

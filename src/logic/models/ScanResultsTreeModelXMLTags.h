@@ -69,6 +69,15 @@ protected:
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
+static const auto ExtUrlTagToXMLTagMap = make_map<ExtUrlTag::TagName, QString>(
+{
+	{ExtUrlTag::HREF, "exturl_dir"},
+	{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
+	{ExtUrlTag::SIZE_FILE, "size_file"},
+	{ExtUrlTag::TS_CREATION, "ts_creation"},
+	{ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
+	{ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
+});
 
 /**
  *
@@ -86,28 +95,6 @@ public:
 		EXTURL_CUESHEET
 	};
 	Q_ENUM(TagName)
-
-//	// Partial specialization for maps from this ExtEnum to whatever.
-//	template <class ToType>
-//	using DSRTagToTypeMapType = ExtEnumMapBase<DSRTag::TagName, ToType>;
-
-//	/**
-//     * Static map factory function.
-//	 * @return
-//	 */
-//	template <class ToType>
-//	static DSRTagToTypeMapType<ToType> make_map(std::initializer_list<DSRTagToTypeMapType<typename ToType>::value_type> init_list)
-//	{
-//		return typename DSRTagToTypeMapType<ToType>(init_list);
-//	}
-
-	/**
-	 * Forwards DSRTag operator[] to the std::map's .at() function, so we don't populate the map but rather throw.
-	 */
-//	const QString operator[](DSRTag::TagName i) const { return m_dsrtag_to_string[i]; };
-
-//protected:
-//	static const ExtEnumToStringMap<DSRTag::TagName> m_dsrtag_to_string;
 };
 Q_DECLARE_METATYPE(DSRTag);
 

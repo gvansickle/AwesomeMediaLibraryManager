@@ -60,15 +60,30 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	X(ts_last_modified, m_last_modified_timestamp) \
 	X(ts_last_modified_metadata, m_metadata_last_modified_timestamp)
 
+#define DATASTREAM_FIELDS_2(X) \
+	X(HREF, m_url) \
+	X(TS_LAST_REFRESH, m_timestamp_last_refresh) \
+	X(SIZE_FILE, m_size) \
+	X(TS_CREATION, m_creation_timestamp) \
+	X(TS_LAST_MODIFIED, m_last_modified_timestamp) \
+	X(TS_LAST_MODIFIED_METADATA, m_metadata_last_modified_timestamp)
 
 QVariant ExtUrl::toVariant() const
 {
 	QVariantMap map;
 
+#if 0
 	// Add all the fields to the map.
-#define X(field_enum_name, field) map.insert( /*ExtUrlTag[*/ # field_enum_name /*]*/ , field );
+#define X(field_enum_name, field) map.insert( /*ExtUrlTagToXMLTagMap[*/ # field_enum_name /*]*/ , field );
 	DATASTREAM_FIELDS(X)
 #undef X
+#else
+#define Y(a, b)  a::b
+#define X(field_enum_name, xml_tag_qstr)   map.insert( ExtUrlTagToXMLTagMap[ Y(ExtUrlTag,field_enum_name) ], field );
+	DATASTREAM_FIELDS_2(X)
+#undef X
+#endif
+
 	return map;
 }
 

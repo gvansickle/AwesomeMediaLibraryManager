@@ -40,7 +40,7 @@ class QFileInfo;
 #include "ISerializable.h"
 
 
-#if 0
+#if 0 // FileInfo
 class FileModificationInfo
 {
     Q_GADGET
