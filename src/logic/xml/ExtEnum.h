@@ -30,6 +30,8 @@
  * @note Tell me I'm wrong. ;-)
  * @note Also, Better Enums doesn't work with Q_DECLARE_METATYPE, but is otherwise awesome.
  *          @link http://aantron.github.io/better-enums/index.html
+ *
+ * Aspiring to, but not sure we'll get there:
  * - Typesafe.
  * - Representations:
  * -- integer
@@ -38,7 +40,7 @@
  * - Maps
  * - @todo Sort order can be separated from any of the representations.
  * - Hashable
- * - enum-like representation, i.e. "DerivedExtEnum val = TypeSafeEnumerator1;
+ * - As close as practical to built-in enum-like syntax and semantics, e.g. "DerivedExtEnum val = TypeSafeEnumerator1;
  */
 
 // Fwd declaration.

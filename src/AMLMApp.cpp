@@ -116,7 +116,7 @@ void AMLMApp::Init(bool gtest_only)
 	connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
 }
 
-AMLMApp *AMLMApp::instance()
+AMLMApp* AMLMApp::instance()
 {
     Q_ASSERT(m_the_instance != nullptr);
     return m_the_instance;

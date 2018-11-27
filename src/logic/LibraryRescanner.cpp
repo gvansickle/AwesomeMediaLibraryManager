@@ -254,7 +254,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		qIno() << "Sending" << new_items.size() << "scan results to model";
 		run_in_event_loop(this, [=, tree_model_ptr=tree_model](){
 
-			// Append entries to the ScanResultsTreemodel.
+			// Append entries to the ScanResultsTreeModel.
 			tree_model_ptr->appendItems(new_items);
 
 	        /// @todo Obsoleting... very... slowly.
@@ -300,9 +300,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 			else
 			{
 #if 1
-				AbstractTreeModelWriter tmw(tree_model_ptr);
-				tmw.write_to_iodevice(&outfile);
-				outfile.close();
+//				AbstractTreeModelWriter tmw(tree_model_ptr);
+//				tmw.write_to_iodevice(&outfile);
+//				outfile.close();
 
 				/// NEW Let's also try it with plenty of QVariants.
 				{
@@ -343,6 +343,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				}
 #ifndef TRY_XQUERY_READ
 				// Now let's see if we can XQuery what we just wrote.
+				if(0)
 				{
 				    QFile queryFile(QString(":/xquery_files/filelist.xq"));
 				    queryFile.open(QIODevice::ReadOnly);

@@ -38,7 +38,7 @@ template <class ScopeTypeEnumType>
 using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
 
 /**
- *
+ * ExtUrl tags.
  */
 class ExtUrlTag
 {
@@ -73,7 +73,7 @@ static const auto ExtUrlTagToXMLTagMap = make_map<ExtUrlTag::TagName, QString>(
 });
 
 /**
- *
+ * DirScanResult tags.
  */
 class DSRTag
 {
@@ -100,7 +100,7 @@ static const auto DSRTagToXMLTagMap = ExtEnum::make_map<DSRTag::TagName, QString
 });
 
 /**
- *
+ * ScanResultsTreeModelItem tags.
  */
 class SRTMTag
 {
@@ -129,7 +129,7 @@ static const auto SRTMTagToXMLTagMap = ExtEnum::make_map<SRTMTag::TagName, QStri
 });
 
 /**
- *
+ * ScanResultsTreeModelItem tags.
  */
 class SRTMItemTag
 {

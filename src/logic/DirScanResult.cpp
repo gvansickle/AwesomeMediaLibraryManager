@@ -92,22 +92,8 @@ void DirScanResult::fromVariant(const QVariant& variant)
 
 ScanResultsTreeModelItem* DirScanResult::toTreeModelItem()
 {
-//	QVector<QVariant> column_data;
-//	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
-//	column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
-//	column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
-
 	auto new_item = new ScanResultsTreeModelItem(this);
 //	auto new_item = make_default_node(column_data);
-
-#warning "EXPERIMENTAL, REMOVE"
-//    QVector<AbstractTreeModelItem *> child_items;
-//	AbstractTreeModelItem* child_item = new ScanResultsTreeModelItem({"One", "Two", "Three"}, new_item);
-
-//    child_items.push_back(child_item);
-
-//    new_item->appendChildren(child_items);
-
 	return new_item;
 }
 
@@ -216,42 +202,5 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 
 	out << e;
 	return out;
-
-//	{
-//		XmlElement e("dirscanresult",
-//					 [=](auto* e, auto* xml){
-//			// Append attributes to the outer element.
-//			e->setId(1);
-
-//			// Append child elements.
-////			e->
-
-//			// Write all the child elements.
-//			auto dir_url {dsr.m_dir_exturl.toXml()};
-//			auto cue_url {dsr.m_cue_exturl.toXml()};
-
-//			dir_url.setId("dir_exturl");
-//			cue_url.setId("cuesheet_url");
-
-//			dir_url.write(xml);
-//			cue_url.write(xml);
-//			;});//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
-//		e.set_out(&out);
-////		XmlElement dir_url(out, "m_dir_exturl", dsr.m_dir_exturl.m_url);
-////		out << dsr.m_dir_exturl;
-////		out << dsr.m_cue_exturl;
-//	}
-
-////	out << dsr.m_dir_exturl;
-////	out << dsr.m_cue_exturl;
-////	qDb() << dsr.m_dir_exturl;
-////	qDb() << dsr.m_cue_exturl;
-////	out.writeAttribute("href", exturl.m_url.toString());
-////	out.writeTextElement("title", "Media URL");
-////	out.writeEndElement();
-//	//delete e;
-//	return out;
 }
-
-
 

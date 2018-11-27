@@ -196,10 +196,6 @@ protected:
     /// Hidden root node of the tree model.
     /// Pulls double duty as the horizontal header item.
 	AbstractTreeModelHeaderItem* m_root_item;
-
-private:
-	void setupModelData(const QStringList &lines, AbstractTreeModelItem *parent);
-
 };
 
 

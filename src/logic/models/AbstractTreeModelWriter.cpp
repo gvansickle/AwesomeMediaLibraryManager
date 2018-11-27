@@ -85,7 +85,6 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 
 	m_tree_model->writeModel(out);
-
 #elif 0
 
 	// Write out the top-level items.
