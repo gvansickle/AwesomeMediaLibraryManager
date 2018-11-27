@@ -78,8 +78,7 @@ QVariant ExtUrl::toVariant() const
 	DATASTREAM_FIELDS(X)
 #undef X
 #else
-#define Y(a, b)  a::b
-#define X(field_enum_name, xml_tag_qstr)   map.insert( ExtUrlTagToXMLTagMap[ Y(ExtUrlTag,field_enum_name) ], field );
+#define X(field_enum_name, field)   map.insert( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], field );
 	DATASTREAM_FIELDS_2(X)
 #undef X
 #endif
@@ -92,8 +91,8 @@ void ExtUrl::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_name, field) field = map.value( # field_name ).value<decltype( field )>();
-	DATASTREAM_FIELDS(X)
+#define X(field_enum_name, field) field = map.value( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ] ).value<decltype( field )>();
+	DATASTREAM_FIELDS_2(X)
 #undef X
 }
 
