@@ -38,7 +38,14 @@ public:
 	{
 	};
 
-//	static ExtEnumMapBase make_map(ScopeTypeEnumType, ToType);
+//	/**
+//	 * Static map factory function.
+//	 * @return
+//	 */
+//	static ExtEnumMapBase<ScopeTypeEnumType, ToType> make_map(std::initializer_list<typename maptype::value_type> init_list)
+//	{
+//		return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
+//	}
 
 	const ToType operator[](ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
 	const ToType at(ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
@@ -46,6 +53,16 @@ public:
 	const std::map<ScopeTypeEnumType, ToType> m_ExtEnum_to_ToType_map;
 
 };
+/**
+ * Static map factory function.
+ * @return
+ */
+template <class ScopeTypeEnumType, class ToType>
+inline static ExtEnumMapBase<ScopeTypeEnumType, ToType>
+make_map(std::initializer_list<typename ExtEnumMapBase<ScopeTypeEnumType, ToType>::maptype::value_type> init_list)
+{
+	return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
+}
 
 template <class ScopeTypeEnumType>
 using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
@@ -73,17 +90,15 @@ public:
 	/**
 	 * Forwards ExtUrlTag operator[] to the std::map's .at() function, so we don't populate the map but rather throw.
 	 */
-//	const std::string operator[](ExtUrlTag::TagName i) { return m_exturltag_to_string[i]; };
 
 	static const QString at(ExtUrlTag::TagName i) { return m_exturltag_to_string.at(i); };
 
 protected:
 	// Map from ExtUrlTag's to the std::string's which should be used in the XML.
 	static const ExtEnumToStringMap<ExtUrlTag::TagName> m_exturltag_to_string;
-//	static std::map<ExtUrlTag::TagName, std::string> m_exturltag_to_string;
-
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
+
 
 /**
  *
@@ -104,6 +119,20 @@ public:
 	};
 	Q_ENUM(TagName)
 
+	// Partial specialization for maps from this ExtEnum to whatever.
+	template <class ToType>
+	using DSRTagToTypeMapType = ExtEnumMapBase<DSRTag::TagName, ToType>;
+
+//	/**
+//     * Static map factory function.
+//	 * @return
+//	 */
+//	template <class ToType>
+//	static DSRTagToTypeMapType<ToType> make_map(std::initializer_list<DSRTagToTypeMapType<typename ToType>::value_type> init_list)
+//	{
+//		return typename DSRTagToTypeMapType<ToType>(init_list);
+//	}
+
 	/**
 	 * Forwards DSRTag operator[] to the std::map's .at() function, so we don't populate the map but rather throw.
 	 */
@@ -114,6 +143,12 @@ protected:
 };
 Q_DECLARE_METATYPE(DSRTag);
 
+static const auto DSRTagToXMLTagMap = make_map<DSRTag::TagName, QString>(
+		{
+	{DSRTag::EXTURL_DIR, "exturl_dir"},
+	{DSRTag::EXTURL_MEDIA, "exturl_media"},
+	{DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}
+		});
 
 /**
  *

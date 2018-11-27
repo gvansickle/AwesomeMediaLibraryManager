@@ -47,7 +47,7 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 	// The one piece of data we really need here, non-xspf.
 //	map.insert("base_directory", m_base_directory);
-	auto name = ExtUrlTag::at(ExtUrlTag::TagName::HREF);
+	auto name = ExtUrlTag::at(ExtUrlTag::HREF);
 	map.insert(name, m_base_directory);
 
 	/// @todo Start of xspf-specific stuff.

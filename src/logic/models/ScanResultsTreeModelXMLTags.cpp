@@ -29,12 +29,18 @@ const ExtEnumToStringMap<ExtUrlTag::TagName> ExtUrlTag::m_exturltag_to_string
 	{ ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
 };
 
-const ExtEnumToStringMap<DSRTag::TagName> DSRTag::m_dsrtag_to_string
-{
-	{DSRTag::EXTURL_DIR, "exturl_dir"},
-	{DSRTag::EXTURL_MEDIA, "exturl_media"},
-	{DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}
-};
+//const ExtEnumToStringMap<DSRTag::TagName> DSRTag::m_dsrtag_to_string
+//{
+//	{DSRTag::EXTURL_DIR, "exturl_dir"},
+//	{DSRTag::EXTURL_MEDIA, "exturl_media"},
+//	{DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}
+//};
+
+//static const auto DSRTagToXMLTagMap = make_map<DSRTag::TagName, QString>({
+//		                                          {DSRTag::EXTURL_DIR, "exturl_dir"},
+//		                                          {DSRTag::EXTURL_MEDIA, "exturl_media"},
+//		                                          {DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}
+//                                          });
 
 const ExtEnumToStringMap<SRTMTag::TagName> SRTMTag::m_srtmtag_to_string
 {
