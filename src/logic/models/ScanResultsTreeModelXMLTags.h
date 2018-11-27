@@ -29,31 +29,10 @@
 #include <QObject>
 #include <QtXml>
 
-template <class ScopeTypeEnumType, class ToType>
-struct ExtEnumMapBase
-{
-	using maptype = std::map<ScopeTypeEnumType, ToType>;
-public:
-	ExtEnumMapBase(std::initializer_list<typename maptype::value_type> init_list) : m_ExtEnum_to_ToType_map(init_list)
-	{
-	};
+// Ours
+#include <logic/xml/ExtEnum.h>
 
-	const ToType operator[](ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
-	const ToType at(ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
 
-	const std::map<ScopeTypeEnumType, ToType> m_ExtEnum_to_ToType_map;
-
-};
-/**
- * Static map factory function.
- * @return
- */
-template <class ScopeTypeEnumType, class ToType>
-inline static ExtEnumMapBase<ScopeTypeEnumType, ToType>
-make_map(std::initializer_list<typename ExtEnumMapBase<ScopeTypeEnumType, ToType>::maptype::value_type> init_list)
-{
-	return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
-}
 
 template <class ScopeTypeEnumType>
 using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
@@ -101,13 +80,10 @@ class DSRTag
 public:
 	enum TagName
 	{
-		/// flags_dirprops	/*X(flags_dirprops, m_dir_props)*/
+		FLAGS_DIRPROPS, /*X(flags_dirprops, m_dir_props)*/
 		EXTURL_DIR,
 		EXTURL_MEDIA,
 		EXTURL_CUESHEET
-//	X(exturl_dir, m_dir_exturl) \
-//	X(exturl_media, m_media_exturl) \
-//	X(exturl_cuesheet, m_cue_exturl)
 	};
 	Q_ENUM(TagName)
 
@@ -137,6 +113,7 @@ Q_DECLARE_METATYPE(DSRTag);
 
 static const auto DSRTagToXMLTagMap = make_map<DSRTag::TagName, QString>(
 {
+	{DSRTag::FLAGS_DIRPROPS, "flags_dirprops"},
 	{DSRTag::EXTURL_DIR, "exturl_dir"},
 	{DSRTag::EXTURL_MEDIA, "exturl_media"},
 	{DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}

@@ -59,39 +59,7 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	X(exturl_media, m_media_exturl) \
 	X(exturl_cuesheet, m_cue_exturl)
 
-/**
- * Variant map insert adapter for FieldType's which have an .toVariant() member function.
- * @tparam MapType
- * @tparam FieldTagType
- * @tparam FieldType
- * @param map
- * @param field_tag
- * @param field_val
- * @return
- */
-//template <class MapType, class FieldTagType = const char*, class FieldType,
-//        REQUIRES(std::is_invocable_v<std::declval<FieldType>.toVariant>)>
-//void varmap_insert(MapType& map, FieldTagType field_tag, FieldType field_val) //-> std::enable_if_t(&FieldType::toVariant)
-//{
-//	map.insert(field_tag, field_val.toVariant());
-//}
 
-/**
- * For Qt5 Q_FLAG()s.
- * @tparam MapType
- * @tparam FieldTagType
- * @tparam FieldType
- * @param map
- * @param field_tag
- * @param field_val
- * @return
- */
-//template <class MapType, class FieldTagType = const char*, class FieldType>
-//void varmap_insert(MapType& map, FieldTagType field_tag, FieldType field_val) //-> decltype(&FieldType::testFlag)
-//{
-//	QVariant temp_var = QVariant::fromValue(field_val);
-//	map.insert(field_tag, temp_var);
-//}
 
 QVariant DirScanResult::toVariant() const
 {

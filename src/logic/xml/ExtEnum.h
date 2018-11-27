@@ -22,11 +22,11 @@
 
 #include <initializer_list>
 #include <string>
-#include <string_view>
+#include <map>
 #include <cstring>
 
 /**
- * A way-improved enum that's been too long in coming to C++.
+ * A way-improved enum facility that's been too long in coming to C++.
  * @note Tell me I'm wrong. ;-)
  * @note Also, Better Enums doesn't work with Q_DECLARE_METATYPE, but is otherwise awesome.
  *          @link http://aantron.github.io/better-enums/index.html
@@ -35,23 +35,53 @@
  * -- integer
  * -- string
  * -- ...other?
- * - Sort order can be separated from any of the representations.
+ * - Maps
+ * - @todo Sort order can be separated from any of the representations.
  * - Hashable
  * - enum-like representation, i.e. "DerivedExtEnum val = TypeSafeEnumerator1;
  */
 
+/**
+ *
+ * @tparam T
+ */
 template <class T>
 class ExtEnumBase
 {
-	/// Type we'll use to map from key values (the value of the enumerator).
-//	using keyvalue_to_keyindex_map_type = std::map<int, typename T>;
 
-//	template<class T, class QEnumToXFuncType>
-//	auto make_map(QEnumToXFuncType mapper)
-//	{
-//		static
-//	}
 };
+
+/**
+ * Base class for ExtEnum-indexed maps.
+ *
+ * @tparam ScopeTypeEnumType
+ * @tparam ToType
+ */
+template <class ScopeTypeEnumType, class ToType>
+struct ExtEnumMapBase
+{
+	using maptype = std::map<ScopeTypeEnumType, ToType>;
+public:
+	ExtEnumMapBase(std::initializer_list<typename maptype::value_type> init_list)
+		: m_ExtEnum_to_ToType_map(init_list) { };
+
+	const ToType operator[](ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
+	const ToType at(ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
+private:
+	const std::map<ScopeTypeEnumType, ToType> m_ExtEnum_to_ToType_map;
+
+};
+
+/**
+ * Static map factory function.
+ * @return
+ */
+template <class ScopeTypeEnumType, class ToType>
+inline static ExtEnumMapBase<ScopeTypeEnumType, ToType>
+make_map(std::initializer_list<typename ExtEnumMapBase<ScopeTypeEnumType, ToType>::maptype::value_type> init_list)
+{
+	return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
+}
 
 #if 0
 
