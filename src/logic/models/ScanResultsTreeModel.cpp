@@ -46,10 +46,7 @@ QVariant ScanResultsTreeModel::toVariant() const
 	QVariantMap map;
 
 	// The one piece of data we really need here, non-xspf.
-	map.insert("base_directory", m_base_directory);
-#warning "FIX THIS"
-//	auto name = DSRTagToXMLTagMap[DSRTag::BASE];
-//	map.insert(name, m_base_directory);
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::BASE_DIRECTORY], m_base_directory);
 
 	/// @todo Start of xspf-specific stuff.
 //		XmlElement playlist("playlist", [=](XmlElement* e, QXmlStreamWriter* out){
@@ -64,19 +61,19 @@ QVariant ScanResultsTreeModel::toVariant() const
 	/// @todo XSPF Playlist metadata here.
 	/// http://www.xspf.org/xspf-v1.html#rfc.section.2.3.1
 	/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
-	map.insert("title", "XSPF playlist title goes HERE");
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::TITLE], "XSPF playlist title goes HERE");
 
 	/// <creator> "Human-readable name of the entity (author, authors, group, company, etc) that authored the playlist. xspf:playlist elements MAY contain exactly one."
-	map.insert("creator", "XSPF playlist CREATOR GOES HERE");
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::CREATOR], "XSPF playlist CREATOR GOES HERE");
 
 	/// ...
 	/// <date>	"Creation date (not last-modified date) of the playlist, formatted as a XML schema dateTime. xspf:playlist elements MAY contain exactly one.
 	///	A sample date is "2005-01-08T17:10:47-05:00".
-	map.insert("date", QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::DATE], QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
 	// Insert the invisible root item, which will recursively add all children.
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
-	map.insert("tree_model_root_item", m_root_item->toVariant());
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM], m_root_item->toVariant());
 
 	return map;
 }
@@ -85,13 +82,15 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
 	QVariantMap map = variant.toMap();
 
-	m_base_directory = map.value("base_directory").toUrl();
+	/// @todo This should have a list of known base directory paths,
+	///         e.g. the file:// URL and the gvfs /run/... mount point, Windows drive letter paths, etc.
+	m_base_directory = map.value(SRTMTagToXMLTagMap[SRTMTag::BASE_DIRECTORY]).toUrl();
 
-	auto title = map.value("title").toString();
-	auto creator = map.value("creator").toString();
+	auto title = map.value(SRTMTagToXMLTagMap[SRTMTag::TITLE]).toString();
+	auto creator = map.value(SRTMTagToXMLTagMap[SRTMTag::CREATOR]).toString();
 
 	/// @todo This is a QDateTime
-	auto creation_date = map.value("date").toString();
+	auto creation_date = map.value(SRTMTagToXMLTagMap[SRTMTag::DATE]).toString();
 
 	qDb() << M_NAME_VAL(title);
 	qDb() << M_NAME_VAL(creator);
@@ -99,7 +98,7 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	m_root_item = new AbstractTreeModelHeaderItem();
-	m_root_item->fromVariant(map.value("tree_model_root_item"));
+	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
 
 #warning @todo INCOMPLETE/error handling
 }

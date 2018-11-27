@@ -47,17 +47,17 @@ struct ExtEnumMapBase;
 
 /**
  *
- * @tparam T
  */
 class ExtEnum
 {
+public:
 	/**
      * Static map factory function.
      * @returns An object mapping ScopeTypeEnumType's to ToType's via the at(index) and operator[](index) member
      *          functions.
      */
 	template <class ScopeTypeEnumType, class ToType>
-	inline static ExtEnumMapBase<ScopeTypeEnumType, ToType>
+	static ExtEnumMapBase<ScopeTypeEnumType, ToType>
 	make_map(std::initializer_list<typename ExtEnumMapBase<ScopeTypeEnumType, ToType>::maptype::value_type> init_list)
 	{
 		return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);

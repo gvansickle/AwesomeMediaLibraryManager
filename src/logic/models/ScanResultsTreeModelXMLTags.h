@@ -40,7 +40,7 @@ using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
 /**
  *
  */
-class ExtUrlTag //: public ExtEnumMapBase<ExtUrlTag, ExtUrlTag::TagName>
+class ExtUrlTag
 {
 	Q_GADGET
 
@@ -57,15 +57,8 @@ public:
 	};
 	Q_ENUM(TagName)
 
-	/**
-	 * Forwards ExtUrlTag operator[] to the std::map's .at() function, so we don't populate the map but rather throw.
-	 */
+	/// @todo Should find a way to add to-map members here.
 
-	static const QString at(ExtUrlTag::TagName i) { return m_exturltag_to_string.at(i); };
-
-protected:
-	// Map from ExtUrlTag's to the std::string's which should be used in the XML.
-	static const ExtEnumToStringMap<ExtUrlTag::TagName> m_exturltag_to_string;
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
@@ -98,7 +91,7 @@ public:
 };
 Q_DECLARE_METATYPE(DSRTag);
 
-static const auto DSRTagToXMLTagMap = make_map<DSRTag::TagName, QString>(
+static const auto DSRTagToXMLTagMap = ExtEnum::make_map<DSRTag::TagName, QString>(
 {
 	{DSRTag::FLAGS_DIRPROPS, "flags_dirprops"},
 	{DSRTag::EXTURL_DIR, "exturl_dir"},
@@ -123,23 +116,37 @@ public:
 	};
 	Q_ENUM(TagName)
 
-	/**
-	 * Forwards SRTMTag operator[] to the std::map's .at() function, so we don't populate the map but rather throw.
-	 */
-	const QString operator[](SRTMTag::TagName i) const { return m_srtmtag_to_string[i]; };
-
-protected:
-	static const ExtEnumToStringMap<SRTMTag::TagName> m_srtmtag_to_string;
 };
 Q_DECLARE_METATYPE(SRTMTag);
 
-static const auto SRTMTagToXMLTagMap = make_map<SRTMTag::TagName, QString>(
+static const auto SRTMTagToXMLTagMap = ExtEnum::make_map<SRTMTag::TagName, QString>(
 {
 	{SRTMTag::BASE_DIRECTORY, "base_directory"},
 	{SRTMTag::TITLE, "title"},
 	{SRTMTag::CREATOR, "creator"},
 	{SRTMTag::DATE, "date"},
 	{SRTMTag::ROOT_ITEM, "tree_model_root_item"}
+});
+
+/**
+ *
+ */
+class SRTMItemTag
+{
+Q_GADGET
+public:
+	enum TagName
+	{
+		DIRSCANRESULT
+	};
+	Q_ENUM(TagName)
+
+};
+Q_DECLARE_METATYPE(SRTMItemTag);
+
+static const auto SRTMItemTagToXMLTagMap = ExtEnum::make_map<SRTMItemTag::TagName, QString>(
+{
+	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"}
 });
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

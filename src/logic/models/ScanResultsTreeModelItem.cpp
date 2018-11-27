@@ -29,6 +29,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
+#include "ScanResultsTreeModelXMLTags.h"
 
 /**
  * QXmlQuery notes:
@@ -38,65 +39,6 @@
  * looked up efficiently with the fn:id() function. See xml:id Version 1.0 [http://www.w3.org/TR/xml-id/] for details."
  */
 
-//template <class T>
-//struct SerializationDescriptorWriters
-//{
-//	static T& String(const T& outstr, const SerializationDescriptor& item)
-//	{
-////		char* endptr = 0;
-////		if (option.arg != 0 && strtol(option.arg, &endptr, 10)){};
-////		if (endptr != option.arg && *endptr == 0)
-////		  return lmcppop::ARG_OK;
-//
-////		if (msg) printError("Option '", option, "' requires a numeric argument\n");
-////		return lmcppop::ARG_ILLEGAL;
-//	}
-//};
-//
-//template <class OutSerializerRef>
-//struct SerializationDescriptor
-//{
-//	const std::string m_tag_name;
-//	const std::function<OutSerializerRef(OutSerializerRef, const SerializationDescriptor&)> m_xml_writer;
-////	const unsigned m_index;
-////	const int m_type;
-////	const int m_notype {0};
-////	const char* const m_shortopts;
-////	const char* const m_longopts;
-////	const char *const m_argname;
-////	const lmcppop::CheckArg m_check_arg;
-////	const std::string m_help;
-////	const bool m_is_hidden { false };
-////	const bool m_is_bracket_no { false };
-//
-////	struct section_header_tag {};
-//	struct normal_element_tag {};
-////	struct arbtext_tag {};
-////	struct hidden_tag {};
-//	struct attribute_tag {};
-//
-//	/**
-//	 * Constructor overload for generic tags.
-//	 *
-//	 * @param tag_name  Text of the section header.
-//	 */
-//	SerializationDescriptor(const char *tag_name, normal_element_tag = normal_element_tag()) noexcept
-//		: m_tag_name(tag_name), m_xml_writer(Arg::None))
-//	{
-//	};
-//
-//	/**
-//	 * Atrribute list.
-//	 */
-//	SerializationDescriptor(const char *attr_name, attribute_tag = attribute_tag()) noexcept
-//	{
-//
-//	};
-//};
-//
-//static std::vector<SerializationDescriptor> f_tree_model_item_description {
-//	{"exturl", "href"}
-//};
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem* parent)
 	: AbstractTreeModelItem(parent)
@@ -155,7 +97,8 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
-	map.insert("dirscanresult", m_dsr.toVariant());
+
+	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT], m_dsr.toVariant());
 
 	return map;
 }
@@ -164,13 +107,10 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
 
-#warning "THIS IS WHERE THINGS BREAK, we get here but never into DirScanResult.fromVariant()... oh, because we never call it."
 #warning "The cast should work though, right?"
 //	m_dsr = map.value("dirscanresult").value<DirScanResult>();
-	auto dsr_in_variant = map.value("dirscanresult");
+	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
 	m_dsr.fromVariant(dsr_in_variant);
-
-	qDb() << "GOT HERE:" << m_dsr.getMediaExtUrl();
 }
 
 
