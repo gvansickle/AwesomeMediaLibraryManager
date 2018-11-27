@@ -33,6 +33,7 @@
 
 // Ours
 #include "models/ScanResultsTreeModel.h"
+#include "models/ScanResultsTreeModelXMLTags.h"
 #include <utils/EnumFlagHelpers.h>
 #include <logic/models/AbstractTreeModelWriter.h>
 #include <logic/xml/ExtEnum.h>
@@ -102,12 +103,16 @@ QVariant DirScanResult::toVariant() const
 #define X(field_name, field) varmap_insert(map, # field_name, field); //map.insert( # field_name , field.toVariant() );
 	DATASTREAM_FIELDS(X)
 #undef X
-#else
+#elif 0
 /// @todo DEBUG
 //	map.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
 	map.insert("exturl_dir", m_dir_exturl.toVariant());
 	map.insert("exturl_media", m_media_exturl.toVariant());
 	map.insert("exturl_cuesheet", m_cue_exturl.toVariant());
+#else
+	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR], m_dir_exturl.toVariant());
+	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA], m_media_exturl.toVariant());
+	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET], m_cue_exturl.toVariant());
 #endif
 
 	return map;
