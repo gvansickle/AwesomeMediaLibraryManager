@@ -203,7 +203,7 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
     AbstractTreeModelItem *parentItem = getItem(parent);
 
     AbstractTreeModelItem *childItem = parentItem->child(row);
-    if (childItem)
+	if(childItem != nullptr)
 	{
         return createIndex(row, column, childItem);
 	}

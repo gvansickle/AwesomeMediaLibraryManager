@@ -54,12 +54,12 @@ public:
     /// @}
 
     explicit FileModificationInfo(const QFileInfo &fmodinfo)
-        : m_size(fmodinfo.size()),
+        : m_file_size_bytes(fmodinfo.size()),
           m_last_modified_timestamp(fmodinfo.lastModified()),
           m_metadata_last_modified_timestamp(fmodinfo.metadataChangeTime()) {}
 
     /// File size, or 0 if couldn't be determined.
-    qint64 m_size {0};
+    qint64 m_file_size_bytes {0};
     /// Last modified time.  Invalid if can't be determined(?).
     QDateTime m_last_modified_timestamp;
     /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
@@ -68,7 +68,7 @@ public:
 //    QTH_FRIEND_QDEBUG_OP(FileModificationInfo);
     friend QDebug operator<<(QDebug dbg, const FileModificationInfo& obj)
     {
-        return dbg << obj.m_size << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
+        return dbg << obj.m_file_size_bytes << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
     }
 };
 
@@ -87,7 +87,7 @@ class ExtUrl : public ISerializable
 public:
 	ExtUrl() = default;
 	ExtUrl(const ExtUrl& other) = default;
-	~ExtUrl() = default;
+	~ExtUrl() override = default;
 
     /**
      * Construct an ExtUrl from a QUrl and QFileInfo.
@@ -138,7 +138,7 @@ public:
 	QDateTime m_timestamp_last_refresh;
 
 	/// File size, or 0 if couldn't be determined.
-	qint64 m_size {0};
+	qint64 m_file_size_bytes {0};
 
 	/// Creation time.
 	/// Needed for XSPF etc.

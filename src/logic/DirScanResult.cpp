@@ -65,17 +65,10 @@ QVariant DirScanResult::toVariant() const
 {
 	QVariantMap map;
 
-	qDb() << "GOT HERE";
-#if 0
 	// Add all the fields to the map.
-#define X(field_name, field) varmap_insert(map, # field_name, field); //map.insert( # field_name , field.toVariant() );
-	DATASTREAM_FIELDS(X)
-#undef X
-#else
 	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR], m_dir_exturl.toVariant());
 	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA], m_media_exturl.toVariant());
 	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET], m_cue_exturl.toVariant());
-#endif
 
 	return map;
 }
@@ -85,13 +78,6 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 
 	// Extract all the fields from the map, cast them to their type.
-#if 0
-#define X(field_name, field) { auto field_in_variant = map.value( # field_name );\
-                                field.fromVariant(field_in_variant); \
-							}
-	DATASTREAM_FIELDS(X)
-#undef X
-#else
 
 	/// @todo Something is still broken here.  This should work, but it doesn't:
 //	m_media_exturl = map.value("exturl_media").value<ExtUrl>();
@@ -102,7 +88,6 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	m_dir_exturl.fromVariant(exturl_in_variant);
 	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET]);
 	m_cue_exturl.fromVariant(exturl_in_variant);
-#endif
 }
 
 ScanResultsTreeModelItem* DirScanResult::toTreeModelItem()
@@ -193,7 +178,7 @@ M_WARNING("TODO");
     return QVector<ExtUrl>();
 }
 
-QDebug operator<<(QDebug dbg, const DirScanResult & obj)
+QDebug operator<<(QDebug dbg, const DirScanResult & obj) // NOLINT(performance-unnecessary-value-param)
 {
 #define X(ignore, field) << obj.field
     dbg DATASTREAM_FIELDS(X);

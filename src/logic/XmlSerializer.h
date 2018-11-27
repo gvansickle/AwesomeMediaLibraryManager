@@ -37,8 +37,8 @@
 class XmlSerializer: public ISerializer
 {
 public:
-	XmlSerializer();
-	~XmlSerializer() override;
+	XmlSerializer() = default;
+	~XmlSerializer() override = default;
 
 	void save(const ISerializable& serializable,
 			const QUrl& file_url,

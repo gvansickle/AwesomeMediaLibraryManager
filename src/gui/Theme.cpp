@@ -339,7 +339,7 @@ M_WARNING("TODO");
         }
     }
 #endif
-    qIn() << "QPA Platform plugin name:" << qApp->platformName();
+	qIn() << "QPA Platform plugin name:" << QGuiApplication::platformName();
 
     // Add supplementary paths to supplemental_icon_theme_dirs depending on OS.
     /// @note

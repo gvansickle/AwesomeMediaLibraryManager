@@ -34,15 +34,6 @@
 #include <utils/DebugHelpers.h>
 
 
-XmlSerializer::XmlSerializer() : ISerializer()
-{
-}
-
-XmlSerializer::~XmlSerializer()
-{
-
-}
-
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name)
 {
 	/// @todo file_url Currently only file://'s are supported.
@@ -196,6 +187,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	QString typeString = attributes.value("type").toString();
 
 	QVariant variant;
+	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
 	auto metatype = QVariant::nameToType(typeString.toStdString().c_str());
 	switch (metatype)
 	{

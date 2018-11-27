@@ -367,14 +367,14 @@ TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 	}
 }
 
-#include <map>
-struct QEnumMap
-{
-	std::map<TestEnumHolder::TestEnum, std::string> m_the_map;
-};
+//#include <map>
+//struct QEnumMap
+//{
+//	std::map<TestEnumHolder::TestEnum, std::string> m_the_map;
+//};
 
 
-TEST_F(FlagsAndEnumsTests, QEnumMapping)
+TEST_F(FlagsAndEnumsTests, QEnumMapping) // NOLINT
 {
 	std::map<TestEnumHolder::TestEnum, std::string> the_map
 		{

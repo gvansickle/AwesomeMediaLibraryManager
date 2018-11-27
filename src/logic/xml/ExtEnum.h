@@ -92,16 +92,16 @@ class const_string
 {
 private:
 	const char* const m_string;
-	const std::size_t m_size;
+	const std::size_t m_file_size_bytes;
 
 public:
 	template<std::size_t N>
-	constexpr const_string(const char(&string)[N]) : m_string(string), m_size(N-1) {}
+	constexpr const_string(const char(&string)[N]) : m_string(string), m_file_size_bytes(N-1) {}
 
-	constexpr const_string(const char* const pString) : m_string {pString}, m_size { std::strlen(pString) } {};
+	constexpr const_string(const char* const pString) : m_string {pString}, m_file_size_bytes { std::strlen(pString) } {};
 
 	/// Return the length of the string.
-	constexpr std::size_t size() const { return m_size; }
+	constexpr std::size_t size() const { return m_file_size_bytes; }
 
 	constexpr const char* operator*() const
 	{
@@ -111,7 +111,7 @@ public:
 
 	constexpr bool operator==(const char * cstr) const
 	{
-		for(int i=0; i<m_size; ++i)
+		for(int i=0; i<m_file_size_bytes; ++i)
 		{
 			if(cstr[i] == '\0')
 			{
