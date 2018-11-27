@@ -48,19 +48,11 @@ AMLM_QREG_CALLBACK([](){
 
 ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 {
-	// Save mod info, possibly loading it from the filesystem if we don't have it in qurl_finfo.
-	LoadModInfo(qurl_finfo);
+	// Capture modification info, possibly loading it from the filesystem if we don't have it in qurl_finfo.
+	load_mod_info(qurl_finfo);
 }
 
 #define DATASTREAM_FIELDS(X) \
-	X(href, m_url) \
-	X(ts_last_refresh, m_timestamp_last_refresh) \
-	X(file_size, m_file_size_bytes) \
-	X(ts_creation, m_creation_timestamp) \
-	X(ts_last_modified, m_last_modified_timestamp) \
-	X(ts_last_modified_metadata, m_metadata_last_modified_timestamp)
-
-#define DATASTREAM_FIELDS_2(X) \
 	X(HREF, m_url) \
 	X(TS_LAST_REFRESH, m_timestamp_last_refresh) \
 	X(SIZE_FILE, m_file_size_bytes) \
@@ -74,7 +66,7 @@ QVariant ExtUrl::toVariant() const
 
 	// Add all the fields to the map.
 #define X(field_enum_name, field)   map.insert( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], field );
-	DATASTREAM_FIELDS_2(X)
+	DATASTREAM_FIELDS(X)
 #undef X
 
 	return map;
@@ -86,7 +78,7 @@ void ExtUrl::fromVariant(const QVariant& variant)
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_enum_name, field) field = map.value( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ] ).value<decltype( field )>();
-	DATASTREAM_FIELDS_2(X)
+	DATASTREAM_FIELDS(X)
 #undef X
 }
 
@@ -134,7 +126,7 @@ void ExtUrl::save_mod_info(const QFileInfo* qurl_finfo)
 	}
 }
 
-void ExtUrl::LoadModInfo(const QFileInfo* qurl_finfo)
+void ExtUrl::load_mod_info(const QFileInfo* qurl_finfo)
 {
 	Q_ASSERT(m_url.isValid());
 
@@ -163,7 +155,7 @@ void ExtUrl::LoadModInfo(const QFileInfo* qurl_finfo)
 QDebug operator<<(QDebug dbg, const ExtUrl& obj) // NOLINT(performance-unnecessary-value-param)
 {
 #define X(unused, field) << obj.field
-	dbg DATASTREAM_FIELDS_2(X);
+	dbg DATASTREAM_FIELDS(X);
 #undef X
 	return dbg;
 }
@@ -171,7 +163,7 @@ QDebug operator<<(QDebug dbg, const ExtUrl& obj) // NOLINT(performance-unnecessa
 QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 {
 #define X(unused, field) << myObj.field
-	out DATASTREAM_FIELDS_2(X);
+	out DATASTREAM_FIELDS(X);
 #undef X
 	return out;
 }
@@ -179,22 +171,9 @@ QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 QDataStream& operator>>(QDataStream& in, ExtUrl& myObj)
 {
 #define X(unused, field) >> myObj.field
-	return in DATASTREAM_FIELDS_2(X);
+	return in DATASTREAM_FIELDS(X);
 #undef X
 }
-
-
-
-/**
- * QXmlStreamWriter write operator.
- */
-//QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
-//{
-//	auto e = exturl.toXml();
-//	e.write(&out);
-
-//	return out;
-//}
 
 
 #undef DATASTREAM_FIELDS

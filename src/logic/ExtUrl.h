@@ -176,13 +176,14 @@ protected:
 
 	/// Populate the modification info from qurl_finfo.
 	/// If null, load the info using m_url.
-	void LoadModInfo(const QFileInfo* qurl_finfo = nullptr);
+	void load_mod_info(const QFileInfo* qurl_finfo = nullptr);
 
 };
 
 Q_DECLARE_METATYPE(ExtUrl);
 /// "declares global operator|() functions for Flags"
 Q_DECLARE_OPERATORS_FOR_FLAGS(ExtUrl::Status);
+
 QTH_DECLARE_QDEBUG_OP(ExtUrl);
 QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
 //QTH_DECLARE_QXMLSTREAM_OPS(ExtUrl);

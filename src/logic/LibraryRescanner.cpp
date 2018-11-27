@@ -346,7 +346,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				{
 				    QFile queryFile(QString(":/xquery_files/filelist.xq"));
 				    queryFile.open(QIODevice::ReadOnly);
-					QFile outfile2(QDir::homePath() + "/DeleteMe_2.xml");
+					QFile outfile2(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
 					auto status = outfile2.open(QFile::WriteOnly | QFile::Text);
 				    const QString query(QString::fromLatin1(queryFile.readAll()));
 				    QStringList xqout;

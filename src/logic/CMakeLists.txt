@@ -116,7 +116,7 @@ target_link_libraries(logic_subdir
 		models_subdir
 		proxymodels_subdir
 		xml_subdir
-)
+	)
 target_include_directories(logic_subdir
 	PUBLIC
 	    # For config.h

@@ -133,5 +133,13 @@ protected:
 };
 Q_DECLARE_METATYPE(SRTMTag);
 
+static const auto SRTMTagToXMLTagMap = make_map<SRTMTag::TagName, QString>(
+{
+	{SRTMTag::BASE_DIRECTORY, "base_directory"},
+	{SRTMTag::TITLE, "title"},
+	{SRTMTag::CREATOR, "creator"},
+	{SRTMTag::DATE, "date"},
+	{SRTMTag::ROOT_ITEM, "tree_model_root_item"}
+});
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

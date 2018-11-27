@@ -41,13 +41,27 @@
  * - enum-like representation, i.e. "DerivedExtEnum val = TypeSafeEnumerator1;
  */
 
+// Fwd declaration.
+template <class ScopeTypeEnumType, class ToType>
+struct ExtEnumMapBase;
+
 /**
  *
  * @tparam T
  */
-template <class T>
-class ExtEnumBase
+class ExtEnum
 {
+	/**
+     * Static map factory function.
+     * @returns An object mapping ScopeTypeEnumType's to ToType's via the at(index) and operator[](index) member
+     *          functions.
+     */
+	template <class ScopeTypeEnumType, class ToType>
+	inline static ExtEnumMapBase<ScopeTypeEnumType, ToType>
+	make_map(std::initializer_list<typename ExtEnumMapBase<ScopeTypeEnumType, ToType>::maptype::value_type> init_list)
+	{
+		return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
+	}
 
 };
 
@@ -65,8 +79,17 @@ public:
 	ExtEnumMapBase(std::initializer_list<typename maptype::value_type> init_list)
 		: m_ExtEnum_to_ToType_map(init_list) { };
 
+	/**
+	 * Both operator[] and .at() call the underlying map's .at() function.  This
+	 * prevents accidentally adding default constructed elements by throwing
+	 * an exception regardless of how the map is indexed.
+	 *
+	 * @param i
+	 * @return
+	 */
 	const ToType operator[](ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
 	const ToType at(ScopeTypeEnumType i) const { return m_ExtEnum_to_ToType_map.at(i); };
+
 private:
 	const std::map<ScopeTypeEnumType, ToType> m_ExtEnum_to_ToType_map;
 
@@ -84,52 +107,6 @@ make_map(std::initializer_list<typename ExtEnumMapBase<ScopeTypeEnumType, ToType
 }
 
 #if 0
-
-/**
- * Minimal constexpr compile-time string class.
- */
-class const_string
-{
-private:
-	const char* const m_string;
-	const std::size_t m_file_size_bytes;
-
-public:
-	template<std::size_t N>
-	constexpr const_string(const char(&string)[N]) : m_string(string), m_file_size_bytes(N-1) {}
-
-	constexpr const_string(const char* const pString) : m_string {pString}, m_file_size_bytes { std::strlen(pString) } {};
-
-	/// Return the length of the string.
-	constexpr std::size_t size() const { return m_file_size_bytes; }
-
-	constexpr const char* operator*() const
-	{
-		return m_string;
-	}
-	constexpr const char* c_str() const { return m_string; };
-
-	constexpr bool operator==(const char * cstr) const
-	{
-		for(int i=0; i<m_file_size_bytes; ++i)
-		{
-			if(cstr[i] == '\0')
-			{
-				// Other string ended before we did.  Not equal.
-				return false;
-			}
-			if(cstr[i] != m_string[i])
-			{
-				// chars at position i not equal.
-				return false;
-			}
-		}
-
-		// All chars matched, equal.
-		return true;
-	};
-};
-
 //template <class DerivedClass>
 struct ExtEnumerator
 {
@@ -219,36 +196,6 @@ struct ExtEnumerator
 //MACRO((10) Y BOOST_PP_LPAREN(), result) // expands to 10
 
 //#define EXTENUMERATOR(extenumerator_name)
-
-#if 0
-
-/// Bitwise-or operator for FileCreationFlag.
-/// @note Yeah, I didn't realize this was necessary for non-class enums in C++ either.  I've been writing too much C....
-constexpr inline FileCreationFlag operator|(FileCreationFlag a, FileCreationFlag b)
-{
-	return static_cast<FileCreationFlag>(static_cast<std::underlying_type<FileCreationFlag>::type>(a)
-	                                     | static_cast<std::underlying_type<FileCreationFlag>::type>(b));
-}
-
-inline std::ostream& operator<<(std::ostream& out, const FileType value){
-	const char* s = 0;
-#define M_ENUM_CASE(p) case(p): s = #p; break;
-	switch(value){
-		M_ENUM_CASE(FT_UNINITIALIZED);
-		M_ENUM_CASE(FT_UNKNOWN);
-		M_ENUM_CASE(FT_REG);
-		M_ENUM_CASE(FT_DIR);
-		M_ENUM_CASE(FT_SYMLINK);
-		M_ENUM_CASE(FT_STAT_FAILED);
-	}
-#undef M_ENUM_CASE
-
-	return out << s;
-}
-#endif
-
 #endif // 0
-
-
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
