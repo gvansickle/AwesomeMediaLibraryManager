@@ -103,12 +103,6 @@ QVariant DirScanResult::toVariant() const
 #define X(field_name, field) varmap_insert(map, # field_name, field); //map.insert( # field_name , field.toVariant() );
 	DATASTREAM_FIELDS(X)
 #undef X
-#elif 0
-/// @todo DEBUG
-//	map.insert("flags_dirprops", QVariant::fromValue<DirScanResult::DirPropFlags>(m_dir_props));
-	map.insert("exturl_dir", m_dir_exturl.toVariant());
-	map.insert("exturl_media", m_media_exturl.toVariant());
-	map.insert("exturl_cuesheet", m_cue_exturl.toVariant());
 #else
 	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR], m_dir_exturl.toVariant());
 	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA], m_media_exturl.toVariant());
@@ -134,16 +128,12 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	/// @todo Something is still broken here.  This should work, but it doesn't:
 //	m_media_exturl = map.value("exturl_media").value<ExtUrl>();
 
-	auto exturl_in_variant = map.value("exturl_media");
+	QVariant exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA]);
 	m_media_exturl.fromVariant(exturl_in_variant);
-	exturl_in_variant = map.value("exturl_dir");
+	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR]);
 	m_dir_exturl.fromVariant(exturl_in_variant);
-	exturl_in_variant = map.value("exturl_cuesheet");
+	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET]);
 	m_cue_exturl.fromVariant(exturl_in_variant);
-
-//	qDb() << M_NAME_VAL(exturl_in_variant);
-//	qDb() << M_NAME_VAL(m_media_exturl);
-
 #endif
 }
 
