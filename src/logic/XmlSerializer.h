@@ -27,6 +27,8 @@
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
 #include <QVariant>
+class QString;
+class QStringList;
 
 // Ours
 #include "ISerializer.h"
@@ -40,12 +42,26 @@ public:
 	XmlSerializer() = default;
 	~XmlSerializer() override = default;
 
+	/**
+	 *
+	 * @param serializable
+	 * @param file_url
+	 * @param root_element_name  String to use for the single root element of the document.
+	 * @param
+	 */
 	void save(const ISerializable& serializable,
 			const QUrl& file_url,
-			const QString& root_name
+			const QString& root_element_name,
+			std::function<void(void)> extra_save_actions = nullptr
 			) override;
 
 	void load(ISerializable& serializable, const QUrl& file_url) override;
+
+	void set_default_namespace(const QString& default_ns, const QString& default_ns_version);
+
+protected:
+
+	void save_extra_start_info(QXmlStreamWriter& xmlstream);
 
 private:
 
@@ -83,6 +99,11 @@ private:
 				.arg(xmlstream.lineNumber())
 				.arg(xmlstream.columnNumber());
 	}
+
+	QString m_root_name;
+	QString m_default_ns;
+	QString m_default_ns_version;
+
 };
 
 #endif /* SRC_LOGIC_XMLSERIALIZER_H_ */

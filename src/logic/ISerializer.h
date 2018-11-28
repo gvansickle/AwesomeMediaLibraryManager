@@ -23,6 +23,9 @@
 #ifndef SRC_LOGIC_ISERIALIZER_H_
 #define SRC_LOGIC_ISERIALIZER_H_
 
+// Std C++
+#include <functional>
+
 // Qt5
 #include <QString>
 #include <QUrl>
@@ -40,7 +43,8 @@ public:
 
 	virtual void save(const ISerializable& serializable,
 			const QUrl& filepath,
-			const QString& rootName = "") = 0;
+			const QString& rootName = "",
+			std::function<void(void)> extra_save_actions = nullptr ) = 0;
 
 	virtual void load(ISerializable& serializable, const QUrl& filepath) = 0;
 };

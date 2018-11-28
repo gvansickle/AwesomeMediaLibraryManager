@@ -34,7 +34,8 @@
 #include <utils/DebugHelpers.h>
 
 
-void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name)
+void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name,
+                         std::function<void(void)> extra_save_actions)
 {
 	/// @todo file_url Currently only file://'s are supported.
 
@@ -56,14 +57,12 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	// Start document.
 	xmlstream.writeStartDocument();
 
-	/// @todo PUT THIS IN A LAMBDA PARAM OR SOMETHING
-	// Write DTD
-	// @todo
-	// Write Start Element
-	xmlstream.writeStartElement("amlm_database");
-	xmlstream.writeDefaultNamespace("http://xspf.org/ns/0/");
-	xmlstream.writeAttribute("version", "1");
-	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");
+	if(extra_save_actions)
+	{
+		extra_save_actions();
+	}
+
+	save_extra_start_info(xmlstream);
 
 	writeVariantToStream(root_name, serializable.toVariant(), xmlstream);
 
@@ -216,19 +215,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 		case QMetaType::QVariantMap:
 			variant = readVariantMapFromStream(xmlstream);
 			break;
-//		case QMetaType::QUrl:
-//		{
-//			qInfo() << "#### Trying to read type:" << metatype;
-//			QByteArray ba;
-//			QDataStream ds(&ba, QIODevice::ReadWrite);
-//			ds << xmlstream.readElementText();
-//
-//			variant.fromValue(ds) = ds;
-//			qIn() << "### ds:" << ds;
-//			break;
-//		}
 		default:
-//			qInfo() << "#### Trying to read type:" << metatype;
 			variant = readVariantValueFromStream(xmlstream);
 			break;
 	}
@@ -322,4 +309,24 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {
 
+}
+
+void XmlSerializer::set_default_namespace(const QString& default_ns, const QString& default_ns_version)
+{
+	m_default_ns = default_ns;
+	m_default_ns_version = default_ns_version;
+}
+
+void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
+{
+	/// @todo This still seems like it should be one layer above this class.
+
+	// Write DTD
+	// N/A
+
+	// Write Start Element, default namespace and version.
+	xmlstream.writeStartElement("amlm_database");
+	xmlstream.writeDefaultNamespace(m_default_ns);
+	xmlstream.writeAttribute("version", m_default_ns_version);
+	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");
 }

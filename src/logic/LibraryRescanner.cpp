@@ -311,6 +311,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 					qIn() << "###### WRITING" << filename;
 
 					XmlSerializer xmlser;
+					xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 					xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(filename), "playlist");
 
 					qIn() << "###### WROTE" << filename;
@@ -321,6 +322,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 						qIn() << "###### READING BACK" << filename;
 
 						XmlSerializer xmlser_read;
+						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 						readback_tree_model = new ScanResultsTreeModel(static_cast<QObject*>(tree_model_ptr)->parent());
 						// Load it.
 						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(filename));
@@ -335,6 +337,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 						QString filename = QDir::homePath() + "/DeleteMeNew3.xspf";
 						qIn() << "###### WRITING WHAT WE READ TO" << filename;
 						XmlSerializer xmlser;
+						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 						xmlser.save(*readback_tree_model, QUrl::fromLocalFile(filename), "playlist");
 						qIn() << "###### WROTE" << filename;
 					}
