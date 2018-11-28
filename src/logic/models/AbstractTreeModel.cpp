@@ -127,11 +127,11 @@ AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) cons
 	return m_root_item;
 }
 
-void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
-{
-	// Write out the entire tree model recursively, starting at the m_root_item.
-	writeItemAndChildren(writer, m_root_item);
-}
+//void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
+//{
+//	// Write out the entire tree model recursively, starting at the m_root_item.
+//	writeItemAndChildren(writer, m_root_item);
+//}
 
 bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
 {
@@ -147,20 +147,6 @@ bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
 		AbstractTreeModelItem* parent_item = nullptr;
 		while(xml.readNextStartElement())
 		{
-			for(const auto& parse_func : m_parse_factory_functions)
-			{
-				AbstractTreeModelItem* new_item = parse_func(&xml, parent_item);
-				if(new_item != nullptr)
-				{
-					// Parsed it.
-				}
-				else
-				{
-					// Not sure what that was.
-					qIn() << "Skipping unknown element:" << xml.name();
-					xml.skipCurrentElement();
-				}
-			}
 		}
 
 		return true;
@@ -171,16 +157,12 @@ bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
 	}
 }
 
-void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
-{
-	Q_ASSERT(item != nullptr);
-	item->writeItemAndChildren(writer);
-}
+//void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
+//{
+//	Q_ASSERT(item != nullptr);
+//	item->writeItemAndChildren(writer);
+//}
 
-void AbstractTreeModel::readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item)
-{
-#warning "TODO"
-}
 
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
                                int role) const

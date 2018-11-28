@@ -20,8 +20,14 @@
 /**
  * @file XmlSerializer.h
  */
+
 #ifndef SRC_LOGIC_XMLSERIALIZER_H_
 #define SRC_LOGIC_XMLSERIALIZER_H_
+
+// Std C++
+#include <functional>
+#include <variant>
+
 
 // Qt5
 #include <QXmlStreamWriter>
@@ -57,6 +63,11 @@ public:
 
 	void load(ISerializable& serializable, const QUrl& file_url) override;
 
+	/**
+	 * Call this before save() to set the default XML namespace.
+	 * @param default_ns
+	 * @param default_ns_version
+	 */
 	void set_default_namespace(const QString& default_ns, const QString& default_ns_version);
 
 protected:
@@ -91,19 +102,19 @@ private:
 
 	void check_for_stream_error_and_skip(QXmlStreamReader& xmlstream);
 
-
-	QString errorString(QXmlStreamReader& xmlstream) const
-	{
-		return QObject::tr("%1\nLine %2, column %3")
-				.arg(xmlstream.errorString())
-				.arg(xmlstream.lineNumber())
-				.arg(xmlstream.columnNumber());
-	}
+	using QXmlStreamRWRef = std::variant<std::reference_wrapper<QXmlStreamReader>, std::reference_wrapper<QXmlStreamWriter>>;
+	/**
+	 * If the given QXmlStreamReader/Writer has an error, returns the error string.
+	 * @return
+	 */
+	QString error_string(QXmlStreamRWRef xmlstream) const;
 
 	QString m_root_name;
 	QString m_default_ns;
 	QString m_default_ns_version;
 
+	QXmlStreamReader* m_temp_xml_stream_reader {nullptr};
+	QXmlStreamWriter* m_temp_xml_stream_writer {nullptr};
 };
 
 #endif /* SRC_LOGIC_XMLSERIALIZER_H_ */

@@ -82,37 +82,11 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 //	xml.writeStartElement(m_tree_model->getXmlStreamName());
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 
-	m_tree_model->writeModel(out);
+//	m_tree_model->writeModel(out);
 
 	xml.writeEndDocument();
 	});
 	playlist.write(&xml);
 	return true;
-}
-
-void AbstractTreeModelWriter::write_item(const AbstractTreeModelItem* item)
-{
-	// Convenience ref.
-	auto& xml = m_xml_stream_writer;
-
-	//item->data();
-	QString item_tag_name = "abstracttreemodelitem";
-
-	xml.writeStartElement(item_tag_name);
-	xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
-	// Write out this item.
-	/// @todo Again this should be fobbed off on the derived model/item somehow.  I think.
-	for(int col = 0; col < item->columnCount(); ++col)
-	{
-		xml.writeTextElement(titleElement(), item->data(col).toString());
-	}
-
-	// Write out all children.
-	for(int i = 0; i < item->childCount(); ++i)
-	{
-		// Hold on tight, we're going recursive!
-		write_item(item->child(i));
-	}
-	xml.writeEndElement();
 }
 

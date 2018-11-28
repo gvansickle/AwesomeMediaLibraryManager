@@ -49,8 +49,6 @@ public:
 
 private:
 
-	void write_item(const AbstractTreeModelItem* item);
-
 	QXmlStreamWriter m_xml_stream_writer;
 
 	/// @todo This should be a shared pointer, or we shouldn't store it.

@@ -23,6 +23,9 @@
 
 #include "XmlSerializer.h"
 
+// Std C++
+#include <variant>
+
 // Qt5
 #include <QFile>
 #include <QVariant>
@@ -82,26 +85,26 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 
 	QFile file(load_file_path);
 	file.open(QFile::ReadOnly);
-	QXmlStreamReader stream(&file);
+	QXmlStreamReader xmlstream(&file);
 
 	/// @todo EXTRA READ INFO NEEDS TO COME FROM CALLER
 	// Read the first start element,  namespace element we added.
 	/// @todo Don't just throw it away.
-	stream.readNextStartElement();
+	xmlstream.readNextStartElement();
 
 	// Read the first element in the file.
-	if(!stream.readNextStartElement())
+	if(!xmlstream.readNextStartElement())
 	{
 		// Something went wrong.
-		stream.raiseError("Reading first start element failed.");
+		xmlstream.raiseError("Reading first start element failed.");
 
 		/// @todo Move
-		qWr() << errorString(stream);
+		qWr() << error_string(xmlstream);
 	}
 	else
 	{
 		// Stream it all in.
-		serializable.fromVariant(readVariantFromStream(stream));
+		serializable.fromVariant(readVariantFromStream(xmlstream));
 	}
 }
 
@@ -224,7 +227,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	{
 		// Whatever we read, it didn't make it to a QVariant successfully.
 		xmlstream.raiseError("Invalid QVariant conversion.");
-		qWr() << errorString(xmlstream);
+		qWr() << error_string(xmlstream);
 
 		// Try to keep going.
 		/// @todo Not sure what we need to do here.
@@ -234,7 +237,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	{
 		// Not at an end element, parsing went wrong somehow.
 		xmlstream.raiseError("Reading xml stream failed, skipping to next start element.");
-		qWr() << errorString(xmlstream);
+		qWr() << error_string(xmlstream);
 
 		// Try to keep going, skip to the next sibling element.
 		xmlstream.skipCurrentElement();
@@ -315,6 +318,28 @@ void XmlSerializer::set_default_namespace(const QString& default_ns, const QStri
 {
 	m_default_ns = default_ns;
 	m_default_ns_version = default_ns_version;
+}
+
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+QString XmlSerializer::error_string(QXmlStreamRWRef xmlstream) const
+{
+	QString retval = "";
+
+	retval = std::visit(overloaded {
+				[&](QXmlStreamWriter& xmlstream_w) {
+					return QObject::tr("%1: Line %2, column %3").arg("Unknown error on write").arg("0", "0");
+					},
+				[&](QXmlStreamReader& xmlstream_r) {
+					return QObject::tr("%1: Line %2, column %3")
+							.arg(xmlstream_r.errorString())
+							.arg(xmlstream_r.lineNumber())
+							.arg(xmlstream_r.columnNumber());
+				}
+		}, xmlstream);
+
+	return retval;
 }
 
 void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)

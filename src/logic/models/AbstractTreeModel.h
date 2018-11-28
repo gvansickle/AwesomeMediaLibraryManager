@@ -150,7 +150,7 @@ public:
 	 * Write the entire model to the given QXmlStreamWriter.
 	 * Override this in derived classes to do the right thing.
 	 */
-	virtual void writeModel(QXmlStreamWriter* writer) const;
+//	virtual void writeModel(QXmlStreamWriter* writer) const;
 
 	/**
 	 * Read the entire model from the given QXmlStreamWriter.
@@ -176,20 +176,11 @@ protected:
 	 * Write the given item to the given QXmlStreamWriter.
 	 * Override this in derived classes to do the right thing.
 	 */
-	virtual void writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
+//	virtual void writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
 
-	virtual void readItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item);
 
 	virtual QString getXmlStreamName() const = 0;
 	virtual QString getXmlStreamVersion() const = 0;
-
-	friend class AbstractTreeModelWriter;
-	friend class AbstractTreeModelReader;
-
-	/// Recursive descent parser factory functions.
-	/// At least for the first level of descent.
-	/// Functions take XML stream reader and parent model node, return new node if parsing was successful.
-	std::vector<std::function<AbstractTreeModelItem*(QXmlStreamReader*, AbstractTreeModelItem*)>> m_parse_factory_functions;
 
     /// @}
 

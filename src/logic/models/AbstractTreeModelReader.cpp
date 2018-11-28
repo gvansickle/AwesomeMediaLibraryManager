@@ -62,15 +62,6 @@ bool AbstractTreeModelReader::read(QIODevice* device)
 	return !xml.error();
 }
 
-QString AbstractTreeModelReader::errorString() const
-{
-	auto& xml = m_xml_stream_reader;
-
-	return QObject::tr("%1\nLine %2, column %3")
-				.arg(xml.errorString())
-				.arg(xml.lineNumber())
-				.arg(xml.columnNumber());
-}
 
 
 
