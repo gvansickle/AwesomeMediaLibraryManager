@@ -48,12 +48,26 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 
 	file.open(QFile::WriteOnly);
 
+	// XML writing starts here.
 	QXmlStreamWriter xmlstream(&file);
 
 	xmlstream.setAutoFormatting(true);
 
+	// Start document.
 	xmlstream.writeStartDocument();
+
+	/// @todo PUT THIS IN A LAMBDA PARAM OR SOMETHING
+	// Write DTD
+	// @todo
+	// Write Start Element
+	xmlstream.writeStartElement("amlm_database");
+	xmlstream.writeDefaultNamespace("http://xspf.org/ns/0/");
+	xmlstream.writeAttribute("version", "1");
+	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");
+
 	writeVariantToStream(root_name, serializable.toVariant(), xmlstream);
+
+	xmlstream.writeEndElement();
 	xmlstream.writeEndDocument();
 
 	file.close();
@@ -70,6 +84,11 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	QFile file(load_file_path);
 	file.open(QFile::ReadOnly);
 	QXmlStreamReader stream(&file);
+
+	/// @todo NEEDS TO COME FROM CALLER
+	// Read the first start element,  namespace element we added.
+	/// @todo Don't just throw it away.
+	stream.readNextStartElement();
 
 	// Read the first element in the file.
 	if(!stream.readNextStartElement())

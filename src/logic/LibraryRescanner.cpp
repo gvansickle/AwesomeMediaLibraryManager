@@ -305,8 +305,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 //				outfile.close();
 
 				/// NEW Let's also try it with plenty of QVariants.
+				QString filename = QDir::homePath() + "/DeleteMeNew.xspf";
 				{
-					QString filename = QDir::homePath() + "/DeleteMeNew.xspf";
 
 					qIn() << "###### WRITING" << filename;
 
@@ -343,22 +343,39 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				}
 #ifndef TRY_XQUERY_READ
 				// Now let's see if we can XQuery what we just wrote.
-				if(0)
+				if(1)
 				{
+					// Open the file with the XQuery (in our resources).
 				    QFile queryFile(QString(":/xquery_files/filelist.xq"));
 				    queryFile.open(QIODevice::ReadOnly);
+
+				    // Open the ouput file.
 					QFile outfile2(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
 					auto status = outfile2.open(QFile::WriteOnly | QFile::Text);
-				    const QString query(QString::fromLatin1(queryFile.readAll()));
-				    QStringList xqout;
-				    QXmlQuery qxq;
-				    qxq.setQuery(query);
-					Q_ASSERT(qxq.isValid());
 
-					QXmlFormatter formatter(qxq, &outfile2);
+					// Create the QXmlQuery, bind variables, and load the xquery.
+
+				    QXmlQuery query;
+				    QUrl in_filepath = QUrl::fromLocalFile(filename);
+				    Q_ASSERT(in_filepath.isValid());
+				    query.bindVariable("in_filepath", QVariant(in_filepath.toString()));
+
+					// Read the XQuery as a QString.
+					const QString query_string(QString::fromLatin1(queryFile.readAll()));
+					// Set query.
+					query.setQuery(query_string);
+					Q_ASSERT(query.isValid());
+
+					// String list for list results.
+					QStringList xqout;
+					// Formatter when we want to write another file.
+					QXmlFormatter formatter(query, &outfile2);
 					formatter.setIndentationDepth(2);
-					if(!qxq.evaluateTo(&formatter))
+
+					// Run the query_string.
+					if(!query.evaluateTo(&formatter))
 					{
+
 						Q_ASSERT(0);
 					}
 				}

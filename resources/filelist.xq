@@ -6,7 +6,9 @@
 declare default element namespace "http://xspf.org/ns/0/";
 
 (: Extract all *.flac files. :)
-declare variable $dirpath as xs:string := '/home/gary/DeleteMe.xspf';
-for $x in fn:doc($dirpath)/playlist//exturl[@id="exturl_media"]
+(:declare variable $dirpath as xs:string := '/home/gary/DeleteMe.xspf';:)
+declare variable $in_filepath external;
+
+for $x in fn:doc($in_filepath)/amlm_database/playlist//exturl_media
 where (matches($x/href, '.*\.flac$'))
 return <location>{data($x/href)}</location>
