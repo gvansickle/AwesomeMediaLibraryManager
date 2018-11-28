@@ -84,7 +84,7 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	file.open(QFile::ReadOnly);
 	QXmlStreamReader stream(&file);
 
-	/// @todo NEEDS TO COME FROM CALLER
+	/// @todo EXTRA READ INFO NEEDS TO COME FROM CALLER
 	// Read the first start element,  namespace element we added.
 	/// @todo Don't just throw it away.
 	stream.readNextStartElement();
