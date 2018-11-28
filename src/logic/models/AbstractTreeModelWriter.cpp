@@ -78,29 +78,11 @@ bool AbstractTreeModelWriter::write_to_iodevice(QIODevice* device)
 	///	A sample date is "2005-01-08T17:10:47-05:00".
 	xml.writeTextElement("date", QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
-#if 1
-
 	/// @todo Probably get from derived model class?
 //	xml.writeStartElement(m_tree_model->getXmlStreamName());
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 
 	m_tree_model->writeModel(out);
-#elif 0
-
-	// Write out the top-level items.
-	for(long i = 0; i < m_tree_model->rowCount(); ++i)
-	{
-		QModelIndex qmi = m_tree_model->index(i, 0);
-		write_item(m_tree_model->getItem(qmi));
-	}
-#elif 0
-	// Write out the top-level items.
-	for(long i = 0; i < m_tree_model->rowCount(); ++i)
-	{
-		QModelIndex qmi = m_tree_model->index(i, 0);
-		QXmlQuery = write(m_tree_model->getItem(qmi));
-	}
-#endif
 
 	xml.writeEndDocument();
 	});

@@ -106,12 +106,15 @@ public:
     int childCount() const;
 
     int columnCount() const;
+
 	virtual QVariant data(int column) const;
 
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
 
+    /// Returns a pointer to this item's parent.
     AbstractTreeModelItem *parent();
+	/// Returns a const pointer to this item's parent.
 	const AbstractTreeModelItem *parent() const;
 
     bool removeChildren(int position, int count);

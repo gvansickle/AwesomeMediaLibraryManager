@@ -12,3 +12,4 @@ declare variable $in_filepath external;
 for $x in fn:doc($in_filepath)/amlm_database/playlist//exturl_media
 where (matches($x/href, '.*\.flac$'))
 return <location>{data($x/href)}</location>
+
