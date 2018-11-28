@@ -251,12 +251,17 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # The.  Simplest.  Things.
-# Set default install location to "install" folder in build dir
-# we do not want to install to /usr by default
+# Set default install location to "install" folder in build dir.
+# we do not want to install to /usr by default.add_compile_options.
+# "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
+# typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
+# without overriding a user-provided value"
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH
-        "Install path prefix, prepended onto install directories." FORCE )
-	message(STATUS "Setting CMAKE_INSTALL_PREFIX to ${CMAKE_INSTALL_PREFIX}")
+	set(NEW_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
+	message(STATUS "Changing CMAKE_INSTALL_PREFIX from ${CMAKE_INSTALL_PREFIX} to ${NEW_INSTALL_PREFIX}")
+	set (CMAKE_INSTALL_PREFIX "${NEW_INSTALL_PREFIX}" CACHE
+		PATH "Install path prefix, prepended onto install directories." FORCE )
+	message(STATUS "Set CMAKE_INSTALL_PREFIX to ${CMAKE_INSTALL_PREFIX}")
 else()
 	message(WARNING "CMAKE_INSTALL_PREFIX set to default ${CMAKE_INSTALL_PREFIX}")
 endif()
@@ -522,10 +527,12 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ###
 ### Add the project subdirs.
 ###
+#set(amlm_APP_ICONS "re-set this in resources_subdir")
 # This is the sum-total of all source files which go into building the main exe.
 add_subdir_lib(resources_subdir "${CMAKE_CURRENT_LIST_DIR}/resources")
-add_subdirectory(src)
-add_subdirectory(tests)
+#message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
+add_subdirectory(src EXCLUDE_FROM_ALL)
+add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 
 #include(resources/CMakeLists.txt)

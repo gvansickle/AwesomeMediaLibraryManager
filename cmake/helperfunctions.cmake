@@ -51,6 +51,14 @@ macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR)
 	include(${ARGV1}/CMakeLists.txt)
 endmacro()
 
+macro(print_has_parent_scope)
+	get_directory_property(hasParent PARENT_DIRECTORY)
+	if(hasParent)
+  		message(STATUS "Has a parent scope.")
+	else()
+  		message(STATUS "Doesn't have a parent scope.")
+	endif()
+endmacro(print_has_parent_scope)
 
 # @note cmake 3.12 has this functionality in a one-liner:
 # list(TRANSFORM ${FILES_TO_TRANSLATE} PREPEND ${CMAKE_CURRENT_SOURCE_DIR})

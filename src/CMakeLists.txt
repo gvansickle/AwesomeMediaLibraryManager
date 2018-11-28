@@ -250,6 +250,9 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # Sets the icon on Windows and OSX.
 # See https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <>/src here.
+if(NOT DEFINED amlm_APP_ICONS)
+	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: ${amlm_APP_ICONS}")
+endif()
 ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 
