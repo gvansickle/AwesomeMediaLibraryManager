@@ -20,11 +20,11 @@
 # Application icons.  Used in <>/src/CMakeLists.txt by ecm_add_app_icon().
 ### @todo Make our own icon.
 set(amlm_APP_ICONS
-  48-preferences-desktop-sound.png
-  64-preferences-desktop-sound.png
-  128-preferences-desktop-sound.png
-		# svgz isn't supported by ecm_add_app_icon().
-  #scalable-preferences-desktop-sound.svgz
+	48-preferences-desktop-sound.png
+    64-preferences-desktop-sound.png
+    128-preferences-desktop-sound.png
+	# svgz isn't supported by ecm_add_app_icon().
+    #scalable-preferences-desktop-sound.svgz
 )
 prepend_to_each(amlm_APP_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_APP_ICONS})
 set(amlm_APP_ICONS ${amlm_APP_ICONS} PARENT_SCOPE)
