@@ -37,7 +37,7 @@ class QWidget;
 class ActivityProgressPopup : public QWidget
 {
 public:
-    ActivityProgressPopup(QWidget* parent = nullptr);
+	explicit ActivityProgressPopup(QWidget* parent = nullptr);
 };
 
 #endif /* SRC_GUI_ACTIVITYPROGRESSMANAGER_ACTIVITYPROGRESSPOPUP_H_ */

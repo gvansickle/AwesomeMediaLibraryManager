@@ -24,36 +24,55 @@
 
 // Qt5
 #include <QUrl>
+#include <QString>
 
 // Ours
+#include <utils/QtHelpers.h>
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModelHeaderItem;
 
 class ScanResultsTreeModel : public AbstractTreeModel
 {
-    using BASE_CLASS = AbstractTreeModel;
-
 	Q_OBJECT
 
+	using BASE_CLASS = AbstractTreeModel;
+
 public:
-    ScanResultsTreeModel(const QStringList &headers, const QString &data,
-                         QObject *parent = nullptr);
+	ScanResultsTreeModel(QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
+
+    /**
+     * Sets the base directory of the model.
+     * @todo Not sure if we should support more than one or not.
+     */
+    void setBaseDirectory(const QUrl& base_directory);
 
 	/**
 	 * Append a vector of AbstractTreeModelItem's as children of @p parent.
 	 */
 	bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
 
-protected:
-	QString getXmlStreamName() const override { return "AMLMScanResults"; };
-	QString getXmlStreamVersion() const override { return "0.1"; };
+	/// @name Serialization
+	/// @{
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
+	QTH_FRIEND_QDATASTREAM_OPS(ScanResultsTreeModel);
+
+	/// @}
 
 	/// Create a new root node.
 	AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) override;
 
+protected:
+	QString getXmlStreamName() const override { return "AMLMScanResults"; };
+	QString getXmlStreamVersion() const override { return "0.1"; };
+
+	// The tree's base directory URL.
     QUrl m_base_directory;
 
 };
+
 
 #endif // SCANRESULTSTREEMODEL_H

@@ -29,33 +29,6 @@ add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
 add_subdir_lib(xml_subdir "${CMAKE_CURRENT_LIST_DIR}/xml")
 
 set(logic_subdir_SOURCES
-	Library.h
-	LibraryEntry.h
-	LibraryEntryLoaderJob.h
-	LibraryEntryMimeData.h
-	LibraryModel.h
-	Metadata.h
-	MetadataAbstractBase.h
-	MetadataFromCache.h
-	MetadataTaglib.h
-	MP2.h
-	ntp.h
-	PlaylistModel.h
-	PlaylistModelItem.h
-	PlaylistSortFilterProxyModel.h
-	SupportedMimeTypes.h
-	TrackMetadata.h
-	LibraryRescanner.h
-	CueSheetParser.h
-	CueSheet.h
-	CoverArtJob.h
-	TagLibHelpers.h
-	ModelUserRoles.h
-	ColumnSpec.h
-	LibraryRescannerMapItem.h
-	LibraryRescannerJob.h
-	DirScanResult.h
-	ExtMimeType.h
 	Library.cpp
 	LibraryEntry.cpp
 	LibraryEntryLoaderJob.cpp
@@ -83,14 +56,52 @@ set(logic_subdir_SOURCES
 	ExtMimeType.cpp
 	LibraryRescanner.cpp
 	ExtUrl.cpp
-	ExtUrl.h
 	PerfectDeleter.cpp
-	PerfectDeleter.h
+	XmlSerializer.cpp
 	)
+
+set(logic_subdir_HEADERS
+	Library.h
+	LibraryEntry.h
+	LibraryEntryLoaderJob.h
+	LibraryEntryMimeData.h
+	LibraryModel.h
+	Metadata.h
+	MetadataAbstractBase.h
+	MetadataFromCache.h
+	MetadataTaglib.h
+	MP2.h
+	ntp.h
+	PlaylistModel.h
+	PlaylistModelItem.h
+	PlaylistSortFilterProxyModel.h
+	SupportedMimeTypes.h
+	TrackMetadata.h
+	LibraryRescanner.h
+	CueSheetParser.h
+	CueSheet.h
+	CoverArtJob.h
+	TagLibHelpers.h
+	ModelUserRoles.h
+	ColumnSpec.h
+	LibraryRescannerMapItem.h
+	LibraryRescannerJob.h
+	DirScanResult.h
+	ExtMimeType.h
+	ExtUrl.h
+	PerfectDeleter.h
+	ISerializable.h
+	ISerializer.h
+	XmlSerializer.h
+	)
+	
 prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
+prepend_to_each(logic_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_HEADERS})
 
 target_sources(logic_subdir
 	PUBLIC
+		${logic_subdir_HEADERS}
+	PRIVATE
 		${logic_subdir_SOURCES}
 	)
 target_link_libraries(logic_subdir
@@ -105,7 +116,7 @@ target_link_libraries(logic_subdir
 		models_subdir
 		proxymodels_subdir
 		xml_subdir
-)
+	)
 target_include_directories(logic_subdir
 	PUBLIC
 	    # For config.h

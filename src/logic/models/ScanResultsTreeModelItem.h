@@ -31,6 +31,7 @@ class QXmlStreamReader;
 
 // Ours
 #include "../DirScanResult.h"
+#include "../ISerializable.h"
 
 /*
  *
@@ -38,6 +39,7 @@ class QXmlStreamReader;
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 public:
+	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : AbstractTreeModelItem(parent) {};
 	explicit ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem *parent = nullptr);
 	explicit ScanResultsTreeModelItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
 	 ~ScanResultsTreeModelItem() override;
@@ -48,6 +50,13 @@ public:
 	 * @todo Add role.
 	 */
 	QVariant data(int column) const override;
+
+
+	/// @name Serialization
+	/// @{
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
 
 	/**
 	 * Parses a new ScanResultsTreeModelItem* out of the passed XML stream.
@@ -66,11 +75,21 @@ public:
 
 //	QXmlQuery write() const;
 
+	/// @} // END Serialization
+
 	static ScanResultsTreeModelItem* createChildItem(AbstractTreeModelItem* parent);
 
 protected:
 
-	QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
+	/**
+	 * Factory function primarily for creating default-constructed nodes.
+	 * Used by insertChildren().  Override in derived classes.
+	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
+	 */
+	ScanResultsTreeModelItem*
+	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+
+	const QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
 
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.

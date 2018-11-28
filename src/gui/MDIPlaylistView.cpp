@@ -512,6 +512,7 @@ M_WARNING("TODO: This mostly works, but can start the wrong row if e.g. this vie
 	{
 		// Activate the index to start playing it.
 		auto proxy_index = model()->index(last_row, 0, QModelIndex());
+#warning "According to clazy, this isn't a signal."
 		Q_EMIT onActivated(proxy_index);
 	}
 

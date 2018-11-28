@@ -67,7 +67,9 @@ public:
 
     static LibraryRescannerJobPtr make_job(QObject *parent);
     static LibraryRescannerJobPtr make_job(QObject *parent, LibraryRescannerMapItem item_to_refresh, const LibraryModel *current_libmodel);
+//	static LibraryRescannerJobPtr make_job(QObject *parent, LibraryRescannerMapItem-future-iterators item_to_refresh, const LibraryModel *current_libmodel);
 
+	void run_async_rescan();
 
 public Q_SLOTS:
 

@@ -25,6 +25,7 @@ set(HEADER_FILES_SRC_FUTURE
 	future_type_traits.hpp
 	cpp14_concepts.hpp
 	static_if.hpp
+	grvs_functional.hpp
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
@@ -33,7 +34,6 @@ set(SOURCE_FILES_SRC_FUTURE
 
 prepend_to_each(HEADER_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_FUTURE})
 prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_FUTURE})
-#MESSAGE(STATUS "HEADER_FILES_SRC_FUTURE: ${HEADER_FILES_SRC_FUTURE}")
 
 target_sources(future_subdir
 	PUBLIC

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,29 +17,29 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
-#define AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
+/**
+ * @file FlagsAndEnumsTests.h
+ */
+#ifndef TESTS_FLAGSANDENUMSTESTS_H_
+#define TESTS_FLAGSANDENUMSTESTS_H_
 
-#include <nomocdefs.h>
+// Google Test
+#include <gtest/gtest.h>
 
-#include <QtGlobal>
-#include <QDialog>
-#include <QString>
+#include <src/concurrency/tests/ExtAsyncTestCommon.h>
 
-class AboutBox : public QDialog
+/*
+ *
+ */
+class FlagsAndEnumsTests : public ExtAsyncTestsSuiteFixtureBase //::testing::Test
 {
-	W_OBJECT(AboutBox)
+	using BASE_CLASS = ExtAsyncTestsSuiteFixtureBase;
 
 public:
-    AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags& flags = 0);
 
-	int exec() override;
+protected:
 
-private:
-	Q_DISABLE_COPY(AboutBox)
-
-	QString m_text_str;
-	QString m_title_str;
+	// Objects declared here can be used by all tests in this Fixture.
 };
 
-#endif //AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
+#endif /* TESTS_FLAGSANDENUMSTESTS_H_ */

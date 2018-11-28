@@ -282,7 +282,7 @@ QUrl LibraryEntry::getM2Url() const
 		{
 			auto decurl = m_url;
 			QUrlQuery query;
-			query.addQueryItem("track_name", getMetadata("track_name")[0]);
+			query.addQueryItem("track_name", getMetadata("track_name").at(0));
 			auto ntpfrag = ntp(double(m_offset_secs), double(m_offset_secs+m_length_secs));
 			auto keyval = ntpfrag.toKeyValPair();
 			query.addQueryItem(QString::fromStdString(keyval.key), QString::fromStdString(keyval.value));

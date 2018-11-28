@@ -46,7 +46,9 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
 
     QString debug_str;
 
-    //
+    // Custom log format string handling.
+
+    // Log thread name.
     auto cur_thread = QThread::currentThread();
     QString thread_name;
     if(cur_thread)
@@ -67,6 +69,12 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
     debug_str = qFormatLogMessage(type, context, msg);
 
     debug_str.replace(QStringLiteral("%threadname15"), thread_name);
+
+    // Log a short form of the function name.  With templates, %{function} becomes enormous.
+    // Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
+    // and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
+    M_WARNING("TODO: This needs to be smarter, we mostly only get the return and linkage types");
+    debug_str.replace(QStringLiteral("%shortfunction"), QString(context.function).left(16));
 
     /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.
 #if 0 //def Q_OS_WIN
@@ -154,7 +162,7 @@ void Logging::dumpEnvVars()
 
 
 	qInfo() << "QT/KDE Environment variables:";
-	for(auto str : known_qt_kde_vars)
+	for(const auto& str : qAsConst(known_qt_kde_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
@@ -165,14 +173,14 @@ void Logging::dumpEnvVars()
 	qInfo() << "QGuiApplication::libraryPaths():" << QGuiApplication::libraryPaths();
 
 	qInfo() << "XDG Environment variables:";
-	for(auto str : known_env_vars)
+	for(const auto& str : qAsConst(known_env_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}
 
 	qInfo() << "XDG Base Directory Specification environment variables:";
 
-	for(auto str : known_xdg_base_dir_spec_vars)
+	for(const auto& str : qAsConst(known_xdg_base_dir_spec_vars))
 	{
 		qInfo() << str + ":" << env.value(str, "<unset or empty>");
 	}

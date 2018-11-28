@@ -21,26 +21,30 @@
 
 #include <config.h>
 
-/// Qt5
+// Qt5
 #include <QUrl>
 #include <QFileInfo>
 #include <QDir>
 #include <QRegularExpression>
 
-/// Ours, Qt5/KF5-related
+// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
 #include "models/ScanResultsTreeModel.h"
-
+#include "models/ScanResultsTreeModelXMLTags.h"
+#include <utils/EnumFlagHelpers.h>
 #include <logic/models/AbstractTreeModelWriter.h>
-
+#include <logic/xml/ExtEnum.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
-	qRegisterMetaType<DirScanResult>();
+//	qRegisterMetaType<DirScanResult>();
+	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
+	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
+
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
@@ -49,26 +53,50 @@ DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_f
 	determineDirProps(found_url_finfo);
 }
 
+#define DATASTREAM_FIELDS(X) \
+	/*X(flags_dirprops, m_dir_props)*/ \
+	X(exturl_dir, m_dir_exturl) \
+	X(exturl_media, m_media_exturl) \
+	X(exturl_cuesheet, m_cue_exturl)
+
+
+
+QVariant DirScanResult::toVariant() const
+{
+	QVariantMap map;
+
+	// Add all the fields to the map.
+	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR], m_dir_exturl.toVariant());
+	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA], m_media_exturl.toVariant());
+	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET], m_cue_exturl.toVariant());
+
+	return map;
+}
+
+void DirScanResult::fromVariant(const QVariant& variant)
+{
+	QVariantMap map = variant.toMap();
+
+	// Extract all the fields from the map, cast them to their type.
+
+	/// @todo Something is still broken here.  This should work, but it doesn't:
+//	m_media_exturl = map.value("exturl_media").value<ExtUrl>();
+
+	QVariant exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA]);
+	m_media_exturl.fromVariant(exturl_in_variant);
+	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR]);
+	m_dir_exturl.fromVariant(exturl_in_variant);
+	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET]);
+	m_cue_exturl.fromVariant(exturl_in_variant);
+}
+
 ScanResultsTreeModelItem* DirScanResult::toTreeModelItem()
 {
-//	QVector<QVariant> column_data;
-//	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
-//	column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
-//	column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
-
 	auto new_item = new ScanResultsTreeModelItem(this);
 //	auto new_item = make_default_node(column_data);
-
-#warning "EXPERIMENTAL, REMOVE"
-//    QVector<AbstractTreeModelItem *> child_items;
-//	AbstractTreeModelItem* child_item = new ScanResultsTreeModelItem({"One", "Two", "Three"}, new_item);
-
-//    child_items.push_back(child_item);
-
-//    new_item->appendChildren(child_items);
-
 	return new_item;
 }
+
 
 XmlElement DirScanResult::toXml() const
 {
@@ -136,12 +164,9 @@ M_WARNING("TODO");
     return QVector<ExtUrl>();
 }
 
-#define DATASTREAM_FIELDS(X) \
-	X(m_dir_exturl) X(m_dir_props) X(m_media_exturl) X(m_cue_exturl)
-
-QDebug operator<<(QDebug dbg, const DirScanResult & obj)
+QDebug operator<<(QDebug dbg, const DirScanResult & obj) // NOLINT(performance-unnecessary-value-param)
 {
-#define X(field) << obj.field
+#define X(ignore, field) << obj.field
     dbg DATASTREAM_FIELDS(X);
 #undef X
     return dbg;
@@ -177,43 +202,5 @@ QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
 
 	out << e;
 	return out;
-
-//	{
-//		XmlElement e("dirscanresult",
-//					 [=](auto* e, auto* xml){
-//			// Append attributes to the outer element.
-//			e->setId(1);
-
-//			// Append child elements.
-////			e->
-
-//			// Write all the child elements.
-//			auto dir_url {dsr.m_dir_exturl.toXml()};
-//			auto cue_url {dsr.m_cue_exturl.toXml()};
-
-//			dir_url.setId("dir_exturl");
-//			cue_url.setId("cuesheet_url");
-
-//			dir_url.write(xml);
-//			cue_url.write(xml);
-//			;});//, XmlAttributeList({QXmlStreamAttribute("dir_exturl", dsr.m_dir_exturl)}));
-//		e.set_out(&out);
-////		XmlElement dir_url(out, "m_dir_exturl", dsr.m_dir_exturl.m_url);
-////		out << dsr.m_dir_exturl;
-////		out << dsr.m_cue_exturl;
-//	}
-
-////	out << dsr.m_dir_exturl;
-////	out << dsr.m_cue_exturl;
-////	qDb() << dsr.m_dir_exturl;
-////	qDb() << dsr.m_cue_exturl;
-////	out.writeAttribute("href", exturl.m_url.toString());
-////	out.writeTextElement("title", "Media URL");
-////	out.writeEndElement();
-//	//delete e;
-//	return out;
 }
-
-#undef DATASTREAM_FIELDS
-
 

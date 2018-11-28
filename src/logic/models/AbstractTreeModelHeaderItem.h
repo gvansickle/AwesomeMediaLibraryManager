@@ -23,20 +23,24 @@
 #ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 #define SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 
-#include "AbstractTreeModelItem.h"
-
+// Qt5
 #include <QVector>
 #include <QVariant>
 
+// Ours
+#include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
+#include "ScanResultsTreeModelItem.h"
 
-/*
+
+/**
  *
  */
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
 {
 public:
-	explicit AbstractTreeModelHeaderItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
+	explicit AbstractTreeModelHeaderItem(QVector<QVariant> x = QVector<QVariant>(),
+	                                     AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;
 
 	/**
@@ -45,6 +49,19 @@ public:
 	 * @returns true
 	 */
 	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
+
+	/// @name Serialization
+	/// @{
+
+	QVariant toVariant() const override;
+
+	void fromVariant(const QVariant& variant) override;
+
+	/// @}
+
+protected:
+
+	ScanResultsTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

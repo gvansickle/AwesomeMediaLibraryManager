@@ -1159,7 +1159,10 @@ void MainWindow::updateConnections()
 bool MainWindow::maybeSaveOnClose()
 {
 	QStringList failures;
-	for(auto child : m_mdi_area->subWindowList())
+
+	auto swl = m_mdi_area->subWindowList().toStdList();
+
+	for(const auto& child : swl)
 	{
 		MDIPlaylistView* playlist_ptr= qobject_cast<MDIPlaylistView*>(child->widget());
 		if(playlist_ptr == nullptr)
@@ -1571,7 +1574,7 @@ void MainWindow::onRescanLibrary()
 M_WARNING("HACKISH, MAKE THIS BETTER");
 /// @todo So really what we're doing is removing any libraries and re-opening them.
 
-QVector<QUrl> lib_root_urls;
+	QVector<QUrl> lib_root_urls;
 
 	for(auto l : m_libmodels)
 	{
@@ -1580,7 +1583,7 @@ QVector<QUrl> lib_root_urls;
 		onRemoveDirFromLibrary(l);
 	}
 
-	for(auto url : lib_root_urls)
+	for(const auto& url : qAsConst(lib_root_urls))
 	{
 		openFileLibrary(url);
 	}
@@ -1588,7 +1591,7 @@ QVector<QUrl> lib_root_urls;
 
 void MainWindow::onCancelRescan()
 {
-	for(auto l : m_libmodels)
+	for(const auto& l : m_libmodels)
 	{
 		l->cancelRescan();
 	}
@@ -1709,7 +1712,7 @@ void MainWindow::newCollectionView()
 	child->setMainModel2(model);
 //    child->getTableView()->setModel(model);
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
-    child->setPane2Model(AMLMApp::instance()->scan_results_tree_model_instance());
+    child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel());
 
     mdi_child->show();
 }

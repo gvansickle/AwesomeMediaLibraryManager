@@ -53,6 +53,7 @@
 ****************************************************************************/
 
 // This class's header.
+#include "ScanResultsTreeModel.h"
 #include "AbstractTreeModel.h"
 
 // Std C++
@@ -63,8 +64,9 @@
 
 // Ours
 #include "AbstractTreeModelItem.h"
+#include "AbstractTreeModelHeaderItem.h"
 #include <utils/DebugHelpers.h>
-
+#include <logic/XmlSerializer.h>
 
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
@@ -72,28 +74,13 @@ AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(paren
 
 }
 
-AbstractTreeModel::AbstractTreeModel(const QStringList &headers, const QString &data, QObject *parent)
-	: AbstractTreeModel(parent)
-{
-//	/// @todo Move all this out of the constructor?
-//    QVector<QVariant> rootData;
-//	for(const QString& header : headers)
-//	{
-//        rootData << header;
-//	}
-
-////	m_root_item = new AbstractTreeModelItem(rootData);
-//	/// @todo virtual function in constructor.
-//	m_root_item = make_root_node(rootData);
-}
-
 AbstractTreeModel::~AbstractTreeModel()
 {
-	delete m_root_item;
 }
 
 int AbstractTreeModel::columnCount(const QModelIndex & /* parent */) const
 {
+	Q_ASSERT(m_root_item != nullptr);
 	return m_root_item->columnCount();
 }
 
@@ -126,7 +113,7 @@ Qt::ItemFlags AbstractTreeModel::flags(const QModelIndex &index) const
     return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
 }
 
-AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) const
+AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) const
 {
 	if (index.isValid())
 	{
@@ -136,7 +123,7 @@ AbstractTreeModelItem *AbstractTreeModel::getItem(const QModelIndex &index) cons
             return item;
 		}
     }
-	/// @todo This might want to be an assert().
+	/// @todo This might want to be an assert() due to invalid index.
 	return m_root_item;
 }
 
@@ -216,7 +203,7 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
     AbstractTreeModelItem *parentItem = getItem(parent);
 
     AbstractTreeModelItem *childItem = parentItem->child(row);
-    if (childItem)
+	if(childItem != nullptr)
 	{
         return createIndex(row, column, childItem);
 	}
@@ -228,7 +215,9 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 
 bool AbstractTreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
 {
-    bool success;
+	Q_CHECK_PTR(m_root_item);
+
+	bool success;
 
     beginInsertColumns(parent, position, position + columns - 1);
 	success = m_root_item->insertColumns(position, columns);
@@ -239,6 +228,8 @@ bool AbstractTreeModel::insertColumns(int position, int columns, const QModelInd
 
 bool AbstractTreeModel::insertRows(int position, int rows, const QModelIndex &parent)
 {
+	Q_CHECK_PTR(m_root_item);
+
     AbstractTreeModelItem *parentItem = getItem(parent);
     bool success;
 
@@ -295,6 +286,14 @@ bool AbstractTreeModel::removeRows(int position, int rows, const QModelIndex &pa
     return success;
 }
 
+
+void AbstractTreeModel::setRootItem(AbstractTreeModelHeaderItem* root_header_item)
+{
+	/// @todo Anything if it's already set?
+	m_root_item = root_header_item;
+}
+
+
 bool AbstractTreeModel::appendItems(QVector<AbstractTreeModelItem *> new_items, const QModelIndex &parent)
 {
     auto parent_item = getItem(parent);
@@ -349,7 +348,8 @@ bool AbstractTreeModel::setHeaderData(int section, Qt::Orientation orientation,
 
     if (result)
 	{
-    	// Docs: "If you are changing the number of columns or rows you do not need to emit this signal, but use the begin/end functions."
+    	// Docs: "If you are changing the number of columns or rows you do not need to emit this signal,
+    	// but use the begin/end functions."
 		Q_EMIT headerDataChanged(orientation, section, section);
 	}
 
@@ -365,68 +365,4 @@ bool AbstractTreeModel::setHeaderData(const AbstractHeaderSection& header_sectio
 	return true;
 }
 
-void AbstractTreeModel::setupModelData(const QStringList &lines, AbstractTreeModelItem *parent)
-{
-    QList<AbstractTreeModelItem*> parents;
-    QList<int> indentations;
-    parents << parent;
-    indentations << 0;
 
-    int number = 0;
-
-	while (number < lines.count())
-	{
-        int position = 0;
-		while (position < lines[number].length())
-		{
-            if (lines[number].at(position) != ' ')
-			{
-                break;
-			}
-            ++position;
-        }
-
-        QString lineData = lines[number].mid(position).trimmed();
-
-		if (!lineData.isEmpty())
-		{
-            // Read the column data from the rest of the line.
-            QStringList columnStrings = lineData.split("\t", QString::SkipEmptyParts);
-            QVector<QVariant> columnData;
-            for (int column = 0; column < columnStrings.count(); ++column)
-			{
-                columnData << columnStrings[column];
-			}
-
-			if (position > indentations.last())
-			{
-                // The last child of the current parent is now the new parent
-                // unless the current parent has no children.
-
-				if (parents.last()->childCount() > 0)
-				{
-                    parents << parents.last()->child(parents.last()->childCount()-1);
-                    indentations << position;
-                }
-			}
-			else
-			{
-				while (position < indentations.last() && parents.count() > 0)
-				{
-                    parents.pop_back();
-                    indentations.pop_back();
-                }
-            }
-
-            // Append a new item to the current parent's list of children.
-            AbstractTreeModelItem *parent = parents.last();
-			parent->insertChildren(parent->childCount(), 1, m_root_item->columnCount());
-            for (int column = 0; column < columnData.size(); ++column)
-			{
-                parent->child(parent->childCount() - 1)->setData(column, columnData[column]);
-			}
-        }
-
-        ++number;
-    }
-}

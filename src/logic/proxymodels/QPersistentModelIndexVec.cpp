@@ -35,7 +35,7 @@ QPersistentModelIndexVec::operator const QModelIndexList() const
 {
 	QModelIndexList retval;
 
-	for(auto i : *this)
+	for(const auto& i : *this)
 	{
 		retval.push_back(i);
 	}

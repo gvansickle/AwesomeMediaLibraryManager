@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,29 +17,37 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
-#define AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
+/**
+ * @file ISerializer.h
+ */
+#ifndef SRC_LOGIC_ISERIALIZER_H_
+#define SRC_LOGIC_ISERIALIZER_H_
 
-#include <nomocdefs.h>
+// Std C++
+#include <functional>
 
-#include <QtGlobal>
-#include <QDialog>
+// Qt5
 #include <QString>
+#include <QUrl>
 
-class AboutBox : public QDialog
+// Ours
+#include "ISerializable.h"
+
+/**
+ * Abstract Base Class for serializers.
+ */
+class ISerializer
 {
-	W_OBJECT(AboutBox)
-
 public:
-    AboutBox(QWidget *parent = nullptr, const Qt::WindowFlags& flags = 0);
+	virtual ~ISerializer() {}
 
-	int exec() override;
+	virtual void save(const ISerializable& serializable,
+			const QUrl& filepath,
+			const QString& rootName = "",
+			std::function<void(void)> extra_save_actions = nullptr ) = 0;
 
-private:
-	Q_DISABLE_COPY(AboutBox)
-
-	QString m_text_str;
-	QString m_title_str;
+	virtual void load(ISerializable& serializable, const QUrl& filepath) = 0;
 };
 
-#endif //AWESOMEMEDIALIBRARYMANAGER_ABOUTBOX_H
+
+#endif /* SRC_LOGIC_ISERIALIZER_H_ */

@@ -13,7 +13,7 @@ class SettingsPageLibrary : public QWidget
 
 public:
 	explicit SettingsPageLibrary(QWidget *parent = 0);
-	~SettingsPageLibrary();
+	~SettingsPageLibrary() override;
 
 private:
 	Ui::SettingsPageLibrary *ui;

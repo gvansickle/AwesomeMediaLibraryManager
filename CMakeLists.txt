@@ -39,7 +39,7 @@ message(STATUS "CMake-time CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 message(STATUS "CMake-time CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH}")
 include(cmake/GetVersionInfo.cmake)
 
-# Prevent an in-root-of-src-tree build.
+# Prevent an in-root-of-src-tree build and any accidental build-induced changes to source files.
 # Per @link https://stackoverflow.com/questions/1208681/with-cmake-how-would-you-disable-in-source-builds, these have to
 # be prior to project().
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
@@ -174,7 +174,8 @@ ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -Wmaybe-uninitiali
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments)
+	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
+	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree -fno-elide-type
@@ -444,7 +445,7 @@ set(Boost_USE_DEBUG_LIBS         ON)
 set(Boost_USE_RELEASE_LIBS       OFF)
 #set(BOOST_ALL_DYN_LINK           OFF)
 set(Boost_USE_DEBUG_RUNTIME      ON)
-set(Boost_DEBUG  ON) # enable debug output from FindBoost.
+set(Boost_DEBUG    				OFF) # enable debug output from FindBoost.
 set(Boost_DETAILED_FAILURE_MSG ON) # add detailed information to the failure message 
 								   # even when the REQUIRED option is not given to the find_package call.
 find_package(Boost 1.66.0 REQUIRED
@@ -502,6 +503,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${boost_callable_traits_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
+	# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
+	${PROJECT_SOURCE_DIR}/src/third_party/better_enums
 	### @todo REMOVE
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
@@ -520,9 +523,10 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ### Add the project subdirs.
 ###
 # This is the sum-total of all source files which go into building the main exe.
-#add_subdir_lib()
+add_subdir_lib(resources_subdir "${CMAKE_CURRENT_LIST_DIR}/resources")
 add_subdirectory(src)
 add_subdirectory(tests)
+
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)

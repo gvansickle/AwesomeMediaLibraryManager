@@ -37,8 +37,10 @@ class QFileInfo;
 #include <utils/QtHelpers.h>
 #include "xml/XmlObjects.h"
 #include <logic/models/AbstractTreeModelWriter.h>
+#include "ISerializable.h"
 
-#if 0
+
+#if 0 // FileInfo
 class FileModificationInfo
 {
     Q_GADGET
@@ -52,12 +54,12 @@ public:
     /// @}
 
     explicit FileModificationInfo(const QFileInfo &fmodinfo)
-        : m_size(fmodinfo.size()),
+        : m_file_size_bytes(fmodinfo.size()),
           m_last_modified_timestamp(fmodinfo.lastModified()),
           m_metadata_last_modified_timestamp(fmodinfo.metadataChangeTime()) {}
 
     /// File size, or 0 if couldn't be determined.
-    qint64 m_size {0};
+    qint64 m_file_size_bytes {0};
     /// Last modified time.  Invalid if can't be determined(?).
     QDateTime m_last_modified_timestamp;
     /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
@@ -66,7 +68,7 @@ public:
 //    QTH_FRIEND_QDEBUG_OP(FileModificationInfo);
     friend QDebug operator<<(QDebug dbg, const FileModificationInfo& obj)
     {
-        return dbg << obj.m_size << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
+        return dbg << obj.m_file_size_bytes << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;
     }
 };
 
@@ -78,14 +80,14 @@ Q_DECLARE_METATYPE(FileModificationInfo);
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
  */
-class ExtUrl
+class ExtUrl : public ISerializable
 {
 	Q_GADGET
 
 public:
 	ExtUrl() = default;
 	ExtUrl(const ExtUrl& other) = default;
-	~ExtUrl() = default;
+	~ExtUrl() override = default;
 
     /**
      * Construct an ExtUrl from a QUrl and QFileInfo.
@@ -100,15 +102,23 @@ public:
 	ExtUrl& operator=(const QUrl& qurl) { m_url = qurl; return *this; /** @todo determine other info. */}
 
 
-    /// ExtUrl Status enum.
-    enum Status
+    /**
+     * ExtUrl Status enum.
+     */
+    enum Statuses
     {
         Exists = 0x01,
         Accessible = 0x02,
         IsStale = 0x04
     };
-    Q_DECLARE_FLAGS(Statuses, Status)
-    Q_FLAG(Statuses)
+    /// "The Q_DECLARE_FLAGS(Flags, Enum) macro expands to: typedef QFlags<Enum> Flags;"
+    /// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"
+    /// @link http://doc.qt.io/qt-5/qflags.html#flags-and-the-meta-object-system
+    /// @link http://doc.qt.io/qt-5/qflags.html#Q_DECLARE_FLAGS
+    Q_DECLARE_FLAGS(Status, Statuses)
+    /// "This macro registers a single flags type with the meta-object system.".
+    /// @link http://doc.qt.io/qt-5/qobject.html#Q_FLAG
+    Q_FLAG(Status)
 
     /**
      * Check the status of the URL, if it is accessible, if it's stale, etc.
@@ -128,7 +138,7 @@ public:
 	QDateTime m_timestamp_last_refresh;
 
 	/// File size, or 0 if couldn't be determined.
-	qint64 m_size {0};
+	qint64 m_file_size_bytes {0};
 
 	/// Creation time.
 	/// Needed for XSPF etc.
@@ -150,10 +160,15 @@ public:
 	/// QXmlStream{Read,Write} operators.
 //	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
 
+	/// @todo Can these be protected?
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
 	/**
 	 * Return an XmlElement representing this ExtUrl.
 	 */
 	XmlElement toXml() const;
+
 
 protected:
 
@@ -161,12 +176,14 @@ protected:
 
 	/// Populate the modification info from qurl_finfo.
 	/// If null, load the info using m_url.
-	void LoadModInfo(const QFileInfo* qurl_finfo = nullptr);
+	void load_mod_info(const QFileInfo* qurl_finfo = nullptr);
 
 };
 
 Q_DECLARE_METATYPE(ExtUrl);
-Q_DECLARE_OPERATORS_FOR_FLAGS(ExtUrl::Statuses);
+/// "declares global operator|() functions for Flags"
+Q_DECLARE_OPERATORS_FOR_FLAGS(ExtUrl::Status);
+
 QTH_DECLARE_QDEBUG_OP(ExtUrl);
 QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
 //QTH_DECLARE_QXMLSTREAM_OPS(ExtUrl);

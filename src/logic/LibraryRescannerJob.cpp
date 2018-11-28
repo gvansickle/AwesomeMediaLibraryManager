@@ -79,6 +79,11 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
 
 void LibraryRescannerJob::runFunctor()
 {
+	this->run_async_rescan();
+}
+
+void LibraryRescannerJob::run_async_rescan()
+{
     qDb() << "ENTER run";
 
     setProgressUnit(KJob::Unit::Files);

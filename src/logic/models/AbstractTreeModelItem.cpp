@@ -64,13 +64,13 @@
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
 
-AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent)
-{
-	m_parent_item = parent;
-}
+//AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem *parent_item)
+//{
+//	m_parent_item = parent_item;
+//}
 
-AbstractTreeModelItem::AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent)
-	: AbstractTreeModelItem(parent)
+AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item, const QVector<QVariant>& data)
+	: m_parent_item(parent_item)
 {
 	m_item_data = data;
 }
@@ -90,7 +90,7 @@ QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
                      );
 #undef X
 
-AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
+AbstractTreeModelItem* AbstractTreeModelItem::child(int number)
 {
 	// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
 	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
@@ -99,6 +99,10 @@ AbstractTreeModelItem *AbstractTreeModelItem::child(int number)
 
 const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
 {
+	if(number >= childCount())
+	{
+		qWr() << "### CHILD INDEX OUT OF RANGE:" << number;
+	}
 	return stdex::value(m_child_items, number);
 }
 
@@ -145,7 +149,8 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 	{
         QVector<QVariant> data(columns);
 //		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
-		AbstractTreeModelItem *item = make_default_node(data, this);
+		// Create a new default-constructed item.
+		AbstractTreeModelItem *item = create_default_constructed_child_item(this);
 		m_child_items.insert(pos_iterator, item);
     }
 
@@ -172,12 +177,12 @@ bool AbstractTreeModelItem::insertColumns(int position, int columns)
     return true;
 }
 
-AbstractTreeModelItem *AbstractTreeModelItem::parent()
+AbstractTreeModelItem* AbstractTreeModelItem::parent()
 {
 	return m_parent_item;
 }
 
-const AbstractTreeModelItem*AbstractTreeModelItem::parent() const
+const AbstractTreeModelItem* AbstractTreeModelItem::parent() const
 {
 	return m_parent_item;
 }
@@ -230,7 +235,7 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
     return true;
 }
 
-bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem *> new_children)
+bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem*> new_children)
 {
     /// @todo Support add columns?
     for(auto* child : new_children)
@@ -247,11 +252,6 @@ void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
     AMLM_WARNIF(m_parent_item != nullptr);
 
 	m_parent_item = parent_item;
-}
-
-AbstractTreeModelItem* AbstractTreeModelItem::make_default_node(const QVector<QVariant>& data, AbstractTreeModelItem* parent)
-{
-	return make_default_node(data, parent);
 }
 
 

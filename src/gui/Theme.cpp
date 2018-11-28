@@ -183,7 +183,8 @@ void Theme::initialize()
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     // QIcon::fallbackSearchPaths() Introduced in Qt5 5.11.0.
     qIn() << "Initial Icon Theme Fallback Search Paths:";
-    for(const auto& respath : QIcon::fallbackSearchPaths())
+	auto fsp = QIcon::fallbackSearchPaths().toStdList();
+	for(const auto& respath : fsp)
     {
         qIn() << "  " << respath;
     }
@@ -252,7 +253,7 @@ void Theme::initialize()
     Q_ASSERT(rccs_loaded > 0);
 #endif
     // Interesting stuff in here by default.
-//    dump_resource_tree(":/");
+	dump_resource_tree(":/");
 
     LogIconThemeInfo();
 
@@ -338,7 +339,7 @@ M_WARNING("TODO");
         }
     }
 #endif
-    qIn() << "QPA Platform plugin name:" << qApp->platformName();
+	qIn() << "QPA Platform plugin name:" << QGuiApplication::platformName();
 
     // Add supplementary paths to supplemental_icon_theme_dirs depending on OS.
     /// @note
@@ -443,7 +444,7 @@ QActionGroup * Theme::getWidgetStylesActionGroup(MainWindow *main_window)
 	}
 
 	// Add all available styles to the menu, checking the currently selected one.
-    for(const QString &style : m_available_qstyles)
+	for(const QString &style : qAsConst(m_available_qstyles))
 	{
         QAction *a = new QAction(style, stylesGroup);
 		a->setCheckable(true);

@@ -40,7 +40,7 @@ class Theme : public QWidget
 
 public:
     explicit Theme(QWidget *parent = nullptr);
-    ~Theme() = default;
+    ~Theme() override = default;
 
     static void initialize();
 

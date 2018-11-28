@@ -17,16 +17,29 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Application icons.
+# Application icons.  Used in <>/src/CMakeLists.txt by ecm_add_app_icon().
 ### @todo Make our own icon.
-set(amlm_ICONS PARENT_SCOPE)
-set(amlm_ICONS PARENT_SCOPE
-  48-preferences-desktop-sound.png
-  64-preferences-desktop-sound.png
-  128-preferences-desktop-sound.png
-  scalable-preferences-desktop-sound.svgz
+set(amlm_APP_ICONS
+	48-preferences-desktop-sound.png
+    64-preferences-desktop-sound.png
+    128-preferences-desktop-sound.png
+	# svgz isn't supported by ecm_add_app_icon().
+    #scalable-preferences-desktop-sound.svgz
 )
+prepend_to_each(amlm_APP_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_APP_ICONS})
+set(amlm_APP_ICONS ${amlm_APP_ICONS} PARENT_SCOPE)
 
+set(amlm_XQUERIES
+	xquery_files.qrc
+	filelist.xq
+)
+prepend_to_each(amlm_XQUERIES "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_XQUERIES})
+
+target_sources(resources_subdir 
+	PUBLIC
+		${amlm_ICONS}
+		${amlm_XQUERIES}
+)
 
 # Qt5 Binary Resource (rcc) files.
 #qt5_add_binary_resources(icons_oxygen oxygenicons.qrc)

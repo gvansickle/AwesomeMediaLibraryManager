@@ -67,34 +67,54 @@ class QXmlStreamWriter;
 // Ours
 #include <src/utils/QtHelpers.h>
 
+#include <logic/ISerializable.h>
+
 /**
  * Generic item for use in AbstractItemTreeModel.
  */
-class AbstractTreeModelItem
+class AbstractTreeModelItem : public virtual ISerializable
 {
 public:
-	explicit AbstractTreeModelItem(AbstractTreeModelItem *parent = nullptr);
-	explicit AbstractTreeModelItem(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
-    virtual ~AbstractTreeModelItem();
+	/**
+	 *
+	 * @param parent_item  The AbstractTreeModelItem which is the "tree-wise" parent of this item.
+	 *                     @note This is completely unrelated to QObject and its parent/child memory
+	 *                     management implications; this class isn't derived from QObject.
+	 */
+//	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
+	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr,
+			const QVector<QVariant>& data = QVector<QVariant>());
+	~AbstractTreeModelItem() override;
+
+	/**
+	 * @todo Virtual constructor returning covariant model item pointer.
+	 */
+//	virtual AbstractTreeModelItem* create() const = 0;
+	/// Virtual constructor for copy.
+//	virtual AbstractTreeModelItem* clone() const = 0;
 
     /// Return a pointer to the number'th child of this item.
-    /// @returns Pointer to a default constructed AbstractTreeModelItem, which is not added to the QVector.
-	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
-	AbstractTreeModelItem *child(int number);
+    /// @returns If @arg number is not valid, a pointer to a default constructed AbstractTreeModelItem,
+    /// 			which is not added to the QVector.
+	/// @todo That seems all kinds of wrong, should probably return a nullptr or assert or something.
+	AbstractTreeModelItem* child(int number);
 
 	/// Const version.
-	const AbstractTreeModelItem *child(int number) const;
+	const AbstractTreeModelItem* child(int number) const;
 
     /// The number of children this item has.
     int childCount() const;
 
     int columnCount() const;
+
 	virtual QVariant data(int column) const;
 
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
 
+    /// Returns a pointer to this item's parent.
     AbstractTreeModelItem *parent();
+	/// Returns a const pointer to this item's parent.
 	const AbstractTreeModelItem *parent() const;
 
     bool removeChildren(int position, int count);
@@ -107,6 +127,11 @@ public:
 
     bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
 
+	// Serialization
+    // Be sure to override these in derived classes.
+    //virtual QVariant toVariant() const = 0;
+    //virtual void fromVariant(const QVariant& variant) = 0;
+
 	/**
 	 * Write this item and any children to the given QXmlStreamWriter.
 	 * Override this in derived classes to do the right thing.
@@ -116,7 +141,7 @@ public:
 
 
     // Debug stream op free func friender.
-    QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem)
+    QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
 
@@ -124,10 +149,13 @@ protected:
     /// Primarily for use in appendChildren().
     virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
-	/// Factory function for creating default-constructed nodes.
-	/// Used by insertChildren().
-	AbstractTreeModelItem* make_default_node(const QVector<QVariant> &data, AbstractTreeModelItem *parent = nullptr);
-
+	/**
+	 * Factory function for creating default-constructed child nodes.
+	 * Used by insertChildren().  Override in derived classes.
+	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
+	 */
+	virtual AbstractTreeModelItem*
+	create_default_constructed_child_item(AbstractTreeModelItem* parent) = 0;
 
 private:
 
@@ -138,7 +166,7 @@ private:
 	QVector<QVariant> m_item_data;
 
 	// Pointer to our parent item.
-	AbstractTreeModelItem *m_parent_item;
+	AbstractTreeModelItem *m_parent_item { nullptr };
 };
 
 // Debug stream op free func declaration.

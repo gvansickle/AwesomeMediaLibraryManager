@@ -35,6 +35,7 @@
 #include <src/utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
+#include "ISerializable.h"
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;
@@ -42,20 +43,20 @@ class ScanResultsTreeModelItem;
 /**
  * A single hit found during a directory scan.
  */
-class DirScanResult
+class DirScanResult : public ISerializable
 {
 	Q_GADGET
 
 public:
-	/// @name Public default and copy constructors and destructor for Q_DECLARE_METATYPE().
+	/// @name Public default and copy constructors and destructor needed for Q_DECLARE_METATYPE().
 	/// @{
     DirScanResult() = default;
     DirScanResult(const DirScanResult& other) = default;
-    virtual ~DirScanResult() = default;
+	~DirScanResult() override = default;
 	/// @}
 
     /// Constructor for public consumption.
-    DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
+	explicit DirScanResult(const QUrl& found_url, const QFileInfo& found_url_finfo);
 
 	friend class CollectionMedium;
 
@@ -73,12 +74,18 @@ public:
         /// Dir is just a bunch of MP3's.
         JBOMP3s = 0x10,
         /// Nothing is known about the dir.
-        Unknown = 0x00
+		Unknown = 0x00
     };
-    Q_DECLARE_FLAGS(DirProps, DirProp)
-    Q_FLAG(DirProps)
+	/// "The Q_DECLARE_FLAGS(Flags, Enum) macro expands to: typedef QFlags<Enum> Flags;"
+	/// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"
+	/// @link http://doc.qt.io/qt-5/qflags.html#flags-and-the-meta-object-system
+	/// @link http://doc.qt.io/qt-5/qflags.html#Q_DECLARE_FLAGS
+    Q_DECLARE_FLAGS(DirPropFlags, DirProp)
+	/// "This macro registers a single flags type with the meta-object system.".
+	/// @link http://doc.qt.io/qt-5/qobject.html#Q_FLAG
+    Q_FLAG(DirPropFlags)
 
-    DirProps getDirProps() const { return m_dir_props; }
+	DirPropFlags getDirProps() const { return m_dir_props; }
 
 	/// Get the ExtUrl which points to the actual media file found.
 	const ExtUrl& getMediaExtUrl() const { return m_media_exturl; }
@@ -88,10 +95,19 @@ public:
     /// Returned URL will not be valid if there was no sidecar cue sheet.
 	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
 
-    QTH_FRIEND_QDEBUG_OP(DirScanResult)
-	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
+	/// @name Serialization
+	/// @{
+
+	/// @todo Can these be protected?
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
+	/// @}
+
+    QTH_FRIEND_QDEBUG_OP(DirScanResult);
+//	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 	/// QXmlStream{Read,Write} operators.
-	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
+//	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
 
 	ScanResultsTreeModelItem *toTreeModelItem();
 
@@ -108,7 +124,7 @@ protected:
 	/// Absolute URL to the directory.
 	ExtUrl m_dir_exturl;
 
-    DirProps m_dir_props { Unknown };
+    DirPropFlags m_dir_props { Unknown };
 
     /// The media URL which was found.
 	ExtUrl m_media_exturl;
@@ -119,9 +135,11 @@ protected:
 };
 
 Q_DECLARE_METATYPE(DirScanResult);
-Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirProps);
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirPropFlags);
+
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
-QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
-QTH_DECLARE_QXMLSTREAM_OPS(DirScanResult);
+//QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
+//QTH_DECLARE_QXMLSTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

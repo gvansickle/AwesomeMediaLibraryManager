@@ -256,7 +256,8 @@ void NetAwareFileDialogGtk3::applyOptions()
         setDirectory(opts->initialDirectory());
     }
 
-    for(const QUrl &filename : opts->initiallySelectedFiles())
+    auto isf = opts->initiallySelectedFiles().toStdList();
+	for(const QUrl& filename : isf)
     {
         selectFileInternal(filename);
     }

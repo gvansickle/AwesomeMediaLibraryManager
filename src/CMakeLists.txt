@@ -85,14 +85,6 @@ set(INCLUDE_DIR_VERDIGRIS ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
-###
-### Intel TBB
-###
-#download_project(PROJ                tbb_wjakob
-#                 GIT_REPOSITORY      https://github.com/wjakob/tbb.git
-#                 GIT_TAG             master
-#                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-#)
 
 # Make the KConfig settings file its own library, so dependencies get handled correctly.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
@@ -103,7 +95,9 @@ set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 ###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
 
-
+###
+### Collect all the external link lib targets into one variable. 
+###
 set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
@@ -137,6 +131,7 @@ set(HEADER_FILES
 	utils/AboutDataSetup.h
 	utils/QtHelpers.h
 	utils/VectorHelpers.h
+	utils/EnumFlagHelpers.h
     )
 
 # Source file list.
@@ -196,7 +191,6 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	concurrency/ThreadsafeMap.cpp
 	concurrency/DebugSequence.cpp
 	concurrency/WorkerThreadBase.cpp
-	
 	concurrency/FunctionWrapper.cpp
 	concurrency/FunctionWrapper.h
 	concurrency/WorkStealingQueue.cpp
@@ -209,8 +203,8 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 # Subdir targets.
 #
 add_subdirectory(gui)
-add_subdir_lib(logic_subdir "logic")
-add_subdir_lib(future_subdir "future")
+add_subdir_lib(logic_subdir "${CMAKE_CURRENT_LIST_DIR}/logic")
+add_subdir_lib(future_subdir "${CMAKE_CURRENT_LIST_DIR}/future")
 
 
 #
@@ -224,6 +218,7 @@ add_subdir_lib(future_subdir "future")
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 	future_subdir
 	logic_subdir
+	resources_subdir
 )
 
 # Concurrency
@@ -254,8 +249,8 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 
 # Sets the icon on Windows and OSX.
 # See https://api.kde.org/ecm/module/ECMAddAppIcon.html
-file(GLOB ICONS_SRCS "${PROJECT_SOURCE_DIR}/resources/*-preferences-desktop-sound.png")
-ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
+# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <>/src here.
+ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 
 # Qt5 Binary Resource (rcc) files.
@@ -269,6 +264,8 @@ qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenico
 # Qt5 non-binary Resource files.
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
+### @todo Is this right?
+qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
@@ -289,8 +286,6 @@ endif()
 ###
 ### @note Including HEADER_FILES in here so they get checked for existence.
 ###
-#message(STATUS "amlm_SRCS ${amlm_SRCS}")
-#message(STATUS "amlm_settings_SRCS ${amlm_settings_SRCS}")
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
 		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
@@ -382,7 +377,7 @@ set(TEST_EXE_TARGET alltests)
 set(AMLM_SOURCE_FILES_TEST "")
 set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
-#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.cpp
+	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
 	concurrency/tests/ExtAsyncTestCommon.cpp
@@ -392,7 +387,7 @@ list(APPEND AMLM_SOURCE_FILES_TEST
 	)
 list(APPEND AMLM_HEADER_FILES_TEST
 #	${PROJECT_SOURCE_DIR}/tests/TestHelpers.h
-#	${PROJECT_SOURCE_DIR}/tests/TestLifecycleManager.h
+	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.h
 	concurrency/tests/ExtAsyncTaskTests.h
 	concurrency/tests/ExtAsyncTests.h
 	concurrency/tests/ExtAsyncTestCommon.h
@@ -417,7 +412,12 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 	"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	"TEST_FWK_IS_GTEST=1"
 	)
-target_include_directories(${TEST_EXE_TARGET} PRIVATE "utils/nomoc" ${INCLUDE_DIR_VERDIGRIS})
+target_include_directories(${TEST_EXE_TARGET} PRIVATE
+	"utils/nomoc"
+	${INCLUDE_DIR_VERDIGRIS}
+	# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
+	${PROJECT_SOURCE_DIR}/src/third_party/better_enums
+	)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${TEST_EXE_TARGET} PROPERTIES

@@ -33,20 +33,53 @@
 
 // Ours
 #include "models/AbstractTreeModelWriter.h"
+#include <logic/models/ScanResultsTreeModelXMLTags.h>
 #include "xml/XmlObjects.h"
 #include <utils/DebugHelpers.h>
+
+
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
 	qRegisterMetaType<ExtUrl>();
-	qRegisterMetaTypeStreamOperators<ExtUrl>("ExtUrl");
+//	qRegisterMetaTypeStreamOperators<ExtUrl>("ExtUrl");
 });
 
 
 ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 {
-	// Save mod info, possibly loading it from the filesystem if we don't have it in qurl_finfo.
-	LoadModInfo(qurl_finfo);
+	// Capture modification info, possibly loading it from the filesystem if we don't have it in qurl_finfo.
+	load_mod_info(qurl_finfo);
+}
+
+#define DATASTREAM_FIELDS(X) \
+	X(HREF, m_url) \
+	X(TS_LAST_REFRESH, m_timestamp_last_refresh) \
+	X(SIZE_FILE, m_file_size_bytes) \
+	X(TS_CREATION, m_creation_timestamp) \
+	X(TS_LAST_MODIFIED, m_last_modified_timestamp) \
+	X(TS_LAST_MODIFIED_METADATA, m_metadata_last_modified_timestamp)
+
+QVariant ExtUrl::toVariant() const
+{
+	QVariantMap map;
+
+	// Add all the fields to the map.
+#define X(field_enum_name, field)   map.insert( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], field );
+	DATASTREAM_FIELDS(X)
+#undef X
+
+	return map;
+}
+
+void ExtUrl::fromVariant(const QVariant& variant)
+{
+	QVariantMap map = variant.toMap();
+
+	// Extract all the fields from the map, cast them to their type.
+#define X(field_enum_name, field) field = map.value( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ] ).value<decltype( field )>();
+	DATASTREAM_FIELDS(X)
+#undef X
 }
 
 XmlElement ExtUrl::toXml() const
@@ -54,11 +87,11 @@ XmlElement ExtUrl::toXml() const
 	// Mostly elements format.
 	XmlElementList el = {
 		XmlElement("href", m_url),
-		XmlElement("file_size", m_size),
+		XmlElement("file_size", m_file_size_bytes),
 		XmlElement("ts_last_refresh", m_timestamp_last_refresh),
 		XmlElement("ts_creation", m_creation_timestamp),
 		XmlElement("ts_last_modified", m_last_modified_timestamp),
-		XmlElement("ts_metadata_last_modified", m_metadata_last_modified_timestamp)
+		XmlElement("ts_last_modified_metadata", m_metadata_last_modified_timestamp)
 		};
 
 	XmlElement retval("exturl",
@@ -83,7 +116,7 @@ void ExtUrl::save_mod_info(const QFileInfo* qurl_finfo)
 	if(qurl_finfo != nullptr)
 	{
 		// Should never be nullptr here.
-		m_size = qurl_finfo->size();
+		m_file_size_bytes = qurl_finfo->size();
 		QDateTime dt_filetime_birth = qurl_finfo->fileTime(QFileDevice::FileBirthTime);
 		QDateTime dt_finfo_birth = qurl_finfo->birthTime();
 		Q_ASSERT(dt_filetime_birth == dt_finfo_birth);
@@ -93,7 +126,7 @@ void ExtUrl::save_mod_info(const QFileInfo* qurl_finfo)
 	}
 }
 
-void ExtUrl::LoadModInfo(const QFileInfo* qurl_finfo)
+void ExtUrl::load_mod_info(const QFileInfo* qurl_finfo)
 {
 	Q_ASSERT(m_url.isValid());
 
@@ -119,13 +152,9 @@ void ExtUrl::LoadModInfo(const QFileInfo* qurl_finfo)
 	}
 }
 
-#define DATASTREAM_FIELDS(X) \
-	X(m_url) X(m_timestamp_last_refresh) X(m_size) X(m_creation_timestamp) \
-	X(m_last_modified_timestamp) X(m_metadata_last_modified_timestamp)
-
-QDebug operator<<(QDebug dbg, const ExtUrl& obj)
+QDebug operator<<(QDebug dbg, const ExtUrl& obj) // NOLINT(performance-unnecessary-value-param)
 {
-#define X(field) << obj.field
+#define X(unused, field) << obj.field
 	dbg DATASTREAM_FIELDS(X);
 #undef X
 	return dbg;
@@ -133,7 +162,7 @@ QDebug operator<<(QDebug dbg, const ExtUrl& obj)
 
 QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 {
-#define X(field) << myObj.field
+#define X(unused, field) << myObj.field
 	out DATASTREAM_FIELDS(X);
 #undef X
 	return out;
@@ -141,23 +170,10 @@ QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 
 QDataStream& operator>>(QDataStream& in, ExtUrl& myObj)
 {
-#define X(field) >> myObj.field
+#define X(unused, field) >> myObj.field
 	return in DATASTREAM_FIELDS(X);
 #undef X
 }
-
-
-
-/**
- * QXmlStreamWriter write operator.
- */
-//QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const ExtUrl& exturl)
-//{
-//	auto e = exturl.toXml();
-//	e.write(&out);
-
-//	return out;
-//}
 
 
 #undef DATASTREAM_FIELDS

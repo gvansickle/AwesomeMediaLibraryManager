@@ -26,7 +26,7 @@ LibraryEntryMimeData::LibraryEntryMimeData() : QMimeData ()
 
 bool LibraryEntryMimeData::hasFormat(const QString& mimetype) const
 {
-	if(mimetype == g_additional_supported_mimetypes[0] && m_lib_item_list.size() > 0)
+	if(mimetype == g_additional_supported_mimetypes[0] && !m_lib_item_list.empty())
 	{
 		return true;
 	}
@@ -37,7 +37,7 @@ QStringList LibraryEntryMimeData::formats() const
 {
 	QStringList retval;
 
-	if(m_lib_item_list.size() > 0)
+	if(!m_lib_item_list.empty())
 	{
 		retval.append(g_additional_supported_mimetypes[0]);
 	}

@@ -64,7 +64,7 @@ namespace AMLM
 		ExtUrl m_dir_url;
 
 		/// Properties of the directory.
-		DirScanResult::DirProps m_dir_props { DirScanResult::DirProp::Unknown };
+		DirScanResult::DirPropFlags m_dir_props { DirScanResult::DirProp::Unknown };
 
 		/// The URLs of the media files plus Info for detecting changes
 		QVector<ExtUrl> m_media_urls;

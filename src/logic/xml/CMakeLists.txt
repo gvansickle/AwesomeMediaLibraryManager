@@ -20,29 +20,35 @@
 # @file src/logic/xml/CMakeLists.txt
 
 set(xml_subdir_SOURCES
-	XmlObjects.h
-	XmlObjects.cpp
+		ExtEnum.cpp
+		XmlObjects.cpp
 	)
+set(xml_subdir_HEADERS
+		ExtEnum.h
+		XmlObjects.h
+	)
+
 prepend_to_each(xml_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${xml_subdir_SOURCES})
-
-
+prepend_to_each(xml_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${xml_subdir_HEADERS})
 
 target_sources(xml_subdir
 	PUBLIC
+		${xml_subdir_HEADERS}
+	PRIVATE
 		${xml_subdir_SOURCES}
 	)
 
 target_link_libraries(xml_subdir
 	PUBLIC
-	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
-#		${AMLM_TAGLIB_TARGET}
-#		${AMLM_LIBCUE_TARGET}
+
 )
 target_include_directories(xml_subdir
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
+		${PROJECT_SOURCE_DIR}/src/third_party/better_enums
 	)
