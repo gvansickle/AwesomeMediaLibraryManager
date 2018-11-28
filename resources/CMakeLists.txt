@@ -17,15 +17,17 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Application icons.
+# Application icons.  Used in <>/src/CMakeLists.txt by ecm_add_app_icon().
 ### @todo Make our own icon.
-set(amlm_ICONS
+set(amlm_APP_ICONS
   48-preferences-desktop-sound.png
   64-preferences-desktop-sound.png
   128-preferences-desktop-sound.png
-  scalable-preferences-desktop-sound.svgz
+		# svgz isn't supported by ecm_add_app_icon().
+  #scalable-preferences-desktop-sound.svgz
 )
-prepend_to_each(amlm_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_ICONS})
+prepend_to_each(amlm_APP_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_APP_ICONS})
+set(amlm_APP_ICONS ${amlm_APP_ICONS} PARENT_SCOPE)
 
 set(amlm_XQUERIES
 	xquery_files.qrc

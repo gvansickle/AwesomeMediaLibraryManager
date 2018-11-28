@@ -249,8 +249,8 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 
 # Sets the icon on Windows and OSX.
 # See https://api.kde.org/ecm/module/ECMAddAppIcon.html
-file(GLOB ICONS_SRCS "${PROJECT_SOURCE_DIR}/resources/*-preferences-desktop-sound.png")
-ecm_add_app_icon(amlm_SRCS ICONS ${ICONS_SRCS})
+# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <>/src here.
+ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 
 # Qt5 Binary Resource (rcc) files.
