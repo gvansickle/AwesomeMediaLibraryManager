@@ -36,7 +36,6 @@ class QFileInfo;
 // Ours
 #include <utils/QtHelpers.h>
 #include "xml/XmlObjects.h"
-#include <logic/models/AbstractTreeModelWriter.h>
 #include "ISerializable.h"
 
 

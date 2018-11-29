@@ -354,4 +354,33 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 	xmlstream.writeDefaultNamespace(m_default_ns);
 	xmlstream.writeAttribute("version", m_default_ns_version);
 	xmlstream.writeNamespace("http://amlm/ns/0/", "amlm");
+
+#if 0 /// @note This was moved out of the old writer.  It's XSPF stuff, but we need a generally applicable solution.
+	/// @todo Move out of this class. Start of xspf-specific stuff.
+	XmlElement playlist("playlist", [=](XmlElement* e, QXmlStreamWriter* out){
+		auto& xml = *out;
+		xml.writeDefaultNamespace("http://xspf.org/ns/0/");
+		xml.writeAttribute("version", "1");
+		xml.writeNamespace("http://amlm/ns/0/", "amlm"); // Our extension namespace.
+//		xml.writeAttribute("version", "1");
+
+		// No DTD for xspf.
+
+		/// @todo Playlist metadata here.  Needs to be moved out of this class.
+		/// http://www.xspf.org/xspf-v1.html#rfc.section.2.3.1
+		/// <title> "A human-readable title for the playlist. xspf:playlist elements MAY contain exactly one."
+		xml.writeTextElement("title", "XSPF playlist title goes HERE");
+
+		/// <creator> "Human-readable name of the entity (author, authors, group, company, etc) that authored the playlist. xspf:playlist elements MAY contain exactly one."
+		xml.writeTextElement("creator", "XSPF playlist CREATOR GOES HERE");
+
+		/// ...
+		/// <date>	"Creation date (not last-modified date) of the playlist, formatted as a XML schema dateTime. xspf:playlist elements MAY contain exactly one.
+		///	A sample date is "2005-01-08T17:10:47-05:00".
+		xml.writeTextElement("date", QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+
+		/// @todo Probably get from derived model class?
+//	xml.writeStartElement(m_tree_model->getXmlStreamName());
+//	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
+#endif
 }

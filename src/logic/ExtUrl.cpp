@@ -32,7 +32,6 @@
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
-#include "models/AbstractTreeModelWriter.h"
 #include <logic/models/ScanResultsTreeModelXMLTags.h>
 #include "xml/XmlObjects.h"
 #include <utils/DebugHelpers.h>

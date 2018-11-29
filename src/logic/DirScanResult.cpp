@@ -35,7 +35,6 @@
 #include "models/ScanResultsTreeModel.h"
 #include "models/ScanResultsTreeModelXMLTags.h"
 #include <utils/EnumFlagHelpers.h>
-#include <logic/models/AbstractTreeModelWriter.h>
 #include <logic/xml/ExtEnum.h>
 
 AMLM_QREG_CALLBACK([](){

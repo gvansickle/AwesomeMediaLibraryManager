@@ -41,7 +41,6 @@
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
 #include <logic/models/AbstractTreeModelItem.h>
-#include <logic/models/AbstractTreeModelWriter.h>
 #include <utils/DebugHelpers.h>
 
 /// Ours, Qt5/KF5-related

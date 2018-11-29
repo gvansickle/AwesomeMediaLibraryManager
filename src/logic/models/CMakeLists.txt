@@ -25,7 +25,6 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
 	AbstractTreeModel.cpp
 	AbstractTreeModelItem.cpp
 	AbstractTreeModelHeaderItem.cpp
-	AbstractTreeModelWriter.cpp
 	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.cpp
 	ScanResultsTreeModelXMLTags.cpp
@@ -36,7 +35,6 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractTreeModel.h
 		AbstractTreeModelItem.h
 		AbstractTreeModelHeaderItem.h
-		AbstractTreeModelWriter.h
 		ScanResultsTreeModel.h
 		ScanResultsTreeModelItem.h
 		ScanResultsTreeModelXMLTags.h
