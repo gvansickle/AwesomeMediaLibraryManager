@@ -211,7 +211,7 @@ M_WARNING("TODO");
 
 QString NetworkAwareFileDialog::selectedNameFilter() const
 {
-M_WARNING("TODO");
+M_MESSAGE("TODO");
     return m_the_qfiledialog->selectedNameFilter();
 }
 

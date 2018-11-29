@@ -75,14 +75,20 @@ class AbstractTreeModelHeaderItem;
 #include <logic/ISerializable.h>
 
 
+/**
+ * Abstract tree model base class.  Inherits from QAbstractItemModel and ISerializable.
+ */
 class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializable
 {
     Q_OBJECT
+
+	using BASE_CLASS = QAbstractItemModel;
 
 public:
 	explicit AbstractTreeModel(QObject *parent = nullptr);
 	~AbstractTreeModel() override;
 
+	// bool hasIndex() is not virtual.
 
 	/**
 	 * Calls getItem(index), which returns index.internalPointer() which is an AbstractTreeModelItem*.
@@ -92,9 +98,11 @@ public:
 	 */
     QVariant data(const QModelIndex &index, int role) const override;
 
+//	QMap<int, QVariant> itemData(const QModelIndex &index) const override;
+//	bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) override;
+
     /// Header data interface
     /// @{
-
 
     /// Get the header data corresponding to the given section number, orientation, and role.
     QVariant headerData(int section, Qt::Orientation orientation,
@@ -121,6 +129,10 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role = Qt::EditRole) override;
 
+    /// @name Row and column insert, remove, and move operations.
+    /// @note Singular insert/remove/move row and column functions are not virtual
+    ///       but are implemented in QAbstractItemModel.
+    /// @{
 
     bool insertColumns(int position, int columns,
                        const QModelIndex &parent = QModelIndex()) override;
@@ -130,6 +142,12 @@ public:
                     const QModelIndex &parent = QModelIndex()) override;
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
+	bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
+	                      const QModelIndex &destinationParent, int destinationChild) override;
+	bool moveColumns(const QModelIndex &sourceParent, int sourceColumn, int count,
+	                         const QModelIndex &destinationParent, int destinationChild) override;
+
+	/// @} // END row/col insert/remove/move.
 
 	/// @name Extended public model interface.
     /// @{

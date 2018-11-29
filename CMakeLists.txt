@@ -178,7 +178,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree -fno-elide-type
+	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree
 		-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
@@ -186,6 +186,7 @@ if(WIN32)
 endif(WIN32)
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
+message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
@@ -531,8 +532,8 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 # This is the sum-total of all source files which go into building the main exe.
 add_subdir_lib(resources_subdir "${CMAKE_CURRENT_LIST_DIR}/resources")
 #message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
-add_subdirectory(src EXCLUDE_FROM_ALL)
-add_subdirectory(tests EXCLUDE_FROM_ALL)
+add_subdirectory(src)
+add_subdirectory(tests)
 
 
 #include(resources/CMakeLists.txt)

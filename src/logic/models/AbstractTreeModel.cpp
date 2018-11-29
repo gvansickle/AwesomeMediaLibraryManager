@@ -228,7 +228,19 @@ bool AbstractTreeModel::removeRows(int position, int rows, const QModelIndex &pa
     success = parentItem->removeChildren(position, rows);
     endRemoveRows();
 
-    return success;
+	return success;
+}
+
+bool AbstractTreeModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int count, const QModelIndex& destinationParent, int destinationChild)
+{
+	// Defer to base class.
+	return this->BASE_CLASS::moveRows(sourceParent, sourceRow, count, destinationParent, destinationChild);
+}
+
+bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceColumn, int count, const QModelIndex& destinationParent, int destinationChild)
+{
+	// Defer to base class.
+	return this->BASE_CLASS::moveRows(sourceParent, sourceColumn, count, destinationParent, destinationChild);
 }
 
 

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ExperimentalKDEView1</class>
+ <widget class="QWidget" name="ExperimentalKDEView1">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>779</width>
+    <height>551</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="KCategorizedView" name="kcategorizedview"/>
+   </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="KUrlLabel" name="kurllabel">
+       <property name="text">
+        <string>Experimental View</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="KCapacityBar" name="kcapacitybar"/>
+     </item>
+     <item>
+      <widget class="KRatingWidget" name="kratingwidget"/>
+     </item>
+     <item>
+      <widget class="KLed" name="kled"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>KUrlLabel</class>
+   <extends>QLabel</extends>
+   <header>kurllabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KLed</class>
+   <extends>QWidget</extends>
+   <header>kled.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KCapacityBar</class>
+   <extends>QWidget</extends>
+   <header>kcapacitybar.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KCategorizedView</class>
+   <extends>QListView</extends>
+   <header>kcategorizedview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KRatingWidget</class>
+   <extends>QFrame</extends>
+   <header>kratingwidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

@@ -26,8 +26,7 @@
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
 {
-	// Populate the parse factory functions with the first-layer node type names we know about.
-//	m_parse_factory_functions.emplace_back(&ScanResultsTreeModelItem::parse);
+
 }
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)

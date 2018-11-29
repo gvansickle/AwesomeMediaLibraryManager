@@ -107,107 +107,12 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
 
-#warning "The cast should work though, right?"
+M_MESSAGE("The cast should work though, right?");
 //	m_dsr = map.value("dirscanresult").value<DirScanResult>();
 	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
 	m_dsr.fromVariant(dsr_in_variant);
 }
 
-
-ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent)
-{
-	auto& xml = *xmlp;
-
-	if(xml.name() != "srtmitem")
-	{
-		// Not fur us.
-		return nullptr;
-	}
-	else
-	{
-		// Read in this and all children.
-		auto* this_node = createChildItem(parent);
-
-		while(xml.readNextStartElement())
-		{
-			// Read the columns.
-			if(xml.name() == "column_data")
-			{
-				qDb() << "### column_data:" << xml.readElementText();
-			}
-			else
-			{
-				xml.skipCurrentElement();
-			}
-		}
-
-		return this_node;
-	}
-}
-
-#if DELETEME
-bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) const
-{
-	// Convenience ref.
-	auto& xml = *writer;
-
-	// We should never be the root item.
-	Q_ASSERT(parent() != nullptr);
-
-	// Write out this item.
-	xml.writeStartElement(m_item_tag_name);
-	xml.writeAttribute("parents_child_number", QString("%1").arg(childNumber()));
-	xml.writeAttribute("parents_total_children", QString("%1").arg(parent()->childCount()));
-
-	// Write out the DirScanResults.
-	auto dsr = m_dsr.toXml();
-	dsr.write(&xml);
-
-	// Write the columns of data.
-//	for(int col = 0; col < columnCount(); ++col)
-//	{
-//		/// @todo Get header element info.
-////		xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
-//		xml.writeTextElement("column_data", data(col).toString());
-//	}
-
-//	// Write out all children.
-//	// Note that if we were an XmlElement, this would be done for us.
-//	if(childCount() > 0)
-//	{
-//		xml.writeStartElement("srtmi_child_item_list");
-//		for(int i = 0; i < childCount(); ++i)
-//		{
-//			// Hold on tight, we're going recursive!
-//			child(i)->writeItemAndChildren(writer);
-//		}
-//		xml.writeEndElement();
-//	}
-	xml.writeEndElement();
-
-	/// @todo Default to something else if not overridden?
-	return true;
-}
-#endif
-
-#if 0
-QXmlQuery ScanResultsTreeModelItem::write() const
-{
-	QXmlQuery query;
-
-	query.bindVariable("tagname", QVariant(m_item_tag_name));
-	query.bindVariable("m_dsr", QVariant::fromValue<DirScanResult>(m_dsr));
-//	query.bindVariable("inner_var", query_inner);
-	query.setQuery(
-				"<{$tagname}>"
-				"<m_dsr>{$m_dsr}</m_dsr>"
-				"</{$tagname}>"
-				);
-	Q_ASSERT(query.isValid());
-
-	return query;
-}
-#endif
 
 ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
 {

@@ -47,9 +47,8 @@ public:
      */
     void setBaseDirectory(const QUrl& base_directory);
 
-	/**
-	 * Append a vector of AbstractTreeModelItem's as children of @p parent.
-	 */
+
+	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
 	bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
 
 	/// @name Serialization

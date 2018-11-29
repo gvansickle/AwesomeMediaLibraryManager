@@ -59,14 +59,6 @@ public:
 	void fromVariant(const QVariant& variant) override;
 
 	/**
-	 * Parses a new ScanResultsTreeModelItem* out of the passed XML stream.
-	 * Returns nullptr if the next parse factory function should be tried.
-	 * @param xml
-	 * @return
-	 */
-	static ScanResultsTreeModelItem* parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent);
-
-	/**
 	 * Write this item and any children to the given QXmlStreamWriter.
 	 * Override this in derived classes to do the right thing.
 	 * @returns true
