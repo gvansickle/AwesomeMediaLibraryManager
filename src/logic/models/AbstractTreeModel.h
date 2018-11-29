@@ -95,20 +95,18 @@ public:
     /// Header data interface
     /// @{
 
-    /**
-     * Get the header data corresponding to the given section number, orientation, and role.
-     */
+
+    /// Get the header data corresponding to the given section number, orientation, and role.
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const override;
 
-    /**
-     * Set the header data corresponding to the given section number, orientation, and role.
-     */
+    /// Set the header data corresponding to the given section number, orientation, and role.
     bool setHeaderData(int section, Qt::Orientation orientation,
                          const QVariant &value, int role = Qt::EditRole) override;
 
     /// Overload taking an AbstractHeaderSection.
-    virtual bool setHeaderData(const AbstractHeaderSection& header_section);
+    virtual bool setHeaderData(int section, const AbstractHeaderSection& header_section);
+
     /// @}
 
     QModelIndex index(int row, int column,

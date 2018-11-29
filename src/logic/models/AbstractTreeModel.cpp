@@ -301,7 +301,7 @@ bool AbstractTreeModel::setHeaderData(int section, Qt::Orientation orientation,
 	return result;
 }
 
-bool AbstractTreeModel::setHeaderData(const AbstractHeaderSection& header_section)
+bool AbstractTreeModel::setHeaderData(int section, const AbstractHeaderSection& header_section)
 {
 	Q_ASSERT(0);
 //	this->setHeaderData(header_section.section(),
