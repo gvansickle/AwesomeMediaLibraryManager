@@ -43,16 +43,14 @@ public:
 	                                     AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;
 
-	/**
-	 * Write this item and any children to the given QXmlStreamWriter.
-	 * Override this in derived classes to do the right thing.
-	 * @returns true
-	 */
-	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
 
 	/// @name Serialization
 	/// @{
 
+	/**
+	 * Serialize this item and any children to a QVariant.
+	 * Override this in derived classes to do the right thing.
+	 */
 	QVariant toVariant() const override;
 
 	void fromVariant(const QVariant& variant) override;

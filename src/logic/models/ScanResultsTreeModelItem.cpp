@@ -145,6 +145,7 @@ ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp
 	}
 }
 
+#if DELETEME
 bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) const
 {
 	// Convenience ref.
@@ -187,6 +188,7 @@ bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) co
 	/// @todo Default to something else if not overridden?
 	return true;
 }
+#endif
 
 #if 0
 QXmlQuery ScanResultsTreeModelItem::write() const

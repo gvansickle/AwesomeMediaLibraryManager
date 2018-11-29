@@ -38,26 +38,6 @@ AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 {
 }
 
-bool AbstractTreeModelHeaderItem::writeItemAndChildren(QXmlStreamWriter* writer) const
-{
-	// Convenience ref.
-	auto& xml = *writer;
-
-	XmlElement e("abstract_tree_model_header", {}, {},
-	{XmlElement("test", 1)},
-				 [=](XmlElement* e, QXmlStreamWriter* xml){
-		for(int i = 0; i < childCount(); ++i)
-		{
-			const auto* child = this->child(i);
-			child->writeItemAndChildren(xml);
-		}
-	});
-
-	e.write(writer);
-#warning "TODO"
-	return false;
-}
-
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
 	QVariantMap map;

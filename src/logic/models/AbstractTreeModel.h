@@ -146,14 +146,15 @@ public:
 
 	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
 
-	/// @name Serialization
+	/// @name Serialization, from ISerializable.
 	/// Remember to override these in derived classes.
 	/// @{
 
 	/// Serialize the entire model to a QVariant.
-	// QVariant toVariant() const override = 0;
+	///   QVariant toVariant() const override = 0;
+
 	/// Serialize the entire model from a QVariant.
-	// void fromVariant(const QVariant& variant) override = 0;
+	///   void fromVariant(const QVariant& variant) override = 0;
 
 	/// @} // END Serialization
 

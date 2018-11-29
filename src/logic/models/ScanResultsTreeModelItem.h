@@ -33,8 +33,8 @@ class QXmlStreamReader;
 #include "../DirScanResult.h"
 #include "../ISerializable.h"
 
-/*
- *
+/**
+ * Model of the results of scanning a directory tree.
  */
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
@@ -71,9 +71,7 @@ public:
 	 * Override this in derived classes to do the right thing.
 	 * @returns true
 	 */
-	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
-
-//	QXmlQuery write() const;
+//	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
 
 	/// @} // END Serialization
 

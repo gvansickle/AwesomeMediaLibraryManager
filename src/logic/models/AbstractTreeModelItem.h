@@ -1,3 +1,22 @@
+/*
+ * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ *
+ * This file is part of AwesomeMediaLibraryManager.
+ *
+ * AwesomeMediaLibraryManager is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * AwesomeMediaLibraryManager is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /**
  * Adapted from the "Editable Tree Model Example" shipped with Qt5.
  */
@@ -62,7 +81,6 @@
 #include <QList>
 #include <QVariant>
 #include <QVector>
-class QXmlStreamWriter;
 
 // Ours
 #include <src/utils/QtHelpers.h>
@@ -70,7 +88,7 @@ class QXmlStreamWriter;
 #include <logic/ISerializable.h>
 
 /**
- * Generic item for use in AbstractItemTreeModel.
+ * Base class for AbstractItemTreeModel items.
  */
 class AbstractTreeModelItem : public virtual ISerializable
 {
@@ -98,15 +116,20 @@ public:
     /// 			which is not added to the QVector.
 	/// @todo That seems all kinds of wrong, should probably return a nullptr or assert or something.
 	AbstractTreeModelItem* child(int number);
-
 	/// Const version.
 	const AbstractTreeModelItem* child(int number) const;
 
     /// The number of children this item has.
-    int childCount() const;
+    virtual int childCount() const;
 
-    int columnCount() const;
+    /// @returns the number of columns of data this item has.
+    virtual int columnCount() const;
 
+    /**
+     * Read access to the data of this item.
+     * @param column  The column of data to return.
+     * @return A QVariant containing all the data in @a column.
+     */
 	virtual QVariant data(int column) const;
 
     bool insertChildren(int position, int count, int columns);
@@ -127,18 +150,15 @@ public:
 
     bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
 
-	// Serialization
-    // Be sure to override these in derived classes.
-    //virtual QVariant toVariant() const = 0;
-    //virtual void fromVariant(const QVariant& variant) = 0;
+	/// @name Serialization
+	/// These are from the ISerializable interface.
+	/// Be sure to override these in derived classes.
+	/// @{
 
-	/**
-	 * Write this item and any children to the given QXmlStreamWriter.
-	 * Override this in derived classes to do the right thing.
-	 * @returns true
-	 */
-	virtual bool writeItemAndChildren(QXmlStreamWriter* writer) const = 0;
+    // virtual QVariant toVariant() const = 0;
+    // virtual void fromVariant(const QVariant& variant) = 0;
 
+    /// @}
 
     // Debug stream op free func friender.
     QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
@@ -159,14 +179,17 @@ protected:
 
 private:
 
-	// Vector of child items.
+	/// Pointer to our parent AbstractTreeModelItem.
+	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
+	/// be non-null as long as this item is not the invisible root item.
+	AbstractTreeModelItem *m_parent_item { nullptr };
+
+	/// Vector of child items.
 	std::vector<AbstractTreeModelItem*> m_child_items;
 
-	// Vector of items for each column.
+	/// Vector of items for each column.
+	/// @todo Try to get rid of this, the data is the responsibility of derived classes.
 	QVector<QVariant> m_item_data;
-
-	// Pointer to our parent item.
-	AbstractTreeModelItem *m_parent_item { nullptr };
 };
 
 // Debug stream op free func declaration.

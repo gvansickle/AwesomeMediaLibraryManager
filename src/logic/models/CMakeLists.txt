@@ -28,6 +28,7 @@ set(SOURCE_FILES_SRC_LOGIC_MODELS
 	ScanResultsTreeModel.cpp
 	ScanResultsTreeModelItem.cpp
 	ScanResultsTreeModelXMLTags.cpp
+	TreeModelRootItem.cpp
 	)
 set(HEADER_FILES_SRC_LOGIC_MODELS
 		AbstractHeaderSection.h
@@ -38,6 +39,7 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		ScanResultsTreeModel.h
 		ScanResultsTreeModelItem.h
 		ScanResultsTreeModelXMLTags.h
+		TreeModelRootItem.h
 		)
 prepend_to_each(SOURCE_FILES_SRC_LOGIC_MODELS "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_LOGIC_MODELS})
 prepend_to_each(HEADER_FILES_SRC_LOGIC_MODELS "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_LOGIC_MODELS})

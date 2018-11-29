@@ -92,7 +92,12 @@ QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
 
 AbstractTreeModelItem* AbstractTreeModelItem::child(int number)
 {
-	// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
+	if(number >= childCount())
+	{
+		qWr() << "### CHILD INDEX OUT OF RANGE:" << number;
+	}
+
+	/// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
 	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
 	return stdex::value(m_child_items, number);
 }
