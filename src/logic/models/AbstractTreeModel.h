@@ -146,20 +146,18 @@ public:
 
 	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
 
-	/**
-	 * Write the entire model to the given QXmlStreamWriter.
-	 * Override this in derived classes to do the right thing.
-	 */
-//	virtual void writeModel(QXmlStreamWriter* writer) const;
+	/// @name Serialization
+	/// Remember to override these in derived classes.
+	/// @{
 
-	/**
-	 * Read the entire model from the given QXmlStreamWriter.
-	 * Override this in derived classes to do the right thing.
-	 * @returns false if model could not be read from reader.
-	 */
-	virtual bool readModel(QXmlStreamReader* reader);
+	/// Serialize the entire model to a QVariant.
+	// QVariant toVariant() const override = 0;
+	/// Serialize the entire model from a QVariant.
+	// void fromVariant(const QVariant& variant) override = 0;
 
-	/// @}
+	/// @} // END Serialization
+
+	/// @} // END Extended public model interface.
 
 protected:
 
@@ -171,13 +169,6 @@ protected:
 	 */
 	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
 //	virtual AbstractTreeModelItem* make_default_node(QVector<QVariant> rootData, AbstractTreeModelItem* parent) = 0;
-
-	/**
-	 * Write the given item to the given QXmlStreamWriter.
-	 * Override this in derived classes to do the right thing.
-	 */
-//	virtual void writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const;
-
 
 	virtual QString getXmlStreamName() const = 0;
 	virtual QString getXmlStreamVersion() const = 0;

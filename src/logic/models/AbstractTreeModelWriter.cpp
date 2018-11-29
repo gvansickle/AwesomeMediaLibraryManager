@@ -29,7 +29,6 @@
 // Ours
 #include "AbstractTreeModel.h"
 #include "AbstractTreeModelItem.h"
-#include "AbstractTreeModelReader.h"
 #include "../xml/XmlObjects.h"
 
 static inline QString yesValue() { return QStringLiteral("yes"); }

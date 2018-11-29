@@ -127,43 +127,6 @@ AbstractTreeModelItem* AbstractTreeModel::getItem(const QModelIndex &index) cons
 	return m_root_item;
 }
 
-//void AbstractTreeModel::writeModel(QXmlStreamWriter* writer) const
-//{
-//	// Write out the entire tree model recursively, starting at the m_root_item.
-//	writeItemAndChildren(writer, m_root_item);
-//}
-
-bool AbstractTreeModel::readModel(QXmlStreamReader* reader)
-{
-#warning "TODO"
-	auto& xml = *reader;
-
-	// Check that we're reading an XML file with the right format.
-	if(xml.name() == getXmlStreamName()
-			&& xml.attributes().value("version") == getXmlStreamVersion())
-	{
-		// Start the recursive descent.
-		// Whatever we find here should be the m_root_node.
-		AbstractTreeModelItem* parent_item = nullptr;
-		while(xml.readNextStartElement())
-		{
-		}
-
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-//void AbstractTreeModel::writeItemAndChildren(QXmlStreamWriter* writer, AbstractTreeModelItem* item) const
-//{
-//	Q_ASSERT(item != nullptr);
-//	item->writeItemAndChildren(writer);
-//}
-
-
 QVariant AbstractTreeModel::headerData(int section, Qt::Orientation orientation,
                                int role) const
 {
