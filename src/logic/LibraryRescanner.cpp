@@ -208,7 +208,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		{
 			DirScanResult dsr = tap_future.resultAt(i);
 			// Add another entry to the vector we'll send to the model.
-			new_items.push_back(dsr.toTreeModelItem());
+//			new_items.push_back(dsr.toTreeModelItem());
+			new_items.push_back(new ScanResultsTreeModelItem(dsr));
 
 			if(i >= end)
 			{

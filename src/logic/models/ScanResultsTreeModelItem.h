@@ -39,10 +39,11 @@ class QXmlStreamReader;
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 public:
+	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
 	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : AbstractTreeModelItem(parent) {};
-	explicit ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem *parent = nullptr);
-	explicit ScanResultsTreeModelItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
-	 ~ScanResultsTreeModelItem() override;
+	/// Create a new model item populated with the passed DirScanResult.
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
+	~ScanResultsTreeModelItem() override;
 
 	/**
 	 * Column data override.
@@ -54,20 +55,14 @@ public:
 
 	/// @name Serialization
 	/// @{
+
 	/// Serialize item and any children to a QVariant.
 	QVariant toVariant() const override;
 	/// Serialize item and any children from a QVariant.
 	void fromVariant(const QVariant& variant) override;
 
-	/**
-
-	 * Override this in derived classes to do the right thing.
-	 * @returns true
-	 */
-
 	/// @} // END Serialization
 
-	static ScanResultsTreeModelItem* createChildItem(AbstractTreeModelItem* parent);
 
 protected:
 
@@ -78,8 +73,6 @@ protected:
 	 */
 	ScanResultsTreeModelItem*
 	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
-
-	const QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
 
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.

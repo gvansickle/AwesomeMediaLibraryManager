@@ -40,30 +40,10 @@
  */
 
 
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem* parent)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)
 	: AbstractTreeModelItem(parent)
 {
-	m_dsr = *dsr;
-//	qDb() << "############" << m_dsr;
-//	qDb() << "############" << m_dsr.getMediaExtUrl();
-//	dsr->getDirProps();
-//	dsr->getMediaExtUrl();
-//	dsr->getSidecarCuesheetExtUrl();
-//	QVector<QVariant> column_data;
-//	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
-//	column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
-//	column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
-
-//	setData(0, QVariant::fromValue<DirProps>(m_dsr.getDirProps()).toString());
-//	setData(1, QVariant::fromValue(QUrl(m_dsr.getMediaExtUrl()).toDisplayString()));
-//	setData(2, column_data[2]);
-}
-
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
-	: AbstractTreeModelItem(parent, x)
-{
-	Q_ASSERT(0);
-#warning "Eliminate?"
+	m_dsr = dsr;
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
@@ -114,21 +94,21 @@ M_MESSAGE("The cast should work though, right?");
 }
 
 
-ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
-{
-	ScanResultsTreeModelItem* child_item;
-
-	if(parent)
-	{
-		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
-	}
-	else
-	{
-		child_item = new ScanResultsTreeModelItem(parent);
-	}
-
-	return child_item;
-}
+//ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
+//{
+//	ScanResultsTreeModelItem* child_item;
+//
+//	if(parent)
+//	{
+//		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
+//	}
+//	else
+//	{
+//		child_item = new ScanResultsTreeModelItem(parent);
+//	}
+//
+//	return child_item;
+//}
 
 ScanResultsTreeModelItem *
 ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)

@@ -98,6 +98,7 @@ public:
 	 */
     QVariant data(const QModelIndex &index, int role) const override;
 
+    /// @todo Maybe override these.
 //	QMap<int, QVariant> itemData(const QModelIndex &index) const override;
 //	bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) override;
 
