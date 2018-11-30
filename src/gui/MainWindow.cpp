@@ -124,6 +124,10 @@
 
 #include "concurrency/ExtAsync.h"
 
+/// @note EXPERIMENTAL
+#include <gui/widgets/ExperimentalKDEView1.h>
+
+
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
 // the MDI editor example here: http://www.informit.com/articles/article.aspx?p=1405543&seqNum=6, and countless
@@ -1714,7 +1718,12 @@ void MainWindow::newCollectionView()
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
     child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel());
 
+	auto second_child = new ExperimentalKDEView1(this);
+	auto second_mdi_child = m_mdi_area->addSubWindow(second_child);
+	second_child->setModel(AMLMApp::instance()->IScanResultsTreeModel());
+
     mdi_child->show();
+	second_mdi_child->show();
 }
 
 /**

@@ -23,7 +23,7 @@ void CollectionView::setMainModel(QSqlRelationalTableModel *model)
     auto view = ui->treeView;
     view->setModel(model);
 	view->setItemDelegate(new QSqlRelationalDelegate(view));
-
+#warning "TODO REMOVE"
 	model->select();
 
 	auto tmr = new QTimer(this);

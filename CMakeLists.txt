@@ -324,6 +324,8 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	GuiAddons
 	ConfigWidgets ## Not in Krita from this until WindowSystem.
 	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	ItemModels
+	ItemViews
 	XmlGui
 	IconThemes
 	WindowSystem
@@ -331,7 +333,7 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 set(HAVE_KF501 ${KF5_FOUND})
 list(APPEND KF5_LINK_LIB_TARGETS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
 list(APPEND KF5_LINK_LIB_TARGETS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes KF5::ItemModels KF5::ItemViews)
 list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
 
 ###### EXPERIMENT

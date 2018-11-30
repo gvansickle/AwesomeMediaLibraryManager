@@ -9,7 +9,8 @@
 // Ours
 #include <logic/dbmodels/ScanResultsTableModel.h>
 
-namespace Ui {
+namespace Ui
+{
 class CollectionView;
 }
 

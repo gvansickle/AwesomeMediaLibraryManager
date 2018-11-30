@@ -54,16 +54,16 @@ public:
 
 	/// @name Serialization
 	/// @{
-
+	/// Serialize item and any children to a QVariant.
 	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
 	void fromVariant(const QVariant& variant) override;
 
 	/**
-	 * Write this item and any children to the given QXmlStreamWriter.
+
 	 * Override this in derived classes to do the right thing.
 	 * @returns true
 	 */
-//	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
 
 	/// @} // END Serialization
 

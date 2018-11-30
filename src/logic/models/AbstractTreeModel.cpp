@@ -62,11 +62,15 @@
 // Qt5
 #include <QtWidgets>
 
+// KF5
+#include <KItemViews/KCategorizedSortFilterProxyModel>
+
 // Ours
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
 #include <utils/DebugHelpers.h>
 #include <logic/XmlSerializer.h>
+
 
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)

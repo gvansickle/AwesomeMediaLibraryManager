@@ -14,9 +14,6 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="KCategorizedView" name="kcategorizedview"/>
-   </item>
    <item row="1" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -36,6 +33,9 @@
       <widget class="KLed" name="kled"/>
      </item>
     </layout>
+   </item>
+   <item row="0" column="0">
+    <widget class="KCategorizedView" name="m_kcategorizedview"/>
    </item>
   </layout>
  </widget>
