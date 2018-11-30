@@ -69,10 +69,10 @@
 //	m_parent_item = parent_item;
 //}
 
-AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item, const QVector<QVariant>& data)
+AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item/*, const QVector<QVariant>& data*/)
 	: m_parent_item(parent_item)
 {
-	m_item_data = data;
+//	m_item_data = data;
 }
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
@@ -152,7 +152,7 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 
 	for (int row = 0; row < count; ++row)
 	{
-        QVector<QVariant> data(columns);
+//        QVector<QVariant> data(columns);
 //		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
 		// Create a new default-constructed item.
 		AbstractTreeModelItem *item = create_default_constructed_child_item(this);

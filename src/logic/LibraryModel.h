@@ -157,7 +157,6 @@ public:
 
     virtual void setLibraryRootUrl(const QUrl& url);
 
-//	virtual void connectProgressToActivityProgressWidget(ActivityProgressWidget* apw);
 	virtual void stopAllBackgroundThreads();
 	virtual void close(bool delete_cache = false);
 

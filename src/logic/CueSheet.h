@@ -120,7 +120,7 @@ private:
      */
     std::map<int, TrackMetadata> m_tracks;
 
-	// Mutex for serializing acces to libcue.  Libcue isn't thread-safe.
+	// Mutex for serializing access to libcue.  Libcue isn't thread-safe.
     static std::mutex m_libcue_mutex;
 };
 

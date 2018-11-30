@@ -84,7 +84,7 @@
 
 // Ours
 #include <src/utils/QtHelpers.h>
-
+#include <utils/StaticAnalysis.h>
 #include <logic/ISerializable.h>
 
 /**
@@ -100,8 +100,8 @@ public:
 	 *                     management implications; this class isn't derived from QObject.
 	 */
 //	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
-	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr,
-			const QVector<QVariant>& data = QVector<QVariant>());
+	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr/*,
+			const QVector<QVariant>& data = QVector<QVariant>()*/);
 	~AbstractTreeModelItem() override;
 
 	/**
@@ -112,14 +112,16 @@ public:
 //	virtual AbstractTreeModelItem* clone() const = 0;
 
     /// Return a pointer to the number'th child of this item.
-    /// @returns If @arg number is not valid, a pointer to a default constructed AbstractTreeModelItem,
+    /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
     /// 			which is not added to the QVector.
 	/// @todo That seems all kinds of wrong, should probably return a nullptr or assert or something.
 	AbstractTreeModelItem* child(int number);
+
+	/// @copydoc AbstractTreeModelItem::child(int)
 	/// Const version.
 	const AbstractTreeModelItem* child(int number) const;
 
-    /// The number of children this item has.
+    /// @returns The number of children this item has.
     virtual int childCount() const;
 
     /// @returns the number of columns of data this item has.
@@ -132,7 +134,14 @@ public:
      */
 	virtual QVariant data(int column) const;
 
-    bool insertChildren(int position, int count, int columns);
+	/**
+	 * Insert @a count default-constructed (i.e. empty) child items, starting after child index @a position.
+	 * @param position
+	 * @param count
+	 * @param columns
+	 * @return
+	 */
+    virtual bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
 
     /// Returns a pointer to this item's parent.
@@ -185,7 +194,8 @@ private:
 	AbstractTreeModelItem *m_parent_item { nullptr };
 
 	/// Vector of child items.
-	std::vector<AbstractTreeModelItem*> m_child_items;
+	/// This item owns its children for memory-management purposes.
+	std::vector<gsl::owner<AbstractTreeModelItem*>> m_child_items;
 
 	/// Vector of items for each column.
 	/// @todo Try to get rid of this, the data is the responsibility of derived classes.

@@ -31,14 +31,6 @@
 #include <logic/DirScanResult.h>
 #include "ScanResultsTreeModelXMLTags.h"
 
-/**
- * QXmlQuery notes:
- * http://doc.qt.io/qt-5/xmlprocessing.html#xml-id
- * "xml:id
- * Processing of XML files supports xml:id. This allows elements that have an attribute named xml:id to be
- * looked up efficiently with the fn:id() function. See xml:id Version 1.0 [http://www.w3.org/TR/xml-id/] for details."
- */
-
 
 ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)
 	: AbstractTreeModelItem(parent)
@@ -67,7 +59,7 @@ QVariant ScanResultsTreeModelItem::data(int column) const
 		break;
 	}
 
-	return QVariant("XXXX");
+	return QVariant();
 }
 
 
@@ -89,26 +81,10 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 
 M_MESSAGE("The cast should work though, right?");
 //	m_dsr = map.value("dirscanresult").value<DirScanResult>();
+
 	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
 	m_dsr.fromVariant(dsr_in_variant);
 }
-
-
-//ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
-//{
-//	ScanResultsTreeModelItem* child_item;
-//
-//	if(parent)
-//	{
-//		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
-//	}
-//	else
-//	{
-//		child_item = new ScanResultsTreeModelItem(parent);
-//	}
-//
-//	return child_item;
-//}
 
 ScanResultsTreeModelItem *
 ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)

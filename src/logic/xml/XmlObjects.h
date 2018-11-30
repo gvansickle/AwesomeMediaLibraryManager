@@ -41,9 +41,26 @@
 
 QStringList run_xquery(const QXmlQuery& xquery, const QUrl& source_url);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, const QUrl& dest_xml_url);
+
 QStringList run_xquery(const QUrl& xquery_url, const QUrl& source_url);
 bool run_xquery(const QUrl& xquery_url, const QUrl& source_url, const QUrl& dest_xml_url);
 
+/**
+ * QXmlQuery notes:
+ * http://doc.qt.io/qt-5/xmlprocessing.html#xml-id
+ * "xml:id
+ * Processing of XML files supports xml:id. This allows elements that have an attribute named xml:id to be
+ * looked up efficiently with the fn:id() function. See xml:id Version 1.0 [http://www.w3.org/TR/xml-id/] for details."
+ * The details are:
+ * "- the ID value matches the allowed lexical form,
+ * - the value is unique within the XML document, and that
+ * - each element has at most one single unique identifier."
+ * The xml::id is alphanumeric, specifically an NCName: @link https://www.w3.org/TR/REC-xml-names/#NT-NCName
+ * Short form, a valid C identifier works, slightly longer form:
+ * - Start char is not a number
+ * - Remaining chars are not ':'.  "COLON, HYPHEN-MINUS, FULL STOP (period), LOW LINE (underscore), and MIDDLE DOT are explicitly permitted",
+ *   but I think we'll avoid non-C identifier chars when possible.
+ */
 
 class XmlValue : public QString
 {

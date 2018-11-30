@@ -135,15 +135,26 @@ public:
     ///       but are implemented in QAbstractItemModel.
     /// @{
 
-    bool insertColumns(int position, int columns,
+    /**
+     * Inserts @a count new default-constructed columns into @a parent model before the given
+     * column @a insert_before_column.  If @a insert_before_column is 0, columns are still prepended,
+     * and if it's columnCount(), they're still prepended to the non-existent one-past-the-end column;
+     * i.e. they're appended to the list.
+     *
+     * @return true on success.
+     */
+    bool insertColumns(int insert_before_column, int count,
                        const QModelIndex &parent = QModelIndex()) override;
-    bool removeColumns(int position, int columns,
+
+    bool removeColumns(int insert_before_column, int count,
                        const QModelIndex &parent = QModelIndex()) override;
+
     bool insertRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
-	bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
+
+    bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
 	                      const QModelIndex &destinationParent, int destinationChild) override;
 	bool moveColumns(const QModelIndex &sourceParent, int sourceColumn, int count,
 	                         const QModelIndex &destinationParent, int destinationChild) override;
@@ -187,7 +198,6 @@ protected:
 	 * Override in derived classes to return a newly created root/header item node for the model.
 	 */
 	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
-//	virtual AbstractTreeModelItem* make_default_node(QVector<QVariant> rootData, AbstractTreeModelItem* parent) = 0;
 
 	virtual QString getXmlStreamName() const = 0;
 	virtual QString getXmlStreamVersion() const = 0;

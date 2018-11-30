@@ -34,6 +34,9 @@ QString ItemDelegateLength::displayText(const QVariant& value, const QLocale& /*
 	// Convert from QVariant to Fraction.
 	Fraction frac = value.value<Fraction>();
 	double total_seconds = qint64(frac);
+	// fromMSecsSinceStartOfDay() takes an int, which is 32 bits on at least x86_64/Linux,
+	// so this wraps and probably fails for total_seconds values >= 2147483.648 secs == ~595.5 hours.
+	// So probably OK for track lengths.
 	QTime as_qtime = QTime::fromMSecsSinceStartOfDay(total_seconds * 1000);
 	return as_qtime.toString("mm:ss");
 }

@@ -43,12 +43,12 @@
  */
 
 /// ExtFuture<> Concept checks.
-static_assert(IsExtFuture<ExtFuture<int>>, "");
-static_assert(NonNestedExtFuture<ExtFuture<int>>, "");
-static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>, "");
-static_assert(!NestedExtFuture<ExtFuture<int>>, "");
-static_assert(!IsExtFuture<int>, "");
+static_assert(IsExtFuture<ExtFuture<int>>);
+static_assert(NonNestedExtFuture<ExtFuture<int>>);
+static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>);
+static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>);
+static_assert(!NestedExtFuture<ExtFuture<int>>);
+static_assert(!IsExtFuture<int>);
 
 /// ExtFuture<T> sanity checks.
 // From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
@@ -57,7 +57,7 @@ static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >);
 int v;
 static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
 /// @todo
-//    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >, "");
+//    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >);
 static_assert(!std::is_same_v<QFuture<long>, ExtFuture<long>>);
 //static_assert(std::is_convertible_v<QFuture<long>, ExtFuture<long>>);
 static_assert(std::is_convertible_v<ExtFuture<long>, QFuture<long>>);

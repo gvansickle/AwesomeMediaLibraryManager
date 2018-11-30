@@ -28,10 +28,11 @@
 
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parentItem)
-	: AbstractTreeModelItem(parentItem, x)
+	: AbstractTreeModelItem(parentItem)
 {
 #warning "TODO This should take a list of AbsHeaderSections"
 //	m_item_data = x;
+	m_column_specs = x;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()

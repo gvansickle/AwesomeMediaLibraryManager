@@ -44,7 +44,7 @@ void MimeTypeDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
     painter->save();
 
     // Draw the background.
-    if (option.state & QStyle::State_Selected)
+	if ((option.state & QStyle::State_Selected) != 0)
     {
             painter->fillRect(option.rect, option.palette.highlight());
     }

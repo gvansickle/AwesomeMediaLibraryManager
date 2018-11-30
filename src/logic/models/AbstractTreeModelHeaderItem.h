@@ -26,6 +26,7 @@
 // Qt5
 #include <QVector>
 #include <QVariant>
+#include <logic/ColumnSpec.h>
 
 // Ours
 #include "AbstractTreeModelItem.h"
@@ -60,6 +61,8 @@ public:
 protected:
 
 	ScanResultsTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+
+	std::vector<ColumnSpec> m_column_specs;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

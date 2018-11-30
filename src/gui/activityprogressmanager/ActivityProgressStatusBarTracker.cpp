@@ -174,6 +174,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     if(!jobWatch)
     {
+		Q_ASSERT_X(0, __func__, "Job deleted while being registered, shouldn't be possible");
         qCro() << "Job deleted while being registered";
         wdgt->deleteLater();
         return;
@@ -194,6 +195,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     if(!jobWatch)
     {
+		Q_ASSERT_X(0, __func__, "Job deleted while being registered, shouldn't be possible");
         qCro() << "Job deleted while being registered";
         wdgt->deleteLater();
         return;

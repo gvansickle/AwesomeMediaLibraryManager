@@ -175,10 +175,17 @@ public:
 //	ExtFuture(QFuture<T>&& f) noexcept ...;
 
 	/// Copy construct from QFuture<void>.
-	/// @todo Something's broken here, this doesn't actually compile.
-//	ExtFuture(const QFuture<void>& f) : ExtFuture<Unit>(f) {};
+	/// @todo Needs to be static I think.
 
-	explicit ExtFuture(QFutureInterface<T> *p, uint64_t id = 0) // ~Internal, see QFuture<>().
+	/**
+	 * Construct from a QFutureInterface<T> pointer.
+	 *
+	 * @note Quasi-internal, see QFuture<>()'s use.
+	 *
+	 * @param p   Pointer to a QFutureInterface<T> instance.
+	 * @param id  Optional identifier for debugging.
+	 */
+	explicit ExtFuture(QFutureInterface<T> *p, uint64_t id = 0)
 		: BASE_CLASS(p) { m_extfuture_id_no = id; }
 
 	/**
@@ -235,6 +242,7 @@ public:
 
 	/**
 	 * Conversion operator to ExtFuture<Unit>.
+	 * @todo Can't get this to compile, can't figure out the template-laden error message.
 	 */
 //	explicit operator ExtFuture<Unit>() const
 //	{
