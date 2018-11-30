@@ -31,12 +31,18 @@
 
 // Qt5
 #include <QXmlStreamWriter>
+#include <QXmlQuery>
 #include <QDateTime>
 #include <QUrl>
 
 // Ours
 #include <utils/DebugHelpers.h>
 
+
+QStringList run_xquery(const QXmlQuery& xquery, const QUrl& source_url);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, const QUrl& dest_xml_url);
+QStringList run_xquery(const QUrl& xquery_url, const QUrl& source_url);
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_url, const QUrl& dest_xml_url);
 
 
 class XmlValue : public QString

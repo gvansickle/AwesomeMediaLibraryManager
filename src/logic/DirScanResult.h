@@ -62,6 +62,8 @@ public:
 
     enum DirProp
     {
+	    /// Nothing is known about the directory.
+	    Unknown = 0x00,
         /// Directory contains only one album, not just e.g. a dump of mp3's.
         SingleAlbum = 0x01,
         /// Directory contains a single audio file.
@@ -72,9 +74,7 @@ public:
         /// Directory has one or more album art files.
         HasArt = 0x08,
         /// Dir is just a bunch of MP3's.
-        JBOMP3s = 0x10,
-        /// Nothing is known about the dir.
-		Unknown = 0x00
+        JBOMP3s = 0x10
     };
 	/// "The Q_DECLARE_FLAGS(Flags, Enum) macro expands to: typedef QFlags<Enum> Flags;"
 	/// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"
