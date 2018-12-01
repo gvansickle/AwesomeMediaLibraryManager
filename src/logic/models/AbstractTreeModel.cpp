@@ -170,28 +170,28 @@ QModelIndex AbstractTreeModel::index(int row, int column, const QModelIndex &par
 	}
 }
 
-bool AbstractTreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
+bool AbstractTreeModel::insertColumns(int insert_before_column, int num_columns, const QModelIndex& parent_model_index)
 {
 	Q_CHECK_PTR(m_root_item);
 
 	bool success;
 
-    beginInsertColumns(parent, position, position + columns - 1);
-	success = m_root_item->insertColumns(position, columns);
+    beginInsertColumns(parent_model_index, insert_before_column, insert_before_column + num_columns - 1);
+	success = m_root_item->insertColumns(insert_before_column, num_columns);
     endInsertColumns();
 
     return success;
 }
 
-bool AbstractTreeModel::insertRows(int position, int rows, const QModelIndex &parent)
+bool AbstractTreeModel::insertRows(int insert_before_row, int num_rows, const QModelIndex& parent_model_index)
 {
 	Q_CHECK_PTR(m_root_item);
 
-    AbstractTreeModelItem *parentItem = getItem(parent);
+    AbstractTreeModelItem *parentItem = getItem(parent_model_index);
     bool success;
 
-    beginInsertRows(parent, position, position + rows - 1);
-	success = parentItem->insertChildren(position, rows, m_root_item->columnCount());
+    beginInsertRows(parent_model_index, insert_before_row, insert_before_row + num_rows - 1);
+	success = parentItem->insertChildren(insert_before_row, num_rows, m_root_item->columnCount());
     endInsertRows();
 
     return success;
@@ -215,11 +215,11 @@ QModelIndex AbstractTreeModel::parent(const QModelIndex &index) const
     return createIndex(parentItem->childNumber(), 0, parentItem);
 }
 
-bool AbstractTreeModel::removeColumns(int position, int columns, const QModelIndex &parent)
+bool AbstractTreeModel::removeColumns(int position, int columns, const QModelIndex& parent_model_index)
 {
     bool success;
 
-    beginRemoveColumns(parent, position, position + columns - 1);
+    beginRemoveColumns(parent_model_index, position, position + columns - 1);
 	success = m_root_item->removeColumns(position, columns);
     endRemoveColumns();
 
@@ -231,13 +231,13 @@ bool AbstractTreeModel::removeColumns(int position, int columns, const QModelInd
     return success;
 }
 
-bool AbstractTreeModel::removeRows(int position, int rows, const QModelIndex &parent)
+bool AbstractTreeModel::removeRows(int remove_start_row, int num_rows, const QModelIndex& parent_item_index)
 {
-    AbstractTreeModelItem *parentItem = getItem(parent);
+    AbstractTreeModelItem *parentItem = getItem(parent_item_index);
     bool success = true;
 
-    beginRemoveRows(parent, position, position + rows - 1);
-    success = parentItem->removeChildren(position, rows);
+    beginRemoveRows(parent_item_index, remove_start_row, remove_start_row + num_rows - 1);
+    success = parentItem->removeChildren(remove_start_row, num_rows);
     endRemoveRows();
 
 	return success;

@@ -145,24 +145,38 @@ public:
     /// @{
 
     /**
-     * Inserts @a count new default-constructed columns into @a parent model before the given
-     * column @a insert_before_column.  If @a insert_before_column is 0, columns are still prepended,
-     * and if it's columnCount(), they're still prepended to the non-existent one-past-the-end column;
+     * Inserts @a num_columns new columns into the model before column @a insert_before_column.  If
+     * @a insert_before_column is 0, columns are still prepended, and if it's columnCount(), they're still prepended
+     * to the non-existent one-past-the-end column;
      * i.e. they're appended to the list.
      *
      * @return true on success.
      */
-    bool insertColumns(int insert_before_column, int count,
-                       const QModelIndex &parent = QModelIndex()) override;
+    bool insertColumns(int insert_before_column, int num_columns,
+                       const QModelIndex& parent_model_index = QModelIndex()) override;
+	/**
+	 * Remove columns.
+	 */
+    bool removeColumns(int remove_start_column, int num_columns,
+                       const QModelIndex& parent_model_index = QModelIndex()) override;
 
-    bool removeColumns(int insert_before_column, int count,
-                       const QModelIndex &parent = QModelIndex()) override;
+    /**
+     * Inserts @a count new default-constructed rows under model item @a parent_model_index model before the given row @a insert_before_row.
+     * If @a insert_before_row is 0, rows are still prepended.  If it's >= rowCount(), operation is meaningless and
+     * the call returns false, not having done anything.
+     *
+     * @return true on success.
+     */
+    bool insertRows(int insert_before_row, int num_rows,
+                    const QModelIndex& parent_model_index = QModelIndex()) override;
 
-    bool insertRows(int position, int rows,
-                    const QModelIndex &parent = QModelIndex()) override;
-    bool removeRows(int position, int rows,
-                    const QModelIndex &parent = QModelIndex()) override;
+    /**
+     * Remove rows [@a remove_start_row, @a remove_start_row + @a num_rows - 1 ].
+     */
+    bool removeRows(int remove_start_row, int num_rows,
+                    const QModelIndex& parent_item_index = QModelIndex()) override;
 
+    /// @todo These currently just call the base class functions.
     bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
 	                      const QModelIndex &destinationParent, int destinationChild) override;
 	bool moveColumns(const QModelIndex &sourceParent, int sourceColumn, int count,
@@ -170,11 +184,14 @@ public:
 
 	/// @} // END row/col insert/remove/move.
 
+
 	/// @name Extended public model interface.
     /// @{
 
 	/**
 	 * Append a std::vector of AbstractTreeModelItem's as children of @p parent.
+	 * This is effectively the same as insertRows() followed by numerous setData() calls, but the default construction
+	 * of the item objects is skipped since we're passing in the @a new_items.
 	 */
 	virtual bool appendItems(std::vector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
 
