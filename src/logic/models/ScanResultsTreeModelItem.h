@@ -52,6 +52,7 @@ public:
 	 */
 	QVariant data(int column) const override;
 
+	int columnCount() const override;
 
 	/// @name Serialization
 	/// @{
@@ -67,12 +68,20 @@ public:
 protected:
 
 	/**
-	 * Factory function primarily for creating default-constructed nodes.
+	 * Factory function for creating default-constructed nodes.
 	 * Used by insertChildren().  Override in derived classes.
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
 	ScanResultsTreeModelItem*
 	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	bool derivedClassSetData(int column, const QVariant &value) override;
+	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+	/// @}
 
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.

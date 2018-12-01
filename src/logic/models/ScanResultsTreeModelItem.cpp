@@ -62,6 +62,11 @@ QVariant ScanResultsTreeModelItem::data(int column) const
 	return QVariant();
 }
 
+int ScanResultsTreeModelItem::columnCount() const
+{
+	return 3;
+}
+
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
@@ -94,5 +99,38 @@ ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeMode
 	child_item = new ScanResultsTreeModelItem(parent);
 
 	return child_item;
+}
+
+bool ScanResultsTreeModelItem::derivedClassSetData(int column, const QVariant& value)
+{
+	// We have at the moment only a DirScanResult, not sure we need to set data by column.
+	return true;
+}
+
+bool ScanResultsTreeModelItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
+{
+	/// @todo Again only a DirScanResult.  Not sure what to do here.
+	/// Qt5 TreeModel has this:
+	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
+	///		beginInsertColumns(parent, position, position + columns - 1);
+	///		success = rootItem->insertColumns(position, columns);
+	///		endInsertColumns();
+	/// So it's up to the root item to decide what to do, not the model.
+	/// The root item calls child items and they add/remove QVariant's as required.
+
+	return true;
+}
+
+bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+{
+	/// @todo Again only a DirScanResult.  Not sure what to do here.
+	/// Qt5 TreeModel has this:
+	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
+	///		beginInsertColumns(parent, position, position + columns - 1);
+	///		success = rootItem->insertColumns(position, columns);
+	///		endInsertColumns();
+	/// So it's up to the root item to decide what to do, not the model.
+
+	return true;
 }
 

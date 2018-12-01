@@ -75,11 +75,17 @@
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
 {
-
+	auto horizontal_header_item = new AbstractTreeModelHeaderItem();
+	m_root_item = new TreeModelRootItem(this, horizontal_header_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()
 {
+}
+
+bool AbstractTreeModel::setColumnSpecs(std::initializer_list<QString> column_specs)
+{
+	return m_root_item->getHorizontalHeader()->setColumnSpecs(column_specs);
 }
 
 int AbstractTreeModel::columnCount(const QModelIndex & /* parent */) const
@@ -245,13 +251,6 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 {
 	// Defer to base class.
 	return this->BASE_CLASS::moveRows(sourceParent, sourceColumn, count, destinationParent, destinationChild);
-}
-
-
-void AbstractTreeModel::setRootItem(AbstractTreeModelHeaderItem* root_header_item)
-{
-	/// @todo Anything if it's already set?
-	m_root_item = root_header_item;
 }
 
 
