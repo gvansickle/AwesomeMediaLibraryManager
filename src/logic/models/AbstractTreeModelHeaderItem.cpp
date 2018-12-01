@@ -29,9 +29,11 @@
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> column_specs, AbstractTreeModel *parent_model,
 														 AbstractTreeModelItem *parentItem)
-	: TreeModelRootItem(parent_model, parentItem)
+	: AbstractTreeModelItem(parentItem)
 {
 M_WARNING("TODO This should take a list of ColumnSpecs");
+
+/// @todo Also save the parent_model.
 
 //	m_column_specs = column_specs;
 
@@ -71,7 +73,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	QVariantList list;
 
 	// Header info.
-	/// @todo Or is some of this really model info?
+	/// @todo Or is some of this really model info?  Children are.
 	map.insert("header_num_sections", columnCount());
 	for(int i = 0; i < columnCount(); ++i)
 	{

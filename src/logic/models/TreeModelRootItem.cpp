@@ -39,58 +39,58 @@ TreeModelRootItem::~TreeModelRootItem()
 {
 }
 
-QVariant TreeModelRootItem::data(int column) const
-{
-	Q_ASSERT_X(0, __PRETTY_FUNCTION__, "I don't think we should be getting here");
-	return QVariant();
-}
+//QVariant TreeModelRootItem::data(int column) const
+//{
+//	Q_ASSERT_X(0, __PRETTY_FUNCTION__, "I don't think we should be getting here");
+//	return QVariant();
+//}
 
-int TreeModelRootItem::columnCount() const
-{
-	Q_CHECK_PTR(m_horizontal_header_item);
-	return m_horizontal_header_item->columnCount();
-}
+//int TreeModelRootItem::columnCount() const
+//{
+////	Q_CHECK_PTR(m_horizontal_header_item);
+////	return m_horizontal_header_item->columnCount();
+//}
 
-QVariant TreeModelRootItem::toVariant() const
-{
-	QVariantMap map;
+//QVariant TreeModelRootItem::toVariant() const
+//{
+//	QVariantMap map;
+//
+//	// The horizontal header item.
+//	map.insert(/*SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]*/ "header_horz", m_horizontal_header_item->toVariant());
+//
+//	return map;
+//}
+//
+//void TreeModelRootItem::fromVariant(const QVariant& variant)
+//{
+//	QVariantMap map = variant.toMap();
+//
+//	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
+//	m_horizontal_header_item = new AbstractTreeModelHeaderItem();
+//	m_horizontal_header_item->fromVariant(map.value(/*SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]*/ "header_horz"));
+//}
 
-	// The horizontal header item.
-	map.insert(/*SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]*/ "header_horz", m_horizontal_header_item->toVariant());
+//ScanResultsTreeModelItem* TreeModelRootItem::create_default_constructed_child_item(AbstractTreeModelItem* parent)
+//{
+//	/// @todo Should they be parented out the gate like this?
+//	return new ScanResultsTreeModelItem(parent);
+//}
 
-	return map;
-}
-
-void TreeModelRootItem::fromVariant(const QVariant& variant)
-{
-	QVariantMap map = variant.toMap();
-
-	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-	m_horizontal_header_item = new AbstractTreeModelHeaderItem();
-	m_horizontal_header_item->fromVariant(map.value(/*SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]*/ "header_horz"));
-}
-
-ScanResultsTreeModelItem* TreeModelRootItem::create_default_constructed_child_item(AbstractTreeModelItem* parent)
-{
-	/// @todo Should they be parented out the gate like this?
-	return new ScanResultsTreeModelItem(this);
-}
-
-bool TreeModelRootItem::derivedClassSetData(int column, const QVariant& value)
-{
-	M_WARNING("TODO");
-	return true;
-}
-
-bool TreeModelRootItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
-{
-	M_WARNING("TODO");
-	return true;
-}
-
-bool TreeModelRootItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
-{
-	M_WARNING("TODO");
-	return true;
-}
+//bool TreeModelRootItem::derivedClassSetData(int column, const QVariant& value)
+//{
+//	M_WARNING("TODO");
+//	return true;
+//}
+//
+//bool TreeModelRootItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
+//{
+//	M_WARNING("TODO");
+//	return true;
+//}
+//
+//bool TreeModelRootItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+//{
+//	M_WARNING("TODO");
+//	return true;
+//}
 
