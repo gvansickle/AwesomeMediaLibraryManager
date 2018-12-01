@@ -259,7 +259,7 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 	return derivedClassSetData(column, value);
 }
 
-bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem*> new_children)
+bool AbstractTreeModelItem::appendChildren(std::vector<AbstractTreeModelItem*> new_children)
 {
     /// @todo Support adding new columns if children have them?
     for(auto* child : new_children)

@@ -203,7 +203,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	// Attach a streaming tap to get the results.
 	ExtFuture<DirScanResult> tail_future
 		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end){
-		QVector<AbstractTreeModelItem*> new_items;
+		std::vector<AbstractTreeModelItem*> new_items;
 		int original_end = end;
 		for(int i=begin; i<end; i++)
 		{

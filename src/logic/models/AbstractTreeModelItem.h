@@ -158,7 +158,7 @@ public:
     int childNumber() const;
 
 
-    bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
+	bool appendChildren(std::vector<AbstractTreeModelItem*> new_children);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.

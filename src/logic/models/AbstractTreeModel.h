@@ -58,7 +58,7 @@
 
 // Std C++
 #include <memory>
-
+#include <vector>
 
 // Qt5
 #include <QAbstractItemModel>
@@ -173,8 +173,10 @@ public:
 	/// @name Extended public model interface.
     /// @{
 
-	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
-    virtual bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
+	/**
+	 * Append a std::vector of AbstractTreeModelItem's as children of @p parent.
+	 */
+	virtual bool appendItems(std::vector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
 
 	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
 

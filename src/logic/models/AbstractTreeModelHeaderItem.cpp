@@ -113,7 +113,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
 	// But... we're being deserialized here, so will we have a model yet?
-M_WARNING("NEEDS TO PROP TO MODEL HERE?");
+M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	insertColumns(0, header_num_sections);
 
 	qDb() << "READING HEADER SECTION LIST," << header_num_sections << "COLUMNS:"  << header_section_list;
@@ -140,7 +140,7 @@ M_WARNING("NEEDS TO PROP TO MODEL HERE?");
 	// 1. We could possibly do step 1 in a non-GUI thread.
 	// 2. We can add the children in a single batch vs. one at a time, avoiding the model/view signaling overhead.
 	// It does however burn more RAM.
-	QVector<AbstractTreeModelItem*> temp_items;
+	std::vector<AbstractTreeModelItem*> temp_items;
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;

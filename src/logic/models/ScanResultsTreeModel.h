@@ -49,7 +49,7 @@ public:
 
 
 	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
-	bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
+	bool appendItems(std::vector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
 
 	/// @name Serialization
 	/// @{

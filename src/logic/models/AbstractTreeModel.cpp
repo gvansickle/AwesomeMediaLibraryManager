@@ -256,7 +256,7 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 }
 
 
-bool AbstractTreeModel::appendItems(QVector<AbstractTreeModelItem *> new_items, const QModelIndex &parent)
+bool AbstractTreeModel::appendItems(std::vector<AbstractTreeModelItem*> new_items, const QModelIndex &parent)
 {
     auto parent_item = getItem(parent);
     Q_CHECK_PTR(parent_item);
