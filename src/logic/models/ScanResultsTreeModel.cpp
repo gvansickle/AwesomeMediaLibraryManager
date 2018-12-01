@@ -106,9 +106,9 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 #warning @todo INCOMPLETE/error handling
 }
 
-AbstractTreeModelHeaderItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
-{
-#warning "I THINK THIS IS ERRONEOUS"
-	return new AbstractTreeModelHeaderItem(rootData);
-}
+//AbstractTreeModelHeaderItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
+//{
+//#warning "I THINK THIS IS ERRONEOUS"
+//	return new AbstractTreeModelHeaderItem();
+//}
 

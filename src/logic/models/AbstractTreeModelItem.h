@@ -92,6 +92,7 @@
  */
 class AbstractTreeModelItem : public virtual ISerializable
 {
+
 public:
 	/**
 	 *
@@ -100,8 +101,7 @@ public:
 	 *                     management implications; this class isn't derived from QObject.
 	 *                     However, we still own our children and have to delete them on destruction.
 	 */
-	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr/*,
-			const QVector<QVariant>& data = QVector<QVariant>()*/);
+	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
 	~AbstractTreeModelItem() override;
 
 	/**
@@ -206,22 +206,7 @@ private:
 	/// This item owns its children for memory-management purposes.
 	std::vector<gsl::owner<AbstractTreeModelItem*>> m_child_items;
 
-	/// Vector of items for each column.
-	/// @todo Try to get rid of this, the data is the responsibility of derived classes.
-//	QVector<QVariant> m_item_data;
-
-	/// @name Info cache for child items.
-	/// @{
-
-//	int get_max_child_columns() const;
-//	struct CachedItemInfo
-//	{
-//
-//		int m_num_columns;
-//	};
-//	std::map<AbstractTreeModelItem*, CachedItemInfo>
-	/// @}
-
+	/// @note Any actual item data beyond the child items is the responsibility of derived classes.
 };
 
 // Debug stream op free func declaration.

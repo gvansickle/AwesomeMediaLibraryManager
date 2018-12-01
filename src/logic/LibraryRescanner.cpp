@@ -41,6 +41,7 @@
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>
 #include <logic/models/AbstractTreeModelItem.h>
+#include <logic/models/ScanResultsTreeModel.h>
 #include <utils/DebugHelpers.h>
 
 /// Ours, Qt5/KF5-related
@@ -323,7 +324,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 
 						XmlSerializer xmlser_read;
 						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-						readback_tree_model = new ScanResultsTreeModel(static_cast<QObject*>(tree_model_ptr)->parent());
+						readback_tree_model = new ScanResultsTreeModel(this);//static_cast<QObject*>(tree_model_ptr)->parent());
 						// Load it.
 						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(filename));
 

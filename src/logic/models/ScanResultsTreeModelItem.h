@@ -38,6 +38,8 @@ class QXmlStreamReader;
  */
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
+	using BASE_CLASS = AbstractTreeModelItem;
+
 public:
 	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
 	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : AbstractTreeModelItem(parent) {};

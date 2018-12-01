@@ -76,8 +76,8 @@
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)
 {
 	auto horizontal_header_item = new AbstractTreeModelHeaderItem();
-	QVector<QVariant> column_specs({"A", "B", "C"}); ///< Dummy.
-	m_root_item = new AbstractTreeModelHeaderItem(column_specs, this, horizontal_header_item);
+
+	m_root_item = new AbstractTreeModelHeaderItem(this, horizontal_header_item);
 }
 
 AbstractTreeModel::~AbstractTreeModel()

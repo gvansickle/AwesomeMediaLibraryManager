@@ -62,7 +62,7 @@ public:
 	/// @}
 
 	/// Create a new root node.
-	AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) override;
+//	AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) override;
 
 protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };

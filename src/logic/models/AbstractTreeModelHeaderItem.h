@@ -45,11 +45,16 @@ class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
-	explicit AbstractTreeModelHeaderItem(QVector<QVariant> column_specs = QVector<QVariant>(),
-										 AbstractTreeModel *parent_model = nullptr,
+	explicit AbstractTreeModelHeaderItem(AbstractTreeModelItem *parentItem = nullptr);
+	explicit AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
 										 AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;
 
+	 /**
+	  * @warning This must be called before any child items are added to the model.
+	  * @param column_specs
+	  * @return
+	  */
 	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
 
 	QVariant data(int column) const override;
@@ -85,8 +90,11 @@ protected:
 
 	/// @todo This is where we're ultimately headed, but QStrings in the interim.
 //	std::vector<ColumnSpec> m_column_specs;
-	std::vector<QString> m_column_specs;
+	std::vector<QString> m_column_specs {};
 
+	// The model we belong to.
+	/// @note Not sure we actually need this for anything.
+	AbstractTreeModel* m_parent_model;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

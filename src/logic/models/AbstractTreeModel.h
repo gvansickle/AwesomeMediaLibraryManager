@@ -85,6 +85,10 @@ class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializabl
 	using BASE_CLASS = QAbstractItemModel;
 
 public:
+	/**
+	 * Creates a new AbstractTreeModel object.
+	 * This model will have a default constructed AbstractTreeModelHeader with no columns and no children.
+	 */
 	explicit AbstractTreeModel(QObject *parent = nullptr);
 	~AbstractTreeModel() override;
 
@@ -196,7 +200,7 @@ protected:
 	/**
 	 * Override in derived classes to return a newly created root/header item node for the model.
 	 */
-	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
+//	virtual AbstractTreeModelHeaderItem * make_root_node(QVector<QVariant> rootData) = 0;
 
 	virtual QString getXmlStreamName() const = 0;
 	virtual QString getXmlStreamVersion() const = 0;

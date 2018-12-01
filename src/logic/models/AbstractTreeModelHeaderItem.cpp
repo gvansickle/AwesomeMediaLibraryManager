@@ -20,27 +20,27 @@
 /**
  * @file AbstractTreeModelHeaderItem.cpp
  */
+
 #include "AbstractTreeModelHeaderItem.h"
 
 // Ours
 #include <logic/xml/XmlObjects.h>
-#include "ScanResultsTreeModelItem.h"
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> column_specs, AbstractTreeModel *parent_model,
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)
+	: AbstractTreeModelItem(parentItem)
+{
+	m_parent_model = nullptr;
+}
+
+
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
 														 AbstractTreeModelItem *parentItem)
 	: AbstractTreeModelItem(parentItem)
 {
-M_WARNING("TODO This should take a list of ColumnSpecs");
 
-/// @todo Also save the parent_model.
-
-//	m_column_specs = column_specs;
-
-	for(auto& element : column_specs)
-	{
-		m_column_specs.push_back(element.toString());
-	}
+	// Save the pointer to the parent_model.
+	m_parent_model = parent_model;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
@@ -49,6 +49,9 @@ AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 
 bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<QString> column_specs)
 {
+	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
+	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
+#warning "INSERT COLUMNS"
 	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
 	return true;
 }
@@ -104,7 +107,13 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	QVariantList header_section_list = map.value("header_section_list").toList();
 
+	// Read the number of header sections...
 	auto header_num_sections = map.value("header_num_sections").toInt();
+	// ... and insert that many default-constructed columns to this HeaderItem.
+	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
+	// So... I think we need to go through that mechanism if we're already in a model.
+	// But... we're being deserialized here, so will we have a model yet?
+M_WARNING("NEEDS TO PROP TO MODEL HERE?");
 	insertColumns(0, header_num_sections);
 
 	qDb() << "READING HEADER SECTION LIST," << header_num_sections << "COLUMNS:"  << header_section_list;
@@ -141,7 +150,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 		temp_items.push_back(child_item);
 	}
 
-	// Append the children we read in to our list.
+	// Append the children we read in to our list all in one batch.
 	this->appendChildren(temp_items);
 }
 

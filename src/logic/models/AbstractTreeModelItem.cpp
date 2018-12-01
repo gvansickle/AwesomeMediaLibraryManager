@@ -69,10 +69,9 @@
 //	m_parent_item = parent_item;
 //}
 
-AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item/*, const QVector<QVariant>& data*/)
+AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
 	: m_parent_item(parent_item)
 {
-//	m_item_data = data;
 }
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
