@@ -34,8 +34,7 @@ set(dbmodels_subdir_SOURCES
 	EntityBase.h
 	ScanResultsTableModel.cpp
 	ScanResultsTableModel.h
-	SQLHelpers.h
-	)
+		)
 prepend_to_each(dbmodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${dbmodels_subdir_SOURCES})
 
 target_sources(dbmodels_subdir
@@ -60,4 +59,3 @@ set_target_properties(dbmodels_subdir
     AUTOMOC ON
     AUTORCC OFF
     AUTOUIC OFF)
-    

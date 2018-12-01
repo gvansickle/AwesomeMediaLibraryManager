@@ -77,7 +77,7 @@ set(gui_SOURCE_FILES
 	menus/HelpMenu.cpp
 	helpers/NetAwareFileDialogGtk3.cpp
 	helpers/Gtk3DialogHelper.cpp
-	helpers/IfExistsAskForOverwrite.h
+	helpers/IfExistsAskForOverwrite.cpp
 	actions/StandardActions.cpp
 	Theme.cpp
 	delegates/ItemDelegateLength.cpp

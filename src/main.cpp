@@ -228,6 +228,9 @@ int main(int argc, char *argv[])
 		// From the KDE5 docs: https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#ab0c194be12f0ad123a9ba8be75bb85c9
 		// "KMainWindows must be created on the heap with 'new'"
 		MainWindow *mainWin = new MainWindow();
+		// Tell the app singleton about the main window singleton.
+		// Note that there's a lot of code between the two creations.
+		amlmApp->MAIN_ONLY_setMainWindow(mainWin);
 		mainWin->show();
 	}
 

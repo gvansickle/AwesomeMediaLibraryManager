@@ -23,15 +23,21 @@
 
 #include "IfExistsAskForOverwrite.h"
 
+// Qt5
+#include <QFile>
+#include <QMessageBox>
+
+// Ours
+#include <src/AMLMApp.h>
+#include <src/gui/MainWindow.h>
+
+
 IfExistsAskForOverwrite::IfExistsAskForOverwrite()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 IfExistsAskForOverwrite::~IfExistsAskForOverwrite()
 {
-	// TODO Auto-generated destructor stub
 }
 
 // Static
@@ -40,9 +46,9 @@ bool IfExistsAskForOverwrite::IfExistsAskForDelete(const QUrl &filename)
     QFile the_file(filename.toLocalFile());
     if(the_file.exists())
     {
-        QMessageBox::StandardButton retval = QMessageBox::warning(MainWindow::instance(), tr("File exists"),
-                                                                  tr("The file '%1' already exists.\n"
-                                                               "Do you want to delete it?").arg(filename.toLocalFile()),
+		QMessageBox::StandardButton retval = QMessageBox::warning(AMLMApp::IMainWindow(), QObject::tr("File exists"),
+        		QObject::tr("The file '%1' already exists.\n"
+                            "Do you want to delete it?").arg(filename.toLocalFile()),
                                           QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if(retval == QMessageBox::Yes)
         {

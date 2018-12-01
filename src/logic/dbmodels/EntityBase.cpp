@@ -19,8 +19,6 @@
 
 #include "EntityBase.h"
 
-#include "SQLHelpers.h"
-
 #include <utils/RegisterQtMetatypes.h>
 #include <src/logic/DirScanResult.h>
 #include <utils/DebugHelpers.h>

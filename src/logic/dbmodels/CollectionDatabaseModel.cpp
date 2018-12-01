@@ -35,7 +35,6 @@
 #include <QString>
 
 /// Ours
-#include "SQLHelpers.h"
 #include <utils/DebugHelpers.h>
 #include <AMLMApp.h>
 #include <gui/MainWindow.h>

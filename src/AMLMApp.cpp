@@ -35,6 +35,7 @@
 #include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 #include <utils/RegisterQtMetatypes.h>
+#include <gui/MainWindow.h>
 
 
 // Pointer to the singleton.
@@ -102,6 +103,11 @@ M_TODO("Needs to be ColumnSpecs");
 
 	/// @note This is a self-connection, not sure this will work as intended.
 	connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
+}
+
+void AMLMApp::MAIN_ONLY_setMainWindow(MainWindow* the_main_window)
+{
+	m_the_main_window = the_main_window;
 }
 
 AMLMApp* AMLMApp::instance()
