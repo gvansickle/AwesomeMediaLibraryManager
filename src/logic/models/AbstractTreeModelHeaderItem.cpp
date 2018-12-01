@@ -27,16 +27,38 @@
 #include "ScanResultsTreeModelItem.h"
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parentItem)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> column_specs, AbstractTreeModelItem *parentItem)
 	: AbstractTreeModelItem(parentItem)
 {
-#warning "TODO This should take a list of AbsHeaderSections"
-//	m_item_data = x;
-	m_column_specs = x;
+M_WARNING("TODO This should take a list of AbsHeaderSections");
+
+//	m_column_specs = column_specs;
+
+	for(auto& element : column_specs)
+	{
+		m_column_specs.push_back(element.toString());
+	}
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 {
+}
+
+bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<QString> column_specs)
+{
+	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
+	return true;
+}
+
+QVariant AbstractTreeModelHeaderItem::data(int column) const
+{
+	Q_ASSERT_X(column, __PRETTY_FUNCTION__, "Got data() call");
+	return QVariant();
+}
+
+int AbstractTreeModelHeaderItem::columnCount() const
+{
+	return m_column_specs.size();
 }
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
@@ -125,5 +147,34 @@ AbstractTreeModelHeaderItem::create_default_constructed_child_item(AbstractTreeM
 	child_item = new ScanResultsTreeModelItem(parent);
 
 	return child_item;
+}
+
+bool AbstractTreeModelHeaderItem::derivedClassSetData(int column, const QVariant& value)
+{
+	// We're the header, we should never have the Abstract Model's setData() called on us,
+	// but this is the AbstractTreeModel*Item*'s setData(), and we're calling it in at least fromVariant() above.
+
+	/// @todo Take ColumnSpecs instead.
+	m_column_specs.at(column) = value.toString();
+
+	return false;
+}
+
+bool AbstractTreeModelHeaderItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
+{
+	// vector.insert(pos, size, ...):
+	// - pos has the same definition as we're exposing here, it's the insert-before point.  Can be the end() iterator.
+	/// @todo Again, convert to default constructed ColumnSpecs.
+	m_column_specs.insert(m_column_specs.cbegin() + insert_before_column, num_columns, QString());
+
+	return true;
+}
+
+bool AbstractTreeModelHeaderItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+{
+	m_column_specs.erase(m_column_specs.cbegin() + first_column_to_remove,
+			m_column_specs.cbegin() + first_column_to_remove + num_columns);
+
+	return true;
 }
 

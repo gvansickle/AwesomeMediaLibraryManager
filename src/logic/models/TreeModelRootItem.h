@@ -24,16 +24,62 @@
 #ifndef SRC_LOGIC_MODELS_TREEMODELROOTITEM_H_
 #define SRC_LOGIC_MODELS_TREEMODELROOTITEM_H_
 
-#include <logic/models/AbstractTreeModelItem.h>
+// Ours.
+#include "AbstractTreeModelItem.h"
+#include "ScanResultsTreeModelItem.h" ///< @todo This is wrong, we have a derived item included here in the very root.
+class AbstractTreeModel;
+class AbstractTreeModelHeaderItem;
+class ScanResultsTreeModelItem;
 
-/*
+/**
  *
  */
 class TreeModelRootItem: public AbstractTreeModelItem
 {
 public:
-	TreeModelRootItem();
-	virtual ~TreeModelRootItem();
+	explicit TreeModelRootItem() = default;
+	explicit TreeModelRootItem(AbstractTreeModel* parent_model,
+							   AbstractTreeModelHeaderItem* horizontal_header_item,
+							   AbstractTreeModelItem* parent_item = nullptr);
+	~TreeModelRootItem() override;
+
+	void setHorizontalHeader(AbstractTreeModelHeaderItem* new_header) { m_horizontal_header_item = new_header; };
+	AbstractTreeModelHeaderItem* getHorizontalHeader() { return m_horizontal_header_item; };
+
+	QVariant data(int column) const override;
+
+	int columnCount() const override;
+
+	/// @name Serialization
+	/// @{
+
+	/// Serialize item and any children to a QVariant.
+	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
+	void fromVariant(const QVariant& variant) override;
+
+	/// @} // END Serialization
+
+
+protected:
+
+	/**
+	 * Factory function for creating default-constructed nodes.
+	 * Used by insertChildren().  Override in derived classes.
+	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
+	 */
+	ScanResultsTreeModelItem*
+	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	bool derivedClassSetData(int column, const QVariant &value) override;
+	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+	/// @}
+
+	AbstractTreeModelHeaderItem* m_horizontal_header_item {nullptr};
 };
 
 #endif /* SRC_LOGIC_MODELS_TREEMODELROOTITEM_H_ */

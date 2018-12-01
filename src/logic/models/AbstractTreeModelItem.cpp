@@ -77,12 +77,15 @@ AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item/
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
+	// Doesn't remove items, just deletes them.
 	qDeleteAll(m_child_items);
 }
 
 /// Debug streaming implementation.
 #define DATASTREAM_FIELDS(X) \
-    X(m_parent_item) X(m_item_data) X(m_child_items)
+    X(m_parent_item)\
+    /*X(m_item_data)*/\
+    X(m_child_items)
 
 #define X(field) << obj.field
 QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
@@ -130,15 +133,15 @@ int AbstractTreeModelItem::childNumber() const
     return 0;
 }
 
-int AbstractTreeModelItem::columnCount() const
-{
-	return m_item_data.count();
-}
-
-QVariant AbstractTreeModelItem::data(int column) const
-{
-	return m_item_data.value(column);
-}
+//int AbstractTreeModelItem::columnCount() const
+//{
+//	return m_item_data.count();
+//}
+//
+//QVariant AbstractTreeModelItem::data(int column) const
+//{
+//	return m_item_data.value(column);
+//}
 
 bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 {
@@ -162,21 +165,31 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
     return true;
 }
 
-bool AbstractTreeModelItem::insertColumns(int position, int columns)
+bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_columns)
 {
-	if (position < 0 || position > m_item_data.size())
+	auto current_num_columns = columnCount();
+
+	if (insert_before_column < 0 || insert_before_column > current_num_columns)
 	{
+		// Check if we're out of bounds.
+		/// @todo Probably assert here?
         return false;
 	}
 
-	for (int column = 0; column < columns; ++column)
-	{
-		m_item_data.insert(position, QVariant());
-	}
+	// Insert new columns in this.
+	// Since we're ~abstract, we don't have our own data structures to resize here.
+	// So I think the best thing to do is punt the adding of columns to this to the
+	// derived class via this call, but insert the new columns into all of our children here in the loop below.
+	bool success = derivedClassInsertColumns(insert_before_column, num_columns);
+//	for (int column = 0; column < num_columns; ++column)
+//	{
+//		m_item_data.insert(insert_before_column, QVariant());
+//	}
 
+	// Insert new columns in children.
 	for(AbstractTreeModelItem *child : m_child_items)
 	{
-        child->insertColumns(position, columns);
+        child->insertColumns(insert_before_column, num_columns);
 	}
 
     return true;
@@ -210,16 +223,22 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 
 bool AbstractTreeModelItem::removeColumns(int position, int columns)
 {
-	if (position < 0 || position + columns > m_item_data.size())
+	auto current_num_columns = columnCount();
+
+	// Check that the range is legitimate.
+	if (position < 0 || position + columns > current_num_columns)
 	{
 		return false;
 	}
 
-	for (int column = 0; column < columns; ++column)
+	// Remove our columns in derived classes.
+	bool success = derivedClassRemoveColumns(position, columns);
+	if(!success)
 	{
-		m_item_data.remove(position);
+		return false;
 	}
 
+	// Remove columns from all children.
 	for(AbstractTreeModelItem *child : m_child_items)
 	{
         child->removeColumns(position, columns);
@@ -231,18 +250,19 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 
 bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 {
-	if (column < 0 || column >= m_item_data.size())
+	auto current_num_columns = columnCount();
+
+	if (column < 0 || column >= current_num_columns)
 	{
         return false;
 	}
 
-	m_item_data[column] = value;
-    return true;
+	return derivedClassSetData(column, value);
 }
 
 bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem*> new_children)
 {
-    /// @todo Support add columns?
+    /// @todo Support adding new columns if children have them?
     for(auto* child : new_children)
     {
         child->setParentItem(this);
@@ -255,8 +275,8 @@ bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem*> new_c
 void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 {
     AMLM_WARNIF(m_parent_item != nullptr);
+	AMLM_WARNIF(m_parent_item->columnCount() != this->columnCount());
 
 	m_parent_item = parent_item;
 }
-
 

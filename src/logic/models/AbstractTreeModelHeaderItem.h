@@ -23,6 +23,9 @@
 #ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 #define SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 
+// Std C++
+#include <vector>
+
 // Qt5
 #include <QVector>
 #include <QVariant>
@@ -40,9 +43,15 @@
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
 {
 public:
-	explicit AbstractTreeModelHeaderItem(QVector<QVariant> x = QVector<QVariant>(),
-	                                     AbstractTreeModelItem *parentItem = nullptr);
+	explicit AbstractTreeModelHeaderItem(QVector<QVariant> column_specs = QVector<QVariant>(),
+										 AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;
+
+	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
+
+	QVariant data(int column) const override;
+
+	int columnCount() const override;
 
 
 	/// @name Serialization
@@ -60,9 +69,21 @@ public:
 
 protected:
 
+	/// @todo I don't think we need this now that we have a dedicated TreeModelRootItem.
 	ScanResultsTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
 
-	std::vector<ColumnSpec> m_column_specs;
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	bool derivedClassSetData(int column, const QVariant &value) override;
+	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+	/// @}
+
+	/// @todo This is where we're ultimately headed, but QStrings in the interim.
+//	std::vector<ColumnSpec> m_column_specs;
+	std::vector<QString> m_column_specs;
+
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

@@ -57,6 +57,8 @@
 #define ABSTRACTTREEMODEL_H
 
 // Std C++
+#include "TreeModelRootItem.h"
+
 #include <memory>
 
 
@@ -72,6 +74,7 @@ class QXmlStreamReader;
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
+class TreeModelRootItem;
 #include <logic/ISerializable.h>
 
 
@@ -87,6 +90,11 @@ class AbstractTreeModel : public QAbstractItemModel, public virtual ISerializabl
 public:
 	explicit AbstractTreeModel(QObject *parent = nullptr);
 	~AbstractTreeModel() override;
+
+	/**
+	 * Set the ColumnSpecs in the model's root item, which holds the info for the horizontal header.
+	 */
+	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
 
 	// bool hasIndex() is not virtual.
 
@@ -164,12 +172,6 @@ public:
 	/// @name Extended public model interface.
     /// @{
 
-	/**
-	 * Set the root item, which doubles as the header item.
-	 */
-	virtual void setRootItem(AbstractTreeModelHeaderItem* root_header_item);
-
-
 	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
     virtual bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
 
@@ -205,8 +207,9 @@ protected:
     /// @}
 
     /// Hidden root node of the tree model.
+	TreeModelRootItem* m_root_item {nullptr};
     /// Pulls double duty as the horizontal header item.
-	AbstractTreeModelHeaderItem* m_root_item;
+//	AbstractTreeModelHeaderItem* m_root_item;
 };
 
 

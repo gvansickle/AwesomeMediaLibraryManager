@@ -98,8 +98,8 @@ public:
 	 * @param parent_item  The AbstractTreeModelItem which is the "tree-wise" parent of this item.
 	 *                     @note This is completely unrelated to QObject and its parent/child memory
 	 *                     management implications; this class isn't derived from QObject.
+	 *                     However, we still own our children and have to delete them on destruction.
 	 */
-//	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
 	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr/*,
 			const QVector<QVariant>& data = QVector<QVariant>()*/);
 	~AbstractTreeModelItem() override;
@@ -124,25 +124,25 @@ public:
     /// @returns The number of children this item has.
     virtual int childCount() const;
 
-    /// @returns the number of columns of data this item has.
-    virtual int columnCount() const;
+    /// @returns The number of columns of data this item has.
+    /// This is the max of the column count of all child items.
+    virtual int columnCount() const = 0;
 
     /**
      * Read access to the data of this item.
      * @param column  The column of data to return.
      * @return A QVariant containing all the data in @a column.
      */
-	virtual QVariant data(int column) const;
+	virtual QVariant data(int column) const = 0;
 
 	/**
-	 * Insert @a count default-constructed (i.e. empty) child items, starting after child index @a position.
-	 * @param position
-	 * @param count
-	 * @param columns
-	 * @return
+	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
+	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
+	 * @return true if successful.
 	 */
     virtual bool insertChildren(int position, int count, int columns);
-    bool insertColumns(int position, int columns);
+
+    virtual bool insertColumns(int insert_before_column, int num_columns);
 
     /// Returns a pointer to this item's parent.
     AbstractTreeModelItem *parent();
@@ -186,6 +186,14 @@ protected:
 	virtual AbstractTreeModelItem*
 	create_default_constructed_child_item(AbstractTreeModelItem* parent) = 0;
 
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	virtual bool derivedClassSetData(int column, const QVariant &value) = 0;
+	virtual bool derivedClassInsertColumns(int insert_before_column, int num_columns) = 0;
+	virtual bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) = 0;
+	/// @}
+
 private:
 
 	/// Pointer to our parent AbstractTreeModelItem.
@@ -199,7 +207,20 @@ private:
 
 	/// Vector of items for each column.
 	/// @todo Try to get rid of this, the data is the responsibility of derived classes.
-	QVector<QVariant> m_item_data;
+//	QVector<QVariant> m_item_data;
+
+	/// @name Info cache for child items.
+	/// @{
+
+//	int get_max_child_columns() const;
+//	struct CachedItemInfo
+//	{
+//
+//		int m_num_columns;
+//	};
+//	std::map<AbstractTreeModelItem*, CachedItemInfo>
+	/// @}
+
 };
 
 // Debug stream op free func declaration.
