@@ -89,26 +89,13 @@ void AMLMApp::Init(bool gtest_only)
 
 	/// @todo TEMP hardcoded db file name in home dir.
 	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-	QString db_file = db_dir + "/AMLMTestdb.sqlite3";
 
-	// Create or open the database.
-    /// @todo Removing.
-//	m_cdb_model->InitDb(QUrl::fromLocalFile(db_file), "the_connection_name");
-
-//	auto rel_table_model = m_cdb_model->make_reltable_model(this);
-//	m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
-//	m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"), 1);
-
-    /// @todo Move this somewhere.
-//    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
-
-	// Create and set up the scan results model.
+	// Create and set up the scan results tree model.
 	m_srtm_instance = new ScanResultsTreeModel(this);
 	// Create and set the root item / headers
-#warning "THIS IS GROSS, CLEAN IT UP"
+M_TODO("Needs to be ColumnSpecs");
 	m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
-//	QVector<QVariant> header_columns {"DirProps", "MediaURL", "SidecarCueURL"};
-//	m_srtm_instance->setRootItem(m_srtm_instance->make_root_node(header_columns));
+
 
 
 	/// @end Experiments

@@ -310,10 +310,12 @@ _Pragma("GCC diagnostic push")
 #if defined(_MSC_VER)
 #   define M_WARNING(exp) __pragma(message(FILE_LINE_LINK "warning C2660: " exp))
 #elif defined(__clang__)
+#   define M_TODO(msg)    M_WARNING(msg) //_Pragma(STRINGIZE_IMPL(message(msg " at line " DEFER(STRINGISE_IMPL,__LINE__))))
 #   define M_MESSAGE(msg) M_WARNING(msg) //_Pragma(STRINGIZE_IMPL(message(msg " at line " DEFER(STRINGISE_IMPL,__LINE__))))
 #   define M_WARNING(X) _Pragma(STRINGISE_IMPL(GCC warning(X " at line " DEFER(STRINGISE_IMPL, __LINE__))))
 #elif defined(__GNUC__) || defined(__GNUCXX__)
-#	define DO_PRAGMA(x) _Pragma (#x)
+#	define DO_PRAGMA(x) _Pragma (#x) // NOLINT
+#   define M_TODO(msg)    DO_PRAGMA(message (msg " at line " DEFER(STRINGISE_IMPL,__LINE__)) ) // NOLINT
 #   define M_MESSAGE(msg) DO_PRAGMA(message (msg " at line " DEFER(STRINGISE_IMPL,__LINE__)) ) // NOLINT
 #   define M_WARNING(exp) DO_PRAGMA(message FILE_LINE_LINK "warning: " exp) // NOLINT
 #endif

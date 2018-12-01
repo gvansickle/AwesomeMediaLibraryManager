@@ -264,7 +264,10 @@ bool AbstractTreeModel::appendItems(std::vector<AbstractTreeModelItem*> new_item
     auto first_new_row = parent_item->childCount();
 
     /// @todo What do we need to do to support/handle different num of columns?
-    beginInsertRows(parent, first_new_row, first_new_row + new_items.size());
+	/// @todo These items have data already and aren't default-constructed, do we need to do anything different
+	///       than begin/endInsert rows?
+
+	beginInsertRows(parent, first_new_row, first_new_row + new_items.size());
 
     parent_item->appendChildren(new_items);
 

@@ -77,7 +77,7 @@ public:
 
 protected:
 
-	/// @todo I don't think we need this now that we have a dedicated TreeModelRootItem.
+	/// @todo
 	ScanResultsTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
