@@ -274,8 +274,9 @@ bool AbstractTreeModelItem::appendChildren(QVector<AbstractTreeModelItem*> new_c
 
 void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 {
+//	Q_ASSERT(parent_item != nullptr);
     AMLM_WARNIF(m_parent_item != nullptr);
-	AMLM_WARNIF(m_parent_item->columnCount() != this->columnCount());
+//	AMLM_WARNIF(m_parent_item->columnCount() != this->columnCount());
 
 	m_parent_item = parent_item;
 }

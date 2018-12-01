@@ -96,8 +96,11 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	qDb() << M_NAME_VAL(creation_date);
 
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
-	m_root_item = new TreeModelRootItem();
-	new AbstractTreeModelHeaderItem();
+	if(m_root_item != nullptr)
+	{
+		delete m_root_item;
+	}
+	m_root_item = new AbstractTreeModelHeaderItem();
 	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
 
 #warning @todo INCOMPLETE/error handling

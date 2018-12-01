@@ -35,15 +35,19 @@
 #include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
 #include "ScanResultsTreeModelItem.h"
+#include "TreeModelRootItem.h"
 
 
 /**
  *
  */
-class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
+class AbstractTreeModelHeaderItem: public TreeModelRootItem
 {
+	using BASE_CLASS = TreeModelRootItem;
+
 public:
 	explicit AbstractTreeModelHeaderItem(QVector<QVariant> column_specs = QVector<QVariant>(),
+										 AbstractTreeModel *parent_model = nullptr,
 										 AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;
 

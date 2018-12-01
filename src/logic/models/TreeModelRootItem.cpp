@@ -30,18 +30,13 @@
 
 
 TreeModelRootItem::TreeModelRootItem(AbstractTreeModel* parent_model,
-									 AbstractTreeModelHeaderItem* horizontal_header_item,
 									 AbstractTreeModelItem* parent_item)
 {
 
-	m_horizontal_header_item = horizontal_header_item;
 }
 
 TreeModelRootItem::~TreeModelRootItem()
 {
-	// This isn't a child.
-	/// @todo Should it be?
-	delete m_horizontal_header_item;
 }
 
 QVariant TreeModelRootItem::data(int column) const

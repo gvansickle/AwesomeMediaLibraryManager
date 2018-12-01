@@ -39,7 +39,6 @@ class TreeModelRootItem: public AbstractTreeModelItem
 public:
 	explicit TreeModelRootItem() = default;
 	explicit TreeModelRootItem(AbstractTreeModel* parent_model,
-							   AbstractTreeModelHeaderItem* horizontal_header_item,
 							   AbstractTreeModelItem* parent_item = nullptr);
 	~TreeModelRootItem() override;
 

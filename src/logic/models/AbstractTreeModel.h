@@ -207,9 +207,8 @@ protected:
     /// @}
 
     /// Hidden root node of the tree model.
-	TreeModelRootItem* m_root_item {nullptr};
     /// Pulls double duty as the horizontal header item.
-//	AbstractTreeModelHeaderItem* m_root_item;
+	AbstractTreeModelHeaderItem* m_root_item;
 };
 
 

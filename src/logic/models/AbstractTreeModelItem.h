@@ -135,6 +135,8 @@ public:
      */
 	virtual QVariant data(int column) const = 0;
 
+	bool setData(int column, const QVariant &value);
+
 	/**
 	 * Insert @a count default-constructed (i.e. empty) child items (rows), starting after child index @a position.
 	 * Default construction is via the create_default_constructed_child_item() function (pure virtual here).
@@ -155,7 +157,6 @@ public:
     /// The row number of this item in its parent's list of children.
     int childNumber() const;
 
-    bool setData(int column, const QVariant &value);
 
     bool appendChildren(QVector<AbstractTreeModelItem*> new_children);
 

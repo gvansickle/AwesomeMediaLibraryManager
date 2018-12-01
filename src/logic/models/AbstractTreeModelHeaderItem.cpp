@@ -27,10 +27,11 @@
 #include "ScanResultsTreeModelItem.h"
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> column_specs, AbstractTreeModelItem *parentItem)
-	: AbstractTreeModelItem(parentItem)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> column_specs, AbstractTreeModel *parent_model,
+														 AbstractTreeModelItem *parentItem)
+	: TreeModelRootItem(parent_model, parentItem)
 {
-M_WARNING("TODO This should take a list of AbsHeaderSections");
+M_WARNING("TODO This should take a list of ColumnSpecs");
 
 //	m_column_specs = column_specs;
 
@@ -52,7 +53,10 @@ bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<QString> 
 
 QVariant AbstractTreeModelHeaderItem::data(int column) const
 {
-	Q_ASSERT_X(column, __PRETTY_FUNCTION__, "Got data() call");
+	if(column < columnCount())
+	{
+		return m_column_specs.at(column);
+	}
 	return QVariant();
 }
 
