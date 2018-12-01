@@ -57,8 +57,6 @@
 #define ABSTRACTTREEMODEL_H
 
 // Std C++
-#include "TreeModelRootItem.h"
-
 #include <memory>
 
 
@@ -74,7 +72,6 @@ class QXmlStreamReader;
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
-class TreeModelRootItem;
 #include <logic/ISerializable.h>
 
 
