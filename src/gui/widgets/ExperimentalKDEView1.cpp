@@ -34,7 +34,8 @@ bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
 
 	M_MESSAGE("THIS DOESN'T WORK FOR SOME REASON");
 
-	view->setModel(m_cat_proxy_model.get());
+	view->setModel(model);
+//	view->setModel(m_cat_proxy_model.get());
 //	view->setCategoryDrawer(m_cat_drawer.get());
 //	view->setAlternatingBlockColors(true);
 //	view->setCollapsibleBlocks(false);
