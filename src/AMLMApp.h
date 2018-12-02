@@ -112,7 +112,7 @@ public:
 
 	QMimeDatabase* mime_db() { return m_mime_database; };
 
-    CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
+// GONE:  CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
 
@@ -173,7 +173,7 @@ private:
 
     MainWindow* m_the_main_window {nullptr};
 
-    CollectionDatabaseModel* m_cdb_model;
+//    CollectionDatabaseModel* m_cdb_model;
 
 	AbstractTreeModel* m_cdb2_model_instance;
 

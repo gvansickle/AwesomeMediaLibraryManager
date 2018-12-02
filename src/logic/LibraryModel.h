@@ -86,7 +86,7 @@ public:
 	explicit LibraryModel(QObject *parent = nullptr);
     ~LibraryModel() override;
 
-    CollectionDatabaseModel *m_cdb_model;
+//    CollectionDatabaseModel *m_cdb_model;
 
 	/**
 	 * Open a new LibraryModel on the specified QUrl.

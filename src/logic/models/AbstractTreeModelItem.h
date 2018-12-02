@@ -96,9 +96,8 @@ class AbstractTreeModelItem : public virtual ISerializable
 public:
 	/**
 	 *
-	 * @param parent_item  The AbstractTreeModelItem which is the "tree-wise" parent of this item.
-	 *                     @note This is completely unrelated to QObject and its parent/child memory
-	 *                     management implications; this class isn't derived from QObject.
+	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.
+	 *                     @note This is completely unrelated to QObject parentage, this class isn't derived from QObject.
 	 *                     However, we still own our children and have to delete them on destruction.
 	 */
 	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
@@ -106,6 +105,7 @@ public:
 
 	/**
 	 * @todo Virtual constructor returning covariant model item pointer.
+	 * Think we'll probably need this.
 	 */
 //	virtual AbstractTreeModelItem* create() const = 0;
 	/// Virtual constructor for copy.

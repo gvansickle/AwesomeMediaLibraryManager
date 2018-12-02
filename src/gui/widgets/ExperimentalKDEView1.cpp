@@ -17,7 +17,7 @@ ExperimentalKDEView1::~ExperimentalKDEView1()
 
 bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
 {
-	auto view = ui->m_kcategorizedview;
+	auto view = ui->m_top_level_tree_view;
 
 	// Put the URLs in column 0.
 	m_column_remapper_proxy = QSharedPointer<KRearrangeColumnsProxyModel>::create(this);
@@ -35,10 +35,10 @@ bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
 	M_MESSAGE("THIS DOESN'T WORK FOR SOME REASON");
 
 	view->setModel(m_cat_proxy_model.get());
-	view->setCategoryDrawer(m_cat_drawer.get());
-	view->setAlternatingBlockColors(true);
-	view->setCollapsibleBlocks(false);
-	view->setCategorySpacing(24);
+//	view->setCategoryDrawer(m_cat_drawer.get());
+//	view->setAlternatingBlockColors(true);
+//	view->setCollapsibleBlocks(false);
+//	view->setCategorySpacing(24);
 
 	return true;
 }

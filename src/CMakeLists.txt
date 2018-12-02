@@ -267,8 +267,8 @@ qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenico
 # Qt5 non-binary Resource files.
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
-### @todo Is this right?
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
+
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS

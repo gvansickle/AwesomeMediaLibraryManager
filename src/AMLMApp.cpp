@@ -32,13 +32,14 @@
 #include <utils/TheSimplestThings.h>
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
-#include <logic/dbmodels/CollectionDatabaseModel.h>
+//#include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 #include <utils/RegisterQtMetatypes.h>
 #include <gui/MainWindow.h>
 
 
-// Pointer to the singleton.
+
+// Pointer to the AMLMApp singleton.
 AMLMApp *AMLMApp::m_the_instance = nullptr;
 
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv), m_perfect_deleter(this)
@@ -86,7 +87,7 @@ void AMLMApp::Init(bool gtest_only)
 	/* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
 
 	/// @todo Experiments
-	m_cdb_model = new CollectionDatabaseModel(this);
+//	m_cdb_model = new CollectionDatabaseModel(this);
 
 	/// @todo TEMP hardcoded db file name in home dir.
 	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
