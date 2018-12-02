@@ -91,10 +91,6 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	/// @todo This is a QDateTime
 	auto creation_date = map.value(SRTMTagToXMLTagMap[SRTMTag::DATE]).toString();
 
-	qDb() << M_NAME_VAL(title);
-	qDb() << M_NAME_VAL(creator);
-	qDb() << M_NAME_VAL(creation_date);
-
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
 	if(m_root_item != nullptr)
 	{
@@ -106,9 +102,4 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 #warning @todo INCOMPLETE/error handling
 }
 
-//AbstractTreeModelHeaderItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
-//{
-//#warning "I THINK THIS IS ERRONEOUS"
-//	return new AbstractTreeModelHeaderItem();
-//}
 

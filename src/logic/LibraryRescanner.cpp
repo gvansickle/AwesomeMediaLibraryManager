@@ -192,6 +192,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 
+    // Makes a new AMLMJobT.
 	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
     // Get a pointer to the Scan Results Tree model.
@@ -209,7 +210,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		{
 			DirScanResult dsr = tap_future.resultAt(i);
 			// Add another entry to the vector we'll send to the model.
-//			new_items.push_back(dsr.toTreeModelItem());
 			new_items.push_back(new ScanResultsTreeModelItem(dsr));
 
 			if(i >= end)
@@ -273,6 +273,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 	// Make sure the above job gets canceled and deleted.
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
+	// START dirtrav_job->then()
 	dirtrav_job->then(this, [=, tree_model_ptr=tree_model](DirectoryScannerAMLMJob* kjob){
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
@@ -384,8 +385,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 					}
 				}
 #endif
-
-
 			}
 /// @todo EXPERIMENTAL
 
@@ -409,7 +408,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
             lib_rescan_job->start();
 #endif
         }
-    });
+    }); // END dirtrav_job->then
 
     master_job_tracker->registerJob(dirtrav_job);
 	master_job_tracker->setAutoDelete(dirtrav_job, true);
