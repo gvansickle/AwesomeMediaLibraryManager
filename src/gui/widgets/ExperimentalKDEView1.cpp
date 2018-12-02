@@ -26,13 +26,12 @@ bool ExperimentalKDEView1::setModel(ScanResultsTreeModel* model)
 	remapping << 1;
 	m_column_remapper_proxy->setSourceColumns(remapping);
 
+	M_MESSAGE("I can't get the proxy model or view to work");
 	m_cat_proxy_model = QSharedPointer<KCategorizedSortFilterProxyModel>::create(this);
-
 	m_cat_proxy_model->setSourceModel(m_column_remapper_proxy.get());
 	m_cat_proxy_model->setCategorizedModel(true);
 	Q_ASSERT(0 == m_cat_proxy_model->sortColumn());
 
-	M_MESSAGE("THIS DOESN'T WORK FOR SOME REASON");
 
 	view->setModel(model);
 //	view->setModel(m_cat_proxy_model.get());
