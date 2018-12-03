@@ -20,8 +20,67 @@
 /**
  * @file XmlObjects.cpp
  */
-#include <logic/serialization/XmlObjects.h>
+
+#include "XmlObjects.h"
+
 #include <utils/DebugHelpers.h>
+#include <QtCore/QFile>
+#include <QtCore/QDir>
+#include <QtXmlPatterns/QXmlFormatter>
+
+
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url)
+{
+	// Open the file containing the XQuery (could be in our resources).
+	QFile xquery_file(xquery_url.toLocalFile());
+	xquery_file.open(QIODevice::ReadOnly);
+
+	// Open the output file.
+	QFile outfile(dest_xml_url.toLocalFile());
+	auto status = outfile.open(QFile::WriteOnly | QFile::Text);
+
+	// Create the QXmlQuery, bind variables, and load the xquery.
+
+	QXmlQuery the_query;
+
+	// Bind the source XML URL to the variable used in the XQuery file.
+	Q_ASSERT(source_xml_url.isValid());
+	the_query.bindVariable("input_file_path", QVariant(source_xml_url.toLocalFile()));
+
+	/// @todo Probably have a lambda here for the caller to bind more variables.
+
+	// Read the XQuery as a QString.
+	const QString query_string(QString::fromLatin1(xquery_file.readAll()));
+	// Set the_query.
+	the_query.setQuery(query_string);
+	Q_ASSERT(the_query.isValid());
+
+	// Formatter when we want to write another file.
+	QXmlFormatter formatter(the_query, &outfile);
+	formatter.setIndentationDepth(2);
+
+	// Run the query_string.
+	bool retval = the_query.evaluateTo(&formatter);
+
+	return retval;
+}
+
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QStringList* out_stringlist);
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QString* out_string);
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QIODevice *target);
+/// Serialize to a QAbstractXmlReceiver, e.g. QXmlSerializer.
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultItems *result);
+
+
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, const QUrl& dest_xml_url);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QStringList* out_stringlist);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QIODevice *target);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems *result);
+
+
 
 //void XmlElement::append(std::unique_ptr<XmlElement> child)
 //{
@@ -92,4 +151,6 @@ QString toISOTime(const QDateTime& dt)
 }
 
 XmlValue::XmlValue(const QDateTime& dt) : QString(toISOTime(dt)) {}
+
+
 

@@ -7,18 +7,17 @@ declare default element namespace "http://xspf.org/ns/0/";
 
 (: Extract all *.flac files. :)
 (: Path to the AMLM database, will be passed in. :)
-declare variable $in_filepath external;
+declare variable $input_file_path external;
 
-let $media_file_list_flac := fn:doc($in_filepath)/amlm_database/playlist//exturl_media
+let $media_file_list_flac := fn:doc($input_file_path)/amlm_database/playlist//exturl_media
 return
 <html>
 <body>
 <ol>
 {
-for $x at $count in fn:doc($in_filepath)/amlm_database/playlist//exturl_media
+for $x at $count in fn:doc($input_file_path)/amlm_database/playlist//exturl_media
 where (matches($x/href, '.*\.flac$'))
 return
-
 <li id="{$count}">
 	{data($x/href)}
 </li>

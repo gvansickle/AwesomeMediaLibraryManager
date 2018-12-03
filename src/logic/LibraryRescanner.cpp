@@ -347,7 +347,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				}
 #ifndef TRY_XQUERY_READ
 				// Now let's see if we can XQuery what we just wrote.
-				if(1)
+				auto outfile_url = QUrl::fromLocalFile(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
+				bool retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist.xq"),
+						QUrl::fromLocalFile(filename), outfile_url);
+
+				Q_ASSERT(retval);
+
+				if(0)
 				{
 					// Open the file with the XQuery (in our resources).
 				    QFile queryFile(QString(":/xquery_files/filelist.xq"));
@@ -362,7 +368,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 				    QXmlQuery query;
 				    QUrl in_filepath = QUrl::fromLocalFile(filename);
 				    Q_ASSERT(in_filepath.isValid());
-				    query.bindVariable("in_filepath", QVariant(in_filepath.toString()));
+				    query.bindVariable("input_file_path", QVariant(in_filepath.toString()));
 
 					// Read the XQuery as a QString.
 					const QString query_string(QString::fromLatin1(queryFile.readAll()));
