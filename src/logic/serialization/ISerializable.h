@@ -20,11 +20,18 @@
 /**
  * @file ISerializable.h
  */
+
 #ifndef SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_
 #define SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_
 
 #include <QVariant>
 
+/**
+ * Abstract interface for adding serialization capabilities to classes which
+ * derive from and implement this interface.
+ *
+ * @see ISerializer.
+ */
 class ISerializable
 {
 public:

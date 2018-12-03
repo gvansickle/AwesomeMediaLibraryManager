@@ -33,6 +33,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
+#include <logic/serialization/ISerializable.h>
 
 
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name,
