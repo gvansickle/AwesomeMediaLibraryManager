@@ -40,7 +40,7 @@ using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
 /**
  * ExtUrl tags.
  */
-class ExtUrlTag
+class ExtUrlTag : public ExtEnum<ExtUrlTag>
 {
 	Q_GADGET
 
@@ -75,7 +75,7 @@ static const auto ExtUrlTagToXMLTagMap = make_map<ExtUrlTag::TagName, QString>(
 /**
  * DirScanResult tags.
  */
-class DSRTag
+class DSRTag : public ExtEnum<DSRTag>
 {
 	Q_GADGET
 
@@ -91,7 +91,7 @@ public:
 };
 Q_DECLARE_METATYPE(DSRTag);
 
-static const auto DSRTagToXMLTagMap = ExtEnum::make_map<DSRTag::TagName, QString>(
+static const auto DSRTagToXMLTagMap = DSRTag::make_map<DSRTag::TagName, QString>(
 {
 	{DSRTag::FLAGS_DIRPROPS, "flags_dirprops"},
 	{DSRTag::EXTURL_DIR, "exturl_dir"},
@@ -102,7 +102,7 @@ static const auto DSRTagToXMLTagMap = ExtEnum::make_map<DSRTag::TagName, QString
 /**
  * ScanResultsTreeModelItem tags.
  */
-class SRTMTag
+class SRTMTag : public ExtEnum<SRTMTag>
 {
 	Q_GADGET
 public:
@@ -119,7 +119,7 @@ public:
 };
 Q_DECLARE_METATYPE(SRTMTag);
 
-static const auto SRTMTagToXMLTagMap = ExtEnum::make_map<SRTMTag::TagName, QString>(
+static const auto SRTMTagToXMLTagMap = SRTMTag::make_map<SRTMTag::TagName, QString>(
 {
 	{SRTMTag::BASE_DIRECTORY, "base_directory"},
 	{SRTMTag::TITLE, "title"},
@@ -131,7 +131,7 @@ static const auto SRTMTagToXMLTagMap = ExtEnum::make_map<SRTMTag::TagName, QStri
 /**
  * ScanResultsTreeModelItem tags.
  */
-class SRTMItemTag
+class SRTMItemTag : public ExtEnum<SRTMItemTag>
 {
 Q_GADGET
 public:
@@ -144,7 +144,7 @@ public:
 };
 Q_DECLARE_METATYPE(SRTMItemTag);
 
-static const auto SRTMItemTagToXMLTagMap = ExtEnum::make_map<SRTMItemTag::TagName, QString>(
+static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::TagName, QString>(
 {
 	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"}
 });

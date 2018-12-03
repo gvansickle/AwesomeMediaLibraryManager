@@ -43,13 +43,14 @@
  * - As close as practical to built-in enum-like syntax and semantics, e.g. "DerivedExtEnum val = TypeSafeEnumerator1;
  */
 
-// Fwd declaration.
+// Fwd declaration for ExtEnum->SomethingElse maps.
 template <class ScopeTypeEnumType, class ToType>
 struct ExtEnumMapBase;
 
 /**
  *
  */
+template <class DerivedType>
 class ExtEnum
 {
 public:
