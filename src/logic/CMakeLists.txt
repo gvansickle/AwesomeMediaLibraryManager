@@ -26,7 +26,7 @@
 add_subdir_lib(models_subdir "${CMAKE_CURRENT_LIST_DIR}/models")
 add_subdir_lib(dbmodels_subdir "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
 add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
-add_subdir_lib(xml_subdir "${CMAKE_CURRENT_LIST_DIR}/xml")
+add_subdir_lib(serialization_subdir "${CMAKE_CURRENT_LIST_DIR}/serialization")
 
 set(logic_subdir_SOURCES
 	Library.cpp
@@ -115,7 +115,7 @@ target_link_libraries(logic_subdir
 		dbmodels_subdir
 		models_subdir
 		proxymodels_subdir
-		xml_subdir
+		serialization_subdir
 	)
 target_include_directories(logic_subdir
 	PUBLIC
