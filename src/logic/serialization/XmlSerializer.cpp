@@ -21,7 +21,9 @@
  * @file XmlSerializer.cpp
  */
 
-#include <logic/serialization/XmlSerializer.h>
+#include "XmlSerializer.h"
+
+// Std C++
 #include <variant>
 
 // Qt5
@@ -33,7 +35,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
-#include <logic/serialization/ISerializable.h>
+#include "ISerializable.h"
 
 
 void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url, const QString &root_name,

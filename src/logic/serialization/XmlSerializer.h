@@ -37,7 +37,7 @@ class QString;
 class QStringList;
 
 // Ours
-#include <logic/serialization/ISerializer.h>
+#include "ISerializer.h"
 
 /**
  * Concrete ISerializer class for serializing ISerializables as XML.
@@ -113,8 +113,9 @@ private:
 	QString m_default_ns;
 	QString m_default_ns_version;
 
-	QXmlStreamReader* m_temp_xml_stream_reader {nullptr};
-	QXmlStreamWriter* m_temp_xml_stream_writer {nullptr};
+	/// @todo I think I thought we needed these at one point, but now I don't know.
+//	QXmlStreamReader* m_temp_xml_stream_reader {nullptr};
+//	QXmlStreamWriter* m_temp_xml_stream_writer {nullptr};
 };
 
 #endif /* SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_ */
