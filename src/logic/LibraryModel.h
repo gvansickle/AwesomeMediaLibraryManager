@@ -55,13 +55,6 @@ Q_DECLARE_METATYPE(VecOfLEs);
 Q_DECLARE_METATYPE(VecOfPMIs);
 
 
-enum LibState
-{
-	Idle,
-	ScanningForFiles,
-	PopulatingMetadata
-};
-
 /**
  * The LibraryModel class.
  */
@@ -74,9 +67,6 @@ class LibraryModel : public QAbstractItemModel
 Q_SIGNALS:
 	/// Signal to ourself to start an asynchronous directory traversal.
     void startFileScanSignal(QUrl url);
-
-    /// Status/Progress signal.
-//    void statusSignal(LibState, qint64, qint64);
 
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
 //    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;

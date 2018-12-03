@@ -25,8 +25,8 @@
 
 /**
  * Class which tries to encapsulate some of the rather complex Qt5 threading issues into a single
- * base class, whcih can then be more conveniently subclassed.
- * See here: https://mayaposch.wordpress.com/2011/11/01/how-to-really-truly-use-qthreads-the-full-explanation/
+ * base class, which can then be more conveniently subclassed.
+ * @link https://mayaposch.wordpress.com/2011/11/01/how-to-really-truly-use-qthreads-the-full-explanation/
  */
 class WorkerThreadBase : public QObject
 {

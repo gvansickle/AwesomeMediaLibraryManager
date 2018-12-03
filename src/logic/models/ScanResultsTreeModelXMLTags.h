@@ -62,7 +62,7 @@ public:
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
-static const auto ExtUrlTagToXMLTagMap = make_map<ExtUrlTag::TagName, QString>(
+static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagName, QString>(
 {
 	{ExtUrlTag::HREF, "href"},
 	{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},

@@ -25,10 +25,14 @@
 #define XSPFSERIALIZER_H
 
 
+#include "XmlSerializer.h"
+
+
 class XSPFSerializer : public XmlSerializer
 {
 public:
 	XSPFSerializer();
 };
+
 
 #endif // XSPFSERIALIZER_H

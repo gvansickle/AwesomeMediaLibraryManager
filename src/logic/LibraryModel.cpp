@@ -1044,7 +1044,7 @@ void LibraryModel::disconnectIncomingSignals()
 void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
-    qDbo() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
+    qDbo() << QString("Status: %1 populated, %2 rows").arg(m_library.getNumPopulatedEntries()).arg(rowCount());
 //	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 
