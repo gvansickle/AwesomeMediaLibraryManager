@@ -19,7 +19,7 @@
 
 
 
-#include "ExtEnum.h"
+#include <logic/serialization/ExtEnum.h>
 
 
 #if 0

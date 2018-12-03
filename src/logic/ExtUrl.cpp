@@ -33,7 +33,7 @@
 
 // Ours
 #include <logic/models/ScanResultsTreeModelXMLTags.h>
-#include "xml/XmlObjects.h"
+#include <logic/serialization/XmlObjects.h>
 #include <utils/DebugHelpers.h>
 
 

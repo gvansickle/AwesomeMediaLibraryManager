@@ -98,7 +98,7 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 		// Something went wrong.
 		xmlstream.raiseError("Reading first start element failed.");
 
-		/// @todo Move
+		/// @todo Handle errors better.
 		qWr() << error_string(xmlstream);
 	}
 	else

@@ -35,7 +35,7 @@ class QFileInfo;
 
 // Ours
 #include <utils/QtHelpers.h>
-#include "xml/XmlObjects.h"
+#include <logic/serialization/XmlObjects.h>
 #include "ISerializable.h"
 
 

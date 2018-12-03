@@ -42,6 +42,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest-spi.h> //< For EXPECT_NONFATAL_FAILURE() etc.
+#include <logic/serialization/ExtEnum.h>
 
 // Ours
 #include <tests/TestHelpers.h>
@@ -55,7 +56,6 @@
 #include <utils/EnumFlagHelpers.h>
 ///// @todo Split off
 #include "../logic/ExtUrl.h"
-#include "../logic/xml/ExtEnum.h"
 
 /**
  * Test flag class definition.

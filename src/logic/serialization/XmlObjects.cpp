@@ -20,9 +20,7 @@
 /**
  * @file XmlObjects.cpp
  */
-#include "XmlObjects.h"
-
-// Ours
+#include <logic/serialization/XmlObjects.h>
 #include <utils/DebugHelpers.h>
 
 //void XmlElement::append(std::unique_ptr<XmlElement> child)

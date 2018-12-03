@@ -39,8 +39,8 @@ class QStringList;
 // Ours
 #include "ISerializer.h"
 
-/*
- *
+/**
+ * Concrete ISerializer class for serializing ISerializables as XML.
  */
 class XmlSerializer: public ISerializer
 {

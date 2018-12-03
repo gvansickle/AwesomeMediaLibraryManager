@@ -20,8 +20,8 @@
 /**
  * @file XmlObjects.h
  */
-#ifndef SRC_LOGIC_XML_XMLOBJECTS_H_
-#define SRC_LOGIC_XML_XMLOBJECTS_H_
+#ifndef SRC_LOGIC_SERIALIZATION_XMLOBJECTS_H_
+#define SRC_LOGIC_SERIALIZATION_XMLOBJECTS_H_
 
 // Std C++
 #include <functional>
@@ -263,4 +263,4 @@ static inline QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const XmlEleme
 	return out;
 }
 
-#endif /* SRC_LOGIC_XML_XMLOBJECTS_H_ */
+#endif /* SRC_LOGIC_SERIALIZATION_XMLOBJECTS_H_ */

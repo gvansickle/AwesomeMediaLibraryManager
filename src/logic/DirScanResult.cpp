@@ -20,6 +20,7 @@
 #include "DirScanResult.h"
 
 #include <config.h>
+#include <logic/serialization/ExtEnum.h>
 
 // Qt5
 #include <QUrl>
@@ -35,7 +36,6 @@
 #include "models/ScanResultsTreeModel.h"
 #include "models/ScanResultsTreeModelXMLTags.h"
 #include <utils/EnumFlagHelpers.h>
-#include <logic/xml/ExtEnum.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
