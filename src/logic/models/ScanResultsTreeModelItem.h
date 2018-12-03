@@ -31,7 +31,7 @@ class QXmlStreamReader;
 
 // Ours
 #include "../DirScanResult.h"
-#include "../ISerializable.h"
+#include <logic/serialization/ISerializable.h>
 
 /**
  * Model of the results of scanning a directory tree.

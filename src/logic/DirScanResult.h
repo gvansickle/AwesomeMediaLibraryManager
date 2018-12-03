@@ -21,6 +21,7 @@
 #define SRC_LOGIC_DIRSCANRESULT_H_
 
 #include <config.h>
+#include <logic/serialization/ISerializable.h>
 
 // Qt5
 #include <QUrl>
@@ -35,7 +36,6 @@
 #include <src/utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
-#include "ISerializable.h"
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;

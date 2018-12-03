@@ -20,8 +20,8 @@
 /**
  * @file ISerializable.h
  */
-#ifndef SRC_LOGIC_ISERIALIZABLE_H_
-#define SRC_LOGIC_ISERIALIZABLE_H_
+#ifndef SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_
+#define SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_
 
 #include <QVariant>
 
@@ -42,4 +42,4 @@ public:
 };
 
 
-#endif /* SRC_LOGIC_ISERIALIZABLE_H_ */
+#endif /* SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_ */

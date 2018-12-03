@@ -53,9 +53,8 @@
 #include <concurrency/DirectoryScanJob.h>
 
 #include "LibraryRescannerJob.h"
-#include "XmlSerializer.h"
-
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
+#include <logic/serialization/XmlSerializer.h>
 
 #include "logic/LibraryModel.h"
 

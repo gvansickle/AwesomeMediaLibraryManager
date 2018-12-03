@@ -22,11 +22,15 @@
 set(serialization_subdir_SOURCES
 		ExtEnum.cpp
 		XmlObjects.cpp
-	)
+		XmlSerializer.cpp
+		)
 set(serialization_subdir_HEADERS
 		ExtEnum.h
 		XmlObjects.h
-	)
+		XmlSerializer.h
+		ISerializable.h
+		ISerializer.h
+		)
 
 prepend_to_each(serialization_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${serialization_subdir_SOURCES})
 prepend_to_each(serialization_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${serialization_subdir_HEADERS})

@@ -62,4 +62,7 @@ target_include_directories(models_subdir
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+	PRIVATE
+		# For serialization
+		"${CMAKE_CURRENT_LIST_DIR}/../serialization"
 	)

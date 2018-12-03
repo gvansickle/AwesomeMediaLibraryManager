@@ -21,8 +21,8 @@
  * @file XmlSerializer.h
  */
 
-#ifndef SRC_LOGIC_XMLSERIALIZER_H_
-#define SRC_LOGIC_XMLSERIALIZER_H_
+#ifndef SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_
+#define SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_
 
 // Std C++
 #include <functional>
@@ -37,7 +37,7 @@ class QString;
 class QStringList;
 
 // Ours
-#include "ISerializer.h"
+#include <logic/serialization/ISerializer.h>
 
 /**
  * Concrete ISerializer class for serializing ISerializables as XML.
@@ -117,4 +117,4 @@ private:
 	QXmlStreamWriter* m_temp_xml_stream_writer {nullptr};
 };
 
-#endif /* SRC_LOGIC_XMLSERIALIZER_H_ */
+#endif /* SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_ */

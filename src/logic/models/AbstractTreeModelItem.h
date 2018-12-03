@@ -75,6 +75,7 @@
 #define ABSTRACTTREEMODELITEM_H
 
 // Std C++
+#include <logic/serialization/ISerializable.h>
 #include <vector>
 
 // Qt5
@@ -85,7 +86,6 @@
 // Ours
 #include <src/utils/QtHelpers.h>
 #include <utils/StaticAnalysis.h>
-#include <logic/ISerializable.h>
 
 /**
  * Base class for AbstractItemTreeModel items.

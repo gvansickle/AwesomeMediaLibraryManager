@@ -72,7 +72,7 @@ class QXmlStreamReader;
 class AbstractTreeModelItem;
 class AbstractHeaderSection;
 class AbstractTreeModelHeaderItem;
-#include <logic/ISerializable.h>
+#include <logic/serialization/ISerializable.h>
 
 
 /**

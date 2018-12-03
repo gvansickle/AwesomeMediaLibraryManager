@@ -20,10 +20,11 @@
 /**
  * @file ISerializer.h
  */
-#ifndef SRC_LOGIC_ISERIALIZER_H_
-#define SRC_LOGIC_ISERIALIZER_H_
+#ifndef SRC_LOGIC_SERIALIZATION_ISERIALIZER_H_
+#define SRC_LOGIC_SERIALIZATION_ISERIALIZER_H_
 
 // Std C++
+#include <logic/serialization/ISerializable.h>
 #include <functional>
 
 // Qt5
@@ -31,7 +32,6 @@
 #include <QUrl>
 
 // Ours
-#include "ISerializable.h"
 
 /**
  * Abstract Base Class for serializers.
@@ -50,4 +50,4 @@ public:
 };
 
 
-#endif /* SRC_LOGIC_ISERIALIZER_H_ */
+#endif /* SRC_LOGIC_SERIALIZATION_ISERIALIZER_H_ */

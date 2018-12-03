@@ -21,9 +21,7 @@
  * @file XmlSerializer.cpp
  */
 
-#include "XmlSerializer.h"
-
-// Std C++
+#include <logic/serialization/XmlSerializer.h>
 #include <variant>
 
 // Qt5
