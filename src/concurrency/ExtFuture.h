@@ -275,11 +275,10 @@ public:
 	/// @}
 
 	/**
-	 * @name Static members for the global cancel propagation handler.
+	 * @name Static members for the global state needed by ExtFuture.
 	 */
 	/// @{
 	static void InitStaticExtFutureState();
-//	static std::shared_ptr<ExtAsync::ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 	/// @}
 
 	/// @name Extra informational accessors.
@@ -720,7 +719,7 @@ public:
 
 		QtConcurrent::run(
 //		returned_future = ExtAsync::run_for_then(
-			[=, then_callback_copy = /*std::decay_t<ThenCallbackType>*/DECAY_COPY(then_callback)]
+			[=, then_callback_copy = DECAY_COPY(then_callback)]
 					(ExtFuture<T> this_future_copy, ExtFuture<LiftedR> returned_future_copy) -> void {
 
 			// Ok, we're now running in the thread which will call then_callback_copy(this_future_copy).
@@ -1088,7 +1087,7 @@ public:
 			  REQUIRES(std::is_invocable_v<FinallyCallbackType>)>
 	ExtFuture<Unit> finally(FinallyCallbackType&& finally_callback)
 	{
-		ExtFuture<Unit> retval = this->then([=, finally_callback_copy = std::decay_t<FinallyCallbackType>(finally_callback)](ExtFuture<T> this_future) -> Unit {
+		ExtFuture<Unit> retval = this->then([=, finally_callback_copy = DECAY_COPY(finally_callback)](ExtFuture<T> this_future) -> Unit {
 			this_future.waitForFinished();
 
 			// Call the finally_callback.
@@ -1150,7 +1149,7 @@ protected:
 		>
 	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
-		return StreamingTapHelper(guard_qobject, [=, tap_cb = std::decay_t<F>(tap_callback)](ExtFuture<T> f, int begin, int end) {
+		return StreamingTapHelper(guard_qobject, [=, tap_cb = DECAY_COPY(tap_callback)](ExtFuture<T> f, int begin, int end) {
 			Q_ASSERT(f.isStarted());
 //			Q_ASSERT(!f.isFinished());
 			for(auto i = begin; i < end; ++i)
@@ -1185,7 +1184,7 @@ protected:
 		ExtFuture<T> returned_future = make_started_only_future<T>();
 
 		// The concurrent run().
-		QtConcurrent::run([=, streaming_tap_callback_copy = /*std::decay_t<StreamingTapCallbackType>*/DECAY_COPY(streaming_tap_callback)]
+		QtConcurrent::run([=, streaming_tap_callback_copy = DECAY_COPY(streaming_tap_callback)]
 						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) {
 				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
 						<< "ret_future_copy:" << returned_future_copy;

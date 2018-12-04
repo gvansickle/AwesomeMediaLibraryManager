@@ -450,8 +450,6 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 {
 	try
 	{
-
-
 	AMLMTEST_SCOPED_TRACE("IN QtConcurrentMappedFutureStateOnCancel template function");
 
 	std::atomic_int map_callback_run_counter {0};
@@ -507,7 +505,7 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	AMLMTEST_EXPECT_FALSE(mapped_results_future.isFinished());
 
 	TCOUT << "SLEEPING FOR 1000";
-	/// @note So this will wake back up and either all the lambdas will have been called and run, or none will have.
+	/// @note So this will wake back up and either all the lambdas will have been called and finished, or none will have.
 	///       However, the mapped() call/future may not be finished yet.
     TC_Sleep(1000);
 
@@ -516,14 +514,15 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	TCOUT << "CANCELING:" << ExtFutureState::state(mapped_results_future);
 	if(dont_let_jobs_complete)
 	{
-		/// @note 2 sec case, We should still be Running here.
+		/// @note Jobs take 2 sec to complete case.  We should always still be Running here.
 		AMLMTEST_EXPECT_TRUE(mapped_results_future.isRunning() && mapped_results_future.isStarted()) << state(mapped_results_future);
 	}
 	else
 	{
-		/// @note 0.5 sec case, we should not still be Running here, and should be Finished.
-		AMLMTEST_EXPECT_TRUE(mapped_results_future.isFinished());
+		/// @note Jobs take 0.5 sec to complete case, we should not still be Running here, and should be Finished.
+		/// @note However, it sporadically is coming back as not finished.
 		EXPECT_TRUE(mapped_results_future.isStarted());
+		AMLMTEST_EXPECT_TRUE(mapped_results_future.isFinished()) << mapped_results_future;
 		EXPECT_TRUE(!mapped_results_future.isRunning()) << mapped_results_future;
 		TCOUT << "WARNING: Canceling already-finished future";
 	}
@@ -1048,8 +1047,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 
 	rsm.ReportResult(0);
 
-	bool ran_tap {false};
-	bool ran_then {false};
+	std::atomic_bool ran_tap {false};
+	std::atomic_bool ran_then {false};
 
     using FutureType = ExtFuture<QString>;
 
