@@ -42,25 +42,22 @@
  * Run the XQuery at @a xquery_url against the source XML at @a source_xml_url, and write the results to the
  * file @a dest_xml_url.
  *
- * @param xquery_url
- * @param source_xml_url
- * @param dest_xml_url
- * @return
+ * @return true on success.
  */
 bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url);
 
 bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QStringList* out_stringlist);
 bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QString* out_string);
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QIODevice *target);
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultItems *result);
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QIODevice* target);
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultItems* result);
 
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, const QUrl& dest_xml_url);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QStringList* out_stringlist);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QIODevice *target);
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems *result);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems* result);
 
 /**
  * QXmlQuery notes:
