@@ -30,7 +30,6 @@
 #include <QtCore>
 #include <QUrl>
 #include <QDateTime>
-#include <QXmlQuery>
 class QFileInfo;
 
 // Ours
@@ -106,6 +105,7 @@ public:
      */
     enum Statuses
     {
+    	Unknown = 0x00,
         Exists = 0x01,
         Accessible = 0x02,
         IsStale = 0x04
@@ -154,20 +154,16 @@ public:
 
 //	bool isValid() { return m_url.isValid(); }
 
-	QTH_FRIEND_QDATASTREAM_OPS(ExtUrl);
-
-	/// QXmlStream{Read,Write} operators.
-//	QTH_FRIEND_QXMLSTREAM_OPS(ExtUrl);
+	/// @name Serialization
+	/// @{
 
 	/// @todo Can these be protected?
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 
-	/**
-	 * Return an XmlElement representing this ExtUrl.
-	 */
-	XmlElement toXml() const;
+	QTH_FRIEND_QDATASTREAM_OPS(ExtUrl);
 
+	/// @}
 
 protected:
 
@@ -185,6 +181,5 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(ExtUrl::Status);
 
 QTH_DECLARE_QDEBUG_OP(ExtUrl);
 QTH_DECLARE_QDATASTREAM_OPS(ExtUrl);
-//QTH_DECLARE_QXMLSTREAM_OPS(ExtUrl);
 
 #endif /* SRC_LOGIC_EXTURL_H_ */

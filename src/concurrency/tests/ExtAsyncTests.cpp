@@ -522,7 +522,9 @@ void QtConcurrentMappedFutureStateOnCancel(bool dont_let_jobs_complete)
 	else
 	{
 		/// @note 0.5 sec case, we should not still be Running here, and should be Finished.
-		AMLMTEST_EXPECT_TRUE(mapped_results_future.isFinished() && mapped_results_future.isStarted() && !mapped_results_future.isRunning()) << mapped_results_future;
+		AMLMTEST_EXPECT_TRUE(mapped_results_future.isFinished());
+		EXPECT_TRUE(mapped_results_future.isStarted());
+		EXPECT_TRUE(!mapped_results_future.isRunning()) << mapped_results_future;
 		TCOUT << "WARNING: Canceling already-finished future";
 	}
 

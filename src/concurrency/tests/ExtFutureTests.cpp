@@ -1853,19 +1853,19 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 
 
 	QList<int> expected_results {1,2,3,4,5,6};
-	eftype ef = async_int_generator<eftype>(1, 6, this);
+	eftype root_future = async_int_generator<eftype>(1, 6, this);
 
-	TCOUT << "Starting ef state:" << ef.state();
-	ASSERT_TRUE(ef.isStarted());
-	ASSERT_FALSE(ef.isCanceled());
-	ASSERT_FALSE(ef.isFinished());
+	TCOUT << "Starting ef state:" << root_future.state();
+	ASSERT_TRUE(root_future.isStarted());
+	ASSERT_FALSE(root_future.isCanceled());
+	ASSERT_FALSE(root_future.isFinished());
 
 	TCOUT << "Attaching then()";
 
-	auto f2 = ef.then([=, &async_results_from_then, &num_then_completions](eftype ef) -> int  {
-			TCOUT << "IN THEN, future:" << ef.state() << ef.resultCount();
-			AMLMTEST_EXPECT_TRUE(ef.isFinished());
-			async_results_from_then = ef.get();
+	auto f2 = root_future.then([=, &async_results_from_then, &num_then_completions](eftype root_future_copy) -> int  {
+			TCOUT << "IN THEN, future:" << root_future_copy.state() << root_future_copy.resultCount();
+			AMLMTEST_EXPECT_TRUE(root_future_copy.isFinished());
+			async_results_from_then = root_future_copy.get();
 			num_then_completions++;
 			return 5;
 	});
@@ -1876,32 +1876,32 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 
 	TCOUT << "BEFORE WAITING FOR THEN()" << f2;
 
-	// Block.
+	// Block waiting on the results.
 	async_results_from_get = f2.results();
 
 	TCOUT << "AFTER WAITING FOR THEN()" << f2;
 
-	EXPECT_TRUE(ef.isFinished());
+	EXPECT_TRUE(root_future.isFinished());
 	EXPECT_EQ(num_then_completions, 1);
 
 	// .get() above should block.
-	EXPECT_TRUE(ef.isFinished());
+	EXPECT_TRUE(root_future.isFinished());
 
 	// This shouldn't do anything, should already be finished.
-	ef.waitForFinished();
+	root_future.waitForFinished();
 
-	TCOUT << "Post .tap().get(), extfuture:" << ef.state();
+	TCOUT << "Post .tap().get(), extfuture:" << root_future.state();
 
-	EXPECT_TRUE(ef.isStarted());
-	EXPECT_FALSE(ef.isCanceled()) << ef.state();
-	EXPECT_TRUE(ef.isFinished());
+	EXPECT_TRUE(root_future.isStarted());
+	EXPECT_FALSE(root_future.isCanceled()) << root_future.state();
+	EXPECT_TRUE(root_future.isFinished());
 
 	EXPECT_EQ(async_results_from_get.size(), 1);
 	EXPECT_EQ(async_results_from_get[0], 5);
 	EXPECT_EQ(async_results_from_then.size(), 6);
 	EXPECT_EQ(async_results_from_then, expected_results);
 
-	ASSERT_TRUE(ef.isFinished());
+	ASSERT_TRUE(root_future.isFinished());
 
 	TC_EXIT();
 }

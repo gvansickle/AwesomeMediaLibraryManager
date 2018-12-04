@@ -23,7 +23,7 @@
 
 /**
  * @file
- * An extended QFuture<T> class.
+ * An extended QFuture<T> class supporting .then() composition etc.
  */
 
 // Std C++
@@ -53,13 +53,12 @@
 #include <utils/UniqueIDMixin.h>
 
 #include "ExtFutureState.h"
-#include "ExtFutureWatcher.h"
 #include "ExtFutureProgressInfo.h"
 #include "ExtAsyncExceptions.h"
-#include "ExtFuturePropagationHandler.h"
 
 // Generated
 #include "logging_cat_ExtFuture.h"
+
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync
@@ -1338,17 +1337,7 @@ struct when_any_result
 /// @{
 
 #include "impl/ExtFuture_impl.hpp"
-#include "ExtFuturePropagationHandler.h"
 
-#if 0
-template <class ExtFutureT, class ContinuationType>
-auto external_then(ExtFutureT ef, ContinuationType continuation) -> ExtFuture<decltype(continuation(ef.get()))>
-{
-	return ExtAsync::run_again([=](ExtFuture<> dummy){
-		continuation(ef.get());
-	});
-}
-#endif
 
 template<typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
