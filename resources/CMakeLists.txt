@@ -29,8 +29,6 @@ set(amlm_APP_ICONS
     128-preferences-desktop-sound.png
 	# svgz isn't supported by ecm_add_app_icon().
     #scalable-preferences-desktop-sound.svgz
-	# We're included, no parent scope.
-	#    PARENT_SCOPE
 )
 prepend_to_each(amlm_APP_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_APP_ICONS})
 

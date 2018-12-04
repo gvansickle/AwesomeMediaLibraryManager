@@ -200,7 +200,7 @@ void Theme::initialize()
     using string_pair_list = std::vector<string_pair>;
     const string_pair_list rccs {
         {"icontheme.rcc", ":/icons/breeze"}
-        /*, "icons_oxygen.rcc"*/};
+        };
     for(const string_pair& rcc_entry : rccs)
     {
         // Look for the specified file.

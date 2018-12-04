@@ -248,8 +248,10 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 	)
 
 # Sets the icon on Windows and OSX.
-# See https://api.kde.org/ecm/module/ECMAddAppIcon.html
-# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <>/src here.
+# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <proj>/src here.
+# See:
+# @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
+# @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
 if(NOT DEFINED amlm_APP_ICONS)
 	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: ${amlm_APP_ICONS}")
 endif()
@@ -257,7 +259,7 @@ ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 
 # Qt5 Binary Resource (rcc) files.
-qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
+#qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
@@ -320,7 +322,8 @@ set_target_properties(${PROJECT_NAME}
     AUTOMOC ON
     AUTOUIC ON)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
-add_dependencies(${PROJECT_NAME} icons_oxygen)
+### @todo breeze
+#add_dependencies(${PROJECT_NAME} icons_oxygen)
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
