@@ -103,10 +103,11 @@ template <class CallbackType>
 		 * to the caller."
 		 *
 		 * We're close to that here, except:
-		 * - The callback is passed an ExtFuture<T> f as its first parameter.  All communication out is through this future.
+		 * - The callback is passed an ExtFuture<T> f as its first parameter.  All communication in or out of the callback
+		 *   is through this future.
 		 * - A copy of ExtFuture<T> f is returned by this function call.  This returned value should be used by the
 		 *   caller for obtaining results and control of the asynchronous task.
-		 * - The callback must return void.  Any return values must be passed directly to the future f via .reportResult() etc.
+		 * - The callback must return void.  Any return values must be passed directly to the ExtFuture<T> f via .reportResult() etc.
 		 *
 		 * @tparam ExtFutureT  The return type of the run_param_expander() call and of the ExtFuture
 		 * 						passed to the callback function as the first parameter.
@@ -115,7 +116,7 @@ template <class CallbackType>
 		 *     @code
 		 *     		void callback(ExtFuture<T> f [, args...])
 		 *     @endcode
-		 *     @note The return value of the callback must be void. Any return values must be sent to @p f.
+		 *     @note The return value of the callback must be void. Any return values must be sent to @a f.
 		 *
 		 * @param args  Parameter pack of the arguments to pass to the callback.  Note that these will be passed
 		 *              in the parameter list after the ExtFuture<T> f parameter, which is passed first.
@@ -123,20 +124,20 @@ template <class CallbackType>
 		 */
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
 				  class... Args,
-				  REQUIRES(is_ExtFuture_v<ExtFutureT>
-				  && !is_nested_ExtFuture_v<ExtFutureT>)>
+				  REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
 		static ExtFutureT run_param_expander(CallbackType&& callback, Args&&... args)
 		{
+			// Create the ExtFuture<T> we'll be returning.
 			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
 
 			// Capture the future and the variadic args into a tuple we'll pass to the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
-			auto lambda = [&,
-//					callback_copy=/*std::decay_t*/std::forward<CallbackType>(callback),
+			auto lambda = [
 					callback_copy = DECAY_COPY(callback),
-					retfuture_copy=std::forward/*decay_t*/<ExtFutureT>(retfuture),
+					retfuture_copy=std::forward<ExtFutureT>(retfuture),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
-					() mutable {
+					() mutable
+			{
 
 				try
 				{

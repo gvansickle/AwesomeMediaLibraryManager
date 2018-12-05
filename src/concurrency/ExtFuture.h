@@ -83,7 +83,7 @@ template <typename T>
 ExtFuture<T> make_started_only_future();
 
 /**
- * A std::shared_future<>-like class implemented on top of Qt5's QFutureInterface<T> class and other facilities.
+ * A std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
  *
  * Actually more like a combined promise and future.
  *
@@ -94,11 +94,12 @@ ExtFuture<T> make_started_only_future();
  * - setProgressValue() and other progress reporting.
  * - pause()/resume()
  * - cancel()
- * - results()
  * - future()
  *
  * Future (consumer/reader) functionality:
- * - get()
+ * - get() [std::shared_future::get()]
+ * -- result() [QFuture]
+ * -- results() [QFuture]
  * - then()
  * - wait()
  * - tap()
@@ -285,6 +286,35 @@ public:
 	/// @{
 
 	/**
+	 * "Checks if the associated shared state is ready.  The behavior is undefined if valid() is false."
+	 * (from @link https://en.cppreference.com/w/cpp/experimental/shared_future/is_ready).
+	 * Same semantics as std::experimental::shared_future::is_ready().
+	 *
+	 * @return  true if the associated shared state is ready.
+	 */
+	bool is_ready() const
+	{
+		Q_ASSERT(this->valid() == true);
+		// We're only C++17 ready if we're Finished or Canceled (including Exceptions).
+		return this->isFinished() || this->isCanceled();
+	}
+
+	/**
+	 * This sort of gets lost in translation.  Per @link https://en.cppreference.com/w/cpp/thread/shared_future/valid,
+	 * we should be valid()==false if we've been:
+	 * 1. Default constructed (and presumably never given a state via another method, e.g. assignment).
+	 * 2. Moved from.
+	 * 3. (std::experimental::future only) Invalidated by a call of .get().
+	 * Our Qt 5 underpinnings don't support move semantics (anywhere AFAICT), which eliminates #2.  #3 doesn't apply
+	 * since QFuture<T> etc. don't become invalid due to .get() or other results-access calls (again shared_future semantics).
+	 * #1 is the only one I'm not 100% on.  We have a QFutureInterface<T> constructed beneath us in all cases, so per
+	 * the definitions above, I don't think we're ever in an invalid state.
+	 *
+	 * @returns  true if *this refers to a shared state, otherwise false.
+	 */
+	bool valid() const { return true; }
+
+	/**
 	 * Returns true if this ExtFuture<T> is sitting on an exception.  Does not cause any potential exception
 	 * to be thrown.
 	 *
@@ -403,6 +433,7 @@ public:
 	 * - if state is Canceled already, return, having done nothing.
 	 * - else switch state out of Paused and into Canceled.
 	 * - Send QFutureCallOutEvent::Canceled.
+	 * @note This is shadowing the same non-virtual function in QFuture<T>.
 	 */
 	void cancel()
 	{
@@ -412,6 +443,7 @@ public:
 
 	/**
 	 * Blocks until this future is finished or canceled.
+	 * @note This is shadowing the same non-virtual function in QFuture<T>.
 	 */
 	void waitForFinished()
 	{
@@ -422,7 +454,7 @@ public:
 		this->d.waitForFinished();
 		if(this->hasException())
 		{
-			Q_ASSERT_X(0, "waitForFinished()", "Had an exception but didn't throw");
+			Q_ASSERT_X(0, "waitForFinished()", "ExtFuture held an exception but didn't throw");
 		}
 	}
 
@@ -701,7 +733,7 @@ public:
 			  typename LiftedR = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 			  REQUIRES(!is_ExtFuture_v<LiftedR>
 			  && std::is_invocable_r_v<Unit::DropT<LiftedR>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<LiftedR> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback) const /** std .then() is const */
+	ExtFuture<LiftedR> then(QThreadPool* context, bool call_on_cancel, ThenCallbackType&& then_callback) const /** std .then() is const */
 	{
 		static_assert (!std::is_same_v<LiftedR, void>, "Callback return value should never be void");
 
@@ -955,7 +987,7 @@ public:
 				  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 				  REQUIRES(!is_ExtFuture_v<R>
 				  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback) const
+	ExtFuture<R> then(QThreadPool* context, ThenCallbackType&& then_callback) const
 	{
 		// Forward to the master callback, don't call the then_callback on a cancel.
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
@@ -1337,8 +1369,14 @@ struct when_any_result
 
 #include "impl/ExtFuture_impl.hpp"
 
+//template <typename T>
+//explicit operator ExtFuture::ExtFuture<Unit>() const
+//{
+//	return ExtFuture<Unit>(&(this->d));
+////		return qToUnitExtFuture(*this);
+//}
 
-template<typename T>
+template <typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
 {
 	/// @note .d is in fact private for QFuture<void>s.
