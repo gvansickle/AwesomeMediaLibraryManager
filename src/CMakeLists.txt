@@ -201,7 +201,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 # Subdir targets.
 #
 add_subdirectory(gui)
-add_subdir_lib(logic_subdir "${CMAKE_CURRENT_LIST_DIR}/logic")
+add_subdir_lib(logic_subdir CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
 add_subdir_lib(future CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
 
 

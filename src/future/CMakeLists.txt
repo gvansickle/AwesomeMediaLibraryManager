@@ -43,15 +43,12 @@ target_sources(future
 target_link_libraries(future PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
 target_include_directories(future
 	PUBLIC
-#		${CMAKE_CURRENT_SOURCE_DIR}/.. # To allow <future/whatever.h>
 		${CMAKE_CURRENT_LIST_DIR}
 	    ${CMAKE_CURRENT_LIST_DIR}/.. # To allow <future/whatever.h>
 		${boost_callable_traits_SOURCE_DIR}
 		${boost_callable_traits_BINARY_DIR}
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-#	PRIVATE
-#		${CMAKE_CURRENT_SOURCE_DIR}/src
 		)
 
 #MESSAGE(STATUS "\${CMAKE_CURRENT_LIST_DIR}/..: ${CMAKE_CURRENT_LIST_DIR}/..")
