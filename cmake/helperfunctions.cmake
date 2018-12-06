@@ -43,12 +43,12 @@ endfunction()
 #
 # @param add_subdir_lib_LIB_TARGET_NAME  This should be the name of the subdirectory, with "_lib" appended.  This name is what you'll use as the target link library.
 # @param add_subdir_lib_SUBDIR           This should be the name of the subdirectory.
-macro(add_subdir_lib_internal add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR)
-	if(NOT ${ARGC} EQUAL 2)
-		message(FATAL_ERROR "add_subdir_lib requires two arguments")
+macro(add_subdir_lib_internal add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR add_subdir_lib_PLACEHOLDER_EXCLUDE_FROM_ALL)
+	if(NOT ${ARGC} EQUAL 3)
+		message(FATAL_ERROR "add_subdir_lib requires 3 arguments")
 	endif()
 	message(STATUS "Creating library ${ARGV0} from ${ARGV1}/CMakeLists.txt with CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
-	add_library(${ARGV0} STATIC EXCLUDE_FROM_ALL "")
+	add_library(${ARGV0} STATIC ${PLACEHOLDER_EXCLUDE_FROM_ALL} "")
 	include(${ARGV1}/CMakeLists.txt)
 endmacro()
 
@@ -56,14 +56,20 @@ endmacro()
 # add_subdir_lib(): The missing CMake add_*().  Adds a subdirectory as a library target in this directory.
 #
 macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME)
-	set(options OPTIONAL FAST)
-	set(oneValueArgs DESTINATION RENAME)
-	set(multiValueArgs TARGETS CONFIGURATIONS)
-	cmake_parse_arguments(ADD_SUBDIR_LIB "${options}" "${oneValueArgs}"
-		                      "${multiValueArgs}" ${ARGN} )
+	# Option flags we understand.
+	set(options CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
+	# Arguments taking 1 value.
+	#set(oneValueArgs DESTINATION RENAME)
+	# Arguments taking multiple values.
+	#set(multiValueArgs TARGETS CONFIGURATIONS)
+	cmake_parse_arguments(ADD_SUBDIR_LIB
+		"${options}"
+		"${oneValueArgs}"
+		"${multiValueArgs}"
+		${ARGN})
 	message(STATUS "ADD_SUBDIR_LIB_UNPARSED_ARGUMENTS: ${ADD_SUBDIR_LIB_UNPARSED_ARGUMENTS}")
-	if(NOT ${ARGC} EQUAL 2)
-		message(FATAL_ERROR "add_subdir_lib requires one argument, ${ARGC} provided.")
+	if((${ARGC} LESS "1") OR (${ARGC} GREATER "3"))
+		message(FATAL_ERROR "add_subdir_lib() requires 1-3 arguments, ${ARGC} arguments provided.")
 	endif()
 	# @todo WIP
 	message(STATUS "=========================================================================")
@@ -79,9 +85,22 @@ macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME)
 	# Create an absolute path to the subdir.
 	set(add_subdir_lib_SUBDIR "${CMAKE_CURRENT_LIST_DIR}/${varname}")
 
-	message(STATUS "add_subdir_lib_internal( '${add_subdir_lib_LIB_TARGET_NAME}' '${add_subdir_lib_SUBDIR}' )")
+	if(ADD_SUBDIR_LIB_PLACEHOLDER_EXCLUDE_FROM_ALL)
+		set(EFA "EXCLUDE_FROM_ALL")
+	else()
+		set(EFA "")
+	endif()
 
-	add_subdir_lib_internal(${add_subdir_lib_LIB_TARGET_NAME} ${add_subdir_lib_SUBDIR})
+	if(ADD_SUBDIR_LIB_CREATE_STATIC_LIB)
+		set(CSL "EXCLUDE_FROM_ALL")
+	else()
+		set(CSL "") # @todo
+	endif()
+
+	message(STATUS "add_subdir_lib_internal( '${add_subdir_lib_LIB_TARGET_NAME}' '${add_subdir_lib_SUBDIR}' '${EFA}')")
+
+	# Create the subdir library
+	add_subdir_lib_internal(${add_subdir_lib_LIB_TARGET_NAME} ${add_subdir_lib_SUBDIR} "${EFA}")
 	message(STATUS "=========================================================================")
 endmacro()
 

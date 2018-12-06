@@ -510,8 +510,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${boost_callable_traits_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
-	# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
-	${PROJECT_SOURCE_DIR}/src/third_party/better_enums
 	### @todo REMOVE
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
@@ -531,7 +529,8 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ###
 #set(amlm_APP_ICONS "re-set this in resources_subdir")
 # This is the sum-total of all source files which go into building the main exe.
-add_subdir_lib(resources_subdir "${CMAKE_CURRENT_LIST_DIR}/resources")
+#add_subdir_lib(resources_subdir "${CMAKE_CURRENT_LIST_DIR}/resources" EXCLUDE_FROM_ALL)
+add_subdir_lib(resources EXCLUDE_FROM_ALL)
 #message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
 add_subdirectory(src)
 add_subdirectory(tests)

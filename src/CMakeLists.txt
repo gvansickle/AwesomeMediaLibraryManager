@@ -202,7 +202,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 #
 add_subdirectory(gui)
 add_subdir_lib(logic_subdir "${CMAKE_CURRENT_LIST_DIR}/logic")
-add_subdir_lib(future_subdir "${CMAKE_CURRENT_LIST_DIR}/future")
+add_subdir_lib(future CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
 
 
 #
@@ -214,9 +214,9 @@ add_subdir_lib(future_subdir "${CMAKE_CURRENT_LIST_DIR}/future")
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-	future_subdir
+	future
 	logic_subdir
-	resources_subdir
+	resources
 )
 
 # Concurrency

@@ -35,13 +35,13 @@ set(SOURCE_FILES_SRC_FUTURE
 prepend_to_each(HEADER_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_FUTURE})
 prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_FUTURE})
 
-target_sources(future_subdir
+target_sources(future
 	PUBLIC
 		${HEADER_FILES_SRC_FUTURE}
 		${SOURCE_FILES_SRC_FUTURE}
 	)
-target_link_libraries(future_subdir PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
-target_include_directories(future_subdir
+target_link_libraries(future PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
+target_include_directories(future
 	PUBLIC
 #		${CMAKE_CURRENT_SOURCE_DIR}/.. # To allow <future/whatever.h>
 		${CMAKE_CURRENT_LIST_DIR}
@@ -56,7 +56,7 @@ target_include_directories(future_subdir
 
 #MESSAGE(STATUS "\${CMAKE_CURRENT_LIST_DIR}/..: ${CMAKE_CURRENT_LIST_DIR}/..")
 		
-set_target_properties(future_subdir
+set_target_properties(future
     PROPERTIES
     AUTOMOC ON
     AUTORCC OFF
