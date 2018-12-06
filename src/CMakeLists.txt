@@ -419,8 +419,6 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 target_include_directories(${TEST_EXE_TARGET} PRIVATE
 	"utils/nomoc"
 	${INCLUDE_DIR_VERDIGRIS}
-	# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
-	${PROJECT_SOURCE_DIR}/src/third_party/better_enums
 	)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -435,7 +433,7 @@ set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock tests_subdir)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock amlm_tests)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
@@ -475,7 +473,7 @@ ecm_mark_as_test(test_qtestamlmjobtests)
 ###
 endif()
 
-endif() # Enable test target.
+endif() # END Enable test target.
 
 ###
 ### Installation.

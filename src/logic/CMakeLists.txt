@@ -94,7 +94,7 @@ set(logic_subdir_HEADERS
 prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
 prepend_to_each(logic_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_HEADERS})
 
-target_sources(logic
+target_sources_local(logic
 	PUBLIC
 		${logic_subdir_HEADERS}
 	PRIVATE
@@ -108,10 +108,10 @@ target_link_libraries(logic
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-		dbmodels_subdir
-		models_subdir
-		proxymodels_subdir
-		serialization_subdir
+		dbmodels
+		models
+		proxymodels
+		serialization
 	)
 target_include_directories(logic
 	PUBLIC

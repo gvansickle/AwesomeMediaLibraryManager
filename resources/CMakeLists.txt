@@ -38,7 +38,7 @@ set(amlm_XQUERIES
 )
 prepend_to_each(amlm_XQUERIES "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_XQUERIES})
 
-target_sources(resources
+target_sources_local(resources
 	PUBLIC
 		${amlm_ICONS}
 		${amlm_XQUERIES}

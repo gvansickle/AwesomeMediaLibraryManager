@@ -203,6 +203,7 @@ endif()
 include(CheckCXXCompilerFlag)
 include(PrintTargetProperties)
 include(helperfunctions)
+include(add_subdir_lib)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.

@@ -37,21 +37,21 @@ set(serialization_subdir_HEADERS
 prepend_to_each(serialization_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${serialization_subdir_SOURCES})
 prepend_to_each(serialization_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${serialization_subdir_HEADERS})
 
-target_sources(serialization_subdir
+target_sources_local(serialization
 	PUBLIC
 		${serialization_subdir_HEADERS}
 	PRIVATE
 		${serialization_subdir_SOURCES}
 	)
 
-target_link_libraries(serialization_subdir
+target_link_libraries(serialization
 	PUBLIC
 		${QT5_LINK_LIB_TARGETS}
 		${KF5_LINK_LIB_TARGETS}
 		${GTK_LINK_LIB_TARGETS}
 
 )
-target_include_directories(serialization_subdir
+target_include_directories(serialization
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src

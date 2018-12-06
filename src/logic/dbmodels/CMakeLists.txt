@@ -37,7 +37,7 @@ set(dbmodels_subdir_SOURCES
 		)
 prepend_to_each(dbmodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${dbmodels_subdir_SOURCES})
 
-target_sources(dbmodels
+target_sources_local(dbmodels
 	PUBLIC
 		${dbmodels_subdir_SOURCES}
 	)

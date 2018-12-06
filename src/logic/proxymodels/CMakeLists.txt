@@ -34,7 +34,7 @@ prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxym
 
 
 
-target_sources(proxymodels
+target_sources_local(proxymodels
 	PUBLIC
 		${proxymodels_subdir_SOURCES}
 	)
