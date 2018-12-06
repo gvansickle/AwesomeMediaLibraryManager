@@ -158,7 +158,7 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 # Concurrency files.
 set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/AsyncTaskManager.h
-		concurrency/ExtFutureState.h
+	concurrency/ExtFutureState.h
 	concurrency/ExtFuture.h
 	concurrency/ExtFutureProgressInfo.h
 	concurrency/ExtFuturePropagationHandler.h
@@ -169,7 +169,6 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	concurrency/impl/ExtFutureImplHelpers.h
 	concurrency/ExtAsync.h
 	concurrency/ExtAsyncExceptions.h
-	concurrency/ExtAsyncTask.h
 	concurrency/AMLMJob.h
 	concurrency/AMLMCompositeJob.h
 	concurrency/DirectoryScanJob.h

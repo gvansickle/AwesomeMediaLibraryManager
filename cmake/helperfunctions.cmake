@@ -37,12 +37,13 @@ function(print_compilers_and_params)
 endfunction()
 
 
-#
-# The missing CMake add_*.  Adds a subdirectory as a library target in this directory.
-# Based on @link https://crascit.com/2016/01/31/enhanced-source-file-handling-with-target_sources/
+# add_subdir_lib() implementation based on @link https://crascit.com/2016/01/31/enhanced-source-file-handling-with-target_sources/
+# This is the pre-cmake-3.13 version.
 # Target is EXCLUDE_FROM_ALL, so something has to depend on it for it to be built.
 #
-macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR)
+# @param add_subdir_lib_LIB_TARGET_NAME  This should be the name of the subdirectory, with "_lib" appended.  This name is what you'll use as the target link library.
+# @param add_subdir_lib_SUBDIR           This should be the name of the subdirectory.
+macro(add_subdir_lib_internal add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR)
 	if(NOT ${ARGC} EQUAL 2)
 		message(FATAL_ERROR "add_subdir_lib requires two arguments")
 	endif()
@@ -50,6 +51,75 @@ macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR)
 	add_library(${ARGV0} STATIC EXCLUDE_FROM_ALL "")
 	include(${ARGV1}/CMakeLists.txt)
 endmacro()
+
+#
+# add_subdir_lib(): The missing CMake add_*().  Adds a subdirectory as a library target in this directory.
+#
+macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME)
+	set(options OPTIONAL FAST)
+	set(oneValueArgs DESTINATION RENAME)
+	set(multiValueArgs TARGETS CONFIGURATIONS)
+	cmake_parse_arguments(ADD_SUBDIR_LIB "${options}" "${oneValueArgs}"
+		                      "${multiValueArgs}" ${ARGN} )
+	message(STATUS "ADD_SUBDIR_LIB_UNPARSED_ARGUMENTS: ${ADD_SUBDIR_LIB_UNPARSED_ARGUMENTS}")
+	if(NOT ${ARGC} EQUAL 2)
+		message(FATAL_ERROR "add_subdir_lib requires one argument, ${ARGC} provided.")
+	endif()
+	# @todo WIP
+	message(STATUS "=========================================================================")
+	set(save_LIB_TARGET_NAME "${ARGV0}")
+	message(STATUS "save_LIB_TARGET_NAME: ${save_LIB_TARGET_NAME}")
+	# Make a unique var, since we're in the calling scope.
+	# Make a string for the directory.
+	#set(varname add_subdir_lib_${add_subdir_lib_LIB_TARGET_NAME}_SUBDIRECTORY)
+	set(varname "${save_LIB_TARGET_NAME}")
+	message(STATUS "varname: ${varname}")
+	string(REGEX REPLACE "^(.*)_subdir$" "\\1" varname "${varname}")
+	message(STATUS "varname: ${varname}")
+	# Create an absolute path to the subdir.
+	set(add_subdir_lib_SUBDIR "${CMAKE_CURRENT_LIST_DIR}/${varname}")
+
+	message(STATUS "add_subdir_lib_internal( '${add_subdir_lib_LIB_TARGET_NAME}' '${add_subdir_lib_SUBDIR}' )")
+
+	add_subdir_lib_internal(${add_subdir_lib_LIB_TARGET_NAME} ${add_subdir_lib_SUBDIR})
+	message(STATUS "=========================================================================")
+endmacro()
+
+
+
+# Per Crascit: @link https://crascit.com/2016/01/31/enhanced-source-file-handling-with-target_sources/
+# This is a compatibility helper function for cmake pre-3.13 and the target_sources() subdir handling idiom
+# in his article at the link above.
+# NOTE: This helper function assumes no generator expressions are used
+#       for the source files
+function(target_sources_local target)
+  if(POLICY CMP0076)
+	# New behavior is available, so just forward to it by ensuring
+	# that we have the policy set to request the new behavior, but
+	# don't change the policy setting for the calling scope
+	cmake_policy(PUSH)
+	cmake_policy(SET CMP0076 NEW)
+	target_sources(${target} ${ARGN})
+	cmake_policy(POP)
+	return()
+  endif()
+
+  # Must be using CMake 3.12 or earlier, so simulate the new behavior
+  unset(_srcList)
+  get_target_property(_targetSourceDir ${target} SOURCE_DIR)
+
+  foreach(src ${ARGN})
+	if(NOT src STREQUAL "PRIVATE" AND
+			NOT src STREQUAL "PUBLIC" AND
+	   NOT src STREQUAL "INTERFACE" AND
+	   NOT IS_ABSOLUTE "${src}")
+      # Relative path to source, prepend relative to where target was defined
+	  file(RELATIVE_PATH src "${_targetSourceDir}" "${CMAKE_CURRENT_LIST_DIR}/${src}")
+    endif()
+	list(APPEND _srcList ${src})
+  endforeach()
+  target_sources(${target} ${_srcList})
+endfunction()
 
 macro(print_has_parent_scope)
 	get_directory_property(hasParent PARENT_DIRECTORY)
