@@ -23,10 +23,10 @@
 #add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
 #add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
 
-add_subdir_lib(models_subdir "${CMAKE_CURRENT_LIST_DIR}/models")
-add_subdir_lib(dbmodels_subdir "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
-add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
-add_subdir_lib(serialization_subdir "${CMAKE_CURRENT_LIST_DIR}/serialization")
+add_subdir_lib(models "${CMAKE_CURRENT_LIST_DIR}/models")
+add_subdir_lib(dbmodels "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
+add_subdir_lib(proxymodels "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
+add_subdir_lib(serialization "${CMAKE_CURRENT_LIST_DIR}/serialization")
 
 set(logic_subdir_SOURCES
 	Library.cpp
@@ -94,13 +94,13 @@ set(logic_subdir_HEADERS
 prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
 prepend_to_each(logic_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_HEADERS})
 
-target_sources(logic_subdir
+target_sources(logic
 	PUBLIC
 		${logic_subdir_HEADERS}
 	PRIVATE
 		${logic_subdir_SOURCES}
 	)
-target_link_libraries(logic_subdir
+target_link_libraries(logic
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -113,7 +113,7 @@ target_link_libraries(logic_subdir
 		proxymodels_subdir
 		serialization_subdir
 	)
-target_include_directories(logic_subdir
+target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src

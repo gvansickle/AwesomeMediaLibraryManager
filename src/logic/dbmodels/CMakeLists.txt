@@ -37,12 +37,12 @@ set(dbmodels_subdir_SOURCES
 		)
 prepend_to_each(dbmodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${dbmodels_subdir_SOURCES})
 
-target_sources(dbmodels_subdir
+target_sources(dbmodels
 	PUBLIC
 		${dbmodels_subdir_SOURCES}
 	)
-target_link_libraries(dbmodels_subdir PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
-target_include_directories(dbmodels_subdir
+target_link_libraries(dbmodels PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
+target_include_directories(dbmodels
 	PUBLIC
 #		${CMAKE_CURRENT_SOURCE_DIR}/.. # To allow <future/whatever.h>
 		${CMAKE_CURRENT_LIST_DIR}
@@ -54,7 +54,7 @@ target_include_directories(dbmodels_subdir
 		)
 
 		
-set_target_properties(dbmodels_subdir
+set_target_properties(dbmodels
     PROPERTIES
     AUTOMOC ON
     AUTORCC OFF
