@@ -60,7 +60,7 @@
 /**
  * Test flag class definition.
  */
-class TestFlagHolder
+class TestFlagHolder : public ExtEnum<TestFlagHolder>
 {
 	Q_GADGET
 public:
@@ -76,10 +76,8 @@ public:
 	Q_FLAG(TestFlags)
 };
 Q_DECLARE_METATYPE(TestFlagHolder);
-//Q_DECLARE_METATYPE(TestFlagHolder::TestFlags);
 Q_DECLARE_OPERATORS_FOR_FLAGS(TestFlagHolder::TestFlags);
 
-//static auto dummy_var_123 = [=](){ AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(); return 1; }();
 static int dummy_456 = (AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(), 1);
 
 /**
