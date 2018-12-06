@@ -671,36 +671,7 @@ public:
 	 * @tparam F = Continuation function type.  Must accept *this by value as the first parameter.
 	 * @tparam R = Return value of continuation F(ExtFuture<T>).
 	 *
-	 * @return A new future for containing the return value of @a continuation_function.
-	 */
-	/**
-	 * @todo Exception handling.
-	 * This is the basic pattern used in the RunFunctionTaskBase<> and RunFunctionTask<> class templates from Qt5's internals.
-	 *  Note the use of reportException():
-	 * run()
-	 * {
-	 * 	if (this->isCanceled())
-		{
-			// We've been cancelled before we started, just report finished.
-			/// @note It seems like we also should be calling reportCancelled(),
-			/// but neither of Qt5's RunFunctionTask<T> nor Qt Creator's AsyncJob<> (derived only from QRunnable)
-			/// do so.
-			this->reportFinished();
-			return;
-		}
-
-		try
-		{
-	 * 		this->m_task->run(*this);
-		} catch (QException &e) {
-			QFutureInterface<T>::reportException(e);
-		} catch (...) {
-			QFutureInterface<T>::reportException(QUnhandledException());
-		}
-
-		this->reportResult(result);
-		this->reportFinished();
-		}
+	 * @return A new future for containing the return value of @a then_callback.
 	 */
 	/**
 	 * The root then() implementation.

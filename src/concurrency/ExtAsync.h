@@ -133,7 +133,7 @@ template <class CallbackType>
 			auto lambda = [
 					executor = executor,
 					callback_copy = DECAY_COPY(callback),
-					retfuture_copy=std::forward<ExtFutureT>(retfuture),
+					retfuture_copy = std::forward<ExtFutureT>(retfuture),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
 					() mutable
 			{
@@ -143,8 +143,13 @@ template <class CallbackType>
 					// Call the callback with a copy of the retfuture and the args all as elements in argtuple.
 					std::apply(callback_copy, argtuple);
 				}
-					// Handle exceptions and cancellation.
-					// Exceptions propagate upwards, cancellation propagates downwards.
+				// Handle exceptions and cancellation.
+				// Exceptions propagate upwards, cancellation propagates downwards.
+				/// @note That makes no sense.  At the "root" (i.e. the run() call, here),
+				/// there is no upstream, only downstream (attached .then()'s etc).
+				/// And any cancel could be coming from outside ("app's closing"), or possibly from
+				/// inside the callback, though I can't think of an example of the latter ATM.
+				/// The callback could throw for other reasons.
 				catch(ExtAsyncCancelException& e)
 				{
 					qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
@@ -154,21 +159,25 @@ template <class CallbackType>
 				}
 				catch(QException& e)
 				{
-					qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-					retfuture_copy.cancel();
-//					qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
-//					retfuture_copy.reportException(e);
+//					qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+//					retfuture_copy.cancel();
+					qDb() << "CAUGHT EXCEPTION, THROWING TO DOWNSTREAM (RETURNED) FUTURE";
+					retfuture_copy.reportException(e);
 				}
 				catch (...)
 				{
-					qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-					retfuture_copy.cancel();
-//					qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
-//					retfuture_copy.reportException(QUnhandledException());
+//					qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+//					retfuture_copy.cancel();
+					qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO DOWSTREAM (RETURNED) FUTURE";
+					retfuture_copy.reportException(QUnhandledException());
 				}
 
-				// One last loose end.  If we get here, the returned future may have been canceled by .cancel(), which
-				// doesn't throw.  So:
+				// One last loose end...?  Remember we're at the root of a potential tree of .then()-like
+				// attachments.  At this point in the control flow, the returned future may have been canceled by:
+				// - A call to this->cancel() from either outside, or
+				// - A call to this->cancel() from the catch()'s above.
+				// I don't think we need to propagate the cancel to the downstream attachments, since the
+				// shared_future-like behavior should already be doing that.
 				// - In run() (here) we have nothing to do but return.
 				// - In then() we'll have to do the same thing we do for a cancel exception.
 				if(retfuture_copy.isCanceled())
@@ -192,8 +201,11 @@ template <class CallbackType>
 			return retfuture;
 		}
 
-		/// Takes a QObject as the executor parameter, runs in the thread that object lives in.
-		/// Yeah, this can probably be merged with the above QThreadPool one, but I'm sick of fighting templates at the moment.
+		/**
+		 * Takes a QObject as the executor parameter, runs in the event loop of the thread the QObject lives in.
+		 * This is mainly for use is .then() for returning results to the GUI.
+		 * @note Yeah, this could probably be merged with the above QThreadPool one, but I'm sick of fighting templates at the moment.
+		 */
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
 				class... Args,
 				REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
@@ -285,75 +297,10 @@ template <class CallbackType>
 			return run_param_expander(QThreadPool::globalInstance(), std::forward<CallbackType>(callback), std::forward<Args>(args)...);
 		};
 
+
+
 #if 0
-			// Create the ExtFuture<T> we'll be returning.
-			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
-
-			// Capture the future and the variadic args into a tuple we'll pass to the lambda instead of passing them in the
-			// limited QtConcurrent::run() parameter list.
-			auto lambda = [
-					callback_copy = DECAY_COPY(callback),
-					retfuture_copy=std::forward<ExtFutureT>(retfuture),
-					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
-					() mutable
-			{
-
-				try
-				{
-					// Call the callback with a copy of the retfuture and the args all as elements in argtuple.
-					std::apply(callback_copy, argtuple);
-				}
-				// Handle exceptions and cancellation.
-				// Exceptions propagate upwards, cancellation propagates downwards.
-				catch(ExtAsyncCancelException& e)
-				{
-					qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
-					retfuture_copy.cancel();
-//					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
-//					retfuture_copy.reportException(e);
-				}
-				catch(QException& e)
-				{
-					qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-					retfuture_copy.cancel();
-//					qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
-//					retfuture_copy.reportException(e);
-				}
-				catch (...)
-				{
-					qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-					retfuture_copy.cancel();
-//					qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
-//					retfuture_copy.reportException(QUnhandledException());
-				}
-
-				// One last loose end.  If we get here, the returned future may have been canceled by .cancel(), which
-				// doesn't throw.  So:
-				// - In run() (here) we have nothing to do but return.
-				// - In then() we'll have to do the same thing we do for a cancel exception.
-				if(retfuture_copy.isCanceled())
-				{
-					// if constexpr(in_a_then) { <below> };
-//					qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
-//					retfuture_copy.cancel();
-//					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
-//					retfuture_copy.reportException(e);
-					qWr() << "NON-THROWING CANCEL, RETURNING";
-					return;
-				}
-
-				/// @todo If exception should we actually be reporting finished?
-				retfuture_copy.reportFinished();
-			};
-
-			// Don't need to pass anything other than the lambda.
-			QtConcurrent::run(lambda);
-
-			return retfuture;
-		}
-#endif
-
-#if 0 // This run_again() is confused about return future type vs. passed-in type.
+		// This run_again() is confused about return future type vs. passed-in type.
 		/**
 		 * ExtAsync::run() helper.
 		 *
