@@ -25,6 +25,7 @@
 #include <functional>
 
 // Qt5
+#include <QObject>
 #include <QtConcurrent>
 
 // Ours
@@ -114,7 +115,7 @@ void LibraryRescannerJob::run_async_rescan()
         {
             // We've been cancelled.
             qIno() << "CANCELLED";
-            m_ext_future.reportCanceled();
+//            m_ext_future.reportCanceled();
             break;
         }
     }

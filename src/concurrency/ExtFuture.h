@@ -141,18 +141,11 @@ public:
 	/**
 	 * Default constructor.
 	 *
-	 * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
-	 *        if it isn't both Started and Running.
+	 * @param initialState  We default-construct to State(Started|Finished|Canceled) to match QFuture<T>'s default state.
+	 * @note .waitForFinished() won't wait on a default-constructed future, thinks it's finished.
 	 */
-#if 0
-	ExtFuture() : QFuture<T>() {}
-#elif 0
-	explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
-																							  | QFutureInterfaceBase::State::Running))
-		: QFuture<T>(new QFutureInterface<T>(initialState))	{ }
-#else // Match default state of QFuture<T>, (Started|Finished|Canceled).
 	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
-#endif
+
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d))
 //			m_progress_unit(other.m_progress_unit)
@@ -719,7 +712,7 @@ public:
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context below.
 		ExtFuture<LiftedR> returned_future = make_started_only_future<LiftedR>();
-
+		/// @todo Use context.
 		QtConcurrent::run(
 //		returned_future = ExtAsync::run_for_then(
 			[=, then_callback_copy = DECAY_COPY(then_callback)]
@@ -1193,14 +1186,6 @@ protected:
 						<< "ret_future_copy:" << returned_future_copy;
 
 				Q_ASSERT(returned_future_copy != this_future_copy);
-
-				// Add the downstream cancel propagator first.
-#if EXTFUTURECANCEL_SEP_THREAD
-				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
-										register_cancel_prop_down_to_up(QFuture<void>(this_future_copy), QFuture<void>(ret_future_copy));
-#else
-//				QFuture<int> adc_fut = PropagateExceptionsSecondToFirst(this_future_copy, ret_future_copy);
-#endif
 
 				int i = 0;
 				try

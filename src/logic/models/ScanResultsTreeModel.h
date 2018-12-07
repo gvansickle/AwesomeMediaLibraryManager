@@ -46,12 +46,12 @@ class ScanResultsTreeModel : public AbstractTreeModel
 	using BASE_CLASS = AbstractTreeModel;
 
 public:
-	ScanResultsTreeModel(QObject *parent = nullptr);
+	explicit ScanResultsTreeModel(QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
 
     /**
      * Sets the base directory of the model.
-     * @todo Not sure if we should support more than one or not.
+     * @todo Not sure if we should support more than one or not, but should support "known alias paths".
      */
     void setBaseDirectory(const QUrl& base_directory);
 

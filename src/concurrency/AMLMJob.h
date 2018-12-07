@@ -66,9 +66,11 @@ struct AMLMJob_traits
 };
 
 /**
- * Unbelieveable PITA.
- * https://stackoverflow.com/questions/39186348/connection-of-pure-virtual-signal-of-interface-class?rq=1
+ * Abstract interface for ExtFuture<T> signals.  Inherit from this to emit these signals.  Unbelievable PITA.
  * https://stackoverflow.com/questions/17943496/declare-abstract-signal-in-interface-class?noredirect=1&lq=1
+ * https://stackoverflow.com/questions/39186348/connection-of-pure-virtual-signal-of-interface-class?rq=1
+ *
+ * @todo Do we need this?
  */
 class IExtFutureWatcher
 {
@@ -85,7 +87,7 @@ public:
     // QObject signals.
 //    virtual void destroyed(QObject* obj) = 0;
 };
-Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
+Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher_iif")
 
 /**
 * Where Does The State Live?
@@ -167,11 +169,11 @@ Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher")
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob/*, public IExtFutureWatcher*/, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
-	Q_INTERFACES(IExtFutureWatcher)
+//	Q_INTERFACES(IExtFutureWatcher)
 
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
@@ -192,7 +194,7 @@ Q_SIGNALS:
     /// @name ExtFuture<T> signals we want to expose to the outside world.
     /// @{
 
-    void SIGNAL_resultsReadyAt(int begin, int end) override;
+    void SIGNAL_resultsReadyAt(int begin, int end);
 
     /// @}
 
@@ -207,7 +209,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished, in any case. It is used to notify
     /// observers that the job is terminated and that progress can be hidden."
     /// Call emitResult(job) to emit.
-    void finished(KJob *job) override;
+//    void finished(KJob *job) override;
     /// "Emitted when the job is suspended."
     /// No direct way to emit this?
 //    void suspended(KJob *job);
@@ -217,7 +219,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished (except when killed with KJob::Quietly).
     /// Use error to know if the job was finished with error."
     /// Call emitResult(job) to emit.
-    void result(KJob *job) override;
+//    void result(KJob *job) override;
 
     // QObject signals.
 //	void destroyed(QObject* obj) override;
@@ -560,7 +562,13 @@ private:
 };
 
 /**
- * Class template for wrapping ExtAsync jobs returning an ExtFuture<T>.
+ * CRTP class template for wrapping ExtAsync jobs returning an ExtFuture<T>.
+ * Use like this:
+ * @code
+ *      class Derived : public AMLMJobT<ExtFuture<int>>
+ *      {
+ *      };
+ * @endcode
  */
 template <class ExtFutureT>
 class AMLMJobT : public AMLMJob
@@ -569,7 +577,7 @@ class AMLMJobT : public AMLMJob
 
 public:
 	using ExtFutureType = ExtFutureT;
-    using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureT::value_type>;
+    using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureType::value_type>;
 
     explicit AMLMJobT(QObject* parent = nullptr)
         : BASE_CLASS(parent)
@@ -978,8 +986,9 @@ protected:
         // forward resultsReadyAt() signal.
         connect_or_die(watcher, &WatcherType::resultsReadyAt, this, &ThisType::SIGNAL_resultsReadyAt);
         // KJob signal forwarders.
-        connect_or_die(this, &KJob::finished, this, &ThisType::finished);
-        connect_or_die(this, &KJob::result, this, &ThisType::result);
+        /// @todo Don't need/want these as long as we don't override the base class versions of the signals.
+//        connect_or_die(this, &KJob::finished, this, &ThisType::finished);
+//        connect_or_die(this, &KJob::result, this, &ThisType::result);
 
         // QObject forwarders.
 		/// @note Does this actually make sense?
@@ -1040,6 +1049,8 @@ protected:
 	/// @} /// END KJob-related support functions.
 
     /// The ExtFuture<T>.
+    /// This is always a copy of an ExtFuture<T> created somewhere outside this class instance.
+M_TODO("Should start out with the normal default state?");
 	ExtFutureT m_ext_future { make_started_only_future<typename ExtFutureT::inner_t>() };
 
 	/// The watcher for the ExtFuture.

@@ -40,7 +40,7 @@
  * - Maps
  * - @todo Sort order can be separated from any of the representations.
  * - Hashable
- * - As close as practical to built-in enum-like syntax and semantics, e.g. "DerivedExtEnum val = TypeSafeEnumerator1;
+ * - As close as practical to built-in enum-like syntax and semantics, e.g. "DerivedExtEnum val = TypeSafeEnumerator1;"
  */
 
 // Fwd declaration for ExtEnum->SomethingElse maps.

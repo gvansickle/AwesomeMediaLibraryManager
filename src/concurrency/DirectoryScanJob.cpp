@@ -61,7 +61,7 @@ DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, co
     return retval;
 }
 
-void /*DirectoryScannerAMLMJob::*/DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
+void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
 		const QStringList &name_filters,
 		const QDir::Filters dir_filters,
@@ -94,7 +94,8 @@ void /*DirectoryScannerAMLMJob::*/DirScanFunction(ExtFuture<DirScanResult> ext_f
 
 	int num_files_found_so_far = 0;
 	int num_discovered_dirs = 0;
-	uint num_possible_files = 0;
+	uint64_t num_possible_files = 0;
+	uint64_t total_discovered_file_size_bytes = 0;
 
 	QString status_text = QObject::tr("Scanning for music files");
 
@@ -116,7 +117,7 @@ void /*DirectoryScannerAMLMJob::*/DirScanFunction(ExtFuture<DirScanResult> ext_f
 		// First check that we have a valid file or dir: Currently exists and is readable by current user.
 		if(!(file_info.exists() && file_info.isReadable()))
 		{
-			qWr() << "UNREADABLE FILE:" << file_info.absoluteFilePath();
+			qWr() << "UNREADABLE/NON-EXISTENT FILE:" << file_info.absoluteFilePath();
 			/// @todo Collect errors
 		}
 		else if(file_info.isDir())
@@ -140,8 +141,8 @@ void /*DirectoryScannerAMLMJob::*/DirScanFunction(ExtFuture<DirScanResult> ext_f
 			num_files_found_so_far++;
 
 			// How big is it?
-//            auto file_size = file_info.size();
-//            total_discovered_file_size_bytes += file_size;
+            auto file_size = file_info.size();
+            total_discovered_file_size_bytes += file_size;
 
 			QUrl file_url = QUrl::fromLocalFile(entry_path);
 
@@ -179,7 +180,8 @@ void /*DirectoryScannerAMLMJob::*/DirScanFunction(ExtFuture<DirScanResult> ext_f
 		{
 			// We've been cancelled.
 			qIn() << "CANCELLED";
-			ext_future.reportCanceled();
+			// It's already been handled, we'd be reporting it twice here.
+//			ext_future.reportCanceled();
 			break;
 		}
 	}

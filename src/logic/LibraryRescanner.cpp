@@ -238,7 +238,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 		}
 		if(tap_future.isFinished())
 		{
-			qWr() << "tap_callback saw finished";
+			qIno() << "tap_callback saw finished";
 			if(new_items.empty())
 			{
 				qWr() << "tap_callback saw finished/empty new_items";
@@ -416,10 +416,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     }); // END dirtrav_job->then
 
     master_job_tracker->registerJob(dirtrav_job);
-	master_job_tracker->setAutoDelete(dirtrav_job, true);
+	master_job_tracker->setAutoDelete(dirtrav_job, false);
     master_job_tracker->setStopOnClose(dirtrav_job, true);
 	master_job_tracker->registerJob(lib_rescan_job);
-	master_job_tracker->setAutoDelete(lib_rescan_job, true);
+	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
     // Start the asynchronous ball rolling.
