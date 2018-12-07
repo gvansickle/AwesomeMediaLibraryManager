@@ -41,11 +41,10 @@
 
 // Ours
 #include <src/future/function_traits.hpp>
-#include <src/future/static_if.hpp>
 #include <src/utils/UniqueIDMixin.h>
 #include "utils/ConnectHelpers.h"
-#include "concurrency/ExtFutureProgressInfo.h"
-#include "concurrency/ExtAsync.h"
+#include "IExtFutureWatcher.h"
+#include "ExtAsync.h"
 
 
 class AMLMJob;

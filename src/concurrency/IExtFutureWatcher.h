@@ -35,6 +35,7 @@ class KJob;
  * @todo Do we need this?
  * @todo Doesn't look like it, but: I don't get what's going on here wrt moc.  It's complaining that this doesn't have a
  * Q_OBJECT in it and signals can't be virtual, but this is the exact pattern used by e.g. KDevelop's IStatus interface.
+ * ...splitting this into its own file makes the problem go away.  WTH.
  */
 class IExtFutureWatcher
 {
