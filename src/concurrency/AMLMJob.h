@@ -65,29 +65,7 @@ struct AMLMJob_traits
 
 };
 
-/**
- * Abstract interface for ExtFuture<T> signals.  Inherit from this to emit these signals.  Unbelievable PITA.
- * https://stackoverflow.com/questions/17943496/declare-abstract-signal-in-interface-class?noredirect=1&lq=1
- * https://stackoverflow.com/questions/39186348/connection-of-pure-virtual-signal-of-interface-class?rq=1
- *
- * @todo Do we need this?
- */
-class IExtFutureWatcher
-{
-public:
-    virtual ~IExtFutureWatcher() = default;
 
-//Q_SIGNALS:
-    virtual void SIGNAL_resultsReadyAt(int begin, int end) = 0;
-
-    // KJob signals.
-    virtual void finished(KJob *job) = 0;
-    virtual void result(KJob *job) = 0;
-
-    // QObject signals.
-//    virtual void destroyed(QObject* obj) = 0;
-};
-Q_DECLARE_INTERFACE(IExtFutureWatcher, "IExtFutureWatcher_iif")
 
 /**
 * Where Does The State Live?
@@ -902,7 +880,7 @@ protected:
         */
         AMLM_ASSERT_IN_GUITHREAD();
 
-        if(!(capabilities() & KJob::Capability::Killable))
+        if(!(capabilities() & KJob::Killable))
         {
             Q_ASSERT_X(0, __func__, "Trying to kill an unkillable AMLMJob.");
         }

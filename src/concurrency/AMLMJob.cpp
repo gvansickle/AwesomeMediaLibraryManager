@@ -45,6 +45,7 @@ AMLM_QREG_CALLBACK([](){
 });
 
 
+
 AMLMJob::AMLMJob(QObject *parent) : KJob(parent)
 {
     setObjectName(uniqueQObjectName());

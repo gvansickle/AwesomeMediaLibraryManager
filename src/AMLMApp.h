@@ -112,11 +112,7 @@ public:
 
 	QMimeDatabase* mime_db() { return m_mime_database; };
 
-// GONE:  CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
-
-
-
 
 	static PerfectDeleter* IPerfectDeleter() { return &(amlmApp->m_perfect_deleter); };
 
@@ -173,8 +169,6 @@ private:
 
     MainWindow* m_the_main_window {nullptr};
 
-//    CollectionDatabaseModel* m_cdb_model;
-
 	AbstractTreeModel* m_cdb2_model_instance;
 
     ScanResultsTreeModel* m_srtm_instance {nullptr};
@@ -182,7 +176,6 @@ private:
     QMimeDatabase* m_mime_database {nullptr};
 
 	PerfectDeleter m_perfect_deleter;
-//	ExtFuturePropagationHandler m_future_cancel_prop_handler;
 
     std::atomic_bool m_shutting_down {false};
     std::atomic_bool m_controlled_shutdown_complete {false};
