@@ -21,7 +21,6 @@
 #define AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H
 
 // Std C++
-#include <logic/serialization/ExtEnum.h>
 #include <initializer_list>
 #include <map>
 #include <string>
@@ -31,7 +30,7 @@
 #include <QtXml>
 
 // Ours
-
+#include <src/logic/serialization/ExtEnum.h>
 
 
 template <class ScopeTypeEnumType>

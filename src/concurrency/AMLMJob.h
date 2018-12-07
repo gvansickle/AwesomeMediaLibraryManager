@@ -146,11 +146,11 @@ struct AMLMJob_traits
  * @note Multiple inheritance in effect here.  Ok since only KJob inherits from QObject.
  *
  */
-class AMLMJob: public KJob/*, public IExtFutureWatcher*/, public UniqueIDMixin<AMLMJob>
+class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJob>
 {
 
     Q_OBJECT
-//	Q_INTERFACES(IExtFutureWatcher)
+	Q_INTERFACES(IExtFutureWatcher)
 
     /// KCoreAddons::KJob
     /// - Subclasses must implement start(), which should trigger the execution of the job (although the work should be done asynchronously).
@@ -186,7 +186,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished, in any case. It is used to notify
     /// observers that the job is terminated and that progress can be hidden."
     /// Call emitResult(job) to emit.
-//    void finished(KJob *job) override;
+    void finished(KJob *job) override;
     /// "Emitted when the job is suspended."
     /// No direct way to emit this?
 //    void suspended(KJob *job);
@@ -196,7 +196,7 @@ Q_SIGNALS:
     /// "Emitted when the job is finished (except when killed with KJob::Quietly).
     /// Use error to know if the job was finished with error."
     /// Call emitResult(job) to emit.
-//    void result(KJob *job) override;
+    void result(KJob *job) override;
 
     // QObject signals.
 //	void destroyed(QObject* obj) override;
@@ -1027,14 +1027,15 @@ protected:
 
     /// The ExtFuture<T>.
     /// This is always a copy of an ExtFuture<T> created somewhere outside this class instance.
-M_TODO("Should start out with the normal default state?");
+//M_TODO("Should start out with the normal default state?");
 	ExtFutureT m_ext_future { make_started_only_future<typename ExtFutureT::inner_t>() };
 
 	/// The watcher for the ExtFuture.
     ExtFutureWatcherT* m_ext_watcher;
 
 	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.
-	int64_t m_speed {0};
+	/// KJob::emitSpeed() takes an unsigned long.
+	unsigned long m_speed {0};
 	QSharedPointer<QTimer> m_speed_timer { nullptr };
 	qulonglong m_speed_last_processed_size {0};
 	std::deque<int64_t> m_speed_history;

@@ -55,4 +55,6 @@ target_include_directories(serialization
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+	PRIVATE
+		${PROJECT_SOURCE_DIR}/src
 	)

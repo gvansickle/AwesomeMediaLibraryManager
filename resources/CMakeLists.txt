@@ -30,19 +30,22 @@ set(amlm_APP_ICONS
 	# svgz isn't supported by ecm_add_app_icon().
     #scalable-preferences-desktop-sound.svgz
 )
-prepend_to_each(amlm_APP_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_APP_ICONS})
+#prepend_to_each(amlm_APP_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_APP_ICONS})
 
 set(amlm_XQUERIES
 	xquery_files.qrc
 	filelist.xq
 )
-prepend_to_each(amlm_XQUERIES "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_XQUERIES})
+#prepend_to_each(amlm_XQUERIES "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_XQUERIES})
 
 target_sources_local(resources
 	PUBLIC
+		${amlm_APP_ICONS}
 		${amlm_ICONS}
 		${amlm_XQUERIES}
 )
+
+ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 # Qt5 Binary Resource (rcc) files.
 #qt5_add_binary_resources(icons_oxygen oxygenicons.qrc)

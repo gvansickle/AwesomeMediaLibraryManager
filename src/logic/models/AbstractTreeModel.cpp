@@ -53,8 +53,6 @@
 ****************************************************************************/
 
 // This class's header.
-#include <logic/serialization/XmlSerializer.h>
-#include "ScanResultsTreeModel.h"
 #include "AbstractTreeModel.h"
 
 // Std C++
@@ -70,7 +68,8 @@
 #include "AbstractTreeModelItem.h"
 #include "AbstractTreeModelHeaderItem.h"
 #include <utils/DebugHelpers.h>
-
+#include <src/logic/serialization/XmlSerializer.h>
+#include "ScanResultsTreeModel.h"
 
 
 AbstractTreeModel::AbstractTreeModel(QObject* parent) : QAbstractItemModel(parent)

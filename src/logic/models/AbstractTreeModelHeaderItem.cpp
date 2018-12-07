@@ -21,10 +21,10 @@
  * @file AbstractTreeModelHeaderItem.cpp
  */
 
-#include <logic/serialization/XmlObjects.h>
 #include "AbstractTreeModelHeaderItem.h"
 
 // Ours
+#include <src/logic/serialization/XmlObjects.h>
 
 
 AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)

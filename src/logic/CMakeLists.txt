@@ -23,10 +23,10 @@
 #add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
 #add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
 
-add_subdir_lib(models "${CMAKE_CURRENT_LIST_DIR}/models")
-add_subdir_lib(dbmodels "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
-add_subdir_lib(proxymodels "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
-add_subdir_lib(serialization "${CMAKE_CURRENT_LIST_DIR}/serialization")
+add_subdir_lib(models EXCLUDE_FROM_ALL)
+add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
+add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
+add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
 set(logic_subdir_SOURCES
 	Library.cpp
@@ -91,8 +91,8 @@ set(logic_subdir_HEADERS
 	PerfectDeleter.h
 	)
 	
-prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
-prepend_to_each(logic_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_HEADERS})
+#prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
+#prepend_to_each(logic_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_HEADERS})
 
 target_sources_local(logic
 	PUBLIC
@@ -117,6 +117,7 @@ target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		${PROJECT_SOURCE_DIR}/src
 	)
 
 

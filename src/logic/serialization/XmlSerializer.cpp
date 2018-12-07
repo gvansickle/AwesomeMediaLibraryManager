@@ -34,7 +34,7 @@
 #include <QDataStream>
 
 // Ours
-#include <utils/DebugHelpers.h>
+#include <src/utils/DebugHelpers.h>
 #include "ISerializable.h"
 
 

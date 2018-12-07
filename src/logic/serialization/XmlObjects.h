@@ -36,7 +36,7 @@
 #include <QUrl>
 
 // Ours
-#include <utils/DebugHelpers.h>
+#include <src/utils/DebugHelpers.h>
 
 /**
  * Run the XQuery at @a xquery_url against the source XML at @a source_xml_url, and write the results to the

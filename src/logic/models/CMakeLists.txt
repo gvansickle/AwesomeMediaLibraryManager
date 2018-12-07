@@ -65,4 +65,6 @@ target_include_directories(models
 	PRIVATE
 		# For serialization
 		"${CMAKE_CURRENT_LIST_DIR}/../serialization"
+		# For anything under src: utils/, logic/, etc.
+		${PROJECT_SOURCE_DIR}/src
 	)

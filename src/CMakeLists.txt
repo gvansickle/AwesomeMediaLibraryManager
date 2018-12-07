@@ -155,56 +155,16 @@ set(HEADER_FILES_UTILS_NOMOC
 	utils/nomoc/nomocimpl.h)
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
-# Concurrency files.
-set(HEADER_FILES_UTILS_CONCURRENCY
-	concurrency/AsyncTaskManager.h
-	concurrency/ExtFutureState.h
-	concurrency/ExtFuture.h
-	concurrency/ExtFutureProgressInfo.h
-	concurrency/ExtFuturePropagationHandler.h
-	concurrency/ExtFutureWatcher.h
-	concurrency/ExtAsync_traits.h
-	concurrency/IExtFutureWatcher.h
-	concurrency/impl/ExtAsync_impl.h
-	concurrency/impl/ExtFuture_impl.hpp
-	concurrency/impl/ExtFutureImplHelpers.h
-	concurrency/ExtAsync.h
-	concurrency/ExtAsyncExceptions.h
-	concurrency/AMLMJob.h
-	concurrency/AMLMCompositeJob.h
-	concurrency/DirectoryScanJob.h
-	concurrency/ThreadsafeMap.h
-	concurrency/DebugSequence.h
-	concurrency/WorkerThreadBase.h
-	)
-set(SOURCE_FILES_UTILS_CONCURRENCY
-	concurrency/impl/ExtFutureImplHelpers.cpp
-	concurrency/ExtAsync.cpp
-	concurrency/ExtAsyncExceptions.cpp
-	concurrency/ExtFuture.cpp
-	concurrency/ExtFutureProgressInfo.cpp
-	concurrency/ExtFuturePropagationHandler.cpp
-	concurrency/IExtFutureWatcher.cpp
-	concurrency/AMLMJob.cpp
-	concurrency/AMLMCompositeJob.cpp
-	concurrency/DirectoryScanJob.cpp
-	concurrency/ThreadsafeMap.cpp
-	concurrency/DebugSequence.cpp
-	concurrency/WorkerThreadBase.cpp
-	concurrency/FunctionWrapper.cpp
-	concurrency/FunctionWrapper.h
-	concurrency/WorkStealingQueue.cpp
-	concurrency/WorkStealingQueue.h
-	concurrency/ThreadPool2.cpp
-	concurrency/ThreadPool2.h
-	)
+
 
 #
 # Subdir targets.
 #
+add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
+add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
+add_subdir_lib(future STATIC EXCLUDE_FROM_ALL)
 add_subdirectory(gui)
-add_subdir_lib(logic CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
-add_subdir_lib(future CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
+
 
 
 #
@@ -216,14 +176,15 @@ add_subdir_lib(future CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-	future
-	logic
-	resources
+		concurrency
+		future
+		logic
+		resources
 )
 
-# Concurrency
-list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
-list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
+## Concurrency
+#list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
+#list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 
 # Models
 list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
@@ -252,10 +213,11 @@ list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
 # See:
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
-if(NOT DEFINED amlm_APP_ICONS)
-	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: ${amlm_APP_ICONS}")
-endif()
-ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
+target_link_libraries(src PUBLIC resources)
+#if(NOT DEFINED amlm_APP_ICONS)
+#	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: '${amlm_APP_ICONS}'")
+#endif()
+#ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 
 # Qt5 Binary Resource (rcc) files.
@@ -366,6 +328,10 @@ download_project(PROJ                googletest
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# Disable Google Test/Mock's own tests.
+set(gmock_build_tests OFF CACHE BOOL "" FORCE)
+set(gtest_build_samples OFF CACHE BOOL "" FORCE)
+set(gtest_build_tests OFF CACHE BOOL "" FORCE)
 # Add googletest directly to our build. This adds
 # the following targets: gtest, gtest_main, gmock
 # and gmock_main.

@@ -30,8 +30,7 @@ set(proxymodels_subdir_SOURCES
 	QPersistentModelIndexVec.h
 	QPersistentModelIndexVec.cpp
 	)
-prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
-
+#prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
 
 
 target_sources_local(proxymodels
@@ -52,4 +51,5 @@ target_include_directories(proxymodels
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		${PROJECT_SOURCE_DIR}/src
 	)

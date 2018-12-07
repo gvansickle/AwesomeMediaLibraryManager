@@ -24,17 +24,35 @@
 # This is the pre-cmake-3.13 version.
 # Target is EXCLUDE_FROM_ALL, so something has to depend on it for it to be built.
 #
-# @param add_subdir_lib_LIB_TARGET_NAME  This should be the name of the subdirectory, with "_lib" appended.  This name is what you'll use as the target link library.
-# @param add_subdir_lib_SUBDIR           This should be the name of the subdirectory.
+# @param add_subdir_lib_LIB_TARGET_NAME  This should be the name of the subdirectory.  This name is also what to use as the target link library.
+# @param add_subdir_lib_SUBDIR           This should be the absolute name of the subdirectory.  Optional if cmake > 3.13.
 # @param add_subdir_lib_PLACEHOLDER_EXCLUDE_FROM_ALL  Pass "EXCLUDE_FROM_ALL" or "".
 #
 macro(add_subdir_lib_internal add_subdir_lib_LIB_TARGET_NAME add_subdir_lib_SUBDIR add_subdir_lib_PLACEHOLDER_EXCLUDE_FROM_ALL)
-	if(NOT ${ARGC} EQUAL 3)
-		message(FATAL_ERROR "add_subdir_lib requires 3 arguments")
+	if(${ARGC} LESS "1")
+		message(FATAL_ERROR "add_subdir_lib_internal requires at least one argument, ${ARGC} given.")
 	endif()
-	message(STATUS "Creating library ${ARGV0} from ${ARGV1}/CMakeLists.txt with CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
+	message(STATUS "Creating library '${ARGV0}' in directory '${CMAKE_CURRENT_LIST_DIR}'")
+	# Add the library in the calling directory.
 	add_library(${ARGV0} STATIC ${PLACEHOLDER_EXCLUDE_FROM_ALL} "")
-	include(${ARGV1}/CMakeLists.txt)
+	# Now we need to either add_subdirectory() or include() the subdirectory's CMakeLists.txt.
+	# Again this is cmake version dependent.
+	if(POLICY CMP0076)
+		# New behavior is available, so just forward to it by ensuring
+		# that we have the policy set to request the new behavior, but
+		# don't change the policy setting for the calling scope.
+		message(STATUS "Creating library '${ARGV0}' using 'add_subdirectory(${add_subdir_lib_LIB_TARGET_NAME} ${ARGN})', CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
+		cmake_policy(PUSH)
+		cmake_policy(SET CMP0076 NEW)
+		# add_subdirectory() in cmake 3.13+ now behaves more like you'd think it should.
+		# Params are source_dir, optional binary_dir, optional EXCLUDE_FROM_ALL.
+		add_subdirectory(${add_subdir_lib_LIB_TARGET_NAME} ${ARGN})
+		cmake_policy(POP)
+	else()
+		# add_subdirectory() less than 3.13 desn't behave like we need it to.
+		message(STATUS "Creating library ${ARGV0} using 'include(${ARGV0}/CMakeLists.txt)', CMAKE_CURRENT_LIST_DIR: ${CMAKE_CURRENT_LIST_DIR}")
+		include(${ARGV0}/CMakeLists.txt)
+	endif()
 endmacro()
 
 #
@@ -42,7 +60,7 @@ endmacro()
 #
 macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME)
 	# Option flags we understand.
-	set(options CREATE_STATIC_LIB EXCLUDE_FROM_ALL)
+	set(options STATIC EXCLUDE_FROM_ALL)
 	# Arguments taking 1 value.
 	#set(oneValueArgs DESTINATION RENAME)
 	# Arguments taking multiple values.
@@ -76,16 +94,16 @@ macro(add_subdir_lib add_subdir_lib_LIB_TARGET_NAME)
 		set(EFA "")
 	endif()
 
-	if(ADD_SUBDIR_LIB_CREATE_STATIC_LIB)
-		set(CSL "EXCLUDE_FROM_ALL")
+	if(ADD_SUBDIR_LIB_STATIC)
+		set(CSL "STATIC")
 	else()
 		set(CSL "") # @todo
 	endif()
 
-	message(STATUS "add_subdir_lib_internal( '${add_subdir_lib_LIB_TARGET_NAME}' '${add_subdir_lib_SUBDIR}' '${EFA}')")
+	message(STATUS "add_subdir_lib_internal('${add_subdir_lib_LIB_TARGET_NAME}' '${add_subdir_lib_SUBDIR}' '${CSL}' '${EFA}')")
 
 	# Create the subdir library
-	add_subdir_lib_internal(${add_subdir_lib_LIB_TARGET_NAME} ${add_subdir_lib_SUBDIR} "${EFA}")
+	add_subdir_lib_internal(${add_subdir_lib_LIB_TARGET_NAME} ${add_subdir_lib_SUBDIR} "${CSL}" "${EFA}")
 	message(STATUS "=========================================================================")
 endmacro()
 
