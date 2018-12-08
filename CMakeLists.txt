@@ -529,10 +529,10 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ### Add the project subdirs.
 ###
 #set(amlm_APP_ICONS "re-set this in resources_subdir")
-add_subdir_lib(resources EXCLUDE_FROM_ALL)
+add_subdir_lib(resources STATIC EXCLUDE_FROM_ALL)
 message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
-add_subdir_lib(src EXCLUDE_FROM_ALL)
-### @todo Google Test crates a target named "tests" as well, and I can't seem to disable/work around it other than
+add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
+### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
 ###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
 #add_subdir_lib(tests EXCLUDE_FROM_ALL)
 add_subdirectory(tests EXCLUDE_FROM_ALL)
