@@ -30,6 +30,7 @@
 
 // Ours
 #include "StringHelpers.h"
+#include "DebugHelpers.h"
 
 /**
  * And the one thing you might want to use Qt's QMetaWhatever infrastructure for, implicitly or explicitly converting

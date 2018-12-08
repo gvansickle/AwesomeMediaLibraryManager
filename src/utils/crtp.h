@@ -33,6 +33,13 @@ struct crtp
 	 * @endcode
 	 */
     T& underlying() { return static_cast<T&>(*this); }
+
+	/**
+     * Use these in derived classes like so:
+     * @code
+     *    this->underlying().SomeCRTPedFunction();
+	 * @endcode
+	 */
     T const& underlying() const { return static_cast<T const&>(*this); }
 private:
     crtp(){}

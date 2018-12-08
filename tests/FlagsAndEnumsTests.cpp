@@ -101,6 +101,26 @@ public:
 };
 Q_DECLARE_METATYPE(TestEnumHolder);
 
+/**
+ * Test ExtEnum class definition.
+ */
+class TestExtEnumHolder : public ExtEnum<TestExtEnumHolder>
+{
+	Q_GADGET
+public:
+
+	enum TestExtEnum
+	{
+		Enum0 = 0x00,
+		Enum1 = 0x01,
+		Enum2 = 0x02,
+		Enum3 = 0x03,
+		Enum9 = 0x09,
+		Enum8 = 0x08
+	};
+	Q_ENUM(TestExtEnum)
+};
+Q_DECLARE_METATYPE(TestExtEnumHolder);
 
 //
 // Tests
@@ -325,10 +345,20 @@ TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
 
 
 
-TEST_F(FlagsAndEnumsTests, ExtEnumSanity)
+TEST_F(FlagsAndEnumsTests, DISABLED_ExtEnumSanity)
 {
+//	TestExtEnumHolder::TestExtEnum test_ext_enum;
+
+//	test_ext_enum = TestExtEnumHolder::Enum1;
+
+//	TCOUT << "TestExtEnumHolder::Enum1: " << test_ext_enum;//).toString();
+
+//	EXPECT_EQ(test_ext_enum, QString("TestExtEnumHolder::Enum1"));
 }
 
+/**
+ * Iterating through the keys of the enumeration, in declaration order.
+ */
 TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 {
 	TestEnumHolder::TestEnum the_enum;

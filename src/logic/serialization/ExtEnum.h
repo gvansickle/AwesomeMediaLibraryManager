@@ -20,10 +20,18 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
 #define AWESOMEMEDIALIBRARYMANAGER_EXTENUM_H
 
+// Std C++
 #include <initializer_list>
 #include <string>
 #include <map>
 #include <cstring>
+
+// Qt 5
+//#include <QString>
+
+// Ours
+#include <src/utils/crtp.h>
+#include <src/utils/EnumFlagHelpers.h>
 
 /**
  * A way-improved enum facility that's been too long in coming to C++.
@@ -48,12 +56,25 @@ template <class ScopeTypeEnumType, class ToType>
 struct ExtEnumMapBase;
 
 /**
- *
+ * CRTP base class for ExtEnums.  Mix this into derived classes like so:
+ * @code
+ *  class MyNewEnum : public ExtEnum {};
+ * @endcode
  */
 template <class DerivedType>
-class ExtEnum
+class ExtEnum : crtp<DerivedType, ExtEnum>
 {
 public:
+
+	/**
+	 * Return the string representation of the value of this ExtEnum.
+	 * I.e. for class MyEnum::Enum1.toString() == "MyEnum::Enum1".
+	 */
+	std::string toString() const
+	{
+		return EnumFlagtoqstr(this->underlying());
+	};
+
 	/**
      * Static map factory function.
      * @returns An object mapping ScopeTypeEnumType's to ToType's via the at(index) and operator[](index) member
@@ -65,7 +86,6 @@ public:
 	{
 		return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
 	}
-
 };
 
 /**
