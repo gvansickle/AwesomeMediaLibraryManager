@@ -50,7 +50,7 @@
 
 #include <concurrency/ExtAsync.h>
 #include <concurrency/AsyncTaskManager.h>
-#include <concurrency/DirectoryScanJob.h>
+#include <logic/jobs/DirectoryScanJob.h>
 
 #include "LibraryRescannerJob.h"
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>

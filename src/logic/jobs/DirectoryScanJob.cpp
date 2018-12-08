@@ -17,7 +17,7 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "AMLMJob.h"
+#include "concurrency/AMLMJob.h"
 #include "DirectoryScanJob.h"
 
 #include <QString>

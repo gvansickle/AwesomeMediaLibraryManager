@@ -19,12 +19,9 @@
 
 # @file src/logic/CMakeLists.txt
 
-#add_subdirectory(models EXCLUDE_FROM_ALL)
-#add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
-#add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
-
-add_subdir_lib(models EXCLUDE_FROM_ALL)
 add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
+add_subdir_lib(jobs EXCLUDE_FROM_ALL)
+add_subdir_lib(models EXCLUDE_FROM_ALL)
 add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
@@ -109,6 +106,7 @@ target_link_libraries(logic
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
 		dbmodels
+		jobs
 		models
 		proxymodels
 		serialization

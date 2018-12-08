@@ -37,7 +37,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	AMLMJob.h
 	AMLMJobT.h
 	AMLMCompositeJob.h
-	DirectoryScanJob.h
+		../logic/jobs/DirectoryScanJob.h
 	ThreadsafeMap.h
 	DebugSequence.h
 	WorkerThreadBase.h
@@ -53,7 +53,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	AMLMJob.cpp
 	AMLMJobT.cpp
 	AMLMCompositeJob.cpp
-	DirectoryScanJob.cpp
+		../logic/jobs/DirectoryScanJob.cpp
 	ThreadsafeMap.cpp
 	DebugSequence.cpp
 	WorkerThreadBase.cpp

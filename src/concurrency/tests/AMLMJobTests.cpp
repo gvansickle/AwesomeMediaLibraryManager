@@ -38,7 +38,7 @@
 #include <future/function_traits.hpp>
 #include <tests/TestHelpers.h>
 #include "../AMLMJob.h"
-#include <src/concurrency/DirectoryScanJob.h>
+#include <logic/jobs/DirectoryScanJob.h>
 
 
 ////////////////////////

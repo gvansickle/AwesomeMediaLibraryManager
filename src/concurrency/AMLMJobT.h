@@ -20,10 +20,15 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_AMLMJOBT_H
 #define AWESOMEMEDIALIBRARYMANAGER_AMLMJOBT_H
 
+// Std C++
+
+// Qt5
+
 #ifdef QT_NO_EXCEPTIONS
 #error "WE NEED A QT COMPILED WITH EXCEPTIONS ENABLED"
 #endif
 
+// Ours
 #include "AMLMJob.h"
 
 /**
@@ -530,9 +535,9 @@ protected:
  * Create a new AMLMJobT from an ExtFuture<>.
  */
 template<class ExtFutureT>
-inline static auto* make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
+inline static std::unique_ptr<AMLMJobT<ExtFutureT>> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
 {
-	auto job = new AMLMJobT<ExtFutureT>(ef, parent);
+	auto job = std::make_unique<AMLMJobT<ExtFutureT>>(ef, parent);
 	return job;
 }
 

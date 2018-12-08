@@ -54,15 +54,15 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
-template <class T>
-struct AMLMJob_traits
-{
-    using type = T;
-    using ExtFutureType = typename T::ExtFutureT;
-
-    ExtFutureType get_future() { return T::m_ext_future; }
-
-};
+//template <class T>
+//struct AMLMJob_traits
+//{
+//    using type = T;
+//    using ExtFutureType = typename T::ExtFutureT;
+//
+//    ExtFutureType get_future() { return T::m_ext_future; }
+//
+//};
 
 
 
