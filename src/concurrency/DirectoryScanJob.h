@@ -32,7 +32,7 @@
 
 // Ours
 #include <logic/DirScanResult.h>
-#include "AMLMJob.h"
+#include "AMLMJobT.h"
 #include <concurrency/ExtFuture.h>
 #include "utils/UniqueIDMixin.h"
 

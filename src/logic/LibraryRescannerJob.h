@@ -29,7 +29,7 @@
 /// Ours
 #include "LibraryRescannerMapItem.h"
 #include "LibraryRescanner.h" ///< For MetadataReturnVal
-#include <src/concurrency/AMLMJob.h>
+#include <src/concurrency/AMLMJobT.h>
 
 class LibraryModel;
 class LibraryRescannerJob;

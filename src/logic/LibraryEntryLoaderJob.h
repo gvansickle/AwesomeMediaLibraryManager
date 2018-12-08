@@ -32,7 +32,7 @@
 #include <QPointer>
 
 // Ours
-#include <concurrency/AMLMJob.h>
+#include <concurrency/AMLMJobT.h>
 #include "LibraryEntry.h"
 #include "LibraryRescanner.h" // For MetadataReturnVal
 
