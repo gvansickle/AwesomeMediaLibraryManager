@@ -20,7 +20,7 @@
 # GraphViz settings
 
 set(GRAPHVIZ_GRAPH_NAME "AMLMDeps")
-set(GRAPHVIZ_GRAPH_HEADER "node [n fontsize = “12”];") # "AMLM Target Dependency Graph"
+#set(GRAPHVIZ_GRAPH_HEADER "node [n fontsize = “12”];") # "AMLM Target Dependency Graph"
 # Regexes
 set(GRAPHVIZ_IGNORE_TARGETS "")
 # Set this to FALSE to exclude per target graphs foo.dot.<target>.

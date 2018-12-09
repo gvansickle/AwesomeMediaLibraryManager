@@ -669,6 +669,7 @@ bool ActivityProgressStatusBarTracker::stopOnClose(KJob *job) const
 void ActivityProgressStatusBarTracker::setAutoDelete(KJob *kjob, bool autoDelete)
 {
     Q_CHECK_PTR(kjob);
+M_MESSAGE("This function makes no sense, the KJob has the interface and we're going through the tracker for this?");
     kjob->setAutoDelete(autoDelete);
 }
 

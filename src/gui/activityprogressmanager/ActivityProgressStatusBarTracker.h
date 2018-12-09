@@ -249,6 +249,23 @@ public Q_SLOTS:
     void registerJob(KJob *kjob) override;
 
     /**
+     * A slightly better registration interface, taking a std::weak_ptr to an AMLMJob.
+     * @param kjob
+     */
+//    template <class JobTypePtr>
+    void registerJob(/*JobTypePtr*/SHARED_PTR<AMLMJob> kjob)
+    {
+//        if constexpr (std::is_convertible_v</*JobTypePtr*/std::shared_ptr<AMLMJob>, std::weak_ptr<AMLMJob>>)
+//        {
+            return registerJob(kjob.get());
+//        }
+//        else
+//        {
+//            static_assert("FAIL");
+//        }
+    };
+
+    /**
      * From KJobTrackerInterface:
      * "You need to manually call this method only if you re-implemented registerJob() without connecting KJob::finished to this slot."
      * KJTI does this:

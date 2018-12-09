@@ -28,6 +28,9 @@
 #error "WE NEED A QT COMPILED WITH EXCEPTIONS ENABLED"
 #endif
 
+// Qt 5 / KDE backfill.
+#include <utils/QtHelpers.h>
+
 // Ours
 #include "AMLMJob.h"
 
@@ -397,6 +400,7 @@ protected:
 //        m_ext_watcher->cancel();
 		m_ext_future.cancel();
 
+
         /// Kdevelop::ImportProjectJob::doKill() sets the KJob error info here on a kill.
         /// @todo Is it possible for us to have been deleted before this call due to the cancel() above?
 		this->setError(KJob::KilledJobError);
@@ -544,17 +548,18 @@ protected:
 	QSharedPointer<QTimer> m_speed_timer { nullptr };
 	qulonglong m_speed_last_processed_size {0};
 	std::deque<int64_t> m_speed_history;
-
 };
 
 /**
  * Create a new AMLMJobT from an ExtFuture<>.
  */
 template<class ExtFutureT>
-inline static std::unique_ptr<AMLMJobT<ExtFutureT>>  make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
+inline static SHARED_PTR<AMLMJobT<ExtFutureT>>
+make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
 	/// @todo Does this really need a parent?
-	return std::make_unique<AMLMJobT<ExtFutureT>>(ef, parent);
+//	return std::make_shared<AMLMJobT<ExtFutureT>>(ef, parent);
+	return MAKE_SHARED<AMLMJobT<ExtFutureT>>(ef, parent);
 }
 
 

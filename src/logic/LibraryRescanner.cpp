@@ -47,6 +47,7 @@
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
+#include <utils/QtHelpers.h>
 
 #include <concurrency/ExtAsync.h>
 #include <concurrency/AsyncTaskManager.h>
@@ -193,7 +194,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
 #else
     /// Return type here is: std::unique_ptr<AMLMJobT<ExtFutureT>>
 M_TODO("This isn't scanning.");
-    /*std::unique_ptr<AMLMJobT<DirScanResult>>*/ auto dirtrav_job = make_async_AMLMJobT(
+    SHARED_PTR<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(
     		DirectoryScannerAMLMJob::AsyncDirScan(dir_url, extensions,
     				QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories), this);
 #endif
@@ -423,8 +424,8 @@ M_TODO("This isn't scanning.");
     }); // END dirtrav_job->then
 
     master_job_tracker->registerJob(dirtrav_job);
-	master_job_tracker->setAutoDelete(dirtrav_job, false);
-    master_job_tracker->setStopOnClose(dirtrav_job, true);
+	master_job_tracker->setAutoDelete(dirtrav_job.get(), false);
+    master_job_tracker->setStopOnClose(dirtrav_job.get(), true);
 	master_job_tracker->registerJob(lib_rescan_job);
 	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 	master_job_tracker->setStopOnClose(lib_rescan_job, true);
