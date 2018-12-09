@@ -38,15 +38,13 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
-
-#include <continuable/detail/traits.hpp>
+#include <continuable/detail/utility/traits.hpp>
 
 namespace cti {
 namespace detail {
 namespace container {
 namespace detail {
 // We don't want to pull the algorithm header in
-template <typename... T>
 constexpr std::size_t max_element_of(std::initializer_list<std::size_t> list) {
   std::size_t m = 0;
   for (auto current : list) {
@@ -56,16 +54,23 @@ constexpr std::size_t max_element_of(std::initializer_list<std::size_t> list) {
   }
   return m;
 }
+
+/// Workarround for a regression introduced in ~ MSVC 15.8.1
+template <typename T>
+using size_of_helper = std::integral_constant<std::size_t, sizeof(T)>;
+template <typename T>
+using align_of_helper = std::integral_constant<std::size_t, alignof(T)>;
+
 template <typename... T>
-constexpr auto storage_of_impl() {
-  constexpr auto size = max_element_of({sizeof(T)...});
-  constexpr auto align = max_element_of({alignof(T)...});
+constexpr auto storage_of_impl(traits::identity<T...>) {
+  constexpr auto size = max_element_of({(size_of_helper<T>::value)...});
+  constexpr auto align = max_element_of({(align_of_helper<T>::value)...});
   return std::aligned_storage_t<size, align>{};
 }
 
 /// Declares the aligned storage union for the given types
 template <typename... T>
-using storage_of_t = decltype(storage_of_impl<T...>());
+using storage_of_t = decltype(storage_of_impl(traits::identity<T...>{}));
 
 /// The value fpr the empty slot
 using slot_t = std::uint8_t;

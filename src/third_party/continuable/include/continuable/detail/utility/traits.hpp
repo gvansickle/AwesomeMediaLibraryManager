@@ -35,12 +35,17 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-
 #include <continuable/detail/features.hpp>
 
 namespace cti {
 namespace detail {
 namespace traits {
+/// Removes all references and qualifiers from the given type T,
+/// since std::decay has too much overhead through checking for
+/// function pointers and arrays also.
+template <typename T>
+using unrefcv_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
 namespace detail {
 template <typename T, typename... Args>
 struct index_of_impl;
