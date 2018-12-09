@@ -187,9 +187,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     Q_CHECK_PTR(master_job_tracker);
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
-
+#if 0
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+#else
+    /// Return type here is: std::unique_ptr<AMLMJobT<ExtFutureT>>
+    auto dirtrav_job = make_async_AMLMJobT(
+    		DirectoryScannerAMLMJob::AsyncDirScan(nullptr, dir_url, extensions,
+    				QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories), this);
+#endif
 
     // Makes a new AMLMJobT.
 	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);

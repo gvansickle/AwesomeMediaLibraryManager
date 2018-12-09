@@ -171,7 +171,7 @@ Q_SIGNALS:
     /// @name ExtFuture<T> signals we want to expose to the outside world.
     /// @{
 
-    void SIGNAL_resultsReadyAt(int begin, int end);
+	void SIGNAL_resultsReadyAt(int begin, int end) override;
 
     /// @}
 
@@ -454,7 +454,7 @@ protected:
      * Reporting and control should be handled via the derived class's m_ext_future member.
      *
      */
-    virtual void runFunctor() = 0;
+    virtual void runFunctor() {};
 
     /// @}
 

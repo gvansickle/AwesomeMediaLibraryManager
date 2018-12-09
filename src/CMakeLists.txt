@@ -104,11 +104,9 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
 		verdigris_target
 		Boost::thread
-		#tbb_wjakob
 		)
 
 
@@ -161,9 +159,9 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 # Subdir targets.
 #
 add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
-add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
 add_subdir_lib(future STATIC EXCLUDE_FROM_ALL)
 add_subdirectory(gui)
+add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
 
 
 
@@ -328,7 +326,7 @@ download_project(PROJ                googletest
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# Disable Google Test/Mock's own tests.
+# Try to disable Google Test/Mock's own tests.
 set(gmock_build_tests OFF CACHE BOOL "" FORCE)
 set(gtest_build_samples OFF CACHE BOOL "" FORCE)
 set(gtest_build_tests OFF CACHE BOOL "" FORCE)

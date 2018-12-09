@@ -170,16 +170,17 @@ include(ECMEnableSanitizers)
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 if(UNIX)
-ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -Wmaybe-uninitialized -Werror=maybe-uninitialized)
+ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
+	ucm_add_flags(-Og -ggdb3 -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
+	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree
-		-fdelayed-template-parsing -frelaxed-template-template-args)
+	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
+	ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
 #ucm_add_flags(/showIncludes)
@@ -517,8 +518,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 
 ### Generate configured headers.
 # Generate the version info file.
-configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+#configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
+#		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 # Generate the amlm-configure.h file.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h

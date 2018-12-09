@@ -203,7 +203,7 @@ template <class CallbackType>
 
 		/**
 		 * Takes a QObject as the executor parameter, runs in the event loop of the thread the QObject lives in.
-		 * This is mainly for use is .then() for returning results to the GUI.
+		 * This is mainly for use in .then() for returning results to the GUI.
 		 * @note Yeah, this could probably be merged with the above QThreadPool one, but I'm sick of fighting templates at the moment.
 		 */
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
@@ -211,7 +211,7 @@ template <class CallbackType>
 				REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
 		static ExtFutureT run_param_expander(QObject* executor, CallbackType&& callback, Args&&... args)
 		{
-			static_assert(!std::is_base_of_v<QThreadPool, decltype(*executor)>, "Executor was deduced incorrectly");
+			static_assert(!std::is_convertible_v<QThreadPool*, decltype(executor)*>, "Executor was deduced incorrectly");
 
 			// Create the ExtFuture<T> we'll be returning.
 			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
@@ -749,11 +749,7 @@ template <class CallbackType>
 	>
 	ExtFuture<LiftedR> run_again(CallbackType&& callback, Args&&... args)
 	{
-#if 1
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
-#else
-		return ExtAsync::detail_struct<CallbackType>::run_again(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
-#endif
 	}
 
 

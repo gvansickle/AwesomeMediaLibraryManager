@@ -30,20 +30,29 @@ set(amlm_APP_ICONS
 	# svgz isn't supported by ecm_add_app_icon().
     #scalable-preferences-desktop-sound.svgz
 )
-#prepend_to_each(amlm_APP_ICONS "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_APP_ICONS})
 
 set(amlm_XQUERIES
 	xquery_files.qrc
 	filelist.xq
 )
-#prepend_to_each(amlm_XQUERIES "${CMAKE_CURRENT_LIST_DIR}/" ${amlm_XQUERIES})
+
+# Generate the version info file.
+configure_file(VersionInfo.cpp.in VersionInfo.cpp)
 
 target_sources_local(resources
 	PUBLIC
+		VersionInfo.cpp
 		${amlm_APP_ICONS}
 		${amlm_ICONS}
 		${amlm_XQUERIES}
 )
+set_target_properties(resources
+	PROPERTIES
+		AUTOMOC OFF
+		# CMake suddenly doesn't know the linker language to use for this subdir,
+		# even with the add of VersionInfo.cpp, so force it.
+		LINKER_LANGUAGE CXX
+	)
 
 ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 

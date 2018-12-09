@@ -60,6 +60,17 @@ public:
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
 	}
 
+	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr)
+			: BASE_CLASS(parent), m_ext_future(extfuture)
+	{
+		qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
+		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
+		// We could get a doKill() call at any time after we leave this constructor.
+		m_ext_watcher = new ExtFutureWatcherT();
+		// Create a new 1 sec speed update QTimer.
+		m_speed_timer = QSharedPointer<QTimer>::create(this);
+	}
+
     /**
      * Return a copy of the future.
      */
@@ -534,11 +545,11 @@ protected:
 /**
  * Create a new AMLMJobT from an ExtFuture<>.
  */
-template<class ExtFutureT>
-inline static std::unique_ptr<AMLMJobT<ExtFutureT>> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
+template<class ExtFutureT>  /// std::unique_ptr<AMLMJobT<ExtFutureT>>
+inline static AMLMJobT<ExtFutureT>*  make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
-	auto job = std::make_unique<AMLMJobT<ExtFutureT>>(ef, parent);
-	return job;
+	/// @todo Does this need a parent?
+	return /*std::make_unique<*/new AMLMJobT<ExtFutureT>/*>*/(ef, parent);
 }
 
 
