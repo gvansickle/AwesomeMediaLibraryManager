@@ -60,6 +60,11 @@ public:
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
 	}
 
+	/**
+	 * Constructor for make_async_AMLMJobT<>().
+	 * @param extfuture
+	 * @param parent
+	 */
 	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr)
 			: BASE_CLASS(parent), m_ext_future(extfuture)
 	{
@@ -545,11 +550,11 @@ protected:
 /**
  * Create a new AMLMJobT from an ExtFuture<>.
  */
-template<class ExtFutureT>  /// std::unique_ptr<AMLMJobT<ExtFutureT>>
-inline static AMLMJobT<ExtFutureT>*  make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
+template<class ExtFutureT>
+inline static std::unique_ptr<AMLMJobT<ExtFutureT>>  make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
-	/// @todo Does this need a parent?
-	return /*std::make_unique<*/new AMLMJobT<ExtFutureT>/*>*/(ef, parent);
+	/// @todo Does this really need a parent?
+	return std::make_unique<AMLMJobT<ExtFutureT>>(ef, parent);
 }
 
 

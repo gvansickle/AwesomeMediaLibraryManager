@@ -219,7 +219,6 @@ template <class CallbackType>
 			// Capture the future and the variadic args into a tuple we'll pass to the lambda instead of passing them in the
 			// limited QtConcurrent::run() parameter list.
 			auto lambda = [
-					executor = executor,
 					callback_copy = DECAY_COPY(callback),
 					retfuture_copy=std::forward<ExtFutureT>(retfuture),
 					argtuple = std::make_tuple(std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)]
@@ -275,7 +274,10 @@ template <class CallbackType>
 			};
 
 			// Don't need to pass anything other than the lambda.
-			QtConcurrent::run(lambda);
+//			QtConcurrent::run(lambda);
+M_WARNING("TODO: This won't block, seems like it should.  But maybe we're OK, neither does ::run()");
+M_WARNING("TODO: We do need to finish the returned future though.");
+			run_in_event_loop(executor, lambda);
 
 			return retfuture;
 		}

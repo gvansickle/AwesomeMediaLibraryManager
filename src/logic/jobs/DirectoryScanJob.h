@@ -84,7 +84,7 @@ public:
 											   QDir::Filters filters,
 											   QDirIterator::IteratorFlags flags);
 
-	static ExtFuture<DirScanResult> AsyncDirScan(AMLMJob* amlmJob,
+	static ExtFuture<DirScanResult> AsyncDirScan(
 			const QUrl& dir_url,
 			const QStringList &name_filters,
 			const QDir::Filters dir_filters = QDir::NoFilter,

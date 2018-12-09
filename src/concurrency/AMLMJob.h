@@ -353,6 +353,10 @@ public:
 
 //            qDbo() << "IN THEN CALLBACK, KJob:" << kjob;
 
+			QPointer<KJob> kjob_wp(kjob);
+
+			Q_ASSERT(kjob_wp != 0);
+
             // Need to determine if the result was success, error, or cancel.
             // In the latter two cases, we need to make sure any chained AMLMJobs are either
             // cancelled (or notified of the failure?).
@@ -378,11 +382,13 @@ public:
             else
             {
                 // Cast to the derived job type.
+                Q_ASSERT_X(kjob != nullptr, "AMLMJob then()", "kjob was deleted");
                 using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
-                auto* jobptr = dynamic_cast<JobType*>(kjob);
+//                auto* jobptr = dynamic_cast<JobType*>(kjob);
+	            auto* jobptr = static_cast<JobType*>(kjob);
                 Q_ASSERT(jobptr);
                 // Call the continuation.
-                f(jobptr);
+                std::invoke(f, jobptr);
             }
         });
     }
