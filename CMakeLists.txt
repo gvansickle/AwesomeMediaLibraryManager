@@ -622,6 +622,12 @@ cpack_add_component(
 
 endif()### END INSTALLER STUFF
 
+# Generate a dependency graph.
+# @see CMakeGraphVizOptions.cmake
+add_custom_target(graphviz ALL
+	COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/graphviz"
+	COMMAND "${CMAKE_COMMAND}" "--graphviz=graphviz/amlm.dot" .
+	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 ###
 ### Print summary.
