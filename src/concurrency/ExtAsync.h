@@ -663,6 +663,13 @@ M_WARNING("TODO: We do need to finish the returned future though.");
 		return report_and_control;
 	}
 
+//	template <class CallbackType, class... Args,
+//			class ExtFutureT = argtype_t<CallbackType, 0>>
+//	static auto run(CallbackType&& callback, Args&&... args) -> argtype_t<CallbackType, 0>
+//	{
+//		return ExtAsync::detail_struct<CallbackType>::run_param_expander(DECAY_COPY(callback), std::forward<Args>(args)...);
+//	}
+
 #if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
      * ExtAsync::run() overload for member functions of classes derived from AMLMJob taking zero params.

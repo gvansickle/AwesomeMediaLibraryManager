@@ -55,6 +55,12 @@
 template <class ScopeTypeEnumType, class ToType>
 struct ExtEnumMapBase;
 
+template <class ExtEnumDerivedType>
+struct ExtEnumTraits
+{
+	using EnumTagType = typename ExtEnumDerivedType::EnumType;
+};
+
 /**
  * CRTP base class for ExtEnums.  Mix this into derived classes like so:
  * @code
@@ -65,6 +71,14 @@ template <class DerivedType>
 class ExtEnum : crtp<DerivedType, ExtEnum>
 {
 public:
+
+//	using DerivedTypeEnumTag = typename DerivedType::EnumTag;
+//	enum EnumTag : int;
+//	using DerivedTypeEnumTag = typename :: typename DerivedType::EnumTag;
+//	template <class T>
+//	using T = typename ExtEnumTraits<DerivedType>::EnumTag;
+
+//	ExtEnum& operator=(const DerivedType enum_val) { m_value = enum_val; return *this; };
 
 	/**
 	 * Return the string representation of the value of this ExtEnum.
@@ -86,6 +100,12 @@ public:
 	{
 		return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
 	}
+
+private:
+
+//	T m_value;
+//	typename ExtEnumTraits<typename DerivedType>::EnumTagType m_value;
+//	EnumTagType<typename DerivedType::EnumTag> m_value;
 };
 
 /**

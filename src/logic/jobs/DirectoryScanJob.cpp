@@ -205,8 +205,7 @@ ExtFuture<DirScanResult> DirectoryScannerAMLMJob::AsyncDirScan(const QUrl& dir_u
 															   const QDir::Filters dir_filters,
 															   const QDirIterator::IteratorFlags iterator_flags)
 {
-	return ExtAsync::run(&DirScanFunction, nullptr,
-						 dir_url, name_filters, dir_filters, iterator_flags);
+	return ExtAsync::run(&DirScanFunction, /*AMLMJobT*/nullptr, dir_url, name_filters, dir_filters, iterator_flags);
 }
 
 void DirectoryScannerAMLMJob::runFunctor()

@@ -104,12 +104,12 @@ Q_DECLARE_METATYPE(TestEnumHolder);
 /**
  * Test ExtEnum class definition.
  */
-class TestExtEnumHolder : public ExtEnum<TestExtEnumHolder>
+class TestExtEnum : public ExtEnum<TestExtEnum>
 {
 	Q_GADGET
 public:
 
-	enum TestExtEnum
+	enum EnumTag
 	{
 		Enum0 = 0x00,
 		Enum1 = 0x01,
@@ -118,9 +118,10 @@ public:
 		Enum9 = 0x09,
 		Enum8 = 0x08
 	};
-	Q_ENUM(TestExtEnum)
+	Q_ENUM(EnumTag)
 };
-Q_DECLARE_METATYPE(TestExtEnumHolder);
+Q_DECLARE_METATYPE(TestExtEnum);
+
 
 //
 // Tests
@@ -347,17 +348,18 @@ TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
 
 TEST_F(FlagsAndEnumsTests, DISABLED_ExtEnumSanity)
 {
-//	TestExtEnumHolder::TestExtEnum test_ext_enum;
+//	TestExtEnum::TestExtEnum test_ext_enum;
 
-//	test_ext_enum = TestExtEnumHolder::Enum1;
+//	test_ext_enum = TestExtEnum::Enum1;
 
-//	TCOUT << "TestExtEnumHolder::Enum1: " << test_ext_enum;//).toString();
+//	TCOUT << "TestExtEnum::Enum1: " << test_ext_enum;//).toString();
 
-//	EXPECT_EQ(test_ext_enum, QString("TestExtEnumHolder::Enum1"));
+//	EXPECT_EQ(test_ext_enum, QString("TestExtEnum::Enum1"));
 }
 
 /**
- * Iterating through the keys of the enumeration, in declaration order.
+ * Iterating through the keys of the enumeration.  This should happen in enumerator declaration order,
+ * and not according to the numerical value of the enumerators, thanks to QMetaEnum.
  */
 TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 {
@@ -384,6 +386,54 @@ TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 		{
 			switch(key_index)
 			{
+			// Last two enumerators, Enum8 = 8 and Enum9 = 9, are in reverse numerical order wrt their declarations.
+			case 4:
+				EXPECT_EQ(key_value, 9);
+				break;
+			case 5:
+				EXPECT_EQ(key_value, 8);
+				break;
+			}
+		}
+	}
+}
+
+/**
+ * Iterating through the keys of the enumeration.  This should happen in declaration order.
+ */
+TEST_F(FlagsAndEnumsTests, ExtEnumEnumeration)
+{
+	TestExtEnum::EnumTag the_enum;
+	TestExtEnum the_extenum;
+
+	the_enum = TestExtEnum::Enum2;
+//	the_extenum = TestExtEnum::Enum8;
+
+	TCOUT << "Debug operator<<:" << the_enum;
+//	TCOUT << ".toString():" << TestExtEnum::toString()the_enum.toString();
+
+	// Get the enum metatype.
+	auto emt = QMetaEnum::fromType<TestExtEnum::EnumTag>();
+
+	TCOUT << "QMetaEnum:" << emt.scope() << "::" << emt.name();
+
+	auto num_keys = emt.keyCount();
+
+	for(int key_index = 0; key_index < num_keys; ++key_index)
+	{
+		const char* key_str = emt.key(key_index);
+		int key_value = emt.value(key_index);
+		TCOUT << "Key index:" << key_index << "Identifier:" << key_str << "Value:" << key_value;
+
+		if(key_index < 4)
+		{
+			EXPECT_EQ(key_value, key_index);
+		}
+		else
+		{
+			switch(key_index)
+			{
+			// Last two enumerators, Enum8 = 8 and Enum9 = 9, are in reverse numerical order wrt their declarations.
 			case 4:
 				EXPECT_EQ(key_value, 9);
 				break;

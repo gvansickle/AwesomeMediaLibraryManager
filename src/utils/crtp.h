@@ -18,6 +18,25 @@
  *   For MixedIntoClass->crtp<> however, see note 1 below.
  * Per https://www.fluentcpp.com/2017/05/19/crtp-helper/
  *
+ * Use like this:
+ *
+ * @code
+ * // New class 1 that you want to use via CRTP.
+ * template <class T>
+ * class CRTP1 : crtp<T, CRTP2> ...
+ *
+ * // New class 2 that you want to use via CRTP.
+ * template <class T>
+ * class CRTP2 : crtp<T, CRTP2> ...
+ *
+ * // Class you want to use the above two CRTP classes with.
+ * class NewClass : public CRTP1<NewClass>, public CRTP2<NewClass> ...
+ *
+ * @endcode
+ *
+ * So the top-level class gets "transported" all the way down the MI hierarchy in the first template parameter,
+ * and the second parameter is used only to break the diamond inheritance.
+ *
  * @note [1] Still need to do this in client classes to avoid ambiguous name resolution:
  *     using MyCRTPBase<MyClass>::funcInMyCRTPBase;
  * @see https://stackoverflow.com/a/46916924
@@ -41,6 +60,7 @@ struct crtp
 	 * @endcode
 	 */
     T const& underlying() const { return static_cast<T const&>(*this); }
+
 private:
     crtp(){}
     /// crtpType<> exists only to differentiate types.

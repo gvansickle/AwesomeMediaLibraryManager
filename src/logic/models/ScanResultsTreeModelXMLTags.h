@@ -44,7 +44,7 @@ class ExtUrlTag : public ExtEnum<ExtUrlTag>
 	Q_GADGET
 
 public:
-	enum TagName
+	enum EnumTag
 	{
 		/// ExtUrl
 		HREF,
@@ -54,14 +54,14 @@ public:
 		TS_LAST_MODIFIED,
 		TS_LAST_MODIFIED_METADATA
 	};
-	Q_ENUM(TagName)
+	Q_ENUM(EnumTag)
 
 	/// @todo Should find a way to add to-map members here.
 
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
-static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagName, QString>(
+static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::EnumTag, QString>(
 {
 	{ExtUrlTag::HREF, "href"},
 	{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},

@@ -188,7 +188,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
     Q_CHECK_PTR(master_job_tracker);
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
-#if 0
+#if 1
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 #else
@@ -281,7 +281,7 @@ M_TODO("This isn't scanning.");
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
 	// START dirtrav_job->then()
-	dirtrav_job->then(this, [=, tree_model_ptr=tree_model](DirectoryScannerAMLMJob* kjob){
+	dirtrav_job->then(this, [=, tree_model_ptr=tree_model](DirectoryScannerAMLMJob* kjob) {
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -424,8 +424,8 @@ M_TODO("This isn't scanning.");
     }); // END dirtrav_job->then
 
     master_job_tracker->registerJob(dirtrav_job);
-	master_job_tracker->setAutoDelete(dirtrav_job.get(), false);
-    master_job_tracker->setStopOnClose(dirtrav_job.get(), true);
+	master_job_tracker->setAutoDelete(dirtrav_job, false);
+    master_job_tracker->setStopOnClose(dirtrav_job, true);
 	master_job_tracker->registerJob(lib_rescan_job);
 	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 	master_job_tracker->setStopOnClose(lib_rescan_job, true);
