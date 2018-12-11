@@ -28,9 +28,9 @@
 #include <utils/crtp.h>
 
 template <class DerivedType>
-struct XMLTagBaseMixin : crtp<DerivedType, XMLTagBaseMixin>
+struct XmlTag : public ExtEnum<XmlTag>, crtp<DerivedType, XmlTag>
 {
-	XMLTagBaseMixin(std::string tag_string) : m_tag_string(tag_string) {};
+	XmlTag(std::string tag_string) : m_tag_string(tag_string) {};
 
 private:
 
@@ -42,7 +42,7 @@ private:
  * CRTP Base class for XML tags.
  */
 template <class DerivedType>
-class XMLTagBase : public ExtEnum<DerivedType>, public XMLTagBaseMixin<DerivedType>
+class XMLTagBase : public ExtEnum<DerivedType>, public XmlTag<DerivedType>
 {
 public:
 	XMLTagBase();

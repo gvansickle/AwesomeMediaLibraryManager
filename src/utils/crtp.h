@@ -23,7 +23,7 @@
  * @code
  * // New class 1 that you want to use via CRTP.
  * template <class T>
- * class CRTP1 : crtp<T, CRTP2> ...
+ * class CRTP1 : crtp<T, CRTP1> ...
  *
  * // New class 2 that you want to use via CRTP.
  * template <class T>

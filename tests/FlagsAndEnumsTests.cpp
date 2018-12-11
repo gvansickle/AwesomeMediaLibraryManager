@@ -346,15 +346,18 @@ TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
 
 
 
-TEST_F(FlagsAndEnumsTests, DISABLED_ExtEnumSanity)
+TEST_F(FlagsAndEnumsTests, ExtEnumSanity)
 {
-//	TestExtEnum::TestExtEnum test_ext_enum;
+	TestExtEnum::EnumTag test_ext_enum;
+	TestExtEnum::EnumTag second;
 
-//	test_ext_enum = TestExtEnum::Enum1;
+	test_ext_enum = TestExtEnum::Enum1;
 
-//	TCOUT << "TestExtEnum::Enum1: " << test_ext_enum;//).toString();
+	second = test_ext_enum;
 
-//	EXPECT_EQ(test_ext_enum, QString("TestExtEnum::Enum1"));
+	TCOUT << "TestExtEnum::Enum1: " << test_ext_enum;//).toString();
+
+//	EXPECT_EQ(second.toStdString(), std::string("TestExtEnum::Enum1"));
 }
 
 /**
