@@ -31,7 +31,7 @@
 
 // Ours
 #include <src/logic/serialization/ExtEnum.h>
-
+#include <src/logic/serialization/XmlTagBase.h>
 
 template <class ScopeTypeEnumType>
 using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
@@ -39,12 +39,12 @@ using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
 /**
  * ExtUrl tags.
  */
-class ExtUrlTag : public ExtEnum<ExtUrlTag>
+class ExtUrlTag : public XmlTagBase<ExtUrlTag>
 {
 	Q_GADGET
 
 public:
-	enum EnumTag
+	enum TagEnum
 	{
 		/// ExtUrl
 		HREF,
@@ -54,22 +54,25 @@ public:
 		TS_LAST_MODIFIED,
 		TS_LAST_MODIFIED_METADATA
 	};
-	Q_ENUM(EnumTag)
+	Q_ENUM(TagEnum)
 
 	/// @todo Should find a way to add to-map members here.
 
+	const std::string toXmlTagString(TagEnum enumerator);
+
+protected:
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
-static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::EnumTag, QString>(
-{
-	{ExtUrlTag::HREF, "href"},
-	{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
-	{ExtUrlTag::SIZE_FILE, "size_file"},
-	{ExtUrlTag::TS_CREATION, "ts_creation"},
-	{ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
-	{ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
-});
+static const auto ExtUrlTagToXMLTagMap { ExtUrlTag::make_map<ExtUrlTag::TagEnum, QString>(
+		{
+				{ExtUrlTag::HREF, "href"},
+				{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
+				{ExtUrlTag::SIZE_FILE, "size_file"},
+				{ExtUrlTag::TS_CREATION, "ts_creation"},
+				{ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
+				{ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
+		})};
 
 /**
  * DirScanResult tags.

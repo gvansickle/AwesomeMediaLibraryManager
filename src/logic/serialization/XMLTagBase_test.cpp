@@ -20,5 +20,5 @@
 /**
  * @file XMLTagBase_test.cpp
  */
-#include <XMLTagBase.h>
+#include <XmlTagBase.h>
 

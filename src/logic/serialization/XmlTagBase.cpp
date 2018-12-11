@@ -20,16 +20,5 @@
 /**
  * @file XMLTagBase.cpp
  */
-#include <XMLTagBase.h>
-
-XMLTagBase::XMLTagBase()
-{
-	// TODO Auto-generated constructor stub
-
-}
-
-XMLTagBase::~XMLTagBase()
-{
-	// TODO Auto-generated destructor stub
-}
+#include <XmlTagBase.h>
 

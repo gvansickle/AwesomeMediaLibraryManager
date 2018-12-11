@@ -27,6 +27,7 @@
 #include "ExtEnum.h"
 #include <utils/crtp.h>
 
+#if 0
 template <class DerivedType>
 struct XmlTag : public ExtEnum<XmlTag>, crtp<DerivedType, XmlTag>
 {
@@ -37,16 +38,21 @@ private:
 	/// The tag in string form.  Does not contain the "<>"'s or the end slash.
 	std::string m_tag_string;
 };
+#endif
 
 /**
  * CRTP Base class for XML tags.
  */
 template <class DerivedType>
-class XMLTagBase : public ExtEnum<DerivedType>, public XmlTag<DerivedType>
+class XmlTagBase : public ExtEnum<DerivedType>//, public XmlTag<DerivedType>
 {
 public:
-	XMLTagBase();
-	virtual ~XMLTagBase();
+	XmlTagBase() {};
+	XmlTagBase(const std::string& tag_string) : m_tag_string(tag_string) {};
+	virtual ~XmlTagBase() {};
+
+	/// The tag in string form.  Does not contain the "<>"'s or the end slash.
+	std::string m_tag_string;
 };
 
 #endif /* SRC_LOGIC_SERIALIZATION_XMLTAGBASE_H_ */

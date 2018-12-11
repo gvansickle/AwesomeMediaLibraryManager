@@ -97,7 +97,7 @@ public:
      *          functions.
      */
 	template <class ScopeTypeEnumType, class ToType>
-	static ExtEnumMapBase<ScopeTypeEnumType, ToType>
+	static const ExtEnumMapBase<ScopeTypeEnumType, ToType>
 	make_map(std::initializer_list<typename ExtEnumMapBase<ScopeTypeEnumType, ToType>::maptype::value_type> init_list)
 	{
 		return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
@@ -109,7 +109,7 @@ private:
 //	T m_value;
 //	typename ExtEnumTraits<typename DerivedType>::EnumTagType m_value;
 //	EnumTagType<typename DerivedType::EnumTag> m_value;
-	std::any m_value;
+//	std::any m_value {};
 };
 
 /**
