@@ -75,6 +75,7 @@ template <class DerivedType>
 class ExtEnum : crtp<DerivedType, ExtEnum>
 {
 public:
+//	ExtEnum()
 
 //	using DerivedTypeEnumTag = typename DerivedType::EnumTag;
 //	enum EnumTag : int;
@@ -123,6 +124,9 @@ public:
 	{
 		return ExtEnumMapBase<ScopeTypeEnumType, ToType>(init_list);
 	}
+
+protected:
+	constexpr auto get_map_init_from_derived();
 
 private:
 //	using DerivedType::ExtEnumTag;

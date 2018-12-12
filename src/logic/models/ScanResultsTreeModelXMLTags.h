@@ -53,64 +53,24 @@ public:
 
 	enum TagEnum
 	{
-		#define X(s, tag_str) s,
-			M_ExtUrlTags(X)
-		#undef X
-//		/// ExtUrl
-//		HREF,
-//		TS_LAST_REFRESH,
-//		SIZE_FILE,
-//		TS_CREATION,
-//		TS_LAST_MODIFIED,
-//		TS_LAST_MODIFIED_METADATA
+#define X(id, tag_str) id,
+		M_ExtUrlTags(X)
+#undef X
 	};
 	Q_ENUM(TagEnum)
 
-
-//	using ToTagMapType = ExtEnumMapBase<ExtUrlTag::TagEnum, QString>;
-	struct MapEntryType
-	{
-		static const TagEnum tag;
-		static const char *const str;
-	};
-//	struct MapType
-//	{
-//		MapEntryType[];
-//	};
-	using ToTagMapType = std::map<decltype(MapEntryType::tag), decltype(MapEntryType::str)>;
-
 //protected:
-
-	struct MapStruct { TagEnum the_tag; const char * str;};
-	#define X(s, tag_str) { s, tag_str },
-	static constexpr MapStruct map2[6] = { M_ExtUrlTags(X) };
-//	static constexpr decltype(auto)  map2 = std::experimental::make_array({M_ExtUrlTags(X)});
-	#undef X
 
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
-//static ExtUrlTag::ToTagMapType ExtUrlTagToXMLTagMap ([](){
-//	ExtUrlTag::ToTagMapType retval;
-//	for(const auto& x : ExtUrlTag::map2)
-//	{
-//		retval.insert(x.the_tag, x.str);
-//	}
-//	return retval;
-//}());
-
-//		ExtUrlTag::make_map<ExtUrlTag::TagEnum, QString>(
-//		{
-//		#define X(s, tag_str) { ExtUrlTag::s, tag_str },
-//				M_ExtUrlTags
-//		#undef X
-////				{ExtUrlTag::HREF, "href"},
-////				{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
-////				{ExtUrlTag::SIZE_FILE, "size_file"},
-////				{ExtUrlTag::TS_CREATION, "ts_creation"},
-////				{ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
-////				{ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
-//		});
+static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagEnum, QString>(
+{
+			// This expands to an init list with entries which look like: {ExtUrlTag::HREF, "href"},
+#define X(s, tag_str) { ExtUrlTag::s, tag_str },
+				M_ExtUrlTags(X)
+#undef X
+});
 
 /**
  * DirScanResult tags.
