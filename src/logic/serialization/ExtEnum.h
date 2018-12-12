@@ -82,6 +82,27 @@ public:
 //	template <class T>
 //	using T = typename ExtEnumTraits<DerivedType>::EnumTag;
 
+	QMetaEnum qMetaEnum() const
+	{
+		return QMetaEnum::fromType<ExtEnum>();
+	}
+
+
+	int keyCount() const
+	{
+		return this->qMetaEnum().keyCount();
+	}
+
+	int keyToIndex(int key_index) const
+	{
+		return this->qMetaEnum().keyToValue(qMetaEnum().key(key_index));
+	}
+
+	int keyIndexToValue(int key_index) const
+	{
+		return this->qMetaEnum().value(key_index);
+	}
+
 	/**
 	 * Return the string representation of the value of this ExtEnum.
 	 * I.e. for class MyEnum::Enum1.toString() == "MyEnum::Enum1".

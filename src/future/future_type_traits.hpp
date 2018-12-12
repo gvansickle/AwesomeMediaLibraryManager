@@ -23,7 +23,14 @@
 #include <config.h>
 
 // Std C++
+
 #include <type_traits>
+//#if __has_include(<experimental/type_traits>)
+//#include <experimental/type_traits>
+//using namespace ns_detection = namespace std::experimental::fundamentals_v2;
+//#else
+//using ns_detection = namespace std;
+//#endif
 #include <tuple>
 #include <functional> // For std::invoke<>().
 
@@ -158,7 +165,7 @@ namespace std // I know, I know.
 
 	template <class To, template<class...> class Op, class... Args>
 	constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args...>::value;
-} // std
+} // namespace std
 #endif // __cpp_lib_experimental_detect No support for detection idiom.
 
 #if !defined(__cpp_lib_bool_constant) || (__cpp_lib_bool_constant < 201505)
@@ -193,7 +200,6 @@ namespace std
 
 
 /// Template variable wrappers.
-/// @todo Concepts?
 /// @{
 
 template <bool... Bs>

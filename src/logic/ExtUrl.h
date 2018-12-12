@@ -35,6 +35,7 @@ class QFileInfo;
 // Ours
 #include <utils/QtHelpers.h>
 #include <logic/serialization/XmlObjects.h>
+#include <logic/serialization/XmlTagBase.h>
 #include <logic/serialization/ISerializable.h>
 
 
@@ -78,7 +79,7 @@ Q_DECLARE_METATYPE(FileModificationInfo);
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
  */
-class ExtUrl : public ISerializable
+class ExtUrl : public XmlTagBase<ExtUrl>, public ISerializable
 {
 	Q_GADGET
 

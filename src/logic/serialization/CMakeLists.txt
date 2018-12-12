@@ -36,9 +36,6 @@ set(serialization_subdir_HEADERS
 		XSPFSerializer.h
 		)
 
-prepend_to_each(serialization_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${serialization_subdir_SOURCES})
-prepend_to_each(serialization_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${serialization_subdir_HEADERS})
-
 target_sources_local(serialization
 	PUBLIC
 		${serialization_subdir_HEADERS}

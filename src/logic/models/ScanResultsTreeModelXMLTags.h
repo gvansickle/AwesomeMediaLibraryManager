@@ -24,6 +24,7 @@
 #include <initializer_list>
 #include <map>
 #include <string>
+//#include <experimental/array>
 
 // Qt5
 #include <QObject>
@@ -33,46 +34,83 @@
 #include <src/logic/serialization/ExtEnum.h>
 #include <src/logic/serialization/XmlTagBase.h>
 
-template <class ScopeTypeEnumType>
-using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
-
 /**
- * ExtUrl tags.
+ * ExtUrl tags.  These are XML tags which exist in the ExtUrl "namespace".
  */
 class ExtUrlTag : public XmlTagBase<ExtUrlTag>
 {
 	Q_GADGET
 
 public:
+
+	#define M_ExtUrlTags(X) \
+		X(HREF, "href") \
+		X(TS_LAST_REFRESH, "ts_last_refresh") \
+		X(SIZE_FILE, "size_file") \
+		X(TS_CREATION,"ts_creation") \
+		X(TS_LAST_MODIFIED, "ts_last_modified") \
+		X(TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata")
+
 	enum TagEnum
 	{
-		/// ExtUrl
-		HREF,
-		TS_LAST_REFRESH,
-		SIZE_FILE,
-		TS_CREATION,
-		TS_LAST_MODIFIED,
-		TS_LAST_MODIFIED_METADATA
+		#define X(s, tag_str) s,
+			M_ExtUrlTags(X)
+		#undef X
+//		/// ExtUrl
+//		HREF,
+//		TS_LAST_REFRESH,
+//		SIZE_FILE,
+//		TS_CREATION,
+//		TS_LAST_MODIFIED,
+//		TS_LAST_MODIFIED_METADATA
 	};
 	Q_ENUM(TagEnum)
 
-	/// @todo Should find a way to add to-map members here.
 
-	const std::string toXmlTagString(TagEnum enumerator);
+//	using ToTagMapType = ExtEnumMapBase<ExtUrlTag::TagEnum, QString>;
+	struct MapEntryType
+	{
+		static const TagEnum tag;
+		static const char *const str;
+	};
+//	struct MapType
+//	{
+//		MapEntryType[];
+//	};
+	using ToTagMapType = std::map<decltype(MapEntryType::tag), decltype(MapEntryType::str)>;
 
-protected:
+//protected:
+
+	struct MapStruct { TagEnum the_tag; const char * str;};
+	#define X(s, tag_str) { s, tag_str },
+	static constexpr MapStruct map2[6] = { M_ExtUrlTags(X) };
+//	static constexpr decltype(auto)  map2 = std::experimental::make_array({M_ExtUrlTags(X)});
+	#undef X
+
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
-static const auto ExtUrlTagToXMLTagMap { ExtUrlTag::make_map<ExtUrlTag::TagEnum, QString>(
-		{
-				{ExtUrlTag::HREF, "href"},
-				{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
-				{ExtUrlTag::SIZE_FILE, "size_file"},
-				{ExtUrlTag::TS_CREATION, "ts_creation"},
-				{ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
-				{ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
-		})};
+//static ExtUrlTag::ToTagMapType ExtUrlTagToXMLTagMap ([](){
+//	ExtUrlTag::ToTagMapType retval;
+//	for(const auto& x : ExtUrlTag::map2)
+//	{
+//		retval.insert(x.the_tag, x.str);
+//	}
+//	return retval;
+//}());
+
+//		ExtUrlTag::make_map<ExtUrlTag::TagEnum, QString>(
+//		{
+//		#define X(s, tag_str) { ExtUrlTag::s, tag_str },
+//				M_ExtUrlTags
+//		#undef X
+////				{ExtUrlTag::HREF, "href"},
+////				{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
+////				{ExtUrlTag::SIZE_FILE, "size_file"},
+////				{ExtUrlTag::TS_CREATION, "ts_creation"},
+////				{ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
+////				{ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
+//		});
 
 /**
  * DirScanResult tags.
