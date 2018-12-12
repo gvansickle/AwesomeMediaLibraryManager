@@ -68,7 +68,7 @@ static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagEnum,
 {
 			// This expands to an init list with entries which look like: {ExtUrlTag::HREF, "href"},
 #define X(s, tag_str) { ExtUrlTag::s, tag_str },
-				M_ExtUrlTags(X)
+			M_ExtUrlTags(X)
 #undef X
 });
 
@@ -109,10 +109,10 @@ public:
 	enum TagName
 	{
 		ROOT_ITEM,
+		BASE_DIRECTORY,
 		TITLE,
 		CREATOR,
-		DATE,
-		BASE_DIRECTORY
+		DATE
 	};
 	Q_ENUM(TagName)
 

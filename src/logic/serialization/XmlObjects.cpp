@@ -33,12 +33,19 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 {
 	// Open the file containing the XQuery (could be in our resources).
 	QFile xquery_file(xquery_url.toLocalFile());
-	xquery_file.open(QIODevice::ReadOnly);
+	bool status = xquery_file.open(QIODevice::ReadOnly);
+	if(!status)
+	{
+		throw std::runtime_error("Couldn't open input file");
+	}
 
 	// Open the output file.
 	QFile outfile(dest_xml_url.toLocalFile());
-	auto status = outfile.open(QFile::WriteOnly | QFile::Text);
-
+	status = outfile.open(QFile::WriteOnly | QFile::Text);
+	if(!status)
+	{
+		throw std::runtime_error(std::string("Couldn't open output file for writing"));
+	}
 	// Create the QXmlQuery, bind variables, and load the xquery.
 
 	QXmlQuery the_query;
@@ -55,6 +62,12 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 	the_query.setQuery(query_string);
 	Q_ASSERT(the_query.isValid());
 
+#if 1 // New stuff
+
+	return run_xquery(the_query, source_xml_url, dest_xml_url);
+
+#else
+
 	// Formatter when we want to write another file.
 	QXmlFormatter formatter(the_query, &outfile);
 	formatter.setIndentationDepth(2);
@@ -63,6 +76,7 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 	bool retval = the_query.evaluateTo(&formatter);
 
 	return retval;
+#endif
 }
 
 bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QStringList* out_stringlist);
@@ -73,7 +87,26 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXml
 bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultItems *result);
 
 
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, const QUrl& dest_xml_url);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, const QUrl& dest_xml_url)
+{
+	// Open the output file.
+	QFile outfile(dest_xml_url.toLocalFile());
+	bool status = outfile.open(QFile::WriteOnly | QFile::Text);
+	if(!status)
+	{
+		throw std::runtime_error("Couldn't open output file");
+	}
+
+	// Formatter when we want to write out another XML file.
+	QXmlFormatter formatter(xquery, &outfile);
+	formatter.setIndentationDepth(2);
+
+	// Run the QXmlQuery.
+	bool retval = xquery.evaluateTo(&formatter);
+
+	return retval;
+}
+
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QStringList* out_stringlist);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QIODevice *target);
