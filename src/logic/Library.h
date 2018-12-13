@@ -56,6 +56,7 @@ public:
 
 	void serializeToFile(QFileDevice& file) const;
 	void deserializeFromFile(QFileDevice& file);
+
 	/// @}
 
 private:
