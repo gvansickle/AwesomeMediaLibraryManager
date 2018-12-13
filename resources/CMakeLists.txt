@@ -34,6 +34,7 @@ set(amlm_APP_ICONS
 set(amlm_XQUERIES
 	xquery_files.qrc
 	filelist.xq
+	filelist_stringlistout.xq
 )
 
 # Generate the version info file.

@@ -57,11 +57,11 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultIt
  * file @a dest_xml_url.
  *
  * @param xquery
- * @param xml_source_url
+ * @param source_xml_url
  * @param dest_xml_url
  * @return true on success.
  */
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, const QUrl& dest_xml_url);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, const QUrl& dest_xml_url);
 
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QStringList* out_stringlist);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);

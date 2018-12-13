@@ -361,6 +361,14 @@ M_TODO("This isn't scanning.");
 
 				Q_ASSERT(retval);
 
+				// Now let's see if we can XQuery what we just wrote.
+//				auto outfile_url = QUrl::fromLocalFile(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
+				QStringList query_results;
+				retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
+				                         QUrl::fromLocalFile(filename), &query_results);
+				Q_ASSERT(retval);
+				qDbo() << query_results;
+
 				if(0)
 				{
 					// Open the file with the XQuery (in our resources).

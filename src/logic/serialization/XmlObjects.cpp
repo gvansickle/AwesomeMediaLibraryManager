@@ -46,6 +46,7 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 	{
 		throw std::runtime_error(std::string("Couldn't open output file for writing"));
 	}
+
 	// Create the QXmlQuery, bind variables, and load the xquery.
 
 	QXmlQuery the_query;
@@ -62,32 +63,47 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 	the_query.setQuery(query_string);
 	Q_ASSERT(the_query.isValid());
 
-#if 1 // New stuff
-
 	return run_xquery(the_query, source_xml_url, dest_xml_url);
-
-#else
-
-	// Formatter when we want to write another file.
-	QXmlFormatter formatter(the_query, &outfile);
-	formatter.setIndentationDepth(2);
-
-	// Run the query_string.
-	bool retval = the_query.evaluateTo(&formatter);
-
-	return retval;
-#endif
 }
 
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QStringList* out_stringlist);
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QString* out_string);
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QIODevice *target);
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList* out_stringlist)
+{
+	// Open the file containing the XQuery (could be in our resources).
+	QFile xquery_file(xquery_url.toLocalFile());
+	bool status = xquery_file.open(QIODevice::ReadOnly);
+	if(!status)
+	{
+		throw std::runtime_error("Couldn't open input file");
+	}
+
+	// Create the QXmlQuery, bind variables, and load the xquery.
+
+	QXmlQuery the_query;
+
+	// Bind the source XML URL to the variable used in the XQuery file.
+	Q_ASSERT(source_xml_url.isValid());
+	the_query.bindVariable("input_file_path", QVariant(source_xml_url.toLocalFile()));
+
+	/// @todo Probably have a lambda here for the caller to bind more variables.
+
+	// Read in the XQuery as a QString.
+	const QString query_string(QString::fromLatin1(xquery_file.readAll()));
+	// Set the_query.
+	the_query.setQuery(query_string);
+	Q_ASSERT(the_query.isValid());
+
+	// Run the prepared query.
+	return run_xquery(the_query, source_xml_url, out_stringlist);
+}
+
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QString* out_string);
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QIODevice *target);
 /// Serialize to a QAbstractXmlReceiver, e.g. QXmlSerializer.
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultItems *result);
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QAbstractXmlReceiver *callback);
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QXmlResultItems *result);
 
 
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, const QUrl& dest_xml_url)
+bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, const QUrl& dest_xml_url)
 {
 	// Open the output file.
 	QFile outfile(dest_xml_url.toLocalFile());
@@ -107,7 +123,15 @@ bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, const QUrl&
 	return retval;
 }
 
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QStringList* out_stringlist);
+bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, QStringList* out_stringlist)
+{
+	// Output is going to a QStringList.
+	// Run the QXmlQuery.
+	bool retval = xquery.evaluateTo(out_stringlist);
+
+	return retval;
+}
+
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QIODevice *target);
 bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
