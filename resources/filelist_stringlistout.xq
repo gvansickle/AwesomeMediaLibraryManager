@@ -10,10 +10,10 @@ declare default element namespace "http://xspf.org/ns/0/";
 declare variable $input_file_path external;
 
 (: Load all media files. :)
-let $media_file_list := fn:doc($input_file_path)/amlm_database/playlist//exturl_media/href
-return $media_file_list
+(:let $media_file_list := fn:doc($input_file_path)/amlm_database/playlist//exturl_media/href:)
+(:return fn:string({$media_file_list}):)
 
-(: for $x in fn:doc($input_file_path)/amlm_database/playlist//exturl_media/href :)
+for $x in fn:doc($input_file_path)/amlm_database/playlist//exturl_media/href
 (: where (matches($x, '.*\.flac$')) :)
-(: return ($x) :)
+return fn:string($x)
 
