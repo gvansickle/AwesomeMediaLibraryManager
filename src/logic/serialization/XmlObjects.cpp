@@ -65,7 +65,7 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 	the_query.setQuery(query_string);
 	Q_ASSERT(the_query.isValid());
 
-	return run_xquery(the_query, source_xml_url, dest_xml_url);
+	return run_xquery(the_query, dest_xml_url);
 }
 
 bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList* out_stringlist,
@@ -76,7 +76,7 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList*
 	bool status = xquery_file.open(QIODevice::ReadOnly);
 	if(!status)
 	{
-		throw std::runtime_error("Couldn't open input file");
+		throw std::runtime_error("Couldn't open xquery source file");
 	}
 
 	// Create the QXmlQuery, bind variables, and load the xquery.
@@ -100,14 +100,45 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList*
 	return run_xquery(the_query, source_xml_url, out_stringlist);
 }
 
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QString* out_string);
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QIODevice *target);
-/// Serialize to a QAbstractXmlReceiver, e.g. QXmlSerializer.
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QAbstractXmlReceiver *callback);
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QXmlResultItems *result);
+bool run_xquery(const QUrl& xquery_url, QIODevice* xml_source, QIODevice* xml_sink,
+                const std::function<void(QXmlQuery*)>& bind_callback)
+{
+	// Open the file containing the XQuery (could be in our resources).
+	QFile xquery_file(xquery_url.toLocalFile());
+	bool status = xquery_file.open(QIODevice::ReadOnly);
+	if(!status)
+	{
+		throw std::runtime_error("Couldn't open xquery source file");
+	}
 
+	// Create the QXmlQuery, bind variables, and load the xquery.
 
-bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, const QUrl& dest_xml_url)
+	QXmlQuery the_query;
+
+	// Call any bind_callback the caller provided.
+	bind_callback(&the_query);
+
+	// Read in the XQuery as a QString.
+	const QString query_string(QString::fromLatin1(xquery_file.readAll()));
+	// Set the_query.
+	// @note This is correct, var binding should be before the setQuery() call.
+	the_query.setQuery(query_string);
+	Q_ASSERT(the_query.isValid());
+
+	return run_xquery(the_query, xml_source, xml_sink);
+}
+
+//bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QString* out_string);
+///// Serialize to a QAbstractXmlReceiver, e.g. QXmlSerializer.
+//bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QAbstractXmlReceiver *callback);
+//bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QXmlResultItems *result);
+
+/**
+ * Run @a xquery, putting results in @a out_stringlist.
+ * @a xquery must already have all bindings in place.
+ * @a source_xml_url is not used and will probably be removed.
+ */
+bool run_xquery(const QXmlQuery& xquery, const QUrl& dest_xml_url)
 {
 	// Open the output file.
 	QFile outfile(dest_xml_url.toLocalFile());
@@ -146,10 +177,21 @@ bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, QStringList
 	return retval;
 }
 
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QIODevice *target);
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
-bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems *result);
+bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_sink)
+{
+	if(!xquery.isValid())
+	{
+		throw std::runtime_error("invalid QXmlQuery");
+	}
+
+	bool retval = xquery.evaluateTo(xml_sink);
+
+	return retval;
+}
+
+//bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
+//bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver *callback);
+//bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems *result);
 
 
 

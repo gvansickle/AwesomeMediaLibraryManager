@@ -314,27 +314,27 @@ M_TODO("This isn't scanning.");
 //				outfile.close();
 
 				/// NEW Let's also try it with plenty of QVariants.
-				QString filename = QDir::homePath() + "/DeleteMeNew.xspf";
+				QString database_filename = QDir::homePath() + "/DeleteMeNew.xspf";
 				{
 
-					qIn() << "###### WRITING" << filename;
+					qIn() << "###### WRITING" << database_filename;
 
 					XmlSerializer xmlser;
 					xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-					xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(filename), "playlist");
+					xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(database_filename), "playlist");
 
-					qIn() << "###### WROTE" << filename;
+					qIn() << "###### WROTE" << database_filename;
 
 					/// Let's now try to read it back.
 					ScanResultsTreeModel* readback_tree_model;
 					{
-						qIn() << "###### READING BACK" << filename;
+						qIn() << "###### READING BACK" << database_filename;
 
 						XmlSerializer xmlser_read;
 						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 						readback_tree_model = new ScanResultsTreeModel(this);//static_cast<QObject*>(tree_model_ptr)->parent());
 						// Load it.
-						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(filename));
+						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(database_filename));
 
 						qIn() << "###### READBACK INFO:";
 						qIn() << "COLUMNS:" << readback_tree_model->columnCount()
@@ -357,7 +357,7 @@ M_TODO("This isn't scanning.");
 				// Now let's see if we can XQuery what we just wrote.
 				auto outfile_url = QUrl::fromLocalFile(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
 				bool retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist.xq"),
-						QUrl::fromLocalFile(filename), outfile_url);
+						QUrl::fromLocalFile(database_filename), outfile_url);
 
 				Q_ASSERT(retval);
 
@@ -366,13 +366,47 @@ M_TODO("This isn't scanning.");
 					// Now let's see if we can XQuery what we just wrote as a QStringList.
 					QStringList query_results;
 					retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
-					                    QUrl::fromLocalFile(filename), &query_results,
+					                    QUrl::fromLocalFile(database_filename), &query_results,
 					                    [&](QXmlQuery* xq) {
 						                    xq->bindVariable(QString("extension_regex"), QVariant(ext_regex));
 					                    });
 					Q_ASSERT(retval);
 					qDbo() << "###### NUM" << ext_regex << "FILES:" << query_results.count();
 				}
+
+				/// @todo MORE EXERIMENTS, Linking through QIODevice / Temp file.
+				{
+					QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq");
+					// Open the database file.
+					QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
+					bool status = database_file.open(QFile::WriteOnly | QFile::Text);
+					throwif(!status /*"########## COULDN'T OPEN FILE"*/);
+					if(!status)
+					{
+						qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
+
+					}
+
+					// Here we'll manually prepare the two queries.
+					QXmlQuery first_xquery, second_xquery;
+
+					// The tempfile we'll use as a pipe.
+					QTemporaryFile tempfile;
+					// .open() is always RW.
+					throwif(!tempfile.open());
+					qDb() << "TEMPFILE NAME:" << tempfile.fileName();
+
+					first_xquery.bindVariable("input_file_path", &database_file);
+					first_xquery.bindVariable("output_file_path", &tempfile);
+					first_xquery.bindVariable("", &tempfile);
+					second_xquery.bindVariable("input_file_path", &tempfile)
+					second_xquery.bindVariable("output_file_path", &output_file);
+
+					for(QString ext_regex : {R"((.*(\.ogg)|(\.mp3)$))", R"((.*\.mp3$))"})
+					{
+					}
+				}
+				/// END @todo MORE EXERIMENTS, QIODevice.
 
 				if(0)
 				{
@@ -387,7 +421,7 @@ M_TODO("This isn't scanning.");
 					// Create the QXmlQuery, bind variables, and load the xquery.
 
 				    QXmlQuery query;
-				    QUrl in_filepath = QUrl::fromLocalFile(filename);
+				    QUrl in_filepath = QUrl::fromLocalFile(database_filename);
 				    Q_ASSERT(in_filepath.isValid());
 				    query.bindVariable("input_file_path", QVariant(in_filepath.toString()));
 
