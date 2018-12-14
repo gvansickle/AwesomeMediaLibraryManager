@@ -39,19 +39,12 @@ class XmlTagBase : public ExtEnum<DerivedType>, crtp<DerivedType, XmlTagBase>
 public:
 	XmlTagBase() {};
 	XmlTagBase(const std::string& tag_string) : m_tag_string(tag_string) {};
-//	XmlTagBase(std::initializer_list<>)
 	virtual ~XmlTagBase() {};
 
 //	const std::string toXmlTagString(int enumerator) const { return this->m_tag_string; };
 
 	/// The tag in string form.  Does not contain the "<>"'s or the end slash.
 	std::string m_tag_string { "ERROR" };
-
-	struct MapStruct { int the_tag_index; const char * str; };
-//#define X(s, tag_str) { s, tag_str },
-//	static constexpr MapStruct m_the_xml_tagmap[] = { M_ExtUrlTags(X) };
-////	static constexpr decltype(auto)  map2 = std::experimental::make_array({M_ExtUrlTags(X)});
-//#undef X
 };
 
 /**

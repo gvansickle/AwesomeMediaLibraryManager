@@ -35,14 +35,16 @@
 #include <src/logic/serialization/XmlTagBase.h>
 
 /**
- * ExtUrl tags.  These are XML tags which exist in the ExtUrl "namespace".
+ * ExtUrl tags.
+ * These are the XML tags which you'll find in an ExtUrl element.
  */
 class ExtUrlTag : public XmlTagBase<ExtUrlTag>
 {
 	Q_GADGET
 
 public:
-
+	/// The tags in X-macro form.  First is text usable as a C++ identifier,
+	/// and second here is the text to use for the tag in an XML document.
 	#define M_ExtUrlTags(X) \
 		X(HREF, "href") \
 		X(TS_LAST_REFRESH, "ts_last_refresh") \
@@ -59,7 +61,7 @@ public:
 	};
 	Q_ENUM(TagEnum)
 
-//protected:
+
 
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
@@ -100,7 +102,7 @@ static const auto DSRTagToXMLTagMap = DSRTag::make_map<DSRTag::TagName, QString>
 });
 
 /**
- * ScanResultsTreeModelItem tags.
+ * ScanResultsTreeModel tags.
  */
 class SRTMTag : public ExtEnum<SRTMTag>
 {
@@ -112,7 +114,9 @@ public:
 		BASE_DIRECTORY,
 		TITLE,
 		CREATOR,
-		DATE
+		DATE,
+		TS_LAST_SCAN_START,
+		TS_LAST_SCAN_END
 	};
 	Q_ENUM(TagName)
 
@@ -125,7 +129,9 @@ static const auto SRTMTagToXMLTagMap = SRTMTag::make_map<SRTMTag::TagName, QStri
 	{SRTMTag::TITLE, "title"},
 	{SRTMTag::CREATOR, "creator"},
 	{SRTMTag::DATE, "date"},
-	{SRTMTag::ROOT_ITEM, "tree_model_root_item"}
+	{SRTMTag::ROOT_ITEM, "tree_model_root_item"},
+	{SRTMTag::TS_LAST_SCAN_START, "ts_last_scan_start"},
+	{SRTMTag::TS_LAST_SCAN_END, "ts_last_scan_end"}
 });
 
 /**
@@ -137,9 +143,7 @@ Q_GADGET
 public:
 	enum TagName
 	{
-		DIRSCANRESULT,
-		TS_LAST_SCAN_START,
-		TS_LAST_SCAN_END
+		DIRSCANRESULT
 	};
 	Q_ENUM(TagName)
 
@@ -148,9 +152,7 @@ Q_DECLARE_METATYPE(SRTMItemTag);
 
 static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::TagName, QString>(
 {
-	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"},
-	{SRTMItemTag::TS_LAST_SCAN_START, "ts_last_scan_start"},
-	{SRTMItemTag::TS_LAST_SCAN_END, "ts_last_scan_end"}
+	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"}
 });
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

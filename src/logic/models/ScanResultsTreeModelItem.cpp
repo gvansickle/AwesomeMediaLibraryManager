@@ -76,8 +76,6 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
 	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT], m_dsr.toVariant());
-	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START], QVariant());
-	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END], QVariant());
 
 	return map;
 }
@@ -91,9 +89,7 @@ M_MESSAGE("The cast should work though, right?");
 
 	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
 	m_dsr.fromVariant(dsr_in_variant);
-	/// @todo Read these in.
-	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START]
-	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END]
+
 
 }
 

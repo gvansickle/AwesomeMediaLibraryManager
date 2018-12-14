@@ -74,6 +74,10 @@ QVariant ScanResultsTreeModel::toVariant() const
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
 	map.insert(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM], m_root_item->toVariant());
 
+	// Timestamps for the start and end of the last full scan.
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::TS_LAST_SCAN_START], QVariant(QDateTime()));
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::TS_LAST_SCAN_END], QVariant(QDateTime()));
+
 	return map;
 }
 
@@ -98,6 +102,10 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	}
 	m_root_item = new AbstractTreeModelHeaderItem();
 	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
+
+	/// @todo Read these in.
+	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START]
+	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END]
 
 #warning @todo INCOMPLETE/error handling
 }
