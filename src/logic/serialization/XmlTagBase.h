@@ -38,13 +38,13 @@ class XmlTagBase : public ExtEnum<DerivedType>, crtp<DerivedType, XmlTagBase>
 {
 public:
 	XmlTagBase() {};
-	XmlTagBase(const std::string& tag_string) : m_tag_string(tag_string) {};
+//	XmlTagBase(const std::string& tag_string) : m_tag_string(tag_string) {};
 	virtual ~XmlTagBase() {};
 
 //	const std::string toXmlTagString(int enumerator) const { return this->m_tag_string; };
 
 	/// The tag in string form.  Does not contain the "<>"'s or the end slash.
-	std::string m_tag_string { "ERROR" };
+//	std::string m_tag_string { "ERROR" };
 };
 
 /**

@@ -29,7 +29,8 @@
 #include <QtXmlPatterns/QXmlFormatter>
 
 
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url)
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url,
+		const std::function<void(QXmlQuery*)>& bind_callback)
 {
 	// Open the file containing the XQuery (could be in our resources).
 	QFile xquery_file(xquery_url.toLocalFile());
@@ -55,7 +56,8 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 	Q_ASSERT(source_xml_url.isValid());
 	the_query.bindVariable("input_file_path", QVariant(source_xml_url.toLocalFile()));
 
-	/// @todo Probably have a lambda here for the caller to bind more variables.
+	// Call any bind_callback the caller provided.
+	bind_callback(&the_query);
 
 	// Read the XQuery as a QString.
 	const QString query_string(QString::fromLatin1(xquery_file.readAll()));
@@ -66,7 +68,8 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& 
 	return run_xquery(the_query, source_xml_url, dest_xml_url);
 }
 
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList* out_stringlist)
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList* out_stringlist,
+                const std::function<void(QXmlQuery*)>& bind_callback)
 {
 	// Open the file containing the XQuery (could be in our resources).
 	QFile xquery_file(xquery_url.toLocalFile());
@@ -84,7 +87,8 @@ bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, QStringList*
 	Q_ASSERT(source_xml_url.isValid());
 	the_query.bindVariable("input_file_path", QVariant(source_xml_url.toLocalFile()));
 
-	/// @todo Probably have a lambda here for the caller to bind more variables.
+	// Call any bind_callback the caller provided.
+	bind_callback(&the_query);
 
 	// Read in the XQuery as a QString.
 	const QString query_string(QString::fromLatin1(xquery_file.readAll()));
@@ -123,8 +127,18 @@ bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, const QUrl&
 	return retval;
 }
 
+/**
+ * Run @a xquery, putting results in @a out_stringlist.
+ * @a xquery must already have all bindings in place.
+ * @a source_xml_url is not used and will probably be removed.
+ */
 bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, QStringList* out_stringlist)
 {
+	if(!xquery.isValid())
+	{
+		throw std::runtime_error("invalid QXmlQuery");
+	}
+
 	// Output is going to a QStringList.
 	// Run the QXmlQuery.
 	bool retval = xquery.evaluateTo(out_stringlist);

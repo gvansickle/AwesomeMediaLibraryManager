@@ -44,9 +44,12 @@
  *
  * @return true on success.
  */
-bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url);
+bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url,
+                const std::function<void(QXmlQuery*)>& bind_callback = [](QXmlQuery*){});
 
-bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QStringList* out_stringlist);
+bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QStringList* out_stringlist,
+				const std::function<void(QXmlQuery*)>& bind_callback = [](QXmlQuery*){});
+
 bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QString* out_string);
 bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QIODevice* target);
 bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);

@@ -361,12 +361,18 @@ M_TODO("This isn't scanning.");
 
 				Q_ASSERT(retval);
 
-				// Now let's see if we can XQuery what we just wrote as a QStringList.
-				QStringList query_results;
-				retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
-				                         QUrl::fromLocalFile(filename), &query_results);
-				Q_ASSERT(retval);
-				qDbo() << query_results;
+				for(QString ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
+				{
+					// Now let's see if we can XQuery what we just wrote as a QStringList.
+					QStringList query_results;
+					retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
+					                    QUrl::fromLocalFile(filename), &query_results,
+					                    [&](QXmlQuery* xq) {
+						                    xq->bindVariable(QString("extension_regex"), QVariant(ext_regex));
+					                    });
+					Q_ASSERT(retval);
+					qDbo() << "###### NUM" << ext_regex << "FILES:" << query_results.count();
+				}
 
 				if(0)
 				{
