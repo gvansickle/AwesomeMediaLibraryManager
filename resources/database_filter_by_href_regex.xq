@@ -3,11 +3,9 @@
 declare default element namespace "http://xspf.org/ns/0/";
 
 (: Path to the AMLM database, will be passed in as a bound variable. :)
-
 declare variable $input_file_path external;
+(: Regex to filter hrefs.  Intended for extensions, but not enforced. :)
 declare variable $extension_regex external;
-(:~ declare variable $input_file_path := '/home/gary/DeletemeNew.xspf'; ~:)
-(:~ declare variable $extension_regex := '.*/\.flac$'; ~:)
 
 <list>
 {
