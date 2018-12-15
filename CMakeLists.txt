@@ -514,7 +514,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
 	### @todo REMOVE
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
-	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+	${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+	)
 
 ### Generate configured headers.
 # Generate the version info file.

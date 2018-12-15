@@ -87,7 +87,8 @@ if(WIN32)
 endif()
 set_target_properties(libcue
 	PROPERTIES C_VISIBILITY_PRESET hidden)
-set_property(TARGET libcue PROPERTY SKIP_AUTOGEN ON)
+set_property(TARGET libcue 
+			PROPERTY SKIP_AUTOGEN ON)
 
 #install(TARGETS libcue
 #        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

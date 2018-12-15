@@ -113,38 +113,12 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
-	utils/ConnectHelpers.h
-	utils/DebugBlock.h
-	utils/DebugHelpers.h
-	utils/Fraction.h
-	utils/in.h
-	utils/MapConverter.h
-	utils/StringHelpers.h
-	utils/RegisterQtMetatypes.h
-	utils/UniqueIDMixin.h
-	utils/QtCastHelpers.h
-	utils/TheSimplestThings.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
-	utils/Logging.h
-	utils/AboutDataSetup.h
-	utils/QtHelpers.h
-	utils/VectorHelpers.h
-	utils/EnumFlagHelpers.h
     )
 
 # Source file list.
 set(SOURCE_FILES
 	AMLMApp.cpp
-	utils/DebugBlock.cpp
-	utils/DebugHelpers.cpp
-	utils/Fraction.cpp
-	utils/MapConverter.cpp
-	utils/RegisterQtMetatypes.cpp
-	utils/UniqueIDMixin.h
-	utils/Logging.cpp
-	utils/AboutDataSetup.cpp
-	utils/QtHelpers.cpp
-	utils/VectorHelpers.cpp
 	)
 
 # NoMoc files.
@@ -162,7 +136,7 @@ add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
 add_subdir_lib(future STATIC EXCLUDE_FROM_ALL)
 add_subdirectory(gui)
 add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
-
+add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
 
 
 #
@@ -178,6 +152,7 @@ set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		future
 		logic
 		resources
+		utils
 )
 
 ## Concurrency
