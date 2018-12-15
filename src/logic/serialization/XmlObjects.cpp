@@ -23,10 +23,14 @@
 
 #include "XmlObjects.h"
 
-#include <utils/DebugHelpers.h>
+// Qt5
 #include <QtCore/QFile>
 #include <QtCore/QDir>
 #include <QtXmlPatterns/QXmlFormatter>
+
+// Ours
+#include <utils/DebugHelpers.h>
+#include "SerializationExceptions.h"
 
 
 bool run_xquery(const QUrl& xquery_url, const QUrl& source_xml_url, const QUrl& dest_xml_url,
@@ -181,7 +185,7 @@ bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_s
 {
 	if(!xquery.isValid())
 	{
-		throw std::runtime_error("invalid QXmlQuery");
+		throw SerializationException("invalid QXmlQuery");
 	}
 
 	bool retval = xquery.evaluateTo(xml_sink);

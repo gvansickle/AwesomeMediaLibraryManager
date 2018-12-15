@@ -379,16 +379,15 @@ M_TODO("This isn't scanning.");
 					QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq");
 					// Open the database file.
 					QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
-					bool status = database_file.open(QFile::WriteOnly | QFile::Text);
+					bool status = database_file.open(QFile::ReadOnly | QFile::Text);
 					throwif(!status /*"########## COULDN'T OPEN FILE"*/);
 					if(!status)
 					{
-						qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
+						qCro() << "########## COULDN'T OPEN FILE:" << filename;
 
 					}
-
-					// Here we'll manually prepare the two queries.
-					QXmlQuery first_xquery, second_xquery;
+					// Open the output file.
+					QFile output_file(QDir::homePath() + "/DeleteMeThroughTempFile.xspf");
 
 					// The tempfile we'll use as a pipe.
 					QTemporaryFile tempfile;
@@ -396,15 +395,20 @@ M_TODO("This isn't scanning.");
 					throwif(!tempfile.open());
 					qDb() << "TEMPFILE NAME:" << tempfile.fileName();
 
-					first_xquery.bindVariable("input_file_path", &database_file);
-					first_xquery.bindVariable("output_file_path", &tempfile);
-					first_xquery.bindVariable("", &tempfile);
-					second_xquery.bindVariable("input_file_path", &tempfile)
-					second_xquery.bindVariable("output_file_path", &output_file);
+					// Here we'll manually prepare the two queries.
+					QXmlQuery first_xquery, second_xquery;
 
-					for(QString ext_regex : {R"((.*(\.ogg)|(\.mp3)$))", R"((.*\.mp3$))"})
-					{
-					}
+					first_xquery.bindVariable("input_file_path", &database_file);
+//					first_xquery.bindVariable("output_file_path", &tempfile);
+					first_xquery.bindVariable("extension_regex", QVariant(R"((.*(\.ogg)|(\.mp3)$))"));
+					second_xquery.bindVariable("input_file_path", &tempfile);
+//					second_xquery.bindVariable("output_file_path", &output_file);
+					second_xquery.bindVariable("extension_regex", QVariant(R"((.*\.mp3$))"));
+
+					status = run_xquery(first_xquery, &database_file, &tempfile);
+					throwif(!status);
+					status = run_xquery(second_xquery, &tempfile, &output_file);
+					throwif(!status);
 				}
 				/// END @todo MORE EXERIMENTS, QIODevice.
 
