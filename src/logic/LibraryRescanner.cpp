@@ -57,6 +57,7 @@
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include <logic/serialization/XmlSerializer.h>
 #include <logic/serialization/SerializationExceptions.h>
+#include <utils/Stopwatch.h>
 
 #include "logic/LibraryModel.h"
 
@@ -377,6 +378,8 @@ M_TODO("This isn't scanning.");
 
 				/// @todo MORE EXERIMENTS, Linking through QIODevice / Temp file.
 				{
+					Stopwatch sw("XQuery test");
+
 					// Open the database file.
 					QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
 					bool status = database_file.open(QFile::ReadOnly | QFile::Text);

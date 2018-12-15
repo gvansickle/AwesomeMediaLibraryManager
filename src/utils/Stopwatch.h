@@ -24,6 +24,7 @@
 #define SRC_UTILS_STOPWATCH_H_
 
 #include <chrono>
+#include <string>
 
 /**
  * Scoped Elapsed time timer, mostly for debug purposes.
@@ -31,11 +32,12 @@
 class Stopwatch
 {
 public:
-	Stopwatch();
+	Stopwatch(const std::string& being_timed_msg);
 	virtual ~Stopwatch();
 
 private:
 	std::chrono::steady_clock::time_point m_start;
+	std::string m_being_timed_msg;
 };
 
 #endif /* SRC_UTILS_STOPWATCH_H_ */

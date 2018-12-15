@@ -20,15 +20,26 @@
 /**
  * @file Stopwatch.cpp
  */
-#include <utils/Stopwatch.h>
 
-Stopwatch::Stopwatch()
+#include "Stopwatch.h"
+
+// Std C++
+#include <iostream>
+
+
+Stopwatch::Stopwatch(const std::string& being_timed_msg) : m_being_timed_msg(being_timed_msg)
 {
-
+	m_start = std::chrono::steady_clock::now();
+	std::cout << "START: " << m_being_timed_msg << std::endl;
 }
 
 Stopwatch::~Stopwatch()
 {
-	// TODO Auto-generated destructor stub
+	auto end = std::chrono::steady_clock::now();
+
+	std::chrono::duration<double> elapsed = end - m_start;
+
+	std::cout << "END: " << m_being_timed_msg << std::endl;
+	std::cout << "ELAPSED: " << elapsed.count() << " sec" << std::endl;
 }
 
