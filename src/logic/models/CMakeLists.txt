@@ -39,8 +39,6 @@ set(HEADER_FILES_SRC_LOGIC_MODELS
 		ScanResultsTreeModelItem.h
 		ScanResultsTreeModelXMLTags.h
 		)
-prepend_to_each(SOURCE_FILES_SRC_LOGIC_MODELS "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_LOGIC_MODELS})
-prepend_to_each(HEADER_FILES_SRC_LOGIC_MODELS "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_LOGIC_MODELS})
 
 target_sources_local(models
 	PUBLIC
