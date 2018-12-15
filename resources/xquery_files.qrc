@@ -2,5 +2,6 @@
     <qresource prefix="/xquery_files">
         <file>filelist.xq</file>
         <file>filelist_stringlistout.xq</file>
+        <file>database_filter_by_href_regex.xq</file>
     </qresource>
 </RCC>
