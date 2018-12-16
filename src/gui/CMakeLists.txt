@@ -110,10 +110,6 @@ add_subdirectory(activityprogressmanager)
 ### @todo
 
 
-#set_target_properties(widgets
-#    PROPERTIES
-#    AUTOMOC ON
-#    AUTOUIC ON)
 #target_link_libraries(widgets ${PROJECT_COMMON_LINK_LIBS})
 add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
 
@@ -143,8 +139,10 @@ target_sources_local(gui
 		)
 set_target_properties(gui
     PROPERTIES
-    AUTOMOC ON
-    AUTOUIC ON)
+    	AUTOMOC ON
+    	AUTOUIC ON
+    	AUTORCC ON
+    	)
 target_link_libraries(gui
 	PUBLIC
 		${QT5_LINK_LIB_TARGETS}

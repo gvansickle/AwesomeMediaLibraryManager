@@ -25,7 +25,7 @@
  * Just a wrapper around the way-too-long name of the real generated KConfig settings header.
  */
 
-#include <AwesomeMediaLibraryManagerSettings.h>
+#include <src/AwesomeMediaLibraryManagerSettings.h>
 
 
 #endif /* AMLMSETTINGS_H_ */

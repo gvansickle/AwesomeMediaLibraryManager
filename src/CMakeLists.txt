@@ -166,20 +166,12 @@ list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
 list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
-# From gui/.
-# @todo Make this a real target.
-#list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-#list(APPEND SOURCE_FILES ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER} ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-#prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a real target.
-
 # Build the ultimate list of lists.
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
-	#${amlm_gui_SRCS} ### @todo Make this a real target.
-	#${amlm_gui_widget_SRCS} ### @todo
 	)
 
 # Sets the icon on Windows and OSX.
-# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <proj>/src here.
+# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <proj>/src/CMakeLists.txt here.
 # See:
 # @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
 # @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
