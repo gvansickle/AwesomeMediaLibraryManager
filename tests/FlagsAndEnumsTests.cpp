@@ -443,16 +443,12 @@ TEST_F(FlagsAndEnumsTests, ExtEnumEnumeration)
 			case 5:
 				EXPECT_EQ(key_value, 8);
 				break;
+			default:
+				ADD_FAILURE();
 			}
 		}
 	}
 }
-
-//#include <map>
-//struct QEnumMap
-//{
-//	std::map<TestEnumHolder::TestEnum, std::string> m_the_map;
-//};
 
 
 TEST_F(FlagsAndEnumsTests, QEnumMapping) // NOLINT

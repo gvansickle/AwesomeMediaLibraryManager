@@ -134,7 +134,7 @@ list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 #
 add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
 add_subdir_lib(future STATIC EXCLUDE_FROM_ALL)
-add_subdirectory(gui)
+add_subdir_lib(gui STATIC EXCLUDE_FROM_ALL)
 add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
 add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
 
@@ -150,14 +150,11 @@ add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
 		concurrency
 		future
+		gui
 		logic
 		resources
 		utils
 )
-
-## Concurrency
-#list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
-#list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 
 # Models
 list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
@@ -171,14 +168,14 @@ list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
 # From gui/.
 # @todo Make this a real target.
-list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-list(APPEND SOURCE_FILES ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER} ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a real target.
+#list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+#list(APPEND SOURCE_FILES ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER} ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
+#prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a real target.
 
 # Build the ultimate list of lists.
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
-	${amlm_gui_SRCS} ### @todo Make this a real target.
-	${amlm_gui_widget_SRCS} ### @todo
+	#${amlm_gui_SRCS} ### @todo Make this a real target.
+	#${amlm_gui_widget_SRCS} ### @todo
 	)
 
 # Sets the icon on Windows and OSX.
@@ -435,7 +432,7 @@ install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
 		
-# Make the installed app debuggable.
+# Make the built and installed app debuggable.
 # Add a .gdbinit file and support files to the install directory.
 install(PROGRAMS gdb_wrap.sh
 	DESTINATION

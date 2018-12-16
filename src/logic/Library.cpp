@@ -63,7 +63,7 @@ QString Library::getLibraryName() const
 
 void Library::addNewEntries(std::vector<std::shared_ptr<LibraryEntry>> entries)
 {
-	for(auto e : entries)
+	for(auto& e : entries)
 	{
 		m_lib_entries.push_back(e);
 		addingEntry(e.get());
@@ -122,7 +122,7 @@ std::shared_ptr<LibraryEntry> Library::operator[](size_t index) const
 
 bool Library::areAllEntriesFullyPopulated() const
 {
-	for(auto e : m_lib_entries)
+	for(const auto& e : m_lib_entries)
 	{
 		if(!e->isPopulated())
 		{
@@ -157,7 +157,7 @@ void Library::writeToJson(QJsonObject& jo, bool no_items) const
 	{
 		// Collect up the LibraryEntry's.
 		QJsonArray array;
-		for(auto e : m_lib_entries)
+		for(const auto& e : m_lib_entries)
 		{
 			QJsonObject qjsonobject;
 			e->writeToJson(qjsonobject);

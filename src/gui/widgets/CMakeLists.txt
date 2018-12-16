@@ -17,34 +17,51 @@
 # along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-set(HEADER_FILES_GUI_WIDGETS
+set(gui_widgets_HEADER_FILES
 		ExperimentalKDEView1.h
 		CollectionStatsWidget.h
 		CollectionView.h
 		PixmapLabel.h
 		PlayerControls.h
 	)
-set(SOURCE_FILES_GUI_WIDGETS
+set(gui_widgets_SOURCE_FILES
 		ExperimentalKDEView1.cpp
 		CollectionStatsWidget.cpp
 		CollectionView.cpp
 		PixmapLabel.cpp
 		PlayerControls.cpp
 	)
-set(UI_FILES_GUI_WIDGETS
+set(gui_widgets_UI_FILES
 		ExperimentalKDEView1.ui
 		CollectionView.ui
  	)
 
-# Prepend directory. 
-prepend_to_each(HEADER_FILES_GUI_WIDGETS "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_GUI_WIDGETS})
-prepend_to_each(SOURCE_FILES_GUI_WIDGETS "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_GUI_WIDGETS})
-prepend_to_each(UI_FILES_GUI_WIDGETS "${CMAKE_CURRENT_LIST_DIR}/" ${UI_FILES_GUI_WIDGETS})
-
-#target_sources(widgets
-#	PUBLIC
-list(APPEND amlm_widget_SRCS
-		${HEADER_FILES_GUI_WIDGETS}
-		${SOURCE_FILES_GUI_WIDGETS}
-		${UI_FILES_GUI_WIDGETS}
+target_sources_local(widgets
+	PUBLIC
+		${gui_widgets_HEADER_FILES}
+	#PRIVATE
+		${gui_widgets_SOURCE_FILES}
+		${gui_widgets_UI_FILES}
 	)
+set_target_properties(widgets
+    PROPERTIES
+        AUTOMOC ON
+        AUTOUIC ON
+		AUTORCC ON
+		)
+target_link_libraries(widgets
+	PUBLIC
+		${QT5_LINK_LIB_TARGETS}
+		${KF5_LINK_LIB_TARGETS}
+		${GTK_LINK_LIB_TARGETS}
+		)
+target_include_directories(widgets
+	PUBLIC
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+		# For nomoc.
+		${PROJECT_SOURCE_DIR}/src/utils/nomoc
+	PUBLIC
+		# For anything in <root>/src: utils, logic, future, gui.
+		${PROJECT_SOURCE_DIR}/src
+		)
