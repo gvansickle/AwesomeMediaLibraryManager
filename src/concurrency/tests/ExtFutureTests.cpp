@@ -1249,6 +1249,38 @@ TEST_F(ExtFutureTest, ThenFutureDeleted)
 	TC_EXIT();
 }
 
+
+TEST_F(ExtFutureTest, ParallelThens)  // NOLINT
+{
+	TC_ENTER();
+
+	std::atomic_bool then1, then2;
+
+	ExtFuture<int> f0 = ExtAsync::run([&](ExtFuture<int> cmdresp_future) {
+			TC_Sleep(1000);
+			cmdresp_future.reportResult(25);
+	});
+
+	auto f1 = f0.then([&](ExtFuture<int> dummy){
+		then1 = true;
+	});
+	auto f2 = f0.then([&](ExtFuture<int> dummy){
+		then2 = true;
+	});
+
+	// Wait for the thens to finish.
+	f1.waitForFinished();
+	f2.waitForFinished();
+
+	EXPECT_TRUE(then1);
+	EXPECT_TRUE(then2);
+
+	EXPECT_TRUE(f1.isFinished());
+	EXPECT_TRUE(f2.isFinished());
+
+	TC_EXIT();
+}
+
 TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();

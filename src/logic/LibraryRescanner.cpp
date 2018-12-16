@@ -212,7 +212,7 @@ M_TODO("This isn't scanning.");
 
 	// Attach a streaming tap to get the results.
 	ExtFuture<DirScanResult> tail_future
-		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end){
+		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) {
 		std::vector<AbstractTreeModelItem*> new_items;
 		int original_end = end;
 		for(int i=begin; i<end; i++)
@@ -363,22 +363,26 @@ M_TODO("This isn't scanning.");
 
 				Q_ASSERT(retval);
 
-				for(QString ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
 				{
-					// Now let's see if we can XQuery what we just wrote as a QStringList.
-					QStringList query_results;
-					retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
-					                    QUrl::fromLocalFile(database_filename), &query_results,
-					                    [&](QXmlQuery* xq) {
-						                    xq->bindVariable(QString("extension_regex"), QVariant(ext_regex));
-					                    });
-					Q_ASSERT(retval);
-					qDbo() << "###### NUM" << ext_regex << "FILES:" << query_results.count();
+					Stopwatch sw("XQuery test: two regex queries in loop");
+
+					for(QString ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
+					{
+						// Now let's see if we can XQuery what we just wrote as a QStringList.
+						QStringList query_results;
+						retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
+						                    QUrl::fromLocalFile(database_filename), &query_results,
+						                    [&](QXmlQuery* xq) {
+							                    xq->bindVariable(QString("extension_regex"), QVariant(ext_regex));
+						                    });
+						Q_ASSERT(retval);
+						qDbo() << "###### NUM" << ext_regex << "FILES:" << query_results.count();
+					}
 				}
 
 				/// @todo MORE EXERIMENTS, Linking through QIODevice / Temp file.
 				{
-					Stopwatch sw("XQuery test");
+					Stopwatch sw("XQuery test: through temp file");
 
 					// Open the database file.
 					QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
@@ -392,7 +396,7 @@ M_TODO("This isn't scanning.");
 
 					// The tempfile we'll use as a pipe.
 					QTemporaryFile tempfile;
-					// .open() is always RW.
+					// QTemporaryFile::open() is always RW.
 					throwif<SerializationException>(!tempfile.open(), "Couldn't open temp file");
 					qDb() << "TEMPFILE NAME:" << tempfile.fileName();
 

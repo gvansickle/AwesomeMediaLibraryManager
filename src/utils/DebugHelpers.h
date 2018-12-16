@@ -279,6 +279,7 @@ struct print_constexpr_in_compilation_warning
 /// @}
 
 #define M_NAME_VAL(id) STRINGISE_IMPL(id) ":" << id
+#define M_ID_VAL(id) M_NAME_VAL(id)
 
 /**
  * Portable __PRETTY_FUNCTION__.
