@@ -167,6 +167,7 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 				ext_future.setProgressRange(0, num_possible_files);
 			}
 
+			/// @todo
 //			amlmJob->setProcessedAmountAndSize(KJob::Unit::Files, num_files_found_so_far);
 			/// NEW
 			ext_future.setProgressValue(num_files_found_so_far);

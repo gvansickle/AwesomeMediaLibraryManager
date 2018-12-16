@@ -71,6 +71,10 @@ public:
 
 	void run_async_rescan();
 
+	/// The map function for rescanning the library to reload metadata from the files.
+	/// Runs in an arbitrary thread context, so must be threadsafe.
+	MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
+
 public Q_SLOTS:
 
     void setDataToMap(QVector<VecLibRescannerMapItems> items_to_rescan, const LibraryModel* current_libmodel);
@@ -79,16 +83,17 @@ protected:
 
     void runFunctor() override;
 
-    /// The map function for rescanning the library to reload metadata from the files.
-    /// Runs in an arbitrary thread context, so must be threadsafe.
-    MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
-
 private:
     Q_DISABLE_COPY(LibraryRescannerJob)
 
     QVector<VecLibRescannerMapItems> m_items_to_rescan;
     const LibraryModel* m_current_libmodel;
 };
+
+
+void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, LibraryRescannerJob* job,
+                                  QVector<VecLibRescannerMapItems> items_to_rescan);
+
 
 Q_DECLARE_METATYPE(LibraryRescannerJobPtr);
 
