@@ -395,6 +395,12 @@ protected:
 		// Stop the speed timer if it's running.
 		m_speed_timer->stop();
 
+        if(this->isAutoDelete())
+	    {
+		    /// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
+		    qWr() << "doKill() about to cancel AMLMJobT with autoDelete()==true, may result in a this->deleteLater(), via finishJob().";
+	    }
+
         // Tell the Future and hence job to Cancel.
 		/// @todo Valgrind says that when we get an aboutToShutdown(), this is an 'invalid read of size 8'.
 //        m_ext_watcher->cancel();
@@ -410,11 +416,6 @@ protected:
 #if 0
         //    Q_ASSERT(ef.isStarted() && ef.isCanceled() && ef.isFinished());
 #else
-		if(this->isAutoDelete())
-		{
-			/// @warning At any point after we return here, this may have been deleteLater()'ed by KJob::finishJob().
-			qWr() << "doKill() returning, AMLMJob is autoDelete(), may result in a this->deleteLater(), via finishJob().";
-		}
 
 		// Wait for the runFunctor() to report Finished.
 //		m_ext_watcher->waitForFinished();
