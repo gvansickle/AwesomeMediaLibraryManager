@@ -86,13 +86,10 @@ add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
 
-# @todo Make the KConfig settings file its own library, so dependencies get handled correctly.
-# amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
+
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
-message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
-# Exclude the generated KConfig settings source files from AUTOMOC etc.
-#set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
-### @todo Do we need this? Target to get the deps on generated files right.
+# We make the generated KConfig settings files into their own library so dependencies get handled correctly.
+# amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
 add_library(kconfig_target
 		STATIC EXCLUDE_FROM_ALL
 		${amlm_settings_SRCS}

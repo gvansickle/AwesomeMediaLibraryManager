@@ -107,25 +107,7 @@ PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILE
 
 add_subdirectory(activityprogressmanager)
 
-### @todo
-
-
-#target_link_libraries(widgets ${PROJECT_COMMON_LINK_LIBS})
 add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
-
-#set(amlm_gui_SRCS
-#	${gui_SOURCE_FILES}
-#	${gui_HEADER_FILES}
-#	${gui_settings_SOURCE_FILES}
-#	${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-#	${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-#	${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-#	#${amlm_gui_widget_SRCS}
-#	#${HEADER_FILES_GUI_WIDGETS}
-#	#${SOURCE_FILES_GUI_WIDGETS}
-#	#${UI_FILES_GUI_WIDGETS}
-#	#PARENT_SCOPE
-#	)
 
 target_sources_local(gui
 	PUBLIC

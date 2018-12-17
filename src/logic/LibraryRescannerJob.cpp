@@ -147,13 +147,16 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 	ext_future.setProgressUnit(KJob::Unit::Files);
 
 	// Send out progress text.
-	QString status_text = QObject::tr("Rereading metadata");
-	ext_future.reportDescription(status_text);//,
-//                                QPair<QString,QString>(QObject::tr("Root URL"), m_dir_url.toString()),
-//                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+	QString status_text = QObject::tr("Refreshing metadata");
+	ext_future.reportDescription(status_text,
+                                QPair<QString,QString>(QObject::tr("Root URL"), ""),
+                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
 
 	/// @todo
 	//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
+
+	ext_future.setProgressRange(0, items_to_rescan.size());
+	ext_future.setProgressValueAndText(0, status_text);
 
 	qulonglong num_items = 0;
 	for(QVector<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
