@@ -25,7 +25,8 @@
  * Just a wrapper around the way-too-long name of the real generated KConfig settings header.
  */
 
-#include <src/AwesomeMediaLibraryManagerSettings.h>
+/// @note "AwesomeMediaLibraryManagerSettings.h" is built source, and is generated in <builddir_root>/src/.
+#include <AwesomeMediaLibraryManagerSettings.h>
 
 
 #endif /* AMLMSETTINGS_H_ */

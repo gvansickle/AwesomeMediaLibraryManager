@@ -86,14 +86,21 @@ add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
 
-# Make the KConfig settings file its own library, so dependencies get handled correctly.
+# @todo Make the KConfig settings file its own library, so dependencies get handled correctly.
+# amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
 kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
-#message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
+message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
 # Exclude the generated KConfig settings source files from AUTOMOC etc.
-set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON) 
+#set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON)
 ### @todo Do we need this? Target to get the deps on generated files right.
-###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
-
+add_library(kconfig_target
+		STATIC EXCLUDE_FROM_ALL
+		${amlm_settings_SRCS}
+		)
+#		${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
+target_link_libraries(kconfig_target
+		${KF5_LINK_LIB_TARGETS}
+		)
 
 ###
 ### Collect all the external link lib targets into one variable. 
@@ -148,6 +155,7 @@ add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
+		kconfig_target
 		concurrency
 		future
 		gui
@@ -237,14 +245,15 @@ target_include_directories(${PROJECT_NAME}
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
 		${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
-		)
+		${PROJECT_BINARY_DIR}/src
+	)
 target_compile_options(${PROJECT_NAME} PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
-    AUTOMOC ON
-    AUTOUIC ON)
+        AUTOMOC ON
+        AUTOUIC ON)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)
@@ -434,7 +443,7 @@ install(PROGRAMS gdb_wrap.sh
 	COMPONENT
 		coreapp
 		)
-install(PROGRAMS  gdbinit.in
+install(PROGRAMS gdbinit.in
 	RENAME
 		 .gdbinit
 	DESTINATION
@@ -475,7 +484,7 @@ install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINA
 # AppStream component metadata files.
 install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
 		COMPONENT coreapp)
-# KConfig file.
+# The KConfig file.
 install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR}
 	    COMPONENT coreapp)
 
