@@ -358,7 +358,7 @@ public:
 	}
 };
 
-int value = 10;
+int f_value = 10;
 
 #if 0 /// @todo
 class UnitResult : public QFutureInterfaceBase
@@ -443,7 +443,7 @@ TEST_F(ExtFutureTest, QTBfutureInterface3)
 	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
 	AMLMTEST_EXPECT_FALSE(intFuture.isFinished());
 
-	result.reportFinished(&value);
+	result.reportFinished(&f_value);
 
 	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
 	AMLMTEST_EXPECT_TRUE(intFuture.isFinished());
@@ -454,14 +454,14 @@ TEST_F(ExtFutureTest, QTBfutureInterface3)
 	AMLMTEST_EXPECT_TRUE(intFuture.isFinished());
 	AMLMTEST_EXPECT_FALSE(intFuture.isCanceled());
 
-	AMLMTEST_ASSERT_EQ(e, value);
+	AMLMTEST_ASSERT_EQ(e, f_value);
 	intFuture.waitForFinished();
 
 	IntResult intAlgo;
 	intFuture = intAlgo.run();
 	ExtFuture<int> intFuture2(intFuture);
-	AMLMTEST_ASSERT_EQ(intFuture.result(), value);
-	AMLMTEST_ASSERT_EQ(intFuture2.result(), value);
+	AMLMTEST_ASSERT_EQ(intFuture.result(), f_value);
+	AMLMTEST_ASSERT_EQ(intFuture2.result(), f_value);
 	intFuture.waitForFinished();
 
 #if 0 /// @todo
@@ -1945,33 +1945,8 @@ TEST_F(ExtFutureTest, ThenChain)
 {
 	TC_ENTER();
 
-	TC_START_RSM(rsm);
-
-	SCOPED_TRACE("ThenChain");
-
-	using ::testing::InSequence;
-	using ::testing::Return;
-	using ::testing::Eq;
-	using ::testing::ReturnArg;
-	using ::testing::_;
-
-	ON_CALL(rsm, ReportResult(_))
-			.WillByDefault(ReturnArg<0>());
-	enum
-	{
-		MSTART,
-		MEND,
-		T1ENTERED,
-		T2ENTERED
-	};
-	{
-		InSequence s;
-
-		TC_RSM_EXPECT_CALL(rsm, MSTART);
-		TC_RSM_EXPECT_CALL(rsm, T1ENTERED);
-		TC_RSM_EXPECT_CALL(rsm, T2ENTERED);
-		TC_RSM_EXPECT_CALL(rsm, MEND);
-	}
+	std::atomic_bool ran_then_1 = false;
+	std::atomic_bool ran_then_2 = false;
 
 	using FutureType = ExtFuture<QString>;
 
@@ -1983,29 +1958,30 @@ TEST_F(ExtFutureTest, ThenChain)
 
 	TCOUT << "Future created:" << future;
 
-	rsm.ReportResult(MSTART);
+	future.then([&ran_then_1](FutureType in_future) {
 
-	future.then([&rsm](FutureType in_future){
-			SCOPED_TRACE("In then 1");
-
-			rsm.ReportResult(T1ENTERED);
+			ran_then_1 = true;
 			return 1;
 		;})
-		.then([=, &rsm](ExtFuture<int> in_future) {
-			SCOPED_TRACE("In then 2");
+		.then([&](ExtFuture<int> in_future) {
 
-//			EXPECT_THAT(ran_tap, Eq(true));
+			EXPECT_TRUE(ran_then_1);
+			ran_then_2 = true;
 
 			EXPECT_TRUE(in_future.isStarted());
 			EXPECT_TRUE(in_future.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(in_future.isRunning());
+
+			auto val = in_future.result();
+
+			EXPECT_EQ(val, 1);
 
 //			TCOUT << "in then(), extfuture:" << tostdstr(extfuture.qtget_first());
 //			EXPECT_EQ(in_future.qtget_first(), QString("delayed_string_func_1() output"));
 //			EXPECT_FALSE(ran_then);
 //			ran_then = true;
 
-			rsm.ReportResult(T2ENTERED);
+//			rsm.ReportResult(T2ENTERED);
 
 			return QString("Then Called");
 	})/*.test_tap([&](auto ef){
@@ -2022,9 +1998,8 @@ TEST_F(ExtFutureTest, ThenChain)
 	EXPECT_FALSE(future.isRunning());
 	EXPECT_TRUE(future.isFinished());
 
-	rsm.ReportResult(MEND);
-
-	TC_END_RSM(rsm);
+	EXPECT_TRUE(ran_then_1);
+	EXPECT_TRUE(ran_then_2);
 
 	TC_EXIT();
 }

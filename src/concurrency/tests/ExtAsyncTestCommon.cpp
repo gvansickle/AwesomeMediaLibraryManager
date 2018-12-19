@@ -51,10 +51,11 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
     fixture->register_generator(tgb);
 
 	QFuture<QString> qretval = QtConcurrent::run([=]() -> QString {
+//	ExtFuture<QString> retval = ExtAsync::run_zero_params([&]() -> QString {
         // Sleep for a second.
-        qDb() << "ENTER, SLEEPING FOR 1 SEC";
+        TCOUT << "ENTER, SLEEPING FOR 1 SEC";
 		TC_Sleep(1000);
-        qDb() << "SLEEP COMPLETE";
+        TCOUT << "SLEEP COMPLETE";
 
         fixture->unregister_generator(tgb);
         delete tgb;
@@ -64,9 +65,10 @@ QString delayed_string_func_1(ExtAsyncTestsSuiteFixtureBase *fixture)
 	ExtFuture<QString> retval = ExtFuture<QString>(qretval);
 	// QVERIFY() does a "return;", so we can't use it in a function returning a value.
 	Q_ASSERT(retval.isStarted());
+	Q_ASSERT(!retval.isCanceled());
 	Q_ASSERT(!retval.isFinished());
 
-    GTEST_COUT_qDB << "delayed_string_func_1() returning future:" << retval.state();
+    TCOUT << "delayed_string_func_1() returning future:" << retval.state();
 
     return retval.result();
 }

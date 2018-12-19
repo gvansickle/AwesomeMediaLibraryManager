@@ -275,8 +275,8 @@ template <class CallbackType>
 
 			// Don't need to pass anything other than the lambda.
 //			QtConcurrent::run(lambda);
-M_WARNING("TODO: This won't block, seems like it should.  But maybe we're OK, neither does ::run()");
-M_WARNING("TODO: We do need to finish the returned future though.");
+//M_WARNING("TODO: This won't block, seems like it should.  But maybe we're OK, neither does ::run()");
+//M_WARNING("TODO: We do need to finish the returned future though.");
 			run_in_event_loop(executor, lambda);
 
 			return retfuture;
@@ -790,9 +790,9 @@ M_WARNING("TODO: We do need to finish the returned future though.");
 	 */
 	template <typename CallableType, typename R = std::invoke_result_t<CallableType, void>,
 		REQUIRES(is_non_void_non_ExtFuture_v<R> // Return type is not void or ExtFuture<>
-			  && ct::is_invocable_r_v<R, CallableType, void> // F has signature R F(void).
+			  && std::is_invocable_r_v<R, CallableType, void> // F has signature R F(void).
 			  )>
-	ExtFuture<R> run_zero_params(CallableType&& function)
+	auto run_zero_params(CallableType&& function) -> ExtFuture<R>
 	{
 		ExtFuture<R> retfuture;
 

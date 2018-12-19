@@ -141,8 +141,12 @@ public:
 	/**
 	 * Default constructor.
 	 *
-	 * @param initialState  We default-construct to State(Started|Finished|Canceled) to match QFuture<T>'s default state.
-	 * @note .waitForFinished() won't wait on a default-constructed future, thinks it's finished.
+	 * We default-construct to State(Started|Finished|Canceled) to match QFuture<T>'s default state.
+	 *
+	 * @note Per @link: https://en.cppreference.com/w/cpp/thread/shared_future/valid
+	 * "Checks if the future refers to a shared state.  This is the case only for futures that were not
+	 * default-constructed or moved from."
+	 * .waitForFinished() won't wait on a default-constructed future, thinks it's finished.
 	 */
 	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
 
@@ -300,16 +304,24 @@ public:
 	 * we should be valid()==false if we've been:
 	 * 1. Default constructed (and presumably never given a state via another method, e.g. assignment).
 	 * 2. Moved from.
-	 * 3. (std::experimental::future only) Invalidated by a call of .get().
+	 * 3. (std::experimental::future<> only) Invalidated by a call of .get().
 	 * Our Qt 5 underpinnings don't support move semantics (anywhere AFAICT), which eliminates #2.  #3 doesn't apply
-	 * since QFuture<T> etc. don't become invalid due to .get() or other results-access calls (again shared_future semantics).
-	 * #1 is the only one I'm not 100% on.  We have a QFutureInterface<T> constructed beneath us in all cases, so per
-	 * the definitions above, I don't think we're ever in an "invalid" state.  But default-constructed might be what should
-	 * be considered invalid here.
+	 * since QFuture<T> etc. don't become invalid due to .get() or other results-access calls (again shared_future<T> semantics).
+	 * #1 is the only one we care about here.  We have a QFutureInterface<T> constructed beneath us in all cases, so
+	 * we never are missing a shared state, but default-constructed should be considered invalid here.
+	 * Default construction results in the state being (Started|Finished|Canceled).
 	 *
 	 * @returns  true if *this refers to a shared state, otherwise false.
 	 */
-	bool valid() const { return true; }
+	bool valid() const
+	{
+		if(this->isCanceled() && this->isFinished() && this->isStarted())
+		{
+			qWr() << "ExtFuture" << m_extfuture_id_no << "is invalid";
+			return false;
+		}
+		return true;
+	}
 
 	/**
 	 * Returns true if this ExtFuture<T> is sitting on an exception.  Does not cause any potential exception
@@ -625,6 +637,8 @@ public:
 	 * Will throw if this holds an exception.
 	 *
 	 * Essentially the same semantics as std::future::get(); shared_future::get() always returns a reference instead.
+	 *
+	 * @todo Should probably only return the first result for consistency with std .get().
 	 *
 	 * @note Directly calls this->results().  This blocks any event loop in this thread.
 	 *
@@ -1099,11 +1113,10 @@ public:
 	}
 
 	/**
-	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
-	 * event loop running.
+	 * Block the current thread on the finishing of this ExtFuture<T>.
+	 * Does not keep the thread's event loop running.
 	 *
-	 * Effectively the same semantics as std::future::wait(), but with Qt's-event-loop pumping, so it only
-	 * semi-blocks the thread.
+	 * Effectively the same semantics as std::{shared_}future::wait().
 	 */
 	void wait();
 
@@ -1314,7 +1327,8 @@ struct when_any_result
 };
 
 /**
- * C++2x when_all().
+ * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
+ * @link https://en.cppreference.com/w/cpp/experimental/when_all
  * @tparam InputIterator
  * @param first
  * @param last
