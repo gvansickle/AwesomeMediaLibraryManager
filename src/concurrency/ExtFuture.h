@@ -83,7 +83,7 @@ template <typename T>
 ExtFuture<T> make_started_only_future();
 
 /**
- * A std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
+ * A C++2x-ish std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
  *
  * Actually more like a combined promise and future.
  *
@@ -279,6 +279,7 @@ public:
 	/// @{
 
 	/**
+	 * C++2x is_ready().
 	 * "Checks if the associated shared state is ready.  The behavior is undefined if valid() is false."
 	 * (from @link https://en.cppreference.com/w/cpp/experimental/shared_future/is_ready).
 	 * Same semantics as std::experimental::shared_future::is_ready().
@@ -287,12 +288,14 @@ public:
 	 */
 	bool is_ready() const
 	{
+		// I'm defining the undefined behavior if this isn't valid here as "assert".  You're welcome ISO.
 		Q_ASSERT(this->valid() == true);
-		// We're only C++17 ready if we're Finished or Canceled (including Exceptions).
+		// We're only C++2x-ready if we're Finished or Canceled (including Exceptions).
 		return this->isFinished() || this->isCanceled();
 	}
 
 	/**
+	 * C++2x valid().
 	 * This sort of gets lost in translation.  Per @link https://en.cppreference.com/w/cpp/thread/shared_future/valid,
 	 * we should be valid()==false if we've been:
 	 * 1. Default constructed (and presumably never given a state via another method, e.g. assignment).
@@ -301,7 +304,8 @@ public:
 	 * Our Qt 5 underpinnings don't support move semantics (anywhere AFAICT), which eliminates #2.  #3 doesn't apply
 	 * since QFuture<T> etc. don't become invalid due to .get() or other results-access calls (again shared_future semantics).
 	 * #1 is the only one I'm not 100% on.  We have a QFutureInterface<T> constructed beneath us in all cases, so per
-	 * the definitions above, I don't think we're ever in an invalid state.
+	 * the definitions above, I don't think we're ever in an "invalid" state.  But default-constructed might be what should
+	 * be considered invalid here.
 	 *
 	 * @returns  true if *this refers to a shared state, otherwise false.
 	 */
@@ -1308,6 +1312,21 @@ struct when_any_result
 	std::size_t index;
 	Sequence futures;
 };
+
+/**
+ * C++2x when_all().
+ * @tparam InputIterator
+ * @param first
+ * @param last
+ * @return
+ */
+template <class InputIterator>
+ExtFuture<std::vector<typename std::iterator_traits<InputIterator>::value_type>>
+when_all(InputIterator first, InputIterator last);
+
+template <class... Futures>
+ExtFuture<std::tuple<std::decay_t<Futures>...>> when_all(Futures&&... futures);
+
 
 } /// END namespace ExtAsync
 

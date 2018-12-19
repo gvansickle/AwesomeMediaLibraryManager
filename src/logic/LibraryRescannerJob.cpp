@@ -39,6 +39,9 @@ LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJobT(parent)
     // Set our object name.
     setObjectName(uniqueQObjectName());
 
+	/// @todo This should be coming through the ExtFuture.
+	setProgressUnit(KJob::Unit::Files);
+
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
 }
@@ -144,6 +147,8 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 {
 	qDb() << "ENTER library_metadata_rescan_task";
 
+	// For now we'll count progress in terms of files scanned.
+	// Might want to change to tracks eventually.
 	ext_future.setProgressUnit(KJob::Unit::Files);
 
 	// Send out progress text.
@@ -162,7 +167,7 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 	for(QVector<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
 	{
 		qDb() << "Item number:" << num_items;
-		/// @todo eliminate th_job ptr.
+		/// @todo eliminate the_job ptr.
 		MetadataReturnVal a = the_job->refresher_callback(*i);
 		Q_EMIT the_job->processReadyResults(a);
 		num_items++;

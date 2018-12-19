@@ -378,6 +378,8 @@ public:
 TEST_F(ExtFutureTest, QTBfuture)
 {
 	// default constructors
+	// None of these .waitForFinished() calls should actually wait.  This is sort of a degenerate case,
+	// and matches QFuture<T>'s behavior.
 	ExtFuture<int> intFuture;
 	intFuture.waitForFinished();
 	ExtFuture<QString> stringFuture;
@@ -397,6 +399,7 @@ TEST_F(ExtFutureTest, QTBfuture)
 
 	// state
 	AMLMTEST_EXPECT_TRUE(intFuture2.isStarted());
+	AMLMTEST_EXPECT_TRUE(intFuture2.isCanceled());
 	AMLMTEST_EXPECT_TRUE(intFuture2.isFinished());
 }
 

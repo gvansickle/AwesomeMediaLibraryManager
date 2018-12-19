@@ -38,6 +38,7 @@ DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl& di
     // Set our object name.
     setObjectName(uniqueQObjectName());
 
+    /// @todo This should be coming through the ExtFuture.
     setProgressUnit(KJob::Unit::Files);
 
     // Set our capabilities.
