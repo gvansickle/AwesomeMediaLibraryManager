@@ -97,6 +97,8 @@ void AMLMApp::Init(bool gtest_only)
 	// Create and set the root item / headers
 M_TODO("Needs to be ColumnSpecs");
 	m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
+	// Let's add two more columns
+	m_srtm_instance->insertColumns(3, 2);
 
 
 

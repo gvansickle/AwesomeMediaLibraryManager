@@ -146,7 +146,7 @@ public:
 	 * @note Per @link: https://en.cppreference.com/w/cpp/thread/shared_future/valid
 	 * "Checks if the future refers to a shared state.  This is the case only for futures that were not
 	 * default-constructed or moved from."
-	 * .waitForFinished() won't wait on a default-constructed future, thinks it's finished.
+	 * .waitForFinished() won't wait on a default-constructed future, thinks it's never run.
 	 */
 	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
 
@@ -300,7 +300,7 @@ public:
 
 	/**
 	 * C++2x valid().
-	 * This sort of gets lost in translation.  Per @link https://en.cppreference.com/w/cpp/thread/shared_future/valid,
+	 * This needs some minor translation.  Per @link https://en.cppreference.com/w/cpp/thread/shared_future/valid,
 	 * we should be valid()==false if we've been:
 	 * 1. Default constructed (and presumably never given a state via another method, e.g. assignment).
 	 * 2. Moved from.
@@ -310,6 +310,13 @@ public:
 	 * #1 is the only one we care about here.  We have a QFutureInterface<T> constructed beneath us in all cases, so
 	 * we never are missing a shared state, but default-constructed should be considered invalid here.
 	 * Default construction results in the state being (Started|Finished|Canceled).
+	 *
+	 * @note But what about an ExtFuture<T> which was canceled, then finished by either user or the cancelation mechanism itself?
+	 *       It'd be in that same state.  But:
+	 *       1. The "future-side" user of a std::shared_future<T> can't finish the future directly.
+	 *       2. ...but std:: doesn't provide a cancel mechanism either.
+	 *       3. ...but .waitForFinished() won't block, and will try to run the Runnable if the future's not also Running.
+	 *       4. ...so I don't know at the moment.
 	 *
 	 * @returns  true if *this refers to a shared state, otherwise false.
 	 */
