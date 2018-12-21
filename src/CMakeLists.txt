@@ -110,7 +110,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${AMLM_LIBCUE_TARGET}
 		callable_traits
 		verdigris_target
-		Boost::thread
+#		Boost::thread
 		)
 
 

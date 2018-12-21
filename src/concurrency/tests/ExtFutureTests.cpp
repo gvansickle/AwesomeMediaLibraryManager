@@ -89,7 +89,7 @@ TEST_F(ExtFutureTest, ContinuableBasic)
 }
 #endif
 
-#if 1 /// Boost::thread
+#if 0 /// Boost::thread
 #include <boost/thread.hpp>
 #include <boost/thread/future.hpp>
 
@@ -98,15 +98,20 @@ int calculate_the_answer_to_life_the_universe_and_everything()
 	return 42;
 }
 
-TEST_F(ExtFutureTest, BoostSanity)
+TEST_F(ExtFutureTest, DISABLED_BoostSanity)
 {
 	boost::packaged_task<int> pt(calculate_the_answer_to_life_the_universe_and_everything);
 
 	boost::unique_future<int> fi=pt.get_future();
 
-	boost::thread task(boost::move(pt)); // launch task on a thread
+	// launch task on a thread
+	boost::thread task(boost::move(pt));
 
-	fi.wait(); // wait for it to finish
+	// wait for the future to be finished.
+	fi.wait();
+
+	// Make sure we wait for the thread to terminate.
+	task.join();
 
 	EXPECT_TRUE(fi.is_ready());
 	EXPECT_TRUE(fi.has_value());
