@@ -107,9 +107,9 @@ namespace ExtAsync
 		private:
 			// add your variables here
 		};
-	}
+	};
 
-template <class CallbackType>
+	template <class CallbackType>
 	struct detail_struct
 	{
 		/**
@@ -346,7 +346,7 @@ template <class CallbackType>
 		{
 			using ExtAsync::detail::WorkerQObject;
 
-			ExtFutureT retfuture = make_started_only_future<ExtFutureT::inner_t>();
+			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::inner_t>();
 
 			QThread* thread = new QThread;
 			WorkerQObject* worker = new WorkerQObject();
@@ -359,9 +359,13 @@ template <class CallbackType>
 			// Connection from thread start to actual WorkerQObject process() function start
 			connect_or_die(thread, &QThread::started, worker, [=,
 					callback_copy=DECAY_COPY(std::forward<CallbackType>(callback)),
-					        args_copy=DECAY_COPY(std::forward<Args>(args)...)
-					        ](){
-				worker->process(callback_copy, retfuture, args_copy);
+					retfuture_copy=retfuture
+//					        args_copy=std::forward_as_tuple<Args>(args...)
+					        ]() mutable {
+				/// @todo Exceptions/cancellation.
+				worker->process(callback_copy, retfuture_copy, args...);
+				/// @note Unconditional finish here.
+				retfuture_copy.reportFinished();
 			});
 			// When the worker QObject is finished, tell the thread to quit, and register the worker to be deleted.
 			connect_or_die(worker, &WorkerQObject::finished, thread, &QThread::quit);
@@ -736,6 +740,18 @@ template <class CallbackType>
 
 		return report_and_control;
 	}
+
+	template <class CallbackType,
+	        class ExtFutureT = argtype_t<CallbackType, 0>,
+			class... Args,
+			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+	static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
+	{
+		return ExtAsync::detail_struct<CallbackType>::run_in_qthread_with_event_loop(
+				std::forward<CallbackType>(callback), std::forward<Args>(args)...
+				);
+	}
+
 
 //	template <class CallbackType, class... Args,
 //			class ExtFutureT = argtype_t<CallbackType, 0>>

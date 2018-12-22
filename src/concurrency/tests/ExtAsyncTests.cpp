@@ -1202,6 +1202,31 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRunFreefunc)
     TC_EXIT();
 }
 
+TEST_F(ExtAsyncTestsSuiteFixture, RunFreeFuncInQThreadWithEventLoop)
+{
+	TC_ENTER();
+
+	std::atomic_bool ran_callback = false;
+
+	ExtFuture<int> f0 = ExtAsync::run_in_qthread_with_event_loop([&](ExtFuture<int> f){
+			TCOUT << "ENTERED CALLBACK";
+
+			TC_Sleep(1000);
+
+			ran_callback = true;
+	});
+
+	EXPECT_FALSE(f0.isFinished());
+	EXPECT_FALSE(ran_callback);
+
+	f0.wait();
+
+	EXPECT_TRUE(f0.isFinished());
+	EXPECT_TRUE(ran_callback);
+
+	TC_EXIT();
+}
+
 /// Static checks
 TEST_F(ExtAsyncTestsSuiteFixture, StaticChecks)
 {
