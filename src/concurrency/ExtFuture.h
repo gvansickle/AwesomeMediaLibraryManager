@@ -1467,6 +1467,7 @@ ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 template <typename T>
 ExtFuture<T> make_started_only_future()
 {
+	static_assert(!is_ExtFuture_v<T>, "ExtFuture<T>: T cannot be a nested ExtFuture");
 	// QFutureInterface<T> starts out with a state of NoState.
 	QFutureInterface<T> fi;
 	fi.reportStarted();

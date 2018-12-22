@@ -130,8 +130,9 @@ std::set<std::string> MetadataTaglib::getNewTags()
 
 static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 {
+#warning "CRASHING HERE?"
 	TagMap retval;
-	for(auto key_val_pairs : pm)
+	for(const auto& key_val_pairs : pm)
 	{
 		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
 		//std::string key = reverse_lookup(key_val_pairs.first.toCString());
@@ -140,7 +141,7 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 
 		std::vector<std::string> out_val;
 		// Iterate over the StringList for this key.
-		for(auto value : key_val_pairs.second)
+		for(const auto& value : key_val_pairs.second)
 		{
 			out_val.push_back(tostdstr(value));
 		}

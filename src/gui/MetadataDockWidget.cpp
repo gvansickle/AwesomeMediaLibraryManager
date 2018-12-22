@@ -339,7 +339,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 				{
 					// Succeeded, convert QImage to QPixmap.
 
-					if(cover_image_bytes.size() != 0)
+					if(!cover_image_bytes.empty())
 					{
 						qDb() << "Valid cover image found"; ///@todo << cover_image.mime_type;
 						m_cover_image_label->setPixmap(QPixmap::fromImage(image));
@@ -398,7 +398,7 @@ void MetadataDockWidget::onProxyModelChange(bool has_rows)
 		auto index = m_proxy_model->index(0, 0, QModelIndex());
 		PopulateTreeWidget(index);
 	}
-    else
+	else
     {
         qDebug() << "NO ROWS";
     }

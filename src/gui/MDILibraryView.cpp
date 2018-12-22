@@ -299,7 +299,7 @@ QModelIndex MDILibraryView::from_underlying_qmodelindex(const QModelIndex &under
 void MDILibraryView::addSendToMenuActions(QMenu* menu)
 {
 	auto playlistviews = getAllMdiPlaylistViews();
-	if(playlistviews.size() > 0)
+	if(!playlistviews.empty())
 	{
 		if(playlistviews.size() == 1)
 		{
@@ -379,7 +379,7 @@ void MDILibraryView::onActivated(const QModelIndex& index)
 	/// @todo Add a check for that.
 	auto selected_row_pindexes = selectedRowPindexes();
 
-	if(selected_row_pindexes.size() == 0)
+	if(selected_row_pindexes.empty())
 	{
 		qWarning() << "Should have more than one selected row, got 0";
 	}

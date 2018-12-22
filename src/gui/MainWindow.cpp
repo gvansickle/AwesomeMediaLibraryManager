@@ -1183,7 +1183,7 @@ bool MainWindow::maybeSaveOnClose()
 			}
 		}
 	}
-	if(failures.size() > 0)
+	if(!failures.empty())
 	{
 		if(QMessageBox::warning(this, tr("Save Error"),
 								tr("Failed to save %1\nQuit anyway?").arg(failures.join(',')), /// @todo % "\n\t".join(failures),
@@ -1311,7 +1311,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 	{
 		// No existing View, is there an existing Model open?
 		/// @todo: Seems like there should be a cleaner way to handle this.
-		for(auto lm : m_libmodels)
+		for(const auto& lm : m_libmodels)
 		{
 			if(lm->getLibRootDir() == url)
 			{
@@ -1320,7 +1320,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 				retval.m_model_was_existing = true;
 			}
 		}
-		for(auto pm : m_playlist_models)
+		for(const auto& pm : m_playlist_models)
 		{
 			if(pm->getLibRootDir() == url)
 			{
@@ -1511,7 +1511,7 @@ void MainWindow::openWindows()
 {
 	qInfo() << "Opening windows which were open at end of last session...";
 
-	for(auto m : m_libmodels)
+	for(const auto& m : m_libmodels)
 	{
 		qDebug() << "Opening view on existing model:" << m->getLibraryName() << m->getLibRootDir();
 
@@ -1580,7 +1580,7 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 
 	QVector<QUrl> lib_root_urls;
 
-	for(auto l : m_libmodels)
+	for(auto& l : m_libmodels)
 	{
 //		l->startRescan();
 		lib_root_urls << l->getLibRootDir();
@@ -2176,7 +2176,7 @@ void MainWindow::onTextFilterChanged()
 
 void MainWindow::stopAllBackgroundThreads()
 {
-	for(auto model : m_libmodels)
+	for(auto& model : m_libmodels)
 	{
 		model->stopAllBackgroundThreads();
 	}

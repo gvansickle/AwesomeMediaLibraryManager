@@ -67,7 +67,7 @@ MetadataAbstractBase::MetadataAbstractBase()
 
 static std::string reverse_lookup(const std::string& native_key)
 {
-	for(auto entry : f_name_normalization_map)
+	for(const auto& entry : f_name_normalization_map)
 	{
 		if(entry.second == native_key)
 		{
@@ -124,7 +124,7 @@ TagMap MetadataAbstractBase::filled_fields() const
 	{
 //qDebug() << "Converting filled_fields to TagMap";
 		TagMap retval;
-		for(auto key_val_pairs : m_tag_map) ///@todo EXP m_pm)
+		for(const auto& key_val_pairs : m_tag_map) ///@todo EXP m_pm)
 		{
 //            qDebug() << "Native Key:" << key_val_pairs.first;
 			std::string key = reverse_lookup(key_val_pairs.first); ///@todo EXP.toCString());
@@ -140,7 +140,7 @@ M_WARNING("TODO: Find a better way to track new keys.")
 
 			std::vector<std::string> out_val;
 			// Iterate over the StringList for this key.
-			for(auto value : key_val_pairs.second)
+			for(const auto& value : key_val_pairs.second)
 			{
 				/// @todo Not sure what I was doing here.
 				///@todo EXP std::string val_as_utf8 = value.to8Bit(true);

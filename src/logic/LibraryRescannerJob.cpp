@@ -222,7 +222,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
             retval.m_original_pindexes.push_back(mapitem[0].pindex);
 
             auto vec_items = item->populate();
-            for (auto i : vec_items)
+			for (const auto& i : vec_items)
             {
                 if (!i->isPopulated())
                 {

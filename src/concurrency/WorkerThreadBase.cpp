@@ -19,11 +19,20 @@
 
 #include <concurrency/WorkerThreadBase.h>
 #include <QDebug>
+#include "WorkerThreadBase.h"
+
 
 WorkerThreadBase::WorkerThreadBase(QObject *parent) : QObject(parent)
 {
+	/// @warning We're still in the creating thread in the constructor here.
+	/// Don't allocate anything from the heap, and be aware of this if you allocate anything else.
+}
+
+WorkerThreadBase::~WorkerThreadBase()
+{
 
 }
+
 
 void WorkerThreadBase::moveToThread(QThread *targetThread)
 {
@@ -55,3 +64,4 @@ void WorkerThreadBase::connectDefaultSignals(QThread *targetThread)
     // Tell the thread to delete itself when it is finally shut down.
     connect(targetThread, &QThread::finished, targetThread, &QThread::deleteLater);
 }
+

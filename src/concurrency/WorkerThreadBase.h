@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -32,14 +32,16 @@ class WorkerThreadBase : public QObject
 {
     Q_OBJECT
 
-public:
-    explicit WorkerThreadBase(QObject *parent = 0);
-
-	void moveToThread(QThread* targetThread);
-
 Q_SIGNALS:
 	/// Signal we will emit when all work is complete and we should be destroyed.
 	void finished();
+
+
+public:
+    explicit WorkerThreadBase(QObject *parent = 0);
+    ~WorkerThreadBase() override;
+
+	void moveToThread(QThread* targetThread);
 
 public Q_SLOTS:
 	/// Signaled when the QThread is started.  Override.
@@ -50,7 +52,7 @@ public Q_SLOTS:
 	virtual void quit();
 
 private:
-	Q_DISABLE_COPY(WorkerThreadBase)
+//	Q_DISABLE_COPY(WorkerThreadBase)
 
 	void connectDefaultSignals(QThread* targetThread);
 };

@@ -282,7 +282,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
             // No such KJob anymore.
             continue;
         }
-        if(kjob->capabilities() & KJob::Killable)
+		if(kjob->capabilities() & KJob::Killable)
         {
             qIno() << "Killing KJob:" << kjob;
             // Synchronous call of KJob::kill().

@@ -288,7 +288,7 @@ QDebug operator<<(QDebug dbg, const CueSheet &cuesheet)
 
     dbg << "CueSheet(";
     dbg << "{\n";
-    for(auto i : cuesheet.m_tracks)
+	for(const auto& i : cuesheet.m_tracks)
     {
         dbg << "KEY:" << i.first << "VALUE:" << i.second << "\n";
     }

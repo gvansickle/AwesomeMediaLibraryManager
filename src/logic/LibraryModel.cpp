@@ -29,7 +29,7 @@
 #include <QStandardPaths>
 #include <QIcon>
 #include <QDebug>
-#include <QThread>
+//#include <QThread>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QTemporaryFile>

@@ -79,6 +79,36 @@ template <typename T> class ExtFuture;
 namespace ExtAsync
 {
 
+	namespace detail
+	{
+		/**
+		 * Wrapper helper object for run_in_qthread_with_event_loop().
+		 */
+		class WorkerQObject : public QObject
+		{
+			Q_OBJECT
+
+		public:
+			WorkerQObject() = default;
+			~WorkerQObject() override = default;
+
+		public:
+			template <class CallbackType, class ExtFutureT, class... Args>
+			void process(CallbackType&& callback, ExtFutureT future, Args&&... args)
+			{
+				std::invoke(callback, future, args...);
+			};
+
+		Q_SIGNALS:
+			void resultReady();
+			void finished();
+			void error(QString err);
+
+		private:
+			// add your variables here
+		};
+	}
+
 template <class CallbackType>
 	struct detail_struct
 	{
@@ -300,6 +330,50 @@ template <class CallbackType>
 		};
 
 
+
+		/**
+		 * Run the callback in a QThread with its own event loop.
+		 * @tparam CallbackType  Callback of type:
+		 *                   @code
+		 *                       void callback(ExtFutureT [, ...])
+		 *                   @endcode
+		 * @param callback  The callback to run in the new thread.
+		 */
+		template <class ExtFutureT = argtype_t<CallbackType, 0>,
+				class... Args,
+				REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+		static ExtFutureT run_in_qthread_with_event_loop(CallbackType&& callback, Args&&... args)
+		{
+			using ExtAsync::detail::WorkerQObject;
+
+			ExtFutureT retfuture = make_started_only_future<ExtFutureT::inner_t>();
+
+			QThread* thread = new QThread;
+			WorkerQObject* worker = new WorkerQObject();
+			// Move the worked QObject to the new thread.
+			worker->moveToThread(thread);
+
+			connect_or_die(worker, &WorkerQObject::error, thread, [=](QString errorstr){
+				qCr() << "WorkerQObject reported error:" << errorstr;
+			});
+			// Connection from thread start to actual WorkerQObject process() function start
+			connect_or_die(thread, &QThread::started, worker, [=,
+					callback_copy=DECAY_COPY(std::forward<CallbackType>(callback)),
+					        args_copy=DECAY_COPY(std::forward<Args>(args)...)
+					        ](){
+				worker->process(callback_copy, retfuture, args_copy);
+			});
+			// When the worker QObject is finished, tell the thread to quit, and register the worker to be deleted.
+			connect_or_die(worker, &WorkerQObject::finished, thread, &QThread::quit);
+			connect_or_die(worker, &WorkerQObject::finished, worker, &QObject::deleteLater);
+			// Connect the QThread's finished signal to the deleteLater() slot so that it gets scheduled for deletion.
+			/// @note I think this connection allows us to ignore the thread once we've started it, and it won't leak.
+			connect_or_die(thread, &QThread::finished, thread, &QThread::deleteLater);
+			// Start the new thread.
+			thread->start();
+
+			return retfuture;
+		};
 
 #if 0
 		// This run_again() is confused about return future type vs. passed-in type.
@@ -717,19 +791,8 @@ template <class CallbackType>
 		using arg0t = std::tuple_element_t<0, argst>;
 		using ExtFutureR = std::remove_reference_t<arg0t>;
 		static_assert(std::is_same_v<ExtFutureT, ExtFutureR>);
-#if 0
-		ExtFutureT retval;
-		qDb() << "FUTURE:" << retval;
 
-        // retval is passed by copy here.
-//		QtConcurrent::run([callback_fn=std::decay_t<CallbackType>(callback)](ExtFutureT ef, auto... args) {
-//			std::invoke(callback_fn, ef, args...);
-//		}, std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
-		QtConcurrent::run(std::forward<CallbackType>(callback), std::forward<ExtFutureT>(retval), std::forward<Args>(args)...);
-		return retval;
-#else
 		return ExtAsync::detail_struct<CallbackType>::run_param_expander(std::forward<CallbackType>(callback), std::forward<Args>(args)...);
-#endif
     }
 
 	/**

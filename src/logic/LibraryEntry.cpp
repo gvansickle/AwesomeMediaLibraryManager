@@ -374,7 +374,7 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 	{
 		TagMap tm = m_metadata.filled_fields();
 		QStringList sl;
-		for(auto entry : tm)
+		for(const auto& entry : tm)
 		{
 //qDb() << "entry:" << entry;
 			sl.clear();

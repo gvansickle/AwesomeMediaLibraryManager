@@ -174,12 +174,14 @@ ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-po
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
-ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
+### @note This crashes when linked with non-debug libstdc++.  Can't pass containers between them.
+#ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
 	ucm_add_flags(-Og -ggdb3 -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
+	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
 	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
