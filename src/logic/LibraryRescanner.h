@@ -100,6 +100,9 @@ protected:
 	/// Runs in an arbitrary thread context, so must be threadsafe.
 	MetadataReturnVal refresher_callback(const VecLibRescannerMapItems& mapitem);
 
+	/// Experimental: Run XQuery in a separate thread.
+	void ExpRunXQuery1(const QString& database_filename, const QString& in_filename);
+
 private:
 	Q_DISABLE_COPY(LibraryRescanner)
 

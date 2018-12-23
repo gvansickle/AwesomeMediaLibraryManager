@@ -380,63 +380,8 @@ M_TODO("This isn't scanning.");
 					}
 				}
 
-				/// @todo MORE EXERIMENTS, Linking through QIODevice / Temp file.
-				{
-					Stopwatch sw("XQuery test: through temp file");
+				ExpRunXQuery1(database_filename, filename);
 
-					// Open the database file.
-					QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
-					bool status = database_file.open(QFile::ReadOnly | QFile::Text);
-					throwif(!status /*"########## COULDN'T OPEN FILE"*/);
-					if(!status)
-					{
-						qCro() << "########## COULDN'T OPEN FILE:" << filename;
-
-					}
-
-					// The tempfile we'll use as a pipe.
-					QTemporaryFile tempfile;
-					// QTemporaryFile::open() is always RW.
-					throwif<SerializationException>(!tempfile.open(), "Couldn't open temp file");
-					qDb() << "TEMPFILE NAME:" << tempfile.fileName();
-
-					// Open the terminal output file.
-					QFile output_file(QDir::homePath() + "/DeleteMeThroughTempFile.xspf");
-					throwif<SerializationException>(!output_file.open(QIODevice::WriteOnly), "Couldn't open output file");
-
-					// Here we'll manually prepare the two queries.
-					QXmlQuery first_xquery, second_xquery;
-
-					// Open the file containing the XQuery (could be in our resources).
-					auto xquery_qurl = QUrl::fromLocalFile(":/xquery_files/database_filter_by_href_regex.xq");
-					QFile xquery_file(xquery_qurl.toLocalFile());
-					status = xquery_file.open(QIODevice::ReadOnly);
-					if(!status)
-					{
-						throw SerializationException("Couldn't open xquery source file");
-					}
-					// Read in the XQuery as a QString.
-					const QString query_string(QString::fromLatin1(xquery_file.readAll()));
-
-					first_xquery.bindVariable("input_file_path", &database_file);
-//					first_xquery.bindVariable("output_file_path", &tempfile);
-					first_xquery.bindVariable("extension_regex", QVariant(R"((.*\.(flac|mp3)$))"));
-					second_xquery.bindVariable("input_file_path", &tempfile);
-//					second_xquery.bindVariable("output_file_path", &output_file);
-					second_xquery.bindVariable("extension_regex", QVariant(R"((.*\.mp3$))"));
-
-					// Set the xqueries.
-					// @note This is correct, var binding should be before the setQuery() call.
-					first_xquery.setQuery(query_string);
-					second_xquery.setQuery(query_string);
-
-					status = run_xquery(first_xquery, &database_file, &tempfile);
-					throwif(!status);
-					tempfile.reset();
-					status = run_xquery(second_xquery, &tempfile, &output_file);
-					throwif(!status);
-				}
-				/// END @todo MORE EXERIMENTS, QIODevice.
 
 				if(0)
 				{
@@ -600,6 +545,72 @@ void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 		Q_ASSERT_X(0, "Scanning", "Not sure what we got");
 	}
 }
+
+void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QString& filename)
+{
+	/// @todo MORE EXPERIMENTS, Linking through QIODevice / Temp file.
+
+	Stopwatch sw("XQuery test: through temp file");
+
+	auto f0 = ExtAsync::run_in_qthread_with_event_loop([&](ExtFuture<Unit>) {
+
+		// Open the database file.
+		QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
+		bool status = database_file.open(QFile::ReadOnly | QFile::Text);
+		throwif(!status /*"########## COULDN'T OPEN FILE"*/);
+		if(!status)
+		{
+			qCro() << "########## COULDN'T OPEN FILE:" << filename;
+
+		}
+
+		// The tempfile we'll use as a pipe.
+		QTemporaryFile tempfile;
+		// QTemporaryFile::open() is always RW.
+		throwif<SerializationException>(!tempfile.open(), "Couldn't open temp file");
+		qDb() << "TEMPFILE NAME:" << tempfile.fileName();
+
+		// Open the terminal output file.
+		QFile output_file(QDir::homePath() + "/DeleteMeThroughTempFile.xspf");
+		throwif<SerializationException>(!output_file.open(QIODevice::WriteOnly), "Couldn't open output file");
+
+		// Here we'll manually prepare the two queries.
+		QXmlQuery first_xquery, second_xquery;
+
+		// Open the file containing the XQuery (could be in our resources).
+		auto xquery_qurl = QUrl::fromLocalFile(":/xquery_files/database_filter_by_href_regex.xq");
+		QFile xquery_file(xquery_qurl.toLocalFile());
+		status = xquery_file.open(QIODevice::ReadOnly);
+		if(!status)
+		{
+			throw SerializationException("Couldn't open xquery source file");
+		}
+		// Read in the XQuery as a QString.
+		const QString query_string(QString::fromLatin1(xquery_file.readAll()));
+
+		first_xquery.bindVariable("input_file_path", &database_file);
+//					first_xquery.bindVariable("output_file_path", &tempfile);
+		first_xquery.bindVariable("extension_regex", QVariant(R"((.*\.(flac|mp3)$))"));
+		second_xquery.bindVariable("input_file_path", &tempfile);
+//					second_xquery.bindVariable("output_file_path", &output_file);
+		second_xquery.bindVariable("extension_regex", QVariant(R"((.*\.mp3$))"));
+
+		// Set the xqueries.
+		// @note This is correct, var binding should be before the setQuery() call.
+		first_xquery.setQuery(query_string);
+		second_xquery.setQuery(query_string);
+
+		status = run_xquery(first_xquery, &database_file, &tempfile);
+		throwif(!status);
+		tempfile.reset();
+		status = run_xquery(second_xquery, &tempfile, &output_file);
+		throwif(!status);
+
+	});
+
+	f0.wait();
+}
+/// END @todo MORE EXERIMENTS, QIODevice.
 
 #if 0
 void LibraryRescanner::onRescanFinished()

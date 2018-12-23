@@ -33,7 +33,7 @@
 // Determine if we're being used in a QTest or Google Test build.
 #include <utils/DebugHelpers.h>
 #if defined(TEST_FWK_IS_GTEST)
-	M_WARNING("Building for Google Test framework");
+	M_MESSAGE("Building for Google Test framework");
 	// Include Google Test / Mock headers
 	#include <gtest/gtest.h>
 	#include <gmock/gmock.h>
@@ -44,7 +44,7 @@
 #	endif
 
 #elif defined(TEST_FWK_IS_QTEST)
-	M_WARNING("Building for QTest framework");
+	M_MESSAGE("Building for QTest framework");
 #else
 #error "No test framework defined"
 #endif
