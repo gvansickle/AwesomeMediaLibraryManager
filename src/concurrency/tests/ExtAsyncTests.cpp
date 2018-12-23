@@ -1208,13 +1208,15 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunFreeFuncInQThreadWithEventLoop)
 
 	std::atomic_bool ran_callback = false;
 
-	ExtFuture<int> f0 = ExtAsync::run_in_qthread_with_event_loop([&](ExtFuture<int> f){
+	ExtFuture<int> f0 = ExtAsync::run_in_qthread_with_event_loop([&](ExtFuture<int> f, int passed_in_val){
 			TCOUT << "ENTERED CALLBACK";
 
 			TC_Sleep(1000);
 
 			ran_callback = true;
-	});
+
+			f.reportResult(passed_in_val);
+	}, 4);
 
 	EXPECT_FALSE(f0.isFinished());
 	EXPECT_FALSE(ran_callback);
@@ -1223,6 +1225,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunFreeFuncInQThreadWithEventLoop)
 
 	EXPECT_TRUE(f0.isFinished());
 	EXPECT_TRUE(ran_callback);
+	EXPECT_EQ(f0.result(), 4);
 
 	TC_EXIT();
 }
