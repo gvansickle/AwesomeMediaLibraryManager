@@ -188,7 +188,9 @@ bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_s
 		throw SerializationException("invalid QXmlQuery");
 	}
 
-	bool retval = xquery.evaluateTo(xml_sink);
+	QXmlSerializer serializer(xquery, xml_sink);
+
+	bool retval = xquery.evaluateTo(&serializer);
 
 	return retval;
 }

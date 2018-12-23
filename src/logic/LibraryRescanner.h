@@ -35,8 +35,6 @@
 
 /// Ours
 #include <src/concurrency/ExtAsync.h>
-#include <src/concurrency/AsyncTaskManager.h> ///< For futureww
-
 #include "LibraryRescannerMapItem.h"
 
 class LibraryModel;
@@ -109,8 +107,6 @@ private:
 	LibraryModel* m_current_libmodel;
 
 	ExtFuture<QString> m_dirtrav_future;
-
-//    futureww<MetadataReturnVal> m_futureww;
 };
 
 

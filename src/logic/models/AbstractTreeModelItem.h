@@ -114,7 +114,7 @@ public:
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
     /// 			which is not added to the QVector.
-	/// @todo That seems all kinds of wrong, should probably return a nullptr or assert or something.
+	/// @todo That seems all kinds of wrong, should probably return a nullptr or throw or something.
 	AbstractTreeModelItem* child(int number);
 
 	/// @copydoc AbstractTreeModelItem::child(int)
