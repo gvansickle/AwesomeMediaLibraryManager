@@ -171,7 +171,7 @@ bool run_xquery(const QXmlQuery& xquery, const QUrl& source_xml_url, QStringList
 {
 	if(!xquery.isValid())
 	{
-		throw std::runtime_error("invalid QXmlQuery");
+		throw SerializationException("invalid QXmlQuery");
 	}
 
 	// Output is going to a QStringList.
@@ -188,9 +188,13 @@ bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_s
 		throw SerializationException("invalid QXmlQuery");
 	}
 
-	QXmlSerializer serializer(xquery, xml_sink);
+	// Formatter so the resulting XML isn't one single multi-megabyte string.
+	/// @note Mainly for debug.  We don't need this here if we're never going to look at the file in a text editor,
+	///       We could use a QXmlSerializer instead, and even just passing the xml_sink seems to work.
+	QXmlFormatter formatter(xquery, xml_sink);
+	formatter.setIndentationDepth(2);
 
-	bool retval = xquery.evaluateTo(&serializer);
+	bool retval = xquery.evaluateTo(&formatter);
 
 	return retval;
 }
