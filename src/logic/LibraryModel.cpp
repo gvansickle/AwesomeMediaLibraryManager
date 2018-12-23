@@ -104,7 +104,7 @@ QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
     // Create the new LibraryModel.
 	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
 
-M_WARNING("TODO: Find a better way to start async operations and/or connect");
+M_MESSAGE("TODO: Find a better way to start async operations and/or connect");
     lib->setLibraryRootUrl(open_url);
 
     return lib;
@@ -275,7 +275,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 			}
 			else if(sec_id == SectionID::MIMEType)
 			{
-M_WARNING("TODO Probably should be refactored.");
+M_MESSAGE("TODO Probably should be refactored.");
 //				return item->getFileType();
                 return QVariant::fromValue(item->getMimeType());
 			}
@@ -765,7 +765,7 @@ Qt::DropActions LibraryModel::supportedDropActions() const
 
 QStringList LibraryModel::mimeTypes() const
 {
-	M_WARNING("TODO: Return url type as well?");
+	M_MESSAGE("TODO: Return url type as well?");
 
 	return g_additional_supported_mimetypes;
 }

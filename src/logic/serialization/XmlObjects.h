@@ -38,6 +38,9 @@
 // Ours
 #include <src/utils/DebugHelpers.h>
 
+/// @name run_query() overloads taking a QUrl pointing to an XQuery file.
+/// @{
+
 /**
  * Run the XQuery at @a xquery_url against the source XML at @a source_xml_url, and write the results to the
  * file @a dest_xml_url.
@@ -73,6 +76,11 @@ bool run_xquery(const QUrl& xquery_url, QIODevice* xml_source, QIODevice* xml_si
 //bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);
 //bool run_xquery(const QUrl& xquery_url, const QUrl& xml_source_url, QXmlResultItems* result);
 
+/// @}
+
+/// @name run_query() overloads taking a prepared QXmlQuery.
+/// @{
+
 /**
  * Run the QXmlQuery @a xquery against the source XML at @a source_xml_url, and write the results to the
  * file @a dest_xml_url.
@@ -95,6 +103,8 @@ bool run_xquery(const QXmlQuery& xquery, QIODevice* xml_source, QIODevice* xml_s
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QString* out_string);
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QAbstractXmlReceiver* callback);
 //bool run_xquery(const QXmlQuery& xquery, const QUrl& xml_source_url, QXmlResultItems* result);
+
+/// @}
 
 /**
  * QXmlQuery notes:

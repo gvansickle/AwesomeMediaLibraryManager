@@ -549,10 +549,12 @@ void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
 void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QString& filename)
 {
 	/// @todo MORE EXPERIMENTS, Linking through QIODevice / Temp file.
-
-	Stopwatch sw("XQuery test: through temp file");
+{ // For stopwatches.
+	Stopwatch sw_par("Parallel XQuery test");
 
 	auto f0 = ExtAsync::run_in_qthread_with_event_loop([&](ExtFuture<Unit>) {
+
+		Stopwatch sw("Parallel XQuery test: Subtest 1: Through temp file");
 
 		// Open the database file.
 		QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
@@ -561,7 +563,6 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 		if(!status)
 		{
 			qCro() << "########## COULDN'T OPEN FILE:" << filename;
-
 		}
 
 		// The tempfile we'll use as a pipe.
@@ -608,7 +609,98 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 
 	});
 
+	// Run a parallel XQuery.
+	auto f0_2 = ExtAsync::run_in_qthread_with_event_loop([&](ExtFuture<Unit>) {
+
+		Stopwatch sw("Parallel XQuery test: Subtest 2: String literal xquery");
+return;
+		// Open the database file.
+		QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
+		bool status = database_file.open(QFile::ReadOnly | QFile::Text);
+		throwif(!status /*"########## COULDN'T OPEN FILE"*/);
+		if(!status)
+		{
+			qCro() << "########## COULDN'T OPEN FILE:" << filename;
+		}
+
+		// Open the terminal output file.
+		QFile output_file(QDir::homePath() + "/DeleteMeSecondThread.xspf");
+		throwif<SerializationException>(!output_file.open(QIODevice::WriteOnly), "Couldn't open output file");
+
+		// Here we'll manually prepare the two queries.
+		QXmlQuery first_xquery;
+
+//		// Open the file containing the XQuery (could be in our resources).
+//		auto xquery_qurl = QUrl::fromLocalFile(":/xquery_files/database_filter_by_href_regex.xq");
+//		QFile xquery_file(xquery_qurl.toLocalFile());
+//		status = xquery_file.open(QIODevice::ReadOnly);
+//		if(!status)
+//		{
+//			throw SerializationException("Couldn't open xquery source file");
+//		}
+		// Try hardcoded XQuery text.
+		const QString query_string(QString::fromLatin1(R"xq(
+(: http://www.w3.org/2005/xpath-functions :)
+(: The XSPF namespace. :)
+declare default element namespace "http://xspf.org/ns/0/";
+declare namespace functx = "http://www.functx.com";
+
+(: Path to the AMLM database, will be passed in as a bound variable. :)
+declare variable $input_file_path as xs:anyURI external;
+
+
+(: Local copy function.  Returns a deep copy of $n and all sub-nodes.  Use as a basis for whole-doc filters. :)
+(: declare function local:copy($n as node()) as node() {
+    typeswitch($n)
+        case $e as element()
+            return
+                element {fn:name($e)}
+                    {$e/@*,
+                     for $c in $e/(* | text())
+                         return local:copy($c) }
+      default return $n
+}; :)
+
+(: let $x := fn:doc($input_file_path)//href
+return
+ <output>
+    <original>{$x}</original>
+    <fullcopy> {local:copy($x)}</fullcopy>
+ </output>
+:)
+
+(: From http://www.xqueryfunctions.com/xq/functx_replace-element-values.html. :)
+declare function functx:replace-element-values
+  ( $elements as element()* ,
+    $values as xs:anyAtomicType* )  as element()* {
+
+   for $element at $seq in $elements
+   return element { node-name($element)}
+             { $element/@*,
+               $values[$seq] }
+};
+
+for $x in fn:doc($input_file_path)//href
+return functx:replace-element-values($x,concat($x,'.APPENDED'))
+
+)xq"));
+
+		first_xquery.bindVariable("input_file_path", &database_file);
+
+		// Set the xqueries.
+		// @note This is correct, var binding should be before the setQuery() call.
+		first_xquery.setQuery(query_string);
+		throwif<SerializationException>(!first_xquery.isValid(), "Bad XQuery");
+
+		status = run_xquery(first_xquery, &database_file, &output_file);
+		throwif<SerializationException>(!status, "XQuery failed");
+	});
+
+	/// @todo wait_for_all().
 	f0.wait();
+	f0_2.wait();
+}
+	qDb() << "PARALLEL XQUERY TEST COMPLETE";
 }
 /// END @todo MORE EXERIMENTS, QIODevice.
 

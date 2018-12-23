@@ -40,6 +40,6 @@ Stopwatch::~Stopwatch()
 	std::chrono::duration<double> elapsed = end - m_start;
 
 	std::cout << "END: " << m_being_timed_msg << std::endl;
-	std::cout << "ELAPSED: " << elapsed.count() << " sec" << std::endl;
+	std::cout << "ELAPSED TIME: " << m_being_timed_msg << ": " << elapsed.count() << " sec" << std::endl;
 }
 
