@@ -613,7 +613,7 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 	auto f0_2 = ExtAsync::run_in_qthread_with_event_loop([&](ExtFuture<Unit>) {
 
 		Stopwatch sw("Parallel XQuery test: Subtest 2: String literal xquery");
-return;
+
 		// Open the database file.
 		QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
 		bool status = database_file.open(QFile::ReadOnly | QFile::Text);

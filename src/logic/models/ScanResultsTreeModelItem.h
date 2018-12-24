@@ -39,10 +39,11 @@ class QXmlStreamReader;
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 	using BASE_CLASS = AbstractTreeModelItem;
+//	using BASE_CLASS = clone_inherit<ScanResultsTreeModelItem, AbstractTreeModelItem>;
 
 public:
 	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
-	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : AbstractTreeModelItem(parent) {};
+	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
 	/// Create a new model item populated with the passed DirScanResult.
 	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
 	~ScanResultsTreeModelItem() override;

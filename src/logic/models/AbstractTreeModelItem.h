@@ -89,6 +89,8 @@
 
 /**
  * Base class for AbstractItemTreeModel items.
+ *
+ * @base clone_inherit<>  Adds covariant plus smart pointer clone() support to the derived class hierarchy.
  */
 class AbstractTreeModelItem : public virtual ISerializable
 {
@@ -108,8 +110,8 @@ public:
 	 * Think we'll probably need this.
 	 */
 //	virtual AbstractTreeModelItem* create() const = 0;
-	/// Virtual constructor for copy.
-//	virtual AbstractTreeModelItem* clone() const = 0;
+
+
 
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
@@ -196,6 +198,13 @@ protected:
 	/// @}
 
 private:
+
+	/**
+	 * Private virtual constructor for the clone interface.
+	 * Override in derived classes.
+	 */
+//	virtual AbstractTreeModelItem* clone_impl() const = 0;
+
 
 	/// Pointer to our parent AbstractTreeModelItem.
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always

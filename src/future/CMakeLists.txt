@@ -24,6 +24,7 @@ set(HEADER_FILES_SRC_FUTURE
 	function_traits.hpp
 	future_type_traits.hpp
 	cpp14_concepts.hpp
+	cloneable.h
 	static_if.hpp
 	grvs_functional.hpp
 	Unit.hpp
@@ -31,9 +32,6 @@ set(HEADER_FILES_SRC_FUTURE
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
 	)
-
-prepend_to_each(HEADER_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_FUTURE})
-prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_FUTURE})
 
 target_sources_local(future
 	PUBLIC
