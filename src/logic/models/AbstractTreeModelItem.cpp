@@ -64,11 +64,6 @@
 #include <utils/DebugHelpers.h>
 #include <utils/VectorHelpers.h>
 
-//AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem *parent_item)
-//{
-//	m_parent_item = parent_item;
-//}
-
 AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
 	: m_parent_item(parent_item)
 {
@@ -76,15 +71,16 @@ AbstractTreeModelItem::AbstractTreeModelItem(AbstractTreeModelItem* parent_item)
 
 AbstractTreeModelItem::~AbstractTreeModelItem()
 {
-	// Doesn't remove items, just deletes them.
-	qDeleteAll(m_child_items);
+	// Doesn't remove child items, just deletes them.
+//	qDeleteAll(m_child_items);
+	removeChildren(0, childCount());
 }
 
 /// Debug streaming implementation.
 #define DATASTREAM_FIELDS(X) \
     X(m_parent_item)\
     /*X(m_item_data)*/\
-    X(m_child_items)
+    X(m_child_items.size())
 
 #define X(field) << obj.field
 QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
@@ -97,11 +93,13 @@ AbstractTreeModelItem* AbstractTreeModelItem::child(int number)
 	if(number >= childCount())
 	{
 		qWr() << "### CHILD INDEX OUT OF RANGE:" << number;
+		Q_ASSERT(0);
+		return nullptr;
 	}
 
 	/// @note .value() here returns a default constructed AbstractTreeModelItem which is not added to the QVector.
 	/// @todo This seems all kinds of wrong, should probably return a nullptr or assert or something.
-	return stdex::value(m_child_items, number);
+	return m_child_items[number].get();
 }
 
 const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
@@ -109,8 +107,10 @@ const AbstractTreeModelItem* AbstractTreeModelItem::child(int number) const
 	if(number >= childCount())
 	{
 		qWr() << "### CHILD INDEX OUT OF RANGE:" << number;
+		Q_ASSERT(0);
+		return nullptr;
 	}
-	return stdex::value(m_child_items, number);
+	return m_child_items[number].get();
 }
 
 
@@ -126,7 +126,10 @@ int AbstractTreeModelItem::childNumber() const
 {
 	if (m_parent_item != nullptr)
 	{
-		return stdex::indexOf(m_parent_item->m_child_items, this);
+//		return stdex::indexOf(m_parent_item->m_child_items, this);
+		auto iter = std::find_if(m_parent_item->m_child_items.cbegin(), m_parent_item->m_child_items.cend(),
+				[=](const auto& unptr){ return unptr.get() == this; });
+		return iter - m_parent_item->m_child_items.cbegin();
 	}
 
     return 0;
@@ -147,6 +150,7 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 	if (position < 0 || position > m_child_items.size())
 	{
 		// Insertion point out of range of existing children.
+		qWr() << "INVALID INSERT POSITION:" << position << ", balking.";
         return false;
 	}
 
@@ -157,8 +161,8 @@ bool AbstractTreeModelItem::insertChildren(int position, int count, int columns)
 //        QVector<QVariant> data(columns);
 //		AbstractTreeModelItem *item = new AbstractTreeModelItem(data, this);
 		// Create a new default-constructed item.
-		AbstractTreeModelItem *item = create_default_constructed_child_item(this);
-		m_child_items.insert(pos_iterator, item);
+		std::unique_ptr<AbstractTreeModelItem> item = std::move(create_default_constructed_child_item(this, columns));
+		m_child_items.insert(pos_iterator, std::move(item));
     }
 
     return true;
@@ -186,7 +190,7 @@ bool AbstractTreeModelItem::insertColumns(int insert_before_column, int num_colu
 //	}
 
 	// Insert new columns in children.
-	for(AbstractTreeModelItem *child : m_child_items)
+	for(auto& child : m_child_items)
 	{
         child->insertColumns(insert_before_column, num_columns);
 	}
@@ -208,13 +212,18 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
 {
 	if (position < 0 || position + count > m_child_items.size())
 	{
+		qCr() << "out of bounds:" << position << count;
         return false;
 	}
 
-	for (int row = 0; row < count; ++row)
-	{
-		delete stdex::takeAt(m_child_items, position);
-	}
+	m_child_items.erase(m_child_items.begin()+position, m_child_items.begin()+position+count-1);
+
+//	for (int row = 0; row < count; ++row)
+//	{
+//		// Remove and delete the child.
+//		auto child = stdex::takeAt(m_child_items, position);
+//		child.release();
+//	}
 
     return true;
 }
@@ -238,7 +247,7 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
 	}
 
 	// Remove columns from all children.
-	for(AbstractTreeModelItem *child : m_child_items)
+	for(auto& child : m_child_items)
 	{
         child->removeColumns(position, columns);
 	}
@@ -259,13 +268,13 @@ bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 	return derivedClassSetData(column, value);
 }
 
-bool AbstractTreeModelItem::appendChildren(std::vector<AbstractTreeModelItem*> new_children)
+bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children)
 {
     /// @todo Support adding new columns if children have them?
-    for(auto* child : new_children)
+    for(auto& child : new_children)
     {
         child->setParentItem(this);
-        m_child_items.push_back(child);
+        m_child_items.push_back(std::move(child));
     }
 
 	return true;

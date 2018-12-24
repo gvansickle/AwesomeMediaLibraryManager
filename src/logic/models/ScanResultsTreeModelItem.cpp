@@ -23,6 +23,9 @@
 
 #include "ScanResultsTreeModelItem.h"
 
+// Std C++
+#include <memory>
+
 // Qt5
 #include <QXmlStreamReader>
 

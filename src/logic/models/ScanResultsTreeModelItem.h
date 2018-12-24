@@ -27,7 +27,7 @@
 
 // Qt5
 #include <QStringLiteral>
-class QXmlStreamReader;
+//class QXmlStreamReader;
 
 // Ours
 #include "../DirScanResult.h"
@@ -39,7 +39,6 @@ class QXmlStreamReader;
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
 	using BASE_CLASS = AbstractTreeModelItem;
-//	using BASE_CLASS = clone_inherit<ScanResultsTreeModelItem, AbstractTreeModelItem>;
 
 public:
 	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
@@ -57,7 +56,7 @@ public:
 
 	int columnCount() const override;
 
-	/// @name Serialization
+	/// @name ISerializable interface
 	/// @{
 
 	/// Serialize item and any children to a QVariant.

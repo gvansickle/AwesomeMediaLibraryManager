@@ -162,7 +162,7 @@ public:
 
     /**
      * Inserts @a count new default-constructed rows under model item @a parent_model_index model before the given row @a insert_before_row.
-     * If @a insert_before_row is 0, rows are still prepended.  If it's >= rowCount(), operation is meaningless and
+     * If @a insert_before_row is 0, rows are still prepended.  If it's > rowCount(), operation is meaningless and
      * the call returns false, not having done anything.
      *
      * @return true on success.

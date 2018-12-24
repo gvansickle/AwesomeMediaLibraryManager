@@ -75,6 +75,7 @@
 #define ABSTRACTTREEMODELITEM_H
 
 // Std C++
+#include <memory>
 #include <vector>
 
 // Qt5
@@ -104,14 +105,6 @@ public:
 	 */
 	explicit AbstractTreeModelItem(AbstractTreeModelItem* parent_item = nullptr);
 	~AbstractTreeModelItem() override;
-
-	/**
-	 * @todo Virtual constructor returning covariant model item pointer.
-	 * Think we'll probably need this.
-	 */
-//	virtual AbstractTreeModelItem* create() const = 0;
-
-
 
     /// Return a pointer to the number'th child of this item.
     /// @returns If @a number is not valid, a pointer to a default constructed AbstractTreeModelItem,
@@ -153,6 +146,9 @@ public:
 	/// Returns a const pointer to this item's parent.
 	const AbstractTreeModelItem *parent() const;
 
+	/**
+	 * Remove and delete the @a count children starting at @a position.
+	 */
     bool removeChildren(int position, int count);
     bool removeColumns(int position, int columns);
 
@@ -160,7 +156,7 @@ public:
     int childNumber() const;
 
 
-	bool appendChildren(std::vector<AbstractTreeModelItem*> new_children);
+	bool appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.
@@ -186,8 +182,8 @@ protected:
 	 * Used by insertChildren().  Override in derived classes.
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
-	virtual AbstractTreeModelItem*
-	create_default_constructed_child_item(AbstractTreeModelItem* parent) = 0;
+	virtual std::unique_ptr<AbstractTreeModelItem>
+	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) = 0;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
@@ -199,13 +195,6 @@ protected:
 
 private:
 
-	/**
-	 * Private virtual constructor for the clone interface.
-	 * Override in derived classes.
-	 */
-//	virtual AbstractTreeModelItem* clone_impl() const = 0;
-
-
 	/// Pointer to our parent AbstractTreeModelItem.
 	/// For items in a tree model (i.e. not being copy/pasted or mid-construction), this will always
 	/// be non-null as long as this item is not the invisible root item.
@@ -213,7 +202,7 @@ private:
 
 	/// Vector of child items.
 	/// This item owns its children for memory-management purposes.
-	std::vector<gsl::owner<AbstractTreeModelItem*>> m_child_items;
+	std::vector<std::unique_ptr<AbstractTreeModelItem>> m_child_items;
 
 	/// @note Any actual item data beyond the child items is the responsibility of derived classes.
 };

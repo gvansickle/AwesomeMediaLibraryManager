@@ -31,13 +31,14 @@ namespace stdex
 {
 
 	/**
-	 * Analog of Qt5's T QVector::value(int i) const for any type with an .at() operator.
+	 * Analog of Qt5's "T QVector::value(int i, const T& defaultValue) const" for any container type
+	 * with an .at() operator.
 	 * @param i  Index.
 	 * @returns The value at index i, or if i is out-of-bounds, a default-constructed value of type T.
 	 *          Does not add the value to the container.
 	 */
 	template<class ContainerOfT, class T = typename ContainerOfT::value_type>
-	T value(ContainerOfT& cont, int i)
+	T value(const ContainerOfT& cont, int i, const T& default_value = T())
 	{
 		try
 		{
@@ -45,7 +46,7 @@ namespace stdex
 		}
 		catch(std::out_of_range& e)
 		{
-			return T();
+			return default_value;
 		}
 	};
 
