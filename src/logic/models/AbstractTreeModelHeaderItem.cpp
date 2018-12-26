@@ -140,22 +140,22 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	// 1. We could possibly do step 1 in a non-GUI thread.
 	// 2. We can add the children in a single batch vs. one at a time, avoiding the model/view signaling overhead.
 	// It does however burn more RAM.
-	std::vector<AbstractTreeModelItem*> temp_items;
+	std::vector<std::unique_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
-		ScanResultsTreeModelItem* child_item = this->create_default_constructed_child_item(this);
+		auto child_item = this->create_default_constructed_child_item(this, columnCount());
 		child_item->fromVariant(child);
 		// Save it off temporarily.
-		temp_items.push_back(child_item);
+		temp_items.push_back(std::move(child_item));
 	}
 
 	// Append the children we read in to our list all in one batch.
-	this->appendChildren(temp_items);
+	this->appendChildren(std::move(temp_items));
 }
 
 ScanResultsTreeModelItem*
-AbstractTreeModelHeaderItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)
+AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
 {
 	ScanResultsTreeModelItem* child_item;
 

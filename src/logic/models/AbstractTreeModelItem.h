@@ -178,12 +178,17 @@ protected:
     virtual void setParentItem(AbstractTreeModelItem* parent_item);
 
 	/**
-	 * Factory function for creating default-constructed child nodes.
-	 * Used by insertChildren().  Override in derived classes.
-	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
+	 * Non-virtual Interface factory function for creating default-constructed child nodes.
+	 * Used by insertChildren().  Do not attempt to override in derived classes.
 	 */
-	virtual std::unique_ptr<AbstractTreeModelItem>
-	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) = 0;
+	std::unique_ptr<AbstractTreeModelItem>
+	create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns);
+
+	/**
+	 * The covariant-return-type factory function for child items.  Override in derived classes.
+	 */
+	virtual AbstractTreeModelItem*
+	do_create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns) = 0;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.

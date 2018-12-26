@@ -289,3 +289,9 @@ void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 	m_parent_item = parent_item;
 }
 
+std::unique_ptr<AbstractTreeModelItem>
+AbstractTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem* parent, int num_columns)
+{
+	return std::unique_ptr<AbstractTreeModelItem>(this->do_create_default_constructed_child_item(parent, num_columns));
+}
+

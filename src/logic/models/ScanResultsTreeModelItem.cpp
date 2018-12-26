@@ -97,7 +97,7 @@ M_MESSAGE("The cast should work though, right?");
 }
 
 ScanResultsTreeModelItem *
-ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)
+ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
 {
 	ScanResultsTreeModelItem* child_item;
 

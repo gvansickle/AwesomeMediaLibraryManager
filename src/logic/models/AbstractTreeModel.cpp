@@ -255,7 +255,7 @@ bool AbstractTreeModel::moveColumns(const QModelIndex& sourceParent, int sourceC
 }
 
 
-bool AbstractTreeModel::appendItems(std::vector<AbstractTreeModelItem*> new_items, const QModelIndex &parent)
+bool AbstractTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent)
 {
     auto parent_item = getItem(parent);
     Q_CHECK_PTR(parent_item);
@@ -268,7 +268,7 @@ bool AbstractTreeModel::appendItems(std::vector<AbstractTreeModelItem*> new_item
 
 	beginInsertRows(parent, first_new_row, first_new_row + new_items.size());
 
-    parent_item->appendChildren(new_items);
+    parent_item->appendChildren(std::move(new_items));
 
     endInsertRows();
 

@@ -78,7 +78,7 @@ public:
 protected:
 
 	/// @todo
-	ScanResultsTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+	ScanResultsTreeModelItem* do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns) override;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.

@@ -75,7 +75,7 @@ protected:
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
 	ScanResultsTreeModelItem*
-	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
 	///       The base class will have error-checked function parameters.
