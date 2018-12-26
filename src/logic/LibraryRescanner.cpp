@@ -213,13 +213,13 @@ M_TODO("This isn't scanning.");
 	// Attach a streaming tap to get the results.
 	ExtFuture<DirScanResult> tail_future
 		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) {
-		std::vector<AbstractTreeModelItem*> new_items;
+		std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items;
 		int original_end = end;
 		for(int i=begin; i<end; i++)
 		{
 			DirScanResult dsr = tap_future.resultAt(i);
 			// Add another entry to the vector we'll send to the model.
-			new_items.push_back(new ScanResultsTreeModelItem(dsr));
+			new_items.push_back(std::make_unique<ScanResultsTreeModelItem>(dsr));
 
 			if(i >= end)
 			{
@@ -265,7 +265,7 @@ M_TODO("This isn't scanning.");
 		run_in_event_loop(this, [=, tree_model_ptr=tree_model](){
 
 			// Append entries to the ScanResultsTreeModel.
-			tree_model_ptr->appendItems(new_items);
+			tree_model_ptr->appendItems(std::move(new_items));
 
 	        /// @todo Obsoleting... very... slowly.
 			for(const auto& entry : new_items)

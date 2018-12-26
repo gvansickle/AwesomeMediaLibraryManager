@@ -35,9 +35,9 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 }
 
 
-bool ScanResultsTreeModel::appendItems(std::vector<AbstractTreeModelItem*> new_items, const QModelIndex& parent)
+bool ScanResultsTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex& parent)
 {
-	return BASE_CLASS::appendItems(new_items, parent);
+	return BASE_CLASS::appendItems(std::move(new_items), parent);
 }
 
 QVariant ScanResultsTreeModel::toVariant() const

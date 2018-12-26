@@ -193,7 +193,7 @@ public:
 	 * This is effectively the same as insertRows() followed by numerous setData() calls, but the default construction
 	 * of the item objects is skipped since we're passing in the @a new_items.
 	 */
-	virtual bool appendItems(std::vector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
 
 	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
 
