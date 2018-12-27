@@ -205,7 +205,7 @@ M_TODO("This isn't scanning.");
 	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
     // Get a pointer to the Scan Results Tree model.
-    auto tree_model = AMLMApp::instance()->IScanResultsTreeModel();
+	auto tree_model = AMLMApp::IScanResultsTreeModel();
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
     tree_model->setBaseDirectory(dir_url);

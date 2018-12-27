@@ -30,11 +30,10 @@ MapConverter::MapConverter()
 QVariantMap MapConverter::TagMaptoVarMap(const std::map<std::string, std::vector<std::string> >& tm)
 {
 	QVariantMap retval;
-	for(auto e : tm)
+	for(const auto& e : tm)
 	{
-		QVariant second;
 		QStringList sl;
-		for(auto str : e.second)
+		for(const auto& str : e.second)
 		{
 			sl.append(QString::fromUtf8(str.c_str()));
 		}
@@ -55,7 +54,7 @@ std::map<std::string, std::vector<std::string> > MapConverter::VarMapToTagMap(co
 
 		QStringList qsl = cit->value<QStringList>();
 
-		for(auto cstr : qsl)
+		for(const auto& cstr : qsl)
 		{
 			sl.push_back(cstr.toStdString());
 		}

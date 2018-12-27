@@ -210,7 +210,7 @@ void Library::serializeToFile(QFileDevice& file) const
 
 void Library::deserializeFromFile(QFileDevice& file)
 {
-	Q_ASSERT(0 == "NOT IMPLEMENTED");
+	Q_ASSERT(nullptr == "NOT IMPLEMENTED");
 }
 
 void Library::addingEntry(const LibraryEntry* entry)
