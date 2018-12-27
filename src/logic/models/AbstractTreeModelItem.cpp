@@ -73,7 +73,11 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 {
 	// Doesn't remove child items, just deletes them.
 //	qDeleteAll(m_child_items);
-	removeChildren(0, childCount());
+	if(childCount() > 0)
+	{
+		// Remove and delete all children.
+		removeChildren(0, childCount());
+	}
 }
 
 /// Debug streaming implementation.
@@ -216,7 +220,15 @@ bool AbstractTreeModelItem::removeChildren(int position, int count)
         return false;
 	}
 
-	m_child_items.erase(m_child_items.begin()+position, m_child_items.begin()+position+count-1);
+	if(count == 0)
+	{
+		qWr() << "Attempt to remove zero children";
+		return false;
+	}
+
+	auto start = m_child_items.begin()+position;
+	auto end = m_child_items.begin()+position+count-1;
+	m_child_items.erase(start, end);
 
 //	for (int row = 0; row < count; ++row)
 //	{
@@ -274,7 +286,7 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractT
     for(auto& child : new_children)
     {
         child->setParentItem(this);
-        m_child_items.push_back(std::move(child));
+        m_child_items.emplace_back(std::move(child));
     }
 
 	return true;

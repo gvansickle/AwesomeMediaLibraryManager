@@ -232,6 +232,12 @@ bool AbstractTreeModel::removeColumns(int position, int columns, const QModelInd
 
 bool AbstractTreeModel::removeRows(int remove_start_row, int num_rows, const QModelIndex& parent_item_index)
 {
+	if(num_rows == 0)
+	{
+		qWr() << "Attempt to remove zero children";
+		return false;
+	}
+
     AbstractTreeModelItem *parentItem = getItem(parent_item_index);
     bool success = true;
 
@@ -260,17 +266,23 @@ bool AbstractTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeMode
     auto parent_item = getItem(parent);
     Q_CHECK_PTR(parent_item);
 
-    auto first_new_row = parent_item->childCount();
+    if(new_items.empty())
+    {
+    	qWr() << "Attempt to append zero items.";
+    	return false;
+    }
+
+    auto first_new_row_num_after_insertion = parent_item->childCount();
 
     /// @todo What do we need to do to support/handle different num of columns?
 	/// @todo These items have data already and aren't default-constructed, do we need to do anything different
 	///       than begin/endInsert rows?
-
-	beginInsertRows(parent, first_new_row, first_new_row + new_items.size());
+	// parent, first_row_num_after_insertion, last_row_num_after_insertion.
+	this->beginInsertRows(parent, first_new_row_num_after_insertion, first_new_row_num_after_insertion + new_items.size() - 1);
 
     parent_item->appendChildren(std::move(new_items));
 
-    endInsertRows();
+    this->endInsertRows();
 
     return true;
 }

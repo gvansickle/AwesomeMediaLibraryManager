@@ -189,7 +189,7 @@ public:
     /// @{
 
 	/**
-	 * Append a std::vector of AbstractTreeModelItem's as children of @p parent.
+	 * Append a std::vector of AbstractTreeModelItem's as children of @a parent.
 	 * This is effectively the same as insertRows() followed by numerous setData() calls, but the default construction
 	 * of the item objects is skipped since we're passing in the @a new_items.
 	 */

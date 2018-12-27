@@ -1105,6 +1105,7 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
 
 /**
  * For callables with the signature "void Callback(void)".
+ * @note Callback can't return a value because it's invoked asynchronously in @a context's thread/event loop.
  */
 template <class CallableType,
 		  REQUIRES(std::is_invocable_r_v<void, CallableType>)>

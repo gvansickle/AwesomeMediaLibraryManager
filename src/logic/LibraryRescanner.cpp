@@ -213,13 +213,18 @@ M_TODO("This isn't scanning.");
 	// Attach a streaming tap to get the results.
 	ExtFuture<DirScanResult> tail_future
 		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) {
-		std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items;
+
+		using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
+
+		// Make a new container we'll use to pass the incoming values to the GUI thread below.
+		std::shared_ptr<ItemContType> new_items = std::make_shared<ItemContType>();
+
 		int original_end = end;
 		for(int i=begin; i<end; i++)
 		{
 			DirScanResult dsr = tap_future.resultAt(i);
 			// Add another entry to the vector we'll send to the model.
-			new_items.push_back(std::make_unique<ScanResultsTreeModelItem>(dsr));
+			new_items->emplace_back(std::make_unique<ScanResultsTreeModelItem>(dsr));
 
 			if(i >= end)
 			{
@@ -248,35 +253,40 @@ M_TODO("This isn't scanning.");
 		}
 		if(tap_future.isFinished())
 		{
-			qIno() << "tap_callback saw finished";
-			if(new_items.empty())
+			qIn() << "tap_callback saw finished";
+			if(new_items->empty())
 			{
 				qWr() << "tap_callback saw finished/empty new_items";
+				return;
 			}
-			return;
+			qIn() << "tap_callback saw finished, but with" << new_items->size() << "outstanding results.";
 		}
 
 		// Shouldn't get here with no incoming items.
-		Q_ASSERT_X(!new_items.empty(), "DIRTRAV CALLBACK", "NO NEW ITEMS BUT HIT TAP CALLBACK");
+		Q_ASSERT_X(!new_items->empty(), "DIRTRAV CALLBACK", "NO NEW ITEMS BUT HIT TAP CALLBACK");
 
 		// Got all the ready results, send them to the model(s).
 		// We have to do this from the GUI thread unfortunately.
-		qIno() << "Sending" << new_items.size() << "scan results to model";
-		run_in_event_loop(this, [=, tree_model_ptr=tree_model](){
-
-			// Append entries to the ScanResultsTreeModel.
-			tree_model_ptr->appendItems(std::move(new_items));
+		qIn() << "Sending" << new_items->size() << "scan results to model";
+		run_in_event_loop(this, [=,
+						   tree_model_ptr=tree_model,
+						   new_items_copy=new_items
+						   ]() mutable {
 
 	        /// @todo Obsoleting... very... slowly.
-			for(const auto& entry : new_items)
+			for(const std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_copy)
 			{
 				// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
 				qIn() << "EMITTING:" << entry->data(1).toString();
 				Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(
 							entry->data(1).toString());
 			}
-		});
 
+			// Append entries to the ScanResultsTreeModel.
+			tree_model_ptr->appendItems(std::move(*new_items_copy));
+
+			return 5;
+		});
 	});
 
 	// Make sure the above job gets canceled and deleted.
