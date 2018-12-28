@@ -32,6 +32,8 @@
 // Ours
 #include "../DirScanResult.h"
 #include <logic/serialization/ISerializable.h>
+/// @todo TEMP
+
 
 /**
  * Model of the results of scanning a directory tree.
@@ -74,7 +76,7 @@ protected:
 	 * Used by insertChildren().  Override in derived classes.
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
-	ScanResultsTreeModelItem*
+	AbstractTreeModelItem*
 	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
 
 	/// @name Virtual functions called by the base class to complete certain operations.
@@ -90,5 +92,45 @@ protected:
 	DirScanResult m_dsr;
 
 };
+
+
+class SRTMItem_LibEntry : public ScanResultsTreeModelItem
+{
+	using BASE_CLASS = ScanResultsTreeModelItem;
+
+public:
+	SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
+	~SRTMItem_LibEntry() override = default;
+
+	QVariant data(int column) const override;
+
+	int columnCount() const override;
+
+	/// @name ISerializable interface
+	/// @{
+
+	/// Serialize item and any children to a QVariant.
+	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
+	void fromVariant(const QVariant& variant) override;
+
+	/// @} // END Serialization
+	
+protected:
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	bool derivedClassSetData(int column, const QVariant &value) override;
+	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+	/// @}
+
+private:
+	std::string m_key;
+	std::string m_val;
+};
+
+/// @todo Need this here for QVariant::fromValue().
+Q_DECLARE_METATYPE(std::string);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

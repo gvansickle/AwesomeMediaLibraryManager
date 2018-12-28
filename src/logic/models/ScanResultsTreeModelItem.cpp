@@ -96,12 +96,12 @@ M_MESSAGE("The cast should work though, right?");
 
 }
 
-ScanResultsTreeModelItem *
+AbstractTreeModelItem *
 ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
 {
-	ScanResultsTreeModelItem* child_item;
+	SRTMItem_LibEntry* child_item;
 
-	child_item = new ScanResultsTreeModelItem(parent);
+	child_item = new SRTMItem_LibEntry(parent);
 
 	return child_item;
 }
@@ -139,3 +139,60 @@ bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_rem
 	return true;
 }
 
+
+/////////// @todo SRTMItem_LibEntry
+
+bool SRTMItem_LibEntry::derivedClassSetData(int column, const QVariant& value)
+{
+	return ScanResultsTreeModelItem::derivedClassSetData(column, value);
+}
+
+bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int num_columns)
+{
+	return ScanResultsTreeModelItem::derivedClassInsertColumns(insert_before_column, num_columns);
+}
+
+bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+{
+	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
+}
+
+QVariant SRTMItem_LibEntry::data(int column) const
+{
+	switch(column)
+	{
+		case 0:
+			return QVariant::fromValue(m_key);
+			break;
+		case 1:
+			return QVariant::fromValue(m_val);
+			break;
+		default:
+			return QVariant();
+			break;
+	}
+}
+
+int SRTMItem_LibEntry::columnCount() const
+{
+	return 2;
+}
+
+QVariant SRTMItem_LibEntry::toVariant() const
+{
+	QVariantMap map;
+
+	/// @todo Will be more fields, justifying the map vs. value?
+	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
+
+	map.insert("TEST_KEY", QVariant::fromValue(m_key));
+
+	return map;
+}
+
+void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
+{
+	ScanResultsTreeModelItem::fromVariant(variant);
+}
+
+/////////// @todo SRTMItem_LibEntry
