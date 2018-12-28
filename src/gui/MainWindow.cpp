@@ -194,6 +194,8 @@ MainWindow::~MainWindow()
     instance()->m_activity_progress_tracker = nullptr;
 #endif
 
+	delete m_player;
+
     m_instance = nullptr;
 }
 
