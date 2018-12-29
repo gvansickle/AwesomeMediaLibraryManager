@@ -37,7 +37,7 @@
 #include "src/utils/Fraction.h"
 
 
-class LibraryEntry
+class LibraryEntry : public ISerializable
 {
 public:
     LibraryEntry() = default;
@@ -75,10 +75,20 @@ public:
 	void writeToJson(QJsonObject& jo) const;
 	void readFromJson(QJsonObject& jo);
 
+	/// @name ISerializable interface
+	/// @{
+
+	/// Serialize item and any children to a QVariant.
+	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
+	void fromVariant(const QVariant& variant) override;
+
+	/// @} // END ISerializable
+
     QTH_FRIEND_QDATASTREAM_OPS(LibraryEntry);
 //    friend QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
 //	friend QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
-	/// @}
+	/// @} // END Serialization
 
 	/// @todo Do we want to return some kind of actual Image class here instead?
 	QByteArray getCoverImageBytes();

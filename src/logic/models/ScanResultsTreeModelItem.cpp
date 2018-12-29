@@ -87,12 +87,12 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
 
-M_MESSAGE("The cast should work though, right?");
-//	m_dsr = map.value("dirscanresult").value<DirScanResult>();
-
 	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
 	m_dsr.fromVariant(dsr_in_variant);
 
+	/// @todo Make a list or something.
+	auto kv_pair_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0]);
+	m_dsr.fromVariant(kv_pair_in_variant);
 
 }
 
@@ -185,14 +185,16 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map.insert("TEST_KEY", QVariant::fromValue(m_key));
+	map.insert("TEST_COL0", QVariant::fromValue(m_key));
+	map.insert("TEST_COL1", QVariant::fromValue(m_val));
 
 	return map;
 }
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	ScanResultsTreeModelItem::fromVariant(variant);
+	QVariantMap map = variant.toMap();
+
 }
 
 /////////// @todo SRTMItem_LibEntry

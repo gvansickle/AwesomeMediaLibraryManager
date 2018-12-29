@@ -143,7 +143,8 @@ Q_GADGET
 public:
 	enum TagName
 	{
-		DIRSCANRESULT
+		DIRSCANRESULT,
+		TEST_PAIR_0
 	};
 	Q_ENUM(TagName)
 
@@ -152,7 +153,8 @@ Q_DECLARE_METATYPE(SRTMItemTag);
 
 static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::TagName, QString>(
 {
-	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"}
+	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"},
+	{SRTMItemTag::TEST_PAIR_0, "TEST_PAIR_0"}
 });
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H
