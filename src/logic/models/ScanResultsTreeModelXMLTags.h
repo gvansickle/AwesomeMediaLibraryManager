@@ -61,7 +61,10 @@ public:
 	};
 	Q_ENUM(TagEnum)
 
-
+#define X(id, tag_str) { id, tag_str },
+/// @todo Not currently used.
+	static constexpr std::tuple<TagEnum, std::string_view> m_testmap[] = { M_ExtUrlTags(X) };
+#undef X
 
 };
 Q_DECLARE_METATYPE(ExtUrlTag);

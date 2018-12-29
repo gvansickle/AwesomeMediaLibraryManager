@@ -35,7 +35,7 @@
 #include "ExtMimeType.h"
 #include "Metadata.h"
 #include "src/utils/Fraction.h"
-
+#include "serialization/ISerializable.h"
 
 class LibraryEntry : public ISerializable
 {

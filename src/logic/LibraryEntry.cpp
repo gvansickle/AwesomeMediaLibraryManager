@@ -354,6 +354,18 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 	return;
 }
 
+QVariant LibraryEntry::toVariant() const
+{
+	/// @todo
+	return QVariant();
+}
+
+void LibraryEntry::fromVariant(const QVariant& variant)
+{
+	/// @todo
+}
+
+
 QByteArray LibraryEntry::getCoverImageBytes()
 {
 	if(isPopulated() && !isError())
@@ -468,3 +480,4 @@ QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
 
 	return in;
 }
+
