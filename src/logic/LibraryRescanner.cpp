@@ -211,8 +211,9 @@ M_TODO("This isn't scanning.");
     tree_model->setBaseDirectory(dir_url);
 
 	// Attach a streaming tap to get the results.
+	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
 	ExtFuture<DirScanResult> tail_future
-		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) {
+		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
 
 		using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
@@ -268,24 +269,22 @@ M_TODO("This isn't scanning.");
 		// Got all the ready results, send them to the model(s).
 		// We have to do this from the GUI thread unfortunately.
 		qIn() << "Sending" << new_items->size() << "scan results to model";
-		run_in_event_loop(this, [=,
+
+
+        /// @todo Obsoleting... very... slowly.
+		for(const std::unique_ptr<AbstractTreeModelItem>& entry : *new_items)
+		{
+			// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel via the watcher.
+			qurl_future.reportResult(entry->data(1).toString());
+		}
+
+		run_in_event_loop(this, [
 						   tree_model_ptr=tree_model,
 						   new_items_copy=new_items
-						   ]() mutable {
-
-	        /// @todo Obsoleting... very... slowly.
-			for(const std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_copy)
-			{
-				// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel.
-				qIn() << "EMITTING:" << entry->data(1).toString();
-				Q_EMIT m_current_libmodel->SLOT_onIncomingFilename(
-							entry->data(1).toString());
-			}
-
+						   ]() {
 			// Append entries to the ScanResultsTreeModel.
+			/// @note Needs to be in GUI thread.
 			tree_model_ptr->appendItems(std::move(*new_items_copy));
-
-			return 5;
 		});
 	});
 
@@ -320,11 +319,6 @@ M_TODO("This isn't scanning.");
 			}
 			else
 			{
-
-//				AbstractTreeModelWriter tmw(tree_model_ptr);
-//				tmw.write_to_iodevice(&outfile);
-//				outfile.close();
-
 				/// NEW Let's also try it with plenty of QVariants.
 				QString database_filename = QDir::homePath() + "/DeleteMeNew.xspf";
 				{
@@ -391,44 +385,6 @@ M_TODO("This isn't scanning.");
 				}
 
 				ExpRunXQuery1(database_filename, filename);
-
-
-				if(0)
-				{
-					// Open the file with the XQuery (in our resources).
-				    QFile queryFile(QString(":/xquery_files/filelist.xq"));
-				    queryFile.open(QIODevice::ReadOnly);
-
-				    // Open the ouput file.
-					QFile outfile2(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
-					auto status = outfile2.open(QFile::WriteOnly | QFile::Text);
-
-					// Create the QXmlQuery, bind variables, and load the xquery.
-
-				    QXmlQuery query;
-				    QUrl in_filepath = QUrl::fromLocalFile(database_filename);
-				    Q_ASSERT(in_filepath.isValid());
-				    query.bindVariable("input_file_path", QVariant(in_filepath.toString()));
-
-					// Read the XQuery as a QString.
-					const QString query_string(QString::fromLatin1(queryFile.readAll()));
-					// Set query.
-					query.setQuery(query_string);
-					Q_ASSERT(query.isValid());
-
-					// String list for list results.
-					QStringList xqout;
-					// Formatter when we want to write another file.
-					QXmlFormatter formatter(query, &outfile2);
-					formatter.setIndentationDepth(2);
-
-					// Run the query_string.
-					if(!query.evaluateTo(&formatter))
-					{
-
-						Q_ASSERT(0);
-					}
-				}
 #endif
 			}
 /// @todo EXPERIMENTAL
@@ -444,6 +400,7 @@ M_TODO("This isn't scanning.");
             rescan_items = m_current_libmodel->getLibRescanItems();
 
             qDb() << "rescan_items:" << rescan_items.size();
+            /// @todo TEMP FOR DEBUGGING, CHANGE FROM ASSERT TO ERROR.
 			Q_ASSERT(!rescan_items.empty());
 
             lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
@@ -462,6 +419,20 @@ M_TODO("This isn't scanning.");
 	master_job_tracker->setAutoDelete(lib_rescan_job, false);
 	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
+
+	// Hook up future watchers.
+	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultReadyAt,
+			m_current_libmodel, [=](int index) {
+				auto url_str = qurl_future.resultAt(index);
+				m_current_libmodel->SLOT_onIncomingFilename(url_str);
+	});
+	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
+	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
+			this, [=](int index){
+		this->SLOT_processReadyResults(lib_rescan_job->get_extfuture().resultAt(index));
+	});
+	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
+
     // Start the asynchronous ball rolling.
     dirtrav_job->start();
 
@@ -470,7 +441,7 @@ M_TODO("This isn't scanning.");
 
 void LibraryRescanner::cancelAsyncDirectoryTraversal()
 {
-	m_dirtrav_future.cancel();
+//	m_dirtrav_future.cancel();
 }
 
 #if 0
@@ -501,7 +472,7 @@ void LibraryRescanner::startAsyncRescan(QVector<VecLibRescannerMapItems> items_t
 
 #endif
 
-void LibraryRescanner::processReadyResults(MetadataReturnVal lritem_vec)
+void LibraryRescanner::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 {
 	// We got one of ??? things back:
 	// - A single pindex and associated LibraryEntry*, maybe new, maybe a rescan..

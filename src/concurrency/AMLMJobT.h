@@ -300,7 +300,9 @@ protected:
 
         if(m_ext_future.isPaused())
         {
-            // ExtAsync<> is paused, so wait for it to be resumed.
+            // ExtAsync::run<> is paused, so wait for it to be resumed.
+            // It won't be paused here if the future was canceled.
+            Q_ASSERT(m_ext_future.isFinished() || m_ext_future.isCanceled());
 			qWr() << "ExtAsync<> is paused, waiting for it to be resumed....";
             m_ext_future.waitForResume();
         }

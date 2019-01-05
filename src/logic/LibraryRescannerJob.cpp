@@ -84,8 +84,8 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
 void LibraryRescannerJob::runFunctor()
 {
 	// Make the internal connection to the SLOT_processReadyResults() slot.
-	connect(this, &LibraryRescannerJob::processReadyResults,
-	        m_current_libmodel, qOverload<MetadataReturnVal>(&LibraryModel::SLOT_processReadyResults));
+//	connect(this, &LibraryRescannerJob::SLOT_processReadyResults,
+//	        m_current_libmodel, qOverload<MetadataReturnVal>(&LibraryModel::SLOT_processReadyResults));
 
 //	this->run_async_rescan();
 	library_metadata_rescan_task(m_ext_future, this, m_items_to_rescan);
@@ -115,7 +115,7 @@ void LibraryRescannerJob::run_async_rescan()
     {
         qDb() << "Item number:" << num_items;
         MetadataReturnVal a = this->refresher_callback(*i);
-        Q_EMIT processReadyResults(a);
+        Q_EMIT SLOT_processReadyResults(a);
         num_items++;
 
         setProcessedAmountAndSize(KJob::Unit::Files, num_items);
@@ -169,7 +169,11 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 		qDb() << "Item number:" << num_items;
 		/// @todo eliminate the_job ptr.
 		MetadataReturnVal a = the_job->refresher_callback(*i);
-		Q_EMIT the_job->processReadyResults(a);
+
+		/// @exp Removing the signal here.
+//		Q_EMIT the_job->SLOT_processReadyResults(a);
+		ext_future.reportResult(a);
+
 		num_items++;
 
 		/// @todo

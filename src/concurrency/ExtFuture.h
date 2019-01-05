@@ -1076,7 +1076,7 @@ public:
 			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> tap(StreamingTapCallbackType&& tap_callback)
 	{
-		return this->tap(QApplication::instance(), std::forward<StreamingTapCallbackType>(tap_callback));
+		return this->tap(QApplication::instance(), DECAY_COPY(std::forward<StreamingTapCallbackType>(tap_callback)));
 	}
 
 	/**
@@ -1204,8 +1204,8 @@ protected:
 		ExtFuture<T> returned_future = make_started_only_future<T>();
 
 		// The concurrent run().
-		QtConcurrent::run([=, streaming_tap_callback_copy = DECAY_COPY(streaming_tap_callback)]
-						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) {
+		QtConcurrent::run([=, streaming_tap_callback_copy = DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
+						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) mutable {
 				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
 						<< "ret_future_copy:" << returned_future_copy;
 

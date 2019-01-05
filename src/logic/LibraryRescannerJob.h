@@ -51,7 +51,7 @@ class LibraryRescannerJob: public AMLMJobT<ExtFuture<MetadataReturnVal>>, public
     using UniqueIDMixin<LibraryRescannerJob>::uniqueQObjectName;
 
 Q_SIGNALS:
-    void processReadyResults(MetadataReturnVal lritem_vec);
+//    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
 
 protected:
     explicit LibraryRescannerJob(QObject* parent);

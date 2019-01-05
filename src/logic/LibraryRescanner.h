@@ -67,6 +67,11 @@ Q_DECLARE_METATYPE(ExtFuture<MetadataReturnVal>)
 
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;
 
+/**
+ * Object which needs to be refactored badly.  Parent is a LibraryModel (which deleteLater()s it),
+ * this object (re-)populates the model by scanning a directory tree in one phase, then loading metadata
+ * from the files in the next phase.
+ */
 class LibraryRescanner : public QObject
 {
 	Q_OBJECT
@@ -87,8 +92,10 @@ public Q_SLOTS:
 	void cancelAsyncDirectoryTraversal();
 
 //	void onDirTravFinished();
-
-    void processReadyResults(MetadataReturnVal lritem_vec);
+	/**
+	 * Slot which accepts the incoming metadata.
+	 */
+    void SLOT_processReadyResults(MetadataReturnVal lritem_vec);
 
 	/// Slot called by m_rescan_future_watcher when the rescan is complete.
 //    void onRescanFinished();
@@ -106,7 +113,10 @@ private:
 
 	LibraryModel* m_current_libmodel;
 
-	ExtFuture<QString> m_dirtrav_future;
+//	ExtFuture<QString> m_dirtrav_future;
+
+	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
+	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 };
 
 

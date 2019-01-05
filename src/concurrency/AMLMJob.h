@@ -168,12 +168,11 @@ class AMLMJob: public KJob, public IExtFutureWatcher, public UniqueIDMixin<AMLMJ
 
 Q_SIGNALS:
 
-    /// @name ExtFuture<T> signals we want to expose to the outside world.
+    /// @name IExtFutureWatcher interface signals.
     /// @{
 
 	void SIGNAL_resultsReadyAt(int begin, int end) override;
 
-    /// @}
 
     /// @warning Qt5 signals are always public in the C++ sense.  Slots are similarly public when called
     ///          via the signal->slot mechanism, on direct calls they have the normal public/protected/private rules.
@@ -203,7 +202,10 @@ Q_SIGNALS:
 
     /// @}
 
-    /// @name Public KJob signals, quite a few:
+	/// @} // END IExtFutureWatcher interface signals.
+
+
+	/// @name Public KJob signals, quite a few:
     ///
 	// void 	description (KJob *job, const QString &title, const QPair< QString, QString > &field1=QPair< QString, QString >(), const QPair< QString, QString > &field2=QPair< QString, QString >())
 
