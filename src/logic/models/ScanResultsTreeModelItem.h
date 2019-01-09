@@ -126,8 +126,8 @@ protected:
 	/// @}
 
 private:
-	std::string m_key;
-	std::string m_val;
+	std::string m_key {"key"};
+	std::string m_val {"value"};
 };
 
 /// @todo Need this here for QVariant::fromValue().

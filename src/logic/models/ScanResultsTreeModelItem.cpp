@@ -162,10 +162,10 @@ QVariant SRTMItem_LibEntry::data(int column) const
 	switch(column)
 	{
 		case 0:
-			return QVariant::fromValue(m_key);
+			return QVariant::fromValue(toqstr(m_key));
 			break;
 		case 1:
-			return QVariant::fromValue(m_val);
+			return QVariant::fromValue(toqstr(m_val));
 			break;
 		default:
 			return QVariant();
@@ -194,6 +194,8 @@ QVariant SRTMItem_LibEntry::toVariant() const
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
 	QVariantMap map = variant.toMap();
+
+	/// @todo Incomplete.
 
 }
 

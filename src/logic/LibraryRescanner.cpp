@@ -285,6 +285,17 @@ M_TODO("This isn't scanning.");
 			// Append entries to the ScanResultsTreeModel.
 			/// @note Needs to be in GUI thread.
 			tree_model_ptr->appendItems(std::move(*new_items_copy));
+
+			/// @todo REMOVE, EXPERIMENTAL
+			{
+				// Get the last top-level row.
+				auto last_row_index = tree_model_ptr->rowCount() - 1;
+				Q_ASSERT(last_row_index >= 0);
+
+				auto new_child = std::make_unique<SRTMItem_LibEntry>();
+				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
+			}
+			/// @todo REMOVE, EXPERIMENTAL
 		});
 	});
 

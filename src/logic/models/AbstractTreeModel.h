@@ -194,6 +194,7 @@ public:
 	 * of the item objects is skipped since we're passing in the @a new_items.
 	 */
 	virtual bool appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex());
+	virtual bool appendItem(std::unique_ptr<AbstractTreeModelItem> new_items, const QModelIndex &parent = QModelIndex());
 
 	AbstractTreeModelItem* getItem(const QModelIndex &index) const;
 

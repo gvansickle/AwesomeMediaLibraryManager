@@ -287,6 +287,14 @@ bool AbstractTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeMode
     return true;
 }
 
+bool AbstractTreeModel::appendItem(std::unique_ptr<AbstractTreeModelItem> new_item, const QModelIndex& parent)
+{
+	std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items;
+
+	new_items.emplace_back(std::move(new_item));
+	return appendItems(std::move(new_items), parent);
+}
+
 int AbstractTreeModel::rowCount(const QModelIndex &parent) const
 {
     AbstractTreeModelItem *parentItem = getItem(parent);
@@ -340,5 +348,7 @@ bool AbstractTreeModel::setHeaderData(int section, const AbstractHeaderSection& 
 //	for()
 	return true;
 }
+
+
 
 
