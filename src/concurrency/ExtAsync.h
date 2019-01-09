@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#pragma once
 #ifndef UTILS_CONCURRENCY_EXTASYNC_H_
 #define UTILS_CONCURRENCY_EXTASYNC_H_
 
@@ -25,7 +25,6 @@
  * Qt5 analogs to std::async().
  */
 
-#pragma once
 
 #include <config.h>
 

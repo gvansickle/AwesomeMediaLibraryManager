@@ -683,17 +683,23 @@ int mapper(const int &i)
 
 TEST_F(ExtAsyncTestsSuiteFixture, MappedIncrementalResults)
 {
+	TC_ENTER();
+
 	const int count = 200;
 	QList<int> ints;
 	for (int i=0; i < count; ++i)
+	{
 		ints << i;
+	}
 
 	ExtFuture<int> future = QtConcurrent::mapped(ints, mapper);
 
 	QList<int> results;
 
-	while (future.isFinished() == false) {
-		for (int i = 0; i < future.resultCount(); ++i) {
+	while (future.isFinished() == false)
+	{
+		for (int i = 0; i < future.resultCount(); ++i)
+		{
 			results += future.resultAt(i);
 		}
 
@@ -703,6 +709,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, MappedIncrementalResults)
 	AMLMTEST_ASSERT_EQ(future.isFinished(), true);
 	AMLMTEST_ASSERT_EQ(future.resultCount(), count);
 	AMLMTEST_ASSERT_EQ(future.results().count(), count);
+
+	TC_EXIT();
 }
 
 TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)

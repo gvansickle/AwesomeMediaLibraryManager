@@ -1333,6 +1333,14 @@ struct when_any_result
 	Sequence futures;
 };
 
+template <class InputIt>
+auto when_any(InputIt first, InputIt last)
+-> ExtFuture<when_any_result<std::vector<typename std::iterator_traits<InputIt>::value_type>>>;
+
+template < class... Futures >
+auto when_any(Futures&&... futures)
+-> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>;
+
 /**
  * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
  * @link https://en.cppreference.com/w/cpp/experimental/when_all
