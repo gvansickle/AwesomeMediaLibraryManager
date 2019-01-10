@@ -101,7 +101,21 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
 
 	if (!index.isValid())
 	{
+		// Should never get here, checkIndex() should have asserted above.
         return QVariant();
+	}
+
+	// Color invalid model indexes.
+	if(index.column() > columnCount())
+	{
+		switch(role)
+		{
+			case Qt::ItemDataRole::BackgroundRole:
+				return QVariant::fromValue(QBrush(Qt::lightGray));
+				break;
+			default:
+				break;
+		}
 	}
 
     if (role != Qt::DisplayRole && role != Qt::EditRole)
@@ -109,6 +123,7 @@ QVariant AbstractTreeModel::data(const QModelIndex &index, int role) const
         return QVariant();
 	}
 
+    // Get a pointer to the indexed item.
     AbstractTreeModelItem *item = getItem(index);
 
     return item->data(index.column());

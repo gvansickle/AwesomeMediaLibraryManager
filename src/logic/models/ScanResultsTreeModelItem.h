@@ -54,7 +54,7 @@ public:
 	 *
 	 * @todo Add role.
 	 */
-	QVariant data(int column) const override;
+	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
 	int columnCount() const override;
 
@@ -102,7 +102,7 @@ public:
 	SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
 	~SRTMItem_LibEntry() override = default;
 
-	QVariant data(int column) const override;
+	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
 	int columnCount() const override;
 

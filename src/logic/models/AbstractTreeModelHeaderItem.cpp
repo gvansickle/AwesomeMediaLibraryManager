@@ -56,8 +56,13 @@ bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<QString> 
 	return true;
 }
 
-QVariant AbstractTreeModelHeaderItem::data(int column) const
+QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
 {
+	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
+	{
+		return QVariant();
+	}
+
 	if(column < columnCount())
 	{
 		return m_column_specs.at(column);

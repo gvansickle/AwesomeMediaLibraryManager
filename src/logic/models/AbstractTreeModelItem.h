@@ -128,7 +128,7 @@ public:
      * @param column  The column of data to return.
      * @return A QVariant containing all the data in @a column.
      */
-	virtual QVariant data(int column) const = 0;
+	virtual QVariant data(int column, int role = Qt::DisplayRole) const;
 
 	bool setData(int column, const QVariant &value);
 
@@ -209,7 +209,8 @@ private:
 	/// This item owns its children for memory-management purposes.
 	std::vector<std::unique_ptr<AbstractTreeModelItem>> m_child_items;
 
-	/// @note Any actual item data beyond the child items is the responsibility of derived classes.
+	/// @note AbstractTreeModelItem contains no data members for actual item data.
+	/// Any actual item data beyond the child items is the responsibility of derived classes.
 };
 
 // Debug stream op free func declaration.

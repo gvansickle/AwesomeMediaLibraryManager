@@ -56,6 +56,7 @@
 #include "AbstractTreeModelItem.h"
 
 // Qt5
+#include <QBrush>
 #include <QStringList>
 #include <QXmlStreamWriter>
 #include <QXmlStreamReader>
@@ -267,6 +268,22 @@ bool AbstractTreeModelItem::removeColumns(int position, int columns)
     return true;
 }
 
+QVariant AbstractTreeModelItem::data(int column, int role) const
+{
+	// Color invalid model indexes.
+	if(column > columnCount())
+	{
+		switch(role)
+		{
+			case Qt::ItemDataRole::BackgroundRole:
+				return QVariant::fromValue(QBrush(Qt::lightGray));
+				break;
+			default:
+				break;
+		}
+	}
+	return QVariant();
+}
 
 bool AbstractTreeModelItem::setData(int column, const QVariant &value)
 {

@@ -57,7 +57,7 @@ public:
 	  */
 	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
 
-	QVariant data(int column) const override;
+	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
 	int columnCount() const override;
 

@@ -45,9 +45,14 @@ ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 {
 }
 
-QVariant ScanResultsTreeModelItem::data(int column) const
+QVariant ScanResultsTreeModelItem::data(int column, int role) const
 {
-	/// Map column and @todo role to the corresponding data.
+	// Map column and role to the corresponding data.
+
+	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
+	{
+		return QVariant();
+	}
 
 	switch(column)
 	{
@@ -157,8 +162,12 @@ bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, in
 	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
 }
 
-QVariant SRTMItem_LibEntry::data(int column) const
+QVariant SRTMItem_LibEntry::data(int column, int role) const
 {
+	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
+	{
+		return QVariant();
+	}
 	switch(column)
 	{
 		case 0:
