@@ -160,4 +160,39 @@ static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::Ta
 	{SRTMItemTag::TEST_PAIR_0, "TEST_PAIR_0"}
 });
 
+
+class LibraryEntryTag : public XmlTagBase<LibraryEntryTag>
+{
+Q_GADGET
+
+public:
+	/// The tags in X-macro form.  First is text usable as a C++ identifier,
+	/// and second here is the text to use for the tag in an XML document.
+	#define M_LibraryEntryTags(X) \
+		X(URL, "m_url") \
+		X(IS_POPULATED, "m_is_populated") \
+		X(IS_ERROR, "m_is_error") \
+		X(IS_SUBTRACK,"m_is_subtrack") \
+		X(OFFSET_SECS, "m_offset_secs") \
+		X(LENGTH_SECS, "m_length_secs") \
+		X(MIME_TYPE, "m_mime_type") \
+		X(METADATA, "m_metadata")
+
+
+	enum TagEnum
+	{
+#define X(id, tag_str) id,
+		M_LibraryEntryTags(X)
+#undef X
+	};
+	Q_ENUM(TagEnum)
+
+#define X(id, tag_str) { id, tag_str },
+/// @todo Not currently used.
+	static constexpr std::tuple<TagEnum, std::string_view> m_testmap[] = { M_LibraryEntryTags(X) };
+#undef X
+
+};
+Q_DECLARE_METATYPE(LibraryEntryTag);
+
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

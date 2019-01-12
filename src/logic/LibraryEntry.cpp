@@ -357,7 +357,27 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 QVariant LibraryEntry::toVariant() const
 {
 	/// @todo
-	return QVariant();
+	QVariantMap retval;
+
+	retval["m_url"] = m_url.toString();
+	retval["m_is_populated"] = isPopulated();
+	retval["m_is_error"] = m_is_error;
+	retval["m_is_subtrack"] = m_is_subtrack;
+	retval["m_offset_secs"] = m_offset_secs.toQString();
+	retval["m_length_secs"] = m_length_secs.toQString();
+
+	M_WARNING("/// @todo This is always null.");
+	QString str;
+	QTextStream ts(&str);
+	ts << m_mime_type;
+	retval["m_mime_type"] = *ts.string();
+
+	if(isPopulated())
+	{
+		M_WARNING("TODO: Don't write out in the has-cached-metadata case")
+//		m_metadata.writeToJson(jo);
+	}
+	return retval;
 }
 
 void LibraryEntry::fromVariant(const QVariant& variant)
