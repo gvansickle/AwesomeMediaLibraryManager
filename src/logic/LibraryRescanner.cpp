@@ -283,18 +283,27 @@ M_TODO("This isn't scanning.");
 						   new_items_copy=new_items
 						   ]() {
 			// Append entries to the ScanResultsTreeModel.
+
+			/// @todo REMOVE, EXPERIMENTAL
+			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_copy)
+			{
+				// Get the last top-level row.
+//				auto last_row_index = tree_model_ptr->rowCount() - 1;
+//				Q_ASSERT(last_row_index >= 0);
+
+				auto new_child = std::make_unique<SRTMItem_LibEntry>();
+				auto lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+				/// @todo SLOW
+				lib_entry->populate(true);
+				new_child->setLibraryEntry(lib_entry);
+				entry->appendChild(std::move(new_child));
+//				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
+//				tree_model_ptr->appendItem(std::move(new_child));
+			}
+
 			/// @note Needs to be in GUI thread.
 			tree_model_ptr->appendItems(std::move(*new_items_copy));
 
-			/// @todo REMOVE, EXPERIMENTAL
-			{
-				// Get the last top-level row.
-				auto last_row_index = tree_model_ptr->rowCount() - 1;
-				Q_ASSERT(last_row_index >= 0);
-
-				auto new_child = std::make_unique<SRTMItem_LibEntry>();
-				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
-			}
 			/// @todo REMOVE, EXPERIMENTAL
 		});
 	});
@@ -432,12 +441,14 @@ M_TODO("This isn't scanning.");
 
 
 	// Hook up future watchers.
+	// Dirscan.
 	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultReadyAt,
 			m_current_libmodel, [=](int index) {
 				auto url_str = qurl_future.resultAt(index);
 				m_current_libmodel->SLOT_onIncomingFilename(url_str);
 	});
 	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
+	// Metadata refresh.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
 		this->SLOT_processReadyResults(lib_rescan_job->get_extfuture().resultAt(index));

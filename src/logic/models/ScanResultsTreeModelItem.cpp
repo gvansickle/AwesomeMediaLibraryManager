@@ -32,6 +32,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
+#include <LibraryEntry.h>
 #include "ScanResultsTreeModelXMLTags.h"
 
 
@@ -85,6 +86,18 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT], m_dsr.toVariant());
 
+	/// @todo Make a list or something.
+//	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0], toVariant(kv_pair_in_variant);
+
+	// Children to variant list.
+	QVariantList vl;
+	for(int i=0; i<childCount(); i++)
+	{
+		auto* child_ptr = child(i);
+		vl.append(child_ptr->toVariant());
+	}
+	map.insert("children", vl);
+
 	return map;
 }
 
@@ -98,6 +111,8 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 	/// @todo Make a list or something.
 	auto kv_pair_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0]);
 	m_dsr.fromVariant(kv_pair_in_variant);
+
+	/// @todo
 
 }
 
@@ -196,6 +211,11 @@ QVariant SRTMItem_LibEntry::toVariant() const
 
 	map.insert("TEST_COL0", QVariant::fromValue(m_key));
 	map.insert("TEST_COL1", QVariant::fromValue(m_val));
+
+	if(auto libentry = m_library_entry.get(); libentry != nullptr)
+	{
+		map.insert("m_library_entry", m_library_entry->toVariant());
+	}
 
 	return map;
 }

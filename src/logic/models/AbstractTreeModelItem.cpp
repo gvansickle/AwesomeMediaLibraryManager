@@ -309,6 +309,15 @@ bool AbstractTreeModelItem::appendChildren(std::vector<std::unique_ptr<AbstractT
 	return true;
 }
 
+bool AbstractTreeModelItem::appendChild(std::unique_ptr<AbstractTreeModelItem> new_child)
+{
+	std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children;
+
+	new_children.emplace_back(std::move(new_child));
+
+	return appendChildren(std::move(new_children));
+}
+
 void AbstractTreeModelItem::setParentItem(AbstractTreeModelItem *parent_item)
 {
 //	Q_ASSERT(parent_item != nullptr);

@@ -155,8 +155,14 @@ public:
     /// The row number of this item in its parent's list of children.
     int childNumber() const;
 
-
+	/**
+	 * Append the given @a new_children to this item.  This item takes ownership of the children via std::unique_ptr<>,
+	 * and is set as the parent of the child items.
+	 * @param new_children
+	 * @return
+	 */
 	bool appendChildren(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_children);
+	bool appendChild(std::unique_ptr<AbstractTreeModelItem> new_child);
 
 	/// @name Serialization
 	/// These are from the ISerializable interface.

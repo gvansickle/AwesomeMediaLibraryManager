@@ -32,6 +32,7 @@
 // Ours
 #include "../DirScanResult.h"
 #include <logic/serialization/ISerializable.h>
+class LibraryEntry;
 /// @todo TEMP
 
 
@@ -99,12 +100,14 @@ class SRTMItem_LibEntry : public ScanResultsTreeModelItem
 	using BASE_CLASS = ScanResultsTreeModelItem;
 
 public:
-	SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
+	explicit SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
 	~SRTMItem_LibEntry() override = default;
 
 	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
 	int columnCount() const override;
+
+	void setLibraryEntry(std::shared_ptr<LibraryEntry> libentry) { m_library_entry = libentry; };
 
 	/// @name ISerializable interface
 	/// @{
@@ -128,6 +131,7 @@ protected:
 private:
 	std::string m_key {"key"};
 	std::string m_val {"value"};
+	std::shared_ptr<LibraryEntry> m_library_entry;
 };
 
 /// @todo Need this here for QVariant::fromValue().
