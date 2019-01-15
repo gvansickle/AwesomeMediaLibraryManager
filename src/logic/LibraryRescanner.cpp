@@ -293,9 +293,9 @@ M_TODO("This isn't scanning.");
 
 				auto new_child = std::make_unique<SRTMItem_LibEntry>();
 				auto lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
-				/// @todo SLOW
-				lib_entry->populate(true);
-				new_child->setLibraryEntry(lib_entry);
+				/// @todo SLOW, AND INCORRECT: populate() is 1->many.
+				auto lib_entries = lib_entry->populate(true);
+				new_child->setLibraryEntry(lib_entries.at(0));
 				entry->appendChild(std::move(new_child));
 //				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
 //				tree_model_ptr->appendItem(std::move(new_child));
