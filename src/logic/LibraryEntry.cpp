@@ -367,7 +367,7 @@ QVariant LibraryEntry::toVariant() const
 //	retval["m_length_secs"] = m_length_secs.toQString();
 	// Insert into the XML map.
 	retval.insert(LibraryEntryTag::URL_tagstr, m_url);
-	retval.insert(LibraryEntryTag::IS_POPULATED_tagstr,isPopulated());
+	retval.insert(LibraryEntryTag::IS_POPULATED_tagstr, isPopulated());
 	retval.insert(LibraryEntryTag::IS_ERROR_tagstr, m_is_error);
 	retval.insert(LibraryEntryTag::IS_SUBTRACK_tagstr, m_is_subtrack);
 //	QVariant temp_var;
@@ -380,7 +380,8 @@ QVariant LibraryEntry::toVariant() const
 	QString str;
 	QTextStream ts(&str);
 	ts << m_mime_type;
-	retval["m_mime_type"] = *ts.string();
+//	retval["m_mime_type"] = *ts.string();
+	retval.insert(LibraryEntryTag::MIME_TYPE_tagstr, QVariant::fromValue<ExtMimeType>(m_mime_type));
 
 	if(isPopulated())
 	{

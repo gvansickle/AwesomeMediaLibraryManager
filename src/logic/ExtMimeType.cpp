@@ -19,4 +19,11 @@
 
 #include "ExtMimeType.h"
 
+// Ours.
+#include <utils/DebugHelpers.h>
+#include <utils/RegisterQtMetatypes.h>
 
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering ExtMimeType";
+	qRegisterMetaType<ExtMimeType>();
+});
