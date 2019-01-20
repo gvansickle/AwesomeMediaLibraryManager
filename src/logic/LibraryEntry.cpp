@@ -27,22 +27,22 @@
 #include <QDataStream>
 #include <QUrlQuery>
 
-// Ours.
-#include "utils/MapConverter.h"
-#include "utils/DebugHelpers.h"
-#include "TrackMetadata.h"
-#include "ntp.h"
-
 // TagLib
 #include <tag.h>
 #include <fileref.h>
 #include <tpropertymap.h>
-#include <utils/StringHelpers.h>
-#include <utils/QtHelpers.h>
-#include <utils/RegisterQtMetatypes.h>
 
 // Ours
 #include "AMLMApp.h"
+#include <utils/StringHelpers.h>
+#include <utils/QtHelpers.h>
+#include <utils/RegisterQtMetatypes.h>
+#include <logic/models/ScanResultsTreeModelXMLTags.h>
+#include <utils/Fraction.h>
+#include "utils/MapConverter.h"
+#include "utils/DebugHelpers.h"
+#include "TrackMetadata.h"
+#include "ntp.h"
 
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01
@@ -359,12 +359,22 @@ QVariant LibraryEntry::toVariant() const
 	/// @todo
 	QVariantMap retval;
 
-	retval["m_url"] = m_url.toString();
-	retval["m_is_populated"] = isPopulated();
-	retval["m_is_error"] = m_is_error;
-	retval["m_is_subtrack"] = m_is_subtrack;
-	retval["m_offset_secs"] = m_offset_secs.toQString();
-	retval["m_length_secs"] = m_length_secs.toQString();
+//	retval["m_url"] = m_url.toString();
+//	retval["m_is_populated"] = isPopulated();
+//	retval["m_is_error"] = m_is_error;
+//	retval["m_is_subtrack"] = m_is_subtrack;
+//	retval["m_offset_secs"] = m_offset_secs.toQString();
+//	retval["m_length_secs"] = m_length_secs.toQString();
+	// Insert into the XML map.
+	retval.insert(LibraryEntryTag::URL_tagstr, m_url);
+	retval.insert(LibraryEntryTag::IS_POPULATED_tagstr,isPopulated());
+	retval.insert(LibraryEntryTag::IS_ERROR_tagstr, m_is_error);
+	retval.insert(LibraryEntryTag::IS_SUBTRACK_tagstr, m_is_subtrack);
+//	QVariant temp_var;
+//	temp_var << m_offset_secs;
+//	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, QVariant::fromValue<Fraction>(m_offset_secs));
+	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, m_offset_secs.toQString());
+	retval.insert(LibraryEntryTag::LENGTH_SECS_tagstr, m_length_secs.toQString());
 
 	M_WARNING("/// @todo This is always null.");
 	QString str;
@@ -377,6 +387,7 @@ QVariant LibraryEntry::toVariant() const
 		M_WARNING("TODO: Don't write out in the has-cached-metadata case")
 //		m_metadata.writeToJson(jo);
 	}
+
 	return retval;
 }
 

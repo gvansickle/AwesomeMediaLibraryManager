@@ -35,7 +35,8 @@
 
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering Fraction";
-    qRegisterMetaType<Fraction>();
+    /// @todo This isn't working (in or out) with QVariant.
+//    qRegisterMetaType<Fraction>();
 	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
 });
 

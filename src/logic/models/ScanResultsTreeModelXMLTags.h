@@ -110,6 +110,7 @@ static const auto DSRTagToXMLTagMap = DSRTag::make_map<DSRTag::TagName, QString>
 class SRTMTag : public ExtEnum<SRTMTag>
 {
 	Q_GADGET
+
 public:
 	enum TagName
 	{
@@ -142,7 +143,8 @@ static const auto SRTMTagToXMLTagMap = SRTMTag::make_map<SRTMTag::TagName, QStri
  */
 class SRTMItemTag : public ExtEnum<SRTMItemTag>
 {
-Q_GADGET
+	Q_GADGET
+
 public:
 	enum TagName
 	{
@@ -163,7 +165,7 @@ static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::Ta
 
 class LibraryEntryTag : public XmlTagBase<LibraryEntryTag>
 {
-Q_GADGET
+	Q_GADGET
 
 public:
 	/// The tags in X-macro form.  First is text usable as a C++ identifier,
@@ -187,10 +189,21 @@ public:
 	};
 	Q_ENUM(TagEnum)
 
+#define X(id, tag_str) static constexpr QLatin1String id ## _tagstr { tag_str };
+	M_LibraryEntryTags(X)
+#undef X
+
 #define X(id, tag_str) { id, tag_str },
 /// @todo Not currently used.
 	static constexpr std::tuple<TagEnum, std::string_view> m_testmap[] = { M_LibraryEntryTags(X) };
 #undef X
+
+	static constexpr std::string_view toXmlTagString(TagEnum enumerator)
+	{
+//		return std::find_if(std::begin(LibraryEntryTag::m_testmap), std::end(LibraryEntryTag::m_testmap),
+//				[=](std::tuple<TagEnum, std::string_view> e){ return std::get<0>(e) == enumerator; });
+		return std::get<1>(LibraryEntryTag::m_testmap[enumerator]);
+	};
 
 };
 Q_DECLARE_METATYPE(LibraryEntryTag);
