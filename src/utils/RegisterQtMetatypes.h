@@ -31,6 +31,9 @@ int RegisterQTRegCallback(std::function<void(void)> f);
  * Singleton class for static-init-time registering of callbacks to be called
  * immediately after the QApp has been created.
  *
+ * @note Welcome to the "static initialization order fiasco":
+ * @link https://isocpp.org/wiki/faq/ctors#static-init-order
+ *
  * Uses the Construct On First Use Idiom.
  * https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
  */
@@ -39,16 +42,26 @@ class QtRegCallbackRegistry
 public:
     QtRegCallbackRegistry() = default;
 
-    void register_callback(std::function<void(void)> callback);
-    static void static_append(std::function<void(void)> f);
+    int* register_callback(std::function<void(void)> callback);
+	int* register_callback(const char* name, std::function<void(void)> callback);
+
+	static void static_append(std::function<void(void)> f);
     void call_registration_callbacks();
 
 private:
-    std::vector<std::function<void(void)>> m_registered_callbacks;
+    std::vector<std::function<void(void)>> m_registered_callbacks {};
 };
 
+/**
+ * The QtRegCallbackRegistry singleton accessor.
+ *
+ * Uses the "Construct On First Use Idiom" to ensure that the singleton is:
+ * a) Created once; after the first call, subsequent calls return the same object instance.
+ * b) Created by the first call.
+ * @link https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
+ */
 QtRegCallbackRegistry& reginstance();
 
-#define AMLM_QREG_CALLBACK(f) static const int dummy = (reginstance().register_callback(f), 0)
+#define AMLM_QREG_CALLBACK(...) static const int dummy = (reginstance().register_callback(__VA_ARGS__), 0)
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

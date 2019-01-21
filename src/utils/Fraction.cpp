@@ -37,7 +37,7 @@ AMLM_QREG_CALLBACK([](){
     qIn() << "Registering Fraction";
     /// @todo This isn't working (in or out) with QVariant.
 //    qRegisterMetaType<Fraction>();
-	qRegisterMetaTypeStreamOperators<Fraction>("Fraction");
+	qRegisterMetaTypeStreamOperators<Fraction>();
 });
 
 /// Calculate the Greatest Common Divisor.

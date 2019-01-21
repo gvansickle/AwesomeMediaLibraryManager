@@ -313,7 +313,7 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 M_WARNING("/// @todo This is always null.");
 	QString str;
 	QTextStream ts(&str);
-	ts << m_mime_type;
+//	ts << m_mime_type;
 	jo["m_mime_type"] = *ts.string();
 
 	if(isPopulated())
@@ -334,7 +334,7 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 	QString str;
 	QTextStream ts(&str);
 	str = jo["m_mime_type"].toString();
-	ts >> m_mime_type;
+//	ts >> m_mime_type;
 	// Metadata might not have been written.
 	//metadata_jval: QJsonValue = jo.value("metadata")
 	QJsonObject metadata_jval = jo["metadata"].toObject();
@@ -379,8 +379,11 @@ QVariant LibraryEntry::toVariant() const
 	M_WARNING("/// @todo This is always null.");
 	QString str;
 	QTextStream ts(&str);
-	ts << m_mime_type;
+//	ts << m_mime_type;
 //	retval["m_mime_type"] = *ts.string();
+	qDb() << M_ID_VAL(m_mime_type);
+//	QVariant tempvar;
+//	tempvar << m_mime_type;
 	retval.insert(LibraryEntryTag::MIME_TYPE_tagstr, QVariant::fromValue<ExtMimeType>(m_mime_type));
 
 	if(isPopulated())

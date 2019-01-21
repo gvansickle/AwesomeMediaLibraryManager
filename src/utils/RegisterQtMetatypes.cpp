@@ -72,6 +72,16 @@
  * yourself.
  */
 
+/**
+ * Register a number of general-purpose Qt5 converters etc.
+ */
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering std::string->QString converter";
+
+	QMetaType::registerConverter<std::string, QString>([](const std::string& str){ return toqstr(str); });
+});
+
+Q_DECLARE_METATYPE(std::string);
 
 void RegisterQtMetatypes()
 {
@@ -104,10 +114,18 @@ void RegisterQtMetatypes()
 }
 
 
-void QtRegCallbackRegistry::register_callback(std::function<void(void)> callback)
+int* QtRegCallbackRegistry::register_callback(std::function<void(void)> callback)
 {
     m_registered_callbacks.push_back(callback);
     std::cerr << "Registering callback:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
+    // Return a dummy pointer.
+	return reinterpret_cast<int*>(&callback);
+}
+
+int* QtRegCallbackRegistry::register_callback(const char* name, std::function<void(void)> callback)
+{
+	Q_ASSERT(0);
+	return nullptr;
 }
 
 void QtRegCallbackRegistry::call_registration_callbacks()

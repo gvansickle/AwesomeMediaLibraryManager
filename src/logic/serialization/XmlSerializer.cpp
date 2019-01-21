@@ -170,6 +170,14 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 {
 	Q_ASSERT(variant.isValid());
 
+	// variant must be convertible to a string.
+	if(!variant.canConvert<QString>())
+	{
+		std::string vartype {variant.typeName()};
+		qCr() << "QVariant contents not convertible to a QString" << vartype;
+		Q_ASSERT(0);
+	}
+
 	QString str = variant.toString();
 
 	xmlstream.writeCharacters(str);
