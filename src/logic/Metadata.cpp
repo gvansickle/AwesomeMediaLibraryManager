@@ -19,18 +19,30 @@
 
 #include "Metadata.h"
 
-#include "MetadataTaglib.h"
-#include "MetadataFromCache.h"
-
-#include "utils/MapConverter.h"
-
-#include <QJsonObject>
-
+// Std C++.
 #include <memory>
 #include <string>
 #include <map>
 
+// Qt5
+#include <QJsonObject>
+
+// Ours.
+#include "MetadataTaglib.h"
+#include "MetadataFromCache.h"
+#include "utils/MapConverter.h"
 #include <utils/DebugHelpers.h>
+#include <utils/RegisterQtMetatypes.h>
+
+
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering Metadata metatypes";
+	qRegisterMetaType<Metadata>();
+	qRegisterMetaTypeStreamOperators<Metadata>();
+	QMetaType::registerDebugStreamOperator<Metadata>();
+	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
+});
+
 
 static std::map<AudioFileType, std::string> f_filetype_to_string_map =
 {
@@ -40,6 +52,8 @@ static std::map<AudioFileType, std::string> f_filetype_to_string_map =
 	{AudioFileType::OGG_VORBIS, "Ogg Vorbis"},
 	{AudioFileType::WAV, "WAV"}
 };
+
+Metadata::~Metadata() {}
 
 Metadata Metadata::make_metadata()
 {
@@ -79,9 +93,19 @@ void Metadata::writeToJson(QJsonObject& jo) const
 	jo["metadata"] = QJsonObject::fromVariantMap(MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
 }
 
-QDataStream &operator<<(QDataStream &out, const Metadata &myObj)
+QVariant Metadata::toVariant() const
 {
-	M_WARNING("TODO");
+	return "TODO";
+}
+
+void Metadata::fromVariant(const QVariant& variant)
+{
+
+}
+
+QDataStream &operator<<(QDataStream &out, const Metadata &obj)
+{
+	out << MapConverter::TagMaptoVarMap(obj.pImpl->m_tag_map);
 	return out;
 }
 

@@ -23,9 +23,14 @@
 #include "MetadataAbstractBase.h"
 
 class QJsonObject;
+
+// Ours.
+#include <utils/QtHelpers.h>
+#include <logic/serialization/ISerializable.h>
 class MetadataFromCache;
 
-class Metadata
+
+class Metadata : public ISerializable
 {
 private:
 	std::unique_ptr<MetadataAbstractBase> pImpl;
@@ -33,7 +38,7 @@ private:
 public:
 	Metadata() : pImpl(nullptr) {}
 	Metadata(const MetadataAbstractBase& derived) : pImpl(derived.clone()) {}
-	~Metadata() {}
+	~Metadata() override;
 
 	/// Copy constructor.
 	Metadata(const Metadata& other) : pImpl((other.pImpl)? other.pImpl->clone() : nullptr) {}
@@ -133,10 +138,19 @@ public:
 	/// @name Serialization
 	/// @{
 	void writeToJson(QJsonObject& jo) const;
+
+	QTH_FRIEND_QDATASTREAM_OPS(Metadata);
+
+	/// Serialize item and any children to a QVariant.
+	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
+	void fromVariant(const QVariant& variant) override;
+
 	/// @}
 
 };
 
+Q_DECLARE_METATYPE(Metadata);
 
 QDataStream &operator<<(QDataStream &out, const Metadata &myObj);
 QDataStream &operator>>(QDataStream &in, Metadata &myObj);

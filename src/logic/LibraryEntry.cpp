@@ -359,37 +359,18 @@ QVariant LibraryEntry::toVariant() const
 	/// @todo
 	QVariantMap retval;
 
-//	retval["m_url"] = m_url.toString();
-//	retval["m_is_populated"] = isPopulated();
-//	retval["m_is_error"] = m_is_error;
-//	retval["m_is_subtrack"] = m_is_subtrack;
-//	retval["m_offset_secs"] = m_offset_secs.toQString();
-//	retval["m_length_secs"] = m_length_secs.toQString();
 	// Insert into the XML map.
 	retval.insert(LibraryEntryTag::URL_tagstr, m_url);
 	retval.insert(LibraryEntryTag::IS_POPULATED_tagstr, isPopulated());
 	retval.insert(LibraryEntryTag::IS_ERROR_tagstr, m_is_error);
 	retval.insert(LibraryEntryTag::IS_SUBTRACK_tagstr, m_is_subtrack);
-//	QVariant temp_var;
-//	temp_var << m_offset_secs;
-//	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, QVariant::fromValue<Fraction>(m_offset_secs));
 	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, QVariant::fromValue(m_offset_secs));
 	retval.insert(LibraryEntryTag::LENGTH_SECS_tagstr, QVariant::fromValue(m_length_secs));
-
-	M_WARNING("/// @todo This is always null.");
-	QString str;
-	QTextStream ts(&str);
-//	ts << m_mime_type;
-//	retval["m_mime_type"] = *ts.string();
-	qDb() << M_ID_VAL(m_mime_type);
-//	QVariant tempvar;
-//	tempvar << m_mime_type;
 	retval.insert(LibraryEntryTag::MIME_TYPE_tagstr, QVariant::fromValue<ExtMimeType>(m_mime_type));
 
 	if(isPopulated())
 	{
-		M_WARNING("TODO: Don't write out in the has-cached-metadata case")
-//		m_metadata.writeToJson(jo);
+		retval.insert(LibraryEntryTag::METADATA_tagstr, QVariant::fromValue(m_metadata));
 	}
 
 	return retval;

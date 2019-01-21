@@ -38,7 +38,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
 	qRegisterMetaType<ExtUrl>();
-//	qRegisterMetaTypeStreamOperators<ExtUrl>("ExtUrl");
+	qRegisterMetaTypeStreamOperators<ExtUrl>();
 });
 
 

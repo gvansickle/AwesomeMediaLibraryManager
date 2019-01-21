@@ -340,7 +340,7 @@ M_TODO("This isn't scanning.");
 			else
 			{
 				/// NEW Let's also try it with plenty of QVariants.
-				QString database_filename = QDir::homePath() + "/DeleteMeNew.xspf";
+				QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 				{
 
 					qIn() << "###### WRITING" << database_filename;
