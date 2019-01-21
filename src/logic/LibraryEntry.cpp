@@ -48,7 +48,7 @@
 #define LIBRARY_ENTRY_VERSION 0x01
 
 AMLM_QREG_CALLBACK([](){
-    qIn() << "Registering LibraryEntry types";
+    qIn() << "Registering LibraryEntry metatypes";
     qRegisterMetaType<LibraryEntry>();
     });
 
@@ -122,7 +122,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 		if(!file_metadata.hasCueSheet())
 		{
 			// Couldn't load a cue sheet, this is probably a single-song file.
-			qDebug() << "No cuesheet for file" << this->m_url;
+//			qDebug() << "No cuesheet for file" << this->m_url;
 
 			auto new_entry = std::make_shared<LibraryEntry>(*this);
 			new_entry->m_metadata = file_metadata;
@@ -176,7 +176,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 				new_entry->m_is_populated = true;
 				new_entry->m_is_error = false;
 
-                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
 
 				retval.push_back(new_entry);
 			}
@@ -373,8 +373,8 @@ QVariant LibraryEntry::toVariant() const
 //	QVariant temp_var;
 //	temp_var << m_offset_secs;
 //	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, QVariant::fromValue<Fraction>(m_offset_secs));
-	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, m_offset_secs.toQString());
-	retval.insert(LibraryEntryTag::LENGTH_SECS_tagstr, m_length_secs.toQString());
+	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, QVariant::fromValue(m_offset_secs));
+	retval.insert(LibraryEntryTag::LENGTH_SECS_tagstr, QVariant::fromValue(m_length_secs));
 
 	M_WARNING("/// @todo This is always null.");
 	QString str;

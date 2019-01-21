@@ -130,7 +130,6 @@ std::set<std::string> MetadataTaglib::getNewTags()
 
 static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 {
-#warning "CRASHING HERE?"
 	TagMap retval;
 	for(const auto& key_val_pairs : pm)
 	{
