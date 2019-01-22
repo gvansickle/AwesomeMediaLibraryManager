@@ -39,8 +39,8 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering Metadata metatypes";
 	qRegisterMetaType<Metadata>();
 	qRegisterMetaTypeStreamOperators<Metadata>();
-	QMetaType::registerDebugStreamOperator<Metadata>();
-	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
+//	QMetaType::registerDebugStreamOperator<Metadata>();
+//	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
 
 
@@ -100,7 +100,7 @@ QVariant Metadata::toVariant() const
 
 void Metadata::fromVariant(const QVariant& variant)
 {
-
+	/// @todo
 }
 
 QDataStream &operator<<(QDataStream &out, const Metadata &obj)

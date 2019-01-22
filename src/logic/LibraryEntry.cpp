@@ -370,7 +370,7 @@ QVariant LibraryEntry::toVariant() const
 
 	if(isPopulated())
 	{
-		retval.insert(LibraryEntryTag::METADATA_tagstr, QVariant::fromValue(m_metadata));
+		retval.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
 	}
 
 	return retval;
