@@ -27,10 +27,12 @@ set(HEADER_FILES_SRC_FUTURE
 	cloneable.h
 	static_if.hpp
 	grvs_functional.hpp
+	InsertionOrderedMap.h
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
+	InsertionOrderedMap.cpp
 	)
 
 target_sources_local(future
