@@ -99,6 +99,7 @@ private:
 	QVariant readVariantValueFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
+	QVariant readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream);
 
 	/// @}
 

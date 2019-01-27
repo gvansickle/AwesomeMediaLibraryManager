@@ -144,7 +144,7 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	int type = variant.type(); // AFAICT this is just wrong.
 	int usertype = variant.userType(); // This matches variant.typeName()
-	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();// QVariant::nameToType("InsertionOrderedMap<QString,QVariant>");
+	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
 
 	if(type != usertype)
 	{
@@ -235,24 +235,31 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
+	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+
 
 	QVariant variant;
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
 	auto metatype = QVariant::nameToType(typeString.toStdString().c_str());
-	switch (metatype)
+
+	if(metatype == iomap_id)
 	{
-		case QMetaType::QVariantList:
-			variant = readVariantListFromStream(xmlstream);
-			break;
-		case QMetaType::QVariantMap:
-			variant = readVariantMapFromStream(xmlstream);
-			break;
-//		case :
-//			variant = readVariantOrderedMapFromStream(xmlstream);
-//			break;
-		default:
-			variant = readVariantValueFromStream(xmlstream);
-			break;
+		variant = readVariantOrderedMapFromStream(xmlstream);
+	}
+	else
+	{
+		switch(metatype)
+		{
+			case QMetaType::QVariantList:
+				variant = readVariantListFromStream(xmlstream);
+				break;
+			case QMetaType::QVariantMap:
+				variant = readVariantMapFromStream(xmlstream);
+				break;
+			default:
+				variant = readVariantValueFromStream(xmlstream);
+				break;
+		}
 	}
 
 	if(!variant.isValid())
@@ -341,6 +348,16 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 	return map;
 }
 
+QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream)
+{
+	QVariantInsertionOrderedMap map;
+	while(xmlstream.readNextStartElement())
+	{
+		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
+	}
+	return QVariant::fromValue(map);
+}
+
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {
 	M_TODO("TODO");
@@ -416,5 +433,7 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 #endif
 }
+
+
 
 
