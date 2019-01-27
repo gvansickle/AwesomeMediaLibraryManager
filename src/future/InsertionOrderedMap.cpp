@@ -22,4 +22,6 @@
  */
 #include <InsertionOrderedMap.h>
 
+// Qt5
+#include <utils/RegisterQtMetatypes.h>
 

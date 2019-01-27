@@ -23,9 +23,14 @@
 #ifndef SRC_FUTURE_INSERTIONORDEREDMAP_H_
 #define SRC_FUTURE_INSERTIONORDEREDMAP_H_
 
-#include <vector>
+// Std C++
+#include <stdexcept>
+#include <deque>
 #include <map>
 #include <tuple>
+
+// Qt5
+#include <utils/QtHelpers.h>
 
 /**
  * A map which maintains the insertion order of its keys.  The only operational difference between this and
@@ -39,20 +44,74 @@ class InsertionOrderedMap
 public:
 	/// @name Member types
 	/// @{
-	using underlying_container_type = std::vector<std::tuple<KeyType, ValueType>>;
+	using key_type = KeyType;
+	using mapped_type = ValueType;
+	using value_type = std::pair<const KeyType, ValueType>;
+	using underlying_container_type = std::deque<value_type>;
 	using const_iterator = typename underlying_container_type::const_iterator;
 	using iterator = typename underlying_container_type::iterator;
 	/// @}
+
+private:
+	using uc_size_type = typename underlying_container_type::size_type;
 
 public:
 	InsertionOrderedMap() = default;
 	virtual ~InsertionOrderedMap() = default;
 
+	void insert(const KeyType key, const ValueType value)
+	{
+		insert(std::make_pair(key, value));
+	}
+
+	void insert(const value_type& key_val)
+	{
+		m_vector_of_elements.push_back(key_val);
+		m_map_of_keys_to_vector_indices.insert(std::make_pair(key_val.first, m_vector_of_elements.size()-1));
+	}
+
+	const mapped_type& at(const KeyType& key) const
+	{
+		auto it = this->find(key);
+		if(it == m_vector_of_elements.cend())
+		{
+			throw std::out_of_range(std::string("InsertionOrderedMap(): no such element at():")/* + std::to_string(key)*/);
+		}
+		return it->second;
+	}
+
+	const_iterator find( const KeyType& key ) const
+	{
+		auto it_index = m_map_of_keys_to_vector_indices.find(key);
+		if(it_index == m_map_of_keys_to_vector_indices.end())
+		{
+			return m_vector_of_elements.cend();
+		}
+
+		Q_ASSERT(it_index->first == m_vector_of_elements[it_index->second].first);
+		return m_vector_of_elements.cbegin() + it_index->second;
+	};
+
+	const_iterator cbegin() const { return std::cbegin(m_vector_of_elements); };
+	const_iterator begin() const { return this->cbegin(); }
+	const_iterator cend() const { return std::cend(m_vector_of_elements); };
+	const_iterator end() const { return this->cend(); }
+
+#if 1 // Qt5
+//	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
+#endif // Qt5
+
 protected:
 
-	std::vector<std::tuple<KeyType, ValueType>> m_vector_of_elements;
-	std::map<KeyType, ValueType> m_map_of_elements;
+	underlying_container_type m_vector_of_elements;
+	// Map of keys to indexes in the vector.
+	std::map<KeyType, uc_size_type> m_map_of_keys_to_vector_indices;
 
 };
+
+#if 1 // Qt5
+//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+
+#endif // Qt5
 
 #endif /* SRC_FUTURE_INSERTIONORDEREDMAP_H_ */

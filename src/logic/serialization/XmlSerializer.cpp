@@ -144,23 +144,35 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	int type = variant.type(); // AFAICT this is just wrong.
 	int usertype = variant.userType(); // This matches variant.typeName()
+	static int iomap_id = qMetaTypeId<InsertionOrderedMap<QString,QVariant>>();// QVariant::nameToType("InsertionOrderedMap<QString,QVariant>");
 
 	if(type != usertype)
 	{
 //		qWr() << "#### TYPE != USERTYPE: variant.typeName():" << variant.typeName() << "As ints:" << type << "!=" << usertype << ":"
 //				<< QVariant::typeToName(type) << QVariant::typeToName(usertype);
 	}
-	switch (usertype)//variant.type())
+
+	if(usertype == iomap_id)
 	{
-		case QMetaType::QVariantList:
-			writeVariantListToStream(variant, xmlstream);
-			break;
-		case QMetaType::QVariantMap:
-			writeVariantMapToStream(variant, xmlstream);
-			break;
-		default:
-			writeVariantValueToStream(variant, xmlstream);
-			break;
+		writeVariantOrderedMapToStream(variant, xmlstream);
+	}
+	else
+	{
+		switch(usertype)//variant.type())
+		{
+			case QMetaType::QVariantList:
+				writeVariantListToStream(variant, xmlstream);
+				break;
+			case QMetaType::QVariantMap:
+				writeVariantMapToStream(variant, xmlstream);
+				break;
+//			case iomap_id:
+//				writeVariantOrderedMapToStream(variant, xmlstream);
+//				break;
+			default:
+				writeVariantValueToStream(variant, xmlstream);
+				break;
+		}
 	}
 	xmlstream.writeEndElement();
 }
@@ -210,6 +222,17 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 	}
 }
 
+void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
+{
+	using IOM = InsertionOrderedMap<QString, QVariant>;
+
+	IOM omap = variant.value<IOM>();
+
+	for(auto& i : omap)
+	{
+		writeVariantToStream(i.first, i.second, xmlstream);
+	}
+}
 
 QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
@@ -227,6 +250,9 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 		case QMetaType::QVariantMap:
 			variant = readVariantMapFromStream(xmlstream);
 			break;
+//		case :
+//			variant = readVariantOrderedMapFromStream(xmlstream);
+//			break;
 		default:
 			variant = readVariantValueFromStream(xmlstream);
 			break;
@@ -275,7 +301,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 
 	// Cast to type named in typeString.
 	// If this fails, status will be false, but variant will be changed to the requested type
-	// will be null/cleared byt valid.
+	// will be null/cleared but valid.
 	bool status = variant.convert(QVariant::nameToType(typeString.toStdString().c_str()));
 
 	if(!status)
@@ -320,7 +346,7 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {
-
+	M_TODO("TODO");
 }
 
 void XmlSerializer::set_default_namespace(const QString& default_ns, const QString& default_ns_version)
@@ -393,3 +419,5 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 #endif
 }
+
+

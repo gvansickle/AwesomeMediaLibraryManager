@@ -86,6 +86,8 @@ private:
 
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
+	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
+
 	void writeVariantValueToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 
 	/// @}

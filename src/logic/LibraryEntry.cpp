@@ -39,6 +39,7 @@
 #include <utils/RegisterQtMetatypes.h>
 #include <logic/models/ScanResultsTreeModelXMLTags.h>
 #include <utils/Fraction.h>
+#include <src/future/InsertionOrderedMap.h>
 #include "utils/MapConverter.h"
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
@@ -357,7 +358,8 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 QVariant LibraryEntry::toVariant() const
 {
 	/// @todo
-	QVariantMap retval;
+//	QVariantMap retval;
+	InsertionOrderedMap<QString, QVariant> retval;
 
 	// Insert into the XML map.
 	retval.insert(LibraryEntryTag::URL_tagstr, m_url);
@@ -373,7 +375,7 @@ QVariant LibraryEntry::toVariant() const
 		retval.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
 	}
 
-	return retval;
+	return QVariant::fromValue(retval);
 }
 
 void LibraryEntry::fromVariant(const QVariant& variant)

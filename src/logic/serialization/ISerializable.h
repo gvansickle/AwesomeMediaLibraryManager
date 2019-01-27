@@ -24,7 +24,19 @@
 #ifndef SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_
 #define SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_
 
+// Std C++
+// None yet.
+
+// Qt5
+#include <QMetaType>
 #include <QVariant>
+
+// Ours
+#include <future/InsertionOrderedMap.h>
+
+Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+//using InsertionOrderedQVariantMap = InsertionOrderedMap<QString, QVariant>;
+
 
 /**
  * Abstract interface for adding serialization capabilities to classes which
