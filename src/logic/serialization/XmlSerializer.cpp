@@ -144,7 +144,7 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	int type = variant.type(); // AFAICT this is just wrong.
 	int usertype = variant.userType(); // This matches variant.typeName()
-	static int iomap_id = qMetaTypeId<InsertionOrderedMap<QString,QVariant>>();// QVariant::nameToType("InsertionOrderedMap<QString,QVariant>");
+	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();// QVariant::nameToType("InsertionOrderedMap<QString,QVariant>");
 
 	if(type != usertype)
 	{
@@ -166,9 +166,6 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 			case QMetaType::QVariantMap:
 				writeVariantMapToStream(variant, xmlstream);
 				break;
-//			case iomap_id:
-//				writeVariantOrderedMapToStream(variant, xmlstream);
-//				break;
 			default:
 				writeVariantValueToStream(variant, xmlstream);
 				break;

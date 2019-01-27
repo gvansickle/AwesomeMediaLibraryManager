@@ -35,6 +35,9 @@
 #include <future/InsertionOrderedMap.h>
 
 Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+
+using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
+Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 //using InsertionOrderedQVariantMap = InsertionOrderedMap<QString, QVariant>;
 
 
