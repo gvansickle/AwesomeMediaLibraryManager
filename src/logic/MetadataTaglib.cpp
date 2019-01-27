@@ -92,6 +92,9 @@ static const std::map<std::string, std::string> f_name_normalization_map =
 	{"comment", "COMMENT"},
 };
 
+/**
+ * @link https://xiph.org/vorbis/doc/v-comment.html
+ */
 static const std::map<std::string, std::vector<std::string>> f_vorbis_comment_normalization_map =
 {
 	{"album_name", {"ALBUM"}},
@@ -189,7 +192,7 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 	return retval;
 }
 
-bool MetadataTaglib::read(QUrl url)
+bool MetadataTaglib::read(const QUrl& url)
 {
 	// String for storing an embedded cuesheet if we have one.
 	std::string cuesheet_str;

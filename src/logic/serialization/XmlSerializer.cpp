@@ -161,6 +161,9 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 		switch(usertype)//variant.type())
 		{
 			case QMetaType::QVariantList:
+				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
+				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList or QMetaType::QStringList"
+			case QMetaType::QStringList:
 				writeVariantListToStream(variant, xmlstream);
 				break;
 			case QMetaType::QVariantMap:

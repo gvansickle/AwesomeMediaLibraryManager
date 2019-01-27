@@ -35,7 +35,7 @@ public:
 
 	virtual bool isFromCache() const override { return true; }
 
-    virtual bool read(QUrl /*url*/) override { Q_ASSERT(0); return false; }
+    virtual bool read(const QUrl /*url*/&) override { Q_ASSERT(0); return false; }
 
 	void readFromJson(const QJsonObject& jo);
 

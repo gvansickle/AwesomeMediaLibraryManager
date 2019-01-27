@@ -29,6 +29,10 @@ class MapConverter
 public:
 	MapConverter();
 
+	/**
+	 * @note This function is misnamed/returns the wrong type.  A QVariantMap is a typedef
+	 *       of QMap<QString, QVariant>; this function actually returns a QMap<QString, QVariant<QStringList>>.
+	 */
 	static QVariantMap TagMaptoVarMap(const std::map<std::string, std::vector<std::string>>& tm);
 	static std::map<std::string, std::vector<std::string>> VarMapToTagMap(const QVariantMap& vm);
 };

@@ -95,7 +95,11 @@ void Metadata::writeToJson(QJsonObject& jo) const
 
 QVariant Metadata::toVariant() const
 {
-	return "TODO";
+	QVariantMap retval;
+	/// @todo
+	retval.insert("metadata", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
+
+	return retval;
 }
 
 void Metadata::fromVariant(const QVariant& variant)

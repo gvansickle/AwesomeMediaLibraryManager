@@ -57,7 +57,7 @@ public:
 	// Non-virtual clone() interface, because of no covariance for smart ptrs.
 	std::unique_ptr<MetadataAbstractBase> clone() const { return std::unique_ptr<MetadataAbstractBase>(this->clone_impl()); }
 
-	virtual bool read(QUrl url) = 0;
+	virtual bool read(const QUrl& url) = 0;
 
 	virtual bool hasBeenRead() const { return m_read_has_been_attempted; }
 	virtual bool isError() const { return m_is_error; }

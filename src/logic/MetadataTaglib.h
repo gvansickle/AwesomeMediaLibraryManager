@@ -34,7 +34,7 @@ public:
 
 	static std::set<std::string> getNewTags();
 
-    bool read(QUrl url) override;
+    bool read(const QUrl& url) override;
 
 	/// Audio stream properites.
 	/// @{
