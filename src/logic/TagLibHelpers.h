@@ -23,7 +23,12 @@
 
 #include <config.h>
 
+// Std C++.
 #include <type_traits>
+
+// TagLib.
+#include <fileref.h>
+#include <audioproperties.h>
 
 /// @name The TagLib::FileRef constructor takes a TagLib::FileName, which:
 /// - on Linux is typedef for const char *
@@ -31,18 +36,20 @@
 /// So here's a couple templates to smooth this over.
 /// @{
 template<typename StringType, typename FNType = TagLib::FileName>
-std::enable_if_t<std::is_same<FNType, const char*>::value, TagLib::FileRef>
-openFileRef(const StringType& local_path)
+	std::enable_if_t<std::is_same<FNType, const char*>::value, TagLib::FileRef>
+openFileRef(const StringType& local_path, bool readAudioProperties=true,
+            TagLib::AudioProperties::ReadStyle audioPropertiesStyle=TagLib::AudioProperties::Average)
 {
 	// TagLib::FileName is a const char *, so this is likely Linux.  Translate the QString accordingly and open the FileRef.
-	return TagLib::FileRef(local_path.toStdString().c_str());
+	return TagLib::FileRef(local_path.toStdString().c_str(), readAudioProperties, audioPropertiesStyle);
 }
 template<typename StringType, typename FNType = TagLib::FileName>
-std::enable_if_t<!std::is_same<FNType, const char *>::value, TagLib::FileRef>
-openFileRef(const StringType& local_path)
+	std::enable_if_t<!std::is_same<FNType, const char *>::value, TagLib::FileRef>
+openFileRef(const StringType& local_path, bool readAudioProperties=true,
+            TagLib::AudioProperties::ReadStyle audioPropertiesStyle=TagLib::AudioProperties::Average)
 {
 	// TagLib::FileName is not const char *, so this is likely Windows.  Translate the QString accordingly and open the FileRef.
-	return TagLib::FileRef(local_path.toStdWString().c_str());
+	return TagLib::FileRef(local_path.toStdWString().c_str(), readAudioProperties, audioPropertiesStyle);
 }
 /// @}
 
