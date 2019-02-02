@@ -162,7 +162,8 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 		{
 			case QMetaType::QVariantList:
 				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
-				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList or QMetaType::QStringList"
+				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
+				/// or QMetaType::QStringList"
 			case QMetaType::QStringList:
 				writeVariantListToStream(variant, xmlstream);
 				break;
@@ -177,24 +178,21 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeEndElement();
 }
 
-
-void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
+void XmlSerializer::writeHomogenousListToStream(const std::string_view& item_type, const QVariant& variant,
+                                                QXmlStreamWriter& xmlstream)
 {
-	Q_ASSERT(variant.isValid());
+	QVariantList list = variant.toList();
 
-	// variant must be convertible to a string.
-	if(!variant.canConvert<QString>())
+	// Get the type of the first element, we'll assume all items are the same type.
+	/// @todo
+
+	// Stream each QVariant in the list out.
+	/// @note tag name will be "item" for each element, not sure we want that.
+	for(const QVariant& element : list)
 	{
-		std::string vartype {variant.typeName()};
-		qCr() << "QVariant contents not convertible to a QString:" << vartype;
-		Q_ASSERT(0);
+		writeVariantToStream("item", element, xmlstream);
 	}
-
-	QString str = variant.toString();
-
-	xmlstream.writeCharacters(str);
 }
-
 
 void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
@@ -234,6 +232,23 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 	}
 }
 
+void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
+{
+	Q_ASSERT(variant.isValid());
+
+	// variant must be convertible to a string.
+	if(!variant.canConvert<QString>())
+	{
+		std::string vartype {variant.typeName()};
+		qCr() << "QVariant contents not convertible to a QString:" << vartype;
+		Q_ASSERT(0);
+	}
+
+	QString str = variant.toString();
+
+	xmlstream.writeCharacters(str);
+}
+
 QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
@@ -254,6 +269,10 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 		switch(metatype)
 		{
 			case QMetaType::QVariantList:
+				/// @link http://doc.qt.io/qt-5/qvariant.html#toList
+				/// "Returns the variant as a QVariantList if the variant has userType() QMetaType::QVariantList
+				/// or QMetaType::QStringList"
+			case QMetaType::QStringList:
 				variant = readVariantListFromStream(xmlstream);
 				break;
 			case QMetaType::QVariantMap:
@@ -353,6 +372,7 @@ QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 
 QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream)
 {
+	// Only difference from readVariantMapFromStream() is the local map type we use.
 	QVariantInsertionOrderedMap map;
 	while(xmlstream.readNextStartElement())
 	{

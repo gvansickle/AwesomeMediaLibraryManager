@@ -53,7 +53,7 @@ set(SOURCE_FILES_UTILS_CONCURRENCY
 	AMLMJob.cpp
 	AMLMJobT.cpp
 	AMLMCompositeJob.cpp
-		../logic/jobs/DirectoryScanJob.cpp
+	../logic/jobs/DirectoryScanJob.cpp
 	ThreadsafeMap.cpp
 	DebugSequence.cpp
 	WorkerThreadBase.cpp
