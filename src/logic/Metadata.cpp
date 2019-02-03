@@ -26,6 +26,8 @@
 
 // Qt5
 #include <QJsonObject>
+#include <QVariant>
+#include <QVariantMap>
 
 // Ours.
 #include "MetadataTaglib.h"
@@ -97,7 +99,7 @@ QVariant Metadata::toVariant() const
 {
 	QVariantMap retval;
 	/// @todo
-	retval.insert("metadata", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
+	retval.insert("metadata_tagtree", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
 
 	return retval;
 }
@@ -105,16 +107,32 @@ QVariant Metadata::toVariant() const
 void Metadata::fromVariant(const QVariant& variant)
 {
 	/// @todo
+	QVariantMap map = variant.toMap();
+	using tag_map_var_type = std::map<std::string, std::vector<std::string>>;
+	QVariantMap tag_map_variant;
+	tag_map_variant = map.value("metadata_tagtree").value<QVariantMap>();
+	tag_map_var_type tag_map = MapConverter::VarMapToTagMap(tag_map_variant);
+
+	pImpl->m_tag_map = tag_map;
 }
 
 QDataStream &operator<<(QDataStream &out, const Metadata &obj)
 {
+	/// @todo
 	out << MapConverter::TagMaptoVarMap(obj.pImpl->m_tag_map);
 	return out;
 }
 
-QDataStream &operator>>(QDataStream &in, Metadata &myObj)
+QDataStream &operator>>(QDataStream &in, Metadata &obj)
 {
-	M_WARNING("TODO");
+	/// @todo
+
+	QVariantMap tag_map;
+	using tag_map_var_type = std::map<std::string, std::vector<std::string>>;
+	tag_map_var_type tag_map_std;
+///	in >> tag_map_std;
+
+	obj.pImpl->m_tag_map = tag_map_std;
+
 	return in;
 }

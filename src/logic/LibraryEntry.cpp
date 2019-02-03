@@ -355,34 +355,52 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 	return;
 }
 
+#define M_DATASTREAM_FIELDS(X) \
+	X(URL, m_url) \
+	X(IS_POPULATED, m_is_populated) \
+	X(IS_ERROR, m_is_error) \
+	X(IS_SUBTRACK, m_is_subtrack) \
+	X(OFFSET_SECS, m_offset_secs) \
+	X(LENGTH_SECS, m_length_secs) \
+	X(MIME_TYPE, m_mime_type)
+
 QVariant LibraryEntry::toVariant() const
 {
 	/// @todo
-//	QVariantMap retval;
-	InsertionOrderedMap<QString, QVariant> retval;
+	InsertionOrderedMap<QString, QVariant> map;
 
-	// Insert into the XML map.
-	retval.insert(LibraryEntryTag::URL_tagstr, m_url);
-	retval.insert(LibraryEntryTag::IS_POPULATED_tagstr, isPopulated());
-	retval.insert(LibraryEntryTag::IS_ERROR_tagstr, m_is_error);
-	retval.insert(LibraryEntryTag::IS_SUBTRACK_tagstr, m_is_subtrack);
-	retval.insert(LibraryEntryTag::OFFSET_SECS_tagstr, QVariant::fromValue(m_offset_secs));
-	retval.insert(LibraryEntryTag::LENGTH_SECS_tagstr, QVariant::fromValue(m_length_secs));
-	retval.insert(LibraryEntryTag::MIME_TYPE_tagstr, QVariant::fromValue<ExtMimeType>(m_mime_type));
+	// Insert field values into the QVariantMap.
+#define X(field_enum_name, field)   map.insert( LibraryEntryTag :: field_enum_name ## _tagstr, QVariant::fromValue( field ) );
+	M_DATASTREAM_FIELDS(X)
+#undef X
 
 	if(isPopulated())
 	{
-		retval.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
+		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
 	}
 
-	return QVariant::fromValue(retval);
+	return QVariant::fromValue(map);
 }
 
 void LibraryEntry::fromVariant(const QVariant& variant)
 {
 	/// @todo
+	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
+
+	// Extract all the fields from the map, cast them to their type.
+#define X(field_enum_name, field) field = map.value( LibraryEntryTag :: field_enum_name ## _tagstr ).value<decltype( field )>();
+	M_DATASTREAM_FIELDS(X)
+#undef X
+
+	/// @todo
+//	if(isPopulated())
+//	{
+//		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
+//	}
+
 }
 
+#undef M_DATASTREAM_FIELDS
 
 QByteArray LibraryEntry::getCoverImageBytes()
 {

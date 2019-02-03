@@ -152,8 +152,8 @@ public:
 
 Q_DECLARE_METATYPE(Metadata);
 
-QDataStream &operator<<(QDataStream &out, const Metadata &myObj);
-QDataStream &operator>>(QDataStream &in, Metadata &myObj);
+QDataStream &operator<<(QDataStream &out, const Metadata &obj);
+QDataStream &operator>>(QDataStream &in, Metadata &obj);
 
 
 #endif // METADATA_H

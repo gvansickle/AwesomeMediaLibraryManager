@@ -31,6 +31,7 @@
 
 // Qt5
 #include <utils/QtHelpers.h>
+#include <QMap>
 
 /**
  * A map which maintains the insertion order of its keys.  The only operational difference between this and
@@ -99,7 +100,29 @@ public:
 
 #if 1 // Qt5
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
+
+	// Conversion operator to a QMap<QString, QVariant>.
+	operator QMap<KeyType, ValueType>() const
+	{
+		QMap<KeyType, ValueType> retval{m_vector_of_elements};
+/// @todo Correct?
+//		retval = m_vector_of_elements;
+
+		return retval;
+	}
+
 #endif // Qt5
+
+	const ValueType value(const KeyType& key, const ValueType& default_value = ValueType()) const
+	{
+		auto cit = this->find(key);
+		if(cit == this->cend())
+		{
+			// No such key.
+			return default_value;
+		}
+		return cit->second;
+	}
 
 protected:
 

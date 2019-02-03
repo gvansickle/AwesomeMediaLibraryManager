@@ -28,6 +28,7 @@
 
 // Qt5
 #include <QFile>
+#include <QSaveFile>
 #include <QVariant>
 #include <QVariantList>
 #include <QVariantMap>
@@ -49,12 +50,12 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 		Q_ASSERT_X(0, __PRETTY_FUNCTION__, "LOCAL FILE PATH IS EMPTY");
 	}
 
-	QFile file(save_file_path);
+	QSaveFile savefile(save_file_path);
 
-	file.open(QFile::WriteOnly);
+	savefile.open(QIODevice::WriteOnly);
 
 	// XML writing starts here.
-	QXmlStreamWriter xmlstream(&file);
+	QXmlStreamWriter xmlstream(&savefile);
 
 	xmlstream.setAutoFormatting(true);
 
@@ -73,7 +74,7 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	xmlstream.writeEndElement();
 	xmlstream.writeEndDocument();
 
-	file.close();
+	savefile.commit();
 }
 
 void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)

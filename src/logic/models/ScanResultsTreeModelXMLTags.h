@@ -205,6 +205,8 @@ public:
 		return std::get<1>(LibraryEntryTag::m_testmap[enumerator]);
 	};
 
+#undef M_LibraryEntryTags
+
 };
 Q_DECLARE_METATYPE(LibraryEntryTag);
 

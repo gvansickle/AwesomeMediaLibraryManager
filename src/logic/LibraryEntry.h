@@ -94,7 +94,7 @@ public:
 	/// @todo Do we want to return some kind of actual Image class here instead?
 	QByteArray getCoverImageBytes();
 
-	QMap<QString, QVariant> getAllMetadata() const;
+	QVariantMap getAllMetadata() const;
 
 	Fraction get_pre_gap_offset_secs() const { return m_pre_gap_offset_secs; }
 	Fraction get_offset_secs() const { return m_offset_secs; }
