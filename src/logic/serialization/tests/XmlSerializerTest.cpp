@@ -62,6 +62,19 @@ public:
 	std::function<void(const QVariant&)> m_from_func;
 };
 
+class TestXmlSerializer : public XmlSerializer
+{
+public:
+	void save(const ISerializable& serializable,
+			const QUrl& file_url,
+			const QString& root_element_name,
+			std::function<void(void)> extra_save_actions = nullptr
+			) override;
+
+	void load(ISerializable& serializable, const QUrl& file_url) override;
+
+};
+
 TEST_F(XmlSerializerTests, ShouldPass)
 {
 	EXPECT_TRUE(true);
