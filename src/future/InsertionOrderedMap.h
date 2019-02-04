@@ -93,6 +93,17 @@ public:
 		return m_vector_of_elements.cbegin() + it_index->second;
 	};
 
+	const ValueType value(const KeyType& key, const ValueType& default_value = ValueType()) const
+	{
+		auto cit = this->find(key);
+		if(cit == this->cend())
+		{
+			// No such key.
+			return default_value;
+		}
+		return cit->second;
+	}
+
 	const_iterator cbegin() const { return std::cbegin(m_vector_of_elements); };
 	const_iterator begin() const { return this->cbegin(); }
 	const_iterator cend() const { return std::cend(m_vector_of_elements); };
@@ -113,16 +124,7 @@ public:
 
 #endif // Qt5
 
-	const ValueType value(const KeyType& key, const ValueType& default_value = ValueType()) const
-	{
-		auto cit = this->find(key);
-		if(cit == this->cend())
-		{
-			// No such key.
-			return default_value;
-		}
-		return cit->second;
-	}
+
 
 protected:
 
