@@ -58,6 +58,7 @@ private:
 
 public:
 	InsertionOrderedMap() = default;
+	InsertionOrderedMap(const InsertionOrderedMap& other) = default;
 	virtual ~InsertionOrderedMap() = default;
 
 	void insert(const KeyType key, const ValueType value)
@@ -109,7 +110,7 @@ public:
 	const_iterator cend() const { return std::cend(m_vector_of_elements); };
 	const_iterator end() const { return this->cend(); }
 
-#if 1 // Qt5
+#if 0 // Qt5
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
 
 	// Conversion operator to a QMap<QString, QVariant>.
@@ -135,7 +136,7 @@ protected:
 };
 
 #if 1 // Qt5
-//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 #endif // Qt5
 

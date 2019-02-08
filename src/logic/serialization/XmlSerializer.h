@@ -115,10 +115,6 @@ private:
 	QString m_root_name;
 	QString m_default_ns;
 	QString m_default_ns_version;
-
-	/// @todo I think I thought we needed these at one point, but now I don't know.
-//	QXmlStreamReader* m_temp_xml_stream_reader {nullptr};
-//	QXmlStreamWriter* m_temp_xml_stream_writer {nullptr};
 };
 
 #endif /* SRC_LOGIC_SERIALIZATION_XMLSERIALIZER_H_ */

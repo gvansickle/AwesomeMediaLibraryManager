@@ -20,17 +20,21 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
+// Qt5
 #include <QUrl>
+
+// Ours.
+#include <src/logic/serialization/ISerializable.h>
 
 #include "LibraryEntry.h"
 
 class QFileDevice;
 
-class Library
+class Library : ISerializable
 {
 public:
     Library();
-	virtual ~Library();
+	 ~Library() override;
 
 	void clear();
 	void setRootUrl(const QUrl& url) { m_root_url = url; }
@@ -56,6 +60,9 @@ public:
 
 	void serializeToFile(QFileDevice& file) const;
 	void deserializeFromFile(QFileDevice& file);
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
 
 	/// @}
 

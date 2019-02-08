@@ -311,15 +311,15 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 	jo["m_offset_secs"] = m_offset_secs.toQString();
 	jo["m_length_secs"] = m_length_secs.toQString();
 
-M_WARNING("/// @todo This is always null.");
+	M_WARNING("/// @todo This is always null.");
 	QString str;
 	QTextStream ts(&str);
-//	ts << m_mime_type;
+	//	ts << m_mime_type;
 	jo["m_mime_type"] = *ts.string();
 
 	if(isPopulated())
 	{
-M_WARNING("TODO: Don't write out in the has-cached-metadata case")
+		M_WARNING("TODO: Don't write out in the has-cached-metadata case");
 		m_metadata.writeToJson(jo);
 	}
 }

@@ -213,6 +213,48 @@ void Library::deserializeFromFile(QFileDevice& file)
 	Q_ASSERT(nullptr == "NOT IMPLEMENTED");
 }
 
+/// @aside ...uhhhhhhhhh........
+using strviw_type = QString;
+static const strviw_type XMLTAG_WRITE_TIMESTAMP_MS("write_timestamp_ms");
+static const strviw_type XMLTAG_WRITE_TIMESTAMP_UTC("write_timestamp_utc");
+static const strviw_type XMLTAG_LIBRARY_ROOT_URL("library_root_url");
+static const strviw_type XMLTAG_NUM_UNPOP("num_unpopulated");
+static const strviw_type XMLTAG_NUM_POP("num_populated");
+static const strviw_type XMLTAG_NUM_LIBRARY_ENTRIES("num_lib_entries");
+static const strviw_type XMLTAG_LIBRARY_ENTRIES("library_entries");
+//static const std::string_view XMLTAG_LIBRARY("library");
+
+QVariant Library::toVariant() const
+{
+	QVariantInsertionOrderedMap map;
+//	InsertionOrderedMap<QString, QVariant> map;
+
+	// Write the Library's info.
+	map.insert(XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
+	map.insert(XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc()/*.toString()*/);
+	map.insert(XMLTAG_LIBRARY_ROOT_URL, m_root_url);
+	map.insert(XMLTAG_NUM_UNPOP, num_unpopulated);
+	map.insert(XMLTAG_NUM_POP, num_populated);
+	map.insert(XMLTAG_NUM_LIBRARY_ENTRIES, (qint64)m_lib_entries.size());
+	if(!m_lib_entries.size())
+	{
+		// Serialize the LibraryEntry's.
+		QVariantList list;
+		for(const auto& e : m_lib_entries)
+		{
+			list.append(e->toVariant());
+		}
+		map.insert(XMLTAG_LIBRARY_ENTRIES, list);
+	}
+
+	return QVariant::fromValue(map);
+}
+
+void Library::fromVariant(const QVariant& variant)
+{
+
+}
+
 void Library::addingEntry(const LibraryEntry* entry)
 {
 	if(entry->isPopulated())
