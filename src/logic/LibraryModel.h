@@ -22,14 +22,18 @@
 #ifndef LIBRARYMODEL_H
 #define LIBRARYMODEL_H
 
+// Std C++
 #include <vector>
 
+// Qt5
 #include <QAbstractItemModel>
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
 #include <QVector>
+class QFileDevice;
 
+// Ours
 #include <src/logic/dbmodels/CollectionDatabaseModel.h>
 
 #include <src/concurrency/ThreadsafeMap.h>
@@ -41,7 +45,6 @@
 #include "LibraryEntryLoaderJob.h"
 #include "LibraryRescannerMapItem.h"
 
-class QFileDevice;
 
 class LibraryRescanner;
 
@@ -58,7 +61,7 @@ Q_DECLARE_METATYPE(VecOfPMIs);
 /**
  * The LibraryModel class.
  */
-class LibraryModel : public QAbstractItemModel
+class LibraryModel : public QAbstractItemModel, public ISerializable
 {
     Q_OBJECT
 
@@ -162,6 +165,9 @@ public:
 
 	virtual void serializeToFile(QFileDevice& file) const;
 	virtual void deserializeFromFile(QFileDevice& file);
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
 
 	///
 	/// Drag and drop support.

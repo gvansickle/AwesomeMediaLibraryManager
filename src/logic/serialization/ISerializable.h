@@ -64,4 +64,65 @@ public:
 };
 
 
+class SerializableQVariantList : public QVariantList, public virtual ISerializable
+{
+public:
+
+	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag)
+	{
+		set_tag_names(list_tag, list_item_tag);
+	}
+
+	SerializableQVariantList& operator=(const SerializableQVariantList& other)
+	{
+		((QVariantList)*this) = (QVariantList)other;
+		m_list_tag = other.m_list_tag;
+		m_list_item_tag = other.m_list_item_tag;
+		return *this;
+	}
+
+	void set_tag_names(const QString& list_tag, const QString& list_item_tag)
+	{
+		m_list_tag = list_tag;
+		m_list_item_tag = list_item_tag;
+	}
+
+	QVariant toVariant() const override
+	{
+		Q_ASSERT(!m_list_tag.isNull());
+		Q_ASSERT(!m_list_tag.isEmpty());
+		Q_ASSERT(!m_list_item_tag.isNull());
+		Q_ASSERT(!m_list_item_tag.isEmpty());
+
+		QVariantMap map;
+		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
+		map.insert(m_list_tag, *qvl);
+		return map;
+	}
+
+	void fromVariant(const QVariant& variant) override
+	{
+		Q_ASSERT(!m_list_tag.isNull());
+		Q_ASSERT(!m_list_tag.isEmpty());
+		Q_ASSERT(!m_list_item_tag.isNull());
+		Q_ASSERT(!m_list_item_tag.isEmpty());
+
+		QVariantMap map = variant.toMap();
+		QVariantList qvl = map.value(m_list_tag).toList();
+
+		for(const auto& e : qvl)
+		{
+			this->push_back(e);
+		}
+	}
+
+private:
+	QString m_list_tag;
+	QString m_list_item_tag;
+};
+
+
+
 #endif /* SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_ */
+
+

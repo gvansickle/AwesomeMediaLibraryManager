@@ -116,8 +116,6 @@ public:
 
 	static PerfectDeleter* IPerfectDeleter() { return &(amlmApp->m_perfect_deleter); };
 
-//	static ExtFuturePropagationHandler* IExtFuturePropagationHandler() { return &(amlmApp->m_future_cancel_prop_handler); };
-
     /// @}
 
     /**

@@ -121,6 +121,7 @@
 // Asynchronous activity progress monitoring.
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
+#include <logic/serialization/XmlSerializer.h>
 
 #include "concurrency/ExtAsync.h"
 
@@ -1426,36 +1427,83 @@ void MainWindow::readPreGUISettings()
 
 void MainWindow::readLibSettings(QSettings& settings)
 {
-	int num_libs = settings.beginReadArray("libraries");
-	qInfo() << "Reading" << num_libs << "libraries...";
-	for(int i = 0; i < num_libs; ++i)
+	int num_libs;
+
+	if(false) /// OLD JSON
 	{
-		settings.setArrayIndex(i);
+		num_libs = settings.beginReadArray("libraries");
+		qInfo() << "Reading" << num_libs << "libraries...";
 
-		QByteArray jdoc_str = settings.value("asJson").toByteArray();
-
-//		qDebug() << "jdoc_str=" << jdoc_str;
-		QJsonDocument jsondoc = QJsonDocument::fromJson(jdoc_str);
-//		qDebug() << "Jsondoc:" << jsondoc.toJson();
-//		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
-
-		QPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
-
-		if(!libmodel)
+		for(int i = 0; i < num_libs; ++i)
 		{
-			QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
-								  QMessageBox::Ok);
+			QPointer<LibraryModel> libmodel;
+
+			settings.setArrayIndex(i);
+
+			QByteArray jdoc_str = settings.value("asJson").toByteArray();
+
+			//		qDebug() << "jdoc_str=" << jdoc_str;
+			QJsonDocument jsondoc = QJsonDocument::fromJson(jdoc_str);
+			//		qDebug() << "Jsondoc:" << jsondoc.toJson();
+			//		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
+
+			libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
+
+			if(!libmodel)
+			{
+				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+									  QMessageBox::Ok);
+			}
+			else
+			{
+				MDIModelViewPair mvpair;
+				mvpair.m_model = libmodel;
+				mvpair.m_model_was_existing = false;
+
+				addChildMDIModelViewPair_Library(mvpair);
+			}
 		}
-		else
-		{
-			MDIModelViewPair mvpair;
-			mvpair.m_model = libmodel;
-			mvpair.m_model_was_existing = false;
+		settings.endArray();
+	}
+	if(true) /// XML
+	{
+		/// @todo Currently hardcoded to save/restore only one lib.
+		num_libs = 1;
 
-			addChildMDIModelViewPair_Library(mvpair);
+		qInfo() << "Reading" << num_libs << "libraries...";
+
+		for(int i = 0; i < num_libs; ++i)
+		{
+			QPointer<LibraryModel> libmodel;
+
+M_TODO("INTERIM, CONVERT OVER TO THIS");
+			QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
+			qIn() << "###### READING XML DB:" << database_filename;
+
+			XmlSerializer xmlser;
+			xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+			/// @todo Loop.
+			libmodel = new LibraryModel(this);
+			xmlser.load(*libmodel, QUrl::fromLocalFile(database_filename));
+
+			qIn() << "###### READ XML DB:" << database_filename;
+
+			if(!libmodel)
+			{
+				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+									  QMessageBox::Ok);
+			}
+			else
+			{
+				MDIModelViewPair mvpair;
+				mvpair.m_model = libmodel;
+				mvpair.m_model_was_existing = false;
+
+				addChildMDIModelViewPair_Library(mvpair);
+			}
 		}
 	}
-	settings.endArray();
 }
 
 void MainWindow::writeSettings()
@@ -1484,7 +1532,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	qDebug() << "Writing"  << m_libmodels.size() << "libraries";
 	for(size_t i = 0; i < m_libmodels.size(); ++i)
 	{
-//		qDebug() << "Model #:" << i;
+		qDebug() << "Writing Model #:" << i;
 		settings.setArrayIndex(i);
 
 		// Serialize the library to a QJsonObject.
@@ -1500,6 +1548,29 @@ void MainWindow::writeLibSettings(QSettings& settings)
 		settings.setValue("asJson", jdoc_bytes);
 	}
 	settings.endArray();
+
+	if(true) /// XML
+	{
+M_TODO("INTERIM, CONVERT OVER TO THIS");
+		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
+		qIn() << "###### WRITING XML DB:" << database_filename;
+
+		XmlSerializer xmlser;
+		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+
+//		QVariantList list;
+		SerializableQVariantList list("library_list", "library_instance");
+		for(size_t i = 0; i < m_libmodels.size(); ++i)
+		{
+			list.push_back(QVariant::fromValue(m_libmodels[i]));
+		}
+//		auto cur_libmodel = m_libmodels[0];
+		xmlser.save(list, QUrl::fromLocalFile(database_filename), "the_library_model");
+
+		qIn() << "###### WROTE XML DB:" << database_filename;
+	}
+
 	qDebug() << "writeLibSettings() end";
 }
 

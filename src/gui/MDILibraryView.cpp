@@ -27,6 +27,7 @@
 #include <QMenu>
 #include <QToolTip>
 #include <QContextMenuEvent>
+#include <QMessageBox>
 
 // Ours
 #include <gui/MDIPlaylistView.h>
@@ -42,6 +43,9 @@
 #include <logic/LibraryEntryMimeData.h>
 #include <logic/ModelUserRoles.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
+#include <logic/serialization/XmlSerializer.h>
+#include <AMLMApp.h>
+#include <MainWindow.h>
 
 MDILibraryView::MDILibraryView(QWidget* parent) : MDITreeViewBase(parent)
 {
@@ -137,7 +141,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
 		libmodel = LibraryModel::openFile(open_url, parent);
 	}
 
-    if(libmodel)
+	if(libmodel != nullptr)
     {
 		// The model has either been found already existing and with no associated View, or it has been newly opened.
 		// Either way it's valid and we now create and associate a View with it.
@@ -156,7 +160,8 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     else
     {
 		// Library import failed.
-M_WARNING("TODO: Add a QMessageBox or something here.");
+		M_TODO("Add a QMessageBox or something here.");
+		QMessageBox::critical(amlmApp->IMainWindow(), "TODO: Title", "TODO: Text", QMessageBox::Ok);
 		return MDIModelViewPair();
     }
 }
@@ -257,11 +262,27 @@ bool MDILibraryView::readFile(QUrl load_url)
 void MDILibraryView::serializeDocument(QFileDevice& file)
 {
 	m_underlying_model->serializeToFile(file);
+
+M_WARNING("TODO: Serialization, remove or replace.");
+
+	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
+	qIn() << "###### WRITING" << database_filename;
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.save(*m_underlying_model, QUrl::fromLocalFile(database_filename), "the_library_model");
+
+	qIn() << "###### WROTE" << database_filename;
+
 }
 
 void MDILibraryView::deserializeDocument(QFileDevice& file)
 {
 	m_underlying_model->deserializeFromFile(file);
+
+M_WARNING("TODO: Serialization, remove or replace.");
+	Q_ASSERT(0);
 }
 
 bool MDILibraryView::isModified() const

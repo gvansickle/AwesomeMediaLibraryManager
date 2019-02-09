@@ -90,7 +90,7 @@ void AMLMApp::Init(bool gtest_only)
 //	m_cdb_model = new CollectionDatabaseModel(this);
 
 	/// @todo TEMP hardcoded db file name in home dir.
-	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
+//	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 
 	// Create and set up the scan results tree model.
 	m_srtm_instance = new ScanResultsTreeModel(this);
@@ -99,7 +99,6 @@ M_TODO("Needs to be ColumnSpecs");
 	m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
 	// Let's add two more columns
 	m_srtm_instance->insertColumns(3, 2);
-
 
 
 	/// @end Experiments

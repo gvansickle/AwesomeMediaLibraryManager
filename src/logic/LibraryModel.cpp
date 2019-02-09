@@ -751,6 +751,16 @@ void LibraryModel::deserializeFromFile(QFileDevice& file)
 	m_library.deserializeFromFile(file);
 }
 
+QVariant LibraryModel::toVariant() const
+{
+	return m_library.toVariant();
+}
+
+void LibraryModel::fromVariant(const QVariant& variant)
+{
+	m_library.fromVariant(variant);
+}
+
 Qt::DropActions LibraryModel::supportedDragActions() const
 {
 	// Only copy out of the LibraryModel, no moves.
