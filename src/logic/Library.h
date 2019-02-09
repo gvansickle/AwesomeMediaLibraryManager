@@ -76,8 +76,8 @@ public:
 
 	std::vector<std::shared_ptr<LibraryEntry>> m_lib_entries;
 
-	qint64 num_unpopulated {0};
-	qint64 num_populated {0};
+	qint64 m_num_unpopulated {0};
+	qint64 m_num_populated {0};
 
 };
 

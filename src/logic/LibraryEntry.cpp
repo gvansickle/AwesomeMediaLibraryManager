@@ -367,7 +367,8 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 QVariant LibraryEntry::toVariant() const
 {
 	/// @todo
-	InsertionOrderedMap<QString, QVariant> map;
+//	InsertionOrderedMap<QString, QVariant> map;
+	QVariantInsertionOrderedMap map;
 
 	// Insert field values into the QVariantMap.
 #define X(field_enum_name, field)   map.insert( LibraryEntryTag :: field_enum_name ## _tagstr, QVariant::fromValue( field ) );
