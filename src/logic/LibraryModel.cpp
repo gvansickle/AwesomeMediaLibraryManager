@@ -753,12 +753,18 @@ void LibraryModel::deserializeFromFile(QFileDevice& file)
 
 QVariant LibraryModel::toVariant() const
 {
-	return m_library.toVariant();
+	QVariantMap map;
+
+	map.insert("the_models_library", m_library.toVariant());
+
+	return map;
 }
 
 void LibraryModel::fromVariant(const QVariant& variant)
 {
-	m_library.fromVariant(variant);
+	QVariantMap map = variant.toMap();
+
+	m_library = map.value("the_models_library").value<Library>();
 }
 
 Qt::DropActions LibraryModel::supportedDragActions() const

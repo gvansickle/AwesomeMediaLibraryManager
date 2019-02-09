@@ -160,7 +160,7 @@ MDIModelViewPair MDILibraryView::openFile(QUrl open_url, QWidget *parent, std::f
     else
     {
 		// Library import failed.
-		M_TODO("Add a QMessageBox or something here.");
+		/// @todo Add a QMessageBox or something here.
 		QMessageBox::critical(amlmApp->IMainWindow(), "TODO: Title", "TODO: Text", QMessageBox::Ok);
 		return MDIModelViewPair();
     }
@@ -271,7 +271,7 @@ M_WARNING("TODO: Serialization, remove or replace.");
 
 	XmlSerializer xmlser;
 	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-	xmlser.save(*m_underlying_model, QUrl::fromLocalFile(database_filename), "the_library_model");
+	xmlser.save(*m_underlying_model, QUrl::fromLocalFile(database_filename), "the_library_model_from_view");
 
 	qIn() << "###### WROTE" << database_filename;
 

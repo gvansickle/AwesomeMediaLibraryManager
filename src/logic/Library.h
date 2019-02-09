@@ -81,6 +81,8 @@ public:
 
 };
 
+Q_DECLARE_METATYPE(Library);
+
 QDataStream &operator<<(QDataStream &out, const Library &myObj);
 QDataStream &operator>>(QDataStream &in, Library &myObj);
 
