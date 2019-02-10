@@ -1465,7 +1465,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 		}
 		settings.endArray();
 	}
-	if(true) /// XML
+	if(false) /// XML
 	{
 		/// @todo Currently hardcoded to save/restore only one lib.
 		num_libs = 1;
@@ -1559,14 +1559,15 @@ M_TODO("INTERIM, CONVERT OVER TO THIS");
 		XmlSerializer xmlser;
 		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 
-//		QVariantList list;
-		SerializableQVariantList list("library_list", "library_instance");
+		SerializableQVariantList list("library_list", "library_list_item");
 		for(size_t i = 0; i < m_libmodels.size(); ++i)
 		{
-			list.push_back(QVariant::fromValue(m_libmodels[i]));
+			LibraryModel* lmp = m_libmodels[i];
+			QVariant qv = lmp->toVariant();
+			list.push_back(qv);
 		}
-//		auto cur_libmodel = m_libmodels[0];
-		xmlser.save(list, QUrl::fromLocalFile(database_filename), "the_library_model");
+
+		xmlser.save(list, QUrl::fromLocalFile(database_filename), "the_library_model_list");
 
 		qIn() << "###### WROTE XML DB:" << database_filename;
 	}

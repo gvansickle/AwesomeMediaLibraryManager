@@ -146,6 +146,7 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	int type = variant.type(); // AFAICT this is just wrong.
 	int usertype = variant.userType(); // This matches variant.typeName()
 	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
 	if(type != usertype)
 	{
@@ -156,6 +157,10 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	if(usertype == iomap_id)
 	{
 		writeVariantOrderedMapToStream(variant, xmlstream);
+	}
+	else if(usertype == serqvarlist_id)
+	{
+		writeHomogenousListToStream(variant, xmlstream);
 	}
 	else
 	{
@@ -179,7 +184,7 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeEndElement();
 }
 
-void XmlSerializer::writeHomogenousListToStream(const std::string_view& item_type, const QVariant& variant,
+void XmlSerializer::writeHomogenousListToStream(const std::string_view& item_tag, const QVariant& variant,
                                                 QXmlStreamWriter& xmlstream)
 {
 	QVariantList list = variant.toList();
@@ -191,7 +196,7 @@ void XmlSerializer::writeHomogenousListToStream(const std::string_view& item_typ
 	/// @note tag name will be "item" for each element, not sure we want that.
 	for(const QVariant& element : list)
 	{
-		writeVariantToStream("item", element, xmlstream);
+		writeVariantToStream(item_tag, element, xmlstream);
 	}
 }
 
@@ -253,6 +258,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
 	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
 
 	QVariant variant;
@@ -262,6 +268,10 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	if(metatype == iomap_id)
 	{
 		variant = readVariantOrderedMapFromStream(xmlstream);
+	}
+	else if(metatype == serqvarlist_id)
+	{
+		variant = readHomogenousListFromStream(xmlstream);
 	}
 	else
 	{
@@ -331,6 +341,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 
 	if(!status)
 	{
+//#error "FAILING HERE"
 		qWr() << QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(dataString, typeString);
 		qWr() << "isValid():" << variant.isValid();
 	}

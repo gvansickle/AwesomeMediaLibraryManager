@@ -263,9 +263,9 @@ void Library::fromVariant(const QVariant& variant)
 	{
 		std::shared_ptr<LibraryEntry> libentry = std::make_shared<LibraryEntry>();
 		libentry->fromVariant(e);
-		m_lib_entries.emplace_back(libentry);
+		m_lib_entries.push_back(libentry);
 	}
-
+	Q_ASSERT(m_lib_entries.size() == num_lib_entries);
 }
 
 void Library::addingEntry(const LibraryEntry* entry)

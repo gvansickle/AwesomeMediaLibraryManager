@@ -67,11 +67,12 @@ public:
 class SerializableQVariantList : public QVariantList, public virtual ISerializable
 {
 public:
-
+	SerializableQVariantList() = default;
 	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag)
 	{
 		set_tag_names(list_tag, list_item_tag);
 	}
+	~SerializableQVariantList() = default;
 
 	SerializableQVariantList& operator=(const SerializableQVariantList& other)
 	{
@@ -95,6 +96,7 @@ public:
 		Q_ASSERT(!m_list_item_tag.isEmpty());
 
 		QVariantMap map;
+//		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
 		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
 		map.insert(m_list_tag, *qvl);
 		return map;
@@ -121,7 +123,7 @@ private:
 	QString m_list_item_tag;
 };
 
-
+Q_DECLARE_METATYPE(SerializableQVariantList);
 
 #endif /* SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_ */
 
