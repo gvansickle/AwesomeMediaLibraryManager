@@ -82,8 +82,7 @@ private:
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
 
-	void writeHomogenousListToStream(const std::string_view& item_tag, const QVariant& variant,
-	                                 QXmlStreamWriter& xmlstream);
+	void writeSerializableQVariantListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
@@ -96,6 +95,7 @@ private:
 
 	QVariant readVariantFromStream(QXmlStreamReader& xmlstream);
 
+	QVariant readHomogenousListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantListFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantMapFromStream(QXmlStreamReader& xmlstream);
 	QVariant readVariantOrderedMapFromStream(QXmlStreamReader& xmlstream);

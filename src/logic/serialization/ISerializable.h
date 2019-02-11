@@ -64,10 +64,14 @@ public:
 };
 
 
+/**
+ * @todo Maybe factor out a QVariantList with tag names only.
+ */
 class SerializableQVariantList : public QVariantList, public virtual ISerializable
 {
 public:
 	SerializableQVariantList() = default;
+	SerializableQVariantList(const SerializableQVariantList& other) = default;
 	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag)
 	{
 		set_tag_names(list_tag, list_item_tag);
@@ -88,6 +92,16 @@ public:
 		m_list_item_tag = list_item_tag;
 	}
 
+	const QString& get_list_tag() const
+	{
+		return m_list_tag;
+	}
+
+	const QString& get_list_item_tag() const
+	{
+		return m_list_item_tag;
+	}
+
 	QVariant toVariant() const override
 	{
 		Q_ASSERT(!m_list_tag.isNull());
@@ -97,7 +111,7 @@ public:
 
 		QVariantMap map;
 //		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
-		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
+		const SerializableQVariantList* qvl = dynamic_cast<const SerializableQVariantList*>(this);
 		map.insert(m_list_tag, *qvl);
 		return map;
 	}

@@ -1562,6 +1562,7 @@ M_TODO("INTERIM, CONVERT OVER TO THIS");
 		SerializableQVariantList list("library_list", "library_list_item");
 		for(size_t i = 0; i < m_libmodels.size(); ++i)
 		{
+			// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
 			LibraryModel* lmp = m_libmodels[i];
 			QVariant qv = lmp->toVariant();
 			list.push_back(qv);

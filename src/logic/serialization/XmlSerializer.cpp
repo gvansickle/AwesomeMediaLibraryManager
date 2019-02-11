@@ -101,12 +101,18 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 		xmlstream.raiseError("Reading first start element failed.");
 
 		/// @todo Handle errors better.
-		qWr() << error_string(xmlstream);
+		qWr() << "XML READ ERROR:" << error_string(xmlstream);
 	}
 	else
 	{
 		// Stream it all in.
 		serializable.fromVariant(readVariantFromStream(xmlstream));
+	}
+
+	// Reading completed one way or another, check for errors.
+	if(xmlstream.hasError())
+	{
+		qWr() << "XML READ ERROR:" << error_string(xmlstream);
 	}
 }
 
@@ -145,6 +151,7 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	int type = variant.type(); // AFAICT this is just wrong.
 	int usertype = variant.userType(); // This matches variant.typeName()
+	// These do their work at compile-time.
 	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
 	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
@@ -160,7 +167,7 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	}
 	else if(usertype == serqvarlist_id)
 	{
-		writeHomogenousListToStream(variant, xmlstream);
+		writeSerializableQVariantListToStream(variant, xmlstream);
 	}
 	else
 	{
@@ -184,19 +191,19 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeEndElement();
 }
 
-void XmlSerializer::writeHomogenousListToStream(const std::string_view& item_tag, const QVariant& variant,
-                                                QXmlStreamWriter& xmlstream)
+void XmlSerializer::writeSerializableQVariantListToStream(const QVariant& variant,
+                                                          QXmlStreamWriter& xmlstream)
 {
-	QVariantList list = variant.toList();
+	SerializableQVariantList list = variant.value<SerializableQVariantList>();
 
-	// Get the type of the first element, we'll assume all items are the same type.
-	/// @todo
+	qDb() << "tags:" << list.get_list_tag() << list.get_list_item_tag();
+
+	auto the_item_tag = list.get_list_item_tag();
 
 	// Stream each QVariant in the list out.
-	/// @note tag name will be "item" for each element, not sure we want that.
 	for(const QVariant& element : list)
 	{
-		writeVariantToStream(item_tag, element, xmlstream);
+		writeVariantToStream(the_item_tag, element, xmlstream);
 	}
 }
 
@@ -316,6 +323,65 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	return variant;
 }
 
+
+QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream)
+{
+	QVariantList list;
+	bool is_first_item = true;
+	QString item_tag;
+
+	while(xmlstream.readNextStartElement())
+	{
+		if(is_first_item)
+		{
+			// We should have just read in the tag for items in this list.
+			item_tag = xmlstream.name().toString();
+			is_first_item = false;
+		}
+		else
+		{
+			// Check that we're still reading the correct item type.
+			auto this_item_tag = xmlstream.name();
+			if(item_tag != this_item_tag)
+			{
+				Q_ASSERT(0);
+			}
+		}
+
+		// Now read the contents of the <item>.
+		QVariant next_list_element = readVariantFromStream(xmlstream);
+
+		check_for_stream_error_and_skip(xmlstream);
+
+		list.append(next_list_element);
+	}
+
+	check_for_stream_error_and_skip(xmlstream);
+
+	return list;
+}
+
+QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
+{
+	QVariantList list;
+	while(xmlstream.readNextStartElement())
+	{
+		// We should have just read in an "<item>".
+		Q_ASSERT(xmlstream.name() == "item");
+
+		// Now read the contents of the <item>.
+		QVariant next_list_element = readVariantFromStream(xmlstream);
+
+		check_for_stream_error_and_skip(xmlstream);
+
+		list.append(next_list_element);
+	}
+
+	check_for_stream_error_and_skip(xmlstream);
+
+	return list;
+}
+
 QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
@@ -347,27 +413,6 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 	}
 
 	return variant;
-}
-
-QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
-{
-	QVariantList list;
-	while(xmlstream.readNextStartElement())
-	{
-		// We should have just read in an "<item>".
-		Q_ASSERT(xmlstream.name() == "item");
-
-		// Now read the contents of the <item>.
-		QVariant next_list_element = readVariantFromStream(xmlstream);
-
-		check_for_stream_error_and_skip(xmlstream);
-
-		list.append(next_list_element);
-	}
-
-	check_for_stream_error_and_skip(xmlstream);
-
-	return list;
 }
 
 QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
@@ -466,7 +511,6 @@ void XmlSerializer::save_extra_start_info(QXmlStreamWriter& xmlstream)
 //	xml.writeAttribute(AbstractTreeModelReader::versionAttribute(), m_tree_model->getXmlStreamVersion());
 #endif
 }
-
 
 
 
