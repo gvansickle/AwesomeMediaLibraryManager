@@ -97,7 +97,7 @@ public:
 	}
 #endif
 
-private:
+protected:
 	QString m_list_tag;
 	QString m_list_item_tag;
 };

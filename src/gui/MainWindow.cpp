@@ -1465,31 +1465,46 @@ void MainWindow::readLibSettings(QSettings& settings)
 		}
 		settings.endArray();
 	}
-	if(false) /// XML
+	if(true) /// XML
 	{
+M_TODO("INTERIM, CONVERT OVER TO THIS");
+
 		/// @todo Currently hardcoded to save/restore only one lib.
 		num_libs = 1;
 
+		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
 		qInfo() << "Reading" << num_libs << "libraries...";
 
-		for(int i = 0; i < num_libs; ++i)
+		qIn() << "###### READING XML DB:" << database_filename;
+
+		XmlSerializer xmlser;
+		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+
+		SerializableQVariantList list("library_list", "library_list_item");
+
+		xmlser.load(list, QUrl::fromLocalFile(database_filename));
+
+		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
+
+		for(int i = 0; i < list.size(); ++i)
 		{
-			QPointer<LibraryModel> libmodel;
+//			QPointer<LibraryModel> libmodel;
 
-M_TODO("INTERIM, CONVERT OVER TO THIS");
-			QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+//			libmodel = new LibraryModel(this);
 
-			qIn() << "###### READING XML DB:" << database_filename;
+			// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
+//			LibraryModel* lmp = m_libmodels[i];
+//			QVariant qv = lmp->toVariant();
+//			list.push_back(qv);
 
-			XmlSerializer xmlser;
-			xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-			/// @todo Loop.
-			libmodel = new LibraryModel(this);
-			xmlser.load(*libmodel, QUrl::fromLocalFile(database_filename));
+			QVariant qv = list[i];
+			Q_ASSERT(qv.isValid());
+			Q_ASSERT(!qv.isNull());
+			LibraryModel* lmp = new LibraryModel(this);
+			lmp->fromVariant(qv);
 
-			qIn() << "###### READ XML DB:" << database_filename;
-
-			if(!libmodel)
+			if(!lmp)
 			{
 				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
 									  QMessageBox::Ok);
@@ -1497,12 +1512,13 @@ M_TODO("INTERIM, CONVERT OVER TO THIS");
 			else
 			{
 				MDIModelViewPair mvpair;
-				mvpair.m_model = libmodel;
+				mvpair.m_model = lmp;
 				mvpair.m_model_was_existing = false;
 
 				addChildMDIModelViewPair_Library(mvpair);
 			}
 		}
+		qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
 	}
 }
 

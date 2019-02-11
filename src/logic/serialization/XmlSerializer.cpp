@@ -326,7 +326,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 
 QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream)
 {
-	QVariantList list;
+	QVariantHomogenousList list;
 	bool is_first_item = true;
 	QString item_tag;
 
@@ -336,6 +336,7 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 		{
 			// We should have just read in the tag for items in this list.
 			item_tag = xmlstream.name().toString();
+			list.set_tag_names("TODO_dummy", item_tag);
 			is_first_item = false;
 		}
 		else
@@ -344,11 +345,11 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 			auto this_item_tag = xmlstream.name();
 			if(item_tag != this_item_tag)
 			{
-				Q_ASSERT(0);
+				Q_ASSERT_X(0, __func__, "TAG MISMATCH IN LIST");
 			}
 		}
 
-		// Now read the contents of the <item>.
+		// Now read the contents of the <$item_tag>.
 		QVariant next_list_element = readVariantFromStream(xmlstream);
 
 		check_for_stream_error_and_skip(xmlstream);
@@ -358,7 +359,7 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 
 	check_for_stream_error_and_skip(xmlstream);
 
-	return list;
+	return QVariant::fromValue(list);
 }
 
 QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)

@@ -77,21 +77,19 @@ public:
 	{
 		set_tag_names(list_tag, list_item_tag);
 	}
-	~SerializableQVariantList() = default;
+	~SerializableQVariantList() override = default;
 
-	SerializableQVariantList& operator=(const SerializableQVariantList& other)
+	SerializableQVariantList& operator=(SerializableQVariantList other)
 	{
-		((QVariantList)*this) = (QVariantList)other;
-		m_list_tag = other.m_list_tag;
-		m_list_item_tag = other.m_list_item_tag;
+		std::swap(*this, other);
 		return *this;
 	}
 
-	void set_tag_names(const QString& list_tag, const QString& list_item_tag)
-	{
-		m_list_tag = list_tag;
-		m_list_item_tag = list_item_tag;
-	}
+//	void set_tag_names(const QString& list_tag, const QString& list_item_tag)
+//	{
+//		m_list_tag = list_tag;
+//		m_list_item_tag = list_item_tag;
+//	}
 
 	const QString& get_list_tag() const
 	{
@@ -111,9 +109,8 @@ public:
 		Q_ASSERT(!m_list_item_tag.isEmpty());
 
 		QVariantMap map;
-//		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
-		const SerializableQVariantList* qvl = dynamic_cast<const SerializableQVariantList*>(this);
-		map.insert(m_list_tag, QVariant::fromValue(*qvl));
+		// Return a QMap with a single QVariant(SerializableQVariantList) item.
+		map.insert(m_list_tag, QVariant::fromValue(*this));
 		return map;
 	}
 
@@ -133,9 +130,9 @@ public:
 		}
 	}
 
-private:
-	QString m_list_tag;
-	QString m_list_item_tag;
+//private:
+//	QString m_list_tag;
+//	QString m_list_item_tag;
 };
 
 Q_DECLARE_METATYPE(SerializableQVariantList);
