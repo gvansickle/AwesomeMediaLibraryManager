@@ -23,7 +23,4 @@
 
 #include "QVariantHomogenousList.h"
 
-QVariantHomogenousList::QVariantHomogenousList()
-{
 
-}

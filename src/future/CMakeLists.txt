@@ -28,11 +28,13 @@ set(HEADER_FILES_SRC_FUTURE
 	static_if.hpp
 	grvs_functional.hpp
 	InsertionOrderedMap.h
+	QVariantHomogenousList.h
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
 	InsertionOrderedMap.cpp
+	QVariantHomogenousList.cpp
 	)
 
 target_sources_local(future

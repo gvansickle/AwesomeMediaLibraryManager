@@ -33,6 +33,7 @@
 
 // Ours
 #include <future/InsertionOrderedMap.h>
+#include <future/QVariantHomogenousList.h>
 
 //Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(InsertionOrderedMap);
@@ -67,7 +68,7 @@ public:
 /**
  * @todo Maybe factor out a QVariantList with tag names only.
  */
-class SerializableQVariantList : public QVariantList, public virtual ISerializable
+class SerializableQVariantList : public QVariantHomogenousList, public virtual ISerializable
 {
 public:
 	SerializableQVariantList() = default;
@@ -112,7 +113,7 @@ public:
 		QVariantMap map;
 //		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
 		const SerializableQVariantList* qvl = dynamic_cast<const SerializableQVariantList*>(this);
-		map.insert(m_list_tag, *qvl);
+		map.insert(m_list_tag, QVariant::fromValue(*qvl));
 		return map;
 	}
 
