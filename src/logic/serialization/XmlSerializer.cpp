@@ -270,7 +270,10 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 
 	QVariant variant;
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
-	auto metatype = QVariant::nameToType(typeString.toStdString().c_str());
+	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
+	auto metatype = QMetaType::type(typeString.toStdString().c_str());
+
+//	AMLM_ASSERT_EQ(metatype, metatype2);
 
 	if(metatype == iomap_id)
 	{
@@ -411,6 +414,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 //#error "FAILING HERE"
 		qWr() << QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(dataString, typeString);
 		qWr() << "isValid():" << variant.isValid();
+		check_for_stream_error_and_skip(xmlstream);
 	}
 
 	return variant;
@@ -439,7 +443,15 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstr
 
 void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 {
-	M_TODO("TODO");
+	if(xmlstream.hasError())
+	{
+//		QXmlStreamReader::Error err = xmlstream.error();
+		auto estr = error_string(xmlstream);
+
+		qWr() << "### XML STREAM READ ERROR:" << estr;
+		qWr() << "### Skipping current element";
+		xmlstream.skipCurrentElement();
+	}
 }
 
 void XmlSerializer::set_default_namespace(const QString& default_ns, const QString& default_ns_version)

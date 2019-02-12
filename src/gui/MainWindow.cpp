@@ -1474,8 +1474,6 @@ M_TODO("INTERIM, CONVERT OVER TO THIS");
 
 		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
-		qInfo() << "Reading" << num_libs << "libraries...";
-
 		qIn() << "###### READING XML DB:" << database_filename;
 
 		XmlSerializer xmlser;
