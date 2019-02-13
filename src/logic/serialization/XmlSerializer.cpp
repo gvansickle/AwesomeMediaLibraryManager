@@ -62,16 +62,16 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 	// Start document.
 	xmlstream.writeStartDocument();
 
-	if(extra_save_actions)
-	{
-		extra_save_actions();
-	}
+//	if(extra_save_actions)
+//	{
+//		extra_save_actions();
+//	}
 
 	save_extra_start_info(xmlstream);
 
 	writeVariantToStream(root_name, serializable.toVariant(), xmlstream);
 
-	xmlstream.writeEndElement();
+//	xmlstream.writeEndElement();
 	xmlstream.writeEndDocument();
 
 	savefile.commit();
@@ -93,6 +93,11 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	// Read the first start element,  namespace element we added.
 	/// @todo Don't just throw it away.
 	xmlstream.readNextStartElement();
+//	if(xmlstream.readNextStartElement())
+//	{
+//		qIn() << "First start element tag:" << xmlstream.name() << ", skipping...";
+//		xmlstream.skipCurrentElement();
+//	}
 
 	// Read the first element in the file.
 	if(!xmlstream.readNextStartElement())

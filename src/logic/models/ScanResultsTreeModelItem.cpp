@@ -209,8 +209,8 @@ QVariant SRTMItem_LibEntry::toVariant() const
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map.insert("TEST_COL0", QVariant::fromValue(m_key));
-	map.insert("TEST_COL1", QVariant::fromValue(m_val));
+//	map.insert("TEST_COL0", QVariant::fromValue(m_key));
+//	map.insert("TEST_COL1", QVariant::fromValue(m_val));
 
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)
 	{

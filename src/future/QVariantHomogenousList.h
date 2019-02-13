@@ -65,38 +65,6 @@ public:
 		return m_list_item_tag;
 	}
 
-#if 0
-	QVariant toVariant() const override
-	{
-		Q_ASSERT(!m_list_tag.isNull());
-		Q_ASSERT(!m_list_tag.isEmpty());
-		Q_ASSERT(!m_list_item_tag.isNull());
-		Q_ASSERT(!m_list_item_tag.isEmpty());
-
-		QVariantMap map;
-//		const QVariantList* qvl = dynamic_cast<const QVariantList*>(this);
-		const SerializableQVariantList* qvl = dynamic_cast<const SerializableQVariantList*>(this);
-		map.insert(m_list_tag, *qvl);
-		return map;
-	}
-
-	void fromVariant(const QVariant& variant) override
-	{
-		Q_ASSERT(!m_list_tag.isNull());
-		Q_ASSERT(!m_list_tag.isEmpty());
-		Q_ASSERT(!m_list_item_tag.isNull());
-		Q_ASSERT(!m_list_item_tag.isEmpty());
-
-		QVariantMap map = variant.toMap();
-		QVariantList qvl = map.value(m_list_tag).toList();
-
-		for(const auto& e : qvl)
-		{
-			this->push_back(e);
-		}
-	}
-#endif
-
 protected:
 	QString m_list_tag;
 	QString m_list_item_tag;
