@@ -39,6 +39,9 @@ AMLM_QREG_CALLBACK([](){
     qRegisterMetaType<Fraction>();
 	qRegisterMetaTypeStreamOperators<Fraction>();
 	QMetaType::registerConverter<Fraction, QString>([](const Fraction& frac){ return frac.toQString(); });
+	QMetaType::registerConverter<QString, Fraction>([](const QString& str){
+		return Fraction(str);
+	});
 });
 
 /// Calculate the Greatest Common Divisor.

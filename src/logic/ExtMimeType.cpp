@@ -30,6 +30,11 @@ AMLM_QREG_CALLBACK([](){
 	qRegisterMetaTypeStreamOperators<ExtMimeType>();
 	QMetaType::registerDebugStreamOperator<ExtMimeType>();
 	QMetaType::registerConverter<ExtMimeType, QString>([](const ExtMimeType& obj){ return obj.name(); });
+	QMetaType::registerConverter<QString, ExtMimeType>([](const QString& str){
+		QMimeDatabase db;
+		ExtMimeType mtobj = db.mimeTypeForName(str);
+		return mtobj;
+	});
 });
 
 
@@ -55,6 +60,7 @@ QDataStream& operator>>(QDataStream& in, ExtMimeType& obj)
 	QString as_str;
 	in >> as_str;
 
+	/// @todo Convert to a central single mime db.
 	QMimeDatabase db;
 	obj = db.mimeTypeForName(as_str);
 

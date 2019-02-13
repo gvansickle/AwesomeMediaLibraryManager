@@ -306,21 +306,16 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	if(!variant.isValid())
 	{
 		// Whatever we read, it didn't make it to a QVariant successfully.
-		xmlstream.raiseError("Invalid QVariant conversion.");
-		qWr() << error_string(xmlstream);
-
-		// Try to keep going.
-		/// @todo Not sure what we need to do here.
+		// Report error and try to keep going.
+		xmlstream.raiseError("Invalid QVariant conversion");
+		check_for_stream_error_and_skip(xmlstream);
 	}
 
 	if(!xmlstream.isEndElement())
 	{
 		// Not at an end element, parsing went wrong somehow.
-		xmlstream.raiseError("Reading xml stream failed, skipping to next start element.");
-		qWr() << error_string(xmlstream);
-
-		// Try to keep going, skip to the next sibling element.
-		xmlstream.skipCurrentElement();
+		xmlstream.raiseError("Reading xml stream failed, skipping to next start element");
+		check_for_stream_error_and_skip(xmlstream);
 	}
 
 	return variant;
@@ -395,7 +390,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 	/// @note I know, not cool with all the RAM wasteage.
 	QString dataString = xmlstream.readElementText();
 
-//	qIn() << "Type:" << typeString << ", Data:" << dataString;
+	qIn() << "Type:" << typeString << ", Data:" << dataString;
 
 	QVariant variant(dataString);
 
@@ -407,7 +402,10 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 	// Cast to type named in typeString.
 	// If this fails, status will be false, but variant will be changed to the requested type
 	// will be null/cleared but valid.
-	bool status = variant.convert(QVariant::nameToType(typeString.toStdString().c_str()));
+	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
+	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
+	auto metatype = QMetaType::type(typeString.toStdString().c_str());
+	bool status = variant.convert(metatype);
 
 	if(!status)
 	{

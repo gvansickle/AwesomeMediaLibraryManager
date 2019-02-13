@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,9 +20,13 @@
 #ifndef FRACTION_H
 #define FRACTION_H
 
+// Qt5
 #include <QDebug>
 #include <QMetaType>
 #include <QString>
+
+// Ours
+#include <utils/QtHelpers.h>
 
 /**
  * @todo We should obsolete this.
@@ -62,6 +66,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(Fraction);
+QTH_DECLARE_QDATASTREAM_OPS(Fraction);
 
 Fraction operator+(Fraction f1, Fraction f2);
 Fraction operator-(Fraction f1, Fraction f2);
