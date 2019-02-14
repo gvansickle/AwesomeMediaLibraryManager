@@ -92,7 +92,7 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	/// @todo EXTRA READ INFO NEEDS TO COME FROM CALLER
 	// Read the first start element,  namespace element we added.
 	/// @todo Don't just throw it away.
-	xmlstream.readNextStartElement();
+//	xmlstream.readNextStartElement();
 //	if(xmlstream.readNextStartElement())
 //	{
 //		qIn() << "First start element tag:" << xmlstream.name() << ", skipping...";
@@ -111,7 +111,9 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	else
 	{
 		// Stream it all in.
-		serializable.fromVariant(readVariantFromStream(xmlstream));
+		QVariant qvar = readVariantFromStream(xmlstream);
+/// @todo qvar is coming back as a QVarMap with one entry: "library_list"/QVariantHomogenousList.
+		serializable.fromVariant(qvar);
 	}
 
 	// Reading completed one way or another, check for errors.
@@ -272,11 +274,14 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
 	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
+	Q_ASSERT(xmlstream.isStartElement());
 
 	QVariant variant;
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
 	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
 	auto metatype = QMetaType::type(typeString.toStdString().c_str());
+
+	log_current_node(xmlstream);
 
 //	AMLM_ASSERT_EQ(metatype, metatype2);
 
@@ -312,16 +317,17 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	{
 		// Whatever we read, it didn't make it to a QVariant successfully.
 		// Report error and try to keep going.
-		xmlstream.raiseError("Invalid QVariant conversion");
+		xmlstream.raiseError("#### Invalid QVariant conversion");
 		check_for_stream_error_and_skip(xmlstream);
 	}
 
 	if(!xmlstream.isEndElement())
 	{
 		// Not at an end element, parsing went wrong somehow.
-		xmlstream.raiseError("Reading xml stream failed, skipping to next start element");
-		check_for_stream_error_and_skip(xmlstream);
+		xmlstream.raiseError("#### NOT AT END ELEMENT, Reading xml stream failed, skipping to next start element");
 	}
+
+	check_for_stream_error_and_skip(xmlstream);
 
 	return variant;
 }
@@ -332,6 +338,8 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 	QVariantHomogenousList list;
 	bool is_first_item = true;
 	QString item_tag;
+
+	Q_ASSERT(xmlstream.isStartElement());
 
 	while(xmlstream.readNextStartElement())
 	{
@@ -368,6 +376,9 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
 {
 	QVariantList list;
+
+	Q_ASSERT(xmlstream.isStartElement());
+
 	while(xmlstream.readNextStartElement())
 	{
 		// We should have just read in an "<item>".
@@ -390,6 +401,8 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
+
+	Q_ASSERT(xmlstream.isStartElement());
 
 	// Slurps up all contents of this element until the EndElement, including all child element text.
 	/// @note I know, not cool with all the RAM wasteage.
@@ -414,11 +427,10 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 
 	if(!status)
 	{
-//#error "FAILING HERE"
-		qWr() << QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(dataString, typeString);
-		qWr() << "isValid():" << variant.isValid();
-		check_for_stream_error_and_skip(xmlstream);
+		xmlstream.raiseError(QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(dataString, typeString));
 	}
+
+	check_for_stream_error_and_skip(xmlstream);
 
 	return variant;
 }
@@ -426,6 +438,9 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
 {
 	QVariantMap map;
+
+	Q_ASSERT(xmlstream.isStartElement());
+
 	while(xmlstream.readNextStartElement())
 	{
 		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
@@ -437,6 +452,9 @@ QVariant XmlSerializer::readVariantOrderedMapFromStream(QXmlStreamReader& xmlstr
 {
 	// Only difference from readVariantMapFromStream() is the local map type we use.
 	QVariantInsertionOrderedMap map;
+
+	Q_ASSERT(xmlstream.isStartElement());
+
 	while(xmlstream.readNextStartElement())
 	{
 		map.insert(xmlstream.name().toString(), readVariantFromStream(xmlstream));
@@ -451,10 +469,14 @@ void XmlSerializer::check_for_stream_error_and_skip(QXmlStreamReader& xmlstream)
 //		QXmlStreamReader::Error err = xmlstream.error();
 		auto estr = error_string(xmlstream);
 
-		qWr() << "### XML STREAM READ ERROR:" << estr;
-		qWr() << "### Skipping current element";
+		qWr() << "### XML STREAM READ ERROR:" << estr << ", skipping current element";
 		xmlstream.skipCurrentElement();
 	}
+}
+
+void XmlSerializer::log_current_node(QXmlStreamReader& xmlstream)
+{
+	qIn() << "#### Current node:" << xmlstream.lineNumber() << ":" << xmlstream.columnNumber() << ":" << xmlstream.qualifiedName();
 }
 
 void XmlSerializer::set_default_namespace(const QString& default_ns, const QString& default_ns_version)

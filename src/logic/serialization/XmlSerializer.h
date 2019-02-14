@@ -105,6 +105,8 @@ private:
 
 	void check_for_stream_error_and_skip(QXmlStreamReader& xmlstream);
 
+	void log_current_node(QXmlStreamReader& xmlstream);
+
 	using QXmlStreamRWRef = std::variant<std::reference_wrapper<QXmlStreamReader>, std::reference_wrapper<QXmlStreamWriter>>;
 	/**
 	 * If the given QXmlStreamReader/Writer has an error, returns the error string.
