@@ -85,12 +85,6 @@ public:
 		return *this;
 	}
 
-//	void set_tag_names(const QString& list_tag, const QString& list_item_tag)
-//	{
-//		m_list_tag = list_tag;
-//		m_list_item_tag = list_item_tag;
-//	}
-
 	const QString& get_list_tag() const
 	{
 		return m_list_tag;
@@ -122,17 +116,13 @@ public:
 		Q_ASSERT(!m_list_item_tag.isEmpty());
 
 		QVariantMap map = variant.toMap();
-		QVariantList qvl = map.value(m_list_tag).toList();
+		QVariantHomogenousList qvl = map.value(m_list_tag).value<QVariantHomogenousList>();
 
 		for(const auto& e : qvl)
 		{
 			this->push_back(e);
 		}
 	}
-
-//private:
-//	QString m_list_tag;
-//	QString m_list_item_tag;
 };
 
 Q_DECLARE_METATYPE(SerializableQVariantList);

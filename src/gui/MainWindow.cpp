@@ -1469,10 +1469,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 	{
 M_TODO("INTERIM, CONVERT OVER TO THIS");
 
-		/// @todo Currently hardcoded to save/restore only one lib.
-		num_libs = 1;
-
-		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
 		qIn() << "###### READING XML DB:" << database_filename;
 

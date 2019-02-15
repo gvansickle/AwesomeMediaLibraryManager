@@ -66,12 +66,11 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 //	{
 //		extra_save_actions();
 //	}
-
+	// xmlstream.writeStartElement(str);
 	save_extra_start_info(xmlstream);
 
 	writeVariantToStream(root_name, serializable.toVariant(), xmlstream);
 
-//	xmlstream.writeEndElement();
 	xmlstream.writeEndDocument();
 
 	savefile.commit();
@@ -92,7 +91,8 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	/// @todo EXTRA READ INFO NEEDS TO COME FROM CALLER
 	// Read the first start element,  namespace element we added.
 	/// @todo Don't just throw it away.
-//	xmlstream.readNextStartElement();
+	xmlstream.readNextStartElement();
+	qIn() << "First start element tag:" << xmlstream.name();
 //	if(xmlstream.readNextStartElement())
 //	{
 //		qIn() << "First start element tag:" << xmlstream.name() << ", skipping...";
