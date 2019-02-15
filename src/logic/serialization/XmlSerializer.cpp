@@ -112,7 +112,7 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	{
 		// Stream it all in.
 		QVariant qvar = readVariantFromStream(xmlstream);
-/// @todo qvar is coming back as a QVarMap with one entry: "library_list"/QVariantHomogenousList.
+/// @todo THINK THIS IS FIXED: qvar is coming back as a QVarMap with one entry: "library_list"/QVariantHomogenousList.
 		serializable.fromVariant(qvar);
 	}
 
@@ -244,7 +244,7 @@ void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXml
 {
 	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
 
-	for(auto& i : omap)
+	for(const auto& i : omap)
 	{
 		writeVariantToStream(i.first, i.second, xmlstream);
 	}

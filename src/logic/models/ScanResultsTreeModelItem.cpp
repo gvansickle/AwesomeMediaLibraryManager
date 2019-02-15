@@ -225,7 +225,7 @@ void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 
 	/// @todo Incomplete.
-
+	Q_ASSERT(0);
 }
 
 /////////// @todo SRTMItem_LibEntry
