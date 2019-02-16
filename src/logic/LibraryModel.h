@@ -34,6 +34,7 @@
 class QFileDevice;
 
 // Ours
+#include <logic/serialization/ISerializable.h>
 #include <src/logic/dbmodels/CollectionDatabaseModel.h>
 
 #include <src/concurrency/ThreadsafeMap.h>

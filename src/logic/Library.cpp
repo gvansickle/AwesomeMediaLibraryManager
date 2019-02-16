@@ -28,16 +28,6 @@
 
 #include <utils/DebugHelpers.h>
 
-Library::Library()
-{
-
-}
-
-Library::~Library()
-{
-
-}
-
 void Library::clear()
 {
 	m_root_url = QUrl();

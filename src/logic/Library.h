@@ -20,6 +20,9 @@
 #ifndef LIBRARY_H
 #define LIBRARY_H
 
+// Std C++
+#include <utility>
+
 // Qt5
 #include <QUrl>
 
@@ -33,8 +36,32 @@ class QFileDevice;
 class Library : ISerializable
 {
 public:
-    Library();
-	 ~Library() override;
+	Library() = default;
+	Library(const Library& rhs)
+	{
+		m_root_url = rhs.m_root_url;
+		m_num_populated = rhs.m_num_populated;
+		m_num_unpopulated = rhs.m_num_unpopulated;
+		m_lib_entries = rhs.m_lib_entries;
+	}
+//	Library(Library&& other) = default;
+	~Library() override = default;
+
+	Library& operator=(Library other)
+	{
+		swap(*this, other);
+		return *this;
+	}
+
+	friend void swap(Library& lhs, Library& rhs)
+	{
+		// Enable ADL.
+		using std::swap;
+		swap(lhs.m_root_url, rhs.m_root_url);
+		swap(lhs.m_num_populated, rhs.m_num_populated);
+		swap(lhs.m_num_unpopulated, rhs.m_num_unpopulated);
+		swap(lhs.m_lib_entries, rhs.m_lib_entries);
+	}
 
 	void clear();
 	void setRootUrl(const QUrl& url) { m_root_url = url; }
@@ -82,6 +109,7 @@ public:
 };
 
 Q_DECLARE_METATYPE(Library);
+Q_DECLARE_METATYPE(Library*);
 
 QDataStream &operator<<(QDataStream &out, const Library &myObj);
 QDataStream &operator>>(QDataStream &in, Library &myObj);

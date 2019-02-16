@@ -764,7 +764,9 @@ void LibraryModel::fromVariant(const QVariant& variant)
 {
 	QVariantMap map = variant.toMap();
 
-	m_library = map.value("the_models_library").value<Library>();
+	QVariant temp = map.value("the_models_library").value<QVariantInsertionOrderedMap>();
+
+	m_library = temp.value<Library>();
 }
 
 Qt::DropActions LibraryModel::supportedDragActions() const

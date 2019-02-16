@@ -1499,6 +1499,8 @@ QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 			LibraryModel* lmp = new LibraryModel(this);
 			lmp->fromVariant(qv);
 
+			Q_ASSERT(lmp->getLibRootDir().isValid());
+
 			if(!lmp)
 			{
 				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
