@@ -255,7 +255,7 @@ void Library::fromVariant(const QVariant& variant)
 		libentry->fromVariant(e);
 		m_lib_entries.push_back(libentry);
 	}
-//	AMLM_ASSERT_EQ(m_lib_entries.size(), num_lib_entries);
+	AMLM_WARNIF(m_lib_entries.size() != num_lib_entries);
 }
 
 void Library::addingEntry(const LibraryEntry* entry)

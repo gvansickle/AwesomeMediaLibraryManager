@@ -43,7 +43,7 @@ class LibraryEntry : public ISerializable
 public:
     LibraryEntry() = default;
 	LibraryEntry(const LibraryEntry& other) = default;
-    virtual ~LibraryEntry() = default;
+	~LibraryEntry() override = default;
 
     explicit LibraryEntry(const QUrl& m_url);
 

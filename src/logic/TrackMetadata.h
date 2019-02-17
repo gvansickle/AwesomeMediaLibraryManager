@@ -28,7 +28,7 @@
 #include <QtCore>
 
 // Cue Sheet Frame == 1/75th of a second.
-using Frames = long;
+//using Frames = long;
 
 /**
  * Metadata which applies to a single track in a possibly multi-track media.
