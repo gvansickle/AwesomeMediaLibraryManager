@@ -87,8 +87,7 @@ public:
 	/// @} // END ISerializable
 
     QTH_FRIEND_QDATASTREAM_OPS(LibraryEntry);
-//    friend QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
-//	friend QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
+
 	/// @} // END Serialization
 
 	/// @todo Do we want to return some kind of actual Image class here instead?
@@ -148,8 +147,5 @@ inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libent
 
 QTH_DECLARE_QDATASTREAM_OPS(LibraryEntry);
 QTH_DECLARE_QDATASTREAM_OPS(std::shared_ptr<LibraryEntry>);
-
-//QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
-//QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
 
 #endif // LIBRARYENTRY_H

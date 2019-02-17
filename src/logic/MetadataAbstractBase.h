@@ -20,11 +20,15 @@
 #ifndef METADATAABSTRACTBASE_H
 #define METADATAABSTRACTBASE_H
 
-#include <QUrl>
-
+// Std C++
 #include <set>
 #include <memory>
 
+// Qt5
+#include <QUrl>
+
+// Ours.
+#include <future/guideline_helpers.h>
 #include <src/utils/Fraction.h>
 
 #include "TrackMetadata.h"
@@ -50,9 +54,11 @@ class TrackMetadata;
 
 class MetadataAbstractBase
 {
+
 public:
 	MetadataAbstractBase();
 	virtual ~MetadataAbstractBase() = default;
+	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(MetadataAbstractBase);
 
 	// Non-virtual clone() interface, because of no covariance for smart ptrs.
 	std::unique_ptr<MetadataAbstractBase> clone() const { return std::unique_ptr<MetadataAbstractBase>(this->clone_impl()); }

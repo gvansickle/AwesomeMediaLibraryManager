@@ -27,12 +27,14 @@ set(HEADER_FILES_SRC_FUTURE
 	cloneable.h
 	static_if.hpp
 	grvs_functional.hpp
+	guideline_helpers.h
 	InsertionOrderedMap.h
 	QVariantHomogenousList.h
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
+	guideline_helpers.cpp
 	InsertionOrderedMap.cpp
 	QVariantHomogenousList.cpp
 	)
