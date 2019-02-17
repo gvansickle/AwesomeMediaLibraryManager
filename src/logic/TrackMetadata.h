@@ -27,7 +27,9 @@
 /// Qt5
 #include <QtCore>
 
-// Cue Sheet Frame == 1/75th of a second.
+// Ours.
+#include "Frames.h"
+
 //using Frames = long;
 
 /**

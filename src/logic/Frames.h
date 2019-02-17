@@ -23,14 +23,42 @@
 #ifndef SRC_LOGIC_FRAMES_H_
 #define SRC_LOGIC_FRAMES_H_
 
-/*
- *
+// Std C++.
+#include <cstdint>
+
+// Boost.
+#include <boost/operators.hpp>
+#if 0
+/**
+ * Arithmetic type for units of CD Cue Sheet Frames == 1/75th of a second.
  */
 class Frames
+		: boost::totally_ordered< Frames
+		, boost::addable< Frames
+		> > // That was base-class chaining.
+
 {
 public:
-	Frames();
-	virtual ~Frames();
-};
+	/// Rule of Zero.
 
+	explicit Frames(int64_t value) { m_frames = value; }
+
+	/**
+	 * Three-way comparison operator.
+	 * @return
+	 */
+	//friend int compare(Frames& f1, Frames& f2) noexcept;
+	bool operator<(const Frames& other) const { return m_frames < other.m_frames; };
+	bool operator==(const Frames& other) const { return m_frames == other.m_frames; };
+
+	Frames operator+=(const Frames& other)
+	{
+		return Frames(m_frames + other.m_frames);
+	}
+
+private:
+
+	int64_t m_frames;
+};
+#endif
 #endif /* SRC_LOGIC_FRAMES_H_ */

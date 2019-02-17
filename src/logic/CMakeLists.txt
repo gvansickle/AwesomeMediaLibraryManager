@@ -54,6 +54,7 @@ set(logic_subdir_SOURCES
 	LibraryRescanner.cpp
 	ExtUrl.cpp
 	PerfectDeleter.cpp
+	Frames.cpp
 	)
 
 set(logic_subdir_HEADERS
@@ -86,6 +87,7 @@ set(logic_subdir_HEADERS
 	ExtMimeType.h
 	ExtUrl.h
 	PerfectDeleter.h
+	Frames.h
 	)
 	
 #prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
