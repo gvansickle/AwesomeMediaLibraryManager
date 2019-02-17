@@ -366,8 +366,6 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 
 QVariant LibraryEntry::toVariant() const
 {
-	/// @todo
-//	InsertionOrderedMap<QString, QVariant> map;
 	QVariantInsertionOrderedMap map;
 
 	// Insert field values into the QVariantMap.
@@ -385,8 +383,7 @@ QVariant LibraryEntry::toVariant() const
 
 void LibraryEntry::fromVariant(const QVariant& variant)
 {
-	/// @todo
-	InsertionOrderedMap<QString, QVariant> map = variant.value<InsertionOrderedMap<QString, QVariant>>();
+	QVariantInsertionOrderedMap map = variant.value<InsertionOrderedMap<QString, QVariant>>();
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_enum_name, field) field = map.value( LibraryEntryTag :: field_enum_name ## _tagstr ).value<decltype( field )>();
@@ -394,10 +391,27 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 #undef X
 
 	/// @todo
-//	if(isPopulated())
-//	{
-//		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
-//	}
+	if(isPopulated())
+	{
+		/// @todo This is badly named. m_metadata the field has a "metadata_tagtree" QVarMap inside it.
+		QVariant metadata_map = map.value(LibraryEntryTag::METADATA_tagstr);
+
+//		Q_ASSERT(metadata_map.value().canConvert<MetadataFromCache>());
+
+		if(metadata_map.isValid())
+		{
+			m_metadata = Metadata::make_metadata(metadata_map);
+			m_is_error = false;
+			m_is_populated = true;
+		}
+		else
+		{
+			qWarning() << "Found no/invalid metadata in XML for" << m_url;
+			m_metadata = Metadata::make_metadata();
+			m_is_error = true;
+			m_is_populated = false;
+		}
+	}
 
 }
 

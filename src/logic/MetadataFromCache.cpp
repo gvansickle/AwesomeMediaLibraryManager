@@ -43,6 +43,18 @@ void MetadataFromCache::readFromJson(const QJsonObject& jo)
 	///qDebug() << "Reading Metadata from Json:" << m_tag_map;
 }
 
+QVariant MetadataFromCache::toVariant() const
+{
+	Q_ASSERT_X(0, __func__, "NOT IMPLEMENTED");
+	return QVariant();
+}
+
+void MetadataFromCache::fromVariant(const QVariant& variant)
+{
+	QVariantMap map = variant.toMap();
+	m_tag_map = MapConverter::VarMapToTagMap(map);
+}
+
 Metadata MetadataFromCache::get_one_track_metadata(int track_index) const
 {
 	Q_ASSERT(0);

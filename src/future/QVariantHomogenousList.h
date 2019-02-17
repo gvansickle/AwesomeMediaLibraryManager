@@ -38,14 +38,9 @@
 class QVariantHomogenousList : public QVariantList
 {
 public:
+	// Rule-of-Zero doesn't work here, probably Qt5.
 	QVariantHomogenousList() = default;
 	QVariantHomogenousList(const QVariantHomogenousList& other) = default;
-	QVariantHomogenousList(const QString& list_tag, const QString& list_item_tag)
-	{
-		set_tag_names(list_tag, list_item_tag);
-	}
-	~QVariantHomogenousList() = default;
-
 	QVariantHomogenousList& operator=(QVariantHomogenousList other)
 	{
 		// allow use of std::swap()...
@@ -54,6 +49,12 @@ public:
 		// ...but select overloads first.
 		swap(*this, other);
 		return *this;
+	}
+	~QVariantHomogenousList() = default;
+
+	QVariantHomogenousList(const QString& list_tag, const QString& list_item_tag)
+	{
+		set_tag_names(list_tag, list_item_tag);
 	}
 
 	void set_tag_names(const QString& list_tag, const QString& list_item_tag)

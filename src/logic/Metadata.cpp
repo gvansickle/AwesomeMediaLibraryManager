@@ -78,6 +78,20 @@ Metadata Metadata::make_metadata(const QJsonObject& jo)
 	return retval;
 }
 
+Metadata Metadata::make_metadata(const QVariant& variant)
+{
+	QVariantMap map = variant.toMap();
+
+	QVariantMap metadata_tagtree = map.value("metadata_tagtree").toMap();
+
+//	Q_ASSERT(map.canConvert<MetadataFromCache>());
+	MetadataFromCache retval;
+	retval.fromVariant(metadata_tagtree);
+	retval.m_read_has_been_attempted = true;
+	retval.m_is_error = false;
+	return retval;
+}
+
 std::set<std::string> Metadata::getNewTags()
 {
 	return MetadataTaglib::getNewTags();
@@ -106,6 +120,7 @@ QVariant Metadata::toVariant() const
 
 void Metadata::fromVariant(const QVariant& variant)
 {
+//	return pImpl->fromVariant(variant);
 	/// @todo
 	QVariantMap map = variant.toMap();
 	using tag_map_var_type = std::map<std::string, std::vector<std::string>>;

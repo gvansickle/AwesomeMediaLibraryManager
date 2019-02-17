@@ -64,6 +64,8 @@ public:
 	/// Static factory function for creating a new Metadata from the given QJsonObject.
 	static Metadata make_metadata(const QJsonObject& jo);
 
+	static Metadata make_metadata(const QVariant& variant);
+
 	/// @}
 
 	static std::set<std::string> getNewTags();
