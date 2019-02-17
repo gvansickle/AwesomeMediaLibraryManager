@@ -225,7 +225,7 @@ bool MetadataTaglib::read(const QUrl& url)
 	// Downcast it to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
 	{
-		m_file_type = AudioFileType::MP3;
+		m_audio_file_type = AudioFileType::MP3;
 		m_has_ape = file->hasAPETag();
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
@@ -236,7 +236,7 @@ bool MetadataTaglib::read(const QUrl& url)
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
 	{
-		m_file_type = AudioFileType::FLAC;
+		m_audio_file_type = AudioFileType::FLAC;
 		m_has_ogg_xipfcomment = file->hasXiphComment();
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
@@ -252,7 +252,7 @@ bool MetadataTaglib::read(const QUrl& url)
 	}
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
-		m_file_type = AudioFileType::OGG_VORBIS;
+		m_audio_file_type = AudioFileType::OGG_VORBIS;
 		if(auto tag = file->tag())
 		{
 			m_has_ogg_xipfcomment = true;
@@ -262,7 +262,7 @@ bool MetadataTaglib::read(const QUrl& url)
 	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
 	{
 		// Wav file.
-		m_file_type = AudioFileType::WAV;
+		m_audio_file_type = AudioFileType::WAV;
 		m_has_id3v2 = file->hasID3v2Tag();
 		m_has_info_tag = file->hasInfoTag();
 

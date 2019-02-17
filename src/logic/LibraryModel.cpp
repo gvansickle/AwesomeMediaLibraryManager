@@ -766,13 +766,11 @@ void LibraryModel::fromVariant(const QVariant& variant)
 
 	QVariant temp = map.value("the_models_library");//.value<QVariantInsertionOrderedMap>();
 
-//	Q_ASSERT(temp.canConvert<Library>());
 	Q_ASSERT(temp.canConvert<QVariantInsertionOrderedMap>());
 
 	Library temp_lib;
 	temp_lib.fromVariant(temp);
 
-//	m_library = temp.value<Library>();
 	m_library = temp_lib;
 }
 

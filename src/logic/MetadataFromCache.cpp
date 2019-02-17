@@ -45,8 +45,12 @@ void MetadataFromCache::readFromJson(const QJsonObject& jo)
 
 QVariant MetadataFromCache::toVariant() const
 {
-	Q_ASSERT_X(0, __func__, "NOT IMPLEMENTED");
-	return QVariant();
+//	Q_ASSERT_X(0, __func__, "NOT IMPLEMENTED");
+	QVariantMap map;
+
+	map.insert(QString("metadata_from_cache_dummy_DELETEME"), MapConverter::TagMaptoVarMap(m_tag_map));
+
+	return map;
 }
 
 void MetadataFromCache::fromVariant(const QVariant& variant)

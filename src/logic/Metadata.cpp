@@ -99,7 +99,7 @@ std::set<std::string> Metadata::getNewTags()
 
 std::string Metadata::GetFiletypeName() const
 {
-	return f_filetype_to_string_map[pImpl->m_file_type];
+	return f_filetype_to_string_map[pImpl->m_audio_file_type];
 }
 
 void Metadata::writeToJson(QJsonObject& jo) const
@@ -114,6 +114,7 @@ QVariant Metadata::toVariant() const
 	QVariantMap retval;
 	/// @todo
 	retval.insert("metadata_tagtree", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
+	retval.insert("metadata_abstract_base", pImpl->toVariant());
 
 	return retval;
 }

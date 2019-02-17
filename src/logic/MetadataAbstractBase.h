@@ -26,11 +26,14 @@
 
 // Qt5
 #include <QUrl>
+#include <QObject>
 
 // Ours.
+#include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
 #include <src/utils/Fraction.h>
-
+//#include <utils/EnumFlagHelpers.h>
+#include <logic/serialization/ExtEnum.h>
 #include "TrackMetadata.h"
 
 // Taglib
@@ -38,27 +41,52 @@
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 
-enum class AudioFileType
+
+class AudioFileType : public ExtEnum<AudioFileType>
 {
-	UNKNOWN,
-	FLAC,
-	MP3,
-	OGG_VORBIS,
-	WAV,
+	Q_GADGET
+
+public:
+
+	enum Types
+	{
+		UNKNOWN,
+		FLAC,
+		MP3,
+		OGG_VORBIS,
+		WAV,
+	};
+
+	Q_ENUM(Types);
+
+	/// Default operations (except destructor).  Use = default versions.
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(AudioFileType);
+	constexpr AudioFileType(AudioFileType::Types audio_file_type) : m_audio_file_type(audio_file_type) {}
+	AudioFileType(const QString& str) {}
+
+	friend bool operator<(const AudioFileType& a, const AudioFileType& b) { return a.m_audio_file_type < b.m_audio_file_type; }
+
+	operator QString() const { return "TODO"; }
+private:
+	Types m_audio_file_type;
 };
+
+Q_DECLARE_METATYPE(AudioFileType);
+
 
 using TagMap = std::map<std::string, std::vector<std::string>>;
 
 class Metadata;
 class TrackMetadata;
 
-class MetadataAbstractBase
+class MetadataAbstractBase : public virtual ISerializable
 {
 
 public:
-	MetadataAbstractBase();
-	virtual ~MetadataAbstractBase() = default;
-	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(MetadataAbstractBase);
+	M_GH_RULE_OF_ZERO(MetadataAbstractBase);
+//	MetadataAbstractBase() = default;
+//	virtual ~MetadataAbstractBase() = default;
+//	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(MetadataAbstractBase);
 
 	// Non-virtual clone() interface, because of no covariance for smart ptrs.
 	std::unique_ptr<MetadataAbstractBase> clone() const { return std::unique_ptr<MetadataAbstractBase>(this->clone_impl()); }
@@ -96,7 +124,17 @@ public:
 	/// @todo virtual int numEmbeddedPictures() const = 0;
 	virtual QByteArray getCoverArtBytes() const = 0;
 
-	AudioFileType m_file_type {AudioFileType::UNKNOWN};
+	/// @name Serialization support.
+	/// @{
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+	/// @}
+
+public:
+	/// @name Data members.
+	/// So yeah, this isn't really a very abstract Abstract Base Class....
+
+	AudioFileType m_audio_file_type {AudioFileType::Types::UNKNOWN};
 
 	bool m_has_cuesheet {false};
 

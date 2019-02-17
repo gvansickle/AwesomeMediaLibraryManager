@@ -33,6 +33,7 @@
 // Ours
 #include <src/utils/crtp.h>
 #include <src/utils/EnumFlagHelpers.h>
+#include <future/guideline_helpers.h>
 
 /**
  * A way-improved enum facility that's been too long in coming to C++.
@@ -75,7 +76,7 @@ template <class DerivedType>
 class ExtEnum : crtp<DerivedType, ExtEnum>
 {
 public:
-//	ExtEnum()
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(ExtEnum);
 
 //	using DerivedTypeEnumTag = typename DerivedType::EnumTag;
 //	enum EnumTag : int;
