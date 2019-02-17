@@ -35,12 +35,9 @@
 #include <future/InsertionOrderedMap.h>
 #include <future/QVariantHomogenousList.h>
 
-//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
-//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(InsertionOrderedMap);
 
 using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
-
 
 /**
  * Abstract interface for adding serialization capabilities to classes which
@@ -85,44 +82,8 @@ public:
 		return *this;
 	}
 
-	const QString& get_list_tag() const
-	{
-		return m_list_tag;
-	}
-
-	const QString& get_list_item_tag() const
-	{
-		return m_list_item_tag;
-	}
-
-	QVariant toVariant() const override
-	{
-		Q_ASSERT(!m_list_tag.isNull());
-		Q_ASSERT(!m_list_tag.isEmpty());
-		Q_ASSERT(!m_list_item_tag.isNull());
-		Q_ASSERT(!m_list_item_tag.isEmpty());
-
-		QVariantMap map;
-		// Return a QMap with a single QVariant(SerializableQVariantList) item.
-		map.insert(m_list_tag, QVariant::fromValue(*this));
-		return map;
-	}
-
-	void fromVariant(const QVariant& variant) override
-	{
-		Q_ASSERT(!m_list_tag.isNull());
-		Q_ASSERT(!m_list_tag.isEmpty());
-		Q_ASSERT(!m_list_item_tag.isNull());
-		Q_ASSERT(!m_list_item_tag.isEmpty());
-
-		QVariantMap map = variant.toMap();
-		QVariantHomogenousList qvl = map.value(m_list_tag).value<QVariantHomogenousList>();
-
-		for(const auto& e : qvl)
-		{
-			this->push_back(e);
-		}
-	}
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
 };
 
 Q_DECLARE_METATYPE(SerializableQVariantList);

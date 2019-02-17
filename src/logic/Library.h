@@ -33,35 +33,36 @@
 
 class QFileDevice;
 
-class Library : ISerializable
+class Library : public ISerializable
 {
 public:
-	Library() = default;
-	Library(const Library& rhs)
-	{
-		m_root_url = rhs.m_root_url;
-		m_num_populated = rhs.m_num_populated;
-		m_num_unpopulated = rhs.m_num_unpopulated;
-		m_lib_entries = rhs.m_lib_entries;
-	}
+//	Library() = default;
+//	Library(const Library& rhs)
+//	{
+//		m_root_url = rhs.m_root_url;
+//		m_num_populated = rhs.m_num_populated;
+//		m_num_unpopulated = rhs.m_num_unpopulated;
+//		m_lib_entries = rhs.m_lib_entries;
+//	}
+//	 Move constructor.
 //	Library(Library&& other) = default;
-	~Library() override = default;
+//	~Library() override = default;
 
-	Library& operator=(Library other)
-	{
-		swap(*this, other);
-		return *this;
-	}
+//	Library& operator=(Library other)
+//	{
+//		swap(*this, other);
+//		return *this;
+//	}
 
-	friend void swap(Library& lhs, Library& rhs)
-	{
-		// Enable ADL.
-		using std::swap;
-		swap(lhs.m_root_url, rhs.m_root_url);
-		swap(lhs.m_num_populated, rhs.m_num_populated);
-		swap(lhs.m_num_unpopulated, rhs.m_num_unpopulated);
-		swap(lhs.m_lib_entries, rhs.m_lib_entries);
-	}
+//	friend void swap(Library& lhs, Library& rhs)
+//	{
+//		// Enable ADL.
+//		using std::swap;
+//		swap(lhs.m_root_url, rhs.m_root_url);
+//		swap(lhs.m_num_populated, rhs.m_num_populated);
+//		swap(lhs.m_num_unpopulated, rhs.m_num_unpopulated);
+//		swap(lhs.m_lib_entries, rhs.m_lib_entries);
+//	}
 
 	void clear();
 	void setRootUrl(const QUrl& url) { m_root_url = url; }

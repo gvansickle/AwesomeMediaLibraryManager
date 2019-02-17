@@ -32,6 +32,9 @@
 #include <QString>
 #include <QVariantList>
 
+// Ours.
+#include <utils/DebugHelpers.h>
+
 class QVariantHomogenousList : public QVariantList
 {
 public:
@@ -45,7 +48,11 @@ public:
 
 	QVariantHomogenousList& operator=(QVariantHomogenousList other)
 	{
-		std::swap(*this, other);
+		// allow use of std::swap()...
+		qDb() << "SWAPPING";
+		using std::swap;
+		// ...but select overloads first.
+		swap(*this, other);
 		return *this;
 	}
 

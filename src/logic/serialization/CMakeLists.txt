@@ -22,6 +22,7 @@
 set(serialization_subdir_SOURCES
 		ExtEnum.cpp
 		XmlTagBase.cpp
+		ISerializable.cpp
 		SerializationExceptions.cpp
 		XmlObjects.cpp
 		XmlSerializer.cpp
