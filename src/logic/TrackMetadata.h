@@ -28,9 +28,9 @@
 #include <QtCore>
 
 // Ours.
-#include "Frames.h"
+//#include "Frames.h"
 
-//using Frames = long;
+using Frames = long;
 
 /**
  * Metadata which applies to a single track in a possibly multi-track media.
