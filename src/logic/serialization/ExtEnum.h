@@ -84,9 +84,14 @@ public:
 //	template <class T>
 //	using T = typename ExtEnumTraits<DerivedType>::EnumTag;
 
-	constexpr QMetaEnum qMetaEnum() const
+//	constexpr QMetaEnum qMetaEnum() const
+//	{
+//		return QMetaEnum::fromType<DerivedType>();
+//	}
+
+	static constexpr QMetaEnum& qMetaEnum()
 	{
-		return QMetaEnum::fromType<ExtEnum>();
+		return QMetaEnum::fromType<DerivedType>();
 	}
 
 
@@ -104,6 +109,16 @@ public:
 	{
 		return this->qMetaEnum().value(key_index);
 	}
+
+//	int keyToValue(const char* key, bool * ok = nullptr) const
+//	{
+//		return decltype(this->underlying())::qMetaEnum().keyToValue(key, ok);
+//	}
+//
+//	void fromValue(const char* key, bool * ok = nullptr)
+//	{
+//		*this = this->qMetaEnum().keyToValue(key, ok);
+//	}
 
 	/**
 	 * Return the string representation of the value of this ExtEnum.

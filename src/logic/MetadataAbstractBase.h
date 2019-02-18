@@ -45,13 +45,13 @@
  * @brief The AudioFileType class
  * @todo Do we really need this, or would ExtMimeType serve just as well?
  */
-class AudioFileType : public ExtEnum<AudioFileType>
+class AudioFileType //: public ExtEnum<AudioFileType>
 {
 	Q_GADGET
 
 public:
 
-	enum Types
+	enum Type
 	{
 		UNKNOWN,
 		FLAC,
@@ -60,24 +60,24 @@ public:
 		WAV,
 	};
 
-	Q_ENUM(Types);
+	Q_ENUM(Type);
 
 	/// Default operations (except destructor).  Use = default versions.
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AudioFileType);
 
-	/// Constexpr constructor for defining
-	constexpr AudioFileType(AudioFileType::Types audio_file_type) : m_audio_file_type(audio_file_type) {}
+	/// Constexpr constructor for initializers from literals.
+	constexpr AudioFileType(AudioFileType::Type audio_file_type) : m_audio_file_type(audio_file_type) {}
+//	AudioFileType(AudioFileType::Type audio_file_type) : m_audio_file_type(audio_file_type) {}
 //	AudioFileType(const QString& str) { m_audio_file_type  }
 
 	friend bool operator<(const AudioFileType& a, const AudioFileType& b) { return a.m_audio_file_type < b.m_audio_file_type; }
 
-	operator QString() const { return EnumFlagtoqstr(m_audio_file_type); }
+//	operator QString() const { return EnumFlagtoqstr(m_audio_file_type); }
 private:
-	Types m_audio_file_type;
+	Type m_audio_file_type {Type::UNKNOWN};
 };
 
 Q_DECLARE_METATYPE(AudioFileType);
-
 
 using TagMap = std::map<std::string, std::vector<std::string>>;
 
@@ -139,7 +139,7 @@ public:
 	/// @name Data members.
 	/// So yeah, this isn't really a very abstract Abstract Base Class....
 
-	AudioFileType m_audio_file_type {AudioFileType::Types::UNKNOWN};
+	AudioFileType::Type m_audio_file_type {AudioFileType::UNKNOWN};
 
 	bool m_has_cuesheet {false};
 

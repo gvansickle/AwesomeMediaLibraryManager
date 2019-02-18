@@ -296,6 +296,12 @@ TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)
 
 	testflags_through_qvar = flags_as_qvar.value<TestEnumHolder::TestEnum>();
 
+	TCOUT << "RECOVERED ENUM:" << testflags_through_qvar;
+
+	QString testenum_through_qvar_as_string = QVariant::fromValue(testflags).toString();
+
+	TCOUT << "RECOVERED ENUM AS STR:" << testenum_through_qvar_as_string;
+
 	EXPECT_EQ(testflags_through_qvar, testflags_original);
 }
 

@@ -71,6 +71,16 @@ QFlagsType QFlagsFromQStr(const QString& rep, bool *ok = nullptr)
 	return QFlagsType(me.keysToValue(tostdstr(rep).c_str(), ok));
 }
 
+template<typename QEnumType>
+QEnumType QEnumFromQStr(const QString& rep, bool *ok = nullptr)
+{
+	QMetaEnum me = QMetaEnum::fromType<QEnumType>();
+
+	// It's a Q_ENUM().
+	Q_ASSERT(!me.isFlag());
+
+	return QEnumType(me.keysToValue(tostdstr(rep).c_str(), ok));
+}
 
 //
 //template<typename QEnumType>
@@ -123,5 +133,33 @@ public:
 	}
 };
 
+template <class EnumType>
+class AMLMRegisterQEnumQStringConverters
+{
+public:
+	AMLMRegisterQEnumQStringConverters()
+	{
+		QMetaEnum etme = QMetaEnum::fromType<EnumType>();
+
+		if(!QMetaType::hasRegisteredConverterFunction<EnumType, QString>())
+		{
+			qIn() << "Registering QMetaType::registerConverter() functions for type:" << etme.scope() << etme.name();
+			// Register converters between TestFlagHolder::TestFlags-to-QString for at least QVariant's benefit.
+			bool success = QMetaType::registerConverter<EnumType, QString>([](const EnumType& flags) -> QString {
+				return EnumFlagtoqstr(flags);
+			});
+			Q_ASSERT_X(success, __PRETTY_FUNCTION__, "EnumType-to-QString converter registration failed");
+
+			success = QMetaType::registerConverter<QString, EnumType>([](const QString& str) -> EnumType {
+				return QEnumFromQStr<EnumType>(str);
+			});
+			Q_ASSERT_X(success, __PRETTY_FUNCTION__, "EnumType-from-QString converter registration failed");
+		}
+		else
+		{
+			qWr() << "Type" << etme.scope() << etme.name() << "already has registered QMetaType::registerConverter() functions";
+		}
+	}
+};
 
 #endif /* SRC_UTILS_ENUMFLAGHELPERS_H_ */

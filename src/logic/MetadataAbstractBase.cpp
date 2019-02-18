@@ -49,12 +49,18 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AudioFileType";
 //	qRegisterMetaTypeStreamOperators<AudioFileType>();
-	QMetaType::registerConverter<AudioFileType, QString>([](const AudioFileType& non_str){
-		return non_str;
-	});
-	QMetaType::registerConverter<QString, AudioFileType>([](const QString& str){
-		return AudioFileType(str);
-	});
+//	qRegisterMetaType<AudioFileType::Type>("AudioFileType::Type");
+//	AMLMRegisterQEnumQStringConverters<AudioFileType::Type>();
+
+//	QMetaType::registerConverter<AudioFileType, QString>([](const AudioFileType& qenum){
+//		return toqstr(qenum);
+//	});
+//	QMetaType::registerConverter<QString, AudioFileType>([](const QString& str){
+//		QVariant var = str;
+//		AudioFileType retval = var.value<AudioFileType>();
+////		retval.fromValue(tostdstr(str).c_str());
+//		return retval;
+//	});
 });
 
 
@@ -237,7 +243,7 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue( member_field ) );
+#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
