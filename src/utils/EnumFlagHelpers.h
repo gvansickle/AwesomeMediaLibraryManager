@@ -82,18 +82,6 @@ QEnumType QEnumFromQStr(const QString& rep, bool *ok = nullptr)
 	return QEnumType(me.keysToValue(tostdstr(rep).c_str(), ok));
 }
 
-//
-//template<typename QEnumType>
-//QEnumType QEnumFromQStr(const QString& rep)
-//{
-//	QMetaEnum me = QMetaEnum::fromType<QEnumType>();
-//	if(QMetaEnum::fromType<QEnumType>().isFlag())
-//	{
-//		// It's a Q_FLAG().
-//		return QString(me.valueToKeys(value));
-//	}
-//}
-
 /**
  * Register QFlags-specialization-to/from-QString converters.
  * This is required for QFlags (but not QEnums) to be able to convert to and from a string

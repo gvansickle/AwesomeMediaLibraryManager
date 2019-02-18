@@ -282,6 +282,28 @@ TEST_F(FlagsAndEnumsTests, EnumToStringViaQVariant)
 	EXPECT_EQ(enum_as_str, QString("Enum1"));
 }
 
+TEST_F(FlagsAndEnumsTests, StringToEnumViaQVariant)
+{
+	// Q_ENUM()s support conversion from a QString through a QVariant to the Q_ENUM() type.
+	// Note that the string consists of only the enumerator, the enum tag nor the containing class are represented.
+
+	QString str = "Enum1";
+
+	QVariant qvar(str);// = QVariant::fromValue(str);
+
+	TestEnumHolder::TestEnum test_enum;
+
+	test_enum = qvar.value<TestEnumHolder::TestEnum>();
+
+	TCOUT << "test_enum:" << test_enum;
+
+	int metatype = QMetaType::type("TestEnumHolder::TestEnum");
+	const char* metatype_name = QMetaType::typeName(metatype);
+	TCOUT << M_NAME_VAL(metatype_name);
+
+	EXPECT_EQ(test_enum, TestEnumHolder::Enum1);
+}
+
 TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)
 {
 	TestEnumHolder::TestEnum testflags_original { TestEnumHolder::Enum1 };

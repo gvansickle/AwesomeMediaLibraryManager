@@ -35,49 +35,14 @@
 #include <utils/EnumFlagHelpers.h>
 #include <logic/serialization/ExtEnum.h>
 #include "TrackMetadata.h"
+#include "AudioFileType.h"
 
 // Taglib
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 
-/**
- * @brief The AudioFileType class
- * @todo Do we really need this, or would ExtMimeType serve just as well?
- */
-class AudioFileType //: public ExtEnum<AudioFileType>
-{
-	Q_GADGET
 
-public:
-
-	enum Type
-	{
-		UNKNOWN,
-		FLAC,
-		MP3,
-		OGG_VORBIS,
-		WAV,
-	};
-
-	Q_ENUM(Type);
-
-	/// Default operations (except destructor).  Use = default versions.
-	M_GH_RULE_OF_FIVE_DEFAULT_C21(AudioFileType);
-
-	/// Constexpr constructor for initializers from literals.
-	constexpr AudioFileType(AudioFileType::Type audio_file_type) : m_audio_file_type(audio_file_type) {}
-//	AudioFileType(AudioFileType::Type audio_file_type) : m_audio_file_type(audio_file_type) {}
-//	AudioFileType(const QString& str) { m_audio_file_type  }
-
-	friend bool operator<(const AudioFileType& a, const AudioFileType& b) { return a.m_audio_file_type < b.m_audio_file_type; }
-
-//	operator QString() const { return EnumFlagtoqstr(m_audio_file_type); }
-private:
-	Type m_audio_file_type {Type::UNKNOWN};
-};
-
-Q_DECLARE_METATYPE(AudioFileType);
 
 using TagMap = std::map<std::string, std::vector<std::string>>;
 

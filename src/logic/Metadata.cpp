@@ -46,7 +46,7 @@ AMLM_QREG_CALLBACK([](){
 });
 
 
-static std::map<AudioFileType, std::string> f_filetype_to_string_map =
+static std::map<AudioFileType::Type, std::string> f_filetype_to_string_map =
 {
 	{AudioFileType::UNKNOWN, "unknown"},
 	{AudioFileType::FLAC, "FLAC"},

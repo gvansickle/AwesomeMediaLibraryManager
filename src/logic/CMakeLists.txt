@@ -26,6 +26,7 @@ add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
 set(logic_subdir_SOURCES
+	AudioFileType.cpp
 	Library.cpp
 	LibraryEntry.cpp
 	LibraryEntryLoaderJob.cpp
@@ -58,6 +59,7 @@ set(logic_subdir_SOURCES
 	)
 
 set(logic_subdir_HEADERS
+	AudioFileType.h
 	Library.h
 	LibraryEntry.h
 	LibraryEntryLoaderJob.h

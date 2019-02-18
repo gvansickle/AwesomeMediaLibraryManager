@@ -399,35 +399,72 @@ QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
 
 QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 {
+	// The lowest-level read function.
+
 	QXmlStreamAttributes attributes = xmlstream.attributes();
-	QString typeString = attributes.value("type").toString();
+	QString attr_type_str = attributes.value("type").toString();
 
 	Q_ASSERT(xmlstream.isStartElement());
 
 	// Slurps up all contents of this element until the EndElement, including all child element text.
 	/// @note I know, not cool with all the RAM wasteage.
-	QString dataString = xmlstream.readElementText();
+	QString element_text = xmlstream.readElementText();
 
-	qIn() << "Type:" << typeString << ", Data:" << dataString;
-
-	QVariant variant(dataString);
+	QVariant variant(element_text);
 
 	if(!variant.isValid())
 	{
 		Q_ASSERT(0);
 	}
 
-	// Cast to type named in typeString.
+	// Cast to type named in attr_type_str.
 	// If this fails, status will be false, but variant will be changed to the requested type
 	// will be null/cleared but valid.
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
-	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
-	auto metatype = QMetaType::type(typeString.toStdString().c_str());
-	bool status = variant.convert(metatype);
-
-	if(!status)
+	QVariant::Type metatype_v = QVariant::nameToType(attr_type_str.toStdString().c_str());
+	int metatype = QMetaType::type(attr_type_str.toStdString().c_str());
+	const char* metatype_name = QMetaType::typeName(metatype);
+	if(metatype != metatype_v)
 	{
-		xmlstream.raiseError(QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(dataString, typeString));
+		qWr() << "METATYPES DIFFER:" << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !="
+			<< M_NAME_VAL(metatype_v) << "(" << metatype_v << ")";
+		qWr() << "Type:" << attr_type_str << ", Element text:" << element_text;
+	}
+
+	if(metatype == QMetaType::UnknownType)
+	{
+		// This is bad, we don't know the type.
+		qCr() << "ERROR: Unknown type:" << attr_type_str;
+	}
+	else
+	{
+		bool is_compatible = variant.canConvert(metatype);
+
+		if(!is_compatible)
+		{
+			qWr() << "ERROR: CAN'T CONVERT FROM QSTRING TO TYPE:" << M_ID_VAL(attr_type_str) << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !=" << M_NAME_VAL(metatype_v);
+		}
+		else
+		{
+			// Check if it's an empty string.  If so, we're return a default-constructed object of type metatype.
+			if(variant.isNull())
+			{
+				// Empty string, return default constructed object.
+				// We checked metatype above, it's valid.
+//				void* retobj_p = QMetaType::create(metatype);
+				qWr() << "TODO: NULL QVARIANT, SKIPPING";
+			}
+			else
+			{
+				bool status = variant.convert(metatype);
+
+				if(!status)
+				{
+					qWr() << "ERROR: METATYPES:" << M_ID_VAL(attr_type_str) << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !=" << M_NAME_VAL(metatype_v);
+					xmlstream.raiseError(QString("XML FAIL: Could not convert string '%1' to object of type '%2'").arg(element_text, attr_type_str));
+				}
+			}
+		}
 	}
 
 	check_for_stream_error_and_skip(xmlstream);
