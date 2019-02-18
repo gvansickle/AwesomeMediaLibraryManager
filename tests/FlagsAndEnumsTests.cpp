@@ -47,6 +47,7 @@
 // Ours
 #include <tests/TestHelpers.h>
 #include <utils/DebugHelpers.h>
+#include <logic/AudioFileType.h>
 
 // Mocks
 #include <tests/TestLifecycleManager.h>
@@ -302,6 +303,29 @@ TEST_F(FlagsAndEnumsTests, StringToEnumViaQVariant)
 	TCOUT << M_NAME_VAL(metatype_name);
 
 	EXPECT_EQ(test_enum, TestEnumHolder::Enum1);
+}
+
+TEST_F(FlagsAndEnumsTests, StringToEnumViaQVariantAudioFileType)
+{
+	// Q_ENUM()s support conversion from a QString through a QVariant to the Q_ENUM() type.
+	// Note that the string consists of only the enumerator, the enum tag nor the containing class are represented.
+
+	QString str = "FLAC";
+
+	QVariant qvar(str);// = QVariant::fromValue(str);
+
+	AudioFileType::Type test_enum;
+
+//	test_enum = qvar.value<AudioFileType::Type>();
+	test_enum = qvar.value<decltype(test_enum)>();
+
+	TCOUT << "test_enum:" << test_enum;
+
+	int metatype = QMetaType::type("AudioFileType::Type");
+	const char* metatype_name = QMetaType::typeName(metatype);
+	TCOUT << M_NAME_VAL(metatype_name);
+
+	EXPECT_EQ(test_enum, AudioFileType::FLAC);
 }
 
 TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)

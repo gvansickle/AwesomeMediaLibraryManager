@@ -46,22 +46,22 @@
  */
 
 
-AMLM_QREG_CALLBACK([](){
-	qIn() << "Registering AudioFileType";
-//	qRegisterMetaTypeStreamOperators<AudioFileType>();
-//	qRegisterMetaType<AudioFileType::Type>("AudioFileType::Type");
-//	AMLMRegisterQEnumQStringConverters<AudioFileType::Type>();
-
-//	QMetaType::registerConverter<AudioFileType, QString>([](const AudioFileType& qenum){
-//		return toqstr(qenum);
-//	});
-//	QMetaType::registerConverter<QString, AudioFileType>([](const QString& str){
-//		QVariant var = str;
-//		AudioFileType retval = var.value<AudioFileType>();
-////		retval.fromValue(tostdstr(str).c_str());
-//		return retval;
-//	});
-});
+//AMLM_QREG_CALLBACK([](){
+//	qIn() << "Registering AudioFileType";
+////	qRegisterMetaTypeStreamOperators<AudioFileType>();
+////	qRegisterMetaType<AudioFileType::Type>("AudioFileType::Type");
+////	AMLMRegisterQEnumQStringConverters<AudioFileType::Type>();
+//
+////	QMetaType::registerConverter<AudioFileType, QString>([](const AudioFileType& qenum){
+////		return toqstr(qenum);
+////	});
+////	QMetaType::registerConverter<QString, AudioFileType>([](const QString& str){
+////		QVariant var = str;
+////		AudioFileType retval = var.value<AudioFileType>();
+//////		retval.fromValue(tostdstr(str).c_str());
+////		return retval;
+////	});
+//});
 
 
 /// Interface name to Taglib name map.
@@ -221,7 +221,9 @@ using strviw_type = QString;
 	X(XMLTAG_HAS_ID3V1, m_has_id3v1) \
 	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
 	X(XMLTAG_HAS_APE, m_has_ape) \
-	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment)
+	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
+	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag)
+
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );

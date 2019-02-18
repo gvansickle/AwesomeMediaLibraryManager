@@ -19,7 +19,21 @@
 
 #include "AudioFileType.h"
 
-AudioFileType::~AudioFileType()
-{
+#include <utils/RegisterQtMetatypes.h>
+#include <utils/DebugHelpers.h>
 
-}
+//AMLM_QREG_CALLBACK2(AudioFileType, [](){
+////AMLM_QREG_CALLBACK([](){
+//	qIn() << "Registering AudioFileType";
+//	qIn() << "Registering AudioFileType2";
+//	auto a = qRegisterMetaType<AudioFileType>();
+//	qIn() << "Registered metatype:" << a;
+//	auto b = qRegisterMetaType<AudioFileType::Type>();
+//	auto c = qRegisterMetaType<AudioFileType::Type>("AudioFileTypeType");
+//	qIn() << "Registered metatypes:" << a << b << c;
+//});
+
+//AMLM_QREG_CALLBACK_ODR_USE(AudioFileType);
+
+
+

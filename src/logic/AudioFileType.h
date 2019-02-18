@@ -20,7 +20,12 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
 #define AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H
 
+// Qt5
+#include <QMetaType>
 #include <QObject>
+
+// Ours.
+#include <utils/RegisterQtMetatypes.h>
 
 /**
  * @brief The AudioFileType class
@@ -31,8 +36,6 @@ class AudioFileType
 	Q_GADGET
 
 public:
-	virtual ~AudioFileType();
-
 	enum Type
 	{
 		UNKNOWN,
@@ -46,7 +49,6 @@ public:
 };
 
 Q_DECLARE_METATYPE(AudioFileType);
-//Q_DECLARE_METATYPE(AudioFileType::Type);
 
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_AUDIOFILETYPE_H

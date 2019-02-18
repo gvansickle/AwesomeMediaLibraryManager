@@ -20,8 +20,10 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 #define AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 
+// Std C++
 #include <functional>
 #include <vector>
+#include <iostream>
 
 void RegisterQtMetatypes();
 
@@ -62,6 +64,54 @@ private:
  */
 QtRegCallbackRegistry& reginstance();
 
-#define AMLM_QREG_CALLBACK(...) static const int dummy = (reginstance().register_callback(__VA_ARGS__), 0)
+/**
+ * We're attempting to take advantage of Deferred dynamic initialization here.
+ * @link https://en.cppreference.com/w/cpp/language/initialization#Non-local_variables
+ * Wait, no we're not.  God this language.
+ */
+#define TOKEN_PASTE_HELPER(x, y) x ## y
+#define TOKEN_PASTE(x, y) TOKEN_PASTE_HELPER(x, y)
+
+template <typename T>
+struct StaticInitBaseBase
+{
+	enum
+	{
+		Defined = 0
+	};
+};
+
+template <typename T>
+struct StaticInitBase : public StaticInitBaseBase<T>
+{
+	int dummy_odr_use()
+	{
+		return rand();
+	}
+};
+
+#define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand())
+
+//#define AMLM_QREG_CALLBACK(...) AMLM_QREG_CALLBACK2(FIXME, __VA_ARGS__)
+
+
+#define AMLM_QREG_CALLBACK2(classname, ...) \
+	template <>\
+	struct StaticInitBase< classname >  /*classname ## _AMLM_QREG_CALLBACK*/ \
+	{\
+		StaticInitBase< classname > /*classname ## _AMLM_QREG_CALLBACK*/ () \
+        {\
+	this->m_dummy_int = __LINE__;\
+	std::cout << "TEST" << std::endl;\
+	std::cerr << "TEST2" << std::endl;\
+            reginstance().register_callback( # classname, __VA_ARGS__);\
+        }\
+	int m_dummy_int{};	\
+	};\
+	static StaticInitBase< classname > odr_use_THISISTOPREVENTACCIDENTALUSE_ ## classname ;
+
+#define AMLM_QREG_CALLBACK_ODR_USE(classname) \
+	static const auto* unused = std::addressof( odr_use_THISISTOPREVENTACCIDENTALUSE_ ## classname );
+
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

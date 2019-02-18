@@ -33,6 +33,7 @@
 #include <logic/LibraryEntryMimeData.h>
 //#include <concurrency/AMLMJob.h>
 #include <logic/LibraryRescannerMapItem.h>
+#include <logic/AudioFileType.h>
 
 /**
  * Why do we need this qRegisterMetaType<> mechanism?  It appears that we really don't.
@@ -86,7 +87,21 @@ Q_DECLARE_METATYPE(std::string);
 void RegisterQtMetatypes()
 {
     // Call all the registration callbacks which have been registered during static-init time.
+    qIn() << "START Calling registered callbacks";
 	reginstance().call_registration_callbacks();
+
+
+	{
+		qIn() << "Registering AudioFileType";
+		qIn() << "Registering AudioFileType2";
+		auto a = qRegisterMetaType<AudioFileType>();
+		qIn() << "Registered metatype:" << a;
+		auto b = qRegisterMetaType<AudioFileType::Type>();
+		auto c = qRegisterMetaType<AudioFileType::Type>("AudioFileTypeType");
+		qIn() << "Registered metatypes:" << a << b << c;
+	}
+
+	qIn() << "END Calling registered callbacks";
 
     // KJob types.
     qRegisterMetaType<KJob*>();
@@ -124,8 +139,10 @@ int* QtRegCallbackRegistry::register_callback(std::function<void(void)> callback
 
 int* QtRegCallbackRegistry::register_callback(const char* name, std::function<void(void)> callback)
 {
-	Q_ASSERT(0);
-	return nullptr;
+	m_registered_callbacks.push_back(callback);
+	std::cerr << "Registering callback, name:" << name << "address:" << &callback << ", size now:" << m_registered_callbacks.size() << "\n";
+	// Return a dummy pointer.
+	return reinterpret_cast<int*>(&callback);
 }
 
 void QtRegCallbackRegistry::call_registration_callbacks()

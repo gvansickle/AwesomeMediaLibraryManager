@@ -91,9 +91,6 @@ set(logic_subdir_HEADERS
 	PerfectDeleter.h
 	Frames.h
 	)
-	
-#prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
-#prepend_to_each(logic_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_HEADERS})
 
 target_sources_local(logic
 	PUBLIC

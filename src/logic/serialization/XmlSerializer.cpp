@@ -112,14 +112,13 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	{
 		// Stream it all in.
 		QVariant qvar = readVariantFromStream(xmlstream);
-/// @todo THINK THIS IS FIXED: qvar is coming back as a QVarMap with one entry: "library_list"/QVariantHomogenousList.
 		serializable.fromVariant(qvar);
 	}
 
 	// Reading completed one way or another, check for errors.
 	if(xmlstream.hasError())
 	{
-		qWr() << "XML READ ERROR:" << error_string(xmlstream);
+		qWr() << "#### XML READ ERROR:" << error_string(xmlstream);
 	}
 }
 
@@ -267,6 +266,14 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	xmlstream.writeCharacters(str);
 }
 
+/**
+ * XmlSerializer::readVariantFromStream
+ *
+ * @note On invalid QVariant, skips the current element and tries to continue.
+ *
+ * @param xmlstream
+ * @return
+ */
 QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
@@ -278,10 +285,10 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 
 	QVariant variant;
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
-	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
-	auto metatype = QMetaType::type(typeString.toStdString().c_str());
+//	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
+	int metatype = QMetaType::type(typeString.toStdString().c_str());
 
-	log_current_node(xmlstream);
+//	log_current_node(xmlstream);
 
 //	AMLM_ASSERT_EQ(metatype, metatype2);
 
@@ -318,14 +325,12 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 		// Whatever we read, it didn't make it to a QVariant successfully.
 		// Report error and try to keep going.
 		xmlstream.raiseError("#### Invalid QVariant conversion");
-		check_for_stream_error_and_skip(xmlstream);
 	}
-
-	if(!xmlstream.isEndElement())
-	{
-		// Not at an end element, parsing went wrong somehow.
-		xmlstream.raiseError("#### NOT AT END ELEMENT, Reading xml stream failed, skipping to next start element");
-	}
+//	else if(!xmlstream.isEndElement())
+//	{
+//		// Not at an end element, parsing went wrong somehow.
+//		xmlstream.raiseError("#### NOT AT END ELEMENT, Reading xml stream failed, skipping to next start element");
+//	}
 
 	check_for_stream_error_and_skip(xmlstream);
 
@@ -363,12 +368,15 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 		// Now read the contents of the <$item_tag>.
 		QVariant next_list_element = readVariantFromStream(xmlstream);
 
-		check_for_stream_error_and_skip(xmlstream);
-
-		list.append(next_list_element);
+		if(!next_list_element.isValid())
+		{
+			check_for_stream_error_and_skip(xmlstream);
+		}
+		else
+		{
+			list.append(next_list_element);
+		}
 	}
-
-	check_for_stream_error_and_skip(xmlstream);
 
 	return QVariant::fromValue(list);
 }
@@ -387,12 +395,15 @@ QVariant XmlSerializer::readVariantListFromStream(QXmlStreamReader& xmlstream)
 		// Now read the contents of the <item>.
 		QVariant next_list_element = readVariantFromStream(xmlstream);
 
-		check_for_stream_error_and_skip(xmlstream);
-
-		list.append(next_list_element);
+		if(!next_list_element.isValid())
+		{
+			check_for_stream_error_and_skip(xmlstream);
+		}
+		else
+		{
+			list.append(next_list_element);
+		}
 	}
-
-	check_for_stream_error_and_skip(xmlstream);
 
 	return list;
 }
@@ -424,17 +435,17 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 	QVariant::Type metatype_v = QVariant::nameToType(attr_type_str.toStdString().c_str());
 	int metatype = QMetaType::type(attr_type_str.toStdString().c_str());
 	const char* metatype_name = QMetaType::typeName(metatype);
-	if(metatype != metatype_v)
-	{
-		qWr() << "METATYPES DIFFER:" << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !="
-			<< M_NAME_VAL(metatype_v) << "(" << metatype_v << ")";
-		qWr() << "Type:" << attr_type_str << ", Element text:" << element_text;
-	}
+//	if(metatype != metatype_v)
+//	{
+//		qWr() << "METATYPES DIFFER:" << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !="
+//			<< M_NAME_VAL(metatype_v) << "(" << metatype_v << ")";
+//		qWr() << "Type:" << attr_type_str << ", Element text:" << element_text;
+//	}
 
 	if(metatype == QMetaType::UnknownType)
 	{
 		// This is bad, we don't know the type.
-		qCr() << "ERROR: Unknown type:" << attr_type_str;
+		xmlstream.raiseError(QString("ERROR: Unknown type: %1").arg(attr_type_str));
 	}
 	else
 	{
@@ -442,7 +453,9 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 
 		if(!is_compatible)
 		{
-			qWr() << "ERROR: CAN'T CONVERT FROM QSTRING TO TYPE:" << M_ID_VAL(attr_type_str) << M_NAME_VAL(metatype)  << "(name: " << metatype_name << ") !=" << M_NAME_VAL(metatype_v);
+			xmlstream.raiseError(QString("ERROR: CAN'T CONVERT FROM QSTRING TO INCOMPATIBLE TYPE: %1 %2 %3 != %4")
+				.arg(attr_type_str)
+				.arg(metatype).arg(metatype_name).arg(metatype_v));
 		}
 		else
 		{
@@ -452,7 +465,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 				// Empty string, return default constructed object.
 				// We checked metatype above, it's valid.
 //				void* retobj_p = QMetaType::create(metatype);
-				qWr() << "TODO: NULL QVARIANT, SKIPPING";
+				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
 			}
 			else
 			{
@@ -467,7 +480,8 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 		}
 	}
 
-	check_for_stream_error_and_skip(xmlstream);
+	// No check for errors here, let the top-level readVariantFromStream() handle that.
+//	check_for_stream_error_and_skip(xmlstream);
 
 	return variant;
 }
