@@ -32,7 +32,7 @@
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
 #include <src/utils/Fraction.h>
-//#include <utils/EnumFlagHelpers.h>
+#include <utils/EnumFlagHelpers.h>
 #include <logic/serialization/ExtEnum.h>
 #include "TrackMetadata.h"
 
@@ -41,7 +41,10 @@
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 
-
+/**
+ * @brief The AudioFileType class
+ * @todo Do we really need this, or would ExtMimeType serve just as well?
+ */
 class AudioFileType : public ExtEnum<AudioFileType>
 {
 	Q_GADGET
@@ -61,12 +64,14 @@ public:
 
 	/// Default operations (except destructor).  Use = default versions.
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AudioFileType);
+
+	/// Constexpr constructor for defining
 	constexpr AudioFileType(AudioFileType::Types audio_file_type) : m_audio_file_type(audio_file_type) {}
-	AudioFileType(const QString& str) {}
+//	AudioFileType(const QString& str) { m_audio_file_type  }
 
 	friend bool operator<(const AudioFileType& a, const AudioFileType& b) { return a.m_audio_file_type < b.m_audio_file_type; }
 
-	operator QString() const { return "TODO"; }
+	operator QString() const { return EnumFlagtoqstr(m_audio_file_type); }
 private:
 	Types m_audio_file_type;
 };

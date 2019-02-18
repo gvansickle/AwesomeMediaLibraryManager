@@ -84,13 +84,13 @@ public:
 //	template <class T>
 //	using T = typename ExtEnumTraits<DerivedType>::EnumTag;
 
-	QMetaEnum qMetaEnum() const
+	constexpr QMetaEnum qMetaEnum() const
 	{
 		return QMetaEnum::fromType<ExtEnum>();
 	}
 
 
-	int keyCount() const
+	constexpr int keyCount() const
 	{
 		return this->qMetaEnum().keyCount();
 	}
@@ -113,6 +113,11 @@ public:
 	{
 		return EnumFlagtoqstr(this->underlying());
 	};
+
+	/**
+	 * Conversion operator to QString.
+	 */
+//	operator QString() const { return EnumFlagtoqstr(this->underlying()); }
 
 	/**
      * Static map factory function.

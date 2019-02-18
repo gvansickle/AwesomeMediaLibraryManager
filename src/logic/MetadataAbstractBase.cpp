@@ -50,7 +50,7 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AudioFileType";
 //	qRegisterMetaTypeStreamOperators<AudioFileType>();
 	QMetaType::registerConverter<AudioFileType, QString>([](const AudioFileType& non_str){
-		return QString(non_str);
+		return non_str;
 	});
 	QMetaType::registerConverter<QString, AudioFileType>([](const QString& str){
 		return AudioFileType(str);
@@ -207,17 +207,9 @@ TrackMetadata MetadataAbstractBase::track(int i) const
 
 /// @aside ...uhhhhhhhhh........
 using strviw_type = QString;
-//static const strviw_type XMLTAG_AUDIO_FILE_TYPE("m_audio_file_type");
-//static const strviw_type XMLTAG_HAS_CUESHEET("m_has_cuesheet");
-//static const strviw_type XMLTAG_HAS_VORBIS_COMMENT("m_has_vorbis_comment");
-//static const strviw_type XMLTAG_HAS_ID3V1("m_has_id3v1");
-//static const strviw_type XMLTAG_HAS_ID3V2("m_has_id3v2");
-//static const strviw_type XMLTAG_HAS_APE("m_has_ape");
-//static const strviw_type XMLTAG_HAS_OGG_XIPFCOMMENT("m_has_ogg_xipfcomment");
-//static const strviw_type XMLTAG_HAS_INFOTAG("m_has_info_tag");
 
 #define M_DATASTREAM_FIELDS(X) \
-	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
+	X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type) \
 	X(XMLTAG_HAS_CUESHEET, m_has_cuesheet) \
 	X(XMLTAG_HAS_VORBIS_COMMENT, m_has_vorbis_comment) \
 	X(XMLTAG_HAS_ID3V1, m_has_id3v1) \
@@ -227,7 +219,6 @@ using strviw_type = QString;
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
-static const strviw_type XMLTAG_AUDIO_FILE_TYPE("m_audio_file_type");
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -235,8 +226,6 @@ QVariant MetadataAbstractBase::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-//	map.insert(XMLTAG_AUDIO_FILE_TYPE, QVariant::fromValue(m_audio_file_type));
-	map.insert(XMLTAG_AUDIO_FILE_TYPE, QVariant::fromValue(m_audio_file_type));
 #define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue( member_field ) );
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -248,6 +237,9 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
+#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue( member_field ) );
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 }
 
