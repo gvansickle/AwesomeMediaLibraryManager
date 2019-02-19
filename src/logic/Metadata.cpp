@@ -106,17 +106,20 @@ void Metadata::writeToJson(QJsonObject& jo) const
 {
 	Q_ASSERT(pImpl);
 //	qDebug() << "Writing Metadata to QJsonObject:" << jo;
-	jo["metadata"] = QJsonObject::fromVariantMap(MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
+#warning "TEMP FOR XML CONVERSION"
+//	jo["metadata"] = QJsonObject::fromVariantMap(MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
+//	jo["metadata"] = QJsonObject::fromVariantMap(pImpl->m_tag_map.toVariant());
 }
 
 QVariant Metadata::toVariant() const
 {
-	QVariantMap retval;
+	QVariantMap map;
 	/// @todo
-	retval.insert("metadata_tagtree", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
-	retval.insert("metadata_abstract_base", pImpl->toVariant());
+//	map.insert("metadata_tagtree", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
+//	map.insert("m_tag_map", m_tag_map);
+	map.insert("metadata_abstract_base", pImpl->toVariant());
 
-	return retval;
+	return map;
 }
 
 void Metadata::fromVariant(const QVariant& variant)
@@ -124,18 +127,27 @@ void Metadata::fromVariant(const QVariant& variant)
 //	return pImpl->fromVariant(variant);
 	/// @todo
 	QVariantMap map = variant.toMap();
-	using tag_map_var_type = std::map<std::string, std::vector<std::string>>;
-	QVariantMap tag_map_variant;
-	tag_map_variant = map.value("metadata_tagtree").value<QVariantMap>();
-	tag_map_var_type tag_map = MapConverter::VarMapToTagMap(tag_map_variant);
 
-	pImpl->m_tag_map = tag_map;
+#if (0)
+	{
+		using tag_map_var_type = std::map<std::string, std::vector<std::string>>;
+		QVariantMap tag_map_variant;
+		tag_map_variant = map.value("metadata_tagtree").value<QVariantMap>();
+		tag_map_var_type tag_map = MapConverter::VarMapToTagMap(tag_map_variant);
+
+		pImpl->m_tag_map = tag_map;
+	}
+#endif
+	if(1)
+	{
+		pImpl->fromVariant(variant);
+	}
 }
 
 QDataStream &operator<<(QDataStream &out, const Metadata &obj)
 {
 	/// @todo
-	out << MapConverter::TagMaptoVarMap(obj.pImpl->m_tag_map);
+//	out << MapConverter::TagMaptoVarMap(obj.pImpl->m_tag_map);
 	return out;
 }
 
@@ -148,7 +160,7 @@ QDataStream &operator>>(QDataStream &in, Metadata &obj)
 	tag_map_var_type tag_map_std;
 ///	in >> tag_map_std;
 
-	obj.pImpl->m_tag_map = tag_map_std;
+//	obj.pImpl->m_tag_map = tag_map_std;
 
 	return in;
 }

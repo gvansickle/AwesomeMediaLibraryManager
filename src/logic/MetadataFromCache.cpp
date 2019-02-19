@@ -39,7 +39,9 @@ MetadataFromCache::~MetadataFromCache()
 void MetadataFromCache::readFromJson(const QJsonObject& jo)
 {
 	///qDebug() << "Reading Metadata from Json:" << jo.toVariantMap();
-	m_tag_map = MapConverter::VarMapToTagMap(jo.toVariantMap());
+#warning "TEMP FOR XML CONVERSION"
+//	m_tag_map = MapConverter::VarMapToTagMap(jo.toVariantMap());
+/// @todo
 	///qDebug() << "Reading Metadata from Json:" << m_tag_map;
 }
 
@@ -48,7 +50,8 @@ QVariant MetadataFromCache::toVariant() const
 //	Q_ASSERT_X(0, __func__, "NOT IMPLEMENTED");
 	QVariantMap map;
 
-	map.insert(QString("metadata_from_cache_dummy_DELETEME"), MapConverter::TagMaptoVarMap(m_tag_map));
+//	map.insert(QString("metadata_from_cache_dummy_DELETEME"), MapConverter::TagMaptoVarMap(m_tag_map));
+	map.insert("m_tag_map", m_tag_map.toVariant());
 
 	return map;
 }
@@ -56,7 +59,8 @@ QVariant MetadataFromCache::toVariant() const
 void MetadataFromCache::fromVariant(const QVariant& variant)
 {
 	QVariantMap map = variant.toMap();
-	m_tag_map = MapConverter::VarMapToTagMap(map);
+//	m_tag_map = MapConverter::VarMapToTagMap(map);
+	m_tag_map = map.value("m_tag_map").value<AMLMTagMap>();
 }
 
 Metadata MetadataFromCache::get_one_track_metadata(int track_index) const

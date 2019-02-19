@@ -122,7 +122,7 @@ public:
 	TagMap m_tm_infotag;
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.
-	TagMap m_tag_map;
+	AMLMTagMap m_tag_map;
 
 	bool m_read_has_been_attempted {false};
 	bool m_is_error {false};
