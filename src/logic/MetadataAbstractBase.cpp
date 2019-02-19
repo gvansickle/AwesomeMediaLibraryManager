@@ -222,14 +222,14 @@ using strviw_type = QString;
 	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
 	X(XMLTAG_HAS_APE, m_has_ape) \
 	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
-	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag)
+	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag) \
 	/** TagMaps */ \
 	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
 	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
 	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
 	X(XMLTAG_TM_APE, m_tm_ape) \
 	X(XMLTAG_TM_XIPF, m_tm_xipf) \
-	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
+	X(XMLTAG_TM_INFOTAG, m_tm_infotag)
 
 
 /// Strings to use for the tags.

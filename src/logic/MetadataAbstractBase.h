@@ -36,6 +36,7 @@
 #include <logic/serialization/ExtEnum.h>
 #include "TrackMetadata.h"
 #include "AudioFileType.h"
+#include "AMLMTagMap.h"
 
 // Taglib
 #include <taglib/tag.h>
@@ -43,8 +44,6 @@
 #include <taglib/tpropertymap.h>
 
 
-
-using TagMap = std::map<std::string, std::vector<std::string>>;
 
 class Metadata;
 class TrackMetadata;

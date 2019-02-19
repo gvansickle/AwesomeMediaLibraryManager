@@ -23,14 +23,37 @@
 #ifndef SRC_LOGIC_AMLMTAGMAP_H_
 #define SRC_LOGIC_AMLMTAGMAP_H_
 
+// Std C++
+#include <map>
+#include <string>
+
+// Qt5
+#include <QMetaType>
+#include <QVariant>
+
+// Ours.
+#include <future/guideline_helpers.h>
+#include <logic/serialization/ISerializable.h>
+
+using TagMap = std::map<std::string, std::vector<std::string>>;
+
 /*
  *
  */
-class AMLMTagMap
+class AMLMTagMap : public virtual ISerializable
 {
 public:
-	AMLMTagMap();
-	virtual ~AMLMTagMap();
+	M_GH_RULE_OF_ZERO(AMLMTagMap);
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
+private:
+	using container_type = std::multimap<std::string, std::string>;
+
+	container_type m_the_map;
 };
+
+Q_DECLARE_METATYPE(AMLMTagMap);
 
 #endif /* SRC_LOGIC_AMLMTAGMAP_H_ */

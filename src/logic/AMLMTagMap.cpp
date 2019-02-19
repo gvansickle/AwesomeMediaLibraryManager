@@ -20,16 +20,17 @@
 /**
  * @file AMLMTagMap.cpp
  */
-#include <AMLMTagMap.h>
+#include "AMLMTagMap.h"
 
-AMLMTagMap::AMLMTagMap()
+
+QVariant AMLMTagMap::toVariant() const
 {
-	// TODO Auto-generated constructor stub
-
+	/// @todo
+	return QVariant();
 }
 
-AMLMTagMap::~AMLMTagMap()
+void AMLMTagMap::fromVariant(const QVariant& variant)
 {
-	// TODO Auto-generated destructor stub
+
 }
 
