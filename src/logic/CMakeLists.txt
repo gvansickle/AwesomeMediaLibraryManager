@@ -26,6 +26,7 @@ add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
 add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
 set(logic_subdir_SOURCES
+	AMLMTagMap.cpp
 	AudioFileType.cpp
 	Library.cpp
 	LibraryEntry.cpp
@@ -59,6 +60,7 @@ set(logic_subdir_SOURCES
 	)
 
 set(logic_subdir_HEADERS
+	AMLMTagMap.h
 	AudioFileType.h
 	Library.h
 	LibraryEntry.h

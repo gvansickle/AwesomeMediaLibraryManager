@@ -215,7 +215,7 @@ TrackMetadata MetadataAbstractBase::track(int i) const
 using strviw_type = QString;
 
 #define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type) \
+	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
 	X(XMLTAG_HAS_CUESHEET, m_has_cuesheet) \
 	X(XMLTAG_HAS_VORBIS_COMMENT, m_has_vorbis_comment) \
 	X(XMLTAG_HAS_ID3V1, m_has_id3v1) \
@@ -223,6 +223,13 @@ using strviw_type = QString;
 	X(XMLTAG_HAS_APE, m_has_ape) \
 	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
 	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag)
+	/** TagMaps */ \
+	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
+	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
+	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
+	X(XMLTAG_TM_APE, m_tm_ape) \
+	X(XMLTAG_TM_XIPF, m_tm_xipf) \
+	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
 
 
 /// Strings to use for the tags.

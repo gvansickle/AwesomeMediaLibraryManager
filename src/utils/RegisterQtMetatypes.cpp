@@ -92,13 +92,8 @@ void RegisterQtMetatypes()
 
 
 	{
-		qIn() << "Registering AudioFileType";
-		qIn() << "Registering AudioFileType2";
 		auto a = qRegisterMetaType<AudioFileType>();
-		qIn() << "Registered metatype:" << a;
-		auto b = qRegisterMetaType<AudioFileType::Type>();
-		auto c = qRegisterMetaType<AudioFileType::Type>("AudioFileTypeType");
-		qIn() << "Registered metatypes:" << a << b << c;
+		qIn() << "Registering AudioFileType, QMetaType:" << a;
 	}
 
 	qIn() << "END Calling registered callbacks";
