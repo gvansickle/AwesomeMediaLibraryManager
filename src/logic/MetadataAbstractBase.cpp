@@ -114,10 +114,10 @@ std::string MetadataAbstractBase::operator[](const std::string& key) const
 	}
 
 //	TagLib::StringList stringlist = m_pm[native_key_string];
-	decltype(m_tag_map)::mapped_type stringlist;
+	/*decltype(m_tag_map)::mapped_type*/std::string stringlist;
 
 	auto strlist_it = m_tag_map.find(native_key_string);
-	if(strlist_it != m_tag_map.end())
+	if(strlist_it != m_tag_map.cend())
 	{
 		stringlist = strlist_it->second;
 	}

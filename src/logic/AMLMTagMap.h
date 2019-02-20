@@ -42,16 +42,68 @@ using TagMap = std::map<std::string, std::vector<std::string>>;
  */
 class AMLMTagMap : public virtual ISerializable
 {
+
+	/// Member Types
+private:
+	using Key = std::string;
+	using T = std::string;
+	using underlying_container_type = std::multimap<Key, T>;
+
+public:
+	using key_type = Key;
+	using mapped_type = T;
+	using value_type = std::pair<const Key, T>;
+	using const_iterator = typename underlying_container_type::const_iterator;
+	using iterator = typename underlying_container_type::iterator;
+
+	/// Member functions.
 public:
 	M_GH_RULE_OF_ZERO(AMLMTagMap);
 
+	template <typename T>
+	AMLMTagMap& operator=(const T& map)
+	{
+		/// @todo
+		Q_ASSERT(0);
+		return *this;
+	}
+
+	mapped_type& operator[](const Key& key)
+	{
+		iterator it = m_the_map.find(key);
+		if(it != m_the_map.end())
+		{
+			return it->second;
+		}
+	};
+	mapped_type& operator[](const Key& key) const;
+
+	iterator insert(const value_type& value) { return m_the_map.insert(value); };
+
+	iterator find( const Key& x );
+
+	const_iterator find( const Key& x ) const;
+
+	template< class K >
+	iterator find( const K& x );
+
+	template< class K >
+	const_iterator find( const K& x ) const;
+
+	iterator begin() { return std::begin(m_the_map); }
+	iterator end() { return std::end(m_the_map); }
+	const_iterator cbegin() const { return std::cbegin(m_the_map); };
+	const_iterator cend() const { return std::cend(m_the_map); };
+
+	/// @name Serialization
+	/// @{
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
+	/// @}
 
 private:
-	using container_type = std::multimap<std::string, std::string>;
 
-	container_type m_the_map;
+	underlying_container_type m_the_map;
 };
 
 Q_DECLARE_METATYPE(AMLMTagMap);

@@ -399,10 +399,11 @@ Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate")
 	if(track_entry.m_PTI_TITLE.size() > 0)
 	{
-    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
+//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
-		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
-    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
+//		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
+		retval.m_tag_map.insert({"TITLE", track_entry.m_PTI_TITLE});
+//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 	}
 	if(track_entry.m_PTI_PERFORMER.size() > 0)
 	{

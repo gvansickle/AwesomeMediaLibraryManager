@@ -72,7 +72,8 @@ public:
 	virtual Fraction total_length_seconds() const;
 
 	/// Return the first entry matching the key, or an empty string if no such key.
-	virtual std::string operator[](const std::string& key) const;
+	/// @deprecated I think.  First entry matching key can be find().
+	virtual std::string operator[](const std::string& key) const __attribute__((deprecated));
 
 	/// Return all string metadata as a map.
 	virtual TagMap filled_fields() const;
