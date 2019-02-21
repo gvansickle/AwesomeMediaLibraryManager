@@ -26,11 +26,13 @@
 QVariant AMLMTagMap::toVariant() const
 {
 	/// @todo
+	Q_ASSERT(0);
 	return QVariant();
 }
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
 {
+	Q_ASSERT(0);
 
 }
 

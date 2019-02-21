@@ -114,17 +114,17 @@ std::string MetadataAbstractBase::operator[](const std::string& key) const
 	}
 
 //	TagLib::StringList stringlist = m_pm[native_key_string];
-	/*decltype(m_tag_map)::mapped_type*/std::string stringlist;
+	std::vector<std::string> stringlist = m_tag_map.equal_range_vector(native_key_string);
 
-	auto strlist_it = m_tag_map.find(native_key_string);
-	if(strlist_it != m_tag_map.cend())
-	{
-		stringlist = strlist_it->second;
-	}
-	else
-	{
-//		qDebug() << "No such key:" << native_key_string;
-	}
+//	auto strlist_it = m_tag_map.find(native_key_string);
+//	if(strlist_it != m_tag_map.cend())
+//	{
+//		stringlist = strlist_it->second;
+//	}
+//	else
+//	{
+////		qDebug() << "No such key:" << native_key_string;
+//	}
 
 	if(stringlist.empty())
 	{
@@ -143,7 +143,7 @@ TagMap MetadataAbstractBase::filled_fields() const
 	{
 //qDebug() << "Converting filled_fields to TagMap";
 		TagMap retval;
-		for(const auto& key_val_pairs : m_tag_map) ///@todo EXP m_pm)
+		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tag_map) ///@todo EXP m_pm)
 		{
 //            qDebug() << "Native Key:" << key_val_pairs.first;
 			std::string key = reverse_lookup(key_val_pairs.first); ///@todo EXP.toCString());
@@ -156,16 +156,16 @@ M_WARNING("TODO: Find a better way to track new keys.")
 				///f_newly_discovered_keys.insert(key_val_pairs.first); ///@todo EXP .toCString(true));
 				continue;
 			}
-
-			std::vector<std::string> out_val;
+#error "TODO: Have to iterate over keys here only once."
+			std::vector<std::string> out_val = m_tag_map.equal_range_vector(key_val_pairs.first);
 			// Iterate over the StringList for this key.
-			for(const auto& value : key_val_pairs.second)
-			{
-				/// @todo Not sure what I was doing here.
-				///@todo EXP std::string val_as_utf8 = value.to8Bit(true);
-				//qDebug() << "Value:" << val_as_utf8 << QString::fromUtf8(val_as_utf8.c_str());
-				out_val.push_back(value); ///@todo EXP .toCString(true));
-			}
+//			for(const auto& value : key_val_pairs.second)
+//			{
+//				/// @todo Not sure what I was doing here.
+//				///@todo EXP std::string val_as_utf8 = value.to8Bit(true);
+//				//qDebug() << "Value:" << val_as_utf8 << QString::fromUtf8(val_as_utf8.c_str());
+//				out_val.push_back(value); ///@todo EXP .toCString(true));
+//			}
 			retval[key] = out_val;
 		}
 //        qDebug() << "Returning:" << retval;

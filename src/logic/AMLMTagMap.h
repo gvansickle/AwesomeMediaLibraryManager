@@ -26,6 +26,7 @@
 // Std C++
 #include <map>
 #include <string>
+#include <vector>
 
 // Qt5
 #include <QMetaType>
@@ -68,32 +69,65 @@ public:
 		return *this;
 	}
 
-	mapped_type& operator[](const Key& key)
+	/**
+	 * Returns a reference to the first value of the matching key.
+	 * Performs an insertion of a default-constructed value if such key does not already exist.
+	 * @param key
+	 * @return
+	 */
+	std::vector<mapped_type> operator[](const Key& key) __attribute__((deprecated))
 	{
-		iterator it = m_the_map.find(key);
-		if(it != m_the_map.end())
+		auto range = m_the_map.equal_range(key);
+		if(range.first != m_the_map.end())
 		{
-			return it->second;
+			auto retval = std::vector<mapped_type>();
+			for(auto& i = range.first; i != range.second; ++i)
+			{
+				retval.push_back(i->second);
+			}
+			return retval;
+		}
+		else
+		{
+			auto it = m_the_map.insert( std::make_pair(key, T()) );
+			return std::vector<mapped_type>();
 		}
 	};
-	mapped_type& operator[](const Key& key) const;
 
 	iterator insert(const value_type& value) { return m_the_map.insert(value); };
 
+	/// @name Lookup.
 	iterator find( const Key& x );
-
 	const_iterator find( const Key& x ) const;
 
-	template< class K >
-	iterator find( const K& x );
+	std::pair<iterator, iterator> equal_range(const Key& key)
+	{
+		return m_the_map.equal_range(key);
+	}
+	std::pair<const_iterator, const_iterator> equal_range(const Key& key) const
+	{
+		return m_the_map.equal_range(key);
+	}
 
-	template< class K >
-	const_iterator find( const K& x ) const;
+	std::vector<mapped_type> equal_range_vector(const Key& key) const
+	{
+		auto range = equal_range(key);
 
-	iterator begin() { return std::begin(m_the_map); }
-	iterator end() { return std::end(m_the_map); }
-	const_iterator cbegin() const { return std::cbegin(m_the_map); };
-	const_iterator cend() const { return std::cend(m_the_map); };
+		auto retval = std::vector<mapped_type>();
+		for(auto& i = range.first; i != range.second; ++i)
+		{
+			retval.push_back(i->second);
+		}
+		return retval;
+	}
+
+
+	iterator begin() { return m_the_map.begin(); }
+	iterator end() { return m_the_map.end(); }
+	const_iterator begin() const { return m_the_map.begin(); };
+	const_iterator end() const { return m_the_map.end(); };
+	const_iterator cbegin() const noexcept { return m_the_map.cbegin(); };
+	const_iterator cend() const noexcept { return m_the_map.cend(); };
 
 	/// @name Serialization
 	/// @{
