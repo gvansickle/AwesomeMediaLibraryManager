@@ -156,7 +156,7 @@ M_WARNING("TODO: Find a better way to track new keys.")
 				///f_newly_discovered_keys.insert(key_val_pairs.first); ///@todo EXP .toCString(true));
 				continue;
 			}
-#error "TODO: Have to iterate over keys here only once."
+
 			std::vector<std::string> out_val = m_tag_map.equal_range_vector(key_val_pairs.first);
 			// Iterate over the StringList for this key.
 //			for(const auto& value : key_val_pairs.second)

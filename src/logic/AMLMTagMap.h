@@ -37,6 +37,10 @@
 #include <logic/serialization/ISerializable.h>
 
 using TagMap = std::map<std::string, std::vector<std::string>>;
+//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::map);
+//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
+//Q_DECLARE_METATYPE(std::string);
+Q_DECLARE_METATYPE(TagMap);
 
 /*
  *
@@ -61,13 +65,7 @@ public:
 public:
 	M_GH_RULE_OF_ZERO(AMLMTagMap);
 
-	template <typename T>
-	AMLMTagMap& operator=(const T& map)
-	{
-		/// @todo
-		Q_ASSERT(0);
-		return *this;
-	}
+	AMLMTagMap& operator=(const TagMap& tagmap);
 
 	/**
 	 * Returns a reference to the first value of the matching key.
@@ -75,24 +73,7 @@ public:
 	 * @param key
 	 * @return
 	 */
-	std::vector<mapped_type> operator[](const Key& key) __attribute__((deprecated))
-	{
-		auto range = m_the_map.equal_range(key);
-		if(range.first != m_the_map.end())
-		{
-			auto retval = std::vector<mapped_type>();
-			for(auto& i = range.first; i != range.second; ++i)
-			{
-				retval.push_back(i->second);
-			}
-			return retval;
-		}
-		else
-		{
-			auto it = m_the_map.insert( std::make_pair(key, T()) );
-			return std::vector<mapped_type>();
-		}
-	};
+	std::vector<mapped_type> operator[](const Key& key) __attribute__((deprecated));
 
 	iterator insert(const value_type& value) { return m_the_map.insert(value); };
 
@@ -109,17 +90,7 @@ public:
 		return m_the_map.equal_range(key);
 	}
 
-	std::vector<mapped_type> equal_range_vector(const Key& key) const
-	{
-		auto range = equal_range(key);
-
-		auto retval = std::vector<mapped_type>();
-		for(auto& i = range.first; i != range.second; ++i)
-		{
-			retval.push_back(i->second);
-		}
-		return retval;
-	}
+	std::vector<mapped_type> equal_range_vector(const Key& key) const;
 
 
 	iterator begin() { return m_the_map.begin(); }

@@ -23,6 +23,50 @@
 #include "AMLMTagMap.h"
 
 
+AMLMTagMap&AMLMTagMap::operator=(const TagMap& tagmap)
+{
+	m_the_map.clear();
+	for(const auto & it : tagmap)
+	{
+		for(const auto& valit : it.second)
+		{
+			m_the_map.insert(std::make_pair(it.first, valit));
+		}
+	}
+	return *this;
+}
+
+std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Key& key)
+{
+	auto range = m_the_map.equal_range(key);
+	if(range.first != m_the_map.end())
+	{
+		auto retval = std::vector<mapped_type>();
+		for(auto& i = range.first; i != range.second; ++i)
+		{
+			retval.push_back(i->second);
+		}
+		return retval;
+	}
+	else
+	{
+		auto it = m_the_map.insert( std::make_pair(key, T()) );
+		return std::vector<mapped_type>();
+	}
+}
+
+std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTagMap::Key& key) const
+{
+	auto range = equal_range(key);
+
+	auto retval = std::vector<mapped_type>();
+	for(auto& i = range.first; i != range.second; ++i)
+	{
+		retval.push_back(i->second);
+	}
+	return retval;
+}
+
 QVariant AMLMTagMap::toVariant() const
 {
 	/// @todo
