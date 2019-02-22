@@ -224,18 +224,19 @@ using strviw_type = QString;
 	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
 	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag) \
 	/** TagMaps */ \
-	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
-	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
-	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
-	X(XMLTAG_TM_APE, m_tm_ape) \
-	X(XMLTAG_TM_XIPF, m_tm_xipf) \
-	X(XMLTAG_TM_INFOTAG, m_tm_infotag)
-
+//	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
+//	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
+//	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
+//	X(XMLTAG_TM_APE, m_tm_ape) \
+//	X(XMLTAG_TM_XIPF, m_tm_xipf) \
+//	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
+//	X(XMLTAG_TM_M_TAG_MAP, m_tag_map)
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
+static const strviw_type XMLTAG_TM_M_TAG_MAP("m_tag_map");
 
 QVariant MetadataAbstractBase::toVariant() const
 {
@@ -244,6 +245,8 @@ QVariant MetadataAbstractBase::toVariant() const
 #define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue( member_field ) );
 	M_DATASTREAM_FIELDS(X);
 #undef X
+
+	map.insert(XMLTAG_TM_M_TAG_MAP, m_tag_map.toVariant());
 
 	return QVariant::fromValue(map);
 }

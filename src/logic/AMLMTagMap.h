@@ -40,7 +40,7 @@ using TagMap = std::map<std::string, std::vector<std::string>>;
 //Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::map);
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
 //Q_DECLARE_METATYPE(std::string);
-Q_DECLARE_METATYPE(TagMap);
+//Q_DECLARE_METATYPE(TagMap);
 
 /*
  *

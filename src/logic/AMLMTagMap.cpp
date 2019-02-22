@@ -22,8 +22,16 @@
  */
 #include "AMLMTagMap.h"
 
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering AMLMTagMap metatypes";
+	qRegisterMetaType<AMLMTagMap>();
+	qRegisterMetaTypeStreamOperators<AMLMTagMap>();
+//	QMetaType::registerDebugStreamOperator<Metadata>();
+//	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
+});
 
-AMLMTagMap&AMLMTagMap::operator=(const TagMap& tagmap)
+
+AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 {
 	m_the_map.clear();
 	for(const auto & it : tagmap)
@@ -69,9 +77,25 @@ std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTa
 
 QVariant AMLMTagMap::toVariant() const
 {
-	/// @todo
-	Q_ASSERT(0);
-	return QVariant();
+	QVariantMap map;
+
+	std::pair<const_iterator, const_iterator> range;
+
+	// Iterate through the multimap's elements by key.
+	for(auto it = m_the_map.begin(); it != m_the_map.end(); it = range.second)
+	{
+		// Get the range of the current key
+		range = m_the_map.equal_range(it->first);
+
+		// Iterate over the values in the range.
+M_TODO("THIS IS WRONG, MANY-TO-ONE MAPPING");
+		for(auto valit = range.first; valit != range.second; ++valit)
+		{
+			map.insert(toqstr(valit->first), toqstr(valit->second));
+		}
+	}
+
+	return map;
 }
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
