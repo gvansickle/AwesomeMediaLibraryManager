@@ -24,13 +24,14 @@
 #define SRC_LOGIC_AMLMTAGMAP_H_
 
 // Std C++
-#include <map>
+//#include <map>
 #include <string>
 #include <vector>
 
 // Qt5
 #include <QMetaType>
 #include <QVariant>
+#include <QMultiMap>
 
 // Ours.
 #include <future/guideline_helpers.h>
@@ -38,7 +39,7 @@
 #include <logic/serialization/ISerializable.h>
 
 using TagMap = std::map<std::string, std::vector<std::string>>;
-//Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::map);
+Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::multimap);
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
 //Q_DECLARE_METATYPE(std::string);
 //Q_DECLARE_METATYPE(TagMap);
@@ -53,9 +54,12 @@ class AMLMTagMap : public virtual ISerializable
 private:
 	using Key = std::string;
 	using T = std::string;
-	using underlying_container_type = std::multimap<Key, T>;
+
+//	using underlying_container_type = QMultiMap<Key, T>;
+
 
 public:
+	using underlying_container_type = std::multimap<Key, T>;
 	using key_type = Key;
 	using mapped_type = T;
 	using value_type = std::pair<const Key, T>;
@@ -107,6 +111,7 @@ public:
 	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
+	operator QVariant () const;
 	/// @}
 
 	/// @name Debug
@@ -120,6 +125,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(AMLMTagMap);
+Q_DECLARE_METATYPE(AMLMTagMap::underlying_container_type);
 QTH_DECLARE_QDATASTREAM_OPS(AMLMTagMap);
 
 

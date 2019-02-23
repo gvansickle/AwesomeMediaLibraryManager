@@ -248,7 +248,7 @@ QVariant MetadataAbstractBase::toVariant() const
 
 	QVariant qvar_tm = QVariant::fromValue(m_tag_map);
 	Q_ASSERT(qvar_tm.isValid());
-	map.insert(XMLTAG_TM_M_TAG_MAP, qvar_tm);
+	map.insert(XMLTAG_TM_M_TAG_MAP, m_tag_map.toVariant());
 
 	return QVariant::fromValue(map);
 }

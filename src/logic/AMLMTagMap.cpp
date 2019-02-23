@@ -80,6 +80,9 @@ QVariant AMLMTagMap::toVariant() const
 {
 	QVariantMap map;
 
+	QVariantHomogenousList list("AMLMTagMap", "entry");
+
+#if 0
 	std::pair<const_iterator, const_iterator> range;
 
 	// Iterate through the multimap's elements by key.
@@ -95,6 +98,16 @@ M_TODO("THIS IS WRONG, MANY-TO-ONE MAPPING");
 			map.insert(toqstr(valit->first), toqstr(valit->second));
 		}
 	}
+#endif
+
+	for(const auto& it : m_the_map)
+	{
+//		QPair<QString, QString> entry {toqstr(it.first), toqstr(it.second)};
+		QStringList entry {toqstr(it.first), toqstr(it.second)};
+		list.push_back(entry);
+	}
+
+	map.insert("m_the_map", list);
 
 	return map;
 }
@@ -104,6 +117,11 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 	QVariantMap map = variant.toMap();
 	Q_ASSERT(0);
 
+}
+
+AMLMTagMap::operator QVariant() const
+{
+	return toVariant();
 }
 
 QTH_DEFINE_QDEBUG_OP(AMLMTagMap, << obj.m_the_map );
