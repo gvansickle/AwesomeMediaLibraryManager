@@ -101,6 +101,7 @@ M_TODO("THIS IS WRONG, MANY-TO-ONE MAPPING");
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
 {
+	QVariantMap map = variant.toMap();
 	Q_ASSERT(0);
 
 }
