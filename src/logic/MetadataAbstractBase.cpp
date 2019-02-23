@@ -246,7 +246,9 @@ QVariant MetadataAbstractBase::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	map.insert(XMLTAG_TM_M_TAG_MAP, m_tag_map.toVariant());
+	QVariant qvar_tm = QVariant::fromValue(m_tag_map);
+	Q_ASSERT(qvar_tm.isValid());
+	map.insert(XMLTAG_TM_M_TAG_MAP, qvar_tm);
 
 	return QVariant::fromValue(map);
 }
@@ -259,6 +261,13 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+	QVariant qvar_tm = map.value(XMLTAG_TM_M_TAG_MAP);
+	Q_ASSERT(qvar_tm.isValid());
+//	Q_ASSERT(qvar_tm.canConvert<AMLMTagMap>());
+
+	m_tag_map = qvar_tm.value<decltype(m_tag_map)>();
+
+	qDb() << M_ID_VAL(m_tag_map);
 }
 
 #undef M_DATASTREAM_FIELDS

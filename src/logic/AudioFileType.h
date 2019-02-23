@@ -25,7 +25,7 @@
 #include <QObject>
 
 // Ours.
-#include <utils/RegisterQtMetatypes.h>
+//#include <utils/RegisterQtMetatypes.h>
 
 /**
  * @brief The AudioFileType class

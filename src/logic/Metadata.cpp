@@ -78,18 +78,32 @@ Metadata Metadata::make_metadata(const QJsonObject& jo)
 	return retval;
 }
 
+static const QString XMLTAG_METADATA_ABSTRACT_BASE_PIMPL {"metadata_abstract_base_pimpl"};
+
+
 Metadata Metadata::make_metadata(const QVariant& variant)
 {
+	Q_ASSERT(variant.isValid());
+#if 0
+M_TODO("What's going on here?");
+/// Contains only "metadata_abstract_base_pimpl", which contains only "base_class_variant".
 	QVariantMap map = variant.toMap();
 
-	QVariantMap metadata_tagtree = map.value("metadata_tagtree").toMap();
+	QVariant pimpl_qvar= map.value(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL);
+	Q_ASSERT(pimpl_qvar.isValid());
 
 //	Q_ASSERT(map.canConvert<MetadataFromCache>());
 	MetadataFromCache retval;
-	retval.fromVariant(metadata_tagtree);
+	retval.fromVariant(pimpl_qvar);
 	retval.m_read_has_been_attempted = true;
 	retval.m_is_error = false;
 	return retval;
+#else
+	QVariantMap map = variant.toMap();
+	Metadata retval = make_metadata();
+	retval.fromVariant(variant);
+	return retval;
+#endif
 }
 
 std::set<std::string> Metadata::getNewTags()
@@ -111,13 +125,14 @@ void Metadata::writeToJson(QJsonObject& jo) const
 //	jo["metadata"] = QJsonObject::fromVariantMap(pImpl->m_tag_map.toVariant());
 }
 
+
 QVariant Metadata::toVariant() const
 {
 	QVariantMap map;
 	/// @todo
 //	map.insert("metadata_tagtree", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
 //	map.insert("m_tag_map", m_tag_map);
-	map.insert("metadata_abstract_base", pImpl->toVariant());
+	map.insert(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL, pImpl->toVariant());
 
 	return map;
 }
@@ -140,7 +155,11 @@ void Metadata::fromVariant(const QVariant& variant)
 #endif
 	if(1)
 	{
-		pImpl->fromVariant(variant);
+		QVariant pimpl_qvar= map.value(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL);
+
+		Q_ASSERT(pimpl_qvar.isValid());
+
+		pImpl->fromVariant(pimpl_qvar);
 	}
 }
 

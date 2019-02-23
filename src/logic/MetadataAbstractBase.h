@@ -150,6 +150,4 @@ private:
 	virtual MetadataAbstractBase * clone_impl() const = 0;
 };
 
-
-
 #endif // METADATAABSTRACTBASE_H

@@ -47,20 +47,23 @@ void MetadataFromCache::readFromJson(const QJsonObject& jo)
 
 QVariant MetadataFromCache::toVariant() const
 {
-//	Q_ASSERT_X(0, __func__, "NOT IMPLEMENTED");
 	QVariantMap map;
 
-//	map.insert(QString("metadata_from_cache_dummy_DELETEME"), MapConverter::TagMaptoVarMap(m_tag_map));
-	map.insert("m_tag_map", m_tag_map.toVariant());
+	map.insert("base_class_variant", this->BASE_CLASS::toVariant());
 
 	return map;
 }
 
 void MetadataFromCache::fromVariant(const QVariant& variant)
 {
+	Q_ASSERT(variant.isValid());
 	QVariantMap map = variant.toMap();
-//	m_tag_map = MapConverter::VarMapToTagMap(map);
-	m_tag_map = map.value("m_tag_map").value<AMLMTagMap>();
+
+//	m_tag_map = map.value("m_tag_map").value<AMLMTagMap>();
+	QVariant qvar = map.value("base_class_variant");
+	Q_ASSERT(qvar.isValid());
+
+	this->BASE_CLASS::fromVariant(qvar);
 }
 
 Metadata MetadataFromCache::get_one_track_metadata(int track_index) const

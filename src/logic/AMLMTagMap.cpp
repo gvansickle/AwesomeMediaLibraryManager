@@ -26,7 +26,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AMLMTagMap metatypes";
 	qRegisterMetaType<AMLMTagMap>();
-//	qRegisterMetaTypeStreamOperators<AMLMTagMap>();
+	qRegisterMetaTypeStreamOperators<AMLMTagMap>();
 //	QMetaType::registerDebugStreamOperator<Metadata>();
 //	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
@@ -106,20 +106,24 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 
 }
 
+QTH_DEFINE_QDEBUG_OP(AMLMTagMap, << obj.m_the_map );
+
+#define DATASTREAM_FIELDS(X) \
+	X(m_the_map, m_the_map)
+
 QDataStream& operator<<(QDataStream& out, const AMLMTagMap& obj)
 {
-	for(const auto& it : obj.m_the_map)
-	{
-		out << toqstr(it.first) << toqstr(it.second);
-	}
-	return out;
+	Q_ASSERT(0);
+//#define X(unused, field) << obj.field
+//	out DATASTREAM_FIELDS(X);
+//#undef X
+//	return out;
 }
 
 QDataStream& operator>>(QDataStream& in, AMLMTagMap& obj)
 {
-	std::pair<std::string, std::string> pr;
-	QString f, s;
-	in >> f >> s;
-	obj.m_the_map.insert({f.toStdString(),s.toStdString()});
-	return in;
+	Q_ASSERT(0);
+//#define X(unused, field) >> obj.field
+//	return in DATASTREAM_FIELDS(X);
+//#undef X
 }

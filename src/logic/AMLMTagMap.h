@@ -34,6 +34,7 @@
 
 // Ours.
 #include <future/guideline_helpers.h>
+#include <utils/QtHelpers.h>
 #include <logic/serialization/ISerializable.h>
 
 using TagMap = std::map<std::string, std::vector<std::string>>;
@@ -63,7 +64,8 @@ public:
 
 	/// Member functions.
 public:
-	M_GH_RULE_OF_ZERO(AMLMTagMap);
+//	M_GH_RULE_OF_ZERO(AMLMTagMap);
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap);
 
 	AMLMTagMap& operator=(const TagMap& tagmap);
 
@@ -105,6 +107,11 @@ public:
 	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
+	/// @}
+
+	/// @name Debug
+	/// @{
+	QTH_FRIEND_QDEBUG_OP(AMLMTagMap);
 	/// @}
 
 private:

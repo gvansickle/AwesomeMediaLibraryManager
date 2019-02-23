@@ -32,6 +32,7 @@ class QJsonObject;
 
 class MetadataFromCache : public MetadataAbstractBase, public virtual ISerializable
 {
+	using BASE_CLASS = MetadataAbstractBase;
 public:
 	MetadataFromCache();
 	~MetadataFromCache() override;

@@ -383,7 +383,7 @@ QVariant LibraryEntry::toVariant() const
 
 void LibraryEntry::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<InsertionOrderedMap<QString, QVariant>>();
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Extract all the fields from the map, cast them to their type.
 #define X(field_enum_name, field) field = map.value( LibraryEntryTag :: field_enum_name ## _tagstr ).value<decltype( field )>();
@@ -393,7 +393,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	/// @todo
 	if(isPopulated())
 	{
-		/// @todo This is badly named. m_metadata the field has a "metadata_tagtree" QVarMap inside it.
+		/// @todo This is badly named. m_metadata the field has a "metadata_abstract_base_pimpl" QVarInsOrderMap inside it.
 		QVariant metadata_map = map.value(LibraryEntryTag::METADATA_tagstr);
 
 //		Q_ASSERT(metadata_map.value().canConvert<MetadataFromCache>());
