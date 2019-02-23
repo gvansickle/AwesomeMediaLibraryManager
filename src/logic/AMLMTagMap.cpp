@@ -21,11 +21,12 @@
  * @file AMLMTagMap.cpp
  */
 #include "AMLMTagMap.h"
+#include <utils/RegisterQtMetatypes.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AMLMTagMap metatypes";
 	qRegisterMetaType<AMLMTagMap>();
-	qRegisterMetaTypeStreamOperators<AMLMTagMap>();
+//	qRegisterMetaTypeStreamOperators<AMLMTagMap>();
 //	QMetaType::registerDebugStreamOperator<Metadata>();
 //	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
@@ -104,3 +105,20 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 
 }
 
+QDataStream& operator<<(QDataStream& out, const AMLMTagMap& obj)
+{
+	for(const auto& it : obj.m_the_map)
+	{
+		out << toqstr(it.first) << toqstr(it.second);
+	}
+	return out;
+}
+
+QDataStream& operator>>(QDataStream& in, AMLMTagMap& obj)
+{
+	std::pair<std::string, std::string> pr;
+	QString f, s;
+	in >> f >> s;
+	obj.m_the_map.insert({f.toStdString(),s.toStdString()});
+	return in;
+}

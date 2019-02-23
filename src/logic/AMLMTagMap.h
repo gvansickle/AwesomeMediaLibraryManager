@@ -102,6 +102,7 @@ public:
 
 	/// @name Serialization
 	/// @{
+	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 	/// @}
@@ -112,5 +113,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(AMLMTagMap);
+QTH_DECLARE_QDATASTREAM_OPS(AMLMTagMap);
+
 
 #endif /* SRC_LOGIC_AMLMTAGMAP_H_ */

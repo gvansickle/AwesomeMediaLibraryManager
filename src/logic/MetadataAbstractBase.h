@@ -33,6 +33,7 @@
 #include <future/guideline_helpers.h>
 #include <src/utils/Fraction.h>
 #include <utils/EnumFlagHelpers.h>
+#include <utils/QtHelpers.h>
 #include <logic/serialization/ExtEnum.h>
 #include "TrackMetadata.h"
 #include "AudioFileType.h"
@@ -96,6 +97,8 @@ public:
 
 	/// @name Serialization support.
 	/// @{
+	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
+
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 	/// @}
