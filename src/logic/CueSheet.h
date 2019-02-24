@@ -126,6 +126,7 @@ private:
 
 Q_DECLARE_METATYPE(CueSheet);
 
+
 QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
 QDataStream &operator<<(QDataStream &out, const CueSheet &myObj);
