@@ -223,20 +223,25 @@ using strviw_type = QString;
 	X(XMLTAG_HAS_APE, m_has_ape) \
 	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
 	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag) \
+	X(XMLTAG_AUDIO_FILE_URL, m_audio_file_url) \
+	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
+
+#define M_DATASTREAM_FIELDS_MAPS(X) \
 	/** TagMaps */ \
-//	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
-//	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
-//	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
-//	X(XMLTAG_TM_APE, m_tm_ape) \
-//	X(XMLTAG_TM_XIPF, m_tm_xipf) \
-//	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
+	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
+	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
+	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
+	X(XMLTAG_TM_APE, m_tm_ape) \
+	X(XMLTAG_TM_XIPF, m_tm_xipf) \
+	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
 	X(XMLTAG_TM_M_TAG_MAP, m_tag_map)
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
-static const strviw_type XMLTAG_TM_M_TAG_MAP("m_tag_map");
+//static const strviw_type XMLTAG_TM_M_TAG_MAP("m_tag_map");
 
 QVariant MetadataAbstractBase::toVariant() const
 {
@@ -246,9 +251,13 @@ QVariant MetadataAbstractBase::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	QVariant qvar_tm = QVariant::fromValue(m_tag_map);
-	Q_ASSERT(qvar_tm.isValid());
-	map.insert(XMLTAG_TM_M_TAG_MAP, m_tag_map.toVariant());
+//	QVariant qvar_tm = QVariant::fromValue(m_tag_map);
+//	Q_ASSERT(qvar_tm.isValid());
+//	map.insert(XMLTAG_TM_M_TAG_MAP, m_tag_map.toVariant());
+
+#define X(field_tag, member_field) map.insert( field_tag , member_field . toVariant());
+	M_DATASTREAM_FIELDS_MAPS(X);
+#undef X
 
 	auto retval = QVariant::fromValue(map);
 	Q_ASSERT(retval.isValid());
@@ -269,6 +278,13 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 
 //	m_tag_map = qvar_tm.value<AMLMTagMap>();
 	m_tag_map.fromVariant(qvar_tm);
+
+#define X(field_tag, member_field) member_field . fromVariant(map.value(field_tag));
+	M_DATASTREAM_FIELDS_MAPS(X);
+#undef X
+
+	m_read_has_been_attempted = true;
+	m_is_error = false;
 
 	qDb() << M_ID_VAL(m_tag_map) << "Num Entries:" << m_tag_map.size();
 }
