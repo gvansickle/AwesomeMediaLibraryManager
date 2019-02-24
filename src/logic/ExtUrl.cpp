@@ -25,16 +25,12 @@
 
 // Qt5
 #include <QFileInfo>
-#include <QXmlStreamWriter>
-#include <QtXmlPatterns>
 
 // Ours, Qt5 Support
 #include <utils/RegisterQtMetatypes.h>
 
 // Ours
-#include "models/AbstractTreeModelWriter.h"
 #include <logic/models/ScanResultsTreeModelXMLTags.h>
-#include "xml/XmlObjects.h"
 #include <utils/DebugHelpers.h>
 
 
@@ -42,7 +38,7 @@
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering ExtUrl";
 	qRegisterMetaType<ExtUrl>();
-//	qRegisterMetaTypeStreamOperators<ExtUrl>("ExtUrl");
+	qRegisterMetaTypeStreamOperators<ExtUrl>();
 });
 
 
@@ -80,29 +76,6 @@ void ExtUrl::fromVariant(const QVariant& variant)
 #define X(field_enum_name, field) field = map.value( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ] ).value<decltype( field )>();
 	DATASTREAM_FIELDS(X)
 #undef X
-}
-
-XmlElement ExtUrl::toXml() const
-{
-	// Mostly elements format.
-	XmlElementList el = {
-		XmlElement("href", m_url),
-		XmlElement("file_size", m_file_size_bytes),
-		XmlElement("ts_last_refresh", m_timestamp_last_refresh),
-		XmlElement("ts_creation", m_creation_timestamp),
-		XmlElement("ts_last_modified", m_last_modified_timestamp),
-		XmlElement("ts_last_modified_metadata", m_metadata_last_modified_timestamp)
-		};
-
-	XmlElement retval("exturl",
-					  XmlAttributeList(),
-					  XmlValue(),
-					  el,
-					  [=](XmlElement* e, QXmlStreamWriter* xml){
-//		qDb() << "callback";
-	});
-
-	return retval;
 }
 
 void ExtUrl::save_mod_info(const QFileInfo* qurl_finfo)

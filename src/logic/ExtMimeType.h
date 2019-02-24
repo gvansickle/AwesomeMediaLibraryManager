@@ -24,6 +24,9 @@
 #include <QMimeDatabase>
 #include <QMimeType>
 
+// Ours.
+#include <utils/QtHelpers.h>
+
 /**
  * A streamable QMimeType.
  *
@@ -34,31 +37,36 @@ class ExtMimeType : public QMimeType
     Q_GADGET
 
 public:
-    ExtMimeType() = default;
+    ExtMimeType();
     ExtMimeType(const QMimeType& other) : QMimeType(other) {}
     ~ExtMimeType() = default;
 
-    template <class StreamType>
-    friend StreamType& operator<<(StreamType& out, const ExtMimeType& obj)
-    {
-        out << obj.name();
-        return out;
-    }
+	QTH_FRIEND_QDATASTREAM_OPS(ExtMimeType);
 
-    template <class StreamType>
-    friend StreamType& operator>>(StreamType& in, ExtMimeType& obj)
-    {
-        QString as_str;
-        in >> as_str;
+//    template <class StreamType>
+//    friend StreamType& operator<<(StreamType& out, const ExtMimeType& obj)
+//    {
+//        out << obj.name();
+//        return out;
+//    }
 
-        QMimeDatabase db;
-        obj = db.mimeTypeForName(as_str);
+//    template <class StreamType>
+//    friend StreamType& operator>>(StreamType& in, ExtMimeType& obj)
+//    {
+//        QString as_str;
+//        in >> as_str;
 
-        return in;
-    }
+//        QMimeDatabase db;
+//        obj = db.mimeTypeForName(as_str);
+
+//        return in;
+//    }
 };
 
 Q_DECLARE_METATYPE(ExtMimeType);
+
+QTH_DECLARE_QDEBUG_OP(ExtMimeType);
+QTH_DECLARE_QDATASTREAM_OPS(ExtMimeType);
 
 
 #endif // EXTMIMETYPE_H

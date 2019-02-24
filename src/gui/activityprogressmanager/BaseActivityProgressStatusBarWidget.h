@@ -35,6 +35,7 @@ class KAbstractWidgetJobTracker;
 class KToolTipWidget;
 
 /// Ours
+#include <utils/StaticAnalysis.h>
 #include <utils/TheSimplestThings.h>
 #include "concurrency/AMLMJob.h"
 class ActivityProgressStatusBarTracker;
@@ -185,26 +186,26 @@ protected:
 
     /// Description text, Job Title.
     /// Something like "Copying".
-    QPointer<QLabel> m_job_title_label {nullptr};
+	gsl::owner<QLabel*> m_job_title_label {nullptr};
 
     /// Detail text, Field 1.
     /// Example given at @link https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#a145f7a7648f06ef79cf526a2c6125b88
     /// is ""Source" with an URL".
-    QLabel* m_field1_label {nullptr};
+	gsl::owner<QLabel*> m_field1_label {nullptr};
 
     /// Detail text, Field 2.
     /// Example given at @link https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#a145f7a7648f06ef79cf526a2c6125b88
     /// is ""Destination" with an URL".
-    QLabel* m_field2_label {nullptr};
+	gsl::owner<QLabel*> m_field2_label {nullptr};
 
     /// Info message label.
     /// @link https://api.kde.org/frameworks/kcoreaddons/html/classKJob.html#afed68ccf8ff292cb95ca8d286080cc61
     /// Display[s] state information about this job.
     /// Examples of message are "Resolving host", "Connecting to host...", etc.
-    QLabel* m_info_message_label {nullptr};
+	gsl::owner<QLabel*> m_info_message_label {nullptr};
 
     /// Speed label.
-    QLabel* m_speed_label {nullptr};
+	gsl::owner<QLabel*> m_speed_label {nullptr};
 
     /// The progress bar.
     QProgressBar* m_progress_bar {nullptr};
@@ -217,7 +218,7 @@ protected:
 
     /// Tooltip for when the user hovers anywhere over the widget.
     KToolTipWidget* m_tool_tip_widget {nullptr};
-    QLabel* m_tool_tip_label {nullptr};
+	gsl::owner<QLabel*> m_tool_tip_label {nullptr};
 
     /// @}
 };

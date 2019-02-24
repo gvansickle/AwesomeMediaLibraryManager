@@ -3,13 +3,12 @@
 
 // Qt5
 #include <QWidget>
-#include <QSqlRelationalTableModel>
-#include <QSqlRelationalDelegate>
 
 // Ours
 #include <logic/dbmodels/ScanResultsTableModel.h>
 
-namespace Ui {
+namespace Ui
+{
 class CollectionView;
 }
 
@@ -23,8 +22,6 @@ class CollectionView : public QWidget
 public:
     explicit CollectionView(QWidget *parent = nullptr);
     ~CollectionView() override;
-
-    void setMainModel(QSqlRelationalTableModel* model);
 
 	void setMainModel2(ScanResultsTableModel* model);
 

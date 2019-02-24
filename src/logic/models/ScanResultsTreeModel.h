@@ -31,6 +31,14 @@
 #include "ScanResultsTreeModelItem.h"
 class AbstractTreeModelHeaderItem;
 
+
+/**
+ * A ScanResultsTreeModel represents the results of a directory traversal.  Each instance corresponds
+ * roughly to what MusicBrainz refers to as a "Medium": @link https://musicbrainz.org/doc/Medium
+ * It's essentially a URL to an mp3, ogg, flac, or other audio file which:
+ * - Contains 1 or more tracks.
+ * - May have a sidecar or embedded cue sheet.
+ */
 class ScanResultsTreeModel : public AbstractTreeModel
 {
 	Q_OBJECT
@@ -38,19 +46,18 @@ class ScanResultsTreeModel : public AbstractTreeModel
 	using BASE_CLASS = AbstractTreeModel;
 
 public:
-	ScanResultsTreeModel(QObject *parent = nullptr);
+	explicit ScanResultsTreeModel(QObject *parent = nullptr);
     ~ScanResultsTreeModel() override = default;
 
     /**
      * Sets the base directory of the model.
-     * @todo Not sure if we should support more than one or not.
+     * @todo Not sure if we should support more than one or not, but should support "known alias paths".
      */
     void setBaseDirectory(const QUrl& base_directory);
 
-	/**
-	 * Append a vector of AbstractTreeModelItem's as children of @p parent.
-	 */
-	bool appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex &parent = QModelIndex()) override;
+
+	/// Append a vector of AbstractTreeModelItem's as children of @p parent.
+	bool appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex &parent = QModelIndex()) override;
 
 	/// @name Serialization
 	/// @{
@@ -61,9 +68,6 @@ public:
 	QTH_FRIEND_QDATASTREAM_OPS(ScanResultsTreeModel);
 
 	/// @}
-
-	/// Create a new root node.
-	AbstractTreeModelHeaderItem* make_root_node(QVector<QVariant> rootData) override;
 
 protected:
 	QString getXmlStreamName() const override { return "AMLMScanResults"; };

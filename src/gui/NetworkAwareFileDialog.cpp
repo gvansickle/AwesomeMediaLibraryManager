@@ -211,7 +211,7 @@ M_WARNING("TODO");
 
 QString NetworkAwareFileDialog::selectedNameFilter() const
 {
-M_WARNING("TODO");
+M_MESSAGE("TODO");
     return m_the_qfiledialog->selectedNameFilter();
 }
 
@@ -305,7 +305,7 @@ void NetworkAwareFileDialog::setDefaultSidebarUrls()
 			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation)[0])
 			/// @todo if linux && gvfs
 			<< QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::RuntimeLocation)[0] + "/gvfs");
-		for(auto url : urls)
+		for(const auto& url : urls)
 		{
 			qDebug() << "Adding Sidebar URL:" << url;
 		}
@@ -420,8 +420,10 @@ static Gtk::FileChooserAction map_to_Gtk_FileChooserAction(QFileDialog::FileMode
     case QFileDialog::ExistingFiles:
         // "The names of zero or more existing files."
         // == "???"
+		return Gtk::FILE_CHOOSER_ACTION_OPEN; // For "control may reach end of nonvoid function".
         Q_ASSERT(0);
     default:
+		return Gtk::FILE_CHOOSER_ACTION_OPEN; // For "control may reach end of nonvoid function".
         Q_ASSERT(0);
     }
 }
@@ -655,7 +657,7 @@ void NetworkAwareFileDialog::setTransientParent_xcb()
 
     qDebug() << M_NAME_VAL(m_transientParent);
 
-    if(m_transientParent)
+	if(m_transientParent != nullptr)
     {
         xcb_window_t tp_xcb_win = m_transientParent->winId();
         xcb_void_cookie_t cookie = xcb_change_property_checked(m_xcb_connection, XCB_PROP_MODE_REPLACE,

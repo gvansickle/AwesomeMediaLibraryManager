@@ -23,56 +23,37 @@
 
 #include "ScanResultsTreeModelItem.h"
 
+// Std C++
+#include <memory>
+
 // Qt5
 #include <QXmlStreamReader>
 
 // Ours
 #include <utils/DebugHelpers.h>
 #include <logic/DirScanResult.h>
+#include <LibraryEntry.h>
 #include "ScanResultsTreeModelXMLTags.h"
 
-/**
- * QXmlQuery notes:
- * http://doc.qt.io/qt-5/xmlprocessing.html#xml-id
- * "xml:id
- * Processing of XML files supports xml:id. This allows elements that have an attribute named xml:id to be
- * looked up efficiently with the fn:id() function. See xml:id Version 1.0 [http://www.w3.org/TR/xml-id/] for details."
- */
 
-
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem* parent)
+ScanResultsTreeModelItem::ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem* parent)
 	: AbstractTreeModelItem(parent)
 {
-	m_dsr = *dsr;
-//	qDb() << "############" << m_dsr;
-//	qDb() << "############" << m_dsr.getMediaExtUrl();
-//	dsr->getDirProps();
-//	dsr->getMediaExtUrl();
-//	dsr->getSidecarCuesheetExtUrl();
-//	QVector<QVariant> column_data;
-//	column_data.append(QVariant::fromValue<DirProps>(getDirProps()).toString());
-//	column_data.append(QVariant::fromValue(getMediaExtUrl().m_url.toDisplayString()));
-//	column_data.append(QVariant::fromValue(getSidecarCuesheetExtUrl().m_url.toDisplayString()));
-
-//	setData(0, QVariant::fromValue<DirProps>(m_dsr.getDirProps()).toString());
-//	setData(1, QVariant::fromValue(QUrl(m_dsr.getMediaExtUrl()).toDisplayString()));
-//	setData(2, column_data[2]);
-}
-
-ScanResultsTreeModelItem::ScanResultsTreeModelItem(QVector<QVariant> x, AbstractTreeModelItem *parent)
-	: AbstractTreeModelItem(parent, x)
-{
-	Q_ASSERT(0);
-#warning "Eliminate?"
+	m_dsr = dsr;
 }
 
 ScanResultsTreeModelItem::~ScanResultsTreeModelItem()
 {
 }
 
-QVariant ScanResultsTreeModelItem::data(int column) const
+QVariant ScanResultsTreeModelItem::data(int column, int role) const
 {
-	/// Map column and @todo role to the corresponding data.
+	// Map column and role to the corresponding data.
+
+	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
+	{
+		return QVariant();
+	}
 
 	switch(column)
 	{
@@ -87,7 +68,12 @@ QVariant ScanResultsTreeModelItem::data(int column) const
 		break;
 	}
 
-	return QVariant("XXXX");
+	return QVariant();
+}
+
+int ScanResultsTreeModelItem::columnCount() const
+{
+	return 3;
 }
 
 
@@ -100,6 +86,18 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT], m_dsr.toVariant());
 
+	/// @todo Make a list or something.
+//	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0], toVariant(kv_pair_in_variant);
+
+	// Children to variant list.
+	QVariantList vl;
+	for(int i=0; i<childCount(); i++)
+	{
+		auto* child_ptr = child(i);
+		vl.append(child_ptr->toVariant());
+	}
+	map.insert("children", vl);
+
 	return map;
 }
 
@@ -107,129 +105,127 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantMap map = variant.toMap();
 
-#warning "The cast should work though, right?"
-//	m_dsr = map.value("dirscanresult").value<DirScanResult>();
 	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
 	m_dsr.fromVariant(dsr_in_variant);
+
+	/// @todo Make a list or something.
+	auto kv_pair_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0]);
+	m_dsr.fromVariant(kv_pair_in_variant);
+
+	/// @todo
+
 }
 
-
-ScanResultsTreeModelItem* ScanResultsTreeModelItem::parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent)
+AbstractTreeModelItem *
+ScanResultsTreeModelItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
 {
-	auto& xml = *xmlp;
+	SRTMItem_LibEntry* child_item;
 
-	if(xml.name() != "srtmitem")
-	{
-		// Not fur us.
-		return nullptr;
-	}
-	else
-	{
-		// Read in this and all children.
-		auto* this_node = createChildItem(parent);
+	child_item = new SRTMItem_LibEntry(parent);
 
-		while(xml.readNextStartElement())
-		{
-			// Read the columns.
-			if(xml.name() == "column_data")
-			{
-				qDb() << "### column_data:" << xml.readElementText();
-			}
-			else
-			{
-				xml.skipCurrentElement();
-			}
-		}
-
-		return this_node;
-	}
+	return child_item;
 }
 
-bool ScanResultsTreeModelItem::writeItemAndChildren(QXmlStreamWriter* writer) const
+bool ScanResultsTreeModelItem::derivedClassSetData(int column, const QVariant& value)
 {
-	// Convenience ref.
-	auto& xml = *writer;
-
-	// We should never be the root item.
-	Q_ASSERT(parent() != nullptr);
-
-	// Write out this item.
-	xml.writeStartElement(m_item_tag_name);
-	xml.writeAttribute("parents_child_number", QString("%1").arg(childNumber()));
-	xml.writeAttribute("parents_total_children", QString("%1").arg(parent()->childCount()));
-
-	// Write out the DirScanResults.
-	auto dsr = m_dsr.toXml();
-	dsr.write(&xml);
-
-	// Write the columns of data.
-//	for(int col = 0; col < columnCount(); ++col)
-//	{
-//		/// @todo Get header element info.
-////		xml.writeAttribute("childNumber", QString("%1").arg(item->childNumber()));
-//		xml.writeTextElement("column_data", data(col).toString());
-//	}
-
-//	// Write out all children.
-//	// Note that if we were an XmlElement, this would be done for us.
-//	if(childCount() > 0)
-//	{
-//		xml.writeStartElement("srtmi_child_item_list");
-//		for(int i = 0; i < childCount(); ++i)
-//		{
-//			// Hold on tight, we're going recursive!
-//			child(i)->writeItemAndChildren(writer);
-//		}
-//		xml.writeEndElement();
-//	}
-	xml.writeEndElement();
-
-	/// @todo Default to something else if not overridden?
+	// We have at the moment only a DirScanResult, not sure we need to set data by column.
 	return true;
 }
 
-#if 0
-QXmlQuery ScanResultsTreeModelItem::write() const
+bool ScanResultsTreeModelItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
 {
-	QXmlQuery query;
+	/// @todo Again only a DirScanResult.  Not sure what to do here.
+	/// Qt5 TreeModel has this:
+	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
+	///		beginInsertColumns(parent, position, position + columns - 1);
+	///		success = rootItem->insertColumns(position, columns);
+	///		endInsertColumns();
+	/// So it's up to the root item to decide what to do, not the model.
+	/// The root item calls child items and they add/remove QVariant's as required.
 
-	query.bindVariable("tagname", QVariant(m_item_tag_name));
-	query.bindVariable("m_dsr", QVariant::fromValue<DirScanResult>(m_dsr));
-//	query.bindVariable("inner_var", query_inner);
-	query.setQuery(
-				"<{$tagname}>"
-				"<m_dsr>{$m_dsr}</m_dsr>"
-				"</{$tagname}>"
-				);
-	Q_ASSERT(query.isValid());
-
-	return query;
+	return true;
 }
-#endif
 
-ScanResultsTreeModelItem* ScanResultsTreeModelItem::createChildItem(AbstractTreeModelItem* parent)
+bool ScanResultsTreeModelItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
 {
-	ScanResultsTreeModelItem* child_item;
+	/// @todo Again only a DirScanResult.  Not sure what to do here.
+	/// Qt5 TreeModel has this:
+	///   bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent)
+	///		beginInsertColumns(parent, position, position + columns - 1);
+	///		success = rootItem->insertColumns(position, columns);
+	///		endInsertColumns();
+	/// So it's up to the root item to decide what to do, not the model.
 
-	if(parent)
+	return true;
+}
+
+
+/////////// @todo SRTMItem_LibEntry
+
+bool SRTMItem_LibEntry::derivedClassSetData(int column, const QVariant& value)
+{
+	return ScanResultsTreeModelItem::derivedClassSetData(column, value);
+}
+
+bool SRTMItem_LibEntry::derivedClassInsertColumns(int insert_before_column, int num_columns)
+{
+	return ScanResultsTreeModelItem::derivedClassInsertColumns(insert_before_column, num_columns);
+}
+
+bool SRTMItem_LibEntry::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+{
+	return ScanResultsTreeModelItem::derivedClassRemoveColumns(first_column_to_remove, num_columns);
+}
+
+QVariant SRTMItem_LibEntry::data(int column, int role) const
+{
+	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
 	{
-		child_item = new ScanResultsTreeModelItem(QVector<QVariant>(), parent);
+		return QVariant();
 	}
-	else
+	switch(column)
 	{
-		child_item = new ScanResultsTreeModelItem(parent);
+		case 0:
+			return QVariant::fromValue(toqstr(m_key));
+			break;
+		case 1:
+			return QVariant::fromValue(toqstr(m_val));
+			break;
+		default:
+			return QVariant();
+			break;
+	}
+}
+
+int SRTMItem_LibEntry::columnCount() const
+{
+	return 2;
+}
+
+QVariant SRTMItem_LibEntry::toVariant() const
+{
+	QVariantMap map;
+
+	/// @todo Will be more fields, justifying the map vs. value?
+	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
+
+//	map.insert("TEST_COL0", QVariant::fromValue(m_key));
+//	map.insert("TEST_COL1", QVariant::fromValue(m_val));
+
+	if(auto libentry = m_library_entry.get(); libentry != nullptr)
+	{
+		map.insert("m_library_entry", m_library_entry->toVariant());
 	}
 
-	return child_item;
+	return map;
 }
 
-ScanResultsTreeModelItem *
-ScanResultsTreeModelItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)
+void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	ScanResultsTreeModelItem* child_item;
+	QVariantMap map = variant.toMap();
 
-	child_item = new ScanResultsTreeModelItem(parent);
-
-	return child_item;
+	/// @todo Incomplete.
+	Q_ASSERT(0);
 }
 
+/////////// @todo SRTMItem_LibEntry

@@ -49,7 +49,7 @@ QMetaObject::Connection connect_clicked(Sender* sender, const Receiver* receiver
 
 /**
  * Make a connection and assert if the attempt fails.
- * This is the general case, including lambdas.  Unfortunately:
+ * This template is for the general case, including lambdas.  Unfortunately:
  * "Qt::UniqueConnections do not work for lambdas, non-member functions and functors; they only apply
  * to connecting to member functions."
  * The overload below tries to catch the case where UniqueConnection does apply.

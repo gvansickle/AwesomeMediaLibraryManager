@@ -67,6 +67,31 @@ struct then_helper
 };
 
 } // END detail
+
+	/**
+	 * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
+	 * @link https://en.cppreference.com/w/cpp/experimental/when_all
+	 *
+	 * @todo Probably should be in ::detail.
+	 *
+	 * @tparam InputIterator
+	 * @param first
+	 * @param last
+	 * @return
+	 */
+	template <class InputIterator>
+	ExtFuture<std::vector<typename std::iterator_traits<InputIterator>::value_type>>
+	when_all(InputIterator first, InputIterator last)
+	{
+
+	}
+
+	template <class... Futures>
+	ExtFuture<std::tuple<std::decay_t<Futures>...>> when_all(Futures&&... futures)
+	{
+
+	}
+
 } // END ExtAsync
 
 #if 0 // templates.....
@@ -288,12 +313,14 @@ ExtFuture<R> ExtFuture<T>::then(QObject* context, bool call_on_cancel, ThenCallb
 template<typename T>
 void ExtFuture<T>::wait()
 {
-	while (!this->isFinished())
-	{
-		// Pump the event loop.
-		QCoreApplication::processEvents(QEventLoop::AllEvents);
-		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-	}
+	Q_ASSERT(this->valid());
+	this->waitForFinished();
+//	while (!this->isFinished())
+//	{
+//		// Pump the event loop.
+//		QCoreApplication::processEvents(QEventLoop::AllEvents);
+//		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+//	}
 }
 
 template<typename T>

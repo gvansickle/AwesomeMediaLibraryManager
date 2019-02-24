@@ -21,6 +21,7 @@
 #define SRC_UTILS_QTHELPERS_H_
 
 #include <config.h>
+#include <QtCore/QSharedPointer>
 
 /*
  *
@@ -32,6 +33,25 @@ public:
 	virtual ~QtHelpers();
 };
 
+/**
+ * In many/most instances we can't cross the std:: and Qt 5 streams.
+ * Uhhhh.......
+ */
+template <class T>
+using SHARED_PTR = QSharedPointer<T>;
+
+template <class T, class... Args>
+SHARED_PTR<T> MAKE_SHARED(Args&&... args)
+{
+	return SHARED_PTR<T>::create(args...);
+}
+
+/// Seriously, no Qt unique ptr?
+template <class T>
+using UNIQUE_PTR = QSharedPointer<T>;
+
+template <class T>
+using WEAK_PTR = QWeakPointer<T>;
 
 #if 0
 template<class StreamType, class T>

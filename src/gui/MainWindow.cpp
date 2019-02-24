@@ -121,8 +121,13 @@
 // Asynchronous activity progress monitoring.
 #include <gui/activityprogressmanager/ActivityProgressStatusBarTracker.h>
 #include <logic/proxymodels/LibrarySortFilterProxyModel.h>
+#include <logic/serialization/XmlSerializer.h>
 
 #include "concurrency/ExtAsync.h"
+
+/// @note EXPERIMENTAL
+#include <gui/widgets/ExperimentalKDEView1.h>
+
 
 //
 // Note: The MDI portions of this file are very roughly based on the Qt5 MDI example,
@@ -189,6 +194,8 @@ MainWindow::~MainWindow()
     delete instance()->m_activity_progress_tracker;
     instance()->m_activity_progress_tracker = nullptr;
 #endif
+
+	delete m_player;
 
     m_instance = nullptr;
 }
@@ -1179,7 +1186,7 @@ bool MainWindow::maybeSaveOnClose()
 			}
 		}
 	}
-	if(failures.size() > 0)
+	if(!failures.empty())
 	{
 		if(QMessageBox::warning(this, tr("Save Error"),
 								tr("Failed to save %1\nQuit anyway?").arg(failures.join(',')), /// @todo % "\n\t".join(failures),
@@ -1307,7 +1314,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 	{
 		// No existing View, is there an existing Model open?
 		/// @todo: Seems like there should be a cleaner way to handle this.
-		for(auto lm : m_libmodels)
+		for(const auto& lm : m_libmodels)
 		{
 			if(lm->getLibRootDir() == url)
 			{
@@ -1316,7 +1323,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 				retval.m_model_was_existing = true;
 			}
 		}
-		for(auto pm : m_playlist_models)
+		for(const auto& pm : m_playlist_models)
 		{
 			if(pm->getLibRootDir() == url)
 			{
@@ -1420,36 +1427,96 @@ void MainWindow::readPreGUISettings()
 
 void MainWindow::readLibSettings(QSettings& settings)
 {
-	int num_libs = settings.beginReadArray("libraries");
-	qInfo() << "Reading" << num_libs << "libraries...";
-	for(int i = 0; i < num_libs; ++i)
+	int num_libs;
+
+	if(false) /// OLD JSON
 	{
-		settings.setArrayIndex(i);
+		num_libs = settings.beginReadArray("libraries");
+		qInfo() << "Reading" << num_libs << "libraries...";
 
-		QByteArray jdoc_str = settings.value("asJson").toByteArray();
-
-//		qDebug() << "jdoc_str=" << jdoc_str;
-		QJsonDocument jsondoc = QJsonDocument::fromJson(jdoc_str);
-//		qDebug() << "Jsondoc:" << jsondoc.toJson();
-//		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
-
-		QPointer<LibraryModel> libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
-
-		if(!libmodel)
+		for(int i = 0; i < num_libs; ++i)
 		{
-			QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
-								  QMessageBox::Ok);
-		}
-		else
-		{
-			MDIModelViewPair mvpair;
-			mvpair.m_model = libmodel;
-			mvpair.m_model_was_existing = false;
+			QPointer<LibraryModel> libmodel;
 
-			addChildMDIModelViewPair_Library(mvpair);
+			settings.setArrayIndex(i);
+
+			QByteArray jdoc_str = settings.value("asJson").toByteArray();
+
+			//		qDebug() << "jdoc_str=" << jdoc_str;
+			QJsonDocument jsondoc = QJsonDocument::fromJson(jdoc_str);
+			//		qDebug() << "Jsondoc:" << jsondoc.toJson();
+			//		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
+
+			libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
+
+			if(!libmodel)
+			{
+				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+									  QMessageBox::Ok);
+			}
+			else
+			{
+				MDIModelViewPair mvpair;
+				mvpair.m_model = libmodel;
+				mvpair.m_model_was_existing = false;
+
+				addChildMDIModelViewPair_Library(mvpair);
+			}
 		}
+		settings.endArray();
 	}
-	settings.endArray();
+	if(true) /// XML
+	{
+M_TODO("INTERIM, CONVERT OVER TO THIS");
+
+		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
+		qIn() << "###### READING XML DB:" << database_filename;
+
+		XmlSerializer xmlser;
+		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+
+		SerializableQVariantList list("library_list", "library_list_item");
+
+		xmlser.load(list, QUrl::fromLocalFile(database_filename));
+
+		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
+
+		for(int i = 0; i < list.size(); ++i)
+		{
+//			QPointer<LibraryModel> libmodel;
+
+//			libmodel = new LibraryModel(this);
+
+			// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
+//			LibraryModel* lmp = m_libmodels[i];
+//			QVariant qv = lmp->toVariant();
+//			list.push_back(qv);
+
+			QVariant qv = list[i];
+			Q_ASSERT(qv.isValid());
+			Q_ASSERT(!qv.isNull());
+			LibraryModel* lmp = new LibraryModel(this);
+			lmp->fromVariant(qv);
+
+			Q_ASSERT(lmp->getLibRootDir().isValid());
+
+			if(!lmp)
+			{
+				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+									  QMessageBox::Ok);
+			}
+			else
+			{
+				MDIModelViewPair mvpair;
+				mvpair.m_model = lmp;
+				mvpair.m_model_was_existing = false;
+
+				addChildMDIModelViewPair_Library(mvpair);
+			}
+		}
+		qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
+	}
 }
 
 void MainWindow::writeSettings()
@@ -1478,7 +1545,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	qDebug() << "Writing"  << m_libmodels.size() << "libraries";
 	for(size_t i = 0; i < m_libmodels.size(); ++i)
 	{
-//		qDebug() << "Model #:" << i;
+		qDebug() << "Writing Model #:" << i;
 		settings.setArrayIndex(i);
 
 		// Serialize the library to a QJsonObject.
@@ -1494,6 +1561,31 @@ void MainWindow::writeLibSettings(QSettings& settings)
 		settings.setValue("asJson", jdoc_bytes);
 	}
 	settings.endArray();
+
+	if(true) /// XML
+	{
+M_TODO("INTERIM, CONVERT OVER TO THIS");
+		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
+		qIn() << "###### WRITING XML DB:" << database_filename;
+
+		XmlSerializer xmlser;
+		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+
+		SerializableQVariantList list("library_list", "library_list_item");
+		for(size_t i = 0; i < m_libmodels.size(); ++i)
+		{
+			// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
+			LibraryModel* lmp = m_libmodels[i];
+			QVariant qv = lmp->toVariant();
+			list.push_back(qv);
+		}
+
+		xmlser.save(list, QUrl::fromLocalFile(database_filename), "the_library_model_list");
+
+		qIn() << "###### WROTE XML DB:" << database_filename;
+	}
+
 	qDebug() << "writeLibSettings() end";
 }
 
@@ -1507,7 +1599,7 @@ void MainWindow::openWindows()
 {
 	qInfo() << "Opening windows which were open at end of last session...";
 
-	for(auto m : m_libmodels)
+	for(const auto& m : m_libmodels)
 	{
 		qDebug() << "Opening view on existing model:" << m->getLibraryName() << m->getLibRootDir();
 
@@ -1576,7 +1668,7 @@ M_WARNING("HACKISH, MAKE THIS BETTER");
 
 	QVector<QUrl> lib_root_urls;
 
-	for(auto l : m_libmodels)
+	for(auto& l : m_libmodels)
 	{
 //		l->startRescan();
 		lib_root_urls << l->getLibRootDir();
@@ -1705,16 +1797,16 @@ void MainWindow::newCollectionView()
     auto mdi_child = m_mdi_area->addSubWindow(child);
     Q_CHECK_PTR(mdi_child);
 
-//	auto model = AMLMApp::instance()->cdb_instance()->make_reltable_model(this, AMLMApp::instance()->cdb_instance()->OpenDatabaseConnection("the_connection_name", false, false));
-	auto model = AMLMApp::instance()->cdb_instance()->make_scantable_model(this);
-	qDbo() << "RELMODEL:" << model;
-//    child->setMainModel(model);
-	child->setMainModel2(model);
 //    child->getTableView()->setModel(model);
 //    child->setPane2Model(AMLMApp::instance()->cdb2_model_instance());
     child->setPane2Model(AMLMApp::instance()->IScanResultsTreeModel());
 
+	auto second_child = new ExperimentalKDEView1(this);
+	auto second_mdi_child = m_mdi_area->addSubWindow(second_child);
+	second_child->setModel(AMLMApp::instance()->IScanResultsTreeModel());
+
     mdi_child->show();
+	second_mdi_child->show();
 }
 
 /**
@@ -2172,7 +2264,7 @@ void MainWindow::onTextFilterChanged()
 
 void MainWindow::stopAllBackgroundThreads()
 {
-	for(auto model : m_libmodels)
+	for(auto& model : m_libmodels)
 	{
 		model->stopAllBackgroundThreads();
 	}

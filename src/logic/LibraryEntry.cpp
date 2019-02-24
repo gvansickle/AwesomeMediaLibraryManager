@@ -27,28 +27,29 @@
 #include <QDataStream>
 #include <QUrlQuery>
 
-// Ours.
+// TagLib
+#include <tag.h>
+#include <fileref.h>
+#include <tpropertymap.h>
+
+// Ours
+#include "AMLMApp.h"
+#include <utils/StringHelpers.h>
+#include <utils/QtHelpers.h>
+#include <utils/RegisterQtMetatypes.h>
+#include <logic/models/ScanResultsTreeModelXMLTags.h>
+#include <utils/Fraction.h>
+#include <src/future/InsertionOrderedMap.h>
 #include "utils/MapConverter.h"
 #include "utils/DebugHelpers.h"
 #include "TrackMetadata.h"
 #include "ntp.h"
 
-// TagLib
-#include <tag.h>
-#include <fileref.h>
-#include <tpropertymap.h>
-#include <utils/StringHelpers.h>
-#include <utils/QtHelpers.h>
-#include <utils/RegisterQtMetatypes.h>
-
-// Ours
-#include "AMLMApp.h"
-
 #define LIBRARY_ENTRY_MAGIC_NUMBER 0x98542123
 #define LIBRARY_ENTRY_VERSION 0x01
 
 AMLM_QREG_CALLBACK([](){
-    qIn() << "Registering LibraryEntry types";
+    qIn() << "Registering LibraryEntry metatypes";
     qRegisterMetaType<LibraryEntry>();
     });
 
@@ -122,7 +123,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 		if(!file_metadata.hasCueSheet())
 		{
 			// Couldn't load a cue sheet, this is probably a single-song file.
-			qDebug() << "No cuesheet for file" << this->m_url;
+//			qDebug() << "No cuesheet for file" << this->m_url;
 
 			auto new_entry = std::make_shared<LibraryEntry>(*this);
 			new_entry->m_metadata = file_metadata;
@@ -176,7 +177,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 				new_entry->m_is_populated = true;
 				new_entry->m_is_error = false;
 
-                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
 
 				retval.push_back(new_entry);
 			}
@@ -310,15 +311,15 @@ void LibraryEntry::writeToJson(QJsonObject& jo) const
 	jo["m_offset_secs"] = m_offset_secs.toQString();
 	jo["m_length_secs"] = m_length_secs.toQString();
 
-M_WARNING("/// @todo This is always null.");
+	M_WARNING("/// @todo This is always null.");
 	QString str;
 	QTextStream ts(&str);
-	ts << m_mime_type;
+	//	ts << m_mime_type;
 	jo["m_mime_type"] = *ts.string();
 
 	if(isPopulated())
 	{
-M_WARNING("TODO: Don't write out in the has-cached-metadata case")
+		M_WARNING("TODO: Don't write out in the has-cached-metadata case");
 		m_metadata.writeToJson(jo);
 	}
 }
@@ -334,7 +335,7 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 	QString str;
 	QTextStream ts(&str);
 	str = jo["m_mime_type"].toString();
-	ts >> m_mime_type;
+//	ts >> m_mime_type;
 	// Metadata might not have been written.
 	//metadata_jval: QJsonValue = jo.value("metadata")
 	QJsonObject metadata_jval = jo["metadata"].toObject();
@@ -353,6 +354,68 @@ void LibraryEntry::readFromJson(QJsonObject& jo)
 	}
 	return;
 }
+
+#define M_DATASTREAM_FIELDS(X) \
+	X(URL, m_url) \
+	X(IS_POPULATED, m_is_populated) \
+	X(IS_ERROR, m_is_error) \
+	X(IS_SUBTRACK, m_is_subtrack) \
+	X(OFFSET_SECS, m_offset_secs) \
+	X(LENGTH_SECS, m_length_secs) \
+	X(MIME_TYPE, m_mime_type)
+
+QVariant LibraryEntry::toVariant() const
+{
+	QVariantInsertionOrderedMap map;
+
+	// Insert field values into the QVariantMap.
+#define X(field_enum_name, field)   map.insert( LibraryEntryTag :: field_enum_name ## _tagstr, QVariant::fromValue( field ) );
+	M_DATASTREAM_FIELDS(X)
+#undef X
+
+	if(isPopulated())
+	{
+		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
+	}
+
+	return QVariant::fromValue(map);
+}
+
+void LibraryEntry::fromVariant(const QVariant& variant)
+{
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+	// Extract all the fields from the map, cast them to their type.
+#define X(field_enum_name, field) field = map.value( LibraryEntryTag :: field_enum_name ## _tagstr ).value<decltype( field )>();
+	M_DATASTREAM_FIELDS(X)
+#undef X
+
+	/// @todo
+	if(isPopulated())
+	{
+		/// @todo This is badly named. m_metadata the field has a "metadata_abstract_base_pimpl" QVarInsOrderMap inside it.
+		QVariant metadata_map = map.value(LibraryEntryTag::METADATA_tagstr);
+
+//		Q_ASSERT(metadata_map.value().canConvert<MetadataFromCache>());
+
+		if(metadata_map.isValid())
+		{
+			m_metadata = Metadata::make_metadata(metadata_map);
+			m_is_error = false;
+			m_is_populated = true;
+		}
+		else
+		{
+			qWarning() << "Found no/invalid metadata in XML for" << m_url;
+			m_metadata = Metadata::make_metadata();
+			m_is_error = true;
+			m_is_populated = false;
+		}
+	}
+
+}
+
+#undef M_DATASTREAM_FIELDS
 
 QByteArray LibraryEntry::getCoverImageBytes()
 {
@@ -374,7 +437,7 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 	{
 		TagMap tm = m_metadata.filled_fields();
 		QStringList sl;
-		for(auto entry : tm)
+		for(const auto& entry : tm)
 		{
 //qDb() << "entry:" << entry;
 			sl.clear();
@@ -468,3 +531,4 @@ QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
 
 	return in;
 }
+

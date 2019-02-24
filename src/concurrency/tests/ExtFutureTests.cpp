@@ -89,7 +89,7 @@ TEST_F(ExtFutureTest, ContinuableBasic)
 }
 #endif
 
-#if 1 /// Boost::thread
+#if 0 /// Boost::thread
 #include <boost/thread.hpp>
 #include <boost/thread/future.hpp>
 
@@ -98,15 +98,20 @@ int calculate_the_answer_to_life_the_universe_and_everything()
 	return 42;
 }
 
-TEST_F(ExtFutureTest, BoostSanity)
+TEST_F(ExtFutureTest, DISABLED_BoostSanity)
 {
 	boost::packaged_task<int> pt(calculate_the_answer_to_life_the_universe_and_everything);
 
 	boost::unique_future<int> fi=pt.get_future();
 
-	boost::thread task(boost::move(pt)); // launch task on a thread
+	// launch task on a thread
+	boost::thread task(boost::move(pt));
 
-	fi.wait(); // wait for it to finish
+	// wait for the future to be finished.
+	fi.wait();
+
+	// Make sure we wait for the thread to terminate.
+	task.join();
 
 	EXPECT_TRUE(fi.is_ready());
 	EXPECT_TRUE(fi.has_value());
@@ -358,7 +363,7 @@ public:
 	}
 };
 
-int value = 10;
+int f_value = 10;
 
 #if 0 /// @todo
 class UnitResult : public QFutureInterfaceBase
@@ -378,6 +383,8 @@ public:
 TEST_F(ExtFutureTest, QTBfuture)
 {
 	// default constructors
+	// None of these .waitForFinished() calls should actually wait.  This is sort of a degenerate case,
+	// and matches QFuture<T>'s behavior.
 	ExtFuture<int> intFuture;
 	intFuture.waitForFinished();
 	ExtFuture<QString> stringFuture;
@@ -397,6 +404,7 @@ TEST_F(ExtFutureTest, QTBfuture)
 
 	// state
 	AMLMTEST_EXPECT_TRUE(intFuture2.isStarted());
+	AMLMTEST_EXPECT_TRUE(intFuture2.isCanceled());
 	AMLMTEST_EXPECT_TRUE(intFuture2.isFinished());
 }
 
@@ -440,7 +448,7 @@ TEST_F(ExtFutureTest, QTBfutureInterface3)
 	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
 	AMLMTEST_EXPECT_FALSE(intFuture.isFinished());
 
-	result.reportFinished(&value);
+	result.reportFinished(&f_value);
 
 	AMLMTEST_EXPECT_TRUE(intFuture.isStarted());
 	AMLMTEST_EXPECT_TRUE(intFuture.isFinished());
@@ -451,14 +459,14 @@ TEST_F(ExtFutureTest, QTBfutureInterface3)
 	AMLMTEST_EXPECT_TRUE(intFuture.isFinished());
 	AMLMTEST_EXPECT_FALSE(intFuture.isCanceled());
 
-	AMLMTEST_ASSERT_EQ(e, value);
+	AMLMTEST_ASSERT_EQ(e, f_value);
 	intFuture.waitForFinished();
 
 	IntResult intAlgo;
 	intFuture = intAlgo.run();
 	ExtFuture<int> intFuture2(intFuture);
-	AMLMTEST_ASSERT_EQ(intFuture.result(), value);
-	AMLMTEST_ASSERT_EQ(intFuture2.result(), value);
+	AMLMTEST_ASSERT_EQ(intFuture.result(), f_value);
+	AMLMTEST_ASSERT_EQ(intFuture2.result(), f_value);
 	intFuture.waitForFinished();
 
 #if 0 /// @todo
@@ -1249,6 +1257,38 @@ TEST_F(ExtFutureTest, ThenFutureDeleted)
 	TC_EXIT();
 }
 
+
+TEST_F(ExtFutureTest, ParallelThens)  // NOLINT
+{
+	TC_ENTER();
+
+	std::atomic_bool then1, then2;
+
+	ExtFuture<int> f0 = ExtAsync::run([&](ExtFuture<int> cmdresp_future) {
+			TC_Sleep(1000);
+			cmdresp_future.reportResult(25);
+	});
+
+	auto f1 = f0.then([&](ExtFuture<int> dummy){
+		then1 = true;
+	});
+	auto f2 = f0.then([&](ExtFuture<int> dummy){
+		then2 = true;
+	});
+
+	// Wait for the thens to finish.
+	f1.waitForFinished();
+	f2.waitForFinished();
+
+	EXPECT_TRUE(then1);
+	EXPECT_TRUE(then2);
+
+	EXPECT_TRUE(f1.isFinished());
+	EXPECT_TRUE(f2.isFinished());
+
+	TC_EXIT();
+}
+
 TEST_F(ExtFutureTest, ExtFutureThenCancel)
 {
 	TC_ENTER();
@@ -1853,19 +1893,19 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 
 
 	QList<int> expected_results {1,2,3,4,5,6};
-	eftype ef = async_int_generator<eftype>(1, 6, this);
+	eftype root_future = async_int_generator<eftype>(1, 6, this);
 
-	TCOUT << "Starting ef state:" << ef.state();
-	ASSERT_TRUE(ef.isStarted());
-	ASSERT_FALSE(ef.isCanceled());
-	ASSERT_FALSE(ef.isFinished());
+	TCOUT << "Starting ef state:" << root_future.state();
+	ASSERT_TRUE(root_future.isStarted());
+	ASSERT_FALSE(root_future.isCanceled());
+	ASSERT_FALSE(root_future.isFinished());
 
 	TCOUT << "Attaching then()";
 
-	auto f2 = ef.then([=, &async_results_from_then, &num_then_completions](eftype ef) -> int  {
-			TCOUT << "IN THEN, future:" << ef.state() << ef.resultCount();
-			AMLMTEST_EXPECT_TRUE(ef.isFinished());
-			async_results_from_then = ef.get();
+	auto f2 = root_future.then([=, &async_results_from_then, &num_then_completions](eftype root_future_copy) -> int  {
+			TCOUT << "IN THEN, future:" << root_future_copy.state() << root_future_copy.resultCount();
+			AMLMTEST_EXPECT_TRUE(root_future_copy.isFinished());
+			async_results_from_then = root_future_copy.get();
 			num_then_completions++;
 			return 5;
 	});
@@ -1876,32 +1916,32 @@ TEST_F(ExtFutureTest, ExtFutureSingleThen)
 
 	TCOUT << "BEFORE WAITING FOR THEN()" << f2;
 
-	// Block.
+	// Block waiting on the results.
 	async_results_from_get = f2.results();
 
 	TCOUT << "AFTER WAITING FOR THEN()" << f2;
 
-	EXPECT_TRUE(ef.isFinished());
+	EXPECT_TRUE(root_future.isFinished());
 	EXPECT_EQ(num_then_completions, 1);
 
 	// .get() above should block.
-	EXPECT_TRUE(ef.isFinished());
+	EXPECT_TRUE(root_future.isFinished());
 
 	// This shouldn't do anything, should already be finished.
-	ef.waitForFinished();
+	root_future.waitForFinished();
 
-	TCOUT << "Post .tap().get(), extfuture:" << ef.state();
+	TCOUT << "Post .tap().get(), extfuture:" << root_future.state();
 
-	EXPECT_TRUE(ef.isStarted());
-	EXPECT_FALSE(ef.isCanceled()) << ef.state();
-	EXPECT_TRUE(ef.isFinished());
+	EXPECT_TRUE(root_future.isStarted());
+	EXPECT_FALSE(root_future.isCanceled()) << root_future.state();
+	EXPECT_TRUE(root_future.isFinished());
 
 	EXPECT_EQ(async_results_from_get.size(), 1);
 	EXPECT_EQ(async_results_from_get[0], 5);
 	EXPECT_EQ(async_results_from_then.size(), 6);
 	EXPECT_EQ(async_results_from_then, expected_results);
 
-	ASSERT_TRUE(ef.isFinished());
+	ASSERT_TRUE(root_future.isFinished());
 
 	TC_EXIT();
 }
@@ -1910,33 +1950,8 @@ TEST_F(ExtFutureTest, ThenChain)
 {
 	TC_ENTER();
 
-	TC_START_RSM(rsm);
-
-	SCOPED_TRACE("ThenChain");
-
-	using ::testing::InSequence;
-	using ::testing::Return;
-	using ::testing::Eq;
-	using ::testing::ReturnArg;
-	using ::testing::_;
-
-	ON_CALL(rsm, ReportResult(_))
-			.WillByDefault(ReturnArg<0>());
-	enum
-	{
-		MSTART,
-		MEND,
-		T1ENTERED,
-		T2ENTERED
-	};
-	{
-		InSequence s;
-
-		TC_RSM_EXPECT_CALL(rsm, MSTART);
-		TC_RSM_EXPECT_CALL(rsm, T1ENTERED);
-		TC_RSM_EXPECT_CALL(rsm, T2ENTERED);
-		TC_RSM_EXPECT_CALL(rsm, MEND);
-	}
+	std::atomic_bool ran_then_1 = false;
+	std::atomic_bool ran_then_2 = false;
 
 	using FutureType = ExtFuture<QString>;
 
@@ -1948,29 +1963,30 @@ TEST_F(ExtFutureTest, ThenChain)
 
 	TCOUT << "Future created:" << future;
 
-	rsm.ReportResult(MSTART);
+	future.then([&ran_then_1](FutureType in_future) {
 
-	future.then([&rsm](FutureType in_future){
-			SCOPED_TRACE("In then 1");
-
-			rsm.ReportResult(T1ENTERED);
+			ran_then_1 = true;
 			return 1;
 		;})
-		.then([=, &rsm](ExtFuture<int> in_future) {
-			SCOPED_TRACE("In then 2");
+		.then([&](ExtFuture<int> in_future) {
 
-//			EXPECT_THAT(ran_tap, Eq(true));
+			EXPECT_TRUE(ran_then_1);
+			ran_then_2 = true;
 
 			EXPECT_TRUE(in_future.isStarted());
 			EXPECT_TRUE(in_future.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(in_future.isRunning());
+
+			auto val = in_future.result();
+
+			EXPECT_EQ(val, 1);
 
 //			TCOUT << "in then(), extfuture:" << tostdstr(extfuture.qtget_first());
 //			EXPECT_EQ(in_future.qtget_first(), QString("delayed_string_func_1() output"));
 //			EXPECT_FALSE(ran_then);
 //			ran_then = true;
 
-			rsm.ReportResult(T2ENTERED);
+//			rsm.ReportResult(T2ENTERED);
 
 			return QString("Then Called");
 	})/*.test_tap([&](auto ef){
@@ -1987,9 +2003,8 @@ TEST_F(ExtFutureTest, ThenChain)
 	EXPECT_FALSE(future.isRunning());
 	EXPECT_TRUE(future.isFinished());
 
-	rsm.ReportResult(MEND);
-
-	TC_END_RSM(rsm);
+	EXPECT_TRUE(ran_then_1);
+	EXPECT_TRUE(ran_then_2);
 
 	TC_EXIT();
 }

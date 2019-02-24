@@ -22,33 +22,41 @@
 
 #include "MetadataAbstractBase.h"
 
+// Qt5
 #include <QByteArray>
 
+// Ours
+#include <logic/serialization/ISerializable.h>
 
 class QJsonObject;
 
-class MetadataFromCache : public MetadataAbstractBase
+class MetadataFromCache : public MetadataAbstractBase, public virtual ISerializable
 {
+	using BASE_CLASS = MetadataAbstractBase;
 public:
 	MetadataFromCache();
-	virtual ~MetadataFromCache() override;
+	~MetadataFromCache() override;
 
-	virtual bool isFromCache() const override { return true; }
+	bool isFromCache() const override { return true; }
 
-    virtual bool read(QUrl /*url*/) override { Q_ASSERT(0); return false; }
+	bool read(const QUrl /*url*/&) override { Q_ASSERT(0); return false; }
 
 	void readFromJson(const QJsonObject& jo);
 
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+
 	/// Track metadata.
-	virtual Metadata get_one_track_metadata(int track_index) const override;
+	Metadata get_one_track_metadata(int track_index) const override;
 
 	/// Embedded art.
-	virtual QByteArray getCoverArtBytes() const override;
+	QByteArray getCoverArtBytes() const override;
 
 private:
 
 	virtual MetadataFromCache* clone_impl() const override;
 };
 
+Q_DECLARE_METATYPE(MetadataFromCache);
 
 #endif // METADATAFROMCACHE_H

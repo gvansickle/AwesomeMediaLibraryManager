@@ -86,14 +86,18 @@ add_library(verdigris_target INTERFACE)
 target_include_directories(verdigris_target INTERFACE ${PROJECT_SOURCE_DIR}/src/third_party/verdigris/src)
 
 
-# Make the KConfig settings file its own library, so dependencies get handled correctly.
-kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
-#message(STATUS "* amlm_settings_SRCS: ${amlm_settings_SRCS}")
-# Exclude the generated KConfig settings source files from AUTOMOC etc.
-set_property(SOURCE ${amlm_settings_SRCS} PROPERTY SKIP_AUTOGEN ON) 
-### @todo Do we need this? Target to get the deps on generated files right.
-###add_custom_target(AwesomeMediaLibraryManagerSettings_h DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
 
+kconfig_add_kcfg_files(amlm_settings_SRCS AwesomeMediaLibraryManagerSettings.kcfgc)
+# We make the generated KConfig settings files into their own library so dependencies get handled correctly.
+# amlm_settings_SRCS == AwesomeMediaLibraryManagerSettings.cpp and .h.
+add_library(kconfig_target
+		STATIC EXCLUDE_FROM_ALL
+		${amlm_settings_SRCS}
+		)
+#		${CMAKE_CURRENT_BINARY_DIR}/AwesomeMediaLibraryManagerSettings.h)
+target_link_libraries(kconfig_target
+		${KF5_LINK_LIB_TARGETS}
+		)
 
 ###
 ### Collect all the external link lib targets into one variable. 
@@ -104,49 +108,21 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-		${AMLM_QXTGLOBALSHORTCUT_LIB_TARGET}
 		callable_traits
 		verdigris_target
-		Boost::thread
-		#tbb_wjakob
+#		Boost::thread
 		)
 
 
 # Main program header files.
 set(HEADER_FILES
 	AMLMApp.h
-	utils/ConnectHelpers.h
-	utils/DebugBlock.h
-	utils/DebugHelpers.h
-	utils/Fraction.h
-	utils/in.h
-	utils/MapConverter.h
-	utils/StringHelpers.h
-	utils/RegisterQtMetatypes.h
-	utils/UniqueIDMixin.h
-	utils/QtCastHelpers.h
-	utils/TheSimplestThings.h
 	${PROJECT_SOURCE_DIR}/resources/VersionInfo.h    ### @todo
-	utils/Logging.h
-	utils/AboutDataSetup.h
-	utils/QtHelpers.h
-	utils/VectorHelpers.h
-	utils/EnumFlagHelpers.h
     )
 
 # Source file list.
 set(SOURCE_FILES
 	AMLMApp.cpp
-	utils/DebugBlock.cpp
-	utils/DebugHelpers.cpp
-	utils/Fraction.cpp
-	utils/MapConverter.cpp
-	utils/RegisterQtMetatypes.cpp
-	utils/UniqueIDMixin.h
-	utils/Logging.cpp
-	utils/AboutDataSetup.cpp
-	utils/QtHelpers.cpp
-	utils/VectorHelpers.cpp
 	)
 
 # NoMoc files.
@@ -155,56 +131,16 @@ set(HEADER_FILES_UTILS_NOMOC
 	utils/nomoc/nomocimpl.h)
 list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_NOMOC})
 
-# Concurrency files.
-set(HEADER_FILES_UTILS_CONCURRENCY
-	concurrency/AsyncTaskManager.h
-	concurrency/ExtendedDeferred.h
-	concurrency/ExtFutureState.h
-	concurrency/ExtFuture.h
-	concurrency/ExtFutureProgressInfo.h
-	concurrency/ExtFuturePropagationHandler.h
-	concurrency/ExtFutureWatcher.h
-	concurrency/ExtAsync_traits.h
-	concurrency/impl/ExtAsync_impl.h
-	concurrency/impl/ExtFuture_impl.hpp
-	concurrency/impl/ExtFutureImplHelpers.h
-	concurrency/ExtAsync.h
-	concurrency/ExtAsyncExceptions.h
-	concurrency/ExtAsyncTask.h
-	concurrency/AMLMJob.h
-	concurrency/AMLMCompositeJob.h
-	concurrency/DirectoryScanJob.h
-	concurrency/ThreadsafeMap.h
-	concurrency/DebugSequence.h
-	concurrency/WorkerThreadBase.h
-	)
-set(SOURCE_FILES_UTILS_CONCURRENCY
-	concurrency/impl/ExtFutureImplHelpers.cpp
-	concurrency/ExtAsync.cpp
-	concurrency/ExtAsyncExceptions.cpp
-	concurrency/ExtFuture.cpp
-	concurrency/ExtFutureProgressInfo.cpp
-	concurrency/ExtFuturePropagationHandler.cpp
-	concurrency/AMLMJob.cpp
-	concurrency/AMLMCompositeJob.cpp
-	concurrency/DirectoryScanJob.cpp
-	concurrency/ThreadsafeMap.cpp
-	concurrency/DebugSequence.cpp
-	concurrency/WorkerThreadBase.cpp
-	concurrency/FunctionWrapper.cpp
-	concurrency/FunctionWrapper.h
-	concurrency/WorkStealingQueue.cpp
-	concurrency/WorkStealingQueue.h
-	concurrency/ThreadPool2.cpp
-	concurrency/ThreadPool2.h
-	)
+
 
 #
 # Subdir targets.
 #
-add_subdirectory(gui)
-add_subdir_lib(logic_subdir "${CMAKE_CURRENT_LIST_DIR}/logic")
-add_subdir_lib(future_subdir "${CMAKE_CURRENT_LIST_DIR}/future")
+add_subdir_lib(concurrency STATIC EXCLUDE_FROM_ALL)
+add_subdir_lib(future STATIC EXCLUDE_FROM_ALL)
+add_subdir_lib(gui STATIC EXCLUDE_FROM_ALL)
+add_subdir_lib(logic STATIC EXCLUDE_FROM_ALL)
+add_subdir_lib(utils STATIC EXCLUDE_FROM_ALL)
 
 
 #
@@ -216,14 +152,14 @@ add_subdir_lib(future_subdir "${CMAKE_CURRENT_LIST_DIR}/future")
 
 # Collect all the project-common internal and external link library targets into a single variable.
 set(PROJECT_COMMON_INTERNAL_LINK_LIB_TARGETS
-	future_subdir
-	logic_subdir
-	resources_subdir
+		kconfig_target
+		concurrency
+		future
+		gui
+		logic
+		resources
+		utils
 )
-
-# Concurrency
-list(APPEND HEADER_FILES ${HEADER_FILES_UTILS_CONCURRENCY})
-list(APPEND SOURCE_FILES ${SOURCE_FILES_UTILS_CONCURRENCY})
 
 # Models
 list(APPEND SOURCE_FILES ${SOURCE_FILES_LOGIC_MODELS})
@@ -235,26 +171,24 @@ list(APPEND SOURCE_FILES ${QT5_LOGGING_CATEGORY_SOURCE_FILES})
 list(APPEND HEADER_FILES ${HEADER_FILES_THIRD_PARTY})
 list(APPEND SOURCE_FILES ${SOURCE_FILES_THIRD_PARTY})
 
-# From gui/.
-# @todo Make this a real target.
-list(APPEND HEADER_FILES ${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-list(APPEND SOURCE_FILES ${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER} ${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER})
-prepend_to_each(amlm_gui_SRCS "gui/" ${amlm_gui_SRCS}) ### @todo Make this a real target.
-
 # Build the ultimate list of lists.
 list(APPEND amlm_SRCS ${SOURCE_FILES} ${HEADER_FILES}
-	${amlm_gui_SRCS} ### @todo Make this a real target.
-	${amlm_gui_widget_SRCS} ### @todo
 	)
 
 # Sets the icon on Windows and OSX.
-# See https://api.kde.org/ecm/module/ECMAddAppIcon.html
-# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <>/src here.
-ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
+# @note amlm_APP_ICONS is set in <proj>/resources/CMakeLists.txt, we're in <proj>/src/CMakeLists.txt here.
+# See:
+# @link https://api.kde.org/ecm/module/ECMAddAppIcon.html
+# @link http://kfunk.org/2017/12/20/tips-streamlining-kde-application-for-deployment-microsoft-windows/
+target_link_libraries(src PUBLIC resources)
+#if(NOT DEFINED amlm_APP_ICONS)
+#	message(FATAL_ERROR "NOT DEFINED: amlm_APP_ICONS: '${amlm_APP_ICONS}'")
+#endif()
+#ecm_add_app_icon(amlm_SRCS ICONS ${amlm_APP_ICONS})
 
 
 # Qt5 Binary Resource (rcc) files.
-qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
+#qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenicons.qrc")
 #set(AppIcon_qrc "${CMAKE_CURRENT_SOURCE_DIR}/../resources/AppIcon.qrc")
 #set(AppIcon_rcc_dir "${CMAKE_CURRENT_BINARY_DIR}/../bin")
 #set(AppIcon_rcc "${AppIcon_rcc_dir}/AppIcon.rcc")
@@ -264,8 +198,8 @@ qt5_add_binary_resources(icons_oxygen "${PROJECT_SOURCE_DIR}/resources/oxygenico
 # Qt5 non-binary Resource files.
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/AppIcon.qrc")
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/amlm.qrc")
-### @todo Is this right?
 qt5_add_resources(amlm_SRCS "${PROJECT_SOURCE_DIR}/resources/xquery_files.qrc")
+
 
 # The link lib targets common to app and test builds.
 set(PROJECT_COMMON_LINK_LIBS
@@ -308,16 +242,18 @@ target_include_directories(${PROJECT_NAME}
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
 		${PROJECT_SOURCE_DIR}/src ### @todo For <future/...>
-		)
+		${PROJECT_BINARY_DIR}/src
+	)
 target_compile_options(${PROJECT_NAME} PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 # Only the Qt stuff needs AUTOMOC.
 ### This doesn't work: set_property(FILES ${SOURCE_FILES} ${HEADER_FILES} PROPERTY AUTOMOC ON)
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
-    AUTOMOC ON
-    AUTOUIC ON)
+        AUTOMOC ON
+        AUTOUIC ON)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
-add_dependencies(${PROJECT_NAME} icons_oxygen)
+### @todo breeze
+#add_dependencies(${PROJECT_NAME} icons_oxygen)
 
 # Stop clang-tidy from scanning generated files.
 file(WRITE "${PROJECT_BINARY_DIR}/.clang-tidy" "
@@ -360,6 +296,10 @@ download_project(PROJ                googletest
 # Prevent GoogleTest from overriding our compiler/linker options
 # when building with Visual Studio
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# Try to disable Google Test/Mock's own tests.
+set(gmock_build_tests OFF CACHE BOOL "" FORCE)
+set(gtest_build_samples OFF CACHE BOOL "" FORCE)
+set(gtest_build_tests OFF CACHE BOOL "" FORCE)
 # Add googletest directly to our build. This adds
 # the following targets: gtest, gtest_main, gmock
 # and gmock_main.
@@ -377,6 +317,7 @@ set(TEST_EXE_TARGET alltests)
 set(AMLM_SOURCE_FILES_TEST "")
 set(AMLM_HEADER_FILES_TEST "")
 list(APPEND AMLM_SOURCE_FILES_TEST
+	logic/serialization/tests/XmlSerializerTest.cpp
 	${PROJECT_SOURCE_DIR}/tests/FlagsAndEnumsTests.cpp
 	concurrency/tests/ExtAsyncTaskTests.cpp
 	concurrency/tests/ExtAsyncTests.cpp
@@ -415,8 +356,6 @@ target_compile_definitions(${TEST_EXE_TARGET} PRIVATE
 target_include_directories(${TEST_EXE_TARGET} PRIVATE
 	"utils/nomoc"
 	${INCLUDE_DIR_VERDIGRIS}
-	# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
-	${PROJECT_SOURCE_DIR}/src/third_party/better_enums
 	)
 target_compile_definitions(${TEST_EXE_TARGET} PRIVATE "GTEST_LANGUAGE_CXX11")
 target_compile_options(${TEST_EXE_TARGET} PRIVATE ${EXTRA_CXX_COMPILE_FLAGS})
@@ -431,7 +370,7 @@ set_property(TARGET gtest PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gtest_main PROPERTY SKIP_AUTOGEN ON)
 set_property(TARGET gmock_main PROPERTY SKIP_AUTOGEN ON)
-target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock tests_subdir)
+target_link_libraries(${TEST_EXE_TARGET} Threads::Threads gtest gmock amlm_tests)
 target_link_libraries(${TEST_EXE_TARGET} Qt5::Test ${PROJECT_COMMON_LINK_LIBS})
 add_test(NAME ${TEST_EXE_TARGET} COMMAND $<TARGET_FILE:${TEST_EXE_TARGET}>)
 ecm_mark_as_test(${TEST_EXE_TARGET})
@@ -471,7 +410,7 @@ ecm_mark_as_test(test_qtestamlmjobtests)
 ###
 endif()
 
-endif() # Enable test target.
+endif() # END Enable test target.
 
 ###
 ### Installation.
@@ -492,7 +431,7 @@ install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
 		
-# Make the installed app debuggable.
+# Make the built and installed app debuggable.
 # Add a .gdbinit file and support files to the install directory.
 install(PROGRAMS gdb_wrap.sh
 	DESTINATION
@@ -502,7 +441,7 @@ install(PROGRAMS gdb_wrap.sh
 	COMPONENT
 		coreapp
 		)
-install(PROGRAMS  gdbinit.in
+install(PROGRAMS gdbinit.in
 	RENAME
 		 .gdbinit
 	DESTINATION
@@ -543,7 +482,7 @@ install(PROGRAMS io.github.gvansickle.awesomemedialibrarymanager.desktop DESTINA
 # AppStream component metadata files.
 install(FILES io.github.gvansickle.awesomemedialibrarymanager.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR}
 		COMPONENT coreapp)
-# KConfig file.
+# The KConfig file.
 install(FILES AwesomeMediaLibraryManagerSettings.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR}
 	    COMPONENT coreapp)
 

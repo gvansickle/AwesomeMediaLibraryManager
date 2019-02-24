@@ -18,24 +18,6 @@ CollectionView::~CollectionView()
     delete ui;
 }
 
-void CollectionView::setMainModel(QSqlRelationalTableModel *model)
-{
-    auto view = ui->treeView;
-    view->setModel(model);
-	view->setItemDelegate(new QSqlRelationalDelegate(view));
-
-	model->select();
-
-	auto tmr = new QTimer(this);
-	connect(tmr, &QTimer::timeout, view, [=](){
-		qDebug() << "Trying to refresh";
-//		model->submitAll();
-//		model->select();
-//		view->selectAll();
-	});
-	tmr->start(1000);
-}
-
 void CollectionView::setMainModel2(ScanResultsTableModel* model)
 {
 	auto view = ui->treeView;

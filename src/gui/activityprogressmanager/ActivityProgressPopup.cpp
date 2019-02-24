@@ -18,6 +18,7 @@
  */
 
 #include <gui/activityprogressmanager/ActivityProgressPopup.h>
+#include <QPointer>
 #include <QToolButton>
 
 
@@ -26,11 +27,11 @@
 
 ActivityProgressPopup::ActivityProgressPopup(QWidget *parent) : QWidget(parent)
 {
-    auto button_jobs = new QToolButton();
+	auto button_jobs = new QToolButton();
     button_jobs->setArrowType(Qt::UpArrow); // Instead of a normal icon.
 
     auto progress_list_action = new QWidgetAction(this);
-    progress_list_action->setDefaultWidget(button_jobs);
+	progress_list_action->setDefaultWidget(button_jobs);
     addAction(progress_list_action);
 }
 

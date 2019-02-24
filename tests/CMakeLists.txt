@@ -21,7 +21,7 @@
 
 ### @todo This needs work.  Not sure atm how best to partition this.
 
-add_library(tests_subdir STATIC
+add_library(amlm_tests STATIC
 	EXCLUDE_FROM_ALL
 	# Actual tests
 #	FlagsAndEnumsTests.cpp
@@ -34,27 +34,14 @@ add_library(tests_subdir STATIC
 	TestHelpers.h
 	)
 
-target_link_libraries(tests_subdir
+target_link_libraries(amlm_tests
 	PUBLIC
 		gtest
 		gmock
 )
 
-#target_link_libraries(tests_subdir
-#	PUBLIC
-#	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
-#		${QT5_LINK_LIB_TARGETS}
-#		${KF5_LINK_LIB_TARGETS}
-#		${GTK_LINK_LIB_TARGETS}
-#		${AMLM_TAGLIB_TARGET}
-#		${AMLM_LIBCUE_TARGET}
-#		dbmodels_subdir
-#		models_subdir
-#		proxymodels_subdir
-#		xml_subdir
-#		)
-		
-target_include_directories(tests_subdir
+
+target_include_directories(amlm_tests
 	PRIVATE
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src

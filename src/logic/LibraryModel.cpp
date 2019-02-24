@@ -29,7 +29,6 @@
 #include <QStandardPaths>
 #include <QIcon>
 #include <QDebug>
-#include <QThread>
 #include <QJsonObject>
 #include <QJsonDocument>
 #include <QTemporaryFile>
@@ -105,7 +104,7 @@ QPointer<LibraryModel> LibraryModel::openFile(QUrl open_url, QObject* parent)
     // Create the new LibraryModel.
 	auto lib = QPointer<LibraryModel>(new LibraryModel(parent));
 
-M_WARNING("TODO: Find a better way to start async operations and/or connect");
+M_MESSAGE("TODO: Find a better way to start async operations and/or connect");
     lib->setLibraryRootUrl(open_url);
 
     return lib;
@@ -276,7 +275,7 @@ QVariant LibraryModel::data(const QModelIndex &index, int role) const
 			}
 			else if(sec_id == SectionID::MIMEType)
 			{
-M_WARNING("TODO Probably should be refactored.");
+M_MESSAGE("TODO Probably should be refactored.");
 //				return item->getFileType();
                 return QVariant::fromValue(item->getMimeType());
 			}
@@ -752,6 +751,29 @@ void LibraryModel::deserializeFromFile(QFileDevice& file)
 	m_library.deserializeFromFile(file);
 }
 
+QVariant LibraryModel::toVariant() const
+{
+	QVariantMap map;
+
+	map.insert("the_models_library", m_library.toVariant());
+
+	return map;
+}
+
+void LibraryModel::fromVariant(const QVariant& variant)
+{
+	QVariantMap map = variant.toMap();
+
+	QVariant temp = map.value("the_models_library");//.value<QVariantInsertionOrderedMap>();
+
+	Q_ASSERT(temp.canConvert<QVariantInsertionOrderedMap>());
+
+	Library temp_lib;
+	temp_lib.fromVariant(temp);
+
+	m_library = temp_lib;
+}
+
 Qt::DropActions LibraryModel::supportedDragActions() const
 {
 	// Only copy out of the LibraryModel, no moves.
@@ -766,7 +788,7 @@ Qt::DropActions LibraryModel::supportedDropActions() const
 
 QStringList LibraryModel::mimeTypes() const
 {
-	M_WARNING("TODO: Return url type as well?");
+	M_MESSAGE("TODO: Return url type as well?");
 
 	return g_additional_supported_mimetypes;
 }
@@ -1044,7 +1066,7 @@ void LibraryModel::disconnectIncomingSignals()
 void LibraryModel::finishIncoming()
 {
 	// Tell anyone listening our current status.
-    qDbo() << QString("Status: %1/%2/%3").arg(LibState::PopulatingMetadata).arg(m_library.getNumPopulatedEntries()).arg(rowCount());
+    qDbo() << QString("Status: %1 populated, %2 rows").arg(m_library.getNumPopulatedEntries()).arg(rowCount());
 //	Q_EMIT statusSignal(LibState::PopulatingMetadata, m_library.getNumPopulatedEntries(), rowCount());
 }
 

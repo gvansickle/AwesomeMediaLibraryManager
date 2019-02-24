@@ -25,6 +25,7 @@
 #include <functional>
 
 // Qt5
+#include <QObject>
 #include <QtConcurrent>
 
 // Ours
@@ -37,6 +38,9 @@ LibraryRescannerJob::LibraryRescannerJob(QObject* parent) : AMLMJobT(parent)
 {
     // Set our object name.
     setObjectName(uniqueQObjectName());
+
+	/// @todo This should be coming through the ExtFuture.
+	setProgressUnit(KJob::Unit::Files);
 
     // Set our capabilities.
     setCapabilities(KJob::Capability::Killable | KJob::Capability::Suspendable);
@@ -79,9 +83,15 @@ void LibraryRescannerJob::setDataToMap(QVector<VecLibRescannerMapItems> items_to
 
 void LibraryRescannerJob::runFunctor()
 {
-	this->run_async_rescan();
+	// Make the internal connection to the SLOT_processReadyResults() slot.
+//	connect(this, &LibraryRescannerJob::SLOT_processReadyResults,
+//	        m_current_libmodel, qOverload<MetadataReturnVal>(&LibraryModel::SLOT_processReadyResults));
+
+//	this->run_async_rescan();
+	library_metadata_rescan_task(m_ext_future, this, m_items_to_rescan);
 }
 
+#if 0
 void LibraryRescannerJob::run_async_rescan()
 {
     qDb() << "ENTER run";
@@ -105,7 +115,7 @@ void LibraryRescannerJob::run_async_rescan()
     {
         qDb() << "Item number:" << num_items;
         MetadataReturnVal a = this->refresher_callback(*i);
-        Q_EMIT processReadyResults(a);
+        Q_EMIT SLOT_processReadyResults(a);
         num_items++;
 
         setProcessedAmountAndSize(KJob::Unit::Files, num_items);
@@ -114,7 +124,7 @@ void LibraryRescannerJob::run_async_rescan()
         {
             // We've been cancelled.
             qIno() << "CANCELLED";
-            m_ext_future.reportCanceled();
+//            m_ext_future.reportCanceled();
             break;
         }
     }
@@ -130,6 +140,68 @@ void LibraryRescannerJob::run_async_rescan()
     /// @todo push down
     m_ext_future.reportFinished();
 }
+#else
+
+void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, LibraryRescannerJob* the_job,
+                                  QVector<VecLibRescannerMapItems> items_to_rescan)
+{
+	qDb() << "ENTER library_metadata_rescan_task";
+
+	// For now we'll count progress in terms of files scanned.
+	// Might want to change to tracks eventually.
+	ext_future.setProgressUnit(KJob::Unit::Files);
+
+	// Send out progress text.
+	QString status_text = QObject::tr("Refreshing metadata");
+	ext_future.reportDescription(status_text,
+                                QPair<QString,QString>(QObject::tr("Root URL"), ""),
+                                QPair<QString,QString>(QObject::tr("Current file"), QObject::tr("")));
+
+	/// @todo
+	//setTotalAmountAndSize(KJob::Unit::Files, m_items_to_rescan.size());
+
+	ext_future.setProgressRange(0, items_to_rescan.size());
+	ext_future.setProgressValueAndText(0, status_text);
+
+	qulonglong num_items = 0;
+	for(QVector<VecLibRescannerMapItems>::const_iterator i = items_to_rescan.cbegin(); i != items_to_rescan.cend(); ++i)
+	{
+		qDb() << "Item number:" << num_items;
+		/// @todo eliminate the_job ptr.
+		MetadataReturnVal a = the_job->refresher_callback(*i);
+
+		/// @exp Removing the signal here.
+//		Q_EMIT the_job->SLOT_processReadyResults(a);
+		ext_future.reportResult(a);
+
+		num_items++;
+
+		/// @todo
+//		setProcessedAmountAndSize(KJob::Unit::Files, num_items);
+		/// @note New, temp.
+		ext_future.setProgressValue(num_items);
+
+		if(ext_future.HandlePauseResumeShouldICancel())
+		{
+			// We've been cancelled.
+			qIn() << "CANCELLED";
+			break;
+		}
+	}
+
+	// We've either completed our work or been cancelled.
+	// Either way, defaultEnd() will handle setting the cancellation status as long as
+	// we set success/fail appropriately.
+//    if(!wasCancelRequested())
+//    {
+//    	setSuccessFlag(true);
+//    }
+
+	/// @todo push down
+	ext_future.reportFinished();
+}
+
+#endif
 
 MetadataReturnVal LibraryRescannerJob::refresher_callback(const VecLibRescannerMapItems &mapitem)
 {
@@ -154,7 +226,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
             retval.m_original_pindexes.push_back(mapitem[0].pindex);
 
             auto vec_items = item->populate();
-            for (auto i : vec_items)
+			for (const auto& i : vec_items)
             {
                 if (!i->isPopulated())
                 {

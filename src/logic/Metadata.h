@@ -23,9 +23,14 @@
 #include "MetadataAbstractBase.h"
 
 class QJsonObject;
+
+// Ours.
+#include <utils/QtHelpers.h>
+#include <logic/serialization/ISerializable.h>
 class MetadataFromCache;
 
-class Metadata
+
+class Metadata : public ISerializable
 {
 private:
 	std::unique_ptr<MetadataAbstractBase> pImpl;
@@ -33,7 +38,7 @@ private:
 public:
 	Metadata() : pImpl(nullptr) {}
 	Metadata(const MetadataAbstractBase& derived) : pImpl(derived.clone()) {}
-	~Metadata() {}
+	~Metadata() override;
 
 	/// Copy constructor.
 	Metadata(const Metadata& other) : pImpl((other.pImpl)? other.pImpl->clone() : nullptr) {}
@@ -58,6 +63,8 @@ public:
 
 	/// Static factory function for creating a new Metadata from the given QJsonObject.
 	static Metadata make_metadata(const QJsonObject& jo);
+
+	static Metadata make_metadata(const QVariant& variant);
 
 	/// @}
 
@@ -87,12 +94,12 @@ public:
 	bool hasXiphComment() { return pImpl->m_has_ogg_xipfcomment; }
 	bool hasInfoTag() { return pImpl->m_has_info_tag; }
 
-	TagMap tagmap_VorbisComments() { return pImpl ? pImpl->m_tm_vorbis_comments : TagMap() ; }
-	TagMap tagmap_id3v1() { return pImpl ? pImpl->m_tm_id3v1 : TagMap() ; }
-	TagMap tagmap_id3v2() { return pImpl ? pImpl->m_tm_id3v2 : TagMap() ; }
-	TagMap tagmap_ape() { return pImpl ? pImpl->m_tm_ape : TagMap() ; }
-	TagMap tagmap_xiph() { return pImpl ? pImpl->m_tm_xipf : TagMap() ; }
-	TagMap tagmap_InfoTag() { return pImpl ? pImpl->m_tm_infotag : TagMap() ; }
+	AMLMTagMap tagmap_VorbisComments() { return pImpl ? pImpl->m_tm_vorbis_comments : AMLMTagMap() ; }
+	AMLMTagMap tagmap_id3v1() { return pImpl ? pImpl->m_tm_id3v1 : AMLMTagMap() ; }
+	AMLMTagMap tagmap_id3v2() { return pImpl ? pImpl->m_tm_id3v2 : AMLMTagMap() ; }
+	AMLMTagMap tagmap_ape() { return pImpl ? pImpl->m_tm_ape : AMLMTagMap() ; }
+	AMLMTagMap tagmap_xiph() { return pImpl ? pImpl->m_tm_xipf : AMLMTagMap() ; }
+	AMLMTagMap tagmap_InfoTag() { return pImpl ? pImpl->m_tm_infotag : AMLMTagMap() ; }
 	/// @}
 
 	/// Audio stream properites.
@@ -133,13 +140,22 @@ public:
 	/// @name Serialization
 	/// @{
 	void writeToJson(QJsonObject& jo) const;
+
+	QTH_FRIEND_QDATASTREAM_OPS(Metadata);
+
+	/// Serialize item and any children to a QVariant.
+	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
+	void fromVariant(const QVariant& variant) override;
+
 	/// @}
 
 };
 
+Q_DECLARE_METATYPE(Metadata);
 
-QDataStream &operator<<(QDataStream &out, const Metadata &myObj);
-QDataStream &operator>>(QDataStream &in, Metadata &myObj);
+QDataStream &operator<<(QDataStream &out, const Metadata &obj);
+QDataStream &operator>>(QDataStream &in, Metadata &obj);
 
 
 #endif // METADATA_H

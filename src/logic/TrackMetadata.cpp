@@ -47,6 +47,20 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
+QVariant TrackMetadata::toVariant() const
+{
+	QVariantMap map;
+
+	map.insert("TrackMetadataTEST", "DUMMY");
+
+	return map;
+}
+
+void TrackMetadata::fromVariant(const QVariant& variant)
+{
+
+}
+
 
 QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
 {

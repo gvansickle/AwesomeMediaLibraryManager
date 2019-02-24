@@ -30,16 +30,15 @@ set(proxymodels_subdir_SOURCES
 	QPersistentModelIndexVec.h
 	QPersistentModelIndexVec.cpp
 	)
-prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
+#prepend_to_each(proxymodels_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${proxymodels_subdir_SOURCES})
 
 
-
-target_sources(proxymodels_subdir
+target_sources_local(proxymodels
 	PUBLIC
 		${proxymodels_subdir_SOURCES}
 	)
 
-target_link_libraries(proxymodels_subdir
+target_link_libraries(proxymodels
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -48,8 +47,9 @@ target_link_libraries(proxymodels_subdir
 #		${AMLM_TAGLIB_TARGET}
 #		${AMLM_LIBCUE_TARGET}
 )
-target_include_directories(proxymodels_subdir
+target_include_directories(proxymodels
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		${PROJECT_SOURCE_DIR}/src
 	)

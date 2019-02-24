@@ -174,6 +174,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     if(!jobWatch)
     {
+		Q_ASSERT_X(0, __func__, "Job deleted while being registered, shouldn't be possible");
         qCro() << "Job deleted while being registered";
         wdgt->deleteLater();
         return;
@@ -194,6 +195,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
     if(!jobWatch)
     {
+		Q_ASSERT_X(0, __func__, "Job deleted while being registered, shouldn't be possible");
         qCro() << "Job deleted while being registered";
         wdgt->deleteLater();
         return;
@@ -280,7 +282,7 @@ void ActivityProgressStatusBarTracker::SLOT_CancelAllKJobs()
             // No such KJob anymore.
             continue;
         }
-        if(kjob->capabilities() & KJob::Killable)
+		if(kjob->capabilities() & KJob::Killable)
         {
             qIno() << "Killing KJob:" << kjob;
             // Synchronous call of KJob::kill().
@@ -667,6 +669,7 @@ bool ActivityProgressStatusBarTracker::stopOnClose(KJob *job) const
 void ActivityProgressStatusBarTracker::setAutoDelete(KJob *kjob, bool autoDelete)
 {
     Q_CHECK_PTR(kjob);
+M_MESSAGE("This function makes no sense, the KJob has the interface and we're going through the tracker for this?");
     kjob->setAutoDelete(autoDelete);
 }
 

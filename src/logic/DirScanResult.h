@@ -35,7 +35,7 @@
 #include <src/utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
-#include "ISerializable.h"
+#include <src/logic/serialization/ISerializable.h>
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;
@@ -62,6 +62,8 @@ public:
 
     enum DirProp
     {
+	    /// Nothing is known about the directory.
+	    Unknown = 0x00,
         /// Directory contains only one album, not just e.g. a dump of mp3's.
         SingleAlbum = 0x01,
         /// Directory contains a single audio file.
@@ -72,9 +74,7 @@ public:
         /// Directory has one or more album art files.
         HasArt = 0x08,
         /// Dir is just a bunch of MP3's.
-        JBOMP3s = 0x10,
-        /// Nothing is known about the dir.
-		Unknown = 0x00
+        JBOMP3s = 0x10
     };
 	/// "The Q_DECLARE_FLAGS(Flags, Enum) macro expands to: typedef QFlags<Enum> Flags;"
 	/// "The Q_DECLARE_FLAGS() macro does not expose the flags to the meta-object system"
@@ -106,12 +106,6 @@ public:
 
     QTH_FRIEND_QDEBUG_OP(DirScanResult);
 //	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
-	/// QXmlStream{Read,Write} operators.
-//	QTH_FRIEND_QXMLSTREAM_OPS(DirScanResult);
-
-	ScanResultsTreeModelItem *toTreeModelItem();
-
-	XmlElement toXml() const;
 
 protected:
 
@@ -140,6 +134,5 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(DirScanResult::DirPropFlags);
 
 QTH_DECLARE_QDEBUG_OP(DirScanResult);
 //QTH_DECLARE_QDATASTREAM_OPS(DirScanResult);
-//QTH_DECLARE_QXMLSTREAM_OPS(DirScanResult);
 
 #endif /* SRC_LOGIC_DIRSCANRESULT_H_ */

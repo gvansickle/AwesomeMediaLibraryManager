@@ -20,6 +20,7 @@
 #include "DirScanResult.h"
 
 #include <config.h>
+#include <logic/serialization/ExtEnum.h>
 
 // Qt5
 #include <QUrl>
@@ -35,8 +36,6 @@
 #include "models/ScanResultsTreeModel.h"
 #include "models/ScanResultsTreeModelXMLTags.h"
 #include <utils/EnumFlagHelpers.h>
-#include <logic/models/AbstractTreeModelWriter.h>
-#include <logic/xml/ExtEnum.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
@@ -88,35 +87,6 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	m_dir_exturl.fromVariant(exturl_in_variant);
 	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET]);
 	m_cue_exturl.fromVariant(exturl_in_variant);
-}
-
-ScanResultsTreeModelItem* DirScanResult::toTreeModelItem()
-{
-	auto new_item = new ScanResultsTreeModelItem(this);
-//	auto new_item = make_default_node(column_data);
-	return new_item;
-}
-
-
-XmlElement DirScanResult::toXml() const
-{
-	/// @todo
-	int id = qrand();
-
-	XmlElement retval("dirscanresult",
-	/*XmlAttributeList(*/{{"id", id}}/*)*/, // Attribute list
-	XmlValue(), // value
-	// Child XmlElements.
-	{
-		XmlElement("flags_dirprops", toqstr(m_dir_props)),
-		 m_dir_exturl.toXml().setId("exturl_dir"),
-		m_media_exturl.toXml().setId("exturl_media"),
-		m_cue_exturl.toXml().setId("exturl_cuesheet")},
-				 [=](auto* e, auto* xml){
-		;}
-	);
-
-	return retval;
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
@@ -188,19 +158,4 @@ QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 #undef X
 }
 #endif
-
-/**
- * QXmlStreamWriter write operator.
- */
-QXmlStreamWriter& operator<<(QXmlStreamWriter& out, const DirScanResult& dsr)
-{
-
-//	out.writeStartElement("dirscanresult");
-	// Directory URL.
-
-	auto e = dsr.toXml();
-
-	out << e;
-	return out;
-}
 

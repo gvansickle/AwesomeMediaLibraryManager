@@ -24,39 +24,40 @@ set(HEADER_FILES_SRC_FUTURE
 	function_traits.hpp
 	future_type_traits.hpp
 	cpp14_concepts.hpp
+	cloneable.h
 	static_if.hpp
 	grvs_functional.hpp
+	guideline_helpers.h
+	InsertionOrderedMap.h
+	QVariantHomogenousList.h
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
+	guideline_helpers.cpp
+	InsertionOrderedMap.cpp
+	QVariantHomogenousList.cpp
 	)
 
-prepend_to_each(HEADER_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${HEADER_FILES_SRC_FUTURE})
-prepend_to_each(SOURCE_FILES_SRC_FUTURE "${CMAKE_CURRENT_LIST_DIR}/" ${SOURCE_FILES_SRC_FUTURE})
-
-target_sources(future_subdir
+target_sources_local(future
 	PUBLIC
 		${HEADER_FILES_SRC_FUTURE}
 		${SOURCE_FILES_SRC_FUTURE}
 	)
-target_link_libraries(future_subdir PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
-target_include_directories(future_subdir
+target_link_libraries(future PUBLIC ${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS})
+target_include_directories(future
 	PUBLIC
-#		${CMAKE_CURRENT_SOURCE_DIR}/.. # To allow <future/whatever.h>
 		${CMAKE_CURRENT_LIST_DIR}
 	    ${CMAKE_CURRENT_LIST_DIR}/.. # To allow <future/whatever.h>
 		${boost_callable_traits_SOURCE_DIR}
 		${boost_callable_traits_BINARY_DIR}
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
-#	PRIVATE
-#		${CMAKE_CURRENT_SOURCE_DIR}/src
 		)
 
 #MESSAGE(STATUS "\${CMAKE_CURRENT_LIST_DIR}/..: ${CMAKE_CURRENT_LIST_DIR}/..")
 		
-set_target_properties(future_subdir
+set_target_properties(future
     PROPERTIES
     AUTOMOC ON
     AUTORCC OFF

@@ -25,6 +25,7 @@
 #include <memory>
 
 // Qt5
+#include <QMetaType>
 #include <QObject>
 #include <QUrl>
 
@@ -35,14 +36,14 @@
 #include "ExtMimeType.h"
 #include "Metadata.h"
 #include "src/utils/Fraction.h"
+#include "serialization/ISerializable.h"
 
-
-class LibraryEntry
+class LibraryEntry : public ISerializable
 {
 public:
     LibraryEntry() = default;
 	LibraryEntry(const LibraryEntry& other) = default;
-    virtual ~LibraryEntry() = default;
+	~LibraryEntry() override = default;
 
     explicit LibraryEntry(const QUrl& m_url);
 
@@ -75,15 +76,24 @@ public:
 	void writeToJson(QJsonObject& jo) const;
 	void readFromJson(QJsonObject& jo);
 
+	/// @name ISerializable interface
+	/// @{
+
+	/// Serialize item and any children to a QVariant.
+	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
+	void fromVariant(const QVariant& variant) override;
+
+	/// @} // END ISerializable
+
     QTH_FRIEND_QDATASTREAM_OPS(LibraryEntry);
-//    friend QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
-//	friend QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
-	/// @}
+
+	/// @} // END Serialization
 
 	/// @todo Do we want to return some kind of actual Image class here instead?
 	QByteArray getCoverImageBytes();
 
-	QMap<QString, QVariant> getAllMetadata() const;
+	QVariantMap getAllMetadata() const;
 
 	Fraction get_pre_gap_offset_secs() const { return m_pre_gap_offset_secs; }
 	Fraction get_offset_secs() const { return m_offset_secs; }
@@ -124,11 +134,11 @@ protected:
 };
 
 /// So we can more easily pass ptrs in QVariants.
-Q_DECLARE_METATYPE(LibraryEntry)
-Q_DECLARE_METATYPE(LibraryEntry*)
-Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr)
-Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>)
-Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>)
+Q_DECLARE_METATYPE(LibraryEntry);
+Q_DECLARE_METATYPE(LibraryEntry*);
+Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
+Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
+Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);
 
 inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libentry)
 {
@@ -137,8 +147,5 @@ inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libent
 
 QTH_DECLARE_QDATASTREAM_OPS(LibraryEntry);
 QTH_DECLARE_QDATASTREAM_OPS(std::shared_ptr<LibraryEntry>);
-
-//QDataStream &operator<<(QDataStream &out, const LibraryEntry &myObj);
-//QDataStream &operator>>(QDataStream &in, LibraryEntry &myObj);
 
 #endif // LIBRARYENTRY_H

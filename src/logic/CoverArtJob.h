@@ -26,7 +26,7 @@
 #include <QUrl>
 
 // Ours
-#include "concurrency/AMLMJob.h"
+#include "concurrency/AMLMJobT.h"
 
 class CoverArtJob;
 using CoverArtJobPtr = QPointer<CoverArtJob>;

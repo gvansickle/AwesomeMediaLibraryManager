@@ -34,10 +34,11 @@
 #include <logic/models/AbstractTreeModel.h>
 #include <logic/models/ScanResultsTreeModel.h>
 #include <logic/PerfectDeleter.h>
-
+class MainWindow;
 
 /**
  * qApp-alike macro for getting a pointer to the AMLMApp singleton.
+ * This will Q_ASSERT if the app instance doesn't exist yet.
  */
 #define amlmApp AMLMApp::instance()
 
@@ -84,30 +85,36 @@ public:
 	 * Post-constructor initialization.
 	 */
 	void Init(bool gtest_only = false);
+	void MAIN_ONLY_setMainWindow(MainWindow* the_main_window);
 
     /**
      * @returns the AMLMApp singleton.
      */
     static AMLMApp* instance();
 
-    /// @name "Controllers", per KDevelop ICore terminology.
+    /// @name "Controllers", per KDevelop's ICore terminology.
     /// Basically just a bunch of instance()'s for singletons used by the app.
     /// @{
 
+	/**
+	 * Get a pointer to the MainWindow.
+	 * @note You'll have to #include <src/gui/MainWindow.h>, we just forward-declare it in this header.
+	 */
+	static MainWindow* IMainWindow()
+	{
+		Q_ASSERT(amlmApp->m_the_main_window != nullptr);
+		return amlmApp->m_the_main_window;
+	}
+
 //    ActivityProgressStatusBarTracker == see MainWindow, this currently needs a parent widget.
 
+	static ScanResultsTreeModel* IScanResultsTreeModel() { return amlmApp->m_srtm_instance; };
 
-    CollectionDatabaseModel* cdb_instance() { return m_cdb_model; }
+	QMimeDatabase* mime_db() { return m_mime_database; };
+
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
-//    ScanResultsTreeModel* scan_results_tree_model_instance() { return m_srtm_instance; };
-    static ScanResultsTreeModel* IScanResultsTreeModel() { return amlmApp->m_srtm_instance; };
-
-    QMimeDatabase* mime_db() { return m_mime_database; };
-
 	static PerfectDeleter* IPerfectDeleter() { return &(amlmApp->m_perfect_deleter); };
-
-//	static ExtFuturePropagationHandler* IExtFuturePropagationHandler() { return &(amlmApp->m_future_cancel_prop_handler); };
 
     /// @}
 
@@ -158,16 +165,15 @@ private:
     /// The AMLMApp singleton.
     static AMLMApp* m_the_instance;
 
-    CollectionDatabaseModel* m_cdb_model;
+    MainWindow* m_the_main_window {nullptr};
 
 	AbstractTreeModel* m_cdb2_model_instance;
 
-    ScanResultsTreeModel* m_srtm_instance;
+    ScanResultsTreeModel* m_srtm_instance {nullptr};
 
-    QMimeDatabase* m_mime_database;
+    QMimeDatabase* m_mime_database {nullptr};
 
 	PerfectDeleter m_perfect_deleter;
-//	ExtFuturePropagationHandler m_future_cancel_prop_handler;
 
     std::atomic_bool m_shutting_down {false};
     std::atomic_bool m_controlled_shutdown_complete {false};

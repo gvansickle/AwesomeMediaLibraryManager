@@ -42,10 +42,12 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest-spi.h> //< For EXPECT_NONFATAL_FAILURE() etc.
+#include <logic/serialization/ExtEnum.h>
 
 // Ours
 #include <tests/TestHelpers.h>
 #include <utils/DebugHelpers.h>
+#include <logic/AudioFileType.h>
 
 // Mocks
 #include <tests/TestLifecycleManager.h>
@@ -55,12 +57,11 @@
 #include <utils/EnumFlagHelpers.h>
 ///// @todo Split off
 #include "../logic/ExtUrl.h"
-#include "../logic/xml/ExtEnum.h"
 
 /**
  * Test flag class definition.
  */
-class TestFlagHolder
+class TestFlagHolder : public ExtEnum<TestFlagHolder>
 {
 	Q_GADGET
 public:
@@ -76,10 +77,8 @@ public:
 	Q_FLAG(TestFlags)
 };
 Q_DECLARE_METATYPE(TestFlagHolder);
-//Q_DECLARE_METATYPE(TestFlagHolder::TestFlags);
 Q_DECLARE_OPERATORS_FOR_FLAGS(TestFlagHolder::TestFlags);
 
-//static auto dummy_var_123 = [=](){ AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(); return 1; }();
 static int dummy_456 = (AMLMRegisterQFlagQStringConverters<TestFlagHolder::TestFlags>(), 1);
 
 /**
@@ -102,6 +101,27 @@ public:
 	Q_ENUM(TestEnum)
 };
 Q_DECLARE_METATYPE(TestEnumHolder);
+
+/**
+ * Test ExtEnum class definition.
+ */
+class TestExtEnum : public ExtEnum<TestExtEnum>
+{
+	Q_GADGET
+public:
+
+	enum EnumTag
+	{
+		Enum0 = 0x00,
+		Enum1 = 0x01,
+		Enum2 = 0x02,
+		Enum3 = 0x03,
+		Enum9 = 0x09,
+		Enum8 = 0x08
+	};
+	Q_ENUM(EnumTag)
+};
+Q_DECLARE_METATYPE(TestExtEnum);
 
 
 //
@@ -263,6 +283,51 @@ TEST_F(FlagsAndEnumsTests, EnumToStringViaQVariant)
 	EXPECT_EQ(enum_as_str, QString("Enum1"));
 }
 
+TEST_F(FlagsAndEnumsTests, StringToEnumViaQVariant)
+{
+	// Q_ENUM()s support conversion from a QString through a QVariant to the Q_ENUM() type.
+	// Note that the string consists of only the enumerator, the enum tag nor the containing class are represented.
+
+	QString str = "Enum1";
+
+	QVariant qvar(str);// = QVariant::fromValue(str);
+
+	TestEnumHolder::TestEnum test_enum;
+
+	test_enum = qvar.value<TestEnumHolder::TestEnum>();
+
+	TCOUT << "test_enum:" << test_enum;
+
+	int metatype = QMetaType::type("TestEnumHolder::TestEnum");
+	const char* metatype_name = QMetaType::typeName(metatype);
+	TCOUT << M_NAME_VAL(metatype_name);
+
+	EXPECT_EQ(test_enum, TestEnumHolder::Enum1);
+}
+
+TEST_F(FlagsAndEnumsTests, StringToEnumViaQVariantAudioFileType)
+{
+	// Q_ENUM()s support conversion from a QString through a QVariant to the Q_ENUM() type.
+	// Note that the string consists of only the enumerator, the enum tag nor the containing class are represented.
+
+	QString str = "FLAC";
+
+	QVariant qvar(str);// = QVariant::fromValue(str);
+
+	AudioFileType::Type test_enum;
+
+//	test_enum = qvar.value<AudioFileType::Type>();
+	test_enum = qvar.value<decltype(test_enum)>();
+
+	TCOUT << "test_enum:" << test_enum;
+
+	int metatype = QMetaType::type("AudioFileType::Type");
+	const char* metatype_name = QMetaType::typeName(metatype);
+	TCOUT << M_NAME_VAL(metatype_name);
+
+	EXPECT_EQ(test_enum, AudioFileType::FLAC);
+}
+
 TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)
 {
 	TestEnumHolder::TestEnum testflags_original { TestEnumHolder::Enum1 };
@@ -276,6 +341,12 @@ TEST_F(FlagsAndEnumsTests, EnumRoundTripThroughQVariantStringRep)
 	TestEnumHolder::TestEnum testflags_through_qvar;
 
 	testflags_through_qvar = flags_as_qvar.value<TestEnumHolder::TestEnum>();
+
+	TCOUT << "RECOVERED ENUM:" << testflags_through_qvar;
+
+	QString testenum_through_qvar_as_string = QVariant::fromValue(testflags).toString();
+
+	TCOUT << "RECOVERED ENUM AS STR:" << testenum_through_qvar_as_string;
 
 	EXPECT_EQ(testflags_through_qvar, testflags_original);
 }
@@ -329,8 +400,22 @@ TEST_F(FlagsAndEnumsTests, QUrlRoundTripThroughQVariant)
 
 TEST_F(FlagsAndEnumsTests, ExtEnumSanity)
 {
+	TestExtEnum::EnumTag test_ext_enum;
+	TestExtEnum::EnumTag second;
+
+	test_ext_enum = TestExtEnum::Enum1;
+
+	second = test_ext_enum;
+
+	TCOUT << "TestExtEnum::Enum1: " << test_ext_enum;//).toString();
+
+//	EXPECT_EQ(second.toStdString(), std::string("TestExtEnum::Enum1"));
 }
 
+/**
+ * Iterating through the keys of the enumeration.  This should happen in enumerator declaration order,
+ * and not according to the numerical value of the enumerators, thanks to QMetaEnum.
+ */
 TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 {
 	TestEnumHolder::TestEnum the_enum;
@@ -356,6 +441,7 @@ TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 		{
 			switch(key_index)
 			{
+			// Last two enumerators, Enum8 = 8 and Enum9 = 9, are in reverse numerical order wrt their declarations.
 			case 4:
 				EXPECT_EQ(key_value, 9);
 				break;
@@ -367,11 +453,54 @@ TEST_F(FlagsAndEnumsTests, QEnumEnumeration)
 	}
 }
 
-//#include <map>
-//struct QEnumMap
-//{
-//	std::map<TestEnumHolder::TestEnum, std::string> m_the_map;
-//};
+/**
+ * Iterating through the keys of the enumeration.  This should happen in declaration order.
+ */
+TEST_F(FlagsAndEnumsTests, ExtEnumEnumeration)
+{
+	TestExtEnum::EnumTag the_enum;
+	TestExtEnum the_extenum;
+
+	the_enum = TestExtEnum::Enum2;
+//	the_extenum = TestExtEnum::Enum8;
+
+	TCOUT << "Debug operator<<:" << the_enum;
+//	TCOUT << ".toString():" << TestExtEnum::toString()the_enum.toString();
+
+	// Get the enum metatype.
+	auto emt = QMetaEnum::fromType<TestExtEnum::EnumTag>();
+
+	TCOUT << "QMetaEnum:" << emt.scope() << "::" << emt.name();
+
+	auto num_keys = emt.keyCount();
+
+	for(int key_index = 0; key_index < num_keys; ++key_index)
+	{
+		const char* key_str = emt.key(key_index);
+		int key_value = emt.value(key_index);
+		TCOUT << "Key index:" << key_index << "Identifier:" << key_str << "Value:" << key_value;
+
+		if(key_index < 4)
+		{
+			EXPECT_EQ(key_value, key_index);
+		}
+		else
+		{
+			switch(key_index)
+			{
+			// Last two enumerators, Enum8 = 8 and Enum9 = 9, are in reverse numerical order wrt their declarations.
+			case 4:
+				EXPECT_EQ(key_value, 9);
+				break;
+			case 5:
+				EXPECT_EQ(key_value, 8);
+				break;
+			default:
+				ADD_FAILURE();
+			}
+		}
+	}
+}
 
 
 TEST_F(FlagsAndEnumsTests, QEnumMapping) // NOLINT

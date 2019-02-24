@@ -43,6 +43,7 @@ set(gui_HEADER_FILES
 	menus/HelpMenu.h
 	helpers/NetAwareFileDialogGtk3.h
 	helpers/Gtk3DialogHelper.h
+	helpers/IfExistsAskForOverwrite.h
 	actions/ActionHelpers.h
 	actions/StandardActions.h
 	Theme.h
@@ -76,6 +77,7 @@ set(gui_SOURCE_FILES
 	menus/HelpMenu.cpp
 	helpers/NetAwareFileDialogGtk3.cpp
 	helpers/Gtk3DialogHelper.cpp
+	helpers/IfExistsAskForOverwrite.cpp
 	actions/StandardActions.cpp
 	Theme.cpp
 	delegates/ItemDelegateLength.cpp
@@ -105,35 +107,36 @@ PREPEND_TO_EACH(gui_settings_SOURCE_FILES "settings/" ${gui_settings_SOURCE_FILE
 
 add_subdirectory(activityprogressmanager)
 
-### @todo
-#add_library(widgets "")
-set(amlm_widget_SRCS "")
-include(widgets/CMakeLists.txt)
-#set_target_properties(widgets
-#    PROPERTIES
-#    AUTOMOC ON
-#    AUTOUIC ON)
-#target_link_libraries(widgets ${PROJECT_COMMON_LINK_LIBS})
+add_subdir_lib(widgets STATIC EXCLUDE_FROM_ALL)
 
-set(amlm_gui_SRCS
-	${gui_SOURCE_FILES}
-	${gui_HEADER_FILES}
-	${gui_settings_SOURCE_FILES}
-	${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-	${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-	${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
-	#${amlm_gui_widget_SRCS}
-	#${HEADER_FILES_GUI_WIDGETS}
-	#${SOURCE_FILES_GUI_WIDGETS}
-	#${UI_FILES_GUI_WIDGETS}
-	PARENT_SCOPE
-	)
-
-set(amlm_gui_widget_SRCS
- 	${amlm_widget_SRCS}
- 	PARENT_SCOPE
- 	)
-
-#message(STATUS "amlm_gui_SRCS: ${amlm_gui_SRCS}")
-
-
+target_sources_local(gui
+	PUBLIC
+		${gui_HEADER_FILES}
+#	PRIVATE
+		${gui_SOURCE_FILES}
+		${gui_settings_SOURCE_FILES}
+		${HEADER_FILES_GUI_ACTIVITYPROGRESSMANAGER}
+		${SOURCE_FILES_GUI_ACTIVITYPROGRESSMANAGER}
+		${UI_FILES_GUI_ACTIVITYPROGRESSMANAGER}
+		)
+set_target_properties(gui
+    PROPERTIES
+    	AUTOMOC ON
+    	AUTOUIC ON
+    	AUTORCC ON
+    	)
+target_link_libraries(gui
+	PUBLIC
+		${QT5_LINK_LIB_TARGETS}
+		${KF5_LINK_LIB_TARGETS}
+		${GTK_LINK_LIB_TARGETS}
+		widgets
+		)
+target_include_directories(gui
+	PUBLIC
+		# For config.h
+		${PROJECT_BINARY_DIR}/src
+	PUBLIC
+		# For anything in <root>/src: utils, logic, future, gui.
+		${PROJECT_SOURCE_DIR}/src
+		)

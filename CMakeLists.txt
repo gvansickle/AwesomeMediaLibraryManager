@@ -30,7 +30,7 @@
 
 
 # cmake setup.
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 cmake_policy(SET CMP0053 NEW) # Use new var ref/esc seq eval
 cmake_policy(SET CMP0010 NEW) # Silence warning on CMP0010.
 
@@ -170,22 +170,30 @@ include(ECMEnableSanitizers)
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 if(UNIX)
-ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -Wmaybe-uninitialized -Werror=maybe-uninitialized)
+ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
+# Flags for GNU libstdc++
+### @todo Detect that we're actually using GNU libstdc++
+# "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
+### @note This crashes when linked with non-debug libstdc++.  Can't pass containers between them.
+#ucm_add_flags(CXX -D_GLIBCXX_DEBUG=1)
 endif(UNIX)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	message(STATUS "C++ Compiler is GCC")
-	ucm_add_flags(-Og -ggdb3 -fno-omit-frame-pointer -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
+	ucm_add_flags(-Og -ggdb3 -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
+	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
+	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fno-omit-frame-pointer -fdebug-macro -fdiagnostics-show-template-tree -fno-elide-type
-		-fdelayed-template-parsing -frelaxed-template-template-args)
+	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
+	ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
 #ucm_add_flags(/showIncludes)
 endif(WIN32)
 message(STATUS "C compiler supported features = ${CMAKE_C_COMPILE_FEATURES}")
 message(STATUS "C++ compiler supported features = ${CMAKE_CXX_COMPILE_FEATURES}")
+message(STATUS "C++ CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
@@ -202,6 +210,7 @@ endif()
 include(CheckCXXCompilerFlag)
 include(PrintTargetProperties)
 include(helperfunctions)
+include(add_subdir_lib)
 # Include some basic Qt5-related cmake functions
 include(QtCommon)
 set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE) # Without this, Release builds won't include the MSVC C runtime.
@@ -251,12 +260,17 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # The.  Simplest.  Things.
-# Set default install location to "install" folder in build dir
-# we do not want to install to /usr by default
+# Set default install location to "install" folder in build dir.
+# we do not want to install to /usr by default.add_compile_options.
+# "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
+# typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
+# without overriding a user-provided value"
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH
-        "Install path prefix, prepended onto install directories." FORCE )
-	message(STATUS "Setting CMAKE_INSTALL_PREFIX to ${CMAKE_INSTALL_PREFIX}")
+	set(NEW_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
+	message(STATUS "Changing CMAKE_INSTALL_PREFIX from ${CMAKE_INSTALL_PREFIX} to ${NEW_INSTALL_PREFIX}")
+	set (CMAKE_INSTALL_PREFIX "${NEW_INSTALL_PREFIX}" CACHE
+		PATH "Install path prefix, prepended onto install directories." FORCE )
+	message(STATUS "Set CMAKE_INSTALL_PREFIX to ${CMAKE_INSTALL_PREFIX}")
 else()
 	message(WARNING "CMAKE_INSTALL_PREFIX set to default ${CMAKE_INSTALL_PREFIX}")
 endif()
@@ -288,11 +302,10 @@ find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Gui
 	Widgets
 	Multimedia
-	Sql
 	XmlPatterns
 	Concurrent
 	)
-set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::Sql Qt5::XmlPatterns Qt5::Concurrent)
+set(QT5_LINK_LIB_TARGETS Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia Qt5::XmlPatterns Qt5::Concurrent)
 
 # Unix-only
 if(UNIX)
@@ -318,6 +331,8 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 	GuiAddons
 	ConfigWidgets ## Not in Krita from this until WindowSystem.
 	KIO ## USE_KDE_KIO, git clone git://anongit.kde.org/kio.git
+	ItemModels
+	ItemViews
 	XmlGui
 	IconThemes
 	WindowSystem
@@ -325,7 +340,7 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
 set(HAVE_KF501 ${KF5_FOUND})
 list(APPEND KF5_LINK_LIB_TARGETS KF5::CoreAddons KF5::ConfigCore KF5::ConfigGui)
 list(APPEND KF5_LINK_LIB_TARGETS KF5::KIOCore KF5::KIOFileWidgets KF5::KIOWidgets KF5::KIONTLM)
-list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes)
+list(APPEND KF5_LINK_LIB_TARGETS KF5::WidgetsAddons KF5::XmlGui KF5::GuiAddons KF5::IconThemes KF5::ItemModels KF5::ItemViews)
 list(APPEND KF5_LINK_LIB_TARGETS KF5::WindowSystem)
 
 ###### EXPERIMENT
@@ -434,26 +449,26 @@ print_varlist(boost_callable_traits_SOURCE_DIR boost_callable_traits_BINARY_DIR)
 
 # Boost
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
-set(BOOST_THREAD_VERSION          4) # Latest in 1.66 as of this writing.
-set(BOOST_THREAD_PROVIDES_FUTURE ON)
-set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
-set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
-set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
-set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
-set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
-set(Boost_USE_DEBUG_LIBS         ON)
-set(Boost_USE_RELEASE_LIBS       OFF)
-#set(BOOST_ALL_DYN_LINK           OFF)
-set(Boost_USE_DEBUG_RUNTIME      ON)
-set(Boost_DEBUG    				OFF) # enable debug output from FindBoost.
-set(Boost_DETAILED_FAILURE_MSG ON) # add detailed information to the failure message 
-								   # even when the REQUIRED option is not given to the find_package call.
-find_package(Boost 1.66.0 REQUIRED
-	COMPONENTS
-		thread
-		system)
-include_directories( ${Boost_INCLUDE_DIR} )
-link_directories( ${Boost_LIBRARY_DIRS} )
+#set(BOOST_THREAD_VERSION          4) # Latest in 1.66 as of this writing.
+#set(BOOST_THREAD_PROVIDES_FUTURE ON)
+#set(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION ON)
+#set(BOOST_THREAD_FUTURE_USES_OPTIONAL ON)
+#set(Boost_USE_STATIC_LIBS        ON) # Only find static libs.
+#set(Boost_USE_STATIC_RUNTIME     ON) # Want static runtime.
+#set(Boost_USE_MULTITHREADED      ON) # Need multithreaded.
+#set(Boost_USE_DEBUG_LIBS         ON)
+#set(Boost_USE_RELEASE_LIBS       OFF)
+##set(BOOST_ALL_DYN_LINK           OFF)
+#set(Boost_USE_DEBUG_RUNTIME      ON)
+#set(Boost_DEBUG    				OFF) # enable debug output from FindBoost.
+#set(Boost_DETAILED_FAILURE_MSG ON) # add detailed information to the failure message 
+#								   # even when the REQUIRED option is not given to the find_package call.
+#find_package(Boost 1.66.0 REQUIRED
+#	COMPONENTS
+#		thread
+#		system)
+#include_directories( ${Boost_INCLUDE_DIR} )
+#link_directories( ${Boost_LIBRARY_DIRS} )
 
 # Qt logging categories.
 # @link https://api.kde.org/ecm/module/ECMQtDeclareLoggingCategory.html
@@ -473,6 +488,7 @@ ecm_qt_declare_logging_category(QT5_LOGGING_CATEGORY_SOURCE_FILES
 add_definitions(
 	-DQT_DEPRECATED_WARNINGS
     #-DQT_DISABLE_DEPRECATED_BEFORE=0x051000
+    -DQT_NO_KEYWORDS
     -DQT_NO_SIGNALS_SLOTS_KEYWORDS
     #-DQT_NO_URL_CAST_FROM_STRING
     #-DQT_NO_CAST_FROM_ASCII
@@ -503,16 +519,15 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${boost_callable_traits_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
-	# For <enum.h> i.e. Better Enums, @link https://github.com/aantron/better-enums.
-	${PROJECT_SOURCE_DIR}/src/third_party/better_enums
 	### @todo REMOVE
 	${Qt5Core_PRIVATE_INCLUDE_DIRS}
-	${Qt5Gui_PRIVATE_INCLUDE_DIRS})
+	${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+	)
 
 ### Generate configured headers.
 # Generate the version info file.
-configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
-		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
+#configure_file(${PROJECT_SOURCE_DIR}/resources/VersionInfo.cpp.in
+#		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp)
 # Generate the amlm-configure.h file.
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 	${PROJECT_BINARY_DIR}/src/config.h
@@ -522,11 +537,14 @@ configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in
 ###
 ### Add the project subdirs.
 ###
-# This is the sum-total of all source files which go into building the main exe.
-add_subdir_lib(resources_subdir "${CMAKE_CURRENT_LIST_DIR}/resources")
-add_subdirectory(src)
-add_subdirectory(tests)
-
+#set(amlm_APP_ICONS "re-set this in resources_subdir")
+add_subdir_lib(resources STATIC EXCLUDE_FROM_ALL)
+message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
+add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
+### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
+###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
+#add_subdir_lib(tests EXCLUDE_FROM_ALL)
+add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 #include(resources/CMakeLists.txt)
 #print_varlist(amlm_ICONS amlm_SRCS)
@@ -611,6 +629,15 @@ cpack_add_component(
 #    COMMENT "Dummy target to show package configuration files in Qt Creator interface")
 
 endif()### END INSTALLER STUFF
+
+# Generate a dependency graph.
+# @see CMakeGraphVizOptions.cmake
+if(FALSE)
+add_custom_target(graphviz ALL
+	COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/graphviz"
+	COMMAND "${CMAKE_COMMAND}" "--graphviz=graphviz/amlm.dot" .
+	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+endif()
 
 
 ###

@@ -44,6 +44,7 @@
 #include <logic/proxymodels/ModelChangeWatcher.h>
 #include <logic/proxymodels/ModelHelpers.h>
 #include <logic/proxymodels/SelectionFilterProxyModel.h>
+#include <logic/AMLMTagMap.h>
 
 #include <utils/StringHelpers.h>
 
@@ -163,16 +164,16 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
             metadata_types->setFirstColumnSpanned(true);
             m_metadata_widget->setFirstItemColumnSpanned(metadata_types, true);
 
-            std::vector<std::tuple<QString, QVariant, TagMap>> md_list = {
+            std::vector<std::tuple<QString, QVariant, AMLMTagMap>> md_list = {
 				{"hasVorbisComments?", md.hasVorbisComments(), md.tagmap_VorbisComments()},
 				{"hasID3v1?", md.hasID3v1(), md.tagmap_id3v1()},
 				{"hasID3v2?", md.hasID3v2(), md.tagmap_id3v2()},
-				{"hasAPE?", md.hasAPE(), TagMap()},
+				{"hasAPE?", md.hasAPE(), AMLMTagMap()},
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
 				{"hasInfoTag?", md.hasInfoTag(), md.tagmap_InfoTag()}
 			};
 
-			for(auto e : md_list)
+			for(const auto& e : md_list)
 			{
 				auto md_type_item = new QTreeWidgetItem({std::get<0>(e), std::get<1>(e).toString()});
 				metadata_types->addChild(md_type_item);
@@ -339,7 +340,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 				{
 					// Succeeded, convert QImage to QPixmap.
 
-					if(cover_image_bytes.size() != 0)
+					if(!cover_image_bytes.empty())
 					{
 						qDb() << "Valid cover image found"; ///@todo << cover_image.mime_type;
 						m_cover_image_label->setPixmap(QPixmap::fromImage(image));
@@ -388,6 +389,37 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
 	}
 }
 
+void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap)
+{
+	tagmap.foreach_pair([=](QString key, QString value){
+		if(!key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
+		{
+			auto child = new QTreeWidgetItem({key, value});
+			parent->addChild(child);
+		}
+	});
+
+//	for(const auto& e : tagmap)
+//	{
+//		QString key = toqstr(e.first);
+//		// Filter out keys we don't want to see in the Metadata display.
+//		// Mainly this is CUESHEET and LOG entries in FLAC VORBIS_COMMENT blocks, which are gigantic and destroy the
+//		// formatting.
+//		///@todo Maybe also filter on size of values.
+//		if(key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
+//		{
+//			continue;
+//		}
+//		#error "LOOPS ON EACH .SECOND CHAR"
+//		for(const auto& f : e.second)
+//		{
+//			QString value = toqstr(f);
+//			auto child = new QTreeWidgetItem({key, value});
+//			parent->addChild(child);
+//		}
+//	}
+}
+
 void MetadataDockWidget::onProxyModelChange(bool has_rows)
 {
 //	qDebug() << "MODELWATCHER DETECTED CHANGE IN PROXY MODEL";
@@ -398,8 +430,9 @@ void MetadataDockWidget::onProxyModelChange(bool has_rows)
 		auto index = m_proxy_model->index(0, 0, QModelIndex());
 		PopulateTreeWidget(index);
 	}
-    else
+	else
     {
         qDebug() << "NO ROWS";
     }
 }
+

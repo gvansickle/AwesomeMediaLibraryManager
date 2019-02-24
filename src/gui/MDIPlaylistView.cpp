@@ -453,11 +453,11 @@ void MDIPlaylistView::onDelete()
 
 	// Iterate over the selection ranges and convert to "row ranges".
 	qDebug() << "SELECTION CONTAINS" << selection.size() << "CONTIGUOUS RANGES";
-	for(QItemSelectionRange range : selection)
+	for(const QItemSelectionRange& range : selection)
 	{
 		qDebug() << "RANGE:" << range;
-		QPersistentModelIndex first_row = range.topLeft();
-		QPersistentModelIndex last_row = range.bottomRight();
+		const QPersistentModelIndex& first_row = range.topLeft();
+		const QPersistentModelIndex& last_row = range.bottomRight();
 
 		auto start_row = first_row.row();
 		auto num_rows = (last_row.row() - start_row)+1;
@@ -481,7 +481,7 @@ M_WARNING("TODO: Dedup")
 	// We first need to convert the LibraryEntry's to a PlaylistModelItem's.
 	auto new_playlist_entries = toNewPlaylistModelItems(mime_data->m_lib_item_list);
 
-	if(new_playlist_entries.size() == 0)
+	if(new_playlist_entries.empty())
 	{
 		qWarning() << "No PlaylistModelItems returned from toNewPlaylistModelItems() conversion:" << new_playlist_entries
 				   << "Original entries:" << mime_data->m_lib_item_list;

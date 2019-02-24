@@ -32,12 +32,14 @@
 #include <utils/TheSimplestThings.h>
 #include <logic/SupportedMimeTypes.h>
 #include <gui/Theme.h>
-#include <logic/dbmodels/CollectionDatabaseModel.h>
+//#include <logic/dbmodels/CollectionDatabaseModel.h>
 #include <logic/PerfectDeleter.h>
 #include <utils/RegisterQtMetatypes.h>
+#include <gui/MainWindow.h>
 
 
-// Pointer to the singleton.
+
+// Pointer to the AMLMApp singleton.
 AMLMApp *AMLMApp::m_the_instance = nullptr;
 
 AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv), m_perfect_deleter(this)
@@ -85,35 +87,29 @@ void AMLMApp::Init(bool gtest_only)
 	/* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
 
 	/// @todo Experiments
-	m_cdb_model = new CollectionDatabaseModel(this);
+//	m_cdb_model = new CollectionDatabaseModel(this);
 
 	/// @todo TEMP hardcoded db file name in home dir.
-	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-	QString db_file = db_dir + "/AMLMTestdb.sqlite3";
+//	auto db_dir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
 
-	// Create or open the database.
-    /// @todo Removing.
-//	m_cdb_model->InitDb(QUrl::fromLocalFile(db_file), "the_connection_name");
-
-//	auto rel_table_model = m_cdb_model->make_reltable_model(this);
-//	m_cdb_model->SLOT_addDirScanResult(QUrl("http://gbsfjdhg"));
-//	m_cdb_model->SLOT_addDirScanResult(QUrl("http://the_next_one"), 1);
-
-    /// @todo Move this somewhere.
-//    m_cdb2_model_instance = new AbstractTreeModel({"DirProps", "MediaURL", "SidecarCueURL"}, str, this);
-
-	// Create and set up the scan results model.
+	// Create and set up the scan results tree model.
 	m_srtm_instance = new ScanResultsTreeModel(this);
 	// Create and set the root item / headers
-#warning "THIS IS GROSS, CLEAN IT UP"
-	QVector<QVariant> header_columns {"DirProps", "MediaURL", "SidecarCueURL"};
-	m_srtm_instance->setRootItem(m_srtm_instance->make_root_node(header_columns));
+M_TODO("Needs to be ColumnSpecs");
+	m_srtm_instance->setColumnSpecs({"DirProps", "MediaURL", "SidecarCueURL"});
+	// Let's add two more columns
+	m_srtm_instance->insertColumns(3, 2);
 
 
 	/// @end Experiments
 
 	/// @note This is a self-connection, not sure this will work as intended.
 	connect_or_die(AMLMApp::instance(), &QCoreApplication::aboutToQuit, this, &AMLMApp::SLOT_onAboutToQuit);
+}
+
+void AMLMApp::MAIN_ONLY_setMainWindow(MainWindow* the_main_window)
+{
+	m_the_main_window = the_main_window;
 }
 
 AMLMApp* AMLMApp::instance()

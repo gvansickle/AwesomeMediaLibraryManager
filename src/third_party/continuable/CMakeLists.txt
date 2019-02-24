@@ -33,6 +33,10 @@ option(CTI_CONTINUABLE_WITH_EXAMPLES
        "Build the continuable examples"
        ${IS_TOP_LEVEL_PROJECT})
 
+option(CTI_CONTINUABLE_WITH_BENCHMARKS
+       "Build the continuable benchmarks"
+       OFF)
+
 option(CTI_CONTINUABLE_WITH_NO_EXCEPTIONS
        "Disable exception support"
        OFF)
@@ -52,6 +56,13 @@ option(CTI_CONTINUABLE_WITH_CPP_LATEST
 option(CTI_CONTINUABLE_WITH_LIGHT_TESTS
        "Disable some template heavy unit tests (for CI usage)"
        OFF)
+
+# Top level project settings only
+if (IS_TOP_LEVEL_PROJECT)
+  set(CTI_CONTINUABLE_WITH_CONCURRENT_JOBS
+       "0" CACHE STRING
+       "Set the number of concurrent compilation jobs (0 = unlimited, for CI usage)")
+endif()
 
 include(cmake/CMakeLists.txt)
 

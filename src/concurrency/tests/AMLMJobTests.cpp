@@ -38,7 +38,7 @@
 #include <future/function_traits.hpp>
 #include <tests/TestHelpers.h>
 #include "../AMLMJob.h"
-#include <src/concurrency/DirectoryScanJob.h>
+#include <logic/jobs/DirectoryScanJob.h>
 
 
 ////////////////////////
@@ -280,7 +280,7 @@ INSTANTIATE_TEST_CASE_P(TrueFalseParameterizedTests,
                         AMLMJobTestsParameterized,
                         ::testing::Bool());
 
-TEST_F(AMLMJobTests, ThisShouldPass)
+TEST_F(AMLMJobTests, ThisShouldPass) // NOLINT
 {
     TC_ENTER();
 
@@ -289,7 +289,7 @@ TEST_F(AMLMJobTests, ThisShouldPass)
     TC_EXIT();
 }
 
-TEST_P(AMLMJobTestsParameterized, ImportProjectJobSyncExecPAutoDelete)
+TEST_P(AMLMJobTestsParameterized, ImportProjectJobSyncExecPAutoDelete) // NOLINT
 {
     TC_ENTER();
 
@@ -407,7 +407,7 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_AsynchronousExecTestAMLMJob1PAutoDele
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, DISABLED_ThenTest)
+TEST_F(AMLMJobTests, DISABLED_ThenTest) // NOLINT
 {
     TC_ENTER();
 
@@ -417,7 +417,7 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest)
 	M_QSIGNALSPIES_SET(j);
 
 	j->then(qApp, [=](TestAMLMJob1* j_kjob) -> void {
-        if(j->error())
+		if(j->error() != 0)
         {
             // Error.
 			AMLMTEST_COUT << "ASYNC JOB FAILED:\r\n"; // << j_kjob->error() << ":" << j_kjob->errorText() << ":" << j_kjob->errorString();
@@ -448,7 +448,7 @@ TEST_F(AMLMJobTests, DISABLED_ThenTest)
 }
 
 
-TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete)
+TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete) // NOLINT
 {
     TC_ENTER();
 
@@ -522,7 +522,7 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_DirScanCancelTestPAutodelete)
     TC_EXIT();
 }
 
-TEST_P(AMLMJobTestsParameterized, DISABLED_CancelTestPAutoDelete)
+TEST_P(AMLMJobTestsParameterized, DISABLED_CancelTestPAutoDelete) // NOLINT
 {
     TC_ENTER();
 
@@ -583,7 +583,7 @@ TEST_P(AMLMJobTestsParameterized, DISABLED_CancelTestPAutoDelete)
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, DISABLED_CancelBeforeStart)
+TEST_F(AMLMJobTests, DISABLED_CancelBeforeStart) // NOLINT
 {
     TC_ENTER();
 
@@ -627,7 +627,7 @@ TEST_F(AMLMJobTests, DISABLED_CancelBeforeStart)
     TC_EXIT();
 }
 
-TEST_F(AMLMJobTests, ImportProjectJobCancelBeforeStart)
+TEST_F(AMLMJobTests, ImportProjectJobCancelBeforeStart) // NOLINT
 {
     TC_ENTER();
 

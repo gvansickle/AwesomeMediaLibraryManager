@@ -201,30 +201,36 @@ void PlayerControls::setState(QMediaPlayer::State state)
 
 	m_playerState = state;
 
+	// For removing the existing default action of the Play/Pause button.  See below.
+	auto delete_old_action_lambda = [&]() {
+		QAction* old_action = m_playButton->defaultAction();
+		if(old_action != nullptr)
+		{
+			m_playButton->removeAction(old_action);
+		};
+	};
+
     if(state == QMediaPlayer::StoppedState)
     {
 	    qDebug() << "Stopped, setting play act";
 		m_stop_act->setEnabled(false);
 	    // Note: We actually need to remove the existing default action here, or the button grows a drop-down menu with
 	    // all the actions.
-	    auto old_action = m_playButton->defaultAction();
-	    if(old_action) { m_playButton->removeAction(old_action); };
+		delete_old_action_lambda();
 		m_playButton->setDefaultAction(m_play_act);
     }
     else if( state == QMediaPlayer::PlayingState)
     {
 	    qDebug() << "Playing, setting pause act";
 		m_stop_act->setEnabled(true);
-	    auto old_action = m_playButton->defaultAction();
-	    if(old_action) { m_playButton->removeAction(old_action); };
+		delete_old_action_lambda();
 		m_playButton->setDefaultAction(m_pause_act);
     }
     else if( state == QMediaPlayer::PausedState)
     {
 	    qDebug() << "Paused, setting play act";
 		m_stop_act->setEnabled(true);
-	    auto old_action = m_playButton->defaultAction();
-	    if(old_action) { m_playButton->removeAction(old_action); };
+		delete_old_action_lambda();
 		m_playButton->setDefaultAction(m_play_act);
     }
 }

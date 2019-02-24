@@ -19,16 +19,15 @@
 
 # @file src/logic/CMakeLists.txt
 
-#add_subdirectory(models EXCLUDE_FROM_ALL)
-#add_subdirectory(dbmodels EXCLUDE_FROM_ALL)
-#add_subdirectory(proxymodels EXCLUDE_FROM_ALL)
-
-add_subdir_lib(models_subdir "${CMAKE_CURRENT_LIST_DIR}/models")
-add_subdir_lib(dbmodels_subdir "${CMAKE_CURRENT_LIST_DIR}/dbmodels")
-add_subdir_lib(proxymodels_subdir "${CMAKE_CURRENT_LIST_DIR}/proxymodels")
-add_subdir_lib(xml_subdir "${CMAKE_CURRENT_LIST_DIR}/xml")
+add_subdir_lib(dbmodels EXCLUDE_FROM_ALL)
+add_subdir_lib(jobs EXCLUDE_FROM_ALL)
+add_subdir_lib(models EXCLUDE_FROM_ALL)
+add_subdir_lib(proxymodels EXCLUDE_FROM_ALL)
+add_subdir_lib(serialization EXCLUDE_FROM_ALL)
 
 set(logic_subdir_SOURCES
+	AMLMTagMap.cpp
+	AudioFileType.cpp
 	Library.cpp
 	LibraryEntry.cpp
 	LibraryEntryLoaderJob.cpp
@@ -57,10 +56,12 @@ set(logic_subdir_SOURCES
 	LibraryRescanner.cpp
 	ExtUrl.cpp
 	PerfectDeleter.cpp
-	XmlSerializer.cpp
+	Frames.cpp
 	)
 
 set(logic_subdir_HEADERS
+	AMLMTagMap.h
+	AudioFileType.h
 	Library.h
 	LibraryEntry.h
 	LibraryEntryLoaderJob.h
@@ -90,21 +91,16 @@ set(logic_subdir_HEADERS
 	ExtMimeType.h
 	ExtUrl.h
 	PerfectDeleter.h
-	ISerializable.h
-	ISerializer.h
-	XmlSerializer.h
+	Frames.h
 	)
-	
-prepend_to_each(logic_subdir_SOURCES "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_SOURCES})
-prepend_to_each(logic_subdir_HEADERS "${CMAKE_CURRENT_LIST_DIR}/" ${logic_subdir_HEADERS})
 
-target_sources(logic_subdir
+target_sources_local(logic
 	PUBLIC
 		${logic_subdir_HEADERS}
 	PRIVATE
 		${logic_subdir_SOURCES}
 	)
-target_link_libraries(logic_subdir
+target_link_libraries(logic
 	PUBLIC
 	    #${PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS} ### @todo "logic_subdir links to itself".
 		${QT5_LINK_LIB_TARGETS}
@@ -112,15 +108,17 @@ target_link_libraries(logic_subdir
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-		dbmodels_subdir
-		models_subdir
-		proxymodels_subdir
-		xml_subdir
+		dbmodels
+		jobs
+		models
+		proxymodels
+		serialization
 	)
-target_include_directories(logic_subdir
+target_include_directories(logic
 	PUBLIC
 	    # For config.h
 		${PROJECT_BINARY_DIR}/src
+		${PROJECT_SOURCE_DIR}/src
 	)
 
 

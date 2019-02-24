@@ -23,7 +23,7 @@
 
 /**
  * @file
- * An extended QFuture<T> class.
+ * An extended QFuture<T> class supporting .then() composition etc.
  */
 
 // Std C++
@@ -53,13 +53,12 @@
 #include <utils/UniqueIDMixin.h>
 
 #include "ExtFutureState.h"
-#include "ExtFutureWatcher.h"
 #include "ExtFutureProgressInfo.h"
 #include "ExtAsyncExceptions.h"
-#include "ExtFuturePropagationHandler.h"
 
 // Generated
 #include "logging_cat_ExtFuture.h"
+
 
 // Forward declare the ExtAsync namespace
 namespace ExtAsync
@@ -84,7 +83,7 @@ template <typename T>
 ExtFuture<T> make_started_only_future();
 
 /**
- * A std::shared_future<>-like class implemented on top of Qt5's QFutureInterface<T> class and other facilities.
+ * A C++2x-ish std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
  *
  * Actually more like a combined promise and future.
  *
@@ -95,11 +94,12 @@ ExtFuture<T> make_started_only_future();
  * - setProgressValue() and other progress reporting.
  * - pause()/resume()
  * - cancel()
- * - results()
  * - future()
  *
  * Future (consumer/reader) functionality:
- * - get()
+ * - get() [std::shared_future::get()]
+ * -- result() [QFuture]
+ * -- results() [QFuture]
  * - then()
  * - wait()
  * - tap()
@@ -141,18 +141,15 @@ public:
 	/**
 	 * Default constructor.
 	 *
-	 * @param initialState  Defaults to State(Started | Running).  Does not appear to waitForFinished()
-	 *        if it isn't both Started and Running.
+	 * We default-construct to State(Started|Finished|Canceled) to match QFuture<T>'s default state.
+	 *
+	 * @note Per @link: https://en.cppreference.com/w/cpp/thread/shared_future/valid
+	 * "Checks if the future refers to a shared state.  This is the case only for futures that were not
+	 * default-constructed or moved from."
+	 * .waitForFinished() won't wait on a default-constructed future, thinks it's never run.
 	 */
-#if 0
-	ExtFuture() : QFuture<T>() {}
-#elif 0
-	explicit ExtFuture(QFutureInterfaceBase::State initialState = QFutureInterfaceBase::State(QFutureInterfaceBase::State::Started
-																							  | QFutureInterfaceBase::State::Running))
-		: QFuture<T>(new QFutureInterface<T>(initialState))	{ }
-#else // Match default state of QFuture<T>, (Started|Finished|Canceled).
 	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
-#endif
+
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d))
 //			m_progress_unit(other.m_progress_unit)
@@ -175,10 +172,17 @@ public:
 //	ExtFuture(QFuture<T>&& f) noexcept ...;
 
 	/// Copy construct from QFuture<void>.
-	/// @todo Something's broken here, this doesn't actually compile.
-//	ExtFuture(const QFuture<void>& f) : ExtFuture<Unit>(f) {};
+	/// @todo Needs to be static I think.
 
-	explicit ExtFuture(QFutureInterface<T> *p, uint64_t id = 0) // ~Internal, see QFuture<>().
+	/**
+	 * Construct from a QFutureInterface<T> pointer.
+	 *
+	 * @note Quasi-internal, see QFuture<>()'s use.
+	 *
+	 * @param p   Pointer to a QFutureInterface<T> instance.
+	 * @param id  Optional identifier for debugging.
+	 */
+	explicit ExtFuture(QFutureInterface<T> *p, uint64_t id = 0)
 		: BASE_CLASS(p) { m_extfuture_id_no = id; }
 
 	/**
@@ -235,6 +239,7 @@ public:
 
 	/**
 	 * Conversion operator to ExtFuture<Unit>.
+	 * @todo Can't get this to compile, can't figure out the template-laden error message.
 	 */
 //	explicit operator ExtFuture<Unit>() const
 //	{
@@ -268,15 +273,62 @@ public:
 	/// @}
 
 	/**
-	 * @name Static members for the global cancel propagation handler.
+	 * @name Static members for the global state needed by ExtFuture.
 	 */
 	/// @{
 	static void InitStaticExtFutureState();
-//	static std::shared_ptr<ExtAsync::ExtFuturePropagationHandler> IExtFuturePropagationHandler();
 	/// @}
 
 	/// @name Extra informational accessors.
 	/// @{
+
+	/**
+	 * C++2x is_ready().
+	 * "Checks if the associated shared state is ready.  The behavior is undefined if valid() is false."
+	 * (from @link https://en.cppreference.com/w/cpp/experimental/shared_future/is_ready).
+	 * Same semantics as std::experimental::shared_future::is_ready().
+	 *
+	 * @return  true if the associated shared state is ready.
+	 */
+	bool is_ready() const
+	{
+		// I'm defining the undefined behavior if this isn't valid here as "assert".  You're welcome ISO.
+		Q_ASSERT(this->valid() == true);
+		// We're only C++2x-ready if we're Finished or Canceled (including Exceptions).
+		return this->isFinished() || this->isCanceled();
+	}
+
+	/**
+	 * C++2x valid().
+	 * This needs some minor translation.  Per @link https://en.cppreference.com/w/cpp/thread/shared_future/valid,
+	 * we should be valid()==false if we've been:
+	 * 1. Default constructed (and presumably never given a state via another method, e.g. assignment).
+	 * 2. Moved from.
+	 * 3. (std::experimental::future<> only) Invalidated by a call of .get().
+	 * Our Qt 5 underpinnings don't support move semantics (anywhere AFAICT), which eliminates #2.  #3 doesn't apply
+	 * since QFuture<T> etc. don't become invalid due to .get() or other results-access calls (again shared_future<T> semantics).
+	 * #1 is the only one we care about here.  We have a QFutureInterface<T> constructed beneath us in all cases, so
+	 * we never are missing a shared state, but default-constructed should be considered invalid here.
+	 * Default construction results in the state being (Started|Finished|Canceled).
+	 *
+	 * @note But what about an ExtFuture<T> which was canceled, then finished by either user or the cancelation mechanism itself?
+	 *       It'd be in that same state.  But:
+	 *       1. The "future-side" user of a std::shared_future<T> can't finish the future directly.
+	 *       2. ...but std:: doesn't provide a cancel mechanism either.
+	 *       3. ...but .waitForFinished() won't block, and will try to run the Runnable if the future's not also Running.
+	 *       4. ...so I don't know at the moment.
+	 *
+	 * @returns  true if *this refers to a shared state, otherwise false.
+	 */
+	bool valid() const
+	{
+		if(this->isCanceled() && this->isFinished() && this->isStarted())
+		{
+			qWr() << "ExtFuture" << m_extfuture_id_no << "is invalid";
+			return false;
+		}
+		return true;
+	}
 
 	/**
 	 * Returns true if this ExtFuture<T> is sitting on an exception.  Does not cause any potential exception
@@ -397,6 +449,7 @@ public:
 	 * - if state is Canceled already, return, having done nothing.
 	 * - else switch state out of Paused and into Canceled.
 	 * - Send QFutureCallOutEvent::Canceled.
+	 * @note This is shadowing the same non-virtual function in QFuture<T>.
 	 */
 	void cancel()
 	{
@@ -406,6 +459,7 @@ public:
 
 	/**
 	 * Blocks until this future is finished or canceled.
+	 * @note This is shadowing the same non-virtual function in QFuture<T>.
 	 */
 	void waitForFinished()
 	{
@@ -416,7 +470,7 @@ public:
 		this->d.waitForFinished();
 		if(this->hasException())
 		{
-			Q_ASSERT_X(0, "waitForFinished()", "Had an exception but didn't throw");
+			Q_ASSERT_X(0, "waitForFinished()", "ExtFuture held an exception but didn't throw");
 		}
 	}
 
@@ -591,6 +645,8 @@ public:
 	 *
 	 * Essentially the same semantics as std::future::get(); shared_future::get() always returns a reference instead.
 	 *
+	 * @todo Should probably only return the first result for consistency with std .get().
+	 *
 	 * @note Directly calls this->results().  This blocks any event loop in this thread.
 	 *
 	 * @return The results value of this ExtFuture.  As with std::shared_future::get() and QFuture's various .results(),
@@ -633,36 +689,7 @@ public:
 	 * @tparam F = Continuation function type.  Must accept *this by value as the first parameter.
 	 * @tparam R = Return value of continuation F(ExtFuture<T>).
 	 *
-	 * @return A new future for containing the return value of @a continuation_function.
-	 */
-	/**
-	 * @todo Exception handling.
-	 * This is the basic pattern used in the RunFunctionTaskBase<> and RunFunctionTask<> class templates from Qt5's internals.
-	 *  Note the use of reportException():
-	 * run()
-	 * {
-	 * 	if (this->isCanceled())
-		{
-			// We've been cancelled before we started, just report finished.
-			/// @note It seems like we also should be calling reportCancelled(),
-			/// but neither of Qt5's RunFunctionTask<T> nor Qt Creator's AsyncJob<> (derived only from QRunnable)
-			/// do so.
-			this->reportFinished();
-			return;
-		}
-
-		try
-		{
-	 * 		this->m_task->run(*this);
-		} catch (QException &e) {
-			QFutureInterface<T>::reportException(e);
-		} catch (...) {
-			QFutureInterface<T>::reportException(QUnhandledException());
-		}
-
-		this->reportResult(result);
-		this->reportFinished();
-		}
+	 * @return A new future for containing the return value of @a then_callback.
 	 */
 	/**
 	 * The root then() implementation.
@@ -695,7 +722,7 @@ public:
 			  typename LiftedR = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 			  REQUIRES(!is_ExtFuture_v<LiftedR>
 			  && std::is_invocable_r_v<Unit::DropT<LiftedR>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<LiftedR> then(QObject* context, bool call_on_cancel, ThenCallbackType&& then_callback) const /** std .then() is const */
+	ExtFuture<LiftedR> then(QThreadPool* context, bool call_on_cancel, ThenCallbackType&& then_callback) const /** std .then() is const */
 	{
 		static_assert (!std::is_same_v<LiftedR, void>, "Callback return value should never be void");
 
@@ -710,10 +737,10 @@ public:
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context below.
 		ExtFuture<LiftedR> returned_future = make_started_only_future<LiftedR>();
-
+		/// @todo Use context.
 		QtConcurrent::run(
 //		returned_future = ExtAsync::run_for_then(
-			[=, then_callback_copy = /*std::decay_t<ThenCallbackType>*/DECAY_COPY(then_callback)]
+			[=, then_callback_copy = DECAY_COPY(then_callback)]
 					(ExtFuture<T> this_future_copy, ExtFuture<LiftedR> returned_future_copy) -> void {
 
 			// Ok, we're now running in the thread which will call then_callback_copy(this_future_copy).
@@ -949,7 +976,7 @@ public:
 				  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
 				  REQUIRES(!is_ExtFuture_v<R>
 				  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then(QObject* context, ThenCallbackType&& then_callback) const
+	ExtFuture<R> then(QThreadPool* context, ThenCallbackType&& then_callback) const
 	{
 		// Forward to the master callback, don't call the then_callback on a cancel.
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
@@ -1049,7 +1076,7 @@ public:
 			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> tap(StreamingTapCallbackType&& tap_callback)
 	{
-		return this->tap(QApplication::instance(), std::forward<StreamingTapCallbackType>(tap_callback));
+		return this->tap(QApplication::instance(), DECAY_COPY(std::forward<StreamingTapCallbackType>(tap_callback)));
 	}
 
 	/**
@@ -1081,7 +1108,7 @@ public:
 			  REQUIRES(std::is_invocable_v<FinallyCallbackType>)>
 	ExtFuture<Unit> finally(FinallyCallbackType&& finally_callback)
 	{
-		ExtFuture<Unit> retval = this->then([=, finally_callback_copy = std::decay_t<FinallyCallbackType>(finally_callback)](ExtFuture<T> this_future) -> Unit {
+		ExtFuture<Unit> retval = this->then([=, finally_callback_copy = DECAY_COPY(finally_callback)](ExtFuture<T> this_future) -> Unit {
 			this_future.waitForFinished();
 
 			// Call the finally_callback.
@@ -1093,11 +1120,10 @@ public:
 	}
 
 	/**
-	 * Block the current thread on the finishing of this ExtFuture, but keep the thread's
-	 * event loop running.
+	 * Block the current thread on the finishing of this ExtFuture<T>.
+	 * Does not keep the thread's event loop running.
 	 *
-	 * Effectively the same semantics as std::future::wait(), but with Qt's-event-loop pumping, so it only
-	 * semi-blocks the thread.
+	 * Effectively the same semantics as std::{shared_}future::wait().
 	 */
 	void wait();
 
@@ -1143,7 +1169,7 @@ protected:
 		>
 	ExtFuture<T> TapHelper(QObject *guard_qobject, F&& tap_callback)
 	{
-		return StreamingTapHelper(guard_qobject, [=, tap_cb = std::decay_t<F>(tap_callback)](ExtFuture<T> f, int begin, int end) {
+		return StreamingTapHelper(guard_qobject, [=, tap_cb = DECAY_COPY(tap_callback)](ExtFuture<T> f, int begin, int end) {
 			Q_ASSERT(f.isStarted());
 //			Q_ASSERT(!f.isFinished());
 			for(auto i = begin; i < end; ++i)
@@ -1178,20 +1204,12 @@ protected:
 		ExtFuture<T> returned_future = make_started_only_future<T>();
 
 		// The concurrent run().
-		QtConcurrent::run([=, streaming_tap_callback_copy = /*std::decay_t<StreamingTapCallbackType>*/DECAY_COPY(streaming_tap_callback)]
-						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) {
+		QtConcurrent::run([=, streaming_tap_callback_copy = DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
+						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) mutable {
 				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
 						<< "ret_future_copy:" << returned_future_copy;
 
 				Q_ASSERT(returned_future_copy != this_future_copy);
-
-				// Add the downstream cancel propagator first.
-#if EXTFUTURECANCEL_SEP_THREAD
-				ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->
-										register_cancel_prop_down_to_up(QFuture<void>(this_future_copy), QFuture<void>(ret_future_copy));
-#else
-//				QFuture<int> adc_fut = PropagateExceptionsSecondToFirst(this_future_copy, ret_future_copy);
-#endif
 
 				int i = 0;
 				try
@@ -1315,6 +1333,30 @@ struct when_any_result
 	Sequence futures;
 };
 
+template <class InputIt>
+auto when_any(InputIt first, InputIt last)
+-> ExtFuture<when_any_result<std::vector<typename std::iterator_traits<InputIt>::value_type>>>;
+
+template < class... Futures >
+auto when_any(Futures&&... futures)
+-> ExtFuture<when_any_result<std::tuple<std::decay_t<Futures>...>>>;
+
+/**
+ * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
+ * @link https://en.cppreference.com/w/cpp/experimental/when_all
+ * @tparam InputIterator
+ * @param first
+ * @param last
+ * @return
+ */
+template <class InputIterator>
+ExtFuture<std::vector<typename std::iterator_traits<InputIterator>::value_type>>
+when_all(InputIterator first, InputIterator last);
+
+template <class... Futures>
+ExtFuture<std::tuple<std::decay_t<Futures>...>> when_all(Futures&&... futures);
+
+
 } /// END namespace ExtAsync
 
 /// @}
@@ -1330,19 +1372,15 @@ struct when_any_result
 /// @{
 
 #include "impl/ExtFuture_impl.hpp"
-#include "ExtFuturePropagationHandler.h"
 
-#if 0
-template <class ExtFutureT, class ContinuationType>
-auto external_then(ExtFutureT ef, ContinuationType continuation) -> ExtFuture<decltype(continuation(ef.get()))>
-{
-	return ExtAsync::run_again([=](ExtFuture<> dummy){
-		continuation(ef.get());
-	});
-}
-#endif
+//template <typename T>
+//explicit operator ExtFuture::ExtFuture<Unit>() const
+//{
+//	return ExtFuture<Unit>(&(this->d));
+////		return qToUnitExtFuture(*this);
+//}
 
-template<typename T>
+template <typename T>
 static ExtFutureState::State state(const QFuture<T>& qfuture_derived)
 {
 	/// @note .d is in fact private for QFuture<void>s.
@@ -1437,6 +1475,7 @@ ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 template <typename T>
 ExtFuture<T> make_started_only_future()
 {
+	static_assert(!is_ExtFuture_v<T>, "ExtFuture<T>: T cannot be a nested ExtFuture");
 	// QFutureInterface<T> starts out with a state of NoState.
 	QFutureInterface<T> fi;
 	fi.reportStarted();

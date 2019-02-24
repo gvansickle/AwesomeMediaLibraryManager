@@ -26,8 +26,7 @@
 ScanResultsTreeModel::ScanResultsTreeModel(QObject *parent)
     : BASE_CLASS(parent)
 {
-	// Populate the parse factory functions with the first-layer node type names we know about.
-	m_parse_factory_functions.emplace_back(&ScanResultsTreeModelItem::parse);
+
 }
 
 void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
@@ -36,9 +35,9 @@ void ScanResultsTreeModel::setBaseDirectory(const QUrl &base_directory)
 }
 
 
-bool ScanResultsTreeModel::appendItems(QVector<AbstractTreeModelItem*> new_items, const QModelIndex& parent)
+bool ScanResultsTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeModelItem>> new_items, const QModelIndex& parent)
 {
-	return BASE_CLASS::appendItems(new_items, parent);
+	return BASE_CLASS::appendItems(std::move(new_items), parent);
 }
 
 QVariant ScanResultsTreeModel::toVariant() const
@@ -75,6 +74,10 @@ QVariant ScanResultsTreeModel::toVariant() const
 	/// @todo It also serves as the model's header, not sure that's a good overloading.
 	map.insert(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM], m_root_item->toVariant());
 
+	// Timestamps for the start and end of the last full scan.
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::TS_LAST_SCAN_START], QVariant(QDateTime()));
+	map.insert(SRTMTagToXMLTagMap[SRTMTag::TS_LAST_SCAN_END], QVariant(QDateTime()));
+
 	return map;
 }
 
@@ -92,19 +95,19 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 	/// @todo This is a QDateTime
 	auto creation_date = map.value(SRTMTagToXMLTagMap[SRTMTag::DATE]).toString();
 
-	qDb() << M_NAME_VAL(title);
-	qDb() << M_NAME_VAL(creator);
-	qDb() << M_NAME_VAL(creation_date);
-
 	/// @note This is a QVariantMap, contains abstract_tree_model_header as a QVariantList.
+	if(m_root_item != nullptr)
+	{
+		delete m_root_item;
+	}
 	m_root_item = new AbstractTreeModelHeaderItem();
 	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
+
+	/// @todo Read these in.
+	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START]
+	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END]
 
 #warning @todo INCOMPLETE/error handling
 }
 
-AbstractTreeModelHeaderItem* ScanResultsTreeModel::make_root_node(QVector<QVariant> rootData)
-{
-	return new AbstractTreeModelHeaderItem(rootData);
-}
 

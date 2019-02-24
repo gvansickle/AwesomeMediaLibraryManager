@@ -27,74 +27,114 @@
 
 // Qt5
 #include <QStringLiteral>
-class QXmlStreamReader;
+//class QXmlStreamReader;
 
 // Ours
 #include "../DirScanResult.h"
-#include "../ISerializable.h"
+#include <logic/serialization/ISerializable.h>
+class LibraryEntry;
+/// @todo TEMP
 
-/*
- *
+
+/**
+ * Model of the results of scanning a directory tree.
  */
 class ScanResultsTreeModelItem : public AbstractTreeModelItem
 {
+	using BASE_CLASS = AbstractTreeModelItem;
+
 public:
-	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : AbstractTreeModelItem(parent) {};
-	explicit ScanResultsTreeModelItem(DirScanResult* dsr, AbstractTreeModelItem *parent = nullptr);
-	explicit ScanResultsTreeModelItem(QVector<QVariant> x = QVector<QVariant>(), AbstractTreeModelItem *parent = nullptr);
-	 ~ScanResultsTreeModelItem() override;
+	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
+	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
+	/// Create a new model item populated with the passed DirScanResult.
+	explicit ScanResultsTreeModelItem(const DirScanResult& dsr, AbstractTreeModelItem *parent = nullptr);
+	~ScanResultsTreeModelItem() override;
 
 	/**
 	 * Column data override.
 	 *
 	 * @todo Add role.
 	 */
-	QVariant data(int column) const override;
+	QVariant data(int column, int role = Qt::DisplayRole) const override;
 
+	int columnCount() const override;
 
-	/// @name Serialization
+	/// @name ISerializable interface
 	/// @{
 
+	/// Serialize item and any children to a QVariant.
 	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
 	void fromVariant(const QVariant& variant) override;
-
-	/**
-	 * Parses a new ScanResultsTreeModelItem* out of the passed XML stream.
-	 * Returns nullptr if the next parse factory function should be tried.
-	 * @param xml
-	 * @return
-	 */
-	static ScanResultsTreeModelItem* parse(QXmlStreamReader* xmlp, AbstractTreeModelItem* parent);
-
-	/**
-	 * Write this item and any children to the given QXmlStreamWriter.
-	 * Override this in derived classes to do the right thing.
-	 * @returns true
-	 */
-	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
-
-//	QXmlQuery write() const;
 
 	/// @} // END Serialization
 
-	static ScanResultsTreeModelItem* createChildItem(AbstractTreeModelItem* parent);
 
 protected:
 
 	/**
-	 * Factory function primarily for creating default-constructed nodes.
+	 * Factory function for creating default-constructed nodes.
 	 * Used by insertChildren().  Override in derived classes.
 	 * @todo Convert to smart pointer (std::unique_ptr<AbstractTreeModelItem>) return type, retain covariant return.
 	 */
-	ScanResultsTreeModelItem*
-	create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+	AbstractTreeModelItem*
+	do_create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr, int num_columns = 0) override;
 
-	const QString m_item_tag_name = QStringLiteral("scan_res_tree_model_item");
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	bool derivedClassSetData(int column, const QVariant &value) override;
+	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+	/// @}
 
 	/// The directory scan results corresponding to this entry.
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
 
 };
+
+
+class SRTMItem_LibEntry : public ScanResultsTreeModelItem
+{
+	using BASE_CLASS = ScanResultsTreeModelItem;
+
+public:
+	explicit SRTMItem_LibEntry(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
+	~SRTMItem_LibEntry() override = default;
+
+	QVariant data(int column, int role = Qt::DisplayRole) const override;
+
+	int columnCount() const override;
+
+	void setLibraryEntry(std::shared_ptr<LibraryEntry> libentry) { m_library_entry = libentry; };
+
+	/// @name ISerializable interface
+	/// @{
+
+	/// Serialize item and any children to a QVariant.
+	QVariant toVariant() const override;
+	/// Serialize item and any children from a QVariant.
+	void fromVariant(const QVariant& variant) override;
+
+	/// @} // END Serialization
+	
+protected:
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	bool derivedClassSetData(int column, const QVariant &value) override;
+	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+	/// @}
+
+private:
+	std::string m_key {"key"};
+	std::string m_val {"value"};
+	std::shared_ptr<LibraryEntry> m_library_entry;
+};
+
+/// @todo Need this here for QVariant::fromValue().
+Q_DECLARE_METATYPE(std::string);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

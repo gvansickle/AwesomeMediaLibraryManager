@@ -24,9 +24,8 @@
 #include "DebugHelpers.h"
 
 #include <string>
-//#include <>
 
-inline std::string class_name(const char * pretty_function)
+std::string class_name(const char * pretty_function)
 {
 	std::string pf { pretty_function };
 	auto end_of_colons = pf.find_last_of(':');

@@ -23,36 +23,52 @@
 #ifndef SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 #define SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_
 
+// Std C++
+#include <vector>
+
 // Qt5
 #include <QVector>
 #include <QVariant>
+#include <logic/ColumnSpec.h>
 
 // Ours
 #include "AbstractTreeModelItem.h"
 #include "AbstractHeaderSection.h"
 #include "ScanResultsTreeModelItem.h"
-
+class AbstractTreeModel;
 
 /**
  *
  */
 class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
 {
+	using BASE_CLASS = AbstractTreeModelItem;
+
 public:
-	explicit AbstractTreeModelHeaderItem(QVector<QVariant> x = QVector<QVariant>(),
-	                                     AbstractTreeModelItem *parentItem = nullptr);
+	explicit AbstractTreeModelHeaderItem(AbstractTreeModelItem *parentItem = nullptr);
+	explicit AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
+										 AbstractTreeModelItem *parentItem = nullptr);
 	 ~AbstractTreeModelHeaderItem() override;
 
-	/**
-	 * Write this item and any children to the given QXmlStreamWriter.
-	 * Override this in derived classes to do the right thing.
-	 * @returns true
-	 */
-	bool writeItemAndChildren(QXmlStreamWriter* writer) const override;
+	 /**
+	  * @warning This must be called before any child items are added to the model.
+	  * @param column_specs
+	  * @return
+	  */
+	virtual bool setColumnSpecs(std::initializer_list<QString> column_specs);
+
+	QVariant data(int column, int role = Qt::DisplayRole) const override;
+
+	int columnCount() const override;
+
 
 	/// @name Serialization
 	/// @{
 
+	/**
+	 * Serialize this item and any children to a QVariant.
+	 * Override this in derived classes to do the right thing.
+	 */
 	QVariant toVariant() const override;
 
 	void fromVariant(const QVariant& variant) override;
@@ -61,7 +77,24 @@ public:
 
 protected:
 
-	ScanResultsTreeModelItem* create_default_constructed_child_item(AbstractTreeModelItem *parent = nullptr) override;
+	/// @todo
+	ScanResultsTreeModelItem* do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns) override;
+
+	/// @name Virtual functions called by the base class to complete certain operations.
+	///       The base class will have error-checked function parameters.
+	/// @{
+	bool derivedClassSetData(int column, const QVariant &value) override;
+	bool derivedClassInsertColumns(int insert_before_column, int num_columns) override;
+	bool derivedClassRemoveColumns(int first_column_to_remove, int num_columns) override;
+	/// @}
+
+	/// @todo This is where we're ultimately headed, but QStrings in the interim.
+//	std::vector<ColumnSpec> m_column_specs;
+	std::vector<QString> m_column_specs {};
+
+	// The model we belong to.
+	/// @note Not sure we actually need this for anything.
+	AbstractTreeModel* m_parent_model;
 };
 
 #endif /* SRC_LOGIC_MODELS_ABSTRACTTREEMODELHEADERITEM_H_ */

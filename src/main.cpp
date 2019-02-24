@@ -55,8 +55,8 @@
 
 #include "utils/Logging.h"
 
-M_WARNING("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER)
-M_WARNING("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER)
+M_MESSAGE("BUILDING WITH CMAKE_C_COMPILER_ID: " CMAKE_C_COMPILER_ID " = " CMAKE_C_COMPILER);
+M_MESSAGE("BUILDING WITH CMAKE_CXX_COMPILER_ID: " CMAKE_CXX_COMPILER_ID " = " CMAKE_CXX_COMPILER);
 
 /**
  * Here's where the magic happens.
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
                        "%threadname15 "
 					   "%{if-debug}DEBUG%{endif}%{if-info}INFO%{endif}%{if-warning}WARNING%{endif}%{if-critical}CRITICAL%{endif}"
                        "%{if-fatal}FATAL%{endif}"
-					   "%{if-category} %{category} %{endif}"
+					   "%{if-category} %{category}%{endif}"
 						"] "
 					   /*	+ logging.ClickableLinkPattern() + */
                        "%{function}:" /*"%shortfunction:"*/ "%{line} - %{message}"
@@ -228,6 +228,9 @@ int main(int argc, char *argv[])
 		// From the KDE5 docs: https://api.kde.org/frameworks/kxmlgui/html/classKMainWindow.html#ab0c194be12f0ad123a9ba8be75bb85c9
 		// "KMainWindows must be created on the heap with 'new'"
 		MainWindow *mainWin = new MainWindow();
+		// Tell the app singleton about the main window singleton.
+		// Note that there's a lot of code between the two creations.
+		amlmApp->MAIN_ONLY_setMainWindow(mainWin);
 		mainWin->show();
 	}
 

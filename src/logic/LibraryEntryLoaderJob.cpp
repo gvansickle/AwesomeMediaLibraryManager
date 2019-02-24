@@ -36,7 +36,10 @@ AMLM_QREG_CALLBACK([](){
 /// @{
 #if 0
 #define DATASTREAM_FIELDS(X) \
-    X(m_original_pindex) X(m_original_libentry) X(m_new_libentries) X(m_num_tracks_found)
+	X(m_original_pindex)\
+	X(m_original_libentry)\
+	X(m_new_libentries)\
+	X(m_num_tracks_found)
 
 
 QDebug operator<<(QDebug dbg, const LibraryEntryLoaderJobResult & obj)

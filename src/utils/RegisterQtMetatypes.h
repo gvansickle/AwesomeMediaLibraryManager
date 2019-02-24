@@ -20,8 +20,10 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 #define AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H
 
+// Std C++
 #include <functional>
 #include <vector>
+#include <iostream>
 
 void RegisterQtMetatypes();
 
@@ -31,6 +33,9 @@ int RegisterQTRegCallback(std::function<void(void)> f);
  * Singleton class for static-init-time registering of callbacks to be called
  * immediately after the QApp has been created.
  *
+ * @note Welcome to the "static initialization order fiasco":
+ * @link https://isocpp.org/wiki/faq/ctors#static-init-order
+ *
  * Uses the Construct On First Use Idiom.
  * https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
  */
@@ -39,16 +44,74 @@ class QtRegCallbackRegistry
 public:
     QtRegCallbackRegistry() = default;
 
-    void register_callback(std::function<void(void)> callback);
-    static void static_append(std::function<void(void)> f);
+    int* register_callback(std::function<void(void)> callback);
+	int* register_callback(const char* name, std::function<void(void)> callback);
+
+	static void static_append(std::function<void(void)> f);
     void call_registration_callbacks();
 
 private:
-    std::vector<std::function<void(void)>> m_registered_callbacks;
+    std::vector<std::function<void(void)>> m_registered_callbacks {};
 };
 
+/**
+ * The QtRegCallbackRegistry singleton accessor.
+ *
+ * Uses the "Construct On First Use Idiom" to ensure that the singleton is:
+ * a) Created once; after the first call, subsequent calls return the same object instance.
+ * b) Created by the first call.
+ * @link https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
+ */
 QtRegCallbackRegistry& reginstance();
 
-#define AMLM_QREG_CALLBACK(f) static const int dummy = (reginstance().register_callback(f), 0)
+/**
+ * We're attempting to take advantage of Deferred dynamic initialization here.
+ * @link https://en.cppreference.com/w/cpp/language/initialization#Non-local_variables
+ * Wait, no we're not.  God this language.
+ */
+#define TOKEN_PASTE_HELPER(x, y) x ## y
+#define TOKEN_PASTE(x, y) TOKEN_PASTE_HELPER(x, y)
+
+template <typename T>
+struct StaticInitBaseBase
+{
+	enum
+	{
+		Defined = 0
+	};
+};
+
+template <typename T>
+struct StaticInitBase : public StaticInitBaseBase<T>
+{
+	int dummy_odr_use()
+	{
+		return rand();
+	}
+};
+
+#define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand())
+
+//#define AMLM_QREG_CALLBACK(...) AMLM_QREG_CALLBACK2(FIXME, __VA_ARGS__)
+
+
+#define AMLM_QREG_CALLBACK2(classname, ...) \
+	template <>\
+	struct StaticInitBase< classname >  /*classname ## _AMLM_QREG_CALLBACK*/ \
+	{\
+		StaticInitBase< classname > /*classname ## _AMLM_QREG_CALLBACK*/ () \
+        {\
+	this->m_dummy_int = __LINE__;\
+	std::cout << "TEST" << std::endl;\
+	std::cerr << "TEST2" << std::endl;\
+            reginstance().register_callback( # classname, __VA_ARGS__);\
+        }\
+	int m_dummy_int{};	\
+	};\
+	static StaticInitBase< classname > odr_use_THISISTOPREVENTACCIDENTALUSE_ ## classname ;
+
+#define AMLM_QREG_CALLBACK_ODR_USE(classname) \
+	static const auto* unused = std::addressof( odr_use_THISISTOPREVENTACCIDENTALUSE_ ## classname );
+
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_REGISTERQTMETATYPES_H

@@ -22,14 +22,19 @@
 #ifndef LIBRARYMODEL_H
 #define LIBRARYMODEL_H
 
+// Std C++
 #include <vector>
 
+// Qt5
 #include <QAbstractItemModel>
 #include <QFuture>
 #include <QSaveFile>
 #include <QUrl>
 #include <QVector>
+class QFileDevice;
 
+// Ours
+#include <logic/serialization/ISerializable.h>
 #include <src/logic/dbmodels/CollectionDatabaseModel.h>
 
 #include <src/concurrency/ThreadsafeMap.h>
@@ -41,7 +46,6 @@
 #include "LibraryEntryLoaderJob.h"
 #include "LibraryRescannerMapItem.h"
 
-class QFileDevice;
 
 class LibraryRescanner;
 
@@ -55,17 +59,10 @@ Q_DECLARE_METATYPE(VecOfLEs);
 Q_DECLARE_METATYPE(VecOfPMIs);
 
 
-enum LibState
-{
-	Idle,
-	ScanningForFiles,
-	PopulatingMetadata
-};
-
 /**
  * The LibraryModel class.
  */
-class LibraryModel : public QAbstractItemModel
+class LibraryModel : public QAbstractItemModel, public ISerializable
 {
     Q_OBJECT
 
@@ -75,9 +72,6 @@ Q_SIGNALS:
 	/// Signal to ourself to start an asynchronous directory traversal.
     void startFileScanSignal(QUrl url);
 
-    /// Status/Progress signal.
-//    void statusSignal(LibState, qint64, qint64);
-
     /// Signal-to-self for async loading of metadata for a single LibraryEntry.
 //    void SIGNAL_selfSendReadyResults(MetadataReturnVal results) const;
 	void SIGNAL_selfSendReadyResults(LibraryEntryLoaderJobResult results) const;
@@ -86,7 +80,7 @@ public:
 	explicit LibraryModel(QObject *parent = nullptr);
     ~LibraryModel() override;
 
-    CollectionDatabaseModel *m_cdb_model;
+//    CollectionDatabaseModel *m_cdb_model;
 
 	/**
 	 * Open a new LibraryModel on the specified QUrl.
@@ -157,7 +151,6 @@ public:
 
     virtual void setLibraryRootUrl(const QUrl& url);
 
-//	virtual void connectProgressToActivityProgressWidget(ActivityProgressWidget* apw);
 	virtual void stopAllBackgroundThreads();
 	virtual void close(bool delete_cache = false);
 
@@ -169,10 +162,13 @@ public:
 	virtual void readFromJson(const QJsonObject& jo);
 
 	/// Static constructor for deserializing from JSON.
-	static QPointer<LibraryModel> constructFromJson(const QJsonObject & json, QObject* parent = Q_NULLPTR);
+	static QPointer<LibraryModel> constructFromJson(const QJsonObject & json, QObject* parent = nullptr);
 
 	virtual void serializeToFile(QFileDevice& file) const;
 	virtual void deserializeFromFile(QFileDevice& file);
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
 
 	///
 	/// Drag and drop support.

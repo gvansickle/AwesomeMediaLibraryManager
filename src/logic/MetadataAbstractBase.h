@@ -20,44 +20,48 @@
 #ifndef METADATAABSTRACTBASE_H
 #define METADATAABSTRACTBASE_H
 
-#include <QUrl>
-
+// Std C++
 #include <set>
 #include <memory>
 
-#include <src/utils/Fraction.h>
+// Qt5
+#include <QUrl>
+#include <QObject>
 
+// Ours.
+#include <logic/serialization/ISerializable.h>
+#include <future/guideline_helpers.h>
+#include <src/utils/Fraction.h>
+#include <utils/EnumFlagHelpers.h>
+#include <utils/QtHelpers.h>
+#include <logic/serialization/ExtEnum.h>
 #include "TrackMetadata.h"
+#include "AudioFileType.h"
+#include "AMLMTagMap.h"
 
 // Taglib
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 
-enum class AudioFileType
-{
-	UNKNOWN,
-	FLAC,
-	MP3,
-	OGG_VORBIS,
-	WAV,
-};
 
-using TagMap = std::map<std::string, std::vector<std::string>>;
 
 class Metadata;
 class TrackMetadata;
 
-class MetadataAbstractBase
+class MetadataAbstractBase : public virtual ISerializable
 {
+
 public:
-	MetadataAbstractBase();
-	virtual ~MetadataAbstractBase() = default;
+	M_GH_RULE_OF_ZERO(MetadataAbstractBase);
+//	MetadataAbstractBase() = default;
+//	virtual ~MetadataAbstractBase() = default;
+//	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(MetadataAbstractBase);
 
 	// Non-virtual clone() interface, because of no covariance for smart ptrs.
 	std::unique_ptr<MetadataAbstractBase> clone() const { return std::unique_ptr<MetadataAbstractBase>(this->clone_impl()); }
 
-	virtual bool read(QUrl url) = 0;
+	virtual bool read(const QUrl& url) = 0;
 
 	virtual bool hasBeenRead() const { return m_read_has_been_attempted; }
 	virtual bool isError() const { return m_is_error; }
@@ -69,7 +73,8 @@ public:
 	virtual Fraction total_length_seconds() const;
 
 	/// Return the first entry matching the key, or an empty string if no such key.
-	virtual std::string operator[](const std::string& key) const;
+	/// @deprecated I think.  First entry matching key can be find().
+	virtual std::string operator[](const std::string& key) const __attribute__((deprecated));
 
 	/// Return all string metadata as a map.
 	virtual TagMap filled_fields() const;
@@ -90,7 +95,19 @@ public:
 	/// @todo virtual int numEmbeddedPictures() const = 0;
 	virtual QByteArray getCoverArtBytes() const = 0;
 
-	AudioFileType m_file_type {AudioFileType::UNKNOWN};
+	/// @name Serialization support.
+	/// @{
+	QTH_FRIEND_QDATASTREAM_OPS(MetadataAbstractBase);
+
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+	/// @}
+
+public:
+	/// @name Data members.
+	/// So yeah, this isn't really a very abstract Abstract Base Class....
+
+	AudioFileType::Type m_audio_file_type {AudioFileType::UNKNOWN};
 
 	bool m_has_cuesheet {false};
 
@@ -101,15 +118,15 @@ public:
 	bool m_has_ogg_xipfcomment {false};
 	bool m_has_info_tag {false};
 
-	TagMap m_tm_vorbis_comments;
-	TagMap m_tm_id3v1;
-	TagMap m_tm_id3v2;
-	TagMap m_tm_ape;
-	TagMap m_tm_xipf;
-	TagMap m_tm_infotag;
+	AMLMTagMap m_tm_vorbis_comments;
+	AMLMTagMap m_tm_id3v1;
+	AMLMTagMap m_tm_id3v2;
+	AMLMTagMap m_tm_ape;
+	AMLMTagMap m_tm_xipf;
+	AMLMTagMap m_tm_infotag;
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.
-	TagMap m_tag_map;
+	AMLMTagMap m_tag_map;
 
 	bool m_read_has_been_attempted {false};
 	bool m_is_error {false};
@@ -128,11 +145,11 @@ protected:
 	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
 	std::map<int, TrackMetadata> m_tracks;
 
+	/// @}
+
 private:
 	/// Override this in derived classes.
 	virtual MetadataAbstractBase * clone_impl() const = 0;
 };
-
-
 
 #endif // METADATAABSTRACTBASE_H

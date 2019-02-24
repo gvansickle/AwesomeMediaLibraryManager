@@ -19,4 +19,51 @@
 
 #include "ExtMimeType.h"
 
+// Ours.
+#include <utils/DebugHelpers.h>
+#include <utils/RegisterQtMetatypes.h>
 
+
+AMLM_QREG_CALLBACK([](){
+	qIn() << "Registering ExtMimeType";
+	qRegisterMetaType<ExtMimeType>();
+	qRegisterMetaTypeStreamOperators<ExtMimeType>();
+	QMetaType::registerDebugStreamOperator<ExtMimeType>();
+	QMetaType::registerConverter<ExtMimeType, QString>([](const ExtMimeType& obj){ return obj.name(); });
+	QMetaType::registerConverter<QString, ExtMimeType>([](const QString& str){
+		/// @todo Convert to a central single mime db.
+		QMimeDatabase db;
+		ExtMimeType mtobj = db.mimeTypeForName(str);
+		return mtobj;
+	});
+});
+
+
+ExtMimeType::ExtMimeType() : QMimeType()
+{
+//static int* dummy = (qRegisterMetaTypeStreamOperators<ExtMimeType>(), nullptr);
+}
+
+QDebug operator<<(QDebug dbg, const ExtMimeType& obj) // NOLINT(performance-unnecessary-value-param)
+{
+	dbg << "ExtMimeType(" << obj.name() << ")";
+	return dbg;
+}
+
+QDataStream& operator<<(QDataStream& out, const ExtMimeType& obj)
+{
+	out << obj.name();
+	return out;
+}
+
+QDataStream& operator>>(QDataStream& in, ExtMimeType& obj)
+{
+	QString as_str;
+	in >> as_str;
+
+	/// @todo Convert to a central single mime db.
+	QMimeDatabase db;
+	obj = db.mimeTypeForName(as_str);
+
+	return in;
+}

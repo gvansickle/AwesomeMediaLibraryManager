@@ -189,7 +189,7 @@ bool MDITreeViewBase::readFile(QUrl load_url)
 	if(!file.open(QFile::ReadOnly | QFile::Text))
 	{
 		QMessageBox::warning(this, qApp->applicationDisplayName(),
-							QString("Cannot read file %1:\n%2.").arg(load_url.toString()).arg(file.errorString()));
+							QString("Cannot read file %1:\n%2.").arg(load_url.toString(), file.errorString()));
 		return false;
 	}
 
@@ -215,7 +215,7 @@ bool MDITreeViewBase::writeFile(QUrl save_url, QString filter)
     if(!savefile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QMessageBox::warning(this, qApp->applicationDisplayName(),
-							tr("Cannot write file %1:\n%2.").arg(save_url.toDisplayString()).arg(savefile.errorString()));
+							tr("Cannot write file %1:\n%2.").arg(save_url.toDisplayString(), savefile.errorString()));
         return false;
     }
 
@@ -441,7 +441,7 @@ void MDITreeViewBase::contextMenuEvent(QContextMenuEvent* event)
 		// This item should be in the current selection.
 		auto selected_row_pindexes = selectedRowPindexes();
 
-		if(selected_row_pindexes.size() == 0)
+		if(selected_row_pindexes.empty())
 		{
 			qWarning() << "Should have more than one selected row, got 0";
 		}

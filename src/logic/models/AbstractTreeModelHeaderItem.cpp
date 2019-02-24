@@ -20,42 +20,59 @@
 /**
  * @file AbstractTreeModelHeaderItem.cpp
  */
+
 #include "AbstractTreeModelHeaderItem.h"
 
 // Ours
-#include <logic/xml/XmlObjects.h>
-#include "ScanResultsTreeModelItem.h"
+#include <src/logic/serialization/XmlObjects.h>
 
 
-AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(QVector<QVariant> x, AbstractTreeModelItem *parentItem)
-	: AbstractTreeModelItem(parentItem, x)
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModelItem* parentItem)
+	: AbstractTreeModelItem(parentItem)
 {
-#warning "TODO This should take a list of AbsHeaderSections"
-//	m_item_data = x;
+	m_parent_model = nullptr;
+}
+
+
+AbstractTreeModelHeaderItem::AbstractTreeModelHeaderItem(AbstractTreeModel *parent_model,
+														 AbstractTreeModelItem *parentItem)
+	: AbstractTreeModelItem(parentItem)
+{
+
+	// Save the pointer to the parent_model.
+	m_parent_model = parent_model;
 }
 
 AbstractTreeModelHeaderItem::~AbstractTreeModelHeaderItem()
 {
 }
 
-bool AbstractTreeModelHeaderItem::writeItemAndChildren(QXmlStreamWriter* writer) const
+bool AbstractTreeModelHeaderItem::setColumnSpecs(std::initializer_list<QString> column_specs)
 {
-	// Convenience ref.
-	auto& xml = *writer;
+	M_WARNING("TODO This should take a list of ColumnSpecs, NEEDS TO INSERT COLUMNS");
+	Q_ASSERT_X(childCount() == 0, __PRETTY_FUNCTION__, "Model has children already");
+#warning "INSERT COLUMNS"
+	std::copy(column_specs.begin(), column_specs.end(), std::back_inserter(m_column_specs));
+	return true;
+}
 
-	XmlElement e("abstract_tree_model_header", {}, {},
-	{XmlElement("test", 1)},
-				 [=](XmlElement* e, QXmlStreamWriter* xml){
-		for(int i = 0; i < childCount(); ++i)
-		{
-			const auto* child = this->child(i);
-			child->writeItemAndChildren(xml);
-		}
-	});
+QVariant AbstractTreeModelHeaderItem::data(int column, int role) const
+{
+	if((role != Qt::ItemDataRole::DisplayRole) && (role != Qt::ItemDataRole::EditRole))
+	{
+		return QVariant();
+	}
 
-	e.write(writer);
-#warning "TODO"
-	return false;
+	if(column < columnCount())
+	{
+		return m_column_specs.at(column);
+	}
+	return QVariant();
+}
+
+int AbstractTreeModelHeaderItem::columnCount() const
+{
+	return m_column_specs.size();
 }
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
@@ -64,7 +81,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	QVariantList list;
 
 	// Header info.
-	/// @todo Or is some of this really model info?
+	/// @todo Or is some of this really model info?  Children are.
 	map.insert("header_num_sections", columnCount());
 	for(int i = 0; i < columnCount(); ++i)
 	{
@@ -95,7 +112,13 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 
 	QVariantList header_section_list = map.value("header_section_list").toList();
 
+	// Read the number of header sections...
 	auto header_num_sections = map.value("header_num_sections").toInt();
+	// ... and insert that many default-constructed columns to this HeaderItem.
+	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
+	// So... I think we need to go through that mechanism if we're already in a model.
+	// But... we're being deserialized here, so will we have a model yet?
+M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	insertColumns(0, header_num_sections);
 
 	qDb() << "READING HEADER SECTION LIST," << header_num_sections << "COLUMNS:"  << header_section_list;
@@ -122,27 +145,56 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	// 1. We could possibly do step 1 in a non-GUI thread.
 	// 2. We can add the children in a single batch vs. one at a time, avoiding the model/view signaling overhead.
 	// It does however burn more RAM.
-	QVector<AbstractTreeModelItem*> temp_items;
+	std::vector<std::unique_ptr<AbstractTreeModelItem>> temp_items;
 	for(const QVariant& child : child_list)
 	{
 		qDb() << "READING CHILD ITEM:" << child;
-		ScanResultsTreeModelItem* child_item = this->create_default_constructed_child_item(this);
+		auto child_item = this->create_default_constructed_child_item(this, columnCount());
 		child_item->fromVariant(child);
 		// Save it off temporarily.
-		temp_items.push_back(child_item);
+		temp_items.push_back(std::move(child_item));
 	}
 
-	// Append the children we read in to our list.
-	this->appendChildren(temp_items);
+	// Append the children we read in to our list all in one batch.
+	this->appendChildren(std::move(temp_items));
 }
 
 ScanResultsTreeModelItem*
-AbstractTreeModelHeaderItem::create_default_constructed_child_item(AbstractTreeModelItem *parent)
+AbstractTreeModelHeaderItem::do_create_default_constructed_child_item(AbstractTreeModelItem *parent, int num_columns)
 {
 	ScanResultsTreeModelItem* child_item;
 
 	child_item = new ScanResultsTreeModelItem(parent);
 
 	return child_item;
+}
+
+bool AbstractTreeModelHeaderItem::derivedClassSetData(int column, const QVariant& value)
+{
+	// We're the header, we should never have the Abstract Model's setData() called on us,
+	// but this is the AbstractTreeModel*Item*'s setData(), and we're calling it in at least fromVariant() above.
+
+	/// @todo Take ColumnSpecs instead.
+	m_column_specs.at(column) = value.toString();
+
+	return false;
+}
+
+bool AbstractTreeModelHeaderItem::derivedClassInsertColumns(int insert_before_column, int num_columns)
+{
+	// vector.insert(pos, size, ...):
+	// - pos has the same definition as we're exposing here, it's the insert-before point.  Can be the end() iterator.
+	/// @todo Again, convert to default constructed ColumnSpecs.
+	m_column_specs.insert(m_column_specs.cbegin() + insert_before_column, num_columns, QString());
+
+	return true;
+}
+
+bool AbstractTreeModelHeaderItem::derivedClassRemoveColumns(int first_column_to_remove, int num_columns)
+{
+	m_column_specs.erase(m_column_specs.cbegin() + first_column_to_remove,
+			m_column_specs.cbegin() + first_column_to_remove + num_columns);
+
+	return true;
 }
 

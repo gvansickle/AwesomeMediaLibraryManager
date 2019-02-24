@@ -32,7 +32,7 @@
 #include "LibraryEntry.h"
 
 /**
- * Represents a single item (url) in the LibraryModel which needs its data refreshed.
+ * Represents a single item in the LibraryModel which needs its data refreshed.
  */
 struct LibraryRescannerMapItem
 {

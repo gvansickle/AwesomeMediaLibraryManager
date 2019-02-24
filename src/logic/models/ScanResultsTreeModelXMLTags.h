@@ -24,58 +24,63 @@
 #include <initializer_list>
 #include <map>
 #include <string>
+//#include <experimental/array>
 
 // Qt5
 #include <QObject>
 #include <QtXml>
 
 // Ours
-#include <logic/xml/ExtEnum.h>
-
-
-
-template <class ScopeTypeEnumType>
-using ExtEnumToStringMap = ExtEnumMapBase<ScopeTypeEnumType, QString>;
+#include <src/logic/serialization/ExtEnum.h>
+#include <src/logic/serialization/XmlTagBase.h>
 
 /**
  * ExtUrl tags.
+ * These are the XML tags which you'll find in an ExtUrl element.
  */
-class ExtUrlTag
+class ExtUrlTag : public XmlTagBase<ExtUrlTag>
 {
 	Q_GADGET
 
 public:
-	enum TagName
-	{
-		/// ExtUrl
-		HREF,
-		TS_LAST_REFRESH,
-		SIZE_FILE,
-		TS_CREATION,
-		TS_LAST_MODIFIED,
-		TS_LAST_MODIFIED_METADATA
-	};
-	Q_ENUM(TagName)
+	/// The tags in X-macro form.  First is text usable as a C++ identifier,
+	/// and second here is the text to use for the tag in an XML document.
+	#define M_ExtUrlTags(X) \
+		X(HREF, "href") \
+		X(TS_LAST_REFRESH, "ts_last_refresh") \
+		X(SIZE_FILE, "size_file") \
+		X(TS_CREATION,"ts_creation") \
+		X(TS_LAST_MODIFIED, "ts_last_modified") \
+		X(TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata")
 
-	/// @todo Should find a way to add to-map members here.
+	enum TagEnum
+	{
+#define X(id, tag_str) id,
+		M_ExtUrlTags(X)
+#undef X
+	};
+	Q_ENUM(TagEnum)
+
+#define X(id, tag_str) { id, tag_str },
+/// @todo Not currently used.
+	static constexpr std::tuple<TagEnum, std::string_view> m_testmap[] = { M_ExtUrlTags(X) };
+#undef X
 
 };
 Q_DECLARE_METATYPE(ExtUrlTag);
 
-static const auto ExtUrlTagToXMLTagMap = make_map<ExtUrlTag::TagName, QString>(
+static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagEnum, QString>(
 {
-	{ExtUrlTag::HREF, "href"},
-	{ExtUrlTag::TS_LAST_REFRESH, "ts_last_refresh"},
-	{ExtUrlTag::SIZE_FILE, "size_file"},
-	{ExtUrlTag::TS_CREATION, "ts_creation"},
-	{ExtUrlTag::TS_LAST_MODIFIED, "ts_last_modified"},
-	{ExtUrlTag::TS_LAST_MODIFIED_METADATA, "ts_last_modified_metadata"}
+			// This expands to an init list with entries which look like: {ExtUrlTag::HREF, "href"},
+#define X(s, tag_str) { ExtUrlTag::s, tag_str },
+			M_ExtUrlTags(X)
+#undef X
 });
 
 /**
  * DirScanResult tags.
  */
-class DSRTag
+class DSRTag : public ExtEnum<DSRTag>
 {
 	Q_GADGET
 
@@ -91,7 +96,7 @@ public:
 };
 Q_DECLARE_METATYPE(DSRTag);
 
-static const auto DSRTagToXMLTagMap = ExtEnum::make_map<DSRTag::TagName, QString>(
+static const auto DSRTagToXMLTagMap = DSRTag::make_map<DSRTag::TagName, QString>(
 {
 	{DSRTag::FLAGS_DIRPROPS, "flags_dirprops"},
 	{DSRTag::EXTURL_DIR, "exturl_dir"},
@@ -100,53 +105,109 @@ static const auto DSRTagToXMLTagMap = ExtEnum::make_map<DSRTag::TagName, QString
 });
 
 /**
- * ScanResultsTreeModelItem tags.
+ * ScanResultsTreeModel tags.
  */
-class SRTMTag
+class SRTMTag : public ExtEnum<SRTMTag>
 {
 	Q_GADGET
+
 public:
 	enum TagName
 	{
 		ROOT_ITEM,
+		BASE_DIRECTORY,
 		TITLE,
 		CREATOR,
 		DATE,
-		BASE_DIRECTORY
+		TS_LAST_SCAN_START,
+		TS_LAST_SCAN_END
 	};
 	Q_ENUM(TagName)
 
 };
 Q_DECLARE_METATYPE(SRTMTag);
 
-static const auto SRTMTagToXMLTagMap = ExtEnum::make_map<SRTMTag::TagName, QString>(
+static const auto SRTMTagToXMLTagMap = SRTMTag::make_map<SRTMTag::TagName, QString>(
 {
 	{SRTMTag::BASE_DIRECTORY, "base_directory"},
 	{SRTMTag::TITLE, "title"},
 	{SRTMTag::CREATOR, "creator"},
 	{SRTMTag::DATE, "date"},
-	{SRTMTag::ROOT_ITEM, "tree_model_root_item"}
+	{SRTMTag::ROOT_ITEM, "tree_model_root_item"},
+	{SRTMTag::TS_LAST_SCAN_START, "ts_last_scan_start"},
+	{SRTMTag::TS_LAST_SCAN_END, "ts_last_scan_end"}
 });
 
 /**
  * ScanResultsTreeModelItem tags.
  */
-class SRTMItemTag
+class SRTMItemTag : public ExtEnum<SRTMItemTag>
 {
-Q_GADGET
+	Q_GADGET
+
 public:
 	enum TagName
 	{
-		DIRSCANRESULT
+		DIRSCANRESULT,
+		TEST_PAIR_0
 	};
 	Q_ENUM(TagName)
 
 };
 Q_DECLARE_METATYPE(SRTMItemTag);
 
-static const auto SRTMItemTagToXMLTagMap = ExtEnum::make_map<SRTMItemTag::TagName, QString>(
+static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::TagName, QString>(
 {
-	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"}
+	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"},
+	{SRTMItemTag::TEST_PAIR_0, "TEST_PAIR_0"}
 });
+
+
+class LibraryEntryTag : public XmlTagBase<LibraryEntryTag>
+{
+	Q_GADGET
+
+public:
+	/// The tags in X-macro form.  First is text usable as a C++ identifier,
+	/// and second here is the text to use for the tag in an XML document.
+	#define M_LibraryEntryTags(X) \
+		X(URL, "m_url") \
+		X(IS_POPULATED, "m_is_populated") \
+		X(IS_ERROR, "m_is_error") \
+		X(IS_SUBTRACK,"m_is_subtrack") \
+		X(OFFSET_SECS, "m_offset_secs") \
+		X(LENGTH_SECS, "m_length_secs") \
+		X(MIME_TYPE, "m_mime_type") \
+		X(METADATA, "m_metadata")
+
+
+	enum TagEnum
+	{
+#define X(id, tag_str) id,
+		M_LibraryEntryTags(X)
+#undef X
+	};
+	Q_ENUM(TagEnum)
+
+#define X(id, tag_str) static constexpr QLatin1String id ## _tagstr { tag_str };
+	M_LibraryEntryTags(X)
+#undef X
+
+#define X(id, tag_str) { id, tag_str },
+/// @todo Not currently used.
+	static constexpr std::tuple<TagEnum, std::string_view> m_testmap[] = { M_LibraryEntryTags(X) };
+#undef X
+
+	static constexpr std::string_view toXmlTagString(TagEnum enumerator)
+	{
+//		return std::find_if(std::begin(LibraryEntryTag::m_testmap), std::end(LibraryEntryTag::m_testmap),
+//				[=](std::tuple<TagEnum, std::string_view> e){ return std::get<0>(e) == enumerator; });
+		return std::get<1>(LibraryEntryTag::m_testmap[enumerator]);
+	};
+
+#undef M_LibraryEntryTags
+
+};
+Q_DECLARE_METATYPE(LibraryEntryTag);
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

@@ -34,7 +34,7 @@ class QTreeView;
 
 class SelectionFilterProxyModel;
 class ModelChangeWatcher;
-
+class AMLMTagMap;
 
 class MetadataDockWidget : public QDockWidget
 {
@@ -75,6 +75,7 @@ private:
     PixmapLabel* m_cover_image_label { nullptr };
 
     void addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap);
+	void addChildrenFromTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap);
 
 private Q_SLOTS:
 	/**

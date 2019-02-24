@@ -92,6 +92,9 @@ static const std::map<std::string, std::string> f_name_normalization_map =
 	{"comment", "COMMENT"},
 };
 
+/**
+ * @link https://xiph.org/vorbis/doc/v-comment.html
+ */
 static const std::map<std::string, std::vector<std::string>> f_vorbis_comment_normalization_map =
 {
 	{"album_name", {"ALBUM"}},
@@ -131,7 +134,7 @@ std::set<std::string> MetadataTaglib::getNewTags()
 static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 {
 	TagMap retval;
-	for(auto key_val_pairs : pm)
+	for(const auto& key_val_pairs : pm)
 	{
 		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
 		//std::string key = reverse_lookup(key_val_pairs.first.toCString());
@@ -140,7 +143,7 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 
 		std::vector<std::string> out_val;
 		// Iterate over the StringList for this key.
-		for(auto value : key_val_pairs.second)
+		for(const auto& value : key_val_pairs.second)
 		{
 			out_val.push_back(tostdstr(value));
 		}
@@ -189,7 +192,7 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 	return retval;
 }
 
-bool MetadataTaglib::read(QUrl url)
+bool MetadataTaglib::read(const QUrl& url)
 {
 	// String for storing an embedded cuesheet if we have one.
 	std::string cuesheet_str;
@@ -222,7 +225,7 @@ bool MetadataTaglib::read(QUrl url)
 	// Downcast it to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
 	{
-		m_file_type = AudioFileType::MP3;
+		m_audio_file_type = AudioFileType::MP3;
 		m_has_ape = file->hasAPETag();
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
@@ -233,7 +236,7 @@ bool MetadataTaglib::read(QUrl url)
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
 	{
-		m_file_type = AudioFileType::FLAC;
+		m_audio_file_type = AudioFileType::FLAC;
 		m_has_ogg_xipfcomment = file->hasXiphComment();
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
@@ -249,7 +252,7 @@ bool MetadataTaglib::read(QUrl url)
 	}
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
-		m_file_type = AudioFileType::OGG_VORBIS;
+		m_audio_file_type = AudioFileType::OGG_VORBIS;
 		if(auto tag = file->tag())
 		{
 			m_has_ogg_xipfcomment = true;
@@ -259,7 +262,7 @@ bool MetadataTaglib::read(QUrl url)
 	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
 	{
 		// Wav file.
-		m_file_type = AudioFileType::WAV;
+		m_audio_file_type = AudioFileType::WAV;
 		m_has_id3v2 = file->hasID3v2Tag();
 		m_has_info_tag = file->hasInfoTag();
 
@@ -396,10 +399,11 @@ Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate")
 	if(track_entry.m_PTI_TITLE.size() > 0)
 	{
-    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
+//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
-		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
-    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
+//		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
+		retval.m_tag_map.insert({"TITLE", track_entry.m_PTI_TITLE});
+//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 	}
 	if(track_entry.m_PTI_PERFORMER.size() > 0)
 	{
