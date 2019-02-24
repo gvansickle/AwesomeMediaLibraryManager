@@ -81,6 +81,7 @@ std::string MetadataAbstractBase::operator[](const std::string& key) const
 {
 	std::string native_key_string;
 
+
 	auto it = f_name_normalization_map.find(key);
 	if(it != f_name_normalization_map.end())
 	{
