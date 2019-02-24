@@ -97,7 +97,7 @@ public:
 
 	/// @name Serialization support.
 	/// @{
-	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
+	QTH_FRIEND_QDATASTREAM_OPS(MetadataAbstractBase);
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;

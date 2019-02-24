@@ -69,6 +69,9 @@ public:
 //	M_GH_RULE_OF_ZERO(AMLMTagMap);
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap);
 
+	/**
+	 * Assignment from a TagMap.
+	 */
 	AMLMTagMap& operator=(const TagMap& tagmap);
 
 	/**
@@ -96,6 +99,7 @@ public:
 
 	std::vector<mapped_type> equal_range_vector(const Key& key) const;
 
+	/// Size.
 	underlying_container_type::size_type size() const { return m_the_map.size(); }
 
 	iterator begin() { return m_the_map.begin(); }

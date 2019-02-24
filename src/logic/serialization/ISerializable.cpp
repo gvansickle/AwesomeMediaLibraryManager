@@ -46,7 +46,7 @@ QVariant SerializableQVariantList::toVariant() const
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
 	QVariantMap map;
-	// Return a QMap with a single QVariant(SerializableQVariantList) item.
+	// Return a QMap with a single QVariant(QVariantHomogenousList) item.
 	/// @note Slicing warning, but this is ok here.
 	QVariantHomogenousList list = *this;
 
@@ -62,8 +62,10 @@ void SerializableQVariantList::fromVariant(const QVariant& variant)
 	Q_ASSERT(!m_list_item_tag.isEmpty());
 
 	QVariantMap map = variant.toMap();
+
 	Q_ASSERT(map.contains(m_list_tag));
 	Q_ASSERT(map.value(m_list_tag).canConvert<QVariantHomogenousList>());
+
 	QVariantHomogenousList qvl = map.value(m_list_tag).value<QVariantHomogenousList>();
 
 	for(const auto& e : qvl)

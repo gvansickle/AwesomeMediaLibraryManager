@@ -139,32 +139,18 @@ QVariant Metadata::toVariant() const
 
 void Metadata::fromVariant(const QVariant& variant)
 {
-//	return pImpl->fromVariant(variant);
-	/// @todo
 	QVariantMap map = variant.toMap();
 
-#if (0)
-	{
-		using tag_map_var_type = std::map<std::string, std::vector<std::string>>;
-		QVariantMap tag_map_variant;
-		tag_map_variant = map.value("metadata_tagtree").value<QVariantMap>();
-		tag_map_var_type tag_map = MapConverter::VarMapToTagMap(tag_map_variant);
+	QVariant pimpl_qvar= map.value(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL);
 
-		pImpl->m_tag_map = tag_map;
-	}
-#endif
-	if(1)
-	{
-		QVariant pimpl_qvar= map.value(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL);
+	Q_ASSERT(pimpl_qvar.isValid());
 
-		Q_ASSERT(pimpl_qvar.isValid());
-
-		pImpl->fromVariant(pimpl_qvar);
-	}
+	pImpl->fromVariant(pimpl_qvar);
 }
 
 QDataStream &operator<<(QDataStream &out, const Metadata &obj)
 {
+	Q_ASSERT(0);
 	/// @todo
 //	out << MapConverter::TagMaptoVarMap(obj.pImpl->m_tag_map);
 	return out;
@@ -172,6 +158,7 @@ QDataStream &operator<<(QDataStream &out, const Metadata &obj)
 
 QDataStream &operator>>(QDataStream &in, Metadata &obj)
 {
+	Q_ASSERT(0);
 	/// @todo
 
 	QVariantMap tag_map;

@@ -41,17 +41,7 @@ class QVariantHomogenousList : public QVariantList
 public:
 	// Rule-of-Zero doesn't work here, probably Qt5.
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(QVariantHomogenousList);
-//	QVariantHomogenousList() = default;
-//	QVariantHomogenousList(const QVariantHomogenousList& other) = default;
-//	QVariantHomogenousList& operator=(QVariantHomogenousList other)
-//	{
-//		// allow use of std::swap()...
-//		qDb() << "SWAPPING";
-//		using std::swap;
-//		// ...but select overloads first.
-//		swap(other);
-//		return *this;
-//	}
+
 	virtual ~QVariantHomogenousList() = default;
 
 	QVariantHomogenousList(const QString& list_tag, const QString& list_item_tag)

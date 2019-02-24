@@ -35,8 +35,11 @@ AMLM_QREG_CALLBACK([](){
 AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 {
 	m_the_map.clear();
+
+	// Iterate over key+value pairs.
 	for(const auto & it : tagmap)
 	{
+		// Iterate over the value, which is a vector of values.
 		for(const auto& valit : it.second)
 		{
 			m_the_map.insert(std::make_pair(it.first, valit));
@@ -99,7 +102,7 @@ M_TODO("THIS IS WRONG, MANY-TO-ONE MAPPING");
 		}
 	}
 #endif
-
+	// Iterate over all entries.
 	for(const auto& it : m_the_map)
 	{
 		QStringList entry {toqstr(it.first), toqstr(it.second)};
