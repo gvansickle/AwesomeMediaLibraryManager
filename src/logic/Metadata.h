@@ -94,12 +94,12 @@ public:
 	bool hasXiphComment() { return pImpl->m_has_ogg_xipfcomment; }
 	bool hasInfoTag() { return pImpl->m_has_info_tag; }
 
-	TagMap tagmap_VorbisComments() { return pImpl ? pImpl->m_tm_vorbis_comments : TagMap() ; }
-	TagMap tagmap_id3v1() { return pImpl ? pImpl->m_tm_id3v1 : TagMap() ; }
-	TagMap tagmap_id3v2() { return pImpl ? pImpl->m_tm_id3v2 : TagMap() ; }
-	TagMap tagmap_ape() { return pImpl ? pImpl->m_tm_ape : TagMap() ; }
-	TagMap tagmap_xiph() { return pImpl ? pImpl->m_tm_xipf : TagMap() ; }
-	TagMap tagmap_InfoTag() { return pImpl ? pImpl->m_tm_infotag : TagMap() ; }
+	AMLMTagMap tagmap_VorbisComments() { return pImpl ? pImpl->m_tm_vorbis_comments : AMLMTagMap() ; }
+	AMLMTagMap tagmap_id3v1() { return pImpl ? pImpl->m_tm_id3v1 : AMLMTagMap() ; }
+	AMLMTagMap tagmap_id3v2() { return pImpl ? pImpl->m_tm_id3v2 : AMLMTagMap() ; }
+	AMLMTagMap tagmap_ape() { return pImpl ? pImpl->m_tm_ape : AMLMTagMap() ; }
+	AMLMTagMap tagmap_xiph() { return pImpl ? pImpl->m_tm_xipf : AMLMTagMap() ; }
+	AMLMTagMap tagmap_InfoTag() { return pImpl ? pImpl->m_tm_infotag : AMLMTagMap() ; }
 	/// @}
 
 	/// Audio stream properites.

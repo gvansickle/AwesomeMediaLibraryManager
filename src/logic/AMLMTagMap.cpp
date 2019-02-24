@@ -48,6 +48,12 @@ AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 	return *this;
 }
 
+//AMLMTagMap::operator TagMap() const
+//{
+//	return TagMap();
+//}
+
+
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Key& key)
 {
 	auto range = m_the_map.equal_range(key);
@@ -157,3 +163,4 @@ QDataStream& operator>>(QDataStream& in, AMLMTagMap& obj)
 //	return in DATASTREAM_FIELDS(X);
 //#undef X
 }
+

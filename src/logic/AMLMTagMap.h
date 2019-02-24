@@ -74,6 +74,9 @@ public:
 	 */
 	AMLMTagMap& operator=(const TagMap& tagmap);
 
+//	explicit operator TagMap () const;
+
+
 	/**
 	 * Returns a reference to the first value of the matching key.
 	 * Performs an insertion of a default-constructed value if such key does not already exist.
@@ -101,6 +104,7 @@ public:
 
 	/// Size.
 	underlying_container_type::size_type size() const { return m_the_map.size(); }
+	bool empty() const { return m_the_map.empty(); }
 
 	iterator begin() { return m_the_map.begin(); }
 	iterator end() { return m_the_map.end(); }
@@ -108,6 +112,25 @@ public:
 	const_iterator end() const { return m_the_map.end(); };
 	const_iterator cbegin() const noexcept { return m_the_map.cbegin(); };
 	const_iterator cend() const noexcept { return m_the_map.cend(); };
+
+	template <class CallbackType>
+	void foreach_pair(CallbackType&& t) const
+	{
+		std::pair<const_iterator, const_iterator> range;
+
+		// Iterate through the multimap's elements by key.
+		for(auto it = m_the_map.begin(); it != m_the_map.end(); it = range.second)
+		{
+			// Get the range of the current key
+			range = m_the_map.equal_range(it->first);
+
+			// Iterate over the values in the range.
+			for(auto valit = range.first; valit != range.second; ++valit)
+			{
+				std::invoke(t, toqstr(valit->first), toqstr(valit->second));
+			}
+		}
+	}
 
 	/// @name Serialization
 	/// @{

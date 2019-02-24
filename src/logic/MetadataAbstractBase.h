@@ -118,12 +118,12 @@ public:
 	bool m_has_ogg_xipfcomment {false};
 	bool m_has_info_tag {false};
 
-	TagMap m_tm_vorbis_comments;
-	TagMap m_tm_id3v1;
-	TagMap m_tm_id3v2;
-	TagMap m_tm_ape;
-	TagMap m_tm_xipf;
-	TagMap m_tm_infotag;
+	AMLMTagMap m_tm_vorbis_comments;
+	AMLMTagMap m_tm_id3v1;
+	AMLMTagMap m_tm_id3v2;
+	AMLMTagMap m_tm_ape;
+	AMLMTagMap m_tm_xipf;
+	AMLMTagMap m_tm_infotag;
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.
 	AMLMTagMap m_tag_map;
