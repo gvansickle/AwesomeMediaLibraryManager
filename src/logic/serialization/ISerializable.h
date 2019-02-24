@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -68,19 +68,13 @@ public:
 class SerializableQVariantList : public QVariantHomogenousList, public virtual ISerializable
 {
 public:
-	SerializableQVariantList() = default;
-	SerializableQVariantList(const SerializableQVariantList& other) = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(SerializableQVariantList);
+
 	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag)
 	{
 		set_tag_names(list_tag, list_item_tag);
 	}
 	~SerializableQVariantList() override = default;
-
-	SerializableQVariantList& operator=(SerializableQVariantList other)
-	{
-		std::swap(*this, other);
-		return *this;
-	}
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;

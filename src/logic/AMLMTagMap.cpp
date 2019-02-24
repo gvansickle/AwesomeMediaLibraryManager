@@ -102,12 +102,11 @@ M_TODO("THIS IS WRONG, MANY-TO-ONE MAPPING");
 
 	for(const auto& it : m_the_map)
 	{
-//		QPair<QString, QString> entry {toqstr(it.first), toqstr(it.second)};
 		QStringList entry {toqstr(it.first), toqstr(it.second)};
 		list.push_back(entry);
 	}
 
-	map.insert("m_the_map", list);
+	map.insert("m_the_map", QVariant::fromValue(list));
 
 	return map;
 }
@@ -115,7 +114,17 @@ M_TODO("THIS IS WRONG, MANY-TO-ONE MAPPING");
 void AMLMTagMap::fromVariant(const QVariant& variant)
 {
 	QVariantMap map = variant.toMap();
-	Q_ASSERT(0);
+
+	QVariantHomogenousList list("AMLMTagMap", "entry");
+
+	list = map.value("m_the_map").value<QVariantHomogenousList>();
+
+	for(const auto& entry_qvar : qAsConst(list))
+	{
+		auto entry_list = entry_qvar.value<QStringList>();
+		auto entry = std::make_pair(tostdstr(entry_list[0]), tostdstr(entry_list[1]));
+		m_the_map.insert(entry);
+	}
 
 }
 

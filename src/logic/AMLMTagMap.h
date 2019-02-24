@@ -55,10 +55,8 @@ private:
 	using Key = std::string;
 	using T = std::string;
 
-//	using underlying_container_type = QMultiMap<Key, T>;
-
-
 public:
+	//	using underlying_container_type = QMultiMap<Key, T>;
 	using underlying_container_type = std::multimap<Key, T>;
 	using key_type = Key;
 	using mapped_type = T;
@@ -98,6 +96,7 @@ public:
 
 	std::vector<mapped_type> equal_range_vector(const Key& key) const;
 
+	underlying_container_type::size_type size() const { return m_the_map.size(); }
 
 	iterator begin() { return m_the_map.begin(); }
 	iterator end() { return m_the_map.end(); }
@@ -111,7 +110,7 @@ public:
 	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
-	operator QVariant () const;
+	explicit operator QVariant () const;
 	/// @}
 
 	/// @name Debug

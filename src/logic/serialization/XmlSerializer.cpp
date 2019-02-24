@@ -159,7 +159,9 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	int usertype = variant.userType(); // This matches variant.typeName()
 	// These do their work at compile-time.
 	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+	static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
+
 
 	if(type != usertype)
 	{
@@ -171,9 +173,15 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	{
 		writeVariantOrderedMapToStream(variant, xmlstream);
 	}
+	else if(usertype == qvarlist_id)
+	{
+		writeQVariantHomogenousListToStream(variant, xmlstream);
+	}
 	else if(usertype == serqvarlist_id)
 	{
-		writeSerializableQVariantListToStream(variant, xmlstream);
+		QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
+
+		writeQVariantHomogenousListToStream(list, xmlstream);
 	}
 	else
 	{
@@ -197,10 +205,12 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeEndElement();
 }
 
-void XmlSerializer::writeSerializableQVariantListToStream(const QVariant& variant,
-                                                          QXmlStreamWriter& xmlstream)
+void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
-	SerializableQVariantList list = variant.value<SerializableQVariantList>();
+	Q_ASSERT(variant.isValid());
+	Q_ASSERT(variant.canConvert<QVariantHomogenousList>());
+
+	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
 	qDb() << "tags:" << list.get_list_tag() << list.get_list_item_tag();
 
@@ -215,6 +225,8 @@ void XmlSerializer::writeSerializableQVariantListToStream(const QVariant& varian
 
 void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
+	Q_ASSERT(variant.isValid());
+
 	QVariantList list = variant.toList();
 
 	// Stream each QVariant in the list out.
@@ -279,6 +291,7 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
 	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+	static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
 	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
 	Q_ASSERT(xmlstream.isStartElement());
@@ -295,6 +308,10 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	if(metatype == iomap_id)
 	{
 		variant = readVariantOrderedMapFromStream(xmlstream);
+	}
+	else if(metatype == qvarlist_id)
+	{
+		variant = readHomogenousListFromStream(xmlstream);
 	}
 	else if(metatype == serqvarlist_id)
 	{
@@ -342,30 +359,34 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 {
 	QVariantHomogenousList list;
 	bool is_first_item = true;
-	QString item_tag;
+	QString list_item_tag;
 
 	Q_ASSERT(xmlstream.isStartElement());
+
+	QString list_tag = xmlstream.name().toString();
+
+	qDb() << "List tag:" << list_tag;
 
 	while(xmlstream.readNextStartElement())
 	{
 		if(is_first_item)
 		{
 			// We should have just read in the tag for items in this list.
-			item_tag = xmlstream.name().toString();
-			list.set_tag_names("TODO_dummy", item_tag);
+			list_item_tag = xmlstream.name().toString();
+			list.set_tag_names(list_tag, list_item_tag);
 			is_first_item = false;
 		}
 		else
 		{
 			// Check that we're still reading the correct item type.
 			auto this_item_tag = xmlstream.name();
-			if(item_tag != this_item_tag)
+			if(list_item_tag != this_item_tag)
 			{
 				Q_ASSERT_X(0, __func__, "TAG MISMATCH IN LIST");
 			}
 		}
 
-		// Now read the contents of the <$item_tag>.
+		// Now read the contents of the <$list_item_tag>.
 		QVariant next_list_element = readVariantFromStream(xmlstream);
 
 		if(!next_list_element.isValid())

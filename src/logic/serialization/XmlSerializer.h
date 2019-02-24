@@ -35,6 +35,7 @@
 #include <QVariant>
 class QString;
 class QStringList;
+class QVariantHomogenousList;
 
 // Ours
 #include "ISerializer.h"
@@ -82,7 +83,7 @@ private:
 	void writeVariantToStream(const QString& nodeName,
 	                          const QVariant& variant, QXmlStreamWriter& xmlstream);
 
-	void writeSerializableQVariantListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
+	void writeQVariantHomogenousListToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream);
 	void writeVariantMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
 	void writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream);
