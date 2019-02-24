@@ -145,6 +145,8 @@ protected:
 	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
 	std::map<int, TrackMetadata> m_tracks;
 
+	/// @}
+
 private:
 	/// Override this in derived classes.
 	virtual MetadataAbstractBase * clone_impl() const = 0;

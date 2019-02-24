@@ -29,13 +29,14 @@
 
 // Ours.
 //#include "Frames.h"
+#include <logic/serialization/ISerializable.h>
 
 using Frames = long;
 
 /**
  * Metadata which applies to a single track in a possibly multi-track media.
  */
-class TrackMetadata
+class TrackMetadata : public ISerializable
 {
     Q_GADGET
 
@@ -43,6 +44,12 @@ public:
 	TrackMetadata();
 
 	std::string toStdString() const;
+
+	/// @name Serialization
+	/// @{
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+	/// @}
 
 	long m_track_number {0};
 

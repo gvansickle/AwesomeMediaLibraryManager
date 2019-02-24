@@ -242,6 +242,8 @@ using strviw_type = QString;
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 //static const strviw_type XMLTAG_TM_M_TAG_MAP("m_tag_map");
+static const strviw_type XMLTAG_TRACKS("m_tracks");
+
 
 QVariant MetadataAbstractBase::toVariant() const
 {
@@ -259,9 +261,20 @@ QVariant MetadataAbstractBase::toVariant() const
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
+	// Add the track list to the return value.
+	QVariantMap qvar_track_map;
+	for(const auto& it : m_tracks)
+	{
+		// Using "track" prefix here because XML tags can't start with numbers.
+		qvar_track_map.insert(QString("track%1").arg(it.first), it.second.toVariant());
+	}
+
+	map.insert(XMLTAG_TRACKS, qvar_track_map);
+
 	auto retval = QVariant::fromValue(map);
 	Q_ASSERT(retval.isValid());
-	return retval;
+//	return retval;
+	return map;
 }
 
 void MetadataAbstractBase::fromVariant(const QVariant& variant)
