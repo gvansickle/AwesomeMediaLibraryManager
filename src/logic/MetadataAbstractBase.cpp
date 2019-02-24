@@ -262,18 +262,15 @@ QVariant MetadataAbstractBase::toVariant() const
 #undef X
 
 	// Add the track list to the return value.
-	QVariantMap qvar_track_map;
+	QVariantInsertionOrderedMap qvar_track_map;
 	for(const auto& it : m_tracks)
 	{
 		// Using "track" prefix here because XML tags can't start with numbers.
-		qvar_track_map.insert(QString("track%1").arg(it.first), it.second.toVariant());
+		qvar_track_map.insert(QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0')), it.second.toVariant());
 	}
 
 	map.insert(XMLTAG_TRACKS, qvar_track_map);
 
-	auto retval = QVariant::fromValue(map);
-	Q_ASSERT(retval.isValid());
-//	return retval;
 	return map;
 }
 
