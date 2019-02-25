@@ -284,19 +284,27 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 
 	QVariant qvar_tm = map.value(XMLTAG_TM_M_TAG_MAP);
 	Q_ASSERT(qvar_tm.isValid());
-//	Q_ASSERT(qvar_tm.canConvert<AMLMTagMap>());
 
-//	m_tag_map = qvar_tm.value<AMLMTagMap>();
 	m_tag_map.fromVariant(qvar_tm);
 
 #define X(field_tag, member_field) member_field . fromVariant(map.value(field_tag));
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
+	// Read in the track list.
+	QVariantInsertionOrderedMap qvar_track_map = map.value(XMLTAG_TRACKS).value<QVariantInsertionOrderedMap>();
+	for(const auto& it : qvar_track_map)
+	{
+		// 5 == len("track"). Using "track" prefix here because XML tags can't start with numbers.
+		qint64 track_num = std::stoll(tostdstr(it.first).substr(5));
+		TrackMetadata tm;
+		tm.fromVariant(it.second);
+		m_tracks.insert(std::make_pair(track_num, tm));
+		//qvar_track_map.insert(QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0')), it.second.toVariant());
+	}
+
 	m_read_has_been_attempted = true;
 	m_is_error = false;
-
-	qDb() << M_ID_VAL(m_tag_map) << "Num Entries:" << m_tag_map.size();
 }
 
 #undef M_DATASTREAM_FIELDS

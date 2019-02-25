@@ -73,7 +73,6 @@ QVariant TrackMetadata::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-//	map.insert("TrackMetadataTEST", "DUMMY");
 #define X(field_tag, member_field) map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
 	M_DATASTREAM_FIELDS(X);
 #undef X

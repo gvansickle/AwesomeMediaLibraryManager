@@ -301,10 +301,6 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 //	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
 	int metatype = QMetaType::type(typeString.toStdString().c_str());
 
-//	log_current_node(xmlstream);
-
-//	AMLM_ASSERT_EQ(metatype, metatype2);
-
 	if(metatype == iomap_id)
 	{
 		variant = readVariantOrderedMapFromStream(xmlstream);
@@ -365,7 +361,7 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 
 	QString list_tag = xmlstream.name().toString();
 
-	qDb() << "List tag:" << list_tag;
+//	qDb() << "List tag:" << list_tag;
 
 	while(xmlstream.readNextStartElement())
 	{

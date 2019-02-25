@@ -129,9 +129,7 @@ void Metadata::writeToJson(QJsonObject& jo) const
 QVariant Metadata::toVariant() const
 {
 	QVariantMap map;
-	/// @todo
-//	map.insert("metadata_tagtree", MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
-//	map.insert("m_tag_map", m_tag_map);
+
 	map.insert(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL, pImpl->toVariant());
 
 	return map;
