@@ -21,6 +21,9 @@
 
 #include "TrackMetadata.h"
 
+// Std C++
+#include <string>
+
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
@@ -30,6 +33,8 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering TrackMetadata";
     qRegisterMetaType<TrackMetadata>();
     ;});
+
+Q_DECLARE_METATYPE(std::string);
 
 TrackMetadata::TrackMetadata()
 {
@@ -47,18 +52,42 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
+using strviw_type = QLatin1String;
+
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
+	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
+	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
+	/*X(XMLTAG_TRACK_META_INDEXES, m_indexes)*/ \
+	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
 QVariant TrackMetadata::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
-	map.insert("TrackMetadataTEST", "DUMMY");
+//	map.insert("TrackMetadataTEST", "DUMMY");
+#define X(field_tag, member_field) map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 	return map;
 }
 
 void TrackMetadata::fromVariant(const QVariant& variant)
 {
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
+#define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
+	M_DATASTREAM_FIELDS(X);
+#undef X
 }
 
 

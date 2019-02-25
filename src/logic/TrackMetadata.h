@@ -31,7 +31,7 @@
 //#include "Frames.h"
 #include <logic/serialization/ISerializable.h>
 
-using Frames = long;
+using Frames = qint64;
 
 /**
  * Metadata which applies to a single track in a possibly multi-track media.
@@ -51,7 +51,7 @@ public:
 	void fromVariant(const QVariant& variant) override;
 	/// @}
 
-	long m_track_number {0};
+	qint64 m_track_number {0};
 
     Frames m_length_pre_gap {0};
 	Frames m_start_frames {0};
@@ -97,7 +97,7 @@ public:
 
 	/// Indexes.
 	/// -1 means there was no such index in the cue sheet.
-	std::vector<long> m_indexes;
+	std::vector<qint64> m_indexes;
 
 	/// Derived info.
 	bool m_is_part_of_gapless_set {false};

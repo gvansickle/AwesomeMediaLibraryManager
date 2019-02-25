@@ -22,6 +22,7 @@
 // Std C++
 #include <vector>
 #include <functional>
+#include <string>
 
 // KF5
 #include <KJob>
@@ -73,6 +74,8 @@
  * yourself.
  */
 
+Q_DECLARE_METATYPE(std::string);
+
 /**
  * Register a number of general-purpose Qt5 converters etc.
  */
@@ -80,9 +83,9 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering std::string->QString converter";
 
 	QMetaType::registerConverter<std::string, QString>([](const std::string& str){ return toqstr(str); });
+	QMetaType::registerConverter<QString, std::string>([](const QString& str){ return tostdstr(str); });
 });
 
-Q_DECLARE_METATYPE(std::string);
 
 void RegisterQtMetatypes()
 {

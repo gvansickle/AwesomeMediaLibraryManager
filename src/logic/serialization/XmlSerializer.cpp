@@ -212,7 +212,7 @@ void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant,
 
 	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
-	qDb() << "tags:" << list.get_list_tag() << list.get_list_item_tag();
+//	qDb() << "tags:" << list.get_list_tag() << list.get_list_item_tag();
 
 	auto the_item_tag = list.get_list_item_tag();
 
