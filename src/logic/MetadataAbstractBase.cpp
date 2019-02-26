@@ -300,7 +300,6 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 		TrackMetadata tm;
 		tm.fromVariant(it.second);
 		m_tracks.insert(std::make_pair(track_num, tm));
-		//qvar_track_map.insert(QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0')), it.second.toVariant());
 	}
 
 	m_read_has_been_attempted = true;

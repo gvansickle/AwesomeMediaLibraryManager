@@ -253,6 +253,9 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 
 void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
+	Q_ASSERT(variant.isValid());
+	Q_ASSERT(variant.canConvert<QVariantInsertionOrderedMap>());
+
 	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
 
 	for(const auto& i : omap)
