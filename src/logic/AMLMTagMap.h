@@ -88,6 +88,7 @@ public:
 	iterator insert(const value_type& value) { return m_the_map.insert(value); };
 
 	/// @name Lookup.
+	/// @{
 	iterator find( const Key& x );
 	const_iterator find( const Key& x ) const;
 
@@ -100,7 +101,13 @@ public:
 		return m_the_map.equal_range(key);
 	}
 
+	/**
+	 * Returns the list of all keys, in sorted order.
+	 */
+	std::vector<key_type> keys() const;
+
 	std::vector<mapped_type> equal_range_vector(const Key& key) const;
+	/// @}
 
 	/// Size.
 	underlying_container_type::size_type size() const { return m_the_map.size(); }

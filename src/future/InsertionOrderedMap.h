@@ -28,6 +28,7 @@
 #include <deque>
 #include <map>
 #include <tuple>
+#include <vector>
 
 // Qt5
 #include <utils/QtHelpers.h>
@@ -70,6 +71,15 @@ public:
 	{
 		m_vector_of_elements.push_back(key_val);
 		m_map_of_keys_to_vector_indices.insert(std::make_pair(key_val.first, m_vector_of_elements.size()-1));
+	}
+
+	template <template<typename> typename VectorLike>
+	void insert_multi(const KeyType& key, const VectorLike<ValueType>& vector_of_values)
+	{
+		for(const auto& val : vector_of_values)
+		{
+			this->insert(key, val);
+		}
 	}
 
 	const mapped_type& at(const KeyType& key) const
