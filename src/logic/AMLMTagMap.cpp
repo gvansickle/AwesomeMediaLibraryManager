@@ -107,48 +107,94 @@ std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const
 
 QVariant AMLMTagMap::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
+//	using maptype = QVariantMap;
+	using maptype = QVariantInsertionOrderedMap;
 
-	QVariantHomogenousList key_list("keys", "key");
+	maptype map;
+//	maptype qvar_map;
 
+	QVariantHomogenousList list("AMLTagMapEntries", "entry");
+
+	foreach_pair([&](QString key, QString val){
+		QVariantHomogenousList pair("KVPair", "pair");
+		pair.push_back(key);
+		pair.push_back(val);
+		list.push_back(pair);
+	});
+
+	map.insert("m_the_map", list);
+
+#if 0
 	// Get all the keys.
 	auto all_keys = keys();
-
-	QVariantList qvar_list;
 
 	// Iterate over all keys.
 	for(const auto& it : all_keys)
 	{
-		// Get all values for this key.
-//		QVariantHomogenousList qval_list("values", "value");
 		QVariantList qval_list;
 
+		// Get all values for this key.
 		const auto ervec = equal_range_vector(it);
 		for(const auto& val : ervec)
 		{
 			qval_list.push_back(toqstr(val));
 		}
-//		iomap.insert(toqstr(it), qvar_list);
-		QVariantList key_values_pair;
-		key_values_pair.push_back(toqstr(it));
-		key_values_pair.push_back(qval_list);
-		qvar_list.push_back(key_values_pair);
+
+		maptype single_key_map;
+		single_key_map.insert("key", toqstr(it));
+		single_key_map.insert("values", qval_list);
+		qvar_map.insert("single_key_map", single_key_map);
 	}
 
-	map.insert("m_the_map", QVariant::fromValue(qvar_list));
-
+	map.insert("m_the_map", QVariant::fromValue(qvar_map));
+#endif
 	return map;
 }
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
 {
-	Q_ASSERT(variant.canConvert<QVariantInsertionOrderedMap>());
+	m_the_map.clear();
+
+	QVariantHomogenousList list("AMLTagMapEntries", "entry");
+	list = variant.value<QVariantHomogenousList>();
+
+	QSequentialIterable seq_it = variant.value<QSequentialIterable>();
+
+	for(const auto& it : seq_it) //QString key, QString val){
+	{
+		QVariantHomogenousList pair = it.value<QVariantHomogenousList>();//("KVPair", "pair");
+//		pair.push_back(key);
+//		pair.push_back(val);
+//		list.push_back(pair);
+//		m_the_map.insert(pair[0], pair[1]);
+	}
+
+	return;
+
+//	Q_ASSERT(variant.canConvert<QVariantInsertionOrderedMap>());
+	if(!variant.canConvert<QVariantInsertionOrderedMap>())
+	{
+		qWr() << "Can't convert QVariant:" << variant;
+		return;
+	}
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	QVariantInsertionOrderedMap iomap;
-//	QVariant qvar_iomap = map.value("m_the_map");
-//	Q_ASSERT(qvar_iomap.canConvert<QVariantInsertionOrderedMap>());
-//	iomap = qvar_iomap.value<QVariantInsertionOrderedMap>();
+	QVariantInsertionOrderedMap qvar_map;
+
+	QVariant qvar_the_map = map.value("m_the_map");
+	if(qvar_the_map.canConvert<QVariantInsertionOrderedMap>())
+	{
+		qWr() << "Can't convert from QVariant:" << qvar_the_map;
+		return;
+	}
+
+	qvar_map = qvar_the_map.value<QVariantInsertionOrderedMap>();
+
+	for(const auto& key_val_pair : qvar_map)
+	{
+		QVariantInsertionOrderedMap single_key_map;
+		single_key_map.insert("key", key_val_pair.first);
+	}
 
 //	// Get all
 //	for(const auto& entry_qvar : qAsConst(list))

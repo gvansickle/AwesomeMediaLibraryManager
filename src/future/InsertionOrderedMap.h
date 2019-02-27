@@ -31,8 +31,11 @@
 #include <vector>
 
 // Qt5
-#include <utils/QtHelpers.h>
 #include <QVariant>
+
+// Ours
+#include <utils/QtHelpers.h>
+#include <future/guideline_helpers.h>
 
 /**
  * A map which maintains the insertion order of its keys.  The only operational difference between this and
@@ -58,8 +61,9 @@ private:
 	using uc_size_type = typename underlying_container_type::size_type;
 
 public:
-	InsertionOrderedMap() = default;
-	InsertionOrderedMap(const InsertionOrderedMap& other) = default;
+//	InsertionOrderedMap() = default;
+//	InsertionOrderedMap(const InsertionOrderedMap& other) = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
 	virtual ~InsertionOrderedMap() = default;
 
 	void insert(const KeyType key, const ValueType value)
