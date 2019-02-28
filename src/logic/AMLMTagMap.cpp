@@ -145,14 +145,10 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 	for(auto it = list.cbegin(); it != list.cend(); ++it)
 	{
 		QStringList pair; //("KVPair", "pair");
-		qDb() << M_ID_VAL(*it);
+
 		Q_ASSERT((*it).canConvert<QStringList>());
 		pair = it->toStringList();
 
-		qDb() << pair;
-//		pair.push_back(key);
-//		pair.push_back(val);
-//		list.push_back(pair);
 		QString key, value;
 		key = pair.value(0);
 		value = pair.value(1);
