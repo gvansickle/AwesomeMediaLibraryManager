@@ -69,16 +69,7 @@ Metadata Metadata::make_metadata(QUrl file_url)
 	return retval;
 }
 
-Metadata Metadata::make_metadata(const QJsonObject& jo)
-{
-	MetadataFromCache retval;
-	retval.readFromJson(jo);
-	retval.m_read_has_been_attempted = true;
-	retval.m_is_error = false;
-	return retval;
-}
-
-static const QString XMLTAG_METADATA_ABSTRACT_BASE_PIMPL {"metadata_abstract_base_pimpl"};
+static constexpr QLatin1Literal XMLTAG_METADATA_ABSTRACT_BASE_PIMPL {"metadata_abstract_base_pimpl"};
 
 
 Metadata Metadata::make_metadata(const QVariant& variant)

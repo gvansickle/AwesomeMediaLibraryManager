@@ -20,6 +20,9 @@
 // Object header
 #include "LibraryEntry.h"
 
+// Std C++
+#include <string>
+
 // Qt5
 #include <QDataStream>
 #include <QUrlQuery>
@@ -303,7 +306,7 @@ QUrl LibraryEntry::getM2Url() const
 //		m_metadata.writeToJson(jo);
 //	}
 //}
-//
+
 //void LibraryEntry::readFromJson(QJsonObject& jo)
 //{
 //	m_url = QUrl(jo["m_url"].toString());

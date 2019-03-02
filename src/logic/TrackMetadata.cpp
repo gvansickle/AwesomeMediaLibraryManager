@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -24,9 +24,13 @@
 // Std C++
 #include <string>
 
+// Libcue.
+#include <libcue/libcue.h>
+
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
+
 
 
 AMLM_QREG_CALLBACK([](){
@@ -36,10 +40,17 @@ AMLM_QREG_CALLBACK([](){
 
 Q_DECLARE_METATYPE(std::string);
 
-TrackMetadata::TrackMetadata()
-{
 
+std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Cdtext* cdtext)
+{
+	auto retval = std::make_unique<TrackMetadata>();
+	// get the Pack Type Indicator data.
+#define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , cdtext ));
+	PTI_STR_LIST(X)
+#undef X
+	return retval;
 }
+
 
 std::string TrackMetadata::toStdString() const
 {
@@ -52,7 +63,7 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
-using strviw_type = QLatin1String;
+using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
@@ -95,8 +106,9 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     QDebugStateSaver saver(dbg);
 
 #define X(id) dbg << "TrackMetadata(" << #id ":" << tm.m_ ## id << ")\n";
-    PTI_STR_LIST
+    PTI_STR_LIST(X)
 #undef X
 
     return dbg;
 }
+

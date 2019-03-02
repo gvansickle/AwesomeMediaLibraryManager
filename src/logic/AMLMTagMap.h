@@ -66,7 +66,6 @@ public:
 
 	/// Member functions.
 public:
-//	M_GH_RULE_OF_ZERO(AMLMTagMap);
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap);
 
 	/**

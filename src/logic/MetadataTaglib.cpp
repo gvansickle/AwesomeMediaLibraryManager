@@ -33,7 +33,7 @@
 #include <QDebug>
 
 // TagLib includes.
-#if 0
+#if 1
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>

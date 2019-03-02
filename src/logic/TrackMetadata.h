@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017. 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,30 +20,36 @@
 #ifndef TRACKMETADATA_H
 #define TRACKMETADATA_H
 
-/// Stc C++
+// Stc C++
 #include <string>
 #include <vector>
 
-/// Qt5
+// Qt5
 #include <QtCore>
+
+// Libcue.
+struct Cdtext;
 
 // Ours.
 //#include "Frames.h"
-#include <logic/serialization/ISerializable.h>
-
 using Frames = qint64;
+#include <logic/serialization/ISerializable.h>
+#include <future/guideline_helpers.h>
+
 
 /**
  * Metadata which applies to a single track in a possibly multi-track media.
  */
 class TrackMetadata : public ISerializable
 {
-    Q_GADGET
+//    Q_GADGET
 
 public:
-	TrackMetadata();
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(TrackMetadata);
 
 	std::string toStdString() const;
+
+	static std::unique_ptr<TrackMetadata> make_track_metadata(const Cdtext* cdtext);
 
 	/// @name Serialization
 	/// @{
@@ -58,8 +64,10 @@ public:
 	Frames m_length_frames {0};
 	Frames m_length_post_gap {0};
 
-	/// cdtext "pack type indicators".
-#define PTI_STR_LIST \
+	/// CD-Text "pack type indicators".
+	/// @link https://github.com/lipnitsk/libcue/blob/master/libcue.h
+	/// These are the character types, see below for binary types.
+#define PTI_STR_LIST(X) \
     X(PTI_TITLE) \
     X(PTI_PERFORMER) \
     X(PTI_SONGWRITER) \
@@ -70,7 +78,7 @@ public:
 
     // PTI_DISC_ID == binary disc identification info.
     // PTI_GENRE == binary genre.
-#define PTI_BIN_LIST \
+#define PTI_BIN_LIST(X) \
     X(PTI_DISC_ID) \
     X(PTI_GENRE) \
     X(PTI_TOC_INFO1) \
@@ -79,18 +87,20 @@ public:
 
     /// @name Declaration of all CD-TEXT string "pack type indicators".
     /// @{
-#define X(id) std::string m_ ## id ;
-    PTI_STR_LIST
+#define X(id) std::string m_ ## id {};
+    PTI_STR_LIST(X)
 #undef X
     /// @}
+//#undef PTI_STR_LIST
 
     /// @name Declaration of all CD-TEXT binary "pack type indicators".
     /// @todo What type should these really be?
     /// @{
-#define X(id) std::string m_ ## id ;
-    PTI_BIN_LIST
+#define X(id) std::string m_ ## id {};
+    PTI_BIN_LIST(X)
 #undef X
     /// @}
+//#undef PTI_BIN_LIST
 
 	/// ISRC code.  May be empty.
 	std::string m_isrc;
@@ -108,6 +118,9 @@ public:
 };
 
 Q_DECLARE_METATYPE(TrackMetadata);
+
+// Qt5 already declares this.
+//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
 
 QDebug operator<<(QDebug dbg, const TrackMetadata &tm);
 

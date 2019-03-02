@@ -229,11 +229,15 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
             Cdtext* cdt = track_get_cdtext(t);
 
             TrackMetadata tm;
+#if 0
+#warning "FIXING"
             // get the Pack Type Indicator data.
 #define X(id) tm.m_ ## id = tostdstr(cdtext_get( id , cdt ));
-            PTI_STR_LIST
+            PTI_STR_LIST(X)
 #undef X
-
+#else
+			tm = *TrackMetadata::make_track_metadata(cdt);
+#endif
             for(auto i = 0; i<99; ++i)
             {
                 //qDebug() << "Reading track index:" << i;

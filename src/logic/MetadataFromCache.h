@@ -41,7 +41,7 @@ public:
 
 	bool read(const QUrl /*url*/&) override { Q_ASSERT(0); return false; }
 
-	void readFromJson(const QJsonObject& jo);
+//	void readFromJson(const QJsonObject& jo);
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;

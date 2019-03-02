@@ -61,9 +61,7 @@ public:
 	/// Static factory function for creating a new Metadata from the given audio file URL.
 	static Metadata make_metadata(QUrl file_url);
 
-	/// Static factory function for creating a new Metadata from the given QJsonObject.
-	static Metadata make_metadata(const QJsonObject& jo);
-
+	/// Static factory function for creating a new Metadata from the given QVariant tree.
 	static Metadata make_metadata(const QVariant& variant);
 
 	/// @}
