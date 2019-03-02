@@ -336,16 +336,16 @@ QUrl LibraryEntry::getM2Url() const
 //}
 
 #define M_DATASTREAM_FIELDS(X) \
-	X(URL, m_url) \
-	X(IS_POPULATED, m_is_populated) \
-	X(IS_ERROR, m_is_error) \
-	X(MIME_TYPE, m_mime_type) \
-	X(IS_SUBTRACK, m_is_subtrack) \
+	X(XMLTAG_URL, m_url) \
+	X(XMLTAG_IS_POPULATED, m_is_populated) \
+	X(XMLTAG_IS_ERROR, m_is_error) \
+	X(XMLTAG_MIME_TYPE, m_mime_type) \
+	X(XMLTAG_IS_SUBTRACK, m_is_subtrack) \
 	X(XMLTAG_TRACK_NUMBER, m_track_number) \
 	X(XMLTAG_TOTAL_TRACK_NUMBER, m_total_track_number) \
 	X(XMLTAG_PRE_GAP_OFFSET_SECS, m_pre_gap_offset_secs) \
-	X(OFFSET_SECS, m_offset_secs) \
-	X(LENGTH_SECS, m_length_secs)
+	X(XMLTAG_OFFSET_SECS, m_offset_secs) \
+	X(XMLTAG_LENGTH_SECS, m_length_secs)
 
 using strviw_type = QLatin1Literal;
 
