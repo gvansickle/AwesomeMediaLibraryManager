@@ -339,18 +339,28 @@ QUrl LibraryEntry::getM2Url() const
 	X(URL, m_url) \
 	X(IS_POPULATED, m_is_populated) \
 	X(IS_ERROR, m_is_error) \
+	X(MIME_TYPE, m_mime_type) \
 	X(IS_SUBTRACK, m_is_subtrack) \
+	X(XMLTAG_TRACK_NUMBER, m_track_number) \
+	X(XMLTAG_TOTAL_TRACK_NUMBER, m_total_track_number) \
+	X(XMLTAG_PRE_GAP_OFFSET_SECS, m_pre_gap_offset_secs) \
 	X(OFFSET_SECS, m_offset_secs) \
-	X(LENGTH_SECS, m_length_secs) \
-	X(MIME_TYPE, m_mime_type)
+	X(LENGTH_SECS, m_length_secs)
+
+using strviw_type = QLatin1Literal;
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 QVariant LibraryEntry::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
 	// Insert field values into the QVariantMap.
-#define X(field_enum_name, field)   map.insert( LibraryEntryTag :: field_enum_name ## _tagstr, QVariant::fromValue( field ) );
-	M_DATASTREAM_FIELDS(X)
+#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	if(isPopulated())
@@ -366,8 +376,8 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_enum_name, field) field = map.value( LibraryEntryTag :: field_enum_name ## _tagstr ).value<decltype( field )>();
-	M_DATASTREAM_FIELDS(X)
+#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
+	M_DATASTREAM_FIELDS(X);
 #undef X
 
 	/// @todo

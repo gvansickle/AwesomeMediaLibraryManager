@@ -54,9 +54,8 @@ class MetadataAbstractBase : public virtual ISerializable
 
 public:
 	M_GH_RULE_OF_ZERO(MetadataAbstractBase);
-//	MetadataAbstractBase() = default;
-//	virtual ~MetadataAbstractBase() = default;
 //	M_GH_POLYMORPHIC_SUPPRESS_COPYING_C67(MetadataAbstractBase);
+	virtual ~MetadataAbstractBase() = default;
 
 	// Non-virtual clone() interface, because of no covariance for smart ptrs.
 	std::unique_ptr<MetadataAbstractBase> clone() const { return std::unique_ptr<MetadataAbstractBase>(this->clone_impl()); }

@@ -96,8 +96,8 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     setWidget(mainWidget);
 
 	// Connect up to the proxy model.  We won't have to disconnect/reconnect since we own this proxy model.
-	connect(m_proxy_model, &SelectionFilterProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
-	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
+	connect_or_die(m_proxy_model, &SelectionFilterProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+	connect_or_die(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 
 void MetadataDockWidget::connectToView(MDITreeViewBase* view)
@@ -148,7 +148,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
 M_TODO("Not getting some field here");
-		qDb() << "METADATA:" << md.toVariant();
+//		qDb() << "METADATA:" << md.toVariant();
 
 		std::map<QString, QVariant> pimeta = libentry->getAllMetadata().toStdMap(); // QMap<QString, QVariant>
 		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;

@@ -121,9 +121,9 @@ protected:
 	bool m_is_subtrack = false;
 
 	// The track number of this track on the CD.
-	qint64 m_track_number = 0;
+	qint64 m_track_number {0};
 	// Total number of tracks on the CD.
-	qint64 m_total_track_number = 0;
+	qint64 m_total_track_number {0};
 
 	Fraction m_pre_gap_offset_secs;// = 0;
 	Fraction m_offset_secs; // = 0;

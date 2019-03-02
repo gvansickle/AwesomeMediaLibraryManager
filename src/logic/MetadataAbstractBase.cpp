@@ -212,7 +212,7 @@ TrackMetadata MetadataAbstractBase::track(int i) const
 }
 
 /// @aside ...uhhhhhhhhh........
-using strviw_type = QString;
+using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS(X) \
 	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
