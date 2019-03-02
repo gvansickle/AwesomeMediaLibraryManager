@@ -36,33 +36,7 @@ class QFileDevice;
 class Library : public ISerializable
 {
 public:
-//	Library() = default;
-//	Library(const Library& rhs)
-//	{
-//		m_root_url = rhs.m_root_url;
-//		m_num_populated = rhs.m_num_populated;
-//		m_num_unpopulated = rhs.m_num_unpopulated;
-//		m_lib_entries = rhs.m_lib_entries;
-//	}
-//	 Move constructor.
-//	Library(Library&& other) = default;
-//	~Library() override = default;
-
-//	Library& operator=(Library other)
-//	{
-//		swap(*this, other);
-//		return *this;
-//	}
-
-//	friend void swap(Library& lhs, Library& rhs)
-//	{
-//		// Enable ADL.
-//		using std::swap;
-//		swap(lhs.m_root_url, rhs.m_root_url);
-//		swap(lhs.m_num_populated, rhs.m_num_populated);
-//		swap(lhs.m_num_unpopulated, rhs.m_num_unpopulated);
-//		swap(lhs.m_lib_entries, rhs.m_lib_entries);
-//	}
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(Library);
 
 	void clear();
 	void setRootUrl(const QUrl& url) { m_root_url = url; }
@@ -83,15 +57,8 @@ public:
 
 	/// @name Serialization
 	/// @{
-//	void writeToJson(QJsonObject& jo, bool no_items = false) const;
-//	void readFromJson(const QJsonObject& jo);
-//
-//	void serializeToFile(QFileDevice& file) const;
-//	void deserializeFromFile(QFileDevice& file);
-
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
-
 	/// @}
 
 private:

@@ -190,19 +190,6 @@ qint64 Library::getNumPopulatedEntries() const
 //	}
 //}
 
-//void Library::serializeToFile(QFileDevice& file) const
-//{
-//	Q_ASSERT(0);
-////	QJsonObject lib_object;
-////	writeToJson(lib_object);
-////	QJsonDocument saveDoc(lib_object);
-////	file.write(saveDoc.toJson());
-//}
-//
-//void Library::deserializeFromFile(QFileDevice& file)
-//{
-//	Q_ASSERT(nullptr == "NOT IMPLEMENTED");
-//}
 
 /// @aside ...uhhhhhhhhh........
 using strviw_type = QLatin1String;

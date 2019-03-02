@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -38,6 +38,7 @@
 #include "src/utils/Fraction.h"
 #include "serialization/ISerializable.h"
 
+
 class LibraryEntry : public ISerializable
 {
 public:
@@ -73,8 +74,6 @@ public:
 
 	/// @name Serialization
 	/// @{
-//	void writeToJson(QJsonObject& jo) const;
-//	void readFromJson(QJsonObject& jo);
 
 	/// @name ISerializable interface
 	/// @{

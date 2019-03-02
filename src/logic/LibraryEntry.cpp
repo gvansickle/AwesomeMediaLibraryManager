@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -21,9 +21,6 @@
 #include "LibraryEntry.h"
 
 // Qt5
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QJsonArray>
 #include <QDataStream>
 #include <QUrlQuery>
 
@@ -85,23 +82,6 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 		qDebug() << "Already populated.";
 		return retval;
 	}
-
-#if 0 /// @todo Look for an associated *.cue sheet file.
-	// Check for an associated cuesheet.
-	cue_name = re.sub(r"\.[\w]+$", r".cue", url_as_local)
-	cue_file: QFile = QFile(cue_name)
-	cue_file_exists = cue_file.exists()
-	sheet = None
-	try:
-		if audiofile.supports_cuesheet():
-			logger.debug("READING EMBEDDED CUESHEET")
-			sheet = audiofile.get_cuesheet()
-		elif cue_file_exists:
-			logger.debug("Trying to read separate cue sheet file")
-			sheet = audiotools.read_sheet(cue_name)
-	except audiotools.SheetException as e:
-		logger.warning("Exception trying to read cuesheet: {}".format(e))
-#endif
 
     // Get the MIME type.
     auto mdb = amlmApp->mime_db();
@@ -483,6 +463,7 @@ QStringList LibraryEntry::getMetadata(QString key) const
 
 QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 {
+	Q_ASSERT(0);
 	// Magic number and version.
 	out << (quint32)LIBRARY_ENTRY_MAGIC_NUMBER;
 	out << (quint32)LIBRARY_ENTRY_VERSION;
@@ -505,6 +486,7 @@ QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 
 QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
 {
+	Q_ASSERT(0);
 	// Read and check the header.
 	quint32  magic_number;
 	in >> magic_number;

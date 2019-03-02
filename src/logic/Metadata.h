@@ -139,7 +139,6 @@ public:
 
 	/// @name Serialization
 	/// @{
-	void writeToJson(QJsonObject& jo) const;
 
 	QTH_FRIEND_QDATASTREAM_OPS(Metadata);
 

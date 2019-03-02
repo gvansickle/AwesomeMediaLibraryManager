@@ -147,6 +147,8 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 	{
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
+M_TODO("Not getting some field here");
+		qDb() << "METADATA:" << md.toVariant();
 
 		std::map<QString, QVariant> pimeta = libentry->getAllMetadata().toStdMap(); // QMap<QString, QVariant>
 		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;
@@ -212,80 +214,6 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 		}
 
 		// Load and Display the cover image.
-#if THE_OLD_SYCHRONOUS_WAY
-		auto cover_image_bytes = libentry->getCoverImageBytes();
-		if(cover_image_bytes.size() != 0)
-		{
-			qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-			QImage image;
-			if(image.loadFromData(cover_image_bytes) == true)
-			{
-				///qDebug() << "Image:" << image;
-				m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-				//m_cover_image_label.adjustSize()
-			}
-			else
-			{
-				qWarning() << "Error attempting to load image.";
-				QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-				m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-			}
-		}
-		else
-		{
-			// No image available.
-			QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-		}
-#elif 0 //THE NEW ASYNCHRONOUS WAY
-        auto coverartjob = CoverArtJob::make_job(this, libentry->getUrl());
-        coverartjob->then(this, [=](CoverArtJob* kjob) {
-            if(kjob->error() || kjob->m_byte_array.size() == 0)
-            {
-                // Error.  Load the "No image available" icon.
-                qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-                // Report error via uiDelegate()
-                /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
-                /// every time there's an error.
-//                auto uidelegate = kjob->uiDelegate();
-//                Q_CHECK_PTR(uidelegate);
-//                uidelegate->showErrorMessage();
-                QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-            }
-            else
-            {
-                // Succeeded, pick up the image.
-
-                auto& cover_image_bytes = kjob->m_byte_array;
-
-                if(cover_image_bytes.size() != 0)
-                {
-                    qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-                    QImage image;
-                    if(image.loadFromData(cover_image_bytes) == true)
-                    {
-                        ///qDebug() << "Image:" << image;
-                        m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-                        //m_cover_image_label.adjustSize()
-                    }
-                    else
-                    {
-                        qWarning() << "Error attempting to load image.";
-                        QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                        m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-                    }
-                }
-                else
-                {
-                    // No image available.
-                    QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                    m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-                }
-            }
-        });
-        coverartjob->start();
-#elif 1 // THE EVEN NEWER ASYNC WAY
 
 		// Create the asynchronous Cover Art loader task.";
 		ExtFuture<QByteArray> coverart_future = CoverArtJob::make_task(this, libentry->getUrl());
@@ -359,7 +287,6 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 			return true;
 		});
-#endif
 	}
 	else
 	{

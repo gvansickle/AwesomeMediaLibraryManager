@@ -116,16 +116,6 @@ std::string Metadata::GetFiletypeName() const
 	return f_filetype_to_string_map[pImpl->m_audio_file_type];
 }
 
-void Metadata::writeToJson(QJsonObject& jo) const
-{
-	Q_ASSERT(pImpl);
-//	qDebug() << "Writing Metadata to QJsonObject:" << jo;
-#warning "TEMP FOR XML CONVERSION"
-//	jo["metadata"] = QJsonObject::fromVariantMap(MapConverter::TagMaptoVarMap(pImpl->m_tag_map));
-//	jo["metadata"] = QJsonObject::fromVariantMap(pImpl->m_tag_map.toVariant());
-}
-
-
 QVariant Metadata::toVariant() const
 {
 	QVariantMap map;
