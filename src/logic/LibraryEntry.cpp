@@ -302,58 +302,58 @@ QUrl LibraryEntry::getM2Url() const
     }
 }
 
-void LibraryEntry::writeToJson(QJsonObject& jo) const
-{
-	jo["m_url"] = m_url.toString();
-	jo["m_is_populated"] = isPopulated();
-	jo["m_is_error"] = m_is_error;
-	jo["m_is_subtrack"] = m_is_subtrack;
-	jo["m_offset_secs"] = m_offset_secs.toQString();
-	jo["m_length_secs"] = m_length_secs.toQString();
-
-	M_WARNING("/// @todo This is always null.");
-	QString str;
-	QTextStream ts(&str);
-	//	ts << m_mime_type;
-	jo["m_mime_type"] = *ts.string();
-
-	if(isPopulated())
-	{
-		M_WARNING("TODO: Don't write out in the has-cached-metadata case");
-		m_metadata.writeToJson(jo);
-	}
-}
-
-void LibraryEntry::readFromJson(QJsonObject& jo)
-{
-	m_url = QUrl(jo["m_url"].toString());
-	m_is_populated = jo["m_is_populated"].toBool(false);
-	m_is_error = jo["m_is_error"].toBool(false);
-	m_is_subtrack = jo["m_is_subtrack"].toBool(false);
-	m_offset_secs = Fraction(jo["m_offset_secs"].toString("0/1"));
-	m_length_secs = Fraction(jo["m_length_secs"].toString("0/1"));
-	QString str;
-	QTextStream ts(&str);
-	str = jo["m_mime_type"].toString();
-//	ts >> m_mime_type;
-	// Metadata might not have been written.
-	//metadata_jval: QJsonValue = jo.value("metadata")
-	QJsonObject metadata_jval = jo["metadata"].toObject();
-	if(!metadata_jval.empty())
-	{
-		///qDebug() << "Found metadata in JSON";
-		m_metadata = Metadata::make_metadata(metadata_jval);
-		m_is_populated = true;
-	}
-	else
-	{
-		qWarning() << "Found no metadata in JSON for" << m_url;
-		m_metadata = Metadata::make_metadata();
-		m_is_error = true;
-		m_is_populated = false;
-	}
-	return;
-}
+//void LibraryEntry::writeToJson(QJsonObject& jo) const
+//{
+//	jo["m_url"] = m_url.toString();
+//	jo["m_is_populated"] = isPopulated();
+//	jo["m_is_error"] = m_is_error;
+//	jo["m_is_subtrack"] = m_is_subtrack;
+//	jo["m_offset_secs"] = m_offset_secs.toQString();
+//	jo["m_length_secs"] = m_length_secs.toQString();
+//
+//	M_WARNING("/// @todo This is always null.");
+//	QString str;
+//	QTextStream ts(&str);
+//	//	ts << m_mime_type;
+//	jo["m_mime_type"] = *ts.string();
+//
+//	if(isPopulated())
+//	{
+//		M_WARNING("TODO: Don't write out in the has-cached-metadata case");
+//		m_metadata.writeToJson(jo);
+//	}
+//}
+//
+//void LibraryEntry::readFromJson(QJsonObject& jo)
+//{
+//	m_url = QUrl(jo["m_url"].toString());
+//	m_is_populated = jo["m_is_populated"].toBool(false);
+//	m_is_error = jo["m_is_error"].toBool(false);
+//	m_is_subtrack = jo["m_is_subtrack"].toBool(false);
+//	m_offset_secs = Fraction(jo["m_offset_secs"].toString("0/1"));
+//	m_length_secs = Fraction(jo["m_length_secs"].toString("0/1"));
+//	QString str;
+//	QTextStream ts(&str);
+//	str = jo["m_mime_type"].toString();
+////	ts >> m_mime_type;
+//	// Metadata might not have been written.
+//	//metadata_jval: QJsonValue = jo.value("metadata")
+//	QJsonObject metadata_jval = jo["metadata"].toObject();
+//	if(!metadata_jval.empty())
+//	{
+//		///qDebug() << "Found metadata in JSON";
+//		m_metadata = Metadata::make_metadata(metadata_jval);
+//		m_is_populated = true;
+//	}
+//	else
+//	{
+//		qWarning() << "Found no metadata in JSON for" << m_url;
+//		m_metadata = Metadata::make_metadata();
+//		m_is_error = true;
+//		m_is_populated = false;
+//	}
+//	return;
+//}
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(URL, m_url) \

@@ -83,11 +83,11 @@ public:
 
 	/// @name Serialization
 	/// @{
-	void writeToJson(QJsonObject& jo, bool no_items = false) const;
-	void readFromJson(const QJsonObject& jo);
-
-	void serializeToFile(QFileDevice& file) const;
-	void deserializeFromFile(QFileDevice& file);
+//	void writeToJson(QJsonObject& jo, bool no_items = false) const;
+//	void readFromJson(const QJsonObject& jo);
+//
+//	void serializeToFile(QFileDevice& file) const;
+//	void deserializeFromFile(QFileDevice& file);
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;

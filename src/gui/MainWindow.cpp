@@ -1429,6 +1429,7 @@ void MainWindow::readLibSettings(QSettings& settings)
 {
 	int num_libs;
 
+#if 0
 	if(false) /// OLD JSON
 	{
 		num_libs = settings.beginReadArray("libraries");
@@ -1465,6 +1466,8 @@ void MainWindow::readLibSettings(QSettings& settings)
 		}
 		settings.endArray();
 	}
+#endif
+
 	if(true) /// XML
 	{
 M_TODO("INTERIM, CONVERT OVER TO THIS");
@@ -1541,7 +1544,9 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	// First it seems we have to remove the array.
 	settings.remove("libraries");
 
+#if 0
 	settings.beginWriteArray("libraries");
+
 	qDebug() << "Writing"  << m_libmodels.size() << "libraries";
 	for(size_t i = 0; i < m_libmodels.size(); ++i)
 	{
@@ -1561,6 +1566,7 @@ void MainWindow::writeLibSettings(QSettings& settings)
 		settings.setValue("asJson", jdoc_bytes);
 	}
 	settings.endArray();
+#endif
 
 	if(true) /// XML
 	{

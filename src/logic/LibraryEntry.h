@@ -73,8 +73,8 @@ public:
 
 	/// @name Serialization
 	/// @{
-	void writeToJson(QJsonObject& jo) const;
-	void readFromJson(QJsonObject& jo);
+//	void writeToJson(QJsonObject& jo) const;
+//	void readFromJson(QJsonObject& jo);
 
 	/// @name ISerializable interface
 	/// @{

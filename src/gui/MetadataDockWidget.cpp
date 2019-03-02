@@ -31,6 +31,7 @@
 #include <QDataWidgetMapper>
 #include <QLineEdit>
 #include <QSplitter>
+#include <QRegularExpression>
 
 // Ours
 #include <AMLMApp.h>
@@ -367,6 +368,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 }
 
+#if 0
 void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap)
 {
 	for(auto& e : tagmap)
@@ -388,6 +390,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
 		}
 	}
 }
+#endif
 
 void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap)
 {

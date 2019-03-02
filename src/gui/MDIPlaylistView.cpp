@@ -217,8 +217,9 @@ void MDIPlaylistView::serializeDocument(QFileDevice& file)
 	else if(mt.inherits("application/vnd.apple.mpegurl"))
 	{
 		// Save in MU8U format.
-M_WARNING("TODO: Save in MU8U format")
-		underlyingModel()->serializeToFile(file);
+M_WARNING("TODO: Save in MU8U format");
+Q_ASSERT(0);
+//		underlyingModel()->serializeToFile(file);
 	}
 }
 
