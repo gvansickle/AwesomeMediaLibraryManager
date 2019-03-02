@@ -409,7 +409,7 @@ M_WARNING("TODO: This could probably be improved, e.g. not merge these in but ke
 	{
 		retval.m_tag_map["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
 	}
-	if(track_entry.m_isrc.size() > 0)
+	if(!track_entry.m_isrc.empty())
 	{
 		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
 	}
@@ -431,7 +431,7 @@ static QByteArray getCoverArtBytes_ID3(TagLib::ID3v2::Tag* tag)
 	if (!frameList.isEmpty())
 	{
 		qDebug() << "Found" << frameList.size() << "embedded pictures.";
-		const auto* frame = (TagLib::ID3v2::AttachedPictureFrame*)frameList.front();
+		const auto* frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame*>(frameList.front());
 		return QByteArray(frame->picture().data(), frame->picture().size());
 	}
 
