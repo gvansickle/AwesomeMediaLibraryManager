@@ -330,7 +330,7 @@ M_TODO("This isn't scanning.");
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
 /// @todo EXPERIMENTAL
-			QString filename = QDir::homePath() + "/DeleteMe.xspf";
+			QString filename = QDir::homePath() + "/AMLM_DeleteMe_XQuery.xml";
 			qIno() << "Writing model to XML file:" << filename;
 			QFile outfile(filename);
 			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
@@ -370,7 +370,7 @@ M_TODO("This isn't scanning.");
 
 					/// And lets' try to reserialize it out.
 					{
-						QString filename = QDir::homePath() + "/DeleteMeNew3.xspf";
+						QString filename = QDir::homePath() + "/AMLM_DeleteMe_TreeModelOut.xml";
 						qIn() << "###### WRITING WHAT WE READ TO" << filename;
 						XmlSerializer xmlser;
 						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
@@ -563,10 +563,10 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 		// Open the database file.
 		QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
 		bool status = database_file.open(QFile::ReadOnly | QFile::Text);
-		throwif(!status /*"########## COULDN'T OPEN FILE"*/);
+		throwif<SerializationException>(!status, "########## COULDN'T OPEN FILE");
 		if(!status)
 		{
-			qCro() << "########## COULDN'T OPEN FILE:" << filename;
+			qCro() << "########## COULDN'T OPEN FILE:" << database_filename;
 		}
 
 		// The tempfile we'll use as a pipe.
@@ -576,7 +576,7 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 		qDb() << "TEMPFILE NAME:" << tempfile.fileName();
 
 		// Open the terminal output file.
-		QFile output_file(QDir::homePath() + "/DeleteMeThroughTempFile.xspf");
+		QFile output_file(QDir::homePath() + "/AMLM_DeleteMe_ThroughTempFile.xspf");
 		throwif<SerializationException>(!output_file.open(QIODevice::WriteOnly), "Couldn't open output file");
 
 		// Here we'll manually prepare the two queries.
@@ -628,7 +628,7 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 		}
 
 		// Open the terminal output file.
-		QFile output_file(QDir::homePath() + "/DeleteMeSecondThread.xspf");
+		QFile output_file(QDir::homePath() + "/AMLM_DeleteMe_XQuerySecondThread.xml");
 		throwif<SerializationException>(!output_file.open(QIODevice::WriteOnly), "Couldn't open output file");
 
 		// Here we'll manually prepare the two queries.
