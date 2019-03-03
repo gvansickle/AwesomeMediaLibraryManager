@@ -225,7 +225,8 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
             // Only one pindex though.
             retval.m_original_pindexes.push_back(mapitem[0].pindex);
 
-            auto vec_items = item->populate();
+			item->populate();
+			auto vec_items = item->split_to_tracks();
 			for (const auto& i : vec_items)
             {
                 if (!i->isPopulated())
@@ -270,7 +271,8 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     {
         // Multiple incoming tracks.
         std::shared_ptr<LibraryEntry> first_item = mapitem[0].item;
-        auto subtracks = first_item->populate(true);
+        first_item->populate(true);
+		auto subtracks = first_item->split_to_tracks();
         if(subtracks.size() < mapitem.size())
         {
             // We got fewer back than we had before.

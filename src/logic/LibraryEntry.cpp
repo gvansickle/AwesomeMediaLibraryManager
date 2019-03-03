@@ -66,6 +66,59 @@ std::shared_ptr<LibraryEntry> LibraryEntry::fromUrl(const QUrl &fileurl)
 	return retval;
 }
 
+std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
+{
+	std::vector<std::shared_ptr<LibraryEntry>> retval;
+	auto file_metadata = m_metadata;
+
+	///qDebug() << "Track numbers:" << "???";
+
+	for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
+	{
+		TrackMetadata sheet_track = file_metadata.track(tn);
+		qDebug() << "Track number:" << sheet_track.m_track_number;
+
+		// Have the file_metadata object "split" itself and give us just the metadata as if there
+		// was only this track in the file.
+		Metadata track_metadata = file_metadata.get_one_track_metadata(tn);
+
+		/// @todo Scan indexes here?
+
+		m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
+		if(sheet_track.m_length_frames > 0)
+		{
+			// Not the last track.
+			m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
+		}
+		else
+		{
+			// Must be the last track, so there's no cue entry for the start of the next track,
+			// so we have to calculate the length manually.
+			/// @note We no longer have to do this here, this is done in the Metadata class on cue sheet read.
+			Q_ASSERT(0);
+		}
+
+
+		/// Create the new entry.
+		auto new_entry = std::make_shared<LibraryEntry>(*this);
+		new_entry->m_track_number = tn;
+//M_WARNING("THIS IS ALWAYS 0")
+		new_entry->m_total_track_number = file_metadata.numTracks();
+		new_entry->m_metadata = track_metadata;
+		new_entry->m_offset_secs = m_offset_secs;
+		new_entry->m_length_secs = m_length_secs;
+		new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
+		new_entry->m_is_populated = true;
+		new_entry->m_is_error = false;
+
+//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+
+		retval.push_back(new_entry);
+	}
+
+	return retval;
+}
+
 std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
 {
     // Populate the metadata.  Assumption is that all we have before calling this is the url.
@@ -118,52 +171,20 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 		}
 		else
 		{
-			// We did get a cue sheet, could be more than one track in this file.
-
-			///qDebug() << "Track numbers:" << "???";
-#error "THIS UNCONDITIONALLY SPLITS, NEED TO PARAMATERIZE"
-			for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
-			{
-				TrackMetadata sheet_track = file_metadata.track(tn);
-				qDebug() << "Track number:" << sheet_track.m_track_number;
-
-				// Have the file_metadata object "split" itself and give us just the metadata as if there
-				// was only this track in the file.
-				Metadata track_metadata = file_metadata.get_one_track_metadata(tn);
-
-				/// @todo Scan indexes here?
-
-				m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
-				if(sheet_track.m_length_frames > 0)
-				{
-					// Not the last track.
-					m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
-				}
-				else
-				{
-					// Must be the last track, so there's no cue entry for the start of the next track,
-					// so we have to calculate the length manually.
-					/// @note We no longer have to do this here, this is done in the Metadata class on cue sheet read.
-					Q_ASSERT(0);
-				}
-
-
-				/// Create the new entry.
-				auto new_entry = std::make_shared<LibraryEntry>(*this);
-				new_entry->m_track_number = tn;
-//M_WARNING("THIS IS ALWAYS 0")
-                new_entry->m_total_track_number = file_metadata.numTracks();
-                new_entry->m_metadata = track_metadata;
-				new_entry->m_offset_secs = m_offset_secs;
-				new_entry->m_length_secs = m_length_secs;
-				new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
-				new_entry->m_is_populated = true;
-				new_entry->m_is_error = false;
-
-//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
-
-				retval.push_back(new_entry);
-			}
+			// We did get a cue sheet, could be more than one track in this file,
+			// but we'll let the caller decide whether to split into tracks or not.
+			m_metadata = file_metadata;
+			/// Create the new entry.
+			auto new_entry = std::make_shared<LibraryEntry>(*this);
+			new_entry->m_track_number = 1; /// @todo DUMMY VAL
+			new_entry->m_total_track_number = file_metadata.numTracks();
+			new_entry->m_metadata = file_metadata;
+			new_entry->m_offset_secs = m_offset_secs;
+			new_entry->m_length_secs = m_length_secs;
+			new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
+			new_entry->m_is_populated = true;
+			new_entry->m_is_error = false;
+			retval.push_back(new_entry); //split_to_tracks();
 		}
 	}
 

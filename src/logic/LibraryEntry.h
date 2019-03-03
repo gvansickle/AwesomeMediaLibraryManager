@@ -102,6 +102,8 @@ public:
 
 	QStringList getMetadata(QString key) const;
 
+	std::vector<std::shared_ptr<LibraryEntry>> split_to_tracks();
+
 protected:
 
 	// The URL to the media.

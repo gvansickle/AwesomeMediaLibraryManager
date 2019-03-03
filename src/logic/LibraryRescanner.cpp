@@ -295,6 +295,7 @@ M_TODO("This isn't scanning.");
 				auto lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 				/// @todo SLOW, AND INCORRECT: populate() is 1->many.
 				auto lib_entries = lib_entry->populate(true);
+//				auto lib_entries = lib_entry->split_to_tracks();
 				new_child->setLibraryEntry(lib_entries.at(0));
 				entry->appendChild(std::move(new_child));
 //				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));

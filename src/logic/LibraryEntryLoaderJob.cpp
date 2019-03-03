@@ -150,7 +150,8 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
         // Item's metadata has not been looked at.  We may have multiple tracks.
 
 //		qIn() << "LOADING ITEM:" << libentry;
-		auto vec_items = libentry->populate();
+		libentry->populate();
+		auto vec_items = libentry->split_to_tracks();
         for (const auto& i : vec_items)
         {
             if (!i->isPopulated())
