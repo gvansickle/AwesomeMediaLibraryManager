@@ -44,7 +44,7 @@ Q_DECLARE_METATYPE(std::string);
 std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Cdtext* cdtext)
 {
 	auto retval = std::make_unique<TrackMetadata>();
-	// get the Pack Type Indicator data.
+	// Get the Pack Type Indicator data.
 #define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , cdtext ));
 	PTI_STR_LIST(X)
 #undef X
@@ -72,22 +72,27 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
 	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
 	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
-	/*X(XMLTAG_TRACK_META_INDEXES, m_indexes)*/ \
 	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
+
+#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
 
 QVariant TrackMetadata::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-#define X(field_tag, member_field) map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field); //map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
 	M_DATASTREAM_FIELDS(X);
 #undef X
-
+	QVariantHomogenousList hlist("listname", "entryname");
+	hlist = m_indexes;
+	map.insert(XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(hlist));
 	return map;
 }
 
@@ -98,6 +103,20 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 #define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
 	M_DATASTREAM_FIELDS(X);
 #undef X
+
+	QVariant qvar_hlist = map.value(XMLTAG_TRACK_META_INDEXES);
+	Q_ASSERT(qvar_hlist.isValid());
+	if(qvar_hlist.isNull())
+	{
+		return;
+	}
+//	Q_ASSERT(qvar_hlist.canConvert<QVariantHomogenousList>());
+	auto hlist = qvar_hlist.value<QVariantHomogenousList>();
+	m_indexes.clear();
+	for(const auto& val : hlist)
+	{
+		m_indexes.push_back(val.value<qint64>());
+	}
 }
 
 

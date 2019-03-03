@@ -396,8 +396,8 @@ Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 //qIn() << "AFTER:" << retval.m_tracks;
 
 	// Copy any track-specific CDTEXT data to the "top level" metadata.
-M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate")
-	if(track_entry.m_PTI_TITLE.size() > 0)
+M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate");
+	if(!track_entry.m_PTI_TITLE.empty())
 	{
 //    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
@@ -405,13 +405,14 @@ M_WARNING("TODO: This could probably be improved, e.g. not merge these in but ke
 		retval.m_tag_map.insert({"TITLE", track_entry.m_PTI_TITLE});
 //    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 	}
-	if(track_entry.m_PTI_PERFORMER.size() > 0)
+	if(!track_entry.m_PTI_PERFORMER.empty())
 	{
 		retval.m_tag_map["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
 	}
 	if(!track_entry.m_isrc.empty())
 	{
-		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
+//		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
+		retval.m_tag_map.insert({"ISRC", track_entry.m_isrc});
 	}
 
 	return retval;

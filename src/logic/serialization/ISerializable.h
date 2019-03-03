@@ -82,6 +82,26 @@ public:
 
 Q_DECLARE_METATYPE(SerializableQVariantList);
 
+
+/// @name Some helper templates.
+/// @{
+
+template <class MapType, class StringType, class MemberType>
+void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
+{
+	// InsertionOrderedMap<>::insert() currently returns void.
+//	using iterator_type = typename MapType::iterator;
+	/*iterator_type it =*/ map.insert( key , QVariant::fromValue<MemberType>( member ) );
+//	if(it == map.end())
+//	{
+//		// Insertion failed for some reason.
+//		throw QException();
+//	}
+}
+
+/// @}
+
+
 #endif /* SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_ */
 
 

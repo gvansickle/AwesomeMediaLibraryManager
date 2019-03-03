@@ -36,15 +36,6 @@ MetadataFromCache::~MetadataFromCache()
 
 }
 
-//void MetadataFromCache::readFromJson(const QJsonObject& jo)
-//{
-//	///qDebug() << "Reading Metadata from Json:" << jo.toVariantMap();
-//#warning "TEMP FOR XML CONVERSION"
-////	m_tag_map = MapConverter::VarMapToTagMap(jo.toVariantMap());
-///// @todo
-//	///qDebug() << "Reading Metadata from Json:" << m_tag_map;
-//}
-
 QVariant MetadataFromCache::toVariant() const
 {
 	QVariantMap map;
