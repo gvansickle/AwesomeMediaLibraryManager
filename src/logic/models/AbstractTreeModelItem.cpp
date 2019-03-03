@@ -74,6 +74,7 @@ AbstractTreeModelItem::~AbstractTreeModelItem()
 {
 	// Doesn't remove child items, just deletes them.
 //	qDeleteAll(m_child_items);
+M_WARNING("FIXME: Both these are virtual calls");
 	if(childCount() > 0)
 	{
 		// Remove and delete all children.

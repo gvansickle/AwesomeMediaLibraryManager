@@ -90,12 +90,20 @@ QVariant TrackMetadata::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field); //map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
+
+	// Serialize the CD-Text Pack Type Indicator data.
+#define X(id) map_insert_or_die(map, # id , m_ ## id);
+	PTI_STR_LIST(X)
+#undef X
+
+	// m_indexes
 	QVariantHomogenousList hlist("listname", "entryname");
 	hlist = m_indexes;
 	map.insert(XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(hlist));
+
 	return map;
 }
 

@@ -278,7 +278,7 @@ void MainWindow::init()
 	////// Connect up signals and slots.
 	createConnections();
 
-	setWindowTitle(qApp->applicationDisplayName());
+	setWindowTitle(amlmApp->applicationDisplayName());
 
 	setUnifiedTitleAndToolBarOnMac(true);
 
@@ -942,7 +942,7 @@ void MainWindow::createToolBars()
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());
     // Set it to the current style.
-	QString cur_style = qApp->style()->objectName();
+	QString cur_style = amlmApp->style()->objectName();
 	styleComboBox->setCurrentIndex(styleComboBox->findText(cur_style, Qt::MatchFixedString));
 	m_settingsToolBar->addWidget(styleComboBox);
 	connect(styleComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeStyle);
@@ -1042,7 +1042,7 @@ void MainWindow::initRootModels()
 void MainWindow::createConnections()
 {
 	/// @todo
-    connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
+	connect(amlmApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(m_player, m_controls);
@@ -1302,7 +1302,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 {
     MDIModelViewPair retval;
     auto view = findSubWindowView(url);
-    if(view)
+	if(view)
     {
 		// Found an existing View, which means it's attached to an existing Model.
         retval.m_view = view;

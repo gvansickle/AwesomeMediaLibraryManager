@@ -390,7 +390,7 @@ M_TODO("This isn't scanning.");
 				{
 					Stopwatch sw("XQuery test: two regex queries in loop");
 
-					for(QString ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
+					for(const QString& ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
 					{
 						// Now let's see if we can XQuery what we just wrote as a QStringList.
 						QStringList query_results;

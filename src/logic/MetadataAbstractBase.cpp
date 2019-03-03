@@ -257,7 +257,7 @@ QVariant MetadataAbstractBase::toVariant() const
 //	Q_ASSERT(qvar_tm.isValid());
 //	map.insert(XMLTAG_TM_M_TAG_MAP, m_tag_map.toVariant());
 
-#define X(field_tag, member_field) map.insert( field_tag , member_field . toVariant());
+#define X(field_tag, member_field) map.insert( field_tag , (member_field) . toVariant());
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
