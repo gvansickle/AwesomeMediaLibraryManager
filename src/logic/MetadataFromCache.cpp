@@ -24,7 +24,6 @@
 #include "utils/DebugHelpers.h"
 #include "utils/MapConverter.h"
 
-#include <QJsonObject>
 
 MetadataFromCache::MetadataFromCache()
 {

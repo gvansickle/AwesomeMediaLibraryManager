@@ -212,7 +212,7 @@ QVariant Library::toVariant() const
 	map.insert(XMLTAG_LIBRARY_ROOT_URL, m_root_url);
 	map.insert(XMLTAG_NUM_UNPOP, m_num_unpopulated);
 	map.insert(XMLTAG_NUM_POP, m_num_populated);
-	map.insert(XMLTAG_NUM_LIBRARY_ENTRIES, (qint64)m_lib_entries.size());
+	map.insert(XMLTAG_NUM_LIBRARY_ENTRIES, static_cast<qint64>(m_lib_entries.size()));
 	if(!m_lib_entries.empty())
 	{
 		// Serialize the LibraryEntry's.

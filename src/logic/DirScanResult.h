@@ -98,7 +98,6 @@ public:
 	/// @name Serialization
 	/// @{
 
-	/// @todo Can these be protected?
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 

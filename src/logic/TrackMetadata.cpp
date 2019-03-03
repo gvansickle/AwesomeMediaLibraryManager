@@ -48,6 +48,9 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Cdtext* 
 #define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , cdtext ));
 	PTI_STR_LIST(X)
 #undef X
+
+//	qDb() << "m_PTI_GENRE" << (cdtext_get(PTI_GENRE, cdtext) == nullptr ? "NULL" : cdtext_get(PTI_GENRE, cdtext));
+
 	return retval;
 }
 

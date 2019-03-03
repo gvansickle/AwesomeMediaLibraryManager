@@ -131,9 +131,9 @@ std::set<std::string> MetadataTaglib::getNewTags()
 	return f_newly_discovered_keys;
 }
 
-static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
+static AMLMTagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 {
-	TagMap retval;
+	AMLMTagMap retval;
 	for(const auto& key_val_pairs : pm)
 	{
 		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
@@ -145,9 +145,11 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 		// Iterate over the StringList for this key.
 		for(const auto& value : key_val_pairs.second)
 		{
-			out_val.push_back(tostdstr(value));
+//			out_val.push_back(tostdstr(value));
+			auto sstr = tostdstr(value);
+			retval.insert({key, sstr});
 		}
-		retval[key] = out_val;
+//		retval.insert(std::make_pair(toqstr(key), toqstr(out_val)));
 	}
 	//qDebug() << "Returning:" << retval;
 	return retval;
