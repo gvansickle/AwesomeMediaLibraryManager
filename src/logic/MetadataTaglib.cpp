@@ -344,6 +344,7 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
 //        qDb() << "CUESHEET:" << *cuesheet;
         // Copy the cuesheet track info.
         m_tracks = cuesheet->get_track_map();
+qDb() << "####### NUM TRACKS:" << m_tracks.size();
         Q_ASSERT(m_tracks.size() > 0);
 
 

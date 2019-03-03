@@ -121,7 +121,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 			// We did get a cue sheet, could be more than one track in this file.
 
 			///qDebug() << "Track numbers:" << "???";
-
+#error "THIS UNCONDITIONALLY SPLITS, NEED TO PARAMATERIZE"
 			for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
 			{
 				TrackMetadata sheet_track = file_metadata.track(tn);

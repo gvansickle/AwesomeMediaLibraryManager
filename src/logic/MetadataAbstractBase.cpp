@@ -146,7 +146,7 @@ TagMap MetadataAbstractBase::filled_fields() const
 		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tag_map) ///@todo EXP m_pm)
 		{
 //            qDebug() << "Native Key:" << key_val_pairs.first;
-			std::string key = reverse_lookup(key_val_pairs.first); ///@todo EXP.toCString());
+			std::string key = reverse_lookup(key_val_pairs.first);
 //            qDebug() << "Normalized key:" << key;
 
 			if(key.empty() || key.length() == 0)
@@ -249,7 +249,7 @@ QVariant MetadataAbstractBase::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -263,13 +263,17 @@ QVariant MetadataAbstractBase::toVariant() const
 
 	// Add the track list to the return value.
 	QVariantInsertionOrderedMap qvar_track_map;
+	qDb() << "########### NUM TRACKS:" << m_tracks.size();
 	for(const auto& it : m_tracks)
 	{
 		// Using "track" prefix here because XML tags can't start with numbers.
-		qvar_track_map.insert(QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0')), it.second.toVariant());
+		QString track_num_str = QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0'));
+		TrackMetadata tm = it.second;
+qDb() << "########### " << track_num_str << tm;
+		qvar_track_map.insert(track_num_str, tm.toVariant());
 	}
 
-	map.insert(XMLTAG_TRACKS, qvar_track_map);
+	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
 
 	return map;
 }
