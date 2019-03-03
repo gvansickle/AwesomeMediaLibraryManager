@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -17,40 +17,26 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef METADATA_H
-#define METADATA_H
+#ifndef LOGIC_METADATA_H
+#define LOGIC_METADATA_H
 
-#include "MetadataAbstractBase.h"
-
-class QJsonObject;
+// Std C++
+#include <set>
 
 // Ours.
 #include <utils/QtHelpers.h>
+#include "AMLMTagMap.h"
+#include "AudioFileType.h"
+#include "TrackMetadata.h"
+#include <utils/Fraction.h>
 #include <logic/serialization/ISerializable.h>
-class MetadataFromCache;
 
 
-class Metadata : public ISerializable
+class Metadata : public virtual ISerializable
 {
-private:
-	std::unique_ptr<MetadataAbstractBase> pImpl;
-
 public:
-	Metadata() : pImpl(nullptr) {}
-	Metadata(const MetadataAbstractBase& derived) : pImpl(derived.clone()) {}
-	~Metadata() override;
-
-	/// Copy constructor.
-	Metadata(const Metadata& other) : pImpl((other.pImpl)? other.pImpl->clone() : nullptr) {}
-	/// Assignment operator.
-	Metadata& operator=(const Metadata& other)
-	{
-		if(&other != this)
-		{
-			pImpl = std::move(other.pImpl->clone());
-		}
-		return *this;
-	}
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(Metadata);
+	~Metadata() override {};
 
 	/// @name Static Factory Functions
 	/// @{
@@ -68,52 +54,51 @@ public:
 
 	static std::set<std::string> getNewTags();
 
-	///
-	/// "Redirectors".
-	///
 
-	///bool read(QUrl url) { return pImpl && pImpl->read(url); }
-	bool hasBeenRead() const { return pImpl && pImpl->hasBeenRead(); }
-	bool isError() const { return pImpl && pImpl->isError(); }
-	bool isFromCache() const { return pImpl && pImpl->isFromCache(); }
+	bool read(const QUrl& url);
+	bool hasBeenRead() const;
+	bool isError() const;
+	/// Return true if the object was read from a cache rather than the actual file.
+	/// Intent is that if this returns true, it shouldn't be written back to the cache.
+	bool isFromCache() const;
 
 	/// Conversion to bool.  Returns true if Metadata has been read successfully.
-	operator bool() const { return hasBeenRead() && !isError(); }
+	explicit operator bool() const { return hasBeenRead() && !isError(); }
 
 	/// @name Meta-metadata.
 	/// @{
 
 	std::string GetFiletypeName() const;
 
-	bool hasVorbisComments() const { return pImpl->m_has_vorbis_comment; }
-	bool hasID3v1() const { return pImpl->m_has_id3v1; }
-	bool hasID3v2() const { return pImpl->m_has_id3v2; }
-	bool hasAPE() const { return pImpl->m_has_ape; }
-	bool hasXiphComment() { return pImpl->m_has_ogg_xipfcomment; }
-	bool hasInfoTag() { return pImpl->m_has_info_tag; }
+	bool hasVorbisComments() const { return m_has_vorbis_comment; }
+	bool hasID3v1() const { return m_has_id3v1; }
+	bool hasID3v2() const { return m_has_id3v2; }
+	bool hasAPE() const { return m_has_ape; }
+	bool hasXiphComment() { return m_has_ogg_xipfcomment; }
+	bool hasInfoTag() { return m_has_info_tag; }
 
-	AMLMTagMap tagmap_VorbisComments() { return pImpl ? pImpl->m_tm_vorbis_comments : AMLMTagMap() ; }
-	AMLMTagMap tagmap_id3v1() { return pImpl ? pImpl->m_tm_id3v1 : AMLMTagMap() ; }
-	AMLMTagMap tagmap_id3v2() { return pImpl ? pImpl->m_tm_id3v2 : AMLMTagMap() ; }
-	AMLMTagMap tagmap_ape() { return pImpl ? pImpl->m_tm_ape : AMLMTagMap() ; }
-	AMLMTagMap tagmap_xiph() { return pImpl ? pImpl->m_tm_xipf : AMLMTagMap() ; }
-	AMLMTagMap tagmap_InfoTag() { return pImpl ? pImpl->m_tm_infotag : AMLMTagMap() ; }
+	AMLMTagMap tagmap_VorbisComments() { return m_tm_vorbis_comments; }
+	AMLMTagMap tagmap_id3v1() { return m_tm_id3v1; }
+	AMLMTagMap tagmap_id3v2() { return m_tm_id3v2; }
+	AMLMTagMap tagmap_ape() { return m_tm_ape; }
+	AMLMTagMap tagmap_xiph() { return m_tm_xipf; }
+	AMLMTagMap tagmap_InfoTag() { return m_tm_infotag; }
 	/// @}
 
 	/// Audio stream properites.
-	Fraction total_length_seconds() const { return pImpl->total_length_seconds(); }
+	Fraction total_length_seconds() const;
 
 	/// Return the first entry matching the key, or an empty string if no such key.
-	std::string operator[](const std::string& key) const { Q_ASSERT(pImpl); return pImpl->operator [](key); }
+	std::string operator[](const std::string& key) const;
 
 	/// Overload for const char *'s.
 	std::string operator[](const char *key) const { return (*this)[std::string(key)]; }
 
 	/// Return all string metadata as a map.
-	TagMap filled_fields() const { return pImpl->filled_fields(); }
+	TagMap filled_fields() const;
 
 	/// Cue sheet support.
-	bool hasCueSheet() const { return pImpl->hasCueSheet(); }
+	bool hasCueSheet() const { return m_has_cuesheet; }
 
 	/// @todo bool hasHiddenTrackOneAudio() const { return pImpl->hasHiddenTrackOneAudio(); }
 
@@ -121,19 +106,20 @@ public:
 	/// @{
 
 	/// Return the number of tracks found in this file.
-	int numTracks() const { return pImpl->numTracksOnMedia(); }
-	TrackMetadata getThisTracksMetadata() const { return pImpl->getThisTracksMetadata(); }
+	int numTracks() const { return m_num_tracks_on_media; }
+	/// @todo OBSOLETE/BAD INTERFACE.
+	TrackMetadata getThisTracksMetadata() const { return m_tracks.cbegin()->second; }
 
 	/// Return the TrackMetadata for the specified track.
 	/// @note @a index is 1-based.
-	TrackMetadata track(int index) const { return pImpl->track(index); }
-	Metadata get_one_track_metadata(int track_index) const { return pImpl->get_one_track_metadata(track_index); }
+	TrackMetadata track(int index) const;
+	Metadata get_one_track_metadata(int track_index) const;
 
 	/// @}
 
 	/// Embedded art.
 	/// @todo int numEmbeddedPictures() const { return pImpl->numEmbeddedPictures(); }
-	QByteArray getCoverArtBytes() const { Q_ASSERT(pImpl); return pImpl->getCoverArtBytes(); }
+	QByteArray getCoverArtBytes() const;
 
 	/// @name Serialization
 	/// @{
@@ -147,6 +133,47 @@ public:
 
 	/// @}
 
+	AudioFileType::Type m_audio_file_type {AudioFileType::UNKNOWN};
+
+	bool m_has_cuesheet {false};
+
+	bool m_has_vorbis_comment {false};
+	bool m_has_id3v1 {false};
+	bool m_has_id3v2 {false};
+	bool m_has_ape {false};
+	bool m_has_ogg_xipfcomment {false};
+	bool m_has_info_tag {false};
+
+	AMLMTagMap m_tm_vorbis_comments;
+	AMLMTagMap m_tm_id3v1;
+	AMLMTagMap m_tm_id3v2;
+	AMLMTagMap m_tm_ape;
+	AMLMTagMap m_tm_xipf;
+	AMLMTagMap m_tm_infotag;
+
+	/// The TagMap from the generic "fr.tag()->properties()" call.
+	AMLMTagMap m_tag_map;
+
+	bool m_read_has_been_attempted {false};
+	bool m_is_error {false};
+	bool m_is_from_cache {false};
+
+protected:
+	QUrl m_audio_file_url {};
+
+	long m_length_in_milliseconds {0};
+
+	/// @name Track info.
+	/// @{
+
+	/// The number of tracks on the audio file this Metadata applies to.
+	int m_num_tracks_on_media {0};
+
+	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
+	std::map<int, TrackMetadata> m_tracks;
+
+	/// @}
+
 };
 
 Q_DECLARE_METATYPE(Metadata);
@@ -155,4 +182,4 @@ QDataStream &operator<<(QDataStream &out, const Metadata &obj);
 QDataStream &operator>>(QDataStream &in, Metadata &obj);
 
 
-#endif // METADATA_H
+#endif // LOGIC_METADATA_H

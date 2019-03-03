@@ -27,8 +27,8 @@
 class MetadataTaglib : public MetadataAbstractBase
 {
 public:
-	MetadataTaglib();
-    ~MetadataTaglib() override;
+	MetadataTaglib() {};
+	~MetadataTaglib() override {};
 
     bool isFromCache() const override { return false; }
 
@@ -59,5 +59,16 @@ private:
 
     MetadataTaglib* clone_impl() const override;
 };
+
+namespace TagLib
+{
+	namespace FLAC
+	{
+		class File;
+	}
+};
+
+QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file);
+QByteArray getCoverArtBytes(const QUrl& url);
 
 #endif // METADATATAGLIB_H

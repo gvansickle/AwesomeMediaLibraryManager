@@ -156,17 +156,8 @@ static AMLMTagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 }
 
 
-MetadataTaglib::MetadataTaglib() : MetadataAbstractBase()
-{
 
-}
-
-MetadataTaglib::~MetadataTaglib()
-{
-
-}
-
-static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
+QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 {
 	QString retval;
 
@@ -385,6 +376,7 @@ M_WARNING("TODO: Handle hidden track-one audio")
 
 Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 {
+#if 0 /// @todo OBSOLETE
 	// Start off with a complete duplicate.
 	MetadataTaglib retval(*this);
 
@@ -419,6 +411,8 @@ M_WARNING("TODO: This could probably be improved, e.g. not merge these in but ke
 	}
 
 	return retval;
+#endif
+	return Metadata();
 }
 
 #if TODO
@@ -472,6 +466,53 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
 	}
 
 	return QByteArray();
+}
+
+QByteArray getCoverArtBytes(const QUrl& url)
+{
+	QByteArray retval;
+
+	// Open the file ref.
+	QString url_as_local = /*m_audio_file_url*/url.toLocalFile();
+
+	TagLib::FileRef fr {openFileRef(url_as_local)};
+	if(fr.isNull())
+	{
+		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
+		return retval;
+	}
+
+	// Downcast it to whatever type it really is.
+	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
+	{
+		if (file->ID3v2Tag())
+		{
+			retval = getCoverArtBytes_ID3(file->ID3v2Tag());
+		}
+		if (retval.isEmpty() && file->APETag())
+		{
+			retval = getCoverArtBytes_APE(file->APETag());
+		}
+	}
+	else if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
+	{
+		retval = getCoverArtBytes_FLAC(file);
+		if (retval.isEmpty() && file->ID3v2Tag())
+		{
+			retval = getCoverArtBytes_ID3(file->ID3v2Tag());
+		}
+	}
+
+	if(retval.size() > 0)
+	{
+		qDebug() << "Found pic data, size:" << retval.size();
+	}
+	else
+	{
+		qDebug() << "Found no pic data";
+	}
+
+	return retval;
 }
 
 QByteArray MetadataTaglib::getCoverArtBytes() const

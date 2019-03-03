@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -25,16 +25,48 @@
 #include <map>
 
 // Qt5
-#include <QJsonObject>
 #include <QVariant>
 #include <QVariantMap>
 
+// TagLib includes.
+#if 1
+#include <taglib/tag.h>
+#include <taglib/fileref.h>
+#include <taglib/tpropertymap.h>
+#include <taglib/audioproperties.h>
+#include <taglib/mpegfile.h>
+#include <taglib/vorbisfile.h>
+#include <taglib/wavfile.h>
+#include <taglib/attachedpictureframe.h>
+#include <taglib/id3v1tag.h>
+#include <taglib/id3v2tag.h>
+#include <taglib/apetag.h>
+#include <taglib/flacfile.h>
+#include <taglib/flacpicture.h>
+#else
+#include <tag.h>
+#include <fileref.h>
+#include <tpropertymap.h>
+#include <audioproperties.h>
+#include <mpegfile.h>
+#include <vorbisfile.h>
+#include <wavfile.h>
+#include <attachedpictureframe.h>
+#include <id3v1tag.h>
+#include <id3v2tag.h>
+#include <apetag.h>
+#include <flacfile.h>
+#include <flacpicture.h>
+#endif
+
 // Ours.
+#include "TagLibHelpers.h"
 #include "MetadataTaglib.h"
 #include "MetadataFromCache.h"
 #include "utils/MapConverter.h"
 #include <utils/DebugHelpers.h>
 #include <utils/RegisterQtMetatypes.h>
+#include "CueSheet.h"
 
 
 AMLM_QREG_CALLBACK([](){
@@ -55,21 +87,103 @@ static std::map<AudioFileType::Type, std::string> f_filetype_to_string_map =
 	{AudioFileType::WAV, "WAV"}
 };
 
-Metadata::~Metadata() {}
+static std::set<std::string> f_newly_discovered_keys;
+
+/// Interface name to Taglib name map.
+/// @see http://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
+static const std::map<std::string, std::string> f_name_normalization_map =
+{
+	{"track_name", "TITLE"},
+	{"track_number", "TRACKNUMBER"},
+	{"track_total", ""},
+	{"album_name", "ALBUM"},
+	{"album_artist", "ALBUMARTIST"},
+	{"track_artist", "ARTIST"},
+	{"track_performer", "PERFORMER"},
+	{"composer_name", "COMPOSER"},
+	{"conductor_name", "CONDUCTOR"},
+	{"genre", "GENRE"},
+	{"media", "MEDIA"},
+	{"ISRC", "ISRC"},
+	{"catalog", "CATALOGNUMBER"},
+	{"comment", "COMMENT"},
+};
+
+/**
+ * @link https://xiph.org/vorbis/doc/v-comment.html
+ */
+static const std::map<std::string, std::vector<std::string>> f_vorbis_comment_normalization_map =
+{
+	{"album_name", {"ALBUM"}},
+	{"album_artist", {"ALBUMARTIST"}},
+	{"track_name", {"TITLE"}},
+	{"track_subtitle", {"SUBTITLE"}},
+	{"genre", {"GENRE"}},
+	{"mood", {"MOOD"}},
+	{"style", {"STYLE"}},
+	{"disc_total", {"DISCTOTAL", "TOTALDISCS"}},
+	{"disc_number", {"DISCNUMBER"}},
+	{"track_number", {"TRACKNUMBER"}},
+	{"track_total", {"TRACKTOTAL", "TOTALTRACKS"}},
+};
+
+static std::string reverse_lookup(const std::string& native_key)
+{
+	for(const auto& entry : f_name_normalization_map)
+	{
+		if(entry.second == native_key)
+		{
+			return entry.first;
+		}
+	}
+	return native_key;
+}
+
+
+
+std::set<std::string> Metadata::getNewTags()
+{
+	return f_newly_discovered_keys;
+}
+
+static AMLMTagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
+{
+	AMLMTagMap retval;
+	for(const auto& key_val_pairs : pm)
+	{
+		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
+		//std::string key = reverse_lookup(key_val_pairs.first.toCString());
+		//qDebug() << "Normalized key:" << key;
+		std::string key = tostdstr(key_val_pairs.first);
+
+		std::vector<std::string> out_val;
+		// Iterate over the StringList for this key.
+		for(const auto& value : key_val_pairs.second)
+		{
+//			out_val.push_back(tostdstr(value));
+			auto sstr = tostdstr(value);
+			retval.insert({key, sstr});
+		}
+//		retval.insert(std::make_pair(toqstr(key), toqstr(out_val)));
+	}
+	//qDebug() << "Returning:" << retval;
+	return retval;
+}
+
 
 Metadata Metadata::make_metadata()
 {
-	return Metadata(MetadataTaglib());
+	return Metadata();
 }
 
 Metadata Metadata::make_metadata(QUrl file_url)
 {
-	MetadataTaglib retval;
+	Metadata retval;
 	retval.read(file_url);
 	return retval;
 }
 
-static constexpr QLatin1Literal XMLTAG_METADATA_ABSTRACT_BASE_PIMPL {"metadata_abstract_base_pimpl"};
+static constexpr QLatin1String XMLTAG_METADATA_ABSTRACT_BASE_PIMPL {"metadata_abstract_base_pimpl"};
 
 
 Metadata Metadata::make_metadata(const QVariant& variant)
@@ -97,35 +211,460 @@ M_TODO("What's going on here?");
 #endif
 }
 
-std::set<std::string> Metadata::getNewTags()
+
+bool Metadata::read(const QUrl& url)
 {
-	return MetadataTaglib::getNewTags();
+	// String for storing an embedded cuesheet if we have one.
+	std::string cuesheet_str;
+
+	m_audio_file_url = url;
+
+	QString url_as_local = url.toLocalFile();
+	// Open the file.
+	TagLib::FileRef fr {openFileRef(url_as_local)};
+	if(fr.isNull())
+	{
+		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
+		m_is_error = true;
+		m_read_has_been_attempted = true;
+		return false;
+	}
+
+
+	/// @todo TEST
+	/// @note The generic properties do not contain CUESHEETs.
+	if(fr.tag()->properties().contains("CUESHEET"))
+	{
+		qDebug() << "Generic properties() contains CUESHEET";
+	}
+	else
+	{
+//		qDebug() << "No generic CUESHEET";
+	}
+
+	// Downcast it to whatever type it really is.
+	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
+	{
+		m_audio_file_type = AudioFileType::MP3;
+		m_has_ape = file->hasAPETag();
+		m_has_id3v1 = file->hasID3v1Tag();
+		m_has_id3v2 = file->hasID3v2Tag();
+
+		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToTagMap(file->ID3v1Tag()->properties());
+		if(m_has_id3v2)	m_tm_id3v2 = PropertyMapToTagMap(file->ID3v2Tag()->properties());
+		if(m_has_ape) m_tm_ape = PropertyMapToTagMap(file->APETag()->properties());
+	}
+	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
+	{
+		m_audio_file_type = AudioFileType::FLAC;
+		m_has_ogg_xipfcomment = file->hasXiphComment();
+		m_has_id3v1 = file->hasID3v1Tag();
+		m_has_id3v2 = file->hasID3v2Tag();
+
+		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToTagMap(file->ID3v1Tag()->properties());
+		if(m_has_ogg_xipfcomment)
+		{
+			m_tm_xipf = PropertyMapToTagMap(file->xiphComment()->properties());
+			// Extract any CUESHEET embedded in the XiphComment.
+			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();
+		}
+		if(m_has_id3v2) m_tm_id3v2 = PropertyMapToTagMap(file->ID3v2Tag()->properties());
+	}
+	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
+	{
+		m_audio_file_type = AudioFileType::OGG_VORBIS;
+		if(auto tag = file->tag())
+		{
+			m_has_ogg_xipfcomment = true;
+			m_tm_xipf = PropertyMapToTagMap(tag->properties());
+		}
+	}
+	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
+	{
+		// Wav file.
+		m_audio_file_type = AudioFileType::WAV;
+		m_has_id3v2 = file->hasID3v2Tag();
+		m_has_info_tag = file->hasInfoTag();
+
+		if(m_has_info_tag)
+		{
+			m_tm_infotag = PropertyMapToTagMap(file->InfoTag()->properties());
+		}
+
+		if(m_has_id3v2)
+		{
+			m_tm_id3v2 = PropertyMapToTagMap(file->ID3v2Tag()->properties());
+		}
+	}
+
+	// Read a dictionary mapping of the tags.
+	TagLib::Tag* tag = fr.tag();
+	if(tag == nullptr)
+	{
+		qWarning() << "File" << m_audio_file_url << "returned a null tag.";
+	}
+	else
+	{
+M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produced by EAC");
+	/// @todo The sidecar cue sheet support will then also kick in, and you get weirdness like a track will have two names.
+	/// Need to do some kind of comparison/validity check.
+#if 1
+		auto pm = tag->properties();
+
+//        for(auto e : pm)
+//        {
+//            qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
+//        }
+		m_tag_map = PropertyMapToTagMap(pm);
+
+M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
+
+//        qDb() << m_tag_map;
+#endif
+	}
+
+	// Read the AudioProperties.
+	TagLib::AudioProperties* audio_properties;
+	audio_properties = fr.audioProperties();
+	if(audio_properties != nullptr)
+	{
+		m_length_in_milliseconds = audio_properties->lengthInMilliseconds();
+		//qDebug() << "Length in ms" << m_length_in_milliseconds;
+	}
+	else
+	{
+		qWarning() << "AudioProperties was null";
+	}
+
+
+	std::unique_ptr<CueSheet> cuesheet;
+	cuesheet.reset();
+
+	// Did we find an embedded cue sheet?
+	if(!cuesheet_str.empty())
+	{
+		cuesheet = CueSheet::TEMP_parse_cue_sheet_string(cuesheet_str, m_length_in_milliseconds);
+		Q_ASSERT(cuesheet);
+	}
+	else
+	{
+		// Try to read a possible sidecar cue sheet file.
+		cuesheet = CueSheet::read_associated_cuesheet(m_audio_file_url, m_length_in_milliseconds);
+	}
+
+	// Did we find a cue sheet?
+	if(cuesheet)
+	{
+		m_has_cuesheet = true;
+		m_num_tracks_on_media = cuesheet->get_total_num_tracks();
+
+		/// @todo MAYBE TEMP?
+//        qDb() << "CUESHEET:" << *cuesheet;
+		// Copy the cuesheet track info.
+		m_tracks = cuesheet->get_track_map();
+qDb() << "####### NUM TRACKS:" << m_tracks.size();
+		Q_ASSERT(m_tracks.size() > 0);
+
+
+		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
+		qDebug() << "Scanning for gaplessness...";
+		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
+		{
+//            qDb() << "TRACK:" << track_num << m_tracks[track_num];
+
+			auto next_tracknum = track_num+1;
+			TrackMetadata tm1 = m_tracks[track_num];
+			TrackMetadata tm2 = m_tracks[next_tracknum];
+			///Frames tm2_first_possible_pregap_frame = tm2.m_length_pre_gap >= 0 ? tm2.m_start_frames - tm2.m_length_pre_gap : tm2.m_start_frames;
+			Frames gap_frames_1to2 = tm2.m_length_pre_gap;/// - tm1.last_frame();
+			if(gap_frames_1to2 < 5 )
+			{
+				// There's little or no gap.
+				qDebug() << "Found a gapless track pair in" << m_audio_file_url << ":" << tm1.toStdString() << tm2.toStdString();
+				m_tracks[track_num].m_is_part_of_gapless_set = true;
+				m_tracks[next_tracknum].m_is_part_of_gapless_set = true;
+			}
+		}
+	}
+
+	m_is_error = false;
+	m_read_has_been_attempted = true;
+	return true;
 }
+
+bool Metadata::hasBeenRead() const
+{
+	return m_read_has_been_attempted;
+}
+
+bool Metadata::isError() const { return m_is_error; }
+
+bool Metadata::isFromCache() const { return m_is_from_cache; }
 
 std::string Metadata::GetFiletypeName() const
 {
-	return f_filetype_to_string_map[pImpl->m_audio_file_type];
+	return f_filetype_to_string_map[m_audio_file_type];
 }
+
+Fraction Metadata::total_length_seconds() const
+{
+	if(hasBeenRead() && !isError())
+	{
+		return Fraction(m_length_in_milliseconds, 1000);
+	}
+	else
+	{
+		return Fraction(0, 1);
+	}
+}
+
+TagMap Metadata::filled_fields() const
+{
+	if(hasBeenRead() && !isError())
+	{
+		//qDebug() << "Converting filled_fields to TagMap";
+		TagMap retval;
+		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tag_map) ///@todo EXP m_pm)
+		{
+			//            qDebug() << "Native Key:" << key_val_pairs.first;
+			std::string key = reverse_lookup(key_val_pairs.first);
+			//            qDebug() << "Normalized key:" << key;
+
+			if(key.empty() || key.length() == 0)
+			{
+				// We found an unknown key.
+				M_WARNING("TODO: Find a better way to track new keys.")
+				///f_newly_discovered_keys.insert(key_val_pairs.first); ///@todo EXP .toCString(true));
+				continue;
+			}
+
+			std::vector<std::string> out_val = m_tag_map.equal_range_vector(key_val_pairs.first);
+			// Iterate over the StringList for this key.
+			//			for(const auto& value : key_val_pairs.second)
+			//			{
+			//				/// @todo Not sure what I was doing here.
+			//				///@todo EXP std::string val_as_utf8 = value.to8Bit(true);
+			//				//qDebug() << "Value:" << val_as_utf8 << QString::fromUtf8(val_as_utf8.c_str());
+			//				out_val.push_back(value); ///@todo EXP .toCString(true));
+			//			}
+			retval[key] = out_val;
+		}
+		//        qDebug() << "Returning:" << retval;
+		return retval;
+	}
+	else
+	{
+		return TagMap();
+	}
+}
+
+TrackMetadata Metadata::track(int i) const
+{
+	// Incoming index is 1-based.
+	Q_ASSERT(i > 0);
+//	if(size_t(i) >= m_tracks.size()+1)
+//	{
+//		qFatal("i: %d, m_tracks.size()+1: %lu", i, m_tracks.size()+1);
+//	}
+
+	try
+	{
+		TrackMetadata retval = m_tracks.at(i);
+		return retval;
+	}
+	catch (...)
+	{
+		qFatal("No TrackMetadata found for i: %d, m_tracks.size()+1: %lu", i, m_tracks.size()+1);
+	}
+
+//	return retval;
+}
+
+Metadata Metadata::get_one_track_metadata(int track_index) const
+{
+	// Start off with a complete duplicate.
+	Metadata retval(*this);
+
+	// Now replace the track map with only the entry for this one track.
+	//qIn() << "BEFORE:" << retval.m_tracks;
+	std::map<int, TrackMetadata> new_track_map;
+	auto track_entry = m_tracks.at(track_index);
+	new_track_map.insert({track_index, track_entry});
+
+	retval.m_tracks = new_track_map;
+
+	//qIn() << "AFTER:" << retval.m_tracks;
+
+	// Copy any track-specific CDTEXT data to the "top level" metadata.
+	M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate");
+	if(!track_entry.m_PTI_TITLE.empty())
+	{
+		//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
+		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
+		//		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
+		retval.m_tag_map.insert({"TITLE", track_entry.m_PTI_TITLE});
+		//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
+	}
+	if(!track_entry.m_PTI_PERFORMER.empty())
+	{
+		retval.m_tag_map["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
+	}
+	if(!track_entry.m_isrc.empty())
+	{
+		//		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
+		retval.m_tag_map.insert({"ISRC", track_entry.m_isrc});
+	}
+
+	return retval;
+}
+
+QByteArray Metadata::getCoverArtBytes() const
+{
+	// static function in MetadataTagLib.h/.cpp.
+	return getCoverArtBytes();
+}
+
+std::string Metadata::operator[](const std::string& key) const
+{
+	std::string native_key_string;
+
+	auto it = f_name_normalization_map.find(key);
+	if(it != f_name_normalization_map.end())
+	{
+		// Found it.
+		native_key_string = it->second;
+	}
+	else
+	{
+		// Didn't find it.
+		native_key_string = "";
+		return native_key_string;
+	}
+
+	//	TagLib::StringList stringlist = m_pm[native_key_string];
+	std::vector<std::string> stringlist = m_tag_map.equal_range_vector(native_key_string);
+
+	//	auto strlist_it = m_tag_map.find(native_key_string);
+	//	if(strlist_it != m_tag_map.cend())
+	//	{
+	//		stringlist = strlist_it->second;
+	//	}
+	//	else
+	//	{
+	////		qDebug() << "No such key:" << native_key_string;
+	//	}
+
+	if(stringlist.empty())
+	{
+		return "";
+	}
+	else
+	{
+		return stringlist[0];
+	}
+}
+
+using strviw_type = QLatin1Literal;
+
+#define M_DATASTREAM_FIELDS(X) \
+	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
+	X(XMLTAG_HAS_CUESHEET, m_has_cuesheet) \
+	X(XMLTAG_HAS_VORBIS_COMMENT, m_has_vorbis_comment) \
+	X(XMLTAG_HAS_ID3V1, m_has_id3v1) \
+	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
+	X(XMLTAG_HAS_APE, m_has_ape) \
+	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
+	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag) \
+	X(XMLTAG_AUDIO_FILE_URL, m_audio_file_url) \
+	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
+
+#define M_DATASTREAM_FIELDS_MAPS(X) \
+	/** TagMaps */ \
+	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
+	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
+	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
+	X(XMLTAG_TM_APE, m_tm_ape) \
+	X(XMLTAG_TM_XIPF, m_tm_xipf) \
+	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
+	X(XMLTAG_TM_M_TAG_MAP, m_tag_map)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_MAPS(X);
+#undef X
+//static const strviw_type XMLTAG_TM_M_TAG_MAP("m_tag_map");
+static const strviw_type XMLTAG_TRACKS("m_tracks");
 
 QVariant Metadata::toVariant() const
 {
-	QVariantMap map;
+//	QVariantMap map;
 
-	map.insert(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL, pImpl->toVariant());
+	QVariantInsertionOrderedMap map;
+
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+#define X(field_tag, member_field) map.insert( field_tag , (member_field) . toVariant());
+	M_DATASTREAM_FIELDS_MAPS(X);
+#undef X
+
+	// Add the track list to the return value.
+	QVariantInsertionOrderedMap qvar_track_map;
+	qDb() << "########### NUM TRACKS:" << m_tracks.size();
+	for(const auto& it : m_tracks)
+	{
+		// Using "track" prefix here because XML tags can't start with numbers.
+		QString track_num_str = QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0'));
+		TrackMetadata tm = it.second;
+		qDb() << "########### " << track_num_str << tm;
+		qvar_track_map.insert(track_num_str, tm.toVariant());
+	}
+
+	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
 
 	return map;
+
+//	map.insert(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL, pImpl->toVariant());
+
+//	return map;
 }
 
 void Metadata::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	QVariant pimpl_qvar= map.value(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL);
+#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
-	Q_ASSERT(pimpl_qvar.isValid());
+	QVariant qvar_tm = map.value(XMLTAG_TM_M_TAG_MAP);
+	Q_ASSERT(qvar_tm.isValid());
 
-	pImpl->fromVariant(pimpl_qvar);
+	m_tag_map.fromVariant(qvar_tm);
+
+#define X(field_tag, member_field) member_field . fromVariant(map.value(field_tag));
+	M_DATASTREAM_FIELDS_MAPS(X);
+#undef X
+
+	// Read in the track list.
+	QVariantInsertionOrderedMap qvar_track_map = map.value(XMLTAG_TRACKS).value<QVariantInsertionOrderedMap>();
+	for(const auto& it : qvar_track_map)
+	{
+		// 5 == len("track"). Using "track" prefix here because XML tags can't start with numbers.
+		qint64 track_num = std::stoll(tostdstr(it.first).substr(5));
+		TrackMetadata tm;
+		tm.fromVariant(it.second);
+		m_tracks.insert(std::make_pair(track_num, tm));
+	}
+
+	m_read_has_been_attempted = true;
+	m_is_error = false;
 }
+
+#undef M_DATASTREAM_FIELDS
+
 
 QDataStream &operator<<(QDataStream &out, const Metadata &obj)
 {
