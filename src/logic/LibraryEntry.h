@@ -33,24 +33,25 @@
 #include <src/utils/QtHelpers.h>
 
 // Ours
+#include <future/guideline_helpers.h>
 #include "ExtMimeType.h"
 #include "Metadata.h"
 #include "src/utils/Fraction.h"
 #include "serialization/ISerializable.h"
 
 
-class LibraryEntry : public ISerializable
+class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public virtual ISerializable
 {
 public:
-    LibraryEntry() = default;
-	LibraryEntry(const LibraryEntry& other) = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);
 	~LibraryEntry() override = default;
 
     explicit LibraryEntry(const QUrl& m_url);
 
     static std::shared_ptr<LibraryEntry> fromUrl(const QUrl& fileurl = QUrl());
 
-	std::vector<std::shared_ptr<LibraryEntry> > populate(bool force_refresh = false);
+	void populate(bool force_refresh = false);
+	std::vector<std::shared_ptr<LibraryEntry>> split_to_tracks();
 
 	std::shared_ptr<LibraryEntry> refresh_metadata();
 
@@ -102,7 +103,6 @@ public:
 
 	QStringList getMetadata(QString key) const;
 
-	std::vector<std::shared_ptr<LibraryEntry>> split_to_tracks();
 
 protected:
 
@@ -139,6 +139,7 @@ Q_DECLARE_METATYPE(LibraryEntry);
 Q_DECLARE_METATYPE(LibraryEntry*);
 Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
+Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
 Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);
 
 inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libentry)

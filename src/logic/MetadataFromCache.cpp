@@ -24,6 +24,7 @@
 #include "utils/DebugHelpers.h"
 #include "utils/MapConverter.h"
 
+#if OBSOLETE
 
 MetadataFromCache::MetadataFromCache()
 {
@@ -76,3 +77,5 @@ QByteArray MetadataFromCache::getCoverArtBytes() const
 
 	return retval;
 }
+
+#endif //OBSOLETE

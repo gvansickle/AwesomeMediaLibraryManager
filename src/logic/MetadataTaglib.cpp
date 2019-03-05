@@ -69,6 +69,7 @@
 #include "utils/StringHelpers.h"
 #include "TagLibHelpers.h"
 
+#if 0
 
 static std::set<std::string> f_newly_discovered_keys;
 
@@ -154,7 +155,7 @@ static AMLMTagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 	//qDebug() << "Returning:" << retval;
 	return retval;
 }
-
+#endif // OBSOLETE
 
 
 QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
@@ -184,6 +185,8 @@ QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 
 	return retval;
 }
+
+#if OBSOLETE
 
 bool MetadataTaglib::read(const QUrl& url)
 {
@@ -423,6 +426,8 @@ int MetadataTaglib::numEmbeddedPictures() const
 }
 #endif
 
+#endif // OBSOLETE
+
 static QByteArray getCoverArtBytes_ID3(TagLib::ID3v2::Tag* tag)
 {
 	const TagLib::ID3v2::FrameList& frameList = tag->frameList("APIC");
@@ -515,6 +520,7 @@ QByteArray getCoverArtBytes(const QUrl& url)
 	return retval;
 }
 
+#if OBSOLETE
 QByteArray MetadataTaglib::getCoverArtBytes() const
 {
 	QByteArray retval;
@@ -567,3 +573,4 @@ MetadataTaglib* MetadataTaglib::clone_impl() const
 	return new MetadataTaglib(*this);
 }
 
+#endif // OBSOLETE

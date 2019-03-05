@@ -96,6 +96,8 @@ static std::string reverse_lookup(const std::string& native_key)
 	return native_key;
 }
 
+#if OBSOLETE
+
 std::string MetadataAbstractBase::operator[](const std::string& key) const
 {
 	std::string native_key_string;
@@ -311,3 +313,5 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 }
 
 #undef M_DATASTREAM_FIELDS
+
+#endif //OBSOLETE

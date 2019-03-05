@@ -241,12 +241,12 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
         }
         else if (item->isPopulated() && item->isSubtrack())
         {
-            qCritical() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << item->getUrl();
+			qCr() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << item->getUrl();
             Q_ASSERT(0);
         }
         else
         {
-            //qDebug() << "Re-reading metatdata for item" << item->getUrl();
+			qDb() << "Re-reading metatdata for item" << item->getUrl();
             std::shared_ptr<LibraryEntry> new_entry = item->refresh_metadata();
 
             if(new_entry == nullptr)

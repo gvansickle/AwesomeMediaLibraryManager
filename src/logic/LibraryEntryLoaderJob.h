@@ -39,7 +39,7 @@
 
 class LibraryEntryLoaderJobResult
 {
-	Q_GADGET
+//	Q_GADGET
 
 public:
     LibraryEntryLoaderJobResult() = default;
@@ -70,7 +70,7 @@ public:
     QPersistentModelIndex m_original_pindex;
     std::shared_ptr<LibraryEntry> m_original_libentry;
 
-    QVector<std::shared_ptr<LibraryEntry>> m_new_libentries;
+	std::vector<std::shared_ptr<LibraryEntry>> m_new_libentries;
     int m_num_tracks_found {0};
 
 //    QTH_FRIEND_QDEBUG_OP(LibraryEntryLoaderJobResult);

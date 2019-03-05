@@ -88,6 +88,7 @@ M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS, OR THE JOBS SHOULDNT BE OWNED BY T
 MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapItems& mapitem)
 {
     MetadataReturnVal retval;
+	Q_ASSERT(0);
 #if 0
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
@@ -179,7 +180,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
+void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
     qDb() << "START:" << dir_url;
 
@@ -292,10 +293,18 @@ M_TODO("This isn't scanning.");
 //				Q_ASSERT(last_row_index >= 0);
 
 				auto new_child = std::make_unique<SRTMItem_LibEntry>();
-				auto lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
-				/// @todo SLOW, AND INCORRECT: populate() is 1->many.
-				auto lib_entries = lib_entry->populate(true);
-//				auto lib_entries = lib_entry->split_to_tracks();
+				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+
+				lib_entry->populate(true);
+				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+				if(lib_entry->isSubtrack())
+				{
+					lib_entries = lib_entry->split_to_tracks();
+				}
+				else
+				{
+					lib_entries.push_back(lib_entry);
+				}
 				new_child->setLibraryEntry(lib_entries.at(0));
 				entry->appendChild(std::move(new_child));
 //				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
@@ -452,7 +461,10 @@ M_TODO("This isn't scanning.");
 	// Metadata refresh.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
-		this->SLOT_processReadyResults(lib_rescan_job->get_extfuture().resultAt(index));
+M_TODO("Getting zero results for single files in here.");
+		MetadataReturnVal ready_result = lib_rescan_job->get_extfuture().resultAt(index);
+//		Q_ASSERT(ready_result.m_new_libentries.size() != 0);
+		this->SLOT_processReadyResults(ready_result);
 	});
 	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
 
@@ -504,7 +516,8 @@ void LibraryRescanner::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 
 	if(lritem_vec.m_num_tracks_found == 0)
 	{
-		qCritical() << "RESULT WAS EMPTY";
+		qWr() << "RESULT WAS EMPTY";
+		return;
 	}
 
 	if(lritem_vec.m_num_tracks_found > 1

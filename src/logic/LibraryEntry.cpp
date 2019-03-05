@@ -73,74 +73,87 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 
 	///qDebug() << "Track numbers:" << "???";
 
-	for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
+	qDb() << M_ID_VAL(m_url);
+	qDb() << M_ID_VAL(m_total_track_number);
+	qDb() << M_ID_VAL(file_metadata.numTracks());
+
+	if(m_total_track_number == 0 || m_total_track_number == 1)
 	{
-		TrackMetadata sheet_track = file_metadata.track(tn);
-		qDebug() << "Track number:" << sheet_track.m_track_number;
-
-		// Have the file_metadata object "split" itself and give us just the metadata as if there
-		// was only this track in the file.
-		Metadata track_metadata = file_metadata.get_one_track_metadata(tn);
-
-		/// @todo Scan indexes here?
-
-		m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
-		if(sheet_track.m_length_frames > 0)
-		{
-			// Not the last track.
-			m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
-		}
-		else
-		{
-			// Must be the last track, so there's no cue entry for the start of the next track,
-			// so we have to calculate the length manually.
-			/// @note We no longer have to do this here, this is done in the Metadata class on cue sheet read.
-			Q_ASSERT(0);
-		}
-
-
-		/// Create the new entry.
-		auto new_entry = std::make_shared<LibraryEntry>(*this);
-		new_entry->m_track_number = tn;
-//M_WARNING("THIS IS ALWAYS 0")
-		new_entry->m_total_track_number = file_metadata.numTracks();
-		new_entry->m_metadata = track_metadata;
-		new_entry->m_offset_secs = m_offset_secs;
-		new_entry->m_length_secs = m_length_secs;
-		new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
-		new_entry->m_is_populated = true;
-		new_entry->m_is_error = false;
-
-//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
-
-		retval.push_back(new_entry);
+		retval.push_back(this->shared_from_this());
 	}
+	else
+	{
+
+		for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
+		{
+			TrackMetadata sheet_track = file_metadata.track(tn);
+			qDebug() << "Track number:" << sheet_track.m_track_number;
+
+			// Have the file_metadata object "split" itself and give us just the metadata as if there
+			// was only this track in the file.
+			Metadata track_metadata = file_metadata.get_one_track_metadata(tn);
+
+			/// @todo Scan indexes here?
+
+			m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
+			if(sheet_track.m_length_frames > 0)
+			{
+				// Not the last track.
+				m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
+			}
+			else
+			{
+				// Must be the last track, so there's no cue entry for the start of the next track,
+				// so we have to calculate the length manually.
+				/// @note We no longer have to do this here, this is done in the Metadata class on cue sheet read.
+				Q_ASSERT(0);
+			}
+
+
+			/// Create the new entry.
+			auto new_entry = std::make_shared<LibraryEntry>(*this);
+			new_entry->m_track_number = tn;
+			//M_WARNING("THIS IS ALWAYS 0")
+			new_entry->m_total_track_number = file_metadata.numTracks();
+			new_entry->m_metadata = track_metadata;
+			new_entry->m_offset_secs = m_offset_secs;
+			new_entry->m_length_secs = m_length_secs;
+			new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
+			new_entry->m_is_populated = true;
+			new_entry->m_is_error = false;
+
+			//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+
+			retval.push_back(new_entry);
+		}
+	}
+	Q_ASSERT(retval.size() > 0);
 
 	return retval;
 }
 
-std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
+void LibraryEntry::populate(bool force_refresh)
 {
     // Populate the metadata.  Assumption is that all we have before calling this is the url.
-    // returns a list of LibraryEntry's, or this if m_url was not a multi-track file.
+	// See split_to_tracks() for further handling of a multi-track file.
 
-	std::vector<std::shared_ptr<LibraryEntry>> retval;
+//	std::vector<std::shared_ptr<LibraryEntry>> retval;
 
 	// Some sanity checks first.
 	if(!m_url.isValid())
 	{
         qWr() << "Invalid URL:" << m_url;
-		return retval;
+//		return retval;
 	}
     if(!force_refresh && isPopulated() )
 	{
 		// Nothing to do.
 		qDebug() << "Already populated.";
-		return retval;
+//		return retval;
 	}
 
     // Get the MIME type.
-    auto mdb = amlmApp->mime_db();
+	auto* mdb = amlmApp->mime_db();
     m_mime_type = mdb->mimeTypeForUrl(m_url);
 
 	// Try to read the metadata of the file.
@@ -149,10 +162,8 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 	{
 		// Read failed.
 		qWarning() << "Can't get metadata for file '" << m_url << "'";
-		auto new_entry = std::make_shared<LibraryEntry>(*this);
-		new_entry->m_is_populated = true;
-		new_entry->m_is_error = true;
-		retval.push_back(new_entry);
+		m_is_populated = true;
+		m_is_error = true;
 	}
 	else
 	{
@@ -160,14 +171,14 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 		{
 			// Couldn't load a cue sheet, this is probably a single-song file.
 //			qDebug() << "No cuesheet for file" << this->m_url;
-
-			auto new_entry = std::make_shared<LibraryEntry>(*this);
-			new_entry->m_metadata = file_metadata;
-			new_entry->m_length_secs = file_metadata.total_length_seconds();
-			new_entry->m_is_subtrack = false;
-			new_entry->m_is_populated = true;
-			new_entry->m_is_error = false;
-			retval.push_back(new_entry);
+//#error "SHARED FROM THIS"
+//			auto new_entry = std::make_shared<LibraryEntry>(*this);
+//			std::shared_ptr<LibraryEntry> new_entry = this->shared_from_this();
+			m_metadata = file_metadata;
+			m_length_secs = file_metadata.total_length_seconds();
+			m_is_subtrack = false;
+			m_is_populated = true;
+			m_is_error = false;
 		}
 		else
 		{
@@ -175,20 +186,16 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 			// but we'll let the caller decide whether to split into tracks or not.
 			m_metadata = file_metadata;
 			/// Create the new entry.
-			auto new_entry = std::make_shared<LibraryEntry>(*this);
-			new_entry->m_track_number = 1; /// @todo DUMMY VAL
-			new_entry->m_total_track_number = file_metadata.numTracks();
-			new_entry->m_metadata = file_metadata;
-			new_entry->m_offset_secs = m_offset_secs;
-			new_entry->m_length_secs = m_length_secs;
-			new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
-			new_entry->m_is_populated = true;
-			new_entry->m_is_error = false;
-			retval.push_back(new_entry); //split_to_tracks();
+			m_track_number = -1; /// @todo DUMMY VAL
+			m_total_track_number = file_metadata.numTracks();
+			m_metadata = file_metadata;
+			m_offset_secs = Fraction(0,1);
+			m_length_secs = file_metadata.total_length_seconds();
+			m_is_subtrack = (file_metadata.numTracks() > 1);
+			m_is_populated = true;
+			m_is_error = false;
 		}
 	}
-
-	return retval;
 }
 
 std::shared_ptr<LibraryEntry> LibraryEntry::refresh_metadata()
@@ -232,6 +239,7 @@ std::shared_ptr<LibraryEntry> LibraryEntry::refresh_metadata()
 		else
 		{
 			/// Multitrack file.
+			qWr() << "TODO: MULTITRACK FILE";
 M_WARNING("TODO MULTITRACK METADATA REFRESH")
 			Q_ASSERT(0);
 		}

@@ -29,8 +29,6 @@
 #include <QStandardPaths>
 #include <QIcon>
 #include <QDebug>
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QTemporaryFile>
 #include <QDir>
 #include <QFileIconProvider>
@@ -56,7 +54,8 @@
 AMLM_QREG_CALLBACK([](){
     qIn() << "Registering LibraryModel types";
     qRegisterMetaType<VecOfUrls>();
-    qRegisterMetaType<VecOfLEs>();
+//    qRegisterMetaType<VecOfLEs>();
+	qRegisterMetaType<std::vector<std::shared_ptr<LibraryEntry>>>("VecOfLEs");
     qRegisterMetaType<VecOfPMIs>();
     });
 

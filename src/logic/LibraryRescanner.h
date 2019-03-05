@@ -43,8 +43,8 @@ class LibraryEntry;
 
 struct MetadataReturnVal
 {
-	QVector<QPersistentModelIndex> m_original_pindexes;
-	QVector<std::shared_ptr<LibraryEntry>> m_new_libentries;
+	std::vector<QPersistentModelIndex> m_original_pindexes;
+	std::vector<std::shared_ptr<LibraryEntry>> m_new_libentries;
 	int m_num_tracks_found {0};
 
 	void push_back(QPersistentModelIndex pmi, std::shared_ptr<LibraryEntry> le)
@@ -79,7 +79,7 @@ class LibraryRescanner : public QObject
 Q_SIGNALS:
 
 public:
-	LibraryRescanner(LibraryModel* parent);
+	explicit LibraryRescanner(LibraryModel* parent);
 	~LibraryRescanner() override;
 
 	void startAsyncRescan(QVector<VecLibRescannerMapItems> items_to_rescan);
@@ -88,7 +88,7 @@ public:
 	qint64 m_last_elapsed_time_dirscan {0};
 
 public Q_SLOTS:
-	void startAsyncDirectoryTraversal(QUrl dir_url);
+	void startAsyncDirectoryTraversal(const QUrl& dir_url);
 	void cancelAsyncDirectoryTraversal();
 
 //	void onDirTravFinished();

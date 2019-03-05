@@ -401,6 +401,11 @@ bool Metadata::isError() const { return m_is_error; }
 
 bool Metadata::isFromCache() const { return m_is_from_cache; }
 
+Metadata::operator bool() const
+{
+	return hasBeenRead() && !isError();
+}
+
 std::string Metadata::GetFiletypeName() const
 {
 	return f_filetype_to_string_map[m_audio_file_type];
@@ -598,8 +603,6 @@ static const strviw_type XMLTAG_TRACKS("m_tracks");
 
 QVariant Metadata::toVariant() const
 {
-//	QVariantMap map;
-
 	QVariantInsertionOrderedMap map;
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
@@ -625,10 +628,6 @@ QVariant Metadata::toVariant() const
 	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
 
 	return map;
-
-//	map.insert(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL, pImpl->toVariant());
-
-//	return map;
 }
 
 void Metadata::fromVariant(const QVariant& variant)

@@ -24,6 +24,8 @@
 #include "TrackMetadata.h"
 #include "CueSheetParser.h"
 
+#if 0
+
 class MetadataTaglib : public MetadataAbstractBase
 {
 public:
@@ -59,6 +61,8 @@ private:
 
     MetadataTaglib* clone_impl() const override;
 };
+
+#endif
 
 namespace TagLib
 {

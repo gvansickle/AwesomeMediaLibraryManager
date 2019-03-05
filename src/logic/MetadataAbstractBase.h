@@ -44,7 +44,7 @@
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
 
-
+#if OBSOLETE
 
 class Metadata;
 class TrackMetadata;
@@ -150,5 +150,7 @@ private:
 	/// Override this in derived classes.
 	virtual MetadataAbstractBase * clone_impl() const = 0;
 };
+
+#endif // OBSOLETE
 
 #endif // METADATAABSTRACTBASE_H

@@ -50,12 +50,15 @@ class QFileDevice;
 class LibraryRescanner;
 
 using VecOfUrls = QVector<QUrl>;
-using VecOfLEs = QVector<std::shared_ptr<LibraryEntry> >;
+using VecOfLEs = std::vector<std::shared_ptr<LibraryEntry> >;
 using VecOfPMIs = QVector<QPersistentModelIndex>;
 struct LibraryRescannerMapItem;
 
 Q_DECLARE_METATYPE(VecOfUrls);
-Q_DECLARE_METATYPE(VecOfLEs);
+//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
+//Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
+//Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
+//Q_DECLARE_METATYPE(VecOfLEs);
 Q_DECLARE_METATYPE(VecOfPMIs);
 
 

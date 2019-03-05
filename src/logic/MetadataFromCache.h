@@ -28,6 +28,7 @@
 // Ours
 #include <logic/serialization/ISerializable.h>
 
+#if OBSOLETE
 
 class MetadataFromCache : public MetadataAbstractBase, public virtual ISerializable
 {
@@ -55,5 +56,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(MetadataFromCache);
+
+#endif //OBSOLETE
 
 #endif // METADATAFROMCACHE_H

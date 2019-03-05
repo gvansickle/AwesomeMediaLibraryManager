@@ -63,7 +63,7 @@ public:
 	bool isFromCache() const;
 
 	/// Conversion to bool.  Returns true if Metadata has been read successfully.
-	explicit operator bool() const { return hasBeenRead() && !isError(); }
+	explicit operator bool() const;
 
 	/// @name Meta-metadata.
 	/// @{
