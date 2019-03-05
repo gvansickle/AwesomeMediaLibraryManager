@@ -79,11 +79,11 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 
 	if(m_total_track_number == 0 || m_total_track_number == 1)
 	{
+		// Either unknown or only one track, return this.
 		retval.push_back(this->shared_from_this());
 	}
 	else
 	{
-
 		for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
 		{
 			TrackMetadata sheet_track = file_metadata.track(tn);
@@ -122,7 +122,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 			new_entry->m_is_populated = true;
 			new_entry->m_is_error = false;
 
-			//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+//			qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
 
 			retval.push_back(new_entry);
 		}
@@ -134,22 +134,18 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 
 void LibraryEntry::populate(bool force_refresh)
 {
-    // Populate the metadata.  Assumption is that all we have before calling this is the url.
+	// Populate the file metadata.  Assumption is that all we have before calling this is the url.
 	// See split_to_tracks() for further handling of a multi-track file.
-
-//	std::vector<std::shared_ptr<LibraryEntry>> retval;
 
 	// Some sanity checks first.
 	if(!m_url.isValid())
 	{
         qWr() << "Invalid URL:" << m_url;
-//		return retval;
 	}
     if(!force_refresh && isPopulated() )
 	{
 		// Nothing to do.
 		qDebug() << "Already populated.";
-//		return retval;
 	}
 
     // Get the MIME type.
@@ -171,9 +167,6 @@ void LibraryEntry::populate(bool force_refresh)
 		{
 			// Couldn't load a cue sheet, this is probably a single-song file.
 //			qDebug() << "No cuesheet for file" << this->m_url;
-//#error "SHARED FROM THIS"
-//			auto new_entry = std::make_shared<LibraryEntry>(*this);
-//			std::shared_ptr<LibraryEntry> new_entry = this->shared_from_this();
 			m_metadata = file_metadata;
 			m_length_secs = file_metadata.total_length_seconds();
 			m_is_subtrack = false;
@@ -216,7 +209,7 @@ std::shared_ptr<LibraryEntry> LibraryEntry::refresh_metadata()
 	{
 		// Read failed.
 		qWarning() << "Can't get metadata for file" << m_url;
-		auto new_entry = std::make_shared<LibraryEntry>(*this);
+		auto new_entry = this->shared_from_this();
 		new_entry->m_is_populated = true;
 		new_entry->m_is_error = true;
 		retval = new_entry;
@@ -228,7 +221,7 @@ std::shared_ptr<LibraryEntry> LibraryEntry::refresh_metadata()
 			// Couldn't load a cue sheet, this is probably a single-song file.
 			qDebug() << "No cuesheet for file" << this->m_url;
 
-			auto new_entry = std::make_shared<LibraryEntry>(*this);
+			auto new_entry = this->shared_from_this();
 			new_entry->m_metadata = file_metadata;
 			new_entry->m_length_secs = file_metadata.total_length_seconds();
 			new_entry->m_is_subtrack = false;

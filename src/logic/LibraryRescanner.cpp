@@ -297,11 +297,12 @@ M_TODO("This isn't scanning.");
 
 				lib_entry->populate(true);
 				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-				if(lib_entry->isSubtrack())
-				{
-					lib_entries = lib_entry->split_to_tracks();
-				}
-				else
+				/// @note Here we only care about the LibraryEntry corresponding to each file.
+//				if(!lib_entry->isSubtrack())
+//				{
+//					lib_entries = lib_entry->split_to_tracks();
+//				}
+//				else
 				{
 					lib_entries.push_back(lib_entry);
 				}

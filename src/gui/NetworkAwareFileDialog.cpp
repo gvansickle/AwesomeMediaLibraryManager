@@ -21,6 +21,11 @@
 
 #include "NetworkAwareFileDialog.h"
 
+// Std C++
+#include <memory>
+#include <set>
+
+// Qt5
 #include <QApplication>
 #include <QRegularExpression>
 #include <QDebug>
@@ -40,12 +45,11 @@
 #include <gdk/x11/gdkx11window.h>
 #endif // HAVE_GTKMM01 == 1
 
-#include <memory>
-#include <set>
 
+// Ours
 #include <utils/in.h>
 #include <utils/DebugHelpers.h>
-
+#include <utils/ConnectHelpers.h>
 #include "AMLMSettings.h"
 
 /**
@@ -117,7 +121,7 @@ NetworkAwareFileDialog::NetworkAwareFileDialog(QWidget *parent, const QString& c
 
     // We need to track the filter the user has selected (i.e. "Text files (*.txt)") via this signal.
     // For QFileDialog there doesn't appear to be any better way to get this information after the exec() call returns.
-	connect(m_the_qfiledialog.data(), &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
+	connect_or_die(m_the_qfiledialog.data(), &QFileDialog::filterSelected, this, &NetworkAwareFileDialog::onFilterSelected);
 }
 
 NetworkAwareFileDialog::~NetworkAwareFileDialog()
@@ -384,7 +388,7 @@ QDialog::DialogCode NetworkAwareFileDialog::exec_qfiledialog()
         m_the_qfiledialog->setOption(QFileDialog::DontUseNativeDialog, true);
     }
 
-    qInfo() << "Using QFileDialog, is_dlg_native:" << is_dlg_native();
+	qInfo() << "Using QFileDialog, is_dlg_native?:" << is_dlg_native();
 
     QDialog::DialogCode retval = static_cast<QDialog::DialogCode>(m_the_qfiledialog->exec());
     return retval;
