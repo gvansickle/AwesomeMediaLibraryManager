@@ -247,9 +247,9 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
         else
         {
 			qDb() << "Re-reading metatdata for item" << item->getUrl();
-            std::shared_ptr<LibraryEntry> new_entry = item->refresh_metadata();
+            item->refresh_metadata();
 
-            if(new_entry == nullptr)
+            if(item->isError())
             {
                 // Couldn't load the metadata from the file.
                 // Only option here is to return the old item, which should now be marked with an error.
@@ -262,7 +262,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
             {
                 // Repackage it and return.
                 retval.m_original_pindexes.push_back(mapitem[0].pindex);
-                retval.m_new_libentries.push_back(new_entry);
+                retval.m_new_libentries.push_back(item);
                 retval.m_num_tracks_found = 1;
             }
         }

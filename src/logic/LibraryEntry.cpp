@@ -191,53 +191,9 @@ void LibraryEntry::populate(bool force_refresh)
 	}
 }
 
-std::shared_ptr<LibraryEntry> LibraryEntry::refresh_metadata()
+void LibraryEntry::refresh_metadata()
 {
-	std::shared_ptr<LibraryEntry> retval = nullptr;
-
-	// Some sanity checks first.
-	if(!m_url.isValid())
-	{
-		// Nothing to do.
-		qDebug() << "Invalid URL or already populated.";
-		return retval;
-	}
-
-	// Try to read the metadata of the file.
-	Metadata file_metadata = Metadata::make_metadata(m_url);
-	if(!file_metadata)
-	{
-		// Read failed.
-		qWarning() << "Can't get metadata for file" << m_url;
-		auto new_entry = this->shared_from_this();
-		new_entry->m_is_populated = true;
-		new_entry->m_is_error = true;
-		retval = new_entry;
-	}
-	else
-	{
-		if(!file_metadata.hasCueSheet())
-		{
-			// Couldn't load a cue sheet, this is probably a single-song file.
-			qDebug() << "No cuesheet for file" << this->m_url;
-
-			auto new_entry = this->shared_from_this();
-			new_entry->m_metadata = file_metadata;
-			new_entry->m_length_secs = file_metadata.total_length_seconds();
-			new_entry->m_is_subtrack = false;
-			new_entry->m_is_populated = true;
-			new_entry->m_is_error = false;
-			retval = new_entry;
-		}
-		else
-		{
-			/// Multitrack file.
-			qWr() << "TODO: MULTITRACK FILE";
-M_WARNING("TODO MULTITRACK METADATA REFRESH")
-			Q_ASSERT(0);
-		}
-	}
-	return retval;
+	populate(true);
 }
 
 bool LibraryEntry::isFromSameFileAs(const LibraryEntry *other) const
