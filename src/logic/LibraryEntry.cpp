@@ -193,6 +193,7 @@ void LibraryEntry::populate(bool force_refresh)
 
 void LibraryEntry::refresh_metadata()
 {
+	/// @todo Eliminate either this or populate().
 	populate(true);
 }
 
