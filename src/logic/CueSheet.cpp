@@ -197,6 +197,33 @@ std::string tostdstr(enum DiscMode disc_mode)
 	}
 }
 
+static std::string LibCueHelper_cd_get_catalog(struct Cd *cd)
+{
+	struct DummyCd
+	{
+		int mode;
+		const char* catalog;
+	};
+
+	std::string retval {};
+
+	/// @todo This is gross, pretend you don't see this.
+	/// @todo There is no libcue API through which to read this member, so this.
+	/// We should probably convert over to the libcue in cuetools here:
+	/// @link https://github.com/knight-rider/cuetools
+	/// That does have an accessor and last activity was Nov 2018.
+
+	const DummyCd* dummy_cd = (const DummyCd*)cd;
+
+	const char* catalog_cstr = dummy_cd->catalog;
+	if(catalog_cstr != nullptr)
+	{
+		retval = catalog_cstr;
+	}
+
+	return retval;
+}
+
 bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
 {
 	// Mutex FBO libcue.  Libcue isn't thread-safe.
@@ -221,10 +248,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
     else
     {
         // Libcue parsed the cuesheet text, let's extract what we need.
-		qDb() << "CD_DUMP:";
-		cd_dump(cd);
-#warning "TODO"
-		qDb() << "CATALOG:" << (&(cd)+sizeof(int));
+//		qDb() << "CD_DUMP:";
+//		cd_dump(cd);
+		m_disc_catalog = LibCueHelper_cd_get_catalog(cd);
 		enum DiscMode disc_mode = cd_get_mode(cd);
 		qDb() << "Disc Mode:" << toqstr(tostdstr(disc_mode));
 		// Get the Cue Sheet's REM contents.
@@ -237,8 +263,8 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 		}
 		else
 		{
-			qDb() << "CDTEXT_DUMP:";
-			cdtext_dump(cdtext, false);
+			qDb() << "CDTEXT_DUMP (disc):";
+			cdtext_dump(cdtext, 0);
 		}
 	    AMLM_WARNIF(cdtext == nullptr);
 		auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);

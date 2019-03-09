@@ -151,22 +151,17 @@ static AMLMTagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 	AMLMTagMap retval;
 	for(const auto& key_val_pairs : pm)
 	{
-		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
-		//std::string key = reverse_lookup(key_val_pairs.first.toCString());
-		//qDebug() << "Normalized key:" << key;
 		std::string key = tostdstr(key_val_pairs.first);
 
 		std::vector<std::string> out_val;
 		// Iterate over the StringList for this key.
 		for(const auto& value : key_val_pairs.second)
 		{
-//			out_val.push_back(tostdstr(value));
 			auto sstr = tostdstr(value);
 			retval.insert({key, sstr});
 		}
-//		retval.insert(std::make_pair(toqstr(key), toqstr(out_val)));
 	}
-	//qDebug() << "Returning:" << retval;
+	qDb() << "Returning:" << retval;
 	return retval;
 }
 
@@ -222,44 +217,48 @@ bool Metadata::read(const QUrl& url)
 	m_audio_file_url = url;
 
 	QString url_as_local = url.toLocalFile();
-	// Open the file.
-	TagLib::FileRef fr {openFileRef(url_as_local)};
+
+	// Open a TagLib FileRef on the file.
+	// Use "Accurate" mode for reading audio property info.
+	TagLib::FileRef fr { openFileRef(url_as_local, /*read audio props:*/true, TagLib::AudioProperties::Accurate) };
 	if(fr.isNull())
 	{
-		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
+		qWr() << "Unable to open file" << url_as_local << "with TagLib";
 		m_is_error = true;
 		m_read_has_been_attempted = true;
 		return false;
 	}
 
-
-	/// @todo TEST
-	/// @note The generic properties do not contain CUESHEETs.
-	if(fr.tag()->properties().contains("CUESHEET"))
+	//
+	// Read the AudioProperties.
+	//
+	TagLib::AudioProperties* audio_properties;
+	audio_properties = fr.audioProperties();
+	if(audio_properties != nullptr)
 	{
-		qDebug() << "Generic properties() contains CUESHEET";
+		// Got some audio properties.
+		m_bitrate_kb_sec = audio_properties->bitrate();
+		m_num_channels = audio_properties->channels();
+		m_length_in_milliseconds = audio_properties->lengthInMilliseconds();
+		m_sample_rate = audio_properties->sampleRate();
 	}
 	else
 	{
-//		qDebug() << "No generic CUESHEET";
+		qWr() << "AudioProperties was null";
 	}
 
-	bool has_cat = fr.tag()->properties().contains("CATALOG");
-	if(has_cat)
-	{
-		qDb() << "HAS CATALOG";
-	}
-	TagLib::PropertyMap pm = fr.tag()->properties();
-	for(const auto& cit : pm)
-	{
-		auto key = cit.first;
-		for(const auto& val : cit.second)
-		{
-			qDb() << "PROPERTYMAP:" << key << val;
-		}
-	}
 
-	// Downcast it to whatever type it really is.
+//	TagLib::PropertyMap pm = fr.tag()->properties();
+//	for(const auto& cit : pm)
+//	{
+//		auto key = cit.first;
+//		for(const auto& val : cit.second)
+//		{
+//			qDb() << "PROPERTYMAP:" << key << val;
+//		}
+//	}
+
+	// Downcast the FileRef to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
 	{
 		m_audio_file_type = AudioFileType::MP3;
@@ -326,9 +325,12 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 	/// @todo The sidecar cue sheet support will then also kick in, and you get weirdness like a track will have two names.
 	/// Need to do some kind of comparison/validity check.
 #if 1
+		/// @note TagLib docs: "Exports the tags of the file as dictionary mapping (human readable)
+		/// tag names (Strings) to StringLists of tag values. The default implementation in this class
+		/// considers only the usual built-in tags (artist, album, ...) and only one value per key."
 		TagLib::PropertyMap pm = tag->properties();
 
-		for(auto e : pm)
+		for(const auto& e : pm)
 		{
 			qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
 		}
@@ -340,20 +342,10 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
 #endif
 	}
 
-	// Read the AudioProperties.
-	TagLib::AudioProperties* audio_properties;
-	audio_properties = fr.audioProperties();
-	if(audio_properties != nullptr)
-	{
-		m_length_in_milliseconds = audio_properties->lengthInMilliseconds();
-		//qDebug() << "Length in ms" << m_length_in_milliseconds;
-	}
-	else
-	{
-		qWarning() << "AudioProperties was null";
-	}
 
-
+	//
+	// Cuesheet handling
+	//
 	std::unique_ptr<CueSheet> cuesheet;
 	cuesheet.reset();
 

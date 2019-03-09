@@ -135,7 +135,30 @@ public:
 
 	/// @}
 
+private:
+
+	QUrl m_audio_file_url {};
+
 	AudioFileType::Type m_audio_file_type {AudioFileType::UNKNOWN};
+
+	/// @name Disc/full-file audio properties, obtained via TagLib.
+	/// @{
+
+	/// Per TagLib docs, "the most appropriate bit rate for the file in kb/s. For
+	/// constant bitrate formats this is simply the bitrate of the file. For variable
+	/// bitrate formats this is either the average or nominal bitrate.".
+	int64_t m_bitrate_kb_sec {0};
+
+	/// Number of channels of audio.
+	int8_t m_num_channels {0};
+
+	/// Sample rate in samples/sec.
+	int64_t m_sample_rate {0};
+
+	/// Length of the entire file in ms.
+	/// We need this for the CueSheet so we can determine the length of the final track.
+	int64_t m_length_in_milliseconds {0};
+	/// @}
 
 	bool m_has_cuesheet {false};
 
@@ -160,10 +183,7 @@ public:
 	bool m_is_error {false};
 	bool m_is_from_cache {false};
 
-protected:
-	QUrl m_audio_file_url {};
 
-	long m_length_in_milliseconds {0};
 
 	/// @name Track info.
 	/// @{

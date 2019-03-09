@@ -61,8 +61,6 @@ public:
 
     /**
      * Returns the parsed TrackMetadata entries as a std::map.
-     *
-     * @warning MAYBE TEMP?
      */
     std::map<int, TrackMetadata> get_track_map() const;
 
@@ -87,8 +85,10 @@ protected:
     friend QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
 private:
+	/// Mutex for serializing access to libcue.  Libcue isn't thread-safe.
+	static std::mutex m_libcue_mutex;
 
-    // File info
+	/// @name File info
     /// @todo More that one file per sheet?
 
     /// @name Mandatory Info
@@ -98,6 +98,9 @@ private:
      * "Name and type of at least one file being indexed"
      */
     /// @todo
+
+	/// The UPC/EAN code of the disc.
+	std::string m_disc_catalog {};
 
 	uint64_t m_length_in_milliseconds {0};
 
@@ -122,9 +125,6 @@ private:
      * - Track numbers must be unique within a CUESHEET."
      */
     std::map<int, TrackMetadata> m_tracks;
-
-	// Mutex for serializing access to libcue.  Libcue isn't thread-safe.
-    static std::mutex m_libcue_mutex;
 };
 
 Q_DECLARE_METATYPE(CueSheet);
