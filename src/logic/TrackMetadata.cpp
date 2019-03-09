@@ -26,6 +26,7 @@
 
 // Libcue.
 #include <libcue/libcue.h>
+#include <libcue/cd.h>
 
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
@@ -49,7 +50,7 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Cdtext* 
 	PTI_STR_LIST(X)
 #undef X
 
-//	qDb() << "m_PTI_GENRE" << (cdtext_get(PTI_GENRE, cdtext) == nullptr ? "NULL" : cdtext_get(PTI_GENRE, cdtext));
+	qDb() << "m_PTI_UPC_ISRC" << (cdtext_get(PTI_UPC_ISRC, cdtext) == nullptr ? "NULL" : cdtext_get(PTI_UPC_ISRC, cdtext));
 
 	return retval;
 }

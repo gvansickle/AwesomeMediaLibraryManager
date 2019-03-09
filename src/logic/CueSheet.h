@@ -40,7 +40,9 @@ class TrackMetadata;
 
 /**
  * CD cue sheet class.
+ * C++ class for abstracing cuesheet info, mostly digested via libcue.
  * @link http://wiki.hydrogenaud.io/index.php?title=Cue_sheet
+ * @link https://en.wikipedia.org/wiki/Cue_sheet_(computing)
  */
 class CueSheet
 {
@@ -97,6 +99,7 @@ private:
      */
     /// @todo
 
+	uint64_t m_length_in_milliseconds {0};
 
     /// @}
 

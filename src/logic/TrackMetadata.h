@@ -42,8 +42,6 @@ using Frames = qint64;
  */
 class TrackMetadata : public ISerializable
 {
-//    Q_GADGET
-
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(TrackMetadata);
 

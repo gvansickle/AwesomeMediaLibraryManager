@@ -32,7 +32,8 @@
 /// and apparently MS's stdio.h isn't C++-safe.
 extern "C" {
 // Libcue
-#include <libcue.h>
+#include <libcue/libcue.h>
+#include <libcue/cd.h>
 }
 
 /// Ours, Qt5/KF5-related
@@ -126,17 +127,6 @@ std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, ui
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
     cue_url = cue_url_as_str;
     Q_ASSERT(cue_url.isValid());
-//    {
-//        qWr() << "URL has no filename:" << cue_url;
-//    }
-
-//    auto kfileitem = new KFileItem(cue_url /*, mimetype = unknown, mode=unknown */);
-
-//    Q_ASSERT(kfileitem);
-//    qIn() << "URL Info:" << cue_url;
-//    qIn() << "MIME type:" << kfileitem->mimetype();
-//    qIn() << "Local?:" << kfileitem->isLocalFile();
-//    qIn() << "mostLocalUrl:" << kfileitem->mostLocalUrl();
 
     // Try to open it.
     QFile cuefile(cue_url.toLocalFile());
@@ -188,6 +178,25 @@ uint8_t CueSheet::get_total_num_tracks() const
     return m_num_tracks_on_media;
 }
 
+std::string tostdstr(enum DiscMode disc_mode)
+{
+	switch(disc_mode)
+	{
+	case MODE_CD_DA:  /* CD-DA */
+		return "CD-DA";
+		break;
+	case MODE_CD_ROM: /* CD-ROM mode 1 */
+		return "CD-ROM mode 1";
+		break;
+	case MODE_CD_ROM_XA:  /* CD-ROM XA and CD-I */
+		return "CD-ROM XA or CD-I";
+		break;
+	default:
+		return "UNKNOWN";
+		break;
+	}
+}
+
 bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t length_in_ms)
 {
 	// Mutex FBO libcue.  Libcue isn't thread-safe.
@@ -201,9 +210,8 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
 	Q_ASSERT_X(cd != nullptr, __PRETTY_FUNCTION__, "failed to parse cuesheet string");
 
-M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
-    /// @todo NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.
-    uint64_t m_length_in_milliseconds = length_in_ms;
+    // NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.
+    m_length_in_milliseconds = length_in_ms;
 
     if(cd == nullptr)
     {
@@ -212,7 +220,37 @@ M_WARNING("TEMP: NEED THE TOTAL LENGTH FOR LAST TRACK LENGTH.");
     }
     else
     {
-        // Libcue parsed it, let's extract what we need.
+        // Libcue parsed the cuesheet text, let's extract what we need.
+		qDb() << "CD_DUMP:";
+		cd_dump(cd);
+		enum DiscMode disc_mode = cd_get_mode(cd);
+		qDb() << "Disc Mode:" << toqstr(tostdstr(disc_mode));
+		// Get the Cue Sheet's REM contents.
+		Rem* cdrem = cd_get_rem(cd);
+		// Get the disc-level CD-TEXT.
+	    Cdtext* cdtext = cd_get_cdtext(cd);
+		if(cdtext_is_empty(cdtext) == 0)
+		{
+			qWr() << "No CDTEXT";
+		}
+		else
+		{
+			qDb() << "CDTEXT_DUMP:";
+			cdtext_dump(cdtext, false);
+		}
+	    AMLM_WARNIF(cdtext == nullptr);
+		auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);
+		std::string disc_id {};
+		if(disc_id_cstr == nullptr)
+		{
+			qWr() << "No DiscID";
+		}
+		else
+		{
+			/// @note Never seem to get here.
+			disc_id = disc_id_cstr;
+		}
+	    qDb() << M_ID_VAL(disc_id);
 
         m_num_tracks_on_media = cd_get_ntrack(cd);
         qDebug() << "Num Tracks:" << m_num_tracks_on_media;

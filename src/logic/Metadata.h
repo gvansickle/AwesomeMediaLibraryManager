@@ -85,8 +85,10 @@ public:
 	AMLMTagMap tagmap_InfoTag() { return m_tm_infotag; }
 	/// @}
 
-	/// Audio stream properites.
+	/// @name Audio stream properites.
+	/// @{
 	Fraction total_length_seconds() const;
+	/// @}
 
 	/// Return the first entry matching the key, or an empty string if no such key.
 	std::string operator[](const std::string& key) const;

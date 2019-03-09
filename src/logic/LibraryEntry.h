@@ -53,6 +53,7 @@ public:
 	void populate(bool force_refresh = false);
 	std::vector<std::shared_ptr<LibraryEntry>> split_to_tracks();
 
+	// Same as populate().
 	void refresh_metadata();
 
 	bool isPopulated() const { return m_is_populated; }

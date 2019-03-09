@@ -211,7 +211,9 @@ M_TODO("What's going on here?");
 #endif
 }
 
-
+/**
+ * Read the metadata associated with the given URL.
+ */
 bool Metadata::read(const QUrl& url)
 {
 	// String for storing an embedded cuesheet if we have one.
@@ -240,6 +242,21 @@ bool Metadata::read(const QUrl& url)
 	else
 	{
 //		qDebug() << "No generic CUESHEET";
+	}
+
+	bool has_cat = fr.tag()->properties().contains("CATALOG");
+	if(has_cat)
+	{
+		qDb() << "HAS CATALOG";
+	}
+	TagLib::PropertyMap pm = fr.tag()->properties();
+	for(const auto& cit : pm)
+	{
+		auto key = cit.first;
+		for(const auto& val : cit.second)
+		{
+			qDb() << "PROPERTYMAP:" << key << val;
+		}
 	}
 
 	// Downcast it to whatever type it really is.
@@ -309,12 +326,12 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 	/// @todo The sidecar cue sheet support will then also kick in, and you get weirdness like a track will have two names.
 	/// Need to do some kind of comparison/validity check.
 #if 1
-		auto pm = tag->properties();
+		TagLib::PropertyMap pm = tag->properties();
 
-//        for(auto e : pm)
-//        {
-//            qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
-//        }
+		for(auto e : pm)
+		{
+			qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
+		}
 		m_tag_map = PropertyMapToTagMap(pm);
 
 M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
