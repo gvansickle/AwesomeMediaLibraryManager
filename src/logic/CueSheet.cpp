@@ -223,6 +223,8 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
         // Libcue parsed the cuesheet text, let's extract what we need.
 		qDb() << "CD_DUMP:";
 		cd_dump(cd);
+#warning "TODO"
+		qDb() << "CATALOG:" << (&(cd)+sizeof(int));
 		enum DiscMode disc_mode = cd_get_mode(cd);
 		qDb() << "Disc Mode:" << toqstr(tostdstr(disc_mode));
 		// Get the Cue Sheet's REM contents.
