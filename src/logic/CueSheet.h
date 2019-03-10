@@ -37,6 +37,7 @@ class QUrl;
 //#include "TrackMetadata.h"  ///< Per-track cue sheet info
 class TrackMetadata;
 #include "CueSheetParser.h"
+#include <logic/serialization/ISerializable.h>
 
 /**
  * CD cue sheet class.
@@ -44,7 +45,7 @@ class TrackMetadata;
  * @link http://wiki.hydrogenaud.io/index.php?title=Cue_sheet
  * @link https://en.wikipedia.org/wiki/Cue_sheet_(computing)
  */
-class CueSheet
+class CueSheet : public virtual ISerializable
 {
 public:
 	CueSheet();
@@ -72,6 +73,12 @@ public:
 
     /// @}
 
+
+	/// @name Serialization
+	/// @{
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+	/// @}
 
 protected:
 
@@ -112,6 +119,10 @@ private:
 	/// Also, this shows up in cue sheets as "REM DISCID nnnnnnnn", note the lack of a "_".  Surveys of
 	/// my collection show the value to always be a 32-bit hex string.
 	std::string m_disc_id {};
+
+	/// @todo: REM DISCNUMBER, TOTALDISCS, DATE
+	///
+	///
 
 	uint64_t m_length_in_milliseconds {0};
 

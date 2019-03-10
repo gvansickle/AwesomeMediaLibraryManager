@@ -178,10 +178,26 @@ std::map<int, TrackMetadata> CueSheet::get_track_map() const
 
 uint8_t CueSheet::get_total_num_tracks() const
 {
-    return m_num_tracks_on_media;
+	return m_num_tracks_on_media;
 }
 
-std::string tostdstr(enum DiscMode disc_mode)
+QVariant CueSheet::toVariant() const
+{
+	QVariantMap map;
+
+	/// TODO
+	Q_ASSERT(0);
+
+	return map;
+}
+
+void CueSheet::fromVariant(const QVariant& variant)
+{
+	/// TODO
+	Q_ASSERT(0);
+}
+
+static std::string tostdstr(enum DiscMode disc_mode)
 {
 	switch(disc_mode)
 	{

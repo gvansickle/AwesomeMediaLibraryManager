@@ -113,7 +113,7 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 			/// Create the new entry.
 			auto new_entry = std::make_shared<LibraryEntry>(*this);
 			new_entry->m_track_number = tn;
-			//M_WARNING("THIS IS ALWAYS 0")
+
 			new_entry->m_total_track_number = file_metadata.numTracks();
 			new_entry->m_metadata = track_metadata;
 			new_entry->m_offset_secs = m_offset_secs;

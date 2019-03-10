@@ -146,7 +146,7 @@ std::set<std::string> Metadata::getNewTags()
 	return f_newly_discovered_keys;
 }
 
-static AMLMTagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
+static AMLMTagMap PropertyMapToAMLMTagMap(TagLib::PropertyMap pm)
 {
 	AMLMTagMap retval;
 	for(const auto& key_val_pairs : pm)
@@ -207,7 +207,7 @@ M_TODO("What's going on here?");
 }
 
 /**
- * Read the metadata associated with the given URL.
+ * Read the metadata associated with the given URL with TagLib.
  */
 bool Metadata::read(const QUrl& url)
 {
@@ -248,6 +248,9 @@ bool Metadata::read(const QUrl& url)
 	}
 
 
+	//
+	// Tags
+	//
 //	TagLib::PropertyMap pm = fr.tag()->properties();
 //	for(const auto& cit : pm)
 //	{
@@ -266,9 +269,9 @@ bool Metadata::read(const QUrl& url)
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
 
-		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToTagMap(file->ID3v1Tag()->properties());
-		if(m_has_id3v2)	m_tm_id3v2 = PropertyMapToTagMap(file->ID3v2Tag()->properties());
-		if(m_has_ape) m_tm_ape = PropertyMapToTagMap(file->APETag()->properties());
+		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties());
+		if(m_has_id3v2)	m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
+		if(m_has_ape) m_tm_ape = PropertyMapToAMLMTagMap(file->APETag()->properties());
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
 	{
@@ -277,12 +280,9 @@ bool Metadata::read(const QUrl& url)
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
 
-		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToTagMap(file->ID3v1Tag()->properties());
+		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties());
 		if(m_has_ogg_xipfcomment)
 		{
-#if 0
-			m_tm_xipf = PropertyMapToTagMap(file->xiphComment()->properties());
-#endif
 			// TagLib has some funky kicks going on here:
 			/// @link https://taglib.org/api/classTagLib_1_1FLAC_1_1File.html#a31ffa82b2e168f5625311cbfa030f04f
 			// Re ->tag(): "Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
@@ -295,12 +295,10 @@ bool Metadata::read(const QUrl& url)
 			xipf_comment = file->xiphComment();
 			m_tm_xipf = xipf_comment->fieldListMap();
 
-//			qDb() << "XIPHCOMMENT:" << m_tm_xipf;
-
 			// Extract any CUESHEET embedded in the XiphComment.
 			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();
 		}
-		if(m_has_id3v2) m_tm_id3v2 = PropertyMapToTagMap(file->ID3v2Tag()->properties());
+		if(m_has_id3v2) m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
 	}
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
@@ -323,12 +321,12 @@ bool Metadata::read(const QUrl& url)
 
 		if(m_has_info_tag)
 		{
-			m_tm_infotag = PropertyMapToTagMap(file->InfoTag()->properties());
+			m_tm_infotag = PropertyMapToAMLMTagMap(file->InfoTag()->properties());
 		}
 
 		if(m_has_id3v2)
 		{
-			m_tm_id3v2 = PropertyMapToTagMap(file->ID3v2Tag()->properties());
+			m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
 		}
 	}
 
@@ -343,7 +341,7 @@ bool Metadata::read(const QUrl& url)
 M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produced by EAC");
 	/// @todo The sidecar cue sheet support will then also kick in, and you get weirdness like a track will have two names.
 	/// Need to do some kind of comparison/validity check.
-#if 1
+
 		/// @note TagLib docs: "Exports the tags of the file as dictionary mapping (human readable)
 		/// tag names (Strings) to StringLists of tag values. The default implementation in this class
 		/// considers only the usual built-in tags (artist, album, ...) and only one value per key."
@@ -353,12 +351,7 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 		{
 			qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
 		}
-		m_tag_map = PropertyMapToTagMap(pm);
-
-M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
-
-//        qDb() << m_tag_map;
-#endif
+		m_tag_map = PropertyMapToAMLMTagMap(pm);
 	}
 
 
