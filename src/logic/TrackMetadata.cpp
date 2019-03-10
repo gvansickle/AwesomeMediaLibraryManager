@@ -116,6 +116,10 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+#define X(id) m_ ## id = map.value( # id ).value<decltype( m_ ## id )>();
+	PTI_STR_LIST(X);
+#undef X
+
 	QVariant qvar_hlist = map.value(XMLTAG_TRACK_META_INDEXES);
 	Q_ASSERT(qvar_hlist.isValid());
 	if(qvar_hlist.isNull())
