@@ -33,6 +33,18 @@
 #include <QVariant>
 #include <QMultiMap>
 
+// TagLib
+#include <taglib/xiphcomment.h> ///< Unfortunately needed here for "typedef Map< String, StringList > FieldListMap".
+//namespace TagLib
+//{
+//namespace Ogg
+//{
+//	class Dummy;
+//	typedef Dummy FieldListMap;
+////	class XiphComment;
+//}
+//}
+
 // Ours.
 #include <future/guideline_helpers.h>
 #include <utils/QtHelpers.h>
@@ -73,6 +85,11 @@ public:
 	 */
 	AMLMTagMap& operator=(const TagMap& tagmap);
 
+	/**
+	* Assignment from a XiphComment's FieldListMap.
+	*/
+	AMLMTagMap& operator=(const TagLib::Ogg::FieldListMap& taglib_field_list_map);
+
 //	explicit operator TagMap () const;
 
 
@@ -111,6 +128,7 @@ public:
 	/// Size.
 	underlying_container_type::size_type size() const { return m_the_map.size(); }
 	bool empty() const { return m_the_map.empty(); }
+	void clear();
 
 	iterator begin() { return m_the_map.begin(); }
 	iterator end() { return m_the_map.end(); }

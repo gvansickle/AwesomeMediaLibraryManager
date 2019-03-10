@@ -82,6 +82,8 @@ protected:
      */
     bool parse_cue_sheet_string(const std::string& cuesheet_text, uint64_t total_length_in_ms = 0);
 
+	std::string prep_final_cuesheet_string(const std::string& cuesheet_text) const;
+
     friend QDebug operator<<(QDebug dbg, const CueSheet &cuesheet);
 
 private:
@@ -94,13 +96,22 @@ private:
     /// @name Mandatory Info
     /// @{
 
-    /**
-     * "Name and type of at least one file being indexed"
-     */
-    /// @todo
 
-	/// The UPC/EAN code of the disc.
-	std::string m_disc_catalog {};
+
+	/// The Sony UPC/EAN code /AKA MMC-3 Media Catalog Number of the disc.
+	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html#Text-Pack-Types
+	/// Mandatory 13 digits long.  This is always ASCII encoded.
+	std::string m_disc_catalog_num {};
+
+	/// CD-TEXT Pack type 0x86, "Disc Identification".  Disc, not Track.
+	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html#Misc-Pack-Types
+	/// "here is how Sony describes this:
+	///	  Catalog Number: (use ASCII Code) Catalog Number of the album
+	/// So it is not really binary but might be non-printable, and should contain only bytes with bit 7 set to zero."
+	/// This is not the same as the CD-TEXT "CATALOG" number, but exactly what it is is not clear.
+	/// Also, this shows up in cue sheets as "REM DISCID nnnnnnnn", note the lack of a "_".  Surveys of
+	/// my collection show the value to always be a 32-bit hex string.
+	std::string m_disc_id {};
 
 	uint64_t m_length_in_milliseconds {0};
 

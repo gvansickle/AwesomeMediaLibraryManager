@@ -20,7 +20,13 @@
 /**
  * @file AMLMTagMap.cpp
  */
+
 #include "AMLMTagMap.h"
+
+// TagLib.
+#include <taglib/xiphcomment.h>
+
+// Ours.
 #include <utils/RegisterQtMetatypes.h>
 
 AMLM_QREG_CALLBACK([](){
@@ -34,7 +40,7 @@ AMLM_QREG_CALLBACK([](){
 
 AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 {
-	m_the_map.clear();
+	clear();
 
 	// Iterate over key+value pairs.
 	for(const auto & it : tagmap)
@@ -45,6 +51,23 @@ AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 			m_the_map.insert(std::make_pair(it.first, valit));
 		}
 	}
+	return *this;
+}
+
+AMLMTagMap& AMLMTagMap::operator=(const TagLib::Ogg::FieldListMap& taglib_field_list_map)
+{
+	clear();
+
+	// Iterate over key+value_vector pairs.
+	for(const auto & it : taglib_field_list_map)
+	{
+		// Iterate over the value, which is a vector of values.
+		for(const auto& valit : it.second)
+		{
+			m_the_map.insert(std::make_pair(tostdstr(it.first), tostdstr(valit)));
+		}
+	}
+
 	return *this;
 }
 
@@ -83,6 +106,11 @@ std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTa
 		retval.push_back(i->second);
 	}
 	return retval;
+}
+
+void AMLMTagMap::clear()
+{
+	m_the_map.clear();
 }
 
 std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const

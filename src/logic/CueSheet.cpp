@@ -21,6 +21,9 @@
 
 #include "CueSheet.h"
 
+// Std C++
+#include <regex>
+
 // Qt5
 #include <QRegularExpression>
 #include <QUrl>
@@ -232,8 +235,11 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 	// libcue (actually flex) can't handle invalid UTF-8.
     Q_ASSERT_X(isValidUTF8(cuesheet_text.c_str()), __func__, "Invalid UTF-8 cuesheet string.");
 
+	// Final adjustment of the string to compensate for some variations seen in the wild.
+	std::string final_cuesheet_string = prep_final_cuesheet_string(cuesheet_text);
+
 	// Try to parse the cue sheet we found with libcue.
-	Cd* cd = cue_parse_string(cuesheet_text.c_str());
+	Cd* cd = cue_parse_string(final_cuesheet_string.c_str());
 
 	Q_ASSERT_X(cd != nullptr, __PRETTY_FUNCTION__, "failed to parse cuesheet string");
 
@@ -248,13 +254,16 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
     else
     {
         // Libcue parsed the cuesheet text, let's extract what we need.
+
 //		qDb() << "CD_DUMP:";
 //		cd_dump(cd);
-		m_disc_catalog = LibCueHelper_cd_get_catalog(cd);
+
+		// Get disc-level info from the Cd struct.
+		// Not a lot of interest there, except the Catalog number and the CD-TEXT.
+		m_disc_catalog_num = LibCueHelper_cd_get_catalog(cd);
 		enum DiscMode disc_mode = cd_get_mode(cd);
 		qDb() << "Disc Mode:" << toqstr(tostdstr(disc_mode));
-		// Get the Cue Sheet's REM contents.
-		Rem* cdrem = cd_get_rem(cd);
+
 		// Get the disc-level CD-TEXT.
 	    Cdtext* cdtext = cd_get_cdtext(cd);
 		if(cdtext_is_empty(cdtext) == 0)
@@ -267,18 +276,21 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 			cdtext_dump(cdtext, 0);
 		}
 	    AMLM_WARNIF(cdtext == nullptr);
-		auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);
-		std::string disc_id {};
-		if(disc_id_cstr == nullptr)
+		if(cdtext != nullptr)
 		{
-			qWr() << "No DiscID";
+			auto* disc_id_cstr = cdtext_get(PTI_DISC_ID, cdtext);
+			if(disc_id_cstr == nullptr)
+			{
+				qWr() << "No DiscID";
+			}
+			else
+			{
+				m_disc_id = disc_id_cstr;
+			}
 		}
-		else
-		{
-			/// @note Never seem to get here.
-			disc_id = disc_id_cstr;
-		}
-	    qDb() << M_ID_VAL(disc_id);
+
+		// Get the CD's  Cue Sheet's REM contents.
+		Rem* cdrem = cd_get_rem(cd);
 
         m_num_tracks_on_media = cd_get_ntrack(cd);
         qDebug() << "Num Tracks:" << m_num_tracks_on_media;
@@ -348,7 +360,21 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
         // Succeeded.
         return true;
-    }
+	}
+}
+
+std::string CueSheet::prep_final_cuesheet_string(const std::string& cuesheet_text) const
+{
+	std::string retval;
+
+	// The best I can figure is that the "REM DISCID nnnnn"'s I'm seeing in a lot of cue sheets is actually
+	// 86h "Disc Identification information" as defined by MMC-3/CD-TEXT.  Trouble is, there's no definition there,
+	// or anywhere else I can find.  A survey of the cuesheets I have all have the number as a 32-bit hex value.
+	std::regex s_REM_DISCID(R"!(^REM\sDISCID)!", std::regex_constants::ECMAScript);
+
+	retval = std::regex_replace(cuesheet_text, s_REM_DISCID, "DISC_ID");
+
+	return retval;
 }
 
 

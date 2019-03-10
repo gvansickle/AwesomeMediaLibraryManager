@@ -280,7 +280,23 @@ bool Metadata::read(const QUrl& url)
 		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToTagMap(file->ID3v1Tag()->properties());
 		if(m_has_ogg_xipfcomment)
 		{
+#if 0
 			m_tm_xipf = PropertyMapToTagMap(file->xiphComment()->properties());
+#endif
+			// TagLib has some funky kicks going on here:
+			/// @link https://taglib.org/api/classTagLib_1_1FLAC_1_1File.html#a31ffa82b2e168f5625311cbfa030f04f
+			// Re ->tag(): "Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
+			// Not sure that's true, but there's also xiphComment():
+			// "Returns a pointer to the XiphComment for the file.
+			// Note
+			// This may return a valid pointer regardless of whether or not the file on disk has a XiphComment. Use hasXiphComment()
+			// to check if the file on disk actually has a XiphComment."
+			TagLib::Ogg::XiphComment* xipf_comment;
+			xipf_comment = file->xiphComment();
+			m_tm_xipf = xipf_comment->fieldListMap();
+
+//			qDb() << "XIPHCOMMENT:" << m_tm_xipf;
+
 			// Extract any CUESHEET embedded in the XiphComment.
 			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();
 		}
@@ -292,7 +308,10 @@ bool Metadata::read(const QUrl& url)
 		if(auto tag = file->tag())
 		{
 			m_has_ogg_xipfcomment = true;
-			m_tm_xipf = PropertyMapToTagMap(tag->properties());
+//			m_tm_xipf = PropertyMapToTagMap(tag->properties());
+			TagLib::Ogg::XiphComment* xipf_comment;
+			xipf_comment = file->tag();
+			m_tm_xipf = xipf_comment->fieldListMap();
 		}
 	}
 	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
@@ -344,7 +363,7 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
 
 
 	//
-	// Cuesheet handling
+	// Cuesheet handling, using libcue.
 	//
 	std::unique_ptr<CueSheet> cuesheet;
 	cuesheet.reset();
