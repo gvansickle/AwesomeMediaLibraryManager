@@ -35,15 +35,6 @@
 
 // TagLib
 #include <taglib/xiphcomment.h> ///< Unfortunately needed here for "typedef Map< String, StringList > FieldListMap".
-//namespace TagLib
-//{
-//namespace Ogg
-//{
-//	class Dummy;
-//	typedef Dummy FieldListMap;
-////	class XiphComment;
-//}
-//}
 
 // Ours.
 #include <future/guideline_helpers.h>
@@ -79,6 +70,7 @@ public:
 	/// Member functions.
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap);
+	~AMLMTagMap() override = default;
 
 	/**
 	 * Assignment from a TagMap.
@@ -89,9 +81,6 @@ public:
 	* Assignment from a XiphComment's FieldListMap.
 	*/
 	AMLMTagMap& operator=(const TagLib::Ogg::FieldListMap& taglib_field_list_map);
-
-//	explicit operator TagMap () const;
-
 
 	/**
 	 * Returns a reference to the first value of the matching key.

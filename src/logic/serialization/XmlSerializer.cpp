@@ -33,6 +33,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include <QDataStream>
+#include <QRegularExpression>
 
 // Ours
 #include <src/utils/DebugHelpers.h>
@@ -278,6 +279,8 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 
 	QString str = variant.toString();
 
+	// See if we need to re-encode it.
+
 	xmlstream.writeCharacters(str);
 }
 
@@ -504,6 +507,15 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 //	check_for_stream_error_and_skip(xmlstream);
 
 	return variant;
+}
+
+QString XmlSerializer::normalize_node_name(const QString& node_name) const
+{
+//	QRegularExpression re("s/(\\s+)/%20/g");
+
+//	auto matchit = re.globalMatch(node_name);
+	QString retval = node_name;
+	return retval.replace(" ", "%20");
 }
 
 QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)

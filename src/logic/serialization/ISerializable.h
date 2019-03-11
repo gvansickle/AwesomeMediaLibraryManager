@@ -89,6 +89,7 @@ Q_DECLARE_METATYPE(SerializableQVariantList);
 template <class MapType, class StringType, class MemberType>
 void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
 {
+//	static_assert(qMetaTypeId<MemberType>() != 0, "");
 	// InsertionOrderedMap<>::insert() currently returns void.
 //	using iterator_type = typename MapType::iterator;
 	/*iterator_type it =*/ map.insert( key , QVariant::fromValue<MemberType>( member ) );

@@ -104,6 +104,13 @@ private:
 
 	/// @}
 
+	/// @name Read/Write helpers
+	/// @{
+
+	QString normalize_node_name(const QString& node_name) const;
+
+	/// @}
+
 	void check_for_stream_error_and_skip(QXmlStreamReader& xmlstream);
 
 	void log_current_node(QXmlStreamReader& xmlstream);

@@ -71,11 +71,6 @@ AMLMTagMap& AMLMTagMap::operator=(const TagLib::Ogg::FieldListMap& taglib_field_
 	return *this;
 }
 
-//AMLMTagMap::operator TagMap() const
-//{
-//	return TagMap();
-//}
-
 
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Key& key)
 {
@@ -135,40 +130,52 @@ std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const
 
 QVariant AMLMTagMap::toVariant() const
 {
-	using maptype = QVariantInsertionOrderedMap;
+	QVariantInsertionOrderedMap map;
 
-	maptype map;
+//	QVariantHomogenousList list("AMLTagMapEntries", "entry");
+	QVariantInsertionOrderedMap keymap;
 
-	QVariantHomogenousList list("AMLTagMapEntries", "entry");
+	// Get the list of keys, in... insertion order?
+	auto keylist = keys();
 
-	foreach_pair([&](QString key, QString val)
+	for(const auto& key : keylist)
 	{
-		QVariantHomogenousList pair("KVPair", "pair");
-		pair.push_back(key);
-		pair.push_back(val);
-		list.push_back(pair);
-	});
+		// For each key, create a vector of values, in insertion order.
+		const auto& vector_of_values = equal_range_vector(key);
 
-	map.insert("m_the_map", list);
+		QStringList qvector_of_values;
+		for(const auto& value : vector_of_values)
+		{
+			qvector_of_values.push_back(toqstr(value));
+		}
+
+		// Insert it into the return value.
+		map_insert_or_die(keymap, toqstr(key), qvector_of_values);
+	}
+
+//	foreach_pair([&](QString key, QString val)
+//	{
+//		QVariantHomogenousList pair("KVPair", "pair");
+//		pair.push_back(key);
+//		pair.push_back(val);
+//		list.push_back(QVariant::fromValue(pair));
+//	});
+
+	map.insert("m_the_map", QVariant::fromValue(keymap));
 
 	return map;
 }
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
 {
-	m_the_map.clear();
+	clear();
+return;
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	using maptype = QVariantInsertionOrderedMap;
-
-	Q_ASSERT(variant.canConvert<maptype>());
-
-	maptype map = variant.value<maptype>();
-
-
-	QVariantList list; //("AMLTagMapEntries", "entry");
-	auto list_qvar = map.value("m_the_map");
-	Q_ASSERT(list_qvar.canConvert<QVariantList>());
-	list = list_qvar.value<QVariantList>();
+	QVariantHomogenousList list("AMLTagMapEntries", "entry");
+	QVariant list_qvar = map.value("m_the_map");
+//	Q_ASSERT(list_qvar.canConvert<QVariantHomogenousList>());
+	list = list_qvar.value<QVariantHomogenousList>();
 
 	for(auto it = list.cbegin(); it != list.cend(); ++it)
 	{

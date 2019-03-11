@@ -35,7 +35,7 @@
 #define M_AMLM_EXCEPTION_CTORS_DTORS(exception_class_name, base_class_name) \
 	exception_class_name (const std::string & what_arg) : base_class_name (what_arg) {}; \
 	exception_class_name (const char* what_arg) : base_class_name (what_arg) {}; \
-	virtual ~exception_class_name () = default;
+	~exception_class_name () override = default;
 
 #define M_QT5_EXCEPTION_BOILERPLATE(exception_class_name) \
 	void raise() const override { throw *this; } \
@@ -49,9 +49,9 @@ class AMLMException : public QException
 public:
 	AMLMException(const std::string& what_arg) : m_what_str(what_arg) {};
 	AMLMException(const char * what_arg) : m_what_str(what_arg) {};
-	virtual ~AMLMException() = default;
+	 ~AMLMException() override = default;
 
-	virtual const char* what() const noexcept { return m_what_str.c_str(); }
+	const char* what() const noexcept override { return m_what_str.c_str(); }
 
 	/// @name These two are for Qt5.  Allows it to throw across threads.
 	/// @{
