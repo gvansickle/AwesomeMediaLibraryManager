@@ -123,6 +123,7 @@ private:
 	/// @todo: REM DISCNUMBER, TOTALDISCS, DATE
 	///
 	///
+	std::string m_disc_date {};
 
 	uint64_t m_length_in_milliseconds {0};
 

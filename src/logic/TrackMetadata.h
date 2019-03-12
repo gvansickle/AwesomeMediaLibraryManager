@@ -47,7 +47,7 @@ public:
 
 	std::string toStdString() const;
 
-	static std::unique_ptr<TrackMetadata> make_track_metadata(const Cdtext* cdtext);
+	static std::unique_ptr<TrackMetadata> make_track_metadata(const Cdtext* track_cdtext);
 
 	/// @name Serialization
 	/// @{
@@ -137,8 +137,8 @@ Sony documents report that this field contains:
     Genre information that would supplement the Genre Code, such as “USA Rock music in the 60’s”.
 
 This information is always ASCII encoded. */ \
-	X(PTI_TOC_INFO1) /* 0x88 == Disc*/  \
-	X(PTI_TOC_INFO2) /* 0x89 == Disc  */ \
+	X(PTI_TOC_INFO1) /* 0x88 == Disc */  \
+	X(PTI_TOC_INFO2) /* 0x89 == Disc */ \
     X(PTI_SIZE_INFO)
 
     /// @name Declaration of all CD-TEXT string "pack type indicators".

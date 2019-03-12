@@ -162,6 +162,11 @@ private:
 
 	bool m_has_cuesheet {false};
 
+	/// @name Cuesheet-derived CD-level info.
+	/// @{
+
+	/// @}
+
 	bool m_has_vorbis_comment {false};
 	bool m_has_id3v1 {false};
 	bool m_has_id3v2 {false};

@@ -42,15 +42,15 @@ AMLM_QREG_CALLBACK([](){
 Q_DECLARE_METATYPE(std::string);
 
 
-std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Cdtext* cdtext)
+std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Cdtext* track_cdtext)
 {
 	auto retval = std::make_unique<TrackMetadata>();
 	// Get the Pack Type Indicator data.
-#define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , cdtext ));
+#define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , track_cdtext ));
 	PTI_STR_LIST(X)
 #undef X
 
-	qDb() << "m_PTI_UPC_ISRC" << (cdtext_get(PTI_UPC_ISRC, cdtext) == nullptr ? "NULL" : cdtext_get(PTI_UPC_ISRC, cdtext));
+	qDb() << "m_PTI_UPC_ISRC" << (cdtext_get(PTI_UPC_ISRC, track_cdtext) == nullptr ? "NULL" : cdtext_get(PTI_UPC_ISRC, track_cdtext));
 
 	return retval;
 }

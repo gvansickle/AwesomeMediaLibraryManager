@@ -274,7 +274,9 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 //		qDb() << "CD_DUMP:";
 //		cd_dump(cd);
 
+		//
 		// Get disc-level info from the Cd struct.
+		//
 		// Not a lot of interest there, except the Catalog number and the CD-TEXT.
 		m_disc_catalog_num = LibCueHelper_cd_get_catalog(cd);
 		enum DiscMode disc_mode = cd_get_mode(cd);
@@ -305,9 +307,12 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 			}
 		}
 
-		// Get the CD's  Cue Sheet's REM contents.
+		// Get the Cue Sheet's CD-level REM contents.
 		Rem* cdrem = cd_get_rem(cd);
+		// Pretty much just Date.
+	    m_disc_date = tostdstr(rem_get(REM_DATE, cdrem));
 
+	    // Get the number of tracks on the media.
         m_num_tracks_on_media = cd_get_ntrack(cd);
         qDebug() << "Num Tracks:" << m_num_tracks_on_media;
 
@@ -315,12 +320,14 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
         {
             qWr() << "Num tracks is less than 2:" << m_num_tracks_on_media;
         }
+
+        // Iterate over each track and get any info we can.
         for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
         {
             Track* t = cd_get_track(cd, track_num);
 //            qDebug() << "Track filename:" << track_get_filename(t);
-            // Get the CD-Text info.
-            Cdtext* cdt = track_get_cdtext(t);
+            // Get the Track's CD-Text info.
+            Cdtext* track_cdtext = track_get_cdtext(t);
 
             TrackMetadata tm;
 #if 0
@@ -330,7 +337,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
             PTI_STR_LIST(X)
 #undef X
 #else
-			tm = *TrackMetadata::make_track_metadata(cdt);
+			tm = *TrackMetadata::make_track_metadata(track_cdtext);
 #endif
             for(auto i = 0; i<99; ++i)
             {
