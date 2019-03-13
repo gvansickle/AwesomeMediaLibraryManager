@@ -120,7 +120,7 @@ private:
     /// @name Mandatory Info
     /// @{
 
-	/// The Sony UPC/EAN code /AKA MMC-3 Media Catalog Number of the disc.
+	/// "CATALOG": The Sony UPC/EAN code /AKA MMC-3 Media Catalog Number of the disc.
 	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html#Text-Pack-Types
 	/// Mandatory 13 digits long.  This is always ASCII encoded.
 	std::string m_disc_catalog_num {};

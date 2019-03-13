@@ -115,13 +115,13 @@ using strviw_type = QLatin1Literal;
 //	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
 //	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
 
-//#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
-//	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
+#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+	X(XMLTAG_TRACK_METADATA, m_tracks)
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
-//	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
+	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
 
 
@@ -200,7 +200,19 @@ QVariant CueSheet::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	qWr() << "TODO: TRACK FIELDS";
+//	qWr() << "TODO: TRACK FIELDS";
+	// Add the track list to the return value.
+	QVariantInsertionOrderedMap qvar_track_map;
+//	qDb() << "########### NUM TRACKS:" << m_tracks.size();
+	for(const auto& it : m_tracks)
+	{
+		// Using "track" prefix here because XML tags can't start with numbers.
+		QString track_num_str = QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0'));
+		TrackMetadata tm = it.second;
+//		qDb() << "########### " << track_num_str << tm;
+		qvar_track_map.insert(track_num_str, tm.toVariant());
+	}
+	map.insert(XMLTAG_TRACK_METADATA, QVariant::fromValue(qvar_track_map));
 
 	return map;
 }
