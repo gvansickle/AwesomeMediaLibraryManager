@@ -26,6 +26,7 @@
 // Ours.
 #include <utils/QtHelpers.h>
 #include "AMLMTagMap.h"
+#include "CueSheet.h"
 #include "AudioFileType.h"
 #include "TrackMetadata.h"
 #include <utils/Fraction.h>
@@ -161,6 +162,7 @@ private:
 	/// @}
 
 	bool m_has_cuesheet {false};
+	CueSheet m_cuesheet;
 
 	/// @name Cuesheet-derived CD-level info.
 	/// @{

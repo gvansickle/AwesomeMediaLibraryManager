@@ -28,9 +28,6 @@
 #include <QRegularExpression>
 #include <QUrl>
 
-// KF5
-//#include <KF5/KIOCore/KFileItem>
-
 /// @todo Looks like VS2017 headers are broken here.  libcue.h includes <stdio.h> outside the extern "C",
 /// and apparently MS's stdio.h isn't C++-safe.
 extern "C" {
@@ -46,6 +43,7 @@ extern "C" {
 /// Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 
+Q_DECLARE_METATYPE(std::string);
 
 
 /**
@@ -106,14 +104,26 @@ AMLM_QREG_CALLBACK([](){
     qRegisterMetaType<CueSheet>()
     ;});
 
-CueSheet::CueSheet()
-{
+using strviw_type = QLatin1Literal;
 
-}
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
+	X(XMLTAG_DISC_ID, m_disc_id) \
+	X(XMLTAG_DISC_DATE, m_disc_date) \
+//	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
+//	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+//	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
+//	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
 
-CueSheet::~CueSheet()
-{
-}
+//#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+//	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+//	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
+#undef X
+
 
 std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
 {
@@ -183,18 +193,27 @@ uint8_t CueSheet::get_total_num_tracks() const
 
 QVariant CueSheet::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
-	/// TODO
-	Q_ASSERT(0);
+	// CD-level fields.
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+	qWr() << "TODO: TRACK FIELDS";
 
 	return map;
 }
 
 void CueSheet::fromVariant(const QVariant& variant)
 {
-	/// TODO
-	Q_ASSERT(0);
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+#define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+	qWr() << "TODO: TRACK FIELDS";
 }
 
 static std::string tostdstr(enum DiscMode disc_mode)

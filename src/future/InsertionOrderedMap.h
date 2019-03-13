@@ -61,8 +61,6 @@ private:
 	using uc_size_type = typename underlying_container_type::size_type;
 
 public:
-//	InsertionOrderedMap() = default;
-//	InsertionOrderedMap(const InsertionOrderedMap& other) = default;
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
 	virtual ~InsertionOrderedMap() = default;
 

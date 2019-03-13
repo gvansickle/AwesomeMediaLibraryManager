@@ -36,6 +36,7 @@ class QUrl;
 /// Ours
 //#include "TrackMetadata.h"  ///< Per-track cue sheet info
 class TrackMetadata;
+#include <future/guideline_helpers.h>
 #include "CueSheetParser.h"
 #include <logic/serialization/ISerializable.h>
 
@@ -43,13 +44,29 @@ class TrackMetadata;
  * CD cue sheet class.
  * C++ class for abstracing cuesheet info, mostly digested via libcue.
  * @link http://wiki.hydrogenaud.io/index.php?title=Cue_sheet
+ * "Cue sheet contents
+ *
+ * All cue sheets contain the following info:
+ *
+ * - The name & type of at least one file being indexed (an audio file, normally);
+ * - A numbered list of tracks each file corresponds to or contains;
+ * - The start point (index 01) for each track, time-wise (MM:SS:FF format).
+ *
+ * Cue sheets may contain the following additional info:
+ *
+ * - CD-Text metadata such as performer, title, songwriter for the disc and/or each track;
+ * - ISRCs (sound recording IDs to burn)
+ * - Special flags for CD burning (e.g. for pre-emphasis)
+ * - Gap info (how much silence to insert before or after each track)
+ * - Comments (which are used by some programs to store nonstandard metadata like genre, freeDB disc ID, etc.)"
+ *
  * @link https://en.wikipedia.org/wiki/Cue_sheet_(computing)
  */
 class CueSheet : public virtual ISerializable
 {
 public:
-	CueSheet();
-	virtual ~CueSheet();
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(CueSheet);
+	~CueSheet() override {};
 
     /**
      * Factory function.
@@ -102,8 +119,6 @@ private:
 
     /// @name Mandatory Info
     /// @{
-
-
 
 	/// The Sony UPC/EAN code /AKA MMC-3 Media Catalog Number of the disc.
 	/// @link https://www.gnu.org/software/libcdio/cd-text-format.html#Text-Pack-Types

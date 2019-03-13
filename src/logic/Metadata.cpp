@@ -377,6 +377,8 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 	if(cuesheet)
 	{
 		m_has_cuesheet = true;
+		m_cuesheet = *cuesheet;
+
 		m_num_tracks_on_media = cuesheet->get_total_num_tracks();
 
 		/// @todo MAYBE TEMP?
@@ -619,8 +621,8 @@ using strviw_type = QLatin1Literal;
 	M_DATASTREAM_FIELDS(X);
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
-//static const strviw_type XMLTAG_TM_M_TAG_MAP("m_tag_map");
 static const strviw_type XMLTAG_TRACKS("m_tracks");
+static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 QVariant Metadata::toVariant() const
 {
@@ -647,6 +649,7 @@ QVariant Metadata::toVariant() const
 	}
 
 	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
+	map.insert(XMLTAG_CUESHEET, m_cuesheet.toVariant());
 
 	return map;
 }

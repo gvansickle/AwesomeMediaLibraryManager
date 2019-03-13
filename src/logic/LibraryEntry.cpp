@@ -341,7 +341,8 @@ QVariant LibraryEntry::toVariant() const
 	QVariantInsertionOrderedMap map;
 
 	// Insert field values into the QVariantMap.
-#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+//#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 

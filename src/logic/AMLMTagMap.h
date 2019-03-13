@@ -59,7 +59,6 @@ private:
 	using T = std::string;
 
 public:
-	//	using underlying_container_type = QMultiMap<Key, T>;
 	using underlying_container_type = std::multimap<Key, T>;
 	using key_type = Key;
 	using mapped_type = T;
@@ -117,7 +116,8 @@ public:
 	/// Size.
 	underlying_container_type::size_type size() const { return m_the_map.size(); }
 	bool empty() const { return m_the_map.empty(); }
-	void clear();
+
+	/*[[clang::reinitializes]]*/ void clear();
 
 	iterator begin() { return m_the_map.begin(); }
 	iterator end() { return m_the_map.end(); }
