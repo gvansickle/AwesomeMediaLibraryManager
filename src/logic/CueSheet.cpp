@@ -212,6 +212,7 @@ QVariant CueSheet::toVariant() const
 //		qDb() << "########### " << track_num_str << tm;
 		qvar_track_map.insert(track_num_str, tm.toVariant());
 	}
+	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
 	map.insert(XMLTAG_TRACK_METADATA, QVariant::fromValue(qvar_track_map));
 
 	return map;
