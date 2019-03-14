@@ -281,6 +281,7 @@ bool Metadata::read(const QUrl& url)
 		m_has_id3v2 = file->hasID3v2Tag();
 
 		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties());
+		if(m_has_id3v2) m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
 		if(m_has_ogg_xipfcomment)
 		{
 			// TagLib has some funky kicks going on here:
@@ -295,10 +296,12 @@ bool Metadata::read(const QUrl& url)
 			xipf_comment = file->xiphComment();
 			m_tm_xipf = xipf_comment->fieldListMap();
 
+			auto field_count = xipf_comment->fieldCount();
+			qDb() << "### XIPH: Field Count:" << field_count << "FieldListMap size:" << m_tm_xipf.size();
+
 			// Extract any CUESHEET embedded in the XiphComment.
 			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();
 		}
-		if(m_has_id3v2) m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
 	}
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
@@ -306,7 +309,6 @@ bool Metadata::read(const QUrl& url)
 		if(auto tag = file->tag())
 		{
 			m_has_ogg_xipfcomment = true;
-//			m_tm_xipf = PropertyMapToTagMap(tag->properties());
 			TagLib::Ogg::XiphComment* xipf_comment;
 			xipf_comment = file->tag();
 			m_tm_xipf = xipf_comment->fieldListMap();

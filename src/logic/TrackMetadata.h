@@ -49,12 +49,14 @@ public:
 	void fromVariant(const QVariant& variant) override;
 	/// @}
 
-	// "00" to "99"
+	// ~ "00" to "99"
 	std::string m_index_num {};
 
 	// Index value in Frames.
 	Frames m_index_frames {};
 };
+
+Q_DECLARE_METATYPE(TrackIndex);
 
 /**
  * Metadata which applies to a single track on a possibly multi-track media.

@@ -153,7 +153,7 @@ private:
 
     /**
      * Cue sheet-derived information on each track.
-     * @note Map key is the track number, 1 to 99.
+	 * @note Map key is the track number, 1 to 99, except see below.
      * @ref https://xiph.org/flac/format.html#cuesheet_track
      * "Track number.
      * - A track number of 0 is not allowed to avoid conflicting with the CD-DA spec, which reserves this for the lead-in.

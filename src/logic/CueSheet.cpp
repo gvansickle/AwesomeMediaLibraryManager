@@ -337,6 +337,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 			else
 			{
 				m_disc_id = disc_id_cstr;
+				qDb() << "##################### REM DISC_ID:" << m_disc_id;
 			}
 		}
 

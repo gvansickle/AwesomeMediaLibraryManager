@@ -176,6 +176,7 @@ M_TODO("Not getting some field here");
 				{"hasInfoTag?", md.hasInfoTag(), md.tagmap_InfoTag()}
 			};
 
+			// Add each of the tag type trees as a separate expanded subtree.
 			for(const auto& e : md_list)
 			{
 				auto md_type_item = new QTreeWidgetItem({std::get<0>(e), std::get<1>(e).toString()});
@@ -321,33 +322,14 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const Ta
 
 void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap)
 {
+	// Add all entries in tagmap to parent, with a few exceptions.
 	tagmap.foreach_pair([=](QString key, QString value){
-		if(!key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
+		if(!key.contains(QRegularExpression(R"!(^(REM\s+)?(CUESHEET|LOG|CTDBTRACKCONFIDENCE))!")))
 		{
 			auto child = new QTreeWidgetItem({key, value});
 			parent->addChild(child);
 		}
 	});
-
-//	for(const auto& e : tagmap)
-//	{
-//		QString key = toqstr(e.first);
-//		// Filter out keys we don't want to see in the Metadata display.
-//		// Mainly this is CUESHEET and LOG entries in FLAC VORBIS_COMMENT blocks, which are gigantic and destroy the
-//		// formatting.
-//		///@todo Maybe also filter on size of values.
-//		if(key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
-//		{
-//			continue;
-//		}
-//		#error "LOOPS ON EACH .SECOND CHAR"
-//		for(const auto& f : e.second)
-//		{
-//			QString value = toqstr(f);
-//			auto child = new QTreeWidgetItem({key, value});
-//			parent->addChild(child);
-//		}
-//	}
 }
 
 void MetadataDockWidget::onProxyModelChange(bool has_rows)
