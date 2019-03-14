@@ -37,13 +37,33 @@ using Frames = qint64;
 #include <future/guideline_helpers.h>
 
 
+class TrackIndex : public virtual ISerializable
+{
+public:
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(TrackIndex);
+	~TrackIndex() override = default;
+
+	/// @name Serialization
+	/// @{
+	QVariant toVariant() const override;
+	void fromVariant(const QVariant& variant) override;
+	/// @}
+
+	// "00" to "99"
+	std::string m_index_num {};
+
+	// Index value in Frames.
+	Frames m_index_frames {};
+};
+
 /**
- * Metadata which applies to a single track in a possibly multi-track media.
+ * Metadata which applies to a single track on a possibly multi-track media.
  */
-class TrackMetadata : public ISerializable
+class TrackMetadata : public virtual ISerializable
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(TrackMetadata);
+	~TrackMetadata() override = default;
 
 	std::string toStdString() const;
 
@@ -163,7 +183,8 @@ This information is always ASCII encoded. */ \
 
 	/// Indexes.
 	/// -1 means there was no such index in the cue sheet.
-	QVector<qint64> m_indexes;
+//	QVector<int64_t> m_indexes;
+	std::vector<TrackIndex> m_indexes;
 
 	/// Derived info.
 	bool m_is_part_of_gapless_set {false};

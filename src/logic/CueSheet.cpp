@@ -110,7 +110,7 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
-//	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
+///@todo	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
 //	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
 //	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
@@ -200,16 +200,17 @@ QVariant CueSheet::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-//	qWr() << "TODO: TRACK FIELDS";
+	// Track-level fields
+
 	// Add the track list to the return value.
 	QVariantInsertionOrderedMap qvar_track_map;
-//	qDb() << "########### NUM TRACKS:" << m_tracks.size();
+	qDb() << "########### NUM TRACKS:" << m_tracks.size();
 	for(const auto& it : m_tracks)
 	{
 		// Using "track" prefix here because XML tags can't start with numbers.
 		QString track_num_str = QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0'));
 		TrackMetadata tm = it.second;
-//		qDb() << "########### " << track_num_str << tm;
+		qDb() << "########### " << track_num_str << tm;
 		qvar_track_map.insert(track_num_str, tm.toVariant());
 	}
 	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
@@ -371,19 +372,23 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 #else
 			tm = *TrackMetadata::make_track_metadata(track_cdtext);
 #endif
-            for(auto i = 0; i<99; ++i)
+			for(auto i = 0; i<=99; ++i)
             {
                 //qDebug() << "Reading track index:" << i;
                 long ti = track_get_index(t, i);
-                tm.m_indexes.push_back(ti);
+				TrackIndex track_index;
+				track_index.m_index_num = "index" + std::to_string(i);
+				track_index.m_index_frames = ti;
+
                 if((ti==-1) && (i>1))
                 {
-                    qDb() << "Found last index: " << i-1;
+					// qDb() << "Found last index: " << i-1;
                     break;
                 }
                 else
                 {
-                    qDb() << " Index:" << ti;
+//                    qDb() << " Index:" << ti;
+					tm.m_indexes.push_back(track_index);
                 }
             }
 

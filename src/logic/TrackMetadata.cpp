@@ -101,10 +101,18 @@ QVariant TrackMetadata::toVariant() const
 #undef X
 
 	// m_indexes
+#if 0
 	QVariantHomogenousList hlist("listname", "entryname");
 	hlist = m_indexes;
 	map.insert(XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(hlist));
-
+#else
+	QVariantInsertionOrderedMap index_map;
+	for(const auto& index : m_indexes)
+	{
+		map_insert_or_die(index_map, toqstr(index.m_index_num), (index.m_index_frames));
+	}
+	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(index_map));
+#endif
 	return map;
 }
 
@@ -120,19 +128,23 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	PTI_STR_LIST(X);
 #undef X
 
+
+
+#if TEMP
 	QVariant qvar_hlist = map.value(XMLTAG_TRACK_META_INDEXES);
 	Q_ASSERT(qvar_hlist.isValid());
 	if(qvar_hlist.isNull())
 	{
 		return;
 	}
-//	Q_ASSERT(qvar_hlist.canConvert<QVariantHomogenousList>());
+	Q_ASSERT(qvar_hlist.canConvert<QVariantHomogenousList>());
 	auto hlist = qvar_hlist.value<QVariantHomogenousList>();
 	m_indexes.clear();
 	for(const auto& val : hlist)
 	{
 		m_indexes.push_back(val.value<qint64>());
 	}
+#endif
 }
 
 
@@ -147,3 +159,18 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     return dbg;
 }
 
+
+QVariant TrackIndex::toVariant() const
+{
+	QVariantInsertionOrderedMap map;
+
+	map_insert_or_die(map, "index_num", m_index_num);
+	map_insert_or_die(map, "index_frames", m_index_frames);
+
+	return map;
+}
+
+void TrackIndex::fromVariant(const QVariant& variant)
+{
+
+}
