@@ -39,6 +39,7 @@ class TrackMetadata;
 #include <future/guideline_helpers.h>
 #include "CueSheetParser.h"
 #include <logic/serialization/ISerializable.h>
+#include <logic/AMLMTagMap.h>
 
 /**
  * CD cue sheet class.
@@ -81,6 +82,9 @@ public:
      * Returns the parsed TrackMetadata entries as a std::map.
      */
     std::map<int, TrackMetadata> get_track_map() const;
+
+	AMLMTagMap asAMLMTagMap_Disc() const;
+	std::vector<AMLMTagMap> asAMLMTagMap_Tracks() const;
 
     /// @name Accessors
     /// @{

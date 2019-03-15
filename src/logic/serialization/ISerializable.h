@@ -100,6 +100,18 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 //	}
 }
 
+//template <class MapType, class StringType, class MemberType>
+//void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
+//{
+//	using iterator_type = typename MapType::iterator;
+//	iterator_type it = map.insert( key , member );
+//	if(it == map.end())
+//	{
+//		// Insertion failed for some reason.
+//		throw QException();
+//	}
+//}
+
 /// @}
 
 

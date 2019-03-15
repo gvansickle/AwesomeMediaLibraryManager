@@ -381,10 +381,11 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 		m_has_cuesheet = true;
 		m_cuesheet = *cuesheet;
 
+		// Get the disc-level cuesheet info as an AMLMTagMap.
+		m_tm_cuesheet_disc = m_cuesheet.asAMLMTagMap_Disc();
+
 		m_num_tracks_on_media = cuesheet->get_total_num_tracks();
 
-		/// @todo MAYBE TEMP?
-//        qDb() << "CUESHEET:" << *cuesheet;
 		// Copy the cuesheet track info.
 		m_tracks = cuesheet->get_track_map();
 qDb() << "####### NUM TRACKS:" << m_tracks.size();
@@ -434,6 +435,12 @@ Metadata::operator bool() const
 std::string Metadata::GetFiletypeName() const
 {
 	return f_filetype_to_string_map[m_audio_file_type];
+}
+
+AMLMTagMap Metadata::tagmap_cuesheet_disc() const
+{
+	// Generate the AMLMTagMap and return it.
+	return m_cuesheet.asAMLMTagMap_Disc();
 }
 
 Fraction Metadata::total_length_seconds() const

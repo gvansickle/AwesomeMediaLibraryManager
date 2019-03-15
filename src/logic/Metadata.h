@@ -75,15 +75,16 @@ public:
 	bool hasID3v1() const { return m_has_id3v1; }
 	bool hasID3v2() const { return m_has_id3v2; }
 	bool hasAPE() const { return m_has_ape; }
-	bool hasXiphComment() { return m_has_ogg_xipfcomment; }
-	bool hasInfoTag() { return m_has_info_tag; }
+	bool hasXiphComment() const { return m_has_ogg_xipfcomment; }
+	bool hasInfoTag() const { return m_has_info_tag; }
 
-	AMLMTagMap tagmap_VorbisComments() { return m_tm_vorbis_comments; }
-	AMLMTagMap tagmap_id3v1() { return m_tm_id3v1; }
-	AMLMTagMap tagmap_id3v2() { return m_tm_id3v2; }
-	AMLMTagMap tagmap_ape() { return m_tm_ape; }
-	AMLMTagMap tagmap_xiph() { return m_tm_xipf; }
-	AMLMTagMap tagmap_InfoTag() { return m_tm_infotag; }
+	AMLMTagMap tagmap_VorbisComments() const { return m_tm_vorbis_comments; }
+	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }
+	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
+	AMLMTagMap tagmap_ape() const { return m_tm_ape; }
+	AMLMTagMap tagmap_xiph() const { return m_tm_xipf; }
+	AMLMTagMap tagmap_InfoTag() const { return m_tm_infotag; }
+	AMLMTagMap tagmap_cuesheet_disc() const;
 	/// @}
 
 	/// @name Audio stream properites.
@@ -182,6 +183,7 @@ private:
 	AMLMTagMap m_tm_ape;
 	AMLMTagMap m_tm_xipf;
 	AMLMTagMap m_tm_infotag;
+	AMLMTagMap m_tm_cuesheet_disc {};
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.
 	AMLMTagMap m_tag_map;
@@ -199,7 +201,10 @@ private:
 	int m_num_tracks_on_media {0};
 
 	/// Collection of track metadata.  May be empty, may contain multiple entries for a single-file multi-song image.
-	std::map<int, TrackMetadata> m_tracks;
+	std::map<int, TrackMetadata> m_tracks {};
+
+	/// Same as above, but in AMLMTagMap form.
+	AMLMTagMap m_track_amlmtagmaps {};
 
 	/// @}
 

@@ -23,6 +23,7 @@
 
 // Std C++
 #include <regex>
+#include <string_view>
 
 // Qt5
 #include <QRegularExpression>
@@ -106,7 +107,7 @@ AMLM_QREG_CALLBACK([](){
 
 using strviw_type = QLatin1Literal;
 
-#define M_DATASTREAM_FIELDS(X) \
+#define M_DATASTREAM_FIELDS_DISC(X) \
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
@@ -120,7 +121,7 @@ using strviw_type = QLatin1Literal;
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
-	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_DISC(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
 
@@ -183,7 +184,28 @@ std::unique_ptr<CueSheet> CueSheet::TEMP_parse_cue_sheet_string(const std::strin
 
 std::map<int, TrackMetadata> CueSheet::get_track_map() const
 {
-    return m_tracks;
+	return m_tracks;
+}
+
+AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
+{
+	AMLMTagMap retval;
+
+	// CD-level fields.
+#define X(field_tag, member_field) retval.insert(std::make_pair(tostdstr(field_tag), member_field));
+	M_DATASTREAM_FIELDS_DISC(X);
+#undef X
+
+	return retval;
+}
+
+std::vector<AMLMTagMap> CueSheet::asAMLMTagMap_Tracks() const
+{
+	std::vector<AMLMTagMap> retval;
+
+	Q_ASSERT(0);
+
+	return retval;
 }
 
 uint8_t CueSheet::get_total_num_tracks() const
@@ -197,7 +219,7 @@ QVariant CueSheet::toVariant() const
 
 	// CD-level fields.
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
-	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 
 	// Track-level fields
@@ -224,7 +246,7 @@ void CueSheet::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 #define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
-	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 
 	qWr() << "TODO: TRACK FIELDS";
