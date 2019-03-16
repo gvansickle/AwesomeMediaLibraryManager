@@ -83,7 +83,14 @@ public:
      */
     std::map<int, TrackMetadata> get_track_map() const;
 
+	/**
+	 * Returns the cuesheet info related to the entire disc as an AMLMTagMap.
+	 */
 	AMLMTagMap asAMLMTagMap_Disc() const;
+
+	/**
+	 * Returns the cuesheet info related to the tracks as an AMLMTagMap.
+	 */
 	std::vector<AMLMTagMap> asAMLMTagMap_Tracks() const;
 
     /// @name Accessors

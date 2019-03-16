@@ -104,12 +104,12 @@ enum /*QLocale::*/DataSizeFormats
 /// The simplest things....
 /// @{
 
-static inline std::string tostdstr(const char *cstr)
+static inline std::string tostdstr(const char *cstr, const std::string& if_null = std::string())
 {
 	// Handles the case where cstr == nullptr.
 	if(cstr == nullptr)
 	{
-		return std::string();
+		return if_null;
 	}
 	else
 	{

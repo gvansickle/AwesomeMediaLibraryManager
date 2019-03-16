@@ -42,9 +42,56 @@ AMLM_QREG_CALLBACK([](){
 Q_DECLARE_METATYPE(std::string);
 
 
-std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Cdtext* track_cdtext)
+using strviw_type = QLatin1Literal;
+
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
+	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
+	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
+	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
+
+#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
+#undef X
+
+
+std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* track_ptr, int track_number)
 {
 	auto retval = std::make_unique<TrackMetadata>();
+
+	// The non-CD-Text info.
+	retval->m_track_number = track_number;
+
+	retval->m_isrc = tostdstr(track_get_isrc(track_ptr));
+	/// @todo Obsolete?
+	retval->m_PTI_UPC_ISRC = retval->m_isrc;
+
+	// The track's audio data location info.
+	auto& tm = *retval;
+	tm.m_length_pre_gap = track_get_zero_pre(track_ptr);
+	tm.m_start_frames = track_get_start(track_ptr);
+	tm.m_length_frames = track_get_length(track_ptr);
+	tm.m_length_post_gap = track_get_zero_post(track_ptr);
+
+//	if(tm.m_length_frames < 0)
+//	{
+//		// This is the last track.  We have to calculate the length from the total recording time minus the start offset.
+//		Q_ASSERT(m_length_in_milliseconds > 0);
+//		tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
+//	}
+	tm.m_isrc = tostdstr(track_get_isrc(track_ptr));
+
+	// Get the per-track CD-Text.
+	const Cdtext* track_cdtext = track_get_cdtext(track_ptr);
+
 	// Get the Pack Type Indicator data.
 #define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , track_cdtext ));
 	PTI_STR_LIST(X)
@@ -67,25 +114,6 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
-using strviw_type = QLatin1Literal;
-
-#define M_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
-	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
-	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
-	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
-	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
-	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
-	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
-
-#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
-	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
-
-/// Strings to use for the tags.
-#define X(field_tag, member_field) static constexpr strviw_type field_tag ( # member_field );
-	M_DATASTREAM_FIELDS(X);
-	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
-#undef X
 
 QVariant TrackMetadata::toVariant() const
 {

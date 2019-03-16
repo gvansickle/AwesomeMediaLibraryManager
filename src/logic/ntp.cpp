@@ -82,7 +82,7 @@ ntp::ntp(const QUrl& url)
 				}
 				if(!(start_ok || end_ok))
 				{
-					qCritical() << "2Malformed or unsupported Media Fragment/Temporal Dimension:" << mf_temporal_val;
+					qCritical() << "Malformed or unsupported Media Fragment/Temporal Dimension:" << mf_temporal_val;
 				}
 
 				qDebug() << "ntp start:" << m_start_offset_secs << "end:" << m_end_offset_secs;

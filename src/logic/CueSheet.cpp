@@ -416,7 +416,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
             PTI_STR_LIST(X)
 #undef X
 #else
-			tm = *TrackMetadata::make_track_metadata(track_cdtext);
+			tm = *TrackMetadata::make_track_metadata(t, track_num);
 #endif
 			for(auto i = 0; i<=99; ++i)
             {

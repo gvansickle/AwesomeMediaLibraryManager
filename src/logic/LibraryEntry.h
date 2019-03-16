@@ -129,7 +129,9 @@ protected:
 	qint64 m_total_track_number {0};
 
 	Fraction m_pre_gap_offset_secs;// = 0;
+	/// Start of the audio, in secs.
 	Fraction m_offset_secs; // = 0;
+	/// Length of the audio in secs.
 	Fraction m_length_secs; // = 0;
 
 	Metadata m_metadata;

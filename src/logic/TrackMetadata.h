@@ -35,6 +35,7 @@ struct Cdtext;
 using Frames = qint64;
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
+#include <third_party/libcue/libcue.h>
 
 
 class TrackIndex : public virtual ISerializable
@@ -69,7 +70,7 @@ public:
 
 	std::string toStdString() const;
 
-	static std::unique_ptr<TrackMetadata> make_track_metadata(const Cdtext* track_cdtext);
+	static std::unique_ptr<TrackMetadata> make_track_metadata(const Track* track_ptr, int track_number);
 
 	/// @name Serialization
 	/// @{
@@ -79,9 +80,16 @@ public:
 
 	qint64 m_track_number {0};
 
+	/// Length (? or offset from the beginning of the file?) of the pre-audio gap, in frames.
     Frames m_length_pre_gap {0};
+	/// Start of the audio from the beginning of the file, in frames.
+	/// Exactly the value returned by Libcue track_get_start().
+	/// Corresponds to INDEX 01.
 	Frames m_start_frames {0};
+	/// Length of the audio from the beginning of the file, in frames.
+	/// Exactly the value returned by track_get_length().
 	Frames m_length_frames {0};
+	/// Length (? or offset from the beginning of the file?) of the post-audio gap, in frames.
 	Frames m_length_post_gap {0};
 
 	/// CD-Text "pack type indicators".
@@ -183,9 +191,7 @@ This information is always ASCII encoded. */ \
 	/// Track ISRC code.  May be empty.
 	std::string m_isrc;
 
-	/// Indexes.
-	/// -1 means there was no such index in the cue sheet.
-//	QVector<int64_t> m_indexes;
+	/// Indexes for this track.
 	std::vector<TrackIndex> m_indexes;
 
 	/// Derived info.
@@ -197,7 +203,7 @@ This information is always ASCII encoded. */ \
 };
 
 Q_DECLARE_METATYPE(TrackMetadata);
-Q_DECLARE_METATYPE(QVector<qint64>);
+Q_DECLARE_METATYPE(std::vector<TrackIndex>);
 // Qt5 already declares this.
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
 
