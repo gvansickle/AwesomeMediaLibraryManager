@@ -78,6 +78,7 @@ public:
 	void fromVariant(const QVariant& variant) override;
 	/// @}
 
+
 	qint64 m_track_number {0};
 
 	/// Length (? or offset from the beginning of the file?) of the pre-audio gap, in frames.

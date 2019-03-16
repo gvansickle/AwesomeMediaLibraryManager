@@ -125,6 +125,22 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, MemberTyp
     }
 }
 
+template <class MapType, class StringType, class MemberType>
+auto map_read_field_or_warn(const MapType& map, const StringType& key, const MemberType& member) -> MemberType
+{
+	MemberType retval;
+
+	if(QVariant qvar = map.value(key); qvar.isValid())
+	{
+		retval = qvar.value<MemberType>();
+	}
+	else
+	{
+		qWr() << "Couldn't read field:" << key;
+	}
+
+	return retval;
+}
 
 /// @}
 

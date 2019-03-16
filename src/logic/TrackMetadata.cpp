@@ -23,6 +23,7 @@
 
 // Std C++
 #include <string>
+#include <any>
 
 // Libcue.
 #include <libcue/libcue.h>
@@ -67,11 +68,13 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 {
 	auto retval = std::make_unique<TrackMetadata>();
 
+	auto& tm = *retval;
+
+
 	// The non-CD-Text info.
-	retval->m_track_number = track_number;
+	tm.m_track_number = track_number;
 
 	// The track's audio data location info, as parsed by libcue.
-	auto& tm = *retval;
 	tm.m_length_pre_gap = track_get_zero_pre(track_ptr);
 	tm.m_start_frames = track_get_start(track_ptr);
 	tm.m_length_frames = track_get_length(track_ptr);
@@ -106,6 +109,7 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 		tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
 	}
 #endif
+
 	tm.m_isrc = tostdstr(track_get_isrc(track_ptr));
 
 	// Get the per-track CD-Text info.
@@ -173,23 +177,20 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	PTI_STR_LIST(X);
 #undef X
 
+	// Load the indexes.
+	QVariantInsertionOrderedMap index_map;
+	index_map = map_read_field_or_warn(map, XMLTAG_TRACK_META_INDEXES, index_map);
 
-
-#if TEMP
-	QVariant qvar_hlist = map.value(XMLTAG_TRACK_META_INDEXES);
-	Q_ASSERT(qvar_hlist.isValid());
-	if(qvar_hlist.isNull())
+	for(const auto& entry : index_map)
 	{
-		return;
+		TrackIndex ti;
+		// Note that we're using the entry tag string as one of the data members.
+		/// @todo Need to make this usage easier.
+		ti.m_index_num = tostdstr(entry.first);
+		ti.m_index_frames = entry.second.value<qlonglong>();
+		m_indexes.push_back(ti);
+//		qDb() << M_ID_VAL(ti.m_index_num) << M_ID_VAL(ti.m_index_frames);
 	}
-	Q_ASSERT(qvar_hlist.canConvert<QVariantHomogenousList>());
-	auto hlist = qvar_hlist.value<QVariantHomogenousList>();
-	m_indexes.clear();
-	for(const auto& val : hlist)
-	{
-		m_indexes.push_back(val.value<qint64>());
-	}
-#endif
 }
 
 
@@ -204,6 +205,15 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     return dbg;
 }
 
+struct SerSpec
+{
+	std::string m_tagname;
+	std::any m_ptr_to_member;
+};
+static const SerSpec ser_specs[] = {
+	{"index_num", &TrackIndex::m_index_num },
+	{"index_frames", &TrackIndex::m_index_frames }
+};
 
 QVariant TrackIndex::toVariant() const
 {
@@ -217,5 +227,12 @@ QVariant TrackIndex::toVariant() const
 
 void TrackIndex::fromVariant(const QVariant& variant)
 {
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+//	m_index_num = map.value("index_num").value<>();
+	for(const SerSpec& ssr : ser_specs)
+	{
+		qDb() << toqstr(ssr.m_tagname);
+	}
 
 }
