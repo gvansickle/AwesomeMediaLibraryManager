@@ -269,9 +269,9 @@ bool Metadata::read(const QUrl& url)
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
 
-		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties());
-		if(m_has_id3v2)	m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
-		if(m_has_ape) m_tm_ape = PropertyMapToAMLMTagMap(file->APETag()->properties());
+		if(m_has_id3v1) { m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties()); }
+		if(m_has_id3v2) { m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties()); }
+		if(m_has_ape) { m_tm_ape = PropertyMapToAMLMTagMap(file->APETag()->properties()); }
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
 	{
@@ -440,7 +440,7 @@ std::string Metadata::GetFiletypeName() const
 AMLMTagMap Metadata::tagmap_cuesheet_disc() const
 {
 	// Generate the AMLMTagMap and return it.
-	return m_cuesheet.asAMLMTagMap_Disc();
+	return m_tm_cuesheet_disc;
 }
 
 Fraction Metadata::total_length_seconds() const
@@ -623,7 +623,8 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TM_APE, m_tm_ape) \
 	X(XMLTAG_TM_XIPF, m_tm_xipf) \
 	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
-	X(XMLTAG_TM_M_TAG_MAP, m_tag_map)
+	X(XMLTAG_TM_M_TAG_MAP, m_tag_map) \
+	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
@@ -632,6 +633,8 @@ using strviw_type = QLatin1Literal;
 #undef X
 static const strviw_type XMLTAG_TRACKS("m_tracks");
 static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
+
+
 
 QVariant Metadata::toVariant() const
 {
@@ -677,7 +680,7 @@ void Metadata::fromVariant(const QVariant& variant)
 
 	m_tag_map.fromVariant(qvar_tm);
 
-#define X(field_tag, member_field) member_field . fromVariant(map.value(field_tag));
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &member_field);
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 

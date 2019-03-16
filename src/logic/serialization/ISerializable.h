@@ -112,6 +112,20 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 //	}
 //}
 
+template <class MapType, class StringType, class MemberType>
+void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType* member)
+{
+    if(auto qvar = map.value(key); qvar.isValid())
+    {
+    	member->fromVariant(qvar);
+    }
+    else
+    {
+        qWr() << "Couldn't read field:" << key;
+    }
+}
+
+
 /// @}
 
 

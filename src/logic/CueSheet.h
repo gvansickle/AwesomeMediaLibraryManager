@@ -153,7 +153,7 @@ private:
      * @see https://xiph.org/flac/format.html#metadata_block_cuesheet
      * ""
      */
-    uint8_t m_num_tracks_on_media {0};
+    int64_t m_num_tracks_on_media {0};
 
     /**
      * Cue sheet-derived information on each track.

@@ -77,6 +77,7 @@ public:
 	bool hasAPE() const { return m_has_ape; }
 	bool hasXiphComment() const { return m_has_ogg_xipfcomment; }
 	bool hasInfoTag() const { return m_has_info_tag; }
+	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
 	AMLMTagMap tagmap_VorbisComments() const { return m_tm_vorbis_comments; }
 	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }

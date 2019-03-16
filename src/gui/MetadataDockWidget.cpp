@@ -174,7 +174,7 @@ M_TODO("Not getting some field here");
 				{"hasAPE?", md.hasAPE(), AMLMTagMap()},
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
 				{"hasInfoTag?", md.hasInfoTag(), md.tagmap_InfoTag()},
-				{"hasCuesheetDisc?", true, md.tagmap_cuesheet_disc()}
+				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()}
 			};
 
 			// Add each of the tag type trees as a separate expanded subtree.
@@ -199,16 +199,16 @@ M_TODO("Not getting some field here");
 			{"Pre-gap offset", libentry->get_pre_gap_offset_secs().toQString()},
 			{"Length", libentry->get_length_secs().toQString()}
 		};
-		for(auto& p: list)
+		for(const auto& p: list)
 		{
             m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
 		}
 
 		/// Dump all the metadata.
-		for(auto entry = pimeta.begin(); entry != pimeta.end(); ++entry)
+		for(const auto& entry : pimeta)
 		{
-			QString key = entry->first;
-			QStringList value = entry->second.toStringList();
+			QString key = entry.first;
+			QStringList value = entry.second.toStringList();
 			if(value.empty())
 			{
                 m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
@@ -301,7 +301,7 @@ void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const AM
 {
 	// Add all entries in tagmap to parent, with a few exceptions.
 	tagmap.foreach_pair([=](QString key, QString value){
-		if(!key.contains(QRegularExpression(R"!(^(REM\s+)?(CUESHEET|LOG|CTDBTRACKCONFIDENCE))!")))
+		if(!key.contains(QRegularExpression(R"!(^(REM\s+)?(CUESHEET|LOG|.*CTDB(TRACK|DISC)CONFIDENCE))!")))
 		{
 			auto child = new QTreeWidgetItem({key, value});
 			parent->addChild(child);
