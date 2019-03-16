@@ -123,11 +123,11 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TRACK_METADATA, m_tracks, nullptr)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field, caster) static constexpr strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field, caster) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS_DISC(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
-static constexpr QLatin1String XMLTAG_DISC_NUM_TRACKS_ON_MEDIA("m_num_tracks_on_media");
+static const QLatin1String XMLTAG_DISC_NUM_TRACKS_ON_MEDIA("m_num_tracks_on_media");
 
 std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
 {
@@ -404,20 +404,11 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
         for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
         {
             Track* t = cd_get_track(cd, track_num);
-//            qDebug() << "Track filename:" << track_get_filename(t);
-            // Get the Track's CD-Text info.
-            Cdtext* track_cdtext = track_get_cdtext(t);
 
             TrackMetadata tm;
-#if 0
-#warning "FIXING"
-            // get the Pack Type Indicator data.
-#define X(id) tm.m_ ## id = tostdstr(cdtext_get( id , cdt ));
-            PTI_STR_LIST(X)
-#undef X
-#else
+
 			tm = *TrackMetadata::make_track_metadata(t, track_num);
-#endif
+#if 0 // Moved into TrackMetadata
 			for(auto i = 0; i<=99; ++i)
             {
                 //qDebug() << "Reading track index:" << i;
@@ -437,7 +428,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 					tm.m_indexes.push_back(track_index);
                 }
             }
-
+#endif
             tm.m_track_number = track_num;
             tm.m_start_frames = track_get_start(t);
             tm.m_length_frames = track_get_length(t);

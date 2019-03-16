@@ -104,6 +104,10 @@ enum /*QLocale::*/DataSizeFormats
 /// The simplest things....
 /// @{
 
+/**
+ * Convert a const char* to a std::string.  If @a cstr is nullptr, return @a if_null instead, which
+ * defaults to a default constructed std::string().
+ */
 static inline std::string tostdstr(const char *cstr, const std::string& if_null = std::string())
 {
 	// Handles the case where cstr == nullptr.

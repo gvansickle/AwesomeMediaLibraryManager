@@ -70,34 +70,51 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 	// The non-CD-Text info.
 	retval->m_track_number = track_number;
 
-	retval->m_isrc = tostdstr(track_get_isrc(track_ptr));
-	/// @todo Obsolete?
-	retval->m_PTI_UPC_ISRC = retval->m_isrc;
-
-	// The track's audio data location info.
+	// The track's audio data location info, as parsed by libcue.
 	auto& tm = *retval;
 	tm.m_length_pre_gap = track_get_zero_pre(track_ptr);
 	tm.m_start_frames = track_get_start(track_ptr);
 	tm.m_length_frames = track_get_length(track_ptr);
 	tm.m_length_post_gap = track_get_zero_post(track_ptr);
 
-//	if(tm.m_length_frames < 0)
-//	{
-//		// This is the last track.  We have to calculate the length from the total recording time minus the start offset.
-//		Q_ASSERT(m_length_in_milliseconds > 0);
-//		tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
-//	}
+	// The track's indexes, which should simply duplicate the above.
+	for(auto i = 0; i<=99; ++i)
+	{
+		//qDebug() << "Reading track index:" << i;
+		long ti = track_get_index(track_ptr, i);
+		TrackIndex track_index;
+		track_index.m_index_num = "index" + std::to_string(i);
+		track_index.m_index_frames = ti;
+
+		if((ti==-1) && (i>1))
+		{
+			// qDb() << "Found last index: " << i-1;
+			break;
+		}
+		else
+		{
+//          qDb() << " Index:" << ti;
+			tm.m_indexes.push_back(track_index);
+		}
+	}
+
+#if 0 /// @todo Do we still need to clean up the last track's length?
+	if(tm.m_length_frames < 0)
+	{
+		// This is the last track.  We have to calculate the length from the total recording time minus the start offset.
+		Q_ASSERT(m_length_in_milliseconds > 0);
+		tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
+	}
+#endif
 	tm.m_isrc = tostdstr(track_get_isrc(track_ptr));
 
-	// Get the per-track CD-Text.
+	// Get the per-track CD-Text info.
 	const Cdtext* track_cdtext = track_get_cdtext(track_ptr);
 
 	// Get the Pack Type Indicator data.
 #define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , track_cdtext ));
 	PTI_STR_LIST(X)
 #undef X
-
-	qDb() << "m_PTI_UPC_ISRC" << (cdtext_get(PTI_UPC_ISRC, track_cdtext) == nullptr ? "NULL" : cdtext_get(PTI_UPC_ISRC, track_cdtext));
 
 	return retval;
 }
