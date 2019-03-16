@@ -113,6 +113,8 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_DISC_ID, m_disc_id, nullptr) \
 	X(XMLTAG_DISC_DATE, m_disc_date, nullptr) \
 //	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media, [&](const auto& inval){ return std::to_string(inval); }) \
+
+#define M_DATASTREAM_FIELDS_TRACK(X) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
 //	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
 //	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
@@ -395,7 +397,10 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
             qWr() << "Num tracks is less than 2:" << m_num_tracks_on_media;
         }
 
+		//
+		// Per-Track metadata.
         // Iterate over each track and get any info we can.
+		//
         for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
         {
             Track* t = cd_get_track(cd, track_num);
