@@ -150,18 +150,15 @@ QVariant TrackMetadata::toVariant() const
 #undef X
 
 	// m_indexes
-#if 0
-	QVariantHomogenousList hlist("listname", "entryname");
-	hlist = m_indexes;
-	map.insert(XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(hlist));
-#else
+	// Note that we're using the entry tag string as one of the data members.
+	/// @todo Need to make this usage easier.
 	QVariantInsertionOrderedMap index_map;
 	for(const auto& index : m_indexes)
 	{
 		map_insert_or_die(index_map, toqstr(index.m_index_num), (index.m_index_frames));
 	}
 	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(index_map));
-#endif
+
 	return map;
 }
 
@@ -189,7 +186,6 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 		ti.m_index_num = tostdstr(entry.first);
 		ti.m_index_frames = entry.second.value<qlonglong>();
 		m_indexes.push_back(ti);
-//		qDb() << M_ID_VAL(ti.m_index_num) << M_ID_VAL(ti.m_index_frames);
 	}
 }
 
@@ -205,22 +201,22 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     return dbg;
 }
 
-struct SerSpec
-{
-	std::string m_tagname;
-	std::any m_ptr_to_member;
-};
-static const SerSpec ser_specs[] = {
-	{"index_num", &TrackIndex::m_index_num },
-	{"index_frames", &TrackIndex::m_index_frames }
-};
+
+#define M_TRACK_INDEX_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_TRACK_INDEX_NUM, index_num) \
+	X(XMLTAG_TRACK_INDEX_FRAMES, index_frames)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_TRACK_INDEX_DATASTREAM_FIELDS(X);
+#undef X
 
 QVariant TrackIndex::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-	map_insert_or_die(map, "index_num", m_index_num);
-	map_insert_or_die(map, "index_frames", m_index_frames);
+	map_insert_or_die(map, XMLTAG_TRACK_INDEX_NUM, m_index_num);
+	map_insert_or_die(map, XMLTAG_TRACK_INDEX_FRAMES, m_index_frames);
 
 	return map;
 }
@@ -229,10 +225,6 @@ void TrackIndex::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-//	m_index_num = map.value("index_num").value<>();
-	for(const SerSpec& ssr : ser_specs)
-	{
-		qDb() << toqstr(ssr.m_tagname);
-	}
-
+	m_index_num = map.value(XMLTAG_TRACK_INDEX_NUM).value<decltype(m_index_num)>();
+	m_index_frames = map.value(XMLTAG_TRACK_INDEX_FRAMES).value<decltype(m_index_frames)>();
 }
