@@ -30,11 +30,14 @@ return
         <body>
             <ol>
                 {
-                    for $x at $count in $doc//exturl_media/href
-                    where (matches($x, '.*\.flac$'))
+                    for $x at $count in $doc//m_library_entry
+                    let $tracknums := $x//m_tracks/*[fn:starts-with(fn:local-name(), "track")]
+                    where exists($tracknums)
                     return
-                        <li xml:id="{$count}">
-                            {data($x)}
+                        for $tracknum in $tracknums
+                        return
+                        <li title="{$tracknum/PTI_TITLE/text()}" xml:id="{$count}">
+                            {$tracknum}
                         </li>
                 }
             </ol>
