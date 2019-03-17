@@ -248,11 +248,9 @@ QVariant CueSheet::toVariant() const
 	qDb() << "########### NUM TRACKS:" << m_tracks.size();
 	for(const auto& it : m_tracks)
 	{
-		// Using "track" prefix here because XML tags can't start with numbers.
-		QString track_num_str = QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0'));
 		TrackMetadata tm = it.second;
-		qDb() << "########### " << track_num_str << tm;
-		qvar_track_map.insert(track_num_str, tm.toVariant());
+		qDb() << "########### " << it.first << tm;
+		qvar_track_map.insert("track", tm.toVariant());
 	}
 	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
 	map.insert(XMLTAG_TRACK_METADATA, QVariant::fromValue(qvar_track_map));
@@ -269,7 +267,16 @@ void CueSheet::fromVariant(const QVariant& variant)
 #undef X
 	m_num_tracks_on_media = map.value(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA).value<decltype(m_num_tracks_on_media)>();
 
-	qWr() << "TODO: TRACK FIELDS";
+	// Track-level fields
+	QVariantInsertionOrderedMap qvar_track_map;
+	map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_map);
+
+	for(const auto& track : qvar_track_map)
+	{
+		int track_num = std::stoi(tostdstr(track.first));
+		m_tracks.insert(std::pair(track_num, track.second.value<TrackMetadata>()));
+	}
+
 }
 
 static std::string tostdstr(enum DiscMode disc_mode)

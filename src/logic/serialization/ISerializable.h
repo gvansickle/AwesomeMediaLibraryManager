@@ -32,6 +32,7 @@
 #include <QVariant>
 
 // Ours
+#include "SerializationExceptions.h"
 #include <future/InsertionOrderedMap.h>
 #include <future/QVariantHomogenousList.h>
 
@@ -99,18 +100,6 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 //	}
 }
 
-//template <class MapType, class StringType, class MemberType>
-//void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
-//{
-//	using iterator_type = typename MapType::iterator;
-//	iterator_type it = map.insert( key , member );
-//	if(it == map.end())
-//	{
-//		// Insertion failed for some reason.
-//		throw QException();
-//	}
-//}
-
 template <class MapType, class StringType, class MemberType>
 void map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, MemberType* member)
 {
@@ -154,6 +143,18 @@ auto map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, c
 	return retval;
 }
 
+template <class ListType, class MemberType>
+void list_push_back_or_die(ListType& list, const MemberType& member)
+{
+	QVariant qvar = QVariant::fromValue<MemberType>( member );
+	if(!qvar.isValid())
+	{
+		throw SerializationException("Coudn't push_back() to list.");
+	}
+
+	list.push_back(qvar);
+}
+
 template <class ListType, class ListEntryType, template<typename> class OutListType>
 void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list)
 {
@@ -161,7 +162,7 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 	auto num_entries = list.size();
 	if(num_entries == 0)
 	{
-		qWr() << "LIST EMPTY:" << list;
+		qWr() << "LIST IS EMPTY:" << list;
 		return;
 	}
 
@@ -173,7 +174,7 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 			return;
 		}
 
-		p_list->emplace_back(qvar.value<ListEntryType>());
+		p_list->push_back(qvar.value<ListEntryType>());
 	}
 }
 

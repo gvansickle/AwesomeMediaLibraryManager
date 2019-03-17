@@ -149,18 +149,12 @@ QVariant TrackMetadata::toVariant() const
 #undef X
 
 	// m_indexes
-	// Note that we're using the entry tag string as one of the data members.
-	/// @todo Need to make this usage easier.
-	QVariantInsertionOrderedMap index_map;
-	for(const auto& index : m_indexes)
+	QVariantHomogenousList index_list("m_indexes", "index");
+	for(const TrackIndex& index : m_indexes)
 	{
-#if 0
-		map_insert_or_die(index_map, toqstr(index.m_index_num), (index.m_index_frames));
-#else
-		map_insert_or_die(index_map, "index", index.toVariant());
-#endif
+		list_push_back_or_die(index_list, index.toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(index_map));
+	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(index_list));
 
 	return map;
 }
@@ -179,23 +173,10 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 #undef X
 
 	// Load the index list.
-	QVariantHomogenousList index_map;
-	index_map = map_read_field_or_warn_fromvar(map, XMLTAG_TRACK_META_INDEXES, index_map);
+	QVariantHomogenousList index_list("m_indexes", "index");
+	index_list = map_read_field_or_warn_fromvar(map, XMLTAG_TRACK_META_INDEXES, index_list);
 
-	list_read_all_fields_or_warn(index_map, &m_indexes);
-
-//	for(const auto& entry : index_map)
-//	{
-//		TrackIndex ti;
-//#if 0
-//		// Note that we're using the entry tag string as one of the data members.
-//		/// @todo Need to make this usage easier.
-//		ti.m_index_num = tostdstr(entry.first);
-//		ti.m_index_frames = entry.second.value<qlonglong>();
-//#endif
-//		map_read_field_or_warn_fromvar(index_map, "index", &ti);
-//		m_indexes.push_back(ti);
-//	}
+	list_read_all_fields_or_warn(index_list, &m_indexes);
 }
 
 
