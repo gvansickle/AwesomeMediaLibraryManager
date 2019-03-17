@@ -273,8 +273,14 @@ void CueSheet::fromVariant(const QVariant& variant)
 
 	for(const auto& track : qvar_track_map)
 	{
-		int track_num = std::stoi(tostdstr(track.first));
-		m_tracks.insert(std::pair(track_num, track.second.value<TrackMetadata>()));
+		TrackMetadata tm;
+		tm.fromVariant(track.second);
+
+		// Should have a track number.
+		throwif(tm.m_track_number == 0);
+		int track_num = tm.m_track_number;
+
+		m_tracks.insert(std::make_pair(track_num, tm));
 	}
 
 }

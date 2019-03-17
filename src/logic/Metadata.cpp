@@ -648,19 +648,22 @@ QVariant Metadata::toVariant() const
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
+	// Track-level fields.
+M_WARNING("TODO: Do we still need this?");
+
 	// Add the track list to the return value.
 	QVariantInsertionOrderedMap qvar_track_map;
 	qDb() << "########### NUM TRACKS:" << m_tracks.size();
 	for(const auto& it : m_tracks)
 	{
-		// Using "track" prefix here because XML tags can't start with numbers.
-		QString track_num_str = QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0'));
+//		QString track_num_str = QString("track");
 		TrackMetadata tm = it.second;
-		qDb() << "########### " << track_num_str << tm;
-		qvar_track_map.insert(track_num_str, tm.toVariant());
+		qDb() << "########### " << it.first << tm;
+		qvar_track_map.insert("track", tm.toVariant());
 	}
 
 	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
+M_WARNING("TODO: REMOVE TRACKS HERE?");
 	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
 	map.insert(XMLTAG_CUESHEET, m_cuesheet.toVariant());
 
@@ -685,13 +688,17 @@ void Metadata::fromVariant(const QVariant& variant)
 #undef X
 
 	// Read in the track list.
+M_WARNING("TODO: Not sure we need this anymore.");
 	QVariantInsertionOrderedMap qvar_track_map = map.value(XMLTAG_TRACKS).value<QVariantInsertionOrderedMap>();
-	for(const auto& it : qvar_track_map)
+	for(const auto& track : qvar_track_map)
 	{
-		// 5 == len("track"). Using "track" prefix here because XML tags can't start with numbers.
-		qint64 track_num = std::stoll(tostdstr(it.first).substr(5));
 		TrackMetadata tm;
-		tm.fromVariant(it.second);
+		tm.fromVariant(track.second);
+
+		// Should have a track number.
+		throwif(tm.m_track_number == 0);
+		int track_num = tm.m_track_number;
+
 		m_tracks.insert(std::make_pair(track_num, tm));
 	}
 

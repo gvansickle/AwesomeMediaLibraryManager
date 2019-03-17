@@ -94,7 +94,7 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 		else
 		{
 			TrackIndex track_index;
-			track_index.m_index_num = "index" + std::to_string(i);
+			track_index.m_index_num = std::to_string(i);
 			track_index.m_index_frames = ti;
 			tm.m_indexes.push_back(track_index);
 		}
@@ -163,7 +163,6 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-//#define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
 #define X(field_tag, member_field) member_field = map_read_field_or_warn_fromvar(map, field_tag, member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
