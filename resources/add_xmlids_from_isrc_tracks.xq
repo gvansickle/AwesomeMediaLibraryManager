@@ -53,10 +53,14 @@ declare variable $input_file_path external;
 (:    let $item_lwr := fn:lower-case($item):)
 (:    return fn:replace($item_lwr,'.*\.([a-zA-Z0-9]*)$','$1','i'):)
 
+(:title="{$tracknum/PTI_TITLE/text()}":)
+
 (:let $distinct_categories := fn:distinct-values($extension_items):)
 let $doc := fn:doc($input_file_path)/amlm_database
 return
     <html>
+        <header>
+        </header>
         <body>
             <ol>
                 {
@@ -64,12 +68,14 @@ return
                     let $tracknums := $x//m_tracks/*[fn:starts-with(fn:local-name(), "track")]
                     where exists($tracknums)
                     return
+
                         for $tracknum in $tracknums
                         return
-                        <li title="{$tracknum/PTI_TITLE/text()}">
-                            {functx:add-attributes($tracknum, xs:QName('xml:id'), $tracknum/m_isrc/text())}
-                        </li>
+                            <li>
+                                {functx:add-attributes($tracknum, xs:QName('xml:id'), fn:concat("trackid_", $tracknum/m_isrc/text()))}
+                            </li>
                 }
+
             </ol>
         </body>
     </html>
