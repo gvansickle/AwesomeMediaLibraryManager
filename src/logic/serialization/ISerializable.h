@@ -25,7 +25,7 @@
 #define SRC_LOGIC_SERIALIZATION_ISERIALIZABLE_H_
 
 // Std C++
-// None yet.
+#include <type_traits>
 
 // Qt5
 #include <QMetaType>
@@ -63,7 +63,6 @@ public:
 
 
 /**
- * @todo Maybe factor out a QVariantList with tag names only.
  */
 class SerializableQVariantList : public QVariantHomogenousList, public virtual ISerializable
 {
@@ -113,11 +112,11 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 //}
 
 template <class MapType, class StringType, class MemberType>
-void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType* member)
+void map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, MemberType* member)
 {
     if(auto qvar = map.value(key); qvar.isValid())
     {
-    	member->fromVariant(qvar);
+		member->fromVariant(qvar);
     }
     else
     {
@@ -126,7 +125,20 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, MemberTyp
 }
 
 template <class MapType, class StringType, class MemberType>
-auto map_read_field_or_warn(const MapType& map, const StringType& key, const MemberType& member) -> MemberType
+void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType* member)
+{
+	if(auto qvar = map.value(key); qvar.isValid())
+	{
+		*member = qvar.template value<MemberType>();
+	}
+	else
+	{
+		qWr() << "Couldn't read field:" << key;
+	}
+}
+
+template <class MapType, class StringType, class MemberType>
+auto map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, const MemberType& member) -> MemberType
 {
 	MemberType retval {};
 
@@ -140,6 +152,29 @@ auto map_read_field_or_warn(const MapType& map, const StringType& key, const Mem
 	}
 
 	return retval;
+}
+
+template <class ListType, class ListEntryType, template<typename> class OutListType>
+void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list)
+{
+	p_list->clear();
+	auto num_entries = list.size();
+	if(num_entries == 0)
+	{
+		qWr() << "LIST EMPTY:" << list;
+		return;
+	}
+
+	for(const QVariant& qvar : list)
+	{
+		if(!qvar.isValid())
+		{
+			qWr() << "Failed reading list:" << qvar << list;
+			return;
+		}
+
+		p_list->emplace_back(qvar.value<ListEntryType>());
+	}
 }
 
 /// @}

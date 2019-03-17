@@ -154,7 +154,11 @@ QVariant TrackMetadata::toVariant() const
 	QVariantInsertionOrderedMap index_map;
 	for(const auto& index : m_indexes)
 	{
+#if 0
 		map_insert_or_die(index_map, toqstr(index.m_index_num), (index.m_index_frames));
+#else
+		map_insert_or_die(index_map, "index", index.toVariant());
+#endif
 	}
 	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(index_map));
 
@@ -166,7 +170,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 //#define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
-#define X(field_tag, member_field) member_field = map_read_field_or_warn(map, field_tag, member_field );
+#define X(field_tag, member_field) member_field = map_read_field_or_warn_fromvar(map, field_tag, member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -174,19 +178,24 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	PTI_STR_LIST(X);
 #undef X
 
-	// Load the indexes.
-	QVariantInsertionOrderedMap index_map;
-	index_map = map_read_field_or_warn(map, XMLTAG_TRACK_META_INDEXES, index_map);
+	// Load the index list.
+	QVariantHomogenousList index_map;
+	index_map = map_read_field_or_warn_fromvar(map, XMLTAG_TRACK_META_INDEXES, index_map);
 
-	for(const auto& entry : index_map)
-	{
-		TrackIndex ti;
-		// Note that we're using the entry tag string as one of the data members.
-		/// @todo Need to make this usage easier.
-		ti.m_index_num = tostdstr(entry.first);
-		ti.m_index_frames = entry.second.value<qlonglong>();
-		m_indexes.push_back(ti);
-	}
+	list_read_all_fields_or_warn(index_map, &m_indexes);
+
+//	for(const auto& entry : index_map)
+//	{
+//		TrackIndex ti;
+//#if 0
+//		// Note that we're using the entry tag string as one of the data members.
+//		/// @todo Need to make this usage easier.
+//		ti.m_index_num = tostdstr(entry.first);
+//		ti.m_index_frames = entry.second.value<qlonglong>();
+//#endif
+//		map_read_field_or_warn_fromvar(index_map, "index", &ti);
+//		m_indexes.push_back(ti);
+//	}
 }
 
 
@@ -201,19 +210,36 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     return dbg;
 }
 
-
 #define M_TRACK_INDEX_DATASTREAM_FIELDS(X) \
-	X(XMLTAG_TRACK_INDEX_NUM, index_num) \
-	X(XMLTAG_TRACK_INDEX_FRAMES, index_frames)
+	X(XMLTAG_TRACK_INDEX_NUM, "index_num", m_index_num) \
+	X(XMLTAG_TRACK_INDEX_FRAMES, "index_frames", m_index_frames)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, field_tag_str, member_field) static const strviw_type field_tag ( field_tag_str );
 	M_TRACK_INDEX_DATASTREAM_FIELDS(X);
 #undef X
+
+//struct MapEntry
+//{
+//	template <class T>
+//	MapEntry(const char* str, T m_ptr_to_member);
+//	const char* m_str;
+////	const std::any m_ptr_to_member;
+//	const T m_ptr_to_member;
+
+//	auto get_ptr_to_member() -> decltype(m_ptr_to_member) { return std::any_cast<decltype(m_ptr_to_member)>(m_ptr_to_member); };
+//};
+
+//static const MapEntry f_map[] = {
+//	{"index_num", &TrackIndex::m_index_num},
+//	{"index_frames", &TrackIndex::m_index_frames}
+//};
 
 QVariant TrackIndex::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
+
+//	map_insert_or_die(index_map, toqstr(index.m_index_num), (index.m_index_frames));
 
 	map_insert_or_die(map, XMLTAG_TRACK_INDEX_NUM, m_index_num);
 	map_insert_or_die(map, XMLTAG_TRACK_INDEX_FRAMES, m_index_frames);
@@ -225,6 +251,11 @@ void TrackIndex::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	m_index_num = map.value(XMLTAG_TRACK_INDEX_NUM).value<decltype(m_index_num)>();
-	m_index_frames = map.value(XMLTAG_TRACK_INDEX_FRAMES).value<decltype(m_index_frames)>();
+//#define X(field_tag, field_tag_str, member_field)
+//	m_index_num = map.value(XMLTAG_TRACK_INDEX_NUM).value<decltype(m_index_num)>();
+//	m_index_frames = map.value(XMLTAG_TRACK_INDEX_FRAMES).value<decltype(m_index_frames)>();
+
+	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_NUM, &m_index_num);
+	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_FRAMES, &m_index_frames);
+
 }

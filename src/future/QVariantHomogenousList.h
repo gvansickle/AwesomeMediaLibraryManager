@@ -76,8 +76,8 @@ public:
 	}
 
 protected:
-	QString m_list_tag;
-	QString m_list_item_tag;
+	QString m_list_tag {};
+	QString m_list_item_tag {};
 };
 
 Q_DECLARE_METATYPE(QVariantHomogenousList);
