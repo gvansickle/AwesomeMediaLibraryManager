@@ -348,7 +348,8 @@ QVariant LibraryEntry::toVariant() const
 
 	if(isPopulated())
 	{
-		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
+//		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
+		map_insert_or_die(map, LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
 	}
 
 	return QVariant::fromValue(map);

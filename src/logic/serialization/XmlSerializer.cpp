@@ -227,6 +227,7 @@ void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant,
 void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
+	Q_ASSERT(variant.canConvert<QVariantList>());
 
 	QVariantList list = variant.toList();
 
@@ -240,6 +241,9 @@ void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStream
 
 void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
+	Q_ASSERT(variant.isValid());
+	Q_ASSERT(variant.canConvert<QVariantMap>());
+
 	QVariantMap map = variant.toMap();
 
 	// Stream out each element in the map.

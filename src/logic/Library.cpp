@@ -216,12 +216,13 @@ QVariant Library::toVariant() const
 	if(!m_lib_entries.empty())
 	{
 		// Serialize the LibraryEntry's.
-		QVariantList list;
+		QVariantHomogenousList list("", "library_entry");
 		for(const auto& e : m_lib_entries)
 		{
 			list.append(e->toVariant());
 		}
-		map.insert(XMLTAG_LIBRARY_ENTRIES, list);
+//		map.insert(XMLTAG_LIBRARY_ENTRIES, list);
+		map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
 	}
 
 	return QVariant::fromValue(map);
@@ -236,7 +237,8 @@ void Library::fromVariant(const QVariant& variant)
 	m_num_populated = map.value(XMLTAG_NUM_POP).value<qint64>();
 	qint64 num_lib_entries = map.value(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
 
-	QVariantList list = map.value(XMLTAG_LIBRARY_ENTRIES).toList();
+	QVariantHomogenousList list;
+	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 	for(const QVariant& e : list)
 	{
 		std::shared_ptr<LibraryEntry> libentry = std::make_shared<LibraryEntry>();
