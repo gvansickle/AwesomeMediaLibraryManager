@@ -234,17 +234,18 @@ QVariant CueSheet::toVariant() const
 	// Track-level fields
 
 	// Add the track list to the return value.
-	QVariantInsertionOrderedMap qvar_track_map;
-	qDb() << "########### NUM TRACKS:" << m_tracks.size();
+M_WARNING("TODO list vs map");
+//	QVariantInsertionOrderedMap qvar_track_map;
+	QVariantHomogenousList qvar_track_list("m_tracks", "track");
+
 	for(const auto& it : m_tracks)
 	{
 		TrackMetadata tm = it.second;
-		qDb() << "########### " << it.first << tm;
-		qvar_track_map.insert("track", tm.toVariant());
-		qDb() << "########### INSERTED:" << it.first << tm;
+//		qvar_track_map.insert("track", tm.toVariant());
+		list_push_back_or_die(qvar_track_list, tm);
 	}
 	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
-	map_insert_or_die(map, XMLTAG_TRACK_METADATA, qvar_track_map);
+	map_insert_or_die(map, XMLTAG_TRACK_METADATA, qvar_track_list);
 
 	return map;
 }
@@ -260,14 +261,18 @@ void CueSheet::fromVariant(const QVariant& variant)
 	m_num_tracks_on_media = map.value(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA).value<decltype(m_num_tracks_on_media)>();
 
 	// Track-level fields
-	QVariantInsertionOrderedMap qvar_track_map;
-	map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_map);
-	AMLM_WARNIF(!qvar_track_map.empty());
+//	QVariantInsertionOrderedMap qvar_track_map;
+	QVariantHomogenousList qvar_track_list("m_tracks", "track");
 
-	for(const auto& track : qvar_track_map)
+	map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_list);
+	AMLM_WARNIF(qvar_track_list.empty());
+#if 0
+	list_read_all_fields_or_warn(qvar_track_list, &m_tracks);
+#else
+	for(const auto& track : qAsConst(qvar_track_list))
 	{
 		TrackMetadata tm;
-		tm.fromVariant(track.second);
+		tm.fromVariant(track);
 
 
 		// Should have a track number.
@@ -276,7 +281,7 @@ void CueSheet::fromVariant(const QVariant& variant)
 
 		m_tracks.insert(std::make_pair(track_num, tm));
 	}
-
+#endif
 }
 
 static std::string tostdstr(enum DiscMode disc_mode)

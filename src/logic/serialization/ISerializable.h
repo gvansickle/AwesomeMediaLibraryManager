@@ -151,22 +151,22 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, MemberTyp
 	}
 }
 
-template <class MapType, class StringType, class MemberType>
-auto map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, const MemberType& member) -> MemberType
-{
-	MemberType retval {};
+//template <class MapType, class StringType, class MemberType>
+//auto map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, const MemberType& member) -> MemberType
+//{
+//	MemberType retval {};
 
-	if(QVariant qvar = map.value(key); qvar.isValid())
-	{
-		retval = qvar.value<MemberType>();
-	}
-	else
-	{
-		qWr() << "Couldn't read field:" << key;
-	}
+//	if(QVariant qvar = map.value(key); qvar.isValid())
+//	{
+//		retval = qvar.value<MemberType>();
+//	}
+//	else
+//	{
+//		qWr() << "Couldn't read field:" << key;
+//	}
 
-	return retval;
-}
+//	return retval;
+//}
 
 /// @}
 
@@ -182,11 +182,12 @@ void list_push_back_or_die(ListType& list, const ISerializable& member)
 	list.push_back(qvar);
 }
 
-template <class ListType, class MemberType>
+template <class ListType, class MemberType,
+		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
 void list_push_back_or_die(ListType& list, const MemberType& member)
 {
 	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
-	
+
 	QVariant qvar = QVariant::fromValue<MemberType>( member );
 	if(!qvar.isValid())
 	{
@@ -197,21 +198,23 @@ void list_push_back_or_die(ListType& list, const MemberType& member)
 }
 
 template <class ListType, class ListEntryType, template<typename> class OutListType>
-void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list)
+void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list, const char* caller = __builtin_FUNCTION())
 {
+	static_assert(std::is_same_v<ListType, QVariantHomogenousList> || std::is_same_v<ListType, QVariantList>,
+				  "Not a list type");
 	p_list->clear();
 	auto num_entries = list.size();
 	if(num_entries == 0)
 	{
-		qWr() << "LIST IS EMPTY:" << list;
+		qWr() << M_ID_VAL(caller) << "LIST IS EMPTY:" << list;
 		return;
 	}
 
 	for(const QVariant& qvar : list)
 	{
-		if(!qvar.isValid())
+		if(!qvar.isValid() || !qvar.canConvert<ListEntryType>())
 		{
-			qWr() << "Failed reading list:" << qvar << list;
+			qWr() << M_ID_VAL(caller) << "Failed reading list:" << qvar << list;
 			return;
 		}
 

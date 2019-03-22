@@ -307,7 +307,7 @@ qDb() << "ENTERED";
 
 	// Insert field values into the QVariantMap.
 //#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
-#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field); qDb() << "INSERTED:" << field_tag << member_field;
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -319,9 +319,9 @@ qDb() << "HERE";
 	{
 //		map.insert(XMLTAG_METADATA, m_metadata.toVariant());
 //		map_insert_or_die(map, XMLTAG_METADATA, m_metadata);
-		qDb() << "IS POPULATED";
+//		qDb() << "IS POPULATED";
 	}
-	qDb() << "LEAVING";
+//	qDb() << "LEAVING";
 
 	return map; //QVariant::fromValue(map);
 }
@@ -360,7 +360,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 //			m_is_populated = false;
 //		}
 	}
-qDb() << "LIBRRAYENTRY:" << *this;
+//qDb() << "LIBRRAYENTRY:" << *this;
 }
 
 #undef M_DATASTREAM_FIELDS

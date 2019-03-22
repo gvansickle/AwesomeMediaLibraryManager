@@ -72,6 +72,8 @@ template <typename ResultType, typename CheckType, template <typename> class ...
 using requires = std::enable_if_t<std::conjunction<Concepts<CheckType>...>::value, ResultType>;
 
 /**
+ * fallback is valid only if all conditions are false.  You want this as the compliment to
+ * a number of requires<>, e.g.:
  *
  */
 template <typename ResultType, typename CheckType, template <typename> class ... Concepts>
@@ -80,6 +82,23 @@ using fallback = std::enable_if_t<std::conjunction<std::negation<Concepts<CheckT
 
 namespace concepts
 {
+
+	/**
+	 * An always-false template for use in static_assert()'s, to make them SFINAE-friendly.
+	 * E.g. in a fallback template:
+	 * template<class T>
+	 * auto func(T whatever) -> fallback<void, T, ConceptA>
+	 * {
+	 * 		static_assert(always_false<T>::error, "Type T doesn't model ConceptA");
+	 * }
+	 *
+	 */
+	template <class T>
+	struct always_false
+	{
+		static constexpr bool error = false;
+	};
+
 	template <class T> constexpr bool Pointer = std::is_pointer<T>::value;
 
 	/// Mishmash of ideas from all over.
@@ -120,6 +139,7 @@ namespace concepts
 		template<class F, class... Ts>
 		auto requires(F&& f, Ts&&... xs) -> decltype(f(std::forward<Ts>(xs)...));
 	};
+
 }
 
 

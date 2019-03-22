@@ -668,21 +668,24 @@ QVariant Metadata::toVariant() const
 M_WARNING("TODO: Do we still need this?");
 
 	// Add the track list to the return value.
-	QVariantInsertionOrderedMap qvar_track_map;
-	qDb() << "########### NUM TRACKS:" << m_tracks.size();
+M_WARNING("TODO list vs map");
+//	QVariantInsertionOrderedMap qvar_track_map;
+	QVariantHomogenousList qvar_track_map("m_track", "track");
+
 	for(const auto& it : m_tracks)
 	{
 //		QString track_num_str = QString("track");
 		TrackMetadata tm = it.second;
-		qDb() << "########### TRACK:" << it.first << tm;
-		qvar_track_map.insert("track", tm.toVariant());
+		list_push_back_or_die(qvar_track_map, tm);
 	}
 
 	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
 M_WARNING("TODO: REMOVE TRACKS HERE?");
-	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
-	map.insert(XMLTAG_CUESHEET, m_cuesheet.toVariant());
-qDb() << "LEAVING Metadata::toVariant()";
+//	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
+//	map.insert(XMLTAG_CUESHEET, m_cuesheet.toVariant());
+map_insert_or_die(map, XMLTAG_TRACKS, qvar_track_map);
+map_insert_or_die(map, XMLTAG_CUESHEET, m_cuesheet);
+
 	return map;
 }
 

@@ -152,7 +152,7 @@ QVariant TrackMetadata::toVariant() const
 	QVariantHomogenousList index_list("m_indexes", "index");
 	for(const TrackIndex& index : m_indexes)
 	{
-		list_push_back_or_die(index_list, index.toVariant());
+		list_push_back_or_die(index_list, index);
 	}
 
 	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, index_list);
@@ -164,7 +164,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, member_field) member_field = map_read_field_or_warn_fromvar(map, field_tag, member_field );
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, & member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -174,9 +174,10 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 
 	// Load the index list.
 	QVariantHomogenousList index_list("m_indexes", "index");
-	index_list = map_read_field_or_warn_fromvar(map, XMLTAG_TRACK_META_INDEXES, index_list);
-
+	map_read_field_or_warn(map, XMLTAG_TRACK_META_INDEXES, &index_list);
+qDb() << "HERE, size:" << index_list.size();
 	list_read_all_fields_or_warn(index_list, &m_indexes);
+qDb() << "THERE, size:" << m_indexes.size();
 }
 
 
