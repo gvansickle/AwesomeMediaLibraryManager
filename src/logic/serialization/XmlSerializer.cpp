@@ -128,9 +128,6 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 	xmlstream.writeStartElement(nodeName);
 	xmlstream.writeAttribute("type", variant.typeName());
 
-	/// DEBUG
-	qDb() << "NODENAME:" << nodeName;
-
 	/**
 	 * @note Uhhhhhh..... QMetaType sometimes != QVariant.type().
 	 *
