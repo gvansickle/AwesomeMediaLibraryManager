@@ -103,7 +103,7 @@ public:
 
 	/// @}
 
-    QTH_FRIEND_QDEBUG_OP(DirScanResult);
+    QTH_DECLARE_FRIEND_QDEBUG_OP(DirScanResult);
 //	QTH_FRIEND_QDATASTREAM_OPS(DirScanResult);
 
 protected:

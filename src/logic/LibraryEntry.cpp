@@ -224,6 +224,11 @@ bool LibraryEntry::hasNoPregap() const
 //					qCritical() << "TRACK NO LESS THAN 1:" << m_track_number;
 					return false;
 				}
+				if(!m_metadata.hasTrack(m_track_number))
+				{
+					qWr() << "Possible database corruption, no such metadata track:" << m_track_number;
+					return false;
+				}
 				TrackMetadata tm = m_metadata.track(m_track_number);
 				if(tm.m_is_part_of_gapless_set)
 				{
@@ -264,59 +269,6 @@ QUrl LibraryEntry::getM2Url() const
     }
 }
 
-//void LibraryEntry::writeToJson(QJsonObject& jo) const
-//{
-//	jo["m_url"] = m_url.toString();
-//	jo["m_is_populated"] = isPopulated();
-//	jo["m_is_error"] = m_is_error;
-//	jo["m_is_subtrack"] = m_is_subtrack;
-//	jo["m_offset_secs"] = m_offset_secs.toQString();
-//	jo["m_length_secs"] = m_length_secs.toQString();
-//
-//	M_WARNING("/// @todo This is always null.");
-//	QString str;
-//	QTextStream ts(&str);
-//	//	ts << m_mime_type;
-//	jo["m_mime_type"] = *ts.string();
-//
-//	if(isPopulated())
-//	{
-//		M_WARNING("TODO: Don't write out in the has-cached-metadata case");
-//		m_metadata.writeToJson(jo);
-//	}
-//}
-
-//void LibraryEntry::readFromJson(QJsonObject& jo)
-//{
-//	m_url = QUrl(jo["m_url"].toString());
-//	m_is_populated = jo["m_is_populated"].toBool(false);
-//	m_is_error = jo["m_is_error"].toBool(false);
-//	m_is_subtrack = jo["m_is_subtrack"].toBool(false);
-//	m_offset_secs = Fraction(jo["m_offset_secs"].toString("0/1"));
-//	m_length_secs = Fraction(jo["m_length_secs"].toString("0/1"));
-//	QString str;
-//	QTextStream ts(&str);
-//	str = jo["m_mime_type"].toString();
-////	ts >> m_mime_type;
-//	// Metadata might not have been written.
-//	//metadata_jval: QJsonValue = jo.value("metadata")
-//	QJsonObject metadata_jval = jo["metadata"].toObject();
-//	if(!metadata_jval.empty())
-//	{
-//		///qDebug() << "Found metadata in JSON";
-//		m_metadata = Metadata::make_metadata(metadata_jval);
-//		m_is_populated = true;
-//	}
-//	else
-//	{
-//		qWarning() << "Found no metadata in JSON for" << m_url;
-//		m_metadata = Metadata::make_metadata();
-//		m_is_error = true;
-//		m_is_populated = false;
-//	}
-//	return;
-//}
-
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_URL, m_url) \
 	X(XMLTAG_IS_POPULATED, m_is_populated) \
@@ -327,7 +279,8 @@ QUrl LibraryEntry::getM2Url() const
 	X(XMLTAG_TOTAL_TRACK_NUMBER, m_total_track_number) \
 	X(XMLTAG_PRE_GAP_OFFSET_SECS, m_pre_gap_offset_secs) \
 	X(XMLTAG_OFFSET_SECS, m_offset_secs) \
-	X(XMLTAG_LENGTH_SECS, m_length_secs)
+	X(XMLTAG_LENGTH_SECS, m_length_secs) \
+	/* X(XMLTAG_METADATA, m_metadata) */
 
 using strviw_type = QLatin1Literal;
 
@@ -335,24 +288,42 @@ using strviw_type = QLatin1Literal;
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
+static const strviw_type XMLTAG_METADATA ( "m_metadata" );
+
+QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
+{
+	QDebugStateSaver saver(dbg);
+#define X(field_tag, member_field) << field_tag << obj.member_field << ","
+	dbg M_DATASTREAM_FIELDS(X);
+#undef X
+	return dbg;
+}
 
 QVariant LibraryEntry::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
+qDb() << "ENTERED";
+
 	// Insert field values into the QVariantMap.
 //#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
-#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field); qDb() << "INSERTED:" << field_tag << member_field;
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+	map_insert_or_die(map, XMLTAG_METADATA, m_metadata);
+
+qDb() << "HERE";
+
 	if(isPopulated())
 	{
-//		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
-		map_insert_or_die(map, LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
+//		map.insert(XMLTAG_METADATA, m_metadata.toVariant());
+//		map_insert_or_die(map, XMLTAG_METADATA, m_metadata);
+		qDb() << "IS POPULATED";
 	}
+	qDb() << "LEAVING";
 
-	return QVariant::fromValue(map);
+	return map; //QVariant::fromValue(map);
 }
 
 void LibraryEntry::fromVariant(const QVariant& variant)
@@ -360,33 +331,36 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
+//#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
+
+	map_read_field_or_warn(map, XMLTAG_METADATA, &m_metadata);
 
 	/// @todo
 	if(isPopulated())
 	{
 		/// @todo This is badly named. m_metadata the field has a "metadata_abstract_base_pimpl" QVarInsOrderMap inside it.
-		QVariant metadata_map = map.value(LibraryEntryTag::METADATA_tagstr);
+//		QVariant metadata_map = map.value(XMLTAG_METADATA);
+//		Q_ASSERT(metadata_map.isValid());
+//		Q_ASSERT(metadata_map.canConvert<MetadataFromCache>());
 
-//		Q_ASSERT(metadata_map.value().canConvert<MetadataFromCache>());
-
-		if(metadata_map.isValid())
-		{
-			m_metadata = Metadata::make_metadata(metadata_map);
-			m_is_error = false;
-			m_is_populated = true;
-		}
-		else
-		{
-			qWarning() << "Found no/invalid metadata in XML for" << m_url;
-			m_metadata = Metadata::make_metadata();
-			m_is_error = true;
-			m_is_populated = false;
-		}
+//		if(metadata_map.isValid())
+//		{
+//			m_metadata = Metadata::make_metadata(metadata_map);
+//			m_is_error = false;
+//			m_is_populated = true;
+//		}
+//		else
+//		{
+//			qWarning() << "Found no/invalid metadata in XML for" << m_url;
+//			m_metadata = Metadata::make_metadata();
+//			m_is_error = true;
+//			m_is_populated = false;
+//		}
 	}
-
+qDb() << "LIBRRAYENTRY:" << *this;
 }
 
 #undef M_DATASTREAM_FIELDS

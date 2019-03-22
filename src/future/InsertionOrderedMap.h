@@ -122,6 +122,9 @@ public:
 	const_iterator cend() const { return std::cend(m_vector_of_elements); };
 	const_iterator end() const { return this->cend(); }
 
+	bool empty() const { return m_vector_of_elements.empty(); };
+	size_t size() const { return m_vector_of_elements.size(); };
+
 #if 1 // Qt5
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
 

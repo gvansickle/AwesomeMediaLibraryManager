@@ -64,7 +64,7 @@ public:
     /// Last modified time of file metadata (permissions etc.).  Invalid if can't be determined(?).
     QDateTime m_metadata_last_modified_timestamp;
 
-//    QTH_FRIEND_QDEBUG_OP(FileModificationInfo);
+//    QTH_DECLARE_FRIEND_QDEBUG_OP(FileModificationInfo);
     friend QDebug operator<<(QDebug dbg, const FileModificationInfo& obj)
     {
         return dbg << obj.m_file_size_bytes << obj.m_last_modified_timestamp << obj.m_metadata_last_modified_timestamp;

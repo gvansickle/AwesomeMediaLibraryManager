@@ -119,6 +119,7 @@ public:
 	/// @note @a index is 1-based.
 	TrackMetadata track(int index) const;
 	Metadata get_one_track_metadata(int track_index) const;
+	bool hasTrack(int i) const;
 
 	/// @}
 
@@ -128,7 +129,7 @@ public:
 
 	/// @name Serialization
 	/// @{
-
+	QTH_DECLARE_FRIEND_QDEBUG_OP(Metadata);
 	QTH_FRIEND_QDATASTREAM_OPS(Metadata);
 
 	/// Serialize item and any children to a QVariant.
@@ -205,7 +206,7 @@ private:
 	std::map<int, TrackMetadata> m_tracks {};
 
 	/// Same as above, but in AMLMTagMap form.
-	AMLMTagMap m_track_amlmtagmaps {};
+//	AMLMTagMap m_track_amlmtagmaps {};
 
 	/// @}
 

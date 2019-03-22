@@ -205,7 +205,7 @@ static constexpr strviw_type XMLTAG_LIBRARY_ENTRIES("library_entries");
 QVariant Library::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
-
+qDb() << "ENTER";
 	// Write the Library's info.
 	map.insert(XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
 	map.insert(XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc()/*.toString()*/);
@@ -216,15 +216,16 @@ QVariant Library::toVariant() const
 	if(!m_lib_entries.empty())
 	{
 		// Serialize the LibraryEntry's.
-		QVariantHomogenousList list("", "library_entry");
+		//QVariantHomogenousList list("", "library_entry");
+		QVariantList list;
 		for(const auto& e : m_lib_entries)
 		{
 			list.append(e->toVariant());
 		}
-//		map.insert(XMLTAG_LIBRARY_ENTRIES, list);
-		map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
+		map.insert(XMLTAG_LIBRARY_ENTRIES, list);
+//		map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
 	}
-
+qDb() << "EXIT";
 	return QVariant::fromValue(map);
 }
 
@@ -237,10 +238,12 @@ void Library::fromVariant(const QVariant& variant)
 	m_num_populated = map.value(XMLTAG_NUM_POP).value<qint64>();
 	qint64 num_lib_entries = map.value(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
 
-	QVariantHomogenousList list;
-	map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
+	//QVariantHomogenousList list("library_entries", "library_entry");
+	//map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
+	QVariantList list = map.value(XMLTAG_LIBRARY_ENTRIES).toList();
 	for(const QVariant& e : list)
 	{
+		Q_ASSERT(e.isValid());
 		std::shared_ptr<LibraryEntry> libentry = std::make_shared<LibraryEntry>();
 		libentry->fromVariant(e);
 		m_lib_entries.push_back(libentry);

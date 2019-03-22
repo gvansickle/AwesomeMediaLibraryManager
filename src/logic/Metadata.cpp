@@ -77,6 +77,8 @@ AMLM_QREG_CALLBACK([](){
 //	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
 
+QTH_DEFINE_DUMMY_QDEBUG_OP(Metadata);
+
 
 static std::map<AudioFileType::Type, std::string> f_filetype_to_string_map =
 {
@@ -199,7 +201,8 @@ M_TODO("What's going on here?");
 	retval.m_is_error = false;
 	return retval;
 #else
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map; //= variant.value<QVariantInsertionOrderedMap>();
+	qviomap_from_qvar_or_die(&map, variant);
 	Metadata retval = make_metadata();
 	retval.fromVariant(variant);
 	return retval;
@@ -555,6 +558,18 @@ Metadata Metadata::get_one_track_metadata(int track_index) const
 	return retval;
 }
 
+bool Metadata::hasTrack(int i) const
+{
+	if(m_tracks.find(i) != m_tracks.cend())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 QByteArray Metadata::getCoverArtBytes() const
 {
 	// static function in MetadataTagLib.h/.cpp.
@@ -644,7 +659,8 @@ QVariant Metadata::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-#define X(field_tag, member_field) map.insert( field_tag , (member_field) . toVariant());
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+//#define X(field_tag, member_field) map.insert( field_tag , member_field.toVariant());
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
@@ -658,7 +674,7 @@ M_WARNING("TODO: Do we still need this?");
 	{
 //		QString track_num_str = QString("track");
 		TrackMetadata tm = it.second;
-		qDb() << "########### " << it.first << tm;
+		qDb() << "########### TRACK:" << it.first << tm;
 		qvar_track_map.insert("track", tm.toVariant());
 	}
 
@@ -666,26 +682,26 @@ M_WARNING("TODO: Do we still need this?");
 M_WARNING("TODO: REMOVE TRACKS HERE?");
 	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
 	map.insert(XMLTAG_CUESHEET, m_cuesheet.toVariant());
-
+qDb() << "LEAVING Metadata::toVariant()";
 	return map;
 }
 
 void Metadata::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+//	Q_ASSERT(variant.isValid());
+	QVariantInsertionOrderedMap map; // = variant.value<QVariantInsertionOrderedMap>();
+	qviomap_from_qvar_or_die(&map, variant);
 
 #define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	QVariant qvar_tm = map.value(XMLTAG_TM_M_TAG_MAP);
-	Q_ASSERT(qvar_tm.isValid());
-
-	m_tag_map.fromVariant(qvar_tm);
-
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &member_field);
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
+
+	m_cuesheet.fromVariant(map.value(XMLTAG_CUESHEET));//, m_cuesheet.toVariant());
+
 
 	// Read in the track list.
 M_WARNING("TODO: Not sure we need this anymore.");

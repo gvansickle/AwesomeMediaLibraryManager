@@ -34,8 +34,7 @@ class QUrl;
 #include <QDataStream>
 
 /// Ours
-//#include "TrackMetadata.h"  ///< Per-track cue sheet info
-class TrackMetadata;
+#include "TrackMetadata.h"  ///< Per-track cue sheet info
 #include <future/guideline_helpers.h>
 #include "CueSheetParser.h"
 #include <logic/serialization/ISerializable.h>

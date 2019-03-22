@@ -73,7 +73,7 @@ public:
 	std::vector<std::shared_ptr<LibraryEntry>> m_new_libentries;
     int m_num_tracks_found {0};
 
-//    QTH_FRIEND_QDEBUG_OP(LibraryEntryLoaderJobResult);
+//    QTH_DECLARE_FRIEND_QDEBUG_OP(LibraryEntryLoaderJobResult);
 //    QTH_FRIEND_QDATASTREAM_OPS(LibraryEntryLoaderJobResult);
 };
 Q_DECLARE_METATYPE(LibraryEntryLoaderJobResult);

@@ -87,6 +87,7 @@ public:
 
 	/// @} // END ISerializable
 
+	QTH_DECLARE_FRIEND_QDEBUG_OP(LibraryEntry);
     QTH_FRIEND_QDATASTREAM_OPS(LibraryEntry);
 
 	/// @} // END Serialization
@@ -144,6 +145,8 @@ Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
 Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
 Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);
+
+QTH_DECLARE_QDEBUG_OP(LibraryEntry);
 
 inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libentry)
 {

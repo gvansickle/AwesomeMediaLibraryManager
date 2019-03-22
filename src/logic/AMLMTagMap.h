@@ -24,7 +24,7 @@
 #define SRC_LOGIC_AMLMTAGMAP_H_
 
 // Std C++
-//#include <map>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -42,13 +42,14 @@
 #include <logic/serialization/ISerializable.h>
 
 using TagMap = std::map<std::string, std::vector<std::string>>;
+Q_DECLARE_METATYPE(TagMap);
+
 Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(std::multimap);
 //Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(std::vector);
 //Q_DECLARE_METATYPE(std::string);
-//Q_DECLARE_METATYPE(TagMap);
 
-/*
- *
+/**
+ * Multimap of std::string key/std::string value pairs.
  */
 class AMLMTagMap : public virtual ISerializable
 {
@@ -69,7 +70,14 @@ public:
 	/// Member functions.
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap);
+//	AMLMTagMap() = default;
 	~AMLMTagMap() override = default;
+
+//	AMLMTagMap& operator=(const AMLMTagMap& other)
+//	{
+//		m_the_map = other.m_the_map;
+//		return *this;
+//	}
 
 	/**
 	 * Assignment from a TagMap.
@@ -150,12 +158,12 @@ public:
 	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
-	explicit operator QVariant () const;
+//	explicit operator QVariant () const;
 	/// @}
 
 	/// @name Debug
 	/// @{
-	QTH_FRIEND_QDEBUG_OP(AMLMTagMap);
+	QTH_DECLARE_FRIEND_QDEBUG_OP(AMLMTagMap);
 	/// @}
 
 private:

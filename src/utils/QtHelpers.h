@@ -115,7 +115,7 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
 /**
  * QDebug "friender".
  */
-#define QTH_FRIEND_QDEBUG_OP(classname) \
+#define QTH_DECLARE_FRIEND_QDEBUG_OP(classname) \
     IMPL_QTH_DECLARE_QDEBUG_OP(friend, classname)
 
 /**
@@ -123,6 +123,17 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
  */
 #define QTH_DECLARE_QDEBUG_OP(classname) \
 	IMPL_QTH_DECLARE_QDEBUG_OP(/**/, classname)
+
+/**
+ * A dummy debug streaming operator, intended for temp use while developing.
+ */
+#define QTH_DEFINE_DUMMY_QDEBUG_OP(classname) \
+    QDebug operator<<(QDebug dbg, const classname & obj)\
+    {\
+        QDebugStateSaver saver(dbg);\
+        dbg << #classname " (" << "TODO" << ")";\
+        return dbg; \
+    }
 
 #define QTH_DEFINE_QDEBUG_OP(classname, ...) \
     QDebug operator<<(QDebug dbg, const classname & obj)\

@@ -175,7 +175,7 @@ public:
     /// @}
 
     // Debug stream op free func friender.
-    QTH_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
+    QTH_DECLARE_FRIEND_QDEBUG_OP(AbstractTreeModelItem);
 
 protected:
 

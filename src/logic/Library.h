@@ -37,6 +37,7 @@ class Library : public ISerializable
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(Library);
+	~Library() override = default;
 
 	void clear();
 	void setRootUrl(const QUrl& url) { m_root_url = url; }

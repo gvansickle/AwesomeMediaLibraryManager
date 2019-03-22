@@ -162,7 +162,7 @@ static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::Ta
 	{SRTMItemTag::TEST_PAIR_0, "TEST_PAIR_0"}
 });
 
-
+#if 0 // OBSOLETE
 class LibraryEntryTag : public XmlTagBase<LibraryEntryTag>
 {
 	Q_GADGET
@@ -209,5 +209,6 @@ public:
 
 };
 Q_DECLARE_METATYPE(LibraryEntryTag);
+#endif
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

@@ -208,8 +208,8 @@ AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 	AMLMTagMap retval;
 
 	// CD-level fields.
-#define X(field_tag, member_field, caster) retval.insert(std::make_pair(tostdstr(field_tag), member_field));
-//#define X(field_tag, member_field, caster) map_insert_or_die(retval, tostdstr(field_tag), member_field);
+#define X(field_tag, member_field, caster) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
+//#define X(field_tag, member_field, caster) map_insert_or_die(retval, tostdstr(field_tag), std::to_string(member_field));
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_num_tracks_on_media)));
@@ -234,7 +234,7 @@ uint8_t CueSheet::get_total_num_tracks() const
 QVariant CueSheet::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
-
+qDb() << "ENTERED CueSheet::toVariant()";
 	// CD-level fields.
 #define X(field_tag, member_field, caster) map_insert_or_die(map, field_tag, member_field, caster);
 	M_DATASTREAM_FIELDS_DISC(X);
@@ -251,9 +251,12 @@ QVariant CueSheet::toVariant() const
 		TrackMetadata tm = it.second;
 		qDb() << "########### " << it.first << tm;
 		qvar_track_map.insert("track", tm.toVariant());
+		qDb() << "########### INSERTED:" << it.first << tm;
 	}
 	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
 	map.insert(XMLTAG_TRACK_METADATA, QVariant::fromValue(qvar_track_map));
+
+qDb() << "LEAVE CueSheet::toVariant()";
 
 	return map;
 }
@@ -270,11 +273,13 @@ void CueSheet::fromVariant(const QVariant& variant)
 	// Track-level fields
 	QVariantInsertionOrderedMap qvar_track_map;
 	map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_map);
+	AMLM_WARNIF(!qvar_track_map.empty());
 
 	for(const auto& track : qvar_track_map)
 	{
 		TrackMetadata tm;
 		tm.fromVariant(track.second);
+
 
 		// Should have a track number.
 		throwif(tm.m_track_number == 0);

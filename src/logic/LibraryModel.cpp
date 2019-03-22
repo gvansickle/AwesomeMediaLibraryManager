@@ -754,23 +754,27 @@ void LibraryModel::deserializeFromFile(QFileDevice& file)
 
 QVariant LibraryModel::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
-	map.insert("the_models_library", m_library.toVariant());
+	map_insert_or_die(map, "the_models_library", m_library);
+//	map.insert("the_models_library", m_library.toVariant());
 
 	return map;
 }
 
 void LibraryModel::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map; // = variant.toMap();
+	qviomap_from_qvar_or_die(&map, variant);
 
-	QVariant temp = map.value("the_models_library");//.value<QVariantInsertionOrderedMap>();
+	QVariant temp = map.value("the_models_library");
 
 	Q_ASSERT(temp.canConvert<QVariantInsertionOrderedMap>());
-
+	QVariantInsertionOrderedMap qvar_temp_lib = temp.value<QVariantInsertionOrderedMap>();
 	Library temp_lib;
-	temp_lib.fromVariant(temp);
+//	qviomap_from_qvar_or_die(&temp_lib, variant);
+
+	temp_lib.fromVariant(qvar_temp_lib);
 
 	m_library = temp_lib;
 }

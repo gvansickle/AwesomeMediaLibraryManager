@@ -41,11 +41,12 @@ class QVariantHomogenousList : public QVariantList
 public:
 	// Rule-of-Zero doesn't work here, probably Qt5.
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(QVariantHomogenousList);
+	virtual ~QVariantHomogenousList() = default;
+
 	QVariantHomogenousList(const QString& list_tag, const QString& list_item_tag)
 	{
 		set_tag_names(list_tag, list_item_tag);
 	}
-	virtual ~QVariantHomogenousList() = default;
 
 	// Assignment from other list types.
 	template <class ListLike>

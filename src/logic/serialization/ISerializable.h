@@ -62,6 +62,13 @@ public:
 	virtual void fromVariant(const QVariant& variant) = 0;
 };
 
+template <class OutMapType>
+void qviomap_from_qvar_or_die(OutMapType* map_out, const QVariant& var_in)
+{
+	Q_ASSERT(var_in.isValid());
+	Q_ASSERT(var_in.canConvert<OutMapType>());
+	*map_out = var_in.value<OutMapType>();
+}
 
 /**
  */
@@ -70,9 +77,9 @@ class SerializableQVariantList : public QVariantHomogenousList, public virtual I
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(SerializableQVariantList);
 
-	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag)
+	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag) : QVariantHomogenousList(list_tag, list_item_tag)
 	{
-		set_tag_names(list_tag, list_item_tag);
+//		set_tag_names(list_tag, list_item_tag);
 	}
 	~SerializableQVariantList() override = default;
 
@@ -86,9 +93,22 @@ Q_DECLARE_METATYPE(SerializableQVariantList);
 /// @name Some helper templates.
 /// @{
 
-template <class MapType, class StringType, class MemberType>
+template <class MapType, class StringType>
+void map_insert_or_die(MapType& map, const StringType& key, const ISerializable& member)
+{
+	map.insert( key , member.toVariant() );
+//	if(it == map.end())
+//	{
+//		// Insertion failed for some reason.
+//		throw QException();
+//	}
+}
+
+template <class MapType, class StringType, class MemberType,
+		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)> ///< Not clear why these are required to get the ISerializable above to be preferred.
 void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
 {
+	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
 //	static_assert(qMetaTypeId<MemberType>() != 0, "");
 	// InsertionOrderedMap<>::insert() currently returns void.
 //	using iterator_type = typename MapType::iterator;
@@ -100,25 +120,30 @@ void map_insert_or_die(MapType& map, const StringType& key, const MemberType& me
 //	}
 }
 
-template <class MapType, class StringType, class MemberType>
-void map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, MemberType* member)
+/// @name Read entries from a maplike type into the apropriate @a member.
+/// @{
+
+template <class MapType, class StringType>
+void map_read_field_or_warn(const MapType& map, const StringType& key, ISerializable* member)
 {
-    if(auto qvar = map.value(key); qvar.isValid())
-    {
+	if(QVariant qvar = map.value(key); qvar.isValid())
+	{
 		member->fromVariant(qvar);
-    }
-    else
-    {
-        qWr() << "Couldn't read field:" << key;
-    }
+	}
+	else
+	{
+		qWr() << "Couldn't read field:" << key;
+	}
 }
 
-template <class MapType, class StringType, class MemberType>
+template <class MapType, class StringType, class MemberType,
+		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
 void map_read_field_or_warn(const MapType& map, const StringType& key, MemberType* member)
 {
-	if(auto qvar = map.value(key); qvar.isValid())
+	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
+	if(QVariant qvar = map.value(key); qvar.isValid())
 	{
-		*member = qvar.template value<MemberType>();
+		*member = qvar.value<MemberType>();
 	}
 	else
 	{
@@ -142,6 +167,8 @@ auto map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, c
 
 	return retval;
 }
+
+/// @}
 
 template <class ListType, class MemberType>
 void list_push_back_or_die(ListType& list, const MemberType& member)
