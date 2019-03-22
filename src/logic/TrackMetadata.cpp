@@ -154,8 +154,9 @@ QVariant TrackMetadata::toVariant() const
 	{
 		list_push_back_or_die(index_list, index.toVariant());
 	}
-	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, QVariant::fromValue(index_list));
-qDb() << "LEAVING TrackMetadata::toVariant";
+
+	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, index_list);
+
 	return map;
 }
 

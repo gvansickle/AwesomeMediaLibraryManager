@@ -109,10 +109,11 @@ AMLM_QREG_CALLBACK([](){
 using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS_DISC(X) \
-	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num, nullptr) \
-	X(XMLTAG_DISC_ID, m_disc_id, nullptr) \
-	X(XMLTAG_DISC_DATE, m_disc_date, nullptr) \
-//	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media, [&](const auto& inval){ return std::to_string(inval); }) \
+	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
+	X(XMLTAG_DISC_ID, m_disc_id) \
+	X(XMLTAG_DISC_DATE, m_disc_date) \
+	/** @todo Need to come up with an insert as std:string, this is a integral value. */\
+	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)*/
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
@@ -120,14 +121,16 @@ using strviw_type = QLatin1Literal;
 //	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
 
 #define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
-	X(XMLTAG_TRACK_METADATA, m_tracks, nullptr)
+	/** @todo See above */\
+	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media) \
+	X(XMLTAG_TRACK_METADATA, m_tracks)
 
 /// Strings to use for the tags.
-#define X(field_tag, member_field, caster) static const strviw_type field_tag ( # member_field );
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS_DISC(X);
 	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
 #undef X
-static const QLatin1String XMLTAG_DISC_NUM_TRACKS_ON_MEDIA("m_num_tracks_on_media");
+//static const QLatin1String XMLTAG_DISC_NUM_TRACKS_ON_MEDIA("m_num_tracks_on_media");
 
 std::unique_ptr<CueSheet> CueSheet::read_associated_cuesheet(const QUrl &url, uint64_t total_length_in_ms)
 {
@@ -190,26 +193,13 @@ std::map<int, TrackMetadata> CueSheet::get_track_map() const
 	return m_tracks;
 }
 
-template <class TMap, class TTag, class TVal, class FCast>
-void map_insert_or_die(TMap& map, const TTag& tag, const TVal& val, FCast&& fcast)
-{
-	if constexpr (std::is_null_pointer_v<FCast>)
-	{
-		map.insert(std::make_pair(tag, toqstr(val)));
-	}
-	else
-	{
-		map.insert({tag, std::invoke(fcast, val)});
-	}
-}
-
 AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 {
 	AMLMTagMap retval;
 
-	// CD-level fields.
-#define X(field_tag, member_field, caster) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
-//#define X(field_tag, member_field, caster) map_insert_or_die(retval, tostdstr(field_tag), std::to_string(member_field));
+	// Disc-level fields.
+#define X(field_tag, member_field) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
+//#define X(field_tag, member_field) map_insert_or_die(retval, tostdstr(field_tag), std::to_string(member_field));
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_num_tracks_on_media)));
@@ -234,9 +224,9 @@ uint8_t CueSheet::get_total_num_tracks() const
 QVariant CueSheet::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
-qDb() << "ENTERED CueSheet::toVariant()";
+
 	// CD-level fields.
-#define X(field_tag, member_field, caster) map_insert_or_die(map, field_tag, member_field, caster);
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 	map.insert(std::make_pair(QString(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), toqstr(std::to_string(m_num_tracks_on_media))));
@@ -254,18 +244,17 @@ qDb() << "ENTERED CueSheet::toVariant()";
 		qDb() << "########### INSERTED:" << it.first << tm;
 	}
 	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
-	map.insert(XMLTAG_TRACK_METADATA, QVariant::fromValue(qvar_track_map));
-
-qDb() << "LEAVE CueSheet::toVariant()";
+	map_insert_or_die(map, XMLTAG_TRACK_METADATA, qvar_track_map);
 
 	return map;
 }
 
 void CueSheet::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
 
-#define X(field_tag, member_field, caster) member_field = map.value( field_tag ).value<decltype( member_field )>();
+#define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
 	m_num_tracks_on_media = map.value(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA).value<decltype(m_num_tracks_on_media)>();

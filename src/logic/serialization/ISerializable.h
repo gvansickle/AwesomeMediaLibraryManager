@@ -170,9 +170,23 @@ auto map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, c
 
 /// @}
 
+template <class ListType>
+void list_push_back_or_die(ListType& list, const ISerializable& member)
+{
+	QVariant qvar = member.toVariant();
+	if(!qvar.isValid())
+	{
+		throw SerializationException("Coudn't push_back() to list.");
+	}
+
+	list.push_back(qvar);
+}
+
 template <class ListType, class MemberType>
 void list_push_back_or_die(ListType& list, const MemberType& member)
 {
+	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
+	
 	QVariant qvar = QVariant::fromValue<MemberType>( member );
 	if(!qvar.isValid())
 	{
