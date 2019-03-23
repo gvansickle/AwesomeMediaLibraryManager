@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ elementFormDefault="qualified">
+ 	<!-- ^^^ targetNamespace="https://???"  -->
+	<!-- ^^^ xmlns="https://???^^^same"  -->
  <xsd:annotation>
   <xsd:documentation>Sample document.</xsd:documentation>
  </xsd:annotation>
- <xsd:element name="sample">
+<!-- Cue Sheet track indexes, i.e. "INDEX 01 12:34:56"-->
+ <xsd:element name="m_indexes">
   <xsd:complexType>
-   <xsd:all>
-    <xsd:element name="sample-inner" type="xsd:string" minOccurs="0"/>
-   </xsd:all>
-   <xsd:attribute name="attribute" type="xsd:string"/>
+   <xsd:sequence>
+    <xsd:element name="index" minOccurs="0" maxOccurs="1">
+     <xsd:complexType>
+      <xsd:sequence>
+       <xsd:element name="index_num" type="xsd:string" minOccurs="0"/>
+       <xsd:element name="index_frames" type="xsd:decimal" minOccurs="0"/>
+      </xsd:sequence>
+     </xsd:complexType>
+    </xsd:element>
+   </xsd:sequence>
+   <xsd:attribute name="type" type="xsd:string"/>
   </xsd:complexType>
-  <xsd:complexType name="m_library_entry"/>
  </xsd:element>
 </xsd:schema>
