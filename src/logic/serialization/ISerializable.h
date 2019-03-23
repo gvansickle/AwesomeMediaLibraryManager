@@ -150,9 +150,18 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, MemberTyp
 
 /// @}
 
+
+/// @name Functions for pushing values/list-likes to a QList<QVariant>.
+/// @{
+
+/**
+ * Push a single entry given by @a member onto the @a list.
+ * @overload For ISerializable @a member's.
+ */
 template <class ListType>
 void list_push_back_or_die(ListType& list, const ISerializable& member)
 {
+	// ISerializable knows how to turn itself into a QVariant.
 	QVariant qvar = member.toVariant();
 	if(!qvar.isValid())
 	{
@@ -162,6 +171,9 @@ void list_push_back_or_die(ListType& list, const ISerializable& member)
 	list.push_back(qvar);
 }
 
+/**
+ * Push a single entry given by @a member onto the @a list.
+ */
 template <class ListType, class MemberType,
 		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)>
 void list_push_back_or_die(ListType& list, const MemberType& member)
@@ -177,13 +189,22 @@ void list_push_back_or_die(ListType& list, const MemberType& member)
 	list.push_back(qvar);
 }
 
+/// @}
+
+/**
+ * Read all entries in @a list and copy them to @a p_list.
+ * @tparam ListType  A list-like of QVariant's, each holding a single @a ListEntryType.
+ */
 template <class ListType, class ListEntryType, template<typename> class OutListType>
-void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list, const char* caller = __builtin_FUNCTION())
+void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list,
+								  const char* caller = "UNKNOWN"/*__builtin_FUNCTION()*/)
 {
 	static_assert(std::is_same_v<ListType, QVariantHomogenousList> || std::is_same_v<ListType, QVariantList>,
 				  "Not a list type");
 
+	// Make sure return list is empty.
 	p_list->clear();
+
 	auto num_entries = list.size();
 	if(num_entries == 0)
 	{
@@ -193,11 +214,8 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 
 	for(const QVariant& qvar : qAsConst(list))
 	{
-		if(!qvar.isValid() || !qvar.canConvert<ListEntryType>())
-		{
-			qWr() << M_ID_VAL(caller) << "Failed reading list:" << qvar << list;
-			return;
-		}
+		throwif<SerializationException>(!qvar.isValid(), "Invalid QVariant");
+		throwif<SerializationException>(!qvar.canConvert<ListEntryType>(), "Can't convert QVariant contents of list to ListEntryType");
 
 		p_list->push_back(qvar.value<ListEntryType>());
 	}

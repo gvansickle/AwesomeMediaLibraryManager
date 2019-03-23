@@ -149,16 +149,4 @@ inline static StreamType operator<<(StreamType outstream, const T& obj)
 #define QTH_DECLARE_QDATASTREAM_OPS(classname) \
 	IMPL_QTH_DECLARE_QDATASTREAM_OPS(/**/, classname)
 
-/// @name QXmlStream{Reader,Writer} declarations.
-/// @{
-
-#define QTH_FRIEND_QXMLSTREAM_OPS(classname) \
-	IMPL_QTH_DECLARE_QXMLSTREAM_OPS(friend, classname)
-
-#define QTH_DECLARE_QXMLSTREAM_OPS(classname) \
-	IMPL_QTH_DECLARE_QXMLSTREAM_OPS(/**/, classname)
-
-/// @}
-
-
 #endif /* SRC_UTILS_QTHELPERS_H_ */

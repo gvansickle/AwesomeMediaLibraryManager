@@ -665,7 +665,6 @@ QVariant Metadata::toVariant() const
 #undef X
 
 	// Track-level fields.
-M_WARNING("TODO: Do we still need this?");
 
 	// Add the track list to the return map.
 	QVariantHomogenousList qvar_track_map("m_track", "track");
@@ -692,7 +691,7 @@ void Metadata::fromVariant(const QVariant& variant)
 	qviomap_from_qvar_or_die(&map, variant);
 
 //#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
-#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
