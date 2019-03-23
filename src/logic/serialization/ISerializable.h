@@ -151,23 +151,6 @@ void map_read_field_or_warn(const MapType& map, const StringType& key, MemberTyp
 	}
 }
 
-//template <class MapType, class StringType, class MemberType>
-//auto map_read_field_or_warn_fromvar(const MapType& map, const StringType& key, const MemberType& member) -> MemberType
-//{
-//	MemberType retval {};
-
-//	if(QVariant qvar = map.value(key); qvar.isValid())
-//	{
-//		retval = qvar.value<MemberType>();
-//	}
-//	else
-//	{
-//		qWr() << "Couldn't read field:" << key;
-//	}
-
-//	return retval;
-//}
-
 /// @}
 
 template <class ListType>
@@ -202,6 +185,7 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 {
 	static_assert(std::is_same_v<ListType, QVariantHomogenousList> || std::is_same_v<ListType, QVariantList>,
 				  "Not a list type");
+
 	p_list->clear();
 	auto num_entries = list.size();
 	if(num_entries == 0)
@@ -210,7 +194,7 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 		return;
 	}
 
-	for(const QVariant& qvar : list)
+	for(const QVariant& qvar : qAsConst(list))
 	{
 		if(!qvar.isValid() || !qvar.canConvert<ListEntryType>())
 		{

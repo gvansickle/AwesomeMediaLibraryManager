@@ -112,7 +112,7 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_DISC_CATALOG_NUM, m_disc_catalog_num) \
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
-	/** @todo Need to come up with an insert as std:string, this is a integral value. */\
+	/** @todo Need to come up with an insert-as-std:string, this is a integral value. */\
 	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)*/
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
@@ -244,7 +244,10 @@ M_WARNING("TODO list vs map");
 //		qvar_track_map.insert("track", tm.toVariant());
 		list_push_back_or_die(qvar_track_list, tm);
 	}
-	/// @todo Cuesheet contains track metadata, but other metadata contains other track metadata....
+
+	// Warn if our num tracks down't match or don't make sense.
+	AMLM_WARNIF(m_tracks.size() != m_num_tracks_on_media && m_tracks.size() != 1);
+
 	map_insert_or_die(map, XMLTAG_TRACK_METADATA, qvar_track_list);
 
 	return map;
@@ -261,7 +264,6 @@ void CueSheet::fromVariant(const QVariant& variant)
 	m_num_tracks_on_media = map.value(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA).value<decltype(m_num_tracks_on_media)>();
 
 	// Track-level fields
-//	QVariantInsertionOrderedMap qvar_track_map;
 	QVariantHomogenousList qvar_track_list("m_tracks", "track");
 
 	map_read_field_or_warn(map, XMLTAG_TRACK_METADATA, &qvar_track_list);
