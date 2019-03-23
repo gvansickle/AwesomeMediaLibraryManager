@@ -677,7 +677,10 @@ M_WARNING("TODO: Do we still need this?");
 		list_push_back_or_die(qvar_track_map, tm);
 	}
 
+	// All tracks on the disc.
 	map_insert_or_die(map, XMLTAG_TRACKS, qvar_track_map);
+	// The cuesheet, which will duplicate the track list.
+	/// @todo Somehow eliminate duplication here.
 	map_insert_or_die(map, XMLTAG_CUESHEET, m_cuesheet);
 
 	return map;
@@ -697,7 +700,8 @@ void Metadata::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
-	m_cuesheet.fromVariant(map.value(XMLTAG_CUESHEET));//, m_cuesheet.toVariant());
+//	m_cuesheet.fromVariant(map.value(XMLTAG_CUESHEET));//, m_cuesheet.toVariant());
+	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
 
 	// Read in the track list.
