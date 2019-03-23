@@ -175,8 +175,6 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	// Load the index list.
 	QVariantHomogenousList index_list("m_indexes", "index");
 	map_read_field_or_warn(map, XMLTAG_TRACK_META_INDEXES, &index_list);
-qDb() << "HERE, size:" << index_list.size();
-//	list_read_all_fields_or_warn(index_list, &m_indexes);
 
 	// Read the m_indexes TrackIndex'es out of the list.
 	// This is a QList<QVariant> where the qvar holds QVariantInsertionOrderedMap's.
@@ -191,7 +189,10 @@ qDb() << "HERE, size:" << index_list.size();
 		m_indexes.push_back(ti);
 	}
 
-qDb() << "THERE, size:" << m_indexes.size();
+	if(index_list.size() != m_indexes.size())
+	{
+		qWr() << "m_indexes size mismatch:" << index_list.size() << "!=" << m_indexes.size();
+	}
 }
 
 
