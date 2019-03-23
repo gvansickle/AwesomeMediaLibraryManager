@@ -276,7 +276,6 @@ void CueSheet::fromVariant(const QVariant& variant)
 		TrackMetadata tm;
 		tm.fromVariant(track);
 
-
 		// Should have a track number.
 		throwif(tm.m_track_number == 0);
 		int track_num = tm.m_track_number;

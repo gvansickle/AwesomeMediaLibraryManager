@@ -76,12 +76,9 @@ class SerializableQVariantList : public QVariantHomogenousList, public virtual I
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(SerializableQVariantList);
-
-	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag) : QVariantHomogenousList(list_tag, list_item_tag)
-	{
-//		set_tag_names(list_tag, list_item_tag);
-	}
 	~SerializableQVariantList() override = default;
+
+	SerializableQVariantList(const QString& list_tag, const QString& list_item_tag) : QVariantHomogenousList(list_tag, list_item_tag) {};
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
