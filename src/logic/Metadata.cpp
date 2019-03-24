@@ -660,7 +660,6 @@ QVariant Metadata::toVariant() const
 #undef X
 
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
-//#define X(field_tag, member_field) map.insert( field_tag , member_field.toVariant());
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
@@ -690,7 +689,6 @@ void Metadata::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-//#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -699,17 +697,19 @@ void Metadata::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
-//	m_cuesheet.fromVariant(map.value(XMLTAG_CUESHEET));//, m_cuesheet.toVariant());
 	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
 
 	// Read in the track list.
-M_WARNING("TODO: Not sure we need this anymore.");
-	QVariantInsertionOrderedMap qvar_track_map = map.value(XMLTAG_TRACKS).value<QVariantInsertionOrderedMap>();
-	for(const auto& track : qvar_track_map)
+	QVariantHomogenousList qvar_track_list("m_track", "track");
+	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);// = map.value(XMLTAG_TRACKS).value<QVariantHomogenousList>();
+#if 0
+	list_read_all_fields_or_warn(qvar_track_list)
+#else
+	for(const auto& track : qvar_track_list)
 	{
 		TrackMetadata tm;
-		tm.fromVariant(track.second);
+		tm.fromVariant(track);
 
 		// Should have a track number.
 		throwif(tm.m_track_number == 0);
@@ -717,7 +717,7 @@ M_WARNING("TODO: Not sure we need this anymore.");
 
 		m_tracks.insert(std::make_pair(track_num, tm));
 	}
-
+#endif
 	m_read_has_been_attempted = true;
 	m_is_error = false;
 }

@@ -306,7 +306,6 @@ QVariant LibraryEntry::toVariant() const
 qDb() << "ENTERED";
 
 	// Insert field values into the QVariantMap.
-//#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
@@ -323,7 +322,7 @@ qDb() << "HERE";
 	}
 //	qDb() << "LEAVING";
 
-	return map; //QVariant::fromValue(map);
+	return map;
 }
 
 void LibraryEntry::fromVariant(const QVariant& variant)
@@ -331,7 +330,6 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Extract all the fields from the map, cast them to their type.
-//#define X(field_tag, member_field)   member_field = map.value( field_tag ).value<decltype(member_field)>();
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
