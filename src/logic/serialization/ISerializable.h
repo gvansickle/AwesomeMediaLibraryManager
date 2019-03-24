@@ -32,13 +32,14 @@
 #include <QVariant>
 
 // Ours
+#include <utils/RegisterQtMetatypes.h> ///< For <cstdint> metatypes.
 #include "SerializationExceptions.h"
 #include <future/InsertionOrderedMap.h>
 #include <future/QVariantHomogenousList.h>
 
 
-using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
-Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
+//using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
+//Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 
 /**
  * Abstract interface for adding serialization capabilities to classes which
@@ -100,6 +101,22 @@ void map_insert_or_die(MapType& map, const StringType& key, const ISerializable&
 //		throw QException();
 //	}
 }
+
+//template <class MapType, class StringType, class MemberType,
+//		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType> && std::is_integral_v<MemberType>)>
+//void map_insert_or_die(MapType& map, const StringType& key, const MemberType& member)
+//{
+//	static_assert (!std::is_base_of_v<ISerializable, MemberType>, "DEDUCTION FAILED");
+////	static_assert(qMetaTypeId<MemberType>() != 0, "");
+//	// InsertionOrderedMap<>::insert() currently returns void.
+////	using iterator_type = typename MapType::iterator;
+//	/*iterator_type it =*/ map.insert( key , QVariant::fromValue<MemberType>( member ) );
+////	if(it == map.end())
+////	{
+////		// Insertion failed for some reason.
+////		throw QException();
+////	}
+//}
 
 template <class MapType, class StringType, class MemberType,
 		  REQUIRES(!std::is_base_of_v<ISerializable, MemberType>)> ///< Not clear why these are required to get the ISerializable above to be preferred.

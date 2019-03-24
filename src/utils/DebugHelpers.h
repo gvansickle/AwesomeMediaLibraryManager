@@ -36,6 +36,7 @@
 #include <QCoreApplication> //< For AMLM_ASSERT_IN_GUITHREAD().
 
 // Ours
+#include <future/preproc.h>
 #include "StringHelpers.h"
 #include "DebugBlock.h"
 
@@ -269,14 +270,6 @@ struct print_constexpr_in_compilation_warning
 #define STATIC_PRINT_CONSTEXPR_VAL(constant) char(print_constexpr_in_compilation_warning<constant>())
 /// @}
 
-/// @name Preprocessor helpers for string expansion etc.
-/// Used in M_WARNING() and elsewhere.
-/// @{
-#define STRINGISE_IMPL(x) #x
-#define STRINGISE(x) STRINGISE_IMPL(x)
-#define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) "): "
-#define DEFER(M, ...) M(__VA_ARGS__)
-/// @}
 
 #define M_NAME_VAL(id) STRINGISE_IMPL(id) ":" << id
 #define M_ID_VAL(id) M_NAME_VAL(id)
@@ -308,6 +301,7 @@ _Pragma("GCC diagnostic push")
  * Portable compile-time message and warning output.
  * Use: M_WARNING("My message")
  */
+#define FILE_LINE_LINK __FILE__ "(" STRINGISE(__LINE__) "): "
 #if defined(_MSC_VER)
 #   define M_WARNING(exp) __pragma(message(FILE_LINE_LINK "warning C2660: " exp))
 #elif defined(__clang__)

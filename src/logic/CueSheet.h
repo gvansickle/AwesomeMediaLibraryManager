@@ -40,6 +40,7 @@ class QUrl;
 #include <logic/serialization/ISerializable.h>
 #include <logic/AMLMTagMap.h>
 
+
 /**
  * CD cue sheet class.
  * C++ class for abstracing cuesheet info, mostly digested via libcue.
@@ -159,7 +160,7 @@ private:
      * @see https://xiph.org/flac/format.html#metadata_block_cuesheet
      * ""
      */
-    int64_t m_num_tracks_on_media {0};
+	std::int32_t m_num_tracks_on_media {0};
 
     /**
      * Cue sheet-derived information on each track.

@@ -128,7 +128,10 @@ public:
 #if 1 // Qt5
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
 
-	// Conversion operator to a QVariant.
+	/**
+	 * Conversion operator to a QVariant.
+	 * @note This is deliberately not explicit so that it is a workalike to QMap wrt QVariants.
+	 */
 	operator QVariant() const
 	{
 		return QVariant::fromValue(*this);
@@ -142,7 +145,6 @@ public:
 #endif // Qt5
 
 
-
 protected:
 
 	underlying_container_type m_vector_of_elements;
@@ -153,6 +155,9 @@ protected:
 
 #if 1 // Qt5
 Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+
+using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
+Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 
 #endif // Qt5
 

@@ -24,6 +24,17 @@
 #include <functional>
 #include <vector>
 #include <iostream>
+#include <cstdint>
+
+// Qt5
+#include <QObject>
+
+// Qt5 metatype declarations for metatypes for <cstdint>.
+Q_DECLARE_METATYPE(std::int32_t);
+Q_DECLARE_METATYPE(std::uint32_t);
+Q_DECLARE_METATYPE(std::int64_t);
+Q_DECLARE_METATYPE(std::uint64_t);
+
 
 void RegisterQtMetatypes();
 

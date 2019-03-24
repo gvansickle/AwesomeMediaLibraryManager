@@ -113,7 +113,7 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_DISC_ID, m_disc_id) \
 	X(XMLTAG_DISC_DATE, m_disc_date) \
 	/** @todo Need to come up with an insert-as-std:string, this is a integral value. */\
-	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)*/
+	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
 
 #define M_DATASTREAM_FIELDS_TRACK(X) \
 //	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
@@ -122,7 +122,7 @@ using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
 	/** @todo See above */\
-	X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media) \
+	/*X(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)*/ \
 	X(XMLTAG_TRACK_METADATA, m_tracks)
 
 /// Strings to use for the tags.
@@ -193,16 +193,30 @@ std::map<int, TrackMetadata> CueSheet::get_track_map() const
 	return m_tracks;
 }
 
+template <class T, class Stringlike>
+void AMLMTagMap_convert_and_insert(AMLMTagMap& map, const Stringlike& tagname, const T& value)
+{
+	if constexpr(std::is_integral_v<T>)
+	{
+		// It's an integral of some sort, convert to a string.
+		map.insert(tagname, std::to_string(value));
+	}
+	else
+	{
+		map.insert(tagname, value);
+	}
+}
+
 AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 {
 	AMLMTagMap retval;
 
 	// Disc-level fields.
-#define X(field_tag, member_field) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
-//#define X(field_tag, member_field) map_insert_or_die(retval, tostdstr(field_tag), std::to_string(member_field));
+//#define X(field_tag, member_field) retval.insert(std::make_pair(tostdstr(field_tag), /*QVariant::fromValue*/member_field));
+#define X(field_tag, member_field) AMLMTagMap_convert_and_insert(retval, tostdstr(field_tag), member_field);
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
-	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_num_tracks_on_media)));
+//	retval.insert(std::make_pair(tostdstr(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), std::to_string(m_num_tracks_on_media)));
 
 	return retval;
 }
@@ -229,19 +243,16 @@ QVariant CueSheet::toVariant() const
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
-	map.insert(std::make_pair(QString(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), toqstr(std::to_string(m_num_tracks_on_media))));
+//	map.insert(std::make_pair(QString(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), toqstr(std::to_string(m_num_tracks_on_media))));
 
 	// Track-level fields
 
 	// Add the track list to the return value.
-M_WARNING("TODO list vs map");
-//	QVariantInsertionOrderedMap qvar_track_map;
 	QVariantHomogenousList qvar_track_list("m_tracks", "track");
 
 	for(const auto& it : m_tracks)
 	{
 		TrackMetadata tm = it.second;
-//		qvar_track_map.insert("track", tm.toVariant());
 		list_push_back_or_die(qvar_track_list, tm);
 	}
 
@@ -258,10 +269,10 @@ void CueSheet::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-#define X(field_tag, member_field) member_field = map.value( field_tag ).value<decltype( member_field )>();
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
-	m_num_tracks_on_media = map.value(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA).value<decltype(m_num_tracks_on_media)>();
+//	m_num_tracks_on_media = map.value(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA).value<decltype(m_num_tracks_on_media)>();
 
 	// Track-level fields
 	QVariantHomogenousList qvar_track_list("m_tracks", "track");

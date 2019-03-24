@@ -280,7 +280,7 @@ QUrl LibraryEntry::getM2Url() const
 	X(XMLTAG_PRE_GAP_OFFSET_SECS, m_pre_gap_offset_secs) \
 	X(XMLTAG_OFFSET_SECS, m_offset_secs) \
 	X(XMLTAG_LENGTH_SECS, m_length_secs) \
-	/* X(XMLTAG_METADATA, m_metadata) */
+	X(XMLTAG_METADATA, m_metadata)
 
 using strviw_type = QLatin1Literal;
 
@@ -288,7 +288,7 @@ using strviw_type = QLatin1Literal;
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
-static const strviw_type XMLTAG_METADATA ( "m_metadata" );
+//static const strviw_type XMLTAG_METADATA ( "m_metadata" );
 
 QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
 {
@@ -303,16 +303,12 @@ QVariant LibraryEntry::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-qDb() << "ENTERED";
-
 	// Insert field values into the QVariantMap.
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	map_insert_or_die(map, XMLTAG_METADATA, m_metadata);
-
-qDb() << "HERE";
+//	map_insert_or_die(map, XMLTAG_METADATA, m_metadata);
 
 	if(isPopulated())
 	{
@@ -334,7 +330,7 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	map_read_field_or_warn(map, XMLTAG_METADATA, &m_metadata);
+//	map_read_field_or_warn(map, XMLTAG_METADATA, &m_metadata);
 
 	/// @todo
 	if(isPopulated())

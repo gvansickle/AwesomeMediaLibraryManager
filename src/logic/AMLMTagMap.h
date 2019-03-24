@@ -99,6 +99,14 @@ public:
 
 	iterator insert(const value_type& value) { return m_the_map.insert(value); };
 
+	/**
+	 * Insert @a value under @a key.
+	 * @note A two-parameter insert() is conspicuously absent from std::map/multimap and QMap.  I'm sure I'll
+	 *       discover the reason after this interface is fully entrenched in the codebase.
+	 */
+	iterator insert(const key_type& key, const mapped_type& value) { return m_the_map.insert({key, value}); };
+
+
 	/// @name Lookup.
 	/// @{
 	iterator find( const Key& x );
