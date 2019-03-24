@@ -33,7 +33,7 @@
 
 class QFileDevice;
 
-class Library : public ISerializable
+class Library : public virtual ISerializable
 {
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(Library);
@@ -68,13 +68,13 @@ private:
 
 //private:
 public:
-	QUrl m_root_url;
 
-	std::vector<std::shared_ptr<LibraryEntry>> m_lib_entries;
+	QUrl m_root_url;
 
 	qint64 m_num_unpopulated {0};
 	qint64 m_num_populated {0};
 
+	std::vector<std::shared_ptr<LibraryEntry>> m_lib_entries;
 };
 
 Q_DECLARE_METATYPE(Library);

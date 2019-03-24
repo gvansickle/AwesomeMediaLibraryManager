@@ -30,5 +30,9 @@ namespace detail
 
 #define PP_VA_NARGS(...) detail::va_nargs(__VA_ARGS__)
 
+/// Two-level token-pasting helpers.  Params are expanded before token pasting.
+#define TOKENPASTE2(a, b) a ## b
+#define TOKENPASTE(a, b) TOKENPASTE2(a, b)
+
 
 #endif /* SRC_FUTURE_PREPROC_H_ */

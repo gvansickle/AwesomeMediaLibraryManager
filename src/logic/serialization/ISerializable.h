@@ -195,7 +195,8 @@ void list_push_back_or_die(ListType& list, const MemberType& member)
  * Read all entries in @a list and copy them to @a p_list.
  * @tparam ListType  A list-like of QVariant's, each holding a single @a ListEntryType.
  */
-template <class ListType, class ListEntryType, template<typename> class OutListType>
+template <class ListType, class ListEntryType, template<typename> class OutListType,
+		  REQUIRES(!std::is_base_of_v<ISerializable, ListEntryType>)>
 void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list,
 								  const char* caller = "UNKNOWN"/*__builtin_FUNCTION()*/)
 {
@@ -218,6 +219,42 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 		throwif<SerializationException>(!qvar.canConvert<ListEntryType>(), "Can't convert QVariant contents of list to ListEntryType");
 
 		p_list->push_back(qvar.value<ListEntryType>());
+	}
+}
+
+/**
+ * Read all entries in @a list and copy them to @a p_list.
+ * @overload For ISerializable @a ListEntryType's.
+ * @tparam ListType  A list-like of QVariant's, each holding a single @a ListEntryType.
+ */
+template <class ListType, class ListEntryType, template<typename> class OutListType,
+		  REQUIRES(std::is_base_of_v<ISerializable, ListEntryType>)>
+void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryType>* p_list,
+								  const char* caller = "UNKNOWN"/*__builtin_FUNCTION()*/)
+{
+	static_assert(std::is_same_v<ListType, QVariantHomogenousList> || std::is_same_v<ListType, QVariantList>,
+				  "Not a list type");
+
+	// Make sure return list is empty.
+	p_list->clear();
+
+	auto num_entries = list.size();
+	if(num_entries == 0)
+	{
+		qWr() << M_ID_VAL(caller) << "LIST IS EMPTY:" << list;
+		return;
+	}
+
+	for(const QVariant& qvar : qAsConst(list))
+	{
+		throwif<SerializationException>(!qvar.isValid(), "Invalid QVariant");
+//		throwif<SerializationException>(!qvar.canConvert<ListEntryType>(), "Can't convert QVariant contents of list to ListEntryType");
+
+		// It's an ISerializable-derived class.
+		ListEntryType list_entry = qvar.value<ListEntryType>();
+//		ISerializable* Iser = dynamic_cast<ISerializable*>(qvar.value<ListEntryType>());
+		list_entry.fromVariant(qvar);
+		p_list->push_back(list_entry);
 	}
 }
 
