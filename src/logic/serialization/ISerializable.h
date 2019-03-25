@@ -38,9 +38,6 @@
 #include <future/QVariantHomogenousList.h>
 
 
-//using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
-//Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
-
 /**
  * Abstract interface for adding serialization capabilities to classes which
  * derive from and implement this interface.

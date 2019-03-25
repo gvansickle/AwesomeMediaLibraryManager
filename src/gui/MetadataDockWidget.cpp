@@ -32,6 +32,7 @@
 #include <QLineEdit>
 #include <QSplitter>
 #include <QRegularExpression>
+#include <QHeaderView>
 
 // Ours
 #include <AMLMApp.h>
@@ -74,6 +75,9 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_metadata_widget->setRootIsDecorated(false);
     m_metadata_widget->setColumnCount(2);
     m_metadata_widget->setHeaderLabels(QStringList() << "Key" << "Value");
+	// Set resize behavior.
+	m_metadata_widget->header()->setStretchLastSection(false);
+	m_metadata_widget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
 	// The Cover Art label.
     m_cover_image_label = new PixmapLabel(this);
@@ -184,7 +188,7 @@ M_TODO("Not getting some field here");
 				metadata_types->addChild(md_type_item);
 				if(!std::get<2>(e).empty())
 				{
-					addChildrenFromTagMap(md_type_item, std::get<2>(e));
+					addChildrenFromAMLMTagMap(md_type_item, std::get<2>(e));
 					md_type_item->setExpanded(true);
 				}
 			}
@@ -297,7 +301,7 @@ M_TODO("Not getting some field here");
 
 }
 
-void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap)
+void MetadataDockWidget::addChildrenFromAMLMTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap)
 {
 	// Add all entries in tagmap to parent, with a few exceptions.
 	tagmap.foreach_pair([=](QString key, QString value){

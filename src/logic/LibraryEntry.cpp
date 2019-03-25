@@ -288,7 +288,7 @@ using strviw_type = QLatin1Literal;
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
 #undef X
-//static const strviw_type XMLTAG_METADATA ( "m_metadata" );
+
 
 QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
 {

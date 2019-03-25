@@ -120,6 +120,7 @@ protected:
 
     ExtMimeType m_mime_type;
 
+    /// @todo Is all the below soon to be obsolete?
 	// Flag if this is a subtrack of a single-file album rip.
 	// See https://xiph.org/flac/format.html#metadata_block_cuesheet
 	bool m_is_subtrack = false;
