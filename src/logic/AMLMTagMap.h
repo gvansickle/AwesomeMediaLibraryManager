@@ -70,14 +70,7 @@ public:
 	/// Member functions.
 public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(AMLMTagMap);
-//	AMLMTagMap() = default;
 	~AMLMTagMap() override = default;
-
-//	AMLMTagMap& operator=(const AMLMTagMap& other)
-//	{
-//		m_the_map = other.m_the_map;
-//		return *this;
-//	}
 
 	/**
 	 * Assignment from a TagMap.
