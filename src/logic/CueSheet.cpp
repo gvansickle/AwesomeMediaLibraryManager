@@ -193,20 +193,6 @@ std::map<int, TrackMetadata> CueSheet::get_track_map() const
 	return m_tracks;
 }
 
-template <class T, class Stringlike>
-void AMLMTagMap_convert_and_insert(AMLMTagMap& map, const Stringlike& tagname, const T& value)
-{
-	if constexpr(std::is_integral_v<T>)
-	{
-		// It's an integral of some sort, convert to a string.
-		map.insert(tagname, std::to_string(value));
-	}
-	else
-	{
-		map.insert(tagname, value);
-	}
-}
-
 AMLMTagMap CueSheet::asAMLMTagMap_Disc() const
 {
 	AMLMTagMap retval;
@@ -243,7 +229,6 @@ QVariant CueSheet::toVariant() const
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
-//	map.insert(std::make_pair(QString(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA), toqstr(std::to_string(m_num_tracks_on_media))));
 
 	// Track-level fields
 
@@ -269,10 +254,10 @@ void CueSheet::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
+	// CD-level fields.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS_DISC(X);
 #undef X
-//	m_num_tracks_on_media = map.value(XMLTAG_DISC_NUM_TRACKS_ON_MEDIA).value<decltype(m_num_tracks_on_media)>();
 
 	// Track-level fields
 	QVariantHomogenousList qvar_track_list("m_tracks", "track");
@@ -432,27 +417,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
             TrackMetadata tm;
 
 			tm = *TrackMetadata::make_track_metadata(t, track_num);
-#if 0 // Moved into TrackMetadata
-			for(auto i = 0; i<=99; ++i)
-            {
-                //qDebug() << "Reading track index:" << i;
-                long ti = track_get_index(t, i);
-				TrackIndex track_index;
-				track_index.m_index_num = "index" + std::to_string(i);
-				track_index.m_index_frames = ti;
 
-                if((ti==-1) && (i>1))
-                {
-					// qDb() << "Found last index: " << i-1;
-                    break;
-                }
-                else
-                {
-//                    qDb() << " Index:" << ti;
-					tm.m_indexes.push_back(track_index);
-                }
-            }
-#endif
             tm.m_track_number = track_num;
             tm.m_start_frames = track_get_start(t);
             tm.m_length_frames = track_get_length(t);

@@ -183,5 +183,18 @@ Q_DECLARE_METATYPE(AMLMTagMap);
 Q_DECLARE_METATYPE(AMLMTagMap::underlying_container_type);
 QTH_DECLARE_QDATASTREAM_OPS(AMLMTagMap);
 
+template <class T, class Stringlike>
+void AMLMTagMap_convert_and_insert(AMLMTagMap& map, const Stringlike& tagname, const T& value)
+{
+	if constexpr(std::is_integral_v<T>)
+	{
+		// It's an integral of some sort, convert to a string.
+		map.insert(tagname, std::to_string(value));
+	}
+	else
+	{
+		map.insert(tagname, value);
+	}
+}
 
 #endif /* SRC_LOGIC_AMLMTAGMAP_H_ */
