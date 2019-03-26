@@ -110,10 +110,16 @@ public:
 	/// @name Track metadata.
 	/// @{
 
+M_TODO("We need a separate AMLMTrack class here.");
+
 	/// Return the number of tracks found in this file.
 	int numTracks() const { return m_num_tracks_on_media; }
 	/// @todo OBSOLETE/BAD INTERFACE.
 	TrackMetadata getThisTracksMetadata() const { return m_tracks.cbegin()->second; }
+
+	bool hasTrackCuesheet() const { return numTracks() < 2; }
+	AMLMTagMap tagmap_cuesheet_track() const;
+
 
 	/// Return the TrackMetadata for the specified track.
 	/// @note @a index is 1-based.

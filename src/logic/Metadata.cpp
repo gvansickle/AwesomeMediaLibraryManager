@@ -396,6 +396,7 @@ qDb() << "####### NUM TRACKS:" << m_tracks.size();
 
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
+M_TODO("WAS THIS ALREADY DONE ABOVE?");
 		qDebug() << "Scanning for gaplessness...";
 		for(int track_num=1; track_num < m_num_tracks_on_media; ++track_num)
 		{
@@ -496,6 +497,12 @@ TagMap Metadata::filled_fields() const
 	{
 		return TagMap();
 	}
+}
+
+AMLMTagMap Metadata::tagmap_cuesheet_track() const
+{
+	Q_ASSERT(numTracks() < 2);
+	return getThisTracksMetadata().m_tm_track_pti;
 }
 
 TrackMetadata Metadata::track(int i) const

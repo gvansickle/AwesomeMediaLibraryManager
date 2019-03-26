@@ -418,6 +418,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 			TrackMetadata tm;
 
 			// Have the TrackMetadata class assemble itself from the cue sheet track_ptr data.
+			/// @todo Make use of the unique_ptr<> returned here.
 			tm = *TrackMetadata::make_track_metadata(track_ptr, track_num);
 
             if(tm.m_length_frames < 0)

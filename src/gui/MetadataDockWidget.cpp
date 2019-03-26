@@ -178,7 +178,10 @@ M_TODO("Not getting some field here");
 				{"hasAPE?", md.hasAPE(), AMLMTagMap()},
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
 				{"hasInfoTag?", md.hasInfoTag(), md.tagmap_InfoTag()},
-				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()}
+				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()},
+#if 0 /// @todo
+				{"hasTrackCuesheetInfo?", md.hasTrackCuesheet(), md.tagmap_cuesheet_track()}
+#endif
 			};
 
 			// Add each of the tag type trees as a separate expanded subtree.

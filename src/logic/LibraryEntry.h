@@ -102,6 +102,7 @@ public:
 	Fraction get_length_secs() const { return m_length_secs; }
 
 	Metadata metadata() const { return m_metadata; }
+	Metadata track_cuesheet_metadata() const;
 
 	QStringList getMetadata(QString key) const;
 

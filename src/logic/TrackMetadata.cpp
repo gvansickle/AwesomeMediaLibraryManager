@@ -178,12 +178,6 @@ QVariant TrackMetadata::toVariant() const
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-	// Serialize the CD-Text Pack Type Indicator data.
-//#define X(id) map_insert_or_die(map, # id , m_ ## id);
-//	PTI_STR_LIST(X)
-//#undef X
-//	map_insert_or_die(map, XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti);
-
 	// m_indexes
 	QVariantHomogenousList index_list("m_indexes", "index");
 	for(const TrackIndex& index : m_indexes)
@@ -204,6 +198,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+M_TODO("REMOVE");
 #define X(id) m_ ## id = map.value( # id ).value<decltype( m_ ## id )>();
 	PTI_STR_LIST(X);
 #undef X
