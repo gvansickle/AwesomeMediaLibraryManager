@@ -79,8 +79,6 @@
 
 Q_DECLARE_METATYPE(std::string);
 
-#define M_CSTDINT(X) \
-	X(int)
 #define EXPAND(x) x
 #define ADD_STD(base_type) /*TOKENPASTE*/std::base_type
 #define ADD_U(base_type) TOKENPASTE2(u, base_type)

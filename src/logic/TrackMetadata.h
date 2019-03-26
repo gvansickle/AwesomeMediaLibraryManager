@@ -36,6 +36,7 @@ using Frames = qint64;
 #include <logic/serialization/ISerializable.h>
 #include <future/guideline_helpers.h>
 #include <third_party/libcue/libcue.h>
+#include "AMLMTagMap.h"
 
 
 class TrackIndex : public virtual ISerializable
@@ -189,8 +190,14 @@ This information is always ASCII encoded. */ \
     /// @}
 //#undef PTI_BIN_LIST
 
+	/// The track's Pack Type Indicator info as an AMLMTagMap.
+	AMLMTagMap m_tm_track_pti;
+
 	/// Track ISRC code.  May be empty.
 	std::string m_isrc;
+
+	/// Track filename from cuesheet.
+	std::string m_track_filename;
 
 	/// Indexes for this track.
 	std::vector<TrackIndex> m_indexes;

@@ -23,15 +23,21 @@
 
 // Std C++
 #include <string>
-#include <any>
+#include <memory>
 
 // Libcue.
+extern "C" {
 #include <libcue/libcue.h>
 #include <libcue/cd.h>
+#include <libcue/cdtext.h>
+} // END extern C
 
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
+
+#include "AMLMTagMap.h"
+
 
 
 
@@ -52,7 +58,8 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
 	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
 	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
-	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set)
+	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set) \
+	X(XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti)
 
 #define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
 	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
@@ -73,6 +80,9 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 
 	// The non-CD-Text info.
 	tm.m_track_number = track_number;
+
+	tm.m_track_filename = track_get_filename(track_ptr);
+	tm.m_isrc = tostdstr(track_get_isrc(track_ptr));
 
 	// The track's audio data location info, as parsed by libcue.
 	tm.m_length_pre_gap = track_get_zero_pre(track_ptr);
@@ -109,15 +119,40 @@ std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* t
 	}
 #endif
 
-	tm.m_isrc = tostdstr(track_get_isrc(track_ptr));
 
 	// Get the per-track CD-Text info.
 	const Cdtext* track_cdtext = track_get_cdtext(track_ptr);
+
+	if(track_cdtext != nullptr)
+	{
+		// Get the track's Pack Type Indicator info as an AMLMTagMap.
+		for(int pti = Pti::PTI_TITLE; pti < Pti::PTI_END; pti++)
+		{
+			const char* tcdt_value = cdtext_get((Pti)pti, track_cdtext);
+			if(tcdt_value != nullptr)
+			{
+				std::string key_str = cdtext_get_key(pti, 1);
+				tm.m_tm_track_pti.insert(key_str, tcdt_value);
+			}
+		}
+	}
+
+	if(tm.m_tm_track_pti.find("TITLE") != tm.m_tm_track_pti.cend())
+	{
+		qDb() << "TRACK CDTEXT INFO:" << toqstr(tm.m_tm_track_pti.find("TITLE")->second);
+	}
 
 	// Get the Pack Type Indicator data.
 #define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , track_cdtext ));
 	PTI_STR_LIST(X)
 #undef X
+
+M_TODO("REPLACE THE ABOVE");
+//	/// @todo Get the track's Pack Type Indicator info as an AMLMTagMap.
+//#define X(id) tm.m_tm_track_pti.insert( # id, tostdstr(cdtext_get( id , track_cdtext )));
+//	PTI_STR_LIST(X)
+//#undef X
+
 
 	return retval;
 }
@@ -144,9 +179,10 @@ QVariant TrackMetadata::toVariant() const
 #undef X
 
 	// Serialize the CD-Text Pack Type Indicator data.
-#define X(id) map_insert_or_die(map, # id , m_ ## id);
-	PTI_STR_LIST(X)
-#undef X
+//#define X(id) map_insert_or_die(map, # id , m_ ## id);
+//	PTI_STR_LIST(X)
+//#undef X
+//	map_insert_or_die(map, XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti);
 
 	// m_indexes
 	QVariantHomogenousList index_list("m_indexes", "index");
@@ -164,7 +200,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, & member_field );
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, & (member_field) );
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -178,7 +214,7 @@ void TrackMetadata::fromVariant(const QVariant& variant)
 
 	// Read the m_indexes TrackIndex'es out of the list.
 	// This is a QList<QVariant> where the qvar holds QVariantInsertionOrderedMap's.
-	for(const QVariant& qvar_index_entry : index_list)
+	for(const QVariant& qvar_index_entry : qAsConst(index_list))
 	{
 		Q_ASSERT(qvar_index_entry.isValid());
 		Q_ASSERT(qvar_index_entry.canConvert<QVariantInsertionOrderedMap>());
