@@ -91,6 +91,21 @@ std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Ke
 	}
 }
 
+AMLMTagMap::iterator AMLMTagMap::find(const AMLMTagMap::Key& x)
+{
+	return m_the_map.find(x);
+}
+
+AMLMTagMap::const_iterator AMLMTagMap::find(const AMLMTagMap::Key& x) const
+{
+	return m_the_map.find(x);
+}
+
+bool AMLMTagMap::contains(const AMLMTagMap::Key& key) const
+{
+	return (m_the_map.find(key) != cend());
+}
+
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTagMap::Key& key) const
 {
 	auto range = equal_range(key);

@@ -104,6 +104,7 @@ public:
 	/// @{
 	iterator find( const Key& x );
 	const_iterator find( const Key& x ) const;
+	bool contains( const Key& key ) const;
 
 	std::pair<iterator, iterator> equal_range(const Key& key)
 	{

@@ -361,6 +361,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 		//
 		// Get disc-level info from the Cd struct.
 		//
+
 		// Not a lot of interest there, except the Catalog number and the CD-TEXT.
 		m_disc_catalog_num = LibCueHelper_cd_get_catalog(cd);
 		enum DiscMode disc_mode = cd_get_mode(cd);
@@ -399,7 +400,7 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 
 	    // Get the number of tracks on the media.
         m_num_tracks_on_media = cd_get_ntrack(cd);
-        qDebug() << "Num Tracks:" << m_num_tracks_on_media;
+		qDb() << "Num Tracks:" << m_num_tracks_on_media;
 
         if(m_num_tracks_on_media < 2)
         {
@@ -412,26 +413,21 @@ bool CueSheet::parse_cue_sheet_string(const std::string &cuesheet_text, uint64_t
 		//
         for(int track_num=1; track_num < m_num_tracks_on_media+1; ++track_num)
         {
-            Track* t = cd_get_track(cd, track_num);
+			Track* track_ptr = cd_get_track(cd, track_num);
 
-            TrackMetadata tm;
+			TrackMetadata tm;
 
-			tm = *TrackMetadata::make_track_metadata(t, track_num);
+			// Have the TrackMetadata class assemble itself from the cue sheet track_ptr data.
+			tm = *TrackMetadata::make_track_metadata(track_ptr, track_num);
 
-            tm.m_track_number = track_num;
-            tm.m_start_frames = track_get_start(t);
-            tm.m_length_frames = track_get_length(t);
             if(tm.m_length_frames < 0)
             {
                 // This is the last track.  We have to calculate the length from the total recording time minus the start offset.
                 Q_ASSERT(m_length_in_milliseconds > 0);
                 tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
             }
-            tm.m_length_pre_gap = track_get_zero_pre(t);
-            tm.m_length_post_gap = track_get_zero_post(t);
-            tm.m_isrc = tostdstr(track_get_isrc(t));
-//            qDb() << "Track info:" << tm.toStdString();
-            // Using .insert() here to detect duplicate track numbers, which shouldn't ever exist per cue sheet specs.
+
+			// Using .insert() here to detect duplicate track numbers, which shouldn't ever exist per cue sheet specs.
             auto insert_status = m_tracks.insert({track_num, tm});
             if(insert_status.second != true)
             {
