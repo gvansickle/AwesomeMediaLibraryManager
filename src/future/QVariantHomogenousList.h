@@ -26,7 +26,7 @@
 #define QVARIANTHOMOGENOUSLIST_H
 
 // Std C++
-#include <utility> // For swap().
+#include <deque> // For swap().
 
 // Qt5
 #include <QString>
