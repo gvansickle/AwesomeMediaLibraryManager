@@ -46,7 +46,7 @@ AMLM_QREG_CALLBACK([](){
     qRegisterMetaType<TrackMetadata>();
     ;});
 
-Q_DECLARE_METATYPE(std::string);
+//Q_DECLARE_METATYPE(std::string);
 
 
 using strviw_type = QLatin1Literal;

@@ -135,6 +135,6 @@ private:
 };
 
 /// @todo Need this here for QVariant::fromValue().
-Q_DECLARE_METATYPE(std::string);
+//Q_DECLARE_METATYPE(std::string);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

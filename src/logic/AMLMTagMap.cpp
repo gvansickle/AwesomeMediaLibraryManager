@@ -33,8 +33,6 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AMLMTagMap metatypes";
 	qRegisterMetaType<AMLMTagMap>();
 	qRegisterMetaTypeStreamOperators<AMLMTagMap>();
-//	QMetaType::registerDebugStreamOperator<Metadata>();
-//	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
 
 
@@ -175,21 +173,29 @@ QVariant AMLMTagMap::toVariant() const
 	map.insert("m_the_map", QVariant::fromValue(list));
 //	map_insert_or_die(map, "m_the_map", list);
 
-	return map;
+	return /*map*/list;
 }
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
 {
 	clear();
 
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-
 	QVariantHomogenousList list("AMLMTagMapEntries", "entry");
-	QVariant list_qvar = map.value("m_the_map");
-	Q_ASSERT(list_qvar.isValid());
-	Q_ASSERT(list_qvar.canConvert<QVariantHomogenousList>());
 
-	list = list_qvar.value<QVariantHomogenousList>();
+	/// @todo REMOVE
+	if(variant.canConvert<QVariantInsertionOrderedMap>())
+	{
+		QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+		QVariant list_qvar = map.value("m_the_map");
+		Q_ASSERT(list_qvar.isValid());
+		Q_ASSERT(list_qvar.canConvert<QVariantHomogenousList>());
+		list = list_qvar.value<QVariantHomogenousList>();
+	}
+	else if (variant.canConvert<QVariantHomogenousList>())
+	{
+		list = variant.value<QVariantHomogenousList>();
+	}
+
 
 	for(auto entry = list.cbegin(); entry != list.cend(); ++entry)
 	{

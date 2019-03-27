@@ -45,7 +45,7 @@ extern "C" {
 /// Ours
 #include "TrackMetadata.h"  ///< Per-track cue sheet info
 
-Q_DECLARE_METATYPE(std::string);
+//Q_DECLARE_METATYPE(std::string);
 
 
 /**

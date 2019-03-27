@@ -77,7 +77,6 @@
  * yourself.
  */
 
-Q_DECLARE_METATYPE(std::string);
 
 #define EXPAND(x) x
 #define ADD_STD(base_type) /*TOKENPASTE*/std::base_type
@@ -85,6 +84,11 @@ Q_DECLARE_METATYPE(std::string);
 #define ADD_BITS(base_type, bits) TOKENPASTE2(base_type, bits)
 #define ADD_T(base_type) TOKENPASTE2(base_type, _t)
 #define DUP_NS_AND_NOT(X, base_type) X(base_type) X(std::base_type)
+
+/// Qt5's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
+/// @link https://doc.qt.io/qt-5/qglobalstatic.html
+Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
+
 
 /**
  * Register a number of general-purpose Qt5 converters etc.
@@ -176,6 +180,9 @@ void QtRegCallbackRegistry::call_registration_callbacks()
 
 QtRegCallbackRegistry& reginstance()
 {
+	// The callback registry.  static local so that it will be created only once, on first use,
+	// Returning a ref to it so that it's accessible to all callers.
+	// @link https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
     static QtRegCallbackRegistry* retval = new QtRegCallbackRegistry();
     return *retval;
 }

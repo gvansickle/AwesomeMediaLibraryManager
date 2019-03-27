@@ -401,7 +401,7 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 		}
 		else
 		{
-			list.append(next_list_element);
+			list.push_back(next_list_element);
 		}
 	}
 

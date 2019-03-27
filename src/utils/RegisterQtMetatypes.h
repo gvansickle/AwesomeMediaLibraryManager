@@ -29,6 +29,8 @@
 // Qt5
 #include <QObject>
 
+// Qt5 metatype declarations for some std containers.
+Q_DECLARE_METATYPE(std::string);
 // Qt5 metatype declarations for metatypes for <cstdint>.
 Q_DECLARE_METATYPE(std::int32_t);
 Q_DECLARE_METATYPE(std::uint32_t);
@@ -102,6 +104,7 @@ struct StaticInitBase : public StaticInitBaseBase<T>
 };
 
 #define AMLM_QREG_CALLBACK(...) static auto TOKEN_PASTE(dummy, __COUNTER__) = (reginstance().register_callback(__VA_ARGS__), rand())
+
 
 //#define AMLM_QREG_CALLBACK(...) AMLM_QREG_CALLBACK2(FIXME, __VA_ARGS__)
 

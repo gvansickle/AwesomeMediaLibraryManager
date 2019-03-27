@@ -35,9 +35,19 @@
 // Ours.
 #include <utils/DebugHelpers.h>
 #include <future/guideline_helpers.h>
+#include <deque>
 
-class QVariantHomogenousList : public QVariantList
+class QVariantHomogenousList //: public QVariantList
 {
+public:
+	/// @name Member types
+	/// @{
+	using value_type = QVariant;
+	using underlying_container_type = std::deque<value_type>;
+	using const_iterator = typename underlying_container_type::const_iterator;
+	using iterator = typename underlying_container_type::iterator;
+	/// @}
+
 public:
 	// Rule-of-Zero doesn't work here, probably Qt5.
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(QVariantHomogenousList);
@@ -76,11 +86,35 @@ public:
 		return m_list_item_tag;
 	}
 
+	void clear() noexcept { m_the_list.clear(); }
+
+	void push_back( const QVariant& value ) { m_the_list.push_back(value); };
+
+	const_iterator cbegin() const { return std::cbegin(m_the_list); };
+	const_iterator begin() const { return this->cbegin(); }
+	const_iterator cend() const { return std::cend(m_the_list); };
+	const_iterator end() const { return this->cend(); }
+
+	long size() const noexcept { return m_the_list.size(); }
+	bool empty() const noexcept { return m_the_list.empty(); }
+
+	/**
+	 * Conversion operator to a QVariant.
+	 * @note This is deliberately not explicit so that it is a workalike to QList<QVariant> wrt QVariants.
+	 */
+	operator QVariant() const
+	{
+		return QVariant::fromValue(*this);
+	}
+
 protected:
 	QString m_list_tag {};
 	QString m_list_item_tag {};
+
+	underlying_container_type m_the_list;
 };
 
 Q_DECLARE_METATYPE(QVariantHomogenousList);
+//Q_DECLARE_SEQUENTIAL_CONTAINER_METATYPE(QVariantHomogenousList);
 
 #endif // QVARIANTHOMOGENOUSLIST_H
