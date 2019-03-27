@@ -267,8 +267,6 @@ QVariant TrackIndex::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-//	map_insert_or_die(index_map, toqstr(index.m_index_num), (index.m_index_frames));
-
 	map_insert_or_die(map, XMLTAG_TRACK_INDEX_NUM, m_index_num);
 	map_insert_or_die(map, XMLTAG_TRACK_INDEX_FRAMES, m_index_frames);
 
@@ -278,10 +276,6 @@ QVariant TrackIndex::toVariant() const
 void TrackIndex::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-
-//#define X(field_tag, field_tag_str, member_field)
-//	m_index_num = map.value(XMLTAG_TRACK_INDEX_NUM).value<decltype(m_index_num)>();
-//	m_index_frames = map.value(XMLTAG_TRACK_INDEX_FRAMES).value<decltype(m_index_frames)>();
 
 	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_NUM, &m_index_num);
 	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_FRAMES, &m_index_frames);

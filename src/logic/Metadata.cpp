@@ -180,33 +180,15 @@ Metadata Metadata::make_metadata(QUrl file_url)
 	return retval;
 }
 
-static constexpr QLatin1String XMLTAG_METADATA_ABSTRACT_BASE_PIMPL {"metadata_abstract_base_pimpl"};
-
-
 Metadata Metadata::make_metadata(const QVariant& variant)
 {
 	Q_ASSERT(variant.isValid());
-#if 0
-M_TODO("What's going on here?");
-/// Contains only "metadata_abstract_base_pimpl", which contains only "base_class_variant".
-	QVariantMap map = variant.toMap();
 
-	QVariant pimpl_qvar= map.value(XMLTAG_METADATA_ABSTRACT_BASE_PIMPL);
-	Q_ASSERT(pimpl_qvar.isValid());
-
-//	Q_ASSERT(map.canConvert<MetadataFromCache>());
-	MetadataFromCache retval;
-	retval.fromVariant(pimpl_qvar);
-	retval.m_read_has_been_attempted = true;
-	retval.m_is_error = false;
-	return retval;
-#else
-	QVariantInsertionOrderedMap map; //= variant.value<QVariantInsertionOrderedMap>();
+	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 	Metadata retval = make_metadata();
 	retval.fromVariant(variant);
 	return retval;
-#endif
 }
 
 /**
@@ -264,6 +246,17 @@ bool Metadata::read(const QUrl& url)
 //		}
 //	}
 
+	/// @todo We should move this to The Future....
+//	template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+//	template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+//	using taglib_file_type = std::variant<TagLib::MPEG::File*,TagLib::FLAC::File*>;
+
+//	taglib_file_type file_type = fr.file();
+
+//	for(const auto file : )
+//	std::visit();
+
 	// Downcast the FileRef to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
 	{
@@ -283,8 +276,8 @@ bool Metadata::read(const QUrl& url)
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
 
-		if(m_has_id3v1) m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties());
-		if(m_has_id3v2) m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
+		if(m_has_id3v1) { m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties()); }
+		if(m_has_id3v2) { m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties()); }
 		if(m_has_ogg_xipfcomment)
 		{
 			// TagLib has some funky kicks going on here:
@@ -335,7 +328,7 @@ bool Metadata::read(const QUrl& url)
 		}
 	}
 
-	// Read a dictionary mapping of the tags.
+	// Read TagLib's generic tags.
 	TagLib::Tag* tag = fr.tag();
 	if(tag == nullptr)
 	{
@@ -664,9 +657,6 @@ QVariant Metadata::toVariant() const
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
-#undef X
-
-#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
@@ -677,7 +667,6 @@ QVariant Metadata::toVariant() const
 
 	for(const auto& it : m_tracks)
 	{
-//		QString track_num_str = QString("track");
 		TrackMetadata tm = it.second;
 		list_push_back_or_die(qvar_track_map, tm);
 	}
