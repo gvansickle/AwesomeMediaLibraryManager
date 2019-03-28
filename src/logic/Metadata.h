@@ -194,7 +194,7 @@ private:
 	AMLMTagMap m_tm_cuesheet_disc {};
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.
-	AMLMTagMap m_tag_map;
+	AMLMTagMap m_tm_generic;
 
 	bool m_read_has_been_attempted {false};
 	bool m_is_error {false};

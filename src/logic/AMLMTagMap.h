@@ -78,11 +78,9 @@ public:
 	AMLMTagMap& operator=(const TagMap& tagmap);
 
 	/**
-	* Assignment from a XiphComment's FieldListMap.
-	*/
-//	using GenericFieldListMap = TagLib::Map<std::variant<TagLib::String, TagLib::ByteVector>, TagLib::StringList>;
-//	using GenericFieldListMap = TagLib::Map<TagLib::String, TagLib::StringList>;
-//	AMLMTagMap& operator=(const GenericFieldListMap& taglib_field_list_map);
+	 * Assignment from a TagLib FieldListMap.
+	 * For some reason the key is either a TagLib String or ByteVector depending on the file format, hence templates.
+	 */
 	template <class StringLike>
 	AMLMTagMap& operator=(const TagLib::Map<StringLike, TagLib::StringList>& taglib_field_list_map)
 	{

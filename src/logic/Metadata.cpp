@@ -361,7 +361,7 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 		{
 			qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
 		}
-		m_tag_map = PropertyMapToAMLMTagMap(pm);
+		m_tm_generic = PropertyMapToAMLMTagMap(pm);
 	}
 
 
@@ -470,7 +470,7 @@ TagMap Metadata::filled_fields() const
 	{
 		//qDebug() << "Converting filled_fields to TagMap";
 		TagMap retval;
-		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tag_map) ///@todo EXP m_pm)
+		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tm_generic) ///@todo EXP m_pm)
 		{
 			//            qDebug() << "Native Key:" << key_val_pairs.first;
 			std::string key = reverse_lookup(key_val_pairs.first);
@@ -484,7 +484,7 @@ TagMap Metadata::filled_fields() const
 				continue;
 			}
 
-			std::vector<std::string> out_val = m_tag_map.equal_range_vector(key_val_pairs.first);
+			std::vector<std::string> out_val = m_tm_generic.equal_range_vector(key_val_pairs.first);
 			// Iterate over the StringList for this key.
 			//			for(const auto& value : key_val_pairs.second)
 			//			{
@@ -554,17 +554,17 @@ Metadata Metadata::get_one_track_metadata(int track_index) const
 		//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
 		//		retval.m_tag_map["TITLE"].push_back(track_entry.m_PTI_TITLE);
-		retval.m_tag_map.insert({"TITLE", track_entry.m_PTI_TITLE});
+		retval.m_tm_generic.insert({"TITLE", track_entry.m_PTI_TITLE});
 		//    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 	}
 	if(!track_entry.m_PTI_PERFORMER.empty())
 	{
-		retval.m_tag_map["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
+		retval.m_tm_generic["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
 	}
 	if(!track_entry.m_isrc.empty())
 	{
 		//		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
-		retval.m_tag_map.insert({"ISRC", track_entry.m_isrc});
+		retval.m_tm_generic.insert({"ISRC", track_entry.m_isrc});
 	}
 
 	return retval;
@@ -606,7 +606,7 @@ std::string Metadata::operator[](const std::string& key) const
 	}
 
 	//	TagLib::StringList stringlist = m_pm[native_key_string];
-	std::vector<std::string> stringlist = m_tag_map.equal_range_vector(native_key_string);
+	std::vector<std::string> stringlist = m_tm_generic.equal_range_vector(native_key_string);
 
 	//	auto strlist_it = m_tag_map.find(native_key_string);
 	//	if(strlist_it != m_tag_map.cend())
@@ -643,14 +643,14 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
 
 #define M_DATASTREAM_FIELDS_MAPS(X) \
-	/** TagMaps */ \
+	/** AMLMTagMaps */ \
 	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
 	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
 	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
 	X(XMLTAG_TM_APE, m_tm_ape) \
 	X(XMLTAG_TM_XIPF, m_tm_xipf) \
 	X(XMLTAG_TM_RIFF_INFOTAG, m_tm_riff_infotag) \
-	X(XMLTAG_TM_M_TAG_MAP, m_tag_map) \
+	X(XMLTAG_TM_GENERIC, m_tm_generic) \
 	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
 
 /// Strings to use for the tags.
@@ -697,11 +697,8 @@ void Metadata::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
-#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
-#undef X
-
-#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &member_field);
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
