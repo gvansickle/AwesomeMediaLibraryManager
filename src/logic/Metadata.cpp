@@ -466,12 +466,12 @@ Fraction Metadata::total_length_seconds() const
 	}
 }
 
-TagMap Metadata::filled_fields() const
+AMLMTagMap Metadata::filled_fields() const
 {
 	if(hasBeenRead() && !isError())
 	{
 		//qDebug() << "Converting filled_fields to TagMap";
-		TagMap retval;
+		AMLMTagMap retval;
 		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tm_generic)
 		{
 			//            qDebug() << "Native Key:" << key_val_pairs.first;
@@ -502,7 +502,7 @@ TagMap Metadata::filled_fields() const
 	}
 	else
 	{
-		return TagMap();
+		return AMLMTagMap();
 	}
 }
 
@@ -636,7 +636,6 @@ using strviw_type = QLatin1Literal;
 #define M_DATASTREAM_FIELDS(X) \
 	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
 	X(XMLTAG_HAS_CUESHEET, m_has_cuesheet) \
-	X(XMLTAG_HAS_VORBIS_COMMENT, m_has_vorbis_comment) \
 	X(XMLTAG_HAS_ID3V1, m_has_id3v1) \
 	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
 	X(XMLTAG_HAS_APE, m_has_ape) \
@@ -647,7 +646,6 @@ using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS_MAPS(X) \
 	/** AMLMTagMaps */ \
-	X(XMLTAG_TM_VORBIS_COMMENTS, m_tm_vorbis_comments) \
 	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
 	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
 	X(XMLTAG_TM_APE, m_tm_ape) \

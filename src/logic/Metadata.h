@@ -71,7 +71,6 @@ public:
 
 	std::string GetFiletypeName() const;
 
-	bool hasVorbisComments() const { return m_has_vorbis_comment; }
 	bool hasID3v1() const { return m_has_id3v1; }
 	bool hasID3v2() const { return m_has_id3v2; }
 	bool hasAPE() const { return m_has_ape; }
@@ -79,7 +78,6 @@ public:
 	bool hasRIFFInfo() const { return m_has_riff_info; }
 	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
-	AMLMTagMap tagmap_VorbisComments() const { return m_tm_vorbis_comments; }
 	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }
 	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
 	AMLMTagMap tagmap_ape() const { return m_tm_ape; }
@@ -100,7 +98,7 @@ public:
 	std::string operator[](const char *key) const { return (*this)[std::string(key)]; }
 
 	/// Return all string metadata as a map.
-	TagMap filled_fields() const;
+	AMLMTagMap filled_fields() const;
 
 	/// Cue sheet support.
 	bool hasCueSheet() const { return m_has_cuesheet; }
@@ -178,14 +176,12 @@ private:
 
 	/// @}
 
-	bool m_has_vorbis_comment {false};
 	bool m_has_id3v1 {false};
 	bool m_has_id3v2 {false};
 	bool m_has_ape {false};
 	bool m_has_ogg_xipfcomment {false};
 	bool m_has_riff_info {false};
 
-	AMLMTagMap m_tm_vorbis_comments;
 	AMLMTagMap m_tm_id3v1;
 	AMLMTagMap m_tm_id3v2;
 	AMLMTagMap m_tm_ape;

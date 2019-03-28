@@ -1090,15 +1090,15 @@ QString LibraryModel::getEntryStatusToolTip(LibraryEntry* item) const
 {
 	QString tttext;
 
-	QMap<QString, QVariant> mdff = item->getAllMetadata();
-	QMap<QString, QVariant>::const_iterator cit;
+	AMLMTagMap mdff = item->getAllMetadata();
+	AMLMTagMap::const_iterator cit;
 
 	tttext =
 "<b>Library Entry Info</b><hr>"
 "<table>";
 	for(cit = mdff.cbegin(); cit != mdff.cend(); ++cit)
 	{
-		tttext += table_row(tostdstr(cit.key()), tostdstr(cit.value().toString()));
+		tttext += table_row(tostdstr(cit->first), tostdstr(cit->second));
 	}
 
 tttext += "</table>";

@@ -371,13 +371,16 @@ QByteArray LibraryEntry::getCoverImageBytes()
 	}
 }
 
-QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
+AMLMTagMap LibraryEntry::getAllMetadata() const
 {
-	QMap<QString, QVariant> retval;
+	AMLMTagMap retval;
 
 	if(isPopulated())
 	{
-		TagMap tm = m_metadata.filled_fields();
+		AMLMTagMap tm = m_metadata.filled_fields();
+#if 1
+		retval = tm;
+#else
 		QStringList sl;
 		for(const auto& entry : tm)
 		{
@@ -394,6 +397,7 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 //qDb() << "sl:" << sl;
 			retval[key] = QVariant::fromValue(sl);
 		}
+#endif
 	}
 
 	return retval;

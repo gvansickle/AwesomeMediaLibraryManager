@@ -95,7 +95,8 @@ public:
 	/// @todo Do we want to return some kind of actual Image class here instead?
 	QByteArray getCoverImageBytes();
 
-	QVariantMap getAllMetadata() const;
+	/// @todo What are we expecting here for semantics?
+	AMLMTagMap getAllMetadata() const;
 
 	Fraction get_pre_gap_offset_secs() const { return m_pre_gap_offset_secs; }
 	Fraction get_offset_secs() const { return m_offset_secs; }

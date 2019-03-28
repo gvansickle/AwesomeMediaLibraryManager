@@ -154,7 +154,7 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 M_TODO("Not getting some field here");
 //		qDb() << "METADATA:" << md.toVariant();
 
-		std::map<QString, QVariant> pimeta = libentry->getAllMetadata().toStdMap(); // QMap<QString, QVariant>
+		AMLMTagMap pimeta = libentry->getAllMetadata(); // QMap<QString, QVariant>
 		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;
 		// clear out any old data we have.
         m_metadata_widget->clear();
@@ -172,7 +172,6 @@ M_TODO("Not getting some field here");
             m_metadata_widget->setFirstItemColumnSpanned(metadata_types, true);
 
             std::vector<std::tuple<QString, QVariant, AMLMTagMap>> md_list = {
-				{"hasVorbisComments?", md.hasVorbisComments(), md.tagmap_VorbisComments()},
 				{"hasID3v1?", md.hasID3v1(), md.tagmap_id3v1()},
 				{"hasID3v2?", md.hasID3v2(), md.tagmap_id3v2()},
 				{"hasAPE?", md.hasAPE(), md.tagmap_ape()},
@@ -212,15 +211,19 @@ M_TODO("Not getting some field here");
 		}
 
 		/// Dump all the metadata.
-		for(const auto& entry : pimeta)
-		{
-			QString key = entry.first;
-			QStringList value = entry.second.toStringList();
-			if(value.empty())
-			{
-                m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
-			}
-		}
+		/// @todo Just putting the entries into the tree here.
+		pimeta.foreach_pair([&](QString key, QString val){
+			m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, val}));
+		});
+//		for(const auto& entry : pimeta)
+//		{
+//			QString key = toqstr(entry.first);
+//			QStringList value = toqstr(entry.second);
+//			if(value.empty())
+//			{
+//                m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
+//			}
+//		}
 
 		// Load and Display the cover image.
 
