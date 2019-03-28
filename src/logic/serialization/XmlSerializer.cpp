@@ -25,6 +25,8 @@
 
 // Std C++
 #include <variant>
+// Std C++ from The Future
+#include <future/overloaded.h>
 
 // Qt5
 #include <QFile>
@@ -571,9 +573,6 @@ void XmlSerializer::set_default_namespace(const QString& default_ns, const QStri
 	m_default_ns = default_ns;
 	m_default_ns_version = default_ns_version;
 }
-
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 QString XmlSerializer::error_string(QXmlStreamRWRef xmlstream) const
 {

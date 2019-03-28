@@ -175,9 +175,9 @@ M_TODO("Not getting some field here");
 				{"hasVorbisComments?", md.hasVorbisComments(), md.tagmap_VorbisComments()},
 				{"hasID3v1?", md.hasID3v1(), md.tagmap_id3v1()},
 				{"hasID3v2?", md.hasID3v2(), md.tagmap_id3v2()},
-				{"hasAPE?", md.hasAPE(), AMLMTagMap()},
+				{"hasAPE?", md.hasAPE(), md.tagmap_ape()},
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
-				{"hasInfoTag?", md.hasInfoTag(), md.tagmap_InfoTag()},
+				{"hasRIFFInfoTag?", md.hasRIFFInfo(), md.tagmap_RIFFInfo()},
 				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()},
 #if 0 /// @todo
 				{"hasTrackCuesheetInfo?", md.hasTrackCuesheet(), md.tagmap_cuesheet_track()}

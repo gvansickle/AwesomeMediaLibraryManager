@@ -78,8 +78,14 @@ public:
 	AMLMTagMap& operator=(const TagMap& tagmap);
 
 	/**
+	 * Assignment from a TagLib PropertyMap.
+	 */
+	AMLMTagMap& operator=(const TagLib::PropertyMap& prop_map);
+
+	/**
 	 * Assignment from a TagLib FieldListMap.
 	 * For some reason the key is either a TagLib String or ByteVector depending on the file format, hence templates.
+	 * OggXiphComment: @link https://taglib.org/api/classTagLib_1_1Ogg_1_1XiphComment.html#aaad472ea2921a034bb8d7842a55459b9
 	 */
 	template <class StringLike>
 	AMLMTagMap& operator=(const TagLib::Map<StringLike, TagLib::StringList>& taglib_field_list_map)

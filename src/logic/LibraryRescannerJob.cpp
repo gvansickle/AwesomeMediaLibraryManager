@@ -170,8 +170,7 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 		/// @todo eliminate the_job ptr.
 		MetadataReturnVal a = the_job->refresher_callback(*i);
 
-		/// @exp Removing the signal here.
-//		Q_EMIT the_job->SLOT_processReadyResults(a);
+		// Report the new results to The Future.
 		ext_future.reportResult(a);
 
 		num_items++;
@@ -235,7 +234,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
                 }
                 retval.push_back(i);
 
-                qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
+//                qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
 
             }
         }

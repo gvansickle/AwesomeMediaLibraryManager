@@ -29,6 +29,8 @@ set(HEADER_FILES_SRC_FUTURE
 	grvs_functional.hpp
 	guideline_helpers.h
 	InsertionOrderedMap.h
+	overloaded.h
+	preproc.h
 	QVariantHomogenousList.h
 	Unit.hpp
 	)

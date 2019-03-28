@@ -148,24 +148,24 @@ std::set<std::string> Metadata::getNewTags()
 	return f_newly_discovered_keys;
 }
 
-static AMLMTagMap PropertyMapToAMLMTagMap(TagLib::PropertyMap pm)
-{
-	AMLMTagMap retval;
-	for(const auto& key_val_pairs : pm)
-	{
-		std::string key = tostdstr(key_val_pairs.first);
+//[[deprecated]] static AMLMTagMap PropertyMapToAMLMTagMap(TagLib::PropertyMap pm)
+//{
+//	AMLMTagMap retval;
+//	for(const auto& key_val_pairs : pm)
+//	{
+//		std::string key = tostdstr(key_val_pairs.first);
 
-		std::vector<std::string> out_val;
-		// Iterate over the StringList for this key.
-		for(const auto& value : key_val_pairs.second)
-		{
-			auto sstr = tostdstr(value);
-			retval.insert({key, sstr});
-		}
-	}
-	qDb() << "Returning:" << retval;
-	return retval;
-}
+//		std::vector<std::string> out_val;
+//		// Iterate over the StringList for this key.
+//		for(const auto& value : key_val_pairs.second)
+//		{
+//			auto sstr = tostdstr(value);
+//			retval.insert({key, sstr});
+//		}
+//	}
+//	qDb() << "Returning:" << retval;
+//	return retval;
+//}
 
 
 Metadata Metadata::make_metadata()
@@ -173,7 +173,7 @@ Metadata Metadata::make_metadata()
 	return Metadata();
 }
 
-Metadata Metadata::make_metadata(QUrl file_url)
+Metadata Metadata::make_metadata(const QUrl& file_url)
 {
 	Metadata retval;
 	retval.read(file_url);
@@ -240,10 +240,6 @@ bool Metadata::read(const QUrl& url)
 	// For reading TagLib's generic tags.
 	TagLib::Tag* tag = nullptr;
 
-	/// @todo We should move this to The Future....
-//	template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-//	template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
 //	using taglib_file_type = std::variant<TagLib::MPEG::File*,TagLib::FLAC::File*>;
 
 //	taglib_file_type file_type = fr.file();
@@ -266,9 +262,16 @@ bool Metadata::read(const QUrl& url)
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
 
-		if(m_has_id3v1) { m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties()); }
-		if(m_has_id3v2) { m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties()); }
-		if(m_has_ape) { m_tm_ape = PropertyMapToAMLMTagMap(file->APETag()->properties()); }
+		if(m_has_id3v1) { m_tm_id3v1 = file->ID3v1Tag()->properties(); }//PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties()); }
+		if(m_has_id3v2)
+		{
+			// Re: TagLib::ID3v2::Tag::properties()
+			// "This function does some work to translate the hard-specified ID3v2 frame types into a free-form string-to-stringlist PropertyMap:
+			// [...and it does sound like it does a lot of decoding...]"
+			// @link https://taglib.org/api/classTagLib_1_1ID3v2_1_1Tag.html#a5094b04654b0912db9dca61de11f4663
+			m_tm_id3v2 = file->ID3v2Tag()->properties();
+		}
+		if(m_has_ape) { m_tm_ape = file->APETag()->properties(); }
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
 	{
@@ -282,8 +285,8 @@ bool Metadata::read(const QUrl& url)
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
 
-		if(m_has_id3v1) { m_tm_id3v1 = PropertyMapToAMLMTagMap(file->ID3v1Tag()->properties()); }
-		if(m_has_id3v2) { m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties()); }
+		if(m_has_id3v1) { m_tm_id3v1 = file->ID3v1Tag()->properties(); }
+		if(m_has_id3v2) { m_tm_id3v2 = file->ID3v2Tag()->properties(); }
 		if(m_has_ogg_xipfcomment)
 		{
 			// TagLib has some funky kicks going on here:
@@ -328,17 +331,16 @@ bool Metadata::read(const QUrl& url)
 
 		m_audio_file_type = AudioFileType::WAV;
 		m_has_id3v2 = file->hasID3v2Tag();
-		m_has_riff_info_tag = file->hasInfoTag();
+		m_has_riff_info = file->hasInfoTag();
 
-		if(m_has_riff_info_tag)
+		if(m_has_riff_info)
 		{
-			m_tm_riff_infotag = PropertyMapToAMLMTagMap(file->InfoTag()->properties());
-//			m_tm_riff_infotag = file->InfoTag()->fieldListMap();
+			m_tm_riff_info = file->InfoTag()->properties();
 		}
 
 		if(m_has_id3v2)
 		{
-			m_tm_id3v2 = PropertyMapToAMLMTagMap(file->ID3v2Tag()->properties());
+			m_tm_id3v2 = file->ID3v2Tag()->properties();
 		}
 	}
 
@@ -361,7 +363,7 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 		{
 			qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
 		}
-		m_tm_generic = PropertyMapToAMLMTagMap(pm);
+		m_tm_generic = pm;
 	}
 
 
@@ -397,7 +399,7 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 		// Copy the cuesheet track info.
 		m_tracks = cuesheet->get_track_map();
 qDb() << "####### NUM TRACKS:" << m_tracks.size();
-		Q_ASSERT(m_tracks.size() > 0);
+		Q_ASSERT(!m_tracks.empty());
 
 
 		// Ok, now do a second pass over the tracks and determine if there are any gapless sets.
@@ -470,7 +472,7 @@ TagMap Metadata::filled_fields() const
 	{
 		//qDebug() << "Converting filled_fields to TagMap";
 		TagMap retval;
-		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tm_generic) ///@todo EXP m_pm)
+		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tm_generic)
 		{
 			//            qDebug() << "Native Key:" << key_val_pairs.first;
 			std::string key = reverse_lookup(key_val_pairs.first);
@@ -480,7 +482,7 @@ TagMap Metadata::filled_fields() const
 			{
 				// We found an unknown key.
 				M_WARNING("TODO: Find a better way to track new keys.")
-				///f_newly_discovered_keys.insert(key_val_pairs.first); ///@todo EXP .toCString(true));
+				///f_newly_discovered_keys.insert(key_val_pairs.first);
 				continue;
 			}
 
@@ -534,6 +536,7 @@ TrackMetadata Metadata::track(int i) const
 
 Metadata Metadata::get_one_track_metadata(int track_index) const
 {
+M_TODO("FIX THIS");
 	// Start off with a complete duplicate.
 	Metadata retval(*this);
 
@@ -638,7 +641,7 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
 	X(XMLTAG_HAS_APE, m_has_ape) \
 	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
-	X(XMLTAG_HAS_RIFF_INFO_TAG, m_has_riff_info_tag) \
+	X(XMLTAG_HAS_RIFF_INFO, m_has_riff_info) \
 	X(XMLTAG_AUDIO_FILE_URL, m_audio_file_url) \
 	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
 
@@ -649,7 +652,7 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
 	X(XMLTAG_TM_APE, m_tm_ape) \
 	X(XMLTAG_TM_XIPF, m_tm_xipf) \
-	X(XMLTAG_TM_RIFF_INFOTAG, m_tm_riff_infotag) \
+	X(XMLTAG_TM_RIFF_INFOTAG, m_tm_riff_info) \
 	X(XMLTAG_TM_GENERIC, m_tm_generic) \
 	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
 
@@ -704,10 +707,9 @@ void Metadata::fromVariant(const QVariant& variant)
 
 	map_read_field_or_warn(map, XMLTAG_CUESHEET, &m_cuesheet);
 
-
 	// Read in the track list.
 	QVariantHomogenousList qvar_track_list("m_track", "track");
-	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);// = map.value(XMLTAG_TRACKS).value<QVariantHomogenousList>();
+	map_read_field_or_warn(map, XMLTAG_TRACKS, &qvar_track_list);
 #if 0
 	list_read_all_fields_or_warn(qvar_track_list)
 #else
@@ -730,7 +732,7 @@ void Metadata::fromVariant(const QVariant& variant)
 #undef M_DATASTREAM_FIELDS
 
 
-QDataStream &operator<<(QDataStream &out, const Metadata &obj)
+QDataStream &operator<<(QDataStream &out, [[maybe_unused]] const Metadata &obj)
 {
 	Q_ASSERT(0);
 	/// @todo

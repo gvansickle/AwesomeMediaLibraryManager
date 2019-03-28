@@ -25,6 +25,7 @@
 
 // TagLib.
 #include <taglib/xiphcomment.h>
+#include <taglib/tpropertymap.h>
 
 // Ours.
 #include <utils/RegisterQtMetatypes.h>
@@ -52,6 +53,25 @@ AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 	return *this;
 }
 
+AMLMTagMap& AMLMTagMap::operator=(const TagLib::PropertyMap& prop_map)
+{
+	clear();
+
+	for(const auto& key_val_pairs : prop_map)
+	{
+		std::string key = tostdstr(key_val_pairs.first);
+
+		std::vector<std::string> out_val;
+		// Iterate over the StringList for this key.
+		for(const auto& value : key_val_pairs.second)
+		{
+			auto sstr = tostdstr(value);
+			m_the_map.insert({key, sstr});
+		}
+	}
+
+	return *this;
+}
 
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Key& key)
 {
@@ -226,5 +246,3 @@ QDataStream& operator>>(QDataStream& in, AMLMTagMap& obj)
 //	return in DATASTREAM_FIELDS(X);
 //#undef X
 }
-
-
