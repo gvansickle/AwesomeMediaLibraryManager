@@ -76,7 +76,7 @@ public:
 	bool hasID3v2() const { return m_has_id3v2; }
 	bool hasAPE() const { return m_has_ape; }
 	bool hasXiphComment() const { return m_has_ogg_xipfcomment; }
-	bool hasInfoTag() const { return m_has_info_tag; }
+	bool hasInfoTag() const { return m_has_riff_info_tag; }
 	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
 	AMLMTagMap tagmap_VorbisComments() const { return m_tm_vorbis_comments; }
@@ -84,7 +84,7 @@ public:
 	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
 	AMLMTagMap tagmap_ape() const { return m_tm_ape; }
 	AMLMTagMap tagmap_xiph() const { return m_tm_xipf; }
-	AMLMTagMap tagmap_InfoTag() const { return m_tm_infotag; }
+	AMLMTagMap tagmap_InfoTag() const { return m_tm_riff_infotag; }
 	AMLMTagMap tagmap_cuesheet_disc() const;
 	/// @}
 
@@ -183,14 +183,14 @@ private:
 	bool m_has_id3v2 {false};
 	bool m_has_ape {false};
 	bool m_has_ogg_xipfcomment {false};
-	bool m_has_info_tag {false};
+	bool m_has_riff_info_tag {false};
 
 	AMLMTagMap m_tm_vorbis_comments;
 	AMLMTagMap m_tm_id3v1;
 	AMLMTagMap m_tm_id3v2;
 	AMLMTagMap m_tm_ape;
 	AMLMTagMap m_tm_xipf;
-	AMLMTagMap m_tm_infotag;
+	AMLMTagMap m_tm_riff_infotag;
 	AMLMTagMap m_tm_cuesheet_disc {};
 
 	/// The TagMap from the generic "fr.tag()->properties()" call.

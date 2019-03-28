@@ -52,23 +52,6 @@ AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 	return *this;
 }
 
-AMLMTagMap& AMLMTagMap::operator=(const TagLib::Ogg::FieldListMap& taglib_field_list_map)
-{
-	clear();
-
-	// Iterate over key+value_vector pairs.
-	for(const auto & it : taglib_field_list_map)
-	{
-		// Iterate over the value, which is a vector of values.
-		for(const auto& valit : it.second)
-		{
-			m_the_map.insert(std::make_pair(tostdstr(it.first), tostdstr(valit)));
-		}
-	}
-
-	return *this;
-}
-
 
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Key& key)
 {

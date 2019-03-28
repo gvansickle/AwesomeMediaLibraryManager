@@ -80,7 +80,35 @@ public:
 	/**
 	* Assignment from a XiphComment's FieldListMap.
 	*/
-	AMLMTagMap& operator=(const TagLib::Ogg::FieldListMap& taglib_field_list_map);
+//	using GenericFieldListMap = TagLib::Map<std::variant<TagLib::String, TagLib::ByteVector>, TagLib::StringList>;
+//	using GenericFieldListMap = TagLib::Map<TagLib::String, TagLib::StringList>;
+//	AMLMTagMap& operator=(const GenericFieldListMap& taglib_field_list_map);
+	template <class StringLike>
+	AMLMTagMap& operator=(const TagLib::Map<StringLike, TagLib::StringList>& taglib_field_list_map)
+	{
+		clear();
+
+		// Iterate over key+value_vector pairs.
+		for(const auto & it : taglib_field_list_map)
+		{
+			// Iterate over the value, which is a vector of values.
+			for(const auto& valit : it.second)
+			{
+				std::string key;
+				if constexpr(std::is_same_v<TagLib::ByteVector, decltype(it.first)>)
+				{
+					key = tostdstr(it.first.data());
+				}
+				else
+				{
+					key = tostdstr(it.first);
+				}
+				m_the_map.insert(std::make_pair(key, tostdstr(valit)));
+			}
+		}
+
+		return *this;
+	}
 
 	/**
 	 * Returns a reference to the first value of the matching key.

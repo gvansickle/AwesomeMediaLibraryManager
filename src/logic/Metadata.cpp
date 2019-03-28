@@ -236,15 +236,9 @@ bool Metadata::read(const QUrl& url)
 	//
 	// Tags
 	//
-//	TagLib::PropertyMap pm = fr.tag()->properties();
-//	for(const auto& cit : pm)
-//	{
-//		auto key = cit.first;
-//		for(const auto& val : cit.second)
-//		{
-//			qDb() << "PROPERTYMAP:" << key << val;
-//		}
-//	}
+
+	// For reading TagLib's generic tags.
+	TagLib::Tag* tag = nullptr;
 
 	/// @todo We should move this to The Future....
 //	template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
@@ -260,6 +254,13 @@ bool Metadata::read(const QUrl& url)
 	// Downcast the FileRef to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
 	{
+		// For TagLib::MPEG::File*, per TagLib docs:
+		// "virtual Tag* TagLib::MPEG::File::tag() const
+		// Returns a pointer to a tag that is the union of the ID3v2 and ID3v1 tags. The ID3v2 tag is given priority in reading
+		// the information – if requested information exists in both the ID3v2 tag and the ID3v1 tag, the information from the
+		// ID3v2 tag will be returned."
+		tag = file->tag();
+
 		m_audio_file_type = AudioFileType::MP3;
 		m_has_ape = file->hasAPETag();
 		m_has_id3v1 = file->hasID3v1Tag();
@@ -271,6 +272,11 @@ bool Metadata::read(const QUrl& url)
 	}
 	else if(TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
 	{
+		// For TagLib::FLAC::File* file, per TagLib docs:
+		// "virtual TagLib::Tag* TagLib::FLAC::File::tag()	const
+		//	Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
+		tag = file->tag();
+
 		m_audio_file_type = AudioFileType::FLAC;
 		m_has_ogg_xipfcomment = file->hasXiphComment();
 		m_has_id3v1 = file->hasID3v1Tag();
@@ -301,6 +307,9 @@ bool Metadata::read(const QUrl& url)
 	}
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
+		// "Returns the XiphComment for this file."
+		tag = file->tag();
+
 		m_audio_file_type = AudioFileType::OGG_VORBIS;
 		if(auto tag = file->tag())
 		{
@@ -313,13 +322,18 @@ bool Metadata::read(const QUrl& url)
 	else if(TagLib::RIFF::WAV::File* file = dynamic_cast<TagLib::RIFF::WAV::File*>(fr.file()))
 	{
 		// Wav file.
+		// "Returns the ID3v2 Tag for this file.
+		// Note: This method does not return all the tags for this file for backward compatibility. Will be fixed in TagLib 2.0."
+		tag = file->tag();
+
 		m_audio_file_type = AudioFileType::WAV;
 		m_has_id3v2 = file->hasID3v2Tag();
-		m_has_info_tag = file->hasInfoTag();
+		m_has_riff_info_tag = file->hasInfoTag();
 
-		if(m_has_info_tag)
+		if(m_has_riff_info_tag)
 		{
-			m_tm_infotag = PropertyMapToAMLMTagMap(file->InfoTag()->properties());
+			m_tm_riff_infotag = PropertyMapToAMLMTagMap(file->InfoTag()->properties());
+//			m_tm_riff_infotag = file->InfoTag()->fieldListMap();
 		}
 
 		if(m_has_id3v2)
@@ -328,8 +342,6 @@ bool Metadata::read(const QUrl& url)
 		}
 	}
 
-	// Read TagLib's generic tags.
-	TagLib::Tag* tag = fr.tag();
 	if(tag == nullptr)
 	{
 		qWarning() << "File" << m_audio_file_url << "returned a null tag.";
@@ -626,7 +638,7 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_HAS_ID3V2, m_has_id3v2) \
 	X(XMLTAG_HAS_APE, m_has_ape) \
 	X(XMLTAG_HAS_OGG_XIPFCOMMENT, m_has_ogg_xipfcomment) \
-	X(XMLTAG_HAS_INFO_TAG, m_has_info_tag) \
+	X(XMLTAG_HAS_RIFF_INFO_TAG, m_has_riff_info_tag) \
 	X(XMLTAG_AUDIO_FILE_URL, m_audio_file_url) \
 	X(XMLTAG_NUM_TRACKS_ON_MEDIA, m_num_tracks_on_media)
 
@@ -637,7 +649,7 @@ using strviw_type = QLatin1Literal;
 	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
 	X(XMLTAG_TM_APE, m_tm_ape) \
 	X(XMLTAG_TM_XIPF, m_tm_xipf) \
-	X(XMLTAG_TM_INFOTAG, m_tm_infotag) \
+	X(XMLTAG_TM_RIFF_INFOTAG, m_tm_riff_infotag) \
 	X(XMLTAG_TM_M_TAG_MAP, m_tag_map) \
 	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
 
