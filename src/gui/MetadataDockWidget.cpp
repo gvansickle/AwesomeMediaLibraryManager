@@ -211,7 +211,7 @@ M_TODO("Not getting some field here");
 		}
 
 		/// Dump all the metadata.
-		/// @todo Just putting the entries into the tree here.
+		/// @todo Does this make any sense anymore? Just putting the entries into the tree here.
 		pimeta.foreach_pair([&](QString key, QString val){
 			m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, val}));
 		});

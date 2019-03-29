@@ -468,6 +468,7 @@ Fraction Metadata::total_length_seconds() const
 
 AMLMTagMap Metadata::filled_fields() const
 {
+M_TODO("OBSOLETE");
 	if(hasBeenRead() && !isError())
 	{
 		//qDebug() << "Converting filled_fields to TagMap";
