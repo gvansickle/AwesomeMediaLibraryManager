@@ -76,25 +76,48 @@ int ScanResultsTreeModelItem::columnCount() const
 	return 3;
 }
 
+using strviw_type = QLatin1Literal;
+
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_DIRSCANRESULT, m_dsr)
+//#define M_DATASTREAM_FIELDS_MAPS(X) \
+//	/** AMLMTagMaps */ \
+//	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
+//	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
+//	X(XMLTAG_TM_APE, m_tm_ape) \
+//	X(XMLTAG_TM_XIPF, m_tm_xipf) \
+//	X(XMLTAG_TM_RIFF_INFOTAG, m_tm_riff_info) \
+//	X(XMLTAG_TM_GENERIC, m_tm_generic) \
+//	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+//	M_DATASTREAM_FIELDS_MAPS(X);
+#undef X
+//static const strviw_type XMLTAG_TRACKS("m_tracks");
+//static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT], m_dsr.toVariant());
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 	/// @todo Make a list or something.
 //	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0], toVariant(kv_pair_in_variant);
 
 	// Children to variant list.
-	QVariantList vl;
+	QVariantHomogenousList vl("children", "child");
 	for(int i=0; i<childCount(); i++)
 	{
 		auto* child_ptr = child(i);
-		vl.append(child_ptr->toVariant());
+		vl.push_back(child_ptr->toVariant());
 	}
 	map.insert("children", vl);
 
@@ -103,7 +126,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
 	m_dsr.fromVariant(dsr_in_variant);

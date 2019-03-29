@@ -26,7 +26,7 @@
 #define QVARIANTHOMOGENOUSLIST_H
 
 // Std C++
-#include <deque> // For swap().
+#include <deque>
 
 // Qt5
 #include <QString>
@@ -35,7 +35,7 @@
 // Ours.
 #include <utils/DebugHelpers.h>
 #include <future/guideline_helpers.h>
-#include <deque>
+
 
 class QVariantHomogenousList //: public QVariantList
 {

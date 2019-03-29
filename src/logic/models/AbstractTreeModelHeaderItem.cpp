@@ -77,8 +77,8 @@ int AbstractTreeModelHeaderItem::columnCount() const
 
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
-	QVariantMap map;
-	QVariantList list;
+	QVariantInsertionOrderedMap map;
+	QVariantHomogenousList list("header_section_list", "section");
 
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
@@ -92,7 +92,7 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	qDb() << M_NAME_VAL(childCount());
 	map.insert("num_child_items", childCount());
 
-	// Create a QVariantList of our children.
+	// Create a list of our children.
 	list.clear();
 	for(int i = 0; i < childCount(); ++i)
 	{
@@ -108,9 +108,11 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
 
-	QVariantList header_section_list = map.value("header_section_list").toList();
+	QVariantHomogenousList header_section_list("header_section_list", "section");
+	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
 
 	// Read the number of header sections...
 	auto header_num_sections = map.value("header_num_sections").toInt();
@@ -133,7 +135,7 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantList child_list = map.value("child_node_list").toList();
+	QVariantHomogenousList child_list = map.value("child_node_list").value<QVariantHomogenousList>();
 
 
 	// We'll break this into two phases:
