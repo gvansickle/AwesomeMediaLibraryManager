@@ -192,7 +192,6 @@ public:
 	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
-//	explicit operator QVariant () const;
 	/// @}
 
 	/// @name Debug

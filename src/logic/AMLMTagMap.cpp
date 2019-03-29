@@ -23,12 +23,16 @@
 
 #include "AMLMTagMap.h"
 
+// Qt5
+#include <QtGlobal>
+
 // TagLib.
 #include <taglib/xiphcomment.h>
 #include <taglib/tpropertymap.h>
 
 // Ours.
 #include <utils/RegisterQtMetatypes.h>
+#include <utils/DebugHelpers.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AMLMTagMap metatypes";
@@ -185,19 +189,9 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 
 	QVariantHomogenousList list("AMLMTagMapEntries", "entry");
 
-	/// @todo REMOVE
-	if(variant.canConvert<QVariantInsertionOrderedMap>())
-	{
-		QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
-		QVariant list_qvar = map.value("m_the_map");
-		Q_ASSERT(list_qvar.isValid());
-		Q_ASSERT(list_qvar.canConvert<QVariantHomogenousList>());
-		list = list_qvar.value<QVariantHomogenousList>();
-	}
-	else if (variant.canConvert<QVariantHomogenousList>())
-	{
-		list = variant.value<QVariantHomogenousList>();
-	}
+	Q_ASSERT(variant.canConvert<QVariantHomogenousList>());
+
+	list = variant.value<QVariantHomogenousList>();
 
 
 	for(auto entry = list.cbegin(); entry != list.cend(); ++entry)
@@ -219,11 +213,6 @@ void AMLMTagMap::fromVariant(const QVariant& variant)
 
 	return;
 }
-
-//AMLMTagMap::operator QVariant() const
-//{
-//	return toVariant();
-//}
 
 QTH_DEFINE_QDEBUG_OP(AMLMTagMap, << obj.m_the_map );
 
