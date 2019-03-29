@@ -80,23 +80,11 @@ using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS(X) \
 	X(XMLTAG_DIRSCANRESULT, m_dsr)
-//#define M_DATASTREAM_FIELDS_MAPS(X) \
-//	/** AMLMTagMaps */ \
-//	X(XMLTAG_TM_ID3V1, m_tm_id3v1) \
-//	X(XMLTAG_TM_ID3V2, m_tm_id3v2) \
-//	X(XMLTAG_TM_APE, m_tm_ape) \
-//	X(XMLTAG_TM_XIPF, m_tm_xipf) \
-//	X(XMLTAG_TM_RIFF_INFOTAG, m_tm_riff_info) \
-//	X(XMLTAG_TM_GENERIC, m_tm_generic) \
-//	X(XMLTAG_DISC_CUESHEET, m_tm_cuesheet_disc)
 
 /// Strings to use for the tags.
 #define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
 	M_DATASTREAM_FIELDS(X);
-//	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
-//static const strviw_type XMLTAG_TRACKS("m_tracks");
-//static const strviw_type XMLTAG_CUESHEET("m_cuesheet");
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
@@ -108,9 +96,6 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 #define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
-
-	/// @todo Make a list or something.
-//	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0], toVariant(kv_pair_in_variant);
 
 	// Children to variant list.
 	QVariantHomogenousList vl("children", "child");
@@ -128,15 +113,9 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
-	m_dsr.fromVariant(dsr_in_variant);
-
-	/// @todo Make a list or something.
-	auto kv_pair_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0]);
-	m_dsr.fromVariant(kv_pair_in_variant);
-
-	/// @todo
-
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
+	M_DATASTREAM_FIELDS(X);
+#undef X
 }
 
 AbstractTreeModelItem *
@@ -227,25 +206,21 @@ int SRTMItem_LibEntry::columnCount() const
 
 QVariant SRTMItem_LibEntry::toVariant() const
 {
-	QVariantMap map;
+	QVariantHomogenousList list("library_entries", "m_library_entry");
 
-	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
-
-//	map.insert("TEST_COL0", QVariant::fromValue(m_key));
-//	map.insert("TEST_COL1", QVariant::fromValue(m_val));
 
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)
 	{
-		map.insert("m_library_entry", m_library_entry->toVariant());
+//		list_push_back_or_die(list, m_library_entry);
 	}
 
-	return map;
+	return list;
 }
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
 	/// @todo Incomplete.
 	Q_ASSERT(0);

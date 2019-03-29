@@ -138,28 +138,28 @@ static const auto SRTMTagToXMLTagMap = SRTMTag::make_map<SRTMTag::TagName, QStri
 	{SRTMTag::TS_LAST_SCAN_END, "ts_last_scan_end"}
 });
 
-/**
- * ScanResultsTreeModelItem tags.
- */
-class SRTMItemTag : public ExtEnum<SRTMItemTag>
-{
-	Q_GADGET
-
-public:
-	enum TagName
-	{
-		DIRSCANRESULT,
-		TEST_PAIR_0
-	};
-	Q_ENUM(TagName)
-
-};
-Q_DECLARE_METATYPE(SRTMItemTag);
-
-static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::TagName, QString>(
-{
-	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"},
-	{SRTMItemTag::TEST_PAIR_0, "TEST_PAIR_0"}
-});
+///**
+// * ScanResultsTreeModelItem tags.
+// */
+//class SRTMItemTag : public ExtEnum<SRTMItemTag>
+//{
+//	Q_GADGET
+//
+//public:
+//	enum TagName
+//	{
+//		DIRSCANRESULT,
+//		TEST_PAIR_0
+//	};
+//	Q_ENUM(TagName)
+//
+//};
+//Q_DECLARE_METATYPE(SRTMItemTag);
+//
+//static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::TagName, QString>(
+//{
+//	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"},
+//	{SRTMItemTag::TEST_PAIR_0, "TEST_PAIR_0"}
+//});
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H
