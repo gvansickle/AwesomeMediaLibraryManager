@@ -147,11 +147,14 @@ std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const
 	return retval;
 }
 
+void AMLMTagMap::merge(AMLMTagMap& source)
+{
+M_TODO("Need to handle dups smarter.");
+	m_the_map.insert(source.m_the_map.begin(), source.m_the_map.end());
+}
 
 QVariant AMLMTagMap::toVariant() const
 {
-	QVariantInsertionOrderedMap map;
-
 	QVariantHomogenousList list("AMLMTagMapEntries", "entry");
 
 	// Get the list of keys, in... insertion order?
@@ -177,10 +180,7 @@ QVariant AMLMTagMap::toVariant() const
 		list.push_back(QVariant::fromValue(kvpair_map));
 	}
 
-	map.insert("m_the_map", QVariant::fromValue(list));
-//	map_insert_or_die(map, "m_the_map", list);
-
-	return /*map*/list;
+	return list;
 }
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
@@ -235,3 +235,5 @@ QDataStream& operator>>(QDataStream& in, AMLMTagMap& obj)
 //	return in DATASTREAM_FIELDS(X);
 //#undef X
 }
+
+

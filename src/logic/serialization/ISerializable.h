@@ -35,7 +35,7 @@
 #include <utils/RegisterQtMetatypes.h> ///< For <cstdint> metatypes.
 #include "SerializationExceptions.h"
 #include <future/InsertionOrderedMap.h>
-#include <QVariantHomogenousList.h>
+#include "QVariantHomogenousList.h"
 
 
 /**

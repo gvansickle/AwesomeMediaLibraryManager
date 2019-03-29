@@ -31,14 +31,12 @@ set(HEADER_FILES_SRC_FUTURE
 	InsertionOrderedMap.h
 	overloaded.h
 	preproc.h
-	QVariantHomogenousList.h
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
 	guideline_helpers.cpp
 	InsertionOrderedMap.cpp
-	QVariantHomogenousList.cpp
 	)
 
 target_sources_local(future

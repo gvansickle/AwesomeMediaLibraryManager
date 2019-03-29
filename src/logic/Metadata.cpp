@@ -238,14 +238,8 @@ bool Metadata::read(const QUrl& url)
 	//
 
 	// For reading TagLib's generic tags.
-	TagLib::Tag* tag = nullptr;
+//	TagLib::Tag* tag = nullptr;
 
-//	using taglib_file_type = std::variant<TagLib::MPEG::File*,TagLib::FLAC::File*>;
-
-//	taglib_file_type file_type = fr.file();
-
-//	for(const auto file : )
-//	std::visit();
 
 	// Downcast the FileRef to whatever type it really is.
 	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
@@ -255,7 +249,7 @@ bool Metadata::read(const QUrl& url)
 		// Returns a pointer to a tag that is the union of the ID3v2 and ID3v1 tags. The ID3v2 tag is given priority in reading
 		// the information – if requested information exists in both the ID3v2 tag and the ID3v1 tag, the information from the
 		// ID3v2 tag will be returned."
-		tag = file->tag();
+		m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::MP3;
 		m_has_ape = file->hasAPETag();
@@ -278,15 +272,23 @@ bool Metadata::read(const QUrl& url)
 		// For TagLib::FLAC::File* file, per TagLib docs:
 		// "virtual TagLib::Tag* TagLib::FLAC::File::tag()	const
 		//	Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
-		tag = file->tag();
+//		m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::FLAC;
-		m_has_ogg_xipfcomment = file->hasXiphComment();
 		m_has_id3v1 = file->hasID3v1Tag();
 		m_has_id3v2 = file->hasID3v2Tag();
+		m_has_ogg_xipfcomment = file->hasXiphComment();
 
-		if(m_has_id3v1) { m_tm_id3v1 = file->ID3v1Tag()->properties(); }
-		if(m_has_id3v2) { m_tm_id3v2 = file->ID3v2Tag()->properties(); }
+		if(m_has_id3v1)
+		{
+			m_tm_id3v1 = file->ID3v1Tag()->properties();
+			m_tm_generic.merge(m_tm_id3v1);
+		}
+		if(m_has_id3v2)
+		{
+			m_tm_id3v2 = file->ID3v2Tag()->properties();
+			m_tm_generic.merge(m_tm_id3v2);
+		}
 		if(m_has_ogg_xipfcomment)
 		{
 			// TagLib has some funky kicks going on here:
@@ -294,15 +296,15 @@ bool Metadata::read(const QUrl& url)
 			// Re ->tag(): "Returns the Tag for this file. This will be a union of XiphComment, ID3v1 and ID3v2 tags."
 			// Not sure that's true, but there's also xiphComment():
 			// "Returns a pointer to the XiphComment for the file.
-			// Note
-			// This may return a valid pointer regardless of whether or not the file on disk has a XiphComment. Use hasXiphComment()
+			// Note: This may return a valid pointer regardless of whether or not the file on disk has a XiphComment. Use hasXiphComment()
 			// to check if the file on disk actually has a XiphComment."
 			TagLib::Ogg::XiphComment* xipf_comment;
 			xipf_comment = file->xiphComment();
 			m_tm_xipf = xipf_comment->fieldListMap();
 
+			m_tm_generic.merge(m_tm_xipf);
+
 			auto field_count = xipf_comment->fieldCount();
-			qDb() << "### XIPH: Field Count:" << field_count << "FieldListMap size:" << m_tm_xipf.size();
 
 			// Extract any CUESHEET embedded in the XiphComment.
 			cuesheet_str = get_cue_sheet_from_OggXipfComment(file).toStdString();
@@ -311,7 +313,7 @@ bool Metadata::read(const QUrl& url)
 	else if(TagLib::Ogg::Vorbis::File* file = dynamic_cast<TagLib::Ogg::Vorbis::File*>(fr.file()))
 	{
 		// "Returns the XiphComment for this file."
-		tag = file->tag();
+		m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::OGG_VORBIS;
 		if(auto tag = file->tag())
@@ -327,7 +329,7 @@ bool Metadata::read(const QUrl& url)
 		// Wav file.
 		// "Returns the ID3v2 Tag for this file.
 		// Note: This method does not return all the tags for this file for backward compatibility. Will be fixed in TagLib 2.0."
-		tag = file->tag();
+		m_tm_generic = file->tag()->properties();
 
 		m_audio_file_type = AudioFileType::WAV;
 		m_has_id3v2 = file->hasID3v2Tag();
@@ -344,7 +346,7 @@ bool Metadata::read(const QUrl& url)
 		}
 	}
 
-	if(tag == nullptr)
+	if(m_tm_generic.empty())
 	{
 		qWarning() << "File" << m_audio_file_url << "returned a null tag.";
 	}
@@ -357,13 +359,13 @@ M_WARNING("BUG: Pulls data from bad cuesheet embeds in FLAC, such as some produc
 		/// @note TagLib docs: "Exports the tags of the file as dictionary mapping (human readable)
 		/// tag names (Strings) to StringLists of tag values. The default implementation in this class
 		/// considers only the usual built-in tags (artist, album, ...) and only one value per key."
-		TagLib::PropertyMap pm = tag->properties();
+//		TagLib::PropertyMap pm = tag->properties();
 
-		for(const auto& e : pm)
-		{
-			qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
-		}
-		m_tm_generic = pm;
+//		for(const auto& e : pm)
+//		{
+//			qDb() << "TagLib properties Property Map:" << e.first << e.second.toString("///");
+//		}
+//		m_tm_generic = pm;
 	}
 
 

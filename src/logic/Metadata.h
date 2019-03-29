@@ -71,6 +71,7 @@ public:
 
 	std::string GetFiletypeName() const;
 
+	bool hasGeneric() const { return !m_tm_generic.empty(); }
 	bool hasID3v1() const { return m_has_id3v1; }
 	bool hasID3v2() const { return m_has_id3v2; }
 	bool hasAPE() const { return m_has_ape; }
@@ -78,6 +79,7 @@ public:
 	bool hasRIFFInfo() const { return m_has_riff_info; }
 	bool hasDiscCuesheet() const { return !m_tm_cuesheet_disc.empty(); }
 
+	AMLMTagMap tagmap_generic() const { return m_tm_generic; };
 	AMLMTagMap tagmap_id3v1() const { return m_tm_id3v1; }
 	AMLMTagMap tagmap_id3v2() const { return m_tm_id3v2; }
 	AMLMTagMap tagmap_ape() const { return m_tm_ape; }
@@ -171,26 +173,21 @@ private:
 	bool m_has_cuesheet {false};
 	CueSheet m_cuesheet;
 
-	/// @name Cuesheet-derived CD-level info.
-	/// @{
-
-	/// @}
-
 	bool m_has_id3v1 {false};
 	bool m_has_id3v2 {false};
 	bool m_has_ape {false};
 	bool m_has_ogg_xipfcomment {false};
 	bool m_has_riff_info {false};
 
+	/// The TagMap from the generic "fr.tag()->properties()" call.
+	AMLMTagMap m_tm_generic;
 	AMLMTagMap m_tm_id3v1;
 	AMLMTagMap m_tm_id3v2;
 	AMLMTagMap m_tm_ape;
 	AMLMTagMap m_tm_xipf;
 	AMLMTagMap m_tm_riff_info;
+	/// Cuesheet-derived CD-level info.
 	AMLMTagMap m_tm_cuesheet_disc {};
-
-	/// The TagMap from the generic "fr.tag()->properties()" call.
-	AMLMTagMap m_tm_generic;
 
 	bool m_read_has_been_attempted {false};
 	bool m_is_error {false};

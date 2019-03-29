@@ -27,6 +27,7 @@ set(serialization_subdir_SOURCES
 		XmlObjects.cpp
 		XmlSerializer.cpp
 		XSPFSerializer.cpp
+		QVariantHomogenousList.cpp
 		)
 set(serialization_subdir_HEADERS
 		ExtEnum.h
@@ -37,6 +38,7 @@ set(serialization_subdir_HEADERS
 		ISerializable.h
 		ISerializer.h
 		XSPFSerializer.h
+		QVariantHomogenousList.h
 		)
 
 target_sources_local(serialization

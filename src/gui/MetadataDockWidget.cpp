@@ -172,6 +172,7 @@ M_TODO("Not getting some field here");
             m_metadata_widget->setFirstItemColumnSpanned(metadata_types, true);
 
             std::vector<std::tuple<QString, QVariant, AMLMTagMap>> md_list = {
+				{"hasGeneric?", md.hasGeneric(), md.tagmap_generic()},
 				{"hasID3v1?", md.hasID3v1(), md.tagmap_id3v1()},
 				{"hasID3v2?", md.hasID3v2(), md.tagmap_id3v2()},
 				{"hasAPE?", md.hasAPE(), md.tagmap_ape()},

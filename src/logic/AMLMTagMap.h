@@ -187,6 +187,8 @@ public:
 		}
 	}
 
+	void merge(AMLMTagMap& source);
+
 	/// @name Serialization
 	/// @{
 	QTH_FRIEND_QDATASTREAM_OPS(AMLMTagMap);
