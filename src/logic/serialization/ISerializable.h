@@ -63,6 +63,7 @@ public:
 template <class OutMapType>
 void qviomap_from_qvar_or_die(OutMapType* map_out, const QVariant& var_in)
 {
+//	throwif(!var_in.isValid(), SerializationException("input QVariant is not valid"));
 	Q_ASSERT(var_in.isValid());
 	Q_ASSERT(var_in.canConvert<OutMapType>());
 	*map_out = var_in.value<OutMapType>();

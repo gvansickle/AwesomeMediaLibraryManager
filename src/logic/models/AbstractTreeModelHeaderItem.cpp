@@ -75,19 +75,30 @@ int AbstractTreeModelHeaderItem::columnCount() const
 	return m_column_specs.size();
 }
 
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections)
+
+using strviw_type = QLatin1Literal;
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
-	QVariantHomogenousList list("header_section_list", "section");
+	QVariantHomogenousList header_section_list("header_section_list", "section");
 
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
-	map.insert("header_num_sections", columnCount());
+	map.insert(XMLTAG_HEADER_NUM_SECTIONS, columnCount());
 	for(int i = 0; i < columnCount(); ++i)
 	{
-		list.push_back(data(i));
+		header_section_list.push_back(data(i));
 	}
-	map.insert("header_section_list", list);
+	map.insert("header_section_list", header_section_list);
 
 	qDb() << M_NAME_VAL(childCount());
 	map.insert("num_child_items", childCount());
@@ -98,8 +109,8 @@ QVariant AbstractTreeModelHeaderItem::toVariant() const
 	for(int i = 0; i < childCount(); ++i)
 	{
 		const AbstractTreeModelItem* child = this->child(i);
-		//child_list.push_back(child->toVariant());
-		list_push_back_or_warn(child_list, "child", child);
+		child_list.push_back(child->toVariant());
+//		list_push_back_or_warn(child_list, "child", child);
 	}
 
 	// Add list of child tree items to our QVariantMap.
@@ -118,7 +129,7 @@ void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
 
 	// Read the number of header sections...
-	auto header_num_sections = map.value("header_num_sections").toInt();
+	auto header_num_sections = map.value(XMLTAG_HEADER_NUM_SECTIONS).toInt();
 	// ... and insert that many default-constructed columns to this HeaderItem.
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
