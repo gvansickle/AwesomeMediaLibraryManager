@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -21,9 +21,24 @@
 
 #include "TrackMetadata.h"
 
+// Std C++
+#include <string>
+#include <memory>
+
+// Libcue.
+extern "C" {
+#include <libcue/libcue.h>
+#include <libcue/cd.h>
+#include <libcue/cdtext.h>
+} // END extern C
+
 /// Ours, Qt5/KF5-related
 #include <utils/TheSimplestThings.h>
 #include <utils/RegisterQtMetatypes.h>
+
+#include "AMLMTagMap.h"
+
+
 
 
 AMLM_QREG_CALLBACK([](){
@@ -31,10 +46,117 @@ AMLM_QREG_CALLBACK([](){
     qRegisterMetaType<TrackMetadata>();
     ;});
 
-TrackMetadata::TrackMetadata()
-{
+//Q_DECLARE_METATYPE(std::string);
 
+
+using strviw_type = QLatin1Literal;
+
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_TRACK_META_TRACK_NUM, m_track_number) \
+	X(XMLTAG_TRACK_META_LEN_PREGAP, m_length_pre_gap) \
+	X(XMLTAG_TRACK_META_START_FRAMES, m_start_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_FRAMES, m_length_frames) \
+	X(XMLTAG_TRACK_META_LENGTH_POST_GAP, m_length_post_gap) \
+	X(XMLTAG_TRACK_META_ISRC, m_isrc) \
+	X(XMLTAG_TRACK_META_IS_PART_OF_GAPLESS_SET, m_is_part_of_gapless_set) \
+	X(XMLTAG_TRACK_PTI_VALUES, m_tm_track_pti)
+
+#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+	X(XMLTAG_TRACK_META_INDEXES, m_indexes)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
+#undef X
+
+
+std::unique_ptr<TrackMetadata> TrackMetadata::make_track_metadata(const Track* track_ptr, int track_number)
+{
+	auto retval = std::make_unique<TrackMetadata>();
+
+	auto& tm = *retval;
+
+
+	// The non-CD-Text info.
+	tm.m_track_number = track_number;
+
+	tm.m_track_filename = track_get_filename(track_ptr);
+	tm.m_isrc = tostdstr(track_get_isrc(track_ptr));
+
+	// The track's audio data location info, as parsed by libcue.
+	tm.m_length_pre_gap = track_get_zero_pre(track_ptr);
+	tm.m_start_frames = track_get_start(track_ptr);
+	tm.m_length_frames = track_get_length(track_ptr);
+	tm.m_length_post_gap = track_get_zero_post(track_ptr);
+
+	// The track's indexes, which should simply duplicate the above.
+	for(auto i = 0; i<=99; ++i)
+	{
+		//qDebug() << "Reading track index:" << i;
+		long ti = track_get_index(track_ptr, i);
+
+		if((ti==-1) && (i>1))
+		{
+			// Found the last index.
+			break;
+		}
+		else
+		{
+			TrackIndex track_index;
+			track_index.m_index_num = std::to_string(i);
+			track_index.m_index_frames = ti;
+			tm.m_indexes.push_back(track_index);
+		}
+	}
+
+#if 0 /// @todo Do we still need to clean up the last track's length?
+	if(tm.m_length_frames < 0)
+	{
+		// This is the last track.  We have to calculate the length from the total recording time minus the start offset.
+		Q_ASSERT(m_length_in_milliseconds > 0);
+		tm.m_length_frames = (75.0*double(m_length_in_milliseconds)/1000.0) - tm.m_start_frames;
+	}
+#endif
+
+
+	// Get the per-track CD-Text info.
+	const Cdtext* track_cdtext = track_get_cdtext(track_ptr);
+
+	if(track_cdtext != nullptr)
+	{
+		// Get the track's Pack Type Indicator info as an AMLMTagMap.
+		for(int pti = Pti::PTI_TITLE; pti < Pti::PTI_END; pti++)
+		{
+			const char* tcdt_value = cdtext_get((Pti)pti, track_cdtext);
+			if(tcdt_value != nullptr)
+			{
+				std::string key_str = cdtext_get_key(pti, 1);
+				tm.m_tm_track_pti.insert(key_str, tcdt_value);
+			}
+		}
+	}
+
+	if(tm.m_tm_track_pti.find("TITLE") != tm.m_tm_track_pti.cend())
+	{
+		qDb() << "TRACK CDTEXT INFO:" << toqstr(tm.m_tm_track_pti.find("TITLE")->second);
+	}
+
+	// Get the Pack Type Indicator data.
+#define X(id) retval->m_ ## id = tostdstr(cdtext_get( id , track_cdtext ));
+	PTI_STR_LIST(X)
+#undef X
+
+M_TODO("REPLACE THE ABOVE");
+//	/// @todo Get the track's Pack Type Indicator info as an AMLMTagMap.
+//#define X(id) tm.m_tm_track_pti.insert( # id, tostdstr(cdtext_get( id , track_cdtext )));
+//	PTI_STR_LIST(X)
+//#undef X
+
+
+	return retval;
 }
+
 
 std::string TrackMetadata::toStdString() const
 {
@@ -47,18 +169,61 @@ std::string TrackMetadata::toStdString() const
 	return retval;
 }
 
+
 QVariant TrackMetadata::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
-	map.insert("TrackMetadataTEST", "DUMMY");
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+	// m_indexes
+	QVariantHomogenousList index_list("m_indexes", "index");
+	for(const TrackIndex& index : m_indexes)
+	{
+		list_push_back_or_die(index_list, index);
+	}
+
+	map_insert_or_die(map, XMLTAG_TRACK_META_INDEXES, index_list);
 
 	return map;
 }
 
 void TrackMetadata::fromVariant(const QVariant& variant)
 {
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, & (member_field) );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+M_TODO("REMOVE");
+#define X(id) m_ ## id = map.value( # id ).value<decltype( m_ ## id )>();
+	PTI_STR_LIST(X);
+#undef X
+
+	// Load the index list.
+	QVariantHomogenousList index_list("m_indexes", "index");
+	map_read_field_or_warn(map, XMLTAG_TRACK_META_INDEXES, &index_list);
+
+	// Read the m_indexes TrackIndex'es out of the list.
+	// This is a QList<QVariant> where the qvar holds QVariantInsertionOrderedMap's.
+	for(const QVariant& qvar_index_entry : qAsConst(index_list))
+	{
+		Q_ASSERT(qvar_index_entry.isValid());
+		Q_ASSERT(qvar_index_entry.canConvert<QVariantInsertionOrderedMap>());
+
+		QVariantInsertionOrderedMap qvmap_index_entry = qvar_index_entry.value<QVariantInsertionOrderedMap>();
+		TrackIndex ti;
+		ti.fromVariant(qvmap_index_entry);
+		m_indexes.push_back(ti);
+	}
+
+	if(index_list.size() != m_indexes.size())
+	{
+		qWr() << "m_indexes size mismatch:" << index_list.size() << "!=" << m_indexes.size();
+	}
 }
 
 
@@ -67,8 +232,52 @@ QDebug operator<<(QDebug dbg, const TrackMetadata &tm)
     QDebugStateSaver saver(dbg);
 
 #define X(id) dbg << "TrackMetadata(" << #id ":" << tm.m_ ## id << ")\n";
-    PTI_STR_LIST
+    PTI_STR_LIST(X)
 #undef X
 
     return dbg;
+}
+
+#define M_TRACK_INDEX_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_TRACK_INDEX_NUM, "index_num", m_index_num) \
+	X(XMLTAG_TRACK_INDEX_FRAMES, "index_frames", m_index_frames)
+
+/// Strings to use for the tags.
+#define X(field_tag, field_tag_str, member_field) static const strviw_type field_tag ( field_tag_str );
+	M_TRACK_INDEX_DATASTREAM_FIELDS(X);
+#undef X
+
+//struct MapEntry
+//{
+//	template <class T>
+//	MapEntry(const char* str, T m_ptr_to_member);
+//	const char* m_str;
+////	const std::any m_ptr_to_member;
+//	const T m_ptr_to_member;
+
+//	auto get_ptr_to_member() -> decltype(m_ptr_to_member) { return std::any_cast<decltype(m_ptr_to_member)>(m_ptr_to_member); };
+//};
+
+//static const MapEntry f_map[] = {
+//	{"index_num", &TrackIndex::m_index_num},
+//	{"index_frames", &TrackIndex::m_index_frames}
+//};
+
+QVariant TrackIndex::toVariant() const
+{
+	QVariantInsertionOrderedMap map;
+
+	map_insert_or_die(map, XMLTAG_TRACK_INDEX_NUM, m_index_num);
+	map_insert_or_die(map, XMLTAG_TRACK_INDEX_FRAMES, m_index_frames);
+
+	return map;
+}
+
+void TrackIndex::fromVariant(const QVariant& variant)
+{
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+
+	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_NUM, &m_index_num);
+	map_read_field_or_warn(map, XMLTAG_TRACK_INDEX_FRAMES, &m_index_frames);
+
 }

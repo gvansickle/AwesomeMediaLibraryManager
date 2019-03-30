@@ -29,14 +29,14 @@ set(HEADER_FILES_SRC_FUTURE
 	grvs_functional.hpp
 	guideline_helpers.h
 	InsertionOrderedMap.h
-	QVariantHomogenousList.h
+	overloaded.h
+	preproc.h
 	Unit.hpp
 	)
 set(SOURCE_FILES_SRC_FUTURE
 	function_traits.cpp
 	guideline_helpers.cpp
 	InsertionOrderedMap.cpp
-	QVariantHomogenousList.cpp
 	)
 
 target_sources_local(future

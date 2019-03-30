@@ -22,11 +22,13 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QFileDevice>
-#include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
+//#include <QJsonArray>
+//#include <QJsonDocument>
+//#include <QJsonObject>
 
+// Ours
 #include <utils/DebugHelpers.h>
+#include <future/preproc.h>
 
 void Library::clear()
 {
@@ -134,127 +136,88 @@ qint64 Library::getNumPopulatedEntries() const
 	return m_num_populated;
 }
 
-void Library::writeToJson(QJsonObject& jo, bool no_items) const
-{
-	// Write the Library's info.
-	jo["write_timestamp_ms"] = QDateTime::currentMSecsSinceEpoch();
-	jo["write_timestamp_utc"] = QDateTime::currentDateTimeUtc().toString();
-	jo["rootUrl"] = m_root_url.toString();
-	jo["m_num_unpopulated"] = m_num_unpopulated;
-	jo["m_num_populated"] = m_num_populated;
-	jo["len_lib_entries"] = (qint64)m_lib_entries.size();
-	if(!no_items)
-	{
-		// Collect up the LibraryEntry's.
-		QJsonArray array;
-		for(const auto& e : m_lib_entries)
-		{
-			QJsonObject qjsonobject;
-			e->writeToJson(qjsonobject);
-			array.append(qjsonobject);
-		}
-		//print(array)
-		jo["LibraryEntries"] = array;
-	}
-}
 
-void Library::readFromJson(const QJsonObject& jo)
-{
-	clear();
-	m_root_url = QUrl(jo["rootUrl"].toString());
-	m_num_unpopulated = jo["m_num_unpopulated"].toInt();
-	m_num_populated = jo["m_num_populated"].toInt();
-	int len_lib_entries = jo["len_lib_entries"].toInt();
-	// Read in the library entries.
-	QJsonArray jsonarray = jo["LibraryEntries"].toArray();
-	int len_jsonarray = jsonarray.size();
-	if(len_jsonarray != len_lib_entries)
-	{
-		qCritical() << QString("len_jsonarray(%1) != len_lib_entries(%2)").arg(len_jsonarray).arg(len_lib_entries);
-	}
-	if(jsonarray.size() > 0)
-	{
-		for(qint64 i = 0; i<jsonarray.size(); ++i)
-		{
-			///qDebug() << "Reading LibraryEntry:" << i;
-			auto libentryobj = jsonarray[i].toObject();
-			auto libentry = std::make_shared<LibraryEntry>();
-			libentry->readFromJson(libentryobj);
-			m_lib_entries.push_back(libentry);
-		}
-		ptrdiff_t read_num_lib_entries = m_lib_entries.size();
-		if(read_num_lib_entries != len_lib_entries)
-		{
-			qCritical() << QString("read_num_lib_entries(%1) != len_lib_entries(%2)").arg(read_num_lib_entries).arg(len_lib_entries);
-		}
-	}
-}
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_ROOT_URL, m_root_url) \
+	X(XMLTAG_NUM_UNPOP, m_num_unpopulated) \
+	X(XMLTAG_NUM_POP, m_num_populated)
 
-void Library::serializeToFile(QFileDevice& file) const
-{
-	QJsonObject lib_object;
-	writeToJson(lib_object);
-	QJsonDocument saveDoc(lib_object);
-	file.write(saveDoc.toJson());
-}
+#define M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X) \
+	X(XMLTAG_LIBRARY_ENTRIES, m_lib_entries)
 
-void Library::deserializeFromFile(QFileDevice& file)
-{
-	Q_ASSERT(nullptr == "NOT IMPLEMENTED");
-}
 
-/// @aside ...uhhhhhhhhh........
-using strviw_type = QString;
+/// Strings to use for the tags.
+using strviw_type = QLatin1String;
+
+#define X(field_tag, member_field) static const strviw_type field_tag( # member_field );
+	M_DATASTREAM_FIELDS(X);
+	M_DATASTREAM_FIELDS_SPECIAL_HANDLING(X);
+#undef X
 static const strviw_type XMLTAG_WRITE_TIMESTAMP_MS("write_timestamp_ms");
 static const strviw_type XMLTAG_WRITE_TIMESTAMP_UTC("write_timestamp_utc");
-static const strviw_type XMLTAG_LIBRARY_ROOT_URL("library_root_url");
-static const strviw_type XMLTAG_NUM_UNPOP("m_num_unpopulated");
-static const strviw_type XMLTAG_NUM_POP("m_num_populated");
 static const strviw_type XMLTAG_NUM_LIBRARY_ENTRIES("num_lib_entries");
-static const strviw_type XMLTAG_LIBRARY_ENTRIES("library_entries");
-//static const std::string_view XMLTAG_LIBRARY("library");
+
 
 QVariant Library::toVariant() const
 {
+qDb() << "ENTER";
+
 	QVariantInsertionOrderedMap map;
 
-	// Write the Library's info.
-	map.insert(XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+	// Write some derived info re: the Library.
+//	map.insert(XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
+	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
 	map.insert(XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc()/*.toString()*/);
-	map.insert(XMLTAG_LIBRARY_ROOT_URL, m_root_url);
-	map.insert(XMLTAG_NUM_UNPOP, m_num_unpopulated);
-	map.insert(XMLTAG_NUM_POP, m_num_populated);
-	map.insert(XMLTAG_NUM_LIBRARY_ENTRIES, (qint64)m_lib_entries.size());
+	map.insert(XMLTAG_NUM_LIBRARY_ENTRIES, static_cast<qint64>(m_lib_entries.size()));
 	if(!m_lib_entries.empty())
 	{
 		// Serialize the LibraryEntry's.
-		QVariantList list;
+		//QVariantHomogenousList list("", "library_entry");
+		QVariantHomogenousList list("m_lib_entries", "library_entry");
+
 		for(const auto& e : m_lib_entries)
 		{
-			list.append(e->toVariant());
+//			list.append(e->toVariant());
+			list_push_back_or_die(list, *e);
 		}
-		map.insert(XMLTAG_LIBRARY_ENTRIES, list);
+		map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
 	}
 
-	return QVariant::fromValue(map);
+qDb() << "EXIT, wrote:" << m_lib_entries.size() << "libentries";
+
+	return map; //QVariant::fromValue(map);
 }
 
 void Library::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	m_root_url = map.value(XMLTAG_LIBRARY_ROOT_URL).value<QUrl>();
-	m_num_unpopulated = map.value(XMLTAG_NUM_UNPOP).value<qint64>();
-	m_num_populated = map.value(XMLTAG_NUM_POP).value<qint64>();
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+//	m_root_url = map.value(XMLTAG_LIBRARY_ROOT_URL).value<QUrl>();
+//	m_num_unpopulated = map.value(XMLTAG_NUM_UNPOP).value<qint64>();
+//	m_num_populated = map.value(XMLTAG_NUM_POP).value<qint64>();
 	qint64 num_lib_entries = map.value(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
 
-	QVariantList list = map.value(XMLTAG_LIBRARY_ENTRIES).toList();
+	//QVariantHomogenousList list("library_entries", "library_entry");
+	//map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
+	QVariant qvar_list = map.value(XMLTAG_LIBRARY_ENTRIES);
+	Q_ASSERT(qvar_list.isValid());
+	QVariantHomogenousList list = qvar_list.value<QVariantHomogenousList>();
 	for(const QVariant& e : list)
 	{
+		Q_ASSERT(e.isValid());
 		std::shared_ptr<LibraryEntry> libentry = std::make_shared<LibraryEntry>();
 		libentry->fromVariant(e);
 		m_lib_entries.push_back(libentry);
 	}
+	qDb() << "NUM LIB ENTRIES:" << m_lib_entries.size() << "VS:" << num_lib_entries;
 	AMLM_WARNIF(m_lib_entries.size() != num_lib_entries);
 }
 

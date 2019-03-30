@@ -28,7 +28,7 @@
 // Ours
 #include <logic/serialization/ISerializable.h>
 
-class QJsonObject;
+#if OBSOLETE
 
 class MetadataFromCache : public MetadataAbstractBase, public virtual ISerializable
 {
@@ -40,8 +40,6 @@ public:
 	bool isFromCache() const override { return true; }
 
 	bool read(const QUrl /*url*/&) override { Q_ASSERT(0); return false; }
-
-	void readFromJson(const QJsonObject& jo);
 
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
@@ -58,5 +56,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(MetadataFromCache);
+
+#endif //OBSOLETE
 
 #endif // METADATAFROMCACHE_H

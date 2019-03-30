@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -33,25 +33,28 @@
 #include <src/utils/QtHelpers.h>
 
 // Ours
+#include <future/guideline_helpers.h>
 #include "ExtMimeType.h"
 #include "Metadata.h"
 #include "src/utils/Fraction.h"
 #include "serialization/ISerializable.h"
 
-class LibraryEntry : public ISerializable
+
+class LibraryEntry : public std::enable_shared_from_this<LibraryEntry>, public virtual ISerializable
 {
 public:
-    LibraryEntry() = default;
-	LibraryEntry(const LibraryEntry& other) = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(LibraryEntry);
 	~LibraryEntry() override = default;
 
     explicit LibraryEntry(const QUrl& m_url);
 
     static std::shared_ptr<LibraryEntry> fromUrl(const QUrl& fileurl = QUrl());
 
-	std::vector<std::shared_ptr<LibraryEntry> > populate(bool force_refresh = false);
+	void populate(bool force_refresh = false);
+	std::vector<std::shared_ptr<LibraryEntry>> split_to_tracks();
 
-	std::shared_ptr<LibraryEntry> refresh_metadata();
+	// Same as populate().
+	void refresh_metadata();
 
 	bool isPopulated() const { return m_is_populated; }
 	bool isError() const { return m_is_error; }
@@ -73,8 +76,6 @@ public:
 
 	/// @name Serialization
 	/// @{
-	void writeToJson(QJsonObject& jo) const;
-	void readFromJson(QJsonObject& jo);
 
 	/// @name ISerializable interface
 	/// @{
@@ -86,6 +87,7 @@ public:
 
 	/// @} // END ISerializable
 
+	QTH_DECLARE_FRIEND_QDEBUG_OP(LibraryEntry);
     QTH_FRIEND_QDATASTREAM_OPS(LibraryEntry);
 
 	/// @} // END Serialization
@@ -93,15 +95,18 @@ public:
 	/// @todo Do we want to return some kind of actual Image class here instead?
 	QByteArray getCoverImageBytes();
 
-	QVariantMap getAllMetadata() const;
+	/// @todo What are we expecting here for semantics?
+	AMLMTagMap getAllMetadata() const;
 
 	Fraction get_pre_gap_offset_secs() const { return m_pre_gap_offset_secs; }
 	Fraction get_offset_secs() const { return m_offset_secs; }
 	Fraction get_length_secs() const { return m_length_secs; }
 
 	Metadata metadata() const { return m_metadata; }
+	Metadata track_cuesheet_metadata() const;
 
 	QStringList getMetadata(QString key) const;
+
 
 protected:
 
@@ -117,17 +122,20 @@ protected:
 
     ExtMimeType m_mime_type;
 
+    /// @todo Is all the below soon to be obsolete?
 	// Flag if this is a subtrack of a single-file album rip.
 	// See https://xiph.org/flac/format.html#metadata_block_cuesheet
 	bool m_is_subtrack = false;
 
 	// The track number of this track on the CD.
-	qint64 m_track_number = 0;
+	qint64 m_track_number {0};
 	// Total number of tracks on the CD.
-	qint64 m_total_track_number = 0;
+	qint64 m_total_track_number {0};
 
 	Fraction m_pre_gap_offset_secs;// = 0;
+	/// Start of the audio, in secs.
 	Fraction m_offset_secs; // = 0;
+	/// Length of the audio in secs.
 	Fraction m_length_secs; // = 0;
 
 	Metadata m_metadata;
@@ -138,7 +146,10 @@ Q_DECLARE_METATYPE(LibraryEntry);
 Q_DECLARE_METATYPE(LibraryEntry*);
 Q_DECLARE_SMART_POINTER_METATYPE(std::shared_ptr);
 Q_DECLARE_METATYPE(std::shared_ptr<LibraryEntry>);
+Q_DECLARE_METATYPE(std::vector<std::shared_ptr<LibraryEntry>>);
 Q_DECLARE_METATYPE(QSharedPointer<LibraryEntry>);
+
+QTH_DECLARE_QDEBUG_OP(LibraryEntry);
 
 inline QDebug operator<<(QDebug dbg, const std::shared_ptr<LibraryEntry> &libentry)
 {

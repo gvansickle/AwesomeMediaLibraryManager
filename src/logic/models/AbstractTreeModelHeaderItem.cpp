@@ -75,45 +75,61 @@ int AbstractTreeModelHeaderItem::columnCount() const
 	return m_column_specs.size();
 }
 
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_HEADER_NUM_SECTIONS, header_num_sections)
+
+using strviw_type = QLatin1Literal;
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+
 QVariant AbstractTreeModelHeaderItem::toVariant() const
 {
-	QVariantMap map;
-	QVariantList list;
+	QVariantInsertionOrderedMap map;
+	QVariantHomogenousList header_section_list("header_section_list", "section");
 
 	// Header info.
 	/// @todo Or is some of this really model info?  Children are.
-	map.insert("header_num_sections", columnCount());
+	map.insert(XMLTAG_HEADER_NUM_SECTIONS, columnCount());
 	for(int i = 0; i < columnCount(); ++i)
 	{
-		list.push_back(data(i));
+		header_section_list.push_back(data(i));
 	}
-	map.insert("header_section_list", list);
+	map.insert("header_section_list", header_section_list);
 
 	qDb() << M_NAME_VAL(childCount());
 	map.insert("num_child_items", childCount());
 
-	// Create a QVariantList of our children.
-	list.clear();
+	// Create a list of our children.
+	QVariantHomogenousList child_list("child_list", "child");
+	child_list.clear();
 	for(int i = 0; i < childCount(); ++i)
 	{
 		const AbstractTreeModelItem* child = this->child(i);
-		list.push_back(child->toVariant());
+		child_list.push_back(child->toVariant());
+//		list_push_back_or_warn(child_list, "child", child);
 	}
 
 	// Add list of child tree items to our QVariantMap.
-	map.insert("child_node_list", list);
+//	map.insert("child_node_list", list);
+	map_insert_or_die(map, "child_node_list", child_list);
 
 	return map;
 }
 
 void AbstractTreeModelHeaderItem::fromVariant(const QVariant &variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
 
-	QVariantList header_section_list = map.value("header_section_list").toList();
+	QVariantHomogenousList header_section_list("header_section_list", "section");
+	header_section_list = map.value("header_section_list").value<QVariantHomogenousList>();
 
 	// Read the number of header sections...
-	auto header_num_sections = map.value("header_num_sections").toInt();
+	auto header_num_sections = map.value(XMLTAG_HEADER_NUM_SECTIONS).toInt();
 	// ... and insert that many default-constructed columns to this HeaderItem.
 	// Note that the AbstractTreeModel forwards it's insertColumns() call to here, but it handles the begin/end signaling.
 	// So... I think we need to go through that mechanism if we're already in a model.
@@ -133,7 +149,7 @@ M_WARNING("NEED TO GO THROUGH MODEL HERE?");
 	/// @todo This is a QVariantList containing <item>/QVariantMap's, each of which
 	/// contains a single <scan_res_tree_model_item type="QVariantMap">, which in turn
 	/// contains a single <dirscanresult>/QVariantMap.
-	QVariantList child_list = map.value("child_node_list").toList();
+	QVariantHomogenousList child_list = map.value("child_node_list").value<QVariantHomogenousList>();
 
 
 	// We'll break this into two phases:

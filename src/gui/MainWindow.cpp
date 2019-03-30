@@ -278,7 +278,7 @@ void MainWindow::init()
 	////// Connect up signals and slots.
 	createConnections();
 
-	setWindowTitle(qApp->applicationDisplayName());
+	setWindowTitle(amlmApp->applicationDisplayName());
 
 	setUnifiedTitleAndToolBarOnMac(true);
 
@@ -942,7 +942,7 @@ void MainWindow::createToolBars()
 	QComboBox* styleComboBox = new QComboBox;
 	styleComboBox->addItems(QStyleFactory::keys());
     // Set it to the current style.
-	QString cur_style = qApp->style()->objectName();
+	QString cur_style = amlmApp->style()->objectName();
 	styleComboBox->setCurrentIndex(styleComboBox->findText(cur_style, Qt::MatchFixedString));
 	m_settingsToolBar->addWidget(styleComboBox);
 	connect(styleComboBox, static_cast<void(QComboBox::*)(const QString&)>(&QComboBox::activated), this, &MainWindow::changeStyle);
@@ -1042,7 +1042,7 @@ void MainWindow::initRootModels()
 void MainWindow::createConnections()
 {
 	/// @todo
-    connect(qApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
+	connect(amlmApp, &QApplication::focusChanged, this, &MainWindow::onFocusChanged);
 
     // Connect player controls up to player.
 	connectPlayerAndControls(m_player, m_controls);
@@ -1302,7 +1302,7 @@ MDIModelViewPair MainWindow::findSubWindowModelViewPair(QUrl url) const
 {
     MDIModelViewPair retval;
     auto view = findSubWindowView(url);
-    if(view)
+	if(view)
     {
 		// Found an existing View, which means it's attached to an existing Model.
         retval.m_view = view;
@@ -1429,94 +1429,45 @@ void MainWindow::readLibSettings(QSettings& settings)
 {
 	int num_libs;
 
-	if(false) /// OLD JSON
+	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
+	qIn() << "###### READING XML DB:" << database_filename;
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+
+	SerializableQVariantList list("library_list", "library_list_item");
+
+	xmlser.load(list, QUrl::fromLocalFile(database_filename));
+
+	qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
+
+//	for(int i = 0; i < list.size(); ++i)
+	for(const auto& list_entry : list)
 	{
-		num_libs = settings.beginReadArray("libraries");
-		qInfo() << "Reading" << num_libs << "libraries...";
+		QVariant qv = list_entry;//list[i];
+		Q_ASSERT(qv.isValid());
+		Q_ASSERT(!qv.isNull());
+		LibraryModel* lmp = new LibraryModel(this);
+		lmp->fromVariant(qv);
 
-		for(int i = 0; i < num_libs; ++i)
+		Q_ASSERT(lmp->getLibRootDir().isValid());
+
+		if(!lmp)
 		{
-			QPointer<LibraryModel> libmodel;
-
-			settings.setArrayIndex(i);
-
-			QByteArray jdoc_str = settings.value("asJson").toByteArray();
-
-			//		qDebug() << "jdoc_str=" << jdoc_str;
-			QJsonDocument jsondoc = QJsonDocument::fromJson(jdoc_str);
-			//		qDebug() << "Jsondoc:" << jsondoc.toJson();
-			//		qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
-
-			libmodel = LibraryModel::constructFromJson(jsondoc.object(), this);
-
-			if(!libmodel)
-			{
-				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
-									  QMessageBox::Ok);
-			}
-			else
-			{
-				MDIModelViewPair mvpair;
-				mvpair.m_model = libmodel;
-				mvpair.m_model_was_existing = false;
-
-				addChildMDIModelViewPair_Library(mvpair);
-			}
+			QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
+								  QMessageBox::Ok);
 		}
-		settings.endArray();
-	}
-	if(true) /// XML
-	{
-M_TODO("INTERIM, CONVERT OVER TO THIS");
-
-		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
-
-		qIn() << "###### READING XML DB:" << database_filename;
-
-		XmlSerializer xmlser;
-		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-
-		SerializableQVariantList list("library_list", "library_list_item");
-
-		xmlser.load(list, QUrl::fromLocalFile(database_filename));
-
-		qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
-
-		for(int i = 0; i < list.size(); ++i)
+		else
 		{
-//			QPointer<LibraryModel> libmodel;
+			MDIModelViewPair mvpair;
+			mvpair.m_model = lmp;
+			mvpair.m_model_was_existing = false;
 
-//			libmodel = new LibraryModel(this);
-
-			// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
-//			LibraryModel* lmp = m_libmodels[i];
-//			QVariant qv = lmp->toVariant();
-//			list.push_back(qv);
-
-			QVariant qv = list[i];
-			Q_ASSERT(qv.isValid());
-			Q_ASSERT(!qv.isNull());
-			LibraryModel* lmp = new LibraryModel(this);
-			lmp->fromVariant(qv);
-
-			Q_ASSERT(lmp->getLibRootDir().isValid());
-
-			if(!lmp)
-			{
-				QMessageBox::critical(this, qApp->applicationDisplayName(), "Failed to open library",
-									  QMessageBox::Ok);
-			}
-			else
-			{
-				MDIModelViewPair mvpair;
-				mvpair.m_model = lmp;
-				mvpair.m_model_was_existing = false;
-
-				addChildMDIModelViewPair_Library(mvpair);
-			}
+			addChildMDIModelViewPair_Library(mvpair);
 		}
-		qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
 	}
+	qIn() << "###### READ AND CONVERTED XML DB:" << database_filename;
 }
 
 void MainWindow::writeSettings()
@@ -1539,52 +1490,28 @@ void MainWindow::writeLibSettings(QSettings& settings)
 	qDebug() << "writeLibSettings() start";
 
 	// First it seems we have to remove the array.
+	/// @todo Remove, unneeded?
 	settings.remove("libraries");
 
-	settings.beginWriteArray("libraries");
-	qDebug() << "Writing"  << m_libmodels.size() << "libraries";
+	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+
+	qIn() << "###### WRITING XML DB:" << database_filename;
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+
+	SerializableQVariantList list("library_list", "library_list_item");
 	for(size_t i = 0; i < m_libmodels.size(); ++i)
 	{
-		qDebug() << "Writing Model #:" << i;
-		settings.setArrayIndex(i);
-
-		// Serialize the library to a QJsonObject.
-		QJsonObject lib_object;
-		m_libmodels[i]->writeToJson(lib_object);
-		// Create a QJsonDocument from the QJsonObject.
-		QJsonDocument jsondoc(lib_object);
-//		qDebug() << "LIB AS JSON:" << jsondoc.toJson();
-		// Convert the QJSonDocument to a QByteArray.
-		QByteArray jdoc_bytes = jsondoc.toJson();
-
-		// Finally write the QJsonDocument to the QSettings array.
-		settings.setValue("asJson", jdoc_bytes);
+		// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
+		LibraryModel* lmp = m_libmodels[i];
+		QVariant qv = lmp->toVariant();
+		list.push_back(qv);
 	}
-	settings.endArray();
 
-	if(true) /// XML
-	{
-M_TODO("INTERIM, CONVERT OVER TO THIS");
-		QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
+	xmlser.save(list, QUrl::fromLocalFile(database_filename), "the_library_model_list");
 
-		qIn() << "###### WRITING XML DB:" << database_filename;
-
-		XmlSerializer xmlser;
-		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-
-		SerializableQVariantList list("library_list", "library_list_item");
-		for(size_t i = 0; i < m_libmodels.size(); ++i)
-		{
-			// m_libmodels are pointers to QObject-derived, we need to push into the list manually.
-			LibraryModel* lmp = m_libmodels[i];
-			QVariant qv = lmp->toVariant();
-			list.push_back(qv);
-		}
-
-		xmlser.save(list, QUrl::fromLocalFile(database_filename), "the_library_model_list");
-
-		qIn() << "###### WROTE XML DB:" << database_filename;
-	}
+	qIn() << "###### WROTE XML DB:" << database_filename;
 
 	qDebug() << "writeLibSettings() end";
 }

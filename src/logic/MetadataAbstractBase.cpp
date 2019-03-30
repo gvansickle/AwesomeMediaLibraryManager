@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -96,6 +96,8 @@ static std::string reverse_lookup(const std::string& native_key)
 	return native_key;
 }
 
+#if OBSOLETE
+
 std::string MetadataAbstractBase::operator[](const std::string& key) const
 {
 	std::string native_key_string;
@@ -146,7 +148,7 @@ TagMap MetadataAbstractBase::filled_fields() const
 		for(const std::pair<const std::string, std::string>& key_val_pairs : m_tag_map) ///@todo EXP m_pm)
 		{
 //            qDebug() << "Native Key:" << key_val_pairs.first;
-			std::string key = reverse_lookup(key_val_pairs.first); ///@todo EXP.toCString());
+			std::string key = reverse_lookup(key_val_pairs.first);
 //            qDebug() << "Normalized key:" << key;
 
 			if(key.empty() || key.length() == 0)
@@ -212,7 +214,7 @@ TrackMetadata MetadataAbstractBase::track(int i) const
 }
 
 /// @aside ...uhhhhhhhhh........
-using strviw_type = QString;
+using strviw_type = QLatin1Literal;
 
 #define M_DATASTREAM_FIELDS(X) \
 	/*X(XMLTAG_AUDIO_FILE_TYPE, m_audio_file_type)*/ \
@@ -249,7 +251,7 @@ QVariant MetadataAbstractBase::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
-#define X(field_tag, member_field)   map.insert( field_tag , QVariant::fromValue<decltype(member_field)>( member_field ) );
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
@@ -257,19 +259,23 @@ QVariant MetadataAbstractBase::toVariant() const
 //	Q_ASSERT(qvar_tm.isValid());
 //	map.insert(XMLTAG_TM_M_TAG_MAP, m_tag_map.toVariant());
 
-#define X(field_tag, member_field) map.insert( field_tag , member_field . toVariant());
+#define X(field_tag, member_field) map.insert( field_tag , (member_field) . toVariant());
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
 	// Add the track list to the return value.
 	QVariantInsertionOrderedMap qvar_track_map;
+	qDb() << "########### NUM TRACKS:" << m_tracks.size();
 	for(const auto& it : m_tracks)
 	{
 		// Using "track" prefix here because XML tags can't start with numbers.
-		qvar_track_map.insert(QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0')), it.second.toVariant());
+		QString track_num_str = QString("track%1").arg(it.first, 2, 10, QChar::fromLatin1('0'));
+		TrackMetadata tm = it.second;
+qDb() << "########### " << track_num_str << tm;
+		qvar_track_map.insert(track_num_str, tm.toVariant());
 	}
 
-	map.insert(XMLTAG_TRACKS, qvar_track_map);
+	map.insert(XMLTAG_TRACKS, QVariant::fromValue(qvar_track_map));
 
 	return map;
 }
@@ -284,19 +290,28 @@ void MetadataAbstractBase::fromVariant(const QVariant& variant)
 
 	QVariant qvar_tm = map.value(XMLTAG_TM_M_TAG_MAP);
 	Q_ASSERT(qvar_tm.isValid());
-//	Q_ASSERT(qvar_tm.canConvert<AMLMTagMap>());
 
-//	m_tag_map = qvar_tm.value<AMLMTagMap>();
 	m_tag_map.fromVariant(qvar_tm);
 
 #define X(field_tag, member_field) member_field . fromVariant(map.value(field_tag));
 	M_DATASTREAM_FIELDS_MAPS(X);
 #undef X
 
+	// Read in the track list.
+	QVariantInsertionOrderedMap qvar_track_map = map.value(XMLTAG_TRACKS).value<QVariantInsertionOrderedMap>();
+	for(const auto& it : qvar_track_map)
+	{
+		// 5 == len("track"). Using "track" prefix here because XML tags can't start with numbers.
+		qint64 track_num = std::stoll(tostdstr(it.first).substr(5));
+		TrackMetadata tm;
+		tm.fromVariant(it.second);
+		m_tracks.insert(std::make_pair(track_num, tm));
+	}
+
 	m_read_has_been_attempted = true;
 	m_is_error = false;
-
-	qDb() << M_ID_VAL(m_tag_map) << "Num Entries:" << m_tag_map.size();
 }
 
 #undef M_DATASTREAM_FIELDS
+
+#endif //OBSOLETE

@@ -76,25 +76,34 @@ int ScanResultsTreeModelItem::columnCount() const
 	return 3;
 }
 
+using strviw_type = QLatin1Literal;
+
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_DIRSCANRESULT, m_dsr)
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 QVariant ScanResultsTreeModelItem::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
 	/// @todo Will be more fields, justifying the map vs. value?
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
-	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT], m_dsr.toVariant());
-
-	/// @todo Make a list or something.
-//	map.insert(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0], toVariant(kv_pair_in_variant);
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 	// Children to variant list.
-	QVariantList vl;
+	QVariantHomogenousList vl("children", "child");
 	for(int i=0; i<childCount(); i++)
 	{
 		auto* child_ptr = child(i);
-		vl.append(child_ptr->toVariant());
+//		list_push_back_or_die(vl, child_ptr);
+		vl.push_back(child_ptr->toVariant());
 	}
 	map.insert("children", vl);
 
@@ -103,17 +112,19 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 
 void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-	auto dsr_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::DIRSCANRESULT]);
-	m_dsr.fromVariant(dsr_in_variant);
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
-	/// @todo Make a list or something.
-	auto kv_pair_in_variant = map.value(SRTMItemTagToXMLTagMap[SRTMItemTag::TEST_PAIR_0]);
-	m_dsr.fromVariant(kv_pair_in_variant);
-
-	/// @todo
-
+	// Children to variant list.
+	QVariantHomogenousList vl("children", "child");
+	map_read_field_or_warn(map, "children", &vl);
+//	for(const auto& ch : vl)
+//	{
+//		appendChild(ch.fromVariant());
+//	}
 }
 
 AbstractTreeModelItem *
@@ -204,25 +215,24 @@ int SRTMItem_LibEntry::columnCount() const
 
 QVariant SRTMItem_LibEntry::toVariant() const
 {
-	QVariantMap map;
+	QVariantHomogenousList list("library_entries", "m_library_entry");
 
-	/// @todo Will be more fields, justifying the map vs. value?
+//	list_push_back_or_die(list, "TEST_COL0", m_key);
+//	list_push_back_or_die(list, "TEST_COL1", m_val);
+
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
-
-//	map.insert("TEST_COL0", QVariant::fromValue(m_key));
-//	map.insert("TEST_COL1", QVariant::fromValue(m_val));
 
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)
 	{
-		map.insert("m_library_entry", m_library_entry->toVariant());
+		list_push_back_or_die(list, m_library_entry->toVariant());
 	}
 
-	return map;
+	return list;
 }
 
 void SRTMItem_LibEntry::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
 	/// @todo Incomplete.
 	Q_ASSERT(0);

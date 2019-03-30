@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2017, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -20,10 +20,10 @@
 // Object header
 #include "LibraryEntry.h"
 
+// Std C++
+#include <string>
+
 // Qt5
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QJsonArray>
 #include <QDataStream>
 #include <QUrlQuery>
 
@@ -66,45 +66,90 @@ std::shared_ptr<LibraryEntry> LibraryEntry::fromUrl(const QUrl &fileurl)
 	return retval;
 }
 
-std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_refresh)
+std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::split_to_tracks()
 {
-    // Populate the metadata.  Assumption is that all we have before calling this is the url.
-    // returns a list of LibraryEntry's, or this if m_url was not a multi-track file.
-
 	std::vector<std::shared_ptr<LibraryEntry>> retval;
+	auto file_metadata = m_metadata;
+
+	///qDebug() << "Track numbers:" << "???";
+
+	qDb() << M_ID_VAL(m_url);
+	qDb() << M_ID_VAL(m_total_track_number);
+	qDb() << M_ID_VAL(file_metadata.numTracks());
+
+	if(m_total_track_number == 0 || m_total_track_number == 1)
+	{
+		// Either unknown or only one track, return this.
+		retval.push_back(this->shared_from_this());
+	}
+	else
+	{
+		for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
+		{
+			TrackMetadata sheet_track = file_metadata.track(tn);
+			qDebug() << "Track number:" << sheet_track.m_track_number;
+
+			// Have the file_metadata object "split" itself and give us just the metadata as if there
+			// was only this track in the file.
+			Metadata track_metadata = file_metadata.get_one_track_metadata(tn);
+
+			/// @todo Scan indexes here?
+
+			m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
+			if(sheet_track.m_length_frames > 0)
+			{
+				// Not the last track.
+				m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
+			}
+			else
+			{
+				// Must be the last track, so there's no cue entry for the start of the next track,
+				// so we have to calculate the length manually.
+				/// @note We no longer have to do this here, this is done in the Metadata class on cue sheet read.
+				Q_ASSERT(0);
+			}
+
+
+			/// Create the new entry.
+			auto new_entry = std::make_shared<LibraryEntry>(*this);
+			new_entry->m_track_number = tn;
+
+			new_entry->m_total_track_number = file_metadata.numTracks();
+			new_entry->m_metadata = track_metadata;
+			new_entry->m_offset_secs = m_offset_secs;
+			new_entry->m_length_secs = m_length_secs;
+			new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
+			new_entry->m_is_populated = true;
+			new_entry->m_is_error = false;
+
+//			qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
+
+			retval.push_back(new_entry);
+		}
+	}
+	Q_ASSERT(retval.size() > 0);
+
+	return retval;
+}
+
+void LibraryEntry::populate(bool force_refresh)
+{
+	// Populate the file metadata.  Assumption is that all we have before calling this is the url.
+	// See split_to_tracks() for further handling of a multi-track file.
 
 	// Some sanity checks first.
 	if(!m_url.isValid())
 	{
         qWr() << "Invalid URL:" << m_url;
-		return retval;
 	}
     if(!force_refresh && isPopulated() )
 	{
 		// Nothing to do.
 		qDebug() << "Already populated.";
-		return retval;
 	}
 
-#if 0 /// @todo Look for an associated *.cue sheet file.
-	// Check for an associated cuesheet.
-	cue_name = re.sub(r"\.[\w]+$", r".cue", url_as_local)
-	cue_file: QFile = QFile(cue_name)
-	cue_file_exists = cue_file.exists()
-	sheet = None
-	try:
-		if audiofile.supports_cuesheet():
-			logger.debug("READING EMBEDDED CUESHEET")
-			sheet = audiofile.get_cuesheet()
-		elif cue_file_exists:
-			logger.debug("Trying to read separate cue sheet file")
-			sheet = audiotools.read_sheet(cue_name)
-	except audiotools.SheetException as e:
-		logger.warning("Exception trying to read cuesheet: {}".format(e))
-#endif
-
     // Get the MIME type.
-    auto mdb = amlmApp->mime_db();
+	auto* mdb = amlmApp->mime_db();
     m_mime_type = mdb->mimeTypeForUrl(m_url);
 
 	// Try to read the metadata of the file.
@@ -113,10 +158,8 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 	{
 		// Read failed.
 		qWarning() << "Can't get metadata for file '" << m_url << "'";
-		auto new_entry = std::make_shared<LibraryEntry>(*this);
-		new_entry->m_is_populated = true;
-		new_entry->m_is_error = true;
-		retval.push_back(new_entry);
+		m_is_populated = true;
+		m_is_error = true;
 	}
 	else
 	{
@@ -124,115 +167,34 @@ std::vector<std::shared_ptr<LibraryEntry>> LibraryEntry::populate(bool force_ref
 		{
 			// Couldn't load a cue sheet, this is probably a single-song file.
 //			qDebug() << "No cuesheet for file" << this->m_url;
-
-			auto new_entry = std::make_shared<LibraryEntry>(*this);
-			new_entry->m_metadata = file_metadata;
-			new_entry->m_length_secs = file_metadata.total_length_seconds();
-			new_entry->m_is_subtrack = false;
-			new_entry->m_is_populated = true;
-			new_entry->m_is_error = false;
-			retval.push_back(new_entry);
+			m_metadata = file_metadata;
+			m_length_secs = file_metadata.total_length_seconds();
+			m_is_subtrack = false;
+			m_is_populated = true;
+			m_is_error = false;
 		}
 		else
 		{
-			// We did get a cue sheet, could be more than one track in this file.
-
-			///qDebug() << "Track numbers:" << "???";
-
-			for(int tn = 1; tn <= file_metadata.numTracks(); ++tn)
-			{
-				TrackMetadata sheet_track = file_metadata.track(tn);
-				qDebug() << "Track number:" << sheet_track.m_track_number;
-
-				// Have the file_metadata object "split" itself and give us just the metadata as if there
-				// was only this track in the file.
-				Metadata track_metadata = file_metadata.get_one_track_metadata(tn);
-
-				/// @todo Scan indexes here?
-
-				m_offset_secs = Fraction(double(sheet_track.m_start_frames)/(75.0), 1);
-				if(sheet_track.m_length_frames > 0)
-				{
-					// Not the last track.
-					m_length_secs = Fraction(double(sheet_track.m_length_frames)/(75.0), 1);
-				}
-				else
-				{
-					// Must be the last track, so there's no cue entry for the start of the next track,
-					// so we have to calculate the length manually.
-					/// @note We no longer have to do this here, this is done in the Metadata class on cue sheet read.
-					Q_ASSERT(0);
-				}
-
-
-				/// Create the new entry.
-				auto new_entry = std::make_shared<LibraryEntry>(*this);
-				new_entry->m_track_number = tn;
-//M_WARNING("THIS IS ALWAYS 0")
-                new_entry->m_total_track_number = file_metadata.numTracks();
-                new_entry->m_metadata = track_metadata;
-				new_entry->m_offset_secs = m_offset_secs;
-				new_entry->m_length_secs = m_length_secs;
-				new_entry->m_is_subtrack = (file_metadata.numTracks() > 1);
-				new_entry->m_is_populated = true;
-				new_entry->m_is_error = false;
-
-//                qDb() << "LIBENTRY:" << tn << new_entry->getAllMetadata();
-
-				retval.push_back(new_entry);
-			}
+			// We did get a cue sheet, could be more than one track in this file,
+			// but we'll let the caller decide whether to split into tracks or not.
+			m_metadata = file_metadata;
+			/// Create the new entry.
+			m_track_number = -1; /// @todo DUMMY VAL
+			m_total_track_number = file_metadata.numTracks();
+			m_metadata = file_metadata;
+			m_offset_secs = Fraction(0,1);
+			m_length_secs = file_metadata.total_length_seconds();
+			m_is_subtrack = (file_metadata.numTracks() > 1);
+			m_is_populated = true;
+			m_is_error = false;
 		}
 	}
-
-	return retval;
 }
 
-std::shared_ptr<LibraryEntry> LibraryEntry::refresh_metadata()
+void LibraryEntry::refresh_metadata()
 {
-	std::shared_ptr<LibraryEntry> retval = nullptr;
-
-	// Some sanity checks first.
-	if(!m_url.isValid())
-	{
-		// Nothing to do.
-		qDebug() << "Invalid URL or already populated.";
-		return retval;
-	}
-
-	// Try to read the metadata of the file.
-	Metadata file_metadata = Metadata::make_metadata(m_url);
-	if(!file_metadata)
-	{
-		// Read failed.
-		qWarning() << "Can't get metadata for file" << m_url;
-		auto new_entry = std::make_shared<LibraryEntry>(*this);
-		new_entry->m_is_populated = true;
-		new_entry->m_is_error = true;
-		retval = new_entry;
-	}
-	else
-	{
-		if(!file_metadata.hasCueSheet())
-		{
-			// Couldn't load a cue sheet, this is probably a single-song file.
-			qDebug() << "No cuesheet for file" << this->m_url;
-
-			auto new_entry = std::make_shared<LibraryEntry>(*this);
-			new_entry->m_metadata = file_metadata;
-			new_entry->m_length_secs = file_metadata.total_length_seconds();
-			new_entry->m_is_subtrack = false;
-			new_entry->m_is_populated = true;
-			new_entry->m_is_error = false;
-			retval = new_entry;
-		}
-		else
-		{
-			/// Multitrack file.
-M_WARNING("TODO MULTITRACK METADATA REFRESH")
-			Q_ASSERT(0);
-		}
-	}
-	return retval;
+	/// @todo Eliminate either this or populate().
+	populate(true);
 }
 
 bool LibraryEntry::isFromSameFileAs(const LibraryEntry *other) const
@@ -260,6 +222,11 @@ bool LibraryEntry::hasNoPregap() const
 				if(m_track_number < 1)
 				{
 //					qCritical() << "TRACK NO LESS THAN 1:" << m_track_number;
+					return false;
+				}
+				if(!m_metadata.hasTrack(m_track_number))
+				{
+					qWr() << "Possible database corruption, no such metadata track:" << m_track_number;
 					return false;
 				}
 				TrackMetadata tm = m_metadata.track(m_track_number);
@@ -302,83 +269,56 @@ QUrl LibraryEntry::getM2Url() const
     }
 }
 
-void LibraryEntry::writeToJson(QJsonObject& jo) const
-{
-	jo["m_url"] = m_url.toString();
-	jo["m_is_populated"] = isPopulated();
-	jo["m_is_error"] = m_is_error;
-	jo["m_is_subtrack"] = m_is_subtrack;
-	jo["m_offset_secs"] = m_offset_secs.toQString();
-	jo["m_length_secs"] = m_length_secs.toQString();
-
-	M_WARNING("/// @todo This is always null.");
-	QString str;
-	QTextStream ts(&str);
-	//	ts << m_mime_type;
-	jo["m_mime_type"] = *ts.string();
-
-	if(isPopulated())
-	{
-		M_WARNING("TODO: Don't write out in the has-cached-metadata case");
-		m_metadata.writeToJson(jo);
-	}
-}
-
-void LibraryEntry::readFromJson(QJsonObject& jo)
-{
-	m_url = QUrl(jo["m_url"].toString());
-	m_is_populated = jo["m_is_populated"].toBool(false);
-	m_is_error = jo["m_is_error"].toBool(false);
-	m_is_subtrack = jo["m_is_subtrack"].toBool(false);
-	m_offset_secs = Fraction(jo["m_offset_secs"].toString("0/1"));
-	m_length_secs = Fraction(jo["m_length_secs"].toString("0/1"));
-	QString str;
-	QTextStream ts(&str);
-	str = jo["m_mime_type"].toString();
-//	ts >> m_mime_type;
-	// Metadata might not have been written.
-	//metadata_jval: QJsonValue = jo.value("metadata")
-	QJsonObject metadata_jval = jo["metadata"].toObject();
-	if(!metadata_jval.empty())
-	{
-		///qDebug() << "Found metadata in JSON";
-		m_metadata = Metadata::make_metadata(metadata_jval);
-		m_is_populated = true;
-	}
-	else
-	{
-		qWarning() << "Found no metadata in JSON for" << m_url;
-		m_metadata = Metadata::make_metadata();
-		m_is_error = true;
-		m_is_populated = false;
-	}
-	return;
-}
-
 #define M_DATASTREAM_FIELDS(X) \
-	X(URL, m_url) \
-	X(IS_POPULATED, m_is_populated) \
-	X(IS_ERROR, m_is_error) \
-	X(IS_SUBTRACK, m_is_subtrack) \
-	X(OFFSET_SECS, m_offset_secs) \
-	X(LENGTH_SECS, m_length_secs) \
-	X(MIME_TYPE, m_mime_type)
+	X(XMLTAG_URL, m_url) \
+	X(XMLTAG_IS_POPULATED, m_is_populated) \
+	X(XMLTAG_IS_ERROR, m_is_error) \
+	X(XMLTAG_MIME_TYPE, m_mime_type) \
+	X(XMLTAG_IS_SUBTRACK, m_is_subtrack) \
+	X(XMLTAG_TRACK_NUMBER, m_track_number) \
+	X(XMLTAG_TOTAL_TRACK_NUMBER, m_total_track_number) \
+	X(XMLTAG_PRE_GAP_OFFSET_SECS, m_pre_gap_offset_secs) \
+	X(XMLTAG_OFFSET_SECS, m_offset_secs) \
+	X(XMLTAG_LENGTH_SECS, m_length_secs) \
+	X(XMLTAG_METADATA, m_metadata)
+
+using strviw_type = QLatin1Literal;
+
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const strviw_type field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
+
+
+QDebug operator<<(QDebug dbg, const LibraryEntry& obj)
+{
+	QDebugStateSaver saver(dbg);
+#define X(field_tag, member_field) << field_tag << obj.member_field << ","
+	dbg M_DATASTREAM_FIELDS(X);
+#undef X
+	return dbg;
+}
 
 QVariant LibraryEntry::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
 	// Insert field values into the QVariantMap.
-#define X(field_enum_name, field)   map.insert( LibraryEntryTag :: field_enum_name ## _tagstr, QVariant::fromValue( field ) );
-	M_DATASTREAM_FIELDS(X)
+#define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
 #undef X
+
+//	map_insert_or_die(map, XMLTAG_METADATA, m_metadata);
 
 	if(isPopulated())
 	{
-		map.insert(LibraryEntryTag::METADATA_tagstr, m_metadata.toVariant());
+//		map.insert(XMLTAG_METADATA, m_metadata.toVariant());
+//		map_insert_or_die(map, XMLTAG_METADATA, m_metadata);
+//		qDb() << "IS POPULATED";
 	}
+//	qDb() << "LEAVING";
 
-	return QVariant::fromValue(map);
+	return map;
 }
 
 void LibraryEntry::fromVariant(const QVariant& variant)
@@ -386,33 +326,35 @@ void LibraryEntry::fromVariant(const QVariant& variant)
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_enum_name, field) field = map.value( LibraryEntryTag :: field_enum_name ## _tagstr ).value<decltype( field )>();
-	M_DATASTREAM_FIELDS(X)
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
+	M_DATASTREAM_FIELDS(X);
 #undef X
+
+//	map_read_field_or_warn(map, XMLTAG_METADATA, &m_metadata);
 
 	/// @todo
 	if(isPopulated())
 	{
 		/// @todo This is badly named. m_metadata the field has a "metadata_abstract_base_pimpl" QVarInsOrderMap inside it.
-		QVariant metadata_map = map.value(LibraryEntryTag::METADATA_tagstr);
+//		QVariant metadata_map = map.value(XMLTAG_METADATA);
+//		Q_ASSERT(metadata_map.isValid());
+//		Q_ASSERT(metadata_map.canConvert<MetadataFromCache>());
 
-//		Q_ASSERT(metadata_map.value().canConvert<MetadataFromCache>());
-
-		if(metadata_map.isValid())
-		{
-			m_metadata = Metadata::make_metadata(metadata_map);
-			m_is_error = false;
-			m_is_populated = true;
-		}
-		else
-		{
-			qWarning() << "Found no/invalid metadata in XML for" << m_url;
-			m_metadata = Metadata::make_metadata();
-			m_is_error = true;
-			m_is_populated = false;
-		}
+//		if(metadata_map.isValid())
+//		{
+//			m_metadata = Metadata::make_metadata(metadata_map);
+//			m_is_error = false;
+//			m_is_populated = true;
+//		}
+//		else
+//		{
+//			qWarning() << "Found no/invalid metadata in XML for" << m_url;
+//			m_metadata = Metadata::make_metadata();
+//			m_is_error = true;
+//			m_is_populated = false;
+//		}
 	}
-
+//qDb() << "LIBRRAYENTRY:" << *this;
 }
 
 #undef M_DATASTREAM_FIELDS
@@ -429,13 +371,16 @@ QByteArray LibraryEntry::getCoverImageBytes()
 	}
 }
 
-QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
+AMLMTagMap LibraryEntry::getAllMetadata() const
 {
-	QMap<QString, QVariant> retval;
+	AMLMTagMap retval;
 
 	if(isPopulated())
 	{
-		TagMap tm = m_metadata.filled_fields();
+		AMLMTagMap tm = m_metadata.filled_fields();
+#if 1
+		retval = tm;
+#else
 		QStringList sl;
 		for(const auto& entry : tm)
 		{
@@ -452,6 +397,7 @@ QMap<QString, QVariant> LibraryEntry::getAllMetadata() const
 //qDb() << "sl:" << sl;
 			retval[key] = QVariant::fromValue(sl);
 		}
+#endif
 	}
 
 	return retval;
@@ -483,6 +429,7 @@ QStringList LibraryEntry::getMetadata(QString key) const
 
 QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 {
+	Q_ASSERT(0);
 	// Magic number and version.
 	out << (quint32)LIBRARY_ENTRY_MAGIC_NUMBER;
 	out << (quint32)LIBRARY_ENTRY_VERSION;
@@ -505,6 +452,7 @@ QDataStream& operator<<(QDataStream& out, const LibraryEntry& myObj)
 
 QDataStream& operator>>(QDataStream& in, LibraryEntry& myObj)
 {
+	Q_ASSERT(0);
 	// Read and check the header.
 	quint32  magic_number;
 	in >> magic_number;

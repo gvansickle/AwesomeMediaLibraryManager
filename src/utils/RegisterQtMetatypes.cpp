@@ -22,10 +22,14 @@
 // Std C++
 #include <vector>
 #include <functional>
+#include <string>
+#include <cstdint>
 
 // KF5
 #include <KJob>
 
+// Ours.
+#include <future/preproc.h>
 #include <logic/LibraryEntry.h>
 #include <logic/PlaylistModelItem.h>
 #include <utils/Fraction.h>
@@ -73,6 +77,19 @@
  * yourself.
  */
 
+
+#define EXPAND(x) x
+#define ADD_STD(base_type) /*TOKENPASTE*/std::base_type
+#define ADD_U(base_type) TOKENPASTE2(u, base_type)
+#define ADD_BITS(base_type, bits) TOKENPASTE2(base_type, bits)
+#define ADD_T(base_type) TOKENPASTE2(base_type, _t)
+#define DUP_NS_AND_NOT(X, base_type) X(base_type) X(std::base_type)
+
+/// Qt5's take on construct-on-first-use.  Not sure we need it here, see reginstance() below.
+/// @link https://doc.qt.io/qt-5/qglobalstatic.html
+Q_GLOBAL_STATIC(QtRegCallbackRegistry, f_qt_reg_callback_registry);
+
+
 /**
  * Register a number of general-purpose Qt5 converters etc.
  */
@@ -80,9 +97,20 @@ AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering std::string->QString converter";
 
 	QMetaType::registerConverter<std::string, QString>([](const std::string& str){ return toqstr(str); });
-});
+	QMetaType::registerConverter<QString, std::string>([](const QString& str){ return tostdstr(str); });
 
-Q_DECLARE_METATYPE(std::string);
+	qIn() << "Registering <cstdint> metatypes";
+
+#define RMT(full_type) qRegisterMetaType< full_type >( # full_type );
+	DUP_NS_AND_NOT(RMT, int8_t);
+	DUP_NS_AND_NOT(RMT, int32_t);
+	DUP_NS_AND_NOT(RMT, uint32_t);
+	DUP_NS_AND_NOT(RMT, int64_t);
+	DUP_NS_AND_NOT(RMT, uint64_t);
+});
+/// @todo Compile breaks if this is in the lambda.
+#undef RMT
+
 
 void RegisterQtMetatypes()
 {
@@ -152,6 +180,9 @@ void QtRegCallbackRegistry::call_registration_callbacks()
 
 QtRegCallbackRegistry& reginstance()
 {
+	// The callback registry.  static local so that it will be created only once, on first use,
+	// Returning a ref to it so that it's accessible to all callers.
+	// @link https://isocpp.org/wiki/faq/ctors#static-init-order-on-first-use
     static QtRegCallbackRegistry* retval = new QtRegCallbackRegistry();
     return *retval;
 }

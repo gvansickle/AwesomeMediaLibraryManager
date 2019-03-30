@@ -20,21 +20,30 @@
 /**
  * @file AMLMTagMap.cpp
  */
+
 #include "AMLMTagMap.h"
+
+// Qt5
+#include <QtGlobal>
+
+// TagLib.
+#include <taglib/xiphcomment.h>
+#include <taglib/tpropertymap.h>
+
+// Ours.
 #include <utils/RegisterQtMetatypes.h>
+#include <utils/DebugHelpers.h>
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering AMLMTagMap metatypes";
 	qRegisterMetaType<AMLMTagMap>();
 	qRegisterMetaTypeStreamOperators<AMLMTagMap>();
-//	QMetaType::registerDebugStreamOperator<Metadata>();
-//	QMetaType::registerConverter<Metadata, QString>([](const Metadata& obj){ return obj.name(); });
 });
 
 
 AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 {
-	m_the_map.clear();
+	clear();
 
 	// Iterate over key+value pairs.
 	for(const auto & it : tagmap)
@@ -48,11 +57,25 @@ AMLMTagMap& AMLMTagMap::operator=(const TagMap& tagmap)
 	return *this;
 }
 
-//AMLMTagMap::operator TagMap() const
-//{
-//	return TagMap();
-//}
+AMLMTagMap& AMLMTagMap::operator=(const TagLib::PropertyMap& prop_map)
+{
+	clear();
 
+	for(const auto& key_val_pairs : prop_map)
+	{
+		std::string key = tostdstr(key_val_pairs.first);
+
+		std::vector<std::string> out_val;
+		// Iterate over the StringList for this key.
+		for(const auto& value : key_val_pairs.second)
+		{
+			auto sstr = tostdstr(value);
+			m_the_map.insert({key, sstr});
+		}
+	}
+
+	return *this;
+}
 
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Key& key)
 {
@@ -73,6 +96,21 @@ std::vector<AMLMTagMap::mapped_type> AMLMTagMap::operator[](const AMLMTagMap::Ke
 	}
 }
 
+AMLMTagMap::iterator AMLMTagMap::find(const AMLMTagMap::Key& x)
+{
+	return m_the_map.find(x);
+}
+
+AMLMTagMap::const_iterator AMLMTagMap::find(const AMLMTagMap::Key& x) const
+{
+	return m_the_map.find(x);
+}
+
+bool AMLMTagMap::contains(const AMLMTagMap::Key& key) const
+{
+	return (m_the_map.find(key) != cend());
+}
+
 std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTagMap::Key& key) const
 {
 	auto range = equal_range(key);
@@ -85,61 +123,95 @@ std::vector<AMLMTagMap::mapped_type> AMLMTagMap::equal_range_vector(const AMLMTa
 	return retval;
 }
 
-QVariant AMLMTagMap::toVariant() const
+void AMLMTagMap::clear()
 {
-	QVariantMap map;
+	m_the_map.clear();
+}
 
-	QVariantHomogenousList list("AMLMTagMap", "entry");
+std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const
+{
+	std::vector<AMLMTagMap::key_type> retval;
 
-#if 0
-	std::pair<const_iterator, const_iterator> range;
+	AMLMTagMap::key_type last_key;
 
-	// Iterate through the multimap's elements by key.
-	for(auto it = m_the_map.begin(); it != m_the_map.end(); it = range.second)
-	{
-		// Get the range of the current key
-		range = m_the_map.equal_range(it->first);
-
-		// Iterate over the values in the range.
-M_TODO("THIS IS WRONG, MANY-TO-ONE MAPPING");
-		for(auto valit = range.first; valit != range.second; ++valit)
-		{
-			map.insert(toqstr(valit->first), toqstr(valit->second));
-		}
-	}
-#endif
-	// Iterate over all entries.
 	for(const auto& it : m_the_map)
 	{
-		QStringList entry {toqstr(it.first), toqstr(it.second)};
-		list.push_back(entry);
+		// Pick out the unique keys.
+		if(it.first != last_key)
+		{
+			last_key = it.first;
+			retval.push_back(it.first);
+		}
 	}
 
-	map.insert("m_the_map", QVariant::fromValue(list));
+	return retval;
+}
 
-	return map;
+void AMLMTagMap::merge(AMLMTagMap& source)
+{
+M_TODO("Need to handle dups smarter.");
+	m_the_map.insert(source.m_the_map.begin(), source.m_the_map.end());
+}
+
+QVariant AMLMTagMap::toVariant() const
+{
+	QVariantHomogenousList list("AMLMTagMapEntries", "entry");
+
+	// Get the list of keys, in... insertion order?
+	auto keylist = keys();
+
+	for(const auto& key : keylist)
+	{
+		// For each key, create a vector of values, in insertion order.
+		const auto& vector_of_values = equal_range_vector(key);
+
+		QVariantHomogenousList qvector_of_values("values", "value");
+		for(const auto& value : vector_of_values)
+		{
+			qvector_of_values.push_back(toqstr(value));
+		}
+
+		QVariantInsertionOrderedMap kvpair_map;
+
+		// Insert it into the return value.
+		map_insert_or_die(kvpair_map, "key", toqstr(key));
+		map_insert_or_die(kvpair_map, "values", qvector_of_values);
+
+		list.push_back(QVariant::fromValue(kvpair_map));
+	}
+
+	return list;
 }
 
 void AMLMTagMap::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	clear();
 
-	QVariantHomogenousList list("AMLMTagMap", "entry");
+	QVariantHomogenousList list("AMLMTagMapEntries", "entry");
 
-	list = map.value("m_the_map").value<QVariantHomogenousList>();
+	Q_ASSERT(variant.canConvert<QVariantHomogenousList>());
 
-	for(const auto& entry_qvar : qAsConst(list))
+	list = variant.value<QVariantHomogenousList>();
+
+
+	for(auto entry = list.cbegin(); entry != list.cend(); ++entry)
 	{
-		auto entry_list = entry_qvar.value<QStringList>();
-		auto entry = std::make_pair(tostdstr(entry_list[0]), tostdstr(entry_list[1]));
-		m_the_map.insert(entry);
+		QVariantInsertionOrderedMap kvpair_map = entry->value<QVariantInsertionOrderedMap>();
+		QVariantHomogenousList qvector_of_values("values", "value");
+
+		QString key;
+		key = kvpair_map.value("key").toString();
+		QVariant qvar_values = kvpair_map.value("values");
+		Q_ASSERT(qvar_values.isValid());
+		Q_ASSERT(qvar_values.canConvert<QVariantHomogenousList>());
+		qvector_of_values = qvar_values.value<QVariantHomogenousList>();
+		for(const auto& value : qAsConst(qvector_of_values))
+		{
+			m_the_map.insert(std::make_pair(tostdstr(key), tostdstr(value.toString())));
+		}
 	}
 
-}
-
-AMLMTagMap::operator QVariant() const
-{
-	return toVariant();
+	return;
 }
 
 QTH_DEFINE_QDEBUG_OP(AMLMTagMap, << obj.m_the_map );
@@ -163,4 +235,5 @@ QDataStream& operator>>(QDataStream& in, AMLMTagMap& obj)
 //	return in DATASTREAM_FIELDS(X);
 //#undef X
 }
+
 

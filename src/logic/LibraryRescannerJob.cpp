@@ -170,8 +170,7 @@ void library_metadata_rescan_task(ExtFuture<MetadataReturnVal> ext_future, Libra
 		/// @todo eliminate the_job ptr.
 		MetadataReturnVal a = the_job->refresher_callback(*i);
 
-		/// @exp Removing the signal here.
-//		Q_EMIT the_job->SLOT_processReadyResults(a);
+		// Report the new results to The Future.
 		ext_future.reportResult(a);
 
 		num_items++;
@@ -225,7 +224,8 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
             // Only one pindex though.
             retval.m_original_pindexes.push_back(mapitem[0].pindex);
 
-            auto vec_items = item->populate();
+			item->populate();
+			auto vec_items = item->split_to_tracks();
 			for (const auto& i : vec_items)
             {
                 if (!i->isPopulated())
@@ -234,21 +234,21 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
                 }
                 retval.push_back(i);
 
-                qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
+//                qDb() << "LIBENTRY METADATA:" << i->getAllMetadata();
 
             }
         }
         else if (item->isPopulated() && item->isSubtrack())
         {
-            qCritical() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << item->getUrl();
+			qCr() << "TODO: FOUND SUBTRACK ITEM, SKIPPING:" << item->getUrl();
             Q_ASSERT(0);
         }
         else
         {
-            //qDebug() << "Re-reading metatdata for item" << item->getUrl();
-            std::shared_ptr<LibraryEntry> new_entry = item->refresh_metadata();
+			qDb() << "Re-reading metatdata for item" << item->getUrl();
+            item->refresh_metadata();
 
-            if(new_entry == nullptr)
+            if(item->isError())
             {
                 // Couldn't load the metadata from the file.
                 // Only option here is to return the old item, which should now be marked with an error.
@@ -261,7 +261,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
             {
                 // Repackage it and return.
                 retval.m_original_pindexes.push_back(mapitem[0].pindex);
-                retval.m_new_libentries.push_back(new_entry);
+                retval.m_new_libentries.push_back(item);
                 retval.m_num_tracks_found = 1;
             }
         }
@@ -270,7 +270,8 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     {
         // Multiple incoming tracks.
         std::shared_ptr<LibraryEntry> first_item = mapitem[0].item;
-        auto subtracks = first_item->populate(true);
+        first_item->populate(true);
+		auto subtracks = first_item->split_to_tracks();
         if(subtracks.size() < mapitem.size())
         {
             // We got fewer back than we had before.

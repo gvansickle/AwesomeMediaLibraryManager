@@ -88,6 +88,7 @@ M_WARNING("TODO: THIS SHOULD CANCEL THE JOBS, OR THE JOBS SHOULDNT BE OWNED BY T
 MetadataReturnVal LibraryRescanner::refresher_callback(const VecLibRescannerMapItems& mapitem)
 {
     MetadataReturnVal retval;
+	Q_ASSERT(0);
 #if 0
 	qDebug() << "Current thread:" << QThread::currentThread()->objectName();
 
@@ -179,7 +180,7 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-void LibraryRescanner::startAsyncDirectoryTraversal(QUrl dir_url)
+void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
     qDb() << "START:" << dir_url;
 
@@ -292,9 +293,19 @@ M_TODO("This isn't scanning.");
 //				Q_ASSERT(last_row_index >= 0);
 
 				auto new_child = std::make_unique<SRTMItem_LibEntry>();
-				auto lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
-				/// @todo SLOW, AND INCORRECT: populate() is 1->many.
-				auto lib_entries = lib_entry->populate(true);
+				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+
+				lib_entry->populate(true);
+				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+				/// @note Here we only care about the LibraryEntry corresponding to each file.
+//				if(!lib_entry->isSubtrack())
+//				{
+//					lib_entries = lib_entry->split_to_tracks();
+//				}
+//				else
+				{
+					lib_entries.push_back(lib_entry);
+				}
 				new_child->setLibraryEntry(lib_entries.at(0));
 				entry->appendChild(std::move(new_child));
 //				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
@@ -329,7 +340,7 @@ M_TODO("This isn't scanning.");
             qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
 /// @todo EXPERIMENTAL
-			QString filename = QDir::homePath() + "/DeleteMe.xspf";
+			QString filename = QDir::homePath() + "/AMLM_DeleteMe_XQuery.xml";
 			qIno() << "Writing model to XML file:" << filename;
 			QFile outfile(filename);
 			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
@@ -369,7 +380,7 @@ M_TODO("This isn't scanning.");
 
 					/// And lets' try to reserialize it out.
 					{
-						QString filename = QDir::homePath() + "/DeleteMeNew3.xspf";
+						QString filename = QDir::homePath() + "/AMLM_DeleteMe_TreeModelOut.xml";
 						qIn() << "###### WRITING WHAT WE READ TO" << filename;
 						XmlSerializer xmlser;
 						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
@@ -390,7 +401,7 @@ M_TODO("This isn't scanning.");
 				{
 					Stopwatch sw("XQuery test: two regex queries in loop");
 
-					for(QString ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
+					for(const QString& ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
 					{
 						// Now let's see if we can XQuery what we just wrote as a QStringList.
 						QStringList query_results;
@@ -451,7 +462,10 @@ M_TODO("This isn't scanning.");
 	// Metadata refresh.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
-		this->SLOT_processReadyResults(lib_rescan_job->get_extfuture().resultAt(index));
+M_TODO("Getting zero results for single files in here.");
+		MetadataReturnVal ready_result = lib_rescan_job->get_extfuture().resultAt(index);
+//		Q_ASSERT(ready_result.m_new_libentries.size() != 0);
+		this->SLOT_processReadyResults(ready_result);
 	});
 	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
 
@@ -503,7 +517,8 @@ void LibraryRescanner::SLOT_processReadyResults(MetadataReturnVal lritem_vec)
 
 	if(lritem_vec.m_num_tracks_found == 0)
 	{
-		qCritical() << "RESULT WAS EMPTY";
+		qWr() << "RESULT WAS EMPTY";
+		return;
 	}
 
 	if(lritem_vec.m_num_tracks_found > 1
@@ -562,10 +577,10 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 		// Open the database file.
 		QFile database_file(QUrl::fromLocalFile(database_filename).toLocalFile());
 		bool status = database_file.open(QFile::ReadOnly | QFile::Text);
-		throwif(!status /*"########## COULDN'T OPEN FILE"*/);
+		throwif<SerializationException>(!status, "########## COULDN'T OPEN FILE");
 		if(!status)
 		{
-			qCro() << "########## COULDN'T OPEN FILE:" << filename;
+			qCro() << "########## COULDN'T OPEN FILE:" << database_filename;
 		}
 
 		// The tempfile we'll use as a pipe.
@@ -575,7 +590,7 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 		qDb() << "TEMPFILE NAME:" << tempfile.fileName();
 
 		// Open the terminal output file.
-		QFile output_file(QDir::homePath() + "/DeleteMeThroughTempFile.xspf");
+		QFile output_file(QDir::homePath() + "/AMLM_DeleteMe_ThroughTempFile.xspf");
 		throwif<SerializationException>(!output_file.open(QIODevice::WriteOnly), "Couldn't open output file");
 
 		// Here we'll manually prepare the two queries.
@@ -627,7 +642,7 @@ void LibraryRescanner::ExpRunXQuery1(const QString& database_filename, const QSt
 		}
 
 		// Open the terminal output file.
-		QFile output_file(QDir::homePath() + "/DeleteMeSecondThread.xspf");
+		QFile output_file(QDir::homePath() + "/AMLM_DeleteMe_XQuerySecondThread.xml");
 		throwif<SerializationException>(!output_file.open(QIODevice::WriteOnly), "Couldn't open output file");
 
 		// Here we'll manually prepare the two queries.

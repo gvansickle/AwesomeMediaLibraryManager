@@ -28,10 +28,14 @@
 #include <deque>
 #include <map>
 #include <tuple>
+#include <vector>
 
 // Qt5
-#include <utils/QtHelpers.h>
 #include <QVariant>
+
+// Ours
+#include <utils/QtHelpers.h>
+#include <future/guideline_helpers.h>
 
 /**
  * A map which maintains the insertion order of its keys.  The only operational difference between this and
@@ -57,8 +61,7 @@ private:
 	using uc_size_type = typename underlying_container_type::size_type;
 
 public:
-	InsertionOrderedMap() = default;
-	InsertionOrderedMap(const InsertionOrderedMap& other) = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
 	virtual ~InsertionOrderedMap() = default;
 
 	void insert(const KeyType key, const ValueType value)
@@ -70,6 +73,15 @@ public:
 	{
 		m_vector_of_elements.push_back(key_val);
 		m_map_of_keys_to_vector_indices.insert(std::make_pair(key_val.first, m_vector_of_elements.size()-1));
+	}
+
+	template <template<typename> typename VectorLike>
+	void insert_multi(const KeyType& key, const VectorLike<ValueType>& vector_of_values)
+	{
+		for(const auto& val : vector_of_values)
+		{
+			this->insert(key, val);
+		}
 	}
 
 	const mapped_type& at(const KeyType& key) const
@@ -110,10 +122,16 @@ public:
 	const_iterator cend() const { return std::cend(m_vector_of_elements); };
 	const_iterator end() const { return this->cend(); }
 
+	bool empty() const { return m_vector_of_elements.empty(); };
+	size_t size() const { return m_vector_of_elements.size(); };
+
 #if 1 // Qt5
 //	QTH_FRIEND_QDATASTREAM_OPS(InsertionOrderedMap);
 
-	// Conversion operator to a QVariant.
+	/**
+	 * Conversion operator to a QVariant.
+	 * @note This is deliberately not explicit so that it is a workalike to QMap wrt QVariants.
+	 */
 	operator QVariant() const
 	{
 		return QVariant::fromValue(*this);
@@ -127,7 +145,6 @@ public:
 #endif // Qt5
 
 
-
 protected:
 
 	underlying_container_type m_vector_of_elements;
@@ -138,6 +155,9 @@ protected:
 
 #if 1 // Qt5
 Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
+
+using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
+Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
 
 #endif // Qt5
 

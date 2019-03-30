@@ -25,6 +25,8 @@
 
 // Std C++
 #include <variant>
+// Std C++ from The Future
+#include <future/overloaded.h>
 
 // Qt5
 #include <QFile>
@@ -33,6 +35,7 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include <QDataStream>
+#include <QRegularExpression>
 
 // Ours
 #include <src/utils/DebugHelpers.h>
@@ -212,7 +215,7 @@ void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant,
 
 	QVariantHomogenousList list = variant.value<QVariantHomogenousList>();
 
-	qDb() << "tags:" << list.get_list_tag() << list.get_list_item_tag();
+//	qDb() << "tags:" << list.get_list_tag() << list.get_list_item_tag();
 
 	auto the_item_tag = list.get_list_item_tag();
 
@@ -226,6 +229,7 @@ void XmlSerializer::writeQVariantHomogenousListToStream(const QVariant& variant,
 void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
 	Q_ASSERT(variant.isValid());
+	Q_ASSERT(variant.canConvert<QVariantList>());
 
 	QVariantList list = variant.toList();
 
@@ -239,6 +243,9 @@ void XmlSerializer::writeVariantListToStream(const QVariant &variant, QXmlStream
 
 void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamWriter& xmlstream)
 {
+	Q_ASSERT(variant.isValid());
+	Q_ASSERT(variant.canConvert<QVariantMap>());
+
 	QVariantMap map = variant.toMap();
 
 	// Stream out each element in the map.
@@ -253,6 +260,9 @@ void XmlSerializer::writeVariantMapToStream(const QVariant &variant, QXmlStreamW
 
 void XmlSerializer::writeVariantOrderedMapToStream(const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
+	Q_ASSERT(variant.isValid());
+	Q_ASSERT(variant.canConvert<QVariantInsertionOrderedMap>());
+
 	QVariantInsertionOrderedMap omap = variant.value<QVariantInsertionOrderedMap>();
 
 	for(const auto& i : omap)
@@ -269,11 +279,13 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	if(!variant.canConvert<QString>())
 	{
 		std::string vartype {variant.typeName()};
-		qCr() << "QVariant contents not convertible to a QString:" << vartype;
+		qCr() << "QVariant contents not convertible to a QString:" << M_ID_VAL(variant) << M_ID_VAL(vartype);
 		Q_ASSERT(0);
 	}
 
 	QString str = variant.toString();
+
+	// See if we need to re-encode it.
 
 	xmlstream.writeCharacters(str);
 }
@@ -300,10 +312,6 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 	/// @todo QVariant::Type returned, switch is on QMetaType::Type.  OK but former is deprecated and clang-tidy warns.
 //	auto metatype_v = QVariant::nameToType(typeString.toStdString().c_str());
 	int metatype = QMetaType::type(typeString.toStdString().c_str());
-
-//	log_current_node(xmlstream);
-
-//	AMLM_ASSERT_EQ(metatype, metatype2);
 
 	if(metatype == iomap_id)
 	{
@@ -365,7 +373,7 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 
 	QString list_tag = xmlstream.name().toString();
 
-	qDb() << "List tag:" << list_tag;
+//	qDb() << "List tag:" << list_tag;
 
 	while(xmlstream.readNextStartElement())
 	{
@@ -395,7 +403,7 @@ QVariant XmlSerializer::readHomogenousListFromStream(QXmlStreamReader& xmlstream
 		}
 		else
 		{
-			list.append(next_list_element);
+			list.push_back(next_list_element);
 		}
 	}
 
@@ -486,7 +494,7 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 				// Empty string, return default constructed object.
 				// We checked metatype above, it's valid.
 //				void* retobj_p = QMetaType::create(metatype);
-				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
+//				qWr() << "TODO: NULL QVARIANT, SKIPPING. Type:" << attr_type_str;
 			}
 			else
 			{
@@ -505,6 +513,15 @@ QVariant XmlSerializer::readVariantValueFromStream(QXmlStreamReader& xmlstream)
 //	check_for_stream_error_and_skip(xmlstream);
 
 	return variant;
+}
+
+QString XmlSerializer::normalize_node_name(const QString& node_name) const
+{
+//	QRegularExpression re("s/(\\s+)/%20/g");
+
+//	auto matchit = re.globalMatch(node_name);
+	QString retval = node_name;
+	return retval.replace(" ", "%20");
 }
 
 QVariant XmlSerializer::readVariantMapFromStream(QXmlStreamReader& xmlstream)
@@ -556,9 +573,6 @@ void XmlSerializer::set_default_namespace(const QString& default_ns, const QStri
 	m_default_ns = default_ns;
 	m_default_ns_version = default_ns_version;
 }
-
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 QString XmlSerializer::error_string(QXmlStreamRWRef xmlstream) const
 {

@@ -261,8 +261,8 @@ bool MDILibraryView::readFile(QUrl load_url)
 
 void MDILibraryView::serializeDocument(QFileDevice& file)
 {
-	m_underlying_model->serializeToFile(file);
-
+//	m_underlying_model->serializeToFile(file);
+	Q_ASSERT(0);
 M_WARNING("TODO: Serialization, remove or replace.");
 
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
@@ -279,10 +279,10 @@ M_WARNING("TODO: Serialization, remove or replace.");
 
 void MDILibraryView::deserializeDocument(QFileDevice& file)
 {
-	m_underlying_model->deserializeFromFile(file);
-
-M_WARNING("TODO: Serialization, remove or replace.");
+	M_WARNING("TODO: Serialization, remove or replace.");
 	Q_ASSERT(0);
+
+//	m_underlying_model->deserializeFromFile(file);
 }
 
 bool MDILibraryView::isModified() const

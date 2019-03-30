@@ -25,12 +25,17 @@
 #include <gtest/gtest.h>
 //#include <gmock/gmock-matchers.h>
 
+// Qt5
+#include <QVariantMap>
+
 // Ours
 //#include <tests/TestHelpers.h>
 #include <concurrency/tests/ExtAsyncTestCommon.h>
 #include "../ISerializable.h"
 #include "../ISerializer.h"
 #include "../XmlSerializer.h"
+#include <AMLMTagMap.h>
+
 
 /**
  * Test Suite (ISTQB) or "Test Case" (Google) for ExtAsyncTests.
@@ -110,4 +115,25 @@ TEST_F(XmlSerializerTests, TypeRoundTripping)
 	EXPECT_EQ(round_tripped_variant["nextone"], 126);
 
 	TCOUT << "nextone" << round_tripped_variant["nextone"];
+}
+
+TEST_F(XmlSerializerTests, AMLMTagMapRoundTripping)
+{
+	AMLMTagMap tm, tm2;
+
+	tm.insert(AMLMTagMap::value_type("Hello", "Goodbye"));
+
+	QVariantMap map;
+	map.insert("testfield", QVariant::fromValue(tm));
+	QVariant retval = map;
+
+	EXPECT_TRUE(retval.isValid());
+
+	QVariantMap frommap = retval.toMap();
+
+	tm2 = frommap.value("testfield").value<AMLMTagMap>();
+
+	auto vec = tm2.equal_range_vector("Hello");
+	EXPECT_FALSE(vec.empty());
+	EXPECT_EQ(vec[0], std::string("Goodbye"));
 }

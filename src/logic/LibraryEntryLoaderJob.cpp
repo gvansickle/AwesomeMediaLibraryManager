@@ -150,7 +150,8 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
         // Item's metadata has not been looked at.  We may have multiple tracks.
 
 //		qIn() << "LOADING ITEM:" << libentry;
-		auto vec_items = libentry->populate();
+		libentry->populate();
+		auto vec_items = libentry->split_to_tracks();
         for (const auto& i : vec_items)
         {
             if (!i->isPopulated())
@@ -173,9 +174,9 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
         // Item needs to be refreshed.
 
         //qDebug() << "Re-reading metatdata for item" << item->getUrl();
-		std::shared_ptr<LibraryEntry> new_entry = libentry->refresh_metadata();
+		libentry->refresh_metadata();
 
-        if(!new_entry)
+        if(libentry->isError())
         {
             // Couldn't load the metadata from the file.
             // Only option here is to return the old item, which should now be marked with an error.
@@ -188,7 +189,7 @@ void LibraryEntryLoaderJob::LoadEntry(ExtFuture<LibraryEntryLoaderJobResult> ext
         {
             // Repackage it and return.
 //            retval.m_original_pindexes.push_back(m_pmi);
-            retval.m_new_libentries.push_back(new_entry);
+            retval.m_new_libentries.push_back(libentry);
             retval.m_num_tracks_found = 1;
         }
     }

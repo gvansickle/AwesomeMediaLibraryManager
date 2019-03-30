@@ -42,7 +42,7 @@ bool ScanResultsTreeModel::appendItems(std::vector<std::unique_ptr<AbstractTreeM
 
 QVariant ScanResultsTreeModel::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
 	// The one piece of data we really need here, non-xspf.
 	map.insert(SRTMTagToXMLTagMap[SRTMTag::BASE_DIRECTORY], m_base_directory);
@@ -83,7 +83,8 @@ QVariant ScanResultsTreeModel::toVariant() const
 
 void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map;
+	qviomap_from_qvar_or_die(&map, variant);
 
 	/// @todo This should have a list of known base directory paths,
 	///         e.g. the file:// URL and the gvfs /run/... mount point, Windows drive letter paths, etc.
@@ -101,8 +102,9 @@ void ScanResultsTreeModel::fromVariant(const QVariant& variant)
 		delete m_root_item;
 	}
 	m_root_item = new AbstractTreeModelHeaderItem();
-	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
-
+//	m_root_item->fromVariant(map.value(SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM]));
+M_WARNING("TODO: There sometimes isn't a root item in the map.");
+	map_read_field_or_warn(map, SRTMTagToXMLTagMap[SRTMTag::ROOT_ITEM], m_root_item);
 	/// @todo Read these in.
 	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_START]
 	// SRTMItemTagToXMLTagMap[SRTMItemTag::TS_LAST_SCAN_END]

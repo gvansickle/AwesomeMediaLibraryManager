@@ -44,6 +44,7 @@ class ScanResultsTreeModelItem : public AbstractTreeModelItem
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
+
 	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
 	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
 	/// Create a new model item populated with the passed DirScanResult.
@@ -135,6 +136,6 @@ private:
 };
 
 /// @todo Need this here for QVariant::fromValue().
-Q_DECLARE_METATYPE(std::string);
+//Q_DECLARE_METATYPE(std::string);
 
 #endif /* SRC_LOGIC_MODELS_SCANRESULTSTREEMODELITEM_H_ */

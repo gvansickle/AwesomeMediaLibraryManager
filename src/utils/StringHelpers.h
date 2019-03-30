@@ -96,18 +96,24 @@ enum /*QLocale::*/DataSizeFormats
 /// @name Functions for converting between the several thousand different and
 /// non-interoperable UTF-8 string classes, one or more brought into the project per library used.
 /// There are only two assumptions made here:
-/// - Any const char* passed in is a pointer to a UTF-8 string.
+/// - Any const char* passed in is one of:
+/// -- A pointer to a UTF-8 string.
+/// -- A nullptr, in which case an empty std::string is returned.
 /// - Any std::strings are likewise really holding UTF-8 strings.
 ///
 /// The simplest things....
 /// @{
 
-static inline std::string tostdstr(const char *cstr)
+/**
+ * Convert a const char* to a std::string.  If @a cstr is nullptr, return @a if_null instead, which
+ * defaults to a default constructed std::string().
+ */
+static inline std::string tostdstr(const char *cstr, const std::string& if_null = std::string())
 {
 	// Handles the case where cstr == nullptr.
 	if(cstr == nullptr)
 	{
-		return std::string();
+		return if_null;
 	}
 	else
 	{

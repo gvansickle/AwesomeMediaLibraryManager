@@ -33,7 +33,7 @@
 #include <QDebug>
 
 // TagLib includes.
-#if 0
+#if 1
 #include <taglib/tag.h>
 #include <taglib/fileref.h>
 #include <taglib/tpropertymap.h>
@@ -69,6 +69,7 @@
 #include "utils/StringHelpers.h"
 #include "TagLibHelpers.h"
 
+#if 0
 
 static std::set<std::string> f_newly_discovered_keys;
 
@@ -131,9 +132,9 @@ std::set<std::string> MetadataTaglib::getNewTags()
 	return f_newly_discovered_keys;
 }
 
-static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
+static AMLMTagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 {
-	TagMap retval;
+	AMLMTagMap retval;
 	for(const auto& key_val_pairs : pm)
 	{
 		//qDebug() << "Native Key:" << key_val_pairs.first.toCString(true);
@@ -145,26 +146,19 @@ static TagMap PropertyMapToTagMap(TagLib::PropertyMap pm)
 		// Iterate over the StringList for this key.
 		for(const auto& value : key_val_pairs.second)
 		{
-			out_val.push_back(tostdstr(value));
+//			out_val.push_back(tostdstr(value));
+			auto sstr = tostdstr(value);
+			retval.insert({key, sstr});
 		}
-		retval[key] = out_val;
+//		retval.insert(std::make_pair(toqstr(key), toqstr(out_val)));
 	}
 	//qDebug() << "Returning:" << retval;
 	return retval;
 }
+#endif // OBSOLETE
 
 
-MetadataTaglib::MetadataTaglib() : MetadataAbstractBase()
-{
-
-}
-
-MetadataTaglib::~MetadataTaglib()
-{
-
-}
-
-static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
+QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 {
 	QString retval;
 
@@ -173,7 +167,7 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 		qDebug() << "properties() contains CUESHEET";
 		TagLib::StringList strlist = file->properties()["CUESHEET"];
 		qDebug() << "CUESHEET strlist num entries:" << strlist.size();
-		qDebug() << "CUESHEET strlist entries:" << strlist.toString();
+//		qDebug() << "CUESHEET strlist entries:" << strlist.toString();
 		retval = toqstr(strlist.toString());
 	}
 
@@ -191,6 +185,8 @@ static QString get_cue_sheet_from_OggXipfComment(TagLib::FLAC::File* file)
 
 	return retval;
 }
+
+#if OBSOLETE
 
 bool MetadataTaglib::read(const QUrl& url)
 {
@@ -342,6 +338,7 @@ M_WARNING("BUG: THIS IS COMING BACK WITH ONE ENTRY");
 //        qDb() << "CUESHEET:" << *cuesheet;
         // Copy the cuesheet track info.
         m_tracks = cuesheet->get_track_map();
+qDb() << "####### NUM TRACKS:" << m_tracks.size();
         Q_ASSERT(m_tracks.size() > 0);
 
 
@@ -382,6 +379,7 @@ M_WARNING("TODO: Handle hidden track-one audio")
 
 Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 {
+#if 0 /// @todo OBSOLETE
 	// Start off with a complete duplicate.
 	MetadataTaglib retval(*this);
 
@@ -396,8 +394,8 @@ Metadata MetadataTaglib::get_one_track_metadata(int track_index) const
 //qIn() << "AFTER:" << retval.m_tracks;
 
 	// Copy any track-specific CDTEXT data to the "top level" metadata.
-M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate")
-	if(track_entry.m_PTI_TITLE.size() > 0)
+M_WARNING("TODO: This could probably be improved, e.g. not merge these in but keep the track info separate");
+	if(!track_entry.m_PTI_TITLE.empty())
 	{
 //    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 		qDebug() << "NEW TRACK_NAME:" << track_entry.m_PTI_TITLE;
@@ -405,16 +403,19 @@ M_WARNING("TODO: This could probably be improved, e.g. not merge these in but ke
 		retval.m_tag_map.insert({"TITLE", track_entry.m_PTI_TITLE});
 //    qIn() << M_NAME_VAL(retval.m_tag_map["TITLE"]);
 	}
-	if(track_entry.m_PTI_PERFORMER.size() > 0)
+	if(!track_entry.m_PTI_PERFORMER.empty())
 	{
 		retval.m_tag_map["PERFORMER"].push_back(track_entry.m_PTI_PERFORMER);
 	}
-	if(track_entry.m_isrc.size() > 0)
+	if(!track_entry.m_isrc.empty())
 	{
-		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
+//		retval.m_tag_map["ISRC"].push_back(track_entry.m_isrc);
+		retval.m_tag_map.insert({"ISRC", track_entry.m_isrc});
 	}
 
 	return retval;
+#endif
+	return Metadata();
 }
 
 #if TODO
@@ -425,13 +426,15 @@ int MetadataTaglib::numEmbeddedPictures() const
 }
 #endif
 
+#endif // OBSOLETE
+
 static QByteArray getCoverArtBytes_ID3(TagLib::ID3v2::Tag* tag)
 {
 	const TagLib::ID3v2::FrameList& frameList = tag->frameList("APIC");
 	if (!frameList.isEmpty())
 	{
 		qDebug() << "Found" << frameList.size() << "embedded pictures.";
-		const auto* frame = (TagLib::ID3v2::AttachedPictureFrame*)frameList.front();
+		const auto* frame = dynamic_cast<TagLib::ID3v2::AttachedPictureFrame*>(frameList.front());
 		return QByteArray(frame->picture().data(), frame->picture().size());
 	}
 
@@ -470,6 +473,54 @@ static QByteArray getCoverArtBytes_FLAC(TagLib::FLAC::File* file)
 	return QByteArray();
 }
 
+QByteArray getCoverArtBytes(const QUrl& url)
+{
+	QByteArray retval;
+
+	// Open the file ref.
+	QString url_as_local = /*m_audio_file_url*/url.toLocalFile();
+
+	TagLib::FileRef fr {openFileRef(url_as_local)};
+	if(fr.isNull())
+	{
+		qWarning() << "Unable to open file" << url_as_local << "with TagLib";
+		return retval;
+	}
+
+	// Downcast it to whatever type it really is.
+	if (TagLib::MPEG::File* file = dynamic_cast<TagLib::MPEG::File*>(fr.file()))
+	{
+		if (file->ID3v2Tag())
+		{
+			retval = getCoverArtBytes_ID3(file->ID3v2Tag());
+		}
+		if (retval.isEmpty() && file->APETag())
+		{
+			retval = getCoverArtBytes_APE(file->APETag());
+		}
+	}
+	else if (TagLib::FLAC::File* file = dynamic_cast<TagLib::FLAC::File*>(fr.file()))
+	{
+		retval = getCoverArtBytes_FLAC(file);
+		if (retval.isEmpty() && file->ID3v2Tag())
+		{
+			retval = getCoverArtBytes_ID3(file->ID3v2Tag());
+		}
+	}
+
+	if(retval.size() > 0)
+	{
+		qDebug() << "Found pic data, size:" << retval.size();
+	}
+	else
+	{
+		qDebug() << "Found no pic data";
+	}
+
+	return retval;
+}
+
+#if OBSOLETE
 QByteArray MetadataTaglib::getCoverArtBytes() const
 {
 	QByteArray retval;
@@ -522,3 +573,4 @@ MetadataTaglib* MetadataTaglib::clone_impl() const
 	return new MetadataTaglib(*this);
 }
 
+#endif // OBSOLETE

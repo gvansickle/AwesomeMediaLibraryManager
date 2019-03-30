@@ -31,6 +31,8 @@
 #include <QDataWidgetMapper>
 #include <QLineEdit>
 #include <QSplitter>
+#include <QRegularExpression>
+#include <QHeaderView>
 
 // Ours
 #include <AMLMApp.h>
@@ -73,6 +75,9 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     m_metadata_widget->setRootIsDecorated(false);
     m_metadata_widget->setColumnCount(2);
     m_metadata_widget->setHeaderLabels(QStringList() << "Key" << "Value");
+	// Set resize behavior.
+	m_metadata_widget->header()->setStretchLastSection(false);
+	m_metadata_widget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
 	// The Cover Art label.
     m_cover_image_label = new PixmapLabel(this);
@@ -95,8 +100,8 @@ MetadataDockWidget::MetadataDockWidget(const QString& title, QWidget *parent, Qt
     setWidget(mainWidget);
 
 	// Connect up to the proxy model.  We won't have to disconnect/reconnect since we own this proxy model.
-	connect(m_proxy_model, &SelectionFilterProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
-	connect(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
+	connect_or_die(m_proxy_model, &SelectionFilterProxyModel::dataChanged, this, &MetadataDockWidget::onDataChanged);
+	connect_or_die(m_proxy_model_watcher, &ModelChangeWatcher::modelHasRows, this, &MetadataDockWidget::onProxyModelChange);
 }
 
 void MetadataDockWidget::connectToView(MDITreeViewBase* view)
@@ -146,8 +151,10 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 	{
 		// Get a copy of the metadata.
 		Metadata md = libentry->metadata();
+M_TODO("Not getting some field here");
+//		qDb() << "METADATA:" << md.toVariant();
 
-		std::map<QString, QVariant> pimeta = libentry->getAllMetadata().toStdMap(); // QMap<QString, QVariant>
+		AMLMTagMap pimeta = libentry->getAllMetadata(); // QMap<QString, QVariant>
 		///qDebug() << "PLAYLIST ITEM METADATA: " << pimeta;
 		// clear out any old data we have.
         m_metadata_widget->clear();
@@ -165,21 +172,26 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
             m_metadata_widget->setFirstItemColumnSpanned(metadata_types, true);
 
             std::vector<std::tuple<QString, QVariant, AMLMTagMap>> md_list = {
-				{"hasVorbisComments?", md.hasVorbisComments(), md.tagmap_VorbisComments()},
+				{"hasGeneric?", md.hasGeneric(), md.tagmap_generic()},
 				{"hasID3v1?", md.hasID3v1(), md.tagmap_id3v1()},
 				{"hasID3v2?", md.hasID3v2(), md.tagmap_id3v2()},
-				{"hasAPE?", md.hasAPE(), AMLMTagMap()},
+				{"hasAPE?", md.hasAPE(), md.tagmap_ape()},
 				{"hasXiphComment?", md.hasXiphComment(), md.tagmap_xiph()},
-				{"hasInfoTag?", md.hasInfoTag(), md.tagmap_InfoTag()}
+				{"hasRIFFInfoTag?", md.hasRIFFInfo(), md.tagmap_RIFFInfo()},
+				{"hasDiscCuesheet?", md.hasDiscCuesheet(), md.tagmap_cuesheet_disc()},
+#if 0 /// @todo
+				{"hasTrackCuesheetInfo?", md.hasTrackCuesheet(), md.tagmap_cuesheet_track()}
+#endif
 			};
 
+			// Add each of the tag type trees as a separate expanded subtree.
 			for(const auto& e : md_list)
 			{
 				auto md_type_item = new QTreeWidgetItem({std::get<0>(e), std::get<1>(e).toString()});
 				metadata_types->addChild(md_type_item);
 				if(!std::get<2>(e).empty())
 				{
-					addChildrenFromTagMap(md_type_item, std::get<2>(e));
+					addChildrenFromAMLMTagMap(md_type_item, std::get<2>(e));
 					md_type_item->setExpanded(true);
 				}
 			}
@@ -194,97 +206,27 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 			{"Pre-gap offset", libentry->get_pre_gap_offset_secs().toQString()},
 			{"Length", libentry->get_length_secs().toQString()}
 		};
-		for(auto& p: list)
+		for(const auto& p: list)
 		{
             m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({p.first, p.second.toString()}));
 		}
 
 		/// Dump all the metadata.
-		for(auto entry = pimeta.begin(); entry != pimeta.end(); ++entry)
-		{
-			QString key = entry->first;
-			QStringList value = entry->second.toStringList();
-			if(value.empty())
-			{
-                m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
-			}
-		}
+		/// @todo Does this make any sense anymore? Just putting the entries into the tree here.
+		pimeta.foreach_pair([&](QString key, QString val){
+			m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, val}));
+		});
+//		for(const auto& entry : pimeta)
+//		{
+//			QString key = toqstr(entry.first);
+//			QStringList value = toqstr(entry.second);
+//			if(value.empty())
+//			{
+//                m_metadata_widget->addTopLevelItem(new QTreeWidgetItem({key, value[0]}));
+//			}
+//		}
 
 		// Load and Display the cover image.
-#if THE_OLD_SYCHRONOUS_WAY
-		auto cover_image_bytes = libentry->getCoverImageBytes();
-		if(cover_image_bytes.size() != 0)
-		{
-			qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-			QImage image;
-			if(image.loadFromData(cover_image_bytes) == true)
-			{
-				///qDebug() << "Image:" << image;
-				m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-				//m_cover_image_label.adjustSize()
-			}
-			else
-			{
-				qWarning() << "Error attempting to load image.";
-				QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-				m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-			}
-		}
-		else
-		{
-			// No image available.
-			QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-			m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-		}
-#elif 0 //THE NEW ASYNCHRONOUS WAY
-        auto coverartjob = CoverArtJob::make_job(this, libentry->getUrl());
-        coverartjob->then(this, [=](CoverArtJob* kjob) {
-            if(kjob->error() || kjob->m_byte_array.size() == 0)
-            {
-                // Error.  Load the "No image available" icon.
-                qWr() << "ASYNC GetCoverArt FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-                // Report error via uiDelegate()
-                /// @todo This actually works now, too well.  For this KJob, we don't want a dialog popping up
-                /// every time there's an error.
-//                auto uidelegate = kjob->uiDelegate();
-//                Q_CHECK_PTR(uidelegate);
-//                uidelegate->showErrorMessage();
-                QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-            }
-            else
-            {
-                // Succeeded, pick up the image.
-
-                auto& cover_image_bytes = kjob->m_byte_array;
-
-                if(cover_image_bytes.size() != 0)
-                {
-                    qDebug("Cover image found"); ///@todo << cover_image.mime_type;
-                    QImage image;
-                    if(image.loadFromData(cover_image_bytes) == true)
-                    {
-                        ///qDebug() << "Image:" << image;
-                        m_cover_image_label->setPixmap(QPixmap::fromImage(image));
-                        //m_cover_image_label.adjustSize()
-                    }
-                    else
-                    {
-                        qWarning() << "Error attempting to load image.";
-                        QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                        m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-                    }
-                }
-                else
-                {
-                    // No image available.
-                    QIcon no_pic_icon = Theme::iconFromTheme("image-missing");
-                    m_cover_image_label->setPixmap(no_pic_icon.pixmap(QSize(256,256)));
-                }
-            }
-        });
-        coverartjob->start();
-#elif 1 // THE EVEN NEWER ASYNC WAY
 
 		// Create the asynchronous Cover Art loader task.";
 		ExtFuture<QByteArray> coverart_future = CoverArtJob::make_task(this, libentry->getUrl());
@@ -358,7 +300,6 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 			return true;
 		});
-#endif
 	}
 	else
 	{
@@ -367,57 +308,16 @@ void MetadataDockWidget::PopulateTreeWidget(const QModelIndex& first_model_index
 
 }
 
-void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const TagMap& tagmap)
+void MetadataDockWidget::addChildrenFromAMLMTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap)
 {
-	for(auto& e : tagmap)
-	{
-		QString key = toqstr(e.first);
-        // Filter out keys we don't want to see in the Metadata display.
-        // Mainly this is CUESHEET and LOG entries in FLAC VORBIS_COMMENT blocks, which are gigantic and destroy the
-        // formatting.
-        ///@todo Maybe also filter on size of values.
-        if(key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
-        {
-            continue;
-        }
-		for(const auto& f : e.second)
-		{
-			QString value = toqstr(f);
-			auto child = new QTreeWidgetItem({key, value});
-			parent->addChild(child);
-		}
-	}
-}
-
-void MetadataDockWidget::addChildrenFromTagMap(QTreeWidgetItem* parent, const AMLMTagMap& tagmap)
-{
+	// Add all entries in tagmap to parent, with a few exceptions.
 	tagmap.foreach_pair([=](QString key, QString value){
-		if(!key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
+		if(!key.contains(QRegularExpression(R"!(^(REM\s+)?(CUESHEET|LOG|.*CTDB(TRACK|DISC)CONFIDENCE))!")))
 		{
 			auto child = new QTreeWidgetItem({key, value});
 			parent->addChild(child);
 		}
 	});
-
-//	for(const auto& e : tagmap)
-//	{
-//		QString key = toqstr(e.first);
-//		// Filter out keys we don't want to see in the Metadata display.
-//		// Mainly this is CUESHEET and LOG entries in FLAC VORBIS_COMMENT blocks, which are gigantic and destroy the
-//		// formatting.
-//		///@todo Maybe also filter on size of values.
-//		if(key.contains(QRegularExpression(R"!(CUESHEET|LOG|CTDBTRACKCONFIDENCE)!")))
-//		{
-//			continue;
-//		}
-//		#error "LOOPS ON EACH .SECOND CHAR"
-//		for(const auto& f : e.second)
-//		{
-//			QString value = toqstr(f);
-//			auto child = new QTreeWidgetItem({key, value});
-//			parent->addChild(child);
-//		}
-//	}
 }
 
 void MetadataDockWidget::onProxyModelChange(bool has_rows)
