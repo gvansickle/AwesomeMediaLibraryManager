@@ -79,7 +79,7 @@ Q_DECLARE_METATYPE(FileModificationInfo);
  * An extended URL class.
  * Extensions are data used to detect if the referenced item has changed.
  */
-class ExtUrl : public XmlTagBase<ExtUrl>, public ISerializable
+class ExtUrl : public XmlTagBase<ExtUrl>, public virtual ISerializable
 {
 	Q_GADGET
 

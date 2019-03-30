@@ -39,7 +39,6 @@
 
 AMLM_QREG_CALLBACK([](){
 	qIn() << "Registering DirScanResult";
-//	qRegisterMetaType<DirScanResult>();
 	qRegisterMetaType<DirScanResult::DirPropFlags>("DirScanResult::DirPropFlags");
 	AMLMRegisterQFlagQStringConverters<DirScanResult::DirPropFlags>();
 });
@@ -47,27 +46,30 @@ AMLM_QREG_CALLBACK([](){
 
 
 DirScanResult::DirScanResult(const QUrl &found_url, const QFileInfo &found_url_finfo)
-	: m_media_exturl(found_url, &found_url_finfo)
+	: m_exturl_media(found_url, &found_url_finfo)
 {
 	determineDirProps(found_url_finfo);
 }
 
-#define DATASTREAM_FIELDS(X) \
-	/*X(flags_dirprops, m_dir_props)*/ \
-	X(exturl_dir, m_dir_exturl) \
-	X(exturl_media, m_media_exturl) \
-	X(exturl_cuesheet, m_cue_exturl)
+#define M_DATASTREAM_FIELDS(X) \
+	X(XMLTAG_FLAGS_DIRPROPS, m_flags_dirprops) \
+	X(XMLTAG_EXTURL_DIR, m_exturl_dir_url) \
+	X(XMLTAG_EXTURL_MEDIA, m_exturl_media) \
+	X(XMLTAG_EXTURL_CUESHEET, m_exturl_cuesheet)
 
-
+/// Strings to use for the tags.
+#define X(field_tag, member_field) static const QLatin1Literal field_tag ( # member_field );
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 QVariant DirScanResult::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
 	// Add all the fields to the map.
-	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR], m_dir_exturl.toVariant());
-	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA], m_media_exturl.toVariant());
-	map.insert(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET], m_cue_exturl.toVariant());
+#define X(field_tag, member_field) map_insert_or_die(map, field_tag, member_field);
+	M_DATASTREAM_FIELDS(X);
+#undef X
 
 	return map;
 }
@@ -81,27 +83,24 @@ void DirScanResult::fromVariant(const QVariant& variant)
 	/// @todo Something is still broken here.  This should work, but it doesn't:
 //	m_media_exturl = map.value("exturl_media").value<ExtUrl>();
 
-	QVariant exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_MEDIA]);
-	m_media_exturl.fromVariant(exturl_in_variant);
-	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_DIR]);
-	m_dir_exturl.fromVariant(exturl_in_variant);
-	exturl_in_variant = map.value(DSRTagToXMLTagMap[DSRTag::EXTURL_CUESHEET]);
-	m_cue_exturl.fromVariant(exturl_in_variant);
+#define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
+	M_DATASTREAM_FIELDS(X);
+#undef X
 }
 
 void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
 {
     // Separate out just the directory part of the URL.
 	// Works for any URL.
-	QUrl m_dir_url = m_media_exturl.m_url.adjusted(QUrl::RemoveFilename);
+	QUrl m_dir_url = m_exturl_media.m_url.adjusted(QUrl::RemoveFilename);
 	QFileInfo fi(m_dir_url.toString());
-	m_dir_exturl = ExtUrl(m_dir_url, &fi);
+	m_exturl_dir_url = ExtUrl(m_dir_url, &fi);
 
     // Is there a sidecar cue sheet?
 
 	// Create the URL the *.cue file would have.
 	ExtUrl possible_cue_url;
-	possible_cue_url = QUrl(m_media_exturl);
+	possible_cue_url = QUrl(m_exturl_media);
 	QString cue_url_as_str = possible_cue_url.m_url.toString();
     Q_ASSERT(!cue_url_as_str.isEmpty());
     cue_url_as_str.replace(QRegularExpression("\\.[[:alnum:]]+$"), ".cue");
@@ -115,8 +114,9 @@ void DirScanResult::determineDirProps(const QFileInfo &found_url_finfo)
         if(fi.exists())
         {
             // It's there.
-			m_cue_exturl = ExtUrl(possible_cue_url.m_url, &fi);
-            m_dir_props |= HasSidecarCueSheet;
+			// Set the flag and the path relative to the directory (should be just the filename).
+			m_exturl_cuesheet = ExtUrl(possible_cue_url.m_url, &fi);
+			m_flags_dirprops |= HasSidecarCueSheet;
         }
     }
     else
@@ -137,7 +137,7 @@ M_WARNING("TODO");
 QDebug operator<<(QDebug dbg, const DirScanResult & obj) // NOLINT(performance-unnecessary-value-param)
 {
 #define X(ignore, field) << obj.field
-    dbg DATASTREAM_FIELDS(X);
+	dbg M_DATASTREAM_FIELDS(X);
 #undef X
     return dbg;
 }
@@ -146,7 +146,7 @@ QDebug operator<<(QDebug dbg, const DirScanResult & obj) // NOLINT(performance-u
 QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
 {
 #define X(field) << myObj.field
-    out DATASTREAM_FIELDS(X);
+	out M_DATASTREAM_FIELDS(X);
 #undef X
     return out;
 }
@@ -154,7 +154,7 @@ QDataStream &operator<<(QDataStream &out, const DirScanResult & myObj)
 QDataStream &operator>>(QDataStream &in, DirScanResult & myObj)
 {
 #define X(field) >> myObj.field
-    return in DATASTREAM_FIELDS(X);
+	return in M_DATASTREAM_FIELDS(X);
 #undef X
 }
 #endif

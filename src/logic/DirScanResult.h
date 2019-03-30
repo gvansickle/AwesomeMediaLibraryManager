@@ -60,6 +60,9 @@ public:
 
 	friend class CollectionMedium;
 
+	/**
+	 * Flags for various properties of a scanned directory.
+	 */
     enum DirProp
     {
 	    /// Nothing is known about the directory.
@@ -85,15 +88,15 @@ public:
 	/// @link http://doc.qt.io/qt-5/qobject.html#Q_FLAG
     Q_FLAG(DirPropFlags)
 
-	DirPropFlags getDirProps() const { return m_dir_props; }
+	DirPropFlags getDirProps() const { return m_flags_dirprops; }
 
 	/// Get the ExtUrl which points to the actual media file found.
-	const ExtUrl& getMediaExtUrl() const { return m_media_exturl; }
+	const ExtUrl& getMediaExtUrl() const { return m_exturl_media; }
 
     /// URL to any sidecar cuesheet found.
     /// If one was found, DirProp::HasSidecarCueSheet will be set.
     /// Returned URL will not be valid if there was no sidecar cue sheet.
-	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_cue_exturl; }
+	const ExtUrl& getSidecarCuesheetExtUrl() const { return m_exturl_cuesheet; }
 
 	/// @name Serialization
 	/// @{
@@ -115,15 +118,15 @@ protected:
 	// Member vars.
 
 	/// Absolute URL to the directory.
-	ExtUrl m_dir_exturl;
+	ExtUrl m_exturl_dir_url;
 
-    DirPropFlags m_dir_props { Unknown };
+	DirPropFlags m_flags_dirprops { Unknown };
 
     /// The media URL which was found.
-	ExtUrl m_media_exturl;
+	ExtUrl m_exturl_media;
 
     /// URL to a sidecar cuesheet.  May be empty if none was found.
-	ExtUrl m_cue_exturl;
+	ExtUrl m_exturl_cuesheet;
 
 };
 

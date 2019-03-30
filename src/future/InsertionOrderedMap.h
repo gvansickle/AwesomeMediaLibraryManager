@@ -64,6 +64,14 @@ public:
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(InsertionOrderedMap);
 	virtual ~InsertionOrderedMap() = default;
 
+	InsertionOrderedMap(const QVariant& variant)
+	{
+		Q_ASSERT(variant.isValid());
+		using qvartype = InsertionOrderedMap<KeyType, ValueType>;
+		Q_ASSERT(variant.canConvert< qvartype >());
+		*this = variant.value< InsertionOrderedMap<KeyType, ValueType> >();
+	}
+
 	void insert(const KeyType key, const ValueType value)
 	{
 		insert(std::make_pair(key, value));
@@ -154,10 +162,13 @@ protected:
 };
 
 #if 1 // Qt5
+
+
 Q_DECLARE_ASSOCIATIVE_CONTAINER_METATYPE(InsertionOrderedMap);
 
 using QVariantInsertionOrderedMap = InsertionOrderedMap<QString, QVariant>;
 Q_DECLARE_METATYPE(QVariantInsertionOrderedMap);
+
 
 #endif // Qt5
 
