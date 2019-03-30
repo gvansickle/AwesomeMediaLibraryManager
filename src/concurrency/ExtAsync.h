@@ -352,6 +352,7 @@ namespace ExtAsync
 			// Move the worked QObject to the new thread.
 			worker->moveToThread(thread);
 
+			// Connect to the worker's error signal.
 			connect_or_die(worker, &WorkerQObject::error, thread, [=](QString errorstr){
 				qCr() << "WorkerQObject reported error:" << errorstr;
 			});
@@ -672,27 +673,6 @@ namespace ExtAsync
 		QThread::currentThread()->setObjectName(QString("%1_").arg(id) + QThread::currentThread()->objectName() );
 	};
 
-    /**
-     * Helper struct for creating SFINAE-friendly function overloads-of-last-resort.
-     *
-     * @link https://gracicot.github.io/tricks/2017/07/01/deleted-function-diagnostic.html
-     *
-     * ...and this trick actually doesn't work.  It semi-works on gcc with C++11, but C++14 just gives the "use of deleted function" error.
-     */
-    struct TemplateOverloadResolutionFailed
-    {
-        template <typename T>
-        TemplateOverloadResolutionFailed(T&&)
-        {
-            static_assert(!std::is_same_v<T,T>, "Unable to find an appropriate template.");
-        };
-    };
-
-    /**
-     * ExtAsync::run() overload-of-last-resort to flag that none of the other templates matched.
-     */
-//    void run(TemplateOverloadResolutionFailed, ...) = delete;
-
 	/**
 	 * ExtAsync::run() overload for member functions taking an ExtFuture<T> as the first non-this param.
 	 * E.g.:
@@ -752,12 +732,7 @@ namespace ExtAsync
 	}
 
 
-//	template <class CallbackType, class... Args,
-//			class ExtFutureT = argtype_t<CallbackType, 0>>
-//	static auto run(CallbackType&& callback, Args&&... args) -> argtype_t<CallbackType, 0>
-//	{
-//		return ExtAsync::detail_struct<CallbackType>::run_param_expander(DECAY_COPY(callback), std::forward<Args>(args)...);
-//	}
+
 
 #if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
@@ -1003,6 +978,34 @@ namespace ExtAsync
 
 		return retfuture;
     }
+
+    template <class CallbackType>
+    ExtFuture<decltype(std::declval<CallbackType>()())>
+    spawn_async(CallbackType&& callback)
+    {
+    	// The promise we'll make and extract a future from.
+		ExtFuture<decltype(std::declval<CallbackType>()())> promise;
+
+		auto retfuture = promise.get_future();
+	    std::thread the_thread(
+	    		[promise=std::move(promise), callback=std::decay_t<CallbackType>(callback)]()
+	    		mutable {
+	    			try
+				    {
+	    				promise.set_value_at_thread_exit(callback());
+				    }
+	    			catch(QException& e)
+				    {
+	    				promise.set_exception_at_thread_exit(e);
+				    }
+	    			catch(...)
+				    {
+	    				promise.set_exception_at_thread_exit(std::current_exception());
+				    }
+	    		});
+	    the_thread.detach();
+	    return retfuture;
+    };
 
 	////// START EXPERIMENTAL
 

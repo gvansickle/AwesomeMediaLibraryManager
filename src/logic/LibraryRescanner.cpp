@@ -67,7 +67,7 @@ AMLM_QREG_CALLBACK([](){
 	// From #include <logic/LibraryRescanner.h>
 	qRegisterMetaType<MetadataReturnVal>();
 	qRegisterMetaType<QFuture<MetadataReturnVal>>();
-	qRegisterMetaType<VecLibRescannerMapItems>();
+	qRegisterMetaType<QVector<LibraryRescannerMapItem>>("VecLibRescannerMapItems");
     });
 
 

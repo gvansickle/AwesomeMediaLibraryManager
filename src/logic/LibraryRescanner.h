@@ -65,7 +65,9 @@ Q_DECLARE_METATYPE(MetadataReturnVal)
 Q_DECLARE_METATYPE(QFuture<MetadataReturnVal>)
 Q_DECLARE_METATYPE(ExtFuture<MetadataReturnVal>)
 
+// Typedef registered in cpp file.
 using VecLibRescannerMapItems = QVector<LibraryRescannerMapItem>;
+
 
 /**
  * Object which needs to be refactored badly.  Parent is a LibraryModel (which deleteLater()s it),

@@ -97,32 +97,32 @@ public:
         return job;
     }
 
-    Q_SCRIPTABLE void start() override
-    {
-        // Hook up signals and such to the ExtFutureWatcher<T>.
-        HookUpExtFutureSignals(m_ext_watcher);
+	Q_SCRIPTABLE void start() override
+	{
+		// Hook up signals and such to the ExtFutureWatcher<T>.
+		HookUpExtFutureSignals(m_ext_watcher);
 
 		// Start the speed calculation timer.
 		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
 		m_speed_timer->setInterval(1000);
 		m_speed_timer->start();
 
-        // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
-        // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
-        // role is handled by the ExtFuture<> m_ext_future and m_ext_watcher.
-        // Note that calling the destructor of (by deleting) the returned future is ok:
-        // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
-        // "Note that this neither waits nor cancels the asynchronous computation."
+		// Just let ExtAsync run the run() function, which will in turn run the runFunctor().
+		// Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
+		// role is handled by the ExtFuture<> m_ext_future and m_ext_watcher.
+		// Note that calling the destructor of (by deleting) the returned future is ok:
+		// http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
+		// "Note that this neither waits nor cancels the asynchronous computation."
 
-        // Run.
+		// Run.
 		ExtFutureT future = ExtAsync::run_class_noarg(this, &std::remove_reference_t<decltype(*this)>::run /*&AMLMJobT::run*/);
 
 		m_ext_future = future;
 
-        // All connections have already been made, so set the watched future.
-        // "To avoid a race condition, it is important to call this function after doing the connections."
-        m_ext_watcher->setFuture(m_ext_future);
-    }
+		// All connections have already been made, so set the watched future.
+		// "To avoid a race condition, it is important to call this function after doing the connections."
+		m_ext_watcher->setFuture(m_ext_future);
+	}
 
 protected: //Q_SLOTS:
 
