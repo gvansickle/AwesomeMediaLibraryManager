@@ -102,6 +102,7 @@ QVariant ScanResultsTreeModelItem::toVariant() const
 	for(int i=0; i<childCount(); i++)
 	{
 		auto* child_ptr = child(i);
+//		list_push_back_or_die(vl, child_ptr);
 		vl.push_back(child_ptr->toVariant());
 	}
 	map.insert("children", vl);
@@ -116,6 +117,14 @@ void ScanResultsTreeModelItem::fromVariant(const QVariant &variant)
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
+
+	// Children to variant list.
+	QVariantHomogenousList vl("children", "child");
+	map_read_field_or_warn(map, "children", &vl);
+//	for(const auto& ch : vl)
+//	{
+//		appendChild(ch.fromVariant());
+//	}
 }
 
 AbstractTreeModelItem *
