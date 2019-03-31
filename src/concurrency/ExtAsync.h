@@ -333,9 +333,9 @@ namespace ExtAsync
 		/**
 		 * Run the callback in a QThread with its own event loop.
 		 * @tparam CallbackType  Callback of type:
-		 *                   @code
-		 *                       void callback(ExtFutureT [, ...])
-		 *                   @endcode
+		 *     @code
+		 *     void callback(ExtFutureT [, ...])
+		 *     @endcode
 		 * @param callback  The callback to run in the new thread.
 		 */
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
@@ -358,9 +358,9 @@ namespace ExtAsync
 			});
 			// Connection from thread start to actual WorkerQObject process() function start
 			connect_or_die(thread, &QThread::started, worker, [=,
-					callback_copy=DECAY_COPY(std::forward<CallbackType>(callback)),
-					retfuture_copy=retfuture
-//					        args_copy=std::forward_as_tuple<Args>(args...)
+						   callback_copy = DECAY_COPY(std::forward<CallbackType>(callback)),
+						   retfuture_copy = retfuture//,
+//						   args_copy = std::forward_as_tuple<Args>(args...)
 					        ]() mutable {
 				/// @todo Exceptions/cancellation.
 				worker->process(callback_copy, retfuture_copy, args...);
@@ -1068,8 +1068,10 @@ namespace ExtAsync
  * Adapted from https://stackoverflow.com/questions/21646467/how-to-execute-a-functor-or-a-lambda-in-a-given-thread-in-qt-gcd-style/21653558#21653558
  */
 template <typename F>
-static void runInObjectEventLoop(F && fun, QObject * obj = qApp) {
-   struct Event : public QEvent {
+static void runInObjectEventLoop(F && fun, QObject * obj = qApp)
+{
+   struct Event : public QEvent
+   {
       using Fun = typename std::decay<F>::type;
       Fun fun;
       Event(Fun && fun) : QEvent(QEvent::None), fun(std::move(fun)) {}

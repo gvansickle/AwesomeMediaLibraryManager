@@ -149,7 +149,7 @@ protected: //Q_SLOTS:
         // The emitResult() call will send out a KJob::finished() signal.
 		qDbo() << "GOT EXTFUTURE FINISHED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
-        emitResult();
+		this->emitResult();
     }
 
     virtual void SLOT_extfuture_canceled()

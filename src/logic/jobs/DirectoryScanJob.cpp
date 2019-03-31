@@ -17,17 +17,19 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "concurrency/AMLMJob.h"
 #include "DirectoryScanJob.h"
 
+
+// Qt5
 #include <QString>
 #include <QUrl>
 #include <QDirIterator>
 
-/// Ours
-#include "utils/TheSimplestThings.h"
+// Ours
+#include <utils/TheSimplestThings.h>
 #include <logic/DirScanResult.h>
 #include <concurrency/ExtAsync.h>
+#include <concurrency/AMLMJob.h>
 
 DirectoryScannerAMLMJob::DirectoryScannerAMLMJob(QObject *parent, const QUrl& dir_url,
 								   const QStringList &nameFilters,

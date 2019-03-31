@@ -213,8 +213,17 @@ M_TODO("This isn't scanning.");
 
 	// Attach a streaming tap to get the results.
 	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
-	ExtFuture<DirScanResult> tail_future
-		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
+#if 0
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread_with_event_loop(DirScanFunction, nullptr,
+																dir_url,
+																extensions,
+																QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot,
+																QDirIterator::Subdirectories);
+	ExtFuture<DirScanResult> tail_future = dirresults_future
+#else
+	ExtFuture<DirScanResult> tail_future = dirtrav_job->get_extfuture()
+#endif
+		.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
 
 		using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
