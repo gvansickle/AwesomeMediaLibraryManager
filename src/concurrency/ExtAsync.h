@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
-#ifndef UTILS_CONCURRENCY_EXTASYNC_H_
-#define UTILS_CONCURRENCY_EXTASYNC_H_
+#ifndef CONCURRENCY_EXTASYNC_H_
+#define CONCURRENCY_EXTASYNC_H_
 
 /**
  * @file
@@ -359,11 +359,12 @@ namespace ExtAsync
 			// Connection from thread start to actual WorkerQObject process() function start
 			connect_or_die(thread, &QThread::started, worker, [=,
 						   callback_copy = DECAY_COPY(std::forward<CallbackType>(callback)),
-						   retfuture_copy = retfuture//,
-//						   args_copy = std::forward_as_tuple<Args>(args...)
-					        ]() mutable {
+						   retfuture_copy = retfuture,
+						   argtuple = std::make_tuple(worker, std::forward<decltype(callback)>(callback), std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)
+							]() mutable {
 				/// @todo Exceptions/cancellation.
 				worker->process(callback_copy, retfuture_copy, args...);
+//				std::apply(&WorkerQObject::process<CallbackType, ExtFutureT, decltype(args)...>, argtuple);
 				/// @note Unconditional finish here.
 				retfuture_copy.reportFinished();
 			});
@@ -979,6 +980,25 @@ namespace ExtAsync
 		return retfuture;
     }
 
+	/**
+	 * Run a callback in a QThread.
+	 */
+	template <class CallbackType,
+			class ExtFutureT = argtype_t<CallbackType, 0>,
+			class... Args,
+			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
+	{
+		ExtFutureT retfuture;
+
+		auto new_thread = QThread::create(callback, retfuture, args...);
+
+		new_thread->start();
+
+		return retfuture;
+	}
+
+
     template <class CallbackType>
     ExtFuture<decltype(std::declval<CallbackType>()())>
     spawn_async(CallbackType&& callback)
@@ -1157,4 +1177,4 @@ namespace ExtAsync
 
 } // Namespace ExtAsync.
 
-#endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */
+#endif /* CONCURRENCY_EXTASYNC_H_ */

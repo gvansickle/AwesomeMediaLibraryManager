@@ -1210,6 +1210,41 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncRunFreefunc)
     TC_EXIT();
 }
 
+TEST_F(ExtAsyncTestsSuiteFixture, RunInQThreadTest)
+{
+	TC_ENTER();
+
+	int val = 0;
+	std::set<int> seen_tap_values;
+
+	ExtFuture<int> f0 = ExtAsync::run_in_qthread([&](ExtFuture<int> ef){
+//			EXPECT_EQ(f0, ef);
+			while(val < 10)
+	{
+			TCOUT << "val:" << val;
+			val++;
+			ef.reportResult(val);
+			TC_Sleep(1000);
+}
+			ef.reportFinished();
+			;});
+
+//	f0.then([](){;});
+	f0.tap([&](ExtFuture<int> in_future, int begin, int end){
+		for(int i = begin; i < end; i++)
+		{
+			seen_tap_values.insert(in_future.resultAt(i));
+		}
+	});
+//	f0.wait();
+
+	f0.waitForFinished();
+
+	EXPECT_EQ(val, 10);
+
+	TC_EXIT();
+}
+
 TEST_F(ExtAsyncTestsSuiteFixture, RunFreeFuncInQThreadWithEventLoop)
 {
 	TC_ENTER();
