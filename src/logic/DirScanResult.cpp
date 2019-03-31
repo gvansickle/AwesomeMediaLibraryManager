@@ -76,13 +76,9 @@ QVariant DirScanResult::toVariant() const
 
 void DirScanResult::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map(variant);
 
-	// Extract all the fields from the map, cast them to their type.
-
-	/// @todo Something is still broken here.  This should work, but it doesn't:
-//	m_media_exturl = map.value("exturl_media").value<ExtUrl>();
-
+	// Extract all the fields from the map.
 #define X(field_tag, member_field) map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X

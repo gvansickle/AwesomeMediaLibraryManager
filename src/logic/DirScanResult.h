@@ -28,8 +28,8 @@
 #include <QDateTime>
 #include <QDataStream>
 #include <QDebug>
-#include <QXmlStreamWriter>
-#include <QXmlQuery>
+//#include <QXmlStreamWriter>
+//#include <QXmlQuery>
 
 // Ours
 #include <src/utils/QtHelpers.h>
