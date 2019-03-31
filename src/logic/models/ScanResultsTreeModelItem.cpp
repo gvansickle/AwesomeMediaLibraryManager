@@ -217,9 +217,6 @@ QVariant SRTMItem_LibEntry::toVariant() const
 {
 	QVariantHomogenousList list("library_entries", "m_library_entry");
 
-//	list_push_back_or_die(list, "TEST_COL0", m_key);
-//	list_push_back_or_die(list, "TEST_COL1", m_val);
-
 	/// @todo Need the parent here too?  Probably needs to be handled by the parent, but maybe for error detection.
 
 	if(auto libentry = m_library_entry.get(); libentry != nullptr)

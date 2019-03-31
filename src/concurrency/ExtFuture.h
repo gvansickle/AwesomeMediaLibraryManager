@@ -686,7 +686,7 @@ public:
 
 	void set_value(const T& value)
 	{
-		reportFinished(&value);
+		this->reportFinished(&value);
 	}
 
 	void set_value_at_thread_exit(const T& value)
@@ -1259,22 +1259,21 @@ protected:
 				int i = 0;
 				try
 				{
-
 					while(true)
 					{
-						qDb() << "STREAMINGTAP: Waiting for next result";
+//						qDb() << "STREAMINGTAP: Waiting for next result";
 
 						/**
-					  * QFutureInterfaceBase::waitForResult(int resultIndex)
-					  * - if exception, rethrow.
-					  * - if !running, return.
-					  * - stealAndRunRunnable()
-					  * - lock mutex.
-					  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
-					  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
-					  *     d->waitCondition.wait(&d->m_mutex);
-					  *   d->m_exceptionStore.throwPossibleException();
-					  */
+						  * QFutureInterfaceBase::waitForResult(int resultIndex)
+						  * - if exception, rethrow.
+						  * - if !running, return.
+						  * - stealAndRunRunnable()
+						  * - lock mutex.
+						  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
+						  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
+						  *     d->waitCondition.wait(&d->m_mutex);
+						  *   d->m_exceptionStore.throwPossibleException();
+						  */
 						/// @todo This needs to wait on both this_ and returned_ futures.
 						this_future_copy.waitForResult(i);
 
@@ -1283,7 +1282,7 @@ protected:
 						if(result_count <= i)
 						{
 							// No new results, must have finshed etc.
-							qWr() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
+//							qWr() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
 							break;
 						}
 
@@ -1295,14 +1294,14 @@ protected:
 						// Copy the new results to the returned future.
 						for(; i < result_count; ++i)
 						{
-							qDb() << "STREAMINGTAP: Next result available at i = " << i;
+//							qDb() << "STREAMINGTAP: Next result available at i = " << i;
 
 							T the_next_val = this_future_copy.resultAt(i);
 							returned_future_copy.reportResult(the_next_val);
 						}
 					} // END while(true).
 
-					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
+//					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
 
 					// Check final state.  We know it's at least Finished.
 					/// @todo Could we be Finished here with pending results?

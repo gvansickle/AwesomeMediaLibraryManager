@@ -213,11 +213,11 @@ M_TODO("This isn't scanning.");
 
 	// Attach a streaming tap to get the results.
 	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
-#if 0
-	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread_with_event_loop(DirScanFunction, nullptr,
+#if 1
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread(DirScanFunction, nullptr,
 																dir_url,
 																extensions,
-																QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot,
+																QDir::Filters(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot),
 																QDirIterator::Subdirectories);
 	ExtFuture<DirScanResult> tail_future = dirresults_future
 #else

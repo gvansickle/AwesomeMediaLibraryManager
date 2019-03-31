@@ -125,7 +125,7 @@ Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
  * @param dir_filters
  * @param iterator_flags
  */
-static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
+void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
 		const QUrl& dir_url,
 		const QStringList &name_filters,
 		const QDir::Filters dir_filters = QDir::NoFilter,
