@@ -20,8 +20,15 @@
 #ifndef AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 #define AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 
+// Std C++ helpers.
 #include <future/function_traits.hpp>
+
+// Qt5
+#include <QThread>
+
+// Ours.
 #include "../ExtAsync_traits.h"
+#include "../ExtFuture.h"
 
 namespace ExtAsync
 {
@@ -35,9 +42,12 @@ namespace ExtAsync
 			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
 	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&& ... args)
 	{
-		ExtFutureT retfuture;
+		using T = typename ExtFutureT::value_type;
+		ExtFutureT retfuture = make_started_only_future<T>();
 
-		auto new_thread = QThread::create(callback, std::forward<ExtFutureT>(retfuture), args...);
+		auto new_thread = QThread::create(callback, retfuture, args...);
+
+		connect_or_die(new_thread, &QThread::finished, new_thread, &QObject::deleteLater);
 
 		new_thread->start();
 

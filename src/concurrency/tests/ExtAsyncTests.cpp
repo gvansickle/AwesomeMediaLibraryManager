@@ -1217,30 +1217,47 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunInQThreadTest)
 	int val = 0;
 	std::set<int> seen_tap_values;
 
-	ExtFuture<int> f0 = ExtAsync::run_in_qthread([&](ExtFuture<int> ef){
-//			EXPECT_EQ(f0, ef);
-				while(val < 10)
-				{
+	ExtFuture<int> f0 = ExtAsync::run_in_qthread([&](ExtFuture<int> ef, int testval1){
+			EXPECT_EQ(f0, ef);
+			TCOUT << M_ID_VAL(testval1);
+			while(val < 10)
+			{
 				TCOUT << "val:" << val;
+			ef.reportResult(val);
 				val++;
-				ef.reportResult(val);
-				TC_Sleep(1000);
-				}
-				ef.reportFinished();
-			;});
+				TC_Sleep(100);
+			}
+			ef.reportFinished();
+		;}, 7);
 
-//	f0.then([](){;});
-	f0.tap([&](ExtFuture<int> in_future, int begin, int end){
+	TCOUT << "POST run(), f0:" << f0;
+
+	auto flast = f0.tap([&](ExtFuture<int> in_future, int begin, int end){
 		for(int i = begin; i < end; i++)
 		{
 			seen_tap_values.insert(in_future.resultAt(i));
 		}
-	});
-//	f0.wait();
+	}).then([&](ExtFuture<int> fut_from_upstream){
+		EXPECT_TRUE(fut_from_upstream.is_ready());
+		QList<int> then_in_val = fut_from_upstream.get();
 
-	f0.waitForFinished();
+		TCOUT << M_ID_VAL(then_in_val);
+
+		// Check that we got the right values.
+		int exp_i = 0;
+		for(const int i : then_in_val)
+		{
+			EXPECT_EQ(i, exp_i);
+			exp_i++;
+		}
+	;});
+
+	flast.wait();
+
+//	flast.waitForFinished();
 
 	EXPECT_EQ(val, 10);
+	EXPECT_EQ(seen_tap_values.size(), 10);
 
 	TC_EXIT();
 }
