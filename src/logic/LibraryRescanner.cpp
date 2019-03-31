@@ -288,6 +288,7 @@ M_TODO("This isn't scanning.");
 			qurl_future.reportResult(entry->data(1).toString());
 		}
 
+#if 0 // ScanResultsTreeModel
 		run_in_event_loop(this, [
 						   tree_model_ptr=tree_model,
 						   new_items_copy=new_items
@@ -326,6 +327,7 @@ M_TODO("This isn't scanning.");
 
 			/// @todo REMOVE, EXPERIMENTAL
 		});
+#endif // END ScanResultsTreeModel
 	});
 
 	// Make sure the above job gets canceled and deleted.
