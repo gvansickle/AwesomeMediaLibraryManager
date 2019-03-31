@@ -56,6 +56,7 @@
 template <typename T> class ExtFuture;
 
 #include "impl/ExtAsync_impl.h"
+#include "impl/ExtAsync_RunInThread.h"
 
 // Generated
 #include "logging_cat_ExtAsync.h"
@@ -980,23 +981,7 @@ namespace ExtAsync
 		return retfuture;
     }
 
-	/**
-	 * Run a callback in a QThread.
-	 */
-	template <class CallbackType,
-			class ExtFutureT = argtype_t<CallbackType, 0>,
-			class... Args,
-			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
-	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
-	{
-		ExtFutureT retfuture;
 
-		auto new_thread = QThread::create(callback, retfuture, args...);
-
-		new_thread->start();
-
-		return retfuture;
-	}
 
 
     template <class CallbackType>

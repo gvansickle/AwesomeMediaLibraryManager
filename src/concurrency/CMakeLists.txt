@@ -32,12 +32,13 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	impl/ExtAsync_impl.h
 	impl/ExtFuture_impl.hpp
 	impl/ExtFutureImplHelpers.h
+	impl/ExtAsync_RunInThread.h
 	ExtAsync.h
 	ExtAsyncExceptions.h
 	AMLMJob.h
 	AMLMJobT.h
 	AMLMCompositeJob.h
-		../logic/jobs/DirectoryScanJob.h
+	../logic/jobs/DirectoryScanJob.h
 	ThreadsafeMap.h
 	DebugSequence.h
 	WorkerThreadBase.h

@@ -1219,14 +1219,14 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunInQThreadTest)
 
 	ExtFuture<int> f0 = ExtAsync::run_in_qthread([&](ExtFuture<int> ef){
 //			EXPECT_EQ(f0, ef);
-			while(val < 10)
-	{
-			TCOUT << "val:" << val;
-			val++;
-			ef.reportResult(val);
-			TC_Sleep(1000);
-}
-			ef.reportFinished();
+				while(val < 10)
+				{
+				TCOUT << "val:" << val;
+				val++;
+				ef.reportResult(val);
+				TC_Sleep(1000);
+				}
+				ef.reportFinished();
 			;});
 
 //	f0.then([](){;});
