@@ -26,19 +26,17 @@
 #include <utils/StringHelpers.h>
 
 
-SupportedMimeTypes* SupportedMimeTypes::m_the_instance {nullptr};
+//SupportedMimeTypes* SupportedMimeTypes::m_the_instance {nullptr};
 
-SupportedMimeTypes& SupportedMimeTypes::instance()
+SupportedMimeTypes& SupportedMimeTypes::instance(QObject* parent)
 {
+	static SupportedMimeTypes* m_the_instance = (Q_ASSERT(parent != nullptr), new SupportedMimeTypes(parent));
+
     return *m_the_instance;
 }
 
 SupportedMimeTypes::SupportedMimeTypes(QObject* parent) : QObject(parent)
 {
-    Q_ASSERT(m_the_instance == nullptr);
-
-    m_the_instance = this;
-
     // "*.flac", "*.mp3", "*.ogg", "*.wav"
     m_mime_audio_types << "audio/flac" << "audio/mpeg" << "audio/ogg" << "audio/x-flac+ogg" << "audio/x-vorbis+ogg" << "audio/x-wav";
     m_mime_audio_associated_types << "application/x-cue";

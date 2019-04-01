@@ -149,8 +149,8 @@ void LibraryEntry::populate(bool force_refresh)
 	}
 
     // Get the MIME type.
-	auto* mdb = amlmApp->mime_db();
-    m_mime_type = mdb->mimeTypeForUrl(m_url);
+	auto& mdb = amlmApp->mime_db();
+	m_mime_type = mdb.mimeTypeForUrl(m_url);
 
 	// Try to read the metadata of the file.
 	Metadata file_metadata = Metadata::make_metadata(m_url);

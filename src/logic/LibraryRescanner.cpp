@@ -194,7 +194,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 #if 1
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-#else
+#elif 0
     /// Return type here is: std::unique_ptr<AMLMJobT<ExtFutureT>>
 M_TODO("This isn't scanning.");
     SHARED_PTR<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(
