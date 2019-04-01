@@ -191,7 +191,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     Q_CHECK_PTR(master_job_tracker);
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
-#if 1
+
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread(DirScanFunction, nullptr,
+																dir_url,
+																extensions,
+																QDir::Filters(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot),
+																QDirIterator::Subdirectories);
+	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future);
+
+#if 0
     DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
 									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
 #elif 0
@@ -213,12 +221,9 @@ M_TODO("This isn't scanning.");
 
 	// Attach a streaming tap to get the results.
 	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
+
+
 #if 1
-	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread(DirScanFunction, nullptr,
-																dir_url,
-																extensions,
-																QDir::Filters(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot),
-																QDirIterator::Subdirectories);
 	ExtFuture<DirScanResult> tail_future = dirresults_future
 #else
 	ExtFuture<DirScanResult> tail_future = dirtrav_job->get_extfuture()

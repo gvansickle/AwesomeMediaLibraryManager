@@ -79,6 +79,20 @@ public:
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
 	}
 
+	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr,
+					  KJob::Unit units = KJob::Unit::Files,
+					  KJob::Capabilities capabilities = KJob::Capability::Killable | KJob::Capability::Suspendable) : AMLMJobT(extfuture, parent)
+	{
+		// Set our object name.
+		setObjectName("AMLJobT");
+
+		/// @todo This should be coming through the ExtFuture.
+		setProgressUnit(units);
+
+		// Set our capabilities.
+		setCapabilities(capabilities);
+	}
+
     /**
      * Return a copy of the future.
      */
@@ -243,6 +257,7 @@ protected: //Q_SLOTS:
 	}
 
 protected:
+
 
     /// Last-stage wrapper around the runFunctor().
     /// Handles most of the common ExtFuture<T> start/finished/canceled/exception code.
@@ -557,12 +572,13 @@ protected:
  * Create a new AMLMJobT from an ExtFuture<>.
  */
 template<class ExtFutureT>
-inline static SHARED_PTR<AMLMJobT<ExtFutureT>>
+//inline static SHARED_PTR<AMLMJobT<ExtFutureT>>
+inline static QPointer<AMLMJobT<ExtFutureT>>
 make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
 	/// @todo Does this really need a parent?
-//	return std::make_shared<AMLMJobT<ExtFutureT>>(ef, parent);
-	return MAKE_SHARED<AMLMJobT<ExtFutureT>>(ef, parent);
+	return new AMLMJobT<ExtFutureT>(ef, parent, KJob::Unit::Files);
+//	return MAKE_SHARED<AMLMJobT<ExtFutureT>>(ef, parent);
 }
 
 
