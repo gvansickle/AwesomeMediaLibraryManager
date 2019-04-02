@@ -1050,7 +1050,7 @@ public:
 			// Wait for the incoming future (this) to be ready.
 			this->get();
 			// Run the callback in the context's event loop.
-			run_in_event_loop(context, [= ](){
+			run_in_event_loop(context, [=, &retfuture](){
 				if constexpr(std::is_void_v<std::invoke_result_t<ThenCallbackType, decltype(*this)>>)
 				{
 					// Returns void.
@@ -1060,9 +1060,8 @@ public:
 				else
 				{
 					auto retval = std::invoke(then_callback, *this);
-
+					retfuture.reportFinished(retval);
 				}
-				retfuture.reportFinished();
 				;});
 			;});
 
