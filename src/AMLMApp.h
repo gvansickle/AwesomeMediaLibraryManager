@@ -171,8 +171,6 @@ private:
 
     ScanResultsTreeModel* m_srtm_instance {nullptr};
 
-//    QMimeDatabase* m_mime_database {nullptr};
-
 	PerfectDeleter m_perfect_deleter;
 
     std::atomic_bool m_shutting_down {false};

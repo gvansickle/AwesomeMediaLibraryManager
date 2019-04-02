@@ -64,6 +64,12 @@
 namespace ExtAsync
 {
 namespace detail {}
+
+	template<class CallbackType,
+			class ExtFutureT = argtype_t<CallbackType, 0>,
+			class... Args,
+			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&& ... args);
 }
 
 template <class T>
@@ -1026,6 +1032,43 @@ public:
 		// Forward to the master callback, don't call the then_callback on a cancel.
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
 	}
+
+	/**
+	 * .then() overload: Run callback in @a context's event loop.
+	 * callback is of the form:
+	 *     ExtFuture<R> callback(ExtFuture<T>)
+	 */
+	template <typename ThenCallbackType,
+			typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
+			        class QObjectType,
+			REQUIRES(!is_ExtFuture_v<R>
+			        && !std::is_convertible_v<QObjectType, QThreadPool>
+			         && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
+	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
+	{
+		ExtFuture<R> retfuture = ExtAsync::run_in_qthread([=](ExtFuture<T> rep_con_future) mutable {
+			// Wait for the incoming future (this) to be ready.
+			this->get();
+			// Run the callback in the context's event loop.
+			run_in_event_loop(context, [= ](){
+				if constexpr(std::is_void_v<std::invoke_result_t<ThenCallbackType, decltype(*this)>>)
+				{
+					// Returns void.
+					std::invoke(then_callback, *this);
+					retfuture.reportFinished();
+				}
+				else
+				{
+					auto retval = std::invoke(then_callback, *this);
+
+				}
+				retfuture.reportFinished();
+				;});
+			;});
+
+		return retfuture;
+	}
+
 
 	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback

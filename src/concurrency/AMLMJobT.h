@@ -68,29 +68,27 @@ public:
 	 * @param extfuture
 	 * @param parent
 	 */
-	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr)
+	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr,
+					  KJob::Unit units = KJob::Unit::Files,
+					  KJob::Capabilities capabilities = KJob::Capability::Killable | KJob::Capability::Suspendable)
 			: BASE_CLASS(parent), m_ext_future(extfuture)
 	{
 		qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
+
+		/// @todo This should be coming through the ExtFuture.
+		setProgressUnit(units);
+
+		// Set our object name.
+		setObjectName("AMLJobT");
+
+		// Set our capabilities.
+		setCapabilities(capabilities);
+
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
 		m_ext_watcher = new ExtFutureWatcherT();
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
-	}
-
-	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr,
-					  KJob::Unit units = KJob::Unit::Files,
-					  KJob::Capabilities capabilities = KJob::Capability::Killable | KJob::Capability::Suspendable) : AMLMJobT(extfuture, parent)
-	{
-		// Set our object name.
-		setObjectName("AMLJobT");
-
-		/// @todo This should be coming through the ExtFuture.
-		setProgressUnit(units);
-
-		// Set our capabilities.
-		setCapabilities(capabilities);
 	}
 
     /**

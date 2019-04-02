@@ -339,7 +339,8 @@ M_TODO("This isn't scanning.");
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
 	// START dirtrav_job->then()
-	dirtrav_job->then(this, [=, tree_model_ptr=tree_model](DirectoryScannerAMLMJob* kjob) {
+//	dirtrav_job->
+	tail_future.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<DirScanResult> dsr) {
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
