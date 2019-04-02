@@ -47,16 +47,17 @@ namespace ExtAsync
 	{
     	ExtFuture<T> retfuture = make_started_only_future<T>();
 
-		auto new_thread = QThread::create([=, callback=DECAY_COPY(callback)
+		auto new_thread = QThread::create([=, callback=DECAY_COPY(callback),
+										  retfuture_cp=std::forward<ExtFuture<T>>(retfuture)
 									 ](){
-			if constexpr(std::is_void_v<T>)
+			if constexpr(std::is_void_v<Unit::DropT<T>>)
 			{
-				std::invoke(callback, std::forward<Args>(args)...);
-				retfuture.reportFinished();
+				std::invoke(callback, /*std::forward<Args>(*/args/*)*/...);
+				retfuture_cp.reportFinished();
 			}
 			else
 			{
-				retfuture.reportFinished(std::invoke(callback, std::forward<Args>(args)...));
+				retfuture_cp.reportFinished(std::invoke(callback, args...));
 			}
 			;});
 		connect_or_die(new_thread, &QThread::finished, new_thread, &QObject::deleteLater);

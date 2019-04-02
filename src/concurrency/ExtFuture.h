@@ -66,10 +66,15 @@ namespace ExtAsync
 namespace detail {}
 
 	template<class CallbackType,
-			class ExtFutureT = argtype_t<CallbackType, 0>,
+			class ExtFutureT,
 			class... Args,
 			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
 	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&& ... args);
+
+	template <class CallbackType, class... Args,
+			class T>
+	static ExtFuture<T>
+	qthread_async(CallbackType&& callback, Args&& ... args);
 }
 
 template <class T>
@@ -1046,12 +1051,12 @@ public:
 			         && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
-		ExtFuture<R> retfuture = ExtAsync::run_in_qthread([=](ExtFuture<T> rep_con_future) mutable {
+		ExtFuture<R> retfuture = ExtAsync::qthread_async([=]() mutable {
 			// Wait for the incoming future (this) to be ready.
 			this->get();
 			// Run the callback in the context's event loop.
 			run_in_event_loop(context, [=, &retfuture](){
-				if constexpr(std::is_void_v<std::invoke_result_t<ThenCallbackType, decltype(*this)>>)
+				if constexpr(std::is_void_v<Unit::DropT<R>>)
 				{
 					// Returns void.
 					std::invoke(then_callback, *this);
