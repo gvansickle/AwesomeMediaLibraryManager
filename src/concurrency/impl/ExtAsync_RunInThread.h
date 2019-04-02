@@ -37,18 +37,46 @@
 
 namespace ExtAsync
 {
-
 	/**
 	 * Run a callback in a QThread.
 	 */
+	template <class CallbackType, class... Args,
+			class T = Unit::LiftT<std::invoke_result_t<std::decay_t<CallbackType>, std::decay_t<Args>...>>>
+	static ExtFuture<T>
+    qthread_async(CallbackType&& callback, Args&& ... args)
+	{
+    	ExtFuture<T> retfuture = make_started_only_future<T>();
+
+		auto new_thread = QThread::create([=, callback=DECAY_COPY(callback)
+									 ](){
+			if constexpr(std::is_void_v<T>)
+			{
+				std::invoke(callback, std::forward<Args>(args)...);
+				retfuture.reportFinished();
+			}
+			else
+			{
+				retfuture.reportFinished(std::invoke(callback, std::forward<Args>(args)...));
+			}
+			;});
+		connect_or_die(new_thread, &QThread::finished, new_thread, &QObject::deleteLater);
+		new_thread->start();
+
+		return retfuture;
+	}
+
+	/**
+	 * Run a callback in a QThread.  Callback is passed an ExtFuture<T>.
+	 */
+#if 0
 	template<class CallbackType,
 			class ExtFutureT = argtype_t<CallbackType, 0>,
 			class... Args,
-			class U = std::invoke_result_t<CallbackType, ExtFutureT, Args...>, // callback return type.
+			class U = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>, // callback return type.
 			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
 	static ExtFuture<U> run_in_qthread(CallbackType&& callback, Args&& ... args)
 	{
-		using T = typename ExtFutureT::value_type;
+//		class U = Unit::Lift<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>;
 		ExtFuture<U> retfuture = make_started_only_future<U>();
 
 		auto new_thread = QThread::create(callback, retfuture, args...);
@@ -61,6 +89,23 @@ namespace ExtAsync
 
 		return retfuture;
 	};
+#else
+	template<class CallbackType,
+			class ExtFutureT = argtype_t<CallbackType, 0>,
+			class... Args,
+			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&& ... args)
+	{
+		using T = Unit::LiftT<typename ExtFutureT::value_type>;
+		ExtFutureT retfuture = make_started_only_future<T>();
+
+		qthread_async(callback, retfuture, args...);
+
+		qDb() << __func__ << "RETURNING";
+
+		return retfuture;
+	};
+#endif
 
 	/**
 	 * Attach a Sutteresque .then()-like continuation to a run_in_qthread().
