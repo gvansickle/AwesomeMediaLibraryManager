@@ -40,11 +40,11 @@ namespace ExtAsync
 	/**
 	 * Run a callback in a QThread.
 	 */
-	template <class CallbackType, class... Args,
-			class T = Unit::LiftT<std::invoke_result_t<std::decay_t<CallbackType>, std::decay_t<Args>...>>>
-	static ExtFuture<T>
-    qthread_async(CallbackType&& callback, Args&& ... args)
+	template <class CallbackType, class... Args>
+	static auto qthread_async(CallbackType&& callback, Args&& ... args) ->
+		ExtFuture<Unit::LiftT<std::invoke_result_t<std::decay_t<CallbackType>, std::decay_t<Args>...>>>
 	{
+		using T = Unit::LiftT<std::invoke_result_t<std::decay_t<CallbackType>, std::decay_t<Args>...>>;
     	ExtFuture<T> retfuture = make_started_only_future<T>();
 
 		auto new_thread = QThread::create([=, callback=DECAY_COPY(callback),
@@ -92,9 +92,9 @@ namespace ExtAsync
 	};
 #else
 	template<class CallbackType,
-			class ExtFutureT = argtype_t<CallbackType, 0>,
-			class... Args,
-			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+			class ExtFutureT,
+			class... Args/*,
+			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)*/>
 	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&& ... args)
 	{
 		using T = Unit::LiftT<typename ExtFutureT::value_type>;
