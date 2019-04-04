@@ -66,8 +66,8 @@ namespace ExtAsync
 			ExtFutureR retfuture = make_started_only_future<typename ExtFutureR::value_type>();
 
 			auto new_thread = QThread::create([=, callback=DECAY_COPY(callback),
-													  retfuture_cp=std::forward<ExtFutureR>(retfuture)
-			                                  ](){
+													  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
+											  ]() mutable {
 				if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
 				{
 					std::invoke(callback, args...);
