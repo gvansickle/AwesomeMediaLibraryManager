@@ -192,7 +192,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
-	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread(DirScanFunction, nullptr,
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::Async/*<decltype(DirScanFunction)>*/::run_in_qthread(DirScanFunction, nullptr,
 																dir_url,
 																extensions,
 																QDir::Filters(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot),

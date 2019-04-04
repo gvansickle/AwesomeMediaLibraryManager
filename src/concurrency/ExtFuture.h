@@ -64,10 +64,12 @@ namespace ExtAsync
 {
 namespace detail {}
 
-	template <class CallbackType, class... Args>
-	static auto qthread_async(CallbackType&& callback, Args&& ... args) ->
-	ExtFuture<Unit::LiftT<std::invoke_result_t<std::decay_t<CallbackType>, std::decay_t<Args>...>>>;
+struct Async;
 }
+
+#define ExtAsync_RunInThread_DECL_ONLY
+//#include "impl/ExtAsync_RunInThread.h"
+#undef ExtAsync_RunInThread_DECL_ONLY
 
 template <class T>
 class ExtFuture;
@@ -1043,7 +1045,9 @@ public:
 			         && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
-		ExtFuture<R> retfuture = ExtAsync::qthread_async([=, &retfuture]() mutable {
+		ExtFuture<R> retfuture;
+#if 0 // TEMP
+		ExtFuture<R> retfuture = ExtAsync::Async::qthread_async([=, &retfuture]() mutable {
 			// Wait for the incoming future (this) to be ready.
 			this->get();
 			// Run the callback in the context's event loop.
@@ -1061,7 +1065,7 @@ public:
 				}
 				;});
 			;});
-
+#endif
 		return retfuture;
 	}
 
