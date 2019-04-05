@@ -64,6 +64,10 @@ public:
 
 	/**
 	 * For adding QFuture<void>'s to be canceled/waited on.
+	 * @warning This is kind of wrong.  Ext/QFutures are ~std::shared_future<>'s, so while we can tell the promise-side
+	 * status (i.e. isFinished() etc.), there's not a public way of determining when the future is no longer being
+	 * looked at by consumers, and hence can be destroyed.  Since it's a value-type, it may not even make sense to try
+	 * to track finished-ness, but we should have a way to do a global cancel() of all outstanding futures.
 	 */
 	void addQFuture(QFuture<void> f);
 

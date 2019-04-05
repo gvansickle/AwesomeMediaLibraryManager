@@ -91,6 +91,7 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 	}
 
 	// Periodically purge completed futures.
+	/// @todo This is the most wrong part, this will cancel futures which may still have consumers.
 	if(m_num_qfutures_added_since_last_purge > m_purge_futures_count)
 	{
 		qIno() << "Purging QFutures...";
