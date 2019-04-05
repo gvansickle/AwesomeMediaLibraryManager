@@ -30,6 +30,7 @@
 #include <QLibraryInfo>
 #include <QLoggingCategory>
 #include <QProcessEnvironment>
+#include <QRegularExpression>
 #include <QString>
 #include <QThread>
 
@@ -61,7 +62,7 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
         // No name yet, last-ditch we'll print the native thread ID.
 
         auto cur_thread_id = QThread::currentThreadId();
-        thread_name = QString("%1").arg((unsigned long)cur_thread_id);
+		thread_name = QString("%1").arg(reinterpret_cast<uintptr_t>(cur_thread_id));
     }
     // Fit to 15 chars, fixed width.
     thread_name = thread_name.leftJustified(15, '_', true);
@@ -74,7 +75,13 @@ void printDebugMessagesWhileDebuggingHandler(QtMsgType type, const QMessageLogCo
     // Unfortunately we can't use __FUNCTION__ here because QMessageLogContext captures only __PRETTY_FUNCTION__,.
     // and even that already gets cleaned up by %{function}. So we have to simply truncate what we get.
     M_WARNING("TODO: This needs to be smarter, we mostly only get the return and linkage types");
-    debug_str.replace(QStringLiteral("%shortfunction"), QString(context.function).left(16));
+	debug_str.replace(QStringLiteral("%shortfunction"), [&context]{
+		QString retval = context.function;
+		retval.remove(QRegularExpression(R"!(^[\s]*(static|void|template|virtual|\*))!"));
+		retval.remove(QRegularExpression(R"!(\w+\s+)!"));
+		retval.remove(QRegularExpression(R"!(^([\s]+))!"));
+		return retval.left(16);
+	}());
 
     /// @todo I must be missing a header on Windows, all I get is "OutputDebugString not defined" here.
 #if 0 //def Q_OS_WIN

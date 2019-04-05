@@ -59,12 +59,23 @@
 // Generated
 #include "logging_cat_ExtFuture.h"
 
-
 // Forward declare the ExtAsync namespace
 namespace ExtAsync
 {
 namespace detail {}
+
+//struct Async;
+template <class CallbackType, /*class ExtFutureR,*/ class... Args,
+				  class R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>,
+				  class ExtFutureR = ExtFuture<R>
+				  >
+		static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
 }
+
+
+#define ExtAsync_RunInThread_DECL_ONLY
+//#include "impl/ExtAsync_RunInThread.h"
+#undef ExtAsync_RunInThread_DECL_ONLY
 
 template <class T>
 class ExtFuture;
@@ -126,18 +137,24 @@ class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 {
 	using BASE_CLASS = QFuture<T>;
 
-	static_assert(!std::is_void<T>::value, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
+	static_assert(!std::is_void_v<T>, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
 
 	/// Like QFuture<T>, T must have a default constructor and a copy constructor.
 	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
 	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
 
 public:
+	/// @name Member types
+	/// @{
 
 	/// Member alias for the contained type, ala boost::future<T>, Facebook's Folly Futures.
 	using value_type = T;
+	/// Probably obsolete, this was I think the original name we used for value_type.
 	using inner_t = T;
 
+	/// @}
+
+public:
 	/**
 	 * Default constructor.
 	 *
@@ -408,17 +425,19 @@ public:
 		this->d.reportResults(results, beginIndex, count);
 	}
 
-	/// @} // END Results reporting interface.
-
 	/**
+	 * Call this from your promise-side code to indicate successful completion.
 	 * If result is != nullptr, calls reportResult() and adds a copy of the result.
 	 * Unconditionally reports finished.
-	 * @param result
+	 * @param result  If result is != nullptr, calls reportResult() and adds a copy of the result.
 	 */
 	inline void reportFinished(const T *result = nullptr)
 	{
 		this->d.reportFinished(result);
 	}
+
+	/// @} // END Results reporting interface.
+
 
 	/// From QFutureInterfaceBase
 
@@ -659,9 +678,46 @@ public:
 	}
 
 	/**
-	 * QFuture<T> has result(), results(), resultAt(), and isResultReadyAt().
+	 * QFuture<T> covers result(), results(), resultAt(), and isResultReadyAt().
 	 */
 
+	/// @name std::promise-like functionality.
+	/// @{
+
+	/**
+	 * This is semi-analogous to std:experimental::promise's get_future().
+	 * The difference being that this can be called an indefinite number of times, and it still returns a valid
+	 * ExtFuture<T>.
+	 * @return
+	 */
+	auto get_future()
+	{
+		return *this;
+	}
+
+	void set_value(const T& value)
+	{
+		this->reportFinished(&value);
+	}
+
+	void set_value_at_thread_exit(const T& value)
+	{
+		/// @todo This doesn't connect to thread exit at all, not sure what to do about that.
+		set_value(value);
+	}
+
+	void set_exception(QException& p)
+	{
+		this->reportException(p);
+	}
+
+	void set_exception_at_thread_exit(QException& p)
+	{
+		/// @todo This doesn't connect to thread exit at all, not sure what to do about that.
+		set_exception(p);
+	}
+
+	/// @} // END std::promise-like functionality.
 
 	/// @name .then() overloads.
 	/// Various C++2x/"C++ Extensions for Concurrency" TS (ISO/IEC TS 19571:2016) std::experimental::future-like
@@ -983,6 +1039,45 @@ public:
 	}
 
 	/**
+	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
+	 * Mainly intended for running in the main thread/event loop.
+	 * callback is of the form:
+	 *     ExtFuture<R> callback(ExtFuture<T>)
+	 */
+	template <typename ThenCallbackType,
+			typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
+			        class QObjectType,
+			REQUIRES(!is_ExtFuture_v<R>
+			        && !std::is_convertible_v<QObjectType, QThreadPool>
+			         && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
+	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
+	{
+		ExtFuture<R> retfuture = make_started_only_future<R>();
+#if 1 // TEMP
+		/*ExtFuture<R>*/ retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
+			// Wait inside this intermediate thread for the incoming future (this) to be ready.
+			this_future.waitForFinished();
+			// Run the callback in the context's event loop.
+			run_in_event_loop(context, [=, retfuture_cp = retfuture]() mutable {
+				if constexpr(std::is_void_v<Unit::DropT<R>>)
+				{
+					// Returns void.
+					std::invoke(then_callback, this_future);
+					retfuture_cp.reportFinished();
+				}
+				else
+				{
+					auto retval = std::invoke(then_callback, this_future);
+					retfuture_cp.reportFinished(retval);
+				}
+				;});
+			;}, DECAY_COPY(*this));
+#endif
+		return retfuture;
+	}
+
+
+	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback
 	 * with the signature:
 	 * 	@code
@@ -1019,7 +1114,7 @@ public:
 	/// @{
 
 	/**
-	 * Attaches a .tap() callback to this ExtFuture.
+	 * Attaches a .tap() callback to this ExtFuture<T>.
 	 *
 	 * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
 	 *
@@ -1214,22 +1309,21 @@ protected:
 				int i = 0;
 				try
 				{
-
 					while(true)
 					{
-						qDb() << "STREAMINGTAP: Waiting for next result";
+//						qDb() << "STREAMINGTAP: Waiting for next result";
 
 						/**
-					  * QFutureInterfaceBase::waitForResult(int resultIndex)
-					  * - if exception, rethrow.
-					  * - if !running, return.
-					  * - stealAndRunRunnable()
-					  * - lock mutex.
-					  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
-					  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
-					  *     d->waitCondition.wait(&d->m_mutex);
-					  *   d->m_exceptionStore.throwPossibleException();
-					  */
+						  * QFutureInterfaceBase::waitForResult(int resultIndex)
+						  * - if exception, rethrow.
+						  * - if !running, return.
+						  * - stealAndRunRunnable()
+						  * - lock mutex.
+						  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
+						  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
+						  *     d->waitCondition.wait(&d->m_mutex);
+						  *   d->m_exceptionStore.throwPossibleException();
+						  */
 						/// @todo This needs to wait on both this_ and returned_ futures.
 						this_future_copy.waitForResult(i);
 
@@ -1238,7 +1332,7 @@ protected:
 						if(result_count <= i)
 						{
 							// No new results, must have finshed etc.
-							qWr() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
+//							qWr() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
 							break;
 						}
 
@@ -1250,14 +1344,14 @@ protected:
 						// Copy the new results to the returned future.
 						for(; i < result_count; ++i)
 						{
-							qDb() << "STREAMINGTAP: Next result available at i = " << i;
+//							qDb() << "STREAMINGTAP: Next result available at i = " << i;
 
 							T the_next_val = this_future_copy.resultAt(i);
 							returned_future_copy.reportResult(the_next_val);
 						}
 					} // END while(true).
 
-					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
+//					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
 
 					// Check final state.  We know it's at least Finished.
 					/// @todo Could we be Finished here with pending results?

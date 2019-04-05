@@ -110,7 +110,7 @@ public:
 
 	static ScanResultsTreeModel* IScanResultsTreeModel() { return amlmApp->m_srtm_instance; };
 
-	QMimeDatabase* mime_db() { return m_mime_database; };
+	QMimeDatabase& mime_db();
 
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
@@ -170,8 +170,6 @@ private:
 	AbstractTreeModel* m_cdb2_model_instance;
 
     ScanResultsTreeModel* m_srtm_instance {nullptr};
-
-    QMimeDatabase* m_mime_database {nullptr};
 
 	PerfectDeleter m_perfect_deleter;
 

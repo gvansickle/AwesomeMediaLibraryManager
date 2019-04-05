@@ -160,8 +160,6 @@ static const strviw_type XMLTAG_NUM_LIBRARY_ENTRIES("num_lib_entries");
 
 QVariant Library::toVariant() const
 {
-qDb() << "ENTER";
-
 	QVariantInsertionOrderedMap map;
 
 #define X(field_tag, member_field)   map_insert_or_die(map, field_tag, member_field);
@@ -169,19 +167,16 @@ qDb() << "ENTER";
 #undef X
 
 	// Write some derived info re: the Library.
-//	map.insert(XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
 	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_MS, QDateTime::currentMSecsSinceEpoch());
-	map.insert(XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc()/*.toString()*/);
-	map.insert(XMLTAG_NUM_LIBRARY_ENTRIES, static_cast<qint64>(m_lib_entries.size()));
+	map_insert_or_die(map, XMLTAG_WRITE_TIMESTAMP_UTC, QDateTime::currentDateTimeUtc()/*.toString()*/);
+	map_insert_or_die(map, XMLTAG_NUM_LIBRARY_ENTRIES, static_cast<qint64>(m_lib_entries.size()));
 	if(!m_lib_entries.empty())
 	{
 		// Serialize the LibraryEntry's.
-		//QVariantHomogenousList list("", "library_entry");
 		QVariantHomogenousList list("m_lib_entries", "library_entry");
 
 		for(const auto& e : m_lib_entries)
 		{
-//			list.append(e->toVariant());
 			list_push_back_or_die(list, *e);
 		}
 		map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
@@ -189,27 +184,25 @@ qDb() << "ENTER";
 
 qDb() << "EXIT, wrote:" << m_lib_entries.size() << "libentries";
 
-	return map; //QVariant::fromValue(map);
+	return map;
 }
 
 void Library::fromVariant(const QVariant& variant)
 {
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
-#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &member_field);
+#define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
-//	m_root_url = map.value(XMLTAG_LIBRARY_ROOT_URL).value<QUrl>();
-//	m_num_unpopulated = map.value(XMLTAG_NUM_UNPOP).value<qint64>();
-//	m_num_populated = map.value(XMLTAG_NUM_POP).value<qint64>();
 	qint64 num_lib_entries = map.value(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
 
 	//QVariantHomogenousList list("library_entries", "library_entry");
 	//map_read_field_or_warn(map, XMLTAG_LIBRARY_ENTRIES, &list);
 	QVariant qvar_list = map.value(XMLTAG_LIBRARY_ENTRIES);
 	Q_ASSERT(qvar_list.isValid());
-	QVariantHomogenousList list = qvar_list.value<QVariantHomogenousList>();
+	QVariantHomogenousList list("m_lib_entries", "library_entry");
+	list = qvar_list.value<QVariantHomogenousList>();
 	for(const QVariant& e : list)
 	{
 		Q_ASSERT(e.isValid());

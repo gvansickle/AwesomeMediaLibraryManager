@@ -253,9 +253,9 @@ void Theme::initialize()
     Q_ASSERT(rccs_loaded > 0);
 #endif
     // Interesting stuff in here by default.
-	dump_resource_tree(":/");
-
-    LogIconThemeInfo();
+    /// @note Dumps a lot, use for debug only.
+//	dump_resource_tree(":/");
+//    LogIconThemeInfo();
 
 
 M_WARNING("TODO");

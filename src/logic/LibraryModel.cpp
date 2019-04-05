@@ -651,6 +651,7 @@ void LibraryModel::setLibraryRootUrl(const QUrl& url)
 	createCacheFile(url);
 
 	connectSignals();
+M_TODO("SEPARATE SCANNING FROM INIT");
 //	Q_EMIT statusSignal(LibState::ScanningForFiles, 0, 0);
 	Q_EMIT startFileScanSignal(m_library.m_root_url);
 
@@ -672,99 +673,18 @@ void LibraryModel::close(bool delete_cache)
 	}
 }
 
-//void LibraryModel::writeToJson(QJsonObject& json) const
-//{
-//	// Save the cache separately.
-//	qDebug() << "Writing cache file path to json object";
-//
-//	qDebug() << "QUrl:" << m_lib_cache_file.fileName() << QUrl::fromLocalFile(m_lib_cache_file.fileName()).toString();
-//
-//	json["lib_cache_file"] = QUrl::fromLocalFile(m_lib_cache_file.fileName()).toString();
-//// 	qDebug() << "json object:" << json;
-//	QJsonObject lib_object;
-// 	qDebug() << "Writing library to new json object";
-//	m_library.writeToJson(lib_object, false);
-//	QJsonDocument jsondoc(lib_object);
-//	QByteArray jdoc_str = jsondoc.toJson();
-//	///lib_cache_file.write(bytearray(jdoc_str, encoding='utf-8'));
-//	qDebug() << "Writing jdoc_str to cache file";
-//	qint64 write_retval = m_lib_cache_file.write(jdoc_str);
-//	if(write_retval < 0)
-//	{
-//		qWarning() << "Error writing to cache file" << m_lib_cache_file.fileName() << ":" << m_lib_cache_file.errorString();
-//	}
-//	qDebug() << "committing and closing";
-//	m_lib_cache_file.commit();
-//	// Save the minimum of the library.
-//	m_library.writeToJson(json, true);
-//}
-//
-//void LibraryModel::readFromJson(const QJsonObject& jo)
-//{
-//	beginResetModel();
-//
-//	QUrl lib_cache_filename = QUrl(jo["lib_cache_file"].toString());
-//
-//	qDebug() << "Trying to open library cache file" << lib_cache_filename;
-//
-//	m_lib_cache_file.setFileName(lib_cache_filename.toLocalFile());
-//	if(!m_lib_cache_file.open(QIODevice::WriteOnly))
-//	{
-//		qCritical() << "Couldn't open cache file " << lib_cache_filename << ":" << m_lib_cache_file.errorString();
-//	}
-//
-//	// Now read the entire cache file.  QSaveFile isn't R/W, so we have to open a normal file to do this.
-//	QFile temp_read_file(lib_cache_filename.toLocalFile());
-//	temp_read_file.open(QIODevice::ReadOnly);
-//	QByteArray js = temp_read_file.readAll();
-//	QByteArray jdoc_str = js; //.encode('utf-8');
-//	temp_read_file.close();
-//
-//	QJsonDocument jsondoc = QJsonDocument::fromJson(jdoc_str);
-//
-//	qDebug() << "Jsondoc is object?:" << jsondoc.isObject();
-//
-//	m_library.readFromJson(jsondoc.object());
-//
-//	connectSignals();
-//
-//	endResetModel();
-//}
-
-//QPointer<LibraryModel> LibraryModel::constructFromJson(const QJsonObject& json, QObject* parent)
-//{
-//	LibraryModel* retval = new LibraryModel(parent);
-//
-//	retval->readFromJson(json);
-//
-//	return retval;
-//}
-
-#if 0
-void LibraryModel::serializeToFile(QFileDevice& file) const
-{
-	m_library.serializeToFile(file);
-}
-
-void LibraryModel::deserializeFromFile(QFileDevice& file)
-{
-	m_library.deserializeFromFile(file);
-}
-#endif
-
 QVariant LibraryModel::toVariant() const
 {
 	QVariantInsertionOrderedMap map;
 
 	map_insert_or_die(map, "the_models_library", m_library);
-//	map.insert("the_models_library", m_library.toVariant());
 
 	return map;
 }
 
 void LibraryModel::fromVariant(const QVariant& variant)
 {
-	QVariantInsertionOrderedMap map; // = variant.toMap();
+	QVariantInsertionOrderedMap map;
 	qviomap_from_qvar_or_die(&map, variant);
 
 	QVariant temp = map.value("the_models_library");

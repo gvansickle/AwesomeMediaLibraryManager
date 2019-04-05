@@ -48,7 +48,7 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 	load_mod_info(qurl_finfo);
 }
 
-#define DATASTREAM_FIELDS(X) \
+#define M_DATASTREAM_FIELDS(X) \
 	X(HREF, m_url) \
 	X(TS_LAST_REFRESH, m_timestamp_last_refresh) \
 	X(SIZE_FILE, m_file_size_bytes) \
@@ -58,11 +58,11 @@ ExtUrl::ExtUrl(const QUrl& qurl, const QFileInfo* qurl_finfo) : m_url(qurl)
 
 QVariant ExtUrl::toVariant() const
 {
-	QVariantMap map;
+	QVariantInsertionOrderedMap map;
 
 	// Add all the fields to the map.
-#define X(field_enum_name, field)   map.insert( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], field );
-	DATASTREAM_FIELDS(X)
+#define X(field_enum_name, field)   map_insert_or_die(map, ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], field );
+	M_DATASTREAM_FIELDS(X)
 #undef X
 
 	return map;
@@ -70,11 +70,11 @@ QVariant ExtUrl::toVariant() const
 
 void ExtUrl::fromVariant(const QVariant& variant)
 {
-	QVariantMap map = variant.toMap();
+	QVariantInsertionOrderedMap map(variant);
 
 	// Extract all the fields from the map, cast them to their type.
-#define X(field_enum_name, field) field = map.value( ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ] ).value<decltype( field )>();
-	DATASTREAM_FIELDS(X)
+#define X(field_enum_name, field)    map_read_field_or_warn(map, ExtUrlTagToXMLTagMap[ ExtUrlTag :: field_enum_name ], &(field));
+	M_DATASTREAM_FIELDS(X)
 #undef X
 }
 
@@ -128,7 +128,7 @@ void ExtUrl::load_mod_info(const QFileInfo* qurl_finfo)
 QDebug operator<<(QDebug dbg, const ExtUrl& obj) // NOLINT(performance-unnecessary-value-param)
 {
 #define X(unused, field) << obj.field
-	dbg DATASTREAM_FIELDS(X);
+	dbg M_DATASTREAM_FIELDS(X);
 #undef X
 	return dbg;
 }
@@ -136,7 +136,7 @@ QDebug operator<<(QDebug dbg, const ExtUrl& obj) // NOLINT(performance-unnecessa
 QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 {
 #define X(unused, field) << myObj.field
-	out DATASTREAM_FIELDS(X);
+	out M_DATASTREAM_FIELDS(X);
 #undef X
 	return out;
 }
@@ -144,9 +144,9 @@ QDataStream& operator<<(QDataStream& out, const ExtUrl& myObj)
 QDataStream& operator>>(QDataStream& in, ExtUrl& myObj)
 {
 #define X(unused, field) >> myObj.field
-	return in DATASTREAM_FIELDS(X);
+	return in M_DATASTREAM_FIELDS(X);
 #undef X
 }
 
 
-#undef DATASTREAM_FIELDS
+#undef M_DATASTREAM_FIELDS

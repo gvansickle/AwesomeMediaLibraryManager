@@ -67,7 +67,7 @@ AMLM_QREG_CALLBACK([](){
 	// From #include <logic/LibraryRescanner.h>
 	qRegisterMetaType<MetadataReturnVal>();
 	qRegisterMetaType<QFuture<MetadataReturnVal>>();
-	qRegisterMetaType<VecLibRescannerMapItems>();
+	qRegisterMetaType<QVector<LibraryRescannerMapItem>>("VecLibRescannerMapItems");
     });
 
 
@@ -191,16 +191,15 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     Q_CHECK_PTR(master_job_tracker);
 
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
-#if 1
-    DirectoryScannerAMLMJobPtr dirtrav_job = DirectoryScannerAMLMJob::make_job(this, dir_url, extensions,
-									QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-#else
-    /// Return type here is: std::unique_ptr<AMLMJobT<ExtFutureT>>
-M_TODO("This isn't scanning.");
-    SHARED_PTR<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(
-    		DirectoryScannerAMLMJob::AsyncDirScan(dir_url, extensions,
-    				QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories), this);
-#endif
+
+	// Run the directory scan in another thread.
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread(DirScanFunction, nullptr,
+																dir_url,
+																extensions,
+																QDir::Filters(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot),
+																QDirIterator::Subdirectories);
+	// Create/Attach an AMLMJobT to the dirscan future.
+	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future);
 
     // Makes a new AMLMJobT.
 	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
@@ -213,8 +212,14 @@ M_TODO("This isn't scanning.");
 
 	// Attach a streaming tap to get the results.
 	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
-	ExtFuture<DirScanResult> tail_future
-		= dirtrav_job->get_extfuture().tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
+
+	/// TEMP
+//	dirresults_future.wait();
+
+	// Attach a streaming tap to the dirscan future.
+	ExtFuture<DirScanResult> tail_future = dirresults_future.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
+
+		qDb() << "IN TAP, tap_future:" << tap_future;
 
 		using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
@@ -225,6 +230,9 @@ M_TODO("This isn't scanning.");
 		for(int i=begin; i<end; i++)
 		{
 			DirScanResult dsr = tap_future.resultAt(i);
+
+			qDb() << "#### DSR:" << dsr.getMediaExtUrl();
+
 			// Add another entry to the vector we'll send to the model.
 			new_items->emplace_back(std::make_unique<ScanResultsTreeModelItem>(dsr));
 
@@ -279,6 +287,7 @@ M_TODO("This isn't scanning.");
 			qurl_future.reportResult(entry->data(1).toString());
 		}
 
+#if 0 // ScanResultsTreeModel
 		run_in_event_loop(this, [
 						   tree_model_ptr=tree_model,
 						   new_items_copy=new_items
@@ -317,13 +326,15 @@ M_TODO("This isn't scanning.");
 
 			/// @todo REMOVE, EXPERIMENTAL
 		});
+#endif // END ScanResultsTreeModel
 	});
 
 	// Make sure the above job gets canceled and deleted.
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
 	// START dirtrav_job->then()
-	dirtrav_job->then(this, [=, tree_model_ptr=tree_model](DirectoryScannerAMLMJob* kjob) {
+//	dirtrav_job->
+	tail_future.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<DirScanResult> dsr) {
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -470,7 +481,9 @@ M_TODO("Getting zero results for single files in here.");
 	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
 
     // Start the asynchronous ball rolling.
-    dirtrav_job->start();
+M_TODO("????");
+//	dirtrav_job->start();
+
 
 	qDb() << "END:" << dir_url;
 }

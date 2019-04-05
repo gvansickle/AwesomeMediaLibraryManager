@@ -32,10 +32,10 @@ class SupportedMimeTypes: public QObject
     Q_OBJECT
 
 public:
-    explicit SupportedMimeTypes(QObject* parent);
+	explicit SupportedMimeTypes(QObject* parent = nullptr);
     ~SupportedMimeTypes() override;
 
-    static SupportedMimeTypes& instance();
+	static SupportedMimeTypes& instance(QObject* parent = nullptr);
 
     QVector<QMimeType> supportedAudioMimeTypes() const;
     QStringList supportedAudioMimeTypesAsFilterStringList() const;
@@ -48,7 +48,6 @@ protected:
 
 private:
 
-    static SupportedMimeTypes* m_the_instance;
 
 };
 

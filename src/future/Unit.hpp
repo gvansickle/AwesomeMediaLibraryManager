@@ -68,7 +68,7 @@ struct Unit
 
     // "Lift": Convert type T into Unit if it's void, T otherwise.
     template <typename T>
-    struct Lift : std::conditional<std::is_same<T, void>::value, Unit, T> {};
+	struct Lift : std::conditional<std::is_same<T, void>::value, Unit, T> {};
     template <typename T>
     using LiftT = typename Lift<T>::type;
 

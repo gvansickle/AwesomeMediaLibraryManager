@@ -68,10 +68,22 @@ public:
 	 * @param extfuture
 	 * @param parent
 	 */
-	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr)
+	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr,
+					  KJob::Unit units = KJob::Unit::Files,
+					  KJob::Capabilities capabilities = KJob::Capability::Killable | KJob::Capability::Suspendable)
 			: BASE_CLASS(parent), m_ext_future(extfuture)
 	{
 		qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
+
+		/// @todo This should be coming through the ExtFuture.
+		setProgressUnit(units);
+
+		// Set our object name.
+		setObjectName("AMLJobT");
+
+		// Set our capabilities.
+		setCapabilities(capabilities);
+
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
 		m_ext_watcher = new ExtFutureWatcherT();
@@ -97,32 +109,33 @@ public:
         return job;
     }
 
-    Q_SCRIPTABLE void start() override
-    {
-        // Hook up signals and such to the ExtFutureWatcher<T>.
-        HookUpExtFutureSignals(m_ext_watcher);
+	Q_SCRIPTABLE void start() override
+	{
+M_WARNING("THIS IS NOW SOMEWHAT INCORRECT, ESP. THE run_class_noarg()");
+		// Hook up signals and such to the ExtFutureWatcher<T>.
+		HookUpExtFutureSignals(m_ext_watcher);
 
 		// Start the speed calculation timer.
 		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
 		m_speed_timer->setInterval(1000);
 		m_speed_timer->start();
 
-        // Just let ExtAsync run the run() function, which will in turn run the runFunctor().
-        // Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
-        // role is handled by the ExtFuture<> m_ext_future and m_ext_watcher.
-        // Note that calling the destructor of (by deleting) the returned future is ok:
-        // http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
-        // "Note that this neither waits nor cancels the asynchronous computation."
+		// Just let ExtAsync run the run() function, which will in turn run the runFunctor().
+		// Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
+		// role is handled by the ExtFuture<> m_ext_future and m_ext_watcher.
+		// Note that calling the destructor of (by deleting) the returned future is ok:
+		// http://doc.qt.io/qt-5/qfuture.html#dtor.QFuture
+		// "Note that this neither waits nor cancels the asynchronous computation."
 
-        // Run.
+		// Run.
 		ExtFutureT future = ExtAsync::run_class_noarg(this, &std::remove_reference_t<decltype(*this)>::run /*&AMLMJobT::run*/);
 
 		m_ext_future = future;
 
-        // All connections have already been made, so set the watched future.
-        // "To avoid a race condition, it is important to call this function after doing the connections."
-        m_ext_watcher->setFuture(m_ext_future);
-    }
+		// All connections have already been made, so set the watched future.
+		// "To avoid a race condition, it is important to call this function after doing the connections."
+		m_ext_watcher->setFuture(m_ext_future);
+	}
 
 protected: //Q_SLOTS:
 
@@ -149,7 +162,7 @@ protected: //Q_SLOTS:
         // The emitResult() call will send out a KJob::finished() signal.
 		qDbo() << "GOT EXTFUTURE FINISHED, calling deleteLater() on the watcher.";
         m_ext_watcher->deleteLater();
-        emitResult();
+		this->emitResult();
     }
 
     virtual void SLOT_extfuture_canceled()
@@ -244,6 +257,7 @@ protected: //Q_SLOTS:
 
 protected:
 
+
     /// Last-stage wrapper around the runFunctor().
     /// Handles most of the common ExtFuture<T> start/finished/canceled/exception code.
     /// Should not need to be overridded in derived classes.
@@ -307,7 +321,7 @@ protected:
             m_ext_future.waitForResume();
         }
 
-		qDb() << "REPORTING FINISHED";
+		qDb() << "AMLMJOBT REPORTING FINISHED";
         m_ext_future.reportFinished();
 
         // We should only have two possible states here, excl. exceptions for the moment:
@@ -554,15 +568,18 @@ protected:
 };
 
 /**
- * Create a new AMLMJobT from an ExtFuture<>.
+ * Create a new AMLMJobT from an ExtFuture<T>.
  */
 template<class ExtFutureT>
-inline static SHARED_PTR<AMLMJobT<ExtFutureT>>
+//inline static SHARED_PTR<AMLMJobT<ExtFutureT>>
+inline static QPointer<AMLMJobT<ExtFutureT>>
 make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
 	/// @todo Does this really need a parent?
-//	return std::make_shared<AMLMJobT<ExtFutureT>>(ef, parent);
-	return MAKE_SHARED<AMLMJobT<ExtFutureT>>(ef, parent);
+	qDb() << "ef:" << ef;
+	Q_ASSERT(!ef.isFinished() && !ef.isCanceled());
+	return new AMLMJobT<ExtFutureT>(ef, parent, KJob::Unit::Files);
+//	return MAKE_SHARED<AMLMJobT<ExtFutureT>>(ef, parent);
 }
 
 

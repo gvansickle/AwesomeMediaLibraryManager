@@ -29,6 +29,7 @@
 #include <QtConcurrent>
 
 // Ours
+#include <utils/DebugHelpers.h>
 #include <concurrency/ExtAsync.h>
 #include <utils/TheSimplestThings.h>
 #include "LibraryModel.h"

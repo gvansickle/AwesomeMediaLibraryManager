@@ -23,6 +23,9 @@
 
 #include "AMLMTagMap.h"
 
+// Std C++
+#include <iterator>
+
 // Qt5
 #include <QtGlobal>
 
@@ -149,8 +152,10 @@ std::vector<AMLMTagMap::key_type> AMLMTagMap::keys() const
 
 void AMLMTagMap::merge(AMLMTagMap& source)
 {
-M_TODO("Need to handle dups smarter.");
-	m_the_map.insert(source.m_the_map.begin(), source.m_the_map.end());
+M_TODO("Need to handle dups smarter, e.g. ID3v1 can chop long strings that ID3v2 can handle.");
+	AMLMTagMap::underlying_container_type merged_val;
+	std::set_union(cbegin(), cend(), source.cbegin(), source.cend(), std::inserter(merged_val, merged_val.end()));
+	m_the_map = merged_val;
 }
 
 QVariant AMLMTagMap::toVariant() const

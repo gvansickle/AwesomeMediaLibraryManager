@@ -43,7 +43,7 @@ using DirectoryScannerAMLMJobPtr = QPointer<DirectoryScannerAMLMJob>;
 /**
  *
  */
-class DirectoryScannerAMLMJob : public AMLMJobT<ExtFuture<DirScanResult>>, public UniqueIDMixin<DirectoryScannerAMLMJob>
+class DirectoryScannerAMLMJob : public AMLMJobT<ExtFuture<DirScanResult>>, public virtual UniqueIDMixin<DirectoryScannerAMLMJob>
 {
 	Q_OBJECT
 
@@ -92,6 +92,8 @@ public:
 
 protected:
 
+	/// @todo Temp while converting over to AMLMJobT<>.
+	void run() override;
 	void runFunctor() override;
 
 protected Q_SLOT:
@@ -125,7 +127,7 @@ Q_DECLARE_METATYPE(DirectoryScannerAMLMJobPtr);
  * @param dir_filters
  * @param iterator_flags
  */
-static void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
+void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* amlmJob,
 		const QUrl& dir_url,
 		const QStringList &name_filters,
 		const QDir::Filters dir_filters = QDir::NoFilter,

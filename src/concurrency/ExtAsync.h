@@ -17,8 +17,8 @@
  * along with AwesomeMediaLibraryManager.  If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
-#ifndef UTILS_CONCURRENCY_EXTASYNC_H_
-#define UTILS_CONCURRENCY_EXTASYNC_H_
+#ifndef CONCURRENCY_EXTASYNC_H_
+#define CONCURRENCY_EXTASYNC_H_
 
 /**
  * @file
@@ -56,6 +56,7 @@
 template <typename T> class ExtFuture;
 
 #include "impl/ExtAsync_impl.h"
+#include "impl/ExtAsync_RunInThread.h"
 
 // Generated
 #include "logging_cat_ExtAsync.h"
@@ -333,9 +334,9 @@ namespace ExtAsync
 		/**
 		 * Run the callback in a QThread with its own event loop.
 		 * @tparam CallbackType  Callback of type:
-		 *                   @code
-		 *                       void callback(ExtFutureT [, ...])
-		 *                   @endcode
+		 *     @code
+		 *     void callback(ExtFutureT [, ...])
+		 *     @endcode
 		 * @param callback  The callback to run in the new thread.
 		 */
 		template <class ExtFutureT = argtype_t<CallbackType, 0>,
@@ -352,17 +353,19 @@ namespace ExtAsync
 			// Move the worked QObject to the new thread.
 			worker->moveToThread(thread);
 
+			// Connect to the worker's error signal.
 			connect_or_die(worker, &WorkerQObject::error, thread, [=](QString errorstr){
 				qCr() << "WorkerQObject reported error:" << errorstr;
 			});
 			// Connection from thread start to actual WorkerQObject process() function start
 			connect_or_die(thread, &QThread::started, worker, [=,
-					callback_copy=DECAY_COPY(std::forward<CallbackType>(callback)),
-					retfuture_copy=retfuture
-//					        args_copy=std::forward_as_tuple<Args>(args...)
-					        ]() mutable {
+						   callback_copy = DECAY_COPY(std::forward<CallbackType>(callback)),
+						   retfuture_copy = retfuture,
+						   argtuple = std::make_tuple(worker, std::forward<decltype(callback)>(callback), std::forward<ExtFutureT>(retfuture), std::forward<Args>(args)...)
+							]() mutable {
 				/// @todo Exceptions/cancellation.
 				worker->process(callback_copy, retfuture_copy, args...);
+//				std::apply(&WorkerQObject::process<CallbackType, ExtFutureT, decltype(args)...>, argtuple);
 				/// @note Unconditional finish here.
 				retfuture_copy.reportFinished();
 			});
@@ -672,27 +675,6 @@ namespace ExtAsync
 		QThread::currentThread()->setObjectName(QString("%1_").arg(id) + QThread::currentThread()->objectName() );
 	};
 
-    /**
-     * Helper struct for creating SFINAE-friendly function overloads-of-last-resort.
-     *
-     * @link https://gracicot.github.io/tricks/2017/07/01/deleted-function-diagnostic.html
-     *
-     * ...and this trick actually doesn't work.  It semi-works on gcc with C++11, but C++14 just gives the "use of deleted function" error.
-     */
-    struct TemplateOverloadResolutionFailed
-    {
-        template <typename T>
-        TemplateOverloadResolutionFailed(T&&)
-        {
-            static_assert(!std::is_same_v<T,T>, "Unable to find an appropriate template.");
-        };
-    };
-
-    /**
-     * ExtAsync::run() overload-of-last-resort to flag that none of the other templates matched.
-     */
-//    void run(TemplateOverloadResolutionFailed, ...) = delete;
-
 	/**
 	 * ExtAsync::run() overload for member functions taking an ExtFuture<T> as the first non-this param.
 	 * E.g.:
@@ -752,12 +734,7 @@ namespace ExtAsync
 	}
 
 
-//	template <class CallbackType, class... Args,
-//			class ExtFutureT = argtype_t<CallbackType, 0>>
-//	static auto run(CallbackType&& callback, Args&&... args) -> argtype_t<CallbackType, 0>
-//	{
-//		return ExtAsync::detail_struct<CallbackType>::run_param_expander(DECAY_COPY(callback), std::forward<Args>(args)...);
-//	}
+
 
 #if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
@@ -1004,6 +981,37 @@ namespace ExtAsync
 		return retfuture;
     }
 
+
+
+
+    template <class CallbackType>
+    ExtFuture<decltype(std::declval<CallbackType>()())>
+    spawn_async(CallbackType&& callback)
+    {
+    	// The promise we'll make and extract a future from.
+		ExtFuture<decltype(std::declval<CallbackType>()())> promise;
+
+		auto retfuture = promise.get_future();
+	    std::thread the_thread(
+	    		[promise=std::move(promise), callback=std::decay_t<CallbackType>(callback)]()
+	    		mutable {
+	    			try
+				    {
+	    				promise.set_value_at_thread_exit(callback());
+				    }
+	    			catch(QException& e)
+				    {
+	    				promise.set_exception_at_thread_exit(e);
+				    }
+	    			catch(...)
+				    {
+	    				promise.set_exception_at_thread_exit(std::current_exception());
+				    }
+	    		});
+	    the_thread.detach();
+	    return retfuture;
+    };
+
 	////// START EXPERIMENTAL
 
 	/**
@@ -1065,8 +1073,10 @@ namespace ExtAsync
  * Adapted from https://stackoverflow.com/questions/21646467/how-to-execute-a-functor-or-a-lambda-in-a-given-thread-in-qt-gcd-style/21653558#21653558
  */
 template <typename F>
-static void runInObjectEventLoop(F && fun, QObject * obj = qApp) {
-   struct Event : public QEvent {
+static void runInObjectEventLoop(F && fun, QObject * obj = qApp)
+{
+   struct Event : public QEvent
+   {
       using Fun = typename std::decay<F>::type;
       Fun fun;
       Event(Fun && fun) : QEvent(QEvent::None), fun(std::move(fun)) {}
@@ -1152,4 +1162,4 @@ namespace ExtAsync
 
 } // Namespace ExtAsync.
 
-#endif /* UTILS_CONCURRENCY_EXTASYNC_H_ */
+#endif /* CONCURRENCY_EXTASYNC_H_ */

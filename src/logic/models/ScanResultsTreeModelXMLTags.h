@@ -78,33 +78,6 @@ static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagEnum,
 });
 
 /**
- * DirScanResult tags.
- */
-class DSRTag : public ExtEnum<DSRTag>
-{
-	Q_GADGET
-
-public:
-	enum TagName
-	{
-		FLAGS_DIRPROPS, /*X(flags_dirprops, m_dir_props)*/
-		EXTURL_DIR,
-		EXTURL_MEDIA,
-		EXTURL_CUESHEET
-	};
-	Q_ENUM(TagName)
-};
-Q_DECLARE_METATYPE(DSRTag);
-
-static const auto DSRTagToXMLTagMap = DSRTag::make_map<DSRTag::TagName, QString>(
-{
-	{DSRTag::FLAGS_DIRPROPS, "flags_dirprops"},
-	{DSRTag::EXTURL_DIR, "exturl_dir"},
-	{DSRTag::EXTURL_MEDIA, "exturl_media"},
-	{DSRTag::EXTURL_CUESHEET, "exturl_cuesheet"}
-});
-
-/**
  * ScanResultsTreeModel tags.
  */
 class SRTMTag : public ExtEnum<SRTMTag>
@@ -137,29 +110,5 @@ static const auto SRTMTagToXMLTagMap = SRTMTag::make_map<SRTMTag::TagName, QStri
 	{SRTMTag::TS_LAST_SCAN_START, "ts_last_scan_start"},
 	{SRTMTag::TS_LAST_SCAN_END, "ts_last_scan_end"}
 });
-
-///**
-// * ScanResultsTreeModelItem tags.
-// */
-//class SRTMItemTag : public ExtEnum<SRTMItemTag>
-//{
-//	Q_GADGET
-//
-//public:
-//	enum TagName
-//	{
-//		DIRSCANRESULT,
-//		TEST_PAIR_0
-//	};
-//	Q_ENUM(TagName)
-//
-//};
-//Q_DECLARE_METATYPE(SRTMItemTag);
-//
-//static const auto SRTMItemTagToXMLTagMap = SRTMItemTag::make_map<SRTMItemTag::TagName, QString>(
-//{
-//	{SRTMItemTag::DIRSCANRESULT, "dirscanresult"},
-//	{SRTMItemTag::TEST_PAIR_0, "TEST_PAIR_0"}
-//});
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

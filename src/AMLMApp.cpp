@@ -58,8 +58,6 @@ AMLMApp::~AMLMApp()
 {
     /// @todo Shut down whatever still needs shutting down.
 
-    delete m_mime_database;
-
 	// No more singleton.
 	m_the_instance = nullptr;
 
@@ -70,8 +68,6 @@ void AMLMApp::Init(bool gtest_only)
 {
 	// Register our types with Qt.
 	RegisterQtMetatypes();
-
-    m_mime_database = new QMimeDatabase();
 
 	/// @todo This is ugly, refactor this.
 	if(gtest_only)
@@ -84,7 +80,7 @@ void AMLMApp::Init(bool gtest_only)
 //    qIn() << "QNetworkAccessManager Supported Schemes:" << nam->supportedSchemes();
 
 	// Create the singletons we'll need for any app invocation.
-	/* QObject hierarchy will self-destruct this = */ new SupportedMimeTypes(this);
+	SupportedMimeTypes::instance(this);
 
 	/// @todo Experiments
 //	m_cdb_model = new CollectionDatabaseModel(this);
@@ -116,6 +112,12 @@ AMLMApp* AMLMApp::instance()
 {
     Q_ASSERT(m_the_instance != nullptr);
     return m_the_instance;
+}
+
+QMimeDatabase& AMLMApp::mime_db()
+{
+	static QMimeDatabase* m_mime_database = new QMimeDatabase();
+	return *m_mime_database;
 }
 
 bool AMLMApp::shuttingDown() const
