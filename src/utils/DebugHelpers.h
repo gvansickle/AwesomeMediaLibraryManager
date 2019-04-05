@@ -122,6 +122,10 @@ void throwif(bool condition, Args... args)
 	Q_ASSERT_X(QThread::currentThread() == QCoreApplication::instance()->thread(), __PRETTY_FUNCTION__, "Not in GUI thread.");\
 	} while(0)
 
+#define AMLM_ASSERT_NOT_IN_GUITHREAD() do {\
+	Q_ASSERT_X(QThread::currentThread() != QCoreApplication::instance()->thread(), __PRETTY_FUNCTION__, "In GUI thread, shouldn't be.");\
+	} while(0)
+
 /// From -> To
 //#define AMLM_ASSERT_PTR_IS_CONVERTIBLE(a, b) if(dynamic_cast<std::remove_pointer_t<decltype(b)>>(a) == 0) \
 //    { qCr() << "pointers are not dynamic_cast<> convertible:" << #a ":" << a << #b ":" << b;  Q_ASSERT(0); }

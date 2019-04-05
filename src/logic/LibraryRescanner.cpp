@@ -219,7 +219,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<DirScanResult> tail_future = dirresults_future.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
 
-		qDb() << "IN TAP, tap_future:" << tap_future;
+		// Start of the dirtrav tap callback.  This should be a non-main thread.
+		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
 		using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
@@ -462,7 +463,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	master_job_tracker->setStopOnClose(lib_rescan_job, true);
 
 
+	//
 	// Hook up future watchers.
+	//
+
 	// Dirscan.
 	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultReadyAt,
 			m_current_libmodel, [=](int index) {
@@ -470,10 +474,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 				m_current_libmodel->SLOT_onIncomingFilename(url_str);
 	});
 	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
+
 	// Metadata refresh.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
-M_TODO("Getting zero results for single files in here.");
+
 		MetadataReturnVal ready_result = lib_rescan_job->get_extfuture().resultAt(index);
 //		Q_ASSERT(ready_result.m_new_libentries.size() != 0);
 		this->SLOT_processReadyResults(ready_result);
