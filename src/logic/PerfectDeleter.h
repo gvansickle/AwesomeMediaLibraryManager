@@ -97,7 +97,7 @@ private:
 
 	bool waitForAMLMJobsFinished(bool spin);
 
-	void scan_and_purge_futures();
+//	void scan_and_purge_futures();
 };
 
 #endif // PERFECTDELETER_H

@@ -111,6 +111,7 @@ public:
 
 	Q_SCRIPTABLE void start() override
 	{
+M_WARNING("THIS IS NOW SOMEWHAT INCORRECT, ESP. THE run_class_noarg()");
 		// Hook up signals and such to the ExtFutureWatcher<T>.
 		HookUpExtFutureSignals(m_ext_watcher);
 

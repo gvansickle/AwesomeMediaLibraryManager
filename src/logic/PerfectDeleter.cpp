@@ -64,8 +64,8 @@ void PerfectDeleter::cancel_and_wait_for_all()
 
 	// Wait for the QFutures to finish.
 	/// @todo Need to keep event loop running here?
-	scan_and_purge_futures();
-	qIno() << "Waiting for" << m_future_synchronizer.futures().size() << "canceled QFuture<void>'s to finish...";
+//	scan_and_purge_futures();
+	qIno() << "Canceling" << m_future_synchronizer.futures().size() << "QFuture<void>'s and waiting for them to finish...";
 	m_future_synchronizer.waitForFinished();
 	qIno() << "Wait complete.";
 
@@ -92,12 +92,12 @@ void PerfectDeleter::addQFuture(QFuture<void> f)
 
 	// Periodically purge completed futures.
 	/// @todo This is the most wrong part, this will cancel futures which may still have consumers.
-	if(m_num_qfutures_added_since_last_purge > m_purge_futures_count)
-	{
-		qIno() << "Purging QFutures...";
-		scan_and_purge_futures();
-		m_num_qfutures_added_since_last_purge = 0;
-	}
+//	if(m_num_qfutures_added_since_last_purge > m_purge_futures_count)
+//	{
+//		qIno() << "Purging QFutures...";
+//		scan_and_purge_futures();
+//		m_num_qfutures_added_since_last_purge = 0;
+//	}
 }
 
 void PerfectDeleter::addKJob(KJob* kjob)
@@ -178,6 +178,7 @@ bool PerfectDeleter::waitForAMLMJobsFinished(bool spin)
 	} while(spin);
 }
 
+#if 0
 void PerfectDeleter::scan_and_purge_futures()
 {
 	/// @note Requires m_mutex to already be held.
@@ -208,3 +209,4 @@ void PerfectDeleter::scan_and_purge_futures()
 		   << num_remaining_futures << "==" << m_future_synchronizer.futures().size() << "remaining";
 
 }
+#endif
