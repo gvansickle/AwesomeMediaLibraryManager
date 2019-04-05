@@ -48,12 +48,6 @@ namespace ExtAsync
 //	template <class CallbackType>
 	struct Async
 	{
-		// Return value type of CallbackType(Args...), or Unit if it returns void.
-//		using R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>;
-
-		// Return value type of CallbackType(ExtFuture<T>, Args...), or Unit if it returns void.
-//		using R = Unit::LiftT<Unit::LiftT<std::invoke_result_t<std::decay_t<CallbackType>, std::decay_t<Args>...>>>;
-
 		/**
 		 * Run a callback in a QThread.
 		 */
@@ -64,10 +58,13 @@ namespace ExtAsync
 		static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 		{
 			ExtFutureR retfuture = make_started_only_future<typename ExtFutureR::value_type>();
-
+			qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 			auto new_thread = QThread::create([=, callback=DECAY_COPY(callback),
 													  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 											  ]() mutable {
+				qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
+				Q_ASSERT(retfuture_cp == retfuture);
+				retfuture_cp.reportStarted();
 				if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
 				{
 					std::invoke(callback, args...);
@@ -75,12 +72,22 @@ namespace ExtAsync
 				}
 				else
 				{
-					retfuture_cp.reportFinished(std::invoke(callback, args...));
+					auto retval = std::invoke(callback, args...);
+					static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
+					retfuture_cp.reportFinished(retval);
 				}
+				qDb() << "EXIT IN1";
 				;});
-			connect_or_die(new_thread, &QThread::finished, new_thread, &QObject::deleteLater);
+
+			connect_or_die(new_thread, &QThread::finished, new_thread, [=](){
+				qDb() << "DELETING QTHREAD:" << new_thread;
+				new_thread->deleteLater();
+			});
+
+			// Start the thread.
 			new_thread->start();
 
+			qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;
 			return retfuture;
 		}
 
@@ -111,14 +118,18 @@ namespace ExtAsync
 	};
 #else
 		template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
-			REQUIRES(is_ExtFuture_v<ExtFutureT>)>
+			REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
 		static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
 		{
 			ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 
-			qthread_async(callback, retfuture, args...);
+			qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
-			qDb() << __func__ << "RETURNING";
+			// Ignoring the returned ExtFuture<>.
+			/// @todo Can we really do this?
+			auto inner_retfuture = qthread_async(callback, retfuture, args...);
+
+			qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture << M_ID_VAL(inner_retfuture);
 
 			return retfuture;
 		};

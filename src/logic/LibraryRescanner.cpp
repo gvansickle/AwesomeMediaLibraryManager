@@ -239,6 +239,9 @@ M_TODO("This isn't scanning.");
 		for(int i=begin; i<end; i++)
 		{
 			DirScanResult dsr = tap_future.resultAt(i);
+
+			qDb() << "#### DSR:" << dsr.getMediaExtUrl();
+
 			// Add another entry to the vector we'll send to the model.
 			new_items->emplace_back(std::make_unique<ScanResultsTreeModelItem>(dsr));
 
@@ -487,7 +490,9 @@ M_TODO("Getting zero results for single files in here.");
 	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
 
     // Start the asynchronous ball rolling.
-    dirtrav_job->start();
+M_TODO("????");
+	dirtrav_job->start();
+
 
 	qDb() << "END:" << dir_url;
 }

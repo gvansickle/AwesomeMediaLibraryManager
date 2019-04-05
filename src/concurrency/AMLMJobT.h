@@ -320,7 +320,7 @@ protected:
             m_ext_future.waitForResume();
         }
 
-		qDb() << "REPORTING FINISHED";
+		qDb() << "AMLMJOBT REPORTING FINISHED";
         m_ext_future.reportFinished();
 
         // We should only have two possible states here, excl. exceptions for the moment:
@@ -567,7 +567,7 @@ protected:
 };
 
 /**
- * Create a new AMLMJobT from an ExtFuture<>.
+ * Create a new AMLMJobT from an ExtFuture<T>.
  */
 template<class ExtFutureT>
 //inline static SHARED_PTR<AMLMJobT<ExtFutureT>>
@@ -575,6 +575,8 @@ inline static QPointer<AMLMJobT<ExtFutureT>>
 make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
 	/// @todo Does this really need a parent?
+	qDb() << "ef:" << ef;
+	Q_ASSERT(!ef.isFinished() && !ef.isCanceled());
 	return new AMLMJobT<ExtFutureT>(ef, parent, KJob::Unit::Files);
 //	return MAKE_SHARED<AMLMJobT<ExtFutureT>>(ef, parent);
 }

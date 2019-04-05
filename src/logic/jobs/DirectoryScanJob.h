@@ -92,6 +92,8 @@ public:
 
 protected:
 
+	/// @todo Temp while converting over to AMLMJobT<>.
+	void run() override;
 	void runFunctor() override;
 
 protected Q_SLOT:

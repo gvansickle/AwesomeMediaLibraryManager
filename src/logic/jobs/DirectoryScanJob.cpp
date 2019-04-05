@@ -127,6 +127,7 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		{
 			/// @todo Unused, do we need this?
 			// QDir dir = file_info.absoluteDir();
+			qDb() << "NEW DIR:" << file_info.fileName();
 			num_discovered_dirs++;
 
 			// Update the max range to be the number of files we know we've found so far plus the number
@@ -177,6 +178,8 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 
 			// Report the URL we found to the future.
 			ext_future.reportResult(dir_scan_result);
+
+			qDb() << "NUM FILES:" << num_files_found_so_far << ", per ext_future:" << ext_future.resultCount();
 		}
 
 		// Have we been canceled?
@@ -209,12 +212,19 @@ ExtFuture<DirScanResult> DirectoryScannerAMLMJob::AsyncDirScan(const QUrl& dir_u
 															   const QDir::Filters dir_filters,
 															   const QDirIterator::IteratorFlags iterator_flags)
 {
+	Q_ASSERT(0);
 	return ExtAsync::run(&DirScanFunction, /*AMLMJobT*/nullptr, dir_url, name_filters, dir_filters, iterator_flags);
+}
+
+void DirectoryScannerAMLMJob::run()
+{
+	// Do nothing.
 }
 
 void DirectoryScannerAMLMJob::runFunctor()
 {
-	DirScanFunction(m_ext_future, this,
-				m_dir_url, m_name_filters, m_dir_filters, m_iterator_flags);
+	Q_ASSERT(0);
+//	DirScanFunction(m_ext_future, this,
+//				m_dir_url, m_name_filters, m_dir_filters, m_iterator_flags);
 }
 

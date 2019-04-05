@@ -114,7 +114,7 @@ AMLMApp* AMLMApp::instance()
     return m_the_instance;
 }
 
-QMimeDatabase&AMLMApp::mime_db()
+QMimeDatabase& AMLMApp::mime_db()
 {
 	static QMimeDatabase* m_mime_database = new QMimeDatabase();
 	return *m_mime_database;
