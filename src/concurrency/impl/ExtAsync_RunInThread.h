@@ -46,8 +46,8 @@ ExtFuture<T> make_started_only_future();
 namespace ExtAsync
 {
 //	template <class CallbackType>
-	struct Async
-	{
+//	struct Async
+//	{
 		/**
 		 * Run a callback in a QThread.
 		 */
@@ -150,9 +150,8 @@ namespace ExtAsync
 
 			return retfuture;
 		};
-	};
+//	};
 
-
-} // END namespace ExtAsync.
+}; // END namespace ExtAsync.
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
