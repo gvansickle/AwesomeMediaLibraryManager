@@ -1039,7 +1039,8 @@ public:
 	}
 
 	/**
-	 * .then() overload: Run callback in @a context's event loop.  Mainly intended for running in the main thread/event loop.
+	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
+	 * Mainly intended for running in the main thread/event loop.
 	 * callback is of the form:
 	 *     ExtFuture<R> callback(ExtFuture<T>)
 	 */
@@ -1051,26 +1052,26 @@ public:
 			         && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
-//		ExtFuture<R> retfuture;
+		ExtFuture<R> retfuture = make_started_only_future<R>();
 #if 1 // TEMP
-		ExtFuture<R> retfuture = ExtAsync::qthread_async([=, &retfuture]() mutable {
-			// Wait for the incoming future (this) to be ready.
-			this->get();
+		/*ExtFuture<R>*/ retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
+			// Wait inside this intermediate thread for the incoming future (this) to be ready.
+			this_future.waitForFinished();
 			// Run the callback in the context's event loop.
-			run_in_event_loop(context, [=, &retfuture](){
+			run_in_event_loop(context, [=, retfuture_cp = retfuture]() mutable {
 				if constexpr(std::is_void_v<Unit::DropT<R>>)
 				{
 					// Returns void.
-					std::invoke(then_callback, *this);
-					retfuture.reportFinished();
+					std::invoke(then_callback, this_future);
+					retfuture_cp.reportFinished();
 				}
 				else
 				{
-					auto retval = std::invoke(then_callback, *this);
-					retfuture.reportFinished(retval);
+					auto retval = std::invoke(then_callback, this_future);
+					retfuture_cp.reportFinished(retval);
 				}
 				;});
-			;});
+			;}, DECAY_COPY(*this));
 #endif
 		return retfuture;
 	}

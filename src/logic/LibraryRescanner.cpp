@@ -222,6 +222,8 @@ M_TODO("This isn't scanning.");
 	// Attach a streaming tap to get the results.
 	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
 
+	/// TEMP
+	dirresults_future.wait();
 
 #if 1
 	ExtFuture<DirScanResult> tail_future = dirresults_future
