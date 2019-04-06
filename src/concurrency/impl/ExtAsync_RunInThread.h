@@ -64,12 +64,12 @@ namespace ExtAsync
 				retfuture_cp.reportStarted();
 				if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
 				{
-					std::invoke(callback, args...);
+					std::invoke(std::move(callback), args...);
 					retfuture_cp.reportFinished();
 				}
 				else
 				{
-					auto retval = std::invoke(callback, args...);
+					auto retval = std::invoke(std::move(callback), args...);
 					static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
 					retfuture_cp.reportFinished(retval);
 				}
