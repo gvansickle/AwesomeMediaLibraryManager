@@ -1408,8 +1408,6 @@ protected:
 public:
 	std::atomic_uint64_t m_extfuture_id_no {0};
 
-//	int m_progress_unit { 0 /* == KJob::Unit::Bytes*/};
-
 	/// @}
 };
 

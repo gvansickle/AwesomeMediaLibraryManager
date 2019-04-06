@@ -215,6 +215,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	/// TEMP
 //	dirresults_future.wait();
+	// New container type we'll use to pass the incoming values to the GUI thread in a .then() below.
+	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<DirScanResult> tail_future = dirresults_future.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
@@ -222,7 +224,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
-		using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
+//		qDb() << "IN TAP:" << M_ID_VAL(tap_future.resultCount()) << M_ID_VAL(begin) << M_ID_VAL(end);
 
 		// Make a new container we'll use to pass the incoming values to the GUI thread below.
 		std::shared_ptr<ItemContType> new_items = std::make_shared<ItemContType>();
@@ -232,7 +234,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		{
 			DirScanResult dsr = tap_future.resultAt(i);
 
-			qDb() << "#### DSR:" << dsr.getMediaExtUrl();
+//			qDb() << "#### DSR:" << dsr.getMediaExtUrl();
 
 			// Add another entry to the vector we'll send to the model.
 			new_items->emplace_back(std::make_unique<ScanResultsTreeModelItem>(dsr));
@@ -328,7 +330,48 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			/// @todo REMOVE, EXPERIMENTAL
 		});
 #endif // END ScanResultsTreeModel
-	});
+	})
+#if 0
+	.tap(qApp, [=,
+			tree_model_ptr=tree_model//,
+			//new_items_copy=new_items
+			](ExtFuture<std::shared_ptr<ItemContType>> new_items_copy) {
+		// Append entries to the ScanResultsTreeModel.
+
+		/// @todo REMOVE, EXPERIMENTAL
+		for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_copy)
+		{
+			// Get the last top-level row.
+			//				auto last_row_index = tree_model_ptr->rowCount() - 1;
+			//				Q_ASSERT(last_row_index >= 0);
+
+			auto new_child = std::make_unique<SRTMItem_LibEntry>();
+			std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+
+			lib_entry->populate(true);
+			std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+			/// @note Here we only care about the LibraryEntry corresponding to each file.
+			//				if(!lib_entry->isSubtrack())
+			//				{
+			//					lib_entries = lib_entry->split_to_tracks();
+			//				}
+			//				else
+			{
+				lib_entries.push_back(lib_entry);
+			}
+			new_child->setLibraryEntry(lib_entries.at(0));
+			entry->appendChild(std::move(new_child));
+			//				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
+			//				tree_model_ptr->appendItem(std::move(new_child));
+		}
+
+		/// @note Needs to be in GUI thread.
+		tree_model_ptr->appendItems(std::move(*new_items_copy));
+
+		/// @todo REMOVE, EXPERIMENTAL
+		return dsr.get();
+#endif
+	;
 
 	// Make sure the above job gets canceled and deleted.
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
@@ -336,6 +379,9 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// START dirtrav_job->then()
 //	dirtrav_job->
 	tail_future.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<DirScanResult> dsr) {
+
+		AMLM_ASSERT_IN_GUITHREAD();
+
         qDb() << "DIRTRAV COMPLETE";
         if(kjob->error())
         {
@@ -467,7 +513,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	// Hook up future watchers.
 	//
 
-	// Dirscan.
+	// Dirscan results to the m_current_libmodel.
 	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultReadyAt,
 			m_current_libmodel, [=](int index) {
 				auto url_str = qurl_future.resultAt(index);
@@ -475,7 +521,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	});
 	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
 
-	// Metadata refresh.
+	// Metadata refresh results to this (the main) thread, via a slot for furthe processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
 
