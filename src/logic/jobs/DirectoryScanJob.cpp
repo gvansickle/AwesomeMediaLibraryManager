@@ -125,9 +125,6 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		}
 		else if(file_info.isDir())
 		{
-			/// @todo Unused, do we need this?
-			// QDir dir = file_info.absoluteDir();
-			qDb() << "NEW DIR:" << file_info.fileName();
 			num_discovered_dirs++;
 
 			// Update the max range to be the number of files we know we've found so far plus the number
