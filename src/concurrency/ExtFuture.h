@@ -64,7 +64,6 @@ namespace ExtAsync
 {
 namespace detail {}
 
-//struct Async;
 template <class CallbackType, /*class ExtFutureR,*/ class... Args,
 				  class R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>,
 				  class ExtFutureR = ExtFuture<R>
@@ -72,10 +71,6 @@ template <class CallbackType, /*class ExtFutureR,*/ class... Args,
 		static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
 }
 
-
-#define ExtAsync_RunInThread_DECL_ONLY
-//#include "impl/ExtAsync_RunInThread.h"
-#undef ExtAsync_RunInThread_DECL_ONLY
 
 template <class T>
 class ExtFuture;
@@ -140,8 +135,8 @@ class ExtFuture : public QFuture<T>//, public UniqueIDMixin<ExtFuture<T>>
 	static_assert(!std::is_void_v<T>, "ExtFuture<void> not supported, use ExtFuture<Unit> instead.");
 
 	/// Like QFuture<T>, T must have a default constructor and a copy constructor.
-	static_assert(std::is_default_constructible<T>::value, "T must be default constructible.");
-	static_assert(std::is_copy_constructible<T>::value, "T must be copy constructible.");
+	static_assert(std::is_default_constructible_v<T>, "T must be default constructible.");
+	static_assert(std::is_copy_constructible_v<T>, "T must be copy constructible.");
 
 public:
 	/// @name Member types
@@ -954,14 +949,14 @@ public:
 						{
 							// then_callback_copy returns void, return a Unit separately.
 							qDb() << "INVOKING ret type == Unit";
-							std::invoke(then_callback_copy, this_future_copy);
+							std::invoke(std::move(then_callback_copy), this_future_copy);
 							retval = unit;
 						}
 						else
 						{
 							// then_callback_copy returns non-void, return the callback's return value.
 							qDb() << "INVOKING ret type != Unit";
-							retval = std::invoke(then_callback_copy, this_future_copy);
+							retval = std::invoke(std::move(then_callback_copy), this_future_copy);
 						}
 						qDb() << "INVOKED";
 					}
@@ -1053,26 +1048,31 @@ public:
 	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
 		ExtFuture<R> retfuture = make_started_only_future<R>();
-#if 1 // TEMP
-		/*ExtFuture<R>*/ retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
+
+		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
 			// Wait inside this intermediate thread for the incoming future (this) to be ready.
 			this_future.waitForFinished();
+
 			// Run the callback in the context's event loop.
-			run_in_event_loop(context, [=, retfuture_cp = retfuture]() mutable {
+			// Note the std::invoke details.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
+			// "When the shared state currently associated with *this is ready, the continuation INVOKE(std::move(fd), *this)
+			// is called on an unspecified thread of execution [...]. If that expression is invalid, the behavior is undefined."
+			run_in_event_loop(context, [=, retfuture_cp = retfuture, then_callback=DECAY_COPY(then_callback)]() mutable {
 				if constexpr(std::is_void_v<Unit::DropT<R>>)
 				{
-					// Returns void.
-					std::invoke(then_callback, this_future);
+					// Continuation returns void.
+					std::invoke(std::move(then_callback), this_future);
 					retfuture_cp.reportFinished();
 				}
 				else
 				{
-					auto retval = std::invoke(then_callback, this_future);
+					// Continuation returns a value type.
+					auto retval = std::invoke(std::move(then_callback), this_future);
 					retfuture_cp.reportFinished(retval);
 				}
 				;});
 			;}, DECAY_COPY(*this));
-#endif
+
 		return retfuture;
 	}
 

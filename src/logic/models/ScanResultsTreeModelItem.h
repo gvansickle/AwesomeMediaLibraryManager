@@ -27,7 +27,6 @@
 
 // Qt5
 #include <QStringLiteral>
-//class QXmlStreamReader;
 
 // Ours
 #include "../DirScanResult.h"
@@ -39,11 +38,16 @@ class LibraryEntry;
 /**
  * Model of the results of scanning a directory tree.
  */
-class ScanResultsTreeModelItem : public AbstractTreeModelItem
+class ScanResultsTreeModelItem :
+		public AbstractTreeModelItem
+//		public clone_inherit<abstract_method<ScanResultsTreeModelItem>, virtual_inherit_from<AbstractTreeModelItem>>
+//		public clone_inherit<ScanResultsTreeModelItem, AbstractTreeModelItem>
+
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
+//	M_GH_RULE_OF_FIVE_DEFAULT_C21(ScanResultsTreeModelItem);
 
 	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
 	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};
@@ -93,10 +97,13 @@ protected:
 	/// This is things like the main media URL, sidecar cue sheet URLs, timestamp info, etc.
 	DirScanResult m_dsr;
 
+
 };
 
 
-class SRTMItem_LibEntry : public ScanResultsTreeModelItem
+class SRTMItem_LibEntry :
+		public ScanResultsTreeModelItem
+//		public clone_inherit<SRTMItem_LibEntry, virtual_inherit_from<ScanResultsTreeModelItem>>
 {
 	using BASE_CLASS = ScanResultsTreeModelItem;
 

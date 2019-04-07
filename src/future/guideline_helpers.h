@@ -52,4 +52,18 @@
 #define M_GH_RULE_OF_FIVE_DEFAULT_C21(classname) IMPL_RULE_OF_FIVE(classname, default)
 #define M_GH_RULE_OF_FIVE_DELETE_C21(classname) IMPL_RULE_OF_FIVE(classname, delete)
 
+/**
+ * @todo Rules for passing smart ptrs.
+ * @link http://www.modernescpp.com/index.php/c-core-guidelines-passing-smart-pointer
+ * "
+ *	R.32: Take a unique_ptr<widget> parameter to express that a function assumes ownership of a widget
+ *  R.33: Take a unique_ptr<widget>& parameter to express that a function reseats the widget
+ *	R.34: Take a shared_ptr<widget> parameter to express that a function is part owner
+ *	R.35: Take a shared_ptr<widget>& parameter to express that a function might reseat the shared pointer
+ *	R.36: Take a const shared_ptr<widget>& parameter to express that it might retain a reference count to the object ???
+ *	R.37: Do not pass a pointer or reference obtained from an aliased smart pointer
+ * "
+ */
+
+
 #endif /* SRC_FUTURE_GUIDELINE_HELPERS_H_ */

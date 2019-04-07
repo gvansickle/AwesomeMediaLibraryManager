@@ -24,6 +24,7 @@
 
 /// Std C++
 #include <memory>
+#include <vector>
 
 /// Qt5
 #include <QObject>
@@ -36,6 +37,7 @@
 /// Ours
 #include <src/concurrency/ExtAsync.h>
 #include "LibraryRescannerMapItem.h"
+#include <src/logic/models/AbstractTreeModelItem.h>
 
 class LibraryModel;
 class LibraryEntry;
@@ -115,9 +117,11 @@ private:
 
 	LibraryModel* m_current_libmodel;
 
-//	ExtFuture<QString> m_dirtrav_future;
+	// New container type we'll use to pass the incoming values to the new model.
+	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
+	QFutureWatcher<ItemContType> m_extfuture_watcher_new_model;
 	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 };
 
