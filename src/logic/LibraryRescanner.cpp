@@ -184,6 +184,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
     qDb() << "START:" << dir_url;
 
+	expect_and_set(0, 1);
+
 	// Time how long it takes.
 	m_timer.start();
 
@@ -214,6 +216,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	/// @todo Obsoleting.
 	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
 
+	// New container type we'll use to pass the incoming values to the new model.
+	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
 	// Create a future so we can attach a continuation to get the results to the main thread.
 	using SharedItemContType = std::shared_ptr<ItemContType>;
@@ -224,7 +228,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
-
+		if(begin == 0)
+		{
+			expect_and_set(1, 2);
+		}
 //		qDb() << "IN TAP:" << M_ID_VAL(tap_future.resultCount()) << M_ID_VAL(begin) << M_ID_VAL(end);
 
 		// Creat a new container instance we'll use to pass the incoming values to the GUI thread below.
@@ -272,7 +279,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			{
 				qWr() << "tap_callback saw finished/empty new_items";
 
-M_TODO("This needs to reportFinished before the next steps below whihc save the DB, NOT WORKING HERE");
+M_TODO("This needs to reportFinished before the next steps below which save the DB, NOT WORKING HERE");
 tree_model_item_future.reportFinished();
 
 				return;
@@ -356,9 +363,28 @@ tree_model_item_future.reportFinished();
 
 	// START dirtrav_job->then()
 //	dirtrav_job->
-	tail_future.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<DirScanResult> dsr) {
+	tail_future
+		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable {
+		// Finish a couple futures we started in this, and since this is done, there should be no more
+		// results coming for them.
+
+		expect_and_set(2, 3);
+
+		qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
+		tree_model_item_future.reportFinished();
+		qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
+
+		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
+		qurl_future.reportFinished();
+		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
+
+		return future.get();
+		}) // END tail_future.then()
+
+		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<DirScanResult> dsr) {
 
 		AMLM_ASSERT_IN_GUITHREAD();
+		expect_and_set(2, 3);
 
 		qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
         if(kjob->error())
@@ -389,7 +415,6 @@ tree_model_item_future.reportFinished();
 				/// NEW Let's also try it with plenty of QVariants.
 				QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 				{
-
 					qIn() << "###### WRITING" << database_filename;
 					qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
 
@@ -478,18 +503,7 @@ tree_model_item_future.reportFinished();
             lib_rescan_job->start();
 #endif
         }
-	}).then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable {
-		// Finish a couple futures we started in this, and since this is done, there should be no more
-		// results coming for them.
-		qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
-		tree_model_item_future.reportFinished();
-		qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
-
-		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
-		qurl_future.reportFinished();
-		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
-
-		;}); // END dirtrav_job->then
+	});
 
     master_job_tracker->registerJob(dirtrav_job);
 	master_job_tracker->setAutoDelete(dirtrav_job, false);
@@ -527,6 +541,8 @@ tree_model_item_future.reportFinished();
 								tree_model_ptr=tree_model
 								](ExtFuture<SharedItemContType> new_items_future) {
 		AMLM_ASSERT_IN_GUITHREAD();
+
+		qDb() << "START: tree_model_item_future.then, new_items_future count:" << new_items_future;
 
 		// For each QList<SharedItemContType> entry.
 		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
@@ -822,6 +838,13 @@ return functx:replace-element-values($x,concat($x,'.APPENDED'))
 	f0_2.wait();
 }
 	qDb() << "PARALLEL XQUERY TEST COMPLETE";
+}
+
+bool LibraryRescanner::expect_and_set(int expect, int set)
+{
+	Q_ASSERT(expect == m_main_sequence_monitor);
+	m_main_sequence_monitor = set;
+	return true;
 }
 /// END @todo MORE EXERIMENTS, QIODevice.
 
