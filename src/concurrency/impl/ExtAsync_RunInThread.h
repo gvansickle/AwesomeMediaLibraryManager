@@ -124,9 +124,9 @@ namespace ExtAsync
 
 		// Ignoring the returned ExtFuture<>.
 		/// @todo Can we really do this?
-		auto inner_retfuture = qthread_async(callback, retfuture, args...);
+		/*auto inner_retfuture =*/ qthread_async(callback, retfuture, args...);
 
-		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture << M_ID_VAL(inner_retfuture);
+		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;// << M_ID_VAL(inner_retfuture);
 
 		return retfuture;
 	};

@@ -115,13 +115,13 @@ protected:
 private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
+	std::atomic_int m_main_sequence_monitor {0};
+
+	bool expect_and_set(int expect, int set);
+
 	LibraryModel* m_current_libmodel;
 
-	// New container type we'll use to pass the incoming values to the new model.
-	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
-
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
-	QFutureWatcher<ItemContType> m_extfuture_watcher_new_model;
 	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 };
 
