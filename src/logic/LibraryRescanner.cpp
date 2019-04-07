@@ -205,7 +205,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	LibraryRescannerJobPtr lib_rescan_job = LibraryRescannerJob::make_job(this);
 
     // Get a pointer to the Scan Results Tree model.
-	auto tree_model = AMLMApp::IScanResultsTreeModel();
+	ScanResultsTreeModel* tree_model = AMLMApp::IScanResultsTreeModel();
     // Set the root URL of the scan results model.
     /// @todo Should this really be done here, or somewhere else?
     tree_model->setBaseDirectory(dir_url);
@@ -215,8 +215,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
 
 
-	// Create a future so we can attach a watcher to get the results to the main thread.
-	using SharedItemContType = std::shared_ptr<ItemContType>;//std::vector<std::shared_ptr<AbstractTreeModelItem>>;
+	// Create a future so we can attach a continuation to get the results to the main thread.
+	using SharedItemContType = std::shared_ptr<ItemContType>;
 	ExtFuture<SharedItemContType> tree_model_item_future = make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
@@ -271,6 +271,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			if(new_items->empty())
 			{
 				qWr() << "tap_callback saw finished/empty new_items";
+
+M_TODO("This needs to reportFinished before the next steps below whihc save the DB, NOT WORKING HERE");
+tree_model_item_future.reportFinished();
+
 				return;
 			}
 			qIn() << "tap_callback saw finished, but with" << new_items->size() << "outstanding results.";
@@ -338,6 +342,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		});
 #endif // END ScanResultsTreeModel
 	})
+#if 0
+			.then([=](ExtFuture<DirScanResult> dsr) mutable {
+		M_TODO("This needs to reportFinished before the next steps below whihc save the DB.");
+		tree_model_item_future.reportFinished();
+		return dsr.results();
+	})
+#endif
 	;
 
 	// Make sure the above job gets canceled and deleted.
@@ -380,6 +391,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 				{
 
 					qIn() << "###### WRITING" << database_filename;
+					qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
 
 					XmlSerializer xmlser;
 					xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
@@ -551,6 +563,7 @@ qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(*entry) << M_ID_VAL(entry->data(1).t
 
 			// Finally, move the new model items to their new home.
 			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
+			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
 	});
 #endif
