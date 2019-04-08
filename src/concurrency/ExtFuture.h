@@ -88,6 +88,15 @@ std::atomic_uint64_t get_next_id();
 template <typename T>
 ExtFuture<T> make_started_only_future();
 
+template<typename T,
+         REQUIRES(!is_ExtFuture_v<T> && !std::is_base_of_v<T, QStringList>)>
+ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value);
+
+template<typename T,
+         REQUIRES(!is_ExtFuture_v<T>)>
+ExtFuture<typename std::decay_t<T>> make_ready_future_from_qlist(QList<T>&& value);
+
+
 /**
  * A C++2x-ish std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
  *
@@ -198,16 +207,53 @@ public:
 		: BASE_CLASS(p) { m_extfuture_id_no = id; }
 
 	/**
-	 * Unwrapping constructor, ala std::experimental::future::future, boost::future.
+	 * Converting constructor from QList<T>.
+	 * Mainly for use in .then().then() chains, when the first then() returns future.get(), which
+	 * in Qt5 gets us a QList<T>.
+	 */
+//	template <class U>
+	ExtFuture(QList<T>&& list)
+	{
+//		ExtFuture<QList<T>> temp = make_ready_future();
+		auto temp = make_ready_future_from_qlist(std::forward<QList<T>>(list));
+//		auto temp = make_ready_future(list);
+		*this = temp;
+	}
+
+	/**
+	 * Unwrapping constructor, ala std::experimental::hared_future::shared_future, boost::future.
+	 * Constructs a shared_future object from the shared state referred to by other.
 	 * @note Unimplemented, honeypot for catching nested ExtFuture<>s and asserting at compile time.
-	 * Not sure if we really need this or not.
 	 */
 	template <class ExtFutureExtFutureT,
 			  REQUIRES(NestedExtFuture<ExtFutureExtFutureT>)>
 	explicit ExtFuture(ExtFuture<ExtFuture<T>>&& other)
 	{
+#if 1
 		Q_UNUSED(other);
 		static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
+#else
+		M_WARNING("USING NESTED EXTFUTURE");
+		if(other.valid() == false)
+		{
+			// Invalid other == empty this.
+			qWr() << "Nested other future was not valid:" << other;
+		}
+
+		/// @todo...
+		// "Steal" other's shared state.  This is probably the worst way to do so, but I don't see many
+		// alternatives with Qt5.
+		// Force other to be finished.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/shared_future,
+		// this constructor sounds a lot like a move constructor; other is left in invalid state after
+		// this function returns (other.valid() == false).
+		other.reportFinished();
+		if(other.resultCount() == 0 || other.resultCount() > 1)
+		{
+			// Should only be one nested ExtFuture, not a QList of them.
+			throw ExtFutureError(ExtFutureErrc::broken_promise);
+		}
+		*this = other.results()[0];
+#endif
 	}
 
 	/**
@@ -309,6 +355,7 @@ public:
 		// We're only C++2x-ready if we're Finished or Canceled (including Exceptions).
 		return this->isFinished() || this->isCanceled();
 	}
+
 
 	/**
 	 * C++2x valid().
@@ -690,6 +737,19 @@ public:
 		return *this;
 	}
 
+//	/**
+//	 * If this is a nested ExtFuture, returns a proxy (since we're a shared_future, a copy) of the inner future.
+//	 * Else just returns a copy or this.
+//	 * @return
+//	 */
+//	ExtFuture<T> unwrap()
+//	{
+//		if constexpr (is_nested_ExtFuture_v<decltype(*this)>)
+//		{
+//			return ExtFuture<T>();
+//		}
+//	}
+
 	void set_value(const T& value)
 	{
 		this->reportFinished(&value);
@@ -1023,11 +1083,12 @@ public:
 		return returned_future;
 	}
 
-	template <typename ThenCallbackType,
-				  typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
+	template <class ThenCallbackType,
+				  class R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
+	              class ThenReturnType = ExtFuture<R>,// then_return_future_type_t<R>,
 				  REQUIRES(!is_ExtFuture_v<R>
-				  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then(QThreadPool* context, ThenCallbackType&& then_callback) const
+	              && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
+	ThenReturnType then(QThreadPool* context, ThenCallbackType&& then_callback) const
 	{
 		// Forward to the master callback, don't call the then_callback on a cancel.
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
@@ -1039,15 +1100,18 @@ public:
 	 * callback is of the form:
 	 *     ExtFuture<R> callback(ExtFuture<T>)
 	 */
-	template <typename ThenCallbackType,
-			typename R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
-			        class QObjectType,
-			REQUIRES(!is_ExtFuture_v<R>
-			        && !std::is_convertible_v<QObjectType, QThreadPool>
-			         && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
+	template <class ThenCallbackType, class QObjectType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >,
+	                class ThenReturnType = ExtFuture<R>,//then_return_future_type_t<R>,
+	        REQUIRES(!is_ExtFuture_v<R>
+	                && !std::is_convertible_v<QObjectType, QThreadPool>
+//	                 && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>
+					&& std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>
+	          )>
+	ThenReturnType then(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
-		ExtFuture<R> retfuture = make_started_only_future<R>();
+//		static_assert(std::is_convertible_v<typename ThenReturnType::inner_t, R>, "");
+
+		ThenReturnType retfuture = make_started_only_future<R>();
 
 		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
 			// Wait inside this intermediate thread for the incoming future (this) to be ready.
@@ -1057,7 +1121,8 @@ public:
 			// Note the std::invoke details.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
 			// "When the shared state currently associated with *this is ready, the continuation INVOKE(std::move(fd), *this)
 			// is called on an unspecified thread of execution [...]. If that expression is invalid, the behavior is undefined."
-			run_in_event_loop(context, [=, retfuture_cp = retfuture, then_callback=DECAY_COPY(then_callback)]() mutable {
+			run_in_event_loop(context, [=, retfuture_cp = retfuture,
+			                  then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))]() mutable {
 				if constexpr(std::is_void_v<Unit::DropT<R>>)
 				{
 					// Continuation returns void.
@@ -1067,8 +1132,8 @@ public:
 				else
 				{
 					// Continuation returns a value type.
-					auto retval = std::invoke(std::move(then_callback), this_future);
-					retfuture_cp.reportFinished(retval);
+					R retval = std::invoke(std::move(then_callback), this_future);
+					retfuture_cp.reportFinished(&retval);
 				}
 				;});
 			;}, DECAY_COPY(*this));
@@ -1076,6 +1141,27 @@ public:
 		return retfuture;
 	}
 
+M_TODO("THIS ALMOST WORKS");
+//	/**
+//	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
+//	 * Mainly intended for chaining .then()'s together which need to forward the incoming future.
+//	 * callback is of the form:
+//	 *     ExtFuture<R> callback(QList<T>)
+//	 */
+//	template <class ThenCallbackType, class QObjectType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, QList<T>> >,
+//	                class ThenReturnType = ExtFuture<R>,//then_return_future_type_t<R>,
+//	        REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
+//	                && !std::is_convertible_v<QObjectType, QThreadPool>
+//	                && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, QList<T>>
+//	          )>
+//	ThenReturnType then(QObjectType* context, ThenCallbackType&& then_callback) const
+//	{
+//		ThenReturnType retfuture = make_started_only_future<T>();
+
+//		/// @todo
+
+//		return retfuture;
+//	}
 
 	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback
@@ -1096,10 +1182,13 @@ public:
 	 * @param then_callback
 	 * @returns ExtFuture<R>  A future which will be made ready with the return value of then_callback.
 	 */
-	template <class ThenCallbackType, class R = Unit::LiftT<ct::return_type_t<ThenCallbackType>>,
+	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >, //ct::return_type_t<ThenCallbackType>>,
+			class ThenReturnType = then_return_future_type_t<
+			        /*std::invoke_result_t<ThenCallbackType, ExtFuture<T>>*/ R
+			        >,
 			REQUIRES(is_non_void_non_ExtFuture_v<R>
 			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	ExtFuture<R> then( ThenCallbackType&& then_callback ) const
+	/*ExtFuture<R>*/ThenReturnType then( ThenCallbackType&& then_callback ) const
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
 		return this->then(nullptr /*QApplication::instance()*/, /*call_on_cancel==*/ false,
@@ -1535,13 +1624,29 @@ ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
  * @return
  */
 template<typename T,
-		 REQUIRES(!is_ExtFuture_v<T>)>
+         REQUIRES(!is_ExtFuture_v<T> && !std::is_base_of_v<T, QStringList>)>
 ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 {
 	QFutureInterface<T> qfi;
 
 	qfi.reportStarted();
 	qfi.reportResult(std::forward<T>(value));
+	qfi.reportFinished();
+
+	return 	ExtFuture<T>(&qfi, get_next_id());
+}
+
+/**
+ * Same as above, but with a QList<T> from an upstream ExtFuture<T>.
+ */
+template<typename T,
+         REQUIRES(!is_ExtFuture_v<T>)>
+ExtFuture<typename std::decay_t<T>> make_ready_future_from_qlist(QList<T>&& value)
+{
+	QFutureInterface<T> qfi;
+
+	qfi.reportStarted();
+	qfi.reportResults(QVector<T>::fromList(value));
 	qfi.reportFinished();
 
 	return 	ExtFuture<T>(&qfi, get_next_id());

@@ -364,7 +364,7 @@ tree_model_item_future.reportFinished();
 	// START dirtrav_job->then()
 //	dirtrav_job->
 	tail_future
-		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable {
+		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable -> QList<DirScanResult> {
 		// Finish a couple futures we started in this, and since this is done, there should be no more
 		// results coming for them.
 
@@ -381,7 +381,7 @@ tree_model_item_future.reportFinished();
 		return future.get();
 		}) // END tail_future.then()
 
-		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<DirScanResult> dsr) {
+		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<QList<DirScanResult>> dsr) {
 
 		AMLM_ASSERT_IN_GUITHREAD();
 		expect_and_set(2, 3);
@@ -503,6 +503,8 @@ tree_model_item_future.reportFinished();
             lib_rescan_job->start();
 #endif
         }
+
+		return dsr.get();
 	});
 
     master_job_tracker->registerJob(dirtrav_job);
