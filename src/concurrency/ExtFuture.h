@@ -44,6 +44,7 @@
 #include <QFutureInterface>
 #include <QThread>
 #include <QPair>
+#include <QStringList> // For template shenanigans.
 
 // Ours
 #include <utils/QtHelpers.h>
@@ -211,13 +212,13 @@ public:
 	 * Mainly for use in .then().then() chains, when the first then() returns future.get(), which
 	 * in Qt5 gets us a QList<T>.
 	 */
-//	template <class U>
-	ExtFuture(QList<T>&& list)
+	ExtFuture(const QList<T>& list)
 	{
+		Q_ASSERT(0);
 //		ExtFuture<QList<T>> temp = make_ready_future();
-		auto temp = make_ready_future_from_qlist(std::forward<QList<T>>(list));
+//		auto temp = make_ready_future_from_qlist(std::forward<QList<U>>(list));
 //		auto temp = make_ready_future(list);
-		*this = temp;
+//		*this = temp;
 	}
 
 	/**
@@ -1094,13 +1095,23 @@ public:
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
 	}
 
+	template <class U>
+	static const bool IsTAQList = std::is_base_of_v<U, QStringList>;
+
 	/**
 	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
 	 * Mainly intended for running in the main thread/event loop.
 	 * callback is of the form:
 	 *     ExtFuture<R> callback(ExtFuture<T>)
 	 */
-	template <class ThenCallbackType, class QObjectType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >,
+	template <class ThenCallbackType, class QObjectType,
+//			  class NonQListT = typename std::conditional_t<IsTAQList<T>, //std::is_base_of_v<T, QStringList>,
+//												   /* true, is QList<T> */
+//															contained_type_t<T>,
+//												   //std::enable_if_t<std::is_base_of_v<T, QStringList>, typename T::value_type>,
+//												   /* false, isn't QList<T> */
+//												   T>,
+			  class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >,
 	                class ThenReturnType = ExtFuture<R>,//then_return_future_type_t<R>,
 	        REQUIRES(!is_ExtFuture_v<R>
 	                && !std::is_convertible_v<QObjectType, QThreadPool>

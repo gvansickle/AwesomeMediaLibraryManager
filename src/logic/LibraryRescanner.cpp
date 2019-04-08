@@ -364,7 +364,7 @@ tree_model_item_future.reportFinished();
 	// START dirtrav_job->then()
 //	dirtrav_job->
 	tail_future
-		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable -> QList<DirScanResult> {
+		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable /*-> QList<DirScanResult>*/ {
 		// Finish a couple futures we started in this, and since this is done, there should be no more
 		// results coming for them.
 
@@ -378,13 +378,14 @@ tree_model_item_future.reportFinished();
 		qurl_future.reportFinished();
 		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
 
-		return future.get();
+//		return future.get();
+		return unit;
 		}) // END tail_future.then()
 
-		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<QList<DirScanResult>> dsr) {
+		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
 
 		AMLM_ASSERT_IN_GUITHREAD();
-		expect_and_set(2, 3);
+		expect_and_set(3, 4);
 
 		qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
         if(kjob->error())
@@ -504,7 +505,7 @@ tree_model_item_future.reportFinished();
 #endif
         }
 
-		return dsr.get();
+//		return dsr.get();
 	});
 
     master_job_tracker->registerJob(dirtrav_job);
@@ -562,7 +563,7 @@ tree_model_item_future.reportFinished();
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
 M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
-qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(*entry) << M_ID_VAL(entry->data(1).toString());
+qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
 				lib_entry->populate(true);
 
 				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;

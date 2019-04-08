@@ -139,6 +139,7 @@
 #include <shared_mutex>
 #include <map>
 #include <algorithm>
+#include <type_traits>
 
 // Qt5
 #include <QFuture>
@@ -171,6 +172,9 @@ template class ExtFuture<double>;
 template class ExtFuture<QString>;
 template class ExtFuture<QByteArray>;
 
-
+/// Static checks.
+static_assert(std::is_class_v<ExtFuture<QList<int>>>);
+static_assert(std::is_convertible_v<QList<int>, ExtFuture<int>>);
+//static_assert(std::is_convertible_v<ExtFuture<QList<int>>, ExtFuture<int>>);
 
 
