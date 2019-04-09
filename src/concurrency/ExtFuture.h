@@ -66,10 +66,10 @@ namespace ExtAsync
 namespace detail {}
 
 template <class CallbackType, /*class ExtFutureR,*/ class... Args,
-				  class R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>,
-				  class ExtFutureR = ExtFuture<R>
-				  >
-		static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
+		  class R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>,
+		  class ExtFutureR = ExtFuture<R>
+		  >
+static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
 }
 
 
@@ -1086,7 +1086,7 @@ public:
 
 	template <class ThenCallbackType,
 				  class R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>,
-	              class ThenReturnType = ExtFuture<R>,// then_return_future_type_t<R>,
+	              class ThenReturnType = R,// then_return_future_type_t<R>,
 				  REQUIRES(!is_ExtFuture_v<R>
 	              && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	ThenReturnType then(QThreadPool* context, ThenCallbackType&& then_callback) const
@@ -1257,7 +1257,7 @@ M_TODO("THIS ALMOST WORKS");
 	 * @returns An ExtFuture<T> which is made ready when this is completed.
 	 */
 	template<typename StreamingTapCallbackType,
-			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
+			 REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
 	ExtFuture<T> tap(QObject* context, StreamingTapCallbackType&& tap_callback)
 	{
 		return this->StreamingTapHelper(context, std::forward<StreamingTapCallbackType>(tap_callback));
@@ -1265,7 +1265,7 @@ M_TODO("THIS ALMOST WORKS");
 
 	/**
 	 * .tap() overload for streaming taps.
-	 * Tap will run in the QApplication instance. @todo Not functional yet.
+	 * Tap will run in the QApplication instance.
 	 */
 	template<typename StreamingTapCallbackType,
 			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
@@ -1396,10 +1396,11 @@ protected:
 		// with this_future in a non-blocking state.
 
 		// The future we'll immediately return.  We copy this into the streaming_tap_callback's ::run() context.
-		ExtFuture<T> returned_future = make_started_only_future<T>();
+//		ExtFuture<T> returned_future = make_started_only_future<T>();
 
 		// The concurrent run().
-		QtConcurrent::run([=, streaming_tap_callback_copy = DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
+		ExtFuture<T> returned_future = ExtAsync::qthread_async([=,
+														   streaming_tap_callback_copy = DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
 						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) mutable {
 				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
 						<< "ret_future_copy:" << returned_future_copy;
@@ -1439,7 +1440,7 @@ protected:
 						// Call the tap callback.
 						//				streaming_tap_callback_copy(ef, i, result_count);
 //						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
-						std::invoke(streaming_tap_callback_copy, this_future_copy, i, result_count);
+						std::invoke(std::move(streaming_tap_callback_copy), this_future_copy, i, result_count);
 
 						// Copy the new results to the returned future.
 						for(; i < result_count; ++i)

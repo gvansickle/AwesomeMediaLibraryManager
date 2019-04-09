@@ -18,10 +18,6 @@
  */
 
 #ifndef AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
-//#   if defined(ExtAsync_RunInThread_DECL_ONLY)
-//#       define AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H_ExtAsync_RunInThread_DECL_ONLY
-//#   endif
-//#else
 #define AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 
 // Std C++
@@ -36,7 +32,6 @@
 #include <QThread>
 
 // Ours.
-//#include <AMLMApp.h>
 #include "../ExtAsync_traits.h"
 #include "../ExtFuture.h"
 

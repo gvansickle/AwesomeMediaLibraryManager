@@ -41,6 +41,7 @@
 
 class LibraryModel;
 class LibraryEntry;
+class ScanResultsTreeModel;
 
 
 struct MetadataReturnVal
@@ -112,10 +113,14 @@ protected:
 	/// Experimental: Run XQuery in a separate thread.
 	void ExpRunXQuery1(const QString& database_filename, const QString& in_filename);
 
+	void SaveDatabase(ScanResultsTreeModel* tree_model_ptr);
+
+        
 private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
 	std::atomic_int m_main_sequence_monitor {0};
+	std::atomic_bool m_model_ready_to_save_to_db {false};
 
 	bool expect_and_set(int expect, int set);
 

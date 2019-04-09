@@ -180,6 +180,21 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
+void LibraryRescanner::SaveDatabase(ScanResultsTreeModel* tree_model_ptr)
+{
+	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
+
+	qIn() << "###### WRITING" << database_filename;
+	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
+
+	XmlSerializer xmlser;
+	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+	xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(database_filename), "playlist");
+
+	qIn() << "###### WROTE" << database_filename;
+}
+
+
 void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
     qDb() << "START:" << dir_url;
@@ -224,7 +239,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	ExtFuture<SharedItemContType> tree_model_item_future = make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
-	ExtFuture<DirScanResult> tail_future = dirresults_future.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
+	ExtFuture<DirScanResult> tail_future = dirresults_future.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
@@ -306,7 +321,7 @@ tree_model_item_future.reportFinished();
 		/// @note passing a shared_ptr to a vector of unique_ptrs between threads.
 		tree_model_item_future.reportResult(new_items);
 
-		qDb() << M_ID_VAL(tree_model_item_future);
+		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
 
 #elif 0 // ScanResultsTreeModel
 		run_in_event_loop(this, [
@@ -348,165 +363,202 @@ tree_model_item_future.reportFinished();
 			/// @todo REMOVE, EXPERIMENTAL
 		});
 #endif // END ScanResultsTreeModel
-	})
-#if 0
-			.then([=](ExtFuture<DirScanResult> dsr) mutable {
-		M_TODO("This needs to reportFinished before the next steps below whihc save the DB.");
-		tree_model_item_future.reportFinished();
-		return dsr.results();
-	})
-#endif
-	;
+	}) // returns ExtFuture<DirScanResults> tail_future.
+	.then([=](ExtFuture<DirScanResult> fut_ignored) {
+		// The dirscan is complete.
+		qDb() << "DIRSCAN COMPLETE .then()";
+	});
+//	;
 
-	// Make sure the above job gets canceled and deleted.
-	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
-	// START dirtrav_job->then()
-//	dirtrav_job->
 	tail_future
-		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable /*-> QList<DirScanResult>*/ {
-		// Finish a couple futures we started in this, and since this is done, there should be no more
-		// results coming for them.
+	/// @then
+		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable -> void /*-> QList<DirScanResult>*/ {
+			// Finish a couple futures we started in this, and since this is done, there should be no more
+			// results coming for them.
 
-		expect_and_set(2, 3);
+			expect_and_set(2, 3);
 
-		qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
-		tree_model_item_future.reportFinished();
-		qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
+			qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
+			tree_model_item_future.reportFinished();
+			qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
 
-		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
-		qurl_future.reportFinished();
-		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
+			qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
+			qurl_future.reportFinished();
+			qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
 
-//		return future.get();
-		return unit;
-		}) // END tail_future.then()
+//			return future.get();
+		})
+		/// @then
+		.then(qApp, [=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future) {
+		AMLM_ASSERT_IN_GUITHREAD();
+
+		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future;
+
+//		tree_model_item_future.wait();
+
+		// For each QList<SharedItemContType> entry.
+		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
+		{
+			// Append entries to the ScanResultsTreeModel.
+			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
+			{
+				// Make sure the entry wasn't moved from.
+				Q_ASSERT(bool(entry) == true);
+				// Get the last top-level row.
+//				auto last_row_index = tree_model_ptr->rowCount() - 1;
+//				Q_ASSERT(last_row_index >= 0);
+
+				auto new_child = std::make_unique<SRTMItem_LibEntry>();
+				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+
+				M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
+				lib_entry->populate(true);
+
+				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+				/// @note Here we only care about the LibraryEntry corresponding to each file.
+//				if(!lib_entry->isSubtrack())
+//				{
+//					lib_entries = lib_entry->split_to_tracks();
+//				}
+//				else
+				{
+					lib_entries.push_back(lib_entry);
+				}
+				new_child->setLibraryEntry(lib_entries.at(0));
+				entry->appendChild(std::move(new_child));
+			}
+
+			// Finally, move the new model items to their new home.
+			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
+			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
+		}
+
+		Q_ASSERT(m_model_ready_to_save_to_db == false);
+		m_model_ready_to_save_to_db = true;
+	})
 
 		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
 
-		AMLM_ASSERT_IN_GUITHREAD();
-		expect_and_set(3, 4);
+			AMLM_ASSERT_IN_GUITHREAD();
+			expect_and_set(3, 4);
 
-		qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
-        if(kjob->error())
-        {
-            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
-            auto uidelegate = kjob->uiDelegate();
-            Q_CHECK_PTR(uidelegate);
-            uidelegate->showErrorMessage();
-        }
-        else
-        {
-            // Succeeded, but we may still have outgoing filenames in flight.
-            qIn() << "DIRTRAV SUCCEEDED";
-            m_last_elapsed_time_dirscan = m_timer.elapsed();
-            qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
+
+			qDb() << "DIRTRAV COMPLETE, NOW IN GUI THREAD";
+	        if(kjob->error())
+	        {
+	            qWr() << "DIRTRAV FAILED:" << kjob->error() << ":" << kjob->errorText() << ":" << kjob->errorString();
+	            auto uidelegate = kjob->uiDelegate();
+	            Q_CHECK_PTR(uidelegate);
+	            uidelegate->showErrorMessage();
+	        }
+	        else
+	        {
+	            // Succeeded, but we may still have outgoing filenames in flight.
+	            qIn() << "DIRTRAV SUCCEEDED";
+	            m_last_elapsed_time_dirscan = m_timer.elapsed();
+	            qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
 /// @todo EXPERIMENTAL
-			QString filename = QDir::homePath() + "/AMLM_DeleteMe_XQuery.xml";
-			qIno() << "Writing model to XML file:" << filename;
-			QFile outfile(filename);
-			auto status = outfile.open(QFile::WriteOnly | QFile::Text);
-			if(!status)
-			{
-				qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
-			}
-			else
-			{
-				/// NEW Let's also try it with plenty of QVariants.
-				QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
+				QString filename = QDir::homePath() + "/AMLM_DeleteMe_XQuery.xml";
+				qIno() << "Writing model to XML file:" << filename;
+				QFile outfile(filename);
+				auto status = outfile.open(QFile::WriteOnly | QFile::Text);
+				if(!status)
 				{
-					qIn() << "###### WRITING" << database_filename;
-					qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
-
-					XmlSerializer xmlser;
-					xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-					xmlser.save(*tree_model_ptr, QUrl::fromLocalFile(database_filename), "playlist");
-
-					qIn() << "###### WROTE" << database_filename;
-
-					/// Let's now try to read it back.
-					ScanResultsTreeModel* readback_tree_model;
-					{
-						qIn() << "###### READING BACK" << database_filename;
-
-						XmlSerializer xmlser_read;
-						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-						readback_tree_model = new ScanResultsTreeModel(this);//static_cast<QObject*>(tree_model_ptr)->parent());
-						// Load it.
-						xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(database_filename));
-
-						qIn() << "###### READBACK INFO:";
-						qIn() << "COLUMNS:" << readback_tree_model->columnCount()
-								<< "ROWS:" << readback_tree_model->rowCount();
-					}
-
-					/// And lets' try to reserialize it out.
-					{
-						QString filename = QDir::homePath() + "/AMLM_DeleteMe_TreeModelOut.xml";
-						qIn() << "###### WRITING WHAT WE READ TO" << filename;
-						XmlSerializer xmlser;
-						xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-						xmlser.save(*readback_tree_model, QUrl::fromLocalFile(filename), "playlist");
-						qIn() << "###### WROTE" << filename;
-					}
-					readback_tree_model->deleteLater();
-
+					qCro() << "########## COULDN'T WRITE TO FILE:" << filename;
 				}
-#ifndef TRY_XQUERY_READ
-				// Now let's see if we can XQuery what we just wrote.
-				auto outfile_url = QUrl::fromLocalFile(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
-				bool retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist.xq"),
-						QUrl::fromLocalFile(database_filename), outfile_url);
-
-				Q_ASSERT(retval);
-
+				else
 				{
-					Stopwatch sw("XQuery test: two regex queries in loop");
+					QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
 
-					for(const QString& ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
+					Q_ASSERT(m_model_ready_to_save_to_db == true);
+					m_model_ready_to_save_to_db = false;
+
+					// Save the database out to XML.
+					SaveDatabase(tree_model_ptr);
 					{
-						// Now let's see if we can XQuery what we just wrote as a QStringList.
-						QStringList query_results;
-						retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
-						                    QUrl::fromLocalFile(database_filename), &query_results,
-						                    [&](QXmlQuery* xq) {
-							                    xq->bindVariable(QString("extension_regex"), QVariant(ext_regex));
-						                    });
-						Q_ASSERT(retval);
-						qDbo() << "###### NUM" << ext_regex << "FILES:" << query_results.count();
+						/// Let's now try to read it back.
+						ScanResultsTreeModel* readback_tree_model;
+						{
+							qIn() << "###### READING BACK" << database_filename;
+
+							XmlSerializer xmlser_read;
+							xmlser_read.set_default_namespace("http://xspf.org/ns/0/", "1");
+							readback_tree_model = new ScanResultsTreeModel(this);//static_cast<QObject*>(tree_model_ptr)->parent());
+							// Load it.
+							xmlser_read.load(*readback_tree_model, QUrl::fromLocalFile(database_filename));
+
+							qIn() << "###### READBACK INFO:";
+							qIn() << "COLUMNS:" << readback_tree_model->columnCount()
+									<< "ROWS:" << readback_tree_model->rowCount();
+						}
+
+						/// And lets' try to reserialize it out.
+						{
+							QString filename = QDir::homePath() + "/AMLM_DeleteMe_TreeModelOut.xml";
+							qIn() << "###### WRITING WHAT WE READ TO" << filename;
+							XmlSerializer xmlser;
+							xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
+							xmlser.save(*readback_tree_model, QUrl::fromLocalFile(filename), "playlist");
+							qIn() << "###### WROTE" << filename;
+						}
+						readback_tree_model->deleteLater();
+
 					}
+	#ifndef TRY_XQUERY_READ
+					// Now let's see if we can XQuery what we just wrote.
+					auto outfile_url = QUrl::fromLocalFile(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
+					bool retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist.xq"),
+							QUrl::fromLocalFile(database_filename), outfile_url);
+
+					Q_ASSERT(retval);
+
+					{
+						Stopwatch sw("XQuery test: two regex queries in loop");
+
+						for(const QString& ext_regex : {R"((.*\.flac$))", R"((.*\.mp3$))"})
+						{
+							// Now let's see if we can XQuery what we just wrote as a QStringList.
+							QStringList query_results;
+							retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist_stringlistout.xq"),
+							                    QUrl::fromLocalFile(database_filename), &query_results,
+							                    [&](QXmlQuery* xq) {
+								                    xq->bindVariable(QString("extension_regex"), QVariant(ext_regex));
+							                    });
+							Q_ASSERT(retval);
+							qDbo() << "###### NUM" << ext_regex << "FILES:" << query_results.count();
+						}
+					}
+
+					ExpRunXQuery1(database_filename, filename);
+	#endif
 				}
-
-				ExpRunXQuery1(database_filename, filename);
-#endif
-			}
-/// @todo EXPERIMENTAL
+	/// @todo EXPERIMENTAL
 
 
-#if 1
-            // Directory traversal complete, start rescan.
+	#if 1
+	            // Directory traversal complete, start rescan.
 
-            QVector<VecLibRescannerMapItems> rescan_items;
+	            QVector<VecLibRescannerMapItems> rescan_items;
 
-            qDb() << "GETTING RESCAN ITEMS";
+	            qDb() << "GETTING RESCAN ITEMS";
 
-            rescan_items = m_current_libmodel->getLibRescanItems();
+	            rescan_items = m_current_libmodel->getLibRescanItems();
 
-            qDb() << "rescan_items:" << rescan_items.size();
-            /// @todo TEMP FOR DEBUGGING, CHANGE FROM ASSERT TO ERROR.
-			Q_ASSERT(!rescan_items.empty());
+	            qDb() << "rescan_items:" << rescan_items.size();
+	            /// @todo TEMP FOR DEBUGGING, CHANGE FROM ASSERT TO ERROR.
+				Q_ASSERT(!rescan_items.empty());
 
-            lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
+	            lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
 
-            // Start the metadata scan.
-            qDb() << "STARTING RESCAN";
-            lib_rescan_job->start();
-#endif
-        }
-
-//		return dsr.get();
-	});
+	            // Start the metadata scan.
+	            qDb() << "STARTING RESCAN";
+	            lib_rescan_job->start();
+	#endif
+	        }
+		});
 
     master_job_tracker->registerJob(dirtrav_job);
 	master_job_tracker->setAutoDelete(dirtrav_job, false);
@@ -531,7 +583,6 @@ tree_model_item_future.reportFinished();
 	// Metadata refresh results to this (the main) thread, via a slot for furthe processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
-
 		MetadataReturnVal ready_result = lib_rescan_job->get_extfuture().resultAt(index);
 //		Q_ASSERT(ready_result.m_new_libentries.size() != 0);
 		this->SLOT_processReadyResults(ready_result);
@@ -539,7 +590,7 @@ tree_model_item_future.reportFinished();
 	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
 
 	/// @note .then() works here, we should try a .tap().
-#if 1
+#if 0
 	tree_model_item_future.then(qApp, [=,
 								tree_model_ptr=tree_model
 								](ExtFuture<SharedItemContType> new_items_future) {
@@ -556,8 +607,8 @@ tree_model_item_future.reportFinished();
 				// Make sure the entry wasn't moved from.
 				Q_ASSERT(bool(entry) == true);
 				// Get the last top-level row.
-				//				auto last_row_index = tree_model_ptr->rowCount() - 1;
-				//				Q_ASSERT(last_row_index >= 0);
+//				auto last_row_index = tree_model_ptr->rowCount() - 1;
+//				Q_ASSERT(last_row_index >= 0);
 
 				auto new_child = std::make_unique<SRTMItem_LibEntry>();
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
@@ -568,11 +619,11 @@ qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).t
 
 				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
 				/// @note Here we only care about the LibraryEntry corresponding to each file.
-				//				if(!lib_entry->isSubtrack())
-				//				{
-				//					lib_entries = lib_entry->split_to_tracks();
-				//				}
-				//				else
+//				if(!lib_entry->isSubtrack())
+//				{
+//					lib_entries = lib_entry->split_to_tracks();
+//				}
+//				else
 				{
 					lib_entries.push_back(lib_entry);
 				}
@@ -584,8 +635,14 @@ qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).t
 			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
 			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
+
+		Q_ASSERT(m_model_ready_to_save_to_db == false);
+		m_model_ready_to_save_to_db = true;
 	});
 #endif
+
+	// Make sure the above job gets canceled and deleted.
+	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
 	//
     // Start the asynchronous ball rolling.

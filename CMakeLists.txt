@@ -170,7 +170,7 @@ include(ECMEnableSanitizers)
 # https://github.com/onqtam/ucm#ucm_add_flags
 include(ucm)
 if(UNIX)
-ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
+#ucm_add_flags(-fmessage-length=0 -pthread -Werror=return-type -fno-omit-frame-pointer)
 # Flags for GNU libstdc++
 ### @todo Detect that we're actually using GNU libstdc++
 # "compiles user code using the debug mode. When defined, _GLIBCXX_ASSERTIONS is defined automatically"
@@ -185,8 +185,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
-	ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
+	#ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
+	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
 #ucm_add_flags(/showIncludes)
