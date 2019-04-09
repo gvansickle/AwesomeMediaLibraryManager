@@ -66,7 +66,7 @@ namespace ExtAsync
 namespace detail {}
 
 template <class CallbackType, /*class ExtFutureR,*/ class... Args,
-		  class R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>,
+		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
 		  class ExtFutureR = ExtFuture<R>
 		  >
 static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
@@ -415,7 +415,7 @@ public:
 	 * Cancel/Pause/Resume helper function for while(1) loops reporting/controlled by this ExtFuture<T>.
 	 *
 	 * Call this at the bottom of your while(1) loop.  If the call returns true,
-	 * you're being canceled and must break out of the loop, report canceled, and return.
+	 * you're being canceled and must break out of the loop, report canceled[???], and return.
 	 *
 	 * Handles pause/resume completely internally, nothing more needs to be done in the calling loop.
 	 *
@@ -1095,8 +1095,8 @@ public:
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
 	}
 
-	template <class U>
-	static const bool IsTAQList = std::is_base_of_v<U, QStringList>;
+//	template <class U>
+//	static const bool IsTAQList = std::is_base_of_v<U, QStringList>;
 
 	/**
 	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
@@ -1223,14 +1223,14 @@ M_TODO("THIS ALMOST WORKS");
 	 * @return ExtFuture<T>
 	 */
 	template <typename TapCallbackType,
-			  REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
+			  REQUIRES(std::is_invocable_r_v<void, TapCallbackType, T>)>
 	ExtFuture<T> tap(QObject* context, TapCallbackType&& tap_callback)
 	{
 		return this->TapHelper(context, std::forward<TapCallbackType>(tap_callback));
 	}
 
 	/**
-	 * Attaches a non-streaming tap callback to this ExtFuture.
+	 * Attaches a .tap() to this ExtFuture<T>.
 	 *
 	 * The callback passed to tap() is invoked with individual results from this, of type T, as they become available.
 	 *
@@ -1239,7 +1239,7 @@ M_TODO("THIS ALMOST WORKS");
 	 * @return ExtFuture<T>
 	 */
 	template <typename TapCallbackType,
-			  REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, T>)>
+			  REQUIRES(std::is_invocable_r_v<void, TapCallbackType, T>)>
 	ExtFuture<T> tap(TapCallbackType&& tap_callback)
 	{
 		auto retval = this->tap(QApplication::instance(), std::forward<TapCallbackType>(tap_callback));
@@ -1283,7 +1283,7 @@ M_TODO("THIS ALMOST WORKS");
 			 REQUIRES(ct::is_invocable_r_v<void, TapCallbackType, ExtFuture<T>>)>
 	ExtFuture<T> test_tap(TapCallbackType&& tap_callback)
 	{
-		std::invoke(tap_callback, *this);
+		std::invoke(std::forward<TapCallbackType>(tap_callback), *this);
 		return *this;
 	}
 

@@ -315,12 +315,6 @@ void ExtFuture<T>::wait()
 {
 	Q_ASSERT(this->valid());
 	this->waitForFinished();
-//	while (!this->isFinished())
-//	{
-//		// Pump the event loop.
-//		QCoreApplication::processEvents(QEventLoop::AllEvents);
-//		QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-//	}
 }
 
 template<typename T>

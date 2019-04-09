@@ -239,7 +239,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	ExtFuture<SharedItemContType> tree_model_item_future = make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
-	ExtFuture<DirScanResult> tail_future = dirresults_future.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
+	ExtFuture</*DirScanResult*/Unit> tail_future = dirresults_future.tap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
@@ -252,7 +252,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		// Creat a new container instance we'll use to pass the incoming values to the GUI thread below.
 		/// @todo We should find a better way to do this sort of thing.
 		/// Maybe a multi-output .tap()?
-		std::shared_ptr<ItemContType> new_items = std::make_shared<ItemContType>();
+		SharedItemContType new_items = std::make_shared<ItemContType>();
 
 		int original_end = end;
 		for(int i=begin; i<end; i++)
@@ -373,7 +373,7 @@ tree_model_item_future.reportFinished();
 
 	tail_future
 	/// @then
-		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<DirScanResult> future) mutable -> void /*-> QList<DirScanResult>*/ {
+		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void /*-> QList<DirScanResult>*/ {
 			// Finish a couple futures we started in this, and since this is done, there should be no more
 			// results coming for them.
 
@@ -388,9 +388,10 @@ tree_model_item_future.reportFinished();
 			qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
 
 //			return future.get();
-		})
+		});
+
 		/// @then
-		.then(qApp, [=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future) {
+		tree_model_item_future.then(qApp, [=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future) {
 		AMLM_ASSERT_IN_GUITHREAD();
 
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future;
@@ -412,7 +413,7 @@ tree_model_item_future.reportFinished();
 				auto new_child = std::make_unique<SRTMItem_LibEntry>();
 				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
-				M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
 				lib_entry->populate(true);
 

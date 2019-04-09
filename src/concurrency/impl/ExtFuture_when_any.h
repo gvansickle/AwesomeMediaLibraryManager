@@ -23,11 +23,11 @@
 #ifndef SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ANY_H_
 #define SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ANY_H_
 
-/*
- *
- */
-class when_any
+namespace ExtFuture_detail
 {
-};
+
+
+
+}
 
 #endif /* SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ANY_H_ */

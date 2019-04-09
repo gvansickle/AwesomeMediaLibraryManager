@@ -20,8 +20,20 @@
 #ifndef EXTFUTUREIMPLHELPERS_H
 #define EXTFUTUREIMPLHELPERS_H
 
+// Std C++
+#include <type_traits>
+
+// Qt5
+#include <QList>
+
+
 template <class T>
 class ExtFuture;
+
+/// @todo May not need this.
+template <class U>
+static const bool IsTAQList = std::is_same_v<U, QList<typename U::value_type>>;
+
 
 /**
  * A helper for ExtFuture<T>.waitForFinished() which ignores isRunning() and only returns based on

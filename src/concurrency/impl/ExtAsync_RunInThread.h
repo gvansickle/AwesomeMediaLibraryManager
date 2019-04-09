@@ -42,9 +42,12 @@ namespace ExtAsync
 {
 	/**
 	 * Run a callback in a QThread.
+	 * @note On the correct usage of std::invoke_result_t<> in this situation:
+	 * @link https://stackoverflow.com/a/47875452
+	 * "There's no difference between std::invoke_result_t<F&&, Args&&...> and std::invoke_result_t<F, Args...>"
 	 */
 	template <class CallbackType, /*class ExtFutureR,*/ class... Args,
-			  class R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>,
+			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
 			  class ExtFutureR = ExtFuture<R>
 			  >
 	static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
