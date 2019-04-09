@@ -65,9 +65,9 @@ namespace ExtAsync
 {
 namespace detail {}
 
-template <class CallbackType, /*class ExtFutureR,*/ class... Args,
+template <class CallbackType, class... Args,
 		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-		  class ExtFutureR = ExtFuture<R>
+			  class ExtFutureR = std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
 		  >
 static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
 }

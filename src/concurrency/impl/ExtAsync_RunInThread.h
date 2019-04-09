@@ -48,10 +48,12 @@ namespace ExtAsync
 	 */
 	template <class CallbackType, /*class ExtFutureR,*/ class... Args,
 			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-			  class ExtFutureR = ExtFuture<R>
+			  class ExtFutureR = std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
 			  >
 	static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
+//		static_assert(std::is_invocable_r_v<void, CallbackType, Args...>);
+
 		ExtFutureR retfuture = make_started_only_future<typename ExtFutureR::value_type>();
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 		auto new_thread = QThread::create([=, callback=DECAY_COPY(callback),
@@ -69,7 +71,7 @@ namespace ExtAsync
 				{
 					auto retval = std::invoke(std::move(callback), args...);
 					static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
-					retfuture_cp.reportFinished(retval);
+					retfuture_cp.reportFinished(&retval);
 				}
 				qDb() << "EXIT IN1";
 			;});
