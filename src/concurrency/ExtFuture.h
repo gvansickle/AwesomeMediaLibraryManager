@@ -1156,7 +1156,7 @@ public:
 		return retfuture;
 	}
 
-M_TODO("THIS ALMOST WORKS");
+/// M_TODO("THIS ALMOST WORKS");
 //	/**
 //	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
 //	 * Mainly intended for chaining .then()'s together which need to forward the incoming future.

@@ -97,7 +97,7 @@ namespace ExtAsync
 		REQUIRES(is_ExtFuture_v<ExtFutureT>
 			 && !is_nested_ExtFuture_v<ExtFutureT>
 			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
-	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
+	ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 
