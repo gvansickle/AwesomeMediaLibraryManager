@@ -51,7 +51,7 @@ namespace ExtAsync
 			  class ExtFutureR = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
 			  REQUIRES(!is_ExtFuture_v<R>)
 			  >
-	static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
+	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
 //		static_assert(std::is_invocable_r_v<void, CallbackType, Args...>);
 

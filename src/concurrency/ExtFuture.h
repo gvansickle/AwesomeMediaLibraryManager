@@ -96,13 +96,11 @@ std::atomic_uint64_t get_next_id();
 template <typename T>
 ExtFuture<T> make_started_only_future();
 
-template<typename T,
-         REQUIRES(!is_ExtFuture_v<T> && !std::is_base_of_v<T, QStringList>)>
-ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value);
+template<typename T>
+auto make_ready_future(T&& value) -> ExtFuture<std::decay_t<T>>;
 
-template<typename T,
-         REQUIRES(!is_ExtFuture_v<T>)>
-ExtFuture<typename std::decay_t<T>> make_ready_future_from_qlist(QList<T>&& value);
+template<typename T>
+auto make_ready_future_from_qlist(QList<T>&& value) -> ExtFuture<std::decay_t<T>>;
 
 
 /**
@@ -1122,14 +1120,13 @@ public:
 	                class ThenReturnType = ExtFuture<R>,//then_return_future_type_t<R>,
 	        REQUIRES(!is_ExtFuture_v<R>
 	                && !std::is_convertible_v<QObjectType, QThreadPool>
-//	                 && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>
 					&& std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>
 	          )>
-	ThenReturnType then(QObjectType* context, ThenCallbackType&& then_callback) const
+	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
 //		static_assert(std::is_convertible_v<typename ThenReturnType::inner_t, R>, "");
 
-		ThenReturnType retfuture = make_started_only_future<R>();
+		ExtFuture<R> retfuture = make_started_only_future<R>();
 
 		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
 			// Wait inside this intermediate thread for the incoming future (this) to be ready.
@@ -1404,9 +1401,9 @@ protected:
 		ExtFuture<T> returned_future = make_started_only_future<T>();
 
 		// The concurrent run().
-		/*ExtFuture<T> returned_future =*/ ExtAsync::qthread_async([=,
-														   streaming_tap_callback=DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
-						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy)  {
+		/*ExtFuture<T> returned_future =*/ ExtAsync::qthread_async([=]
+														   //streaming_tap_callback=DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
+						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) mutable -> void {
 				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
 						<< "ret_future_copy:" << returned_future_copy;
 
@@ -1445,7 +1442,7 @@ protected:
 						// Call the tap callback.
 						//				streaming_tap_callback_copy(ef, i, result_count);
 //						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
-						std::invoke(streaming_tap_callback, this_future_copy, i, result_count);
+						/*std::invoke(*/streaming_tap_callback(this_future_copy, i, result_count);
 
 						// Copy the new results to the returned future.
 						for(; i < result_count; ++i)
@@ -1499,7 +1496,7 @@ protected:
 				}
 
 				/// @todo THIS IS RETURNING A FUTURE.
-				return returned_future_copy;
+//				return returned_future_copy;
 			}, // END lambda
 			DECAY_COPY(*this),
 			DECAY_COPY(returned_future)); // END ::run() call.
@@ -1623,6 +1620,8 @@ ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
 //	return ExtFuture<Unit>(future.d);
 //}
 
+
+
 /**
  * Creates a completed future containing the value @a value.
  *
@@ -1641,9 +1640,8 @@ ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
  * @param value
  * @return
  */
-template<typename T,
-         REQUIRES(!is_ExtFuture_v<T> && !std::is_base_of_v<T, QStringList>)>
-ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
+template<typename T>
+auto make_ready_future(T&& value) -> ExtFuture<std::decay_t<T>>
 {
 	QFutureInterface<T> qfi;
 
@@ -1657,9 +1655,8 @@ ExtFuture<typename std::decay_t<T>> make_ready_future(T&& value)
 /**
  * Same as above, but with a QList<T> from an upstream ExtFuture<T>.
  */
-template<typename T,
-         REQUIRES(!is_ExtFuture_v<T>)>
-ExtFuture<typename std::decay_t<T>> make_ready_future_from_qlist(QList<T>&& value)
+template<typename T>
+auto make_ready_future_from_qlist(QList<T>&& value) -> ExtFuture<std::decay_t<T>>
 {
 	QFutureInterface<T> qfi;
 

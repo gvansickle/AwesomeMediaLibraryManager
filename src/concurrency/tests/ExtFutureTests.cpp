@@ -2035,7 +2035,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.");
-	auto f2 = ef.tap(qApp, [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end) -> void  {
+	auto f2 = ef.stap(qApp, [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end) -> void  {
 			TCOUT << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {

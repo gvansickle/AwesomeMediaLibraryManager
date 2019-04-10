@@ -1232,7 +1232,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunInQThreadTest)
 
 	TCOUT << "POST run(), f0:" << f0;
 
-	auto flast = f0.tap([&](ExtFuture<int> in_future, int begin, int end){
+	auto flast = f0.stap([&](ExtFuture<int> in_future, int begin, int end){
 		for(int i = begin; i < end; i++)
 		{
 			seen_tap_values.insert(in_future.resultAt(i));
