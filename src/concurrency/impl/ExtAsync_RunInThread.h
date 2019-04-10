@@ -46,9 +46,10 @@ namespace ExtAsync
 	 * @link https://stackoverflow.com/a/47875452
 	 * "There's no difference between std::invoke_result_t<F&&, Args&&...> and std::invoke_result_t<F, Args...>"
 	 */
-	template <class CallbackType, /*class ExtFutureR,*/ class... Args,
+	template <class CallbackType, class... Args,
 			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-			  class ExtFutureR = std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+			  class ExtFutureR = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+			  REQUIRES(!is_ExtFuture_v<R>)
 			  >
 	static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
@@ -74,7 +75,7 @@ namespace ExtAsync
 					retfuture_cp.reportFinished(&retval);
 				}
 				qDb() << "EXIT IN1";
-			;});
+			});
 
 		connect_or_die(new_thread, &QThread::finished, new_thread, [=](){
 			qDb() << "DELETING QTHREAD:" << new_thread;
@@ -90,39 +91,19 @@ namespace ExtAsync
 
 
 	/**
-	 * Run a callback in a QThread.  Callback is passed an ExtFuture<T>.
+	 * Run a controllable callback in a QThread.  Callback is passed an ExtFuture<T>.
 	 */
-#if 0
-	template<class CallbackType,
-		class ExtFutureT = argtype_t<CallbackType, 0>,
-		class... Args,
-		class U = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>, // callback return type.
-		REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
-	ExtFuture<U> run_in_qthread(CallbackType&& callback, Args&& ... args)
-	{
-	//		class U = Unit::Lift<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>;
-		ExtFuture<U> retfuture = make_started_only_future<U>();
-
-		auto new_thread = QThread::create(callback, retfuture, args...);
-
-	//		connect_or_die(new_thread, &QThread::finished, new_thread, &QObject::deleteLater);
-
-		new_thread->start();
-
-		qDb() << __func__ << "RETURNING";
-
-		return retfuture;
-	};
-#else
 	template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
-		REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
+		REQUIRES(is_ExtFuture_v<ExtFutureT>
+			 && !is_nested_ExtFuture_v<ExtFutureT>
+			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
 	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
-		// Ignoring the returned ExtFuture<>.
+		// Ignoring the returned ExtFuture<Unit>.
 		/// @todo Can we really do this?
 		/*auto inner_retfuture =*/ qthread_async(callback, retfuture, args...);
 
@@ -130,7 +111,7 @@ namespace ExtAsync
 
 		return retfuture;
 	};
-#endif
+
 
 	/**
 	 * Attach a Sutteresque .then()-like continuation to a run_in_qthread().

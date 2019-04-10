@@ -67,9 +67,16 @@ namespace detail {}
 
 template <class CallbackType, class... Args,
 		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-			  class ExtFutureR = std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+		  class ExtFutureR = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+		  REQUIRES(!is_ExtFuture_v<R>)
 		  >
 static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
+
+template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
+	REQUIRES(is_ExtFuture_v<ExtFutureT>
+		 && !is_nested_ExtFuture_v<ExtFutureT>
+		 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
+static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args);
 }
 
 
@@ -1180,7 +1187,7 @@ M_TODO("THIS ALMOST WORKS");
 	 * 	@code
 	 * 		R then_callback(ExtFuture<T> f)
 	 * 	@endcode
-	 * where neither R or T is an ExtFuture<>.
+	 * where neither R nor T is an ExtFuture<>.
 	 *
 	 * When the shared state of *this future is ready, the then_callback continuation will be called with the
 	 * finished ExtFuture f  *this.
@@ -1194,10 +1201,8 @@ M_TODO("THIS ALMOST WORKS");
 	 * @returns ExtFuture<R>  A future which will be made ready with the return value of then_callback.
 	 */
 	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >, //ct::return_type_t<ThenCallbackType>>,
-			class ThenReturnType = then_return_future_type_t<
-			        /*std::invoke_result_t<ThenCallbackType, ExtFuture<T>>*/ R
-			        >,
-			REQUIRES(is_non_void_non_ExtFuture_v<R>
+			class ThenReturnType = ExtFuture<R>,
+			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
 			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	/*ExtFuture<R>*/ThenReturnType then( ThenCallbackType&& then_callback ) const
 	{
@@ -1258,7 +1263,7 @@ M_TODO("THIS ALMOST WORKS");
 	 */
 	template<typename StreamingTapCallbackType,
 			 REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
-	ExtFuture<T> tap(QObject* context, StreamingTapCallbackType&& tap_callback)
+	ExtFuture<T> stap(QObject* context, StreamingTapCallbackType&& tap_callback)
 	{
 		return this->StreamingTapHelper(context, std::forward<StreamingTapCallbackType>(tap_callback));
 	}
@@ -1269,9 +1274,9 @@ M_TODO("THIS ALMOST WORKS");
 	 */
 	template<typename StreamingTapCallbackType,
 			 REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)>
-	ExtFuture<T> tap(StreamingTapCallbackType&& tap_callback)
+	ExtFuture<T> stap(StreamingTapCallbackType&& tap_callback)
 	{
-		return this->tap(QApplication::instance(), DECAY_COPY(std::forward<StreamingTapCallbackType>(tap_callback)));
+		return this->stap(QApplication::instance(), std::forward<StreamingTapCallbackType>(tap_callback));
 	}
 
 	/**
@@ -1396,12 +1401,12 @@ protected:
 		// with this_future in a non-blocking state.
 
 		// The future we'll immediately return.  We copy this into the streaming_tap_callback's ::run() context.
-//		ExtFuture<T> returned_future = make_started_only_future<T>();
+		ExtFuture<T> returned_future = make_started_only_future<T>();
 
 		// The concurrent run().
-		ExtFuture<T> returned_future = ExtAsync::qthread_async([=,
-														   streaming_tap_callback_copy = DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
-						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) mutable {
+		/*ExtFuture<T> returned_future =*/ ExtAsync::qthread_async([=,
+														   streaming_tap_callback=DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
+						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy)  {
 				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
 						<< "ret_future_copy:" << returned_future_copy;
 
@@ -1440,7 +1445,7 @@ protected:
 						// Call the tap callback.
 						//				streaming_tap_callback_copy(ef, i, result_count);
 //						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
-						std::invoke(std::move(streaming_tap_callback_copy), this_future_copy, i, result_count);
+						std::invoke(streaming_tap_callback, this_future_copy, i, result_count);
 
 						// Copy the new results to the returned future.
 						for(; i < result_count; ++i)
@@ -1493,10 +1498,11 @@ protected:
 					returned_future_copy.reportException(QUnhandledException());
 				}
 
+				/// @todo THIS IS RETURNING A FUTURE.
 				return returned_future_copy;
 			}, // END lambda
-			*this,
-			returned_future); // END ::run() call.
+			DECAY_COPY(*this),
+			DECAY_COPY(returned_future)); // END ::run() call.
 
 		return returned_future;
 	}

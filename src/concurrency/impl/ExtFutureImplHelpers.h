@@ -34,6 +34,12 @@ class ExtFuture;
 template <class U>
 static const bool IsTAQList = std::is_same_v<U, QList<typename U::value_type>>;
 
+template <class FutureType, class NextFunction>
+auto external_then(FutureType f, NextFunction n) -> ExtFuture<decltype(n(f.get()))>
+{
+	return ExtAsync::qthread_async([=](){f.get();});
+}
+
 
 /**
  * A helper for ExtFuture<T>.waitForFinished() which ignores isRunning() and only returns based on
