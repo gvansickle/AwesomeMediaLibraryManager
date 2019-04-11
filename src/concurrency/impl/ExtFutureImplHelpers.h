@@ -26,6 +26,17 @@
 // Qt5
 #include <QList>
 
+// Ours
+//#include "ExtAsync_RunInThread.h"
+namespace ExtAsync
+{
+template <class CallbackType, class... Args,
+		  class R,// = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+		  class ExtFutureR//, = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+		  //REQUIRES(!is_ExtFuture_v<R>)
+		  >
+ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
+}
 
 template <class T>
 class ExtFuture;

@@ -65,18 +65,29 @@ namespace ExtAsync
 {
 namespace detail {}
 
-template <class CallbackType, class... Args,
-		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-		  class ExtFutureR = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
-		  REQUIRES(!is_ExtFuture_v<R>)
-		  >
-static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
+//template <class CallbackType, class... Args,
+//		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+//		  class ExtFutureR = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+//		  REQUIRES(!is_ExtFuture_v<R>)
+//		  >
+//static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
 
 template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
 	REQUIRES(is_ExtFuture_v<ExtFutureT>
 		 && !is_nested_ExtFuture_v<ExtFutureT>
 		 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
 static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args);
+
+template <class CallbackType, class... Args,
+		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+		  class ExtFutureR = ExtFuture<R>,
+		  REQUIRES(!is_ExtFuture_v<R>)
+		  >
+ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
+
+//template <class Fut, class Work>
+//auto then_in_qthread(Fut f, Work w) -> ExtFuture<decltype(w(f.get()))>;
+
 }
 
 
@@ -1110,12 +1121,6 @@ public:
 	 *     ExtFuture<R> callback(ExtFuture<T>)
 	 */
 	template <class ThenCallbackType, class QObjectType,
-//			  class NonQListT = typename std::conditional_t<IsTAQList<T>, //std::is_base_of_v<T, QStringList>,
-//												   /* true, is QList<T> */
-//															contained_type_t<T>,
-//												   //std::enable_if_t<std::is_base_of_v<T, QStringList>, typename T::value_type>,
-//												   /* false, isn't QList<T> */
-//												   T>,
 			  class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >,
 	                class ThenReturnType = ExtFuture<R>,//then_return_future_type_t<R>,
 	        REQUIRES(!is_ExtFuture_v<R>
@@ -1150,8 +1155,8 @@ public:
 					R retval = std::invoke(std::move(then_callback), this_future);
 					retfuture_cp.reportFinished(&retval);
 				}
-				;});
-			;}, DECAY_COPY(*this));
+				});
+			}, DECAY_COPY(*this));
 
 		return retfuture;
 	}
@@ -1204,8 +1209,32 @@ public:
 	/*ExtFuture<R>*/ThenReturnType then( ThenCallbackType&& then_callback ) const
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
+		M_TODO("CLOSE");
+#if 0
 		return this->then(nullptr /*QApplication::instance()*/, /*call_on_cancel==*/ false,
 				std::forward<ThenCallbackType>(then_callback));
+#else
+		ExtFuture<R> retfuture = make_started_only_future<R>();
+
+		auto retval = ExtAsync::qthread_async([=](ExtFuture<T> in_future) mutable {
+			in_future.wait();
+
+			if constexpr(std::is_void_v<Unit::DropT<R>>)
+			{
+				std::invoke(then_callback, in_future);
+			}
+			else
+			{
+				R retval = std::invoke(then_callback, in_future);
+				return retval;
+			}
+
+			}, *this);
+		retfuture.reportResult(retval);
+		retfuture.reportFinished();
+
+		return retfuture;
+#endif
 	}
 
 	///

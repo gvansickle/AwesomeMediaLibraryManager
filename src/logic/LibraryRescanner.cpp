@@ -373,7 +373,7 @@ tree_model_item_future.reportFinished();
 
 	//tail_future
 	/// @then
-		.then(qApp, [=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void /*-> QList<DirScanResult>*/ {
+		.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void /*-> QList<DirScanResult>*/ {
 			// Finish a couple futures we started in this, and since this is done, there should be no more
 			// results coming for them.
 

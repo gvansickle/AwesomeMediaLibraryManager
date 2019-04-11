@@ -48,7 +48,7 @@ namespace ExtAsync
 	 */
 	template <class CallbackType, class... Args,
 			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-			  class ExtFutureR = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+			  class ExtFutureR = ExtFuture<R>,
 			  REQUIRES(!is_ExtFuture_v<R>)
 			  >
 	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
@@ -128,6 +128,13 @@ namespace ExtAsync
 
 		return retfuture;
 	};
+
+	template <class Fut, class Work>
+	auto then_in_qthread(Fut&& f, Work&& w) -> ExtFuture<decltype(w(f.get()))>
+	{
+		return ExtAsync::qthread_async([=]{ w(f.get());});
+	}
+
 }; // END namespace ExtAsync.
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
