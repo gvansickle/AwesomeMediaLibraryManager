@@ -1205,7 +1205,7 @@ public:
 	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >, //ct::return_type_t<ThenCallbackType>>,
 			class ThenReturnType = ExtFuture<R>,
 			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
-			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
+			  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
 	/*ExtFuture<R>*/ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
@@ -1214,8 +1214,6 @@ public:
 		return this->then(nullptr /*QApplication::instance()*/, /*call_on_cancel==*/ false,
 				std::forward<ThenCallbackType>(then_callback));
 #else
-//		ExtFuture<R> retfuture = make_started_only_future<R>();
-
 		ExtFuture<R> retfuture = ExtAsync::qthread_async([=](ExtFuture<T> in_future) mutable {
 
 			// Block in the spawned thread for in_future to become ready.
@@ -1223,19 +1221,8 @@ public:
 			in_future.wait();
 
 			return std::invoke(then_callback, in_future);
-//			if constexpr(std::is_void_v<Unit::DropT<R>>)
-//			{
-//				std::invoke(then_callback, in_future);
-//			}
-//			else
-//			{
-//				R retval = std::invoke(then_callback, in_future);
-//				return retval;
-//			}
 
-			}, *this);
-//		retfuture.reportResult(retval.get());
-//		retfuture.reportFinished();
+			}, std::forward<decltype(*this)>(*this));
 
 		return retfuture;
 #endif
@@ -1251,7 +1238,7 @@ public:
 		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
 		if constexpr(true)
 		{
-			return then_qthread_async(std::move(then_callback));
+			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
 	};
 
