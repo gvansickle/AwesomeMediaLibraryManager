@@ -63,7 +63,7 @@ endif()
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
@@ -416,29 +416,17 @@ endif(UNIX)
 
 
 #
-# Intel's TBB.
-# CMake integration per @link https://github.com/01org/tbb/tree/tbb_2019/cmake
-### This method pulls the code down from github.
-# @note On my Fedora 29 box with installed binary tbb, it looks like CMake already has tbb modules at this path:
-#set(PATH_TO_TBB_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake/tbb")
-#set(TBB_ROOT "${CMAKE_CURRENT_LIST_DIR}/../tbb")
-#include(${PATH_TO_TBB_CMAKE_MODULES}/TBBGet.cmake)
-#include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-#tbb_get(TBB_ROOT tbb_root SOURCE_CODE)
-#tbb_build(TBB_ROOT ${TBB_ROOT} CONFIG_DIR TBB_DIR MAKE_ARGS tbb_cpf=1)
-#find_package(TBB REQUIRED tbb_preview)
-#tbb_get(TBB_ROOT tbb_root CONFIG_DIR TBB_DIR)
-#find_package(TBB REQUIRED tbb)
-
-#
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
 #
 # See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
+if(FALSE)
 ### CallableTraits only in 1.66+.
-#set(Boost_USE_MULTITHREADED      ON)
-#find_package(Boost 1.66.0 REQUIRED
-#  COMPONENTS CallableTraits
-#  )
+set(Boost_USE_MULTITHREADED      ON)
+find_package(Boost REQUIRED #1.60.0
+  COMPONENTS CallableTraits
+  )
+else()
+if(FALSE)
 download_project(PROJ                boost_callable_traits
 	GIT_REPOSITORY https://github.com/boostorg/callable_traits.git
 	GIT_TAG        master
@@ -446,6 +434,8 @@ download_project(PROJ                boost_callable_traits
 	)
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR} EXCLUDE_FROM_ALL)
 print_varlist(boost_callable_traits_SOURCE_DIR boost_callable_traits_BINARY_DIR)
+endif()
+endif()
 
 # Boost
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
@@ -543,6 +533,7 @@ message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
 add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
 ### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
 ###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
+
 #add_subdir_lib(tests EXCLUDE_FROM_ALL)
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 

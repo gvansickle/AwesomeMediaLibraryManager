@@ -1206,7 +1206,7 @@ public:
 			class ThenReturnType = ExtFuture<R>,
 			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
 			  && ct::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	/*ExtFuture<R>*/ThenReturnType then( ThenCallbackType&& then_callback ) const
+	/*ExtFuture<R>*/ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
 		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
 		M_TODO("CLOSE");
@@ -1214,28 +1214,46 @@ public:
 		return this->then(nullptr /*QApplication::instance()*/, /*call_on_cancel==*/ false,
 				std::forward<ThenCallbackType>(then_callback));
 #else
-		ExtFuture<R> retfuture = make_started_only_future<R>();
+//		ExtFuture<R> retfuture = make_started_only_future<R>();
 
-		auto retval = ExtAsync::qthread_async([=](ExtFuture<T> in_future) mutable {
+		ExtFuture<R> retfuture = ExtAsync::qthread_async([=](ExtFuture<T> in_future) mutable {
+
+			// Block in the spawned thread for in_future to become ready.
+			/// @todo Handle throws.
 			in_future.wait();
 
-			if constexpr(std::is_void_v<Unit::DropT<R>>)
-			{
-				std::invoke(then_callback, in_future);
-			}
-			else
-			{
-				R retval = std::invoke(then_callback, in_future);
-				return retval;
-			}
+			return std::invoke(then_callback, in_future);
+//			if constexpr(std::is_void_v<Unit::DropT<R>>)
+//			{
+//				std::invoke(then_callback, in_future);
+//			}
+//			else
+//			{
+//				R retval = std::invoke(then_callback, in_future);
+//				return retval;
+//			}
 
 			}, *this);
-		retfuture.reportResult(retval);
-		retfuture.reportFinished();
+//		retfuture.reportResult(retval.get());
+//		retfuture.reportFinished();
 
 		return retfuture;
 #endif
 	}
+
+	/**
+	 * Attempt at a One True Top-Level .then() template.
+	 */
+	template <class ThenCallbackType>
+	auto then(ThenCallbackType&& then_callback ) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
+	{
+		// Get the return type of then_callback.
+		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
+		if constexpr(true)
+		{
+			return then_qthread_async(std::move(then_callback));
+		}
+	};
 
 	///
 	/// @} // END .then() overloads.

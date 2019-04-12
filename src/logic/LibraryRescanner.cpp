@@ -239,7 +239,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	ExtFuture<SharedItemContType> tree_model_item_future = make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
-	ExtFuture</*DirScanResult*/Unit> tail_future = dirresults_future.stap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable {
+	ExtFuture</*DirScanResult*/Unit> tail_future
+			= dirresults_future.stap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
 		AMLM_ASSERT_NOT_IN_GUITHREAD();
@@ -364,7 +365,7 @@ tree_model_item_future.reportFinished();
 		});
 #endif // END ScanResultsTreeModel
 	}) // returns ExtFuture<DirScanResult> tail_future.
-	.then([=](ExtFuture<DirScanResult> fut_ignored) {
+	.then([=](ExtFuture<DirScanResult> fut_ignored) -> void {
 		// The dirscan is complete.
 		qDb() << "DIRSCAN COMPLETE .then()";
 	})

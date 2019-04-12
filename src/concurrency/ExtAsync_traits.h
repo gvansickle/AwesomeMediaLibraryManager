@@ -137,4 +137,9 @@ using then_return_future_type_t = std::conditional_t<is_ExtFuture_v<U>, // == U:
         ExtFuture<U> // Non-nested case, no unwrapping.
         >;
 
+template <class ThenCallbackType, class ExtFutureType>
+using then_return_type_from_callback_and_future_t = then_return_future_type_t<Unit::LiftT<
+        std::invoke_result_t<ThenCallbackType, ExtFutureType>
+        >>;
+
 #endif /* UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_ */

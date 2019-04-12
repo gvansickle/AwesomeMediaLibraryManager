@@ -108,7 +108,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-		callable_traits
+#		callable_traits
 		verdigris_target
 #		Boost::thread
 		)
@@ -267,7 +267,7 @@ Checks: '-*,llvm-twine-local'
 ###
 ### Testing
 ###
-if(TRUE) # Enable test target.
+if(FALSE) # Enable test target.
 
 find_package(Qt5Test REQUIRED)
 
