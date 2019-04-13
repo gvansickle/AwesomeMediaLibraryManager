@@ -210,11 +210,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
 	// Run the directory scan in another thread.
-	ExtFuture<DirScanResult> dirresults_future = ExtAsync::run_in_qthread(DirScanFunction, nullptr,
-																dir_url,
-																extensions,
-																QDir::Filters(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot),
-																QDirIterator::Subdirectories);
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::qthread_async_with_control_future(DirScanFunction, nullptr,
+	                                                                                         dir_url,
+	                                                                                         extensions,
+	                                                                                         QDir::Filters(QDir::Files |
+	                                                                                                       QDir::AllDirs |
+	                                                                                                       QDir::NoDotAndDotDot),
+	                                                                                         QDirIterator::Subdirectories);
 	// Create/Attach an AMLMJobT to the dirscan future.
 	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future);
 

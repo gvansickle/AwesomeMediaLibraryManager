@@ -288,4 +288,8 @@ std::decay_t<T> DECAY_COPY(T&& v)
 template<class T>
 struct dependent_false : std::false_type {};
 
+template<class T>
+constexpr bool dependent_false_v = dependent_false<T>::value;
+
+
 #endif /* UTILS_CONCURRENCY_FUTURE_TYPE_TRAITS_HPP_ */

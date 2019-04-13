@@ -76,7 +76,7 @@ template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, clas
 	REQUIRES(is_ExtFuture_v<ExtFutureT>
 		 && !is_nested_ExtFuture_v<ExtFutureT>
 		 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
-static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args);
+static ExtFutureT qthread_async_with_control_future(CallbackType&& callback, Args&& ... args);
 
 template <class CallbackType, class... Args,
 		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
@@ -1184,16 +1184,17 @@ public:
 	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >, //ct::return_type_t<ThenCallbackType>>,
 			class ThenReturnType = ExtFuture<R>,
 			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
-			  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
+			  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)
+			>
 	ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
-		ExtFuture<R> retfuture = ExtAsync::qthread_async([=](ExtFuture<T> in_future) mutable {
+		ExtFuture<R> retfuture = ExtAsync::qthread_async([=, fd_then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](ExtFuture<T> in_future) mutable {
 
 			// Block in the spawned thread for in_future to become ready.
 			/// @todo Handle throws.
 			in_future.wait();
 
-			return std::invoke(then_callback, in_future);
+			return std::invoke(std::move(fd_then_callback), in_future);
 
 			}, std::forward<decltype(*this)>(*this));
 
@@ -1209,17 +1210,19 @@ public:
 		// Get the return type of then_callback.
 		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
 M_TODO("TODO");
-		if constexpr(std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>)
+		if constexpr(std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>
+		        || std::is_convertible_v<ContextType, nullptr_t>)
 		{
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
 		else if constexpr (!std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>)
 		{
-			return then_run_in_event_loop(context, then_callback);
+			return then_run_in_event_loop(context, std::forward<ThenCallbackType>(then_callback));
 		}
 		else
 		{
-			static_assert(dependent_false<ContextType>::value, "No matching overload");
+			// No matching .then() overload ("underload"?).
+			static_assert(dependent_false_v<ContextType>, "No matching overload");
 		}
 	};
 
@@ -1232,7 +1235,6 @@ M_TODO("TODO");
 	template <class ThenCallbackType>
 	auto then(ThenCallbackType&& then_callback ) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
 	{
-		// Get the return type of then_callback.
 		return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 	};
 

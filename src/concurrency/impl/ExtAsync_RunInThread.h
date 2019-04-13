@@ -42,6 +42,8 @@ namespace ExtAsync
 {
 	/**
 	 * Run a callback in a QThread.
+	 * The returned ExtFuture<> will be reported as Finished when the callback returns.
+	 *
 	 * @note On the correct usage of std::invoke_result_t<> in this situation:
 	 * @link https://stackoverflow.com/a/47875452
 	 * "There's no difference between std::invoke_result_t<F&&, Args&&...> and std::invoke_result_t<F, Args...>"
@@ -53,11 +55,11 @@ namespace ExtAsync
 			  >
 	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
-//		static_assert(std::is_invocable_r_v<void, CallbackType, Args...>);
-
 		ExtFutureR retfuture = make_started_only_future<typename ExtFutureR::value_type>();
+
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
-		auto new_thread = QThread::create([=, callback=DECAY_COPY(callback),
+
+		auto new_thread = QThread::create([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
 				qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
@@ -65,12 +67,12 @@ namespace ExtAsync
 				retfuture_cp.reportStarted();
 				if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
 				{
-					std::invoke(std::move(callback), args...);
+					std::invoke(std::move(fd_callback), args...);
 					retfuture_cp.reportFinished();
 				}
 				else
 				{
-					auto retval = std::invoke(std::move(callback), args...);
+					auto retval = std::invoke(std::move(fd_callback), args...);
 					static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
 					retfuture_cp.reportFinished(&retval);
 				}
@@ -97,14 +99,13 @@ namespace ExtAsync
 		REQUIRES(is_ExtFuture_v<ExtFutureT>
 			 && !is_nested_ExtFuture_v<ExtFutureT>
 			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
-	ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
+	ExtFutureT qthread_async_with_control_future(CallbackType&& callback, Args&& ... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
-		// Ignoring the returned ExtFuture<Unit>.
-		/// @todo Can we really do this?
+		// Ignoring the returned ExtFuture<>.
 		/*auto inner_retfuture =*/ qthread_async(callback, retfuture, args...);
 
 		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;// << M_ID_VAL(inner_retfuture);
