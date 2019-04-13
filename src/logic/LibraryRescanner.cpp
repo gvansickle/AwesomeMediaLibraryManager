@@ -317,53 +317,13 @@ tree_model_item_future.reportFinished();
 			// Send the URL ~dsr.getMediaExtUrl().m_url.toString()) to the LibraryModel via the watcher.
 			qurl_future.reportResult(entry->data(1).toString());
 		}
-#if 1
+
 		/// @note This could also be a signal emit.
 		/// @note passing a shared_ptr to a vector of unique_ptrs between threads.
 		tree_model_item_future.reportResult(new_items);
 
 		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
 
-#elif 0 // ScanResultsTreeModel
-		run_in_event_loop(this, [
-						   tree_model_ptr=tree_model,
-						   new_items_copy=new_items
-						   ]() {
-			// Append entries to the ScanResultsTreeModel.
-
-			/// @todo REMOVE, EXPERIMENTAL
-			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_copy)
-			{
-				// Get the last top-level row.
-//				auto last_row_index = tree_model_ptr->rowCount() - 1;
-//				Q_ASSERT(last_row_index >= 0);
-
-				auto new_child = std::make_unique<SRTMItem_LibEntry>();
-				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
-
-				lib_entry->populate(true);
-				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-				/// @note Here we only care about the LibraryEntry corresponding to each file.
-//				if(!lib_entry->isSubtrack())
-//				{
-//					lib_entries = lib_entry->split_to_tracks();
-//				}
-//				else
-				{
-					lib_entries.push_back(lib_entry);
-				}
-				new_child->setLibraryEntry(lib_entries.at(0));
-				entry->appendChild(std::move(new_child));
-//				tree_model_ptr->appendItem(std::move(new_child), tree_model_ptr->index(last_row_index, 0));
-//				tree_model_ptr->appendItem(std::move(new_child));
-			}
-
-			/// @note Needs to be in GUI thread.
-			tree_model_ptr->appendItems(std::move(*new_items_copy));
-
-			/// @todo REMOVE, EXPERIMENTAL
-		});
-#endif // END ScanResultsTreeModel
 	}) // returns ExtFuture<DirScanResult> tail_future.
 	.then([=](ExtFuture<DirScanResult> fut_ignored) -> void {
 		// The dirscan is complete.
