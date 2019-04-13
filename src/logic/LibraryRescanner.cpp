@@ -239,7 +239,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	ExtFuture<SharedItemContType> tree_model_item_future = make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
-	ExtFuture</*DirScanResult*/Unit> tail_future
+	ExtFuture<Unit> tail_future
 			= dirresults_future.stap([=](ExtFuture<DirScanResult> tap_future, int begin, int end) mutable -> void {
 
 		// Start of the dirtrav tap callback.  This should be a non-main thread.
@@ -373,8 +373,8 @@ tree_model_item_future.reportFinished();
 
 
 	//tail_future
-	/// @then
-		.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void /*-> QList<DirScanResult>*/ {
+	/// @then Finish the two output futures.
+		.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void {
 			// Finish a couple futures we started in this, and since this is done, there should be no more
 			// results coming for them.
 
@@ -387,8 +387,6 @@ tree_model_item_future.reportFinished();
 			qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
 			qurl_future.reportFinished();
 			qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
-
-//			return future.get();
 		});
 
 		/// @then
@@ -434,7 +432,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 
 			// Finally, move the new model items to their new home.
 			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
-			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
+//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
 
 		Q_ASSERT(m_model_ready_to_save_to_db == false);
@@ -591,58 +589,6 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	});
 	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
 
-	/// @note .then() works here, we should try a .tap().
-#if 0
-	tree_model_item_future.then(qApp, [=,
-								tree_model_ptr=tree_model
-								](ExtFuture<SharedItemContType> new_items_future) {
-		AMLM_ASSERT_IN_GUITHREAD();
-
-		qDb() << "START: tree_model_item_future.then, new_items_future count:" << new_items_future;
-
-		// For each QList<SharedItemContType> entry.
-		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
-		{
-			// Append entries to the ScanResultsTreeModel.
-			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
-			{
-				// Make sure the entry wasn't moved from.
-				Q_ASSERT(bool(entry) == true);
-				// Get the last top-level row.
-//				auto last_row_index = tree_model_ptr->rowCount() - 1;
-//				Q_ASSERT(last_row_index >= 0);
-
-				auto new_child = std::make_unique<SRTMItem_LibEntry>();
-				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
-
-M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
-qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
-				lib_entry->populate(true);
-
-				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-				/// @note Here we only care about the LibraryEntry corresponding to each file.
-//				if(!lib_entry->isSubtrack())
-//				{
-//					lib_entries = lib_entry->split_to_tracks();
-//				}
-//				else
-				{
-					lib_entries.push_back(lib_entry);
-				}
-				new_child->setLibraryEntry(lib_entries.at(0));
-				entry->appendChild(std::move(new_child));
-			}
-
-			// Finally, move the new model items to their new home.
-			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
-			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
-		}
-
-		Q_ASSERT(m_model_ready_to_save_to_db == false);
-		m_model_ready_to_save_to_db = true;
-	});
-#endif
-
 	// Make sure the above job gets canceled and deleted.
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
 
@@ -653,7 +599,7 @@ M_TODO("????");
 //	dirtrav_job->start();
 
 
-	qDb() << "END:" << dir_url;
+	qDb() << "LEAVING" << __func__ << ":" << dir_url;
 }
 
 void LibraryRescanner::cancelAsyncDirectoryTraversal()
