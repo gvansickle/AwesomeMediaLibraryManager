@@ -124,6 +124,7 @@
 #include <logic/serialization/XmlSerializer.h>
 
 #include "concurrency/ExtAsync.h"
+#include <utils/Stopwatch.h>
 
 /// @note EXPERIMENTAL
 #include <gui/widgets/ExperimentalKDEView1.h>
@@ -1488,6 +1489,8 @@ void MainWindow::writeSettings()
 void MainWindow::writeLibSettings(QSettings& settings)
 {
 	qDebug() << "writeLibSettings() start";
+
+	Stopwatch libsave_sw("################ Library save");
 
 	// First it seems we have to remove the array.
 	/// @todo Remove, unneeded?

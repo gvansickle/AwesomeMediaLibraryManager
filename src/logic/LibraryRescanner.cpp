@@ -210,13 +210,13 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
     auto extensions = SupportedMimeTypes::instance().supportedAudioMimeTypesAsSuffixStringList();
 
 	// Run the directory scan in another thread.
-	ExtFuture<DirScanResult> dirresults_future = ExtAsync::qthread_async_with_control_future(DirScanFunction, nullptr,
-	                                                                                         dir_url,
-	                                                                                         extensions,
-	                                                                                         QDir::Filters(QDir::Files |
-	                                                                                                       QDir::AllDirs |
-	                                                                                                       QDir::NoDotAndDotDot),
-	                                                                                         QDirIterator::Subdirectories);
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::qthread_async_with_cnr_future(DirScanFunction, nullptr,
+	                                                                                     dir_url,
+	                                                                                     extensions,
+	                                                                                     QDir::Filters(QDir::Files |
+	                                                                                                   QDir::AllDirs |
+	                                                                                                   QDir::NoDotAndDotDot),
+	                                                                                     QDirIterator::Subdirectories);
 	// Create/Attach an AMLMJobT to the dirscan future.
 	QPointer<AMLMJobT<ExtFuture<DirScanResult>>> dirtrav_job = make_async_AMLMJobT(dirresults_future);
 
@@ -540,7 +540,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	});
 	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
 
-	// Metadata refresh results to this (the main) thread, via a slot for furthe processing.
+	// Metadata refresh results to this (the main) thread, via a slot for further processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
 		MetadataReturnVal ready_result = lib_rescan_job->get_extfuture().resultAt(index);

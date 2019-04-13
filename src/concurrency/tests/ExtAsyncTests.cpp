@@ -1217,7 +1217,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunInQThreadTest)
 	int val = 0;
 	std::set<int> seen_tap_values;
 
-	ExtFuture<int> f0 = ExtAsync::qthread_async_with_control_future([&](ExtFuture<int> ef, int testval1) {
+	ExtFuture<int> f0 = ExtAsync::qthread_async_with_cnr_future([&](ExtFuture<int> ef, int testval1) {
 		EXPECT_EQ(f0, ef);
 		TCOUT << M_ID_VAL(testval1);
 		while(val < 10)

@@ -692,7 +692,6 @@ void LibraryModel::fromVariant(const QVariant& variant)
 	Q_ASSERT(temp.canConvert<QVariantInsertionOrderedMap>());
 	QVariantInsertionOrderedMap qvar_temp_lib = temp.value<QVariantInsertionOrderedMap>();
 	Library temp_lib;
-//	qviomap_from_qvar_or_die(&temp_lib, variant);
 
 	temp_lib.fromVariant(qvar_temp_lib);
 

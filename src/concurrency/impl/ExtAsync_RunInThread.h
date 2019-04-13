@@ -93,13 +93,15 @@ namespace ExtAsync
 
 
 	/**
-	 * Run a controllable callback in a QThread.  Callback is passed an ExtFuture<T>.
+	 * Run a Controllable and Reporting (CnR) callback in a new QThread.
+	 * Callback is passed an ExtFuture<T>, which it should use for all control and reporting.
+	 * @returns A copy of the ExtFuture<T> passed to the callback.
 	 */
 	template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
 		REQUIRES(is_ExtFuture_v<ExtFutureT>
 			 && !is_nested_ExtFuture_v<ExtFutureT>
 			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
-	ExtFutureT qthread_async_with_control_future(CallbackType&& callback, Args&& ... args)
+	ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 
@@ -108,7 +110,7 @@ namespace ExtAsync
 		// Ignoring the returned ExtFuture<>.
 		/*auto inner_retfuture =*/ qthread_async(callback, retfuture, args...);
 
-		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;// << M_ID_VAL(inner_retfuture);
+		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;
 
 		return retfuture;
 	};

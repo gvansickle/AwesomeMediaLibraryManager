@@ -76,7 +76,7 @@ template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, clas
 	REQUIRES(is_ExtFuture_v<ExtFutureT>
 		 && !is_nested_ExtFuture_v<ExtFutureT>
 		 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
-static ExtFutureT qthread_async_with_control_future(CallbackType&& callback, Args&& ... args);
+static ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args);
 
 template <class CallbackType, class... Args,
 		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
@@ -1111,9 +1111,6 @@ public:
 		return this->then(context, /*call_on_cancel==*/ false, std::forward<ThenCallbackType>(then_callback));
 	}
 
-//	template <class U>
-//	static const bool IsTAQList = std::is_base_of_v<U, QStringList>;
-
 	/**
 	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
 	 * Mainly intended for running in the main thread/event loop.
@@ -1209,9 +1206,9 @@ public:
 	{
 		// Get the return type of then_callback.
 		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
-M_TODO("TODO");
+
 		if constexpr(std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>
-		        || std::is_convertible_v<ContextType, nullptr_t>)
+				|| std::is_convertible_v<ContextType, nullptr_t>)
 		{
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
