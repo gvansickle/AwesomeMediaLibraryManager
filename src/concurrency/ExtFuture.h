@@ -1206,14 +1206,8 @@ public:
 			class ThenReturnType = ExtFuture<R>,
 			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
 			  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)>
-	/*ExtFuture<R>*/ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
+	ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
-		// then_callback is always an lvalue.  Pass it to the next function as an lvalue or rvalue depending on the type of ThenCallbackType.
-		M_TODO("CLOSE");
-#if 0
-		return this->then(nullptr /*QApplication::instance()*/, /*call_on_cancel==*/ false,
-				std::forward<ThenCallbackType>(then_callback));
-#else
 		ExtFuture<R> retfuture = ExtAsync::qthread_async([=](ExtFuture<T> in_future) mutable {
 
 			// Block in the spawned thread for in_future to become ready.
@@ -1225,22 +1219,36 @@ public:
 			}, std::forward<decltype(*this)>(*this));
 
 		return retfuture;
-#endif
 	}
 
 	/**
 	 * Attempt at a One True Top-Level .then() template.
 	 */
-	template <class ThenCallbackType>
-	auto then(ThenCallbackType&& then_callback ) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
+	template <class ContextType, class ThenCallbackType>
+	auto then(ContextType&& context, ThenCallbackType&& then_callback ) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
 	{
 		// Get the return type of then_callback.
 		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
-		if constexpr(true)
+		if constexpr(std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>)
 		{
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
 	};
+
+	/**
+	 * Attempt at the second One True Top-Level .then() template.
+	 * This is equivalent to std::experimental::shared_future::then(), in which per
+	 * @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+	 * "the continuation INVOKE(std::move(fd), *this) is called on an unspecified thread of execution".
+	 */
+	template <class ThenCallbackType>
+	auto then(ThenCallbackType&& then_callback ) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
+	{
+		// Get the return type of then_callback.
+		return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
+	};
+
+
 
 	///
 	/// @} // END .then() overloads.
