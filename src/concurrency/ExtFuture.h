@@ -1127,7 +1127,7 @@ public:
 	                && !std::is_convertible_v<QObjectType, QThreadPool>
 					&& std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>
 	          )>
-	ExtFuture<R> then(QObjectType* context, ThenCallbackType&& then_callback) const
+	ExtFuture<R> then_run_in_event_loop(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
 //		static_assert(std::is_convertible_v<typename ThenReturnType::inner_t, R>, "");
 
@@ -1161,27 +1161,6 @@ public:
 		return retfuture;
 	}
 
-/// M_TODO("THIS ALMOST WORKS");
-//	/**
-//	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
-//	 * Mainly intended for chaining .then()'s together which need to forward the incoming future.
-//	 * callback is of the form:
-//	 *     ExtFuture<R> callback(QList<T>)
-//	 */
-//	template <class ThenCallbackType, class QObjectType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, QList<T>> >,
-//	                class ThenReturnType = ExtFuture<R>,//then_return_future_type_t<R>,
-//	        REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
-//	                && !std::is_convertible_v<QObjectType, QThreadPool>
-//	                && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, QList<T>>
-//	          )>
-//	ThenReturnType then(QObjectType* context, ThenCallbackType&& then_callback) const
-//	{
-//		ThenReturnType retfuture = make_started_only_future<T>();
-
-//		/// @todo
-
-//		return retfuture;
-//	}
 
 	/**
 	 * std::experimental::future-like .then() which takes a continuation function @a then_callback
@@ -1229,9 +1208,18 @@ public:
 	{
 		// Get the return type of then_callback.
 		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
+M_TODO("TODO");
 		if constexpr(std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>)
 		{
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
+		}
+		else if constexpr (!std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>)
+		{
+			return then_run_in_event_loop(context, then_callback);
+		}
+		else
+		{
+			static_assert(dependent_false<ContextType>::value, "No matching overload");
 		}
 	};
 

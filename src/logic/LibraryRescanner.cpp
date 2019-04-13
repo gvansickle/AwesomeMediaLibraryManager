@@ -395,8 +395,6 @@ tree_model_item_future.reportFinished();
 
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future;
 
-//		tree_model_item_future.wait();
-
 		// For each QList<SharedItemContType> entry.
 		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
 		{
