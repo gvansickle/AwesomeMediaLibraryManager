@@ -156,14 +156,6 @@ static const strviw_type XMLTAG_WRITE_TIMESTAMP_MS("write_timestamp_ms");
 static const strviw_type XMLTAG_WRITE_TIMESTAMP_UTC("write_timestamp_utc");
 static const strviw_type XMLTAG_NUM_LIBRARY_ENTRIES("num_lib_entries");
 
-/// @todo
-using EntType = std::shared_ptr<LibraryEntry>;
-// Reduce function.  Note that return type and value aren't used.
-// V function(T &result, const U &intermediate)
-static void add_to_list(QVariantHomogenousList& list, const QVariant& entry)
-{
-	list.push_back(entry);
-};
 
 QVariant Library::toVariant() const
 {
@@ -179,45 +171,10 @@ QVariant Library::toVariant() const
 	map_insert_or_die(map, XMLTAG_NUM_LIBRARY_ENTRIES, static_cast<qint64>(m_lib_entries.size()));
 	if(!m_lib_entries.empty())
 	{
-		// Serialize the LibraryEntry's.
+		// Serialize the LibraryEntry's into an ordered list.
 		QVariantHomogenousList list("m_lib_entries", "library_entry");
-#if 1 /// @exp See how QtConcurrent fares here.
-		struct WhyCantWeHaveNiceCpp17Things
-		{
-			using result_type = QVariant;
-			result_type operator()(const EntType& incoming)
-			{
-				QVariant qvar = incoming->toVariant();
-				if(!qvar.isValid())
-				{
-					throw SerializationException("invalid QVariant conversion.");
-				}
-
-				return qvar;
-			}
-//			QVariantHomogenousList& m_outlist_ref;
-		};
-
-		WhyCantWeHaveNiceCpp17Things mapper; //{std::ref(list)};
-
-		// Qt5.12 QFuture iterators are basically broken. STL-style iterators won't block.  Java-style will detach, and new results won't show up.
-		// So we'll try blocking, which we're doing all this to avoid.
-		// OrderedReduce == reduce func called in order of input sequence,
-		// SequentialReduce == reduce func called by one thread at a time.
-		list = QtConcurrent::blockingMappedReduced(m_lib_entries.cbegin(), m_lib_entries.cend(), mapper, add_to_list,
-											QtConcurrent::OrderedReduce|QtConcurrent::SequentialReduce);
-		list.set_tag_names("m_lib_entries", "library_entry");
-//		QtConcurrent::blockingMapped<
-//				/*std::vector<EntType>*/QVariantHomogenousList>(m_lib_entries.cbegin(), m_lib_entries.cend(),
-//												   mapper);
-
-//		for(QFuture<EntType>::const_iterator it = results_future.constEnd(); it != results_future.constEnd(); ++it)
-//		QFutureIterator<EntType> it(results_future);
-//		for(auto it : results_future)
-//		{
-//			list_push_back_or_die(list, *it);
-//		}
-//		Q_ASSERT(results_future.isFinished());
+#if 1
+		list_blocking_map_reduce_push_back_or_die(list, m_lib_entries);
 #else
 		for(const auto& e : m_lib_entries)
 		{

@@ -30,9 +30,11 @@
 // Qt5
 #include <QMetaType>
 #include <QVariant>
+#include <QtConcurrent>
 
 // Ours
 #include <utils/RegisterQtMetatypes.h> ///< For <cstdint> metatypes.
+#include <future/future_type_traits.hpp>
 #include "SerializationExceptions.h"
 #include <future/InsertionOrderedMap.h>
 #include "QVariantHomogenousList.h"
@@ -174,6 +176,65 @@ void list_push_back_or_die(ListType& list, const MemberType& member)
 	}
 
 	list.push_back(qvar);
+}
+
+/**
+ * Use a blocking call to blockingMappedReduce() to serialize the entries in
+ * @a in_list to the output QVariantHomogenousList @a out_list.
+ * @note Like it says on the tin, the map part is concurrent, so it has to be threadsafe.
+ *
+ * @tparam InListType  A container of pointers to ISerializable-derived objects.
+ */
+template <class InListType>
+void list_blocking_map_reduce_push_back_or_die(QVariantHomogenousList& out_list, const InListType& in_list)
+{
+	if constexpr(std::is_base_of_v<ISerializable, typename InListType::value_type::element_type>)
+	{
+		struct mapped_reduce_helper
+		{
+			/**
+			 * The Reduce callback.  Doesn't really need to be in this struct, but it was handy.
+			 */
+			static void add_to_list(QVariantHomogenousList& list, const QVariant& entry)
+			{
+				list.push_back(entry);
+			};
+
+			/**
+			 * The mapping functor.
+			 */
+			using result_type = QVariant;
+			result_type operator()(const typename InListType::value_type& incoming)
+			{
+				// Convert to a QVariant and return.
+				QVariant qvar = incoming->toVariant();
+				if(!qvar.isValid())
+				{
+					throw SerializationException("invalid QVariant conversion.");
+				}
+
+				return qvar;
+			}
+		};
+
+		mapped_reduce_helper mapper;
+
+		// Qt5.12 QFuture iterators are basically broken. STL-style iterators won't block.  Java-style will detach, and new results won't show up.
+		// So we'll try blocking, which we're doing all this to avoid.
+		// OrderedReduce == reduce func called in order of input sequence,
+		// SequentialReduce == reduce func called by one thread at a time.
+		auto initial_list_tag = out_list.get_list_tag();
+		auto initial_list_item_tag = out_list.get_list_item_tag();
+		out_list = QtConcurrent::blockingMappedReduced(in_list.cbegin(), in_list.cend(), mapper,
+													   mapped_reduce_helper::add_to_list,
+											QtConcurrent::OrderedReduce|QtConcurrent::SequentialReduce);
+		// Reset the tag names.
+		out_list.set_tag_names(initial_list_tag, initial_list_item_tag);
+	}
+	else
+	{
+		static_assert(dependent_false_v<InListType>, "No matching template for params: list_blocking_map_reduce_push_back_or_die");
+	}
 }
 
 /// @}
