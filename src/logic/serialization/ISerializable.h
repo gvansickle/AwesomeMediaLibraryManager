@@ -306,6 +306,84 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
 	}
 }
 
+/**
+ * Use a blocking call to blockingMappedReduce() to serialize the entries in
+ * @a in_list to the output QVariantHomogenousList @a out_list.
+ * @note Like it says on the tin, the map part is concurrent, so it has to be threadsafe.
+ *
+ * @tparam InListType  A container of pointers to ISerializable-derived objects.
+ */
+template <class InListType, class OutListValueType, template<typename> class OutListType>
+void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list, OutListType<OutListValueType>* p_out_list)
+{
+	static_assert(std::is_same_v<InListType, QVariantHomogenousList> || std::is_same_v<InListType, QVariantList>,
+	              "InListType is not a recognized list type");
+
+	// We're trying to make this serial code concurrent:
+	//		for(const QVariant& e : in_list)
+	//		{
+	//			Q_ASSERT(e.isValid());
+	//			std::shared_ptr<LibraryEntry> libentry = std::make_shared<LibraryEntry>();
+	//			libentry->fromVariant(e);
+	//			m_lib_entries.push_back(libentry);
+	//		}
+
+	if constexpr(std::is_base_of_v<ISerializable, typename OutListType<OutListValueType>::value_type::element_type>)
+	{
+		// For this case, in_list should hold shared_ptr's to ISerializable's, e.g.:
+		// QVariantList<std::shared_ptr<LibraryEntry>>
+
+		// This will be e.g. std::shared_ptr<LibraryEntry>
+		using OutListPtrType = typename OutListType<OutListValueType>::value_type;
+		// This will be e.g. LibraryEntry:
+		using OutElementType = typename OutListType<OutListValueType>::value_type::element_type;
+
+		struct mapped_reduce_helper
+		{
+			/**
+			 * The Reduce callback.  Doesn't really need to be in this struct, but it was handy.
+			 */
+			static void add_to_list(OutListType<OutListValueType>& out_list, const OutListPtrType& new_entry)
+			{
+				out_list.push_back(new_entry);
+			};
+
+			/**
+			 * The mapping functor.
+			 */
+			using result_type = OutListPtrType;
+			result_type operator()(const QVariant& incoming)
+			{
+				// Convert from a QVariant and return.
+				throwif<SerializationException>(!incoming.isValid(), "invalid QVariant in read.");
+				OutListPtrType ptr_to_new_element = std::make_shared<OutElementType>();
+				ptr_to_new_element->fromVariant(incoming);
+				return ptr_to_new_element;
+			}
+		};
+
+		mapped_reduce_helper mapper;
+
+		// Qt5.12 QFuture iterators are basically broken. STL-style iterators won't block.  Java-style will detach, and new results won't show up.
+		// So we'll try blocking, which we're doing all this to avoid.
+		// OrderedReduce == reduce func called in order of input sequence,
+		// SequentialReduce == reduce func called by one thread at a time.
+		auto initial_list_tag = in_list.get_list_tag();
+		auto initial_list_item_tag = in_list.get_list_item_tag();
+		OutListType<OutListValueType> throwaway_list;
+		throwaway_list = QtConcurrent::blockingMappedReduced(in_list.cbegin(), in_list.cend(), mapper,
+		                                               mapped_reduce_helper::add_to_list,
+		                                               QtConcurrent::OrderedReduce|QtConcurrent::SequentialReduce);
+//		// Reset the tag names.
+//		throwaway_list.set_tag_names(initial_list_tag, initial_list_item_tag);
+		std::move(throwaway_list.begin(), throwaway_list.end(), std::back_inserter(*p_out_list));
+	}
+	else
+	{
+		static_assert(dependent_false_v<InListType>, "No matching template for params: list_blocking_map_reduce_push_back_or_die");
+	}
+}
+
 /// @}
 
 

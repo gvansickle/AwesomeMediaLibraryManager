@@ -28,6 +28,7 @@
 // Ours
 #include <utils/DebugHelpers.h>
 #include <future/preproc.h>
+#include <utils/Stopwatch.h>
 
 void Library::clear()
 {
@@ -173,14 +174,10 @@ QVariant Library::toVariant() const
 	{
 		// Serialize the LibraryEntry's into an ordered list.
 		QVariantHomogenousList list("m_lib_entries", "library_entry");
-#if 1
+
+		// ... in parallel, at least somewhat.
 		list_blocking_map_reduce_push_back_or_die(list, m_lib_entries);
-#else
-		for(const auto& e : m_lib_entries)
-		{
-			list_push_back_or_die(list, *e);
-		}
-#endif
+
 		map_insert_or_die(map, XMLTAG_LIBRARY_ENTRIES, list);
 	}
 
@@ -191,6 +188,8 @@ qDb() << "EXIT, wrote:" << m_lib_entries.size() << "libentries";
 
 void Library::fromVariant(const QVariant& variant)
 {
+	Stopwatch sw("################### Library::fromVariant()");
+
 	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
 
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
@@ -205,6 +204,9 @@ void Library::fromVariant(const QVariant& variant)
 	Q_ASSERT(qvar_list.isValid());
 	QVariantHomogenousList list("m_lib_entries", "library_entry");
 	list = qvar_list.value<QVariantHomogenousList>();
+#if 0 // Concurrency.
+	list_blocking_map_reduce_read_all_entries_or_warn(list, &m_lib_entries);
+#else
 	for(const QVariant& e : list)
 	{
 		Q_ASSERT(e.isValid());
@@ -212,6 +214,7 @@ void Library::fromVariant(const QVariant& variant)
 		libentry->fromVariant(e);
 		m_lib_entries.push_back(libentry);
 	}
+#endif
 	qDb() << "NUM LIB ENTRIES:" << m_lib_entries.size() << "VS:" << num_lib_entries;
 	AMLM_WARNIF(m_lib_entries.size() != num_lib_entries);
 }
