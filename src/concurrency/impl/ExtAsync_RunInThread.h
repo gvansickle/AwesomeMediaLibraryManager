@@ -108,6 +108,10 @@ namespace ExtAsync
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
 		// Ignoring the returned ExtFuture<>.
+		/// @note We couldn't do this with C++11-17 std::async()-returned futures, because they will block on delete:
+		/// @link https://en.cppreference.com/w/cpp/thread/async
+		/// "If the std::future obtained from std::async is not moved from or bound to a reference, the destructor of
+		/// the std::future will block at the end of the full expression until the asynchronous operation completes"
 		/*auto inner_retfuture =*/ qthread_async(callback, retfuture, args...);
 
 		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;

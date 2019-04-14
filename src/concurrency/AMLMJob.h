@@ -54,18 +54,6 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
-//template <class T>
-//struct AMLMJob_traits
-//{
-//    using type = T;
-//    using ExtFutureType = typename T::ExtFutureT;
-//
-//    ExtFutureType get_future() { return T::m_ext_future; }
-//
-//};
-
-
-
 /**
 * Where Does The State Live?
 *
@@ -337,7 +325,7 @@ public:
 
     /// @name Callback/pseudo-std-C++17+ interface.
     /// @{
-
+#if 0
     /**
      * .then(ctx, continuation) -> void
      */
@@ -394,7 +382,7 @@ public:
             }
         });
     }
-
+#endif
     /// @}
 
 

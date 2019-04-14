@@ -68,29 +68,7 @@ struct then_helper
 
 } // END detail
 
-	/**
-	 * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
-	 * @link https://en.cppreference.com/w/cpp/experimental/when_all
-	 *
-	 * @todo Probably should be in ::detail.
-	 *
-	 * @tparam InputIterator
-	 * @param first
-	 * @param last
-	 * @return
-	 */
-	template <class InputIterator>
-	ExtFuture<std::vector<typename std::iterator_traits<InputIterator>::value_type>>
-	when_all(InputIterator first, InputIterator last)
-	{
 
-	}
-
-	template <class... Futures>
-	ExtFuture<std::tuple<std::decay_t<Futures>...>> when_all(Futures&&... futures)
-	{
-
-	}
 
 } // END ExtAsync
 

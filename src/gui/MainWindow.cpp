@@ -46,8 +46,6 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QSettings>
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QComboBox>
 #include <QStyleFactory>
 #include <QDirIterator>

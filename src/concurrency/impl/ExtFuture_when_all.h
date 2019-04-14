@@ -23,11 +23,37 @@
 #ifndef SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ALL_H_
 #define SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ALL_H_
 
-/*
+// Std C++
+#include <vector>
+#include <type_traits>
+#include <iterator>
+
+
+template <class T>
+class ExtFuture;
+
+/**
+ * C++2x/concurrency TS when_all() implementation for ExtFuture<T>s.
+ * @link https://en.cppreference.com/w/cpp/experimental/when_all
  *
+ * @todo Probably should be in ::detail.
+ *
+ * @tparam InputIterator
+ * @param first
+ * @param last
+ * @return
  */
-class ExtFuture_when_all
+template <class InputIterator>
+ExtFuture<std::vector<typename std::iterator_traits<InputIterator>::value_type>>
+when_all(InputIterator first, InputIterator last)
 {
-};
+
+}
+
+template <class... Futures>
+ExtFuture<std::tuple<std::decay_t<Futures>...>> when_all(Futures&&... futures)
+{
+
+}
 
 #endif /* SRC_CONCURRENCY_IMPL_EXTFUTURE_WHEN_ALL_H_ */
