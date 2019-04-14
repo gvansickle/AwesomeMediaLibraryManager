@@ -1208,8 +1208,10 @@ public:
 		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
 
 		if constexpr(std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>
-				|| std::is_convertible_v<ContextType, nullptr_t>)
+	            || std::is_null_pointer_v<ContextType>)
 		{
+			// context is either a QThreadPool* or nullptr.
+			/// @todo For the moment, spawn both cases in a new thread.
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
 		else if constexpr (!std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>)

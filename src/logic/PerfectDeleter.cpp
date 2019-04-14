@@ -28,6 +28,8 @@
 
 PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 {
+	setObjectName("ThePerfectDeleter");
+
 	m_future_synchronizer.setCancelOnWait(true);
 }
 
@@ -128,12 +130,13 @@ void PerfectDeleter::addAMLMJob(AMLMJob* amlmjob)
 	// registered pointers from the storage here.
 
 	auto remover_lambda = [=](QObject* obj) {
-		qDb() << "AMLMJob destroyed";
+		qIn() << "AMLMJob destroyed:" << obj->objectName();
 		std::lock_guard lock(m_mutex);
 		m_watched_AMLMJobs.erase(std::remove(m_watched_AMLMJobs.begin(), m_watched_AMLMJobs.end(), obj),
 				m_watched_AMLMJobs.end());
 	};
 
+M_WARNING("These both want to remove the same amlmjob, maybe ok?");
 	connect_or_die(amlmjob, &QObject::destroyed, this, remover_lambda);
 	connect_or_die(amlmjob, &AMLMJob::finished, this, remover_lambda);
 
