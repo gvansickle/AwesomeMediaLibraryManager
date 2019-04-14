@@ -65,13 +65,6 @@ namespace ExtAsync
 {
 namespace detail {}
 
-//template <class CallbackType, class... Args,
-//		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-//		  class ExtFutureR = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
-//		  REQUIRES(!is_ExtFuture_v<R>)
-//		  >
-//static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
-
 template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
 	REQUIRES(is_ExtFuture_v<ExtFutureT>
 		 && !is_nested_ExtFuture_v<ExtFutureT>
@@ -84,9 +77,6 @@ template <class CallbackType, class... Args,
 		  REQUIRES(!is_ExtFuture_v<R>)
 		  >
 ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
-
-//template <class Fut, class Work>
-//auto then_in_qthread(Fut f, Work w) -> ExtFuture<decltype(w(f.get()))>;
 
 }
 
@@ -103,6 +93,7 @@ std::atomic_uint64_t get_next_id();
 #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
 
 #include "impl/ExtFutureImplHelpers.h"
+#include "impl/ExtAsync_impl.h"
 
 template <typename T>
 ExtFuture<T> make_started_only_future();
@@ -278,12 +269,6 @@ public:
 	 *
 	 * @todo We're now deriving from QFuture<T>, which doesn't have a virtual destructor, so I'm not sure
 	 * how correct this is or if it even makes any sense.
-	 *
-	 * @note We used to derive from QFutureInterface<>:
-	 * QFutureInterface<> is derived from QFutureInterfaceBase, which has a virtual destructor.
-	 * QFutureInterface<>'s destructor isn't marked either virtual or override.  By the
-	 * rules of C++, QFutureInterface<>'s destructor is in fact virtual ("once virtual always virtual"),
-	 * so we're good.  Marking this override to avoid further confusion.
 	 */
 	~ExtFuture() = default;
 
@@ -328,14 +313,14 @@ public:
 	template <class U>
 	bool operator==(const ExtFuture<U> &other) const
 	{
-		/// @todo Additional fields.
+		/// @todo Additional fields?
 		return this->d == other.d;
 	}
 
 	template <class U>
 	bool operator!=(const ExtFuture<U> &other) const
 	{
-		/// @todo Additional fields.
+		/// @todo Additional fields?
 		return this->d != other.d;
 	}
 
@@ -767,15 +752,27 @@ public:
 //		}
 //	}
 
+	/**
+	 * Store @a value into shared state and make the state ready.
+	 * @link https://en.cppreference.com/w/cpp/thread/promise/set_value
+	 * @param value
+	 */
 	void set_value(const T& value)
 	{
 		this->reportFinished(&value);
 	}
 
+	/**
+	 * Store @a value into shared state and do not make the state ready immediately.
+	 * Arrange for it to become ready when the current thread exits, "after all variables
+	 * with thread-local storage duration have been destroyed."
+	 * @link https://en.cppreference.com/w/cpp/thread/promise/set_value
+	 * @param value
+	 */
 	void set_value_at_thread_exit(const T& value)
 	{
 		/// @todo This doesn't connect to thread exit at all, not sure what to do about that.
-		set_value(value);
+		this->set_value(value);
 	}
 
 	void set_exception(QException& p)
@@ -786,7 +783,7 @@ public:
 	void set_exception_at_thread_exit(QException& p)
 	{
 		/// @todo This doesn't connect to thread exit at all, not sure what to do about that.
-		set_exception(p);
+		this->set_exception(p);
 	}
 
 	/// @} // END std::promise-like functionality.
@@ -854,6 +851,8 @@ public:
 	{
 		static_assert (!std::is_same_v<LiftedR, void>, "Callback return value should never be void");
 
+//#error
+		Q_ASSERT(ExtAsync::detail::context_has_event_loop(context));
 		Q_ASSERT(context == nullptr); // Not yet implemented.
 		if(context != nullptr)
 		{
@@ -1200,6 +1199,7 @@ public:
 
 	/**
 	 * Attempt at a One True Top-Level .then() template.
+	 * @todo Exception handling, cancelation.
 	 */
 	template <class ContextType, class ThenCallbackType>
 	auto then(ContextType&& context, ThenCallbackType&& then_callback ) const -> then_return_type_from_callback_and_future_t<ThenCallbackType, ExtFuture<T>>
@@ -1214,8 +1214,11 @@ public:
 			/// @todo For the moment, spawn both cases in a new thread.
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
-		else if constexpr (!std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>)
+		else if constexpr (!std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>
+		        && std::is_convertible_v<ContextType, QObject*>)
 		{
+			// context is not a QThreadPool, but is a QObject with an event loop.
+			// Run the callback in @a context's thread via its event loop.
 			return then_run_in_event_loop(context, std::forward<ThenCallbackType>(then_callback));
 		}
 		else

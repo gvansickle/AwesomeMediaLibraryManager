@@ -177,6 +177,6 @@ static_assert(std::is_class_v<ExtFuture<QList<int>>>);
 static_assert(std::is_convertible_v<QList<int>, ExtFuture<int>>);
 //static_assert(std::is_convertible_v<ExtFuture<QList<int>>, ExtFuture<int>>);
 
-static_assert(IsTAQList<QList<int>> == true);
-static_assert(IsTAQList<QVector<int>> == false);
+//static_assert(IsTAQList<QList<int>> == true);
+//static_assert(IsTAQList<QVector<int>> == false);
 

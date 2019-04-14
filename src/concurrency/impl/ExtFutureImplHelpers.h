@@ -41,9 +41,9 @@ ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
 template <class T>
 class ExtFuture;
 
-/// @todo May not need this.
-template <class U>
-static const bool IsTAQList = std::is_same_v<U, QList<typename U::value_type>>;
+///// @todo May not need this.
+//template <class U>
+//static const bool IsTAQList = std::is_same_v<U, QList<typename U::value_type>>;
 
 template <class FutureType, class NextFunction>
 auto external_then(FutureType f, NextFunction n) -> ExtFuture<decltype(n(f.get()))>

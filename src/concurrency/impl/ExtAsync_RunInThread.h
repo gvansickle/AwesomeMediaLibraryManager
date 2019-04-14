@@ -59,7 +59,7 @@ namespace ExtAsync
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
-		auto new_thread = QThread::create([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
+		QThread* new_thread = QThread::create([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
 				qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
@@ -79,10 +79,15 @@ namespace ExtAsync
 				qDb() << "EXIT IN1";
 			});
 
+		// Make a self-delete connection for the QThread.
+		// This is per-Qt5 docs, minus the lambda, which shouldn't make a difference.
 		connect_or_die(new_thread, &QThread::finished, new_thread, [=](){
 			qDb() << "DELETING QTHREAD:" << new_thread;
 			new_thread->deleteLater();
 		});
+
+		/// @todo Set thread name before starting it.
+//		new_thread->setObjectName();
 
 		// Start the thread.
 		new_thread->start();
@@ -120,27 +125,27 @@ namespace ExtAsync
 	};
 
 
-	/**
-	 * Attach a Sutteresque .then()-like continuation to a run_in_qthread().
-	 */
-	template <class InFutureT, class CallbackType, class OutFutureU>
-	static OutFutureU then_in_main_thread(InFutureT in_future, CallbackType&& then_callback)
-	{
-		using U = typename OutFutureU::value_type;
-		OutFutureU retfuture = make_started_only_future<U>();
-
-		QFutureWatcher<U>* watcher = new QFutureWatcher<U>(qobject_cast<QObject>(qApp));
-
-		connect_or_die(watcher, &QFutureWatcher<U>::finished, watcher, &QFutureWatcher<U>::deleteLater);
-
-		return retfuture;
-	};
-
-	template <class Fut, class Work>
-	auto then_in_qthread(Fut&& f, Work&& w) -> ExtFuture<decltype(w(f.get()))>
-	{
-		return ExtAsync::qthread_async([=]{ w(f.get());});
-	}
+//	/**
+//	 * Attach a Sutteresque .then()-like continuation to a run_in_qthread().
+//	 */
+//	template <class InFutureT, class CallbackType, class OutFutureU>
+//	static OutFutureU then_in_main_thread(InFutureT in_future, CallbackType&& then_callback)
+//	{
+//		using U = typename OutFutureU::value_type;
+//		OutFutureU retfuture = make_started_only_future<U>();
+//
+//		QFutureWatcher<U>* watcher = new QFutureWatcher<U>(qobject_cast<QObject>(qApp));
+//
+//		connect_or_die(watcher, &QFutureWatcher<U>::finished, watcher, &QFutureWatcher<U>::deleteLater);
+//
+//		return retfuture;
+//	};
+//
+//	template <class Fut, class Work>
+//	auto then_in_qthread(Fut&& f, Work&& w) -> ExtFuture<decltype(w(f.get()))>
+//	{
+//		return ExtAsync::qthread_async([=]{ w(f.get());});
+//	}
 
 }; // END namespace ExtAsync.
 
