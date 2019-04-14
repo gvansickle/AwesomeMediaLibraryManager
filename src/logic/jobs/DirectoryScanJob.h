@@ -79,17 +79,6 @@ public:
 
 	~DirectoryScannerAMLMJob() override;
 
-	static DirectoryScannerAMLMJobPtr make_job(QObject *parent, const QUrl& dir_url,
-											   const QStringList &nameFilters,
-											   QDir::Filters filters,
-											   QDirIterator::IteratorFlags flags);
-
-	static ExtFuture<DirScanResult> AsyncDirScan(
-			const QUrl& dir_url,
-			const QStringList &name_filters,
-			const QDir::Filters dir_filters = QDir::NoFilter,
-			const QDirIterator::IteratorFlags iterator_flags = QDirIterator::NoIteratorFlags);
-
 protected:
 
 	/// @todo Temp while converting over to AMLMJobT<>.

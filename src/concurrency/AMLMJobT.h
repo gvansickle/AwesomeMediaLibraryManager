@@ -80,7 +80,9 @@ public:
 		setProgressUnit(units);
 
 		// Set our object name.
-		setObjectName("AMLJobT");
+		/// @todo Again better through ExtFuture.
+		const char* jobname = "UNKNOWN_JOB";
+		this->setObjectName(jobname);
 
 		// Set our capabilities.
 		setCapabilities(capabilities);
@@ -110,16 +112,6 @@ public:
         return m_ext_future;
     }
 
-//    /**
-//     * Factory function for creating AMLMJobT's wrapping the passed-in ExtFuture<T>.
-//     * @returns AMLMJobT, which is not started.
-//     */
-//    static std::unique_ptr<AMLMJobT> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
-//    {
-//        auto job = std::make_unique<AMLMJobT>(ef, parent);
-//        return job;
-//    }
-
 	Q_SCRIPTABLE void start() override
 	{
 //M_WARNING("THIS IS NOW SOMEWHAT INCORRECT, ESP. THE run_class_noarg()");
@@ -131,13 +123,9 @@ public:
 			return;
 		}
 
-		// Hook up signals and such to the ExtFutureWatcher<T>.
-		HookUpExtFutureSignals(m_ext_watcher);
-
-		// Start the speed calculation timer.
-		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
-		m_speed_timer->setInterval(1000);
-		m_speed_timer->start();
+		// Hook up signals and such to the ExtFutureWatcher<T>,
+		// start the speed calculation timer.
+		pre_start();
 
 		// Just let ExtAsync run the run() function, which will in turn run the runFunctor().
 		// Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -590,8 +578,8 @@ protected:
 	ExtFutureT m_ext_future { make_started_only_future<typename ExtFutureT::inner_t>() };
 
 	/// The watcher for the ExtFuture.
-//#error "This screws with the QObject parent/child delete mechanism"
-//	std::unique_ptr<ExtFutureWatcherT> m_ext_watcher {};
+	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism
+	///       (we get double deletes).
 	ExtFutureWatcherT* m_ext_watcher {};
 
 	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.
@@ -603,15 +591,16 @@ protected:
 };
 
 /**
- * Create a new AMLMJobT from an ExtFuture<T>.
+ * Create a new AMLMJobT wrapped around an ExtFuture<T>.
+ * @todo Does this really need a parent?  AMLMJob[T] takes one, but....
  */
 template<class ExtFutureT>
 inline static QPointer<AMLMJobT<ExtFutureT>>
 make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
-	/// @todo Does this really need a parent?
-	qDb() << "ef:" << ef;
-	Q_ASSERT(!ef.isFinished() && !ef.isCanceled());
+	/// @todo I think we don't care if the future has already started/canceled here,
+	/// as long as we hook up fut<->job and job<->everything-else signal/slots, we're ok.
+//	Q_ASSERT(!ef.isFinished() && !ef.isCanceled());
 	return new AMLMJobT<ExtFutureT>(ef, parent, KJob::Unit::Files);
 }
 

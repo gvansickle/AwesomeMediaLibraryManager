@@ -52,17 +52,6 @@ DirectoryScannerAMLMJob::~DirectoryScannerAMLMJob()
 //    qDbo() << "DirectoryScannerAMLMJob DELETED:" << this;
 }
 
-DirectoryScannerAMLMJobPtr DirectoryScannerAMLMJob::make_job(QObject *parent, const QUrl& dir_url,
-                                                             const QStringList &nameFilters,
-                                                             QDir::Filters filters,
-                                                             QDirIterator::IteratorFlags flags)
-{
-    auto retval = new DirectoryScannerAMLMJob(parent, dir_url,
-                                              nameFilters,
-                                              filters,
-                                              flags);
-    return retval;
-}
 
 void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 		const QUrl& dir_url, // The URL pointing at the directory to recursively scan.
@@ -202,15 +191,6 @@ void DirScanFunction(ExtFuture<DirScanResult> ext_future, AMLMJob* /*amlmJob*/,
 
 	qDb() << "RETURNING, ExtFuture:" << ext_future; ///< STARTED only, last output of pool thread
 	return;
-}
-
-ExtFuture<DirScanResult> DirectoryScannerAMLMJob::AsyncDirScan(const QUrl& dir_url,
-															   const QStringList& name_filters,
-															   const QDir::Filters dir_filters,
-															   const QDirIterator::IteratorFlags iterator_flags)
-{
-	Q_ASSERT(0);
-	return ExtAsync::run(&DirScanFunction, /*AMLMJobT*/nullptr, dir_url, name_filters, dir_filters, iterator_flags);
 }
 
 void DirectoryScannerAMLMJob::run()
