@@ -368,14 +368,12 @@ void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list
 		// So we'll try blocking, which we're doing all this to avoid.
 		// OrderedReduce == reduce func called in order of input sequence,
 		// SequentialReduce == reduce func called by one thread at a time.
-		auto initial_list_tag = in_list.get_list_tag();
-		auto initial_list_item_tag = in_list.get_list_item_tag();
+
 		OutListType<OutListValueType> throwaway_list;
 		throwaway_list = QtConcurrent::blockingMappedReduced(in_list.cbegin(), in_list.cend(), mapper,
 		                                               mapped_reduce_helper::add_to_list,
 		                                               QtConcurrent::OrderedReduce|QtConcurrent::SequentialReduce);
-//		// Reset the tag names.
-//		throwaway_list.set_tag_names(initial_list_tag, initial_list_item_tag);
+
 		std::move(throwaway_list.begin(), throwaway_list.end(), std::back_inserter(*p_out_list));
 	}
 	else

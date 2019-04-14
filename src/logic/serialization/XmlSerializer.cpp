@@ -39,6 +39,7 @@
 
 // Ours
 #include <src/utils/DebugHelpers.h>
+#include <utils/Stopwatch.h>
 #include "ISerializable.h"
 
 
@@ -81,6 +82,8 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 
 void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 {
+	Stopwatch sw("###################### XmlSerializer::load()");
+
 	QString load_file_path = file_url.toLocalFile();
 	if(load_file_path.isEmpty())
 	{
@@ -89,7 +92,19 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 
 	QFile file(load_file_path);
 	file.open(QFile::ReadOnly);
+
+#if 0 /// @exp See if reading it all in at once is a win or loss. == It doesn't seem to make a difference.
+	QByteArray whole_file = file.readAll();
+	if(whole_file.size() == 0)
+	{
+		qWr() << "##### COULDNT LOAD ENTIRE FILE INTO MEMORY";
+		return;
+	}
+	QXmlStreamReader xmlstream(whole_file);
+#else
 	QXmlStreamReader xmlstream(&file);
+#endif
+
 
 	/// @todo EXTRA READ INFO NEEDS TO COME FROM CALLER
 	// Read the first start element,  namespace element we added.

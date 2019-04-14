@@ -190,7 +190,8 @@ void Library::fromVariant(const QVariant& variant)
 {
 	Stopwatch sw("################### Library::fromVariant()");
 
-	QVariantInsertionOrderedMap map = variant.value<QVariantInsertionOrderedMap>();
+	QVariantInsertionOrderedMap map; // = variant.value<QVariantInsertionOrderedMap>();
+	qviomap_from_qvar_or_die(&map, variant);
 
 #define X(field_tag, member_field)   map_read_field_or_warn(map, field_tag, &(member_field));
 	M_DATASTREAM_FIELDS(X);
@@ -204,17 +205,11 @@ void Library::fromVariant(const QVariant& variant)
 	Q_ASSERT(qvar_list.isValid());
 	QVariantHomogenousList list("m_lib_entries", "library_entry");
 	list = qvar_list.value<QVariantHomogenousList>();
-#if 0 // Concurrency.
+
+
+	// Concurrency.  Vs. the loop we used to have here, we went from 2.x secs to 0.5 secs.
 	list_blocking_map_reduce_read_all_entries_or_warn(list, &m_lib_entries);
-#else
-	for(const QVariant& e : list)
-	{
-		Q_ASSERT(e.isValid());
-		std::shared_ptr<LibraryEntry> libentry = std::make_shared<LibraryEntry>();
-		libentry->fromVariant(e);
-		m_lib_entries.push_back(libentry);
-	}
-#endif
+
 	qDb() << "NUM LIB ENTRIES:" << m_lib_entries.size() << "VS:" << num_lib_entries;
 	AMLM_WARNIF(m_lib_entries.size() != num_lib_entries);
 }
