@@ -851,16 +851,9 @@ public:
 	{
 		static_assert (!std::is_same_v<LiftedR, void>, "Callback return value should never be void");
 
-//#error
 		Q_ASSERT(ExtAsync::detail::context_has_event_loop(context));
 		Q_ASSERT(context == nullptr); // Not yet implemented.
-		if(context != nullptr)
-		{
-			// If non-null, make sure context has an event loop.
-			QThread* ctx_thread = context->thread();
-			Q_ASSERT(ctx_thread != nullptr);
-			Q_ASSERT(ctx_thread->eventDispatcher() != nullptr);
-		}
+
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context below.
 		ExtFuture<LiftedR> returned_future = make_started_only_future<LiftedR>();
@@ -1111,7 +1104,7 @@ public:
 	}
 
 	/**
-	 * .then() overload: Run callback in @a context's event loop, passing a finished *this as the first parameter.
+	 * .then() overload: Run @a then_callback in @a context's event loop, passing a finished *this as the first parameter.
 	 * Mainly intended for running in the main thread/event loop.
 	 * callback is of the form:
 	 *     ExtFuture<R> callback(ExtFuture<T>)
@@ -1125,18 +1118,20 @@ public:
 	          )>
 	ExtFuture<R> then_run_in_event_loop(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
-//		static_assert(std::is_convertible_v<typename ThenReturnType::inner_t, R>, "");
-
 		ExtFuture<R> retfuture = make_started_only_future<R>();
 
 		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
-			// Wait inside this intermediate thread for the incoming future (this) to be ready.
-			this_future.waitForFinished();
+
+			// Wait inside this intermediate thread for the incoming future (this_future) to be ready.
+			this_future.wait();
 
 			// Run the callback in the context's event loop.
 			// Note the std::invoke details.  Per @link https://en.cppreference.com/w/cpp/experimental/shared_future/then:
 			// "When the shared state currently associated with *this is ready, the continuation INVOKE(std::move(fd), *this)
 			// is called on an unspecified thread of execution [...]. If that expression is invalid, the behavior is undefined."
+			/// @note run_in_event_loop() may (different threads) or may not (same threads) return immediately to the caller.
+			///       This is the second reason to be inside this intermediate thread.  Completion is handled via
+			///       the ExtFuture<> retfuture_cp we pass in here.
 			run_in_event_loop(context, [=, retfuture_cp = retfuture,
 			                  then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))]() mutable {
 				if constexpr(std::is_void_v<Unit::DropT<R>>)
@@ -1152,7 +1147,7 @@ public:
 					retfuture_cp.reportFinished(&retval);
 				}
 				});
-			}, DECAY_COPY(*this));
+		    }, DECAY_COPY(*this));
 
 		return retfuture;
 	}
@@ -1214,7 +1209,7 @@ public:
 			/// @todo For the moment, spawn both cases in a new thread.
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
-		else if constexpr (!std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>
+	    else if constexpr (!std::is_convertible_v<ContextType, QThreadPool*>
 		        && std::is_convertible_v<ContextType, QObject*>)
 		{
 			// context is not a QThreadPool, but is a QObject with an event loop.
