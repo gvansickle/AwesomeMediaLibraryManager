@@ -1120,7 +1120,7 @@ public:
 	{
 		ExtFuture<R> retfuture = make_started_only_future<R>();
 
-		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable {
+		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable  {
 
 			// Wait inside this intermediate thread for the incoming future (this_future) to be ready.
 			this_future.wait();
@@ -1147,7 +1147,7 @@ public:
 					retfuture_cp.reportFinished(&retval);
 				}
 				});
-		    }, DECAY_COPY(*this));
+			}, DECAY_COPY(*this));
 
 		return retfuture;
 	}
@@ -1172,22 +1172,40 @@ public:
 	 * @param then_callback
 	 * @returns ExtFuture<R>  A future which will be made ready with the return value of then_callback.
 	 */
-	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >, //ct::return_type_t<ThenCallbackType>>,
+	template <class ThenCallbackType, class R = Unit::LiftT< std::invoke_result_t<ThenCallbackType, ExtFuture<T>> >,
 			class ThenReturnType = ExtFuture<R>,
 			REQUIRES(!is_ExtFuture_v<R> && !is_ExtFuture_v<T>
 			  && std::is_invocable_r_v<Unit::DropT<R>, ThenCallbackType, ExtFuture<T>>)
 			>
 	ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
-		ExtFuture<R> retfuture = ExtAsync::qthread_async([=, fd_then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](ExtFuture<T> in_future) mutable {
+		ThenReturnType retfuture = make_started_only_future<R>();
+
+		/*ExtFuture<R>*/ retfuture = ExtAsync::qthread_async(
+					[=, fd_then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
 
 			// Block in the spawned thread for in_future to become ready.
-			/// @todo Handle throws.
-			in_future.wait();
+			// Exception behavior somewhat similar to @link http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0701r1.html#passing-futures-to-then-continuations-is-unwieldy
+			// "When .then is invoked with a continuation that is only invocable with T and the future that the continuation
+			// is being attached to contains an exception, .then does not invoke the continuation and returns a future containing
+			// the exception. We call this exception propagation."
+			// If in_future becomes exceptional or is canceled, the .wait() will throw, and never call then_callback.
+			// qthread_async() handles the exception propagation.
 
-			return std::invoke(std::move(fd_then_callback), in_future);
+			// From @link https://doc.qt.io/qt-5/qexception.html
+			// "When using QFuture, transferred exceptions will be thrown when calling the following functions:
+			//				QFuture::waitForFinished()
+			//				QFuture::result()
+			//				QFuture::resultAt()
+			//				QFuture::results()"
 
-			}, std::forward<decltype(*this)>(*this));
+			return exception_propagation_helper_then(in_future, returned_future_copy, std::move(then_callback));
+//			in_future.wait();
+
+			// Run the callback.  If then_callback throws or cancels in_future, again qthread_async() will handle the propagation.
+//			return std::invoke(std::move(fd_then_callback), in_future);
+
+			}, DECAY_COPY(std::forward<decltype(*this)>(*this)), DECAY_COPY(retfuture));
 
 		return retfuture;
 	}
@@ -1209,10 +1227,10 @@ public:
 			/// @todo For the moment, spawn both cases in a new thread.
 			return then_qthread_async(std::forward<ThenCallbackType>(then_callback));
 		}
-	    else if constexpr (!std::is_convertible_v<ContextType, QThreadPool*>
+		else if constexpr (!std::is_convertible_v<ContextType, QThreadPool*>
 		        && std::is_convertible_v<ContextType, QObject*>)
 		{
-			// context is not a QThreadPool, but is a QObject with an event loop.
+			// context is not a QThreadPool, but it is a QObject with an event loop.
 			// Run the callback in @a context's thread via its event loop.
 			return then_run_in_event_loop(context, std::forward<ThenCallbackType>(then_callback));
 		}

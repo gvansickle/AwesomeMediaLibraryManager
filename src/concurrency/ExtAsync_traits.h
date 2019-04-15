@@ -126,7 +126,7 @@ using has_extfuture_ref_as_first_param = std::is_detected<has_extfuture_ref_as_f
  *
  * Not sure, at one point .then() was specced to only do a single level of unwrapping.
  *
- * @tparam U  Return type of the .then() continuation.
+ * @tparam U  Return type of the continuation passed to .then().
  * @returns   Return type of the .then() member function.
  */
 template <class U>

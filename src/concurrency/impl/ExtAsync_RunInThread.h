@@ -33,6 +33,7 @@
 
 // Ours.
 #include "../ExtAsync_traits.h"
+#include "ExtFutureImplHelpers.h"
 #include "../ExtFuture.h"
 
 template <typename T>
@@ -42,7 +43,7 @@ namespace ExtAsync
 {
 	/**
 	 * Run a callback in a QThread.
-	 * The returned ExtFuture<> will be reported as Finished when the callback returns.
+	 * The returned ExtFuture<> will be reported as Finished when the callback returns, or as Exception on either cancel or error.
 	 *
 	 * @note On the correct usage of std::invoke_result_t<> in this situation:
 	 * @link https://stackoverflow.com/a/47875452
@@ -62,21 +63,67 @@ namespace ExtAsync
 		QThread* new_thread = QThread::create([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
-				qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
-				Q_ASSERT(retfuture_cp == retfuture);
-				retfuture_cp.reportStarted();
-				if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
+#if 0
+			exception_propagation_helper(retfuture_cp,
+					[=](ExtFutureR future_ref, Args... args) mutable {
+						qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
+						Q_ASSERT(retfuture_cp == retfuture);
+						retfuture_cp.reportStarted();
+						if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
+						{
+							std::invoke(std::move(fd_callback), args...);
+							retfuture_cp.reportFinished();
+						}
+						else
+						{
+							auto retval = std::invoke(std::move(fd_callback), args...);
+							static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
+							retfuture_cp.reportFinished(&retval);
+						}
+						qDb() << "EXIT IN1";
+					},
+//					std::move(fd_callback),
+					args...);
+#else
+				try
 				{
-					std::invoke(std::move(fd_callback), args...);
-					retfuture_cp.reportFinished();
+					qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
+					Q_ASSERT(retfuture_cp == retfuture);
+					retfuture_cp.reportStarted();
+					if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
+					{
+						std::invoke(std::move(fd_callback), args...);
+						retfuture_cp.reportFinished();
+					}
+					else
+					{
+						auto retval = std::invoke(std::move(fd_callback), args...);
+						static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
+						retfuture_cp.reportFinished(&retval);
+					}
+					qDb() << "EXIT IN1";
 				}
-				else
+				catch(ExtAsyncCancelException& e)
 				{
-					auto retval = std::invoke(std::move(fd_callback), args...);
-					static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
-					retfuture_cp.reportFinished(&retval);
+					/**
+					 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+					 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+					 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+					 *  state of the returned future object."
+					 */
+					qDb() << "RETHROWING CANCEL EXCEPTION";
+					retfuture_cp.reportException(e);
+					// I think we don't want to rethrow with a throw() here.  This will throw to the wrong future.
 				}
-				qDb() << "EXIT IN1";
+				catch(QException& e)
+				{
+					retfuture_cp.reportException(e);
+				}
+				catch (...)
+				{
+					retfuture_cp.reportException(QUnhandledException());
+				}
+#endif
 			});
 
 		// Make a self-delete connection for the QThread.

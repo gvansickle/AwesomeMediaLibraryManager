@@ -980,86 +980,6 @@ namespace ExtAsync
 
 		return retfuture;
     }
-
-
-
-
-    template <class CallbackType>
-    ExtFuture<decltype(std::declval<CallbackType>()())>
-    spawn_async(CallbackType&& callback)
-    {
-    	// The promise we'll make and extract a future from.
-		ExtFuture<decltype(std::declval<CallbackType>()())> promise;
-
-		auto retfuture = promise.get_future();
-	    std::thread the_thread(
-	    		[promise=std::move(promise), callback=std::decay_t<CallbackType>(callback)]()
-	    		mutable {
-	    			try
-				    {
-	    				promise.set_value_at_thread_exit(callback());
-				    }
-	    			catch(QException& e)
-				    {
-	    				promise.set_exception_at_thread_exit(e);
-				    }
-	    			catch(...)
-				    {
-	    				promise.set_exception_at_thread_exit(std::current_exception());
-				    }
-	    		});
-	    the_thread.detach();
-	    return retfuture;
-    };
-
-	////// START EXPERIMENTAL
-
-	/**
-	 * Returns a callable object which captures f.
-	 * Different from async_adapter() in that f is to be called with normal values,
-	 * not futures.
-	 */
-	template <typename F>
-	static auto asynchronize(F f)
-	{
-		return [f](auto ... xs) {
-			return [=] () {
-				return std::async(std::launch::async, f, xs...);
-			};
-		};
-	}
-
-	/**
-	 * Returned object can be called with any number of future objects as parameters.
-	 * It then calls .get() on all futures, applies function f to them, and returns the result.
-	 */
-	template <typename F>
-	static auto fut_unwrap(F f)
-	{
-		return [f](auto ... xs) {
-			return f(xs.get()...);
-		};
-	}
-
-	/**
-	 * Wraps a synchronous function, makes it wait for future arguments and returns a future result.
-	 */
-	template <typename F>
-	static auto async_adapter(F f)
-	{
-		return [f](auto ... xs) {
-			return [=] () {
-				// What's going on here:
-				// - Everything in parameter pack xs is assumed to be a callable object.  They will be called without args.
-				// - fut_unwrap(f) transforms f into a function object which accepts an arbitrary number of args.
-				// - When this async finally runs f, f calls .get() on all the xs()'s.
-				return std::async(std::launch::async, fut_unwrap(f), xs()...);
-			};
-		};
-	}
-
-	////// END EXPERIMENTAL
-
 };
 
 /**
@@ -1128,35 +1048,6 @@ static void run_in_event_loop(QObject* context, CallableType&& callable)
 	Q_ASSERT(retval == true);
 }
 
-/**
- * For callables with the signature "ReturnType Callback(void)", where ReturnType != ExtFuture.
- */
-//template <class CallableType, class ReturnType = Unit::LiftT<std::invoke_result_t<CallableType>>,
-//		  REQUIRES(is_non_void_non_ExtFuture_v<ReturnType>
-//		  && std::is_invocable_r_v<Unit::DropT<ReturnType>, CallableType>)>
-//static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
-//{
-//	ReturnType return_value;
-//	bool retval;
-//	if constexpr(std::is_same_v<ReturnType, void>)
-//	{
-//		static_assert(std::is_same_v<ReturnType, void>, "Bad return type");
-//		// callable returns void.
-//		retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable));
-//		return_value = unit;
-//	}
-//	else
-//	{
-//		// callable returns a non-void.
-//		retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
-//		/// @todo We're getting "QMetaObject::invokeMethod: Unable to invoke methods with return values in queued connections" here.
-//		Q_ASSERT_X(retval == true, __PRETTY_FUNCTION__, "invokeMethod() failed");
-//	}
-//	// Die if the function couldn't be invoked.
-//	/// @todo We're getting "QMetaObject::invokeMethod: Unable to invoke methods with return values in queued connections" here.
-//	Q_ASSERT(retval == true);
-//	return return_value;
-//}
 
 namespace ExtAsync
 {

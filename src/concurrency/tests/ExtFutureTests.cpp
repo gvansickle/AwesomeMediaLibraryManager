@@ -1117,8 +1117,10 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 //	ExtFuture<int> root_async_operation_future = make_started_only_future<int>();
 
 	// Create and start the async operation.
-	ExtFuture<int> root_async_operation_future = ExtAsync::run_again([=]
-													  (ExtFuture<int> root_async_operation_future_copy) -> int {
+	ExtFuture<int> root_async_operation_future =
+//			ExtAsync::run_again(
+			ExtAsync::qthread_async_with_cnr_future(
+				[=](ExtFuture<int> root_async_operation_future_copy) -> int {
 
 		SCOPED_TRACE("In ExtAsync::run()");
 

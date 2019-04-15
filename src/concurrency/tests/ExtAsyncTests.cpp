@@ -143,6 +143,7 @@ static std::string twice(const std::string &s)
 	return s + s;
 }
 
+#if 0 // This stuff has been moved to attic, probably obsolete.
 TEST_F(ExtAsyncTestsSuiteFixture, AsynchronizeBasic)
 {
 	TC_ENTER();
@@ -172,6 +173,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, AsynchronizeBasic)
 
 	TC_EXIT();
 }
+#endif
 
 /// Concurrent C++
 template<typename T>
