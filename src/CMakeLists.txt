@@ -430,6 +430,13 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
 		COMPONENT coreapp)
+
+### Install the test executable.  We do this because for debugging we need the same gdb_wrap.sh to be found.
+install(TARGETS ${TEST_EXE_TARGET} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+				#LIBRARY DESTINATION .
+				#ARCHIVE DESTINATION .
+		COMPONENT coreapp)
 		
 # Make the built and installed app debuggable.
 # Add a .gdbinit file and support files to the install directory.

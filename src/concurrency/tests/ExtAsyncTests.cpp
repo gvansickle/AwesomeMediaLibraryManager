@@ -242,7 +242,50 @@ TEST_F(ExtAsyncTestsSuiteFixture, CCPPBasic)
 	TC_EXIT();
 }
 
-/// Concurrent C++
+/// END Concurrent C++
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncException)
+{
+	TC_ENTER();
+
+	ExtFuture<int> f0 = ExtAsync::qthread_async([=]() -> int {
+		/*TCOUT*/qDebug() << "THROWING";
+		TC_Sleep(1000);
+//		throw ExtAsyncCancelException();
+		throw QException();
+//		throw std::exception();
+		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		return 5;
+		;});
+
+	TC_Wait(500);
+	TCOUT << "ABOUT TO TRY";
+
+	try
+	{
+		f0.wait();
+//		f0.waitForResult(0);
+		ADD_FAILURE() << "Didn't throw";
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+	}
+	catch(QException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Threw unexpected exception.";
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 {

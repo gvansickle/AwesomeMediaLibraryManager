@@ -26,8 +26,12 @@
 
 // Qt5
 #include <QList>
+#include <QThreadPool>
 
 // Ours
+#include <utils/DebugHelpers.h>
+#include <future/Unit.hpp>
+#include <concurrency/ExtAsyncExceptions.h>
 //#include "ExtAsync_RunInThread.h"
 
 // Generated

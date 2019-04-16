@@ -39,6 +39,8 @@
 template <typename T>
 ExtFuture<T> make_started_only_future();
 
+#define EXTASYNC_USE_QTHREAD 1
+
 namespace ExtAsync
 {
 	/**
@@ -56,13 +58,20 @@ namespace ExtAsync
 			  >
 	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
-		ExtFutureR retfuture = make_started_only_future<typename ExtFutureR::value_type>();
+		ExtFutureR retfuture = make_started_only_future<R>();//typename ExtFutureR::value_type>();
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
-		QThread* new_thread = QThread::create([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
+#if EXTASYNC_USE_QTHREAD == 1
+		QThread* new_thread = QThread::create
+#else
+		QtConcurrent::run
+#endif
+						([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
+
+			Q_ASSERT(retfuture == retfuture_cp);
 #if 0
 			exception_propagation_helper(retfuture_cp,
 					[=](ExtFutureR future_ref, Args... args) mutable {
@@ -87,9 +96,9 @@ namespace ExtAsync
 #else
 				try
 				{
-					qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
+//					qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
 					Q_ASSERT(retfuture_cp == retfuture);
-					retfuture_cp.reportStarted();
+//					retfuture_cp.reportStarted();
 					if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
 					{
 						std::invoke(std::move(fd_callback), args...);
@@ -101,7 +110,7 @@ namespace ExtAsync
 						static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
 						retfuture_cp.reportFinished(&retval);
 					}
-					qDb() << "EXIT IN1";
+//					qDb() << "EXIT IN1";
 				}
 				catch(ExtAsyncCancelException& e)
 				{
@@ -111,21 +120,26 @@ namespace ExtAsync
 					 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
 					 *  state of the returned future object."
 					 */
-					qDb() << "RETHROWING CANCEL EXCEPTION";
+					qDb() << "CAUGHT CANCEL EXCEPTION";
 					retfuture_cp.reportException(e);
 					// I think we don't want to rethrow with a throw() here.  This will throw to the wrong future.
 				}
 				catch(QException& e)
 				{
+				qDb() << "CAUGHT QEXCEPTION";
 					retfuture_cp.reportException(e);
 				}
 				catch (...)
 				{
+				qDb() << "CAUGHT UNKNOWN EXCEPTION";
 					retfuture_cp.reportException(QUnhandledException());
 				}
 #endif
+					qDb() << "Leaving Thread," << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
+					retfuture_cp.reportFinished();
+					return;
 			});
-
+#if EXTASYNC_USE_QTHREAD == 1
 		// Make a self-delete connection for the QThread.
 		// This is per-Qt5 docs, minus the lambda, which shouldn't make a difference.
 		connect_or_die(new_thread, &QThread::finished, new_thread, [=](){
@@ -138,7 +152,7 @@ namespace ExtAsync
 
 		// Start the thread.
 		new_thread->start();
-
+#endif
 		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;
 		return retfuture;
 	}

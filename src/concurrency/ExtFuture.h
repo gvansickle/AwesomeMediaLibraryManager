@@ -524,18 +524,18 @@ public:
 	 * Blocks until this future is finished or canceled.
 	 * @note This is shadowing the same non-virtual function in QFuture<T>.
 	 */
-	void waitForFinished()
-	{
-		if(this->hasException())
-		{
-			qWr() << "waitForFinished() about to throw";
-		}
-		this->d.waitForFinished();
-		if(this->hasException())
-		{
-			Q_ASSERT_X(0, "waitForFinished()", "ExtFuture held an exception but didn't throw");
-		}
-	}
+//	void waitForFinished()
+//	{
+//		if(this->hasException())
+//		{
+//			qWr() << "waitForFinished() about to throw";
+//		}
+//		this->d.waitForFinished();
+//		if(this->hasException())
+//		{
+//			Q_ASSERT_X(0, "waitForFinished()", "ExtFuture held an exception but didn't throw");
+//		}
+//	}
 
 	/**
 	 * Simply calls QFutureInterfaceBase::reportCanceled(), which just calls cancel().
@@ -1386,8 +1386,6 @@ public:
 	template <class FutureType>
 	static ExtFutureState::State state(const FutureType& future);
 
-protected:
-
 	/**
 	 * Simple wrapper allowing us to call this->d.waitForResult(i) without
 	 * directly touching the not-really-public QFutureInterfaceBase instance d.
@@ -1400,6 +1398,8 @@ protected:
 	{
 		this->d.waitForResult(resultIndex);
 	}
+
+protected:
 
 
 	/**

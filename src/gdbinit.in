@@ -9,6 +9,7 @@ echo === Loading Qt5 Pretty Printers\n
 python
 import sys, os.path
 sys.path.insert(0, os.path.expanduser('~/.gdb'))
+sys.path.insert(0, os.path.expanduser('../install/bin'))
 import qt5printers
 qt5printers.register_printers(gdb.current_objfile())
 end
