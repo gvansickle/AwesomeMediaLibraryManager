@@ -287,45 +287,122 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncException)
 	TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenException)
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromTop)
 {
 	TC_ENTER();
 
 	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
-		/*TCOUT*/qDebug() << "THROWING NON-CANCEL";
+		/*TCOUT*/qDebug() << "THROWING CANCEL";
 		TC_Sleep(1000);
 		throw ExtAsyncCancelException();
-//		throw QException();
-//		throw std::exception();
+
+		ADD_FAILURE() << "Didn't throw out of thread to future.";
+
 		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
 		return 5;
 		})
-			.then_qthread_async([=](ExtFuture<int> f0){
+		.then_qthread_async([=](ExtFuture<int> f0){
 			qDb() << "Waiting in then() for cancel exception.";
 			f0.wait();
 			ADD_FAILURE() << ".then() didn't throw";
 			int f0val = f0.get()[0];
 			return f0val;
-});
+		});
 
-	TC_Wait(2000);
+	TC_Wait(500);
 	TCOUT << "ABOUT TO TRY";
 
 	try
 	{
-//		f1.wait();
-		f1.waitForResult(0);
+		f1.wait();
 		ADD_FAILURE() << "Didn't throw";
 	}
 	catch(ExtAsyncCancelException& e)
 	{
 		TCOUT << "CAUGHT CANCEL EXCEPTION";
 		SUCCEED();
+		EXPECT_TRUE(f1.isCanceled());
 	}
 	catch(QException& e)
 	{
-		TCOUT << "CAUGHT NON-CANCEL EXCEPTION";
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Threw unexpected exception.";
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBottom)
+{
+	TC_ENTER();
+
+	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
+		for(int i = 0; i<10; i++)
+		{
+			TCOUT << "qthread_async_with_cnr_future() iteration:" << i;
+			// Do nothing for a sec.
+			TC_Sleep(1000);
+
+			if(in_fut.HandlePauseResumeShouldICancel())
+			{
+				// We're being canceled.
+				if(in_fut.isCanceled())
+				{
+					TCOUT << "IN_FUT is already canceled";
+				}
+				if(in_fut.isFinished())
+				{
+					TCOUT << "IN_FUT is already finished";
+				}
+				SUCCEED() << "LEAVING TOP LOOP DUE TO CANCEL";
+				in_fut.reportException(ExtAsyncCancelException());
+				in_fut.reportFinished();
+				return 0;
+			}
+
+		}
+		ADD_FAILURE() << "Didn't return from thread due to cancel.";
+
+		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		return 5;
+		})
+		.then_qthread_async([=](ExtFuture<int> f0){
+		EXPECT_TRUE(f0.is_ready());
+			qDb() << "Waiting in then() for cancel exception.";
+			f0.wait();
+			ADD_FAILURE() << ".then() didn't throw";
+			int f0val = f0.get()[0];
+			return f0val;
+		});
+
+	TC_Wait(500);
+	TCOUT << "ABOUT TO TRY TO QUIT FROM THE BOTTOM";
+
+	try
+	{
+		// Cancel the last future in the chain.
+		/// I don't think this should throw....?
+		EXPECT_FALSE(f1.isFinished());
+		EXPECT_FALSE(f1.isCanceled());
+		f1.cancel();
+//		f1.wait();
+		f1.waitForResult(0);
+//		ADD_FAILURE() << "Didn't throw";
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
 		SUCCEED();
+		EXPECT_TRUE(f1.isCanceled());
+	}
+	catch(QException& e)
+	{
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
 	}
 	catch(...)
 	{
@@ -1389,15 +1466,15 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunFreeFuncInQThreadWithEventLoop)
 TEST_F(ExtAsyncTestsSuiteFixture, StaticChecks)
 {
 
-	static_assert(std::is_default_constructible<QString>::value, "");
+	static_assert(std::is_default_constructible<QString>::value);
 
 	// From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
 	// "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
-	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >, "");
+	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >);
 	int v;
-	static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >, "");
+	static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
 	/// @todo
-//	static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<void> >, "");
+//	static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<void> >);
 
 }
 

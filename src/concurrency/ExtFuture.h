@@ -383,11 +383,12 @@ public:
 	 */
 	bool valid() const
 	{
-		if(this->isCanceled() && this->isFinished() && this->isStarted())
-		{
-			qWr() << "ExtFuture" << m_extfuture_id_no << "is invalid";
-			return false;
-		}
+		/// @todo Possibly temp, as noted above don't have much of an invalid state.
+//		if(this->isCanceled() && this->isFinished() && this->isStarted())
+//		{
+//			qWr() << "ExtFuture" << m_extfuture_id_no << "is invalid";
+//			return false;
+//		}
 		return true;
 	}
 
