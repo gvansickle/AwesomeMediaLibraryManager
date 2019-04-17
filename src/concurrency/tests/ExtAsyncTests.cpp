@@ -324,7 +324,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenException)
 	}
 	catch(QException& e)
 	{
-		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		TCOUT << "CAUGHT NON-CANCEL EXCEPTION";
 		SUCCEED();
 	}
 	catch(...)
