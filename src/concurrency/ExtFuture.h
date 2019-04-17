@@ -1181,7 +1181,7 @@ public:
 	{
 		ThenReturnType retfuture = make_started_only_future<R>();
 
-		/*ExtFuture<R>*/ retfuture = ExtAsync::qthread_async(
+		/*ExtFuture<R> retfuture =*/ ExtAsync::qthread_async(
 					[=, fd_then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
 
 			// Block in the spawned thread for in_future to become ready.
@@ -1199,13 +1199,14 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
-			return exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
+			exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
+//			return returned_future_copy;
 //			in_future.wait();
 
 			// Run the callback.  If then_callback throws or cancels in_future, again qthread_async() will handle the propagation.
 //			return std::invoke(std::move(fd_then_callback), in_future);
 
-			}, DECAY_COPY(std::forward<decltype(*this)>(*this)), DECAY_COPY(std::forward<ThenReturnType>(retfuture)));
+			}, DECAY_COPY(/*std::forward<ExtFuture<T>>*/(*this)), DECAY_COPY(/*std::forward<ThenReturnType>*/(retfuture)));
 
 		return retfuture;
 	}

@@ -65,7 +65,7 @@ auto external_then(FutureType f, NextFunction n) -> ExtFuture<decltype(n(f.get()
  * For an ExtFuture<T>::then(), the futures should be *this and the returned_future, resp.
  */
 template <class T, class CallbackType, class R,  class... Args>
-R exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args)
+void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args)
 {
 	bool call_on_cancel = false;
 
@@ -114,7 +114,7 @@ R exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> 
 		}
 
 		// Did this_future_copy Finish first?
-		if(this_future_copy.isFinished())
+		else if(this_future_copy.isFinished())
 		{
 			// Normal finish of this_future_copy, no cancel or exception to propagate.
 			qDb() << "THIS_FUTURE FINISHED NORMALLY";
@@ -147,7 +147,8 @@ R exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> 
 		 *  state of the returned future object."
 		 */
 		qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
-		ret_future_copy.cancel();
+//		ret_future_copy.cancel();
+		ret_future_copy.reportException(e);
 //				returned_future_copy.reportException(e);
 		qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(e);
@@ -234,11 +235,9 @@ R exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> 
 			}
 			// Didn't throw, report the result.
 			ret_future_copy.reportResult(retval);
-			/// @todo THIS IS TO GET THE RETURN TYPE RIGHT, I THINK WE NEED TO HANDLE THIS DIFFERENTLY, WE'RE DOUBLE-REPORTING.
-			return retval;
 		}
-			// One more time, Handle exceptions and cancellation, this time of the callback itself.
-			// Exceptions propagate upwards, cancellation propagates downwards.
+		// One more time, Handle exceptions and cancellation, this time of the callback itself.
+		// Exceptions propagate upwards, cancellation propagates downwards.
 		catch(ExtAsyncCancelException& e)
 		{
 			qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
@@ -290,9 +289,6 @@ R exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> 
 	/// See ExtAsync, again not sure if we should finish here if canceled.
 	/// @todo I think this is wrong on a cancel.
 	ret_future_copy.reportFinished();
-
-	/// @todo DUMMY REMOVE
-	return R();
 }
 
 /**

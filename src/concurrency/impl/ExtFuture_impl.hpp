@@ -291,7 +291,7 @@ ExtFuture<R> ExtFuture<T>::then(QObject* context, bool call_on_cancel, ThenCallb
 template<typename T>
 void ExtFuture<T>::wait()
 {
-	Q_ASSERT(this->valid());
+//	Q_ASSERT(this->valid());
 	this->waitForFinished();
 }
 

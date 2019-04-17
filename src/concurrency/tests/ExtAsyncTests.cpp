@@ -292,7 +292,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenException)
 	TC_ENTER();
 
 	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
-		/*TCOUT*/qDebug() << "THROWING CANCEL";
+		/*TCOUT*/qDebug() << "THROWING NON-CANCEL";
 		TC_Sleep(1000);
 		throw ExtAsyncCancelException();
 //		throw QException();
@@ -301,20 +301,20 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenException)
 		return 5;
 		})
 			.then_qthread_async([=](ExtFuture<int> f0){
-			TCOUT << "Waiting in then() for cancel exception.";
+			qDb() << "Waiting in then() for cancel exception.";
 			f0.wait();
 			ADD_FAILURE() << ".then() didn't throw";
 			int f0val = f0.get()[0];
 			return f0val;
 });
 
-	TC_Wait(500);
+	TC_Wait(2000);
 	TCOUT << "ABOUT TO TRY";
 
 	try
 	{
-		f1.wait();
-//		f0.waitForResult(0);
+//		f1.wait();
+		f1.waitForResult(0);
 		ADD_FAILURE() << "Didn't throw";
 	}
 	catch(ExtAsyncCancelException& e)
