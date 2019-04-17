@@ -221,7 +221,7 @@ namespace ExtAsync
 					return;
 				}
 
-				/// @todo If exception should we actually be reporting finished?
+				// Even in the case of exception, we need to reportFinished() or we just hang.
 				retfuture_copy.reportFinished();
 			};
 

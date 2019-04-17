@@ -135,9 +135,11 @@ namespace ExtAsync
 					retfuture_cp.reportException(QUnhandledException());
 				}
 #endif
-					qDb() << "Leaving Thread," << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
-					retfuture_cp.reportFinished();
-					return;
+				qDb() << "Leaving Thread," << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
+				// Even in the case of exception, we need to reportFinished() or we just hang.
+				/// @todo Not sure if this also applies if we're already finished or canceled.
+				retfuture_cp.reportFinished();
+				return;
 			});
 #if EXTASYNC_USE_QTHREAD == 1
 		// Make a self-delete connection for the QThread.

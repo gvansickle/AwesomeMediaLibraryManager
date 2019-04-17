@@ -1199,13 +1199,13 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
-			return exception_propagation_helper_then(in_future, returned_future_copy, std::move(then_callback));
+			return exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 //			in_future.wait();
 
 			// Run the callback.  If then_callback throws or cancels in_future, again qthread_async() will handle the propagation.
 //			return std::invoke(std::move(fd_then_callback), in_future);
 
-			}, DECAY_COPY(std::forward<decltype(*this)>(*this)), DECAY_COPY(retfuture));
+			}, DECAY_COPY(std::forward<decltype(*this)>(*this)), DECAY_COPY(std::forward<ThenReturnType>(retfuture)));
 
 		return retfuture;
 	}

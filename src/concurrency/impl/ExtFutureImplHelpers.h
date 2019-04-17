@@ -272,7 +272,6 @@ R exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> 
 			ret_future_copy.cancel();
 			qDb() << "CANCELED, THROWING TO UPSTREAM (THIS) FUTURE";
 			this_future_copy.reportException(ExtAsyncCancelException());
-			/// @todo Should we throw out of the function here?  Above?
 //					return;
 		}
 	}
