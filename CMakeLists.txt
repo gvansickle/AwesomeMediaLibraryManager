@@ -183,6 +183,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
 	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
 	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree)
+	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
 	#ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)

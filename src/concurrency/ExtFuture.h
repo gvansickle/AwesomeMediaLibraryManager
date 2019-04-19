@@ -180,8 +180,8 @@ public:
 	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
 
 	/// Copy constructor.
-	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d))
-//			m_progress_unit(other.m_progress_unit)
+	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)),
+			m_name(other.m_name)
 	{ m_extfuture_id_no.store(other.m_extfuture_id_no); }
 
 	/// Move constructor
@@ -306,6 +306,11 @@ public:
 //		return ExtFuture<Unit>(&(this->d));
 ////		return qToUnitExtFuture(*this);
 //	}
+
+	void setName(const std::string& name)
+	{
+		m_name = name;
+	}
 
 	/// @name Comparison operators.
 	/// @{
@@ -1577,6 +1582,7 @@ protected:
 
 public:
 	std::atomic_uint64_t m_extfuture_id_no {0};
+	std::string m_name {"[unknown]"};
 
 	/// @}
 };
@@ -1770,7 +1776,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 	QDebugStateSaver saver(dbg);
 
 	// .resultCount() does not cause a stored exception to be thrown.  It does acquire the mutex.
-	dbg << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << "state:" << extfuture.state()
+	dbg << "ExtFuture<T>( id=" << extfuture.m_name /*m_extfuture_id_no*/ << "state:" << extfuture.state()
 		<< "hasException():" << extfuture.hasException() << ", resultCount():" << extfuture.resultCount() << ")";
 
 	return dbg;
@@ -1783,7 +1789,8 @@ template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
 	// .resultCount() does not appear to cause a stored exception to be thrown.  It does acquire the mutex.
-	outstream << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << " state: " << extfuture.state() << ", resultCount(): " << extfuture.resultCount() << ")";
+	outstream << "ExtFuture<T>( id=" << extfuture.m_name /*m_extfuture_id_no*/ << " state: " << extfuture.state()
+	<< ", resultCount(): " << extfuture.resultCount() << ")";
 
 	return outstream;
 }

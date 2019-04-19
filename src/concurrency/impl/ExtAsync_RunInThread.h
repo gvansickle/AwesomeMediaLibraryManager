@@ -59,6 +59,7 @@ namespace ExtAsync
 	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
 		ExtFutureR retfuture = make_started_only_future<R>();
+		retfuture.setName("Returned qthread_async()");
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
@@ -97,7 +98,8 @@ namespace ExtAsync
 				{
 //					qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
 					Q_ASSERT(retfuture_cp == retfuture);
-//					retfuture_cp.reportStarted();
+					Q_ASSERT(retfuture_cp.isStarted());
+
 					if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
 					{
 						std::invoke(std::move(fd_callback), args...);
@@ -121,6 +123,7 @@ namespace ExtAsync
 					 */
 					qDb() << "CAUGHT CANCEL EXCEPTION";
 					retfuture_cp.reportException(e);
+					Q_ASSERT(retfuture_cp.isCanceled());
 					// I think we don't want to rethrow with a throw() here.  This will throw to the wrong future.
 				}
 				catch(QException& e)
@@ -134,15 +137,17 @@ namespace ExtAsync
 					retfuture_cp.reportException(QUnhandledException());
 				}
 #endif
-				qDb() << "Leaving Thread," << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
+				qDb() << "Leaving Thread:" << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
 				/// @note Not clear what is happening here.  reportException() sets canceled, so why finished?
 				// Even in the case of exception, we need to reportFinished() or we just hang.
 				/// @todo Not sure if this also applies if we're already finished or canceled.
 				if(retfuture_cp.hasException())
 				{
 					qDb() << "Future has exception, finishing:" << retfuture_cp;
+					Q_ASSERT(retfuture_cp.isCanceled());
 				}
 				retfuture_cp.reportFinished();
+				qDb() << "Reported finished:" << retfuture_cp;
 				return;
 			});
 #if EXTASYNC_USE_QTHREAD == 1
@@ -175,6 +180,7 @@ namespace ExtAsync
 			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
 	ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args)
 	{
+#if 1
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
@@ -184,11 +190,121 @@ namespace ExtAsync
 		/// @link https://en.cppreference.com/w/cpp/thread/async
 		/// "If the std::future obtained from std::async is not moved from or bound to a reference, the destructor of
 		/// the std::future will block at the end of the full expression until the asynchronous operation completes"
-		/*auto inner_retfuture =*/ qthread_async(callback, retfuture, args...);
-
+		try
+		{
+			auto inner_retfuture = qthread_async(callback, retfuture, args...);
+			inner_retfuture.setName("InnerRetfuture");
+		}
+		catch(...)
+		{
+			qDb() << "CAUGHT UNKNOWN EXCEPTION";
+			Q_ASSERT(0);
+		}
 		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;
 
 		return retfuture;
+#else
+		using R = typename ExtFutureR::value_type;
+		ExtFutureR retfuture = make_started_only_future<R>();
+
+		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
+
+		QThread* new_thread = QThread::create([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
+						 retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
+				 ]() mutable {
+					Q_ASSERT(retfuture == retfuture_cp);
+#if 0
+					exception_propagation_helper(retfuture_cp,
+					[=](ExtFutureR future_ref, Args... args) mutable {
+						qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
+						Q_ASSERT(retfuture_cp == retfuture);
+						retfuture_cp.reportStarted();
+						if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
+						{
+							std::invoke(std::move(fd_callback), args...);
+							retfuture_cp.reportFinished();
+						}
+						else
+						{
+							auto retval = std::invoke(std::move(fd_callback), args...);
+							static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
+							retfuture_cp.reportFinished(&retval);
+						}
+						qDb() << "EXIT IN1";
+					},
+//					std::move(fd_callback),
+					args...);
+#else
+					try
+					{
+//					qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
+						Q_ASSERT(retfuture_cp == retfuture);
+						Q_ASSERT(retfuture_cp.isStarted());
+
+						if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
+						{
+							std::invoke(std::move(fd_callback), retfuture_cp, args...);
+							retfuture_cp.reportFinished();
+						}
+						else
+						{
+							QList<R> retval = std::invoke(std::move(fd_callback), retfuture_cp, args...);
+							static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
+							retfuture_cp.reportFinished(&retval);
+						}
+//					qDb() << "EXIT IN1";
+					}
+					catch(ExtAsyncCancelException& e)
+					{
+						/**
+						 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+						 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+						 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+						 *  state of the returned future object."
+						 */
+						qDb() << "CAUGHT CANCEL EXCEPTION";
+						retfuture_cp.reportException(e);
+						// I think we don't want to rethrow with a throw() here.  This will throw to the wrong future.
+					}
+					catch(QException& e)
+					{
+						qDb() << "CAUGHT QEXCEPTION";
+						retfuture_cp.reportException(e);
+					}
+					catch (...)
+					{
+						qDb() << "CAUGHT UNKNOWN EXCEPTION";
+						retfuture_cp.reportException(QUnhandledException());
+					}
+#endif
+					qDb() << "Leaving Thread:" << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
+					/// @note Not clear what is happening here.  reportException() sets canceled, so why finished?
+					// Even in the case of exception, we need to reportFinished() or we just hang.
+					/// @todo Not sure if this also applies if we're already finished or canceled.
+					if(retfuture_cp.hasException())
+					{
+						qDb() << "Future has exception, finishing:" << retfuture_cp;
+					}
+					retfuture_cp.reportFinished();
+					return;
+				});
+#if EXTASYNC_USE_QTHREAD == 1
+		// Make a self-delete connection for the QThread.
+		// This is per-Qt5 docs, minus the lambda, which shouldn't make a difference.
+		connect_or_die(new_thread, &QThread::finished, new_thread, [=](){
+			qDb() << "DELETING QTHREAD:" << new_thread;
+			new_thread->deleteLater();
+		});
+
+		/// @todo Set thread name before starting it.
+//		new_thread->setObjectName();
+
+		// Start the thread.
+		new_thread->start();
+#endif
+		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;
+		return retfuture;
+#endif
 	};
 
 

@@ -44,6 +44,7 @@
 // Ours
 #include <tests/TestHelpers.h>
 #include "ExtAsyncTestCommon.h"
+#include <concurrency/ExtFuture.h>
 #include <tests/IResultsSequenceMock.h>
 
 // Mocks
@@ -420,33 +421,156 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	TC_EXIT();
 }
 
+constexpr auto c_started_running = QFutureInterfaceBase::State(QFutureInterfaceBase::Started
+		| QFutureInterfaceBase::Running);
+
+constexpr auto c_started_finished_canceled = QFutureInterfaceBase::State(QFutureInterfaceBase::Started
+		| QFutureInterfaceBase::Finished
+		| QFutureInterfaceBase::Canceled);
+
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
+{
+	TC_ENTER();
+
+	///
+	/// QtConcurrent::run():
+	///
+	QFuture<int> qf0 = QtConcurrent::run([&](){
+		qDb() << "QFUTURE:" << ExtFutureState::state(qf0);
+		EXPECT_EQ(ExtFutureState::state(qf0), c_started_running);
+		throw QException(); return 1; });
+
+	while(!qf0.isCanceled() && !qf0.isFinished())
+	{
+		TC_Wait(1000);
+	}
+
+	qDb() << "QFUTURE:" << ExtFutureState::state(qf0);
+	EXPECT_TRUE(ExtFutureState::state(qf0) == c_started_finished_canceled);
+
+	// Does it throw?
+	try
+	{
+		qf0.waitForFinished();
+		ADD_FAILURE() << "QFuture didn't throw";
+	}
+	catch(QException& e)
+	{
+		qDb() << "QFUTURE/caught exception:" << ExtFutureState::state(qf0);
+		qDb() << "Caught:" << e.what();
+		EXPECT_EQ(ExtFutureState::state(qf0), c_started_finished_canceled);
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Caught the wrong exception type";
+	}
+
+	///
+	/// ExtAsync::qthread_async():
+	///
+	ExtFuture<int> exf0 = ExtAsync::qthread_async([&](){
+		EXPECT_EQ(ExtFutureState::state(exf0), c_started_running);
+		qDb() << "EXTFUTURE:" << ExtFutureState::state(exf0);
+		throw QException(); return 1; });
+
+	while(!exf0.isCanceled() && !exf0.isFinished())
+	{
+		TC_Wait(1000);
+	}
+	qDb() << "EXTFUTURE:" << ExtFutureState::state(exf0);
+	EXPECT_TRUE(ExtFutureState::state(exf0) == c_started_finished_canceled);
+
+	// Does it throw?
+	try
+	{
+		exf0.waitForFinished();
+		ADD_FAILURE() << "ExtFuture didn't throw";
+	}
+	catch(QException& e)
+	{
+		qDb() << "EXTFUTURE/caught exception:" << ExtFutureState::state(exf0);
+		qDb() << "Caught:" << e.what();
+		EXPECT_EQ(ExtFutureState::state(exf0), c_started_finished_canceled);
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Caught the wrong exception type";
+	}
+
+	///
+	/// ExtAsync::qthread_async_with_cnr_future():
+	///
+	ExtFuture<int> cnrf0 = ExtAsync::qthread_async_with_cnr_future([&](ExtFuture<int> cnr_future){
+		EXPECT_EQ(ExtFutureState::state(cnrf0), c_started_running);
+		qDb() << "EXTFUTURE:" << ExtFutureState::state(cnrf0);
+		throw QException(); return 1; });
+
+	while(!cnrf0.isCanceled() && !cnrf0.isFinished())
+	{
+		TC_Wait(1000);
+	}
+	qDb() << "EXTFUTURE:" << ExtFutureState::state(cnrf0);
+	EXPECT_TRUE(ExtFutureState::state(cnrf0) == c_started_finished_canceled);
+
+	// Does it throw?
+	try
+	{
+		cnrf0.waitForFinished();
+		ADD_FAILURE() << "ExtFuture didn't throw";
+	}
+	catch(QException& e)
+	{
+		qDb() << "EXTFUTURE/caught exception:" << ExtFutureState::state(cnrf0);
+		qDb() << "Caught:" << e.what();
+		EXPECT_EQ(ExtFutureState::state(cnrf0), c_started_finished_canceled);
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Caught the wrong exception type";
+	}
+
+	TC_EXIT();
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsSingleThenish)
+{
+	TC_ENTER();
+
+
+
+	TC_EXIT();
+}
+
 TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBottom)
 {
 	TC_ENTER();
 
-	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
+//	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
+	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
 		for(int i = 0; i<10; i++)
 		{
 			TCOUT << "qthread_async_with_cnr_future() iteration:" << i;
 			// Do nothing for a sec.
 			TC_Sleep(1000);
-
+#if 0
 			if(in_fut.HandlePauseResumeShouldICancel())
 			{
 				// We're being canceled.
 				if(in_fut.isCanceled())
 				{
-					TCOUT << "IN_FUT is already canceled";
+					qDb() << "IN_FUT is already canceled";
 				}
 				if(in_fut.isFinished())
 				{
 					TCOUT << "IN_FUT is already finished";
 				}
-				SUCCEED() << "LEAVING TOP LOOP DUE TO CANCEL";
+				qDb() << "LEAVING TOP LOOP DUE TO CANCEL";
 				in_fut.reportException(ExtAsyncCancelException());
 				in_fut.reportFinished();
 				return 0;
 			}
+#endif
 		}
 
 		ADD_FAILURE() << "Finished thread function not due to cancel.";
@@ -491,19 +615,23 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 				return 2;//f0val;
 			});
 
+	f1.setName("f1");
+
 	TC_Wait(500);
-	TCOUT << "ABOUT TO TRY TO QUIT FROM THE BOTTOM";
+
+	qDb() << "ABOUT TO TRY TO QUIT FROM THE BOTTOM";
 
 	try
 	{
 		// Cancel the last future in the chain.
-		/// I don't think this should throw....?
+		qDb() << "ABOUT TO CANCEL";
 		EXPECT_FALSE(f1.isFinished());
 		EXPECT_FALSE(f1.isCanceled());
-		f1.cancel();
-//		f1.wait();
-		f1.waitForResult(0);
-//		ADD_FAILURE() << "Didn't throw";
+//		f1.cancel();
+		f1.reportException(ExtAsyncCancelException());
+		f1.wait();
+
+		ADD_FAILURE() << "Wait after cancel didn't throw";
 	}
 	catch(ExtAsyncCancelException& e)
 	{
