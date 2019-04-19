@@ -54,5 +54,11 @@ protected:
 
 };
 
+class ExtAsyncTestsParameterized : public ExtAsyncTestsSuiteFixture,
+		public ::testing::WithParamInterface<bool>
+{
+
+};
+
 
 #endif /* UTILS_CONCURRENCY_TESTS_ASYNCTESTS_H_ */

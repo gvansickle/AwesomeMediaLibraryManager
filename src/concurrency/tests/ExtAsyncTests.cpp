@@ -244,7 +244,11 @@ TEST_F(ExtAsyncTestsSuiteFixture, CCPPBasic)
 
 /// END Concurrent C++
 
-TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncException)
+INSTANTIATE_TEST_SUITE_P(ExtAsyncParameterizedTests,
+						ExtAsyncTestsParameterized,
+						::testing::Bool());
+
+TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncException)
 {
 	TC_ENTER();
 
@@ -287,16 +291,20 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncException)
 	TC_EXIT();
 }
 
-TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromTop)
+TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTopOrBottom)
 {
 	TC_ENTER();
 
-	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
-		/*TCOUT*/qDebug() << "THROWING CANCEL";
-		TC_Sleep(1000);
-		throw ExtAsyncCancelException();
+	bool cancel_from_top = GetParam();
 
-		ADD_FAILURE() << "Didn't throw out of thread to future.";
+	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+		TC_Sleep(1000);
+		if(cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM TOP";
+			throw ExtAsyncCancelException();
+			ADD_FAILURE() << "Didn't throw out of thread to future.";
+		}
 
 		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
 		return 5;
@@ -304,9 +312,16 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromTop
 		.then_qthread_async([=](ExtFuture<int> f0){
 			qDb() << "Waiting in then() for cancel exception.";
 			f0.wait();
-			ADD_FAILURE() << ".then() didn't throw";
-			int f0val = f0.get()[0];
-			return f0val;
+
+			if(!cancel_from_top)
+			{
+				/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
+				throw ExtAsyncCancelException();
+				ADD_FAILURE() << ".then() didn't throw";
+			}
+
+//			int f0val = f0.get()[0];
+			return 1;
 		});
 
 	TC_Wait(500);
@@ -315,7 +330,75 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromTop
 	try
 	{
 		f1.wait();
-		ADD_FAILURE() << "Didn't throw";
+		ADD_FAILURE() << ".wait() Didn't throw";
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+		EXPECT_TRUE(f1.isCanceled());
+	}
+	catch(QException& e)
+	{
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Threw unexpected exception.";
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
+TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionFromTopOrBottom)
+{
+	TC_ENTER();
+
+	bool cancel_from_top = GetParam();
+
+	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+		TC_Sleep(1000);
+		if(cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM TOP";
+			throw ExtAsyncCancelException();
+			ADD_FAILURE() << "Didn't throw out of thread to future.";
+		}
+
+		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		return 5;
+		})
+		.then_qthread_async([=](ExtFuture<int> f0){
+			qDb() << "Waiting in then() for cancel exception.";
+			f0.wait();
+
+//			int f0val = f0.get()[0];
+			return 1;
+		})
+		.then_qthread_async([=](ExtFuture<int> f2){
+		qDb() << "Waiting in then() for cancel exception.";
+		f2.wait();
+
+		if(!cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
+			throw ExtAsyncCancelException();
+			ADD_FAILURE() << ".then() didn't throw";
+		}
+
+		//			int f0val = f0.get()[0];
+		return 1;
+	});
+
+	TC_Wait(500);
+	TCOUT << "ABOUT TO TRY";
+
+	try
+	{
+		f1.wait();
+		ADD_FAILURE() << ".wait() Didn't throw";
 	}
 	catch(ExtAsyncCancelException& e)
 	{
@@ -364,21 +447,49 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 				in_fut.reportFinished();
 				return 0;
 			}
-
 		}
-		ADD_FAILURE() << "Didn't return from thread due to cancel.";
 
-		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		ADD_FAILURE() << "Finished thread function not due to cancel.";
 		return 5;
 		})
 		.then_qthread_async([=](ExtFuture<int> f0){
+		qDb() << "Waiting in then() for cancel exception.";
 		EXPECT_TRUE(f0.is_ready());
-			qDb() << "Waiting in then() for cancel exception.";
+
+			QList<int> result;
+
+			result = f0.get();
+			ADD_FAILURE() << "get() DIDN'T THROW";
+
+			EXPECT_TRUE(f0.isCanceled());
+//			EXPECT_TRUE(f0.hasException());
+			TCOUT << "WAIT START" << f0;
 			f0.wait();
-			ADD_FAILURE() << ".then() didn't throw";
-			int f0val = f0.get()[0];
-			return f0val;
-		});
+			TCOUT << "WAIT END" << f0;
+			ADD_FAILURE() << ".wait() didn't throw";
+//			int f0val = f0.get()[0];
+			EXPECT_TRUE(f0.isCanceled());
+			return 1;//f0val;
+		})
+		.then_qthread_async([=](ExtFuture<int> f2){
+			qDb() << "Waiting in then() for cancel exception.";
+			EXPECT_TRUE(f2.is_ready());
+
+				QList<int> result;
+
+				result = f2.get();
+				ADD_FAILURE() << "get() DIDN'T THROW";
+
+				EXPECT_TRUE(f2.isCanceled());
+	//			EXPECT_TRUE(f2.hasException());
+				TCOUT << "WAIT START" << f2;
+				f2.wait();
+				TCOUT << "WAIT END" << f2;
+				ADD_FAILURE() << ".wait() didn't throw";
+	//			int f0val = f0.get()[0];
+				EXPECT_TRUE(f2.isCanceled());
+				return 2;//f0val;
+			});
 
 	TC_Wait(500);
 	TCOUT << "ABOUT TO TRY TO QUIT FROM THE BOTTOM";
@@ -410,6 +521,30 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 	}
 
 	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
+static int use1(int a) {return a*a;}
+static int use2(int a) {return a/a;}
+static int use3(int a) {return a+a;}
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncMultipleGet)
+{
+	TC_ENTER();
+
+	int arg = 5;
+
+	ExtFuture<int> ftr = ExtAsync::qthread_async([=]{ return arg*arg; } );
+
+	if ( rand() > RAND_MAX/2 )
+	{
+		use1( ftr.get_first() );
+	} else
+	{
+		use2(  ftr.get_first() );
+	}
+	use3( ftr.get_first() );
 
 	TC_EXIT();
 }
@@ -914,12 +1049,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_FALSE(extfuture.isRunning());
 
 		qDb() << "Then1, got extfuture:" << extfuture;
-		qDb() << "Then1, extfuture val:" << extfuture.qtget_first();
+		qDb() << "Then1, extfuture val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran1 = true;
-		QString the_str = extfuture.qtget_first();
+		QString the_str = extfuture.get_first();
 		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
 		return QString("Then1 OUTPUT");
 	})
@@ -932,12 +1067,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_FALSE(extfuture.isRunning());
 
 		qDb() << "Then2, got extfuture:" << extfuture;
-		qDb() << "Then2, extfuture val:" << extfuture.qtget_first();
+		qDb() << "Then2, extfuture val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
-		auto the_str = extfuture.qtget_first();
+		auto the_str = extfuture.get_first();
 		EXPECT_EQ(the_str, QString("Then1 OUTPUT"));
 		return QString("Then2 OUTPUT");
 	})
@@ -950,7 +1085,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_FALSE(extfuture.isRunning());
 
 		qDb() << "Then3, got extfuture:" << extfuture;
-		qDb() << "Then3, extfuture val:" << extfuture.qtget_first();
+		qDb() << "Then3, extfuture val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
@@ -1000,12 +1135,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		EXPECT_FALSE(extfuture.isRunning());
 
-		qDb() << "Then1, got val:" << extfuture.qtget_first();
+		qDb() << "Then1, got val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran1 = true;
-		QString the_str = extfuture.qtget_first();
+		QString the_str = extfuture.get_first();
 		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
 		return 2;
 	})
@@ -1016,12 +1151,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		EXPECT_FALSE(extfuture.isRunning());
 
-		qDb() << "Then2, got val:" << extfuture.qtget_first();
+		qDb() << "Then2, got val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
-		EXPECT_EQ(extfuture.qtget_first(), 2);
+		EXPECT_EQ(extfuture.get_first(), 2);
 		return 3;
 	})
 	.then([&](ExtFuture<int> extfuture) -> double {
@@ -1030,12 +1165,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		EXPECT_FALSE(extfuture.isRunning());
 
-		qDb() << "Then3, got val:" << extfuture.qtget_first();
+		qDb() << "Then3, got val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
 		ran3 = true;
-		EXPECT_EQ(extfuture.qtget_first(), 3);
+		EXPECT_EQ(extfuture.get_first(), 3);
 
 		TC_DONE_WITH_STACK();
 
@@ -1158,7 +1293,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TestMakeReadyFutures)
 	ExtFuture<int> future = make_ready_future(45);
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_TRUE(future.isFinished());
-	ASSERT_EQ(future.qtget_first(), 45);
+	ASSERT_EQ(future.get_first(), 45);
 
 	TC_EXIT();
 }
@@ -1266,8 +1401,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(extfuture.isRunning());
 
-			TCOUT << "in then(), extfuture:" << tostdstr(extfuture.qtget_first());
-			EXPECT_EQ(extfuture.qtget_first(), QString("delayed_string_func_1() output"));
+			TCOUT << "in then(), extfuture:" << tostdstr(extfuture.get_first());
+			EXPECT_EQ(extfuture.get_first(), QString("delayed_string_func_1() output"));
 			EXPECT_FALSE(ran_then);
 			ran_then = true;
 			return QString("Then Called");

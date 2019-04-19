@@ -336,7 +336,7 @@ public:
 	 * @name Static members for the global state needed by ExtFuture.
 	 */
 	/// @{
-	static void InitStaticExtFutureState();
+//	static void InitStaticExtFutureState();
 	/// @}
 
 	/// @name Extra informational accessors.
@@ -347,7 +347,7 @@ public:
 	 * "Checks if the associated shared state is ready.  The behavior is undefined if valid() is false."
 	 * (from @link https://en.cppreference.com/w/cpp/experimental/shared_future/is_ready).
 	 * Same semantics as std::experimental::shared_future::is_ready().
-	 *
+	 * @note Future may be either Finished or Canceled, with an Exception or not, with results or not.  This call will not throw.
 	 * @return  true if the associated shared state is ready.
 	 */
 	bool is_ready() const
@@ -403,10 +403,14 @@ public:
 	 *   mutex locked.
 	 * - QFutureInterfaceBase::waitForResult() calls throwPossibleException() without locking that same mutex.
 	 */
-	bool hasException() const
+	bool hasException() const noexcept
 	{
 		return this->d.exceptionStore().hasException();
 	}
+
+	bool has_exception() const noexcept { return this->hasException(); }
+
+	bool has_value() const noexcept { return this->resultCount() > 0; }
 
 	/// @} // END  Extra informational accessors.
 
@@ -556,7 +560,7 @@ public:
 	 * - Locks mutex.
 	 * - Does nothing and returns if this future's state is (Canceled|Finished).
 	 * - Stores exception in the shared state,
-	 * - Switches state to Canceled.
+	 * - ***Switches state to Canceled.*** == promise::set_exception() "makes the state ready"
 	 * - Sends Canceled callout.
 	 */
 	void reportException(const QException &e)
@@ -701,7 +705,7 @@ public:
 	 *
 	 * @return The result value of this ExtFuture.
 	 */
-	T qtget_first();
+	T get_first();
 
 	/**
 	 * Waits until the ExtFuture<T> is finished, and returns the resulting QList<T>.
@@ -776,6 +780,19 @@ public:
 		this->set_value(value);
 	}
 
+	/**
+	 * @link https://en.cppreference.com/w/cpp/thread/promise/set_exception
+	 *
+	 * "Atomically stores the exception [pointer] p into the shared state and makes the state ready."
+	 * [Will throw if:]
+	 * - *this has no shared state. The error category is set to no_state.
+	 * - The shared state already stores a value or exception. The error category is set to promise_already_satisfied.
+	 * "
+	 *
+	 * We don't throw here atm.
+	 *
+	 * @param p
+	 */
 	void set_exception(QException& p)
 	{
 		this->reportException(p);
@@ -1753,7 +1770,8 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 	QDebugStateSaver saver(dbg);
 
 	// .resultCount() does not cause a stored exception to be thrown.  It does acquire the mutex.
-	dbg << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << "state:" << extfuture.state() << ", resultCount():" << extfuture.resultCount() << ")";
+	dbg << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << "state:" << extfuture.state()
+		<< "hasException():" << extfuture.hasException() << ", resultCount():" << extfuture.resultCount() << ")";
 
 	return dbg;
 }

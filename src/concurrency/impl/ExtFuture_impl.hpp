@@ -138,7 +138,7 @@ ExtFuture<T>& ExtFuture<T>::operator=(const ExtFuture::BASE_CLASS& other)
 }
 
 template<typename T>
-T ExtFuture<T>::qtget_first()
+T ExtFuture<T>::get_first()
 {
 	wait();
 	return this->result();

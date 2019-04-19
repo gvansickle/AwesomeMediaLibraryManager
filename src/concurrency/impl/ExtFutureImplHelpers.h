@@ -58,6 +58,16 @@ auto external_then(FutureType f, NextFunction n) -> ExtFuture<decltype(n(f.get()
 	return ExtAsync::qthread_async([=](){f.get();});
 }
 
+
+template <class T, class CallbackType, class R,  class... Args>
+void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy,
+		CallbackType&& callback, Args&&... args)
+{
+
+}
+
+
+
 /**
  * Template to try to get a common handle on exception and cancel handling.
  * CallbackType == ExtFuture<R> callback(ExtFuture<T> this_future, args...)
@@ -68,6 +78,10 @@ template <class T, class CallbackType, class R,  class... Args>
 void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args)
 {
 	bool call_on_cancel = false;
+
+	// Have to be at least started prior to getting in here.
+	Q_ASSERT(this_future_copy.isStarted());
+	Q_ASSERT(ret_future_copy.isStarted());
 
 	try
 	{
@@ -87,15 +101,32 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 			qWr() << "END SPINWAIT";
 		}
 
-		/// Spinwait is over, now we have four combinations to dispatch on.
+		/// Spinwait is over, now we have ??? combinations to dispatch on along at least 4 dimensions:
+		/// - this_future_copy / ret_future_copy (/both???)
+		/// - hasException() (== also canceled) vs. no exception
+		/// - isCanceled() with no exception vs. not canceled
+		/// - isFinished() vs. not finished.
+		///
+		/// ...and we haven't even gotten to the actual callback yet.
 
-		// Was downstream canceled?
-		if(ret_future_copy.isCanceled())
+
+		if(ret_future_copy.hasException())
 		{
-			// Downstream canceled, this is why we're here.
-			qDb() << "returned_future_copy CANCELED:" << ret_future_copy;
-			// Propagate cancel to this_future_copy.
-			this_future_copy.reportCanceled();
+			// Downstream threw, which cancels (doesn't have to be a cancel exception).
+			// Trigger an immediate rethrow.  This will be caught below.
+			Q_ASSERT(ret_future_copy.isCanceled());
+			ret_future_copy.waitForFinished();
+			Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from returned future failed.");
+		}
+		// Was downstream canceled without an exception?
+		else if(ret_future_copy.isCanceled())
+		{
+			// Downstream was canceled without an exception.
+			qDb() << "returned_future_copy CANCELED WITHOUT EXCEPTION:" << ret_future_copy;
+			// Propagate cancel to this_future_copy.  Since ret_future_copy is already canceled, we can't get an exception through
+			// it here.
+			this_future_copy.reportException(ExtAsyncCancelException());
+			this_future_copy.waitForFinished();
 		}
 		else if(ret_future_copy.isFinished())
 		{
@@ -105,19 +136,28 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 			Q_ASSERT_X(0, __func__, "Future returned by then() is finished first, shouldn't be possible.");
 		}
 
-		// Was this_future canceled?
-		if(this_future_copy.isCanceled())
+		if(this_future_copy.hasException())
 		{
-			/// @todo Upstream canceled.
-			qWr() << "this_future_copy CANCELED:" << this_future_copy.state();
-//					Q_ASSERT(0); // SHOULD CANCEL DOWNSTREAM.
+			// This threw, which cancels (doesn't have to be a cancel exception).
+			// Trigger an immediate rethrow.  This will be caught below.
+			Q_ASSERT(this_future_copy.isCanceled());
+			this_future_copy.waitForFinished();
+			Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from this future failed.");
 		}
-
+		// Was this_future_copy canceled without an exception?
+		else if(this_future_copy.isCanceled())
+		{
+			// This was canceled without an exception, i.e. with a direct call to .cancel().
+			// We can't add a cancel exception to this_future_copy now, it'll be ignored.
+			// But we do have to try to propagate this downstream.
+			qWr() << "this_future_copy CANCELED WITHOUT EXCEPTION:" << this_future_copy.state();
+			ret_future_copy.reportException(ExtAsyncCancelException());
+		}
 		// Did this_future_copy Finish first?
 		else if(this_future_copy.isFinished())
 		{
 			// Normal finish of this_future_copy, no cancel or exception to propagate.
-			qDb() << "THIS_FUTURE FINISHED NORMALLY";
+//			qDb() << "THIS_FUTURE FINISHED NORMALLY";
 		}
 
 		// Now we're either Finished or Canceled, so we can call waitForFinished().  We now know
@@ -146,8 +186,7 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 		 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
 		 *  state of the returned future object."
 		 */
-		qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
-//		ret_future_copy.cancel();
+		qDb() << "CAUGHT CANCEL, THROWING TO DOWSTREAM (RETURNED) FUTURE";
 		ret_future_copy.reportException(e);
 //				returned_future_copy.reportException(e);
 		qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
@@ -180,7 +219,7 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 	{
 		// if constexpr(in_a_then) { <below> };
 		qDb() << "CANCELED, CANCELING DOWSTREAM (RETURNED) FUTURE" << ret_future_copy;
-		ret_future_copy.cancel();
+		ret_future_copy.reportException(ExtAsyncCancelException());
 		qDb() << "CANCELED, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(ExtAsyncCancelException());
 	}
@@ -240,22 +279,22 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 		// Exceptions propagate upwards, cancellation propagates downwards.
 		catch(ExtAsyncCancelException& e)
 		{
-			qDb() << "CAUGHT CANCEL, CANCELING DOWSTREAM (RETURNED) FUTURE";
-			ret_future_copy.cancel();
+			qDb() << "CAUGHT CANCEL, THROWING DOWSTREAM (RETURNED) FUTURE";
+			ret_future_copy.reportException(e);
 			qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 			this_future_copy.reportException(e);
 		}
 		catch(QException& e)
 		{
 			qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-			ret_future_copy.cancel();
+			ret_future_copy.reportException(e);
 			qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 			this_future_copy.reportException(e);
 		}
 		catch (...)
 		{
 			qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-			ret_future_copy.cancel();
+			ret_future_copy.reportException(QUnhandledException());
 			qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 			this_future_copy.reportException(QUnhandledException());
 		}

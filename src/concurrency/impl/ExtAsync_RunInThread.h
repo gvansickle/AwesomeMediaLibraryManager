@@ -58,7 +58,7 @@ namespace ExtAsync
 			  >
 	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
-		ExtFutureR retfuture = make_started_only_future<R>();//typename ExtFutureR::value_type>();
+		ExtFutureR retfuture = make_started_only_future<R>();
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
 
@@ -70,7 +70,6 @@ namespace ExtAsync
 						([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
-
 			Q_ASSERT(retfuture == retfuture_cp);
 #if 0
 			exception_propagation_helper(retfuture_cp,
@@ -126,18 +125,23 @@ namespace ExtAsync
 				}
 				catch(QException& e)
 				{
-				qDb() << "CAUGHT QEXCEPTION";
+					qDb() << "CAUGHT QEXCEPTION";
 					retfuture_cp.reportException(e);
 				}
 				catch (...)
 				{
-				qDb() << "CAUGHT UNKNOWN EXCEPTION";
+					qDb() << "CAUGHT UNKNOWN EXCEPTION";
 					retfuture_cp.reportException(QUnhandledException());
 				}
 #endif
 				qDb() << "Leaving Thread," << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
+				/// @note Not clear what is happening here.  reportException() sets canceled, so why finished?
 				// Even in the case of exception, we need to reportFinished() or we just hang.
 				/// @todo Not sure if this also applies if we're already finished or canceled.
+				if(retfuture_cp.hasException())
+				{
+					qDb() << "Future has exception, finishing:" << retfuture_cp;
+				}
 				retfuture_cp.reportFinished();
 				return;
 			});
