@@ -297,7 +297,7 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 
 	bool cancel_from_top = GetParam();
 
-	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+	ExtFuture<int> f0 = ExtAsync::qthread_async([=]() -> int {
 		TC_Sleep(1000);
 		if(cancel_from_top)
 		{
@@ -308,7 +308,8 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 
 		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
 		return 5;
-		})
+		});
+	ExtFuture<int> f1 = f0
 		.then_qthread_async([=](ExtFuture<int> f0){
 
 			qDb() << "In then(), triggering via .wait() for cancel exception.";
@@ -329,7 +330,7 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 			/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN'S RETURNED FUTURE";
 			Q_ASSERT(!f1.isCanceled());
 			Q_ASSERT(!f1.isFinished());
-			if(1)
+			if(0)
 			{
 				f1.reportException(ExtAsyncCancelException());
 				f1.reportFinished();
@@ -339,14 +340,14 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 				f1.cancel();
 			}
 		}
-		f1.wait();
+		f0.wait();
 		ADD_FAILURE() << ".wait() Didn't throw, f1:" << f1;
 	}
 	catch(ExtAsyncCancelException& e)
 	{
-		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		qDb() << "CAUGHT CANCEL EXCEPTION:" << e.what();
 		SUCCEED();
-		EXPECT_TRUE(f1.isCanceled());
+		EXPECT_TRUE(f0.isCanceled()) << ExtFutureState::state(f0);
 	}
 	catch(QException& e)
 	{
@@ -384,32 +385,33 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 
 		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
 		return 5;
-		})
-		.then_qthread_async([=](ExtFuture<int> f0){
-			qDb() << "Waiting in then() for cancel exception.";
-			f0.wait();
+	});
+	auto fend = f1
+	.then_qthread_async([=](ExtFuture<int> f0){
+		qDb() << "Waiting in then() for cancel exception, f0:" << f0;
+		f0.wait();
 
-//			int f0val = f0.get()[0];
-			return 1;
-		})
-		.then_qthread_async([=](ExtFuture<int> f2){
+		ADD_FAILURE() << "f0.wait() didn't throw:" << f0;
+
+		return 1;
+	})
+	.then_qthread_async([=](ExtFuture<int> f2){
 		qDb() << "Waiting in then() for cancel exception, f2:" << f2;
 		f2.wait();
+		ADD_FAILURE() << "f2.wait() didn't throw:" << f2;
 
-		if(!cancel_from_top)
-		{
-			/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
-			throw ExtAsyncCancelException();
-			ADD_FAILURE() << ".then() didn't throw";
-		}
-
-		//			int f0val = f0.get()[0];
 		return 1;
 	});
 	f1.setName("f1");
+	fend.setName("fend");
 
 	TC_Wait(500);
-//	qDb() << "Trying to cancel";
+
+	if(!cancel_from_top)
+	{
+		/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
+		fend.cancel();
+	}
 
 	TCOUT << "ABOUT TO TRY";
 
