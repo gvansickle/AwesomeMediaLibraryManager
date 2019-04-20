@@ -269,7 +269,6 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncException)
 	try
 	{
 		f0.wait();
-//		f0.waitForResult(0);
 		ADD_FAILURE() << "Didn't throw";
 	}
 	catch(ExtAsyncCancelException& e)
@@ -314,13 +313,6 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 			qDb() << "Waiting in then() for cancel exception.";
 			f0.wait();
 
-			if(!cancel_from_top)
-			{
-				/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
-				throw ExtAsyncCancelException();
-				ADD_FAILURE() << ".then() didn't throw";
-			}
-
 //			int f0val = f0.get()[0];
 			return 1;
 		});
@@ -330,6 +322,11 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 
 	try
 	{
+		if(!cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN'S RETURNED FUTURE";
+			f1.cancel();
+		}
 		f1.wait();
 		ADD_FAILURE() << ".wait() Didn't throw";
 	}
@@ -394,6 +391,8 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 	});
 
 	TC_Wait(500);
+//	qDb() << "Trying to cancel";
+
 	TCOUT << "ABOUT TO TRY";
 
 	try

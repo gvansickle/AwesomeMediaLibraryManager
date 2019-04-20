@@ -103,13 +103,12 @@ namespace ExtAsync
 					if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
 					{
 						std::invoke(std::move(fd_callback), args...);
-						retfuture_cp.reportFinished();
 					}
 					else
 					{
-						auto retval = std::invoke(std::move(fd_callback), args...);
-						static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
-						retfuture_cp.reportFinished(&retval);
+						R retval = std::invoke(std::move(fd_callback), args...);
+						static_assert(!is_ExtFuture_v<R>, "Callback return value cannot be a future type.");
+						retfuture_cp.reportResult(retval);
 					}
 //					qDb() << "EXIT IN1";
 				}
@@ -146,6 +145,7 @@ namespace ExtAsync
 					qDb() << "Future has exception, finishing:" << retfuture_cp;
 					Q_ASSERT(retfuture_cp.isCanceled());
 				}
+				// We always have to report finished, regardless of exception or cancel status.
 				retfuture_cp.reportFinished();
 				qDb() << "Reported finished:" << retfuture_cp;
 				return;
@@ -181,11 +181,18 @@ namespace ExtAsync
 	ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
+		retfuture.setName("CNRRetfuture");
 
 		qthread_async([=,fd_callback=DECAY_COPY(std::forward<CallbackType>(callback))](ExtFutureT cnr_future, auto... args){
+			Q_ASSERT(retfuture == cnr_future);
 			try
 			{
 				std::invoke(std::move(fd_callback), cnr_future, args...);
+			}
+			catch(ExtAsyncCancelException& e)
+			{
+				qDb() << "IN CNR, CAUGHT CANCEL EXCEPTION";
+				cnr_future.reportException(e);
 			}
 			catch(QException& e)
 			{

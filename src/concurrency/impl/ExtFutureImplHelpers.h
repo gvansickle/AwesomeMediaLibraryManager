@@ -179,10 +179,11 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 	Q_ASSERT(this_future_copy.isStarted());
 	Q_ASSERT(ret_future_copy.isStarted());
 
-	exception_propagation_helper_spinwait(this_future_copy, ret_future_copy, callback, args...);
 
 	try
 	{
+		exception_propagation_helper_spinwait(this_future_copy, ret_future_copy, callback, args...);
+
 #if 0
 		// We should never end up calling then_callback_copy with a non-finished future; this is the code
 		// which will guarantee that.
