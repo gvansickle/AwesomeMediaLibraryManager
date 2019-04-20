@@ -1207,7 +1207,16 @@ public:
 		ExtAsync::qthread_async(
 					[=, fd_then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
 
-			// Block in the spawned thread for in_future to become ready.
+			// Block in this spawned thread for in_future to become ready.
+			// Intention is that everything is handled in exception_propagation_helper_then(), and that behavior matches
+			/// @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+			// "When the shared state currently associated with *this is ready, the continuation
+			// INVOKE(std::move(fd), *this) is called on an unspecified thread of execution. [...]
+			// Any value returned from the continuation is stored as the result in the shared state of the returned
+			// future object. Any exception propagated from the execution of the continuation is stored as the
+			// exceptional result in the shared state of the returned future object."
+
+			/// @todo Check that this is true:
 			// Exception behavior somewhat similar to @link http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0701r1.html#passing-futures-to-then-continuations-is-unwieldy
 			// "When .then is invoked with a continuation that is only invocable with T and the future that the continuation
 			// is being attached to contains an exception, .then does not invoke the continuation and returns a future containing
@@ -1222,12 +1231,8 @@ public:
 			//				QFuture::resultAt()
 			//				QFuture::results()"
 
-			exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
-//			return returned_future_copy;
-//			in_future.wait();
 
-			// Run the callback.  If then_callback throws or cancels in_future, again qthread_async() will handle the propagation.
-//			return std::invoke(std::move(fd_then_callback), in_future);
+			exception_propagation_helper_then(in_future, returned_future_copy, std::move(fd_then_callback));
 
 			}, *this, retfuture);
 
@@ -1244,7 +1249,7 @@ public:
 		// Get the return type of then_callback.
 		using R = Unit::LiftT<std::invoke_result_t<ThenCallbackType, ExtFuture<T>>>;
 
-		if constexpr(std::is_convertible_v<std::remove_pointer_t<ContextType>, QThreadPool>
+		if constexpr(std::is_convertible_v<ContextType, QThreadPool*>
 	            || std::is_null_pointer_v<ContextType>)
 		{
 			// context is either a QThreadPool* or nullptr.
