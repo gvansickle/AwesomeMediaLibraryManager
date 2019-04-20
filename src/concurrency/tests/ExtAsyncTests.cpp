@@ -325,7 +325,8 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 		if(!cancel_from_top)
 		{
 			/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN'S RETURNED FUTURE";
-			f1.cancel();
+			f1.reportException(ExtAsyncCancelException());
+			f1.reportFinished();
 		}
 		f1.wait();
 		ADD_FAILURE() << ".wait() Didn't throw";
