@@ -436,6 +436,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
 	///
 	/// QtConcurrent::run():
 	///
+	qDb() << "############# START QtConcurrent::run()";
 	QFuture<int> qf0 = QtConcurrent::run([&](){
 		qDb() << "QFUTURE:" << ExtFutureState::state(qf0);
 		EXPECT_EQ(ExtFutureState::state(qf0), c_started_running);
@@ -469,10 +470,11 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
 	///
 	/// ExtAsync::qthread_async():
 	///
-	ExtFuture<int> exf0 = ExtAsync::qthread_async([&](){
+	qDb() << "############# START ExtAsync::qthread_async()";
+	ExtFuture<int> exf0 = ExtAsync::qthread_async([](ExtFuture<int> exf0){
 		EXPECT_EQ(ExtFutureState::state(exf0), c_started_running);
 		qDb() << "EXTFUTURE:" << ExtFutureState::state(exf0);
-		throw QException(); return 1; });
+		throw QException(); return 1; }, exf0);
 
 	while(!exf0.isCanceled() && !exf0.isFinished())
 	{
@@ -501,9 +503,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
 	///
 	/// ExtAsync::qthread_async_with_cnr_future():
 	///
-	ExtFuture<int> cnrf0 = ExtAsync::qthread_async_with_cnr_future([&](ExtFuture<int> cnr_future){
-		EXPECT_EQ(ExtFutureState::state(cnrf0), c_started_running);
-		qDb() << "EXTFUTURE:" << ExtFutureState::state(cnrf0);
+	qDb() << "############# START ExtAsync::qthread_async_with_cnr_future()";
+	ExtFuture<int> cnrf0 = ExtAsync::qthread_async_with_cnr_future([](ExtFuture<int> cnr_future){
+		EXPECT_EQ(ExtFutureState::state(cnr_future), c_started_running);
+		qDb() << "EXTFUTURE:" << ExtFutureState::state(cnr_future);
 		throw QException(); return 1; });
 
 	while(!cnrf0.isCanceled() && !cnrf0.isFinished())
@@ -511,7 +514,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
 		TC_Wait(1000);
 	}
 	qDb() << "EXTFUTURE:" << ExtFutureState::state(cnrf0);
-	EXPECT_TRUE(ExtFutureState::state(cnrf0) == c_started_finished_canceled);
+	EXPECT_TRUE(ExtFutureState::state(cnrf0) == c_started_finished_canceled) << cnrf0;
 
 	// Does it throw?
 	try

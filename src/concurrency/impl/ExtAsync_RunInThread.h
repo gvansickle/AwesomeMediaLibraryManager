@@ -180,7 +180,28 @@ namespace ExtAsync
 			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
 	ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args)
 	{
-#if 1
+		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
+
+		qthread_async([=,fd_callback=DECAY_COPY(std::forward<CallbackType>(callback))](ExtFutureT cnr_future, auto... args){
+			try
+			{
+				std::invoke(std::move(fd_callback), cnr_future, args...);
+			}
+			catch(QException& e)
+			{
+				qDb() << "CALLBACK THREW";
+				cnr_future.reportException(e);
+			}
+			catch(...)
+			{
+				cnr_future.reportException(QUnhandledException());
+			}
+			cnr_future.reportFinished();
+
+			}, retfuture, args...);
+
+		return retfuture;
+#if 0
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 
 		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
@@ -203,7 +224,7 @@ namespace ExtAsync
 		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;
 
 		return retfuture;
-#else
+#elif 0
 		using R = typename ExtFutureR::value_type;
 		ExtFutureR retfuture = make_started_only_future<R>();
 
