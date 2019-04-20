@@ -325,7 +325,6 @@ tree_model_item_future.reportFinished();
 		tree_model_item_future.reportResult(new_items);
 
 		qDb() << "END OF DSR TAP:" << M_ID_VAL(tree_model_item_future);
-
 	}) // returns ExtFuture<DirScanResult> tail_future.
 	.then([=](ExtFuture<DirScanResult> fut_ignored) -> void {
 		// The dirscan is complete.
@@ -336,23 +335,25 @@ tree_model_item_future.reportFinished();
 
 	//tail_future
 	/// @then Finish the two output futures.
-		.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void {
-			// Finish a couple futures we started in this, and since this is done, there should be no more
-			// results coming for them.
+	.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void {
+		// Finish a couple futures we started in this, and since this is done, there should be no more
+		// results coming for them.
 
-			expect_and_set(2, 3);
+		expect_and_set(2, 3);
+		AMLM_ASSERT_NOT_IN_GUITHREAD();
 
-			qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
-			tree_model_item_future.reportFinished();
-			qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
+		qDb() << "FINISHING TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Running|Started)
+		tree_model_item_future.reportFinished();
+		qDb() << "FINISHED TREE MODEL FUTURE:" << M_ID_VAL(tree_model_item_future); // == (Started|Finished)
 
-			qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
-			qurl_future.reportFinished();
-			qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
-		});
+		qDb() << "FINISHING:" << M_ID_VAL(qurl_future);
+		qurl_future.reportFinished();
+		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
+	});
 
-		/// @then
-		tree_model_item_future.then(qApp, [=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future) {
+	/// @then
+	tree_model_item_future.then(qApp, [=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future) {
+
 		AMLM_ASSERT_IN_GUITHREAD();
 
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future;
@@ -395,13 +396,14 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 //			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
 
-		Q_ASSERT(m_model_ready_to_save_to_db == false);
-		m_model_ready_to_save_to_db = true;
-	})
+			Q_ASSERT(m_model_ready_to_save_to_db == false);
+			m_model_ready_to_save_to_db = true;
+		})
 
 		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
+
 			expect_and_set(3, 4);
 
 
@@ -467,7 +469,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 						readback_tree_model->deleteLater();
 
 					}
-	#ifndef TRY_XQUERY_READ
+#ifndef TRY_XQUERY_READ
 					// Now let's see if we can XQuery what we just wrote.
 					auto outfile_url = QUrl::fromLocalFile(QDir::homePath() + "/DeleteMe_ListOfUrlsFound.xml");
 					bool retval = run_xquery(QUrl::fromLocalFile(":/xquery_files/filelist.xq"),
@@ -493,32 +495,32 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 					}
 
 					ExpRunXQuery1(database_filename, filename);
-	#endif
+#endif
 				}
 	/// @todo EXPERIMENTAL
 
 
-	#if 1
-	            // Directory traversal complete, start rescan.
+#if 1
+            // Directory traversal complete, start rescan.
 
-	            QVector<VecLibRescannerMapItems> rescan_items;
+            QVector<VecLibRescannerMapItems> rescan_items;
 
-	            qDb() << "GETTING RESCAN ITEMS";
+            qDb() << "GETTING RESCAN ITEMS";
 
-	            rescan_items = m_current_libmodel->getLibRescanItems();
+            rescan_items = m_current_libmodel->getLibRescanItems();
 
-	            qDb() << "rescan_items:" << rescan_items.size();
-	            /// @todo TEMP FOR DEBUGGING, CHANGE FROM ASSERT TO ERROR.
-				Q_ASSERT(!rescan_items.empty());
+            qDb() << "rescan_items:" << rescan_items.size();
+            /// @todo TEMP FOR DEBUGGING, CHANGE FROM ASSERT TO ERROR.
+			Q_ASSERT(!rescan_items.empty());
 
-	            lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
+            lib_rescan_job->setDataToMap(rescan_items, m_current_libmodel);
 
-	            // Start the metadata scan.
-	            qDb() << "STARTING RESCAN";
-	            lib_rescan_job->start();
-	#endif
-	        }
-		});
+            // Start the metadata scan.
+            qDb() << "STARTING RESCAN";
+            lib_rescan_job->start();
+#endif
+        }
+	});
 
     master_job_tracker->registerJob(dirtrav_job);
 	master_job_tracker->setAutoDelete(dirtrav_job, false);

@@ -43,3 +43,15 @@ Stopwatch::~Stopwatch()
 	std::cout << "ELAPSED TIME: " << m_being_timed_msg << ": " << elapsed.count() << " sec" << std::endl;
 }
 
+void Stopwatch::lap(const std::string& lap_marker_str)
+{
+	lap_marker lm;
+	lm.m_lap_time = std::chrono::steady_clock::now();
+	lm.m_lap_discription = lap_marker_str;
+	m_lap_markers.push_back(lm);
+
+	std::chrono::duration<double> elapsed = lm.m_lap_time - m_start;
+
+	std::cout << "ELAPSED TIME, LAP:" << lm.m_lap_discription << ": " << elapsed.count() << " sec" << std::endl;
+}
+
