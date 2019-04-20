@@ -1776,7 +1776,7 @@ QDebug operator<<(QDebug dbg, const ExtFuture<T> &extfuture)
 	QDebugStateSaver saver(dbg);
 
 	// .resultCount() does not cause a stored exception to be thrown.  It does acquire the mutex.
-	dbg << "ExtFuture<T>( id=" << extfuture.m_name /*m_extfuture_id_no*/ << "state:" << extfuture.state()
+	dbg << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << extfuture.m_name << "state:" << extfuture.state()
 		<< "hasException():" << extfuture.hasException() << ", resultCount():" << extfuture.resultCount() << ")";
 
 	return dbg;
@@ -1789,8 +1789,8 @@ template <typename T>
 std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 {
 	// .resultCount() does not appear to cause a stored exception to be thrown.  It does acquire the mutex.
-	outstream << "ExtFuture<T>( id=" << extfuture.m_name /*m_extfuture_id_no*/ << " state: " << extfuture.state()
-	<< ", resultCount(): " << extfuture.resultCount() << ")";
+	outstream << "ExtFuture<T>( id=" << extfuture.m_extfuture_id_no << extfuture.m_name << " state: " << extfuture.state()
+			<< "hasException():" << extfuture.hasException() << ", resultCount(): " << extfuture.resultCount() << ")";
 
 	return outstream;
 }

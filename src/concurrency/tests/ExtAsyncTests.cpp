@@ -310,7 +310,9 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 		return 5;
 		})
 		.then_qthread_async([=](ExtFuture<int> f0){
-			qDb() << "Waiting in then() for cancel exception.";
+
+			qDb() << "In then(), triggering via .wait() for cancel exception.";
+			// This should throw on a cancel.
 			f0.wait();
 
 //			int f0val = f0.get()[0];
@@ -325,11 +327,14 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 		if(!cancel_from_top)
 		{
 			/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN'S RETURNED FUTURE";
-			f1.reportException(ExtAsyncCancelException());
-			f1.reportFinished();
+//			f1.reportException(ExtAsyncCancelException());
+//			f1.reportFinished();
+			Q_ASSERT(!f1.isCanceled());
+			Q_ASSERT(!f1.isFinished());
+			f1.cancel();
 		}
 		f1.wait();
-		ADD_FAILURE() << ".wait() Didn't throw";
+		ADD_FAILURE() << ".wait() Didn't throw, f1:" << f1;
 	}
 	catch(ExtAsyncCancelException& e)
 	{
@@ -343,7 +348,12 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTo
 	}
 	catch(...)
 	{
-		ADD_FAILURE() << "Threw unexpected exception.";
+		std::exception_ptr eptr = std::current_exception();
+		try { std::rethrow_exception(eptr); }
+		catch (const std::exception& e)
+		{
+			ADD_FAILURE() << "Threw unexpected exception." << e.what();
+		}
 	}
 
 	TCOUT << "ABOUT TO LEAVE TEST";
@@ -377,7 +387,7 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 			return 1;
 		})
 		.then_qthread_async([=](ExtFuture<int> f2){
-		qDb() << "Waiting in then() for cancel exception.";
+		qDb() << "Waiting in then() for cancel exception, f2:" << f2;
 		f2.wait();
 
 		if(!cancel_from_top)
@@ -390,6 +400,7 @@ TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionF
 		//			int f0val = f0.get()[0];
 		return 1;
 	});
+	f1.setName("f1");
 
 	TC_Wait(500);
 //	qDb() << "Trying to cancel";

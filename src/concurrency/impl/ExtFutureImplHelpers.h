@@ -76,11 +76,11 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 	/// @todo Is that correct though?
 //				if(!this_future_copy.isRunning())
 	{
-		qCWarning(EXTFUTURE) << "START SPINWAIT";
+		qCDebug(EXTFUTURE) << "START SPINWAIT";
 		// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
 		spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, ret_future_copy);
-//					spinWaitForFinishedOrCanceled(this_future_copy);
-		qWr() << "END SPINWAIT";
+
+		qCDebug(EXTFUTURE) << "END SPINWAIT";
 	}
 
 	/// Spinwait is over, now we have ??? combinations to dispatch on along at least 4 dimensions:
@@ -94,7 +94,7 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 
 	if(ret_future_copy.hasException())
 	{
-		// Downstream threw, which cancels (doesn't have to be a cancel exception).
+		// Downstream threw, which .cancels() (doesn't have to be a cancel exception).
 		// We need to propagate the exception to this_future_copy.
 		/// @todo Assuming anything attached to ret_future_copy will worry about it's throwing.
 		// Trigger an immediate rethrow.  @todo Is this really correct?
@@ -104,18 +104,22 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 		/// a throw; that will change some state to "has thrown", which I don't know what that effects.
 		/// Not sure what we can do about this atm.
 		this_future_copy.reportException(ExtAsyncCancelException());
+		this_future_copy.reportFinished();
 		this_future_copy.waitForFinished();
 		Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from returned future failed.");
 	}
-		// Was downstream canceled without an exception?
+	// Was downstream canceled without an exception?
 	else if(ret_future_copy.isCanceled())
 	{
 		// Downstream was canceled without an exception.
+		/// @todo Assuming anything attached to ret_future_copy will worry about it's throwing.
 		qDb() << "returned_future_copy CANCELED WITHOUT EXCEPTION:" << ret_future_copy;
 		// Propagate cancel to this_future_copy.  Since ret_future_copy is already canceled, we can't get an exception through
 		// it here.
 		this_future_copy.reportException(ExtAsyncCancelException());
+		this_future_copy.reportFinished();
 		this_future_copy.waitForFinished();
+		Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from returned future failed.");
 	}
 	else if(ret_future_copy.isFinished())
 	{
@@ -130,6 +134,7 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 		// This threw, which cancels (doesn't have to be a cancel exception).
 		// Trigger an immediate rethrow.  This will be caught below.
 		Q_ASSERT(this_future_copy.isCanceled());
+		this_future_copy.reportFinished();
 		this_future_copy.waitForFinished();
 		Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from this future failed.");
 	}
@@ -141,6 +146,7 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 		// But we do have to try to propagate this downstream.
 		qWr() << "this_future_copy CANCELED WITHOUT EXCEPTION:" << this_future_copy.state();
 		ret_future_copy.reportException(ExtAsyncCancelException());
+		ret_future_copy.reportFinished();
 	}
 		// Did this_future_copy Finish first?
 	else if(this_future_copy.isFinished())
@@ -152,6 +158,7 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 	// Now we're either Finished or Canceled, so we can call waitForFinished().  We now know
 	// the state of isRunning() does reflect if we're done or not.
 	// This call will block, or throw if an exception is reported to this_future_copy.
+	this_future_copy.reportFinished();
 	this_future_copy.waitForFinished();
 
 	// Ok, so now we're definitely finished and/or canceled.
@@ -183,94 +190,6 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 	try
 	{
 		exception_propagation_helper_spinwait(this_future_copy, ret_future_copy, callback, args...);
-
-#if 0
-		// We should never end up calling then_callback_copy with a non-finished future; this is the code
-		// which will guarantee that.
-		// This could throw a propagated exception from upstream (this_future_copy).
-		// Per @link https://medium.com/@nihil84/qt-thread-delegation-esc-e06b44034698, we can't just use
-		// this_future_copy.waitForFinished() here because it will return immediately if the thread hasn't
-		// "really" started (i.e. if isRunning() == false).
-		/// @todo Is that correct though?
-//				if(!this_future_copy.isRunning())
-		{
-			qCWarning(EXTFUTURE) << "START SPINWAIT";
-			// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
-			spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, ret_future_copy);
-//					spinWaitForFinishedOrCanceled(this_future_copy);
-			qWr() << "END SPINWAIT";
-		}
-
-		/// Spinwait is over, now we have ??? combinations to dispatch on along at least 4 dimensions:
-		/// - this_future_copy / ret_future_copy (/both???)
-		/// - hasException() (== also canceled) vs. no exception
-		/// - isCanceled() with no exception vs. not canceled
-		/// - isFinished() vs. not finished.
-		///
-		/// ...and we haven't even gotten to the actual callback yet.
-
-
-		if(ret_future_copy.hasException())
-		{
-			// Downstream threw, which cancels (doesn't have to be a cancel exception).
-			// Trigger an immediate rethrow.  This will be caught below.
-			Q_ASSERT(ret_future_copy.isCanceled());
-			ret_future_copy.waitForFinished();
-			Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from returned future failed.");
-		}
-		// Was downstream canceled without an exception?
-		else if(ret_future_copy.isCanceled())
-		{
-			// Downstream was canceled without an exception.
-			qDb() << "returned_future_copy CANCELED WITHOUT EXCEPTION:" << ret_future_copy;
-			// Propagate cancel to this_future_copy.  Since ret_future_copy is already canceled, we can't get an exception through
-			// it here.
-			this_future_copy.reportException(ExtAsyncCancelException());
-			this_future_copy.waitForFinished();
-		}
-		else if(ret_future_copy.isFinished())
-		{
-			// Downstream is already Finished, but not canceled.
-			// Not clear that this is a valid, or even possible, state here.
-			qWr() << "returned_future_copy FINISHED?:" << ret_future_copy;
-			Q_ASSERT_X(0, __func__, "Future returned by then() is finished first, shouldn't be possible.");
-		}
-
-		if(this_future_copy.hasException())
-		{
-			// This threw, which cancels (doesn't have to be a cancel exception).
-			// Trigger an immediate rethrow.  This will be caught below.
-			Q_ASSERT(this_future_copy.isCanceled());
-			this_future_copy.waitForFinished();
-			Q_ASSERT_X(0, __func__, "Attempt to rethrow exception from this future failed.");
-		}
-		// Was this_future_copy canceled without an exception?
-		else if(this_future_copy.isCanceled())
-		{
-			// This was canceled without an exception, i.e. with a direct call to .cancel().
-			// We can't add a cancel exception to this_future_copy now, it'll be ignored.
-			// But we do have to try to propagate this downstream.
-			qWr() << "this_future_copy CANCELED WITHOUT EXCEPTION:" << this_future_copy.state();
-			ret_future_copy.reportException(ExtAsyncCancelException());
-		}
-		// Did this_future_copy Finish first?
-		else if(this_future_copy.isFinished())
-		{
-			// Normal finish of this_future_copy, no cancel or exception to propagate.
-//			qDb() << "THIS_FUTURE FINISHED NORMALLY";
-		}
-
-		// Now we're either Finished or Canceled, so we can call waitForFinished().  We now know
-		// the state of isRunning() does reflect if we're done or not.
-		// This call will block, or throw if an exception is reported to this_future_copy.
-		this_future_copy.waitForFinished();
-
-		// Ok, so now we're definitely finished and/or canceled.
-
-		Q_ASSERT(this_future_copy.isFinished() || this_future_copy.isCanceled());
-
-		// Got here, so we didn't throw.  We might still be canceled.
-#endif
 	}
 	// Handle exceptions and cancellation.
 	// Exceptions propagate upwards, cancellation propagates downwards.
@@ -289,21 +208,20 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 		 */
 		qDb() << "CAUGHT CANCEL, THROWING TO DOWSTREAM (RETURNED) FUTURE";
 		ret_future_copy.reportException(e);
-//				returned_future_copy.reportException(e);
 		qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(e);
 	}
 	catch(QException& e)
 	{
 		qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-		ret_future_copy.cancel();
+		ret_future_copy.reportException(e);
 		qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(e);
 	}
 	catch (...)
 	{
 		qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
-		ret_future_copy.cancel();
+		ret_future_copy.reportException(QUnhandledException());
 		qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(QUnhandledException());
 	}
@@ -351,28 +269,21 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 			qDb() << "THENCB: Calling then_callback_copy(this_future_copy).";
 			R retval;
 
-//			if(context != nullptr)
-//			{
-//				// Call the callback in the context's event loop.
-//				retval = run_in_event_loop(context, then_callback_copy);
-//			}
-//			else
+			if constexpr(std::is_same_v<R, Unit>)
 			{
-				if constexpr(std::is_same_v<R, Unit>)
-				{
-					// then_callback_copy returns void, return a Unit separately.
-					qDb() << "INVOKING ret type == Unit";
-					std::invoke(std::move(callback), this_future_copy);
-					retval = unit;
-				}
-				else
-				{
-					// then_callback_copy returns non-void, return the callback's return value.
-					qDb() << "INVOKING ret type != Unit";
-					retval = std::invoke(std::move(callback), this_future_copy);
-				}
-				qDb() << "INVOKED";
+				// then_callback_copy returns void, return a Unit separately.
+				qDb() << "INVOKING ret type == Unit";
+				std::invoke(std::move(callback), this_future_copy);
+				retval = unit;
 			}
+			else
+			{
+				// then_callback_copy returns non-void, return the callback's return value.
+				qDb() << "INVOKING ret type != Unit";
+				retval = std::invoke(std::move(callback), this_future_copy);
+			}
+			qDb() << "INVOKED";
+
 			// Didn't throw, report the result.
 			ret_future_copy.reportResult(retval);
 		}
