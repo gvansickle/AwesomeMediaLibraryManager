@@ -28,14 +28,13 @@
 #include <QDateTime>
 #include <QDataStream>
 #include <QDebug>
-//#include <QXmlStreamWriter>
-//#include <QXmlQuery>
 
 // Ours
 #include <src/utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
 #include <src/logic/serialization/ISerializable.h>
+#include <src/future/guideline_helpers.h>
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;
@@ -50,8 +49,9 @@ class DirScanResult : public ISerializable
 public:
 	/// @name Public default and copy constructors and destructor needed for Q_DECLARE_METATYPE().
 	/// @{
-    DirScanResult() = default;
-    DirScanResult(const DirScanResult& other) = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(DirScanResult);
+//    DirScanResult() = default;
+//    DirScanResult(const DirScanResult& other) = default;
 	~DirScanResult() override = default;
 	/// @}
 

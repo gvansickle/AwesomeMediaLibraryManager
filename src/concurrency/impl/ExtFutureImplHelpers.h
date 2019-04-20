@@ -76,11 +76,11 @@ void exception_propagation_helper_spinwait(ExtFuture<T> this_future_copy, ExtFut
 	/// @todo Is that correct though?
 //				if(!this_future_copy.isRunning())
 	{
-		qCDebug(EXTFUTURE) << "START SPINWAIT";
+//		qCDebug(EXTFUTURE) << "START SPINWAIT";
 		// Blocks (busy-wait with yield) until one of the futures is canceled or finished.
 		spinWaitForFinishedOrCanceled(QThreadPool::globalInstance(), this_future_copy, ret_future_copy);
 
-		qCDebug(EXTFUTURE) << "END SPINWAIT";
+//		qCDebug(EXTFUTURE) << "END SPINWAIT";
 	}
 
 	/// Spinwait is over, now we have ??? combinations to dispatch on along at least 4 dimensions:
@@ -206,23 +206,23 @@ void exception_propagation_helper_then(ExtFuture<T> this_future_copy, ExtFuture<
 		 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
 		 *  state of the returned future object."
 		 */
-		qDb() << "CAUGHT CANCEL, THROWING TO DOWSTREAM (RETURNED) FUTURE";
+//		qDb() << "CAUGHT CANCEL, THROWING TO DOWSTREAM (RETURNED) FUTURE";
+//		qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 		ret_future_copy.reportException(e);
-		qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(e);
 	}
 	catch(QException& e)
 	{
-		qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+//		qDb() << "CAUGHT EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+//		qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 		ret_future_copy.reportException(e);
-		qDb() << "CAUGHT EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(e);
 	}
 	catch (...)
 	{
-		qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+//		qDb() << "CAUGHT UNKNOWN EXCEPTION, CANCELING DOWSTREAM (RETURNED) FUTURE";
+//		qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 		ret_future_copy.reportException(QUnhandledException());
-		qDb() << "CAUGHT UNKNOWN EXCEPTION, THROWING TO UPSTREAM (THIS) FUTURE";
 		this_future_copy.reportException(QUnhandledException());
 	}
 

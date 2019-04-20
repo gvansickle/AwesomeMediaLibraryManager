@@ -1463,9 +1463,9 @@ protected:
 	 * @return
 	 */
 	template <typename StreamingTapCallbackType,
-		REQUIRES(ct::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)
+		REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)
 		>
-	ExtFuture<T> StreamingTapHelper(QObject *guard_qobject, StreamingTapCallbackType&& streaming_tap_callback)
+	ExtFuture<T> StreamingTapHelper(QObject *context, StreamingTapCallbackType&& streaming_tap_callback)
 	{
 		/// @todo Use guard_qobject, should be QThreadPool* I think.
 //		Q_ASSERT(guard_qobject == nullptr);
@@ -1477,8 +1477,9 @@ protected:
 		ExtFuture<T> returned_future = make_started_only_future<T>();
 
 		// The concurrent run().
-		/*ExtFuture<T> returned_future =*/ ExtAsync::qthread_async([=]
-														   //streaming_tap_callback=DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
+		/*ExtFuture<T> returned_future =*/
+		ExtAsync::qthread_async([=,
+						   streaming_tap_callback_cp=DECAY_COPY(std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
 						  (ExtFuture<T> this_future_copy, ExtFuture<T> returned_future_copy) mutable -> void {
 				qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
 						<< "ret_future_copy:" << returned_future_copy;
@@ -1503,7 +1504,7 @@ protected:
 						  *     d->waitCondition.wait(&d->m_mutex);
 						  *   d->m_exceptionStore.throwPossibleException();
 						  */
-						/// @todo This needs to wait on both this_ and returned_ futures.
+						/// @todo This needs to wait on both this_ and returned_ futures for cancellation.
 						this_future_copy.waitForResult(i);
 
 						// Check if the wait failed to result in any results.
@@ -1518,7 +1519,7 @@ protected:
 						// Call the tap callback.
 						//				streaming_tap_callback_copy(ef, i, result_count);
 //						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
-						/*std::invoke(*/streaming_tap_callback(this_future_copy, i, result_count);
+						std::invoke(std::move(streaming_tap_callback_cp), this_future_copy, i, result_count);
 
 						// Copy the new results to the returned future.
 						for(; i < result_count; ++i)
@@ -1533,16 +1534,16 @@ protected:
 //					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
 
 					// Check final state.  We know it's at least Finished.
-					/// @todo Could we be Finished here with pending results?
+					// We could be Finished here with pending results.
 					/// Don't care as much on non-Finished cases.
 					if(this_future_copy.isCanceled())
 					{
-						qDb() << "TAP: this_future cancelled:" << this_future_copy.state();
+//						qDb() << "STAP: this_future cancelled:" << this_future_copy.state();
 						returned_future_copy.reportCanceled();
 					}
 					else if(this_future_copy.isFinished())
 					{
-						qDb() << "TAP: ef finished:" << this_future_copy.state();
+//						qDb() << "STAP: ef finished:" << this_future_copy.state();
 						returned_future_copy.reportFinished();
 					}
 					else
