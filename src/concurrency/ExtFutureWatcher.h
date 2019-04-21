@@ -126,12 +126,12 @@ public:
 	/**
 	 * Overload of setFuture() which takes a QFutureInterface<T> instead of a QFuture<T>.
 	 */
-	ExtFutureWatcher<T>& setFuture(QFutureInterface<T> &future_interface);
+	ExtFutureWatcher<T>& setFuture(QFutureInterface<T>& future_interface);
 
     /**
      * Overload of setFuture() which takes an ExtFuture<T>& instead of a QFuture<T>&.
      */
-    ExtFutureWatcher<T>& setFuture(const ExtFuture<T> &ext_future);
+	ExtFutureWatcher<T>& setFuture(const ExtFuture<T>& ext_future);
 
 	/// @name Signal callback interface.
 	/// @{

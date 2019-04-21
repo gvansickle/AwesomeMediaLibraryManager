@@ -197,6 +197,7 @@ void Library::fromVariant(const QVariant& variant)
 	M_DATASTREAM_FIELDS(X);
 #undef X
 
+	// This is a local.
 	qint64 num_lib_entries = map.value(XMLTAG_NUM_LIBRARY_ENTRIES).value<qint64>();
 
 	//QVariantHomogenousList list("library_entries", "library_entry");
@@ -205,7 +206,6 @@ void Library::fromVariant(const QVariant& variant)
 	Q_ASSERT(qvar_list.isValid());
 	QVariantHomogenousList list("m_lib_entries", "library_entry");
 	list = qvar_list.value<QVariantHomogenousList>();
-
 
 	// Concurrency.  Vs. the loop we used to have here, we went from 2.x secs to 0.5 secs.
 	list_blocking_map_reduce_read_all_entries_or_warn(list, &m_lib_entries);

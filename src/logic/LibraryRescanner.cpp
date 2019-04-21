@@ -423,6 +423,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	            qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
 /// @todo EXPERIMENTAL
+#if 0
 				QString filename = QDir::homePath() + "/AMLM_DeleteMe_XQuery.xml";
 				qIno() << "Writing model to XML file:" << filename;
 				QFile outfile(filename);
@@ -497,6 +498,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 					ExpRunXQuery1(database_filename, filename);
 #endif
 				}
+#endif
 	/// @todo EXPERIMENTAL
 
 

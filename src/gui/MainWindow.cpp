@@ -1441,14 +1441,18 @@ void MainWindow::readLibSettings(QSettings& settings)
 
 	qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
 
-//	for(int i = 0; i < list.size(); ++i)
 	for(const auto& list_entry : list)
 	{
-		QVariant qv = list_entry;//list[i];
+		QVariant qv = list_entry;
 		Q_ASSERT(qv.isValid());
 		Q_ASSERT(!qv.isNull());
+
+
 		LibraryModel* lmp = new LibraryModel(this);
-		lmp->fromVariant(qv);
+		{
+			Stopwatch sw("lmp-from-variant");
+			lmp->fromVariant(qv);
+		}
 
 		Q_ASSERT(lmp->getLibRootDir().isValid());
 

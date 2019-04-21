@@ -305,6 +305,10 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	xmlstream.writeCharacters(str);
 }
 
+static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
+static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
+
 /**
  * XmlSerializer::readVariantFromStream
  *
@@ -317,9 +321,6 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
-	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
-	static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
-	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
 	Q_ASSERT(xmlstream.isStartElement());
 
