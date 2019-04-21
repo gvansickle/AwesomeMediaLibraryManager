@@ -39,11 +39,11 @@
 template <typename T>
 ExtFuture<T> make_started_only_future();
 
-#define EXTASYNC_USE_QTHREAD 1
 
 namespace ExtAsync
 {
 	template <class CallbackType, class... Args,
+			  class CBReturnType = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
 			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
 			  class ExtFutureR = ExtFuture<R>,
 			  REQUIRES(!is_ExtFuture_v<R>)
@@ -64,13 +64,13 @@ namespace ExtAsync
 				Q_ASSERT(retfuture_cp == retfuture);
 				Q_ASSERT(retfuture_cp.isStarted());
 
-				if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
+				if constexpr(std::is_convertible_v<Unit, CBReturnType>)
 				{
 					std::invoke(std::move(fd_callback), args...);
 				}
 				else
 				{
-					R retval = std::invoke(std::move(fd_callback), args...);
+					CBReturnType retval = std::invoke(std::move(fd_callback), args...);
 					static_assert(!is_ExtFuture_v<R>, "Callback return value cannot be a future type.");
 					retfuture_cp.reportResult(retval);
 				}
@@ -167,6 +167,9 @@ namespace ExtAsync
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 		retfuture.setName("CNRRetfuture");
 
+#if 1
+		return qthread_async(retfuture, callback, retfuture, args...);
+#else
 		qthread_async([=,fd_callback=DECAY_COPY(std::forward<CallbackType>(callback))](ExtFutureT cnr_future, auto... args){
 			Q_ASSERT(retfuture == cnr_future);
 			// We have to catch any exceptions ourselves here, because we need to propagate them
@@ -194,6 +197,7 @@ namespace ExtAsync
 			}, retfuture, args...);
 
 		return retfuture;
+#endif
 	};
 
 
