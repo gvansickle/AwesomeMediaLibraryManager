@@ -199,6 +199,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 {
     qDb() << "START:" << dir_url;
 
+	Stopwatch sw("############ startAsyncDirectoryTraversal()");
+
 	expect_and_set(0, 1);
 
 	// Time how long it takes.
@@ -536,11 +538,15 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	// Hook up future watchers.
 	//
 
-	// Dirscan results to the m_current_libmodel.
-	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultReadyAt,
-			m_current_libmodel, [=](int index) {
-				auto url_str = qurl_future.resultAt(index);
-				m_current_libmodel->SLOT_onIncomingFilename(url_str);
+	// Dirscan QUrls to the m_current_libmodel.
+	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultsReadyAt,
+				   m_current_libmodel, [=](int begin_index, int end_index){
+		for(int i = begin_index; i<end_index; ++i)
+		{
+			/// @todo Maybe coming in out of order.
+			QString url_str = m_extfuture_watcher_dirtrav.resultAt(i);
+			m_current_libmodel->SLOT_onIncomingFilename(url_str);
+		}
 	});
 	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
 

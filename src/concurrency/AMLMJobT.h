@@ -33,6 +33,8 @@
 
 // Ours
 #include "AMLMJob.h"
+#include "ExtFutureProgressInfo.h"
+#include "ExtFuture.h"
 
 /**
  * CRTP class template for wrapping ExtAsync jobs returning an ExtFuture<T>.

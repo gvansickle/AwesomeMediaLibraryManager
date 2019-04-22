@@ -140,6 +140,10 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 	}
 }
 
+static const int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+static const int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
+static const int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
+
 void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
 	xmlstream.writeStartElement(nodeName);
@@ -175,11 +179,6 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	int type = variant.type(); // AFAICT this is just wrong.
 	int usertype = variant.userType(); // This matches variant.typeName()
-	// These do their work at compile-time.
-	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
-	static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
-	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
-
 
 	if(type != usertype)
 	{
@@ -305,9 +304,7 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	xmlstream.writeCharacters(str);
 }
 
-static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
-static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
-static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
+
 
 /**
  * XmlSerializer::readVariantFromStream

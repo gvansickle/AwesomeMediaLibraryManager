@@ -93,7 +93,8 @@
 /**
  * Base class for AbstractItemTreeModel items.
  * @note Not derived from QObject.
- * @base clone_inherit<>  Adds covariant plus smart pointer clone() support to the derived class hierarchy.
+ * @note base clone_inherit<> Would add covariant plus smart pointer clone() support to the derived class hierarchy,
+ *       but I can't get it to work.
  */
 class AbstractTreeModelItem :
 		public virtual ISerializable

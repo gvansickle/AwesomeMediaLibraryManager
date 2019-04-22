@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -44,6 +44,21 @@ include(cmake/GetVersionInfo.cmake)
 # be prior to project().
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+if(TRUE)
+	### Set up the <LANG>_COMPILER_LAUNCHERs.
+	### @note "This property is initialized by the value of 
+	###       the CMAKE_<LANG>_COMPILER_LAUNCHER variable if it is set when a target is created."
+	
+	# Use ccache if it's available.
+	find_program(CCACHE_PROGRAM ccache)
+	if(CCACHE_PROGRAM)
+		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+	endif()
+#	if(TRUE) # csbuild - the static analysis one.
+#		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "csbuild;--print-current;-c")
+#	endif()
+endif()
 
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
@@ -110,7 +125,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
-set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
+set(ENABLE_CLAZY OFF) # This applies to KDECMakeSettings.
 include(KDECMakeSettings NO_POLICY_SCOPE)
 
 # CMake macros.
@@ -199,13 +214,7 @@ message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
 
-if(true)
-	# Use ccache if it's available.
-	find_program(CCACHE_PROGRAM ccache)
-	if(CCACHE_PROGRAM)
-		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-	endif()
-endif()
+
 
 # Include some basic cmake functions.
 include(CheckCXXCompilerFlag)

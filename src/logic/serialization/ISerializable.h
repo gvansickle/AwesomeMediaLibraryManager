@@ -313,11 +313,13 @@ void list_read_all_fields_or_warn(const ListType& list, OutListType<ListEntryTyp
  *
  * @tparam InListType  A container of pointers to ISerializable-derived objects.
  */
-template <class InListType, class OutListValueType, template<typename> class OutListType>
-void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list, OutListType<OutListValueType>* p_out_list)
+template <class InListType, /*class OutListValueType,*/ /*template<typename>*/ class OutListType>
+void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list, OutListType/*<OutListValueType>*/* p_out_list)
 {
 	static_assert(std::is_same_v<InListType, QVariantHomogenousList> || std::is_same_v<InListType, QVariantList>,
 	              "InListType is not a recognized list type");
+
+	using OutListValueType = typename OutListType::value_type;
 
 	// We're trying to make this serial code concurrent:
 	//		for(const QVariant& e : in_list)
@@ -328,22 +330,22 @@ void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list
 	//			m_lib_entries.push_back(libentry);
 	//		}
 
-	if constexpr(std::is_base_of_v<ISerializable, typename OutListType<OutListValueType>::value_type::element_type>)
+	if constexpr(std::is_base_of_v<ISerializable, typename OutListType/*<OutListValueType>*/::value_type::element_type>)
 	{
 		// For this case, in_list should hold shared_ptr's to ISerializable's, e.g.:
 		// QVariantList<std::shared_ptr<LibraryEntry>>
 
 		// This will be e.g. std::shared_ptr<LibraryEntry>
-		using OutListPtrType = typename OutListType<OutListValueType>::value_type;
+		using OutListPtrType = typename OutListType/*<OutListValueType>*/::value_type;
 		// This will be e.g. LibraryEntry:
-		using OutElementType = typename OutListType<OutListValueType>::value_type::element_type;
+		using OutElementType = typename OutListType/*<OutListValueType>*/::value_type::element_type;
 
 		struct mapped_reduce_helper
 		{
 			/**
 			 * The Reduce callback.  Doesn't really need to be in this struct, but it was handy.
 			 */
-			static void add_to_list(OutListType<OutListValueType>& out_list, const OutListPtrType& new_entry)
+			static void add_to_list(OutListType/*<OutListValueType>*/& out_list, const OutListPtrType& new_entry)
 			{
 				out_list.push_back(new_entry);
 			};
@@ -369,7 +371,7 @@ void list_blocking_map_reduce_read_all_entries_or_warn(const InListType& in_list
 		// OrderedReduce == reduce func called in order of input sequence,
 		// SequentialReduce == reduce func called by one thread at a time.
 
-		OutListType<OutListValueType> throwaway_list;
+		OutListType/*<OutListValueType>*/ throwaway_list;
 		throwaway_list = QtConcurrent::blockingMappedReduced(in_list.cbegin(), in_list.cend(), mapper,
 		                                               mapped_reduce_helper::add_to_list,
 		                                               QtConcurrent::OrderedReduce|QtConcurrent::SequentialReduce);

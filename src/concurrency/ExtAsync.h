@@ -52,11 +52,17 @@
 // Ours
 #include "ExtFutureState.h"
 #include "utils/DebugHelpers.h"
+#include "utils/ConnectHelpers.h"
 
-template <typename T> class ExtFuture;
+template <typename T>
+class ExtFuture;
+template <typename T>
+ExtFuture<T> make_started_only_future();
 
+#include "ExtAsyncFwd.h"
 #include "impl/ExtAsync_impl.h"
-#include "impl/ExtAsync_RunInThread.h"
+//#include "impl/ExtAsync_RunInThread.h"
+
 
 // Generated
 #include "logging_cat_ExtAsync.h"

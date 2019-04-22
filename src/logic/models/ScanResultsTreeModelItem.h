@@ -47,7 +47,7 @@ class ScanResultsTreeModelItem :
 	using BASE_CLASS = AbstractTreeModelItem;
 
 public:
-//	M_GH_RULE_OF_FIVE_DEFAULT_C21(ScanResultsTreeModelItem);
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(ScanResultsTreeModelItem);
 
 	/// Create a default-constructed (i.e. "blank") ScanResultsTreeModelItem, possibly with a given parent.
 	explicit ScanResultsTreeModelItem(AbstractTreeModelItem *parent = nullptr) : BASE_CLASS(parent) {};

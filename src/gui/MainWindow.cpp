@@ -1431,13 +1431,14 @@ void MainWindow::readLibSettings(QSettings& settings)
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
 	qIn() << "###### READING XML DB:" << database_filename;
-
-	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-
 	SerializableQVariantList list("library_list", "library_list_item");
+	{
+		Stopwatch(tostdstr(QString("############## READ OF ") + database_filename));
+		XmlSerializer xmlser;
+		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 
-	xmlser.load(list, QUrl::fromLocalFile(database_filename));
+		xmlser.load(list, QUrl::fromLocalFile(database_filename));
+	}
 
 	qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
 

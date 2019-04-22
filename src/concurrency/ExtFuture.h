@@ -60,26 +60,9 @@
 // Generated
 #include "logging_cat_ExtFuture.h"
 
-// Forward declare the ExtAsync namespace
-namespace ExtAsync
-{
-namespace detail {}
-
-template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
-	REQUIRES(is_ExtFuture_v<ExtFutureT>
-		 && !is_nested_ExtFuture_v<ExtFutureT>
-		 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
-static ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args);
-
-template <class CallbackType, class... Args,
-		  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-		  class ExtFutureR = ExtFuture<R>,
-		  REQUIRES(!is_ExtFuture_v<R>)
-		  >
-ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
-
-}
-
+// ExtAsync forward declarations.
+#include "ExtAsyncFwd.h"
+#include "ExtAsync.h"
 
 template <class T>
 class ExtFuture;
@@ -1802,6 +1785,7 @@ std::ostream& operator<<(std::ostream& outstream, const ExtFuture<T> &extfuture)
 }
 
 #endif //#if !defined(TEMPL_ONLY_NEED_DECLARATION) || defined(TEMPL_ONLY_NEED_DEF)
+
 
 /// @name Explicit instantiations to try to get compile times down.
 /// @{
