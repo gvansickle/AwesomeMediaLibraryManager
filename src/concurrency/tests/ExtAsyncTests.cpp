@@ -568,14 +568,14 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 {
 	TC_ENTER();
 
-//	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
-	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
+//	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
 		for(int i = 0; i<10; i++)
 		{
 			TCOUT << "qthread_async_with_cnr_future() iteration:" << i;
 			// Do nothing for a sec.
 			TC_Sleep(1000);
-#if 0
+#if 1
 			if(in_fut.HandlePauseResumeShouldICancel())
 			{
 				// We're being canceled.
