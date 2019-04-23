@@ -31,6 +31,7 @@
 #include <QFutureInterface>
 #include <QException>
 
+
 template <class T>
 class ExtFuture;
 

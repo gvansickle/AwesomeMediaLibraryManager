@@ -162,11 +162,12 @@ public:
 	 * default-constructed or moved from."
 	 * .waitForFinished() won't wait on a default-constructed future, thinks it's never run.
 	 */
-	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{ ExtAsync::detail::get_next_id() }	{ }
+	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no(ExtAsync::detail::get_next_id())
+	{
+	}
 
 	/// Copy constructor.
-	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)),
-			m_name(other.m_name)
+	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)), m_name(other.m_name)
 	{ m_extfuture_id_no.store(other.m_extfuture_id_no); }
 
 	/// Move constructor
@@ -224,6 +225,7 @@ public:
 	{
 #if 1
 		Q_UNUSED(other);
+		Q_ASSERT(0);
 		static_assert(NestedExtFuture<ExtFutureExtFutureT>, "Nested ExtFutures not supported");
 #else
 		M_WARNING("USING NESTED EXTFUTURE");
