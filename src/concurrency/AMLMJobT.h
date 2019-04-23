@@ -577,7 +577,7 @@ protected:
 
     /// The ExtFuture<T>.
     /// This is always a copy of an ExtFuture<T> created somewhere outside this class instance.
-	ExtFutureT m_ext_future { make_started_only_future<typename ExtFutureT::inner_t>() };
+	ExtFutureT m_ext_future { ExtAsync::make_started_only_future<typename ExtFutureT::inner_t>() };
 
 	/// The watcher for the ExtFuture.
 	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism

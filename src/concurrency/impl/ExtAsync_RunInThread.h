@@ -33,7 +33,7 @@
 
 // Ours.
 //#include "../ExtAsync_traits.h"
-//#include "../ExtAsyncFwd.h"
+#include "ExtFuture_make_xxx_future.h"
 #include "ExtFutureImplHelpers.h"
 #include "../ExtFuture.h"
 
@@ -140,17 +140,16 @@ namespace detail
 	 * @link https://stackoverflow.com/a/47875452
 	 * "There's no difference between std::invoke_result_t<F&&, Args&&...> and std::invoke_result_t<F, Args...>"
 	 */
-	template <class CallbackType, class... Args,
+	template <class CallbackType, class... Args//,
 //			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-			  class ExtFutureR//, = ExtFuture<R>,
 //			  REQUIRES(!is_ExtFuture_v<R>)
 			  >
-	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
+	auto qthread_async(CallbackType&& callback, Args&&... args) -> ExtFuture<Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>>
 	{
 		using R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>;
 		static_assert(!is_ExtFuture_v<R>);
 
-		ExtFutureR retfuture = make_started_only_future<R>();
+		ExtFuture<R> retfuture = make_started_only_future<R>();
 		retfuture.setName("Returned qthread_async()");
 
 		return detail::qthread_async(retfuture, callback, args...);

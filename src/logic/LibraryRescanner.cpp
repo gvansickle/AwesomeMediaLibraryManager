@@ -233,14 +233,14 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 	// Create a future so we can attach a watcher to get the QUrl results to the main thread.
 	/// @todo Obsoleting.
-	ExtFuture<QString> qurl_future = make_started_only_future<QString>();
+	ExtFuture<QString> qurl_future = ExtAsync::make_started_only_future<QString>();
 
 	// New container type we'll use to pass the incoming values to the new model.
 	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
 	// Create a future so we can attach a continuation to get the results to the main thread.
 	using SharedItemContType = std::shared_ptr<ItemContType>;
-	ExtFuture<SharedItemContType> tree_model_item_future = make_started_only_future<SharedItemContType>();
+	ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
 	ExtFuture<Unit> tail_future

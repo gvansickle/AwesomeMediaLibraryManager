@@ -23,9 +23,28 @@
 #ifndef SRC_CONCURRENCY_IMPL_EXTFUTURE_MAKE_XXX_FUTURE_H_
 #define SRC_CONCURRENCY_IMPL_EXTFUTURE_MAKE_XXX_FUTURE_H_
 
+// Std C++
+#include <type_traits>
+#include <atomic>
+
+// Qt5
+#include <QFutureInterface>
+#include <QException>
+
+template <class T>
+class ExtFuture;
 
 namespace ExtAsync
 {
+namespace detail
+{
+	inline static std::atomic_uint64_t get_next_id()
+	{
+		static std::atomic_uint64_t f_future_id_ctr {2};
+		return f_future_id_ctr.fetch_add(1);
+	}
+}
+
 /// @name ExtFuture<T> make_xxx_future() functions.
 /// @{
 
@@ -56,7 +75,7 @@ auto make_ready_future(T&& value) -> ExtFuture<std::decay_t<T>>
 	qfi.reportResult(std::forward<T>(value));
 	qfi.reportFinished();
 
-	return 	ExtFuture<T>(&qfi, get_next_id());
+	return 	ExtFuture<T>(&qfi, detail::get_next_id());
 }
 
 /**
@@ -71,13 +90,13 @@ auto make_ready_future_from_qlist(QList<T>&& value) -> ExtFuture<std::decay_t<T>
 	qfi.reportResults(QVector<T>::fromList(value));
 	qfi.reportFinished();
 
-	return 	ExtFuture<T>(&qfi, get_next_id());
+	return 	ExtFuture<T>(&qfi, detail::get_next_id());
 }
 
 template <class T, class E,
 		  REQUIRES(!is_ExtFuture_v<T>
 		  && std::is_base_of_v<QException, E>)>
-ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
+auto make_exceptional_future(const E & exception) -> ExtFuture<std::decay_t<T>>
 {
 	QFutureInterface<T> qfi;
 
@@ -85,21 +104,21 @@ ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
 	qfi.reportException(exception);
 	qfi.reportFinished();
 
-	return ExtFuture<T>(&qfi, get_next_id());
+	return ExtFuture<T>(&qfi, detail::get_next_id());
 }
 
 /**
  * Helper which returns a (Started) ExtFuture<T>.
  */
 template <typename T>
-ExtFuture<T> make_started_only_future()
+auto make_started_only_future() -> ExtFuture<std::decay_t<T>>
 {
 	static_assert(!is_ExtFuture_v<T>, "ExtFuture<T>: T cannot be a nested ExtFuture");
 	// QFutureInterface<T> starts out with a state of NoState.
 	QFutureInterface<T> fi;
 	fi.reportStarted();
 //	Q_ASSERT(ExtFutureState::state(fi) == ExtFutureState::Started) << state(fi);
-	return ExtFuture<T>(&fi, get_next_id());
+	return ExtFuture<T>(&fi, detail::get_next_id());
 }
 
 } // END ExtAsync

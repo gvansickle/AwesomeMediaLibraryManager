@@ -806,7 +806,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     }
 	else
 	{
-		the_future = make_started_only_future<int>();
+		the_future = ExtAsync::make_started_only_future<int>();
 	}
 
     ASSERT_TRUE(the_future.isStarted());
@@ -1440,7 +1440,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, TestMakeReadyFutures)
 {
 	TC_ENTER();
 
-	ExtFuture<int> future = make_ready_future(45);
+	ExtFuture<int> future = ExtAsync::make_ready_future(45);
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_TRUE(future.isFinished());
 	ASSERT_EQ(future.get_first(), 45);
@@ -1755,11 +1755,11 @@ TEST_F(ExtAsyncTestsSuiteFixture, StaticChecks)
 
 	// From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
 	// "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
-	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >);
+	static_assert(std::is_same_v<decltype(ExtAsync::make_ready_future(4)), ExtFuture<int> >);
 	int v;
-	static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
+	static_assert(!std::is_same_v<decltype(ExtAsync::make_ready_future(std::ref(v))), ExtFuture<int&> >);
 	/// @todo
-//	static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<void> >);
+//	static_assert(std::is_same_v<decltype(ExtAsync::make_ready_future()), ExtFuture<void> >);
 
 }
 

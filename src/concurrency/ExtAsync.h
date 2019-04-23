@@ -58,8 +58,10 @@
 //class ExtFuture;
 #include "ExtFuture.h"
 
-template <typename T>
-ExtFuture<T> make_started_only_future();
+//template <typename T>
+//ExtFuture<T> make_started_only_future();
+
+#include "impl/ExtFuture_make_xxx_future.h"
 
 #include "impl/ExtAsync_impl.h"
 //#include "impl/ExtAsync_RunInThread.h"

@@ -78,15 +78,16 @@ std::atomic_uint64_t get_next_id();
 
 #include "impl/ExtFutureImplHelpers.h"
 #include "impl/ExtAsync_RunInThread.h"
+#include "impl/ExtFuture_make_xxx_future.h"
 
-template <typename T>
-ExtFuture<T> make_started_only_future();
+//template <typename T>
+//ExtFuture<T> make_started_only_future();
 
-template<typename T>
-auto make_ready_future(T&& value) -> ExtFuture<std::decay_t<T>>;
+//template<typename T>
+//auto make_ready_future(T&& value) -> ExtFuture<std::decay_t<T>>;
 
-template<typename T>
-auto make_ready_future_from_qlist(QList<T>&& value) -> ExtFuture<std::decay_t<T>>;
+//template<typename T>
+//auto make_ready_future_from_qlist(QList<T>&& value) -> ExtFuture<std::decay_t<T>>;
 
 
 /**
@@ -161,7 +162,7 @@ public:
 	 * default-constructed or moved from."
 	 * .waitForFinished() won't wait on a default-constructed future, thinks it's never run.
 	 */
-	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{get_next_id()}	{ }
+	explicit ExtFuture() : QFuture<T>(), m_extfuture_id_no{ ExtAsync::detail::get_next_id() }	{ }
 
 	/// Copy constructor.
 	ExtFuture(const ExtFuture<T>& other) : QFuture<T>(&(other.d)),
@@ -863,7 +864,7 @@ public:
 
 
 		// The future we'll immediately return.  We copy this into the then_callback ::run() context below.
-		ExtFuture<LiftedR> returned_future = make_started_only_future<LiftedR>();
+		ExtFuture<LiftedR> returned_future = ExtAsync::make_started_only_future<LiftedR>();
 		/// @todo Use context.
 		QtConcurrent::run(
 //		returned_future = ExtAsync::run_for_then(
@@ -1125,7 +1126,7 @@ public:
 	          )>
 	ExtFuture<R> then_run_in_event_loop(QObjectType* context, ThenCallbackType&& then_callback) const
 	{
-		ExtFuture<R> retfuture = make_started_only_future<R>();
+		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
 		retfuture = ExtAsync::qthread_async([=](ExtFuture<T> this_future) mutable  {
 
@@ -1186,7 +1187,7 @@ public:
 			>
 	ThenReturnType then_qthread_async( ThenCallbackType&& then_callback ) const
 	{
-		ThenReturnType retfuture = make_started_only_future<R>();
+		ThenReturnType retfuture = ExtAsync::make_started_only_future<R>();
 
 		ExtAsync::qthread_async(
 					[=, fd_then_callback=DECAY_COPY(std::forward<ThenCallbackType>(then_callback))](ExtFuture<T> in_future, ThenReturnType returned_future_copy) mutable {
@@ -1458,7 +1459,7 @@ protected:
 		// with this_future in a non-blocking state.
 
 		// The future we'll immediately return.  We copy this into the streaming_tap_callback's ::run() context.
-		ExtFuture<T> returned_future = make_started_only_future<T>();
+		ExtFuture<T> returned_future = ExtAsync::make_started_only_future<T>();
 
 		// The concurrent run().
 		/*ExtFuture<T> returned_future =*/

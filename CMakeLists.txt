@@ -275,6 +275,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
 # typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
 # without overriding a user-provided value"
+### @todo This is still broken: prefix.sh gets generated (first time after a wipe?) with /usr/bin paths.
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 	set(NEW_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
 	message(STATUS "Changing CMAKE_INSTALL_PREFIX from ${CMAKE_INSTALL_PREFIX} to ${NEW_INSTALL_PREFIX}")
