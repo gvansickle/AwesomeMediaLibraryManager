@@ -37,26 +37,27 @@
 // Generated
 #include "logging_cat_ExtFuture.h"
 
-
-namespace ExtAsync
-{
-template <class CallbackType, class... Args,
-		  class R,// = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
-		  class ExtFutureR//, = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
-		  //REQUIRES(!is_ExtFuture_v<R>)
-		  >
-ExtFutureR qthread_async(CallbackType&& callback, Args&&... args);
-}
-
 template <class T>
 class ExtFuture;
 
+//namespace ExtAsync
+//{
+//template <class CallbackType, class... Args,
+//		  //class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+//		  class ExtFutureR//, = ExtFuture<R>,//std::conditional_t<is_ExtFuture_v<R>, R, ExtFuture<R>>
+//		  //REQUIRES(!is_ExtFuture_v<R>)
+//		  >
+//auto qthread_async(CallbackType&& callback, Args&&... args) -> ExtFuture<Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>>;
+//} // END ExtAsync
 
-template <class FutureType, class NextFunction>
-auto external_then(FutureType f, NextFunction n) -> ExtFuture<decltype(n(f.get()))>
-{
-	return ExtAsync::qthread_async([=](){f.get();});
-}
+
+
+
+//template <class FutureType, class NextFunction>
+//auto external_then(FutureType f, NextFunction n) -> ExtFuture<decltype(n(f.get()))>
+//{
+//	return ExtAsync::qthread_async([=](){f.get();});
+//}
 
 
 template <class T, class CallbackType, class R,  class... Args>

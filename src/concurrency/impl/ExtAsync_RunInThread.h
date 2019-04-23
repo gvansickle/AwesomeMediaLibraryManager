@@ -33,12 +33,14 @@
 
 // Ours.
 //#include "../ExtAsync_traits.h"
-#include "../ExtAsyncFwd.h"
+//#include "../ExtAsyncFwd.h"
 #include "ExtFutureImplHelpers.h"
 #include "../ExtFuture.h"
 
 
 namespace ExtAsync
+{
+namespace detail
 {
 	template <class CallbackType, class... Args,
 			  class CBReturnType = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
@@ -127,6 +129,7 @@ namespace ExtAsync
 
 		return retfuture;
 	}
+}; // END ExtAsync::detail
 
 	/**
 	 * Run a callback in a QThread.
@@ -138,16 +141,19 @@ namespace ExtAsync
 	 * "There's no difference between std::invoke_result_t<F&&, Args&&...> and std::invoke_result_t<F, Args...>"
 	 */
 	template <class CallbackType, class... Args,
-			  class R /*= Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>*/,
-			  class ExtFutureR /*= ExtFuture<R>,*/
-			  /*REQUIRES(!is_ExtFuture_v<R>)*/
+//			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+			  class ExtFutureR//, = ExtFuture<R>,
+//			  REQUIRES(!is_ExtFuture_v<R>)
 			  >
 	ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
 	{
+		using R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>;
+		static_assert(!is_ExtFuture_v<R>);
+
 		ExtFutureR retfuture = make_started_only_future<R>();
 		retfuture.setName("Returned qthread_async()");
 
-		return qthread_async(retfuture, callback, args...);
+		return detail::qthread_async(retfuture, callback, args...);
 	}
 
 
@@ -156,17 +162,17 @@ namespace ExtAsync
 	 * Callback is passed an ExtFuture<T>, which it should use for all control and reporting.
 	 * @returns A copy of the ExtFuture<T> passed to the callback.
 	 */
-	template<class CallbackType, class ExtFutureT/* = argtype_t<CallbackType, 0>*/, class... Args/*,
+	template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
 		REQUIRES(is_ExtFuture_v<ExtFutureT>
 			 && !is_nested_ExtFuture_v<ExtFutureT>
-			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)*/>
+			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
 	ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 		retfuture.setName("CNRRetfuture");
 
 #if 1
-		return qthread_async(retfuture, callback, retfuture, args...);
+		return detail::qthread_async(retfuture, callback, retfuture, args...);
 #else
 		qthread_async([=,fd_callback=DECAY_COPY(std::forward<CallbackType>(callback))](ExtFutureT cnr_future, auto... args){
 			Q_ASSERT(retfuture == cnr_future);

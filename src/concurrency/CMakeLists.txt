@@ -31,6 +31,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	IExtFutureWatcher.h
 	impl/ExtAsync_impl.h
 	impl/ExtFuture_impl.hpp
+	impl/ExtFuture_make_xxx_future.h
 	impl/ExtFuture_when_all.h
 	impl/ExtFuture_when_any.h
 	impl/ExtFutureImplHelpers.h

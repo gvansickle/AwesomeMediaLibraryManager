@@ -41,7 +41,7 @@
 
 // Ours
 #include <utils/DebugHelpers.h>
-//#include "../ExtFuture.h"
+//#include "../ExtFuture.h" ///< Can't include this because it uses context_has_event_loop().
 #include "../ExtAsync_traits.h"
 #include "../ExtAsyncExceptions.h"
 

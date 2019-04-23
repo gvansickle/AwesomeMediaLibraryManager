@@ -54,12 +54,13 @@
 #include "utils/DebugHelpers.h"
 #include "utils/ConnectHelpers.h"
 
-template <typename T>
-class ExtFuture;
+//template <typename T>
+//class ExtFuture;
+#include "ExtFuture.h"
+
 template <typename T>
 ExtFuture<T> make_started_only_future();
 
-#include "ExtAsyncFwd.h"
 #include "impl/ExtAsync_impl.h"
 //#include "impl/ExtAsync_RunInThread.h"
 
@@ -1054,12 +1055,5 @@ static void run_in_event_loop(QObject* context, CallableType&& callable)
 	Q_ASSERT(retval == true);
 }
 
-
-namespace ExtAsync
-{
-
-//.....
-
-} // Namespace ExtAsync.
 
 #endif /* CONCURRENCY_EXTASYNC_H_ */

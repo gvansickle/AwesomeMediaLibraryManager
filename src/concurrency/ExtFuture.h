@@ -60,8 +60,7 @@
 // Generated
 #include "logging_cat_ExtFuture.h"
 
-// ExtAsync forward declarations.
-#include "ExtAsyncFwd.h"
+// ExtAsync
 #include "ExtAsync.h"
 
 template <class T>
@@ -72,11 +71,13 @@ std::atomic_uint64_t get_next_id();
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
 #include "ExtAsync_traits.h"
+#include "impl/ExtAsync_impl.h"
+
 
 #if defined(TEMPL_ONLY_NEED_DECLARATION) || !defined(TEMPL_ONLY_NEED_DEF)
 
 #include "impl/ExtFutureImplHelpers.h"
-#include "impl/ExtAsync_impl.h"
+#include "impl/ExtAsync_RunInThread.h"
 
 template <typename T>
 ExtFuture<T> make_started_only_future();
@@ -1684,79 +1685,6 @@ ExtFuture<Unit> qToUnitExtFuture(const ExtFuture<T> &future)
 
 
 /**
- * Creates a completed future containing the value @a value.
- *
- * @param value
- * @return  A ready ExtFuture<deduced_type_t<T>>();
- */
-/**
- * Create and return a finished future of type ExtFuture<T>.
- *
- * Intended to be a mostly-work-alike to std::experimental::make_ready_future.
- * @see http://en.cppreference.com/w/cpp/experimental/make_ready_future
- *
- * @todo Specialize for void, or use Unit.
- * @todo return type decay rules when decay<T> is ref wrapper.
- *
- * @param value
- * @return
- */
-template<typename T>
-auto make_ready_future(T&& value) -> ExtFuture<std::decay_t<T>>
-{
-	QFutureInterface<T> qfi;
-
-	qfi.reportStarted();
-	qfi.reportResult(std::forward<T>(value));
-	qfi.reportFinished();
-
-	return 	ExtFuture<T>(&qfi, get_next_id());
-}
-
-/**
- * Same as above, but with a QList<T> from an upstream ExtFuture<T>.
- */
-template<typename T>
-auto make_ready_future_from_qlist(QList<T>&& value) -> ExtFuture<std::decay_t<T>>
-{
-	QFutureInterface<T> qfi;
-
-	qfi.reportStarted();
-	qfi.reportResults(QVector<T>::fromList(value));
-	qfi.reportFinished();
-
-	return 	ExtFuture<T>(&qfi, get_next_id());
-}
-
-template <class T, class E,
-		  REQUIRES(!is_ExtFuture_v<T>
-		  && std::is_base_of_v<QException, E>)>
-ExtFuture<typename std::decay_t<T>> make_exceptional_future(const E & exception)
-{
-	QFutureInterface<T> qfi;
-
-	qfi.reportStarted();
-	qfi.reportException(exception);
-	qfi.reportFinished();
-
-	return ExtFuture<T>(&qfi, get_next_id());
-}
-
-/**
- * Helper which returns a (Started) ExtFuture<T>.
- */
-template <typename T>
-ExtFuture<T> make_started_only_future()
-{
-	static_assert(!is_ExtFuture_v<T>, "ExtFuture<T>: T cannot be a nested ExtFuture");
-	// QFutureInterface<T> starts out with a state of NoState.
-	QFutureInterface<T> fi;
-	fi.reportStarted();
-//	Q_ASSERT(ExtFutureState::state(fi) == ExtFutureState::Started) << state(fi);
-	return ExtFuture<T>(&fi, get_next_id());
-}
-
-/**
  * QDebug stream operator.
  */
 template <typename T>
@@ -1801,6 +1729,8 @@ extern template class ExtFuture<double>;
 extern template class ExtFuture<QString>;
 extern template class ExtFuture<QByteArray>;
 /// @}
+
+#include "impl/ExtFuture_impl.hpp"
 
 #endif /* SRC_CONCURRENCY_EXTFUTURE_H_ */
 
