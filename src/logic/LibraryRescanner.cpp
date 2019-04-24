@@ -297,8 +297,8 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 			{
 				qWr() << "tap_callback saw finished/empty new_items";
 
-M_TODO("This needs to reportFinished before the next steps below which save the DB, NOT WORKING HERE");
-tree_model_item_future.reportFinished();
+//M_TODO("This needs to reportFinished before the next steps below which save the DB, NOT WORKING HERE");
+//tree_model_item_future.reportFinished();
 
 				return;
 			}
@@ -330,10 +330,6 @@ tree_model_item_future.reportFinished();
 		// The dirscan is complete.
 		qDb() << "DIRSCAN COMPLETE .then()";
 	})
-//	;
-
-
-	//tail_future
 	/// @then Finish the two output futures.
 	.then([=, tree_model_item_future=tree_model_item_future](ExtFuture<Unit> future) mutable -> void {
 		// Finish a couple futures we started in this, and since this is done, there should be no more
