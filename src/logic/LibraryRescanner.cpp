@@ -180,10 +180,8 @@ M_WARNING("There's no locking here, there needs to be, or these need to be copie
     return retval;
 }
 
-void LibraryRescanner::SaveDatabase(ScanResultsTreeModel* tree_model_ptr)
+void LibraryRescanner::SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename)
 {
-	QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
-
 	qIn() << "###### WRITING" << database_filename;
 	qIn() << "###### TREEMODELPTR HAS NUM ROWS:" << tree_model_ptr->rowCount();
 
@@ -424,6 +422,15 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	            m_last_elapsed_time_dirscan = m_timer.elapsed();
 	            qIn() << "Directory scan took" << m_last_elapsed_time_dirscan << "ms";
 
+		        // Save the database out to XML.
+		        QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
+
+		        Q_ASSERT(m_model_ready_to_save_to_db == true);
+		        m_model_ready_to_save_to_db = false;
+
+		        SaveDatabase(tree_model_ptr, database_filename);
+
+
 /// @todo EXPERIMENTAL
 #if 0
 				QString filename = QDir::homePath() + "/AMLM_DeleteMe_XQuery.xml";
@@ -436,13 +443,6 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 				}
 				else
 				{
-					QString database_filename = QDir::homePath() + "/AMLMDatabase.xml";
-
-					Q_ASSERT(m_model_ready_to_save_to_db == true);
-					m_model_ready_to_save_to_db = false;
-
-					// Save the database out to XML.
-					SaveDatabase(tree_model_ptr);
 					{
 						/// Let's now try to read it back.
 						ScanResultsTreeModel* readback_tree_model;

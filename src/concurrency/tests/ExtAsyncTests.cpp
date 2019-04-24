@@ -569,13 +569,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 	TC_ENTER();
 
 	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
-//	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
 		for(int i = 0; i<10; i++)
 		{
 			TCOUT << "qthread_async_with_cnr_future() iteration:" << i;
 			// Do nothing for a sec.
 			TC_Sleep(1000);
-#if 1
+
 			if(in_fut.HandlePauseResumeShouldICancel())
 			{
 				// We're being canceled.
@@ -592,7 +591,6 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBot
 				in_fut.reportFinished();
 				return 0;
 			}
-#endif
 		}
 
 		ADD_FAILURE() << "Finished thread function not due to cancel.";

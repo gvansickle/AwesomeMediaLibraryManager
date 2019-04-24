@@ -227,10 +227,10 @@ namespace ExtAsync
 //					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 //					retfuture_copy.reportException(e);
 					qWr() << "NON-THROWING CANCEL, RETURNING";
-					return;
+//					return;
 				}
 
-				// Even in the case of exception, we need to reportFinished() or we just hang.
+				// Even in the case of exception or cancelation, we need to reportFinished() or we just hang.
 				retfuture_copy.reportFinished();
 			};
 
@@ -742,9 +742,6 @@ namespace ExtAsync
 				);
 	}
 
-
-
-
 #if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
      * ExtAsync::run() overload for member functions of classes derived from AMLMJob taking zero params.
@@ -858,7 +855,7 @@ namespace ExtAsync
 			  )>
 	auto run_zero_params(CallableType&& function) -> ExtFuture<R>
 	{
-		ExtFuture<R> retfuture;
+		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
 		/*
 		 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
@@ -877,7 +874,6 @@ namespace ExtAsync
 				retval = std::invoke(fn);
 				// Report our single result.
 				retfuture.reportResult(retval);
-				retfuture.reportFinished();
 			}
 			catch(ExtAsyncCancelException& e)
 			{
@@ -900,7 +896,9 @@ namespace ExtAsync
 			{
 				retfuture.reportException(QUnhandledException());
 			}
-	    	;}, std::forward<ExtFuture<R>>(retfuture));
+			retfuture.reportFinished();
+
+		}, std::forward<ExtFuture<R>>(retfuture));
 
 	    return retfuture;
 	}
@@ -915,16 +913,16 @@ namespace ExtAsync
 	 * @param function  Callable, R function(Args...)
      * @return
      */
-	template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, typename... Args,
+	template <typename CallbackType, class... Args, typename R = std::invoke_result_t<CallbackType, Args...>,
         REQUIRES(!std::is_member_function_pointer_v<CallbackType>
 			  && (sizeof...(Args) > 0)
 			  && is_non_void_non_ExtFuture_v<R>
 			&& (arity_v<CallbackType> > 0)
-			&& ct::is_invocable_r_v<R, CallbackType, Args&&...>)
+			&& std::is_invocable_r_v<R, CallbackType, Args&&...>)
         >
 	ExtFuture<R> run(CallbackType&& function, Args&&... args)
     {
-		ExtFuture<R> retfuture;
+		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
 		/**
 		 * @todo Exception handling.
@@ -986,6 +984,7 @@ namespace ExtAsync
 		{
 			retfuture.reportException(QUnhandledException());
 		}
+		retfuture.reportFinished();
 
 		return retfuture;
     }

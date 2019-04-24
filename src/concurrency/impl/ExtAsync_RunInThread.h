@@ -170,55 +170,9 @@ namespace detail
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
 		retfuture.setName("CNRRetfuture");
 
-#if 1
 		return detail::qthread_async(retfuture, callback, retfuture, args...);
-#else
-		qthread_async([=,fd_callback=DECAY_COPY(std::forward<CallbackType>(callback))](ExtFutureT cnr_future, auto... args){
-			Q_ASSERT(retfuture == cnr_future);
-			// We have to catch any exceptions ourselves here, because we need to propagate them
-			// to the CnR future, not the returned future.
-			try
-			{
-				std::invoke(std::move(fd_callback), cnr_future, args...);
-			}
-			catch(ExtAsyncCancelException& e)
-			{
-				qDb() << "IN CNR, CAUGHT CANCEL EXCEPTION";
-				cnr_future.reportException(e);
-			}
-			catch(QException& e)
-			{
-				qDb() << "CALLBACK THREW";
-				cnr_future.reportException(e);
-			}
-			catch(...)
-			{
-				cnr_future.reportException(QUnhandledException());
-			}
-			cnr_future.reportFinished();
-
-			}, retfuture, args...);
-
-		return retfuture;
-#endif
 	};
 
-
-//	/**
-//	 * Attach a Sutteresque .then()-like continuation to a run_in_qthread().
-//	 */
-//	template <class InFutureT, class CallbackType, class OutFutureU>
-//	static OutFutureU then_in_main_thread(InFutureT in_future, CallbackType&& then_callback)
-//	{
-//		using U = typename OutFutureU::value_type;
-//		OutFutureU retfuture = make_started_only_future<U>();
-//
-//		QFutureWatcher<U>* watcher = new QFutureWatcher<U>(qobject_cast<QObject>(qApp));
-//
-//		connect_or_die(watcher, &QFutureWatcher<U>::finished, watcher, &QFutureWatcher<U>::deleteLater);
-//
-//		return retfuture;
-//	};
 //
 //	template <class Fut, class Work>
 //	auto then_in_qthread(Fut&& f, Work&& w) -> ExtFuture<decltype(w(f.get()))>
