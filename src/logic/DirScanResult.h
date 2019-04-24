@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -50,8 +50,6 @@ public:
 	/// @name Public default and copy constructors and destructor needed for Q_DECLARE_METATYPE().
 	/// @{
 	M_GH_RULE_OF_FIVE_DEFAULT_C21(DirScanResult);
-//    DirScanResult() = default;
-//    DirScanResult(const DirScanResult& other) = default;
 	~DirScanResult() override = default;
 	/// @}
 
