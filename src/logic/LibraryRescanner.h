@@ -42,6 +42,7 @@
 class LibraryModel;
 class LibraryEntry;
 class ScanResultsTreeModel;
+class SharedItemContType;
 
 
 struct MetadataReturnVal
@@ -127,6 +128,8 @@ private:
 	LibraryModel* m_current_libmodel;
 
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
+M_TODO("THIS IS BROKEN");
+	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
 	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 };
 

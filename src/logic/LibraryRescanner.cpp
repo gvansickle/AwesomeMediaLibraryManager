@@ -352,7 +352,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 
 		AMLM_ASSERT_IN_GUITHREAD();
 
-		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future;
+		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
 		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
@@ -545,6 +545,10 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		}
 	});
 	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
+
+	connect_or_die(&m_efwatcher_tree_model_append, &QFutureWatcher<SharedItemContType>::resultReadyAt,
+				   this, [](){});
+	m_efwatcher_tree_model_append.setFuture();
 
 	// Metadata refresh results to this (the main) thread, via a slot for further processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
