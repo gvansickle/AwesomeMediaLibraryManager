@@ -234,10 +234,10 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 	ExtFuture<QString> qurl_future = ExtAsync::make_started_only_future<QString>();
 
 	// New container type we'll use to pass the incoming values to the new model.
-	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
+//	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
 
 	// Create a future so we can attach a continuation to get the results to the main thread.
-	using SharedItemContType = std::shared_ptr<ItemContType>;
+//	using SharedItemContType = std::shared_ptr<ItemContType>;
 	ExtFuture<SharedItemContType> tree_model_item_future = ExtAsync::make_started_only_future<SharedItemContType>();
 
 	// Attach a streaming tap to the dirscan future.
@@ -347,6 +347,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
 	});
 
+#if 0
 	/// @then
 	tree_model_item_future.then(qApp, [=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future) {
 
@@ -395,7 +396,9 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			Q_ASSERT(m_model_ready_to_save_to_db == false);
 			m_model_ready_to_save_to_db = true;
 		})
-
+#endif
+			ExtFuture<Unit> dirtrav_complete = ExtAsync::make_started_only_future<Unit>();
+	dirtrav_complete
 		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
@@ -546,9 +549,67 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	});
 	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
 
+	//
+	// TreeModelItems
+	//
 	connect_or_die(&m_efwatcher_tree_model_append, &QFutureWatcher<SharedItemContType>::resultReadyAt,
-				   this, [](){});
-	m_efwatcher_tree_model_append.setFuture();
+				   this, [=, tree_model_ptr=tree_model](int index) mutable {
+		auto result = this->m_efwatcher_tree_model_append.resultAt(index);
+		AMLM_ASSERT_IN_GUITHREAD();
+
+//		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
+
+		// For each QList<SharedItemContType> entry.
+//		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
+		const SharedItemContType& new_items_vector_ptr = result;
+		{
+			// Append entries to the ScanResultsTreeModel.
+			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
+			{
+				// Make sure the entry wasn't moved from.
+				Q_ASSERT(bool(entry) == true);
+				// Get the last top-level row.
+//				auto last_row_index = tree_model_ptr->rowCount() - 1;
+//				Q_ASSERT(last_row_index >= 0);
+
+				auto new_child = std::make_unique<SRTMItem_LibEntry>();
+				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+
+M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
+				lib_entry->populate(true);
+
+				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+				/// @note Here we only care about the LibraryEntry corresponding to each file.
+//				if(!lib_entry->isSubtrack())
+//				{
+//					lib_entries = lib_entry->split_to_tracks();
+//				}
+//				else
+				{
+					lib_entries.push_back(lib_entry);
+				}
+				new_child->setLibraryEntry(lib_entries.at(0));
+				entry->appendChild(std::move(new_child));
+			}
+
+			// Finally, move the new model items to their new home.
+			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
+//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
+		}
+	});
+	connect_or_die(&m_efwatcher_tree_model_append, &QFutureWatcher<SharedItemContType>::finished,
+				   this, [=, tree_model_ptr=tree_model]() mutable {
+		Q_ASSERT(this->m_model_ready_to_save_to_db == false);
+		this->m_model_ready_to_save_to_db = true;
+
+			dirtrav_complete.reportFinished();
+	});
+	m_efwatcher_tree_model_append.setFuture(tree_model_item_future);
+	//
+	//
+	//
+
 
 	// Metadata refresh results to this (the main) thread, via a slot for further processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,

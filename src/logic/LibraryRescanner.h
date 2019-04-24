@@ -128,7 +128,9 @@ private:
 	LibraryModel* m_current_libmodel;
 
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
-M_TODO("THIS IS BROKEN");
+	/// @todo
+	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
+	using SharedItemContType = std::shared_ptr<ItemContType>;
 	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
 	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 };
