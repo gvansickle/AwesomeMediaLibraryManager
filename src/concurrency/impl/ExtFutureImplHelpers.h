@@ -413,9 +413,19 @@ void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_cop
 				   [=,
 				   this_future_copy_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(this_future_copy)),
 				   callback_cp=DECAY_COPY(std::forward<CallbackType>(callback))](int begin, int end) mutable {
-		//callback_cp(this_future_copy_copy, begin, end);
 		std::invoke(callback_cp, this_future_copy, begin, end);
+	   	/// @note We're temporarily copying to the output future here, we should change that to use a separate thread.
+		for(int i = begin; i < end; ++i)
+		{
+			ret_future_copy.reportResult(this_future_copy_copy, i);
+		}
 	});
+	// Canceled.
+	connect_or_die(this_future_watcher, &QFutureWatcher<T>::canceled, context,
+			[=, ret_future_copy_copy=DECAY_COPY(ret_future_copy)]() mutable { ret_future_copy_copy.reportCanceled(); });
+	// Finished.
+	connect_or_die(this_future_watcher, &QFutureWatcher<T>::finished, context,
+				   [=]() mutable { ret_future_copy.reportFinished(); });
 
 	retfuture_watcher->setFuture(ret_future_copy);
 	this_future_watcher->setFuture(this_future_copy);

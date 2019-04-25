@@ -347,16 +347,22 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		qDb() << "FINISHED:" << M_ID_VAL(qurl_future);
 	});
 
-#if 0
-	/// @then
-	tree_model_item_future.then(qApp, [=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future) {
+#if 1
+	/// @stap
+	/// Append TreeModelItems to the tree_model.
+	tree_model_item_future.stap(this,
+								[=, tree_model_ptr=tree_model](ExtFuture<SharedItemContType> new_items_future, int begin_index, int end_index) mutable {
 
 		AMLM_ASSERT_IN_GUITHREAD();
 
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
-		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
+//		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
+		for(int index = begin_index; index < end_index; ++index)
+		{
+		auto result = new_items_future.resultAt(index);
+		const SharedItemContType& new_items_vector_ptr = result;
 		{
 			// Append entries to the ScanResultsTreeModel.
 			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
@@ -392,13 +398,19 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
 //			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 		}
+		}
 
-			Q_ASSERT(m_model_ready_to_save_to_db == false);
-			m_model_ready_to_save_to_db = true;
 		})
 #endif
+#if 0
 			ExtFuture<Unit> dirtrav_complete = ExtAsync::make_started_only_future<Unit>();
 	dirtrav_complete
+#endif
+		.then([&](ExtFuture<SharedItemContType> f){
+		Q_ASSERT(m_model_ready_to_save_to_db == false);
+		m_model_ready_to_save_to_db = true;
+		return unit;
+		})
 		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
@@ -558,6 +570,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 		}
 	});
 
+#if 0
 	//
 	// TreeModelItems
 	//
@@ -618,7 +631,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	//
 	//
 	//
-
+#endif
 
 	// Metadata refresh results to this (the main) thread, via a slot for further processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
