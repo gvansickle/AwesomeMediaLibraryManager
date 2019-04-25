@@ -70,7 +70,7 @@ class ExtFuture;
 std::atomic_uint64_t get_next_id();
 
 // Stuff that ExtFuture.h needs to have declared/defined prior to the ExtFuture<> declaration.
-#include "ExtAsync_traits.h"
+#include "ExtFuture_traits.h"
 #include "impl/ExtAsync_impl.h"
 
 

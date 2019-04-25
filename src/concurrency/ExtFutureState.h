@@ -33,7 +33,7 @@
 // Ours
 #include <utils/QtHelpers.h>
 #include <utils/StringHelpers.h>
-#include "ExtAsync_traits.h"
+#include "ExtFuture_traits.h"
 
 class ExtFutureState
 {

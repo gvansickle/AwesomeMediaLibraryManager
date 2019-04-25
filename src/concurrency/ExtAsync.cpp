@@ -26,7 +26,7 @@
 #include <type_traits>
 #include <future/future_type_traits.hpp>
 
-#include "ExtAsync_traits.h"
+#include "ExtFuture_traits.h"
 #include <utils/DebugHelpers.h>
 
 

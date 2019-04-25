@@ -27,7 +27,7 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	ExtFutureProgressInfo.h
 	ExtFuturePropagationHandler.h
 	ExtFutureWatcher.h
-	ExtAsync_traits.h
+	ExtFuture_traits.h
 	IExtFutureWatcher.h
 	impl/ExtAsync_impl.h
 	impl/ExtFuture_impl.hpp
