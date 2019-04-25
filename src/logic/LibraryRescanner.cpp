@@ -537,17 +537,26 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	// Hook up future watchers.
 	//
 
-	// Dirscan QUrls to the m_current_libmodel.
-	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultsReadyAt,
-				   m_current_libmodel, [=](int begin_index, int end_index){
+//	// Dirscan QUrls to the m_current_libmodel.
+//	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultsReadyAt,
+//				   m_current_libmodel, [=](int begin_index, int end_index){
+//		for(int i = begin_index; i<end_index; ++i)
+//		{
+//			/// @todo Maybe coming in out of order.
+//			QString url_str = m_extfuture_watcher_dirtrav.resultAt(i);
+//			m_current_libmodel->SLOT_onIncomingFilename(url_str);
+//		}
+//	});
+//	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
+
+	qurl_future.stap(this, [=](ExtFuture<QString> ef, int begin_index, int end_index) {
 		for(int i = begin_index; i<end_index; ++i)
 		{
 			/// @todo Maybe coming in out of order.
-			QString url_str = m_extfuture_watcher_dirtrav.resultAt(i);
+			QString url_str = ef.resultAt(i);
 			m_current_libmodel->SLOT_onIncomingFilename(url_str);
 		}
 	});
-	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
 
 	//
 	// TreeModelItems

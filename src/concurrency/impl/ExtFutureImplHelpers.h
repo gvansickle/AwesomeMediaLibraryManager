@@ -25,6 +25,7 @@
 #include <functional>
 
 // Qt5
+#include <QFutureWatcher>
 #include <QList>
 #include <QThreadPool>
 
@@ -372,15 +373,52 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 }
 
 /**
+ * @todo doc fixes:
  * Template to try to get a common handle on exception and cancel handling.
- * CallbackType == ExtFuture<R> callback(ExtFuture<T> this_future, args...)
+ * CallbackType == void callback(ExtFuture<T> this_future, int begin, int end, args...)
  *
- * For an ExtFuture<T>::then(), the futures should be *this and the returned_future, resp.
+ * For an ExtFuture<T>::stap(), the futures should be *this and the returned_future, resp.
+ *
+ * @param context  The QObject*, and hence the thread, within which @a ret_future_copy lives.
+ * @param this_future_copy  The upstream future.  May or may not live in the same thread as ret_future_copy, may not have an event loop.
+ * @param ret_future_copy   The downstream future.  Must live in the same thread as @a context.
  */
 template <class T, class CallbackType, class R,  class... Args>
-void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args)
+void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy,
+								  CallbackType&& callback, Args&&... args)
 {
+	static_assert(std::is_void_v<std::invoke_result_t<CallbackType, ExtFuture<T>, int, int/*, Args...*/>>, "Callback must return void.");
 
+	// Watchers will live in context's thread.
+	QFutureWatcher<R>* retfuture_watcher = new QFutureWatcher<R>(context);
+	QFutureWatcher<T>* this_future_watcher = new QFutureWatcher<T>(context);
+
+	// R->T ("upstream") cancel signal.
+	connect_or_die(retfuture_watcher, &QFutureWatcher<R>::canceled, context, [=,
+				   this_future_copy_copy=DECAY_COPY(std::forward<ExtFuture<T>>(this_future_copy))]() mutable {
+		// Note we directly call cancel() (but from context's thread) because this_future_copy may not have an event loop.
+		this_future_copy_copy.cancel();
+	});
+	// R->T ("upstream") finished signal.
+	/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
+	connect_or_die(retfuture_watcher, &QFutureWatcher<R>::finished, context, [=,
+				   this_future_copy_copy=DECAY_COPY(std::forward<ExtFuture<T>>(this_future_copy))]() mutable {
+		// Note we directly call cancel() (but from context's thread) because this_future_copy may not have an event loop.
+		this_future_copy_copy.reportFinished();
+	});
+
+	// T->R ("downstream") signals.
+	// The resultsReadyAt signal.
+	connect_or_die(this_future_watcher, &QFutureWatcher<T>::resultsReadyAt, context,
+				   [=,
+				   this_future_copy_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(this_future_copy)),
+				   callback_cp=DECAY_COPY(std::forward<CallbackType>(callback))](int begin, int end) mutable {
+		//callback_cp(this_future_copy_copy, begin, end);
+		std::invoke(callback_cp, this_future_copy, begin, end);
+	});
+
+	retfuture_watcher->setFuture(ret_future_copy);
+	this_future_watcher->setFuture(this_future_copy);
 }
 
 #if 0
