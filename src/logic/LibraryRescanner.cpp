@@ -361,57 +361,53 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 //		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
 		for(int index = begin_index; index < end_index; ++index)
 		{
-		auto result = new_items_future.resultAt(index);
-		const SharedItemContType& new_items_vector_ptr = result;
-		{
-			// Append entries to the ScanResultsTreeModel.
-			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
+			auto result = new_items_future.resultAt(index);
+			const SharedItemContType& new_items_vector_ptr = result;
 			{
-				// Make sure the entry wasn't moved from.
-				Q_ASSERT(bool(entry) == true);
-				// Get the last top-level row.
-//				auto last_row_index = tree_model_ptr->rowCount() - 1;
-//				Q_ASSERT(last_row_index >= 0);
-
-				auto new_child = std::make_unique<SRTMItem_LibEntry>();
-				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
-
-M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
-				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
-				lib_entry->populate(true);
-
-				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-				/// @note Here we only care about the LibraryEntry corresponding to each file.
-//				if(!lib_entry->isSubtrack())
-//				{
-//					lib_entries = lib_entry->split_to_tracks();
-//				}
-//				else
+				// Append entries to the ScanResultsTreeModel.
+				for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
 				{
-					lib_entries.push_back(lib_entry);
+					// Make sure the entry wasn't moved from.
+					Q_ASSERT(bool(entry) == true);
+					// Get the last top-level row.
+	//				auto last_row_index = tree_model_ptr->rowCount() - 1;
+	//				Q_ASSERT(last_row_index >= 0);
+
+					auto new_child = std::make_unique<SRTMItem_LibEntry>();
+					std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
+
+	M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+					qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
+					lib_entry->populate(true);
+
+					std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
+					/// @note Here we only care about the LibraryEntry corresponding to each file.
+	//				if(!lib_entry->isSubtrack())
+	//				{
+	//					lib_entries = lib_entry->split_to_tracks();
+	//				}
+	//				else
+					{
+						lib_entries.push_back(lib_entry);
+					}
+					new_child->setLibraryEntry(lib_entries.at(0));
+					entry->appendChild(std::move(new_child));
 				}
-				new_child->setLibraryEntry(lib_entries.at(0));
-				entry->appendChild(std::move(new_child));
+
+				// Finally, move the new model items to their new home.
+				tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
+	//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
 			}
-
-			// Finally, move the new model items to their new home.
-			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
-//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
-		}
 		}
 
-		})
+	})
 #endif
-#if 0
-			ExtFuture<Unit> dirtrav_complete = ExtAsync::make_started_only_future<Unit>();
-	dirtrav_complete
-#endif
-		.then([&](ExtFuture<SharedItemContType> f){
+	.then([&](ExtFuture<SharedItemContType> f){
 		Q_ASSERT(m_model_ready_to_save_to_db == false);
 		m_model_ready_to_save_to_db = true;
 		return unit;
-		})
-		.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
+	})
+	.then(qApp, [=, tree_model_ptr=tree_model, kjob = dirtrav_job](ExtFuture<Unit> future_unit) {
 
 			AMLM_ASSERT_IN_GUITHREAD();
 
@@ -549,18 +545,6 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 	// Hook up future watchers.
 	//
 
-//	// Dirscan QUrls to the m_current_libmodel.
-//	connect_or_die(&m_extfuture_watcher_dirtrav, &QFutureWatcher<QString>::resultsReadyAt,
-//				   m_current_libmodel, [=](int begin_index, int end_index){
-//		for(int i = begin_index; i<end_index; ++i)
-//		{
-//			/// @todo Maybe coming in out of order.
-//			QString url_str = m_extfuture_watcher_dirtrav.resultAt(i);
-//			m_current_libmodel->SLOT_onIncomingFilename(url_str);
-//		}
-//	});
-//	m_extfuture_watcher_dirtrav.setFuture(QFuture<QString>(qurl_future));
-
 	qurl_future.stap(this, [=](ExtFuture<QString> ef, int begin_index, int end_index) {
 		for(int i = begin_index; i<end_index; ++i)
 		{
@@ -569,69 +553,6 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 			m_current_libmodel->SLOT_onIncomingFilename(url_str);
 		}
 	});
-
-#if 0
-	//
-	// TreeModelItems
-	//
-	connect_or_die(&m_efwatcher_tree_model_append, &QFutureWatcher<SharedItemContType>::resultReadyAt,
-				   this, [=, tree_model_ptr=tree_model](int index) mutable {
-		auto result = this->m_efwatcher_tree_model_append.resultAt(index);
-		AMLM_ASSERT_IN_GUITHREAD();
-
-//		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
-
-		// For each QList<SharedItemContType> entry.
-//		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
-		const SharedItemContType& new_items_vector_ptr = result;
-		{
-			// Append entries to the ScanResultsTreeModel.
-			for(std::unique_ptr<AbstractTreeModelItem>& entry : *new_items_vector_ptr)
-			{
-				// Make sure the entry wasn't moved from.
-				Q_ASSERT(bool(entry) == true);
-				// Get the last top-level row.
-//				auto last_row_index = tree_model_ptr->rowCount() - 1;
-//				Q_ASSERT(last_row_index >= 0);
-
-				auto new_child = std::make_unique<SRTMItem_LibEntry>();
-				std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
-
-M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
-				qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
-				lib_entry->populate(true);
-
-				std::vector<std::shared_ptr<LibraryEntry>> lib_entries;
-				/// @note Here we only care about the LibraryEntry corresponding to each file.
-//				if(!lib_entry->isSubtrack())
-//				{
-//					lib_entries = lib_entry->split_to_tracks();
-//				}
-//				else
-				{
-					lib_entries.push_back(lib_entry);
-				}
-				new_child->setLibraryEntry(lib_entries.at(0));
-				entry->appendChild(std::move(new_child));
-			}
-
-			// Finally, move the new model items to their new home.
-			tree_model_ptr->appendItems(std::move(*new_items_vector_ptr));
-//			qDb() << "TREEMODELPTR:" << M_ID_VAL(tree_model_ptr->rowCount());
-		}
-	});
-	connect_or_die(&m_efwatcher_tree_model_append, &QFutureWatcher<SharedItemContType>::finished,
-				   this, [=, tree_model_ptr=tree_model]() mutable {
-		Q_ASSERT(this->m_model_ready_to_save_to_db == false);
-		this->m_model_ready_to_save_to_db = true;
-
-			dirtrav_complete.reportFinished();
-	});
-	m_efwatcher_tree_model_append.setFuture(tree_model_item_future);
-	//
-	//
-	//
-#endif
 
 	// Metadata refresh results to this (the main) thread, via a slot for further processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,

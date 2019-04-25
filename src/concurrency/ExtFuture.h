@@ -455,6 +455,16 @@ public:
 		this->d.reportResults(results, beginIndex, count);
 	}
 
+	inline void reportResults(const ExtFuture<T> &ef, int begin_index, int end_index)
+	{
+		QVector<T> results;
+		for(int i = begin_index; i<end_index; ++i)
+		{
+			results.push_back(ef.resultAt(i));
+		}
+		this->reportResults(results, begin_index, results.size());
+	}
+
 	/**
 	 * Call this from your promise-side code to indicate successful completion.
 	 * If result is != nullptr, calls reportResult() and adds a copy of the result.
