@@ -44,7 +44,7 @@ class ScanResultsTreeModelItem;
  */
 class DirScanResult : public ISerializable
 {
-	Q_GADGET
+	Q_GADGET // Needed for DirProp enum below.
 
 public:
 	/// @name Public default and copy constructors and destructor needed for Q_DECLARE_METATYPE().

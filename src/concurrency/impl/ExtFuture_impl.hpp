@@ -59,7 +59,7 @@ T ExtFuture<T>::get_first()
 template<typename T>
 void ExtFuture<T>::wait()
 {
-//	Q_ASSERT(this->valid());
+	Q_ASSERT(this->valid());
 	this->waitForFinished();
 }
 

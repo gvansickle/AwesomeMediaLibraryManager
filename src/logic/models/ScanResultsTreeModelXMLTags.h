@@ -77,38 +77,6 @@ static const auto ExtUrlTagToXMLTagMap = ExtUrlTag::make_map<ExtUrlTag::TagEnum,
 #undef X
 });
 
-/**
- * ScanResultsTreeModel tags.
- */
-class SRTMTag : public ExtEnum<SRTMTag>
-{
-	Q_GADGET
 
-public:
-	enum TagName
-	{
-		ROOT_ITEM,
-		BASE_DIRECTORY,
-		TITLE,
-		CREATOR,
-		DATE,
-		TS_LAST_SCAN_START,
-		TS_LAST_SCAN_END
-	};
-	Q_ENUM(TagName)
-
-};
-Q_DECLARE_METATYPE(SRTMTag);
-
-static const auto SRTMTagToXMLTagMap = SRTMTag::make_map<SRTMTag::TagName, QString>(
-{
-	{SRTMTag::BASE_DIRECTORY, "base_directory"},
-	{SRTMTag::TITLE, "title"},
-	{SRTMTag::CREATOR, "creator"},
-	{SRTMTag::DATE, "date"},
-	{SRTMTag::ROOT_ITEM, "tree_model_root_item"},
-	{SRTMTag::TS_LAST_SCAN_START, "ts_last_scan_start"},
-	{SRTMTag::TS_LAST_SCAN_END, "ts_last_scan_end"}
-});
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_SCANRESULTSTREEMODELXMLTAGS_H

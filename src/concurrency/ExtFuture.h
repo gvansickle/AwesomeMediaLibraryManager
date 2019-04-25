@@ -63,9 +63,6 @@
 // ExtAsync
 #include "ExtAsync.h"
 
-template <class T>
-class ExtFuture;
-
 /// ExtFuture ID counter.
 std::atomic_uint64_t get_next_id();
 
@@ -79,16 +76,6 @@ std::atomic_uint64_t get_next_id();
 #include "impl/ExtFutureImplHelpers.h"
 #include "impl/ExtAsync_RunInThread.h"
 #include "impl/ExtFuture_make_xxx_future.h"
-
-//template <typename T>
-//ExtFuture<T> make_started_only_future();
-
-//template<typename T>
-//auto make_ready_future(T&& value) -> ExtFuture<std::decay_t<T>>;
-
-//template<typename T>
-//auto make_ready_future_from_qlist(QList<T>&& value) -> ExtFuture<std::decay_t<T>>;
-
 
 /**
  * A C++2x-ish std::shared_future<>-like class implemented on top of Qt5's QFuture<T> and QFutureInterface<T> classes and other facilities.
@@ -353,7 +340,7 @@ public:
 
 	/**
 	 * C++2x valid().
-	 * This needs some minor translation.  Per @link https://en.cppreference.com/w/cpp/thread/shared_future/valid,
+	 * This needs some /minor/major/ translation.  Per @link https://en.cppreference.com/w/cpp/thread/shared_future/valid,
 	 * we should be valid()==false if we've been:
 	 * 1. Default constructed (and presumably never given a state via another method, e.g. assignment).
 	 * 2. Moved from.
@@ -363,6 +350,8 @@ public:
 	 * #1 is the only one we care about here.  We have a QFutureInterface<T> constructed beneath us in all cases, so
 	 * we never are missing a shared state, but default-constructed should be considered invalid here.
 	 * Default construction results in the state being (Started|Finished|Canceled).
+	 *
+	 * @note ...Except that's identical to the really finished or canceled states.  So for now we just always return true here.
 	 *
 	 * @note But what about an ExtFuture<T> which was canceled, then finished by either user or the cancelation mechanism itself?
 	 *       It'd be in that same state.  But:
@@ -1449,13 +1438,15 @@ protected:
 	 * @endcode
 	 * @return
 	 */
-	template <typename StreamingTapCallbackType,
+	template <class ContextType, class StreamingTapCallbackType,
 		REQUIRES(std::is_invocable_r_v<void, StreamingTapCallbackType, ExtFuture<T>, int, int>)
 		>
-	ExtFuture<T> StreamingTapHelper(QObject *context, StreamingTapCallbackType&& streaming_tap_callback)
+	ExtFuture<T> StreamingTapHelper(ContextType&& context, StreamingTapCallbackType&& streaming_tap_callback)
 	{
-		/// @todo Use guard_qobject, should be QThreadPool* I think.
-//		Q_ASSERT(guard_qobject == nullptr);
+		if constexpr(std::is_convertible_v<ContextType, QThreadPool*>)
+		{
+//			streaming_tap_helper_watcher();
+		}
 
 		// This is fundamentally similar to the .then() case in that the callback has to be called
 		// with this_future in a non-blocking state.

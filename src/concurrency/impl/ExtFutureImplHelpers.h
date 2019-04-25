@@ -371,6 +371,18 @@ static inline void spinWaitForFinishedOrCanceled(QThreadPool* tp, const ExtFutur
 	}
 }
 
+/**
+ * Template to try to get a common handle on exception and cancel handling.
+ * CallbackType == ExtFuture<R> callback(ExtFuture<T> this_future, args...)
+ *
+ * For an ExtFuture<T>::then(), the futures should be *this and the returned_future, resp.
+ */
+template <class T, class CallbackType, class R,  class... Args>
+void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_copy, ExtFuture<R> ret_future_copy, CallbackType&& callback, Args&&... args)
+{
+
+}
+
 #if 0
 template <class T, class U>
 static void spinWaitForFinishedOrCanceled(const ExtFuture<T>& this_future, const ExtFuture<U>& downstream_future)
