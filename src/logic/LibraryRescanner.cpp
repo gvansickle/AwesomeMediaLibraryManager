@@ -358,7 +358,6 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		qDb() << "START: tree_model_item_future.then(), new_items_future count:" << new_items_future.resultCount();
 
 		// For each QList<SharedItemContType> entry.
-//		for(const SharedItemContType& new_items_vector_ptr : new_items_future)
 		for(int index = begin_index; index < end_index; ++index)
 		{
 			auto result = new_items_future.resultAt(index);
@@ -369,14 +368,11 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 				{
 					// Make sure the entry wasn't moved from.
 					Q_ASSERT(bool(entry) == true);
-					// Get the last top-level row.
-	//				auto last_row_index = tree_model_ptr->rowCount() - 1;
-	//				Q_ASSERT(last_row_index >= 0);
 
 					auto new_child = std::make_unique<SRTMItem_LibEntry>();
 					std::shared_ptr<LibraryEntry> lib_entry = LibraryEntry::fromUrl(entry->data(1).toString());
 
-	M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
+M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 					qDb() << "ADDING TO NEW MODEL:" << M_ID_VAL(&entry) << M_ID_VAL(entry->data(1).toString());
 					lib_entry->populate(true);
 
@@ -554,6 +550,7 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		}
 	});
 
+#if 0
 	// Metadata refresh results to this (the main) thread, via a slot for further processing.
 	connect_or_die(&m_extfuture_watcher_metadata, &QFutureWatcher<MetadataReturnVal>::resultReadyAt,
 			this, [=](int index){
@@ -562,6 +559,14 @@ void LibraryRescanner::startAsyncDirectoryTraversal(const QUrl& dir_url)
 		this->SLOT_processReadyResults(ready_result);
 	});
 	m_extfuture_watcher_metadata.setFuture(lib_rescan_job->get_extfuture());
+#else
+	lib_rescan_job->get_extfuture().stap(this, [=](ExtFuture<MetadataReturnVal> ef, int begin, int end){
+		for(int i = begin; i<end; ++i)
+		{
+			this->SLOT_processReadyResults(ef.resultAt(i));
+		}
+	});
+#endif
 
 	// Make sure the above job gets canceled and deleted.
 	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
