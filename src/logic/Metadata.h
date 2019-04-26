@@ -110,7 +110,7 @@ public:
 	/// @name Track metadata.
 	/// @{
 
-M_TODO("We need a separate AMLMTrack class here.");
+/// @todo We need a separate AMLMTrack class here.
 
 	/// Return the number of tracks found in this file.
 	int numTracks() const { return m_num_tracks_on_media; }

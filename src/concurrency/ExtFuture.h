@@ -1469,110 +1469,108 @@ protected:
 			// This is fundamentally similar to the .then() case in that the callback has to be called
 			// with this_future in a non-blocking state.
 
-
 			// The concurrent run().
-			/*ExtFuture<T> returned_future =*/
 			ExtAsync::qthread_async([=,
-					                        streaming_tap_callback_cp = DECAY_COPY(
-							                        std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
-					                        (ExtFuture<T> this_future_copy,
-					                         ExtFuture<T> returned_future_copy) mutable -> void {
-				                        qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
-				                              << "ret_future_copy:" << returned_future_copy;
+	                streaming_tap_callback_cp = DECAY_COPY(
+	                        std::forward<StreamingTapCallbackType>(streaming_tap_callback))]
+	                (ExtFuture<T> this_future_copy,
+	                 ExtFuture<T> returned_future_copy) mutable -> void {
+	            qDb() << "STREAMINGTAP: START ::RUN(), this_future_copy:" << this_future_copy
+	                  << "ret_future_copy:" << returned_future_copy;
 
-				                        Q_ASSERT(returned_future_copy != this_future_copy);
+	            Q_ASSERT(returned_future_copy != this_future_copy);
 
-				                        int i = 0;
-				                        try
-				                        {
-					                        while(true)
-					                        {
-//						qDb() << "STREAMINGTAP: Waiting for next result";
+	            int i = 0;
+	            try
+	            {
+	                while(true)
+	                {
+	//						qDb() << "STREAMINGTAP: Waiting for next result";
 
-						                        /**
-												  * QFutureInterfaceBase::waitForResult(int resultIndex)
-												  * - if exception, rethrow.
-												  * - if !running, return.
-												  * - stealAndRunRunnable()
-												  * - lock mutex.
-												  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
-												  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
-												  *     d->waitCondition.wait(&d->m_mutex);
-												  *   d->m_exceptionStore.throwPossibleException();
-												  */
-						                        /// @todo This needs to wait on both this_ and returned_ futures for cancellation.
-						                        this_future_copy.waitForResult(i);
+	                    /**
+						  * QFutureInterfaceBase::waitForResult(int resultIndex)
+						  * - if exception, rethrow.
+						  * - if !running, return.
+						  * - stealAndRunRunnable()
+						  * - lock mutex.
+						  * - const int waitIndex = (resultIndex == -1) ? INT_MAX : resultIndex;
+						  *   while (isRunning() && !d->internal_isResultReadyAt(waitIndex))
+						  *     d->waitCondition.wait(&d->m_mutex);
+						  *   d->m_exceptionStore.throwPossibleException();
+						  */
+	                    /// @todo This needs to wait on both this_ and returned_ futures for cancellation.
+	                    this_future_copy.waitForResult(i);
 
-						                        // Check if the wait failed to result in any results.
-						                        int result_count = this_future_copy.resultCount();
-						                        if(result_count <= i)
-						                        {
-							                        // No new results, must have finshed etc.
-//							qWr() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
-							                        break;
-						                        }
+	                    // Check if the wait failed to result in any results.
+	                    int result_count = this_future_copy.resultCount();
+	                    if(result_count <= i)
+	                    {
+	                        // No new results, must have finshed etc.
+	//							qWr() << "STREAMINGTAP: NO NEW RESULTS, BREAKING, this_future:" << this_future_copy.state();
+	                        break;
+	                    }
 
-						                        // Call the tap callback.
-						                        //				streaming_tap_callback_copy(ef, i, result_count);
-//						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
-						                        std::invoke(std::move(streaming_tap_callback_cp), this_future_copy, i, result_count);
+	                    // Call the tap callback.
+	                    //				streaming_tap_callback_copy(ef, i, result_count);
+	//						qDb() << "STREAMINGTAP: CALLING TAP CALLBACK, this_future:" << this_future_copy;
+	                    std::invoke(std::move(streaming_tap_callback_cp), this_future_copy, i, result_count);
 
-						                        // Copy the new results to the returned future.
-						                        for(; i < result_count; ++i)
-						                        {
-//							qDb() << "STREAMINGTAP: Next result available at i = " << i;
+	                    // Copy the new results to the returned future.
+	                    for(; i < result_count; ++i)
+	                    {
+	//							qDb() << "STREAMINGTAP: Next result available at i = " << i;
 
-							                        T the_next_val = this_future_copy.resultAt(i);
-							                        returned_future_copy.reportResult(the_next_val);
-						                        }
-					                        } // END while(true).
+	                        T the_next_val = this_future_copy.resultAt(i);
+	                        returned_future_copy.reportResult(the_next_val);
+	                    }
+	                } // END while(true).
 
-//					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
+	//					qDb() << "STREAMINGTAP: LEFT WHILE(!Finished) LOOP, f0 state:" << this_future_copy;
 
-					                        // Check final state.  We know it's at least Finished.
-					                        // We could be Finished here with pending results.
-					                        /// Don't care as much on non-Finished cases.
-					                        if(this_future_copy.isCanceled())
-					                        {
-//						qDb() << "STAP: this_future cancelled:" << this_future_copy.state();
-						                        returned_future_copy.reportCanceled();
-					                        }
-					                        else if(this_future_copy.isFinished())
-					                        {
-//						qDb() << "STAP: ef finished:" << this_future_copy.state();
-						                        returned_future_copy.reportFinished();
-					                        }
-					                        else
-					                        {
-						                        /// @todo Exceptions.
-						                        qDb() << "NOT FINISHED OR CANCELED:" << this_future_copy.state();
-						                        Q_ASSERT(0);
-					                        }
-				                        }
-				                        catch(ExtAsyncCancelException& e)
-				                        {
-					                        /**
-											 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
-											 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
-											 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
-											 *  state of the returned future object."
-											 */
-					                        returned_future_copy.reportException(e);
-				                        }
-				                        catch(QException& e)
-				                        {
-					                        returned_future_copy.reportException(e);
-				                        }
-				                        catch(...)
-				                        {
-					                        returned_future_copy.reportException(QUnhandledException());
-				                        }
+	                // Check final state.  We know it's at least Finished.
+	                // We could be Finished here with pending results.
+	                /// Don't care as much on non-Finished cases.
+	                if(this_future_copy.isCanceled())
+	                {
+	//						qDb() << "STAP: this_future cancelled:" << this_future_copy.state();
+	                    returned_future_copy.reportCanceled();
+	                }
+	                else if(this_future_copy.isFinished())
+	                {
+	//						qDb() << "STAP: ef finished:" << this_future_copy.state();
+	                    returned_future_copy.reportFinished();
+	                }
+	                else
+	                {
+	                    /// @todo Exceptions.
+	                    qDb() << "NOT FINISHED OR CANCELED:" << this_future_copy.state();
+	                    Q_ASSERT(0);
+	                }
+	            }
+	            catch(ExtAsyncCancelException& e)
+	            {
+	                /**
+					 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+					 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+					 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+					 *  state of the returned future object."
+					 */
+	                returned_future_copy.reportException(e);
+	            }
+	            catch(QException& e)
+	            {
+	                returned_future_copy.reportException(e);
+	            }
+	            catch(...)
+	            {
+	                returned_future_copy.reportException(QUnhandledException());
+	            }
 
-				                        /// @todo THIS IS RETURNING A FUTURE.
-//				return returned_future_copy;
-			                        }, // END lambda
-			                        DECAY_COPY(*this),
-			                        DECAY_COPY(returned_future)); // END ::run() call.
+	            /// @todo THIS IS RETURNING A FUTURE.
+	//				return returned_future_copy;
+	        }, // END lambda
+	        DECAY_COPY(*this),
+	        DECAY_COPY(returned_future)); // END ::run() call.
 		}
 		
 		return returned_future;
