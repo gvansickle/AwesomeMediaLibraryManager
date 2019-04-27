@@ -222,7 +222,7 @@ endif()
 ###
 add_executable(${PROJECT_NAME} ${WIN32_OR_MACOS_BUNDLE}
 		main.cpp
-		${amlm_SRCS} #${SOURCE_FILES} ${HEADER_FILES} ${META_FILES_TO_INCLUDE} ${RESOURCE_FILES}
+		${amlm_SRCS}
 		${amlm_settings_SRCS}
 		${PROJECT_BINARY_DIR}/resources/VersionInfo.cpp
 	)
@@ -237,7 +237,7 @@ target_compile_definitions(${PROJECT_NAME}
 		"QT_NO_KEYWORDS=1"
 		"USE_BUNDLED_VERDIGRIS=${USE_BUNDLED_VERDIGRIS}"
 	)
-target_include_directories(${PROJECT_NAME} 
+target_include_directories(${PROJECT_NAME}
 	PUBLIC 
 		"utils/nomoc"
 		${INCLUDE_DIR_VERDIGRIS}
@@ -250,7 +250,9 @@ target_compile_options(${PROJECT_NAME} PUBLIC ${EXTRA_CXX_COMPILE_FLAGS})
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
         AUTOMOC ON
-        AUTOUIC ON)
+        AUTOUIC ON
+        #CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-*"
+        )
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_COMMON_LINK_LIBS})
 ### @todo breeze
 #add_dependencies(${PROJECT_NAME} icons_oxygen)

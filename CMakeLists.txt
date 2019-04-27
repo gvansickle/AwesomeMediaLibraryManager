@@ -18,6 +18,8 @@
 #
 
 # References:
+# Too many to list.  Some of the critical ones:
+# https://gist.github.com/mbinna/c61dbb39bca0e4fb7d1f73b0d66a4fd1  ("Effective Modern CMake")
 # https://github.com/euler0/mini-cmake-qt (QtCommon et al, Public Domain, https://github.com/euler0/mini-cmake-qt/blob/master/LICENSE)
 # https://cmake.org/cmake/help/v3.0/manual/cmake-qt.7.html
 # Installer refs:
@@ -271,7 +273,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # The.  Simplest.  Things.
 # Set default install location to "install" folder in build dir.
-# we do not want to install to /usr by default.add_compile_options.
+# we do not want to install to /usr by default.
 # "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
 # typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
 # without overriding a user-provided value"
@@ -307,6 +309,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 ###
 ### The Qt5 packages we require.
+### @note CONFIG|MODULE: "If no module is found the command falls back to Config mode, described below.
+###       This fall back is disabled if the MODULE option is given."
 ###
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
 	Core
@@ -402,9 +406,9 @@ print_varlist(BREEZEICONS_PATH)
 ###
 set(GTK_LINK_LIB_TARGETS "")
 if(UNIX)
-pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
-list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
-set(HAVE_GTKMM01 ${GTKMM_FOUND})
+	pkg_check_modules(GTKMM REQUIRED IMPORTED_TARGET gtkmm-3.0)
+	list(APPEND GTK_LINK_LIB_TARGETS PkgConfig::GTKMM)
+	set(HAVE_GTKMM01 ${GTKMM_FOUND})
 endif(UNIX)
 
 ###
@@ -520,8 +524,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 	${boost_callable_traits_SOURCE_DIR}/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/continuable/include
 	${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/function2/include
-	### @todo REMOVE
-	${Qt5Core_PRIVATE_INCLUDE_DIRS}
+	### @todo REMOVE, still needed for NetAwareFileDialogGtk3 (<QtGui/qpa/qplatformdialoghelper.h>)
 	${Qt5Gui_PRIVATE_INCLUDE_DIRS}
 	)
 
@@ -634,7 +637,7 @@ endif()### END INSTALLER STUFF
 
 # Generate a dependency graph.
 # @see CMakeGraphVizOptions.cmake
-if(FALSE)
+if(TRUE)
 add_custom_target(graphviz ALL
 	COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_BINARY_DIR}/graphviz"
 	COMMAND "${CMAKE_COMMAND}" "--graphviz=graphviz/amlm.dot" .
