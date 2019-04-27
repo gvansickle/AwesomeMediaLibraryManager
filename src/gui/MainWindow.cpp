@@ -175,6 +175,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 MainWindow::~MainWindow()
 {
+M_WARNING("LOOKS LIKE WE'RE HANGING HERE");
     // KDev's MainWindow does only this here:
     /**
      * if (memberList().count() == 1) {
