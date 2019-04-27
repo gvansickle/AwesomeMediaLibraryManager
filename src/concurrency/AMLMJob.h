@@ -54,18 +54,6 @@ using AMLMJobPtr = QPointer<AMLMJob>;
 Q_DECLARE_METATYPE(AMLMJobPtr);
 
 
-//template <class T>
-//struct AMLMJob_traits
-//{
-//    using type = T;
-//    using ExtFutureType = typename T::ExtFutureT;
-//
-//    ExtFutureType get_future() { return T::m_ext_future; }
-//
-//};
-
-
-
 /**
 * Where Does The State Live?
 *
@@ -334,70 +322,6 @@ public:
     static void dump_job_info(KJob* kjob, const QString &header = QString());
 
 public:
-
-    /// @name Callback/pseudo-std-C++17+ interface.
-    /// @{
-
-    /**
-     * .then(ctx, continuation) -> void
-     */
-    template <typename ContextType, typename Func,
-              REQUIRES(std::is_base_of_v<QObject, ContextType>)>
-    void then(const ContextType *ctx, Func&& f)
-    {
-        qDb() << "ENTERED THEN";
-
-//        QPointer<KJob> pkjob = kjob;
-
-        // result(KJob*) signal:
-        // "Emitted when the job is finished (except when killed with KJob::Quietly)."
-		connect_or_die(this, &KJob::result, ctx, [=](KJob* kjob){
-
-//            qDbo() << "IN THEN CALLBACK, KJob:" << kjob;
-
-			QPointer<KJob> kjob_wp(kjob);
-
-			Q_ASSERT(kjob_wp != 0);
-
-            // Need to determine if the result was success, error, or cancel.
-            // In the latter two cases, we need to make sure any chained AMLMJobs are either
-            // cancelled (or notified of the failure?).
-            switch(kjob->error())
-            {
-            // "[kjob->error()] Returns the error code, if there has been an error.
-            // Only call this method from the slot connected to result()."
-            case NoError:
-                break;
-            case KilledJobError:
-                break;
-            default:
-                // UserDefinedError or some other error.
-                break;
-            }
-
-            if(kjob->error())
-            {
-                // Report the error.
-                qWr() << "Reporting error via uiDelegate():" << kjob->error() << kjob->errorString() << ":" << kjob->errorText();
-                kjob->uiDelegate()->showErrorMessage();
-            }
-            else
-            {
-                // Cast to the derived job type.
-                Q_ASSERT_X(kjob != nullptr, "AMLMJob then()", "kjob was deleted");
-                using JobType = std::remove_pointer_t<argtype_t<Func, 0>>;
-//                auto* jobptr = dynamic_cast<JobType*>(kjob);
-	            auto* jobptr = static_cast<JobType*>(kjob);
-                Q_ASSERT(jobptr);
-                // Call the continuation.
-                std::invoke(f, jobptr);
-            }
-        });
-    }
-
-    /// @}
-
-
 
 public Q_SLOTS:
 

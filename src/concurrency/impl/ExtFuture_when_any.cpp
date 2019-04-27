@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -18,38 +18,7 @@
  */
 
 /**
- * @file Stopwatch.h
+ * @file when_any.cpp
  */
-#ifndef SRC_UTILS_STOPWATCH_H_
-#define SRC_UTILS_STOPWATCH_H_
+#include <concurrency/impl/ExtFuture_when_any.h>
 
-// Std C++
-#include <chrono>
-#include <string>
-#include <vector>
-
-/**
- * Scoped Elapsed time timer, mostly for debug purposes.
- */
-class Stopwatch
-{
-public:
-	Stopwatch(const std::string& being_timed_msg);
-	virtual ~Stopwatch();
-
-	void lap(const std::string& lap_marker_str);
-
-private:
-
-	struct lap_marker
-	{
-		std::chrono::steady_clock::time_point m_lap_time;
-		std::string m_lap_discription;
-	};
-
-	std::chrono::steady_clock::time_point m_start;
-	std::string m_being_timed_msg;
-	std::vector<lap_marker> m_lap_markers;
-};
-
-#endif /* SRC_UTILS_STOPWATCH_H_ */

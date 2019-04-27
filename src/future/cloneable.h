@@ -63,7 +63,7 @@ protected:
 	// using typename... Bases::Bases;
 
 private:
-	virtual clone_inherit * clone_impl() const override
+	clone_inherit* clone_impl() const override
 	{
 		return new Derived(static_cast<const Derived & >(*this));
 	}
@@ -75,7 +75,7 @@ template <typename Derived, typename ... Bases>
 class clone_inherit<abstract_method<Derived>, Bases...> : public Bases...
 {
 public:
-	virtual ~clone_inherit() = default;
+	 ~clone_inherit() override = default;
 
 	std::unique_ptr<Derived> clone() const
 	{
@@ -88,7 +88,7 @@ protected:
 	// using typename... Bases::Bases;
 
 private:
-	virtual clone_inherit * clone_impl() const = 0;
+	 clone_inherit * clone_impl() const override = 0;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ public:
 	}
 
 private:
-	virtual clone_inherit * clone_impl() const override
+	clone_inherit * clone_impl() const override
 	{
 		return new Derived(static_cast<const Derived & >(*this));
 	}
@@ -130,7 +130,38 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/// @name Example User Code
+
+//class cloneable : public clone_inherit<abstract_method<cloneable>>
+//{
+//};
+
+//class abstracted : public clone_inherit<abstract_method<abstracted>, cloneable>
+//{
+//};
+
 class cloneable : public clone_inherit<abstract_method<cloneable>>
+{
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+class foo
+   : public clone_inherit<abstract_method<foo>, virtual_inherit_from<cloneable>>
+{
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+class bar
+   : public clone_inherit<abstract_method<bar>, virtual_inherit_from<cloneable>>
+{
+};
+
+///////////////////////////////////////////////////////////////////////////////
+
+class concrete
+   : public clone_inherit<concrete, foo, bar>
 {
 };
 

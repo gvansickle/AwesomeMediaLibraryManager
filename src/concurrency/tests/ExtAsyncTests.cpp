@@ -44,6 +44,7 @@
 // Ours
 #include <tests/TestHelpers.h>
 #include "ExtAsyncTestCommon.h"
+#include <concurrency/ExtFuture.h>
 #include <tests/IResultsSequenceMock.h>
 
 // Mocks
@@ -143,6 +144,7 @@ static std::string twice(const std::string &s)
 	return s + s;
 }
 
+#if 0 // This stuff has been moved to attic, probably obsolete.
 TEST_F(ExtAsyncTestsSuiteFixture, AsynchronizeBasic)
 {
 	TC_ENTER();
@@ -172,6 +174,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, AsynchronizeBasic)
 
 	TC_EXIT();
 }
+#endif
 
 /// Concurrent C++
 template<typename T>
@@ -240,7 +243,459 @@ TEST_F(ExtAsyncTestsSuiteFixture, CCPPBasic)
 	TC_EXIT();
 }
 
-/// Concurrent C++
+/// END Concurrent C++
+
+INSTANTIATE_TEST_SUITE_P(ExtAsyncParameterizedTests,
+						ExtAsyncTestsParameterized,
+						::testing::Bool());
+
+TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncException)
+{
+	TC_ENTER();
+
+	ExtFuture<int> f0 = ExtAsync::qthread_async([=]() -> int {
+		/*TCOUT*/qDebug() << "THROWING";
+		TC_Sleep(1000);
+//		throw ExtAsyncCancelException();
+		throw QException();
+//		throw std::exception();
+		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		return 5;
+		;});
+
+	TC_Wait(500);
+	TCOUT << "ABOUT TO TRY";
+
+	try
+	{
+		f0.wait();
+		ADD_FAILURE() << "Didn't throw";
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+	}
+	catch(QException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Threw unexpected exception.";
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
+TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncThenCancelExceptionFromTopOrBottom)
+{
+	TC_ENTER();
+
+	bool cancel_from_top = GetParam();
+
+	ExtFuture<int> f0 = ExtAsync::qthread_async([=]() -> int {
+		TC_Sleep(1000);
+		if(cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM TOP";
+			throw ExtAsyncCancelException();
+			ADD_FAILURE() << "Didn't throw out of thread to future.";
+		}
+
+		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		return 5;
+		});
+	ExtFuture<int> f1 = f0
+		.then_qthread_async([=](ExtFuture<int> f0){
+
+			qDb() << "In then(), triggering via .wait() for cancel exception.";
+			// This should throw on a cancel.
+			f0.wait();
+
+//			int f0val = f0.get()[0];
+			return 1;
+		});
+
+	TC_Wait(500);
+	TCOUT << "ABOUT TO TRY";
+
+	try
+	{
+		if(!cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN'S RETURNED FUTURE";
+			Q_ASSERT(!f1.isCanceled());
+			Q_ASSERT(!f1.isFinished());
+			if(0)
+			{
+				f1.reportException(ExtAsyncCancelException());
+				f1.reportFinished();
+			}
+			else
+			{
+				f1.cancel();
+			}
+		}
+		f0.wait();
+		ADD_FAILURE() << ".wait() Didn't throw, f1:" << f1;
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		qDb() << "CAUGHT CANCEL EXCEPTION:" << e.what();
+		SUCCEED();
+		EXPECT_TRUE(f0.isCanceled()) << ExtFutureState::state(f0);
+	}
+	catch(QException& e)
+	{
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+	}
+	catch(...)
+	{
+		std::exception_ptr eptr = std::current_exception();
+		try { std::rethrow_exception(eptr); }
+		catch (const std::exception& e)
+		{
+			ADD_FAILURE() << "Threw unexpected exception." << e.what();
+		}
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
+TEST_P(ExtAsyncTestsParameterized, ExtAsyncQthreadAsyncMultiThenCancelExceptionFromTopOrBottom)
+{
+	TC_ENTER();
+
+	bool cancel_from_top = GetParam();
+
+	ExtFuture<int> f1 = ExtAsync::qthread_async([=]() -> int {
+		TC_Sleep(1000);
+		if(cancel_from_top)
+		{
+			/*TCOUT*/qDebug() << "THROWING CANCEL FROM TOP";
+			throw ExtAsyncCancelException();
+			ADD_FAILURE() << "Didn't throw out of thread to future.";
+		}
+
+		TCOUT << "ABOUT TO LEAVE THREAD AND RETURN 5";
+		return 5;
+	});
+	auto fend = f1
+	.then_qthread_async([=](ExtFuture<int> f0){
+		qDb() << "Waiting in then() for cancel exception, f0:" << f0;
+		f0.wait();
+
+		ADD_FAILURE() << "f0.wait() didn't throw:" << f0;
+
+		return 1;
+	})
+	.then_qthread_async([=](ExtFuture<int> f2){
+		qDb() << "Waiting in then() for cancel exception, f2:" << f2;
+		f2.wait();
+		ADD_FAILURE() << "f2.wait() didn't throw:" << f2;
+
+		return 1;
+	});
+	f1.setName("f1");
+	fend.setName("fend");
+
+	TC_Wait(500);
+
+	if(!cancel_from_top)
+	{
+		/*TCOUT*/qDebug() << "THROWING CANCEL FROM BOTTOM THEN";
+		fend.cancel();
+	}
+
+	TCOUT << "ABOUT TO TRY";
+
+	try
+	{
+		f1.wait();
+		ADD_FAILURE() << ".wait() Didn't throw";
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+		EXPECT_TRUE(f1.isCanceled());
+	}
+	catch(QException& e)
+	{
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Threw unexpected exception.";
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
+constexpr auto c_started_running = QFutureInterfaceBase::State(QFutureInterfaceBase::Started
+		| QFutureInterfaceBase::Running);
+
+constexpr auto c_started_finished_canceled = QFutureInterfaceBase::State(QFutureInterfaceBase::Started
+		| QFutureInterfaceBase::Finished
+		| QFutureInterfaceBase::Canceled);
+
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsWhatDoesQtCRunDo)
+{
+	TC_ENTER();
+
+	///
+	/// QtConcurrent::run():
+	///
+	qDb() << "############# START QtConcurrent::run()";
+	QFuture<int> qf0 = QtConcurrent::run([&](){
+		qDb() << "QFUTURE:" << ExtFutureState::state(qf0);
+		EXPECT_EQ(ExtFutureState::state(qf0), c_started_running);
+		throw QException(); return 1; });
+
+	while(!qf0.isCanceled() && !qf0.isFinished())
+	{
+		TC_Wait(1000);
+	}
+
+	qDb() << "QFUTURE:" << ExtFutureState::state(qf0);
+	EXPECT_TRUE(ExtFutureState::state(qf0) == c_started_finished_canceled);
+
+	// Does it throw?
+	try
+	{
+		qf0.waitForFinished();
+		ADD_FAILURE() << "QFuture didn't throw";
+	}
+	catch(QException& e)
+	{
+		qDb() << "QFUTURE/caught exception:" << ExtFutureState::state(qf0);
+		qDb() << "Caught:" << e.what();
+		EXPECT_EQ(ExtFutureState::state(qf0), c_started_finished_canceled);
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Caught the wrong exception type";
+	}
+
+	///
+	/// ExtAsync::qthread_async():
+	///
+	qDb() << "############# START ExtAsync::qthread_async()";
+	ExtFuture<int> exf0 = ExtAsync::qthread_async_with_cnr_future([](ExtFuture<int> exf0){
+		EXPECT_EQ(ExtFutureState::state(exf0), c_started_running);
+		qDb() << "EXTFUTURE:" << ExtFutureState::state(exf0);
+		throw QException(); return 1; });
+
+	while(!exf0.isCanceled() && !exf0.isFinished())
+	{
+		TC_Wait(1000);
+	}
+	qDb() << "EXTFUTURE:" << ExtFutureState::state(exf0);
+	EXPECT_TRUE(ExtFutureState::state(exf0) == c_started_finished_canceled);
+
+	// Does it throw?
+	try
+	{
+		exf0.waitForFinished();
+		ADD_FAILURE() << "ExtFuture didn't throw";
+	}
+	catch(QException& e)
+	{
+		qDb() << "EXTFUTURE/caught exception:" << ExtFutureState::state(exf0);
+		qDb() << "Caught:" << e.what();
+		EXPECT_EQ(ExtFutureState::state(exf0), c_started_finished_canceled);
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Caught the wrong exception type";
+	}
+
+	///
+	/// ExtAsync::qthread_async_with_cnr_future():
+	///
+	qDb() << "############# START ExtAsync::qthread_async_with_cnr_future()";
+	ExtFuture<int> cnrf0 = ExtAsync::qthread_async_with_cnr_future([](ExtFuture<int> cnr_future){
+		EXPECT_EQ(ExtFutureState::state(cnr_future), c_started_running);
+		qDb() << "EXTFUTURE:" << ExtFutureState::state(cnr_future);
+		throw QException(); return 1; });
+
+	while(!cnrf0.isCanceled() && !cnrf0.isFinished())
+	{
+		TC_Wait(1000);
+	}
+	qDb() << "EXTFUTURE:" << ExtFutureState::state(cnrf0);
+	EXPECT_TRUE(ExtFutureState::state(cnrf0) == c_started_finished_canceled) << cnrf0;
+
+	// Does it throw?
+	try
+	{
+		cnrf0.waitForFinished();
+		ADD_FAILURE() << "ExtFuture didn't throw";
+	}
+	catch(QException& e)
+	{
+		qDb() << "EXTFUTURE/caught exception:" << ExtFutureState::state(cnrf0);
+		qDb() << "Caught:" << e.what();
+		EXPECT_EQ(ExtFutureState::state(cnrf0), c_started_finished_canceled);
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Caught the wrong exception type";
+	}
+
+	TC_EXIT();
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExceptionsSingleThenish)
+{
+	TC_ENTER();
+
+
+
+	TC_EXIT();
+}
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncThenCancelExceptionFromBottom)
+{
+	TC_ENTER();
+
+	ExtFuture<int> f1 = ExtAsync::qthread_async_with_cnr_future([=](ExtFuture<int> in_fut) -> int {
+		for(int i = 0; i<10; i++)
+		{
+			TCOUT << "qthread_async_with_cnr_future() iteration:" << i;
+			// Do nothing for a sec.
+			TC_Sleep(1000);
+
+			if(in_fut.HandlePauseResumeShouldICancel())
+			{
+				// We're being canceled.
+				if(in_fut.isCanceled())
+				{
+					qDb() << "IN_FUT is already canceled";
+				}
+				if(in_fut.isFinished())
+				{
+					TCOUT << "IN_FUT is already finished";
+				}
+				qDb() << "LEAVING TOP LOOP DUE TO CANCEL";
+				in_fut.reportException(ExtAsyncCancelException());
+				in_fut.reportFinished();
+				return 0;
+			}
+		}
+
+		ADD_FAILURE() << "Finished thread function not due to cancel.";
+		return 5;
+		})
+		.then_qthread_async([=](ExtFuture<int> f0){
+		qDb() << "Waiting in then() for cancel exception.";
+		EXPECT_TRUE(f0.is_ready());
+
+			QList<int> result;
+
+			result = f0.get();
+			ADD_FAILURE() << "get() DIDN'T THROW";
+
+			EXPECT_TRUE(f0.isCanceled());
+//			EXPECT_TRUE(f0.hasException());
+			TCOUT << "WAIT START" << f0;
+			f0.wait();
+			TCOUT << "WAIT END" << f0;
+			ADD_FAILURE() << ".wait() didn't throw";
+//			int f0val = f0.get()[0];
+			EXPECT_TRUE(f0.isCanceled());
+			return 1;//f0val;
+		})
+		.then_qthread_async([=](ExtFuture<int> f2){
+			qDb() << "Waiting in then() for cancel exception.";
+			EXPECT_TRUE(f2.is_ready());
+
+				QList<int> result;
+
+				result = f2.get();
+				ADD_FAILURE() << "get() DIDN'T THROW";
+
+				EXPECT_TRUE(f2.isCanceled());
+	//			EXPECT_TRUE(f2.hasException());
+				TCOUT << "WAIT START" << f2;
+				f2.wait();
+				TCOUT << "WAIT END" << f2;
+				ADD_FAILURE() << ".wait() didn't throw";
+	//			int f0val = f0.get()[0];
+				EXPECT_TRUE(f2.isCanceled());
+				return 2;//f0val;
+			});
+
+	f1.setName("f1");
+
+	TC_Wait(500);
+
+	qDb() << "ABOUT TO TRY TO QUIT FROM THE BOTTOM";
+
+	try
+	{
+		// Cancel the last future in the chain.
+		qDb() << "ABOUT TO CANCEL";
+		EXPECT_FALSE(f1.isFinished());
+		EXPECT_FALSE(f1.isCanceled());
+//		f1.cancel();
+		f1.reportException(ExtAsyncCancelException());
+		f1.wait();
+
+		ADD_FAILURE() << "Wait after cancel didn't throw";
+	}
+	catch(ExtAsyncCancelException& e)
+	{
+		TCOUT << "CAUGHT CANCEL EXCEPTION";
+		SUCCEED();
+		EXPECT_TRUE(f1.isCanceled());
+	}
+	catch(QException& e)
+	{
+		ADD_FAILURE() << "CAUGHT NON-CANCEL EXCEPTION";
+	}
+	catch(...)
+	{
+		ADD_FAILURE() << "Threw unexpected exception.";
+	}
+
+	TCOUT << "ABOUT TO LEAVE TEST";
+
+	TC_EXIT();
+}
+
+static int use1(int a) {return a*a;}
+static int use2(int a) {return a/a;}
+static int use3(int a) {return a+a;}
+
+TEST_F(ExtAsyncTestsSuiteFixture, ExtAsyncQthreadAsyncMultipleGet)
+{
+	TC_ENTER();
+
+	int arg = 5;
+
+	ExtFuture<int> ftr = ExtAsync::qthread_async([=]{ return arg*arg; } );
+
+	if ( rand() > RAND_MAX/2 )
+	{
+		use1( ftr.get_first() );
+	} else
+	{
+		use2(  ftr.get_first() );
+	}
+	use3( ftr.get_first() );
+
+	TC_EXIT();
+}
 
 TEST_F(ExtAsyncTestsSuiteFixture, QtConcurrentSanityTest)
 {
@@ -349,7 +804,7 @@ void QtConcurrentRunFutureStateOnCancelGuts()
     }
 	else
 	{
-		the_future = make_started_only_future<int>();
+		the_future = ExtAsync::make_started_only_future<int>();
 	}
 
     ASSERT_TRUE(the_future.isStarted());
@@ -742,12 +1197,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_FALSE(extfuture.isRunning());
 
 		qDb() << "Then1, got extfuture:" << extfuture;
-		qDb() << "Then1, extfuture val:" << extfuture.qtget_first();
+		qDb() << "Then1, extfuture val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran1 = true;
-		QString the_str = extfuture.qtget_first();
+		QString the_str = extfuture.get_first();
 		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
 		return QString("Then1 OUTPUT");
 	})
@@ -760,12 +1215,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_FALSE(extfuture.isRunning());
 
 		qDb() << "Then2, got extfuture:" << extfuture;
-		qDb() << "Then2, extfuture val:" << extfuture.qtget_first();
+		qDb() << "Then2, extfuture val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
-		auto the_str = extfuture.qtget_first();
+		auto the_str = extfuture.get_first();
 		EXPECT_EQ(the_str, QString("Then1 OUTPUT"));
 		return QString("Then2 OUTPUT");
 	})
@@ -778,7 +1233,7 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestExtFutures)
 		EXPECT_FALSE(extfuture.isRunning());
 
 		qDb() << "Then3, got extfuture:" << extfuture;
-		qDb() << "Then3, extfuture val:" << extfuture.qtget_first();
+		qDb() << "Then3, extfuture val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
@@ -828,12 +1283,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		EXPECT_FALSE(extfuture.isRunning());
 
-		qDb() << "Then1, got val:" << extfuture.qtget_first();
+		qDb() << "Then1, got val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, false);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran1 = true;
-		QString the_str = extfuture.qtget_first();
+		QString the_str = extfuture.get_first();
 		EXPECT_EQ(the_str, QString("delayed_string_func_1() output"));
 		return 2;
 	})
@@ -844,12 +1299,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		EXPECT_FALSE(extfuture.isRunning());
 
-		qDb() << "Then2, got val:" << extfuture.qtget_first();
+		qDb() << "Then2, got val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, false);
 		EXPECT_EQ(ran3, false);
 		ran2 = true;
-		EXPECT_EQ(extfuture.qtget_first(), 2);
+		EXPECT_EQ(extfuture.get_first(), 2);
 		return 3;
 	})
 	.then([&](ExtFuture<int> extfuture) -> double {
@@ -858,12 +1313,12 @@ TEST_F(ExtAsyncTestsSuiteFixture, ExtFutureThenChainingTestMixedTypes)
 		EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 		EXPECT_FALSE(extfuture.isRunning());
 
-		qDb() << "Then3, got val:" << extfuture.qtget_first();
+		qDb() << "Then3, got val:" << extfuture.get_first();
 		EXPECT_EQ(ran1, true);
 		EXPECT_EQ(ran2, true);
 		EXPECT_EQ(ran3, false);
 		ran3 = true;
-		EXPECT_EQ(extfuture.qtget_first(), 3);
+		EXPECT_EQ(extfuture.get_first(), 3);
 
 		TC_DONE_WITH_STACK();
 
@@ -983,10 +1438,10 @@ TEST_F(ExtAsyncTestsSuiteFixture, TestMakeReadyFutures)
 {
 	TC_ENTER();
 
-	ExtFuture<int> future = make_ready_future(45);
+	ExtFuture<int> future = ExtAsync::make_ready_future(45);
 	ASSERT_TRUE(future.isStarted());
 	ASSERT_TRUE(future.isFinished());
-	ASSERT_EQ(future.qtget_first(), 45);
+	ASSERT_EQ(future.get_first(), 45);
 
 	TC_EXIT();
 }
@@ -1094,8 +1549,8 @@ TEST_F(ExtAsyncTestsSuiteFixture, TapAndThenOneResult)
 			EXPECT_TRUE(extfuture.isFinished()) << "C++ std semantics are that the future is finished when the continuation is called.";
 			EXPECT_FALSE(extfuture.isRunning());
 
-			TCOUT << "in then(), extfuture:" << tostdstr(extfuture.qtget_first());
-			EXPECT_EQ(extfuture.qtget_first(), QString("delayed_string_func_1() output"));
+			TCOUT << "in then(), extfuture:" << tostdstr(extfuture.get_first());
+			EXPECT_EQ(extfuture.get_first(), QString("delayed_string_func_1() output"));
 			EXPECT_FALSE(ran_then);
 			ran_then = true;
 			return QString("Then Called");
@@ -1217,22 +1672,22 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunInQThreadTest)
 	int val = 0;
 	std::set<int> seen_tap_values;
 
-	ExtFuture<int> f0 = ExtAsync::/*Async::*/run_in_qthread([&](ExtFuture<int> ef, int testval1){
-			EXPECT_EQ(f0, ef);
-			TCOUT << M_ID_VAL(testval1);
-			while(val < 10)
-			{
-				TCOUT << "val:" << val;
+	ExtFuture<int> f0 = ExtAsync::qthread_async_with_cnr_future([&](ExtFuture<int> ef, int testval1) {
+		EXPECT_EQ(f0, ef);
+		TCOUT << M_ID_VAL(testval1);
+		while(val < 10)
+		{
+			TCOUT << "val:" << val;
 			ef.reportResult(val);
-				val++;
-				TC_Sleep(100);
-			}
-			ef.reportFinished();
-		;}, 7);
+			val++;
+			TC_Sleep(100);
+		}
+		ef.reportFinished();;
+	}, 7);
 
 	TCOUT << "POST run(), f0:" << f0;
 
-	auto flast = f0.tap([&](ExtFuture<int> in_future, int begin, int end){
+	auto flast = f0.stap([&](ExtFuture<int> in_future, int begin, int end){
 		for(int i = begin; i < end; i++)
 		{
 			seen_tap_values.insert(in_future.resultAt(i));
@@ -1294,15 +1749,15 @@ TEST_F(ExtAsyncTestsSuiteFixture, RunFreeFuncInQThreadWithEventLoop)
 TEST_F(ExtAsyncTestsSuiteFixture, StaticChecks)
 {
 
-	static_assert(std::is_default_constructible<QString>::value, "");
+	static_assert(std::is_default_constructible<QString>::value);
 
 	// From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
 	// "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
-	static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >, "");
+	static_assert(std::is_same_v<decltype(ExtAsync::make_ready_future(4)), ExtFuture<int> >);
 	int v;
-	static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >, "");
+	static_assert(!std::is_same_v<decltype(ExtAsync::make_ready_future(std::ref(v))), ExtFuture<int&> >);
 	/// @todo
-//	static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<void> >, "");
+//	static_assert(std::is_same_v<decltype(ExtAsync::make_ready_future()), ExtFuture<void> >);
 
 }
 

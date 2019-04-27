@@ -170,6 +170,7 @@ public:
 ///     TCOUT << "This is a test";
 /// @endcode
 #define TCOUT  TestCout().getQDebugRef()
+//#define TCOUT  qDebug()
 
 /// @}
 

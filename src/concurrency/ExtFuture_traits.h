@@ -73,10 +73,13 @@ struct isExtFuture2<ExtFuture<T>> : std::true_type
 template <typename T>
 constexpr bool is_ExtFuture_v = isExtFuture<T>::value;
 
+/**
+ * The type T of an ExtFuture<T>.
+ */
 template <typename T>
 using ExtFuture_inner_t = typename isExtFuture<T>::inner_t;
 
-/// Our "ExtFuture" concepts.
+/// Our "ExtFuture" concepts, helper templates, etc.
 template <class T>
 constexpr bool IsExtFuture = require<concepts::Class<T>, is_ExtFuture_v<T>>;
 
@@ -111,6 +114,32 @@ using has_extfuture_ref_as_first_param_type = decltype(std::declval<F>()(std::de
 template <class F, class T>
 using has_extfuture_ref_as_first_param = std::is_detected<has_extfuture_ref_as_first_param_type, F, T>;
 
-/// END concepts
+/**
+ * .then() helper for ExtFuture implicit unwrapping.  Determines the type of the ExtFuture returned by .then().
+ *
+ * We're somewhat following the latest standards thinking here:
+ * @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+ * "Let U be the return type of the continuation [...].  If U is std::experimental::future<T2> for some type T2,
+ * then the return type of then is std::experimental::future<T2>, [else it's]
+ * std::experimental::future<U>."
+ * Main difference is no differentiation between a future and a shared_future (they're all shared).
+ *
+ * Not sure, at one point .then() was specced to only do a single level of unwrapping.
+ *
+ * @tparam U  Return type of the continuation passed to .then().
+ * @returns   Return type of the .then() member function.
+ */
+template <class U>
+using then_return_future_type_t = std::conditional_t<is_ExtFuture_v<U>, // == U::inner_t == T2.
+        /* true */
+        ExtFuture<ExtFuture_inner_t<U>>, // Unwrapping, T2 should be a non-ExtFuture?
+        /* false */
+        ExtFuture<U> // Non-nested case, no unwrapping.
+        >;
+
+template <class ThenCallbackType, class ExtFutureType>
+using then_return_type_from_callback_and_future_t = then_return_future_type_t<Unit::LiftT<
+        std::invoke_result_t<ThenCallbackType, ExtFutureType>
+        >>;
 
 #endif /* UTILS_CONCURRENCY_IMPL_EXTASYNC_TRAITS_H_ */

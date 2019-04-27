@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+ * Copyright 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
  *
  * This file is part of AwesomeMediaLibraryManager.
  *
@@ -28,14 +28,13 @@
 #include <QDateTime>
 #include <QDataStream>
 #include <QDebug>
-//#include <QXmlStreamWriter>
-//#include <QXmlQuery>
 
 // Ours
 #include <src/utils/QtHelpers.h>
 #include "ExtUrl.h"
 #include <src/logic/models/AbstractTreeModelItem.h>
 #include <src/logic/serialization/ISerializable.h>
+#include <src/future/guideline_helpers.h>
 
 class CollectionMedium;
 class ScanResultsTreeModelItem;
@@ -45,13 +44,12 @@ class ScanResultsTreeModelItem;
  */
 class DirScanResult : public ISerializable
 {
-	Q_GADGET
+	Q_GADGET // Needed for DirProp enum below.
 
 public:
 	/// @name Public default and copy constructors and destructor needed for Q_DECLARE_METATYPE().
 	/// @{
-    DirScanResult() = default;
-    DirScanResult(const DirScanResult& other) = default;
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(DirScanResult);
 	~DirScanResult() override = default;
 	/// @}
 

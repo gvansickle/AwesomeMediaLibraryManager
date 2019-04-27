@@ -46,8 +46,6 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QSettings>
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QComboBox>
 #include <QStyleFactory>
 #include <QDirIterator>
@@ -124,6 +122,7 @@
 #include <logic/serialization/XmlSerializer.h>
 
 #include "concurrency/ExtAsync.h"
+#include <utils/Stopwatch.h>
 
 /// @note EXPERIMENTAL
 #include <gui/widgets/ExperimentalKDEView1.h>
@@ -176,6 +175,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags flags) : BASE_CLASS(pare
 
 MainWindow::~MainWindow()
 {
+M_WARNING("LOOKS LIKE WE'RE HANGING HERE");
     // KDev's MainWindow does only this here:
     /**
      * if (memberList().count() == 1) {
@@ -1432,24 +1432,29 @@ void MainWindow::readLibSettings(QSettings& settings)
 	QString database_filename = QDir::homePath() + "/AMLMDatabaseSerDes.xml";
 
 	qIn() << "###### READING XML DB:" << database_filename;
-
-	XmlSerializer xmlser;
-	xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
-
 	SerializableQVariantList list("library_list", "library_list_item");
+	{
+		Stopwatch(tostdstr(QString("############## READ OF ") + database_filename));
+		XmlSerializer xmlser;
+		xmlser.set_default_namespace("http://xspf.org/ns/0/", "1");
 
-	xmlser.load(list, QUrl::fromLocalFile(database_filename));
+		xmlser.load(list, QUrl::fromLocalFile(database_filename));
+	}
 
 	qIn() << "###### READ" << list.size() << " libraries from XML DB:" << database_filename;
 
-//	for(int i = 0; i < list.size(); ++i)
 	for(const auto& list_entry : list)
 	{
-		QVariant qv = list_entry;//list[i];
+		QVariant qv = list_entry;
 		Q_ASSERT(qv.isValid());
 		Q_ASSERT(!qv.isNull());
+
+
 		LibraryModel* lmp = new LibraryModel(this);
-		lmp->fromVariant(qv);
+		{
+			Stopwatch sw("lmp-from-variant");
+			lmp->fromVariant(qv);
+		}
 
 		Q_ASSERT(lmp->getLibRootDir().isValid());
 
@@ -1488,6 +1493,8 @@ void MainWindow::writeSettings()
 void MainWindow::writeLibSettings(QSettings& settings)
 {
 	qDebug() << "writeLibSettings() start";
+
+	Stopwatch libsave_sw("################ Library save");
 
 	// First it seems we have to remove the array.
 	/// @todo Remove, unneeded?

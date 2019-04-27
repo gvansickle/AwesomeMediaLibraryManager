@@ -44,7 +44,7 @@ public:
 	PlaylistSectionID() = default;
 	PlaylistSectionID(PlaylistSectionID::Enumerator e) { m_val = e; }
 	operator int() const { return m_val; }
-	operator SectionID() { return SectionID(m_val); }
+//	operator SectionID() { return SectionID(m_val); }
 };
 
 
@@ -61,19 +61,19 @@ public:
 
 	/// Override this in derived classes to return a newly-allocated, default-constructed instance
 	/// of an entry derived from LibraryEntry.  Used by insertRows().
-	virtual std::shared_ptr<LibraryEntry> createDefaultConstructedEntry() const override;
+	std::shared_ptr<LibraryEntry> createDefaultConstructedEntry() const override;
 
-	virtual std::shared_ptr<LibraryEntry> getItem(const QModelIndex& index) const override;
+	std::shared_ptr<LibraryEntry> getItem(const QModelIndex& index) const override;
 
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
 	/// @name Drag and drop support.
 	/// @{
 
-	virtual QStringList mimeTypes() const override;
+	QStringList mimeTypes() const override;
 	Qt::DropActions supportedDragActions() const override;
 	Qt::DropActions supportedDropActions() const override;
-	virtual bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
+	bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
 
 	/**
 	 * @todo Per @link http://www.qtcentre.org/threads/5910-QTreeWidget-Drag-and-drop:
@@ -81,11 +81,11 @@ public:
 	 *  For move operations, it does not get called. It gets called when you try to copy the data.
 	 *  For Move or Internal move operations QTreeWidget::dropEvent() gets called."
 	 */
-	virtual bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
+	bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
 	/// @}
 
-    virtual void setLibraryRootUrl(const QUrl& url) override;
+	void setLibraryRootUrl(const QUrl& url) override;
 
 
 	QMediaPlaylist* qmplaylist();

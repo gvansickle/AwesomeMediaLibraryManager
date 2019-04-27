@@ -46,6 +46,29 @@ public:
     ExtAsyncCancelException *clone() const override { return new ExtAsyncCancelException(*this); }
 };
 
+enum class ExtFutureErrc
+{
+    broken_promise,
+    future_already_retrieved,
+	promise_already_satisfied,
+    no_state
+};
+
+/**
+ * Qt5ish std::future_error.
+ * @see @link https://en.cppreference.com/w/cpp/thread/future_error
+ */
+class ExtFutureError : public QException
+{
+public:
+	explicit ExtFutureError(ExtFutureErrc errc, const char* msg = nullptr) : m_code(errc) {};
+	ExtFutureErrc code() const { return m_code; };
+    void raise() const override { throw *this; }
+	ExtFutureError *clone() const override { return new ExtFutureError(*this); }
+private:
+    ExtFutureErrc m_code {};
+};
+
 inline void print_exception(const std::exception& e, int level =  0)
 {
 	std::cerr << std::string(level, ' ') << "exception: " << e.what() << '\n';

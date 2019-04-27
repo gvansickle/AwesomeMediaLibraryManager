@@ -52,11 +52,20 @@
 // Ours
 #include "ExtFutureState.h"
 #include "utils/DebugHelpers.h"
+#include "utils/ConnectHelpers.h"
 
-template <typename T> class ExtFuture;
+//template <typename T>
+//class ExtFuture;
+#include "ExtFuture.h"
+
+//template <typename T>
+//ExtFuture<T> make_started_only_future();
+
+#include "impl/ExtFuture_make_xxx_future.h"
 
 #include "impl/ExtAsync_impl.h"
-#include "impl/ExtAsync_RunInThread.h"
+//#include "impl/ExtAsync_RunInThread.h"
+
 
 // Generated
 #include "logging_cat_ExtAsync.h"
@@ -218,10 +227,10 @@ namespace ExtAsync
 //					qDb() << "CAUGHT CANCEL, THROWING TO UPSTREAM (THIS) FUTURE";
 //					retfuture_copy.reportException(e);
 					qWr() << "NON-THROWING CANCEL, RETURNING";
-					return;
+//					return;
 				}
 
-				/// @todo If exception should we actually be reporting finished?
+				// Even in the case of exception or cancelation, we need to reportFinished() or we just hang.
 				retfuture_copy.reportFinished();
 			};
 
@@ -332,7 +341,7 @@ namespace ExtAsync
 
 
 		/**
-		 * Run the callback in a QThread with its own event loop.
+		 * Run the callback in a new QThread with its own event loop.
 		 * @tparam CallbackType  Callback of type:
 		 *     @code
 		 *     void callback(ExtFutureT [, ...])
@@ -733,9 +742,6 @@ namespace ExtAsync
 				);
 	}
 
-
-
-
 #if 1 /// @todo obsolete this?  Used by AMLMJobT::start().
     /**
      * ExtAsync::run() overload for member functions of classes derived from AMLMJob taking zero params.
@@ -849,7 +855,7 @@ namespace ExtAsync
 			  )>
 	auto run_zero_params(CallableType&& function) -> ExtFuture<R>
 	{
-		ExtFuture<R> retfuture;
+		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
 		/*
 		 * @see SO: https://stackoverflow.com/questions/34815698/c11-passing-function-as-lambda-parameter
@@ -868,7 +874,6 @@ namespace ExtAsync
 				retval = std::invoke(fn);
 				// Report our single result.
 				retfuture.reportResult(retval);
-				retfuture.reportFinished();
 			}
 			catch(ExtAsyncCancelException& e)
 			{
@@ -891,7 +896,9 @@ namespace ExtAsync
 			{
 				retfuture.reportException(QUnhandledException());
 			}
-	    	;}, std::forward<ExtFuture<R>>(retfuture));
+			retfuture.reportFinished();
+
+		}, std::forward<ExtFuture<R>>(retfuture));
 
 	    return retfuture;
 	}
@@ -906,16 +913,16 @@ namespace ExtAsync
 	 * @param function  Callable, R function(Args...)
      * @return
      */
-	template <typename CallbackType, typename R = ct::return_type_t<CallbackType>, typename... Args,
+	template <typename CallbackType, class... Args, typename R = std::invoke_result_t<CallbackType, Args...>,
         REQUIRES(!std::is_member_function_pointer_v<CallbackType>
 			  && (sizeof...(Args) > 0)
 			  && is_non_void_non_ExtFuture_v<R>
 			&& (arity_v<CallbackType> > 0)
-			&& ct::is_invocable_r_v<R, CallbackType, Args&&...>)
+			&& std::is_invocable_r_v<R, CallbackType, Args&&...>)
         >
 	ExtFuture<R> run(CallbackType&& function, Args&&... args)
     {
-		ExtFuture<R> retfuture;
+		ExtFuture<R> retfuture = ExtAsync::make_started_only_future<R>();
 
 		/**
 		 * @todo Exception handling.
@@ -977,89 +984,10 @@ namespace ExtAsync
 		{
 			retfuture.reportException(QUnhandledException());
 		}
+		retfuture.reportFinished();
 
 		return retfuture;
     }
-
-
-
-
-    template <class CallbackType>
-    ExtFuture<decltype(std::declval<CallbackType>()())>
-    spawn_async(CallbackType&& callback)
-    {
-    	// The promise we'll make and extract a future from.
-		ExtFuture<decltype(std::declval<CallbackType>()())> promise;
-
-		auto retfuture = promise.get_future();
-	    std::thread the_thread(
-	    		[promise=std::move(promise), callback=std::decay_t<CallbackType>(callback)]()
-	    		mutable {
-	    			try
-				    {
-	    				promise.set_value_at_thread_exit(callback());
-				    }
-	    			catch(QException& e)
-				    {
-	    				promise.set_exception_at_thread_exit(e);
-				    }
-	    			catch(...)
-				    {
-	    				promise.set_exception_at_thread_exit(std::current_exception());
-				    }
-	    		});
-	    the_thread.detach();
-	    return retfuture;
-    };
-
-	////// START EXPERIMENTAL
-
-	/**
-	 * Returns a callable object which captures f.
-	 * Different from async_adapter() in that f is to be called with normal values,
-	 * not futures.
-	 */
-	template <typename F>
-	static auto asynchronize(F f)
-	{
-		return [f](auto ... xs) {
-			return [=] () {
-				return std::async(std::launch::async, f, xs...);
-			};
-		};
-	}
-
-	/**
-	 * Returned object can be called with any number of future objects as parameters.
-	 * It then calls .get() on all futures, applies function f to them, and returns the result.
-	 */
-	template <typename F>
-	static auto fut_unwrap(F f)
-	{
-		return [f](auto ... xs) {
-			return f(xs.get()...);
-		};
-	}
-
-	/**
-	 * Wraps a synchronous function, makes it wait for future arguments and returns a future result.
-	 */
-	template <typename F>
-	static auto async_adapter(F f)
-	{
-		return [f](auto ... xs) {
-			return [=] () {
-				// What's going on here:
-				// - Everything in parameter pack xs is assumed to be a callable object.  They will be called without args.
-				// - fut_unwrap(f) transforms f into a function object which accepts an arbitrary number of args.
-				// - When this async finally runs f, f calls .get() on all the xs()'s.
-				return std::async(std::launch::async, fut_unwrap(f), xs()...);
-			};
-		};
-	}
-
-	////// END EXPERIMENTAL
-
 };
 
 /**
@@ -1113,53 +1041,20 @@ static void runInObjectEventLoop(T * obj, R(T::* method)()) {
 /// Above is pre-Qt5.10.  The below should be used from Qt5.10+.
 
 /**
- * For callables with the signature "void Callback(void)".
+ * Run the @a callable in the event loop of @a context.
+ * For callables with the signature "void Callback(void)".  Cannot pass parameters directly because invokeMethod()
+ * doesn't support it.
+ * @note This may (different threads) or may not (same threads) return immediately to the caller.
  * @note Callback can't return a value because it's invoked asynchronously in @a context's thread/event loop.
  */
 template <class CallableType,
 		  REQUIRES(std::is_invocable_r_v<void, CallableType>)>
 static void run_in_event_loop(QObject* context, CallableType&& callable)
 {
-	bool retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable));
+	bool retval = QMetaObject::invokeMethod(context, DECAY_COPY(std::forward<CallableType>(callable)));
 	// Die if the function couldn't be invoked.
 	Q_ASSERT(retval == true);
 }
 
-/**
- * For callables with the signature "ReturnType Callback(void)", where ReturnType != ExtFuture.
- */
-//template <class CallableType, class ReturnType = Unit::LiftT<std::invoke_result_t<CallableType>>,
-//		  REQUIRES(is_non_void_non_ExtFuture_v<ReturnType>
-//		  && std::is_invocable_r_v<Unit::DropT<ReturnType>, CallableType>)>
-//static ReturnType run_in_event_loop(QObject* context, CallableType&& callable)
-//{
-//	ReturnType return_value;
-//	bool retval;
-//	if constexpr(std::is_same_v<ReturnType, void>)
-//	{
-//		static_assert(std::is_same_v<ReturnType, void>, "Bad return type");
-//		// callable returns void.
-//		retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable));
-//		return_value = unit;
-//	}
-//	else
-//	{
-//		// callable returns a non-void.
-//		retval = QMetaObject::invokeMethod(context, std::forward<CallableType>(callable), &return_value);
-//		/// @todo We're getting "QMetaObject::invokeMethod: Unable to invoke methods with return values in queued connections" here.
-//		Q_ASSERT_X(retval == true, __PRETTY_FUNCTION__, "invokeMethod() failed");
-//	}
-//	// Die if the function couldn't be invoked.
-//	/// @todo We're getting "QMetaObject::invokeMethod: Unable to invoke methods with return values in queued connections" here.
-//	Q_ASSERT(retval == true);
-//	return return_value;
-//}
-
-namespace ExtAsync
-{
-
-//.....
-
-} // Namespace ExtAsync.
 
 #endif /* CONCURRENCY_EXTASYNC_H_ */

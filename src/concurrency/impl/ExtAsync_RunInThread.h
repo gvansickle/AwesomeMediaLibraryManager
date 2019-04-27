@@ -18,10 +18,6 @@
  */
 
 #ifndef AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
-//#   if defined(ExtAsync_RunInThread_DECL_ONLY)
-//#       define AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H_ExtAsync_RunInThread_DECL_ONLY
-//#   endif
-//#else
 #define AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H
 
 // Std C++
@@ -36,117 +32,158 @@
 #include <QThread>
 
 // Ours.
-//#include <AMLMApp.h>
-#include "../ExtAsync_traits.h"
+//#include "../ExtAsync_traits.h"
+#include "ExtFuture_make_xxx_future.h"
+#include "ExtFutureImplHelpers.h"
 #include "../ExtFuture.h"
+#include <logic/PerfectDeleter.h>
 
-template <typename T>
-ExtFuture<T> make_started_only_future();
 
 namespace ExtAsync
 {
-	/**
-	 * Run a callback in a QThread.
-	 */
-	template <class CallbackType, /*class ExtFutureR,*/ class... Args,
-			  class R = Unit::LiftT<std::invoke_result_t</*std::decay_t<*/CallbackType/*>*/, /*std::decay_t<*/Args/*>*/...>>,
-			  class ExtFutureR = ExtFuture<R>
+namespace detail
+{
+	template <class CallbackType, class... Args,
+			  class CBReturnType = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+			  class ExtFutureR = ExtFuture<R>,
+			  REQUIRES(!is_ExtFuture_v<R>)
 			  >
-	static ExtFutureR qthread_async(CallbackType&& callback, Args&&... args)
+	ExtFutureR qthread_async(ExtFutureR retfuture, CallbackType&& callback, Args&&... args)
 	{
-		ExtFutureR retfuture = make_started_only_future<typename ExtFutureR::value_type>();
-		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
-		auto new_thread = QThread::create([=, callback=DECAY_COPY(callback),
+		Q_ASSERT(retfuture.isStarted());
+
+		QThread* new_thread = QThread::create
+						([=, fd_callback=DECAY_COPY(std::forward<CallbackType>(callback)),
 												  retfuture_cp=/*std::forward<ExtFutureR>*/(retfuture)
 										  ]() mutable {
-			qDb() << "ENTER IN1, retfuture_cp:" << retfuture_cp;
-			Q_ASSERT(retfuture_cp == retfuture);
-			retfuture_cp.reportStarted();
-			if constexpr(std::is_void_v<Unit::DropT<typename ExtFutureR::value_type>>)
-			{
-				std::invoke(callback, args...);
-				retfuture_cp.reportFinished();
-			}
-			else
-			{
-				auto retval = std::invoke(callback, args...);
-				static_assert(!is_ExtFuture_v<decltype(retval)>, "Callback return value cannot be a future type.");
-				retfuture_cp.reportFinished(retval);
-			}
-			qDb() << "EXIT IN1";
-			;});
+			Q_ASSERT(retfuture == retfuture_cp);
 
+			// Catch any exceptions from the callback and propagate them to the returned future.
+			try
+			{
+				Q_ASSERT(retfuture_cp == retfuture);
+				Q_ASSERT(retfuture_cp.isStarted());
+
+				if constexpr(std::is_convertible_v<Unit, CBReturnType>)
+				{
+					std::invoke(std::move(fd_callback), args...);
+				}
+				else
+				{
+					CBReturnType retval = std::invoke(std::move(fd_callback), args...);
+					static_assert(!is_ExtFuture_v<R>, "Callback return value cannot be a future type.");
+					retfuture_cp.reportResult(retval);
+				}
+			}
+			catch(ExtAsyncCancelException& e)
+			{
+				/**
+				 * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
+				 * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
+				 *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
+				 *  state of the returned future object."
+				 */
+				qDb() << "CAUGHT CANCEL EXCEPTION";
+				retfuture_cp.reportException(e);
+				Q_ASSERT(retfuture_cp.isCanceled());
+			}
+			catch(QException& e)
+			{
+				qDb() << "CAUGHT QEXCEPTION";
+				retfuture_cp.reportException(e);
+			}
+			catch (...)
+			{
+				/// @todo Need to report the actual exception here.
+				qWr() << "CAUGHT UNKNOWN EXCEPTION";
+				retfuture_cp.reportException(QUnhandledException());
+			}
+
+			qDb() << "Leaving Thread:" << M_ID_VAL(retfuture_cp) << M_ID_VAL(retfuture);
+			// Even in the case of exception, we need to reportFinished() or we just hang.
+			/// @note Not clear what is happening here.  reportException() sets canceled, so why finished?
+			/// @todo Not sure if this also applies if we're already finished or canceled.
+			if(retfuture_cp.hasException())
+			{
+				qDb() << "Future has exception, finishing:" << retfuture_cp;
+				Q_ASSERT(retfuture_cp.isCanceled());
+			}
+			// We always have to report finished, regardless of exception or cancel status.
+			retfuture_cp.reportFinished();
+			qDb() << "Reported finished:" << retfuture_cp;
+			return;
+		});
+
+		// Make a self-delete connection for the QThread.
+		// This is per-Qt5 docs, minus the lambda, which shouldn't make a difference.
 		connect_or_die(new_thread, &QThread::finished, new_thread, [=](){
 			qDb() << "DELETING QTHREAD:" << new_thread;
 			new_thread->deleteLater();
 		});
 
+		/// @todo Set thread name before starting it.
+//		new_thread->setObjectName();
+
+		// Add to PerfectDeleter.
+		PerfectDeleter::instance().addQThread(new_thread);
+
 		// Start the thread.
 		new_thread->start();
 
-		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture;
 		return retfuture;
+	}
+}; // END ExtAsync::detail
+
+	/**
+	 * Run a callback in a QThread.
+	 * The returned ExtFuture<R> will be reported as Finished when the callback returns, or as Exception on either cancel or error.
+	 * Exceptions thrown by @a callback will be propagated to the returned ExtFuture<R>.
+	 *
+	 * @note On the correct usage of std::invoke_result_t<> in this situation:
+	 * @link https://stackoverflow.com/a/47875452
+	 * "There's no difference between std::invoke_result_t<F&&, Args&&...> and std::invoke_result_t<F, Args...>"
+	 */
+	template <class CallbackType, class... Args//,
+//			  class R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>,
+//			  REQUIRES(!is_ExtFuture_v<R>)
+			  >
+	auto qthread_async(CallbackType&& callback, Args&&... args) -> ExtFuture<Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>>
+	{
+		using R = Unit::LiftT<std::invoke_result_t<CallbackType, Args...>>;
+		static_assert(!is_ExtFuture_v<R>);
+
+		ExtFuture<R> retfuture = make_started_only_future<R>();
+		retfuture.setName("Returned qthread_async()");
+
+		return detail::qthread_async(retfuture, callback, args...);
 	}
 
 
 	/**
-	 * Run a callback in a QThread.  Callback is passed an ExtFuture<T>.
+	 * Run a Controllable and Reporting (CnR) callback in a new QThread.
+	 * Callback is passed an ExtFuture<T>, which it should use for all control and reporting.
+	 * @returns A copy of the ExtFuture<T> passed to the callback.
 	 */
-#if 0
-	template<class CallbackType,
-		class ExtFutureT = argtype_t<CallbackType, 0>,
-		class... Args,
-		class U = Unit::LiftT<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>, // callback return type.
-		REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
-	ExtFuture<U> run_in_qthread(CallbackType&& callback, Args&& ... args)
-	{
-	//		class U = Unit::Lift<std::invoke_result_t<CallbackType, ExtFutureT, Args...>>;
-		ExtFuture<U> retfuture = make_started_only_future<U>();
-
-		auto new_thread = QThread::create(callback, retfuture, args...);
-
-	//		connect_or_die(new_thread, &QThread::finished, new_thread, &QObject::deleteLater);
-
-		new_thread->start();
-
-		qDb() << __func__ << "RETURNING";
-
-		return retfuture;
-	};
-#else
 	template<class CallbackType, class ExtFutureT = argtype_t<CallbackType, 0>, class... Args,
-		REQUIRES(is_ExtFuture_v<ExtFutureT> && !is_nested_ExtFuture_v<ExtFutureT>)>
-	static ExtFutureT run_in_qthread(CallbackType&& callback, Args&&... args)
+		REQUIRES(is_ExtFuture_v<ExtFutureT>
+			 && !is_nested_ExtFuture_v<ExtFutureT>
+			 && std::is_invocable_r_v<void, CallbackType, ExtFutureT, Args...>)>
+	ExtFutureT qthread_async_with_cnr_future(CallbackType&& callback, Args&& ... args)
 	{
 		ExtFutureT retfuture = make_started_only_future<typename ExtFutureT::value_type>();
+		retfuture.setName("CNRRetfuture");
 
-		qDb() << "ENTER" << __func__ << ", retfuture:" << retfuture;
-
-		// Ignoring the returned ExtFuture<>.
-		/// @todo Can we really do this?
-		auto inner_retfuture = qthread_async(callback, retfuture, args...);
-
-		qDb() << "EXIT" << __func__ << ", retfuture:" << retfuture << M_ID_VAL(inner_retfuture);
-
-		return retfuture;
+		return detail::qthread_async(retfuture, callback, retfuture, args...);
 	};
-#endif
 
-	/**
-	 * Attach a Sutteresque .then()-like continuation to a run_in_qthread().
-	 */
-	template <class InFutureT, class CallbackType, class OutFutureU>
-	static OutFutureU then_in_main_thread(InFutureT in_future, CallbackType&& then_callback)
-	{
-		using U = typename OutFutureU::value_type;
-		OutFutureU retfuture = make_started_only_future<U>();
+//
+//	template <class Fut, class Work>
+//	auto then_in_qthread(Fut&& f, Work&& w) -> ExtFuture<decltype(w(f.get()))>
+//	{
+//		return ExtAsync::qthread_async([=]{ w(f.get());});
+//	}
 
-		QFutureWatcher<U>* watcher = new QFutureWatcher<U>(qobject_cast<QObject>(qApp));
-
-		connect_or_die(watcher, &QFutureWatcher<U>::finished, watcher, &QFutureWatcher<U>::deleteLater);
-
-		return retfuture;
-	};
 }; // END namespace ExtAsync.
 
 #endif //AWESOMEMEDIALIBRARYMANAGER_EXTASYNC_RUNINTHREAD_H

@@ -1,5 +1,5 @@
 #
-# Copyright 2017, 2018 Gary R. Van Sickle (grvs@users.sourceforge.net).
+# Copyright 2017, 2018, 2019 Gary R. Van Sickle (grvs@users.sourceforge.net).
 #
 # This file is part of AwesomeMediaLibraryManager.
 #
@@ -45,6 +45,21 @@ include(cmake/GetVersionInfo.cmake)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
+if(TRUE)
+	### Set up the <LANG>_COMPILER_LAUNCHERs.
+	### @note "This property is initialized by the value of 
+	###       the CMAKE_<LANG>_COMPILER_LAUNCHER variable if it is set when a target is created."
+	
+	# Use ccache if it's available.
+	find_program(CCACHE_PROGRAM ccache)
+	if(CCACHE_PROGRAM)
+		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+	endif()
+#	if(TRUE) # csbuild - the static analysis one.
+#		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "csbuild;--print-current;-c")
+#	endif()
+endif()
+
 # Basic information about project
 # Note that here is where CMake determines compilers and loads any toolchain.cmake file.
 # (per https://cgold.readthedocs.io/en/latest/tutorials/project.html)
@@ -63,7 +78,7 @@ endif()
 # Additional project info.
 set(PROJECT_AUTHOR "Gary R. Van Sickle")
 set(PROJECT_AUTHOR_EMAIL "grvs@users.sourceforge.net")
-set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
+set(FULL_COPYRIGHT_STRING "Copyright (c) 2017, 2018, 2019 ${PROJECT_AUTHOR} <${PROJECT_AUTHOR_EMAIL}>")
 
 # Early include of some basic cmake stuff.
 include(CMakePrintHelpers)
@@ -110,7 +125,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
 # @link https://api.kde.org/ecm/kde-module/KDECMakeSettings.html#runtime-paths
 include(KDEInstallDirs)  ##< Replaces/uses GNUInstallDirs.
 #set(APPLE_FORCE_X11 ON) # This applies to KDECMakeSettings.
-set(ENABLE_CLAZY ON) # This applies to KDECMakeSettings.
+set(ENABLE_CLAZY OFF) # This applies to KDECMakeSettings.
 include(KDECMakeSettings NO_POLICY_SCOPE)
 
 # CMake macros.
@@ -182,11 +197,12 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 	ucm_add_flags(-Og -ggdb3 -fvar-tracking -fvar-tracking-assignments -gpubnames -ggnu-pubnames)
 	ucm_add_flags(-grecord-gcc-switches -gas-loc-support -gstatement-frontiers -ginline-points -femit-struct-debug-detailed=any)
 	ucm_add_flags(-fno-eliminate-unused-debug-types -fno-inline)
-	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized)
+	ucm_add_flags(-Wmaybe-uninitialized -Werror=maybe-uninitialized -fdiagnostics-show-template-tree)
+	ucm_add_flags(-fuse-ld=gold) # Let's try the gold linker.
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 	message(STATUS "C++ Compiler is Clang")
-	ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
-	ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
+	#ucm_add_flags(-Og -ggdb3 -Wthread-safety -fdebug-macro -fdiagnostics-show-template-tree)
+	#ucm_add_flags(-fdelayed-template-parsing -frelaxed-template-template-args)
 endif()
 if(WIN32)
 #ucm_add_flags(/showIncludes)
@@ -198,13 +214,7 @@ message(STATUS "C++ CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
 
 ###
 
-if(true)
-	# Use ccache if it's available.
-	find_program(CCACHE_PROGRAM ccache)
-	if(CCACHE_PROGRAM)
-		set_property(GLOBAL PROPERTY CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-	endif()
-endif()
+
 
 # Include some basic cmake functions.
 include(CheckCXXCompilerFlag)
@@ -265,6 +275,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # "CMake sets this variable to a TRUE value when the CMAKE_INSTALL_PREFIX has just been initialized to its default value,
 # typically on the first run of CMake within a new build tree. This can be used by project code to change the default 
 # without overriding a user-provided value"
+### @todo This is still broken: prefix.sh gets generated (first time after a wipe?) with /usr/bin paths.
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 	set(NEW_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
 	message(STATUS "Changing CMAKE_INSTALL_PREFIX from ${CMAKE_INSTALL_PREFIX} to ${NEW_INSTALL_PREFIX}")
@@ -416,29 +427,17 @@ endif(UNIX)
 
 
 #
-# Intel's TBB.
-# CMake integration per @link https://github.com/01org/tbb/tree/tbb_2019/cmake
-### This method pulls the code down from github.
-# @note On my Fedora 29 box with installed binary tbb, it looks like CMake already has tbb modules at this path:
-#set(PATH_TO_TBB_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake/tbb")
-#set(TBB_ROOT "${CMAKE_CURRENT_LIST_DIR}/../tbb")
-#include(${PATH_TO_TBB_CMAKE_MODULES}/TBBGet.cmake)
-#include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-#tbb_get(TBB_ROOT tbb_root SOURCE_CODE)
-#tbb_build(TBB_ROOT ${TBB_ROOT} CONFIG_DIR TBB_DIR MAKE_ARGS tbb_cpf=1)
-#find_package(TBB REQUIRED tbb_preview)
-#tbb_get(TBB_ROOT tbb_root CONFIG_DIR TBB_DIR)
-#find_package(TBB REQUIRED tbb)
-
-#
 # And Boost.  Sorry.  But just CallableTraits, has no other deps.
 #
 # See https://cmake.org/cmake/help/v3.10/module/FindBoost.html
+if(FALSE)
 ### CallableTraits only in 1.66+.
-#set(Boost_USE_MULTITHREADED      ON)
-#find_package(Boost 1.66.0 REQUIRED
-#  COMPONENTS CallableTraits
-#  )
+set(Boost_USE_MULTITHREADED      ON)
+find_package(Boost REQUIRED #1.60.0
+  COMPONENTS CallableTraits
+  )
+else()
+if(FALSE)
 download_project(PROJ                boost_callable_traits
 	GIT_REPOSITORY https://github.com/boostorg/callable_traits.git
 	GIT_TAG        master
@@ -446,6 +445,8 @@ download_project(PROJ                boost_callable_traits
 	)
 add_subdirectory(${boost_callable_traits_SOURCE_DIR} ${boost_callable_traits_BINARY_DIR} EXCLUDE_FROM_ALL)
 print_varlist(boost_callable_traits_SOURCE_DIR boost_callable_traits_BINARY_DIR)
+endif()
+endif()
 
 # Boost
 # See @link https://cmake.org/cmake/help/latest/module/FindBoost.html
@@ -543,6 +544,7 @@ message(AUTHOR_WARNING "amlm_APP_ICONS: ${amlm_APP_ICONS}")
 add_subdir_lib(src STATIC EXCLUDE_FROM_ALL)
 ### @todo Google Test creates a target named "tests" as well, and I can't seem to disable/work around it other than
 ###    by using add_subdirectory() vs. add_subdir_lib().  Maybe this is better anyway.
+
 #add_subdir_lib(tests EXCLUDE_FROM_ALL)
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 

@@ -39,6 +39,7 @@
 
 // Ours
 #include <src/utils/DebugHelpers.h>
+#include <utils/Stopwatch.h>
 #include "ISerializable.h"
 
 
@@ -81,6 +82,8 @@ void XmlSerializer::save(const ISerializable &serializable, const QUrl &file_url
 
 void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 {
+	Stopwatch sw("###################### XmlSerializer::load()");
+
 	QString load_file_path = file_url.toLocalFile();
 	if(load_file_path.isEmpty())
 	{
@@ -89,7 +92,19 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 
 	QFile file(load_file_path);
 	file.open(QFile::ReadOnly);
+
+#if 0 /// @exp See if reading it all in at once is a win or loss. == It doesn't seem to make a difference.
+	QByteArray whole_file = file.readAll();
+	if(whole_file.size() == 0)
+	{
+		qWr() << "##### COULDNT LOAD ENTIRE FILE INTO MEMORY";
+		return;
+	}
+	QXmlStreamReader xmlstream(whole_file);
+#else
 	QXmlStreamReader xmlstream(&file);
+#endif
+
 
 	/// @todo EXTRA READ INFO NEEDS TO COME FROM CALLER
 	// Read the first start element,  namespace element we added.
@@ -124,6 +139,10 @@ void XmlSerializer::load(ISerializable& serializable, const QUrl &file_url)
 		qWr() << "#### XML READ ERROR:" << error_string(xmlstream);
 	}
 }
+
+static const int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
+static const int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
+static const int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
 void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant& variant, QXmlStreamWriter& xmlstream)
 {
@@ -160,11 +179,6 @@ void XmlSerializer::writeVariantToStream(const QString &nodeName, const QVariant
 
 	int type = variant.type(); // AFAICT this is just wrong.
 	int usertype = variant.userType(); // This matches variant.typeName()
-	// These do their work at compile-time.
-	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
-	static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
-	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
-
 
 	if(type != usertype)
 	{
@@ -290,6 +304,8 @@ void XmlSerializer::writeVariantValueToStream(const QVariant &variant, QXmlStrea
 	xmlstream.writeCharacters(str);
 }
 
+
+
 /**
  * XmlSerializer::readVariantFromStream
  *
@@ -302,9 +318,6 @@ QVariant XmlSerializer::readVariantFromStream(QXmlStreamReader& xmlstream)
 {
 	QXmlStreamAttributes attributes = xmlstream.attributes();
 	QString typeString = attributes.value("type").toString();
-	static int iomap_id = qMetaTypeId<QVariantInsertionOrderedMap>();
-	static int qvarlist_id = qMetaTypeId<QVariantHomogenousList>();
-	static int serqvarlist_id = qMetaTypeId<SerializableQVariantList>();
 
 	Q_ASSERT(xmlstream.isStartElement());
 

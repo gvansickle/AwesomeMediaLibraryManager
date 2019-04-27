@@ -143,11 +143,6 @@ public:
 	operator QVariant() const
 	{
 		return QVariant::fromValue(*this);
-//		QVariant retval{m_vector_of_elements};
-///// @todo Correct?
-////		retval = m_vector_of_elements;
-//
-//		return retval;
 	}
 
 #endif // Qt5

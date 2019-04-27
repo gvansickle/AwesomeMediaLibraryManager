@@ -274,4 +274,22 @@ std::decay_t<T> DECAY_COPY(T&& v)
  */
 #define INVOKE std::invoke
 
+/**
+ * Template for creating catch-all constexpr-if final else's.  This template lets you create a type-dependent
+ * expression in a static_assert(), which would otherwise not work as expected:
+ * if constexpr(whatever)
+ * else if()
+ * else
+ * {
+ *      static_assert(dependent_false<ContextType>::value, "No matching overload");
+ * }
+ * @tparam T
+ */
+template<class T>
+struct dependent_false : std::false_type {};
+
+template<class T>
+constexpr bool dependent_false_v = dependent_false<T>::value;
+
+
 #endif /* UTILS_CONCURRENCY_FUTURE_TYPE_TRAITS_HPP_ */

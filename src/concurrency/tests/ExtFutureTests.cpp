@@ -794,7 +794,7 @@ TEST_F(ExtFutureTest, ReadyFutureCompletion)
 
     /// @note Important safety tip: nL and nLL are different sizes on Windows vs. Linux.
     /// <cstdint> to the rescue.
-    ExtFuture<int64_t> ef = make_ready_future(INT64_C(25));
+	ExtFuture<int64_t> ef = ExtAsync::make_ready_future(INT64_C(25));
 
 	// Make sure it's really ready.
 	TCOUT << "ExtFuture state:" << state(ef);
@@ -816,7 +816,7 @@ TEST_F(ExtFutureTest, FutureSingleThread)
 {
     TC_ENTER();
 
-	ExtFuture<int> ef = make_started_only_future<int>();
+	ExtFuture<int> ef = ExtAsync::make_started_only_future<int>();
 
 //    EXPECT_EQ(ef.state(), ExtFutureState::Started | ExtFutureState::Running);
 
@@ -1114,11 +1114,13 @@ TEST_F(ExtFutureTest, ExtFutureThenThrow)
 	SCOPED_TRACE("ExtFutureThenThrow");
 
 	// So we can assert we're getting the same ExtFuture when we enter the run() callback.
-//	ExtFuture<int> root_async_operation_future = make_started_only_future<int>();
+//	ExtFuture<int> root_async_operation_future = ExtAsync::make_started_only_future<int>();
 
 	// Create and start the async operation.
-	ExtFuture<int> root_async_operation_future = ExtAsync::run_again([=]
-													  (ExtFuture<int> root_async_operation_future_copy) -> int {
+	ExtFuture<int> root_async_operation_future =
+//			ExtAsync::run_again(
+			ExtAsync::qthread_async_with_cnr_future(
+				[=](ExtFuture<int> root_async_operation_future_copy) -> int {
 
 		SCOPED_TRACE("In ExtAsync::run()");
 
@@ -1225,8 +1227,8 @@ TEST_F(ExtFutureTest, ThenFutureDeleted)
 	std::atomic_bool got_into_then {false};
 
 	// Create a new future.
-//	ExtFuture<int>* promise = new make_started_only_future<int>();//ExtFuture<int>();
-	ExtFuture<int>* promise = new ExtFuture<int>(make_started_only_future<int>());
+//	ExtFuture<int>* promise = new ExtAsync::make_started_only_future<int>();//ExtFuture<int>();
+	ExtFuture<int>* promise = new ExtFuture<int>(ExtAsync::make_started_only_future<int>());
 
 //	AMLMTEST_EXPECT_FUTURE_STARTED_NOT_FINISHED_OR_CANCELED(*promise);
 
@@ -1578,8 +1580,8 @@ TEST_F(ExtFutureTest, ExtFutureCancelPromise)
 {
     TC_ENTER();
 
-	ExtFuture<Unit> promise_side = make_started_only_future<Unit>();
-	ExtFuture<Unit> future_side = make_started_only_future<Unit>();
+	ExtFuture<Unit> promise_side = ExtAsync::make_started_only_future<Unit>();
+	ExtFuture<Unit> future_side = ExtAsync::make_started_only_future<Unit>();
 
 	future_side.reportStarted();
 	promise_side = future_side;
@@ -1611,8 +1613,8 @@ TEST_F(ExtFutureTest, ExtFutureCancelFuture)
 {
     TC_ENTER();
 
-	ExtFuture<Unit> promise_side = make_started_only_future<Unit>();
-	ExtFuture<Unit> future_side = make_started_only_future<Unit>();
+	ExtFuture<Unit> promise_side = ExtAsync::make_started_only_future<Unit>();
+	ExtFuture<Unit> future_side = ExtAsync::make_started_only_future<Unit>();
 
     ASSERT_TRUE(future_side.isStarted());
 
@@ -2035,7 +2037,7 @@ TEST_F(ExtFutureTest, ExtFutureStreamingTap)
 
 //    async_results_from_get =
 M_WARNING("TODO: This is still spinning when the test exits.");
-	auto f2 = ef.tap(qApp, [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end) -> void  {
+	auto f2 = ef.stap(qApp, [=, &async_results_from_tap, &num_tap_completions](eftype ef, int begin, int end) -> void  {
 			TCOUT << "IN TAP, begin:" << begin << ", end:" << end;
         for(int i = begin; i<end; i++)
         {

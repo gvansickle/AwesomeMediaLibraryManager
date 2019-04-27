@@ -83,14 +83,14 @@ M_WARNING("FIXME: Both these are virtual calls");
 }
 
 /// Debug streaming implementation.
-#define DATASTREAM_FIELDS(X) \
+#define M_DATASTREAM_FIELDS(X) \
     X(m_parent_item)\
     /*X(m_item_data)*/\
     X(m_child_items.size())
 
 #define X(field) << obj.field
 QTH_DEFINE_QDEBUG_OP(AbstractTreeModelItem,
-                             DATASTREAM_FIELDS(X)
+							 M_DATASTREAM_FIELDS(X)
                      );
 #undef X
 

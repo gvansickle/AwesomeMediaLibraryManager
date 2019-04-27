@@ -24,6 +24,7 @@
 
 /// Std C++
 #include <memory>
+#include <vector>
 
 /// Qt5
 #include <QObject>
@@ -36,9 +37,12 @@
 /// Ours
 #include <src/concurrency/ExtAsync.h>
 #include "LibraryRescannerMapItem.h"
+#include <src/logic/models/AbstractTreeModelItem.h>
 
 class LibraryModel;
 class LibraryEntry;
+class ScanResultsTreeModel;
+class SharedItemContType;
 
 
 struct MetadataReturnVal
@@ -110,14 +114,24 @@ protected:
 	/// Experimental: Run XQuery in a separate thread.
 	void ExpRunXQuery1(const QString& database_filename, const QString& in_filename);
 
+	void SaveDatabase(ScanResultsTreeModel* tree_model_ptr, const QString& database_filename);
+
+        
 private:
 	Q_DISABLE_COPY(LibraryRescanner)
 
+	std::atomic_int m_main_sequence_monitor {0};
+	std::atomic_bool m_model_ready_to_save_to_db {false};
+
+	bool expect_and_set(int expect, int set);
+
 	LibraryModel* m_current_libmodel;
 
-//	ExtFuture<QString> m_dirtrav_future;
-
 	QFutureWatcher<QString> m_extfuture_watcher_dirtrav;
+	/// @todo
+	using ItemContType = std::vector<std::unique_ptr<AbstractTreeModelItem>>;
+	using SharedItemContType = std::shared_ptr<ItemContType>;
+	QFutureWatcher<SharedItemContType> m_efwatcher_tree_model_append;
 	QFutureWatcher<MetadataReturnVal> m_extfuture_watcher_metadata;
 };
 

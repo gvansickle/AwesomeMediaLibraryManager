@@ -114,7 +114,7 @@ public:
 
 	AbstractTreeModel* cdb2_model_instance() { return m_cdb2_model_instance; }
 
-	static PerfectDeleter* IPerfectDeleter() { return &(amlmApp->m_perfect_deleter); };
+	static PerfectDeleter& IPerfectDeleter() { return PerfectDeleter::instance(); };
 
     /// @}
 
@@ -171,7 +171,8 @@ private:
 
     ScanResultsTreeModel* m_srtm_instance {nullptr};
 
-	PerfectDeleter m_perfect_deleter;
+    // This shouldn't be needed to destroy the PD singleton, since it's parented to this.
+//	PerfectDeleter *m_perfect_deleter;
 
     std::atomic_bool m_shutting_down {false};
     std::atomic_bool m_controlled_shutdown_complete {false};

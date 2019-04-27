@@ -161,15 +161,6 @@ public:
 	/// Serialization
 	///
 
-//	virtual void writeToJson(QJsonObject & json) const;
-//	virtual void readFromJson(const QJsonObject& jo);
-
-	/// Static constructor for deserializing from JSON.
-//	static QPointer<LibraryModel> constructFromJson(const QJsonObject & json, QObject* parent = nullptr);
-
-//	virtual void serializeToFile(QFileDevice& file) const;
-//	virtual void deserializeFromFile(QFileDevice& file);
-
 	QVariant toVariant() const override;
 	void fromVariant(const QVariant& variant) override;
 

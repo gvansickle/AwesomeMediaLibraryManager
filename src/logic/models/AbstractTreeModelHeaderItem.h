@@ -40,7 +40,9 @@ class AbstractTreeModel;
 /**
  *
  */
-class AbstractTreeModelHeaderItem: public AbstractTreeModelItem
+class AbstractTreeModelHeaderItem:
+		public AbstractTreeModelItem
+//		public clone_inherit<abstract_method<AbstractTreeModelHeaderItem>, AbstractTreeModelItem>
 {
 	using BASE_CLASS = AbstractTreeModelItem;
 

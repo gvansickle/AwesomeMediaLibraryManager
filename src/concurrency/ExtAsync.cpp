@@ -26,50 +26,88 @@
 #include <type_traits>
 #include <future/future_type_traits.hpp>
 
-#include "ExtAsync_traits.h"
+#include "ExtFuture_traits.h"
 #include <utils/DebugHelpers.h>
 
+
+
+
+/// Attic for experimental stuff that didn't pan out, but is too good to trash.
+#if 0
+////// START EXPERIMENTAL
+
 /**
- * - Cancellation and Exceptions
- *
- * Per std::experimental::shared_future::then() at @link https://en.cppreference.com/w/cpp/experimental/shared_future/then
- * "Any value returned from the continuation is stored as the result in the shared state of the returned future object.
- *  Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared
- *  state of the returned future object."
- *
- * Per @link https://software.intel.com/en-us/node/506075 (tbb), referring to task_group_context objects:
- * "Exceptions propagate upwards. Cancellation propagates downwards. The opposition interplays to cleanly stop a nested
- * computation when an exception occurs."
+ * Returns a callable object which captures f.
+ * Different from async_adapter() in that f is to be called with normal values,
+ * not futures.
  */
+template <typename F>
+static auto asynchronize(F f)
+{
+	return [f](auto ... xs) {
+		return [=] () {
+			return std::async(std::launch::async, f, xs...);
+		};
+	};
+}
 
-/// ExtFuture<> Concept checks.
-static_assert(IsExtFuture<ExtFuture<int>>);
-static_assert(NonNestedExtFuture<ExtFuture<int>>);
-static_assert(!NonNestedExtFuture<ExtFuture<ExtFuture<int>>>);
-static_assert(NestedExtFuture<ExtFuture<ExtFuture<int>>>);
-static_assert(!NestedExtFuture<ExtFuture<int>>);
-static_assert(!IsExtFuture<int>);
+/**
+ * Returned object can be called with any number of future objects as parameters.
+ * It then calls .get() on all futures, applies function f to them, and returns the result.
+ */
+template <typename F>
+static auto fut_unwrap(F f)
+{
+	return [f](auto ... xs) {
+		return f(xs.get()...);
+	};
+}
 
-/// ExtFuture<T> sanity checks.
-// From http://en.cppreference.com/w/cpp/experimental/make_ready_future:
-// "If std::decay_t<T> is std::reference_wrapper<X>, then the type V is X&, otherwise, V is std::decay_t<T>."
-static_assert(std::is_same_v<decltype(make_ready_future(4)), ExtFuture<int> >);
-int v;
-static_assert(!std::is_same_v<decltype(make_ready_future(std::ref(v))), ExtFuture<int&> >);
-/// @todo
-//    static_assert(std::is_same_v<decltype(make_ready_future()), ExtFuture<Unit> >);
-static_assert(!std::is_same_v<QFuture<long>, ExtFuture<long>>);
-//static_assert(std::is_convertible_v<QFuture<long>, ExtFuture<long>>);
-static_assert(std::is_convertible_v<ExtFuture<long>, QFuture<long>>);
+/**
+ * Wraps a synchronous function, makes it wait for future arguments and returns a future result.
+ */
+template <typename F>
+static auto async_adapter(F f)
+{
+	return [f](auto ... xs) {
+		return [=] () {
+			// What's going on here:
+			// - Everything in parameter pack xs is assumed to be a callable object.  They will be called without args.
+			// - fut_unwrap(f) transforms f into a function object which accepts an arbitrary number of args.
+			// - When this async finally runs f, f calls .get() on all the xs()'s.
+			return std::async(std::launch::async, fut_unwrap(f), xs()...);
+		};
+	};
+}
 
-static_assert(std::is_copy_constructible_v<ExtFuture<long>>);
-/// Should not be "really" move constructable or assignable, but not sure how to check that ATM.
-/// Should be is_move_constructible_v via the copy constructor taking "const T&".
-/// @link  https://en.cppreference.com/w/cpp/types/is_move_constructible
-static_assert(std::is_move_constructible_v<ExtFuture<long>>);
-static_assert(std::is_move_assignable_v<ExtFuture<long>>);
-/// Should not be trivially anything, i.e. a memmove() is sufficient to copy/move/assign.
-static_assert(!std::is_trivially_copy_constructible_v<ExtFuture<long>>);
-static_assert(!std::is_trivially_copy_assignable_v<ExtFuture<long>>);
-static_assert(!std::is_trivially_move_constructible_v<ExtFuture<long>>);
-static_assert(!std::is_trivially_move_assignable_v<ExtFuture<long>>);
+////// END EXPERIMENTAL
+
+template <class CallbackType>
+ExtFuture<decltype(std::declval<CallbackType>()())>
+spawn_async(CallbackType&& callback)
+{
+	// The promise we'll make and extract a future from.
+	ExtFuture<decltype(std::declval<CallbackType>()())> promise;
+
+	auto retfuture = promise.get_future();
+	std::thread the_thread(
+			[promise=std::move(promise), callback=std::decay_t<CallbackType>(callback)]()
+			mutable {
+				try
+				{
+					promise.set_value_at_thread_exit(callback());
+				}
+				catch(QException& e)
+				{
+					promise.set_exception_at_thread_exit(e);
+				}
+				catch(...)
+				{
+					promise.set_exception_at_thread_exit(std::current_exception());
+				}
+			});
+	the_thread.detach();
+	return retfuture;
+};
+
+#endif

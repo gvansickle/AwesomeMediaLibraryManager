@@ -86,19 +86,25 @@
 // Ours
 #include <src/utils/QtHelpers.h>
 #include <src/utils/StaticAnalysis.h>
+#include <src/future/guideline_helpers.h>
+#include <src/future/cloneable.h>
 #include <src/logic/serialization/ISerializable.h>
 
 /**
  * Base class for AbstractItemTreeModel items.
- *
- * @base clone_inherit<>  Adds covariant plus smart pointer clone() support to the derived class hierarchy.
+ * @note Not derived from QObject.
+ * @note base clone_inherit<> Would add covariant plus smart pointer clone() support to the derived class hierarchy,
+ *       but I can't get it to work.
  */
-class AbstractTreeModelItem : public virtual ISerializable
+class AbstractTreeModelItem :
+		public virtual ISerializable
+//		public clone_inherit<abstract_method<AbstractTreeModelItem>, virtual_inherit_from<ISerializable>>
 {
 
 public:
+	M_GH_RULE_OF_FIVE_DEFAULT_C21(AbstractTreeModelItem);
 	/**
-	 *
+	 * Default constructor.
 	 * @param parent_item  The AbstractTreeModelItem which is both the owner and "tree-wise" parent of this item.
 	 *                     @note This is completely unrelated to QObject parentage, this class isn't derived from QObject.
 	 *                     However, we still own our children and have to delete them on destruction.

@@ -108,7 +108,7 @@ set(PROJECT_COMMON_EXTERNAL_LINK_LIB_TARGETS
 		${GTK_LINK_LIB_TARGETS}
 		${AMLM_TAGLIB_TARGET}
 		${AMLM_LIBCUE_TARGET}
-		callable_traits
+#		callable_traits
 		verdigris_target
 #		Boost::thread
 		)
@@ -429,6 +429,13 @@ install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
 # Install the App Icon
 install(FILES ${AppIcon_rcc}
 	    DESTINATION ${KDE_INSTALL_APPDIR}
+		COMPONENT coreapp)
+
+### Install the test executable.  We do this because for debugging we need the same gdb_wrap.sh to be found.
+install(TARGETS ${TEST_EXE_TARGET} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS}
+				#RUNTIME DESTINATION . # Default is /usr/local/${PROJECT_NAME} on UNIX and c:/Program Files/${PROJECT_NAME}/${PROJECT_NAME} on Windows.
+				#LIBRARY DESTINATION .
+				#ARCHIVE DESTINATION .
 		COMPONENT coreapp)
 		
 # Make the built and installed app debuggable.

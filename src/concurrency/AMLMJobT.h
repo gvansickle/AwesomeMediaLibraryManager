@@ -33,6 +33,8 @@
 
 // Ours
 #include "AMLMJob.h"
+#include "ExtFutureProgressInfo.h"
+#include "ExtFuture.h"
 
 /**
  * CRTP class template for wrapping ExtAsync jobs returning an ExtFuture<T>.
@@ -52,13 +54,14 @@ public:
 	using ExtFutureType = ExtFutureT;
     using ExtFutureWatcherT = QFutureWatcher<typename ExtFutureType::value_type>;
 
-    explicit AMLMJobT(QObject* parent = nullptr)
-        : BASE_CLASS(parent)
+	explicit AMLMJobT(QObject* parent = nullptr) : BASE_CLASS(parent)
 	{
         qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
         // Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 	    // We could get a doKill() call at any time after we leave this constructor.
-        m_ext_watcher = new ExtFutureWatcherT();
+//		m_ext_watcher = std::make_unique<ExtFutureWatcherT>();
+		m_ext_watcher = new ExtFutureWatcherT();
+
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
 	}
@@ -71,7 +74,7 @@ public:
 	explicit AMLMJobT(ExtFutureType extfuture, QObject* parent = nullptr,
 					  KJob::Unit units = KJob::Unit::Files,
 					  KJob::Capabilities capabilities = KJob::Capability::Killable | KJob::Capability::Suspendable)
-			: BASE_CLASS(parent), m_ext_future(extfuture)
+			: BASE_CLASS(parent), m_ext_future(extfuture), m_hacky_way_to_ignore_start(true)
 	{
 		qDbo() << "Constructor, m_ext_future:" << m_ext_future.state();
 
@@ -79,17 +82,29 @@ public:
 		setProgressUnit(units);
 
 		// Set our object name.
-		setObjectName("AMLJobT");
+		/// @todo Again better through ExtFuture.
+		const char* jobname = "UNKNOWN_JOB";
+		this->setObjectName(jobname);
 
 		// Set our capabilities.
 		setCapabilities(capabilities);
 
 		// Watcher creation is here vs. in start() to mitigate against cancel-before-start races and segfaults.  Seems to work.
 		// We could get a doKill() call at any time after we leave this constructor.
+//		m_ext_watcher = std::make_unique<ExtFutureWatcherT>();
 		m_ext_watcher = new ExtFutureWatcherT();
+
 		// Create a new 1 sec speed update QTimer.
 		m_speed_timer = QSharedPointer<QTimer>::create(this);
+
+		// Hook up watcher->{other} signal/slots, start speed timer.
+		pre_start();
+
+		// Connect future to watcher last, to avoid losing signals we connected to in pre_start().
+		m_ext_watcher->setFuture(m_ext_future);
 	}
+
+	~AMLMJobT() override {};
 
     /**
      * Return a copy of the future.
@@ -99,26 +114,20 @@ public:
         return m_ext_future;
     }
 
-    /**
-     * Factory function for creating AMLMJobT's wrapping the passed-in ExtFuture<T>.
-     * @returns AMLMJobT, which is not started.
-     */
-    static std::unique_ptr<AMLMJobT> make_amlmjobt(ExtFutureT ef, QObject* parent = nullptr)
-    {
-        auto job = std::make_unique<AMLMJobT>(ef, parent);
-        return job;
-    }
-
 	Q_SCRIPTABLE void start() override
 	{
-M_WARNING("THIS IS NOW SOMEWHAT INCORRECT, ESP. THE run_class_noarg()");
-		// Hook up signals and such to the ExtFutureWatcher<T>.
-		HookUpExtFutureSignals(m_ext_watcher);
+//M_WARNING("THIS IS NOW SOMEWHAT INCORRECT, ESP. THE run_class_noarg()");
 
-		// Start the speed calculation timer.
-		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
-		m_speed_timer->setInterval(1000);
-		m_speed_timer->start();
+		if(m_hacky_way_to_ignore_start == true)
+		{
+			/// We don't have a callback to run(), we were created by make_async_AMLMJobT().
+			/// @obsolete this as soon as possible.
+			return;
+		}
+
+		// Hook up signals and such to the ExtFutureWatcher<T>,
+		// start the speed calculation timer.
+		pre_start();
 
 		// Just let ExtAsync run the run() function, which will in turn run the runFunctor().
 		// Note that we do not use the returned ExtFuture<Unit> here; that control and reporting
@@ -257,6 +266,19 @@ protected: //Q_SLOTS:
 
 protected:
 
+	/**
+	 * FBO make_async_AMLMJobT<>().
+	 */
+	void pre_start()
+	{
+		// Hook up signals and such to the ExtFutureWatcher<T>.
+		HookUpExtFutureSignals(m_ext_watcher);
+
+		// Start the speed calculation timer.
+		m_speed_timer->setTimerType(Qt::TimerType::PreciseTimer);
+		m_speed_timer->setInterval(1000);
+		m_speed_timer->start();
+	}
 
     /// Last-stage wrapper around the runFunctor().
     /// Handles most of the common ExtFuture<T> start/finished/canceled/exception code.
@@ -551,13 +573,16 @@ protected:
 
 	/// @} /// END KJob-related support functions.
 
+	bool m_hacky_way_to_ignore_start {false};
+
     /// The ExtFuture<T>.
     /// This is always a copy of an ExtFuture<T> created somewhere outside this class instance.
-//M_TODO("Should start out with the normal default state?");
-	ExtFutureT m_ext_future { make_started_only_future<typename ExtFutureT::inner_t>() };
+	ExtFutureT m_ext_future { ExtAsync::make_started_only_future<typename ExtFutureT::inner_t>() };
 
 	/// The watcher for the ExtFuture.
-    ExtFutureWatcherT* m_ext_watcher;
+	/// @note Would like to use a std::unique_ptr here, but it screws with the QObject parent/child delete mechanism
+	///       (we get double deletes).
+	ExtFutureWatcherT* m_ext_watcher {};
 
 	/// KJob::emitSpeed() support, which we apparently have to maintain ourselves.
 	/// KJob::emitSpeed() takes an unsigned long.
@@ -568,18 +593,17 @@ protected:
 };
 
 /**
- * Create a new AMLMJobT from an ExtFuture<T>.
+ * Create a new AMLMJobT wrapped around an ExtFuture<T>.
+ * @todo Does this really need a parent?  AMLMJob[T] takes one, but....
  */
 template<class ExtFutureT>
-//inline static SHARED_PTR<AMLMJobT<ExtFutureT>>
 inline static QPointer<AMLMJobT<ExtFutureT>>
 make_async_AMLMJobT(ExtFutureT ef, QObject* parent = nullptr)
 {
-	/// @todo Does this really need a parent?
-	qDb() << "ef:" << ef;
-	Q_ASSERT(!ef.isFinished() && !ef.isCanceled());
+	/// @todo I think we don't care if the future has already started/canceled here,
+	/// as long as we hook up fut<->job and job<->everything-else signal/slots, we're ok.
+//	Q_ASSERT(!ef.isFinished() && !ef.isCanceled());
 	return new AMLMJobT<ExtFutureT>(ef, parent, KJob::Unit::Files);
-//	return MAKE_SHARED<AMLMJobT<ExtFutureT>>(ef, parent);
 }
 
 

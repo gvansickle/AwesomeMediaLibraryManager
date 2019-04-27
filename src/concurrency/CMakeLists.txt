@@ -27,10 +27,13 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	ExtFutureProgressInfo.h
 	ExtFuturePropagationHandler.h
 	ExtFutureWatcher.h
-	ExtAsync_traits.h
+	ExtFuture_traits.h
 	IExtFutureWatcher.h
 	impl/ExtAsync_impl.h
 	impl/ExtFuture_impl.hpp
+	impl/ExtFuture_make_xxx_future.h
+	impl/ExtFuture_when_all.h
+	impl/ExtFuture_when_any.h
 	impl/ExtFutureImplHelpers.h
 	impl/ExtAsync_RunInThread.h
 	ExtAsync.h
@@ -44,6 +47,8 @@ set(HEADER_FILES_UTILS_CONCURRENCY
 	WorkerThreadBase.h
 	)
 set(SOURCE_FILES_UTILS_CONCURRENCY
+	impl/ExtFuture_when_all.cpp
+	impl/ExtFuture_when_any.cpp
 	impl/ExtFutureImplHelpers.cpp
 	ExtAsync.cpp
 	ExtAsyncExceptions.cpp

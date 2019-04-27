@@ -169,9 +169,21 @@ void tst_QString::DirScanCancelTestPAutodelete()
 	// Dummy dir so the dir scanner job has something to chew on.
     QUrl dir_url = QUrl::fromLocalFile("/");
 //    RecordProperty("dirscanned", tostdstr(dir_url.toString()));
+#if 0 // OBSOLETE
     DirectoryScannerAMLMJobPtr dsj = DirectoryScannerAMLMJob::make_job(qApp, dir_url,
 	                                    QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
 	                                    QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+#endif
+	// Run the directory scan in another thread.
+	ExtFuture<DirScanResult> dirresults_future = ExtAsync::qthread_async_with_cnr_future(DirScanFunction, nullptr,
+																						 dir_url,
+																						 QStringList({"*.flac", "*.mp3", "*.ogg", "*.wav"}),
+																						 QDir::Filters(QDir::Files |
+																									   QDir::AllDirs |
+																									   QDir::NoDotAndDotDot),
+																						 QDirIterator::Subdirectories);
+	auto dsj = make_async_AMLMJobT(dirresults_future);
+
 
     M_QSIGNALSPIES_SET(dsj);
 

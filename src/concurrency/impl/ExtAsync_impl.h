@@ -35,13 +35,14 @@
 #include <future/Unit.hpp>
 
 // Qt5
+#include <QObject>
 #include <QException>
 #include <QtConcurrentRun>
 
 // Ours
 #include <utils/DebugHelpers.h>
-#include "../ExtFuture.h"
-#include "../ExtAsync_traits.h"
+//#include "../ExtFuture.h" ///< Can't include this because it uses context_has_event_loop().
+#include "concurrency/ExtFuture_traits.h"
 #include "../ExtAsyncExceptions.h"
 
 //template <class T>
@@ -49,7 +50,32 @@
 
 namespace ExtAsync
 {
-
+	namespace detail
+	{
+		/**
+		 * Helper for checking if the given @a context object has an event loop.
+		 * @param obj
+		 * @return
+		 */
+		inline static bool context_has_event_loop(QObject* context)
+		{
+			if(context == nullptr)
+			{
+				// No event loop, not even an object.
+				return false;
+			}
+			// If non-null, make sure context has an event loop.
+			QThread* ctx_thread = context->thread();
+			// Something's broken if we don't have a thread, I think we need to assert in this case.
+			Q_ASSERT(ctx_thread != nullptr);
+			if(ctx_thread->eventDispatcher() != nullptr)
+			{
+				// Has an event dispatcher, so has event loop.
+				return true;
+			}
+			return false;
+		};
+	}
 } // END namespace ExtAsync
 
 

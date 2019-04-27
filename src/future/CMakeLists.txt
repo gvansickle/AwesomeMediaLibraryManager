@@ -23,6 +23,7 @@ set(HEADER_FILES_SRC_FUTURE
 	deduced_type.hpp
 	function_traits.hpp
 	future_type_traits.hpp
+	future_algorithms.h
 	cpp14_concepts.hpp
 	cloneable.h
 	static_if.hpp
@@ -49,8 +50,8 @@ target_include_directories(future
 	PUBLIC
 		${CMAKE_CURRENT_LIST_DIR}
 	    ${CMAKE_CURRENT_LIST_DIR}/.. # To allow <future/whatever.h>
-		${boost_callable_traits_SOURCE_DIR}
-		${boost_callable_traits_BINARY_DIR}
+#		${boost_callable_traits_SOURCE_DIR}
+#		${boost_callable_traits_BINARY_DIR}
 		# For config.h
 		${PROJECT_BINARY_DIR}/src
 		)

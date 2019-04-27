@@ -70,6 +70,12 @@ public:
 		return *this;
 	}
 
+	/**
+	 * We need to keep this public so that we can set the tags after e.g. an assignment from another
+	 * QVar*List, which will also copy other's tags, which we may not want.
+	 * @param list_tag
+	 * @param list_item_tag
+	 */
 	void set_tag_names(const QString& list_tag, const QString& list_item_tag)
 	{
 		m_list_tag = list_tag;
