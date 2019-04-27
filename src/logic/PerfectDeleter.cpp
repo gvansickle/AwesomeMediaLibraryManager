@@ -20,7 +20,12 @@
 #include "PerfectDeleter.h"
 
 // Std C++
+#include <QTextCursor>
+#include <QTextList>
 #include <algorithm>
+
+// Future Std C++
+#include <future/future_algorithms.h> ///< For Uniform Container Erasure.
 
 // Ours
 #include <concurrency/ExtFuturePropagationHandler.h>
@@ -35,12 +40,30 @@ PerfectDeleter::PerfectDeleter(QObject* parent) : QObject(parent)
 
 PerfectDeleter::~PerfectDeleter()
 {
+	qDb() << objectName() << "destroyed.";
+}
 
+PerfectDeleter& PerfectDeleter::instance(QObject* parent)
+{
+	// First caller must specify a parent, or we'll assert here.
+	static PerfectDeleter* m_the_instance = (Q_ASSERT(parent != nullptr), new PerfectDeleter(parent));
+
+	return *m_the_instance;
 }
 
 void PerfectDeleter::cancel_and_wait_for_all()
 {
 	std::lock_guard lock(m_mutex);
+
+	// Ok, we're going down, so try to do so with as little leakage as possible.
+
+	// First print some stats.
+	qIno() << "END OF PROGRAM SUMMARY OF OPEN RESOURCES";
+	auto stats_text_doc = stats();
+	for(const auto& line : qAsConst(stats_text_doc))
+	{
+		qIno() << line;
+	}
 
 	// Cancel all registered AMLMJobs.
 	qIno() << "Killing" << m_watched_AMLMJobs.size() << "AMLMJobs";
@@ -143,15 +166,97 @@ M_WARNING("These both want to remove the same amlmjob, maybe ok?");
 	m_watched_AMLMJobs.push_back(amlmjob);
 }
 
-std::vector<std::tuple<QString, long> > PerfectDeleter::stats() const
+void PerfectDeleter::addQThread(QThread* qthread)
 {
 	std::lock_guard lock(m_mutex);
+
+	// QThread is a QObject which will ordinarily have a parent.  However, per the docs, QThread::create() is
+	// somewhat different: the caller is suppose to take ownership.  So that's why this exists.
+
+	// First let's check if we can immediately delete it.
+	if(qthread->isFinished())
+	{
+		qthread->deleteLater();
+	}
+	else
+	{
+		// From Qt docs:
+		// "When this signal is emitted, the event loop has already stopped running. No more events will be processed in the thread,
+		// except for deferred deletion events. This signal can be connected to QObject::deleteLater(), to free objects in that thread."
+		connect_or_die(qthread, &QThread::finished, this, [=](){
+			qIn() << "Deleting QThread:" << qthread;
+			/// @todo Uniquify, don't rely on pointer.
+			std::experimental::erase(m_watched_QThreads, qthread);
+			qthread->deleteLater();
+			});
+		m_watched_QThreads.push_back(qthread);
+	}
+}
+
+//template <class T>
+//QTextTable& operator<<(QTextTable& table, T NextColumnText)
+//{
+//	if constexpr(NextColumnText == std::endl)
+//	{
+//		// EOL, insert a new row.
+
+//	}
+//	else if(std::is_convertible_v<T, const QString&>)
+//	{
+
+//	}
+//	else
+//	{
+//		static_assert(dependent_false<T>, "")
+//	}
+//}
+
+#if 0
+QTextDocument* PerfectDeleter::stats() const
+{
+	/// @todo This should really be a Threadsafe Interface pattern.
+//	std::lock_guard lock(m_mutex);
+
+	// Generate and return a stats object.
+	QTextDocument* retval = new QTextDocument();
+	QTextCursor cursor(retval);
+	cursor.movePosition(QTextCursor::Start);
+	QTextList* list = cursor.insertList(QTextListFormat::ListDisc);
+
+	cursor.insertText(tr("Num QThreads: %1").arg(m_watched_QThreads.size()));
 
 	// QFutureSynchronizer<> stats.
 	int num_futures = m_future_synchronizer.futures().size();
 
-	return {{tr("Watched QFuture<void>s"), num_futures}};
+	cursor.insertText(tr("Total added QFutures: %1").arg(m_total_num_added_qfutures));
+	cursor.insertText(tr("Total unfinished QFutures: %1").arg(m_future_synchronizer.futures().size()));
+	cursor.insertText(tr("Number of QFutures added since last purge: %1").arg(m_num_qfutures_added_since_last_purge));
 
+	cursor.insertText(tr("Watched QFuture<void>s: %1").arg(num_futures));
+
+	return retval;
+}
+#endif
+QStringList PerfectDeleter::stats() const
+{
+	/// @todo This should really be a Threadsafe Interface pattern.
+//	std::lock_guard lock(m_mutex);
+
+	// Generate and return a stats object.
+	QStringList retval;
+
+	retval << tr("Num QThreads: %1").arg(m_watched_QThreads.size());
+
+	// QFutureSynchronizer<> stats.
+	int num_futures = m_future_synchronizer.futures().size();
+
+	retval << tr("Total added QFutures: %1").arg(m_total_num_added_qfutures);
+	retval << tr("Total unfinished QFutures: %1").arg(m_future_synchronizer.futures().size());
+	retval << tr("Number of QFutures added since last purge: %1").arg(m_num_qfutures_added_since_last_purge);
+
+	retval << tr("Watched QFuture<void>s: %1").arg(num_futures);
+
+	return retval;
 }
 
 bool PerfectDeleter::waitForAMLMJobsFinished(bool spin)

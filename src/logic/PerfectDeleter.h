@@ -23,6 +23,7 @@
 // Std C++
 #include <deque>
 #include <mutex>
+#include <memory>
 
 // Qt5
 #include <QObject>
@@ -35,12 +36,28 @@
 
 // Ours
 #include <src/concurrency/AMLMJob.h>
+#include <QtGui/QTextDocument>
 
 struct Deletable
 {
 //	template <class T, class Canceler, class Waiter>
 	QVariant m_to_be_deleted;
 };
+
+class PDStatEntry
+{
+public:
+	explicit PDStatEntry(const QString& str) : m_stat_text(str) { }
+	QString m_stat_text;
+	std::shared_ptr<PDStatEntry> m_substat_ptr;
+	static constexpr int mc_indent = 4;
+};
+
+template <class StreamType>
+StreamType& operator<<(StreamType& os, const PDStatEntry& obj)
+{
+	return os << obj.m_stat_text;
+}
 
 /**
  * Class for managing the lifecycle of various deferred-delete or self-deleting objects.
@@ -60,6 +77,13 @@ public:
      */
 	~PerfectDeleter() override;
 
+	/**
+	 * Singleton accessor.
+	 * @param parent  Must be specified once by the first caller (usually the QApplication-derived singleton).
+	 */
+	static PerfectDeleter& instance(QObject* parent = nullptr);
+
+
 	void cancel_and_wait_for_all();
 
 	/**
@@ -75,7 +99,9 @@ public:
 
     void addAMLMJob(AMLMJob* amlmjob);
 
-	std::vector<std::tuple<QString, long>> stats() const;
+	void addQThread(QThread* qthread);
+
+	QStringList stats() const;
 
 private:
 
@@ -92,6 +118,7 @@ private:
 
     std::deque<QPointer<KJob>> m_watched_KJobs;
     std::deque<QPointer<AMLMJob>> m_watched_AMLMJobs;
+	std::deque<QPointer<QThread>> m_watched_QThreads;
 
     /// Private member functions.
 

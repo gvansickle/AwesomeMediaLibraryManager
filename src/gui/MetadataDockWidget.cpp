@@ -233,7 +233,7 @@ M_TODO("Not getting some field here");
 
 		//qDb() << "CoverArtCallback: Adding to perfect deleter.";
 		/// @todo Is there a race here? Should this be part of the make_, so we never see it if it gets deleted?
-		AMLMApp::IPerfectDeleter()->addQFuture(coverart_future);
+		AMLMApp::IPerfectDeleter().addQFuture(coverart_future);
 
 		qDb() << "CoverArtCallback: Adding .then()..";
 		coverart_future.then([=](ExtFuture<QByteArray> future) -> bool {

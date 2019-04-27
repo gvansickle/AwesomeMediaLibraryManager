@@ -23,6 +23,7 @@ set(HEADER_FILES_SRC_FUTURE
 	deduced_type.hpp
 	function_traits.hpp
 	future_type_traits.hpp
+	future_algorithms.h
 	cpp14_concepts.hpp
 	cloneable.h
 	static_if.hpp

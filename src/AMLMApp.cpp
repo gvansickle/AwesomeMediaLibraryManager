@@ -42,7 +42,7 @@
 // Pointer to the AMLMApp singleton.
 AMLMApp *AMLMApp::m_the_instance = nullptr;
 
-AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv), m_perfect_deleter(this)
+AMLMApp::AMLMApp(int& argc, char** argv) : BASE_CLASS(argc, argv)
 {
     Q_ASSERT(m_the_instance == nullptr);
 
@@ -66,6 +66,9 @@ AMLMApp::~AMLMApp()
 
 void AMLMApp::Init(bool gtest_only)
 {
+	// Get the PerfectDeleter instance up as early as possible.
+	PerfectDeleter::instance(this);
+
 	// Register our types with Qt.
 	RegisterQtMetatypes();
 
@@ -148,7 +151,7 @@ void AMLMApp::SLOT_onAboutToQuit()
     // - the QCoreApplication::aboutToQuit() signal.
     // - Called directly by the MainWindow() destructor.
 
-    qDbo() << "App about to quit, shutting down.";
+    qWr() << "##### App about to quit, shutting down event loop.";
 
     if(!m_shutting_down)
     {
@@ -176,11 +179,9 @@ void AMLMApp::perform_controlled_shutdown()
     if(!m_controlled_shutdown_complete)
     {
 		// Do whatever shutdown tasks we need to in here.
-#if 0
-		ExtAsync::ExtFuturePropagationHandler::IExtFuturePropagationHandler()->close();
-#endif
+
 		// Cancel all asynchronous activities and wait for them to complete.
-		AMLMApp::IPerfectDeleter()->cancel_and_wait_for_all();
+		AMLMApp::IPerfectDeleter().cancel_and_wait_for_all();
     }
 
     m_controlled_shutdown_complete = true;

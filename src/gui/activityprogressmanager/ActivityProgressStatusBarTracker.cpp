@@ -189,7 +189,7 @@ void ActivityProgressStatusBarTracker::registerJob(KJob* kjob)
 
 	if(auto jobptr = dynamic_cast<AMLMJob*>(kjob))
 	{
-		AMLMApp::IPerfectDeleter()->addAMLMJob(jobptr);
+		AMLMApp::IPerfectDeleter().addAMLMJob(jobptr);
 	}
 	/// @todo
 

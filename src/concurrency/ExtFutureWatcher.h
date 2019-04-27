@@ -88,7 +88,7 @@ public:
 		}
         if(thread_parent != nullptr)
         {
-            qWr() << "CONSTRUCTOR CALLED WITH NON-NULL THREAD PARENT:" << parent;
+			qWr() << "CONSTRUCTOR CALLED WITH NON-NULL THREAD PARENT:" << thread_parent;
         }
 		// Give ourselves a default name.
 		this->setObjectName("ExtFutureWatcher");
@@ -163,7 +163,7 @@ public:
 	}
 
     template <class ResultsReadyAtCallback,
-              REQUIRES(ct::is_invocable_r_v<void, ResultsReadyAtCallback, const ExtFuture<T>&, int, int>)>
+			  REQUIRES(std::is_invocable_r_v<void, ResultsReadyAtCallback, const ExtFuture<T>&, int, int>)>
     ExtFutureWatcher<T>& connect_onResultsReadyAt(QObject* context, ResultsReadyAtCallback&& callback)
     {
         /// @todo CONTEXT
@@ -172,8 +172,8 @@ public:
             context = this;
         }
         connect_or_die(this, &ExtFutureWatcher::resultsReadyAt, context,
-                       [=, callback_copy = std::decay_t<ResultsReadyAtCallback>(callback)](int begin, int end){
-            callback_copy(this->future(), begin, end);
+					   [=, callback_copy=DECAY_COPY(std::forward<ResultsReadyAtCallback>(callback))](int begin, int end){
+			std::invoke(std::move(callback_copy), this->future(), begin, end);
         });
         return *this;
     }

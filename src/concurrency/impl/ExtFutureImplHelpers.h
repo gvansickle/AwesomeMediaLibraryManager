@@ -34,6 +34,7 @@
 #include <future/Unit.hpp>
 #include <concurrency/ExtAsyncExceptions.h>
 //#include "ExtAsync_RunInThread.h"
+#include <concurrency/ExtFutureWatcher.h>
 
 // Generated
 #include "logging_cat_ExtFuture.h"
@@ -389,19 +390,22 @@ void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_cop
 {
 	static_assert(std::is_void_v<std::invoke_result_t<CallbackType, ExtFuture<T>, int, int/*, Args...*/>>, "Callback must return void.");
 
+	using FutureWatcherTypeR = ExtFutureWatcher<R>;
+	using FutureWatcherTypeT = ExtFutureWatcher<T>;
+
 	// Watchers will live in context's thread.
-	QFutureWatcher<R>* retfuture_watcher = new QFutureWatcher<R>(context);
-	QFutureWatcher<T>* this_future_watcher = new QFutureWatcher<T>(context);
+	FutureWatcherTypeR* retfuture_watcher = new FutureWatcherTypeR(/*context*/);
+	FutureWatcherTypeT* this_future_watcher = new FutureWatcherTypeT(/*context*/);
 
 	// R->T ("upstream") cancel signal.
-	connect_or_die(retfuture_watcher, &QFutureWatcher<R>::canceled, context, [=,
+	connect_or_die(retfuture_watcher, &FutureWatcherTypeR::canceled, context, [=,
 				   this_future_copy_copy=DECAY_COPY(std::forward<ExtFuture<T>>(this_future_copy))]() mutable {
 		// Note we directly call cancel() (but from context's thread) because this_future_copy may not have an event loop.
 		this_future_copy_copy.cancel();
 	});
 	// R->T ("upstream") finished signal.
 	/// @note Should only ever get this due to an exception thrown into R, and then we should probably have gotten a cancel instead.
-	connect_or_die(retfuture_watcher, &QFutureWatcher<R>::finished, context, [=,
+	connect_or_die(retfuture_watcher, &FutureWatcherTypeR::finished, context, [=,
 				   this_future_copy_copy=DECAY_COPY(std::forward<ExtFuture<T>>(this_future_copy))]() mutable {
 		// Note we directly call cancel() (but from context's thread) because this_future_copy may not have an event loop.
 		this_future_copy_copy.reportFinished();
@@ -409,7 +413,7 @@ void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_cop
 
 	// T->R ("downstream") signals.
 	// The resultsReadyAt signal.
-	connect_or_die(this_future_watcher, &QFutureWatcher<T>::resultsReadyAt, context,
+	connect_or_die(this_future_watcher, &FutureWatcherTypeR::resultsReadyAt, context,
 				   [=,
 				   this_future_copy_copy=DECAY_COPY(/*std::forward<ExtFuture<T>>*/(this_future_copy)),
 				   callback_cp=DECAY_COPY(std::forward<CallbackType>(callback))](int begin, int end) mutable {
@@ -421,10 +425,10 @@ void streaming_tap_helper_watcher(QObject* context, ExtFuture<T> this_future_cop
 		}
 	});
 	// Canceled.
-	connect_or_die(this_future_watcher, &QFutureWatcher<T>::canceled, context,
+	connect_or_die(this_future_watcher, &FutureWatcherTypeT::canceled, context,
 			[=, ret_future_copy_copy=DECAY_COPY(ret_future_copy)]() mutable { ret_future_copy_copy.reportCanceled(); });
 	// Finished.
-	connect_or_die(this_future_watcher, &QFutureWatcher<T>::finished, context,
+	connect_or_die(this_future_watcher, &FutureWatcherTypeT::finished, context,
 				   [=]() mutable { ret_future_copy.reportFinished(); });
 
 	retfuture_watcher->setFuture(ret_future_copy);

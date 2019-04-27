@@ -569,7 +569,7 @@ M_WARNING("THIS POPULATE CAN AND SHOULD BE DONE IN ANOTHER THREAD");
 #endif
 
 	// Make sure the above job gets canceled and deleted.
-	AMLMApp::IPerfectDeleter()->addQFuture(tail_future);
+	AMLMApp::IPerfectDeleter().addQFuture(tail_future);
 
 	//
     // Start the asynchronous ball rolling.
